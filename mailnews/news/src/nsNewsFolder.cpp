@@ -60,6 +60,9 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID,	NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+#define PREF_MAX_NEWS_HEADERS_TO_SHOW "mail.news.maxheaderstoshow"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -529,20 +532,99 @@ nsresult nsMsgNewsFolder::GetDatabase()
 NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 {
-	nsresult rv = GetDatabase();
+  // number_to_show is a tempory hack to allow newsgroups
+  // with thousands of message to work.  the way it works is
+  // we return a cropped enumerator back to to the caller
+  // instead of the full one.  This gets around the problem
+  // where tree layout (and probably other things) don't scale
 
-	if(NS_SUCCEEDED(rv))
-	{
-		nsIEnumerator *msgHdrEnumerator = nsnull;
-		nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-		rv = mDatabase->EnumerateMessages(&msgHdrEnumerator);
-		if(NS_SUCCEEDED(rv))
-			rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
-												   this, &messageEnumerator);
-		*result = messageEnumerator;
-		NS_IF_RELEASE(msgHdrEnumerator);
-	}
-	return rv;
+  PRInt32 number_to_show;
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs) {
+    rv = prefs->GetIntPref(PREF_MAX_NEWS_HEADERS_TO_SHOW, &number_to_show);
+    if (NS_FAILED(rv)) {
+      // failed to get the pref...show them all the headers
+      number_to_show = 0;
+    }
+  }
+  else {
+    // failed to get pref service...show them all headers
+    number_to_show = 0;
+  }
+
+  // if the user asks for a negative value, I'll just ignore them
+  if (number_to_show < 0) {
+  	number_to_show = 0;
+  }
+  
+  if (number_to_show) {
+    rv = GetDatabase();
+    *result = nsnull;
+    
+    if(NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
+      nsCOMPtr<nsIEnumerator> msgHdrEnumerator2;
+      nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
+      rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
+      rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator2));
+      nsCOMPtr <nsISupportsArray> shortlist;
+      
+      if(NS_SUCCEEDED(rv)) {
+        NS_NewISupportsArray(getter_AddRefs(shortlist));
+        PRInt32 total = 0;
+        for (msgHdrEnumerator->First(); msgHdrEnumerator->IsDone() != NS_OK; msgHdrEnumerator->Next()) {
+          total++;
+        }
+#ifdef DEBUG_NOISY_NEWS
+        printf("total = %d\n",total);
+#endif
+        PRInt32 count = 0;
+        for (msgHdrEnumerator2->First(); msgHdrEnumerator2->IsDone() != NS_OK; msgHdrEnumerator2->Next()) {
+          if (count >= (total - number_to_show)) {
+            nsCOMPtr<nsISupports> i;
+            rv = msgHdrEnumerator2->CurrentItem(getter_AddRefs(i));
+            if (NS_FAILED(rv)) return rv;
+            shortlist->AppendElement(i);
+#ifdef DEBUG_NOISY_NEWS
+            printf("not skipping %d\n", count);
+#endif
+          }
+#ifdef DEBUG_NOISY_NEWS
+          else {
+            printf("skipping %d\n", count);
+          }
+#endif
+          count++;
+        }
+        
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr <nsIBidirectionalEnumerator> enumerator;
+          rv = NS_NewISupportsArrayEnumerator(shortlist, getter_AddRefs(enumerator));
+          if (NS_SUCCEEDED(rv)) {
+            rv = NS_NewMessageFromMsgHdrEnumerator(enumerator,
+                                                   this, &messageEnumerator);
+            *result = messageEnumerator;
+          }
+        }
+      }
+    }
+    return rv;
+  }
+  else {
+    rv = GetDatabase();
+    *result = nsnull;
+    
+    if(NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
+        nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
+        rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
+        if(NS_SUCCEEDED(rv))
+          rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator, this, &messageEnumerator);
+        *result = messageEnumerator;
+    }
+    return rv;   
+  }
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
@@ -622,8 +704,8 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 	nsresult rv = NS_OK;
     
 	nsFileSpec path;
-    nsIMsgFolder *child = nsnull;
-	//Get a directory based on our current path.
+  nsCOMPtr <nsIMsgFolder> child;
+  //Get a directory based on our current path.
 	rv = CreateDirectoryForFolder(path);
 	if(NS_FAILED(rv))
 		return rv;
@@ -658,7 +740,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 
 			//Now let's create the actual new folder
 			nsAutoString folderNameStr(folderName);
-			rv = AddSubfolder(folderName, &child);
+			rv = AddSubfolder(folderName, getter_AddRefs(child));
             unusedDB->SetSummaryValid(PR_TRUE);
             unusedDB->Close(PR_TRUE);
         }
@@ -680,7 +762,6 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 			NS_IF_RELEASE(folderSupports);
 		}
 	}
-	NS_IF_RELEASE(child);
 	return rv;
 #endif
   return NS_OK;
