@@ -524,7 +524,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
   nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
-  server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
+  server->SetPrettyName(localMailFakeHostName.GetUnicode());
 
   // notice, no identity for local mail
   account->SetIncomingServer(server);
@@ -1094,7 +1094,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
   nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
-  server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
+  server->SetPrettyName(localMailFakeHostName.GetUnicode());
   
   // create the directory structure for old 4.x "Local Mail"
   // under <profile dir>/Mail/Local Folders or
