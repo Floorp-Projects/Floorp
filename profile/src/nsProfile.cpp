@@ -1279,8 +1279,12 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
     char oldRegFile[_MAX_LENGTH] = {'\0'};
 
 #ifdef XP_PC
+#ifdef XP_OS2
+    nsSpecialSystemDirectory system(nsSpecialSystemDirectory::OS2_OS2Directory);
+#else
     // Registry file has been traditionally stored in the windows directory (XP_PC).
     nsSpecialSystemDirectory systemDir(nsSpecialSystemDirectory::Win_WindowsDirectory);
+#endif
     
     // Append the name of the old registry to the path obtained.
     PL_strcpy(oldRegFile, systemDir.GetNativePathCString());
