@@ -137,10 +137,13 @@
     <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
-    
+
+    <command id="Tools:Search" oncommand="focusSearchBar();"/>    
     <command id="Tools:Downloads" oncommand="toOpenWindowByType('Download:Manager', 
                                                                 'chrome://mozapps/content/downloads/downloads.xul',
                                                                 'chrome,dialog=no,resizable');"/>
+    <command id="Tools:Extensions" oncommand="BrowserOpenExtensions('extensions');"/>
+    <command id="Tools:Themes" oncommand="BrowserOpenExtensions('themes');"/>
     
 #ifdef XP_MACOSX
     <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
@@ -174,12 +177,12 @@
          modifiers="alt"/>
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-    <key id="focusSearchBar" key="&searchFocusUnix.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
+    <key id="key_search" key="&searchFocusUnix.commandkey;" command="Tools:Search" modifiers="accel"/>
 #else
-    <key id="focusSearchBar" key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
+    <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
 #endif
 #else
-    <key id="focusSearchBar" key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
+    <key id="key_search" key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
 #endif
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
