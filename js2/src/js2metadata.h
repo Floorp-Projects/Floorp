@@ -129,17 +129,17 @@ private:
 };
 
 // A pond is a place to get chunks of PondScum from and to return them to
-#define POND_SIZE (16000)
+#define POND_SIZE (32000)
 #define POND_SANITY (0xFADE2BAD)
 class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
     
     void *allocFromPond(size_t sz);
-    void returnToPond(PondScum *p);
+    uint32 returnToPond(PondScum *p);
 
     void resetMarks();
-    void moveUnmarkedToFreeList();
+    uint32 moveUnmarkedToFreeList();
 
     uint32 sanity;
 
@@ -170,7 +170,7 @@ public:
     static std::list<PondScum **> rootList;
     typedef std::list<PondScum **>::iterator RootIterator;
 
-    static void gc(JS2Metadata *meta);
+    static uint32 gc();
     static RootIterator addRoot(void *t);   // pass the address of any JS2Object pointer
                                             // Note: Not the address of a JS2VAL!
     static void removeRoot(RootIterator ri);

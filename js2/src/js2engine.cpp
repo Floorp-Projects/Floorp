@@ -107,7 +107,6 @@ namespace MetaData {
                 default:
                     NOT_REACHED("Bad opcode, no biscuit");
                 }
-                if ((i++ % 200) == 0) JS2Object::gc(meta);        // XXX temporarily, for testing
             }
             catch (Exception &jsx) {
                 if (mTryStack.size() > 0) {

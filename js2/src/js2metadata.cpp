@@ -1511,7 +1511,6 @@ namespace MetaData {
     // Validate the entire expression rooted at p
     void JS2Metadata::ValidateExpression(Context *cxt, Environment *env, ExprNode *p)
     {
-        JS2Object::gc(this);            // XXX testing stability
         switch (p->getKind()) {
         case ExprNode::Null:
         case ExprNode::number:
@@ -4761,7 +4760,7 @@ deleteClassProperty:
     }
 
     // Mark all reachable objects and put the rest back on the freelist
-    void JS2Object::gc(JS2Metadata *meta)
+    uint32 JS2Object::gc()
     {
         pond.resetMarks();
         // Anything on the root list is a pointer to a JS2Object.
@@ -4773,8 +4772,7 @@ deleteClassProperty:
                 GCMARKOBJECT(obj)
             }
         }
-        meta->mark();
-        pond.moveUnmarkedToFreeList();
+        return pond.moveUnmarkedToFreeList();
     }
 
     // Allocate a chunk of size s
@@ -4872,7 +4870,11 @@ deleteClassProperty:
             }
             // ok, then try the next Pond
             if (nextPond == NULL) {
-                // there isn't one, so make it
+                // there isn't one; run the gc
+				uint32 released = JS2Object::gc();
+				if (released > sz)
+					return JS2Object::alloc(sz - sizeof(PondScum));
+
                 nextPond = new Pond(sz, nextPond);
             }
             return nextPond->allocFromPond(sz);
@@ -4890,7 +4892,7 @@ deleteClassProperty:
     }
 
     // Stick the chunk at the start of the free list
-    void Pond::returnToPond(PondScum *p)
+    uint32 Pond::returnToPond(PondScum *p)
     {
         p->owner = (Pond *)freeHeader;
         uint8 *t = (uint8 *)(p + 1);
@@ -4898,6 +4900,7 @@ deleteClassProperty:
         memset(t, 0xB3, p->getSize() - sizeof(PondScum));
 #endif
         freeHeader = p;
+		return p->getSize() - sizeof(PondScum);
     }
 
     // Clear the mark bit from all PondScums
@@ -4914,17 +4917,19 @@ deleteClassProperty:
     }
 
     // Anything left unmarked is now moved to the free list
-    void Pond::moveUnmarkedToFreeList()
+    uint32 Pond::moveUnmarkedToFreeList()
     {
+		uint32 released = 0;
         uint8 *t = pondBottom;
         while (t != pondTop) {
             PondScum *p = (PondScum *)t;
             if (!p->isMarked() && (p->owner == this))   // (owner != this) ==> already on free list
-                returnToPond(p);
+                released += returnToPond(p);
             t += p->getSize();
         }
         if (nextPond)
-            nextPond->moveUnmarkedToFreeList();
+            released += nextPond->moveUnmarkedToFreeList();
+		return released;
     }
 
 

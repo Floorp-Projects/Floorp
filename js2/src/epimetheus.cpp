@@ -101,7 +101,7 @@ const bool showTokens = false;
 #define INTERPRET_INPUT 1
 //#define SHOW_ICODE 1
 
-MetaData::JS2Metadata *metadata;
+MetaData::JS2Metadata *metadata = NULL;
 
 
 static int readEvalPrint(FILE *in)
@@ -378,6 +378,7 @@ int main(int argc, char **argv)
     stdOut << "Welcome to Epimetheus.\n";
 #endif
 
+	JS2Object::addRoot(&metadata);
     metadata = new MetaData::JS2Metadata(world);
     metadata->addGlobalObjectFunction("print", print, 1);
     metadata->addGlobalObjectFunction("load", load, 1);
