@@ -50,29 +50,23 @@
 #include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
-#include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
-#include "nsStyleChangeList.h"
 #include "nsCSSRendering.h"
 #include "nsIViewManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
-#include "nsWidgetsCID.h"
-#include "nsHTMLContainerFrame.h"
-#include "nsIWidget.h"
-
-static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 nsresult
-NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager)
+NS_NewDeckFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
+                nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
+  if (!aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
   nsDeckFrame* it = new (aPresShell) nsDeckFrame(aPresShell, aLayoutManager);
-  if (nsnull == it)
+  if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aNewFrame = it;
@@ -81,12 +75,14 @@ NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* 
 } // NS_NewDeckFrame
 
 
-nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager):nsBoxFrame(aPresShell),mIndex(0)
+nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell,
+                         nsIBoxLayout* aLayoutManager)
+  : nsBoxFrame(aPresShell), mIndex(0)
 {
      // if no layout manager specified us the static sprocket layout
   nsCOMPtr<nsIBoxLayout> layout = aLayoutManager;
 
-  if (layout == nsnull) {
+  if (!layout) {
     NS_NewStackLayout(aPresShell, layout);
   }
 
@@ -103,92 +99,17 @@ nsDeckFrame::ChildrenMustHaveWidgets(PRBool& aMust)
   return NS_OK;
 }
 
-nsresult
-nsDeckFrame::CreateWidget(nsIPresContext* aPresContext, nsIBox* aBox)
-{
-  nsresult rv = NS_OK;
-
-  nsIFrame* frame = nsnull;
-  aBox->GetFrame(&frame);
-
-  nsIView* view = nsnull;
-  frame->GetView(aPresContext, &view);
-  
-  if (!view) {
-    nsStyleContext* context = frame->GetStyleContext();
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext,frame,context,nsnull,PR_TRUE); 
-    frame->GetView(aPresContext, &view);
-  }
-
-  nsCOMPtr<nsIWidget> widget;
-  view->GetWidget(*getter_AddRefs(widget));
-
-  if (!widget)
-     rv = view->CreateWidget(kWidgetCID);
-
-  return rv;
-}
-
-nsresult
-nsDeckFrame::CreateWidgets(nsIPresContext* aPresContext)
-{
-  // create a widget for each child.
-  nsIBox* child = nsnull;
-  GetChildBox(&child);
-  while(child)
-  {
-    CreateWidget(aPresContext, child);
-    child->GetNextBox(&child);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDeckFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                   nsIAtom*        aListName,
-                                   nsIFrame*       aChildList)
-{
-  nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  //CreateWidgets(aPresContext);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsDeckFrame::AppendFrames(nsIPresContext* aPresContext,
-                            nsIPresShell&   aPresShell,
-                            nsIAtom*        aListName,
-                            nsIFrame*       aFrameList)
-{
-  // Only one child frame allowed
-  nsresult rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
-  //CreateWidgets(aPresContext);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsDeckFrame::InsertFrames(nsIPresContext* aPresContext,
-                            nsIPresShell&   aPresShell,
-                            nsIAtom*        aListName,
-                            nsIFrame*       aPrevFrame,
-                            nsIFrame*       aFrameList)
-{
-  // Only one child frame allowed
-  nsresult rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
-  //CreateWidgets(aPresContext);
-  return rv;
-}
-
 NS_IMETHODIMP
 nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
-                               nsIContent* aChild,
-                               PRInt32 aNameSpaceID,
-                               nsIAtom* aAttribute,
-                               PRInt32 aModType, 
-                               PRInt32 aHint)
+                              nsIContent*     aChild,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aModType, 
+                              PRInt32         aHint)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aModType, aHint);
+                                             aNameSpaceID, aAttribute,
+                                             aModType, aHint);
 
 
    // if the index changed hide the old element and make the now element visible
@@ -200,15 +121,15 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsDeckFrame::Init(nsIPresContext*  aPresContext,
-                    nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsStyleContext*  aStyleContext,
-                    nsIFrame*        aPrevInFlow)
+nsDeckFrame::Init(nsIPresContext* aPresContext,
+                  nsIContent*     aContent,
+                  nsIFrame*       aParent,
+                  nsStyleContext* aStyleContext,
+                  nsIFrame*       aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent,
-                                            aParent, aStyleContext,
-                                            aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aPresContext, aContent,
+                                 aParent, aStyleContext,
+                                 aPrevInFlow);
 
   mIndex = GetSelectedIndex();
 
@@ -280,7 +201,7 @@ nsDeckFrame::IndexChanged(nsIPresContext* aPresContext)
 PRInt32
 nsDeckFrame::GetSelectedIndex()
 {
- // default index is 0
+  // default index is 0
   PRInt32 index = 0;
 
   // get the index attribute
@@ -329,7 +250,7 @@ nsDeckFrame::Paint(nsIPresContext*      aPresContext,
     nsIFrame* frame = nsnull;
     box->GetFrame(&frame);
 
-    if (frame != nsnull)
+    if (frame)
       PaintChild(aPresContext, aRenderingContext, aDirtyRect, frame, aWhichLayer);
   }
 
@@ -338,10 +259,11 @@ nsDeckFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 
-NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
-                                             const nsPoint& aPoint, 
-                                             nsFramePaintLayer aWhichLayer,    
-                                             nsIFrame**     aFrame)
+NS_IMETHODIMP
+nsDeckFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+                              const nsPoint&    aPoint, 
+                              nsFramePaintLayer aWhichLayer,    
+                              nsIFrame**        aFrame)
 {
 
   if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
@@ -349,7 +271,7 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
   // if it is not inside us fail
   if (!mRect.Contains(aPoint)) {
-      return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   // if its not in our child just return us.
@@ -374,7 +296,8 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  // make sure we tweek the state so it does not resize our children. We will do that.
+  // Make sure we tweek the state so it does not resize our children.
+  // We will do that.
   PRUint32 oldFlags = 0;
   aState.GetLayoutFlags(oldFlags);
   aState.SetLayoutFlags(NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
@@ -391,12 +314,12 @@ nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
   {
     // make collapsed children not show up
     if (count == mIndex) 
-       ShowBox(aState.GetPresContext(), box);
+      ShowBox(aState.GetPresContext(), box);
     else
-       HideBox(aState.GetPresContext(), box);
+      HideBox(aState.GetPresContext(), box);
 
     nsresult rv2 = box->GetNextBox(&box);
-    NS_ASSERTION(rv2 == NS_OK,"failed to get next child");
+    NS_ASSERTION(NS_SUCCEEDED(rv2), "failed to get next child");
     count++;
   }
 
