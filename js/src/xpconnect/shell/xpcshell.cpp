@@ -45,7 +45,6 @@
 #include "nsIComponentManager.h"
 #include "jsapi.h"
 #include "jsprf.h"
-//#include "xpclog.h"
 #include "nscore.h"
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
@@ -79,17 +78,6 @@
 static void SetupRegistry()
 {
     nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
-}
-
-static nsIXPConnect* GetXPConnect()
-{
-    nsIXPConnect* result;
-
-    if(NS_SUCCEEDED(nsServiceManager::GetService(
-                        nsIXPConnect::GetCID(), NS_GET_IID(nsIXPConnect),
-                        (nsISupports**) &result, NULL)))
-        return result;
-    return NULL;
 }
 
 /***************************************************************************/
@@ -162,13 +150,6 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     gExitCode = EXITCODE_RUNTIME_ERROR;
     JS_free(cx, prefix);
 }
-/*
-static void
-my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
-{
-    printf("%s\n", message);
-}
-*/
 
 static JSBool
 Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -283,12 +264,9 @@ DumpXPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
     }
 
-    nsIXPConnect* xpc = GetXPConnect();
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
     if(xpc)
-    {
         xpc->DebugDump((int16)depth);
-        NS_RELEASE(xpc);
-    }
     return JS_TRUE;
 }
 
@@ -337,6 +315,18 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    if (argc > 0 && !JSVAL_IS_PRIMITIVE(argv[0])) {
+        JS_ClearScope(cx, JSVAL_TO_OBJECT(argv[0]));
+    } else {
+        JS_ReportError(cx, "'clear' requires an object");
+        return JS_FALSE;
+    }    
+    return JS_TRUE;
+}
+
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0},
     {"load",            Load,           1},
@@ -346,6 +336,7 @@ static JSFunctionSpec glob_functions[] = {
     {"dumpXPC",         DumpXPC,        1},
     {"dump",            Dump,           1},
     {"gc",              GC,             0},
+    {"clear",           Clear,          1},
     {0}
 };
 
@@ -499,12 +490,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
         script = JS_CompileScript(cx, obj, buffer, strlen(buffer),
-//#ifdef JSDEBUGGER
-                                  "typein",
-//#else
-//                                  NULL,
-//#endif
-                                  startline);
+                                  "typein", startline);
         if (script) {
             JSErrorReporter older;
 
@@ -699,31 +685,36 @@ main(int argc, char **argv)
     gOutFile = stdout;
 
     rv = NS_InitXPCOM(NULL, NULL);
-    NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
+    if (NS_FAILED(rv)) {
+        printf("NS_InitXPCOM failed!\n");
+        return 1;
+    }
 
     SetupRegistry();
 
-    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
-    // get the JSRuntime from the runtime svc, if possible
-    if (NS_FAILED(rv) ||
-        NS_FAILED(rtsvc->GetRuntime(&rt))) {
-        rtsvc = NULL;
-        rt = JS_NewRuntime(8L * 1024L * 1024L);
-    }
-    if (!rt)
+    nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("nsJSRuntimeService");
+    // get the JSRuntime from the runtime svc
+    if (!rtsvc) {
+        printf("failed to get nsJSRuntimeService!\n");
         return 1;
+    } 
+    
+    if (NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
+        printf("failed to get JSRuntime from nsJSRuntimeService!\n");
+        return 1;
+    }
 
     jscontext = JS_NewContext(rt, 8192);
-    if (!jscontext)
+    if (!jscontext) {
+        printf("JS_NewContext failed!\n");
         return 1;
+    }
 
     JS_SetErrorReporter(jscontext, my_ErrorReporter);
-/*    JS_SetVersion(jscontext, JSVERSION_1_4); */
 
-    nsIXPConnect* xpc = GetXPConnect();
-    if(!xpc)
-    {
-        printf("GetXPConnect() returned NULL!\n");
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+    if (!xpc) {
+        printf("failed to get nsXPConnect service!\n");
         return 1;
     }
 
@@ -733,25 +724,23 @@ main(int argc, char **argv)
     // just to shut it up. Also, note that even though our secman will allow
     // anything, we set the flags to '0' so it ought never get called anyway.
     nsCOMPtr<nsIXPCSecurityManager> secman = 
-        NS_STATIC_CAST(nsIXPCSecurityManager*,new FullTrustSecMan());
+        NS_STATIC_CAST(nsIXPCSecurityManager*, new FullTrustSecMan());
     xpc->SetSecurityManagerForJSContext(jscontext, secman, 0);
     
-    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
-    if(NS_FAILED(rv))
-    {
+    nsCOMPtr<nsIJSContextStack> cxstack = do_GetService("nsThreadJSContextStack");
+    if (!cxstack) {
         printf("failed to get the nsThreadJSContextStack service!\n");
         return 1;
     }
-    if(NS_FAILED(cxstack->Push(jscontext)))
-    {
-        printf("failed to get push the current jscontext on the nsThreadJSContextStack service!\n");
+
+    if(NS_FAILED(cxstack->Push(jscontext))) {
+        printf("failed to push the current JSContext on the nsThreadJSContextStack!\n");
         return 1;
     }
 
     glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
     if (!glob)
         return 1;
-
     if (!JS_InitStandardClasses(jscontext, glob))
         return 1;
     if (!JS_DefineFunctions(jscontext, glob, glob_functions))
@@ -773,13 +762,7 @@ main(int argc, char **argv)
     JS_DestroyContext(jscontext);
     xpc->SyncJSContexts();
     xpc->DebugDump(4);
-    NS_RELEASE(xpc);
-
-    if (!rtsvc) {
-        /* no runtime service, so we have to handle shutdown */
-        JS_DestroyRuntime(rt);
-        JS_ShutDown();
-    }
+    xpc = nsnull;   // force nsCOMPtr to Release the service
 
     rv = NS_ShutdownXPCOM( NULL );
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
