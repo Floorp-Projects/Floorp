@@ -127,7 +127,7 @@ PRInt32 nsTypeAheadFind::gAccelKey = -1;  // magic value of -1 indicates unitial
 
 
 nsTypeAheadFind::nsTypeAheadFind(): 
-  mLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), 
+  mLinksOnlyPref(PR_FALSE), mStartLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), 
   mCaretBrowsingOn(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE), 
   mDontTryExactMatch(PR_FALSE), mRepeatingMode(eRepeatingNone), mTimeoutLength(0),
   mFindService(do_GetService("@mozilla.org/find/find_service;1"))
@@ -234,6 +234,7 @@ int PR_CALLBACK nsTypeAheadFind::TypeAheadFindPrefsReset(const char* aPrefName, 
     }
   }
   prefs->GetBoolPref("accessibility.typeaheadfind.linksonly", &typeAheadFind->mLinksOnlyPref);
+  prefs->GetBoolPref("accessibility.typeaheadfind.startlinksonly", &typeAheadFind->mStartLinksOnlyPref);
   prefs->GetIntPref("accessibility.typeaheadfind.timeout", &typeAheadFind->mTimeoutLength);
   prefs->GetBoolPref("accessibility.browsewithcaret", &typeAheadFind->mCaretBrowsingOn);
 
@@ -767,7 +768,8 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
       RangeStartsInsideLink(returnRange, presShell, &isInsideLink, &isStartingLink);
 
       if (!IsRangeVisible(presShell, presContext, returnRange, aIsFirstVisiblePreferred, getter_AddRefs(startPointRange)) ||
-          (aIsRepeatingSameChar && !isStartingLink) || (aIsLinksOnly && !isInsideLink)) {
+          (aIsRepeatingSameChar && !isStartingLink) || (aIsLinksOnly && !isInsideLink) ||
+          (mStartLinksOnlyPref && aIsLinksOnly && !isStartingLink)) {
         // ------ Failure ------
         // Start find again from here 
         returnRange->CloneRange(getter_AddRefs(startPointRange));
@@ -1159,7 +1161,6 @@ NS_IMETHODIMP nsTypeAheadFind::CancelFind()
 
 void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
 {
-#ifdef TYPEAHEADFIND_CHANGES_SELECTION_LOOK
   if (!aPresShell || !mFocusedDocSelCon)
     return;
   // Paint selection bright (typeaheadfind on)  or normal (typeaheadfind off)
@@ -1191,7 +1192,6 @@ void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
     caret->SetCaretVisible(isCaretVisibleDuringSelection != 0);
     mFocusedDocSelCon->SetCaretEnabled(isCaretVisibleDuringSelection != 0);
   }
-#endif
 }
 
 
@@ -1348,10 +1348,11 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext 
 
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
-  PRBool isVisible = PR_FALSE;
-  viewManager->IsRectVisible(containingView, relFrameRect, NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), &isVisible);
+  PRBool isVisible = PR_FALSE, isBelowViewPort = PR_FALSE;
+  viewManager->IsRectVisible(containingView, relFrameRect, NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
+                             &isVisible, &isBelowViewPort);
 
-  if (isVisible)
+  if (isVisible || isBelowViewPort)
     return PR_TRUE;
 
   // We know that the target range isn't usable because it's not in the view port
@@ -1364,7 +1365,7 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext 
     return PR_FALSE;
 
   PRBool isFirstVisible = PR_FALSE;
-  while (!isFirstVisible) {
+  while (!isFirstVisible && !isBelowViewPort) {
     frameTraversal->Next();
     nsISupports* currentItem;
     frameTraversal->CurrentItem(&currentItem);
@@ -1376,7 +1377,8 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext 
     if (containingView) {
       relFrameRect.x = frameOffset.x;
       relFrameRect.y = frameOffset.y;
-      viewManager->IsRectVisible(containingView, relFrameRect, NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), &isFirstVisible);
+      viewManager->IsRectVisible(containingView, relFrameRect, NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
+        &isFirstVisible, &isBelowViewPort);
     }
   }
   if (frame) {
@@ -1451,3 +1453,4 @@ void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent
   }
   browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, PromiseFlatString(statusString).get());
 }
+
