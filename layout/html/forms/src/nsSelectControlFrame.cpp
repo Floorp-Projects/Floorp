@@ -108,7 +108,11 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
- 
+
+  virtual void PaintOption(PRBool aPaintSelected, nsIPresContext& aPresContext,
+                 nsIRenderingContext& aRenderingContext, nsString aText, nscoord aX, nscoord aY,
+                 const nsRect& aInside, nscoord aTextHeight);
+
   virtual void PaintSelectControl(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect);
@@ -128,6 +132,7 @@ protected:
   nsIDOMHTMLCollection* GetOptions(nsIDOMHTMLSelectElement* aSelect = nsnull);
   nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRUint32 aIndex);
   PRBool GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
+  PRUint32 GetSelectedIndex();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -147,6 +152,7 @@ protected:
   // Accessor methods for mOptionsSelected and mNumOptions
   void GetOptionSelected(PRUint32 index, PRBool* aValue);
   void SetOptionSelected(PRUint32 index, PRBool aValue);
+  void GetOptionSelectedFromWidget(PRInt32 index, PRBool* aValue);
 
   // Free our locally cached option array
   ~nsSelectControlFrame();
@@ -450,6 +456,19 @@ nsSelectControlFrame::GetSelect()
   }
 }
 
+PRUint32
+nsSelectControlFrame::GetSelectedIndex()
+{
+  PRInt32 index = -1; // No selection
+  nsIDOMHTMLSelectElement* select = nsnull;
+  if (NS_SUCCEEDED(mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select))) {
+    select->GetSelectedIndex(&index);
+    NS_RELEASE(select);
+  }
+  return(index); 
+}
+
+
 nsIDOMHTMLCollection* 
 nsSelectControlFrame::GetOptions(nsIDOMHTMLSelectElement* aSelect)
 {
@@ -729,6 +748,34 @@ nsSelectControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection, PRUint32
   return status;
 }
 
+
+void
+nsSelectControlFrame::PaintOption(PRBool aPaintSelected, nsIPresContext& aPresContext,
+                 nsIRenderingContext& aRenderingContext, nsString aText, nscoord aX, nscoord aY,
+                 const nsRect& aInside,
+                 nscoord aTextHeight)
+{
+  nscolor foreground =  NS_RGB(0, 0, 0);
+  nscolor background =  NS_RGB(255, 255, 255);
+  if (PR_TRUE == aPaintSelected) {
+    background =  NS_RGB(0, 0, 0);
+    foreground =  NS_RGB(255, 255, 255);
+  }
+ 
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nsRect rect(aInside.x, aY-onePixel, mRect.width-onePixel, aTextHeight+onePixel);
+  nscolor currentColor;
+  aRenderingContext.GetColor(currentColor);
+  aRenderingContext.SetColor(background);
+  aRenderingContext.FillRect(rect); 
+  aRenderingContext.SetColor(foreground);
+  aRenderingContext.DrawString(aText, aX, aY); 
+  aRenderingContext.SetColor(currentColor);
+}
+
+
 void
 nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
                                          nsIRenderingContext& aRenderingContext,
@@ -826,9 +873,10 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
     y = inside.y;
   }
 
-  PRUint32 selectedIndex;
-  // XXX Get Selected index out of Content model
-  selectedIndex = 1;
+    // Get Selected index out of Content model
+  PRUint32 selectedIndex = GetSelectedIndex();
+  PRBool multiple = PR_FALSE;
+  GetMultiple(&multiple);
 
   nsIDOMNode* node;
   nsIDOMHTMLOptionElement* option;
@@ -842,37 +890,49 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
             text = " ";
         }
 
-        PRBool selected = PR_FALSE;
-        option->GetSelected(&selected);
-        if ((selected && !mIsComboBox) || (mIsComboBox && selectedIndex == i)) {
-          nsRect rect(inside.x, y-onePixel, mRect.width-onePixel, textHeight+onePixel);
-          nscolor currentColor;
-          aRenderingContext.GetColor(currentColor);
-          aRenderingContext.SetColor(NS_RGB(0,0,0));
-          aRenderingContext.FillRect(rect); 
-          aRenderingContext.SetColor(NS_RGB(255,255,255));
-          aRenderingContext.DrawString(text, x, y); 
-          aRenderingContext.SetColor(currentColor);
-        } else {
-          if (!mIsComboBox || (mIsComboBox && -1 == selectedIndex && 0 == i)) {
-            aRenderingContext.DrawString(text, x, y); 
+        if (mIsComboBox) {
+            // Paint a non-selected option
+          if ((selectedIndex == -1) && (i == 0)) {
+            PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
           }
-        }
+          else if (selectedIndex == i) {
+            PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
+          }
 
-        if (!mIsComboBox) {
+          if ((-1 == selectedIndex && (0 == i)) || (selectedIndex == i)) {
+            i = numOptions;
+          }
+
+        } else {
+          // Its a list box
+          if (!multiple) {
+             // Single select list box
+            if (selectedIndex == i)
+              PaintOption(PR_TRUE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
+            else
+              PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
+          }
+          else {
+            PRBool selected = PR_FALSE;
+            option->GetSelected(&selected);
+             // Multi-selection list box
+            if (selected) 
+              PaintOption(PR_TRUE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
+            else
+              PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
+          }     
           y += textHeight;
           if (i == mNumRows-1) {
             i = numOptions;
-          }
-        } else if ((-1 == selectedIndex && 0 == i) || (selectedIndex == i)) {
-          i = numOptions;
+          }   
         }
-
-        NS_RELEASE(option);
       }
-      NS_RELEASE(node);
+         
+      NS_RELEASE(option);
     }
+    NS_RELEASE(node);
   }
+ 
 
   aRenderingContext.PopState(clipEmpty);
   // Draw Scrollbars
@@ -1012,6 +1072,32 @@ void nsSelectControlFrame::GetOptionSelected(PRUint32 index, PRBool* aValue)
   *aValue = PR_FALSE;
 }       
 
+// Get the selected state from the widget
+void nsSelectControlFrame::GetOptionSelectedFromWidget(PRInt32 index, PRBool* aValue)
+{
+  nsIListBox* listBox;
+  *aValue = PR_FALSE;
+  nsresult result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
+  if ((NS_OK == result) && (nsnull != listBox)) {
+    PRUint32 numSelected = listBox->GetSelectedCount();
+    PRInt32* selOptions = nsnull;
+    if (numSelected > 0) {
+      // Could we set numSelected to 1 here? (memory, speed optimization)
+      selOptions = new PRInt32[numSelected];
+      listBox->GetSelectedIndices(selOptions, numSelected);
+      PRUint32 i;
+      for (i = 0; i < numSelected; i++) {
+        if (selOptions[i] == index) {
+          *aValue = PR_TRUE;
+          break;
+        }
+      }
+      delete[] selOptions;
+    }
+    NS_RELEASE(listBox);
+  }
+}
+
 // Update the locally cached selection state (not widget)
 void nsSelectControlFrame::SetOptionSelected(PRUint32 index, PRBool aValue)
 {
@@ -1054,17 +1140,18 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& 
 
 NS_IMETHODIMP nsSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
+
   // Get the selected value of option from local cache (optimization vs. widget)
   if (nsHTMLAtoms::selected == aName) {
     PRInt32 error = 0;
     PRBool selected = PR_FALSE;
     PRInt32 index = aValue.ToInteger(&error, 10); // Get index from aValue
     if (error == 0)
-      GetOptionSelected(index, &selected);
+      GetOptionSelectedFromWidget(index, &selected);
     nsFormControlHelper::GetBoolString(selected, aValue);
     
   // For selectedIndex, get the value from the widget
-  } else if (nsHTMLAtoms::selectedindex == aName) {
+  } else  if (nsHTMLAtoms::selectedindex == aName) {
     PRInt32 selectedIndex = -1;
     PRBool multiple;
     GetMultiple(&multiple);
