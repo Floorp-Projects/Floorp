@@ -2759,7 +2759,7 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
     const char        *propertyURI;
 
     rv = aProperty->GetValueConst(&propertyURI);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return(PR_FALSE);
 
     PRUnichar		buffer[256];
     nsAutoString	uri(CBufDescriptor(buffer, PR_TRUE, sizeof(buffer) / sizeof(PRUnichar), 0));
@@ -2768,12 +2768,12 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
     // rjc: Optimization: 99% of trees that use "ignore='...'" put the
     // attribute on the root of the tree, so check that first
     rv = mRoot->GetNameSpaceID(nameSpaceID);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return(PR_FALSE);
         // Never ever ask an HTML element about non-HTML attributes
         if (nameSpaceID != kNameSpaceID_HTML)
         {
             rv = mRoot->GetAttribute(kNameSpaceID_None, kIgnoreAtom, uri);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) return(PR_FALSE);
             if (rv == NS_CONTENT_ATTR_HAS_VALUE)
             {
         if (uri.Find(propertyURI) >= 0)
@@ -2788,12 +2788,12 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
     nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
     while (element) {
         rv = element->GetNameSpaceID(nameSpaceID);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return(PR_FALSE);
 
         // Never ever ask an HTML element about non-HTML attributes
         if (nameSpaceID != kNameSpaceID_HTML) {
             rv = element->GetAttribute(kNameSpaceID_None, kIgnoreAtom, uri);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) return(PR_FALSE);
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
                 // Okay, we've found the locally-scoped ignore
@@ -2801,9 +2801,9 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
                 // property URIs. So we definitively know whether this
                 // property should be ignored or not.
                 if (uri.Find(propertyURI) >= 0)
-                    return PR_TRUE;
+                    return(PR_TRUE);
                 else
-                    return PR_FALSE;
+                    return(PR_FALSE);
             }
         }
 
@@ -2814,7 +2814,7 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
 */
     // Walked _all_ the way to the top and couldn't find anything to
     // ignore.
-    return PR_FALSE;
+    return(PR_FALSE);
 }
 
 PRBool
@@ -2915,25 +2915,24 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
 
     nsCOMPtr<nsIAtom> tag;
     rv = aElement->GetTag(*getter_AddRefs(tag));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return(PR_FALSE);
 
     // Treat the 'root' element as always open, -unless- it's a
     // menu/menupopup. We don't need to "fake" these as being open.
     if ((aElement == mRoot.get()) && (tag.get() != kMenuAtom))
-      return PR_TRUE;
+      return(PR_TRUE);
 
     nsAutoString value;
     rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, value);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get open attribute");
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return(PR_FALSE);
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         if (value.Equals(trueStr))
-            return PR_TRUE;
+            return(PR_TRUE);
     }
 
-    
-    return PR_FALSE;
+    return(PR_FALSE);
 }
 
 
