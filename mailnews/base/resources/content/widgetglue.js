@@ -671,11 +671,8 @@ function NewFolder(name,uri)
 
 function MsgAccountManager()
 {
-    var result = {refresh: false};
     window.openDialog("chrome://messenger/content/AccountManager.xul",
-                      "AccountManager", "chrome,modal", result);
-    if (result.refresh)
-        refreshFolderPane();
+                      "AccountManager", "chrome,modal");
 }
 
 // we do this from a timer because if this is called from the onload=
@@ -688,11 +685,8 @@ function MsgAccountWizard()
 
 function msgOpenAccountWizard()
 {
-    var result = {refresh: false};
     window.openDialog("chrome://messenger/content/AccountWizard.xul",
-                      "AccountWizard", "chrome,modal", result);
-    if(result.refresh)
-        refreshFolderPane();
+                      "AccountWizard", "chrome,modal");
 }
 
 // refresh the folder tree by rerooting it
