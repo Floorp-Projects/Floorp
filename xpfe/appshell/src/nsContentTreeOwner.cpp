@@ -88,8 +88,7 @@ private:
 //*****************************************************************************
 
 nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull), 
-   mPrimary(fPrimary), mContentTitleSetting(PR_FALSE), 
-   mChromeFlags(nsIWebBrowserChrome::CHROME_ALL)
+   mPrimary(fPrimary), mContentTitleSetting(PR_FALSE)
 {
   // note if this fails, QI on nsIEmbeddingSiteWindow(2) will simply fail
   mSiteWindow2 = new nsSiteWindow2(this);
@@ -126,9 +125,6 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
   NS_ENSURE_ARG_POINTER(aSink);
   *aSink = 0;
 
-  if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
-    return mXULWindow->GetInterface(aIID, aSink);
-
   if(aIID.Equals(NS_GET_IID(nsIPrompt)))
     return mXULWindow->GetInterface(aIID, aSink);
   if(aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
@@ -136,12 +132,8 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
   if (aIID.Equals(NS_GET_IID(nsIDocShellTreeItem))) {
     nsCOMPtr<nsIDocShell> shell;
     mXULWindow->GetDocShell(getter_AddRefs(shell));
-    if (shell) {
-      nsIDocShellTreeItem *result;
-      CallQueryInterface(shell, &result);
-      *aSink = result;
-      return NS_OK;
-    }
+    if (shell)
+      return shell->QueryInterface(aIID, aSink);
     return NS_ERROR_FAILURE;
   }
 
@@ -406,34 +398,12 @@ NS_IMETHODIMP nsContentTreeOwner::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 
 NS_IMETHODIMP nsContentTreeOwner::SetChromeFlags(PRUint32 aChromeFlags)
 {
-   mChromeFlags = aChromeFlags;
-   NS_ENSURE_SUCCESS(ApplyChromeFlags(), NS_ERROR_FAILURE);
-
-   return NS_OK;
+   return mXULWindow->SetChromeFlags(aChromeFlags);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::GetChromeFlags(PRUint32* aChromeFlags)
 {
-  NS_ENSURE_ARG_POINTER(aChromeFlags);
-
-  *aChromeFlags = mChromeFlags;
-
-  /* mChromeFlags is kept up to date, except for scrollbar visibility.
-     That can be changed directly by the content DOM window, which
-     doesn't know to update the chrome window. So that we must check
-     separately. */
-
-  // however, it's pointless to ask if the window isn't set up yet
-  if (!mXULWindow->mChromeLoaded)
-    return NS_OK;
-
-  PRBool scrollbarVisibility = mXULWindow->GetContentScrollbarVisibility();
-  if (scrollbarVisibility)
-    *aChromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
-  else
-    *aChromeFlags &= ~nsIWebBrowserChrome::CHROME_SCROLLBARS;
-
-  return NS_OK;
+  return mXULWindow->GetChromeFlags(aChromeFlags);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::DestroyBrowserWindow()
@@ -628,68 +598,6 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
     title.Assign(mWindowTitleModifier); // Title will just be plain "Mozilla"
 
   return mXULWindow->SetTitle(title.get());
-}
-
-//*****************************************************************************
-// nsContentTreeOwner: Helpers
-//*****************************************************************************   
-
-NS_IMETHODIMP nsContentTreeOwner::ApplyChromeFlags()
-{
-  if(!mXULWindow->mChromeLoaded)
-    return NS_OK;  // We'll do this later when chrome is loaded
-      
-  nsCOMPtr<nsIDOMElement> window;
-  mXULWindow->GetWindowDOMElement(getter_AddRefs(window));
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  // menubar has its own special treatment
-  mXULWindow->mWindow->ShowMenuBar(mChromeFlags & 
-                                     nsIWebBrowserChrome::CHROME_MENUBAR ? 
-                                   PR_TRUE : PR_FALSE);
-
-  /* Scrollbars have their own special treatment. (note here we *do* use
-     mChromeFlags directly, without going through the accessor. This method
-     is intended to be used right after setting mChromeFlags, so this is
-     where the content window's scrollbar state is set to match mChromeFlags
-     in the first place. */
-  mXULWindow->SetContentScrollbarVisibility(mChromeFlags &
-                                              nsIWebBrowserChrome::CHROME_SCROLLBARS ?
-                                            PR_TRUE : PR_FALSE);
-
-  /* the other flags are handled together. we have style rules
-     in navigator.css that trigger visibility based on
-     the 'chromehidden' attribute of the <window> tag. */
-  nsAutoString newvalue;
-
-  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR))
-    newvalue.AppendLiteral("menubar ");
-
-  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR))
-    newvalue.AppendLiteral("toolbar ");
-
-  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_LOCATIONBAR))
-    newvalue.AppendLiteral("location ");
-
-  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR))
-    newvalue.AppendLiteral("directories ");
-
-  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR))
-    newvalue.AppendLiteral("status ");
-
-  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_EXTRA))
-    newvalue.AppendLiteral("extrachrome");
-
-
-  // Get the old value, to avoid useless style reflows if we're just
-  // setting stuff to the exact same thing.
-  nsAutoString oldvalue;
-  window->GetAttribute(NS_LITERAL_STRING("chromehidden"), oldvalue);
-
-  if (oldvalue != newvalue)
-    window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue);
-
-  return NS_OK;
 }
 
 //*****************************************************************************

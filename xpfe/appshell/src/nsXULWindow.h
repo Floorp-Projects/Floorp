@@ -130,6 +130,7 @@ protected:
    void       SetContentScrollbarVisibility(PRBool aVisible);
    PRBool     GetContentScrollbarVisibility();
    void       PersistentAttributesDirty(PRUint32 aDirtyFlags);
+   nsresult   ApplyChromeFlags();
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
@@ -154,6 +155,7 @@ protected:
    PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes
    PRUint32                mPersistentAttributesMask;
+   PRUint32                mChromeFlags;
    nsString                mTitle;
 };
 
