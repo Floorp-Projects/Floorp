@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.24 2001/01/31 15:49:19 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.25 2001/04/12 20:23:42 nicolson%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -259,6 +259,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     SECITEM_TO_MPINT(*publicExponent, &e);
     kiter = 0;
     do {
+	prerr = 0;
 	PORT_SetError(0);
 	CHECK_SEC_OK( generate_prime(&p, primeLen) );
 	CHECK_SEC_OK( generate_prime(&q, primeLen) );
