@@ -824,6 +824,14 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
                 if (NS_FAILED(rv)) return rv;
                 rv = trashFolder->Contains(aProfileDir, PR_TRUE, &inTrash);
                 if (NS_FAILED(rv)) return rv;
+
+                // Also, check if there are any contents in the folder...if there are
+                // none we need to populate this folder provided the folder is not in the trash.
+                if (!inTrash)
+                {
+                    rv = PopulateIfEmptyDir(aProfileDir);
+                    NS_ENSURE_SUCCESS(rv, rv);
+                }
             }
 #endif  
         }
@@ -2132,3 +2140,35 @@ nsresult nsProfile::CloneProfileDirectorySpec(nsILocalFile **aLocalFile)
     
     return NS_OK;
 }
+
+// If the profile folder is empty, dump all default profile files.
+nsresult nsProfile::PopulateIfEmptyDir(nsILocalFile *aProfileDir)
+{
+    nsresult rv;
+    PRBool hasContents = PR_FALSE;
+    PRBool exists = PR_FALSE;
+                
+    // Get Enumerator object to check the dir contents..
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    rv = aProfileDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+    if (NS_FAILED(rv)) return rv;
+    
+    // If there are no files or folders, hasContents is set to false
+    rv = dirIterator->HasMoreElements(&hasContents);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (!hasContents)
+    {
+        // Get profile defaults folder..
+        nsCOMPtr<nsIFile> profDefaultsDir;
+        rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profDefaultsDir));
+        if (NS_FAILED(rv)) return rv;
+        
+        // Copy contents from defaults folder.
+        rv = profDefaultsDir->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && exists)
+        rv = RecursiveCopy(profDefaultsDir, aProfileDir);
+    }
+    return rv;
+}
+

@@ -35,6 +35,7 @@
 #include "nsFileStream.h"
 #include "nsEscape.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 
 #define NS_IMPL_IDS
@@ -492,7 +493,8 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
     mNumProfiles = 0;
     mNumOldProfiles = 0;
     PRBool currentProfileValid = mCurrentProfile.IsEmpty();
-
+    nsAutoString profilePath; 
+    
     while( (NS_OK != enumKeys->IsDone()) ) 
     {
         nsCOMPtr<nsISupports> base;
@@ -534,6 +536,19 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
 
         if (mFixRegEntries)
             FixRegEntry(getter_Copies(directory));
+
+#if defined (XP_MAC)
+        // Need to store persistent strings on mac..
+        PRBool pathChanged = PR_FALSE;
+        rv = GetProfilePathString(profilePath, (const PRUnichar *) directory.get(), &pathChanged);
+        NS_ENSURE_SUCCESS(rv,rv); 
+
+        if (pathChanged)
+        {
+            *((PRUnichar **)getter_Copies(directory)) = 
+                                      nsXPIDLString::Copy(profilePath.GetUnicode());
+        }
+#endif
 
         {
           nsAutoString registryMigratedString;
@@ -949,6 +964,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     rv = enumKeys->First();
     if (NS_FAILED(rv)) return rv;
 
+    nsAutoString persistentPath;
     while( (NS_OK != enumKeys->IsDone()) ) 
     {
         nsCOMPtr<nsISupports> base;
@@ -993,10 +1009,20 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
             {
               nsAutoString registry_directory_string;
               registry_directory_string.AssignWithConversion(REGISTRY_DIRECTORY_STRING);
+
+#if defined (XP_MAC)
+              rv = SetProfilePathString(profileItem->profileLocation, profileItem->profileName, persistentPath);  
+              NS_ENSURE_SUCCESS(rv,rv); 
+              rv = m_registry->SetString(profKey, 
+                                  registry_directory_string.GetUnicode(), 
+                                  persistentPath.GetUnicode());
+              if (NS_FAILED(rv)) return rv;
+#else
               rv = m_registry->SetString(profKey, 
                                   registry_directory_string.GetUnicode(), 
                                   profileItem->profileLocation.GetUnicode());
               if (NS_FAILED(rv)) return rv;
+#endif
             }
 
             {
@@ -1062,10 +1088,20 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
             {
               nsAutoString registry_directory_string;
               registry_directory_string.AssignWithConversion(REGISTRY_DIRECTORY_STRING);
-              m_registry->SetString(profKey, 
+
+#if defined (XP_MAC)
+              rv = SetProfilePathString(profileItem->profileLocation, profileItem->profileName, persistentPath);  
+              NS_ENSURE_SUCCESS(rv,rv); 
+              rv = m_registry->SetString(profKey, 
+                                  registry_directory_string.GetUnicode(), 
+                                  persistentPath.GetUnicode());
+              if (NS_FAILED(rv)) return rv;
+#else
+              rv = m_registry->SetString(profKey, 
                                     registry_directory_string.GetUnicode(), 
                                     profileItem->profileLocation.GetUnicode());
               if (NS_FAILED(rv)) return rv;
+#endif
             }
 
             {
@@ -1561,3 +1597,101 @@ nsProfileAccess::DetermineForceMigration(PRBool *forceMigration)
 	*forceMigration = PR_TRUE;
 	return NS_OK;
 }
+
+// Get the unicode path from the persistent descriptor string
+nsresult
+nsProfileAccess::GetProfilePathString(nsString& dirPath, const PRUnichar *dirString, PRBool *pathChanged)
+{
+    nsresult rv = NS_OK;
+
+    // Initialize the boolean
+    *pathChanged = PR_FALSE;
+
+    nsLiteralString path(dirString);
+
+    PRInt32 firstColon = path.FindChar(PRUnichar(':'));
+    // If there is no colon in the path, on Mac, we have a persistent descriptor 
+    // string. Get the path out of it.
+    if ( firstColon == -1 )
+    {
+        // Get localfile and get unicode path 
+        nsCOMPtr<nsILocalFile> localFile( do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+        if ( localFile )
+        {
+            rv = localFile->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(path));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsXPIDLString convertedPath;
+            rv = localFile->GetUnicodePath(getter_Copies(convertedPath));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            dirPath = convertedPath.get();
+            *pathChanged = PR_TRUE;
+        }
+    }
+    return rv; 
+}
+
+// Set the persistent descriptor string from unicode path 
+nsresult
+nsProfileAccess::SetProfilePathString(const nsString& dirPath, const nsString& profileName, nsString& persistentPath)
+{
+    nsresult rv = NS_OK;
+
+    // Get localfile and set unicode path 
+    nsCOMPtr<nsILocalFile> localFile( do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if ( localFile )
+    {
+        rv = localFile->InitWithUnicodePath(dirPath.GetUnicode());
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // If the user deletes the directory on the disk for some reason,
+        // we need to create it at this point from the registry entry as
+        // GetPresistent Descriptor expects the directory to exist...
+        PRBool exists;
+        rv = localFile->Exists(&exists);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        // we will  be dumping all default contents in the getProfileDir()
+        // after detecting that this is an empty folder...
+        if (!exists)
+        {
+            rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
+
+            // If create fails because user has removed the volume
+            // or some other reason, create a unique dir in default location 
+            // NS_APP_USER_PROFILES_ROOT_DIR always returns something valid.
+            // If the volume that had Documents folder removed, then we get 
+            // the Documents of the startup volume.
+            if (NS_FAILED(rv))
+            {
+                // Get default user profiles location
+                nsCOMPtr<nsIFile> newProfileDir;    
+                rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(newProfileDir));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                // append profile name
+                rv = newProfileDir->AppendUnicode(profileName.GetUnicode());
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                // Create unique dir
+                rv = newProfileDir->CreateUnique(NS_ConvertUCS2toUTF8(profileName.GetUnicode()), 
+                                                 nsIFile::DIRECTORY_TYPE, 0775);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                localFile = do_QueryInterface(newProfileDir, &rv);
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+        }
+                
+        nsXPIDLCString convertedPath;
+        rv = localFile->GetPersistentDescriptor(getter_Copies(convertedPath));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        persistentPath = NS_ConvertUTF8toUCS2(convertedPath);
+    }
+    return rv; 
+}
+
