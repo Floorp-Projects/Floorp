@@ -586,7 +586,8 @@ nsStdURL::ReconstructSpec()
         portBuffer[0] = '\0';
     }
     
-    nsAutoString finalSpec;
+    nsCAutoString finalSpec; // guaranteed to be singlebyte.
+    finalSpec.SetCapacity(64);
     if (mScheme)
     {
         finalSpec = mScheme;
