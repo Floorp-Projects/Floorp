@@ -101,6 +101,7 @@ protected:
 
   GtkWidget    *mMenuItem; // native cascade widget
   PRBool        mIsSeparator;
+  PRBool        mIsSubMenu;
 
   nsIWebShell   * mWebShell;
   nsIDOMElement * mDOMElement;
