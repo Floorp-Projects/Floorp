@@ -180,6 +180,13 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
     return rs;
   }
 
+// XXX we need to do this because blocks depend on it; we shouldn't expect
+// the child frame to deal with it.
+  if (eReflowReason_Initial == reason) {
+    aFrame->GetFrameState(state);
+    aFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
+  }
+
   // XXX the 0,0 part of this is hack: get rid of it
   if (!isAware && ((0 != metrics.width) || (0 != metrics.height))) {
     mLineLayout.SetSkipLeadingWhiteSpace(PR_FALSE);
