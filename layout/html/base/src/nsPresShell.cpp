@@ -840,7 +840,13 @@ public:
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType);  
+  NS_IMETHOD AppendReflowCommandInternal(nsIReflowCommand* aReflowCommand,
+                                         nsVoidArray&      aQueue);   
+  NS_IMETHOD CancelReflowCommand(nsIFrame*                     aTargetFrame, 
+                                 nsIReflowCommand::ReflowType* aCmdType);  
+  NS_IMETHOD CancelReflowCommandInternal(nsIFrame*                     aTargetFrame, 
+                                         nsIReflowCommand::ReflowType* aCmdType,
+                                         nsVoidArray&                  aQueue);  
   NS_IMETHOD CancelAllReflowCommands();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
   NS_IMETHOD FlushPendingNotifications();
@@ -1009,6 +1015,10 @@ public:
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
+  NS_IMETHOD SendInterruptNotificationTo(nsIFrame*                   aFrame,
+                                         nsIPresShell::InterruptType aInterruptType);
+  NS_IMETHOD CancelInterruptNotificationTo(nsIFrame*                   aFrame,
+                                           nsIPresShell::InterruptType aInterruptType);
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD DumpReflows();
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
@@ -1040,11 +1050,17 @@ protected:
   nsresult CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult);
   nsresult WillCauseReflow();
   nsresult DidCauseReflow();
+  void     ProcessReflowCommand(nsVoidArray&         aQueue,
+                                PRBool               aAccumulateTime,
+                                nsHTMLReflowMetrics& aDesiredSize,
+                                nsSize&              aMaxSize,
+                                nsIRenderingContext& aRenderingContext);
   nsresult ProcessReflowCommands(PRBool aInterruptible);
   nsresult GetReflowEventStatus(PRBool* aPending);
   nsresult SetReflowEventStatus(PRBool aPending);  
   void     PostReflowEvent();
-  PRBool   AlreadyInQueue(nsIReflowCommand* aReflowCommand);
+  PRBool   AlreadyInQueue(nsIReflowCommand* aReflowCommand,
+                          nsVoidArray&      aQueue);
   friend struct ReflowEvent;
 
     // utility to determine if we're in the middle of a drag
@@ -1084,7 +1100,11 @@ protected:
   nsIViewManager* mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsILayoutHistoryState* mHistoryState; // [WEAK] session history owns this
   PRUint32 mUpdateCount;
-  nsVoidArray mReflowCommands;
+  // normal reflow commands
+  nsVoidArray mReflowCommands; 
+  // reflow commands targeted at each aFrame who calls SendInterruptNotificationTo(aFrame, Timeout);
+  nsVoidArray mTimeoutReflowCommands; 
+
   PRPackedBool mDocumentLoading;
   PRPackedBool mIsReflowing;
   PRPackedBool mIsDestroying;
@@ -2614,7 +2634,9 @@ NS_IMETHODIMP
 PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
   // Cancel any pending reflow commands targeted at this frame
-  CancelReflowCommand(aFrame, nsnull);
+  CancelReflowCommandInternal(aFrame, nsnull, mReflowCommands);
+  CancelReflowCommandInternal(aFrame, nsnull, mTimeoutReflowCommands);
+
 
   // Notify the frame manager
   if (mFrameManager) {
@@ -3106,16 +3128,17 @@ PresShell::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
 // frame it targets is targeted by a pre-existing reflow command in
 // the queue.
 PRBool
-PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand)
+PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand,
+                          nsVoidArray&      aQueue)
 {
-  PRInt32 i, n = mReflowCommands.Count();
+  PRInt32 i, n = aQueue.Count();
   nsIFrame* targetFrame;
   PRBool inQueue = PR_FALSE;    
 
   if (NS_SUCCEEDED(aReflowCommand->GetTarget(targetFrame))) {
     // Iterate over the reflow commands and compare the targeted frames.
     for (i = 0; i < n; i++) {
-      nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(i);
+      nsIReflowCommand* rc = (nsIReflowCommand*) aQueue.ElementAt(i);
       if (rc) {
         nsIFrame* targetOfQueuedRC;
         if (NS_SUCCEEDED(rc->GetTarget(targetOfQueuedRC))) {
@@ -3142,8 +3165,28 @@ PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand)
   return inQueue;
 }
 
+void
+NotifyAncestorFramesOfReflowCommand(nsIPresShell*     aPresShell,
+                                    nsIReflowCommand* aRC,
+                                    PRBool            aCommandAdded)
+{
+  if (aRC) {
+    nsIFrame* target;
+    aRC->GetTarget(target);
+    if (target) {
+      nsIFrame* ancestor;
+      target->GetParent(&ancestor);
+      while(ancestor) {
+        ancestor->ReflowCommandNotify(aPresShell, aRC, aCommandAdded);
+        ancestor->GetParent(&ancestor);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
-PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
+PresShell::AppendReflowCommandInternal(nsIReflowCommand* aReflowCommand,
+                                       nsVoidArray&      aQueue)
 {
 #ifdef DEBUG
   //printf("gShellCounter: %d\n", gShellCounter++);
@@ -3166,10 +3209,14 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 
   // Add the reflow command to the queue
   nsresult rv = NS_OK;
-  if (!AlreadyInQueue(aReflowCommand)) {
+  // don't check for duplicates on the timeout queue - it is responsiblity of frames
+  // who call SendInterruptNotificationTo to make sure there are no duplicates
+  if ((&aQueue == &mTimeoutReflowCommands) ||
+      ((&aQueue == &mReflowCommands) && !AlreadyInQueue(aReflowCommand, aQueue))) {
     NS_ADDREF(aReflowCommand);
-    rv = (mReflowCommands.AppendElement(aReflowCommand) ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+    rv = (aQueue.AppendElement(aReflowCommand) ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
     ReflowCommandAdded(aReflowCommand);
+    NotifyAncestorFramesOfReflowCommand(this, aReflowCommand, PR_TRUE);
   }
 
   // For async reflow during doc load, post a reflow event if we are not batching reflow commands.
@@ -3184,6 +3231,12 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
+{
+  return AppendReflowCommandInternal(aReflowCommand, mReflowCommands);
 }
 
 
@@ -3209,11 +3262,13 @@ PresShell :: IsDragInProgress ( ) const
 
 
 NS_IMETHODIMP
-PresShell::CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType)
+PresShell::CancelReflowCommandInternal(nsIFrame*                     aTargetFrame, 
+                                       nsIReflowCommand::ReflowType* aCmdType,
+                                       nsVoidArray&                  aQueue)
 {
-  PRInt32 i, n = mReflowCommands.Count();
+  PRInt32 i, n = aQueue.Count();
   for (i = 0; i < n; i++) {
-    nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(i);
+    nsIReflowCommand* rc = (nsIReflowCommand*) aQueue.ElementAt(i);
     if (rc) {
       nsIFrame* target;      
       if (NS_SUCCEEDED(rc->GetTarget(target))) {
@@ -3233,8 +3288,9 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowT
             printf("\n");
           }
 #endif
-          mReflowCommands.RemoveElementAt(i);
+          aQueue.RemoveElementAt(i);
           ReflowCommandRemoved(rc);
+          NotifyAncestorFramesOfReflowCommand(this, rc, PR_FALSE);
           NS_RELEASE(rc);
           n--;
           i--;
@@ -3246,15 +3302,30 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowT
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresShell::CancelReflowCommand(nsIFrame*                     aTargetFrame, 
+                               nsIReflowCommand::ReflowType* aCmdType)
+{
+  return CancelReflowCommandInternal(aTargetFrame, aCmdType, mReflowCommands);
+}
+
 
 NS_IMETHODIMP
 PresShell::CancelAllReflowCommands()
 {
   PRInt32 n = mReflowCommands.Count();
   nsIReflowCommand* rc;
-  for (PRInt32 i = 0; i < n; i++) {
+  PRInt32 i;
+  for (i = 0; i < n; i++) {
     rc = NS_STATIC_CAST(nsIReflowCommand*, mReflowCommands.ElementAt(0));
     mReflowCommands.RemoveElementAt(0);
+    ReflowCommandRemoved(rc);
+    NS_RELEASE(rc);
+  }
+  n = mTimeoutReflowCommands.Count();
+  for (i = 0; i < n; i++) {
+    rc = NS_STATIC_CAST(nsIReflowCommand*, mTimeoutReflowCommands.ElementAt(0));
+    mTimeoutReflowCommands.RemoveElementAt(0);
     ReflowCommandRemoved(rc);
     NS_RELEASE(rc);
   }
@@ -5157,21 +5228,54 @@ PresShell::DidCauseReflow()
   return NS_OK;
 }
 
+void
+PresShell::ProcessReflowCommand(nsVoidArray&         aQueue,
+                                PRBool               aAccumulateTime,
+                                nsHTMLReflowMetrics& aDesiredSize,
+                                nsSize&              aMaxSize,
+                                nsIRenderingContext& aRenderingContext)
+{
+  // Use RemoveElementAt in case the reflowcommand dispatches a
+  // new one during its execution.
+  nsIReflowCommand* rc = (nsIReflowCommand*)aQueue.ElementAt(0);
+  aQueue.RemoveElementAt(0);
+
+  // Dispatch the reflow command
+  PRTime beforeReflow, afterReflow;
+  if (aAccumulateTime) 
+    beforeReflow = PR_Now();
+  rc->Dispatch(mPresContext, aDesiredSize, aMaxSize, aRenderingContext); // dispatch the reflow command
+  if (aAccumulateTime) 
+    afterReflow = PR_Now();
+
+  ReflowCommandRemoved(rc);
+  NS_RELEASE(rc);
+  VERIFY_STYLE_TREE;
+
+  if (aAccumulateTime) {
+    PRInt64 totalTime, diff;
+    LL_SUB(diff, afterReflow, beforeReflow);
+
+    LL_I2L(totalTime, mAccumulatedReflowTime);
+    LL_ADD(totalTime, totalTime, diff);
+    LL_L2I(mAccumulatedReflowTime, totalTime);
+  }
+}
+
 nsresult
 PresShell::ProcessReflowCommands(PRBool aInterruptible)
 {
   MOZ_TIMER_DEBUGLOG(("Start: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_START(mReflowWatch);  
-  PRTime beforeReflow, afterReflow;
-  PRInt64 diff;    
 
   if (0 != mReflowCommands.Count()) {
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsIRenderingContext*  rcx;
     nsIFrame*             rootFrame;        
-
-
     mFrameManager->GetRootFrame(&rootFrame);
+    nsSize          maxSize;
+    rootFrame->GetSize(maxSize);
+
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
 	  if (NS_FAILED(rv)) return rv;
 
@@ -5193,43 +5297,25 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 #endif
     
     mIsReflowing = PR_TRUE;
+    PRInt64 maxTime;
     while (0 != mReflowCommands.Count()) {
-      // Use RemoveElementAt in case the reflowcommand dispatches a
-      // new one during its execution.
-      nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
-      mReflowCommands.RemoveElementAt(0);
-
-      // Dispatch the reflow command
-      nsSize          maxSize;
-      rootFrame->GetSize(maxSize);
-      if (aInterruptible) beforeReflow = PR_Now();
-      rc->Dispatch(mPresContext, desiredSize, maxSize, *rcx); // dispatch the reflow command
-      if (aInterruptible) afterReflow = PR_Now();
-      ReflowCommandRemoved(rc);
-      NS_RELEASE(rc);
-      VERIFY_STYLE_TREE;
-
+      ProcessReflowCommand(mReflowCommands, aInterruptible, desiredSize, maxSize, *rcx);
       if (aInterruptible) {
-        PRInt64 totalTime;
-        PRInt64 maxTime;
-        LL_SUB(diff, afterReflow, beforeReflow);
-
-        LL_I2L(totalTime, mAccumulatedReflowTime);
-        LL_ADD(totalTime, totalTime, diff);
-        LL_L2I(mAccumulatedReflowTime, totalTime);
-
         LL_I2L(maxTime, gMaxRCProcessingTime);
-        if (LL_CMP(totalTime, >, maxTime))
+        if (LL_CMP(mAccumulatedReflowTime, >, maxTime))
           break;          
       }
     }
-    NS_IF_RELEASE(rcx);
     mIsReflowing = PR_FALSE;
 
     if (aInterruptible) {
-      if (mReflowCommands.Count() > 0) {
-        // Reflow Commands are still queued up.
-        // Schedule a reflow event to handle them asynchronously.
+      // process the timeout reflow commands completely
+      // printf("timeout reflows=%d \n", mTimeoutReflowCommands.Count());
+      while (0 != mTimeoutReflowCommands.Count()) {
+        ProcessReflowCommand(mTimeoutReflowCommands, PR_TRUE, desiredSize, maxSize, *rcx);
+      }
+      if (mReflowCommands.Count() > 0) { // Reflow Commands are still queued up.
+        // Schedule a reflow event to handle the remaining reflow commands asynchronously.
         PostReflowEvent();
       }
 #ifdef DEBUG
@@ -5240,6 +5326,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 #endif
       mAccumulatedReflowTime = 0;
     }
+    NS_IF_RELEASE(rcx);
     
 #ifdef DEBUG
     if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
@@ -5285,6 +5372,33 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   return NS_OK;
 }
 
+
+nsresult
+PresShell::SendInterruptNotificationTo(nsIFrame*                   aFrame,
+                                       nsIPresShell::InterruptType aInterruptType)
+{
+  // create a reflow command targeted at aFrame
+  nsIReflowCommand* reflowCmd;
+  nsresult          rv;
+
+  // Target the reflow comamnd at aFrame
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+                               nsIReflowCommand::Timeout);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    AppendReflowCommandInternal(reflowCmd, mTimeoutReflowCommands);
+    NS_RELEASE(reflowCmd);
+  }
+  return rv;
+}
+
+nsresult
+PresShell::CancelInterruptNotificationTo(nsIFrame*                    aFrame,
+                                         nsIPresShell:: InterruptType aInterruptType)
+
+{
+  return CancelReflowCommandInternal(aFrame, nsnull, mTimeoutReflowCommands);
+}
 
 nsresult
 PresShell::GetReflowEventStatus(PRBool* aPending)
@@ -5344,6 +5458,7 @@ PresShell::CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
 
 nsresult
 PresShell::ReflowCommandAdded(nsIReflowCommand* aRC)
@@ -6148,6 +6263,7 @@ PresShell::CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame)
   if (mReflowCountMgr) {
     mReflowCountMgr->Add(aName, (nsReflowReason)aType, aFrame);
   }
+
   return NS_OK;
 }
 

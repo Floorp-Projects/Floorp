@@ -167,9 +167,6 @@ public:
   /** @see nsITableFrame::GetTableSize */
   NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount);
 
-  static void PositionView(nsIPresContext* aPresContext,
-                           nsIFrame*       aFrame);
-
   static void ZeroAutoMargin(nsHTMLReflowState& aReflowState,
                              nsMargin&          aMargin);
 
@@ -183,13 +180,6 @@ protected:
     * The inner table frame can answer this question in a meaningful way.
     * @see nsHTMLContainerFrame::GetSkipSides */
   virtual PRIntn GetSkipSides() const;
-
-  /** return PR_TRUE if the table needs to be reflowed.  
-    * the outer table needs to be reflowed if the table content has changed,
-    * or if the table style attributes or parent max height/width have
-    * changed.
-    */
-  PRBool NeedsReflow(const nsHTMLReflowState& aReflowState);
 
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::VerifyTree
@@ -355,9 +345,6 @@ private:
 
   /** used to track caption max element size */
   PRInt32   mMinCaptionWidth;
-
-  nsSize    mMaxElementSize;
-  nscoord   mInnerTableMaximumWidth;
   nscoord   mPriorAvailWidth;
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING

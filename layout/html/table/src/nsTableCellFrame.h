@@ -90,16 +90,6 @@ public:
 
   void InitCellFrame(PRInt32 aColIndex);
 
-  void SetBorderEdge(PRUint8 aSide, 
-                     PRInt32 aRowIndex, 
-                     PRInt32 aColIndex, 
-                     nsBorderEdge *border,
-                     nscoord aOddAmountToAdd);
-
-  void SetBorderEdgeLength(PRUint8 aSide, 
-                           PRInt32 aIndex, 
-                           nscoord aLength);
-
 
   /** instantiate a new instance of nsTableCellFrame.
     * @param aResult    the new object is returned in this out-param
@@ -246,8 +236,6 @@ private:
   //XXX: aTableFrame can be removed as soon as border-collapse inherits correctly
   void GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame);
 
-  PRUint8 GetOpposingEdge(PRUint8 aEdge);
-
 protected:
 
   friend class nsTableRowFrame;
@@ -281,8 +269,6 @@ protected:
   nsSize       mPass1MaxElementSize;
 
 public:
-  nsBorderEdges *mBorderEdges;      // one list of border segments for each side of the table frame
-                                    // used only for the collapsing border model
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsReflowTimer* mTimer;

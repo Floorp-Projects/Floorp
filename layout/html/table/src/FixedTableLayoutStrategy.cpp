@@ -38,9 +38,7 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 }
 
 PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresContext,
-                                                     nsIStyleContext*         aTableStyle,
-                                                     const nsHTMLReflowState& aReflowState,
-                                                     nscoord                  aMaxWidth)
+                                                     const nsHTMLReflowState& aReflowState)
 {
   return PR_TRUE;
 }
@@ -240,33 +238,6 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   return PR_TRUE;
 }
 
-PRBool FixedTableLayoutStrategy::ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                                           const nsTableCellFrame& aCellFrame) const
-{
-  return ColumnsCanBeInvalidatedBy(aCellFrame);
-}
-
-PRBool FixedTableLayoutStrategy::ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
-                                                           PRBool                  aConsiderMinWidth) const
-
-{
-  nscoord rowIndex;
-  aCellFrame.GetRowIndex(rowIndex);
-  if (0 == rowIndex) {
-    // It is not worth the effort to determine if the col or cell determined the col
-    // width. Since rebalancing the columns is fairly trival in this strategy, just force it.
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-PRBool FixedTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
-                                                    nscoord                 aPrevCellMin,
-                                                    nscoord                 aPrevCellDes) const
-{
-  // take the easy way out, see comments above.
-  return !ColumnsCanBeInvalidatedBy(aCellFrame);
-}
 
 
 

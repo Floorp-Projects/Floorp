@@ -32,34 +32,6 @@ class  nsTableCellFrame;
 class nsReflowTimer;
 #endif
 
-/* ----------- RowReflowState ---------- */
-
-struct RowReflowState {
-  // Our reflow state
-  const nsHTMLReflowState& reflowState;
-
-  // The body's available size (computed from the body's parent)
-  nsSize availSize;
-
-  // the running x-offset
-  nscoord x;
-
-  nsTableFrame *tableFrame;
-
-  RowReflowState(const nsHTMLReflowState& aReflowState,
-                 nsTableFrame*            aTableFrame)
-    : reflowState(aReflowState)
-  {
-    availSize.width = reflowState.availableWidth;
-    availSize.height = reflowState.availableHeight;
-    tableFrame = aTableFrame;
-    x=0;
-  }
-};
-
-/**
- * Additional frame-state bits
- */
 #define NS_TABLE_MAX_ROW_INDEX  (1<<19)
 
 /**
@@ -122,10 +94,10 @@ public:
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint, 
+  NS_IMETHOD GetFrameForPoint(nsIPresContext*   aPresContext,
+                              const nsPoint&    aPoint, 
                               nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
+                              nsIFrame**        aFrame);
 
   /** calls Reflow for all of its child cells.
     * Cells with rowspan=1 are all set to the same height and stacked horizontally.
@@ -140,12 +112,12 @@ public:
     * @see nsTableFrame::BalanceColumnWidths
     * @see nsTableFrame::ShrinkWrapChildren
     */
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+                    nsReflowStatus&          aStatus);
 
-  virtual void DidResize(nsIPresContext* aPresContext,
+  virtual void DidResize(nsIPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState);
 
   /**
@@ -157,7 +129,8 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, 
+                    PRUint32*         aResult) const;
 #endif
  
   void SetTallestCell(nscoord           aHeight,
@@ -200,15 +173,14 @@ public:
 
   virtual PRBool Contains(nsIPresContext* aPresContext, const nsPoint& aPoint);
 
-  void GetMaxElementSize(nsSize& aMaxElementSize) const;
-
   /** used by yje row group frame code */
   void ReflowCellFrame(nsIPresContext*          aPresContext,
                        const nsHTMLReflowState& aReflowState,
                        nsTableCellFrame*        aCellFrame,
                        nscoord                  aAvailableHeight,
                        nsReflowStatus&          aStatus);
-  void InsertCellFrame(nsTableCellFrame* aFrame, nsTableCellFrame* aPrevSibling);
+  void InsertCellFrame(nsTableCellFrame* aFrame, 
+                       nsTableCellFrame* aPrevSibling);
 
   nsresult CalculateCellActualSize(nsIFrame* aRowFrame,
                                    nscoord&  aDesiredWidth,
@@ -232,30 +204,30 @@ protected:
     *
     * @see Reflow
     */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*       aPresContext,
-                               nsHTMLReflowMetrics&  aDesiredSize,
-                               RowReflowState&       aReflowState,
-                               nsReflowStatus&       aStatus);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*          aPresContext,
+                               nsHTMLReflowMetrics&     aDesiredSize,
+                               const nsHTMLReflowState& aReflowState,
+                               nsTableFrame&            aTableFrame,
+                               nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext*      aPresContext,
-                              nsHTMLReflowMetrics& aDesiredSize,
-                              RowReflowState&      aReflowState,
-                              nsReflowStatus&      aStatus,
-                              nsIFrame *           aNextFrame);
+  NS_IMETHOD IR_TargetIsChild(nsIPresContext*          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsTableFrame&            aTableFrame,
+                              nsReflowStatus&          aStatus,
+                              nsIFrame*                aNextFrame);
 
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext*      aPresContext,
-                           nsHTMLReflowMetrics& aDesiredSize,
-                           RowReflowState&      aReflowState,
-                           nsReflowStatus&      aStatus);
+  NS_IMETHOD IR_TargetIsMe(nsIPresContext*          aPresContext,
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsTableFrame&            aTableFrame,
+                           nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_StyleChanged(nsIPresContext*      aPresContext,
-                             nsHTMLReflowMetrics& aDesiredSize,
-                             RowReflowState&      aReflowState,
-                             nsReflowStatus&      aStatus);
-
-  nsresult AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIFrame*       aTableFrame);
+  NS_IMETHOD IR_StyleChanged(nsIPresContext*          aPresContext,
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState,
+                             nsTableFrame&            aTableFrame,
+                             nsReflowStatus&          aStatus);
 
   // row-specific methods
 
@@ -263,52 +235,19 @@ protected:
 
   void FixMinCellHeight(nsTableFrame *aTableFrame);
 
-  NS_IMETHOD RecoverState(nsIPresContext* aPresContext,
-                          RowReflowState& aState,
-                          nsIFrame*       aKidFrame,
-                          nsSize*         aMaxElementSize);
-
-  void PlaceChild(nsIPresContext*      aPresContext,
-                  RowReflowState&      aState,
-                  nsIFrame*            aKidFrame,
-                  nsHTMLReflowMetrics& aDesiredSize,
-                  nscoord              aX,
-                  nscoord              aY,
-                  nsSize*              aMaxElementSize,
-                  nsSize*              aKidMaxElementSize);
-
-  nscoord ComputeCellXOffset(const RowReflowState& aState,
-                             nsIFrame*             aKidFrame,
-                             const nsMargin&       aKidMargin) const;
-  nscoord ComputeCellAvailWidth(const RowReflowState& aState,
-                                nsIFrame*             aKidFrame) const;
-
+  nscoord ComputeCellXOffset(const nsHTMLReflowState& aState,
+                             nsIFrame*                aKidFrame,
+                             const nsMargin&          aKidMargin) const;
   /**
-   * Called for a resize reflow. Typically because the column widths have
-   * changed. Reflows all the existing table cell frames
+   * Called for incremental/dirty and resize reflows. If aDirtyOnly is true then
+   * only reflow dirty cells.
    */
-  NS_IMETHOD ResizeReflow(nsIPresContext*      aPresContext,
-                          nsHTMLReflowMetrics& aDesiredSize,
-                          RowReflowState&      aReflowState,
-                          nsReflowStatus&      aStatus,
-                          PRBool               aDirtyOnly = PR_FALSE);
-
-  /**
-   * Called for the initial reflow. Creates each table cell frame, and
-   * reflows the cell frame to gets its minimum and maximum sizes
-   */
-  NS_IMETHOD InitialReflow(nsIPresContext*      aPresContext,
-                           nsHTMLReflowMetrics& aDesiredSize,
-                           RowReflowState&      aReflowState,
-                           nsReflowStatus&      aStatus,
-                           nsTableCellFrame *   aStartFrame,
-                           PRBool               aDoSiblings);
-
-  nscoord CalculateCellAvailableWidth(nsTableFrame* aTableFrame,
-                                      nsIFrame*     aCellFrame,
-                                      PRInt32       aCellColIndex,
-                                      PRInt32       aNumColSpans,
-                                      nscoord       aCellSpacingX);
+  NS_IMETHOD ReflowChildren(nsIPresContext*          aPresContext,
+                            nsHTMLReflowMetrics&     aDesiredSize,
+                            const nsHTMLReflowState& aReflowState,
+                            nsTableFrame&            aTableFrame,
+                            nsReflowStatus&          aStatus,
+                            PRBool                   aDirtyOnly = PR_FALSE);
 
 public:
   struct RowBits {
@@ -322,7 +261,6 @@ private:
     RowBits  mBits;
   };
   nscoord  mTallestCell;          // not my height, but the height of my tallest child
-  nsSize   mMaxElementSize;       // cached max element size
 
   // max-ascent and max-descent amongst all cells that have 'vertical-align: baseline'
   nscoord mMaxCellAscent;  // does include cells with rowspan > 1
@@ -343,12 +281,6 @@ inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
 {
   NS_PRECONDITION(aRowIndex < NS_TABLE_MAX_ROW_INDEX, "unexpected row index");
   mBits.mRowIndex = aRowIndex;
-}
-
-inline void nsTableRowFrame::GetMaxElementSize(nsSize& aMaxElementSize) const
-{
-  aMaxElementSize.width = mMaxElementSize.width;
-  aMaxElementSize.height = mMaxElementSize.height;
 }
 
 #endif

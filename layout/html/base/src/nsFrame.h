@@ -275,6 +275,9 @@ public:
                                   nsPeekOffsetStruct *aPos);
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   NS_IMETHOD  ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
+  NS_IMETHOD  ReflowCommandNotify(nsIPresShell*     aPresShell,
+                                  nsIReflowCommand* aRC,
+                                  PRBool            aCommandAdded);
 
   NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
                                            nsIFrame** aProviderFrame, 

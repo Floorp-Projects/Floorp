@@ -3734,6 +3734,15 @@ nsFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 }
 
 
+inline NS_IMETHODIMP
+nsFrame::ReflowCommandNotify(nsIPresShell*     aShell,
+                             nsIReflowCommand* aRC,
+                             PRBool            aCommandAdded)
+
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsFrame::GetParentStyleContextProvider(nsIPresContext* aPresContext,
                                        nsIFrame** aProviderFrame, 
