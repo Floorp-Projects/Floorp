@@ -1,6 +1,7 @@
 // nsWeakReference.cpp
 
 #include "nsWeakReference.h"
+#include "nsCOMPtr.h"
 
 nsIWeakReference*
 NS_GetWeakReference( nsISupports* aInstance, nsresult* aResult )
