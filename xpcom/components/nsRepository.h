@@ -134,8 +134,8 @@ private:
 
   static nsresult checkInitialized(void);
   static nsresult loadFactory(FactoryEntry *aEntry, nsIFactory **aFactory);
-  static nsresult nsRepository::SelfRegisterDll(nsDll *dll);
-  static nsresult nsRepository::SelfUnregisterDll(nsDll *dll);
+  static nsresult SelfRegisterDll(nsDll *dll);
+  static nsresult SelfUnregisterDll(nsDll *dll);
 public:
   static nsDllStore *dllStore;
 
