@@ -229,6 +229,7 @@ public:
 
 #ifdef XP_MAC
   void FixUpPluginWindow();
+  void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent);
 #endif
 
 private:
@@ -408,6 +409,8 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
   if(rv != NS_OK)
     return rv;
 
+  mPresContext = aPresContext; // weak ref
+  
   PRBool bImage = PR_FALSE;
 
   //Ideally should be call to imlib, when it is available
@@ -2545,17 +2548,30 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 inline Boolean OSEventAvail(EventMask mask, EventRecord* event) { return EventAvail(mask, event); }
 #endif
 
-static void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
+void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 {
 	::OSEventAvail(0, &aMacEvent);
 	
 	switch (anEvent.message) {
-	case NS_GOTFOCUS:
-  case NS_FOCUS_EVENT_START:
+  case NS_FOCUS_EVENT_START:   // this is the same as NS_FOCUS_CONTENT
 		aMacEvent.what = nsPluginEventType_GetFocusEvent;
+		if (mOwner && mOwner->mPresContext)
+		{
+		  nsCOMPtr<nsIContent> content;
+      mOwner->GetContent(getter_AddRefs(content));
+      if (content)
+        content->SetFocus(mOwner->mPresContext);
+    }
 		break;
-	case NS_LOSTFOCUS:
+	case NS_BLUR_CONTENT:
 		aMacEvent.what = nsPluginEventType_LoseFocusEvent;
+		if (mOwner && mOwner->mPresContext)
+		{
+		  nsCOMPtr<nsIContent> content;
+      mOwner->GetContent(getter_AddRefs(content));
+      if (content)
+        content->RemoveFocus(mOwner->mPresContext);
+    }
 		break;
 	case NS_MOUSE_MOVE:
 	case NS_MOUSE_ENTER:
@@ -2754,8 +2770,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         EventRecord* event = (EventRecord*)anEvent.nativeMsg;
         if ((event == NULL) || (event->what == nullEvent) || 
            (anEvent.message == NS_FOCUS_EVENT_START)      || 
-           (anEvent.message == NS_GOTFOCUS)               || 
-           (anEvent.message == NS_LOSTFOCUS)              || 
+           (anEvent.message == NS_BLUR_CONTENT)           || 
            (anEvent.message == NS_MOUSE_MOVE)             ||
            (anEvent.message == NS_MOUSE_ENTER))
         {

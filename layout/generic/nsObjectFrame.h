@@ -84,6 +84,7 @@ public:
   
   void IsSupportedImage(nsIContent* aContent, PRBool* aImage);
 
+  nsIPresContext *mPresContext;  // weak ref
 protected:
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef(void);
