@@ -77,6 +77,7 @@ nsLoggingSink::nsLoggingSink() {
   mOutput = 0;
 	mLevel=-1;
   mSink=0;
+  mParser=0;
 }
 
 nsLoggingSink::~nsLoggingSink() { 
@@ -340,7 +341,7 @@ nsLoggingSink::AddComment(const nsIParserNode& aNode){
 NS_IMETHODIMP
 nsLoggingSink::SetTitle(const nsString& aValue) {
    
-  char* tmp;
+  char* tmp = nsnull;
   GetNewCString(aValue, &tmp);
 	WriteTabs(mOutput,++mLevel);
   if(tmp) {
@@ -625,7 +626,7 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
     PRInt32 lineNo = 0;
 
     dtd->CollectSkippedContent(aNode.GetNodeType(), theString, lineNo);
-    char* content;
+    char* content = nsnull;
     GetNewCString(theString, &content);
     if(content) {
       PR_fprintf(mOutput, " <content value=\"");
