@@ -205,6 +205,19 @@ public:
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
+   * Used to iterate the list of additional child list names. Returns the atom
+   * name for the additional child list at the specified 0-based index, or a
+   * NULL pointer if there are no more named child lists.
+   *
+   * Note that the list is only the additional named child lists and does not
+   * include the unnamed principal child list.
+   *
+   * @return NS_ERROR_INVALID_ARG if the index is < 0 and NS_OK otherwise
+   */
+  NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
+                                         nsIAtom*& aListName) const = 0;
+
+  /**
    * Get the first child frame from the specified child list.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom

@@ -524,6 +524,14 @@ NS_IMETHODIMP nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 
 // Child frame enumeration
 
+NS_IMETHODIMP
+nsFrame::GetAdditionalChildListName(PRInt32 aIndex, nsIAtom*& aListName) const
+{
+  NS_PRECONDITION(aIndex >= 0, "invalid index number");
+  aListName = nsnull;
+  return aIndex < 0 ? NS_ERROR_INVALID_ARG : NS_OK;
+}
+
 NS_IMETHODIMP nsFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 {
   aFirstChild = nsnull;
