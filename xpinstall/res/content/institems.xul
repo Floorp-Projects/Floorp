@@ -20,11 +20,12 @@ Rights Reserved.
 Contributor(s): 
    Don Bragg (dbragg@netscape.com)
    Dan Veditz <dveditz@netscape.com>
+   Blake Ross <BlakeR1234@aol.com>
 -->
 
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
-
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/institems.dtd">
 
 
@@ -36,25 +37,25 @@ Contributor(s):
         align = "vertical"
 > 
 
-    <html:script language="javascript" src="chrome://communicator/content/xpinstall/institems.js"/>
+    <script src="chrome://communicator/content/xpinstall/institems.js"></script>
+    <keyset id="keyset"/>
     
     <box align="vertical" id="mainBox">
         <box align="horizontal" id="interiorTitleBox">
-            <html:div id="interiorTitle"> &items.label; </html:div>
+            <text class="headline" id="interiorTitle" value="&items.label;"/>
             <spring flex="100%"/>
-            <titledbutton class="graphic" />
-        </box>
-        
-        <html:div >
-            <html:hr/>
-        </html:div>
+            <image src="chrome://global/skin/animthrob_single.gif" />
+        </box>      
 
-        <html:div>&componentList.label;</html:div>
-            
+        <spring id ="verticalSmallSpacer"/>
+        <separator align="center" class="groove" flex="100%"/>            
         <spring id="verticalSmallSpacer"/>
-            
-        <box align="vertical" id="treeBox">
-            <html:div id="table-housing">
+
+        <text class="label" id="componentList" value="&componentList.label;"/>
+        <spring id="verticalSmallSpacer"/>
+        <spring id="verticalSmallSpacer"/>            
+        <box align="vertical" id="treebox">
+            <html>
                 <tree id="modulesTree">
                     <treecol />
                     <treecol />
@@ -69,17 +70,14 @@ Contributor(s):
                     <treechildren id="theTreeBody">
                     </treechildren>
                 </tree>
-            </html:div>
+           </html>
         </box>
-        
-        <spring id="verticalLargeSpacer"/>
 
-        <box class="selection" align="horizontal" id="okcancelBox">
-            <titledbutton class="dialog push" id="start" value="&dialogOk.label;" onclick="onOk();" />
-       		<!--spring style="width:4px"/-->
-            <titledbutton class="dialog push" id="cancel" value="&dialogCancel.label;"  onclick="cancel();" />
+        <separator align="center" class="groove" flex="100%"/>
+        <box class="selection" id="okcancelBox">
+            <button class="dialog push" id="start" default="true" value="&dialogOk.label;" onclick="onOk();"/> 
+            <button class="dialog push" id="cancel" value="&dialogCancel.label;"  onclick="cancel();" />
         </box>
-        <spring id="verticalMediumSpacer"/>
     </box>
 
 
