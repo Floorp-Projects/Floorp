@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Darin Fisher <darin@netscape.com> (original author)
  */
 
 #include "nsStreamObserverProxy.h"

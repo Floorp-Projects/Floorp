@@ -17,6 +17,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #ifndef nsSocketTransport_h___
