@@ -37,8 +37,9 @@ package Support::Files;
 @additional_files = ('syncshadowdb','processmail');
 @exclude_files    = ('importxml.pl');
 
+# XXX - this file should be rewritten to use File::Find or similar
 $file = '*';
-@files = glob($file);
+@files = (glob($file), glob('Bugzilla/*.pm'));
 
 sub isTestingFile {
   my ($file) = @_;

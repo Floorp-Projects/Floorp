@@ -773,6 +773,17 @@ END
     close HTACCESS;
     chmod $fileperm, ".htaccess";
   }
+  if (!-e "Bugzilla/.htaccess") {
+    print "Creating Bugzilla/.htaccess...\n";
+    open HTACCESS, ">Bugzilla/.htaccess";
+    print HTACCESS <<'END';
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+END
+    close HTACCESS;
+    chmod $fileperm, "Bugzilla/.htaccess";
+  }
   if (!-e "data/.htaccess") {
     print "Creating data/.htaccess...\n";
     open HTACCESS, ">data/.htaccess";
@@ -1102,6 +1113,7 @@ if ($my_webservergroup) {
     fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
     fixPerms('data/params', $<, $webservergid, 017);
     fixPerms('*', $<, $webservergid, 027);
+    fixPerms('Bugzilla', $<, $webservergid, 027, 1);
     fixPerms('template', $<, $webservergid, 027, 1);
     fixPerms('css', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
@@ -1126,6 +1138,7 @@ if ($my_webservergroup) {
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
     fixPerms('data/params', $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);
+    fixPerms('Bugzilla', $<, $gid, 022, 1);
     fixPerms('template', $<, $gid, 022, 1);
     fixPerms('css', $<, $gid, 022, 1);
 
