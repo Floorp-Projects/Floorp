@@ -709,6 +709,7 @@ function GetInboxFolder(server)
 
 function GetMessagesForInboxOnServer(server)
 {
+  dump ("GetMessagesForInboxOnServer uri = " + server.serverURI + "\n");
   var inboxFolder = GetInboxFolder(server);
   if (!inboxFolder) return;
 
@@ -734,6 +735,11 @@ function MsgGetMessagesForAllServers(defaultServer)
     try
     {
         var allServers = accountManager.allServers;
+        var firstPop3DownloadServer;
+
+        // these arrays are parallel
+        var pop3DownloadServersArray = new Array; // array of isupportsarrays of servers for a particular folder
+        var localFoldersToDownloadTo; // parallel isupports array of folders to download to...
 
         for (var i=0;i<allServers.Count();i++)
         {
@@ -747,10 +753,37 @@ function MsgGetMessagesForAllServers(defaultServer)
                 }
                 else
                 {
+                    if (currentServer.type == "pop3" && currentServer.downloadOnBiff)
+                    {
+                      var outNumFolders = new Object();
+                      var inboxFolder = currentServer.rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
+                      pop3Server = currentServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
+                      if (!localFoldersToDownloadTo)
+                        localFoldersToDownloadTo = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+                      // coalesce the servers that download into the same folder...
+                      var index = localFoldersToDownloadTo.GetIndexOf(inboxFolder);
+                      if (index == -1)
+                      {
+                        localFoldersToDownloadTo.AppendElement(inboxFolder);
+                        index = pop3DownloadServersArray.length
+                        pop3DownloadServersArray[index] = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+                        pop3DownloadServersArray[index].AppendElement(currentServer);
+                      }
+                      else
+                      {
+                        pop3DownloadServersArray[index].AppendElement(currentServer);
+                      }
+                    }
+                    else
                     // Check to see if there are new messages on the server
-                    currentServer.PerformBiff(msgWindow);
+                      currentServer.PerformBiff(msgWindow);
                 }
             }
+        }
+        for (var i = 0; i < pop3DownloadServersArray.length; i++)
+        {
+          // any ol' pop3Server will do - the serversArray specifies which servers to download from
+          pop3Server.downloadMailFromServers(pop3DownloadServersArray[i], msgWindow, localFoldersToDownloadTo.GetElementAt(i), null);
         }
     }
     catch(ex)
