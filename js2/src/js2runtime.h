@@ -222,38 +222,23 @@ static const double two31 = 2147483648.0;
 
         int operator==(const JSValue& value) const;
     
-        class Owner : public Collector::ObjectOwner {
-        public:
-            /**
-            * Scans through the object, and copies all references.
-            */
-            virtual Collector::size_type scan(Collector* collector, void* object)
-            {
-                JSValue* value = (JSValue*) object;
-                switch (value->tag) {
-                case object_tag:	value->object = (JSObject*) collector->copy(value->object); break;
-                case function_tag:	value->function = (JSFunction*) collector->copy(value->function); break;
-                case type_tag:		value->type = (JSType*) collector->copy(value->type); break;
-                default:			break;
-                }
-                return sizeof(JSValue);
+        /**
+        * Scans through the object, and copies all references.
+        */
+        Collector::size_type scan(Collector* collector)
+        {
+            switch (tag) {
+            case object_tag:	object = (JSObject*) collector->copy(object); break;
+            case function_tag:	function = (JSFunction*) collector->copy(function); break;
+            case type_tag:		type = (JSType*) collector->copy(type); break;
+            default:			break;
             }
-            
-            /**
-            * Performs a bitwise copy of the old object into the new object.
-            */
-            virtual Collector::size_type copy(void* newObject, void* oldObject)
-            {
-                JSValue* newValue = (JSValue*) newObject;
-                JSValue* oldValue = (JSValue*) oldObject;
-                *newValue = *oldValue;
-                return sizeof(JSValue);
-            }
-        };            
+            return sizeof(JSValue);
+        }
 
         void* operator new(size_t n, Collector& gc)
         {
-            static Owner owner;
+            static Collector::Owner<JSValue> owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -644,39 +629,23 @@ XXX ...couldn't get this to work...
             }
         }
 
-    private:
-        class Owner : public Collector::ObjectOwner {
-        public:
-            /**
-            * Scans through the object, and copies all references.
-            */
-            virtual Collector::size_type scan(Collector* collector, void* object)
-            {
-                JSObject* ref = (JSObject*) object;
-                ref->mType = (JSType*) collector->copy(ref->mType);
-                // enumerate property map elements.
-                // what is mPrivate?
-                ref->mPrivate = collector->copy(ref->mPrivate);
-                ref->mPrototype = (JSObject*) collector->copy(ref->mPrototype);
-                return sizeof(JSObject);
-            }
-            
-            /**
-            * Performs a bitwise copy of the old object into the new object.
-            */
-            virtual Collector::size_type copy(void* newObject, void* oldObject)
-            {
-                JSObject* newValue = (JSObject*) newObject;
-                JSObject* oldValue = (JSObject*) oldObject;
-                *newValue = *oldValue;
-                return sizeof(JSObject);
-            }
-        };            
+        /**
+        * Scans through the object, and copies all references.
+        */
+        Collector::size_type scan(Collector* collector)
+        {
+            mType = (JSType*) collector->copy(mType);
+            // enumerate property map elements.
+            // what is mPrivate?
+            mPrivate = collector->copy(mPrivate);
+            mPrototype = (JSObject*) collector->copy(mPrototype);
+            return sizeof(JSObject);
+        }
 
     public:
         void* operator new(size_t n, Collector& gc)
         {
-            static Owner owner;
+            static Collector::Owner<JSObject> owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -731,39 +700,22 @@ XXX ...couldn't get this to work...
 
         JSValue         *mInstanceValues;
 
-    private:
-        class Owner : public JSObject::Owner {
-        public:
-            /**
-            * Scans through the object, and copies all references.
-            */
-            virtual Collector::size_type scan(Collector* collector, void* object)
-            {
-                JSObject::Owner::scan(collector, object);
-                JSInstance* ref = (JSInstance*) object;
-                // FIXME: need some kind of array operator new[] (gc) thing.
-                // this will have to use an extra word to keep track of the
-                // element count.
-                ref->mInstanceValues = (JSValue*) collector->copy(ref->mInstanceValues);
-                return sizeof(JSInstance);
-            }
-            
-            /**
-            * Performs a bitwise copy of the old object into the new object.
-            */
-            virtual Collector::size_type copy(void* newObject, void* oldObject)
-            {
-                JSInstance* newValue = (JSInstance*) newObject;
-                JSInstance* oldValue = (JSInstance*) oldObject;
-                *newValue = *oldValue;
-                return sizeof(JSInstance);
-            }
-        };            
-
-    public:
+        /**
+        * Scans through the object, and copies all references.
+        */
+        Collector::size_type scan(Collector* collector)
+        {
+            JSObject::scan(collector);
+            // FIXME: need some kind of array operator new[] (gc) thing.
+            // this will have to use an extra word to keep track of the
+            // element count.
+            mInstanceValues = (JSValue*) collector->copy(mInstanceValues);
+            return sizeof(JSInstance);
+        }
+        
         void* operator new(size_t n, Collector& gc)
         {
-            static Owner owner;
+            static Collector::Owner<JSInstance> owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -1397,7 +1349,7 @@ XXX ...couldn't get this to work...
         ParameterBarrel *mParameterBarrel;
         Activation mActivation;                 // not used during execution  (XXX so maybe we should handle it differently, hmmm?)
 
- /* private: */
+    private:
         ByteCodeModule *mByteCode;
         NativeCode *mCode;
         JSType *mResultType;
@@ -1413,38 +1365,23 @@ XXX ...couldn't get this to work...
         JSType *mClass;                         // pointer to owning class if this function is a method
         FunctionName *mFunctionName;
 
-        class Owner : public JSObject::Owner {
-        public:
-            /**
-            * Scans through the object, and copies all references.
-            */
-            virtual Collector::size_type scan(Collector* collector, void* object)
-            {
-                JSObject::Owner::scan(collector, object);
-                JSFunction* ref = (JSFunction*) object;
-                ref->mParameterBarrel = (ParameterBarrel*) collector->copy(ref->mParameterBarrel);
-                ref->mResultType = (JSType*) collector->copy(ref->mResultType);
-                ref->mClass = (JSType*) collector->copy(ref->mClass);
-                ref->mPrototype = (JSObject*) collector->copy(ref->mPrototype);
-                return sizeof(JSFunction);
-            }
-            
-            /**
-            * Performs a bitwise copy of the old object into the new object.
-            */
-            virtual Collector::size_type copy(void* newObject, void* oldObject)
-            {
-                JSFunction* newValue = (JSFunction*) newObject;
-                JSFunction* oldValue = (JSFunction*) oldObject;
-                *newValue = *oldValue;
-                return sizeof(JSFunction);
-            }
-        };            
-
     public:
+        /**
+        * Scans through the object, and copies all references.
+        */
+        Collector::size_type scan(Collector* collector)
+        {
+            JSObject::scan(collector);
+            mParameterBarrel = (ParameterBarrel*) collector->copy(mParameterBarrel);
+            mResultType = (JSType*) collector->copy(mResultType);
+            mClass = (JSType*) collector->copy(mClass);
+            mPrototype = (JSObject*) collector->copy(mPrototype);
+            return sizeof(JSFunction);
+        }
+
         void* operator new(size_t n, Collector& gc)
         {
-            static Owner owner;
+            static Collector::Owner<JSFunction> owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -1517,35 +1454,19 @@ XXX ...couldn't get this to work...
 
         JSFunction *getFunction()       { return mFunction; }
 
-    private:
-        class Owner : public JSFunction::Owner {
-        public:
-            /**
-            * Scans through the object, and copies all references.
-            */
-            virtual Collector::size_type scan(Collector* collector, void* object)
-            {
-                JSFunction::Owner::scan(collector, object);
-                JSBoundFunction* ref = (JSBoundFunction*) object;
-                return sizeof(JSBoundFunction);
-            }
-            
-            /**
-            * Performs a bitwise copy of the old object into the new object.
-            */
-            virtual Collector::size_type copy(void* newObject, void* oldObject)
-            {
-                JSBoundFunction* newValue = (JSBoundFunction*) newObject;
-                JSBoundFunction* oldValue = (JSBoundFunction*) oldObject;
-                *newValue = *oldValue;
-                return sizeof(JSBoundFunction);
-            }
-        };            
+        /**
+        * Scans through the object, and copies all references.
+        */
+        Collector::size_type scan(Collector* collector)
+        {
+            JSFunction::scan(collector);
+            // copy the appropriate members.
+            return sizeof(JSBoundFunction);
+        }
 
-    public:
         void* operator new(size_t n, Collector& gc)
         {
-            static Owner owner;
+            static Collector::Owner<JSBoundFunction> owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -1938,37 +1859,19 @@ XXX ...couldn't get this to work...
         JSType *mExtendArgument;
         NamespaceList *mNamespaceList;
 
-    private:
-        class Owner : public JSObject::Owner {
-        public:
-            /**
-            * Scans through the object, and copies all references.
-            */
-            virtual Collector::size_type scan(Collector* collector, void* object)
-            {
-                JSObject::Owner::scan(collector, object);
-                Attribute* ref = (Attribute*) object;
-                if (ref->mExtendArgument)
-                    ref->mExtendArgument = (JSType*) collector->copy(ref->mExtendArgument);
-                return sizeof(Attribute);
-            }
-            
-            /**
-            * Performs a bitwise copy of the old object into the new object.
-            */
-            virtual Collector::size_type copy(void* newObject, void* oldObject)
-            {
-                Attribute* newValue = (Attribute*) newObject;
-                Attribute* oldValue = (Attribute*) oldObject;
-                *newValue = *oldValue;
-                return sizeof(Attribute);
-            }
-        };            
-
-    public:
+        /**
+        * Scans through the object, and copies all references.
+        */
+        Collector::size_type scan(Collector* collector)
+        {
+            JSObject::scan(collector);
+            mExtendArgument = (JSType*) collector->copy(mExtendArgument);
+            return sizeof(Attribute);
+        }
+        
         void* operator new(size_t n, Collector& gc)
         {
-            static Owner owner;
+            static Collector::Owner<Attribute> owner;
             return gc.allocateObject(n, &owner);
         }
 
