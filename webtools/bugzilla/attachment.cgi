@@ -485,7 +485,7 @@ sub insert
   my $attachid = FetchOneColumn();
 
   # Insert a comment about the new attachment into the database.
-  my $comment = "Created an attachment (id=$attachid): $::FORM{'description'}\n";
+  my $comment = "Created an attachment (id=$attachid)\n$::FORM{'description'}\n";
   $comment .= ("\n" . $::FORM{'comment'}) if $::FORM{'comment'};
 
   use Text::Wrap;
