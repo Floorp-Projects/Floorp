@@ -19,6 +19,8 @@
 
 include $(GDEPTH)/gconfig/UNIX.mk
 
+INCLUDES += -I/usr/lesstif/include
+
 #
 # The default implementation strategy for Linux is classic nspr.
 #
