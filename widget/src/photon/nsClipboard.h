@@ -20,6 +20,8 @@
 #define nsClipboard_h__
 
 #include "nsBaseClipboard.h"
+#include "nsString.h"
+
 #include <Pt.h>
 
 class nsITransferable;
