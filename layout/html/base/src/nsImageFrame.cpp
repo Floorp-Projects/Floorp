@@ -17,7 +17,6 @@
  */
 #include "nsHTMLParts.h"
 #include "nsHTMLImage.h"
-#include "nsHTMLTagContent.h"
 #include "nsString.h"
 #include "nsLeafFrame.h"
 #include "nsIPresContext.h"

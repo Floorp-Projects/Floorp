@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsHTMLParts.h"
-#include "nsHTMLContainer.h"
 #include "nsContainerFrame.h"
 #include "nsIDocument.h"
 #include "nsIReflowCommand.h"

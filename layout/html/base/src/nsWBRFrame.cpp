@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsHTMLParts.h"
-#include "nsHTMLTagContent.h"
 #include "nsFrame.h"
 #include "nsHTMLIIDs.h"
 
