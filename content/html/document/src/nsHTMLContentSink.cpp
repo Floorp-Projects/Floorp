@@ -1584,7 +1584,9 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
       // Otherwise just append the container to the parent without
       // notification
       else {
+        mSink->mInNotification++;
         parent->AppendChildTo(container, PR_FALSE);
+        mSink->mInNotification--;
       }
       
       if (NS_SUCCEEDED(result)) {
@@ -1626,7 +1628,9 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
               // Note that we're doing synchronous notifications here
               // since we already did notifications for all content
               // that's come through with the FlushTags() call so far.
+              mSink->mInNotification++;
               result = parent->AppendChildTo(child, sync);
+              mSink->mInNotification--;
             }
             NS_RELEASE(child);
           }
@@ -2372,6 +2376,14 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   ScrollToRef();
 
   mDocument->EndLoad();
+
+  // Ref. Bug 49115
+  // Do this hack to make sure that the parser
+  // doesn't get destroyed, accidently, before 
+  // the circularity, between sink & parser, is
+  // actually borken. 
+  nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
+
   // Drop our reference to the parser to get rid of a circular
   // reference.
   NS_IF_RELEASE(mParser);
