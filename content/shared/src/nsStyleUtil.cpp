@@ -189,10 +189,15 @@ const nsStyleColor* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* a
                                                               PRBool aStartAtParent /*= PR_FALSE*/)
 {
   const nsStyleColor* result = nsnull;
-  nsIStyleContext*    context = aStartAtParent ? aContext->GetParent() : aContext;
+  nsIStyleContext*    context;
+  if (aStartAtParent) {
+    context = aContext->GetParent();  // balance ending release
+  } else {
+    context = aContext;
+    NS_IF_ADDREF(context);  // balance ending release
+  }
   NS_ASSERTION( context != nsnull, "Cannot find NonTransparentBackground in a null context" );
   
-  NS_IF_ADDREF(context);  // balance ending release
   while (nsnull != context) {
     result = (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
 
