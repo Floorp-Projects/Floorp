@@ -712,8 +712,8 @@ var BookmarksToolbar =
     for (var i = 0; i < hbox.childNodes.length; i++) {
       var button = hbox.childNodes[i];
       var menu = aMenuPopup.childNodes[i];
-      if (menu.collapsed == button.collapsed)
-        menu.collapsed = !menu.collapsed;
+      if (menu.hidden == button.collapsed)
+        menu.hidden = !menu.hidden;
     }
   },
 
