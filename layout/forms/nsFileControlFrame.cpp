@@ -449,8 +449,9 @@ nsFileControlFrame::GetFont(nsIPresContext*        aPresContext,
   return NS_OK;
 }
 nscoord 
-nsFileControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                               nscoord aInnerHeight) const
+nsFileControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerHeight) const
 {
    return 0;
 }

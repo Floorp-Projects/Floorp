@@ -107,8 +107,9 @@ nsFormControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 }
 
 nscoord 
-nsFormControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                               nscoord aInnerHeight) const
+nsFormControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerHeight) const
 {
    return NSIntPixelsToTwips(3, aPixToTwip);
 }
@@ -119,7 +120,7 @@ nsFormControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
 {
-  return GetVerticalInsidePadding(aPixToTwip, aInnerWidth);
+  return GetVerticalInsidePadding(aPresContext, aPixToTwip, aInnerWidth);
 }
 
 PRInt32

@@ -400,6 +400,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
+  printf("*********** nsHTMLButtonControlFrame::Paint\n");
  	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
 	if (disp->mVisible)
@@ -608,8 +609,9 @@ nsHTMLButtonControlFrame::GetFormContent(nsIContent*& aContent) const
 }
 
 nscoord 
-nsHTMLButtonControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                               nscoord aInnerHeight) const
+nsHTMLButtonControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                                   float aPixToTwip, 
+                                                   nscoord aInnerHeight) const
 {
    return 0;
 }

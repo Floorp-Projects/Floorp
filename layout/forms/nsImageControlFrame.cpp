@@ -105,7 +105,8 @@ public:
                     nsFont&         aFont);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                           float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                              float aPixToTwip, 
@@ -436,8 +437,9 @@ nsImageControlFrame::GetFormContent(nsIContent*& aContent) const
 }
 
 nscoord 
-nsImageControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                               nscoord aInnerHeight) const
+nsImageControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                              float aPixToTwip, 
+                                              nscoord aInnerHeight) const
 {
    return 0;
 }

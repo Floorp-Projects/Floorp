@@ -39,7 +39,7 @@ protected:
 	virtual CheckState	GetCheckboxState();
 	virtual void 		SetCheckboxState(CheckState aValue);
 
-  virtual nscoord GetCheckboxSize(float aPixToTwip) const;
+  virtual nscoord GetCheckboxSize(nsIPresContext* aPresContext, float aPixToTwip) const;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
