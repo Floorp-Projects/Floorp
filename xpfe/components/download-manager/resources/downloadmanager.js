@@ -44,6 +44,7 @@ var gDownloadView = null;
 var gDownloadManager = null;
 var gRDFService = null;
 var gNC_File = null;
+var gFileHandler = null;
 var gStatusBar = null;
 
 const dlObserver = {
@@ -87,6 +88,14 @@ function DLManagerStartup()
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
   gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
 
+  const ioSvcContractID = "@mozilla.org/network/io-service;1";
+  const ioSvcIID = Components.interfaces.nsIIOService;
+  var ioService = Components.classes[ioSvcContractID].getService(ioSvcIID);
+
+  const fileHandlerIID = Components.interfaces.nsIFileProtocolHandler;
+  gFileHandler = ioService.getProtocolHandler("file")
+                          .QueryInterface(fileHandlerIID);
+
   var ds = window.arguments[0];
   gDownloadView.database.AddDataSource(ds);
   gDownloadView.builder.rebuild();
@@ -95,7 +104,7 @@ function DLManagerStartup()
   var key;
   if ((navigator.platform.indexOf("Win") == -1) &&
       (navigator.platform.indexOf("OS/2") == -1) &&
-      (navigator.platform.indexOf("Mac") != -1))
+      (navigator.platform.indexOf("Mac") == -1))
   {
     document.getElementById("btn_openfile").hidden = true;
   }
@@ -123,7 +132,7 @@ function onSelect(aEvent) {
   
   var selectionCount = gDownloadView.treeBoxObject.selection.count;
   if (selectionCount == 1)
-    gStatusBar.label = getSelectedItem().id;
+    gStatusBar.label = getFileForItem(getSelectedItem()).path;
   else
     gStatusBar.label = "";
 
@@ -288,7 +297,7 @@ var downloadViewController = {
           newSelectionPos = gDownloadView.treeBoxObject.view.rowCount - 1;
         gDownloadView.treeBoxObject.selection.select(newSelectionPos);
         gDownloadView.treeBoxObject.ensureRowIsVisible(newSelectionPos);
-        gStatusBar.label = getSelectedItem().id;
+        gStatusBar.label = getFileForItem(getSelectedItem()).path;
       }
       else {
         // Nothing on the panel, so clear the Status Bar
@@ -355,11 +364,26 @@ function getFileForItem(aElement)
 
 function createLocalFile(aFilePath) 
 {
-  var lfContractID = "@mozilla.org/file/local;1";
-  var lfIID = Components.interfaces.nsILocalFile;
-  var lf = Components.classes[lfContractID].createInstance(lfIID);
-  lf.initWithPath(aFilePath);
-  return lf;
+  const lfIID = Components.interfaces.nsILocalFile;
+  var file;
+  try {
+    file = gFileHandler.getFileFromURLSpec(aFilePath)
+                       .QueryInterface(lfIID);
+  }
+  catch(ex) {
+  }
+
+  // XXXvarga We should fix the download manager to be consistent, that is,
+  // use urls instead of local paths when adding new items to the list.
+  // Once it's fixed, the code below can be removed.
+  // See bug 208113 for more details.
+  if (!file) {
+    const lfContractID = "@mozilla.org/file/local;1";
+    file = Components.classes[lfContractID].createInstance(lfIID);
+    file.initWithPath(aFilePath);
+  }
+
+  return file;
 }
 
 function DLManagerShutdown()
