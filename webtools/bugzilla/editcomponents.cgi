@@ -305,6 +305,8 @@ if ($action eq 'new') {
                            {'name' => $component});
         }
     }
+    my $initialqacontactsql =
+              $initialqacontact ne '' ? SqlQuote($initialqacontactid) : 'NULL';
 
     # Add the new component
     SendSQL("INSERT INTO components ( " .
@@ -314,7 +316,7 @@ if ($action eq 'new') {
           SqlQuote($component) . "," .
           SqlQuote($description) . "," .
           SqlQuote($initialownerid) . "," .
-          SqlQuote($initialqacontactid) . ")");
+          $initialqacontactsql . ")");
 
     # Insert default charting queries for this product.
     # If they aren't using charting, this won't do any harm.
@@ -611,9 +613,11 @@ if ($action eq 'update') {
             ThrowUserError('component_need_valid_initialqacontact',
                            {'name' => $componentold});
         }
+        my $initialqacontactsql =
+              $initialqacontact ne '' ? SqlQuote($initialqacontactid) : 'NULL';
 
         SendSQL("UPDATE components
-                 SET initialqacontact=" . SqlQuote($initialqacontactid) . "
+                 SET initialqacontact = $initialqacontactsql
                  WHERE id = $component_id");
 
         $vars->{'updated_initialqacontact'} = 1;

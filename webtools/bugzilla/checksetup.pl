@@ -3838,8 +3838,14 @@ add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
 if (!$dbh->bz_get_field_def('bugs', 'qa_contact')->[2]) { # if it's NOT NULL
     $dbh->bz_change_field_type('bugs', 'qa_contact', 'mediumint');
     $dbh->do("UPDATE bugs SET qa_contact = NULL WHERE qa_contact = 0");
-    $dbh->do("UPDATE components SET initialqacontact = NULL
-               WHERE initialqacontact = 0");
+}
+
+# 2005-03-27 initialqacontact should be NULL instead of 0, bug 287483
+if (!$dbh->bz_get_field_def('components',
+                            'initialqacontact')->[2]) { # if it's NOT NULL
+    $dbh->bz_change_field_type('components', 'initialqacontact', 'mediumint');
+    $dbh->do("UPDATE components SET initialqacontact = NULL " .
+             "WHERE initialqacontact = 0");
 }
 
 # 2005-03-29 - gerv@gerv.net - bug 73665.
