@@ -283,12 +283,14 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
           reason = eReflowReason_Dirty;
         }
       }
+      /*
       if (eReflowReason_Resize == reason) {
         // we're doing a resize reflow, even though our outer reflow state is incremental
         // text (and possibly other objects) don't do incremental painting for resize reflows
         // so, we have to handle the invalidation for repainting ourselves
         mBlockShouldInvalidateItself = PR_TRUE;
       }
+      */
     }
   }
 
