@@ -46,11 +46,6 @@ var gRDFService = null;
 var gNC_File = null;
 var gStatusBar = null;
 
-function NODE_ID(aElement)
-{
-  return aElement.id || aElement.getAttribute("ref");
-}
-
 function Startup()
 {
   if (!window.arguments.length)
@@ -257,7 +252,7 @@ function getSelectedItems()
 
 function getFileForItem(aElement)
 {
-  var itemResource = gRDFService.GetResource(NODE_ID(aElement));
+  var itemResource = gRDFService.GetResource(aElement.id);
   var fileResource = gDownloadView.database.GetTarget(itemResource, gNC_File, true);
   fileResource = fileResource.QueryInterface(Components.interfaces.nsIRDFResource);
   return createLocalFile(fileResource.Value);
