@@ -24,6 +24,9 @@ var rdf_uri = 'component://netscape/rdf/rdf-service'
 var RDF = Components.classes[rdf_uri].getService()
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService)
 
+// the magic number to find panels.rdf
+var PANELS_RDF_FILE = 66626;
+
 // the default sidebar:
 var sidebar = new Object;
 
@@ -35,28 +38,34 @@ function debug(msg)
 
 function sidebarOverlayInit()
 {
-  // Look in the profile directory to find 'panels.rdf', which is the
-  // database of the user's currently selected panels.
-  var profileInterface = Components.interfaces.nsIProfile;
-  var profileURI = 'component://netscape/profile/manager';
-  var profileService  = Components.classes[profileURI].getService();
-  profileService = profileService.QueryInterface(profileInterface);
-  var sidebar_url = profileService.getCurrentProfileDirFromJS();
-  sidebar_url.URLString += "panels.rdf";
+  try {
+	  var fileLocatorInterface = Components.interfaces.nsIFileLocator;
+	  var fileLocatorProgID = 'component://netscape/filelocator';
+	  var fileLocatorService  = Components.classes[fileLocatorProgID].getService();
+	  // use the fileLocator to look in the profile directory 
+          // to find 'panels.rdf', which is the
+	  // database of the user's currently selected panels.
+	  fileLocatorService = fileLocatorService.QueryInterface(fileLocatorInterface);
 
-  if (sidebar_url.exists()) {
-    debug("sidebar url is " + sidebar_url.URLString + "\n");
-    sidebar.db = sidebar_url.URLString;
+	  // if <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
+	  // bin/defaults/profile/panels.rdf to <profile>/panels.rdf
+	  var sidebar_file = fileLocatorService.GetFileLocation(PANELS_RDF_FILE);
+	  var sidebar_url = sidebar_file.URLString;
+
+	  if (!sidebar_file.exists()) {	
+		// this should not happen, as GetFileLocation() should copy
+		// defaults/panels.rdf to the users profile directory
+		return;
+	  }
+
+	  debug("sidebar url is " + sidebar_url.URLString + "\n");
+	  sidebar.db = sidebar_file.URLString;
   }
-  else {
-    // XXX What we should _really_ do here is copy the default panels
-    // into the profile directory and then try again.
-
-
-    sidebar.db = 'chrome://sidebar/content/default-panels.rdf'
-    debug("using " + sidebar.db + " because " + sidebar_url.URLString + " does not exist\n");
+  catch (ex) {
+	// this should not happen
+	return;
   }
-
+  
   sidebar.resource = 'urn:sidebar:current-panel-list';
 
   // Initialize the display
