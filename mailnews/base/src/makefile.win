@@ -46,6 +46,7 @@ CPPSRCS=                     \
 	nsMsgAccountDataSource.cpp	\
 	nsMsgAccountManagerDS.cpp	\
 	nsMsgIdentityDataSource.cpp	\
+	nsMsgServerDataSource.cpp	\
 	$(NULL)
 
 
@@ -69,6 +70,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgAccountDataSource.obj	\
 	.\$(OBJDIR)\nsMsgAccountManagerDS.obj	\
 	.\$(OBJDIR)\nsMsgIdentityDataSource.obj	\
+	.\$(OBJDIR)\nsMsgServerDataSource.obj	\
 	$(NULL)
 
 
@@ -87,6 +89,7 @@ EXPORTS=                \
 	nsMsgAccountDataSource.h	\
 	nsMsgAccountManagerDS.h	\
 	nsMsgIdentityDataSource.h	\
+	nsMsgServerDataSource.h	\
 	$(NULL)
 
 LINCS=                       \
