@@ -3048,7 +3048,27 @@ var nsSetSmiley =
         break;
         case ":-[": strSml="s6";
         break;
-        case ":-\\": strSml="s7";
+        case ":-\\": 
+        case ":\\": strSml="s7";
+        break;
+        case "=-O": strSml="s8";
+        break;
+        case ":-*": strSml="s9";
+        break;
+        case ">:o":
+        case ">:-o": strSml="s10";
+        break;
+        case "8-)": strSml="s11";
+        break;
+        case ":-$": strSml="s12";
+        break;
+        case ":-!": strSml="s13";
+        break;
+        case "O:-)": strSml="s14";
+        break;
+        case ":'(": strSml="s15";
+        break;
+        case ":-X": strSml="s16";
         break;
         default:	strSml="";
         break;
