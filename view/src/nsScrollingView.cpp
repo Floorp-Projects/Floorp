@@ -139,7 +139,6 @@ void CornerView :: SetQuality(nsContentQuality aQuality)
   if (mQuality != aQuality)
   {
     mQuality = aQuality;
-  mQuality = nsContentQuality_kPoor;
 
     if (mVis == nsViewVisibility_kShow)
       mViewManager->UpdateView(this, nsnull, NS_VMREFRESH_IMMEDIATE);
