@@ -746,7 +746,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           nsCOMPtr<nsIPresShell> shell;
           
           nsCOMPtr<nsIDOMElement> focusedElement;
-          focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+          if (focusController)
+            focusController->GetFocusedElement(getter_AddRefs(focusedElement));
           nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
           
           gLastFocusedDocument->GetShellAt(0, getter_AddRefs(shell));
