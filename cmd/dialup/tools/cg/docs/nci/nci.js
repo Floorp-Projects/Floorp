@@ -116,9 +116,9 @@ function fillSelectListWithConfigFiles(formName, selectListName, fileSuffix, off
 				curConfigDescription 	= parent.nciglobals.GetNameValuePair(fileList[i], "Dial-In Configuration", "Description");
 
 				if ((curConfigName != null)  && (curConfigName != ""))
-					document[formName][selectListName].options[document[formName][selectListName].length] = new Option(curConfigName,fileList[i], false, false);
+					document[formName][selectListName].options[document[formName][selectListName].length] = new Option(curConfigName + " (" + fileList[i] + ")",fileList[i], false, false);
 				else if ((curConfigDescription != null) && (curConfigDescription != ""))
-					document[formName][selectListName].options[document[formName][selectListName].length] = new Option(curConfigDescription,fileList[i], false, false);
+					document[formName][selectListName].options[document[formName][selectListName].length] = new Option(curConfigDescription + " (" + fileList[i] +")",fileList[i], false, false);
 				else
 					document[formName][selectListName].options[document[formName][selectListName].length] = new Option(fileList[i],fileList[i], false, false);
 					
