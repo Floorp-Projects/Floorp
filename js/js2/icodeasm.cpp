@@ -108,6 +108,7 @@ namespace ICodeASM {
             throw JSParseException (eidExpectArgList);
         
         tl = seekTokenStart (tl.begin + 1, end);
+        StringFormatter s_fmt;
         while (tl.estimate == teString || tl.estimate == teAlpha) {
             string *argName = 0;
 
@@ -143,6 +144,15 @@ namespace ICodeASM {
                 sap = &(mCx->getWorld().identifiers[argName->c_str()]);
                 delete argName;
             }
+            else { 
+                /* if an argument name was not specified, use the position
+                 * to build a default name.
+                 */
+                s_fmt << (uint32)al->size();
+                sap = &(mCx->getWorld().identifiers[s_fmt.getString()]);
+                s_fmt.clear();
+
+            }
             VM::Argument arg = VM::Argument (tr, sap);
             
             al->push_back(arg);
@@ -176,7 +186,7 @@ namespace ICodeASM {
 
         for (int i = 0; keyword_exprNodeKinds[i] != 0; ++i)
             if (cmp_nocase (*str, keyword_exprNodeKinds[i], keyword_exprNodeKinds[i] +
-                            strlen (keyword_exprNodeKinds[i]) + 1) == 0) {
+                            strlen (keyword_exprNodeKinds[i])) == 0) {
                 *rval = exprNodeOps[i];
                 delete str;
                 return end;
@@ -220,11 +230,28 @@ namespace ICodeASM {
     }
     
     string8_citer
-    ICodeParser::parseJSClassOperand (string8_citer /*begin*/,
-                                      string8_citer end, string ** /*rval*/)
+    ICodeParser::parseJSClassOperand (string8_citer begin,
+                                      string8_citer end, JSTypes::JSType **rval)
     {
-        NOT_REACHED ("JSClasses are hard, lets go shopping.");
+        TokenLocation tl = seekTokenStart (begin, end);
+
+        if (tl.estimate != teString)
+            throw JSParseException (eidExpectString);
+
+        string8 *str;
+        end = lexString8 (tl.begin, end, &str);
+        StringAtom &typename_atom = mCx->getWorld().identifiers[str->c_str()];
+        delete str;
+        JSTypes::JSValue jsv = 
+            mCx->getGlobalObject()->getVariable(typename_atom);
+        if (jsv.isType())
+            *rval = jsv.type;
+        else
+            *rval = &(JSTypes::Any_Type);
+
         return end;
+//        NOT_REACHED ("JSClasses are hard, lets go shopping.");
+//        return end;
     }
 
     string8_citer
@@ -287,7 +314,7 @@ namespace ICodeASM {
         begin = lexAlpha (tl.begin, end, &str);
         
         if (cmp_nocase(*str, keyword_offset, keyword_offset +
-                       strlen(keyword_offset) + 1) == 0) {
+                       strlen(keyword_offset)) == 0) {
             delete str;
             /* got the "Offset" keyword, treat next thing as a jump offset
              * expressed as "Offset +/-N" */
@@ -391,7 +418,7 @@ namespace ICodeASM {
                 CASE_TYPE(Bool, bool, static_cast);
                 CASE_TYPE(Double, double, static_cast);
                 CASE_TYPE(ICodeModule, string *, reinterpret_cast);
-                CASE_TYPE(JSClass, string *, reinterpret_cast);
+                CASE_TYPE(JSClass, JSTypes::JSType *, reinterpret_cast);
                 CASE_TYPE(JSString, JSTypes::JSString *, reinterpret_cast);
                 CASE_TYPE(JSFunction, string *, reinterpret_cast);
                 CASE_TYPE(JSType, JSTypes::JSType *, reinterpret_cast);
@@ -491,7 +518,7 @@ namespace ICodeASM {
             for (uint i = 0; i < icodemap_size; ++i)
                 if (cmp_nocase(icode_str, &icodemap[i].name[0],
                                &icodemap[i].name[0] +
-                               strlen(icodemap[i].name) + 1) == 0)
+                               strlen(icodemap[i].name)) == 0)
                     /* if match found, parse it's operands */
                     return parseInstruction (i, firstTokenEnd, end);
             /* otherwise, choke on it */

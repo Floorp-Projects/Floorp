@@ -39,6 +39,7 @@
 #include "icodegenerator.h"
 #include "interpreter.h"
 #include "xmlparser.h"
+#include "exception.h"
 #include "icodeasm.h"
 
 #include <stdexcept>
@@ -2552,8 +2553,10 @@ Formatter& operator<<(Formatter &f, string &s)
 }
 
 
-void ICodeGenerator::readICode(const char *fileName)
+ICodeModule *ICodeGenerator::readICode(const char *fileName)
 {
+    ICodeModule *result = NULL;
+
     XMLParser xp(fileName);
     XMLNode *top = xp.parseDocument();
     stdOut << *top;
@@ -2582,12 +2585,13 @@ void ICodeGenerator::readICode(const char *fileName)
 
             mContext->getGlobalObject()->defineVariable(className, &Type_Type, JSValue(thisClass));
 
-            bool hasDefaultConstructor = false;
+//            bool hasDefaultConstructor = false;
             XMLNodeList &elements = node->children();
             for (XMLNodeList::const_iterator j = elements.begin(); j != elements.end(); j++) {
                 XMLNode *element = *j;
+                bool isConstructor = (element->name().compare(widenCString("constructor")) == 0);
 
-                if (element->name().compare(widenCString("method")) == 0) {
+                if (isConstructor || (element->name().compare(widenCString("method")) == 0)) {
                     String methodName, resultTypeName;
                     element->getValue(widenCString("name"), methodName);
                     element->getValue(widenCString("type"), resultTypeName);
@@ -2631,7 +2635,12 @@ void ICodeGenerator::readICode(const char *fileName)
                                                             NULL,                   /* InstructionMap *instructionMap */
                                                             resultType, 
                                                             NotABanana);            /* exception register */
-                        thisClass->defineMethod(methodName, new JSFunction(icm));
+                        if (isConstructor) {
+                            thisClass->defineConstructor(methodName);
+                            scg.setStatic(thisClass, mContext->getWorld().identifiers[methodName], scg.newFunction(icm));
+                        }
+                        else
+                            thisClass->defineMethod(methodName, new JSFunction(icm));
                     }
                 }
                 else {
@@ -2651,7 +2660,7 @@ void ICodeGenerator::readICode(const char *fileName)
                 }
             }
             scg.setStatic(thisClass, mInitName, scg.newFunction(ccg.complete(&Void_Type))); 
-
+/*
             if (!hasDefaultConstructor) {
                 TypedRegister thisValue = TypedRegister(0, thisClass);
                 ArgumentList *args = new ArgumentList(0);
@@ -2665,6 +2674,7 @@ void ICodeGenerator::readICode(const char *fileName)
                 thisClass->defineConstructor(className);
                 scg.setStatic(thisClass, mContext->getWorld().identifiers[className], scg.newFunction(icg.complete(&Void_Type)));
             }
+*/
             thisClass->complete();
         
             if (scg.getICode()->size()) {
@@ -2676,7 +2686,24 @@ void ICodeGenerator::readICode(const char *fileName)
         }
         else {
             if (node->name().compare(widenCString("script")) == 0) {
-                // build an icode module and execute it
+                String &body = node->body();
+                if (body.length()) {
+                    std::string str(body.length(), char());
+                    std::transform(body.begin(), body.end(), str.begin(), narrow);
+                    ICodeParser icp(mContext);
+
+                    stdOut << "(script) Calling ICodeParser with :\n" << str << "\n";
+
+                    icp.parseSourceFromString(str);
+
+                    result = new ICodeModule(icp.mInstructions, 
+                                                        NULL,                   /* VariableList *variables */
+                                                        NULL,                   /* ParameterList *parameters */
+                                                        icp.mMaxRegister, 
+                                                        NULL,                   /* InstructionMap *instructionMap */
+                                                        &Void_Type, 
+                                                        NotABanana);            /* exception register */
+                }                        
             }
             else {
                 if (node->name().compare(widenCString("instance")) == 0) {
@@ -2691,7 +2718,7 @@ void ICodeGenerator::readICode(const char *fileName)
         }
 
     }
-
+    return result;
 }
     
 

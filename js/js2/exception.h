@@ -70,7 +70,7 @@ namespace JavaScript {
     class JSException {
       public:
         JSException (ExceptionID ID, string8_citer pos = 0,
-                     string8 source = 0, ExceptionType type = etUnknown)
+                     string8 source = "", ExceptionType type = etUnknown)
             : mID(ID), mType(type), mPos(pos), mSource(source) {}        
         ExceptionID mID;
         ExceptionType mType;
@@ -100,7 +100,7 @@ namespace JavaScript {
     class JSParseException : public JSException {
       public:
         JSParseException (ExceptionID ID, string8_citer pos = 0,
-                          string8 source = 0) :
+                          string8 source = "") :
                           JSException(ID, pos, source, etParser) {}
         /*
       private:
