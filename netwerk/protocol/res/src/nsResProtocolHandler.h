@@ -45,6 +45,17 @@
 #include "nsISupportsArray.h"
 #include "nsIIOService.h"
 #include "nsWeakReference.h"
+#include "nsStandardURL.h"
+
+// nsResURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
+class nsResURL : public nsStandardURL
+{
+public:
+    nsResURL() : nsStandardURL(PR_TRUE) {}
+    NS_IMETHOD GetFile(nsIFile **);
+    virtual nsStandardURL* StartClone();
+    NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID);
+};
 
 class nsResProtocolHandler : public nsIResProtocolHandler, public nsSupportsWeakReference
 {
