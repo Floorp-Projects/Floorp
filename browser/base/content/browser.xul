@@ -730,7 +730,7 @@ Contributor(s):
                        tooltiptext="&reloadButton.tooltip;"/>
                        
         <toolbarbutton id="stop-button" class="toolbarbutton-1"
-                       label="&stopButton.label;"
+                       label="&stopCmd.label;"
                        oncommand="BrowserStop();" observes="canStop"  
                        tooltiptext="&stopButton.tooltip;"/>
 

@@ -116,13 +116,10 @@
 <!ENTITY downloadManagerCmd.accesskey "D">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
-<!ENTITY javaConsoleCmd.accesskey       "j">
+<!ENTITY javaConsoleCmd.accesskey       "J">
 
 <!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey       "S">
-
-<!ENTITY privacyMenu.label "Privacy &amp; Security">
-<!ENTITY privacyMenu.accesskey "p">
 
 <!ENTITY webDevelopment.label "Web Development">
 <!ENTITY webDevelopment.accesskey "W">
@@ -166,21 +163,21 @@
 <!ENTITY preferencesCmd.accesskey     "e"> 
 
 <!ENTITY viewMenu.label         "View"> 
-<!ENTITY viewMenu.accesskey       "v"> 
+<!ENTITY viewMenu.accesskey       "V"> 
 <!ENTITY viewToolbarsMenu.label       "Show/Hide"> 
 <!ENTITY viewToolbarsMenu.accesskey     "w"> 
 <!ENTITY showTaskbarCmd.label         "Status Bar">  
 <!ENTITY showTaskbarCmd.accesskey       "S"> 
 
 <!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey       "h"> 
+<!ENTITY helpMenu.accesskey       "H"> 
 
 <!ENTITY releaseCmd.label       "Release Notes">
 <!ENTITY releaseCmd.accesskey       "r">
 <!ENTITY aboutCmd.label         "About &brandShortName;">
 <!ENTITY aboutCmd.accesskey       "A">
 <!ENTITY aboutCommPluginsCmd.label      "About Plug-ins">
-<!ENTITY aboutCommPluginsCmd.accesskey      "p">
+<!ENTITY aboutCommPluginsCmd.accesskey      "P">
 
 <!-- Context Menu -->
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
@@ -195,19 +192,17 @@
 <!ENTITY openFrameCmdInTab.accesskey  "T">
 <!ENTITY showOnlyThisFrameCmd.label     "Show Only This Frame">
 <!ENTITY showOnlyThisFrameCmd.accesskey "w">
-<!ENTITY addToBookmarksCmd.label      "Bookmark This Page">
-<!ENTITY addToBookmarksCmd.accesskey  "B">
 <!ENTITY goBackCmd.label              "Back">
-<!ENTITY goBackCmd.accesskey          "b">
+<!ENTITY goBackCmd.accesskey          "B">
 <!ENTITY goForwardCmd.label           "Forward">
-<!ENTITY goForwardCmd.accesskey       "f">
+<!ENTITY goForwardCmd.accesskey       "F">
 <!ENTITY reloadCmd.label              "Reload">
-<!ENTITY reloadCmd.accesskey          "r">
+<!ENTITY reloadCmd.accesskey          "R">
 <!ENTITY reloadCmd.commandkey         "r">
 <!ENTITY stopCmd.label                "Stop">
 <!ENTITY stopCmd.accesskey            "S">
 <!ENTITY reloadFrameCmd.label         "Reload Frame">
-<!ENTITY reloadFrameCmd.accesskey     "r">
+<!ENTITY reloadFrameCmd.accesskey     "R">
 <!ENTITY viewPartialSourceForSelectionCmd.label "View Selection Source">
 <!ENTITY viewPartialSourceForMathMLCmd.label    "View MathML Source">
 <!ENTITY viewPartialSourceCmd.accesskey "e">
@@ -230,20 +225,16 @@
 <!ENTITY bookmarkLinkCmd.label        "Bookmark This Link...">
 <!ENTITY bookmarkLinkCmd.accesskey    "L">
 <!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame...">
-<!ENTITY bookmarkFrameCmd.accesskey   "f">
+<!ENTITY bookmarkFrameCmd.accesskey   "F">
 <!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "A">
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
-<!ENTITY saveFrameCmd.accesskey       "f">
+<!ENTITY saveFrameCmd.accesskey       "F">
 <!ENTITY saveLinkCmd.label            "Save Link Target As...">
 <!ENTITY saveLinkCmd.accesskey        "r">
 <!ENTITY saveImageCmd.label           "Save Image As...">
 <!ENTITY saveImageCmd.accesskey       "v">
-<!ENTITY copyCmd.label                "Copy">
-<!ENTITY copyCmd.accesskey            "c">
-<!ENTITY selectAllCmd.label           "Select All">
-<!ENTITY selectAllCmd.accesskey       "A">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
 <!ENTITY copyLinkCmd.accesskey        "C">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
@@ -252,14 +243,6 @@
 <!ENTITY metadataCmd.accesskey        "P">
 <!ENTITY copyEmailCmd.label           "Copy Email Address">
 <!ENTITY copyEmailCmd.accesskey       "E">
-<!ENTITY pasteCmd.label               "Paste">
-<!ENTITY pasteCmd.accesskey           "p">
-<!ENTITY cutCmd.label                 "Cut">
-<!ENTITY cutCmd.accesskey             "t">
-<!ENTITY deleteCmd.label              "Delete">
-<!ENTITY deleteCmd.accesskey          "D">
-<!ENTITY undoCmd.label                "Undo">
-<!ENTITY undoCmd.accesskey            "U">
 <!ENTITY thisFrameMenu.label              "This Frame">
 <!ENTITY thisFrameMenu.accesskey          "h">
 <!ENTITY search.accesskey             "W">
