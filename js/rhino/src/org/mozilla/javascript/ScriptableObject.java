@@ -1282,7 +1282,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *         <code>Scriptable.NOT_FOUND</code> if not found
      * @since 1.5R2
      */
-    public static Object getProperty(Scriptable obj, String name) {
+    public static Object getProperty(Scriptable obj, String name)
+    {
         Scriptable start = obj;
         Object result;
         do {
@@ -1309,7 +1310,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *         <code>Scriptable.NOT_FOUND</code> if not found
      * @since 1.5R2
      */
-    public static Object getProperty(Scriptable obj, int index) {
+    public static Object getProperty(Scriptable obj, int index)
+    {
         Scriptable start = obj;
         Object result;
         do {
@@ -1332,7 +1334,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return the true if property was found
      * @since 1.5R2
      */
-    public static boolean hasProperty(Scriptable obj, String name) {
+    public static boolean hasProperty(Scriptable obj, String name)
+    {
         return null != getBase(obj, name);
     }
 
@@ -1347,7 +1350,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return the true if property was found
      * @since 1.5R2
      */
-    public static boolean hasProperty(Scriptable obj, int index) {
+    public static boolean hasProperty(Scriptable obj, int index)
+    {
         return null != getBase(obj, index);
     }
 
@@ -1362,7 +1366,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param value any JavaScript value accepted by Scriptable.put
      * @since 1.5R2
      */
-    public static void putProperty(Scriptable obj, String name, Object value) {
+    public static void putProperty(Scriptable obj, String name, Object value)
+    {
         Scriptable base = getBase(obj, name);
         if (base == null)
             base = obj;
@@ -1380,7 +1385,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param value any JavaScript value accepted by Scriptable.put
      * @since 1.5R2
      */
-    public static void putProperty(Scriptable obj, int index, Object value) {
+    public static void putProperty(Scriptable obj, int index, Object value)
+    {
         Scriptable base = getBase(obj, index);
         if (base == null)
             base = obj;
@@ -1398,7 +1404,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return true if the property doesn't exist or was successfully removed
      * @since 1.5R2
      */
-    public static boolean deleteProperty(Scriptable obj, String name) {
+    public static boolean deleteProperty(Scriptable obj, String name)
+    {
         Scriptable base = getBase(obj, name);
         if (base == null)
             return true;
@@ -1417,7 +1424,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return true if the property doesn't exist or was successfully removed
      * @since 1.5R2
      */
-    public static boolean deleteProperty(Scriptable obj, int index) {
+    public static boolean deleteProperty(Scriptable obj, int index)
+    {
         Scriptable base = getBase(obj, index);
         if (base == null)
             return true;
@@ -1509,20 +1517,20 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return fun.call(cx, getTopLevelScope(obj), obj, args);
     }
 
-    private static Scriptable getBase(Scriptable obj, String name) {
-        Scriptable start = obj;
+    private static Scriptable getBase(Scriptable obj, String name)
+    {
         do {
-            if (obj.has(name, start))
+            if (obj.has(name, obj))
                 break;
             obj = obj.getPrototype();
         } while(obj != null);
         return obj;
     }
 
-    private static Scriptable getBase(Scriptable obj, int index) {
-        Scriptable start = obj;
+    private static Scriptable getBase(Scriptable obj, int index)
+    {
         do {
-            if (obj.has(index, start))
+            if (obj.has(index, obj))
                 break;
             obj = obj.getPrototype();
         } while(obj != null);

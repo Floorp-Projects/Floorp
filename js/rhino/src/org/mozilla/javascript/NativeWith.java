@@ -71,47 +71,51 @@ public class NativeWith implements Scriptable, IdFunctionMaster {
         return "With";
     }
 
-    public boolean has(String id, Scriptable start) {
-        if (start == this)
-            start = prototype;
-        return prototype.has(id, start);
+    public boolean has(String id, Scriptable start)
+    {
+        return prototype.has(id, prototype);
     }
 
-    public boolean has(int index, Scriptable start) {
-        if (start == this)
-            start = prototype;
-        return prototype.has(index, start);
+    public boolean has(int index, Scriptable start)
+    {
+        return prototype.has(index, prototype);
     }
 
-    public Object get(String id, Scriptable start) {
+    public Object get(String id, Scriptable start)
+    {
         if (start == this)
             start = prototype;
         return prototype.get(id, start);
     }
 
-    public Object get(int index, Scriptable start) {
+    public Object get(int index, Scriptable start)
+    {
         if (start == this)
             start = prototype;
         return prototype.get(index, start);
     }
 
-    public void put(String id, Scriptable start, Object value) {
+    public void put(String id, Scriptable start, Object value)
+    {
         if (start == this)
             start = prototype;
         prototype.put(id, start, value);
     }
 
-    public void put(int index, Scriptable start, Object value) {
+    public void put(int index, Scriptable start, Object value)
+    {
         if (start == this)
             start = prototype;
         prototype.put(index, start, value);
     }
 
-    public void delete(String id) {
+    public void delete(String id)
+    {
         prototype.delete(id);
     }
 
-    public void delete(int index) {
+    public void delete(int index)
+    {
         prototype.delete(index);
     }
 
