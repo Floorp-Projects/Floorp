@@ -19,19 +19,12 @@ IGNORE_MANIFEST=1
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 MODULE=mime
+DIRS= skin
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) frown.gif	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) smile.gif $(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) wink.gif $(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) sick.gif $(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) mime_en.properties $(DIST)\bin\res\mailnews\messenger
 
 clobber::
-	rm -f $(DIST)\bin\res\mailnews\messenger\frown.gif
-	rm -f $(DIST)\bin\res\mailnews\messenger\smile.gif
-	rm -f $(DIST)\bin\res\mailnews\messenger\wink.gif
-	rm -f $(DIST)\bin\res\mailnews\messenger\sick.gif
 	rm -f $(DIST)\bin\res\mailnews\messenger\mime_en.properties

@@ -37,9 +37,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/am-server.xul		\
 	$(srcdir)/am-server-top.xul	\
 	$(srcdir)/am-server-pop3.xul	\
-	$(srcdir)/am-server-imap.xul	\
-	$(srcdir)/am-server-news.xul	\
-	$(srcdir)/am-server-webmail.xul	\
 	$(srcdir)/am-copies.xul		\
 	$(srcdir)/am-advanced.xul	\
 	$(srcdir)/pref-mailnews.html \

@@ -22,22 +22,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS= skin
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-MESSENGER_DIR = $(DIST)/bin/res/mailnews/messenger
-
-EXPORT_RESOURCES = \
-	$(srcdir)/mailheader-micro.css \
-	$(srcdir)/mailheader-normal.css \
-	$(srcdir)/mailheader-all.css \
-	$(NULL)
-
-EXPORT_RESOURCES_TO_REMOVE := $(addprefix $(MESSENGER_DIR)/, $(EXPORT_RESOURCES))
-
-install::
-	$(INSTALL) $(EXPORT_RESOURCES) $(MESSENGER_DIR)
-
-clobber::
-	$(RM) $(EXPORT_RESOURCES_TO_REMOVE)

@@ -15,19 +15,7 @@
 #
 
 DEPTH=..\..\..\..
-IGNORE_MANIFEST=1
-
-DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=xmlemitter
+DIRS= skin
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
-	$(MAKE_INSTALL) mailheader-micro.css	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) mailheader-normal.css	$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) mailheader-all.css		$(DIST)\bin\res\mailnews\messenger
-
-clobber::
-	rm -f $(DIST)\bin\res\mailnews\messenger\mailheader-micro.css
-	rm -f $(DIST)\bin\res\mailnews\messenger\mailheader-normal.css
-	rm -f $(DIST)\bin\res\mailnews\messenger\mailheader-all.css

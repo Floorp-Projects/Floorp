@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS=public src build
+DIRS=public src prefs build resources
 
 include <$(DEPTH)\config\rules.mak>

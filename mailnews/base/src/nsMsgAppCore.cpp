@@ -882,7 +882,7 @@ nsMsgAppCore::AccountManager(nsIDOMWindow *parent)
 
   nsCOMPtr<nsIURL> url;
   rv = NS_NewURL(getter_AddRefs(url),
-                 "resource:/res/mailnews/messenger/AccountManager.xul");
+                 "chrome://messenger/content/AccountManager.xul");
   if (NS_FAILED(rv)) return rv;
 
   nsIXULWindowCallbacks *cb = nsnull;

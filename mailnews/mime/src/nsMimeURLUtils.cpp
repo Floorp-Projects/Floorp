@@ -373,7 +373,7 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
 
   if ( ItMatches(line, line_size, ":-)") || ItMatches(line, line_size, ":)") ) 
   {
-    *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/smile.gif\" height=17 width=17 align=ABSCENTER>");
+    *outputHTML = PL_strdup("<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
       return PR_FALSE;
     *glyphTextLen = 3;
@@ -381,7 +381,7 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
   }  
   else if ( ItMatches(line, line_size, ":-(") || ItMatches(line, line_size, ":(") ) 
   {
-    *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/frown.gif\" height=17 width=17 align=ABSCENTER>");
+    *outputHTML = PL_strdup("<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
       return PR_FALSE;
     *glyphTextLen = 3;
@@ -389,7 +389,7 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
   }
   else if (ItMatches(line, line_size, ";-)"))
   {
-    *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/wink.gif\" height=17 width=17 align=ABSCENTER>");
+    *outputHTML = PL_strdup("<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
       return PR_FALSE;
     *glyphTextLen = 3;
@@ -397,7 +397,7 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
   }
   else if (ItMatches(line, line_size, ";-P"))
   {
-    *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/sick.gif\" height=17 width=17 align=ABSCENTER>");
+    *outputHTML = PL_strdup("<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
       return PR_FALSE;
     *glyphTextLen = 3;

@@ -28,11 +28,9 @@ include $(topsrcdir)/config/rules.mk
 
 MESSENGER_DIR = $(DIST)/bin/res/mailnews/messenger
 
+DIRS= skin
+
 EXPORT_RESOURCES = \
-	$(srcdir)/smile.gif \
-	$(srcdir)/frown.gif \
-	$(srcdir)/wink.gif \
-	$(srcdir)/sick.gif \
 	$(srcdir)/mime_en.properties \
 	$(NULL)
 
