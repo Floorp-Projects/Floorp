@@ -3073,10 +3073,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   // use tabindex would still enforce that order in those situations.
   PRBool ignoreTabIndex = PR_FALSE;
 
-  if (aStart) {
-    SetFocusedContent(aStart);
-    TabIndexFrom(mCurrentFocus, &mCurrentTabIndex);
-  } else if (!mCurrentFocus) {  
+  if (!aStart && !mCurrentFocus) {  
     // mCurrentFocus is ambiguous for determining whether
     // we're in document-focus mode, because it's nulled out
     // when the document is blurred, and it's also nulled out
@@ -3099,7 +3096,10 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   nsCOMPtr<nsIDocShellTreeItem> shellItem(do_QueryInterface(docShell));
   shellItem->GetItemType(&itemType);
   
-  if (itemType != nsIDocShellTreeItem::typeChrome && mLastFocusedWith != eEventFocusedByMouse) {  
+  // Tab from the selection if it exists, but not if we're in chrome or an explicit starting
+  // point was given.
+  if (!aStart && itemType != nsIDocShellTreeItem::typeChrome &&
+      mLastFocusedWith != eEventFocusedByMouse) {
     // We're going to tab from the selection position 
     nsCOMPtr<nsIDOMHTMLAreaElement> areaElement(do_QueryInterface(mCurrentFocus));
     if (!areaElement) {
@@ -3119,25 +3119,43 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
     }
   }
 
-  if (!mCurrentFocus)   // Get tabindex ready
-    if (aForward)
-      mCurrentTabIndex = docHasFocus && selectionFrame ? 0 : 1;
-    else if (!docHasFocus) 
-      mCurrentTabIndex = 0;
-    else if (selectionFrame)
-      mCurrentTabIndex = 1;   // will keep it from wrapping around to end
+  nsIContent *startContent = nsnull;
 
-  if (selectionFrame) 
+  if (aStart) {
+    presShell->GetPrimaryFrameFor(startContent, &curFocusFrame);
+
+    // If there is no frame, we can't navigate from this content node, and we
+    // fall back to navigating from the document root.
+    if (curFocusFrame)
+      startContent = aStart;
+  } else if (selectionFrame) {
+    // We moved focus to the caret location above, so mCurrentFocus
+    // reflects the starting content node.
+    startContent = mCurrentFocus;
     curFocusFrame = selectionFrame;
-  else if (!docHasFocus)
+  } else if (!docHasFocus) {
+    startContent = mCurrentFocus;
     GetFocusedFrame(&curFocusFrame);
+  }
+
+  if (aStart) {
+    TabIndexFrom(aStart, &mCurrentTabIndex);
+  } else if (!mCurrentFocus) {  // Get tabindex ready
+    if (aForward) {
+      mCurrentTabIndex = docHasFocus && selectionFrame ? 0 : 1;
+    } else if (!docHasFocus) {
+      mCurrentTabIndex = 0;
+    } else if (selectionFrame) {
+      mCurrentTabIndex = 1;   // will keep it from wrapping around to end
+    }
+  }
 
   nsCOMPtr<nsIContent> nextFocus;
   nsIFrame* nextFocusFrame;
   if (aForward || !docHasFocus || selectionFrame)
-    GetNextTabbableContent(rootContent, curFocusFrame, aForward,
-                           ignoreTabIndex, getter_AddRefs(nextFocus),
-                           &nextFocusFrame);
+    GetNextTabbableContent(rootContent, startContent, curFocusFrame,
+                           aForward, ignoreTabIndex,
+                           getter_AddRefs(nextFocus), &nextFocusFrame);
 
   // Clear out mCurrentTabIndex. It has a garbage value because of GetNextTabbableContent()'s side effects
   // It will be set correctly when focus is changed via ChangeFocus()
@@ -3352,7 +3370,9 @@ nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
 
 nsresult
 nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
-                                            nsIFrame* aFrame, PRBool forward,
+                                            nsIContent* aStartContent,
+                                            nsIFrame* aStartFrame, 
+                                            PRBool forward,
                                             PRBool aIgnoreTabIndex, 
                                             nsIContent** aResultNode,
                                             nsIFrame** aResultFrame)
@@ -3364,7 +3384,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
 
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 
-  if (!aFrame) {
+  if (!aStartFrame) {
     //No frame means we need to start with the root content again.
     if (mPresContext) {
       nsIFrame* result = nsnull;
@@ -3373,26 +3393,23 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         presShell->GetPrimaryFrameFor(aRootContent, &result);
       }
 
-      aFrame = result;
+      aStartFrame = result;
 
       if (!forward)
         findLastFrame = PR_TRUE;
     }
-    if (!aFrame) {
+    if (!aStartFrame) {
       return NS_ERROR_FAILURE;
     }
     keepFirstFrame = PR_TRUE;
   }
 
-  //Need to do special check in case we're in an imagemap which has multiple content per frame
-  if (mCurrentFocus) {
-    if (mCurrentFocus->Tag() == nsHTMLAtoms::area &&
-        mCurrentFocus->IsContentOfType(nsIContent::eHTML)) {
-      //Focus is in an imagemap area
-      if (aFrame == mCurrentFocusFrame) {
-        //The current focus map area is in the current frame, don't skip over it.
-        keepFirstFrame = PR_TRUE;
-      }
+  // Need to do special check in case we're in an imagemap which has multiple content per frame
+  if (aStartContent) {
+    if (aStartContent->Tag() == nsHTMLAtoms::area &&
+        aStartContent->IsContentOfType(nsIContent::eHTML)) {
+      // We're starting from an imagemap area, so don't skip over the starting frame.
+      keepFirstFrame = PR_TRUE;
     }
   }
 
@@ -3402,7 +3419,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
     return result;
 
   result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), FOCUS,
-                                   mPresContext, aFrame);
+                                   mPresContext, aStartFrame);
   if (NS_FAILED(result))
     return NS_OK;
 
@@ -3635,7 +3652,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
 
       if (!disabled && !hidden && (aIgnoreTabIndex ||
                                    mCurrentTabIndex == tabIndex) &&
-          child != mCurrentFocus) {
+          child != aStartContent) {
         *aResultNode = child;
         NS_IF_ADDREF(*aResultNode);
         *aResultFrame = currentFrame;
@@ -3659,7 +3676,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
   }
   //else continue looking for next highest priority tab
   mCurrentTabIndex = GetNextTabIndex(aRootContent, forward);
-  return GetNextTabbableContent(aRootContent, nsnull, forward,
+  return GetNextTabbableContent(aRootContent, aStartContent, nsnull, forward,
                                 aIgnoreTabIndex, aResultNode, aResultFrame);
 }
 
@@ -4161,8 +4178,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
           esm = oldPresContext->EventStateManager();
           esm->SetFocusedContent(gLastFocusedContent);
           nsCOMPtr<nsIContent> temp = gLastFocusedContent;
-          NS_RELEASE(gLastFocusedContent);
-          gLastFocusedContent = nsnull;
+          NS_RELEASE(gLastFocusedContent); // nulls out gLastFocusedContent
 
           nsCxPusher pusher(temp);
           temp->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
