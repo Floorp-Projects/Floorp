@@ -16599,7 +16599,6 @@ if test "${enable_cookies+set}" = set; then
   fi
 fi
 
-
 if test "$NECKO_COOKIES"; then
     cat >> confdefs.h <<\EOF
 #define NECKO_COOKIES 1
