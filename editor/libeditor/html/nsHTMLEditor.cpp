@@ -7160,7 +7160,23 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
         nsCOMPtr<nsIDOMCharacterData>nodeAsText;
         nodeAsText = do_QueryInterface(node);
         nodeAsText->GetLength(&length);
-        if (length) *outIsEmptyNode = PR_FALSE;
+        nsCOMPtr<nsISelectionController> selCon;
+        res = GetSelectionController(getter_AddRefs(selCon));
+        if (NS_FAILED(res)) return res;
+        if (!selCon) return NS_ERROR_FAILURE;
+        PRBool isVisible = PR_FALSE;
+        // ask the selection controller for information about whether any
+        // of the data in the node is really rendered.  This is really
+        // something that frames know about, but we aren't supposed to talk to frames.
+        // So we put a call in the selection controller interface, since it's already
+        // in bed with frames anyway.  (this is a fix for bug 46209)
+        res = selCon->CheckVisibility(node, 0, length, &isVisible);
+        if (NS_FAILED(res)) return res;
+        if (isVisible) 
+        {
+          *outIsEmptyNode = PR_FALSE;
+          break;
+        }
       }
       else  // an editable, non-text node. we aren't an empty block 
       {
