@@ -30,8 +30,9 @@
 class nsAppShell : public nsIAppShell
 {
   private:
-    Widget       mTopLevel;
-    XtAppContext mAppContext;
+    Widget              mTopLevel;
+    XtAppContext        mAppContext;
+    nsDispatchListener* mDispatchListener;
 
   public:
     nsAppShell();
@@ -44,6 +45,8 @@ class nsAppShell : public nsIAppShell
     virtual void            Create(int* argc, char ** argv);
     virtual nsresult        Run(); 
     virtual void            Exit();
+
+    virtual void            SetDispatchListener(nsDispatchListener* aDispatchListener);
 
     virtual void* GetNativeData(PRUint32 aDataType);
 
