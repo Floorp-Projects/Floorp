@@ -45,6 +45,7 @@ public:
   NS_IMETHOD SetNewBrowserCallback        (GtkMozEmbedChromeCB *aCallback, void *aData) = 0;
   NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData) = 0;
   NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData) = 0;
+  NS_IMETHOD GetLinkMessage               (const char **retval) = 0;
 };
 
 #endif /* __nsIGtkEmbed_h__ */

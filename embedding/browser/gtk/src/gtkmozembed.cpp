@@ -44,7 +44,6 @@ public:
   nsCOMPtr<nsIGtkEmbed>       embed;
   nsCOMPtr<nsISupportsArray>  topLevelWindowWebShells;
   nsVoidArray                 topLevelWindows;
-  GdkSuperWin                *superwin;
   nsCString		      mInitialURL;
 };
 
@@ -73,6 +72,9 @@ static void
 gtk_moz_embed_realize(GtkWidget *widget);
 
 static void
+gtk_moz_embed_unrealize(GtkWidget *widget);
+
+static void
 gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation);
 
 /* GtkObject methods */
@@ -97,7 +99,7 @@ gtk_moz_embed_handle_new_browser(PRUint32 chromeMask, nsIWebBrowser **_retval, v
 static void
 gtk_moz_embed_handle_toplevel_visibility_change(PRBool aVisibility, void *aData);
 
-static GtkWidgetClass *parent_class;
+static GtkBinClass *parent_class;
 
 static PRBool NS_SetupRegistryCalled = PR_FALSE;
 static PRBool ThreadQueueSetup       = PR_FALSE;
@@ -121,7 +123,7 @@ gtk_moz_embed_get_type(void)
       0,
       0
     };
-    moz_embed_type = gtk_type_unique(GTK_TYPE_WIDGET, &moz_embed_info);
+    moz_embed_type = gtk_type_unique(GTK_TYPE_BIN, &moz_embed_info);
   }
   return moz_embed_type;
 }
@@ -129,15 +131,20 @@ gtk_moz_embed_get_type(void)
 static void
 gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 {
-  GtkWidgetClass *widget_class;
-  GtkObjectClass *object_class;
+  GtkContainerClass  *container_class;
+  GtkBinClass        *bin_class;
+  GtkWidgetClass     *widget_class;
+  GtkObjectClass     *object_class;
   
-  widget_class = GTK_WIDGET_CLASS(klass);
-  object_class = GTK_OBJECT_CLASS(klass);
+  container_class = GTK_CONTAINER_CLASS(klass);
+  bin_class       = GTK_BIN_CLASS(klass);
+  widget_class    = GTK_WIDGET_CLASS(klass);
+  object_class    = GTK_OBJECT_CLASS(klass);
 
-  parent_class = (GtkWidgetClass *)gtk_type_class(gtk_widget_get_type());
+  parent_class = (GtkBinClass *)gtk_type_class(gtk_bin_get_type());
 
   widget_class->realize = gtk_moz_embed_realize;
+  widget_class->unrealize = gtk_moz_embed_unrealize;
   widget_class->size_allocate = gtk_moz_embed_size_allocate;
 
   object_class->destroy = gtk_moz_embed_destroy;
@@ -163,7 +170,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
       g_return_if_fail(NS_SUCCEEDED(rv));
 
       nsIEventQueue *eventQueue;
-     rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQueue);
+      rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQueue);
       g_return_if_fail(NS_SUCCEEDED(rv));
 
       gdk_input_add(eventQueue->GetEventQueueSelectFD(),
@@ -191,8 +198,6 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   g_return_if_fail(chrome);
   embed_private->embed = do_QueryInterface((nsISupports *)(nsIGtkEmbed *) chrome);
   g_return_if_fail(embed_private->embed);
-  // we haven't created our superwin yet
-  embed_private->superwin = NULL;
   // hide it
   embed->data = embed_private;
   // this is how we hook into when show() is called on the widget
@@ -230,9 +235,8 @@ gtk_moz_embed_load_url(GtkWidget *widget, const char *url)
   // If the widget aint realized, save the url for later
   if (!GTK_WIDGET_REALIZED(widget))
   {
-	  embed_private->mInitialURL = url;
-
-	  return;
+    embed_private->mInitialURL = url;
+    return;
   }
 
   nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(embed_private->webBrowser);
@@ -240,6 +244,25 @@ gtk_moz_embed_load_url(GtkWidget *widget, const char *url)
   nsString URLString;
   URLString.AssignWithConversion(url);
   navigation->LoadURI(URLString.GetUnicode());
+}
+
+const char *
+gtk_moz_embed_get_link_message (GtkWidget *widget)
+{
+  GtkMozEmbed        *embed;
+  GtkMozEmbedPrivate *embed_private;
+  const char *retval = NULL;
+
+  g_return_val_if_fail ((widget != NULL), NULL);
+  g_return_val_if_fail ((GTK_IS_MOZ_EMBED(widget)), NULL);
+
+  embed = GTK_MOZ_EMBED(widget);
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  embed_private->embed->GetLinkMessage(&retval);
+
+  return retval;
 }
 
 void
@@ -278,22 +301,14 @@ gtk_moz_embed_realize(GtkWidget *widget)
   // now that we're realized, set up the nsIWebBrowser and nsIBaseWindow stuff
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  // create our superwin
-  embed_private->superwin = gdk_superwin_new(widget->window, 0, 0,
-					     widget->allocation.width, widget->allocation.height);
-
   // check to see if we're supposed to be already visible
   if (GTK_WIDGET_VISIBLE(widget))
-  {
-    gdk_window_show(embed_private->superwin->bin_window);
-    gdk_window_show(embed_private->superwin->shell_window);
     gdk_window_show(widget->window);
-  }
-
+  
   // init our window
   nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = do_QueryInterface(embed_private->webBrowser);
   g_return_if_fail(webBrowserBaseWindow);
-  webBrowserBaseWindow->InitWindow(embed_private->superwin, NULL, 0, 0,
+  webBrowserBaseWindow->InitWindow(widget, NULL, 0, 0,
 				   widget->allocation.width, widget->allocation.height);
   webBrowserBaseWindow->Create();
   PRBool visibility;
@@ -321,6 +336,29 @@ gtk_moz_embed_realize(GtkWidget *widget)
 }
 
 void
+gtk_moz_embed_unrealize(GtkWidget *widget)
+{
+  GtkMozEmbed        *embed;
+  GtkMozEmbedPrivate *embed_private;
+
+  g_return_if_fail(widget != NULL);
+  g_return_if_fail(GTK_IS_MOZ_EMBED(widget));
+
+  embed = GTK_MOZ_EMBED(widget);
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  if (embed_private)
+  {
+    embed_private->webBrowser = nsnull;
+    embed_private->embed = nsnull;
+    // XXX XXX delete all the members of the topLevelWindows
+    // nsVoidArray and then delete the array
+    delete embed_private;
+    embed->data = NULL;
+  }
+}
+
+void
 gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
   GtkMozEmbed        *embed;
@@ -334,18 +372,19 @@ gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
   widget->allocation = *allocation;
+
   if (GTK_WIDGET_REALIZED(widget))
   {
     gdk_window_move_resize(widget->window,
 			   allocation->x, allocation->y,
 			   allocation->width, allocation->height);
-    gdk_superwin_resize(embed_private->superwin, allocation->width, allocation->height);
     // set the size of the base window
     nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = do_QueryInterface(embed_private->webBrowser);
     webBrowserBaseWindow->SetPositionAndSize(0, 0, allocation->width, allocation->height, PR_TRUE);
     nsCOMPtr<nsIBaseWindow> embedBaseWindow = do_QueryInterface(embed_private->embed);
     embedBaseWindow->SetPositionAndSize(0, 0, allocation->width, allocation->height, PR_TRUE);
   }
+  
 }
 
 void
@@ -364,7 +403,6 @@ gtk_moz_embed_destroy(GtkObject *object)
   {
     embed_private->webBrowser = nsnull;
     embed_private->embed = nsnull;
-    gtk_object_unref(GTK_OBJECT(embed_private->superwin));
     // XXX XXX delete all the members of the topLevelWindows
     // nsVoidArray and then delete the array
     delete embed_private;
@@ -383,13 +421,6 @@ gtk_moz_embed_handle_show(GtkWidget *widget, gpointer user_data)
 
   embed = GTK_MOZ_EMBED(widget);
   embed_private = (GtkMozEmbedPrivate *)embed->data;
-
-  // sometimes we get the show signal before we are actually realized
-  if (embed_private->superwin) 
-  {
-    gdk_window_show(embed_private->superwin->bin_window);
-    gdk_window_show(embed_private->superwin->shell_window);
-  }
 }
 
 static void

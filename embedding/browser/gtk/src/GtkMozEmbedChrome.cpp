@@ -107,6 +107,15 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetVisibilityCallback(GtkMozEmbedVisibilityCB *
   return NS_OK;
 }
 
+NS_IMETHODIMP GtkMozEmbedChrome::GetLinkMessage (const char **retval)
+{
+  g_print("GtkMozEmbedChrome::GetLinkMessage\n");
+  NS_ENSURE_ARG_POINTER(retval);
+  *retval = mLinkMessage;
+  return NS_OK;
+}
+
+
 // nsIInterfaceRequestor interface
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetInterface(const nsIID &aIID, void** aInstancePtr)
@@ -132,6 +141,9 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetJSDefaultStatus(const PRUnichar *status)
 NS_IMETHODIMP GtkMozEmbedChrome::SetOverLink(const PRUnichar *link)
 {
   g_print("GtkMozEmbedChrome::SetOverLink\n");
+  nsString linkMessageString(link);
+  mLinkMessage = linkMessageString.ToNewCString();
+  g_print("message is %s\n", (const char *)mLinkMessage);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -278,6 +290,16 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 c
 						  PRInt32 maxTotalProgress)
 {
   g_print("GtkMozEmbedChrome::OnProgressChange\n");
+  g_print("maxTotalProgress is %d and curTotalProgress is %d\n", maxTotalProgress, curTotalProgress);
+  if (maxTotalProgress)
+  {
+    PRUint32 percentage = (curTotalProgress * 100) / maxTotalProgress;
+    g_print("%d%% percent\n", percentage);
+  }
+  else
+  {
+    g_print("Unknown percent\n");
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -288,9 +310,36 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnChildProgressChange(nsIChannel *channel, PRIn
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::OnStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
+NS_IMETHODIMP GtkMozEmbedChrome::OnStatusChange(nsIChannel *channel, PRInt32 aStatus)
 {
   g_print("GtkMozEmbedChrome::OnStatusChange\n");
+  if (aStatus & nsIWebProgress::flag_net_start)
+    g_print("flag_net_start\n");
+  if (aStatus & nsIWebProgress::flag_net_dns)
+    g_print("flag_net_dns\n");
+  if (aStatus & nsIWebProgress::flag_net_connecting)
+    g_print("flag_net_connecting\n");
+  if (aStatus & nsIWebProgress::flag_net_redirecting)
+    g_print("flag_net_redirecting\n");
+  if (aStatus & nsIWebProgress::flag_net_negotiating)
+    g_print("flag_net_negotiating\n");
+  if (aStatus & nsIWebProgress::flag_net_transferring)
+    g_print("flag_net_transferring\n");
+  if (aStatus & nsIWebProgress::flag_net_failedDNS)
+    g_print("flag_net_failedDNS\n");
+  if (aStatus & nsIWebProgress::flag_net_failedConnect)
+    g_print("flag_net_failedConnect\n");
+  if (aStatus & nsIWebProgress::flag_net_failedTransfer)
+    g_print("flag_net_failedTransfer\n");
+  if (aStatus & nsIWebProgress::flag_net_failedTimeout)
+    g_print("flag_net_failedTimeout\n");
+  if (aStatus & nsIWebProgress::flag_net_userCancelled)
+    g_print("flag_net_userCancelled\n");
+  if (aStatus & nsIWebProgress::flag_win_start)
+    g_print("flag_win_start\n");
+  if (aStatus & nsIWebProgress::flag_win_stop)
+    g_print("flag_win_stop\n");
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -40,18 +40,19 @@ typedef struct _GtkMozEmbedClass GtkMozEmbedClass;
 
 struct _GtkMozEmbed
 {
-  GtkWidget widget;
+  GtkBin    bin;
   void     *data;
 };
 
 struct _GtkMozEmbedClass
 {
-  GtkWidgetClass parent_class;
+  GtkBinClass parent_class;
 };
 
-extern GtkType    gtk_moz_embed_get_type(void);
-extern GtkWidget *gtk_moz_embed_new(void);
-extern void       gtk_moz_embed_load_url(GtkWidget *widget, const char *url);
+extern GtkType      gtk_moz_embed_get_type         (void);
+extern GtkWidget   *gtk_moz_embed_new              (void);
+extern void         gtk_moz_embed_load_url         (GtkWidget *widget, const char *url);
+extern const char  *gtk_moz_embed_get_link_message (GtkWidget *widget);
 
 #ifdef __cplusplus
 }
