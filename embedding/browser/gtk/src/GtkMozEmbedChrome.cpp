@@ -1190,13 +1190,18 @@ GtkMozEmbedChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 NS_IMETHODIMP
 GtkMozEmbedChrome::GetVisibility(PRBool *aVisibility)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aVisibility);
+  *aVisibility = mVisibility;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 GtkMozEmbedChrome::SetVisibility(PRBool aVisibility)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mVisibility = aVisibility;
+  if (mChromeListener)
+    mChromeListener->Visibility(aVisibility);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
