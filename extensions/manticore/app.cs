@@ -7,17 +7,30 @@ namespace Silverstone.Manticore.App
   using System.Collections;
 
   using Silverstone.Manticore.BrowserWindow;
+  using Silverstone.Manticore.Preferences;
 
   public class ManticoreApp
   {
     // XXX Need to do something here more similar
     //     to what mozilla does here for parameterized
     //     window types.
-    private Queue browserWindows;
+    private Queue mBrowserWindows;
+    private Preferences mPreferences;
+
+    public Preferences Prefs {
+      get {
+        return mPreferences;
+      }
+    }
 
     public ManticoreApp()
     {
-      browserWindows = new Queue();
+      mBrowserWindows = new Queue();
+
+      // Initialize default and user preferences
+      mPreferences = new Preferences();
+      // mPreferences.InitializeDefaults("default-prefs.xml");
+      mPreferences.LoadPreferencesFile("user-prefs.xml");
 
       OpenNewBrowser();
 
@@ -28,7 +41,7 @@ namespace Silverstone.Manticore.App
     public void OpenNewBrowser()
     {
       BrowserWindow window = new BrowserWindow(this);
-      browserWindows.Enqueue(window);
+      mBrowserWindows.Enqueue(window);
       window.Show();
     }
 

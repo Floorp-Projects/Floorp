@@ -64,7 +64,8 @@ FILES =	app.cs \
 	layout\layoutabstraction.cs \
 	browser\OpenLocDialog.cs \
 	toolkit\toolkit.menus.cs \
-	toolkit\toolkit.toolbars.cs
+	toolkit\toolkit.toolbars.cs \
+	core\preferences.cs 
 
 SUBDIR = WIN32_O.OBJ
 !if defined(MOZ_DEBUG)

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<prefs xmlns="http://www.silverstone.net.nz/2001/manticore/uidl">
+  <stringpref name="browser.homepage" value="http://www.nissan.co.jp/SILVIA/"/>
+  <intpref name="browser.homepage.mode" value="1"/>
+</prefs>

@@ -120,14 +120,27 @@ namespace Silverstone.Manticore.BrowserWindow
       
 	    mToolbarBuilder = new BrowserToolbarBuilder("browser\\browser-toolbar.xml", mCommandHandler, this);
 	    mToolbarBuilder.Build();
+
+      LoadStartPage();
     }
 
-    private void LayoutStartup()
+    private void LoadStartPage()
     {
-      // XXX - add a pref to control this, blank, or last page visited.
-      // Visit the homepage
-      String homepageURL = "http://www.silverstone.net.nz/";
-      webBrowser.LoadURL(homepageURL, false);
+      int startMode = application.Prefs.GetIntPref("browser.homepage.mode");
+      switch (startMode) {
+      case 0:
+        // Don't initialize jack
+        break;
+      case 1:
+        // Load the homepage
+        String homepageURL = application.Prefs.GetStringPref("browser.homepage");
+        webBrowser.LoadURL(homepageURL, false);
+        break;
+      case 2:
+        // Load the last page visited.
+        // XXX todo
+        break;
+      }
     }
 
     ///////////////////////////////////////////////////////////////////////////
