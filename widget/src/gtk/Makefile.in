@@ -55,7 +55,6 @@ CPPSRCS= \
 	nsFileWidget.cpp \
 	nsMenuItem.cpp \
 	nsToolkit.cpp \
-	nsGtkManageWidget.c \
 	nsGtkEventHandler.cpp \
 	nsRadioButton.cpp \
 	nsWindow.cpp
@@ -78,7 +77,6 @@ CPP_OBJS= \
 	nsFileWidget.o \
 	nsMenuItem.o \
 	nsToolkit.o \
-	nsGtkManageWidget.o \
 	nsGtkEventHandler.o \
 	nsRadioButton.o \
 	nsWindow.o \
