@@ -7,14 +7,14 @@
 ;            values.
 Run Mode=Normal
 
-Product Name=Mozilla Seamonkey
+Product Name=$ProductName$
 
 ; Destination Path values:
 ;   PROGRAMFILESDIR
 ;   WINDISK
 ;   WINDIR
 ;   WINSYSDIR
-Path=[PROGRAMFILESDIR]\Mozilla\Seamonkey
+Path=[PROGRAMFILESDIR]\$CompanyName$\Seamonkey
 
 ; Program Folder Path values:
 ;   COMMON_STARTUP
@@ -45,7 +45,7 @@ Path=[PROGRAMFILESDIR]\Mozilla\Seamonkey
 ;   MEDIAPATH
 ;   CONFIGPATH (supported only under Windows95 and Windows98)
 ;   DEVICEPATH
-Program Folder Name=Mozilla Seamonkey
+Program Folder Name=$ProductName$
 Program Folder Path=[COMMON_PROGRAMS]
 
 ; Default Setup Type values:
@@ -58,7 +58,7 @@ Default Setup Type=Setup Type 0
 ; Default Font Size is 32
 ; Default Font Color is WHITE (of BLACK and GREEN)
 ; Default Font Shadow is TRUE
-Setup Title0=Mozilla Seamonkey Pr2 Setup
+Setup Title0=$ProductName$ Pr2 Setup
 Setup Title0 Font Size=
 Setup Title0 Font Color=
 Setup Title0 Font Shadow=TRUE
@@ -90,7 +90,7 @@ Verify Existance=
 ; If the file(s), indicated by the Filename= key, is found to have a version of less than the value
 ; indicated by the Version= key, then display the string in the Message= key.
 [Legacy Check0]
-Filename=[SETUP PATH]\mozilla.exe
+Filename=[SETUP PATH]\$MainExeFile$
 Version=6.0.0.0
 Message=Setup has detected an old version of Mozilla in the chosen destination directory that may pose compatibility issues.  It is highly recommended that a different destination directory be used.  Would you like to choose a different directory?
 
@@ -284,7 +284,6 @@ Attributes=SELECTED|DISABLED
 ; using the url keys and the Archive key.
 Domain0=$Domain$
 Server Path0=$ServerPath$
-;url0=$URLPath$
 
 [Component2]
 Description Short=Mail & News
@@ -305,7 +304,6 @@ Parameter=
 ; using the url keys and the Archive key.
 Domain0=$Domain$
 Server Path0=$ServerPath$
-;url0=$URLPath$
 
 [Core]
 Source=[XPI PATH]\core.xpi
@@ -364,31 +362,36 @@ Source=[JRE BIN PATH]\npjava*.dll
 Destination=[SETUP PATH]\Plugins
 Fail If Exists=FALSE
 
-;[Copy File1]
-;Timing=post launchapp
-;Source=[TEMP]\xtratest\bin\*.*
-;Destination=[SETUP PATH]
-;Fail If Exists=FALSE
+[Copy File1]
+Timing=post smartupdate
+Source=[SETUP STARTUP PATH]\$UninstallFile$
+Destination=[WINDIR]
+Fail If Exists=FALSE
 
-;[Copy File1]
-;Timing=post download
-;Source=[SETUP PATH]\bin\*.exe
-;Destination=[TEMP]
-;Fail If Exists=
+
+;Copy File SequentialX sections
+[Copy File Sequential0]
+Timing=post launchapp
+Filename=install.log
+Source=[SETUP STARTUP PATH]
+Destination=[SETUP PATH]\Uninstall
+
 
 ;Create DirectoryX sections
 [Create Directory0]
 Timing=post download
 Destination=[SETUP PATH]\Plugins
 
-;[Create Directory1]
-;Timing=post download
-;Destination=[TEMP]\Test\temp
 
 ;Delete FileX sections
 [Delete File0]
 Timing=post download
 Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
+
+[Delete File1]
+Timing=post launchapp
+Destination=[SETUP STARTUP PATH]\install.log
+
 
 ;Remove DirectoryX sections
 ;[Remove Directory0]
@@ -396,17 +399,19 @@ Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
 ;Destination=[TEMP]\xtratest
 ;Remove subdirs=TRUE
 
+
 ;RunAppX sections
 [RunApp0]
 Timing=depend reboot
 Wait=FALSE
-Target=[SETUP PATH]\mozilla.exe
+Target=[SETUP PATH]\$MainExeFile$
 Parameters=-installer
 WorkingDir=[SETUP PATH]
 
+
 [Windows Registry0]
 Root Key=HKEY_LOCAL_MACHINE
-Key=Software\Mozilla\Mozilla Seamonkey\$UserAgent$\Main
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
 Name=Program Folder Path
 Name Value=[Default Folder]
 Type=REG_SZ
@@ -416,6 +421,32 @@ Decrypt Name Value=TRUE
 Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=pre smartupdate
+
+[Windows Registry1]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ $UserAgentShort$
+Name=DisplayName
+Name Value=$ProductName$ $UserAgentShort$
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=FALSE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry2]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ $UserAgentShort$
+Name=UninstallString
+Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$"
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
 
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
@@ -448,19 +479,19 @@ Show Folder=SHOW
 Program Folder=[Default Folder]
 
 ;[Program Folder0-Shortcut0]
-;File=[SETUP PATH]\mozilla.exe
+;File=[SETUP PATH]\$MainExeFile$
 ;Arguments=
 ;Working Dir=[SETUP PATH]
-;Description=Mozilla Seamonkey
-;Icon Path=[SETUP PATH]\mozilla.exe
+;Description=$ProductName$
+;Icon Path=[SETUP PATH]\$MainExeFile$
 ;Icon Id=0
 
 ;[Program Folder0-Shortcut1]
-;File=[SETUP PATH]\mozilla.exe
+;File=[SETUP PATH]\$MainExeFile$
 ;Arguments=-ProfileManager
 ;Working Dir=[SETUP PATH]
 ;Description=Profile Manager
-;Icon Path=[SETUP PATH]\mozilla.exe
+;Icon Path=[SETUP PATH]\$MainExeFile$
 ;Icon Id=0
 
 ;[Program Folder0-Shortcut2]

@@ -26,11 +26,11 @@
 #include "extra.h"
 #include "dialogs.h"
 #include "ifuncns.h"
-#include "time.h"
-#include <winnls.h>
+//#include "time.h"
+//#include <winnls.h>
 #include <winver.h>
-#include <tlhelp32.h>
-#include <winperf.h>
+//#include <tlhelp32.h>
+//#include <winperf.h>
 
 #define HIDWORD(l)   ((DWORD) (((ULONG) (l) >> 32) & 0xFFFF))
 #define LODWORD(l)   ((DWORD) (l))
@@ -688,17 +688,21 @@ HRESULT InitUninstallGeneral()
 {
   ugUninstall.dwMode = NORMAL;
 
-  if((ugUninstall.szLogPath     = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szLogPath                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szProductName = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szLogFilename             = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szWrKey       = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szProductName             = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szUserAgent   = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szWrKey                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szWrMainKey   = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szUserAgent               = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szWrMainKey               = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((ugUninstall.szDescription             = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((ugUninstall.szUninstallKeyDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -707,7 +711,9 @@ HRESULT InitUninstallGeneral()
 void DeInitUninstallGeneral()
 {
   FreeMemory(&(ugUninstall.szLogPath));
+  FreeMemory(&(ugUninstall.szLogFilename));
   FreeMemory(&(ugUninstall.szDescription));
+  FreeMemory(&(ugUninstall.szUninstallKeyDescription));
   FreeMemory(&(ugUninstall.szUserAgent));
   FreeMemory(&(ugUninstall.szWrKey));
   FreeMemory(&(ugUninstall.szProductName));
@@ -1053,8 +1059,10 @@ BOOL CheckLegacy(HWND hDlg)
 HRESULT GetUninstallLogPath()
 {
   char szBuf[MAX_BUF];
+  char szTempDescription[MAX_BUF];
   char szLogFolder[MAX_BUF];
   char szKey[MAX_BUF];
+  char szWindowsUninstallKey[MAX_BUF];
   char szErrorMsg[MAX_BUF];
   char szEUninstallLogFolder[MAX_BUF];
 
@@ -1066,14 +1074,18 @@ HRESULT GetUninstallLogPath()
     AppendBackSlash(szKey, sizeof(szKey));
     lstrcat(szKey, "Uninstall");
 
-    GetWinReg(ugUninstall.hWrMainRoot, szKey, "Uninstall Log Folder", szLogFolder,               sizeof(szLogFolder));
-    GetWinReg(ugUninstall.hWrMainRoot, szKey, "Description",          ugUninstall.szDescription, sizeof(szLogFolder));
+    GetWinReg(ugUninstall.hWrMainRoot, szKey, "Uninstall Log Folder",   szLogFolder, sizeof(szLogFolder));
+    GetWinReg(ugUninstall.hWrMainRoot, szKey, "Description",            ugUninstall.szUninstallKeyDescription, sizeof(szLogFolder));
   }
   else
   {
-    GetWinReg(ugUninstall.hWrRoot, ugUninstall.szWrKey, "Uninstall Log Folder", szLogFolder,               sizeof(szLogFolder));
-    GetWinReg(ugUninstall.hWrRoot, ugUninstall.szWrKey, "Description",          ugUninstall.szDescription, sizeof(szLogFolder));
+    GetWinReg(ugUninstall.hWrRoot, ugUninstall.szWrKey, "Uninstall Log Folder", szLogFolder, sizeof(szLogFolder));
+    GetWinReg(ugUninstall.hWrRoot, ugUninstall.szWrKey, "Description",          ugUninstall.szUninstallKeyDescription, sizeof(szLogFolder));
   }
+
+  lstrcpy(szWindowsUninstallKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\");
+  lstrcat(szWindowsUninstallKey, ugUninstall.szUninstallKeyDescription);
+  GetWinReg(HKEY_LOCAL_MACHINE, szWindowsUninstallKey, "DisplayName", ugUninstall.szDescription, sizeof(szLogFolder));
 
   if(FileExists(szLogFolder) == FALSE)
   {
@@ -1088,6 +1100,7 @@ HRESULT GetUninstallLogPath()
 
     return(1);
   }
+  lstrcpy(ugUninstall.szLogPath, szLogFolder);
 
   return(0);
 }
@@ -1105,6 +1118,8 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   if(InitDlgUninstall(&diUninstall))
     return(1);
  
+  lstrcpy(ugUninstall.szLogFilename, FILE_LOG_INSTALL);
+
   /* get install Mode information */
   GetPrivateProfileString("General", "Run Mode", "", szBuf, MAX_BUF, szFileIniUninstall);
   SetUninstallRunMode(szBuf);
@@ -1464,11 +1479,11 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
 
     wsprintf(szVariable, "Software\\Netscape\\Netscape Seamonkey\\%s", szBuf);
   }
-  else if(lstrcmpi(szVariable, "WinRegKey Netscape6") == 0)
+  else if(lstrcmpi(szVariable, "WinRegKey Netscape 6") == 0)
   {
     lstrcpy(szVariable, "Software\\Netscape\\Netscape 6");
   }
-  else if(lstrcmpi(szVariable, "Netscape6 CurrentVersion") == 0)
+  else if(lstrcmpi(szVariable, "Netscape 6 CurrentVersion") == 0)
   {
     /* parse for the current Netscape WinReg key */
     GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape 6", "CurrentVersion", szBuf, sizeof(szBuf));

@@ -50,7 +50,8 @@ typedef int PRInt32;
 
 #define CLASS_NAME                      "Uninstall"
 #define FILE_INI_UNINSTALL              "uninstall.ini"
-#define WIZ_TEMP_DIR                    "ns_utemp"
+#define FILE_LOG_INSTALL                "install.log"
+#define WIZ_TEMP_DIR                    "ns_temp"
 
 /* PP: Parse Path */
 #define PP_FILENAME_ONLY                1
@@ -97,8 +98,10 @@ typedef struct uninstallStruct
 {
   DWORD     dwMode;
   LPSTR     szLogPath;
+  LPSTR     szLogFilename;
   LPSTR     szProductName;
   LPSTR     szDescription;
+  LPSTR     szUninstallKeyDescription;
   HKEY      hWrMainRoot;
   LPSTR     szWrMainKey;
   HKEY      hWrRoot;

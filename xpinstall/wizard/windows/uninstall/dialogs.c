@@ -26,21 +26,23 @@
 #include "extra.h"
 #include "dialogs.h"
 #include "ifuncns.h"
-#include <shlobj.h>
-
-static WNDPROC OldListBoxWndProc;
-static BOOL    gbProcessingXpnstallFiles;
-static DWORD   gdwACFlag;
+#include "parser.h"
 
 LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  RECT rDlg;
+  char  szBuf[MAX_BUF];
+  char  szFileInstallLog[MAX_BUF];
+  char  szKey[MAX_BUF];
+  sil   *silFile;
+  RECT  rDlg;
+  DWORD dwFileFound;
 
   switch(msg)
   {
     case WM_INITDIALOG:
       SetWindowText(hDlg, diUninstall.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diUninstall.szMessage0);
+      wsprintf(szBuf, diUninstall.szMessage0, ugUninstall.szDescription);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -51,6 +53,37 @@ LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
+          dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
+          while(dwFileFound)
+          {
+            if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
+            {
+              FileDelete(szFileInstallLog);
+              Uninstall(silFile);
+              DeInitSilNodes(&silFile);
+            }
+
+            dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
+          }
+
+          lstrcpy(szFileInstallLog, ugUninstall.szLogPath);
+          AppendBackSlash(szFileInstallLog, MAX_BUF);
+          lstrcat(szFileInstallLog, ugUninstall.szLogFilename);
+          if(FileExists(szFileInstallLog))
+          {
+            if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
+            {
+              FileDelete(szFileInstallLog);
+              Uninstall(silFile);
+              DeInitSilNodes(&silFile);
+            }
+          }
+
+          /* clean up the uninstall windows registry key */
+          lstrcpy(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\");
+          lstrcat(szKey, ugUninstall.szUninstallKeyDescription);
+          RegDeleteKey(HKEY_LOCAL_MACHINE, szKey);
+
           DestroyWindow(hDlg);
           PostQuitMessage(0);
           break;

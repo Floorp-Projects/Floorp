@@ -28,6 +28,8 @@ DIRS=$(DIRS) nsinstall \
 !endif
              setup     \
              setuprsc  \
-             ren8dot3
+             ren8dot3  \
+             uninstall \
+             ds32
 
 include <$(DEPTH)\config\rules.mak>

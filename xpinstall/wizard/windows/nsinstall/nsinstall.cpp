@@ -350,11 +350,13 @@ void ParseCommandLine(LPSTR lpszCmdLine)
     if((lstrcmpi(szArgVBuf, "-ms") == 0) || (lstrcmpi(szArgVBuf, "/ms") == 0))
     {
       dwMode = SILENT;
-      lstrcat(szCmdLineToSetup, " /ms");
     }
 
     ++i;
   }
+
+  lstrcpy(szCmdLineToSetup, " ");
+  lstrcat(szCmdLineToSetup, lpszCmdLine);
 }
 
 // Centers the specified window over the desktop. Assumes the window is
@@ -685,6 +687,20 @@ GaugeWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
+HRESULT FileExists(LPSTR szFile)
+{
+  DWORD rv;
+
+  if((rv = GetFileAttributes(szFile)) == -1)
+  {
+    return(FALSE);
+  }
+  else
+  {
+    return(rv);
+  }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // WinMain
 
@@ -693,7 +709,10 @@ RunInstaller()
 {
   PROCESS_INFORMATION pi;
   STARTUPINFO         sti;
-  char                szCmdLine[MAX_PATH];
+  char                szCmdLine[MAX_BUF];
+  char                szSetupFile[MAX_BUF];
+  char                szUninstallFile[MAX_BUF];
+  char                szArcLstFile[MAX_BUF];
   BOOL                bRet;
   char                szText[256];
   char                szTempPath[4096];
@@ -710,19 +729,30 @@ RunInstaller()
   memset(&sti,0,sizeof(sti));
   sti.cb = sizeof(STARTUPINFO);
 
-  // Setup program is in the directory specified for temporary files
-  GetFullTempPathName("SETUP.EXE", sizeof(szCmdLine), szCmdLine);
-
   dwLen = GetTempPath(4096, szTempPath);
   if (szTempPath[dwLen - 1] != '\\')
     strcat(szTempPath, "\\");
   strcat(szTempPath, WIZ_TEMP_DIR);
 
-  GetCurrentDirectory(MAX_PATH, szCurrentDirectory);
-  GetShortPathName(szCurrentDirectory, szBuf, MAX_PATH);
+  // Setup program is in the directory specified for temporary files
+	GetFullTempPathName("Archive.lst",   sizeof(szArcLstFile),    szArcLstFile);
+  GetFullTempPathName("SETUP.EXE",     sizeof(szSetupFile),     szSetupFile);
+  GetFullTempPathName("uninstall.exe", sizeof(szUninstallFile), szUninstallFile);
 
-  lstrcat(szCmdLine, " -a ");
-  lstrcat(szCmdLine, szBuf);
+  GetPrivateProfileString("Archives", "uninstall.exe", "", szBuf, (MAX_BUF * 2), szArcLstFile);
+  if((FileExists(szUninstallFile) != FALSE) && (*szBuf != '\0'))
+  {
+    lstrcpy(szCmdLine, szUninstallFile);
+  }
+  else
+  {
+    lstrcpy(szCmdLine, szSetupFile);
+    GetCurrentDirectory(MAX_PATH, szCurrentDirectory);
+    GetShortPathName(szCurrentDirectory, szBuf, MAX_PATH);
+
+    lstrcat(szCmdLine, " -a ");
+    lstrcat(szCmdLine, szBuf);
+  }
 
   if(szCmdLine != NULL)
     lstrcat(szCmdLine, szCmdLineToSetup);

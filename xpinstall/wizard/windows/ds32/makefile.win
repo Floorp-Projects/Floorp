@@ -27,15 +27,16 @@ USE_NON_MT_LIBS = 1
 MODULE          = ds32
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
 
-OBJS =                          \
+OBJS =                       \
     .\$(OBJDIR)\ds32.obj     \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAM)
-    $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
+    if not exist $(MOZ_TOOLS)\bin\nul mkdir $(MOZ_TOOLS)\bin
+    copy $(PROGRAM) $(MOZ_TOOLS)\bin
 
 clobber_all::
-    $(RM) $(DIST)\install\$(MODULE).exe
+    $(RM) $(MOZ_TOOLS)\bin\$(MODULE).exe
 

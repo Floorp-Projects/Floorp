@@ -38,8 +38,6 @@ OBJS =                          \
     $(NULL)
 
 WIN_LIBS=                       \
-    ole32.lib                   \
-    comdlg32.lib                \
     shell32.lib                 \
     version.lib                 \
     $(NULL)

@@ -31,22 +31,20 @@
 #        default version        - a julian date in the form of:
 #                                 major.minor.release.yydoy
 #                                 ie: 5.0.0.99256
-#        user agent             - user agent of product
 #        component staging path - path to where the components are staged at
 #
 #        ie: perl makejs.pl core.jst 5.0.0.99256
 #
 
 # Make sure there are at least two arguments
-if($#ARGV < 3)
+if($#ARGV < 2)
 {
-  die "usage: $0 <.jst file> <default version> <UserAgent> <staging path>
+  die "usage: $0 <.jst file> <default version> <staging path>
 
        .jst file              : .js template input file
        default version        : default julian base version number to use in the
                                 form of: major.minor.release.yydoy
                                 ie: 5.0.0.99256
-       user agent             : user agent of product (5.0b1 [en])
        component staging path : path to where this component is staged at
                                 ie: z:\\stage\\windows\\32bit\\en\\5.0\\core
        \n";
@@ -54,8 +52,16 @@ if($#ARGV < 3)
 
 $inJstFile        = $ARGV[0];
 $inVersion        = $ARGV[1];
-$inUserAgent      = $ARGV[2];
-$inStagePath      = $ARGV[3];
+$inStagePath      = $ARGV[2];
+
+# get environment vars
+$userAgent        = $ENV{WIZ_userAgent};
+$nameCompany      = $ENV{WIZ_nameCompany};
+$nameProduct      = $ENV{WIZ_nameProduct};
+$fileMainExe      = $ENV{WIZ_fileMainExe};
+$fileUninstall    = $ENV{WIZ_fileUninstall};
+
+$userAgentShort   = ParseUserAgentShort($userAgent);
 
 # Get the name of the file replacing the .jst extension with a .js extension
 @inJstFileSplit   = split(/\./,$inJstFile);
@@ -76,16 +82,7 @@ open(fpOutJs, ">$outJsFile") || die "\nCould not open $outJsFile: $!\n";
 # While loop to read each line from input file
 while($line = <fpInTemplate>)
 {
-  # For each line read, search and replace $Version$ with the version passed in
-  if($line =~ /\$Version\$/i)
-  {
-    $line =~ s/\$Version\$/$inVersion/i;
-  }
-  elsif($line =~ /\$UserAgent\$/i)
-  {
-    $line =~ s/\$UserAgent\$/$inUserAgent/i;
-  }
-  elsif($line =~ /\$SpaceRequired\$/i) # For each line read, search and replace $InstallSize$ with the calculated size
+  if($line =~ /\$SpaceRequired\$/i) # For each line read, search and replace $InstallSize$ with the calculated size
   {
     $spaceRequired = 0;
 
@@ -104,6 +101,16 @@ while($line = <fpInTemplate>)
       $line =~ s/\$SpaceRequired\$/$spaceRequired/i;
     }
   }
+  else
+  {
+    $line =~ s/\$Version\$/$inVersion/i;
+    $line =~ s/\$UserAgent\$/$userAgent/i;
+    $line =~ s/\$UserAgentShort\$/$userAgentShort/i;
+    $line =~ s/\$CompanyName\$/$nameCompany/i;
+    $line =~ s/\$ProductName\$/$nameProduct/i;
+    $line =~ s/\$MainExeFile\$/$fileMainExe/i;
+    $line =~ s/\$UninstallFile\$/$fileUninstall/i;
+  }
 
   print fpOutJs $line;
 }
@@ -114,9 +121,23 @@ sub GetSpaceRequired()
   my($spaceRequired);
 
   print "   calulating size for $inPath\n";
-  $spaceRequired    = `ds32.exe /D /L0 /A /S /C 32768 $inPath`;
+  $spaceRequired    = `$ENV{MOZ_TOOLS}\\bin\\ds32.exe /D /L0 /A /S /C 32768 $inPath`;
   $spaceRequired    = int($spaceRequired / 1024);
   $spaceRequired   += 1;
   return($spaceRequired);
+}
+
+sub ParseUserAgentShort()
+{
+  my($aUserAgent) = @_;
+  my($aUserAgentShort);
+
+  @spaceSplit = split(/ /, $aUserAgent);
+  if($#spaceSplit >= 0)
+  {
+    $aUserAgentShort = $spaceSplit[0];
+  }
+
+  return($aUserAgentShort);
 }
 

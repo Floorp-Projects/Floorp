@@ -92,6 +92,7 @@ void ProcessFileOps(DWORD dwTiming)
   ProcessCreateDirectory(dwTiming);
   ProcessMoveFile(dwTiming);
   ProcessCopyFile(dwTiming);
+  ProcessCopyFileSequential(dwTiming);
   ProcessDeleteFile(dwTiming);
   ProcessRemoveDirectory(dwTiming);
   ProcessRunApp(dwTiming);
@@ -370,6 +371,100 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists)
   return(FO_SUCCESS);
 }
 
+HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilename)
+{
+  int             iFilenameOnlyLen;
+  char            szDestFullFilename[MAX_BUF];
+  char            szSourceFullFilename[MAX_BUF];
+  char            szSearchFilename[MAX_BUF];
+  char            szSearchDestFullFilename[MAX_BUF];
+  char            szFilenameOnly[MAX_BUF];
+  char            szFilenameExtensionOnly[MAX_BUF];
+  char            szNumber[MAX_BUF];
+  long            dwNumber;
+  long            dwMaxNumber;
+  LPSTR           szDotPtr;
+  HANDLE          hFile;
+  WIN32_FIND_DATA fdFile;
+  BOOL            bFound;
+
+
+  lstrcpy(szSourceFullFilename, szSourcePath);
+  AppendBackSlash(szSourceFullFilename, sizeof(szSourceFullFilename));
+  lstrcat(szSourceFullFilename, szFilename);
+
+  if(FileExists(szSourceFullFilename))
+  {
+    /* zero out the memory */
+    ZeroMemory(szSearchFilename,        sizeof(szSearchFilename));
+    ZeroMemory(szFilenameOnly,          sizeof(szFilenameOnly));
+    ZeroMemory(szFilenameExtensionOnly, sizeof(szFilenameExtensionOnly));
+
+    /* parse for the filename w/o extention and also only the extension */
+    if((szDotPtr = strstr(szFilename, ".")) != NULL)
+    {
+      *szDotPtr = '\0';
+      lstrcpy(szSearchFilename, szFilename);
+      lstrcpy(szFilenameOnly, szFilename);
+      lstrcpy(szFilenameExtensionOnly, &szDotPtr[1]);
+      *szDotPtr = '.';
+    }
+    else
+    {
+      lstrcpy(szFilenameOnly, szFilename);
+      lstrcpy(szSearchFilename, szFilename);
+    }
+
+    /* create the wild arg filename to search for in the szDestPath */
+    lstrcat(szSearchFilename, "*.*");
+    lstrcpy(szSearchDestFullFilename, szDestPath);
+    AppendBackSlash(szSearchDestFullFilename, sizeof(szSearchDestFullFilename));
+    lstrcat(szSearchDestFullFilename, szSearchFilename);
+
+    iFilenameOnlyLen = lstrlen(szFilenameOnly);
+    dwNumber         = 0;
+    dwMaxNumber      = 0;
+
+    /* find the largest numbered filename in the szDestPath */
+    if((hFile = FindFirstFile(szSearchDestFullFilename, &fdFile)) == INVALID_HANDLE_VALUE)
+      bFound = FALSE;
+    else
+      bFound = TRUE;
+
+    while(bFound)
+    {
+       ZeroMemory(szNumber, sizeof(szNumber));
+      if((lstrcmpi(fdFile.cFileName, ".") != 0) && (lstrcmpi(fdFile.cFileName, "..") != 0))
+      {
+        lstrcpy(szNumber, &fdFile.cFileName[iFilenameOnlyLen]);
+        dwNumber = atoi(szNumber);
+        if(dwNumber > dwMaxNumber)
+          dwMaxNumber = dwNumber;
+      }
+
+      bFound = FindNextFile(hFile, &fdFile);
+    }
+
+    FindClose(hFile);
+
+    lstrcpy(szDestFullFilename, szDestPath);
+    AppendBackSlash(szDestFullFilename, sizeof(szDestFullFilename));
+    lstrcat(szDestFullFilename, szFilenameOnly);
+    itoa(dwMaxNumber + 1, szNumber, 10);
+    lstrcat(szDestFullFilename, szNumber);
+
+    if(*szFilenameExtensionOnly != '\0')
+    {
+      lstrcat(szDestFullFilename, ".");
+      lstrcat(szDestFullFilename, szFilenameExtensionOnly);
+    }
+
+    CopyFile(szSourceFullFilename, szDestFullFilename, TRUE);
+  }
+
+  return(FO_SUCCESS);
+}
+
 HRESULT ProcessCopyFile(DWORD dwTiming)
 {
   DWORD dwIndex;
@@ -407,6 +502,43 @@ HRESULT ProcessCopyFile(DWORD dwTiming)
     lstrcpy(szSection, "Copy File");
     lstrcat(szSection, szIndex);
     GetPrivateProfileString(szSection, "Source", "", szBuf, MAX_BUF, szFileIniConfig);
+  }
+  return(FO_SUCCESS);
+}
+
+HRESULT ProcessCopyFileSequential(DWORD dwTiming)
+{
+  DWORD dwIndex;
+  char  szIndex[MAX_BUF];
+  char  szBuf[MAX_BUF];
+  char  szSection[MAX_BUF];
+  char  szSource[MAX_BUF];
+  char  szDestination[MAX_BUF];
+  char  szFilename[MAX_BUF];
+
+  dwIndex = 0;
+  itoa(dwIndex, szIndex, 10);
+  lstrcpy(szSection, "Copy File Sequential");
+  lstrcat(szSection, szIndex);
+  GetPrivateProfileString(szSection, "Filename", "", szFilename, MAX_BUF, szFileIniConfig);
+  while(*szFilename != '\0')
+  {
+    if(TimingCheck(dwTiming, szSection, szFileIniConfig))
+    {
+      GetPrivateProfileString(szSection, "Source", "", szBuf, MAX_BUF, szFileIniConfig);
+      DecryptString(szSource, szBuf);
+
+      GetPrivateProfileString(szSection, "Destination", "", szBuf, MAX_BUF, szFileIniConfig);
+      DecryptString(szDestination, szBuf);
+
+      FileCopySequential(szSource, szDestination, szFilename);
+    }
+
+    ++dwIndex;
+    itoa(dwIndex, szIndex, 10);
+    lstrcpy(szSection, "Copy File Sequential");
+    lstrcat(szSection, szIndex);
+    GetPrivateProfileString(szSection, "Filename", "", szFilename, MAX_BUF, szFileIniConfig);
   }
   return(FO_SUCCESS);
 }

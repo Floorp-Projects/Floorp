@@ -1,7 +1,7 @@
 // main
 var srDest;
 var err;
-var communicatorFolder;
+var fCommunicator;
 
 srDest = $SpaceRequired$:bin;
 err    = startInstall("Mozilla Mail", "Mail", "$Version$"); 
@@ -9,17 +9,17 @@ logComment("startInstall: " + err);
 // check return value
 checkError(err);
 
-communicatorFolder = getFolder("Communicator");
-logComment("communicatorFolder: " + communicatorFolder);
+fCommunicator = getFolder("Communicator");
+logComment("fCommunicator: " + fCommunicator);
 
-if(verifyDiskSpace(communicatorFolder, srDest) == true)
+if(verifyDiskSpace(fCommunicator, srDest) == true)
 {
-  setPackageFolder(communicatorFolder);
+  setPackageFolder(fCommunicator);
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
-                     communicatorFolder, // Where to put this file (Returned from GetFolder) 
-                     "",                 // subdir name to create relative to communicatorFolder
+                     fCommunicator,      // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fCommunicator
                      true);              // Force Flag 
   logComment("addDirectory() returned: " + err);
 

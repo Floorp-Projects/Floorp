@@ -37,16 +37,16 @@
 #define KEY_RENAME_DIR                  "rename dir: "
 #define KEY_WINDOWS_SHORTCUT            "windows shortcut: "
 
-sil *InitSilNodes(char *szFileIni);
-void DeInitSilNodes(sil **silHead);
-void ParseCommandLine(LPSTR lpszCmdLine);
-HRESULT FileExists(LPSTR szFile);
-void DeInitializeParser(sil **silHead);
-void DebugPrintFileNodes(sil* silFile);
-void ParseForFile(LPSTR szString, LPSTR szKey, LPSTR szShortFilename, DWORD dwShortFilenameBufSize);
-void ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, DWORD dwRootKeyBufSize, LPSTR szKey, DWORD dwKeyBufSize, LPSTR szName, DWORD dwNameBufSize);
-void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey);
-void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
+sil         *InitSilNodes(char *szFileIni);
+void        DeInitSilNodes(sil **silHead);
+void        ParseCommandLine(LPSTR lpszCmdLine);
+HRESULT     FileExists(LPSTR szFile);
+void        Uninstall(sil* silFile);
+void        ParseForFile(LPSTR szString, LPSTR szKey, LPSTR szShortFilename, DWORD dwShortFilenameBufSize);
+void        ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, DWORD dwRootKeyBufSize, LPSTR szKey, DWORD dwKeyBufSize, LPSTR szName, DWORD dwNameBufSize);
+void        DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey);
+void        DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
+DWORD       GetLogFile(LPSTR szTargetPath, LPSTR szInFilename, LPSTR szOutBuf, DWORD dwOutBufSize);
 
 #endif
 

@@ -1,37 +1,92 @@
+function updateWinReg()
+{
+  //Notes:
+  // can't use a double backslash before subkey - Windows already puts it in.
+  // subkeys have to exist before values can be put in.
+  var winreg = getWinRegistry();
+  var subkey;  //the name of the subkey you are poking around in
+  var valname; // the name of the value you want to look at
+  var value;   //the data in the value you want to look at.
+
+  if(winreg != null) 
+  {
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey  = "SOFTWARE\\$CompanyName$";
+    winreg.createKey(subkey,"");
+
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
+    winreg.createKey(subkey,"");
+
+    valname = "CurrentVersion";
+    value   = "$UserAgent$";
+    err     = winreg.setValueString(subkey, valname, value);
+
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
+    winreg.createKey(subkey,"");
+
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+    winreg.createKey(subkey,"");
+
+    valname = "Install Directory";
+    value   = fCommunicator;
+    err     = winreg.setValueString(subkey, valname, value);
+
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Uninstall";
+    winreg.createKey(subkey,"");
+
+    valname = "Uninstall Log Folder";
+    value   = szUninstall;
+    err     = winreg.setValueString(subkey, valname, value);
+
+    valname = "Description";
+    value   = "$ProductName$ $UserAgentShort$";
+    err     = winreg.setValueString(subkey, valname, value);
+  }
+}
+
 // main
 var srDest;
 var err;
-var communicatorFolder;
+var szUninstall;
+var fUninstall;
+var fCommunicator;
 var fWindowsSystem;
-var fileComponentRegStr;
 var fileComponentReg;
+var fileComponentRegStr;
 
 srDest = $SpaceRequired$:bin;
 err    = startInstall("Mozilla XPCom", "XPCom", "$Version$"); 
 logComment("startInstall: " + err);
 
-communicatorFolder = getFolder("Communicator");
-fWindowsSystem     = getFolder("Win System");
-logComment("communicatorFolder: " + communicatorFolder);
+fCommunicator  = getFolder("Communicator");
+fWindowsSystem = getFolder("Win System");
+logComment("fCommunicator: " + fCommunicator);
 
-if(verifyDiskSpace(communicatorFolder, srDest) == true)
+// build the uninstall folder path
+szUninstall = fCommunicator + "\\Uninstall";
+fUninstall  = getFolder("file:///", szUninstall);
+File.dirCreate(fUninstall);
+
+if(verifyDiskSpace(fCommunicator, srDest) == true)
 {
-  setPackageFolder(communicatorFolder);
+  setPackageFolder(fCommunicator);
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
-                     communicatorFolder, // Where to put this file (Returned from GetFolder) 
-                     "",                 // subdir name to create relative to communicatorFolder
+                     fCommunicator,      // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fCommunicator
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
 
   // check return value
   if(!checkError(err))
   {
-    fileComponentRegStr = communicatorFolder + "\\component.reg";
+    fileComponentRegStr = fCommunicator + "\\component.reg";
     fileComponentReg    = getFolder("file:///", fileComponentRegStr);
     err                 = fileDelete(fileComponentReg);
     logComment("fileDelete() returned: " + err);
+
+    updateWinReg();
 
     err = finalizeInstall(); 
     logComment("finalizeInstall() returned: " + err);
@@ -39,3 +94,4 @@ if(verifyDiskSpace(communicatorFolder, srDest) == true)
 }
 
 // end main
+
