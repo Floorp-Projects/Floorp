@@ -4243,7 +4243,7 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                               nsACString& outCommandID,
                                               nsACString& outParam)
 {
-  nsCAutoString convertedCommandID = NS_ConvertUCS2toUTF8(inCommandID);
+  NS_ConvertUCS2toUTF8 convertedCommandID(inCommandID);
   PRUint32 i, j;
   for (i = 0; i < MidasCommandCount; ++i) {
     if (convertedCommandID.Equals(gMidasCommandTable[i].incomingCommandString,
@@ -4256,7 +4256,7 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
         outParam.Assign(gMidasCommandTable[i].internalParamString);
       }
       else {
-        nsCAutoString convertedParam = NS_ConvertUCS2toUTF8(inParam);
+        NS_ConvertUCS2toUTF8 convertedParam(inParam);
         // check to see if we need to convert the parameter
         for (j = 0; j < MidasParamCount; ++j) {
           if (convertedParam.Equals(gMidasParamTable[j].incomingParamString,
