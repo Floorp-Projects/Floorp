@@ -190,6 +190,10 @@
 	#define REINTERPRET_CAST(T,x)	((T)(x))
 #endif
 
+#ifdef NO_BOOL
+	typedef unsigned char bool;
+#endif
+
 #ifdef NO_MEMBER_USING_DECLARATIONS
 #include "prtypes.h"
 #endif
@@ -289,7 +293,8 @@ class COM_auto_ptr
 
 			explicit
 			COM_auto_ptr( T* ptr = 0 )
-					: ptr_(ptr)
+					: ptr_(ptr),
+						awaiting_AddRef_(false)
 				{
 					if ( ptr_ )
 						ptr_->AddRef();
@@ -297,13 +302,15 @@ class COM_auto_ptr
 
 			explicit
 			COM_auto_ptr( const dont_AddRef_t<T>& P )
-					: ptr_(P.ptr_)
+					: ptr_(P.ptr_),
+						awaiting_AddRef_(false)
 				{
 					// nothing else to do here
 				}
 
 			COM_auto_ptr( const COM_auto_ptr<T>& P )
-					: ptr_(P.ptr_)
+					: ptr_(P.ptr_),
+						awaiting_AddRef_(false)
 				{
 					if ( ptr_ )
 						ptr_->AddRef();
@@ -311,7 +318,7 @@ class COM_auto_ptr
 
 		 ~COM_auto_ptr()
 				{
-					if ( ptr_ )
+					if ( ptr_ && !awaiting_AddRef_ )
 						ptr_->Release();
 				}
 
@@ -325,8 +332,9 @@ class COM_auto_ptr
 			COM_auto_ptr&
 			operator=( const dont_AddRef_t<T>& rhs )
 				{
-					if ( ptr_ )
+					if ( ptr_ && !awaiting_AddRef_ )
 						ptr_->Release();
+					awaiting_AddRef_ = false;
 					ptr_ = rhs.ptr_;
 					return *this;
 				}
@@ -342,6 +350,7 @@ class COM_auto_ptr
 			operator->() const
 					// returns a |derived_safe<T>*| to deny clients the use of |AddRef| and |Release|
 				{
+					assert( ptr_ != 0 ); // you're not allowed to dereference a NULL pointer
 					return get();
 				}
 
@@ -369,19 +378,73 @@ class COM_auto_ptr
 			void
 			reset( T* ptr = 0 )
 				{
-					if ( ptr != ptr_ )
+					if ( ptr )
+						ptr->AddRef();
+					if ( ptr_ && !awaiting_AddRef_ )
+						ptr_->Release();
+					awaiting_AddRef_ = false;
+					ptr_ = ptr;
+				}
+
+
+//		private:
+//			template <class T> friend class func_AddRefs_t;
+//			template <class T> friend class func_doesnt_AddRef_t;
+
+			T**
+			start_assignment( bool awaiting_AddRef )
+				{
+					if ( ptr_ && !awaiting_AddRef_ )
+						ptr_->Release();
+					awaiting_AddRef_ = awaiting_AddRef;
+					ptr_ = 0;
+					return &ptr_;
+				}
+
+			void
+			finish_assignment()
+				{
+					if ( awaiting_AddRef_ )
 						{
-							if ( ptr )
-								ptr->AddRef();
 							if ( ptr_ )
-								ptr_->Release();
-							ptr_ = ptr;
+								ptr_->AddRef();
+							awaiting_AddRef_ = false;
 						}
 				}
 
 		private:
 			T* ptr_;
+			bool awaiting_AddRef_;
 	};
+
+
+template <class T>
+bool
+operator==( const COM_auto_ptr<T>& lhs, const T*const rhs )
+	{
+		return lhs.get() == rhs;
+	}
+
+template <class T>
+bool
+operator!=( const COM_auto_ptr<T>& lhs, const T*const rhs )
+	{
+		return lhs.get() != rhs;
+	}
+
+template <class T>
+bool
+operator==( const T*const lhs, const COM_auto_ptr<T>& rhs )
+	{
+		return lhs == rhs.get();
+	}
+
+template <class T>
+bool
+operator!=( const T*const lhs, const COM_auto_ptr<T>& rhs )
+	{
+		return lhs != rhs.get();
+	}
 
 
 
@@ -410,36 +473,33 @@ class func_AddRefs_t
 		public:
 			explicit
 			func_AddRefs_t( COM_auto_ptr<T>& P )
-					: ptr_(0),
-						new_owner_(P)
+					: owner_(&P)
 				{
 					// nothing else to do
 				}
 
-		 ~func_AddRefs_t()
+#if 1
+			operator void**()
 				{
-					new_owner_ = dont_AddRef(ptr_);
+					return REINTERPRET_CAST(void**, owner_->start_assignment(false));
 				}
+#endif
 
 			T*&
 			operator*()
 				{
-					return ptr_;
+					assert(owner_);
+					return *(owner_->start_assignment(false));
 				}
 
 			operator T**()
 				{
-					return &ptr_;
+					assert(owner_);
+					return owner_->start_assignment(false);
 				}
 
-			operator void**()
-				{
-					return REINTERPRET_CAST(void **,&ptr_);
-				}
-
-    private:
-			T* ptr_;
-			COM_auto_ptr<T>& new_owner_;
+		private:
+			COM_auto_ptr<T>* owner_;
 	};
 
 template <class T>
@@ -463,36 +523,48 @@ class func_doesnt_AddRef_t
 		public:
 			explicit
 			func_doesnt_AddRef_t( COM_auto_ptr<T>& P )
-					: ptr_(0),
-						new_owner_(P)
+					: owner_(&P)
 				{
 					// nothing else to do
 				}
 
+			func_doesnt_AddRef_t( func_doesnt_AddRef_t<T>& F )
+					: owner_(F.owner_)
+				{
+					F.owner_ = 0;
+				}
+
 		 ~func_doesnt_AddRef_t()
 				{
-					new_owner_ = ptr_;
+					if ( owner_ )
+						owner_->finish_assignment();
 				}
+
+#if 1
+			operator void**()
+				{
+					return REINTERPRET_CAST(void**, owner_->start_assignment(true));
+				}
+#endif
 
 			T*&
 			operator*()
 				{
-					return ptr_;
+					assert(owner_);
+					return *(owner_->start_assignment(true));
 				}
 
 			operator T**()
 				{
-					return &ptr_;
+					assert(owner_);
+					return owner_->start_assignment(true);
 				}
 
-			operator void**()
-				{
-					return REINTERPRET_CAST(void **,&ptr_);
-				}
+		private:
+			func_doesnt_AddRef_t<T> operator=( const func_doesnt_AddRef_t<T>& ); // not to be implemented
 
-    private:
-			T* ptr_;
-			COM_auto_ptr<T>& new_owner_;
+		private:
+			COM_auto_ptr<T>* owner_;
 	};
 
 template <class T>

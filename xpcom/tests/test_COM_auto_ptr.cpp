@@ -148,21 +148,6 @@ CreateIFoo( void** result )
 		return 0;
 	}
 
-NS_RESULT
-CreateIFooVoidPtrRef( void*& result )
-		// a typical factory function (that calls AddRef)
-	{
-		cout << ">>CreateIFooVoidPtrRef() --> ";
-		IFoo* foop = new IFoo;
-		cout << "IFoo@" << STATIC_CAST(void*, foop) << endl;
-
-		foop->AddRef();
-		result = foop;
-
-		cout << "<<CreateIFooVoidPtrRef()" << endl;
-		return 0;
-	}
-
 void
 set_a_IFoo( COM_auto_ptr<IFoo>* result )
 	{
@@ -288,10 +273,10 @@ main()
 			IFoo* raw_foo2p = foo2p.get();
 
 			cout << endl << "### Test  8: can you compare a |COM_auto_ptr| with a raw interface pointer [!=]?" << endl;
-			if ( foo1p.get() != raw_foo2p )
-				cout << "foo1p.get() != raw_foo2p" << endl;
+			if ( foo1p != raw_foo2p )
+				cout << "foo1p != raw_foo2p" << endl;
 			else
-				cout << "foo1p.get() == raw_foo2p" << endl;
+				cout << "foo1p == raw_foo2p" << endl;
 
 
 			cout << endl << "### Test  9: can you assign one |COM_auto_ptr| into another?" << endl;
@@ -304,10 +289,10 @@ main()
 				cout << "foo1p != foo2p" << endl;
 
 			cout << endl << "### Test 11: can you compare a |COM_auto_ptr| with a raw interface pointer [==]?" << endl;
-			if ( raw_foo2p == foo2p.get() )
-				cout << "raw_foo2p == foo2p.get()" << endl;
+			if ( raw_foo2p == foo2p )
+				cout << "raw_foo2p == foo2p" << endl;
 			else
-				cout << "raw_foo2p != foo2p.get()" << endl;
+				cout << "raw_foo2p != foo2p" << endl;
 
 			cout << endl << "### Test 12: bare pointer test?" << endl;
 			if ( foo1p )
@@ -350,21 +335,16 @@ main()
 		{
 			cout << endl << "### Test 17: basic parameter behavior?" << endl;
 			COM_auto_ptr<IFoo> foop;
-			CreateIFoo( (void **)(IFoo **)func_AddRefs_t<IFoo>(foop) );
+			CreateIFoo( func_AddRefs_t<IFoo>(foop) );
 		}
 
 
 		{
 			cout << endl << "### Test 18: basic parameter behavior, using the short form?" << endl;
 			COM_auto_ptr<IFoo> foop;
-			CreateIFoo( (void **)(IFoo **)func_AddRefs(foop) );
+			CreateIFoo( func_AddRefs(foop) );
 		}
 
-		{
-			cout << endl << "### Test 18: basic parameter behavior, using the short form?" << endl;
-			COM_auto_ptr<IFoo> foop;
-			CreateIFooVoidPtrRef( *(void **)func_AddRefs(foop) );
-		}
 
 		{
 			cout << endl << "### Test 19: reference parameter behavior?" << endl;
