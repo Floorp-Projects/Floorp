@@ -26,7 +26,9 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
 
   /* void GetNewMail (); */
   NS_IMETHOD GetNewMail() = 0;
-  NS_IMETHOD Open3PaneWindow()=0;
+
+  /* void Open3PaneWindow (); */
+  NS_IMETHOD Open3PaneWindow() = 0;
 };
 
 #endif /* __gen_nsIDOMMsgAppCore_h__ */
