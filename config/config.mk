@@ -180,6 +180,10 @@ NSS_LIBS	= \
 	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
 	$(NULL)
 
+MOZ_UNICHARUTIL_LIBS = $(DIST)/lib/libunicharutil_s.$(LIB_SUFFIX)
+MOZ_REGISTRY_LIBS          = $(DIST)/lib/libmozreg_s.$(LIB_SUFFIX)
+MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/libwidgetsupport_s.$(LIB_SUFFIX)
+
 # determine debug-related options
 DEBUG_FLAGS :=
 
