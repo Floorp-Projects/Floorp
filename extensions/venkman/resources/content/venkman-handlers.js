@@ -33,6 +33,32 @@
  *
  */
 
+console.doCommandStep =
+function con_step()
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+
+    step();
+    return true;
+}
+
+console.doCommandCont =
+function con_step()
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+
+    cont();
+    return true;
+}
+
 console.displayUsageError =
 function con_dusage (command)
 {
@@ -46,6 +72,7 @@ function con_ondt ()
     focusSource (frame.script.fileName, frame.line);
     console._stackOutlinerView.setStack(console.frames);
     console._stackOutlinerView.setCurrentFrame (getCurrentFrameIndex());
+    enableDebugCommands()
 }
 
 console.onLoad =
@@ -418,17 +445,7 @@ function con_iscope ()
 console.onInputStep =
 function con_iwhere ()
 {
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
-    }
-    
-    console.jsds.interruptHook = console._executionHook;
-    var topFrame = console.frames[0];
-    console._stepPast = topFrame.script.fileName + topFrame.line;
-    console.jsds.exitNestedEventLoop();
-    return true;
+    return console.doCommandStep();
 }
 
 console.onInputQuit =
@@ -545,6 +562,7 @@ function con_stackclick (e)
     
     if (target.localName == "outlinercol")
     {
+        console._scriptsOutlinerView.toggleColumnMode();
         console._scriptsOutlinerView.setScripts(console._scripts);
     }
     else if (e.detail == 2 && target.localName == "outlinerbody")
@@ -561,7 +579,7 @@ function con_stackclick (e)
         
         if (console._sources[fileName])
         {
-            focusSource(url, 0);
+            focusSource(fileName, 0);
         }
         else
         {
