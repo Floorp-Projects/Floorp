@@ -297,7 +297,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
     const char* aCString = (const char*) aString;
     if (!inString)
     	return;
-    NS_ASSERTION(strstr(aCString, kFileURLPrefix) == inString, "Not a URL!");
+    NS_ASSERTION(strstr(aCString, kFileURLPrefix) == aCString, "Not a URL!");
     // Make canonical and absolute.
 	nsFilePath path(aCString + kFileURLPrefixLength, inCreateDirs);
 	*this = path;
@@ -430,7 +430,7 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 :    mPath(inString.ToNewCString())
 {
-    NS_ASSERTION(strstr(mPath, kFileURLPrefix) != inString, "URL passed as path");
+    NS_ASSERTION(strstr(mPath, kFileURLPrefix) != mPath, "URL passed as path");
 
 #ifdef XP_PC
     nsFileSpecHelpers::UnixToNative(mPath);
@@ -885,5 +885,5 @@ nsOutputStream& operator << (nsOutputStream& s, const nsPersistentFileDescriptor
 nsAutoCString::~nsAutoCString()
 //----------------------------------------------------------------------------------------
 {
-	delete [] mCString;
+	delete [] (char*)mCString;
 }
