@@ -17,28 +17,30 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "pratom.h"
-#include "nsIComponentManager.h"
 #include "nsSJIS2Unicode.h"
-#include "nsUCVJADll.h"
+
+//----------------------------------------------------------------------
+// Global functions and data [declaration]
+
+static PRUint16 g_SJISMappingTable[] = {
+#include "sjis.ut"
+};
+
+static PRInt16 g_SJISShiftTable[] =  {
+  4, uMultibytesCharset,
+  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
+  ShiftCell(u1ByteChar,   1, 0xA1, 0xDF, 0x00, 0xA1, 0x00, 0xDF),
+  ShiftCell(u2BytesChar,  2, 0x81, 0x9F, 0x81, 0x40, 0x9F, 0xFC),
+  ShiftCell(u2BytesChar,  2, 0xE0, 0xFC, 0xE0, 0x40, 0xFC, 0xFC)
+};
 
 //----------------------------------------------------------------------
 // Class nsSJIS2Unicode [implementation]
 
-NS_IMPL_ISUPPORTS(nsSJIS2Unicode, kIUnicodeDecoderIID);
-
 nsSJIS2Unicode::nsSJIS2Unicode() 
+: nsTableDecoderSupport((uShiftTable*) &g_SJISShiftTable, 
+                        (uMappingTable*) &g_SJISMappingTable)
 {
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-  mUtil = nsnull;
-  mBehavior = kOnError_Recover;
-}
-
-nsSJIS2Unicode::~nsSJIS2Unicode() 
-{
-  NS_IF_RELEASE(mUtil);
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 nsresult nsSJIS2Unicode::CreateInstance(nsISupports ** aResult) 
@@ -48,75 +50,13 @@ nsresult nsSJIS2Unicode::CreateInstance(nsISupports ** aResult)
 }
 
 //----------------------------------------------------------------------
-// Interface nsICharsetConverter [implementation]
+// Subclassing of nsTableDecoderSupport class [implementation]
 
-static PRInt16 gShiftTable[] =  {
-          4, uMultibytesCharset,
-        ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-        ShiftCell(u1ByteChar,   1, 0xA1, 0xDF, 0x00, 0xA1, 0x00, 0xDF),
-        ShiftCell(u2BytesChar,  2, 0x81, 0x9F, 0x81, 0x40, 0x9F, 0xFC),
-        ShiftCell(u2BytesChar,  2, 0xE0, 0xFC, 0xE0, 0x40, 0xFC, 0xFC)
-};
-
-static PRUint16 gMappingTable[] = {
-#include "sjis.ut"
-};
-
-// XXX quick hack so I don't have to include nsICharsetConverterManager
-extern "C" const nsID kCharsetConverterManagerCID;
-
-NS_IMETHODIMP nsSJIS2Unicode::Convert(PRUnichar * aDest, PRInt32 aDestOffset,
-                                       PRInt32 * aDestLength, 
-                                       const char * aSrc, PRInt32 aSrcOffset, 
-                                       PRInt32 * aSrcLength)
+NS_IMETHODIMP nsSJIS2Unicode::GetMaxLength(const char * aSrc, 
+                                           PRInt32 aSrcLength, 
+                                           PRInt32 * aDestLength)
 {
-  if (aDest == NULL) return NS_ERROR_NULL_POINTER;
-  if(nsnull == mUtil)
-  {
-     nsresult res = NS_OK;
-     res = nsComponentManager::CreateInstance(
-             kCharsetConverterManagerCID, 
-             NULL,
-             kIUnicodeDecodeUtilIID,
-             (void**) & mUtil);
-    
-     if(NS_FAILED(res))
-     {
-       *aSrcLength = 0;
-       *aDestLength = 0;
-       return res;
-     }
-  }
-  return mUtil->Convert( aDest, aDestOffset, aDestLength, 
-                                 aSrc, aSrcOffset, aSrcLength,
-                                 mBehavior,
-                                 (uShiftTable*) &gShiftTable, 
-                                 (uMappingTable*)&gMappingTable);
-}
-
-NS_IMETHODIMP nsSJIS2Unicode::Finish(PRUnichar * aDest, PRInt32 aDestOffset,
-                                      PRInt32 * aDestLength)
-{
-  // it is really only a stateless converter...
-  *aDestLength = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSJIS2Unicode::Length(const char * aSrc, PRInt32 aSrcOffset, 
-                                      PRInt32 aSrcLength, 
-                                      PRInt32 * aDestLength)
-{
+  // we are a single byte to Unicode converter, so...
   *aDestLength = aSrcLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSJIS2Unicode::Reset()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSJIS2Unicode::SetInputErrorBehavior(PRInt32 aBehavior)
-{
-  mBehavior = aBehavior;
-  return NS_OK;
+  return NS_OK_UDEC_EXACTLENGTH;
 }

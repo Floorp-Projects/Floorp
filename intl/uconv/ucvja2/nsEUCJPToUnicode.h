@@ -20,16 +20,19 @@
 #ifndef nsEUCJPToUnicode_h___
 #define nsEUCJPToUnicode_h___
 
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeDecodeUtil.h"
+#include "nsUCvJa2Support.h"
 
 //----------------------------------------------------------------------
 // Class nsEUCJPToUnicode [declaration]
 
-class nsEUCJPToUnicode : public nsIUnicodeDecoder
+/**
+ * A character set converter from EUCJP to Unicode.
+ *
+ * @created         24/Mar/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsEUCJPToUnicode : public nsTablesDecoderSupport
 {
-  NS_DECL_ISUPPORTS
-
 public:
 
   /**
@@ -38,32 +41,17 @@ public:
   nsEUCJPToUnicode();
 
   /**
-   * Class destructor.
-   */
-  virtual ~nsEUCJPToUnicode();
-
-  /**
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
 
+protected:
+
   //--------------------------------------------------------------------
-  // Interface nsIUnicodeDecoder [declaration]
+  // Subclassing of nsDecoderSupport class [declaration]
 
-  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength,const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 * aSrcLength);
-  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
-  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Reset();
-  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
-
-private:
-  PRInt32 mBehavior;
-  nsIUnicodeDecodeUtil *mUtil;
-
 };
 
 #endif /* nsEUCJPToUnicode_h___ */
