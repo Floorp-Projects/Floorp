@@ -1067,30 +1067,33 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* cbrs,
     nscoord availMarginSpace = cbrs->computedWidth - aComputedWidth -
       mComputedBorderPadding.left - mComputedBorderPadding.right;
 
-    // See whether we're over constrained
-    if (!isAutoLeftMargin && !isAutoRightMargin) {
-      // Neither margin is 'auto' so we're over constrained. Use the
-      // 'direction' property to tell which margin to ignore
+    if (availMarginSpace > 0) {
+
+      // See whether we're over constrained
+      if (!isAutoLeftMargin && !isAutoRightMargin) {
+        // Neither margin is 'auto' so we're over constrained. Use the
+        // 'direction' property to tell which margin to ignore
 /*XXX*/      if (NS_STYLE_DISPLAY_TABLE != mStyleDisplay->mDisplay) {
-      if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
-        isAutoRightMargin = PR_TRUE;
-      } else {
-        isAutoLeftMargin = PR_TRUE;
-      }
+  if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
+    isAutoRightMargin = PR_TRUE;
+  } else {
+    isAutoLeftMargin = PR_TRUE;
+  }
 /*XXX*/      }
-    }
-
-    if (isAutoLeftMargin) {
-      if (isAutoRightMargin) {
-        // Both margins are 'auto' so their computed values are equal
-        computedMargin.left = availMarginSpace / 2;
-        computedMargin.right = availMarginSpace - computedMargin.left;
-      } else {
-        computedMargin.left = availMarginSpace - computedMargin.right;
       }
 
-    } else if (isAutoRightMargin) {
-      computedMargin.right = availMarginSpace - computedMargin.left;
+      if (isAutoLeftMargin) {
+        if (isAutoRightMargin) {
+          // Both margins are 'auto' so their computed values are equal
+          computedMargin.left = availMarginSpace / 2;
+          computedMargin.right = availMarginSpace - computedMargin.left;
+        } else {
+          computedMargin.left = availMarginSpace - computedMargin.right;
+        }
+
+      } else if (isAutoRightMargin) {
+        computedMargin.right = availMarginSpace - computedMargin.left;
+      }
     }
   }
 }
