@@ -857,6 +857,7 @@ jsval nsDOMClassInfo::sName_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnmousedown_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnmouseup_id       = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnclick_id         = JSVAL_VOID;
+jsval nsDOMClassInfo::sOndblclick_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sOncontextmenu_id   = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnmouseover_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnmouseout_id      = JSVAL_VOID;
@@ -959,6 +960,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOnmousedown_id,     cx, "onmousedown");
   SET_JSVAL_TO_STRING(sOnmouseup_id,       cx, "onmouseup");
   SET_JSVAL_TO_STRING(sOnclick_id,         cx, "onclick");
+  SET_JSVAL_TO_STRING(sOndblclick_id,      cx, "ondblclick");
   SET_JSVAL_TO_STRING(sOncontextmenu_id,   cx, "oncontextmenu");
   SET_JSVAL_TO_STRING(sOnmouseover_id,     cx, "onmouseover");
   SET_JSVAL_TO_STRING(sOnmouseout_id,      cx, "onmouseout");
@@ -2796,6 +2798,7 @@ nsDOMClassInfo::ShutDown()
   sOnmousedown_id     = JSVAL_VOID;
   sOnmouseup_id       = JSVAL_VOID;
   sOnclick_id         = JSVAL_VOID;
+  sOndblclick_id      = JSVAL_VOID;
   sOncontextmenu_id   = JSVAL_VOID;
   sOnmouseover_id     = JSVAL_VOID;
   sOnmouseout_id      = JSVAL_VOID;
@@ -4445,6 +4448,8 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
     return ((id == sOnchange_id)    ||
             (id == sOnclick_id)     ||
             (id == sOncontextmenu_id));
+  case 'd' :
+    return id == sOndblclick_id;
   case 'l' :
     return id == sOnload_id;
   case 'p' :
