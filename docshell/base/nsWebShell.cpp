@@ -665,8 +665,24 @@ nsWebShell::DestroyChildren()
   mChildren.Clear();
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsWebShell)
-NS_IMPL_THREADSAFE_RELEASE(nsWebShell)
+
+NS_IMETHODIMP_(nsrefcnt) nsWebShell::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  ++mRefCnt;
+  return mRefCnt;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsWebShell::Release(void)
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  --mRefCnt;
+  if (mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
 
 nsresult
 nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -1764,21 +1780,22 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
 
    mURL = urlSpec.GetUnicode();
-
-  nsISessionHistory * shist;
-
+   
   /* If this is one of the frames, get it from the top level shell */
 
   if (aModifyHistory) {
-  nsIWebShell * ws;
-  GetRootWebShell(ws);
-  if (ws)
-     ws->GetSessionHistory(shist);
-      /* Add yourself to the Session History */
-   if (shist) {
-      PRInt32  ret=0;
-      ret = shist->add(this);
-   }
+	  nsCOMPtr<nsIWebShell> webShell;
+	  GetRootWebShell(*getter_AddRefs(webShell));
+	  if (webShell)
+	  {
+      nsCOMPtr<nsISessionHistory> shist;
+	    webShell->GetSessionHistory(*getter_AddRefs(shist));
+	      /* Add yourself to the Session History */
+		  if (shist) {
+		    PRInt32  ret=0;
+		    ret = shist->add(this);
+		  }
+		}
   }
    
 
@@ -2311,7 +2328,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
     NS_ADDREF(target);
   }
   else if (name.EqualsIgnoreCase("_top")) {
-    GetRootWebShell(target);
+    GetRootWebShell(target);		// this addrefs, which is OK
   }
   else {
     // Look from the top of the tree downward
@@ -2634,23 +2651,26 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        }
     }
 
-	nsIDocumentLoaderObserver * dlObserver = nsnull;
+	  nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
     if (!mDocLoaderObserver && mParent) {
       /* If this is a frame (in which case it would have a parent && doesn't
        * have a documentloaderObserver, get it from the rootWebShell
        */
-      nsIWebShell * root=nsnull;
-      GetRootWebShell(root);
+      nsCOMPtr<nsIWebShell> root;
+      GetRootWebShell(*getter_AddRefs(root));
    
       if (root) 
-        root->GetDocLoaderObserver(dlObserver);
+        root->GetDocLoaderObserver(*getter_AddRefs(dlObserver));
     }
     else
-      dlObserver = mDocLoaderObserver;
+    {
+      dlObserver = do_QueryInterface(mDocLoaderObserver);		// we need this to addref
+    }
+    
     /*
      * Fire the OnEndDocumentLoad of the DocLoaderobserver
      */
-    if ((nsnull != dlObserver) && (nsnull != aURL)){
+    if (dlObserver && (nsnull != aURL)) {
        dlObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus, aWebShell);
     }
 
