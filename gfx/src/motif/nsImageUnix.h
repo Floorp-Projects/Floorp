@@ -21,6 +21,9 @@
 
 #include "nsIImage.h"
 
+#include "X11/Xlib.h"
+#include "X11/Xutil.h"
+
 class nsImageUnix : public nsIImage
 {
 public:
@@ -32,8 +35,8 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32     GetHeight()         { return 0; }
-  virtual PRInt32     GetWidth()          { return 0; }
+  virtual PRInt32     GetHeight()         { return mWidth; }
+  virtual PRInt32     GetWidth()          { return mDepth; }
   virtual PRUint8*    GetBits()           { return nsnull; }
   virtual PRInt32     GetLineStride()     {return 0; }
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
@@ -82,8 +85,17 @@ public:
   void MoveAlphaMask(PRInt32 aX, PRInt32 aY){}
 
 private:
+  void CreateImage(nsIDeviceContext * aDeviceContext);
+
+private:
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
 
+  PRInt32 mWidth;
+  PRInt32 mDepth;
+  PRInt32 mHeight;
+  nsMaskRequirements mMaskReq;
+
+  XImage * mImage ;
 
 };
 
