@@ -88,7 +88,7 @@ protected:
                                       nsIRequest* request, nsIChannel* aChannel);
   nsresult CheckMixedContext(nsISecurityEventSink* sink, nsIRequest* request,
                              nsIChannel* aChannel);
-  nsresult CheckPost(nsIURI *actionURL, PRBool *okayToPost);
+  nsresult CheckPost(nsIURI *formURI, nsIURI *actionURL, PRBool *okayToPost);
   nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
   nsresult SetBrokenLockIcon(nsISecurityEventSink* sink, nsIRequest* request,
                              PRBool removeValue = PR_FALSE);
