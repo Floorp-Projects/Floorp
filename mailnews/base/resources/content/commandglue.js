@@ -492,7 +492,7 @@ function LoadSelectionIntoMessagePane()
 	var tree = GetThreadTree();
 	
 	var selArray = tree.selectedItems;
-	if ( selArray && (selArray.length == 1) )
+	if (!gNextMessageAfterDelete && selArray && (selArray.length == 1) )
 		LoadMessage(selArray[0]);
 	else
   {

@@ -141,15 +141,15 @@ var folderListener = {
 		if(IsCurrentLoadedFolder(folder))
 		{
 			msgNavigationService.EnsureDocumentIsLoaded(document);
-
 			if(gNextMessageAfterDelete)
 			{
 				var nextMessage = document.getElementById(gNextMessageAfterDelete);
+        gNextMessageAfterDelete = null;
 				SelectNextMessage(nextMessage);
 				var threadTree = GetThreadTree();
 				if(threadTree)
 					threadTree.ensureElementIsVisible(nextMessage);
-				gNextMessageAfterDelete = null;
+				
 			}
 		}
 	}
