@@ -24,7 +24,7 @@ public:
     XMLTag(String name) : mName(name), mFlag(Tag)  { }
     
     void addAttribute(String name, String value)    { mAttributeList.insert(AttributeValue(name, value) ); }
-    bool getValue(String &name, String **value);
+    bool getValue(const String &name, String &value);
     bool hasAttribute(String &name)                 { return (mAttributeList.find(name) != mAttributeList.end()); }
 
     String &name()      { return mName; }
@@ -72,7 +72,7 @@ public:
     void addChild(XMLNode *child)   { mChildren.push_back(child); }
     XMLNodeList &children()         { return mChildren; }
 
-    bool getValue(String &name, String **value)
+    bool getValue(const String &name, String &value)
                                     { return mTag->getValue(name, value); }
     bool hasAttribute(String &name) { return mTag->hasAttribute(name); }
 
