@@ -111,7 +111,7 @@ PRThread* create_new_thread(PRThreadType type,
 PRInt32 native_thread = 0;
 
 	PR_ASSERT(state == PR_UNJOINABLE_THREAD);
-#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WINNT)
+#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WINNT) || defined(WIN95)
 	switch(index %  4) {
 		case 0:
 			scope = (PR_LOCAL_THREAD);
