@@ -1398,16 +1398,25 @@ nsRangeList::ClearSelection()
 NS_IMETHODIMP
 nsRangeList::AddRange(nsIDOMRange* aRange)
 {
-  nsresult	result = AddItem(aRange);
+  nsresult      result = AddItem(aRange);
   
-	if (NS_FAILED(result))
-		return result;
-	
-	return NotifySelectionListeners();
-	
-  // Also need to notify the frames!
-}
+  if (NS_FAILED(result))
+    return result;
+  PRInt32 count;
+  result = GetRangeCount(&count);
+  if (NS_FAILED(result))
+    return result;
+  if (count <= 0)
+  {
+    NS_ASSERTION(0,"bad count after additem\n");
+    return NS_ERROR_FAILURE;
+  }
+  setAnchorFocusRange(count -1);
+  selectFrames(aRange, PR_TRUE);        
+  ScrollIntoView();
 
+  return NotifySelectionListeners();
+}
 
 
 /*
