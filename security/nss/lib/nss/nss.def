@@ -795,6 +795,7 @@ CERT_GetNextGeneralName;
 CERT_GetNextNameConstraint;
 CERT_GetPrevGeneralName;
 CERT_GetPrevNameConstraint;
+SECOID_AddEntry;
 ;+    local:
 ;+       *;
 ;+};
