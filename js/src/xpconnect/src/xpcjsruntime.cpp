@@ -47,6 +47,7 @@ const char* XPCJSRuntime::mStrings[] = {
     "value",                // IDX_VALUE
     "QueryInterface",       // IDX_QUERY_INTERFACE
     "Components",           // IDX_COMPONENTS
+    "wrappedJSObject"       // IDX_WRAPPED_JSOBJECT
 };
 
 /***************************************************************************/

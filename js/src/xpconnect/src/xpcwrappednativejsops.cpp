@@ -87,6 +87,32 @@ static void ThrowException(uintN errNum, JSContext* cx,
 
 /***************************************************************************/
 
+static JSObject*
+GetDoubleWrappedJSObject(JSContext* cx, nsXPCWrappedNative* wrapper, jsid id)
+{
+    JSObject* obj = nsnull;
+    
+    if(wrapper && wrapper->GetNative())
+    {
+        nsCOMPtr<nsIXPConnectWrappedJS> 
+            underware = do_QueryInterface(wrapper->GetNative());               
+        if(underware)
+        {
+            JSObject* mainObj = nsnull;
+            if(NS_SUCCEEDED(underware->GetJSObject(&mainObj)) && mainObj)
+            {
+                jsval val;
+                if(OBJ_GET_PROPERTY(cx, mainObj, id, &val) &&
+                   !JSVAL_IS_PRIMITIVE(val))
+                    obj = JSVAL_TO_OBJECT(val);
+            }
+        }
+    }
+    return obj;
+}
+
+/***************************************************************************/
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
@@ -243,6 +269,50 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         else    // attribute
             return clazz->GetAttributeAsJSVal(cx, wrapper, desc, vp);
     }
+    else if(wrapper->GetNative() &&
+            id == clazz->GetRuntime()->
+                            GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT))
+    {
+        JSObject* realObject = GetDoubleWrappedJSObject(cx, wrapper, id);
+        if(realObject)
+        {
+            // It is a double wrapped object. Figure out if the caller
+            // is allowed to see it.
+
+            XPCContext* xpcc = nsXPConnect::GetContext(cx);
+            if(xpcc)
+            {
+                nsIXPCSecurityManager* sm;
+    
+                sm = xpcc->GetAppropriateSecurityManager(
+                                nsIXPCSecurityManager::HOOK_GET_PROPERTY);
+                if(sm)
+                {
+                    nsCOMPtr<nsIInterfaceInfoManager> iimgr =
+                            dont_AddRef(nsXPConnect::GetInterfaceInfoManager());
+                    if(iimgr)
+                    {
+                        const nsIID& iid = 
+                            NS_GET_IID(nsIXPCWrappedJSObjectGetter);
+                        nsCOMPtr<nsIInterfaceInfo> info;
+                        if(NS_SUCCEEDED(iimgr->GetInfoForIID(&iid, 
+                                                    getter_AddRefs(info))))
+                        {
+                            if(NS_OK != sm->CanGetProperty(cx, iid,
+                                                    wrapper->GetNative(),
+                                                    info, 3, id))
+                            {
+                                // The SecurityManager should have set an exception.
+                                return JS_FALSE;
+                            }
+                        }
+                    }
+                }
+                *vp = OBJECT_TO_JSVAL(realObject);
+                return JS_TRUE;
+            }
+        }
+    }
     else
     {
         nsIXPCScriptable* ds;
@@ -264,12 +334,13 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         JSObject* proto = JS_GetPrototype(cx, obj); 
         if(proto)
             return OBJ_GET_PROPERTY(cx, proto, id, vp);
- 
-        // XXX silently fail when property not found or call fails?
-        *vp = JSVAL_VOID;
-        return JS_TRUE;
     }
+    
+    // XXX silently fail when property not found or call fails?
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
 }
+
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
@@ -360,6 +431,18 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
             *objp = obj;
             *propp = XPC_BUILT_IN_PROPERTY;
             return JS_TRUE;
+        }
+        else if(wrapper->GetNative() &&
+                id == clazz->GetRuntime()->
+                                GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT))
+        {
+            JSObject* realObject = GetDoubleWrappedJSObject(cx, wrapper, id);
+            if(realObject)
+            {
+                *objp = realObject;
+                *propp = XPC_BUILT_IN_PROPERTY;
+                return JS_TRUE;
+            }
         }
         else if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
                 nsnull != (as = wrapper->GetArbitraryScriptable()))

@@ -722,6 +722,17 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
+// #define this if we want to 'double wrap' of JSObjects.
+// This is for the case where we have a JSObject wrapped for native use 
+// which needs to be converted to a JSObject. Originally, we were unwrapping
+// and just exposing the underlying JSObject. This causes anomolies when
+// JSComponents are accessed from other JS code - they don't act like
+// other xpconnect wrapped components. Eventually we want to build a new
+// kind of wrapper especially for JS <-> JS. For now we are building a wrapper
+// around a wrapper. This is not optimal, but good enough for now.
+#define XPC_DO_DOUBLE_WRAP 1
+
+#ifndef XPC_DO_DOUBLE_WRAP
     // is this a wrapped JS object?
     if(nsXPCWrappedJSClass::IsWrappedJS(src))
     {
@@ -734,6 +745,8 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
                                         (void**) dest));
     }
     else
+#endif /* XPC_DO_DOUBLE_WRAP */
+
     {
 #ifndef XPCONNECT_STANDALONE
         // is this a DOM wrapped native object?
@@ -767,8 +780,8 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
                 *pErr = NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT;
         }
         else
+#endif /* XPCONNECT_STANDALONE */
         {
-#endif
             // not a DOM object. Just try to build a wrapper                            
             nsXPCWrappedNativeScope* xpcscope;
             XPCContext* xpcc;
@@ -786,9 +799,7 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
                     return JS_TRUE;
                 }
             }
-#ifndef XPCONNECT_STANDALONE
         }
-#endif
     }
     return JS_FALSE;
 }

@@ -215,3 +215,8 @@ interface nsIXPCTestArray : nsISupports {
 
 };
 
+[scriptable, uuid(13082da0-643c-11d4-8fe0-0010a4e73d9a)]
+interface nsIWrappedJSObjectTest : nsISupports
+{
+    void interfaceMember();        
+};
