@@ -157,7 +157,7 @@ class DOMAttributeMap : public nsIDOMNamedNodeMap,
                         public nsIScriptObjectOwner
 {
 public:
-  DOMAttributeMap(nsIHTMLContent &aContent);
+  DOMAttributeMap(nsIHTMLContent* aContent);
   virtual ~DOMAttributeMap();
 
   NS_DECL_ISUPPORTS
@@ -173,7 +173,7 @@ public:
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 
 private:
-  nsIHTMLContent& mContent;
+  nsIHTMLContent* mContent;
   void* mScriptObject;
 };
 
@@ -282,20 +282,20 @@ DOMAttribute::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMAttributeIID)) {
     nsIDOMAttribute* tmp = this;
     *aInstancePtr = (void*)tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*)tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     nsIDOMAttribute* tmp1 = this;
     nsISupports* tmp2 = tmp1;
     *aInstancePtr = (void*)tmp2;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -480,17 +480,17 @@ DOMAttribute::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 
 //----------------------------------------------------------------------
 
-DOMAttributeMap::DOMAttributeMap(nsIHTMLContent& aContent)
+DOMAttributeMap::DOMAttributeMap(nsIHTMLContent* aContent)
   : mContent(aContent)
 {
   mRefCnt = 1;
-  mContent.AddRef();
+  NS_ADDREF(mContent);
   mScriptObject = nsnull;
 }
 
 DOMAttributeMap::~DOMAttributeMap()
 {
-  mContent.Release();
+  NS_RELEASE(mContent);
 }
 
 nsresult
@@ -502,20 +502,20 @@ DOMAttributeMap::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMNamedNodeMapIID)) {
     nsIDOMNamedNodeMap* tmp = this;
     *aInstancePtr = (void*)tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*)tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     nsIDOMNamedNodeMap* tmp1 = this;
     nsISupports* tmp2 = tmp1;
     *aInstancePtr = (void*)tmp2;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -552,7 +552,7 @@ DOMAttributeMap::GetNamedItem(const nsString &aAttrName,
                                 nsIDOMNode** aAttribute)
 {
   nsAutoString value;
-  mContent.GetAttribute(aAttrName, value);
+  mContent->GetAttribute(aAttrName, value);
   *aAttribute  = (nsIDOMNode *) new DOMAttribute(aAttrName, value);
   return NS_OK;
 }
@@ -573,7 +573,7 @@ DOMAttributeMap::SetNamedItem(nsIDOMNode *aNode)
   attribute->GetValue(value);
   NS_RELEASE(attribute);
 
-  mContent.SetAttribute(name, value, PR_TRUE);
+  mContent->SetAttribute(name, value, PR_TRUE);
   return NS_OK;
 }
 
@@ -585,7 +585,7 @@ DOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
     nsAutoString upper;
     aName.ToUpperCase(upper);
     nsIAtom* attr = NS_NewAtom(upper);
-    mContent.UnsetAttribute(attr);
+    mContent->UnsetAttribute(attr);
   }
 
   return res;
@@ -599,7 +599,7 @@ DOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsISupportsArray *attributes = nsnull;
   if (NS_OK == NS_NewISupportsArray(&attributes)) {
     PRInt32 count;
-    mContent.GetAllAttributeNames(attributes, count);
+    mContent->GetAllAttributeNames(attributes, count);
     if (count > 0) {
       if ((PRInt32)aIndex < count) {
         nsISupports *att = attributes->ElementAt(aIndex);
@@ -607,7 +607,7 @@ DOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
         nsIAtom *atName = nsnull;
         if (nsnull != att && NS_OK == att->QueryInterface(kIAtom, (void**)&atName)) {
           atName->ToString(name);
-          if (NS_CONTENT_ATTR_NOT_THERE != mContent.GetAttribute(name, value)) {
+          if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(name, value)) {
             *aReturn = (nsIDOMNode *)new DOMAttribute(name, value);
             res = NS_OK;
           }
@@ -625,7 +625,7 @@ nsresult
 DOMAttributeMap::GetLength(PRUint32 *aLength)
 {
   PRInt32 n;
-  nsresult rv = mContent.GetAttributeCount(n);
+  nsresult rv = mContent->GetAttributeCount(n);
   *aLength = PRUint32(n);
   return rv;
 }
@@ -732,7 +732,7 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   if (nsnull != gContentDelegate) {
     // Remove our reference to the shared content delegate object.  If
     // the last reference just went away, null out gContentDelegate.
-    nsrefcnt rc = gContentDelegate->Release();
+    nsrefcnt rc = NS_RELEASE(gContentDelegate);
     if (0 == rc) {
       gContentDelegate = nsnull;
     }
@@ -841,7 +841,7 @@ nsGenericHTMLElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
     // cache one after we create it? If we find that this is
     // something that's called often, we might need to do the
     // latter.
-    *aAttributes = new DOMAttributeMap(*mContent);
+    *aAttributes = new DOMAttributeMap(mContent);
   }
   else {
     *aAttributes = nsnull;
@@ -1166,7 +1166,9 @@ nsGenericHTMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
     // We're leaving the DOM event loop so if we created a DOM event,
     // release here.
     if (nsnull != *aDOMEvent) {
-      if (0 != (*aDOMEvent)->Release()) {
+      nsrefcnt rc;
+      NS_RELEASE2((*aDOMEvent), rc);
+      if (0 != rc) {
         // Okay, so someone in the DOM loop (a listener, JS object)
         // still has a ref to the DOM Event but the internal data
         // hasn't been malloc'd.  Force a copy of the data here so the
@@ -1533,7 +1535,7 @@ nsGenericHTMLElement::GetStyleRule(nsIStyleRule*& aResult)
 nsIContentDelegate*
 nsGenericHTMLElement::GetDelegate(nsIPresContext* aCX)
 {
-  gContentDelegate->AddRef();
+  NS_ADDREF(gContentDelegate);
   return gContentDelegate;
 }
 
@@ -1583,8 +1585,9 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
 
   ListAttributes(out);
 
-  nsrefcnt r = mContent->AddRef() - 1;
-  mContent->Release();
+  nsIHTMLContent* hc = mContent;
+  nsrefcnt r = NS_ADDREF(hc) - 1;
+  NS_RELEASE(hc);
   fprintf(out, " refcount=%d<", r);
 
   PRBool canHaveKids;
@@ -2123,13 +2126,13 @@ nsGenericHTMLElement::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 NS_IMETHODIMP_(nsrefcnt) 
 nsGenericHTMLElement::AddRef()
 {
-  return mContent->AddRef();
+  return NS_ADDREF(mContent);
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
 nsGenericHTMLElement::Release()
 {
-  return mContent->Release();
+  return NS_RELEASE(mContent);
 }
 
 
@@ -2947,20 +2950,20 @@ nsChildContentList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMNodeListIID)) {
     nsIDOMNodeList* tmp = this;
     *aInstancePtr = (void*)tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*)tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     nsIDOMNodeList* tmp1 = this;
     nsISupports* tmp2 = tmp1;
     *aInstancePtr = (void*)tmp2;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -3014,7 +3017,7 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 nsGenericHTMLContainerElement::nsGenericHTMLContainerElement()
 {
   mChildren = new nsChildContentList();
-  NS_ADDREF(mChildren);
+  mChildren->AddRef();
 }
 
 nsGenericHTMLContainerElement::~nsGenericHTMLContainerElement()
@@ -3024,7 +3027,7 @@ nsGenericHTMLContainerElement::~nsGenericHTMLContainerElement()
     nsIContent* kid = mChildren->ElementAt(i);
     NS_RELEASE(kid);
   }
-  NS_RELEASE(mChildren);
+  mChildren->Release();
 }
 
 nsresult

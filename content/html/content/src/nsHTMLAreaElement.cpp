@@ -119,7 +119,7 @@ nsHTMLAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLAreaElementIID)) {
     nsIDOMHTMLAreaElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

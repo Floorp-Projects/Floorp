@@ -119,7 +119,7 @@ void parseFile (const char* aFilename,int size)
     CHTMLContentSink theSink;
     parser->setContentSink(&theSink);
     parser->parse(aFilename);
-    parser->Release();
+    NS_RELEASE(parser);
   }
 
   int failpos=0;

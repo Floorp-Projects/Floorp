@@ -87,7 +87,7 @@ nsresult nsParserFactory::QueryInterface(const nsIID &aIID,
     return NS_NOINTERFACE;   
   }   
 
-  AddRef(); // Increase reference count for caller   
+  NS_ADDREF_THIS(); // Increase reference count for caller   
   return NS_OK;   
 }   
 
@@ -118,10 +118,14 @@ nsresult nsParserFactory::CreateInstance(nsISupports *aOuter,
   nsISupports *inst = nsnull;
 
   if (mClassID.Equals(kCParser)) {
-    inst = (nsISupports *)(nsIParser *)new nsParser();
+    nsParser* p;
+    NS_NEWXPCOM(p, nsParser);
+    inst = (nsISupports *)(nsIParser *)p;
   }
   else if (mClassID.Equals(kCParserNode)) {
-    inst = (nsISupports *)(nsIParserNode *)new nsCParserNode();
+    nsCParserNode* cpn;
+    NS_NEWXPCOM(cpn, nsCParserNode);
+    inst = (nsISupports *)(nsIParserNode *) cpn;
   }
   else if (mClassID.Equals(kLoggingSinkCID)) {
     nsIContentSink* cs;

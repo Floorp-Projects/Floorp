@@ -87,22 +87,22 @@ nsresult nsContentList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDOMNodeListIID)) {
     *aInstancePtr = (void*)(nsIDOMNodeList*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMHTMLCollectionIID)) {
     *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
     *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIDOMNodeList*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

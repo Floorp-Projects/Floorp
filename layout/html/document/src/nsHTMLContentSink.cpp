@@ -177,6 +177,7 @@ public:
 
   PRInt32 mInMonolithicContainer;
   PRBool mDirty;
+  PRBool mLayoutStarted;
   nsIFormManager* mCurrentForm;
   nsIImageMap* mCurrentMap;
 
@@ -1228,7 +1229,8 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  HTMLContentSink* it = new HTMLContentSink();
+  HTMLContentSink* it;
+  NS_NEWXPCOM(it, HTMLContentSink);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1395,8 +1397,10 @@ HTMLContentSink::WillInterrupt()
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::WillInterrupt: this=%p", this));
   if (mDirty && !mInMonolithicContainer) {
-    mDocument->ContentAppended(mBody, mBodyChildCount);
-    mBody->ChildCount(mBodyChildCount);
+    if (nsnull != mBody) {
+      mDocument->ContentAppended(mBody, mBodyChildCount);
+      mBody->ChildCount(mBodyChildCount);
+    }
     mDirty = PR_FALSE;
   }
   return NS_OK;
@@ -1811,6 +1815,11 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 void
 HTMLContentSink::StartLayout()
 {
+  if (mLayoutStarted) {
+    return;
+  }
+  mLayoutStarted = PR_TRUE;
+
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsIPresShell* shell = mDocument->GetShellAt(i);

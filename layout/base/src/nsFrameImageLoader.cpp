@@ -84,18 +84,21 @@ nsFrameImageLoader::QueryInterface(REFNSIID aIID,
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kIImageRequestObserverIID)) {
-    *aInstancePtr = (void*) ((nsIImageRequestObserver*) this);
-    AddRef();
+    nsIImageRequestObserver* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIFrameImageLoaderIID)) {
-    *aInstancePtr = (void*) ((nsIFrameImageLoader*) this);
-    AddRef();
+    nsIFrameImageLoader* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*) this);
-    AddRef();
+    nsISupports* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

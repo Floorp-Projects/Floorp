@@ -152,17 +152,17 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kIHTMLDocumentIID)) {
-    AddRef();
+    NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIHTMLDocument *)this;
     return NS_OK;
   }
   if (aIID.Equals(kIDOMHTMLDocumentIID)) {
-    AddRef();
+    NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIDOMHTMLDocument *)this;
     return NS_OK;
   }
   if (aIID.Equals(kIDOMNSHTMLDocumentIID)) {
-    AddRef();
+    NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIDOMNSHTMLDocument *)this;
     return NS_OK;
   }

@@ -165,7 +165,7 @@ nsHTMLNullSink::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr=0;
     return NS_NOINTERFACE;
   }
-  ((nsISupports*) *aInstancePtr)->AddRef();
+  NS_ADDREF_THIS();
   return NS_OK;                                                        
 }
 

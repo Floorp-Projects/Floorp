@@ -83,7 +83,8 @@ NS_NewTextNode(nsIHTMLContent** aInstancePtrResult)
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTextNode* it = new nsTextNode();
+  nsTextNode* it;
+  NS_NEWXPCOM(it, nsTextNode);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -101,7 +102,6 @@ nsTextNode::~nsTextNode()
 }
 
 NS_IMPL_ADDREF(nsTextNode)
-
 NS_IMPL_RELEASE(nsTextNode)
 
 NS_IMETHODIMP
@@ -111,13 +111,13 @@ nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMTextIID)) {
     nsIDOMText* tmp = this;
     *aInstancePtr = (void*) tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kITextContentIID)) {
     nsITextContent* tmp = this;
     *aInstancePtr = (void*) tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -141,7 +141,8 @@ nsTextNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 NS_IMETHODIMP
 nsTextNode::CloneNode(nsIDOMNode** aReturn)
 {
-  nsTextNode* it = new nsTextNode();
+  nsTextNode* it;
+  NS_NEWXPCOM(it, nsTextNode);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
