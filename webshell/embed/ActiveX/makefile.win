@@ -74,6 +74,7 @@ LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+	$(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
 	regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
 
 MozillaControl_i.c MozillaControl.h: MozillaControl.idl
