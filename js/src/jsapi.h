@@ -552,9 +552,9 @@ extern JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
 
 /*
- * Add an external string finalizer, one that understands struct JSString
- * (from jsstr.h) and knows how to free or release the memory pointed at by
- * its chars member.
+ * Add an external string finalizer, one created by JS_NewExternalString (see
+ * below) using a type-code returned from this function, and that understands
+ * how to free or release the memory pointed at by JS_GetStringChars(str).
  *
  * Return a nonnegative type index if there is room for finalizer in the
  * global GC finalizers table, else return -1.  If the engine is compiled
