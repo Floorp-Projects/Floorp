@@ -232,8 +232,10 @@ nsWebShell::FireUnloadForChildren()
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
     nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
-    rv = webShell->FireUnloadEvent();
+    if(shell) {
+        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
+        rv = webShell->FireUnloadEvent();
+    }
   }
 
   return rv;
