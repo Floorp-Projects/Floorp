@@ -481,20 +481,8 @@ ServiceImpl::GetRDFService(nsIRDFService** mgr)
 }
 
 
-
-NS_IMETHODIMP_(nsrefcnt)
-ServiceImpl::AddRef(void)
-{
-    return 2;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-ServiceImpl::Release(void)
-{
-    return 1;
-}
-
-
+NS_IMPL_ADDREF(ServiceImpl);
+NS_IMPL_RELEASE(ServiceImpl);
 NS_IMPL_QUERY_INTERFACE(ServiceImpl, kIRDFServiceIID);
 
 
