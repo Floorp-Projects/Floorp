@@ -630,26 +630,15 @@ public class Interpreter
                 break;
             }
 
-            case Token.GETPROP : {
+            case Token.GETPROP :
                 stackDelta = 1;
-                iCodeTop = generateICode(child, iCodeTop);
-                int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
-                if (special != 0) {
-                    if (special == Node.SPECIAL_PROP_PROTO) {
-                        iCodeTop = addIcode(Icode_GETPROTO, iCodeTop);
-                    } else if (special == Node.SPECIAL_PROP_PARENT) {
-                        iCodeTop = addIcode(Icode_GETSCOPEPARENT, iCodeTop);
-                    } else {
-                        badTree(node);
-                    }
-                } else {
-                    child = child.getNext();
-                    iCodeTop = generateICode(child, iCodeTop);
-                    iCodeTop = addToken(Token.GETPROP, iCodeTop);
-                    itsStackDepth--;
-                }
+                iCodeTop = visitGetProp(iCodeTop, node, child, false);
                 break;
-            }
+
+            case Token.GETELEM :
+                stackDelta = 1;
+                iCodeTop = visitGetElem(iCodeTop, node, child, false);
+                break;
 
             case Token.DELPROP :
             case Token.BITAND :
@@ -663,7 +652,6 @@ public class Interpreter
             case Token.MOD :
             case Token.DIV :
             case Token.MUL :
-            case Token.GETELEM :
             case Token.EQ:
             case Token.NE:
             case Token.SHEQ:
@@ -1117,8 +1105,8 @@ public class Interpreter
     private int generateCallFunAndThis(Node left, int iCodeTop)
     {
         // Generate code to place on stack function and thisObj
-        int type = left.getType();
-        if (type == Token.NAME) {
+        switch (left.getType()) {
+          case Token.NAME: {
             String name = left.getString();
             // Conditionally skip ScriptRuntime.getThis.
             // The getThis entry in the runtime will take a
@@ -1134,30 +1122,67 @@ public class Interpreter
                                        || !itsData.itsFromEvalCode));
             iCodeTop = addString(Icode_NAME_AND_THIS, name, iCodeTop);
             iCodeTop = addByte(skipGetThis ? 1 : 0, iCodeTop);
-            itsStackDepth += 2;
-            if (itsStackDepth > itsData.itsMaxStack)
-                itsData.itsMaxStack = itsStackDepth;
-        } else if (type == Token.GETPROP || type == Token.GETELEM) {
-            // For Call(GetProp(a, b), c, d) or Call(GetElem(a, b), c, d)
-            // generate code to calculate a, dup it, calculate
-            // GetProp(use_stack, b) or GetElem(use_stack, b),
-            // and swap to get function, thisObj layout
-            Node leftLeft = left.getFirstChild();
-            left.removeChild(leftLeft);
-            left.addChildToFront(new Node(Token.USE_STACK));
-            iCodeTop = generateICode(leftLeft, iCodeTop);
-            iCodeTop = addIcode(Icode_DUP, iCodeTop);
-            // No stack adjusting: USE_STACK in subtree will do it
-            iCodeTop = generateICode(left, iCodeTop);
+            stackChange(2);
+            break;
+          }
+          case Token.GETPROP:
+            // x.y(...)
+            //  -> tmp = x, (tmp.y, tmp)(...)
+            iCodeTop = visitGetProp(iCodeTop, left, left.getFirstChild(), true);
             iCodeTop = addIcode(Icode_SWAP, iCodeTop);
-        } else {
+            break;
+          case Token.GETELEM:
+            // x[y](...)
+            //  -> tmp = x, (tmp[y], tmp)(...)
+            iCodeTop = visitGetElem(iCodeTop, left, left.getFirstChild(), true);
+            iCodeTop = addIcode(Icode_SWAP, iCodeTop);
+            break;
+          default:
             // Including Token.GETVAR
             iCodeTop = generateICode(left, iCodeTop);
             iCodeTop = addIcode(Icode_PUSH_PARENT, iCodeTop);
-            itsStackDepth += 1;
-            if (itsStackDepth > itsData.itsMaxStack)
-                itsData.itsMaxStack = itsStackDepth;
+            stackChange(1);
+            break;
         }
+        return iCodeTop;
+    }
+
+    private int visitGetProp(int iCodeTop, Node node, Node child, boolean dupObject)
+    {
+        iCodeTop = generateICode(child, iCodeTop);
+        if (dupObject) {
+            iCodeTop = addIcode(Icode_DUP, iCodeTop);
+            stackChange(1);
+        }
+        int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
+        if (special != 0) {
+            if (special == Node.SPECIAL_PROP_PROTO) {
+                iCodeTop = addIcode(Icode_GETPROTO, iCodeTop);
+            } else if (special == Node.SPECIAL_PROP_PARENT) {
+                iCodeTop = addIcode(Icode_GETSCOPEPARENT, iCodeTop);
+            } else {
+                badTree(node);
+            }
+        } else {
+            child = child.getNext();
+            iCodeTop = generateICode(child, iCodeTop);
+            iCodeTop = addToken(Token.GETPROP, iCodeTop);
+            stackChange(-1);
+        }
+        return iCodeTop;
+    }
+
+    private int visitGetElem(int iCodeTop, Node node, Node child, boolean dupObject)
+    {
+        iCodeTop = generateICode(child, iCodeTop);
+        if (dupObject) {
+            iCodeTop = addIcode(Icode_DUP, iCodeTop);
+            stackChange(1);
+        }
+        child = child.getNext();
+        iCodeTop = generateICode(child, iCodeTop);
+        iCodeTop = addToken(Token.GETELEM, iCodeTop);
+        stackChange(-1);
         return iCodeTop;
     }
 
@@ -1424,6 +1449,16 @@ public class Interpreter
         System.arraycopy(itsData.itsICode, 0, array, 0, iCodeTop);
         itsData.itsICode = array;
         return array;
+    }
+
+    private void stackChange(int change)
+    {
+        int depth = itsStackDepth + change;
+        itsStackDepth += change;
+        if (depth > itsData.itsMaxStack) {
+            itsData.itsMaxStack = depth;
+        }
+        itsStackDepth = depth;
     }
 
     private static int getShort(byte[] iCode, int pc) {
