@@ -286,9 +286,7 @@ function Startup()
 
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
-
-  gBrowser.addEventListener("load", loadEventHandlers, false);
-
+ 
   // set default character set if provided
   if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
     if (window.arguments[1].indexOf("charset=") != -1) {
@@ -385,10 +383,6 @@ function Startup()
     }
   }
   
-  // called when we go into full screen, even if it is 
-  // initiated by a web page script
-  addEventListener("fullscreen", onFullScreen, false);
-
   // does clicking on the urlbar select its contents?
   if (navigator.platform.indexOf("Win") == -1)
     gClickSelectsAll = false;
@@ -408,6 +402,7 @@ function Startup()
 
 function delayedStartup(aElt)
 {
+  gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
     sidebar.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
@@ -421,6 +416,10 @@ function delayedStartup(aElt)
   var bt = document.getElementById("bookmarks-toolbar");
   if ("toolbar" in bt)
     bt.toolbar.builder.rebuild();       
+
+  // called when we go into full screen, even if it is 
+  // initiated by a web page script
+  addEventListener("fullscreen", onFullScreen, false);
 
   WindowFocusTimerCallback(aElt);
 
