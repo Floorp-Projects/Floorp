@@ -320,6 +320,8 @@ function AddAvailableLanguage()
     Languageid	    = otherField.value;
     Languageid      = Languageid.toLowerCase();
 	  Languagename		= GetLanguageTitle(Languageid);
+    if (!Languagename)
+       Languagename = '[' + Languageid + ']';
 	  already_active	= false;	
   
     if (!LangAlreadyActive(Languageid)) {
