@@ -501,12 +501,6 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
             }
         }
     }
-
-    // A request has been redirected.  We ignore this "failure" and pick up with the
-    // subsequent OnStartRequest for the redirected URL.
-    if ( aStatus == NS_BINDING_REDIRECTED ) {
-        return NS_OK;
-    }
 #endif // USE_ASYNC_READ
 
     // If an error occurred, shut down.
