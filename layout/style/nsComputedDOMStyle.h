@@ -122,6 +122,20 @@ private:
                               nscoord& aCoord);
 
   /* Properties Queryable as CSSValues */
+
+  nsresult GetAppearance(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+
+  /* Box properties */
+#ifdef INCLUDE_XUL
+  nsresult GetBoxAlign(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBoxDirection(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBoxFlex(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBoxOrdinalGroup(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBoxOrient(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBoxPack(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+#endif // INCLUDE_XUL
+  nsresult GetBoxSizing(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+
   nsresult GetWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetHeight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetMaxHeight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
@@ -178,6 +192,7 @@ private:
   nsresult GetBorderBottomColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderLeftColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderRightColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetFloatEdge(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   /* Margin Properties */
   nsresult GetMarginWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
@@ -232,6 +247,10 @@ private:
 
   /* User interface properties */
   nsresult GetCursor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetUserFocus(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetUserInput(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetUserModify(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetUserSelect(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSRGBColor* GetDOMCSSRGBColor(nscolor aColor);
