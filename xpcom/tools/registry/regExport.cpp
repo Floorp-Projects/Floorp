@@ -75,9 +75,9 @@ int main( int argc, char *argv[] ) {
 
     // Create the registry
     nsIRegistry *reg;
-    static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
+    // static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
     static NS_DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID);
-    rv = compMgr->CreateInstance(kRegistryCID, NULL, kRegistryIID, (void **) &reg);
+    rv = compMgr->CreateInstance(NS_REGISTRY_PROGID, NULL, kRegistryIID, (void **) &reg);
 
     // Check result.
     if ( rv == NS_OK ) {
