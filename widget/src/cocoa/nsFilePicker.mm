@@ -54,7 +54,7 @@ NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 //
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
-, mAllFilesDisplayed(PR_TRUE)
+: mAllFilesDisplayed(PR_TRUE)
 , mMode(0)
 , mSelectedType(0)
 {
