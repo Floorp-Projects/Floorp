@@ -207,30 +207,33 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
 NS_METHOD
 nsGIFDecoder2::FlushImageData()
 {
-  PRInt32 width;
-  PRInt32 height;
-  mImageFrame->GetWidth(&width);
-  mImageFrame->GetHeight(&height);
+  PRInt32 imgWidth;
+  mImageContainer->GetWidth(&imgWidth);
+  nsRect frameRect;
+  mImageFrame->GetRect(frameRect);
+  
   switch (mCurrentPass - mLastFlushedPass) {
     case 0: {  // same pass
       PRInt32 remainingRows = mCurrentRow - mLastFlushedRow;
       if (remainingRows) {
-        nsRect r(0, mLastFlushedRow+1, width, remainingRows);
+        nsRect r(0, frameRect.y + mLastFlushedRow + 1,
+                 imgWidth, remainingRows);
         mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
       }    
     }
     break;
   
     case 1: {  // one pass on - need to handle bottom & top rects
-      nsRect r(0, 0, width, mCurrentRow+1);
+      nsRect r(0, frameRect.y, imgWidth, mCurrentRow + 1);
       mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
-      nsRect r2(0, mLastFlushedRow+1, width, height-mLastFlushedRow-1);
+      nsRect r2(0, frameRect.y + mLastFlushedRow + 1,
+                imgWidth, frameRect.height - mLastFlushedRow - 1);
       mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r2);
     }
     break;
 
     default: {  // more than one pass on - push the whole frame
-      nsRect r(0, 0, width, height);
+      nsRect r(0, frameRect.y, imgWidth, frameRect.height);
       mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
     }
   }
@@ -337,6 +340,18 @@ int BeginImageFrame(
   decoder->mGIFStruct->width = aFrameWidth;
   decoder->mGIFStruct->height = aFrameHeight;
 
+  if (aFrameNumber == 1) {
+    // Send a onetime OnDataAvailable (Display Refresh) for the first frame
+    // if it has a y-axis offset.  Otherwise, the area may never be refreshed
+    // and the placeholder will remain on the screen. (Bug 37589)
+    PRInt32 imgWidth;
+    decoder->mImageContainer->GetWidth(&imgWidth);
+    if (aFrameYOffset > 0) {
+      nsRect r(0, 0, imgWidth, aFrameYOffset);
+      decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mImageFrame, &r);
+    }
+  }
+
   return 0;
 }
 
@@ -368,6 +383,23 @@ int EndImageFrame(
     decoder->mImageFrame->SetFrameDisposalMethod(aDisposal);
 
     decoder->FlushImageData();
+
+    if (aFrameNumber == 1) {
+      // If the first frame is smaller in height than the entire image, send a
+      // OnDataAvailable (Display Refresh) for the area it does not have data for.
+      // This will clear the remaining bits of the placeholder. (Bug 37589)
+      PRInt32 imgHeight;
+      PRInt32 realFrameHeight = decoder->mGIFStruct->height + decoder->mGIFStruct->y_offset;
+
+      decoder->mImageContainer->GetHeight(&imgHeight);
+      if (imgHeight > realFrameHeight) {
+        PRInt32 imgWidth;
+        decoder->mImageContainer->GetWidth(&imgWidth);
+
+        nsRect r(0, realFrameHeight, imgWidth, imgHeight - realFrameHeight);
+        decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mImageFrame, &r);
+      }
+    }
 
     decoder->mCurrentRow = decoder->mLastFlushedRow = -1;
     decoder->mCurrentPass = decoder->mLastFlushedPass = 0;
