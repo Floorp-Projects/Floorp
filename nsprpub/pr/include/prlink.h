@@ -168,9 +168,7 @@ PR_EXTERN(PRStatus) PR_UnloadLibrary(PRLibrary *lib);
 ** Given the name of a procedure, return the address of the function that
 ** implements the procedure, or NULL if no such function can be
 ** found. This does not find symbols in the main program (the ".exe");
-** use PR_LoadStaticLibrary to register symbols in the main program.  If
-** "lib" is NULL then all currently loaded libraries and the main program
-** are searched.
+** use PR_LoadStaticLibrary to register symbols in the main program.
 **
 ** This function does not modify the reference count of the library.
 */
