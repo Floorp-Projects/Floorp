@@ -89,7 +89,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
 </keyset>
 
 <popupset id="ContextMenus">
-  <popup id="ConsoleContext" oncreate="UpdateCopyMenu()">
+  <popup id="ConsoleContext" onpopupshowing="UpdateCopyMenu()">
     <menuitem type="radio" observes="Console:sortAscend"/>
     <menuitem type="radio" observes="Console:sortDescend"/>
     <menuseparator/>
@@ -107,7 +107,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
     </menu>
 
     <menu id="menu_Edit">
-      <menupopup oncreate="UpdateCopyMenu()">
+      <menupopup onpopupshowing="UpdateCopyMenu()">
         <menuitem id="menu_copy"/>
       </menupopup>
     </menu>

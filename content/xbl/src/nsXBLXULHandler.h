@@ -25,7 +25,7 @@
 #ifndef nsXBLXULHandler_h__
 #define nsXBLXULHandler_h__
 
-#include "nsIDOMMenuListener.h"
+#include "nsIDOMXULListener.h"
 #include "nsXBLEventHandler.h"
 
 class nsIXBLBinding;
@@ -36,7 +36,7 @@ class nsIAtom;
 class nsIController;
 class nsIXBLPrototypeHandler;
 
-class nsXBLXULHandler : public nsIDOMMenuListener, 
+class nsXBLXULHandler : public nsIDOMXULListener, 
                         public nsXBLEventHandler
 {
 public:
@@ -46,10 +46,13 @@ public:
   // nsIDOMetc.
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
-  NS_IMETHOD Create(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupShown(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent);
+  
   NS_IMETHOD Close(nsIDOMEvent* aEvent);
-  NS_IMETHOD Destroy(nsIDOMEvent* aEvent);
-  NS_IMETHOD Action(nsIDOMEvent* aEvent);
+  NS_IMETHOD Command(nsIDOMEvent* aEvent);
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent);
   NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent);
    
@@ -57,7 +60,10 @@ public:
 
 protected:
   static PRUint32 gRefCnt;
-  static nsIAtom* kCreateAtom;
+  static nsIAtom* kPopupShowingAtom;
+  static nsIAtom* kPopupShownAtom;
+  static nsIAtom* kPopupHidingAtom;
+  static nsIAtom* kPopupHiddenAtom;
   static nsIAtom* kCloseAtom;
   static nsIAtom* kDestroyAtom;
   static nsIAtom* kCommandUpdateAtom;

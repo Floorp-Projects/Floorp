@@ -2077,7 +2077,7 @@
 
       <popupset>
         <popup id="purposetip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2087,7 +2087,7 @@
           </window>
         </popup>
         <popup id="sharingtitletip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2098,7 +2098,7 @@
         </popup>
 
         <popup id="superadmintip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2108,7 +2108,7 @@
           </window>
         </popup>
         <popup id="superdevelopmenttip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2118,7 +2118,7 @@
           </window>
         </popup>
         <popup id="supercustomizetip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2128,7 +2128,7 @@
           </window>
         </popup>
         <popup id="supercontacttip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2138,7 +2138,7 @@
           </window>
         </popup>
         <popup id="currenttip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2148,7 +2148,7 @@
           </window>
         </popup>
         <popup id="admintip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2158,7 +2158,7 @@
           </window>
         </popup>
         <popup id="developtip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2168,7 +2168,7 @@
           </window>
         </popup>
         <popup id="customizationtip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2178,7 +2178,7 @@
           </window>
         </popup>
         <popup id="tailoringtip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2188,7 +2188,7 @@
           </window>
         </popup>
         <popup id="pseudo-analysistip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2198,7 +2198,7 @@
           </window>
         </popup>
         <popup id="pseudo-decisiontip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2208,7 +2208,7 @@
           </window>
         </popup>
         <popup id="individual-analysistip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2218,7 +2218,7 @@
           </window>
         </popup>
         <popup id="individual-decisiontip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2228,7 +2228,7 @@
           </window>
         </popup>
         <popup id="contacttip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2238,7 +2238,7 @@
           </window>
         </popup>
         <popup id="historicaltip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2248,7 +2248,7 @@
           </window>
         </popup>
         <popup id="telemarketingtip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2258,7 +2258,7 @@
           </window>
         </popup>
         <popup id="other-purposetip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"
@@ -2268,7 +2268,7 @@
           </window>
         </popup>
         <popup id="sharingtip"
-               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
                >
           <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                   width="300px"

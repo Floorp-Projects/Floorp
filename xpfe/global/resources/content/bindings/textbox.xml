@@ -20,7 +20,7 @@
         <html:input class="textbox-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
       </xul:hbox>
       <xul:popupset>
-        <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
+        <xul:popup onpopupshowing="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
@@ -163,7 +163,7 @@
         <html:textarea class="textbox-textarea" flex="1" inherits="onfocus,onblur,value,disabled,rows,cols,readonly"/>
       </xul:hbox>
       <xul:popupset>
-        <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
+        <xul:popup onpopupshowing="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>

@@ -43,7 +43,7 @@
   <stringbundle id="regionalBundle" src="chrome://navigator-region/locale/region.properties"/>
   
   <popupset>
-    <popup id="contextual" oncreate="return fillContextMenu('contextual', 'Tree');" >
+    <popup id="contextual" onpopupshowing="return fillContextMenu('contextual', 'Tree');" >
       <menu />
     </popup>
   </popupset>

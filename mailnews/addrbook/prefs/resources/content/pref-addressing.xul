@@ -74,7 +74,7 @@
                   prefstring="ldap_2.autoComplete.directoryServer"
                   prefattribute="value">
           <menupopup id="directoriesListPopup" 
-            oncreate="createDirectoriesList(true);">
+            onpopupshowing="createDirectoriesList(true);">
           </menupopup>
        </menulist>
        <button class="small-margin" id="editButton" label="&editDirectories.label;" 

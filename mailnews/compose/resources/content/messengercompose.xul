@@ -210,7 +210,7 @@
         </menupopup>
       </menu>
       <menu id="menu_Edit">
-        <menupopup oncreate="updateEditItems();">
+        <menupopup onpopupshowing="updateEditItems();">
           <menuitem id="menu_undo"/>
           <menuitem id="menu_redo"/>
           <menuseparator/>

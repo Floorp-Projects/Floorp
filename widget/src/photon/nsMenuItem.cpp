@@ -521,7 +521,7 @@ NS_METHOD nsMenuItem::DoCommand()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_MOUSE_EVENT;
-  event.message = NS_MENU_ACTION;
+  event.message = NS_XUL_COMMAND;
 
   nsCOMPtr<nsIContent> contentNode;
   contentNode = do_QueryInterface(mDOMElement);

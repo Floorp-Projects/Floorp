@@ -24,7 +24,7 @@
   </commandset>
   
   <popupset>
-    <popup id="popupContext" oncreate="return viewer.onCreateContext(this)">
+    <popup id="popupContext" onpopupshowing="return viewer.onpopupshowingContext(this)">
       <menuitem label="Inspect in New Window" observes="cmdInspectInNewView"/>
       <menuseparator/>
       <menuitem label="Copy Value" observes="cmdCopyValue"/>

@@ -480,6 +480,8 @@ nsPopupSetFrame::CreatePopup(nsIContent* aElementContent, nsIContent* aPopupCont
   // Now open the popup.
   OpenPopup(PR_TRUE);
 
+  OnCreated(aPopupContent);
+
   return NS_OK;
 }
 
@@ -566,7 +568,6 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
            childPopup &&
           mPopupType != NS_LITERAL_STRING("tooltip") )
       childPopup->InstallKeyboardNavigator();
-
   }
   else {
     if (mCreateHandlerSucceeded && !OnDestroy())
@@ -585,6 +586,8 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
       childPopup->RemoveKeyboardNavigator();
 
     ActivatePopup(PR_FALSE);
+
+    OnDestroyed();
   }
 }
 
@@ -637,7 +640,7 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_CREATE;
+  event.message = NS_XUL_POPUP_SHOWING;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
@@ -711,12 +714,69 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
 }
 
 PRBool
+nsPopupSetFrame::OnCreated(nsIContent* aPopupContent)
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_XUL_POPUP_SHOWN;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+
+  if (aPopupContent) {
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell) {
+      rv = shell->HandleDOMEventWithTarget(aPopupContent, &event, &status);
+    }
+
+    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+PRBool
 nsPopupSetFrame::OnDestroy()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_DESTROY;
+  event.message = NS_XUL_POPUP_HIDING;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+
+  nsCOMPtr<nsIContent> content;
+  GetActiveChildElement(getter_AddRefs(content));
+  
+  if (content) {
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell) {
+      rv = shell->HandleDOMEventWithTarget(content, &event, &status);
+    }
+    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+PRBool
+nsPopupSetFrame::OnDestroyed()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_XUL_POPUP_HIDDEN;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;

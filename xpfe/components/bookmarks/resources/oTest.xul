@@ -110,7 +110,7 @@
   <popupset id="aTooltipSet"/>
 
   <popupset id="contextSet">
-    <popup id="bookmarkContextMenu" oncreate="createContextMenu(event);"/>
+    <popup id="bookmarkContextMenu" onpopupshowing="createContextMenu(event);"/>
   </popupset>
 
   <toolbox>

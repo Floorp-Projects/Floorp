@@ -544,7 +544,7 @@
       <xul:menu class="outliner-colpicker-menu" align="center" allowevents="true">
         <xul:image class="outliner-colpicker-icon"/>
         <xul:menupopup popupanchor="bottomright" popupalign="topright"
-                  oncreate="this.parentNode.parentNode.buildPopup(this);"/>
+                  onpopupshowing="this.parentNode.parentNode.buildPopup(this);"/>
       </xul:menu>
     </content>
     

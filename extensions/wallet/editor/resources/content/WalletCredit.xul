@@ -61,7 +61,7 @@
           <html>&creditType.label;</html>
           <menulist id="card.type" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup oncreate="Append(this.parentNode)">
+            <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -71,7 +71,7 @@
           <html>&creditNumber.label;</html>
           <menulist id="card.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup oncreate="Append(this.parentNode)">
+            <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -83,14 +83,14 @@
             <text value="&creditExpiresMonth.label;" />
             <menulist id="card.expdate.month" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
-              <menupopup oncreate="Append(this.parentNode)">
+              <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
             <text value="&creditExpiresYear.label;" />
             <menulist id="card.expdate.year" editable="true" autoSelectMenuitem="false" flex="60%" width="0"
                       onchange="Append(this)">
-              <menupopup oncreate="Append(this.parentNode)">
+              <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
@@ -101,7 +101,7 @@
           <html>&creditName.label;</html>
           <menulist id="card.name" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup oncreate="Append(this.parentNode)">
+            <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>

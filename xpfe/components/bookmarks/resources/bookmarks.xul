@@ -186,7 +186,7 @@
       </menu>
   
       <menu id="menu_View">
-        <menupopup oncreate="fillViewMenu(this)">
+        <menupopup onpopupshowing="fillViewMenu(this)">
           <menuitem id="viewCommandToolbar" type="checkbox" class="menuitem-iconic"
                     label="&menuitem.view.command.toolbar.label;"
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
@@ -210,7 +210,7 @@
           <menuseparator/>
           <menu label="&menuitem.view.show_columns.label;" 
                 accesskey="&menuitem.view.show_columns.accesskey;">
-            <menupopup oncreate="BuildTreePopup(document.getElementById('theColumns'), 
+            <menupopup onpopupshowing="BuildTreePopup(document.getElementById('theColumns'), 
                                                 document.getElementById('headRow'), this,
                                                 document.getElementById('popupCell'))"/>
           </menu>
@@ -385,7 +385,7 @@
         <treecell class="treecell-header" allowevents="true" id="popupCell">
           <menu class="treecell-popupcell-menu" align="center" pack="center">
             <menupopup popupanchor="bottomright" popupalign="topright"
-                      oncreate="BuildTreePopup(document.getElementById('theColumns'), 
+                      onpopupshowing="BuildTreePopup(document.getElementById('theColumns'), 
                                                document.getElementById('headRow'), this,
                                                document.getElementById('popupCell'))"/>
           </menu>

@@ -158,7 +158,7 @@
     <menu label="&walletPasswordManager.label;"
           accesskey="&walletPasswordManager.accesskey;"
           position="1">
-      <menupopup oncreate="CheckForEncrypt()">
+      <menupopup onpopupshowing="CheckForEncrypt()">
         <menuitem label="&walletDisplaySignonsCmd.label;"
                   accesskey="&walletDisplaySignonsCmd.accesskey;"
                   oncommand="WalletDialog('signon');"/> 

@@ -138,6 +138,8 @@ protected:
     // fire handlers for oncreate/ondestroy
   PRBool OnDestroy() ;
   PRBool OnCreate() ;
+  PRBool OnDestroyed() ;
+  PRBool OnCreated() ;
   
   void LoadMenuItem ( nsIMenu* pParentMenu, nsIContent* menuitemContent);  
   void LoadSubMenu( nsIMenu * pParentMenu, nsIContent* menuitemContent);  

@@ -847,9 +847,6 @@ case _value: eventName.AssignWithConversion(_name) ; break
     _ASSIGN_eventName(NS_PAGE_LOAD,"NS_PAGE_LOAD");
     _ASSIGN_eventName(NS_PAGE_UNLOAD,"NS_PAGE_UNLOAD");
     _ASSIGN_eventName(NS_PAINT,"NS_PAINT");
-    _ASSIGN_eventName(NS_MENU_CREATE,"NS_MENU_CREATE");
-    _ASSIGN_eventName(NS_MENU_DESTROY,"NS_MENU_DESTROY");
-    _ASSIGN_eventName(NS_MENU_ACTION, "NS_MENU_ACTION");
     _ASSIGN_eventName(NS_XUL_BROADCAST, "NS_XUL_BROADCAST");
     _ASSIGN_eventName(NS_XUL_COMMAND_UPDATE, "NS_XUL_COMMAND_UPDATE");
     _ASSIGN_eventName(NS_SCROLLBAR_LINE_NEXT,"NS_SB_LINE_NEXT");

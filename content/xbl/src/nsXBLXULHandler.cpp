@@ -49,20 +49,25 @@
 #include "nsXPIDLString.h"
 
 PRUint32 nsXBLXULHandler::gRefCnt = 0;
-nsIAtom* nsXBLXULHandler::kCreateAtom = nsnull;
+nsIAtom* nsXBLXULHandler::kPopupShowingAtom = nsnull;
+nsIAtom* nsXBLXULHandler::kPopupShownAtom = nsnull;
+nsIAtom* nsXBLXULHandler::kPopupHidingAtom = nsnull;
+nsIAtom* nsXBLXULHandler::kPopupHiddenAtom = nsnull;
 nsIAtom* nsXBLXULHandler::kCloseAtom = nsnull;
 nsIAtom* nsXBLXULHandler::kCommandUpdateAtom = nsnull;
 nsIAtom* nsXBLXULHandler::kBroadcastAtom = nsnull;
-nsIAtom* nsXBLXULHandler::kDestroyAtom = nsnull;
 
 nsXBLXULHandler::nsXBLXULHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
 :nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
-    kCreateAtom = NS_NewAtom("create");
+    kPopupShowingAtom = NS_NewAtom("popupshowing");
+    kPopupShownAtom = NS_NewAtom("popupshown");
+    kPopupHidingAtom = NS_NewAtom("popuphiding");
+    kPopupHiddenAtom = NS_NewAtom("popuphidden");
+    
     kCloseAtom = NS_NewAtom("close");
-    kDestroyAtom = NS_NewAtom("destroy");
     kCommandUpdateAtom = NS_NewAtom("commandupdate");
     kBroadcastAtom = NS_NewAtom("broadcast");
   }
@@ -75,14 +80,16 @@ nsXBLXULHandler::~nsXBLXULHandler()
     NS_RELEASE(kCloseAtom);
     NS_RELEASE(kCommandUpdateAtom);
     NS_RELEASE(kBroadcastAtom);
-    NS_RELEASE(kCreateAtom);
-    NS_RELEASE(kDestroyAtom);
+    NS_RELEASE(kPopupShowingAtom);
+    NS_RELEASE(kPopupShownAtom);
+    NS_RELEASE(kPopupHidingAtom);
+    NS_RELEASE(kPopupHiddenAtom);
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXBLXULHandler, nsXBLEventHandler, nsIDOMMenuListener)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXBLXULHandler, nsXBLEventHandler, nsIDOMXULListener)
 
-nsresult nsXBLXULHandler::Action(nsIDOMEvent* aEvent)
+nsresult nsXBLXULHandler::Command(nsIDOMEvent* aEvent)
 {
   if (!mProtoHandler)
     return NS_ERROR_FAILURE;
@@ -97,7 +104,7 @@ nsresult nsXBLXULHandler::Action(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-nsresult nsXBLXULHandler::Create(nsIDOMEvent* aEvent)
+nsresult nsXBLXULHandler::PopupShowing(nsIDOMEvent* aEvent)
 {
   if (!mProtoHandler)
     return NS_ERROR_FAILURE;
@@ -105,7 +112,52 @@ nsresult nsXBLXULHandler::Create(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIAtom> eventName;
   mProtoHandler->GetEventName(getter_AddRefs(eventName));
 
-  if (eventName.get() != kCreateAtom)
+  if (eventName.get() != kPopupShowingAtom)
+    return NS_OK;
+
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLXULHandler::PopupShown(nsIDOMEvent* aEvent)
+{
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kPopupShownAtom)
+    return NS_OK;
+
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLXULHandler::PopupHiding(nsIDOMEvent* aEvent)
+{
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kPopupHidingAtom)
+    return NS_OK;
+
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLXULHandler::PopupHidden(nsIDOMEvent* aEvent)
+{
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kPopupHiddenAtom)
     return NS_OK;
 
   mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
@@ -151,21 +203,6 @@ nsresult nsXBLXULHandler::CommandUpdate(nsIDOMEvent* aEvent)
   mProtoHandler->GetEventName(getter_AddRefs(eventName));
 
   if (eventName.get() != kCommandUpdateAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
-}
-
-nsresult nsXBLXULHandler::Destroy(nsIDOMEvent* aEvent)
-{
- if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kDestroyAtom)
     return NS_OK;
 
   mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);

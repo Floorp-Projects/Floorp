@@ -289,7 +289,7 @@ Rights Reserved.
 
 </keyset>
 
-  <popup id="threadPaneContext" oncreate="return fillThreadPaneContextMenu();" >
+  <popup id="threadPaneContext" onpopupshowing="return fillThreadPaneContextMenu();" >
     <menuitem id="threadPaneContext-openNewWindow"
         label="&contextOpenNewWindow.label;"
         accesskey="&contextOpenNewWindow.accesskey;"
@@ -469,7 +469,7 @@ Rights Reserved.
         oncommand="MsgDeleteMessage(false, false);"/>
   </popup>
 
-    <popup id="folderPaneContext" oncreate="return fillFolderPaneContextMenu();" >
+    <popup id="folderPaneContext" onpopupshowing="return fillFolderPaneContextMenu();" >
         <menuitem id="folderPaneContext-openNewWindow"
         label="&folderContextOpenNewWindow.label;"
         accesskey="&folderContextOpenNewWindow.accesskey;"
@@ -526,8 +526,8 @@ Rights Reserved.
   </popup> 
 
   <popup id="messagePaneContext"   
-     oncreate="gMessagePaneContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(gMessagePaneContextMenu);"
-     ondestroy="gMessagePaneContextMenu.onDestroy(); gMessagePaneContextMenu = null;">
+     onpopupshowing="gMessagePaneContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(gMessagePaneContextMenu);"
+     onpopuphiding="gMessagePaneContextMenu.onDestroy(); gMessagePaneContextMenu = null;">
         <menuitem id="context-openlink"
                   label="&openLinkCmd.label;"
                   accesskey="&openLinkCmd.accesskey;"
@@ -748,13 +748,13 @@ Rights Reserved.
 
 <menubar id="mailMenubar">
   <menu id="menu_File" >
-    <menupopup id="menu_FilePopup" oncreate="file_init();">
+    <menupopup id="menu_FilePopup" onpopupshowing="file_init();">
       <menuitem label="&newMsgCmd.label;"
       accesskey="&newMsgCmd.accesskey;"
       key="key_newMessage"
       oncommand="MsgNewMessage(event);"/>
       <menu id="menu_New">
-        <menupopup id="menu_NewPopup" oncreate="menu_new_init();">
+        <menupopup id="menu_NewPopup" onpopupshowing="menu_new_init();">
           <menuitem label="&newFolderCmd.label;"
                      oncommand="MsgNewFolder(NewFolder);"
                      accesskey="&newFolderCmd.accesskey;"/>
@@ -771,7 +771,7 @@ Rights Reserved.
         accesskey="&openMessageWindowCmd.accesskey;"
         key="key_openMessage"/>
       <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;">
-        <menupopup id="attachmentMenuList" oncreate="FillAttachmentListPopup(this);"/>
+        <menupopup id="attachmentMenuList" onpopupshowing="FillAttachmentListPopup(this);"/>
       </menu>
       <menuseparator/>
       <menuitem id="menu_close"/>
@@ -854,7 +854,7 @@ Rights Reserved.
   </menu>
 
   <menu id="menu_Edit" oncommand="CommandUpdate_UndoRedo();">
-    <menupopup oncreate="InitEditMessagesMenu()">
+    <menupopup onpopupshowing="InitEditMessagesMenu()">
       <menuitem id="menu_undo" label="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" observes="cmd_undo" oncommand="Undo()"/>
       <menuitem id="menu_redo" label="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" observes="cmd_redo" oncommand="Redo()"/>
       <menuseparator/>
@@ -892,7 +892,7 @@ Rights Reserved.
   </menu>
 
   <menu id="menu_View">
-    <menupopup id="menu_View_Popup" oncreate="view_init()">
+    <menupopup id="menu_View_Popup" onpopupshowing="view_init()">
       <menu id="menu_Toolbars">
         <menupopup>
           <menuitem id="menu_showMessengerToolbar"
@@ -911,7 +911,7 @@ Rights Reserved.
        oncommand="MsgToggleMessagePane();"/>
       <menuseparator/>
       <menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" label="&sortMenu.label;">
-        <menupopup oncreate="InitViewSortByMenu()">
+        <menupopup onpopupshowing="InitViewSortByMenu()">
           <menuitem id="sortByDateMenuitem" type="checkbox" label="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" oncommand="MsgSortByDate()"/>
           <menuitem id="sortByFlagMenuitem" type="checkbox" label="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" oncommand="MsgSortByFlagged()"/>
           <menuitem id="sortByOrderReceivedMenuitem" type="checkbox" label="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" oncommand="MsgSortByOrderReceived()"/>
@@ -929,7 +929,7 @@ Rights Reserved.
         </menupopup>
       </menu>
       <menu label="&msgsMenu.label;" id="viewMessagesMenu" accesskey="&msgsMenu.accesskey;">
-        <menupopup oncreate="InitViewMessagesMenu()">
+        <menupopup onpopupshowing="InitViewMessagesMenu()">
           <menuitem id="viewAllMessagesMenuItem" type="checkbox" label="&allMsgsCmd.label;" accesskey="&allMsgsCmd.accesskey;" disabled="true" observes="cmd_viewAllMsgs"/>
           <menuitem id="viewUnreadMessagesMenuItem" type="checkbox" label="&unreadMsgsCmd.label;" accesskey="&unreadMsgsCmd.accesskey;" disabled="true" observes="cmd_viewUnreadMsgs"/>
           <menuitem id="viewThreadsWithUnreadMenuItem" type="checkbox" label="&threadsWithUnreadCmd.label;" accesskey="&threadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewThreadsWithUnread"/>
@@ -977,7 +977,7 @@ Rights Reserved.
     </menupopup>
   </menu>
   <menu label="&searchMenu.label;" accesskey="&searchMenu.accesskey;">
-    <menupopup  oncreate="InitSearchMessagesMenu();">
+    <menupopup  onpopupshowing="InitSearchMessagesMenu();">
       <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
       <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
       <menuseparator/>
@@ -987,7 +987,7 @@ Rights Reserved.
     </menupopup>
   </menu>
   <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;">
-    <menupopup  oncreate="InitGoMessagesMenu();">
+    <menupopup  onpopupshowing="InitGoMessagesMenu();">
       <menu id="goNextMenu" label="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
         <menupopup>
           <menuitem label="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"/>
@@ -1010,7 +1010,7 @@ Rights Reserved.
   </menu>
   
   <menu label="&msgMenu.label;" accesskey="&msgMenu.accesskey;" >
-  <menupopup oncreate="InitMessageMenu();">
+  <menupopup onpopupshowing="InitMessageMenu();">
     <menuitem label="&newMsgCmd.label;"
     accesskey="&newMsgCmd.accesskey;"
     key="key_newMessage"
@@ -1176,7 +1176,7 @@ Rights Reserved.
     </menu>
     <menuseparator/>
     <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;">
-      <menupopup oncreate="InitMessageMark()">
+      <menupopup onpopupshowing="InitMessageMark()">
         <menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
         <menuitem label="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
         <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
@@ -1212,7 +1212,7 @@ Rights Reserved.
                                     oncommand="goDoCommand('cmd_getNewMessages')" 
                                     containment="http://home.netscape.com/NC-rdf#child" 
                                     ref="msgaccounts:/">
-                            <menupopup oncreate="getMsgToolbarMenu_init()">
+                            <menupopup onpopupshowing="getMsgToolbarMenu_init()">
                                 <menuitem label="&getAllNewMsgCmd.label;" 
                                           observes="cmd_getMsgsForAuthAccounts"/>
                                 <menuseparator/>
@@ -1302,7 +1302,7 @@ Rights Reserved.
       <button class="button-toolbar-2 top" id="button-delete" label="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
       <menubutton class="menubutton-dual toolbar top" id="button-mark" label="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
                   crop="right" observes="button_mark" tooltip="aTooltip" tooltiptext="&markButton.tooltip;">  
-            <menupopup oncreate="InitMessageMark()">
+            <menupopup onpopupshowing="InitMessageMark()">
                 <menuitem type="checkbox" key="key_toggleRead" id="markReadToolbarItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead" default="true" />
                 <menuitem label="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
                 <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>

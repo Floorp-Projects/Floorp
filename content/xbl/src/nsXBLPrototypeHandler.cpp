@@ -447,7 +447,7 @@ nsXBLPrototypeHandler::BindingAttached(nsIDOMEventReceiver* aReceiver)
   nsresult ret;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_ACTION;
+  event.message = NS_XUL_COMMAND;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
@@ -487,7 +487,7 @@ nsXBLPrototypeHandler::BindingDetached(nsIDOMEventReceiver* aReceiver)
   nsresult ret;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_ACTION;
+  event.message = NS_XUL_COMMAND;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;

@@ -412,8 +412,8 @@
         <xul:popupset>
           <xul:popup class="colorpicker-button-menupopup" role="colorpopup"
             onmousedown="event.stopPropagation()"
-            oncreate="this._colorPicker.onPopupCreate()"
-            ondestroy="this._colorPicker.onPopupDestroy()">
+            onpopupshowing="this._colorPicker.onPopupCreate()"
+            onpopuphiding="this._colorPicker.onPopupDestroy()">
   
             <xul:colorpicker inherits="palettename" allowevents="true" role="colorpicker"
              onselect="this.parentNode.parentNode.parentNode.parentNode.pickerChange()"/>

@@ -164,7 +164,7 @@
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="menu_File">
-      <menupopup id="menu_FilePopup" oncreate="UpdateNecessaryItems('cmd_sendPage','Browser:EditPage');">
+      <menupopup id="menu_FilePopup" onpopupshowing="UpdateNecessaryItems('cmd_sendPage','Browser:EditPage');">
         <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
         <menu id="menu_New">
           <menupopup id="menu_NewPopup">
@@ -206,9 +206,9 @@
     </menu>
 
     <menu id="menu_View" accesskey="&viewMenu.accesskey;" label="&viewMenu.label;">
-      <menupopup id="menu_View_Popup" oncreate="UpdateNecessaryItems('View:PageSource');">
+      <menupopup id="menu_View_Popup" onpopupshowing="UpdateNecessaryItems('View:PageSource');">
         <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;" id="view_toolbars">
-          <menupopup id="view_toolbars_popup" oncreate="updateToolbarStates(this);"> 
+          <menupopup id="view_toolbars_popup" onpopupshowing="updateToolbarStates(this);"> 
             <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
             <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
             <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
@@ -221,7 +221,7 @@
         <menu id="menu_textZoom"/>
 
         <menu label="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false">
-          <menupopup oncreate="stylesheetFillPopup(window._content.document, this, document.getElementById('authssnoopt'))">
+          <menupopup onpopupshowing="stylesheetFillPopup(window._content.document, this, document.getElementById('authssnoopt'))">
             <menuitem label="&useStyleSheetNone.label;" id="authssnoopt" type="radio" name="authorstyle" oncommand="stylesheetSwitch(window._content.document, '')"/>
           </menupopup>
         </menu>
@@ -279,7 +279,7 @@
     </menu>
 
     <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
-      <menupopup oncreate="updateGoMenu(event);">
+      <menupopup onpopupshowing="updateGoMenu(event);">
         <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
         <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
         <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>

@@ -45,7 +45,7 @@ Rights Reserved.
   <menuitem label="&saveAllAttachmentsCmd.label;" oncommand="SaveAllAttachments();"/>
 </popup>
 
-<popup id="attachmentTreeTooltip" class="tooltip" oncreate="return FillInAttachmentTooltip(document.tooltipNode);" > 
+<popup id="attachmentTreeTooltip" class="tooltip" onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);" > 
     <text id="attachmentTreeTooltipText"/>
 </popup>
 

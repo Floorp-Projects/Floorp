@@ -61,7 +61,7 @@
   </script>         
 
   <!-- context menu -->
-  <popupset id="contentAreaContextSet" oncreate="initContextItems();"/>
+  <popupset id="contentAreaContextSet" onpopupshowing="initContextItems();"/>
 
   <popup id="contentAreaContextMenu">
     <menuitem id="context-formshow"

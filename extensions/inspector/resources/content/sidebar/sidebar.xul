@@ -29,7 +29,7 @@
 
 
   <popupset id="psTooltipSet">
-    <popup id="ppTooltip" class="tooltip" oncreate="return inspector.fillInTooltip(document.tooltipNode);"> 
+    <popup id="ppTooltip" class="tooltip" onpopupshowing="return inspector.fillInTooltip(document.tooltipNode);"> 
       <text id="txTooltip"/>
     </popup>
   </popupset>

@@ -462,12 +462,14 @@ enum nsDragDropEventStatus {
 #define NS_DRAGDROP_EXIT_SYNTH          (NS_DRAGDROP_EVENT_START + 2)
 
 // Events for popups
-#define NS_MENU_EVENT_START            1500
-#define NS_MENU_CREATE                (NS_MENU_EVENT_START)
-#define NS_MENU_DESTROY               (NS_MENU_EVENT_START+1)
-#define NS_MENU_ACTION                (NS_MENU_EVENT_START+2)
-#define NS_XUL_BROADCAST              (NS_MENU_EVENT_START+3)
-#define NS_XUL_COMMAND_UPDATE         (NS_MENU_EVENT_START+4)
+#define NS_XUL_EVENT_START            1500
+#define NS_XUL_POPUP_SHOWING          (NS_XUL_EVENT_START)
+#define NS_XUL_POPUP_SHOWN            (NS_XUL_EVENT_START+1)
+#define NS_XUL_POPUP_HIDING           (NS_XUL_EVENT_START+2)
+#define NS_XUL_POPUP_HIDDEN           (NS_XUL_EVENT_START+3)
+#define NS_XUL_COMMAND                (NS_XUL_EVENT_START+4)
+#define NS_XUL_BROADCAST              (NS_XUL_EVENT_START+5)
+#define NS_XUL_COMMAND_UPDATE         (NS_XUL_EVENT_START+6)
 //@}
 
 // Scroll events

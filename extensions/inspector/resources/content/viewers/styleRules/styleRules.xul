@@ -26,7 +26,7 @@
   <!--============================= POPUPS ============================== -->
 
   <popupset id="psPopups">
-    <popup id="ppStyleRuleContext" oncreate="return viewer.onCreateRulePopup()">
+    <popup id="ppStyleRuleContext" onpopupshowing="return viewer.onpopupshowingRulePopup()">
       <menuitem label="New" oncommand="viewer.cmdNewRule()"/>
       <menuitem label="Delete" oncommand="viewer.cmdDeleteSelectedRule()"/>
       <menuitem label="Disable" oncommand="viewer.cmdToggleSelectedRule()"/>

@@ -10,7 +10,7 @@
     <script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
 
     <!-- Composer Charset Menu -->
-    <menu id="composerCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:ComposerCharsetMenuRoot" oncommand="ComposerMultiplexHandler(event)" oncreate="UpdateMenus()">
+    <menu id="composerCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:ComposerCharsetMenuRoot" oncommand="ComposerMultiplexHandler(event)" onpopupshowing="UpdateMenus()">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
@@ -108,7 +108,7 @@
     </menu>
 
     <!-- Mail View Charset Menu -->
-    <menu id="mailviewCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" oncreate="UpdateMailMenus()">
+    <menu id="mailviewCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" onpopupshowing="UpdateMailMenus()">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
@@ -206,7 +206,7 @@
     </menu>
 
     <!-- Mail Edit Charset Menu -->
-    <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" oncreate="InitCharsetMenuCheckMark();">
+    <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="InitCharsetMenuCheckMark();">
         <template>
             <rule>
                 <menupopup>
@@ -222,7 +222,7 @@
     </menu>
 
     <!-- Charset Menu -->
-    <menu id="charsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)" oncreate="UpdateMenus(event)">
+    <menu id="charsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)" onpopupshowing="UpdateMenus(event)">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>

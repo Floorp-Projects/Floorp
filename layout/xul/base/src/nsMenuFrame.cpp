@@ -783,6 +783,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       nsCOMPtr<nsIMenuParent> childPopup(do_QueryInterface(frame));
       UpdateDismissalListener(childPopup);
 
+      OnCreated();
     }
 
     // Set the focus back to our view's widget.
@@ -826,9 +827,10 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     // activate false will also set the mMenuOpen to false.
     ActivateMenu(PR_FALSE);
 
+    OnDestroyed();
+
     if (nsMenuFrame::mDismissalListener)
       nsMenuFrame::mDismissalListener->EnableListener(PR_TRUE);
-
   }
 
 }
@@ -1454,7 +1456,7 @@ nsMenuFrame::Execute()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_ACTION;
+  event.message = NS_XUL_COMMAND;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
@@ -1517,7 +1519,7 @@ nsMenuFrame::OnCreate()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_CREATE;
+  event.message = NS_XUL_POPUP_SHOWING;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
@@ -1612,12 +1614,80 @@ nsMenuFrame::OnCreate()
 }
 
 PRBool
+nsMenuFrame::OnCreated()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_XUL_POPUP_SHOWN;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+  
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+  
+  nsresult rv;
+  nsCOMPtr<nsIPresShell> shell;
+  rv = mPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    if (child) {
+      rv = shell->HandleDOMEventWithTarget(child, &event, &status);
+    }
+    else {
+      rv = shell->HandleDOMEventWithTarget(mContent, &event, &status);
+    }
+  }
+
+  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
+PRBool
 nsMenuFrame::OnDestroy()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_DESTROY;
+  event.message = NS_XUL_POPUP_HIDING;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+  
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+  
+  nsresult rv;
+  nsCOMPtr<nsIPresShell> shell;
+  rv = mPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    if (child) {
+      rv = shell->HandleDOMEventWithTarget(child, &event, &status);
+    }
+    else {
+      rv = shell->HandleDOMEventWithTarget(mContent, &event, &status);
+    }
+  }
+
+  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
+PRBool
+nsMenuFrame::OnDestroyed()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_XUL_POPUP_HIDDEN;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;

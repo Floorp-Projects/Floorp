@@ -56,7 +56,7 @@ Contributors:
       <hbox autostretch="never">
         <radio group="ldapAutocomplete" id="directories" value="1" label="&directories.label;"/>
         <menulist id="directoriesList" wsm_persist="true" flex="1">
-          <menupopup oncreate="createDirectoriesList(false);" id="directoriesListPopup"/>
+          <menupopup onpopupshowing="createDirectoriesList(false);" id="directoriesListPopup"/>
         </menulist>
         <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>
       </hbox>

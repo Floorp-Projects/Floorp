@@ -36,7 +36,7 @@
 #include "nsIDOMPaintListener.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDOMCompositionListener.h"
-#include "nsIDOMMenuListener.h"
+#include "nsIDOMXULListener.h"
 #include "nsIDOMScrollListener.h"
 #include "nsIDOMMutationListener.h"
 #include "nsIEventStateManager.h"
@@ -311,8 +311,8 @@ EventArrayType nsEventListenerManager::GetTypeForIID(const nsIID& aIID)
   if (aIID.Equals(NS_GET_IID(nsIDOMCompositionListener)))
     return eEventArrayType_Composition;
 
-  if (aIID.Equals(NS_GET_IID(nsIDOMMenuListener)))
-    return eEventArrayType_Menu;
+  if (aIID.Equals(NS_GET_IID(nsIDOMXULListener)))
+    return eEventArrayType_XUL;
 
   if (aIID.Equals(NS_GET_IID(nsIDOMScrollListener)))
     return eEventArrayType_Scroll;
@@ -633,28 +633,36 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, EventArra
     *aArrayType = eEventArrayType_Paint;
     *aFlags = NS_EVENT_BITS_PAINT_SCROLL;
   } // extened this to handle IME related events
-  else if (aType == nsLayoutAtoms::oncreate) {
-    *aArrayType = eEventArrayType_Menu; 
-    *aFlags = NS_EVENT_BITS_MENU_CREATE;
+  else if (aType == nsLayoutAtoms::onpopupshowing) {
+    *aArrayType = eEventArrayType_XUL; 
+    *aFlags = NS_EVENT_BITS_XUL_POPUP_SHOWING;
+  }
+  else if (aType == nsLayoutAtoms::onpopupshown) {
+    *aArrayType = eEventArrayType_XUL; 
+    *aFlags = NS_EVENT_BITS_XUL_POPUP_SHOWN;
+  }
+  else if (aType == nsLayoutAtoms::onpopuphiding) {
+    *aArrayType = eEventArrayType_XUL; 
+    *aFlags = NS_EVENT_BITS_XUL_POPUP_HIDING;
+  }
+  else if (aType == nsLayoutAtoms::onpopuphidden) {
+    *aArrayType = eEventArrayType_XUL; 
+    *aFlags = NS_EVENT_BITS_XUL_POPUP_HIDDEN;
   }
   else if (aType == nsLayoutAtoms::onclose) {
-    *aArrayType = eEventArrayType_Menu; 
+    *aArrayType = eEventArrayType_XUL; 
     *aFlags = NS_EVENT_BITS_XUL_CLOSE;
   }
-  else if (aType == nsLayoutAtoms::ondestroy) {
-    *aArrayType = eEventArrayType_Menu; 
-    *aFlags = NS_EVENT_BITS_MENU_DESTROY;
-  }
   else if (aType == nsLayoutAtoms::oncommand) {
-    *aArrayType = eEventArrayType_Menu; 
-    *aFlags = NS_EVENT_BITS_MENU_ACTION;
+    *aArrayType = eEventArrayType_XUL; 
+    *aFlags = NS_EVENT_BITS_XUL_COMMAND;
   }
   else if (aType == nsLayoutAtoms::onbroadcast) {
-    *aArrayType = eEventArrayType_Menu;
+    *aArrayType = eEventArrayType_XUL;
     *aFlags = NS_EVENT_BITS_XUL_BROADCAST;
   }
   else if (aType == nsLayoutAtoms::oncommandupdate) {
-    *aArrayType = eEventArrayType_Menu;
+    *aArrayType = eEventArrayType_XUL;
     *aFlags = NS_EVENT_BITS_XUL_COMMAND_UPDATE;
   }
   else if (aType == nsLayoutAtoms::onoverflow) {
@@ -2070,13 +2078,15 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
         }
       }
       break;
-    case NS_MENU_CREATE:
+    case NS_XUL_POPUP_SHOWING:
+    case NS_XUL_POPUP_SHOWN:
+    case NS_XUL_POPUP_HIDING:
+    case NS_XUL_POPUP_HIDDEN:
     case NS_XUL_CLOSE:
-    case NS_MENU_DESTROY:
-    case NS_MENU_ACTION:
+    case NS_XUL_COMMAND:
     case NS_XUL_BROADCAST:
     case NS_XUL_COMMAND_UPDATE:
-      listeners = GetListenersByType(eEventArrayType_Menu, nsnull, PR_FALSE);
+      listeners = GetListenersByType(eEventArrayType_XUL, nsnull, PR_FALSE);
       if (listeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
@@ -2086,26 +2096,32 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
             nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
 
             if (ls->mFlags & aFlags) {
-              nsCOMPtr<nsIDOMMenuListener> menuListener(do_QueryInterface(ls->mListener));
-              if (menuListener) {
+              nsCOMPtr<nsIDOMXULListener> xulListener(do_QueryInterface(ls->mListener));
+              if (xulListener) {
                 switch(aEvent->message) {
-                  case NS_MENU_CREATE:
-                    ret = menuListener->Create(*aDOMEvent);
+                  case NS_XUL_POPUP_SHOWING:
+                    ret = xulListener->PopupShowing(*aDOMEvent);
+                    break;
+                  case NS_XUL_POPUP_SHOWN:
+                    ret = xulListener->PopupShown(*aDOMEvent);
+                    break;
+                  case NS_XUL_POPUP_HIDING:
+                    ret = xulListener->PopupHiding(*aDOMEvent);
+                    break;
+                  case NS_XUL_POPUP_HIDDEN:
+                    ret = xulListener->PopupHidden(*aDOMEvent);
                     break;
                   case NS_XUL_CLOSE:
-                    ret = menuListener->Close(*aDOMEvent);
+                    ret = xulListener->Close(*aDOMEvent);
                     break;
-                  case NS_MENU_DESTROY:
-                    ret = menuListener->Destroy(*aDOMEvent);
-                    break;
-                  case NS_MENU_ACTION:
-                    ret = menuListener->Action(*aDOMEvent);
+                  case NS_XUL_COMMAND:
+                    ret = xulListener->Command(*aDOMEvent);
                     break;
                   case NS_XUL_BROADCAST:
-                    ret = menuListener->Broadcast(*aDOMEvent);
+                    ret = xulListener->Broadcast(*aDOMEvent);
                     break;
                   case NS_XUL_COMMAND_UPDATE:
-                    ret = menuListener->CommandUpdate(*aDOMEvent);
+                    ret = xulListener->CommandUpdate(*aDOMEvent);
                     break;
                   default:
                     break;
@@ -2115,9 +2131,27 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                 PRBool correctSubType = PR_FALSE;
                 PRUint32 subType = 0;
                 switch(aEvent->message) {
-                  case NS_MENU_CREATE:
-                    subType = NS_EVENT_BITS_MENU_CREATE;
-                    if (ls->mSubType & NS_EVENT_BITS_MENU_CREATE) {
+                  case NS_XUL_POPUP_SHOWING:
+                    subType = NS_EVENT_BITS_XUL_POPUP_SHOWING;
+                    if (ls->mSubType & NS_EVENT_BITS_XUL_POPUP_SHOWING) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_XUL_POPUP_SHOWN:
+                    subType = NS_EVENT_BITS_XUL_POPUP_SHOWN;
+                    if (ls->mSubType & NS_EVENT_BITS_XUL_POPUP_SHOWN) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_XUL_POPUP_HIDING:
+                    subType = NS_EVENT_BITS_XUL_POPUP_HIDING;
+                    if (ls->mSubType & NS_EVENT_BITS_XUL_POPUP_HIDING) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_XUL_POPUP_HIDDEN:
+                    subType = NS_EVENT_BITS_XUL_POPUP_HIDDEN;
+                    if (ls->mSubType & NS_EVENT_BITS_XUL_POPUP_HIDDEN) {
                       correctSubType = PR_TRUE;
                     }
                     break;
@@ -2127,15 +2161,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                       correctSubType = PR_TRUE;
                     }
                     break;
-                  case NS_MENU_DESTROY:
-                    subType = NS_EVENT_BITS_MENU_DESTROY;
-                    if (ls->mSubType & NS_EVENT_BITS_MENU_DESTROY) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_MENU_ACTION:
-                    subType = NS_EVENT_BITS_MENU_ACTION;
-                    if (ls->mSubType & NS_EVENT_BITS_MENU_ACTION) {
+                  case NS_XUL_COMMAND:
+                    subType = NS_EVENT_BITS_XUL_COMMAND;
+                    if (ls->mSubType & NS_EVENT_BITS_XUL_COMMAND) {
                       correctSubType = PR_TRUE;
                     }
                     break;

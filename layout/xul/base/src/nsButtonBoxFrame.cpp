@@ -143,7 +143,7 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_ACTION;
+  event.message = NS_XUL_COMMAND;
   if(aEvent) {
     event.isShift = ((nsInputEvent*)(aEvent))->isShift;
     event.isControl = ((nsInputEvent*)(aEvent))->isControl;

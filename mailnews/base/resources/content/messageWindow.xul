@@ -108,7 +108,7 @@ Rights Reserved.
                   oncommand="CopyEmailAddress(document.popupNode)"/>  
     </popup>
 
-    <popup id="allHeadersPopup"  oncreate="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
+    <popup id="allHeadersPopup"  onpopupshowing="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
       <hbox id="allHeadersPopupContainer"/>
     </popup>
 

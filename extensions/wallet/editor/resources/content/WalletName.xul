@@ -61,7 +61,7 @@
           <html>&namePrefix.label;</html>
           <menulist id="name.prefix" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup oncreate="Append(this.parentNode)">
+            <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -71,7 +71,7 @@
           <html>&nameFirst.label;</html>
           <menulist id="name.first" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup oncreate="Append(this.parentNode)">
+            <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -81,7 +81,7 @@
           <html>&nameMiddle.label;</html>
           <menulist id="name.middle" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup oncreate="Append(this.parentNode)">
+            <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -91,7 +91,7 @@
           <html>&nameLast.label;</html>
           <menulist id="name.last" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
-            <menupopup oncreate="Append(this.parentNode)">
+            <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
@@ -102,7 +102,7 @@
           <menulist id="name.suffix" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
 
-            <menupopup oncreate="Append(this.parentNode)">
+            <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>

@@ -1336,7 +1336,7 @@
     <content context="_child">
       <children/>
       <xul:popupset>
-        <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this);">
+        <xul:popup onpopupshowing="this.parentNode.parentNode.doPopupItemEnabling(this);">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"
                         oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
                                    controller.doCommand('cmd_undo');"/>

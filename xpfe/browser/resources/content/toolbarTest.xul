@@ -78,7 +78,7 @@
   </script>
   
   <popupset>
-    <popup type="floater" id="panelpopup" oncreate="initPopup();" 
+    <popup type="floater" id="panelpopup" onpopupshowing="initPopup();" 
            menugenerated="true" popupanchor="bottomleft" popupalign="topleft">
       <vbox flex="1">
         <menuitem label="Add Current Page" class="menuitem-floater"/>
@@ -87,7 +87,7 @@
       </vbox>
     </popup>
     <!--             
-    <popup id="panelpopup" oncreate="initPopup();" orient="vertical"
+    <popup id="panelpopup" onpopupshowing="initPopup();" orient="vertical"
            class="popup-resizable"
            style="min-width: 100px; max-width: 300px;">
       <vbox class="floater-box">

@@ -110,7 +110,7 @@
 -->
 
   <!-- edit menu -->
-  <menupopup id="menu_Edit_Popup" oncreate="initEditItems();">
+  <menupopup id="menu_Edit_Popup" onpopupshowing="initEditItems();">
     <menuitem id="edit_formshow"
               label="&formshowCmd.label;"
               accesskey="&formshowCmd.accesskey;"

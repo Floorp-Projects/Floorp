@@ -28,7 +28,7 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<popup id="folderTooltip" class="tooltip" oncreate="return FillInFolderTooltip(document.tooltipNode);" > 
+<popup id="folderTooltip" class="tooltip" onpopupshowing="return FillInFolderTooltip(document.tooltipNode);" > 
     <text id="foldertooltipText"/>
 </popup>
 
