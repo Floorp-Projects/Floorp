@@ -40,7 +40,7 @@ Rights Reserved.
 <!ENTITY enableStartPage.accesskey        "w">
 <!ENTITY location.label                   "Location:">
 <!ENTITY location.accesskey               "l">
-<!ENTITY useDefault.label                 "Restore Default">
+<!ENTITY useDefault.label                 "Reset">
 <!ENTITY useDefault.accesskey             "r">
 <!ENTITY chooseFile.label                 "Choose File...">
 <!ENTITY chooseFile.accesskey             "h">

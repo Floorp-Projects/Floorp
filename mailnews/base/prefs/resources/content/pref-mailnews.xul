@@ -79,11 +79,16 @@ Contributor(s):
                   pref="true" preftype="bool" prefstring="mailnews.start_page.enabled"
                   prefattribute="checked"/>
       </box>
-    <box autostretch="never" class="indent">
-      <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="mailnews.start_page.url"/>
-      <textfield id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
-                 prefstring="mailnews.start_page.url" prefattribute="value"/>
-    </box>
+
+      <separator class="thin"/>
+
+      <box autostretch="never">
+        <text class="label" value="&location.label;" accesskey="&location.accesskey;" 
+                   for="mailnews.start_page.url"/>
+        <textfield id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
+                   prefstring="mailnews.start_page.url" prefattribute="value"/>
+      </box>
+
     <box autostretch="never" halign="right">
       <button class="dialog" value="&useDefault.label;" accesskey="&useDefault.accesskey;"
               oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');" />
