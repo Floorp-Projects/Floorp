@@ -19,6 +19,7 @@ mailnews/db/mork/src/Makefile
 mailnews/db/msgdb/Makefile
 mailnews/db/msgdb/public/Makefile
 mailnews/db/msgdb/src/Makefile
+mailnews/db/msgdb/build/Makefile
 mailnews/local/Makefile
 mailnews/local/public/Makefile
 mailnews/local/src/Makefile
