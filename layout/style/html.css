@@ -446,7 +446,7 @@ tr:focus, tt:focus, u:focus, ul:focus, var:focus {
 
 /* hidden elements */
 area, base, basefont, head, meta, script, style, title,
-noembed, noscript, param {
+noembed, param {
    display: none;
 }
 
