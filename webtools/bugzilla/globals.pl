@@ -875,13 +875,15 @@ sub quoteUrls {
     $text =~ s~\b(mailto:|)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b
               ~<a href=\"mailto:$2\">$1$2</a>~igx;
 
-    # attachment links - handle both cases separatly for simplicity
+    # attachment links - handle both cases separately for simplicity
     $text =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\))
-              ~GetAttachmentLink($2, $1)
+              ~($things[$count++] = GetAttachmentLink($2, $1)) &&
+               ("\0\0" . ($count-1) . "\0\0")
               ~egmx;
 
     $text =~ s~\b(attachment\s*\#?\s*(\d+))
-              ~GetAttachmentLink($2, $1)
+              ~($things[$count++] = GetAttachmentLink($2, $1)) &&
+               ("\0\0" . ($count-1) . "\0\0")
               ~egmxi;
 
     # This handles bug a, comment b type stuff. Because we're using /g
