@@ -110,6 +110,22 @@ int nsConvertKey(int keysym)
       return(nsKeycodes[i].vkCode);
   }
 
+  // First, try to handle alphanumeric input, not listed in nsKeycodes:
+  if (keysym >= GDK_a && keysym <= GDK_z)
+    return keysym - GDK_a + NS_VK_A;
+
+  if (keysym >= GDK_A && keysym <= GDK_Z)
+    return keysym - GDK_A + NS_VK_A;
+
+  if (keysym >= GDK_0 && keysym <= GDK_9)
+    return keysym - GDK_0 + NS_VK_0;
+
+  if (keysym >= GDK_KP_0 && keysym <= GDK_KP_9)
+    return keysym - GDK_KP_0 + NS_VK_NUMPAD0;
+
+  if (keysym >= GDK_F1 && keysym <= GDK_F24)
+    return keysym - GDK_F1 + NS_VK_F1;
+
   return((int)0);
 }
 
@@ -340,6 +356,13 @@ void InitKeyEvent(GdkEventKey *aGEK,
 
   if (aGEK != NULL) {
     anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
+    //
+    // As per joki: as long as we're using ASCII rather than Unicode,
+    // it's okay to set the keycode to the charcode because the ns
+    // keycodes (e.g. VK_X) happen to map to ascii values;
+    // however, when we move to unicode, we'll want to send the 
+    // unicode translation in the charCode field.
+    //
     anEvent.charCode = aGEK->keyval;
     anEvent.time = aGEK->time;
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
