@@ -234,7 +234,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     return;
 
   if (aData->mFontData) {
-    nsCSSFont& font = *(aData->mFontData);
+    nsRuleDataFont& font = *(aData->mFontData);
     nsHTMLValue value;
     
     // face: string list
@@ -243,8 +243,10 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       if (value.GetUnit() == eHTMLUnit_String) {
         nsAutoString familyList;
         value.GetStringValue(familyList);
-        if (!familyList.IsEmpty())
+        if (!familyList.IsEmpty()) {
           font.mFamily.SetStringValue(familyList, eCSSUnit_String);
+          font.mFamilyFromHTML = PR_TRUE;
+        }
       }
     }
 

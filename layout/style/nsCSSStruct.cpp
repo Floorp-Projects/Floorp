@@ -390,7 +390,6 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
     mOverflow(aCopy.mOverflow),
     mVisibility(aCopy.mVisibility),
     mOpacity(aCopy.mOpacity),
-    mLang(aCopy.mLang),
     // temp fix for bug 24000
     mBreakBefore(aCopy.mBreakBefore),
     mBreakAfter(aCopy.mBreakAfter)

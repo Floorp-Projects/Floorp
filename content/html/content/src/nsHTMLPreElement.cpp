@@ -203,7 +203,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     return;
 
   if (aData->mFontData) {
-    nsCSSFont& font = *(aData->mFontData);
+    nsRuleDataFont& font = *(aData->mFontData);
 
     if (nsnull != aAttributes) {
       nsHTMLValue value;

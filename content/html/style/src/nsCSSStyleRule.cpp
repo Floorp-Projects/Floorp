@@ -918,23 +918,23 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
 // -- CSSImportantRule -------------------------------
 
 // New map helpers shared by both important and regular rules.
-static nsresult MapFontForDeclaration(nsCSSDeclaration* aDecl, nsCSSFont& aFont);
-static nsresult MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSDisplay& aDisplay);
-static nsresult MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSColor& aColor);
-static nsresult MapMarginForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSMargin& aMargin); 
-static nsresult MapListForDeclaration(nsCSSDeclaration* aDecl, nsCSSList& aList);
-static nsresult MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsCSSPosition& aPosition);
-static nsresult MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSTable& aTable);
-static nsresult MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSContent& aContent);
-static nsresult MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSText& aContent);
-static nsresult MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSUserInterface& aContent);
+static nsresult MapFontForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataFont& aFont);
+static nsresult MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataDisplay& aDisplay);
+static nsresult MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataColor& aColor);
+static nsresult MapMarginForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataMargin& aMargin); 
+static nsresult MapListForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataList& aList);
+static nsresult MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataPosition& aPosition);
+static nsresult MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataTable& aTable);
+static nsresult MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataContent& aContent);
+static nsresult MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataText& aContent);
+static nsresult MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataUserInterface& aContent);
 
 #ifdef INCLUDE_XUL
-static nsresult MapXULForDeclaration(nsCSSDeclaration* aDecl, nsCSSXUL& aXUL);
+static nsresult MapXULForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataXUL& aXUL);
 #endif
 
 #ifdef MOZ_SVG
-static nsresult MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsCSSSVG& aSVG);
+static nsresult MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataSVG& aSVG);
 #endif
 
 class CSSStyleRuleImpl;
@@ -1743,7 +1743,7 @@ CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
 }
 
 static nsresult 
-MapFontForDeclaration(nsCSSDeclaration* aDecl, nsCSSFont& aFont)
+MapFontForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataFont& aFont)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -1752,8 +1752,10 @@ MapFontForDeclaration(nsCSSDeclaration* aDecl, nsCSSFont& aFont)
   if (!ourFont)
     return NS_OK; // We don't have any rules for fonts.
 
-  if (eCSSUnit_Null == aFont.mFamily.GetUnit() && eCSSUnit_Null != ourFont->mFamily.GetUnit())
+  if (eCSSUnit_Null == aFont.mFamily.GetUnit() && eCSSUnit_Null != ourFont->mFamily.GetUnit()) {
     aFont.mFamily = ourFont->mFamily;
+    aFont.mFamilyFromHTML = PR_FALSE;
+  }
 
   if (eCSSUnit_Null == aFont.mStyle.GetUnit() && eCSSUnit_Null != ourFont->mStyle.GetUnit())
     aFont.mStyle = ourFont->mStyle;
@@ -1775,7 +1777,7 @@ MapFontForDeclaration(nsCSSDeclaration* aDecl, nsCSSFont& aFont)
 
 #ifdef INCLUDE_XUL
 static nsresult 
-MapXULForDeclaration(nsCSSDeclaration* aDecl, nsCSSXUL& aXUL)
+MapXULForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataXUL& aXUL)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -1814,7 +1816,7 @@ MapXULForDeclaration(nsCSSDeclaration* aDecl, nsCSSXUL& aXUL)
 
 #ifdef MOZ_SVG
 static nsresult 
-MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsCSSSVG& aSVG)
+MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataSVG& aSVG)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -1863,7 +1865,7 @@ MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsCSSSVG& aSVG)
 
 
 static nsresult 
-MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsCSSPosition& aPosition)
+MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataPosition& aPosition)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -1915,7 +1917,7 @@ MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsCSSPosition& aPosition)
 }
 
 static nsresult 
-MapListForDeclaration(nsCSSDeclaration* aDecl, nsCSSList& aList)
+MapListForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataList& aList)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -1959,7 +1961,7 @@ MapListForDeclaration(nsCSSDeclaration* aDecl, nsCSSList& aList)
 }
     
 static nsresult
-MapMarginForDeclaration(nsCSSDeclaration* aDeclaration, const nsStyleStructID& aSID, nsCSSMargin& aMargin)
+MapMarginForDeclaration(nsCSSDeclaration* aDeclaration, const nsStyleStructID& aSID, nsRuleDataMargin& aMargin)
 {
   nsCSSMargin*  ourMargin = (nsCSSMargin*)aDeclaration->GetData(kCSSMarginSID);
   if (!ourMargin)
@@ -2103,7 +2105,7 @@ MapMarginForDeclaration(nsCSSDeclaration* aDeclaration, const nsStyleStructID& a
 }
 
 static nsresult
-MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSColor& aColor)
+MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataColor& aColor)
 {
   if (!aDecl)
     return NS_OK;
@@ -2153,7 +2155,7 @@ MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCS
 }
 
 static nsresult 
-MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSTable& aTable)
+MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataTable& aTable)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -2193,7 +2195,7 @@ MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCS
 }
 
 static nsresult 
-MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSContent& aContent)
+MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataContent& aContent)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -2224,7 +2226,7 @@ MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, ns
 }
 
 static nsresult
-MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSText& aText)
+MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataText& aText)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -2273,7 +2275,7 @@ MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSS
 }
 
 static nsresult 
-MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSDisplay& aDisplay)
+MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataDisplay& aDisplay)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
@@ -2349,7 +2351,7 @@ MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, ns
 }
 
 static nsresult
-MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSUserInterface& aUI)
+MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataUserInterface& aUI)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
