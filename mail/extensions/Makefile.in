@@ -40,4 +40,6 @@ ifneq (,$(findstring inspector,$(MOZ_EXTENSIONS)))
 DIRS  += inspector
 endif
 
+
 include $(topsrcdir)/config/rules.mk
+
