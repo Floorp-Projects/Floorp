@@ -822,7 +822,8 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 
   if (type.Equals("STRING") ||
       type.Equals("UTF8_STRING") ||
-      type.Equals("COMPOUND_TEXT"))
+      type.Equals("COMPOUND_TEXT") ||
+      type.Equals("TEXT"))
   {
     dataFlavor = kUnicodeMime;
   } else {
@@ -869,7 +870,11 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
         clipboardData = utf8String;
         dataLength = strlen(utf8String);
       }
-    } else if (type.Equals("COMPOUND_TEXT")) {
+    } else if (type.Equals("COMPOUND_TEXT") || type.Equals("TEXT")) {
+      if (type.Equals("TEXT")) {
+        // if we get a request for  TEXT, return COMPOUND_TEXT
+        aInfo = gdk_atom_intern("COMPOUND_TEXT", FALSE);
+      }
       char *platformText;
       PRInt32 platformLen;
       // Get the appropriate unicode encoder. We're guaranteed that this won't change
@@ -904,7 +909,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
           rv = encoder->Convert(castedData, &len, platformText, &platformLen);
           (platformText)[platformLen] = '\0';  // null terminate. Convert() doesn't do it for us
         }
-      } // if valid length
+ } // if valid length
 
       if (platformLen > 0) {
         int status = 0;
@@ -1074,6 +1079,8 @@ void nsClipboard::RegisterFormat(const char *aMimeStr, GdkAtom aSelectionAtom)
   // for Text and Unicode we want to add some extra types to the X clipboard
   if (mimeStr.Equals(kUnicodeMime)) {
     // we will do the conversions to and from unicode internally
+    // anyone asking for TEXT will get COMPOUND_TEXT
+    AddTarget(gdk_atom_intern("TEXT", FALSE), aSelectionAtom); 
     AddTarget(gdk_atom_intern("COMPOUND_TEXT", FALSE), aSelectionAtom);
     AddTarget(gdk_atom_intern("UTF8_STRING", FALSE), aSelectionAtom);
     AddTarget(GDK_SELECTION_TYPE_STRING, aSelectionAtom);
