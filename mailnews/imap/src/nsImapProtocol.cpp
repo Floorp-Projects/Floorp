@@ -4806,7 +4806,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
           {
             // if the appended to folder isn't selected in the connection,
             // select it.
-            if (GetServerStateParser().GetSelectedMailboxName() && 
+            if (!GetServerStateParser().GetSelectedMailboxName() || 
                   PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
                             mailboxName))
               SelectMailbox(mailboxName);
