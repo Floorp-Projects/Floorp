@@ -40,6 +40,40 @@
 
 use Cwd;
 
+##
+# RecursiveStrip
+#
+# Strips all libs by recursing into all directories and calling
+# the strip utility on all *.so files.
+#
+# @param   targetDir  the directory to traverse recursively
+#
+sub RecursiveStrip
+{
+    my($targetDir) = $_[0];
+    my(@dirEntries) = ();
+    my($entry) = "";
+    my($saveCwd) = cwd();
+
+    @dirEntries = <$targetDir/*>;
+
+    # strip all .so files in this dir
+    chdir($targetDir);                  # push targetDir
+    system("strip *.so >& /dev/null");
+    chdir($saveCwd);                    # pop targetDir
+
+    # iterate over all subdir entries 
+    foreach $entry ( @dirEntries ) 
+    {
+        # if dir entry is dir
+        if (-d $entry)
+        {       
+            # recurse into subdir
+            RecursiveStrip($entry);
+        }
+    }
+}
+
 # Make sure there are at least three arguments
 if($#ARGV < 2)
 {
@@ -96,6 +130,10 @@ $saveCwdir = cwd();
 # change directory to where the files are, else zip will store
 # unwanted path information.
 chdir("$inStagePath/$inComponentName");
+
+# strip libs
+print "stripping libs in $inStagePath/$inComponentName...\n";
+RecursiveStrip(cwd());
 
 system("zip -r $inDestPath/$inComponentName.xpi *");
 chdir("$saveCwdir");
