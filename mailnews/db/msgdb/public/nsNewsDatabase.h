@@ -19,6 +19,7 @@
 #define _nsNewsDatabase_H_
 
 #include "nsMsgDatabase.h"
+#include "nsINewsDatabase.h"
 
 class nsIDBChangeListener;
 class nsMsgKeyArray;
@@ -26,13 +27,14 @@ class MSG_RetrieveArtInfo;
 class MSG_PurgeInfo;
 // news group database
 
-
-
-class nsNewsDatabase : public nsMsgDatabase
+class nsNewsDatabase : public nsMsgDatabase , public nsINewsDatabase
 {
 public:
   nsNewsDatabase();
   virtual ~nsNewsDatabase();
+
+  NS_DECL_ISUPPORTS_INHERITED 
+
   virtual  nsresult         MessageDBOpenUsingURL(const char * groupURL);
   char *GetGroupURL()       { return m_groupURL; }
   NS_IMETHOD				Open(nsIFileSpec *newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/);
@@ -54,6 +56,10 @@ public:
   NS_IMETHOD				ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
   NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key);
   NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
+
+  // for nsINewsDatabase
+  NS_IMETHOD                GetUnreadSet(nsMsgKeySet **pSet);
+  NS_IMETHOD                SetUnreadSet(char * setStr);
   
   virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
   virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);
@@ -86,6 +92,8 @@ protected:
   
   PRUint32				m_headerIndex;		// index of unthreaded headers
   // at a specified entry.
+
+  nsMsgKeySet           *m_unreadSet;
 };
 
 #endif

@@ -29,6 +29,7 @@ XPIDLSRCS =	\
 
 EXPORTS =	 						\
 			nsIMsgDatabase.h		\
+			nsINewsDatabase.h		\
 			nsMsgDatabase.h			\
 			nsMailDatabase.h		\
 			nsImapMailDatabase.h	\

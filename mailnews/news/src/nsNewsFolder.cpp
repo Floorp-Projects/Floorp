@@ -45,6 +45,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsINntpIncomingServer.h"
+#include "nsINewsDatabase.h"
 #include "nsMsgBaseCID.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -374,13 +375,13 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
   if (NS_FAILED(rv))
     return rv;        
   
-  rv = newsFolder->SetMsgKeySetStr(setStr);
+  rv = newsFolder->SetUnreadSetStr(setStr);
   if (NS_FAILED(rv))
     return rv;
   
 #ifdef DEBUG_NEWS
   char *testStr = nsnull;
-  rv = newsFolder->GetMsgKeySetStr(&testStr);
+  rv = newsFolder->GetUnreadSetStr(&testStr);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   printf("set str = %s\n",testStr);
   if (testStr) {
@@ -1115,7 +1116,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 #ifdef DEBUG_seth
   char *setStr = nsnull;
   // caller needs to use delete [] to free
-  rv = GetMsgKeySetStr(&setStr);
+  rv = GetUnreadSetStr(&setStr);
   if (NS_FAILED(rv)) return rv;
   if (setStr) {
     printf("GetNewMessage with setStr = %s\n", setStr);
@@ -1389,32 +1390,39 @@ nsresult nsMsgNewsFolder::ForgetLine()
 }
 
 // caller needs to use delete [] to free
-NS_IMETHODIMP nsMsgNewsFolder::GetMsgKeySetStr(char * *aMsgKeySetStr)
+NS_IMETHODIMP nsMsgNewsFolder::GetUnreadSetStr(char * *aUnreadSetStr)
 {
   nsresult rv;
   
-  if (!aMsgKeySetStr) return NS_ERROR_NULL_POINTER;
+  if (!aUnreadSetStr) return NS_ERROR_NULL_POINTER;
+
+  rv = GetDatabase();
+  if (NS_FAILED(rv)) return rv;
 
   NS_ASSERTION(mDatabase, "no database!");
   if (!mDatabase) return NS_ERROR_NULL_POINTER;
 
   nsMsgKeySet * set = nsnull;
   
-  rv = mDatabase->GetMsgKeySet(&set);
+  nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
+  if (NS_FAILED(rv))
+	return rv;        
+
+  rv = db->GetUnreadSet(&set);
   if (NS_FAILED(rv)) return rv;
       
-  *aMsgKeySetStr = set->Output();
+  *aUnreadSetStr = set->Output();
 
-  if (!*aMsgKeySetStr) return NS_ERROR_OUT_OF_MEMORY;
+  if (!*aUnreadSetStr) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::SetMsgKeySetStr(char * aMsgKeySetStr)
+NS_IMETHODIMP nsMsgNewsFolder::SetUnreadSetStr(char * aUnreadSetStr)
 {
   nsresult rv;
     
-  if (!aMsgKeySetStr) return NS_ERROR_NULL_POINTER;
+  if (!aUnreadSetStr) return NS_ERROR_NULL_POINTER;
 
   rv = GetDatabase();
   if (NS_FAILED(rv)) return rv;
@@ -1422,6 +1430,10 @@ NS_IMETHODIMP nsMsgNewsFolder::SetMsgKeySetStr(char * aMsgKeySetStr)
   NS_ASSERTION(mDatabase, "no database!");
   if (!mDatabase) return NS_ERROR_FAILURE;
   
-  rv = mDatabase->SetMsgKeySet(aMsgKeySetStr);
+  nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
+  if (NS_FAILED(rv))
+	return rv;        
+
+  rv = db->SetUnreadSet(aUnreadSetStr);
   return rv;
 }

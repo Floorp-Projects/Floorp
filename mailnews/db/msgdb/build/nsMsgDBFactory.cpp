@@ -118,7 +118,7 @@ nsresult nsMsgDBFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, 
 	// do they want an  nsNewsDatabase ?
 	else if (mClassID.Equals(kCNewsDB))
 	{
-		inst = NS_STATIC_CAST(nsIMsgDatabase*, new nsNewsDatabase());
+		inst = NS_STATIC_CAST(nsINewsDatabase*, new nsNewsDatabase());
 	}
 	// do they want an nsImapDatabase?
 	else if (mClassID.Equals(kCImapDB)) 

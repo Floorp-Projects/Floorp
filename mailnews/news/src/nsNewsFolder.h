@@ -94,8 +94,8 @@ public:
 
   NS_IMETHOD GetPath(nsIFileSpec** aPathName);
   
-  NS_IMETHOD GetMsgKeySetStr(char * *aMsgKeySetStr);
-  NS_IMETHOD SetMsgKeySetStr(char * aMsgKeySetStr);
+  NS_IMETHOD GetUnreadSetStr(char * *aUnreadSetStr);
+  NS_IMETHOD SetUnreadSetStr(char * aUnreadSetStr);
 
 protected:
 	nsresult ParseFolder(nsFileSpec& path);

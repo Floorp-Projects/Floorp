@@ -24,13 +24,48 @@
 
 nsNewsDatabase::nsNewsDatabase()
 {
-  // do nothing
+  m_unreadSet = nsnull;
 }
 
 nsNewsDatabase::~nsNewsDatabase()
 {
-  // do nothing.
   // todo:  figure out where to delete m_newsgroupSpec
+
+    if (m_unreadSet) {
+#ifdef DEBUG_MSGKEYSET
+        char *str = nsnull;
+        str = m_unreadSet->Output();
+        if (str) {
+            printf("setStr = %s on destroy\n",str);
+            delete [] str;
+            str = nsnull;
+        }
+#endif
+        delete m_unreadSet;
+        m_unreadSet = nsnull;
+    }    
+}
+
+NS_IMPL_ADDREF_INHERITED(nsNewsDatabase, nsMsgDatabase)
+NS_IMPL_RELEASE_INHERITED(nsNewsDatabase, nsMsgDatabase)  
+
+NS_IMETHODIMP nsNewsDatabase::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+	*aInstancePtr = nsnull;   
+
+ 	if (aIID.Equals(nsINewsDatabase::GetIID()))
+        {
+                *aInstancePtr = NS_STATIC_CAST(nsINewsDatabase *, this);
+        }
+
+        if(*aInstancePtr)
+        {
+                AddRef();
+                return NS_OK;
+        }     
+
+	return nsMsgDatabase::QueryInterface(aIID, aInstancePtr);
 }
 
 nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
@@ -108,9 +143,9 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, n
 nsresult nsNewsDatabase::Close(PRBool forceCommit)
 {
 #ifdef DEBUG_seth
-  if (m_newSet) {
+  if (m_unreadSet) {
     char *str = nsnull;
-    str = m_newSet->Output();
+    str = m_unreadSet->Output();
     printf("setStr is %s\n", str);
     delete [] str;
     str = nsnull;
@@ -142,17 +177,29 @@ NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	nsresult rv = NS_OK;
 	nsMsgKey messageKey;
 	rv = msgHdr->GetMessageKey(&messageKey);
-	if (NS_FAILED(rv)) {
-      return rv;
+	if (NS_FAILED(rv)) return rv;
+
+	if (!bRead) {
+      		rv = AddToNewList(messageKey);
+		if (NS_FAILED(rv)) return rv;
+
+		NS_ASSERTION(m_unreadSet, "m_unreadSet is null");
+		if (!m_unreadSet) return NS_ERROR_FAILURE;
+
+      		rv = m_unreadSet->Add(messageKey);
+		if (NS_FAILED(rv)) return rv;
 	}
-#if 1
-	if (!bRead)
-      rv = AddToNewList(messageKey);
-	else
-      rv = m_newSet->Remove(messageKey);
-#endif
+	else {
+		NS_ASSERTION(m_unreadSet, "m_unreadSet is null");
+		if (!m_unreadSet) return NS_ERROR_FAILURE;
+
+      		rv = m_unreadSet->Remove(messageKey);
+		if (NS_FAILED(rv)) return rv;
+	}
+
 	// give parent class chance to update data structures
 	rv = nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
+	if (NS_FAILED(rv)) return rv;
 
 	// sspitzer:
     // yes, it is expensive to commit every time here.
@@ -174,10 +221,10 @@ NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 	if (!pRead) 
 		return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(m_newSet, "set is null!");
-    if (!m_newSet) return NS_ERROR_FAILURE;
+    NS_ASSERTION(m_unreadSet, "set is null!");
+    if (!m_unreadSet) return NS_ERROR_FAILURE;
     
-	PRBool isRead = m_newSet->IsMember(key);
+	PRBool isRead = m_unreadSet->IsMember(key);
 	*pRead = isRead;
     
 	return NS_OK;
@@ -315,3 +362,41 @@ nsNewsDatabase::ThreadBySubjectWithoutRe()
   return PR_TRUE;
 }
 
+
+NS_IMETHODIMP nsNewsDatabase::GetUnreadSet(nsMsgKeySet **pSet)
+{
+    if (!pSet) return NS_ERROR_NULL_POINTER;
+    
+    NS_ASSERTION(m_unreadSet,"set doesn't exist yet!");
+    if (!m_unreadSet) return NS_ERROR_FAILURE;
+    
+    *pSet = m_unreadSet;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsNewsDatabase::SetUnreadSet(char * setStr)
+{
+    NS_ASSERTION(setStr, "no setStr!");
+    if (!setStr) return NS_ERROR_NULL_POINTER;
+
+    NS_ASSERTION(!m_unreadSet, "set already exists!");
+    if (m_unreadSet) {
+        delete m_unreadSet;
+        m_unreadSet = nsnull;
+    }
+    
+    m_unreadSet = nsMsgKeySet::Create(setStr /* , this */);
+    if (!m_unreadSet) return NS_ERROR_OUT_OF_MEMORY;
+    
+#ifdef DEBUG_MSGKEYSET
+    char *str = nsnull;
+    str = m_unreadSet->Output();
+    if (str) {
+        printf("in str = %s\nout str = %s\n", setStr,str);
+        delete [] str;
+        str = nsnull;
+    }
+#endif
+    
+    return NS_OK;
+}

@@ -28,6 +28,7 @@
 #include "MailNewsTypes.h"
 #include "nsCOMPtr.h"
 #include "nsIDBFolderInfo.h"
+#include "nsINewsDatabase.h"
 
 #ifdef HAVE_PANES
 class MSG_Master;
@@ -55,7 +56,7 @@ class MSG_Master;
 #include "nsCRT.h"
 #include "xp_mcom.h"
 
-#include "nsNewsDatabase.h"
+#include "nsMsgDatabase.h"
 
 #include "nsIDBFolderInfo.h"
 
@@ -218,7 +219,11 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
         }
 		else {
 			nsresult rv = NS_OK;
-			rv = m_newsDB->GetMsgKeySet(&m_set);
+
+            nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(m_newsDB, &rv));
+            if (NS_FAILED(rv)) return rv;
+            
+	    rv = db->GetUnreadSet(&m_set);
             if (NS_FAILED(rv) || !m_set) {
                 return rv;
             }
