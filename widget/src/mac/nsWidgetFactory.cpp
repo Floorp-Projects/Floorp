@@ -138,9 +138,31 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
 
     nsWindow *inst = nsnull;
-    if (aIID.Equals(kCWindow)) {
-        inst = new nsWindow(aOuter);
-    }
+    if (aIID.Equals(kCWindow)) 
+    	{
+      inst = new nsWindow(aOuter);
+    	}
+	 	else 
+	    if (aIID.Equals(kIWidget)) 
+	    	{
+	     	inst = new nsWindow(aOuter);
+	    	}
+	    else
+				if (mClassID.Equals(kCAppShellCID)) 
+					{
+					nsAppShell *appInst = new nsAppShell();
+					if (appInst == NULL) 
+						{  
+						return NS_ERROR_OUT_OF_MEMORY;  
+						}  
+					nsresult res = appInst->QueryInterface(aIID, aResult);
+					if (res != NS_OK) 
+						{
+						delete appInst;
+						}
+					return res;
+					}
+    
 #ifdef NOTNOW
     else if ( mClassID.Equals(kCCheckButtonCID)) {
         inst = new nsCheckButton(aOuter);
