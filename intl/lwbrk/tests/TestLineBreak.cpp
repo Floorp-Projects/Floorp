@@ -38,7 +38,7 @@ static char teng1[] =
 
 static PRUint32 exp1[] = {
   4,5,7,8,9,10,14,15,17,18,22,34,35,39,40,41,42,43,49,50,54,55,62,63,64,65,
-  67,68,69
+  67,68,69,70
 };
 
 //          1         2         3         4         5         6         7
@@ -47,7 +47,7 @@ static char teng2[] =
  "()((reasonab(l)e) line  break. .01123=45x48.";
 
 static PRUint32 exp2[] = {
-  2,12,15,17,18,22,23,24,30,31,37,38,40,41
+  2,12,15,17,18,22,23,24,30,31,37,38,
 };
 
 //          1         2         3         4         5         6         7
@@ -55,20 +55,79 @@ static PRUint32 exp2[] = {
 static char teng3[] = 
  "It's a test to test(ronae ) line break....";
 static PRUint32 exp3[] = {
-  4, 5, 6,7,11,12,14,15,25,26,27,28,32,33
+  4, 5, 6,7,11,12,14,15,19,25,27,28,32,33
 };
 
 static char ruler1[] =
 "          1         2         3         4         5         6         7  ";
 static char ruler2[] =
 "0123456789012345678901234567890123456789012345678901234567890123456789012";
-void TestLineBreaker()
+
+
+PRBool TestASCII(nsILineBreaker *lb,
+                 const char* in, const PRUint32 len, 
+                 const PRUint32* out, PRUint32 outlen)
+{
+         nsAutoString eng1(in);
+         nsBreakState bk(eng1.GetUnicode(), eng1.Length());
+         PRUint32 i,j;
+         PRUint32 res[256];
+         PRBool ok = PR_TRUE;
+         for(i = 0, lb->FirstForwardBreak(&bk);
+                    (! bk.IsDone()) && (i < 256);
+                    lb->NextForwardBreak(&bk), i++)
+         {
+            res [i] = bk.Current();
+         }
+         if (i != outlen)
+         {
+            ok = PR_FALSE;
+            cout << "WARNING!!! return size wrong, expect " << outlen <<
+                    " bet got " << i << "\n";
+         }
+         cout << "string  = \n" << in << "\n";
+         cout << ruler1 << "\n";
+         cout << ruler2 << "\n";
+         cout << "Expect = \n";
+         for(j=0;j<outlen;j++)
+         {
+            cout << out[j] << ",";
+         }
+         cout << "\nResult = \n";
+         for(j=0;j<i;j++)
+         {
+            cout << res[j] << ",";
+         }
+         cout << "\n";
+         for(j=0;j<i;j++)
+         {
+            if(j < outlen)
+            {
+                if (res[j] != out[j])
+                {
+                   ok = PR_FALSE;
+                   cout << "[" << j << "] expect " << out[j] << " but got " <<
+                      res[j] << "\n";
+                }
+            } else {
+                   ok = PR_FALSE;
+                   cout << "[" << j << "] additional " <<
+                      res[j] << "\n";
+   
+            }
+         }
+         return ok;
+}
+     
+     
+PRBool TestLineBreaker()
 {
    cout << "==================================\n";
    cout << "Finish nsILineBreakerFactory Test \n";
    cout << "==================================\n";
    nsILineBreakerFactory *t = NULL;
    nsresult res;
+   PRBool ok = PR_TRUE;
    res = nsServiceManager::GetService(kLWBrkCID,
                                 kILineBreakerFactory,
                                 (nsISupports**) &t);
@@ -76,6 +135,7 @@ void TestLineBreaker()
    cout << "Test 1 - GetService():\n";
    if(NS_FAILED(res) || ( t == NULL ) ) {
      cout << "\t1st GetService failed\n";
+     ok = PR_FALSE;
    } else {
      res = nsServiceManager::ReleaseService(kLWBrkCID, t);
    }
@@ -86,6 +146,7 @@ void TestLineBreaker()
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
      cout << "\t2nd GetService failed\n";
+     ok = PR_FALSE;
    } else {
 
      cout << "Test 3 - GetLineBreaker():\n";
@@ -95,49 +156,40 @@ void TestLineBreaker()
      res = t->GetBreaker(lb_arg, &lb);
      if(NS_FAILED(res) || (lb == NULL)) {
          cout << "GetBreaker(nsILineBreaker*) failed\n";
+         ok = PR_FALSE;
      } else {
          
          cout << "Test 4 - {First,Next}ForwardBreak():\n";
-         PRUint32 expect = sizeof(exp1)/sizeof(char);
+         if( TestASCII(lb, teng1, sizeof(teng1)/sizeof(char), 
+                   exp1, sizeof(exp1)/sizeof(PRUint32)) )
+         {
+           cout << "Test 4 Passed\n\n";
+         } else {
+           ok = PR_FALSE;
+           cout << "Test 4 Failed\n\n";
+         }
 
-         nsAutoString eng1(teng1);
-         nsBreakState bk(eng1.GetUnicode(), eng1.Length());
-         PRUint32 i,j;
-         PRUint32 res[256];
-         for(i = 0, lb->FirstForwardBreak(&bk);
-                    (! bk.IsDone()) && (i < 256);
-                    lb->NextForwardBreak(&bk), i++)
+         cout << "Test 5 - {First,Next}ForwardBreak():\n";
+         if(TestASCII(lb, teng2, sizeof(teng2)/sizeof(char), 
+                   exp2, sizeof(exp2)/sizeof(PRUint32)) )
          {
-            res [i] = bk.Current();
+           cout << "Test 5 Passed\n\n";
+         } else {
+           ok = PR_FALSE;
+           cout << "Test 5 Failed\n\n";
          }
-         if (i != expect)
+
+         cout << "Test 6 - {First,Next}ForwardBreak():\n";
+         if(TestASCII(lb, teng3, sizeof(teng3)/sizeof(char), 
+                   exp3, sizeof(exp3)/sizeof(PRUint32)) )
          {
-            cout << "WARNING!!! return size wrong, expect " << expect <<
-                    " bet got " << i << "\n";
+           cout << "Test 6 Passed\n\n";
+         } else {
+           ok = PR_FALSE;
+           cout << "Test 6 Failed\n\n";
          }
-         cout << "string  = \n" << teng1 << "\n";
-         cout << ruler1 << "\n";
-         cout << ruler2 << "\n";
-         for(j=0;j<i;j++)
-         {
-            cout << res[j] << ",";
-         }
-         for(j=0;j<i;j++)
-         {
-            if(j < expect)
-            {
-                if (res[j] != exp1[j])
-                {
-                   cout << "[" << j << "] expect " << exp1[j] << " but got " <<
-                      res[j] << "\n";
-                }
-            } else {
-                   cout << "[" << j << "] additional " <<
-                      res[j] << "\n";
-   
-            }
-         }
-     
+
+
          NS_IF_RELEASE(lb);
      }
 
@@ -147,6 +199,7 @@ void TestLineBreaker()
    cout << "Finish nsILineBreakerFactory Test \n";
    cout << "==================================\n";
 
+   return ok;
 }
 
 
@@ -171,7 +224,8 @@ int main(int argc, char** argv) {
 
    // --------------------------------------------
 
-   TestLineBreaker();
+   PRBool ok ; 
+   ok =TestLineBreaker();
 
    // --------------------------------------------
    cout << "Finish All The Test Cases\n";
@@ -182,5 +236,9 @@ int main(int argc, char** argv) {
       cout << "nsRepository failed\n";
    else
       cout << "nsRepository FreeLibraries Done\n";
+   if(ok)
+      cout <<  "Line Break Test\nOK\n";
+   else
+      cout <<  "Line Break Test\nFailed\n";
    return 0;
 }
