@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.41 $ 
-# $Date: 2002/05/06 20:53:03 $ 
+# $Revision: 1.42 $ 
+# $Date: 2002/05/06 20:57:53 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.41 $ )[1];
+$VERSION = ( qw $Revision: 1.42 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -376,27 +376,22 @@ sub status_table_start {
 sub is_break_cell {
     my ($tree,$time,$next_time,$last_treestate) = @_;
 
-
-    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
-        $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
-    }
-
     my $is_state1_different = 
         (
-         (defined($LAST_TREESTATE)) &&
+         (defined($last_treestate)) &&
          (defined($DATABASE{$tree}{$next_time}{'treestate'})) &&
          ($last_treestate ne $DATABASE{$tree}{$next_time}{'treestate'}) &&
          1);
 
     my $is_state2_different = 
         (
-         (defined($LAST_TREESTATE)) &&
+         (defined($last_treestate)) &&
          (defined($DATABASE{$tree}{$time}{'treestate'})) &&
          ($last_treestate ne $DATABASE{$tree}{$time}{'treestate'}) &&
          1);
 
     $is_state_different = $is_state1_different || $is_state2_different;    
-    my  $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
+    my $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
     
     my $is_break_cell = ( ($is_state_different) || ($is_author_data) );
     
@@ -442,11 +437,16 @@ sub status_table_row {
                        $LAST_TREESTATE,
                        )
          )) {
+
+      $next_time = $DB_TIMES[$next_index];
+
+      if (defined($DATABASE{$tree}{$next_time}{'treestate'})) {
+          $LAST_TREESTATE = $DATABASE{$next_tree}{$time}{'treestate'};
+      }
+
       $next_index++;
 
   }
-
-  $next_time = $DB_TIMES[$next_index];
 
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
