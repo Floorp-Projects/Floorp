@@ -17,11 +17,11 @@ var panelProgressListener = {
         const nsIChannel = Components.interfaces.nsIChannel;
         if (aStateFlags & nsIWebProgressListener.STATE_START && 
             aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-            document.getElementById('webpanels-throbber').setAttribute("loading", "true");
+            window.parent.document.getElementById('sidebar-throbber').setAttribute("loading", "true");
         }
         else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
                 aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-            document.getElementById('webpanels-throbber').removeAttribute("loading");
+            window.parent.document.getElementById('sidebar-throbber').removeAttribute("loading");
         }
     }
     ,
@@ -45,83 +45,22 @@ var panelProgressListener = {
     }
 };
 
-var panelAreaDNDObserver = {
-  onDrop: function (aEvent, aXferData, aDragSession)
-    {
-      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
-      
-      // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
-      if (!url || !url.length || url.indexOf(" ", 0) != -1) 
-        return;
-
-      var uri = getShortcutOrURI(url);
-      try {
-        document.getElementById('webpanels-browser').webNavigation.loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
-        var addButton = document.getElementById('addpanel-button');
-        addButton.disabled = false;
-      } catch (e) {}
-
-      // keep the event from being handled by the dragDrop listeners
-      // built-in to gecko if they happen to be above us.    
-      aEvent.preventDefault();
-    },
-
-  getSupportedFlavours: function ()
-    {
-      var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("text/unicode");
-      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-      return flavourSet;
-    }
-  
-};
-
 function loadWebPanel(aURI) {
-    gLoadPlaceHolder = false;
-    try {
-      document.getElementById('webpanels-browser').webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
-      var addButton = document.getElementById('addpanel-button');
-      addButton.disabled = true;
-    } catch (e) {}
+    var panelBrowser = document.getElementById('web-panels-browser');
+    panelBrowser.removeAttribute("src");
+    panelBrowser.setAttribute("src", aURI);
+    panelBrowser.setAttribute("cachedsrc", aURI);
 }
-
 
 function load()
 {
-  document.getElementById('webpanels-browser').webProgress.addProgressListener(panelProgressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-  loadPlaceholderPage();
+  var panelBrowser = document.getElementById('web-panels-browser');
+  panelBrowser.webProgress.addProgressListener(panelProgressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  if (panelBrowser.getAttribute("cachedsrc"))
+    panelBrowser.setAttribute("src", panelBrowser.getAttribute("cachedsrc"));
 }
 
 function unload()
 {
-  document.getElementById('webpanels-browser').webProgress.removeProgressListener(panelProgressListener);
-}
-
-// We do this in the onload in order to make sure that the load of this page doesn't delay the onload of
-// the sidebar itself.
-var gLoadPlaceHolder = true;
-function loadPlaceholderPage() {
-    var panelBrowser = document.getElementById('webpanels-browser');
-    var addButton = document.getElementById('addpanel-button');
-    if (gLoadPlaceHolder) {
-        panelBrowser.setAttribute("src", "chrome://browser/content/web-panels.xml");
-        addButton.disabled = true;
-    }
-}
-
-
-function grabPage()
-{
-    var panelBrowser = document.getElementById('webpanels-browser');
-    try {
-      panelBrowser.webNavigation.loadURI(window.parent.gBrowser.currentURI.spec, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
-      var addButton = document.getElementById('addpanel-button');
-      addButton.disabled = false;
-    } catch (e) {}
-}
-
-function addWebPanel()
-{
-    window.parent.addBookmarkAs(document.getElementById('webpanels-browser'), true);
+  document.getElementById('web-panels-browser').webProgress.removeProgressListener(panelProgressListener);
 }

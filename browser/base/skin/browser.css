@@ -767,3 +767,8 @@ resizer[dir="bottomright"] {
   -moz-appearance: resizer;
   cursor: se-resize;
 }
+
+#sidebar-throbber[loading="true"] {
+  list-style-image: url(chrome://global/skin/icons/Loading.gif);
+}
+

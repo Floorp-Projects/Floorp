@@ -19,8 +19,10 @@ browser.jar:
         content/browser/pageInfo.css                  (content/pageInfo.css)
         content/browser/web-panels.js                 (content/web-panels.js)
         content/browser/web-panels.xul                (content/web-panels.xul)
-	content/browser/web-panels.xml                (content/web-panels.xml)
-
+	content/browser/page-drawer.xml               (content/page-drawer.xml)
+	content/browser/page-drawer.js                (content/page-drawer.js)
+        content/browser/page-drawer.xul               (content/page-drawer.xul)
+        
 classic.jar:
         skin/classic/browser/aboutDialog.css          (skin/aboutDialog.css)
         skin/classic/browser/browser.css              (skin/browser.css)
@@ -56,7 +58,7 @@ en-US.jar:
         locale/en-US/browser/pageReportFirstTime.dtd  (locale/pageReportFirstTime.dtd)
 *       locale/en-US/browser/pageInfo.dtd             (locale/pageInfo.dtd)
         locale/en-US/browser/pageInfo.properties      (locale/pageInfo.properties)
-	locale/en-US/browser/web-panels.dtd           (locale/web-panels.dtd)
+	locale/en-US/browser/page-drawer.dtd          (locale/page-drawer.dtd)
 
 US.jar:
         locale/US/browser-region/region.properties    (locale/region.properties)

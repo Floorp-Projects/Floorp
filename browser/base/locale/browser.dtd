@@ -99,7 +99,7 @@
 <!ENTITY historyCmd.accesskey       "i">
 <!ENTITY history.commandKey       "h">
 
-<!ENTITY webPanels.commandKey     "j">
+<!ENTITY pageHolder.commandKey     "j">
 
 <!ENTITY tasksMenu.label "Tools">
 <!ENTITY tasksMenu.accesskey "T"> 
@@ -252,8 +252,8 @@
 <!ENTITY historyButton.label            "History">
 <!ENTITY historyButton.tooltip          "Displays pages you've viewed recently">
 
-<!ENTITY webPanelsButton.label          "Web Panels">
-<!ENTITY webPanelsButton.tooltip        "Displays pages as sidebar panels">
+<!ENTITY pageHolderButton.label         "Page Holder">
+<!ENTITY pageHolderButton.tooltip       "Displays pages in a sidebar panel">
 
 <!ENTITY newTabButton.tooltip           "Opens a new tab">
 <!ENTITY newWindowButton.tooltip        "Opens a new window">

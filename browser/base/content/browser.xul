@@ -176,7 +176,11 @@
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
                  
-    <broadcaster id="viewWebPanelsSidebar" autoCheck="false" label="&webPanelsButton.label;"
+    <broadcaster id="viewPageHolderSidebar" autoCheck="false" label="&pageHolderButton.label;"
+                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/page-drawer.xul"
+                 oncommand="toggleSidebar('viewPageHolderSidebar');"/>
+                 
+    <broadcaster id="viewWebPanelsSidebar" autoCheck="false" 
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
                  oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
 
@@ -248,7 +252,7 @@
     <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
     <key id="key_gotoHistory"  key="&history.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
-    <key id="key_webPanelsSidebar"  key="&webPanels.commandKey;"  command="viewWebPanelsSidebar" modifiers="accel"/>
+    <key id="key_pageHolderSidebar"  key="&pageHolder.commandKey;"  command="viewPageHolderSidebar" modifiers="accel"/>
     
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
@@ -655,7 +659,7 @@
                     <menuitem key="key_openDownloadsSidebar" observes="viewDownloadsSidebar"/>
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar"/>
                     <menuitem key="key_gotoHistory" observes="viewHistorySidebar"/>
-                    <menuitem key="key_webPanelsSidebar" observes="viewWebPanelsSidebar"/>
+                    <menuitem key="key_pageHolderSidebar" observes="viewPageHolderSidebar"/>
                   </menupopup>
                 </menu>            
                 <menuseparator/>
@@ -997,8 +1001,8 @@
                        tooltiptext="&bookmarksButton.tooltip;"/>
     
         <toolbarbutton id="webpanels-button" class="toolbarbutton-1"
-                       observes="viewWebPanelsSidebar"
-                       tooltiptext="&webPanelsButton.tooltip;"/>
+                       observes="viewPageHolderSidebar"
+                       tooltiptext="&pageHolderButton.tooltip;"/>
                        
         <toolbarbutton id="new-tab-button" class="toolbarbutton-1"
                        label="&tabCmd.label;"
@@ -1057,7 +1061,8 @@
   <hbox flex="1" id="browser">
     <vbox id="sidebar-box" hidden="true">
       <sidebarheader align="center">
-        <label id="sidebar-title"/>
+        <label id="sidebar-title" persist="value"/>
+        <image id="sidebar-throbber"/>
         <spacer flex="1"/>
         <toolbarbutton class="tabs-closebutton" oncommand="toggleSidebar();"/>      
       </sidebarheader>        
