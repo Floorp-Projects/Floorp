@@ -352,6 +352,11 @@
 #endif
 #define ExtSelectClipRgn          mozce_ExtSelectClipRgn
 
+#ifdef ExpandEnvironmentStrings
+#undef ExpandEnvironmentStrings
+#endif
+#define ExpandEnvironmentStrings  mozce_ExpandEnvironmentStrings
+
 #ifdef FIXED
 #undef FIXED
 #endif
@@ -366,6 +371,11 @@
 #undef FrameRect
 #endif
 #define FrameRect                 mozce_FrameRect
+
+#ifdef GdiFlush
+#undef GdiFlush
+#endif
+#define GdiFlush                 mozce_GdiFlush
 
 #ifdef GLYPHMETRICS
 #undef GLYPHMETRICS
