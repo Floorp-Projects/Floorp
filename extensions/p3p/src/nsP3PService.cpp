@@ -60,7 +60,7 @@ nsP3PService::nsP3PService()
   // we can live without a prefservice, so errors here aren't fatal
   nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
-    prefBranch->AddObserver(kCookiesP3PStringPref, this, PR_TRUE);
+    prefBranch->AddObserver(kCookiesP3PStringPref, this, PR_FALSE);
   }
   PrefChanged(prefBranch);
 }
