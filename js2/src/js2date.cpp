@@ -1475,6 +1475,11 @@ void initDateObject(JS2Metadata *meta)
 XXX not prototype object function properties, like ECMA3, but members of the Date class
         meta->writeDynamicProperty(meta->dateClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 */
+/*
+XXX not static members, since those can't be accessed from the instance
+          Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
+          meta->defineStaticMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+*/
         InstanceMember *m = new InstanceMethod(fInst);
         meta->defineInstanceMember(meta->dateClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
         pf++;
