@@ -355,18 +355,38 @@ if (formvalue('version')) {
     $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
 }
 
-# There must be at least one status in @status.
-my @status = "NEW";
+# List of status values for drop-down.
+my @status;
 
-if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
-    SendSQL("SELECT votestoconfirm FROM products WHERE name = " .
-            SqlQuote($product));
-    push(@status, $unconfirmedstate) if (FetchOneColumn());
+# Construct the list of allowable values.  There are three cases:
+# 
+#  case                                 values
+#  product does not have confirmation   NEW
+#  confirmation, user cannot confirm    UNCONFIRMED
+#  confirmation, user can confirm       NEW, UNCONFIRMED.
+
+SendSQL("SELECT votestoconfirm FROM products WHERE name = " .
+        SqlQuote($product));
+if (FetchOneColumn()) {
+    if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
+        push(@status, "NEW");
+    }
+    push(@status, $unconfirmedstate);
+} else {
+    push(@status, "NEW");
 }
 
 $vars->{'bug_status'} = \@status; 
-$default{'bug_status'} = $status[0];
 
+# Get the default from a template value if it is legitimate.
+# Otherwise, set the default to the first item on the list.
+
+if (formvalue('bug_status') && (lsearch(\@status, formvalue('bug_status')) >= 0)) {
+    $default{'bug_status'} = formvalue('bug_status');
+} else {
+    $default{'bug_status'} = $status[0];
+}
+ 
 SendSQL("SELECT DISTINCT groups.id, groups.name, groups.description, " .
         "membercontrol, othercontrol " .
         "FROM groups LEFT JOIN group_control_map " .
