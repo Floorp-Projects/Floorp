@@ -1100,7 +1100,6 @@ PSMContentDownloader::PSMContentDownloader(PRUint32 type)
     mType(type)
 {
   NS_INIT_ISUPPORTS();
-  /*NS_INIT_REFCNT();*/
   mNSS = do_GetService(PSM_COMPONENT_CONTRACTID);
 }
 
@@ -1110,8 +1109,8 @@ PSMContentDownloader::~PSMContentDownloader()
     nsMemory::Free(mByteData);
 }
 
-/*NS_IMPL_ISUPPORTS1(CertDownloader, nsIStreamListener);*/
-NS_IMPL_ISUPPORTS(PSMContentDownloader,NS_GET_IID(nsIStreamListener));
+/*NS_IMPL_ISUPPORTS1(CertDownloader, nsIStreamListener)*/
+NS_IMPL_ISUPPORTS1(PSMContentDownloader,nsIStreamListener)
 
 const PRInt32 kDefaultCertAllocLength = 2048;
 
@@ -1242,7 +1241,7 @@ NS_IMPL_ISUPPORTS2(PSMContentListener,
 
 PSMContentListener::PSMContentListener()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mLoadCookie = nsnull;
   mParentContentListener = nsnull;
 }
