@@ -104,6 +104,8 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kICharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_IID);
 
 PRBool keepOnRunning = PR_TRUE;
 nsICharsetConverterManager *ccMan = nsnull;
