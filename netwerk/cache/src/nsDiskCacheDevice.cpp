@@ -344,7 +344,7 @@ nsDiskCacheEvictor::VisitRecord(nsDiskCacheRecord *  mapRecord)
 exit:
     
     delete clientID;
-    delete diskEntry;
+    delete [] (char *)diskEntry;
     return result;
 }
 
@@ -620,7 +620,7 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
     if (nsCRT::strcmp(diskEntry->mKeyStart, key->get()) == 0) {
         entry = diskEntry->CreateCacheEntry(this);
     }
-    delete diskEntry;
+    delete [] (char *)diskEntry;
     
     // If we had a hash collision or CreateCacheEntry failed, return nsnull
     if (!entry)  return nsnull;
@@ -895,7 +895,7 @@ public:
         nsresult rv = mCacheMap->ReadDiskCacheEntry(mapRecord, &diskEntry);
         if (NS_FAILED(rv)) {
             mResult = rv;
-            return kStopVisitingRecords;
+            return kVisitNextRecord;
         }
 
         // create nsICacheEntryInfo
@@ -908,7 +908,7 @@ public:
         
         PRBool  keepGoing;
         rv = mVisitor->VisitEntry(DISK_CACHE_DEVICE_ID, entryInfo, &keepGoing);
-        delete diskEntry;
+        delete [] (char *)diskEntry;
         return keepGoing ? kVisitNextRecord : kStopVisitingRecords;
     }
  

@@ -562,6 +562,8 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry 
     PRFileDesc *        fd         = nsnull;
     *result = nsnull;
     
+    if (!record->MetaLocationInitialized())  return NS_ERROR_NOT_AVAILABLE;
+    
     if (metaFile == 0) {  // entry/metadata stored in separate file
         // open and read the file
         nsCOMPtr<nsILocalFile> file;
@@ -614,7 +616,7 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry 
 exit:
     // XXX auto ptr would be nice
     if (fd) (void) PR_Close(fd);
-    delete diskEntry;
+    delete [] (char *)diskEntry;
     return rv;
 }
 
@@ -657,7 +659,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
                          "generations out of sync");
         } else {
             rv = DeleteStorage(&binding->mRecord, nsDiskCache::kMetaData);
-            if (NS_FAILED(rv))  return rv;
+            if (NS_FAILED(rv))  goto exit;
         }
     }
 
@@ -719,7 +721,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
     }
 
 exit:
-
+    delete [] (char *)diskEntry;
     return rv;
 }
 
