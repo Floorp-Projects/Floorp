@@ -334,7 +334,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
       ((nsEventStatus_eIgnore == *aEventStatus) ||
        (nsEventStatus_eConsumeNoDefault == *aEventStatus)) ) {
     PRBool isFormElement = PR_FALSE;
-    nsCOMPtr<nsIHTMLContent> node; // Node we are a label for
+    nsCOMPtr<nsIContent> content; // Node we are a label for
     switch (aEvent->message) {
       case NS_FOCUS_CONTENT:
 
@@ -372,19 +372,9 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
               rv = domDoc->GetElementById(elementId,
                                           getter_AddRefs(domElement));
             }
-
-            if (NS_SUCCEEDED(rv) && domElement) {
-              // Get our grubby paws on the content interface
-              node = do_QueryInterface(domElement, &rv);
-
-              // Find out of this is a form element.
-              if (NS_SUCCEEDED(rv)) {
-                nsIFormControlFrame* control;
-                GetPrimaryFrame(node, control, PR_TRUE, PR_FALSE);
-
-                isFormElement = control != nsnull;
-              }
-            }
+            content = do_QueryInterface(domElement);
+            isFormElement = content &&
+                content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
           }
         } else {
           // --- No FOR attribute, we are a label for our first child
@@ -392,27 +382,12 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
           PRInt32 numNodes;
           rv = ChildCount(numNodes);
           if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIContent> contNode;
             PRInt32 i;
             for (i = 0; NS_SUCCEEDED(rv) && !isFormElement && (i < numNodes);
                  i++) {
-              rv = ChildAt(i, *getter_AddRefs(contNode));
-
-              if (NS_SUCCEEDED(rv) && contNode) {
-                // We need to make sure this child is a form element
-                nsresult isHTMLContent = PR_FALSE;
-
-                node = do_QueryInterface(contNode, &isHTMLContent);
-
-                if (NS_SUCCEEDED(isHTMLContent) && node) {
-                  // Find out of this is a form element.
-                  nsIFormControlFrame* control;
-
-                  GetPrimaryFrame(node, control, PR_TRUE, PR_FALSE);
-
-                  isFormElement = control != nsnull;
-                }
-              }
+              ChildAt(i, *getter_AddRefs(content));
+              isFormElement = content &&
+                  content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
             }
           }
         }
@@ -420,12 +395,9 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
     } // Close switch
 
     // If we found an element, pass along the event to it.
-    if (NS_SUCCEEDED(rv) && node) {
-      // Only pass along event if this is a form element
-      if (isFormElement) {
-        rv = node->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,
-                                  aEventStatus);
-      }
+    if (NS_SUCCEEDED(rv) && content && isFormElement) {
+      rv = content->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,
+                                   aEventStatus);
     }
   } // Close trickery
 
