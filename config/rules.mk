@@ -77,6 +77,14 @@ ifndef NS_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
 
+ifdef INTERNAL_TOOLS
+CC=$(HOST_CC)
+CXX=$(HOST_CXX)
+CFLAGS=$(HOST_CFLAGS) -I$(DIST)/include
+CXXFLAGS=$(HOST_CXXFLAGS) -I$(DIST)/include
+RANLIB=$(HOST_RANLIB)
+endif
+
 #
 # Library rules
 #
