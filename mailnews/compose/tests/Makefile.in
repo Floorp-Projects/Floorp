@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # smtp is not built as smtpTest is obsolete
-DIRS		= compose 
+DIRS		= compose  compose2
 
 include $(topsrcdir)/config/rules.mk
 
