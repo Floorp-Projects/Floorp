@@ -1027,7 +1027,7 @@ js_Interpret(JSContext *cx, jsval *result)
     onbranch = cx->branchCallback;
     ok = JS_TRUE;
 #define CHECK_BRANCH(len) {                                                   \
-    if (len < 0 && onbranch) {                                                \
+    if (len <= 0 && onbranch) {                                               \
 	SAVE_SP(fp);                                                          \
 	if (!(ok = (*onbranch)(cx, script)))                                  \
 	    goto out;                                                         \
