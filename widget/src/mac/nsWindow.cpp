@@ -95,7 +95,7 @@ inline void GetPortVisibleRegion(GrafPtr port, RgnHandle visRgn)
 //-------------------------------------------------------------------------
 nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
 {
-  strcpy(gInstanceClassName, "nsWindow");
+  gInstanceClassName = "nsWindow";
 
   mParent = nsnull;
   mBounds.SetRect(0,0,0,0);
@@ -168,6 +168,7 @@ nsWindow::~nsWindow()
 			
 	NS_IF_RELEASE(mTempRenderingContext);
 	
+	NS_IF_RELEASE(mFontMetrics);
 	NS_IF_RELEASE(mMenuBar);
 	NS_IF_RELEASE(mMenuListener);
 	
