@@ -1488,6 +1488,7 @@ nsMenuFrame::Execute()
   event.widget = nsnull;
   nsCOMPtr<nsIPresShell> shell;
   nsresult result = mPresContext->GetShell(getter_AddRefs(shell));
+  nsIFrame* me = this;
   if (NS_SUCCEEDED(result) && shell) {
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
   }
@@ -1497,9 +1498,13 @@ nsMenuFrame::Execute()
   nsCOMPtr<nsIDocument> doc;
   content->GetDocument(*getter_AddRefs(doc));
 
+  nsIFrame* primary = nsnull;
+  shell->GetPrimaryFrameFor(content, &primary);
+  
   // Now properly close them all up.
-  if (doc && mMenuParent)
+  if (doc && (primary == me) && mMenuParent) // <-- HACK IS HERE. ICK.
     mMenuParent->DismissChain();
+  // END HACK
 
   // Re-enable rollup events on this menu.
   if ( nsMenuFrame::mDismissalListener ) {
