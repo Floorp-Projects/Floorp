@@ -1,4 +1,5 @@
 <?xml version="1.0"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?> 
 
 <!DOCTYPE window
@@ -29,7 +30,7 @@
 <!ENTITY printPreviewCmd.label ".Print Preview">
 <!ENTITY printCmd.label ".Print">
 <!ENTITY closeCmd.label ".Close">
-<!ENTITY exitCmd.label ".Exit">
+<!ENTITY exitCmd.label "Exit">
 
 <!-- Edit menu items -->
 <!ENTITY editMenu.label ".Edit">
@@ -81,7 +82,7 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="ComposeStartup()"
-		onunload="ComposeExit()"
+		onunload="ComposeUnload()"
 		title="&msgComposeWindow.title;"
 		style="width:100%;height:100%"> 
   
@@ -89,7 +90,7 @@
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"> </html:script>
 <html:script language="JavaScript" src="MsgComposeCommands.js"> </html:script>
 
-<broadcaster id="args" value="editorType=html"/>
+<broadcaster id="args" value="editorType=default"/>
 
 <!-- The Following broadcasters have been imported from editorAppShell.xul -->
 <broadcaster id="Editor:Style:IsBold" bold="false"/>

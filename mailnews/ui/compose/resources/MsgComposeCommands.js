@@ -33,6 +33,33 @@ function ComposeStartup()
 	var date = new Date();
 	sessionID = date.getTime() + Math.random();
 
+	//Creating or Getting the Compose AppCore
+	if (args.name)
+	{
+		appCoreName = args.name;
+		dump("Compose: get composeAppCore=" + args.name + "\n");
+	}
+	else
+		appCoreName = "ComposeAppCore:" + sessionID;
+	composeAppCore = XPAppCoresManager.Find(appCoreName);
+	if (! composeAppCore)
+	{
+		dump("creating ComposeAppCore...\n");
+		composeAppCore = new ComposeAppCore();
+		if (composeAppCore)
+		{
+			composeAppCore.Init(appCoreName);
+			dump("compose app core (" + sessionID + ") correctly added to app cores manager\n");
+		}
+	}
+	if (composeAppCore)
+	{
+		dump("initalizing the compose app core\n");
+		composeAppCore.SetWindow(window);
+		composeAppCore.CompleteCallback("MessageSent();");
+	}
+
+	//Creating a Editor AppCore
 	appCoreName = "EditorAppCore:" + sessionID;
 	editorAppCore = XPAppCoresManager.Find(appCoreName);	
 	dump("Looking up EditorAppCore...\n");
@@ -54,7 +81,28 @@ function ComposeStartup()
 		editorName = appCoreName; //Very important to set this variable used by Editor js
 
 		// setEditorType MUST be call before setContentWindow
-		if (args.editorType && args.editorType.toLowerCase() == "html")
+		var useHtml;
+		if (args.editorType)
+		{
+			switch(args.editorType.toLowerCase())
+			{
+				case "text": useHtml = false;		break;
+				case "html": useHtml = true;		break;
+				
+				case "default":
+				default:
+					if (composeAppCore)
+						useHtml = composeAppCore.useHtml;
+					break;
+			}
+		}
+		else
+		{
+			if (composeAppCore)
+				useHtml = composeAppCore.useHtml;
+		}
+		
+		if (useHtml)
 		{
 			editorAppCore.setEditorType("html");
 			dump("editor initialized in HTML mode\n");
@@ -67,51 +115,35 @@ function ComposeStartup()
 		editorAppCore.setContentWindow(window.frames[0]);
 		editorAppCore.setWebShellWindow(window);
 		editorAppCore.setToolbarWindow(window);
+		if (useHtml)
+			editorAppCore.loadUrl("chrome://messengercompose/content/defaultHtmlBody.html");
+		else
+			editorAppCore.loadUrl("chrome://messengercompose/content/defaultTextBody.html");
 
-		editorAppCore.loadUrl("resource:/res/mailnews/compose/msgcomposeBody.html");
-	}
-
-	if (args.name)
-	{
-		appCoreName = args.name;
-		dump("Compose: get composeAppCore=" + args.name + "\n");
-	}
-	else
-		appCoreName = "ComposeAppCore:" + sessionID;
-	composeAppCore = XPAppCoresManager.Find(appCoreName);
-	if (! composeAppCore)
-	{
-		dump("creating ComposeAppCore...\n");
-		composeAppCore = new ComposeAppCore();
+		// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 		if (composeAppCore)
 		{
-			composeAppCore.Init(appCoreName);
-			dump("compose app core (" + sessionID + ") correctly added to app cores manager\n");
+			dump("Finish Initialization of the compose appcore\n");
+			editorAppCore.wrapColumn = composeAppCore.wrapColumn;
+			composeAppCore.SetEditor(editorAppCore);
+			composeAppCore.useHtml = useHtml;
 		}
 	}
-	if(composeAppCore)
-	{
-		dump("initalizing the compose app core\n");
-		composeAppCore.SetWindow(window);
-		composeAppCore.SetEditor(editorAppCore);
-		composeAppCore.CompleteCallback("MessageSent();");
-	}
+}
+
+function ComposeUnload(calledFromExit)
+{
+	dump("\nPage Unloaded from XUL\n");
+	//Don't use it now because it's called at the wrong time!
 }
 
 function ComposeExit()
 {
-	dump("\nPage Unloaded from XUL\n");
+	dump("\nApplication Exit from XUL\n");
+
+	//editor appcore knows how to shutdown the application, just use it...
 	if (editorAppCore)
-	{
-		dump("\nClosing editor app core\n");
-		//editorAppCore.exit();
-	}
-	if (composeAppCore)
-	{
-		dump("\nClosing compose app core\n");
-//		composeAppCore.exit();
-dump("composeAppCore.exit() not yet implemented!\n");
-	}
+		editorAppCore.exit();
 }
 
 function SetDocumentCharacterSet(aCharset)
