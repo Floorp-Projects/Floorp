@@ -110,6 +110,10 @@ pref("accessibility.warn_on_browsewithcaret", true);
 pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
 pref("accessibility.accesskeycausesactivation", true);
+pref("accessibility.typeaheadfind", true);
+pref("accessibility.typeaheadfind.linksonly", true);
+pref("accessibility.typeaheadfind.startlinksonly", false);
+pref("accessibility.typeaheadfind.timeout", 5000);
 
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
