@@ -1392,15 +1392,28 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
   // If we find such a container...
   if (stackPos > 0) {
     nsIHTMLContent* container = mStack[stackPos].mContent;
+    PRBool sync = PR_FALSE;
     
     // See if it has a parent on the stack. It should for all the
     // cases for which this is called, but put in a check anyway
     if (stackPos > 1) {
       nsIHTMLContent* parent = mStack[stackPos-1].mContent;
+      PRInt32 parentCount;
 
-      // Flush all tags and do notifications - it's easier to deal 
-      // with later notifications.
-      FlushTags();
+      // If we've already flushed the demoted container, flush
+      // what we have and do everything synchronously. If not,
+      // the children that will be promoted will just be dealt
+      // with later.
+      parent->ChildCount(parentCount);
+      if (mStack[stackPos-1].mNumFlushed == parentCount) {
+        FlushTags();
+        sync = PR_TRUE;
+      }
+      // Otherwise just append the container to the parent without
+      // notification
+      else {
+        parent->AppendChildTo(container, PR_FALSE);
+      }
       
       if (NS_SUCCEEDED(result)) {
         // Move all of the demoted containers children to its parent
@@ -1426,14 +1439,14 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
               nsIDOMHTMLFormElement* formElem = nsnull;
               childFormControl->GetForm(&formElem);
               // Removing the child will set it's form control to nsnull.
-              result = container->RemoveChildAt(0, PR_TRUE);
+              result = container->RemoveChildAt(0, sync);
               // Restore the child's form control using the cache'd pointer.
               childFormControl->SetForm(formElem);
               
               NS_RELEASE(childFormControl);
               NS_IF_RELEASE(formElem);
             } else {
-              result = container->RemoveChildAt(0, PR_TRUE);
+              result = container->RemoveChildAt(0, sync);
             }
             
             if (NS_SUCCEEDED(result)) {
@@ -1441,7 +1454,7 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
               // Note that we're doing synchronous notifications here
               // since we already did notifications for all content
               // that's come through with the FlushTags() call so far.
-              result = parent->AppendChildTo(child, PR_TRUE);
+              result = parent->AppendChildTo(child, sync);
             }
             NS_RELEASE(child);
           }
@@ -1459,9 +1472,11 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
     }
     NS_RELEASE(container);
 
-    // Update child counts for everything on the stack, since
-    // we've moved around content in the hierarchy
-    UpdateChildCounts();
+    if (sync) {
+      // Update child counts for everything on the stack, since
+      // we've moved around content in the hierarchy
+      UpdateChildCounts();
+    }
   }
   
   return result;
@@ -2024,7 +2039,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     return rv;
   }
 
-  mNotifyOnTimer = PR_FALSE;
+  mNotifyOnTimer = PR_TRUE;
   prefs->GetBoolPref("content.notify.ontimer", &mNotifyOnTimer);
 
   mBackoffCount = 3;
