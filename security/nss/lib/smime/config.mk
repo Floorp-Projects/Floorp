@@ -95,13 +95,13 @@ EXTRA_SHARED_LIBS += \
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-MAPFILE = $(OBJDIR)/nssmap.sun
+MAPFILE = $(OBJDIR)/smimemap.sun
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -M $(MAPFILE)
 endif
 
 ifeq ($(OS_ARCH),AIX)
-MAPFILE = $(OBJDIR)/nssmap.aix
+MAPFILE = $(OBJDIR)/smimemap.aix
 ALL_TRASH += $(MAPFILE)
 EXPORT_RULES = -bexport:$(MAPFILE)
 endif
@@ -112,8 +112,14 @@ ALL_TRASH += $(MAPFILE)
 MKSHLIB += -c $(MAPFILE)
 endif
 
+ifeq ($(OS_ARCH), OSF1)
+MAPFILE = $(OBJDIR)/smimemap.osf
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -hidden -input $(MAPFILE)
+endif
+
 ifeq ($(OS_ARCH),Linux)
-MAPFILE = $(OBJDIR)/nssmap.linux
+MAPFILE = $(OBJDIR)/smimemap.linux
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -Wl,--version-script,$(MAPFILE)
 endif
