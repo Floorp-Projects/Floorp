@@ -18,10 +18,10 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Scott Collins <scc@netscape.com>
  */
 
 #include "nsCOMPtr.h"
-// #include "nsIWeakReference.h"
 
 nsresult
 nsQueryInterface::operator()( const nsIID& aIID, void** answer ) const
@@ -59,49 +59,12 @@ void
 nsCOMPtr_base::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& iid )
 	{
 		nsISupports* newRawPtr;
-		if ( !NS_SUCCEEDED( helper(iid, NSCAP_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+		if ( !NS_SUCCEEDED( helper(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
 			newRawPtr = 0;
 		if ( mRawPtr )
 			NSCAP_RELEASE(mRawPtr);
 		mRawPtr = newRawPtr;
 	}
-
-
-#if 0
-void
-nsCOMPtr_base::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid, nsresult* result )
-  {
-    nsresult status = NS_ERROR_NULL_POINTER;
-    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
-      rawPtr = 0;
-
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-
-    mRawPtr = rawPtr;
-
-    if ( result )
-      *result = status;
-  }
-
-void
-nsCOMPtr_base::assign_with_QueryReferent( nsIWeakReference* weakPtr, const nsIID& iid, nsresult* result )
-  {
-    nsresult status = NS_ERROR_NULL_POINTER;
-
-    nsISupports* rawPtr;
-    if ( !weakPtr || !NS_SUCCEEDED( status = weakPtr->QueryReferent(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
-      rawPtr = 0;
-
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-
-    mRawPtr = rawPtr;
-
-    if ( result )
-      *result = status;
-  }
-#endif
 
 void**
 nsCOMPtr_base::begin_assignment()
@@ -112,5 +75,5 @@ nsCOMPtr_base::begin_assignment()
 	    	mRawPtr = 0;
     	}
 
-    return NSCAP_REINTERPRET_CAST(void**, &mRawPtr);
+    return NS_REINTERPRET_CAST(void**, &mRawPtr);
   }
