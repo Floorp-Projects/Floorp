@@ -73,6 +73,9 @@ private:
   nsresult ExtractDataFromOS ( DragReference inDragRef, ItemReference inItemRef, ResType inFlavor, 
                                  void** outBuffer, PRInt32* outBuffSize ) ;
 
+    // compute a screen rect from the frame associated with the given dom node
+  PRBool ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScreenRect ) ;
+
     // callback for the MacOS DragManager when a drop site asks for data
   static pascal OSErr DragSendDataProc ( FlavorType inFlavor, void* inRefCon,
   										 ItemReference theItemRef, DragReference inDragRef ) ;
