@@ -35,10 +35,12 @@ static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 //----------------------------------------------------------------------
 
 nsDOMAttribute::nsDOMAttribute(nsIContent* aContent,
-                               const nsString& aName,
+                               nsINodeInfo *aNodeInfo,
                                const nsString& aValue)
-  : mName(aName), mValue(aValue)
+  : mNodeInfo(aNodeInfo), mValue(aValue)
 {
+  NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
+
   NS_INIT_REFCNT();
   // We don't add a reference to our content. It will tell us
   // to drop our reference when it goes away.
@@ -117,15 +119,7 @@ NS_IMETHODIMP
 nsDOMAttribute::GetContent(nsIContent** aContent)
 {
   *aContent = mContent;
-  NS_IF_ADDREF(mContent);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::SetName(const nsString& aName)
-{
-  mName=aName;
+  NS_IF_ADDREF(*aContent);
 
   return NS_OK;
 }
@@ -163,29 +157,30 @@ nsDOMAttribute::SetScriptObject(void *aScriptObject)
 nsresult
 nsDOMAttribute::GetName(nsString& aName)
 {
-  aName=mName;
-  return NS_OK;
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
+
+  return mNodeInfo->GetQualifiedName(aName);
 }
 
 nsresult
 nsDOMAttribute::GetValue(nsString& aValue)
 {
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
+
   nsresult result = NS_OK;
   if (nsnull != mContent) {
-    nsIAtom* nameAtom;
-    PRInt32 nameSpaceID;
     nsresult attrResult;
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> name;
 
-    mContent->ParseAttributeString(mName, nameAtom, nameSpaceID);
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-    }
+    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
+    mNodeInfo->GetNamespaceID(nameSpaceID);
+
     nsAutoString tmpValue;
-    attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, tmpValue);
+    attrResult = mContent->GetAttribute(nameSpaceID, name, tmpValue);
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult) {
       mValue = tmpValue;
     }
-    NS_IF_RELEASE(nameAtom);
   }
   aValue=mValue;
   return result;
@@ -194,17 +189,11 @@ nsDOMAttribute::GetValue(nsString& aValue)
 nsresult
 nsDOMAttribute::SetValue(const nsString& aValue)
 {
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
+
   nsresult result = NS_OK;
   if (nsnull != mContent) {
-    nsIAtom* nameAtom;
-    PRInt32 nameSpaceID;
-
-    mContent->ParseAttributeString(mName, nameAtom, nameSpaceID);
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-    }
-    result = mContent->SetAttribute(nameSpaceID, nameAtom, aValue, PR_TRUE);
-    NS_IF_RELEASE(nameAtom);
+    result = mContent->SetAttribute(mNodeInfo, aValue, PR_TRUE);
   }
   mValue=aValue;
 
@@ -214,22 +203,22 @@ nsDOMAttribute::SetValue(const nsString& aValue)
 nsresult
 nsDOMAttribute::GetSpecified(PRBool* aSpecified)
 {
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aSpecified);
+
   nsresult result = NS_OK;
   if (nsnull == mContent) {
     *aSpecified = PR_FALSE;
-  }
-  else {
+  } else {
     nsAutoString value;
     nsresult attrResult;
-    nsIAtom* nameAtom;
     PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> name;
 
-    mContent->ParseAttributeString(mName, nameAtom, nameSpaceID);    
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-    }
-    attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, value);
-    NS_IF_RELEASE(nameAtom);
+    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
+    mNodeInfo->GetNamespaceID(nameSpaceID);
+
+    attrResult = mContent->GetAttribute(nameSpaceID, name, value);
     if (NS_CONTENT_ATTR_HAS_VALUE == attrResult) {
       *aSpecified = PR_TRUE;
     }
@@ -277,6 +266,8 @@ nsDOMAttribute::SetNodeValue(const nsString& aNodeValue)
 NS_IMETHODIMP
 nsDOMAttribute::GetNodeType(PRUint16* aNodeType)
 {
+  NS_ENSURE_ARG_POINTER(aNodeType);
+
   *aNodeType = (PRUint16)nsIDOMNode::ATTRIBUTE_NODE;
   return NS_OK;
 }
@@ -284,6 +275,8 @@ nsDOMAttribute::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
 {
+  NS_ENSURE_ARG_POINTER(aParentNode);
+
   *aParentNode = nsnull;
   return NS_OK;
 }
@@ -360,6 +353,8 @@ nsDOMAttribute::GetLastChild(nsIDOMNode** aLastChild)
 NS_IMETHODIMP
 nsDOMAttribute::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
+  NS_ENSURE_ARG_POINTER(aPreviousSibling);
+
   *aPreviousSibling = nsnull;
   return NS_OK;
 }
@@ -367,6 +362,8 @@ nsDOMAttribute::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 NS_IMETHODIMP
 nsDOMAttribute::GetNextSibling(nsIDOMNode** aNextSibling)
 {
+  NS_ENSURE_ARG_POINTER(aNextSibling);
+
   *aNextSibling = nsnull;
   return NS_OK;
 }
@@ -374,6 +371,8 @@ nsDOMAttribute::GetNextSibling(nsIDOMNode** aNextSibling)
 NS_IMETHODIMP
 nsDOMAttribute::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
+  NS_ENSURE_ARG_POINTER(aAttributes);
+
   *aAttributes = nsnull;
   return NS_OK;
 }
@@ -409,18 +408,17 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   if (nsnull != mContent) {
     nsAutoString value;
-    nsIAtom* nameAtom;
     PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> name;
+
+    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
+    mNodeInfo->GetNamespaceID(nameSpaceID);
   
-    mContent->ParseAttributeString(mName, nameAtom, nameSpaceID);    
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-    }
-    mContent->GetAttribute(nameSpaceID, nameAtom, value);
-    newAttr = new nsDOMAttribute(nsnull, mName, value); 
+    mContent->GetAttribute(nameSpaceID, name, value);
+    newAttr = new nsDOMAttribute(nsnull, mNodeInfo, value); 
   }
   else {
-    newAttr = new nsDOMAttribute(nsnull, mName, mValue); 
+    newAttr = new nsDOMAttribute(nsnull, mNodeInfo, mValue); 
   }
 
   if (nsnull == newAttr) {
@@ -452,35 +450,67 @@ nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP 
 nsDOMAttribute::GetNamespaceURI(nsString& aNamespaceURI)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
+
+  return mNodeInfo->GetNamespaceURI(aNamespaceURI);
 }
 
 NS_IMETHODIMP 
 nsDOMAttribute::GetPrefix(nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
+
+  return mNodeInfo->GetPrefix(aPrefix);
 }
 
 NS_IMETHODIMP 
 nsDOMAttribute::SetPrefix(const nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
+  nsCOMPtr<nsINodeInfo> newNodeInfo;
+  nsCOMPtr<nsIAtom> prefix;
+  nsresult rv = NS_OK;
+
+  if (aPrefix.Length())
+    prefix = dont_AddRef(NS_NewAtom(aPrefix));
+
+  rv = mNodeInfo->PrefixChanged(prefix, *getter_AddRefs(newNodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mContent) {
+    nsCOMPtr<nsIAtom> name;
+    PRInt32 nameSpaceID;
+    nsAutoString tmpValue;
+
+    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
+    mNodeInfo->GetNamespaceID(nameSpaceID);
+
+    rv = mContent->GetAttribute(nameSpaceID, name, tmpValue);
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      mContent->UnsetAttribute(nameSpaceID, name, PR_TRUE);
+
+      mContent->SetAttribute(newNodeInfo, tmpValue, PR_TRUE);
+    }
+  }
+
+  mNodeInfo = newNodeInfo;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsDOMAttribute::GetLocalName(nsString& aLocalName)
 {
-  return GetName(aLocalName);
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
+
+  return mNodeInfo->GetLocalName(aLocalName);
 }
 
 NS_IMETHODIMP 
 nsDOMAttribute::Normalize()
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Nothing to do here
+  return NS_OK;
 }
 
 NS_IMETHODIMP

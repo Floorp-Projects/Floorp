@@ -31,7 +31,7 @@ static NS_DEFINE_IID(kINameSpaceManagerIID, NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kINameSpaceIID, NS_INAMESPACE_IID);
 
 
-static const char kXMLNSNameSpaceURI[] = "<This isn't really a namespace>";
+static const char kXMLNSNameSpaceURI[] = "http://www.w3.org/2000/xmlns";
 static const char kXMLNameSpaceURI[] = "http://www.w3.org/XML/1998/namespace";
 static const char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";  // XXX?? "urn:w3-org-ns:HTML"??
 // XXX To be removed: Bug 7834 ---

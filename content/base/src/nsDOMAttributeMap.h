@@ -63,15 +63,6 @@ public:
                                      PRUint32* aResult);
 #endif
 
-protected:
-  nsresult GetNamedItemCommon(const nsString& aAttrName,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aNameAtom,
-                              nsIDOMNode** aAttribute);
-  void GetNormalizedName(PRInt32 aNameSpaceID,
-                         nsIAtom* aNameAtom,
-                         nsString& aAttrName);
-
 private:
   nsIContent* mContent;
   void* mScriptObject;

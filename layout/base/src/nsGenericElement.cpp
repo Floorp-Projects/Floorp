@@ -714,15 +714,9 @@ nsGenericElement::GetTagName(nsString& aTagName)
 nsresult
 nsGenericElement::GetAttribute(const nsString& aName, nsString& aReturn)
 {
-  nsIAtom* nameAtom;
-  PRInt32 nameSpaceID;
+  nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aName)));
 
-  mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
-  if (kNameSpaceID_Unknown == nameSpaceID) {
-    nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-  }
-  mContent->GetAttribute(nameSpaceID, nameAtom, aReturn);
-  NS_RELEASE(nameAtom);
+  mContent->GetAttribute(kNameSpaceID_Unknown, nameAtom, aReturn);
 
   return NS_OK;
 }
@@ -1071,15 +1065,10 @@ nsGenericElement::HasAttribute(const nsString& aName, PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  nsCOMPtr<nsIAtom> name;
-  PRInt32 nsid;
-
-  nsresult rv = mContent->ParseAttributeString(aName, *getter_AddRefs(name),
-                                               nsid);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aName)));
 
   nsAutoString tmp;
-  rv = mContent->GetAttribute(nsid, name, tmp);
+  nsresult rv = mContent->GetAttribute(kNameSpaceID_Unknown, name, tmp);
 
   *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
 
@@ -2601,70 +2590,17 @@ nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                         const nsString& aValue,
                                         PRBool aNotify)
 {
-  NS_ASSERTION(kNameSpaceID_Unknown != aNameSpaceID, "must have name space ID");
-  if (kNameSpaceID_Unknown == aNameSpaceID) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  NS_ASSERTION(nsnull != aName, "must have attribute name");
-  if (nsnull == aName) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  nsresult rv;
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  rv = mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsINodeInfo> ni;
+  rv = nimgr->GetNodeInfo(aName, nsnull, aNameSpaceID,
+                          *getter_AddRefs(ni));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (nsnull == mAttributes) {
-    mAttributes = new nsVoidArray();
-  }
-  
-  if (aNotify && (nsnull != mDocument)) {
-    mDocument->BeginUpdate();
-  }
-  
-  if (nsnull != mAttributes) {
-    nsGenericAttribute* attr;
-    PRInt32 index;
-    PRInt32 count = mAttributes->Count();
-    for (index = 0; index < count; index++) {
-      attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
-      if (attr->mNodeInfo->Equals(aName, aNameSpaceID)) {
-        attr->mValue = aValue;
-        rv = NS_OK;
-        break;
-      }
-    }
-    
-    if (index >= count) { // didn't find it
-      nsCOMPtr<nsINodeInfoManager> nimgr;
-      mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
-
-      nsCOMPtr<nsINodeInfo> ni;
-      rv = nimgr->GetNodeInfo(aName, nsnull, aNameSpaceID,
-                              *getter_AddRefs(ni));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      attr = new nsGenericAttribute(ni, aValue);
-      if (nsnull != attr) {
-        mAttributes->AppendElement(attr);
-        rv = NS_OK;
-      }
-    }
-  }
-
-  if (mDocument && NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
-    nsCOMPtr<nsIXBLBinding> binding;
-    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
-    if (binding)
-      binding->AttributeChanged(aName, aNameSpaceID, PR_FALSE);
-
-    if (aNotify) {
-      mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
-      mDocument->EndUpdate();
-    }
-  }
-
-  return rv;
+  return SetAttribute(ni, aValue, aNotify);
 }
 
 nsresult 
@@ -2674,15 +2610,58 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsCOMPtr<nsIAtom> atom;
-  PRInt32 nsid;
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
-  aNodeInfo->GetNameAtom(*getter_AddRefs(atom));
-  aNodeInfo->GetNamespaceID(nsid);
+  if (!mAttributes) {
+    mAttributes = new nsVoidArray();
+    NS_ENSURE_TRUE(mAttributes, NS_ERROR_OUT_OF_MEMORY);
+  }
+  
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->BeginUpdate();
+  }
+  
+  nsGenericAttribute* attr;
+  PRInt32 index;
+  PRInt32 count = mAttributes->Count();
+  for (index = 0; index < count; index++) {
+    attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+    if (attr->mNodeInfo == aNodeInfo) {
+      attr->mValue = aValue;
+      rv = NS_OK;
+      break;
+    }
+  }
+  
+  if (index >= count) { // didn't find it
+    attr = new nsGenericAttribute(aNodeInfo, aValue);
+    NS_ENSURE_TRUE(attr, NS_ERROR_OUT_OF_MEMORY);
 
-  // We still rely on the old way of setting the attribute.
+    mAttributes->AppendElement(attr);
+    rv = NS_OK;
+  }
 
-  return SetAttribute(nsid, atom, aValue, aNotify);
+  if (mDocument && NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIAtom> name;
+    PRInt32 nameSpaceID;
+
+    aNodeInfo->GetNameAtom(*getter_AddRefs(name));
+    aNodeInfo->GetNamespaceID(nameSpaceID);
+
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIXBLBinding> binding;
+    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+    if (binding)
+      binding->AttributeChanged(name, nameSpaceID, PR_FALSE);
+
+    if (aNotify) {
+      mDocument->AttributeChanged(mContent, nameSpaceID, name, NS_STYLE_HINT_UNKNOWN);
+      mDocument->EndUpdate();
+    }
+  }
+
+  return rv;
 }
 
 nsresult 
@@ -2710,7 +2689,7 @@ nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     PRInt32 index;
     for (index = 0; index < count; index++) {
       const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
-      if ((attr->mNodeInfo->NamespaceEquals(kNameSpaceID_Unknown) ||
+      if ((aNameSpaceID == kNameSpaceID_Unknown ||
            attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) && 
           (attr->mNodeInfo->Equals(aName))) {
         attr->mNodeInfo->GetPrefixAtom(aPrefix);
@@ -2754,7 +2733,7 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     PRBool  found = PR_FALSE;
     for (index = 0; index < count; index++) {
       nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
-      if ((attr->mNodeInfo->NamespaceEquals(kNameSpaceID_Unknown) ||
+      if ((aNameSpaceID == kNameSpaceID_Unknown ||
            attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) && 
           attr->mNodeInfo->Equals(aName)) {
         if (aNotify && (nsnull != mDocument)) {
