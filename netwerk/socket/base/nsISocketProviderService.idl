@@ -35,6 +35,6 @@ interface nsISocketProviderService : nsISupports
   0x5472,                                            \
   0x11d3,                                            \
   {0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37}   \
-};
+}
 
 %}
