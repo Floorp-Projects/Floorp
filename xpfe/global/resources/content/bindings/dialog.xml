@@ -166,14 +166,16 @@
 
           // look for any overriding explicit button elements
           var exBtns = this.getElementsByAttribute("dlgtype", "*");
-          for (var i = 0; i < exBtns.length; ++i) {
-            var dlgtype = exBtns[i].getAttribute("dlgtype");
+          var dlgtype;
+          var i;
+          for (i = 0; i < exBtns.length; ++i) {
+            dlgtype = exBtns[i].getAttribute("dlgtype");
             buttons[dlgtype].hidden = true; // hide the anonymous button
             buttons[dlgtype] = exBtns[i];
           }
 
           // add the label and oncommand handler to each button
-          for (var dlgtype in buttons) {
+          for (dlgtype in buttons) {
             var button = buttons[dlgtype];
             buttons[dlgtype].addEventListener("command", this._handleButtonCommand, true);
             // don't override custom labels with pre-defined labels on explicit buttons
@@ -192,11 +194,11 @@
             // mark shown dlgtypes as true
             var shown = { accept: false, cancel: false, help: false,
                           disclosure: false, extra1: false, extra2: false };
-            for (var i = 0; i < list.length; ++i)
+            for (i = 0; i < list.length; ++i)
               shown[list[i].replace(/ /g, "")] = true;
             
             // hide/show the buttons we want
-            for (var dlgtype in shown) {
+            for (dlgtype in shown) {
               if (shown[dlgtype])
                 buttons[dlgtype].hidden = false;
               else
