@@ -448,7 +448,7 @@ PK11_NeedUserInit;
 ;+    local:
 ;+       *;
 ;+};
-;+NSS_3.2.1 {       # NSS 3.2 release
+;+NSS_3.2.1 {       # NSS 3.2.1 release
 ;+    global:
 CERT_AddRDN;
 CERT_CreateRDN;
@@ -460,6 +460,49 @@ CERT_CreateName;
 ;+NSS_3.3 { 	# NSS 3.3. release
 ;+    global:
 SECKEY_CreateDHPrivateKey;
+;+#
+;+# The following symbols are exported only to make JSS work.
+;+# These are still private!!!
+;+#
+CERT_DisableOCSPChecking;
+CERT_DisableOCSPDefaultResponder;
+CERT_EnableOCSPDefaultResponder;
+CERT_GetCertTimes;
+CERT_ImportCRL;
+CERT_IsCACert;
+CERT_SetOCSPDefaultResponder;
+PBE_CreateContext;
+PBE_DestroyContext;
+PBE_GenerateBits;
+PK11_CheckSSOPassword;
+PK11_GetIVLength;
+PK11_GetKeyData;
+PK11_GetKeyType;
+PK11_GEtLowLevelKeyIDForCert;
+PK11_GEtLowLevelKeyIDForPrivateKey;
+PK11_ImportCertForKey;
+PK11_IsLoggedIn;
+PK11_Logout;
+PK11_NeedPWInit;
+PK11_SeedRandom;
+PK11_UnwrapPrivKey;
+PK11_VerifyRecover;
+PK11_WrapPrivKey;
+PK11_ReferenceSlot;
+PK11_GetSlotPWValues;
+PK11_ImportSymKey;
+PK11_ExtractKeyValue;
+SECMOD_DeleteInternalModule;
+SECMOD_DestroyModule;
+SECMOD_GetDefaultModuleList;
+SECMOD_GetDefaultModuleListLock;
+SECMOD_GetInternalModule;
+SECMOD_GetReadLock;
+SECMOD_ReferenceModule;
+SECMOD_ReleaseReadLock;
+SECKEY_GetPrivateKeyType;
+SECKEY_ExtractPublicKey;
+VFY_EndWithSignature;
 ;+    local:
 ;+       *;
 ;+};
