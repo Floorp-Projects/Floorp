@@ -22,6 +22,7 @@ CString iniSrcPath;
 CString scriptPath;
 CString nscpxpiPath;
 CString cdshellPath;
+CString outputPath; 
 
 WIDGET *tempWidget;
 int selCount;
@@ -396,10 +397,16 @@ int StartIB(CString parms, WIDGET *curWidget)
 	char *fgetsrv;
 	int rv = TRUE;
 	char	olddir[1024];
+//	CRect tmpRect = CRect(100,100,200,200);
+//	CProgressCtrl progressBar;
+//	CWnd* wndhandle = AfxGetMainWnd();
+//	progressBar.Create( PBS_SMOOTH, tmpRect, wndhandle, 3456 );
+
 
 	rootPath	= GetGlobal("Root");
 	configName	= GetGlobal("CustomizationList");
 	configPath  = rootPath + "Configs\\" + configName;
+	outputPath	= configPath + "\\Output";
 	cdPath 		= configPath + "\\Output\\Core";
 	cdshellPath	= configPath + "\\Output\\Shell";
 	networkPath = configPath + "\\Network";
@@ -479,9 +486,9 @@ int StartIB(CString parms, WIDGET *curWidget)
 	if (cdDir.Compare("1") ==0)
 	{
 		
+		CString shellPath = workspacePath + "\\Autorun\\";
+		CopyDir(shellPath, outputPath, NULL, TRUE);
 		CreateRshell ();
-		CString shellPath = workspacePath + "\\Autorun\\Shell\\";
-		CopyDir(shellPath, cdshellPath, NULL, FALSE);
 
 	}
 	else
