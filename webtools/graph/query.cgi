@@ -130,7 +130,7 @@ sub show_graph {
 
 
   print "<center>\n";
-  print "<table cellspacing=8>\n";
+  print "<table cellspacing=8 border=0>\n";
 
   print "<tr>\n";
   print "<b>$TESTNAME</b><br>($TBOX)\n";
@@ -154,9 +154,7 @@ sub show_graph {
   print "</td>\n";
 
   # Days, Time-axis
-  print "<td valign=bottom>\n";
   print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">\n";
-  print "<font size=\"-1\">\n";
   print "<input type=hidden name=\"tbox\" value=\"$TBOX\">";
   print "<input type=hidden name=\"testname\" value=\"$TESTNAME\">";
   print "<input type=hidden name=\"autoscale\" value=\"$AUTOSCALE\">";
@@ -167,16 +165,50 @@ sub show_graph {
   print "<input type=hidden name=\"showpoint\" value=\"$SHOWPOINT\">";
   print "<input type=hidden name=\"avg\" value=\"$AVG\">";
 
+  print "<td>\n";
+
+
+  print "<table valign=bottom cellspacing=0 border=0 cellpadding=0>\n";
+
+  print "<tr valign=\"bottom\">\n";
+
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
   print "Days:";
   if($DAYS) {
-	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS&showpoint=$SHOWPOINT&avg=$AVG\">all data</a>|";
-    print "<input type=text value=$DAYS name=\"days\" size=3 maxlength=10>";
-	print ")\n";
+    print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS&showpoint=$SHOWPOINT&avg=$AVG\">all data</a>|";
+    print "</td>\n";
+
+    print "<td valign=bottom>\n";
+    print "<font size=\"-1\">\n";
+    print "<input type=text value=$DAYS name=\"days\" size=3 maxlength=10>\n";
+    print "</td>\n";
+
+    print "<td valign=bottom>\n";
+    print "<font size=\"-1\">\n";
+    print ")\n";
+    print "</td>\n";
+
   } else {
-	print "(<b>all data</b>|";
-    print "<input type=text value=\"\" name=\"days\" size=3 maxlength=10>";
-	print ")\n";
+    print "(<b>all data</b>|";
+    print "</td>\n";
+
+    print "<td valign=bottom>\n";
+    print "<font size=\"-1\">\n";
+    print "<input type=text value=\"\" name=\"days\" size=3 maxlength=10>\n";
+    print "</td>\n";
+
+    print "<td valign=bottom>\n";
+    print "<font size=\"-1\">\n";
+    print ")\n";
+    print "</td>\n";
   }
+
+
+  print "</tr>\n";
+
+  print "</table>\n";
+
   print "</font>\n";
   print "</form>\n";
   print "</td>\n";
@@ -245,7 +277,7 @@ sub show_graph {
   print "<br>\n";
 
 
-  print "<table cellspacing=8>\n";
+  print "<table cellspacing=8 border=0>\n";
   print "<tr>\n";
 
   print "<td>\n";
