@@ -1,26 +1,140 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
-<plist version="0.9">
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>English</string>
-	<key>CFBundleExecutable</key>
-	<string>mozilla-bin</string>
-	<key>CFBundleGetInfoString</key>
-	<string>0.9.7+, © 1998-2002 The Mozilla Organization</string>
-	<key>CFBundleIconFile</key>
-	<string>mach</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleExecutable</key>
+	<string>mozilla-bin</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.mozilla.mozilla</string>
+	<key>CFBundleVersion</key>
+	<string>1.3a</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleName</key>
+	<string>Mozilla</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
 	<string>MOZZ</string>
-	<key>CFBundleVersion</key>
-	<string>0.9.7+</string>
-	<key>CSResourcesFileMapped</key>
-	<true/>
-	<key>NSHumanReadableCopyright</key>
-	<string>�1998-2002 The Mozilla Organization</string>
+	<key>CFBundleIconFile</key>
+	<string>mach</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.3a</string>
+	<key>CFBundleGetInfoString</key>
+	<string>Mozilla 1.3a, © 1998-2002 The Mozilla Organization</string>
+        <key>NSAppleScriptEnabled</key>
+        <true/>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>html</string>
+				<string>htm</string>
+				<string>shtml</string>
+				<string>xml</string>
+				<string>xhtml</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>fileHtml.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>HTML Document</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>HTML</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>txt</string>
+				<string>text</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>fileBookmark.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Text Document</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>TEXT</string>
+				<string>utxt</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>jpeg</string>
+				<string>jpg</string>
+				<string>png</string>
+				<string>gif</string>
+				<string>mng</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>fileBookmark.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Image Document</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>GIFf</string>
+				<string>JPEG</string>
+				<string>PNGf</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLIconFile</key>
+			<string>fileHtml.icns</string>
+			<key>CFBundleURLName</key>
+			<string>http URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>http</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLIconFile</key>
+			<string>fileHtml.icns</string>
+			<key>CFBundleURLName</key>
+			<string>https URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>https</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ftp URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ftp</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>gopher URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gopher</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>file URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>file</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
