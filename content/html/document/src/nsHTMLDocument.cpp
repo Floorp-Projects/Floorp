@@ -505,7 +505,17 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     LL_I2L(scale, 1000000L);
     LL_MUL(prusec, modDate, scale);
     PR_ExplodeTime(prusec, PR_LocalTimeParameters, &prtime);
-    PR_FormatTime(buf, sizeof buf, "%#c", &prtime);
+
+    // Use '%#c' for windows, because '%c' is backward-compatible and
+    // non-y2k with msvc; '%#c' requests that a full year be used in the
+    // result string.  Other OSes just use "%c".
+    PR_FormatTime(buf, sizeof buf,
+#ifdef _WIN32
+                  "%#c",
+#else
+                  "%c",
+#endif
+                  &prtime);
     lastModified.SetString(buf);
     SetLastModified(lastModified);
   }
