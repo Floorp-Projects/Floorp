@@ -19,7 +19,7 @@ classic.jar:
     skin/classic/communicator/bookmarks/bookmark-folder-open.gif         (communicator/bookmarks/bookmark-folder-open.gif)
     skin/classic/communicator/bookmarks/bookmark-folder-button.gif       (communicator/bookmarks/bookmark-folder-button.gif)
     skin/classic/communicator/bookmarks/bookmark-item.gif                (communicator/bookmarks/bookmark-item.gif)
-    skin/classic/communicator/bookmarks/bookmark-item-update.gif         (communicator/bookmarks/bookmark-item-updated.gif)
+    skin/classic/communicator/bookmarks/bookmark-item-updated.gif        (communicator/bookmarks/bookmark-item-updated.gif)
     skin/classic/communicator/bookmarks/home.gif                         (communicator/bookmarks/home.gif)
     skin/classic/communicator/bookmarks/home-hover.gif                   (communicator/bookmarks/home-hover.gif)
     skin/classic/communicator/bookmarks/home-active.gif                  (communicator/bookmarks/home-active.gif)
