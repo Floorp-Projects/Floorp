@@ -53,12 +53,6 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDOMHTMLImageElement.h"
 
-// with apologies: the methods this ifdef controls need to be defined
-// to prevent a link problem
-#ifndef ClientWallet
-#define ClientWallet
-#endif
-
 #ifdef ClientWallet
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
@@ -426,6 +420,23 @@ nsBrowserAppCore::WalletSamples()
   return NS_OK;
 }
 
+#else
+NS_IMETHODIMP
+nsBrowserAppCore::WalletEditor() {
+  return NS_OK;
+}
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletSamples() {
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsBrowserAppCore::WalletQuickFillin() {
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsBrowserAppCore::WalletSafeFillin() {
+  return NS_OK;
+}
 #endif
 
 NS_IMETHODIMP    
