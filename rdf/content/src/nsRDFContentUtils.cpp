@@ -421,12 +421,19 @@ nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
         rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
         if (NS_FAILED(rv)) return rv;
 
+#ifdef NECKO
+        char* spec;
+#else
         const char* spec;
+#endif
         docURL->GetSpec(&spec);
         if (! spec)
             return NS_ERROR_FAILURE;
 
-        aURI = spec;
+        aURI = spec;    // copied by nsString, right
+#ifdef NECKO
+        nsCRT::free(spec);
+#endif
         if (aElementID.First() != PRUnichar('#')) {
             aURI += '#';
         }
@@ -449,7 +456,11 @@ nsRDFContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, n
     rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
     if (NS_FAILED(rv)) return rv;
 
+#ifdef NECKO
+    char* spec;
+#else
     const char* spec;
+#endif
     docURL->GetSpec(&spec);
     if (! spec)
         return NS_ERROR_FAILURE;
@@ -461,6 +472,9 @@ nsRDFContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, n
     else {
         aElementID = aURI;
     }
+#ifdef NECKO
+    nsCRT::free(spec);
+#endif
 
     return NS_OK;
 }

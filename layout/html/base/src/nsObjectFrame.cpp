@@ -35,11 +35,7 @@
 #include "nsIDocument.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #else
 #include "nsIURLGroup.h"
 #endif // NECKO
@@ -616,12 +612,10 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
           }
         }
 
-#ifdef NECKO
-        char* url;
-#else
-        const char* url;
+#ifndef NECKO   // unused urlxxx?
+        const char* urlxxx;
+        (void)baseURL->GetSpec(&urlxxx);
 #endif
-        (void)baseURL->GetSpec(&url);
 
         // Create an absolute URL
         if(classid != JAVA_CLASS_ID) {

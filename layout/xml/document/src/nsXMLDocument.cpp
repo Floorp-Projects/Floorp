@@ -73,6 +73,8 @@ NS_LAYOUT nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 {
   nsXMLDocument* doc = new nsXMLDocument();
+  if (doc == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
   return doc->QueryInterface(kIDocumentIID, (void**) aInstancePtrResult);
 }
 

@@ -130,26 +130,15 @@ public:
    */
   NS_IMETHOD GetContentType(nsString& aContentType) const;
 
-#ifdef NECKO
-  /**
-   * Return the load group for the document. May return null.
-   */
-  NS_IMETHOD_(nsILoadGroup*) GetDocumentLoadGroup() const;
-#else
   /**
    * Return the LoadGroup for the document. May return null.
    */
   virtual nsILoadGroup* GetDocumentLoadGroup() const;
-#endif
 
   /**
    * Return the base URL for realtive URLs in the document. May return null (or the document URL).
    */
-#ifdef NECKO
-  NS_IMETHOD GetBaseURI(nsIURI*& aURL) const;
-#else
   NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
-#endif
 
   /**
    * Return a standard name for the document's character set. This will

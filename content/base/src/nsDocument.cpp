@@ -929,22 +929,14 @@ nsDocument::GetContentType(nsString& aContentType) const
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#ifdef NECKO
-NS_IMETHODIMP_(nsILoadGroup*) nsDocument::GetDocumentLoadGroup() const
-#else
 nsILoadGroup* nsDocument::GetDocumentLoadGroup() const
-#endif
 {
   NS_IF_ADDREF(mDocumentLoadGroup);
   return mDocumentLoadGroup;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
-nsDocument::GetBaseURI(nsIURI* &aURL) const
-#else
 nsDocument::GetBaseURL(nsIURI*& aURL) const
-#endif
 {
   aURL = mDocumentURL;
   NS_IF_ADDREF(mDocumentURL);

@@ -52,9 +52,7 @@
 #include "nsIPostToServer.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIBuffer.h"
 #include "nsIInputStream.h"
@@ -111,6 +109,15 @@ public:
 			SearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent, nsIRDFResource *engine);
 	virtual		~SearchDataSourceCallback(void);
 
+#ifdef NECKO
+    // nsIStreamObserver methods:
+    NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+    NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_ERROR_NOT_IMPLEMENTED; }
+    // nsIStreamListener methods:
+    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+#else
 	// stream observer
 
 	NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
@@ -122,6 +129,7 @@ public:
 	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
 	NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength);
+#endif
 };
 
 
@@ -933,15 +941,7 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 #ifndef NECKO
         rv = NS_NewURL(&url, (const char*) searchURL);
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIURI *uri = nsnull;
-        rv = service->NewURI((const char*) searchURL, nsnull, &uri);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-        NS_RELEASE(uri);
+        rv = NS_NewURI(&url, (const char*) searchURL);
 #endif // NECKO
 		if (NS_SUCCEEDED(rv))
 		{
@@ -969,7 +969,11 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 			SearchDataSourceCallback *callback = new SearchDataSourceCallback(mInner, source, engine);
 			if (nsnull != callback)
 			{
+#ifdef NECKO
+				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), url);
+#else
 				rv = NS_OpenURL(url, NS_STATIC_CAST(nsIStreamListener *, callback));
+#endif
 			}
 		}
 		delete [] searchURL;
@@ -1515,7 +1519,11 @@ SearchDataSourceCallback::~SearchDataSourceCallback()
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+SearchDataSourceCallback::OnStartBinding(nsISupports *ctxt)
+#else
 SearchDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
+#endif
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -1534,7 +1542,7 @@ SearchDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
 }
 
 
-
+#ifndef NECKO
 NS_IMETHODIMP
 SearchDataSourceCallback::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
 {
@@ -1548,15 +1556,28 @@ SearchDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	return(NS_OK);
 }
-
+#endif
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+SearchDataSourceCallback::OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) 
+#else
 SearchDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
+#endif
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
 	nsresult		rv;
+#ifdef NECKO
+	nsIURI*				aURL = (nsIURI*)ctxt;	// this is true because of how NS_OpenURI works...
+#ifdef DEBUG
+	// but verify anyway
+	rv = ctxt->QueryInterface(nsIURI::GetIID(), (void**)aURL);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "bad assumption about NS_OpenURI");
+	NS_RELEASE(aURL);
+#endif
+#endif
 
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
 	{
@@ -1730,9 +1751,17 @@ SearchDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PR
 		// check to see if this needs to be an absolute URL
 		if (hrefStr[0] == PRUnichar('/'))
 		{
+#ifdef NECKO
+			char *host = nsnull, *protocol = nsnull;
+#else
 			const char	*host = nsnull, *protocol = nsnull;
+#endif
 			aURL->GetHost(&host);
+#ifdef NECKO
+			aURL->GetScheme(&protocol);
+#else
 			aURL->GetProtocol(&protocol);
+#endif
 			if (host && protocol)
 			{
 				nsAutoString	temp;
@@ -1743,6 +1772,10 @@ SearchDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PR
 
 				hrefStr = temp;
 			}
+#ifdef NECKO
+			if (host) nsCRT::free(host);
+			if (protocol) nsCRT::free(protocol);
+#endif
 		}
 		
 		char	*href = hrefStr.ToNewCString();
@@ -1986,17 +2019,22 @@ SearchDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PR
 NS_IMPL_ISUPPORTS(SearchDataSourceCallback, nsIRDFSearchDataSourceCallback::GetIID());
 
 
-
+#ifndef NECKO
 NS_IMETHODIMP
 SearchDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 	return(NS_OK);
 }
-
+#endif
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+SearchDataSourceCallback::OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *aIStream,
+										  PRUint32 sourceOffset, PRUint32 aLength)
+#else
 SearchDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+#endif
 {
 	nsresult	rv = NS_OK;
 

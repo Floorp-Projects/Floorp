@@ -483,7 +483,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
           for (int i=0; i<mMouseListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMMouseListener *mMouseListener;
-            nsIScriptEventListener *scriptListener;
 
             ls = (nsListenerStruct*)mMouseListeners->ElementAt(i);
 

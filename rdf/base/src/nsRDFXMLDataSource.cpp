@@ -79,9 +79,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
 #include "nsParserCIID.h"
@@ -544,7 +542,12 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     // should be able to do by itself.
 
     nsIInputStream* in;
-    if (NS_FAILED(rv = NS_OpenURL(aURL, &in, nsnull /* XXX aConsumer */))) {
+#ifdef NECKO
+    if (NS_FAILED(rv = NS_OpenURI(&in, aURL, nsnull /* XXX aConsumer */)))
+#else
+    if (NS_FAILED(rv = NS_OpenURL(aURL, &in, nsnull /* XXX aConsumer */)))
+#endif
+    {
         NS_ERROR("unable to open blocking stream");
         return rv;
     }
@@ -557,8 +560,10 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     if (! proxy)
         goto done;
 
+#ifndef NECKO   // XXX I'm assuming necko will do this now
     // XXX shouldn't netlib be doing this???
     aConsumer->OnStartBinding(aURL, "text/rdf");
+#endif
     while (PR_TRUE) {
         char buf[1024];
         PRUint32 readCount;
@@ -571,15 +576,20 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
         proxy->SetBuffer(buf, readCount);
 
+#ifndef NECKO   // XXX I'm assuming necko will do this now
         // XXX shouldn't netlib be doing this???
-        if (NS_FAILED(rv = aConsumer->OnDataAvailable(aURL, proxy, readCount)))
+        rv = aConsumer->OnDataAvailable(aURL, proxy, readCount);
+#endif
+        if (NS_FAILED(rv))
             break;
     }
     if (rv == NS_BASE_STREAM_EOF) {
         rv = NS_OK;
     }
+#ifndef NECKO   // XXX I'm assuming necko will do this now
     // XXX shouldn't netlib be doing this???
     aConsumer->OnStopBinding(aURL, 0, nsnull);
+#endif
 
 done:
     NS_RELEASE(in);
@@ -602,21 +612,17 @@ static const char kResourceURIPrefix[] = "resource:";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(mURL), uri);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsIURI *uriPtr = nsnull;
-    rv = service->NewURI(uri, nsnull, &uriPtr);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = uriPtr->QueryInterface(nsIURI::GetIID(), (void**)&mURL);
-    NS_RELEASE(uriPtr);
+    rv = NS_NewURI(getter_AddRefs(mURL), uri);
 #endif // NECKO
     if (NS_FAILED(rv)) return rv;
 
     // XXX this is a hack: any "file:" URI is considered writable. All
     // others are considered read-only.
+#ifdef NECKO
+    char* realURL;
+#else
     const char* realURL;
+#endif
     mURL->GetSpec(&realURL);
     if ((PL_strncmp(realURL, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
         (PL_strncmp(realURL, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0)) {
@@ -629,6 +635,9 @@ static const char kResourceURIPrefix[] = "resource:";
         PL_strfree(mURLSpec);
 
     mURLSpec = PL_strdup(realURL);
+#ifdef NECKO
+    nsCRT::free(realURL);
+#endif
 
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -886,7 +895,11 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
         rv = rdf_BlockingParse(mURL, lsnr);
     }
     else {
+#ifdef NECKO
+        rv = NS_OpenURI(lsnr, mURL);
+#else
         rv = NS_OpenURL(mURL, lsnr);
+#endif
     }
 
     return rv;

@@ -1867,7 +1867,15 @@ CSSStyleSheetImpl::Init(nsIURI* aURL)
     return NS_ERROR_ALREADY_INITIALIZED;
 
   if (mInner->mURL) {
+#ifdef NECKO
+#ifdef DEBUG
+    PRBool eq;
+    nsresult rv = mInner->mURL->Equals(aURL, &eq);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && eq, "bad inner");
+#endif
+#else
     NS_ASSERTION(mInner->mURL->Equals(aURL), "bad inner");
+#endif
   }
   else {
     mInner->mURL = aURL;
@@ -2038,7 +2046,13 @@ CSSStyleSheetImpl::ContainsStyleSheet(nsIURI* aURL) const
 {
   NS_PRECONDITION(nsnull != aURL, "null arg");
 
+#ifdef NECKO
+  PRBool result;
+  nsresult rv = mInner->mURL->Equals(aURL, &result);
+  if (NS_FAILED(rv)) result = PR_FALSE;
+#else
   PRBool result = mInner->mURL->Equals(aURL);
+#endif
 
   const CSSStyleSheetImpl*  child = mFirstChild;
   while ((PR_FALSE == result) && (nsnull != child)) {
@@ -2344,7 +2358,6 @@ static PRBool ListCascade(nsHashKey* aKey, void* aValue, void* aClosure)
 void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
 
-  PRUnichar* buffer;
   PRInt32 index;
 
   // Indent
@@ -2356,9 +2369,17 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   }
 
   fputs("CSS Style Sheet: ", out);
+#ifdef NECKO
+  char* buffer;
+  nsresult rv = mInner->mURL->GetSpec(&buffer);
+  nsAutoString as(buffer,0);
+  nsCRT::free(buffer);
+#else
+  PRUnichar* buffer;
   mInner->mURL->ToString(&buffer);
   nsAutoString as(buffer,0);
   delete [] buffer;
+#endif
   fputs(as, out);
 
   if (mMedia) {
@@ -2727,10 +2748,17 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::GetHref(nsString& aHref)
 {
   if (mInner && mInner->mURL) {
+#ifdef NECKO
+    char* str;
+    mInner->mURL->GetSpec(&str);
+    aHref = str;
+    nsCRT::free(str);
+#else
     PRUnichar* str;
     mInner->mURL->ToString(&str);
     aHref = str;
     delete [] str;
+#endif
   }
   else {
     aHref.SetLength(0);

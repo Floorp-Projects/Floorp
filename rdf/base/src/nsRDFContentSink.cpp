@@ -949,7 +949,11 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
     PRInt32 ac = aNode.GetAttributeCount();
     nsresult rv;
 
+#ifdef NECKO
+    char* docURI;
+#else
     const char* docURI;
+#endif
     mDocumentURL->GetSpec(&docURI);
 
     for (PRInt32 i = 0; i < ac; i++) {
@@ -973,6 +977,9 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsRDFParserUtils::StripAndConvert(uri);
 
             rdf_MakeAbsoluteURI(docURI, uri);
+#ifdef NECKO
+            nsCRT::free(docURI);
+#endif
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
@@ -1003,6 +1010,9 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             name.Insert('#', 0);
             
             rdf_MakeAbsoluteURI(docURI, name);
+#ifdef NECKO
+            nsCRT::free(docURI);
+#endif
 
             return gRDFService->GetUnicodeResource(name.GetUnicode(), aResource);
         }
@@ -1015,7 +1025,11 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
-    return rdf_CreateAnonymousResource(docURI, aResource);
+    rv = rdf_CreateAnonymousResource(docURI, aResource);
+#ifdef NECKO
+    nsCRT::free(docURI);
+#endif
+    return rv;
 }
 
 
@@ -1050,9 +1064,16 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
             // XXX Take the URI and make it fully qualified by
             // sticking it into the document's URL. This may not be
             // appropriate...
+#ifdef NECKO
+            char* documentURL;
+#else
             const char* documentURL;
+#endif
             mDocumentURL->GetSpec(&documentURL);
             rdf_MakeAbsoluteURI(documentURL, uri);
+#ifdef NECKO
+            nsCRT::free(documentURL);
+#endif
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }

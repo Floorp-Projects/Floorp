@@ -32,10 +32,7 @@
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsString.h"
@@ -826,6 +823,10 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
     // XXX probably need a way to encode unicode junk for the part of
     // the url that follows a "?"
     nsIURI* url;
+#ifdef NECKO
+    // XXX need to have nsILoadGroup passed in here
+    aErrorCode = NS_NewURI(&url, aURLSpec, mURL/*, group*/);
+#else
     nsILoadGroup* LoadGroup = nsnull;
     mURL->GetLoadGroup(&LoadGroup);
     if (LoadGroup) {
@@ -833,26 +834,9 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
       NS_RELEASE(LoadGroup);
     }
     else {
-#ifndef NECKO
       aErrorCode = NS_NewURL(&url, aURLSpec, mURL);
-#else
-      nsresult rv;
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-      if (NS_FAILED(rv)) return PR_FALSE;
-
-      nsIURI *uri = nsnull, *baseUri = nsnull;
-      rv = mURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-      if (NS_FAILED(rv)) return PR_FALSE;
-
-      const char *uriStr = aURLSpec.GetBuffer();
-      rv = service->NewURI(uriStr, baseUri, &uri);
-      NS_RELEASE(baseUri);
-      if (NS_FAILED(rv)) return PR_FALSE;
-
-      rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-      NS_RELEASE(uri);
-#endif // NECKO
     }
+#endif
 
     if (NS_FAILED(aErrorCode)) {
       // import url is bad
@@ -2479,22 +2463,23 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       if (nsnull != mURL) {
         nsString baseURL;
         nsresult rv;
-#ifndef NECKO
-        rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
+#ifdef NECKO
+        nsIURI* base;
+        if (baseURL.Length() == 0) {
+          rv = NS_NewURI(&base, baseURL);
+        }
+        else {
+          rv = mURL->Clone(&base);
+        }
+        if (NS_FAILED(rv)) return PR_FALSE;
+        
+        const char* str = tk->mIdent.GetBuffer();
+        if (str == nsnull) return PR_FALSE;
+
+        rv = NS_MakeAbsoluteURI(str, base, absURL);
+        NS_RELEASE(base);
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return PR_FALSE;
-
-        nsIURI *baseUri = nsnull;
-        rv = mURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-        if (NS_FAILED(rv)) return PR_FALSE;
-
-        char *absUrlStr = nsnull;
-        const char *urlSpec = (tk->mIdent).GetBuffer();
-        rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
-        NS_RELEASE(baseUri);
-        absURL = absUrlStr;
-        delete [] absUrlStr;
+        rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
 #endif // NECKO
         if (NS_FAILED(rv)) {
           absURL = tk->mIdent;

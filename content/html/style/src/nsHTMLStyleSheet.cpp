@@ -1104,17 +1104,25 @@ NS_IMETHODIMP HTMLStyleSheetImpl::UnsetAttributeFor(nsIAtom* aAttribute,
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
-  PRUnichar* buffer;
-
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML Style Sheet: ", out);
+#ifdef NECKO
+  char* buffer;
+  mURL->GetSpec(&buffer);
+#else
+  PRUnichar* buffer;
   mURL->ToString(&buffer);
+#endif
   nsAutoString as(buffer,0);
   fputs(as, out);
   fputs("\n", out);
+#ifdef NECKO
+  nsCRT::free(buffer);
+#else
   delete buffer;
+#endif
 }
 
 

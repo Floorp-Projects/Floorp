@@ -33,10 +33,9 @@
 #include "nsHashtable.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsCRT.h"
@@ -61,11 +60,20 @@ public:
     NS_ADDREF(mURL);
     mHashValue = 0;
 
+#ifdef NECKO
+    char* urlStr;
+    mURL->GetSpec(&urlStr);
+#else
     PRUnichar*  urlStr;
     mURL->ToString(&urlStr);
+#endif
     if (urlStr) {
       mHashValue = nsCRT::HashValue(urlStr);
+#ifdef NECKO
+      nsCRT::free(urlStr);
+#else
       delete [] urlStr;
+#endif
     }
   }
 
@@ -90,7 +98,13 @@ public:
   virtual PRBool Equals(const nsHashKey* aKey) const
   {
     URLKey* key = (URLKey*)aKey;
+#ifdef NECKO
+    PRBool eq;
+    nsresult rv = mURL->Equals(key->mURL, &eq);
+    return NS_SUCCEEDED(rv) && eq;
+#else
     return mURL->Equals(key->mURL);
+#endif
   }
 
   virtual nsHashKey *Clone(void) const
@@ -758,7 +772,11 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
   else {  // load failed or document now gone, cleanup    
     if (mDocument) {  // still have doc, must have failed
       // Dump error message to console.
+#ifdef NECKO
+      char *url;
+#else
       const char *url;
+#endif
       if (nsnull != aLoadData->mURL) {
         aLoadData->mURL->GetSpec(&url);
       }
@@ -766,7 +784,10 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
         url = "";      
       }
       cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
-        << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
+           << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
+#ifdef NECKO
+      nsCRT::free(url);
+#endif
     }
 
     URLKey  key(aLoadData->mURL);
@@ -988,6 +1009,7 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
+#ifndef NECKO
 static nsIURI* CloneURL(nsIURI* aURL)
 {
   nsIURI* result = nsnull;
@@ -1004,29 +1026,12 @@ static nsIURI* CloneURL(nsIURI* aURL)
       NS_RELEASE(LoadGroup);
     }
     else {
-#ifndef NECKO
       NS_NewURL(&result, buffer, aURL);
-#else
-      nsresult rv;
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-      if (NS_FAILED(rv)) return nsnull;
-
-      nsIURI *uri = nsnull, *baseUrl = nsnull;
-      rv = aURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUrl);
-      if (NS_FAILED(rv)) return nsnull;
-
-      const char *uriStr = buffer.GetBuffer();
-      rv = service->NewURI(uriStr, baseUrl, &uri);
-      NS_RELEASE(baseUrl);
-      if (NS_FAILED(rv)) return nsnull;
-
-      rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&result);
-      NS_RELEASE(uri);
-#endif // NECKO
     }
   }
   return result;
 }
+#endif
 
 nsresult
 CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
@@ -1042,8 +1047,15 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
   }
   else {  // not loading, go load it
     nsIUnicharStreamLoader* loader;
+#ifdef NECKO
+    nsIURI* urlClone;
+    result = aKey.mURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
+    if (NS_SUCCEEDED(result))
+#else
     nsIURI* urlClone = CloneURL(aKey.mURL); // don't give the key to netlib, it munges it
-    if (urlClone) {
+    if (urlClone)
+#endif
+    {
       result = NS_NewUnicharStreamLoader(&loader, urlClone, DoneLoadingStyle, aData);
       NS_RELEASE(urlClone);
       if (NS_SUCCEEDED(result)) {
@@ -1053,7 +1065,14 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         PRInt32 index = 0;
         while (index < mPendingAlternateSheets.Count()) {
           SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(index);
-          if (aKey.mURL->Equals(data->mURL)) {
+#ifdef NECKO
+          PRBool eq;
+          result = aKey.mURL->Equals(data->mURL, &eq);
+          if (NS_SUCCEEDED(result) && eq)
+#else
+          if (aKey.mURL->Equals(data->mURL))
+#endif
+          {
             mPendingAlternateSheets.RemoveElementAt(index);
             loadingData->mNext = data;
             loadingData = data;
@@ -1205,7 +1224,14 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
 
         // verify that sheet doesn't have new child as a parent 
         do {
-          if (parentData->mURL->Equals(aURL)) {  // houston, we have a loop, blow off this child
+#ifdef NECKO
+          PRBool eq;
+          result = parentData->mURL->Equals(aURL, &eq);
+          if (NS_SUCCEEDED(result) && eq)
+#else
+          if (parentData->mURL->Equals(aURL))
+#endif
+          {  // houston, we have a loop, blow off this child
             data->mParentData = nsnull;
             delete data;
             return NS_OK;
@@ -1232,9 +1258,20 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
   if (aURL) {
     // Get an input stream from the url
     nsIInputStream* in;
+#ifdef NECKO
+    nsIURI* urlClone;
+    result = aURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
+    if (NS_SUCCEEDED(result))
+#else
     nsIURI* urlClone = CloneURL(aURL);  // dont give key URL to netlib, it gets munged
-    if (urlClone) {
+    if (urlClone)
+#endif
+    {
+#ifdef NECKO
+      result = NS_OpenURI(&in, urlClone);
+#else
       result = NS_OpenURL(urlClone, &in);
+#endif
       NS_RELEASE(urlClone);
       if (NS_SUCCEEDED(result)) {
         // Translate the input using the argument character set id into unicode
@@ -1254,13 +1291,20 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
       }
       else {
         // Dump an error message to the console
+#ifdef NECKO
+        char *url;
+#else
         const char *url;
+#endif
         if (nsnull != aURL) 
           aURL->GetSpec(&url);
         else
           url = "";      
         cerr << "CSSLoaderImpl::LoadAgentSheet: Load of URL '" << url 
-          << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
+             << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
+#ifdef NECKO
+        nsCRT::free(url);
+#endif
       }
     }
   }
