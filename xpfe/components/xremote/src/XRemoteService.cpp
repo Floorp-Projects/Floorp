@@ -69,11 +69,16 @@ XRemoteService::~XRemoteService()
   Shutdown();
 }
 
-NS_IMPL_ISUPPORTS1(XRemoteService, nsIXRemoteService)
+NS_IMPL_ISUPPORTS2(XRemoteService, nsIXRemoteService, nsIObserver)
 
 NS_IMETHODIMP
 XRemoteService::Startup(void)
 {
+  // We have to destroy the proxy window before the event loop stops running.
+  nsCOMPtr<nsIObserverService> obsServ =
+    do_GetService("@mozilla.org/observer-service;1");
+  obsServ->AddObserver(this, "quit-application", PR_FALSE);
+
   mRunning = PR_TRUE;
   if (mNumWindows == 0)
     CreateProxyWindow();
@@ -85,6 +90,20 @@ XRemoteService::Shutdown(void)
 {
   DestroyProxyWindow();
   mRunning = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XRemoteService::Observe(nsISupports *aSubject, const char *aTopic,
+                        const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic, "quit-application")) {
+    Shutdown();
+  } else {
+    NS_NOTREACHED("unexpected topic");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   return NS_OK;
 }
 
@@ -350,7 +369,7 @@ XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
   }
 
   // walk up the widget tree and find the toplevel window in the
-  // heirarchy
+  // hierarchy
 
   nsCOMPtr<nsIWidget> tempWidget;
 

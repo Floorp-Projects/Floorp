@@ -1265,6 +1265,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 #ifdef MOZ_ENABLE_XREMOTE
   // if we have X remote support and we have our one window up and
   // running start listening for requests on the proxy window.
+  // It will shut itself down before the event queue stops processing events.
   nsCOMPtr<nsIXRemoteService> remoteService;
   remoteService = do_GetService(NS_IXREMOTESERVICE_CONTRACTID);
   if (remoteService)
@@ -1291,12 +1292,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   rv = appShell->Run();
   NS_TIMELINE_LEAVE("appShell->Run");
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
-
-#ifdef MOZ_ENABLE_XREMOTE
-  // shut down the x remote proxy window
-  if (remoteService)
-    remoteService->Shutdown();
-#endif /* MOZ_ENABLE_XREMOTE */
 
 #ifdef MOZ_TIMELINE
   // Make sure we print this out even if timeline is runtime disabled
