@@ -532,6 +532,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 
   char *hdrs = 0;
   PRBool maincontainerISrelatedpart = PR_FALSE;
+  const char * toppart_type = nsnull;
 
   // If we have any attachments, we generate multipart.
   multipart_p = (m_attachment_count > 0);
@@ -914,7 +915,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   // Is the top part a multipart container?
   // can't use m_attachment_count because it's not reliable for that
   // instead use type of main part. See bug #174396
-  const char * toppart_type = toppart->GetType(); // GetType return directly the member variable, don't free it!
+  toppart_type = toppart->GetType(); // GetType return directly the member variable, don't free it!
   if (!m_crypto_closure && toppart_type && !PL_strncasecmp(toppart_type, "multipart/", 10))
   {
     status = toppart->SetBuffer(MIME_MULTIPART_BLURB);
