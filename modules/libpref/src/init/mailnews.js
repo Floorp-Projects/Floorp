@@ -387,6 +387,10 @@ pref("mail.server.default.abbreviate",true);
 pref("mail.server.default.isSecure", false);
 pref("mail.server.default.override_namespaces", true);
 
+pref("mail.server.default.delete_model", 1);
+pref("mail.server.default.fetch_by_chunks", true);
+pref("mail.server.default.mime_parts_on_demand", true);
+
 pref("mail.server.default.max_articles", 500);
 pref("mail.server.default.notify.on", true);
 pref("mail.server.default.mark_old_read", false);
