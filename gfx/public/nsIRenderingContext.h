@@ -562,6 +562,8 @@ public:
    */
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags) = 0;
+  //~~~
+  NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd) = 0;
 };
 
 //modifiers for text rendering
