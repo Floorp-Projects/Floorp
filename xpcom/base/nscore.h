@@ -42,6 +42,7 @@
 
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
+// typedef wchar_t PRUnichar;
 typedef PRUint16 PRUnichar;
 #endif
 
@@ -162,6 +163,10 @@ typedef PRUint16 PRUnichar;
 #ifdef __MWERKS__
   #define HAVE_CPP_SPECIALIZATION
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
+
+  #define HAVE_CPP_USING
+  #define HAVE_CPP_EXPLICIT
+  #define HAVE_CPP_BOOL
 #endif
 
   /* under VC++ (Windows), we don't have autoconf yet */
@@ -169,6 +174,17 @@ typedef PRUint16 PRUnichar;
   /* VC++ 5.0 and greater implement template specialization, 4.2 is unknown */
   #define HAVE_CPP_SPECIALIZATION
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
+
+  #define HAVE_CPP_EXPLICIT
+  #define HAVE_CPP_USING
+
+  #if (_MSC_VER<1100)
+      // before 5.0, VC++ couldn't handle explicit
+    #undef HAVE_CPP_EXPLICIT
+  #elif (_MSC_VER==1100)
+      // VC++5.0 has an internal compiler error (sometimes) without this
+    #undef HAVE_CPP_USING
+  #endif
 #endif
 
 
@@ -184,12 +200,12 @@ typedef PRUint16 PRUnichar;
 #endif
 
 #if defined(HAVE_CPP_NEW_CASTS)
-#define NS_STATIC_CAST(__type, __ptr)      static_cast<__type>(__ptr)
-#define NS_CONST_CAST(__type, __ptr)       const_cast<__type>(__ptr)
+#define NS_STATIC_CAST(__type, __ptr)      static_cast< __type >(__ptr)
+#define NS_CONST_CAST(__type, __ptr)       const_cast< __type >(__ptr)
 
-#define NS_REINTERPRET_POINTER_CAST(__type, __ptr)    reinterpret_cast<__type>(__ptr)
-#define NS_REINTERPRET_NONPOINTER_CAST(__type, __obj) reinterpret_cast<__type>(__obj)
-#define NS_REINTERPRET_CAST(__type, __expr)           reinterpret_cast<__type>(__expr)
+#define NS_REINTERPRET_POINTER_CAST(__type, __ptr)    reinterpret_cast< __type >(__ptr)
+#define NS_REINTERPRET_NONPOINTER_CAST(__type, __obj) reinterpret_cast< __type >(__obj)
+#define NS_REINTERPRET_CAST(__type, __expr)           reinterpret_cast< __type >(__expr)
 
 #else
 #define NS_STATIC_CAST(__type, __ptr)      ((__type)(__ptr))
