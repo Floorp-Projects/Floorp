@@ -1486,7 +1486,7 @@ sub BuildLayoutProjects()
     
     BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.mcp",                  "xpistub$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
     
-    BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",           "MIW$D", "", 0, 0, 0);
+    BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",           "Mozilla Installer$D", "", 0, 0, 0);
 
 	print("--- Layout projects complete ---\n")
 }
