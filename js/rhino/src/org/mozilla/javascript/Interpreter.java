@@ -1498,18 +1498,18 @@ public class Interpreter extends LabelTable {
             }else if (!theData.itsUseDynamicScope) {
                 scope = fnOrScript.getParentScope();
             }
-        }else {
+            if (theData.itsCheckThis) {
+                thisObj = ScriptRuntime.getThis(thisObj);
+            }
+            
+            if (theData.itsNeedsActivation) {
+                scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
+                                                 thisObj, args);
+            }
+
+        } else {
             scope = ScriptRuntime.initScript(cx, scope, fnOrScript, thisObj,
                                              theData.itsFromEvalCode);
-        }
-
-        if (theData.itsCheckThis) {
-            thisObj = ScriptRuntime.getThis(thisObj);
-        }
-
-        if (theData.itsNeedsActivation) {
-            scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
-                                             thisObj, args);
         }
 
         DebugFrame frame = null;
