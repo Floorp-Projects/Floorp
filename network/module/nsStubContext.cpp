@@ -52,6 +52,9 @@ PRIVATE void stub_GraphProgressInit(MWContext  *context,
     nsConnectionInfo *pConn;
 
     if (NULL != URL_s->fe_data) {
+
+       if (URL_s->load_background)
+          return;
         /* 
          * Retrieve the nsConnectionInfo object from the fe_data field
          * of the URL_Struct...
@@ -75,6 +78,8 @@ PRIVATE void stub_GraphProgress(MWContext  *context,
     nsConnectionInfo *pConn;
 
     if (NULL != URL_s->fe_data) {
+       if (URL_s->load_background)
+          return;
         /* 
          * Retrieve the nsConnectionInfo object from the fe_data field
          * of the URL_Struct...
@@ -102,6 +107,8 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
      *      the nsConnectionInfo->pConsumer has been released and NULLed...
      */
     if (NULL != URL_s->fe_data) {
+       if (URL_s->load_background)
+          return;
         /* 
          * Retrieve the nsConnectionInfo object from the fe_data field
          * of the URL_Struct...

@@ -63,6 +63,8 @@ extern const char *XP_AppLanguage;
 extern const char *XP_AppPlatform;
 #endif
 
+extern "C" void RL_Init();
+
 PUBLIC NET_StreamClass * 
 NET_NGLayoutConverter(FO_Present_Types format_out,
                       void *converter_obj,
@@ -111,6 +113,9 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
                                            NULL,
                                            NET_ChunkedDecoderStream);
 
+   
+    RL_Init();
+    
     mContainer = aContainerApp;
     NS_IF_ADDREF(mContainer);
     if (NULL != mContainer) {
