@@ -1762,7 +1762,9 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
       aContentOffsetEnd = aContentOffset +1;
     else 
     {
-      if ((thisRect.x + thisRect.width) < aPoint.x  || thisRect.y > aPoint.y)
+      //if we are a collapsed frame then dont check to see if we need to skip past this content
+      //see bug http://bugzilla.mozilla.org/show_bug.cgi?id=103888
+      if (thisRect.width && thisRect.height && ((thisRect.x + thisRect.width) < aPoint.x  || thisRect.y > aPoint.y))
       {
         aBeginFrameContent = PR_FALSE;
         aContentOffset++;
