@@ -1387,27 +1387,10 @@ nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& a
       aSize.prefSize.width = childInfo.prefSize.width;
     }
 
+    // This retrieval guarantess that the selectedItem will
+    // be set before we lay out.
     nsCOMPtr<nsIDOMElement> element;
     menulist->GetSelectedItem(getter_AddRefs(element));
-    if (!element) {
-      nsAutoString value;
-      menulist->GetValue(value);
-      if (value == "") {
-        nsCOMPtr<nsIContent> child;
-        GetMenuChildrenElement(getter_AddRefs(child));
-        if (child) {
-          PRInt32 count;
-          child->ChildCount(count);
-          if (count > 0) {
-            nsCOMPtr<nsIContent> item;
-            child->ChildAt(0, *getter_AddRefs(item));
-            nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
-            if (selectedElement) 
-              menulist->SetSelectedItem(selectedElement);
-          }
-        }
-      }
-    }
   }
   return rv;
 }

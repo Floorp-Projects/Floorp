@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsRDFCID.h"
 #include "nsXULMenuListElement.h"
+#include "nsIDOMXULPopupElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
@@ -144,9 +145,50 @@ nsXULMenuListElement::SetDisabled(PRBool aDisabled)
   return NS_OK;
 }
 
+static void
+GetMenuChildrenElement(nsIContent* aParent, nsIContent** aResult)
+{
+  PRInt32 count;
+  aParent->ChildCount(count);
+
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> child;
+    aParent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIDOMXULPopupElement> menuPopup(do_QueryInterface(child));
+    if (child) {
+      *aResult = child.get();
+      NS_ADDREF(*aResult);
+      return;
+    }
+  }
+}
+
+
 NS_IMETHODIMP
 nsXULMenuListElement::GetSelectedItem(nsIDOMElement** aResult)
 {
+  if (!mSelectedItem) {
+    nsAutoString value;
+    GetValue(value);
+  
+    if (value == "") {
+      nsCOMPtr<nsIContent> parent(do_QueryInterface(mOuter));
+      nsCOMPtr<nsIContent> child;
+      GetMenuChildrenElement(parent, getter_AddRefs(child));
+      if (child) {
+        PRInt32 count;
+        child->ChildCount(count);
+        if (count > 0) {
+          nsCOMPtr<nsIContent> item;
+          child->ChildAt(0, *getter_AddRefs(item));
+          nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
+          if (selectedElement) 
+            SetSelectedItem(selectedElement);
+        }
+      }
+    }
+  }
+
   *aResult = mSelectedItem;
   NS_IF_ADDREF(*aResult);
 
