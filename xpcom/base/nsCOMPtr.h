@@ -38,7 +38,7 @@
 
   See also:
     <http://www.meer.net/ScottCollins/doc/nsCOMPtr.html>, or
-    <http://www.mozilla.org/...?...> [[still looking for the right place to put this on mozilla]]
+    <http://www.mozilla.org/projects/xpcom/nsCOMPtr.html>
 
   What is |nsCOMPtr|?
 
@@ -232,10 +232,16 @@
     Ideally, we would want declarations like these in a configuration file
     that everybody would get.  Deciding exactly how to do that should
     be part of the process of moving from experimental to production.
+
+    Update: ramiro is working on getting these into the configuration system.
   */
 
 #if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
+
+  #if defined(LINUX) && (__GNUC_MINOR__ <= 7)
+    #define NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS
+  #endif
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER<1100)
