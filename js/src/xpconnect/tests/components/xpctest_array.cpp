@@ -327,7 +327,7 @@ NS_IMETHODIMP
 xpcarraytest::GetStrings(PRUint32 *count, char ***str)
 {
     const static char *strings[] = {"one", "two", "three", "four"};
-    const static scount = sizeof(strings)/sizeof(strings[0]);
+    const static PRUint32 scount = sizeof(strings)/sizeof(strings[0]);
 
     if(mReceiver)
         return mReceiver->GetStrings(count, str);
@@ -335,7 +335,7 @@ xpcarraytest::GetStrings(PRUint32 *count, char ***str)
     char** out = (char**) nsAllocator::Alloc(scount * sizeof(char*));
     if(!out)
         return NS_ERROR_OUT_OF_MEMORY;
-    for(int i = 0; i < scount; ++i)
+    for(PRUint32 i = 0; i < scount; ++i)
     {
         out[i] = (char*) nsAllocator::Clone(strings[i], strlen(strings[i])+1);
         // failure unlikely, leakage foolishly tolerated in this test case
