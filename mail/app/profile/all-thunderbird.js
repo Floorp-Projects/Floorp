@@ -102,6 +102,8 @@ pref("xpinstall.whitelist.add", "update.mozilla.org");
 /////////////////////////////////////////////////////////////////
 // Overrides of the seamonkey suite mailnews.js prefs
 ///////////////////////////////////////////////////////////////// 
+pref("mail.server.default.quickMode", true); // used by RSS servers
+
 pref("mail.showFolderPaneColumns", false); // setting to true will allow total/unread/size columns
 pref("mail.showCondensedAddresses", true); // show the friendly display name for people I know
 
