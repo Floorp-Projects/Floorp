@@ -123,7 +123,9 @@ typedef struct {
   float mSecoundByteStdDev;
   float mSecoundByteMean;
   float mSecoundByteWeight;
-} nsEUCStatistics;
+} nsEUCStatisticsMutable;
+
+typedef const nsEUCStatisticsMutable nsEUCStatistics;
 
 /*
 extern nsEUCStatistics gBig5Statistics = 
@@ -157,25 +159,25 @@ static nsEUCStatistics gEUCKRStatistics =
    May need improvement ....
  */
 #define ZHTW_DETECTOR_NUM_VERIFIERS 7
-extern nsVerifier *gZhTwVerifierSet[];
-extern nsEUCStatistics *gZhTwStatisticsSet[];
+extern nsVerifier* const gZhTwVerifierSet[];
+extern nsEUCStatistics* const gZhTwStatisticsSet[];
 
 #define KO_DETECTOR_NUM_VERIFIERS 6
-extern nsVerifier *gKoVerifierSet[];
+extern nsVerifier* const gKoVerifierSet[];
 
 #define ZHCN_DETECTOR_NUM_VERIFIERS 8
-extern nsVerifier *gZhCnVerifierSet[];
+extern nsVerifier* const gZhCnVerifierSet[];
 
 #define JA_DETECTOR_NUM_VERIFIERS 7
-extern nsVerifier *gJaVerifierSet[];
+extern nsVerifier* const gJaVerifierSet[];
 
 #define ZH_DETECTOR_NUM_VERIFIERS 10
-extern nsVerifier *gZhVerifierSet[];
-extern nsEUCStatistics *gZhStatisticsSet[];
+extern nsVerifier* const gZhVerifierSet[];
+extern nsEUCStatistics* const gZhStatisticsSet[];
 
 #define CJK_DETECTOR_NUM_VERIFIERS 15
-extern nsVerifier *gCJKVerifierSet[];
-extern nsEUCStatistics *gCJKStatisticsSet[];
+extern nsVerifier* const gCJKVerifierSet[];
+extern nsEUCStatistics* const gCJKStatisticsSet[];
 
 class nsEUCSampler {
   public:
@@ -220,7 +222,7 @@ class nsEUCSampler {
 //----------------------------------------------------------
 class nsPSMDetector {
 public :
-   nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet, nsEUCStatistics** aStatisticsSet);
+   nsPSMDetector(PRUint8 aItems, nsVerifier* const * aVerifierSet, nsEUCStatistics* const * aStatisticsSet);
    virtual ~nsPSMDetector() {};
 
    virtual PRBool HandleData(const char* aBuf, PRUint32 aLen);
@@ -233,8 +235,8 @@ protected:
    PRUint8 mClassItems;
    PRUint8 mState[MAX_VERIFIERS];
    PRUint8 mItemIdx[MAX_VERIFIERS];
-   nsVerifier** mVerifier;
-   nsEUCStatistics** mStatisticsData;
+   nsVerifier* const * mVerifier;
+   nsEUCStatistics* const * mStatisticsData;
    PRBool mDone;
 
    PRBool mRunSampler;
@@ -257,7 +259,7 @@ class nsXPCOMDetector :
 {
   NS_DECL_ISUPPORTS
 public:
-    nsXPCOMDetector(PRUint8 aItems, nsVerifier** aVer, nsEUCStatistics** aStatisticsSet);
+    nsXPCOMDetector(PRUint8 aItems, nsVerifier* const * aVer, nsEUCStatistics* const * aStatisticsSet);
     virtual ~nsXPCOMDetector();
   NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
   NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool* oDontFeedMe);
@@ -276,7 +278,7 @@ class nsXPCOMStringDetector :
 {
   NS_DECL_ISUPPORTS
 public:
-    nsXPCOMStringDetector(PRUint8 aItems, nsVerifier** aVer, nsEUCStatistics** aStatisticsSet);
+    nsXPCOMStringDetector(PRUint8 aItems, nsVerifier* const * aVer, nsEUCStatistics* const * aStatisticsSet);
     virtual ~nsXPCOMStringDetector();
     NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, 
                    const char** oCharset, 

@@ -78,7 +78,7 @@ nsEUCStatistics gEUCKRStatistics =
    May need improvement ....
  */
 
-nsVerifier *gZhTwVerifierSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
+nsVerifier* const gZhTwVerifierSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
       &nsUTF8Verifier,
       &nsBIG5Verifier,
       &nsISO2022CNVerifier,
@@ -88,7 +88,7 @@ nsVerifier *gZhTwVerifierSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
       &nsUCS2LEVerifier
 };
 
-nsEUCStatistics *gZhTwStatisticsSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
+nsEUCStatistics* const gZhTwStatisticsSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
       nsnull,
       &gBig5Statistics,
       nsnull,
@@ -100,7 +100,7 @@ nsEUCStatistics *gZhTwStatisticsSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
 
 //==========================================================
 
-nsVerifier *gKoVerifierSet[KO_DETECTOR_NUM_VERIFIERS] = {
+nsVerifier* const gKoVerifierSet[KO_DETECTOR_NUM_VERIFIERS] = {
       &nsUTF8Verifier,
       &nsEUCKRVerifier,
       &nsISO2022KRVerifier,
@@ -111,7 +111,7 @@ nsVerifier *gKoVerifierSet[KO_DETECTOR_NUM_VERIFIERS] = {
 
 //==========================================================
 
-nsVerifier *gZhCnVerifierSet[ZHCN_DETECTOR_NUM_VERIFIERS] = {
+nsVerifier* const gZhCnVerifierSet[ZHCN_DETECTOR_NUM_VERIFIERS] = {
       &nsUTF8Verifier,
       &nsGB2312Verifier,
       &nsGB18030Verifier,
@@ -124,7 +124,7 @@ nsVerifier *gZhCnVerifierSet[ZHCN_DETECTOR_NUM_VERIFIERS] = {
 
 //==========================================================
 
-nsVerifier *gJaVerifierSet[JA_DETECTOR_NUM_VERIFIERS] = {
+nsVerifier* const gJaVerifierSet[JA_DETECTOR_NUM_VERIFIERS] = {
       &nsUTF8Verifier,
       &nsSJISVerifier,
       &nsEUCJPVerifier,
@@ -136,7 +136,7 @@ nsVerifier *gJaVerifierSet[JA_DETECTOR_NUM_VERIFIERS] = {
 
 //==========================================================
 
-nsVerifier *gZhVerifierSet[ZH_DETECTOR_NUM_VERIFIERS] = {
+nsVerifier* const gZhVerifierSet[ZH_DETECTOR_NUM_VERIFIERS] = {
       &nsUTF8Verifier,
       &nsGB2312Verifier,
       &nsGB18030Verifier,
@@ -149,7 +149,7 @@ nsVerifier *gZhVerifierSet[ZH_DETECTOR_NUM_VERIFIERS] = {
       &nsUCS2LEVerifier
 };
 
-nsEUCStatistics *gZhStatisticsSet[ZH_DETECTOR_NUM_VERIFIERS] = {
+nsEUCStatistics* const gZhStatisticsSet[ZH_DETECTOR_NUM_VERIFIERS] = {
       nsnull,
       &gGB2312Statistics,
       &gBig5Statistics,
@@ -163,7 +163,7 @@ nsEUCStatistics *gZhStatisticsSet[ZH_DETECTOR_NUM_VERIFIERS] = {
 
 //==========================================================
 
-nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
+nsVerifier* const gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
       &nsUTF8Verifier,
       &nsSJISVerifier,
       &nsEUCJPVerifier,
@@ -181,7 +181,7 @@ nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
       &nsUCS2LEVerifier
 };
 
-nsEUCStatistics *gCJKStatisticsSet[CJK_DETECTOR_NUM_VERIFIERS] = {
+nsEUCStatistics* const gCJKStatisticsSet[CJK_DETECTOR_NUM_VERIFIERS] = {
       nsnull,
       nsnull,
       &gEUCJPStatistics,
@@ -275,7 +275,7 @@ void nsEUCSampler::CalFreq()
 //----------------------------------------------------------
 NS_IMPL_ISUPPORTS1(nsXPCOMDetector, nsICharsetDetector);
 NS_IMPL_ISUPPORTS1(nsXPCOMStringDetector, nsIStringCharsetDetector);
-nsPSMDetector::nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet, nsEUCStatistics** aStatisticsSet)
+nsPSMDetector::nsPSMDetector(PRUint8 aItems, nsVerifier* const * aVerifierSet, nsEUCStatistics* const * aStatisticsSet)
 {
   mClassRunSampler = (nsnull != aStatisticsSet);
   mStatisticsData = aStatisticsSet;
@@ -488,7 +488,7 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
      } // if(mRunSampler)
 }
 //----------------------------------------------------------
-nsXPCOMDetector::nsXPCOMDetector(PRUint8 aItems, nsVerifier **aVer, nsEUCStatistics** aStatisticsSet)
+nsXPCOMDetector::nsXPCOMDetector(PRUint8 aItems, nsVerifier * const *aVer, nsEUCStatistics* const * aStatisticsSet)
    : nsPSMDetector( aItems, aVer, aStatisticsSet)
 {
   mObserver = nsnull;
@@ -534,7 +534,7 @@ void nsXPCOMDetector::Report(const char* charset)
   mObserver->Notify(charset, eSureAnswer);
 }
 //----------------------------------------------------------
-nsXPCOMStringDetector::nsXPCOMStringDetector(PRUint8 aItems, nsVerifier** aVer, nsEUCStatistics** aStatisticsSet)
+nsXPCOMStringDetector::nsXPCOMStringDetector(PRUint8 aItems, nsVerifier* const * aVer, nsEUCStatistics* const * aStatisticsSet)
    : nsPSMDetector( aItems, aVer, aStatisticsSet)
 {
 }

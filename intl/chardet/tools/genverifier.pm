@@ -82,7 +82,7 @@ sub Gen4BitsClass {
   my($cls);
   my($ret);
   $ret = "";
-  $ret .= "static PRUint32 " . $name . "_cls [ 256 / 8 ] = {\n";
+  $ret .= "static const PRUint32 " . $name . "_cls [ 256 / 8 ] = {\n";
   for($i = 0; $i < 0x100; $i+= 8) {
      $ret .= "PCK4BITS(";
      for($j = $i; $j < $i + 8; $j++) {
@@ -131,7 +131,7 @@ sub Gen4BitsState {
   my($i,$j);
   my($ret);
   $ret = "";
-  $ret .= "static PRUint32 " . $name . "_st [ " . ($lenafterpad >> 3) . "] = {\n";
+  $ret .= "static const PRUint32 " . $name . "_st [ " . ($lenafterpad >> 3) . "] = {\n";
   for($i = 0; $i < $lenafterpad ; $i+= 8) {
      $ret .= "PCK4BITS(";
      for($j = $i; $j < $i + 8; $j++) {

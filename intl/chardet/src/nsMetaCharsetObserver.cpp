@@ -59,7 +59,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
  
-static eHTMLTags gWatchTags[] = 
+static const eHTMLTags gWatchTags[] = 
 { eHTMLTag_meta,
   eHTMLTag_unknown
 };

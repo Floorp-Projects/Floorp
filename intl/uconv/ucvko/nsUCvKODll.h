@@ -41,10 +41,10 @@
 
 #include "prtypes.h"
 
-extern "C" PRUint16 g_utKSC5601Mapping[];
-extern "C" PRUint16 g_ufKSC5601Mapping[];
-extern "C" PRUint16 g_ucvko_AsciiMapping[];
-extern "C" PRUint16 g_HangulNullMapping[];
-extern "C" PRUint16 g_ufJohabJamoMapping[];
+extern const PRUint16 g_utKSC5601Mapping[];
+extern const PRUint16 g_ufKSC5601Mapping[];
+extern const PRUint16 g_ucvko_AsciiMapping[];
+extern const PRUint16 g_HangulNullMapping[];
+extern const PRUint16 g_ufJohabJamoMapping[];
 
 #endif /* nsUCvKODll_h___ */

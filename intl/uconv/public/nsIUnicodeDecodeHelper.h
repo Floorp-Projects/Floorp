@@ -85,14 +85,14 @@ public:
    */
   NS_IMETHOD ConvertByMultiTable(const char * aSrc, PRInt32 * aSrcLength, 
       PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
-      uRange * aRangeArray, uShiftTable ** aShiftTable, 
+      const uRange * aRangeArray, uShiftTable ** aShiftTable, 
       uMappingTable ** aMappingTable) = 0;
 
   /**
    * Converts data using a fast lookup table.
    */
   NS_IMETHOD ConvertByFastTable(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength, PRUnichar * aFastTable, 
+      PRUnichar * aDest, PRInt32 * aDestLength, const PRUnichar * aFastTable, 
       PRInt32 aTableSize) = 0;
 
   /**

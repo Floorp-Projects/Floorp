@@ -43,7 +43,7 @@
  * if you have any question. Thanks
  */
 #include "nsVerifier.h"
-static PRUint32 BIG5_cls [ 256 / 8 ] = {
+static const PRUint32 BIG5_cls [ 256 / 8 ] = {
 PCK4BITS(1,1,1,1,1,1,1,1),  // 00 - 07 
 PCK4BITS(1,1,1,1,1,1,0,0),  // 08 - 0f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 10 - 17 
@@ -79,7 +79,7 @@ PCK4BITS(3,3,3,3,3,3,3,0)   // f8 - ff
 };
 
 
-static PRUint32 BIG5_st [ 3] = {
+static const PRUint32 BIG5_st [ 3] = {
 PCK4BITS(eError,eStart,eStart,     3,eError,eError,eError,eError),//00-07 
 PCK4BITS(eError,eError,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eError),//08-0f 
 PCK4BITS(eError,eStart,eStart,eStart,eStart,eStart,eStart,eStart) //10-17 

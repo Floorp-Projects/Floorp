@@ -173,7 +173,7 @@ for($t = 1; $t <= $tt; $t++)
    $th = $range[($t-1) * 2 + 1];
    $ts = ( $th - $tl ) >> 3;
    $totaldata += $ts + 1;
-   printf OUT "static PRUint8 gGenCatIdx%d[%d] = {\n", $t, $ts + 1;
+   printf OUT "static const PRUint8 gGenCatIdx%d[%d] = {\n", $t, $ts + 1;
    for($i = ($tl >> 3); $i <= ($th >> 3) ; $i ++ )
    {
       $data = 0;
@@ -238,7 +238,7 @@ if($newidx > 255)
       "This program is now broken!!!\n\n\n";      
 
 }
-printf OUT "static PRUint32 gGenCatPat[$newidx] = {\n";
+printf OUT "static const PRUint32 gGenCatPat[$newidx] = {\n";
 for($i = 0 ; $i < $newidx; $i++)
 {
    printf OUT "    %s,  // $i \n", $patarray[$i] ;

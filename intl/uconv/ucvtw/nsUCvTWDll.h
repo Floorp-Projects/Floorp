@@ -41,10 +41,10 @@
 
 #include "prtypes.h"
 
-extern "C" PRUint16 g_ufBig5Mapping[];
-extern "C" PRUint16 g_utBIG5Mapping[];
-extern "C" PRUint16 g_ASCIIMapping[];
-extern "C" PRUint16 g_ufBig5HKSCSMapping[];
-extern "C" PRUint16 g_utBig5HKSCSMapping[];
+extern const PRUint16 g_ufBig5Mapping[];
+extern const PRUint16 g_utBIG5Mapping[];
+extern const PRUint16 g_ASCIIMapping[];
+extern const PRUint16 g_ufBig5HKSCSMapping[];
+extern const PRUint16 g_utBig5HKSCSMapping[];
 
 #endif /* nsUCvTWDll_h___ */

@@ -43,7 +43,7 @@
  * if you have any question. Thanks
  */
 #include "nsVerifier.h"
-static PRUint32 gb18030_cls [ 256 / 8 ] = {
+static const PRUint32 gb18030_cls [ 256 / 8 ] = {
 PCK4BITS(1,1,1,1,1,1,1,1),  // 00 - 07 
 PCK4BITS(1,1,1,1,1,1,0,0),  // 08 - 0f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 10 - 17 
@@ -79,7 +79,7 @@ PCK4BITS(6,6,6,6,6,6,6,0)   // f8 - ff
 };
 
 
-static PRUint32 gb18030_st [ 6] = {
+static const PRUint32 gb18030_st [ 6] = {
 PCK4BITS(eError,eStart,eStart,eStart,eStart,eStart,     3,eError),//00-07 
 PCK4BITS(eError,eError,eError,eError,eError,eError,eItsMe,eItsMe),//08-0f 
 PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eError,eError,eStart),//10-17 

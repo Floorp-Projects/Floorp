@@ -90,7 +90,7 @@ nsBIG5HKSCSToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult)
 {
   return CreateMultiTableDecoder(6,
-                                 (uRange* ) &g_BIG5HKSCSRanges,
+                                 (const uRange* ) &g_BIG5HKSCSRanges,
                                  (uShiftTable**) &g_BIG5HKSCSShiftTableSet,
                                  (uMappingTable**) &g_BIG5HKSCSMappingTableSet,
                                  1,

@@ -44,7 +44,7 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRInt16 g_ShiftTable[] =  {
+static const PRInt16 g_ShiftTable[] =  {
   0, u2BytesCharset,
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };

@@ -43,7 +43,7 @@
  * if you have any question. Thanks
  */
 #include "nsVerifier.h"
-static PRUint32 UCS2LE_cls [ 256 / 8 ] = {
+static const PRUint32 UCS2LE_cls [ 256 / 8 ] = {
 PCK4BITS(0,0,0,0,0,0,0,0),  // 00 - 07 
 PCK4BITS(0,0,1,0,0,2,0,0),  // 08 - 0f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 10 - 17 
@@ -79,7 +79,7 @@ PCK4BITS(0,0,0,0,0,0,4,5)   // f8 - ff
 };
 
 
-static PRUint32 UCS2LE_st [ 7] = {
+static const PRUint32 UCS2LE_st [ 7] = {
 PCK4BITS(     6,     6,     7,     6,     4,     3,eError,eError),//00-07 
 PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eItsMe,eItsMe),//08-0f 
 PCK4BITS(eItsMe,eItsMe,     5,     5,     5,eError,eItsMe,eError),//10-17 

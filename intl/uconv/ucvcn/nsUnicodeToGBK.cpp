@@ -57,11 +57,11 @@
 // Global table initialization function defined in gbku.h
 //-------------------------------------------------------------
 
-static PRInt16 g_2BytesShiftTable[] = {
+static const PRInt16 g_2BytesShiftTable[] = {
  0, u2BytesCharset,
  ShiftCell(0,0,0,0,0,0,0,0)
 };
-static PRInt16 g_4BytesGB18030ShiftTable[] = {
+static const PRInt16 g_4BytesGB18030ShiftTable[] = {
  0, u4BytesGB18030Charset,
  ShiftCell(0,0,0,0,0,0,0,0)
 };
@@ -70,7 +70,7 @@ static PRInt16 g_4BytesGB18030ShiftTable[] = {
 //  Private class used by nsUnicodeToGB18030 and nsUnicodeToGB18030Font0
 //    nsUnicodeToGB18030Uniq2Bytes
 //-----------------------------------------------------------------------
-static PRUint16 g_uf_gb18030_2bytes[] = {
+static const PRUint16 g_uf_gb18030_2bytes[] = {
 #include "gb18030uniq2b.uf"
 };
 class nsUnicodeToGB18030Uniq2Bytes : public nsTableEncoderSupport
@@ -85,7 +85,7 @@ protected:
 //  Private class used by nsUnicodeToGB18030
 //    nsUnicodeTo4BytesGB18030
 //-----------------------------------------------------------------------
-static PRUint16 g_uf_gb18030_4bytes[] = {
+static const PRUint16 g_uf_gb18030_4bytes[] = {
 #include "gb180304bytes.uf"
 };
 class nsUnicodeTo4BytesGB18030 : public nsTableEncoderSupport
@@ -100,7 +100,7 @@ protected:
 //  Private class used by nsUnicodeToGBK
 //    nsUnicodeToGBKUniq2Bytes
 //-----------------------------------------------------------------------
-static PRUint16 g_uf_gbk_2bytes[] = {
+static const PRUint16 g_uf_gbk_2bytes[] = {
 #include "gbkuniq2b.uf"
 };
 class nsUnicodeToGBKUniq2Bytes : public nsTableEncoderSupport

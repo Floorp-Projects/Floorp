@@ -54,7 +54,7 @@ static const PRInt16 g0208ShiftTable[] =  {
         ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-static PRInt16 g0212ShiftTable[] =  {
+static const PRInt16 g0212ShiftTable[] =  {
         0, u2BytesGRPrefix8FCharset, 
         ShiftCell(0,0,0,0,0,0,0,0)
 };

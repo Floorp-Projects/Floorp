@@ -99,7 +99,7 @@ nsJohabToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {
   return CreateMultiTableDecoder(sizeof(g_JOHABRanges) / sizeof(g_JOHABRanges[0]),
-                                 (uRange*) &g_JOHABRanges,
+                                 (const uRange*) &g_JOHABRanges,
                                  (uShiftTable**) &g_JOHABShiftTableSet, 
                                  (uMappingTable**) &g_JOHABMappingTableSet, 1,
                                  aOuter, aIID, aResult);

@@ -46,12 +46,14 @@ typedef enum {
    eItsMe = 2 
 } nsSMState;
 
-typedef struct nsVerifier {
+typedef struct _nsVerifierMutable {
   const char* charset;
   nsPkgInt  cclass;
   PRUint32  stFactor; // >= number of cclass.
   nsPkgInt  states;
-} nsVerifier;
+} nsVerifierMutable;
+
+typedef const nsVerifierMutable nsVerifier;
 
 #define GETCLASS(v,c) GETFROMPCK(((unsigned char)(c)), (v)->cclass)
 #define GETNEXTSTATE(v,c,s) \
