@@ -55,8 +55,8 @@
         <tree 
               id="profiles" style="width: 190px; height: 150px;"
               onclick="return showSelection(event.target.parentNode.parentNode);"
-              ondblclick="return startWithProfile(event.target.parentNode.parentNode);"
-              onkeypress="if(event.which == 13) return startWithProfile(event.target.parentNode.parentNode);">
+              ondblclick="return onStart();"
+              onkeypress="if (event.which == 13) return onStart();">
           <treehead>
             <treerow>
               <treecell>&availprofiles.label;</treecell>
