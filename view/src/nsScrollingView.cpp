@@ -1372,7 +1372,6 @@ void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView 
 {
   PRInt32           numkids;
   aView->GetChildCount(numkids);
-  nsIScrollableView *scroller;
   nscoord           offx, offy;
   PRBool            isscroll = PR_FALSE;
 
@@ -1429,6 +1428,13 @@ NS_IMETHODIMP nsScrollingView :: SetScrolledView(nsIView *aScrolledView)
 NS_IMETHODIMP nsScrollingView :: GetScrolledView(nsIView *&aScrolledView)
 {
   return mClipView->GetChild(0, aScrolledView);
+}
+
+NS_IMETHODIMP nsScrollingView :: GetScrollPosition(nscoord &aX, nscoord &aY)
+{
+  aX = mOffsetX;
+  aY = mOffsetY;
+  return NS_OK;
 }
 
 void nsScrollingView :: ComputeScrollArea(nsIView *aView, nsRect &aRect,

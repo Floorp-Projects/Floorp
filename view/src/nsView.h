@@ -94,10 +94,6 @@ public:
   NS_IMETHOD  SetClientData(void *aData);
   NS_IMETHOD  GetClientData(void *&aData);
   NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
-  // XXX TROY
-#if 0
-  NS_IMETHOD  GetScrollOffset(nscoord *aDx, nscoord *aDy);
-#endif
   NS_IMETHOD  GetDirtyRegion(nsIRegion*& aRegion);
   NS_IMETHOD  SetDirtyRegion(nsIRegion* aRegion);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
