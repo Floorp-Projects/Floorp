@@ -55,6 +55,7 @@
 #include "nsIRDFRemoteDataSource.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
+#include "nsITextToSubURI.h"
 #include "nsEscape.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -89,6 +90,7 @@ static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
 
 static const char kURINC_SearchEngineRoot[]           = "NC:SearchEngineRoot";
 static const char kURINC_SearchResultsSitesRoot[]     = "NC:SearchResultsSitesRoot";
@@ -1752,8 +1754,13 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 
 	struct	encodings	encodingList[] =
 	{
-		{	"2336",	"EUC-JP"	},
-		{	"2561", "Shift_JIS"	},
+		{	"2336",	"EUC-JP"	},	// Japanese
+		{	"2352", "GB2312"	},	// Simplified Chinese
+		{	"2368", "EUC-KR"	},	// Korean
+		{	"2561", "Shift_JIS"	},	// Japanese
+		{	"2562", "KOI8-R"	},	// Russian
+		{	"2563", "Big5"		},	// Traditional Chinese
+
 		{	nsnull, nsnull		}
 	};
 
@@ -1779,6 +1786,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				const nsString &fullURL, const nsString &text)
 {
 	nsresult	rv;
+	nsAutoString	textTemp(text);
 
 //	Note: source can be null
 //	if (!source)	return(NS_ERROR_NULL_POINTER);
@@ -1807,17 +1815,6 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 		nsAutoString	encodingStr, queryEncodingStr, resultEncodingStr;
 
-		GetData(data, "search", "queryEncoding", encodingStr);		// decimal string values
-		MapEncoding(encodingStr, queryEncodingStr);
-		if (queryEncodingStr.Length() > 0)
-		{
-			// XXX to do: need to convert "text" from escaped-UTF_8 to
-			// whatever the dataset indicates it wants to be sent
-		}
-
-		if (NS_FAILED(rv = GetInputs(data, userVar, text, input)))	return(rv);
-		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
-
 		GetData(data, "interpret", "resultEncoding", encodingStr);	// decimal string values
 		MapEncoding(encodingStr, resultEncodingStr);
 		// rjc note: ignore "interpret/resultTranslationEncoding" as well as
@@ -1832,6 +1829,40 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 					getter_AddRefs(unicodeDecoder));
 			}
 		}
+
+
+		GetData(data, "search", "queryEncoding", encodingStr);		// decimal string values
+		MapEncoding(encodingStr, queryEncodingStr);
+		if (queryEncodingStr.Length() > 0)
+		{
+			// convert from escaped-UTF_8, to unicode, and then to
+			// the charset indicated by the dataset in question
+
+			char	*utf8data = textTemp.ToNewUTF8String();
+			if (utf8data)
+			{
+				NS_WITH_SERVICE(nsITextToSubURI, textToSubURI,
+					kTextToSubURICID, &rv);
+				if (NS_SUCCEEDED(rv) && (textToSubURI))
+				{
+					PRUnichar	*uni = nsnull;
+					if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", utf8data, &uni)) && (uni))
+					{
+						char	*charsetData = nsnull;
+						if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(nsCAutoString(queryEncodingStr), uni, &charsetData)) && (charsetData))
+						{
+							textTemp = charsetData;
+							Recycle(charsetData);
+						}
+						Recycle(uni);
+					}
+				}
+				Recycle(utf8data);
+			}
+		}
+
+		if (NS_FAILED(rv = GetInputs(data, userVar, textTemp, input)))	return(rv);
+		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
 
 		if (method.EqualsIgnoreCase("get"))
 		{
