@@ -67,8 +67,6 @@
 #include "nsXPCOM.h"
 #ifdef MOZ_PHOENIX
 #include "nsIShellService.h"
-#else
-#include "nsIWindowsHooks.h"
 #endif
 
 // These are needed to load a URL in a browser window.
