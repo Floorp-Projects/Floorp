@@ -88,7 +88,7 @@
    */
   #include <stdint.h>
 
-  #if !defined(__GNUC__) || (__GNUC__ > 2 || __GNUC_MINOR__ > 91)
+  #if !defined(__GNUC__) || (__GNUC__ > 2 || __GNUC_MINOR__ > 95)
     #include <stdbool.h>
   #else
     /*
