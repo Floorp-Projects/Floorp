@@ -862,6 +862,91 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
 }
 
 
+//
+// Insert a noneditable text node, e.g. formatting whitespace
+//
+nsresult
+nsEditor::InsertNoneditableTextNode(nsIDOMNode* parent, PRInt32 offset,
+                                    nsString& aStr)
+{
+  nsAutoString textNodeTag;
+  nsresult res = GetTextNodeTag(textNodeTag);
+  if (NS_FAILED(res))
+    return res;
+
+  // Can't call CreateNode, because that will call us recursively.
+  // So duplicate what it does:
+  CreateElementTxn *txn;
+  res = CreateTxnForCreateElement(textNodeTag, parent, offset, &txn);
+  if (NS_FAILED(res))
+    return res;
+
+  res = Do(txn);  
+  if (NS_FAILED(res))
+    return res;
+
+  // Now get the pointer to the node we just created ...
+  nsCOMPtr<nsIDOMNode> newNode;
+  res = txn->GetNewNode(getter_AddRefs(newNode));
+  if (NS_FAILED(res))
+    return res;
+  nsCOMPtr<nsIDOMCharacterData> newTextNode;
+  newTextNode = do_QueryInterface(newNode);
+  if (!newTextNode)
+    return NS_ERROR_UNEXPECTED;
+
+  // ... and set its text.
+  return newTextNode->SetData(aStr);
+}
+
+//
+// Figure out what formatting needs to go with this node, and insert it.
+//
+NS_IMETHODIMP
+nsEditor::InsertFormattingForNode(nsIDOMNode* aNode)
+{
+  nsresult res;
+
+  // Don't insert any formatting unless it's an element node
+  PRUint16 nodeType;
+  res = aNode->GetNodeType(&nodeType);
+  if (NS_FAILED(res))
+    return res;
+  if (nodeType != nsIDOMNode::ELEMENT_NODE)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> parent;
+  res = aNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(res))
+    return res;
+  PRInt32 offset = GetIndexOf(parent, aNode);
+
+#ifdef DEBUG_akkana
+  DumpContentTree();
+  nsString namestr;
+  aNode->GetNodeName(namestr);
+  char* nodename = namestr.ToNewCString();
+  printf("Inserting formatting for node <%s> at offset %d\n",
+         nodename, offset);
+  delete[] nodename;
+#endif /* DEBUG_akkana */
+
+  //
+  // XXX We don't yet have a real formatter. As a cheap stopgap,
+  // XXX just insert a newline before and after each newly inserted tag.
+  //
+
+  nsAutoString str (NS_LINEBREAK);
+
+  // After the close tag
+  //res = InsertNoneditableTextNode(parent, offset+1, str);
+
+  // Before the open tag
+  res = InsertNoneditableTextNode(parent, offset, str);
+
+  return res;
+}
+
 NS_IMETHODIMP
 nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
                     nsIDOMNode * aRightNode,
