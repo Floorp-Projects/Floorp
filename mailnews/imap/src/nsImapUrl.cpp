@@ -68,7 +68,8 @@ nsImapUrl::nsImapUrl()
 	m_destinationCanonicalFolderPathSubString = nsnull;
 
 	m_runningUrl = PR_FALSE;
-
+	m_idsAreUids = PR_FALSE;
+	m_flags = 0;
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
 									   (void **) &m_urlListeners);
 }
@@ -871,6 +872,22 @@ char nsImapUrl::GetOnlineSubDirSeparator()
 	return m_onlineSubDirSeparator;
 }
 
+NS_IMETHODIMP nsImapUrl::MessageIdsAreUids(PRBool *result)
+{
+    NS_LOCK_INSTANCE();
+	*result = m_idsAreUids;
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetMsgFlags(imapMessageFlagsType *result)	// kAddMsgFlags or kSubtractMsgFlags only
+{
+    NS_LOCK_INSTANCE();
+	*result = m_flags;
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
 
 // Returns NULL if nothing was done.
 // Otherwise, returns a newly allocated name.
@@ -1011,6 +1028,17 @@ NS_IMETHODIMP  nsImapUrl::CreateServerSourceFolderPathString(char **result)
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
+
+NS_IMETHODIMP nsImapUrl::CreateCanonicalSourceFolderPathString(char **result)
+{
+	if (!result)
+	    return NS_ERROR_NULL_POINTER;
+	NS_LOCK_INSTANCE();
+	*result = PL_strdup(m_sourceCanonicalFolderPathSubString ? m_sourceCanonicalFolderPathSubString : "");
+    NS_UNLOCK_INSTANCE();
+	return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
 
 char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar)
 {	

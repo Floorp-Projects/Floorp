@@ -134,8 +134,11 @@ public:
 	NS_IMETHOD GetImapPartToFetch(char **resultPart) = 0;
 	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) = 0;
 	NS_IMETHOD CreateServerSourceFolderPathString(char **result) = 0;
+	NS_IMETHOD CreateCanonicalSourceFolderPathString(char **result) = 0;
 
 	NS_IMETHOD	CreateListOfMessageIdsString(char **result) = 0;
+	NS_IMETHOD	MessageIdsAreUids(PRBool *result) = 0;
+	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result) = 0;	// kAddMsgFlags or kSubtractMsgFlags only
 };
 
 #endif /* nsIImapUrl_h___ */

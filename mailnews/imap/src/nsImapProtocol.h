@@ -175,8 +175,27 @@ public:
 	// imap commands issued by the parser
 	void Store(nsString2 &aMessageList, const char * aMessageData, PRBool
                aIdsAreUid);
+	void ProcessStoreFlags(const char *messageIds,
+                             PRBool idsAreUids,
+                             imapMessageFlagsType flags,
+                             PRBool addFlags);
 	void Expunge();
+	void Close();
+	void Check();
 	void SelectMailbox(const char *mailboxName);
+	// more imap commands
+	void Logout();
+	void Noop();
+	void Capability();
+	void XServerInfo();
+	void XMailboxInfo(const char *mailboxName);
+	void Namespace();
+	void MailboxData();
+	void GetMyRightsForFolder(const char *mailboxName);
+	void GetACLForFolder(const char *mailboxName);
+	void StatusForFolder(const char *mailboxName);
+	void AutoSubscribeToMailboxIfNecessary(const char *mailboxName);
+
 
 	nsIImapUrl		*GetCurrentUrl() {return m_runningUrl;}
 	// Tunnels
@@ -312,6 +331,9 @@ private:
     TLineDownloadCache m_downloadLineCache;
     PRBool m_fromHeaderSeen;
 
+	PRBool m_needNoop;
+	PRInt32 m_noopCount;
+	PRInt32 m_promoteNoopToCheckCount;
     PRBool m_closeNeededBeforeSelect;
 
     enum EMailboxHierarchyNameState {

@@ -106,9 +106,13 @@ public:
 
 	NS_IMETHOD GetImapPartToFetch(char **result) ;
 	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) ;
+	NS_IMETHOD CreateCanonicalSourceFolderPathString(char **result);
 	NS_IMETHOD CreateServerSourceFolderPathString(char **result) ;
 
 	NS_IMETHOD	CreateListOfMessageIdsString(char **result) ;
+	NS_IMETHOD	MessageIdsAreUids(PRBool *result);
+	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result);	// kAddMsgFlags or kSubtractMsgFlags only
+
 
 	// nsImapUrl
 	nsImapUrl();
@@ -142,9 +146,10 @@ protected:
     char		m_onlineSubDirSeparator;	
 
 
-	PRBool		m_runningUrl;
-
-	nsImapAction m_imapAction;
+	PRBool					m_runningUrl;
+	PRBool					m_idsAreUids;
+	imapMessageFlagsType	m_flags;
+	nsImapAction			m_imapAction;
 	nsIImapLog  * m_imapLog;
     nsIImapMailfolder* m_imapMailfolder;
     nsIImapMessage* m_imapMessage;
