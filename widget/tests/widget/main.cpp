@@ -15,20 +15,19 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsWidgetTest.cpp"
-
 #include "nsIWidget.h"
 
 extern nsresult WidgetTest();
 
+#ifdef XP_PC
+
+#include <windows.h>
 
 void main(int argc, char **argv)
 {
     WidgetTest();
 }
 
-#ifdef XP_PC
-#include <windows.h>
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, 
     int nCmdShow)
 {
