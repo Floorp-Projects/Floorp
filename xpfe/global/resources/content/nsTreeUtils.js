@@ -29,7 +29,6 @@
 
 function TriStateColumnSort(column_name)
 {
-    debug("TriStateColumnSort("+column_name+")");
     var current_column = find_sort_column();
     var current_direction = find_sort_direction(current_column);
     var column = document.getElementById(column_name);
@@ -48,7 +47,6 @@ function TriStateColumnSort(column_name)
 
 function SetSortDirection(direction)
 {
-    debug("SetSortDirection("+direction+")");
     var current_column = find_sort_column();
     var current_direction = find_sort_direction(current_column);
     if (current_direction != direction) {
@@ -58,7 +56,6 @@ function SetSortDirection(direction)
 
 function SetSortColumn(column_name)
 {
-    debug("SetSortColumn("+column_name+")");
     var current_column = find_sort_column();
     var current_direction = find_sort_direction(current_column);
     var column = document.getElementById(column_name);
@@ -82,7 +79,7 @@ function sort_column(column, direction)
     }
     catch(ex)
     {
-        debug("Exception calling xulSortService.Sort()");
+        dump("sort exception: " + ex + "\n");
     }
     update_sort_menuitems(column, direction);
     return false;
@@ -143,7 +140,6 @@ function update_sort_menuitems(column, direction)
         menuitem = menuitem.nextSibling
         while (1) {
             var name = menuitem.getAttribute('column_id');
-            debug("update: "+name)
             if (!name) break;
             if (column_name == name) {
                 menuitem.setAttribute('checked', 'true');
@@ -226,7 +222,7 @@ function fillViewMenu(popup)
   update_sort_menuitems(sort_column, sort_direction);
 }
 
-function fillContextMenu(name)
+function fillContextMenu(name, treeName)
 {
     if (!name) return false;
     var popupNode = document.getElementById(name);
@@ -238,7 +234,7 @@ function fillContextMenu(name)
       popupNode.removeChild(popupNode.childNodes[0]);
     }
 
-    var treeNode = document.getElementById("bookmarksTree");
+    var treeNode = document.getElementById(treeName);
     if (!treeNode) return false;
     var db = treeNode.database;
     if (!db) return false;
@@ -261,7 +257,6 @@ function fillContextMenu(name)
     }
 
     var select_list = treeNode.selectedItems;
-    debug("# of Nodes selected: " + treeNode.selectedItems.length + "\n");
 
     var separatorResource =
         rdf.GetResource(NC_NS + "BookmarkSeparator");
@@ -375,9 +370,6 @@ function fillContextMenu(name)
         if (!cmdNameLiteral) break;
         var cmdName = cmdNameLiteral.Value;
         if (!cmdName) break;
-
-        debug("Command #" + cmdIndex + ": id='" + cmdResource.Value +
-              "'  name='" + cmdName + "'");
 
         var newMenuItem = document.createElement("menuitem");
         newMenuItem.setAttribute("value", cmdName);

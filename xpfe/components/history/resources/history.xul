@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?> <!-- -*- Mode: xml; indent-tabs-mode: nil; -*- -->
 <!--
 
   The contents of this file are subject to the Netscape Public
@@ -25,6 +25,8 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+
+<?xul-overlay href="chrome://communicator/content/history/historyTreeOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
@@ -33,26 +35,16 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
 
 <window title="&historyWindowTitle.label;" id="bookmark-window"
-  onload="HistoryInit();"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns:web="http://home.netscape.com/WEB-rdf#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  width="500" height="400"
-  persist="width height screenX screenY sizemode"
-  orient="vertical"
-  windowtype="history:manager">
+        onload="HistoryInit();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="500" height="400"
+        persist="width height screenX screenY sizemode"
+        orient="vertical"
+        windowtype="history:manager">
 
   <script src="chrome://communicator/content/history/history.js"/>
-  <script src="chrome://global/content/nsTreeController.js"/>
-  <script src="chrome://global/content/nsTreeUtils.js"/>
-  <script src="chrome://global/content/treePopups.js"/>
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
-  <script src="chrome://global/content/nsJSComponentManager.js"/>
-  <script src="chrome://global/content/nsDragAndDrop.js"/>
-  <script src="chrome://global/content/nsTransferable.js"/>
-  <script src="chrome://global/content/nsJSSupportsUtils.js"/>
 
 <commands id="commands">
   <commandset id="selectEditMenuItems"/>
@@ -68,6 +60,7 @@
   <broadcaster id="bm_cmd_saveas"/>
   <!-- Edit Menu -->
   <broadcaster id="cmd_undo"/>
+  <broadcaster id="cmd_cut"/>
   <broadcaster id="cmd_copy"/>
   <broadcaster id="cmd_delete"/>
   <broadcaster id="cmd_selectAll"/>
@@ -82,7 +75,6 @@
   <key id="key_undo"/>
   <key id="key_cut"/>
   <key id="key_copy"/>
-  <key id="key_paste"/>
   <key id="key_delete"/>
   <key id="key_selectAll"/>
 </keyset>
@@ -106,9 +98,8 @@
     <menupopup>
       <menuitem id="menu_undo" disabled="true" />
       <menuseparator/>
-      <menuitem id="menu_cut" disabled="true"/>
+      <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
-      <menuitem id="menu_paste" disabled="true"/>
       <menuitem id="menu_delete"/>
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
@@ -148,125 +139,12 @@
 </toolbox>
 
 <popupset>
-  <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'historyTree');" >
 	  <menu />
   </popup>
 </popupset>
 
-<tree  id="bookmarksTree" ref="NC:HistoryRoot" context="contextual"
-       datasources="rdf:history rdf:localsearch"
-       flex="1"
-       multiple="true"
-       ondraggesture="dump('*** starting drag\n'); nsDragAndDrop.startDrag(event, historyDNDObserver);">
-
-  <template>
-     <rule>
-      <treechildren>
-       <treeitem uri="rdf:*" persist="open"
-         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
-         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-         loading="rdf:http://home.netscape.com/NC-rdf#loading">
-         <treerow>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
-             class="treecell-indent treecell-bookmark"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Date" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Referrer" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#VisitCount" />
-         </treerow>
-       </treeitem>
-      </treechildren>
-     </rule>
-  </template>
-
-  <treecolgroup id="theColumns">
-    <treecol flex="4" id="Name"
-      sortSeparators="true" persist="hidden width" 
-      resource="http://home.netscape.com/NC-rdf#Name"/>
-
-    <splitter class="tree-splitter"/>
-
-    <treecol flex="4" id="URL"
-      sortSeparators="true" persist="hidden width" 
-      resource="http://home.netscape.com/NC-rdf#URL"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
-
-    <splitter class="tree-splitter"/>
-
-    <treecol flex="1" id="Date"
-      sortSeparators="true" persist="hidden width" 
-      resource="http://home.netscape.com/NC-rdf#Date"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
-
-    <splitter class="tree-splitter"/>
-
-    <treecol flex="1" id="FirstVisitDate"
-      sortSeparators="true" persist="hidden width" 
-      resource="http://home.netscape.com/NC-rdf#FirstVisitDate"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
-
-    <splitter class="tree-splitter"/>
-
-    <treecol flex="1" id="Referrer"
-      sortSeparators="true" persist="hidden width" 
-      resource="http://home.netscape.com/NC-rdf#Referrer"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
-
-    <splitter class="tree-splitter"/>
-
-    <treecol flex="1" id="VisitCount"
-      sortSeparators="true" persist="hidden width" 
-      resource="http://home.netscape.com/NC-rdf#VisitCount"
-      resource2="http://home.netscape.com/NC-rdf#Name"/>
-
-    <splitter class="tree-splitter"/>
-
-    <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
-  </treecolgroup>
-
-  <treehead>
-    <treerow id="headRow">
-      <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.name.label;"
-        onclick="return TriStateColumnSort('Name');"
-        observes="Name" />
-      <treecell class="treecell-header sortDirectionIndicator" 
-        value="&tree.header.url.label;"
-        onclick="return TriStateColumnSort('URL');"
-        observes="URL" />
-      <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.date.label;"
-        onclick="return TriStateColumnSort('Date');"
-        observes="Date"/>
-      <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.firstvisitdate.label;"
-        onclick="return TriStateColumnSort('FirstVisitDate');"
-        observes="FirstVisitDate"/>
-      <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.referrer.label;"
-        onclick="return TriStateColumnSort('Referrer');"
-        observes="Referrer"/>
-      <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.visitcount.label;"
-        onclick="return TriStateColumnSort('VisitCount');"
-        observes="VisitCount"/>
-      <treecell class="treecell-header" allowevents="true" id="popupCell">
-        <menu>
-          <image class="treecell-popup-icon"/>
-          <menupopup popupanchor="bottomright" 
-            popupalign="topright"
-            oncreate="BuildTreePopup(document.getElementById('theColumns'), document.getElementById('headRow'), this,
-            document.getElementById('popupCell'))"/>
-        </menu>
-      </treecell>
-    </treerow>
-  </treehead>
-  <treechildren flex="1" id="treechildren-bookmarks" 
-    onclick="return OpenURL(event, event.target.parentNode.parentNode, 
-                            'bookmarksTree');"/>
-</tree>
-
+  <tree id="historyTree"/>
   <statusbar id="status-bar">
     <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
     <statusbarpanel id="statusbar-display" crop="right" flex="1"/>
