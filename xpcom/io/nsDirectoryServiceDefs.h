@@ -35,21 +35,22 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
+/**
+ * Defines the property names for directories available from 
+ * nsIDirectoryService. These dirs are always available even if no 
+ * nsIDirectoryServiceProviders have been registered with the service. 
+ * Application level keys are defined in nsAppDirectoryServiceDefs.h.
+ *
+ * Keys whose definition ends in "DIR" or "FILE" return a single nsIFile (or 
+ * subclass). Keys whose definition ends in "LIST" return an nsISimpleEnumerator
+ * which enumerates a list of file objects.
+ *
+ * Defines listed in this file are FROZEN.  This list may grow.
+ */
+
 #ifndef nsDirectoryServiceDefs_h___
 #define nsDirectoryServiceDefs_h___
-
-//========================================================================================
-//
-// Defines the property names for directories available from nsIDirectoryService. These
-// dirs are always available even if no nsIDirectoryServiceProviders have been registered
-// with the service. Application level keys are defined in nsAppDirectoryServiceDefs.h.
-//
-// Keys whose definition ends in "DIR" or "FILE" return a single nsIFile (or subclass).
-// Keys whose definition ends in "LIST" return an nsISimpleEnumerator which enumerates a
-// list of file objects.
-//
-//========================================================================================
                                                                                                                        
 #define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
 #define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
