@@ -36,3 +36,9 @@ box.padded {
     width: 100%;
 }
 
+iframe {
+ min-width: 10px;
+ min-height: 10px;
+ width: 100px;
+ height: 100px;
+}
