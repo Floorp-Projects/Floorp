@@ -2481,8 +2481,11 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
       if (aTable->value == v) {
         aResult.Append(NS_ConvertASCIItoUCS2(aTable->tag));
         if (aFoldCase) {
-          nsWritingIterator<PRUnichar> start; aResult.BeginWriting(start);
-          *start.get() = nsCRT::ToUpper(*start.get());
+          nsWritingIterator<PRUnichar> start;
+          aResult.BeginWriting(start);
+
+          
+          *start.get() = nsCRT::ToUpper((char)*start);
         }
         return PR_TRUE;
       }
@@ -4402,6 +4405,7 @@ nsGenericHTMLElement::HandleFrameOnloadEvent(nsIDOMEvent* aEvent)
   return HandleDOMEvent(ctx, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 }
 
+// static
 nsresult
 nsGenericHTMLElement::SetProtocolInHrefString(const nsAReadableString &aHref,
                                               const nsAReadableString &aProtocol,
@@ -4428,6 +4432,7 @@ nsGenericHTMLElement::SetProtocolInHrefString(const nsAReadableString &aHref,
   return NS_OK;
 }
 
+// static
 nsresult
 nsGenericHTMLElement::SetHostnameInHrefString(const nsAReadableString &aHref,
                                               const nsAReadableString &aHostname,
@@ -4449,6 +4454,7 @@ nsGenericHTMLElement::SetHostnameInHrefString(const nsAReadableString &aHref,
   return NS_OK;
 }
 
+// static
 nsresult
 nsGenericHTMLElement::SetPathnameInHrefString(const nsAReadableString &aHref,
                                               const nsAReadableString &aPathname,
@@ -4473,6 +4479,7 @@ nsGenericHTMLElement::SetPathnameInHrefString(const nsAReadableString &aHref,
   return NS_OK;
 }
 
+// static
 nsresult
 nsGenericHTMLElement::SetHostInHrefString(const nsAReadableString &aHref,
                                           const nsAReadableString &aHost,
@@ -4495,11 +4502,13 @@ nsGenericHTMLElement::SetHostInHrefString(const nsAReadableString &aHref,
   uri->GetPath(getter_Copies(path));
 
   aResult.Assign(NS_ConvertUTF8toUCS2(scheme) + NS_LITERAL_STRING("://") +
-                 NS_ConvertUTF8toUCS2(preHost) + aHost + NS_ConvertUTF8toUCS2(path));
+                 NS_ConvertUTF8toUCS2(preHost) + aHost +
+                 NS_ConvertUTF8toUCS2(path));
 
   return NS_OK;
 }
 
+// static
 nsresult
 nsGenericHTMLElement::SetSearchInHrefString(const nsAReadableString &aHref,
                                             const nsAReadableString &aSearch,
@@ -4525,6 +4534,7 @@ nsGenericHTMLElement::SetSearchInHrefString(const nsAReadableString &aHref,
   return NS_OK;
 }
 
+// static
 nsresult
 nsGenericHTMLElement::SetHashInHrefString(const nsAReadableString &aHref,
                                           const nsAReadableString &aHash,
@@ -4550,6 +4560,7 @@ nsGenericHTMLElement::SetHashInHrefString(const nsAReadableString &aHref,
   return NS_OK;
 }
 
+// static
 nsresult
 nsGenericHTMLElement::SetPortInHrefString(const nsAReadableString &aHref,
                                           const nsAReadableString &aPort,
@@ -4576,10 +4587,11 @@ nsGenericHTMLElement::SetPortInHrefString(const nsAReadableString &aHref,
   return NS_OK;
 }
 
-nsresult nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
-                                                         nsAWritableString& aProtocol)
+// static
+nsresult
+nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
+                                                nsAWritableString& aProtocol)
 {
-  aProtocol.Truncate();
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
   if (NS_FAILED(rv))
@@ -4596,8 +4608,10 @@ nsresult nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString
   return NS_OK;
 }
 
-nsresult nsGenericHTMLElement::GetHostFromHrefString(const nsAReadableString& aHref,
-                                                     nsAWritableString& aHost)
+// static
+nsresult
+nsGenericHTMLElement::GetHostFromHrefString(const nsAReadableString& aHref,
+                                            nsAWritableString& aHost)
 {
   aHost.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4624,8 +4638,10 @@ nsresult nsGenericHTMLElement::GetHostFromHrefString(const nsAReadableString& aH
   return NS_OK;
 }
 
-nsresult nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString& aHref,
-                                                         nsAWritableString& aHostname)
+// static
+nsresult
+nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString& aHref,
+                                                nsAWritableString& aHostname)
 {
   aHostname.Truncate();
   nsCOMPtr<nsIURI> url;
@@ -4642,8 +4658,10 @@ nsresult nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString
   return NS_OK;
 }
 
-nsresult nsGenericHTMLElement::GetPathnameFromHrefString(const nsAReadableString& aHref,
-                                                         nsAWritableString& aPathname)
+// static
+nsresult
+nsGenericHTMLElement::GetPathnameFromHrefString(const nsAReadableString& aHref,
+                                                nsAWritableString& aPathname)
 {
   aPathname.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4667,8 +4685,10 @@ nsresult nsGenericHTMLElement::GetPathnameFromHrefString(const nsAReadableString
   return NS_OK;
 }
 
-nsresult nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& aHref,
-                                                       nsAWritableString& aSearch)
+// static
+nsresult
+nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& aHref,
+                                              nsAWritableString& aSearch)
 {
   aSearch.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4694,8 +4714,10 @@ nsresult nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& 
 
 }
 
-nsresult nsGenericHTMLElement::GetPortFromHrefString(const nsAReadableString& aHref,
-                                                     nsAWritableString& aPort)
+// static
+nsresult
+nsGenericHTMLElement::GetPortFromHrefString(const nsAReadableString& aHref,
+                                            nsAWritableString& aPort)
 {
   aPort.Truncate();
   nsCOMPtr<nsIURI> url;
@@ -4720,8 +4742,10 @@ nsresult nsGenericHTMLElement::GetPortFromHrefString(const nsAReadableString& aH
   return NS_OK;
 }
 
-nsresult nsGenericHTMLElement::GetHashFromHrefString(const nsAReadableString& aHref,
-                                                     nsAWritableString& aHash)
+// static
+nsresult
+nsGenericHTMLElement::GetHashFromHrefString(const nsAReadableString& aHref,
+                                            nsAWritableString& aHash)
 {
   aHash.Truncate();
   nsCOMPtr<nsIURI> uri;
