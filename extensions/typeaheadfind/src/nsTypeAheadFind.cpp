@@ -570,14 +570,6 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     UseInWindow(domWin);
   }
 
-  if (mBadKeysSinceMatch >= kMaxBadCharsBeforeCancel) {
-    // If they're just quickly mashing keys onto the keyboard, stop searching
-    // until typeahead find is canceled via timeout or another normal means
-    StartTimeout();  // Timeout from last bad key (this one)
-    DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Status message to say find stopped
-    return NS_OK;
-  }
-
   // ---------- Check the keystroke --------------------------------
   if ((isAlt && !isShift) || isCtrl || isMeta) {
     // Ignore most modified keys, but alt+shift may be used for
@@ -642,6 +634,14 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   }
   // ----------- Printable characters --------------
   else {
+    if (mBadKeysSinceMatch >= kMaxBadCharsBeforeCancel) {
+      // If they're just quickly mashing keys onto the keyboard, stop searching
+      // until typeahead find is canceled via timeout or another normal means
+      StartTimeout();  // Timeout from last bad key (this one)
+      DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Status message to say find stopped
+      return NS_OK;
+    }
+
     if (mRepeatingMode == eRepeatingForward ||
         mRepeatingMode == eRepeatingReverse) {
       // Once Accel+[shift]+G or [shift]+F3 has been used once,
