@@ -33,18 +33,9 @@ PRBool nsJAR::SupportsRSAVerification()
   return PR_FALSE;
 }
 
-nsresult nsJAR::DigestBegin(PRUint32* id, PRInt32 alg)
+nsresult nsJAR::CalculateDigest(const char* aInBuf, PRUint32 aInBufLen,
+                                char** digest)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult nsJAR::DigestData(PRUint32 id, const char* data, PRUint32 length)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult nsJAR::CalculateDigest(PRUint32 id, char** digest)
-{ 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -53,3 +44,4 @@ nsresult nsJAR::VerifySignature(const char* sfBuf, const char* rsaBuf,
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+

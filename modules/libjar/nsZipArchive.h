@@ -201,16 +201,12 @@ private:
   nsZipItem*        GetFileItem( const char * zipEntry );
   PRUint32          HashName( const char* aName );
 
-  PRInt32           ReadInitImpl(const char* zipEntry, nsZipItem** aItem);
-  PRInt32           ReadItem( nsZipRead* aRead, char* aBuf, 
-                              PRUint32 aCount, PRUint32* aActual );
+  PRInt32           SeekToItem(const char* zipEntry, nsZipItem** aItem);
+  PRInt32           CopyItemToBuffer(const nsZipItem* aItem, char* aBuf);
   PRInt32           CopyItemToDisk( const nsZipItem* aItem, PRFileDesc* outFD );
   PRInt32           InflateItem( const nsZipItem* aItem, 
                                  PRFileDesc* outFD,
                                  char* buf );
-  PRInt32           ReadInflatedItem( const nsZipItem* aItem, 
-                                      char* inflatedBuf, char* outbuf, 
-                                      PRUint32* aCurPos, PRUint32 count, PRUint32* actual);
 };
 
 /** 
@@ -220,7 +216,6 @@ private:
  */
 class nsZipRead
 {
-
 public:
 
   nsZipRead( nsZipArchive* aZip, nsZipItem* item );
@@ -229,7 +224,7 @@ public:
   nsZipArchive* mArchive;
   nsZipItem*    mItem;
   PRUint32      mCurPos;
-  char*         mInflatedFileBuffer;
+  char*         mFileBuffer;
   PRUint32      mCRC32;
 
 private:
@@ -237,7 +232,6 @@ private:
   nsZipRead& operator=(const nsZipRead& rhs);
   nsZipRead(const nsZipFind& rhs);
 };
-
 
 /** 
  * nsZipFind 

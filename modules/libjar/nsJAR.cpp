@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -31,7 +31,9 @@
 #include "nsJAR.h"
 #include "nsXPIDLString.h"
 
-
+//----------------------------------------------
+// Errors and other utility definitions
+//----------------------------------------------
 #ifndef __gen_nsIFile_h__
 #define NS_ERROR_FILE_UNRECONGNIZED_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
 #define NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 2)
@@ -69,17 +71,84 @@ ziperr2nsresult(PRInt32 ziperr)
     _ptr = nsnull;         \
   }
 
-//-- Used by the JAR hashtables to delete their entries.
+//----------------------------------------------
+// nsJARManifestItem declaration
+//----------------------------------------------
+/*
+ * nsJARManifestItem contains meta-information pertaining 
+ * to an individual JAR entry, taken from the 
+ * META-INF/MANIFEST.MF and META-INF/ *.SF files.
+ * This is security-critical information, defined here so it is not
+ * accessible from anywhere else.
+ */
+typedef enum
+{
+  JAR_INVALID       = 1,
+  JAR_GLOBAL        = 2,
+  JAR_INTERNAL      = 3,
+  JAR_EXTERNAL      = 4
+} JARManifestItemType;
+
+// Use this macro to look up global data (from the manifest file header)
+#define JAR_GLOBALMETA "" 
+
+class nsJARManifestItem
+{
+public:
+  JARManifestItemType mType;
+
+  // the entity which signed this item
+  nsIPrincipal*       mPrincipal;
+
+  // True if the second step of verification (VerifyEntryDigests) 
+  // has taken place:
+  PRBool              step2Complete; 
+  
+  // True unless one or more verification steps failed
+  PRBool              valid;
+  
+  // Internal storage of digests
+  char*               calculatedSectionDigest;
+  char*               storedEntryDigest;
+
+  nsJARManifestItem();
+  virtual ~nsJARManifestItem();
+};
+
+//-------------------------------------------------
+// nsJARManifestItem constructors and destructor
+//-------------------------------------------------
+nsJARManifestItem::nsJARManifestItem(): mType(JAR_INTERNAL),
+                                        mPrincipal(nsnull),
+                                        step2Complete(PR_FALSE),
+                                        valid(PR_TRUE),
+                                        calculatedSectionDigest(nsnull),
+                                        storedEntryDigest(nsnull)
+{
+}
+
+nsJARManifestItem::~nsJARManifestItem()
+{
+  // Delete digests if necessary
+  PR_FREEIF(calculatedSectionDigest);
+  PR_FREEIF(storedEntryDigest);
+  NS_IF_RELEASE(mPrincipal);
+}
+
+//----------------------------------------------
+// nsJAR constructor/destructor
+//----------------------------------------------
 PR_STATIC_CALLBACK(PRBool)
 DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 {
+//-- deletes an entry in  mManifestData.
   PR_FREEIF(aData);
   return PR_TRUE;
 }
 
 // The following initialization makes a guess of 25 entries per jarfile.
 nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 25),
-                manifestParsed(PR_FALSE),
+                step1Complete(PR_FALSE),
                 mVerificationService(nsnull)
 {
   NS_INIT_REFCNT();
@@ -92,6 +161,9 @@ nsJAR::~nsJAR()
 
 NS_IMPL_ISUPPORTS1(nsJAR, nsIZipReader);
 
+//----------------------------------------------
+// nsJAR public implementation
+//----------------------------------------------
 NS_IMETHODIMP
 nsJAR::Init(nsIFile* zipFile)
 {
@@ -156,9 +228,9 @@ nsJAR::GetEntry(const char *zipEntry, nsIZipEntry* *result)
 }
 
 NS_IMETHODIMP    
-nsJAR::FindEntries(const char *aPattern, nsISimpleEnumerator **_retval)
+nsJAR::FindEntries(const char *aPattern, nsISimpleEnumerator **result)
 {
-  if (!_retval)
+  if (!result)
     return NS_ERROR_INVALID_POINTER;
     
   nsZipFind *find = mZip.FindInit(aPattern);
@@ -170,18 +242,20 @@ nsJAR::FindEntries(const char *aPattern, nsISimpleEnumerator **_retval)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF( zipEnum );
 
-  *_retval = zipEnum;
+  *result = zipEnum;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJAR::GetInputStream(const char *aFilename, nsIInputStream **_retval)
+nsJAR::GetInputStream(const char *aFilename, nsIInputStream **result)
 {
-  if (!_retval)
+  if (!result)
     return NS_OK;
-  return CreateInputStream(aFilename, this, _retval);
+  return CreateInputStream(aFilename, this, result);
 }
 
+//-- The following #defines are used by ParseManifest()
+//   and ParseOneFile(). The header strings are defined in the JAR specification.
 #define JAR_MF 1
 #define JAR_SF 2
 #define JAR_MF_SEARCH_STRING "(M|/M)ETA-INF/(M|m)(ANIFEST|anifest).(MF|mf)$"
@@ -192,28 +266,31 @@ nsJAR::GetInputStream(const char *aFilename, nsIInputStream **_retval)
 NS_IMETHODIMP
 nsJAR::ParseManifest()
 {
-  if (manifestParsed || !SupportsRSAVerification())
+  //-- Verification Step 1
+  if (step1Complete || !SupportsRSAVerification())
     return NS_OK;
   nsresult rv;
+  nsCOMPtr<nsISimpleEnumerator> files;
+  nsCOMPtr<nsJARItem> file;
   char* manifestBuffer = nsnull;
   char* rsaBuffer = nsnull;
   PRUint32 rsaLen;
-  nsCOMPtr<nsISimpleEnumerator> files;
-  nsCOMPtr<nsJARItem> file;
   nsXPIDLCString manifestFilename;
+  nsCAutoString rsaFilename;
+  nsCOMPtr<nsIPrincipal> principal;
 
   //-- (1)Manifest (MF) file
   rv = FindEntries(JAR_MF_SEARCH_STRING, getter_AddRefs(files));
-  if (NS_FAILED(rv) || !files) goto cleanup;
+  if (!files) rv = NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) goto cleanup;
 
   //-- Load the file into memory
   rv = files->GetNext(getter_AddRefs(file));
-  if (NS_FAILED(rv)) goto cleanup;
-  if (!file) { rv = NS_ERROR_FILE_CORRUPTED; goto cleanup; } // No MF file
+  if (NS_FAILED(rv) || !file) goto cleanup;
   PRBool more;
   rv = files->HasMoreElements(&more);
-  if (NS_FAILED(rv)) return rv;
-  if (more) { rv = NS_ERROR_FILE_CORRUPTED; goto cleanup; }  // More than one MF file
+  if (NS_FAILED(rv)) goto cleanup;
+  if (more) { rv = NS_ERROR_FILE_CORRUPTED; goto cleanup; } // More than one MF file
   rv = file->GetName(getter_Copies(manifestFilename));
   if (!manifestFilename || NS_FAILED(rv)) return rv;
   rv = LoadEntry(manifestFilename, (const char**)&manifestBuffer);
@@ -223,159 +300,92 @@ nsJAR::ParseManifest()
   rv = ParseOneFile(manifestBuffer, JAR_MF);
   if (NS_FAILED(rv)) goto cleanup;
   JAR_NULLFREE(manifestBuffer)
+  DumpMetadata("PM Pass 1 End");
 
   //-- (2)Signature (SF) file
-  // For now, we only read one SF file, even if the jar has multiple signatures.
+  // If there are multiple signatures, we select one at random.
   rv = FindEntries(JAR_SF_SEARCH_STRING, getter_AddRefs(files));
-  if (NS_FAILED(rv) || !files) goto cleanup;
-
-  {
-    //-- Get an SF file
-    rv = files->GetNext(getter_AddRefs(file));
-    if (NS_FAILED(rv) || !file) goto cleanup;
-    rv = file->GetName(getter_Copies(manifestFilename));
-    if (NS_FAILED(rv)) goto cleanup;
-
-    rv = LoadEntry(manifestFilename, (const char**)&manifestBuffer);
-    if (NS_FAILED(rv)) goto cleanup;
-
-    //-- Get its corresponding RSA file
-    nsCAutoString rsaFilename(manifestFilename);
-    PRInt32 extension = rsaFilename.RFindChar('.') + 1;
-    NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
-    (void)rsaFilename.Cut(extension, 2);
-    (void)rsaFilename.Append("rsa");
-    rv = LoadEntry(rsaFilename, (const char**)&rsaBuffer, &rsaLen);
-    if (NS_FAILED(rv)) // Try uppercase
-    { 
-      JAR_NULLFREE(rsaBuffer)
+  if (!files) rv = NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) goto cleanup;
+  //-- Get an SF file
+  rv = files->GetNext(getter_AddRefs(file));
+  if (NS_FAILED(rv) || !file) goto cleanup;
+  rv = file->GetName(getter_Copies(manifestFilename));
+  if (NS_FAILED(rv)) goto cleanup;
+  
+  rv = LoadEntry(manifestFilename, (const char**)&manifestBuffer);
+  if (NS_FAILED(rv)) goto cleanup;
+  
+  //-- Get its corresponding RSA file
+  rsaFilename = manifestFilename;
+  PRInt32 extension = rsaFilename.RFindChar('.') + 1;
+  NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
+  (void)rsaFilename.Cut(extension, 2);
+  (void)rsaFilename.Append("rsa");
+  rv = LoadEntry(rsaFilename, (const char**)&rsaBuffer, &rsaLen);
+  if (NS_FAILED(rv)) // Try uppercase
+  { 
+    JAR_NULLFREE(rsaBuffer)
       (void)rsaFilename.Cut(extension, 3);
-      (void)rsaFilename.Append("RSA");
-      rv = LoadEntry(rsaFilename, (const char**)&rsaBuffer, &rsaLen);
-    }
-    if (NS_FAILED(rv)) goto cleanup;
-
-    //-- Verify that the RSA file is a valid signature of the SF file
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = VerifySignature(manifestBuffer, rsaBuffer, rsaLen, getter_AddRefs(principal));
-    if (NS_FAILED(rv)) goto cleanup;
-    JAR_NULLFREE(rsaBuffer);
-
-    //-- Parse the SF file. If the verification above failed, principal
-    // is null, and ParseOneFile will mark the relevant entries as invalid.
-    // if ParseOneFile fails, then it has no effect, and we can safely 
-    // continue to the next SF file, or return. 
-    rv = ParseOneFile(manifestBuffer, JAR_SF, principal);
-    JAR_NULLFREE(manifestBuffer)
-    // End of signature file parsing
+    (void)rsaFilename.Append("RSA");
+    rv = LoadEntry(rsaFilename, (const char**)&rsaBuffer, &rsaLen);
   }
+  if (NS_FAILED(rv)) goto cleanup;
+  
+  //-- Verify that the RSA file is a valid signature of the SF file
+  rv = VerifySignature(manifestBuffer, rsaBuffer, rsaLen, getter_AddRefs(principal));
+  if (NS_FAILED(rv)) goto cleanup;
+  JAR_NULLFREE(rsaBuffer);
+  
+  //-- Parse the SF file. If the verification above failed, principal
+  // is null, and ParseOneFile will mark the relevant entries as invalid.
+  // if ParseOneFile fails, then it has no effect, and we can safely 
+  // continue to the next SF file, or return. 
+  ParseOneFile(manifestBuffer, JAR_SF, principal);
+  JAR_NULLFREE(manifestBuffer)
+  DumpMetadata("PM Pass 2 End");
+  // End of signature file parsing
 
  cleanup:
-  DumpMetadata();
   JAR_NULLFREE(manifestBuffer)
   JAR_NULLFREE(rsaBuffer)
-  manifestParsed = NS_SUCCEEDED(rv);
+  step1Complete = NS_SUCCEEDED(rv);
   return rv;
 }
 
-NS_IMETHODIMP
-nsJAR::GetPrincipal(const char* aEntryName, nsIPrincipal** _retval)
+NS_IMETHODIMP  
+nsJAR::GetPrincipal(const char* aFilename, nsIPrincipal** result)
 {
-  // Check that verification is supported and manifest has been parsed
-  if (!SupportsRSAVerification() || !manifestParsed)
-    return NS_ERROR_FAILURE;
-  // Parameter check
-  if (!_retval)
+  //-- Parameter check
+  if (!aFilename)
+    return NS_ERROR_ILLEGAL_VALUE;
+  if (!result)
     return NS_ERROR_NULL_POINTER;
 
-  if(!aEntryName) // Caller wants global file principal
-    aEntryName = JAR_GLOBALMETA;
-
-  nsStringKey key(aEntryName);
-  nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
-  if (!manItem) return NS_ERROR_FAILURE;
-
-  //-- Verify the file digest if we haven't done so already.
-  if (manItem->mType != JAR_GLOBAL && (!manItem->verifyComplete))
-  { 
-    if (manItem->hasPrincipal() && manItem->valid)
-    {
-      //-- Check if entry digests have been calculated (by nsJARInputStream)
-      if (!manItem->entryDigestsCalculated)
-        return NS_ERROR_FAILURE;
-      
-      PRBool foundDigest = PR_FALSE;
-      for (PRInt32 a=0; a<JAR_DIGEST_COUNT; a++)
-      {
-        manItem->valid = manItem->valid && 
-          ( (!manItem->storedEntryDigests[a]) ||
-            PL_strcmp(manItem->storedEntryDigests[a],
-                      manItem->calculatedEntryDigests[a]) == 0 );
-        foundDigest = foundDigest || (manItem->storedEntryDigests[a]);
-      }
-      if (!foundDigest)
-        // No digests in manifest file. Entry is valid but has no owner 
-        manItem->valid = PR_TRUE;
-      if (!manItem->valid)
-        manItem->setPrincipal(nsnull);
-    }
-    // Free up stored digests
-    for(PRInt32 b = 0; b<JAR_DIGEST_COUNT; b++)
-    {
-      JAR_NULLFREE(manItem->calculatedEntryDigests[b])
-      JAR_NULLFREE(manItem->storedEntryDigests[b])
-    }
-      manItem->verifyComplete = PR_TRUE;
-  }
-  
-  if (manItem && manItem->valid)
-  {
-    manItem->getPrincipal(_retval);
-    return NS_OK;
-  }
-  else if (!manItem) 
-  {
-    *_retval = nsnull;
-    return NS_OK;
-  }
-  else // Not valid
-    return NS_ERROR_FAILURE; // XXX: Should this be a security error?
-}
-
-NS_IMETHODIMP
-nsJAR::VerifyExternalFile(const char* aFilename, const char* aBuf,
-                          PRUint32 aLen)
-{
-  //-- Check if verification is supported
-  if (!SupportsRSAVerification())
-    return NS_OK;
-  //-- Parameter check
-  if (!aFilename || !aBuf)
-    return NS_ERROR_ILLEGAL_VALUE;
-
+  DumpMetadata("GetPrincipal");
+  //-- Find the item
   nsStringKey key(aFilename);
   nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
-  if (!manItem)
-    return NS_ERROR_FAILURE;
-  if (!manItem->entryDigestsCalculated)
+  if(!manItem)
   {
-    nsresult rv;
-    for (PRInt32 b=0; b<JAR_DIGEST_COUNT && NS_SUCCEEDED(rv); b++)
-    {
-      PRUint32 id;
-      rv = DigestBegin(&id, b);
-      if (NS_SUCCEEDED(rv))
-        rv = DigestData(id, aBuf, aLen);
-      if (NS_SUCCEEDED(rv))
-        rv = CalculateDigest(id, &(manItem->calculatedEntryDigests[b]));
-    }
-	if (NS_SUCCEEDED(rv))
-	  manItem->entryDigestsCalculated = PR_TRUE;
-  }
-  if (manItem->entryDigestsCalculated)
+    *result = nsnull;
     return NS_OK;
+  }
+
+  NS_ASSERTION(step1Complete && manItem->step2Complete,
+               "Attempt to get principal before verifying signature.");
+
+  if (step1Complete && manItem->step2Complete && manItem->valid)
+  {
+    *result = manItem->mPrincipal;
+    NS_IF_ADDREF(*result);
+    return NS_OK;
+  }
   else
+  {
+    *result = nsnull;
     return NS_ERROR_FAILURE;
+  }
 }
 
 //----------------------------------------------
@@ -398,7 +408,8 @@ nsJAR::CreateInputStream(const char* aFilename, nsJAR* aJAR, nsIInputStream **is
   return NS_OK;
 }
 
-nsresult nsJAR::LoadEntry(const char* aFilename, const char** aBuf, 
+nsresult 
+nsJAR::LoadEntry(const char* aFilename, const char** aBuf, 
                           PRUint32* aBufLen)
 {
   //-- Get a stream for reading the manifest file
@@ -412,7 +423,7 @@ nsresult nsJAR::LoadEntry(const char* aFilename, const char** aBuf,
   PRUint32 len;
   rv = manifestStream->Available(&len);
   if (NS_FAILED(rv)) return rv;
-  buf = (char*)PR_MALLOC(len);
+  buf = (char*)PR_MALLOC(len+1);
   if (!buf) return NS_ERROR_OUT_OF_MEMORY;
   PRUint32 bytesRead;
   rv = manifestStream->Read(buf, len, &bytesRead);
@@ -420,6 +431,7 @@ nsresult nsJAR::LoadEntry(const char* aFilename, const char** aBuf,
     rv = NS_ERROR_FILE_CORRUPTED;
   if (NS_FAILED(rv)) return rv;
   (void)manifestStream->Close();
+  buf[len] = '\0'; //Null-terminate the buffer
   *aBuf = buf;
   if (aBufLen)
     *aBufLen = len;
@@ -427,7 +439,8 @@ nsresult nsJAR::LoadEntry(const char* aFilename, const char** aBuf,
 }
 
 
-PRInt32 nsJAR::ReadLine(const char** src)
+PRInt32
+nsJAR::ReadLine(const char** src)
 {
   //--Moves pointer to beginning of next line and returns line length
   //  not including CR/LF.
@@ -453,9 +466,9 @@ PRInt32 nsJAR::ReadLine(const char** src)
   return length;
 }
 
-nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
-                             nsIPrincipal* aPrincipal,
-                             PRBool aLastSFFile) // Allows us to free up resources
+nsresult
+nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
+                    nsIPrincipal* aPrincipal)
 {
   //-- Set up parsing variables
   nsJARManifestItem* curItem;
@@ -471,7 +484,7 @@ nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
   const char* nextLineStart = filebuf;
   nsCAutoString curLine;
   PRInt32 linelen;
-  nsCAutoString storedSectionDigests[JAR_DIGEST_COUNT];
+  nsCAutoString storedSectionDigest;
 
   //-- Check file header
   linelen = ReadLine(&nextLineStart);
@@ -492,7 +505,7 @@ nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
       {
         if (curItem->mType != JAR_INVALID)
         { 
-          //-- Did this section have a name: line (or the global?)
+          //-- Did this section have a name: line?
           if(!foundName)
             curItem->mType = JAR_INVALID;
           else 
@@ -513,20 +526,14 @@ nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
           }
         }
 
-        if (curItem->mType == JAR_INVALID)
+        if (curItem->mType == JAR_INVALID ||
+            curItem->mType == JAR_GLOBAL)
           delete curItem;
-        else //-- calculate section digests 
+        else //-- calculate section digest
         {
           PRUint32 sectionLength = curPos - sectionStart;
-          for (PRInt32 d=0; d<JAR_DIGEST_COUNT; d++)
-          {
-            PRUint32 id;
-            nsresult rv = DigestBegin(&id, d);
-            if (NS_SUCCEEDED(rv))
-              rv = DigestData(id, sectionStart, sectionLength);
-            if (NS_SUCCEEDED(rv))
-              rv = CalculateDigest(id, &(curItem->calculatedSectionDigests[d]));
-          }
+          CalculateDigest(sectionStart, sectionLength,
+                          &(curItem->calculatedSectionDigest));
           //-- Save item in the hashtable
           nsStringKey itemKey(curItemName);
           mManifestData.Put(&itemKey, (void*)curItem);
@@ -548,31 +555,25 @@ nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
           curSFItem = (nsJARManifestItem*)mManifestData.Get(&key);
           if(curSFItem)
           {
-            PRBool valid = PR_TRUE;
             if (aPrincipal == nsnull) 
               // SF file failed verification
-              valid = PR_FALSE;
-            else // Compare calculated digests
+              curSFItem->valid = PR_FALSE;
+            else // Compare digests
             {
-              PRBool foundDigest = PR_FALSE;
-              for (int a=0; a<JAR_DIGEST_COUNT; a++)
+              if (storedSectionDigest.Length() > 0)
               {
-                valid = valid && 
-                        ( (storedSectionDigests[a].Length() == 0) ||
-                          storedSectionDigests[a] == 
-                            (const char*)curSFItem->calculatedSectionDigests[a] );
-                foundDigest = foundDigest || (storedSectionDigests[a].Length() != 0);
+                if (storedSectionDigest !=
+                    (const char*)curSFItem->calculatedSectionDigest)
+                  curSFItem->valid = PR_FALSE;
+                else
+                {
+                  curSFItem->mPrincipal = aPrincipal;
+                  NS_ADDREF(curSFItem->mPrincipal);
+                }
+                JAR_NULLFREE(curSFItem->calculatedSectionDigest)
+                storedSectionDigest = "";
               }
-              if (foundDigest && valid)
-              {
-                curSFItem->setPrincipal(aPrincipal);
-              }
-            }
-            curSFItem->valid = valid;
-            if (aLastSFFile)
-              // Free the calculated digests; we won't need them again.
-              for(PRInt16 countB=0; countB<JAR_DIGEST_COUNT; countB++)
-                JAR_NULLFREE(curSFItem->calculatedSectionDigests[countB])
+            } // (aPrincipal != nsnull)
           } // if(curSFItem)
         } // if(foundName)
 
@@ -589,7 +590,7 @@ nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
     {
       curPos = nextLineStart;
       PRInt32 continuationLen = ReadLine(&nextLineStart) - 1;
-      nsAutoString continuation(curPos+1, continuationLen);
+      nsCAutoString continuation(curPos+1, continuationLen);
       curLine += continuation;
       linelen += continuationLen;
     }
@@ -605,36 +606,24 @@ nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
     curLine.Mid(lineData, colonPos+2, linelen - (colonPos+2));
 
     //-- Lines to look for:
-    // (1) *-Digest:
-    if (lineName.Find("-Digest",PR_TRUE) != -1) 
+    // (1) Digest:
+    if (lineName.Compare("SHA1-Digest",PR_TRUE) == 0) 
     //-- This is a digest line, save the data in the appropriate place 
     {
-      PRInt32 digest;
-      //** Note that in the following comparisons, the third argument to 
-      //   Compare MUST be the length of the first argument. **
-      if (lineName.Compare("MD5-", PR_TRUE, 4) == 0)
-        digest = JAR_MD5;
-      else if ( lineName.Compare("SHA1-", PR_TRUE, 5) == 0 ||
-                lineName.Compare("SHA-", PR_TRUE, 4) == 0 )
-        digest = JAR_SHA1;
-      else // Unsupported algorithm
-        continue; 
-
       if(aFileType == JAR_MF)
       {
-        curItem->storedEntryDigests[digest] = 
-          (char*)PR_MALLOC(lineData.Length()+1);
-        if (!(curItem->storedEntryDigests[digest]))
-          return NS_ERROR_OUT_OF_MEMORY;
-        (void)PL_strcpy(curItem->storedEntryDigests[digest], lineData);
+        curItem->storedEntryDigest = (char*)PR_MALLOC(lineData.Length()+1);
+        if (!(curItem->storedEntryDigest))
+          continue; // Out of memory, just skip this line instead of returning.
+        PL_strcpy(curItem->storedEntryDigest, lineData);
       }
       else
-        storedSectionDigests[digest] = lineData;
+        storedSectionDigest = lineData;
       continue;
     }
     
     // (2) Name: associates this manifest section with a file in the jar.
-    if (lineName.Compare("Name", PR_TRUE) == 0) 
+    if (!foundName && lineName.Compare("Name", PR_TRUE) == 0) 
     {
       if (!(aFileType == JAR_MF && curItem->mType == JAR_GLOBAL))
         curItemName = lineData;
@@ -645,8 +634,8 @@ nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
     // (3) Magic: this may be an inline Javascript. 
     //     We can't do any other kind of magic.
     if ( aFileType == JAR_MF &&
-         lineName.Compare("Magic", PR_TRUE) == 0 && 
-         curItem->mType != JAR_GLOBAL ) 
+         curItem->mType == JAR_INTERNAL &&
+         lineName.Compare("Magic", PR_TRUE) == 0) 
     {
       if(lineData.Compare("javascript",PR_TRUE) == 0)
         curItem->mType = JAR_EXTERNAL;
@@ -658,6 +647,53 @@ nsresult nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
   } // for (;;)
   return NS_OK;
 } //ParseOneFile()
+
+nsresult
+nsJAR::VerifyEntry(const char* aEntryName, char* aEntryData,
+                   PRUint32 aLen)
+{
+  //-- Verification Step 2
+  // Check that verification is supported and step 1 has been done
+
+  if (!SupportsRSAVerification()) return NS_OK;
+  NS_ASSERTION(step1Complete, 
+               "Verification step 2 called before step 1 complete");
+  if (!step1Complete) return NS_ERROR_FAILURE;
+
+  //-- Get the manifest item
+  nsStringKey key(aEntryName);
+  nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
+  if (!manItem)
+    return NS_OK;
+  if (manItem->mPrincipal && manItem->valid) 
+  {
+    if(!manItem->storedEntryDigest)  
+    { // No entry digests in manifest file. Entry is unsigned.
+      NS_IF_RELEASE(manItem->mPrincipal);
+      manItem->mPrincipal = nsnull;
+    }
+    else
+    { //-- Calculate and compare digests
+      char* calculatedEntryDigest;
+      nsresult rv = CalculateDigest(aEntryData, aLen, &calculatedEntryDigest);
+      if (NS_FAILED(rv)) return rv;
+      if (PL_strcmp(manItem->storedEntryDigest, calculatedEntryDigest) != 0)
+      {
+        manItem->valid = PR_FALSE;
+        NS_IF_RELEASE(manItem->mPrincipal);
+        manItem->mPrincipal = nsnull;
+      }
+      JAR_NULLFREE(calculatedEntryDigest)
+      JAR_NULLFREE(manItem->storedEntryDigest)
+      NS_IF_RELEASE(mVerificationService);
+      mVerificationService = nsnull;
+    }
+  }
+
+  manItem->step2Complete = PR_TRUE;
+  DumpMetadata("VerifyEntry end");
+  return NS_OK;
+}
 
 //----------------------------------------------
 // Debugging functions
@@ -671,8 +707,10 @@ PrintManItem(nsHashKey* aKey, void* aData, void* closure)
     if (manItem)
     {
       nsStringKey* key2 = (nsStringKey*)aKey;
-      printf("------------\nName:%s.\n",key2->GetString().ToNewCString());
+      char* name = key2->GetString().ToNewCString();
+      if (PL_strcmp(name, "") != 0)
       {
+        printf("------------\nName:%s.\n",name);
         if (manItem->mPrincipal)
         {
           char* toStr;
@@ -683,25 +721,26 @@ PrintManItem(nsHashKey* aKey, void* aData, void* closure)
         }
         else
           printf("No Principal.\n");
-        printf("verifyComplete:%i.\n",manItem->verifyComplete);
+        printf("step2Complete:%i.\n",manItem->step2Complete);
         printf("valid:%i.\n",manItem->valid);
-        printf("entryDigestsCalculated:%i.\n",manItem->entryDigestsCalculated);
+        /*
         for (PRInt32 x=0; x<JAR_DIGEST_COUNT; x++)
           printf("calculated section digest:%s.\n",
                  manItem->calculatedSectionDigests[x]);
         for (PRInt32 y=0; y<JAR_DIGEST_COUNT; y++)
           printf("stored entry digest:%s.\n",
                  manItem->storedEntryDigests[y]);
+        */
       }
     }
     return PR_TRUE;
 }
 #endif
 
-void nsJAR::DumpMetadata()
+void nsJAR::DumpMetadata(const char* aMessage)
 {
 #if 0
-  printf("######## nsJAR::DumpMetadata Start ############\n");
+  printf("### nsJAR::DumpMetadata at %s ###\n", aMessage);
   mManifestData.Enumerate(PrintManItem);
   printf("########  nsJAR::DumpMetadata End  ############\n");
 #endif
@@ -710,7 +749,6 @@ void nsJAR::DumpMetadata()
 //----------------------------------------------
 // nsJAREnumerator constructor and destructor
 //----------------------------------------------
-
 nsJAREnumerator::nsJAREnumerator(nsZipFind *aFind)
 : mFind(aFind),
   mCurr(nsnull),
@@ -793,13 +831,9 @@ nsJAREnumerator::GetNext(nsISupports** aResult)
       return NS_ERROR_OUT_OF_MEMORY;
 }
 
-
-
-
 //-------------------------------------------------
 // nsJARItem constructors and destructor
 //-------------------------------------------------
-
 nsJARItem::nsJARItem()
 {
     NS_INIT_ISUPPORTS();
@@ -897,60 +931,3 @@ nsJARItem::GetCRC32(PRUint32 *aCrc32)
     return NS_OK;
 }
 
-
-//-------------------------------------------------
-// nsJARManifestItem constructors and destructor
-//-------------------------------------------------
-nsJARManifestItem::nsJARManifestItem(): mType(JAR_INTERNAL),
-                                        verifyComplete(PR_FALSE),
-                                        valid(PR_TRUE),
-                                        entryDigestsCalculated(PR_FALSE),
-                                        mPrincipal(nsnull)
-{
-  // Initialize digests to null
-  for(PRInt32 count = 0; count<JAR_DIGEST_COUNT; count++)
-  {
-    calculatedSectionDigests[count] = nsnull;
-    calculatedEntryDigests[count] = nsnull;
-    storedEntryDigests[count] = nsnull;
-  }
-}
-
-nsJARManifestItem::~nsJARManifestItem()
-{
-  // Delete digests if necessary
-  for(PRInt32 count = 0; count<JAR_DIGEST_COUNT; count++)
-  {
-    PR_FREEIF(calculatedSectionDigests[count]);
-    PR_FREEIF(calculatedEntryDigests[count]);
-    PR_FREEIF(storedEntryDigests[count]);
-  }
-  NS_IF_RELEASE(mPrincipal);
-}
-    
-
-//-------------------------------------------------
-// nsJARManifestItem accessor functions
-//-------------------------------------------------
-void nsJARManifestItem::setPrincipal(nsIPrincipal *aPrincipal) 
-{
-  NS_IF_RELEASE(mPrincipal);
-  mPrincipal = aPrincipal;
-  NS_IF_ADDREF(mPrincipal);
-}
-    
-void nsJARManifestItem::getPrincipal(nsIPrincipal **result) 
-{
-  if (verifyComplete && valid) 
-  {
-    *result = mPrincipal;
-    NS_IF_ADDREF(*result);
-  } 
-  else 
-    *result = nsnull;
-}
-
-PRBool nsJARManifestItem::hasPrincipal()
-{
-  return verifyComplete && valid && mPrincipal;
-}

@@ -90,23 +90,12 @@ interface nsIZipReader : nsISupports
     /**
      * Returns an object describing the owner (origin and/or signer) of 
      * an entry. parseManifest must be called first. If aEntryName is an
-     * entry in the jar, it must have been read to its end by an input
-     * stream returned through getInputStream. If aEntryName is an external
-     * file with meta-information stored in the jar, verifyExternalFile 
-     * must be called before getPrincipal.
+     * entry in the jar, getInputStream must be called after parseManifest.
+     * If aEntryName is an external file which has meta-information 
+     * stored in the jar, verifyExternalFile (not yet implemented) must 
+     * be called before getPrincipal.
      */
     nsIPrincipal getPrincipal(in string aEntryName);
-
-    /**
-     * Compares a file which is not in the jar to meta-information
-     * about the file which is stored in the jar. Must be called after 
-     * parseManifest and before 
-     * calling getPrincipal on an external file (such as inline Javascript).
-     * There must be an "external" entry in the manifest corresponding to
-     * aFilename.
-     */
-    void verifyExternalFile(in string aFilename, in string aBuf, 
-                            in unsigned long aBufLength);
 };
 
 %{C++
