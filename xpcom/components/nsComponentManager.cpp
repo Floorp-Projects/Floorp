@@ -52,6 +52,7 @@
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
 #include "nsXPIDLString.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "nsIObserverService.h"
 
@@ -417,8 +418,9 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_ISUPPORTS3(nsComponentManagerImpl, nsIComponentManager,
-                   nsISupportsWeakReference, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS4(nsComponentManagerImpl, nsIComponentManager,
+                   nsISupportsWeakReference, nsIInterfaceRequestor,
+                   nsISecurityCheckedComponent)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -1995,6 +1997,34 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     if (getenv("XPCOM_NO_AUTOREG"))
         return NS_OK;
 #endif
+
+    // Unprivileged scripts are only allowed to call autoRegister with no
+    // path specified, and with when being NS_Script or NS_Startup.
+    if ((when != NS_Script && when != NS_Startup) || inDirSpec)
+    {
+      PRBool maySpecifyParams = PR_FALSE;
+
+      nsCOMPtr<nsIScriptSecurityManager>
+        securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+
+      if (NS_SUCCEEDED(rv))
+      {
+        rv = securityManager->IsCapabilityEnabled
+          ("InstallComponents", &maySpecifyParams);
+        if (NS_FAILED(rv)) return rv;
+      }
+      else
+      {
+        NS_ASSERTION(0, "autoRegisterImpl can't get nsScriptSecurityManager");
+      }
+
+      if (!maySpecifyParams)
+      {
+        inDirSpec = nsnull;
+        when = NS_Script;
+      }
+    }
+
     if (inDirSpec) 
     {
         // Use supplied components' directory   
@@ -2338,3 +2368,56 @@ NS_GetGlobalComponentManager(nsIComponentManager* *result)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsComponentManagerImpl: methods for nsISecurityCheckedComponent interface
+////////////////////////////////////////////////////////////////////////////////
+
+
+static char* CloneAllAccess()
+{
+    static const char allAccess[] = "AllAccess";
+    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
+}
+
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP
+nsComponentManagerImpl::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+    // We let anyone do this...
+    *_retval = CloneAllAccess();
+    return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP
+nsComponentManagerImpl::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+    // Allow unprivileged scripts to call Components.manager.autoRegister
+    static const NS_NAMED_LITERAL_STRING(s_autoRegister, "autoRegister");
+
+    if(! nsCRT::strcmp(methodName, s_autoRegister.get()))
+        *_retval = CloneAllAccess();
+    else
+        *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsComponentManagerImpl::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsComponentManagerImpl::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
