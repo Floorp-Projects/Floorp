@@ -764,15 +764,7 @@ mime_insert_all_headers(char            **body,
 
   if (htmlEdit)
   {
-    if (html_tag)
-    {
-      *html_tag = 0;
-      NS_MsgSACopy(&(newBody), *body);
-      *html_tag = '<';
-      NS_MsgSACat(&newBody, "<HTML> <BR><BR>");
-    }
-    else
-      NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
+    NS_MsgSACopy(&(newBody), "<HTML><BODY><BR><BR>");
 
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
     NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
@@ -926,7 +918,7 @@ mime_insert_normal_headers(char             **body,
 
   if (htmlEdit)
   {
-    NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
+    NS_MsgSACopy(&(newBody), "<HTML><BODY><BR><BR>");
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
     NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
   }
@@ -1108,7 +1100,7 @@ mime_insert_micro_headers(char            **body,
 
   if (htmlEdit)
   {
-    NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
+    NS_MsgSACopy(&(newBody), "<HTML><BODY><BR><BR>");
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
     NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
   }
