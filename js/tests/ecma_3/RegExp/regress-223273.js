@@ -36,7 +36,18 @@
 *
 * Date:    23 October 2003
 * SUMMARY: Unescaped, unbalanced parens in a regexp should cause SyntaxError.
-* The same should also be true for unescaped, unbalanced brackets or braces.
+*
+* The same would also be true for unescaped, unbalanced brackets or braces
+* if we followed the ECMA-262 Ed. 3 spec on this. But it was decided for
+* backward compatibility reasons to follow Perl 5, which permits
+*
+* 1. an unescaped, unbalanced right bracket ]
+* 2. an unescaped, unbalanced left brace    {
+* 3. an unescaped, unbalanced right brace   }
+*
+* If any of these should occur, Perl treats each as a literal character.
+* Therefore we permit all three of these cases, even though not ECMA-compliant.
+* Note Perl errors on an unescaped, unbalanced left bracket; so will we.
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=223273
 *
@@ -105,19 +116,25 @@ checkThis(' /(abc([x\\)yz]+)def)g/ ');
 
 
 /*
- * Run similar tests as above for unbalanced brackets -
+ * Unescaped, unbalanced left brackets should be a SyntaxError
  */
 status = inSection(11);
 testThis(' /[/ ');
 
 status = inSection(12);
-testThis(' /]/ ');
-
-status = inSection(13);
 testThis(' /[abc\\]def[g/ ');
 
+
+/*
+ * We permit unescaped, unbalanced right brackets, as does Perl.
+ * No error should result, even though this is not ECMA-compliant.
+ * Note we use checkThis() instead of testThis().
+ */
+status = inSection(13);
+checkThis(' /]/ ');
+
 status = inSection(14);
-testThis(' /\\[abc]def]g/ ');
+checkThis(' /\\[abc]def]g/ ');
 
 
 /*
@@ -145,24 +162,40 @@ checkThis(' /[abc(x\\]yz+)def]g/ ');
 
 
 /*
- * Run some tests for unbalanced braces -
+ * Run some tests for unbalanced braces. We again follow Perl, and
+ * thus permit unescaped unbalanced braces - both left and right,
+ * even though this is not ECMA-compliant.
+ *
+ * Note we use checkThis() instead of testThis().
  */
 status = inSection(21);
-testThis(' /abc{def/ ');
+checkThis(' /abc{def/ ');
 
 status = inSection(22);
-testThis(' /abc}def/ ');
+checkThis(' /abc}def/ ');
+
+status = inSection(23);
+checkThis(' /a{2}bc{def/ ');
+
+status = inSection(24);
+checkThis(' /a}b{3}c}def/ ');
 
 
 /*
  * These regexp patterns are correct and should not generate
  * any errors. Note we use checkThis() instead of testThis().
  */
-status = inSection(23);
+status = inSection(25);
 checkThis(' /abc\\{def/ ');
 
-status = inSection(24);
+status = inSection(26);
 checkThis(' /abc\\}def/ ');
+
+status = inSection(27);
+checkThis(' /a{2}bc\\{def/ ');
+
+status = inSection(28);
+checkThis(' /a\\}b{3}c\\}def/ ');
 
 
 
