@@ -125,47 +125,45 @@ Rights Reserved.
     <menubar id="mailMenubar"/>
   </toolbox>
 
-    <box style="height:100px" flex="1">
+	<box style="height:100px" flex="1">
 
-        <box id="sidebar-box">
-            <sidebarheader type="box" class="sidebarheader-main" value="&mail-sidebar-header.label;"/>
-            <tree id="folderTree" flex="1000" context="folderPaneContext"  />
-        </box>
-         
-        <splitter id="sidebar-splitter"/>
+		<box id="sidebar-box">
+			<sidebarheader type="box" class="sidebarheader-main" value="&mail-sidebar-header.label;"/>
+			<tree id="folderTree" flex="1000" context="folderPaneContext"  />
+		</box>
+          
+		<splitter id="sidebar-splitter"/>
 
-        <box orient="vertical" flex="1">
+		<box orient="vertical" flex="1">
 
-            <box id="accountCentralBox" orient="vertical" flex="1">
-                 <iframe name="accountCentralPane" flex="1" src="about:blank"/>
-            </box>
+		  <box id="accountCentralBox" orient="vertical" flex="1">
+                     <iframe name="accountCentralPane" flex="1" src="about:blank"/>
+                  </box>
 
-            <box orient="vertical">
-                <box id="messagesBox" orient="vertical" flex="1">
-                    <tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"  focusring="false"/>
-                    <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
-                    <splitter collapse="after" persist="state" onclick="OnClickThreadAndMessagePaneSplitter()" id="threadpane-splitter" orient="vertical" autostretch="never">
-                    <grippy/>
-                    </splitter>
-	
-                    <box id="messagepanebox" align="vertical" flex="3" persist="collapsed height" class="window-focusborder" focusring="false" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
-                        <toolbox id="msgHeaderView"/>
-  
-                        <iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
-                    </box>	
+		  <box id="messagesBox" orient="vertical" flex="1">
+     
+			<tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"  focusring="false"/>
+
+			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
+			<splitter collapse="after" persist="state" onclick="OnClickThreadAndMessagePaneSplitter()"
+                id="threadpane-splitter" orient="vertical" autostretch="never">
+        <grippy/>
+      </splitter>
+			
+			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed height" class="window-focusborder" focusring="false" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
+				<toolbox id="msgHeaderView"/>
+    
+				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
+			</box>	
+			<statusbar id="status-bar" class="mailwindow-statusbar">
+				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
+				<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
+			</statusbar>
+		  </box>
                 </box>
 
-                <box id="statusBarBox" orient="vertical">
-                    <statusbar id="status-bar" class="mailwindow-statusbar">
-                        <statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
-                        <statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
-                    </statusbar>
-                </box>
-            </box>
+	</box>
 
-        </box>
-    </box>
-
-    <box id="taskbar" class="toolbox-bottom"/>
+	<box id="taskbar" class="toolbox-bottom"/>
 
 </window>
