@@ -59,7 +59,7 @@ CPPSRCS =				\
 
 MODULE=raptor 
 REQUIRES=xpcom raptor dom 
-EXPORTS=nsSelectionRange.h nsSelectionPoint.h
+# EXPORTS=
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsCommentNode.obj		\
