@@ -1284,8 +1284,8 @@ int nsParseMailMessageState::FinalizeHeaders()
         if (ret == NS_OK)
         {
           m_newMsgHdr->SetRecipientsArray(names, addresses, numAddresses);
-          PR_FREEIF(addresses);
-          PR_FREEIF(names);
+          PR_Free(addresses);
+          PR_Free(names);
         }
         else {	// hmm, should we just use the original string?
           m_newMsgHdr->SetRecipients(recipient->value);
@@ -1301,8 +1301,8 @@ int nsParseMailMessageState::FinalizeHeaders()
         if (ret == NS_OK)
         {
           m_newMsgHdr->SetCCListArray(names, addresses, numAddresses);
-          PR_FREEIF(addresses);
-          PR_FREEIF(names);
+          PR_Free(addresses);
+          PR_Free(names);
         }
         else	// hmm, should we just use the original string?
           m_newMsgHdr->SetCcList(ccList->value);
@@ -1429,7 +1429,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 
   //### why is this stuff const?
   char *tmp = (char*) to.value;
-  PR_FREEIF(tmp);
+  PR_Free(tmp);
   tmp = (char*) cc.value;
   PR_Free(tmp);
 
@@ -1681,7 +1681,6 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 
 		msgHdr->GetFlags(&msgFlags);
 
-		PRBool isRead = (msgFlags & MSG_FLAG_READ);
 		switch (actionType)
 		{
 		case nsMsgFilterAction::Delete :
