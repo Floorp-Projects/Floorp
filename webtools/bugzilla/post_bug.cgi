@@ -39,7 +39,6 @@ use Bugzilla::User;
 sub sillyness {
     my $zz;
     $zz = $::buffer;
-    $zz = %::COOKIE;
     $zz = %::components;
     $zz = %::versions;
     $zz = @::legal_opsys;
@@ -469,8 +468,8 @@ if (UserInGroup("editbugs")) {
 # Email everyone the details of the new bug 
 $vars->{'mailrecipients'} = { 'cc' => \@cc,
                               'owner' => DBID_to_name($::FORM{'assigned_to'}),
-                              'reporter' => $::COOKIE{'Bugzilla_login'},
-                              'changer' => $::COOKIE{'Bugzilla_login'} };
+                              'reporter' => Bugzilla->user->login,
+                              'changer' => Bugzilla->user->login };
 
 if (defined $::FORM{'qa_contact'}) {
     $vars->{'mailrecipients'}->{'qa'} = DBID_to_name($::FORM{'qa_contact'});
@@ -493,8 +492,8 @@ foreach my $i (@all_deps) {
 }
 
 my @bug_list;
-if ($::COOKIE{"BUGLIST"}) {
-    @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
+if ($cgi->cookie("BUGLIST")) {
+    @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
 }
 $vars->{'bug_list'} = \@bug_list;
 
