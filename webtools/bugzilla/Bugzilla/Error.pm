@@ -28,6 +28,7 @@ use base qw(Exporter);
 
 use Bugzilla::Config;
 use Bugzilla::Util;
+use Date::Format;
 
 sub _throw_error {
     my ($name, $error, $vars, $unlock_tables) = @_;
@@ -37,6 +38,36 @@ sub _throw_error {
     $vars->{error} = $error;
 
     Bugzilla->dbh->do("UNLOCK TABLES") if $unlock_tables;
+
+    # If a writable data/errorlog exists, log error details there.
+    if (-w "data/errorlog") {
+        require Data::Dumper;
+        my $mesg = "";
+        for (1..75) { $mesg .= "-"; };
+        $mesg .= "\n[$$] " . time2str("%D %H:%M:%S ", time());
+        $mesg .= "$name $error ";
+        $mesg .= "$ENV{REMOTE_ADDR} " if $ENV{REMOTE_ADDR};
+        $mesg .= Bugzilla->user->login if Bugzilla->user;
+        $mesg .= "\n";
+        my %params = Bugzilla->cgi->Vars;
+        $Data::Dumper::Useqq = 1;
+        for my $param (sort keys %params) {
+            my $val = $params{$param};
+            # obscure passwords
+            $val = "*****" if $param =~ /password/i;
+            # limit line length
+            $val =~ s/^(.{512}).*$/$1\[CHOP\]/;
+            $mesg .= "[$$] " . Data::Dumper->Dump([$val],["param($param)"]);
+        }
+        for my $var (sort keys %ENV) {
+            my $val = $ENV{$var};
+            $val = "*****" if $val =~ /password|http_pass/i;
+            $mesg .= "[$$] " . Data::Dumper->Dump([$val],["env($var)"]);
+        }
+        open(ERRORLOGFID, ">>data/errorlog");
+        print ERRORLOGFID "$mesg\n";
+        close ERRORLOGFID;
+    }
 
     print Bugzilla->cgi->header();
 
