@@ -57,7 +57,7 @@ import java.util.Stack;
  * A dom viewer Frame
 
  *
- * @version $Id: DOMViewerFrame.java,v 1.5 2000/09/19 00:18:13 edburns%acm.org Exp $
+ * @version $Id: DOMViewerFrame.java,v 1.6 2001/04/03 00:42:47 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -176,7 +176,7 @@ public void handleEvent(Event e)
     if (null != relatedNode) {
         mouseOverNode = relatedNode;
     }
-    if (mouseEvent.getShiftKey() && 1 == mouseEvent.getButton()) {
+    if (mouseEvent.getShiftKey() && 0 == mouseEvent.getButton()) {
         if (null != mouseOverNode) {
             selectNodeInTree(mouseOverNode);
         }
