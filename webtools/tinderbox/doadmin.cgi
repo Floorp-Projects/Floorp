@@ -107,6 +107,7 @@ sub trim_logs {
 
 sub create_tree {
     $treename = $form{'treename'};
+    my $repository = $form{'repository'};
     $modulename = $form{'modulename'};
     $branchname = $form{'branchname'};
 
@@ -119,6 +120,9 @@ sub create_tree {
     open( F, ">$treename/treedata.pl" );
     print F "\$cvs_module='$modulename';\n";
     print F "\$cvs_branch='$branchname';\n";
+    if ($repository ne "") {
+        print F "\$cvs_root='$repository';\n";
+    }
     close( F );
 
     open( F, ">$treename/build.dat" );

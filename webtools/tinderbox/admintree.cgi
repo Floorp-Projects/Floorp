@@ -77,6 +77,9 @@ print "
 <TD><B>tinderbox tree name:</B></TD>
 <TD><INPUT NAME=treename VALUE=''></TD>
 </TR><TR>
+<TD><B>cvs repository:</B></TD>
+<TD><INPUT NAME=repository VALUE=''></TD>
+</TR><TR>
 <TD><B>cvs module name:</B></TD>
 <TD><INPUT NAME=modulename VALUE=''></TD>
 </TR><TR>
