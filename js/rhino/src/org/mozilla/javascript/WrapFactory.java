@@ -165,6 +165,10 @@ public class WrapFactory
      */
     public final void setJavaPrimitiveWrap(boolean value)
     {
+        Context cx = Context.getCurrentContext();
+        if (cx != null && cx.isSealed()) {
+            Context.onSealedMutation();
+        }
         javaPrimitiveWrap = value;
     }
 

@@ -1528,13 +1528,13 @@ public class ScriptRuntime {
 
         // Compile the reader with opt level of -1 to force interpreter
         // mode.
-        int oldOptLevel = cx.getOptimizationLevel();
-        cx.setOptimizationLevel(-1);
+        int savedLevel = cx.optimizationLevel;
+        cx.optimizationLevel = -1;
         Script script;
         try {
             script = cx.compileString((String)x, true, sourceName, 1, null);
         } finally {
-            cx.setOptimizationLevel(oldOptLevel);
+            cx.optimizationLevel = savedLevel;
         }
 
         // if the compile fails, an error has been reported by the

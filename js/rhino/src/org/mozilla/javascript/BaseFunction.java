@@ -431,15 +431,15 @@ public class BaseFunction extends IdScriptable implements Function {
 
         // Compile the function with opt level of -1 to force interpreter
         // mode.
-        int oldOptLevel = cx.getOptimizationLevel();
-        cx.setOptimizationLevel(-1);
+        int savedLevel = cx.optimizationLevel;
+        cx.optimizationLevel = -1;
         NativeFunction fn;
         try {
             fn = (NativeFunction) cx.compileFunction(global, source,
                                                      sourceName, 1,
                                                      null);
         }
-        finally { cx.setOptimizationLevel(oldOptLevel); }
+        finally { cx.optimizationLevel = savedLevel; }
 
         ScriptRuntime.setFunctionProtoAndParent(global, fn);
 
