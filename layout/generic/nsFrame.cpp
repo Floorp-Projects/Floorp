@@ -4434,9 +4434,6 @@ GetNextSiblingAcrossLines(nsIPresContext *aPresContext, nsIFrame *aFrame)
  * that was created for an element that was 'display: inline' because
  * that element contained a block.
  *
- * Also correct for the frame tree mangling that happens when we create
- * wrappers for :before/:after.
- *
  * Also skip anonymous scrolled-content parents; inherit directly from the
  * outer scroll frame.
  */
@@ -4448,24 +4445,6 @@ GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
   *aSpecialParent = parent;
   if (parent) {
     nsIAtom* parentPseudo = parent->GetStyleContext()->GetPseudoType();
-    if (parentPseudo == nsCSSAnonBoxes::mozGCWrapperBlock ||
-        parentPseudo == nsCSSAnonBoxes::mozGCWrapperInline) {
-      nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
-      if (pseudo == nsCSSPseudoElements::before) {
-        // Use the wrapped frame, which is after the |:before|.
-        parent = GetNextSiblingAcrossLines(aPresContext, aFrame);
-      } else if (pseudo == nsCSSPseudoElements::after) {
-        parent = parent->GetFirstInFlow()->GetFirstChild(nsnull);
-        // Now we have either the wrapped frame or the :before, but we
-        // want the wrapped frame.
-        if (parent->GetStyleContext()->GetPseudoType() ==
-            nsCSSPseudoElements::before)
-          parent = GetNextSiblingAcrossLines(aPresContext, parent);
-      } else {
-        parent = parent->GetParent();
-      }
-      parentPseudo = parent->GetStyleContext()->GetPseudoType();
-    }
 
     // if this frame itself is not scrolled-content, then skip any scrolled-content
     // parents since they're basically anonymous as far as the style system goes

@@ -166,10 +166,6 @@
   -moz-opacity: inherit;
 }
 
-*|*::-moz-gc-wrapper-block {
-  display: block !important;
-}
-
 /* Printing */
 
 @media print {

@@ -1509,13 +1509,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
 /*
  *
  * aFrame - the frame that should be the parent of the generated
- *   content.  For non-leaf frames, this is the frame for the
- *   corresponding content node.  For leaf frames (those with non-null
- *   |aWrapperFrame|), this is the parent.
- * aWrapperFrame - inout parameter, which may be null.  If non-null,
- *   then the generated content being created is for a leaf frame so
- *   that the generated content requires a wrapper frame, which we must
- *   create if it hasn't been already.
+ *   content.  This is the frame for the corresponding content node,
+ *   which must not be a leaf frame.
  */
 PRBool
 nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShell, 
@@ -1525,7 +1520,6 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
                                                    nsIContent*      aContent,
                                                    nsStyleContext*  aStyleContext,
                                                    nsIAtom*         aPseudoElement,
-                                                   nsIFrame**       aWrapperFrame,
                                                    nsIFrame**       aResult)
 {
   *aResult = nsnull; // initialize OUT parameter
@@ -1544,27 +1538,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
   if (pseudoStyleContext) {
     // |ProbePseudoStyleContext| checks the 'display' property and the
     // |ContentCount()| of the 'content' property for us.
-    if (aWrapperFrame) {
-      if (!*aWrapperFrame) {
-        nsIAtom *wrapperPseudo;
-        if (aStyleContext->GetStyleDisplay()->IsBlockLevel()) {
-          NS_NewBlockFrame(aPresShell, aWrapperFrame);
-          wrapperPseudo = nsCSSAnonBoxes::mozGCWrapperBlock;
-        } else {
-          NS_NewInlineFrame(aPresShell, aWrapperFrame);
-          wrapperPseudo = nsCSSAnonBoxes::mozGCWrapperInline;
-        }        
-        nsStyleContext* parentSC = aStyleContext->GetParent(); 
-        nsRefPtr<nsStyleContext> wrapperSC;
-        wrapperSC = styleSet->ResolvePseudoStyleFor(nsnull,
-                                                    wrapperPseudo, parentSC);
-        // |aFrame| is already the correct parent.
-        InitAndRestoreFrame(aPresContext, aState, aContent, aFrame,
-                            wrapperSC, nsnull, *aWrapperFrame);
-      }
-      // Use the wrapper as the parent.
-      aFrame = *aWrapperFrame;
-    }
+
     // Create a block box or an inline box depending on the value of
     // the 'display' property
     nsIFrame*     containerFrame;
@@ -4853,58 +4827,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     aFrameItems.AddChild(placeholderFrame);
 
   } else {
-    // Handle :before/:after for leaf elements.  For now (XXX bug), just
-    // don't create any generated content if the element in question is
-    // floating or positioned, since that's *hard* (TM).  It requires the
-    // display data in the style context go to the wrapper and the rest go
-    // to the frame inside.
-    // See also bug 141289.
-    if (!processChildren) {
-      nsIFrame *wrapperFrame = nsnull, *beforeFrame, *afterFrame;
-      if (!CreateGeneratedContentFrame(aPresShell, aPresContext,
-                                       aState, aParentFrame, aContent,
-                                       aStyleContext,
-                                       nsCSSPseudoElements::before,
-                                       &wrapperFrame, &beforeFrame)) {
-        beforeFrame = nsnull;
-      }
-      if (!CreateGeneratedContentFrame(aPresShell, aPresContext,
-                                      aState, aParentFrame, aContent,
-                                      aStyleContext,
-                                      nsCSSPseudoElements::after,
-                                      &wrapperFrame, &afterFrame)) {
-        afterFrame = nsnull;
-      }
-      NS_ASSERTION(!(beforeFrame || afterFrame) == !wrapperFrame,
-                   "should get wrapper iff GC");
-      if (wrapperFrame) {
-        // OK, we have generated content for a leaf.
-        // This means |CreateGeneratedContentFrame| created a wrapper
-        // frame to hold the generated content and the leaf frame.  We now
-        // need to link everything together.
-
-        NS_ASSERTION(!newFrame->GetNextSibling(),
-                     "must not have sibling");
-        NS_ASSERTION(!beforeFrame || !beforeFrame->GetNextSibling(),
-                     "must not have sibling");
-        NS_ASSERTION(!afterFrame || !afterFrame->GetNextSibling(),
-                     "must not have sibling");
-
-        nsIFrame *firstChild = newFrame;
-        if (beforeFrame) {
-          beforeFrame->SetNextSibling(newFrame);
-          firstChild = beforeFrame;
-        }
-        newFrame->SetNextSibling(afterFrame);
-
-        newFrame->SetParent(wrapperFrame);
-        wrapperFrame->SetInitialChildList(aPresContext, nsnull, firstChild);
-
-        // From now on, pretend the wrapper frame is the real frame.
-        newFrame = wrapperFrame;
-      }
-    }
-
     // Add the newly constructed frame to the flow
     aFrameItems.AddChild(newFrame);
   }
@@ -8437,7 +8359,7 @@ nsCSSFrameConstructor::AddDummyFrameToSelect(nsIPresContext*  aPresContext,
                                         aParentFrame, aContainer,
                                         styleContext,
                                         nsCSSAnonBoxes::dummyOption,
-                                        nsnull, &generatedFrame)) {
+                                        &generatedFrame)) {
           // Add the generated frame to the child list
           if (aChildItems) {
             aChildItems->AddChild(generatedFrame);
@@ -11466,7 +11388,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSPseudoElements::before,
-                                    nsnull, &generatedFrame)) {
+                                    &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -11508,7 +11430,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSPseudoElements::after,
-                                    nsnull, &generatedFrame)) {
+                                    &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -12810,7 +12732,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
     styleContext = aFrame->GetStyleContext();
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSPseudoElements::before,
-                                    nsnull, &generatedFrame)) {
+                                    &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -12857,7 +12779,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSPseudoElements::after,
-                                    nsnull, &generatedFrame)) {
+                                    &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }

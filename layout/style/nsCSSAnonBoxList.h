@@ -54,8 +54,6 @@ CSS_ANON_BOX(mozNonElement, ":-moz-non-element")
 
 CSS_ANON_BOX(mozAnonymousBlock, ":-moz-anonymous-block")
 CSS_ANON_BOX(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")
-CSS_ANON_BOX(mozGCWrapperBlock, ":-moz-gc-wrapper-block")
-CSS_ANON_BOX(mozGCWrapperInline, ":-moz-gc-wrapper-inline")
 
 CSS_ANON_BOX(mozFirstLineFixup, ":-moz-first-line-fixup")
 CSS_ANON_BOX(mozLineFrame, ":-moz-line-frame")
