@@ -228,21 +228,21 @@ class basic_nsAWritableString
 
     public:
 
-      WritingIterator
+      basic_nsAWritableString<CharT>::WritingIterator
       BeginWriting( PRUint32 aOffset = 0 )
         {
           WritableFragment fragment;
           CharT* startPos = GetWritableFragment(fragment, kFragmentAt, aOffset);
-          return WritingIterator(fragment, startPos, *this);
+          return basic_nsAWritableString<CharT>::WritingIterator(fragment, startPos, *this);
         }
 
 
-      WritingIterator
+      basic_nsAWritableString<CharT>::WritingIterator
       EndWriting( PRUint32 aOffset = 0 )
         {
           WritableFragment fragment;
           CharT* startPos = GetWritableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
-          return WritingIterator(fragment, startPos, *this);
+          return basic_nsAWritableString<CharT>::WritingIterator(fragment, startPos, *this);
         }
 
 
