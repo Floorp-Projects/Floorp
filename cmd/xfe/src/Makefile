@@ -262,7 +262,7 @@ CPPSRCS		+= \
 endif
 endif
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 CPPSRCS		+= \
 		  EditorDrop.cpp \
 		  EditorFrame.cpp \
