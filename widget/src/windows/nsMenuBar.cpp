@@ -40,7 +40,7 @@ NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
 // nsMenuListener interface
 //
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuSelected(const nsGUIEvent & aMenuEvent)
+nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
 	return nsEventStatus_eIgnore;
 }
