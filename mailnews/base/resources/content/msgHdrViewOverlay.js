@@ -57,7 +57,8 @@ var gSaveLabel;
 var gSaveLabelAccesskey;
 var gMessengerBundle;
 var gProfileDirURL;
-var gIconFileURL;
+var gIOService;
+var gFileHandler;
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
@@ -698,6 +699,8 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
 
 function setFromBuddyIcon(email)
 {
+   //dump("XXX email = " + email + "\n");
+
    var fromBuddyIcon = document.getElementById("fromBuddyIcon");
 
    try {
@@ -707,13 +710,13 @@ function setFromBuddyIcon(email)
      var card = abAddressCollector.getCardFromAttribute("PrimaryEmail", email);
 
      if (myScreenName && card && card.aimScreenName) {
-       if (!gProfileDirURL) {
-         // lazily create these file urls, and keep them around
-         gIconFileURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
-         gProfileDirURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
-
+       if (!gIOService) {
+         // lazily create these globals
+         gIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+         gFileHandler = gIOService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+         
          var profile = Components.classes["@mozilla.org/profile/manager;1"].getService(Components.interfaces.nsIProfileInternal);
-         gProfileDirURL.file = profile.getProfileDir(profile.currentProfile);
+         gProfileDirURL = gIOService.newFileURI(profile.getProfileDir(profile.currentProfile));
        }
 
        // if we did have a buddy icon on disk for this screenname, this would be the file url spec for it
@@ -721,8 +724,8 @@ function setFromBuddyIcon(email)
 
        // check if the file exists
        // is this a perf hit?  (how expensive is stat()?)
-       gIconFileURL.spec = iconURLStr;
-       if (gIconFileURL.file.exists()) {
+       var iconFile = gFileHandler.getFileFromURLSpec(iconURLStr);
+       if (iconFile.exists()) {
          fromBuddyIcon.setAttribute("src", iconURLStr);
          return;
        }
@@ -730,6 +733,7 @@ function setFromBuddyIcon(email)
    }
    catch (ex) {
      // can get here if no screenname
+     //dump("ex = " + ex + "\n");
    }
    fromBuddyIcon.setAttribute("src", "");
 }
