@@ -780,31 +780,33 @@ function DetermineHTMLAction()
         //Well, before we ask, see if we can figure out what to do for ourselves
         
         var noHtmlRecipients;
-        var newsgroups;
+        var noHtmlnewsgroups;
 
         //Check the address book for the HTML property for each recipient
         try {
             noHtmlRecipients = msgCompose.GetNoHtmlRecipients(null);
         } catch(ex)
         {
-            noHtmlRecipients = "";
+            var msgCompFields = msgCompose.compFields;
+            noHtmlRecipients = msgCompFields.GetTo() + "," + msgCompFields.GetCc() + "," + msgCompFields.GetBcc();
         }
-        
+        dump("DetermineHTMLAction: noHtmlRecipients are " + noHtmlRecipients + "\n");
+
         //Check newsgroups now...
         try {
-            newsgroups = msgCompose.GetNoHtmlNewsgroups(null);
+            noHtmlnewsgroups = msgCompose.GetNoHtmlNewsgroups(null);
         } catch(ex)
         {
-           newsgroups = msgCompose.compFields.GetNewsgroups();
+           noHtmlnewsgroups = msgCompose.compFields.GetNewsgroups();
         }
         
-        if (noHtmlRecipients != "" || newsgroups != "")
+        if (noHtmlRecipients != "" || noHtmlnewsgroups != "")
         {
             
             //Do we really need to send in HTML?
             //FIX ME: need to ask editor is the body containg any formatting or non plaint text elements.
             
-            if (newsgroups == "")
+            if (noHtmlnewsgroups == "")
             {
                 //See if a preference has been set to tell us what to do. Note that we do not honor that
                 //preference for newsgroups. Only for e-mail addresses.

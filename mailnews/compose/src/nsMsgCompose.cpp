@@ -2124,15 +2124,24 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
     }
 
     //now, build the result
-    noHTMLArray->GetCount(&nbrRecipients);
     recipientStr = "";
+    noHTMLArray->GetCount(&nbrRecipients);
     for (i = 0; i < nbrRecipients; i ++)
     {
-        if (i > 0)
+        if (! recipientStr.IsEmpty())
             recipientStr += ',';
         noHTMLArray->StringAt(i, getter_Copies(emailAddr));
         recipientStr += emailAddr;
-    }     
+    }
+    //Remaining recipients which do not have an entry in the AB are considered as non HTML compliant
+    array->GetCount(&nbrRecipients);
+    for (i = 0; i < nbrRecipients; i ++)
+    {
+        if (! recipientStr.IsEmpty())
+            recipientStr += ',';
+        array->StringAt(i, getter_Copies(emailAddr));
+        recipientStr += emailAddr;
+    }
     *_retval = recipientStr.ToNewUnicode();
     
     return NS_OK;
