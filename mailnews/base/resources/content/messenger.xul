@@ -300,7 +300,7 @@ Rights Reserved.
       </menu>
       <menuitem value="&editMsgAsNewCmd.label;" onaction="MsgEditMessageAsNew();"/>
       <menuseparator/>
-      <menu value="&moveMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menu value="&moveMsgMenu.label;" id="moveMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <menupopup/>
 		<template> 
           <rule iscontainer="true" isempty="false">
@@ -320,7 +320,7 @@ Rights Reserved.
           </rule>
         </template>
       </menu>
-      <menu value="&copyMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menu value="&copyMsgMenu.label;" id="copyMenu" datasources="rdf:null" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <menupopup/>
 		<template>
           <rule iscontainer="true" isempty="false">

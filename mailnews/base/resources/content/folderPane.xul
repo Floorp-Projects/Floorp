@@ -25,15 +25,15 @@
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="top.OnLoadFolderPane(document.getElementById('folderTree'))">
 
 <html:div flex="100%">
 <tree style="height: 100%"
-      rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+      rdf:datasources="rdf:null"
       id="folderTree"
       rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
-      onclick="return top.ChangeFolderByDOMNode(event.target.parentNode.parentNode)"
-      ref="msgaccounts:/">
+      onclick="return top.ChangeFolderByDOMNode(event.target.parentNode.parentNode)">
 
   <template>
   	<rule>

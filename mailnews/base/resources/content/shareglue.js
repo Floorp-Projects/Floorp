@@ -45,9 +45,11 @@ function OnLoadMessenger()
 			startpage = pref.CopyCharPref("mailnews.start_page.url");
 		}
 	}
-	messenger.SetWindow(window);
+	messenger.SetWindow(window, statusFeedback);
 	dump("start message pane with: " + startpage + "\n");
 	window.frames["messagepane"].location = startpage;
+
+	AddDataSources();
 
 	//Load StartFolder
 	if(pref)

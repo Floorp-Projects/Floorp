@@ -27,10 +27,11 @@ Rights Reserved.
 <window
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="top.OnLoadThreadPane(document.getElementById('threadTree'))">
 
 <html:div flex="100%">
-<tree style="height: 100%" datasources="rdf:mailnewsfolders rdf:mailnewsmessages" id="threadTree"
+<tree style="height: 100%" datasources="rdf:null" id="threadTree"
 	  		  onchange="top.ThreadPaneSelectionChange()"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild">
 
@@ -80,7 +81,7 @@ Rights Reserved.
 		<treecell onclick="return top.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">&subjectColumn.label;</treecell>
 		<treecell onclick="return top.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');">&senderColumn.label;</treecell>
 		<treecell> 
-				<html:img style="height:9px" src="&readcol.img;"/>
+				<html:img src="&readcol.img;"/>
 		</treecell>
 		<treecell onclick="return top.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');">&dateColumn.label;</treecell>
 		<treecell onclick="return top.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');">&statusColumn.label;</treecell>

@@ -177,10 +177,12 @@ function MsgViewAllMsgs()
 {
 	dump("MsgViewAllMsgs");
 
-    var tree = GetThreadTree(); 
-
-	messenger.ViewAllMessages(tree.database);
-
+	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
+	if(view)
+	{
+		view.SetShowAll();
+		view.SetShowThreads(false);
+	}
 	RefreshThreadTreeView();
 }
 
@@ -188,9 +190,12 @@ function MsgViewUnreadMsg()
 {
 	dump("MsgViewUnreadMsgs");
 
-    var tree = GetThreadTree(); 
-
-	messenger.ViewUnreadMessages(tree.database);
+	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
+	if(view)
+	{
+		view.SetShowUnread();
+		view.SetShowThreads(false);
+	}
 
 	RefreshThreadTreeView();
 }
@@ -199,9 +204,12 @@ function MsgViewAllThreadMsgs()
 {
 	dump("MsgViewAllMessagesThreaded");
 
-    var tree = GetThreadTree(); 
-
-	messenger.ViewAllThreadMessages(tree.database);
+	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
+	if(view)
+	{
+		view.SetShowAll();
+		view.SetShowThreads(true);
+	}
 	RefreshThreadTreeView();
 }
 
