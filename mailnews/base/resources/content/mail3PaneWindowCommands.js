@@ -171,6 +171,7 @@ var ThreadPaneController =
                 // if in threaded mode, the view will expand all before selecting all
                 gDBView.doCommand(nsMsgViewCommandType.selectAll)
                 if (gDBView.numSelected != 1) {
+                    setTitleFromFolder(gDBView.msgFolder,null);
                     ClearMessagePane();
                 }
                 break;
@@ -1028,6 +1029,24 @@ function GetFolderNameFromUri(uri, outliner)
 /* XXX hiding the search bar while it is focus kills the keyboard so we focus the thread pane */
 function SearchBarToggled()
 {
+  var searchBox = document.getElementById('searchBox');
+  if (searchBox)
+  {
+    var attribValue = searchBox.getAttribute("hidden") ;
+    if (attribValue == "true")
+    {
+      /*come out of quick search view */
+      if (gDBView && gDBView.isSearchView)
+        onClearSearch();
+    }
+    else
+    {
+      /*we have to initialize searchInput because we cannot do it when searchBox is hidden */
+      var searchInput = document.getElementById('searchInput');
+      searchInput.value="";
+    }
+  }
+
   for (var currentNode = top.document.commandDispatcher.focusedElement; currentNode; currentNode = currentNode.parentNode) {
     if (currentNode.getAttribute("hidden") == "true") {
       SetFocusThreadPane();
