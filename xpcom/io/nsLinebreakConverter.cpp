@@ -471,44 +471,22 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
   // nothing to do
   if (ioString.Length() == 0) return NS_OK;
   
-  // we can't go messing with data we don't own
-  if (!ioString.mOwnsBuffer) return NS_ERROR_UNEXPECTED;
-  
   nsresult rv;
   
-  if (ioString.mCharSize == eTwoByte)
-  {
-    PRUnichar  *stringBuf = ioString.mUStr;
-    PRInt32    newLen, theLen = ioString.mLength + 1;
+  // remember the old buffer in case
+  // we blow it away later
+  nsString::char_iterator stringBuf;
+  ioString.BeginWriting(stringBuf);
+  
+  PRInt32    newLen;
     
-    rv = ConvertUnicharLineBreaksInSitu(&stringBuf, aSrcBreaks, aDestBreaks, theLen, &newLen);
-    if (NS_FAILED(rv)) return rv;
-    
-    if (stringBuf != ioString.mUStr)  // we reallocated
-    {
-      // this is pretty evil. Is there a better way?
-      nsMemory::Free(ioString.mUStr);
-      ioString.mUStr = stringBuf;
-      ioString.mLength = newLen - 1;
-      ioString.mCapacity = newLen;
-    }
-  }
-  else
-  {
-    char     *stringBuf = ioString.mStr;
-    PRInt32  newLen, theLen = ioString.mLength + 1;
-    
-    rv = ConvertLineBreaksInSitu(&stringBuf, aSrcBreaks, aDestBreaks, theLen, &newLen);
-    if (NS_FAILED(rv)) return rv;
-    
-    if (stringBuf != ioString.mStr)  // we reallocated
-    {
-      nsMemory::Free(ioString.mStr);
-      ioString.mStr = stringBuf;
-      ioString.mLength = newLen - 1;
-      ioString.mCapacity = newLen;
-    }
-  }
+  rv = ConvertUnicharLineBreaksInSitu(&stringBuf,
+                                      aSrcBreaks, aDestBreaks,
+                                      ioString.Length() + 1, &newLen);
+  if (NS_FAILED(rv)) return rv;
+
+  if (stringBuf != ioString.get())
+    ioString.Adopt(stringBuf);
   
   return NS_OK;
 }
