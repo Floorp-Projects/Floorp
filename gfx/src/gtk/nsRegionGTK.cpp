@@ -28,7 +28,7 @@ nsRegionGTK::nsRegionGTK()
 {
   NS_INIT_REFCNT();
   
-  mRegion = ::gdk_region_new();
+  mRegion = nsnull;
   mRegionType = eRegionComplexity_empty;
 }
 
@@ -39,18 +39,16 @@ nsRegionGTK::~nsRegionGTK()
   mRegion = nsnull;
 }
 
-
 NS_IMPL_QUERY_INTERFACE(nsRegionGTK, kRegionIID)
 NS_IMPL_ADDREF(nsRegionGTK)
 NS_IMPL_RELEASE(nsRegionGTK)
 
 nsresult nsRegionGTK::Init(void)
 {
-  if (mRegion)
-    ::gdk_region_destroy(mRegion);
-  mRegion = ::gdk_region_new();  //correct?
+  //NS_ADDREF_THIS();
+  // should this be here?
+  mRegion = ::gdk_region_new();
   mRegionType = eRegionComplexity_empty;
-  
   return NS_OK;
 }
 
@@ -76,7 +74,6 @@ void nsRegionGTK::SetTo(const nsRegionGTK *aRegion)
 
 void nsRegionGTK::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-
   SetRegionEmpty();
 
   GdkRectangle grect;
@@ -105,10 +102,9 @@ void nsRegionGTK::Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHei
   GdkRegion *tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
 
   GdkRegion *nRegion = ::gdk_regions_intersect(mRegion, tRegion);
-   ::gdk_region_destroy(tRegion);
-   ::gdk_region_destroy(mRegion);
-   mRegion = nRegion;
-
+  ::gdk_region_destroy(tRegion);
+  ::gdk_region_destroy(mRegion);
+  mRegion = nRegion;
 }
 
 void nsRegionGTK::Union(const nsIRegion &aRegion)
@@ -122,7 +118,6 @@ void nsRegionGTK::Union(const nsIRegion &aRegion)
 
 void nsRegionGTK::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-
   GdkRegion *tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
 
   GdkRegion *nRegion = ::gdk_regions_union(mRegion, tRegion);
@@ -185,10 +180,10 @@ PRBool nsRegionGTK::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32
   GdkOverlapType containment;
   GdkRectangle rect;
    
-   rect.x=aX;
-   rect.y = aY;
-   rect.width = aWidth;
-   rect.height = aHeight;
+  rect.x = aX;
+  rect.y = aY;
+  rect.width = aWidth;
+  rect.height = aHeight;
    
   containment = ::gdk_region_rect_in(mRegion, &rect);
 
@@ -282,8 +277,10 @@ NS_IMETHODIMP nsRegionGTK::GetRegionComplexity(nsRegionComplexity &aComplexity) 
 
 void nsRegionGTK::SetRegionEmpty()
 {
-  ::gdk_region_destroy(mRegion);
-  mRegion = ::gdk_region_new();
+  if (!IsEmpty()) {
+    ::gdk_region_destroy(mRegion);
+    mRegion = ::gdk_region_new();
+  }
 }
 
 GdkRegion *nsRegionGTK::CreateRectRegion(PRInt32 aX,
