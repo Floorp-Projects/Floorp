@@ -28,77 +28,78 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetMacModule
 XPIDL_MODULE	= widget_mac
-REQUIRES	= xpcom \
-		  gfx \
-		  string \
-		  uconv \
-		  dom \
-		  webshell \
-		  docshell \
-		  plugin \
-		  content \
-		  layout \
-		  view \
-		  xul \
-		  necko \
+REQUIRES  = xpcom \
+          gfx \
+          string \
+          uconv \
+          dom \
+          webshell \
+          docshell \
+          plugin \
+          content \
+          layout \
+          view \
+          xul \
+          necko \
           nkcache \
-		  locale \
+          locale \
           pref \
           appshell \
           intl \
           mimetype \
-		  unicharutil \
-		  $(NULL)
+          unicharutil \
+          exthandler \
+          $(NULL)
 
 GFX_LCPPSRCS = \
-		nsRepeater.cpp \
-		nsRegionMac.cpp \
-		nsWatchTask.cpp \
-		$(NULL)
+        nsRepeater.cpp \
+        nsRegionMac.cpp \
+        nsWatchTask.cpp \
+        $(NULL)
 
 CPPSRCS         = nsAppShell.cpp \
-		nsBidiKeyboard.cpp \
-		nsButton.cpp \
-		nsChildWindow.cpp \
-		nsClipboard.cpp \
-		nsDeleteObserver.cpp \
-		nsDragHelperService.cpp \
-		nsDragService.cpp \
-		nsFilePicker.cpp \
-		nsLabel.cpp \
-		nsLookAndFeel.cpp \
-		nsMacControl.cpp \
-		nsMacEventHandler.cpp \
-		nsMacMessagePump.cpp \
-		nsMacResources.cpp \
-		nsMacTSMMessagePump.cpp \
-		nsMacWindow.cpp \
-		nsMenuX.cpp \
-		nsMenuBarX.cpp \
-		nsMenuItemX.cpp \
-		nsMimeMapper.cpp \
-		nsScrollbar.cpp \
-		nsNativeScrollbar.cpp \
-		nsSound.cpp \
-		nsTextWidget.cpp \
-		nsTSMStrategy.cpp \
-		nsToolkit.cpp \
-		nsWidgetFactory.cpp \
-		nsWidgetSupport.cpp \
-		nsWindow.cpp \
-		nsMacNativeUnicodeConverter.cpp \
-		nsStylClipboardUtils.cpp \
-		$(GFX_LCPPSRCS) \
-		$(NULL)
+        nsBidiKeyboard.cpp \
+        nsButton.cpp \
+        nsChildWindow.cpp \
+        nsClipboard.cpp \
+        nsDeleteObserver.cpp \
+        nsDragHelperService.cpp \
+        nsDragService.cpp \
+        nsFilePicker.cpp \
+        nsLabel.cpp \
+        nsLookAndFeel.cpp \
+        nsMacControl.cpp \
+        nsMacEventHandler.cpp \
+        nsMacMessagePump.cpp \
+        nsMacResources.cpp \
+        nsMacTSMMessagePump.cpp \
+        nsMacWindow.cpp \
+        nsMenuX.cpp \
+        nsMenuBarX.cpp \
+        nsMenuItemX.cpp \
+        nsMimeMapper.cpp \
+        nsScrollbar.cpp \
+        nsNativeScrollbar.cpp \
+        nsSound.cpp \
+        nsTextWidget.cpp \
+        nsTSMStrategy.cpp \
+        nsToolkit.cpp \
+        nsWidgetFactory.cpp \
+        nsWidgetSupport.cpp \
+        nsWindow.cpp \
+        nsMacNativeUnicodeConverter.cpp \
+        nsStylClipboardUtils.cpp \
+        $(GFX_LCPPSRCS) \
+        $(NULL)
 
-XPIDLSRCS	+= \
-		nsIChangeManager.idl \
-		nsIMacTextInputEventSink.idl \
-		nsIMenuCommandDispatcher.idl \
-		nsPIWidgetMac.idl \
-		nsPIEventSinkStandalone.idl \
-		nsIDragHelperService.idl \
-		$(NULL)
+XPIDLSRCS  += \
+        nsIChangeManager.idl \
+        nsIMacTextInputEventSink.idl \
+        nsIMenuCommandDispatcher.idl \
+        nsPIWidgetMac.idl \
+        nsPIEventSinkStandalone.idl \
+        nsIDragHelperService.idl \
+        $(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
