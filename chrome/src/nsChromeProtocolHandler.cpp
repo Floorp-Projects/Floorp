@@ -77,6 +77,9 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
+// This comes from nsChromeRegistry.cpp
+extern nsIChromeRegistry* gChromeRegistry;
+
 //----------------------------------------------------------------------
 //
 //  A channel that's used for loading cached chrome documents. Since a
@@ -566,7 +569,11 @@ nsChromeProtocolHandler::NewURI(const nsACString &aSpec,
                                 nsIURI *aBaseURI,
                                 nsIURI **result)
 {
+    NS_PRECONDITION(result, "Null out param");
+    
     nsresult rv;
+
+    *result = nsnull;
 
     // Chrome: URLs (currently) have no additional structure beyond that provided
     // by standard URLs, so there is no "outer" given to CreateInstance
@@ -579,24 +586,66 @@ nsChromeProtocolHandler::NewURI(const nsACString &aSpec,
     if (NS_FAILED(rv))
         return rv;
 
-    return CallQueryInterface(url, result);
+    nsCOMPtr<nsIURI> uri(do_QueryInterface(url, &rv));
+    if (NS_FAILED(rv))
+        return rv;
+    
+    // Canonify the "chrome:" URL; e.g., so that we collapse
+    // "chrome://navigator/content/" and "chrome://navigator/content"
+    // and "chrome://navigator/content/navigator.xul".
+
+    // Try the global cache first.
+    nsCOMPtr<nsIChromeRegistry> reg = gChromeRegistry;
+
+    // If that fails, the service has not been instantiated it; let's
+    // do that now.
+    if (!reg) {
+        reg = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    NS_ASSERTION(reg, "Must have a chrome registry by now");
+    
+    rv = reg->Canonify(uri);
+    if (NS_FAILED(rv))
+        return rv;
+
+    *result = uri;
+    NS_ADDREF(*result);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
                                     nsIChannel* *aResult)
 {
+    NS_ENSURE_ARG_POINTER(aURI);
+    NS_PRECONDITION(aResult, "Null out param");
+    
+#ifdef DEBUG
+    // Check that the uri we got is already canonified
+    nsresult debug_rv;
+    nsCOMPtr<nsIChromeRegistry> debugReg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &debug_rv));
+    if (NS_SUCCEEDED(debug_rv)) {
+        nsCOMPtr<nsIURI> debugClone;
+        debug_rv = aURI->Clone(getter_AddRefs(debugClone));
+        if (NS_SUCCEEDED(debug_rv)) {
+            debug_rv = debugReg->Canonify(debugClone);
+            if (NS_SUCCEEDED(debug_rv)) {
+                PRBool same;
+                debug_rv = aURI->Equals(debugClone, &same);
+                if (NS_SUCCEEDED(debug_rv)) {
+                    NS_ASSERTION(same, "Non-canonified chrome uri passed to nsChromeProtocolHandler::NewChannel!");
+                }
+            }
+                
+        }
+    }
+#endif
+
     nsresult rv;
     nsCOMPtr<nsIChannel> result;
-
-    // Canonify the "chrome:" URL; e.g., so that we collapse
-    // "chrome://navigator/content/navigator.xul" and "chrome://navigator/content"
-    // and "chrome://navigator/content/navigator.xul".
-    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = reg->Canonify(aURI);
-    if (NS_FAILED(rv)) return rv;
 
     // Check the prototype cache to see if we've already got the
     // document in the cache.
@@ -635,6 +684,12 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         //nsXPIDLCString oldSpec;
         //aURI->GetSpec(getter_Copies(oldSpec));
         //printf("*************************** %s\n", (const char*)oldSpec);
+
+        nsCOMPtr<nsIChromeRegistry> reg = gChromeRegistry;
+        if (!reg) {
+            reg = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) return rv;
+        }
 
         nsCAutoString spec;
         rv = reg->ConvertChromeURL(aURI, spec);
