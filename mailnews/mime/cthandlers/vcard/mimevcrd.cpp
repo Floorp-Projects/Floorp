@@ -225,7 +225,7 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
         res = NS_ERROR_OUT_OF_MEMORY;
       }
       else {
-        res = decoder->Convert(unichars, 0, &unicharLength, inBuffer, 0, &srcLen);
+        res = decoder->Convert(inBuffer, &srcLen, unichars, &unicharLength);
 
         // convert from unicode
         nsIUnicodeEncoder* encoder = nsnull;

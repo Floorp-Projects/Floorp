@@ -3811,7 +3811,7 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 				}
 				else 
 				{
-					res = decoder->Convert(unichars, 0, &unicharLength, aSourceString, 0, &srcLen);
+					res = decoder->Convert(aSourceString, &srcLen, unichars, &unicharLength);
 					unichars[unicharLength] = 0;
 				}
 				NS_IF_RELEASE(decoder);
@@ -3886,7 +3886,7 @@ PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceSt
 			}
 			else 
 			{
-				res = decoder->Convert(unichars, 0, &unicharLength, aSourceString, 0, &srcLen);
+				res = decoder->Convert(aSourceString, &srcLen, unichars, &unicharLength);
 				unichars[unicharLength] = 0;
 			}
 			NS_IF_RELEASE(decoder);

@@ -1218,7 +1218,7 @@ static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuff
       // allocale an output buffer
       unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
       if (unichars != nsnull) {
-        res = decoder->Convert(unichars, 0, &unicharLength, aBuffer, 0, &srcLen);
+        res = decoder->Convert(aBuffer, &srcLen, unichars, &unicharLength);
         *uniBuffer = (void *) unichars;
         *uniLength = unicharLength;
       }
@@ -1473,7 +1473,7 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
   }
   else {
     // convert to unicode
-    res = decoder->Convert(unichars, 0, &unicharLength, inBuffer, 0, &srcLen);
+    res = decoder->Convert(inBuffer, &srcLen, unichars, &unicharLength);
     if (NS_SUCCEEDED(res)) {
       res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
       // allocale an output buffer
