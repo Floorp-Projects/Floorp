@@ -50,6 +50,10 @@
 #include "nsDependentString.h"
 #include "nsLiteralString.h"
 #include "nsDeviceContextMac.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsIStringBundle.h"
+#include "nsHashtable.h"
 #include <ATSTypes.h>
 #include <SFNTTypes.h>
 #include <SFNTLayoutTypes.h>
@@ -59,7 +63,6 @@
 #ifdef TRACK_INIT_PERFORMANCE
 #include <DriverServices.h>
 #endif
-
 
 class nsFontCleanupObserver : public nsIObserver {
 public:
@@ -76,12 +79,18 @@ NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *
 {
   if (! nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID,aTopic))
   {
-    nsMacUnicodeFontInfo::FreeGlobal();
+    nsMacUnicodeFontInfo::FreeGlobals();
   }
   return NS_OK;
 }
 
-static nsFontCleanupObserver *gFontCleanupObserver;
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
+static nsIStringBundle* gFontEncodingProperties = nsnull;
+static nsICharsetConverterManager2* gCharsetManager = nsnull;
+static nsObjectHashtable* gFontMaps = nsnull;
+static nsFontCleanupObserver *gFontCleanupObserver = nsnull;
+static PRUint16* gCCMap = nsnull;
 
 
 #ifdef IS_BIG_ENDIAN 
@@ -467,7 +476,142 @@ static PRUint16* InitGlobalCCMap()
   return map;
 }
 
-static PRUint16* gCCMap = nsnull;
+static nsresult
+InitFontEncodingProperties(void)
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = bundleService->CreateBundle("resource:/res/fonts/fontEncoding.properties",
+                                   &gFontEncodingProperties);
+  return rv;
+}
+
+// Helper to determine if a font has a private encoding that we know something about
+static nsresult
+GetEncoding(const nsString& aFontName, PRUnichar** aValue)
+{
+  // see if we should init the property
+  if (! gFontEncodingProperties) {
+    // but bail out for common fonts used at startup...
+    nsCAutoString fontName;
+    fontName.AssignWithConversion(aFontName);
+    // this is "MS P Gothic" in Japanese
+    static const char* mspgothic =
+      "\x82\x6c\x82\x72 \x82\x6f\x83\x53\x83\x56\x83\x62\x83\x4e";
+    if ( (!strcmp(fontName.get(), "Tahoma" )) ||
+         (!strcmp(fontName.get(), "Arial" )) ||
+         (!strcmp(fontName.get(), "Times New Roman" )) ||
+         (!strcmp(fontName.get(), "Courier New" )) ||
+         (!strcmp(fontName.get(), mspgothic )) )
+      return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
+
+    // init the property now
+    rv = InitFontEncodingProperties();
+    if NS_FAILED(rv)
+      return rv;
+  }
+
+  nsAutoString name;
+  name.Assign(NS_LITERAL_STRING("encoding."));
+  name.Append(aFontName);
+  name.Append(NS_LITERAL_STRING(".ttf"));
+  name.StripWhitespace();
+  ToLowerCase(name);
+
+  return gFontEncodingProperties->GetStringFromName(name.get(), aValue);
+}
+
+// This function uses the charset converter manager (CCM) to get a pointer on 
+// the converter for the font whose name is given. The CCM caches the converter.
+// The caller holds a reference and should take care of the release.
+static nsresult
+GetConverter(const nsString& aFontName, nsIUnicodeEncoder** aConverter)
+{
+  *aConverter = nsnull;
+
+  nsXPIDLString value;
+  nsresult rv = GetEncoding(aFontName, getter_Copies(value));
+  if (NS_FAILED(rv)) return rv;
+  
+  if (!gCharsetManager)
+  {
+    rv = nsServiceManager::GetService(kCharsetConverterManagerCID,
+            NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharsetManager);
+    if(NS_FAILED(rv)) return rv;
+  }
+  
+  nsCOMPtr<nsIAtom> charset;
+  rv = gCharsetManager->GetCharsetAtom(value.get(), getter_AddRefs(charset));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = gCharsetManager->GetUnicodeEncoder(charset, aConverter);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIUnicodeEncoder* tmp = *aConverter;
+  return tmp->SetOutputErrorBehavior(tmp->kOnError_Replace, nsnull, '?');
+}
+
+// This function uses the charset converter manager to fill the map for the
+// font whose name is given
+static PRUint16*
+GetCCMapThroughConverter(nsIUnicodeEncoder *converter)
+{
+  // see if we know something about the converter of this font 
+  nsCOMPtr<nsICharRepresentable> mapper(do_QueryInterface(converter));
+  return (mapper ? MapperToCCMap(mapper) : nsnull);
+}
+
+static PRBool PR_CALLBACK
+HashtableFreeCCMap(nsHashKey *aKey, void *aData, void *closure)
+{
+    FreeCCMap((PRUint16*) aData);
+    return PR_TRUE;
+}
+
+// If the font is symbolic, get its converter and its compressed character map
+// (CCMap). The caller holds a reference to the converter (@see GetConverter()).
+// The CCMap is cached in a hashtable and will be freed at shutdown.
+nsresult
+nsMacUnicodeFontInfo::GetConverterAndCCMap(const nsString& aFontName, nsIUnicodeEncoder** aConverter,
+    PRUint16** aCCMap)
+{
+    if(NS_SUCCEEDED(GetConverter(aFontName, aConverter)) && *aConverter)
+    {
+        // make sure we have the hashtable
+        if(!gFontMaps)
+        {
+            gFontMaps = new nsObjectHashtable(nsnull, nsnull, HashtableFreeCCMap, nsnull);
+            if(!gFontMaps)
+            {
+                *aConverter = nsnull;
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+
+        // first try to retrieve the ccmap for this font from the hashtable
+        nsStringKey hashKey(aFontName);
+        *aCCMap = (PRUint16*) gFontMaps->Get(&hashKey);
+        if(!*aCCMap)
+        {
+            // if it's not already in the hashtable, create it and add it to the hashtable
+            *aCCMap = GetCCMapThroughConverter(*aConverter);
+            if(!*aCCMap)
+            {
+                *aConverter = nsnull;
+                return NS_ERROR_FAILURE;
+            }
+            gFontMaps->Put(&hashKey, *aCCMap);
+        }
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
+
+
 
 PRBool nsMacUnicodeFontInfo::HasGlyphFor(PRUnichar aChar)
 {
@@ -487,8 +631,12 @@ PRBool nsMacUnicodeFontInfo::HasGlyphFor(PRUnichar aChar)
   return PR_FALSE;
 }
 
-void nsMacUnicodeFontInfo::FreeGlobal()
-{
+void nsMacUnicodeFontInfo::FreeGlobals()
+{    
+  NS_IF_RELEASE(gFontEncodingProperties);
+  NS_IF_RELEASE(gCharsetManager);
+
+  delete gFontMaps;
   if (gCCMap)
-    FreeCCMap(gCCMap);
+    FreeCCMap(gCCMap);  
 }

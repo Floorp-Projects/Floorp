@@ -43,8 +43,110 @@
 #include "nsUnicodeFontMappingMac.h"
 #include "nsUnicodeFontMappingCache.h"
 #include "nsUnicodeMappingUtil.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsCompressedCharMap.h"
+#include "nsMacUnicodeFontInfo.h"
 #define BAD_FONT_NUM	-1
 #define BAD_SCRIPT 0x7f
+
+
+//------------------------------------------------------------------------
+static UnicodeToTextInfo gConverters[32] = { nsnull };
+//------------------------------------------------------------------------
+static UnicodeToTextInfo
+GetConverterByScript(ScriptCode sc)
+{
+  // because the Mac QuickDraw BIDI support are quite different from other platform
+  // we try not to use them and use the XP BIDI feature
+  // those text will be drawn by ATSUI intead one character at a time
+  if ((sc == smArabic) || (sc == smHebrew))
+     return nsnull;
+  NS_PRECONDITION(sc < 32, "illegal script id");
+  if(sc >= 32)
+    return nsnull;
+  if (gConverters[sc] != nsnull) {
+    return gConverters[sc];
+  }
+  OSStatus err = noErr;
+    
+  //
+  TextEncoding scriptEncoding;
+  err = ::UpgradeScriptInfoToTextEncoding(sc, kTextLanguageDontCare, kTextRegionDontCare, nsnull, &scriptEncoding);
+  if ( noErr == err ) 
+ 	  err = ::CreateUnicodeToTextInfoByEncoding(scriptEncoding, &gConverters[sc] );
+
+  if (noErr != err) 
+    gConverters[sc] = nsnull;
+  return gConverters[sc];
+}
+
+
+class nsUnicodeFontMappingEntry
+{
+public:
+    nsUnicodeFontMappingEntry(
+        nsIUnicodeEncoder *aConverter, 
+        PRUint16 *aCCMap, 
+        short aFontNum,
+        ScriptCode aScript)
+    : mConverter(aConverter),
+      mCCMap(aCCMap),
+      mFontNum(aFontNum),
+      mScript(aScript)
+    {
+        NS_ASSERTION(aConverter || aScript != BAD_SCRIPT, "internal error");
+    }
+
+    PRBool Convert(
+        const PRUnichar *aString, 
+        ByteCount aStringLength, 
+        char *aBuffer, 
+        ByteCount aBufferLength,
+        ByteCount& oActualLength,
+        ByteCount& oBytesRead,
+        OptionBits opts)
+    {
+        if(mConverter)
+        {
+            oActualLength = aBufferLength;
+            if(NS_SUCCEEDED(mConverter->Convert(aString, (PRInt32*) &aStringLength, aBuffer, 
+                (PRInt32*) &oActualLength)) && oActualLength)
+            {
+                oBytesRead = 2 * aStringLength;
+                return PR_TRUE;
+            }
+            return PR_FALSE;
+        }
+
+        UnicodeToTextInfo converter = GetConverterByScript(mScript);
+        if(converter)
+        {
+            OSStatus err = ::ConvertFromUnicodeToText(converter, 2 * aStringLength, aString,
+                opts, 0, NULL, 0, NULL,
+                aBufferLength, &oBytesRead, &oActualLength,
+                (LogicalAddress) aBuffer);
+    
+            return (oActualLength > 0 ? PR_TRUE : PR_FALSE);
+        }
+        return PR_FALSE;
+    }
+
+    PRUint16* GetCCMap()
+    {
+        return mCCMap;
+    }
+
+    short GetFontNum()
+    {
+        return mFontNum; 
+    }
+
+private:
+    nsCOMPtr<nsIUnicodeEncoder> mConverter;
+    PRUint16                    *mCCMap; // we don't own this buffer, so don't free it
+    short                       mFontNum;
+    ScriptCode                  mScript;
+};
 
 
 //--------------------------------------------------------------------------
@@ -83,17 +185,15 @@ static void FillVarBlockToScript( PRInt8 script, PRInt8 *aMap)
 }
 
 struct MyFontEnumData {
-    MyFontEnumData(nsIDeviceContext* aDC, PRInt8* pMap, short* pFonts)  : mContext(aDC) {
-    	mMap = pMap;
-    	mFont = pFonts;
+    MyFontEnumData(nsIDeviceContext* aDC, nsUnicodeFontMappingMac* fontMapping)  : mContext(aDC) {
+    	mFontMapping = fontMapping;
     };
     nsIDeviceContext* mContext;
-	PRInt8 *mMap;
-	short *mFont;
+	nsUnicodeFontMappingMac* mFontMapping;
 };
 //--------------------------------------------------------------------------
 
-static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+PRBool nsUnicodeFontMappingMac::FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   MyFontEnumData* data = (MyFontEnumData*)aData;
   nsUnicodeMappingUtil * info = nsUnicodeMappingUtil::GetSingleton();
@@ -112,8 +212,8 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
 			    short fontNum;
 				nsDeviceContextMac::GetMacFontNumber(*fontName, fontNum);
 					
-				if((0 != fontNum) && (BAD_FONT_NUM == data->mFont[ script ])) 
-					data->mFont[ script ] = fontNum;
+				if((0 != fontNum) && (BAD_FONT_NUM == data->mFontMapping->mScriptFallbackFontIDs[ script ])) 
+					data->mFontMapping->mScriptFallbackFontIDs[ script ] = fontNum;
 				// since this is a generic font name, it won't impact the order of script we used
 			}
 		}
@@ -130,15 +230,47 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
 		nsDeviceContextMac::GetMacFontNumber(realFace, fontNum);
 		
 		if(0 != fontNum) {
-			ScriptCode script = ::FontToScript(fontNum);
-			if(BAD_FONT_NUM == data->mFont[ script ]) 
-				data->mFont[ script ] = fontNum;
-			FillVarBlockToScript( script, data->mMap);
+            nsCOMPtr<nsIUnicodeEncoder> converter;
+            PRUint16 *ccmap = nsnull;
+
+            // if this fails, aConverter & aCCMap will be nsnull
+            nsMacUnicodeFontInfo::GetConverterAndCCMap(realFace, getter_AddRefs(converter), &ccmap);
+
+            ScriptCode script = (converter ? BAD_SCRIPT : ::FontToScript(fontNum));
+
+            nsUnicodeFontMappingEntry* entry = new nsUnicodeFontMappingEntry(converter, ccmap, fontNum, script);
+            if(entry)
+                data->mFontMapping->mFontList.AppendElement(entry);
+            
+            // only fill in this information for non-symbolic fonts
+            if(!converter)
+            {    
+                if(BAD_FONT_NUM == data->mFontMapping->mScriptFallbackFontIDs[ script ]) 
+                    data->mFontMapping->mScriptFallbackFontIDs[ script ] = fontNum;
+                FillVarBlockToScript( script, data->mFontMapping->mPrivBlockToScript);
+            }
 		}
 	}
   }
   return PR_TRUE;
 }
+
+PRBool nsUnicodeFontMappingMac::ConvertUnicodeToGlyphs(short aFontNum, 
+    ConstUniCharArrayPtr aString, ByteCount aStringLength,
+    char *aBuffer, ByteCount aBufferLength, ByteCount& oActualLength,
+    ByteCount& oBytesRead, OptionBits opts)
+{
+    for(PRInt32 i = 0; i < mFontList.Count(); i++)
+    {
+        nsUnicodeFontMappingEntry* entry = (nsUnicodeFontMappingEntry*) mFontList[i];
+        if(aFontNum == entry->GetFontNum())
+            return entry->Convert(aString, aStringLength, aBuffer, aBufferLength,
+                oActualLength, oBytesRead, opts);
+    }
+    return PR_FALSE;
+}
+
+
 //--------------------------------------------------------------------------
 nsUnicodeMappingUtil *nsUnicodeFontMappingMac::gUtil = nsnull;
 
@@ -146,8 +278,8 @@ nsUnicodeMappingUtil *nsUnicodeFontMappingMac::gUtil = nsnull;
 
 void nsUnicodeFontMappingMac::InitByFontFamily(nsFont* aFont, nsIDeviceContext *aDeviceContext) 
 {
-   	MyFontEnumData fontData(aDeviceContext, mPrivBlockToScript, mScriptFallbackFontIDs);
-  	aFont->EnumerateFamilies(FontEnumCallback, &fontData);
+    MyFontEnumData fontData(aDeviceContext, this);
+    aFont->EnumerateFamilies(nsUnicodeFontMappingMac::FontEnumCallback, &fontData);
 }
 //--------------------------------------------------------------------------
 
@@ -319,6 +451,15 @@ nsUnicodeFontMappingMac::nsUnicodeFontMappingMac(
 	InitDefaultScriptFonts();
 }
 //--------------------------------------------------------------------------
+
+nsUnicodeFontMappingMac::~nsUnicodeFontMappingMac()
+{
+    for(PRInt32 i = 0; i < mFontList.Count(); i++)
+    {
+        nsUnicodeFontMappingEntry* entry = (nsUnicodeFontMappingEntry*) mFontList[i];
+        delete entry;
+    }
+}
 //--------------------------------------------------------------------------
 
 PRBool nsUnicodeFontMappingMac::Equals(const nsUnicodeFontMappingMac& aMap)
@@ -342,11 +483,49 @@ PRBool nsUnicodeFontMappingMac::Equals(const nsUnicodeFontMappingMac& aMap)
 //--------------------------------------------------------------------------
 
 short nsUnicodeFontMappingMac::GetFontID(PRUnichar aChar) {
+    // initialize to bogus values
+    short firstSymbolicFont = BAD_FONT_NUM, firstNonSymbolicFont = BAD_FONT_NUM;
+    PRInt32 firstSymbolicFontIndex = -1;
+    
+    // find the first symbolic font that has a glyph for aChar
+    // and if there is one, remember it's index in the font list
+    for(PRInt32 i = 0; i < mFontList.Count(); i++)
+    {
+        nsUnicodeFontMappingEntry* entry = (nsUnicodeFontMappingEntry*) mFontList[i];
+        PRUint16 *ccmap = entry->GetCCMap();
+        if(ccmap && CCMAP_HAS_CHAR(ccmap, aChar))
+        {
+            firstSymbolicFontIndex = i;
+            firstSymbolicFont = entry->GetFontNum();
+            break;
+        }
+    }
+
+    // find the first non-symbolic font that has a glyph for aChar
 	nsUnicodeBlock block = GetBlock(aChar);
 	if(block < kUnicodeBlockFixedScriptMax) 
-		return mScriptFallbackFontIDs[gUtil->BlockToScript(block)];
-	else
-		return  mScriptFallbackFontIDs[ mPrivBlockToScript[ block - kUnicodeBlockFixedScriptMax] ];
+	{
+		firstNonSymbolicFont = mScriptFallbackFontIDs[gUtil->BlockToScript(block)];
+		
+		// if there was no symbolic font we don't need to loop through the list again
+        if(firstSymbolicFont == BAD_FONT_NUM)
+            return firstNonSymbolicFont;
+        
+        // find the index of the first non symbolic font in the list and return the 
+        // first font (symbolic or non symbolic) in the list that has a glyph for this char
+        for(PRInt32 i = 0; i < mFontList.Count(); i++)
+        {
+            nsUnicodeFontMappingEntry* entry = (nsUnicodeFontMappingEntry*) mFontList[i];
+            if(entry->GetFontNum() == firstNonSymbolicFont)
+            {
+                return (firstSymbolicFontIndex < i ? firstSymbolicFont : firstNonSymbolicFont);
+            }
+        }
+        return firstNonSymbolicFont;
+	}
+	
+    return (firstSymbolicFont != BAD_FONT_NUM ? firstSymbolicFont : 
+		mScriptFallbackFontIDs[ mPrivBlockToScript[ block - kUnicodeBlockFixedScriptMax] ]);
 }
 
 //------------------------------------------------------------------------

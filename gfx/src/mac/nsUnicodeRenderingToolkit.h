@@ -50,6 +50,7 @@
 class nsUnicodeFallbackCache;
 class nsIDeviceContext;
 class nsGraphicState;
+class nsUnicodeFontMappingMac;
 
 class nsUnicodeRenderingToolkit 
 {
@@ -74,11 +75,10 @@ public:
 
 private:  
   // Unicode text measure/drawing functions
-  UnicodeToTextInfo GetConverterByScript(ScriptCode sc);
   PRBool TECFallbackGetDimensions(const PRUnichar *pChar, nsTextDimensions& oWidth,
-                                  short fontNum, const short* scriptFallbackFonts);
+                                  short fontNum, nsUnicodeFontMappingMac& fontMapping);
   PRBool TECFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth,
-                             short fontNum, const short* scriptFallbackFonts);
+                             short fontNum, nsUnicodeFontMappingMac& fontMapping);
                   
   PRBool ATSUIFallbackGetDimensions(const PRUnichar *pChar, nsTextDimensions& oWidth, short fontNum,  
                                     short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
@@ -104,17 +104,20 @@ private:
   void DrawScriptText(const char* aText, ByteCount aLen, PRInt32 x, PRInt32 y, short& aWidth);
   
   nsresult GetTextSegmentWidth(const PRUnichar *aString, PRUint32 aLength, short fontNum, 
-                               const short *scriptFallbackFonts, PRUint32& oWidth);
+                               nsUnicodeFontMappingMac& fontMapping, PRUint32& oWidth);
   nsresult GetTextSegmentDimensions(const PRUnichar *aString, PRUint32 aLength, short fontNum, 
-                                    const short *scriptFallbackFonts, nsTextDimensions& aDimension);
+                                    nsUnicodeFontMappingMac& fontMapping, nsTextDimensions& aDimension);
   nsresult DrawTextSegment(const PRUnichar *aString, PRUint32 aLength, short fontNum, 
-                           const short *scriptFallbackFonts, PRInt32 x, PRInt32 y, PRUint32& oWidth);
+                           nsUnicodeFontMappingMac& fontMapping, PRInt32 x, PRInt32 y, PRUint32& oWidth);
 
 #ifdef MOZ_MATHML
+  PRBool TECFallbackGetBoundingMetrics(const PRUnichar *pChar, nsBoundingMetrics& oBoundingMetrics,
+  										short fontNum, nsUnicodeFontMappingMac& fontMapping);
   PRBool ATSUIFallbackGetBoundingMetrics(const PRUnichar *pChar, nsBoundingMetrics& oBoundingMetrics, short fontNum,
                                          short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
+  void GetScriptTextBoundingMetrics(const char* aText, ByteCount aLen, ScriptCode aScript, nsBoundingMetrics& oBoundingMetrics);
   nsresult GetTextSegmentBoundingMetrics(const PRUnichar *aString, PRUint32 aLength, short fontNum,
-                                         const short *scriptFallbackFonts, nsBoundingMetrics& oBoundingMetrics);
+                                         nsUnicodeFontMappingMac& fontMapping, nsBoundingMetrics& oBoundingMetrics);
 #endif // MOZ_MATHML
 
   nsUnicodeFallbackCache* GetTECFallbackCache();    
