@@ -171,7 +171,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnStopOperation(PRInt32 aTransactionID, nsresult a
 }
 
 /* void KickIt (); */
-NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus)
+NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus, nsIDOMWindow *aDocShell)
 {
   nsresult rv = NS_OK;
   PRInt32  stateVar;
@@ -188,7 +188,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus)
   // Add ourselves to the party!
   sync->AddSyncListener((nsIAbSyncListener *)this);
 
-  rv = sync->PerformAbSync(&mTransactionID);
+  rv = sync->PerformAbSync(aDocShell, &mTransactionID);
   if (NS_SUCCEEDED(rv))
   {
     if (mStatus)

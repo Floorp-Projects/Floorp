@@ -19,8 +19,9 @@
  *
  * Contributor(s): 
 */
-#include "nsISupports.idl"
+#include "nsrootidl.idl"
 #include "nsIAbSyncListener.idl"
+#include "nsIMsgStatusFeedback.idl"
 
 interface nsIAbSyncState
 { 
@@ -46,6 +47,6 @@ interface nsIAbSync : nsISupports {
    * Send the protocol request and get a transaction ID in return that
    * will be sent along with all sync listener operations
    */
-  void    PerformAbSync(out PRInt32 aTransactionID);
+  void    PerformAbSync(in nsIDOMWindow aDOMWindow, out PRInt32 aTransactionID);
   void    CancelAbSync();
 };

@@ -21,6 +21,7 @@
 */
 #include "nsISupports.idl"
 #include "nsIStreamListener.idl"
+#include "nsIDocShell.idl"
 
 %{C++
 #define NS_AB_SYNC_MOJO_CID \
@@ -36,8 +37,9 @@ interface nsIAbSyncMojo : nsISupports {
 	/*
 	 * This is the primary interface for performing AB Sync mojo operations
 	 */
-  string  BuildMojoString();
-  void		StartAbSyncMojo(in nsIStreamListener aListener);
+  string  BuildMojoString(in nsIDocShell aRootDocShell);
+  void		StartAbSyncMojo(in nsIStreamListener aListener, 
+                          in nsIDocShell aRootDocShell);
   void		GetAbSyncMojoResults(out string aMojoUser, out string aMojoString,
                                out string aMojoSpec, out long aMojoPort);
 };

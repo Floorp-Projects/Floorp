@@ -716,7 +716,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::GetCurrentState(PRInt32 *_retval)
 // This is the implementation of the actual post driver. 
 //
 ////////////////////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsAbSyncPostEngine::BuildMojoString(char **aID)
+NS_IMETHODIMP nsAbSyncPostEngine::BuildMojoString(nsIDocShell *aRootDocShell, char **aID)
 {
   nsresult        rv;
 
@@ -731,11 +731,12 @@ NS_IMETHODIMP nsAbSyncPostEngine::BuildMojoString(char **aID)
       return NS_ERROR_FAILURE;
   }
 
-  rv = mSyncMojo->BuildMojoString(aID);
+  rv = mSyncMojo->BuildMojoString(aRootDocShell, aID);
   return rv;
 }
 
-NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID)
+NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID,
+                                                nsIDocShell *aDocShell)
 {
   nsresult      rv;
   char          *mojoUser = nsnull;
@@ -753,7 +754,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
       return NS_ERROR_FAILURE;
   }
 
-  if (NS_FAILED(mSyncMojo->StartAbSyncMojo(this)))
+  if (NS_FAILED(mSyncMojo->StartAbSyncMojo(this, aDocShell)))
     return NS_ERROR_FAILURE;  
 
   // Set transaction ID and save/init Sync info...

@@ -32,6 +32,7 @@
 #include "nsAbSyncCRCModel.h"
 #include "nsVoidArray.h"
 #include "nsIStringBundle.h"
+#include "nsIDocShell.h"
 
 //
 // Basic Sync Logic
@@ -163,6 +164,7 @@ private:
   nsresult        CleanServerTable(nsVoidArray *aArray);
   PRUnichar       *GetString(const PRUnichar *aStringName);
   nsresult        DisplayErrorMessage(const PRUnichar * msg);
+  nsresult        SetDOMWindow(nsIDOMWindow *aWindow);
 
   nsCOMPtr<nsIAbSyncPostEngine>   mPostEngine;
   nsString                        mPostString;
@@ -235,6 +237,8 @@ private:
 
   nsStringArray   *mPhoneTypes;                           // Phone number types...
   nsStringArray   *mPhoneValues;                          // Phone number values...
+
+  nsIDocShell     *mRootDocShell;                         // For use in prompts
 };
 
 #endif /* __nsIAbSync_h__ */

@@ -40,6 +40,10 @@
 #include "nsIStringBundle.h"
 #include "nsINetSupportDialogService.h"
 #include "nsMsgI18N.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -62,6 +66,7 @@ nsAbSync::nsAbSync()
   mListenerArrayCount = 0;
   mListenerArray = nsnull;
   mStringBundle = nsnull;
+  mRootDocShell = nsnull;
 
   InternalInit();
   InitSchemaColumns();
@@ -270,17 +275,61 @@ nsAbSync::InitSchemaColumns()
 nsresult
 nsAbSync::DisplayErrorMessage(const PRUnichar * msg)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if ((!msg) || (!*msg))
     return NS_ERROR_INVALID_ARG;
 
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  rv = dialog->Alert(nsnull, msg);
-  return NS_OK;
+  if (mRootDocShell)
+  {
+    nsCOMPtr<nsIPrompt> dialog;
+    dialog = do_GetInterface(mRootDocShell, &rv);
+    if (dialog)
+    {
+      rv = dialog->Alert(nsnull, msg);
+      rv = NS_OK;
+    }
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+
+  // If we failed before, fall back to the non-parented modal dialog
+  if (NS_FAILED(rv))
+  {
+    NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = dialog->Alert(nsnull, msg);
+  }
+
+  return rv;
 }
 
+nsresult
+nsAbSync::SetDOMWindow(nsIDOMWindow *aWindow)
+{
+	if (!aWindow)
+		return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface((nsISupports *)aWindow));
+  nsCOMPtr<nsIDocShell> docShell;
+  if (globalScript)
+    globalScript->GetDocShell(getter_AddRefs(docShell));
+  
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));  
+  if(docShellAsItem)
+  {
+    nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
+    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
+    
+    nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootAsItem));
+    mRootDocShell = docShell;
+  }
+
+  return rv;
+}
 
 /* void AddSyncListener (in nsIAbSyncListener aListener); */
 NS_IMETHODIMP nsAbSync::AddSyncListener(nsIAbSyncListener *aListener)
@@ -509,12 +558,15 @@ NS_IMETHODIMP nsAbSync::CancelAbSync()
 }
 
 /* void PerformAbSync (out PRInt32 aTransactionID); */
-NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
+NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindow *aDOMWindow, PRInt32 *aTransactionID)
 {
   nsresult      rv;
   char          *protocolRequest = nsnull;
   char          *prefixStr = nsnull;
   char          *clientIDStr = nsnull;
+
+  // We'll need later...
+  SetDOMWindow(aDOMWindow);
 
   // If we are already running...don't let anything new start...
   if (mCurrentState != nsIAbSyncState::nsIAbSyncIdle)
@@ -577,7 +629,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
     mPostEngine->AddPostListener((nsIAbSyncPostListener *)this);
   }
 
-  rv = mPostEngine->BuildMojoString(&clientIDStr);
+  rv = mPostEngine->BuildMojoString(mRootDocShell, &clientIDStr);
   if (NS_FAILED(rv) || (!clientIDStr))
     goto EarlyExit;
 
@@ -605,7 +657,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
     goto EarlyExit;
 
   // Ok, FIRE!
-  rv = mPostEngine->SendAbRequest(nsnull, mAbSyncPort, protocolRequest, mTransactionID);
+  rv = mPostEngine->SendAbRequest(nsnull, mAbSyncPort, protocolRequest, mTransactionID, mRootDocShell);
   if (NS_SUCCEEDED(rv))
   {
     mCurrentState = nsIAbSyncState::nsIAbSyncRunning;
@@ -2508,31 +2560,17 @@ nsAbSync::GetString(const PRUnichar *aStringName)
 aCard->SetBirthYear(aTagValue->GetUnicode());
 aCard->SetBirthMonth(aTagValue->GetUnicode());
 aCard->SetBirthDay(aTagValue->GetUnicode());
-aCard->SetLastModifiedDate(aTagValue->GetUnicode());
-aCard->SetName(aTagValue->GetUnicode());
-aCard->SetIsMailList(aTagValue->GetUnicode());
-aCard->SetDbTableID(aTagValue->GetUnicode());
-aCard->SetDbRowID(aTagValue->GetUnicode());
-aCard->SetCardValue(aTagValue->GetUnicode());
-aCard->SetAbDatabase(aTagValue->GetUnicode());
-aCard->SetAnonymousStringAttribute(aTagValue->GetUnicode());
-aCard->SetAnonymousIntAttribute(aTagValue->GetUnicode());
-aCard->SetAnonymousBoolAttribute(aTagValue->GetUnicode());
-**********************************************/
-
-/*************
 char *kServerBirthYearColumn = "OMIT:BirthYear";
 char *kServerBirthMonthColumn = "OMIT:BirthMonth";
 char *kServerBirthDayColumn = "OMIT:BirthDay";
-char *kServerLastModifiedDateColumn = "OMIT:LastModifiedDate";
-**************/
-/* So far, we aren't really doing anything with these!
+**********************************************/
+
+/************* FOR MAILING LISTS
+aCard->SetIsMailList(aTagValue->GetUnicode());
+
 char *kAddressCharSetColumn = "AddrCharSet";
 char *kMailListName = "ListName";
 char *kMailListNickName = "ListNickName";
 char *kMailListDescription = "ListDescription";
 char *kMailListTotalAddresses = "ListTotalAddresses";
-So far, we aren't really doing anything with these! **/
-
-
-
+************* FOR MAILING LISTS ***************/
