@@ -717,7 +717,7 @@ PRIVATE XP_Bool intl_convbig5tocns(uint16 big5, uint16* cns, uint8* cnsplane)
 
   /* do binary search to the table */
   l=0;
-  r= ((sizeof(big5_map) / sizeof(cnstobig5))-1);
+  r= ((sizeof(big5_map) / sizeof(big5tocns))-1);
   m= (l+r)/2; ;  
 
   while(1)
