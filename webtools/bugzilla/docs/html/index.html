@@ -77,12 +77,6 @@ CLASS="ADDRESS"
 ></DIV
 ></DIV
 ><BR></SPAN
-><H4
-CLASS="EDITEDBY"
->Edited by</H4
-><H3
-CLASS="EDITOR"
->I. P. Freely</H3
 ><DIV
 CLASS="REVHISTORY"
 ><TABLE
@@ -192,7 +186,7 @@ COLSPAN="3"
 ><DIV
 CLASS="ABSTRACT"
 ><A
-NAME="AEN46"
+NAME="AEN39"
 ></A
 ><P
 ></P
@@ -211,6 +205,12 @@ NAME="AEN46"
 	for installing and maintaining this software is a qualified
 	professional on operating system upon which you install
 	Bugzilla.
+      </P
+><P
+>	THIS DOCUMENTATION IS MAINTAINED IN DOCBOOK 4.1 SGML FORMAT.
+	IF YOU WISH TO MAKE CORRECTIONS, PLEASE MAKE THEM IN PLAIN
+	TEXT OR SGML DIFFS AGAINST THE SOURCE.  I CANNOT ACCEPT
+	ADDITIONS TO THE GUIDE WRITTEN IN HTML!
       </P
 ><P
 ></P
@@ -336,7 +336,7 @@ HREF="how.html#BUG_MANAGE"
 ><DT
 >2.4. <A
 HREF="init4me.html"
->What's in it for me?</A
+>Where can I find my user preferences?</A
 ></DT
 ><DD
 ><DL
@@ -409,12 +409,12 @@ HREF="stepbystep.html"
 ><DL
 ><DT
 >3.2.1. <A
-HREF="stepbystep.html#AEN478"
+HREF="stepbystep.html#AEN486"
 >Introduction</A
 ></DT
 ><DT
 >3.2.2. <A
-HREF="stepbystep.html#AEN484"
+HREF="stepbystep.html#AEN492"
 >Installing the Prerequisites</A
 ></DT
 ><DT
@@ -429,77 +429,80 @@ HREF="stepbystep.html#INSTALL-PERL"
 ></DT
 ><DT
 >3.2.5. <A
-HREF="stepbystep.html#AEN537"
+HREF="stepbystep.html#AEN579"
 >DBI Perl Module</A
 ></DT
 ><DT
 >3.2.6. <A
-HREF="stepbystep.html#AEN574"
+HREF="stepbystep.html#AEN617"
 >Data::Dumper Perl Module</A
 ></DT
 ><DT
 >3.2.7. <A
-HREF="stepbystep.html#AEN578"
+HREF="stepbystep.html#AEN622"
 >MySQL related Perl Module Collection</A
 ></DT
 ><DT
 >3.2.8. <A
-HREF="stepbystep.html#AEN587"
+HREF="stepbystep.html#AEN631"
 >TimeDate Perl Module Collection</A
 ></DT
 ><DT
 >3.2.9. <A
-HREF="stepbystep.html#AEN590"
+HREF="stepbystep.html#AEN635"
 >GD Perl Module (1.8.3)</A
 ></DT
 ><DT
 >3.2.10. <A
-HREF="stepbystep.html#AEN596"
+HREF="stepbystep.html#AEN644"
 >Chart::Base Perl Module (0.99c)</A
 ></DT
 ><DT
 >3.2.11. <A
-HREF="stepbystep.html#AEN599"
+HREF="stepbystep.html#AEN648"
 >DB_File Perl Module</A
 ></DT
 ><DT
 >3.2.12. <A
-HREF="stepbystep.html#AEN602"
+HREF="stepbystep.html#AEN651"
 >HTTP Server</A
 ></DT
 ><DT
 >3.2.13. <A
-HREF="stepbystep.html#AEN616"
+HREF="stepbystep.html#AEN669"
 >Installing the Bugzilla Files</A
 ></DT
 ><DT
 >3.2.14. <A
-HREF="stepbystep.html#AEN636"
+HREF="stepbystep.html#AEN696"
 >Setting Up the MySQL Database</A
 ></DT
 ><DT
 >3.2.15. <A
-HREF="stepbystep.html#AEN675"
->Tweaking "localconfig"</A
+HREF="stepbystep.html#AEN743"
+>Tweaking <TT
+CLASS="FILENAME"
+>localconfig</TT
+></A
 ></DT
 ><DT
 >3.2.16. <A
-HREF="stepbystep.html#AEN704"
+HREF="stepbystep.html#AEN781"
 >Setting Up Maintainers Manually (Optional)</A
 ></DT
 ><DT
 >3.2.17. <A
-HREF="stepbystep.html#AEN713"
+HREF="stepbystep.html#AEN792"
 >The Whining Cron (Optional)</A
 ></DT
 ><DT
 >3.2.18. <A
-HREF="stepbystep.html#AEN723"
+HREF="stepbystep.html#AEN802"
 >Bug Graphs (Optional)</A
 ></DT
 ><DT
 >3.2.19. <A
-HREF="stepbystep.html#AEN735"
+HREF="stepbystep.html#AEN814"
 >Securing MySQL</A
 ></DT
 ></DL
@@ -523,12 +526,12 @@ HREF="geninstall.html"
 ><DL
 ><DT
 >3.5.1. <A
-HREF="geninstall.html#AEN837"
+HREF="geninstall.html#AEN916"
 >Modifying Your Running System</A
 ></DT
 ><DT
 >3.5.2. <A
-HREF="geninstall.html#AEN844"
+HREF="geninstall.html#AEN923"
 >Upgrading From Previous Versions</A
 ></DT
 ><DT
@@ -541,7 +544,20 @@ CLASS="FILENAME"
 ></DT
 ><DT
 >3.5.4. <A
-HREF="geninstall.html#AEN865"
+HREF="geninstall.html#MOD_THROTTLE"
+><TT
+CLASS="FILENAME"
+>mod_throttle</TT
+> and Security</A
+></DT
+><DT
+>3.5.5. <A
+HREF="geninstall.html#CONTENT_TYPE"
+>Preventing untrusted Bugzilla content from executing malicious Javascript code</A
+></DT
+><DT
+>3.5.6. <A
+HREF="geninstall.html#AEN964"
 >UNIX Installation Instructions History</A
 ></DT
 ></DL
@@ -694,7 +710,7 @@ HREF="scm.html"
 ><DT
 >5.4. <A
 HREF="tinderbox.html"
->Tinderbox</A
+>Tinderbox/Tinderbox2</A
 ></DT
 ></DL
 ></DD
@@ -734,14 +750,14 @@ HREF="dbdoc.html"
 ><DL
 ><DT
 >C.2.1. <A
-HREF="dbdoc.html#AEN2089"
+HREF="dbdoc.html#AEN2217"
 >Bugzilla Database Basics</A
 ></DT
 ><DD
 ><DL
 ><DT
 >C.2.1.1. <A
-HREF="dbdoc.html#AEN2118"
+HREF="dbdoc.html#AEN2246"
 >Bugzilla Database Tables</A
 ></DT
 ></DL
@@ -758,7 +774,7 @@ HREF="granttables.html"
 ><DT
 >7. <A
 HREF="variants.html"
->Bugzilla Variants</A
+>Bugzilla Variants and Competitors</A
 ></DT
 ><DD
 ><DL
@@ -766,6 +782,31 @@ HREF="variants.html"
 >7.1. <A
 HREF="rhbugzilla.html"
 >Red Hat Bugzilla</A
+></DT
+><DT
+>7.2. <A
+HREF="variant_fenris.html"
+>Loki Bugzilla (Fenris)</A
+></DT
+><DT
+>7.3. <A
+HREF="variant_issuezilla.html"
+>Issuezilla</A
+></DT
+><DT
+>7.4. <A
+HREF="variant_scarab.html"
+>Scarab</A
+></DT
+><DT
+>7.5. <A
+HREF="variant_perforce.html"
+>Perforce SCM</A
+></DT
+><DT
+>7.6. <A
+HREF="variant_sourceforge.html"
+>SourceForge</A
 ></DT
 ></DL
 ></DD
@@ -778,16 +819,24 @@ HREF="patches.html"
 ><DL
 ><DT
 >D.1. <A
+HREF="rewrite.html"
+>Apache <TT
+CLASS="FILENAME"
+>mod_rewrite</TT
+> magic</A
+></DT
+><DT
+>D.2. <A
 HREF="setperl.html"
 >The setperl.csh Utility</A
 ></DT
 ><DT
->D.2. <A
+>D.3. <A
 HREF="cmdline.html"
 >Command-line Bugzilla Queries</A
 ></DT
 ><DT
->D.3. <A
+>D.4. <A
 HREF="quicksearch.html"
 >The Quicksearch Utility</A
 ></DT
@@ -879,72 +928,73 @@ CLASS="LOT"
 ></DT
 ><DT
 >2-1. <A
-HREF="how.html#AEN297"
+HREF="how.html#AEN307"
 >Some Famous Software Versions</A
 ></DT
 ><DT
 >2-2. <A
-HREF="how.html#AEN307"
+HREF="how.html#AEN317"
 >Mozilla Webtools Components</A
 ></DT
 ><DT
 >3-1. <A
-HREF="stepbystep.html#AEN625"
+HREF="stepbystep.html#AEN685"
 >Setting up bonsaitools symlink</A
 ></DT
 ><DT
 >3-2. <A
-HREF="stepbystep.html#AEN697"
+HREF="stepbystep.html#AEN774"
 >Running checksetup.pl as the web user</A
 ></DT
 ><DT
 >3-3. <A
-HREF="win32.html#AEN910"
+HREF="win32.html#AEN1012"
 >Installing ActivePerl ppd Modules on Microsoft Windows</A
 ></DT
 ><DT
 >3-4. <A
-HREF="win32.html#AEN1084"
->Removing encrypt() for Windows NT installations</A
+HREF="win32.html#AEN1180"
+>Removing encrypt() for Windows NT Bugzilla version
+	      2.12 or earlier</A
 ></DT
 ><DT
 >4-1. <A
-HREF="programadmin.html#AEN1279"
+HREF="programadmin.html#AEN1413"
 >Creating some Components</A
 ></DT
 ><DT
 >4-2. <A
-HREF="programadmin.html#AEN1308"
+HREF="programadmin.html#AEN1442"
 >Common Use of Versions</A
 ></DT
 ><DT
 >4-3. <A
-HREF="programadmin.html#AEN1312"
+HREF="programadmin.html#AEN1446"
 >A Different Use of Versions</A
 ></DT
 ><DT
 >4-4. <A
-HREF="programadmin.html#AEN1340"
+HREF="programadmin.html#AEN1474"
 >Using SortKey with Target Milestone</A
 ></DT
 ><DT
 >4-5. <A
-HREF="programadmin.html#AEN1376"
+HREF="programadmin.html#AEN1510"
 >When to Use Group Security</A
 ></DT
 ><DT
 >4-6. <A
-HREF="programadmin.html#AEN1393"
+HREF="programadmin.html#AEN1527"
 >Creating a New Group</A
 ></DT
 ><DT
 >D-1. <A
-HREF="setperl.html#AEN2193"
+HREF="setperl.html#AEN2360"
 >Using Setperl to set your perl path</A
 ></DT
 ><DT
 >1. <A
-HREF="glossary.html#AEN2389"
+HREF="glossary.html#AEN2602"
 >A Sample Product</A
 ></DT
 ></DL

@@ -38,12 +38,74 @@ point, but for now they are convenient and don't hurt anything.
 documentation.  Please address comments and questions to the newsgroup:
 news://news.mozilla.org/netscape/public/mozilla/webtools .
 
+==========
+HOW TO SET UP YOUR OWN SGML EDITING ENVIRONMENT:
+==========
+
+Trying to set up an SGML/XML Docbook editing environment the 
+first time can be a daunting task.
+I use Linux-Mandrake, in part, because it has a fully-functional
+SGML/XML Docbook editing environment included as part of the
+distribution CD's.  If you have easier instructions for how to
+do this for a particular Linux distribution or platform, please
+let the team know at the mailing list: mozilla-webtools@mozilla.org.
+
+The following text is taken nearly verbatim from
+http://bugzilla.mozilla.org/show_bug.cgi?id=95970, where I gave
+these instructions to someone who wanted the greater manageability
+maintaining a document in Docbook brings:
+
+This is just off the top of my head, but here goes.  Note some of these may 
+NOT be necessary, but I don't think they hurt anything by being installed.
+
+rpms:
+
+openjade
+jadetex
+docbook-dtd41-sgml
+docbook-style-dsssl
+docbook-dtd31-sgml
+docbook-style-dsssl-doc
+xemacs
+psgml
+sgml-tools
+sgml-common
+
+Set up environment:
+
+in your .bashrc add this line (after installing above RPMS):
+export SGML_CATALOG_FILES=/etc/sgml/catalog
+
+Download "ldp.dsl" from the Resources page on linuxdoc.org.  This is the 
+stylesheet I use to get the HTML and text output.  It works well, and has a 
+nice, consistent look with the rest of the linuxdoc documents.  You'll have to 
+adjust the paths in ldp.dsl at the top of the file to reflect the actual 
+locations of your docbook catalog files.  I created a directory, 
+/usr/share/sgml/docbook/ldp, and put the ldp.dsl file there.  I then edited 
+ldp.dsl and changed two lines near the top:
+<!ENTITY docbook.dsl SYSTEM "../dsssl-stylesheets-1.62/html/docbook.dsl" CDATA 
+dsssl>
+...and...
+<!ENTITY docbook.dsl SYSTEM "../dsssl-stylesheets-1.62/print/docbook.dsl" CDATA
+dsssl>
+
+Note the difference is the top one points to the HTML docbook stylesheet, 
+and the next one points to the PRINT docbook stylesheet.
+
+  You know, this sure looks awful involved.  Anyway, once you have this in 
+place, add to your .bashrc:
+export LDP_HOME=/usr/share/sgml/docbook/ldp
+
+  I suggest xemacs for editing your SGML/XML Docbook documents.  The darn
+thing just works, and generally includes PSGML mode by default.  You can
+download psgml at http://www.sourceforge.net/projects/psgml.
+
+==========
 NOTES:
+==========
 
   Here are the commands I use to maintain this documentation.
-  You MUST have DocBook 4.1 set up correctly in order for this to work,
-    but there's only a single REMARK tag that's incompatible with 3.1.
-    Maybe I'll downgrade to DocBook 3.1 to make your life easier...
+  You MUST have DocBook 4.1 set up correctly in order for this to work.
   Substitute your own path to "ldp.dsl" for "$LDP_HOME".
 
 

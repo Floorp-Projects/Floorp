@@ -78,7 +78,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN837"
+NAME="AEN916"
 >3.5.1. Modifying Your Running System</A
 ></H2
 ><P
@@ -111,7 +111,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN844"
+NAME="AEN923"
 >3.5.2. Upgrading From Previous Versions</A
 ></H2
 ><P
@@ -228,33 +228,132 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN865"
->3.5.4. UNIX Installation Instructions History</A
+NAME="MOD_THROTTLE"
+>3.5.4. <TT
+CLASS="FILENAME"
+>mod_throttle</TT
+> and Security</A
 ></H2
 ><P
->	This document was originally adapted from the Bonsai installation
-	instructions by Terry Weissman &#60;terry@mozilla.org&#62;.
+>	It is possible for a user, by mistake or on purpose, to access
+	the database many times in a row which can result in very slow
+	access speeds for other users.  If your Bugzilla installation
+	is experiencing this problem , you may install  the Apache
+	module <TT
+CLASS="FILENAME"
+>mod_throttle</TT
+> which can limit
+	connections by ip-address. You may download this module at
+	<A
+HREF="http://www.snert.com/Software/Throttle/"
+TARGET="_top"
+>http://www.snert.com/Software/Throttle/</A
+>. Follow the instructions to install into your Apache install.  <EM
+>This module only functions with the Apache web server!</EM
+>. You may use the <B
+CLASS="COMMAND"
+>ThrottleClientIP</B
+> command provided by this module  to accomplish this goal. See the <A
+HREF="http://www.snert.com/Software/Throttle/"
+TARGET="_top"
+>Module Instructions</A
+> for more  information. </P
+></DIV
+><DIV
+CLASS="SECTION"
+><H2
+CLASS="SECTION"
+><A
+NAME="CONTENT_TYPE"
+>3.5.5. Preventing untrusted Bugzilla content from executing malicious Javascript code</A
+></H2
+><P
+>It is possible for a Bugzilla to execute malicious
+	Javascript code.  Due to internationalization concerns, we are
+	unable to incorporate the code changes necessary to fulfill
+	the CERT advisory requirements mentioned in <A
+HREF="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3"
+TARGET="_top"
+>http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3</A
+>.  Executing the following code snippet from a UNIX command shell will rectify the problem if your Bugzilla installation is intended for an English-speaking audience.  As always, be sure your Bugzilla installation has a good backup before making changes, and I recommend you understand what the script is doing before executing it. </P
+><P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
+	  do cat $i | sed 's/Content-type\: text\/html/Content-Type: text\/html\; charset=ISO-8859-1/' &#62;$i.tmp; \
+	  mv $i.tmp $i; done
+	</PRE
+></FONT
+></TD
+></TR
+></TABLE
+></P
+><P
+>	All this one-liner command does is search for all instances of
+	<SPAN
+CLASS="QUOTE"
+>"Content-type: text/html"</SPAN
+> and replaces it with
+	<SPAN
+CLASS="QUOTE"
+>"Content-Type: text/html; charset=ISO-8859-1"</SPAN
+>.
+	This specification prevents possible Javascript attacks on the
+	browser, and is suggested for all English-speaking sites.  For
+	non-english-speaking Bugzilla sites, I suggest changing
+	<SPAN
+CLASS="QUOTE"
+>"ISO-8859-1"</SPAN
+>, above, to <SPAN
+CLASS="QUOTE"
+>"UTF-8"</SPAN
+>.
+      </P
+></DIV
+><DIV
+CLASS="SECTION"
+><H2
+CLASS="SECTION"
+><A
+NAME="AEN964"
+>3.5.6. UNIX Installation Instructions History</A
+></H2
+><P
+>	This document was originally adapted from the Bonsai
+	installation instructions by Terry Weissman
+	&#60;terry@mozilla.org&#62;.
       </P
 ><P
->	The February 25, 1999 re-write of this page was done by Ry4an Brase
-	&#60;ry4an@ry4an.org&#62;, with some edits by Terry Weissman, Bryce Nesbitt,
-	Martin Pool, &#38; Dan Mosedale (But don't send bug reports to them;
-	report them using bugzilla, at http://bugzilla.mozilla.org/enter_bug.cgi ,
-	project Webtools, component Bugzilla).
+>	The February 25, 1999 re-write of this page was done by Ry4an
+	Brase &#60;ry4an@ry4an.org&#62;, with some edits by Terry
+	Weissman, Bryce Nesbitt, Martin Pool, &#38; Dan Mosedale (But
+	don't send bug reports to them; report them using bugzilla, at
+	http://bugzilla.mozilla.org/enter_bug.cgi , project Webtools,
+	component Bugzilla).
       </P
 ><P
->	This document was heavily modified again Wednesday, March 07 2001 to
-	reflect changes for Bugzilla 2.12 release by Matthew P. Barnson.  The
-	securing MySQL section should be changed to become standard procedure
-	for Bugzilla installations.
+>	This document was heavily modified again Wednesday, March 07
+	2001 to reflect changes for Bugzilla 2.12 release by Matthew
+	P. Barnson.  The securing MySQL section should be changed to
+	become standard procedure for Bugzilla installations.
       </P
 ><P
->	Finally, the README in its entirety was marked up in SGML and included into
-	the Guide on April 24, 2001 by Matt Barnson.  Since that time, it's undergone
-	extensive modification as Bugzilla grew.
+>	Finally, the README in its entirety was marked up in SGML and
+	included into the Guide on April 24, 2001 by Matt Barnson.
+	Since that time, it's undergone extensive modification as
+	Bugzilla grew.
       </P
 ><P
->	Comments from people using this Guide for the first time are particularly welcome.
+>	Comments from people using this Guide for the first time are
+	particularly welcome.
       </P
 ></DIV
 ></DIV

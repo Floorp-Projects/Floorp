@@ -68,7 +68,7 @@ CLASS="GLOSSDIV"
 ><H1
 CLASS="GLOSSDIV"
 ><A
-NAME="AEN2344"
+NAME="AEN2511"
 >0-9, high ascii</A
 ></H1
 ><DL
@@ -110,11 +110,27 @@ NAME="GLOSS_A"
 ><DL
 ><DT
 ><B
->There are no entries for A</B
+>Apache</B
 ></DT
 ><DD
 ><P
-></P
+>In this context, Apache is the web server most
+	    commonly used for serving up
+	    <I
+CLASS="GLOSSTERM"
+>Bugzilla</I
+> pages.  Contrary to
+	    popular belief, the apache web server has nothing to do
+	    with the ancient and noble Native American tribe, but
+	    instead derived its name from the fact that it was
+	    <SPAN
+CLASS="QUOTE"
+>"a patchy"</SPAN
+> version of the original
+	    <SPAN
+CLASS="ACRONYM"
+>NCSA</SPAN
+> world-wide-web server.</P
 ></DD
 ></DL
 ></DIV
@@ -179,6 +195,139 @@ CLASS="QUOTE"
 > is moderately flexible according to
 	    the needs of the organization using it, though.</P
 ></DD
+><DT
+><B
+>Bugzilla</B
+></DT
+><DD
+><P
+>	    Bugzilla is the industry-standard bug tracking system.  It
+	    is quite popular among Open Source enthusiasts.
+	  </P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_C"
+></A
+></H1
+><DL
+><DT
+><A
+NAME="GLOSS_COMPONENT"
+><B
+>Component</B
+></A
+></DT
+><DD
+><P
+>	    A Component is a subsection of a Product.  It should be a
+	    narrow category, tailored to your organization.  All
+	    Products must contain at least one Component (and, as a
+	    matter of fact, creating a Product with no Components will
+	    create an error in Bugzilla).
+	  </P
+></DD
+><DT
+><A
+NAME="GLOSS_CPAN"
+><B
+><SPAN
+CLASS="ACRONYM"
+>CPAN</SPAN
+></B
+></A
+></DT
+><DD
+><P
+><SPAN
+CLASS="ACRONYM"
+>CPAN</SPAN
+> stands for the
+	    <SPAN
+CLASS="QUOTE"
+>"Comprehensive Perl Archive Network"</SPAN
+>.  CPAN
+	    maintains a large number of extremely useful
+	    <I
+CLASS="GLOSSTERM"
+>Perl</I
+> modules.  By themselves, Perl
+	    modules generally do nothing, but when used as part of a
+	    larger program, they provide much-needed algorithms and
+	    functionality.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_D"
+>D</A
+></H1
+><DL
+><DT
+><B
+>daemon</B
+></DT
+><DD
+><P
+>A daemon is a computer program which runs in the
+	    background.  In general, most daemons are started at boot
+	    time via System V init scripts, or through RC scripts on
+	    BSD-based systems.  <I
+CLASS="GLOSSTERM"
+>mysqld</I
+>, the
+	    MySQL server, and <I
+CLASS="GLOSSTERM"
+>apache</I
+>, a web
+	    server, are generally run as daemons.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_G"
+></A
+></H1
+><DL
+><DT
+><B
+>Groups</B
+></DT
+><DD
+><P
+>The word <SPAN
+CLASS="QUOTE"
+>"Groups"</SPAN
+> has a very special
+	    meaning to Bugzilla.  Bugzilla's main security mechanism
+	    comes by lumping users into groups, and assigning those
+	    groups certain privileges to
+	    <I
+CLASS="GLOSSTERM"
+>Products</I
+> and
+	    <I
+CLASS="GLOSSTERM"
+>Components</I
+> in the
+	    <I
+CLASS="GLOSSTERM"
+>Bugzilla</I
+> database.</P
+></DD
 ></DL
 ></DIV
 ><DIV
@@ -208,6 +357,33 @@ CLASS="GLOSSDIV"
 ><H1
 CLASS="GLOSSDIV"
 ><A
+NAME="GLOSS_M"
+>M</A
+></H1
+><DL
+><DT
+><B
+>mysqld</B
+></DT
+><DD
+><P
+>mysqld is the name of the
+	    <I
+CLASS="GLOSSTERM"
+>daemon</I
+> for the MySQL database.  In
+	    general, it is invoked automatically through the use of
+	    the System V init scripts on GNU/Linux and AT&#38;T System
+	    V-based systems, such as Solaris and HP/UX, or through the
+	    RC scripts on BSD-based systems.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
 NAME="GLOSS_P"
 >P</A
 ></H1
@@ -226,7 +402,7 @@ NAME="GLOSS_P"
 ><DIV
 CLASS="EXAMPLE"
 ><A
-NAME="AEN2389"
+NAME="AEN2602"
 ></A
 ><P
 ><B
@@ -269,6 +445,22 @@ CLASS="QUOTE"
 >"Z"</SPAN
 >.</P
 ></DIV
+></DD
+><DT
+><B
+>Perl</B
+></DT
+><DD
+><P
+>First written by Larry Wall, Perl is a remarkable
+	    program language.  It has the benefits of the flexibility
+	    of an interpreted scripting language (such as shell
+	    script), combined with the speed and power of a compiled
+	    language, such as C.  <I
+CLASS="GLOSSTERM"
+>Bugzilla</I
+> is
+	    maintained in Perl.</P
 ></DD
 ></DL
 ></DIV
@@ -323,8 +515,11 @@ NAME="GLOSS_R"
 ></H1
 ><DL
 ><DT
+><A
+NAME="GLOSS_RECURSION"
 ><B
 >Recursion</B
+></A
 ></DT
 ><DD
 ><P
@@ -347,13 +542,114 @@ CLASS="GLOSSDIV"
 ><H1
 CLASS="GLOSSDIV"
 ><A
+NAME="GLOSS_S"
+>S</A
+></H1
+><DL
+><DT
+><B
+><SPAN
+CLASS="ACRONYM"
+>SGML</SPAN
+></B
+></DT
+><DD
+><P
+><SPAN
+CLASS="ACRONYM"
+>SGML</SPAN
+> stands for <SPAN
+CLASS="QUOTE"
+>"Standard
+	      Generalized Markup Language"</SPAN
+>.  Created in the
+	    1980's to provide an extensible means to maintain
+	    documentation based upon content instead of presentation,
+	    <SPAN
+CLASS="ACRONYM"
+>SGML</SPAN
+> has withstood the test of time as
+	    a robust, powerful language.
+	    <I
+CLASS="GLOSSTERM"
+><SPAN
+CLASS="ACRONYM"
+>XML</SPAN
+></I
+> is the
+	    <SPAN
+CLASS="QUOTE"
+>"baby brother"</SPAN
+> of SGML; any valid
+	    <SPAN
+CLASS="ACRONYM"
+>XML</SPAN
+> document it, by definition, a valid
+	    <SPAN
+CLASS="ACRONYM"
+>SGML</SPAN
+> document.  The document you are
+	    reading is written and maintained in
+	    <SPAN
+CLASS="ACRONYM"
+>SGML</SPAN
+>, and is also valid
+	    <SPAN
+CLASS="ACRONYM"
+>XML</SPAN
+> if you modify the Document Type
+	    Definition.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
+NAME="GLOSS_T"
+>T</A
+></H1
+><DL
+><DT
+><A
+NAME="GLOSS_TARGET_MILESTONE"
+><B
+>Target Milestone</B
+></A
+></DT
+><DD
+><P
+>	    Target Milestones are Product goals.  They are
+	    configurable on a per-Product basis.  Most software
+	    development houses have a concept of
+	    <SPAN
+CLASS="QUOTE"
+>"milestones"</SPAN
+> where the people funding a
+	    project expect certain functionality on certain dates.
+	    Bugzilla facilitates meeting these milestones by giving
+	    you the ability to declare by which milestone a bug will be
+	    fixed, or an enhancement will be implemented.
+	  </P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="GLOSSDIV"
+><H1
+CLASS="GLOSSDIV"
+><A
 NAME="GLOSS_Z"
 >Z</A
 ></H1
 ><DL
 ><DT
+><A
+NAME="ZARRO-BOOGS-FOUND"
 ><B
 >Zarro Boogs Found</B
+></A
 ></DT
 ><DD
 ><P

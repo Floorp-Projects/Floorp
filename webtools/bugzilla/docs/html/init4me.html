@@ -1,7 +1,7 @@
 <HTML
 ><HEAD
 ><TITLE
->What's in it for me?</TITLE
+>Where can I find my user preferences?</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.61
@@ -71,7 +71,7 @@ CLASS="SECTION"
 CLASS="SECTION"
 ><A
 NAME="INIT4ME"
->2.4. What's in it for me?</A
+>2.4. Where can I find my user preferences?</A
 ></H1
 ><TABLE
 BORDER="0"
@@ -101,15 +101,13 @@ VALIGN="TOP"
 ></TR
 ></TABLE
 ><P
->      Customized User Preferences offer tremendous versatility to
-      your individual Bugzilla experience.
-      Let's plunge into what you can do!  The first step is to click
-      the "Edit prefs" link at the footer of each page once you
-      have logged in to
-      <A
+>      Customized User Preferences offer tremendous versatility to your
+      individual Bugzilla experience. Let's plunge into what you can
+      do!  The first step is to click the "Edit prefs" link at the
+      footer of each page once you have logged in to <A
 HREF="http://landfill.tequilarista.org/bugzilla-tip/query.cgi?GoAheadAndLogIn=1"
 TARGET="_top"
->      Landfill</A
+> Landfill</A
 >.
     </P
 ><DIV
@@ -122,16 +120,29 @@ NAME="ACCOUNTSETTINGS"
 ></H2
 ><P
 >	On this page, you can change your basic Account Settings,
-	including your password and full name.
-	For security reasons, in order to change anything on this page you
-	must type your <EM
+	including your password and full name. For security reasons,
+	in order to change anything on this page you must type your
+	<EM
 >current</EM
->
-	password into the "Old Password" field. 
-	If you wish to change your password, type the new password you
-	want into the "New Password" field and again into the "Re-enter 
-	new password" field to ensure
-	you typed your new password correctly.  Select the "Submit" button and you're done!
+> password into the <SPAN
+CLASS="QUOTE"
+>"Old
+	  Password"</SPAN
+> field.  If you wish to change your
+	password, type the new password you want into the <SPAN
+CLASS="QUOTE"
+>"New
+	  Password"</SPAN
+> field and again into the <SPAN
+CLASS="QUOTE"
+>"Re-enter
+	  new password"</SPAN
+> field to ensure you typed your new
+	password correctly.  Select the <SPAN
+CLASS="QUOTE"
+>"Submit"</SPAN
+> button
+	    and you are done.
       </P
 ></DIV
 ><DIV
@@ -150,78 +161,30 @@ CLASS="SECTION"
 NAME="NOTIFICATION"
 >2.4.2.1. Email Notification</A
 ></H3
-><DIV
-CLASS="NOTE"
 ><P
-></P
-><TABLE
-CLASS="NOTE"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->	    The email notification settings described below have been obsoleted in Bugzilla 2.12, and
-	    this section will be replaced with a comprehensive description of the amazing array of 
-	    new options at your disposal.  However, in the meantime, throw this chunk out the window
-	    and go crazy with goofing around with different notification options.
-	  </P
-></TD
-></TR
-></TABLE
-></DIV
-><P
->	  Ahh, here you can reduce or increase the amount of email sent you from Bugzilla!
-	  In the drop-down "Notify me of changes to", select one of
-	  <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
-><EM
->All qualifying bugs</EM
->: sends you every change to every bug
-	      where your name is somewhere on it, regardless of who changed it.</TD
-></TR
-><TR
-><TD
-><EM
->Only those bugs which I am listed in the CC line</EM
->: prevents
-	      you from receiving mail for which you are the reporter,'
-	      owner, or QA contact.  If you are on the CC
-	      list, presumably someone had a <EM
->good</EM
->
-	      reason for you to get the email.</TD
-></TR
-><TR
-><TD
-><EM
->All qulifying bugs except those which I change</EM
->:
-	      This is the default, and
-	      a sensible setting.  If someone else changes your bugs, you will get emailed,
-	      but if you change bugs
-	      yourself you will receive no notification of the change.</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
+>	  Here you can reduce or increase the amount of email sent you
+	  from Bugzilla.  Although this is referred to as
+	  <SPAN
+CLASS="QUOTE"
+>"Advanced Email Filtering Options"</SPAN
+>, they are,
+	  in fact, the standard email filter set.  All of them are
+	  self-explanatory, but you can use the filters in interesting
+	  ways.  For instance, some people (notably Quality Assurance
+	  personnel) often only care to receive updates regarding a
+	  bug when the bug changes state, so they can track bugs on
+	  their flow charts and know when it is time to pull the bug
+	  onto a quality assurance platform for inspection.  Other
+	  people set up email gateways to
+	    <A
+HREF="bonsai.html"
+>Bonsai, the Mozilla automated CVS management system</A
+> or <A
+HREF="tinderbox.html"
+>Tinderbox, the Mozilla automated build management system</A
+>, and
+	  restrict which types of Bugzilla information are fed to
+	  these systems..
 	</P
 ></DIV
 ><DIV
@@ -253,27 +216,30 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	    This option may not be available in all Bugzilla installations, depending upon
-	    the preferences of the systems administrator responsible for the setup of your Bugzilla.
-	    However, if you really want this functionality, ask her to "enable newemailtech
-	    in Params"
-	    and "make it the default for all new users", referring her to the Administration section
-	    of this Guide.
+>	    This option may not be available in all Bugzilla
+	    installations, depending upon the preferences of the
+	    systems administrator responsible for the setup of your
+	    Bugzilla. However, if you really want this functionality,
+	    ask her to "enable newemailtech in Params" and "make it
+	    the default for all new users", referring her to the
+	    Administration section of this Guide.
 	  </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->	  Disregard the warnings about "experimental and bleeding edge"; the code to handle email
-	  in a cleaner manner than that historically used for Bugzilla is
-	  quite robust and well-tested now.
+>	  Disregard the warnings about "experimental and bleeding
+	  edge"; the code to handle email in a cleaner manner than
+	  that historically used for Bugzilla is quite robust and
+	  well-tested now.
 	</P
 ><P
->	  I recommend you enable the option, "Click here to sign up (and risk any bugs)".
-	  Your email-box
-	  will thank you for it.  The fundamental shift in "newemailtech" is away from standard UNIX
-	  "diff" output, which is quite ugly, to a prettier, better laid-out email.
+>	  I recommend you enable the option, "Click here to sign up
+	  (and risk any bugs)". Your email-box will thank you for it.
+	  The fundamental shift in "newemailtech" is away from
+	  standard UNIX "diff" output, which is quite ugly, to a
+	  prettier, better laid-out email.
 	</P
 ></DIV
 ><DIV
@@ -305,20 +271,25 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	    This option may not be available in all Bugzilla installations, depending upon
-	    the preferences of the systems administrator responsible for the setup of your Bugzilla.
-	    However, if you really want this functionality, ask her to "enable watchers in Params".
+>	    This option may not be available in all Bugzilla
+	    installations, depending upon the preferences of the
+	    systems administrator responsible for the setup of your
+	    Bugzilla. However, if you really want this functionality,
+	    ask her to "enable watchers in Params".
 	  </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->	  By entering user email names into the "Users to watch" text entry box, delineated by commas,
-	  you can watch bugs of other users.  This powerful functionality enables seamless transitions
-	  as developers change projects, managers wish to get in touch with the issues faced by their
-	  direct reports, or users go on vacation.  If any of these three situations apply
-	  to you, you will undoubtedly find this feature quite convenient.
+>	  By entering user email names into the "Users to watch" text
+	  entry box, delineated by commas, you can watch bugs of other
+	  users.  This powerful functionality enables seamless
+	  transitions as developers change projects, managers wish to
+	  get in touch with the issues faced by their direct reports,
+	  or users go on vacation.  If any of these three situations
+	  apply to you, you will undoubtedly find this feature quite
+	  convenient.
 	</P
 ></DIV
 ></DIV
@@ -351,20 +322,24 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	  By default, this page is quite barren.  However, go explore the Query Page some more; you will
-	  find that you can store numerous queries on the server, so if you regularly run a particular query
-	  it is just a drop-down menu away.  On this page of Preferences, if you have many stored
-	  queries you can elect to have them always one-click away!
+>	  By default, this page is quite barren.  However, go explore
+	  the Query Page some more; you will find that you can store
+	  numerous queries on the server, so if you regularly run a
+	  particular query it is just a drop-down menu away.  On this
+	  page of Preferences, if you have many stored queries you can
+	  elect to have them always one-click away!
 	</P
 ></TD
 ></TR
 ></TABLE
 ></DIV
 ><P
->	If you have many stored queries on the server, here you will find individual drop-downs for each
-	stored query.  Each drop-down gives you the option of that query appearing on the footer of every
-	page in Bugzilla!  This gives you powerful one-click access to any complex searches you may set up,
-	and is an excellent way to impress your boss...
+>	If you have many stored queries on the server, here you will
+	find individual drop-downs for each stored query.  Each
+	drop-down gives you the option of that query appearing on the
+	footer of every page in Bugzilla!  This gives you powerful
+	one-click access to any complex searches you may set up, and
+	is an excellent way to impress your boss...
       </P
 ><DIV
 CLASS="TIP"
@@ -387,13 +362,18 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->By default, the "My Bugs" link appears at the bottom of each page.  However, this query
-	gives you both the bugs you have reported, as well as those you are assigned.  One of the most
-	common uses for this page is to remove the "My Bugs" link, replacing it with two other queries,
-	commonly called "My Bug Reports" and "My Bugs" (but only referencing bugs assigned to you).  This
-	allows you to distinguish those bugs you have reported from those you are assigned.  I commonly
-	set up complex Boolean queries in the Query page and link them to my footer in this page.  When
-	they are significantly complex, a one-click reference can save hours of work.</P
+>By default, the "My Bugs" link appears at the bottom of
+	  each page.  However, this query gives you both the bugs you
+	  have reported, as well as those you are assigned.  One of
+	  the most common uses for this page is to remove the "My
+	  Bugs" link, replacing it with two other queries, commonly
+	  called "My Bug Reports" and "My Bugs" (but only referencing
+	  bugs assigned to you).  This allows you to distinguish those
+	  bugs you have reported from those you are assigned.  I
+	  commonly set up complex Boolean queries in the Query page
+	  and link them to my footer in this page.  When they are
+	  significantly complex, a one-click reference can save hours
+	  of work.</P
 ></TD
 ></TR
 ></TABLE
@@ -408,11 +388,12 @@ NAME="PERMISSIONSETTINGS"
 >2.4.4. Permissions</A
 ></H2
 ><P
->	This is a purely informative page which outlines your current permissions on
-	this installation of Bugzilla.  If you have permissions to grant certain permissions to
-	other users, the "other users" link appears on this page as well as the footer.
-	For more information regarding user administration, please consult the Administration
-	section of this Guide.
+>	This is a purely informative page which outlines your current
+	permissions on this installation of Bugzilla.  If you have
+	permissions to grant certain permissions to other users, the
+	"other users" link appears on this page as well as the footer.
+	For more information regarding user administration, please
+	consult the Administration section of this Guide.
       </P
 ></DIV
 ></DIV

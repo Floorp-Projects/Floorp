@@ -137,6 +137,15 @@ CLASS="PROMPT"
 	    login name)"; </B
 >
 	</P
+><P
+>Yes, that is <EM
+>fourteen</EM
+>
+	  <SPAN
+CLASS="QUOTE"
+>"f"</SPAN
+>'s.  A whole lot of f-ing going on if you
+	  want to create a new administator.</P
 ></TD
 ></TR
 ></TABLE
@@ -245,13 +254,16 @@ VALIGN="TOP"
 		right-hand side of the text entry box. You can match
 		what you type as a case-insensitive substring (the
 		default) of all users on your system, a case-sensitive
-		regular expression (please see the "man regexp" manual
-		page for details on regular expression syntax), or a
-		<EM
+		regular expression (please see the <B
+CLASS="COMMAND"
+>man
+		  regexp</B
+> manual page for details on regular
+		expression syntax), or a <EM
 >reverse</EM
-> regular expression match,
-		where every user name which does NOT match the regular
-		expression is selected.
+>
+		regular expression match, where every user name which
+		does NOT match the regular expression is selected.
 	      </P
 ></TD
 ></TR
@@ -294,10 +306,17 @@ VALIGN="TOP"
 >not</EM
 >
 		send an email informing them of their username and
-		password. In general, it is preferable to log out and
-		use the "New Account" button to create users, as it
-		will pre-populate all the required fields and also
-		notify  the user of her account name and password.
+		password. While useful for creating dummy accounts
+		(watchers which shuttle mail to another system, for
+		instance, or email addresses which are a mailing
+		list), in general it is preferable to log out and use
+		the <SPAN
+CLASS="QUOTE"
+>"New Account"</SPAN
+> button to create users,
+		as it will pre-populate all the required fields and
+		also notify  the user of her account name and
+		password.
 	      </P
 ></TD
 ></TR
@@ -346,6 +365,15 @@ VALIGN="TOP"
 >	      Don't disable your own administrative account, or you
 	      will hate life!
 	    </P
+><P
+>At this time, <SPAN
+CLASS="QUOTE"
+>"Disabled Text"</SPAN
+> does not
+	      prevent a user from using the email interface.  If you
+	      have the email interface enabled, they can still
+	      continue to submit bugs and comments that way.  We need
+	      a patch to fix this.</P
 ></TD
 ></TR
 ></TABLE
@@ -419,9 +447,8 @@ VALIGN="TOP"
 ><P
 >	      <EM
 >Password</EM
->: You will only see
-	      asterisks in versions of Bugzilla newer than 2.10 or
-	      early 2.11.  You can change the user password here.
+>:  You can change the user
+	      password here.  It is normal to only see asterisks.
 	    </P
 ></LI
 ><LI

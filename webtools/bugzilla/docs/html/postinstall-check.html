@@ -74,8 +74,8 @@ NAME="POSTINSTALL-CHECK"
 >4.1. Post-Installation Checklist</A
 ></H1
 ><P
->      After installation, follow the checklist below to ensure that
-      you have a successful installation. If you do not see a
+>      After installation, follow the checklist below to help ensure
+      that you have a successful installation. If you do not see a
       recommended setting for a parameter, consider leaving it at the
       default while you perform your initial tests on your Bugzilla
       setup.
@@ -86,20 +86,34 @@ CLASS="PROCEDURE"
 TYPE="1"
 ><LI
 ><P
->	  Bring up "editparams.cgi" in your web browser.  For
-	  instance, to edit parameters at mozilla.org, the URL would
-	  be <A
-HREF="http://bugzilla.mozilla.org/editparams.cgi"
-TARGET="_top"
->	    http://bugzilla.mozilla.org/editparams.cgi</A
->, also
-	  available under the "edit parameters" link on your query
-	  page.
+>	  Bring up <TT
+CLASS="FILENAME"
+>editparams.cgi</TT
+> in your web
+	  browser.  This should be available as the <SPAN
+CLASS="QUOTE"
+>"edit
+	    parameters"</SPAN
+> link from any Bugzilla screen once you
+	  have logged in.
 	</P
 ></LI
 ><LI
 ><P
->	  Set "maintainer" to <EM
+>The <SPAN
+CLASS="QUOTE"
+>"maintainer"</SPAN
+> is the email address of
+	  the person responsible for maintaining this Bugzilla
+	  installation.  The maintainer need not be a valid Bugzilla
+	  user.  Error pages, error emails, and administrative mail
+	  will be sent with the maintainer as the return email
+	  address.</P
+><P
+>	  Set <SPAN
+CLASS="QUOTE"
+>"maintainer"</SPAN
+> to <EM
 >your</EM
 > email address.
 	  This allows Bugzilla's error messages to display your email
@@ -108,34 +122,83 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->	  Set "urlbase" to the URL reference for your Bugzilla
-	  installation. If your bugzilla query page is at
-	  http://www.foo.com/bugzilla/query.cgi, your url base is
-	  http://www.foo.com/bugzilla/
+>The <SPAN
+CLASS="QUOTE"
+>"urlbase"</SPAN
+> parameter defines the fully
+	  qualified domain name and web server path to your Bugzilla
+	  installation.</P
+><P
+>	  For example, if your bugzilla query page is
+	  http://www.foo.com/bugzilla/query.cgi, set your
+	  <SPAN
+CLASS="QUOTE"
+>"urlbase"</SPAN
+> is http://www.foo.com/bugzilla/.  
 	</P
 ></LI
 ><LI
+><P
+><SPAN
+CLASS="QUOTE"
+>"usebuggroups"</SPAN
+> dictates whether or not to
+	  implement group-based security for Bugzilla.  If set,
+	  Bugzilla bugs can have an associated groupmask defining
+	  which groups of users are allowed to see and edit the
+	  bug.</P
 ><P
 >	  Set "usebuggroups" to "on" <EM
 >only</EM
 > if you
-	  need to restrict access to products. I suggest leaving this
-	  parameter <EM
+	  may wish to restrict access to products. I suggest leaving
+	  this parameter <EM
 >off</EM
-> while initially testing
-	  your Bugzilla.
+> while initially
+	  testing your Bugzilla.  
 	</P
 ></LI
 ><LI
 ><P
->	  Set "usebuggroupsentry" to "on" if you want to restrict
-	  access to products. Once again, if you are simply testing
+>	  <SPAN
+CLASS="QUOTE"
+>"usebuggroupsentry"</SPAN
+>, when set to
+	  <SPAN
+CLASS="QUOTE"
+>"on"</SPAN
+>, requires that all bugs have an associated
+	  groupmask when submitted.  This parameter is made for those
+	  installations where product isolation is a necessity.
+	</P
+><P
+>	  Set "usebuggroupsentry" to "on" if you absolutely need to
+	  restrict access to bugs from the moment they are submitted
+	  through resolution. Once again, if you are simply testing
 	  your installation, I suggest against turning this parameter
 	  on; the strict security checking may stop you from being
 	  able to modify your new entries.
 	</P
 ></LI
 ><LI
+><P
+>	  You run into an interesting problem when Bugzilla reaches a
+	  high level of continuous activity.  MySQL supports only
+	  table-level write locking.  What this means is that if
+	  someone needs to make a change to a bug, they will lock the
+	  entire table until the operation is complete.  Locking for
+	  write also blocks reads until the write is complete.  The
+	  <SPAN
+CLASS="QUOTE"
+>"shadowdb"</SPAN
+> parameter was designed to get around
+	  this limitation.  While only a single user is allowed to
+	  write to a table at a time, reads can continue unimpeded on
+	  a read-only shadow copy of the database.  Although your
+	  database size will double, a shadow database can cause an
+	  enormous performance improvement when implemented on
+	  extremely high-traffic Bugzilla databases.
+	</P
 ><P
 >	  Set "shadowdb" to "bug_shadowdb" if you will be running a
 	  *very* large installation of Bugzilla. The shadow database
@@ -163,9 +226,13 @@ ALIGN="LEFT"
 VALIGN="TOP"
 ><P
 >	      Enabling "shadowdb" can adversely affect the stability
-	      of your installation of Bugzilla. You may frequently
-	      need to manually synchronize your databases, or schedule
-	      nightly syncs via "cron"
+	      of your installation of Bugzilla. You should regularly
+	      check that your database is in sync.  It is often
+	      advisable to force a shadow database sync nightly via
+	      <SPAN
+CLASS="QUOTE"
+>"cron"</SPAN
+>.
 	    </P
 ></TD
 ></TR
@@ -177,7 +244,13 @@ VALIGN="TOP"
 > to use
 	  it, and have repeatedly run into the problem it was designed
 	  to solve -- very long wait times while attempting to commit
-	  a change to the database.
+	  a change to the database.  Mozilla.org began needing
+	  <SPAN
+CLASS="QUOTE"
+>"shadowdb"</SPAN
+> when they reached around 40,000
+	  Bugzilla users with several hundred Bugzilla bug changes and
+	  comments per day.
         </P
 ><P
 >	  If you use the "shadowdb" option, it is only natural that
@@ -187,6 +260,40 @@ VALIGN="TOP"
 	</P
 ></LI
 ><LI
+><P
+><SPAN
+CLASS="QUOTE"
+>"headerhtml"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"footerhtml"</SPAN
+>,
+	  <SPAN
+CLASS="QUOTE"
+>"errorhtml"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"bannerhtml"</SPAN
+>, and
+	  <SPAN
+CLASS="QUOTE"
+>"blurbhtml"</SPAN
+> are all templates which control
+	  display of headers, footers, errors, banners, and additional
+	  data.  We could go into some detail regarding the usage of
+	  these, but it is really best just to monkey around with them
+	  a bit to see what they do.  I strongly recommend you copy
+	  your <TT
+CLASS="FILENAME"
+>data/params</TT
+> file somewhere safe
+	  before playing with these values, though.  If they are
+	  changed dramatically, it may make it impossible for you to
+	  display Bugzilla pages to fix the problem until you have
+	  restored your <TT
+CLASS="FILENAME"
+>data/params</TT
+> file.</P
 ><P
 >	  If you have custom logos or HTML you must put in place to
 	  fit within your site design guidelines, place the code in
@@ -216,10 +323,11 @@ VALIGN="TOP"
 >	      The "headerhtml" text box is the HTML printed out
 	      <EM
 >before</EM
-> any other code on the page.
-	      If you have a special banner, put the code for it in
-	      "bannerhtml". You may want to leave these settings at
-	      the defaults initially.
+> any other code on the page,
+	      except the CONTENT-TYPE header sent by the Bugzilla
+	      engine. If you have a special banner, put the code for
+	      it in "bannerhtml". You may want to leave these settings
+	      at the defaults initially.
 	    </P
 ></TD
 ></TR
@@ -230,6 +338,14 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
+><SPAN
+CLASS="QUOTE"
+>"passwordmail"</SPAN
+> is rather simple.  Every
+	  time a user creates an account, the text of this parameter
+	  is read as the text to send to the new user along with their
+	  password message.</P
+><P
 >	  Add any text you wish to the "passwordmail" parameter box.
 	  For instance, many people choose to use this box to give a
 	  quick training blurb about how to use Bugzilla at your site.
@@ -237,19 +353,48 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	  Ensure "newemailtech" is "on". Your users will thank you.
-	  This is the default in the post-2.12 world, and is only an
-	  issue if you are upgrading.
-	</P
-></LI
-><LI
+><SPAN
+CLASS="QUOTE"
+>"useqacontact"</SPAN
+> allows you to define an
+	  email address for each component, in addition to that of the
+	  default owner, who will be sent carbon copies of incoming
+	  bugs.  The critical difference between a QA Contact and an
+	  Owner is that the QA Contact follows the component.  If you
+	  reassign a bug from component A to component B, the QA
+	  Contact for that bug will change with the reassignment,
+	  regardless of owner.</P
+><P
+><SPAN
+CLASS="QUOTE"
+>"usestatuswhiteboard"</SPAN
+> defines whether you
+	  wish to have a free-form, overwritable field associated with
+	  each bug.  The advantage of the Status Whiteboard is that it
+	  can be deleted or modified with ease, and provides an
+	  easily-searchable field for indexing some bugs that have
+	  some trait in common.  Many people will put <SPAN
+CLASS="QUOTE"
+>"help
+	    wanted"</SPAN
+>, <SPAN
+CLASS="QUOTE"
+>"stalled"</SPAN
+>, or <SPAN
+CLASS="QUOTE"
+>"waiting
+	    on reply from somebody"</SPAN
+> messages into the Status
+	  Whiteboard field so those who peruse the bugs are aware of
+	  their status even more than that which can be indicated by
+	  the Resolution fields.</P
 ><P
 >	  Do you want to use the QA Contact ("useqacontact") and
 	  status whiteboard ("usestatuswhiteboard") fields? These
 	  fields are useful because they allow for more flexibility,
 	  particularly when you have an existing Quality Assurance
 	  and/or Release Engineering team,  but they may not be needed
-	  for smaller installations.
+	  for many smaller installations.
 	</P
 ></LI
 ><LI
@@ -259,14 +404,26 @@ VALIGN="TOP"
 	  they have untouched new bugs.  If you do not plan to use
 	  this feature, simply do not set up the whining cron job
 	  described in the installation instructions, or set this
-	  value to "0".
+	  value to "0" (never whine).
 	</P
 ></LI
 ><LI
 ><P
+><SPAN
+CLASS="QUOTE"
+>"commenton"</SPAN
+> fields allow you to dictate
+	  what changes can pass without comment, and which must have a
+	  comment from the person who changed them.  Often,
+	  administrators will allow users to add themselves to the CC
+	  list, accept bugs, or change the Status Whiteboard without
+	  adding a comment as to their reasons for the change, yet
+	  require that most other changes come with an
+	  explanation.</P
+><P
 >	  Set the "commenton" options according to your site policy.
 	  It is a wise idea to require comments when users resolve,
-	  reassign, or reopen bugs.
+	  reassign, or reopen bugs at the very least.
 	  <DIV
 CLASS="NOTE"
 ><P
@@ -303,11 +460,38 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	  Set "supportwatchers" to "On".  This feature is helpful for
-	  team leads to monitor progress in their respective areas,
-	  and can offer many other benefits, such as allowing a
-	  developer to pick up a former engineer's bugs without
-	  requiring her to change all the information in the bug.
+>The <SPAN
+CLASS="QUOTE"
+>"supportwatchers"</SPAN
+> option can be an
+	  exceptionally powerful tool in the hands of a power Bugzilla
+	  user.  By enabling this option, you allow users to receive
+	  email updates whenever other users receive email updates.
+	  This is, of course, subject to the groupset restrictions on
+	  the bug; if the <SPAN
+CLASS="QUOTE"
+>"watcher"</SPAN
+> would not normally be
+	  allowed to view a bug, the watcher cannot get around the
+	  system by setting herself up to watch the bugs of someone
+	  with bugs outside her priveleges.  She would still only
+	  receive email updates for those bugs she could normally
+	  view.</P
+><P
+>For Bugzilla sites which require strong inter-Product
+	  security to prevent snooping, watchers are not a good
+	  idea.</P
+><P
+>	  However, for most sites you should set
+	  <SPAN
+CLASS="QUOTE"
+>"supportwatchers"</SPAN
+> to "On".  This feature is
+	  helpful for team leads to monitor progress in their
+	  respective areas, and can offer many other benefits, such as
+	  allowing a developer to pick up a former engineer's bugs
+	  without requiring her to change all the information in the
+	  bug.
 	</P
 ></LI
 ></OL

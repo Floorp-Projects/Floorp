@@ -74,7 +74,23 @@ NAME="CVS"
 >5.2. CVS</A
 ></H1
 ><P
->CVS integration is best accomplished, at this point, using the Bugzilla Email Gateway.</P
+>CVS integration is best accomplished, at this point, using
+      the Bugzilla Email Gateway.  There have been some files
+      submitted to allow greater CVS integration, but we need to make
+      certain that Bugzilla is not tied into one particular software
+      management package.</P
+><P
+>      Follow the instructions in the FAQ for enabling Bugzilla e-mail
+      integration.  Ensure that your check-in script sends an email to
+      your Bugzilla e-mail gateway with the subject of <SPAN
+CLASS="QUOTE"
+>"[Bug
+	XXXX]"</SPAN
+>, and you can have CVS check-in comments append
+      to your Bugzilla bug.  If you have your check-in script include
+      an @resolution field, you can even change the Bugzilla bug
+      state.
+    </P
 ></DIV
 ><DIV
 CLASS="NAVFOOTER"

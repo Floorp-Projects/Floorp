@@ -23,7 +23,7 @@
 <!ENTITY bz-ver "2.14">
 <!ENTITY bz-cvs-ver "2.15">
 <!ENTITY bzg-date "August 10, 2001">
-<!ENTITY bzg-ver "2.14.0">
+<!ENTITY bzg-ver "2.14">
 <!ENTITY bzg-cvs-ver "2.15.0">
 <!ENTITY bzg-auth "Matthew P. Barnson">
 <!ENTITY bzg-auth-email "<email>barnboy@NOSPAM.trilobyte.net</email>">
@@ -137,15 +137,6 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 	</affiliation>
       </collab>
 
-      <editor>
-	<firstname>I.</firstname>
-	<surname>Freely</surname>
-	<othername>P.</othername>
-	<affiliation>
-	  <address><email>ipfreely@freely.eye-p.net</email></address>
-	</affiliation>
-      </editor>
-
     </authorgroup>
 
     <abstract>
@@ -164,6 +155,12 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 	for installing and maintaining this software is a qualified
 	professional on operating system upon which you install
 	Bugzilla.
+      </para>
+      <para>
+	THIS DOCUMENTATION IS MAINTAINED IN DOCBOOK 4.1 SGML FORMAT.
+	IF YOU WISH TO MAKE CORRECTIONS, PLEASE MAKE THEM IN PLAIN
+	TEXT OR SGML DIFFS AGAINST THE SOURCE.  I CANNOT ACCEPT
+	ADDITIONS TO THE GUIDE WRITTEN IN HTML!
       </para>
     </abstract>
 

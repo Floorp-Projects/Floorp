@@ -26,9 +26,16 @@
     <glossdiv id="gloss_a">
       <title>A</title>
       <glossentry>
-	<glossterm>There are no entries for A</glossterm>
+	<glossterm>Apache</glossterm>
 	<glossdef>
-	  <para></para>
+	  <para>In this context, Apache is the web server most
+	    commonly used for serving up
+	    <glossterm>Bugzilla</glossterm> pages.  Contrary to
+	    popular belief, the apache web server has nothing to do
+	    with the ancient and noble Native American tribe, but
+	    instead derived its name from the fact that it was
+	    <quote>a patchy</quote> version of the original
+	    <acronym>NCSA</acronym> world-wide-web server.</para>
 	</glossdef>
       </glossentry>
     </glossdiv>
@@ -70,8 +77,77 @@
 	    the needs of the organization using it, though.</para>
 	</glossdef>
       </glossentry>
+
+      <glossentry>
+	<glossterm>Bugzilla</glossterm>
+	<glossdef>
+	  <para>
+	    Bugzilla is the industry-standard bug tracking system.  It
+	    is quite popular among Open Source enthusiasts.
+	  </para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+
+    <glossdiv id="gloss_c">
+      <title></title>
+      <glossentry id="gloss_component">
+	<glossterm>Component</glossterm>
+	<glossdef>
+	  <para>
+	    A Component is a subsection of a Product.  It should be a
+	    narrow category, tailored to your organization.  All
+	    Products must contain at least one Component (and, as a
+	    matter of fact, creating a Product with no Components will
+	    create an error in Bugzilla).
+	  </para>
+	</glossdef>
+      </glossentry>
+      <glossentry id="gloss_cpan">
+	<glossterm><acronym>CPAN</acronym></glossterm>
+	<glossdef>
+	  <para><acronym>CPAN</acronym> stands for the
+	    <quote>Comprehensive Perl Archive Network</quote>.  CPAN
+	    maintains a large number of extremely useful
+	    <glossterm>Perl</glossterm> modules.  By themselves, Perl
+	    modules generally do nothing, but when used as part of a
+	    larger program, they provide much-needed algorithms and
+	    functionality.</para>
+	</glossdef>
+      </glossentry>
     </glossdiv>
     
+    <glossdiv id="gloss_d">
+      <title>D</title>
+      <glossentry>
+	<glossterm>daemon</glossterm>
+	<glossdef>
+	  <para>A daemon is a computer program which runs in the
+	    background.  In general, most daemons are started at boot
+	    time via System V init scripts, or through RC scripts on
+	    BSD-based systems.  <glossterm>mysqld</glossterm>, the
+	    MySQL server, and <glossterm>apache</glossterm>, a web
+	    server, are generally run as daemons.</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+
+    <glossdiv id="gloss_g">
+      <title></title>
+      <glossentry>
+	<glossterm>Groups</glossterm>
+	<glossdef>
+	  <para>The word <quote>Groups</quote> has a very special
+	    meaning to Bugzilla.  Bugzilla's main security mechanism
+	    comes by lumping users into groups, and assigning those
+	    groups certain privileges to
+	    <glossterm>Products</glossterm> and
+	    <glossterm>Components</glossterm> in the
+	    <glossterm>Bugzilla</glossterm> database.</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+
     <glossdiv id="gloss_i">
       <title>I</title>
       <glossentry id="gloss_infiniteloop">
@@ -81,7 +157,22 @@
 	</glossdef>
       </glossentry>
     </glossdiv>
-    
+
+    <glossdiv id="gloss_m">
+      <title>M</title>
+      <glossentry>
+	<glossterm>mysqld</glossterm>
+	<glossdef>
+	  <para>mysqld is the name of the
+	    <glossterm>daemon</glossterm> for the MySQL database.  In
+	    general, it is invoked automatically through the use of
+	    the System V init scripts on GNU/Linux and AT&amp;T System
+	    V-based systems, such as Solaris and HP/UX, or through the
+	    RC scripts on BSD-based systems.</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+
     <glossdiv id="gloss_p">
       <title>P</title>
       <glossentry>
@@ -108,6 +199,17 @@
 	  </example>
 	</glossdef>
       </glossentry>
+      <glossentry>
+	<glossterm>Perl</glossterm>
+	<glossdef>
+	  <para>First written by Larry Wall, Perl is a remarkable
+	    program language.  It has the benefits of the flexibility
+	    of an interpreted scripting language (such as shell
+	    script), combined with the speed and power of a compiled
+	    language, such as C.  <glossterm>Bugzilla</glossterm> is
+	    maintained in Perl.</para>
+	</glossdef>
+      </glossentry>
     </glossdiv>
     
     <glossdiv id="gloss_q">
@@ -129,8 +231,8 @@
     
     <glossdiv id="gloss_r">
       <title>R</title>
-      <glossentry>
-	<glossterm id="gloss_recursion">Recursion</glossterm>
+      <glossentry id="gloss_recursion" xreflabel="Recursion">
+	<glossterm>Recursion</glossterm>
 	<glossdef>
 	  <para>The property of a function looking back at itself for
 	    something.  <quote>GNU</quote>, for instance, stands for
@@ -140,10 +242,52 @@
 	</glossdef>
       </glossentry>
     </glossdiv>
+
+    <glossdiv id="gloss_s">
+      <title>S</title>
+      <glossentry>
+	<glossterm><acronym>SGML</acronym></glossterm>
+	<glossdef>
+	  <para><acronym>SGML</acronym> stands for <quote>Standard
+	      Generalized Markup Language</quote>.  Created in the
+	    1980's to provide an extensible means to maintain
+	    documentation based upon content instead of presentation,
+	    <acronym>SGML</acronym> has withstood the test of time as
+	    a robust, powerful language.
+	    <glossterm><acronym>XML</acronym></glossterm> is the
+	    <quote>baby brother</quote> of SGML; any valid
+	    <acronym>XML</acronym> document it, by definition, a valid
+	    <acronym>SGML</acronym> document.  The document you are
+	    reading is written and maintained in
+	    <acronym>SGML</acronym>, and is also valid
+	    <acronym>XML</acronym> if you modify the Document Type
+	    Definition.</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+
+    <glossdiv id="gloss_t">
+      <title>T</title>
+      <glossentry id="gloss_target_milestone" xreflabel="Target Milestone">
+	<glossterm>Target Milestone</glossterm>
+	<glossdef>
+	  <para>
+	    Target Milestones are Product goals.  They are
+	    configurable on a per-Product basis.  Most software
+	    development houses have a concept of
+	    <quote>milestones</quote> where the people funding a
+	    project expect certain functionality on certain dates.
+	    Bugzilla facilitates meeting these milestones by giving
+	    you the ability to declare by which milestone a bug will be
+	    fixed, or an enhancement will be implemented.
+	  </para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
     
     <glossdiv id="gloss_z">
       <title>Z</title>
-      <glossentry>
+      <glossentry id="zarro-boogs-found" xreflabel="Zarro Boogs Found">
 	<glossterm>Zarro Boogs Found</glossterm>
 	<glossdef>
 	  <para>This is the cryptic response sent by Bugzilla when a

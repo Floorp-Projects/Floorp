@@ -3,11 +3,13 @@
 <chapter id="future">
   <title>The Future of Bugzilla</title>
   <synopsis>Bugzilla's Future.  Much of this is the present, now.</synopsis>
-  <para>The future of Bugzilla is Bugzilla 3.0.  Unfortunately, I do
+  <para>
+    The future of Bugzilla is Bugzilla 3.0.  Unfortunately, I do
     not have more information about it right now, and most of what
     went into the "future" section is now present.  That stuff was
     blue-sky a year ago; MattyT should have me a new document
-    sometime...</para>
+    sometime...
+  </para>
 </chapter>
 
 <!-- Keep this comment at the end of the file

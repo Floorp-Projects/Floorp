@@ -1,6 +1,6 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
 
-  <chapter id="installation">
+  <chapter id="installation" xreflabel="Bugzilla Installation">
     <title>Installation</title>
     <para>
       These installation instructions are presented assuming you are
@@ -50,6 +50,7 @@
 	refer to these documents when  installing, configuring, and
 	maintaining your Bugzilla installation.
       </member>
+
     </simplelist>
     
     <warning>
@@ -108,8 +109,7 @@
 	  the CPAN dependencies listed below, and are running the very
 	  most recent version of Perl and MySQL (both the executables
 	  and development libraries) on your system, check out
-	  Bundle::Bugzilla in <xref
-						      linkend="bundlebugzilla"></para>
+	  Bundle::Bugzilla in <xref linkend="bundlebugzilla"></para>
       </note>
       <para>
 	The software packages necessary for the proper running of bugzilla are:
@@ -185,39 +185,64 @@
 	    attack.
 	  </para>
 	</warning>
+	<note>
+	  <para>Linux-Mandrake 8.0, the author's test system, includes
+	    every required and optional library for Bugzilla.  The
+	    easiest way to install them is by using the
+	    <filename>urpmi</filename> utility.  If you follow these
+	    commands, you should have everything you need for
+	    Bugzilla, and <filename>checksetup.pl</filename> should
+	    not complain about any missing libraries.  You may already
+	    have some of these installed.</para>
+	  <simplelist>
+	    <member><prompt>bash#</prompt><command> urpmi
+		perl-mysql</command></member>
+	    <member><prompt>bash#</prompt><command> urpmi
+		perl-chart</command></member>
+	    <member><prompt>bash#</prompt><command> urpmi
+		perl-gd</command></member>
+	    <member><prompt>bash#</prompt><command> urpmi
+		perl-MailTools</command> (for Bugzilla email
+	      integration)</member>
+	    <member><prompt>bash#</prompt><command> urpmi
+		apache-modules</command></member>
+	  </simplelist>
+	</note>
 	
       </para>
     </section>
     <section id="install-mysql">
       <title>Installing MySQL Database</title>
       <para>
-	Visit MySQL homepage at http://www.mysql.com/ and grab the
-	latest stable release of the server.  Both binaries and source
-	are available and which you get shouldn't matter.  Be aware
-	that many of the binary versions of MySQL store their data
-	files in /var which on many installations (particularly common
-	with linux installations) is part of a smaller root partition.
-	If you decide to build from sources you can easily set the
-	dataDir as an option to configure.
+	Visit MySQL homepage at <ulink
+				       url="http://www.mysql.com">www.mysql.com</ulink> and grab the latest stable release of the server.  Many of the binary versions of MySQL store their data files in <filename>/var</filename> which is often part of a smaller root partition. If you decide to build from sources you can easily set the dataDir as an option to <filename>configure</filename>.
       </para>
       <para>
-	If you've installed from source or non-package (RPM, deb,
-	etc.) binaries you'll want to make sure to add mysqld to your
+	If you install from source or non-package (RPM, deb, etc.)
+	binaries you need to add
+	<firstterm>mysqld</firstterm> to your
 	init scripts so the server daemon will come back up whenever
-	your machine reboots. You also may want to edit those init
-	scripts, to make sure that mysqld will accept large packets.
-	By default, mysqld is set up to only accept packets up to 64K
-	long.  This limits the size of attachments you may put on
-	bugs.  If you add something like "-O max_allowed_packet=1M" to
-	the command that starts mysqld (or safe_mysqld), then you will
-	be able to have attachments up to about 1 megabyte.
+	your machine reboots. Further discussion of UNIX init
+	sequences are beyond the scope of this guide.
+	<note>
+	  <para>You should have your init script start
+	    <glossterm>mysqld</glossterm> with the ability to accept
+	    large packets. By default, <filename>mysqld</filename>
+	    only accepts packets up to 64K long. This limits the size
+	    of attachments you may put on bugs. If you add <option>-O
+	    max_allowed_packet=1M</option> to the command that starts
+	    <filename>mysqld</filename> (or
+	    <filename>safe_mysqld</filename>), then you will be able
+	    to have attachments up to about 1 megabyte.</para>
+	</note>
+
       </para>
       <note>
 	<para>
 	  If you plan on running Bugzilla and MySQL on the same
-	  machine, consider using the "--skip-networking" option in
-	  the init script. This enhances security by preventing
-	  network access to MySQL.
+	  machine, consider using the <option>--skip-networking</option>
+	  option in the init script. This enhances security by
+	  preventing network access to MySQL.
 	</para>
       </note>
     </section>
@@ -260,9 +285,10 @@
       <tip id="bundlebugzilla" xreflabel="Using Bundle::Bugzilla instead of manually installing Perl modules">
 	<para>
 	  You can skip the following Perl module installation steps by
-	  installing "Bundle::Bugzilla" from CPAN, which includes
-	  them. All Perl module installation steps require you have an
-	  active Internet connection.  If you wish to use
+	  installing <productname>Bundle::Bugzilla</productname> from
+	  <glossterm linkend="gloss_cpan">CPAN</glossterm>, which
+	  includes them. All Perl module installation steps require
+	  you have an active Internet connection.  If you wish to use
 	  Bundle::Bugzilla, however, you must be using the latest
 	  version of Perl (at this writing, version &perl-ver;)
 	</para>
@@ -293,7 +319,7 @@
 	Like almost all Perl modules DBI can be found on the Comprehensive Perl
 	Archive Network (CPAN) at http://www.cpan.org.  The CPAN servers have a
 	real tendency to bog down, so please use mirrors.  The current location
-	at the time of this writing (02/17/99) can be found in Appendix A.
+	at the time of this writing can be found in <xref linkend="downloadlinks">.
       </para>
       <para>
 	Quality, general Perl module installation instructions can be found on
@@ -370,9 +396,11 @@
 	hurt anything.
       </para>
       <para>
-	Data::Dumper is used by the MySQL-related Perl modules.  It can be
-	found on CPAN (link in Appendix A) and can be installed by following
-	the same four step make sequence used for the DBI module.
+	Data::Dumper is used by the MySQL-related Perl modules.  It
+	can be found on CPAN (see <xref linkend="downloadlinks">) and
+	can be
+	installed by following the same four step make sequence used
+	for the DBI module.
       </para>
     </section>
     
@@ -414,37 +442,42 @@
       <section>
 	<title>TimeDate Perl Module Collection</title>
 	<para>
-	  Many of the more common date/time/calendar related Perl modules have
-	  been grouped into a bundle similar to the MySQL modules bundle. This
-	  bundle is stored on the CPAN under the name TimeDate.  A link 
-	  link may be found in Appendix B, Software Download Links.
-	  The component module we're
-	  most interested in is the Date::Format module, but installing all of them
-	  is probably a good idea anyway.  The standard Perl module installation
-	  instructions should work perfectly for this simple package.
+	  Many of the more common date/time/calendar related Perl
+	modules have been grouped into a bundle similar to the MySQL
+	modules bundle. This bundle is stored on the CPAN under the
+	name TimeDate (see link: <xref linkend="downloadlinks">). The
+	component module we're most interested in is the Date::Format
+	module, but installing all of them is probably a good idea
+	anyway.  The standard Perl module installation instructions
+	should work perfectly for this simple package.
 	</para>
       </section>
       <section>
 	<title>GD Perl Module (1.8.3)</title>
 	<para>
-	  The GD library was written by Thomas Boutell a long while ago to
-	  programatically generate images in C.  Since then it's become almost a
-	  defacto standard for programatic image construction.  The Perl bindings
-	  to it found in the GD library are used on a million web pages to generate
-	  graphs on the fly.  That's what bugzilla will be using it for so you'd
-	  better install it if you want any of the graphing to work.
+	  The GD library was written by Thomas Boutell a long while
+	ago to programatically generate images in C.  Since then it's
+	become the defacto standard for programatic image
+	construction.  The Perl bindings to it found in the GD library
+	are used on millions of web pages to generate graphs on the
+	fly. That's what bugzilla will be using it for so you must
+	install it if you want any of the graphing to work.
 	</para>
 	<para>
-	  Actually bugzilla uses the Graph module which relies on GD itself,
-	  but isn't that always the way with OOP.  At any rate, you can find the
-	  GD library on CPAN (link in Appendix B, Software Download Links).  
+	  Actually bugzilla uses the Graph module which relies on GD
+	itself.  Isn't that always the way with object-oriented
+	programming?  At any rate, you can find the GD library on CPAN
+	in <xref linkend="downloadlinks">.  
 	</para>
 	<note>
 	  <para>
-	    The Perl GD library requires some other libraries that may or may not be
-	    installed on your system, including "libpng" and "libgd".  The full requirements
-	    are listed in the Perl GD library README.  Just realize that if compiling GD fails,
-	    it's probably because you're missing a required library.
+	    The Perl GD library requires some other libraries that may
+	  or may not be installed on your system, including
+	  <classname>libpng</classname> and
+	  <classname>libgd</classname>.  The full requirements are
+	  listed in the Perl GD library README.  Just realize that if
+	  compiling GD fails, it's probably because you're missing a
+	  required library.
 	  </para>
 	</note>
       </section>
@@ -453,62 +486,78 @@
 	<title>Chart::Base Perl Module (0.99c)</title>
 	<para>
 	  The Chart module provides bugzilla with on-the-fly charting
-	  abilities.  It can be installed in the usual fashion after it has been
-	  fetched from CPAN where it is found as the Chart-x.x... tarball in a
-	  directory to be listed in Appendix B, "Software Download Links".
-	  Note that as with the GD perl
-	  module, only the version listed above, or newer, will work.
-	  Earlier
-	  versions used GIF's, which are no longer supported by the latest
-	  versions of GD.
+	abilities.  It can be installed in the usual fashion after it
+	has been fetched from CPAN where it is found as the
+	Chart-x.x... tarball, linked in <xref linkend="downloadlinks">. Note that
+	as with the GD perl module, only the version listed above, or
+	newer, will work. Earlier versions used GIF's, which are no
+	longer supported by the latest versions of GD.
 	</para>
       </section>
 
       <section>
 	<title>DB_File Perl Module</title>
 	<para>
-	  DB_File is a module which allows Perl programs to make use of the facilities provided by 
-	  Berkeley DB version 1.x. This module is required by collectstats.pl which is used for 
-	  bug charting. If you plan to make use of bug charting, you must install this module.
+	  DB_File is a module which allows Perl programs to make use
+	of the facilities provided by  Berkeley DB version 1.x. This
+	module is required by collectstats.pl which is used for  bug
+	charting. If you plan to make use of bug charting, you must
+	install this module.
 	</para>
       </section>
 
       <section>
 	<title>HTTP Server</title>
 	<para>
-	  You have a freedom of choice here - Apache, Netscape or any other
-	  server on UNIX would do.  You can easily run the web server on a different
-	  machine than MySQL, but need to adjust the MySQL "bugs" user permissions
-	  accordingly.
+	  You have a freedom of choice here - Apache, Netscape or any
+	other server on UNIX would do.  You can easily run the web
+	server on a different machine than MySQL, but need to adjust
+	the MySQL <quote>bugs</quote> user permissions accordingly.
+	<note>
+	  <para>I strongly recommend Apache as the web server to use.
+	    The Bugzilla Guide installation instructions, in general,
+	    assume you are using Apache.  As more users use different
+	    webservers and send me information on the peculiarities of
+	    installing using their favorite webserver, I will provide
+	    notes for them.</para>
+	</note>
 	</para>
 	<para>
-	  You'll want to make sure that your web server will run any file
-	  with the .cgi extension as a cgi and not just display it.  If you're using
-	  apache that means uncommenting the following line in the srm.conf file:
-	  <computeroutput>AddHandler cgi-script .cgi</computeroutput>
+	  You'll want to make sure that your web server will run any
+	file with the .cgi extension as a cgi and not just display it.
+	If you're using apache that means uncommenting the following
+	line in the srm.conf file:
+	<programlisting>
+AddHandler cgi-script .cgi
+	</programlisting>
 	</para>
 	<para>
-	  With apache you'll also want to make sure that within the access.conf
-	  file the line:
-	  <computeroutput>
-	    Options ExecCGI
-	  </computeroutput>
-	  is in the stanza that covers the directories you intend to put the bugzilla
-	  .html and .cgi files into.
+	  With apache you'll also want to make sure that within the
+	access.conf file the line:
+ <programlisting>
+Options ExecCGI
+</programlisting>
+	is in the stanza that covers the directories into which
+	you intend to put the bugzilla .html and .cgi files.
 	</para>
+      <note>
 	<para>
-	  If you are using a newer version of Apache, both of the above lines will be
-	  (or will need to be) in the httpd.conf file, rather than srm.conf or
-	  access.conf.
+	  Users of newer versions of Apache will generally find both
+	  of the above lines will be in the httpd.conf file, rather
+	  than srm.conf or access.conf.
 	</para>
+      </note>
 	<warning>
 	  <para>
-	    There are two critical directories and a file that should not be a served by
-	    the HTTP server. These are the <quote>data</quote> and <quote>shadow</quote> 
-	    directories and the
-	    <quote>localconfig</quote> file. You should configure your HTTP server to not serve
-	    content from these files. Failure to do so will expose critical passwords
-	  and other data. Please see <xref linkend="htaccess"> for details.
+	    There are important files and directories that should not
+	  be a served by the HTTP server. These are most files in the
+	  <quote>data</quote> and <quote>shadow</quote>  directories
+	  and the <quote>localconfig</quote> file. You should
+	  configure your HTTP server to not serve content from these
+	  files. Failure to do so will expose critical passwords and
+	  other data. Please see <xref linkend="htaccess"> for details
+	  on how to do this for Apache.  I appreciate notes on how to
+	  get this same functionality using other webservers.
 	  </para>
 	</warning>
       </section>
@@ -516,59 +565,65 @@
       <section>
 	<title>Installing the Bugzilla Files</title>
 	<para>
-	  You should untar the Bugzilla files into a directory that you're
-	  willing to make writable by the default web server user (probably
-	  <quote>nobody</quote>).  You may decide to put the files off of the main web space
-	  for your web server or perhaps off of /usr/local with a symbolic link
-	  in the web space that points to the bugzilla directory.  At any rate,
-	  just dump all the files in the same place (optionally omitting the CVS
-	  directories if they were accidentally tarred up with the rest of Bugzilla)
-	  and make sure you can access the files in that directory through your
-	  web server.
+	  You should untar the Bugzilla files into a directory that
+	you're willing to make writable by the default web server user
+	(probably <quote>nobody</quote>).  You may decide to put the
+	files off of the main web space for your web server or perhaps
+	off of <filename>/usr/local</filename> with a symbolic link in
+	the web space that points to the Bugzilla directory.  At any
+	rate, just dump all the files in the same place, and make sure
+	you can access the files in that directory through your web
+	server.
 	</para>
 	<tip>
 	  <para>
 	    If you symlink the bugzilla directory into your Apache's
-	    HTML heirarchy, you may receive "Forbidden" errors unless you
-	    add the "FollowSymLinks" directive to the &lt;Directory&gt; entry
-	    for the HTML root.
+	  HTML heirarchy, you may receive
+	  <errorname>Forbidden</errorname> errors unless you add the
+	  <quote>FollowSymLinks</quote> directive to the
+	  &lt;Directory&gt; entry for the HTML root.
 	  </para>
 	</tip>
 	<para>
-	  Once all the files are in a web accessible directory, make that
-	  directory writable by your webserver's user (which may require just
-	  making it world writable).  This is a temporary step until you run
-	  the post-install <quote>checksetup.pl</quote> script, which locks down your
-	  installation.
-	</para>
-	<para>
-	  Lastly, you'll need to set up a symbolic link to /usr/bonsaitools/bin/perl
-	  for the correct location of your perl executable (probably /usr/bin/perl).
-	  Otherwise you must hack all the .cgi files to change where they look
-	  for perl.  To make future upgrades easier, you should use the symlink
-	  approach.
-	  <example>
-	    <title>Setting up bonsaitools symlink</title>
-	    <para>
-	      Here's how you set up the Perl symlink on Linux to make Bugzilla work.
-	      Your mileage may vary; if you are running on Solaris, you probably need to subsitute
-	      <quote>/usr/local/bin/perl</quote> for <quote>/usr/bin/perl</quote> 
-	      below; if on certain other UNIX systems,
-	      Perl may live in weird places like <quote>/opt/perl</quote>.  As root, run these commands:
-	      <programlisting>
-bash# mkdir /usr/bonsaitools
-bash# mkdir /usr/bonsaitools/bin
+	  Once all the files are in a web accessible directory, make
+	that directory writable by your webserver's user.  This is a
+	temporary step until you run the post-install
+	<filename>checksetup.pl</filename> script, which locks down your
+	installation.
+      </para>
+      <para>
+	Lastly, you'll need to set up a symbolic link to
+	<filename>/usr/bonsaitools/bin/perl</filename> for the correct
+	location of your perl executable (probably
+	<filename>/usr/bin/perl</filename>). Otherwise you must hack
+	all the .cgi files to change where they look for perl, or use
+	<xref linkend="setperl">, found in
+	<xref linkend="patches">.  I suggest using the symlink
+	approach for future release compatability.
+	<example>
+	  <title>Setting up bonsaitools symlink</title>
+	  <para>
+	      Here's how you set up the Perl symlink on Linux to make
+	    Bugzilla work. Your mileage may vary.  For some UNIX
+	    operating systems, you probably need to subsitute
+	    <quote>/usr/local/bin/perl</quote> for
+	    <quote>/usr/bin/perl</quote>  below; if on certain other
+	    UNIX systems, Perl may live in weird places like
+	    <quote>/opt/perl</quote>.  As root, run these commands:
+	    <programlisting>
+bash# mkdir /usr/bonsaitools  
+bash# mkdir /usr/bonsaitools/bin 
 bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
-	      </programlisting>
-	    </para>
-	  </example>
-	  <tip>
-	    <para>
-	      If you don't have root access to set this symlink up,
+	    </programlisting>
+	  </para>
+	</example>
+	<tip>
+	  <para>
+	    If you don't have root access to set this symlink up,
 	    check out the
-	    <xref linkend="setperl">, listed in <xref linkend="patches">.
-	    It will change the path to perl in all your Bugzilla files for you.
-	    </para>
+	    <xref linkend="setperl">, listed in <xref
+						      linkend="patches">. It will change the path to perl in all your Bugzilla files for you.
+	  </para>
 	  </tip>
 	</para>
       </section>
@@ -581,10 +636,11 @@ bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
 	  quality bug tracker.
 	</para>
 	<para>
-	  First, you'll want to fix MySQL permissions to allow access from
-	  Bugzilla.  For the purpose of this Installation section, the Bugzilla username
-	  will be "bugs", and will have minimal permissions.
-
+	  First, you'll want to fix MySQL permissions to allow access
+	from Bugzilla.  For the purpose of this Installation section,
+	the Bugzilla username will be <quote>bugs</quote>, and will
+	have minimal permissions.
+	
 	<warning>
 	  <para>
 	    Bugzilla has not undergone a thorough security audit. It
@@ -594,199 +650,190 @@ bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
 	  </para>
 	  <para>That would be bad.</para>
 	</warning>
-	</para>
-
-	<para>
-	  Give the MySQL root user a password.  MySQL passwords are
-	  limited to 16 characters.
-	  <simplelist>
-	    <member>
-	      <computeroutput>
-		<prompt>bash#</prompt>
-		<command>mysql -u root mysql</command>
-	      </computeroutput>
-	    </member>
-	    <member>
-	      <computeroutput>
-		<prompt>mysql></prompt>
-		<command>
-		  UPDATE user SET Password=PASSWORD ('new_password')
-		  WHERE user='root';
-		</command>
-	      </computeroutput>
-	    </member>
-	    <member>
-	      <computeroutput>
-		<prompt>mysql></prompt>
-		<command>FLUSH PRIVILEGES;</command>
-	      </computeroutput>
-	    </member>
-	  </simplelist>
-	  From this point on, if you need to access MySQL as the
-	  MySQL root user, you will need to use "mysql -u root -p" and
-	  enter your new_password.  Remember that MySQL user names have
-	  nothing to do with Unix user names (login names).	  
-	</para>
-	<para>
-	  Next, we create the "bugs" user, and grant sufficient
-	  permissions for checksetup.pl, which we'll use later, to work
-	  its magic.  This also restricts the "bugs" user to operations
-	  within a database called "bugs", and only allows the account
-	  to connect from "localhost".  Modify it to reflect your setup
-	  if you will be connecting from another machine or as a different
-	  user.
-	</para>
-	<para>
-	  Remember to set bugs_password to some unique password.
-	  <simplelist>
-	    <member>
-	      <computeroutput>
-		<prompt>mysql></prompt>
-		<command>GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,
-		  ALTER,CREATE,DROP,REFERENCES 
-		  ON bugs.* TO bugs@localhost
-		  IDENTIFIED BY 'bugs_password';</command>
-	      </computeroutput>
-	    </member>
-	    <member>
-	      <computeroutput>
-		<prompt>
-		  mysql>
-		</prompt>
-		<command>
-		  FLUSH PRIVILEGES;
-		</command>
-	      </computeroutput>
-	    </member>
-	  </simplelist>
-	</para>
-	<para>
-	  Next, run the magic checksetup.pl script.  (Many thanks to Holger
-	  Schurig &lt;holgerschurig@nikocity.de&gt; for writing this script!)
-	  It will make sure Bugzilla files and directories have reasonable
-	  permissions, set up the "data" directory, and create all the MySQL
-	  tables.
-	  <simplelist>
-	    <member>
-	      <computeroutput>
-		<prompt>bash#</prompt>
-		<command>./checksetup.pl</command>
-	      </computeroutput>
-	    </member>
-	  </simplelist>
-	  The first time you run it, it will create a file called "localconfig".
-	</para>
-      </section>
-
-      <section>
-	<title>Tweaking "localconfig"</title>
-	<para>
-	  This file contains a variety of settings you may need to tweak including
-	  how Bugzilla should connect to the MySQL database.
-	</para>
-	<para>
-	  The connection settings include:
-	  <orderedlist>
-	    <listitem>
-	      <para>
-		server's host: just use "localhost" if the MySQL server is
-                local
-	      </para>
-	    </listitem>
-	    <listitem>
-	      <para>
-		database name: "bugs" if you're following these directions
-	      </para>
-	    </listitem>
-	    <listitem>
-	      <para>
-		MySQL username: "bugs" if you're following these directions
-	      </para>
-	    </listitem>
-	    <listitem>
-	      <para>
-		Password for the "bugs" MySQL account above
-	      </para>
-	    </listitem>
-	  </orderedlist>
-	</para>
-	<para>
-		You may also install .htaccess files that the Apache webserver will use 
-	to restrict access to Bugzilla data files. See <xref linkend="htaccess">.
-	</para>
-	<para>
-	  Once you are happy with the settings, re-run checksetup.pl.  On this
-	  second run, it will create the database and an administrator account
-	  for which you will be prompted to provide information.
-	</para>
-	<para>
-	  When logged into an administrator account once Bugzilla is running,
-	  if you go to the query page (off of the bugzilla main menu), you'll
-	  find an 'edit parameters' option that is filled with editable treats.
-	</para>
-	<para>
-	  Should everything work, you should have a nearly empty copy of the bug
-	  tracking setup.
-	</para>
-	<para>
-	  The second time around, checksetup.pl will stall if it is on a
-	  filesystem that does not fully support file locking via flock(), such as
-	  NFS mounts.  This support is required for Bugzilla to operate safely with
-	  multiple instances. If flock() is not fully supported, it will stall at:
-	  <errorcode>Now regenerating the shadow database for all bugs.</errorcode>
-	  <note>
+      </para>
+      
+      <para>
+	Give the MySQL root user a password.  MySQL passwords are
+	limited to 16 characters.
+	<simplelist>
+	  <member>
+	    <computeroutput> <prompt>bash#</prompt> <command>mysql
+		-u root mysql</command> </computeroutput>
+	  </member>
+	  <member>
+	    <computeroutput> <prompt>mysql></prompt> <command>
+		UPDATE user SET Password=PASSWORD ('new_password')
+		WHERE user='root'; </command> </computeroutput>
+	  </member>
+	  <member>
+	    <computeroutput> <prompt>mysql></prompt> <command>FLUSH
+		PRIVILEGES;</command> </computeroutput>
+	  </member>
+	</simplelist> From this point on, if you need to access
+	MySQL as the MySQL root user, you will need to use
+	<command>mysql -u root -p</command> and enter your
+	new_password.  Remember that MySQL user names have nothing to
+	do with Unix user names (login names).	  
+      </para>
+      <para>
+	Next, we create the <quote>bugs</quote> user, and grant
+	sufficient permissions for checksetup.pl, which we'll use
+	later, to work its magic.  This also restricts the
+	<quote>bugs</quote> user to operations within a database
+	called <quote>bugs</quote>, and only allows the account to
+	connect from <quote>localhost</quote>.  Modify it to reflect
+	your setup if you will be connecting from another machine or
+	as a different user.
+      </para>
+      <para>
+	Remember to set bugs_password to some unique password.
+	<simplelist>
+	  <member>
+	    <computeroutput>
+	      <prompt>mysql></prompt>
+	      <command>GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,
+		ALTER,CREATE,DROP,REFERENCES 
+		ON bugs.* TO bugs@localhost
+		IDENTIFIED BY 'bugs_password';</command>
+	    </computeroutput>
+	  </member>
+	  <member>
+	    <computeroutput>
+	      <prompt>
+		mysql>
+	      </prompt>
+	      <command>
+		FLUSH PRIVILEGES;
+	      </command>
+	    </computeroutput>
+	  </member>
+	</simplelist>
+      </para>
+      <para>
+	Next, run the magic checksetup.pl script.  (Many thanks to
+	Holger Schurig &lt;holgerschurig@nikocity.de&gt; for writing
+	this script!) It will make sure Bugzilla files and directories
+	have reasonable permissions, set up the
+	<filename>data</filename> directory, and create all the MySQL
+	tables.
+	<simplelist>
+	  <member>
+	    <computeroutput> <prompt>bash#</prompt>
+	      <command>./checksetup.pl</command> </computeroutput>
+	  </member>
+	</simplelist> The first time you run it, it will create a
+	file called <filename>localconfig</filename>.
+      </para>
+    </section>
+    
+    <section>
+      <title>Tweaking <filename>localconfig</filename></title>
+      <para>
+	This file contains a variety of settings you may need to tweak including
+	how Bugzilla should connect to the MySQL database.
+      </para>
+      <para>
+	The connection settings include:
+	<orderedlist>
+	  <listitem>
 	    <para>
-	      The second time you run checksetup.pl, you should become the
-	      user your web server runs as, and that you ensure that you set the
-	      "webservergroup" parameter in localconfig to match the web 
-	      server's group
-	      name, if any.  I believe, for the next release of Bugzilla,
-	      this will
-	      be fixed so that Bugzilla supports a "webserveruser" parameter
-	      in localconfig
-	      as well.
-	      <example>
-		<title>Running checksetup.pl as the web user</title>
-		<para>
-		  Assuming your web server runs as user "apache",
-		  and Bugzilla is installed in
-		  "/usr/local/bugzilla", here's one way to run checksetup.pl
-		  as the web server user.
-		  As root, for the <emphasis>second run</emphasis>
-		  of checksetup.pl, do this:
-		  <programlisting>
-bash# chown -R apache:apache /usr/local/bugzilla
-bash# su - apache
-bash# cd /usr/local/bugzilla
-bash# ./checksetup.pl
-		  </programlisting>
-		</para>
-	      </example>
+	      server's host: just use <quote>localhost</quote> if the
+	      MySQL server is local
 	    </para>
-	  </note>
-	</para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      database name: <quote>bugs</quote> if you're following
+	      these directions
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      MySQL username: <quote>bugs</quote> if you're following
+	      these directions
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Password for the <quote>bugs</quote> MySQL account above
+	    </para>
+	  </listitem>
+	</orderedlist>
+      </para>
+      <para>
+	You should also install .htaccess files that the Apache
+	webserver will use  to restrict access to Bugzilla data files.
+	See <xref
+		  linkend="htaccess">.
+      </para>
+      <para>
+	Once you are happy with the settings, re-run
+	<filename>checksetup.pl</filename>. On this second run, it will
+	  create the database and an administrator account for which
+	  you will be prompted to provide information.
+      </para>
+      <para>
+	When logged into an administrator account once Bugzilla is
+	running, if you go to the query page (off of the Bugzilla main
+	menu), you'll find an <quote>edit parameters</quote> option
+	that is filled with editable treats.
+      </para>
+      <para>
+	Should everything work, you will have a nearly empty Bugzilla
+	database and a newly-created <filename>localconfig</filename>
+	file in your Bugzilla root directory.
+      </para>
+      <para>
 	<note>
 	  <para>
-	    The checksetup.pl script is designed so that you can run
-	  it at any time without causing harm.  You should run it
-	  after any upgrade to Bugzilla.
+	    The second time you run checksetup.pl, you should become
+	    the user your web server runs as, and that you ensure that
+	    you set the <quote>webservergroup</quote> parameter in localconfig to
+	    match the web  server's group name, if any.  I believe,
+	    for the next release of Bugzilla, this will be fixed so
+	    that Bugzilla supports a <quote>webserveruser</quote> parameter in
+	    localconfig as well.
+	    <example>
+	      <title>Running checksetup.pl as the web user</title>
+	      <para>
+		  Assuming your web server runs as user "apache", and
+		Bugzilla is installed in "/usr/local/bugzilla", here's
+		one way to run checksetup.pl as the web server user.
+		As root, for the <emphasis>second run</emphasis> of
+		checksetup.pl, do this: 
+		<programlisting> 
+bash# chown -R apache:apache /usr/local/bugzilla 
+bash# su - apache 
+bash# cd /usr/local/bugzilla 
+bash# ./checksetup.pl 
+		</programlisting>
+	      </para>
+	    </example>
 	  </para>
 	</note>
-      </section>
-
-      <section>
-	<title>Setting Up Maintainers Manually (Optional)</title>
+      </para>
+      <note>
 	<para>
-	  If you want to add someone else to every group by hand, you
+	  The checksetup.pl script is designed so that you can run
+	  it at any time without causing harm.  You should run it
+	  after any upgrade to Bugzilla.
+	</para>
+      </note>
+    </section>
+    
+    <section>
+      <title>Setting Up Maintainers Manually (Optional)</title>
+      <para>
+	If you want to add someone else to every group by hand, you
 	can do it by typing the appropriate MySQL commands.  Run
-	'<computeroutput> mysql -u root -p bugs</computeroutput>' You
+	<command> mysql -u root -p bugs</command> You
 	may need different parameters, depending on your security
 	settings. Then:
 	  <simplelist>
 	    <member>
 	      <computeroutput> <prompt>mysql></prompt> <command>update
 		profiles set groupset=0x7fffffffffffffff where
-		login_name = 'XXX';</command> </computeroutput>
+		login_name = 'XXX';</command> </computeroutput> (yes, that's <emphasis>fifteen</emphasis><quote>f</quote>'s.
 	    </member>
 	  </simplelist> replacing XXX with the Bugzilla email address.
 	</para>
@@ -1156,33 +1203,74 @@ bash# ./checksetup.pl
 	<parameter>0</parameter>.
       </para>
     </section>
+
+    <section id="mod_throttle" xreflabel="Using mod_throttle to prevent Denial of Service attacks">
+    	<title><filename>mod_throttle</filename> and Security</title>
+      <para>
+	It is possible for a user, by mistake or on purpose, to access
+	the database many times in a row which can result in very slow
+	access speeds for other users.  If your Bugzilla installation
+	is experiencing this problem , you may install  the Apache
+	module <filename>mod_throttle</filename> which can limit
+	connections by ip-address. You may download this module at
+	<ulink
+	       url="http://www.snert.com/Software/Throttle/">http://www.snert.com/Software/Throttle/</ulink>. Follow the instructions to install into your Apache install.  <emphasis>This module only functions with the Apache web server!</emphasis>. You may use the <command>ThrottleClientIP</command> command provided by this module  to accomplish this goal. See the <ulink url="http://www.snert.com/Software/Throttle/">Module Instructions</ulink> for more  information. </para>
+    </section>
+    
+    <section id="content_type" xreflabel="Preventing untrusted Bugzilla contentfrom executing malicious Javascript code">
+      <title>Preventing untrusted Bugzilla content from executing malicious Javascript code</title>
+      <para>It is possible for a Bugzilla to execute malicious
+	Javascript code.  Due to internationalization concerns, we are
+	unable to incorporate the code changes necessary to fulfill
+	the CERT advisory requirements mentioned in <ulink
+							   url="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3">http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3</ulink>.  Executing the following code snippet from a UNIX command shell will rectify the problem if your Bugzilla installation is intended for an English-speaking audience.  As always, be sure your Bugzilla installation has a good backup before making changes, and I recommend you understand what the script is doing before executing it. </para>
+	<para><programlisting>
+bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
+	  do cat $i | sed 's/Content-type\: text\/html/Content-Type: text\/html\; charset=ISO-8859-1/' >$i.tmp; \
+	  mv $i.tmp $i; done
+	</programlisting></para>
+      <para>
+	All this one-liner command does is search for all instances of
+	<quote>Content-type: text/html</quote> and replaces it with
+	<quote>Content-Type: text/html; charset=ISO-8859-1</quote>.
+	This specification prevents possible Javascript attacks on the
+	browser, and is suggested for all English-speaking sites.  For
+	non-english-speaking Bugzilla sites, I suggest changing
+	<quote>ISO-8859-1</quote>, above, to <quote>UTF-8</quote>.
+      </para>
+    </section>
+
     
     <section>
       <title>UNIX Installation Instructions History</title>
       <para>
-	This document was originally adapted from the Bonsai installation
-	instructions by Terry Weissman &lt;terry@mozilla.org&gt;.
+	This document was originally adapted from the Bonsai
+	installation instructions by Terry Weissman
+	&lt;terry@mozilla.org&gt;.
       </para>
       <para>
-	The February 25, 1999 re-write of this page was done by Ry4an Brase
-	&lt;ry4an@ry4an.org&gt;, with some edits by Terry Weissman, Bryce Nesbitt,
-	Martin Pool, & Dan Mosedale (But don't send bug reports to them;
-	report them using bugzilla, at http://bugzilla.mozilla.org/enter_bug.cgi ,
-	project Webtools, component Bugzilla).
+	The February 25, 1999 re-write of this page was done by Ry4an
+	Brase &lt;ry4an@ry4an.org&gt;, with some edits by Terry
+	Weissman, Bryce Nesbitt, Martin Pool, & Dan Mosedale (But
+	don't send bug reports to them; report them using bugzilla, at
+	http://bugzilla.mozilla.org/enter_bug.cgi , project Webtools,
+	component Bugzilla).
       </para>
       <para>
-	This document was heavily modified again Wednesday, March 07 2001 to
-	reflect changes for Bugzilla 2.12 release by Matthew P. Barnson.  The
-	securing MySQL section should be changed to become standard procedure
-	for Bugzilla installations.
+	This document was heavily modified again Wednesday, March 07
+	2001 to reflect changes for Bugzilla 2.12 release by Matthew
+	P. Barnson.  The securing MySQL section should be changed to
+	become standard procedure for Bugzilla installations.
       </para>
       <para>
-	Finally, the README in its entirety was marked up in SGML and included into
-	the Guide on April 24, 2001 by Matt Barnson.  Since that time, it's undergone
-	extensive modification as Bugzilla grew.
+	Finally, the README in its entirety was marked up in SGML and
+	included into the Guide on April 24, 2001 by Matt Barnson.
+	Since that time, it's undergone extensive modification as
+	Bugzilla grew.
       </para>
       <para>
-	Comments from people using this Guide for the first time are particularly welcome.
+	Comments from people using this Guide for the first time are
+	particularly welcome.
       </para>
     </section>
   </section>
@@ -1217,27 +1305,33 @@ bash# ./checksetup.pl
 	  picnic.  Support for Win32 has improved dramatically in the
 	  last few releases, but, if you choose to proceed, you should
 	  be a <emphasis>very</emphasis> skilled Windows Systems
-	  Administrator with both strong troubleshooting abilities and
-	  a high tolerance for pain. Bugzilla on NT requires hacking
-	  source code and implementing some advanced utilities.  What
-	  follows is the recommended installation procedure for Win32;
-	  additional suggestions are provided in <xref linkend="faq">.
+	  Administrator with strong troubleshooting abilities, a high
+	  tolerance for pain, and moderate perl skills. Bugzilla on NT
+	  requires hacking source code and implementing some advanced
+	  utilities.  What follows is the recommended installation
+	  procedure for Win32; additional suggestions are provided in
+	  <xref linkend="faq">.
 	</para>
       </note>
       
       <procedure>
 	<step>
 	  <para>
-	    Install <ulink url="http://www.apache.org/">Apache Web Server</ulink>
-	    for Windows.
+	    Install <ulink url="http://www.apache.org/">Apache Web
+	      Server</ulink> for Windows, and copy the Bugzilla files
+	    somewhere Apache can serve them.  Please follow all the
+	    instructions referenced in <xref linkend="installation">
+	    regarding your Apache configuration, particularly
+	    instructions regarding the <quote>AddHandler</quote>
+	    parameter and <quote>ExecCGI</quote>.
 	  </para>
 	  <note>
 	    <para>
-	      You may also use Internet Information Server or Personal Web
-	      Server for this purpose.  However, setup is slightly more
-	      difficult.  If ActivePerl doesn't seem to handle your file
-	      associations correctly (for .cgi and .pl files), please
-	      consult <xref linkend="faq">.
+	      You may also use Internet Information Server or Personal
+	      Web Server for this purpose.  However, setup is quite
+	      different.  If ActivePerl doesn't seem to handle your
+	      file associations correctly (for .cgi and .pl files),
+	      please consult <xref linkend="faq">.
 	    </para>
 	    <para>
 	      If you are going to use IIS, if on Windows NT you must
@@ -1299,8 +1393,7 @@ bash# ./checksetup.pl
 	    Install MySQL for NT.
 	    <note>
 	      <para>
-		You can download MySQL for Windows NT from <ulink
-								  url="http://www.mysql.com/">MySQL.com</ulink>.  Some find it helpful to use the WinMySqlAdmin utility, included with the download, to set up the database.
+		You can download MySQL for Windows NT from <ulink url="http://www.mysql.com/">MySQL.com</ulink>.  Some find it helpful to use the WinMySqlAdmin utility, included with the download, to set up the database.
 	      </para>
 	    </note>
 	  </para>
@@ -1393,13 +1486,21 @@ bash# ./checksetup.pl
 	    this line:
 	  </para>
 	  <para>
-	    "my $webservergid = getgrnam($my_webservergroup); "
+	    <programlisting>
+my $webservergid = getgrnam($my_webservergroup);
+	    </programlisting>
 	  </para>
 	  <para>
 	    to
 	  </para>
 	  <para>
-	    "my $webservergid = $my_webservergroup; "
+	    <programlisting>
+my $webservergid = $my_webservergroup;
+	    </programlisting>
+or the name of the group you wish to own the files explicitly:
+	    <programlisting>
+my $webservergid = 'Administrators'
+	    </programlisting>
 	  </para>
 	</step>
 
@@ -1412,8 +1513,7 @@ bash# ./checksetup.pl
 	<step>
 	  <para>Edit <filename>localconfig</filename> to suit your
 	    requirements.  Set <varname>$db_pass</varname> to your
-	    <quote>bugs_password</quote> from <xref
-						    linkend="ntbugs-password">, and <varname>$webservergroup</varname> to <quote>8</quote>.</para>
+	    <quote>bugs_password</quote> from <xref linkend="ntbugs-password">, and <varname>$webservergroup</varname> to <quote>8</quote>.</para>
 	  <note>
 	    <para>Not sure on the <quote>8</quote> for
 	      <varname>$webservergroup</varname> above.  If it's
@@ -1455,8 +1555,7 @@ bash# ./checksetup.pl
 	  <procedure>
 	    <step>
 	      <para>
-		Download NTsendmail, available from<ulink
-							  url="http://www.ntsendmail.com/"> www.ntsendmail.com</ulink>. You must have a "real" mail server which allows you to relay off it in your $ENV{"NTsendmail"} (which you should probably place in globals.pl)
+		Download NTsendmail, available from<ulink url="http://www.ntsendmail.com/"> www.ntsendmail.com</ulink>. You must have a "real" mail server which allows you to relay off it in your $ENV{"NTsendmail"} (which you should probably place in globals.pl)
 	      </para>
 	    </step>
 
@@ -1503,7 +1602,15 @@ $mail->send($from,$to,$subject,$msg);
 		</programlisting>
 	      </para>
 	      <note>
-		<para>The code above needs testing as well to make sure it is correct.</para>
+		<para>
+		  Some have found success using the commercial product, 
+		  <productname>Windmail</productname>.
+		  You could try replacing your sendmail calls with:
+		  <programlisting>
+open SENDMAIL, "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t > mail.log";
+		  </programlisting>
+		or something to that effect.
+		</para>
 	      </note>
 	    </step>
 	  </procedure>
@@ -1568,9 +1675,9 @@ exit;
 	<step>
 	  <note>
 	    <para>
-	      This step is completely optional if you are using IIS or
-	      another web server which only decides on an interpreter
-	      based upon the file extension (.pl), rather than the
+	      This step is optional if you are using IIS or another
+	      web server which only decides on an interpreter based
+	      upon the file extension (.pl), rather than the
 	      <quote>shebang</quote> line (#/usr/bonsaitools/bin/perl)
 	    </para>
 	  </note>
@@ -1583,8 +1690,7 @@ exit;
 	    utility to speed part of this procedure, available in the
 	    <xref linkend="patches"> section of The Bugzilla Guide.
 	    However, it requires the Cygwin GNU-compatible environment
-	    for Win32 be set up in order to work.  See <ulink
-							      url="http://www.cygwin.com/">http://www.cygwin.com/</ulink> for details on obtaining Cygwin.
+	    for Win32 be set up in order to work.  See <ulink url="http://www.cygwin.com/">http://www.cygwin.com/</ulink> for details on obtaining Cygwin.
 	  </para>
 	</step>
 
@@ -1604,10 +1710,11 @@ system ("perl processmail.pl",@ARGLIST);
 
       <tip>
 	<para>
-	  If you are using IIS 5.0 or higher, you must add cgi
+	  If you are using IIS or Personal Web Server, you must add cgi
 	  relationships to Properties -> Home directory (tab) ->
 	  Application Settings (section) -> Configuration (button),
-	  such as: <programlisting> 
+	  such as: 
+	  <programlisting> 
 .cgi to: &lt;perl install directory&gt;\perl.exe %s %s
 .pl to: &lt;perl install directory&gt;\perl.exe %s %s
 GET,HEAD,POST
@@ -1625,11 +1732,10 @@ GET,HEAD,POST
 	  From Andrew Pearson:
 	  <blockquote>
 	    <para>
-	      "You can make Bugzilla work with Personal Web Server for
-	      Windows 98 and higher, as well as for IIS 4.0.  Microsoft has
-	      information available at
-	      <ulink url=" http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP">
-		http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP</ulink>
+	      You can make Bugzilla work with Personal Web Server for
+	      Windows 98 and higher, as well as for IIS 4.0.
+	      Microsoft has information available at <ulink url="
+							    http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP"> http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP</ulink>
 	    </para>
 	    <para>
 	      Basically you need to add two String Keys in the
@@ -1651,119 +1757,28 @@ GET,HEAD,POST
 	</para>
       </tip>
       <tip>
-	<para>"Brian" had this to add, about upgrading to Bugzilla 2.12 from previous versions:</para>
-	<blockquote>
-	  <para>
-	    Hi - I am updating bugzilla to 2.12 so I can tell you what I did (after I
-	    deleted the current dir and copied the files in).
-	  </para>
-	  <para>
-	    In checksetup.pl, I did the following...
-	  </para>
-	  <procedure>
-	    <step>
-	      <programlisting>
-my $webservergid = getgrnam($my_webservergroup);
-	      </programlisting>
-	      <para>to</para>
-	      <programlisting>
-my $webservergid = 'Administrators'		
-	      </programlisting>
-	    </step>
-	    <step>
-	      <para>
-		I then ran checksetup.pl
-	      </para>
-	    </step>
-	    <step>
-	      <para>
-		I removed all the encrypt()
-		<example>
-		  <title>Removing encrypt() for Windows NT installations</title>
-		  <para>
-		    Replace this:
-		    <programlisting>
-SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " .
-    SqlQuote(substr($realcryptpwd, 0, 2)) . ")");
-my $enteredcryptpwd = FetchOneColumn();
-		    </programlisting>
-		    with this:
-		    <programlisting>
-my $enteredcryptpwd = $enteredpwd
-		    </programlisting>
-		    in cgi.pl.
-		  </para>
-		</example>
-	      </para>
-	    </step>
-	    <step>
-	      <para>
-		I renamed processmail to processmail.pl
-	      </para>
-	    </step>
-	    <step>
-	      <para>
-		I altered the sendmail statements to windmail:
-		<programlisting>  
-open SENDMAIL, "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t > mail.log";
-		</programlisting>
-	      </para>
-	      <para>
-		The quotes around the dir is for the spaces. mail.log is for the output
-	      </para>
-	    </step>
-	  </procedure>
-	</blockquote>
-      </tip>
-      <tip>
 	<para>
-	  This was some late breaking information from Jan Evert.  Sorry for the lack of formatting.
+	  If attempting to run Bugzilla 2.12 or older, you will need
+	  to remove encrypt() calls from the Perl source. This is
+	  <emphasis>not necessary</emphasis> for Bugzilla 2.13 and
+	  later.
+	  <example>
+	    <title>Removing encrypt() for Windows NT Bugzilla version
+	      2.12 or earlier</title>
+	    <para>
+	      Replace this:  
+	      <programlisting> 
+SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SqlQuote(substr($realcryptpwd, 0, 2)) . ")"); 
+my $enteredcryptpwd = FetchOneColumn(); 
+	      </programlisting>
+	      with this:  
+	      <programlisting> 
+my $enteredcryptpwd = $enteredpwd  
+	      </programlisting>
+	      in cgi.pl.
+	    </para>
+	  </example>
 	</para>
-	<literallayout>
-I'm busy installing bugzilla on a WinNT machine and I thought I'd notify you
-at this moment of the commments I have to section 2.2.1 of the bugzilla
-guide (at http://www.trilobyte.net/barnsons/html/).
-
-Step 1:
-I've used apache, installation is really straightforward.
-After reading the Unix installation instructions, I found that it is
-necessary to add the ExecCGI option to the bugzilla directory. Also the
-'AddHandler' line for .cgi is by default commented out.
-
-Step 3: although just a detail, 'ppm install &lt;module%gt;' will also work
-(without .ppd). And, it can also download these automatically from
-ActiveState.
-
-Step 4: although I have cygwin installed, it seems that it is not necessary.
-On my machine cygwin is not in the PATH and everything seems to work as
-expected.
-However, I've not used everything yet.
-
-Step 6: the 'bugs_password' given in SQL command d needs to be edited into
-localconfig later on (Step 7) if the password is not empty. I've also edited
-it into globals.pl, but I'm not sure that is needed. In both places, the
-variable is named db_pass.
-
-Step 8: all the sendmail replacements mentioned are not as simple as
-described there. Since I am not familiar (yet) with perl, I don't have any
-mail working yet.
-
-Step 9: in globals.pl the encrypt() call can be replaced by just the
-unencrypted password. In CGI.pl, the complete SQL command can be removed.
-
-Step 11: I've only changed the #! lines in *.cgi. I haven't noticed problems
-with the system() call yet.
-There seem to be only four system() called programs: processmail.pl (handled
-by step 10), syncshadowdb (which should probably get the same treatment as
-processmail.pl), diff and mysqldump. The last one is only needed with the
-shadowdb feature (which I don't use).
-
-There seems to be one step missing: copying the bugzilla files somehwere
-that apache can serve them.
-
-Just noticed the updated guide... Brian's comment is new. His first comment
-will work, but opens up a huge security hole.
-	</literallayout>
       </tip>
     </section>
   </section>

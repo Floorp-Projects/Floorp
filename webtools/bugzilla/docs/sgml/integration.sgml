@@ -5,49 +5,59 @@
 <chapter id="integration">
   <title>Integrating Bugzilla with Third-Party Tools</title>
 
-  <section id="bonsai">
+  <section id="bonsai" xreflabel="Bonsai, the Mozilla automated CVS management system">
     <title>Bonsai</title>
-    <para>We need Bonsai integration information.</para>
+    <para>Bonsai is a web-based tool for managing <xref
+							linkend="cvs">
+      .  Using Bonsai, administrators can control open/closed status
+      of trees, query a fast relational database back-end for change,
+      branch, and comment information, and view changes made since the
+      last time the tree was closed.  These kinds of changes cause the
+      engineer responsible to be <quote>on the hook</quote> (include
+      cool URL link here for Hook policies at mozilla.org).  Bonsai
+      also includes gateways to <xref
+								       linkend="tinderbox"> and Bugzilla </para>
   </section>
 
-  <section id="cvs">
+  <section id="cvs" xreflabel="CVS, the Concurrent Versioning System">
     <title>CVS</title>
-    <para>CVS integration is best accomplished, at this point, using the Bugzilla Email Gateway.</para>
+    <para>CVS integration is best accomplished, at this point, using
+      the Bugzilla Email Gateway.  There have been some files
+      submitted to allow greater CVS integration, but we need to make
+      certain that Bugzilla is not tied into one particular software
+      management package.</para>
+    <para>
+      Follow the instructions in the FAQ for enabling Bugzilla e-mail
+      integration.  Ensure that your check-in script sends an email to
+      your Bugzilla e-mail gateway with the subject of <quote>[Bug
+	XXXX]</quote>, and you can have CVS check-in comments append
+      to your Bugzilla bug.  If you have your check-in script include
+      an @resolution field, you can even change the Bugzilla bug
+      state.
+    </para>
   </section>
 
-  <section id="scm">
+  <section id="scm" xreflabel="Perforce SCM (Fast Software Configuration Management System, a powerful commercial alternative to CVS">
     <title>Perforce SCM</title>
     <para>
-      You can find the project page for Bugzilla and Teamtrack Perforce integration at:
-      <ulink url="http://www.ravenbrook.com/project/p4dti/">
-	http://www.ravenbrook.com/project/p4dti</ulink>.  "p4dti" is now an officially
-      supported product from Perforce, and you can find the "Perforce Public Depot"
-      p4dti page at <ulink url="http://public.perforce.com/public/perforce/p4dti/index.html">
-	http://public.perforce.com/public/perforce/p4dti/index.html</ulink>.
+      You can find the project page for Bugzilla and Teamtrack
+      Perforce integration (p4dti) at: <ulink
+					      url="http://www.ravenbrook.com/project/p4dti/"> http://www.ravenbrook.com/project/p4dti</ulink> .  <quote>p4dti</quote> is now an officially supported product from Perforce, and you can find the "Perforce Public Depot" p4dti page at <ulink url="http://public.perforce.com/public/perforce/p4dti/index.html"> http://public.perforce.com/public/perforce/p4dti/index.html</ulink>.
     </para>
     <para>
-      Integration of Perforce with Bugzilla, once patches are applied, is fairly seamless.  However,
-      p4dti is a patch against the Bugzilla 2.10 release, not the current 2.12 release.  I anticipate
-      patches for 2.12 will be out shortly.  Check the project page regularly for updates, or
-      take the given patches and patch it manually.  p4dti is designed to support multiple defect
-      trackers, and maintains its own documentation for it.  Please consult the pages linked
-      above for further information.
-    </para>
-    <para>
-      Right now, there is no way to synchronize the Bug ID and the Perforce Transaction Number, or
-      to change the Bug ID to read (PRODUCT).bugID unless you hack it in.  Additionally, if you
-      have synchronization problems, the easiest way to avoid them is to only put the bug
-      information, comments, etc. into Bugzilla, and not into the Perforce change records.
-      They will link anyway; merely reference the bug ID fixed in your change description,
-      and put a comment into Bugzilla
-      giving the change ID that fixed the Bugzilla bug.  It's a process issue, not a technology
-      question.
+      Integration of Perforce with Bugzilla, once patches are applied,
+      is seamless.  Perforce replication information will appear below
+      the comments of each bug.  Be certain you have a matching set of
+      patches for the Bugzilla version you are installing.  p4dti is
+      designed to support multiple defect trackers, and maintains its
+      own documentation for it. Please consult the pages linked above
+      for further information.
     </para>
   </section>
 
-  <section id="tinderbox">
-    <title>Tinderbox</title>
-    <para>We need Tinderbox integration information</para>
+  <section id="tinderbox" xreflabel="Tinderbox, the Mozilla automated build management system">
+    <title>Tinderbox/Tinderbox2</title>
+    <para>We need Tinderbox integration information.</para>
   </section>
 
 </chapter>

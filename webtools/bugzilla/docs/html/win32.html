@@ -126,7 +126,7 @@ VALIGN="TOP"
 	  of the  
 	  <A
 HREF="installation.html"
->Chapter 3</A
+>Bugzilla Installation</A
 > section while performing your
 	  Win32 installation.
 	</P
@@ -137,13 +137,14 @@ HREF="installation.html"
 	  be a <EM
 >very</EM
 > skilled Windows Systems
-	  Administrator with both strong troubleshooting abilities and
-	  a high tolerance for pain. Bugzilla on NT requires hacking
-	  source code and implementing some advanced utilities.  What
-	  follows is the recommended installation procedure for Win32;
-	  additional suggestions are provided in <A
+	  Administrator with strong troubleshooting abilities, a high
+	  tolerance for pain, and moderate perl skills. Bugzilla on NT
+	  requires hacking source code and implementing some advanced
+	  utilities.  What follows is the recommended installation
+	  procedure for Win32; additional suggestions are provided in
+	  <A
 HREF="faq.html"
->The Bugzilla FAQ</A
+>Appendix A</A
 >.
 	</P
 ></TD
@@ -159,9 +160,23 @@ TYPE="1"
 >	    Install <A
 HREF="http://www.apache.org/"
 TARGET="_top"
->Apache Web Server</A
+>Apache Web
+	      Server</A
+> for Windows, and copy the Bugzilla files
+	    somewhere Apache can serve them.  Please follow all the
+	    instructions referenced in <A
+HREF="installation.html"
+>Bugzilla Installation</A
 >
-	    for Windows.
+	    regarding your Apache configuration, particularly
+	    instructions regarding the <SPAN
+CLASS="QUOTE"
+>"AddHandler"</SPAN
+>
+	    parameter and <SPAN
+CLASS="QUOTE"
+>"ExecCGI"</SPAN
+>.
 	  </P
 ><DIV
 CLASS="NOTE"
@@ -184,13 +199,13 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	      You may also use Internet Information Server or Personal Web
-	      Server for this purpose.  However, setup is slightly more
-	      difficult.  If ActivePerl doesn't seem to handle your file
-	      associations correctly (for .cgi and .pl files), please
-	      consult <A
+>	      You may also use Internet Information Server or Personal
+	      Web Server for this purpose.  However, setup is quite
+	      different.  If ActivePerl doesn't seem to handle your
+	      file associations correctly (for .cgi and .pl files),
+	      please consult <A
 HREF="faq.html"
->The Bugzilla FAQ</A
+>Appendix A</A
 >.
 	    </P
 ><P
@@ -286,7 +301,7 @@ CLASS="COMMAND"
 ><DIV
 CLASS="EXAMPLE"
 ><A
-NAME="AEN910"
+NAME="AEN1012"
 ></A
 ><P
 ><B
@@ -526,13 +541,63 @@ CLASS="FILENAME"
 	    this line:
 	  </P
 ><P
->	    "my $webservergid = getgrnam($my_webservergroup); "
+>	    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>my $webservergid = getgrnam($my_webservergroup);
+	    </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
 	  </P
 ><P
 >	    to
 	  </P
 ><P
->	    "my $webservergid = $my_webservergroup; "
+>	    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>my $webservergid = $my_webservergroup;
+	    </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+or the name of the group you wish to own the files explicitly:
+	    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>my $webservergid = 'Administrators'
+	    </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
 	  </P
 ></LI
 ><LI
@@ -841,7 +906,31 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->The code above needs testing as well to make sure it is correct.</P
+>		  Some have found success using the commercial product, 
+		  <SPAN
+CLASS="PRODUCTNAME"
+>Windmail</SPAN
+>.
+		  You could try replacing your sendmail calls with:
+		  <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>open SENDMAIL, "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t &#62; mail.log";
+		  </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+		or something to that effect.
+		</P
 ></TD
 ></TR
 ></TABLE
@@ -1002,9 +1091,9 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	      This step is completely optional if you are using IIS or
-	      another web server which only decides on an interpreter
-	      based upon the file extension (.pl), rather than the
+>	      This step is optional if you are using IIS or another
+	      web server which only decides on an interpreter based
+	      upon the file extension (.pl), rather than the
 	      <SPAN
 CLASS="QUOTE"
 >"shebang"</SPAN
@@ -1102,10 +1191,11 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	  If you are using IIS 5.0 or higher, you must add cgi
+>	  If you are using IIS or Personal Web Server, you must add cgi
 	  relationships to Properties -&#62; Home directory (tab) -&#62;
 	  Application Settings (section) -&#62; Configuration (button),
-	  such as: <TABLE
+	  such as: 
+	  <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1164,18 +1254,17 @@ VALIGN="TOP"
 ><P
 >	  From Andrew Pearson:
 	  <A
-NAME="AEN1062"
+NAME="AEN1169"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
 ><P
->	      "You can make Bugzilla work with Personal Web Server for
-	      Windows 98 and higher, as well as for IIS 4.0.  Microsoft has
-	      information available at
-	      <A
-HREF=" http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP"
+>	      You can make Bugzilla work with Personal Web Server for
+	      Windows 98 and higher, as well as for IIS 4.0.
+	      Microsoft has information available at <A
+HREF="            http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP"
 TARGET="_top"
->		http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP</A
+> http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP</A
 >
 	    </P
 ><P
@@ -1225,79 +1314,25 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->"Brian" had this to add, about upgrading to Bugzilla 2.12 from previous versions:</P
-><A
-NAME="AEN1072"
-></A
-><BLOCKQUOTE
-CLASS="BLOCKQUOTE"
-><P
->	    Hi - I am updating bugzilla to 2.12 so I can tell you what I did (after I
-	    deleted the current dir and copied the files in).
-	  </P
-><P
->	    In checksetup.pl, I did the following...
-	  </P
-><DIV
-CLASS="PROCEDURE"
-><OL
-TYPE="1"
-><LI
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="PROGRAMLISTING"
->my $webservergid = getgrnam($my_webservergroup);
-	      </PRE
-></FONT
-></TD
-></TR
-></TABLE
-><P
->to</P
-><TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="PROGRAMLISTING"
->my $webservergid = 'Administrators'		
-	      </PRE
-></FONT
-></TD
-></TR
-></TABLE
-></LI
-><LI
-><P
->		I then ran checksetup.pl
-	      </P
-></LI
-><LI
-><P
->		I removed all the encrypt()
-		<DIV
+>	  If attempting to run Bugzilla 2.12 or older, you will need
+	  to remove encrypt() calls from the Perl source. This is
+	  <EM
+>not necessary</EM
+> for Bugzilla 2.13 and
+	  later.
+	  <DIV
 CLASS="EXAMPLE"
 ><A
-NAME="AEN1084"
+NAME="AEN1180"
 ></A
 ><P
 ><B
->Example 3-4. Removing encrypt() for Windows NT installations</B
+>Example 3-4. Removing encrypt() for Windows NT Bugzilla version
+	      2.12 or earlier</B
 ></P
 ><P
->		    Replace this:
-		    <TABLE
+>	      Replace this:  
+	      <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1307,17 +1342,17 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="PROGRAMLISTING"
->SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " .
-    SqlQuote(substr($realcryptpwd, 0, 2)) . ")");
-my $enteredcryptpwd = FetchOneColumn();
-		    </PRE
+> 
+SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SqlQuote(substr($realcryptpwd, 0, 2)) . ")"); 
+my $enteredcryptpwd = FetchOneColumn(); 
+	      </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-		    with this:
-		    <TABLE
+	      with this:  
+	      <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1327,125 +1362,18 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="PROGRAMLISTING"
->my $enteredcryptpwd = $enteredpwd
-		    </PRE
+> 
+my $enteredcryptpwd = $enteredpwd  
+	      </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
-		    in cgi.pl.
-		  </P
+	      in cgi.pl.
+	    </P
 ></DIV
 >
-	      </P
-></LI
-><LI
-><P
->		I renamed processmail to processmail.pl
-	      </P
-></LI
-><LI
-><P
->		I altered the sendmail statements to windmail:
-		<TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="PROGRAMLISTING"
->  
-open SENDMAIL, "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t &#62; mail.log";
-		</PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-	      </P
-><P
->		The quotes around the dir is for the spaces. mail.log is for the output
-	      </P
-></LI
-></OL
-></DIV
-></BLOCKQUOTE
-></TD
-></TR
-></TABLE
-></DIV
-><DIV
-CLASS="TIP"
-><P
-></P
-><TABLE
-CLASS="TIP"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/tip.gif"
-HSPACE="5"
-ALT="Tip"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->	  This was some late breaking information from Jan Evert.  Sorry for the lack of formatting.
-	</P
-><P
-CLASS="LITERALLAYOUT"
->I'm&nbsp;busy&nbsp;installing&nbsp;bugzilla&nbsp;on&nbsp;a&nbsp;WinNT&nbsp;machine&nbsp;and&nbsp;I&nbsp;thought&nbsp;I'd&nbsp;notify&nbsp;you<br>
-at&nbsp;this&nbsp;moment&nbsp;of&nbsp;the&nbsp;commments&nbsp;I&nbsp;have&nbsp;to&nbsp;section&nbsp;2.2.1&nbsp;of&nbsp;the&nbsp;bugzilla<br>
-guide&nbsp;(at&nbsp;http://www.trilobyte.net/barnsons/html/).<br>
-<br>
-Step&nbsp;1:<br>
-I've&nbsp;used&nbsp;apache,&nbsp;installation&nbsp;is&nbsp;really&nbsp;straightforward.<br>
-After&nbsp;reading&nbsp;the&nbsp;Unix&nbsp;installation&nbsp;instructions,&nbsp;I&nbsp;found&nbsp;that&nbsp;it&nbsp;is<br>
-necessary&nbsp;to&nbsp;add&nbsp;the&nbsp;ExecCGI&nbsp;option&nbsp;to&nbsp;the&nbsp;bugzilla&nbsp;directory.&nbsp;Also&nbsp;the<br>
-'AddHandler'&nbsp;line&nbsp;for&nbsp;.cgi&nbsp;is&nbsp;by&nbsp;default&nbsp;commented&nbsp;out.<br>
-<br>
-Step&nbsp;3:&nbsp;although&nbsp;just&nbsp;a&nbsp;detail,&nbsp;'ppm&nbsp;install&nbsp;&#60;module%gt;'&nbsp;will&nbsp;also&nbsp;work<br>
-(without&nbsp;.ppd).&nbsp;And,&nbsp;it&nbsp;can&nbsp;also&nbsp;download&nbsp;these&nbsp;automatically&nbsp;from<br>
-ActiveState.<br>
-<br>
-Step&nbsp;4:&nbsp;although&nbsp;I&nbsp;have&nbsp;cygwin&nbsp;installed,&nbsp;it&nbsp;seems&nbsp;that&nbsp;it&nbsp;is&nbsp;not&nbsp;necessary.<br>
-On&nbsp;my&nbsp;machine&nbsp;cygwin&nbsp;is&nbsp;not&nbsp;in&nbsp;the&nbsp;PATH&nbsp;and&nbsp;everything&nbsp;seems&nbsp;to&nbsp;work&nbsp;as<br>
-expected.<br>
-However,&nbsp;I've&nbsp;not&nbsp;used&nbsp;everything&nbsp;yet.<br>
-<br>
-Step&nbsp;6:&nbsp;the&nbsp;'bugs_password'&nbsp;given&nbsp;in&nbsp;SQL&nbsp;command&nbsp;d&nbsp;needs&nbsp;to&nbsp;be&nbsp;edited&nbsp;into<br>
-localconfig&nbsp;later&nbsp;on&nbsp;(Step&nbsp;7)&nbsp;if&nbsp;the&nbsp;password&nbsp;is&nbsp;not&nbsp;empty.&nbsp;I've&nbsp;also&nbsp;edited<br>
-it&nbsp;into&nbsp;globals.pl,&nbsp;but&nbsp;I'm&nbsp;not&nbsp;sure&nbsp;that&nbsp;is&nbsp;needed.&nbsp;In&nbsp;both&nbsp;places,&nbsp;the<br>
-variable&nbsp;is&nbsp;named&nbsp;db_pass.<br>
-<br>
-Step&nbsp;8:&nbsp;all&nbsp;the&nbsp;sendmail&nbsp;replacements&nbsp;mentioned&nbsp;are&nbsp;not&nbsp;as&nbsp;simple&nbsp;as<br>
-described&nbsp;there.&nbsp;Since&nbsp;I&nbsp;am&nbsp;not&nbsp;familiar&nbsp;(yet)&nbsp;with&nbsp;perl,&nbsp;I&nbsp;don't&nbsp;have&nbsp;any<br>
-mail&nbsp;working&nbsp;yet.<br>
-<br>
-Step&nbsp;9:&nbsp;in&nbsp;globals.pl&nbsp;the&nbsp;encrypt()&nbsp;call&nbsp;can&nbsp;be&nbsp;replaced&nbsp;by&nbsp;just&nbsp;the<br>
-unencrypted&nbsp;password.&nbsp;In&nbsp;CGI.pl,&nbsp;the&nbsp;complete&nbsp;SQL&nbsp;command&nbsp;can&nbsp;be&nbsp;removed.<br>
-<br>
-Step&nbsp;11:&nbsp;I've&nbsp;only&nbsp;changed&nbsp;the&nbsp;#!&nbsp;lines&nbsp;in&nbsp;*.cgi.&nbsp;I&nbsp;haven't&nbsp;noticed&nbsp;problems<br>
-with&nbsp;the&nbsp;system()&nbsp;call&nbsp;yet.<br>
-There&nbsp;seem&nbsp;to&nbsp;be&nbsp;only&nbsp;four&nbsp;system()&nbsp;called&nbsp;programs:&nbsp;processmail.pl&nbsp;(handled<br>
-by&nbsp;step&nbsp;10),&nbsp;syncshadowdb&nbsp;(which&nbsp;should&nbsp;probably&nbsp;get&nbsp;the&nbsp;same&nbsp;treatment&nbsp;as<br>
-processmail.pl),&nbsp;diff&nbsp;and&nbsp;mysqldump.&nbsp;The&nbsp;last&nbsp;one&nbsp;is&nbsp;only&nbsp;needed&nbsp;with&nbsp;the<br>
-shadowdb&nbsp;feature&nbsp;(which&nbsp;I&nbsp;don't&nbsp;use).<br>
-<br>
-There&nbsp;seems&nbsp;to&nbsp;be&nbsp;one&nbsp;step&nbsp;missing:&nbsp;copying&nbsp;the&nbsp;bugzilla&nbsp;files&nbsp;somehwere<br>
-that&nbsp;apache&nbsp;can&nbsp;serve&nbsp;them.<br>
-<br>
-Just&nbsp;noticed&nbsp;the&nbsp;updated&nbsp;guide...&nbsp;Brian's&nbsp;comment&nbsp;is&nbsp;new.&nbsp;His&nbsp;first&nbsp;comment<br>
-will&nbsp;work,&nbsp;but&nbsp;opens&nbsp;up&nbsp;a&nbsp;huge&nbsp;security&nbsp;hole.<br>
 	</P
 ></TD
 ></TR

@@ -8,18 +8,21 @@
   </subtitle>
   
   <para>
-    So you followed the installation instructions to the letter, and
-    just logged into bugzilla with your super-duper god account and
-    you are sitting at the query screen. Yet, you have nothing to
-    query. Your first act of business needs to be to setup the
-    operating parameters for bugzilla.
+    So you followed <quote><xref linkend="installation"></quote> to the
+    letter, and logged into Bugzilla for the very first time with your
+    super-duper god account.  You sit, contentedly staring at the
+    Bugzilla Query Screen, the worst of the whole mad business of
+    installing this terrific program behind you. It seems, though, you
+    have nothing yet to query! Your first act of business should be to
+    setup the operating parameters for Bugzilla so you can get busy
+    getting data into your bug tracker.
   </para>
 
   <section id="postinstall-check">
     <title>Post-Installation Checklist</title>
     <para>
-      After installation, follow the checklist below to ensure that
-      you have a successful installation. If you do not see a
+      After installation, follow the checklist below to help ensure
+      that you have a successful installation. If you do not see a
       recommended setting for a parameter, consider leaving it at the
       default while you perform your initial tests on your Bugzilla
       setup.
@@ -30,47 +33,80 @@
     <procedure>
       <step>
 	<para>
-	  Bring up "editparams.cgi" in your web browser.  For
-	  instance, to edit parameters at mozilla.org, the URL would
-	  be <ulink url="http://bugzilla.mozilla.org/editparams.cgi">
-	    http://bugzilla.mozilla.org/editparams.cgi</ulink>, also
-	  available under the "edit parameters" link on your query
-	  page.
+	  Bring up <filename>editparams.cgi</filename> in your web
+	  browser.  This should be available as the <quote>edit
+	    parameters</quote> link from any Bugzilla screen once you
+	  have logged in.
 	</para>
       </step>
       <step>
+	<para>The <quote>maintainer</quote> is the email address of
+	  the person responsible for maintaining this Bugzilla
+	  installation.  The maintainer need not be a valid Bugzilla
+	  user.  Error pages, error emails, and administrative mail
+	  will be sent with the maintainer as the return email
+	  address.</para>
 	<para>
-	  Set "maintainer" to <emphasis>your</emphasis> email address.
+	  Set <quote>maintainer</quote> to <emphasis>your</emphasis> email address.
 	  This allows Bugzilla's error messages to display your email
 	  address and allow people to contact you for help.
 	</para>
       </step>
       <step>
+	<para>The <quote>urlbase</quote> parameter defines the fully
+	  qualified domain name and web server path to your Bugzilla
+	  installation.</para>
 	<para>
-	  Set "urlbase" to the URL reference for your Bugzilla
-	  installation. If your bugzilla query page is at
-	  http://www.foo.com/bugzilla/query.cgi, your url base is
-	  http://www.foo.com/bugzilla/
+	  For example, if your bugzilla query page is
+	  http://www.foo.com/bugzilla/query.cgi, set your
+	  <quote>urlbase</quote> is http://www.foo.com/bugzilla/.  
 	</para>
       </step>
       <step>
+	<para><quote>usebuggroups</quote> dictates whether or not to
+	  implement group-based security for Bugzilla.  If set,
+	  Bugzilla bugs can have an associated groupmask defining
+	  which groups of users are allowed to see and edit the
+	  bug.</para>
 	<para>
 	  Set "usebuggroups" to "on" <emphasis>only</emphasis> if you
-	  need to restrict access to products. I suggest leaving this
-	  parameter <emphasis>off</emphasis> while initially testing
-	  your Bugzilla.
+	  may wish to restrict access to products. I suggest leaving
+	  this parameter <emphasis>off</emphasis> while initially
+	  testing your Bugzilla.  
 	</para>
       </step>
       <step>
 	<para>
-	  Set "usebuggroupsentry" to "on" if you want to restrict
-	  access to products. Once again, if you are simply testing
+	  <quote>usebuggroupsentry</quote>, when set to
+	  <quote>on</quote>, requires that all bugs have an associated
+	  groupmask when submitted.  This parameter is made for those
+	  installations where product isolation is a necessity.
+	</para>
+	<para>
+	  Set "usebuggroupsentry" to "on" if you absolutely need to
+	  restrict access to bugs from the moment they are submitted
+	  through resolution. Once again, if you are simply testing
 	  your installation, I suggest against turning this parameter
 	  on; the strict security checking may stop you from being
 	  able to modify your new entries.
 	</para>
       </step>
       <step>
+	<para>
+	  You run into an interesting problem when Bugzilla reaches a
+	  high level of continuous activity.  MySQL supports only
+	  table-level write locking.  What this means is that if
+	  someone needs to make a change to a bug, they will lock the
+	  entire table until the operation is complete.  Locking for
+	  write also blocks reads until the write is complete.  The
+	  <quote>shadowdb</quote> parameter was designed to get around
+	  this limitation.  While only a single user is allowed to
+	  write to a table at a time, reads can continue unimpeded on
+	  a read-only shadow copy of the database.  Although your
+	  database size will double, a shadow database can cause an
+	  enormous performance improvement when implemented on
+	  extremely high-traffic Bugzilla databases.
+	</para>
         <para>
 	  Set "shadowdb" to "bug_shadowdb" if you will be running a
 	  *very* large installation of Bugzilla. The shadow database
@@ -79,15 +115,19 @@
 	  <note>
 	    <para>
 	      Enabling "shadowdb" can adversely affect the stability
-	      of your installation of Bugzilla. You may frequently
-	      need to manually synchronize your databases, or schedule
-	      nightly syncs via "cron"
+	      of your installation of Bugzilla. You should regularly
+	      check that your database is in sync.  It is often
+	      advisable to force a shadow database sync nightly via
+	      <quote>cron</quote>.
 	    </para>
 	  </note> Once again, in testing you should avoid this option
 	  -- use it if or when you <emphasis>need</emphasis> to use
 	  it, and have repeatedly run into the problem it was designed
 	  to solve -- very long wait times while attempting to commit
-	  a change to the database.
+	  a change to the database.  Mozilla.org began needing
+	  <quote>shadowdb</quote> when they reached around 40,000
+	  Bugzilla users with several hundred Bugzilla bug changes and
+	  comments per day.
         </para>
 	<para>
 	  If you use the "shadowdb" option, it is only natural that
@@ -97,6 +137,18 @@
 	</para>
       </step>
       <step>
+	<para><quote>headerhtml</quote>, <quote>footerhtml</quote>,
+	  <quote>errorhtml</quote>, <quote>bannerhtml</quote>, and
+	  <quote>blurbhtml</quote> are all templates which control
+	  display of headers, footers, errors, banners, and additional
+	  data.  We could go into some detail regarding the usage of
+	  these, but it is really best just to monkey around with them
+	  a bit to see what they do.  I strongly recommend you copy
+	  your <filename>data/params</filename> file somewhere safe
+	  before playing with these values, though.  If they are
+	  changed dramatically, it may make it impossible for you to
+	  display Bugzilla pages to fix the problem until you have
+	  restored your <filename>data/params</filename> file.</para>
         <para>
 	  If you have custom logos or HTML you must put in place to
 	  fit within your site design guidelines, place the code in
@@ -105,15 +157,20 @@
 	  <note>
 	    <para>
 	      The "headerhtml" text box is the HTML printed out
-	      <emphasis>before</emphasis> any other code on the page.
-	      If you have a special banner, put the code for it in
-	      "bannerhtml". You may want to leave these settings at
-	      the defaults initially.
+	      <emphasis>before</emphasis> any other code on the page,
+	      except the CONTENT-TYPE header sent by the Bugzilla
+	      engine. If you have a special banner, put the code for
+	      it in "bannerhtml". You may want to leave these settings
+	      at the defaults initially.
 	    </para>
 	  </note>
 	</para>
       </step>
       <step>
+	<para><quote>passwordmail</quote> is rather simple.  Every
+	  time a user creates an account, the text of this parameter
+	  is read as the text to send to the new user along with their
+	  password message.</para>
         <para>
 	  Add any text you wish to the "passwordmail" parameter box.
 	  For instance, many people choose to use this box to give a
@@ -121,20 +178,32 @@
         </para>
       </step>
       <step>
-        <para>
-	  Ensure "newemailtech" is "on". Your users will thank you.
-	  This is the default in the post-2.12 world, and is only an
-	  issue if you are upgrading.
-	</para>
-      </step>
-      <step>
+	<para><quote>useqacontact</quote> allows you to define an
+	  email address for each component, in addition to that of the
+	  default owner, who will be sent carbon copies of incoming
+	  bugs.  The critical difference between a QA Contact and an
+	  Owner is that the QA Contact follows the component.  If you
+	  reassign a bug from component A to component B, the QA
+	  Contact for that bug will change with the reassignment,
+	  regardless of owner.</para>
+	<para><quote>usestatuswhiteboard</quote> defines whether you
+	  wish to have a free-form, overwritable field associated with
+	  each bug.  The advantage of the Status Whiteboard is that it
+	  can be deleted or modified with ease, and provides an
+	  easily-searchable field for indexing some bugs that have
+	  some trait in common.  Many people will put <quote>help
+	    wanted</quote>, <quote>stalled</quote>, or <quote>waiting
+	    on reply from somebody</quote> messages into the Status
+	  Whiteboard field so those who peruse the bugs are aware of
+	  their status even more than that which can be indicated by
+	  the Resolution fields.</para>
 	<para>
 	  Do you want to use the QA Contact ("useqacontact") and
 	  status whiteboard ("usestatuswhiteboard") fields? These
 	  fields are useful because they allow for more flexibility,
 	  particularly when you have an existing Quality Assurance
 	  and/or Release Engineering team,  but they may not be needed
-	  for smaller installations.
+	  for many smaller installations.
 	</para>
       </step>
       <step>
@@ -144,14 +213,22 @@
 	  they have untouched new bugs.  If you do not plan to use
 	  this feature, simply do not set up the whining cron job
 	  described in the installation instructions, or set this
-	  value to "0".
+	  value to "0" (never whine).
 	</para>
       </step>
       <step>
+	<para><quote>commenton</quote> fields allow you to dictate
+	  what changes can pass without comment, and which must have a
+	  comment from the person who changed them.  Often,
+	  administrators will allow users to add themselves to the CC
+	  list, accept bugs, or change the Status Whiteboard without
+	  adding a comment as to their reasons for the change, yet
+	  require that most other changes come with an
+	  explanation.</para>
 	<para>
 	  Set the "commenton" options according to your site policy.
 	  It is a wise idea to require comments when users resolve,
-	  reassign, or reopen bugs.
+	  reassign, or reopen bugs at the very least.
 	  <note>
 	    <para>
 	      It is generally far better to require a developer
@@ -164,12 +241,28 @@
 	</para>
       </step>
       <step>
+	<para>The <quote>supportwatchers</quote> option can be an
+	  exceptionally powerful tool in the hands of a power Bugzilla
+	  user.  By enabling this option, you allow users to receive
+	  email updates whenever other users receive email updates.
+	  This is, of course, subject to the groupset restrictions on
+	  the bug; if the <quote>watcher</quote> would not normally be
+	  allowed to view a bug, the watcher cannot get around the
+	  system by setting herself up to watch the bugs of someone
+	  with bugs outside her priveleges.  She would still only
+	  receive email updates for those bugs she could normally
+	  view.</para>
+	<para>For Bugzilla sites which require strong inter-Product
+	  security to prevent snooping, watchers are not a good
+	  idea.</para>
 	<para>
-	  Set "supportwatchers" to "On".  This feature is helpful for
-	  team leads to monitor progress in their respective areas,
-	  and can offer many other benefits, such as allowing a
-	  developer to pick up a former engineer's bugs without
-	  requiring her to change all the information in the bug.
+	  However, for most sites you should set
+	  <quote>supportwatchers</quote> to "On".  This feature is
+	  helpful for team leads to monitor progress in their
+	  respective areas, and can offer many other benefits, such as
+	  allowing a developer to pick up a former engineer's bugs
+	  without requiring her to change all the information in the
+	  bug.
 	</para>
       </step>
     </procedure>
@@ -205,6 +298,9 @@
 	    groupset=0x7ffffffffffffff where login_name = "(user's
 	    login name)"; </command>
 	</para>
+	<para>Yes, that is <emphasis>fourteen</emphasis>
+	  <quote>f</quote>'s.  A whole lot of f-ing going on if you
+	  want to create a new administator.</para>
       </tip>
     </section>
 
@@ -269,11 +365,11 @@
 		right-hand side of the text entry box. You can match
 		what you type as a case-insensitive substring (the
 		default) of all users on your system, a case-sensitive
-		regular expression (please see the "man regexp" manual
-		page for details on regular expression syntax), or a
-		<emphasis>reverse</emphasis> regular expression match,
-		where every user name which does NOT match the regular
-		expression is selected.
+		regular expression (please see the <command>man
+		  regexp</command> manual page for details on regular
+		expression syntax), or a <emphasis>reverse</emphasis>
+		regular expression match, where every user name which
+		does NOT match the regular expression is selected.
 	      </para>
 	    </tip>
 	  </listitem>
@@ -292,10 +388,14 @@
 	      <para>
 		Adding a user this way will <emphasis>not</emphasis>
 		send an email informing them of their username and
-		password. In general, it is preferable to log out and
-		use the "New Account" button to create users, as it
-		will pre-populate all the required fields and also
-		notify  the user of her account name and password.
+		password. While useful for creating dummy accounts
+		(watchers which shuttle mail to another system, for
+		instance, or email addresses which are a mailing
+		list), in general it is preferable to log out and use
+		the <quote>New Account</quote> button to create users,
+		as it will pre-populate all the required fields and
+		also notify  the user of her account name and
+		password.
 	      </para>
 	    </note>
 	  </listitem>
@@ -317,6 +417,11 @@
 	      Don't disable your own administrative account, or you
 	      will hate life!
 	    </para>
+	    <para>At this time, <quote>Disabled Text</quote> does not
+	      prevent a user from using the email interface.  If you
+	      have the email interface enabled, they can still
+	      continue to submit bugs and comments that way.  We need
+	      a patch to fix this.</para>
 	  </warning>
 	</para>
       </section>
@@ -350,9 +455,8 @@
 	  </listitem>
 	  <listitem>
 	    <para>
-	      <emphasis>Password</emphasis>: You will only see
-	      asterisks in versions of Bugzilla newer than 2.10 or
-	      early 2.11.  You can change the user password here.
+	      <emphasis>Password</emphasis>:  You can change the user
+	      password here.  It is normal to only see asterisks.
 	    </para>
 	  </listitem>
 	  <listitem>

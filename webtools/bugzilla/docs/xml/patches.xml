@@ -3,6 +3,40 @@
 <appendix id="patches" xreflabel="Useful Patches and Utilities for Bugzilla">
   <title>Useful Patches and Utilities for Bugzilla</title>		
 
+  <para>Are you looking for a way to put your Bugzilla into overdrive?  Catch some of the niftiest tricks here in this section.</para>
+
+  <section id="rewrite" xreflabel="Apache mod_rewrite magic">
+    <title>Apache <filename>mod_rewrite</filename> magic</title>
+    <para>Apache's <filename>mod_rewrite</filename> module lets you do some truly amazing things with URL rewriting.  Here are a couple of examples of what you can do.</para>
+    <orderedlist>
+      <listitem>
+	<para>
+	  Make it so if someone types
+	  <computeroutput>http://www.foo.com/12345</computeroutput>,
+	  Bugzilla spits back
+	  http://www.foo.com/show_bug.cgi?id=12345. Try setting up
+	  your VirtualHost section for Bugzilla with a rule like
+	  this:</para>
+	<programlisting>
+<![CDATA[
+<VirtualHost 12.34.56.78>
+RewriteEngine On
+RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
+</VirtualHost>
+]]>
+	</programlisting>
+
+      </listitem>
+      <listitem>
+	<para>There are many, many more things you can do with
+	  mod_rewrite.  As time goes on, I will include many more in
+	  the Guide.  For now, though, please refer to the mod_rewrite
+	  documentation at <ulink
+				  url="http://www.apache.org">http://www.apache.org</ulink></para>
+      </listitem>
+    </orderedlist>
+  </section>
+
 <section id="setperl" xreflabel="The setperl.csh Utility">
     <title>The setperl.csh Utility</title>
     <para>	 You can use the "setperl.csh" utility to quickly and

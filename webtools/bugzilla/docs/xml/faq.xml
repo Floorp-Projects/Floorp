@@ -1,6 +1,6 @@
 <!-- <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
 
-<appendix id="faq" xreflabel="The Bugzilla FAQ">
+<appendix id="faq">
   <title>The Bugzilla FAQ</title>
 
   <qandaset>
@@ -17,8 +17,8 @@
 	<answer>
 	  <para>
 	    You can stay up-to-date with the latest Bugzilla
-	    information at <ulink
-				  url="http://www.mozilla.org/projects/bugzilla/"> http://www.mozilla.org/projects/bugzilla/</ulink>
+	    information at <ulink url="http://www.mozilla.org/projects/bugzilla/">
+	    http://www.mozilla.org/projects/bugzilla/</ulink>
 	  </para>
 	</answer>
       </qandaentry>
@@ -31,9 +31,9 @@
 	</question>
 	<answer>
 	  <para>
-	    Bugzilla is covered by the Mozilla Public License. See
-	    details at <ulink url="http://www.mozilla.org/MPL/">
-	      http://www.mozilla.org/MPL/</ulink>
+	    Bugzilla is covered by the Mozilla Public License.
+	    See details at <ulink url="http://www.mozilla.org/MPL/">
+	    http://www.mozilla.org/MPL/</ulink>
 	  </para>
 	</answer>
       </qandaentry>
@@ -46,17 +46,16 @@
 	</question>
 	<answer>
 	  <para>
-	    <ulink url="http://www.collab.net/">www.collab.net</ulink>
-	    offers Bugzilla as part of their standard offering to
-	    large projects. They do have some minimum fees that are
-	    pretty hefty, and generally aren't interested in small
-	    projects.
+	    <ulink url="http://www.collab.net/">www.collab.net</ulink> offers
+	    Bugzilla as part of their standard offering to large projects.
+	    They do have some minimum fees that are pretty hefty, and generally
+	    aren't interested in small projects.
 	  </para>
 	  <para>
-	    There are several experienced Bugzilla hackers on the
-	    mailing list/newsgroup who are willing to whore themselves
-	    out for generous compensation. Try sending a message to
-	    the mailing list asking for a volunteer.
+	    There are several experienced
+	    Bugzilla hackers on the mailing list/newsgroup who are willing
+	    to whore themselves out for generous compensation.
+	    Try sending a message to the mailing list asking for a volunteer.
 	  </para>
 	</answer>
       </qandaentry>
@@ -64,15 +63,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    What major companies or projects are currently using
-	    Bugzilla for bug-tracking?
+	    What major companies or projects are currently using Bugzilla
+	    for bug-tracking?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    There are <emphasis>dozens</emphasis> of major comapanies
-	    with public Bugzilla sites to track bugs in their
-	    products.  A few include:
+	    There are <emphasis>dozens</emphasis> of major comapanies with public
+	    Bugzilla sites to track bugs in their products.  A few include:
 	    <simplelist>
 	      <member>Netscape/AOL</member>
 	      <member>Mozilla.org</member>
@@ -94,9 +92,8 @@
 	    </simplelist>
 	  </para>
 	  <para>
-	    Suffice to say, there are more than enough huge projects
-	    using Bugzilla that we can safely say it's extremely
-	    popular.
+	    Suffice to say, there are more than enough huge projects using Bugzilla
+	    that we can safely say it's extremely popular.
 	  </para>
 	</answer>
       </qandaentry>
@@ -109,16 +106,9 @@
 	</question>
 	<answer>
 	  <para>
-	    There are many, many contributors from around the world
-	    maintaining Bugzilla. The designated "Maintainer" is Tara
-	    Hernandez, with QA support by Matthew Tuck. Dan Mosedale
-	    and Dawn Endico are employees of Mozilla.org responsible
-	    for the installation of Bugzilla there, and are very
-	    frequent code contributors. Terry Weissman originally
-	    ported Bugzilla, but "these days, Terry just hangs around
-	    and heckles."  The rest of us are mostly transient
-	    developers; Bugzilla suits our needs, and we contribute
-	    code as we have needs for updates.
+	    Bugzilla maintenance has been in a state of flux recently.
+	    Please check <ulink
+				    url="http://www.mozilla.org/projects/bugzilla/">the Bugzilla Project Page for the latest details. </ulink>
 	  </para>
 	</answer>
       </qandaentry>
@@ -126,8 +116,7 @@
       <qandaentry>
 	<question>
 	  <para>
-	    How does Bugzilla stack up against other bug-tracking
-	    databases?
+	    How does Bugzilla stack up against other bug-tracking databases?
 	  </para>
 	</question>
 	<answer>
@@ -143,7 +132,7 @@
 	    flexibility, and superior ease-of-use.
 	  </para>
 	  <para>
-	    If you happen to be a commercial Bugzilla vendor, please
+	    If you happen to be a commercial bug-tracker vendor, please
 	    step forward with a rebuttal so I can include it in the
 	    FAQ.  We're not in pursuit of Bugzilla ueber alles; we
 	    simply love having a powerful, open-source tool to get our
@@ -160,9 +149,8 @@
 	</question>
 	<answer>
 	  <para>
-	    You can't.  However, the administrative account can, by
-	    simply opening your user account in editusers.cgi and
-	    changing the login name.
+	    You can't.  However, the administrative account can, by simply opening
+	    your user account in editusers.cgi and changing the login name.
 	  </para>
 	</answer>
       </qandaentry>
@@ -170,26 +158,24 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Why doesn't Bugzilla offer this or that feature or
-	    compatability with this other tracking software?
+	    Why doesn't Bugzilla offer this or that feature or compatability
+	    with this other tracking software?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    It may be that the support has not been built yet, or that
-	    you have not yet found it.  Bugzilla is making tremendous
-	    strides in usability, customizability, scalability, and
-	    user interface.  It is widely considered the most complete
-	    and popular open-source bug-tracking software in
-	    existence.
+	    It may be that the support has not been built yet, or that you
+	    have not yet found it.  Bugzilla is making tremendous strides in
+	    usability, customizability, scalability, and user interface.  It
+	    is widely considered the most complete and popular open-source
+	    bug-tracking software in existence.
 	  </para>
 	  <para>
-	    That doesn't mean it can't use improvement! You can help
-	    the project along by either hacking a patch yourself that
-	    supports the functionality you require, or else submitting
-	    a "Request for Enhancement" (RFE) using the bug submission
-	    interface at <ulink
-				url="http://bugzilla.mozilla.org/">bugzilla.mozilla.org</ulink>.
+	    That doesn't mean it can't use improvement!
+	    You can help the project along by either hacking a patch yourself
+	    that supports the functionality you require, or else submitting a
+	    "Request for Enhancement" (RFE) using the bug submission interface
+	    at <ulink url="http://bugzilla.mozilla.org/">bugzilla.mozilla.org</ulink>.
 	  </para>
 	</answer>
       </qandaentry>
@@ -205,40 +191,37 @@
 	  <para>Terry Weissman answers,
 	  <blockquote>
 	    <para>
-	      You're not the only one. But <emphasis>I</emphasis> am
-		not very interested. I'm not a real SQL or database
-		person. I just wanted to make a useful tool, and build
-		it on top of free software. So, I picked MySQL, and
-		learned SQL by staring at the MySQL manual and some
-		code lying around here, and wrote Bugzilla. I didn't
-		know that Enum's were non-standard SQL. I'm not sure
-		if I would have cared, but I didn't even know. So, to
-		me, things are "portable" because it uses MySQL, and
-		MySQL is portable enough. I fully understand (now)
-		that people want to be portable to other databases,
-		but that's never been a real concern of mine.
+	      You're not the only one. But <emphasis>I</emphasis> am not very interested. I'm not
+	      a real SQL or database person. I just wanted to make a useful tool,
+	      and build it on top of free software. So, I picked MySQL, and
+	      learned SQL by staring at the MySQL manual and some code lying
+	      around here, and
+	      wrote Bugzilla. I didn't know that Enum's were non-standard SQL.
+	      I'm not sure if I would have cared, but I didn't even know. So, to
+	      me, things are "portable" because it uses MySQL, and MySQL is
+	      portable enough. I fully understand (now) that people want to be
+	      portable to other databases, but that's never been a real concern
+	      of mine.
 	    </para>
 	  </blockquote>
 	  </para>
 	  <para>
-	    Things aren't quite that grim these days, however.  Terry
-	    pretty much sums up much of the thinking many of us have
-	    for Bugzilla, but there is light on the horizon for
-	    database-independence!  Here are some options:
+	    Things aren't quite that grim these days, however.  Terry pretty much
+	    sums up much of the thinking many of us have for Bugzilla, but there
+	    is light on the horizon for database-independence!  Here are some options:
 	  </para>
 	  <simplelist>
 	    <member>
-	      <emphasis><ulink url="http://bugzilla.redhat.com/">Red
-		  Hat Bugzilla</ulink></emphasis>: Runs a modified
-	      Bugzilla 2.8 atop an Oracle database.
+	      <emphasis><ulink url="http://bugzilla.redhat.com/">Red Hat Bugzilla</ulink></emphasis>:
+	      Runs a modified Bugzilla 2.8 atop an Oracle database.
 	    </member>
 	    <member>
-	      <emphasis><ulink
-			       url="http://sourceforge.net/projects/interzilla">Interzilla</ulink></emphasis>: A project to run Bugzilla on Interbase.  No code released yet, however.
+	      <emphasis><ulink url="http://sourceforge.net/projects/interzilla">Interzilla</ulink></emphasis>:
+	      A project to run Bugzilla on Interbase.  No code released yet, however.
 	    </member>
 	    <member>
-	      <emphasis>Bugzilla 3.0</emphasis>: One of the primary
-	      stated goals is multiple database support.
+	      <emphasis>Bugzilla 3.0</emphasis>: One of the primary stated goals
+	      is multiple database support.
 	    </member>
 	  </simplelist>
 	</answer>
@@ -247,40 +230,36 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead
-	    of "/usr/bin/perl" or something else?
+	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
+	    "/usr/bin/perl" or something else?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	     Mozilla.org uses /usr/bonsaitools/bin/perl. The prime
-	    rule in making submissions is "don't break
-	    bugzilla.mozilla.org". If it breaks it, your patch will be
-	    reverted faster than you can do a diff.
+	     Mozilla.org uses /usr/bonsaitools/bin/perl. The prime rule in making
+	    submissions is "don't break bugzilla.mozilla.org". If it breaks it, your
+	    patch will be reverted faster than you can do a diff.
 	  </para>
 	  <para>
-	    Here's Terry Weissman's comment, for some historical
-	    context:
+	    Here's Terry Weissman's comment, for some historical context:
 	    <blockquote>
 	      <para>
-		[This was] purely my own convention. I wanted a place
-		to put a version of Perl and other tools that was
-		strictly under my control for the various webtools,
-		and not subject to anyone else. Edit it to point to
-		whatever you like.
+		[This was] purely my own convention. I wanted a place to put a version of
+		Perl and other tools that was strictly under my control for the
+		various webtools, and not subject to anyone else. Edit it to point
+		to whatever you like.
 	      </para>
 	      <note>
 		<para>
-		  We always recommend that, if possible, you keep the
-		  path as /usr/bonsaitools/bin/perl, and simply add a
-		  /usr/bonsaitools and /usr/bonsaitools/bin directory,
-		  then symlink your version of perl to
-		  /usr/bonsaitools/bin/perl.  This will make upgrading
+		  We always recommend that, if possible, you keep the path
+		  as /usr/bonsaitools/bin/perl, and simply add a /usr/bonsaitools
+		  and /usr/bonsaitools/bin directory, then symlink your version
+		  of perl to /usr/bonsaitools/bin/perl.  This will make upgrading
 		  your Bugzilla much easier in the future.
 		</para>
 		<para>
-		  Obviously, if you do not have root access to your
-		  Bugzilla box, our suggestion is irrelevant.
+		  Obviously, if you do not have root access to your Bugzilla
+		  box, our suggestion is irrelevant.
 		</para>
 	      </note>
 	    </blockquote>
@@ -297,8 +276,7 @@
 	<note>
 	  <para>
 	    <emphasis>This section is no longer up-to-date.</emphasis>
-	    Please see the section on "Red Hat Bugzilla" under
-	    "Variants" in The Bugzilla Guide.
+	    Please see the section on "Red Hat Bugzilla" under "Variants" in The Bugzilla Guide.
 	  </para>
 	</note>
       </para>
@@ -310,29 +288,27 @@
 	</question>
 	<answer>
 	  <para>
-	    Red Hat Bugzilla is arguably more user-friendly,
-	    customizable, and scalable than stock Bugzilla. Check it
-	    out at http://bugzilla.redhat.com and the sources at
-	    ftp://people.redhat.com/dkl/. They've set their Bugzilla
-	    up to work with Oracle out of the box. Note that Redhat
-	    Bugzilla is based upon the 2.8 Bugzilla tree; Bugzilla has
-	    made some tremendous advances since the 2.8 release. Why
-	    not download both Bugzillas to check out the differences
-	    for yourself?
+	    Red Hat Bugzilla is arguably more user-friendly, customizable, and scalable
+	    than stock Bugzilla. Check it out at
+	    http://bugzilla.redhat.com and the sources at ftp://people.redhat.com/dkl/.
+	    They've set their Bugzilla up to work with Oracle out of the box.
+	    Note that Redhat Bugzilla is based upon the 2.8 Bugzilla tree;
+	    Bugzilla has made some tremendous advances since the 2.8 release.
+	    Why not download both Bugzillas to check out the differences for
+	    yourself?
 	  </para>
 	  <para>
-	    Dave Lawrence, the original Red Hat Bugzilla maintainer,
-	    mentions:
+	    Dave Lawrence, the original Red Hat Bugzilla maintainer, mentions:
 	    <blockquote>
 	      <para>
-		Somebody needs to take the ball and run with it.  I'm
-		the only maintainer and am very pressed for time.
+		Somebody needs to take the ball and run with it.  I'm the only
+		maintainer and am very pressed for time.
 	      </para>
-	    </blockquote> If you, or someone you know, has the time
-	    and expertise to do the integration work so main-tree
-	    Bugzilla 2.12 and higher integrates the Red Hat Bugzilla
-	    Oracle modifications, please donate your time to
-	    supporting the Bugzilla project.
+	    </blockquote>
+	    If you, or someone you know, has the time and expertise to do the integration
+	    work so main-tree Bugzilla 2.12 and higher integrates the Red
+	    Hat Bugzilla Oracle modifications, please donate your
+	    time to supporting the Bugzilla project.
 	  </para>
 	</answer>
       </qandaentry>
@@ -348,123 +324,102 @@
 	    <emphasis>Dave Lawrence</emphasis>:
 	    <blockquote>
 	      <para>
-		For the record, we are not using any template type
-		implementation for the cosmetic changes maded to
-		Bugzilla.  It is just alot of html changes in the code
-		itself.  I admit I may have gotten a little carried
-		away with it but the corporate types asked for a more
-		standardized interface to match up with other projects
-		relating to Red Hat web sites.  A lot of other web
-		based internal tools I am working on also look like
-		Bugzilla.
+		For the record, we are not using any template type implementation for
+		the cosmetic changes maded to Bugzilla.  It is just alot of html changes
+		in the code itself.  I admit I may have gotten a little carried away with it
+		but the corporate types asked for a more standardized interface to match up
+		with other projects relating to Red Hat web sites.  A lot of other web based
+		internal tools I am working on also look like Bugzilla.
 	      </para>
 	      <para>
-		I do want to land the changes that I have made to
-		Bugzilla but I may have to back out a good deal and
-		make a different version of Red Hat's Bugzilla for
-		checking in to CVS. Especially the cosmetic changes
-		because it seems they may not fit the general public.
-		I will do that as soon as I can. I also still do my
-		regular QA responsibilities along with Bugzilla so
-		time is difficult sometimes to come by.
+		I do want to land the changes that I have made to Bugzilla but I may
+		have to back out a good deal and make a different version of Red Hat's
+		Bugzilla for checking in to CVS. Especially the cosmetic changes because it
+		seems they may not fit the general public.  I will do that as soon as I can.
+		I also still do my regular QA responsibilities along with Bugzilla so time
+		is difficult sometimes to come by.
 	      </para>
 	      <para>
-		There are also a good deal of other changes that were
-		requested by management for things like support
-		contracts and different permission groups for making
-		bugs private. Here is a short list of the major
+		There are also a good deal of other changes that were requested by
+		management for things like support contracts and different permission
+		groups for making bugs private. Here is a short list of the major
 		changes that have been made:
 	      </para>
 	      <orderedlist>
 		<listitem>
 		  <para>
-		    No enum types. All old enum types are now separate
-		    smaller tables.
+		    No enum types. All old enum types are now separate smaller tables.
 		  </para>
 		</listitem>
 		<listitem>
 		  <para>
-		    No bit wise operations. Not all databases support
-		    this so they were changed to a more generic way of
-		    doing this task
+		    No bit wise operations. Not all databases support this so they were
+		    changed to a more generic way of doing this task
 		  </para>
 		</listitem>
 		<listitem>
 		  <para>
-		    Bug reports can only be altered by the reporter,
-		    assignee, or a privileged bugzilla user. The rest
-		    of the world can see the bug but in a
-		    non-changeable format (unless the bug has been
-		    marked private).  They can however add comments,
-		    add and remove themselves from the CC list
+		    Bug reports can only be altered by the reporter, assignee, or a
+		    privileged bugzilla user. The rest of the world can see the bug but in
+		    a non-changeable format (unless the bug has been marked private).  They
+		    can however add comments, add and remove themselves from the CC list
 		  </para>
 		</listitem>
 		<listitem>
 		  <para>
-		    Different group scheme. Each group has an id
-		    number related to it. There is a user_group table
-		    which contains userid to groupid mappings to
-		    determine which groups each user belongs to.
-		    Additionally there is a bug_group table that has
-		    bugid to groupid mappings to show which groups can
-		    see a particular bug. If there are no entries for
-		    a bug in this table then the bug is public.
+		    Different group scheme. Each group has an id number related to it.
+		    There is a user_group table which contains userid to groupid mappings
+		    to determine which groups each user belongs to.  Additionally there is
+		    a bug_group table that has bugid to groupid mappings to show which
+		    groups can see a particular bug. If there are no entries for a bug in
+		    this table then the bug is public.
 		  </para>
 		</listitem>
 		<listitem>
 		  <para>
-		    Product groups. product_table created to only
-		    allow certain products to be visible for certain
-		    groups in both bug entry and query. This was
+		    Product groups. product_table created to only allow certain products to
+		    be visible for certain groups in both bug entry and query. This was
 		    particulary helpful for support contracts.
 		  </para>
 		</listitem>
 		<listitem>
 		  <para>
-		    Of course many (too many) changes to Bugzilla code
-		    itself to allow use with Oracle and still allow
-		    operation with Mysql if so desired. Currently if
-		    you use Mysql it is set to use Mysql's old
-		    permission scheme to keep breakage to a minimum.
-		    Hopefully one day this will standardize on one
-		    style which may of course be something completely
+		    Of course many (too many) changes to Bugzilla code itself to allow use
+		    with Oracle and still allow operation with Mysql if so desired.
+		    Currently if you use Mysql it is set to use Mysql's old permission
+		    scheme to keep breakage to a minimum. Hopefully one day this will
+		    standardize on one style which may of course be something completely
 		    different.
 		  </para>
 		</listitem>
 		<listitem>
 		  <para>
-		    Uses Text::Template perl module for rendering of
-		    the dynamic HTML pages such as enter_bug.cgi,
-		    query.cgi, bug_form.pl, and for the header and
-		    footer parts of the page. This allows the html to
-		    be separate from the perl code for customizing the
-		    look and feel of the page to one's preference.
+		    Uses Text::Template perl module for rendering of the dynamic HTML pages
+		    such as enter_bug.cgi, query.cgi, bug_form.pl, and for the header and
+		    footer parts of the page. This allows the html to be separate from the
+		    perl code for customizing the look and feel of the page to one's
+		    preference.
 		  </para>
 		</listitem>
 		<listitem>
 		  <para>
-		    There are many other smaller changes. There is
-		    also a port to Oracle that I have been working on
-		    as time permits but is not completely finished but
-		    somewhat usable. I will merge it into our standard
-		    code base when it becomes production quality.
-		    Unfortunately there will have to be some
-		    conditionals in the code to make it work with
-		    other than Oracle due to some differences between
-		    Oracle and Mysql.
+		    There are many other smaller changes. There is also a port to Oracle
+		    that I have been working on as time permits but is not completely
+		    finished but somewhat usable. I will merge it into our standard code
+		    base when it becomes production quality. Unfortunately there will have
+		    to be some conditionals in the code to make it work with other than
+		    Oracle due to some differences between Oracle and Mysql.
 		  </para>
 		</listitem>
 	      </orderedlist>
 	      <para>
-		Both the Mysql and Oracle versions of our current code
-		base are available from ftp://people.redhat.com/dkl.
-		If Terry/Tara wants I can submit patch files for all
-		of the changes I have made and he can determine what
-		is suitable for addition to the main bugzilla cade
-		base. But for me to commit changes to the actual CVS I
-		will need to back out alot of things that are not
-		suitable for the rest of the Bugzilla community. I am
-		open to suggestions.
+		Both the Mysql and Oracle versions of our current code base are
+		available from ftp://people.redhat.com/dkl. If Terry/Tara wants I can submit
+		patch files for all of the changes I have made and he can determine what is
+		suitable for addition to the main bugzilla cade base. But for me to commit
+		changes to the actual CVS I will need to back out alot of things that are
+		not suitable for the rest of the Bugzilla community. I am open to
+		suggestions.
 	      </para>
 	    </blockquote>
 	  </para>
@@ -482,66 +437,57 @@
 	    <note>
 	      <para>
 		This information is somewhat dated; I last updated it
-		7 June 2000.  Please see the "Variants" section of
-		"The Bugzilla Guide" for more up-to-date information
-		regarding Red Hat Bugzilla.
+		7 June 2000.  Please see the "Variants" section of "The Bugzilla Guide"
+		for more up-to-date information regarding Red Hat Bugzilla.
 	      </para>
-	    </note> <emphasis>Dave Lawrence</emphasis>:
+	    </note>
+	    <emphasis>Dave Lawrence</emphasis>:
 	    <blockquote>
 	      <para>
-		     I suppose the current thread warrants an update
-		on the status of Oracle and bugzilla ;) We have now
-		been running Bugzilla 2.8 on Oracle for the last two
-		days in our production environment. I tried to do as
-		much testing as possible with it before going live
-		which is some of the reason for the long delay. I did
-		not get enough feedback as I would have liked from
-		internal developers to help weed out any bugs still
-		left so I said "Fine, i will take it live and then I
-		will get the feedback I want :)" So it is now starting
-		to stabilize and it running quite well after working
-		feverishly the last two days fixing problems as soon
-		as they came in from the outside world. The current
-		branch in cvs is up2date if anyone would like to grab
-		it and try it out. The oracle _setup.pl is broken
-		right now due to some last minute changes but I will
-		update that soon. Therefore you would probably need to
-		create the database tables the old fashioned way using
-		the supplied sql creation scripts located in the
-		./oracle directory. We have heavy optimizations in the
-		database it self thanks to the in-house DBA here at
-		Red Hat so it is running quite fast. The database
-		itself is located on a dual PII450 with 1GB ram and 14
-		high voltage differential raided scsi drives. The
-		tables and indexes are partitioned in 4 chuncks across
-		the raided drive which is nice because when ever you
-		need to do a full table scan, it is actually starting
-		in 4 different locations on 4 different drives
-		simultaneously. And the indexes of course are on
-		separate drives from the data so that speeds things up
-		tremendously. When  I can find the time I will
-		document all that we have done to get this thing going
-		to help others that may need it.
+		     I suppose the current thread warrants an update on the status of
+		Oracle and bugzilla ;) We have now been running Bugzilla 2.8 on
+		Oracle for the last two days in our production environment. I
+		tried to do as much testing as possible with it before going live
+		which is some of the reason for the long delay. I did not get
+		enough feedback as I would have liked from internal developers to
+		help weed out any bugs still left so I said "Fine, i will take it
+		live and then I will get the feedback I want :)" So it is now
+		starting to stabilize and it running quite well after working
+		feverishly the last two days fixing problems as soon as they came
+		in from the outside world. The current branch in cvs is up2date if
+		anyone would like to grab it and try it out. The oracle _setup.pl
+		is broken right now due to some last minute changes but I will
+		update that soon. Therefore you would probably need to create the
+		database tables the old fashioned way using the supplied sql
+		creation scripts located in the ./oracle directory. We have heavy
+		optimizations in the database it self thanks to the in-house DBA
+		here at Red Hat so it is running quite fast. The database itself
+		is located on a dual PII450 with 1GB ram and 14 high voltage
+		differential raided scsi drives. The tables and indexes are
+		partitioned in 4 chuncks across the raided drive which is nice
+		because when ever you need to do a full table scan, it is actually
+		starting in 4 different locations on 4 different drives
+		simultaneously. And the indexes of course are on separate drives
+		from the data so that speeds things up tremendously. When  I can
+		find the time I will document all that we have done to get this
+		thing going to help others that may need it.
 	      </para>
 	      <para>
-		As Matt has mentioned it is still using out-dated code
-		and with a little help I would like to bring
-		everything up to date for eventual  incorporation with
-		the main cvs tree. Due to other duties I have with the
-		company any help with this wiould be appreciated. What
-		we are using  now is what I call a best first effort.
-		It definitely can be improved on and may even need
-		complete rewrites in a lot of areas. A lot of changes
-		may have to be made in the way Bugzilla does things
-		currently  to make this transition to a more generic
-		database interface.  Fortunately when making the
-		Oracle changes I made sure I didn't do  anything that
-		I would consider Oracle specific and could not be
-		easily done with other databases. Alot of the sql
-		statements need to be broken up into smaller utilities
-		that themselves would need to make decisions on what
-		database they are using but the majority of the code
-		can be made database neutral.
+		As Matt has mentioned it is still using out-dated code and with a
+		little help I would like to bring everything up to date for
+		eventual  incorporation with the main cvs tree. Due to other
+		duties I have with the company any help with this wiould be
+		appreciated. What we are using  now is what I call a best first
+		effort. It definitely can be improved on and may even need
+		complete rewrites in a lot of areas. A lot of changes may have to
+		be made in the way Bugzilla does things currently  to make this
+		transition to a more generic database interface.  Fortunately when
+		making the Oracle changes I made sure I didn't do  anything that I
+		would consider Oracle specific and could not be easily done with
+		other databases. Alot of the sql statements need to be broken up
+		into smaller utilities that themselves would need to make
+		decisions on what database they are using but the majority of the
+		code can be made database neutral.
 	      </para>
 	    </blockquote>
 	  </para>
@@ -552,78 +498,21 @@
 
     <qandadiv id="faq_loki">
       <title>Loki Bugzilla (AKA Fenris)</title>
-      <para>
-	<note>
-	  <para>
-	    Loki's "Fenris" Bugzilla is based upon the (now ancient)
-	    Bugzilla 2.8 tree, and is no longer actively maintained.
-	    It works well enough for Loki.  Additionally, the major
-	    differences in Fenris have now been integrated into the
-	    main source tree of Bugzilla, so there's not much reason
-	    to go grab the source.  I leave this section of the FAQ
-	    principally for historical interest, but unless Loki has
-	    further input into Bugzilla's future, it will be
-	    deprecated in future versions of the Guide.
-	  </para>
-	</note>
-      </para>
 
       <qandaentry>
 	<question>
 	  <para>
-	    What about Loki Bugzilla?
+	    What is Loki Bugzilla (Fenris)?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Loki Games has a customized version of Bugzilla available
-	    at http://fenris.lokigames.com.  From that page,
-	    <blockquote>
-	      <para>
-		     You may have noticed that Fenris is a fork from
-		Bugzilla-- our patches weren't suitable for
-		integration --and a few people have expressed interest
-		in the code. Fenris has one major  improvement over
-		Bugzilla, and that is individual comments are not
-		appended onto a string blob, they are stored as a
-		record in a separate table. This allows you to, for
-		instance, separate comments out according to privilege
-		levels in case your bug database could contain
-		sensitive information not for public eyes. We also
-		provide things like email hiding to protect user's
-		privacy, additional fields such as 'user_affected' in
-		case someone enters someone else's bug, comment
-		editing and deletion, and more conditional system
-		variables than Bugzilla does (turn off attachments,
-		qacontact, etc.).
-	      </para>
-	    </blockquote>
+	    Loki Games has a customized version of Bugzilla available at
+	    <ulink url="http://fenris.lokigames.com/">http://fenris.lokigames.com</ulink>.  There are some advantages to using Fenris, chief being separation of comments based upon user privacy level, data hiding, forced login for any data retrieval, and some additional fields.  Loki has mainted their code, originally a fork from the Bugzilla 2.8 code base, and it is quite a bit different than stock Bugzilla at this point.  I recommend you stick with official Bugzilla version &bz-ver; rather than using a fork, but it's up to you.
 	  </para>
 	</answer>
       </qandaentry>
 
-      <qandaentry>
-	<question>
-	  <para>
-	    Who maintains Fenris (Loki Bugzilla) now?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Raphael Barrerro &lt;raistlin@lokigames.com&gt;. Michael
-	    Vance created the initial fork, but no longer maintains
-	    the project.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
-	    
-	  </para>
-	</question>
-      </qandaentry>
     </qandadiv>
 
     <qandadiv id="faq_phb">
@@ -631,9 +520,8 @@
       <para>
 	<note>
 	  <para>
-	    The title of this section doesn't mean you're a PHB -- it
-	    just means you probably HAVE a PHB who wants to know this
-	    :)
+	    The title of this section doesn't mean you're a PHB -- it just means
+	    you probably HAVE a PHB who wants to know this :)
 	  </para>
 	</note>
       </para>
@@ -641,15 +529,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Is Bugzilla web-based or do you have to have specific
-	    software or specific operating system on your machine?
+	    Is Bugzilla web-based or do you have to have specific software or
+	    specific operating system on your machine?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    It is web and e-mail based.  You can edit bugs by sending
-	    specially formatted email to a properly configured
-	    Bugzilla, or control via the web.
+	    It is web and e-mail based.  You can edit bugs by sending specially
+	    formatted email to a properly configured Bugzilla, or control via the web.
 	  </para>
 	</answer>
       </qandaentry>
@@ -657,18 +544,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Has anyone you know of already done any Bugzilla
-	    integration with Perforce (SCM software)?
+	    Has anyone you know of already done any Bugzilla integration with
+	    Perforce (SCM software)?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Yes!  You can find more information elsewhere in "The
-	    Bugzilla Guide" in the "Integration with Third-Party
-	    Products" section. The section on Perforce isn't very
-	    large, but as the maintainer of the Guide is charged with
-	    Perforce/Bugzilla integration by his company, you can
-	    expect this section to grow.
+	    Yes!  You can find more information elsewhere in "The Bugzilla
+	    Guide" in the "Integration with Third-Party Products" section.
 	  </para>
 	</answer>
       </qandaentry>
@@ -684,8 +567,8 @@
 	    Absolutely!  You can track up to a "soft-limit" of around
 	    64 individual "Products", that can each be composed of as
 	    many "Components" as you want.  Check the Administration
-	    section of the Bugzilla Guide for more information
-	    regarding setting up Products and Components.
+	    section of the Bugzilla Guide for more information regarding
+	    setting up Products and Components.
 	  </para>
 	</answer>
       </qandaentry>
@@ -693,9 +576,8 @@
       <qandaentry>
 	<question>
 	  <para>
-	    If I am on many projects, and search for all bugs assigned
-	    to me, will Bugzilla list them for me and allow me to sort
-	    by project, severity etc?
+	    If I am on many projects, and search for all bugs assigned to me, will
+	    Bugzilla list them for me and allow me to sort by project, severity etc?
 	  </para>
 	</question>
 	<answer>
@@ -708,20 +590,18 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Does Bugzilla allow attachments (text, screenshots, urls
-	    etc)? If yes, are there any that are NOT allowed?
+	    Does Bugzilla allow attachments (text, screenshots, urls etc)? If yes,
+	    are there any that are NOT allowed?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Yes.  There are many specific MIME-types that are
-	    pre-defined by Bugzilla, but you may specify any arbitrary
-	    MIME-type you need when you upload the file.  Since all
-	    attachments are stored in the database, however, I
-	    recommend storing large binary attachments elsewhere in
-	    the web server's file system and providing a hyperlink as
-	    a comment, or in the provided "URL" field in the bug
-	    report.
+	    Yes.  There are many specific MIME-types that are pre-defined by Bugzilla,
+	    but you may specify any arbitrary MIME-type you need when you
+	    upload the file.  Since all attachments are stored in the database,
+	    however, I recommend storing large binary attachments elsewhere
+	    in the web server's file system and providing a hyperlink
+	    as a comment, or in the provided "URL" field in the bug report.
 	  </para>
 	</answer>
       </qandaentry>
@@ -729,17 +609,16 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Does Bugzilla allow us to define our own priorities and
-	    levels? Do we have complete freedom to change the labels
-	    of fields and format of them, and the choice of acceptable
-	    values?
+	    Does Bugzilla allow us to define our own priorities and levels? Do we
+	    have complete freedom to change the labels of fields and format of them, and
+	    the choice of acceptable values?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Yes.  However, modifying some fields, notably those
-	    related to bug progression states, also require adjusting
-	    the program logic to compensate for the change.
+	    Yes.  However, modifying some fields, notably those related to bug
+	    progression states, also require adjusting the program logic to
+	    compensate for the change.
 	  </para>
 	</answer>
       </qandaentry>
@@ -748,65 +627,70 @@
       <qandaentry>
 	<question>
 	  <para>
-	    The index.html page doesn't show the footer.  It's really
-	    annoying to have to go to the querypage just to check my
-	    "my bugs" link.  How do I get a footer on static HTML
-	    pages?
+	    The index.html page doesn't show the footer.  It's really annoying to have
+	    to go to the querypage just to check my "my bugs" link.  How do I get a footer
+	    on static HTML pages?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    This was a late-breaking question for the Guide, so I just
-	    have to quote the relevant newsgroup thread on it.
+	    This was a late-breaking question for the Guide, so I just have to
+	    quote the relevant newsgroup thread on it.
 	  </para>
 	  <literallayout>
-> AFAIK, most sites (even if they have SSI enabled) won't have #exec
-	    cmd > enabled.  Perhaps what would be better is a #include
-	    virtual and a > footer.cgi the basically has the "require
-	    'CGI.pl' and PutFooter command. > > Please note that under
-	    most configurations, this also requires naming > the file
-	    from index.html to index.shtml (and making sure that it
-	    will > still be reconized as an index).  Personally, I
-	    think this is better on > a per-installation basis
-	    (perhaps add something to the FAQ that says how > to do
-	    this). Good point.  Yeah, easy enough to do, that it
-	    shouldn't be a big deal for someone to take it on if they
-	    want it.  FAQ is a good place for it. > Dave Miller wrote:
-	    > >> I did a little experimenting with getting the command
-	    menu and footer on >> the end of the index page while
-	    leaving it as an HTML file... >> >> I was successful. :)
-	    >> >> I added this line: >> >> <!--#exec
-	    cmd="/usr/bin/perl -e &quot;require 'CGI.pl';
-	    >>PutFooter();&quot;" --> >> >> Just before the
-	    &lt;/BODY&gt; &lt;/HTML&gt; at the end of the file.  And
-	    it worked. >> >> Thought I'd toss that out there.  Should
-	    I check this in?  For those that >> have SSI disabled,
-	    it'll act like a comment, so I wouldn't think it would >>
-	    break anything.
+> AFAIK, most sites (even if they have SSI enabled) won't have #exec cmd
+> enabled.  Perhaps what would be better is a #include virtual and a
+> footer.cgi the basically has the "require 'CGI.pl' and PutFooter command.
+>
+> Please note that under most configurations, this also requires naming
+> the file from index.html to index.shtml (and making sure that it will
+> still be reconized as an index).  Personally, I think this is better on
+> a per-installation basis (perhaps add something to the FAQ that says how
+> to do this).
+
+Good point.  Yeah, easy enough to do, that it shouldn't be a big deal for
+someone to take it on if they want it.  FAQ is a good place for it.
+
+> Dave Miller wrote:
+>
+>> I did a little experimenting with getting the command menu and footer on
+>> the end of the index page while leaving it as an HTML file...
+>>
+>> I was successful. :)
+>>
+>> I added this line:
+>>
+>> <!--#exec cmd="/usr/bin/perl -e &quot;require 'CGI.pl';
+>>PutFooter();&quot;" -->
+>>
+>> Just before the &lt;/BODY&gt; &lt;/HTML&gt; at the end of the file.  And it worked.
+>>
+>> Thought I'd toss that out there.  Should I check this in?  For those that
+>> have SSI disabled, it'll act like a comment, so I wouldn't think it would
+>> break anything.
 	  </literallayout>
 	</answer>
       </qandaentry>
       <qandaentry>
 	<question>
 	  <para>
-	    Does Bugzilla provide any reporting features, metrics,
-	    graphs, etc? You know, the type of stuff that management
-	    likes to see. :)
+	    Does Bugzilla provide any reporting features, metrics, graphs, etc? You
+	    know, the type of stuff that management likes to see. :)
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Yes.  Look at <ulink
-				 url="http://bugzilla.mozilla.org/reports.cgi"> http://bugzilla.mozilla.org/reports.cgi</ulink> for basic reporting facilities.
+	    Yes.  Look at <ulink url="http://bugzilla.mozilla.org/reports.cgi">
+	    http://bugzilla.mozilla.org/reports.cgi</ulink> for basic reporting
+	    facilities.
 	  </para>
 	  <para>
-	    For more advanced reporting, I recommend hooking up a
-	    professional reporting package, such as Crystal Reports,
-	    and use ODBC to access the MySQL database.  You can do a
-	    lot through the Query page of Bugzilla as well, but right
-	    now Advanced Reporting is much better accomplished through
-	    third-party utilities that can interface with the database
-	    directly.
+	    For more advanced reporting, I recommend hooking up a professional
+	    reporting package, such as Crystal Reports, and use ODBC to access
+	    the MySQL database.  You can do a lot through the Query page of
+	    Bugzilla as well, but right now Advanced Reporting is much
+	    better accomplished through third-party utilities that can
+	    interface with the database directly.
 	  </para>
 	  <para>
 	    Advanced Reporting is a Bugzilla 3.X proposed feature.
@@ -817,16 +701,15 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Is there email notification and if so, what do you see
-	    when you get an email? Do you see bug number and title or
-	    is it only the number?
+	    Is there email notification and if so, what do you see when you get an
+	    email? Do you see bug number and title or is it only the number?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Email notification is user-configurable.  The bug id and
-	    Topic of the bug report accompany each email notification,
-	    along with a list of the changes made.
+	    Email notification is user-configurable.  The bug id and Topic
+	    of the bug report accompany each email notification, along with
+	    a list of the changes made.
 	  </para>
 	</answer>
       </qandaentry>
@@ -848,24 +731,22 @@
       <qandaentry>
 	<question>
 	  <para>
-	    If there is email notification, do users have to have any
-	    particular type of email application?
+	    If there is email notification, do users have to have any particular
+	    type of email application?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Bugzilla email is sent in plain text, the most compatible
-	    mail format on the planet.
+	    Bugzilla email is sent in plain text, the most compatible mail format
+	    on the planet.
 	    <note>
 	      <para>
-		If you decide to use the bugzilla_email integration
-		features to allow Bugzilla to record responses to mail
-		with the associated bug, you may need to caution your
-		users to set their mailer to "respond to messages in
-		the format in which they were sent".  For security
-		reasons Bugzilla ignores HTML tags in comments, and if
-		a user sends HTML-based email into Bugzilla the
-		resulting comment looks downright awful.
+		If you decide to use the bugzilla_email integration features
+		to allow Bugzilla to record responses to mail with the associated bug,
+		you may need to caution your users to set their mailer to "respond
+		to messages in the format in which they were sent".  For security reasons
+		Bugzilla ignores HTML tags in comments, and if a user sends HTML-based
+		email into Bugzilla the resulting comment looks downright awful.
 	      </para>
 	    </note>
 	  </para>
@@ -875,19 +756,17 @@
       <qandaentry>
 	<question>
 	  <para>
-	     If I just wanted to track certain bugs, as they go
-	    through life, can I set it up to alert me via email
-	    whenever that bug changes, whether it be owner, status or
-	    description etc.?
+	     If I just wanted to track certain bugs, as they go through life, can I
+	    set it up to alert me via email whenever that bug changes, whether it be
+	    owner, status or description etc.?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Yes.  Place yourself in the "cc" field of the bug you wish
-	    to monitor. Then change your "Notify me of changes to"
-	    field in the Email Settings tab of the User Preferences
-	    screen in Bugzilla to the "Only those bugs which I am
-	    listed on the CC line" option.
+	    Yes.  Place yourself in the "cc" field of the bug you wish to monitor.
+	    Then change your "Notify me of changes to" field in the Email Settings
+	    tab of the User Preferences screen in Bugzilla to the "Only those
+	    bugs which I am listed on the CC line" option.
 	  </para>
 	</answer>
       </qandaentry>
@@ -895,34 +774,32 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Does Bugzilla allow data to be imported and exported? If I
-	    had outsiders write up a bug report using a MS Word bug
-	    template, could that template be imported into "matching"
-	    fields? If I wanted to take the results of a query and
-	    export that data to MS Excel, could I do that?
+	    Does Bugzilla allow data to be imported and exported? If I had outsiders
+	    write up a bug report using a MS Word bug template, could that template be
+	    imported into "matching" fields? If I wanted to take the results of a query
+	    and export that data to MS Excel, could I do that?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Mozilla allows data export through a custom DTD in XML
-	    format. It does not, however, export to specific formats
-	    other than the XML Mozilla DTD.  Importing the data into
-	    Excel or any other application is left as an exercise for
-	    the reader.
+	    Mozilla allows data export through a custom DTD in XML format.
+	    It does not, however, export to specific formats other than the
+	    XML Mozilla DTD.  Importing the data into Excel or any other application
+	    is left as an exercise for the reader.
 	  </para>
 	  <para>
-	    If you create import filters to other applications from
-	    Mozilla's XML, please submit your modifications for
-	    inclusion in future Bugzilla distributions.
+	    If you create import filters to other applications from Mozilla's XML,
+	    please submit your modifications for inclusion in future Bugzilla
+	    distributions.
 	  </para>
 	  <para>
-	    As for data import, any application can send data to
-	    Bugzilla through the HTTP protocol, or through Mozilla's
-	    XML API.  However, it seems kind of silly to put another
-	    front-end in front of Bugzilla; it makes more sense to
-	    create a simplified bug submission form in HTML.  You can
-	    find an excellent example at <ulink
-						url="http://www.mozilla.org/quality/help/bugzilla-helper.html"> http://www.mozilla.org/quality/help/bugzilla-helper.html</ulink>
+	    As for data import, any application can send data to Bugzilla through
+	    the HTTP protocol, or through Mozilla's XML API.  However, it seems
+	    kind of silly to put another front-end in front of Bugzilla;
+	    it makes more sense to create a simplified bug submission form in
+	    HTML.  You can find an excellent example at
+	    <ulink url="http://www.mozilla.org/quality/help/bugzilla-helper.html">
+	    http://www.mozilla.org/quality/help/bugzilla-helper.html</ulink>
 	  </para>
 	</answer>
       </qandaentry>
@@ -930,9 +807,9 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Does Bugzilla allow fields to be added, changed or
-	    deleted? If I want to customize the bug submission form to
-	    meet our needs, can I do that using our terminology?
+	    Does Bugzilla allow fields to be added, changed or deleted? If I want to
+	    customize the bug submission form to meet our needs, can I do that using our
+	    terminology?
 	  </para>
 	</question>
 	<answer>
@@ -945,16 +822,16 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Has anyone converted Bugzilla to another language to be
-	    used in other countries? Is it localizable?
+	    Has anyone converted Bugzilla to another language to be used in other
+	    countries? Is it localizable?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Currently, no.  Internationalization support for Perl did
-	    not exist in a robust fashion until the recent release of
-	    version 5.6.0; Bugzilla is, and likely will remain (until
-	    3.X) completely non-localized.
+	    Currently, no.  Internationalization support for Perl did not
+	    exist in a robust fashion until the recent release of version 5.6.0;
+	    Bugzilla is, and likely will remain (until 3.X) completely
+	    non-localized.
 	  </para>
 	</answer>
       </qandaentry>
@@ -962,8 +839,8 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Can a user create and save reports? Can they do this in
-	    Word format? Excel format?
+	    Can a user create and save reports? Can they do this in Word format?
+	    Excel format?
 	  </para>
 	</question>
 	<answer>
@@ -989,15 +866,13 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Can a user modify an existing report and then save it into
-	    another name?
+	    Can a user modify an existing report and then save it into another name?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    You can save an unlimited number of queries in Bugzilla.
-	    You are free to modify them and rename them to your
-	    heart's desire.
+	    You can save an unlimited number of queries in Bugzilla.  You are free
+	    to modify them and rename them to your heart's desire.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1005,15 +880,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Does Bugzilla have the ability to search by word, phrase,
-	    compound search?
+	    Does Bugzilla have the ability to search by word, phrase, compound
+	    search?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    You have no idea.  Bugzilla's query interface,
-	    particularly with the advanced Boolean operators, is
-	    incredibly versatile.
+	    You have no idea.  Bugzilla's query interface, particularly with the
+	    advanced Boolean operators, is incredibly versatile.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1021,8 +895,8 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Can the admin person establish separate group and
-	    individual user privileges?
+	    Can the admin person establish separate group and individual user
+	    privileges?
 	  </para>
 	</question>
 	<answer>
@@ -1035,17 +909,15 @@
       <qandaentry>
 	<question>
 	  <para>
-	     Does Bugzilla provide record locking when there is
-	    simultaneous access to the same bug? Does the second
-	    person get a notice that the bug is in use or how are they
-	    notified?
+	     Does Bugzilla provide record locking when there is simultaneous access
+	    to the same bug? Does the second person get a notice that the bug is in use
+	    or how are they notified?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Bugzilla does not lock records.  It provides mid-air
-	    collision detection, and offers the offending user a
-	    choice of options to deal with the conflict.
+	    Bugzilla does not lock records.  It provides mid-air collision detection,
+	    and offers the offending user a choice of options to deal with the conflict.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1058,10 +930,10 @@
 	</question>
 	<answer>
 	  <para>
-	    MySQL, the database back-end for Bugzilla, allows
-	    hot-backup of data. You can find strategies for dealing
-	    with backup considerations at <ulink
-						 url="http://www.mysql.com/doc/B/a/Backup.html"> http://www.mysql.com/doc/B/a/Backup.html</ulink>
+	    MySQL, the database back-end for Bugzilla, allows hot-backup of data.
+	    You can find strategies for dealing with backup considerations
+	    at <ulink url="http://www.mysql.com/doc/B/a/Backup.html">
+	    http://www.mysql.com/doc/B/a/Backup.html</ulink>
 	  </para>
 	</answer>
       </qandaentry>
@@ -1074,8 +946,8 @@
 	</question>
 	<answer>
 	  <para>
-	    Yes.  However, commits to the database must wait until the
-	    tables are unlocked.  Bugzilla databases are typically
+	    Yes.  However, commits to the database must wait
+	    until the tables are unlocked.  Bugzilla databases are typically
 	    very small, and backups routinely take less than a minute.
 	  </para>
 	</answer>
@@ -1084,33 +956,29 @@
       <qandaentry>
 	<question>
 	  <para>
-	    What type of human resources are needed to be on staff to
-	    install and maintain Bugzilla? Specifically, what type of
-	    skills does the person need to have? I need to find out if
-	    we were to go with Bugzilla, what types of individuals
-	    would we need to hire and how much would that cost vs
-	    buying an "Out-of-the-Box" solution.
+	    What type of human resources are needed to be on staff to install and
+	    maintain Bugzilla? Specifically, what type of skills does the person need to
+	    have? I need to find out if we were to go with Bugzilla, what types of
+	    individuals would we need to hire and how much would that cost vs buying an
+	    "Out-of-the-Box" solution.
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    If Bugzilla is set up correctly from the start, continuing
-	    maintenance needs are minimal and can be completed by
-	    unskilled labor.  Things like rotate backup tapes and
-	    check log files for the word "error".
+	    If Bugzilla is set up correctly from the start, continuing maintenance needs
+	    are minimal and can be completed by unskilled labor.  Things like rotate
+	    backup tapes and check log files for the word "error".
 	  </para>
 	  <para>
-	    Commercial Bug-tracking software typically costs somewhere
-	    upwards of $20,000 or more for 5-10 floating licenses.
-	    Bugzilla consultation is available from skilled members of
-	    the newsgroup.
+	    Commercial Bug-tracking software typically costs somewhere upwards
+	    of $20,000 or more for 5-10 floating licenses.  Bugzilla consultation
+	    is available from skilled members of the newsgroup.
 	  </para>
 	  <para>
-	    As an example, as of this writing I typically charge $115
-	    for the first hour, and $89 each hour thereafter for
-	    consulting work.  It takes me three to five hours to make
-	    Bugzilla happy on a Development installation of
-	    Linux-Mandrake.
+	    As an example, as of this writing I typically charge
+	     $115 for the first hour, and $89 each hour thereafter
+	    for consulting work.  It takes me three to five hours to make Bugzilla
+	    happy on a Development installation of Linux-Mandrake.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1118,22 +986,20 @@
       <qandaentry>
 	<question>
 	  <para>
-	    What time frame are we looking at if we decide to hire
-	    people to install and maintain the Bugzilla? Is this
-	    something that takes hours or weeks to install and a
-	    couple of hours per week to maintain and customize or is
-	    this a multi-week install process, plus a full time job
-	    for 1 person, 2 people, etc?
+	    What time frame are we looking at if we decide to hire people to install
+	    and maintain the Bugzilla? Is this something that takes hours or weeks to
+	    install and a couple of hours per week to maintain and customize or is this
+	    a multi-week install process, plus a full time job for 1 person, 2 people,
+	    etc?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    It all depends on your level of commitment.  Someone with
-	    much Bugzilla experience can get you up and running in
-	    less than a day, and your Bugzilla install can run
-	    untended for years.  If your Bugzilla strategy is critical
-	    to your business workflow, hire somebody with reasonable
-	    UNIX or Perl skills to handle your process management and
+	    It all depends on your level of commitment.  Someone with much Bugzilla
+	    experience can get you up and running in less than a day, and
+	    your Bugzilla install can run untended for years.  If your
+	    Bugzilla strategy is critical to your business workflow, hire somebody
+	    with reasonable UNIX or Perl skills to handle your process management and
 	    bug-tracking maintenance & customization.
 	  </para>
 	</answer>
@@ -1142,16 +1008,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Is there any licensing fee or other fees for using
-	    Bugzilla? Any out-of-pocket cost other than the bodies
-	    needed as identified above?
+	    Is there any licensing fee or other fees for using Bugzilla? Any
+	    out-of-pocket cost other than the bodies needed as identified above?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    No.  MySQL asks, if you find their product valuable, that
-	    you purchase a support contract from them that suits your
-	    needs.
+	    No.  MySQL asks, if you find their product valuable, that you purchase
+	    a support contract from them that suits your needs.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1167,8 +1031,9 @@
 	</question>
 	<answer>
 	  <para>
-	    Check <ulink
-			 url="http://www.mozilla.org/projects/bugzilla/"> http://www.mozilla.org/projects/bugzilla/</ulink> for details. Once you download it, untar it, read the Bugzilla Guide.
+	    Check <ulink url="http://www.mozilla.org/projects/bugzilla/">
+	    http://www.mozilla.org/projects/bugzilla/</ulink> for details.
+	    Once you download it, untar it, read the Bugzilla Guide.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1181,8 +1046,8 @@
 	</question>
 	<answer>
 	  <para>
-	    Installation on Windows NT has its own section in "The
-	    Bugzilla Guide".
+	    Installation on Windows NT has its own section in
+	    "The Bugzilla Guide".
 	  </para>
 	</answer>
       </qandaentry>
@@ -1208,19 +1073,16 @@
       <qandaentry>
 	<question>
 	  <para>
-	    How do I completely disable MySQL security if it's giving
-	    me problems (I've followed the instructions in the
-	    installation section of this guide!)?
+	    How do I completely disable MySQL security if it's giving me problems
+	    (I've followed the instructions in the installation section of this guide!)?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Run mysql like this: "mysqld --skip-grant-tables".  Please
-	    remember <emphasis>this makes mysql as secure as taping a
-	      $100 to the floor of a football stadium bathroom for
-	      safekeeping.</emphasis>  Please read the Security
-	    section of the Administration chapter of "The Bugzilla
-	    Guide" before proceeding.
+	    Run mysql like this: "mysqld --skip-grant-tables".  Please remember <emphasis>this
+	    makes mysql as secure as taping a $100 to the floor of a football stadium
+	    bathroom for safekeeping.</emphasis>  Please read the Security section of the
+	    Administration chapter of "The Bugzilla Guide" before proceeding.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1233,11 +1095,10 @@
 	</question>
 	<answer>
 	  <para>
-	    The Bugzilla code has not undergone a complete security
-	    audit. It is recommended that you closely examine
-	    permissions on your Bugzilla installation, and follow the
-	    recommended security guidelines found in The Bugzilla
-	    Guide.
+	    The Bugzilla code has not undergone a complete security audit.
+	    It is recommended that you closely examine permissions on your Bugzilla
+	    installation, and follow the recommended security guidelines found
+	    in The Bugzilla Guide.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1246,17 +1107,16 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I've implemented the security fixes mentioned in Chris
-	    Yeh's security advisory of 5/10/2000 advising not to run
-	    MySQL as root, and am running into problems with MySQL no
-	    longer working correctly.
+	    I've implemented the security fixes mentioned in Chris Yeh's security
+	    advisory of 5/10/2000 advising not to run MySQL as root, and am running into
+	    problems with MySQL no longer working correctly.
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    This is a common problem, related to running out of file
-	    descriptors. Simply add "ulimit -n unlimited" to the
-	    script which starts mysqld.
+	    This is a common problem, related to running out of file descriptors.
+	    Simply add "ulimit -n unlimited" to the script which starts
+	    mysqld.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1268,14 +1128,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I have a user who doesn't want to receive any more email
-	    from Bugzilla. How do I stop it entirely for this user?
+	    I have a user who doesn't want to receive any more email from Bugzilla.
+	    How do I stop it entirely for this user?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    With the email changes to 2.12, the user should be able to
-	    set this in user email preferences.
+	    With the email changes to 2.12, the user should be able to set
+	    this in user email preferences.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1283,15 +1143,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I'm evaluating/testing Bugzilla, and don't want it to send
-	    email to anyone but me. How do I do it?
+	    I'm evaluating/testing Bugzilla, and don't want it to send email to
+	    anyone but me. How do I do it?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Edit the param for the mail text. Replace "To:" with
-	    "X-Real-To:", replace "Cc:" with "X-Real-CC:", and add a
-	    "To: (myemailaddress)".
+	    Edit the param for the mail text. Replace "To:" with "X-Real-To:",
+	    replace "Cc:" with "X-Real-CC:", and add a "To: (myemailaddress)".
 	  </para>
 	</answer>
       </qandaentry>
@@ -1299,15 +1158,17 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I want whineatnews.pl to whine at something more, or other
-	    than, only new bugs. How do I do it?
+	    I want whineatnews.pl to whine at something more, or other than, only new
+	    bugs. How do I do it?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Try Klaas Freitag's excellent patch for "whineatassigned"
-	    functionality. You can find it at<ulink url="
-						    http://bugzilla.mozilla.org/show_bug.cgi?id=6679"> http://bugzilla.mozilla.org/show_bug.cgi?id=6679</ulink>. This patch is against an older version of Bugzilla, so you must apply the diffs manually.
+	    Try Klaas Freitag's excellent patch for "whineatassigned" functionality.
+	    You can find it at<ulink url=" http://bugzilla.mozilla.org/show_bug.cgi?id=6679">
+	      http://bugzilla.mozilla.org/show_bug.cgi?id=6679</ulink>. This
+	    patch is against an older version of Bugzilla, so you must apply
+	    the diffs manually.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1315,23 +1176,22 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I don't like/want to use Procmail to hand mail off to
-	    bug_email.pl. What alternatives do I have?
+	    I don't like/want to use Procmail to hand mail off to bug_email.pl.
+	    What alternatives do I have?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    You can call bug_email.pl directly from your aliases file,
-	    with an entry like this:
+	    You can call bug_email.pl directly from your aliases file, with
+	    an entry like this:
 	    <blockquote>
 	      <para>
-		bugzilla-daemon:
-		"|/usr/local/bin/bugzilla/contrib/bug_email.pl"
+		bugzilla-daemon: "|/usr/local/bin/bugzilla/contrib/bug_email.pl"
 	      </para>
-	    </blockquote> However, this is fairly nasty and subject to
-	    problems; you also need to set up your smrsh (sendmail
-	    restricted shell) to allow it.  In a pinch, though, it can
-	    work.
+	    </blockquote>
+	    However, this is fairly nasty and subject to problems; you also
+	    need to set up your smrsh (sendmail restricted shell) to allow
+	    it.  In a pinch, though, it can work.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1339,15 +1199,13 @@
       <qandaentry>
 	<question>
 	  <para>
-	    How do I set up the email interface to submit/change bugs
-	    via email?
+	    How do I set up the email interface to submit/change bugs via email?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    You can find an updated README.mailif file in the contrib/
-	    directory of your Bugzilla distribution that walks you
-	    through the setup.
+	    You can find an updated README.mailif file in the contrib/ directory
+	    of your Bugzilla distribution that walks you through the setup.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1355,29 +1213,28 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Email takes FOREVER to reach me from bugzilla -- it's
-	    extremely slow. What gives?
+	    Email takes FOREVER to reach me from bugzilla -- it's extremely slow.
+	    What gives?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    If you are using an alternate Mail Transport Agent (MTA
-	    other than sendmail), make sure the options given in the
-	    "processmail" script for all instances of "sendmail" are
-	    correct for your MTA. If you are using Sendmail, you may
-	    wish to delete the "-ODeliveryMode=deferred" option in the
-	    "processmail" script for every invocation of "sendmail".
-	    (Be sure and leave the "-t" option, though!)
+	    If you are using an alternate Mail Transport Agent (MTA other than
+	    sendmail), make sure the options given in the "processmail" script for all
+	    instances of "sendmail" are correct for your MTA. If you are using Sendmail,
+	    you may wish to delete the "-ODeliveryMode=deferred" option in the
+	    "processmail" script for every invocation of "sendmail". (Be sure and leave
+	    the "-t" option, though!)
 	  </para>
 	  <para>
 	    A better alternative is to change the "-O" option to
-	    "-ODeliveryMode=background".  This prevents Sendmail from
-	    hanging your Bugzilla Perl processes if the domain to
-	    which it must send mail is unavailable.
+	    "-ODeliveryMode=background".  This prevents Sendmail from hanging your
+	    Bugzilla Perl processes if the domain to which it must send mail
+	    is unavailable.
 	  </para>
 	  <para>
-	    This is now a configurable parameter called "sendmailnow",
-	    available from editparams.cgi.
+	    This is now a configurable parameter called "sendmailnow", available
+	    from editparams.cgi.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1390,16 +1247,15 @@
 	</question>
 	<answer>
 	  <para>
-	    Double-check that you have not turned off email in your
-	    user preferences. Confirm that Bugzilla is able to send
-	    email by visiting the "Log In" link of your Bugzilla
-	    installation and clicking the "Email me a password" button
-	    after entering your email address.
+	    Double-check that you have not turned off email in your user preferences.
+	    Confirm that Bugzilla is able to send email by visiting the "Log In"
+	    link of your Bugzilla installation and clicking the "Email me a password"
+	    button after entering your email address.
 	  </para>
 	  <para>
-	    If you never receive mail from Bugzilla, chances you do
-	    not have sendmail in "/usr/lib/sendmail".  Ensure sendmail
-	    lives in, or is symlinked to, "/usr/lib/sendmail".
+	    If you never receive mail from Bugzilla, chances you do not have
+	    sendmail in "/usr/lib/sendmail".  Ensure sendmail lives in, or is symlinked
+	    to, "/usr/lib/sendmail".
 	  </para>
 	</answer>
       </qandaentry>
@@ -1416,11 +1272,10 @@
 	</question>
 	<answer>
 	  <para>
-	    Red Hat Bugzilla, mentioned above, works with Oracle.  The
-	    current version from Mozilla.org does not have this
-	    capability.  Unfortunately, though you will sacrifice a
-	    lot of the really great features available in Bugzilla
-	    2.10 and 2.12 if you go with the 2.8-based Redhat version.
+	    Red Hat Bugzilla, mentioned above, works with Oracle.  The current version
+	    from Mozilla.org does not have this capability.  Unfortunately, though
+	    you will sacrifice a lot of the really great features available in
+	    Bugzilla 2.10 and 2.12 if you go with the 2.8-based Redhat version.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1428,30 +1283,25 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Bugs are missing from queries, but exist in the database
-	    (and I can pull them up by specifying the bug ID). What's
-	    wrong?
+	    Bugs are missing from queries, but exist in the database (and I can pull
+	    them up by specifying the bug ID). What's wrong?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	     You've almost certainly enabled the "shadow database",
-	    but for some reason it hasn't been updated for all your
-	    bugs. This is the database against which queries are run,
-	    so that really complex or slow queries won't lock up
-	    portions of the database for other users. You can turn off
-	    the shadow database in editparams.cgi. If you wish to
-	    continue using the shadow database, then as your "bugs"
-	    user run "./syncshadowdb -syncall" from the command line
-	    in the bugzilla installation directory to recreate your
-	    shadow database. After it finishes, be sure to check the
-	    params and make sure that "queryagainstshadowdb" is still
-	    turned on. The syncshadowdb program turns it off if it was
-	    on, and is supposed to turn it back on when completed;
-	    that way, if it crashes in the middle of recreating the
-	    database, it will stay off forever until someone turns it
-	    back on by hand. Apparently, it doesn't always do that
-	    yet.
+	     You've almost certainly enabled the "shadow database", but for some
+	    reason it hasn't been updated for all your bugs. This is the database
+	    against which queries are run, so that really complex or slow queries won't
+	    lock up portions of the database for other users. You can turn off the
+	    shadow database in editparams.cgi. If you wish to continue using the shadow
+	    database, then as your "bugs" user run "./syncshadowdb -syncall" from the
+	    command line in the bugzilla installation directory to recreate your shadow
+	    database. After it finishes, be sure to check the params and make sure that
+	    "queryagainstshadowdb" is still turned on. The syncshadowdb program turns it
+	    off if it was on, and is supposed to turn it back on when completed; that
+	    way, if it crashes in the middle of recreating the database, it will stay
+	    off forever until someone turns it back on by hand. Apparently, it doesn't
+	    always do that yet.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1459,20 +1309,18 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I think my database might be corrupted, or contain invalid
-	    entries. What do I do?
+	    I think my database might be corrupted, or contain invalid entries. What
+	    do I do?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Run the "sanity check" utility (./sanitycheck.cgi in the
-	    bugzilla_home directory) to see! If it all comes back,
-	    you're OK.  If it doesn't come back OK (i.e. any red
-	    letters), there are certain things Bugzilla can recover
-	    from and certain things it can't.  If it can't
-	    auto-recover, I hope you're familiar with mysqladmin
-	    commands or have installed another way to manage your
-	    database...
+	    Run the "sanity check" utility (./sanitycheck.cgi in the bugzilla_home
+	    directory) to see! If it all comes back, you're OK.  If it doesn't come back
+	    OK (i.e. any red letters), there are certain things Bugzilla can recover
+	    from and certain things it can't.  If it can't auto-recover, I hope you're
+	    familiar with mysqladmin commands or have installed another way to manage
+	    your database...
 	  </para>
 	</answer>
       </qandaentry>
@@ -1485,14 +1333,12 @@
 	</question>
 	<answer>
 	  <para>
-	     There is no facility in Bugzilla itself to do this. It's
-	    also generally not a smart thing to do if you don't know
-	    exactly what you're doing. However, if you understand SQL
-	    you can use the mysqladmin utility to manually insert,
-	    delete, and modify table information. Personally, I use
-	    "phpMyAdmin". You have to compile a PHP module with MySQL
-	    support to make it work, but it's very clean and easy to
-	    use.
+	     There is no facility in Bugzilla itself to do this. It's also generally
+	    not a smart thing to do if you don't know exactly what you're doing.
+	    However, if you understand SQL you can use the mysqladmin utility to
+	    manually insert, delete, and modify table information. Personally, I
+	    use "phpMyAdmin". You have to compile a PHP module with MySQL
+	    support to make it work, but it's very clean and easy to use.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1500,17 +1346,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I try to add myself as a user, but Bugzilla always tells
-	    me my password is wrong.
+	    I try to add myself as a user, but Bugzilla always tells me my password is wrong.
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Certain version of MySQL (notably, 3.23.29 and 3.23.30)
-	    accidentally disabled the "crypt()" function.  This
-	    prevented MySQL from storing encrypted passwords. Upgrade
-	    to the "3.23 stable" version of MySQL and you should be
-	    good to go.
+	    Certain version of MySQL (notably, 3.23.29 and 3.23.30) accidentally disabled
+	    the "crypt()" function.  This prevented MySQL from storing encrypted passwords.
+	    Upgrade to the "3.23 stable" version of MySQL and you should be good to go.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1518,18 +1361,17 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I think I've set up MySQL permissions correctly, but
-	    bugzilla still can't connect.
+	    I think I've set up MySQL permissions correctly, but bugzilla still can't
+	    connect.
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Try running MySQL from its binary: "mysqld
-	    --skip-grant-tables". This will allow you to completely
-	    rule out grant tables as the cause of your frustration.
-	    However, I do not recommend you run it this way on a
-	    regular basis, unless you really want your web site
-	    defaced and your machine cracked.
+	    Try running MySQL from its binary: "mysqld --skip-grant-tables". This
+	    will allow you to completely rule out grant tables as the cause of your
+	    frustration. However, I do not recommend you run it this way on a regular
+	    basis, unless you really want your web site defaced and your machine
+	    cracked.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1537,28 +1379,26 @@
       <qandaentry>
 	<question>
 	  <para>
-	    How do I synchronize bug information among multiple
-	    different Bugzilla databases?
+	    How do I synchronize bug information among multiple different Bugzilla
+	    databases?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Well, you can synchronize or you can move bugs.
-	    Synchronization will only work one way -- you can create a
-	    read-only copy of the database at one site, and have it
-	    regularly updated at intervals from the main database.
+	    Well, you can synchronize or you can move bugs.  Synchronization will
+	    only work one way -- you can create a read-only copy of the database
+	    at one site, and have it regularly updated at intervals from the main
+	    database.
 	  </para>
 	  <para>
-	    MySQL has some synchronization features builtin to the
-	    latest releases. It would be great if someone looked into
-	    the possibilities there and provided a report to the
-	    newsgroup on how to effectively synchronize two Bugzilla
-	    installations.
+	    MySQL has some synchronization features builtin to the latest releases.
+	    It would be great if someone looked into the possibilities there
+	    and provided a report to the newsgroup on how to effectively
+	    synchronize two Bugzilla installations.
 	  </para>
 	  <para>
-	    If you simply need to transfer bugs from one Bugzilla to
-	    another, checkout the "move.pl" script in the Bugzilla
-	    distribution.
+	    If you simply need to transfer bugs from one Bugzilla to another,
+	    checkout the "move.pl" script in the Bugzilla distribution.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1566,16 +1406,15 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Why do I get bizarre errors when trying to submit data,
-	    particularly problems with "groupset"?
+	    Why do I get bizarre errors when trying to submit data, particularly problems
+	    with "groupset"?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    If you're sure your MySQL parameters are correct, you
-	    might want turn "strictvaluechecks" OFF in editparams.cgi.
-	    If you have "usebugsentry" set "On", you also cannot
-	    submit a bug as readable by more than one group with
+	    If you're sure your MySQL parameters are correct, you might want turn
+	    "strictvaluechecks" OFF in editparams.cgi.  If you have "usebugsentry" set
+	    "On", you also cannot submit a bug as readable by more than one group with
 	    "strictvaluechecks" ON.
 	  </para>
 	</answer>
@@ -1584,17 +1423,15 @@
       <qandaentry>
 	<question>
 	  <para>
-	    How come even after I delete bugs, the long descriptions
-	    show up?
+	    How come even after I delete bugs, the long descriptions show up?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Delete everything from $BUZILLA_HOME/shadow.  Bugzilla
-	    creates shadow files there, with each filename
-	    corresponding to a bug number.  Also be sure to run
-	    syncshadowdb to make sure, if you are using a shadow
-	    database, that the shadow database is current.
+	    Delete everything from $BUZILLA_HOME/shadow.  Bugzilla creates shadow
+	    files there, with each filename corresponding to a
+	    bug number.  Also be sure to run syncshadowdb to make sure, if you are using
+	    a shadow database, that the shadow database is current.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1607,14 +1444,13 @@
       <qandaentry>
 	<question>
 	  <para>
-	    What is the easiest way to run Bugzilla on Win32
-	    (Win98+/NT/2K)?
+	    What is the easiest way to run Bugzilla on Win32 (Win98+/NT/2K)?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Remove Windows. Install Linux. Install Bugzilla. The boss
-	    will never know the difference.
+	    Remove Windows. Install Linux. Install Bugzilla.
+	    The boss will never know the difference.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1627,10 +1463,9 @@
 	</question>
 	<answer>
 	  <para>
-	    Not currently.  Bundle::Bugzilla enormously simplifies
-	    Bugzilla installation on UNIX systems.  If someone can
-	    volunteer to create a suitable PPM bundle for Win32, it
-	    would be appreciated.
+	    Not currently.  Bundle::Bugzilla enormously simplifies Bugzilla
+	    installation on UNIX systems.  If someone can volunteer to
+	    create a suitable PPM bundle for Win32, it would be appreciated.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1638,34 +1473,29 @@
       <qandaentry>
 	<question>
 	  <para>
-	    CGI's are failing with a "something.cgi is not a valid
-	    Windows NT application" error. Why?
+	    CGI's are failing with a "something.cgi is not a valid Windows NT
+	    application" error. Why?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Depending on what Web server you are using, you will have
-	    to configure the Web server to treat *.cgi files as CGI
-	    scripts. In IIS, you do this by adding *.cgi to the App
-	    Mappings with the &lt;path&gt;\perl.exe %s %s as the
+	    Depending on what Web server you are using, you will have to configure
+	    the Web server to treat *.cgi files as CGI scripts. In IIS, you do this by
+	    adding *.cgi to the App Mappings with the &lt;path&gt;\perl.exe %s %s as the
 	    executable.
 	  </para>
 	  <para>
 	    Microsoft has some advice on this matter, as well:
 	    <blockquote>
 	      <para>
-		"Set application mappings. In the ISM, map the
-		extension for the script file(s) to the executable for
-		the script interpreter. For example, you might map the
-		extension .py to Python.exe, the executable for the
-		Python script interpreter. Note For the ActiveState
-		Perl script interpreter, the extension .pl is
-		associated with PerlIS.dll by default. If you want to
-		change the association of .pl to perl.exe, you need to
-		change the application mapping. In the mapping, you
-		must add two percent (%) characters to the end of the
-		pathname for perl.exe, as shown in this example:
-		c:\perl\bin\perl.exe %s %s"
+		"Set application mappings. In the ISM, map the extension for the script
+		file(s) to the executable for the script interpreter. For example, you might
+		map the extension .py to Python.exe, the executable for the Python script
+		interpreter. Note For the ActiveState Perl script interpreter, the extension
+		.pl is associated with PerlIS.dll by default. If you want to change the
+		association of .pl to perl.exe, you need to change the application mapping.
+		In the mapping, you must add two percent (%) characters to the end of the
+		pathname for perl.exe, as shown in this example: c:\perl\bin\perl.exe %s %s"
 	      </para>
 	    </blockquote>
 	  </para>
@@ -1675,60 +1505,99 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Can I have some general instructions on how to make
-	    Bugzilla on Win32 work?
+	    Can I have some general instructions on how to make Bugzilla on Win32 work?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    The following couple entries are deprecated in favor of
-	    the Windows installation instructions available in the
-	    "Administration" portion of "The Bugzilla Guide". However,
-	    they are provided here for historical interest and
-	    insight. <literallayout> 1. #!C:/perl/bin/perl had to be
-	      added to every perl file. 2. Converted to Net::SMTP to
-	      handle mail messages instead of /usr/bin/sendmail. 3.
-	      The crypt function isn't available on Windows NT (at
-	      least none that I am aware), so I made encrypted
-	      passwords = plaintext passwords. 4. The system call to
-	      diff had to be changed to the Cygwin diff. 5. This was
-	      just to get a demo running under NT, it seems to be
-	      working good, and I have inserted almost 100 bugs from
-	      another bug tracking system. Since this work was done
-	      just to get an in-house demo, I am NOT planning on
-	      making a patch for submission to Bugzilla. If you would
-	      like a zip file, let me know. Q: Hmm, couldn't figure it
-	      out from the general instructions above.  How about
-	      step-by-step? A: Sure! Here ya go! 1. Install IIS 4.0
-	      from the NT Option Pack #4. 2. Download and install
-	      Active Perl. 3. Install the Windows GNU tools from
-	      Cygwin. Make sure to add the bin directory to your
-	      system path. (Everyone should have these, whether they
-	      decide to use Bugzilla or not. :-) ) 4. Download
-	      relevant packages from ActiveState at
-	      http://www.activestate.com/packages/zips/. +
-	      DBD-Mysql.zip 5. Extract each zip file with WinZip, and
-	      install each ppd file using the notation: ppm install
-	      &lt;module&gt;.ppd 6. Install Mysql.  *Note: If you move
-	      the default install from c:\mysql, you must add the
-	      appropriate startup parameters to the NT service. (ex.
-	      -b e:\\programs\\mysql) 7. Download any Mysql client.
-	      http://www.mysql.com/download_win.html 8. Setup MySql.
-	      (These are the commands that I used.) I. Cleanup default
-	      database settings. C:\mysql\bin\mysql -u root mysql
-	      mysql> DELETE FROM user WHERE Host='localhost' AND
-	      User=''; mysql> quit C:\mysql\bin\mysqladmin reload II.
-	      Set password for root. C:\mysql\bin\mysql -u root mysql
-	      mysql> UPDATE user SET Password=PASSWORD('new_password')
-	      WHERE user='root'; mysql> FLUSH PRIVILEGES; mysql> quit
-	      C:\mysql\bin\mysqladmin -u root reload III. Create bugs
-	      user. C:\mysql\bin\mysql -u root -p mysql> insert into
-	      user (host,user,password) values('localhost','bugs','');
-	      mysql> quit C:\mysql\bin\mysqladmin -u root reload IV.
-	      Create the bugs database. C:\mysql\bin\mysql -u root -p
-	      mysql> create database bugs; V. Give the bugs user
-	      access to the bugs database. mysql> insert into db
-	      (host,db,user,select_priv,insert_priv,update_priv,delete_priv,create_priv,drop_priv) values('localhost','bugs','bugs','Y','Y','Y','Y','Y','N') mysql> quit C:\mysql\bin\mysqladmin -u root reload 9. Run the table scripts to setup the bugs database. 10. Change CGI.pm to use the following regular expression because of differing backslashes in NT versus UNIX. o $0 =~ m:[^\\]*$:; 11. Had to make the crypt password = plain text password in the database. (Thanks to Andrew Lahser" &lt;andrew_lahser@merck.com&gt;" on this one.) The files that I changed were: o globals.pl o CGI.pl o alternately, you can try commenting all references to 'crypt' string and replace them with similar lines but without encrypt() or crypr() functions insida all files. 12. Replaced sendmail with Windmail. Basically, you have to come up with a sendmail substitute for NT. Someone said that they used a Perl module (Net::SMTP), but I was trying to save time and do as little Perl coding as possible. 13. Added "perl" to the beginning of all Perl system calls that use a perl script as an argument and renamed processmail to processmail.pl. 14. In processmail.pl, I added binmode(HANDLE) before all read() calls. I'm not sure about this one, but the read() under NT wasn't counting the EOLs without the binary read." </literallayout>
+	    The following couple entries are deprecated in favor of the Windows installation
+	    instructions available in the "Administration" portion of "The Bugzilla Guide".
+	    However, they are provided here for historical interest and insight.
+	    <literallayout>
+  1. #!C:/perl/bin/perl had to be added to every perl file.
+  2. Converted to Net::SMTP to handle mail messages instead of
+     /usr/bin/sendmail.
+  3. The crypt function isn't available on Windows NT (at least none that I
+     am aware), so I made encrypted passwords = plaintext passwords.
+  4. The system call to diff had to be changed to the Cygwin diff.
+  5. This was just to get a demo running under NT, it seems to be working
+     good, and I have inserted almost 100 bugs from another bug tracking
+     system. Since this work was done just to get an in-house demo, I am NOT
+     planning on making a patch for submission to Bugzilla. If you would
+     like a zip file, let me know.
+
+Q: Hmm, couldn't figure it out from the general instructions above.  How
+about step-by-step?
+A: Sure! Here ya go!
+
+  1. Install IIS 4.0 from the NT Option Pack #4.
+  2. Download and install Active Perl.
+  3. Install the Windows GNU tools from Cygwin. Make sure to add the bin
+     directory to your system path. (Everyone should have these, whether
+     they decide to use Bugzilla or not. :-) )
+  4. Download relevant packages from ActiveState at
+     http://www.activestate.com/packages/zips/. + DBD-Mysql.zip
+  5. Extract each zip file with WinZip, and install each ppd file using the
+     notation: ppm install &lt;module&gt;.ppd
+  6. Install Mysql.  *Note: If you move the default install from c:\mysql,
+     you must add the appropriate startup parameters to the NT service. (ex.
+     -b e:\\programs\\mysql)
+  7. Download any Mysql client. http://www.mysql.com/download_win.html
+  8. Setup MySql. (These are the commands that I used.)
+
+          I. Cleanup default database settings.
+           C:\mysql\bin\mysql -u root mysql
+           mysql> DELETE FROM user WHERE Host='localhost' AND User='';
+           mysql> quit
+          C:\mysql\bin\mysqladmin reload
+
+          II. Set password for root.
+           C:\mysql\bin\mysql -u root mysql
+           mysql> UPDATE user SET Password=PASSWORD('new_password')
+           WHERE user='root';
+           mysql> FLUSH PRIVILEGES;
+           mysql> quit
+           C:\mysql\bin\mysqladmin -u root reload
+
+          III. Create bugs user.
+           C:\mysql\bin\mysql -u root -p
+           mysql> insert into user (host,user,password)
+          values('localhost','bugs','');
+           mysql> quit
+           C:\mysql\bin\mysqladmin -u root reload
+
+          IV. Create the bugs database.
+           C:\mysql\bin\mysql -u root -p
+           mysql> create database bugs;
+
+          V. Give the bugs user access to the bugs database.
+           mysql> insert into db
+          (host,db,user,select_priv,insert_priv,update_priv,delete_priv,create_priv,drop_priv)
+          values('localhost','bugs','bugs','Y','Y','Y','Y','Y','N')
+           mysql> quit
+           C:\mysql\bin\mysqladmin -u root reload
+  9. Run the table scripts to setup the bugs database.
+ 10. Change CGI.pm to use the following regular expression because of
+     differing backslashes in NT versus UNIX.
+        o $0 =~ m:[^\\]*$:;
+ 11. Had to make the crypt password = plain text password in the database.
+     (Thanks to Andrew Lahser" &lt;andrew_lahser@merck.com&gt;" on this one.) The
+     files that I changed were:
+        o globals.pl
+        o CGI.pl
+        o alternately, you can try commenting all references to 'crypt'
+          string and replace them with similar lines but without encrypt()
+          or crypr() functions insida all files.
+ 12. Replaced sendmail with Windmail. Basically, you have to come up with a
+     sendmail substitute for NT. Someone said that they used a Perl module
+     (Net::SMTP), but I was trying to save time and do as little Perl coding
+     as possible.
+ 13. Added "perl" to the beginning of all Perl system calls that use a perl
+     script as an argument and renamed processmail to processmail.pl.
+ 14. In processmail.pl, I added binmode(HANDLE) before all read() calls. I'm
+     not sure about this one, but the read() under NT wasn't counting the
+     EOLs without the binary read."
+	    </literallayout>
 	  </para>
 	</answer>
       </qandaentry>
@@ -1736,8 +1605,8 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I'm having trouble with the perl modules for NT not being
-	    able to talk to to the database.
+	    I'm having trouble with the perl modules for NT not being able to talk to
+	    to the database.
 	  </para>
 	</question>
 	<answer>
@@ -1766,14 +1635,14 @@
 	      </listitem>
 	      <listitem>
 		<para>
-		  <prompt>PPM></prompt> <command>install DBI DBD-mysql
-		    GD</command>
+		  <prompt>PPM></prompt> <command>install DBI DBD-mysql GD</command>
 		</para>
 	      </listitem>
-	    </orderedlist> I reckon TimeDate and Data::Dumper come
-	    with the activeperl. You can check the ActiveState site
-	    for packages for installation through PPM. <ulink url="
-							      http://www.activestate.com/Packages/"> http://www.activestate.com/Packages/</ulink>
+	    </orderedlist>
+	    I reckon TimeDate and Data::Dumper come with the activeperl. You can check
+	    the ActiveState site for packages for installation through PPM.
+	    <ulink url=" http://www.activestate.com/Packages/">
+	      http://www.activestate.com/Packages/</ulink>
 	  </para>
 	</answer>
       </qandaentry>
@@ -1786,15 +1655,15 @@
       <qandaentry>
 	<question>
 	  <para>
-	    The query page is very confusing.  Isn't there a simpler
-	    way to query?
+	    The query page is very confusing.  Isn't there a simpler way to query?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    We are developing in that direction.  You can follow
-	    progress on this at <ulink
-				       url="http://bugzilla.mozilla.org/show_bug.cgi?id=16775"> http://bugzilla.mozilla.org/show_bug.cgi?id=16775</ulink>.  Some functionality is available in Bugzilla 2.12, and is available as "quicksearch.html"
+	    We are developing in that direction.  You can follow progress on this
+	    at <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=16775">
+	      http://bugzilla.mozilla.org/show_bug.cgi?id=16775</ulink>.  Some functionality
+	    is available in Bugzilla 2.12, and is available as "quicksearch.html"
 	  </para>
 	</answer>
       </qandaentry>
@@ -1802,24 +1671,23 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I'm confused by the behavior of the "accept" button in the
-	    Show Bug form. Why doesn't it assign the bug to me when I
-	    accept it?
+	    I'm confused by the behavior of the "accept" button in the Show Bug form.
+	    Why doesn't it assign the bug to me when I accept it?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    The current behavior is acceptable to bugzilla.mozilla.org
-	    and most users.  I personally don't like it.  You have
-	    your choice of patches to change this behavior, however.
+	    The current behavior is acceptable to bugzilla.mozilla.org and most
+	    users.  I personally don't like it.  You have your choice of patches
+	    to change this behavior, however.
 	    <simplelist>
-	      <member><ulink
-			     url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8029"> Add a "and accept bug" radio button</ulink></member>
-	      <member><ulink
-			     url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8153"> "Accept" button automatically assigns to you</ulink></member>
-	    </simplelist> Note that these patches are somewhat dated.
-	    You will need to do the find and replace manually to apply
-	    them.  They are very small, though.  It is easy.
+	      <member><ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8029">
+		Add a "and accept bug" radio button</ulink></member>
+	      <member><ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8153">
+		"Accept" button automatically assigns to you</ulink></member>
+	    </simplelist>
+	    Note that these patches are somewhat dated.  You will need to do the find
+	    and replace manually to apply them.  They are very small, though.  It is easy.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1827,16 +1695,15 @@
       <qandaentry>
 	<question>
 	  <para>
-	    I can't upload anything into the database via the "Create
-	    Attachment" link.  What am I doing wrong?
+	    I can't upload anything into the database via the "Create Attachment"
+	    link.  What am I doing wrong?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    The most likely cause is a very old browser or a browser
-	    that is incompatible with file upload via POST.  Download
-	    the latest Netscape, Microsoft, or Mozilla browser to
-	    handle uploads correctly.
+	    The most likely cause is a very old browser or a browser that is
+	    incompatible with file upload via POST.  Download the latest Netscape,
+	    Microsoft, or Mozilla browser to handle uploads correctly.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1844,16 +1711,15 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Email submissions to Bugzilla that have attachments end up
-	    asking me to save it as a "cgi" file.
+	    Email submissions to Bugzilla that have attachments end up asking me to
+	    save it as a "cgi" file.
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    Yup.  Just rename it once you download it, or save it
-	    under a different filename.  This will not be fixed
-	    anytime too soon, because it would cripple some other
-	    functionality.
+	    Yup.  Just rename it once you download it, or save it under a different
+	    filename.  This will not be fixed anytime too soon, because it would
+	    cripple some other functionality.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1861,16 +1727,14 @@
       <qandaentry>
 	<question>
 	  <para>
-	    How do I change a keyword in Bugzilla, once some bugs are
-	    using it?
+	    How do I change a keyword in Bugzilla, once some bugs are using it?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    In the Bugzilla administrator UI, edit the keyword and it
-	    will let you replace the old keyword name with a new one.
-	    This will cause a problem with the keyword cache.  Run
-	    sanitycheck.cgi to fix it.
+	    In the Bugzilla administrator UI, edit the keyword and it will let you
+	    replace the old keyword name with a new one.  This will cause a problem
+	    with the keyword cache.  Run sanitycheck.cgi to fix it.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1888,12 +1752,19 @@
 	</question>
 	<answer>
 	  <para>
-	    Try <ulink
-		       url="http://bugzilla.mozilla.org/buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;product=Webtools&amp;component=Bugzilla"> this link</ulink> to view current bugs or requests for enhancement for Bugzilla.
+	    Try <ulink url="http://bugzilla.mozilla.org/buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;product=Webtools&amp;component=Bugzilla">
+	    this link</ulink> to view current bugs or requests for
+	    enhancement for Bugzilla.
 	  </para>
 	  <para>
-	    You can view bugs marked for 2.14 release <ulink
-							     url="http://bugzilla.mozilla.org/buglist.cgi?product=Webtools&amp;component=Bugzilla&amp;target_milestone=Bugzilla+2.14">here</ulink>. This list includes bugs for the 2.14 release that have already been fixed and checked into CVS.  Please consult the <ulink url="http://www.mozilla.org/projects/bugzilla/"> Bugzilla Project Page</ulink> for details on how to check current sources out of CVS so you can have these bug fixes early!
+	    You can view bugs marked for 2.14 release
+	    <ulink url="http://bugzilla.mozilla.org/buglist.cgi?product=Webtools&amp;component=Bugzilla&amp;target_milestone=Bugzilla+2.14">here</ulink>.
+	    This list includes bugs for the 2.14 release that have already
+	    been fixed and checked into CVS.  Please consult the
+	    <ulink url="http://www.mozilla.org/projects/bugzilla/">
+	      Bugzilla Project Page</ulink> for details on how to
+	    check current sources out of CVS so you can have these
+	    bug fixes early!
 	  </para>
 	</answer>
       </qandaentry>
@@ -1901,15 +1772,19 @@
       <qandaentry>
 	<question>
 	  <para>
-	    How can I change the default priority to a null value?
-	    For instance, have the default priority be "---" instead
-	    of "P2"?
+	    How can I change the default priority to a null value?  For instance, have the default
+	    priority be "---" instead of "P2"?
 	  </para>
 	</question>
 	<answer>
 	  <para>
-	    This is well-documented here: <ulink
-						 url="http://bugzilla.mozilla.org/show_bug.cgi?id=49862"> http://bugzilla.mozilla.org/show_bug.cgi?id=49862</ulink>.  Ultimately, it's as easy as adding the "---" priority field to your localconfig file in the appropriate area, re-running checksetup.pl, and then changing the default priority in your browser using "editparams.cgi".  Hmm, now that I think about it, that is kind of a klunky way to handle it, but for now it's what we have!  Although the bug has been closed "resolved wontfix", there may be a better way to handle this...
+	    This is well-documented here: <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=49862">
+	    http://bugzilla.mozilla.org/show_bug.cgi?id=49862</ulink>.  Ultimately, it's as easy
+	    as adding the "---" priority field to your localconfig file in the appropriate area,
+	    re-running checksetup.pl, and then changing the default priority in your browser using
+	    "editparams.cgi".  Hmm, now that I think about it, that is kind of a klunky way to handle
+	    it, but for now it's what we have!  Although the bug has been closed "resolved wontfix",
+	    there may be a better way to handle this...
 	  </para>
 	</answer>
       </qandaentry>
@@ -1917,8 +1792,7 @@
       <qandaentry>
 	<question>
 	  <para>
-	    What's the best way to submit patches?  What guidelines
-	    should I follow?
+	    What's the best way to submit patches?  What guidelines should I follow?
 	  </para>
 	</question>
 	<answer>
@@ -1926,47 +1800,42 @@
 	    <orderedlist>
 	      <listitem>
 		<para>
-		  Enter a bug into bugzilla.mozilla.org for the
-		  "Webtools" product, "Bugzilla" component.
+		  Enter a bug into bugzilla.mozilla.org for the "Webtools" product,
+		  "Bugzilla" component.
 		</para>
 	      </listitem>
 	      <listitem>
 		<para>
-		  Upload your patch as a unified DIFF (having used
-		  "diff -u" against the <emphasis>current
-		    sources</emphasis> checked out of CVS), or new
-		  source file by clicking "Create a new attachment"
-		  link on the bug page you've just created, and
-		  include any descriptions of database changes you may
-		  make, into the bug ID you submitted in step #1.  Be
-		  sure and click the "Patch" radio button to indicate
-		  the text you are sending is a patch!
+		  Upload your patch as a unified DIFF (having used "diff -u" against
+		  the <emphasis>current sources</emphasis> checked out of CVS),
+		  or new source file by clicking
+		  "Create a new attachment" link on the bug page you've just created, and
+		  include any descriptions of database changes you may make, into the bug
+		  ID you submitted in step #1.  Be sure and click the "Patch" radio
+		  button to indicate the text you are sending is a patch!
 		</para>
 	      </listitem>
 	      <listitem>
 		<para>
 		  Announce your patch and the associated URL
-		  (http://bugzilla.mozilla.org/show_bug.cgi?id=XXXX)
-		  for discussion in the newsgroup
-		  (netscape.public.mozilla.webtools).  You'll get a
-		  really good, fairly immediate reaction to the
-		  implications of your patch, which will also give us
-		  an idea how well-received the change would be.
+		  (http://bugzilla.mozilla.org/show_bug.cgi?id=XXXX) for discussion in
+		  the newsgroup (netscape.public.mozilla.webtools).  You'll get a really
+		  good, fairly immediate reaction to the implications of your patch,
+		  which will also give us an idea how well-received the change would
+		  be.
 		</para>
 	      </listitem>
 	      <listitem>
 		<para>
-		  If it passes muster with minimal modification, the
-		  person to whom the bug is assigned in Bugzilla is
-		  responsible for seeing the patch is checked into
-		  CVS.
+		  If it passes muster with minimal modification, the person to whom
+		  the bug is assigned in Bugzilla is responsible for seeing the patch
+		  is checked into CVS.
 		</para>
 	      </listitem>
 	      <listitem>
 		<para>
-		  Bask in the glory of the fact that you helped write
-		  the most successful open-source bug-tracking
-		  software on the planet :)
+		  Bask in the glory of the fact that you helped write the most successful
+		  open-source bug-tracking software on the planet :)
 		</para>
 	      </listitem>
 	    </orderedlist>
