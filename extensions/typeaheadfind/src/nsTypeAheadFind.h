@@ -260,6 +260,7 @@ class nsTypeAheadController : public nsIController
 {
 public:
   nsTypeAheadController(nsIFocusController *aFocusController);
+  virtual ~nsTypeAheadController();
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLER
 

@@ -2818,6 +2818,10 @@ nsTypeAheadController::nsTypeAheadController(nsIFocusController *aFocusControlle
 {
 }
 
+nsTypeAheadController::~nsTypeAheadController()
+{
+}
+
 NS_IMETHODIMP
 nsTypeAheadController::IsCommandEnabled(const char *aCommand, PRBool *aResult)
 {
@@ -2882,8 +2886,6 @@ nsTypeAheadController::SupportsCommand(const char *aCommand, PRBool *aResult)
 NS_IMETHODIMP
 nsTypeAheadController::DoCommand(const char *aCommand)
 {
-  nsresult rv = NS_OK;
-
   PRBool isLinkSearch = PR_FALSE;
 
   if (nsCRT::strcmp(sLinkFindString, aCommand) == 0) {
