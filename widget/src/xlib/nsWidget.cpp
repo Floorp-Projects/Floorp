@@ -417,6 +417,23 @@ NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
   return NS_OK;
 }
 
+NS_METHOD nsWindow::Minimize(void)
+{
+  status = XIconifyWindow(mDisplay, mBaseWindow, 0);
+  return status ? NS_ERROR_FAULRE : NS_OK;
+}
+
+NS_METHOD nsWindow::Maximize(void)
+{
+  return NS_OK;
+}
+
+
+NS_METHOD nsWindow::Restore(void)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 {
   return NS_OK;

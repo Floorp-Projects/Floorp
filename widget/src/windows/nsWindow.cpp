@@ -885,6 +885,25 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
   return NS_OK;
 }
 
+NS_METHOD nsWindow::Minimize(void)
+{
+  ::ShowWindow(mWnd, SW_MINIMIZE);
+  return NS_OK;
+}
+
+NS_METHOD nsWindow::Maximize(void)
+{
+  ::ShowWindow(mWnd, SW_MAXIMIZE);
+  return NS_OK;
+}
+
+
+NS_METHOD nsWindow::Restore(void)
+{
+  ::ShowWindow(mWnd, SW_RESTORE);
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Move this component
