@@ -94,12 +94,12 @@ nsIView* AbsoluteFrame::CreateView(nsIFrame*     aContainingBlock,
     if (NS_OK == result) {
       nsIView* scrolledView = scrollView->GetScrolledView();
 
-      view->Init(viewManager, aRect, scrolledView, nsnull, nsnull, aZIndex);
+      view->Init(viewManager, aRect, scrolledView, nsnull, nsnull, nsnull, aZIndex);
       viewManager->InsertChild(scrolledView, view, 0);
       NS_RELEASE(scrolledView);
       NS_RELEASE(scrollView);
     } else {
-      view->Init(viewManager, aRect, containingView, nsnull, nsnull, aZIndex);
+      view->Init(viewManager, aRect, containingView, nsnull, nsnull, nsnull, aZIndex);
       viewManager->InsertChild(containingView, view, 0);
     }
   

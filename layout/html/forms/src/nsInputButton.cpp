@@ -19,7 +19,7 @@
 #include "nsInput.h"
 #include "nsInputFrame.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLTagContent.h"
+#include "nsHTMLContainer.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -40,12 +40,12 @@
 #include "nsIFontMetrics.h"
 #include "nsIFormManager.h"
 
-static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-
 enum nsInputButtonType {
-  kInputButtonButton,
-  kInputButtonReset,
-  kInputButtonSubmit
+  kButton_InputButton,
+  kButton_Button,
+  kButton_InputReset,
+  kButton_InputSubmit,
+  kButton_InputHidden
 };
 	
 class nsInputButton : public nsInput {
@@ -57,11 +57,6 @@ public:
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
-
   virtual void GetDefaultLabel(nsString& aLabel);
 
   nsInputButtonType GetButtonType() { return mType; }
@@ -70,10 +65,7 @@ public:
 
   virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, nsString* aValues);
 
-  // Attributes
-  nsString* mValue;
-  nscoord mWidth;
-  nscoord mHeight;
+  virtual PRBool IsHidden();
 
  protected:
   virtual ~nsInputButton();
@@ -89,22 +81,24 @@ public:
                      PRInt32 aIndexInParent,
                      nsIFrame* aParentFrame);
 
-  virtual void PreInitializeWidget(nsIPresContext* aPresContext, 
-	                               nsSize& aBounds);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView* aView);
 
-  virtual void InitializeWidget(nsIView* aView);
-
-  virtual void MouseClicked();
+  virtual void MouseClicked(nsIPresContext* aPresContext);
 
   virtual const nsIID GetCID();
 
   virtual const nsIID GetIID();
 
+  nsInputButtonType GetButtonType() const;
+
 
 protected:
-  virtual      ~nsInputButtonFrame();
-  nsString     mCacheLabel;     
-  nsFont*      mCacheFont;  // XXX this is bad, the lifetime of the font is not known or controlled
+  virtual  ~nsInputButtonFrame();
+
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredLayoutSize,
+                              nsSize& aDesiredWidgetSize);
 };
 
 
@@ -114,8 +108,6 @@ nsInputButton::nsInputButton(nsIAtom* aTag, nsIFormManager* aManager,
                              nsInputButtonType aType)
   : nsInput(aTag, aManager), mType(aType) 
 {
-  mWidth = -1;
-  mHeight = -1;
 }
 
 nsInputButton::~nsInputButton()
@@ -125,73 +117,30 @@ nsInputButton::~nsInputButton()
   }
 }
 
-
-void nsInputButton::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+PRBool 
+nsInputButton::IsHidden()
 {
-  if (aAttribute == nsHTMLAtoms::value) {
-    if (nsnull == mValue) {
-      mValue = new nsString(aValue);
-    } else {
-      mValue->SetLength(0);
-      mValue->Append(aValue);
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    nsHTMLValue value;
-    ParseValue(aValue, 0, 1000, value);
-    mWidth = value.GetIntValue();
-  }
-  else if (aAttribute == nsHTMLAtoms::height) {
-    nsHTMLValue value;
-    ParseValue(aValue, 0, 1000, value);
-    mHeight = value.GetIntValue();
+  if (kButton_InputHidden == mType) {
+    return PR_TRUE;
   }
   else {
-    nsInput::SetAttribute(aAttribute, aValue);
+    return PR_FALSE;
   }
-}
-
-nsContentAttr nsInputButton::GetAttribute(nsIAtom* aAttribute,
-                                          nsHTMLValue& aResult) const
-{
-  nsContentAttr ca = eContentAttr_NotThere;
-  aResult.Reset();
-  if (aAttribute == nsHTMLAtoms::value) {
-    if (nsnull != mValue) {
-      aResult.Set(*mValue);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    if (0 <= mWidth) {
-      aResult.Set(mWidth, eHTMLUnit_Absolute);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::height) {
-    if (0 <= mHeight) {
-      aResult.Set(mHeight, eHTMLUnit_Absolute);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else {
-    ca = nsInput::GetAttribute(aAttribute, aResult);
-  }
-  return ca;
 }
 
 void nsInputButton::GetType(nsString& aResult) const
 {
   aResult.SetLength(0);
   switch (mType) {
-  case kInputButtonButton:
+  case kButton_InputButton:
+  case kButton_Button:
     aResult.Append("button");
     break;
-  case kInputButtonReset:
+  case kButton_InputReset:
     aResult.Append("reset");
     break;
   default:
-  case kInputButtonSubmit:
+  case kButton_InputSubmit:
     aResult.Append("submit");
     break;
   }
@@ -200,9 +149,9 @@ void nsInputButton::GetType(nsString& aResult) const
 void
 nsInputButton::GetDefaultLabel(nsString& aString) 
 {
-  if (kInputButtonReset == mType) {
+  if (kButton_InputReset == mType) {
     aString = "Reset";
-  } else if (kInputButtonSubmit == mType) {
+  } else if (kButton_InputSubmit == mType) {
     aString = "Submit";
   } else {
     aString = "noname";
@@ -214,17 +163,24 @@ nsInputButton::CreateFrame(nsIPresContext* aPresContext,
                            PRInt32 aIndexInParent,
                            nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new nsInputButtonFrame(this, aIndexInParent, aParentFrame);
-  return rv;
+  if (kButton_InputHidden == mType) {
+    nsIFrame* frame;
+    nsFrame::NewFrame(&frame, this, aIndexInParent, aParentFrame);
+    return frame;
+  } 
+  else {
+   return new nsInputButtonFrame(this, aIndexInParent, aParentFrame);
+  }
+ 
 }
 
 PRInt32
 nsInputButton::GetMaxNumValues() 
 {
-  if (kInputButtonSubmit == mType) {
+  if ((kButton_InputSubmit == mType) || (kButton_InputHidden)) {
     return 1;
   } else {
-	return 0;
+	  return 0;
   }
 }
 
@@ -237,7 +193,7 @@ nsInputButton::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     return PR_FALSE;
   }
 
-  if (kInputButtonSubmit != mType) {
+  if ((kButton_InputSubmit != mType) && (kButton_InputHidden != mType)) {
     aNumValues = 0;
     return PR_FALSE;
   }
@@ -261,78 +217,98 @@ nsInputButtonFrame::nsInputButtonFrame(nsIContent* aContent,
                            nsIFrame* aParentFrame)
   : nsInputFrame(aContent, aIndexInParent, aParentFrame)
 {
-  mCacheLabel = "";
-  mCacheFont  = nsnull;
 }
 
 nsInputButtonFrame::~nsInputButtonFrame()
 {
-  mCacheLabel = "";       
-  mCacheFont  = nsnull;  // should this be released? NO
+}
+
+nsInputButtonType 
+nsInputButtonFrame::GetButtonType() const
+{
+  nsInputButton* button = (nsInputButton *)mContent;
+  return button->GetButtonType();
 }
 
 void
-nsInputButtonFrame::MouseClicked() 
+nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
   nsInputButton* button = (nsInputButton *)mContent;
   nsIFormManager* formMan = button->GetFormManager();
   if (nsnull != formMan) {
-    if (kInputButtonReset == button->GetButtonType()) {
+    if (kButton_InputReset == button->GetButtonType()) {
       formMan->OnReset();
-    } else if (kInputButtonSubmit == button->GetButtonType()) {
-      formMan->OnSubmit();
+    } else if (kButton_InputSubmit == button->GetButtonType()) {
+      //NS_ADDREF(this);
+      formMan->OnSubmit(aPresContext, this);
+      //NS_RELEASE(this);
     }
     NS_RELEASE(formMan);
   }
 }
 
-
 void 
-nsInputButtonFrame::PreInitializeWidget(nsIPresContext* aPresContext, nsSize& aBounds)
+nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                   const nsSize& aMaxSize,
+                                   nsReflowMetrics& aDesiredLayoutSize,
+                                   nsSize& aDesiredWidgetSize)
 {
-  float p2t = aPresContext->GetPixelsToTwips();
-
-  nsInputButton* content = (nsInputButton *)mContent; // this must be an nsInputButton 
-  // should this be the parent
-  nsStyleFont* styleFont = (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
-  nsIDeviceContext* deviceContext = aPresContext->GetDeviceContext();
-  nsIFontCache* fontCache = deviceContext->GetFontCache();
-
-  // get the label for the button
-  nsAutoString label;
-  if (nsnull == content->mValue) {
-    content->GetDefaultLabel(label);
-  } else {
-    label.Append(*content->mValue);
+  if (kButton_InputHidden == GetButtonType()) {
+    aDesiredLayoutSize.width  = 0;
+    aDesiredLayoutSize.height = 0;
+    aDesiredWidgetSize.width  = 0;
+    aDesiredWidgetSize.height = 0;
+    return;
   }
-  mCacheLabel = label;  // cache the label
+  nsSize styleSize;
+  GetStyleSize(*aPresContext, aMaxSize, styleSize);
 
-  // get the width and height based on the label, font, padding
-  nsIFontMetrics* fontMet = fontCache->GetMetricsFor(styleFont->mFont);
-  nscoord horPadding = (int) (5.0 * p2t);  // need to get this from the widget
-  nscoord verPadding = (int) (5.0 * p2t);  // need to get this from the widget
-  aBounds.width  = fontMet->GetWidth(label) + (2 * horPadding);
-  aBounds.height = fontMet->GetHeight() + (2 * verPadding);
-  
-  mCacheFont = &(styleFont->mFont); // cache the font  XXX this is bad, the lifetime of the font is not known or controlled
+  nsSize size;
+  PRBool widthExplicit, heightExplicit;
+  PRInt32 ignore;
+  nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 1,
+                            PR_FALSE, nsnull, 1);
+  CalculateSize(aPresContext, this, styleSize, spec, size, 
+                widthExplicit, heightExplicit, ignore);
 
-  NS_RELEASE(fontMet);
-  NS_RELEASE(fontCache);
-  NS_RELEASE(deviceContext);
+  if (!widthExplicit) {
+    size.width += 100;
+  } 
+  if (!heightExplicit) {
+    size.height += 100;
+  } 
+
+  aDesiredLayoutSize.width = size.width;
+  aDesiredLayoutSize.height= size.height;
+  aDesiredWidgetSize.width = size.width;
+  aDesiredWidgetSize.height= size.height;
 }
 
 
 void 
-nsInputButtonFrame::InitializeWidget(nsIView *aView)
+nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
   nsIButton* button;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&button)) {
-	if (nsnull != mCacheFont) {
-	  button->SetFont(*mCacheFont);
-	}
-	button->SetLabel(mCacheLabel);
-    NS_RELEASE(button);
+	  button->SetFont(GetFont(aPresContext));
+	} 
+  else {
+    NS_ASSERTION(0, "no widget in button control");
   }
+
+  nsInputButton* content;
+  GetContent((nsIContent*&) content);
+  nsString value;
+  nsContentAttr status = content->GetAttribute(nsHTMLAtoms::value, value);
+  if (eContentAttr_HasValue == status) {  
+	  button->SetLabel(value);
+  } 
+  else {
+    button->SetLabel(" ");
+  }
+
+  NS_RELEASE(content);
+  NS_RELEASE(button);
 }
 
 const nsIID
@@ -371,19 +347,33 @@ nsresult
 NS_NewHTMLInputButton(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager)
 {
-  return CreateButton(aInstancePtrResult, aTag, aManager, kInputButtonButton);
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_InputButton);
+}
+
+nsresult
+NS_NewHTMLButton(nsIHTMLContent** aInstancePtrResult,
+                 nsIAtom* aTag, nsIFormManager* aManager)
+{
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_Button);
 }
 
 nsresult
 NS_NewHTMLInputSubmit(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager)
 {
-  return CreateButton(aInstancePtrResult, aTag, aManager, kInputButtonSubmit);
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_InputSubmit);
 }
 
 nsresult
 NS_NewHTMLInputReset(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager)
 {
-  return CreateButton(aInstancePtrResult, aTag, aManager, kInputButtonReset);
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_InputReset);
+}
+
+nsresult
+NS_NewHTMLInputHidden(nsIHTMLContent** aInstancePtrResult,
+                      nsIAtom* aTag, nsIFormManager* aManager)
+{
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_InputHidden);
 }

@@ -205,6 +205,7 @@ nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
                                                 tbounds, 
                                                 nsnull,
                                                 &kWidgetCID,
+                                                nsnull,
                                                 aNativeParent))) {
     return rv;
   }

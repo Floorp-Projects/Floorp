@@ -40,6 +40,7 @@ public:
 					const nsRect &aBounds,
 					nsIView *aParent,
 					const nsIID *aWindowIID = nsnull,
+          void *aWidgetInitData = nsnull,
 					nsNativeWindow aNative = nsnull,
 					PRInt32 aZIndex = 0,
 					const nsRect *aClipRect = nsnull,

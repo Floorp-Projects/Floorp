@@ -25,11 +25,18 @@
 #include <windows.h>
 
 
+void nsTextHelper::PreCreateWidget(void *aInitData)
+{
+  if (nsnull != aInitData) {
+    nsWidgetInitData* data = (nsWidgetInitData *) aInitData;
+    mIsPassword = (0 == data->arg1) ? PR_FALSE : PR_TRUE;
+  }
+}
+
 void nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 {
   ::SendMessage(mWnd, EM_SETLIMITTEXT, (WPARAM) (INT)aChars, 0);
 }
-
 
 PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
 

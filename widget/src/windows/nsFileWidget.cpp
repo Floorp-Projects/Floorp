@@ -144,7 +144,8 @@ void   nsFileWidget:: Create(nsIWidget *aParent,
                                  nsString& aTitle,
                                  nsMode aMode,
                                  nsIDeviceContext *aContext,
-                                 nsIToolkit *aToolkit)
+                                 nsIToolkit *aToolkit,
+                                 void *aInitData)
 {
   mWnd = aParent;
   mTitle.SetLength(0);

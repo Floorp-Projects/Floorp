@@ -31,11 +31,10 @@ CPPSRCS =				\
 	nsInputCheckbox.cpp		\
 	nsInputFile.cpp			\
 	nsInputFrame.cpp		\
-	nsInputHidden.cpp		\
 	nsInputImage.cpp		\
-	nsInputPassword.cpp		\
 	nsInputRadio.cpp		\
 	nsInputText.cpp			\
+	nsSelect.cpp            \
 	$(NULL)
 
 MODULE = raptor

@@ -19,7 +19,7 @@
 #include "nsIFormManager.h"
 #include "nsInputFrame.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLTagContent.h"
+#include "nsHTMLContainer.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -30,27 +30,30 @@
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsCoord.h"
+#include "nscoord.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
+#include "nsHTMLForms.h"
 
 // Note: we inherit a base class operator new that zeros our memory
 nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
-  : nsHTMLTagContent(aTag), mControl()
+  : nsHTMLContainer(aTag), mControl()
 {
-printf("** nsInput::nsInput this=%d\n", this);
   mFormMan = aManager;
   if (nsnull != mFormMan) {
     NS_ADDREF(mFormMan);
     mFormMan->AddFormControl(&mControl);
   }
+  mSize = CSS_NOTSET; // not set
 }
 
 nsInput::~nsInput()
 {
-printf("** nsInput::~nsInput()\n");
   NS_IF_RELEASE(mWidget);
   if (nsnull != mName) {
+    delete mName;
+  }
+  if (nsnull != mValue) {
     delete mName;
   }
   if (nsnull != mFormMan) {
@@ -69,7 +72,7 @@ nsresult nsInput::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void**) &mControl;
     return NS_OK;
   }
-  return nsHTMLTagContent::QueryInterface(aIID, aInstancePtr);
+  return nsHTMLContainer::QueryInterface(aIID, aInstancePtr);
 }
 
 nsrefcnt nsInput::Release()
@@ -117,6 +120,12 @@ nsInput::CreateFrame(nsIPresContext *aPresContext,
   return nsnull;
 }
 
+PRBool 
+nsInput::IsHidden()
+{
+  return PR_FALSE;
+}
+
 void 
 nsInput::SetWidget(nsIWidget* aWidget)
 {
@@ -161,7 +170,7 @@ nsInput::GetFormManager() const
  * then return PR_FALSE (form elements without names are not submitable).
  */
 PRBool
-nsInput::GetName(nsString& aName)
+nsInput::GetName(nsString& aName) const
 {
   if ((nsnull != mName) && (0 != mName->Length())) {
     aName = *mName;
@@ -188,44 +197,157 @@ nsInput::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, nsString* aValues
   return PR_FALSE;
 }
 
+void nsInput::CacheAttribute(const nsString& aValue, nsString*& aLoc)
+{
+  if (nsnull == aLoc) {
+    aLoc = new nsString(aValue);
+  } else {
+    aLoc->SetLength(0);
+    aLoc->Append(aValue);
+  }
+}
+
+void nsInput::CacheAttribute(const nsString& aValue, PRInt32 aMinValue, PRInt32& aLoc)
+{
+  PRInt32 status;
+  PRInt32 intVal = aValue.ToInteger(&status);
+  aLoc = ((NS_OK == status) && (intVal >= aMinValue)) ? intVal : aMinValue;
+}
+
 void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
-  if (aAttribute == nsHTMLAtoms::type) {
-    // You cannot set the type of a form element
+  if (aAttribute == nsHTMLAtoms::type) { // You cannot set the type of a form element
     return;
-  }
+  } 
   else if (aAttribute == nsHTMLAtoms::name) {
-    if (nsnull == mName) {
-      mName = new nsString(aValue);
-    } else {
-      mName->SetLength(0);
-      mName->Append(aValue);
-    }
+    CacheAttribute(aValue, mName);
+  } 
+  else if (aAttribute == nsHTMLAtoms::size) {
+    CacheAttribute(aValue, CSS_NOTSET, mSize);
+  } 
+  else if (aAttribute == nsHTMLAtoms::value) {
+    CacheAttribute(aValue, mValue);
+  } 
+  else {
+    nsHTMLContainer::SetAttribute(aAttribute, aValue); // YYY remove this
+  }
+}
+
+nsContentAttr nsInput::GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const
+{
+  aValue.Reset();
+  if (nsnull == aLoc) {
+    return eContentAttr_NotThere;
+  } 
+  else {
+    aValue.Set(*aLoc);
+    return eContentAttr_HasValue;
+  }
+}
+
+nsContentAttr nsInput::GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue) const
+{
+  aValue.Reset();
+  if (aLoc <= CSS_NOTSET) {
+    return eContentAttr_NotThere;
+  } 
+  else {
+    aValue.Set(aLoc);
+    return eContentAttr_HasValue;
+  }
+}
+
+nsContentAttr nsInput::GetCacheAttribute(PRBool aLoc, nsHTMLValue& aValue) const
+{
+  aValue.Reset();
+  if (aLoc) {
+    aValue.Set(1);
+    return eContentAttr_HasValue;
+  } 
+  else {
+    return eContentAttr_NotThere;
+  }
+}
+
+nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, nsString& aValue) const
+{
+  nsHTMLValue htmlValue;
+  nsContentAttr result = GetAttribute(aAttribute, htmlValue);
+  if (eContentAttr_HasValue == result) {
+    htmlValue.GetStringValue(aValue);
+    return eContentAttr_HasValue;
+  }
+  else {
+    aValue = "";
+    return eContentAttr_NoValue;
+  }
+}
+
+nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const
+{
+  nsHTMLValue htmlValue;
+  nsContentAttr result = GetAttribute(aAttribute, htmlValue);
+  if (eContentAttr_HasValue == result) {
+    aValue = htmlValue.GetIntValue();
+    return eContentAttr_HasValue;
+  }
+  else {
+    aValue = ATTR_NOTSET;
+    return eContentAttr_NoValue;
+  }
+}
+
+nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute, PRBool& aValue) const
+{
+  PRInt32 intVal;
+  nsContentAttr result = GetAttribute(aAttribute, intVal);
+  if ((eContentAttr_HasValue == result) && (intVal > 0)) {
+    aValue = PR_TRUE;
+    return eContentAttr_HasValue;
+  }
+  else {
+    aValue = PR_FALSE;
+    return eContentAttr_NoValue;
   }
 }
 
 nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
                                     nsHTMLValue& aValue) const
 {
-  nsContentAttr ca = eContentAttr_NotThere;
   if (aAttribute == nsHTMLAtoms::type) {
     nsAutoString tmp;
     GetType(tmp);
-    aValue.Set(tmp);
-    ca = eContentAttr_HasValue;
-  }
-  else if (aAttribute == nsHTMLAtoms::name) {
-    aValue.Reset();
-    if (nsnull != mName) {
-      aValue.Set(*mName);
-      ca = eContentAttr_HasValue;
+    if (tmp.Length() == 0) {    // derivatives that don't support type return zero length string
+      return eContentAttr_NotThere;
     }
+    else {
+      aValue.Set(tmp);
+      return eContentAttr_HasValue;
+    }
+  } 
+  else if (aAttribute == nsHTMLAtoms::name) {
+    return GetCacheAttribute(mName, aValue);
+  } 
+  else if (aAttribute == nsHTMLAtoms::size) {
+    return GetCacheAttribute(mSize, aValue);
+  }
+  else if (aAttribute == nsHTMLAtoms::value) {
+    return GetCacheAttribute(mValue, aValue);
   }
   else {
-    ca = nsHTMLTagContent::GetAttribute(aAttribute, aValue);
+    return eContentAttr_NotThere;
   }
-  return ca;
 }
+
+PRBool nsInput::GetChecked(PRBool aGetInitialValue) const
+{
+  return PR_FALSE;
+}
+
+void nsInput::SetChecked(PRBool aState, PRBool aSetInitialValue)
+{
+}
+
 
 //----------------------------------------------------------------------
 
@@ -254,7 +376,7 @@ nsresult nsInput::AggInputControl::QueryInterface(REFNSIID aIID, void** aInstanc
   return GET_OUTER()->QueryInterface(aIID, aInstancePtr);
 }
 
-PRBool nsInput::AggInputControl::GetName(nsString& aName)
+PRBool nsInput::AggInputControl::GetName(nsString& aName) const
 {
   return GET_OUTER()->GetName(aName);
 }
@@ -290,3 +412,19 @@ nsrefcnt nsInput::AggInputControl::GetRefCount() const
 {
   return GET_OUTER()->GetRefCount();
 }
+
+PRBool nsInput::AggInputControl::GetChecked(PRBool aGetInitialValue) const
+{
+  return GET_OUTER()->GetChecked(aGetInitialValue);
+}
+
+void nsInput::AggInputControl::SetChecked(PRBool aState, PRBool aSetInitialValue)
+{
+  GET_OUTER()->SetChecked(aState, aSetInitialValue);
+}
+
+void nsInput::AggInputControl::GetType(nsString& aName) const
+{
+  GET_OUTER()->GetType(aName);
+}
+

@@ -538,6 +538,7 @@ float nsString::ToFloat(PRInt32* aErrorCode) const
   if (*cp != 0) {
     *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
   }
+  *aErrorCode = NS_OK;
   return f;
 }
 
@@ -588,6 +589,7 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode) const {
   if (sign == '-') {
     rv = -rv;
   }
+  *aErrorCode = NS_OK;
   return rv;
 }
 

@@ -25,15 +25,14 @@ MODULE=raptor
 REQUIRES=xpcom raptor 
 
 CPPSRCS=nsForm.cpp nsInput.cpp nsInputButton.cpp nsInputCheckbox.cpp \
-    nsInputFile.cpp nsInputFrame.cpp nsInputHidden.cpp nsInputImage.cpp \
-    nsInputPassword.cpp nsInputRadio.cpp nsInputText.cpp 
+    nsInputFile.cpp nsInputFrame.cpp nsInputImage.cpp \
+    nsInputRadio.cpp nsInputText.cpp nsSelect.cpp
 
 CPP_OBJS=.\$(OBJDIR)\nsForm.obj .\$(OBJDIR)\nsInput.obj \
     .\$(OBJDIR)\nsInputButton.obj .\$(OBJDIR)\nsInputCheckbox.obj \
     .\$(OBJDIR)\nsInputFile.obj .\$(OBJDIR)\nsInputFrame.obj \
-    .\$(OBJDIR)\nsInputHidden.obj .\$(OBJDIR)\nsInputImage.obj \
-    .\$(OBJDIR)\nsInputPassword.obj .\$(OBJDIR)\nsInputRadio.obj \
-    .\$(OBJDIR)\nsInputText.obj 
+    .\$(OBJDIR)\nsInputImage.obj .\$(OBJDIR)\nsInputRadio.obj \
+    .\$(OBJDIR)\nsInputText.obj .\$(OBJDIR)\nsSelect.obj 
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
   -I..\..\base\src -I..\..\style\src \

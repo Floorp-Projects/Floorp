@@ -48,8 +48,7 @@ protected:
 
   virtual void GetType(nsString& aResult) const;
 
-  nsString* mValue;
-  PRBool mInitialChecked;               // initial checked flag value
+   PRBool mChecked;               // initial checked flag value
 };
 
 #endif

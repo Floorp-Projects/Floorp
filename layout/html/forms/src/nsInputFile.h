@@ -33,11 +33,6 @@ public:
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
-
 protected:
   virtual ~nsInputFile();
 

@@ -164,10 +164,18 @@ nsresult nsComboBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
     nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsComboBoxIID)) {
+    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
+    if (result == NS_NOINTERFACE) {
+      if (aIID.Equals(kInsComboBoxIID)) {
         *aInstancePtr = (void*) ((nsIComboBox*)this);
         AddRef();
         result = NS_OK;
+      }
+      else if (aIID.Equals(kInsListWidgetIID)) {
+        *aInstancePtr = (void*) ((nsIListWidget*)this);
+        AddRef();
+        result = NS_OK;
+      }
     }
 
     return result;

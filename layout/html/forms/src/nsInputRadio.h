@@ -22,10 +22,12 @@
 // this class defintion will be moved into nsInputRadio.cpp
 
 #include "nsInput.h"
+#include "nsVoidArray.h"
 class nsIAtom;
 class nsString;
 
-class nsInputRadio : public nsInput {
+class nsInputRadio : public nsInput 
+{
 public:
   nsInputRadio (nsIAtom* aTag, nsIFormManager* aManager);
 
@@ -33,10 +35,50 @@ public:
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+
+  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
+                                     nsHTMLValue& aResult) const;
+
+  static const nsString* kTYPE;
+
+  virtual PRBool GetChecked(PRBool aGetInitialValue) const;
+  virtual void SetChecked(PRBool aValue, PRBool aSetInitialValue);
+
+  virtual PRInt32 GetMaxNumValues() { return 1; }
+  
+  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                           nsString* aValues);
+
+  virtual void Reset();
+
 protected:
   virtual ~nsInputRadio();
 
   virtual void GetType(nsString& aResult) const;
+
+  PRBool mChecked;
+};
+
+class nsInputRadioGroup
+{
+public:
+  nsInputRadioGroup(nsString& aName);
+  virtual ~nsInputRadioGroup();
+
+  PRBool          AddRadio(nsIFormControl* aRadio);
+  PRInt32         GetRadioCount() const;
+  nsIFormControl* GetRadioAt(PRInt32 aIndex) const;
+  PRBool          RemoveRadio(nsIFormControl* aRadio);
+
+  nsIFormControl* GetCheckedRadio();
+  void            SetCheckedRadio(nsIFormControl* aRadio);
+  void            GetName(nsString& aNameResult) const;
+
+protected:
+  nsString        mName;
+  nsVoidArray     mRadios;
+  nsIFormControl* mCheckedRadio;
 };
 
 #endif

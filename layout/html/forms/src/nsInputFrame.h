@@ -19,12 +19,20 @@
 #ifndef nsInputFrame_h___
 #define nsInputFrame_h___
 
-#include "nsHTMLTagContent.h"
+#include "nsHTMLContainer.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
 #include "nsLeafFrame.h"
 
 class nsIView;
+class nsIPresContext;
+
+struct nsInputWidgetData {
+  DWORD arg1;
+  DWORD arg2;
+  DWORD arg3;
+  DWORD arg4;
+};
 
 /**
   * Enumeration of possible mouse states used to detect mouse clicks
@@ -34,6 +42,29 @@ enum nsMouseState {
   eMouseEnter,
   eMouseDown,
   eMouseUp
+};
+
+struct nsInputDimensionSpec
+{
+  nsIAtom* mColSizeAttr;
+  PRBool   mColSizeAttrInPixels;
+  nsIAtom* mColValueAttr;
+  PRInt32  mColDefaultSize;
+  PRBool   mColDefaultSizeInPixels;
+  nsIAtom* mRowSizeAttr;
+  PRInt32  mRowDefaultSize;
+
+  nsInputDimensionSpec(nsIAtom* aColSizeAttr, PRBool aColSizeAttrInPixels, 
+                       nsIAtom* aColValueAttr, PRInt32 aColDefaultSize,
+                       PRBool aColDefaultSizeInPixels,
+                       nsIAtom* aRowSizeAttr, PRInt32 aRowDefaultSize)
+                       : mColSizeAttr(aColSizeAttr), mColSizeAttrInPixels(aColSizeAttrInPixels),
+                         mColValueAttr(aColValueAttr), mColDefaultSize(aColDefaultSize),
+                         mColDefaultSizeInPixels(aColDefaultSizeInPixels),
+                         mRowSizeAttr(aRowSizeAttr), mRowDefaultSize(aRowDefaultSize)
+  {
+  }
+
 };
 
 /** 
@@ -53,6 +84,10 @@ public:
                PRInt32 aIndexInParent,
                nsIFrame* aParentFrame);
 
+  static PRInt32 CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
+                                const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 
+                                nsSize& aBounds, PRBool& aWidthExplicit, 
+                                PRBool& aHeightExplicit, PRInt32& aRowSize);
   // nsLeafFrame overrides
 
   /** 
@@ -62,6 +97,9 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
+
+  virtual PRBool IsHidden();
+
   /**
     * Draw this frame within the context of a presentation context and rendering context
     * @see nsIFrame::Paint
@@ -80,7 +118,7 @@ public:
                           nsSize*          aMaxElementSize,
                           ReflowStatus&    aStatus);
 
-  // New Behavior
+  // new behavior
 
   /**
     * Get the class id of the widget associated with this frame
@@ -103,30 +141,37 @@ public:
   virtual nsresult GetWidget(nsIView* aView, nsIWidget** aWidget);
 
   /**
-    * Perform opertations after the widget associated with this frame has been
-    * fully constructed.
-    */
-  virtual void InitializeWidget(nsIView *aView) = 0;  
-
-  /**
     * Respond to a mouse click (e.g. mouse enter, mouse down, mouse up)
     */
-  virtual void MouseClicked() {}
+  virtual void MouseClicked(nsIPresContext* aPresContext) {}
 
   /**
-    * Perform operations before the widget associated with this frame has been
-    * constructed.
-    * @param aPresContext the presentation context
-    * @param aBounds the bounds of this frame. It will be set by this method.
+    * Perform opertations after the widget associated with this frame has been
+    * created.
     */
-  virtual void PreInitializeWidget(nsIPresContext* aPresContext, 
-	                                 nsSize& aBounds); 
+  virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);  
+
+  /**
+    * Perform opertations before the widget associated with this frame has been
+    * created.
+    */
+  virtual nsInputWidgetData* GetWidgetInitData();  
+
+  static PRInt32 GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
+                             const nsString& aString, nsSize& aSize);
+  static PRInt32 GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
+                             PRInt32 aNumChars, nsSize& aSize);
 
 protected:
 
   virtual ~nsInputFrame();
 
   /**
+    * Return PR_TRUE if the bounds of this frame have been set
+    */
+  PRBool BoundsAreSet();
+
+ /**
     * Get the size that this frame would occupy without any constraints
     * @param aPresContext the presentation context
     * @param aDesiredSize the size desired by this frame, to be set by this method
@@ -135,13 +180,26 @@ protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               nsReflowMetrics& aDesiredSize,
                               const nsSize& aMaxSize);
-  /**
-    * Return PR_TRUE if the bounds of this frame have been set
+
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredLayoutSize,
+                              nsSize& aDesiredWidgetSize);
+
+  nsFont& GetFont(nsIPresContext* aPresContext);
+
+   /**
+    * Get the width and height of this control based on CSS 
+    * @param aPresContext the presentation context
+    * @param aMaxSize the maximum size that this frame can have
+    * @param aSize the size that this frame wants, set by this method. values of -1 
+    * for aSize.width or aSize.height indicate unset values.
     */
-  PRBool BoundsAreSet();
+  void GetStyleSize(nsIPresContext& aContext, const nsSize& aMaxSize, nsSize& aSize);
 
   nsSize       mCacheBounds;
   nsMouseState mLastMouseState;
 };
 
 #endif
+

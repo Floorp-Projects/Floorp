@@ -46,11 +46,13 @@ public:
 						const nsRect &aBounds,
 						nsIView *aParent,
 						const nsCID *aWindowIID = nsnull,
+            void *aWidgetInitData = nsnull,
 						nsNativeWindow aNative = nsnull,
 						PRInt32 aZIndex = 0,
 						const nsRect *aClipRect = nsnull,
 						float aOpacity = 1.0f,
 						nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
+
   virtual void Destroy();
   virtual nsIViewManager * GetViewManager();
   virtual nsIWidget * GetWidget();

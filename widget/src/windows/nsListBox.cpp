@@ -35,6 +35,14 @@ void nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
   mMultiSelect = aMultipleSelections;
 }
 
+void nsListBox::PreCreateWidget(void *aInitData)
+{
+  if (nsnull != aInitData) {
+    nsWidgetInitData* data = (nsWidgetInitData *) aInitData;
+    mMultiSelect = (0 == data->arg1) ? PR_FALSE : PR_TRUE;
+  }
+}
+
 //-------------------------------------------------------------------------
 //
 //  destructor
@@ -216,10 +224,18 @@ nsresult nsListBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
     nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsListBoxIID)) {
+    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
+    if (result == NS_NOINTERFACE) {
+      if (aIID.Equals(kInsListBoxIID)) {
         *aInstancePtr = (void*) ((nsIListBox*)this);
         AddRef();
         result = NS_OK;
+      }
+      else if (aIID.Equals(kInsListWidgetIID)) {
+        *aInstancePtr = (void*) ((nsIListWidget*)this);
+        AddRef();
+        result = NS_OK;
+      }
     }
 
     return result;

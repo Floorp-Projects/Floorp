@@ -20,6 +20,8 @@
 
 #include "nsISupports.h"
 class nsIFormControl;
+class nsIPresContext;
+class nsIFrame;
 
 // IID for the nsIFormManager interface
 #define NS_IFORMMANAGER_IID    \
@@ -37,6 +39,13 @@ public:
   // Event methods
 
   /**
+    * Respond to a radio button being checked. This form manager is responsible
+    * for radio group coordination.
+    * @param aRadio the radio button that was checked
+    */
+  virtual void OnRadioChecked(nsIFormControl& aRadio) = 0;
+
+  /**
     * Reset the values of all of this manager's controls back to their
     * initial values. This is in response to a reset button being pushed.
     */
@@ -52,8 +61,10 @@ public:
   /**
     * Submit the values of this manager's controls depending on its action,
     * method attributes. This in response to a submit button being clicked.
+    * @param aPresContext the presentation context
+    * @param aFrame the frame of the submit button 
     */
-  virtual void OnSubmit() = 0;
+  virtual void OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame) = 0;
 
   /**
     * This is tbd and is in repsonse to a tab key being entered in one
@@ -111,6 +122,13 @@ public:
   virtual void SetAttribute(const nsString& aName, const nsString& aValue) = 0;
 
   // misc methods
+
+  /**
+    * Initialize this form manager after all of the controls have been added
+    * This makes it possible to determine what the radio groups are.
+    * @param aReinit if PR_TRUE initialize even if Init has been called before.
+    */
+  virtual void Init(PRBool aReinit) = 0;
 
   /**
     * Get the number of references to this form manager by other objects.

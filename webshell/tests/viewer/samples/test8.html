@@ -2,36 +2,35 @@
 <title>Example 8</title>
 <body>
 
-<H1>Example 8: Simple Forms</H1>
+<H1>Example 8: Form Controls</H1>
 
-<form action=submit-url-goes-here method=get>
+<form action=foo method=get>
 
-A checkbox: <input type=checkbox name=check1 checked><BR>
+<BR>
+a text field
+<BR>
+<input type=text name=text value="some text">
+<BR>
+a text area
+<BR>
+<input type=textarea name=textarea rows=5 cols=20 value="text area">
+<BR>
+a checkbox: <input type=checkbox name=check1 checked><BR>
+<BR>
+<P> radio buttons</P>
+<BR>
+<input type=radio name=group1 checked>  radio1
+<input type=radio name=group1>  radio2
+<BR>
+select/option hack1
+<input type=select1>
+<BR>
+select/option hack2
+<input type=select2>
+<BR><BR>
+<input type=reset name=reset value="RESET"> 
+<input type=submit name=submit value="SUBMIT">
 
-Another checkbox: <input type=checkbox name=check2><BR>
-
-Yet another checkbox: <input type=checkbox name=check3 checked><BR>
-
-One last checkbox: <input type=checkbox name=check4><BR>
-
-<P>This is a simple form</P>
-<P>This is a simple form</P>
-<P>This is a simple form</P>
-<P>This is a simple form</P>
-<P>This is a simple form</P>
-<P>  </P>
-<P><input type=text name=myText value="enter some text">   enter some text</P>
-<P></P><P></P>
-<P><input type=checkbox name=checkbox checked></P>
-<P></P><P></P>
-<P><input type=reset name=myReset value="reset me"> "  " 
-<input type=submit name=submit value=submit>
-</P>
-<P>This is a simple form</P>
-<P>This is a simple form</P>
-<P>This is a simple form</P>
-<P>This is a simple form</P>
-<P>This is a simple form</P>
 </form>
 </body>
 </html>

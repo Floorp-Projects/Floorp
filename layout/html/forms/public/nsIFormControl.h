@@ -31,6 +31,11 @@ class nsIFormManager;
  **/
 class nsIFormControl : public nsISupports {
 public:
+
+  virtual void GetType(nsString& aType) const = 0;
+  virtual PRBool GetChecked(PRBool aGetInitialValue) const = 0;
+  virtual void SetChecked(PRBool aState, PRBool aSetInitialValue) = 0;
+
   /**
     * Get the form manager which manages this control.
     * @return the form manager
@@ -50,7 +55,7 @@ public:
     * @param aResult the nsString which will be set to the name (out parm)
     * @return PR_TRUE if there was a name, PR_FALSE otherwise 
     */
-  virtual PRBool GetName(nsString& aResult) = 0;
+  virtual PRBool GetName(nsString& aResult) const = 0;
 
   /**
     * Get the number of references to this control by other objects.

@@ -161,23 +161,6 @@ void nsRadioButton::GetLabel(nsString& aBuffer)
 
 //-------------------------------------------------------------------------
 //
-// Process all windows messages
-//
-//-------------------------------------------------------------------------
-PRBool nsRadioButton::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
-{            
-    *aRetValue = 0;
-
-    if (msg == WM_LBUTTONUP) {
-      SetState(PR_TRUE);
-      return PR_FALSE;
-    } else {
-      return nsWindow::ProcessMessage(msg, wParam, lParam, aRetValue);
-    }
-}
-
-//-------------------------------------------------------------------------
-//
 // paint message. Don't send the paint out
 //
 //-------------------------------------------------------------------------

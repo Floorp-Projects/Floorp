@@ -66,6 +66,8 @@ public:
    * @param aWindowIID IID for Widget type that this view
    *        should have associated with it. if nsull, then no
    *        width will be created for this view
+   * @param aWidgetInitData data used to initialize this view's widget before
+   *        its create is called.
    * @param aNative native window that will be used as parent of
    *        aWindowIID. if nsnull, then parent will be derived from
    *        parent view and it's ancestors
@@ -79,6 +81,7 @@ public:
 						const nsRect &aBounds,
 						nsIView *aParent,
 						const nsIID *aWindowIID = nsnull,
+            void *aWidgetInitData = nsnull,
 						nsNativeWindow aNative = nsnull,
 						PRInt32 aZIndex = 0,
 						const nsRect *aClipRect = nsnull,

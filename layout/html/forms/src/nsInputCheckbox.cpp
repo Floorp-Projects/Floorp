@@ -37,20 +37,21 @@ public:
                    PRInt32 aIndexInParent,
                    nsIFrame* aParentFrame);
 
-  virtual void PreInitializeWidget(nsIPresContext* aPresContext, 
-	                               nsSize& aBounds);
-
-  virtual void InitializeWidget(nsIView *aView);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
   virtual const nsIID GetCID();
 
   virtual const nsIID GetIID();
 
-  virtual void MouseClicked();
+  virtual void MouseClicked(nsIPresContext* aPresContext);
 
 protected:
   virtual ~nsInputCheckboxFrame();
   PRBool   mCacheState;
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredLayoutSize,
+                              nsSize& aDesiredWidgetSize);
 };
 
 nsInputCheckboxFrame::nsInputCheckboxFrame(nsIContent* aContent,
@@ -80,13 +81,15 @@ nsInputCheckboxFrame::GetCID()
   return kCheckboxCID;
 }
 
-void 
-nsInputCheckboxFrame::PreInitializeWidget(nsIPresContext* aPresContext, 
-                                          nsSize& aBounds)
+void
+nsInputCheckboxFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                     const nsSize& aMaxSize,
+                                     nsReflowMetrics& aDesiredLayoutSize,
+                                     nsSize& aDesiredWidgetSize)
 {
   nsInputCheckbox* content = (nsInputCheckbox *)mContent; // this must be an nsCheckbox 
 
-  // get the state
+  // get the intial state
   nsHTMLValue value; 
   nsContentAttr result = content->GetAttribute(nsHTMLAtoms::checked, value); 
   if (result != eContentAttr_NotThere) {
@@ -94,12 +97,14 @@ nsInputCheckboxFrame::PreInitializeWidget(nsIPresContext* aPresContext,
   }
 
   float p2t = aPresContext->GetPixelsToTwips();
-  aBounds.width  = (int)(13 * p2t);
-  aBounds.height = (int)(13 * p2t);
+  aDesiredLayoutSize.width  = (int)(13 * p2t);
+  aDesiredLayoutSize.height = (int)(13 * p2t);
+  aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
+  aDesiredWidgetSize.height = aDesiredLayoutSize.height;
 }
 
 void 
-nsInputCheckboxFrame::InitializeWidget(nsIView *aView)
+nsInputCheckboxFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
   nsICheckButton* checkbox;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&checkbox)) {
@@ -109,7 +114,7 @@ nsInputCheckboxFrame::InitializeWidget(nsIView *aView)
 }
 
 void 
-nsInputCheckboxFrame::MouseClicked() 
+nsInputCheckboxFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
   nsICheckButton* checkbox;
   nsIView* view;
@@ -129,13 +134,11 @@ nsInputCheckboxFrame::MouseClicked()
 nsInputCheckbox::nsInputCheckbox(nsIAtom* aTag, nsIFormManager* aManager)
   : nsInput(aTag, aManager)
 {
+  mChecked = PR_FALSE;
 }
 
 nsInputCheckbox::~nsInputCheckbox()
 {
-  if (nsnull != mValue) {
-    delete mValue;
-  }
 }
 
 
@@ -174,7 +177,7 @@ nsInputCheckbox::Reset()
 {
   nsICheckButton* checkbox = (nsICheckButton *)GetWidget();
   if (nsnull != checkbox) {
-    checkbox->SetState(mInitialChecked);
+    checkbox->SetState(mChecked);
   }
 }  
 
@@ -196,14 +199,7 @@ void nsInputCheckbox::SetAttribute(nsIAtom* aAttribute,
                                    const nsString& aValue)
 {
   if (aAttribute == nsHTMLAtoms::checked) {
-    mInitialChecked = PR_TRUE;
-  }
-  else if (aAttribute == nsHTMLAtoms::value) {
-    if (nsnull == mValue) {
-      mValue = new nsString(aValue);
-    } else {
-      *mValue = aValue;
-    }
+    mChecked = PR_TRUE;
   }
   else {
     nsInput::SetAttribute(aAttribute, aValue);
@@ -213,26 +209,16 @@ void nsInputCheckbox::SetAttribute(nsIAtom* aAttribute,
 nsContentAttr nsInputCheckbox::GetAttribute(nsIAtom* aAttribute,
                                             nsHTMLValue& aResult) const
 {
-  nsContentAttr ca = eContentAttr_NotThere;
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::checked) {
-    if (mInitialChecked) {
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::value) {
-    if (nsnull != mValue) {
-      aResult.Set(*mValue);
-      ca = eContentAttr_HasValue;
-    }
+    return GetCacheAttribute(mChecked, aResult);
   }
   else {
-    ca = nsInput::GetAttribute(aAttribute, aResult);
+    return nsInput::GetAttribute(aAttribute, aResult);
   }
-  return ca;
 }
 
-NS_HTML nsresult
+nsresult
 NS_NewHTMLInputCheckbox(nsIHTMLContent** aInstancePtrResult,
                         nsIAtom* aTag, nsIFormManager* aManager)
 {

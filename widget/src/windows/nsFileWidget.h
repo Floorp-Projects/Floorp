@@ -46,7 +46,8 @@ class nsFileWidget : public nsIFileWidget, public nsObject
                                     nsString& aTitle,
                                     nsMode aMode,
                                     nsIDeviceContext *aContext = nsnull,
-                                    nsIToolkit *aToolkit = nsnull);
+                                    nsIToolkit *aToolkit = nsnull,
+                                    void *aInitData = nsnull);
 
     // nsIFileWidget part
     virtual PRBool          Show();
