@@ -195,6 +195,10 @@ SOURCE=..\jsclasses.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\jsmath.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\jstypes.h
 # End Source File
 # Begin Source File

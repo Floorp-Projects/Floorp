@@ -41,11 +41,13 @@ namespace JSMathClass {
 
     using JSTypes::JSObject;
     using JSTypes::JSString;
+    using JSTypes::JSScope;
 
     class JSMath : public JSObject {
+    private:
+        JSMath()    { }
     public:
-        JSMath();
-
+        static void initMathObject(JSScope *g);
     };
     
 

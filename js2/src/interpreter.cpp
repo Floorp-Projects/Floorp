@@ -500,13 +500,17 @@ void Context::initContext()
     // set up the correct [[Class]] for the global object (matching SpiderMonkey)
     mGlobal->setClass(new JSString("global"));
 
+
     // add (XXX some) of the global object properties
     mGlobal->setProperty(widenCString("NaN"), kNaNValue);
     mGlobal->setProperty(widenCString("undefined"), kUndefinedValue);
 
+    
     // 'Object', 'Date', 'RegExp', 'Array' etc are all (constructor) properties of the global object
-
-    mGlobal->setProperty(widenCString("Math"), JSValue(new JSMath()));
+    JSObject::initObjectObject(mGlobal);
+    
+    // the 'Math' object just has some useful properties 
+    JSMath::initMathObject(mGlobal);
 
 
     // This initializes the state of the binary operator overload mechanism.
@@ -712,7 +716,10 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     NewObject* no = static_cast<NewObject*>(instruction);
                     JSObject *obj = new JSObject();
-                    (*registers)[dst(no).first] = new JSObject();
+                    if (src1(no).first != NotARegister)
+                        (*registers)[dst(no).first] = new JSObject((*registers)[src1(no).first]);
+                    else
+                        (*registers)[dst(no).first] = new JSObject();
                 }
                 break;
             case NEW_CLASS:

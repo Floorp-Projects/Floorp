@@ -235,6 +235,7 @@ static void readEvalPrint(FILE *in, World &world)
                 // list of zero or more statements
                 ICodeModule* icm = cx.genCode(parsedStatements, ConsoleName);
                 if (icm) {
+stdOut << *icm;
                     JSValue result = cx.interpret(icm, JSValues());
                     stdOut << "result = " << result << "\n";
                     delete icm;

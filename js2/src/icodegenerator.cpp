@@ -211,10 +211,10 @@ TypedRegister ICodeGenerator::loadBoolean(bool value)
     return dest;
 }
 
-TypedRegister ICodeGenerator::newObject(RegisterList * /*args*/)
+TypedRegister ICodeGenerator::newObject(TypedRegister constructor)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
-    NewObject *instr = new NewObject(dest);
+    NewObject *instr = new NewObject(dest, constructor);
     iCode->push_back(instr);
     return dest;
 }
@@ -1103,11 +1103,19 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         call(getStatic(clazz, className), ret, &args);
                     }
                     else
-                        NOT_REACHED("New <name>, where <name> is not a known class");   // XXX Runtime error.
+                        NOT_REACHED("new <name>, where <name> is not a new-able type (whatever that means)");   // XXX Runtime error.
                 }
+                else
+                    if (value.isFunction()) {
+                        TypedRegister f = loadName(className, value.type);
+                        ret = newObject(f);
+                        call(f, ret, &args);
+                    }
+                    else
+                        NOT_REACHED("new <name>, where <name> is not a function");   // XXX Runtime error.
             }                
             else
-                ret = newObject(&args);  // XXX more ?
+                ret = newObject(TypedRegister(NotARegister, &Any_Type));  // XXX more ?
         }
         break;
     case ExprNode::Delete:
@@ -1449,7 +1457,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
 
     case ExprNode::objectLiteral:
         {
-            ret = newObject(NULL);
+            ret = newObject(TypedRegister(NotARegister, &Any_Type));
             PairListExprNode *plen = static_cast<PairListExprNode *>(p);
             ExprPairList *e = plen->pairs;
             while (e) {

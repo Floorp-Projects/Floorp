@@ -41,7 +41,7 @@
         NEW_ARRAY, /* dest */
         NEW_CLASS, /* dest, class */
         NEW_FUNCTION, /* dest, ICodeModule */
-        NEW_OBJECT, /* dest */
+        NEW_OBJECT, /* dest, constructor */
         NOP, /* do nothing and like it */
         NOT, /* dest, source */
         OR, /* dest, source1, source2 */
@@ -582,18 +582,18 @@
         }
     };
 
-    class NewObject : public Instruction_1<TypedRegister> {
+    class NewObject : public Instruction_2<TypedRegister, TypedRegister> {
     public:
-        /* dest */
-        NewObject (TypedRegister aOp1) :
-            Instruction_1<TypedRegister>
-            (NEW_OBJECT, aOp1) {};
+        /* dest, constructor */
+        NewObject (TypedRegister aOp1, TypedRegister aOp2) :
+            Instruction_2<TypedRegister, TypedRegister>
+            (NEW_OBJECT, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_OBJECT] << "\t" << mOp1;
+            f << opcodeNames[NEW_OBJECT] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << mOp1.first;
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };

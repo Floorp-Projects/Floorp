@@ -186,18 +186,23 @@ struct MathConstantEntry {
     { "SQRT1_2",     M_SQRT1_2 }
 };
 
-JSMath::JSMath()
-{ 
-    setClass(new JSString("Math"));
+// There is no constructor for Math, we simply initialize
+//  the properties of the Math object
+void JSMath::initMathObject(JSScope *g)
+{
+    int i;
+    JSMath *m = new JSMath();
+    m->setClass(new JSString("Math"));
 
-    for (int i = 0; i < sizeof(MathFunctions) / sizeof(MathFunctionEntry); i++)
-        setProperty(widenCString(MathFunctions[i].name), JSValue(new JSNativeFunction(MathFunctions[i].fn) ) );
+    for (i = 0; i < sizeof(MathFunctions) / sizeof(MathFunctionEntry); i++)
+        m->setProperty(widenCString(MathFunctions[i].name), JSValue(new JSNativeFunction(MathFunctions[i].fn) ) );
 
-    for (int i = 0; i < sizeof(MathConstants) / sizeof(MathConstantEntry); i++)
-        setProperty(widenCString(MathConstants[i].name), JSValue(MathConstants[i].value) );
+    for (i = 0; i < sizeof(MathConstants) / sizeof(MathConstantEntry); i++)
+        m->setProperty(widenCString(MathConstants[i].name), JSValue(MathConstants[i].value) );
 
+    g->setProperty(widenCString("Math"), JSValue(m));
+    
 }
-
 
 } /* JSMathClass */
 } /* JavaScript */

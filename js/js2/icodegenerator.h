@@ -254,7 +254,7 @@ namespace ICG {
         TypedRegister loadString(const String &value);
         TypedRegister loadString(const StringAtom &name);
                 
-        TypedRegister newObject(RegisterList *args);
+        TypedRegister newObject(TypedRegister constructor);
         TypedRegister newArray();
         TypedRegister newFunction(ICodeModule *icm);
         TypedRegister newClass(JSClass *clazz);

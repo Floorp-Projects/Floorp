@@ -60,6 +60,7 @@ namespace JSTypes {
     class JSObject;
     class JSArray;
     class JSFunction;
+    class JSScope;
     class JSString;
     class JSType;
     class Context;
@@ -224,12 +225,17 @@ namespace JSTypes {
         JSType* mType;
         JSString* mClass;       // this is the internal [[Class]] property
 
-    public:
-        JSObject() : mPrototype(objectPrototypeObject), mType(&Any_Type), mClass(ObjectString) {}
-    
-        static JSObject *objectPrototypeObject;
         static JSObject *initJSObject();
-        static JSString *ObjectString;
+        static String ObjectString;
+        static JSObject *objectPrototypeObject;
+
+        void init(JSObject* prototype);
+
+    public:
+        JSObject()                      { init(objectPrototypeObject); }
+        JSObject(JSValue &constructor)  { init(constructor.object->getProperty(widenCString("prototype")).object); }
+    
+        static void initObjectObject(JSScope *g);
 
         bool hasProperty(const String& name)
         {
@@ -551,6 +557,9 @@ namespace JSTypes {
     };
 
     
+    inline void JSObject::init(JSObject* prototype) { mPrototype = prototype; mType = &Any_Type; mClass = new JSString(ObjectString); }
+
+
 } /* namespace JSTypes */    
 } /* namespace JavaScript */
 
