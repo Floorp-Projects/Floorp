@@ -82,7 +82,7 @@
         accesskey="&autoURLs.accesskey;"/></caption>
     
     <hbox flex="1">
-      <listbox id="czInitialURLs" flex="1" prefdefval="irc:///" 
+      <listbox id="czInitialURLs" flex="1" prefdefval="irc://" 
           style="width: 0px; height: 0px;" 
           prefstring="extensions.irc.initialURLs" preftype="string" 
           prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue" 

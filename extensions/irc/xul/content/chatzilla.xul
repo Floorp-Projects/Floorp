@@ -46,7 +46,7 @@
   <vbox id="outer-box" flex="1">
     <vbox id="upper-box" flex="1">
       <hbox id="tabpanels-contents-box" flex="1">
-        <vbox id="user-list-box" width="20%" persist="collapsed width">
+        <vbox id="user-list-box" width="125" persist="collapsed width">
  
           <tree id="user-list" container="true" datasources="rdf:null" flex="1"
             containment="http://home.netscape.com/NC-irc#chanuser"

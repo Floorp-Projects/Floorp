@@ -34,7 +34,7 @@
  *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
-const __cz_version   = "0.9.52";
+const __cz_version   = "0.9.52A";
 const __cz_condition = "green";
 
 var warn;
@@ -643,7 +643,7 @@ function mircChangeColor (colorInfo, containerTag, data)
 
     if (fgColor == 1)
         delete data.currFgColor;
-    if (arrayHasElementAt(ary, 4))
+    if (arrayHasElementAt(ary, 3))
     {
         var bgColor = ary[3];
         if (bgColor > 16)
@@ -1169,7 +1169,7 @@ function parseIRCURL (url)
 
     /* split url into <host>/<everything-else> pieces */
     var ary = url.match (/^irc:\/\/([^\/\s]+)?(\/.*)?\s*$/i);
-    if (!ary)
+    if (!ary || !ary[1])
     {
         dd ("parseIRCURL: initial split failed");
         return null;
