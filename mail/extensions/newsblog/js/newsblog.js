@@ -42,6 +42,14 @@ var nsNewsBlogFeedDownloader =
     if (!gExternalScriptsLoaded)
       loadScripts();
 
+    // we don't yet support thee ability to check for new articles while we are in the middle of 
+    // subscribing to a feed. For now, abort the check for new feeds. 
+    if (progressNotifier.mSubscribeMode)
+    {
+      debug('Aborting RSS New Mail Check. Feed subscription in progress\n');
+      return;
+    }
+
     // aUrl may be a delimited list of feeds for a particular folder. We need to kick off a download
     // for each feed.
 
@@ -71,6 +79,16 @@ var nsNewsBlogFeedDownloader =
   {
     if (!gExternalScriptsLoaded)
       loadScripts();
+
+   // we don't support the ability to subscribe to several feeds at once yet...
+   // for now, abort the subscription if we are already in the middle of subscribing to a feed
+   // via drag and drop.
+   if (gNumPendingFeedDownloads)
+   {
+     debug('Aborting RSS subscription. Feed downloads already in progress\n');
+     return;
+   }
+
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
               .getService(Components.interfaces.nsIRDFService);
     
