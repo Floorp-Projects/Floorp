@@ -506,47 +506,60 @@ BodyFixupRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext
 NS_IMETHODIMP
 BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  // XXX do any other body processing here
+  NS_ASSERTION(aContext && aPresContext, "null arguments (aContext and aPresContext) not allowed");
+  if (!(aContext && aPresContext)) {
+    return NS_ERROR_FAILURE;
+  }
 
+  // get the context data for the BODY, HTML element, and CANVAS
   nsCOMPtr<nsIStyleContext> parentContext;
   nsCOMPtr<nsIStyleContext> canvasContext;
   parentContext = getter_AddRefs(aContext->GetParent());
-  canvasContext = getter_AddRefs(parentContext->GetParent());
+  if (parentContext){
+    canvasContext = getter_AddRefs(parentContext->GetParent());
+  }
+  if (!(parentContext && canvasContext && aContext)) {
+    return NS_ERROR_FAILURE;
+  }
+  // get the context data for the background information
   PRBool bFixedBackground = PR_FALSE;
-  const nsStyleColor* parentStyleColor;
-  const nsStyleColor* styleColor;
-  styleColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
-  parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
+  nsStyleColor* canvasStyleColor;
+  nsStyleColor* htmlStyleColor;
+  nsStyleColor* bodyStyleColor;
+  bodyStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+  htmlStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
+  canvasStyleColor = (nsStyleColor*)canvasContext->GetMutableStyleData(eStyleStruct_Color);
+  nsStyleColor* styleColor = bodyStyleColor; // default to BODY
 
-  // Use the CSS precedence rules for dealing with BODY background: if the value
+  NS_ASSERTION(bodyStyleColor && htmlStyleColor && canvasStyleColor, "null context data");
+  if (!(bodyStyleColor && htmlStyleColor && canvasStyleColor)){
+    return NS_ERROR_FAILURE;
+  }
+
+  // Use the CSS precedence rules for dealing with background: if the value
   // of the 'background' property for the HTML element is different from
   // 'transparent' then use it, else use the value of the 'background' property
   // for the BODY element
 
-  // See if the BODY has a background specified
+  // See if the BODY or HTML has a non-transparent background 
   // or if the HTML element was previously propagated from its child (the BODY)
   //
-  // XXX - I think we should be doing this *always*, to cover the cases where the 
-  // XXX - background is going to and from transparent... work is needed to handle 
-  // XXX - different settings on the HTML and BODY simoultaneously, however.
-  if ((!styleColor->BackgroundIsTransparent()) || 
-      (parentStyleColor->BackgroundIsTransparent() || 
-       (NS_STYLE_BG_PROPAGATED_FROM_CHILD == (parentStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD))) ) {
+  // Also, check if the canvas has a non-transparent background in case it is being
+  // cleared via the DOM
+  if ((!bodyStyleColor->BackgroundIsTransparent()) || 
+      (!htmlStyleColor->BackgroundIsTransparent()) || 
+      (!canvasStyleColor->BackgroundIsTransparent()) ||
+      (NS_STYLE_BG_PROPAGATED_FROM_CHILD == (htmlStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD)) ) {
 
-    // We have three frames that have to get along here: 
-    //  - the BODY is the one the bg values are set on
-    //  - the HTML element is the body's parent
-    //  - the Canvas is the HTML element's frame's parent, and the frame that actually paints the bg
-    // So, we bubble the bg values up from BODY -> HTML -> Canvas, setting the propagation flags as we go
+    // if HTML background is not transparent then we use its background for the canvas,
+    // otherwise we use the BODY's background
+    if (!(htmlStyleColor->BackgroundIsTransparent())) {
+      styleColor = htmlStyleColor;
+    } else {
+      styleColor = bodyStyleColor;
+    }
 
-    nsStyleColor* canvasStyleColor;
-    nsStyleColor* htmlStyleColor;
-    nsStyleColor* bodyStyleColor;
-    bodyStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-    htmlStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
-    canvasStyleColor = (nsStyleColor*)canvasContext->GetMutableStyleData(eStyleStruct_Color);
-
-    // set the canvas bg values from the body
+    // set the canvas bg values
     canvasStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
     canvasStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
     canvasStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
@@ -557,19 +570,15 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
     bFixedBackground = 
       canvasStyleColor->mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED ? PR_TRUE : PR_FALSE;
 
-    // Reset the BODY's and HTML's background to transparent and propagated-to-parent
-    bodyStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-    bodyStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-                                       NS_STYLE_BG_IMAGE_NONE |
-                                       NS_STYLE_BG_PROPAGATED_TO_PARENT;
-    bodyStyleColor->mBackgroundImage.SetLength(0);
-    bodyStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-
-    htmlStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-                                       NS_STYLE_BG_IMAGE_NONE |
-                                       NS_STYLE_BG_PROPAGATED_TO_PARENT;
-    htmlStyleColor->mBackgroundImage.SetLength(0);
-    htmlStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+    // reset the background values for the context that was propogated
+    styleColor->mBackgroundImage.SetLength(0);
+    styleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+    styleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+                                   NS_STYLE_BG_IMAGE_NONE |
+                                   NS_STYLE_BG_PROPAGATED_TO_PARENT;  
+                                    // NOTE: if this was the BODY then 
+                                    // this flag is somewhat erroneous 
+                                    // as it was propogated to the GRANDPARENT
   }
 
   nsCOMPtr<nsIPresShell> presShell;
@@ -592,10 +601,9 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
         NS_RELEASE(htmlContainer);
       }
     }
+    // take care of some special requirements for fixed backgrounds
+    HandleFixedBackground(aPresContext, presShell, bFixedBackground);
   }
-
-  HandleFixedBackground(aPresContext, presShell, bFixedBackground);
-
   return NS_OK;
 }
 
