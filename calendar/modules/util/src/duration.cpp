@@ -30,10 +30,10 @@
 #include "jutility.h"
 
 // turn this flag on to allow for parsing of year and month
-#define JULIAN_DURATION_PARSING_YEAR_AND_MONTH 1
+#define NSCALDURATION_PARSING_YEAR_AND_MONTH 1
 //---------------------------------------------------------------------
 
-void Julian_Duration::setInvalidDuration()
+void nsCalDuration::setInvalidDuration()
 {
     m_iYear = -1;
     m_iMonth = -1;
@@ -46,7 +46,7 @@ void Julian_Duration::setInvalidDuration()
 
 //---------------------------------------------------------------------
 
-void Julian_Duration::parse(UnicodeString & us)
+void nsCalDuration::parse(UnicodeString & us)
 {
     // NOTE: use a better algorithm like a regexp scanf or something.
 
@@ -56,7 +56,7 @@ void Julian_Duration::parse(UnicodeString & us)
     t_bool bErrorInParse = FALSE;
     t_int32 startOfParse = 0, indexOfT = 0, endOfParse = 0;
     t_int32 day = 0, hour = 0, minute = 0, second = 0, week = 0;
-#if JULIAN_DURATION_PARSING_YEAR_AND_MONTH
+#if NSCALDURATION_PARSING_YEAR_AND_MONTH
     t_int32 year = 0, month = 0;
     t_int32 indexOfY = 0, indexOfMo = 0;
 #endif
@@ -98,14 +98,14 @@ void Julian_Duration::parse(UnicodeString & us)
             startOfParse = 0;
             endOfParse = sSection.size();
 
-#if JULIAN_DURATION_PARSING_YEAR_AND_MONTH
+#if NSCALDURATION_PARSING_YEAR_AND_MONTH
             indexOfY = sSection.indexOf('Y');
             if (indexOfY >= 0)
             {
                 sVal = sSection.extractBetween(startOfParse, indexOfY, sVal);
                 cc = sVal.toCString("");
                 PR_ASSERT(cc != 0);
-                year = JulianUtility::atot_int32(cc, 
+                year = nsCalUtility::atot_int32(cc, 
                     bErrorInParse, sVal.size());
                 delete [] cc;
                 startOfParse = indexOfY + 1;
@@ -116,7 +116,7 @@ void Julian_Duration::parse(UnicodeString & us)
                 sVal = sSection.extractBetween(startOfParse, indexOfMo, sVal);
                 cc = sVal.toCString("");
                 PR_ASSERT(cc != 0);
-                month = JulianUtility::atot_int32(cc, 
+                month = nsCalUtility::atot_int32(cc, 
                     bErrorInParse, sVal.size());
                 delete [] cc;
                 startOfParse = indexOfMo + 1;
@@ -128,12 +128,12 @@ void Julian_Duration::parse(UnicodeString & us)
                 sVal = sSection.extractBetween(startOfParse, indexOfD, sVal);
                 cc = sVal.toCString("");
                 PR_ASSERT(cc != 0);
-                day = JulianUtility::atot_int32(cc, 
+                day = nsCalUtility::atot_int32(cc, 
                     bErrorInParse, sVal.size());
                 delete [] cc;
                 startOfParse = indexOfD + 1;
             }
-#if JULIAN_DURATION_PARSING_YEAR_AND_MONTH
+#if NSCALDURATION_PARSING_YEAR_AND_MONTH
             if (sSection.size() >= 1 && indexOfY == -1 &&             
                 indexOfMo == -1 && indexOfD == -1)
             {
@@ -173,7 +173,7 @@ void Julian_Duration::parse(UnicodeString & us)
                     sVal = sSection.extractBetween(startOfParse, indexOfH, sVal);
                     cc = sVal.toCString("");
                     PR_ASSERT(cc != 0);
-                    hour = JulianUtility::atot_int32(cc,
+                    hour = nsCalUtility::atot_int32(cc,
                         bErrorInParse, sVal.size());
                     delete [] cc;
                     startOfParse = indexOfH + 1;
@@ -184,7 +184,7 @@ void Julian_Duration::parse(UnicodeString & us)
                     sVal = sSection.extractBetween(startOfParse, indexOfMi, sVal);
                     cc = sVal.toCString("");
                     PR_ASSERT(cc != 0);
-                    minute = JulianUtility::atot_int32(cc,
+                    minute = nsCalUtility::atot_int32(cc,
                         bErrorInParse, sVal.size());
                     delete [] cc;
                     startOfParse = indexOfMi + 1;
@@ -195,7 +195,7 @@ void Julian_Duration::parse(UnicodeString & us)
                     sVal = sSection.extractBetween(startOfParse, indexOfS, sVal);
                     cc = sVal.toCString("");
                     PR_ASSERT(cc != 0);
-                    second = JulianUtility::atot_int32(cc,
+                    second = nsCalUtility::atot_int32(cc,
                         bErrorInParse, sVal.size());
                     delete [] cc;
                     startOfParse = indexOfS + 1;                
@@ -228,13 +228,13 @@ void Julian_Duration::parse(UnicodeString & us)
             sVal = us.extractBetween(1, us.size() - 1, sVal);
             cc = sVal.toCString("");
                     PR_ASSERT(cc != 0);
-            week = JulianUtility::atot_int32(cc,
+            week = nsCalUtility::atot_int32(cc,
                 bErrorInParse, sVal.size());
             delete [] cc;           
         }
    } 
    //if (FALSE) TRACE("parse: %d W, %d Y %d M %d D T %d H %d M %d S\r\n", week, year, month, day, hour, minute, second);
-#if JULIAN_DURATION_PARSING_YEAR_AND_MONTH
+#if NSCALDURATION_PARSING_YEAR_AND_MONTH
    if (year < 0 || month < 0 || day < 0 ||
        hour < 0 || minute < 0 || second < 0 || week < 0)
        bErrorInParse = TRUE;
@@ -251,7 +251,7 @@ void Julian_Duration::parse(UnicodeString & us)
    }
    else
    {
-#if JULIAN_DURATION_PARSING_YEAR_AND_MONTH
+#if NSCALDURATION_PARSING_YEAR_AND_MONTH
 
         m_iYear = year;
         m_iMonth = month;
@@ -276,7 +276,7 @@ void Julian_Duration::parse(UnicodeString & us)
 
 //---------------------------------------------------------------------
 
-Julian_Duration::Julian_Duration()
+nsCalDuration::nsCalDuration()
 :
     m_iYear(0),m_iMonth(0),m_iDay(0),m_iHour(0),
     m_iMinute(0),m_iSecond(0), m_iWeek(0),
@@ -286,7 +286,7 @@ Julian_Duration::Julian_Duration()
 
 //---------------------------------------------------------------------
 
-Julian_Duration::Julian_Duration(UnicodeString & us)
+nsCalDuration::nsCalDuration(UnicodeString & us)
 :
     m_iYear(0),m_iMonth(0),m_iDay(0),m_iHour(0),
     m_iMinute(0),m_iSecond(0), m_iWeek(0),
@@ -297,7 +297,7 @@ Julian_Duration::Julian_Duration(UnicodeString & us)
 
 //---------------------------------------------------------------------
 
-Julian_Duration::Julian_Duration(t_int32 type, t_int32 value)
+nsCalDuration::nsCalDuration(t_int32 type, t_int32 value)
 :
     m_iYear(0),m_iMonth(0),m_iDay(0),m_iHour(0),
     m_iMinute(0),m_iSecond(0), m_iWeek(0),
@@ -305,22 +305,22 @@ Julian_Duration::Julian_Duration(t_int32 type, t_int32 value)
 {
     switch (type)
     {
-    case JulianUtility::RT_MINUTELY:
+    case nsCalUtility::RT_MINUTELY:
         m_iMinute = value;
         break;
-    case JulianUtility::RT_HOURLY:
+    case nsCalUtility::RT_HOURLY:
         m_iHour = value;
         break;
-    case JulianUtility::RT_DAILY:
+    case nsCalUtility::RT_DAILY:
         m_iDay = value;
         break;
-    case JulianUtility::RT_WEEKLY:
+    case nsCalUtility::RT_WEEKLY:
         m_iWeek = value;
         break;
-    case JulianUtility::RT_MONTHLY:
+    case nsCalUtility::RT_MONTHLY:
         m_iMonth = value;
         break;
-    case JulianUtility::RT_YEARLY:
+    case nsCalUtility::RT_YEARLY:
         m_iYear = value;
         break;
     default:
@@ -330,7 +330,7 @@ Julian_Duration::Julian_Duration(t_int32 type, t_int32 value)
 
 //---------------------------------------------------------------------
 
-Julian_Duration::Julian_Duration(Julian_Duration & d)
+nsCalDuration::nsCalDuration(nsCalDuration & d)
 :
     m_iYear(0),m_iMonth(0),m_iDay(0),m_iHour(0),
     m_iMinute(0),m_iSecond(0), m_iWeek(0), 
@@ -360,7 +360,7 @@ Julian_Duration::Julian_Duration(Julian_Duration & d)
 }
 //---------------------------------------------------------------------
 
-Julian_Duration::Julian_Duration(t_int32 year, t_int32 month, t_int32 day, 
+nsCalDuration::nsCalDuration(t_int32 year, t_int32 month, t_int32 day, 
                    t_int32 hour, t_int32 min, t_int32 sec, 
                    t_int32 week, t_bool bNegativeDuration)   
 {
@@ -382,7 +382,7 @@ Julian_Duration::Julian_Duration(t_int32 year, t_int32 month, t_int32 day,
 
 //---------------------------------------------------------------------
 
-Julian_Duration::~Julian_Duration() 
+nsCalDuration::~nsCalDuration() 
 {
 }
 
@@ -391,7 +391,7 @@ Julian_Duration::~Julian_Duration()
 ///////////////////////////////////
 // GETTERS AND SETTERS
 ///////////////////////////////////
-void Julian_Duration::set(t_int32 year, t_int32 month, t_int32 day, 
+void nsCalDuration::set(t_int32 year, t_int32 month, t_int32 day, 
                     t_int32 hour, t_int32 min, t_int32 sec, t_bool
                     bNegativeDuration)
 {
@@ -405,7 +405,7 @@ void Julian_Duration::set(t_int32 year, t_int32 month, t_int32 day,
     m_iWeek = 0;
 }
 
-void Julian_Duration::set(t_int32 week, t_bool bNegativeDuration)
+void nsCalDuration::set(t_int32 week, t_bool bNegativeDuration)
 {
     m_iWeek = week;
     m_NegativeDuration = bNegativeDuration;
@@ -417,49 +417,49 @@ void Julian_Duration::set(t_int32 week, t_bool bNegativeDuration)
     m_iSecond = 0;
 }
 
-t_int32 Julian_Duration::getYear() const
+t_int32 nsCalDuration::getYear() const
 {
     if (m_NegativeDuration)
         return (0 - m_iYear);
     return m_iYear;
 }
 
-t_int32 Julian_Duration::getMonth() const
+t_int32 nsCalDuration::getMonth() const
 {
     if (m_NegativeDuration)
         return (0 - m_iMonth);
     return m_iMonth;
 }
 
-t_int32 Julian_Duration::getDay() const
+t_int32 nsCalDuration::getDay() const
 {
     if (m_NegativeDuration)
         return (0 - m_iDay);
     return m_iDay;
 }
 
-t_int32 Julian_Duration::getHour() const
+t_int32 nsCalDuration::getHour() const
 {
     if (m_NegativeDuration)
         return (0 - m_iHour);
     return m_iHour;
 }
 
-t_int32 Julian_Duration::getMinute() const
+t_int32 nsCalDuration::getMinute() const
 {
     if (m_NegativeDuration)
         return (0 - m_iMinute);
     return m_iMinute;
 }
 
-t_int32 Julian_Duration::getSecond() const
+t_int32 nsCalDuration::getSecond() const
 {
     if (m_NegativeDuration)
         return (0 - m_iSecond);
     return m_iSecond;
 }
 
-t_int32 Julian_Duration::getWeek() const
+t_int32 nsCalDuration::getWeek() const
 {
     if (m_NegativeDuration)
         return (0 - m_iWeek);
@@ -474,7 +474,7 @@ t_int32 Julian_Duration::getWeek() const
 
 //---------------------------------------------------------------------
 
-void Julian_Duration::setDurationString(UnicodeString & s)
+void nsCalDuration::setDurationString(UnicodeString & s)
 {
     parse(s);
 }
@@ -482,7 +482,7 @@ void Julian_Duration::setDurationString(UnicodeString & s)
 //---------------------------------------------------------------------
 
 // TODO - will work if only normalize works
-t_int32 Julian_Duration::compareTo(const Julian_Duration & d)
+t_int32 nsCalDuration::compareTo(const nsCalDuration & d)
 {
     normalize();
 
@@ -505,7 +505,7 @@ t_int32 Julian_Duration::compareTo(const Julian_Duration & d)
 
 //---------------------------------------------------------------------
 
-void Julian_Duration::normalize()
+void nsCalDuration::normalize()
 {
     // TODO: RISKY, assumes 30 days in a month, 12 months in a year
     t_int32 temp1 = 0, temp2 = 0, temp3 = 0, temp4 = 0, temp5 = 0;
@@ -539,7 +539,7 @@ void Julian_Duration::normalize()
 
 //---------------------------------------------------------------------
 
-void Julian_Duration::unnormalize()
+void nsCalDuration::unnormalize()
 {
     // TODO: watch out for overflow
     if (m_iYear > 0)
@@ -557,7 +557,7 @@ void Julian_Duration::unnormalize()
 //---------------------------------------------------------------------
 
 t_bool
-Julian_Duration::isZeroLength()
+nsCalDuration::isZeroLength()
 {
     if (m_iYear <= 0 && m_iMonth <= 0 && m_iDay <= 0 && 
         m_iHour <= 0 && m_iMinute <= 0 && m_iSecond <= 0 && 
@@ -569,7 +569,7 @@ Julian_Duration::isZeroLength()
 
 //---------------------------------------------------------------------
 
-UnicodeString Julian_Duration::toString()
+UnicodeString nsCalDuration::toString()
 {
     char sBuf[100];
     char sBuf2[100];
@@ -602,7 +602,7 @@ UnicodeString Julian_Duration::toString()
 
 //---------------------------------------------------------------------
 
-UnicodeString Julian_Duration::toICALString()
+UnicodeString nsCalDuration::toICALString()
 {
     //if (FALSE) TRACE("toString: %d W, %d Y %d M %d D T %d H %d M %d S\r\n", m_iYear, m_iMonth, m_iDay, m_iHour, m_im_iMinute, m_iSecond);
     
@@ -625,7 +625,7 @@ UnicodeString Julian_Duration::toICALString()
 #if 1
         // full form
         char sNum[100];
-#if JULIAN_DURATION_PARSING_YEAR_AND_MONTH
+#if NSCALDURATION_PARSING_YEAR_AND_MONTH
         sprintf(sNum, "%sP%dY%dM%dDT%dH%dM%dS", 
             ((m_NegativeDuration) ? "-" : ""), m_iYear, m_iMonth, m_iDay, m_iHour, m_iMinute, m_iSecond);
 #else
@@ -682,7 +682,7 @@ UnicodeString Julian_Duration::toICALString()
 
 //---------------------------------------------------------------------
 
-t_bool Julian_Duration::isValid()
+t_bool nsCalDuration::isValid()
 {
     if (m_iYear < 0 || m_iMonth < 0 || m_iDay < 0 ||
         m_iHour < 0 || m_iMinute < 0 || m_iSecond < 0 || 
@@ -698,7 +698,7 @@ t_bool Julian_Duration::isValid()
 
 //---------------------------------------------------------------------
 
-const Julian_Duration & Julian_Duration::operator=(const Julian_Duration& d)
+const nsCalDuration & nsCalDuration::operator=(const nsCalDuration& d)
 {
     m_iYear = d.m_iYear;
     m_iMonth = d.m_iMonth;
@@ -714,14 +714,14 @@ const Julian_Duration & Julian_Duration::operator=(const Julian_Duration& d)
 
 //---------------------------------------------------------------------
 
-t_bool Julian_Duration::operator==(const Julian_Duration & that) 
+t_bool nsCalDuration::operator==(const nsCalDuration & that) 
 {
     return (compareTo(that) == 0);
 }
 
 //---------------------------------------------------------------------
 
-t_bool Julian_Duration::operator!=(const Julian_Duration & that) 
+t_bool nsCalDuration::operator!=(const nsCalDuration & that) 
 {
     return (compareTo(that) != 0);
 }

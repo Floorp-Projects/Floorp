@@ -25,12 +25,12 @@
 
 //---------------------------------------------------------------------
 
-JulianUtility::JulianUtility() {}
+nsCalUtility::nsCalUtility() {}
 
 //---------------------------------------------------------------------
 
-//t_int32 JulianUtility::atot_int32(const char * nPtr,
-t_int32 JulianUtility::atot_int32(char * nPtr,
+//t_int32 nsCalUtility::atot_int32(const char * nPtr,
+t_int32 nsCalUtility::atot_int32(char * nPtr,
                                   t_bool & bParseError,
                                   t_int32 size)
 {
@@ -54,7 +54,7 @@ t_int32 JulianUtility::atot_int32(char * nPtr,
 }
 //---------------------------------------------------------------------
 #if 0
-t_int32 JulianUtility::atot_int32(const char * nPtr,
+t_int32 nsCalUtility::atot_int32(const char * nPtr,
                                   t_bool & bParseError,
                                   t_int32 size)
 {
@@ -74,7 +74,7 @@ t_int32 JulianUtility::atot_int32(const char * nPtr,
 }
 #endif
 //---------------------------------------------------------------------
-t_bool JulianUtility::checkRange(t_int32 hashCode, JAtom range[],
+t_bool nsCalUtility::checkRange(t_int32 hashCode, JAtom range[],
                                  t_int32 rangeSize)
 {
     t_int32 i;
@@ -89,7 +89,7 @@ t_bool JulianUtility::checkRange(t_int32 hashCode, JAtom range[],
 //---------------------------------------------------------------------
 
 void 
-JulianUtility::stripDoubleQuotes(UnicodeString & u)
+nsCalUtility::stripDoubleQuotes(UnicodeString & u)
 {
     if (u.size() > 0)
     {
@@ -110,7 +110,7 @@ JulianUtility::stripDoubleQuotes(UnicodeString & u)
 //---------------------------------------------------------------------
 
 UnicodeString &
-JulianUtility::addDoubleQuotes(UnicodeString & us)
+nsCalUtility::addDoubleQuotes(UnicodeString & us)
 {
     if (us.size() != 0)
     {
@@ -122,14 +122,14 @@ JulianUtility::addDoubleQuotes(UnicodeString & us)
 
 //---------------------------------------------------------------------
 /*
-char * JulianUtility::unistrToStr(const UnicodeString & us)
+char * nsCalUtility::unistrToStr(const UnicodeString & us)
 {
     return us.toCString("");
 }
 */
 //---------------------------------------------------------------------
 /*
-UnicodeString & JulianUtility::ToUpper(const UnicodeString & eightBitString)
+UnicodeString & nsCalUtility::ToUpper(const UnicodeString & eightBitString)
 {
     t_int32 i;
     //
@@ -159,7 +159,7 @@ UnicodeString & JulianUtility::ToUpper(const UnicodeString & eightBitString)
 //---------------------------------------------------------------------
 
 /*
-void JulianUtility::TRACE_DateTimeVector(JulianPtrArray & vector)
+void nsCalUtility::TRACE_DateTimeVector(JulianPtrArray & vector)
 {
       for (i = 0; i < vector.GetSize(); i++)         
       {

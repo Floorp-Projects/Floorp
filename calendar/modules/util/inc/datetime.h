@@ -412,19 +412,19 @@ public:
      * adds a duration amount to this datetime
      * @param    d       the duration to add
      */
-    void add(Julian_Duration d);
+    void add(nsCalDuration d);
 
     /**
      * subtracts a duration amount from this datetime
      * @param    d       the duration to subtract
      */
-    void subtract(Julian_Duration d);
+    void subtract(nsCalDuration d);
 
     /**
      * given two datetimes, return the duration length between them.
      * if end before start, return an invalid duration.
      */
-    static Julian_Duration & getDuration(DateTime start, DateTime end, Julian_Duration & out);
+    static nsCalDuration & getDuration(DateTime start, DateTime end, nsCalDuration & out);
 
     /**
      * Clears all fields

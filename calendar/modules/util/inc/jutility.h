@@ -22,8 +22,8 @@
  * 2/3/98 10:12:32 AM
  */
 
-#ifndef __JULIANUTILITY_H_
-#define __JULIANUTILITY_H_
+#ifndef __NSCALUTILITY_H_
+#define __NSCALUTILITY_H_
 
 #include <unistring.h>
 #include <calendar.h>
@@ -36,14 +36,14 @@
  * Also defines the RecurrenceType, which is used by the
  * generator and Recurrence classes for defining span and interval lengths.
  */
-class NS_CAL_UTIL JulianUtility
+class NS_CAL_UTIL nsCalUtility
 {
 private:
 
     /**
      * Hide constructor from clients 
      */
-    JulianUtility();
+    nsCalUtility();
 
 public:
     
@@ -124,5 +124,5 @@ public:
     static UnicodeString & addDoubleQuotes(UnicodeString & us);
 };
 
-#endif /* __JULIANUTILITY_H_ */
+#endif /* __NSCALUTILITY_H_ */
 

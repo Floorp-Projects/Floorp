@@ -30,18 +30,18 @@
 #include "nscalutilexp.h"
 
 /**
- * The Julian_Duration class implements the "duration" data type.
+ * The nsCalDuration class implements the "duration" data type.
  * The "duration" data type is used to identify properties that contain
  * a duration of time.
  * For example:
  *                                                  
  *   P10Y3M15DT5H30M20S
  *                                                  
- * The Julian_Duration class models the duration datatype specified in the iCalendar document.
+ * The nsCalDuration class models the duration datatype specified in the iCalendar document.
  * Assertion: if week value is not equal is zero, then all other values must be zero
  *
  */
-class NS_CAL_UTIL Julian_Duration 
+class NS_CAL_UTIL nsCalDuration 
 {
 private:
 
@@ -80,7 +80,7 @@ private:
     void setInvalidDuration();
 
     /**
-     * parse an iCal Julian_Duration string and populate the data members
+     * parse an iCal nsCalDuration string and populate the data members
      *
      * @param   us  the iCal Duraton string
      */
@@ -95,34 +95,34 @@ public:
     /**
      * default constrctor, set duration to 5 min.
      */
-    Julian_Duration();
+    nsCalDuration();
     
     /**
-     * Constructs a Julian_Duration object using the grammar
+     * Constructs a nsCalDuration object using the grammar
      * defined in the iCalendar spec.
      *
      * @param s String to parse
      */
-    Julian_Duration(UnicodeString & us);
+    nsCalDuration(UnicodeString & us);
      
     /**
-     * Constructs a copy of a Julian_Duration object.
+     * Constructs a copy of a nsCalDuration object.
      *
-     * @param   d   Julian_Duration to copy
+     * @param   d   nsCalDuration to copy
      */
-    Julian_Duration(Julian_Duration & aDuration);
+    nsCalDuration(nsCalDuration & aDuration);
     
     /**
-     * Constructs a Julian_Duration object with a single value set.
+     * Constructs a nsCalDuration object with a single value set.
      * Always yields a positive Duration
      *
      * @param type the field to set (uses <code>Recurrence</code> type constants)
      * @param value value to assign the field
      */
-    Julian_Duration(t_int32 type, t_int32 value);
+    nsCalDuration(t_int32 type, t_int32 value);
     
     /**
-     * Constructs a Julian_Duration object with a single value set.
+     * Constructs a nsCalDuration object with a single value set.
      * Always yields a positive Duration
      * Setting the week != 0 automatically ignores other param values and sets them to 0.
      * Setting any param (year,month,day,hour,min,sec) < 0 automatically creates an invalid Duration.
@@ -136,12 +136,12 @@ public:
      * @param   week    intiial week value
      * @param           isNegativeDuration  TRUE if duration is negative, FALSE otherwise
      */
-    Julian_Duration(t_int32 year, t_int32 month, t_int32 day, t_int32 hour, t_int32 min,
+    nsCalDuration(t_int32 year, t_int32 month, t_int32 day, t_int32 hour, t_int32 min,
         t_int32 sec, t_int32 week, t_bool bNegativeDuration = FALSE);
     /** 
      * Destructor.
      */
-    ~Julian_Duration();
+    ~nsCalDuration();
 
     /*-----------------------------
     ** GETTERS and SETTERS
@@ -295,12 +295,12 @@ public:
 
     /**
      * Comparision method. 
-     * @param           d   Julian_Duration to compare to.
+     * @param           d   nsCalDuration to compare to.
      *
      * @return  -1 if this is shorter, 0 if equal, 1 if longer 
      *           length of duration
      */
-    t_int32 compareTo(const Julian_Duration &d);
+    t_int32 compareTo(const nsCalDuration &d);
 
     /**
      * Normalizes the current duration.  This means rounding off
@@ -325,16 +325,16 @@ public:
     t_bool isZeroLength();
 
     /**
-     * returns this Julian_Duration object to a UnicodeString
+     * returns this nsCalDuration object to a UnicodeString
      * 
-     * @return  a UnicodeString representing the human-readable format of this Julian_Duration
+     * @return  a UnicodeString representing the human-readable format of this nsCalDuration
      */
     UnicodeString toString();
 
     /**
-     * returns this Julian_Duration object to a UnicodeString
+     * returns this nsCalDuration object to a UnicodeString
      * 
-     * @return  a UnicodeString representing the iCal format of this Julian_Duration
+     * @return  a UnicodeString representing the iCal format of this nsCalDuration
      */
     UnicodeString toICALString();
 
@@ -353,44 +353,44 @@ public:
     /**
      * assignment operator
      *
-     * @param   d       Julian_Duration to copy
-     * @return          a copy of that Julian_Duration
+     * @param   d       nsCalDuration to copy
+     * @return          a copy of that nsCalDuration
      */
-    const Julian_Duration &operator=(const Julian_Duration & d); 
+    const nsCalDuration &operator=(const nsCalDuration & d); 
 
     /**
      * (==) equality operator
      *
-     * @param   d       Julian_Duration to copy
+     * @param   d       nsCalDuration to copy
      * @return          TRUE if this is equal to d, otherwise FALSE
      */
-    t_bool operator==(const Julian_Duration & that); 
+    t_bool operator==(const nsCalDuration & that); 
 
     /**
      * (!=) in-equality operator
      *
-     * @param   d       Julian_Duration to copy
+     * @param   d       nsCalDuration to copy
      * @return          TRUE if this NOT equal to d, otherwise FALSE
      */
-    t_bool operator!=(const Julian_Duration & that); 
+    t_bool operator!=(const nsCalDuration & that); 
      
     /*-- TODO - make normalize work so that >, < will work correctly */
 
     /**
      * (>) greater than operator
      *
-     * @param   d       Julian_Duration to copy
+     * @param   d       nsCalDuration to copy
      * @return          TRUE if this is longer duration than d, otherwise FALSE
      */
-    t_bool operator>(const Julian_Duration & that); 
+    t_bool operator>(const nsCalDuration & that); 
 
     /**
      * (<) less than operator
      *
-     * @param   d       Julian_Duration to copy
+     * @param   d       nsCalDuration to copy
      * @return          TRUE if this is shorter duration than d, otherwise FALSE
      */
-    t_bool operator<(const Julian_Duration & that); 
+    t_bool operator<(const nsCalDuration & that); 
 };
 
 #endif /* __DURATION_H_ */

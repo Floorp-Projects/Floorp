@@ -32,20 +32,20 @@
 
 //---------------------------------------------------------------------
 
-JulianUIDRandomGenerator::JulianUIDRandomGenerator()
+nsCalUIDRandomGenerator::nsCalUIDRandomGenerator()
 {
 }
 
 //---------------------------------------------------------------------
 
-JulianUIDRandomGenerator::~JulianUIDRandomGenerator()
+nsCalUIDRandomGenerator::~nsCalUIDRandomGenerator()
 {
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString 
-JulianUIDRandomGenerator::generate(UnicodeString us)
+nsCalUIDRandomGenerator::generate(UnicodeString us)
 {
 #if 0
     char sBuf[10];
@@ -68,7 +68,7 @@ JulianUIDRandomGenerator::generate(UnicodeString us)
 //---------------------------------------------------------------------
 
 UnicodeString
-JulianUIDRandomGenerator::generate()
+nsCalUIDRandomGenerator::generate()
 {
     return generate("");
 }

@@ -45,7 +45,7 @@ NS_IMPL_RELEASE(nsDuration)
 
 nsresult nsDuration :: Init()
 {
-  mDuration = new Julian_Duration();
+  mDuration = new nsCalDuration();
 
   return NS_OK ;
 }
@@ -184,7 +184,7 @@ nsresult nsDuration :: SetSecond(PRUint32 aSecond)
   return NS_OK;
 }
 
-Julian_Duration& nsDuration :: GetDuration()
+nsCalDuration& nsDuration :: GetDuration()
 {
   return (*mDuration);
 }

@@ -760,7 +760,7 @@ void DateTime::add(Calendar::EDateFields aField, t_int32 amount)
 
 //---------------------------------------------------------------------
 
-void DateTime::add(Julian_Duration d)
+void DateTime::add(nsCalDuration d)
 {
     add(Calendar::YEAR, d.getYear());
     add(Calendar::MONTH, d.getMonth()); 
@@ -773,7 +773,7 @@ void DateTime::add(Julian_Duration d)
 
 //---------------------------------------------------------------------
 
-void DateTime::subtract(Julian_Duration d)
+void DateTime::subtract(nsCalDuration d)
 {
     add(Calendar::YEAR, - d.getYear());
     add(Calendar::MONTH, - d.getMonth()); 
@@ -785,8 +785,8 @@ void DateTime::subtract(Julian_Duration d)
 }
 
 //---------------------------------------------------------------------
-Julian_Duration & DateTime::getDuration(DateTime start, DateTime end, 
-                                 Julian_Duration & out)
+nsCalDuration & DateTime::getDuration(DateTime start, DateTime end, 
+                                 nsCalDuration & out)
 {
     t_int32 y = 0, mo = 0, d = 0, h = 0, m = 0, s = 0;
     t_int32 toNextMonth = 0;
@@ -1370,15 +1370,15 @@ DateTime::IsParseable(UnicodeString & s, t_int32 & iYear, t_int32 & iMonth,
 
         /*
         // old way, works but slow and leaks
-        iYear  = JulianUtility::atot_int32(s.extract(0, 4, temp).toCString(""), bParseError, 4);
-        iMonth = JulianUtility::atot_int32(s.extract(4, 2, temp).toCString(""), bParseError, 2);
-        iDay   = JulianUtility::atot_int32(s.extract(6, 2, temp).toCString(""), bParseError, 2);
+        iYear  = nsCalUtility::atot_int32(s.extract(0, 4, temp).toCString(""), bParseError, 4);
+        iMonth = nsCalUtility::atot_int32(s.extract(4, 2, temp).toCString(""), bParseError, 2);
+        iDay   = nsCalUtility::atot_int32(s.extract(6, 2, temp).toCString(""), bParseError, 2);
         */
 
          // new way is faster, but uses ptr arithmetic
-        iYear  = JulianUtility::atot_int32(c, bParseError, 4);
-        iMonth = JulianUtility::atot_int32(c + 4, bParseError, 2);
-        iDay   = JulianUtility::atot_int32(c + 6, bParseError, 2);
+        iYear  = nsCalUtility::atot_int32(c, bParseError, 4);
+        iMonth = nsCalUtility::atot_int32(c + 4, bParseError, 2);
+        iDay   = nsCalUtility::atot_int32(c + 6, bParseError, 2);
        
         if (iMonth > 12 || iDay > 31) 
         {
@@ -1394,15 +1394,15 @@ DateTime::IsParseable(UnicodeString & s, t_int32 & iYear, t_int32 & iMonth,
         {
             /*
             // old way, works but slow
-            iHour  = JulianUtility::atot_int32(s.extract(9, 2, temp).toCString(""), bParseError, 2);
-            iMinute= JulianUtility::atot_int32(s.extract(11, 2, temp).toCString(""), bParseError, 2);
-            iSecond= JulianUtility::atot_int32(s.extract(13, 2, temp).toCString(""), bParseError, 2);
+            iHour  = nsCalUtility::atot_int32(s.extract(9, 2, temp).toCString(""), bParseError, 2);
+            iMinute= nsCalUtility::atot_int32(s.extract(11, 2, temp).toCString(""), bParseError, 2);
+            iSecond= nsCalUtility::atot_int32(s.extract(13, 2, temp).toCString(""), bParseError, 2);
             */
 
             // new way is faster, but uses ptr arithmetic
-            iHour  = JulianUtility::atot_int32(c + 9, bParseError, 2);
-            iMinute   = JulianUtility::atot_int32(c + 11, bParseError, 2);
-            iSecond   = JulianUtility::atot_int32(c + 13, bParseError, 2);
+            iHour  = nsCalUtility::atot_int32(c + 9, bParseError, 2);
+            iMinute   = nsCalUtility::atot_int32(c + 11, bParseError, 2);
+            iSecond   = nsCalUtility::atot_int32(c + 13, bParseError, 2);
 
             if (iHour > 23 || iMinute > 59 || iSecond > 59)
             {
@@ -1459,12 +1459,12 @@ t_bool DateTime::IsParseableUTCOffset(UnicodeString & s,
 
     /*
     // old way, works but slow and leaks
-    iHour = JulianUtility::atot_int32(s.extract(1, 2, u).toCString(""), bParseError, 2);
-    iMin = JulianUtility::atot_int32(s.extract(3, 2, u).toCString(""), bParseError, 2);
+    iHour = nsCalUtility::atot_int32(s.extract(1, 2, u).toCString(""), bParseError, 2);
+    iMin = nsCalUtility::atot_int32(s.extract(3, 2, u).toCString(""), bParseError, 2);
     */
 
-    iHour = JulianUtility::atot_int32(cc + 1, bParseError, 2);
-    iMin = JulianUtility::atot_int32(cc + 3, bParseError, 2);
+    iHour = nsCalUtility::atot_int32(cc + 1, bParseError, 2);
+    iMin = nsCalUtility::atot_int32(cc + 3, bParseError, 2);
 
     delete [] cc; 
 

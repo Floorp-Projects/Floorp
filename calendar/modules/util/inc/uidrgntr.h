@@ -22,8 +22,8 @@
  * 3/19/98 5:35:59 PM
  */
 
-#ifndef __JULIANUIDRANDOMGENERATOR_H_
-#define __JULIANUIDRANDOMGENERATOR_H_
+#ifndef __NSCALRANDOMGENERATOR_H_
+#define __NSCALRANDOMGENERATOR_H_
 
 #include <unistring.h>
 #include "nscalutilexp.h"
@@ -31,14 +31,14 @@
 /**
  *  Class that contains method to generate random UID strings.
  */
-class NS_CAL_UTIL JulianUIDRandomGenerator
+class NS_CAL_UTIL nsCalUIDRandomGenerator
 {
 public:
     /** default constructor.  It's of no use */
-    JulianUIDRandomGenerator();
+    nsCalUIDRandomGenerator();
 
     /** destructor.  It's of no use */
-    ~JulianUIDRandomGenerator();
+    ~nsCalUIDRandomGenerator();
 
     /**
      * generates random UID strings by appending 
@@ -63,5 +63,5 @@ public:
     static UnicodeString generate(UnicodeString us);
 };
 
-#endif /*__JULIANUIDRANDOMGENERATOR_H_ */
+#endif /*__NSCALRANDOMGENERATOR_H_ */
 

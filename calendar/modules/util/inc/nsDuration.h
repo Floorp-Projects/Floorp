@@ -48,13 +48,13 @@ public:
   NS_IMETHOD SetMinute(PRUint32 aMinute);
   NS_IMETHOD SetSecond(PRUint32 aSecond);
 
-  NS_IMETHOD_(Julian_Duration&) GetDuration();
+  NS_IMETHOD_(nsCalDuration&) GetDuration();
 
 protected:
   ~nsDuration();
 
 private:
-  Julian_Duration * mDuration;
+  nsCalDuration * mDuration;
 
 };
 
