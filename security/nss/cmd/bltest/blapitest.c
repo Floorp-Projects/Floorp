@@ -2041,7 +2041,7 @@ int main(int argc, char **argv)
 
     /* set up an initialization vector. */
     if (cipher_requires_IV(cipherInfo.mode)) {
-	char *ivstr;
+	char *ivstr = NULL;
 	bltestSymmKeyParams *skp;
 	file = NULL;
 	if (cipherInfo.mode == bltestRC5_CBC)
