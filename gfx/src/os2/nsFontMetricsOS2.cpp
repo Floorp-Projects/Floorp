@@ -705,6 +705,8 @@ HDC   ps = NULL;
            
    // 7) Find the point size for the font, and set up the charbox too
    float app2dev, app2twip, twip2dev;
+   float textZoom = 1.0;
+   mDeviceContext->GetTextZoom(textZoom);
    mDeviceContext->GetAppUnitsToDevUnits( app2dev);
    mDeviceContext->GetDevUnitsToTwips( app2twip);
    mDeviceContext->GetTwipsToDevUnits( twip2dev);
@@ -722,7 +724,7 @@ HDC   ps = NULL;
    // Note: are you confused by the block above, and thinking that app2twip
    //       must be 1?  Well, there's *no* guarantee that app units are
    //       twips, despite whatever nscoord.h says!
-   int points = NSTwipsToFloorIntPoints( nscoord( mFont->size * app2twip));
+   int points = NSTwipsToFloorIntPoints( nscoord( mFont->size * app2twip * textZoom));
    fh->charbox.cx = MAKEFIXED( points * 20 * twip2dev, 0);
    fh->charbox.cy = fh->charbox.cx;
 
@@ -735,44 +737,33 @@ HDC   ps = NULL;
       DevQueryCaps( hdc, CAPS_HORIZONTAL_FONT_RES, 2, res);
       pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, hps);
 
-      for( i = 0; i < lFonts; i++)
-         if( !stricmp( fh->fattrs.szFacename, pMetrics[ i].szFacename) &&
-             pMetrics[ i].sNominalPointSize / 10 == points  &&
-             pMetrics[ i].sXDeviceRes == res[0]             &&
-             pMetrics[ i].sYDeviceRes == res[1]) break;
-
-      if( i == lFonts)
-      {
-         // Couldn't find an appropriate font, need to use an outline.
-         // If there was an outline originally, fine. If not...
-         if( !bOutline)
+      
+      int curPoints = 0;
+      for( i = 0; i < lFonts; i++) {
+         if( !stricmp(fh->fattrs.szFacename, pMetrics[i].szFacename) &&
+             pMetrics[i].sXDeviceRes == res[0] &&
+             pMetrics[i].sYDeviceRes == res[1])
          {
-            // Can't have the requested font in requested size; fake.
-            if( !stricmp( szFamily, "Helv"))
-               strcpy( szFamily, "Helvetica");
-            else if( !stricmp( szFamily, "Courier"))
-               strcpy( szFamily, "Courier New");
-            else
-               strcpy( szFamily, "Times New Roman"); // hmm
-            fh->fattrs.fsSelection &= ~(FATTR_SEL_BOLD | FATTR_SEL_ITALIC);
-            rc = GpiQueryFaceString( hps, szFamily, &fnd,
-                                     FACESIZE, fh->fattrs.szFacename);
-            if( rc == GPI_ERROR)
-            {
-               strcpy( fh->fattrs.szFacename, szFamily);
-               if( bBold) fh->fattrs.fsSelection |= FATTR_SEL_BOLD;
-               if( bItalic) fh->fattrs.fsSelection |= FATTR_SEL_ITALIC;
-            }
-         }
-         fh->fattrs.fsFontUse = FATTR_FONTUSE_OUTLINE |
-                                FATTR_FONTUSE_TRANSFORMABLE;
-      }
-      else
-      {
-         // image face found fine, set required size in fattrs.
-         fh->fattrs.lMaxBaselineExt = pMetrics[ i].lMaxBaselineExt;
-         fh->fattrs.lAveCharWidth = pMetrics[ i].lAveCharWidth;
-      }
+            if (pMetrics[i].sNominalPointSize / 10 == points) {
+               // image face found fine, set required size in fattrs.
+               fh->fattrs.lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+               fh->fattrs.lAveCharWidth = pMetrics[i].lAveCharWidth;
+               break;
+            } else {
+               if (abs(pMetrics[i].sNominalPointSize / 10 - points) < abs(curPoints - points)) {
+                  curPoints = pMetrics[i].sNominalPointSize / 10;
+                  fh->fattrs.lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+                  fh->fattrs.lAveCharWidth = pMetrics[i].lAveCharWidth;
+               } else if (abs(pMetrics[i].sNominalPointSize / 10 - points) == abs(curPoints - points)) {
+                  if ((pMetrics[i].sNominalPointSize / 10) > curPoints) {
+                     curPoints = pMetrics[i].sNominalPointSize / 10;
+                     fh->fattrs.lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+                     fh->fattrs.lAveCharWidth = pMetrics[i].lAveCharWidth;
+                  } /* endif */
+               } /* endif */
+            } /* endif */
+         } /* endif */
+      } /* endfor */
       delete [] pMetrics;
    }
 
