@@ -409,7 +409,7 @@ function delayedStartup(aElt)
   // Get the preferences service
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
-  pref = prefService.getBranch(null);
+  prefService = prefService.getBranch(null);
 
   updateHomeTooltip();
 }
