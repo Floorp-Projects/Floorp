@@ -626,7 +626,7 @@ if ($action eq 'update') {
                          products WRITE,
                          versions WRITE");
 
-    if ($disallownew != $disallownewold) {
+    if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
         SendSQL("UPDATE products
                  SET disallownew=$disallownew
