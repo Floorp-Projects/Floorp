@@ -26,6 +26,9 @@
 #include "nsIMenu.h"
 #include "nsISupportsArray.h"
 
+#include "nsIDOMElement.h"
+#include "nsIWebShell.h"
+
 class nsIMenuListener;
 
 /**
@@ -42,9 +45,14 @@ public:
   NS_DECL_ISUPPORTS
   
   //nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menubarNode,
+	void              * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
 
   // nsIMenu Methods
@@ -71,6 +79,10 @@ public:
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
   NS_IMETHOD InsertSeparator(const PRUint32 aCount);
 
+  NS_IMETHOD SetDOMNode(nsIDOMNode * menuNode);
+  NS_IMETHOD SetDOMElement(nsIDOMElement * menuElement);
+  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+
   // Native Impl Methods
   // These are not ref counted
   nsIMenu    * GetMenuParent()    { return mMenuParent;    } 
@@ -80,6 +92,17 @@ public:
 protected:
   nsIMenuBar * GetMenuBar(nsIMenu * aMenu);
   nsIWidget *  GetParentWidget();
+  
+  void LoadMenuItem(
+    nsIMenu       * pParentMenu,
+    nsIDOMElement * menuitemElement,
+    nsIDOMNode    * menuitemNode,
+	nsIWebShell   * aWebShell);
+  
+  void LoadSubMenu(
+    nsIMenu       * pParentMenu,
+    nsIDOMElement * menuElement,
+    nsIDOMNode    * menuNode);
 
   nsString     mLabel;
   HMENU        mMenu;
@@ -90,6 +113,9 @@ protected:
   nsISupportsArray * mItems;
   nsIMenuListener * mListener;
 
+  nsIDOMNode    * mDOMNode;
+  nsIDOMElement * mDOMElement;
+  nsIWebShell   * mWebShell;
 };
 
 #endif // nsMenu_h__
