@@ -60,9 +60,7 @@ textbox.padded {
 /* ::::: history button ::::: */
 
 .autocomplete-history-dropmarker {
-#ifndef XP_MACOSX
   -moz-appearance: menulist-button;
-#endif
   min-width: 17px;
   -moz-box-align: center;
   -moz-box-pack: center;
