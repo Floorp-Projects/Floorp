@@ -82,7 +82,7 @@ public:
    *
    * @return the type of the image, if known
    */
-  virtual nsImageType GetImageType(const char *buf, PRInt32 length) = 0;
+ // virtual nsImageType GetImageType(const char *buf, PRInt32 length) = 0;
 };
 
 /// Factory method to get a reference to the singleton image manager
