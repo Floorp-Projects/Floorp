@@ -216,7 +216,7 @@ nsUnknownContentTypeDialog.prototype = {
         var wildCardExtension = "*";
         if (aSuggestedFileExtension) {
           wildCardExtension += aSuggestedFileExtension;
-          picker.appendFilter(this.mLauncher.MIMEInfo.Description, wildCardExtension);
+          picker.appendFilter(this.mLauncher.MIMEInfo.description, wildCardExtension);
         }
 
         picker.appendFilters( nsIFilePicker.filterAll );
@@ -446,7 +446,7 @@ nsUnknownContentTypeDialog.prototype = {
         var mimeInfo = this.mLauncher.MIMEInfo;
         
         // 1. Try to use the pretty description of the type, if one is available.
-        var typeString = mimeInfo.Description;
+        var typeString = mimeInfo.description;
         
         if (typeString == "") {
           // 2. If there is none, use the extension to identify the file, e.g. "ZIP file"

@@ -60,7 +60,7 @@ function Startup()
       var info = window.arguments[0].mLauncher.MIMEInfo;
 
       // Fill the fields we can from this.
-      gDescriptionField.value = info.Description;
+      gDescriptionField.value = info.description;
       gExtensionField.value   = info.primaryExtension;
       gMIMEField.value        = info.MIMEType;
       // an app may have been selected in the opening dialog but not in the mimeinfo
@@ -186,7 +186,7 @@ function onOK()
 
       // Update fields that might have changed.
       info.preferredAction = Components.interfaces.nsIMIMEInfo.useHelperApp;
-      info.Description = gDescriptionField.value;
+      info.description = gDescriptionField.value;
       info.preferredApplicationHandler = file;
       info.applicationDescription = handlerInfo.appDisplayName;
 
