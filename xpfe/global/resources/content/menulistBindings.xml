@@ -17,7 +17,7 @@
       <children includes="menupopup"/>
     </content>
     <handlers>
-      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') this.selectedItem = event.target;"/>
+      <handler event="command" phase="capturing" action="if (event.originalTarget.localName == 'menuitem') this.selectedItem = event.originalTarget;"/>
       <handler event="create">
         <![CDATA[
           if (event.target.parentNode == this && this.selectedItem) {
