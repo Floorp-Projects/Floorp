@@ -348,6 +348,7 @@ sub Checkout()
     my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
     my($nss_tab) = "NSS_30_BRANCH";
     my($psm_tag) = "SECURITY_MAC_BRANCH";
+    my($ldapsdk_tag) = "LDAPCSDK_40_BRANCH"; 
     
     #//
     #// Checkout commands
@@ -357,6 +358,7 @@ sub Checkout()
         $session->checkout("mozilla/nsprpub", $nsprpub_tag)            || print "checkout of nsprpub failed\n";        
         $session->checkout("mozilla/security/nss", $nss_tab)           || print "checkout of security/nss failed\n";
         $session->checkout("mozilla/security/psm", $psm_tag)           || print "checkout of security/psm failed\n";
+        $session->checkout("DirectorySDKSourceC", $ldapsdk_tag)        || print "checkout of LDAP C SDK failed\n";
         $session->checkout("SeaMonkeyAll")                             || 
             print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
     }
@@ -631,6 +633,17 @@ sub MakeResourceAliases()
     _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "locale");
     _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "skin");
     
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "content");
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "locale");
+    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "skin");
+    
+    if ($main::options{transformiix})
+    {
+        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "content");
+        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "locale");
+        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "skin");
+    }
+
     _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf",$dist_dir, $chrome_subdir, "skins:modern:", "skin");
     if ($main::INCLUDE_CLASSIC_SKIN) {
     		_InstallManifestRDF(":mozilla:themes:classic:manifest.rdf",$dist_dir, $chrome_subdir, "skins:classic:", "skin");
@@ -1358,6 +1371,20 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",                 "$distdirectory:mailnews:");
     _InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",               "$distdirectory:mailnews:");
                                                      
+    #LDAP
+    if ($main::options{ldap})
+    {
+        _InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST",      "$distdirectory:directory:");
+        _InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST",       "$distdirectory:directory:");
+        _InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST_IDL",   "$distdirectory:idl:");
+    }
+
+    #XMLEXTRAS
+    if ($main::options{xmlextras})
+    {
+        _InstallFromManifest(":mozilla:extensions:xmlextras:base:public:MANIFEST_IDL", "$distdirectory:idl:");
+    }
+
     print("--- Client Dist export complete ----\n");
 }
 
@@ -1616,6 +1643,16 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:intl:unicharutil:macbuild:unicharutilIDL.mcp",        "unicharutil");
     BuildIDLProject(":mozilla:intl:uconv:macbuild:uconvIDL.mcp",                    "uconv");
 
+    if ($main::options{ldap})
+    {
+        BuildIDLProject(":mozilla:directory:xpcom:macbuild:mozldapIDL.mcp", "mozldap");
+    }
+
+    if ($main::options{xmlextras})
+    {
+        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlextrasIDL.mcp", "xmlextras");
+    }
+
     print("--- IDL projects complete ----\n");
 }
 
@@ -1781,6 +1818,13 @@ sub BuildImglibProjects()
     BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",          "gifdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",          "pngdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",          "jpgdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+    # MNG
+    if ($main::options{mng})
+    {
+        BuildOneProject(":mozilla:modules:libimg:macbuild:mng.mcp",                 "mng$D.o", 0, 0, 0);
+        BuildOneProject(":mozilla:modules:libimg:macbuild:mngdecoder.mcp",          "mngdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
 
     print("--- Imglib projects complete ----\n");
 } # imglib
@@ -2137,11 +2181,8 @@ sub BuildExtensionsProjects()
 
     _InstallResources(":mozilla:extensions:cview:resources:content:MANIFEST", "$cviewContent");
     _InstallResources(":mozilla:extensions:cview:resources:skin:MANIFEST", "$cviewSkin");
+    _InstallResources(":mozilla:extensions:cview:resources:locale:en-US:MANIFEST", "$cviewLocale", 0);
 
-    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "content");
-    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "locale");
-    _InstallManifestRDF(":mozilla:extensions:cview:resources:manifest.rdf", $dist_dir, $chrome_subdir, "packages:cview:", "skin");
-    
     # Transformiix
     if ($main::options{transformiix})
     {
@@ -2155,10 +2196,20 @@ sub BuildExtensionsProjects()
 
         _InstallResources(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:content:MANIFEST", "$transformiixContent");
         _InstallResources(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:skin:MANIFEST", "$transformiixSkin");
-
-        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "content");
-        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "locale");
-        _InstallManifestRDF(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:manifest.rdf", $dist_dir, $chrome_subdir, "packages:transformiix:", "skin");
+        _InstallResources(":mozilla:extensions:transformiix:source:examples:mozilla:transformiix:locale:en-US:MANIFEST", "$transformiixLocale", 0);
+    }
+    
+    # LDAP Client
+    if ($main::options{ldap})
+    {
+        BuildOneProject(":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient.mcp", "LDAPClient$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:directory:xpcom:macbuild:mozldap.mcp", "mozldap$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+    
+    # XML Extras
+    if ($main::options{xmlextras})
+    {
+        BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlextras.mcp", "xmlextras$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
     print("--- Extensions projects complete ----\n");
