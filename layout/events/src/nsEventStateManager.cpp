@@ -980,6 +980,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
           event.clickCount = 0;
           event.point = aEvent->point;
           event.refPoint = aEvent->refPoint;
+          event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+          event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+          event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+          event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
 
           //The frame has change but the content may not have.  Check before dispatching to content
           mLastMouseOverFrame->GetContent(getter_AddRefs(lastContent));
@@ -1015,6 +1019,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
         event.clickCount = 0;
         event.point = aEvent->point;
         event.refPoint = aEvent->refPoint;
+        event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+        event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+        event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+        event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
 
         mCurrentTargetContent = targetContent;
         NS_IF_ADDREF(mCurrentTargetContent);
@@ -1058,6 +1066,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
         event.clickCount = 0;
         event.point = aEvent->point;
         event.refPoint = aEvent->refPoint;
+        event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+        event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+        event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+        event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
 
         nsCOMPtr<nsIContent> lastContent;
         mLastMouseOverFrame->GetContent(getter_AddRefs(lastContent));
@@ -1117,6 +1129,10 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsG
           event.clickCount = 0;
           event.point = aEvent->point;
           event.refPoint = aEvent->refPoint;
+          event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+          event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+          event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+          event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
 
           //The frame has change but the content may not have.  Check before dispatching to content
           mLastDragOverFrame->GetContent(getter_AddRefs(lastContent));
@@ -1155,6 +1171,10 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsG
         event.clickCount = 0;
         event.point = aEvent->point;
         event.refPoint = aEvent->refPoint;
+        event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+        event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+        event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+        event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
 
         mCurrentTargetContent = targetContent;
         NS_IF_ADDREF(mCurrentTargetContent);
@@ -1200,6 +1220,10 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsG
         event.clickCount = 0;
         event.point = aEvent->point;
         event.refPoint = aEvent->refPoint;
+        event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+        event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+        event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+        event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
 
         // dispatch to content via DOM
         nsCOMPtr<nsIContent> lastContent;
@@ -1332,6 +1356,10 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     event.refPoint.x = aEvent->refPoint.x;
     event.refPoint.y = aEvent->refPoint.y;
     event.clickCount = aEvent->clickCount;
+    event.isShift = aEvent->isShift;
+    event.isControl = aEvent->isControl;
+    event.isAlt = aEvent->isAlt;
+    event.isMeta = aEvent->isMeta;
 
     if (mouseContent) {
       ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull,
@@ -1358,6 +1386,10 @@ nsEventStateManager::DispatchKeyPressEvent(nsIPresContext* aPresContext,
   event.message = NS_KEY_PRESS;
   event.widget = nsnull;
   event.keyCode = aEvent->keyCode;
+  event.isShift = aEvent->isShift;
+  event.isControl = aEvent->isControl;
+  event.isAlt = aEvent->isAlt;
+  event.isMeta = aEvent->isMeta;
 
   nsIContent *content;
   mCurrentTarget->GetContent(&content);
