@@ -68,6 +68,11 @@ protected:
   static nsIAtom* kKeyAtom;
   static nsIAtom* kKeyCodeAtom;
   static nsIAtom* kCharCodeAtom;
+  static nsIAtom* kPrimaryAtom;
+  static nsIAtom* kShiftAtom;
+  static nsIAtom* kControlAtom;
+  static nsIAtom* kAltAtom;
+  static nsIAtom* kMetaAtom;
 
 protected:
   nsIContent* mBoundElement; // Both of these refs are weak.
