@@ -71,3 +71,6 @@ pref("chimera.enable_rendezvous", true);
 
 // set typeahead find to search all text by default
 pref("accessibility.typeaheadfind.linksonly", false);
+
+// image resizing
+pref("browser.enable_automatic_image_resizing", true);
