@@ -30,6 +30,7 @@ XPIDLSRCS=      .\nsIRDFNode.idl                  \
                 .\nsIRDFPurgeableDataSource.idl   \
                 .\nsIRDFXMLDataSource.idl         \
                 .\nsIRDFXMLSource.idl             \
+		.\xulstubs.idl			\
                 $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
