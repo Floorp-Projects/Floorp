@@ -201,6 +201,7 @@ function fillFolderPaneContextMenu()
   ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder);
   EnableMenuItem("folderPaneContext-subscribe", true);
 
+  ShowMenuItem("folderPaneContext-sep1", (numSelected <= 1));
 // News folder context menu =============================================
 
   ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) && canSubscribeToFolder && isNewsgroup);
@@ -387,6 +388,26 @@ function IsMenuItemShowing(menuID)
   if (item)
     return item.hidden != "true";
   return false;
+}
+
+function CopyFolderUrl()
+{
+  try 
+  {
+    var folderResource = GetSelectedFolderResource();
+    if (folderResource)
+    {
+      var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+      var contractid = "@mozilla.org/widget/clipboardhelper;1";
+      var iid = Components.interfaces.nsIClipboardHelper;
+      var clipboard = Components.classes[contractid].getService(iid);
+      clipboard.copyString(msgFolder.folderURL);
+    }
+  }
+  catch (ex) 
+  {
+    dump("ex="+ex+"\n");
+  }
 }
 
 function CopyMessageUrl()

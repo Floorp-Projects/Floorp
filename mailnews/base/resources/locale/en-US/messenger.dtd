@@ -521,7 +521,8 @@ Rights Reserved.
 <!ENTITY folderContextSearchMessages.accesskey "S">
 <!ENTITY folderContextProperties.label "Properties...">
 <!ENTITY folderContextProperties.accesskey "o">
-
+<!ENTITY folderContextCopyLocation.label "Copy Folder Location">
+<!ENTITY folderContextCopyLocation.accesskey "C">
 <!-- Message Header View Popup -->
 <!ENTITY AddToAddressBook.label "Add to Address Book...">
 <!ENTITY AddToAddressBook.accesskey "B">
