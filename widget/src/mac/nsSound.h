@@ -39,26 +39,32 @@
 #define __nsSound_h__
 
 #include "nsISound.h"
-#include "nsIStreamLoader.h"
+#include "nsSupportsArray.h"
 
-#include <MacTypes.h>
+class nsIURI;
+class nsIChannel;
+class nsICacheSession;
 
-class nsSound : public nsISound,
-                public nsIStreamLoaderObserver
+class nsSound : public nsISound
 {
 public:
 
+                      nsSound();
+  virtual             ~nsSound();
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
-  NS_DECL_NSISTREAMLOADEROBSERVER
 
-          nsSound();
-  virtual ~nsSound();
+  nsresult            AddRequest(nsISupports* aSoundRequest);
+  nsresult            RemoveRequest(nsISupports* aSoundRequest);
+
+  nsresult            GetCacheSession(nsICacheSession** outCacheSession);
+  nsresult            GetSoundFromCache(nsIURI* inURI, nsISupports** outSound);
+  nsresult            PutSoundInCache(nsIChannel* inChannel, PRUint32 inDataSize, nsISupports* inSound);
 
 protected:
 
-  nsresult    PlaySound(Handle waveDataHandle, long waveDataSize);
-  PRBool      HaveQuickTime();
+  nsSupportsArray    mSoundRequests;    // array of outstanding/playing sounds
 
 };
 
