@@ -919,7 +919,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
-NS_IMPL_ISUPPORTS5(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener, nsIObserver, nsIAlertListener)
+NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener, nsIObserver)
 
 nsDownload::nsDownload(nsDownloadManager* aManager,
                        nsIURI* aTarget,
@@ -982,6 +982,13 @@ nsDownload::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* 
       mDownloadManager->CancelDownload(path);
     // Ignoring return value; this function will get called twice,
     // and bad things happen if we return a failure code the second time.
+    return NS_OK;
+  }
+
+  if (strcmp(aTopic, "alertclickcallback") == 0) {
+    // show the download manager
+    mDownloadManager->Open(nsnull, this);
+    return NS_OK;
   }
 
   return NS_OK;
@@ -1268,23 +1275,6 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
 
   return NS_OK;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIAlertListener
-
-NS_IMETHODIMP
-nsDownload::OnAlertFinished(const PRUnichar * aAlertCookie)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::OnAlertClickCallback(const PRUnichar * aAlertCookie)
-{
-  // show the download manager
-  mDownloadManager->Open(nsnull, this);
-  return NS_OK;
-} 
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDownload
