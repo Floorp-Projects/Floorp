@@ -48,6 +48,7 @@ LINCS = -I$(PUBLIC)/js \
 	-I$(PUBLIC)/dbm \
 	-I$(PUBLIC)/security \
 	-I$(PUBLIC)/xpcom \
+	-I$(PUBLIC)/raptor	\
         -I$(DEPTH)\include \
 
 LCFLAGS = -DMOZILLA_CLIENT
