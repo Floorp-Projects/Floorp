@@ -435,8 +435,11 @@ sub ListPartitions () {
             a({-href=>"help.html#partition"}, "read this") . ".");
     ListSomething("partitions", "id", "ListPartitions", "EditPartition", "name",
                   "name,repositoryid,state,description", "",
-                  {"branchid"=>"branches.name,branches.id=partitions.branchid",
-                   "repositoryid"=>"repositories.name,repositories.id=partitions.repositoryid"},
+                  {"branchid"=>["branches.name",
+                                "branches.id=partitions.branchid"],
+                   "repositoryid"=>["repositories.name",
+                                    "repositories.id=partitions.repositoryid"]
+                                    },
                   "");
 }
 
@@ -449,7 +452,7 @@ sub ListUsers() {
     if ($F::match ne "") {
         $wherepart = "email $F::matchtype " . $::db->quote($F::match);
     }
-    ListSomething("users", "email", "ListUsers", "EditUser", "email", "email,realname,gila_group,cvs_group", "", {}, $wherepart);
+    ListSomething("users", "email", "ListUsers", "EditUser", "email", "email,realname,gila_group,cvs_group", "users as u2", {"voucher"=>["if(users.voucher=0,'NONE',u2.email)", "u2.id=if(users.voucher=0,users.id,users.voucher)", "u2"]}, $wherepart);
 }
 
 
@@ -460,11 +463,14 @@ sub ListSomething {
 
     my %columnremap;
     my %columnwhere;
+    my %columntable;
 
     while (my ($key,$value) = each %$columndefs) {
-        my ($name,$where) = split(/,/, $value);
-        $columnremap{$key} = $name;
-        $columnwhere{$key} = $where;
+        ($columnremap{$key}, $columnwhere{$key}, $columntable{$key}) = (@$value);
+        if (!defined $columntable{$key}) {
+            $columntable{$key} = $columnremap{$key};
+            $columntable{$key} =~ s/\..*$//;
+        }
     }
         
 
@@ -522,6 +528,7 @@ sub ListSomething {
         }
         if (!defined $columnremap{$c}) {
             $columnremap{$c} = "$tablename.$c";
+            $columntable{$c} = $tablename;
         }
     }
 
@@ -535,8 +542,7 @@ sub ListSomething {
     foreach my $c (@cols) {
         my $t = $columnremap{$c};
         push(@mungedcols,$t);
-        ($t) = split(/\./, $t);
-        $usedtables{$t} = 1;
+        $usedtables{$columntable{$c}} = 1;
         if (defined $columnwhere{$c}) {
             if ($wherepart eq "") {
                 $wherepart = " where ";
@@ -550,11 +556,21 @@ sub ListSomething {
         foreach my $i (split(/,/, $extratables)) {
             $usedtables{$i} = 1;
             if ($i =~ m/as (.*)$/) {
-                delete $usedtables{$1};
+                if (exists $usedtables{$1}) {
+                    delete $usedtables{$1};
+                } else {
+                    delete $usedtables{$i};
+                }
             }
         }
     }
-    $query = Query("select $tablename.$idcolumn," . join(",", @mungedcols) . " from " . join(",", keys(%usedtables)) . $wherepart . " order by $columnremap{$sortorder}");
+    my $orderby = $columnremap{$sortorder};
+    if ($orderby =~ /\(/) {
+        # The sort order is too complicated for stupid SQL.  Pick something
+        # simpler.
+        $orderby = "$tablename.$sortorder";
+    }
+    $query = Query("select $tablename.$idcolumn," . join(",", @mungedcols) . " from " . join(",", keys(%usedtables)) . $wherepart . " order by $orderby");
     while (@row = $query->fetchrow()) {
         my $i;
         for ($i=1 ; $i<@row ; $i++) {
