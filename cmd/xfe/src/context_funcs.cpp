@@ -2856,6 +2856,7 @@ fe_showRDFTreeView (Widget parent, LO_BuiltinStruct *builtin_struct)
 				 XmNheight, builtin_struct->height, 
 				 NULL);
   XtRealizeWidget (parent);
+  builtin->show();
 
   return (builtin->getBaseWidget());
 }
