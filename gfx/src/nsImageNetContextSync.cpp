@@ -25,7 +25,7 @@
 #include "nsIURL.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "il_strm.h"
+//#include "il_strm.h"
 
 #ifndef NECKO
 #include "nsINetService.h"
@@ -199,8 +199,10 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
 
 #ifndef NECKO
     // Initiate a synchronous URL load
+
+ 
     if (NS_SUCCEEDED(service->OpenBlockingStream(url, nsnull, &stream)) &&
-        (aReader->StreamCreated(aURL, IL_UNKNOWN) == PR_TRUE)) {
+        (aReader->StreamCreated(aURL, "unknown") == PR_TRUE)) {
 #else
 
     nsIURI *uri = nsnull;
@@ -212,13 +214,30 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
     nsIChannel *channel = nsnull;
     rv = service->NewChannelFromURI("load", uri, nsnull, nsnull, &channel);
     NS_RELEASE(uri);
-    if (NS_FAILED(rv)) return -1;
+    if (NS_FAILED(rv)) 
+        return -1;
+
+    char* aContentType = NULL;
+    rv = channel->GetContentType(&aContentType); //nsCRT alloc's str
+    if (NS_FAILED(rv)) {
+        if(aContentType){
+            nsCRT::free(aContentType);
+        }
+        aContentType = nsCRT::strdup("unknown");        
+    }
+    if(nsCRT::strlen(aContentType) > 50){
+        //somethings wrong. mimetype string shouldn't be this big.
+        //protect us from the user.
+        nsCRT::free(aContentType);
+        aContentType = nsCRT::strdup("unknown"); 
+    } 
 
     rv = channel->OpenInputStream(0, -1, &stream);
     NS_RELEASE(channel);
-    if (NS_FAILED(rv)) return -1;
+    if (NS_FAILED(rv)) 
+        return -1;
 
-    if (aReader->StreamCreated(aURL, IL_UNKNOWN) == PR_TRUE) {
+    if (aReader->StreamCreated(aURL, aContentType) == PR_TRUE) {
 
 #endif // NECKO
 
@@ -263,12 +282,15 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
     }
 
     NS_IF_RELEASE(stream);
+    nsCRT::free(aContentType);
+
   } else {
     aReader->StreamAbort(-1);
     status = -1;
   }
   
   aReader->NetRequestDone(aURL, status);
+
   NS_IF_RELEASE(url);
 
   return 0;

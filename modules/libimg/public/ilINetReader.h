@@ -46,7 +46,7 @@ public:
 
   NS_IMETHOD NetRequestDone(ilIURL *urls, int status)=0;
   
-  virtual PRBool StreamCreated(ilIURL *urls, int type)=0;
+  virtual PRBool StreamCreated(ilIURL *urls, char* type)=0;
   
   virtual PRBool IsMulti()=0;
 };
