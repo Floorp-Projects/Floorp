@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.242 $ ';
+$::UtilsVersion = '$Revision: 1.243 $ ';
 
 package TinderUtils;
 
@@ -578,7 +578,7 @@ sub mail_build_started_message {
 }
 
 sub mail_build_finished_message {
-    my ($start_time, $build_status, $logfile) = @_;
+    my ($start_time, $build_status, $binary_url, $logfile) = @_;
 
     # Rewrite LOG to OUTLOG, shortening lines.
     open OUTLOG, ">$logfile.last" or die "Unable to open logfile, $logfile: $!";
@@ -591,6 +591,7 @@ sub mail_build_finished_message {
     print OUTLOG "tinderbox: tree: $Settings::BuildTree\n";
     print OUTLOG "tinderbox: builddate: $start_time\n";
     print OUTLOG "tinderbox: status: $build_status\n";
+    print OUTLOG "tinderbox: binaryurl: $binary_url\n" if ($binary_url ne "");
     print OUTLOG "tinderbox: build: $Settings::BuildName\n";
     print OUTLOG "tinderbox: errorparser: $platform\n";
     print OUTLOG "tinderbox: buildfamily: $platform\n";
@@ -799,6 +800,8 @@ sub BuildIt {
           # Create toplevel source directory.
           chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
           
+          my $build_status = 'none';
+          my $binary_url   = '';
           # Build it
           unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
             if ($Settings::OS =~ /^WIN/) {
@@ -877,7 +880,7 @@ sub BuildIt {
         my $external_build = "$Settings::BaseDir/post-mozilla.pl";
         if (((-e $external_build) and ($build_status eq 'success')) || 
             ($Settings::SkipMozilla)) {
-            $build_status = PostMozilla::main($build_dir);
+            ($build_status, $binary_url) = PostMozilla::main($build_dir);
         }
 
         # Increment failure count if we failed.
@@ -894,7 +897,7 @@ sub BuildIt {
         close LOG;
         chdir $build_dir;
 
-        mail_build_finished_message($start_time, $build_status, $logfile)
+        mail_build_finished_message($start_time, $build_status, $binary_url, $logfile)
             if $Settings::ReportStatus;
 
         rebootSystem() if $Settings::OS eq 'WIN98' && $Settings::RebootSystem;

@@ -35,7 +35,11 @@ sub main {
   #
 
   # Report a fake success, for example's sake.
-  return 'success';
+  # we return a list because sometimes we pass back a status *and*
+  # a url to a binary location, e.g.:
+  # return ('success', 'http://upload.host.org/path/to/binary');
+  # tinderbox processes the binary url and links to it in the log.
+  return ('success');
 }
 
 # Need to end with a true value, (since we're using "require").
