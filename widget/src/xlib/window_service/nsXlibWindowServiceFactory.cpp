@@ -61,7 +61,7 @@ nsXlibWindowServiceFactory::~nsXlibWindowServiceFactory()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsXlibWindowServiceFactory, NS_GET_IID(nsIFactory))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXlibWindowServiceFactory, nsIFactory)
 
 NS_IMETHODIMP
 nsXlibWindowServiceFactory::CreateInstance(nsISupports *aOuter,
