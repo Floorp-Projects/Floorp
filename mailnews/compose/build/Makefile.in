@@ -46,6 +46,7 @@ EXTRA_DSO_LDOPTS = \
 		-lappcores \
 		-lmsgbaseutil \
 		-lraptorhtmlpars \
+		$(NSPR_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
