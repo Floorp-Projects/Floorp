@@ -117,7 +117,7 @@ nsDownloadManager::~nsDownloadManager()
 
 }
 
-void PR_CALLBACK nsDownloadManager::DownloadCallback(nsITimer *aTimer, void *aClosure)
+void nsDownloadManager::DownloadCallback(nsITimer *aTimer, void *aClosure)
 {
   nsDownload* download = NS_STATIC_CAST(nsDownload*, aClosure);
 
