@@ -52,18 +52,20 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
   nsresult rv=NS_OK;
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-  {
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame)) {
     // Process the newly added column frames
     for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
-      // Set the preliminary values for the column frame
-      PRInt32 colIndex = mStartColIndex + mColCount;
-      ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex);
-      PRInt32 repeat = ((nsTableColFrame *)(kidFrame))->GetSpan();
-      mColCount += repeat;
-      for (PRInt32 i=0; i<repeat; i++)
-      {
-        tableFrame->AddColumnFrame((nsTableColFrame *)kidFrame);
+      const nsStyleDisplay* display;
+      kidFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
+      if (NS_STYLE_DISPLAY_TABLE_COLUMN == display->mDisplay) {
+        // Set the preliminary values for the column frame
+        PRInt32 colIndex = mStartColIndex + mColCount;
+        ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex);
+        PRInt32 repeat = ((nsTableColFrame *)(kidFrame))->GetSpan();
+        mColCount += repeat;
+        for (PRInt32 i=0; i<repeat; i++) {
+          tableFrame->AddColumnFrame((nsTableColFrame *)kidFrame);
+        }
       }
     }
     // colgroup's span attribute is how many columns the group represents
