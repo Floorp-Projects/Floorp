@@ -322,7 +322,9 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
       rv = localFolder->GetFolderScanState(&folderScanState);
       NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr <nsIMsgDBHdr> msgHdr;
-      mailboxUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+      nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(mailboxUrl, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      msgUrl->GetMessageHeader(getter_AddRefs(msgHdr));
       // we do this to get the account key
       localFolder->GetUidlFromFolder(&folderScanState, msgHdr);
       if (!folderScanState.m_accountKey.IsEmpty())

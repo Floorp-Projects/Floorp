@@ -55,7 +55,6 @@ public:
     NS_IMETHOD SetQuery(const nsACString &aQuery);
 
 	// from nsIMailboxUrl:
-	NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer);
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer);
 	NS_IMETHOD SetMailboxCopyHandler(nsIStreamListener *  aConsumer);

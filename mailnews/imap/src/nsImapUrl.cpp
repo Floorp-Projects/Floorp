@@ -1628,3 +1628,12 @@ NS_IMETHODIMP nsImapUrl::SetShouldStoreMsgOffline(PRBool aShouldStoreMsgOffline)
   m_shouldStoreMsgOffline = aShouldStoreMsgOffline;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsImapUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
+{
+  nsXPIDLCString uri;
+  nsresult rv = GetUri(getter_Copies(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return GetMsgDBHdrFromURI(uri.get(), aMsgHdr);
+}
+

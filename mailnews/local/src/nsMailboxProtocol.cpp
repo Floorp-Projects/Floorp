@@ -417,7 +417,9 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
   NS_ASSERTION(m_runningUrl, "Not running a url");
   if (m_runningUrl)
   {
-	  rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+        nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+	  rv = msgUrl->GetMessageHeader(getter_AddRefs(msgHdr));
 	  if (NS_SUCCEEDED(rv) && msgHdr)
 	  {
 		  PRUint32 messageSize = 0;

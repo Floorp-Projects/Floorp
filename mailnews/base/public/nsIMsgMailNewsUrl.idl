@@ -51,6 +51,7 @@ interface nsIMimeHeaders;
 interface nsIStreamListener;
 interface nsIMsgFolder;
 interface nsIMsgHeaderSink;
+interface nsIMsgDBHdr;
 
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
@@ -124,7 +125,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
 // grouping it into a separate interface...
 //////////////////////////////////////////////////////////////////////////////////
 
-[scriptable, uuid(02338DD2-E7B9-11d2-8070-006008128C4E)]
+[scriptable, uuid(6BEED963-0424-44C5-A605-C01F6DCBAAC2)]
 interface nsIMsgMessageUrl : nsISupports {
   // get and set the RDF URI associated with the url. Note, not all urls have
   // had uri's set on them so be prepared to handle cases where this string is empty.
@@ -134,6 +135,9 @@ interface nsIMsgMessageUrl : nsISupports {
   attribute boolean AddDummyEnvelope;	
   attribute boolean canonicalLineEnding;
   attribute string originalSpec;
+  // a message db header for that message.
+  readonly attribute nsIMsgDBHdr messageHeader;
+
 };
 
 //////////////////////////////////////////////////////////////////////////////////

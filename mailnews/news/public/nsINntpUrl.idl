@@ -51,10 +51,9 @@ interface nsINNTPNewsgroupPost;
 
 typedef long nsNewsAction;
 
-[scriptable, uuid(BDD12930-A682-11d2-804C-006008128C4E)]
+[scriptable, uuid(CAB8B3DF-9F66-4B36-838E-BB59950A2349)]
 interface nsINntpUrl : nsISupports {
   attribute nsINNTPNewsgroupPost messageToPost;
-  readonly attribute nsIMsgDBHdr messageHeader;
   attribute nsNewsAction newsAction;
   attribute boolean getOldMessages;
 

@@ -56,8 +56,12 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIMimeMiscStatus.h"
 #include "nsIMsgWindow.h"
+#include "nsMsgUtils.h"
+#include "nsIMsgHdr.h"
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
+
+nsIAtom * nsMsgStatusFeedback::kMsgLoadedAtom = nsnull;
 
 nsMsgStatusFeedback::nsMsgStatusFeedback() :
   m_lastPercent(0)
@@ -71,11 +75,14 @@ nsMsgStatusFeedback::nsMsgStatusFeedback() :
     if (NS_SUCCEEDED(rv))
         bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
                                     getter_AddRefs(mBundle));
+
+    kMsgLoadedAtom = NS_NewAtom("msgLoaded");
 }
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()
 {
   mBundle = nsnull;
+  NS_RELEASE(kMsgLoadedAtom);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgStatusFeedback)
@@ -168,6 +175,22 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
               msgWindow->GetMsgHeaderSink(getter_AddRefs(hdrSink));
               if (hdrSink)
                 hdrSink->OnEndMsgDownload(mailnewsUrl);
+            }
+            // get the folder and notify that the msg has been loaded. We're 
+            // using NotifyPropertyFlagChanged. To be completely consistent,
+            // we'd send a similar notification that the old message was
+            // unloaded.
+            nsXPIDLCString spec;
+            nsCOMPtr <nsIMsgDBHdr> msgHdr;
+            nsCOMPtr <nsIMsgFolder> msgFolder;
+            mailnewsUrl->GetFolder(getter_AddRefs(msgFolder));
+            nsCOMPtr <nsIMsgMessageUrl> msgUrl = do_QueryInterface(mailnewsUrl);
+            if (msgUrl)
+            {
+              // not sending this notification is not a fatal error...
+              (void) msgUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+              if (msgFolder && msgHdr)
+                msgFolder->NotifyPropertyFlagChanged(msgHdr, kMsgLoadedAtom, 0, 1);
             }
           }
         }
