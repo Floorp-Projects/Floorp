@@ -112,6 +112,7 @@ NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
  *  @param   aThread -- A pointer to a PRThread, not really sure of its use for the Mac yet
  *  @return  NONE
  */
-void nsToolkit::Init(PRThread *aThread)
+NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 {
+	return NS_OK;
 }
