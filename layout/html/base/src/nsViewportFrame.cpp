@@ -164,17 +164,18 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
     }
     
     // XXX Temporary hack until the block/inline code starts using 'computedWidth'
-    kidReflowState.availableWidth = kidReflowState.computedWidth;
+    nsMargin  kidBorderPadding;
+    nsHTMLReflowState::ComputeBorderPaddingFor(aKidFrame, &aReflowState, kidBorderPadding);
+    kidReflowState.availableWidth = kidReflowState.computedWidth +
+      kidBorderPadding.left + kidBorderPadding.right;
+
     htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
     // XXX If the child had a fixed height, then make sure it respected it...
     if (NS_AUTOHEIGHT != kidReflowState.computedHeight) {
       if (kidDesiredSize.height < kidReflowState.computedHeight) {
         kidDesiredSize.height = kidReflowState.computedHeight;
-
-        nsMargin  borderPadding;
-        nsHTMLReflowState::ComputeBorderPaddingFor(aKidFrame, &aReflowState, borderPadding);
-        kidDesiredSize.height += borderPadding.top + borderPadding.bottom;
+        kidDesiredSize.height += kidBorderPadding.top + kidBorderPadding.bottom;
       }
     }
 
