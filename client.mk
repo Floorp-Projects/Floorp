@@ -77,9 +77,9 @@ ifndef MAKE
 MAKE := gmake
 endif
 
-CONFIG_GUESS := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
-ifdef CONFIG_GUESS
-  CONFIG_GUESS := $(shell $(CONFIG_GUESS))
+CONFIG_GUESS_SCRIPT := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
+ifdef CONFIG_GUESS_SCRIPT
+  CONFIG_GUESS = $(shell $(CONFIG_GUESS_SCRIPT))
 else
   _IS_FIRST_CHECKOUT := 1
 endif
@@ -95,7 +95,7 @@ ifneq ($(CVS_ROOT_IN_TREE),$(CVSROOT))
 endif
 endif
 
-CVSCO = cvs $(CVS_FLAGS) co $(CVS_CO_FLAGS)
+CVSCO = $(strip cvs $(CVS_FLAGS) co $(CVS_CO_FLAGS))
 CVSCO_LOGFILE := $(ROOTDIR)/cvsco.log
 
 ifdef MOZ_CO_TAG
@@ -115,8 +115,8 @@ run_for_side_effects := \
         $(CVSCO) $(MOZCONFIG_FINDER) $(MOZCONFIG_LOADER); \
      else true; \
      fi; \
-     $(MOZCONFIG_LOADER) $(TOPSRCDIR) mozilla/.client-defs.mk)
-include $(TOPSRCDIR)/.client-defs.mk
+     $(MOZCONFIG_LOADER) $(TOPSRCDIR) mozilla/.mozconfig.mk > mozilla/.mozconfig.out)
+include $(TOPSRCDIR)/.mozconfig.mk
 
 ####################################
 # Options that may come from mozconfig
@@ -150,10 +150,6 @@ ifdef MOZ_CO_DATE
   CVS_CO_FLAGS := $(CVS_CO_FLAGS) -D "$(MOZ_CO_DATE)"
 endif
 
-ifndef MOZ_CO_MODULE
-  MOZ_CO_MODULE := SeaMonkeyAll
-endif
-
 ifeq "$(origin MOZ_MAKE_FLAGS)" "undefined"
   MOZ_MAKE_ENV :=
 else
@@ -168,38 +164,51 @@ else
   MOZ_MAKE := $(MOZ_MAKE_ENV) $(MAKE)
 endif
 
-
-#######################################################################
-# PSM client libs
+####################################
+# CVS defines for SeaMonkey
 #
+ifndef MOZ_CO_MODULE
+  MOZ_CO_MODULE := SeaMonkeyAll
+endif
+CVSCO_SEAMONKEY := $(CVSCO) $(MOZ_CO_MODULE)
 
+####################################
+# CVS defines for PSM
+#
 PSM_CO_MODULE= mozilla/security
 PSM_CO_FLAGS := -P
-CVSCO_PSM = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS) $(PSM_CO_MODULE)
 ifdef PSM_CO_TAG
   PSM_CO_FLAGS := $(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
 endif
+CVSCO_PSM = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS) $(PSM_CO_MODULE)
 
-#######################################################################
-# NSPR
+####################################
+# CVS defines for NSPR
 #
-
 NSPR_CO_MODULE = mozilla/nsprpub
 NSPR_CO_FLAGS := -P
-CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(NSPR_CO_MODULE)
 ifdef NSPR_CO_TAG
   NSPR_CO_FLAGS := $(NSPR_CO_FLAGS) -r $(NSPR_CO_TAG)
 endif
+CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(NSPR_CO_MODULE)
 
 
 #######################################################################
 # Rules
 # 
 
+# Print out any options loaded from mozconfig.
+all build checkout clean depend distclean export install realclean::
+	@if test -f .mozconfig.out; then \
+	  cat .mozconfig.out; \
+	  rm -f .mozconfig.out; \
+	else true; \
+	fi
+
 ifdef _IS_FIRST_CHECKOUT
-all: checkout build
+all:: checkout build
 else
-all: checkout depend build
+all:: checkout depend build
 endif
 
 # Windows equivalents
@@ -214,37 +223,28 @@ everything: checkout clean build
 ####################################
 # CVS checkout
 #
-checkout:
+checkout::
 	@: Backup the last checkout log.
 	@if test -f $(CVSCO_LOGFILE) ; then \
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
 	else true; \
 	fi
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
-	@echo $(CVSCO) mozilla/client.mk; \
+	@echo '$(CVSCO) mozilla/client.mk'; \
         cd $(ROOTDIR); \
 	$(CVSCO) mozilla/client.mk && \
 	$(MAKE) -f mozilla/client.mk real_checkout
 
 real_checkout:
-	@: Start the checkout. Pipe the output to the tty and a log file. \
-	 : If it fails, touch an error file because the pipe hides the    \
-	 : error. If the file is created, remove it and return an error.
-	@rm -f cvs-failed.tmp*; \
-	: Checkout NSPR; \
-	echo $(CVSCO_NSPR); \
-	($(CVSCO_NSPR) || touch cvs-failed.tmp) 2>&1 \
-	  | tee -a $(CVSCO_LOGFILE); \
-	if test -f cvs-failed.tmp; then exit 1; else true; fi; \
-	: Checkout PSM client libs; \
-	echo $(CVSCO_PSM); \
-	($(CVSCO_PSM) || touch cvs-failed.tmp) 2>&1 \
-	  | tee -a $(CVSCO_LOGFILE); \
-	if test -f cvs-failed.tmp; then exit 1; else true; fi; \
-	: Checkout SeaMonkeyAll; \
-	echo $(CVSCO) $(MOZ_CO_MODULE); \
-	($(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp) 2>&1 \
-	  | tee -a $(CVSCO_LOGFILE)
+	@: Start the checkout. Split the output to the tty and a log file. \
+	 : If it fails, touch an error file because "tee" hides the error.
+	@failed=.cvs-failed.tmp; rm -f $$failed*; \
+	cvs_co='echo $$cmd ; \
+	  (eval "$$cmd" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
+	  if test -f $$failed; then false; else true; fi;'; \
+	cmd='$(CVSCO_NSPR)'      && eval $$cvs_co && \
+	cmd='$(CVSCO_PSM)'       && eval $$cvs_co && \
+	cmd='$(CVSCO_SEAMONKEY)' && eval $$cvs_co
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 	@: Check the log for conflicts. ;\
 	conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
@@ -252,14 +252,10 @@ real_checkout:
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
 	  echo "$$conflicts" ;\
 	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE) for full log." ;\
-	  exit 1; \
-	else true; \
-	fi; \
-	if test -f cvs-failed.tmp ; then \
-	  rm cvs-failed.tmp; \
 	  false; \
 	else true; \
 	fi
+
 
 ####################################
 # Web configure
@@ -279,14 +275,12 @@ webconfig:
 	echo   1. Fill out the form on the browser. ;\
 	echo   2. Save the results to $(WEBCONFIG_FILE).
 
-#	netscape -remote "saveAs($(WEBCONFIG_FILE))"
-
 #####################################################
 # First Checkout
 
 ifdef _IS_FIRST_CHECKOUT
 # First time, do build target in a new process to pick up new files.
-build:
+build::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk build
 else
 
@@ -315,7 +309,7 @@ endif
 CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/configure \
 	$(TOPSRCDIR)/allmakefiles.sh \
-	$(TOPSRCDIR)/.client-defs.mk \
+	$(TOPSRCDIR)/.mozconfig.mk \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
 	$(NULL)
 
@@ -347,20 +341,20 @@ endif
 ####################################
 # Depend
 
-depend: $(OBJDIR)/Makefile $(OBJDIR)/config.status
+depend:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) $@;
 
 ####################################
 # Build it
 
-build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status
+build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) export && $(MOZ_MAKE) install
 
 ####################################
 # Other targets
 
 # Pass these target onto the real build system
-install export clean realclean distclean:
+install export clean realclean distclean::
 	$(MOZ_MAKE) $@
 
 cleansrcdir:
