@@ -16,11 +16,11 @@ tab:not([selected="true"]):hover {
 }
 
 tab:not([selected="true"]) > .tab-image-middle > .tab-icon {
-   -moz-opacity: 0.5;
+   opacity: 0.5;
 }
 
 tab:not([selected="true"]):hover > .tab-image-middle > .tab-icon {
-   -moz-opacity: 1.0;
+   opacity: 1.0;
 }
 
 tab:hover > .tab-image-middle > .tab-icon > .tab-extra-status {

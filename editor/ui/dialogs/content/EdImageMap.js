@@ -182,7 +182,7 @@ function highContrast(){
   if (highCont == true){
     frameDoc.getElementById("bgDiv").style.background = "url('chrome://editor/skin/images/Map_checker.gif')";
     frameDoc.getElementById("bgDiv").style.backgroundColor = "white";
-    imageEl.style.setProperty("-moz-opacity", "1.0", true);
+    imageEl.style.setProperty("opacity", "1.0", true);
     document.getElementById("Map:Contrast").setAttribute("checked", "false");
     document.getElementById("Map:Contrast").setAttribute("toggled", "false");
     highCont = false;
@@ -190,7 +190,7 @@ function highContrast(){
   else{
     frameDoc.getElementById("bgDiv").style.background = "url('')";
     frameDoc.getElementById("bgDiv").style.backgroundColor = "#D2D2D2";
-    imageEl.style.setProperty("-moz-opacity", ".3", true);
+    imageEl.style.setProperty("opacity", ".3", true);
     document.getElementById("Map:Contrast").setAttribute("checked", "true");
     document.getElementById("Map:Contrast").setAttribute("toggled", "true");
     highCont = true;

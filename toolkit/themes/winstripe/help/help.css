@@ -134,5 +134,5 @@ toolbar[mode="text"] .toolbarbutton-icon {
 
 #help-throbber[busy="true"] {
   list-style-image: url("chrome://browser/skin/Throbber-small.gif");
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }

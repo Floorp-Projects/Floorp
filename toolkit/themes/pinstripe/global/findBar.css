@@ -91,7 +91,7 @@
 
 #find-previous[disabled="true"]
 {
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 	
 #find-previous:hover
@@ -107,7 +107,7 @@
 
 #find-next[disabled="true"]
 {
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 
 #find-next:hover
@@ -124,7 +124,7 @@
 }
 
 #highlight[disabled="true"] {
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 
 #highlight:active, #highlight[checked="true"] {

@@ -110,7 +110,7 @@ view {
 }
 
 #optionsButton[disabled="true"] {
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 
 .button-text {
