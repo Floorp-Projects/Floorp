@@ -1362,12 +1362,13 @@ public class Codegen extends Interpreter {
             } else {
                 push(right.getString());
             }
+            push(0);
 
             addSpecialInvoke("org/mozilla/javascript/regexp/NativeRegExp",
                                 "<init>",
                                 "(Lorg/mozilla/javascript/Context;" +
                                   "Lorg/mozilla/javascript/Scriptable;" +
-                                  "Ljava/lang/String;Ljava/lang/String;)",
+                                  "Ljava/lang/String;Ljava/lang/String;Z)",
                                   "V");
 
             regexp.putProp(Node.REGEXP_PROP, fieldName);

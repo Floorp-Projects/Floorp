@@ -85,11 +85,13 @@ public class NativeRegExp extends ScriptableObject implements Function {
         ctor.put("prototype", ctor, proto);
     }
 
-    public NativeRegExp(Context cx, Scriptable scope, String source, String global) {
-        init(cx, scope, source, global);
+    public NativeRegExp(Context cx, Scriptable scope, String source, 
+                                                 String global, boolean flat) {
+        init(cx, scope, source, global, flat);
     }
 
-    public void init(Context cx, Scriptable scope, String source, String global) {
+    public void init(Context cx, Scriptable scope, String source, 
+                                                String global, boolean flat) {
         this.source = source;
         flags = 0;
         if (global != null) {
@@ -113,7 +115,34 @@ public class NativeRegExp extends ScriptableObject implements Function {
         }
 
         CompilerState state = new CompilerState(source, flags, cx, scope);
-        this.ren = parseRegExp(state);
+        if (flat) {
+            ren = null;
+            int sourceLen = source.length();
+            int index = 0;
+            while (sourceLen > 0) {
+                int len = sourceLen;
+                if (len > REOP_FLATLEN_MAX) {
+                    len = REOP_FLATLEN_MAX;
+                }
+                RENode ren2 = new RENode(state, len == 1 ? REOP_FLAT1 : REOP_FLAT,
+                                 new Integer(index));                                 
+                ren2.flags = RENode.NONEMPTY;
+                if (len > 1) {
+                    ren2.kid2 = index + len;
+                } else {
+                    ren2.flags |= RENode.SINGLE;
+                    ren2.chr = state.source[index];                    
+                }
+                index += len;
+                sourceLen -= len;
+                if (ren == null)
+                    ren = ren2;
+                else
+                    setNext(state, ren, ren2);
+            }
+        }
+        else
+            this.ren = parseRegExp(state);
         if (ren == null) return;
         RENode end = new RENode(state, REOP_END, null);
         setNext(state, ren, end);
@@ -149,7 +178,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         String s = args.length == 0 ? "" : ScriptRuntime.toString(args[0]);
         String global = args.length > 1 ? ScriptRuntime.toString(args[1])
                                         : null;
-        thisObj.init(cx, funObj, s, global);
+        thisObj.init(cx, funObj, s, global, false);
         return thisObj;
     }
 
