@@ -484,12 +484,15 @@ NS_IMETHODIMP
 nsHTMLAnchorElement::GetProtocol(nsAWritableString& aProtocol)
 {
   nsAutoString href;
-  
+
   nsresult rv = GetHref(href);
   if (NS_FAILED(rv))
     return rv;
-  
-  return GetProtocolFromHrefString(href, aProtocol);
+
+  nsCOMPtr<nsIDocument> doc;
+  mNodeInfo->GetDocument(*getter_AddRefs(doc));
+
+  return GetProtocolFromHrefString(href, aProtocol, doc);
 }
 
 NS_IMETHODIMP
