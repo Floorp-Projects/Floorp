@@ -238,6 +238,8 @@ nsresult
 nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed)
 {
   aProcessed=PR_FALSE;
+
+#ifdef USE_OLD_OBSOLETE_HARDWIRED_SHORTCUT_KEYS
   PRUint32 charCode;
 
   nsCOMPtr<nsIDOMKeyEvent>keyEvent;
@@ -317,6 +319,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       }
     }
   }
+#endif
   return NS_OK;
 }
 
