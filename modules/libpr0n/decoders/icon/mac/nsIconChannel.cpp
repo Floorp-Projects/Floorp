@@ -69,7 +69,7 @@ nsresult nsIconChannel::Init(nsIURI* uri)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
 
-NS_IMETHODIMP nsIconChannel::GetName(PRUnichar* *result)
+NS_IMETHODIMP nsIconChannel::GetName(nsACString &result)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -518,17 +518,28 @@ NS_IMETHODIMP nsIconChannel::SetLoadFlags(PRUint32 aLoadAttributes)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::GetContentType(char* *aContentType) 
+NS_IMETHODIMP nsIconChannel::GetContentType(nsACString &aContentType) 
 {
-  if (!aContentType) return NS_ERROR_NULL_POINTER;
-
-  *aContentType = nsCRT::strdup("image/icon");
-  if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
+  aContentType = NS_LITERAL_CSTRING("image/icon");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetContentType(const char *aContentType)
+nsIconChannel::SetContentType(const nsACString &aContentType)
+{
+  //It doesn't make sense to set the content-type on this type
+  // of channel...
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsIconChannel::GetContentCharset(nsACString &aContentCharset) 
+{
+  aContentCharset = NS_LITERAL_CSTRING("image/icon");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIconChannel::SetContentCharset(const nsACString &aContentCharset)
 {
   //It doesn't make sense to set the content-type on this type
   // of channel...
