@@ -134,7 +134,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     );
     
   return result;
-#else if defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
+#elif defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
 
 asm(
 	"\n\t /: PRUint32 n = invoke_count_words (paramCount, params) * 4;"
