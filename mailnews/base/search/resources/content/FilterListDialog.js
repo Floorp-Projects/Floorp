@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,7 +49,7 @@ var gRunFiltersFolderPickerLabel;
 var gRunFiltersFolderPicker;
 var gRunFiltersButton;
 var gFilterBundle;
-var gPromptService;
+var gPromptService = GetPromptService();
 var gFilterListMsgWindow = null;
 var gFilterTree;
 var gStatusBar;
@@ -92,9 +93,6 @@ const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
 function onLoad()
 {
-    var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
-
     gFilterListMsgWindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].createInstance(Components.interfaces.nsIMsgWindow);
     gFilterListMsgWindow.statusFeedback = gStatusFeedback;
     gFilterListMsgWindow.SetDOMWindow(window); 
@@ -240,8 +238,9 @@ function toggleFilter(aFilterURI)
                                             Components.interfaces.nsIMsgFilter);
     if (filter.unparseable)
     {
-      var str = gFilterBundle.getString("cannotEnableFilter");
-      window.alert(str);
+      if (gPromptService)
+        gPromptService.alert(window, null,
+                             gFilterBundle.getString("cannotEnableFilter"));
       return;
     }
     filter.enabled = !filter.enabled;
@@ -313,7 +312,8 @@ function onFilterSelect(event)
 function onEditFilter() 
 {
   var selectedFilter = currentFilter();
-  var args = {filter: selectedFilter};
+  var curFilterList = currentFilterList();
+  var args = {filter: selectedFilter, filterList: curFilterList};
 
   window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable,centerscreen", args);
 
@@ -339,10 +339,11 @@ function onDeleteFilter()
     var filterList = currentFilterList();
     if (!filterList) return;
 
-    var confirmStr = gFilterBundle.getString("deleteFilterConfirmation");
-
-    if (!window.confirm(confirmStr)) 
-      return;
+    if (gPromptService) {
+      if (!gPromptService.confirm(window, null,
+                                  gFilterBundle.getString("deleteFilterConfirmation")))
+        return;
+    }
 
     filterList.removeFilter(filter);
     refresh();
@@ -376,19 +377,18 @@ function onFilterClose()
   if (filterList) 
     filterList.saveToDefaultFile();
 
-  var nsIPromptService = Components.interfaces.nsIPromptService;
   if (gRunFiltersButton.getAttribute("label") == gRunFiltersButton.getAttribute("stoplabel")) {
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-
     var promptTitle = gFilterBundle.getString("promptTitle");
     var promptMsg = gFilterBundle.getString("promptMsg");;
     var stopButtonLabel = gFilterBundle.getString("stopButtonLabel");
     var continueButtonLabel = gFilterBundle.getString("continueButtonLabel");
-    
-    var result = promptService.confirmEx(window, promptTitle, promptMsg,
-          (promptService.BUTTON_TITLE_IS_STRING*promptService.BUTTON_POS_0) +
-          (promptService.BUTTON_TITLE_IS_STRING*promptService.BUTTON_POS_1),
-          continueButtonLabel, stopButtonLabel, null, null, {value:0});
+    var result = false;
+
+    if (gPromptService)
+      result = gPromptService.confirmEx(window, promptTitle, promptMsg,
+               (gPromptService.BUTTON_TITLE_IS_STRING*gPromptService.BUTTON_POS_0) +
+               (gPromptService.BUTTON_TITLE_IS_STRING*gPromptService.BUTTON_POS_1),
+               continueButtonLabel, stopButtonLabel, null, null, {value:0});
 
     if (result)
       gFilterListMsgWindow.StopUrls();
@@ -678,4 +678,15 @@ function getFirstFolderURI(msgFolder)
     dump(ex + "\n");
   }
   return msgFolder.URI;
+}
+
+function GetPromptService()
+{
+  try {
+    return Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                     .getService(Components.interfaces.nsIPromptService);
+  }
+  catch (e) {
+    return null;
+  }
 }

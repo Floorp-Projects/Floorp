@@ -23,6 +23,7 @@
  *   Alec Flett <alecf@netscape.com>
  *   Håkan Waara <hwaara@chello.se>
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -84,14 +85,16 @@ function filterEditorOnLoad()
     if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
 
+        if ("filterList" in args) {
+          gFilterList = args.filterList;
+        }
+
         if ("filter" in args) {
           // editing a filter
           gFilter = window.arguments[0].filter;
           initializeDialog(gFilter);
         } 
         else {
-          gFilterList = args.filterList;
-          
           if (gFilterList)
               setSearchScope(getScopeFromFilterList(gFilterList));
 
@@ -164,16 +167,6 @@ function onEnterInSearchTerm()
 
 function onAccept()
 {
-    if (duplicateFilterNameExists(gFilterNameElement.value))
-    {
-        if (gPromptService)
-          gPromptService.alert(window,
-            gFilterBundle.getString("cannotHaveDuplicateFilterTitle"),
-            gFilterBundle.getString("cannotHaveDuplicateFilterMessage")
-          );
-        return false;
-    }
-
     if (!saveFilter()) return false;
 
     // parent should refresh filter list..
@@ -214,17 +207,12 @@ var gFolderListener = {
 
 function duplicateFilterNameExists(filterName)
 {
-    var args = window.arguments[0];
-    var filterList;
-    if ("filterList" in args)
-      filterList = args.filterList;
-    if (filterList)
-      for (var i = 0; i < filterList.filterCount; i++)
-     {
-       if (filterName == filterList.getFilterAt(i).filterName)
-         return true;
-     }
-    return false;   
+  if (gFilterList)
+    for (var i = 0; i < gFilterList.filterCount; i++) {
+      if (filterName == gFilterList.getFilterAt(i).filterName)
+        return true;
+    }
+  return false;   
 }
 
 function getScopeFromFilterList(filterList)
@@ -402,6 +390,20 @@ function saveFilter()
     return false;
   }
 
+  // If we think have a duplicate, then we need to check that if we
+  // have an original filter name (i.e. we are editing a filter), then
+  // we must check that the original is not the current as that is what
+  // the duplicateFilterNameExists function will have picked up.
+  if ((!gFilter || gFilter.filterName != filterName) &&
+      duplicateFilterNameExists(filterName)) {
+    if (gPromptService)
+      gPromptService.alert(window,
+                           gFilterBundle.getString("cannotHaveDuplicateFilterTitle"),
+                           gFilterBundle.getString("cannotHaveDuplicateFilterMessage")
+                           );
+    return false;
+  }
+
   if (!(gMoveToFolderCheckbox.checked ||
         gChangePriorityCheckbox.checked ||
         gLabelCheckbox.checked ||
@@ -435,13 +437,13 @@ function saveFilter()
 
   if (!gFilter) 
   {
-    gFilter = gFilterList.createFilter(gFilterNameElement.value);
+    gFilter = gFilterList.createFilter(filterName);
     isNewFilter = true;
     gFilter.enabled=true;
   } 
   else 
   {
-    gFilter.filterName = gFilterNameElement.value;
+    gFilter.filterName = filterName;
     //Prefilter is treated as a new filter.
     if (gPreFillName) 
     {
