@@ -608,7 +608,11 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 	if (m_filePath)
 		delete m_filePath;
 	ParseSearchPart();
+#if defined(XP_MAC)
+	m_filePath = new nsFileSpec(nsFilePath(m_file));
+#else
 	m_filePath = new nsFileSpec(m_file);
+#endif
 
 	// we need to set the mailbox action type that this url represented....
 	// if we had a search field then we parsed it and it set the mailbox state...
