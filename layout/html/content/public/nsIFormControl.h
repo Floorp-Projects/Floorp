@@ -57,6 +57,9 @@ class nsIDOMHTMLFormElement;
  **/
 class nsIFormControl : public nsISupports {
 public:
+
+  static const nsIID& GetIID() { static nsIID iid = NS_IFORMCONTROL_IID; return iid; }
+
   /**
     * Get the form for this form control. 
     * @param aForm the form to get

@@ -33,6 +33,7 @@
 #include "nsDebug.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMElementObserver.h"
@@ -41,6 +42,8 @@
 #include "nsIDOMText.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
+#include "nsIFormControl.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
 #include "nsINameSpace.h"
@@ -1682,6 +1685,37 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
                                                   getter_AddRefs(element));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create HTML element");
     if (NS_FAILED(rv)) return rv;
+
+    // XXX This is part of what will be an optimal solution.  To allow
+    // elements that expect to be inside a form to work without forms, we
+    // will create a secret hidden form up in the XUL document.  Only
+    // do this if the new HTML element is a form control element.
+    // Eventually we'll really want to be tracking all forms full force.
+    nsCOMPtr<nsIFormControl> htmlFormControl = do_QueryInterface(element);
+    if (htmlFormControl) {
+      // Retrieve the hidden form from the XUL document.
+      nsCOMPtr<nsIDOMHTMLFormElement> htmlFormElement;
+      mDocument->GetForm(getter_AddRefs(htmlFormElement));
+      if (!htmlFormElement) {
+        // Create a new form element.
+        nsAutoString tag("form");
+        nsCOMPtr<nsIHTMLContent> newElement;
+        rv = mHTMLElementFactory->CreateInstanceByTag(tag,
+                                                  getter_AddRefs(newElement));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create HTML element");
+        if (NS_FAILED(rv)) return rv;
+
+        htmlFormElement = do_QueryInterface(newElement);
+        if (!htmlFormElement) {
+          NS_ERROR("Uh-oh! Couldn't make a form!");
+          return NS_ERROR_FAILURE;
+        }
+        mDocument->SetForm(htmlFormElement);
+      }
+        
+      // Set the form
+      htmlFormControl->SetForm(htmlFormElement);
+    }
 
     // Force the document to be set _here_. Many of the
     // AppendChildTo() implementations do not recursively ensure
