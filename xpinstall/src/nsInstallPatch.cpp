@@ -281,7 +281,7 @@ PRInt32 nsInstallPatch::Complete()
             // FinalizeInstall() leaving things hosed. These piddly errors
             // aren't worth that.
             VR_Install( tempRegName, 
-                        (char*) (const char *) nsNSPRPath(*mTargetFile),
+                        (char*)(const char *)mTargetFile->GetNativePathCString(),
                         tempVersion, 
                         PR_FALSE );
             

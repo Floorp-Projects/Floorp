@@ -217,18 +217,22 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRBo
                 trigger->Add( item );
                 // The Install manager will delete itself when done
                 rv = mgr->InitManager( trigger );
+                *aReturn = PR_TRUE;
             }
             else
             {
+                rv = NS_ERROR_OUT_OF_MEMORY;
                 delete trigger;
                 delete mgr;
             }
         }
         else
+        {
+            rv = NS_ERROR_OUT_OF_MEMORY;
             delete mgr;
+        }
     }
 
-    *aReturn = NS_OK;  // maybe we should do something more.
     return rv;
 }
 
@@ -364,6 +368,7 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     VERSION              cVersion;
     char*                tempCString;
     REGERR               status;
+    nsInstallVersion     regNameVersion;
     
     tempCString = aRegName.ToNewCString();
 
@@ -372,8 +377,6 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     /* if we got the version */
     if ( status == REGERR_OK ) 
     {
-        nsInstallVersion regNameVersion;
-
         if ( VR_ValidateComponent( tempCString ) == REGERR_NOFILE ) 
         {
             regNameVersion.Init(0,0,0,0);
@@ -385,10 +388,12 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
                                 cVersion.release, 
                                 cVersion.build);
         }
-
-        regNameVersion.CompareTo( aVersion, aReturn );
     }
+    else
+        regNameVersion.Init(0,0,0,0);
         
+    regNameVersion.CompareTo( aVersion, aReturn );
+
     if (tempCString)
         Recycle(tempCString);
     
@@ -441,7 +446,7 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
 {
     // Checking to see if the url is local
 
-    if ( aURL.EqualsIgnoreCase("file://", 7) )
+    if ( aURL.EqualsIgnoreCase("file:/", 6) )
     {       
         tempFileString.SetString( nsNSPRPath(nsFileURL(aURL)) );
     }

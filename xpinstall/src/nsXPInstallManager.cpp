@@ -132,7 +132,11 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     mTriggers = aTriggers;
 
     if ( !mTriggers || mTriggers->Size() == 0 )
+    {
         rv = NS_ERROR_INVALID_POINTER;
+        NS_RELEASE_THIS();
+        return rv;
+    }
 
     //-----------------------------------------------------
     // confirm that install is OK... use stock Confirm()
@@ -174,7 +178,8 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
 
         if ( dlg )
         {
-            rv = dlg->QueryInterface( nsIXPIProgressDlg::GetIID(), getter_AddRefs(mDlg) );
+            rv = dlg->QueryInterface( nsIXPIProgressDlg::GetIID(), 
+                                      getter_AddRefs(mDlg) );
             if (NS_SUCCEEDED(rv))
             {
                 rv = mDlg->Open();
@@ -184,9 +189,24 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // --- clean up on error
-    if (!NS_SUCCEEDED(rv))
+    PRInt32 cbstatus = 0;  // callback status
+    if (NS_SUCCEEDED(rv) && !OKtoInstall )
+        cbstatus = nsInstall::USER_CANCELLED;
+    else if (!NS_SUCCEEDED(rv))
+        cbstatus = nsInstall::UNEXPECTED_ERROR;
+
+    if ( cbstatus != 0 )
+    {
+        // --- inform callbacks of error
+        for (PRUint32 i = 0; i < mTriggers->Size(); i++)
+        {
+            mTriggers->SendStatus( mTriggers->Get(i)->mURL.GetUnicode(),
+                                   cbstatus );
+        }
+
+        // -- must delete ourselves if not continuing
         NS_RELEASE_THIS();
+    }
 
     return rv;
 }
@@ -215,7 +235,9 @@ nsresult nsXPInstallManager::DownloadNext()
                     getter_AddRefs(mItem->mFile) );
             if (NS_FAILED(rv))
             {
-                // XXX serious problem with trigger! try to carry on
+                // serious problem with trigger! try to carry on
+                mTriggers->SendStatus( mItem->mURL.GetUnicode(), 
+                                       nsInstall::DOWNLOAD_ERROR );
                 mItem->mFile = 0;
             }
 
@@ -256,7 +278,9 @@ nsresult nsXPInstallManager::DownloadNext()
 
             if (NS_FAILED(rv))
             {
-                // XXX announce failure somehow
+                // announce failure
+                mTriggers->SendStatus( mItem->mURL.GetUnicode(), 
+                                       nsInstall::DOWNLOAD_ERROR );
                 mItem->mFile = 0;
                 // carry on with the next one
                 rv = DownloadNext();
@@ -282,9 +306,10 @@ nsresult nsXPInstallManager::DownloadNext()
                                                 this );
                     if (NS_SUCCEEDED(rv))
                         PR_AtomicIncrement(&mNumJars);
+                    else
+                        mTriggers->SendStatus( mItem->mURL.GetUnicode(),
+                                               nsInstall::UNEXPECTED_ERROR );
                 }
-                else
-                    ; // XXX announce failure
             }
         }
         else
@@ -351,6 +376,19 @@ nsXPInstallManager::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
     }
 
     mItem->mFile->CloseStream();
+
+    if (!NS_SUCCEEDED(rv))
+    {
+        nsFileSpec fspec;
+        rv = mItem->mFile->GetFileSpec(&fspec);
+        if ( NS_SUCCEEDED(rv) && fspec.Exists() )
+            fspec.Delete(0);
+
+        mItem->mFile = 0;
+
+        mTriggers->SendStatus( mItem->mURL.GetUnicode(),
+                               nsInstall::DOWNLOAD_ERROR );
+    }
     DownloadNext();
     return rv;
 }

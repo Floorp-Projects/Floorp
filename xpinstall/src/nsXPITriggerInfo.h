@@ -60,11 +60,7 @@ class nsXPITriggerItem
 
     nsCOMPtr<nsIFileSpec>  mFile;
 
-    PRBool  IsFileURL() { 
-        nsString startsWith;  
-        mURL.Left(startsWith,7);
-        return startsWith.Equals("file://");
-    }
+    PRBool  IsFileURL() { return mURL.Equals("file:/",PR_FALSE,6); }
 
   private:
     //-- prevent inadvertent copies and assignments
