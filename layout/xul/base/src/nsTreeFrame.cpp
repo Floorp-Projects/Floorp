@@ -107,6 +107,18 @@ void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
  // XXX Re-implement!
 }
 
+NS_IMETHODIMP 
+nsTreeFrame::HandleEvent(nsIPresContext& aPresContext, 
+                             nsGUIEvent*     aEvent,
+                             nsEventStatus&  aEventStatus)
+{
+  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  if (aEvent->message == NS_KEY_DOWN) {
+    printf("YES!\n");
+  }
+  return NS_OK;
+}
+  
 void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
 {
 	PRInt32 rowIndex;

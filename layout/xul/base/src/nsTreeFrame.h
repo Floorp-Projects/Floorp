@@ -44,11 +44,13 @@ public:
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   PRBool RowGroupsShouldBeConstrained() { return PR_TRUE; }
   
-  NS_IMETHODIMP Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
 							         nsHTMLReflowMetrics&     aMetrics,
 							         const nsHTMLReflowState& aReflowState,
 							         nsReflowStatus&          aStatus);
-
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                             nsGUIEvent*     aEvent,
+                             nsEventStatus&  aEventStatus);
 
 protected:
   nsTreeFrame();
