@@ -342,7 +342,9 @@ NS_IMETHODIMP nsMsgDBView::Observe(nsISupports *aSubject, const char *aTopic, co
 
     if(matchFound) {
       NS_ENSURE_SUCCESS(rv,rv);
-      mOutliner->Invalidate();
+      NS_ASSERTION(mOutliner, "no outliner, see bug #114956");
+      if(mOutliner)
+        mOutliner->Invalidate();
     }
   }
   return NS_OK;
@@ -1759,14 +1761,18 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
     if (!mIsSearchView)  //ignore for search view
     {
       rv = ExpandAll();
-      mOutliner->Invalidate();
+      NS_ASSERTION(mOutliner, "no outliner, see bug #114956");
+      if(mOutliner)
+        mOutliner->Invalidate();
     }
     break;
   case nsMsgViewCommandType::collapseAll:
     if (!mIsSearchView)  //ignore for search view
     {
       rv = CollapseAll();
-      mOutliner->Invalidate();
+      NS_ASSERTION(mOutliner, "no outliner, see bug #114956");
+      if(mOutliner)
+        mOutliner->Invalidate();
     }
     break;
   default:
