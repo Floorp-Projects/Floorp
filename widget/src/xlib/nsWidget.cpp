@@ -453,7 +453,8 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = NorthWestGravity;
   // make sure that we listen for events
-  attr.event_mask = ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | FocusChangeMask;
+  attr.event_mask = GetEventMask();
+
   // set the default background color and border to that awful gray
   attr.background_pixel = mBackgroundPixel;
   attr.border_pixel = mBorderPixel;
@@ -467,9 +468,21 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
 
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
   CreateGC();
-
 }
-                            
+
+/* virtual */ long
+nsWidget::GetEventMask()
+{
+	long event_mask;
+
+	event_mask = 
+		ExposureMask | 
+		ButtonPressMask | 
+		ButtonReleaseMask | 
+		PointerMotionMask;
+
+	return event_mask;
+}
 
 void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                                   XSetWindowAttributes aAttr, unsigned long aMask)
@@ -572,7 +585,7 @@ nsWidget::OnPaint(nsPaintEvent &event)
                                                     kRenderingContextIID,
                                                     (void **)&event.renderingContext)) {
       event.renderingContext->Init(mContext, this);
-      result = DispatchWindowEvent(&event);
+      result = DispatchWindowEvent(event);
       NS_RELEASE(event.renderingContext);
     }
     else {
@@ -590,7 +603,7 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
   }
 
   if (nsnull != mEventCallback) {
-    result = DispatchWindowEvent(&aEvent);
+    result = DispatchWindowEvent(aEvent);
     return result;
   }
   if (nsnull != mMouseListener) {
@@ -619,39 +632,124 @@ nsWidget::OnResize(nsSizeEvent &event)
 {
   nsresult result = PR_FALSE;
   if (mEventCallback) {
-      result = DispatchWindowEvent(&event);
+      result = DispatchWindowEvent(event);
   }
   return result;
 }
 
-PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
+PRBool nsWidget::DispatchWindowEvent(nsGUIEvent & aEvent)
 {
   nsEventStatus status;
-  DispatchEvent(event, status);
+  DispatchEvent(&aEvent, status);
   return ConvertStatus(status);
 }
 
+PRBool nsWidget::DispatchKeyEvent(nsKeyEvent & aKeyEvent)
+{
+  if (mEventCallback) 
+  {
+    return DispatchWindowEvent(aKeyEvent);
+  }
 
-NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
+  return PR_FALSE;
+}
+
+
+PRBool nsWidget::DispatchFocusEvent(nsGUIEvent & aEvent)
+{
+  if (mEventCallback) 
+  {
+    return DispatchWindowEvent(aEvent);
+  }
+
+  return PR_FALSE;
+}
+
+//////////////////////////////////////////////////////////////////
+//
+// Turning TRACE_EVENTS on will cause printfs for all
+// mouse events that are dispatched.
+//
+// These are extra noisy, and thus have their own switch:
+//
+// NS_MOUSE_MOVE
+// NS_PAINT
+// NS_MOUSE_ENTER, NS_MOUSE_EXIT
+//
+//////////////////////////////////////////////////////////////////
+
+#undef TRACE_EVENTS
+#undef TRACE_EVENTS_MOTION
+#undef TRACE_EVENTS_PAINT
+#undef TRACE_EVENTS_CROSSING
+
+#ifdef DEBUG
+void
+nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
+                          Window         aWindow)
+{
+#ifndef TRACE_EVENTS_MOTION
+  if (aEvent.message == NS_MOUSE_MOVE)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_PAINT
+  if (aEvent.message == NS_PAINT)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_CROSSING
+  if (aEvent.message == NS_MOUSE_ENTER || aEvent.message == NS_MOUSE_EXIT)
+  {
+    return;
+  }
+#endif
+
+  static int sPrintCount=0;
+
+  printf("%4d %-26s(this=%-8p , window=%-8p",
+         sPrintCount++,
+         (const char *) nsAutoCString(GuiEventToString(aEvent)),
+         this,
+         (void *) aWindow);
+         
+  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
+
+  printf("\n");
+}
+#endif // DEBUG
+//////////////////////////////////////////////////////////////////
+
+
+NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent * aEvent,
                                       nsEventStatus &aStatus)
 {
-  NS_ADDREF(event->widget);
+#ifdef TRACE_EVENTS
+  DebugPrintEvent(*aEvent,mBaseWindow);
+#endif
+
+  NS_ADDREF(aEvent->widget);
 
   if (nsnull != mMenuListener) {
-    if (NS_MENU_EVENT == event->eventStructType)
-      aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *event));
+    if (NS_MENU_EVENT == aEvent->eventStructType)
+      aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *aEvent));
   }
 
   aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {
-    aStatus = (*mEventCallback)(event);
+    aStatus = (*mEventCallback)(aEvent);
   }
 
   // Dispatch to event listener if event was not consumed
   if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
-    aStatus = mEventListener->ProcessEvent(*event);
+    aStatus = mEventListener->ProcessEvent(*aEvent);
   }
-  NS_RELEASE(event->widget);
+
+  NS_RELEASE(aEvent->widget);
 
   return NS_OK;
 }

@@ -45,6 +45,7 @@ nsWindow::DestroyNative(void)
   }
 }
 
+#if 0
 void nsWindow::CreateNative(Window aParent, nsRect aRect)
 {
   XSetWindowAttributes attr;
@@ -70,6 +71,26 @@ void nsWindow::CreateNative(Window aParent, nsRect aRect)
   CreateGC();
 
 }
+#endif
+
+/* virtual */ long
+nsWindow::GetEventMask()
+{
+	long event_mask;
+
+	event_mask = 
+    StructureNotifyMask | 
+    ExposureMask | 
+    ButtonPressMask | 
+    ButtonReleaseMask | 
+    PointerMotionMask |
+    KeyPressMask | 
+    KeyReleaseMask | 
+    FocusChangeMask;
+
+  return event_mask;
+}
+
 
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {

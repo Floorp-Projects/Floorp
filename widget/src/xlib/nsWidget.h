@@ -102,16 +102,23 @@ public:
   NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
+#ifdef DEBUG
+  void                    DebugPrintEvent(nsGUIEvent & aEvent,Window aWindow);
+#endif
+
   virtual PRBool          OnPaint(nsPaintEvent &event);
   virtual PRBool          OnResize(nsSizeEvent &event);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
+  virtual PRBool          DispatchKeyEvent(nsKeyEvent &aKeyEvent);
+  virtual PRBool          DispatchFocusEvent(nsGUIEvent &aEvent);
+
 
   static nsWidget        * GetWidgetForWindow(Window aWindow);
 
 protected:
 
   // private event functions
-  PRBool DispatchWindowEvent(nsGUIEvent* event);
+  PRBool DispatchWindowEvent(nsGUIEvent & aEvent);
   PRBool ConvertStatus(nsEventStatus aStatus);
 
   // create the native window for this class
@@ -120,6 +127,9 @@ protected:
   virtual void CreateNative(Window aParent, nsRect aRect);
   virtual void DestroyNative(void);
   void         CreateGC(void);
+
+  // Let each sublclass set the event mask according to their needs
+  virtual long GetEventMask();
 
   // these will add and delete a window
   static void  AddWindowCallback   (Window aWindow, nsWidget *aWidget);
