@@ -25,8 +25,7 @@
 class nsIRenderingContext;
 class nsIWidget;
 
-
-/*
+/**
  * Return status for event processors.
  */
 
@@ -35,6 +34,10 @@ enum nsEventStatus {
   nsEventStatus_eConsumeNoDefault,  // The event is consumed, don't do default processing
   nsEventStatus_eConsumeDoDefault   // The event is consumed, but do default processing
 };
+
+/**
+ * General graphic user interface event
+ */
 
 struct nsGUIEvent {
   PRUint32    message;              // see GUI MESSAGES
@@ -46,20 +49,36 @@ struct nsGUIEvent {
   void*     nativeMsg;              // Internal platform specific mesasge.
 };
 
+/**
+ * Window resize event
+ */
+
 struct nsSizeEvent : public nsGUIEvent {
     nsRect          *windowSize;    // x,y width, height in pixels
 };
+
+/**
+ * Window repaint event
+ */
 
 struct nsPaintEvent : public nsGUIEvent {
     nsIRenderingContext *renderingContext;
     nsRect              *rect;      // x,y, width, height in pixels of area to paint
 };
 
+/**
+ * Scrollbar event
+ */
+
 struct nsScrollbarEvent : public nsGUIEvent {
     PRUint32        position;       // ranges between scrollbar 0
                                     // and (maxRange - thumbSize)
                                     // see nsIScrollbar.h
 };
+
+/**
+ * Keyboard event
+ */
 
 struct nsKeyEvent : public nsGUIEvent {
     PRUint32        keyCode;        // @see NS_VK codes

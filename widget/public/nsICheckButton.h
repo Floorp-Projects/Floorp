@@ -37,13 +37,15 @@ public:
     /**
      * Set the check state.
      * @param aState PR_TRUE show as checked. PR_FALSE show unchecked.
-     **/
+     */
+
     virtual void SetState(PRBool aState) = 0;
     
     /**
      * Get the check state.
      * @returns PR_TRUE if checked. PR_FALSE if unchecked.
-     **/
+     */
+
     virtual PRBool GetState() = 0;
 
 };

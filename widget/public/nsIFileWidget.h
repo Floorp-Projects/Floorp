@@ -26,13 +26,13 @@
 { 0xf8030015, 0xc342, 0x11d1, { 0x97, 0xf0, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } };
 
 
-/*
+/**
  * File selector mode { load | save }
  */
 
 enum nsMode { eMode_load, eMode_save };
 
-/*
+/**
  * File selector widget.
  * Modally select files for loading or saving.
  */

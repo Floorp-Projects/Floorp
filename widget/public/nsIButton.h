@@ -34,18 +34,23 @@
 
 class nsIButton : public nsIWidget {
 
-public:
- /**
-  * Set the button label
-  * @param aText  button label
-  **/
-  virtual void SetLabel(const nsString &aText) = 0;
+  public:
+ 
+   /**
+    * Set the button label
+    *
+    * @param aText  button label
+    */
+  
+    virtual void SetLabel(const nsString &aText) = 0;
     
- /**
-  * Get the button label
-  * @param aBuffer buffer for button label
-  **/
-  virtual void GetLabel(nsString &aBuffer) = 0;
+   /**
+    * Get the button label
+    *
+    * @param aBuffer contains label upon return
+    */
+ 
+    virtual void GetLabel(nsString &aBuffer) = 0;
 
 };
 

@@ -27,17 +27,16 @@
 #include "prthread.h"
 #include "nsGUIEvent.h"
 
-// foreward declaration
-class nsIToolkit;
-class nsIFontMetrics;
-class nsIToolkit;
-class nsIRenderingContext;
-class nsIEnumerator;
-class nsIDeviceContext;
-struct nsRect;
-struct nsFont;
-
-class nsIPresContext;
+// forward declarations
+class   nsIToolkit;
+class   nsIFontMetrics;
+class   nsIToolkit;
+class   nsIRenderingContext;
+class   nsIEnumerator;
+class   nsIDeviceContext;
+class   nsIPresContext;
+struct  nsRect;
+struct  nsFont;
 
 /**
  * Callback function that deals with events.
@@ -64,18 +63,35 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 
 
 // Hide the native window systems real window type so as to avoid
-// including native window system types and api's. This makes it
-// easier to write cross-platform code.
+// including native window system types and api's. This is necessary
+// to ensure cross-platform code.
 typedef void* nsNativeWindow;
 
-enum nsCursor { eCursor_standard, eCursor_wait, eCursor_select, eCursor_hyperlink }; 
+
+/**
+ * Cursor types.
+ * eCursor_standard   (normal cursor,       usually rendered as an arrow)
+ * eCursor_wait       (system is busy,      usually rendered as a hourglass or watch)
+ * eCursor_select     (Selecting something, usually rendered as an IBeam)
+ * eCursor_hyperlink  (can hyper-link,      usually rendered as a human hand)
+ */
+
+enum nsCursor { eCursor_standard,  
+                eCursor_wait, 
+                eCursor_select, 
+                eCursor_hyperlink }; 
 
 class nsIWidget : public nsISupports {
 
-public:
+  public:
 
     /**
-     * Create and initialize a widget. All the arguments can be NULL in which case
+     * Create and initialize a widget. 
+     *
+     * The widget represents a window that can be drawn into. It also is the 
+     * base class for user-interface widgets such as buttons and text boxes.
+     *
+     * All the arguments can be NULL in which case
      * a top level window with size 0 is created. The event callback function has to
      * be provided only if the caller wants to deal with the events this widget receives.
      * The event callback is basically a preprocess hook called synchronously. The return
@@ -84,11 +100,13 @@ public:
      * widget does not see the event.
      *
      * @param      parent or null if it's a top level window
-     * @param      the widget dimension
-     * @param      the event handler callback function
-     * @return     void
+     * @param     aRect     the widget dimension
+     * @param     aHandleEventFunction the event handler callback function
+     * @return    aToolkit  The toolkit which this widget and any widgets attached
+     *                      to this widget are created in. If nsnull the default
+     *                      toolkit is used.
      *
-     **/
+     */
     virtual void Create(nsIWidget *aParent,
                         const nsRect &aRect,
                         EVENT_CALLBACK aHandleEventFunction,
@@ -96,8 +114,27 @@ public:
                         nsIToolkit *aToolkit = nsnull) = 0;
 
     /**
-     * This Create takes a native window as a parent instead of a nsIWidget
-     **/
+     * Create and initialize a widget with a native window parent
+     *
+     * The widget represents a window that can be drawn into. It also is the 
+     * base class for user-interface widgets such as buttons and text boxes.
+     *
+     * All the arguments can be NULL in which case
+     * a top level window with size 0 is created. The event callback function has to
+     * be provided only if the caller wants to deal with the events this widget receives.
+     * The event callback is basically a preprocess hook called synchronously. The return
+     * value determines whether the event goes to the default window procedure or it is
+     * hidden to the os. The assumption is that if the event handler returns false the
+     * widget does not see the event.
+     *
+     * @param     aParent   native window.
+     * @param     aRect     the widget dimension
+     * @param     aHandleEventFunction the event handler callback function
+     * @return    aToolkit  The toolkit which this widget and any widgets attached
+     *                      to this widget are created in. If nsnull the default
+     *                      toolkit is used.
+     *
+     */
     virtual void Create(nsNativeWindow aParent,
                         const nsRect &aRect,
                         EVENT_CALLBACK aHandleEventFunction,
@@ -105,71 +142,64 @@ public:
                         nsIToolkit *aToolkit = nsnull) = 0;
 
     /**
-     * Close and destroy the current window. The object will still be around
-     *
-     **/
+     * Close and destroy the internal native window. 
+     * This method does not delete the widget.
+     */
+
     virtual void Destroy(void) = 0;
 
     /**
-     * Return the parent Widget of this Widget or NULL if this is a top level window
+     * Return the parent Widget of this Widget or nsnull if this is a 
+     * top level window
      *
-     * @return     nsWidget*, the parent Widget
+     * @return the parent widget or nsnull if it does not have a parent
      *
-     **/
+     */
     virtual nsIWidget* GetParent(void) = 0;
 
     /**
-     * Return an nsEnumerator over the children of this widget or null if no
-     * children.
+     * Return an nsEnumerator over the children of this widget.
      *
-     * @return an enumerator over the list of children
+     * @return an enumerator over the list of children or nsnull if it does not
+     * have any children
      *
-     **/
+     */
     virtual nsIEnumerator*  GetChildren(void) = 0;
 
     /**
-     * used internally to add a remove from the children list
-     *
-     **/
-    virtual void AddChild(nsIWidget* aChild) = 0;
-    virtual void RemoveChild(nsIWidget* aChild) = 0;
-
-    /**
-     * Show/hide the Widget according to the boolean argument
+     * Show or hide this widget
      *
      * @param aState PR_TRUE to show the Widget, PR_FALSE to hide it
      *
-     **/
+     */
     virtual void Show(PRBool aState) = 0;
 
     /**
-     * Move the Widget. The coordinates are expressed in the parent coordinate system.
+     * Move this widget.
      *
-     * @param aX the new x position
-     * @param aY the new y position
+     * @param aX the new x position expressed in the parent's coordinate system
+     * @param aY the new y position expressed in the parent's coordinate system
      *
      **/
     virtual void Move(PRUint32 aX, PRUint32 aY) = 0;
 
     /**
-     * Move/resize/reshape the Widget. The coordinates are expressed in
-     * the parent coordinate system.
+     * Resize this widget. 
      *
-     * @param aWidth  the new width
-     * @param aHeight the new height
+     * @param aWidth  the new width expressed in the parent's coordinate system
+     * @param aHeight the new height expressed in the parent's coordinate system
      *
      */
     virtual void Resize(PRUint32 aWidth,
                         PRUint32 aHeight) = 0;
 
     /**
-     * Move/resize/reshape the Widget. The coordinates are expressed in
-     * the parent coordinate system.
+     * Move or resize this widget.
      *
-     * @param     aX      the new x position
-     * @param     aY      the new y position
-     * @param     aWidth  the new width
-     * @param     aHeight the new height
+     * @param aX      the new x position expressed in the parent's coordinate system
+     * @param aY      the new y position expressed in the parent's coordinate system
+     * @param aWidth  the new width expressed in the parent's coordinate system
+     * @param aHeight the new height expressed in the parent's coordinate system
      *
      */
     virtual void Resize(PRUint32 aX,
@@ -178,36 +208,37 @@ public:
                         PRUint32 aHeight) = 0;
 
     /**
-     * Enable/Disable the Widget according to the boolean argument
+     * Enable or disable this Widget
      *
-     * @param aState PR_TRUE to enable the Widget, PR_FALSE to disable it
+     * @param aState PR_TRUE to enable the Widget, PR_FALSE to disable it.
      *
      */
     virtual void Enable(PRBool aState) = 0;
 
     /**
-     * Give focus to this Widget
-     *
+     * Give focus to this widget.
      */
     virtual void SetFocus(void) = 0;
 
     /**
-     * Get this Widget dimension
+     * Get this widget's dimension
      *
-     * @param aRect, on return has the dimension of this Widget
+     * @param aRect on return it holds the  x. y, width and height of this widget
      *
      */
     virtual void GetBounds(nsRect &aRect) = 0;
 
     /**
-     * Get the  foreground color
-     * @returns the current foreground color
+     * Get the foreground color for this widget
+     *
+     * @returns this widget's foreground color
      *
      */
     virtual nscolor GetForegroundColor(void) = 0;
 
     /**
-     * Set the foreground color
+     * Set the foreground color for this widget
+     *
      * @param aColor the new foreground color
      *
      */
@@ -215,82 +246,93 @@ public:
     virtual void SetForegroundColor(const nscolor &aColor) = 0;
 
     /**
-     * Get the background color
-     * @returns the current background color
+     * Get the background color for this widget
+     *
+     * @returns this widget's background color
      *
      */
 
     virtual nscolor GetBackgroundColor(void) = 0;
 
     /**
-     * Set the background color
+     * Set the background color for this widget
+     *
      * @param aColor the new background color
-     * @returns the current background color
      *
      */
 
     virtual void SetBackgroundColor(const nscolor &aColor) = 0;
 
     /**
-     * Get the font 
+     * Get the font for this widget
+     *
      * @returns the font metrics 
      */
 
     virtual nsIFontMetrics* GetFont(void) = 0;
 
     /**
-     * Set the font 
+     * Set the font for this widget 
+     *
      * @param aFont font to display. @see nsFont for allowable fonts
      */
 
     virtual void SetFont(const nsFont &aFont) = 0;
 
     /**
-     * Get the cursor for this Widget.
-     * @returns the cursor used by the widget
+     * Get the cursor for this widget.
+     *
+     * @returns this widget's cursor.
      */
 
     virtual nsCursor GetCursor(void) = 0;
 
     /**
-     * Set the cursor for this Widget.
-     * @aCursor the cursor for this widget
+     * Set the cursor for this widget
+     *
+     * @aCursor the new cursor for this widget
      */
 
     virtual void SetCursor(nsCursor aCursor) = 0;
 
     /**
-     * Invalidate the Widget and repaint
+     * Invalidate the widget and repaint it.
      *
-     * @param     aIsSynchronouse repaint synchronously if aIsSynchronous is PR_TRUE/
+     * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
      *
-     **/
+     */
+
     virtual void Invalidate(PRBool aIsSynchronous) = 0;
 
   
     /**
-     * Adds a MouseListener to the widget
+     * Adds a mouse listener to this widget
+     * Any existing mouse listener is replaced
      *
+     * @param aListener mouse listener to add to this widget.
      */
+
     virtual void AddMouseListener(nsIMouseListener * aListener) = 0;
 
     /**
      * Return the widget's toolkit
-     * @return the toolkit this widget was created in. @see nsToolkit.h
      *
+     * @return the toolkit this widget was created in. @see nsToolkit.
      */
+
     virtual nsIToolkit* GetToolkit() = 0;    
 
     /**
-     * Set the color map for the widget
-     * @param aColorMap color map for displaying the widget
+     * Set the color map for this widget
+     *
+     * @param aColorMap color map for displaying this widget
      *
      */
 
     virtual void SetColorMap(nsColorMap *aColorMap) = 0;
 
     /**
-     * Scroll the widget
+     * Scroll this widget.
      *
      * @param aDx amount to scroll along the x-axis
      * @param aDy amount to scroll along the y-axis.
@@ -303,7 +345,8 @@ public:
     /*
      * Internal methods
      */
-
+    virtual void AddChild(nsIWidget* aChild) = 0;
+    virtual void RemoveChild(nsIWidget* aChild) = 0;
     virtual void* GetNativeData(PRUint32 aDataType) = 0;
     virtual nsIRenderingContext* GetRenderingContext() = 0;
     virtual nsIDeviceContext* GetDeviceContext() = 0;

@@ -32,15 +32,17 @@ class nsIRadioGroup;
  * Can show itself in a checked or unchecked state. 
  * The RadioButton widget does automatically show itself checked or unchecked when clicked on.
  */
+
 class nsIRadioButton : public nsIButton {
 
-public:
+  public:
+
     /**
      * Set the radio state.
      * @param PRBool PR_TRUE sets the RadioButton and unsets all siblings, PR_FALSE unsets it
      *
      */
-    virtual void            SetState(PRBool aState) = 0;
+    virtual void SetState(PRBool aState) = 0;
 
     /**
      * Tells the RadioButton NOT to notify the RadioGroup that it value has been changed
@@ -48,7 +50,7 @@ public:
      * @param PRBool PR_TRUE sets the RadioButton and unsets all siblings, PR_FALSE unsets it
      *
      */
-    virtual void            SetStateNoNotify(PRBool aState) = 0;
+    virtual void SetStateNoNotify(PRBool aState) = 0;
 
     /**
      * Gets the state the RadioButton
@@ -56,7 +58,7 @@ public:
      * @return BRBool PR_TRUE if set, PR_FALSE if unset
      *
      */
-    virtual PRBool          GetState() = 0;
+    virtual PRBool GetState() = 0;
 
     /**
      * Gets the RadioGroup associated with this button
@@ -64,7 +66,7 @@ public:
      * @return     nsIRadioGroup* its RadioGroup
      *
      */
-    virtual nsIRadioGroup*  GetRadioGroup() = 0;
+    virtual nsIRadioGroup* GetRadioGroup() = 0;
 
     /**
      * Sets the RadioGroup associated with this button
@@ -72,7 +74,7 @@ public:
      * @param      nsIRadioGroup* the new RadioGroup
      *
      */
-    virtual void            SetRadioGroup(nsIRadioGroup* aGroup) = 0;
+    virtual void SetRadioGroup(nsIRadioGroup* aGroup) = 0;
 
 };
 
