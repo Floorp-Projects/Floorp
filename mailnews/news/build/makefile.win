@@ -83,7 +83,7 @@ LLIBS=												\
 			$(DIST)\lib\xpcom.lib					\
 			$(DIST)\lib\plc3.lib					\
 			$(DIST)\lib\msgcoreutil.lib				\
-			$(DIST)\lib\nntp.lib					\
+			$(DIST)\lib\nntp_s.lib					\
 			$(DIST)\lib\netlib.lib					\
 			$(LIBNSPR)								\
 			$(DIST)\lib\rdfutil_s.lib				\
