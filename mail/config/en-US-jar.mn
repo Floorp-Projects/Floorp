@@ -65,6 +65,7 @@ locale/en-US/communicator/pref/pref-applications.properties, en-US/locale/en-US/
 locale/en-US/communicator/pref/pref-applications.dtd,    en-US/locale/en-US/communicator/pref/pref-applications.dtd
 locale/en-US/communicator/pref/pref-applications-edit.dtd, en-US/locale/en-US/communicator/pref/pref-applications-edit.dtd
 
+locale/en-US/communicator/xpinstall,                      en-US/locale/en-US/communicator/xpinstall
 
 #################################################################################################
 # editor

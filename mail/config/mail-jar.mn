@@ -97,6 +97,9 @@ content/navigator/viewSource.xul,		      comm/content/navigator/viewSource.xul
 content/navigator/viewsource.js,		      comm/content/navigator/viewsource.js
 content/navigator/contents.rdf,                       comm/content/navigator/contents.rdf
 
+# from xpinstall for theme installations
+content/communicator/xpinstall,                       comm/content/communicator/xpinstall
+
 #################################################################################################
 # Files we need from global.jar
 #################################################################################################

@@ -53,7 +53,9 @@ skin/classic/communicator/taskbar/mail-16.gif,        classic/skin/classic/commu
 skin/classic/communicator/taskbar/mailnew.gif,        classic/skin/classic/communicator/taskbar/mailnew.gif
 skin/classic/communicator/taskbar/addressbook-hov.gif, classic/skin/classic/communicator/taskbar/addressbook-hov.gif
 skin/classic/communicator/pref/pref.css,              classic/skin/classic/communicator/pref/pref.css
- 
+
+skin/classic/communicator/xpinstall/xpinstall.css,    classic/skin/classic/communicator/xpinstall/xpinstall.css 
+
 #################################################################################################
 # Global
 #################################################################################################

@@ -95,6 +95,9 @@ components\spellchk.dll
 ;; XXX these two files are bogus, they should not be in components\myspell...
 components\myspell\*
 
+; xpinstall (needed to dynamically install themes
+components\xpinstal.dll
+components\xpinstall.xpt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Package Files
