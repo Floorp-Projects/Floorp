@@ -1792,7 +1792,8 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
   fputs("CSS Style Sheet: ", out);
   mURL->ToString(&buffer);
-  fputs(buffer, out);
+  nsAutoString as(buffer,0);
+  fputs(as, out);
   fputs("\n", out);
   delete buffer;
 
