@@ -16,29 +16,51 @@ outliner {
 outlinerbody {
   background-color: white;
   color: black;
+  -moz-user-select: none;
 }
 
-:-moz-outliner-row
+outlinerbody:-moz-outliner-row
 {
-  height: 19px;
-  border-right: 1px solid transparent;
-  border-left: 1px solid transparent;
+  height: 17px;
+  border: 1px solid transparent;
 }
 
-:-moz-outliner-cell
+outlinerbody:-moz-outliner-row(current)
+{
+  border: 1px #768AA0 dotted;
+}
+
+outlinerbody:-moz-outliner-row(selected)
+{
+  background-color:  #486380;
+}
+
+outlinerbody:-moz-outliner-cell
+{
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  padding: 0px 0px 1px 1px;
+}
+
+outlinerbody:-moz-outliner-cell(selected)
 {
   
 }
 
-:-moz-outliner-cell-text
+outlinerbody:-moz-outliner-cell-text
 {
   color: inherit;
+  padding-left: 2px;
+  padding-right: 2px;
 }
 
+outlinerbody:-moz-outliner-cell-text(selected)
+{
+  color: white;  
+}
 
-.outlinercell-header, 
-.outlinercell-inset-header, 
-.outlinercell-header-image { 
+outlinercol
+{ 
   border-left: 1px solid #EDEDED !important;
   border-top: 1px solid #EDEDED !important;
   border-right: 1px solid #6E7070 !important;
@@ -48,8 +70,18 @@ outlinerbody {
   color: #000000;
 }
 
-.outlinercell-header-box,
-.outlinercell-header-image-box {
+outlinerbody:-moz-outliner-line
+{
+  border: 1px dotted grey;
+}
+
+outlinerbody:-moz-outliner-line(selected)
+{
+  border: 1px dotted black;
+}
+
+.outlinercol-box,
+.outlinercol-image-box {
   border-left: 1px solid #C2D0D0;
   border-top: 1px solid #C2D0D0;
   border-right: 1px solid #A4ACAC;
@@ -57,49 +89,49 @@ outlinerbody {
   vertical-align: middle;
 }  
 
-.outlinercell-header-box {
+.outlinercol-box {
   padding: 0px 4px 0px 4px;
 }
 
-.outlinercell-header-image-box {
+.outlinercol-image-box {
   padding: 0px 1px 0px 1px;
 }
   
-.outlinercell-header:hover:active,
-.outlinercell-header-image:hover:active,
-.outlinercell-inset-header:hover:active {
+outlinercol:hover:active
+{
   border: 1px solid #A4ACAC !important;
 }
 
-.outlinercell-header:hover:active > .outlinercell-header-box,
-.outlinercell-inset-header:hover:active > .outlinercell-header-box,
-.outlinercell-header-image:hover:active > .outlinercell-header-image-box {
+outlinercol:hover:active > .outlinercol-box,
+outlinercol:hover:active > .outlinercol-image-box
+{
   border-top: 1px solid transparent;
   border-right: none;
   border-bottom: none;
   border-left: 1px solid transparent;
 }
   
-.outlinercell-header:hover:active > .outlinercell-header-box,
-.outlinercell-inset-header:hover:active > .outlinercell-header-box {
+outlinercol:hover:active > .outlinercol-box,
+outlinercol:hover:active > .outlinercol-image-box
+{
   padding: 1px 4px 0px 5px;
 }
 
-.outlinercell-header-image:hover:active > .outlinercell-header-image-box {
-  padding: 1px 1px 0px 2px;
-}
-
-
 /* outliner header with sort direction indicators */
 
-.outliner-header-sortdirection {
+.outlinercol-sortdirection {
   list-style-image: none;
 }
 
-.sortDirectionIndicator[sortDirection="ascending"] > .outlinercell-header-box > .outliner-header-sortdirection {
+.sortDirectionIndicator[sortDirection="ascending"] > .outlinercol-box > .outlinercol-sortdirection {
   list-style-image: url("chrome://global/skin/sortAscending.gif");
 }
 
-.sortDirectionIndicator[sortDirection="descending"] > .outlinercell-header-box > .outliner-header-sortdirection {
+.sortDirectionIndicator[sortDirection="descending"] > .outlinercol-box > .outlinercol-sortdirection {
   list-style-image: url("chrome://global/skin/sortDescending.gif");
+}
+
+.outliner-colpicker-icon
+{
+  list-style-image       : url("chrome://global/skin/columnselect.gif");
 }
