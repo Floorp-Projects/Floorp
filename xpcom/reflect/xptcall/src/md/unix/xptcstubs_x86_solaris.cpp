@@ -1,21 +1,19 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "MPL"); you may not use this file except in
+ * compliance with the MPL.  You may obtain a copy of the MPL at
+ * http://www.mozilla.org/MPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the MPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the MPL
+ * for the specific language governing rights and limitations under the
+ * MPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the MPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
- * Rights Reserved.
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
  *
  * Contributor(s): 
  */
@@ -108,6 +106,25 @@ nsresult nsXPTCStubBase::Stub##n() \
     : "2" (method)      /* %2 */ \
     : "memory" ); \
     return result; \
+}
+
+#elif defined(__SUNPRO_CC)           /* Sun Workshop Compiler. */
+
+#define STUB_ENTRY(n) \
+nsresult nsXPTCStubBase::Stub##n() \
+{ \
+  asm ( \
+	"\n\t leal   0x0c(%ebp), %ecx\t / args" \
+	"\n\t pushl  %ecx" \
+	"\n\t pushl  $"#n"\t / method index" \
+	"\n\t movl   0x08(%ebp), %ecx\t / this" \
+	"\n\t pushl  %ecx" \
+	"\n\t call   __1cSPrepareAndDispatch6FpnOnsXPTCStubBase_IpI_I_\t / PrepareAndDispatch" \
+	"\n\t addl  $12, %esp" \
+ ); \
+/* result == %eax */ \
+  if(0) /* supress "*** is expected to return a value." error */ \
+     return 0; \
 }
 
 #else
