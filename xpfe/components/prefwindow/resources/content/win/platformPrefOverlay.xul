@@ -83,7 +83,6 @@
           <hbox>
             <spacer flex="1"/>
             <button label="&defaultBrowserButton.label;"
-                    autostretch="never"
                     disabled="true"/>
             <spacer flex="1"/>
           </hbox>
@@ -93,7 +92,6 @@
           <hbox>
             <spacer flex="1"/>
             <button label="&defaultBrowserButton.label;"
-                    autostretch="never"
                     disabled="true"/>
             <spacer flex="1"/>
           </hbox>

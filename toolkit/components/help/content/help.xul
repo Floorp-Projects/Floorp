@@ -373,7 +373,7 @@
             </vbox>
 
             <splitter id="helpsidebar-splitter" collapse="before"
-                    persist="state hidden" autostretch="never" state="open">
+                    persist="state hidden" state="open">
             </splitter>
 
             <vbox id="appcontent" flex="3">

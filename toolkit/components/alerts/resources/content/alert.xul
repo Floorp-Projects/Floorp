@@ -32,7 +32,7 @@ Rights Reserved.
   <hbox id="alertBox" class="alertBox">
     
     <hbox class="alertImageBox" align="center" valign="center">
-      <image id="alertImage" autostretch="never"/>
+      <image id="alertImage"/>
     </hbox>
 
     <vbox id="alertTextBox" class="alertTextBox">

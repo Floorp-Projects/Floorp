@@ -87,13 +87,13 @@
        for embedding -->
   <toolbox>
     <toolbar id="nav-bar">
-      <hbox id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
+      <hbox id="nav-bar-inner" align="center" flex="1" style="min-width: 0px;">
         <button id="back-button" crop="right" onclick="BrowserBack()" label="&backButton.label;"/>  
         <button id="forward-button" crop="right" onclick="BrowserForward()" label="&forwardButton.label;"/>  
         <button id="reload-button" crop="right" onclick="BrowserReload()" label="&reloadButton.label;"/>
         <button id="stop-button" crop="right" onclick="BrowserStop()" label="&stopButton.label;"/>
         <hbox class="box-toolbar-group" flex="1">
-          <hbox autostretch="never" valign="middle" flex="1">
+          <hbox align="center" valign="middle" flex="1">
             <textbox autocomplete="true" timeout="300"
 		 	                 searchSessionType="urlbar" id="urlbar"
                        onkeypress="if( event.keyCode == 13 ) { BrowserLoadURL(); }"/>  
