@@ -1124,6 +1124,15 @@ Reason: %reason%
   },
 
   {
+   name => 'usemenuforusers',
+   desc => 'If this option is set, a popup menu will be used where a user' .
+           ' needs to be selected.  This option should not be enabled on' .
+           ' sites where there are a large number of users.',
+   type => 'b',
+   default => '0'
+  },
+
+  {
    name => 'usermatchmode',
    desc => 'Allow match strings to be entered for user names when entering ' .
            'and editing bugs.  <p>' .

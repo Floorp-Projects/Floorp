@@ -163,7 +163,13 @@
         <b><u>A</u>dd&nbsp;CC:</b>
       </td>
       <td>
-        <input name="newcc" size="30" value="" accesskey="a">
+         [% INCLUDE global/userselect.html.tmpl
+            name => "newcc"
+            value => ""
+            accesskey => "a"
+            size => 30
+            emptyok => 1
+          %]
       </td>
     </tr>
 
@@ -270,8 +276,13 @@
        <b><u>Q</u>A Contact:</b>
        </td>
        <td colspan="7">
-         <input name="qa_contact" accesskey="q"
-                value="[% bug.qa_contact.email FILTER html %]" size="60">
+         [% INCLUDE global/userselect.html.tmpl
+            name => "qa_contact"
+            value => bug.qa_contact.email
+            accesskey => "q"
+            size => 60
+            emptyok => 1
+          %]
        </td>
      </tr>
    [% END %]

@@ -185,8 +185,12 @@ function set_assign_to() {
       </strong>
     </td>
     <td colspan="3">
-      <input name="assigned_to" size="32" 
-             value="[% assigned_to FILTER html %]">
+      [% INCLUDE global/userselect.html.tmpl
+         name => "assigned_to"
+         value => assigned_to
+         size => 32
+         emptyok => 1
+       %]
       <noscript>(Leave blank to assign to default component owner)</noscript>
     </td>
   </tr>
@@ -194,7 +198,12 @@ function set_assign_to() {
   <tr>
     <td align="right"><strong>Cc:</strong></td>
     <td colspan="3">
-      <input name="cc" size="45" value="[% cc FILTER html %]">
+      [% INCLUDE global/userselect.html.tmpl
+         name => "cc"
+         value => cc
+         size => 45
+         emptyok => 1
+       %]
     </td>
   </tr>
   

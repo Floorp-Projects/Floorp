@@ -21,6 +21,7 @@
 #                 Erik Stambaugh <erik@dasbistro.com>
 #                 Bradley Baetz <bbaetz@acm.org>
 #                 Joel Peshkin <bugreport@peshkin.net> 
+#                 Byron Jones <bugzilla@glob.com.au>
 
 ################################################################################
 # Module Initialization
@@ -888,6 +889,45 @@ sub email_prefs {
     return $self->{email_prefs};
 }
 
+sub get_userlist {
+    my $self = shift;
+
+    return $self->{'userlist'} if defined $self->{'userlist'};
+
+    my $query  = "SELECT DISTINCT login_name, realname,";
+    if (&::Param('usevisibilitygroups')) {
+        $query .= " COUNT(group_id) ";
+    } else {
+        $query .= " 1 ";
+    }
+        $query .= "FROM profiles ";
+    if (&::Param('usevisibilitygroups')) {
+        $query .= "LEFT JOIN user_group_map " .
+                  "ON user_group_map.user_id = userid AND isbless = 0 " .
+                  "AND group_id IN(" .
+                  join(', ', (-1, @{$self->visible_groups_inherited})) . ") " .
+                  "AND grant_type <> " . GRANT_DERIVED;
+    }
+    $query    .= " WHERE disabledtext = '' GROUP BY userid";
+
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare($query);
+    $sth->execute;
+
+    my @userlist;
+    while (my($login, $name, $visible) = $sth->fetchrow_array) {
+        push @userlist, {
+            login => $login,
+            identity => $name ? "$name <$login>" : $login,
+            visible => $visible,
+        };
+    }
+    @userlist = sort { lc $$a{'identity'} cmp lc $$b{'identity'} } @userlist;
+
+    $self->{'userlist'} = \@userlist;
+    return $self->{'userlist'};
+}
+
 1;
 
 __END__
@@ -1031,6 +1071,12 @@ Returns an alphabetical list of product names from which
 the user can select bugs.  If the $by_id parameter is true, it returns
 a hash where the keys are the product ids and the values are the
 product names.
+
+=item C<get_userlist>
+
+Returns a reference to an array of users.  The array is populated with hashrefs
+containing the login, identity and visibility.  Users that are not visible to this
+user will have 'visible' set to zero.
 
 =item C<visible_groups_inherited>
 

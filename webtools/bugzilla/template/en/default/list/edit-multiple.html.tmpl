@@ -302,10 +302,12 @@
 <label for="knob-reassign"><a href="page.cgi?id=fields.html#assigned_to">
   Reassign</a> [% terms.bugs %] to
 </label>
-<input name="assigned_to"
-       value="[% user.login FILTER html %]"
-       onchange="document.forms.changeform.knob[[% knum %]].checked = true;"
-       size="32"><br>
+[% INCLUDE global/userselect.html.tmpl
+   name => "assigned_to"
+   value => user.login
+   size => 32
+   onchange => "document.forms.changeform.knob[$knum].checked=true;"
+%]<br>
 
 [% knum = knum + 1 %]
 <input id="knob-reassignbycomponent"

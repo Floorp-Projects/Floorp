@@ -96,12 +96,15 @@
         <a href="page.cgi?id=fields.html#assigned_to">Reassign</a> 
         [% terms.bug %] to
       </label>
-      <input name="assigned_to" size="32"
-             onchange="if ((this.value != '[% bug.assigned_to.email FILTER js FILTER html %]') &&
-                            (this.value != '')) {
-                         document.changeform.knob[[% knum %]].checked=true;
-                       }"
-             value="[% bug.assigned_to.email FILTER html %]">
+      [% safe_assigned_to = FILTER js; bug.assigned_to.email; END %]
+      [% INCLUDE global/userselect.html.tmpl
+           name => "assigned_to"
+           value => bug.assigned_to.email
+           size => 32
+           onchange => "if ((this.value != '$safe_assigned_to') && (this.value != '')) {
+                          document.changeform.knob[$knum].checked=true;
+                        }"
+      %]
       <br>
       [% IF bug.isunconfirmed && bug.user.canconfirm %]
         &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="andconfirm" name="andconfirm">
