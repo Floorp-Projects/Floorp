@@ -625,6 +625,9 @@ function DirPaneSelectionChange()
 
 function GetAbResultsBoxObject()
 {
+  if (!gAbResultsTree)
+    gAbResultsTree = document.getElementById('abResultsTree');
+
   return gAbResultsTree.treeBoxObject;
 }
 
