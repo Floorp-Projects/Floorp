@@ -54,20 +54,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(WIN32) || defined(OS2)
-#include "io.h"
-#endif
-
 #include "secutil.h"
 
-#if defined(XP_UNIX)
-#include <unistd.h>
-#endif
-
 #include "nspr.h"
-#include "prtypes.h"
-#include "prtime.h"
-#include "prlong.h"
 
 #include "pk11func.h"
 #include "secasn1.h"
@@ -76,9 +65,6 @@
 #include "secoid.h"
 #include "certdb.h"
 #include "nss.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 typedef struct _KeyTypes {
     CK_KEY_TYPE	keyType;
@@ -123,47 +109,11 @@ GetLen(PRFileDesc* fd)
 {
     PRFileInfo info;
 
-    if (PR_SUCCESS != PR_GetOpenFileInfo(fd, &info))
-    {
+    if (PR_SUCCESS != PR_GetOpenFileInfo(fd, &info)) {
         return -1;
     }
 
     return info.size;
-}
-
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
-
-void PrintError(void)
-{
-    char* errortext = NULL;
-    PRInt32 errorlen = 0;
-
-    errorlen = PR_GetErrorTextLength();
-    if (errorlen)
-    {
-        errortext = PORT_ZAlloc(errorlen);
-        errorlen = PR_GetErrorText(errortext);
-    }
-    if (errorlen)
-    {
-        PR_fprintf(PR_STDERR, "%s\n", errortext);
-    }
-    else
-    {
-        PRErrorCode prError = 0;
-        PRInt32 osError = 0;
-
-        prError = PR_GetError();
-        osError = PR_GetOSError();
-        PR_fprintf(PR_STDERR, "NSPR error %d , OS error = %d.\n", prError,
-            osError);
-    }
-    if (errortext)
-    {
-        PORT_Free(errortext);
-    }
 }
 
 int
@@ -173,13 +123,13 @@ ReadBuf(char *inFile, SECItem *item)
     int ret;
     PRFileDesc* fd = PR_Open(inFile, PR_RDONLY, 0);
     if (NULL == fd) {
-	PrintError();
+        SECU_PrintError("Error", "PR_Open failed");
 	return -1;
     }
 
     len = GetLen(fd);
     if (len < 0) {
-	PrintError();
+	SECU_PrintError("Error", "PR_GetOpenFileInfo failed");
 	return -1;
     }
     item->data = (unsigned char *)PORT_Alloc(len);
@@ -190,9 +140,9 @@ ReadBuf(char *inFile, SECItem *item)
 
     ret = PR_Read(fd,item->data,item->len);
     if (ret < 0) {
+	SECU_PrintError("Error", "PR_Read failed");
 	PORT_Free(item->data);
 	item->data = NULL;
-	PrintError();
 	return -1;
     }
     PR_Close(fd);
@@ -206,13 +156,13 @@ WriteBuf(char *inFile, SECItem *item)
     int ret;
     PRFileDesc* fd = PR_Open(inFile, PR_WRONLY|PR_CREATE_FILE, 0x200);
     if (NULL == fd) {
-	PrintError();
+        SECU_PrintError("Error", "PR_Open failed");
 	return -1;
     }
 
     ret = PR_Write(fd,item->data,item->len);
     if (ret < 0) {
-	PrintError();
+	SECU_PrintError("Error", "PR_Write failed");
 	return -1;
     }
     PR_Close(fd);
@@ -1044,7 +994,7 @@ main(int argc, char **argv)
 	    goto shutdown;
 	}
 
-	/* WriteBuf outputs it's own error using PrintError */
+	/* WriteBuf outputs it's own error using SECU_PrintError */
 	ret = WriteBuf(symKeyUtil.options[opt_KeyFile].arg, &data);
 	if (ret < 0) {
 	    goto shutdown;
