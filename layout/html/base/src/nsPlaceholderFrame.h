@@ -46,7 +46,7 @@ public:
                            nsReflowMetrics& aDesiredSize,
                            const nsSize&    aMaxSize,
                            nsSize*          aMaxElementSize,
-                           ReflowStatus&    aStatus);
+                           nsReflowStatus&  aStatus);
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 

@@ -311,7 +311,7 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
     childCount++;
 
     // Update mLastContentIsComplete now that this kid fits
-    mLastContentIsComplete = PRBool(status == frComplete);
+    mLastContentIsComplete = NS_FRAME_IS_COMPLETE(status);
 
     // Special handling for incomplete children
     if (frNotComplete == status) {

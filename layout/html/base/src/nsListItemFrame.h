@@ -33,7 +33,7 @@ public:
                           const nsSize& aMaxSize,
                           nsRect& aDesiredRect,
                           nsSize* aMaxElementSize,
-                          ReflowStatus& aStatus);
+                          nsReflowStatus& aStatus);
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aCX,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,

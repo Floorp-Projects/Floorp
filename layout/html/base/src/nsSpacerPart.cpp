@@ -38,10 +38,11 @@ class SpacerFrame : public nsFrame
 public:
   SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext* aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize& aMaxSize,
+                          nsSize* aMaxElementSize,
+                          nsReflowStatus& aStatus);
 protected:
   virtual ~SpacerFrame();
 };
@@ -80,11 +81,11 @@ SpacerFrame::~SpacerFrame()
 {
 }
 
-nsIFrame::ReflowStatus
-SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
-                      nsReflowMetrics& aDesiredSize,
-                      const nsSize& aMaxSize,
-                      nsSize* aMaxElementSize)
+NS_METHOD SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                    nsReflowMetrics& aDesiredSize,
+                                    const nsSize& aMaxSize,
+                                    nsSize* aMaxElementSize,
+                                    nsReflowStatus& aStatus)
 {
   // Get cached state for containing block frame
   nsBlockReflowState* state = nsnull;
@@ -115,7 +116,8 @@ SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
 
   if (nsnull == state) {
     // We don't do anything unless we are in a block container somewhere
-    return frComplete;
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
   }
 
   nscoord width = 0;
@@ -188,7 +190,8 @@ SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
     break;
   }
 
-  return frComplete;
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

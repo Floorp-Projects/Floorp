@@ -41,12 +41,12 @@ public:
   /**
    * Return the first frame in our current flow. 
    */
-  nsIFrame* GetFirstInFlow() const;
+  nsIFrame*   GetFirstInFlow() const;
 
   /**
    * Return the last frame in our current flow.
    */
-  nsIFrame* GetLastInFlow() const;
+  nsIFrame*   GetLastInFlow() const;
 
   NS_IMETHOD  AppendToFlow(nsIFrame* aAfterFrame);
   NS_IMETHOD  PrependToFlow(nsIFrame* aAfterFrame);
@@ -54,8 +54,8 @@ public:
   NS_IMETHOD  BreakFromPrevFlow();
   NS_IMETHOD  BreakFromNextFlow();
 
-  nsIFrame * GetPrevInFlow();
-  nsIFrame * GetNextInFlow();
+  nsIFrame*   GetPrevInFlow();
+  nsIFrame*   GetNextInFlow();
 
 
 protected:

@@ -431,7 +431,7 @@ nsHTMLContainerFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       break;
     default:
       // Ignore all other reflow commands
-      status = frComplete;
+      status = NS_FRAME_COMPLETE;
       break;
     }
   } else {

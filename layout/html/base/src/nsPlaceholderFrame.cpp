@@ -53,7 +53,7 @@ NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                          nsReflowMetrics& aDesiredSize,
                                          const nsSize&    aMaxSize,
                                          nsSize*          aMaxElementSize,
-                                         ReflowStatus&    aStatus)
+                                         nsReflowStatus&  aStatus)
 {
   // Get the floater container in which we're inserted
   nsIFloaterContainer*  container = nsnull;

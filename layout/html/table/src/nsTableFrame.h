@@ -85,14 +85,14 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize& aMaxSize,
                           nsSize* aMaxElementSize,
-                          ReflowStatus& aStatus);
+                          nsReflowStatus& aStatus);
 
   /** @see nsIFrame::IncrementalReflow */
   NS_IMETHOD IncrementalReflow(nsIPresContext* aPresContext,
                                nsReflowMetrics& aDesiredSize,
                                const nsSize&    aMaxSize,
                                nsReflowCommand& aReflowCommand,
-                               ReflowStatus& aStatus);
+                               nsReflowStatus& aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
@@ -191,10 +191,10 @@ protected:
     *
     * @see ResizeReflow
     */
-  virtual ReflowStatus ResizeReflowPass1(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsSize*          aMaxElementSize);
+  virtual nsReflowStatus ResizeReflowPass1(nsIPresContext*  aPresContext,
+                                           nsReflowMetrics& aDesiredSize,
+                                           const nsSize&    aMaxSize,
+                                           nsSize*          aMaxElementSize);
 
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
@@ -207,12 +207,12 @@ protected:
     * @see ResizeReflow
     * @see NeedsReflow
     */
-  virtual ReflowStatus ResizeReflowPass2(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsSize*          aMaxElementSize,
-                                         PRInt32 aMinCaptionWidth,
-                                         PRInt32 mMaxCaptionWidth);
+  virtual nsReflowStatus ResizeReflowPass2(nsIPresContext*  aPresContext,
+                                           nsReflowMetrics& aDesiredSize,
+                                           const nsSize&    aMaxSize,
+                                           nsSize*          aMaxElementSize,
+                                           PRInt32 aMinCaptionWidth,
+                                           PRInt32 mMaxCaptionWidth);
 
   nscoord GetTopMarginFor(nsIPresContext* aCX,
                           InnerTableReflowState& aState,
@@ -256,9 +256,9 @@ protected:
    * @return  frComplete if all content has been mapped and frNotComplete
    *            if we should be continued
    */
-  ReflowStatus  ReflowUnmappedChildren(nsIPresContext*        aPresContext,
-                                       InnerTableReflowState& aState,
-                                       nsSize*                aMaxElementSize);
+  nsReflowStatus  ReflowUnmappedChildren(nsIPresContext*        aPresContext,
+                                         InnerTableReflowState& aState,
+                                         nsSize*                aMaxElementSize);
 
 
   /** assign widths for each column, taking into account the table content, the effective style, 

@@ -185,18 +185,18 @@ public:
   NS_IMETHOD VerifyTree() const;
 
   // nsIRunaround
-  NS_IMETHOD ResizeReflow(nsIPresContext*         aPresContext,
-                          nsISpaceManager*        aSpaceManager,
-                          const nsSize&           aMaxSize,
-                          nsRect&                 aDesiredRect,
-                          nsSize*                 aMaxElementSize,
-                          nsIFrame::ReflowStatus& aStatus);
-  NS_IMETHOD IncrementalReflow(nsIPresContext*         aPresContext,
-                               nsISpaceManager*        aSpaceManager,
-                               const nsSize&           aMaxSize,
-                               nsRect&                 aDesiredRect,
-                               nsReflowCommand&        aReflowCommand,
-                               nsIFrame::ReflowStatus& aStatus);
+  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
+                          nsISpaceManager* aSpaceManager,
+                          const nsSize&    aMaxSize,
+                          nsRect&          aDesiredRect,
+                          nsSize*          aMaxElementSize,
+                          nsReflowStatus&  aStatus);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsISpaceManager* aSpaceManager,
+                               const nsSize&    aMaxSize,
+                               nsRect&          aDesiredRect,
+                               nsReflowCommand& aReflowCommand,
+                               nsReflowStatus&  aStatus);
 
   // nsIFloaterContainer
   virtual PRBool AddFloater(nsIPresContext*   aPresContext,
@@ -212,7 +212,7 @@ public:
                              nsReflowMetrics& aDesiredSize,
                              const nsSize&    aMaxSize,
                              nsSize*          aMaxElementSize,
-                             ReflowStatus&    aStatus);
+                             nsReflowStatus&  aStatus);
 
   nsresult ReflowBlockChild(nsIFrame*        aKidFrame,
                             nsIPresContext*  aPresContext,
@@ -220,7 +220,7 @@ public:
                             const nsSize&    aMaxSize,
                             nsRect&          aDesiredRect,
                             nsSize*          aMaxElementSize,
-                            ReflowStatus&    aStatus);
+                            nsReflowStatus&  aStatus);
 
   nsLineData* GetFirstLine();
 
@@ -245,7 +245,7 @@ protected:
   nsresult DoResizeReflow(nsBlockReflowState& aState,
                           const nsSize&       aMaxSize,
                           nsRect&             aDesiredRect,
-                          ReflowStatus&       aStatus);
+                          nsReflowStatus&     aStatus);
 
   void ComputeDesiredRect(nsBlockReflowState& aState,
                           const nsSize&       aMaxSize,

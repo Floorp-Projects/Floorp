@@ -342,7 +342,7 @@ nsLineLayout::WordBreakReflow()
   mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
   nsSize maxElementSize;
   nsReflowMetrics kidSize;
-  nsIFrame::ReflowStatus kidReflowStatus;
+  nsReflowStatus kidReflowStatus;
   nsSize* kidMaxElementSize = nsnull;
   if (nsnull != mMaxElementSizePointer) {
     kidMaxElementSize = &maxElementSize;
@@ -408,7 +408,7 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   nsSize maxElementSize;
   nsReflowMetrics kidSize;
   nsSize* kidMaxElementSize = nsnull;
-  nsIFrame::ReflowStatus kidReflowStatus;
+  nsReflowStatus kidReflowStatus;
   if (nsnull != mMaxElementSizePointer) {
     kidMaxElementSize = &maxElementSize;
   }
@@ -515,7 +515,7 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
 
   // Set completion status
   mLine->mLastContentOffset = mKidIndex;
-  if (nsIFrame::frComplete == kidReflowStatus) {
+  if (NS_FRAME_IS_COMPLETE(kidReflowStatus)) {
     mLine->mLastContentIsComplete = PR_TRUE;
     if (isBlock ||
         (NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER == mReflowResult)) {

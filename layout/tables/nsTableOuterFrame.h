@@ -87,14 +87,14 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize&    aMaxSize,
                           nsSize*          aMaxElementSize,
-                          ReflowStatus&    aStatus);
+                          nsReflowStatus&  aStatus);
 
   /** @see nsIFrame::IncrementalReflow */
   NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aDesiredSize,
                                const nsSize&    aMaxSize,
                                nsReflowCommand& aReflowCommand,
-                               ReflowStatus&    aStatus);
+                               nsReflowStatus&  aStatus);
 
   /** @see nsContainerFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
@@ -134,13 +134,13 @@ protected:
 
   /** reflow the captions in an infinite space, caching the min/max sizes for each
     */
-  virtual ReflowStatus ResizeReflowCaptionsPass1(nsIPresContext* aPresContext);
+  virtual nsReflowStatus ResizeReflowCaptionsPass1(nsIPresContext* aPresContext);
 
   /** reflow the top captions in a space constrained by the computed table width
     * and the heigth given to us by our parent.  Top captions are laid down
     * before the inner table.
     */
-  virtual ReflowStatus ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
+  virtual nsReflowStatus ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
                                                     nsReflowMetrics& aDesiredSize,
                                                     const nsSize&    aMaxSize,
                                                     nsSize*          aMaxElementSize);
@@ -149,11 +149,11 @@ protected:
     * and the heigth given to us by our parent.  Bottom captions are laid down
     * after the inner table.
     */
-  virtual ReflowStatus ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext,
-                                                       nsReflowMetrics& aDesiredSize,
-                                                       const nsSize&    aMaxSize,
-                                                       nsSize*          aMaxElementSize,
-                                                       nscoord          aYOffset);
+  virtual nsReflowStatus ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext,
+                                                         nsReflowMetrics& aDesiredSize,
+                                                         const nsSize&    aMaxSize,
+                                                         nsSize*          aMaxElementSize,
+                                                         nscoord          aYOffset);
 
   nscoord       GetTopMarginFor(nsIPresContext* aCX,
                                 OuterTableReflowState& aState,
@@ -192,12 +192,12 @@ protected:
   virtual       void SetReflowState(OuterTableReflowState& aState, 
                                     nsIFrame*              aKidFrame);
 
-  virtual nsIFrame::ReflowStatus ReflowChild( nsIFrame*        aKidFrame,
-                                              nsIPresContext*  aPresContext,
-                                              nsReflowMetrics& aDesiredSize,
-                                              const nsSize&    aMaxSize,
-                                              nsSize*          aMaxElementSize,
-                                              OuterTableReflowState& aState);
+  virtual nsReflowStatus ReflowChild( nsIFrame*        aKidFrame,
+                                      nsIPresContext*  aPresContext,
+                                      nsReflowMetrics& aDesiredSize,
+                                      const nsSize&    aMaxSize,
+                                      nsSize*          aMaxElementSize,
+                                      OuterTableReflowState& aState);
 
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::VerifyTree

@@ -134,9 +134,9 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                     nsReflowMetrics& aDesiredSize,
                                     const nsSize&    aMaxSize,
                                     nsSize*          aMaxElementSize,
-                                    ReflowStatus&    aStatus)
+                                    nsReflowStatus&  aStatus)
 {
-  aStatus = frComplete;  // initialize out parameter
+  aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Do we have any children?
   if (nsnull == mFirstChild) {
@@ -177,7 +177,7 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
     // If the frame is complete, then check whether there's a next-in-flow that
     // needs to be deleted
-    if (frComplete == aStatus) {
+    if (NS_FRAME_IS_COMPLETE(aStatus)) {
       nsIFrame* kidNextInFlow;
        
       mFirstChild->GetNextInFlow(kidNextInFlow);
@@ -249,7 +249,7 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                          nsReflowMetrics& aDesiredSize,
                                          const nsSize&    aMaxSize,
                                          nsReflowCommand& aReflowCommand,
-                                         ReflowStatus&    aStatus)
+                                         nsReflowStatus&  aStatus)
 {
   // XXX Currently there's a bug that when the body background image dimension
   // is resolved we're treating that as a content change rather than just repainting

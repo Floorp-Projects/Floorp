@@ -215,11 +215,11 @@ protected:
    * Reflow a child frame and return the status of the reflow. If the child
    * is complete and it has next-in-flows, then delete the next-in-flows.
    */
-  ReflowStatus ReflowChild(nsIFrame*        aKidFrame,
-                           nsIPresContext*  aPresContext,
-                           nsReflowMetrics& aDesiredSize,
-                           const nsSize&    aMaxSize,
-                           nsSize*          aMaxElementSize);
+  nsReflowStatus ReflowChild(nsIFrame*        aKidFrame,
+                             nsIPresContext*  aPresContext,
+                             nsReflowMetrics& aDesiredSize,
+                             const nsSize&    aMaxSize,
+                             nsSize*          aMaxElementSize);
 
   /**
    * Reflow a child frame and return the status of the reflow. If the child
@@ -236,12 +236,12 @@ protected:
    *
    * @see nsIRunaround
    */
-  ReflowStatus ReflowChild(nsIFrame*        aKidFrame,
-                           nsIPresContext*  aPresContext,
-                           nsISpaceManager* aSpaceManager,
-                           const nsSize&    aMaxSize,
-                           nsRect&          aDesiredRect,
-                           nsSize*          aMaxElementSize);
+  nsReflowStatus ReflowChild(nsIFrame*        aKidFrame,
+                             nsIPresContext*  aPresContext,
+                             nsISpaceManager* aSpaceManager,
+                             const nsSize&    aMaxSize,
+                             nsRect&          aDesiredRect,
+                             nsSize*          aMaxElementSize);
 
  /**
   * Moves any frames on both the prev-in-flow's overflow list and the receiver's
@@ -378,7 +378,7 @@ protected:
    *          is frNotComplete then the next-in-flow content offsets are
    *          validated as well
    */
-  void PostReflowCheck(ReflowStatus aStatus);
+  void PostReflowCheck(nsReflowStatus aStatus);
 
   void CheckNextInFlowOffsets();
 

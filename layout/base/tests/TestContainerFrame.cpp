@@ -92,10 +92,10 @@ class SimpleContainer : public nsContainerFrame
 public:
   SimpleContainer(nsIContent* aContent);
 
-  ReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
-                                 nsReflowMetrics& aDesiredSize,
-                                 const nsSize&    aMaxSize,
-                                 nsReflowCommand& aReflowCommand);
+  nsReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
+                                   nsReflowMetrics& aDesiredSize,
+                                   const nsSize&    aMaxSize,
+                                   nsReflowCommand& aReflowCommand);
 
   void      SetFirstChild(nsIFrame* aChild, PRInt32 aChildCount);
   nsIFrame* GetOverflowList() {return mOverflowList;}
@@ -113,14 +113,14 @@ SimpleContainer::SimpleContainer(nsIContent* aContent)
 {
 }
 
-nsIFrame::ReflowStatus
+nsReflowStatus
 SimpleContainer::IncrementalReflow(nsIPresContext*  aPresContext,
                                    nsReflowMetrics& aDesiredSize,
                                    const nsSize&    aMaxSize,
                                    nsReflowCommand& aReflowCommand)
 {
   NS_NOTYETIMPLEMENTED("incremental reflow");
-  return frComplete;
+  return NS_FRAME_COMPLETE;
 }
 
 // Sets mFirstChild and mChildCount, but not mContentOffset, mContentLength,

@@ -76,13 +76,13 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize&   aMaxSize,
                           nsSize*         aMaxElementSize,
-                          ReflowStatus&   aStatus);
+                          nsReflowStatus& aStatus);
   /** @see nsIFrame::IncrementalReflow */
   NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aDesiredSize,
                                const nsSize&    aMaxSize,
                                nsReflowCommand& aReflowCommand,
-                               ReflowStatus&    aStatus);
+                               nsReflowStatus&  aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
@@ -152,9 +152,9 @@ protected:
    * @return  frComplete if all content has been mapped and frNotComplete
    *            if we should be continued
    */
-  ReflowStatus  ReflowUnmappedChildren(nsIPresContext*      aPresContext,
-                                       RowGroupReflowState& aState,
-                                       nsSize*              aMaxElementSize);
+  nsReflowStatus  ReflowUnmappedChildren(nsIPresContext*      aPresContext,
+                                         RowGroupReflowState& aState,
+                                         nsSize*              aMaxElementSize);
 
 private:
   nsIAtom *mType;

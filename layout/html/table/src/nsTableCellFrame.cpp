@@ -208,7 +208,7 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
                                          nsReflowMetrics& aDesiredSize,
                                          const nsSize&   aMaxSize,
                                          nsSize*         aMaxElementSize,
-                                         ReflowStatus&   aStatus)
+                                         nsReflowStatus& aStatus)
 {
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
 
@@ -216,7 +216,7 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   //PreReflowCheck();
 #endif
 
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   if (gsDebug==PR_TRUE)
     printf("nsTableCellFrame::ResizeReflow: maxSize=%d,%d\n",
            aMaxSize.width, aMaxSize.height);
@@ -287,7 +287,7 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
                            kidSize.width, kidSize.height));
   
     
-  if (frNotComplete == aStatus) {
+  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     // If the child didn't finish layout then it means that it used
     // up all of our available space (or needs us to split).
     mLastContentIsComplete = PR_FALSE;
@@ -329,7 +329,7 @@ NS_METHOD nsTableCellFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                               nsReflowMetrics& aDesiredSize,
                                               const nsSize&    aMaxSize,
                                               nsReflowCommand& aReflowCommand,
-                                              ReflowStatus&    aStatus)
+                                              nsReflowStatus&  aStatus)
 {
   if (gsDebug == PR_TRUE) printf("nsTableCellFrame::IncrementalReflow\n");
   // total hack for now, just some hard-coded values

@@ -77,9 +77,9 @@ public:
 
   // Pass the reflow command to the next frame in the hierarchy. Returns the
   // status and the next frame to which the command was dispatched
-  nsIFrame::ReflowStatus Next(nsReflowMetrics& aDesiredSize,
-                              const nsSize&    aMaxSize,
-                              nsIFrame*&       aNextFrame);
+  nsReflowStatus Next(nsReflowMetrics& aDesiredSize,
+                      const nsSize&    aMaxSize,
+                      nsIFrame*&       aNextFrame);
 
   // Pass the reflow command to the next frame in the hierarchy. Returns the
   // status and the next frame to which the command was dispatched
@@ -87,10 +87,10 @@ public:
   // Use this version if you have a space manager. This function will check if
   // the caller supports nsIRunaround and call either the nsIFrame or the
   // nsIRunaround IncrementalReflow() function
-  nsIFrame::ReflowStatus Next(nsISpaceManager* aSpaceManager,
-                              nsRect&          aDesiredRect,
-                              const nsSize&    aMaxSize,
-                              nsIFrame*&       aNextFrame);
+  nsReflowStatus Next(nsISpaceManager* aSpaceManager,
+                      nsRect&          aDesiredRect,
+                      const nsSize&    aMaxSize,
+                      nsIFrame*&       aNextFrame);
 
   nsIFrame* GetNext() const;
 
