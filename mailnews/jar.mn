@@ -64,6 +64,7 @@ messenger.jar:
     content/messenger/pref-labels.js                                           (base/prefs/resources/content/pref-labels.js)
     content/messenger/pref-viewing_messages.xul                                (base/prefs/resources/content/pref-viewing_messages.xul)
     content/messenger/pref-receipts.xul                                        (base/prefs/resources/content/pref-receipts.xul)
+    content/messenger/pref-receipts.js                                         (base/prefs/resources/content/pref-receipts.js)
     content/messenger/custreceipt.xul                                          (base/prefs/resources/content/custreceipt.xul)
     content/messenger/AccountWizard.xul                                        (base/prefs/resources/content/AccountWizard.xul)
     content/messenger/AccountWizard.js                                         (base/prefs/resources/content/AccountWizard.js)
