@@ -101,6 +101,8 @@ public:
 
     nsresult         DoomEntry(nsCacheEntry * entry);
 
+    nsresult         DoomEntry_Locked(nsCacheEntry * entry);
+
 private:
 
     /**
@@ -122,9 +124,6 @@ private:
     nsCacheDevice *  EnsureEntryHasDevice(nsCacheEntry * entry);
 
     nsCacheEntry *   SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy);
-
-    nsresult         DoomEntry_Internal(nsCacheEntry * entry);
-
 
     void             DeactivateEntry(nsCacheEntry * entry);
 
