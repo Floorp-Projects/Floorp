@@ -53,9 +53,9 @@ struct nsBorderColor
 };
 
 enum nsFramesetUnit {
-  eFramesetUnit_Free = 0,
+  eFramesetUnit_Fixed = 0,
   eFramesetUnit_Percent,
-  eFramesetUnit_Pixel
+  eFramesetUnit_Relative
 };
 
 enum nsFrameborder {
@@ -141,6 +141,9 @@ public:
   void SetParentFrameborder(nsFrameborder aValue) { mParentFrameborder = aValue; }
 
 protected:
+  void Scale(nscoord aDesired, PRInt32 aNumIndicies, 
+             PRInt32* aIndicies, PRInt32* aItems);
+
   void CalculateRowCol(nsIPresContext* aPresContext, nscoord aSize, PRInt32 aNumSpecs, 
                        nsFramesetSpec* aSpecs, nscoord* aValues);
 

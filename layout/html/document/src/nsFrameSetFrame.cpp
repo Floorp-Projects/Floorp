@@ -180,154 +180,123 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID, void** aInstance
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
+// XXX should this try to allocate twips based on an even pixel boundary?
+void nsHTMLFramesetFrame::Scale(nscoord aDesired, PRInt32 aNumIndicies, 
+                                PRInt32* aIndicies, PRInt32* aItems)
+{
+  PRInt32 actual = 0;
+  PRInt32 i, j;
+  // get the actual total
+  for (i = 0; i < aNumIndicies; i++) {
+    j = aIndicies[i];
+    actual += aItems[j];
+  }
+
+  float factor = (float)aDesired / (float)actual;
+  actual = 0;
+  // scale the items up or down
+  for (i = 0; i < aNumIndicies; i++) {
+    j = aIndicies[i];
+    aItems[j] = NSToCoordRound((float)aItems[j] * factor);
+    actual += aItems[j];
+  }
+
+  if (aDesired != actual) {
+    PRInt32 unit = (aDesired > actual) ? 1 : -1;
+    i = 0;
+    while (aDesired != actual) {
+      j = aIndicies[i];
+      aItems[j] += unit;
+      actual += unit;
+      i++;
+    }
+  }
+}
+  
+
 /**
   * Translate the rows/cols specs into an array of integer sizes for
-  * each cell in the frameset. The sizes are computed by first
-  * rationalizing the spec into a set of percentages that total
-  * 100. Then the cell sizes are computed.
+  * each cell in the frameset. Sizes are allocated based on the priorities of the
+  * specifier - fixed sizes have the highest priority, percentage sizes have the next
+  * highest priority and relative sizes have the lowest.
   */
-  // XXX This doesn't do a good job of translating "*,625,*" specs
 void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord aSize, 
                                           PRInt32 aNumSpecs, nsFramesetSpec* aSpecs, 
                                           nscoord* aValues)
 {
-  // Total up the three different type of grid cell
-  // percentages. Transfer the resulting values into result for
-  // temporary storage (we don't overwrite the cell specs)
-  PRInt32 free    = 0;
-  PRInt32 percent = 0;
-  PRInt32 pixel   = 0;
+  PRInt32  fixedTotal = 0;
+  PRInt32  numFixed = 0;
+  PRInt32* fixed = new PRInt32[aNumSpecs];
+  PRInt32  numPercent = 0;
+  PRInt32* percent = new PRInt32[aNumSpecs];
+  PRInt32  relativeSums = 0;
+  PRInt32  numRelative = 0;
+  PRInt32* relative= new PRInt32[aNumSpecs];
+
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
-
-  int i; // feeble compiler
-  for (i = 0; i < aNumSpecs; i++) {
+  PRInt32 i, j;
+ 
+  // initialize the fixed, percent, relative indices, allocate the fixed sizes and zero the others
+  for (i = 0; i < aNumSpecs; i++) {   
+    aValues[i] = 0;
     switch (aSpecs[i].mUnit) {
-      case eFramesetUnit_Pixel:
-        // Now that we know the size we are laying out in, turn fixed
-        // pixel dimensions into percents.
-        // XXX maybe use UnitConverter for proper rounding? MMP
-        aValues[i] = NSToCoordRound(100 * p2t * aSpecs[i].mValue / aSize);
-        if (aValues[i] < 1) aValues[i] = 1;
-        pixel += aValues[i];
+      case eFramesetUnit_Fixed:
+        aValues[i] = NSToCoordRound(p2t * aSpecs[i].mValue);
+        fixedTotal += aValues[i];
+        fixed[numFixed] = i;
+        numFixed++;
         break;
       case eFramesetUnit_Percent:
-        aValues[i] = aSpecs[i].mValue;
-        percent += aValues[i];
+        percent[numPercent] = i;
+        numPercent++;
         break;
-      case eFramesetUnit_Free:
-        aValues[i] = aSpecs[i].mValue;
-        free += aValues[i];
+      case eFramesetUnit_Relative:
+        relative[numRelative] = i;
+        numRelative++;
+        relativeSums += aSpecs[i].mValue;
         break;
     }
   }
 
-  if (percent + pixel < 100) {
-    // The user didn't explicitly use up all the space. Spread the
-    // left over space to the free percentage cells first, then to
-    // the normal percentage cells second, and finally to the fixed
-    // cells as a last resort.
-    if (free != 0) {
-      // We have some free percentage cells that want to soak up the
-      // excess space. Spread out the left over space to those cells.
-      int used = 0;
-      int last = -1;
-      int leftOver = 100 - (percent + pixel);
-      for (int i = 0; i < aNumSpecs; i++) {
-        if (eFramesetUnit_Free == aSpecs[i].mUnit) {
-          aValues[i] = aValues[i] * leftOver / free;
-          if (aValues[i] < 1) aValues[i] = 1;
-          used += aValues[i];
-          last = i;
-        }
-      }
-      int remainder = 100 - percent - pixel - used;
-      if ((remainder > 0) && (last >= 0)) {
-        // Slop the extra space into the last qualifying cell
-        aValues[last] += remainder;
-      }
-    } else if (percent != 0) {
-      // We have no free cells but have some normal percentage
-      // cells. Distribute the extra space among them.
-      int used = 0;
-      int last = -1;
-      int leftOver = 100 - pixel;
-      for (int i = 0; i < aNumSpecs; i++) {
-        if (eFramesetUnit_Percent == aSpecs[i].mUnit) {
-          aValues[i] = aValues[i] * leftOver / percent;
-          used += aValues[i];
-          last = i;
-        }
-      }
-      if ((used < leftOver) && (last >= 0)) {
-        // Slop the extra space into the last qualifying cell
-        aValues[last] = aValues[last] + (leftOver - used);
-      }
-    } else {
-      // Give the leftover space to the fixed percentage
-      // cells. Recall that at the start of this method we converted
-      // the fixed pixel values into percentages.
-      int used = 0;
-      for (int i = 0; i < aNumSpecs; i++) {
-        aValues[i] = aValues[i] * 100 / pixel;
-        used += aValues[i];
-      }
-      if ((used < 100) && (aNumSpecs > 0)) {
-        // Slop the extra space into the last cell
-        aValues[aNumSpecs - 1] += (100 - used);
-      }
-    }
-  } else if (percent + pixel > 100) {
-    // The user overallocated the space. We need to shrink something.
-    // If there is not too much fixed percentage added, we can
-    // just shrink the normal percentage cells to make things fit.
-    if (pixel <= 100) {
-      int used = 0;
-      int last = -1;
-      int val = 100 - pixel;
-      for (int i = 0; i < aNumSpecs; i++) {
-        if (eFramesetUnit_Percent == aSpecs[i].mUnit) {
-          aValues[i] = aValues[i] * val / percent;
-          used += aValues[i];
-          last = i;
-        }
-      }
-      // Since integer division always truncates, we either made
-      // it fit exactly, or overcompensated and made it too small.
-      if ((used < val) && (last >= 0)) {
-        aValues[last] += (val - used);
-      }
-    } else {
-      // There is too much fixed percentage as well. We will just
-      // shrink all the cells.
-      int used = 0;
-      for (int i = 0; i < aNumSpecs; i++) {
-        if (eFramesetUnit_Free == aSpecs[i].mUnit) {
-          aValues[i] = 0;
-        } else {
-          aValues[i] = aValues[i] * 100 / (percent + pixel);
-        }
-        used += aValues[i];
-      }
-      if ((used < 100) && (aNumSpecs > 0)) {
-        aValues[aNumSpecs-1] += (100 - used);
-      }
-    }
+  // scale the fixed sizes if they total too much (or too little and there aren't any percent or relative)
+  if ((fixedTotal > aSize) || ((fixedTotal < aSize) && (0 == numPercent) && (0 == numRelative))) { 
+    Scale(aSize, numFixed, fixed, aValues);
+    delete [] fixed; delete [] percent; delete [] relative;
+    return;
   }
 
-  // Now map the result which contains nothing but percentages into
-  // fixed pixel values.
-  int sum = 0;
-  for (i = 0; i < aNumSpecs; i++) {
-    aValues[i] = (aValues[i] * aSize) / 100;
-    sum += aValues[i];
+  PRInt32 percentMax = aSize - fixedTotal;
+  PRInt32 percentTotal = 0;
+  // allocate the percentage sizes from what is left over from the fixed allocation
+  for (i = 0; i < numPercent; i++) {
+    j = percent[i];
+    aValues[j] = NSToCoordRound((float)aSpecs[j].mValue * (float)percentMax / 100.0f);
+    percentTotal += aValues[j];
   }
-  //Assert.Assertion(sum <= aSize);
-  if ((sum < aSize) && (aNumSpecs > 0)) {
-    // Any remaining pixels (from roundoff) go into the last cell
-    aValues[aNumSpecs-1] += aSize - sum;
+
+  // scale the percent sizes if they total too much (or too little and there aren't any relative)
+  if ((percentTotal > percentMax) || ((percentTotal < percentMax) && (0 == numRelative))) { 
+    Scale(percentMax, numPercent, percent, aValues);
+    delete [] fixed; delete [] percent; delete [] relative;
+    return;
+  }
+
+  PRInt32 relativeMax = percentMax - percentTotal;
+  PRInt32 relativeTotal = 0;
+  // allocate the relative sizes from what is left over from the percent allocation
+  for (i = 0; i < numRelative; i++) {
+    j = relative[i];
+    aValues[j] = NSToCoordRound((float)aSpecs[j].mValue * (float)relativeMax / (float)relativeSums);
+    relativeTotal += aValues[j];
+  }
+
+  // scale the relative sizes if they take up too much or too little
+  if (relativeTotal != relativeMax) { 
+    Scale(relativeMax, numRelative, relative, aValues);
   }
 }
+
 
 PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext) 
 {
@@ -533,7 +502,7 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
   }
   aNumSpecs = 1; 
   *aSpecs = new nsFramesetSpec[1];
-  aSpecs[0]->mUnit  = eFramesetUnit_Free;
+  aSpecs[0]->mUnit  = eFramesetUnit_Relative;
   aSpecs[0]->mValue = 1;
 }
 
@@ -573,12 +542,12 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues,
 
     // Note: If end == start then it means that the token has no
     // data in it other than a terminating comma (or the end of the spec)
-    aSpecs[i].mUnit = eFramesetUnit_Pixel;
+    aSpecs[i].mUnit = eFramesetUnit_Fixed;
     if (end > start) {
       PRInt32 numberEnd = end - 1;
       PRUnichar ch = aSpec.CharAt(numberEnd);
       if (ASTER == ch) {
-        aSpecs[i].mUnit = eFramesetUnit_Free;
+        aSpecs[i].mUnit = eFramesetUnit_Relative;
         numberEnd--;
       } else if (PERCENT == ch) {
         aSpecs[i].mUnit = eFramesetUnit_Percent;
