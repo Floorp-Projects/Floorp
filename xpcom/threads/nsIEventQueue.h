@@ -38,7 +38,7 @@
 class nsIEventQueue : public nsISupports
 {
 public:
-	static const nsIID& GetIID() { static nsIID iid = NS_IEVENTQUEUE_IID; return iid;}
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTQUEUE_IID);
 
     NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent) = 0;
     NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult) = 0;
@@ -48,6 +48,7 @@ public:
 
 	NS_IMETHOD EventAvailable(PRBool& aResult) = 0;
 	NS_IMETHOD GetEvent(PLEvent** aResult) = 0;
+    NS_IMETHOD HandleEvent(PLEvent* aEvent) = 0;
 
     NS_IMETHOD_(PRInt32) GetEventQueueSelectFD() = 0;
 

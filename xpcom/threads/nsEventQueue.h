@@ -40,6 +40,7 @@ public:
 
     NS_IMETHOD EventAvailable(PRBool& aResult);
 	NS_IMETHOD GetEvent(PLEvent** aResult);
+    NS_IMETHOD HandleEvent(PLEvent* aEvent);
 
     NS_IMETHOD_(PRInt32) GetEventQueueSelectFD();
 

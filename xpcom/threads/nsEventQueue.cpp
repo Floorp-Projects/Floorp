@@ -133,6 +133,13 @@ nsEventQueueImpl::GetEvent(PLEvent** aResult)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEventQueueImpl::HandleEvent(PLEvent* aEvent)
+{
+    PL_HandleEvent(aEvent);
+    return NS_OK;
+}
+
 NS_IMETHODIMP_(PRInt32) 
 nsEventQueueImpl::GetEventQueueSelectFD() 
 {
