@@ -211,11 +211,17 @@ static NS_DEFINE_IID(kCHTMLImageElement, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
+//#define NEW_CLIPBOARD_SUPPORT
+
 #ifdef NEW_CLIPBOARD_SUPPORT
 static NS_DEFINE_IID(kClipboardCID,          NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kTransferableCID,       NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kDataFlavorCID,         NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kXIFFormatConverterCID, NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_IID(kCDragServiceCID,       NS_DRAGSERVICE_CID);
+static NS_DEFINE_IID(kCDragSourceCID,        NS_DRAGSOURCE_CID);
+static NS_DEFINE_IID(kCDragTargetCID,        NS_DRAGTARGET_CID);
+static NS_DEFINE_IID(kCDraggedObjectCID,     NS_DRAGGEDOBJECT_CID);
 #endif
 
 #ifdef ClientWallet
@@ -376,15 +382,15 @@ NS_SetupRegistry()
 #endif
 
 #ifdef NEW_CLIPBOARD_SUPPORT
-static NS_DEFINE_IID(kClipboardCID,          NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kTransferableCID,       NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kDataFlavorCID,         NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kXIFFormatConverterCID, NS_XIFFORMATCONVERTER_CID);
-
   nsComponentManager::RegisterComponent(kClipboardCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kTransferableCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kDataFlavorCID,         NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kXIFFormatConverterCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+
+  nsComponentManager::RegisterComponent(kCDragServiceCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDragSourceCID,        NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDragTargetCID,        NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDraggedObjectCID,     NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
   nsComponentManager::RegisterComponent(kCSSParserCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
