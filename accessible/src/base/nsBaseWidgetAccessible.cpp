@@ -47,6 +47,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
+#include "nsIURI.h"
 
 // ------------
 // nsBlockAccessible
@@ -193,19 +194,17 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
         *aState |= orState;
       }
     }
+    if (!mLinkContent->IsFocusable()) {
+      *aState &= ~STATE_FOCUSABLE; // Links must have href or tabindex
+    }
   }
 
-  if (!mLinkContent->IsFocusable()) {
-   *aState &= ~STATE_FOCUSABLE; // Links must have href or tabindex
-  }
-  else {
-    nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-    if (docAccessible) {
-      PRBool isEditable;
-      docAccessible->GetIsEditable(&isEditable);
-      if (isEditable) {
-        *aState &= ~(STATE_FOCUSED | STATE_FOCUSABLE); // Links not focusable in editor
-      }
+  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
+  if (docAccessible) {
+    PRBool isEditable;
+    docAccessible->GetIsEditable(&isEditable);
+    if (isEditable) {
+      *aState &= ~(STATE_FOCUSED | STATE_FOCUSABLE); // Links not focusable in editor
     }
   }
   return NS_OK;
@@ -296,15 +295,24 @@ PRBool nsLinkableAccessible::IsALink()
   for (nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
        walkUpContent;
        walkUpContent = walkUpContent->GetParent()) {
-    nsCOMPtr<nsILink> link(do_QueryInterface(walkUpContent));
-    if (link) {
-      mLinkContent = walkUpContent;
-      mIsALinkCached = PR_TRUE;
-      nsLinkState linkState;
-      link->GetLinkState(linkState);
-      if (linkState == eLinkState_Visited)
-        mIsLinkVisited = PR_TRUE;
-      return PR_TRUE;
+    nsIAtom *tag = walkUpContent->Tag();
+    if ((tag == nsAccessibilityAtoms::a || nsAccessibilityAtoms::area)) {
+      // Currently we do not expose <link> tags, because they are not typically
+      // in <body> and rendered.
+      // We do not yet support xlinks
+      nsCOMPtr<nsILink> link = do_QueryInterface(walkUpContent);
+      NS_ASSERTION(link, "No nsILink for area or a");
+      nsCOMPtr<nsIURI> uri;
+      link->GetHrefURI(getter_AddRefs(uri));
+      if (uri) {
+        mLinkContent = walkUpContent;
+        mIsALinkCached = PR_TRUE;
+        nsLinkState linkState;
+        link->GetLinkState(linkState);
+        if (linkState == eLinkState_Visited)
+          mIsLinkVisited = PR_TRUE;
+        return PR_TRUE;
+      }
     }
   }
   mIsALinkCached = PR_TRUE;  // Cached that there is no link
@@ -317,74 +325,3 @@ NS_IMETHODIMP nsLinkableAccessible::Shutdown()
   return nsAccessibleWrap::Shutdown();
 }
 
-
-//----------------
-// nsGenericAccessible
-//----------------
-
-nsGenericAccessible::nsGenericAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-  nsAccessibleWrap(aNode, aShell)
-{ 
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsGenericAccessible, nsAccessible)
-
-NS_IMETHODIMP nsGenericAccessible::TakeFocus()
-{
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content || !mWeakShell) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
-
-  content->SetFocus(nsCOMPtr<nsPresContext>(GetPresContext()));
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsGenericAccessible::GetRole(PRUint32 *aRole)
-{
-  *aRole = ROLE_NOTHING;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsGenericAccessible::GetState(PRUint32 *aState)
-{
-  // XXX todo: use DHTML state attribs to fill in accessible states
-
-  nsAccessible::GetState(aState);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsGenericAccessible::GetValue(nsAString& aValue)
-{
-  // XXX todo: use value attrib or property to fill in accessible value
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-/* PRUint8 getAccNumActions (); */
-NS_IMETHODIMP nsGenericAccessible::GetNumActions(PRUint8 *aNumActions)
-{
-  // XXX todo: use XML events to fill in accessible actions
-
-  *aNumActions = 0;
-
-  return NS_OK;
-}
-
-/* wstring getAccActionName (in PRUint8 index); */
-NS_IMETHODIMP nsGenericAccessible::GetActionName(PRUint8 index, nsAString& _retval)
-{
-  // XXX todo: use XML events to fill in accessible actions
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void accDoAction (in PRUint8 index); */
-NS_IMETHODIMP nsGenericAccessible::DoAction(PRUint8 index)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}

@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLLinkAccessible.h"
+#include "nsAccessibilityAtoms.h"
+#include "nsINameSpaceManager.h"
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLinkAccessible, nsLinkableAccessible)
 
@@ -62,10 +64,19 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLLinkAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLLinkAccessible::GetState(PRUint32 *aState)
 {
-  nsLinkableAccessible::GetState(_retval);
-  *_retval &= ~(STATE_READONLY|STATE_SELECTABLE);
+  nsLinkableAccessible::GetState(aState);
+  *aState  &= ~STATE_READONLY;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (content && content->HasAttr(kNameSpaceID_None,
+                                  nsAccessibilityAtoms::name)) {
+    // This is how we indicate it is a named anchor
+    // In other words, this anchor can be selected as a location :)
+    // There is no other better state to use to indicate this.
+    *aState |= STATE_SELECTABLE;
+  }
 
   return NS_OK;
 }
