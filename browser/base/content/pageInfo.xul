@@ -22,14 +22,10 @@
 #    Chris McAfee <mcafee@netscape.com>
 #    Daniel Brooks <db48x@yahoo.com>
 #    Gervase Markham <gerv@gerv.net>
-<?xml-stylesheet href="chrome://navigator/skin/pageInfo.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/pageInfo.css" type="text/css"?>
 
 <!DOCTYPE window [
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
-  %brandDTD;
-  <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd">
-  %navigatorDTD;
-  <!ENTITY % pageInfoDTD SYSTEM "chrome://navigator/locale/pageInfo.dtd">
+  <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
   %pageInfoDTD;
 ]>
 
@@ -38,13 +34,11 @@
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
   align="stretch" class="dialog"
-  width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
   screenX="10" screenY="10"
-  persist="screenX screenY width height sizemode">
+  persist="screenX screenY">
 
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pageInfo.js"/>
 
   <keyset>
     <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="window.close();"/>
@@ -54,18 +48,18 @@
   <!-- keys are appended from the overlay -->
   <keyset id="dialogKeys"/>
 
-  <stringbundle id="pageinfobundle" src="chrome://navigator/locale/pageInfo.properties"/>
+  <stringbundle id="pageinfobundle" src="chrome://browser/locale/pageInfo.properties"/>
 
   <tabbox id="tabbox" flex="1">
     <tabs id="tabs">
       <tab id="generalTab" label="&generalTab;" 
            accesskey="&generalAccesskey;"/>
       <tab id="formsTab"   label="&formsTab;"   
-           accesskey="&formsAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+           accesskey="&formsAccesskey;" oncommand="ensureSelection(formView)"/>
       <tab id="linksTab"   label="&linksTab;"   
-           accesskey="&linksAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+           accesskey="&linksAccesskey;" oncommand="ensureSelection(linkView)"/>
       <tab id="mediaTab"   label="&mediaTab;"  
-           accesskey="&mediaAccesskey;" oncommand="makeTabs(theDocument, theWindow);"/>
+           accesskey="&mediaAccesskey;" oncommand="ensureSelection(imageView)"/>
       <!-- Others added by overlay -->
     </tabs>
     <tabpanels id="tabpanels" flex="1">
@@ -135,7 +129,7 @@
         </grid>
         <separator class="thin"/>
         <text id="metahead" class="header" value="&generalMeta;"/>
-        <tree id="metatree" flex="1" class="inset">
+        <tree id="metatree" flex="1">
           <treecols>
             <treecol persist="hidden width" flex="1" id="meta-name"    label="&generalMetaName;"/>
             <splitter class="tree-splitter"/>
@@ -147,7 +141,7 @@
 
       <!-- Form information -->
       <vbox>
-        <tree id="formtree" class="inset fixedsize" onselect="onFormSelect();">
+        <tree id="formtree" class="fixedsize" onselect="onFormSelect();">
           <treecols>
             <splitter class="tree-splitter"/>
             <treecol sortSeparators="true" persist="hidden width" flex="1" 
@@ -184,7 +178,7 @@
             </rows>
           </grid>
           <text class="header" value="&formFields;"/>
-          <tree id="formpreview" flex="1" class="inset">
+          <tree id="formpreview" flex="1">
             <treecols>
               <treecol sortSeparators="true" persist="hidden width" flex="3" 
                            width="3" id="field-label"  label="&formLabel;"/>
@@ -205,7 +199,7 @@
 
       <!-- Link info -->
       <vbox>
-        <tree id="linktree" flex="1" class="inset" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')">
+        <tree id="linktree" flex="1" ondraggesture="onBeginLinkDrag(event,'link-address','link-name')">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="5" 
                          width="5" id="link-name"    label="&linkName;"/>
@@ -225,7 +219,7 @@
 
       <!-- Media information -->
       <vbox>
-        <tree id="imagetree" class="inset fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
+        <tree id="imagetree" class="fixedsize" onselect="onImageSelect();" ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
           <treecols>
             <treecol sortSeparators="true" persist="hidden width" flex="10" 
                          width="10" id="image-address" label="&mediaAddress;"/>
