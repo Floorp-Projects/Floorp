@@ -495,11 +495,11 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   if (m_newsgroups)
     fields->SetNewsgroups(m_newsgroups);
 
-  // If we have this, we found a HEADER_X_MOZILLA_NEWSHOST which means
-  // that we saved what the user typed into the "Newsgroup" line in this
-  // header
+#if 0
+  // needs cleanup.  SetNewspostUrl()?
   if (m_newshost)
-    fields->SetNewsgroups(m_newshost);
+    fields->SetNewshost(m_newshost);
+#endif
 
   if (mRequestReturnReceipt)
     fields->SetReturnReceipt(PR_TRUE);
