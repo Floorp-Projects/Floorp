@@ -239,14 +239,14 @@ Contributor(s): ______________________________________. -->
     
         <box class="box-toolbar-group" flex="1">
           <menubutton class="menubutton-icon button-toolbar-3" id="ubhist-keyword-popup" tooltiptext="&internetKeyword.tooltip;">
-            <menupopup class="button-toolbar-3" oncreate="CreateUBHistoryMenu(event);" oncommand="ExecuteUBCommand(event);">
-              <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" keyword="quote"/>
+           <menupopup class="button-toolbar-3" oncreate="CreateUBHistoryMenu(event);" oncommand="ExecuteUBCommand(event);">
+       <!--       <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" keyword="quote"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&localKeyword.label;" keyword="local"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&shopKeyword.label;" keyword="shop"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&careerKeyword.label;" keyword="career"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&webmailKeyword.label;" keyword="webmail"/>
               <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&listKeywords.label;" keyword="list"/>                 
-              <menuseparator/>
+              <menuseparator/>  -->
             </menupopup>
           </menubutton>
 
