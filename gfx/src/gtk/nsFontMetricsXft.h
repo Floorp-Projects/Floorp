@@ -214,8 +214,10 @@ public:
                                          nsFontXft *aFont, void *aData);
     nsresult    GetWidthCallback        (const FcChar32 *aString, PRUint32 aLen,
                                          nsFontXft *aFont, void *aData);
+#ifdef MOZ_MATHML
     nsresult    BoundingMetricsCallback (const FcChar32 *aString, PRUint32 aLen,
                                          nsFontXft *aFont, void *aData);
+#endif /* MOZ_MATHML */
 
 private:
     // local methods

@@ -244,11 +244,13 @@ typedef struct _WidthData {
     nscoord           width;
 } WidthData;
 
+#ifdef MOZ_MATHML
 typedef struct _BoundingMetricsData {
     nsFontMetricsXft *metrics;
     nsBoundingMetrics *bm;
     PRBool firstTime;
 } BoundingMetricsData;
+#endif /* MOZ_MATHML */
 
 class nsAutoBuffer;
 
@@ -299,11 +301,12 @@ static nsresult StaticGetWidthCallback        (const FcChar32 *aString,
                                                PRUint32 aLen,
                                                nsFontXft *aFont, 
                                                void *aData);
+#ifdef MOZ_MATHML
 static nsresult StaticBoundingMetricsCallback (const FcChar32 *aString, 
                                                PRUint32 aLen,
                                                nsFontXft *aFont, 
                                                void *aData);
-
+#endif /* MOZ_MATHML */
 
 #ifdef MOZ_WIDGET_GTK2
 static void GdkRegionSetXftClip(GdkRegion *aGdkRegion, XftDraw *aDraw);
@@ -1675,6 +1678,7 @@ nsFontMetricsXft::GetWidthCallback(const FcChar32 *aString, PRUint32 aLen,
     return NS_OK;
 }
 
+#ifdef MOZ_MATHML
 nsresult
 nsFontMetricsXft::BoundingMetricsCallback(const FcChar32 *aString, 
                                           PRUint32 aLen, nsFontXft *aFont, 
@@ -1707,6 +1711,7 @@ nsFontMetricsXft::BoundingMetricsCallback(const FcChar32 *aString,
 
     return NS_OK;
 }
+#endif /* MOZ_MATHML */
 
 /* static */
 nsresult
@@ -2168,13 +2173,6 @@ nsFontXftCustom::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen,
     }
 
     XftGlyphExtents(GDK_DISPLAY(), mXftFont, str, destLen, &aGlyphInfo);
-
-#ifdef DEBUG_jungshik
-    // to avoid a potential unwanted interaction with Xft/FT/fontconfig,
-    // release mFT_Face as soon as we're done.
-    XftUnlockFace(mXftFont);
-    mFT_Face = nsnull;
-#endif
         
     return NS_OK;
 }
@@ -2243,15 +2241,6 @@ nsFontXftCustom::FillDrawStringSpec(FcChar32* aString, PRUint32 aLen,
     FcChar32 *str = NS_STATIC_CAST(FcChar32 *, buffer.GetArray());
 
     rv = nsFontXft::FillDrawStringSpec(str, destLen, aData);
-
-#ifdef DEBUG_jungshik
-    if(!isWide) {
-        // to avoid a potential unwanted interaction with Xft/FT/fontconfig,
-        // release mFT_Face as soon as we're done.
-        XftUnlockFace(mXftFont);
-        mFT_Face = nsnull;
-    }
-#endif
 
     return rv;
 }
@@ -2790,6 +2779,7 @@ StaticGetWidthCallback(const FcChar32 *aString, PRUint32 aLen,
     return data->metrics->GetWidthCallback(aString, aLen, aFont, aData);
 }
 
+#ifdef MOZ_MATHML
 /* static */
 nsresult
 StaticBoundingMetricsCallback(const FcChar32 *aString, PRUint32 aLen, 
@@ -2798,6 +2788,7 @@ StaticBoundingMetricsCallback(const FcChar32 *aString, PRUint32 aLen,
     BoundingMetricsData *data = (BoundingMetricsData *)aData;
     return data->metrics->BoundingMetricsCallback(aString, aLen, aFont, aData);
 }
+#endif /* MOZ_MATHML */
 
 #ifdef MOZ_WIDGET_GTK2
 /* static */
