@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/junkLog.dtd">
+
+<dialog id="viewLogWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad();"
+        title="&junkLog.title;"
+        windowtype="mailnews:junklog"
+        buttons="accept"
+        ondialogaccept="window.close()"
+        persist="screenX screenY width height">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/junkLog.js"/>
+
+  <vbox flex="1">
+    <description>&junkLogInfo.text;</description>
+    <hbox>
+      <checkbox id="logJunk" oncommand="toggleJunkLog()" label="&enableLog.label;" accesskey="&enableLog.accesskey;"/>
+      <spacer flex="1"/>
+      <button label="&clearLog.label;" accesskey="&clearLog.accesskey;" oncommand="clearLog()"/>
+    </hbox>
+    <vbox flex="1">
+      <spacer height="10px"/>
+      <hbox flex="1">
+        <spacer width="10px"/>
+        <browser id="logView" disablehistory="true" disablesecurity="true" src="about:blank" flex="1"/>
+        <spacer width="10px"/>
+      </hbox>
+      <spacer height="10px"/>
+    </vbox>
+  </vbox>
+</dialog>
