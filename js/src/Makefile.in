@@ -212,7 +212,8 @@ endif
 
 LDFLAGS		+= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
 
-ifneq ($(OS_ARCH),BeOS)
+# BeOS and HP-UX do not require the extra linking of "-lm"
+ifeq (,$(filter BeOS HP-UX,$(OS_ARCH)))
 LDFLAGS		+= -lm
 endif
 
