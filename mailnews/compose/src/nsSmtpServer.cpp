@@ -58,7 +58,9 @@ nsSmtpServer::GetHostname(char * *aHostname)
     nsCAutoString pref;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     getPrefString("hostname", pref);
-    return prefs->CopyCharPref(pref, aHostname);
+    rv = prefs->CopyCharPref(pref, aHostname);
+    if (NS_FAILED(rv)) *aHostname=nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -78,7 +80,9 @@ nsSmtpServer::GetUsername(char * *aUsername)
     nsCAutoString pref;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     getPrefString("username", pref);
-    return prefs->CopyCharPref(pref, aUsername);
+    rv = prefs->CopyCharPref(pref, aUsername);
+    if (NS_FAILED(rv)) *aUsername = nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -98,7 +102,9 @@ nsSmtpServer::GetPassword(char * *aPassword)
     nsCAutoString pref;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     getPrefString("password", pref);
-    return prefs->CopyCharPref(pref, aPassword);
+    rv = prefs->CopyCharPref(pref, aPassword);
+    if (NS_FAILED(rv)) *aPassword = nsnull;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
