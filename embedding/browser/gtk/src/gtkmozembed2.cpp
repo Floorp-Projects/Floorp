@@ -486,7 +486,9 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   embed->data = priv;
   gtk_widget_set_name(GTK_WIDGET(embed), "gtkmozembed");
 
+#ifdef MOZ_WIDGET_GTK2
   GTK_WIDGET_UNSET_FLAGS(GTK_WIDGET(embed), GTK_NO_WINDOW);
+#endif
 }
 
 GtkWidget *
