@@ -328,7 +328,7 @@ LocationImpl::GetHref(nsString& aHref)
   if (mDocShell) {
     nsCOMPtr<nsIURI> uri;
     result = mDocShell->GetCurrentURI(getter_AddRefs(uri));
-    if (NS_SUCCEEDED(result)) {
+    if (NS_SUCCEEDED(result) && uri) {
         nsXPIDLCString uriString;
         result = uri->GetSpec(getter_Copies(uriString));
         if (NS_SUCCEEDED(result))
