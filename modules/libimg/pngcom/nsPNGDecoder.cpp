@@ -128,7 +128,7 @@ private:
 
 /*-----------------------------------------*/
 
-nsPNGDecFactory* gFactory = NULL;
+static nsPNGDecFactory* gFactory = NULL;
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsPNGDecFactory, kIFactoryIID)
