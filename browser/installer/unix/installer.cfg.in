@@ -1,0 +1,12 @@
+VersionLanguage           = en
+NameCompany               = mozilla.org
+NameProduct               = Mozilla Firefox
+NameProductInternal       = Mozilla Firefox
+VersionProduct            = 0.8
+FileInstallerEXE          = @INSTALLER_NAME@
+FileMainEXE               = firefox
+FileUninstall             = UninstallFirefox
+FileUninstallZIP          = UninstallFirefox.zip
+FileInstallerNETRoot      = FirefoxNetSetup
+ComponentList             = xpcom,browser,deflenus,langenus,regus,abe,adt
+LicenseFile               = browser/LICENSE
