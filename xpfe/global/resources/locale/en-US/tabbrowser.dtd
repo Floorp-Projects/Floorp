@@ -1,0 +1,7 @@
+
+<!ENTITY  newTab.label           "New Tab">
+<!ENTITY  newTab.accesskey       "n">
+<!ENTITY  closeTab.label         "Close Tab">
+<!ENTITY  closeTab.accesskey         "c">
+<!ENTITY  closeOtherTabs.label   "Close Other Tabs">
+<!ENTITY  closeOtherTabs.accesskey         "o">

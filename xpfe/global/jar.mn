@@ -81,6 +81,7 @@ en-US.jar:
     locale/en-US/global/textcontext.dtd             (resources/locale/en-US/textcontext.dtd) 
     locale/en-US/global/brand.properties            (resources/locale/en-US/brand.properties) 
     locale/en-US/global/brand.dtd                   (resources/locale/en-US/brand.dtd) 
+    locale/en-US/global/tabbrowser.dtd              (resources/locale/en-US/tabbrowser.dtd)
     locale/en-US/global/wizardManager.properties    (resources/locale/en-US/wizardManager.properties) 
     locale/en-US/global/wizardOverlay.dtd           (resources/locale/en-US/wizardOverlay.dtd) 
     locale/en-US/global/keys.properties             (resources/locale/en-US/keys.properties)
