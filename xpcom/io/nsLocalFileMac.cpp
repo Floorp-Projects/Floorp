@@ -1850,10 +1850,13 @@ nsLocalFile::Exists(PRBool *_retval)
 	if ( rv == NS_ERROR_FILE_NOT_FOUND )
 		return NS_OK;
 	
-	// XXX maybe Exists() should check the mResolvedSpec?
-	FSSpec temp;
-	if (::FSMakeFSSpec(mTargetSpec.vRefNum, mTargetSpec.parID, mTargetSpec.name, &temp) == noErr)
-		*_retval = PR_TRUE;
+	if (NS_SUCCEEDED(rv)) {
+	    // Only use mTargetSpec if mResolvedWasAlias is TRUE
+	    FSSpec spec = mResolvedWasAlias ? mTargetSpec : mResolvedSpec;
+    	FSSpec temp;
+    	if (::FSMakeFSSpec(spec.vRefNum, spec.parID, spec.name, &temp) == noErr)
+    		*_retval = PR_TRUE;
+    }
 
 	return NS_OK;
 }
