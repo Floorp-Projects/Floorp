@@ -849,6 +849,21 @@ nsBulletFrame::Reflow(nsIPresContext& aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus)
 {
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIReflowCommand::ReflowType type;
+    aReflowState.reflowCommand->GetType(type);
+    if (nsIReflowCommand::StyleChanged == type) {
+      // Reload the image, maybe...
+      nsAutoString oldImageURL;
+      mImageLoader.GetURLSpec(oldImageURL);
+      const nsStyleList* myList = (const nsStyleList*)
+        mStyleContext->GetStyleData(eStyleStruct_List);
+      if (myList->mListStyleImage != oldImageURL) {
+        mImageLoader.UpdateURLSpec(&aPresContext, myList->mListStyleImage);
+      }
+    }
+  }
+
   // Get the base size
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);
 
