@@ -71,8 +71,8 @@ public:
   NS_IMETHOD SetCal(NSCalendar* aCal) = 0;
   NS_IMETHOD GetCal(NSCalendar*& aCal) = 0;
   NS_IMETHOD FetchEventsByRange(
-                      const DateTime* aStart, 
-                      const DateTime* aStop,
+                      DateTime* aStart, 
+                      DateTime* aStop,
                       JulianPtrArray* anArray
                       ) = 0;
 };

@@ -211,8 +211,8 @@ static int giViewPropListCount = 10;
  * @return NS_OK on success.
  */
 nsresult nsLayer::FetchEventsByRange(
-                      const DateTime* aStart, 
-                      const DateTime* aStop,
+                      DateTime* aStart, 
+                      DateTime* aStop,
                       JulianPtrArray* anArray
                       )
 {
@@ -258,11 +258,16 @@ nsresult nsLayer::FetchEventsByRange(
   /*
    * Set up the range of time for which we'll pull events...
    */
+#if 0
   int iOffset = 30;
   d.prevDay(iOffset);
   psDTStart = d.toISO8601().toCString("");
   d.nextDay(2 * iOffset);
   psDTEnd = d.toISO8601().toCString("");
+#endif
+
+  psDTStart = aStart->toISO8601().toCString("");
+  psDTEnd = aStop->toISO8601().toCString("");
 
   /*
    * The data is actually read and parsed in another thread. Set it all

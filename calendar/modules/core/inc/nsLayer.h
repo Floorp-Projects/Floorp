@@ -54,8 +54,8 @@ public:
   NS_IMETHOD GetCal(NSCalendar*& aCal);
   NS_IMETHOD SetShell(nsCalendarShell* aShell) {mpShell = aShell; return NS_OK;}
   NS_IMETHOD FetchEventsByRange(
-                      const DateTime* aStart, 
-                      const DateTime* aStop,
+                      DateTime* aStart, 
+                      DateTime* aStop,
                       JulianPtrArray* anArray
                       );
 private:

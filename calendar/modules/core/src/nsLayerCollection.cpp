@@ -148,8 +148,8 @@ nsresult nsLayerCollection::GetCal(NSCalendar*& aCal)
  * @return NS_OK on success
  */
 nsresult nsLayerCollection::FetchEventsByRange(
-                      const DateTime*  aStart, 
-                      const DateTime*  aStop,
+                      DateTime*  aStart, 
+                      DateTime*  aStop,
                       JulianPtrArray*  anArray
                       )
 {
