@@ -1404,6 +1404,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
         static CCommentToken theComment; 
         result=theComment.Consume(aChar,aScanner); 
         if(NS_OK==result) { 
+          result=aScanner.SkipWhitespace();
           temp.Append(theComment.GetStringValueXXX()); 
         } 
       } else { 
