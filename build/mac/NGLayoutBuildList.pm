@@ -578,6 +578,9 @@ sub MakeResourceAliases()
     _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "skin");
     
     _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf",$dist_dir, $chrome_subdir, "skins:modern:", "skin");
+    if ($main::INCLUDE_CLASSIC_SKIN) {
+    		_InstallManifestRDF(":mozilla:themes:classic:manifest.rdf",$dist_dir, $chrome_subdir, "skins:classic:", "skin");
+    }
     _InstallManifestRDF(":mozilla:xpfe:communicator:resources:locale:en-US:manifest.rdf",    $dist_dir, $chrome_subdir, "locales:en-US:", "locale");
     
     _InstallManifestRDF(":mozilla:xpfe:communicator:resources:content:manifest.rdf", $dist_dir, $chrome_subdir, "packages:core:", "content");
@@ -870,6 +873,9 @@ sub MakeResourceAliases()
 
     # Install skin files
     InstallSkinFiles("modern"); # fix me
+    if ($main::INCLUDE_CLASSIC_SKIN) {
+    		InstallSkinFiles("classic"); # fix me
+    }
 
     print("--- Resource copying complete ----\n");
 }
