@@ -16,6 +16,8 @@ EdNamedAnchorProps.xul
 EdNamedAnchorProps.js
 EdInsertTable.xul
 EdInsertTable.js
+EdTableProps.js
+EdTableProps.xul
 EdInsSrc.xul
 EdInsSrc.js
 EdMessage.xul

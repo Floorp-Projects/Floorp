@@ -3575,9 +3575,9 @@ NS_IMETHODIMP nsEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayout
       nsCOMPtr<nsIContent> nodeAsContent( do_QueryInterface(aNode) );
       if (nodeAsContent)
       { // get the frame from the content interface
-        nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
+        //Note: frames are not ref counted, so don't use an nsCOMPtr
         *aLayoutObject = nsnull;
-        return (NS_SUCCEEDED(mPresShell->GetLayoutObjectFor(nodeAsContent, &layoutObject)));
+        result = mPresShell->GetLayoutObjectFor(nodeAsContent, aLayoutObject);
       }
     }
     else {

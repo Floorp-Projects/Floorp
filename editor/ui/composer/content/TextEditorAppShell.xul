@@ -343,9 +343,9 @@
   </menubar>
   
       <toolbar>
-		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="left" popup="FontFaceMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="left" popup="FontSizeMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="right" popup="ParagraphMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="right" popup="FontFaceMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="right" popup="FontSizeMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu" popupanchor="bottomleft"/>
         <titledbutton id="BoldButton" value="&formatToolbar.boldChar;" onclick="EditorApplyStyle('b')">
@@ -353,21 +353,14 @@
         </titledbutton>
 	      <titledbutton id="ItalicButton" value="&formatToolbar.italicChar;" onclick="EditorApplyStyle('i')"/>
 	      <titledbutton id="UnderlineButton" value="&formatToolbar.underlineChar;" onclick="EditorApplyStyle('u')"/>
-<!--
-        <titledbutton id="BoldButton" src="chrome://editor/skin/images/ED_Bold.gif" align="bottom" onclick="EditorApplyStyle('b')">
-		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
-        </titledbutton>
-	      <titledbutton id="ItalicButton" src="chrome://editor/skin/images/ED_Italic.gif" align="bottom" onclick="EditorApplyStyle('i')"/>
-	      <titledbutton id="UnderlineButton" src="chrome://editor/skin/images/ED_Underline.gif" align="bottom" onclick="EditorApplyStyle('u')"/>
--->
-	      <titledbutton src="&bulletListIcon.url;" align="bottom" onclick="EditorInsertList('ul')"/>
-	      <titledbutton src="&numberListIcon.url;" align="bottom" onclick="EditorInsertList('ol')"/>
-	      <titledbutton src="&outdentIcon.url;" align="bottom" onclick="EditorIndent('outdent')"/>
-	      <titledbutton src="&indentIcon.url;" align="bottom" onclick="EditorIndent('indent')"/>
-	      <titledbutton src="&alignpopupIcon.url;" align="bottom" class="popup" popup="AlignmentWindow" popupanchor="bottomleft"/>
-	      <titledbutton src="&linkIcon.url;" align="bottom" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
-	      <titledbutton src="&imageIcon.url;" align="bottom" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
-	      <titledbutton src="&spellingIcon.url;" align="bottom" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+	      <titledbutton src="&bulletListIcon.url;" onclick="EditorInsertList('ul')"/>
+	      <titledbutton src="&numberListIcon.url;" onclick="EditorInsertList('ol')"/>
+	      <titledbutton src="&outdentIcon.url;" onclick="EditorIndent('outdent')"/>
+	      <titledbutton src="&indentIcon.url;" onclick="EditorIndent('indent')"/>
+	      <titledbutton src="&alignpopupIcon.url;" class="popup" popup="AlignmentWindow" popupanchor="bottomleft"/>
+	      <titledbutton src="&linkIcon.url;" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
+	      <titledbutton src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
+	      <titledbutton src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
       </toolbar>
     </toolbox>
 

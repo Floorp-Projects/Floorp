@@ -1801,178 +1801,25 @@ nsHTMLEditor::InsertList(const nsString& aListType)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::InsertLink(nsString& aURL)
-{
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertLink(aURL);
-#endif // ENABLE_JS_EDITOR_LOG
-
-  nsAutoEditBatch beginBatching(this);
-
-  // Find out if the selection is collapsed:
-  nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res) || !selection)
-  {
-#ifdef DEBUG_akkana
-    printf("Can't get selection!");
-#endif
-    return res;
-  }
-  PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(res))
-    isCollapsed = PR_TRUE;
-
-  // Temporary: we need to save the contents of the selection,
-  // then insert them back in as the child of the newly created
-  // anchor node in order to put the link around the selection.
-  // This will require copying the selection into a document fragment,
-  // then splicing the document fragment back into the tree after the
-  // new anchor node has been put in place.  As a temporary solution,
-  // Copy/Paste does this for us in the text case
-  // (and eventually in all cases).
-  if (!isCollapsed)
-    (void)Copy();
-
-  nsCOMPtr<nsIDOMNode> newNode;
-  nsAutoString tag("A");
-  res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
-  if (NS_FAILED(res) || !newNode)
-    return res;
-
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(newNode));
-  if (!anchor)
-  {
-#ifdef DEBUG_akkana
-    printf("Not an anchor element\n");
-#endif
-    return NS_NOINTERFACE;
-  }
-
-  res = anchor->SetHref(aURL);
-  if (NS_FAILED(res))
-  {
-#ifdef DEBUG_akkana
-    printf("SetHref failed");
-#endif
-    return res;
-  }
-
-  // Set the selection to the node we just inserted:
-  res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res) || !selection)
-  {
-#ifdef DEBUG_akkana
-    printf("Can't get selection!");
-#endif
-    return res;
-  }
-  res = selection->Collapse(newNode, 0);
-  if (NS_FAILED(res))
-  {
-#ifdef DEBUG_akkana
-    printf("Couldn't collapse");
-#endif
-    return res;
-  }
-
-  // If we weren't collapsed, paste the old selection back in under the link:
-  if (!isCollapsed)
-    (void)Paste();
-  // Otherwise (we were collapsed) insert some bogus text in
-  // so the link will be visible
-  else
-  {
-    nsString link("[***]");
-    (void) InsertText(link);   // ignore return value -- we don't care
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLEditor::InsertImage(nsString& aURL,
-                          nsString& aWidth, nsString& aHeight,
-                          nsString& aHspace, nsString& aVspace,
-                          nsString& aBorder,
-                          nsString& aAlt,
-                          nsString& aAlignment)
-{
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertImage(aURL, aWidth, aHeight, aHspace, aVspace, aBorder, aAlt, aAlignment);
-#endif // ENABLE_JS_EDITOR_LOG
-
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> newNode;
-
-  nsCOMPtr<nsIDOMDocument>doc;
-  res = GetDocument(getter_AddRefs(doc));
-  if (NS_SUCCEEDED(res))
-  {
-    nsAutoString tag("IMG");
-    nsCOMPtr<nsIDOMElement>newElement;
-    res = doc->CreateElement(tag, getter_AddRefs(newElement));
-    if (NS_SUCCEEDED(res) && newElement)
-    {
-      newNode = do_QueryInterface(newElement);
-      nsCOMPtr<nsIDOMHTMLImageElement> image (do_QueryInterface(newNode));
-      // Set all the attributes now, before we insert into the tree:
-      if (image)
-      {
-        if (NS_SUCCEEDED(res = image->SetSrc(aURL)))
-          if (NS_SUCCEEDED(res = image->SetWidth(aWidth)))
-            if (NS_SUCCEEDED(res = image->SetHeight(aHeight)))
-              if (NS_SUCCEEDED(res = image->SetAlt(aAlt)))
-                if (NS_SUCCEEDED(res = image->SetBorder(aBorder)))
-                  if (NS_SUCCEEDED(res = image->SetAlign(aAlignment)))
-                    if (NS_SUCCEEDED(res = image->SetHspace(aHspace)))
-                      if (NS_SUCCEEDED(res = image->SetVspace(aVspace)))
-                        ;
-      }
-    }
-  }
-
-  // If any of these failed, then don't insert the new node into the tree
-  if (NS_FAILED(res))
-  {
-#ifdef DEBUG_akkana
-    printf("Some failure creating the new image node\n");
-#endif
-    return res;
-  }
-
-  //
-  // Now we're ready to insert the new image node:
-  // Starting now, don't return without ending the transaction!
-  //
-  nsAutoEditBatch beginBatching(this);
-
-  nsCOMPtr<nsIDOMNode> parentNode;
-  PRInt32 offsetOfNewNode;
-  res = DeleteSelectionAndPrepareToCreateNode(parentNode,
-                                                        offsetOfNewNode);
-  if (NS_SUCCEEDED(res))
-  {
-    // and insert it into the right place in the tree:
-    res = InsertNode(newNode, parentNode, offsetOfNewNode);
-  }
-
-  return res;
-}
-
-NS_IMETHODIMP
 nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
 {
-  if (aTagName.Length() == 0 || !aNode || !aReturn )
+  if (aTagName.Length() == 0 || !aReturn )
     return NS_ERROR_NULL_POINTER;
   
+  nsresult res = NS_OK;
+  // If no node supplied, use anchor node of current selection
+  if (!aNode)
+  {
+    nsCOMPtr<nsIDOMSelection>selection;
+    res = nsEditor::GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res) || !selection)
+      return res;
+
+    //TODO: Do I need to release the node?
+    if(NS_FAILED(selection->GetAnchorNode(&aNode)))
+      return NS_ERROR_FAILURE;
+  }
+   
   nsAutoString TagName = aTagName;
   TagName.ToLowerCase();
   PRBool getLink = IsLink(TagName);
@@ -1981,6 +1828,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
   {
     TagName = "a";  
   }
+  PRBool findTableCell = aTagName.EqualsIgnoreCase("td");
 
   // default is null - no element found
   *aReturn = nsnull;
@@ -2000,23 +1848,30 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
     } else {
       nsAutoString currentTagName; 
       currentNode->GetNodeName(currentTagName);
-      if (currentTagName.EqualsIgnoreCase(TagName))
+      // Table cells are a special case:
+      // Match either "td" or "th" for them
+      if (currentTagName.EqualsIgnoreCase(TagName) ||
+          (findTableCell && currentTagName.EqualsIgnoreCase("th")))
       {
         bNodeFound = PR_TRUE;
         break;
-      }
+      } 
     }
     // Search up the parent chain
     // We should never fail because of root test below, but lets be safe
     if (!NS_SUCCEEDED(currentNode->GetParentNode(getter_AddRefs(parent))) || !parent)
       break;
 
-    // Stop searching if parent is a root (body or table cell)
-    PRBool isRoot;
+    // Stop searching if parent is a body tag
     nsAutoString parentTagName;
     parent->GetNodeName(parentTagName);
-    if (!NS_SUCCEEDED(IsRootTag(parentTagName, isRoot)) || isRoot)
+    // Note: Originally used IsRoot to stop at table cells,
+    //  but that's too messy when you are trying to find the parent table
+    //PRBool isRoot;
+    //if (!NS_SUCCEEDED(IsRootTag(parentTagName, isRoot)) || isRoot)
+    if(parentTagName.EqualsIgnoreCase("body"))
       break;
+
     currentNode = parent;
   }
   if (bNodeFound)

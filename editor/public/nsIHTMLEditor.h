@@ -166,30 +166,106 @@ public:
     */
   NS_IMETHOD RemoveParent(const nsString &aParentTag)=0;
 
-  NS_IMETHOD InsertLink(nsString& aURL)=0;
-  NS_IMETHOD InsertImage(nsString& aURL,
-                         nsString& aWidth, nsString& aHeight,
-                         nsString& aHspace, nsString& aVspace,
-                         nsString& aBorder,
-                         nsString& aAlt, nsString& aAlignment)=0;
-
   NS_IMETHOD InsertList(const nsString& aListType)=0;
   NS_IMETHOD Indent(const nsString& aIndent)=0;
   NS_IMETHOD Align(const nsString& aAlign)=0;
 
+  /** Return the input node or a parent matching the given aTagName,
+    *   starting the search at the supplied node.
+    * An example of use is for testing if a node is in a table cell
+    *   given a selection anchor node.
+    *
+    * @param aTagName  The HTML tagname
+    *    Special input values for Links and Named anchors:
+    *    Use "link" or "href" to get a link node 
+    *      (an "A" tag with the "href" attribute set)
+    *    Use "anchor" or "namedanchor" to get a named anchor node
+    *      (an "A" tag with the "name" attribute set)
+    *
+    * @param aNode    The node in the document to start the search
+    *     If it is null, the anchor node of the current selection is used
+    */
   NS_IMETHOD GetElementOrParentByTagName(const nsString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)=0;
+
+  /** Return an element only if it is the only node selected,
+    *    such as an image, horizontal rule, etc.
+    * The exception is a link, which is more like a text attribute:
+    *    The Ancho tag is returned if the selection is within the textnode(s)
+    *    that are children of the "A" node.
+    *    This could be a collapsed selection, i.e., a caret within the link text.
+    *
+    * @param aTagName  The HTML tagname
+    *    Special input values for Links and Named anchors:
+    *    Use "link" or "href" to get a link node
+    *      (an "A" tag with the "href" attribute set)
+    *    Use "anchor" or "namedanchor" to get a named anchor node
+    *      (an "A" tag with the "name" attribute set)
+    */
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
+
+  /** Return a new element with default attribute values
+    * Used primarily to supply new element for various insert element dialogs
+    *  (Image, Link, NamedAnchor, Table, and HorizontalRule 
+    *   are the only returned elements as of 7/25/99)
+    *
+    * @param aTagName  The HTML tagname
+    *    Special input values for Links and Named anchors:
+    *    Use "link" or "href" to get a link node
+    *      (an "A" tag with the "href" attribute set)
+    *    Use "anchor" or "namedanchor" to get a named anchor node
+    *      (an "A" tag with the "name" attribute set)
+    */
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
+  
+  /** Insert an element, which may have child nodes, at the selection
+    * Used primarily to insert a new element for various insert element dialogs,
+    *   but it enforces the HTML 4.0 DTD "CanContain" rules, so it should
+    *   be useful for other elements.
+    *
+    * @param aElement           The element to insert
+    * @param aDeleteSelection   Delete the selection before inserting
+    *     If aDeleteSelection is PR_FALSE, then the element is inserted 
+    *     after the end of the selection for all element except
+    *     Named Anchors, which insert before the selection
+    */  
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)=0;
+
+  /** Save the attributes of a Horizontal Rule in user preferences
+    * These prefs are used when the user inserts a new Horizontal line
+    *
+    * @param aElement An HR element
+    */
   NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement)=0;
+  
+  /** Insert an link element as the parent of the current selection
+    *   be useful for other elements.
+    *
+    * @param aElement   An "A" element with a non-empty "href" attribute
+    */
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
+  
+  /** Set the selection at the suppled element
+    *
+    * @param aElement   An element in the document
+    */
   NS_IMETHOD SelectElement(nsIDOMElement* aElement)=0;
+
+  /** Create a collapsed selection just after aElement
+    * The selection is set to parent-of-aElement with an
+    *   offset 1 greater than aElement's offset
+    *   but it enforces the HTML 4.0 DTD "CanContain" rules, so it should
+    *   be useful for other elements.
+    *
+    * @param aElement  An element in the document
+    */
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement)=0;
 
 // MHTML helper methods
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList)=0;
 
 // Table editing Methods
+  /** Not implemented yet
+    */
   NS_IMETHOD InsertTable()=0;
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter)=0;
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter)=0;
@@ -199,15 +275,54 @@ public:
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber)=0;
   NS_IMETHOD JoinTableCells(PRBool aCellToRight)=0;
-  NS_IMETHOD GetRowIndex(nsIDOMElement *aCell, PRInt32 &aRowIndex)=0;
-  NS_IMETHOD GetColumnIndex(nsIDOMElement *aCell, PRInt32 &aColIndex)=0;
-  NS_IMETHOD GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32& aCount)=0;
-  NS_IMETHOD GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32& aCount)=0;
-  NS_IMETHOD GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32& aCount)=0;
-  NS_IMETHOD GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32& aCount)=0;
+
+  /** Get the row an column index from the layout's cellmap
+    * If aTable is null, it will try to find enclosing table of selection ancho
+    * 
+    */
+  NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell, PRInt32& aRowIndex, PRInt32& aColIndex)=0;
+
+  /** Get the number of rows and columns in a table from the layout's cellmap
+    * If aTable is null, it will try to find enclosing table of selection ancho
+    * Note that all rows in table will not have this many because of 
+    * ROWSPAN effects or if table is not "rectangular" (has short rows)
+    */
+  NS_IMETHOD GetTableSize(nsIDOMElement *aTable, PRInt32& aRowCount, PRInt32& aColCount)=0;
+
+  /** Get a cell element at cellmap grid coordinates
+    * A cell that spans across multiple cellmap locations will
+    *   be returned multiple times, once for each location it occupies
+    *
+    * @param aTable                   A table in the document
+    * @param aRowIndex, aColIndex     The 0-based cellmap indexes
+    *
+    * Note that this returns NS_TABLELAYOUT_CELL_NOT_FOUND 
+    *   when a cell is not found at the given indexes,
+    *   but this passes the NS_SUCCEEDED() test,
+    *   so you can scan for all cells in a row or column
+    *   by iterating through the appropriate indexes
+    *   until the returned aCell is null
+    */
   NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)=0;
-  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
-                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan)=0;
+
+  /** Get a cell at cellmap grid coordinates and associated data
+    * A cell that spans across multiple cellmap locations will
+    *   be returned multiple times, once for each location it occupies
+    * Examine the returned aStartRowIndex and aStartColIndex to see 
+    *   if it is in the same layout column or layout row:
+    *   A "layout row" is all cells sharing the same top edge
+    *   A "layout column" is all cells sharing the same left edge
+    *   This is important to determine what to do when inserting or deleting a column or row
+    * 
+    * @param aTable                   A table in the document
+    * @param aRowIndex, aColIndex     The 0-based cellmap indexes
+    *
+    * Note that this returns NS_TABLELAYOUT_CELL_NOT_FOUND
+    *   when a cell is not found at the given indexes  (see note for GetCellAt())
+    */
+  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell,
+                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
+                           PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected)=0;
 
 // IME editing Methods
   NS_IMETHOD BeginComposition(void)=0;

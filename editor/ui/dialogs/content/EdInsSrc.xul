@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window
 [
@@ -29,7 +29,7 @@
   <xul:broadcaster id="args" value=""/>
 
   <xul:box>
-    <label class="smallmargin" id="srcMessage"> &sourceEditField.label; </label>
+    <label id="srcMessage"> &sourceEditField.label; </label>
   </xul:box>
   <xul:box>
     <textarea rows="6" cols="50" id="srcInput" />

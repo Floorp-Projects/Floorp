@@ -313,6 +313,11 @@ function SetPixelOrPercentByID(elementID, percentString)
 // forceInteger by petejc (pete@postpagan.com)
 function forceInteger(elementID)
 {
+  return;
+  // THIS DOESN'T WORK IN WINDOWS 
+  // with native editbox. 
+  // Wait until we are using GFX (i.e., ender) for editbox
+/*
   editfield = document.getElementById( elementID );
   if ( !editfield )
     return;
@@ -323,6 +328,7 @@ function forceInteger(elementID)
   // It causes the caret to reposition to the beginning,
   //  so characters are inserted backwards!
   editfield.value = stringIn.replace(pat, "");
+*/
 }
 
 // All dialogs share this simple method

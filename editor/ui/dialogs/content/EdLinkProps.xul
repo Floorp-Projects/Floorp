@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 <!-- Eventually we'll move to this...
 <!DOCTYPE window SYSTEM "chrome://editor/en-US/EditorLinkProperties.dtd">
@@ -24,10 +24,10 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "Link Properties">
 
-<!-- These are in the link source fieldset. -->
-<!ENTITY LinkText.label "Link text:">
-<!ENTITY LinkTextInput.label "Enter text to display for a new link:">
-
+<!-- These are in the link source fieldset.
+     This text will change dynamically 
+     (other strings are in editor.properties string bundle file) -->
+<!ENTITY LinkTextCaption.label "Link text:">
 <!-- These controls are in the Dimensions Fieldset of the advanced area -->
 <!ENTITY LinkURLFieldset.label "Link To">
 <!ENTITY LinkURLEditField.label "Enter a web page location or local file:">
@@ -50,34 +50,33 @@
   </script>
   <xul:broadcaster id="args" value=""/>
 
-  <xul:box align="vertical">
-    <xul:box> align="horizontal">
-  	  <label class="smallmargin" id="linkMessage" for="linkTextMessage"> &LinkTextInput.label; </label>
-	</xul:box>
-	<input type="text" size="25" length="25" id="linkTextInput"></input>
+  <xul:box align="vertical" style="min-width: 20em">
+  	<label id="linkTextCaption" for="linkTextMessage"> &LinkTextCaption.label; </label>
+  	<div id="linkTextMessage" style="margin-left: 3em">[replace this]</div>
+	  <input type="text" size="25" length="25" id="linkTextInput"/>
+    <xul:spring class="bigspacer"/>
+
+    <fieldset><legend align="left"> &LinkURLFieldset.label; </legend>
+      <!-- xul:box align="vertical" -->
+        <xul:box align="horizontal">
+  <!--  	    <label for="ChooseFile"> &LinkURLEditField.label; </label> -->
+          <div> &LinkURLEditField.label;</div>
+          <xul:spring flex="100%"/>
+	        <xul:titledbutton class="hspaced" id="RemoveLink" onclick="RemoveLink()" value="&RemoveLinkButton.label;"/>
+	      </xul:box>
+	      <xul:box align="horizontal">
+  	      <input type="text" size="25" length="25" id="hrefInput"></input>
+          <xul:spring flex="100%"/>
+	        <xul:titledbutton class="hspaced" id="ChooseFile" onclick="ChooseFile()" value="&LinkChooseFileButton.label;"/>
+        </xul:box>
+      <!-- /xul:box -->
+    </fieldset>
   </xul:box>
-
-  <fieldset><legend align="left"> &LinkURLFieldset.label; </legend>
-    <xul:box align="vertical">
-      <xul:box align="horizontal">
-  	    <label class="smallmargin" for="ChooseFile"> &LinkURLEditField.label; </label>
-        <xul:spring flex="100%"/>
-	      <button id="RemoveLink" onclick="RemoveLink()"> &RemoveLinkButton.label; </button>
-	    </xul:box>
-	    <xul:box align="horizontal">
-  	    <input type="text" size="25" length="25" id="hrefInput"></input>
-        <xul:spring flex="100%"/>
-	      <button class="ChooseFile" id="ChooseFile" onclick="ChooseFile()"> &LinkChooseFileButton.label; </button>
-      </xul:box>
-    </xul:box>
- </fieldset>
-
- <xul:spring flex="100%"/>
-
- <xul:box>
-    <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
+  <xul:spring class="bigspacer"/>
+  <xul:box>
+    <xul:titledbutton class="hspaced" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
     <xul:spring flex="100%"/>    
-    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
-    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
- </xul:box>
+    <xul:titledbutton class="hspaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
+    <xul:titledbutton class="hspaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
+  </xul:box>
 </xul:window>

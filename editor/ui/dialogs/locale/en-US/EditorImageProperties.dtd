@@ -8,8 +8,8 @@
 <!ENTITY pixels.label "pixels">
 
 <!-- This button is for the progressive disclosure of additional editing functionality -->
-<!ENTITY AdditionalEditingButton.label "Advanced">
-
+<!-- THIS TEXT WILL CHANGE DYNAMICALLY, SO VALUES SHOULD BE IN Edidtor.properties STRING BUNDLE FILE -->
+<!ENTITY MoreOrLessButton.label "More">
 
 <!-- These strings are for use specifically in the editor's image dialog. -->
 
@@ -19,7 +19,7 @@
 <!ENTITY ImageChooseFileButton.label "Choose File...">
 <!ENTITY ImageAlternateText.label "Alternative Text">
 
-<!-- These controls are in the Dimensions Fieldset of the advanced area -->
+<!-- These controls are in the Dimensions Fieldset of the expanded area -->
 <!ENTITY ImageDimensionsFieldset.label "Dimensions">
 <!ENTITY ImageOriginalSizeRadio.label "Original Size">
 <!ENTITY ImageCustomSizeRadio.label "Custom Size">
@@ -35,7 +35,7 @@
 <!ENTITY ImageAlignAroundLeft.option "left alignment with text wrap around">
 <!ENTITY ImageAlignAroundRight.option "right alignment with text wrap around">
 
-<!-- These controls are in the Spacing Fieldset of the advanced area -->
+<!-- These controls are in the Spacing Fieldset of the expanded area -->
 <!ENTITY ImageSpacingFieldset.label "Spacing">
 <!ENTITY ImageSpacingLeftRight.label "Left and Right">
 <!ENTITY ImageSpacingTopBottom.label "Top and Bottom">

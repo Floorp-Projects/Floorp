@@ -1,7 +1,7 @@
 var insertNew = true;
 var imageElement;
 var tagName = "img"
-var advanced = true;
+var expanded = true;
 var wasEnableAll = false;
 var hasAnyChanged = false;
 var oldSourceInt = 0;
@@ -19,8 +19,8 @@ function Startup()
   dialog.srcInput = document.getElementById("image.srcInput");
   dialog.altTextInput = document.getElementById("image.altTextInput");
 
-  dialog.AdvancedButton = document.getElementById("AdvancedButton");
-  dialog.AdvancedRow = document.getElementById("AdvancedRow");
+  dialog.MoreOrLessButton = document.getElementById("MoreOrLessButton");
+  dialog.MoreOrLessRow = document.getElementById("MoreOrLessRow");
 
   dialog.customsizeRadio = document.getElementById( "customsizeRadio" );
   dialog.imagewidthInput = document.getElementById( "imagewidthInput" );
@@ -30,13 +30,13 @@ function Startup()
   dialog.imagetbInput = document.getElementById( "imagetopbottomInput" );
   dialog.imageborderInput = document.getElementById( "imageborderInput" );
 
-  // Start in the mode initialized in the "advanced" var above
+  // Start in the mode initialized in the "expanded" var above
   // THIS IS NOT WORKING NOW - After switching to "basic" mode,
   // then back to 
-  if (advanced) {
-    dialog.AdvancedRow.style.visibility = "inherit"; // visible
+  if (expanded) {
+    dialog.MoreOrLessRow.style.visibility = "inherit"; // visible
   } else {
-    dialog.AdvancedRow.style.visibility = "hidden"; // collapse
+    dialog.MoreOrLessRow.style.visibility = "hidden"; // collapse
   }
 
   if (null == dialog.srcInput || 
@@ -152,20 +152,20 @@ function chooseFile()
   dialog.srcInput.focus();
 }
 
-function onAdvanced()
+function onMoreOrLess()
 {
-  if (advanced) {
+  if (expanded) {
     dump("Changing to BASIC mode\n");
-    advanced = false;
+    expanded = false;
     // BUG: This works to hide the row, but
     //   setting visibility to "show" doesn't bring it back
-    dialog.AdvancedRow.style.visibility = "hidden"; // collapse
-    //dialog.AdvancedRow.style.display = "none";
+    dialog.MoreOrLessRow.style.visibility = "hidden"; // collapse
+    //dialog.MoreOrLessRow.style.display = "none";
   } else {
-    dump("Changing to ADVANCED mode\n");
-    advanced = true;
-    //dialog.AdvancedRow.style.display = "table-row";
-    dialog.AdvancedRow.style.visibility = "inherit"; // visible
+    dump("Changing to EXPANDED mode\n");
+    expanded = true;
+    //dialog.MoreOrLessRow.style.display = "table-row";
+    dialog.MoreOrLessRow.style.visibility = "inherit"; // visible
   }
 }
 
@@ -238,10 +238,10 @@ function doOverallEnabling()
     doDimensionEnabling( canEnableAll );
   }
   
-  // handle altText and advanced button
+  // handle altText and MoreOrLess button
 //  SetLabelEnabledByID( "image.altTextLabel", canEnableAll );
   SetElementEnabledByID("image.altTextInput", canEnableAll );
-  SetElementEnabledByID("AdvancedButton", canEnableAll );
+  SetElementEnabledByID("MoreOrLessButton", canEnableAll );
 
     // commented out since it asserts right now
 //  SetLabelEnabledByID( "imagealignmentLabel", canEnableAll );
