@@ -35,6 +35,7 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsIStringBundle.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsEnumeratorUtils.h"
 #include "nsCRT.h"
 #include <windows.h>
@@ -55,6 +56,12 @@ nsString nsFilePicker::mLastUsedUnicodeDirectory;
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
 #define MAX_EXTENSION_LENGTH 10
+
+#ifndef BIF_USENEWUI
+// BIF_USENEWUI isn't defined in the platform SDK that comes with
+// MSVC6.0. 
+#define BIF_USENEWUI 0x50
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -87,6 +94,22 @@ nsFilePicker::~nsFilePicker()
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
+
+int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+  if (uMsg == BFFM_INITIALIZED)
+  {
+    char * filePath = (char *) lpData;
+    if (filePath)
+    {
+      ::SendMessage(hwnd, BFFM_SETSELECTION, TRUE /* true because lpData is a path string */, lpData);
+      nsCRT::free(filePath);
+    }
+  }
+
+  return 0;
+}
+
 NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
   NS_ENSURE_ARG_POINTER(aReturnVal);
@@ -124,9 +147,19 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     browserInfo.pidlRoot       = nsnull;
     browserInfo.pszDisplayName = (LPWSTR)dirBuffer;
     browserInfo.lpszTitle      = title;
-    browserInfo.ulFlags        = BIF_RETURNONLYFSDIRS;//BIF_STATUSTEXT | BIF_RETURNONLYFSDIRS;
-    browserInfo.lpfn           = nsnull;
+    browserInfo.ulFlags        = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
+    if (initialDir.Length()) // convert folder path to native, the strdup copy will be released in BrowseCallbackProc
+    {
+      nsCAutoString nativeFolderPath;
+      NS_CopyUnicodeToNative(initialDir, nativeFolderPath);
+      browserInfo.lParam       = (LPARAM) nsCRT::strdup(nativeFolderPath.get()); 
+      browserInfo.lpfn         = &BrowseCallbackProc;
+    }
+    else
+    {
     browserInfo.lParam         = nsnull;
+      browserInfo.lpfn         = nsnull;
+    }
     browserInfo.iImage         = nsnull;
 
     // XXX UNICODE support is needed here --> DONE
