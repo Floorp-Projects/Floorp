@@ -30,4 +30,3 @@ DIRS		= protocol client nlslayer
 
 include $(topsrcdir)/config/rules.mk
 
-
