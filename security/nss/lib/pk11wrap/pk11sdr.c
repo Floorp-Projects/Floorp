@@ -41,6 +41,7 @@
 #include "pkcs11.h"
 #include "pk11func.h"
 #include "pk11sdr.h"
+#include "pk11init.h"
 
 /*
  * Data structure and template for encoding the result of an SDR operation
@@ -128,6 +129,23 @@ loser:
   return rv;
 }
 
+static PRLock *pk11sdrLock = NULL;
+
+void
+pk11sdr_Init (void)
+{
+   pk11sdrLock = PR_NewLock();
+}
+
+void
+pk11sdr_Shutdown(void)
+{
+    if (pk11sdrLock) {
+	PR_DestroyLock(pk11sdrLock);
+	pk11sdrLock = NULL;
+    }
+}
+
 /*
  * PK11SDR_Encrypt
  *  Encrypt a block of data using the symmetric key identified.  The result
@@ -178,11 +196,18 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
   if (pKeyID->len == 0) {
 	  pKeyID = &keyIDItem;  /* Use default value */
 
+	  /* put in a course lock to prevent a race between not finding the 
+	   * key and creating  one.
+	   */
+
+	  if (pk11sdrLock) PR_Lock(pk11sdrLock);
+
 	  /* Try to find the key */
 	  key = PK11_FindFixedKey(slot, type, pKeyID, cx);
 	  
 	  /* If the default key doesn't exist yet, try to create it */
 	  if (!key) key = PK11_GenDES3TokenKey(slot, pKeyID, cx);
+	  if (pk11sdrLock) PR_Unlock(pk11sdrLock);
   } else {
 	  key = PK11_FindFixedKey(slot, type, pKeyID, cx);
   }
