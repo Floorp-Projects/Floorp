@@ -166,4 +166,4 @@ pref("editor.custom_color_9", "0,0,FF");
 
 pref("editor.last_color_picked", "0,0,0");
 pref("editor.last_background_color_picked", "255,255,255");
-pref("editor.new_cell_has_space", TRUE);
+pref("editor.new_cell_has_space", true);
