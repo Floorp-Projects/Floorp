@@ -1282,7 +1282,7 @@ SI_RemoveAllSignonData() {
   si_PartiallyLoaded = PR_FALSE;
   si_FullyLoaded = PR_FALSE;
 
- si_Reject * reject;
+  si_Reject * reject;
   while (LIST_COUNT(si_reject_list)>0) {
     reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(0));
     if (reject) {
@@ -1396,9 +1396,6 @@ si_PutReject(char * URLName, nsAutoString userName, PRBool save) {
       si_signon_list_changed = PR_TRUE;
       si_lock_signon_list();
       si_SaveSignonDataLocked(PR_FALSE);
-      si_unlock_signon_list();
-    }
-    if (save) {
       si_unlock_signon_list();
     }
   }
@@ -1685,6 +1682,7 @@ si_ReadLine
       if (obscure) {
         c2 = Wallet_UTF8Get(strmp);
         if (c != c2) {
+          NS_ASSERTION(0, ".p and .u files differ in header");
           return -1;
         }
       }
@@ -1798,7 +1796,7 @@ SI_LoadSignonData(PRBool fullLoad) {
 
   nsInputFileStream strmp(fullLoad ? (dirSpec+signonFileNameP) : dirSpec); // not used if !fullLoad
   if (fullLoad && !strmp.is_open()) {
-    return -1;
+    fullLoad = PR_FALSE;
   }
 
   /* read the header information */
