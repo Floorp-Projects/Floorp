@@ -164,7 +164,6 @@ function CrossFolderNavigation(type, supportsFolderPane )
 
 function ScrollToMessage(type, wrap, selectMessage)
 {
-  dump("XXX ScrollToMessage " + type + "," + selectMessage + "\n");
   try {
     var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
     var outlinerSelection = outlinerView.selection;

@@ -145,7 +145,12 @@ var folderListener = {
                   if (!scrolled) {
                     // if we didn't just scroll, scroll to the first new message
                     // don't select it though
-				    ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+				    scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+                    
+                    // if we failed to find a new message, scroll to the top
+                    if (!scrolled) {
+                      EnsureRowInThreadOutlinerIsVisible(0);
+                    }
                   }
 
 				  if(showPerformance) {
