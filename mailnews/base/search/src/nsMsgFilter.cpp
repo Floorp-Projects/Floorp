@@ -472,9 +472,8 @@ nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *stream)
 nsresult nsMsgFilter::SaveRule()
 {
 	nsresult err = NS_OK;
-	//char			*relativePath = nsnull;
-	nsIMsgFilterList	*filterList;
-    GetFilterList(&filterList);
+	nsCOMPtr<nsIMsgFilterList> filterList;
+    GetFilterList(getter_AddRefs(filterList));
 	nsCAutoString	actionFilingStr;
 
 	GetActionFilingStr(m_action.m_type, actionFilingStr);

@@ -38,9 +38,9 @@
     </radiogroup>
 
     <spring class="spacer"/>
-    <box style="min-height:200px">
+    <box>
     <box id="searchterms"/>
-    <tree class="inset" flex="1" id="searchTermTree">
+    <tree rows="5" class="inset" flex="1" id="searchTermTree">
       <treecolgroup>
         <treecol flex="1"/>
         <treecol flex="4"/>

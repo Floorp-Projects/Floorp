@@ -99,7 +99,7 @@ function RenameFolder(name,uri)
 	if (uri && (uri != "") && name && (name != "")) {
                 var selectedFolder = GetResourceFromUri(uri);
                 folderTree.clearItemSelection();
-                messenger.RenameFolder(folderTree.database, selectedFolder, name);
+                messenger.RenameFolder(GetFolderDatasource(), selectedFolder, name);
         }
         else {
                 dump("no name or nothing selected\n");

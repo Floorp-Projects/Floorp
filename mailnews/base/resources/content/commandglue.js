@@ -487,15 +487,12 @@ function GetSelectedFolderResource()
 
 function SetFolderCharset(folderResource, aCharset)
 {
-	var folderTree = GetFolderTree();
-
-	var db = folderTree.database;
-	var db2 = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+	var db = GetFolderDatasource();
 
 	var charsetResource = RDF.GetLiteral(aCharset);
 	var charsetProperty = RDF.GetResource("http://home.netscape.com/NC-rdf#Charset");
 
-	db2.Assert(folderResource, charsetProperty, charsetResource, true);
+	db.Assert(folderResource, charsetProperty, charsetResource, true);
 }
 
 
@@ -541,16 +538,6 @@ function OnClickThreadAndMessagePaneSplitter()
 		LoadSelectionIntoMessagePane();	
 }
 
-//Called when selection changes in the thread pane.
-function ThreadPaneSelectionChange()
-{
-	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
-
-	if(!collapsed)
-	{
-		LoadSelectionIntoMessagePane();
-	}
-}
 
 //takes the selection from the thread pane and loads it into the message pane
 function LoadSelectionIntoMessagePane()
@@ -634,37 +621,10 @@ function OpenToFolder(item, folderURI)
 	return null;
 }
 
-function IsSpecialFolderSelected(folderName)
-{
-	var selectedFolder = GetThreadTreeFolder();
-	var id = selectedFolder.getAttribute('ref');
-	var folderResource = RDF.GetResource(id);
-	if(!folderResource)
-		return false;
-
-	var folderTree = GetFolderTree();
-	var db = folderTree.database;
-    if (!db) return false;
-	db = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    if (!db) return false;
-
-	var property =
-        RDF.GetResource('http://home.netscape.com/NC-rdf#SpecialFolder');
-    if (!property) return false;
-	var result = db.GetTarget(folderResource, property , true);
-    if (!result) return false;
-	result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    if (!result) return false;
-	if(result.Value == folderName)
-		return true;
-
-	return false;
-}
 
 function IsSpecialFolder(msgFolder, specialFolderName)
 {
-	var folderTree = GetFolderTree();
-	var db = folderTree.database;
+	var db = GetFolderDatasource();
 	var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 	if(folderResource)
 	{

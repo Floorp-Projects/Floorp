@@ -39,7 +39,6 @@ Rights Reserved.
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/mailWindow.js"/>
   <script src="chrome://messenger/content/SearchDialog.js"/>
-  <text value="This dialog is a work in progress! Please don't file any bugs against it."/>
   <box>
     <text class="label" value="&searchHeading.label;"/>
     <menulist id="searchableFolders" flex="2"
@@ -56,7 +55,7 @@ Rights Reserved.
     </box>
   </box>
 
-  <tree id="threadTree" class="inset" flex="1" style="height:0px" context="threadPaneContext"/>
+  <tree id="threadTree" class="inset" flex="1" style="height: 50px" context="threadPaneContext"/>
   <box>
     <spring flex="100%"/>
     <button value="&closeButton.label;" onclick="window.close()"/>

@@ -146,41 +146,15 @@ nsMsgSearchDataSource::HasAssertion(nsIRDFResource *aSource,
     NS_ENSURE_ARG_POINTER(aResult);
 
     if (!aTruthValue) return NS_RDF_NO_VALUE;
-    nsresult rv;
-    
-#ifdef DEBUG_alecf
-    nsXPIDLCString sourceVal;
-    aSource->GetValueConst(getter_Shares(sourceVal));
-
-    nsXPIDLCString propVal;
-    aProperty->GetValueConst(getter_Shares(propVal));
-
-    nsCOMPtr<nsIRDFResource> targetRes(do_QueryInterface(aTarget, &rv));
-    nsXPIDLCString targetVal;
-    if (NS_SUCCEEDED(rv))
-        targetRes->GetValueConst(getter_Shares(targetVal));
-
-    printf("HasAssertion(%s, %s, %s..)?\n",
-           (const char*)sourceVal,
-           (const char*)propVal,
-           (const char*)targetVal ? (const char*)targetVal : "(null)");
-        
-#endif
 
     if (aSource == mSearchRoot.get() &&
         aProperty == kNC_MessageChild.get()) {
-#ifdef DEBUG_alecf
-        printf("I care about this one.\n");
-#endif
 
         PRInt32 indexOfResource;
         mSearchResults->GetIndexOf(NS_STATIC_CAST(nsISupports*,aTarget),
                                     &indexOfResource);
 
         if (indexOfResource != -1) {
-#ifdef DEBUG_alecf
-            printf("And it's a success!\n");
-#endif
             *aResult = PR_TRUE;
             return NS_OK;
         }

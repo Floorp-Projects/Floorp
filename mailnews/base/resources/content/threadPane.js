@@ -25,7 +25,7 @@ function ThreadPaneOnClick(event)
         return;
     
     var targetclass = event.target.getAttribute('class');
-    debug('targetclass = ' + targetclass + '\n');
+    dump('targetclass = ' + targetclass + '\n');
 
     if (targetclass == 'tree-cell-twisty') {
         // The twisty is nested three below the treeitem:
@@ -169,3 +169,52 @@ function ChangeThreadView()
 		RefreshThreadTreeView();
 	}
 }
+
+function IsSpecialFolderSelected(folderName)
+{
+	var selectedFolder = GetThreadTreeFolder();
+	var id = selectedFolder.getAttribute('ref');
+	var folderResource = RDF.GetResource(id);
+	if(!folderResource)
+		return false;
+
+    var db = GetFolderDatasource();
+
+	var property =
+        RDF.GetResource('http://home.netscape.com/NC-rdf#SpecialFolder');
+    if (!property) return false;
+	var result = db.GetTarget(folderResource, property , true);
+    if (!result) return false;
+	result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+    if (!result) return false;
+	if(result.Value == folderName)
+		return true;
+
+	return false;
+}
+
+//Called when selection changes in the thread pane.
+function ThreadPaneSelectionChange()
+{
+	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
+
+	if(!collapsed)
+	{
+		LoadSelectionIntoMessagePane();
+	}
+}
+
+function GetThreadTree()
+{
+    if (gThreadTree) return gThreadTree;
+	var threadTree = document.getElementById('threadTree');
+    gThreadTree = threadTree;
+	return threadTree;
+}
+
+function GetThreadTreeFolder()
+{
+  var tree = GetThreadTree();
+  return tree;
+}
+

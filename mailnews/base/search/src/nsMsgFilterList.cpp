@@ -47,7 +47,8 @@ static const PRUnichar unicodeFormatter[] = {
 };
 
 
-nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
+nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream) :
+    m_fileVersion(0)
 {
 	m_fileStream = fileStream;
 	// I don't know how we're going to report this error if we failed to create the isupports array...

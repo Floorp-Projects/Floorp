@@ -435,11 +435,19 @@ function OnLoadFolderPane(folderTree)
 	//Add folderDataSource and accountManagerDataSource to folderPane
 	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	var database = folderTree.database;
+	var database = GetFolderDatasource();
 
 	database.AddDataSource(accountManagerDataSource);
     database.AddDataSource(folderDataSource);
 	folderTree.setAttribute('ref', 'msgaccounts:/');
+}
+
+function GetFolderDatasource()
+{
+    var folderTree = GetFolderTree();
+    var db = folderTree.database;
+    if (!db) return false;
+    return db;
 }
 
 function OnLoadThreadPane(threadTree)
@@ -478,20 +486,6 @@ function FindInSidebar(currentWindow, id)
 		if(frameItem)
 			return frameItem;
 	}
-}
-
-function GetThreadTree()
-{
-    if (gThreadTree) return gThreadTree;
-	var threadTree = document.getElementById('threadTree');
-    gThreadTree = threadTree;
-	return threadTree;
-}
-
-function GetThreadTreeFolder()
-{
-  var tree = GetThreadTree();
-  return tree;
 }
 
 function GetThreadAndMessagePaneSplitter()
@@ -804,8 +798,7 @@ function GetCompositeDataSource(command)
 	if(command == "GetNewMessages" || command == "DeleteMessages" || command == "Copy"  || 
 	   command == "Move" ||  command == "NewFolder" ||  command == "MarkAllMessagesRead")
 	{
-		var folderTree = GetFolderTree();
-		return folderTree.database;
+        return GetFolderDatasource();
 	}
 	else if(command == "MarkMessageRead" || 
 			command == "MarkMessageFlagged" || command == "MarkThreadAsRead" ||

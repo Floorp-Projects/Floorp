@@ -265,7 +265,9 @@ function MsgOpenNewWindowForMessage(messageUri, folderUri)
 
 	if(!folderUri)
 	{
-		var folder = GetLoadedMsgFolder();
+        var message = RDF.GetResource(messageUri);
+        message = message.QueryInterface(Components.interfaces.nsIMessage);
+        var folder = message.msgFolder;
 		var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
 		folderUri = folderResource.Value;
 	}

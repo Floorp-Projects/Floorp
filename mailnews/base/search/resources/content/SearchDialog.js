@@ -21,12 +21,15 @@
 var rdfDatasourcePrefix = "component://netscape/rdf/datasource?name=";
 var rdfServiceProgID    = "component://netscape/rdf/rdf-service";
 var searchSessionProgID = "component://netscape/messenger/searchSession";
+var folderDSProgID         = rdfDatasourcePrefix + "mailnewsfolders";
 var gSearchDatasource;
 
 var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 
+var gFolderDatasource;
 var gFolderPicker;
+var gThreadTree;
 var gStatusFeedback = new nsMsgStatusFeedback;
 var RDF;
 
@@ -42,7 +45,7 @@ function searchOnLoad()
     
     onMore(null);
 
-    
+    gThreadTree = document.getElementById("threadTree");
 }
 
 function initializeSearchWindowWidgets()
@@ -193,4 +196,18 @@ function testelement(element)
     element.searchScope = 0;
     dump(element.id + ".searchScope = " + element.searchScope + "\n");
 
+}
+
+// stuff after this is implemented to make the thread pane work
+function GetFolderDatasource()
+{
+    if (!gFolderDatasource)
+        gFolderDatasource = Components.classes[folderDSProgID].createInstance(Components.interfaces.nsIRDFDataSource);
+    return gFolderDatasource;
+}
+
+// used to determine if we should try to load a message
+function IsThreadAndMessagePaneSplitterCollapsed()
+{
+    return true;
 }
