@@ -1525,6 +1525,7 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
     rv = StreamConvService->AsyncConvertData(from.GetUnicode(), to.GetUnicode(), mNextListener, aChannel,
                                              &converterListener);
     mNextListener = converterListener;
+	NS_IF_RELEASE(converterListener);
   }
 
   //////////////////////////////
