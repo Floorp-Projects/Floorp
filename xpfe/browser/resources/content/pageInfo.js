@@ -446,7 +446,7 @@ function makeTabs(aDocument, aWindow)
   {
     var num = aWindow.frames.length;
     for (var i = 0; i < num; i++)
-      makeTab(aWindow.frames[i].document, aWindow.frames[i]);  // recurse through the frames
+      makeTabs(aWindow.frames[i].document, aWindow.frames[i]);  // recurse through the frames
   }
 
   var formTree = document.getElementById("formtree");
