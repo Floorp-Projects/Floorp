@@ -292,27 +292,20 @@ scrollbar[value="hidden"] {
 
 /********* XP Scrollbar *********/
 
-button.scrollbar-thumb {
-   user-focus: ignore;
-   background-color: #CCCCCC;
-   border: 1px outset white;
-   list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
+thumb {
+  behavior: url(resource:/chrome/xulBindings.xml#thumb);
+  user-focus: ignore;
+  background-color: #CCCCCC;
+  border: 1px outset #CCCCCC;
+  list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
 }
 
-/*
-pinkerton - workaround. removed until bug 15722 can be fixed.
-button.scrollbar-thumb:hover {
-   list-style-image: url(chrome://global/skin/scroll-thumb-horiz-hover.gif);
-}
-*/
-
-button.scrollbar-thumb[disabled="true"] {
+thumb[disabled="true"] {
    user-focus: ignore;
    list-style-image: url("chrome://global/skin/scroll-thumb-horiz-disabled.gif");
 }
 
-button.scrollbar-thumb[align="vertical"] {
-   user-focus: ignore;
+thumb[align="vertical"] {
    list-style-image: url("chrome://global/skin/scroll-thumb-vert.gif")
 }
 
@@ -397,7 +390,6 @@ splitter {
 grippy {
    display: block;
 }
-
 
 /********** checkbox **********/
 
