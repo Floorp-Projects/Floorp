@@ -144,10 +144,10 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         SetItemDisplay("OfflineSettings", supportsOffline);
 
         // Junk mail settings
-        var canGetMessages = protocolInfo.canGetMessages && false;  // && false, since the feature is not on yet.
-        SetItemDisplay("JunkSettings", canGetMessages);
+        var canControlJunk = protocolInfo.canGetMessages && false;  // && false, since the feature is not on yet.
+        SetItemDisplay("JunkSettings", canControlJunk);
             
-        var displayAdvFeatures = canSearchMessages || canHaveFilters || supportsOffline || canGetMessages;
+        var displayAdvFeatures = canSearchMessages || canHaveFilters || supportsOffline || canControlJunk;
         // Display Adv Features header, only if any of the items are displayed
         SetItemDisplay("AdvancedFeaturesHeader", displayAdvFeatures);
     
