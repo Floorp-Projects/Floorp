@@ -39,8 +39,6 @@
 
 
 static const RGBColor blue = { 0, 0, 0xFFFF };
-static const RGBColor black = { 0, 0, 0 };
-static const RGBColor bgColor = { 0xDDDD, 0xDDDD, 0xDDDD };
 
 
 DragSendDataUPP CPersonalToolbarTable::sSendDataUPP;
@@ -603,8 +601,16 @@ CPersonalToolbarTable :: RedrawCellWithHilite ( const STableCell inCell, bool in
 	
 	// if the hiliting is being turned off, erase the cell so it draws normally again
 	if ( !inHiliteOn ) {
-		StColorState saved;
-		::RGBBackColor(&bgColor);
+		StColorPenState saved;
+
+#if AM_WORKED_LIKE_WE_WANTED		
+		::SetThemeBackground ( kThemeActiveWindowHeaderBrush, 8, false );		// doesn't exist!
+#else
+		RGBColor temp;
+		::GetCPixel ( localCellRect.left + 2, localCellRect.top + 3, &temp );
+		::RGBBackColor(&temp);
+#endif
+
 		::EraseRect(&mTextHiliteRect);		// we can be sure this has been previously computed
 	}
 	
@@ -624,7 +630,7 @@ CPersonalToolbarTable :: DrawCell ( const STableCell &inCell, const Rect &inLoca
 {
 	StTextState savedText;
 	StColorPenState savedColor;
-	::RGBForeColor(&black);
+	::SetThemePen ( kThemeActiveWindowHeaderTextColor, 8, false );
 	
 	SIconTableRec iconAndName;
 	Uint32 dataSize = sizeof(SIconTableRec);
@@ -654,11 +660,7 @@ CPersonalToolbarTable :: DrawCell ( const STableCell &inCell, const Rect &inLoca
 		TextFace(underline);
 		RGBForeColor( &blue );
 	}
-	else {
-		// it should be the window header text color, but that's not right for some reason
-//		::SetThemePen ( kThemeActiveWindowHeaderTextColor, 8, false );
-		::SetThemePen ( kThemeListViewTextColor, 8, false );
-	}
+
 	::MoveTo(inLocalRect.left + 22, inLocalRect.bottom - 4);
 	::DrawString(iconAndName.name);
 	
@@ -1075,7 +1077,15 @@ CPersonalToolbarTable :: RedrawCellWithTextClipping ( const STableCell & inCell 
 	GetLocalCellRect ( inCell, localRect );
 	Rect textRect = ComputeTextRect(iconAndName,localRect);
 	::ClipRect(&textRect);
-	::RGBBackColor(&bgColor);
+
+#if AM_WORKED_LIKE_WE_WANTED		
+	::SetThemeBackground ( kThemeActiveWindowHeaderBrush, 8, false );		// doesn't exist!
+#else
+	RGBColor temp;
+	::GetCPixel ( localRect.left + 2, localRect.top + 3, &temp );
+	::RGBBackColor(&temp);
+#endif
+
 	::EraseRect(&textRect);
 	DrawCell(inCell, localRect);
 
