@@ -294,7 +294,7 @@
 <!ENTITY formatremovestyles.keybinding "y">
 <!ENTITY formatremovelinks.keybinding "k">
 <!ENTITY formatRemoveNamedAnchors.label "Remove Named Anchors">
-<!ENTITY formatRemoveNamedAnchors.accesskey "d">
+<!ENTITY formatRemoveNamedAnchors.accesskey "R">
 <!ENTITY formatremovenamedanchors.keybinding "a">
 
 <!ENTITY formatindent.keybinding "]">
