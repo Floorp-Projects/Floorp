@@ -930,7 +930,16 @@ Boolean CPublish::CommitChanges( Boolean /* isAllPanes */ )
 		if ( titleField )
 			pageData->pTitle = titleField->GetLongDescriptor();
 		
+		if ( pageData->pTitle && pageData->pTitle[0] == 0 )
+		{
+			XP_FREE( pageData->pTitle );
+			pageData->pTitle = NULL;
+		}
+		if ( pageData->pTitle == NULL )
+			pageData->pTitle = strdup( " " );
+		
 		EDT_SetPageData( fContext, pageData );
+		
 		EDT_FreePageData( pageData );
 	}
 
@@ -2478,12 +2487,17 @@ void CEDTableCellContain::PrefsFromControls()
 	if (cellData == NULL)
 		return;
 	
-	if ( fRowSpanEditText->IsEnabled() )
+	if ( fRowSpanEditText->IsEnabled() )	/* assume CF_ROWSPAN bit already set properly */
 		cellData->iRowSpan = fRowSpanEditText->GetValue();
-	if ( fColSpanEditText->IsEnabled() )
+	if ( fColSpanEditText->IsEnabled() )	/* assume CF_COLSPAN bit already set properly */
 		cellData->iColSpan = fColSpanEditText->GetValue();
 	
-	switch ( fHorizontalAlignment->GetValue() )
+	int curValue;
+	
+	curValue = fHorizontalAlignment->GetValue();
+	if ( !(cellData->mask & CF_ALIGN ) && curValue != 4 )
+		cellData->mask |= CF_ALIGN;
+	switch ( curValue )
 	{
 		default:
 		case 1: cellData->align = ED_ALIGN_LEFT;		break;
@@ -2492,59 +2506,96 @@ void CEDTableCellContain::PrefsFromControls()
 		case 4:	break; // mixed state; don't reset
 	}
 	
-	switch ( fVerticalAlignment->GetValue() )
+	curValue = fVerticalAlignment->GetValue();
+	if ( !(cellData->mask & CF_VALIGN ) && curValue != 5 )
+		cellData->mask |= CF_VALIGN;
+	switch ( curValue )
 	{
 		default:
-		case 1: cellData->valign = ED_ALIGN_ABSTOP;
-		case 2: cellData->valign = ED_ALIGN_ABSCENTER;
-		case 3: cellData->valign = ED_ALIGN_BASELINE;
-		case 4: cellData->valign = ED_ALIGN_ABSBOTTOM;
+		case 1: cellData->valign = ED_ALIGN_ABSTOP;		break;
+		case 2: cellData->valign = ED_ALIGN_ABSCENTER;	break;
+		case 3: cellData->valign = ED_ALIGN_BASELINE;	break;
+		case 4: cellData->valign = ED_ALIGN_ABSBOTTOM;	break;
 		case 5:	break;	// mixed state; don't reset
 	}
 	
-	cellData->bHeader = fHeaderStyle->GetValue();
-	cellData->bNoWrap = fWrapText->GetValue();
-		
-	if ( fCustomWidth->GetValue() )
+	curValue = fHeaderStyle->GetValue();
+	if ( curValue != 2 )
+	{
+		if ( !(cellData->mask & CF_HEADER ) )
+			cellData->mask |= CF_HEADER;
+		cellData->bHeader = curValue;
+	}
+	
+	curValue = fWrapText->GetValue();
+	if ( curValue != 2 )
+	{
+		if ( !(cellData->mask & CF_NOWRAP ) )
+			cellData->mask |= CF_NOWRAP;
+		cellData->bNoWrap = curValue;
+	}
+	
+	curValue = fCustomWidth->GetValue();
+	if ( !(cellData->mask & CF_WIDTH ) && curValue != 2 )
+		cellData->mask |= CF_WIDTH;
+	if ( curValue == 1 )
 	{
 		cellData->bWidthDefined = TRUE;
 		cellData->bWidthPercent = fWidthPopup->GetValue() == kPercentOfWindowItem;
 		cellData->iWidth = fWidthEditText->GetValue();
 	}
-	else
+	else if ( curValue == 0 )
 		cellData->bWidthDefined = FALSE;
 	
-	if (fCustomHeight->GetValue())
+	curValue = fCustomHeight->GetValue();
+	if ( !(cellData->mask & CF_HEIGHT ) && curValue != 2 )
+		cellData->mask |= CF_HEIGHT;
+	if ( curValue == 1 )
 	{
 		cellData->bHeightDefined = TRUE;
 		cellData->bHeightPercent = fHeightPopup->GetValue() == kPercentOfWindowItem;
 		cellData->iHeight = fHeightEditText->GetValue();
 	}
-	else
+	else if ( curValue == 0 )
 		cellData->bHeightDefined = FALSE;
 	
 	XP_FREEIF( cellData->pColorBackground );	// we'll replace it with our own if we use it at all.
 	cellData->pColorBackground = NULL;
 	
 	LO_Color pColor;
-	if ( fCustomColor->GetValue() )
+	curValue = fCustomColor->GetValue();
+	if ( curValue != 2 && !(cellData->mask & CF_BACK_COLOR ) )
+		cellData->mask |= CF_BACK_COLOR;
+	if ( curValue == 1 )
 	{
 		pColor = UGraphics::MakeLOColor(fColorCustomColor->GetColor());
 		cellData->pColorBackground = &pColor;
 	}
-	else
+	else if ( curValue == 0 )
 		cellData->pColorBackground = NULL;
 	
 	XP_FREEIF( cellData->pBackgroundImage );
 	cellData->pBackgroundImage = NULL;
 	
-	if ( mUseImage->GetValue() )
+	curValue = mUseImage->GetValue();
+	if ( !(cellData->mask & CF_BACK_IMAGE ) && curValue != 2 )
+		cellData->mask |= CF_BACK_IMAGE;
+	if ( curValue == 1 )
 		cellData->pBackgroundImage = mImageFileName->GetLongDescriptor();
-	cellData->bBackgroundNoSave = mLeaveImage->GetValue();
+	
+	curValue = mLeaveImage->GetValue();
+	if ( curValue != 2 )
+	{
+		if ( !(cellData->mask & CF_BACK_NOSAVE ) )
+			cellData->mask |= CF_BACK_NOSAVE;
+		cellData->bBackgroundNoSave = curValue;
+	}
 
 	LView* extrahtmlbutton = (LView *)FindPaneByID( 'Xtra' );
 	XP_ASSERT( extrahtmlbutton != NULL );
-	if ( extrahtmlbutton->IsEnabled() )
+	if ( !(cellData->mask & CF_EXTRA_HTML ) )
+		XP_ASSERT( 1 );
+	if ( extrahtmlbutton && extrahtmlbutton->IsEnabled() )
 	{
 		XP_FREEIF( cellData->pExtra );
 		cellData->pExtra = pExtra;
@@ -2560,32 +2611,6 @@ void CEDTableCellContain::PrefsFromControls()
 	EDT_FreeTableCellData( cellData );
 }
 
-#if FIRST_PASS_AT_MASK
-typedef enum {
-    ED_ALIGN_LEFT_MASK        = 0x0001,
-    ED_ALIGN_CENTER_MASK      = 0x0002,
-    ED_ALIGN_RIGHT_MASK       = 0x0004,
-    ED_ALIGN_ABSTOP_MASK      = 0x0010,
-    ED_ALIGN_ABSCENTER_MASK   = 0x0020,
-    ED_ALIGN_BASELINE_MASK    = 0x0040,
-    ED_ALIGN_ABSBOTTOM_MASK   = 0x0080
-} ED_AlignmentMask;
-
-/* ED_AlignmentMask: add the values which are set */
-/* Boolean:  true means all agree; false means selection has different values */
-struct _EDT_TableCellMask {
-	ED_AlignmentMask bHalign;
-	ED_AlignmentMask bValign;
-	Boolean bColAndRowSpan;
-	Boolean bHeader;
-	Boolean bNoWrap;
-	Boolean bWidth;
-	Boolean bHeight;
-	Boolean bColor;
-	Boolean bBackgroundImage;
-	Boolean bExtraHTML;
-};
-#endif
 
 // Initialize from preferences
 void CEDTableCellContain::ControlsFromPref()
@@ -2594,21 +2619,10 @@ void CEDTableCellContain::ControlsFromPref()
 	if (cellData == NULL)
 		return;
 
-#if FIRST_PASS_AT_MASK
-	_EDT_TableCellMask cellDataMask;
-	cellDataMask.bHalign = ED_ALIGN_LEFT_MASK;
-	cellDataMask.bValign = ED_ALIGN_BASELINE_MASK;
-	cellDataMask.bColAndRowSpan = true;
-	cellDataMask.bHeader = cellDataMask.bNoWrap = true;
-	cellDataMask.bWidth = cellDataMask.bHeight = true;
-	cellDataMask.bColor = cellDataMask.bBackgroundImage = true;
-	cellDataMask.bExtraHTML = true;
-#endif
-
 // set popup menus depending if nested in another table or just in window
 	short 			resID;
-	CStr255			title;
 	StringHandle	titleH;
+	
 	if (EDT_IsInsertPointInNestedTable(fContext))
 		resID = EDITOR_PERCENT_PARENT_CELL;
 	else
@@ -2619,7 +2633,7 @@ void CEDTableCellContain::ControlsFromPref()
 	{
 		SInt8 hstate = HGetState( (Handle)titleH );
 		HLock( (Handle)titleH );
-		title = *titleH;
+		CStr255 title = *titleH;
 		HSetState( (Handle)titleH, hstate );
 
 		MenuHandle menuh = ((LGAPopup *)fWidthPopup)->GetMacMenuH();
@@ -2637,56 +2651,57 @@ void CEDTableCellContain::ControlsFromPref()
 		}
 	}
 
-/* col and row span */
-#if FIRST_PASS_AT_MASK
-	if ( cellDataMask.bColAndRowSpan )
-#endif
+/* col span */
+	if ( (cellData->mask & CF_COLSPAN) )
+	{
+		fColSpanEditText->SetValue( cellData->iColSpan );
+		fColSpanEditText->Enable();
+	}
+	else
+		fColSpanEditText->Disable();
+		
+/* row span */
+	if ( (cellData->mask & CF_ROWSPAN) )
 	{
 		fRowSpanEditText->SetValue( cellData->iRowSpan );
-		fColSpanEditText->SetValue( cellData->iColSpan );
+		fRowSpanEditText->Enable();
 	}
-#if FIRST_PASS_AT_MASK
 	else
-	{
 		fRowSpanEditText->Disable();
-		fColSpanEditText->Disable();
-		// should disable the rest of this too...
-	}
-#endif
 	
 /* horizontal alignment */
-	switch ( cellData->align )
+	if ( (cellData->mask & CF_ALIGN) )
 	{
-		case ED_ALIGN_LEFT:			fHorizontalAlignment->SetValue( 1 );	break;
-		case ED_ALIGN_ABSCENTER:	fHorizontalAlignment->SetValue( 2 );	break;
-		case ED_ALIGN_RIGHT:		fHorizontalAlignment->SetValue( 3 );	break;
-		default:	/* mixed */		fHorizontalAlignment->SetValue( 4 );	break;
+		switch ( cellData->align )
+		{
+			case ED_ALIGN_DEFAULT:
+			case ED_ALIGN_LEFT:			fHorizontalAlignment->SetValue( 1 );	break;
+			case ED_ALIGN_ABSCENTER:	fHorizontalAlignment->SetValue( 2 );	break;
+			case ED_ALIGN_RIGHT:		fHorizontalAlignment->SetValue( 3 );	break;
+		}
 	}
+	else
+		fHorizontalAlignment->SetValue( 4 );
 
 /* vertical alignment */
-	switch ( cellData->valign )
+	if ( (cellData->mask & CF_VALIGN) )
 	{
-		case ED_ALIGN_ABSTOP:		fVerticalAlignment->SetValue( 1 );	break;
-		case ED_ALIGN_ABSCENTER:	fVerticalAlignment->SetValue( 2 );	break;
-		case ED_ALIGN_BASELINE:		fVerticalAlignment->SetValue( 3 );	break;
-		case ED_ALIGN_ABSBOTTOM:	fVerticalAlignment->SetValue( 4 );	break;
-		default:	/* mixed */		fVerticalAlignment->SetValue( 5 );	break;
+		switch ( cellData->valign )
+		{
+			case ED_ALIGN_ABSTOP:		fVerticalAlignment->SetValue( 1 );	break;
+			case ED_ALIGN_ABSCENTER:	fVerticalAlignment->SetValue( 2 );	break;
+			case ED_ALIGN_BASELINE:		fVerticalAlignment->SetValue( 3 );	break;
+			case ED_ALIGN_ABSBOTTOM:	fVerticalAlignment->SetValue( 4 );	break;
+		}
 	}
+	else
+		fVerticalAlignment->SetValue( 5 );
 
 /* text */
-#if FIRST_PASS_AT_MASK
-	fHeaderStyle->SetValue( cellDataMask.bHeader ? cellData->bHeader : 2 );
-	fWrapText->SetValue( cellDataMask.bNoWrap ? cellData->bNoWrap : 2 );
-#else
-	fHeaderStyle->SetValue( cellData->bHeader );
-	fWrapText->SetValue( cellData->bNoWrap );
-#endif
+	fHeaderStyle->SetValue( (cellData->mask & CF_HEADER) ? cellData->bHeader : 2 );
+	fWrapText->SetValue( (cellData->mask & CF_NOWRAP) ? cellData->bNoWrap : 2 );
 
-#if FIRST_PASS_AT_MASK
-	fCustomWidth->SetValue( cellDataMask.bWidth ? cellData->bWidthDefined : 2 );
-#else
-	fCustomWidth->SetValue( cellData->bWidthDefined );
-#endif
+	fCustomWidth->SetValue( (cellData->mask & CF_WIDTH) ? cellData->bWidthDefined : 2 );
 	if ( cellData->bWidthDefined )
 	{
 		fWidthEditText->SetValue( cellData->iWidth );
@@ -2698,11 +2713,7 @@ void CEDTableCellContain::ControlsFromPref()
 		fWidthPopup->SetValue( kPercentOfWindowItem );
 	}
 	
-#if FIRST_PASS_AT_MASK
-	fCustomHeight->SetValue( cellDataMask.bHeight ? cellData->bHeightDefined : 2 );
-#else
-	fCustomHeight->SetValue( cellData->bHeightDefined );
-#endif
+	fCustomHeight->SetValue( (cellData->mask & CF_HEIGHT) ? cellData->bHeightDefined : 2 );
 	if ( cellData->bHeightDefined )
 	{
 		fHeightEditText->SetValue(cellData->iHeight);
@@ -2714,7 +2725,7 @@ void CEDTableCellContain::ControlsFromPref()
 		fHeightPopup->SetValue( kPercentOfWindowItem );
 	}
 		
-	fCustomColor->SetValue( cellData->pColorBackground != NULL );
+	fCustomColor->SetValue( (cellData->mask & CF_BACK_COLOR) ? cellData->pColorBackground != NULL : 2 );
 	RGBColor rgb;
 	if ( cellData->pColorBackground )
 		rgb = UGraphics::MakeRGBColor( *cellData->pColorBackground );
@@ -2722,32 +2733,24 @@ void CEDTableCellContain::ControlsFromPref()
 		rgb = UGraphics::MakeRGBColor( 0xFF, 0xFF, 0xFF );	// something pretty... (or, better yet, get the default color - yeah, right!)
 	fColorCustomColor->SetColor( rgb );
 	
-	if ( cellData->pBackgroundImage )
-	{
-		mImageFileName->SetLongDescriptor( cellData->pBackgroundImage );
-		// turn on after we set the descriptor so we don't handle as click when msg is broadcast
-		TurnOn( mUseImage );
-	}
-	mLeaveImage->SetValue( cellData->bBackgroundNoSave );
+	mImageFileName->SetLongDescriptor( cellData->pBackgroundImage ? cellData->pBackgroundImage : "" );
+	mUseImage->SetValue( (cellData->mask & CF_BACK_IMAGE) ? cellData->pBackgroundImage != NULL : 2 );
+	mLeaveImage->SetValue( (cellData->mask & CF_BACK_NOSAVE) ? cellData->bBackgroundNoSave : 2 );
 
 	LView* extrahtmlbutton = (LView *)FindPaneByID( 'Xtra' );
 	XP_ASSERT( extrahtmlbutton != NULL );
-#if FIRST_PASS_AT_MASK
-	if ( cellDataMask.bExtraHTML )
-#endif
+	if ( (cellData->mask & CF_EXTRA_HTML) )
 	{
 		extrahtmlbutton->Enable();
 		pExtra = cellData->pExtra;
 		cellData->pExtra = NULL;	// don't let backend free!
 	}
-#if FIRST_PASS_AT_MASK
 	else
 	{
 		/* don't agree; disable for now */
 		extrahtmlbutton->Disable();
 		pExtra = NULL;
 	}
-#endif
 
 	EDT_FreeTableCellData(cellData);
 	AdjustEnable();
@@ -2812,28 +2815,45 @@ void CEDTableCellContain::ListenToMessage( MessageT inMessage, void* /* ioParam 
 {
 	switch ( inMessage )
 	{
+		case 'TsPU':	/* popup menu item was changed */
+		case 'PREV':
 		case 'NEXT':
 			/* AllFieldsOK?, Cancel->Close, Apply */
 //			CEditDialog::ListenToMessage( msg_Apply, NULL );
 
-			/* select next */
-			/* HACK ALERT!!!!!!!  For now, let's just tab to the next cell */
-			EDT_TabKey( fContext, true, false );
+			/* approprate selection  */
+			ED_HitType moveType = ED_HIT_SEL_CELL;
+			LGAPopup * tableSelectionPopup = (LGAPopup*)FindPaneByID( 'TsPU' );
+			if ( tableSelectionPopup )
+			{
+				switch ( tableSelectionPopup->GetValue() )
+				{
+					case 1: /* cell */
+						moveType = ED_HIT_SEL_CELL;
+						break;
+					
+					case 2: /* row */
+						moveType = ED_HIT_SEL_ROW;
+						break;
+					
+					case 3: /* column */
+						moveType = ED_HIT_SEL_COL;
+						break;
+				}
+			}
+			
+			ED_MoveSelType moveDirection;
+			if (inMessage == 'PREV')
+				moveDirection = ED_MOVE_PREV;
+			else if (inMessage == 'NEXT')
+				moveDirection = ED_MOVE_NEXT;
+			else if (inMessage == 'TsPU')
+			     moveDirection = ED_MOVE_NONE;
+			
+			EDT_ChangeTableSelection( fContext, moveType, moveDirection, NULL );
 			
 			/* fill in new data */
 			ControlsFromPref();
-			break;
-			
-		case 'PREV':
-			/* AllFieldsOK */
-			/* Apply */
-			
-			/* select next */
-			/* HACK ALERT!!!!!!!  For now, let's just tab to the previous cell */
-			EDT_TabKey( fContext, false, false );
-
-			/* fill in new data */
-			SysBeep(0);
 			break;
 			
 		case 'cwth':
