@@ -32,8 +32,12 @@
 #include "nsIChannel.h" 
 #include "nsNetDiskCache.h"
 
+class WriteStreamWrapper;
+
 class nsDiskCacheRecord : public nsINetDataCacheRecord
 {
+  friend WriteStreamWrapper;
+
   public:
 
   NS_DECL_ISUPPORTS
@@ -48,6 +52,20 @@ class nsDiskCacheRecord : public nsINetDataCacheRecord
   NS_IMETHOD Init(const char* key, PRUint32 length, PRInt32 ID) ;
 
   nsresult GenInfo(void) ;
+
+  // Notification to us that the cache file was just written to.
+  // This is used to update the nsIFile (mFile) that we hold
+  // after we wrote new data to the file. This is needed because
+  // if we write to the file and the filesize/date has changed,
+  // we need to invalidate the mFile's stat cache.
+  NS_IMETHOD WriteComplete();
+
+  // The mFile we store might be out of date. Atlease
+  // we know that our implementation of nsIFile stores
+  // stat data in a cache. We need to invalidate that cache
+  // at critical points or atleast when we know we changed
+  // file info.
+  NS_IMETHOD UpdateFileInfo();
 
   private:
 
