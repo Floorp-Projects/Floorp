@@ -36,6 +36,7 @@
  *   +- initialScripts (String) urls for scripts to run at startup,
  *   |                          semicolon seperated
  *   +- munger   (Boolean) send output through text->html munger
+ *   |  +- <various>  (Boolean) enable specific munger entry
  *   |  +- smileyText (Boolean) true => display text (and graphic) when
  *   |                                  matching smileys
  *   |                          false => show only the smiley graphic
@@ -108,6 +109,11 @@ function readIRCPrefs (rootNode)
     client.smileyText =
         getBoolPref (pref, rootNode + "munger.smileyText", false);
 
+    for (var entry in client.munger.entries)
+        client.munger.entries[entry].enabled =
+            getBoolPref (pref, rootNode + "munger." + entry,
+                         client.munger.entries[entry].enabled);
+
     client.FLASH_WINDOW =
         getBoolPref (pref, rootNode + "notify.aggressive", true);
 
@@ -162,6 +168,9 @@ function writeIRCPrefs (rootNode)
                       client.stalkingVictims.join ("; "));
     pref.SetBoolPref (rootNode + "munger", client.munger.enabled);
     pref.SetBoolPref (rootNode + "munger.smileyText", client.smileyText);
+    for (var entry in client.munger.entries)
+        pref.SetBoolPref (rootNode + "munger." + entry,
+                          client.munger.entries[entry].enabled);
     pref.SetBoolPref (rootNode + "notify.aggressive", client.FLASH_WINDOW);
     
     var h = client.eventPump.getHook ("event-tracer");

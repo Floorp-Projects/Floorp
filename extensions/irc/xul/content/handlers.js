@@ -132,6 +132,14 @@ function onPopupHighlight (ruleText)
 
 }
 
+function onToggleMungerEntry(entryName)
+{
+    client.munger.entries[entryName].enabled =
+        !client.munger.entries[entryName].enabled;
+    var item = document.getElementById("menu-munger-" + entryName);
+    item.setAttribute ("checked", client.munger.entries[entryName].enabled);
+}
+
 function createPopupContext(event, target)
 {
     var targetType;
@@ -507,8 +515,8 @@ function onToggleMunger()
 {
 
     client.munger.enabled = !client.munger.enabled;
-    document.getElementById("menu-munger").setAttribute ("checked",
-                                                         client.munger.enabled);
+    var item = document.getElementById("menu-munger-global");
+    item.setAttribute ("checked", !client.munger.enabled);
 
 }
 

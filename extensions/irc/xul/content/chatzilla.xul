@@ -215,8 +215,13 @@
         <menu label="&OptionsCmd.label;">
           <menupopup>
 
-            <menuitem id="menu-munger" label="&EnableSmileysCmd.label;"
-              oncommand="onToggleMunger()" type="checkbox"/>
+            <menu label="&MungerCmd.label;">
+              <menupopup id="menu-munger">
+                <menuitem id="menu-munger-global" label="&DisableMunger.label;"
+                  oncommand="onToggleMunger()" type="checkbox"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
 
             <menuseparator/>
 

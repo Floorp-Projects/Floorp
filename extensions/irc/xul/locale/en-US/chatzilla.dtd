@@ -28,7 +28,9 @@
 <!ENTITY network.label		"Network">
 
 <!ENTITY OptionsCmd.label	"Options">
-<!ENTITY EnableSmileysCmd.label "Enable Smileys">
+<!ENTITY MungerCmd.label	"Munger">
+<!ENTITY DisableMunger.label	"Disable All">
+
 <!ENTITY DebugMsgCmd.label	"Debug Mode">
 <!ENTITY DebugMsgCmd.aKey	"D">
 <!ENTITY SaveSetNowCmd.label	"Save Settings Now">

@@ -140,7 +140,9 @@ function initStatic()
 
     setMenuCheck ("menu-dmessages", 
                   client.eventPump.getHook ("event-tracer").enabled);
-    setMenuCheck ("menu-munger", client.munger.enabled);
+    setMenuCheck ("menu-munger-global", !client.munger.enabled);
+
+    setupMungerMenu(client.munger);
 
     client.uiState["tabstrip"] =
         setMenuCheck ("menu-view-tabstrip", isVisible("view-tabs"));
@@ -307,7 +309,7 @@ function initHost(obj)
     obj.munger.addRule ("face",
          /((^|\s)[\<\>]?[\;\=\:]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\](\s|$))/,
          insertSmiley);
-    obj.munger.addRule ("ear", /(?:\s|^)(\(\*)(?:\s|$)/, insertEar);
+    obj.munger.addRule ("ear", /(?:\s|^)(\(\*)(?:\s|$)/, insertEar, false);
     obj.munger.addRule ("rheet", /(?:\s|^)(rhee+t\!*)(?:\s|$)/i, insertRheet);
     obj.munger.addRule ("bold", /(?:\s|^)(\*[^*,.()]*\*)(?:[\s.,]|$)/, 
                         "chatzilla-bold");
@@ -414,6 +416,7 @@ function insertEar (matchText, containerTag)
     var img = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                         "html:img");
     img.setAttribute ("src", client.IMAGEDIR + "face-ear.gif");
+    img.setAttribute ("title", matchText);
     containerTag.appendChild (img);
     
 }
@@ -458,6 +461,7 @@ function insertSmiley (emoticon, containerTag)
                                      "html:span");
     span.setAttribute ("class", "chatzilla-emote");
     span.setAttribute ("type", type);
+    span.setAttribute ("title", emoticon);
     containerTag.appendChild (span);
     
 }
@@ -769,6 +773,23 @@ function createHighlightMenu()
     menu.appendChild(menuitem);
     
     //processStyleRules(frames[0].document.styleSheets[0].cssRules);
+}
+
+function setupMungerMenu(munger)
+{
+    var menu = document.getElementById("menu-munger");
+    for (var entry in munger.entries)
+    {
+        var menuitem = document.createElement("menuitem");
+        menuitem.setAttribute ("label", munger.entries[entry].description);
+        menuitem.setAttribute ("id", "menu-munger-" + entry);
+        menuitem.setAttribute ("type", "checkbox");
+        if (munger.entries[entry].enabled)
+            menuitem.setAttribute ("checked", "true");
+        menuitem.setAttribute ("oncommand", "onToggleMungerEntry('" + 
+                               entry + "');");
+        menu.appendChild(menuitem);
+    }
 }
     
 var testURLs =
@@ -1357,12 +1378,20 @@ function addHistory (source, obj)
 
         source.messages.setAttribute ("class", "msg-table");
         source.messages.setAttribute ("view-type", source.TYPE);
-        tbody = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                          "html:tbody");
-        source.messages.appendChild (tbody);
+        if (0) /*XXX*/ {
+            tbody = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                              "html:tbody");
+            source.messages.appendChild (tbody);
+        } else {
+            tbody = source.messages;
+        }
     }
     else
-        tbody = source.messages.firstChild;
+        if (0) /*XXX*/ {        
+            tbody = source.messages.firstChild;
+        } else {
+            tbody = source.messages;
+        }
 
     var needScroll = false;
     var w = window.frames[0];
@@ -1928,10 +1957,15 @@ function __display(message, msgtype, sourceObj, destObj)
         table.setAttribute ("cellpadding", "0");
         
         td.appendChild (table);
-        var tbody =  document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                               "html:tbody");
+        if (0) /*XXX*/ {
+            var tbody =  document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                                   "html:tbody");
+        } else {
+            tbody = table;
+        }
+        
         tbody.appendChild (msgRow);
-        table.appendChild (tbody);
+        //XXXtable.appendChild (tbody);
         msgRow = tr;
     }
 
