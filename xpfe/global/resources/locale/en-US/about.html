@@ -18,7 +18,8 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
-        Henrik Gemal <gemal@gemal.dk>
+   -    Henrik Gemal <gemal@gemal.dk>
+   -    Daniel Veditz <dveditz@netscape.com>
 -->
   
 <html>
@@ -39,9 +40,9 @@
 <td align="center">
 <h1>
 <a href="http://www.mozilla.org/releases/">Mozilla
-<script type="text/javascript">document.write(navigator.userAgent.substring(
-navigator.userAgent.lastIndexOf(";")+1,navigator.userAgent.lastIndexOf(")"))
-.toUpperCase());</script></a>
+<script type="text/javascript">
+   document.write( navigator.userAgent.match(/rv:([^;)]+)/)[1] );
+</script></a>
 </h1>
 <script type="text/javascript">document.write(navigator.userAgent);</script>
 </td>
