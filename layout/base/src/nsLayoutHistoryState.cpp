@@ -22,6 +22,7 @@
  */
 
 #include "nsILayoutHistoryState.h"
+#include "nsWeakReference.h"
 #include "nsHashtable.h"
 #include "nsIStatefulFrame.h" // Get StateType enum
 
@@ -38,7 +39,8 @@ class HistoryKey: public nsVoidKey {
    }
 };
 
-class nsLayoutHistoryState : public nsILayoutHistoryState
+class nsLayoutHistoryState : public nsILayoutHistoryState,
+                             public nsSupportsWeakReference
 {
 public:
   nsLayoutHistoryState();
@@ -69,10 +71,11 @@ NS_NewLayoutHistoryState(nsILayoutHistoryState** aState)
     if (! aState)
         return NS_ERROR_NULL_POINTER;
 
-    *aState = new nsLayoutHistoryState();
-    if (! *aState)
+    nsLayoutHistoryState *state = new nsLayoutHistoryState();
+    if (!state)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    *aState = NS_STATIC_CAST(nsILayoutHistoryState *, state);
     NS_ADDREF(*aState);
 
     return NS_OK;
@@ -87,8 +90,9 @@ nsLayoutHistoryState::~nsLayoutHistoryState()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsLayoutHistoryState, 
-                  NS_GET_IID(nsILayoutHistoryState));
+NS_IMPL_ISUPPORTS2(nsLayoutHistoryState,
+                   nsILayoutHistoryState,
+                   nsISupportsWeakReference);
 
 NS_IMETHODIMP
 nsLayoutHistoryState::AddState(PRUint32 aContentID,                                
