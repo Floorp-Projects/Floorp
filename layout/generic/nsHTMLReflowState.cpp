@@ -1806,7 +1806,8 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
         frame->GetFrameType(getter_AddRefs(fType));
         if (nsLayoutAtoms::tableOuterFrame == fType.get()) {
           mComputedWidth = 0; // XXX temp fix for trees
-        } else if (nsLayoutAtoms::tableFrame == fType.get()) {
+        } else if ((nsLayoutAtoms::tableFrame == fType.get()) ||
+                   (nsLayoutAtoms::tableCaptionFrame == fType.get())) {
           mComputedWidth = NS_SHRINKWRAPWIDTH;
           if (eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit()) {
             mComputedMargin.left = NS_AUTOMARGIN;
