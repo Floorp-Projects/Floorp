@@ -7,24 +7,24 @@
 /* outer frame */
   textfield
     {
-      border              : 1px inset #DDDDDD;
+      border              : 1px inset ThreeDLightShadow;
       font                : inherit;
-      color               : #000000;
+      color               : WindowText;
       padding             : 0px;
       margin              : 1px 3px 2px 4px;
-      background-color    : #FFFFFF;
+      background-color    : -moz-field;
       -moz-border-radius  : 3px 2px 2px 3px;
       cursor              : text;
     }
     
   textfield[readonly="true"]
     {
-      background-color    : #FFFFFF;
+      background-color    : -moz-field;
     }
   
   textfield[focused="true"]
     {
-      border              : 2px solid #6363CE;
+      border              : 2px solid -moz-mac-focusring;
       margin              : 0px 2px 1px 3px;
     }
     
@@ -40,14 +40,14 @@
       margin              : 0px;
       padding             : 1px 2px 1px 2px;
       cursor              : text;
-      border              : 1px solid #000000;
+      border              : 1px solid ActiveBorder;
       background-color    : inherit;
       color               : inherit;
     }
   
   textfield[disabled="true"] > .textfield-internal-box
     {
-      border              : 1px solid #999999;
+      border              : 1px solid ThreeDShadow;
     }
   
   .textarea-internal-box

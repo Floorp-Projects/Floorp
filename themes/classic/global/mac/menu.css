@@ -11,7 +11,7 @@ menubar > toolbargrippy
 
 menu, menuitem  
   {
-    color                 : #000000;
+    color                 : MenuText;
 	vertical-align        : middle;
   }
 
@@ -24,13 +24,13 @@ menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"]
   {
-	color                 : #777777;
+	color                 : GrayText;
   }
 
 /* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup 
   {
-    background-color      : #DDDDDD;
+    background-color      : Menu;
     border-left           : thin solid white;
     border-top            : thin solid white;
     border-right          : 3px ridge black;
@@ -41,7 +41,7 @@ menupopup, popup
 menupopup > menu, popup > menu,
 menupopup > menuitem, popup > menuitem
   {
-    font				  : 12px charcoal;
+	font				  : 12px charcoal;
     max-width             : 250px;
     min-width             : 0px;
     padding 			  : 0px;
@@ -57,14 +57,15 @@ popup > menuitem[disabled="true"], popup > menu[disabled="true"]
 
 menuseparator 
   {
-  	border-top			  : 1px solid #888888;
-    border-bottom         : 1px solid white; 
+  	border-top			  : 1px solid -moz-mac-menushadow;
+    border-bottom         : 1px solid ThreeDHighlight;
     margin                : 2px 0px 2px 0px;
   }
 
+/*I don't believe this does anything on MacOS (lordpixel@mac.com)*/
 menubar > menu 
   {
-    border                : 1px solid #FFFFFF;
+    border                : 1px solid ActiveBorder;
     padding               : 2px 3px 2px 3px;
     margin                : 2px 0px 2px 0px;
   }
@@ -83,17 +84,27 @@ menubar > menu[menuactive="true"][open="true"]
     background-color      : #CCCCCC;
     -moz-border-radius    : 4px 4px 0px 0px;
   }
+/*end of ineffective stuff*/
+
 
 menupopup > menu[menuactive="true"],
 menupopup > menuitem[menuactive="true"],
 popup > menu[menuactive="true"],
 popup > menuitem[menuactive="true"]
   {
-    background-color      : #333399;   /* Would bE GREAT IF HAD ACCESS TO MAC SYSTEM COLORS */
-  	color				  : white;
+    background-color      : -moz-mac-menuselect;
+  	color				  : -moz-mac-menutextselect;
   }
 
-
+/*Mac menu's don't highlight disabled items at all*/
+menupopup > menu[menuactive="true"][disabled="true"],
+menupopup > menuitem[menuactive="true"][disabled="true"],
+popup > menu[menuactive="true"][disabled="true"],
+popup > menuitem[menuactive="true"][disabled="true"]
+	{
+		background-color: inherit;
+		color: GrayText;
+	}
 /** 
  * Atomic sub-parts of standard menus
  **/
@@ -207,9 +218,9 @@ menuitem[checked="true"][menuactive="true"]
  **/
 .tooltip
   {
-    background-color      : #FFFFCC;
+    background-color      : Info;
     border                : none;
-    color                 : #000000;
+    color                 : InfoText;
     font                  : 9px geneva;
     padding               : 0px 5px 3px 4px;
     margin				  : 0px;
@@ -238,7 +249,10 @@ autorepeatbutton {
 }
 
 autorepeatbutton:hover {
-  background-color      : #333399;
+  background-color      : #333399;	/*none of the CSS system colours capture this*/
+}
+
+
 }
 
 autorepeatbutton > .autorepeatbutton-up {
