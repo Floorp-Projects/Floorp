@@ -28,9 +28,9 @@
 
 [% filtered_desc = bug.short_desc FILTER html %]
 [% filtered_timestamp = bug.delta_ts FILTER time %]
-[% bodyattrs = BLOCK %]class='bz_bug [% bug.bug_status 
-  FILTER css_class_quote %] [%+ bug.component 
-  FILTER css_class_quote %] [%+ bug.bug_id 
+[% bodyattrs = BLOCK %]class='bz_bug bz_status_[% bug.bug_status 
+  FILTER css_class_quote %] bz_component_[% bug.component 
+  FILTER css_class_quote %] bz_bug_[% bug.bug_id 
   FILTER css_class_quote %]' 
 [% END %]
 [% PROCESS global/header.html.tmpl
