@@ -101,6 +101,12 @@ iframe {
     list-style-image      : url("chrome://messenger/skin/getmsg-clicked.gif");
   } 
 
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
+  {
+    margin-left           : 27px;
+    margin-top            : 15px;
+  }
+
 #button-mark
   {
     -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
