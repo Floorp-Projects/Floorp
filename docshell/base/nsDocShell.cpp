@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: ft=cpp tw=78 sw=4 et ts=4 sts=4 cin
- *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -552,6 +551,7 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
         docShellLoadType = nsIDocShellLoadInfo::loadRefresh;
         break;
     case LOAD_BYPASS_HISTORY:
+    case LOAD_ERROR_PAGE:
         docShellLoadType = nsIDocShellLoadInfo::loadBypassHistory;
         break;
     case LOAD_STOP_CONTENT:
@@ -664,6 +664,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                         shEntry = nsnull;
                     }
                     else if ((parentLoadType == LOAD_BYPASS_HISTORY) ||
+                             (parentLoadType == LOAD_ERROR_PAGE) ||
                               (shEntry && 
                                ((parentLoadType & LOAD_CMD_HISTORY) || 
                                 (parentLoadType == LOAD_RELOAD_NORMAL) || 
@@ -1334,13 +1335,19 @@ NS_IMETHODIMP
 nsDocShell::SetCurrentURI(nsIURI *aURI)
 {
     SetCurrentURI(aURI, nsnull);
-
     return NS_OK;
 }
 
 void
 nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest)
 {
+    // We don't want to send a location change when we're displaying an error
+    // page, and we don't want to change our idea of "current URI" either
+    if (mLoadType == LOAD_ERROR_PAGE) {
+        return;
+    }
+
+
     mCurrentURI = aURI;         //This assignment addrefs
     PRBool isRoot = PR_FALSE;   // Is this the root docshell
     PRBool isSubFrame = PR_FALSE;  // Is this a subframe navigation?
@@ -2784,7 +2791,9 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 }
 
 NS_IMETHODIMP
-nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aURL)
+nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
+                             const PRUnichar *aURL,
+                             nsIChannel* aFailedChannel)
 {
     // Get prompt and string bundle servcies
     nsCOMPtr<nsIPrompt> prompter;
@@ -2942,7 +2951,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
     NS_ENSURE_FALSE(messageStr.IsEmpty(), NS_ERROR_FAILURE);
     if (mUseErrorPages) {
         // Display an error page
-        LoadErrorPage(aURI, aURL, error.get(), messageStr.get());
+        LoadErrorPage(aURI, aURL, error.get(), messageStr.get(),
+                      aFailedChannel);
     } 
     else
     {
@@ -2955,15 +2965,41 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
 
 
 NS_IMETHODIMP
-nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *aErrorType, const PRUnichar *aDescription)
+nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
+                          const PRUnichar *aErrorType,
+                          const PRUnichar *aDescription,
+                          nsIChannel* aFailedChannel)
 {
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
+        nsCAutoString spec;
+        aURI->GetSpec(spec);
+
+        nsCAutoString chanName;
+        aFailedChannel->GetName(chanName);
+
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsDocShell[%p]::LoadErrorPage(\"%s\", \"%s\", {...}, [%s])\n", this,
+                spec.get(), NS_ConvertUTF16toUTF8(aURL).get(), chanName.get()));
+    }
+#endif
+    // Create an shistory entry for the old load, if we have a channel
+    if (aFailedChannel) {
+        mURIResultedInDocument = PR_TRUE;
+        OnLoadingSite(aFailedChannel);
+        mOSHE = mLSHE;
+    }
+
     nsAutoString url;
     if (aURI)
     {
+        // Set our current URI
+        SetCurrentURI(aURI);
+
         nsCAutoString uri;
         nsresult rv = aURI->GetSpec(uri);
         NS_ENSURE_SUCCESS(rv, rv);
-        url.AssignWithConversion(uri.get());
+        CopyUTF8toUTF16(uri, url);
     }
     else if (aURL)
     {
@@ -2976,29 +3012,30 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *
 
     // Create a URL to pass all the error information through to the page.
 
-    char *escapedUrl = nsEscape(NS_ConvertUCS2toUTF8(url.get()).get(), url_Path);
-    char *escapedError = nsEscape(NS_ConvertUCS2toUTF8(aErrorType).get(), url_Path);
-    char *escapedDescription = nsEscape(NS_ConvertUCS2toUTF8(aDescription).get(), url_Path);
+    char *escapedUrl = nsEscape(NS_ConvertUTF16toUTF8(url.get()).get(), url_Path);
+    char *escapedError = nsEscape(NS_ConvertUTF16toUTF8(aErrorType).get(), url_Path);
+    char *escapedDescription = nsEscape(NS_ConvertUTF16toUTF8(aDescription).get(), url_Path);
 
-    nsAutoString errorType(aErrorType);
     nsAutoString errorPageUrl;
 
     errorPageUrl.AssignLiteral("chrome://global/content/netError.xhtml?e=");
-    errorPageUrl.AppendWithConversion(escapedError);
+    errorPageUrl.AppendASCII(escapedError);
     errorPageUrl.AppendLiteral("&u=");
-    errorPageUrl.AppendWithConversion(escapedUrl);
+    errorPageUrl.AppendASCII(escapedUrl);
     errorPageUrl.AppendLiteral("&d=");
-    errorPageUrl.AppendWithConversion(escapedDescription);
+    errorPageUrl.AppendASCII(escapedDescription);
 
     PR_FREEIF(escapedDescription);
     PR_FREEIF(escapedError);
     PR_FREEIF(escapedUrl);
-    
-    return LoadURI(errorPageUrl.get(), // URI string
-                   LOAD_FLAGS_BYPASS_HISTORY, 
-                   nsnull,
-                   nsnull,
-                   nsnull);
+
+    nsCOMPtr<nsIURI> errorPageURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return InternalLoad(errorPageURI, nsnull, nsnull, PR_TRUE, nsnull, nsnull,
+                        nsnull, nsnull, LOAD_ERROR_PAGE,
+                        nsnull, PR_TRUE, nsnull, nsnull);
 }
 
 
@@ -3665,7 +3702,8 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
     // there is no need to update the title. There is no need to
     // go to mSessionHistory to update the title. Setting it in mOSHE 
     // would suffice. 
-    if (mOSHE && (mLoadType != LOAD_BYPASS_HISTORY) && (mLoadType != LOAD_HISTORY)) {        
+    if (mOSHE && (mLoadType != LOAD_BYPASS_HISTORY) &&
+        (mLoadType != LOAD_HISTORY) && (mLoadType != LOAD_ERROR_PAGE)) {
         mOSHE->SetTitle(mTitle.get());    
     }
 
@@ -4538,7 +4576,8 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     if (httpChannel) {
         // figure out if SH should be saving layout state.
         PRBool discardLayoutState = ShouldDiscardLayoutState(httpChannel);       
-        if (mLSHE && discardLayoutState && (mLoadType & LOAD_CMD_NORMAL) && (mLoadType != LOAD_BYPASS_HISTORY))
+        if (mLSHE && discardLayoutState && (mLoadType & LOAD_CMD_NORMAL) &&
+            (mLoadType != LOAD_BYPASS_HISTORY) && (mLoadType != LOAD_ERROR_PAGE))
             mLSHE->SetSaveLayoutStateFlag(PR_FALSE);            
     }
 
@@ -5592,13 +5631,17 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // been called.
     mLSHE = aSHEntry;
 
+    nsCOMPtr<nsIRequest> req;
     rv = DoURILoad(aURI, aReferrer,
                    !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                    owner, aTypeHint, aPostData, aHeadersData, aFirstParty,
-                   aDocShell, aRequest);
+                   aDocShell, getter_AddRefs(req));
+    if (req && aRequest)
+        NS_ADDREF(*aRequest = req);
 
     if (NS_FAILED(rv)) {
-        DisplayLoadError(rv, aURI, nsnull);
+        nsCOMPtr<nsIChannel> chan(do_QueryInterface(req));
+        DisplayLoadError(rv, aURI, nsnull, chan);
     }
     
     return rv;
@@ -5666,6 +5709,11 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         loadFlags |= nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
     }
 
+    if (mLoadType == LOAD_ERROR_PAGE) {
+        // Error pages are LOAD_BACKGROUND
+        loadFlags |= nsIChannel::LOAD_BACKGROUND;
+    }
+
     // open a channel for the url
     nsCOMPtr<nsIChannel> channel;
 
@@ -5691,6 +5739,11 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             
         return rv;
     }
+
+    // Make sure to give the caller a channel if we managed to create one
+    // This is important for correct error page/session history interaction
+    if (aRequest)
+        NS_ADDREF(*aRequest = channel);
 
     channel->SetOriginalURI(aURI);
     if (aTypeHint && *aTypeHint) {
@@ -5818,9 +5871,6 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         if (aDocShell) {
           *aDocShell = this;
           NS_ADDREF(*aDocShell);
-        }
-        if (aRequest) {
-          CallQueryInterface(channel, aRequest);
         }
     }
 
@@ -6173,6 +6223,19 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
                      PRUint32 aLoadType)
 {
     NS_ASSERTION(aURI, "uri is null");
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
+        nsCAutoString spec;
+        aURI->GetSpec(spec);
+
+        nsCAutoString chanName;
+        aChannel->GetName(chanName);
+
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsDocShell[%p]::OnNewURI(\"%s\", [%s], 0x%x)\n", this, spec.get(),
+                chanName.get(), aLoadType));
+    }
+#endif
 
     PRBool updateHistory = PR_TRUE;
     PRBool equalUri = PR_FALSE;
@@ -6209,6 +6272,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
 
     // Determine if this type of load should update history.
     if (aLoadType == LOAD_BYPASS_HISTORY ||
+        aLoadType == LOAD_ERROR_PAGE ||
         aLoadType & LOAD_CMD_HISTORY ||
         aLoadType & LOAD_CMD_RELOAD)
         updateHistory = PR_FALSE;
@@ -6258,7 +6322,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         if (cacheChannel) 
             cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
         if (mLSHE)
-          mLSHE->SetCacheKey(cacheKey);
+            mLSHE->SetCacheKey(cacheKey);
     }
 
     if (updateHistory && shAvailable) { 
@@ -6357,6 +6421,20 @@ nsresult
 nsDocShell::AddToSessionHistory(nsIURI * aURI,
                                 nsIChannel * aChannel, nsISHEntry ** aNewEntry)
 {
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
+        nsCAutoString spec;
+        aURI->GetSpec(spec);
+
+        nsCAutoString chanName;
+        aChannel->GetName(chanName);
+
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsDocShell[%p]::AddToSessionHistory(\"%s\", [%s])\n", this, spec.get(),
+                chanName.get()));
+    }
+#endif
+
     nsresult rv = NS_OK;
     nsCOMPtr<nsISHEntry> entry;
     PRBool shouldPersist;

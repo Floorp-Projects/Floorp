@@ -100,6 +100,11 @@
 #include "nsDocShellTransferableHooks.h"
 #include "nsIAuthPromptProvider.h"
 
+/**
+ * Load flag for error pages. This should be bigger than all flags on
+ * nsIWebNavigation.
+ */
+#define LOAD_FLAGS_ERROR_PAGE 0x8000U
 
 #define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
 #define LOAD_TYPE_HAS_FLAGS(type, flags) ((type) & ((flags) << 16))
@@ -125,7 +130,14 @@ enum LoadType {
     LOAD_RELOAD_CHARSET_CHANGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE),
     LOAD_BYPASS_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY),
     LOAD_STOP_CONTENT = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT),
-    LOAD_STOP_CONTENT_AND_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT | nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)
+    LOAD_STOP_CONTENT_AND_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT | nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
+    /**
+     * Load type for an error page. These loads are never triggered by users of
+     * Docshell. Instead, Docshell triggers the load itself when a
+     * consumer-triggered load failed.
+     */
+    LOAD_ERROR_PAGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, LOAD_FLAGS_ERROR_PAGE)
+
     // NOTE: Adding a new value? Remember to update IsValidLoadType!
 };
 static inline PRBool IsValidLoadType(PRUint32 aLoadType)
@@ -145,6 +157,7 @@ static inline PRBool IsValidLoadType(PRUint32 aLoadType)
     case LOAD_BYPASS_HISTORY:
     case LOAD_STOP_CONTENT:
     case LOAD_STOP_CONTENT_AND_REPLACE:
+    case LOAD_ERROR_PAGE:
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -312,8 +325,13 @@ protected:
     nsresult   EnsureTransferableHookData();
     NS_IMETHOD EnsureFind();
     NS_IMETHOD RefreshURIFromQueue();
-    NS_IMETHOD DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aURL);
-    NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *aPage, const PRUnichar *aDescription);
+    NS_IMETHOD DisplayLoadError(nsresult aError, nsIURI *aURI,
+                                const PRUnichar *aURL,
+                                nsIChannel* aFailedChannel = nsnull);
+    NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
+                             const PRUnichar *aPage,
+                             const PRUnichar *aDescription,
+                             nsIChannel* aFailedChannel);
     PRBool IsPrintingOrPP(PRBool aDisplayErrorDialog = PR_TRUE);
 
     nsresult SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer);

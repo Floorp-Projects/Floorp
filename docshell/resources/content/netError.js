@@ -1,9 +1,15 @@
 // Error url MUST be formatted like this:
 //   chrome://neterror.xhtml?e=error&u=url&d=desc
 
+// Note that this file uses document.documentURI to get
+// the URL (with the format from above). This is because
+// document.location.href gets the current URI off the docshell,
+// which is the URL displayed in the location bar, i.e.
+// the URI that the user attempted to load.
+
 function getErrorCode()
 {
-  var url = document.location.href;
+  var url = document.documentURI;
   var error = url.search(/e\=/);
   var duffUrl = url.search(/\&u\=/);
   return decodeURIComponent(url.slice(error + 2, duffUrl));
@@ -11,7 +17,7 @@ function getErrorCode()
 
 function getDuffUrl()
 {
-  var url = document.location.href;
+  var url = document.documentURI;
   var duffUrl = url.search(/u\=/);
   var desc = url.search(/\&d\=/);
   return decodeURIComponent(url.slice(duffUrl + 2, desc));
@@ -19,7 +25,7 @@ function getDuffUrl()
 
 function getDescription()
 {
-  var url = document.location.href;
+  var url = document.documentURI;
   var desc = url.search(/d\=/);
   return decodeURIComponent(url.slice(desc + 2));
 }
