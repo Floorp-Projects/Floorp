@@ -128,10 +128,10 @@ typedef struct JSObjectMap       JSObjectMap;
 typedef struct JSObjectOps       JSObjectOps;
 typedef struct JSXMLObjectOps    JSXMLObjectOps;
 typedef struct JSRuntime         JSRuntime;
-typedef struct JSRuntime         JSTaskState;	/* XXX deprecated name */
+typedef struct JSRuntime         JSTaskState;   /* XXX deprecated name */
 typedef struct JSScript          JSScript;
 typedef struct JSString          JSString;
-typedef struct JSXDRState	 JSXDRState;
+typedef struct JSXDRState        JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
 typedef struct JSLocaleCallbacks JSLocaleCallbacks;
 
@@ -545,7 +545,7 @@ typedef struct JSErrorFormatString {
 
 typedef const JSErrorFormatString *
 (* JS_DLL_CALLBACK JSErrorCallback)(void *userRef, const char *locale,
-			            const uintN errorNumber);
+                                    const uintN errorNumber);
 
 #ifdef va_start
 #define JS_ARGUMENT_FORMATTER_DEFINED 1

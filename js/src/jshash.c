@@ -114,7 +114,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
 
     ht = (JSHashTable*) allocOps->allocTable(allocPriv, sizeof *ht);
     if (!ht)
-	return NULL;
+        return NULL;
     memset(ht, 0, sizeof *ht);
     ht->shift = JS_HASH_BITS - n;
     n = JS_BIT(n);
@@ -211,7 +211,7 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
         if (!ht->buckets) {
             ht->buckets = oldbuckets;
             return NULL;
-	}
+        }
         memset(ht->buckets, 0, nb);
 #ifdef HASHMETER
         ht->ngrows++;
@@ -237,7 +237,7 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
     /* Make a new key value entry */
     he = ht->allocOps->allocEntry(ht->allocPriv, key);
     if (!he)
-	return NULL;
+        return NULL;
     he->keyHash = keyHash;
     he->key = key;
     he->value = value;

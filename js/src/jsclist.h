@@ -52,35 +52,35 @@ typedef struct JSCListStr {
 /*
 ** Insert element "_e" into the list, before "_l".
 */
-#define JS_INSERT_BEFORE(_e,_l)	 \
-    JS_BEGIN_MACRO		 \
-	(_e)->next = (_l);	 \
-	(_e)->prev = (_l)->prev; \
-	(_l)->prev->next = (_e); \
-	(_l)->prev = (_e);	 \
+#define JS_INSERT_BEFORE(_e,_l)  \
+    JS_BEGIN_MACRO               \
+        (_e)->next = (_l);       \
+        (_e)->prev = (_l)->prev; \
+        (_l)->prev->next = (_e); \
+        (_l)->prev = (_e);       \
     JS_END_MACRO
 
 /*
 ** Insert element "_e" into the list, after "_l".
 */
-#define JS_INSERT_AFTER(_e,_l)	 \
-    JS_BEGIN_MACRO		 \
-	(_e)->next = (_l)->next; \
-	(_e)->prev = (_l);	 \
-	(_l)->next->prev = (_e); \
-	(_l)->next = (_e);	 \
+#define JS_INSERT_AFTER(_e,_l)   \
+    JS_BEGIN_MACRO               \
+        (_e)->next = (_l)->next; \
+        (_e)->prev = (_l);       \
+        (_l)->next->prev = (_e); \
+        (_l)->next = (_e);       \
     JS_END_MACRO
 
 /*
 ** Return the element following element "_e"
 */
-#define JS_NEXT_LINK(_e)	 \
-    	((_e)->next)
+#define JS_NEXT_LINK(_e)         \
+        ((_e)->next)
 /*
 ** Return the element preceding element "_e"
 */
-#define JS_PREV_LINK(_e)	 \
-    	((_e)->prev)
+#define JS_PREV_LINK(_e)         \
+        ((_e)->prev)
 
 /*
 ** Append an element "_e" to the end of the list "_l"
@@ -99,10 +99,10 @@ typedef struct JSCListStr {
 /*
 ** Remove the element "_e" from it's circular list.
 */
-#define JS_REMOVE_LINK(_e)	       \
-    JS_BEGIN_MACRO		       \
-	(_e)->prev->next = (_e)->next; \
-	(_e)->next->prev = (_e)->prev; \
+#define JS_REMOVE_LINK(_e)             \
+    JS_BEGIN_MACRO                     \
+        (_e)->prev->next = (_e)->next; \
+        (_e)->next->prev = (_e)->prev; \
     JS_END_MACRO
 
 /*
@@ -110,11 +110,11 @@ typedef struct JSCListStr {
 ** linkage.
 */
 #define JS_REMOVE_AND_INIT_LINK(_e)    \
-    JS_BEGIN_MACRO		       \
-	(_e)->prev->next = (_e)->next; \
-	(_e)->next->prev = (_e)->prev; \
-	(_e)->next = (_e);	       \
-	(_e)->prev = (_e);	       \
+    JS_BEGIN_MACRO                     \
+        (_e)->prev->next = (_e)->next; \
+        (_e)->next->prev = (_e)->prev; \
+        (_e)->next = (_e);             \
+        (_e)->prev = (_e);             \
     JS_END_MACRO
 
 /*
@@ -128,9 +128,9 @@ typedef struct JSCListStr {
 ** Initialize a circular list
 */
 #define JS_INIT_CLIST(_l)  \
-    JS_BEGIN_MACRO	   \
-	(_l)->next = (_l); \
-	(_l)->prev = (_l); \
+    JS_BEGIN_MACRO         \
+        (_l)->next = (_l); \
+        (_l)->prev = (_l); \
     JS_END_MACRO
 
 #define JS_INIT_STATIC_CLIST(_l) \

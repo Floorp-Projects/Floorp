@@ -1248,7 +1248,7 @@ JS_strtod(CONST char *s00, char **se, int *err)
 
     *err = 0;
 
-	bb = bd = bs = delta = NULL;
+    bb = bd = bs = delta = NULL;
     sign = nz0 = nz = 0;
     rv = 0.;
 

@@ -74,7 +74,7 @@ typedef long ptrdiff_t;
 #else /*WIN16*/
 
 #define PTRDIFF(p1, p2, type)                                 \
-	((p1) - (p2))
+        ((p1) - (p2))
 
 #endif
 

@@ -53,14 +53,14 @@ js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-	   JSTrapHandler handler, void *closure);
+           JSTrapHandler handler, void *closure);
 
 extern JS_PUBLIC_API(JSOp)
 JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 extern JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-	     JSTrapHandler *handlerp, void **closurep);
+             JSTrapHandler *handlerp, void **closurep);
 
 extern JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script);
@@ -81,11 +81,11 @@ JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
-		 JSWatchPointHandler handler, void *closure);
+                 JSWatchPointHandler handler, void *closure);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsval id,
-		   JSWatchPointHandler *handlerp, void **closurep);
+                   JSWatchPointHandler *handlerp, void **closurep);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj);
@@ -250,7 +250,7 @@ JS_SetNewScriptHook(JSRuntime *rt, JSNewScriptHook hook, void *callerdata);
 
 extern JS_PUBLIC_API(void)
 JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
-			void *callerdata);
+                        void *callerdata);
 
 /************************************************************************/
 
@@ -262,9 +262,9 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
-			const char *bytes, uintN length,
-			const char *filename, uintN lineno,
-			jsval *rval);
+                        const char *bytes, uintN length,
+                        const char *filename, uintN lineno,
+                        jsval *rval);
 
 /************************************************************************/
 
@@ -298,7 +298,7 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
-		   JSPropertyDesc *pd);
+                   JSPropertyDesc *pd);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda);

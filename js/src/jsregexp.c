@@ -3154,7 +3154,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSRegExp *re;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX)
         return JS_GetReservedSlot(cx, obj, 0, vp);
@@ -3162,20 +3162,20 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JS_LOCK_OBJ(cx, obj);
     re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
     if (re) {
-	switch (slot) {
-	  case REGEXP_SOURCE:
-	    *vp = STRING_TO_JSVAL(re->source);
-	    break;
-	  case REGEXP_GLOBAL:
-	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_GLOB) != 0);
-	    break;
-	  case REGEXP_IGNORE_CASE:
-	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0);
-	    break;
-	  case REGEXP_MULTILINE:
-	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0);
-	    break;
-	}
+        switch (slot) {
+          case REGEXP_SOURCE:
+            *vp = STRING_TO_JSVAL(re->source);
+            break;
+          case REGEXP_GLOBAL:
+            *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_GLOB) != 0);
+            break;
+          case REGEXP_IGNORE_CASE:
+            *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0);
+            break;
+          case REGEXP_MULTILINE:
+            *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0);
+            break;
+        }
     }
     JS_UNLOCK_OBJ(cx, obj);
     return JS_TRUE;
@@ -3190,7 +3190,7 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     ok = JS_TRUE;
     if (!JSVAL_IS_INT(id))
-	return ok;
+        return ok;
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
         if (!js_ValueToNumber(cx, *vp, &lastIndex))
@@ -3636,7 +3636,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     ok = JS_InstanceOf(cx, obj, &js_RegExpClass, argv);
     if (!ok)
-	return JS_FALSE;
+        return JS_FALSE;
     JS_LOCK_OBJ(cx, obj);
     re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (!re) {

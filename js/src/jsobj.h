@@ -243,18 +243,18 @@ struct JSSharpObjectMap {
 
 extern JSHashEntry *
 js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
-		    jschar **sp);
+                    jschar **sp);
 
 extern void
 js_LeaveSharpObject(JSContext *cx, JSIdArray **idap);
 
 extern JSBool
 js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-		jsval *rval);
+                jsval *rval);
 
 extern JSBool
 js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-		jsval *rval);
+                jsval *rval);
 
 extern JSBool
 js_HasOwnPropertyHelper(JSContext *cx, JSObject *obj, JSLookupPropOp lookup,
@@ -276,11 +276,11 @@ extern const char js_lookupSetter_str[];
 
 extern void
 js_InitObjectMap(JSObjectMap *map, jsrefcount nrefs, JSObjectOps *ops,
-		 JSClass *clasp);
+                 JSClass *clasp);
 
 extern JSObjectMap *
 js_NewObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-		JSClass *clasp, JSObject *obj);
+                JSClass *clasp, JSObject *obj);
 
 extern void
 js_DestroyObjectMap(JSContext *cx, JSObjectMap *map);
@@ -338,8 +338,8 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
  */
 extern JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
-		  JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-		  JSProperty **propp);
+                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
+                  JSProperty **propp);
 
 extern JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
@@ -355,7 +355,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
  */
 extern JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-		  JSProperty **propp);
+                  JSProperty **propp);
 
 /*
  * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
@@ -366,7 +366,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
 extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
-		JSProperty **propp);
+                JSProperty **propp);
 
 extern JSObject *
 js_FindIdentifierBase(JSContext *cx, jsid id);
@@ -382,11 +382,11 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
 js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-		 uintN *attrsp);
+                 uintN *attrsp);
 
 extern JSBool
 js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
-		 uintN *attrsp);
+                 uintN *attrsp);
 
 extern JSBool
 js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
@@ -402,18 +402,18 @@ js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length);
 
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-	     jsval *statep, jsid *idp);
+             jsval *statep, jsid *idp);
 
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-	       jsval *vp, uintN *attrsp);
+               jsval *vp, uintN *attrsp);
 
 extern JSBool
 js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
 js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	     jsval *rval);
+             jsval *rval);
 
 extern JSBool
 js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
@@ -429,7 +429,7 @@ js_GetClassPrototype(JSContext *cx, const char *name, JSObject **protop);
 
 extern JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
-		     uintN attrs);
+                     uintN attrs);
 
 extern JSBool
 js_ValueToObject(JSContext *cx, jsval v, JSObject **objp);
@@ -442,7 +442,7 @@ js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, jsval *rval);
 
 extern JSBool
 js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
-	     uintN argc, jsval *argv, jsval *rval);
+             uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);

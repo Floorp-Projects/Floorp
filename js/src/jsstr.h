@@ -210,44 +210,44 @@ typedef enum JSCharType {
 #define JS_CTYPE(c)     (JS_CCODE(c) & 0x1F)
 
 #define JS_ISALPHA(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                     \
-			   (1 << JSCT_LOWERCASE_LETTER) |                     \
-			   (1 << JSCT_TITLECASE_LETTER) |                     \
-			   (1 << JSCT_MODIFIER_LETTER) |                      \
-			   (1 << JSCT_OTHER_LETTER))                          \
-			  >> JS_CTYPE(c)) & 1)
+                           (1 << JSCT_LOWERCASE_LETTER) |                     \
+                           (1 << JSCT_TITLECASE_LETTER) |                     \
+                           (1 << JSCT_MODIFIER_LETTER) |                      \
+                           (1 << JSCT_OTHER_LETTER))                          \
+                          >> JS_CTYPE(c)) & 1)
 
 #define JS_ISALNUM(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                     \
-			   (1 << JSCT_LOWERCASE_LETTER) |                     \
-			   (1 << JSCT_TITLECASE_LETTER) |                     \
-			   (1 << JSCT_MODIFIER_LETTER) |                      \
-			   (1 << JSCT_OTHER_LETTER) |                         \
-			   (1 << JSCT_DECIMAL_DIGIT_NUMBER))                  \
-			  >> JS_CTYPE(c)) & 1)
+                           (1 << JSCT_LOWERCASE_LETTER) |                     \
+                           (1 << JSCT_TITLECASE_LETTER) |                     \
+                           (1 << JSCT_MODIFIER_LETTER) |                      \
+                           (1 << JSCT_OTHER_LETTER) |                         \
+                           (1 << JSCT_DECIMAL_DIGIT_NUMBER))                  \
+                          >> JS_CTYPE(c)) & 1)
 
 /* A unicode letter, suitable for use in an identifier. */
 #define JS_ISLETTER(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                    \
-			    (1 << JSCT_LOWERCASE_LETTER) |                    \
-			    (1 << JSCT_TITLECASE_LETTER) |                    \
-			    (1 << JSCT_MODIFIER_LETTER) |                     \
-			    (1 << JSCT_OTHER_LETTER) |                        \
-			    (1 << JSCT_LETTER_NUMBER))                        \
-			   >> JS_CTYPE(c)) & 1)
+                            (1 << JSCT_LOWERCASE_LETTER) |                    \
+                            (1 << JSCT_TITLECASE_LETTER) |                    \
+                            (1 << JSCT_MODIFIER_LETTER) |                     \
+                            (1 << JSCT_OTHER_LETTER) |                        \
+                            (1 << JSCT_LETTER_NUMBER))                        \
+                           >> JS_CTYPE(c)) & 1)
 
 /*
  * 'IdentifierPart' from ECMA grammar, is Unicode letter or combining mark or
  * digit or connector punctuation.
  */
 #define JS_ISIDPART(c)  ((((1 << JSCT_UPPERCASE_LETTER) |                     \
-			   (1 << JSCT_LOWERCASE_LETTER) |                     \
-			   (1 << JSCT_TITLECASE_LETTER) |                     \
-			   (1 << JSCT_MODIFIER_LETTER) |                      \
-			   (1 << JSCT_OTHER_LETTER) |                         \
-			   (1 << JSCT_LETTER_NUMBER) |                        \
-			   (1 << JSCT_NON_SPACING_MARK) |                     \
-			   (1 << JSCT_COMBINING_SPACING_MARK) |               \
-			   (1 << JSCT_DECIMAL_DIGIT_NUMBER) |                 \
-			   (1 << JSCT_CONNECTOR_PUNCTUATION))                 \
-			  >> JS_CTYPE(c)) & 1)
+                           (1 << JSCT_LOWERCASE_LETTER) |                     \
+                           (1 << JSCT_TITLECASE_LETTER) |                     \
+                           (1 << JSCT_MODIFIER_LETTER) |                      \
+                           (1 << JSCT_OTHER_LETTER) |                         \
+                           (1 << JSCT_LETTER_NUMBER) |                        \
+                           (1 << JSCT_NON_SPACING_MARK) |                     \
+                           (1 << JSCT_COMBINING_SPACING_MARK) |               \
+                           (1 << JSCT_DECIMAL_DIGIT_NUMBER) |                 \
+                           (1 << JSCT_CONNECTOR_PUNCTUATION))                 \
+                          >> JS_CTYPE(c)) & 1)
 
 /* Unicode control-format characters, ignored in input */
 #define JS_ISFORMAT(c) (((1 << JSCT_FORMAT) >> JS_CTYPE(c)) & 1)
@@ -372,7 +372,7 @@ js_ValueToString(JSContext *cx, jsval v);
 extern JSString *
 js_ValueToSource(JSContext *cx, jsval v);
 
-#ifdef HT_ENUMERATE_NEXT	/* XXX don't require jshash.h */
+#ifdef HT_ENUMERATE_NEXT        /* XXX don't require jshash.h */
 /*
  * Compute a hash function from str.
  */

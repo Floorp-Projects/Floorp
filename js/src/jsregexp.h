@@ -127,7 +127,7 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re);
  */
 extern JSBool
 js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
-		 JSBool test, jsval *rval);
+                 JSBool test, jsval *rval);
 
 /*
  * These two add and remove GC roots, respectively, so their calls must be
