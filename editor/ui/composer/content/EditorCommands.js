@@ -179,7 +179,7 @@ function EditorInsertLink()
 	    dump("Link Properties Dialog starting...\n");
       var toolkitCore = GetToolkitCore();
       if (toolkitCore) {
-        toolkitCore.ShowModalDialog("chrome://editordialogs/content/EdLinkProps.xul",
+        toolkitCore.ShowModalDialog("chrome://editordlgs/content/EdLinkProps.xul",
             window);
       }
     } else {
