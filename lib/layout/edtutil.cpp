@@ -5524,9 +5524,13 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
     char * pPasswordSingleSignon = NULL;
     SI_RestoreOldSignonDataFromBrowser(
         pMWContext, pURL, FALSE, &pUserNameSingleSignon, &pPasswordSingleSignon);
-    if (pUserNameSingleSignon) {
-        *ppUserName = pUserNameSingleSignon;
-        *ppPassword = pPasswordSingleSignon;
+    if (pUserNameSingleSignon)
+    {
+        if( ppUserName )
+            *ppUserName = pUserNameSingleSignon;
+        if( ppPassword )
+            *ppPassword = pPasswordSingleSignon;
+
         // If we found a name, we assume the location part of 
         //   URL is correct, so just return that
         return EDT_ReplaceFilename(pURL, NULL, TRUE);
@@ -5549,9 +5553,7 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
     XP_Bool bUseDefault = FALSE;
 
     if( bLastPublishFailed ){
-        // The publish destination should be saved to this at start of publishing (thus may not be "correct")
-        // The destination should also be saved to the first history pref (editor.publish_history_0) 
-        //  but only if publishing succeeded
+        // use the last location saved - this will be the location we failed at before
         PREF_CopyCharPref("editor.publish_last_loc", &pPrefURL);
     } else {
         // Use the last successfully-used location saved in preferences
@@ -5567,9 +5569,6 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
 
     char * pLocation = 0;
     char * pUserName = ppUserName ? *ppUserName : 0;
-    
-    // Parse the preference string to extract Username
-    //  (password is separate for security munging)
     NET_ParseUploadURL( pPrefURL, &pLocation, &pUserName, NULL );
 
 	if (ppUserName)
@@ -5601,11 +5600,20 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
 //    NOTE: CALLER MUST FREE THE RETURNED STRINGS
 #define MAX_PUBLISH_LOCATIONS 20
 
+#ifdef XP_WIN
+XP_Bool
+EDT_GetPublishingHistory(MWContext *pMWContext,
+                         unsigned n,
+						 char** ppLocation,
+						 char** ppUsername,
+						 char** ppPassword)
+#else 
 XP_Bool
 EDT_GetPublishingHistory(unsigned n,
-						 char** location_r,
-						 char** username_r,
-						 char** password_r)
+						 char** ppLocation,
+						 char** ppUsername,
+						 char** ppPassword)
+#endif
 {
 	char  prefname[32];
 	char* prefvalue = NULL;
@@ -5619,29 +5627,41 @@ EDT_GetPublishingHistory(unsigned n,
         prefvalue == NULL || prefvalue[0] == '\0')
 		return FALSE;
 
-	if (location_r != NULL)
-        *location_r = NULL; /* else NET_ParseUploadURL() will try to free! */
-	if (username_r != NULL)
-		*username_r = NULL;
+	if (ppLocation != NULL)
+        *ppLocation = NULL; /* else NET_ParseUploadURL() will try to free! */
+	if (ppUsername != NULL)
+		*ppUsername = NULL;
 
 	XP_Bool return_value;
-	return_value = NET_ParseUploadURL(prefvalue, location_r, username_r, NULL);
-	XP_FREE(prefvalue); // done with this now.
+	return_value = NET_ParseUploadURL(prefvalue, ppLocation, ppUsername, NULL);
 
     if (!return_value)
-		return FALSE;
+    {
+        XP_FREE(prefvalue);
+    	return FALSE;
+    }
 
-	if (password_r != NULL) {
-		XP_SPRINTF(prefname, "editor.publish_password_%d", n);
+	if (ppPassword != NULL)
+    {
+#ifdef XP_WIN
+#if defined(SingleSignon)
+        // Check if we saved a username/password for this URL via SingleSignon
+        char * pUserNameSingleSignon = NULL;
+        char * pPasswordSingleSignon = NULL;
+        SI_RestoreOldSignonDataFromBrowser(
+                    pMWContext, *ppLocation, FALSE, &pUserNameSingleSignon, &pPasswordSingleSignon);
 
-		if (PREF_CopyCharPref(prefname, &prefvalue) != -1 && prefvalue && *prefvalue) {
-			*password_r = HG99879(prefvalue);
-		} else {
-			*password_r = NULL;
-		}
-		if (prefvalue != NULL)
-			XP_FREE(prefvalue);
+        if (pUserNameSingleSignon)
+        {
+            if( ppUsername )
+                *ppUsername = pUserNameSingleSignon;
+            if( ppPassword )
+                *ppPassword = pPasswordSingleSignon;
+        }
+#endif
+#endif
 	}
+    XP_FREEIF(prefvalue);
 	return TRUE;
 }
 
@@ -5650,7 +5670,6 @@ void edt_SyncPublishingHistory(MWContext *pMWContext)
 	char  prefname[32];
 	char* prefvalue = NULL;
 	char* pLastLoc = NULL;
-	char* pLastPass = NULL;
 	int   i;
 	
 	/*
@@ -5661,19 +5680,7 @@ void edt_SyncPublishingHistory(MWContext *pMWContext)
 	if( PREF_CopyCharPref("editor.publish_last_loc", &pLastLoc) == -1 ||
         !pLastLoc || !*pLastLoc )
         return;
-	PREF_CopyCharPref("editor.publish_last_pass", &pLastPass);
-	
 
-#if defined(SingleSignon)
-    char *pLocation = NULL;
-    char *pUsername = NULL;
-    // Separate the location from the username
-    if( NET_ParseUploadURL( pLastLoc, &pLocation, &pUsername, NULL )) 
-    {
-        SI_RememberSignonDataFromBrowser(
-            pMWContext, pLocation, pUsername, pLastPass);
-    }
-#endif 
     /*
 	 *    First scan the list to find pref that matches new item
 	 */
@@ -5700,27 +5707,14 @@ void edt_SyncPublishingHistory(MWContext *pMWContext)
 		XP_SPRINTF(prefname, "editor.publish_history_%d", i);
 		PREF_SetCharPref(prefname, prefvalue);
         XP_FREEIF(prefvalue);
-		
-		XP_SPRINTF(prefname, "editor.publish_password_%d", i-1);
-		PREF_CopyCharPref(prefname, &prefvalue);
-		XP_SPRINTF(prefname, "editor.publish_password_%d", i);
-		PREF_SetCharPref(prefname, prefvalue);
-        XP_FREEIF(prefvalue);
-	}
+    }
 	
 	/*
 	 *    Now set the zero'th one.
 	 */
 	PREF_SetCharPref("editor.publish_history_0", pLastLoc);
-	PREF_SetCharPref("editor.publish_password_0", pLastPass);
-	
     XP_FREEIF(pLastLoc);
-	XP_FREEIF(pLastPass);
 }
-
-//
-// This was placed in EDT.H so front ends can use it as well
-// #define MAX_EDIT_HISTORY_LOCATIONS 10 
 
 // Cache the Edit History data
 static char** ppEditHistoryURLs = NULL;
@@ -6332,6 +6326,29 @@ XP_Bool EDT_AdjustTableRectForCaption(LO_TableStruct *pTable, XP_Rect *pRect)
         }
     }
     return FALSE;
+}
+
+void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername)
+{
+    // Save the location and username given to us by NetLib
+    //  when it prompts for a username and password
+    if( pContext && pAddress && *pAddress && pUsername )
+    {
+        GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
+        // Copy the address and strip off the filename from the supplied URL
+        char *pNewLocation = EDT_ReplaceFilename(pAddress, 0, TRUE);            
+
+        if( pNewLocation )
+        {
+            char *pPrefLocation = 0;
+            // Insert the username into the location string and save in prefs
+            if( NET_MakeUploadURL(&pPrefLocation, pNewLocation, pUsername, 0) )
+                PREF_SetCharPref("editor.publish_last_loc", pPrefLocation);
+
+            XP_FREEIF(pPrefLocation);
+            XP_FREE(pNewLocation);
+        }
+    }
 }
 
 #endif // EDITOR

@@ -647,7 +647,8 @@ ED_FileError EDT_PublishFile( MWContext * pContext,
                            char * pDestFullURL, /* may not have trailing slash */
                            XP_Bool   bKeepImagesWithDoc,
                            XP_Bool   bAutoAdjustLinks,
-                           XP_Bool   bSavePassword ) {
+                           XP_Bool   /*bSavePassword*/ ) // Not used any more
+{
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) ED_ERROR_BLOCKED;
 
     int type = NET_URL_Type(pDestFullURL);
@@ -655,62 +656,53 @@ ED_FileError EDT_PublishFile( MWContext * pContext,
     char *pLocation = NULL;
     char *pUsername = NULL;
     char *pPassword = NULL;
-    if (!NET_ParseUploadURL( pDestFullURL, &pLocation, 
-                             &pUsername, &pPassword )) {
-        // This also checks if the URL is complete garbage.
+    // This also checks if the URL is complete garbage.
+    if (!NET_ParseUploadURL( pDestFullURL, &pLocation, &pUsername, &pPassword ))
         return ED_ERROR_BAD_URL;
-    }                
     
     // Assemble a URL that includes username, but not password and filename
     char * pDestDirectory = EDT_ReplaceFilename(pLocation, NULL, TRUE);
-    if( pDestDirectory ){
+
+    // Save the location and username preferences
+    if( pDestDirectory )
+    {
         char * pPrefLocation = NULL;
-        if (NET_MakeUploadURL(&pPrefLocation,pDestDirectory,pUsername,NULL)) {
+        if (NET_MakeUploadURL(&pPrefLocation, pDestDirectory, pUsername, NULL))
+        {
             // Save as the "last location" in preferences
        		PREF_SetCharPref("editor.publish_last_loc", pPrefLocation);
-
-            //  Save the password if user wants us to (and we have one!)
-            //  Also set the preference we use for initial state of "save password" checkbox
-            if( pPassword && *pPassword ){
-                if( bSavePassword ){    
-                    // NOTE: Password remembering is now handled by "Single Signon" system
-                    // All we do here is save the password in a pref so edt_SyncPublishingHistory
-                    // can get it and pass     
-                    char * pass = HG99875(pPassword);
-                    PREF_SetCharPref("editor.publish_last_pass",pass);
-			        PREF_SetBoolPref("editor.publish_save_password",TRUE);
-                    XP_FREE(pass);
-                } else {
-			        PREF_SetBoolPref("editor.publish_save_password",FALSE);
-                }
-            }
         }
+        XP_FREEIF(pPrefLocation);
     }
     
     // FTP  
-    if (type == FTP_TYPE_URL) {
+    if (type == FTP_TYPE_URL)
+    {
         // For ftp, set dest URL to ftp://username@path, so will edit
         // properly.  Explicitly put the username in the URL.
-       if (pUsername) {
+       if (pUsername)
+       {
           char *pUsernameLocation = NULL;
-          if (NET_MakeUploadURL(&pUsernameLocation,pLocation,pUsername,NULL)) {
+          if (NET_MakeUploadURL(&pUsernameLocation, pLocation, pUsername,NULL))
+          {
               XP_FREEIF(pLocation);
               pLocation = pUsernameLocation;
           }
        }
 
-       retVal = pEditBuffer->PublishFile(finishedOpt,pSourceURL,ppIncludedFiles,
-                    pLocation,pUsername,pPassword,
-                    bKeepImagesWithDoc,bAutoAdjustLinks);
+       // Note that we rely on SingleSignon to supply a memorized password now
+       retVal = pEditBuffer->PublishFile(finishedOpt, pSourceURL, ppIncludedFiles,
+                    pLocation, pUsername,0, bKeepImagesWithDoc,bAutoAdjustLinks);
     }
 
     // HTTP
-    else if (type == HTTP_TYPE_URL || type == SECURE_HTTP_TYPE_URL) {
-        retVal = pEditBuffer->PublishFile(finishedOpt,pSourceURL,ppIncludedFiles,
-                    pLocation,pUsername,pPassword,
-                    bKeepImagesWithDoc,bAutoAdjustLinks);
+    else if (type == HTTP_TYPE_URL || type == SECURE_HTTP_TYPE_URL)
+    {
+        retVal = pEditBuffer->PublishFile(finishedOpt, pSourceURL, ppIncludedFiles,
+                    pLocation, pUsername, pPassword, bKeepImagesWithDoc,bAutoAdjustLinks);
     }
-    else {
+    else
+    {
         // We should have already made sure pDestURL is ftp or http before getting here.
         XP_ASSERT(0);
         retVal = ED_ERROR_BLOCKED;
