@@ -670,6 +670,9 @@ nsNativeAppSupportOS2::CheckConsole() {
               strcpy(pszArgString, TURBOD);
               strcat(pszArgString, " -l -p ");
               strcat(pszArgString, __argv[0]);
+              char *pchar = strrchr(pszArgString, '\\');
+              pchar++;
+              *pchar = '\0';
               pszArgString[strlen(TURBOD)] = '\0';
        
               rc = DosExecPgm(NULL,0,EXEC_BACKGROUND,
