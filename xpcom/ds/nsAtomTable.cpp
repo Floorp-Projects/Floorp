@@ -277,10 +277,12 @@ void NS_PurgeAtomTable()
 #endif
     PL_DHashTableFinish(&gAtomTable);
     gAtomTable.entryCount = 0;
-    
-    PL_FinishArenaPool(gStaticAtomArena);
-    delete gStaticAtomArena;
-    gStaticAtomArena = nsnull;
+
+    if (gStaticAtomArena) {
+      PL_FinishArenaPool(gStaticAtomArena);
+      delete gStaticAtomArena;
+      gStaticAtomArena = nsnull;
+    }
   }
 }
 
