@@ -640,7 +640,7 @@ AC_STRUCT_ST_RDEV
 AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
 
-dnl Check for int16_t, int32_t, uint, and uint16_t.
+dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
 dnl ========================================================
 AC_MSG_CHECKING(for int16_t)
 AC_CACHE_VAL(ac_cv_int16_t,
@@ -668,6 +668,32 @@ if test "$ac_cv_int32_t" = true ; then
 else
   AC_MSG_RESULT(no)
 fi
+AC_MSG_CHECKING(for int64_t)
+AC_CACHE_VAL(ac_cv_int64_t,
+ [AC_TRY_COMPILE([#include <stdio.h>
+                  #include <sys/types.h>],
+                 [int64_t foo = 0;],
+                 [ac_cv_int64_t=true],
+                 [ac_cv_int64_t=false])])
+if test "$ac_cv_int64_t" = true ; then
+  AC_DEFINE(HAVE_INT64_T)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+AC_MSG_CHECKING(for int64)
+AC_CACHE_VAL(ac_cv_int64,
+ [AC_TRY_COMPILE([#include <stdio.h>
+                  #include <sys/types.h>],
+                 [int64 foo = 0;],
+                 [ac_cv_int64=true],
+                 [ac_cv_int64=false])])
+if test "$ac_cv_int64" = true ; then
+  AC_DEFINE(HAVE_INT64)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
 AC_MSG_CHECKING(for uint)
 AC_CACHE_VAL(ac_cv_uint,
  [AC_TRY_COMPILE([#include <stdio.h>
@@ -677,6 +703,19 @@ AC_CACHE_VAL(ac_cv_uint,
                  [ac_cv_uint=false])])
 if test "$ac_cv_uint" = true ; then
   AC_DEFINE(HAVE_UINT)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+AC_MSG_CHECKING(for uint_t)
+AC_CACHE_VAL(ac_cv_uint_t,
+ [AC_TRY_COMPILE([#include <stdio.h>
+                  #include <sys/types.h>],
+                 [uint foo = 0;],
+                 [ac_cv_uint_t=true],
+                 [ac_cv_uint_t=false])])
+if test "$ac_cv_uint_t" = true ; then
+  AC_DEFINE(HAVE_UINT_T)
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
