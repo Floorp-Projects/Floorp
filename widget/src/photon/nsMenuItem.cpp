@@ -568,7 +568,8 @@ NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
 NS_IMETHODIMP nsMenuItem::SetShortcutChar(const nsString &aText)
 {
   PR_LOG(PhWidLog, PR_LOG_ERROR,("nsMenuItem::SetShortcut - Not Implemented\n"));
-//  mKeyEquivalent = aText;
+
+  mKeyEquivalent = aText;
   return NS_OK;
 }
 
@@ -576,7 +577,8 @@ NS_IMETHODIMP nsMenuItem::SetShortcutChar(const nsString &aText)
 NS_IMETHODIMP nsMenuItem::GetShortcutChar(nsString &aText)
 {
   PR_LOG(PhWidLog, PR_LOG_ERROR,("nsMenuItem::GetShortcut - Not Implemented\n"));
-//  aText = mKeyEquivalent;
+
+  aText = mKeyEquivalent;
   return NS_OK;
 }
 
@@ -585,7 +587,7 @@ NS_IMETHODIMP nsMenuItem::SetModifiers(PRUint8 aModifiers)
 {
   PR_LOG(PhWidLog, PR_LOG_ERROR,("nsMenuItem::SetModifiers - Not Implemented\n"));
 
-//  mModifiers = aModifiers;
+  mModifiers = aModifiers;
   return NS_OK;
 }
 
@@ -594,7 +596,7 @@ NS_IMETHODIMP nsMenuItem::GetModifiers(PRUint8 * aModifiers)
 {
   PR_LOG(PhWidLog, PR_LOG_ERROR,("nsMenuItem::GetModifiers - Not Implemented\n"));
 
-//  *aModifiers = mModifiers; 
+  *aModifiers = mModifiers; 
   return NS_OK;
 }
 

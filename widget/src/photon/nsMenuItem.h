@@ -97,6 +97,8 @@ protected:
 
 
   nsString           mLabel;
+  nsString     		 mKeyEquivalent;
+  PRUint8      		 mModifiers;
   PRUint32           mCommand;
   nsIMenu           *mMenuParent;
   nsIPopUpMenu      *mPopUpParent;
