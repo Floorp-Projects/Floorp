@@ -541,7 +541,7 @@ JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
  * Classes, objects, and properties.
  */
 struct JSClass {
-    char                *name;
+    const char          *name;
     uint32              flags;
 
     /* Mandatory non-null function pointer members. */

@@ -2483,7 +2483,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 #endif /* !JS_HAS_XDR */
 
 JSClass js_RegExpClass = {
-    (char *)js_RegExp_str,
+    js_RegExp_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  regexp_getProperty, regexp_setProperty,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,     regexp_finalize,
