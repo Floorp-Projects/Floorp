@@ -208,11 +208,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     margin-right          : 1px;
   }
   
-#homebutton
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
-  }
-  
 .menuitem-iconic
   {
     padding               : 0px !important;

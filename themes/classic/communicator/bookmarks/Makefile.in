@@ -37,6 +37,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	bookmark-item.gif \
 	bookmarks.css \
         home.gif \
+        home-hover.gif \
+        home-active.gif \
         iefavorite.gif \
         iefolder.gif \
         personal-folder-closed.gif \

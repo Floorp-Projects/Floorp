@@ -20,6 +20,23 @@
  * Contributor(s): 
  */
 
+#homebutton
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
+  }
+  
+#homebutton:hover
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/home-hover.gif");
+  }
+  
+#homebutton:active
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/home-active.gif");
+  }
+  
+
+
 .bookmarkitem
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif");

@@ -215,11 +215,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://communicator/skin/search-active.gif");
   }
 
-#homebutton
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
-  }
-  
 .menuitem-iconic
   {
     padding               : 2px;
