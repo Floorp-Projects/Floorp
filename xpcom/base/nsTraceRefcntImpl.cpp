@@ -199,16 +199,23 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
 
     if (ok) {
       int nameLen = strlen(symbol->Name);
-      if (nameLen + 2 > aBufLen) {
+      if (nameLen + 12 > aBufLen) { // 12 == strlen("+0x12345678 ")
         break;
       }
-      memcpy(cp, symbol->Name, nameLen);
-      cp += nameLen;
-      *cp++ = ' ';
-      aBufLen -= nameLen + 1;
+      char* cp2 = symbol->Name;
+      while (*cp2) {
+        if (*cp2 == ' ') *cp2 = '_'; // replace spaces with underscores
+        *cp++ = *cp2++;
+      }
+      aBufLen -= nameLen;
+      char tmp[30];
+      PR_snprintf(tmp, sizeof(tmp), "+0x%08x ", displacement);
+      memcpy(cp, tmp, 12);
+      cp += 12;
+      aBufLen -= nameLen + 12;
     }
     else {
-      if (11 > aBufLen) {
+      if (11 > aBufLen) { // 11 == strlen("0x12345678 ")
         break;
       }
       char tmp[30];
