@@ -86,6 +86,7 @@ endif
 	cp $(topsrcdir)/dist/bin/shlibsign* ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/xpicleanup* ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/chrome/chrome.rdf ./MozillaSunbird/chrome
+	cp $(topsrcdir)/dist/bin/chrome/*.txt ./MozillaSunbird/chrome
 	cp $(topsrcdir)/dist/bin/chrome/US.jar ./MozillaSunbird/chrome
 	cp $(topsrcdir)/dist/bin/chrome/classic.jar ./MozillaSunbird/chrome
 	cp $(topsrcdir)/dist/bin/chrome/embed-sample.jar ./MozillaSunbird/chrome
@@ -254,9 +255,7 @@ endif
 	cp $(topsrcdir)/dist/bin/components/search.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/sidebar.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsSidebar.js ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/related.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/jsconsole-clhandler.js ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/nsUpdateNotifier.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsResetPref.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsKillAll.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/windowds.xpt ./MozillaSunbird/components
@@ -288,6 +287,19 @@ endif
 	cp $(topsrcdir)/dist/bin/components/proxyObj*.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)jsd*$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/docshell*.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/downloadmanager.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/extensions.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/libnegotiateauth.so ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/migration.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/nsBackgroundUpdateService.js ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/nsDownloadProgressListener.js ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/nsExtensionManager.js ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/nsSetDefaultBrowser.js ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/passwordmgr.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/shellservice.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/toolkitprofile.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/update.xpt ./MozillaSunbird/components
+	cp -r $(topsrcdir)/dist/bin/extensions ./MozillaSunbird/
 
 sunbirdunix::
 	cp $(topsrcdir)/dist/bin/components/filepicker.xpt ./MozillaSunbird/components
