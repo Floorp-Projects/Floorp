@@ -487,6 +487,8 @@ protected:
 
   PRBool IsInitialized() const;
 
+  PRInt32 GetWidthInCharacters() const;
+
 
 protected:
   nsIWebShell* mWebShell;
