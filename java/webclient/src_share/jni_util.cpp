@@ -679,7 +679,6 @@ JNU_GetEnv(JavaVM *vm, jint version)
     vm->AttachCurrentThread((void **)&result, (void *) version);
 #else
     vm->AttachCurrentThread( &result, ( void * )version);
-+
 #endif
 
 #endif
