@@ -137,7 +137,7 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
     if (NS_FAILED(rv)) goto loser;
 
     rv = dialogs->SetPassword(ctx,
-                              tokenName,
+                              tokenName.get(),
                               &canceled);
     NS_RELEASE(dialogs);
     if (NS_FAILED(rv)) goto loser;

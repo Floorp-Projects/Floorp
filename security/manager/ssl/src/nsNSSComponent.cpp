@@ -177,7 +177,7 @@ nsNSSComponent::InstallLoadableRoots()
   if (!hasRoot) {
     nsresult rv;
     nsString modName;
-    rv = GetPIPNSSBundleString(NS_LITERAL_STRING("RootCertModuleName"),
+    rv = GetPIPNSSBundleString(NS_LITERAL_STRING("RootCertModuleName").get(),
                                modName);
     if (NS_FAILED(rv)) return;
 
@@ -256,32 +256,34 @@ nsNSSComponent::ConfigureInternalPKCS11Token()
   char *fipsSlotDescription        = NULL;
   char *fipsPrivateSlotDescription = NULL; 
 
-  manufacturerID = GetPK11String(NS_LITERAL_STRING("ManufacturerID"), 
+  manufacturerID = GetPK11String(NS_LITERAL_STRING("ManufacturerID").get(), 
                                  SHORT_PK11_STRING);
   if (manufacturerID == NULL) goto loser;
-  libraryDescription = GetPK11String(NS_LITERAL_STRING("LibraryDescription"), 
-                                     SHORT_PK11_STRING);
+  libraryDescription = 
+              GetPK11String(NS_LITERAL_STRING("LibraryDescription").get(), 
+                            SHORT_PK11_STRING);
   if (libraryDescription == NULL) goto loser;
-  tokenDescription = GetPK11String(NS_LITERAL_STRING("TokenDescription"), 
+  tokenDescription = GetPK11String(NS_LITERAL_STRING("TokenDescription").get(), 
                                    SHORT_PK11_STRING);
   if (tokenDescription == NULL) goto loser;
   privateTokenDescription = 
-                    GetPK11String(NS_LITERAL_STRING("PrivateTokenDescription"), 
-                                  SHORT_PK11_STRING);
+              GetPK11String(NS_LITERAL_STRING("PrivateTokenDescription").get(), 
+                            SHORT_PK11_STRING);
   if (privateTokenDescription == NULL) goto loser;
-  slotDescription = GetPK11String(NS_LITERAL_STRING("SlotDescription"), 
+  slotDescription = GetPK11String(NS_LITERAL_STRING("SlotDescription").get(), 
                                   LONG_PK11_STRING);
   if (slotDescription == NULL) goto loser;
   privateSlotDescription = 
-                     GetPK11String(NS_LITERAL_STRING("PrivateSlotDescription"), 
+              GetPK11String(NS_LITERAL_STRING("PrivateSlotDescription").get(), 
                                    LONG_PK11_STRING);
   if (privateSlotDescription == NULL) goto loser;
-  fipsSlotDescription = GetPK11String(NS_LITERAL_STRING("FipsSlotDescription"),
-                                      LONG_PK11_STRING);
+  fipsSlotDescription = 
+              GetPK11String(NS_LITERAL_STRING("FipsSlotDescription").get(),
+                            LONG_PK11_STRING);
   if (fipsSlotDescription == NULL) goto loser;
   fipsPrivateSlotDescription = 
-                 GetPK11String(NS_LITERAL_STRING("FipsPrivateSlotDescription"), 
-                               LONG_PK11_STRING);
+          GetPK11String(NS_LITERAL_STRING("FipsPrivateSlotDescription").get(), 
+                        LONG_PK11_STRING);
   if (fipsPrivateSlotDescription == NULL) goto loser;
 
   PK11_ConfigurePKCS11(manufacturerID, libraryDescription, tokenDescription,

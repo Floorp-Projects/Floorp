@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.4 2001/03/07 19:24:11 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.5 2001/03/08 23:15:16 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -595,7 +595,7 @@ nsNSSCertificateDB::ImportCertificate(nsIX509Cert *cert,
                                       PRUint32 trusted,
                                       const PRUnichar *nickname)
 {
-  SECStatus srv;
+  SECStatus srv = SECFailure;
   nsresult nsrv;
   CERTCertificate *tmpCert = NULL;
   nsNSSCertTrust trust;
@@ -654,9 +654,8 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
                                  PRUint32      type, 
                                  nsString&     nameList)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   CERTCertListNode *node;
-  int i, num = 0;
+  
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("List of certs:\n"));
   for (node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node, certList);

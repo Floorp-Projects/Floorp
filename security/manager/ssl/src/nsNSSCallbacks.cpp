@@ -92,12 +92,12 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   if (NS_FAILED(rv))
     return nsnull; 
 
-  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertPassPrompt"),
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertPassPrompt").get(),
                                       promptString);
 
   PRUnichar *uniString = promptString.ToNewUnicode();
   rv = proxyPrompt->PromptPassword(nsnull, uniString,
-                                   NS_LITERAL_STRING(" "),
+                                   NS_LITERAL_STRING(" ").get(),
                                    nsIPrompt::SAVE_PASSWORD_NEVER,
                                    &password, &value);
   nsMemory::Free(uniString);
@@ -140,7 +140,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
       if (NS_FAILED(rv))
         return; 
 
-      rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SignedBy"),
+      rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SignedBy").get(),
                                                      formatStrings, 1,
                                                      getter_Copies(shortDesc));
 
