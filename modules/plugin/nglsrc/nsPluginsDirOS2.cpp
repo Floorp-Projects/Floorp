@@ -1,4 +1,4 @@
-/*
+	/*
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -67,20 +67,20 @@ static char *LoadRCDATAString( HMODULE hMod, ULONG resid)
 
 static PRUint32 CalculateVariantCount(char* mimeTypes)
 {
-	PRUint32 variants = 1;
+  PRUint32 variants = 1;
 
   if(mimeTypes == nsnull)
     return 0;
 
-	char* index = mimeTypes;
-	while (*index)
-	{
-		if (*index == '|')
-			variants++;
+  char* index = mimeTypes;
+  while (*index)
+  {
+    if (*index == '|')
+    variants++;
 
-		++index;
-	}
-	return variants;
+    ++index;
+  }
+  return variants;
 }
 
 static char** MakeStringArray(PRUint32 variants, char* data)
@@ -183,14 +183,13 @@ nsresult nsPluginFile::LoadPlugin( PRLibrary *&outLibrary)
 nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 {
    nsresult   rc = NS_ERROR_FAILURE;
-   nsNSPRPath nsprpath( *this);
    HMODULE    hPlug = 0; // Need a HMODULE to query resource statements
    char       failure[ CCHMAXPATH] = "";
    APIRET     ret;
 
-   const char *pszNative = nsprpath;
-   ret = DosLoadModule( failure, CCHMAXPATH, pszNative, &hPlug);
- 
+   const char* path = this->GetCString();
+   ret = DosLoadModule( failure, CCHMAXPATH, path, &hPlug);
+
    while( ret == NO_ERROR)
    {
       info.fPluginInfoSize = sizeof( nsPluginInfo);
@@ -201,8 +200,6 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 
       // get description (doesn't matter if it's missing)...
       info.fDescription = LoadRCDATAString( hPlug, NS_INFO_FileDescription);
-
-      PRUint32 variants = 0;
 
       char * mimeType = LoadRCDATAString( hPlug, NS_INFO_MIMEType);
       if( nsnull == mimeType) break;
@@ -215,14 +212,16 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 
       info.fVariantCount = CalculateVariantCount(mimeType);
 
-      info.fMimeTypeArray = MakeStringArray(variants, mimeType);
+      info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);
       if( info.fMimeTypeArray == nsnull) break;
 
-      info.fMimeDescriptionArray = MakeStringArray(variants, mimeDescription);
+      info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, mimeDescription);
       if( nsnull == info.fMimeDescriptionArray) break;
 
-      info.fExtensionArray = MakeStringArray(variants, extensions);
+      info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
       if( nsnull == info.fExtensionArray) break;
+
+      info.fFileName = PL_strdup(path);
 
       rc = NS_OK;
       break;
