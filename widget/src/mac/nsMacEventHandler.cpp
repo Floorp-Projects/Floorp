@@ -1089,6 +1089,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 
 		case inGoAway:
 		{
+			ResetInputState();	// IM:TEXT 7-23 said we need to call FixTSMDocument when we go away...
 			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
 				gRollupListener->Rollup();
 			}
@@ -1103,7 +1104,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
 			if (widgetHit)
 			{
-			
+				ResetInputState();	
 #ifdef NOTNOW
 				if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
 					nsRect	widgetRect,newrect;
@@ -1933,3 +1934,13 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 	} 
 	return res;
 }
+nsresult nsMacEventHandler::ResetInputState()
+{
+	OSErr err = noErr;
+	if (mTSMDocument) {
+		err = ::FixTSMDocument(mTSMDocument);
+		NS_ASSERTION( (noErr==err)||(tsmDocNotActiveErr==err)||(tsmTSNotOpenErr), "Cannot FixTSMDocument");
+	}
+	return NS_OK;	
+}
+

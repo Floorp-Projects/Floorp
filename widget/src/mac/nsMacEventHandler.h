@@ -97,6 +97,7 @@ public:
 		virtual long 		HandlePositionToOffset(Point aPoint,short* regionClass);
 		virtual nsresult 	HandleOffsetToPosition(long offset,Point* position);
 		virtual nsresult	HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
+		virtual nsresult	ResetInputState();
 		
 protected:
 #if 1

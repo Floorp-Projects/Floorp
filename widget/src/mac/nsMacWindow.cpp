@@ -96,6 +96,26 @@ SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers
 
 } // SetDragActionBasedOnModifiers
 
+#pragma mark -
+
+NS_IMPL_ADDREF(nsMacWindow);
+NS_IMPL_RELEASE(nsMacWindow);
+nsresult nsMacWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+	if (NULL == aInstancePtr) {
+	    return NS_ERROR_NULL_POINTER;
+	}
+
+	if (aIID.Equals(nsIKBStateControl::GetIID())) {
+	    *aInstancePtr = (void*) ((nsIKBStateControl*)this);
+	    AddRef();
+	    return NS_OK;
+	}
+
+	return nsChildWindow::QueryInterface(aIID,aInstancePtr);
+}
+
+#pragma mark -
 
 
 //еее this should probably go into the drag session as a static
@@ -759,4 +779,12 @@ PRBool nsMacWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt1
 	return retVal;
 }
 
-
+NS_IMETHODIMP nsMacWindow::ResetInputState()
+{
+	return mMacEventHandler->ResetInputState();
+}
+NS_IMETHODIMP nsMacWindow::PasswordFieldInit()
+{
+	// to be implemented
+	return NS_OK;
+}

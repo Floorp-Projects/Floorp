@@ -187,10 +187,10 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
 
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kCWindow)) {
-        inst = (nsISupports*)new nsMacWindow();
+        inst = (nsISupports*)(nsBaseWidget*)new nsMacWindow();
     }
     else if (mClassID.Equals(kCPopUp)) {
-        inst = (nsISupports*)new nsMacWindow();
+        inst = (nsISupports*)(nsBaseWidget*)new nsMacWindow();
     }
     else if (mClassID.Equals(kCChild)) {
         inst = (nsISupports*)new ChildWindow();
