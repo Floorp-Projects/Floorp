@@ -2140,8 +2140,10 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
             // updating after reading.
             oid |= MFL_OBJECT_DEF_TAG;
             classInfo = do_QueryInterface(aObject);
-            if (!classInfo)
+            if (!classInfo) {
+                NS_NOTREACHED("aObject must implement nsIClassInfo");
                 return NS_ERROR_FAILURE;
+            }
 
             PRUint32 flags;
             if (NS_SUCCEEDED(classInfo->GetFlags(&flags)) &&
@@ -2175,8 +2177,10 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
 
     if (oid & MFL_OBJECT_DEF_TAG) {
         nsCOMPtr<nsISerializable> serializable(do_QueryInterface(aObject));
-        if (!serializable)
+        if (!serializable) {
+            NS_NOTREACHED("aObject must implement nsISerializable");
             return NS_ERROR_FAILURE;
+        }
 
         nsCID slowCID;
         rv = classInfo->GetClassIDNoAlloc(&slowCID);
@@ -2233,13 +2237,15 @@ nsFastLoadFileWriter::WriteCompoundObject(nsISupports* aObject,
 {
     nsresult rv;
     nsCOMPtr<nsISupports> rootObject(do_QueryInterface(aObject));
+    
+    // We could assert that |rootObject != aObject|, but that would prevent
+    // callers who don't know whether they're dealing with the primary
+    // nsISupports pointer (e.g., they don't know which implementation of
+    // nsIURI they have) from using this function.
 
 #ifdef NS_DEBUG
     nsCOMPtr<nsISupports> roundtrip;
     rootObject->QueryInterface(aIID, getter_AddRefs(roundtrip));
-
-    NS_ASSERTION(rootObject.get() != aObject,
-                 "wasteful call to WriteCompoundObject -- call WriteObject!");
     NS_ASSERTION(roundtrip.get() == aObject,
                  "bad aggregation or multiple inheritance detected by call to "
                  "WriteCompoundObject!");
