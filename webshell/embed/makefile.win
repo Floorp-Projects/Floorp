@@ -21,11 +21,6 @@
 
 DEPTH=..\..
 
-
-!if defined(MOZ_ACTIVEX_SUPPORT)
-DIRS = $(DIRS) ActiveX
-!endif
-
 !if defined(NGPREFS)
 DIRS = $(DIRS) ngprefs
 !endif
