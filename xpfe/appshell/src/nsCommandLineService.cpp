@@ -42,25 +42,28 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Initialize(int argc, char** argv);
-  NS_IMETHOD GetCmdLineValue(char* arg, char **value);
+  NS_IMETHOD Initialize(PRInt32  aArgc, char** aArgv);
+  NS_IMETHOD GetCmdLineValue(char* aArg, char **aValue);
   NS_IMETHOD GetURLToLoad(char ** aResult);
   NS_IMETHOD GetProgramName(char ** aResult);
-//  nsresult PrintCmdArgs();
+  NS_IMETHOD GetArgc(PRInt32  *  aResult);
+  NS_IMETHOD GetArgv(char ** aResult[]);
 
 protected:
   virtual ~nsCmdLineService();
 
   nsVoidArray    mArgList;      // The arguments
   nsVoidArray    mArgValueList; // The argument values
-  PRInt32       mArgCount; // This is not argc. This is # of argument pairs 
+  PRInt32        mArgCount; // This is not argc. This is # of argument pairs 
                             // in the arglist and argvaluelist arrays. This
                             // normally is argc/2.
+  PRInt32        mArgc;     // This is argc;
+  char **        mArgv;     // This is argv;
 };
 
 
 nsCmdLineService::nsCmdLineService()
-	:  mArgCount(0)
+	:  mArgCount(0), mArgc(0), mArgv(0)
 {
   NS_INIT_REFCNT();
 }
@@ -71,34 +74,37 @@ nsCmdLineService::nsCmdLineService()
 NS_IMPL_ISUPPORTS(nsCmdLineService, kICommandLineServiceIID);
 
 NS_IMETHODIMP
-nsCmdLineService::Initialize(int argc, char ** argv)
+nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 {
   PRInt32   i=0;
   nsresult  rv = nsnull;
 
+  // Save aArgc and argv
+  mArgc = aArgc;
+  mArgv = aArgv;
   //Insert the program name 
-  if (argv[0])
+  if (aArgv[0])
   {
     mArgList.AppendElement((void *)PL_strdup("-progname"));
-    mArgValueList.AppendElement((void *)PL_strdup(argv[0]));
+    mArgValueList.AppendElement((void *)PL_strdup(aArgv[0]));
     mArgCount++;
     i++;
   }
 
-  for(i=1; i<argc; i++) {
+  for(i=1; i<aArgc; i++) {
 
-    if (argv[i][0] == '-') {
+    if (aArgv[i][0] == '-') {
      /* An option that starts with -. May or many not
 	    * have a value after it. 
 	    */
-	   mArgList.AppendElement((void *)PL_strdup(argv[i]));
+	   mArgList.AppendElement((void *)PL_strdup(aArgv[i]));
 	   //Increment the index to look ahead at the next option.
      i++;
 
 
      //Look ahead if this option has a value like -w 60
 
-	   if (i == argc) {
+	   if (i == aArgc) {
 	     /* All args have been parsed. Append a PR_TRUE for the
 	      * previous option in the mArgValueList
 	      */
@@ -106,7 +112,7 @@ nsCmdLineService::Initialize(int argc, char ** argv)
 	     mArgCount++;
 	     break;
 	   }
-     if (argv[i][0] == '-') {
+     if (aArgv[i][0] == '-') {
         /* An other option. The previous one didn't have a value.
          * So, store the previous one's value as PR_TRUE in the
 	       * mArgValue array and retract the index so that this option 
@@ -122,7 +128,7 @@ nsCmdLineService::Initialize(int argc, char ** argv)
 	       * could be value to the previous option or a url to
          * load if this is the last argument and has a ':/' in it.
 	       */
-	      if ((i == (argc-1)) && (PL_strstr(argv[i], ":/"))) {
+	      if ((i == (aArgc-1)) && (PL_strstr(aArgv[i], ":/"))) {
 	         /* This is the last argument and a URL 
             * Append a PR_TRUE for the previous option in the value array
             */
@@ -131,7 +137,7 @@ nsCmdLineService::Initialize(int argc, char ** argv)
 
  		       // Append the url to the arrays
            //mArgList.AppendElement((void *)PL_strdup("-url"));
-		       mArgValueList.AppendElement((void *) PL_strdup(argv[i]));
+		       mArgValueList.AppendElement((void *) PL_strdup(aArgv[i]));
 	 	       mArgCount++;
            continue;
         }
@@ -139,18 +145,18 @@ nsCmdLineService::Initialize(int argc, char ** argv)
 	         /* This is a value to the previous option.
 	          * Store it in the mArgValue array 
 	          */
-           mArgValueList.AppendElement((void *)PL_strdup(argv[i]));
+           mArgValueList.AppendElement((void *)PL_strdup(aArgv[i]));
 	         mArgCount++;
 	      }
 	   }
   }
   else {
-       if ((i == (argc-1)) && (PL_strstr(argv[i], ":/"))) {
+       if ((i == (aArgc-1)) && (PL_strstr(aArgv[i], ":/"))) {
 	        /* This must be the  URL at the end 
 	         * Append the url to the arrays
            */
            mArgList.AppendElement((void *)PL_strdup("-url"));
-	         mArgValueList.AppendElement((void *) PL_strdup(argv[i]));
+	         mArgValueList.AppendElement((void *) PL_strdup(aArgv[i]));
 	         mArgCount++;
 	     }
 	     else {
@@ -161,10 +167,12 @@ nsCmdLineService::Initialize(int argc, char ** argv)
 	
  }  // for
 
+#if 0
   for (i=0; i<mArgCount; i++)
   {
-       printf("Argument: %s, ****** Value: %s\n", mArgList.ElementAt(i), mArgValueList.ElementAt(i));      
+       printf("Argument: %s, ****** Value: %s\n", (char *)mArgList.ElementAt(i), (char *) mArgValueList.ElementAt(i));      
   }
+#endif /* 0 */
 
    return rv;
 	
@@ -190,18 +198,17 @@ nsCmdLineService::GetProgramName(char ** aResult)
 
 
 NS_IMETHODIMP
-nsCmdLineService::GetCmdLineValue(char * arg, char ** aResult)
+nsCmdLineService::GetCmdLineValue(char * aArg, char ** aResult)
 {
    nsresult  rv = NS_OK;
-   PRInt32   index=0;
    
-   if (nsnull == arg || nsnull == aResult ) {
+   if (nsnull == aArg || nsnull == aResult ) {
 	    return NS_ERROR_NULL_POINTER;
    }
 
    for (int i = 0; i<mArgCount; i++)
    {
-     if (!PL_strcmp(arg, (char *) mArgList.ElementAt(i))) {
+     if (!PL_strcmp(aArg, (char *) mArgList.ElementAt(i))) {
        *aResult = (char *)mArgValueList.ElementAt(i);
         return NS_OK;
      }
@@ -212,6 +219,25 @@ nsCmdLineService::GetCmdLineValue(char * arg, char ** aResult)
 	
 }
 
+NS_IMETHODIMP
+nsCmdLineService::GetArgc(PRInt32 * aResult)
+{
+
+    if (nsnull == aResult)
+        return NS_ERROR_NULL_POINTER;
+    *aResult =  mArgc;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCmdLineService::GetArgv(char ** aResult[])
+{
+    if (nsnull == aResult)
+      return NS_ERROR_NULL_POINTER;
+    *aResult = mArgv;
+
+    return NS_OK;
+}
 
 nsCmdLineService::~nsCmdLineService()
 {
