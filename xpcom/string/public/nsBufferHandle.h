@@ -188,7 +188,7 @@ class nsSingleThreadVerifier
   {
     public:
       nsSingleThreadVerifier();
-      void verify() const;
+      void verifyThread() const;
     protected:
       void* mThread;
   };
@@ -284,7 +284,7 @@ class nsSharedBufferHandle
       get_refcount() const
         {
 #ifdef DEBUG
-          mSingleThreadVerifier.verify();
+          mSingleThreadVerifier.verifyThread();
 #endif
           return mFlags & kRefCountMask;
         }
@@ -293,7 +293,7 @@ class nsSharedBufferHandle
       set_refcount( PRUint32 aNewRefCount )
         {
 #ifdef DEBUG
-          mSingleThreadVerifier.verify();
+          mSingleThreadVerifier.verifyThread();
 #endif
 
           NS_ASSERTION(aNewRefCount <= kRefCountMask, "aNewRefCount <= kRefCountMask");
