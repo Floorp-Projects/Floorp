@@ -994,6 +994,11 @@ NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
 
       doc->CreateXIF(buffer);
 
+      nsAutoString charset;
+      rv = doc->GetDocumentCharacterSet(charset);
+      if(NS_FAILED(rv)) {
+         charset = "ISO-8859-1"; 
+      }
       nsIParser* parser;
 
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -1015,6 +1020,8 @@ NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
 	        if (NS_OK == rv) {
 	          parser->SetContentSink(sink);
 	    
+	          parser->SetDocumentCharset(charset, kCharsetFromPreviousLoading);
+
 	          nsIDTD* dtd = nsnull;
 	          rv = NS_NewXIFDTD(&dtd);
 	          if (NS_OK == rv) {
@@ -1062,6 +1069,11 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
 
       doc->CreateXIF(buffer);
 
+      nsAutoString charset;
+      rv = doc->GetDocumentCharacterSet(charset);
+      if(NS_FAILED(rv)) {
+         charset = "ISO-8859-1"; 
+      }
       nsIParser* parser;
 
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -1083,6 +1095,8 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
 	        if (NS_OK == rv) {
 	          parser->SetContentSink(sink);
 	    
+	          parser->SetDocumentCharset(charset, kCharsetFromPreviousLoading);
+
 	          nsIDTD* dtd = nsnull;
 	          rv = NS_NewXIFDTD(&dtd);
 	          if (NS_OK == rv) {
