@@ -102,6 +102,7 @@
 #include "nsGfxCIID.h"
 #include "nsHTMLUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsTransform2D.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -1763,9 +1764,11 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
           doupdatewindow = PR_TRUE;
         }
 
-        // check if we need to update window position
+        // Get the offset of the DC
+        nsTransform2D* rcTransform;
+        aRenderingContext.GetCurrentTransform(rcTransform);
         nsPoint origin;
-        GetWindowOriginInPixels(aPresContext, PR_TRUE, &origin);
+        rcTransform->GetTranslationCoord(&origin.x, &origin.y);
 
         if((window->x != origin.x) || (window->y != origin.y)) {
           window->x = origin.x;
