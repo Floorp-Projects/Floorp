@@ -2252,7 +2252,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
 {
   // XXX don't allow local chrome overrides of install chrome!
 #ifdef DEBUG
-  printf("*** Chrome Registration of %s: Checking for contents.rdf at %s\n", PromiseFlatCString(aProviderType).get(), PromiseFlatCString(aBaseURL).get());
+  printf("*** Chrome Registration of %-7s: Checking for contents.rdf at %s\n", PromiseFlatCString(aProviderType).get(), PromiseFlatCString(aBaseURL).get());
 #endif
 
   // Load the data source found at the base URL.
