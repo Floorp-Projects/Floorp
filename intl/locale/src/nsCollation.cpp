@@ -16,10 +16,14 @@
  * Reserved.
  */
 
+#define NS_IMPL_IDS
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
 #include "nsRepository.h"
 #include "nsCollation.h"
 #include "nsCollationCID.h"
 #include "nsUnicharUtilCIID.h"
+#include "prmem.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -147,6 +151,36 @@ nsresult nsCollation::NormalizeString(nsAutoString& stringInOut)
   return NS_OK;
 }
 
+nsresult nsCollation::UnicodeToChar(const nsString& src, char** dst, const nsString& aCharset)
+{
+  nsICharsetConverterManager * ccm = nsnull;
+  nsresult res;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                     kICharsetConverterManagerIID, 
+                                     (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsIUnicodeEncoder* encoder = nsnull;
+    res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+    if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
+      const PRUnichar *unichars = src.GetUnicode();
+      PRInt32 unicharLength = src.Length();
+      PRInt32 dstLength;
+      res = encoder->Length(unichars, 0, unicharLength, &dstLength);
+      *dst = (char *) PR_Malloc(dstLength + 1);
+      if (*dst != nsnull) {
+        res = encoder->Convert(unichars, 0, &unicharLength, *dst, 0, &dstLength);
+        (*dst)[dstLength] = '\0';
+      }
+      else {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_IF_RELEASE(encoder);
+    }    
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+  }
+  return res;
+}
 
 
 
