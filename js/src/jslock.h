@@ -148,9 +148,6 @@ typedef struct JSFatLockTable {
                                     js_TransferScopeLock(cx, scope, newscope)
 
 extern jsword js_CurrentThreadId();
-extern JS_INLINE void js_Lock(JSThinLock *, jsword);
-extern JS_INLINE void js_Unlock(JSThinLock *, jsword);
-extern int js_CompareAndSwap(jsword *, jsword, jsword);
 extern void js_LockRuntime(JSRuntime *rt);
 extern void js_UnlockRuntime(JSRuntime *rt);
 extern void js_LockObj(JSContext *cx, JSObject *obj);
