@@ -323,10 +323,10 @@ Contributor(s): ______________________________________. -->
 		  <menuitem value="&appSpecificCmd.label;" onaction="BrowserReload();"/>
 		  <menuitem value="&appSpecificCmd.label;" onaction="BrowserReload();"/>
 		  <menuseparator />
-		  <menuitem value="&searchBookmarksHistoryCmd.label;" onaction="OpenSearch('find');"/>
-		  <menuitem value="&searchInternetCmd.label;" onaction="OpenSearch('internet');"/>
-		  <menuitem value="&searchAllMailCmd.label;" onaction="OpenSearch('mail');"/>
-		  <menuitem value="&searchAddressbookCmd.label;" onaction="OpenSearch('addressbook');"/>
+		  <menuitem value="&searchBookmarksHistoryCmd.label;" onaction="OpenSearch('find', null);"/>
+		  <menuitem value="&searchInternetCmd.label;" onaction="OpenSearch('internet', null);"/>
+		  <menuitem value="&searchAllMailCmd.label;" onaction="OpenSearch('mail', null);"/>
+		  <menuitem value="&searchAddressbookCmd.label;" onaction="OpenSearch('addressbook', null);"/>
 		  <menuseparator />
 		  <menuitem value="&searchComputerCmd.label;" onaction="BrowserReload();"/>
 	  </menupopup>
@@ -498,6 +498,8 @@ Contributor(s): ______________________________________. -->
               onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
             <spring flex="100%"/>
           </box>
+
+			<titledbutton id="search-button" align="top" value="Search" onclick="OpenSearch('internet', document.getElementById('urlbar').value);" />
 
           <titledbutton id="print-button" align="top" value="&printButton.label;"  
                 onclick="BrowserPrint()">

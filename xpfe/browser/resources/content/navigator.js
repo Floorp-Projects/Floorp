@@ -494,9 +494,11 @@ function UpdateBookmarksLastVisitiedDate(event)
     RefreshUrlbar();
   }
 
-function OpenSearch(tabName)
+function OpenSearch(tabName, searchStr)
 {
-	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName);
+	dump("OpenSearch searchStr: '" + searchStr + "'\n\n");
+
+	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
 }
 
   function BrowserNewWindow()
