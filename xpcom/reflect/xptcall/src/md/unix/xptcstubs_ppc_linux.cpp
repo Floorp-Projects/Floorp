@@ -67,177 +67,172 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
   PRUint32* ap = args;
   PRUint32 gprCount = 1; //skip one GPR reg
   PRUint32 fprCount = 0;
-  for(i = 0; i < paramCount; i++)
-    {
-      const nsXPTParamInfo& param = info->GetParam(i);
-      const nsXPTType& type = param.GetType();
-      nsXPTCMiniVariant* dp = &dispatchParams[i];
+  for(i = 0; i < paramCount; i++) {
+    const nsXPTParamInfo& param = info->GetParam(i);
+    const nsXPTType& type = param.GetType();
+    nsXPTCMiniVariant* dp = &dispatchParams[i];
 
-      if(param.IsOut() || !type.IsArithmetic())
-        {
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.p = (void*) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.p   = (void*) *ap++;
-	  continue;
-        }
-      // else
-      switch(type)
-        {
-	case nsXPTType::T_I8:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.i8 = (PRInt8) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.i8   = (PRInt8) *ap++;
-	  break;
-
-	case nsXPTType::T_I16:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.i16 = (PRInt16) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.i16   = (PRInt16) *ap++;
-	  break;
-
-	case nsXPTType::T_I32:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.i32 = (PRInt32) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.i32   = (PRInt32) *ap++;
-	  break;
-
-	case nsXPTType::T_I64:
-	  if (gprCount & 1) gprCount++;
-	  if ((gprCount + 1) < PARAM_GPR_COUNT)
-	    {
-	      dp->val.i64 = *(PRInt64*) gprData;
-	      gprData += 2;
-	      gprCount++;
-	    }
-	  else
-	    {
-	      if ((PRUint32) ap & 4) ap++;
-	      dp->val.i64 = *(PRInt64*) ap;
-	      ap += 2;
-	    }
-	  break;
-
-	case nsXPTType::T_U8:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.u8 = (PRUint8) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.u8   = (PRUint8) *ap++;
-	  break;
-
-	case nsXPTType::T_U16:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.u16 = (PRUint16) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.u16   = (PRUint16) *ap++;
-	  break;
-
-	case nsXPTType::T_U32:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.u32 = (PRUint32) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.u32   = (PRUint32) *ap++;
-	  break;
-
-	case nsXPTType::T_U64:
-	  if (gprCount & 1) gprCount++;
-	  if ((gprCount + 1) < PARAM_GPR_COUNT)
-	    {
-	      dp->val.u64 = *(PRUint64*) gprData;
-	      gprData += 2;
-	      gprCount++;
-	    }
-	  else
-	    {
-	      if ((PRUint32) ap & 4) ap++;
-	      dp->val.u64 = *(PRUint64*) ap;
-	      ap += 2;
-	    }
-	  break;
-
-	case nsXPTType::T_FLOAT:
-	  if (fprCount < PARAM_FPR_COUNT)
-	    {
-	      dp->val.f = (float) *fprData++;
-	      fprCount++;
-	    }
-	  else
-	    dp->val.f = *(float*) ap++;
-	  break;
-
-	case nsXPTType::T_DOUBLE:
-	  if (fprCount < PARAM_FPR_COUNT)
-	    {
-	      dp->val.d = *fprData++;
-	      fprCount++;
-	    }
-	  else
-	    {
-	      if ((PRUint32) ap & 4) ap++;
-	      dp->val.d = *(double*) ap;
-	      ap += 2;
-	    }
-	  break;
-
-	case nsXPTType::T_BOOL:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.b = (PRBool) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.b   = (PRBool) *ap++;
-	  break;
-
-	case nsXPTType::T_CHAR:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.c = (char) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.c   = (char) *ap++;
-	  break;
-
-	case nsXPTType::T_WCHAR:
-	  if (gprCount < PARAM_GPR_COUNT)
-	    {
-	      dp->val.wc = (wchar_t) *gprData++;
-	      gprCount++;
-	    }
-	  else
-	    dp->val.wc   = (wchar_t) *ap++;
-	  break;
-
-	default:
-	  NS_ASSERTION(0, "bad type");
-	  break;
-        }
+    if(param.IsOut() || !type.IsArithmetic()) {
+      if (gprCount < PARAM_GPR_COUNT) {
+        dp->val.p = (void*) *gprData++;
+        gprCount++;
+      }
+      else {
+        dp->val.p   = (void*) *ap++;
+      }
+      continue;
     }
+    // else
+    switch(type) {
+    case nsXPTType::T_I8:
+      if (gprCount < PARAM_GPR_COUNT) {
+        dp->val.i8 = (PRInt8) *gprData++;
+        gprCount++;
+      }
+      else
+        dp->val.i8   = (PRInt8) *ap++;
+      break;
+
+    case nsXPTType::T_I16:
+      if (gprCount < PARAM_GPR_COUNT) {
+        dp->val.i16 = (PRInt16) *gprData++;
+        gprCount++;
+      }
+      else
+        dp->val.i16   = (PRInt16) *ap++;
+      break;
+
+    case nsXPTType::T_I32:
+      if (gprCount < PARAM_GPR_COUNT)
+        {
+          dp->val.i32 = (PRInt32) *gprData++;
+          gprCount++;
+        }
+      else
+        dp->val.i32   = (PRInt32) *ap++;
+      break;
+
+    case nsXPTType::T_I64:
+      if (gprCount & 1) gprCount++;
+      if ((gprCount + 1) < PARAM_GPR_COUNT)
+        {
+          dp->val.i64 = *(PRInt64*) gprData;
+          gprData += 2;
+          gprCount++;
+        }
+      else
+        {
+          if ((PRUint32) ap & 4) ap++;
+          dp->val.i64 = *(PRInt64*) ap;
+          ap += 2;
+        }
+      break;
+
+    case nsXPTType::T_U8:
+      if (gprCount < PARAM_GPR_COUNT)
+        {
+          dp->val.u8 = (PRUint8) *gprData++;
+          gprCount++;
+        }
+      else
+        dp->val.u8   = (PRUint8) *ap++;
+      break;
+
+    case nsXPTType::T_U16:
+      if (gprCount < PARAM_GPR_COUNT)
+        {
+          dp->val.u16 = (PRUint16) *gprData++;
+          gprCount++;
+        }
+      else
+        dp->val.u16   = (PRUint16) *ap++;
+      break;
+
+    case nsXPTType::T_U32:
+      if (gprCount < PARAM_GPR_COUNT)
+        {
+          dp->val.u32 = (PRUint32) *gprData++;
+          gprCount++;
+        }
+      else
+        dp->val.u32   = (PRUint32) *ap++;
+      break;
+
+    case nsXPTType::T_U64:
+      if (gprCount & 1) gprCount++;
+      if ((gprCount + 1) < PARAM_GPR_COUNT)
+        {
+          dp->val.u64 = *(PRUint64*) gprData;
+          gprData += 2;
+          gprCount++;
+        }
+      else
+        {
+          if ((PRUint32) ap & 4) ap++;
+          dp->val.u64 = *(PRUint64*) ap;
+          ap += 2;
+        }
+      break;
+
+    case nsXPTType::T_FLOAT:
+      if (fprCount < PARAM_FPR_COUNT)
+        {
+          dp->val.f = (float) *fprData++;
+          fprCount++;
+        }
+      else
+        dp->val.f = *(float*) ap++;
+      break;
+
+    case nsXPTType::T_DOUBLE:
+      if (fprCount < PARAM_FPR_COUNT)
+        {
+          dp->val.d = *fprData++;
+          fprCount++;
+        }
+      else
+        {
+          if ((PRUint32) ap & 4) ap++;
+          dp->val.d = *(double*) ap;
+          ap += 2;
+        }
+      break;
+
+    case nsXPTType::T_BOOL:
+      if (gprCount < PARAM_GPR_COUNT)
+        {
+          dp->val.b = (PRBool) *gprData++;
+          gprCount++;
+        }
+      else
+        dp->val.b   = (PRBool) *ap++;
+      break;
+
+    case nsXPTType::T_CHAR:
+      if (gprCount < PARAM_GPR_COUNT)
+        {
+          dp->val.c = (char) *gprData++;
+          gprCount++;
+        }
+      else
+        dp->val.c   = (char) *ap++;
+      break;
+
+    case nsXPTType::T_WCHAR:
+      if (gprCount < PARAM_GPR_COUNT)
+        {
+          dp->val.wc = (wchar_t) *gprData++;
+          gprCount++;
+        }
+      else
+        dp->val.wc   = (wchar_t) *ap++;
+      break;
+
+    default:
+      NS_ASSERTION(0, "bad type");
+      break;
+    }
+  }
 
   result = self->CallMethod((PRUint16) methodIndex, info, dispatchParams);
 
@@ -249,12 +244,18 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
   return result;
 }
 
-extern "C" int SharedStub(void *, int);
+// We give a bogus prototype to generate the correct glue code. We
+// actually pass the method index in r12 (an "unused" register),
+// because r4 is used to pass the first parameter.
+extern "C" nsresult SharedStub(void);
 
 #define STUB_ENTRY(n)                \
 nsresult nsXPTCStubBase::Stub##n()   \
 {                                    \
-  return SharedStub(this, n);        \
+   __asm__(                          \
+   "\tli 12,"#n"\n"                  \
+   );                                \
+   return SharedStub();              \
 }
 
 #define SENTINEL_ENTRY(n)                            \
