@@ -161,7 +161,7 @@ main(int argc, char* argv[])
 	
     // QI and set the upload stream
     nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
-    uploadChannel->SetUploadStream(uploadStream, nsnull);
+    uploadChannel->SetUploadStream(uploadStream, nsnull, -1);
 
     // create a dummy listener
     InputTestConsumer* listener;
