@@ -962,7 +962,8 @@ sub BuildXPIDLCompiler()
     }
 
 	# xpt_link MPW tool, needed for merging xpt files (release build)
-    if ($main::options{xptlink})
+	# but not when targeting Carbon as Pro 6 doesn't have a MSL C.PPC MPW(NL).Lib, or project to build it
+    if ($main::options{xptlink}  && !$main::options{carbon} )
     {
         my($codewarrior_msl) = GetCodeWarriorRelativePath("MSL:MSL_C:MSL_MacOS:");
     	if ( ! -e $codewarrior_msl . "Lib:PPC:MSL C.PPC MPW(NL).Lib") {
