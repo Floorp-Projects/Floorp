@@ -4,7 +4,9 @@
 <!ENTITY sendingPrefix.label "When sending messages, automatically ">
 <!ENTITY fccMailFolder.label "Place a copy in:">
 <!ENTITY chooseFolderButton.label "Choose Folder...">
+<!-- LOCALIZATION NOTE (bccAccount.label): do not translate "Bcc" in below line -->
 <!ENTITY bccAccount.label "Bcc ">
+<!-- LOCALIZATION NOTE (bccAddress.label): do not translate "Bcc" in below line -->
 <!ENTITY bccAddress.label "Bcc these addresses:">
 <!ENTITY specialFolderTitle.label "Special Folders">
 <!ENTITY junkMailFolder.label "Keep junk mail in:">

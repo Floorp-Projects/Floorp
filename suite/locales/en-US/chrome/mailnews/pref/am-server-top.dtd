@@ -1,7 +1,9 @@
 <!-- extracted from am-server-top.xul -->
 
 <!ENTITY serverSettings.label "Server Settings">
+<!-- LOCALIZATION NOTE (popServer.label) : do not translate "POP" in below line -->
 <!ENTITY popServer.label "POP Mail server">
+<!-- LOCALIZATION NOTE (imapServer.label) : do not translate "IMAP" in below line -->
 <!ENTITY imapServer.label "IMAP Mail server">
 <!ENTITY newsServer.label "News Server">
 <!ENTITY webmail.label "Web mail account">
@@ -9,6 +11,11 @@
 <!ENTITY serverName.label "Server Name:">
 <!ENTITY userName.label "User Name:">
 <!ENTITY savePassword.label "Save password.">
+<!-- LOCALIZATION NOTE (biffStart.label) : translate below 2 line with grammer dependency
+        For example, in Japanese cases:
+                biffStart.label "every"
+                biffEnd.label   "minutes for new messages Check"
+-->
 <!ENTITY biffStart.label "Check for new messages every ">
 <!ENTITY biffEnd.label "minutes.">
 <!ENTITY leaveOnServer.label "Leave messages on server.">
@@ -16,11 +23,13 @@
 <!ENTITY emptyTrashOnExit.label "Empty Trash on exit">
 <!ENTITY hostname.label "Server Hostname">
 <!ENTITY username.label "Your Login Name">
+<!-- LOCALIZATION NOTE (popServerTitle.label) : do not translate "POP" in below line -->
 <!ENTITY popServerTitle.label "POP Server Information">
 <!ENTITY deleteMessagePrefix.label "When I delete a message:">
 <!ENTITY modelMoveToTrash.label "Move it to the Trash folder">
 <!ENTITY modelMarkDeleted.label "Mark it as deleted">
 <!ENTITY modelDeleteImmediately.label "Remove it immediately">
+<!-- LOCALIZATION NOTE (expungeOnExit.label) : do not translate two of "&quot;" in below line -->
 <!ENTITY expungeOnExit.label "Clean up (&quot;Expunge&quot;) Inbox on Exit.">
 <!ENTITY emptyTrashOnExit.label "Empty Trash on Exit.">
 <!ENTITY maxMessagesStart.label "Ask me before downloading more than">

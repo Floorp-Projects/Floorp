@@ -4,14 +4,19 @@
 <!ENTITY incomingServerTitle.label "Incoming Server">
 <!ENTITY incomingServerTypeDesc.label "Select the type of incoming server you are using.">
 <!ENTITY incomingServerTypeLabel.label "Server Type:">
+<!-- LOCALIZATION NOTE (incomingServerNameDesc.label) : Do not translate "&quot;pop.netscape.net&quot;" in below line -->
 <!ENTITY incomingServerNameDesc.label "Enter the name of your incoming server. (For example, &quot;pop.netscape.net&quot;)">
 <!ENTITY incomingServerLabel.label "Server Name:">
 
+<!-- LOCALIZATION NOTE (smtpServerTitle.label) : Do not translate "SMTP" in below line -->
 <!ENTITY smtpServerTitle.label "Outgoing (SMTP) Server">
+<!-- LOCALIZATION NOTE (smtpServerDesc.label) : Do not translate "SMTP" and "&quot;smtp.netscape.net&quot;" in below line -->
 <!ENTITY smtpServerDesc.label "Enter the name of your outgoing (SMTP) server. (For example, &quot;smtp.netscape.net&quot;)">
 <!ENTITY smtpServerLabel.label "Server Name:">
 
+<!-- LOCALIZATION NOTE (imapType.label) : Do not translate "IMAP" in below line -->
 <!ENTITY imapType.label "IMAP Mail Server">
+<!-- LOCALIZATION NOTE (popType.label) : Do not translate "POP" in below line -->
 <!ENTITY popType.label "POP Mail Server">
 <!ENTITY nntpType.label "News Server">
 

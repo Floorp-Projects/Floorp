@@ -2,5 +2,6 @@
 
 <!ENTITY emailTitle.label "Your Email Address:">
 <!ENTITY emailDesc.label "Enter your email address; this is the address otherws will use to send email to you:">
+<!-- LOCALIZATION NOTE (emailExample.label) : do not translate "elmer@netscape.net" in below line -->
 <!ENTITY emailExample.label "For example: elmer@netscape.net">
 

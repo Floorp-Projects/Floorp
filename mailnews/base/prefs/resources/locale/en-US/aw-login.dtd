@@ -2,6 +2,7 @@
 
 <!ENTITY loginTitle.label "Name and Password">
 <!ENTITY usernameDesc.label "Enter your user name given to you by your email provider.">
+<!-- LOCALIZATION NOTE (usernameExample.label) : do not translate "&quot;jsmith&quot;" in below line -->
 <!ENTITY usernameExample.label "(for example, &quot;jsmith&quot;)">
 <!ENTITY usernameLabel.label "User Name:">
 

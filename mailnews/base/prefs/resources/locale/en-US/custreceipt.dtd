@@ -20,6 +20,7 @@ Rights Reserved.
 
 <!ENTITY window.title "Customize Return Receipts">
 <!ENTITY pane.title "Customize Return Receipts">
+<!-- LOCALIZATION NOTE (sendReceipt.label) : Do not translate "MDN" in below line -->
 <!ENTITY sendReceipt.label "When I receive a message and its sender requested a receipt(MDN), send one in the following cases:">
 <!ENTITY notInToCc.label "If I'm not in the To or CC list of the message (as for a message to a mailing list):">
 <!ENTITY neverSend.label "Never Send">
