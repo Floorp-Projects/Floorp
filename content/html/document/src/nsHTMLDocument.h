@@ -34,6 +34,7 @@ class nsIHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 class nsIParser;
 class BlockText;
+class nsICSSLoader;
 
 class nsHTMLDocument : public nsMarkupDocument,
                        public nsIHTMLDocument,
@@ -68,8 +69,7 @@ public:
 
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aStyleSheet);
-
-  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
   NS_IMETHOD GetBaseURL(nsIURL*& aURL) const;
   NS_IMETHOD SetBaseURL(const nsString& aURLSpec);
@@ -165,6 +165,7 @@ protected:
   nsIContent *MatchName(nsIContent *aContent, const nsString& aName);
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
+  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
   static PRBool MatchLinks(nsIContent *aContent, nsString* aData);
   static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
   static PRBool MatchLayers(nsIContent *aContent, nsString* aData);
@@ -186,6 +187,7 @@ protected:
   nsString*   mBaseTarget;
   nsDTDMode mDTDMode;
   nsVoidArray mImageMaps;
+  nsICSSLoader* mCSSLoader;
 
   nsContentList *mImages;
   nsContentList *mApplets;
