@@ -908,6 +908,7 @@ sub BuildClientDist()
 	 for $dir (qw(bookmarks find history related sample search shistory sidebar ucth xfer)) {
 	 _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	 }
+     _InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST",			    "$distdirectory:xpfe:");
 	 _InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST_IDL",		    "$distdirectory:idl:");
 
 	 # directory
