@@ -454,7 +454,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                 gLastFocusedContent->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
                 
                 nsCOMPtr<nsIDocument> doc;
-                gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
+                if (gLastFocusedContent) // could have changed in HandleDOMEvent
+                  gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
                 if (doc) {
                   nsCOMPtr<nsIPresShell> shell;
                   doc->GetShellAt(0, getter_AddRefs(shell));
