@@ -1926,7 +1926,7 @@ public final class Context {
     private static Hashtable threadContexts = new Hashtable(11);
     private RegExpProxy regExpProxy;
     private Locale locale;
-    private boolean generatingDebug=true;
+    private boolean generatingDebug;
     private boolean generatingSource=true;
     private boolean compileFunctionsWithDynamicScopeFlag;
     private int optimizationLevel;
