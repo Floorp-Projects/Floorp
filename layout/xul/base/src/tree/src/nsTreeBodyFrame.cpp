@@ -56,9 +56,14 @@
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"
 #include "nsBoxObject.h"
+#include "nsIURL.h"
+#include "nsNetUtil.h"
+
 #ifdef USE_IMG2
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "imgIContainerObserver.h"
+#include "imgILoader.h"
 #endif
 
 #define ELLIPSIS "..."
@@ -138,6 +143,9 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   // Fetch the ID.
   mColElement->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, mID);
 
+  // Cache the ID as an atom.
+  mIDAtom = getter_AddRefs(NS_NewAtom(mID));
+
   // Fetch the crop style.
   mCropStyle = 0;
   nsAutoString crop;
@@ -216,6 +224,7 @@ nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 // Destructor
 nsOutlinerBodyFrame::~nsOutlinerBodyFrame()
 {
+  delete mImageCache;
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -438,9 +447,25 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRow(PRInt32 aIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateCell(PRInt32 aRow, const PRUnichar *aColID)
+NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateCell(PRInt32 aIndex, const PRUnichar *aColID)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aIndex < mTopRowIndex || aIndex > mTopRowIndex + mPageCount + 1)
+    return NS_OK;
+
+  nscoord currX = mInnerBox.x;
+  for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
+       currCol = currCol->GetNext()) {
+    nsRect colRect(currX, mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
+    PRInt32 overflow = colRect.x+colRect.width-(mInnerBox.x+mInnerBox.width);
+    if (overflow > 0)
+      colRect.width -= overflow;
+
+    if (nsCRT::strcmp(currCol->GetID(), aColID) == 0) {
+      nsLeafBoxFrame::Invalidate(mPresContext, colRect, PR_FALSE);
+      break;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
@@ -630,10 +655,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
 }
 
 void
-nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aColID)
+nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsOutlinerColumn* aCol)
 {
-  // XXX Automatically fill in the following props: container, open
-  // And colID too, if it is non-empty?
   mScratchArray->Clear();
   
   // focus
@@ -669,20 +692,82 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aC
         mScratchArray->AppendElement(nsXULAtoms::open);
     }
   }
+
+  if (aCol) {
+    nsCOMPtr<nsIAtom> colID;
+    aCol->GetIDAtom(getter_AddRefs(colID));
+    mScratchArray->AppendElement(colID);
+  }
 }
 
 #ifdef USE_IMG2
 nsresult
-nsOutlinerBodyFrame::GetImage(nsIStyleContext* aStyleContext, imgIContainer** aResult)
+nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, 
+                              nsIStyleContext* aStyleContext, imgIContainer** aResult)
 {
   *aResult = nsnull;
   if (mImageCache) {
     // Look the image up in our cache.
+    nsISupportsKey key(aStyleContext);
+    nsCOMPtr<imgIRequest> imgReq = getter_AddRefs(NS_STATIC_CAST(imgIRequest*, mImageCache->Get(&key)));
+    if (imgReq) {
+      // Find out if the image has loaded.
+      PRUint32 status;
+      imgReq->GetImageStatus(&status);
+      imgReq->GetImage(aResult); // We hand back the image here.  The GetImage call addrefs *aResult.
+      PRUint32 numFrames = 1;
+      if (*aResult)
+        (*aResult)->GetNumFrames(&numFrames);
+
+      if ((!(status & imgIRequest::STATUS_LOAD_COMPLETE)) || numFrames > 1) {
+        // We either aren't done loading, or we're animating. Add our row as a listener for invalidations.
+        nsCOMPtr<imgIDecoderObserver> obs;
+        imgReq->GetDecoderObserver(getter_AddRefs(obs));
+        nsCOMPtr<nsIOutlinerImageListener> listener(do_QueryInterface(obs));
+        if (listener)
+          listener->AddRow(aRowIndex);
+      }
+    }
   }
 
   if (!*aResult) {
-    // We missed.  Create a new imgIRequest object and pass it our row and column
-    // information.
+    // We missed. Kick off the image load.
+    // Obtain the URL from the style context.
+    const nsStyleList* myList =
+      (const nsStyleList*)aStyleContext->GetStyleData(eStyleStruct_List);
+  
+    if (myList->mListStyleImage.Length() > 0) {
+      // Create a new nsOutlinerImageListener object and pass it our row and column
+      // information.
+      nsOutlinerImageListener* listener = new nsOutlinerImageListener(mOutlinerBoxObject, aColID);
+      if (!listener)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      listener->AddRow(aRowIndex);
+
+      nsCOMPtr<nsIURI> baseURI;
+      nsCOMPtr<nsIDocument> doc;
+      mContent->GetDocument(*getter_AddRefs(doc));
+      doc->GetBaseURL(*getter_AddRefs(baseURI));
+     
+      nsCOMPtr<nsIURI> srcURI;
+      NS_NewURI(getter_AddRefs(srcURI), myList->mListStyleImage, baseURI);
+
+      nsCOMPtr<imgIRequest> imageRequest;
+
+      nsresult rv;
+      nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+      il->LoadImage(srcURI, nsnull, listener, mPresContext, getter_AddRefs(imageRequest));
+
+      if (!mImageCache) {
+        mImageCache = new nsSupportsHashtable(32);
+        if (!mImageCache)
+          return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      nsISupportsKey key(aStyleContext);
+      mImageCache->Put(&key, imageRequest);
+    }
   }
   return NS_OK;
 }
@@ -690,6 +775,8 @@ nsOutlinerBodyFrame::GetImage(nsIStyleContext* aStyleContext, imgIContainer** aR
 
 nsRect nsOutlinerBodyFrame::GetImageSize(nsIStyleContext* aStyleContext)
 {
+  // XXX We should respond to visibility rules for collapsed vs. hidden.
+
   // This method returns the width of the twisty INCLUDING borders and padding.
   // It first checks the style context for a width.  If none is found, it tries to
   // use the default image width for the twisty.  If no image is found, it defaults
@@ -736,13 +823,21 @@ nsRect nsOutlinerBodyFrame::GetImageSize(nsIStyleContext* aStyleContext)
           nsCOMPtr<imgIContainer> image;
           imgReq->GetImage(getter_AddRefs(image));
           if (image) {
-            // Get the size from the image.
-            nscoord width;
-            image->GetWidth(&width);
-            r.width += width;
-            nscoord height;
-            image->GetHeight(&height);
-            r.height += height;
+            float p2t;
+            mPresContext->GetPixelsToTwips(&p2t);
+
+            if (needWidth) {
+              // Get the size from the image.
+              nscoord width;
+              image->GetWidth(&width);
+              r.width += NSIntPixelsToTwips(width, p2t); 
+            }
+            
+            if (needHeight) {
+              nscoord height;
+              image->GetHeight(&height);
+              r.height += NSIntPixelsToTwips(height, p2t); 
+            }
           }
         }
       }
@@ -917,7 +1012,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintColumn(nsOutlinerColumn*    aColumn,
 
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
-  PrefillPropertyArray(-1, aColumn->GetID());
+  PrefillPropertyArray(-1, aColumn);
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aColumn->GetElement()));
   mView->GetColumnProperties(aColumn->GetID(), elt, mScratchArray);
 
@@ -954,7 +1049,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
 
   // Now obtain the properties for our row.
   // XXX Automatically fill in the following props: open, container, selected, focused
-  PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING("").get());
+  PrefillPropertyArray(aRowIndex, nsnull);
   mView->GetRowProperties(aRowIndex, mScratchArray);
 
   // Resolve style for the row.  It contains all the info we need to lay ourselves
@@ -996,9 +1091,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex, 
+NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex, 
                                              nsOutlinerColumn*    aColumn,
-                                             const nsRect& aCellRect,
+                                             const nsRect&        aCellRect,
                                              nsIPresContext*      aPresContext,
                                              nsIRenderingContext& aRenderingContext,
                                              const nsRect&        aDirtyRect,
@@ -1009,7 +1104,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
 
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
-  PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING("").get());
+  PrefillPropertyArray(aRowIndex, aColumn);
   mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
 
   // Resolve style for the cell.  It contains all the info we need to lay ourselves
@@ -1056,7 +1151,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
     GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinerline, getter_AddRefs(lineContext));
     const nsStyleDisplay* displayStyle = (const nsStyleDisplay*)lineContext->GetStyleData(eStyleStruct_Display);
     
-    if (displayStyle->IsVisibleOrCollapsed() && level) {
+    if (displayStyle->IsVisibleOrCollapsed() && level && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       // Paint the connecting lines.
       aRenderingContext.PushState();
 
@@ -1102,20 +1197,25 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, twistyRect))
       PaintTwisty(aRowIndex, aColumn, twistyRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
-                  remainingWidth);
+                  remainingWidth, currX);
   }
   
-  // XXX Now paint the various images.
+  // Now paint the icon for our cell.
+  nsRect iconRect(currX, cellRect.y, remainingWidth, cellRect.height);
+  nsRect dirtyRect;
+  if (dirtyRect.IntersectRect(aDirtyRect, iconRect))
+    PaintImage(aRowIndex, aColumn, iconRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
+               remainingWidth, currX);
 
   // Now paint our text, but only if we aren't a cycler column.
   // XXX until we have the ability to load images, allow the view to 
   // insert text into cycler columns...
-//  if (!aColumn->IsCycler()) {
+  if (!aColumn->IsCycler()) {
     nsRect textRect(currX, cellRect.y, remainingWidth, cellRect.height);
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, textRect))
       PaintText(aRowIndex, aColumn, textRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  //}
+  }
 
   return NS_OK;
 }
@@ -1128,7 +1228,8 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsRect&        aDirtyRect,
                                  nsFramePaintLayer    aWhichLayer,
-                                 nscoord&             aRemainingWidth)
+                                 nscoord&             aRemainingWidth,
+                                 nscoord&             aCurrX)
 {
   // Paint the twisty, but only if we are a non-empty container.
   PRBool shouldPaint = PR_FALSE;
@@ -1142,7 +1243,6 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
   }
 
   // Resolve style for the twisty.
-  PrefillPropertyArray(aRowIndex, aColumn->GetID());
   nsCOMPtr<nsIStyleContext> twistyContext;
   GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
 
@@ -1166,29 +1266,116 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
   nsRect copyRect(twistyRect);
   copyRect.Inflate(twistyMargin);
   aRemainingWidth -= copyRect.width;
+  aCurrX += copyRect.width;
 
   if (shouldPaint) {
     // If the layer is the background layer, we must paint our borders and background for our
     // image rect.
     if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
       PaintBackgroundLayer(twistyContext, aPresContext, aRenderingContext, twistyRect, aDirtyRect);
-    else {
+    else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       // Time to paint the twisty.
-
       // Adjust the rect for its border and padding.
       AdjustForBorderPadding(twistyContext, twistyRect);
+      AdjustForBorderPadding(twistyContext, imageSize);
 
 #ifdef USE_IMG2
       // Get the image for drawing.
       nsCOMPtr<imgIContainer> image; 
-      GetImage(twistyContext, getter_AddRefs(image));
+      GetImage(aRowIndex, aColumn->GetID(), twistyContext, getter_AddRefs(image));
       if (image) {
-        // We got an image. Paint it.
         nsPoint p(twistyRect.x, twistyRect.y);
-        aRenderingContext.DrawImage(image, &twistyRect, &p);
+        
+        // Center the image. XXX Obey vertical-align style prop?
+        if (imageSize.height < twistyRect.height) {
+          p.y += (twistyRect.height - imageSize.height)/2;
+          if (((twistyRect.height - imageSize.height)/15)%2 != 0)
+            p.y -= 15;
+        }
+        
+        // Paint the image.
+        aRenderingContext.DrawImage(image, &imageSize, &p);
       }
 #endif
     }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerBodyFrame::PaintImage(int                  aRowIndex,
+                                nsOutlinerColumn*    aColumn,
+                                const nsRect&        aImageRect,
+                                nsIPresContext*      aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                const nsRect&        aDirtyRect,
+                                nsFramePaintLayer    aWhichLayer,
+                                nscoord&             aRemainingWidth,
+                                nscoord&             aCurrX)
+{
+  // Resolve style for the image.
+  nsCOMPtr<nsIStyleContext> imageContext;
+  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
+
+  // Obtain the margins for the twisty and then deflate our rect by that 
+  // amount.  The twisty is assumed to be contained within the deflated rect.
+  nsRect imageRect(aImageRect);
+  const nsStyleMargin* imageMarginData = (const nsStyleMargin*)imageContext->GetStyleData(eStyleStruct_Margin);
+  nsMargin imageMargin;
+  imageMarginData->GetMargin(imageMargin);
+  imageRect.Deflate(imageMargin);
+
+  // If the column isn't a cycler, the image rect extends all the way to the end of the cell.  
+  // This is incorrect.  We need to determine the image rect's true width.  This is done by 
+  // examining the style context for a width first.  If it has one, we use that.  If it doesn't, 
+  // we use the image's natural width.
+  // If the image hasn't loaded and if no width is specified, then we just bail.
+  nsRect imageSize = GetImageSize(imageContext);
+  if (!aColumn->IsCycler())
+   imageRect.width = imageSize.width;
+
+  // Subtract out the remaining width.
+  nsRect copyRect(imageRect);
+  copyRect.Inflate(imageMargin);
+  aRemainingWidth -= copyRect.width;
+  aCurrX += copyRect.width;
+
+  // If the layer is the background layer, we must paint our borders and background for our
+  // image rect.
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
+    PaintBackgroundLayer(imageContext, aPresContext, aRenderingContext, imageRect, aDirtyRect);
+  else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    // Time to paint the twisty.
+    // Adjust the rect for its border and padding.
+    AdjustForBorderPadding(imageContext, imageRect);
+    AdjustForBorderPadding(imageContext, imageSize);
+
+#ifdef USE_IMG2
+    // Get the image for drawing.
+    nsCOMPtr<imgIContainer> image; 
+    GetImage(aRowIndex, aColumn->GetID(), imageContext, getter_AddRefs(image));
+    if (image) {
+      nsPoint p(imageRect.x, imageRect.y);
+      
+      // Center the image. XXX Obey vertical-align style prop?
+      if (imageSize.height < imageRect.height) {
+        p.y += (imageRect.height - imageSize.height)/2;
+        if (((imageRect.height - imageSize.height)/15)%2 != 0)
+          p.y -= 15; // One pixel in twips
+      }
+
+      // For cyclers, we also want to center the image in the column.
+      if (aColumn->IsCycler() && imageSize.width < imageRect.width) {
+        p.x += (imageRect.width - imageSize.width)/2;
+        if (((imageRect.width - imageSize.width)/15)%2 != 0)
+          p.x -= 15; // One pixel in twips
+      }
+
+      // Paint the image.
+      aRenderingContext.DrawImage(image, &imageSize, &p);
+    }
+#endif
   }
 
   return NS_OK;
@@ -1228,7 +1415,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
   // text rect.
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
     PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
-  else {
+  else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // Time to paint our text. 
     // Adjust the rect for its border and padding.
     AdjustForBorderPadding(textContext, textRect);
@@ -1589,4 +1776,92 @@ NS_INTERFACE_MAP_BEGIN(nsOutlinerBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
+
+// ==============================================================================
+// The ImageListener implementation
+// ==============================================================================
+
+#ifdef USE_IMG2
+NS_IMPL_ISUPPORTS3(nsOutlinerImageListener, imgIDecoderObserver, imgIContainerObserver, nsIOutlinerImageListener)
+
+nsOutlinerImageListener::nsOutlinerImageListener(nsIOutlinerBoxObject* aOutliner, const PRUnichar* aID)
+{
+  NS_INIT_ISUPPORTS();
+  mOutliner = aOutliner;
+  mColID = aID;
+  mMin = mMax = 0;
+}
+
+nsOutlinerImageListener::~nsOutlinerImageListener()
+{
+}
+
+NS_IMETHODIMP nsOutlinerImageListener::OnStartDecode(imgIRequest *aRequest, nsISupports *aContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerImageListener::OnStartContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerImageListener::OnStartFrame(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerImageListener::OnDataAvailable(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame, const nsRect *aRect)
+{
+  Invalidate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerImageListener::OnStopFrame(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerImageListener::OnStopContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
+{
+  // XXX This invalidate can go away once libpr0n starts properly firing an onDataAvailable
+  // to me for cached images.
+  Invalidate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerImageListener::OnStopDecode(imgIRequest *aRequest, nsISupports *aContext, nsresult status, const PRUnichar *statusArg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerImageListener::FrameChanged(imgIContainer *aContainer, nsISupports *aContext, gfxIImageFrame *newframe, nsRect * dirtyRect)
+{
+  Invalidate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerImageListener::AddRow(int aIndex)
+{
+  if (aIndex < mMin)
+    mMin = aIndex;
+  else if (aIndex > mMax)
+    mMax = aIndex;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsOutlinerImageListener::Invalidate()
+{
+  // Loop from min to max, invalidating each cell that was listening for this image.
+  for (PRInt32 i = mMin; i <= mMax; i++) {
+    mOutliner->InvalidateCell(i, mColID.GetUnicode());
+  }
+
+  return NS_OK;
+}
+#endif
+
 

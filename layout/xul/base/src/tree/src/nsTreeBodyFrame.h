@@ -29,6 +29,10 @@
 #include "nsIScrollbarMediator.h"
 #include "nsIWidget.h"
 
+#ifdef USE_IMG2
+#include "imgIDecoderObserver.h"
+#endif
+
 class nsSupportsHashtable;
 
 class nsDFAState : public nsHashKey
@@ -123,6 +127,8 @@ class nsOutlinerColumn {
   nsOutlinerColumn* mNext;
 
   nsString mID;
+  nsCOMPtr<nsIAtom> mIDAtom;
+
   PRUint32 mCropStyle;
   PRUint32 mTextAlignment;
   
@@ -144,11 +150,51 @@ public:
   nscoord GetWidth();
   const PRUnichar* GetID() { return mID.GetUnicode(); };
 
+  void GetIDAtom(nsIAtom** aResult) { *aResult = mIDAtom; NS_IF_ADDREF(*aResult); };
+
   PRBool IsPrimary() { return mIsPrimaryCol; };
   PRBool IsCycler() { return mIsCyclerCol; };
 
   PRInt32 GetCropStyle() { return mCropStyle; };
 };
+
+#ifdef USE_IMG2
+// The interface for our image listener.
+// {90586540-2D50-403e-8DCE-981CAA778444}
+#define NS_IOUTLINERIMAGELISTENER_IID \
+{ 0x90586540, 0x2d50, 0x403e, { 0x8d, 0xce, 0x98, 0x1c, 0xaa, 0x77, 0x84, 0x44 } }
+
+class nsIOutlinerImageListener : public nsISupports
+{
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IOUTLINERIMAGELISTENER_IID; return iid; }
+
+public:
+  NS_IMETHOD AddRow(int aIndex)=0;
+  NS_IMETHOD Invalidate()=0;
+};
+
+// This class handles image load observation.
+class nsOutlinerImageListener : public imgIDecoderObserver, public nsIOutlinerImageListener
+{
+public:
+  nsOutlinerImageListener(nsIOutlinerBoxObject* aOutliner, const PRUnichar* aColID);
+  virtual ~nsOutlinerImageListener();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGICONTAINEROBSERVER
+
+  NS_IMETHOD AddRow(int aIndex);
+  NS_IMETHOD Invalidate();
+
+private:
+  int mMin;
+  int mMax;
+  nsString mColID;
+  nsIOutlinerBoxObject* mOutliner;
+};
+#endif
 
 // The actual frame that paints the cells and rows.
 class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject, public nsICSSPseudoComparator,
@@ -216,7 +262,19 @@ public:
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect,
                          nsFramePaintLayer    aWhichLayer,
-                         nscoord&             aRemainingWidth);
+                         nscoord&             aRemainingWidth,
+                         nscoord&             aCurrX);
+
+  // This method paints the image inside the cell of an outliner.
+  NS_IMETHOD PaintImage(int                  aRowIndex,
+                        nsOutlinerColumn*    aColumn,
+                        const nsRect&        aImageRect,
+                        nsIPresContext*      aPresContext,
+                        nsIRenderingContext& aRenderingContext,
+                        const nsRect&        aDirtyRect,
+                        nsFramePaintLayer    aWhichLayer,
+                        nscoord&             aRemainingWidth,
+                        nscoord&             aCurrX);
 
   // This method paints the text string inside a particular cell of the outliner.
   NS_IMETHOD PaintText(int aRowIndex, 
@@ -247,7 +305,8 @@ protected:
 
 #ifdef USE_IMG2
   // Fetch an image from the image cache.
-  nsresult GetImage(nsIStyleContext* aContext, imgIContainer** aResult);
+  nsresult GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, 
+                    nsIStyleContext* aStyleContext, imgIContainer** aResult);
 #endif
 
   // Returns the size of a given image.   This size *includes* border and
@@ -274,8 +333,8 @@ protected:
   void UpdateScrollbar();
 
   // Use to auto-fill some of the common properties without the view having to do it.
-  // Examples include container, open, selected, and focused.
-  void PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aColID);
+  // Examples include container, open, selected, and focus.
+  void PrefillPropertyArray(PRInt32 aRowIndex, nsOutlinerColumn* aCol);
 
   // Our internal scroll method, used by all the public scroll methods.
   nsresult ScrollInternal(PRInt32 aRow);
