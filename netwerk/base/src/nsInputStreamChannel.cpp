@@ -18,6 +18,7 @@
 
 #include "nsInputStreamChannel.h"
 #include "nsIStreamListener.h"
+#include "nsCOMPtr.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsInputStreamChannel methods:
@@ -126,6 +127,11 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 {
     // currently this happens before AsyncRead returns -- hope that's ok
     nsresult rv;
+
+    // Do an extra AddRef so that this method's synchronous operation doesn't end up destroying
+    // the listener prematurely.
+    nsCOMPtr<nsIStreamListener> l(listener);
+
     rv = listener->OnStartRequest(ctxt);
     if (NS_FAILED(rv)) return rv;
 
