@@ -120,6 +120,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	return res;
 }
 
+
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
@@ -202,4 +203,5 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
+
 
