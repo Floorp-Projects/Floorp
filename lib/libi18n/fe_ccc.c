@@ -174,6 +174,9 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_MAC_TURKISH,CS_8859_9,		0, (CCCFunc)One2OneCCC, xlat_MAC_TURKISH_TO_8859_9},
 		{CS_MAC_TURKISH,CS_ASCII,		0, (CCCFunc)One2OneCCC, xlat_MAC_TURKISH_TO_8859_9},
 
+		/* THAI */
+		{CS_TIS620,     CS_TIS620,		0, (CCCFunc)0, 0},
+
 		/*  MULTIBYTE */
 		/*	JAPANESE */
 		{CS_SJIS,		CS_SJIS,		1, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_SJIS },
@@ -238,6 +241,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  		{CS_KSC_8BIT,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
  		{CS_BIG5,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
  		{CS_GB_8BIT,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
+ 		{CS_TIS620,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
  
   		{CS_UTF8,		CS_MAC_ROMAN,	0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
   		{CS_UTF8,		CS_LATIN1,	0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
@@ -250,6 +254,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  		{CS_UTF8,		CS_KSC_8BIT,	0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_BIG5,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_GB_8BIT,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
+ 		{CS_UTF8,		CS_TIS620,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
 
 
 		{CS_USER_DEFINED_ENCODING,	CS_USER_DEFINED_ENCODING,	0, (CCCFunc)0,			0},	
@@ -285,6 +290,9 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 
 		/* ARMENIAN */
 		{CS_ARMSCII8, CS_ARMSCII8,		0, (CCCFunc)0, 0},
+
+		/* THAI */
+		{CS_TIS620,     CS_TIS620,		0, (CCCFunc)0, 0},
 
 		/* GREEK */
 		{CS_CP_1253,	CS_CP_1253,		0,	(CCCFunc)0,				0},
@@ -364,6 +372,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  		{CS_KSC_8BIT,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
  		{CS_BIG5,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
  		{CS_GB_8BIT,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
+ 		{CS_TIS620,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
  
   		{CS_UTF8,		CS_LATIN1,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_CP_1250,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
@@ -374,6 +383,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  		{CS_UTF8,		CS_KSC_8BIT,	0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_BIG5,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_GB_8BIT,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
+ 		{CS_UTF8,		CS_TIS620,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
 
 #ifdef XP_OS2
                 /*
@@ -473,6 +483,9 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		/* ARMENIAN */
 		{CS_ARMSCII8, CS_ARMSCII8,		0, (CCCFunc)0, 0},
 
+		/* THAI */
+		{CS_TIS620,     CS_TIS620,		0, (CCCFunc)0, 0},
+
 		/* GREEK */
 		{CS_8859_7,		CS_8859_7,		0, NULL,			0},	
 		{CS_8859_7,		CS_CP_1253,		0, (CCCFunc)One2OneCCC,	0},
@@ -555,6 +568,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  		{CS_BIG5,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
  		{CS_CNS_8BIT,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CNS_8BIT},
  		{CS_GB_8BIT,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_CGK},
+ 		{CS_TIS620,	CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
  
   		{CS_UTF8,		CS_LATIN1,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_LATIN2,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
@@ -568,6 +582,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
   		{CS_UTF8,		CS_BIG5,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
 		{CS_UTF8,		CS_CNS_8BIT,	0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_GB_8BIT,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
+ 		{CS_UTF8,		CS_TIS620,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
 
 		{CS_IMAP4_UTF7,	CS_UTF8,		0, (CCCFunc)mz_imap4utf72utf8,	0},
 		{0,				0,				0, NULL,			0}

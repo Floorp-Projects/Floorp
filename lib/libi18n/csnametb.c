@@ -59,7 +59,7 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"iso-2022-kr", "KR2022", CS_2022_KR},
 			{"big5", "Big5", CS_BIG5},
 			{"x-x-big5", "Big5", CS_X_BIG5},
-			{"x-tis620", "TIS620", CS_TIS620},
+			{"tis-620", "TIS620", CS_TIS620},
 			{"adobe-symbol-encoding", "Symbol", CS_SYMBOL},
 			{"x-dingbats", "DingBats", CS_DINGBATS},
 			{"x-dectech", "DECTECH", CS_DECTECH},
@@ -325,6 +325,9 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 	/* aliases for ISO-IR-111:	*/
 			{"ECMA-cyrillic", "", CS_ISO_IR_111},
 			{"csISO111ECMACyrillic", "", CS_ISO_IR_111},
+
+	/* aliases for TIS-620:	*/
+			{"x-tis-620", "", CS_TIS620},
 
 			{"", 	"", CS_UNKNOWN}
 };
