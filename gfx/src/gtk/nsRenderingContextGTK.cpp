@@ -809,16 +809,20 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
 
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
 {
-  char buf[1];
-  buf[0] = aC;
-  return GetWidth(buf, 1, aWidth);
+  gint width;
+  GdkFont *font = (GdkFont *)mCurrentFont;
+  width = gdk_char_width(font,aC); 
+  aWidth = NSToCoordRound(width * mP2T);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord &aWidth)
 {
-  PRUnichar buf[1];
-  buf[0] = aC;
-  return GetWidth(buf, 1, aWidth);
+  gint width;
+  GdkFont *font = (GdkFont *)mCurrentFont;
+  width = gdk_char_width_wc(font,(GdkWChar)aC); 
+  aWidth = NSToCoordRound(width * mP2T);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const nsString& aString, nscoord &aWidth)
@@ -847,7 +851,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
 
   GdkFont *font = (GdkFont *)mCurrentFont;
   rc = gdk_text_width (font, aString, aLength);
-  aWidth = nscoord(rc * mP2T);
+  aWidth = NSToCoordRound(rc * mP2T);
 
   return NS_OK;
 }
