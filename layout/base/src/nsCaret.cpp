@@ -604,7 +604,8 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
   {
     // window-relative coordinates (walk right to the top of the view hierarchy)
     // we don't do anything with clipping here
-    
+    viewOffset = withinViewOffset;
+
     do {
       theView->GetPosition(&x, &y);
 
