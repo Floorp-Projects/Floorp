@@ -1777,6 +1777,17 @@ nsDocumentBindInfo::CancelRefreshURLTimers(void)
  *******************************************/
 static nsDocLoaderImpl* gServiceInstance = nsnull;
 
+#if defined(TEMPLATES_IN_nsXPComFactory_EXORCISM)
+NS_DEF_FACTORY(DocLoaderServiceGen,nsDocLoaderImpl)
+
+class nsDocLoaderServiceFactory : public nsDocLoaderServiceGenFactory
+{
+public:
+  NS_IMETHOD CreateInstance(nsISupports *aOuter,
+                            const nsIID &aIID,
+                            void **aResult);
+};
+#else
 class nsDocLoaderServiceFactory : public nsFactory<nsDocLoaderImpl>
 {
 public:
@@ -1784,6 +1795,7 @@ public:
                             const nsIID &aIID,
                             void **aResult);
 };
+#endif
 
 NS_IMETHODIMP
 nsDocLoaderServiceFactory::CreateInstance(nsISupports *aOuter,
@@ -1830,7 +1842,7 @@ done:
 }
 
 
-// Entry point to create nsEventQueueService factory instances...
+// Entry point to create nsDocLoaderService factory instances...
 
 nsresult NS_NewDocLoaderServiceFactory(nsIFactory** aResult)
 {

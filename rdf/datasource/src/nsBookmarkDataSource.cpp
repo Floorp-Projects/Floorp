@@ -812,11 +812,19 @@ HT_WriteOutAsBookmarks1 (RDF rdf, PRFileDesc *fp, RDF_Resource u, RDF_Resource t
 
 #include "nsXPComFactory.h"
 
+#if defined(TEMPLATES_IN_nsXPComFactory_EXORCISM)
+NS_DEF_FACTORY(BookmarkDataSource,BookmarkDataSourceImpl)
+#endif
+
 nsresult
 NS_NewRDFBookmarkDataSourceFactory(nsIFactory** aResult)
 {
     nsresult rv = NS_OK;
+#if defined(TEMPLATES_IN_nsXPComFactory_EXORCISM)
+    nsIFactory* inst = new nsBookmarkDataSourceFactory;
+#else
     nsIFactory* inst = new nsFactory<BookmarkDataSourceImpl>();
+#endif
     if (NULL == inst) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
