@@ -187,9 +187,6 @@ typedef enum EBookmarkOpenBehavior
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle;
 
-- (void)updatePrebinding;
-- (void)prebindFinished:(NSNotification *)aNotification;
-
 - (void)pumpGeckoEventQueue;
 
 // used by export bookmarks popup to say what file extension should be used on the resulting

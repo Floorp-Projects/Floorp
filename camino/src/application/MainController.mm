@@ -184,9 +184,6 @@ const int kReuseWindowOnAE = 2;
 
 -(void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-#ifdef _BUILD_STATIC_BIN
-  [self updatePrebinding];
-#endif
   // initialize if we haven't already.
   PreferenceManager *pm = [PreferenceManager sharedInstance];
 
@@ -1308,44 +1305,6 @@ const int kReuseWindowOnAE = 2;
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification
 {
   [mFindDialog applicationWasActivated];
-}
-
-- (void) updatePrebinding
-{
-  // For MacOS 10.2 and higher, don't do anything, since
-  // the OS updates our prebinding automatically, except on 10.3 where
-  // they screwed up and it doesn't work.
-  struct utsname u;
-  uname(&u);
-
-  float osVersion = atof(u.release);
-  if (osVersion >= 6.0 && osVersion < 7.0)   // Only bail for 10.2.x
-    return;
-
-  // Check our prebinding status.  If we didn't launch prebound,
-  // fork the update script.
-
-  if (!_dyld_launched_prebound()) {
-    NSLog(@"Not prebound, launching update script");
-    NSTask* aTask = [[NSTask alloc] init];
-    NSArray* args = [NSArray arrayWithObject: @"redo-prebinding.sh"];
-
-    [aTask setCurrentDirectoryPath:[[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent]];
-    [aTask setLaunchPath:@"/bin/sh"];
-    [aTask setArguments:args];
-
-    [[NSNotificationCenter defaultCenter] addObserver: self
-          selector:@selector(prebindFinished:)
-          name:NSTaskDidTerminateNotification
-          object: nil];
-
-    [aTask launch];
-  }
-}
-
-- (void)prebindFinished:(NSNotification *)aNotification
-{
-  [[aNotification object] release];
 }
 
 //
