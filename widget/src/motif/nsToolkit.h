@@ -33,15 +33,14 @@ class nsToolkit : public nsIToolkit
 {
 
   public:
-                            nsToolkit();
+    nsToolkit();
+    virtual                 ~nsToolkit();
 
     NS_DECL_ISUPPORTS
 
     virtual void            Init(PRThread *aThread);
 
 
-private:
-                            ~nsToolkit();
 
 };
 

@@ -20,8 +20,44 @@
 #include "nsXtEventHandler.h"
 
 #include "nsWindow.h"
+#include "nsGUIEvent.h"
 
 #include "stdio.h"
+
+
+void nsXtWidget_InitNSEvent(XEvent   * anXEv,
+                            XtPointer  p,
+                            nsGUIEvent &anEvent,
+                            PRUint32   aEventType) 
+{
+  anEvent.message = aEventType;
+  anEvent.widget  = (nsWindow *) p;
+
+  anEvent.point.x = anXEv->xbutton.x;
+  anEvent.point.y = anXEv->xbutton.y;
+
+  anEvent.time    = 0; //TBD
+
+}
+
+void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
+                                 XtPointer  p,
+                                 nsMouseEvent &anEvent,
+                                 PRUint32   aEventType) 
+{
+  // Do base initialization
+  nsXtWidget_InitNSEvent(anXEv, p, anEvent, aEventType);
+
+  // Do Mouse Event specific intialization
+  anEvent.time      = anXEv->xbutton.time;
+  anEvent.isShift   = anXEv->xbutton.state | ShiftMask;
+  anEvent.isControl = anXEv->xbutton.state | ControlMask;
+
+  //anEvent.isAlt      = GetKeyState(VK_LMENU) < 0    || GetKeyState(VK_RMENU) < 0;
+  ////anEvent.clickCount = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
+                      //aEventType == NS_MOUSE_LEFT_DOUBLECLICK)? 2:1;
+
+}
 
 void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
@@ -31,31 +67,68 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
   if (event->xexpose.count != 0)
     return ;
 
-  pevent.widget = widgetWindow;
-    
-  pevent.point.x = event->xbutton.x;
-  pevent.point.y = event->xbutton.y;
-
-  pevent.time = 0; // XXX TBD...
-  pevent.message = NS_PAINT ;  
+  nsXtWidget_InitNSEvent(event, p, pevent, NS_PAINT);
 
   widgetWindow->OnPaint(pevent);
 
 }
 
+//==============================================================
 void nsXtWidget_ButtonPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
-  nsWindow * widgetWindow = (nsWindow *) p;
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  nsMouseEvent mevent;
+  nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
+  widgetWindow->DispatchMouseEvent(mevent);
 }
 
+//==============================================================
 void nsXtWidget_ButtonReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
+  nsMouseEvent mevent;
+  nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
+  widgetWindow->DispatchMouseEvent(mevent);
 }
 
+//==============================================================
 void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
+  //fprintf(stderr, "nsXtWidget_ButtonMotionMask_EventHandler\n");
+  nsMouseEvent mevent;
+  nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
+  widgetWindow->DispatchMouseEvent(mevent);
+}
+
+//==============================================================
+void nsXtWidget_MotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
+{
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  //fprintf(stderr, "nsXtWidget_MotionMask_EventHandler\n");
+  nsGUIEvent mevent;
+  nsXtWidget_InitNSEvent(event, p, mevent, NS_MOUSE_MOVE);
+  widgetWindow->DispatchEvent(&mevent);
+}
+
+//==============================================================
+void nsXtWidget_EnterMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
+{
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  fprintf(stderr, "***************** nsXtWidget_EnterMask_EventHandler\n");
+  nsGUIEvent mevent;
+  nsXtWidget_InitNSEvent(event, p, mevent, NS_MOUSE_ENTER);
+  widgetWindow->DispatchEvent(&mevent);
+}
+
+//==============================================================
+void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
+{
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  fprintf(stderr, "***************** nsXtWidget_LeaveMask_EventHandler\n");
+  nsGUIEvent mevent;
+  nsXtWidget_InitNSEvent(event, p, mevent, NS_MOUSE_EXIT);
+  widgetWindow->DispatchEvent(&mevent);
 }
 
 

@@ -28,6 +28,8 @@
 
 #include "nsXtEventHandler.h"
 
+#include "X11/Xlib.h"
+#include "Xm/Xm.h"
 #include "Xm/Xm.h"
 #include "Xm/MainW.h"
 #include "Xm/Frame.h"
@@ -85,13 +87,18 @@ void nsWindow::RemoveTooltips()
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow(nsISupports *aOuter)
+nsWindow::nsWindow(nsISupports *aOuter):
+  mEventListener(nsnull),
+  mMouseListener(nsnull),
+  mToolkit(nsnull),
+  mFontMetrics(nsnull),
+  mContext(nsnull),
+  mWidget(nsnull),
+  mEventCallback(nsnull)
 {
   // XXX Til can deal with ColorMaps!
   SetForegroundColor(1);
   SetBackgroundColor(2);
-
-  mToolkit = nsnull ;
 
 }
 
@@ -158,7 +165,7 @@ void nsWindow::Create(nsIWidget *aParent,
         
 #define GFXWIN_DLL "libgfxunix.so"
 
-    static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
+    /*static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
     static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
@@ -168,32 +175,35 @@ void nsWindow::Create(nsIWidget *aParent,
     NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
     
-    
+   */ 
     
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-    
+
+    //res = !NS_OK;
     res = NSRepository::CreateInstance(kDeviceContextCID, 
 				       nsnull, 
 				       kDeviceContextIID, 
 				       (void **)&mContext);
-    
-    if (NS_OK == res)
+    if (NS_OK == res) {
       mContext->Init();
+    }
   }
   
-  if (aParent)
+  if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  else
+  } else {
     parentWidget = (Widget) aInitData ;
+  }
   
-  if (!aParent)
+  if (!aParent) {
     mainWindow = ::XtVaCreateManagedWidget("mainWindow",
 					   xmMainWindowWidgetClass,
 					   parentWidget, 
   					   XmNwidth, aRect.width,
   					   XmNheight, aRect.height,
   					   nsnull);
+  }
   
   frame = ::XtVaCreateManagedWidget("frame",
 				    xmDrawingAreaWidgetClass,
@@ -202,8 +212,9 @@ void nsWindow::Create(nsIWidget *aParent,
 				    XmNheight, aRect.height,
 				    nsnull);
 
-  if (!aParent)
+  if (!aParent) {
     XmMainWindowSetAreas (mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
+  }
 
   mWidget = frame ;
     
@@ -211,13 +222,28 @@ void nsWindow::Create(nsIWidget *aParent,
     aParent->AddChild(this);
   }
 
-  // setup the event Handlers
+  // Force cursor to default setting
+  mCursor = eCursor_select;
+  SetCursor(eCursor_standard);
+
   XtAddEventHandler(mWidget, 
 		    ExposureMask, 
 		    PR_FALSE, 
 		    nsXtWidget_ExposureMask_EventHandler,
 		    this);
 
+  InitCallbacks();
+
+}
+
+//-------------------------------------------------------------------------
+//
+// Initialize all the Callbacks
+//
+//-------------------------------------------------------------------------
+void nsWindow::InitCallbacks()
+{
+  // setup the event Handlers
   XtAddEventHandler(mWidget, 
 		    ButtonPressMask, 
 		    PR_FALSE, 
@@ -236,10 +262,23 @@ void nsWindow::Create(nsIWidget *aParent,
 		    nsXtWidget_ButtonMotionMask_EventHandler,
 		    this);
 
+  XtAddEventHandler(mWidget, 
+		    PointerMotionMask, 
+		    PR_FALSE, 
+		    nsXtWidget_MotionMask_EventHandler,
+		    this);
 
-  // Force cursor to default setting
-  mCursor = eCursor_select;
-  SetCursor(eCursor_standard);
+  XtAddEventHandler(mWidget, 
+		    EnterWindowMask, 
+		    PR_FALSE, 
+		    nsXtWidget_EnterMask_EventHandler,
+		    this);
+
+  XtAddEventHandler(mWidget, 
+		    LeaveWindowMask, 
+		    PR_FALSE, 
+		    nsXtWidget_LeaveMask_EventHandler,
+		    this);
 
 }
 
@@ -256,6 +295,7 @@ void nsWindow::Create(nsNativeWindow aParent,
                          nsIToolkit *aToolkit,
                          nsWidgetInitData *aInitData)
 {
+ NS_ASSERTION(0, "nsWindow Constructor is not implemented\n");
 }
 
 
@@ -334,7 +374,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
 {
 }
 
@@ -344,11 +384,7 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aX,
-                      PRUint32 aY,
-                      PRUint32 aWidth,
-                      PRUint32 aHeight,
-                      PRBool   aRepaint)
+void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight)
 {
 }
 
@@ -568,6 +604,7 @@ void nsWindow::SetColorMap(nsColorMap *aColorMap)
 //-------------------------------------------------------------------------
 nsIDeviceContext* nsWindow::GetDeviceContext() 
 { 
+  return mContext;
 }
 
 
@@ -641,7 +678,6 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
   if (nsnull != mEventCallback) {
     result = ConvertStatus((*mEventCallback)(event));
   }
-
     // Dispatch to event listener if event was not consumed
   if ((result != PR_TRUE) && (nsnull != mEventListener)) {
     return ConvertStatus(mEventListener->ProcessEvent(*event));
@@ -651,11 +687,97 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
   }
 }
 
+//-------------------------------------------------------------------------
+//
+// Deal with all sort of mouse event
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
+{
+  PRBool result = PR_FALSE;
+
+  if (nsnull == mEventCallback && nsnull == mMouseListener) {
+    return result;
+  }
+
+
+  // call the event callback 
+  if (nsnull != mEventCallback) {
+
+    result = DispatchEvent(&aEvent);
+
+    //printf("**result=%d%\n",result);
+    /*if (aEventType == NS_MOUSE_MOVE) {
+
+      //MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+      //MouseTrailer::SetMouseTrailerWindow(this);
+      //mouseTrailer->CreateTimer();
+
+      nsRect rect;
+      GetBounds(rect);
+      rect.x = 0;
+      rect.y = 0;
+      //printf("Rect[%d, %d, %d, %d]  Point[%d,%d]\n", rect.x, rect.y, rect.width, rect.height, event.position.x, event.position.y);
+      //printf("mCurrentWindow 0x%X\n", mCurrentWindow);
+
+      if (rect.Contains(event.point.x, event.point.y)) {
+        if (mCurrentWindow == NULL || mCurrentWindow != this) {
+          if ((nsnull != mCurrentWindow) && (!mCurrentWindow->mIsDestroying)) {
+            mCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT);
+          }
+          mCurrentWindow = this;
+          mCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
+        }
+      } 
+    } else if (aEventType == NS_MOUSE_EXIT) {
+      if (mCurrentWindow == this) {
+        mCurrentWindow = nsnull;
+      }
+    }*/
+
+    return result;
+  }
+
+  /*if (nsnull != mMouseListener) {
+    switch (aEventType) {
+      case NS_MOUSE_MOVE: {
+        result = ConvertStatus(mMouseListener->MouseMoved(event));
+        nsRect rect;
+        GetBounds(rect);
+        if (rect.Contains(event.point.x, event.point.y)) {
+          if (mCurrentWindow == NULL || mCurrentWindow != this) {
+            printf("Mouse enter");
+            mCurrentWindow = this;
+          }
+        } else {
+          printf("Mouse exit");
+        }
+
+      } break;
+
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+        result = ConvertStatus(mMouseListener->MousePressed(event));
+        break;
+
+      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_MOUSE_RIGHT_BUTTON_UP:
+        result = ConvertStatus(mMouseListener->MouseReleased(event));
+        result = ConvertStatus(mMouseListener->MouseClicked(event));
+        break;
+    } // switch
+  } */
+  return result;
+}
+
+
 /**
  * Processes an Expose Event
  *
  **/
-void nsWindow::OnPaint(nsPaintEvent &event)
+PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
   nsresult result ;
 
@@ -667,6 +789,10 @@ void nsWindow::OnPaint(nsPaintEvent &event)
     GetBounds(rr);
     
     event.rect = &rr;
+
+    event.renderingContext = nsnull;
+
+    result = DispatchEvent(&event);
 
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
@@ -680,10 +806,12 @@ void nsWindow::OnPaint(nsPaintEvent &event)
 	result = DispatchEvent(&event);
 	NS_RELEASE(event.renderingContext);
       }
-    else
-      result = PR_FALSE;
+    else 
+      {
+        result = PR_FALSE;
+      }
   }
-
+  return result;
 }
 
 
@@ -695,5 +823,30 @@ void nsWindow::EndResizingChildren(void)
 {
 }
 
+
+void nsWindow::OnDestroy()
+{
+}
+
+PRBool nsWindow::OnResize(nsRect &aWindowRect)
+{
+ return FALSE;
+}
+
+PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
+{
+ return FALSE;
+}
+
+
+PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
+{
+ return FALSE;
+}
+
+PRBool nsWindow::OnScroll(PRUint32 scrollCode, PRUint32 cPos)
+{
+ return FALSE;
+}
 
 
