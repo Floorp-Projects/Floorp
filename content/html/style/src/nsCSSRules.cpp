@@ -403,7 +403,7 @@ public:
 
   // nsICSSMediaRule methods
   NS_IMETHOD  SetMedia(nsISupportsArray* aMedia);
-  NS_IMETHOD  HasMedium(nsIAtom* aMedium) const;
+  NS_IMETHOD  UseForMedium(nsIAtom* aMedium) const;
 
   NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule);
 
@@ -589,7 +589,7 @@ CSSMediaRuleImpl::SetMedia(nsISupportsArray* aMedia)
 }
 
 NS_IMETHODIMP
-CSSMediaRuleImpl::HasMedium(nsIAtom* aMedium) const
+CSSMediaRuleImpl::UseForMedium(nsIAtom* aMedium) const
 {
   if (mMedia) {
     if (-1 != mMedia->IndexOf(aMedium)) {
@@ -598,8 +598,9 @@ CSSMediaRuleImpl::HasMedium(nsIAtom* aMedium) const
     if (-1 != mMedia->IndexOf(nsLayoutAtoms::all)) {
       return NS_OK;
     }
+    return NS_COMFALSE;
   }
-  return NS_COMFALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
