@@ -92,6 +92,7 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../xul/base/src \
 		   -I$(srcdir)/../xul/templates/src \
 		   -I$(srcdir)/../events/src \
+		   -I. \
 		   $(NULL)
 
 GARBAGE+=$(BUILD_DATE)
