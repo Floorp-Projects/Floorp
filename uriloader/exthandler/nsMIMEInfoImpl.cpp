@@ -31,9 +31,8 @@ nsMIMEInfoImpl::nsMIMEInfoImpl() {
     NS_INIT_REFCNT();
 }
 
-nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) {
+nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) :mMIMEType( aMIMEType ){
     NS_INIT_REFCNT();
-    mMIMEType.AssignWithConversion(aMIMEType);
 }
 
 PRUint32
@@ -50,7 +49,7 @@ nsMIMEInfoImpl::GetFileExtensions(PRInt32 *elementCount, char ***extensions) {
     if (!_retExts) return NS_ERROR_OUT_OF_MEMORY;
 
     for (PRUint8 i=0; i < *elementCount; i++) {
-        nsString* ext = (nsString*)mExtensions.CStringAt(i);
+        nsCString* ext = mExtensions.CStringAt(i);
         _retExts[i] = ext->ToNewCString();
         if (!_retExts[i]) return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -110,7 +109,7 @@ NS_IMETHODIMP
 nsMIMEInfoImpl::SetMIMEType(const char* aMIMEType) {
     if (!aMIMEType) return NS_ERROR_NULL_POINTER;
 
-    mMIMEType.AssignWithConversion(aMIMEType);
+    mMIMEType=aMIMEType;
     return NS_OK;
 }
 
@@ -168,5 +167,22 @@ NS_IMETHODIMP nsMIMEInfoImpl::GetMacCreator(PRUint32 *aMacCreator)
 NS_IMETHODIMP nsMIMEInfoImpl::SetMacCreator(PRUint32 aMacCreator)
 {
 	mMacCreator = aMacCreator;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::SetFileExtensions( const char* aExtensions )
+{
+	mExtensions.Clear();
+	nsCString extList( aExtensions );
+	
+	PRInt32 breakLocation = -1;
+	while ( (breakLocation= extList.FindCharInSet( ",",0 ) )!= -1)
+	{
+		nsCString ext( extList, breakLocation );
+		mExtensions.AppendCString( ext );
+		extList.Cut(0, breakLocation+1 );
+	}
+	if ( extList.Length() )
+		mExtensions.AppendCString( extList );
 	return NS_OK;
 }
