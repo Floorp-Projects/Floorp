@@ -37,7 +37,8 @@ viewer:Mozilla Profile Migration
 viewer:Mozilla Profile Wizard
 viewer:Mozilla Select Profile
 ; viewer:NSPR Logging
-viewer:Plugins:*
+viewer:Plugins:MRJInaBox
+viewer:Plugins:MRJPlugin.jar
 viewer:Search Plugins:*
 
 viewer:Essential Files:gfx.shlb 
