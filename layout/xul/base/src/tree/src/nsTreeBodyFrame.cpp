@@ -127,6 +127,7 @@ nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 // Destructor
 nsOutlinerBodyFrame::~nsOutlinerBodyFrame()
 {
+  delete mColumns;
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
