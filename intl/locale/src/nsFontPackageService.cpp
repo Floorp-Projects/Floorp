@@ -118,6 +118,10 @@ nsresult nsFontPackageService::CallDownload(const char *aFontPackID, PRInt8 aInS
         if (!have)  {
           *aOutState = eDownload;
           rv = mHandler->NeedFontPackage(aFontPackID);
+          if (rv == NS_ERROR_ABORT) {
+            *aOutState = eInit;
+            rv = NS_OK;
+          }
         }
         else  {
           *aOutState = eInstalled;
