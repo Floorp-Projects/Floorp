@@ -113,7 +113,7 @@ public:
     // vtbl for this class. Since this is overridden in the inheriting class
     // we expect it to never be called. 
     // *This is needed by the Irix implementation.*
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+//    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
     // Include generated vtbl stub declarations.
     // These are virtual and *also* implemented by this class..
