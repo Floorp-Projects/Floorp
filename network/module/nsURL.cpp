@@ -266,8 +266,29 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     }
   }
 
-  const char* cp = PL_strchr(cSpec, ':');
-  if ((nsnull == cp) || ('/' == cSpec[0])) {
+  // The URL is considered absolute if and only if it begins with a
+  // protocol spec. A protocol spec is an alphanumeric string of 1 or
+  // more characters that is terminated with a colon.
+  PRBool isAbsolute = PR_FALSE;
+  char* cp;
+  char* ap = cSpec;
+  char ch;
+  while (0 != (ch = *ap)) {
+    if (((ch >= 'a') && (ch <= 'z')) ||
+        ((ch >= 'A') && (ch <= 'Z')) ||
+        ((ch >= '0') && (ch <= '9'))) {
+      ap++;
+      continue;
+    }
+    if ((ch == ':') && (ap - cSpec >= 2)) {
+      isAbsolute = PR_TRUE;
+      cp = ap;
+      break;
+    }
+    break;
+  }
+
+  if (!isAbsolute) {
     // relative spec
     if (nsnull == aURL) {
       delete cSpec;
