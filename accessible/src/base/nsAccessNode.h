@@ -143,7 +143,7 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     static PRBool gIsAccessibilityActive;
     static PRBool gIsCacheDisabled;
 
-    static nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *gGlobalDocAccessibleCache;
+    static nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> gGlobalDocAccessibleCache;
 };
 
 #endif
