@@ -1367,6 +1367,7 @@ nsGenericContainerElement::~nsGenericContainerElement()
   PRInt32 index;
   for (index = 0; index < count; index++) {
     nsIContent* kid = (nsIContent *)mChildren.ElementAt(index);
+    kid->SetParent(nsnull);
     NS_RELEASE(kid);
   }
   if (nsnull != mAttributes) {
