@@ -117,7 +117,8 @@ struct nsXFormsModelElement::ModelItemProperties
 
 nsXFormsModelElement::nsXFormsModelElement()
   : mElement(nsnull),
-    mSchemaCount(0)
+    mSchemaCount(0),
+    mPendingInstanceCount(0)
 {
 }
 
