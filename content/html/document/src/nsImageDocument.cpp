@@ -114,6 +114,11 @@ protected:
 
   void UpdateTitleAndCharset();
 
+  float GetRatio() {
+    return PR_MIN((float)mVisibleWidth / mImageWidth,
+                  (float)mVisibleHeight / mImageHeight);
+  }
+
   nsCOMPtr<nsIDOMElement>       mImageElement;
 
   PRInt32                       mVisibleWidth;
@@ -219,7 +224,6 @@ nsImageDocument::Init()
     mImageResizingEnabled = temp;
   }
 
-
   return NS_OK;
 }
 
@@ -321,15 +325,14 @@ nsImageDocument::ShrinkToFit()
 {
   if (mImageResizingEnabled) {
     nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(mImageElement);
-
-    float ratio = PR_MIN((float)mVisibleWidth / mImageWidth,
-                         (float)mVisibleHeight / mImageHeight);
-    image->SetWidth(NSToCoordFloor(mImageWidth * ratio));
+    image->SetWidth(NSToCoordFloor(GetRatio() * mImageWidth));
 
     mImageElement->SetAttribute(NS_LITERAL_STRING("style"),
                                 NS_LITERAL_STRING("cursor: move"));
 
     mImageIsResized = PR_TRUE;
+
+    UpdateTitleAndCharset();
   }
   return NS_OK;
 }
@@ -345,6 +348,8 @@ nsImageDocument::RestoreImage()
     }
 
     mImageIsResized = PR_FALSE;
+
+    UpdateTitleAndCharset();
   }
 
   return NS_OK;
@@ -600,6 +605,18 @@ nsImageDocument::UpdateTitleAndCharset()
       typeStr = mimeType;
     }
   }
+
+  nsXPIDLString status;
+  if (mImageIsResized) {
+    nsAutoString ratioStr;
+    ratioStr.AppendInt(NSToCoordFloor(GetRatio() * 100));
+
+    const PRUnichar* formatString[1] = { ratioStr.get() };
+    mStringBundle->FormatStringFromName(NS_LITERAL_STRING("ScaledImage").get(),
+                                        formatString, 1,
+                                        getter_Copies(status));
+  }
+
   static const char* const formatNames[4] = 
   {
     "ImageTitleWithNeitherDimensionsNorFile",
@@ -608,8 +625,8 @@ nsImageDocument::UpdateTitleAndCharset()
     "ImageTitleWithDimensionsAndFile",
   };
 
-  nsMediaDocument::UpdateTitleAndCharset(typeStr, formatNames, 
-                                         mImageWidth, mImageHeight);
+  nsMediaDocument::UpdateTitleAndCharset(typeStr, formatNames,
+                                         mImageWidth, mImageHeight, status);
 }
 
 

@@ -242,9 +242,10 @@ nsMediaDocument::StartLayout()
 }
 
 void 
-nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr, 
-                                       const char* const* aFormatNames, 
-                                       PRInt32 aWidth, PRInt32 aHeight)
+nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
+                                       const char* const* aFormatNames,
+                                       PRInt32 aWidth, PRInt32 aHeight,
+                                       const nsAString& aStatus)
 {
   nsXPIDLString fileStr;
   nsCOMPtr<nsIURI> uri = do_QueryInterface(mDocumentURL);
@@ -287,14 +288,14 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
         const PRUnichar *formatStrings[4]  = {fileStr.get(), typeStr.get(), 
           widthStr.get(), heightStr.get()};
         NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithDimAndFile]);
-        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 4, 
+        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 4,
                                             getter_Copies(title));
       } 
       else {
         const PRUnichar *formatStrings[3]  = {typeStr.get(), widthStr.get(), 
           heightStr.get()};
         NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithDim]);
-        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 3, 
+        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 3,
                                             getter_Copies(title));
       }
     } 
@@ -303,18 +304,29 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
       if (!fileStr.IsEmpty()) {
         const PRUnichar *formatStrings[2] = {fileStr.get(), typeStr.get()};
         NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithFile]);
-        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 2, 
+        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 2,
                                             getter_Copies(title));
-      } 
+      }
       else {
-        const PRUnichar *formatStrings[1]  = {typeStr.get()};
+        const PRUnichar *formatStrings[1] = {typeStr.get()};
         NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithNoInfo]);
-        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 1, 
+        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 1,
                                             getter_Copies(title));
       }
     }
   } 
 
   // set it on the document
-  SetTitle(title);
+  if (aStatus.IsEmpty()) {
+    SetTitle(title);
+  }
+  else {
+    nsXPIDLString titleWithStatus;
+    const nsPromiseFlatString& status = PromiseFlatString(aStatus);
+    const PRUnichar *formatStrings[2] = {title.get(), status.get()};
+    NS_NAMED_LITERAL_STRING(fmtName, "TitleWithStatus");
+    mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 2,
+                                        getter_Copies(titleWithStatus));
+    SetTitle(titleWithStatus);
+  }
 }
