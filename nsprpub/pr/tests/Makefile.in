@@ -113,7 +113,9 @@ CSRCS =             \
 	peek.c    		\
 	perf.c    		\
 	pipeping.c		\
+	pipeping2.c		\
 	pipepong.c		\
+	pipepong2.c		\
 	pipeself.c		\
 	poll_er.c		\
 	poll_nm.c		\
