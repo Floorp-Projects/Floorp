@@ -1470,6 +1470,7 @@ sub BuildClientDist()
 
     #INTL
     #CHARDET
+    _InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST_IDL",               "$distdirectory:idl:");
     _InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST",                   "$distdirectory:chardet");
 
     #UCONV
@@ -2050,6 +2051,8 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:intl:strres:macbuild:strresIDL.mcp",                  "nsIStringBundle");
     BuildIDLProject(":mozilla:intl:unicharutil:macbuild:unicharutilIDL.mcp",        "unicharutil");
     BuildIDLProject(":mozilla:intl:uconv:macbuild:uconvIDL.mcp",                    "uconv");
+    BuildIDLProject(":mozilla:intl:chardet:macbuild:chardetIDL.mcp",                "chardet");
+
 
     if ($main::options{ldap})
     {
