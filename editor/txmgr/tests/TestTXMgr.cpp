@@ -443,7 +443,7 @@ public:
   NS_IMETHOD Close(void) {return NS_OK;}
   NS_IMETHOD Write(const char *str, PRUint32 len, PRUint32 *wcnt)
   {
-    *wcnt = fwrite(&str[offset], 1, len, stdout);
+    *wcnt = fwrite(str, 1, len, stdout);
     fflush(stdout);
     return NS_OK;
   }
