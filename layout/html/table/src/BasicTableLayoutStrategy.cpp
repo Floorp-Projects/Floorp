@@ -1813,9 +1813,7 @@ void BasicTableLayoutStrategy::EnsureCellMinWidths(PRBool aShrinkFixedWidthCells
   delete [] colsToRemoveFrom;
 }
 
-// for now, extra space just falls on the floor (that is, it stays in the table)
-// this is in the case of having to set a col to its min width instead of just
-// subtracting out excessPerColumn
+
 void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth, 
                                                         nscoord aTableWidth, PRBool aShrinkFixedCols)
 {
@@ -1833,8 +1831,7 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth,
 
   PRInt32 numFixedColumns=0;
   PRInt32 *fixedColumns=nsnull;
-  if (PR_TRUE==aShrinkFixedCols)
-    mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
+  mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
   nscoord excess = aComputedWidth - aTableWidth;
   nscoord minDiff;    // the smallest non-zero delta between a column's current width and its min width
   PRInt32 * colsToShrink = new PRInt32[mNumCols];
@@ -1873,7 +1870,7 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth,
     // determine the amount to remove from each column
     nscoord excessPerColumn;
     if (excess<numColsToShrink)
-      excess=1;
+      excessPerColumn=1;
     else
       excessPerColumn = excess/numColsToShrink;  // guess we can remove as much as we want
     if (excessPerColumn>minDiff)                 // then adjust for minimum col widths
@@ -1918,6 +1915,7 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth,
 
 }
 
+
 void BasicTableLayoutStrategy::AdjustTableThatIsTooNarrow(nscoord aComputedWidth, 
                                                           nscoord aTableWidth)
 {
@@ -1935,27 +1933,50 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooNarrow(nscoord aComputedWidth
 
   PRInt32 numFixedColumns=0;
   PRInt32 *fixedColumns=nsnull;
-  //XXX todo: exclude fixed width columns
-  //mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
+  mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
   nscoord excess = aTableWidth - aComputedWidth;
-  if (0<excess && mNumCols!=numFixedColumns)
+  while (0<excess)
   {
-    nscoord excessPerColumn = excess/(mNumCols-numFixedColumns);
-    for (PRInt32 colIndex = 0; colIndex<mNumCols; colIndex++)
+    PRInt32 colIndex;
+    PRInt32 * colsToGrow = new PRInt32[mNumCols];
+    // determine what columns we can take add width to
+    PRInt32 numColsToGrow = 0;
+    PRBool expandFixedCols = PRBool(mNumCols==numFixedColumns);
+    for (colIndex=0; colIndex<mNumCols; colIndex++)
     {
-      //XXX todo: exclude fixed width columns
-      //if (PR_FALSE==IsColumnInList(colIndex, fixedColumns))
+      if ((PR_FALSE==expandFixedCols) && 
+          (PR_TRUE==IsColumnInList(colIndex, fixedColumns, numFixedColumns)))
+        continue;
+      colsToGrow[numColsToGrow] = colIndex;
+      numColsToGrow++;
+    }    
+    nscoord excessPerColumn;
+    if (excess<numColsToGrow)
+      excessPerColumn=1;
+    else
+      excessPerColumn = excess/numColsToGrow;  
+    for (colIndex = 0; colIndex<mNumCols; colIndex++)
+    {
+      if ((PR_TRUE==IsColumnInList(colIndex, colsToGrow, numColsToGrow)))
       {
+        nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
         nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
         colWidth += excessPerColumn;
-        nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
-        if (colWidth >colFrame->GetEffectiveMinColWidth())
+        if (colWidth > colFrame->GetEffectiveMinColWidth())
+        {
+          excess -= excessPerColumn;
           mTableFrame->SetColumnWidth(colIndex, colWidth);
+        }
         else
+        {
+          excess -= mTableFrame->GetColumnWidth(colIndex) - colFrame->GetEffectiveMinColWidth();   
           mTableFrame->SetColumnWidth(colIndex, colFrame->GetEffectiveMinColWidth());
+        }
+        if (0>excess)
+          break;
       }
     }
-  }
+  } // end while (0<excess)
   if (PR_TRUE==gsDebug)
   {
     nscoord tableWidth=0;

@@ -244,6 +244,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
 
   nsHTMLValue value;
+  nsHTMLValue widthValue;
   nsStyleText* textStyle = nsnull;
 
   // align: enum
@@ -327,26 +328,17 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
 
   MapBackgroundAttributesInto(aContext, aPresContext);
 
-  // nowrap
-  GetAttribute(nsHTMLAtoms::nowrap, value);
-  if (value.GetUnit() == eHTMLUnit_Empty)
-  {
-    if (nsnull==textStyle)
-      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-    textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
-  }
-
   // width: pixel
   float p2t = aPresContext->GetPixelsToTwips();
   nsStylePosition* pos = (nsStylePosition*)
     aContext->GetMutableStyleData(eStyleStruct_Position);
-  GetAttribute(nsHTMLAtoms::width, value);
-  if (value.GetUnit() == eHTMLUnit_Pixel) {
-    nscoord twips = nscoord(p2t * value.GetPixelValue());
+  GetAttribute(nsHTMLAtoms::width, widthValue);
+  if (widthValue.GetUnit() == eHTMLUnit_Pixel) {
+    nscoord twips = nscoord(p2t * widthValue.GetPixelValue());
     pos->mWidth.SetCoordValue(twips);
   }
-  else if (value.GetUnit() == eHTMLUnit_Percent) {
-    pos->mWidth.SetPercentValue(value.GetPercentValue());
+  else if (widthValue.GetUnit() == eHTMLUnit_Percent) {
+    pos->mWidth.SetPercentValue(widthValue.GetPercentValue());
   }
 
   // height: pixel
@@ -354,6 +346,19 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
   if (value.GetUnit() == eHTMLUnit_Pixel) {
     nscoord twips = nscoord(p2t * value.GetPixelValue());
     pos->mHeight.SetCoordValue(twips);
+  }
+
+  // nowrap
+  // nowrap depends on the width attribute, so be sure to handle it after width is mapped!
+  GetAttribute(nsHTMLAtoms::nowrap, value);
+  if (value.GetUnit() == eHTMLUnit_Empty)
+  {
+    if (widthValue.GetUnit() != eHTMLUnit_Pixel)
+    {
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
+    }
   }
 }
 
