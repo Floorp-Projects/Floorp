@@ -1876,8 +1876,14 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
     default:
       {
         if ((NS_IS_MOUSE_EVENT(aEvent) &&
+             // Ignore moves that we synthesize.
              NS_STATIC_CAST(nsMouseEvent*,aEvent)->reason ==
-               nsMouseEvent::eReal) ||
+               nsMouseEvent::eReal &&
+             // Ignore mouse exit and enter (we'll get moves if the user
+             // is really moving the mouse) since we get them when we
+             // create and destroy widgets.
+             aEvent->message != NS_MOUSE_EXIT &&
+             aEvent->message != NS_MOUSE_ENTER) ||
             NS_IS_KEY_EVENT(aEvent) ||
             NS_IS_IME_EVENT(aEvent)) {
           gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
