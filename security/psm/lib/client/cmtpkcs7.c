@@ -246,7 +246,8 @@ CMTStatus CMT_PKCS7DecoderFinish(PCMT_CONTROL control, CMUint32 connectionID,
                 } else if (nbytes == 0) {
                     break;
                 }
-                priv->cb(priv->cb_arg, buf, nbytes);
+                if (priv->cb)
+                    priv->cb(priv->cb_arg, buf, nbytes);
             }
         }
     }
