@@ -74,7 +74,6 @@ nsImageGTK::nsImageGTK()
   mSizeImage = 0;
   mAlphaHeight = 0;
   mAlphaWidth = 0;
-  mGC = nsnull;
   mNaturalWidth = 0;
   mNaturalHeight = 0;
   mAlphaValid = PR_FALSE;
@@ -105,10 +104,6 @@ nsImageGTK::~nsImageGTK()
 
   if (mImagePixmap) {
     gdk_pixmap_unref(mImagePixmap);
-  }
-
-  if (mGC) {
-    gdk_gc_unref(mGC);
   }
 
 #ifdef TRACE_IMAGE_ALLOCATION
@@ -431,17 +426,12 @@ nsImageGTK::DrawScaled(nsIRenderingContext &aContext,
     GdkGC *copyGC;
     if (mAlphaPixmap) {
       NS_WARNING("alpha bitmask not scaled!\n");
-      if (mGC) {
-        copyGC = gdk_gc_ref(mGC);
-      } else {
-        mGC = gdk_gc_new(drawing->GetDrawable());
-        GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
-        gdk_gc_copy(mGC, gc);
-        gdk_gc_unref(gc); // unref the one we got
-        copyGC = gdk_gc_ref(mGC);
-        
-        SetupGCForAlpha(copyGC, aDX-aSX, aDY-aSY);
-      }
+      copyGC = gdk_gc_new(drawing->GetDrawable());
+      GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+      gdk_gc_copy(copyGC, gc);
+      gdk_gc_unref(gc); // unref the one we got
+      
+      SetupGCForAlpha(copyGC, aDX-aSX, aDY-aSY);
     } else {
       // don't make a copy... we promise not to change it
       copyGC = ((nsRenderingContextGTK&)aContext).GetGC();
@@ -586,15 +576,10 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
   GdkGC *copyGC;
   if (mAlphaPixmap) {
-    if (mGC) {
-      copyGC = gdk_gc_ref(mGC);
-    } else {
-      mGC = gdk_gc_new(drawing->GetDrawable());
-      GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
-      gdk_gc_copy(mGC, gc);
-      gdk_gc_unref(gc); // unref the one we got
-      copyGC = gdk_gc_ref(mGC);
-    }
+    copyGC = gdk_gc_new(drawing->GetDrawable());
+    GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+    gdk_gc_copy(copyGC, gc);
+    gdk_gc_unref(gc); // unref the one we got
     
     SetupGCForAlpha(copyGC, aDX-aSX, aDY-aSY);
   } else {
@@ -1155,10 +1140,8 @@ void nsImageGTK::SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY)
     xvalues.clip_y_origin = aY;
     xvalues_mask = GCClipXOrigin | GCClipYOrigin;
 
-    if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
-      xvalues.clip_mask = GDK_WINDOW_XWINDOW(mAlphaPixmap);
-      xvalues_mask |= GCClipMask;
-    }
+    xvalues.clip_mask = GDK_WINDOW_XWINDOW(mAlphaPixmap);
+    xvalues_mask |= GCClipMask;
 
     XChangeGC(GDK_DISPLAY(), GDK_GC_XGC(aGC), xvalues_mask, &xvalues);
   }
@@ -1236,16 +1219,10 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
   GdkGC *copyGC;
   if (mAlphaPixmap) {
-
-    if (mGC) {
-      copyGC = gdk_gc_ref(mGC);
-    } else {
-      mGC = gdk_gc_new(drawing->GetDrawable());
-      GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
-      gdk_gc_copy(mGC, gc);
-      gdk_gc_unref(gc); // unref the one we got
-      copyGC = gdk_gc_ref(mGC);
-    }
+    copyGC = gdk_gc_new(drawing->GetDrawable());
+    GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+    gdk_gc_copy(copyGC, gc);
+    gdk_gc_unref(gc); // unref the one we got
     
     SetupGCForAlpha(copyGC, aX, aY);
   } else {
