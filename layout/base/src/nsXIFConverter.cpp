@@ -495,26 +495,25 @@ void nsXIFConverter::EndCSSDeclaration()
 //
 // Leave a temp file for debugging purposes
 //
-void nsXIFConverter::WriteDebugFile()
-{
+void nsXIFConverter::WriteDebugFile() {
+
 #if defined(WIN32)
   const char* filename="c:\\temp\\xif.xif";
-  ofstream out(filename);
 
-  char* s = mBuffer.ToNewCString();
-  out << s;
-  out.close();
-  delete[] s;
 #elif defined(XP_UNIX) || defined(XP_BEOS)
   const char* filename="/tmp/xif.xif";
-  ofstream out(filename);
 
-  char* s = mBuffer.ToNewCString();
-  out << s;
-  out.close();
-  delete[] s;
 #elif defined(XP_MAC)
   // XXX Someone please write some Mac debugging code here!
+
 #endif
+
+  ofstream out(filename);
+  char* s = mBuffer.ToNewCString();
+  if(s) {
+    out << s;
+    Recycle(s);
+  }
+  out.close();
 }
 #endif /* DEBUG */
