@@ -2215,7 +2215,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 
         case nsWindow::SET_FOCUS:
             NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-            SetFocus();
+            SetFocus(PR_FALSE);
             break;
 
         default:
