@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.3 2004/04/22 06:41:02 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.4 2004/04/28 14:39:54 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -71,14 +71,29 @@ public class NavigationTest extends WebclientTestCase {
 	frame.setVisible(true);
 	canvas.setVisible(true);
 	
-	Navigation nav = (Navigation) 
+	Navigation2 nav = (Navigation2) 
 	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
 	assertNotNull(nav);
 	File testPage = new File(getBrowserBinDir(), 
 				 "../../java/webclient/test/automated/src/test/NavigationTest.txt");
 
 	System.out.println("Loading url: " + testPage.toURL().toString());
-	nav.loadURL(testPage.toURL().toString());
+	nav.loadURLBlocking(testPage.toURL().toString());
+
+	CurrentPage2 currentPage = (CurrentPage2) 
+          firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	
+	assertNotNull(currentPage);
+	currentPage.selectAll();
+	Selection selection = currentPage.getSelection();
+	assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
+	System.out.println("Selection is: " + selection.toString());
+
+	/*********
+	RandomHTMLInputStream rhis = new RandomHTMLInputStream(3);
+	nav.loadFromStream(rhis, "http://randomstream.com/",
+			   "text/html", -1, null);
+	************/
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
 	BrowserControlFactory.appTerminate();

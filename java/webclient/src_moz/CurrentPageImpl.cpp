@@ -32,84 +32,90 @@
 
 #include "org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl.h"
 
-#include "CurrentPageActionEvents.h"
-
 #include "ns_util.h"
 #include "rdf_util.h"
+#include "NativeBrowserControl.h"
+#include "EmbedWindow.h"
 
 #include "nsCRT.h"
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeCopyCurrentSelectionToSystemClipboard
-(JNIEnv *env, jobject obj, jint webShellPtr)
-{
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+#if 0 // convenience
 
-    if (initContext->initComplete) {
-        wsCopySelectionEvent * actionEvent = new wsCopySelectionEvent(initContext);
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeCopyCurrentSelectionToSystemClipboard
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
+{
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+
+    if (nativeBrowserControl->initComplete) {
+        wsCopySelectionEvent * actionEvent = new wsCopySelectionEvent(nativeBrowserControl);
         PLEvent         * event       = (PLEvent*) *actionEvent;
-        ::util_PostEvent(initContext, event);
+        ::util_PostEvent(nativeBrowserControl, event);
     }
 
 }
+
+#endif // if 0
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSelection
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject selection)
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jobject selection)
 {
-    NativeBrowserControl *initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl *nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed nativeGetSelection");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed nativeGetSelection");
         return;
     }
-
-    PR_ASSERT(initContext->initComplete);
 
     if (selection == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null Selection object passed to raptorWebShellGetSelection");
+        ::util_ThrowExceptionToJava(env, "Exception: null Selection object passed to nativeGetSelection");
+        return;
+    }
+    nsresult rv = nativeBrowserControl->mWindow->GetSelection(env,
+                                                              selection);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get Selection from browser");
         return;
     }
 
-    wsGetSelectionEvent *actionEvent = new wsGetSelectionEvent(env, initContext, selection);
-
-    PLEvent *event = (PLEvent *) *actionEvent;
-    ::util_PostSynchronousEvent(initContext, event);
+    
 }
 
+#if 0 // convenience
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeHighlightSelection
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject startContainer, jobject endContainer, jint startOffset, jint endOffset)
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jobject startContainer, jobject endContainer, jint startOffset, jint endOffset)
 {
-    NativeBrowserControl *initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl *nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeHighlightSelection");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeHighlightSelection");
         return;
     }
 
-    PR_ASSERT(initContext->initComplete);
+    PR_ASSERT(nativeBrowserControl->initComplete);
 
-    wsHighlightSelectionEvent *actionEvent = new wsHighlightSelectionEvent(env, initContext, startContainer, endContainer, (PRInt32) startOffset, (PRInt32) endOffset);
+    wsHighlightSelectionEvent *actionEvent = new wsHighlightSelectionEvent(env, nativeBrowserControl, startContainer, endContainer, (PRInt32) startOffset, (PRInt32) endOffset);
     PLEvent *event = (PLEvent *) *actionEvent;
-    ::util_PostSynchronousEvent(initContext, event);
+    ::util_PostSynchronousEvent(nativeBrowserControl, event);
 }
 
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeClearAllSelections
-(JNIEnv *env, jobject obj, jint webShellPtr)
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
-    NativeBrowserControl *initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl *nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeClearAllSelections");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeClearAllSelections");
         return;
     }
 
-    PR_ASSERT(initContext->initComplete);
+    PR_ASSERT(nativeBrowserControl->initComplete);
 
-    wsClearAllSelectionEvent *actionEvent = new wsClearAllSelectionEvent(initContext);
+    wsClearAllSelectionEvent *actionEvent = new wsClearAllSelectionEvent(nativeBrowserControl);
 
     PLEvent *event = (PLEvent *) *actionEvent;
-    ::util_PostSynchronousEvent(initContext, event);
+    ::util_PostSynchronousEvent(nativeBrowserControl, event);
 }
 
 /*
@@ -118,24 +124,24 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
  * Signature: (Ljava/lang/String;ZZ)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFindInPage
-(JNIEnv *env, jobject obj, jint webShellPtr, jstring searchString, jboolean forward, jboolean matchCase)
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jstring searchString, jboolean forward, jboolean matchCase)
 {
 
-  NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+  NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
 
   jstring searchStringGlobalRef = (jstring) ::util_NewGlobalRef(env, searchString);
   if (!searchStringGlobalRef) {
-      initContext->initFailCode = kFindComponentError;
+      nativeBrowserControl->initFailCode = kFindComponentError;
       ::util_ThrowExceptionToJava(env, "Exception: Can't create global ref for search string");
       return;
   }
 
-  if (initContext->initComplete) {
-     wsFindEvent * actionEvent = new wsFindEvent(initContext, searchStringGlobalRef,
+  if (nativeBrowserControl->initComplete) {
+     wsFindEvent * actionEvent = new wsFindEvent(nativeBrowserControl, searchStringGlobalRef,
                                                  forward, matchCase);
       PLEvent           * event       = (PLEvent*) *actionEvent;
-      ::util_PostEvent(initContext, event);
+      ::util_PostEvent(nativeBrowserControl, event);
     }
 
 
@@ -149,18 +155,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFindNextInPage
-(JNIEnv *env, jobject obj, jint webShellPtr)
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
 
-  NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+  NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
   //First get the FindComponent object
 
   PRBool found = PR_TRUE;
 
-  if (initContext->initComplete) {
-      wsFindEvent * actionEvent = new wsFindEvent(initContext);
+  if (nativeBrowserControl->initComplete) {
+      wsFindEvent * actionEvent = new wsFindEvent(nativeBrowserControl);
       PLEvent           * event       = (PLEvent*) *actionEvent;
-      ::util_PostEvent(initContext, event);
+      ::util_PostEvent(nativeBrowserControl, event);
   }
 
 }
@@ -171,25 +177,25 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
  * Signature: ()Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetCurrentURL
-(JNIEnv *env, jobject obj, jint webShellPtr)
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
     JNIEnv  *   pEnv = env;
     jobject     jobj = obj;
     char    *   charResult = nsnull;
     jstring     urlString = nsnull;
 
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetURL");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellGetURL");
         return nsnull;
     }
 
-    if (initContext->initComplete) {
-        wsGetURLEvent   * actionEvent = new wsGetURLEvent(initContext);
+    if (nativeBrowserControl->initComplete) {
+        wsGetURLEvent   * actionEvent = new wsGetURLEvent(nativeBrowserControl);
         PLEvent         * event       = (PLEvent*) *actionEvent;
 
-        charResult = (char *) ::util_PostSynchronousEvent(initContext, event);
+        charResult = (char *) ::util_PostSynchronousEvent(nativeBrowserControl, event);
 
         if (charResult != nsnull) {
             urlString = ::util_NewStringUTF(env, (const char *) charResult);
@@ -206,20 +212,20 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
 }
 
 JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetDOM
-(JNIEnv *env, jobject obj, jint webShellPtr)
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
     jobject result = nsnull;
     jlong documentLong = nsnull;
     jclass clazz = nsnull;
     jmethodID mid = nsnull;
 
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetDOM");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellGetDOM");
         return nsnull;
     }
-    if (nsnull == initContext->currentDocument ||
-        nsnull == (documentLong = (jlong) initContext->currentDocument.get())){
+    if (nsnull == nativeBrowserControl->currentDocument ||
+        nsnull == (documentLong = (jlong) nativeBrowserControl->currentDocument.get())){
         return nsnull;
     }
 
@@ -236,7 +242,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
 
     wsGetDOMEvent * actionEvent = new wsGetDOMEvent(env, clazz, mid, documentLong);
     PLEvent         * event       = (PLEvent*) *actionEvent;
-    result = (jobject) ::util_PostSynchronousEvent(initContext, event);
+    result = (jobject) ::util_PostSynchronousEvent(nativeBrowserControl, event);
 
 
     return result;
@@ -268,18 +274,18 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
 
 /* PENDING(ashuk): remove this from here and in the motif directory
 JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
-(JNIEnv * env, jobject jobj, jint webShellPtr, jboolean viewMode)
+(JNIEnv * env, jobject jobj, jint nativeBCPtr, jboolean viewMode)
 {
 
 
-  NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+  NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-  if (initContext->initComplete) {
+  if (nativeBrowserControl->initComplete) {
       wsViewSourceEvent * actionEvent =
-          new wsViewSourceEvent(initContext->docShell, ((JNI_TRUE == viewMode)? PR_TRUE : PR_FALSE));
+          new wsViewSourceEvent(nativeBrowserControl->docShell, ((JNI_TRUE == viewMode)? PR_TRUE : PR_FALSE));
       PLEvent       * event       = (PLEvent*) *actionEvent;
 
-      ::util_PostEvent(initContext, event);
+      ::util_PostEvent(nativeBrowserControl, event);
   }
 
     jbyteArray result = nsnull;
@@ -294,13 +300,14 @@ JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Cur
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeResetFind
-(JNIEnv * env, jobject obj, jint webShellPtr)
+(JNIEnv * env, jobject obj, jint nativeBCPtr)
 {
-  NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+  NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
 }
 
 
+#endif // if 0
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
@@ -308,15 +315,22 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeSelectAll
-(JNIEnv * env, jobject obj, jint webShellPtr)
+(JNIEnv * env, jobject obj, jint nativeBCPtr)
 {
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
-    if (initContext->initComplete) {
-        wsSelectAllEvent * actionEvent = new wsSelectAllEvent(initContext);
-        PLEvent         * event       = (PLEvent*) *actionEvent;
-        ::util_PostEvent(initContext, event);
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null passed to nativeSelectAll");
+        return;
+    }
+    nsresult rv = nativeBrowserControl->mWindow->SelectAll();
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't selectAll");
+        return;
     }
 }
+
+#if 0 // convenience
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
@@ -324,13 +338,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativePrint
-(JNIEnv * env, jobject obj, jint webShellPtr)
+(JNIEnv * env, jobject obj, jint nativeBCPtr)
 {
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
-    if (initContext->initComplete) {
-        wsPrintEvent * actionEvent = new wsPrintEvent(initContext);
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    if (nativeBrowserControl->initComplete) {
+        wsPrintEvent * actionEvent = new wsPrintEvent(nativeBrowserControl);
         PLEvent         * event       = (PLEvent*) *actionEvent;
-        ::util_PostEvent(initContext, event);
+        ::util_PostEvent(nativeBrowserControl, event);
     }
 }
 
@@ -340,13 +354,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
  * Signature: (IZ)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativePrintPreview
-(JNIEnv * env, jobject obj, jint webShellPtr, jboolean preview)
+(JNIEnv * env, jobject obj, jint nativeBCPtr, jboolean preview)
 {
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
-    if (initContext->initComplete) {
-        wsPrintPreviewEvent * actionEvent = new wsPrintPreviewEvent(initContext, preview);
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    if (nativeBrowserControl->initComplete) {
+        wsPrintPreviewEvent * actionEvent = new wsPrintPreviewEvent(nativeBrowserControl, preview);
         PLEvent         * event       = (PLEvent*) *actionEvent;
-        ::util_PostEvent(initContext, event);
+        ::util_PostEvent(nativeBrowserControl, event);
     }
 }
 
+# endif // if 0

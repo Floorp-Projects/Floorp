@@ -50,5 +50,7 @@ public void post(String  absoluteUrl,
                  String  postData,
                  String  postHeaders);
 
+public void loadURLBlocking(String absoluteURL);
+
 } 
 // end of interface Navigation2

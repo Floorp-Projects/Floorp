@@ -43,6 +43,8 @@
 
 class NativeBrowserControl;
 
+#include "ns_util.h"
+
 class EmbedWindow : public nsIWebBrowserChrome,
 		    public nsIWebBrowserChromeFocus,
                     public nsIEmbeddingSiteWindow,
@@ -58,6 +60,9 @@ public:
     nsresult Init            (NativeBrowserControl *aOwner);
     nsresult CreateWindow_   (PRUint32 width, PRUint32 height);
     void     ReleaseChildren (void);
+
+    nsresult SelectAll       ();
+    nsresult GetSelection    (JNIEnv *env, jobject selection);
     
     NS_DECL_ISUPPORTS
     

@@ -29,11 +29,25 @@
 #include <nsCWebBrowser.h>
 #include <nsIComponentManager.h>
 #include <nsIDocShellTreeItem.h>
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
+#include "nsISelection.h"
+#include "nsIDOMRange.h"
+#include "nsIDOMNode.h"
 #include "nsIWidget.h"
 #include "nsReadableUtils.h"
+#include "nsIContentViewer.h"
+#include "nsIContentViewerEdit.h"
+#include "nsIDocShell.h"
+#include "nsIInterfaceRequestorUtils.h"
+
 
 #include "NativeBrowserControl.h"
 #include "EmbedWindow.h"
+
+#include "jni_util.h"
+
+#include "nsCRT.h"
 
 EmbedWindow::EmbedWindow(void)
 {
@@ -107,6 +121,150 @@ EmbedWindow::ReleaseChildren(void)
   }
   mBaseWindow = 0;
   mWebBrowser = 0;
+}
+
+nsresult
+EmbedWindow::SelectAll()
+{
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebBrowser);
+    if (!docShell) {
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    nsresult rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+    if (!contentViewer) {
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
+    if (!contentViewerEdit) {
+        return NS_ERROR_FAILURE;
+    }
+    
+    rv = contentViewerEdit->SelectAll();
+    return rv;
+}
+
+nsresult 
+EmbedWindow::GetSelection(JNIEnv *env, jobject mSelection)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    
+    // Get the DOM window
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    rv = mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (NS_FAILED(rv) || !domWindow)  {
+        return rv;
+    }
+    
+    // Get the selection object of the DOM window
+    nsCOMPtr<nsISelection> selection;
+    rv = domWindow->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(rv) || !selection)  {
+        return rv;
+    }
+
+    // Get the range count
+    PRInt32 rangeCount;
+    rv = selection->GetRangeCount(&rangeCount);
+    if (NS_FAILED(rv) || rangeCount == 0)  {
+        return rv;
+    }
+
+    // Get the actual selection string
+    PRUnichar *selectionStr;
+    rv = selection->ToString(&selectionStr);
+    if (NS_FAILED(rv))  {
+        return rv;
+    }
+    
+    jstring string =
+        env->NewString((jchar*)selectionStr, nsCRT::strlen(selectionStr));
+    // string is now GC'd by Java
+    nsMemory::Free((void *) selectionStr);
+    
+    // Get the first range object of the selection object
+    nsCOMPtr<nsIDOMRange> range;
+    rv = selection->GetRangeAt(0, getter_AddRefs(range));
+    if (NS_FAILED(rv) || !range)  {
+        return rv;
+    }
+    
+    // Get the properties of the range object (startContainer,
+    // startOffset, endContainer, endOffset)
+    PRInt32 startOffset;
+    PRInt32 endOffset;
+    nsCOMPtr<nsIDOMNode> startContainer;
+    nsCOMPtr<nsIDOMNode> endContainer;
+
+    // start container
+    rv = range->GetStartContainer(getter_AddRefs(startContainer));
+    if (NS_FAILED(rv))  {
+        return rv;
+    }
+    
+    // end container
+    rv = range->GetEndContainer(getter_AddRefs(endContainer));
+    if (NS_FAILED(rv))  {
+        return rv;
+    }
+    
+    // start offset
+    rv = range->GetStartOffset(&startOffset);
+    if (NS_FAILED(rv))  {
+        return rv;
+    }
+    
+    // end offset
+    rv = range->GetEndOffset(&endOffset);
+    if (NS_FAILED(rv))  {
+        return rv;
+    }
+    
+    // get a handle on to acutal (java) Node representing the start
+    // and end containers
+    jlong node1Long = nsnull;
+    jlong node2Long = nsnull;
+    
+    nsCOMPtr<nsIDOMNode> node1Ptr(do_QueryInterface(startContainer));
+    nsCOMPtr<nsIDOMNode> node2Ptr(do_QueryInterface(endContainer));
+
+    if (nsnull == (node1Long = (jlong)node1Ptr.get())) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    if (nsnull == (node2Long = (jlong)node2Ptr.get())) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    
+    jclass clazz = nsnull;
+    jmethodID mid = nsnull;
+    
+    if (nsnull == (clazz = ::util_FindClass(env,
+                                            "org/mozilla/dom/DOMAccessor"))) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    if (nsnull == (mid = env->GetStaticMethodID(clazz, "getNodeByHandle",
+                                                 "(J)Lorg/w3c/dom/Node;"))) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    
+    jobject node1 = (jobject) ((void *)::util_CallStaticObjectMethodlongArg(env, clazz, mid, node1Long));
+    jobject node2 = (jobject) ((void *)::util_CallStaticObjectMethodlongArg(env, clazz, mid, node2Long));
+    
+    // prepare the (java) Selection object that is to be returned.
+    if (nsnull == (clazz = ::util_FindClass(env, "org/mozilla/webclient/Selection"))) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    
+    if (nsnull == (mid = env->GetMethodID(clazz, "init",
+                                           "(Ljava/lang/String;Lorg/w3c/dom/Node;Lorg/w3c/dom/Node;II)V"))) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    
+    env->CallVoidMethod(mSelection, mid,
+                         string, node1, node2,
+                         (jint)startOffset, (jint)endOffset);
+    
+    return NS_OK;
 }
 
 // nsISupports

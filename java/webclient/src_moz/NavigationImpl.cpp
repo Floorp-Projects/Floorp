@@ -99,7 +99,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     nsString *uriNsString = nsnull;
     wsLoadFromStreamEvent *actionEvent = nsnull;
     
-    if (nativeBrowserControl == nsnull || !nativeBrowserControl->initComplete) {
+    if (nativeBrowserControl == nsnull) {
         ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeLoadFromStream");
         return;
     }
@@ -110,19 +110,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         ::util_ThrowExceptionToJava(env, "Exception: nativeLoadFromStream: unable to convert java string to native format");
         goto NLFS_CLEANUP;
     }
-
+    
     if (!(uriNsString = 
           new nsString(uriStringUniChars, uriStringUniCharsLength))) {
         ::util_ThrowExceptionToJava(env, "Exception: nativeLoadFromStream: unable to convert native string to nsString");
         goto NLFS_CLEANUP;
     }
-
+    
     // the deleteGlobalRef is done in the wsLoadFromStream destructor
     if (!(globalStream = ::util_NewGlobalRef(env, stream))) {
         ::util_ThrowExceptionToJava(env, "Exception: nativeLoadFromStream: unable to create gloabal ref to stream");
         goto NLFS_CLEANUP;
     }
-
+    
     if (loadProperties) {
         // the deleteGlobalRef is done in the wsLoadFromStream destructor
         if (!(globalLoadProperties = 
@@ -131,7 +131,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
             goto NLFS_CLEANUP;
         }
     }
-
+    
     if (!(actionEvent = new wsLoadFromStreamEvent(nativeBrowserControl,
                                                   (void *) globalStream,
                                                   *uriNsString,
@@ -152,6 +152,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     // note, the deleteGlobalRef for loadProperties happens in the
     // wsLoadFromStreamEvent destructor.
 }
+
+
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativePost
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jstring absoluteURL, jstring target, jint postDataLength,

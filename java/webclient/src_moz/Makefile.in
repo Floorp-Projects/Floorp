@@ -89,18 +89,18 @@ REQUIRES	= xpcom \
 #	nsActions.cpp \
 #	CBrowserContainer.cpp \
 #	PromptActionEvents.cpp  \
-#	CurrentPageImpl.cpp \
 #	CurrentPageActionEvents.cpp \
 #	HistoryImpl.cpp \
 #	HistoryActionEvents.cpp \
 #	ISupportsPeer.cpp \
 #	NativeEventThreadActionEvents.cpp \
 #	NavigationActionEvents.cpp \
-#	InputStreamShim.cpp \
 #	WindowControlActionEvents.cpp \
 #	WindowCreator.cpp \
 
 CPPSRCS = \
+	InputStreamShim.cpp \
+	CurrentPageImpl.cpp \
 	NativeBrowserControl.cpp \
 	NativeWrapperFactory.cpp \
 	EmbedWindow.cpp \

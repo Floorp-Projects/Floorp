@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -101,14 +100,17 @@ public void copyCurrentSelectionToSystemClipboard()
 }
 
 public Selection getSelection() {
-    Selection selection = new SelectionImpl();
-
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    synchronized(getBrowserControl()) {
-        nativeGetSelection(getNativeBrowserControl(), selection);
-    }
+    final Selection selection = new SelectionImpl();
 
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+	     nativeGetSelection(CurrentPageImpl.this.getNativeBrowserControl(),
+				selection);
+	     return null;
+	    }
+	});
+    
     return selection;
 }
 
@@ -258,13 +260,15 @@ public void resetFind()
     }
 }
 
-public void selectAll()
-{
+public void selectAll() {
     getWrapperFactory().verifyInitialized();
-
-    synchronized(getBrowserControl()) {
-        nativeSelectAll(getNativeBrowserControl());
-    }
+    
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeSelectAll(CurrentPageImpl.this.getNativeBrowserControl());
+		return null;
+	    }
+	});
 }
 
 public void print()
@@ -332,7 +336,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.3 2004/04/10 21:50:38 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.4 2004/04/28 14:39:54 edburns%acm.org Exp $");
 
 }
 

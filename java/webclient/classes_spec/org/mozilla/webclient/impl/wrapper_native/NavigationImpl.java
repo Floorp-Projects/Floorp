@@ -92,28 +92,77 @@ public void loadURL(String absoluteURL)
 	});
 }
 
-public void loadFromStream(InputStream stream, String uri,
-                           String contentType, int contentLength,
-                           Properties loadInfo)
-{
-    ParameterCheck.nonNull(stream);
-    ParameterCheck.nonNull(uri);
-    ParameterCheck.nonNull(contentType);
-    if (contentLength < -1 || contentLength == 0) {
-        throw new RangeException("contentLength value " + contentLength +
-                                 " is out of range.  It is should be either -1 or greater than 0.");
+    public void loadURLBlocking(String absoluteURL) {
+	ParameterCheck.nonNull(absoluteURL);
+	getWrapperFactory().verifyInitialized();
+	final int bc = getNativeBrowserControl();
+	final String url = new String(absoluteURL);
+	Assert.assert_it(-1 != bc);
+	
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    NavigationImpl.this.nativeLoadURL(bc, url);
+		    return null;
+		}
+	    });
     }
 
-    getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
+
+    public void loadFromStream(InputStream stream, String uri,
+			       String contentType, int contentLength,
+			       Properties loadInfo) {
+	ParameterCheck.nonNull(stream);
+	ParameterCheck.nonNull(uri);
+	ParameterCheck.nonNull(contentType);
+	if (contentLength < -1 || contentLength == 0) {
+	    throw new RangeException("contentLength value " + contentLength +
+				     " is out of range.  It is should be either -1 or greater than 0.");
+	}
+	
+	final InputStream finalStream = stream;
+	final String finalUri = uri;
+	final String finalContentType = contentType;
+	final int finalContentLength = contentLength;
+	final Properties finalLoadInfo = loadInfo;
+	
+	NativeEventThread.instance.pushRunnable(new Runnable() {
+		public void run() {
+		    nativeLoadFromStream(NavigationImpl.this.getNativeBrowserControl(), 
+					 finalStream, finalUri, 
+					 finalContentType, 
+					 finalContentLength, finalLoadInfo);
+		}
+	    });
+    }
+
+    public void loadFromStreamBlocking(InputStream stream, String uri,
+				       String contentType, int contentLength,
+				       Properties loadInfo) {
+	ParameterCheck.nonNull(stream);
+	ParameterCheck.nonNull(uri);
+	ParameterCheck.nonNull(contentType);
+	if (contentLength < -1 || contentLength == 0) {
+	    throw new RangeException("contentLength value " + contentLength +
+				     " is out of range.  It is should be either -1 or greater than 0.");
+	}
+	
+	final InputStream finalStream = stream;
+	final String finalUri = uri;
+	final String finalContentType = contentType;
+	final int finalContentLength = contentLength;
+	final Properties finalLoadInfo = loadInfo;
+	
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    nativeLoadFromStream(NavigationImpl.this.getNativeBrowserControl(), 
+					 finalStream, finalUri, 
+					 finalContentType, 
+					 finalContentLength, finalLoadInfo);
+		    return null;
+		}
+	    });
+    }
     
-    synchronized(getBrowserControl()) {
-        nativeLoadFromStream(getNativeBrowserControl(), stream,
-                             uri, contentType, contentLength,
-                             loadInfo);
-    }
-}
-
 public void refresh(long loadFlags)
 {
     ParameterCheck.noLessThan(loadFlags, 0);
@@ -226,7 +275,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.5 2004/04/17 21:25:11 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.6 2004/04/28 14:39:54 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
