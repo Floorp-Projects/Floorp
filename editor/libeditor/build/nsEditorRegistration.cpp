@@ -39,21 +39,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIGenericFactory.h"
-
 #include "nsEditorCID.h"
 #include "nsEditor.h"				// for gInstanceCount
 #include "nsPlaintextEditor.h"
-
 #include "nsEditorController.h" //CID
-
-#include "nsTextServicesDocument.h"
-#include "nsTextServicesCID.h"
 #include "nsIControllerContext.h"
-
 #include "nsIServiceManager.h"
 
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "nsHTMLEditor.h"
+#include "nsTextServicesDocument.h"
+#include "nsTextServicesCID.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -63,8 +59,6 @@
 //
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
-
 
 NS_IMETHODIMP nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
                                             void **aResult)
@@ -100,6 +94,7 @@ NS_IMETHODIMP nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditorLog)
@@ -128,9 +123,11 @@ static const nsModuleComponentInfo components[] = {
     { "Editor Controller", NS_EDITORCONTROLLER_CID,
       "@mozilla.org/editor/editorcontroller;1",
       nsEditorControllerConstructor, },
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
     { NULL, NS_TEXTSERVICESDOCUMENT_CID,
       "@mozilla.org/textservices/textservicesdocument;1",
       nsTextServicesDocumentConstructor },
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////
