@@ -430,6 +430,12 @@ static NSArray* sToolbarDefaults = nil;
   NSLog(@"Browser controller died.");
 #endif
 
+  // clear the window-level undo manager used by the edit field. Not sure
+  // why this isn't automatically done, but we'll leave objects hanging around in
+  // the undo/redo if we do not. We also cannot do this in the url bar's dealloc, 
+  // it only works if it's here.
+  [[[self window] undoManager] removeAllActions];
+
   // active Gecko connections have already been shut down in |windowWillClose|
   // so we don't need to worry about that here. We only have to be careful
   // not to access anything related to the document, as it's been destroyed. The
