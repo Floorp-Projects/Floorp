@@ -57,7 +57,9 @@ core:
 - fixed problem with cheap transparency for 4-bit gray    
 - fixed display_xxxx routines for interlaced images      
 - added precaution against faulty iCCP chunks from PS     
-- changed userdata variable to mng_ptr                    
+- changed userdata variable to mng_ptr
+- added typedef for mng_size_t
+- changed size parameter for memory allocation to mng_size_t
 
 samples:
 

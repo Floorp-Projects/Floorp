@@ -223,7 +223,7 @@ il_mng_settimer(mng_handle handle, mng_uint32 msec)
 }  
 
 static mng_ptr
-il_mng_alloc(mng_uint32 size)
+il_mng_alloc(mng_size_t size)
 {
 //  dprintf((stderr, "=== malloc(%d)\n", size));
   void *ptr = nsMemory::Alloc(size);
@@ -232,7 +232,7 @@ il_mng_alloc(mng_uint32 size)
 }
 
 static void
-il_mng_free(mng_ptr ptr, mng_uint32 size)
+il_mng_free(mng_ptr ptr, mng_size_t size)
 {
 //  dprintf((stderr, "=== free(%d)\n", size));
   nsMemory::Free(ptr);
