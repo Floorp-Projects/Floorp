@@ -48,6 +48,8 @@ CHROME_DEPS	= build.dtd buildconfig.html
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CHROME_PLATFORM = mac
 else

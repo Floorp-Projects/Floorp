@@ -34,4 +34,4 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-#expand <!ENTITY version "__MOZILLA_VERSION__">
+#expand <!ENTITY version "__MOZ_APP_VERSION__">

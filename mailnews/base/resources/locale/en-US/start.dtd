@@ -54,7 +54,4 @@ client, supporting advanced junk mail detection and other useful features.">
 <!ENTITY info_bugs.label
 '<a href="http://www.mozilla.org/mailnews/">We</a> welcome bug reports and feature
 requests, but please read the <a href="&releaseURL;">release notes</a> and query
-<a href="http://bugzilla.mozilla.org/query.cgi">Bugzilla</a> first.'>
-<!ENTITY info_standalone.label
-'If you are looking for a stand alone version, see
-<a href="http://www.mozilla.org/products/thunderbird/">Thunderbird Mail</a>.'>
+<a href="https://bugzilla.mozilla.org/query.cgi">Bugzilla</a> first.'>
