@@ -152,8 +152,9 @@
 #define CS_VIET_VPS    (SINGLEBYTE        |  93) /*   93 Vietnamese VPS */
 #define CS_VIET_TCVN   (SINGLEBYTE        |  94) /*   94 Vietnamese TCVN */
 #define CS_VIET_VNI    (                     95) /*   95 Vietnamese VNI */
+#define CS_T61         (MULTIBYTE         |  96) /*   96 T61  */
 
-#define INTL_CHAR_SET_MAX                    96  /* must be highest + 1 */
+#define INTL_CHAR_SET_MAX                    97  /* must be highest + 1 */
 
 
 #define CS_USER_DEFINED_ENCODING (SINGLEBYTE | 254) /* 254 */
