@@ -57,20 +57,27 @@
 
 NS_IMPL_ISUPPORTS1(nsInterfaceInfoManager, nsIInterfaceInfoManager)
 
+static nsInterfaceInfoManager* gInterfaceInfoManager = NULL;
+
 // static
 nsInterfaceInfoManager*
 nsInterfaceInfoManager::GetInterfaceInfoManager()
 {
-    static nsInterfaceInfoManager* impl = NULL;
-    if(!impl)
+    if(!gInterfaceInfoManager)
     {
-        impl = new nsInterfaceInfoManager();
-        if(!impl->ctor_succeeded)
-            NS_RELEASE(impl);
+        gInterfaceInfoManager = new nsInterfaceInfoManager();
+        if(!gInterfaceInfoManager->ctor_succeeded)
+            NS_RELEASE(gInterfaceInfoManager);
     }
-    if(impl)
-        NS_ADDREF(impl);
-    return impl;
+    if(gInterfaceInfoManager)
+        NS_ADDREF(gInterfaceInfoManager);
+    return gInterfaceInfoManager;
+}
+
+void
+nsInterfaceInfoManager::FreeInterfaceInfoManager()
+{
+    NS_IF_RELEASE(gInterfaceInfoManager);
 }
 
 // static
@@ -389,9 +396,26 @@ nsInterfaceInfoManager::initInterfaceTables()
     return NS_OK;
 }
 
+static PRIntn
+free_nametable_records(PLHashEntry *he, PRIntn index, void *arg)
+{
+    nsInterfaceRecord *value = (nsInterfaceRecord *)he->value;
+    if (value) {
+        delete value;
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
 nsInterfaceInfoManager::~nsInterfaceInfoManager()
 {
-    // let the singleton leak
+    nsTypelibRecord::DestroyList(typelibRecords, allocator);
+    if (nameTable) {
+        PL_HashTableEnumerateEntries(nameTable,
+                                     free_nametable_records,
+                                     0);
+        PL_HashTableDestroy(nameTable);
+    }
+    delete IIDTable;
 }
 
 NS_IMETHODIMP
@@ -521,4 +545,10 @@ XPTI_PUBLIC_API(nsIInterfaceInfoManager*)
 XPTI_GetInterfaceInfoManager()
 {
     return nsInterfaceInfoManager::GetInterfaceInfoManager();
+}
+
+XPTI_PUBLIC_API(void)
+XPTI_FreeInterfaceInfoManager()
+{
+    nsInterfaceInfoManager::FreeInterfaceInfoManager();
 }

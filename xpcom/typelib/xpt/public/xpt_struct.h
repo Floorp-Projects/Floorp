@@ -141,6 +141,9 @@ struct XPTHeader {
 extern XPT_PUBLIC_API(XPTHeader *)
 XPT_NewHeader(PRUint16 num_interfaces);
 
+extern XPT_PUBLIC_API(void)
+XPT_FreeHeader(XPTHeader* aHeader);
+
 /* size of header and annotations */
 extern XPT_PUBLIC_API(PRUint32)
 XPT_SizeOfHeader(XPTHeader *header);
@@ -171,6 +174,9 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
                                 nsID *iid, char *name, char *name_space,
                                 XPTInterfaceDescriptor *descriptor);
+
+extern XPT_PUBLIC_API(void)
+XPT_DestroyInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry* ide);
 
 /*
  * An InterfaceDescriptor is a variable-size record used to describe a 
@@ -219,6 +225,9 @@ XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
 extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
 XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
                            PRUint16 num_constants, PRUint8 flags);
+
+extern XPT_PUBLIC_API(void)
+XPT_FreeInterfaceDescriptor(XPTInterfaceDescriptor* id);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddTypes(XPTInterfaceDescriptor *id, PRUint16 num);

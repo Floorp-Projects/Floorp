@@ -125,6 +125,33 @@ XPT_NewHeader(PRUint16 num_interfaces)
     return header;
 }
 
+XPT_PUBLIC_API(void)
+XPT_FreeHeader(XPTHeader* aHeader)
+{
+    if (aHeader) {
+        XPTAnnotation* ann;
+        XPTInterfaceDirectoryEntry* entry = aHeader->interface_directory;
+        XPTInterfaceDirectoryEntry* end = entry + aHeader->num_interfaces;
+        for (; entry < end; entry++) {
+            XPT_DestroyInterfaceDirectoryEntry(entry);
+        }
+
+        ann = aHeader->annotations;
+        while (ann) {
+            XPTAnnotation* next = ann->next;
+            if (XPT_ANN_IS_PRIVATE(ann->flags)) {
+                XPT_FREEIF(ann->creator);
+                XPT_FREEIF(ann->private_data);
+            }
+            XPT_DELETE(ann);
+            ann = next;
+        }
+
+        XPT_FREEIF(aHeader->interface_directory);
+        XPT_DELETE(aHeader);
+    }
+}
+
 XPT_PUBLIC_API(PRBool)
 XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
 {
@@ -238,6 +265,16 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
     ide->name_space = name_space ? strdup(name_space) : NULL;
     ide->interface_descriptor = descriptor;
     return PR_TRUE;
+}
+
+XPT_PUBLIC_API(void)
+XPT_DestroyInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry* ide)
+{
+    if (ide) {
+        if (ide->name) free(ide->name);
+        if (ide->name_space) free(ide->name_space);
+        XPT_FreeInterfaceDescriptor(ide->interface_descriptor);
+    }
 }
 
 /* InterfaceDirectoryEntry records go in the header */
@@ -362,6 +399,38 @@ XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
  free_id:
     XPT_DELETE(id);
     return NULL;
+}
+
+XPT_PUBLIC_API(void)
+XPT_FreeInterfaceDescriptor(XPTInterfaceDescriptor* id)
+{
+    if (id) {
+        XPTMethodDescriptor *md, *mdend;
+        XPTConstDescriptor *cd, *cdend;
+
+        /* Free up method descriptors */
+        md = id->method_descriptors;
+        mdend = md + id->num_methods;
+        for (; md < mdend; md++) {
+            XPT_FREEIF(md->name);
+            XPT_FREEIF(md->params);
+            XPT_FREEIF(md->result);
+        }
+        XPT_FREEIF(id->method_descriptors);
+
+        /* Free up const descriptors */
+        cd = id->const_descriptors;
+        cdend = cd + id->num_constants;
+        for (; cd < cdend; cd++) {
+            XPT_FREEIF(cd->name);
+        }
+        XPT_FREEIF(id->const_descriptors);
+
+        /* Free up type descriptors */
+        XPT_FREEIF(id->additional_types);
+
+        XPT_DELETE(id);
+    }
 }
 
 XPT_PUBLIC_API(PRBool)
