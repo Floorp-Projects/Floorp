@@ -2653,15 +2653,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 			if (mailnewsurl)
 				mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
 
-			if (m_nsIPop3Sink)
-			{
-				nsCOMPtr<nsIPop3IncomingServer> popServer;
-				m_nsIPop3Sink->GetPopServer(getter_AddRefs(popServer));
-				nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(popServer);
-				if (server)
-					server->SetServerBusy(PR_FALSE); // the server is now busy
-			}
-
             m_pop3ConData->next_state = POP3_FREE;
             break;
 
@@ -2716,8 +2707,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 #endif 
             }
 
-            			if (TestFlag(POP3_PASSWORD_FAILED))
-
             if (TestFlag(POP3_PASSWORD_FAILED))
 			{
                 /* We got here because the password was wrong, so go
@@ -2739,6 +2728,14 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             
         case POP3_FREE:
 			UpdateProgressPercent(0,0); // clear out the progress meter
+			if (m_nsIPop3Sink)
+			{
+				nsCOMPtr<nsIPop3IncomingServer> popServer;
+				m_nsIPop3Sink->GetPopServer(getter_AddRefs(popServer));
+				nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(popServer);
+				if (server)
+					server->SetServerBusy(PR_FALSE); // the server is now busy
+			}
 #if 0 // mscott - i believe this can be removed now
             if (m_pop3ConData->graph_progress_bytes_p) {
                 /* Only destroy it if we have initialized it. */
