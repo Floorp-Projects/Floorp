@@ -48,7 +48,7 @@
         this.ifSetAttribute("disablehistory", true);
 
         mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                        getService(Components.interfaces.nsIAutoCompleteController);
+                        createInstance(Components.interfaces.nsIAutoCompleteController);
       ]]></constructor>
 
       <!-- =================== nsIAccessibleProvider =================== -->
@@ -402,9 +402,6 @@
       
       <constructor><![CDATA[
         this.setAttribute("ignorekeys", "true");
-
-        this.view = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                        getService(Components.interfaces.nsITreeView);
       ]]></constructor>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
@@ -435,8 +432,12 @@
         <parameter name="aWidth"/>
         <body><![CDATA[
           if (!this.mPopupOpen) {
-            this.mInput = aInput;
-            
+            if (!this.mInput) {
+              this.mInput = aInput;
+              this.view = this.mInput.mController;
+              this.invalidate();
+            }
+
             this.showCommentColumn = this.mInput.showCommentColumn;
             
             this.removeAttribute("hidden");
