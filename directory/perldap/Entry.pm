@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Entry.pm,v 1.2 1998/07/23 11:05:55 leif Exp $
+# $Id: Entry.pm,v 1.3 1998/07/29 08:25:57 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -22,7 +22,7 @@
 # DESCRIPTION
 #    This package defines an object class to manage one single LDAP
 #    entry. This entry can either be a newly created one, or one
-#    retrieved from an LDAP server, using the LDAP::Connection class.
+#    retrieved from an LDAP server, using the Mozilla::LDAP::Conn class.
 #
 #############################################################################
 
@@ -63,11 +63,12 @@ sub STORE
 
   return if (($val eq "") || ($attr eq ""));
 
-  @{$self->{"_${attr}_save"}} = @{$self->{$attr}}
-    unless $self->{"_${attr}_save"};
+  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
+    unless $self->{"_${attr}_save_"};
   $self->{$attr} = $val;
-  $self->{"_${attr}_modified"} = 1;
+  $self->{"_${attr}_modified_"} = 1;
 
+  # Potentially add the attribute to the OC order list.
   if (($attr ne "dn") && !grep(/^$attr$/, @{$self->{_oc_order_}}))
     {
       push(@{$self->{_oc_order_}}, $attr);
@@ -98,7 +99,7 @@ sub DELETE
   return if ($attr eq "");
   return unless defined($self->{$attr});
 
-  $self->{"_${attr}_deleted"} = 1;
+  $self->{"_${attr}_deleted_"} = 1;
   undef $self->{$attr};
 }
 
@@ -113,9 +114,9 @@ sub attrModified
   return 0 if ($attr eq "");
   return 0 unless defined($self->{$attr});
 
-  @{$self->{"_${attr}_save"}} = @{$self->{$attr}}
-    unless $self->{"_${attr}_save"};
-  $self->{_self_obj_}->{"_${attr}_modified"} = 1;
+  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
+    unless $self->{"_${attr}_save_"};
+  $self->{_self_obj_}->{"_${attr}_modified_"} = 1;
 
   return 1;
 }
@@ -132,7 +133,7 @@ sub remove
   return 0 if ($attr eq "");
   return 0 unless defined($self->{$attr});
 
-  $self->{_self_obj_}->{"_${attr}_deleted"} = 1;
+  $self->{_self_obj_}->{"_${attr}_deleted_"} = 1;
   undef $self->{_self_obj_}->{$attr};
 
   return 1;
@@ -153,15 +154,15 @@ sub removeValue
   return 0 if (($val eq "") || ($attr eq ""));
   return 0 unless defined($self->{$attr});
 
-  @{$self->{"_${attr}_save"}} = @{$self->{$attr}}
-    unless $self->{"_${attr}_save"};
+  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
+    unless $self->{"_${attr}_save_"};
   foreach (@{$self->{$attr}})
     {
       if ($_ eq $val)
 	{
 	  splice(@{$self->{$attr}}, $i, 1);
 	  $action = ($self->size($attr) > 0 ? "modified" : "deleted");
-	  $self->{_self_obj_}->{"_${attr}_${action}"} = 1;
+	  $self->{_self_obj_}->{"_${attr}_${action}_"} = 1;
 
 	  return 1;
 	}
@@ -192,10 +193,10 @@ sub addValue
         }
     }
 
-  @{$self->{"_${attr}_save"}} = @{$self->{$attr}}
-    unless $self->{"_${attr}_save"};
+  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
+    unless $self->{"_${attr}_save_"};
 
-  $self->{_self_obj_}->{"_${attr}_modified"} = 1;
+  $self->{_self_obj_}->{"_${attr}_modified_"} = 1;
   push(@{$self->{$attr}}, $val);
 
   return 1;
@@ -316,7 +317,7 @@ __END__
 
 =head1 SYNOPSIS
 
-  use Mozilla::LDAP::Connection;
+  use Mozilla::LDAP::Conn;
   use Mozilla::LDAP::Entry;
 
 =head1 ABSTRACT
