@@ -248,6 +248,23 @@ NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** document)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebBrowser::GetCurrentURI(PRUnichar** aCurrentURI)
+{
+   NS_ENSURE_ARG_POINTER(aCurrentURI);
+   NS_ENSURE_STATE(mDocShell);
+
+   nsCOMPtr<nsIURI> uri;
+   NS_ENSURE_SUCCESS(mDocShell->GetCurrentURI(getter_AddRefs(uri)), 
+      NS_ERROR_FAILURE);
+
+   char* spec;
+   NS_ENSURE_SUCCESS(uri->GetSpec(&spec), NS_ERROR_FAILURE);
+
+   *aCurrentURI = nsAutoString(spec).ToNewUnicode();
+
+   return NS_OK;
+}
+
 //*****************************************************************************
 // nsWebBrowser::nsIProgress
 //*****************************************************************************
