@@ -189,6 +189,7 @@ OBJS = \
     misc/$(OBJDIR)/prrng.$(OBJ_SUFFIX)	 \
     misc/$(OBJDIR)/prsystem.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prthinfo.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prtpool.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prtrace.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prtime.$(OBJ_SUFFIX)
 
