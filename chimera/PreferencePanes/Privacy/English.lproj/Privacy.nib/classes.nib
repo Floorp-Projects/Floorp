@@ -4,33 +4,41 @@
         {
             CLASS = NSPreferencePane; 
             LANGUAGE = ObjC; 
-            OUTLETS = {_firstKeyView = id; _initialKeyView = id; _lastKeyView = id; _window = id; }; 
+            OUTLETS = {
+                "_firstKeyView" = id; 
+                "_initialKeyView" = id; 
+                "_lastKeyView" = id; 
+                "_window" = id; 
+            }; 
             SUPERCLASS = NSObject; 
         }, 
         {
             ACTIONS = {
                 clearCookies = id; 
+                clickAskAboutCookies = id; 
+                clickAutoFillPasswords = id; 
                 clickEnableCookies = id; 
-                clickEnableJS = id; 
-                clickEnableJava = id; 
-                clickEnableLeaveEncrypted = id; 
-                clickEnableLoadLowGrade = id; 
-                clickEnableViewMixed = id; 
-                clickPromptForCookie = id; 
+                clickStorePasswords = id; 
+                editCookieSites = id; 
+                editCookieSitesDone = id; 
+                launchKeychainAccess = id; 
+                removeCookieSite = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferencePrivacy; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mCookies = id; 
-                mEnableJS = NSButton; 
-                mEnableJava = NSButton; 
-                mLeaveEncrypted = NSButton; 
-                mLoadLowGrade = NSButton; 
-                mPromptForCookie = NSButton; 
-                mViewMixed = NSButton; 
+                mAskAboutCookies = NSButton; 
+                mAutoFillPasswords = NSButton; 
+                mCookieSitePanel = id; 
+                mCookiesEnabled = NSButton; 
+                mEditSitesButton = NSButton; 
+                mEditSitesText = NSTextField; 
+                mSiteTable = NSTableView; 
+                mStorePasswords = NSButton; 
             }; 
-            SUPERCLASS = NSPreferencePane; 
-        }
+            SUPERCLASS = PreferencePaneBase; 
+        }, 
+        {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }
     ); 
     IBVersion = 1; 
 }

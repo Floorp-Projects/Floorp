@@ -1,6 +1,7 @@
-HomePageDefault = "http://www.mozilla.org";
-/* SearchPageDefault = "http://www.dmoz.org"; Leave commented out to get search engine from IC */
-StartPageDefault = "about:blank";
-ThrobberPageDefault = "http://www.mozilla.org";
-FeedbackPageDefault = "http://chimera.mozdev.org";
-InfoPageDefault = "http://chimera.mozdev.org/installation.html";
+HomePageDefault = "http://www.mozilla.org/projects/chimera/homepage.html";
+SearchPageDefault = "http://www.google.com/";
+StartPageDefault = "http://www.mozilla.org/projects/chimera/welcome.html";
+ThrobberPageDefault = "http://www.mozilla.org/projects/chimera/";
+FeedbackPageDefault = "http://www.mozilla.org/projects/chimera/feedback.html";
+InfoPageDefault = "http://www.mozilla.org/projects/chimera/";
+RendezvousPageDefault="http://www.zeroconf.org/webbrowsers.html";

@@ -24,17 +24,40 @@
 #import <Carbon/Carbon.h>
 
 #import "Navigation.h"
+#import "NSString+Utils.h"
 
+#include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPref.h"
 #include "nsIBrowserHistory.h"
 #include "nsICacheService.h"
+#include "nsILocalFileMac.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsString.h"
 
 const int kDefaultExpireDays = 9;
 
+@interface OrgMozillaChimeraPreferenceNavigation(Private)
+
+- (NSString*)getInternetConfigString:(Str255)icPref;
+- (NSString*)getDownloadFolderDescription;
+
+@end
+
+
 @implementation OrgMozillaChimeraPreferenceNavigation
 
+- (id)initWithBundle:(NSBundle *)bundle
+{
+  self = [super initWithBundle:bundle];
+  return self;
+}
+
+- (void)dealloc
+{
+  [super dealloc];
+}
 
 - (void)mainViewDidLoad
 {
@@ -56,18 +79,33 @@ const int kDefaultExpireDays = 9;
     expireDays = kDefaultExpireDays;
 
   [textFieldHistoryDays setIntValue:expireDays];
-  [sliderHistoryDays setIntValue:expireDays];
 
-  [checkboxOpenTabs setState:[self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref]];
-  [checkboxOpenTabsForAEs setState:[self getBooleanPref:"browser.always_reuse_window" withSuccess:&gotPref]];
+  [radioOpenTabsForCommand selectCellWithTag:[self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref]];
+  [radioOpenForAE selectCellWithTag:[self getIntPref:"browser.reuse_window" withSuccess:&gotPref]];
+  
+//  [checkboxOpenTabs setState:[self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref]];
+//  [checkboxOpenTabsForAEs setState:[self getBooleanPref:"browser.always_reuse_window" withSuccess:&gotPref]];
+
   [checkboxLoadTabsInBackground setState:[self getBooleanPref:"browser.tabs.loadInBackground" withSuccess:&gotPref]];
 
   BOOL useSystemHomePage = [self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref;  
   if (useSystemHomePage)
+  {
     [textFieldHomePage setEnabled:NO];
+    [textFieldSearchPage setEnabled:NO];
+  }
 
   [checkboxUseSystemHomePage setState:useSystemHomePage];
-  [textFieldHomePage setStringValue: [self getCurrentHomePage]];
+  [textFieldHomePage   setStringValue: [self getCurrentHomePage]];
+  [textFieldSearchPage setStringValue: [self getCurrentSearchPage]];
+  
+  [mEnableHelperApps setState:[self getBooleanPref:"browser.download.autoDispatch" withSuccess:&gotPref]];
+
+  NSString* downloadFolderDesc = [self getDownloadFolderDescription];
+  if ([downloadFolderDesc length] == 0)
+    downloadFolderDesc = [self getLocalizedString:@"MissingDlFolder"];
+    
+  [mDownloadFolder setStringValue:[self getDownloadFolderDescription]];
 }
 
 - (void) didUnselect
@@ -77,7 +115,10 @@ const int kDefaultExpireDays = 9;
   
   // only save the home page pref if it's not the system one
   if (![checkboxUseSystemHomePage state])
-    [self setPref: "browser.startup.homepage" toString: [textFieldHomePage stringValue]];
+  {
+    [self setPref: "browser.startup.homepage" toString: [textFieldHomePage   stringValue]];
+    [self setPref: "chimera.search_page"      toString: [textFieldSearchPage stringValue]];
+  }
   
   // ensure that the prefs exist
   [self setPref:"browser.startup.page"   toInt: [checkboxNewWindowBlank state] ? 1 : 0];
@@ -97,16 +138,20 @@ const int kDefaultExpireDays = 9;
   if (!mPrefService)
     return;
 
-  if (sender == checkboxOpenTabs) {
-    [self setPref:"browser.tabs.opentabfor.middleclick" toBoolean:[sender state]];
+  if (sender == radioOpenTabsForCommand) {
+    [self setPref:"browser.tabs.opentabfor.middleclick" toBoolean:[[sender selectedCell] tag]];
   }
-  else if (sender == checkboxOpenTabsForAEs) {
-    [self setPref:"browser.always_reuse_window" toBoolean:[sender state]];
+  else if (sender == radioOpenForAE) {
+    [self setPref:"browser.reuse_window" toInt:[[sender selectedCell] tag]];
   }
   else if (sender == checkboxLoadTabsInBackground) {
     [self setPref:"browser.tabs.loadInBackground" toBoolean:[sender state]];
   }
+  else if (sender == mEnableHelperApps) {
+    [self setPref:"browser.download.autoDispatch" toBoolean:[sender state]];
+  }
 }
+
 
 - (IBAction)checkboxUseSystemHomePageClicked:(id)sender
 {
@@ -117,11 +162,17 @@ const int kDefaultExpireDays = 9;
 
   // save the mozilla pref
   if (useSystemHomePage)
-    [self setPref: "browser.startup.homepage" toString: [textFieldHomePage stringValue]];
+  {
+    [self setPref: "browser.startup.homepage" toString: [textFieldHomePage   stringValue]];
+    [self setPref: "chimera.search_page"      toString: [textFieldSearchPage stringValue]];
+  }
   
   [self setPref:"chimera.use_system_home_page" toBoolean: useSystemHomePage];
-  [textFieldHomePage setStringValue: [self getCurrentHomePage]];
-  [textFieldHomePage setEnabled:!useSystemHomePage];
+  [textFieldHomePage   setStringValue: [self getCurrentHomePage]];
+  [textFieldSearchPage setStringValue: [self getCurrentSearchPage]];
+
+  [textFieldHomePage   setEnabled:!useSystemHomePage];
+  [textFieldSearchPage setEnabled:!useSystemHomePage];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -144,9 +195,7 @@ const int kDefaultExpireDays = 9;
   if (!mPrefService)
     return;
 
-  if (sender == sliderHistoryDays)
-    [textFieldHistoryDays setIntValue:[sliderHistoryDays intValue]];
-  else if (sender == textFieldHistoryDays) {
+  if (sender == textFieldHistoryDays) {
     // If any non-numeric characters were entered make some noise and spit it out.
     if (([[textFieldHistoryDays stringValue] rangeOfCharacterFromSet:[[NSCharacterSet decimalDigitCharacterSet] invertedSet]]).length) {
       BOOL gotPref;
@@ -154,11 +203,9 @@ const int kDefaultExpireDays = 9;
       if (!gotPref)
         prefValue = kDefaultExpireDays;
       [textFieldHistoryDays setIntValue:prefValue];
-      [sliderHistoryDays setIntValue:prefValue];
       NSBeep ();
       return;
-    } else
-      [sliderHistoryDays setIntValue:[textFieldHistoryDays intValue]];
+    }
   }
 
   [self setPref:"browser.history_expire_days" toInt:[sender intValue]];
@@ -177,10 +224,44 @@ const int kDefaultExpireDays = 9;
     hist->RemoveAllPages();
 }
 
-- (NSString*) getSystemHomePage
+- (NSString*)getDownloadFolderDescription
 {
-  NSMutableString* homePageString = [[[NSMutableString alloc] init] autorelease];
+  NSString* downloadStr = @"";
+  nsCOMPtr<nsIFile> downloadsDir;
+  NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(downloadsDir));
+	if (!downloadsDir)
+    return downloadStr;
+
+  nsCOMPtr<nsILocalFileMac> macDir = do_QueryInterface(downloadsDir);
+  if (!macDir)
+    return downloadStr;
+
+  FSRef folderRef;
+  nsresult rv = macDir->GetFSRef(&folderRef);
+  if (NS_FAILED(rv))
+    return downloadStr;
+
+  FSCatalogInfo catInfo;
+  HFSUniStr255 fileName;
+  OSErr err = FSGetCatalogInfo(&folderRef, kFSCatInfoVolume, &catInfo, &fileName, NULL, NULL);
+  if (err != noErr)
+    return downloadStr;
+    
+  HFSUniStr255 volName;
+  err = FSGetVolumeInfo(catInfo.volume, 0, NULL, kFSVolInfoNone, NULL, &volName, NULL);
+  if (err != noErr)
+    return downloadStr;
+
+  NSString* fileNameStr   = [NSString stringWithCharacters:fileName.unicode length:fileName.length];
+  NSString* volumeNameStr = [NSString stringWithCharacters:volName.unicode  length:volName.length];
   
+	return [NSString stringWithFormat:[self getLocalizedString:@"DownloadFolderDesc"], fileNameStr, volumeNameStr];
+}
+
+
+- (NSString*)getInternetConfigString:(Str255)icPref
+{
+  NSString*     resultString = @"";
   ICInstance		icInstance = NULL;
   OSStatus 			error;
   
@@ -189,21 +270,26 @@ const int kDefaultExpireDays = 9;
   error = ICStart(&icInstance, 'CHIM');
   if (error != noErr) {
     NSLog(@"Error from ICStart");
-    return @"";
+    return resultString;
   }
   
   ICAttr	dummyAttr;
   Str255	homePagePStr;
   long		prefSize = sizeof(homePagePStr);
-  error = ICGetPref(icInstance, kICWWWHomePage, &dummyAttr, homePagePStr, &prefSize);
+  error = ICGetPref(icInstance, icPref, &dummyAttr, homePagePStr, &prefSize);
   if (error == noErr)
-    [homePageString setString: [NSString stringWithCString: (const char*)&homePagePStr[1] length:homePagePStr[0]]];
+    resultString = [NSString stringWithCString: (const char*)&homePagePStr[1] length:homePagePStr[0]];
   else
-    NSLog(@"Error getting home page from Internet Config");
+    NSLog(@"Error getting pref from Internet Config");
   
   ICStop(icInstance);
   
-  return homePageString;
+  return resultString;
+}
+
+- (NSString*) getSystemHomePage
+{
+  return [self getInternetConfigString:kICWWWHomePage];
 }
 
 - (NSString*) getCurrentHomePage
@@ -214,6 +300,21 @@ const int kDefaultExpireDays = 9;
     return [self getSystemHomePage];
     
   return [self getStringPref: "browser.startup.homepage" withSuccess:&gotPref];
+}
+
+- (NSString*)getSystemSearchPage
+{
+  return [self getInternetConfigString:kICWebSearchPagePrefs];
+}
+
+- (NSString*)getCurrentSearchPage
+{
+  BOOL gotPref;
+  
+  if ([self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref)
+    return [self getSystemSearchPage];
+    
+  return [self getStringPref: "chimera.search_page" withSuccess:&gotPref];
 }
 
 
@@ -229,4 +330,9 @@ const int kDefaultExpireDays = 9;
     cacheServ->EvictEntries(nsICache::STORE_ON_DISK);
 }
 
+
+- (IBAction)checkboxEnableHelperApps:(id)sender
+{
+
+}
 @end

@@ -1,23 +1,65 @@
-<?xml version="1.0"?>
-
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmarks SYSTEM "http://www.mozilla.org/DTDs/ChimeraBookmarks.dtd">
 <bookmarks xmlns="http://chimera.mozdev.org/bookmarks/">
-  <folder name="Toolbar Bookmarks" type="toolbar">
-    <bookmark name="Chimera Install Page"
-              href="http://chimera.mozdev.org/installation.html"/>
-    <bookmark name="Mozilla.Org"
-              href="http://www.mozilla.org"/>
-    <folder name="Entertainment">
-      <bookmark href="http://www.ew.com" name="Entertainment Weekly"/>
-      <bookmark href="http://www.rottentomatoes.com" name="Rotten Tomatoes"/>
-      <bookmark href="http://www.theonering.net" name="The One Ring"/>
-    </folder>
-  </folder>
-  <folder name="My Panels" type="panels">
-    <bookmark href="http://tinderbox.mozilla.org/SeaMonkey/panel.html"
-              name="Tinderbox"/>
-  </folder>
-  <folder name="News">
-    <bookmark name="CNet" href="http://www.cnet.com"/>
-    <bookmark name="CNN" href="http://www.cnn.com"/>
-  </folder>
+	<folder name="Toolbar Bookmarks" type="toolbar" open="true">
+		<folder name="Chimera Info">
+			<bookmark name="Chimera" href="http://www.mozilla.org/projects/chimera/" />
+			<bookmark name="Chimera Feedback" href="http://www.mozilla.org/projects/chimera/feedback.html" />
+			<bookmark name="Mozilla.org" href="http://www.mozilla.org" />
+		</folder>
+		<folder name="News">
+			<bookmark name="BBC News" href="http://news.bbc.co.uk/" />
+			<bookmark name="CNN" href="http://www.cnn.com" />
+			<bookmark name="International Herald Tribune" href="http://iht.com/frontpage.html" />
+			<bookmark name="Salon.com" href="http://www.salon.com/" />
+		</folder>
+		<folder name="Mac News Tabs" group="true">
+			<bookmark name="MacCentral Online" href="http://www.maccentral.com/" />
+			<bookmark name="MacNN | The Macintosh News Network" href="http://www.macnn.com/" />
+			<bookmark name="MacInTouch: Mac news, information and analysis" href="http://www.macintouch.com/" />
+		</folder>
+		<bookmark name="Google" href="http://www.google.com/" keyword="google" id="google" description="" />
+	</folder>
+	<folder name="Apple Stuff">
+		<bookmark name="Apple" href="http://www.apple.com/" />
+		<bookmark name="Apple - Mac OS X" href="http://www.apple.com/macosx/" />
+		<bookmark name="Apple .Mac Welcome" href="http://www.mac.com/" />
+	</folder>
+	<folder name="Mac News">
+		<bookmark name="MacSurfer's Headline News" href="http://www.macsurfer.com/" />
+		<bookmark name="MacCentral Online" href="http://maccentral.macworld.com/" />
+		<bookmark name="MacNN | The Macintosh News Network" href="http://www.macnn.com/" />
+		<bookmark name="MacInTouch: Mac news, information and analysis" href="http://www.macintouch.com/" />
+		<bookmark name="TidBITS Electronic Publishing" href="http://www.tidbits.com/" />
+	</folder>
+	<folder name="Mac Support">
+		<bookmark name="Apple Support" href="http://www.info.apple.com/" />
+		<bookmark name="MacFixIt - Troubleshooting Solution for the Macintosh" href="http://www.macfixit.com/" />
+		<bookmark name="Mac OS X Hints" href="http://www.macosxhints.com/" />
+		<bookmark name="OSXFAQ" href="http://www.osxfaq.com/" />
+	</folder>
+	<folder name="Mac Software">
+		<bookmark name="Apple - Mac OS X - Downloads" href="http://www.apple.com/downloads/macosx/" />
+		<bookmark name="Mac OS X Apps" href="http://www.macosxapps.com/" />
+		<bookmark name="VersionTracker: Mac OS X Software" href="http://www.versiontracker.com/macosx/" />
+	</folder>
+	<folder name="Tech News">
+		<bookmark name="CNet" href="http://www.cnet.com" />
+		<bookmark name="Wired News" href="http://www.wired.com/" />
+	</folder>
+	<folder name="Web Standards">
+		<bookmark name="Netscape DevEdge" href="http://devedge.netscape.com/" />
+		<bookmark name="The World Wide Web Consortium" href="http://www.w3.org/" />
+		<bookmark name="W3C HTML Home Page" href="http://www.w3.org/MarkUp/" />
+		<bookmark name="W3C Document Object Model" href="http://www.w3.org/DOM/#what" />
+		<bookmark name="Cascading Style Sheets" href="http://www.w3.org/Style/CSS/" />
+		<bookmark name="WebReview.com: Style Sheet Reference Guide" href="http://www.webreview.com/style/" />
+		<folder name="Demos" open="true">
+			<bookmark name="Eric Meyer's css/edge" href="http://www.meyerweb.com/eric/css/edge/" />
+			<bookmark name="Mozilla Demos" href="http://www.mozilla.org/start/1.0/demos.html" />
+		</folder>
+	</folder>
+	<bookmark name="Netscape.com" href="http://www.netscape.com/" />
+	<bookmark name="Yahoo!" href="http://www.yahoo.com/" />
+	<bookmark name="dmoz - Open Directory Project" href="http://dmoz.org/" />
 </bookmarks>
