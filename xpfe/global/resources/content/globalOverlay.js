@@ -111,7 +111,22 @@ function goHelpMenu( url )
 
 function goAboutDialog()
 {
-	window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
+  var defaultAboutState = false;
+  try {
+    var pref = Components.classes["component://netscape/preferences"].getService();
+    if( pref )
+      pref = pref.QueryInterface( Components.interfaces.nsIPref );
+    defaultAboutState = pref.GetBoolPref("browser.show_about_as_stupid_modal_window");
+  }
+  catch(e) {
+    defaultAboutState = false;
+  }
+  if( defaultAboutState )
+  	window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
+  else if( appCore ) 
+    appCore.loadUrl( "chrome://global/content/about.html" );
+  else
+    window.open( "chrome://global/content/about.html", "_blank" );
 }
 
 
