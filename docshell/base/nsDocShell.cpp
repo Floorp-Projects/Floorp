@@ -523,46 +523,86 @@ nsDocShell::LoadURI(nsIURI * aURI,
     }
 #endif
 
-    if (!shEntry && loadType != LOAD_NORMAL_REPLACE && mCurrentURI == nsnull) {
-        /* OK. We are in the process of loading a subframe. Checkout the 
-         * parent's loadtype. If the parent was loaded thro' a history
-         * mechanism, then get the SH entry for the child from the parent.
-         * This is done to restore frameset navigation while going back/forward.
-         * If the parent was not loaded thro' any history mechanism, we don't
-         * have to  do this, since we have nothing to restore. 
-         */
-
-        // get the parent
+    if (!shEntry && loadType != LOAD_NORMAL_REPLACE) {
+        // First verify if this is a subframe.
         nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
         GetSameTypeParent(getter_AddRefs(parentAsItem));
 
         nsCOMPtr<nsIDocShell> parentDS(do_QueryInterface(parentAsItem));
         PRUint32 parentLoadType;
 
-        if (parentDS) {
+        if (parentDS && parentDS != NS_STATIC_CAST(nsIDocShell *, this)) {
+            /* OK. It is a subframe. Checkout the 
+             * parent's loadtype. If the parent was loaded thro' a history
+             * mechanism, then get the SH entry for the child from the parent.
+             * This is done to restore frameset navigation while going back/forward.
+             * If the parent was loaded through any other loadType, set the
+             * child's loadType too accordingly, so that session history does not
+             * get confused. 
+             */
+            
             // Get the parent's load type
             parentDS->GetLoadType(&parentLoadType);            
 
-            /* Try to get the SHEntry for this subframe from the parent, 
-             * only if the parent was loaded thro' a history mechanism, 
-             * like back/forward/go/reload
-             */
-            if (parentAsItem && (parentLoadType & LOAD_CMD_HISTORY) || (parentLoadType & LOAD_CMD_RELOAD)) {
-                nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(parentAsItem));                
-                if (parent) {
-                    // Get the ShEntry for the child from the parent
-                    parent->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
-                    if (shEntry) 
+            nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(parentAsItem));
+            if (parent) {
+                // Get the ShEntry for the child from the parent
+                parent->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
+                // Make some decisions on the child frame's loadType based on the 
+                // parent's loadType. 
+                if (mCurrentURI == nsnull) {
+                    // This is a newly created frame.
+                    if (parentLoadType == LOAD_BYPASS_HISTORY) {
+                        // The parent url bypassed history. The child should also
+                        // bypass history to avoid confusion.
                         loadType = parentLoadType;
-                }  // parent
-            } 
+                    }
+                    else if (shEntry && (parentLoadType & LOAD_CMD_HISTORY) || (parentLoadType & LOAD_CMD_RELOAD)) {
+                        // The parent was loaded through a history mechanism. Pass on 
+                        // the parent's loadType to the new child frame too, so that the 
+                        // the whole hierarchy has the appropriate loadtype. Initiate a
+                        // session history based load.     
+                        loadType = parentLoadType;
+                    }
+                    else if (shEntry && (parentLoadType == LOAD_NORMAL || parentLoadType == LOAD_LINK)) {
+                        // The parent was loaded normally. In this case, this *brand new* child really shouldn't
+                        // have a SHEntry. If it does, it could be because the parent is replacing an
+                        // existing frame with a new frame, probably in the onLoadHandler. We don't want this
+                        // url to get into session history. Clear off shEntry, and set laod type to
+                        // LOAD_BYPASS_HISTORY. 
+                        PRUint32 parentBusy=BUSY_FLAGS_NONE;
+                        parentDS->GetBusyFlags(&parentBusy);
+                        if (parentBusy & BUSY_FLAGS_BUSY) {
+                            // The parent is still busy. We most likely got here
+                            // through onLoadHandler. 
+                            loadType = LOAD_BYPASS_HISTORY;
+                            shEntry = nsnull;
+                        }
+                    }   
+                }
+                else {
+                    // This is a pre-existing subframe. If the load was not originally initiated
+                    // by session history, (if (!shEntry) condition succeeded) and mCurrentURI is not null,
+                    // it is possible that a parent's onLoadHandler or even self's onLoadHandler is loading 
+                    // a new page in this child. Check parent's and self's busy status and if it is, 
+                    // we don't want this onLoadHandler load to get in to session history.
+                    PRUint32 parentBusy=BUSY_FLAGS_NONE, selfBusy = BUSY_FLAGS_NONE;
+                    parentDS->GetBusyFlags(&parentBusy);                    
+                    GetBusyFlags(&selfBusy);
+                    if (((parentBusy & BUSY_FLAGS_BUSY) || (selfBusy & BUSY_FLAGS_BUSY)) && shEntry) {
+                        // we don't want this additional load to get into history, since this
+                        // load will automatially happen everytime, no matter how the page is loaded.
+                        loadType = LOAD_BYPASS_HISTORY;
+                        shEntry = nsnull; 
+                    }
+                }
+            } // parent
         } //parentDS
     } // !shEntry
 
     if (shEntry) {
-        // Load is from SH. SH does normal load only
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsDocShell[%p]: loading from session history", this));
+              ("nsDocShell[%p]: loading from session history", this));
 
         rv = LoadHistoryEntry(shEntry, loadType);
     }
@@ -3724,14 +3764,6 @@ nsresult
 nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                         nsIChannel * aChannel, nsresult aStatus)
 {
-    if (mLSHE) {
-        mLSHE->SetLoadType(nsIDocShellLoadInfo::loadHistory);
-
-        // Clear the mLSHE reference to indicate document loading is done one
-        // way or another.
-        mLSHE = nsnull;
-    }
-
     //
     // one of many safeguards that prevent death and destruction if
     // someone is so very very rude as to bring this window down
@@ -3748,6 +3780,16 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         mContentViewer->LoadComplete(aStatus);
 
         mEODForCurrentDocument = PR_TRUE;
+    }
+    // Clear mLSHE after calling the onLoadHandlers. This way, if the
+    // onLoadHandler tries to load something different in
+    // itself or one of its children, we can deal with it appropriately.
+    if (mLSHE) {
+        mLSHE->SetLoadType(nsIDocShellLoadInfo::loadHistory);
+
+        // Clear the mLSHE reference to indicate document loading is done one
+        // way or another.
+        mLSHE = nsnull;
     }
     // if there's a refresh header in the channel, this method
     // will set it up for us. 
