@@ -31,6 +31,7 @@ EXPORTS		= \
 		nsViewsCID.h \
 		nsIViewObserver.h \
 		nsIClipView.h \
+		nsIScrollPositionListener.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
