@@ -1692,6 +1692,7 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 //Table support
 		case cmd_Delete_Table:
 		case cmd_Select_Table:
+		case cmd_Select_All_Cells:
 			if ( !IsDoneLoading() )
 				return;
 	
@@ -1710,6 +1711,7 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 		case cmd_Insert_Row_Above:
 		case cmd_Insert_Row_Below:
 		case cmd_Insert_Cell:
+		case cmd_Select_Row:
 		case cmd_Format_Row:
 		case cmd_Delete_Row:
 			if ( !IsDoneLoading() )
@@ -1720,9 +1722,11 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 		
 		case cmd_Insert_Col_Before:
 		case cmd_Insert_Col_After:
+		case cmd_Select_Col:
 		case cmd_Delete_Col:
 		case cmd_Delete_Cell:
 		case cmd_Format_Cell:
+		case cmd_Select_Cell:
 			if ( !IsDoneLoading() )
 				return;
 	
@@ -4726,6 +4730,26 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 			break;
 		
 		case cmd_Select_Table:
+			FLUSH_JAPANESE_TEXT
+			EDT_SelectTable( *GetContext() );	// clu - this selects all cells instead of table -> WRONG!!
+			break;
+		
+		case cmd_Select_Row:
+			FLUSH_JAPANESE_TEXT
+			EDT_ChangeTableSelection( *GetContext(), ED_HIT_SEL_ROW, ED_MOVE_NONE, NULL);
+			break;
+			
+		case cmd_Select_Col:
+			FLUSH_JAPANESE_TEXT
+			EDT_ChangeTableSelection( *GetContext(), ED_HIT_SEL_COL, ED_MOVE_NONE, NULL );
+			break;
+			
+		case cmd_Select_Cell:
+			FLUSH_JAPANESE_TEXT
+			EDT_ChangeTableSelection( *GetContext(), ED_HIT_SEL_CELL, ED_MOVE_NONE, NULL  );
+			break;
+			
+		case cmd_Select_All_Cells:
 			FLUSH_JAPANESE_TEXT
 			EDT_SelectTable( *GetContext() );
 			break;
