@@ -75,6 +75,7 @@ typedef struct _XfeToolBarPart
     XtCallbackList	button_3_up_callback;		/* Button 3 up cb		*/
     XtCallbackList	selection_changed_callback;	/* Selection changed cb	*/
     XtCallbackList	value_changed_callback;		/* Value changed cb		*/
+    XtCallbackList	force_dimension_callback;	/* Force dimensions cb	*/
 
     /* Button resources */
     unsigned char		button_layout;			/* Button layout		*/
@@ -138,8 +139,7 @@ typedef struct _XfeToolBarRec
 /*----------------------------------------------------------------------*/
 typedef struct _XfeToolBarConstraintPart
 {
-	Boolean			force_width_to_max;		/* Force width to max ?		*/
-	Boolean			force_height_to_max;	/* Force height to max ?	*/
+	Boolean			force_dimension_to_max;	/* Force dimension to max ?	*/
 } XfeToolBarConstraintPart;
 
 /*----------------------------------------------------------------------*/

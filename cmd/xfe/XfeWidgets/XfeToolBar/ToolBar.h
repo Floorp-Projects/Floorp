@@ -38,13 +38,12 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#define XmNforceDimensionsCallback			"forceDimensionsCallback"
+#define XmNforceDimensionCallback			"forceDimensionCallback"
 
 #define XmNactiveButton						"activeButton"
 #define XmNallowWrap						"allowWrap"
 #define XmNdynamicIndicator					"dynamicIndicator"
-#define XmNforceHeightToMax					"forceHeightToMax"
-#define XmNforceWidthToMax					"forceWidthToMax"
+#define XmNforceDimensionToMax				"forceDimensionToMax"
 #define XmNindicatorLocation				"indicatorLocation"
 #define XmNindicatorPosition				"indicatorPosition"
 #define XmNindicatorThreshold				"indicatorThreshold"
@@ -57,8 +56,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 #define XmCActiveButton						"ActiveButton"
 #define XmCDynamicIndicator					"DynamicIndicator"
-#define XmCForceHeightToMax					"ForceHeightToMax"
-#define XmCForceWidthToMax					"ForceWidthToMax"
+#define XmCForceDimensionToMax				"ForceDimensionToMax"
 #define XmCIndicatorLocation				"IndicatorLocation"
 #define XmCIndicatorPosition				"IndicatorPosition"
 #define XmCIndicatorThreshold				"IndicatorThreshold"
@@ -124,7 +122,7 @@ enum
 {
 	XmCR_TOOL_BAR_SELECTION_CHANGED = XmCR_XFE_LAST_REASON + 99, /* ToolBar selection changed */
 	XmCR_TOOL_BAR_VALUE_CHANGED,			/* ToolBar value changed	*/
-	XmCR_FORCE_DIMENSIONS					/* ToolBar force dimensions	*/
+	XmCR_FORCE_DIMENSION					/* ToolBar force dimensions	*/
 };
 
 /*----------------------------------------------------------------------*/
@@ -160,9 +158,9 @@ typedef struct
 {
     int			reason;					/* Reason why CB was invoked	*/
     XEvent *	event;					/* Event that triggered CB		*/
-	Widget		target;					/* Button that invoked callback	*/
+	Widget		child;					/* Child that invoked callback	*/
 	Boolean		allow_change;			/* Allow the change ?			*/
-} XfeToolBarForceDimensionsCallbackStruct;
+} XfeToolBarForceDimensionCallbackStruct;
 
 /*----------------------------------------------------------------------*/
 /*																		*/

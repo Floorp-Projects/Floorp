@@ -90,8 +90,6 @@ static Boolean	ConstraintSetValues	(Widget,Widget,Widget,ArgList,Cardinal *);
 /*----------------------------------------------------------------------*/
 static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
 static void		DrawComponents		(Widget,XEvent *,Region,XRectangle *);
-static void		ChangeManaged		(Widget);
-static void		PrepareComponents	(Widget,int);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -141,6 +139,7 @@ static Boolean	IsValidChild		(Widget);
 static Boolean	IsButtonChild		(Widget);
 static Boolean	IsSeparatorChild	(Widget);
 static void		InvokeCallbacks		(Widget,XtCallbackList,Widget,int,XEvent *);
+static Boolean	AllowForceDimension	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -236,6 +235,15 @@ static const XtResource resources[] =
 		XmRCallback,
 		sizeof(XtCallbackList),
 		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . value_changed_callback),
+		XmRImmediate, 
+		(XtPointer) NULL
+    },
+    { 
+		XmNforceDimensionCallback,
+		XmCCallback,
+		XmRCallback,
+		sizeof(XtCallbackList),
+		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . force_dimension_callback),
 		XmRImmediate, 
 		(XtPointer) NULL
     },
@@ -454,20 +462,11 @@ static const XmSyntheticResource syn_resources[] =
 static const XtResource constraint_resources[] = 
 {
     { 
-		XmNforceWidthToMax,
-		XmCForceWidthToMax,
+		XmNforceDimensionToMax,
+		XmCForceDimensionToMax,
 		XmRBoolean,
 		sizeof(Boolean),
-		XtOffsetOf(XfeToolBarConstraintRec , xfe_tool_bar . force_width_to_max),
-		XmRImmediate,
-		(XtPointer) True
-    },
-    { 
-		XmNforceHeightToMax,
-		XmCForceHeightToMax,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeToolBarConstraintRec , xfe_tool_bar . force_height_to_max),
+		XtOffsetOf(XfeToolBarConstraintRec , xfe_tool_bar . force_dimension_to_max),
 		XmRImmediate,
 		(XtPointer) True
     },
@@ -934,7 +933,7 @@ static XtGeometryResult
 GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 {
 	Widget				w = XtParent(child);
-    XfeToolBarPart *	tp = _XfeToolBarPart(w);
+/*     XfeToolBarPart *	tp = _XfeToolBarPart(w); */
 	XtGeometryMask		mask = request->request_mode;
 	XtGeometryResult	our_result = XtGeometryNo;
 
@@ -1133,14 +1132,8 @@ ConstraintSetValues(Widget oc,Widget rc,Widget nc,ArgList av,Cardinal * ac)
  	XfeToolBarConstraintPart *	ncp = _XfeToolBarConstraintPart(nc);
  	XfeToolBarConstraintPart *	ocp = _XfeToolBarConstraintPart(oc);
 	
-	/* XmNforceWidthToMax */
-	if (ncp->force_width_to_max != ocp->force_width_to_max)
-	{
-		_XfemConfigFlags(w) |= XfeConfigGLE;
-	}
-
-	/* XmNforceHeightToMax */
-	if (ncp->force_height_to_max != ocp->force_height_to_max)
+	/* XmNforceDimensionToMax */
+	if (ncp->force_dimension_to_max != ocp->force_dimension_to_max)
 	{
 		_XfemConfigFlags(w) |= XfeConfigGLE;
 	}
@@ -1210,29 +1203,6 @@ DeleteDynamicChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static void
-ChangeManaged(Widget w)
-{
-/*     XfeToolBarPart *	tp = _XfeToolBarPart(w); */
-
-	PrepareComponents(w,_XFE_PREPARE_MAX_CHILD_DIMENSIONS);
-}
-/*----------------------------------------------------------------------*/
-static void
-PrepareComponents(Widget w,int flags)
-{
-/*     XfeToolBarPart *	tp = _XfeToolBarPart(w); */
-
-/* 	flags = _XFE_PREPARE_MAX_CHILD_DIMENSIONS; */
-
-#if 1
-    if (flags & _XFE_PREPARE_MAX_CHILD_DIMENSIONS)
-    {
-		_XfeManagerUpdateChildrenInfo(w);
-    }
-#endif
-}
-/*----------------------------------------------------------------------*/
-static void
 DrawComponents(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 {
 	_XfeToolBarDrawRaiseBorder(w,event,region,clip_rect);
@@ -1279,9 +1249,15 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 	Dimension					width = 0;
 	Dimension					height = 0;
 	XfeToolBarConstraintPart *	cp = _XfeToolBarConstraintPart(child);
+	Boolean						force_dimension;
 
 	assert( width_out != NULL );
 	assert( height_out != NULL );
+
+	if (cp->force_dimension_to_max)
+	{
+		force_dimension = AllowForceDimension(child);
+	}
 
 	/* Horizontal */
     if (_XfeOrientedOrientation(w) == XmHORIZONTAL)
@@ -1290,13 +1266,13 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 		{
 			/* The button's width */
 			width = 
-				cp->force_width_to_max ? 
+				force_dimension ? 
 				_XfemMaxDynamicWidth(w) : 
 				_XfeWidth(child);
 				
 			/* The button's height */
 			height = 
-				cp->force_height_to_max ? 
+				force_dimension ? 
 				(_XfemBoundaryHeight(w) - 2 * tp->raise_border_thickness) : 
 				_XfeHeight(child);
 		}
@@ -1318,13 +1294,13 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 		{
 			/* The button's width */
 			width = 
-				cp->force_width_to_max ? 
+				force_dimension ? 
 				(_XfemBoundaryWidth(w) - 2 * tp->raise_border_thickness) : 
 				_XfeWidth(child);
 			
 			/* The button's height */
 			height = 
-				cp->force_height_to_max ? 
+				force_dimension ? 
 				_XfemMaxDynamicHeight(w) : 
 				_XfeHeight(child);
 		}
@@ -1938,6 +1914,32 @@ InvokeCallbacks(Widget			w,
 		/* Invoke the Callback List */
 		XtCallCallbackList(w,list,&cbs);
     }
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+AllowForceDimension(Widget child)
+{
+	Widget				w = _XfeParent(child);
+	XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	Boolean				allow = True;
+
+	if (tp->force_dimension_callback != NULL)
+    {
+		XfeToolBarForceDimensionCallbackStruct cbs;
+	
+		cbs.event			= NULL;
+		cbs.reason			= 0;/* reason; */
+
+		cbs.child			= child;
+		cbs.allow_change	= True;
+
+		/* Invoke the Callback List */
+		XtCallCallbackList(w,tp->force_dimension_callback,&cbs);
+
+		allow = cbs.allow_change;
+    }
+
+	return allow;
 }
 /*----------------------------------------------------------------------*/
 

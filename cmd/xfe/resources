@@ -6327,8 +6327,7 @@ for download.
 !!
 !! *dockedTaskBar*undockButton
 !!
-*taskBarUndockButton.forceHeightToMax:			false
-*taskBarUndockButton.forceWidthToMax:			false
+*taskBarUndockButton.forceDimensionToMax:		false
 *taskBarUndockButton.traversalOn:				false
 *taskBarUndockButton.highlightThickness:		0
 *taskBarUndockButton.armOffset:					0

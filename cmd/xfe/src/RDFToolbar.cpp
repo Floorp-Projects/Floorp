@@ -414,7 +414,7 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
-    XtSetArg(av[ac],XmNforceWidthToMax, False);  ac++;
+    XtSetArg(av[ac],XmNforceDimensionToMax, False);  ac++;
 
     button = XfeCreateButton(parent,"bookmarkButton",av,ac);
 
@@ -477,7 +477,7 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
-    XtSetArg(av[ac],XmNforceWidthToMax, False);  ac++;
+    XtSetArg(av[ac],XmNforceDimensionToMax, False);  ac++;
 
     cascade = XfeCreateCascade(parent,"bookmarkCascade",av,ac);
 
