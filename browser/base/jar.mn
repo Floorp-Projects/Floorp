@@ -28,25 +28,3 @@ browser.jar:
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
 *       content/browser/web-panels.js                 (content/web-panels.js)
 *       content/browser/web-panels.xul                (content/web-panels.xul)
-
-en-US.jar:
-        locale/en-US/browser/contents.rdf             (locale/contents.rdf)
-        locale/en-US/browser/aboutDialog.dtd          (locale/aboutDialog.dtd)
-*       locale/en-US/browser/credits.html             (locale/credits.html)
-*       locale/en-US/browser/browser.dtd              (locale/browser.dtd)
-        locale/en-US/browser/browser.properties       (locale/browser.properties)
-        locale/en-US/browser/contentAreaCommands.properties  (locale/contentAreaCommands.properties)
-        locale/en-US/browser/metaData.dtd             (locale/metaData.dtd)
-        locale/en-US/browser/metaData.properties      (locale/metaData.properties)
-        locale/en-US/browser/openLocation.dtd         (locale/openLocation.dtd)
-        locale/en-US/browser/openLocation.properties  (locale/openLocation.properties)
-	      locale/en-US/browser/page-drawer.dtd          (locale/page-drawer.dtd)
-*       locale/en-US/browser/pageInfo.dtd             (locale/pageInfo.dtd)
-        locale/en-US/browser/pageInfo.properties      (locale/pageInfo.properties)
-        locale/en-US/browser/pageReport.dtd           (locale/pageReport.dtd)
-        locale/en-US/browser/pageReportFirstTime.dtd  (locale/pageReportFirstTime.dtd)
-        locale/en-US/browser/setWallpaper.dtd         (locale/setWallpaper.dtd)
-
-US.jar:
-        locale/US/browser-region/region.properties    (locale/region.properties)
-        locale/US/browser-region/contents.rdf         (locale/contents-region.rdf)

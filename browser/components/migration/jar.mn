@@ -20,8 +20,3 @@
 browser.jar:
 *  content/browser/migration/migration.xul                    (content/migration.xul)
 *  content/browser/migration/migration.js                     (content/migration.js)
-  
-en-US.jar:
-   locale/en-US/browser/migration/migration.dtd               (locale/migration.dtd)
-   locale/en-US/browser/migration/migration.properties        (locale/migration.properties)
-

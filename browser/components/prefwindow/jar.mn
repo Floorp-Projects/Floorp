@@ -24,20 +24,3 @@ browser.jar:
 *   content/browser/pref/plugins.xul                       (content/plugins.xul)
 *   content/browser/pref/plugins.js                        (content/plugins.js)
 *   content/browser/pref/permissions.js                    (content/permissions.js)
-
-en-US.jar:
-+   locale/en-US/browser/pref/pref-navigator.dtd           (locale/pref-navigator.dtd)
-    locale/en-US/browser/pref/addPopup.properties          (locale/addPopup.properties)
-    locale/en-US/browser/pref/pref.dtd                     (locale/pref.dtd)
-    locale/en-US/browser/pref/pref-advanced.dtd            (locale/pref-advanced.dtd)
-    locale/en-US/browser/pref/pref-advancedscripts.dtd     (locale/pref-advancedscripts.dtd)
-    locale/en-US/browser/pref/pref-connection.dtd          (locale/pref-connection.dtd)    
-    locale/en-US/browser/pref/pref-extensions.dtd          (locale/pref-extensions.dtd)
-    locale/en-US/browser/pref/pref-features.dtd            (locale/pref-features.dtd)
-    locale/en-US/browser/pref/pref-features-images.dtd     (locale/pref-features-images.dtd)
-    locale/en-US/browser/pref/pref-fonts.dtd               (locale/pref-fonts.dtd)
-    locale/en-US/browser/pref/pref-privacy.dtd             (locale/pref-privacy.dtd)
-    locale/en-US/browser/pref/pref-themes.dtd              (locale/pref-themes.dtd)
-    locale/en-US/browser/pref/prefutilities.properties     (locale/prefutilities.properties)
-    locale/en-US/browser/pref/plugins.dtd                  (locale/plugins.dtd)
-

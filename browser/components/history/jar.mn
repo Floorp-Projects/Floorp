@@ -1,6 +1,3 @@
 browser.jar:
 *   content/browser/history/history-panel.xul              (content/history-panel.xul) 
 *   content/browser/history/history.js                     (content/history.js)
-
-en-US.jar:
-    locale/en-US/browser/history/history.dtd               (locale/history.dtd)

@@ -26,7 +26,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = content locale
-
 include $(topsrcdir)/config/rules.mk
 
