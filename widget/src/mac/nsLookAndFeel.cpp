@@ -37,71 +37,77 @@ nsLookAndFeel::~nsLookAndFeel()
 {
 }
 
-NS_IMETHODIMP_(nscolor) nsLookAndFeel::GetColor(nsColorID aID) 
+NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
-    nscolor res = NS_RGB(0xff,0xff,0xff);
+    nsresult res = NS_OK;
     switch (aID) {
-    case WindowBackground:
-        res = NS_RGB(0xff,0xff,0xff);
+    case eColor_WindowBackground:
+        aColor = NS_RGB(0xff,0xff,0xff);
         break;
-    case WindowForeground:
-        res = NS_RGB(0x00,0x00,0x00);        
+    case eColor_WindowForeground:
+        aColor = NS_RGB(0x00,0x00,0x00);        
         break;
-    case WidgetBackground:
-        res = NS_RGB(0x80,0x80,0x80);
+    case eColor_WidgetBackground:
+        aColor = NS_RGB(0x80,0x80,0x80);
         break;
-    case WidgetForeground:
-        res = NS_RGB(0x00,0x00,0x00);        
+    case eColor_WidgetForeground:
+        aColor = NS_RGB(0x00,0x00,0x00);        
         break;
-    case WidgetSelectBackground:
-        res = NS_RGB(0x80,0x80,0x80);
+    case eColor_WidgetSelectBackground:
+        aColor = NS_RGB(0x80,0x80,0x80);
         break;
-    case WidgetSelectForeground:
-        res = NS_RGB(0x00,0x00,0x80);
+    case eColor_WidgetSelectForeground:
+        aColor = NS_RGB(0x00,0x00,0x80);
         break;
-    case Widget3DHighlight:
-        res = NS_RGB(0xa0,0xa0,0xa0);
+    case eColor_Widget3DHighlight:
+        aColor = NS_RGB(0xa0,0xa0,0xa0);
         break;
-    case Widget3DShadow:
-        res = NS_RGB(0x40,0x40,0x40);
+    case eColor_Widget3DShadow:
+        aColor = NS_RGB(0x40,0x40,0x40);
         break;
-    case TextBackground:
-        res = NS_RGB(0xff,0xff,0xff);
+    case eColor_TextBackground:
+        aColor = NS_RGB(0xff,0xff,0xff);
         break;
-    case TextForeground: 
-        res = NS_RGB(0x00,0x00,0x00);
-	break;
-    case TextSelectBackground:
-        res = NS_RGB(0x00,0x00,0x80);
+    case eColor_TextForeground: 
+        aColor = NS_RGB(0x00,0x00,0x00);
         break;
-    case TextSelectForeground:
-        res = NS_RGB(0xff,0xff,0xff);
+    case eColor_TextSelectBackground:
+        aColor = NS_RGB(0x00,0x00,0x80);
+        break;
+    case eColor_TextSelectForeground:
+        aColor = NS_RGB(0xff,0xff,0xff);
         break;
     default:
+        aColor = NS_RGB(0xff,0xff,0xff);
+        res = NS_ERROR_FAILURE;
         break;
     }
 
     return res;
 }
 
-NS_IMETHODIMP_(PRInt32) nsLookAndFeel::GetMetric(nsMetricID aID)
+NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
-    PRInt32 res;
+    nsresult res = NS_OK;
     switch (aID) {
-    case WindowTitleHeight:
-        res = 0;
+    case eMetric_WindowTitleHeight:
+        aMetric = 0;
         break;
-    case WindowBorderWidth:
-        res = 4;
+    case eMetric_WindowBorderWidth:
+        aMetric = 4;
         break;
-    case WindowBorderHeight:
-        res = 4;
+    case eMetric_WindowBorderHeight:
+        aMetric = 4;
         break;
-    case Widget3DBorder:
-        res = 4;
+    case eMetric_Widget3DBorder:
+        aMetric = 4;
+        break;
+    case eMetric_TextFieldHeight:
+        aMetric = 30;
         break;
     default:
-        res = 0;
+        aMetric = 0;
+        res = NS_ERROR_FAILURE;
     }
     return res;
 }

@@ -48,44 +48,45 @@ nsLookAndFeel::~nsLookAndFeel()
 {
 }
 
-NS_IMETHODIMP_(nscolor) nsLookAndFeel::GetColor(nsColorID aID) 
+NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
+    nsresult res = NS_OK;
     int idx;
     switch (aID) {
-    case WindowBackground:
+    case eColor_WindowBackground:
         idx = COLOR_WINDOW;
         break;
-    case WindowForeground:
+    case eColor_WindowForeground:
         idx = COLOR_WINDOWTEXT;
         break;
-    case WidgetBackground:
+    case eColor_WidgetBackground:
         idx = COLOR_BTNFACE;
         break;
-    case WidgetForeground:
+    case eColor_WidgetForeground:
         idx = COLOR_BTNTEXT;
         break;
-    case WidgetSelectBackground:
+    case eColor_WidgetSelectBackground:
         idx = COLOR_HIGHLIGHT;
         break;
-    case WidgetSelectForeground:
+    case eColor_WidgetSelectForeground:
         idx = COLOR_HIGHLIGHTTEXT;
         break;
-    case Widget3DHighlight:
+    case eColor_Widget3DHighlight:
         idx = COLOR_BTNHIGHLIGHT;
         break;
-    case Widget3DShadow:
+    case eColor_Widget3DShadow:
         idx = COLOR_BTNSHADOW;
         break;
-    case TextBackground:
+    case eColor_TextBackground:
         idx = COLOR_WINDOW;
         break;
-    case TextForeground:
+    case eColor_TextForeground:
         idx = COLOR_WINDOWTEXT;
         break;
-    case TextSelectBackground:
+    case eColor_TextSelectBackground:
         idx = COLOR_HIGHLIGHT;
         break;
-    case TextSelectForeground:
+    case eColor_TextSelectForeground:
         idx = COLOR_HIGHLIGHTTEXT;
         break;
     default:
@@ -93,27 +94,33 @@ NS_IMETHODIMP_(nscolor) nsLookAndFeel::GetColor(nsColorID aID)
         break;
     }
 
-    return ::GetSysColor(idx);
-}
+    aColor = ::GetSysColor(idx);
 
-NS_IMETHODIMP_(PRInt32) nsLookAndFeel::GetMetric(nsMetricID aID)
+    return res;
+}
+  
+NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
-    PRInt32 res;
+    nsresult res = NS_OK;
     switch (aID) {
-    case WindowTitleHeight:
-        res = ::GetSystemMetrics(SM_CYCAPTION);
+    case eMetric_WindowTitleHeight:
+        aMetric = ::GetSystemMetrics(SM_CYCAPTION);
         break;
-    case WindowBorderWidth:
-        res = ::GetSystemMetrics(SM_CXFRAME);
+    case eMetric_WindowBorderWidth:
+        aMetric = ::GetSystemMetrics(SM_CXFRAME);
         break;
-    case WindowBorderHeight:
-        res = ::GetSystemMetrics(SM_CYFRAME);
+    case eMetric_WindowBorderHeight:
+        aMetric = ::GetSystemMetrics(SM_CYFRAME);
         break;
-    case Widget3DBorder:
-        res = ::GetSystemMetrics(SM_CXEDGE);
+    case eMetric_Widget3DBorder:
+        aMetric = ::GetSystemMetrics(SM_CXEDGE);
+        break;
+    case eMetric_TextFieldHeight:
+        aMetric = 24;
         break;
     default:
-        res = -1;
+        aMetric = -1;
+        res = NS_ERROR_FAILURE;
     }
     return res;
 }

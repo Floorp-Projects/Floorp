@@ -27,8 +27,8 @@ public:
   nsLookAndFeel(nsISupports *aOuter);
   virtual ~nsLookAndFeel();
 
-  NS_IMETHOD_(nscolor) GetColor(nsColorID aID);
-  NS_IMETHOD_(PRInt32) GetMetric(nsMetricID aID);
+  NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor);
+  NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
 };
 
 #endif
