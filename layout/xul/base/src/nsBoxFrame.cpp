@@ -1593,7 +1593,6 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
 
   // Child elements have the opportunity to override the visibility property
   // of their parent and display even if the parent is hidden
-  PRBool clipState;
 
   nsRect r(0,0,mRect.width, mRect.height);
   PRBool hasClipped = PR_FALSE;
@@ -1623,8 +1622,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
         // if our rect does not contain the childs then begin clipping
         if (!r.Contains(cr)) {
             aRenderingContext.PushState();
-            aRenderingContext.SetClipRect(r,
-                                          nsClipCombine_kIntersect, clipState);
+            aRenderingContext.SetClipRect(r, nsClipCombine_kIntersect);
             hasClipped = PR_TRUE;
         }
     }
@@ -1665,8 +1663,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
             // if our rect does not contain the childs then begin clipping
             if (!r.Contains(cr)) {
                 aRenderingContext.PushState();
-                aRenderingContext.SetClipRect(r,
-                                              nsClipCombine_kIntersect, clipState);
+                aRenderingContext.SetClipRect(r, nsClipCombine_kIntersect);
                 hasClipped = PR_TRUE;
             }
         }

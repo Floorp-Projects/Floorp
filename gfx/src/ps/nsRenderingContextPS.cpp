@@ -356,12 +356,9 @@ NS_IMETHODIMP nsRenderingContextPS :: IsVisibleRect(const nsRect& aRect, PRBool 
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsRenderingContextPS :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextPS :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
-nsRect  trect = aRect;
-#if defined(XP_WIN) || defined(XP_OS2)
-PRInt32     cliptype;
-#endif
+  nsRect  trect = aRect;
 
   mStates->mLocalClip = aRect;
 
@@ -389,13 +386,6 @@ PRInt32     cliptype;
   mPSObj->clip();
   mPSObj->newpath();
 
-#ifdef XP_WIN
-  if (cliptype == NULLREGION)
-    aClipEmpty = PR_TRUE;
-  else
-    aClipEmpty = PR_FALSE;
-#endif
-
   return NS_OK;
 }
 
@@ -421,12 +411,12 @@ nsRenderingContextPS :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
+nsRenderingContextPS :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
   nsRect rect;
   nsIRegion* pRegion = (nsIRegion*)&aRegion;
   pRegion->GetBoundingBox(&rect.x, &rect.y, &rect.width, &rect.height);
-  SetClipRect(rect, aCombine, aClipEmpty);
+  SetClipRect(rect, aCombine);
 
   return NS_OK; 
 }

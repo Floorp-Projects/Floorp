@@ -803,8 +803,7 @@ nsSVGOuterSVGFrame::Paint(nsIPresContext* aPresContext,
   // initialize Mozilla rendering context
   aRenderingContext.PushState();
   
-  PRBool clipState;
-  aRenderingContext.SetClipRect(aDirtyRect,nsClipCombine_kIntersect,clipState);
+  aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect);
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime start = PR_Now();

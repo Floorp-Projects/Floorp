@@ -91,9 +91,9 @@ public:
 
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 
-  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
+  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
   NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipValid);
-  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty);
+  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
   NS_IMETHOD CopyClipRegion(nsIRegion &aRegion);
   NS_IMETHOD GetClipRegion(nsIRegion **aRegion);
 
@@ -241,7 +241,7 @@ public:
     return gdk_gc_ref(mGC);
   }
 
-  void SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
+  void SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine);
 
   // cause the GC to be updated
   void UpdateGC();

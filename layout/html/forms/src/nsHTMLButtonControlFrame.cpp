@@ -345,9 +345,8 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
 
   rect.Deflate(border);
   aRenderingContext.PushState();
-  PRBool clipEmpty;
 
-  aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipEmpty);
+  aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect);
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATS);

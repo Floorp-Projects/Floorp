@@ -366,8 +366,7 @@ nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize
       nsRect bounds = aRequestedSize;
       bounds *= p2t;
 
-      PRBool clipEmpty;
-      SetClipRect(bounds, nsClipCombine_kReplace, clipEmpty);
+      SetClipRect(bounds, nsClipCombine_kReplace);
     }
 
   aBackbuffer = gBackbuffer;

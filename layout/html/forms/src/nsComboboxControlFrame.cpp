@@ -2355,9 +2355,8 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
 #ifndef MOZ_WIDGET_COCOA
     if (mDisplayFrame) {
       aRenderingContext.PushState();
-      PRBool clipEmpty;
       nsRect clipRect = mDisplayFrame->GetRect();
-      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipEmpty);
+      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect, 
                  mDisplayFrame, NS_FRAME_PAINT_LAYER_BACKGROUND);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect, 

@@ -1116,9 +1116,8 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
   }
 
   // Clip so we don't render outside the inner rect
-  PRBool clipState;
   aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect, clipState);
+  aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect);
 
   PRBool dispIcon = gIconLoad ? gIconLoad->mPrefShowPlaceholders : PR_TRUE;
 

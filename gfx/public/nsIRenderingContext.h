@@ -203,9 +203,8 @@ public:
    * @param aRect The rectangle to set the clipping rectangle to
    * @param aCombine how to combine this rect with the current clip region.
    *        see the bottom of nsIRenderingContext.h
-   * @return PR_TRUE if the clip region is now empty, else PR_FALSE
    */
-  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty) = 0;
+  NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine) = 0;
 
   /**
    * Gets the bounds of the clip region of the RenderingContext. The bounds are returned
@@ -252,9 +251,8 @@ public:
    * @param aRegion The region to set the clipping area to, IN DEVICE COORDINATES
    * @param aCombine how to combine this region with the current clip region.
    *        see the bottom of nsIRenderingContext.h
-   * @return PR_TRUE if the clip region is now empty, else PR_FALSE
    */
-  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty) = 0;
+  NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine) = 0;
 
   /**
    * Gets a copy of the current clipping region for the RenderingContext

@@ -2118,9 +2118,8 @@ nscoord width;
   nsRect clipRect(outside);
 #endif
 
-  PRBool clipState = PR_FALSE;
   aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace);
 
   // rounded version of the border
   for(i=0;i<4;i++){

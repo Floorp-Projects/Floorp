@@ -2078,8 +2078,6 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
     if (!mView)
       return NS_OK;
 
-    PRBool clipState = PR_FALSE;
-  
     // Update our available height and our page count.
     CalcInnerBox();
     PRInt32 oldPageCount = mPageLength;
@@ -2127,7 +2125,7 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
           PRInt32 overflow = (rowRect.y+rowRect.height) - (mInnerBox.y+mInnerBox.height);
           nsRect clipRect(rowRect.x, rowRect.y, mInnerBox.width, mRowHeight-overflow);
           aRenderingContext.PushState();
-          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
+          aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace);
         }
 
         PaintRow(i, rowRect, aPresContext, aRenderingContext, aDirtyRect);

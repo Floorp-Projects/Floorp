@@ -273,7 +273,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRect( nsRect &aRect, PRBool &aClipV
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: SetClipRect( const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty ) 
+NS_IMETHODIMP nsRenderingContextPh :: SetClipRect( const nsRect& aRect, nsClipCombine aCombine ) 
 {
 	nsresult   res = NS_ERROR_FAILURE;
 	nsRect     trect = aRect;
@@ -325,14 +325,13 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect( const nsRect& aRect, nsClipCo
 				break;
 		}
 		
-		aClipEmpty = mClipRegion->IsEmpty();
 		res = NS_OK;
 	}
 	
 	return res;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion( const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty ) 
+NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion( const nsIRegion& aRegion, nsClipCombine aCombine ) 
 {
 	PRUint32 cnt = mStateCache->Count();
 	nsGraphicsState *state = nsnull;
@@ -378,7 +377,6 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion( const nsIRegion& aRegion, n
 			break;
 	}
 	
-	aClipEmpty = mClipRegion->IsEmpty();
 	return NS_OK;
 }
 
