@@ -11255,7 +11255,7 @@ EOF
 fi
 
 
-NS_TRACE_MALLOC=
+NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
 # Check whether --enable-trace-malloc or --disable-trace-malloc was given.
 if test "${enable_trace_malloc+set}" = set; then
   enableval="$enable_trace_malloc"
@@ -13102,6 +13102,11 @@ EOF
 
 
 
+
+
+
+
+
 if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
   cat >> confdefs.h <<\EOF
 #define MOZ_BYPASS_PROFILE_AT_STARTUP 1
@@ -13713,6 +13718,10 @@ s%@MOZ_POST_DSO_LIB_COMMAND@%$MOZ_POST_DSO_LIB_COMMAND%g
 s%@MOZ_POST_PROGRAM_COMMAND@%$MOZ_POST_PROGRAM_COMMAND%g
 s%@MOZ_REORDER@%$MOZ_REORDER%g
 s%@MOZ_TIMELINE@%$MOZ_TIMELINE%g
+s%@MOZ_PROFILE@%$MOZ_PROFILE%g
+s%@MOZ_COVERAGE@%$MOZ_COVERAGE%g
+s%@MOZ_MAPINFO@%$MOZ_MAPINFO%g
+s%@MOZ_BROWSE_INFO@%$MOZ_BROWSE_INFO%g
 s%@SYSTEM_JPEG@%$SYSTEM_JPEG%g
 s%@SYSTEM_PNG@%$SYSTEM_PNG%g
 s%@SYSTEM_MNG@%$SYSTEM_MNG%g
