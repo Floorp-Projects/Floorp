@@ -19,13 +19,14 @@
 /*
  * JS lexical scanner.
  */
+#include "jsstddef.h"
 #include <stdio.h>	/* first to avoid trouble on some systems */
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
 #include <memory.h>
 #include <stdarg.h>
-#include <stddef.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include "prtypes.h"
@@ -286,12 +287,12 @@ GetChar(JSTokenStream *ts)
     int32 c;
     ptrdiff_t len, olen;
     jschar *nl;
-
+    
     if (ts->ungetpos != 0) {
 	c = ts->ungetbuf[--ts->ungetpos];
     } else {
-	if (ts->linebuf.ptr == ts->linebuf.limit) {
-	    len = ts->userbuf.limit - ts->userbuf.ptr;
+	if (ts->linebuf.ptr == ts->linebuf.limit) {                                                                                                         
+	    len = PTRDIFF(ts->userbuf.limit, ts->userbuf.ptr, jschar);
 	    if (len <= 0) {
 #ifdef JSFILE
 		/* Fill ts->userbuf so that \r and \r\n convert to \n. */
@@ -353,7 +354,7 @@ GetChar(JSTokenStream *ts)
 	     * Else copy JS_LINE_LIMIT-1 bytes into linebuf.
 	     */
 	    if (nl < ts->userbuf.limit)
-		len = nl - ts->userbuf.ptr + 1;
+		len = PTRDIFF(nl, ts->userbuf.ptr, jschar) + 1;
 	    if (len >= JS_LINE_LIMIT)
 		len = JS_LINE_LIMIT - 1;
 	    js_strncpy(ts->linebuf.base, ts->userbuf.ptr, len);
@@ -568,8 +569,8 @@ GrowTokenBuf(JSContext *cx, JSTokenBuf *tb)
     PRArenaPool *pool;
 
     base = tb->base;
-    offset = tb->ptr - base;
-    length = tb->limit - base;
+    offset = PTRDIFF(tb->ptr, base, jschar);
+    length = PTRDIFF(tb->limit, base, jschar);
     tbincr = TBINCR * sizeof(jschar);
     pool = &cx->tempPool;
     if (!base) {
@@ -682,7 +683,7 @@ retry:
 		    RETURN(TOK_ERROR);
 		c = GetChar(ts);
 		radix = 16;
-	    } else if (JS7_ISDEC(c) && c < '8') {
+	    } else if (JS7_ISDEC(c)) {
 		radix = 8;
 	    }
 	}

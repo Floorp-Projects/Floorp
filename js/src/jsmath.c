@@ -19,6 +19,7 @@
 /*
  * JS math package.
  */
+#include "jsstddef.h"
 #include <math.h>
 #include <stdlib.h>
 #include "prtypes.h"

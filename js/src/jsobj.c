@@ -19,6 +19,7 @@
 /*
  * JS object implementation.
  */
+#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include "prtypes.h"
@@ -246,7 +247,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     PRHashTable *table;
     JSIdArray *ida;
     PRHashNumber hash;
-    PRHashEntry *he;
+    PRHashEntry *he, **hep;
     jsatomid sharpid;
     char buf[20];
     size_t len;
@@ -274,9 +275,24 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
 	    ida = NULL;
 	}
     } else {
-	hash = js_hash_object(obj);
-	he = *PR_HashTableRawLookup(table, hash, obj);
-	PR_ASSERT(he);
+        hash = js_hash_object(obj);
+        hep = PR_HashTableRawLookup(table, hash, obj);
+        he = *hep;
+    
+        /*
+         * It's possible that the value of a property has changed from the
+         * first time the object's properties are traversed (when the property
+         * ids are entered into the hash table) to the second (when they are
+         * converted to strings), i.e. the getProperty() call is not
+         * idempotent.
+         */
+        if (!he) {
+	    he = PR_HashTableRawAdd(table, hep, hash, obj, (void *)0);
+	    if (!he)
+	        JS_ReportOutOfMemory(cx);
+            *sp = NULL;
+            goto out;
+        }
     }
 
     sharpid = (jsatomid) he->value;
@@ -293,6 +309,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
 	}
     }
 
+out:
     if ((sharpid & SHARP_BIT) == 0) {
     	if (idap && !ida) {
 	    ida = JS_Enumerate(cx, obj);
@@ -306,6 +323,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
 	}
 	map->depth++;
     }
+
     if (idap)
 	*idap = ida;
     return he;
@@ -1042,6 +1060,8 @@ FindConstructor(JSContext *cx, const char *name, jsval *vp)
 {
     JSAtom *atom;
     JSObject *obj, *tmp;
+    JSObject *pobj;
+    JSScopeProperty *sprop;
 
     atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
@@ -1061,7 +1081,19 @@ FindConstructor(JSContext *cx, const char *name, jsval *vp)
 	}
     }
 
-    return OBJ_GET_PROPERTY(cx, obj, (jsid)atom, vp);
+    if(!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, (JSProperty **) &sprop))
+    {
+	return JS_FALSE;
+    }
+    if(!sprop)  {
+	*vp = JSVAL_VOID;
+	return JS_TRUE;
+    }
+
+    PR_ASSERT(OBJ_IS_NATIVE(pobj));
+    *vp = OBJ_GET_SLOT(cx, pobj, sprop->slot);
+    OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+    return JS_TRUE;
 }
 
 JSObject *
@@ -1942,6 +1974,25 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 	if (!JSVAL_IS_PRIMITIVE(v)) {
 	    if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, hint, &v))
 		return JS_FALSE;
+
+            /*
+             * JS1.2 never failed (except for malloc failure) to convert an
+             * object to a string.  ECMA requires an error if both toString
+             * and valueOf fail to produce a primitive value.
+             */
+            if (!JSVAL_IS_PRIMITIVE(v) && cx->version == JSVERSION_1_2) {
+                char *bytes = PR_smprintf("[object %s]",
+                                          OBJ_GET_CLASS(cx, obj)->name);
+                if (!bytes)
+                    return JS_FALSE;
+                str = JS_NewString(cx, bytes, strlen(bytes));
+                if (!str) {
+                    free(bytes);
+                    return JS_FALSE;
+                }
+                v = STRING_TO_JSVAL(str);
+                goto out;
+            }
       	}
       	break;
 
@@ -1950,6 +2001,9 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 	    return JS_FALSE;
 	if (!JSVAL_IS_PRIMITIVE(v)) {
 	    if (JS_TypeOfValue(cx, v) == hint)
+	    	goto out;
+	    /* Don't convert to string (source object literal) for JS1.2. */
+	    if (cx->version == JSVERSION_1_2 && hint == JSTYPE_BOOLEAN)
 	    	goto out;
 	    js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0, NULL,
 			 &v);
@@ -2024,7 +2078,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     case JSENUMERATE_INIT:
         if (!enumerate(cx, obj))
-    	    return JS_FALSE;
+    	    goto init_error;
         length = 0;
 
         /*
@@ -2041,7 +2095,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         ida = js_NewIdArray(cx, length);
         if (!ida) {
 	    JS_UNLOCK_OBJ(cx, obj);
-    	    return JS_FALSE;
+    	    goto init_error;
         }
         i = 0;
         for (sprop = scope->props; sprop; sprop = sprop->next) {
@@ -2055,7 +2109,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         state = JS_malloc(cx, sizeof(JSNativeIteratorState));
         if (!state) {
             JS_DestroyIdArray(cx, ida);
-            return JS_FALSE;
+            goto init_error;
         }
         state->ida = ida;
         state->next_index = 0;
@@ -2077,6 +2131,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     case JSENUMERATE_DESTROY:
         state = JSVAL_TO_PRIVATE(*statep);
+        JS_DestroyIdArray(cx, state->ida);
         JS_free(cx, state);
         *statep = JSVAL_NULL;
         return JS_TRUE;
@@ -2085,6 +2140,10 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         PR_ASSERT(0);
         return JS_FALSE;
     }
+
+init_error:
+    *statep = JSVAL_NULL;
+    return JS_FALSE;
 }
 
 JSBool

@@ -19,6 +19,7 @@
 /*
  * JS bytecode descriptors, disassemblers, and decompilers.
  */
+#include "jsstddef.h"
 #include <memory.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -338,7 +339,7 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
     do {
 	while (JS_ISPRINT(c) && c != quote && !(c >> 8))
 	    c = *++t;
-	len = t - s;
+	len = PTRDIFF(t, s, jschar);
 
 	/* Allocate space for s, including the '\0' at the end. */
 	nb = (sp->offset + len + 1) - sp->size;
@@ -1075,7 +1076,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 			rval = POP_STR();
 			todo = Sprint(&ss->sprinter, "%s || %s", lval, rval);
 			JS_free(cx, (void *)lval);
-			len = done - pc;
+			len = PTRDIFF(done, pc, jsbytecode);
 		    }
 #endif /* JS_BUG_SHORT_CIRCUIT */
 		    break;
@@ -1114,7 +1115,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    rval = POP_STR();
 		    todo = Sprint(&ss->sprinter, "%s && %s", lval, rval);
 		    JS_free(cx, (void *)lval);
-		    len = done - pc;
+		    len = PTRDIFF(done, pc, jsbytecode);
 		}
 #endif /* JS_BUG_SHORT_CIRCUIT */
 		break;
@@ -1127,7 +1128,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    return JS_FALSE;
 		done = pc + GET_JUMP_OFFSET(pc);
 		pc += len;
-		len = done - pc;
+		len = PTRDIFF(done, pc, jsbytecode);
 		DECOMPILE_CODE(pc, len);
 		rval = POP_STR();
 		todo = Sprint(&ss->sprinter, "%s || %s", lval, rval);
@@ -1141,7 +1142,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    return JS_FALSE;
 		done = pc + GET_JUMP_OFFSET(pc);
 		pc += len;
-		len = done - pc;
+		len = PTRDIFF(done, pc, jsbytecode);
 		DECOMPILE_CODE(pc, len);
 		rval = POP_STR();
 		todo = Sprint(&ss->sprinter, "%s && %s", lval, rval);
@@ -1999,7 +2000,7 @@ js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback)
 	begin = pc - js_GetSrcNoteOffset(sn, 0);
     }
     end = pc + cs->length;
-    len = end - begin;
+    len =PTRDIFF(end, begin, jsbytecode);
 
     if (format & (JOF_SET | JOF_DEL | JOF_INCDEC | JOF_IMPORT)) {
 	/* These formats require bytecode source extension. */
