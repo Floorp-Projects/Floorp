@@ -908,7 +908,7 @@ private:
                           nsStyleContext*          aStyleContext,
                           nsIFrame**               aNewFrame,
                           nsFrameItems&            aFrameItems,
-                          PRBool                   aRelPos);
+                          PRBool                   aAbsPosContainer);
 
   nsresult ConstructInline(nsIPresShell*            aPresShell, 
                            nsPresContext*          aPresContext,
