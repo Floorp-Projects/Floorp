@@ -61,6 +61,7 @@ then
 fi
 export QASCRIPT_DIR
 
+O_HWACC=OFF
 O_ALWAYS_YES=OFF    # turned on by -y answer all questions with y 
 
 if [ -z "$O_INIT" ] # header is global, some including scripts may not
@@ -173,6 +174,8 @@ export BC_RELEASE
 EARLY_EXIT=TRUE     #before the report file has been created, causes Exit to 
                     #create it
 
+UX_D0=/h/blds-sca15a/export/builds/mccrel/nss
+
 ################################### glob_init ##########################
 # global shell function, main initialisation function
 ########################################################################
@@ -221,6 +224,18 @@ init_vars()
     then
         Exit "Can't determine current user"
     fi
+    case $HOST in
+        iws-perf)
+            O_HWACC=ON
+            HWACC_LIST="rainbow ncipher"
+            #MODUTIL="-add rainbow -libfile /usr/lib/libcryptoki22.so"
+            export HWACC_LIST
+            ;;
+        *)
+            O_HWACC=OFF
+            ;;
+    esac
+   export O_HWACC
 }
 
 ########################## find_nt_masterbuild #########################
@@ -256,7 +271,7 @@ tbx_dirs()
     if [ "$O_WIN" = "ON" ] ; then
         win_set_d1 #also gets the TMP straight and we need the D1 later
     else
-        D1=/h/blds-sca15a/export/builds/mccrel/nss/nss$NSSVER
+        D1="$UX_D0"/nss$NSSVER
     fi
     if [ -z "${RESULTDIR}" ] ; then # needs to be different for tinderbox
         Debug "Setting RESULTDIR for tinderbox"
@@ -305,7 +320,7 @@ init_dirs()
     elif [ "$O_WIN" = "ON" ] ; then
         win_set_d1
     else
-        D1=/h/blds-sca15a/export/builds/mccrel/nss/nss$NSSVER
+        D1="$UX_D0"/nss$NSSVER
     fi
 
     set_d2
@@ -671,8 +686,12 @@ qa_stat_get_sysinfo()
     else
         case $QA_SYS in
             *SunOS*5.8*)
-                IS_64=`$GET_SYSINFO isainfo -v | grep 64 >/dev/null && \
+                ISAINFO=`$GET_SYSINFO isainfo -v`
+                IS_64=`echo $ISAINFO | grep 64 >/dev/null && \
                     echo 64 bit`
+                IS_I386=`echo $ISAINFO | grep i386 >/dev/null && \
+                    echo i86pc`
+                if [ -n "$IS_I386" ] ; then IS_64="$IS_I386"; fi;
                 if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
                 ;;
             *HP*)
