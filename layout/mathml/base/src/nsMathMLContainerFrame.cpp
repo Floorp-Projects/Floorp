@@ -533,12 +533,14 @@ nsMathMLWrapperFrame::Stretch(nsIPresContext&      aPresContext,
                                 nsCharMetrics&       aDesiredStretchSize)
 {
   nsIFrame* childFrame = mFrames.FirstChild();
-  nsIMathMLFrame* aMathMLFrame;
-  nsresult rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
-  if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-    aMathMLFrame->Stretch(aPresContext, aRenderingContext, aStretchDirection, 
-                          aContainerSize, aDesiredStretchSize);
-    childFrame->SetRect(&aPresContext, nsRect(0,0,aDesiredStretchSize.width,aDesiredStretchSize.height));
+  if (childFrame) {
+    nsIMathMLFrame* aMathMLFrame = nsnull;
+    nsresult rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+      aMathMLFrame->Stretch(aPresContext, aRenderingContext, aStretchDirection, 
+                            aContainerSize, aDesiredStretchSize);
+      childFrame->SetRect(&aPresContext, nsRect(0,0,aDesiredStretchSize.width,aDesiredStretchSize.height));
+    }
   }
   return NS_OK;
 }
@@ -550,16 +552,22 @@ nsMathMLWrapperFrame::Reflow(nsIPresContext&          aPresContext,
                              nsReflowStatus&          aStatus)
 {
   nsresult rv = NS_OK;
-
-  nsReflowStatus childStatus;
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize);
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-
+  aStatus = NS_FRAME_COMPLETE;
+  aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
   nsIFrame* childFrame = mFrames.FirstChild();
-  nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame, availSize);
-  rv = ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowState, childStatus);
-  childFrame->SetRect(&aPresContext, nsRect(0,0,childDesiredSize.width,childDesiredSize.height));
-  aDesiredSize = childDesiredSize;
-  aStatus = childStatus;
+  if (childFrame) {
+    nsReflowStatus childStatus;
+    nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize);
+    nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+    nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame, availSize);
+    rv = ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowState, childStatus);
+    childFrame->SetRect(&aPresContext, nsRect(0,0,childDesiredSize.width,childDesiredSize.height));
+    aDesiredSize = childDesiredSize;
+    aStatus = childStatus;
+  }
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
   return rv;
 }
