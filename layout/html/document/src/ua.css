@@ -840,6 +840,8 @@ button:focus:-moz-focus-inner {
 }
 
 input[type=text] {
+  font-family:monospace;
+  font-size: 10;
   border: 2px inset rgb(204, 204, 204);
   background-color: white;
   color: black;
@@ -1056,6 +1058,8 @@ optgroup:before {
 
 
 textarea {
+  font-family:monospace;
+  font-size: 10;
   vertical-align: bottom;
   border: 2px inset #c0c0c0;
   background-color:white;
