@@ -1875,6 +1875,9 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     if (nsnull == viewManager) {
       view->GetViewManager(viewManager);
     }
+    const nsStyleColor* color;
+    aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&) color);
+    viewManager->SetViewOpacity(view, color->mOpacity);
     viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
 
     aFrame->GetNextInFlow(aFrame);
