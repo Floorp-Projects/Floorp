@@ -535,10 +535,8 @@ class RelatedLinksHandlerImpl : public nsIRelatedLinksHandler,
 				public nsIRDFDataSource
 {
 private:
-	char			*mURI;
 	char			*mRelatedLinksURL;
-	PRBool			mPerformQuery;
-	nsAutoString		mRLServerURL;
+	static nsString		mRLServerURL;
 
    // pseudo-constants
 	static PRInt32		gRefCnt;
@@ -629,6 +627,7 @@ public:
 PRInt32			RelatedLinksHandlerImpl::gRefCnt;
 nsIRDFService		*RelatedLinksHandlerImpl::gRDFService;
 
+nsString		RelatedLinksHandlerImpl::mRLServerURL;
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_RelatedLinksRoot;
 nsIRDFResource		*RelatedLinksHandlerImpl::kRDF_type;
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_RelatedLinksTopic;
@@ -637,9 +636,7 @@ nsIRDFResource		*RelatedLinksHandlerImpl::kNC_Child;
 
 
 RelatedLinksHandlerImpl::RelatedLinksHandlerImpl()
-	: mURI(nsnull),
-	  mRelatedLinksURL(nsnull),
-	  mPerformQuery(PR_FALSE)
+	: mRelatedLinksURL(nsnull)
 {
 	NS_INIT_REFCNT();
 }
