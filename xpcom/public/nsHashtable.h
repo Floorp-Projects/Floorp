@@ -53,4 +53,30 @@ public:
   void Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure = NULL);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+#include "nsID.h"
+
+class nsIDKey: public nsHashKey {
+private:
+    nsID id;
+  
+public:
+    nsIDKey(const nsID &aID) {
+        id = aID;
+    }
+  
+    PRUint32 HashValue(void) const {
+        return id.m0;
+    }
+
+    PRBool Equals(const nsHashKey *aKey) const {
+        return (id.Equals(((const nsIDKey *) aKey)->id));
+    }
+
+    nsHashKey *Clone(void) const {
+        return new nsIDKey(id);
+    }
+};
+
 #endif

@@ -86,28 +86,6 @@ public:
   }
 };
 
-class IDKey: public nsHashKey {
-private:
-  nsID id;
-  
-public:
-  IDKey(const nsID &aID) {
-    id = aID;
-  }
-  
-  PRUint32 HashValue(void) const {
-    return id.m0;
-  }
-
-  PRBool Equals(const nsHashKey *aKey) const {
-    return (id.Equals(((const IDKey *) aKey)->id));
-  }
-
-  nsHashKey *Clone(void) const {
-    return new IDKey(id);
-  }
-};
-
 #ifdef USE_NSREG
 #define USE_REGISTRY
 
@@ -288,7 +266,7 @@ nsresult nsRepository::FindFactory(const nsCID &aClass,
 
   PR_EnterMonitor(monitor);
 
-  IDKey key(aClass);
+  nsIDKey key(aClass);
   FactoryEntry *entry = (FactoryEntry*) factories->Get(&key);
 
   nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -452,7 +430,7 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
 
   PR_EnterMonitor(monitor);
 
-  IDKey key(aClass);
+  nsIDKey key(aClass);
   factories->Put(&key, new FactoryEntry(aClass, aFactory, NULL));
 
   PR_ExitMonitor(monitor);
@@ -499,7 +477,7 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
   else
 #endif
   {
-    IDKey key(aClass);
+    nsIDKey key(aClass);
     factories->Put(&key, new FactoryEntry(aClass, NULL, aLibrary));
   }
 
@@ -530,7 +508,7 @@ nsresult nsRepository::UnregisterFactory(const nsCID &aClass,
     if (old == aFactory) {
       PR_EnterMonitor(monitor);
 
-      IDKey key(aClass);
+      nsIDKey key(aClass);
       FactoryEntry *entry = (FactoryEntry *) factories->Remove(&key);
       delete entry;
 
@@ -560,7 +538,7 @@ nsresult nsRepository::UnregisterFactory(const nsCID &aClass,
     delete [] buf;
   }
 
-  IDKey key(aClass);
+  nsIDKey key(aClass);
   FactoryEntry *old = (FactoryEntry *) factories->Get(&key);
 
   nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
