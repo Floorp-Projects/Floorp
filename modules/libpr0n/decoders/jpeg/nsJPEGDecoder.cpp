@@ -486,12 +486,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 int
 nsJPEGDecoder::OutputScanlines(int num_scanlines)
 {
-  int pass = 0;
-  
-  if (mState == JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT)
-      pass = -1;
-  else
-      pass = mCompletedPasses + 1;
+  PRUint32 top = mInfo.output_scanline;
+  PRBool rv = PR_TRUE;
 
   while ((mInfo.output_scanline < mInfo.output_height) && num_scanlines--) {
       JSAMPROW samples;
@@ -500,7 +496,8 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
       int ns = jpeg_read_scanlines(&mInfo, mSamples, 1);
       
       if (ns != 1) {
-        return PR_FALSE; /* suspend */
+        rv = PR_FALSE; /* suspend */
+        break;
       }
 
       /* If grayscale image ... */
@@ -568,12 +565,14 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
         samples,             // data
         bpr,                 // length
         (mInfo.output_scanline-1) * bpr); // offset
+  }
 
-      nsRect r(0, mInfo.output_scanline, mInfo.output_width, 1);
+  if (top != mInfo.output_scanline) {
+      nsRect r(0, top, mInfo.output_width, mInfo.output_scanline-top);
       mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
   }
 
-  return PR_TRUE;
+  return rv;
 }
 
 
