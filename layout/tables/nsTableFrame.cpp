@@ -380,12 +380,13 @@ nsTableFrame::AppendDirtyReflowCommand(nsIPresShell* aPresShell,
   return rv;
 }
 
-// Make sure any views are positioned properlyvoid
+// Make sure any views are positioned properly
 void
 nsTableFrame::RePositionViews(nsIPresContext* aPresContext,
                               nsIFrame*       aFrame)
 {
   nsContainerFrame::PositionFrameView(aPresContext, aFrame);
+  nsContainerFrame::PositionChildViews(aPresContext, aFrame);
 }
 
 nsIPresShell*

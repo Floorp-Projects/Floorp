@@ -1013,9 +1013,12 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
     y += aFloaterCache->mOffsets.top;
   }
 
-  // Position the floater and make sure and views are properly positioned
+  // Position the floater and make sure and views are properly
+  // positioned. We need to explicitly position its child views as
+  // well, since we're moving the floater after flowing it.
   floater->MoveTo(mPresContext, x, y);
   nsContainerFrame::PositionFrameView(mPresContext, floater);
+  nsContainerFrame::PositionChildViews(mPresContext, floater);
 
   // Update the floater combined area state
   nsRect combinedArea = aFloaterCache->mCombinedArea;

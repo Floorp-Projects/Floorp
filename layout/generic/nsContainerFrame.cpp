@@ -31,6 +31,7 @@
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIView.h"
+#include "nsIScrollableView.h"
 #include "nsVoidArray.h"
 #include "nsISizeOfHandler.h"
 #include "nsIReflowCommand.h"
@@ -357,6 +358,11 @@ TranslatePointTo(nsPoint& aPoint, nsIView* aChildView, nsIView* aParentView)
   return aChildView == aParentView;
 }
 
+/**
+ * Position the view associated with |aKidFrame|, if there is one. A
+ * container frame should call this method after positioning a frame,
+ * but before |Reflow|.
+ */
 void
 nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
                                     nsIFrame*       aKidFrame)
@@ -392,8 +398,8 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
       
         nsRect bounds;
         parentView->GetBounds(bounds);
-        origin.x += bounds.x;
-        origin.y += bounds.y;
+        origin.x -= bounds.x;
+        origin.y -= bounds.y;
         parentView->GetParent(parentView);
       }
      
@@ -409,10 +415,21 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
       }
     }
 
+    if (parentView) {
+      // If the parent view is scrollable, then adjust the origin by
+      // the parent's scroll position.
+      nsIScrollableView* scrollable = nsnull;
+      CallQueryInterface(parentView, &scrollable);
+      if (scrollable) {
+        nscoord scrollX = 0, scrollY = 0;
+        scrollable->GetScrollPosition(scrollX, scrollY);
+
+        origin.x -= scrollX;
+        origin.y -= scrollY;
+      }
+    }
+
     vm->MoveViewTo(view, origin.x, origin.y);
-  }
-  else {
-    PositionChildViews(aPresContext, aKidFrame);
   }
 }
 
@@ -434,51 +451,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     
     // Make sure the view is sized and positioned correctly
     if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
-      nsIView*  containingView;
-      nsPoint   origin;
-      nsIView*  parentView;
-
-      aView->GetParent(parentView);
-      aFrame->GetOffsetFromView(aPresContext, origin, &containingView);
-      
-
-      if (containingView != parentView) 
-      {
-        // it is possible for parent view not to have a frame attached to it
-        // kind of an anonymous view. This happens with native scrollbars and
-        // the clip view. To fix this we need to go up and parentView chain
-        // until we find a view with client data. This is total HACK to fix
-        // the HACK below. COMBO box code should NOT be in the container code!!!
-        // And the case it looks from does not just happen for combo boxes. Native
-        // scrollframes get in this situation too!! 
-        while(parentView) {
-          void *data = 0;
-          parentView->GetClientData(data);
-          if (data)
-            break;
-      
-          nsRect bounds;
-          parentView->GetBounds(bounds);
-          origin.x += bounds.x;
-          origin.y += bounds.y;
-          parentView->GetParent(parentView);
-        }
-     
-        if (containingView != parentView) 
-        {
-          // Huh, the view's parent view isn't the same as the containing view.
-          // This happens for combo box drop-down frames.
-          //
-          // We have the origin in the coordinate space of the containing view,
-          // but we need it in the coordinate space of the parent view so do a
-          // view translation
-          NS_VERIFY(TranslatePointTo(origin, containingView, parentView), "translation failed");
-          vm->MoveViewTo(aView, origin.x, origin.y);
-        }
-      }
-
-      vm->MoveViewTo(aView, origin.x, origin.y);
-
+      PositionFrameView(aPresContext, aFrame);
     }
 
     if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
@@ -764,6 +737,10 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
 }
 
 
+/**
+ * Position the views of |aFrame|'s descendants. A container frame
+ * should call this method if it moves a frame after |Reflow|.
+ */
 void
 nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
                                      nsIFrame*       aFrame)
@@ -782,8 +759,10 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
     nsIFrame* childFrame;
     aFrame->FirstChild(aPresContext, childListName, &childFrame);
     while (childFrame) {
-      // Position the frame's view, if it has one.
+      // Position the frame's view (if it has one) and recursively
+      // process its children
       PositionFrameView(aPresContext, childFrame);
+      PositionChildViews(aPresContext, childFrame);
 
       // Get the next sibling child frame
       childFrame->GetNextSibling(&childFrame);
@@ -833,7 +812,6 @@ nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
                              &aDesiredSize.mOverflowArea,
                              aFlags);
-
   }
   else if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW) &&
            ((curOrigin.x != aX) || (curOrigin.y != aY))) {

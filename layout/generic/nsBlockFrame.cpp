@@ -686,7 +686,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
     reflowState.mSpaceManager = spaceManager.get();
 #ifdef NOISY_SPACEMANAGER
-    printf("constructed new space manager %p\n", reflowState.mSpaceManager);
+    printf("constructed new space manager %p (replacing %p)\n", reflowState.mSpaceManager, oldSpaceManager);
 #endif
   }
 
@@ -844,15 +844,17 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // If we set the space manager, then restore the old space manager now that we're
   // going out of scope
   if (NS_BLOCK_SPACE_MGR & mState) {
-    nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+    nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
 #ifdef NOISY_SPACEMANAGER
     printf("restoring old space manager %p\n", oldSpaceManager);
 #endif
     reflowState.mSpaceManager = oldSpaceManager;
   }
 
+  NS_ASSERTION(aReflowState.mSpaceManager == oldSpaceManager, "lost a space manager");
+
 #ifdef NOISY_SPACEMANAGER
-  nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+  nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
   if (reflowState.mSpaceManager) {
     ListTag(stdout);
     printf(": space-manager %p after reflow\n", reflowState.mSpaceManager);
@@ -2528,11 +2530,10 @@ PlaceFrameView(nsIPresContext* aPresContext,
 {
   nsIView*  view;
   aFrame->GetView(aPresContext, &view);
-  if (view) {
+  if (view)
     nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aFrame, view, nsnull);
-  } else {
-    nsContainerFrame::PositionChildViews(aPresContext, aFrame);
-  }
+
+  nsContainerFrame::PositionChildViews(aPresContext, aFrame);
 }
 
 // XXXldb If I understand correctly what's going on here, this should never

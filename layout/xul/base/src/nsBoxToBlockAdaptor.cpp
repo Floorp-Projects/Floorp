@@ -993,19 +993,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 }
 
 
-void
-nsBoxToBlockAdaptor::PlaceChild(nsIPresContext* aPresContext, nsIFrame* aFrame, nscoord aX, nscoord aY)
-{
-      nsPoint curOrigin;
-      aFrame->GetOrigin(curOrigin);
-
-      // only if the origin changed
-    if ((curOrigin.x != aX) || (curOrigin.y != aY)) {
-        aFrame->MoveTo(aPresContext, aX, aY);
-        nsContainerFrame::PositionFrameView(aPresContext, aFrame);
-    }
-}
-
 /*
 void
 nsBoxToBlockAdaptor::BuildReflowChain(nsIFrame* aFrame, nsIFrame* aTargetParent, const nsHTMLReflowState& aRoot, nsHTMLReflowState& aState)
