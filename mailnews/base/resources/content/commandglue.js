@@ -174,7 +174,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
 	}
 	catch(ex)
 	{
-        dump("Error loading with many headers to download\n");
+        dump("Error loading with many headers to download: " + ex + "\n");
 	}
   }
   else
@@ -562,11 +562,11 @@ function FolderPaneSelectionChange()
 	{
 		var selArray = tree.selectedItems;
 		if ( selArray && (selArray.length == 1) )
-    {
+        {
 			ChangeFolderByDOMNode(selArray[0]);
-      // explicitly force the message pane to get cleared when we switch folders
-      ClearMessagePane(); 
-    }
+            // explicitly force the message pane to get cleared when we switch folders
+            ClearMessagePane(); 
+        }
 		else
 		{
 			var threadTree = GetThreadTree();
@@ -669,29 +669,6 @@ function IsSpecialFolder(msgFolder, specialFolderName)
 	return false;
 }
 
-function ChangeThreadView()
-{
-   var folder = GetSelectedFolder();
-
-	var threadColumn = document.getElementById('ThreadColumnHeader');
-	if(threadColumn)
-	{
-		var currentView = threadColumn.getAttribute('currentView');
-		if(currentView== 'threaded')
-		{
-			ShowThreads(false);
-			if(folder)
-				folder.setAttribute('threaded', "");
-		}
-		else if(currentView == 'unthreaded')
-		{
-			ShowThreads(true);
-			if(folder)
-				folder.setAttribute('threaded', "true");
-		}
-		RefreshThreadTreeView();
-	}
-}
 
 function ShowThreads(showThreads)
 {

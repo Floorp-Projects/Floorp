@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -590,53 +590,6 @@ function GetSelectedMessage()
 
 }
 
-function ThreadPaneOnClick(event)
-{
-    var targetclass = event.target.getAttribute('class');
-    debug('targetclass = ' + targetclass + '\n');
-
-    if (targetclass == 'tree-cell-twisty') {
-        // The twisty is nested three below the treeitem:
-        // <treeitem>
-        //   <treerow>
-        //     <treecell>
-        //         <titledbutton class="tree-cell-twisty"> <!-- anonymous -->
-        var treeitem = event.target.parentNode.parentNode.parentNode;
-		var open = treeitem.getAttribute('open');
-		if(open == "true")
-		{
-			//open all of the children of the treeitem
-			msgNavigationService.OpenTreeitemAndDescendants(treeitem);
-		}
-    }
-	else if(event.detail == 2)
-	{
-    dump("Howdy partner.\n");
-		ThreadPaneDoubleClick(event.target.parentNode.parentNode);
-	}
-}
-
-function ThreadPaneDoubleClick(treeitem)
-{
-	if(IsSpecialFolderSelected("Drafts"))
-	{
-		var loadedFolder = GetLoadedMsgFolder();
-		var messageArray = GetSelectedMessages();
-
-		ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default, loadedFolder, messageArray);
-	}
-	else if(IsSpecialFolderSelected("Templates"))
-	{
-		var loadedFolder = GetLoadedMsgFolder();
-		var messageArray = GetSelectedMessages();
-		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
-	}
-	else
-	{
-		var messageUri = treeitem.getAttribute("id");
-		MsgOpenNewWindowForMessage(messageUri, null);
-	}
-}
 
 
 function GetServer(uri)
