@@ -2988,20 +2988,22 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
     PRInt32 lastIndex = count - 1;
     nsIFrame* top = NS_STATIC_CAST(nsIFrame*, stack.ElementAt(lastIndex));
 
+    // If this is a frame that'll break a word, then bail.
+    PRBool canContinue;
+    top->CanContinueTextRun(canContinue);
+    if (! canContinue)
+      break;
+
+    // Advance to top's next sibling
     nsIFrame* next;
     top->GetNextSibling(&next);
 
     if (! next) {
-      // No next. Pop the top element.
+      // No more siblings. Pop the top element to walk back up the
+      // frame tree.
       stack.RemoveElementAt(lastIndex);
       continue;
     }
-
-    // If this is a frame that'll break a word, then bail.
-    PRBool canContinue;
-    next->CanContinueTextRun(canContinue);
-    if (! canContinue)
-      break;
 
     // We know top's parent is good, but next's might not be. So let's
     // set it to be sure.
