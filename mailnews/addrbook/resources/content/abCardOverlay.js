@@ -110,7 +110,13 @@ function NewCardOKButton()
 	if ( popup )
 	{
 		var uri = popup.value;
-
+		
+		// FIX ME - hack to avoid crashing if no ab selected because of blank option bug from template
+		// should be able to just remove this if we are not seeing blank lines in the ab popup
+		if ( !uri )
+			return false;  // don't close window
+		// -----
+		
 		var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
 		cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
 

@@ -83,6 +83,12 @@ function SelectFirstAddressBook()
 
 function ChangeDirectoryByDOMNode(dirNode)
 {
+	// FIX ME - deselect the items in the resutls pane to work around tree bug
+	var resultsTree = document.getElementById('resultsTree');
+	if ( resultsTree )
+		resultsTree.clearItemSelection();
+	// ----
+	
 	var uri = dirNode.getAttribute('id');
 	dump("uri = " + uri + "\n");
 	
@@ -104,7 +110,6 @@ function ResultsPaneSelectionChange()
 		else
 			ClearCardViewPane();
 	}
-
 }
 
 function SortResultPane(column, sortKey)

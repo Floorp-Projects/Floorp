@@ -273,7 +273,7 @@ Rights Reserved.
 					</html:legend>
 		
 					<box align="vertical" style="width:100%">
-						<html:input id="Notes" type="text" class="CardEdit"/>
+						<html:textarea id="Notes" rows="15"/>
 					</box>
 				</html:fieldset>
 

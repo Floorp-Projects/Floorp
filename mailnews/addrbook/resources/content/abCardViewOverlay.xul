@@ -33,7 +33,7 @@ Rights Reserved.
 	<box id="CardViewBox"
 		 align="vertical"
 		 flex="100%"
-		 style="background-color:#dddddd; padding-left:5px; padding-right:5px">
+		 style="overflow:auto; background-color:#dddddd; padding-left:5px; padding-right:5px">
 		
 		<html:div hide="true" style="font-size:150%; font-weight:bold; border-bottom:2px solid black" id="CardTitle">*</html:div>
 

@@ -17,6 +17,11 @@ function abNameOnLoad()
 		if ( window.arguments[0].okCallback )
 			top.okCallback = window.arguments[0].okCallback;
 	}
+	
+	// focus on input
+	var name = document.getElementById('name');
+	if ( name )
+		name.focus();
 }
 
 function abNameOKButton()
