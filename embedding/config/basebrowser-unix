@@ -163,13 +163,13 @@ components/profile.xpt
 
 ; psm2
 ; Optional - only if you need PSM2 support
-; components/libpipnss.so
-; components/pipnss.xpt
-; chrome/pipnss.jar
-; components/libpippki.so
-; components/pippki.xpt
-; chrome/pippki.jar
-; defaults/pref/security-prefs.js
+components/libpipnss.so
+components/pipnss.xpt
+chrome/pipnss.jar
+components/libpippki.so
+components/pippki.xpt
+chrome/pippki.jar
+defaults/pref/security-prefs.js
 
 ; rdf
 components/librdf.so
@@ -247,25 +247,3 @@ res/viewsource.css
 res/ua.css
 res/forms.css
 res/builtin/*
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
