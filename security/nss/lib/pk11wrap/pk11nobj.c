@@ -65,6 +65,8 @@
 #include "pki.h"
 #include "pkim.h" 
 
+extern const NSSError NSS_ERROR_NOT_FOUND;
+
 CK_TRUST
 pk11_GetTrustField(PK11SlotInfo *slot, PRArenaPool *arena, 
                    CK_OBJECT_HANDLE id, CK_ATTRIBUTE_TYPE type)
