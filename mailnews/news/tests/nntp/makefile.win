@@ -26,7 +26,15 @@ OBJS =                          \
 	.\$(OBJDIR)\nntpTest.obj    \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\mailnews -I$(PUBLIC)\security -I$(PUBLIC)\pref -I$(PUBLIC)\rdf
+LINCS=							\
+		-I$(PUBLIC)\raptor		\
+		-I$(PUBLIC)\xpcom		\
+		-I$(PUBLIC)\netlib		\
+		-I$(PUBLIC)\mailnews	\
+		-I$(PUBLIC)\security	\
+		-I$(PUBLIC)\pref		\
+		-I$(PUBLIC)\rdf			\
+		$(NULL)
 
 MYLIBS=							\
  $(DIST)\lib\xpcom32.lib		\
@@ -35,10 +43,11 @@ MYLIBS=							\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorwidget.lib	\
  $(DIST)\lib\netlib.lib			\
- $(DIST)\lib\plc3.lib		\
+ $(DIST)\lib\plc3.lib			\
  $(DIST)\lib\nntp.lib    		\
  $(DIST)\lib\nntpTest.lib		\
  $(DIST)\lib\msgcore.lib		\
+ $(DIST)\lib\msgcoreutil.lib	\
  $(DIST)\lib\xplib.lib			\
  $(NULL)
 
