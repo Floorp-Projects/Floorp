@@ -58,13 +58,6 @@ public:
 
   NS_IMETHOD DoPrefs(nsBrowserWindow* aWindow);
 
-  void EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
-  {
-    if (nsnull != mCrawler) {
-      mCrawler->EndLoadURL(aShell, aURL, aStatus);
-    }
-  }
-
   virtual int Run() = 0;
 
 protected:
