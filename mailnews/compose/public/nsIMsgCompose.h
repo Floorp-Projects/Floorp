@@ -15,9 +15,7 @@
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 #include "nsID.h"
-#include "nsIID.h"
 #include "nsError.h"
-#include "nsISupportsUtils.h"
 
 
 /* starting interface nsIMsgCompose */
@@ -38,6 +36,7 @@ class nsIMsgCompose : public nsISupports {
   /* void Test (); */
   NS_IMETHOD Test() = 0;
 
+#if 0
   /* void CreateAndInit (in long a_context, in long old_context, in long prefs, in nsIMsgCompFields initfields, in long master); */
   NS_IMETHOD CreateAndInit(PRInt32 a_context, PRInt32 old_context, PRInt32 prefs, nsIMsgCompFields *initfields, PRInt32 master) = 0;
 
@@ -49,6 +48,7 @@ class nsIMsgCompose : public nsISupports {
 
   /* void Dispose (); */
   NS_IMETHOD Dispose() = 0;
+#endif
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
