@@ -1,4 +1,5 @@
 <!ENTITY goBackCmd.commandKey "[">
 <!ENTITY goForwardCmd.commandKey "]">
+<!ENTITY reloadCmd.commandKey "r">
 
 

@@ -17,6 +17,9 @@
     <!-- Supporting IE 'refresh' shortcut key -->
     <key id="reloadIE" keycode="VK_F5" observes="canReload"/>
 
+    <!-- Supporting traditional Ctrl-R reload -->
+    <key id="key_reload" xulkey="true" key="r" observes="canReload"/>
+
   </keyset>  
 
 </overlay>
