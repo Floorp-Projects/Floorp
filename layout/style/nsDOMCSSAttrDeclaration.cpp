@@ -50,6 +50,7 @@
 #include "nsIURI.h"
 #include "nsINameSpaceManager.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsStyleConsts.h"
 
 MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration)
 
@@ -85,7 +86,7 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAReadableString& aPropertyN
                                nsHTMLAtoms::style);
     }
 
-    PRInt32 hint = decl->GetStyleImpact();
+    PRInt32 hint = NS_STYLE_HINT_NONE;
 
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
     nsCSSValue val;
@@ -96,6 +97,7 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAReadableString& aPropertyN
       // We pass in eCSSProperty_UNKNOWN here so that we don't get the
       // property name in the return string.
       val.ToString(aReturn, eCSSProperty_UNKNOWN);
+      hint = nsCSSProps::kHintTable[prop];
     } else {
       // If we tried to remove an invalid property or a property that wasn't
       //  set we simply return success and an empty string
