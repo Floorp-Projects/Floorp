@@ -1,0 +1,72 @@
+<html>
+<title> nsIAccessible Interface Test Case </title>
+<body>
+
+<b><center> HTML Elements </center></b>
+<br>
+<!-- Test Anchor -->
+<!-- Anchor linking to external file -->
+<b> Testing Link </b>
+<br>
+<a href="http://www.yahoo.com"> External Link </a>
+<br>
+
+<!-- Test Form -->
+<br><b> Testing Radio Button </b><br>
+<form>
+  Which is your favorite food
+  <input type="radio" name="favorite" value="mexican"> Mexican
+  <input type="radio" name="favorite" value="italian"> Italian
+  <input type="radio" name="favorite" value="japanese"> Japanese
+  <input type="radio" checked name="favorite" value="other"> Other
+
+  <br><br><b> Testing Check Boxes </b></br>
+  Is your Age
+  <br>
+  <input type="checkbox" name="sex"> Above 30
+  <input type="checkbox" name="sex"> Below 30
+</form>
+
+<!-- Test Table -->
+<b> Testing Table </b><br>
+<table border cols=2 width="50%">
+<caption>Test Table</caption>
+<tr>
+ <td> Row1,Col1</td>
+ <td> Row1,Col2</td>
+</tr>
+<tr>
+ <td> Row2,Col1</td>
+ <td> Row2,Col2</td>
+</tr>
+<tr>
+ <td> Row3,Col1</td>
+ <td> Row3,Col2</td>
+</tr>
+</table>
+
+<!-- Test Text Area -->
+<br><b> Testing Text Area </b><br>
+<textarea name="Comment Box" cols="40" rows="8">
+Default text..
+</textarea>
+
+<!-- Test Select List -->
+<br><br>
+<b>Testing Select List</b>
+<br><br>
+Choose your favorite color
+<select>
+  <option>Red</option>
+  <option>Blue</option>
+  <option>Green</option>
+  <option>Yellow</option>
+</select>
+
+<!-- Test Button -->
+<br><br>
+<b> Testing Button </b><br>
+<button value="submit"> Submit </button>
+
+</body>
+</html>
