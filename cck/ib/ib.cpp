@@ -96,7 +96,8 @@ int findXPI(CString xpiname, CString filename)
 
 int ExtractXPIFile(CString xpiname, CString xpifile)
 {
-	CString command;
+
+  CString command;
 //	AfxMessageBox("The xpiname is "+xpiname+" and the file is "+xpifile,MB_OK);
 	if (findXPI(xpiname, xpifile))
 		return TRUE;
@@ -1024,6 +1025,70 @@ BOOL ModifyUserJS(CString HashedPrefsFile, CString jsSourceFile)
 }
 
 
+BOOL MarkCFGVersion(CString HashedPrefsFile, CString versionTxt)
+{
+
+	// Unhash the prefs file to a plain text file. If there is no hashed file yet,
+	// create a plaintext file with only a comment.
+	CString PlainTextPrefsFile = HashedPrefsFile + ".js";
+	if (FileExists(HashedPrefsFile))
+	{
+		if (!UnHash(HashedPrefsFile, PlainTextPrefsFile))
+			return FALSE;
+	}
+	else
+	{
+		// Create a plain text prefs with only a comment.
+		CreateNewFile(PlainTextPrefsFile, "/* protected prefs */\n");
+	}
+	
+  // find the block and replace it with the contents of the source file
+
+	CString newPrefsFile = PlainTextPrefsFile + ".new";
+
+	// Read in all.js file and make substitutions
+  CStdioFile srcJSC;
+
+  FILE* destJSC = fopen(newPrefsFile, "w");
+
+  if (srcJSC.Open(PlainTextPrefsFile,CFile::modeRead | CFile::typeText) && destJSC)
+  {
+    
+    CString  strLine;
+
+    strLine = "//ADMVERSION:" + versionTxt + "\n";
+    fputs(strLine,destJSC);
+
+    while (srcJSC.ReadString(strLine))
+    {
+   
+      strLine += "\n";
+
+      CString str = strLine.Left(8);
+      if (str.Compare("//ADMVER") == 0)     // throw away any previous //ADMVERSION tags
+        continue;
+
+      fputs(strLine,destJSC);  // drop whatever line we have
+    }  
+
+
+    srcJSC.Close();
+    fclose(destJSC);
+
+  }  // if can open source file
+
+  // delete orig and rename new file to correct name
+
+	remove(PlainTextPrefsFile);
+	rename(newPrefsFile, PlainTextPrefsFile);
+  
+	// And rehash it.
+	if (!Hash(PlainTextPrefsFile, HashedPrefsFile))
+		return FALSE;
+
+
+	return TRUE;
+}
 
 int interpret(char *cmd)
 {
@@ -1300,7 +1365,27 @@ int interpret(char *cmd)
     // so no need to repacked it ourself.
 
   }
-	else
+
+  else if (strcmp(cmdname, "markcfgversion") == 0)
+  {
+		char *xpiname	 = strtok(NULL, ",)");
+		char *filename = strtok(NULL, ",)");
+		char *versiontxt = strtok(NULL, ",)");
+
+		// pull the cfg file out of the XPI
+    //
+    ExtractXPIFile(xpiname, filename);
+
+    // replace the appropriate block of javascript
+    //
+    MarkCFGVersion(filename, versiontxt);   
+
+    // cfg file gets repackaged with call to ReplaceXPIFiles in StartIB after all the interpret calls,
+    // so no need to repacked it ourself.
+
+  }
+
+  else
 		return FALSE;//*** We have to handle this condition better.
 
 	return TRUE;
