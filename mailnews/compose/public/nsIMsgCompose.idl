@@ -17,15 +17,100 @@
 */
 
 #include "nsISupports.idl"
+#include "domstubs.idl"
 #include "nsIMsgCompFields.idl"
+/* #include "nsIDOMEditorAppCore.idl" */
+
+%{ C++
+#include "nsIDOMWindow.h"
+#include "nsIDOMEditorAppCore.h"
+%}
 
 
-[object, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
+typedef long MSG_ComposeType;
+%{ C++
+enum
+{
+	MSGCOMP_TYPE_New	= 0,
+	MSGCOMP_TYPE_Reply,
+	MSGCOMP_TYPE_ReplyAll,
+	MSGCOMP_TYPE_ForwardInline,
+	MSGCOMP_TYPE_ForwardQuoted,
+	MSGCOMP_TYPE_ForwardAsAttachment
+};
+%}
+
+typedef long MSG_ComposeFormat;
+%{ C++
+enum
+{
+	MSGCOMP_FORMAT_Default	= 0,	//Will use user's preference
+	MSGCOMP_FORMAT_HTML,
+	MSGCOMP_FORMAT_PlainText
+};
+%}
+
+typedef long MSG_ComposeSaveType;
+%{ C++
+enum
+{
+	MSGCOMP_SAVETYPE_File	= 0,
+	MSGCOMP_SAVETYPE_Template,
+	MSGCOMP_SAVETYPE_Draft
+};
+%}
+
+typedef long MSG_DeliverMode;
+%{ C++
+//#include "nsMsgComposeBE.h"
+enum
+{
+	MSGCOMP_DELIVER_Now				/*= nsMsgDeliverNow,	*/=0,
+	MSGCOMP_DELIVER_Later			/*= nsMsgQueueForLater,	*/=1,
+	MSGCOMP_DELIVER_Save			/*= nsMsgSave,			*/=2,
+	MSGCOMP_DELIVER_SaveAs			/*= nsMsgSaveAs,		*/=3,
+	MSGCOMP_DELIVER_SaveAsDraft		/*= nsMsgSaveAsDraft,	*/=4,
+	MSGCOMP_DELIVER_SaveAsTemplate	/*= nsMsgSaveAsTemplate	*/=5
+};
+%}
+
+[scriptable, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
 interface nsIMsgCompose : nsISupports {
 
-	void CreateAndInitialize(in long a_context, in long old_context, in long prefs, in nsIMsgCompFields initfields, in long master);
-	void Create(in long a_context, in long prefs, in long master);
-	void Initialize(in long old_context, in nsIMsgCompFields initfields);
-	void Dispose();
+	/* ... */
+	void Initialize(in nsIDOMWindow aWindow, in wstring originalMsgURI,
+		in MSG_ComposeType type, in MSG_ComposeFormat format, in nsISupports object); /*object is temporary*/
+
+	/* ... */
+	void LoadFields();
+
+	/* ... */
+	void SetDocumentCharset(in wstring charset);
+
+	/* ... */
+	void SendMsg(in MSG_DeliverMode deliverMode, in wstring callback);
+
+	/* ... */
+    void SendMsgEx(in MSG_DeliverMode deliverMode, in wstring addrTo, in wstring addrCc, in wstring addrBcc,
+            in wstring newsgroup, in wstring subject, in wstring body,
+            in wstring callback);
+            
+	/* ... */
+    void CloseWindow();
+    
+	/* ... */
+	attribute /*nsIDOMEditorAppCore*/nsISupports editor;
+
+	/* ... */
+    readonly attribute nsIDOMWindow domWindow;
+
+	/* ... */
+    readonly attribute nsIMsgCompFields compFields;
+    
+	/* ... */
+    readonly attribute boolean composeHTML;
+
+	/* ... */
+    readonly attribute long wrapLength;
 };
 
