@@ -34,6 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#if defined(MOZ_LOGGING)
+#define FORCE_PR_LOG
+#endif
+
 #if defined(HAVE_RES_NINIT)
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -157,7 +161,7 @@ nsHostRecord::Create(const char *host, nsHostRecord **result)
 
     rec->_refc = 1; // addref
     rec->host = ((char *) rec) + sizeof(nsHostRecord);
-    rec->addrinfo = nsnull;
+    rec->addr_info = nsnull;
     rec->addr = nsnull;
     rec->expiration = NowInMinutes();
     rec->resolving = PR_FALSE;
@@ -171,8 +175,8 @@ nsHostRecord::Create(const char *host, nsHostRecord **result)
 
 nsHostRecord::~nsHostRecord()
 {
-    if (addrinfo)
-        PR_FreeAddrInfo(addrinfo);
+    if (addr_info)
+        PR_FreeAddrInfo(addr_info);
     if (addr)
         free(addr);
 }
@@ -214,20 +218,20 @@ HostDB_ClearEntry(PLDHashTable *table,
                   PLDHashEntryHdr *entry)
 {
     nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
-#if defined(PR_LOGGING)
-    if (!he->rec->addrinfo)
-        LOG(("%s: => no addrinfo\n", he->rec->host));
+#if defined(DEBUG) && defined(PR_LOGGING)
+    if (!he->rec->addr_info)
+        LOG(("%s: => no addr_info\n", he->rec->host));
     else {
         PRInt32 now = (PRInt32) NowInMinutes();
         PRInt32 diff = (PRInt32) he->rec->expiration - now;
         LOG(("%s: exp=%d => %s\n",
             he->rec->host, diff,
-            PR_GetCanonNameFromAddrInfo(he->rec->addrinfo)));
+            PR_GetCanonNameFromAddrInfo(he->rec->addr_info)));
         void *iter = nsnull;
         PRNetAddr addr;
         char buf[64];
         for (;;) {
-            iter = PR_EnumerateAddrInfo(iter, he->rec->addrinfo, 0, &addr);
+            iter = PR_EnumerateAddrInfo(iter, he->rec->addr_info, 0, &addr);
             if (!iter)
                 break;
             PR_NetAddrToString(&addr, buf, sizeof(buf));
@@ -554,11 +558,11 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         MoveCList(rec->callbacks, cbs);
 
         // update record fields
-        rec->addrinfo = result;
+        rec->addr_info = result;
         rec->expiration = NowInMinutes() + mMaxCacheLifetime;
         rec->resolving = PR_FALSE;
         
-        if (rec->addrinfo) {
+        if (rec->addr_info) {
             // add to mEvictionQ
             PR_APPEND_LINK(rec, &mEvictionQ);
             NS_ADDREF(rec);

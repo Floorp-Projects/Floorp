@@ -87,8 +87,8 @@ nsDNSRecord::GetCanonicalName(nsACString &result)
     // if the record is for an IP address literal, then the canonical
     // host name is the IP address literal.
     const char *cname;
-    if (mHostRecord->addrinfo)
-        cname = PR_GetCanonNameFromAddrInfo(mHostRecord->addrinfo);
+    if (mHostRecord->addr_info)
+        cname = PR_GetCanonNameFromAddrInfo(mHostRecord->addr_info);
     else
         cname = mHostRecord->host;
     result.Assign(cname);
@@ -104,8 +104,8 @@ nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
     if (mDone)
         return NS_ERROR_NOT_AVAILABLE;
 
-    if (mHostRecord->addrinfo) {
-        mIter = PR_EnumerateAddrInfo(mIter, mHostRecord->addrinfo, port, addr);
+    if (mHostRecord->addr_info) {
+        mIter = PR_EnumerateAddrInfo(mIter, mHostRecord->addr_info, port, addr);
         if (!mIter)
             return NS_ERROR_NOT_AVAILABLE;
     }

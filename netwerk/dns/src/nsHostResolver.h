@@ -75,21 +75,21 @@ public:
     /* instantiates a new host record */
     static nsresult Create(const char *host, nsHostRecord **record);
 
-    /* a fully resolved host record has either a non-null |addrinfo| or |addr|
-     * field.  if |addrinfo| is null, it implies that the |host| is an IP
+    /* a fully resolved host record has either a non-null |addr_info| or |addr|
+     * field.  if |addr_info| is null, it implies that the |host| is an IP
      * address literal.  in which case, |addr| contains the parsed address.
-     * otherwise, if |addrinfo| is non-null, then it contains one or many
-     * IP addresses corresponding to the given host name.  if both |addrinfo|
+     * otherwise, if |addr_info| is non-null, then it contains one or many
+     * IP addresses corresponding to the given host name.  if both |addr_info|
      * and |addr| are null, then the given host has not yet been fully resolved.
      * |af| is the address family of the record we are querying for.
      */
     char       *host;
-    PRAddrInfo *addrinfo;
+    PRAddrInfo *addr_info;
     PRNetAddr  *addr;
     PRUint16    af;
     PRUint32    expiration; /* measured in minutes since epoch */
 
-    PRBool HasResult() const { return (addrinfo || addr) != nsnull; }
+    PRBool HasResult() const { return (addr_info || addr) != nsnull; }
 
 private:
     friend class nsHostResolver;
