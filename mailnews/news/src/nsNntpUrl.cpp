@@ -288,7 +288,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 
     nsCString newsgroupURI(kNewsMessageRootURI);
     newsgroupURI.Append("/");
-    if (userName || (userName != "")) {
+    if (userName && (userName != (const char *)"")) {
 	newsgroupURI.Append(userName);
 	newsgroupURI.Append("@");
     }
