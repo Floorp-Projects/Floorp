@@ -1209,7 +1209,7 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
       aMetrics.height = 0;
       aMetrics.ascent = 0;
       aMetrics.descent = 0;
-      aMetrics.mCarriedOutTopMargin = 0;
+//XXX      aMetrics.mCarriedOutTopMargin = 0;
       aMetrics.mCarriedOutBottomMargin = 0;
       aMetrics.mCombinedArea.SetRect(0, 0, 0, 0);
       if (nsnull != aMetrics.maxElementSize) {
@@ -1634,6 +1634,10 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
   nscoord availableHeight = aReflowState.availableHeight;
 #endif
 
+  // XXX_ib write me...
+  nscoord collapsedTopMargin = 0;
+  nscoord collapsedBottomMargin = 0;
+
   // Reflow the block frame
   nsBlockReflowContext bc(aPresContext, aReflowState,
                           nsnull != aMetrics.maxElementSize);
@@ -1641,10 +1645,7 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
   nsRect availSpace(x, y, availableWidth, availableHeight);
   PRBool isAdjacentWithTop = PR_FALSE;
   nsMargin computedOffsets;
-  nsresult rv = bc.ReflowBlock(blockFrame, availSpace,
-#ifdef SPECULATIVE_TOP_MARGIN
-                               PR_FALSE, 0,
-#endif
+  nsresult rv = bc.ReflowBlock(blockFrame, availSpace, PR_FALSE, 0,
                                isAdjacentWithTop,
                                computedOffsets, aStatus);
   if (NS_FAILED(rv)) {
@@ -1659,10 +1660,7 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
     // of it fits)
     nsRect bounds;
     PRBool anyFit = bc.PlaceBlock(isAdjacentWithTop,
-#ifndef SPECULATIVE_TOP_MARGIN
-                                  PR_FALSE, 0,
-#endif
-                                  computedOffsets,
+                                  computedOffsets, &collapsedBottomMargin,
                                   bounds, aMetrics.mCombinedArea);
     if (!anyFit) {
       // None of the block fit
@@ -1710,7 +1708,7 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
       aMetrics.height = bounds.height;
       aMetrics.ascent = bounds.height;
       aMetrics.descent = 0;
-      aMetrics.mCarriedOutTopMargin = bc.GetCollapsedTopMargin();
+//XXX      aMetrics.mCarriedOutTopMargin = bc.GetCollapsedTopMargin();
       aMetrics.mCarriedOutBottomMargin = bc.GetCarriedOutBottomMargin();
       if (nsnull != aMetrics.maxElementSize) {
         *aMetrics.maxElementSize = bc.GetMaxElementSize();
