@@ -336,7 +336,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
  mFocused(PR_FALSE), mColumnsDirty(PR_TRUE), mDropAllowed(PR_FALSE), mHasFixedRowCount(PR_FALSE),
  mVerticalOverflow(PR_FALSE), mImageGuard(PR_FALSE), mReflowCallbackPosted(PR_FALSE),
  mDropRow(-1), mDropOrient(-1), mScrollLines(0), mTimer(nsnull), mValueArray(~PRInt32(0)),
- mUpdateBatchNest(0), mCountBeforeUpdate(-1)
+ mUpdateBatchNest(0), mRowCount(0)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -478,9 +478,6 @@ nsTreeBodyFrame::CalcMaxRowWidth(nsBoxLayoutState& aState)
   nsMargin rowMargin(0,0,0,0);
   GetBorderPadding(rowContext, rowMargin);
 
-  PRInt32 numRows;
-  mView->GetRowCount(&numRows);
-
   nscoord rowWidth;
   nsTreeColumn* col;
   EnsureColumns();
@@ -490,7 +487,7 @@ nsTreeBodyFrame::CalcMaxRowWidth(nsBoxLayoutState& aState)
   nsCOMPtr<nsIRenderingContext> rc;
   presShell->CreateRenderingContext(this, getter_AddRefs(rc));
 
-  for (PRInt32 row = 0; row < numRows; ++row) {
+  for (PRInt32 row = 0; row < mRowCount; ++row) {
     rowWidth = 0;
     col = mColumns;
 
@@ -659,9 +656,7 @@ nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
     if (!mHasFixedRowCount)
       mPageCount = mInnerBox.height / mRowHeight;
 
-    PRInt32 rowCount;
-    mView->GetRowCount(&rowCount);
-    PRInt32 lastPageTopRow = PR_MAX(0, rowCount - mPageCount);
+    PRInt32 lastPageTopRow = PR_MAX(0, mRowCount - mPageCount);
     if (mTopRowIndex > lastPageTopRow)
       ScrollToRow(lastPageTopRow);
 
@@ -724,6 +719,7 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
   if (mView) {
     // View, meet the tree.
     mView->SetTree(mTreeBoxObject);
+    mView->GetRowCount(&mRowCount);
  
     box->SetPropertyAsSupports(view.get(), mView);
 
@@ -1042,13 +1038,11 @@ nsresult nsTreeBodyFrame::CheckVerticalOverflow()
 {
   PRBool verticalOverflowChanged = PR_FALSE;
 
-  PRInt32 rowCount;
-  mView->GetRowCount(&rowCount);
-  if (!mVerticalOverflow && rowCount > mPageCount) {
+  if (!mVerticalOverflow && mRowCount > mPageCount) {
     mVerticalOverflow = PR_TRUE;
     verticalOverflowChanged = PR_TRUE;
   }
-  else if (mVerticalOverflow && rowCount <= mPageCount) {
+  else if (mVerticalOverflow && mRowCount <= mPageCount) {
     mVerticalOverflow = PR_FALSE;
     verticalOverflowChanged = PR_TRUE;
   }
@@ -1075,9 +1069,6 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidateScrollbar()
   if (!EnsureScrollbar() || !mView)
     return NS_OK;
 
-  PRInt32 rowCount = 0;
-  mView->GetRowCount(&rowCount);
-  
   nsCOMPtr<nsIContent> scrollbar;
   mScrollbar->GetContent(getter_AddRefs(scrollbar));
 
@@ -1087,7 +1078,7 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidateScrollbar()
   mPresContext->GetTwipsToPixels(&t2p);
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
-  PRInt32 size = rowHeightAsPixels*(rowCount-mPageCount);
+  PRInt32 size = rowHeightAsPixels*(mRowCount-mPageCount);
   maxposStr.AppendInt(size);
   scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
 
@@ -1179,9 +1170,7 @@ NS_IMETHODIMP nsTreeBodyFrame::GetRowAt(PRInt32 aX, PRInt32 aY, PRInt32* _retval
 
   // Check if the coordinates are below our visible space (or within 
   // our visible space but below any row).
-  PRInt32 rowCount;
-  mView->GetRowCount(&rowCount);
-  if (*_retval > PR_MIN(mTopRowIndex+mPageCount, rowCount - 1))
+  if (*_retval > PR_MIN(mTopRowIndex+mPageCount, mRowCount - 1))
     *_retval = -1;
 
   return NS_OK;
@@ -1208,9 +1197,7 @@ NS_IMETHODIMP nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, 
 
   // Check if the coordinates are below our visible space (or within 
   // our visible space but below any row).
-  PRInt32 rowCount;
-  mView->GetRowCount(&rowCount);
-  if (*aRow > PR_MIN(mTopRowIndex+mPageCount, rowCount - 1)) {
+  if (*aRow > PR_MIN(mTopRowIndex+mPageCount, mRowCount - 1)) {
     *aRow = -1;
     return NS_OK;
   }
@@ -1721,6 +1708,14 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
     return NS_OK;
 
   PRInt32 count = PR_ABS(aCount);
+  mRowCount += aCount;
+#ifdef DEBUG
+  PRInt32 rowCount = mRowCount;
+  mView->GetRowCount(&rowCount);
+  NS_ASSERTION(rowCount == mRowCount, "row count did not change by the amount suggested, check caller");
+#endif
+
+  PRInt32 count = PR_ABS(aCount);
   PRInt32 rowCount;
   mView->GetRowCount(&rowCount);
 
@@ -1754,8 +1749,8 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
     }
     else if (mTopRowIndex >= aIndex) {
       // This is a full-blown invalidate.
-      if (mTopRowIndex + mPageCount > rowCount - 1) {
-        mTopRowIndex = PR_MAX(0, rowCount - 1 - mPageCount);
+      if (mTopRowIndex + mPageCount > mRowCount - 1) {
+        mTopRowIndex = PR_MAX(0, mRowCount - 1 - mPageCount);
         UpdateScrollbar();
       }
       Invalidate();
@@ -1771,11 +1766,7 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 
 NS_IMETHODIMP nsTreeBodyFrame::BeginUpdateBatch()
 {
-  if (mUpdateBatchNest++ == 0) {
-    if (mView) {
-      mView->GetRowCount(&mCountBeforeUpdate);
-    }
-  }
+  ++mUpdateBatchNest;
 
   return NS_OK;
 }
@@ -1787,11 +1778,11 @@ NS_IMETHODIMP nsTreeBodyFrame::EndUpdateBatch()
   if (--mUpdateBatchNest == 0) {
     if (mView) {
       Invalidate();
-      PRInt32 countAfterUpdate;
-      mView->GetRowCount(&countAfterUpdate);
-      if (mCountBeforeUpdate != countAfterUpdate) {
-        if (mTopRowIndex + mPageCount > countAfterUpdate - 1) {
-          mTopRowIndex = PR_MAX(0, countAfterUpdate - 1 - mPageCount);
+      PRInt32 countBeforeUpdate = mRowCount;
+      mView->GetRowCount(&mRowCount);
+      if (countBeforeUpdate != mRowCount) {
+        if (mTopRowIndex + mPageCount > mRowCount - 1) {
+          mTopRowIndex = PR_MAX(0, mRowCount - 1 - mPageCount);
           UpdateScrollbar();
         }
         InvalidateScrollbar();
@@ -2191,8 +2182,11 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
       MarkDirty(state);
     }
 
-    PRInt32 rowCount = 0;
-    mView->GetRowCount(&rowCount);
+#ifdef DEBUG
+    PRInt32 rowCount = mRowCount;
+    mView->GetRowCount(&mRowCount);
+    NS_ASSERTION(mRowCount == rowCount, "row count changed unexpectedly");
+#endif
 
     // Ensure our column info is built.
     EnsureColumns();
@@ -2215,7 +2209,7 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
     }
 
     // Loop through our on-screen rows.
-    for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
+    for (PRInt32 i = mTopRowIndex; i < mRowCount && i < mTopRowIndex+mPageCount+1; i++) {
       nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
       nsRect dirtyRect;
       if (dirtyRect.IntersectRect(aDirtyRect, rowRect) && rowRect.y < (mInnerBox.y+mInnerBox.height)) {
@@ -3161,9 +3155,7 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
       }
     }
     else {
-      PRInt32 rowCount;
-      mView->GetRowCount(&rowCount);
-      if (mDropRow < rowCount - 1) {
+      if (mDropRow < mRowCount - 1) {
         PRInt32 nextLevel;
         mView->GetLevel(mDropRow + 1, &nextLevel);
         if (nextLevel > level)
@@ -3293,9 +3285,7 @@ NS_IMETHODIMP nsTreeBodyFrame::ScrollByLines(PRInt32 aNumLines)
   if (newIndex < 0)
     newIndex = 0;
   else {
-    PRInt32 rowCount;
-    mView->GetRowCount(&rowCount);
-    PRInt32 lastPageTopRow = rowCount - mPageCount;
+    PRInt32 lastPageTopRow = mRowCount - mPageCount;
     if (newIndex > lastPageTopRow)
       newIndex = lastPageTopRow;
   }
@@ -3313,9 +3303,7 @@ NS_IMETHODIMP nsTreeBodyFrame::ScrollByPages(PRInt32 aNumPages)
   if (newIndex < 0)
     newIndex = 0;
   else {
-    PRInt32 rowCount;
-    mView->GetRowCount(&rowCount);
-    PRInt32 lastPageTopRow = rowCount - mPageCount;
+    PRInt32 lastPageTopRow = mRowCount - mPageCount;
     if (newIndex > lastPageTopRow)
       newIndex = lastPageTopRow;
   }
@@ -3330,13 +3318,10 @@ nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
   if (!mView)
     return NS_OK;
 
-  PRInt32 rowCount;
-  mView->GetRowCount(&rowCount);
-
   PRInt32 delta = aRow - mTopRowIndex;
 
   if (delta > 0) {
-    if (mTopRowIndex == (rowCount - mPageCount + 1))
+    if (mTopRowIndex == (mRowCount - mPageCount + 1))
       return NS_OK;
   }
   else {
@@ -3716,17 +3701,14 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
 PRBool
 nsTreeBodyFrame::CanAutoScroll(PRInt32 aRowIndex)
 {
-  PRInt32 rowCount;
-  mView->GetRowCount(&rowCount);
-
   // Check first for partially visible last row.
-  if (aRowIndex == rowCount - 1) {
+  if (aRowIndex == mRowCount - 1) {
     nscoord y = mInnerBox.y + (aRowIndex - mTopRowIndex) * mRowHeight;
     if (y < mInnerBox.height && y + mRowHeight > mInnerBox.height)
       return PR_TRUE;
   }
 
-  if (aRowIndex > 0 && aRowIndex < rowCount - 1)
+  if (aRowIndex > 0 && aRowIndex < mRowCount - 1)
     return PR_TRUE;
 
   return PR_FALSE;
