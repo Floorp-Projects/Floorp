@@ -19,6 +19,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIRDFResourceManager.h"
+#include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
 #include "nsRDFDocument.h"
 #include "nsRDFCID.h"

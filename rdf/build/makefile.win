@@ -41,12 +41,17 @@ LLIBS=\
  $(DIST)\lib\libplc21.lib        \
  $(LIBNSPR)  
 
-LINCS=  -I$(PUBLIC)\rdf          \
-        -I$(PUBLIC)\xpcom        \
-        -I$(PUBLIC)\netlib       \
-        -I$(PUBLIC)\raptor       \
-        -I$(PUBLIC)\js           \
-        -I$(PUBLIC)\dom          \
+# XXX Note dependencies on implementation dirs for factory methods.
+
+LINCS=  -I$(PUBLIC)\rdf                 \
+        -I$(PUBLIC)\xpcom               \
+        -I$(PUBLIC)\netlib              \
+        -I$(PUBLIC)\raptor              \
+        -I$(PUBLIC)\js                  \
+        -I$(PUBLIC)\dom                 \
+        -I$(DEPTH)\rdf\base\src         \
+        -I$(DEPTH)\rdf\content\src      \
+        -I$(DEPTH)\rdf\datasource\src   \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
