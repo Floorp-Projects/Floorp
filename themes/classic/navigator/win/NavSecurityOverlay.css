@@ -1,19 +1,19 @@
-#security-button 
+#security-button2 
   {
     list-style-image:url("chrome://navigator/skin/unlock.gif");
   }
 
-#security-button[level="high"] 
+#security-button2[level="high"] 
   {
     list-style-image:url("chrome://navigator/skin/lock.gif");        
   }
 
-#security-button[level="low"] 
+#security-button2[level="low"] 
   {
     list-style-image:url("chrome://navigator/skin/lock.gif");        
   }
 
-#security-button[level="broken"] 
+#security-button2[level="broken"] 
   {
     list-style-image:url("chrome://navigator/skin/broken.gif");        
   }

@@ -56,4 +56,11 @@
     </content>
   </binding>
 
+  <binding id="simplebutton" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content excludes="observes,template" orient="vertical" autostretch="never" align="center">
+      <xul:image class="simplebutton-icon" inherits="src,disabled"/>
+      <xul:text class="simplebutton-text" inherits="value,accesskey,crop,disabled"/>
+    </content>
+  </binding>
+  
 </bindings>

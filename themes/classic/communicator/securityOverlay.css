@@ -2,7 +2,7 @@
  * XP Classic skin file (shared by all three platform variants)
  **/
 
-#security-button 
+#security-button
   {
     list-style-image:url("chrome://communicator/skin/unlock.gif");
   }

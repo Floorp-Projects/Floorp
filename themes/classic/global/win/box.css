@@ -2,7 +2,7 @@
 titledbox
   {
     border                : 2px groove threedface;
-    padding               : 7px;
+    padding               : 7px !important;
     margin                : 5px;
   }
 

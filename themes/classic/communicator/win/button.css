@@ -2,85 +2,27 @@
  *  these are only used in the navigation toolbar in the navigator package.
  **/
  
-  /* Large vertically orientated toolbar buttons, 
-     e.g. back, print 
-   */
+  /* outer frame */
   .button-toolbar-1, .button-toolbar-2
     {
       background-color    : none;
-      behavior            : url("chrome://global/skin/classicBindings.xml#toolbarbutton-top");
-      min-width           : 47px;
+      behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
+      min-width           : 0px;
       margin              : 0px;
       border              : 1px solid transparent;
-      user-focus          : none;
-      padding             : 2px 3px 2px 3px;
-      text-align          : center;
+      user-focus          : ignore;
     }
-    
-  .button-toolbar-1:hover, .button-toolbar-2:hover
-    {
-      border-left         : 1px solid threedhighlight;
-      border-top          : 1px solid threedhighlight;
-      border-right        : 1px solid threedshadow;
-      border-bottom       : 1px solid threedshadow;
-      color               : #0000FF;
-    } 
-  
-  .button-toolbar-1:hover:active, .button-toolbar-2:hover:active
-    {
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-bottom       : 1px solid threedhighlight;
-      border-right        : 1px solid threedhighlight;
-      padding             : 3px 2px 1px 4px;
-    }
-    
-  .button-toolbar-1[disabled="true"],
-  .button-toolbar-1[disabled="true"]:hover,
-  .button-toolbar-1[disabled="true"]:hover:active,
-  .button-toolbar-2[disabled="true"],
-  .button-toolbar-2[disabled="true"]:hover,
-  .button-toolbar-2[disabled="true"]:hover:active
-    {
-      border              : 1px solid transparent;
-      color               : graytext;
-      padding             : 2px 3px 2px 3px;
-    }    
 
-/* Smaller, horizontally orientated (icon left)
-   toolbar buttons, e.g. bold
- */    
   .button-toolbar
     {
       background-color    : none;
-      behavior            : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
+      behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
       margin              : 1px; /* 0px 1px 0px 1px; */
-      border              : 1px solid transparent;
+      border              : none;
       user-focus          : ignore;
       max-width           : 14em;
-      vertical-align      : middle;
-      padding             : 1px 4px 1px 3px;
     }
-
-  .button-toolbar:hover:active
-    {
-      padding             : 2px 3px 0px 4px;
-    }    
-
-  .button-toolbar[disabled="true"],
-  .button-toolbar[disabled="true"]:hover,
-  .button-toolbar[disabled="true"]:hover:active    
-    {
-      color               : graytext;
-      border              : 1px solid transparent;
-      padding             : 1px 4px 1px 3px;
-    }
-
-  .toolbarbutton-left-text
-    {
-      padding-left        : 4px;
-    }    
 
   /* drag and drop feedback */
   .button-toolbar[dragover-left="true"]
@@ -105,24 +47,69 @@
   .button-toolbar-4    
     {
       background-color    : none;
-      behavior            : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
+      behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
       margin              : 0px;
       border              : 1px solid transparent;
       user-focus          : ignore;
+    }
+    
+  .button-toolbar-4 > .button-internal-box
+    {
       padding             : 0px;
+      border              : 1px solid transparent;
       vertical-align      : middle;
+      text-align          : center;
     }
   
-  .button-toolbar-4:hover
+  .button-toolbar-1:hover, .button-toolbar-2:hover, .button-toolbar-4:hover
     {
-      border-left         : 1px solid threedhighlight;
-      border-top          : 1px solid threedhighlight;
-      border-right        : 1px solid threedshadow;
-      border-bottom       : 1px solid threedshadow;
+      border              : 1px solid threeddarkshadow;
       color               : #0000FF;
     } 
+    
+  .bookmarkitem.button-toolbar:hover
+    {
+      color               : #0000FF;
+      text-decoration     : underline;
+      cursor              : pointer;
+    }
+    
+  .button-toolbar:hover:active
+    {
+      color               : #FF0000;
+      text-decoration     : underline;
+      border              : none;
+    }
 
+  .button-toolbar-1 > .button-internal-box,
+  .button-toolbar-2 > .button-internal-box
+    {
+      padding             : 2px 7px 2px 6px;
+      vertical-align      : middle;
+      text-align          : center;
+      border              : 1px solid transparent;
+    }    
+    
+  .button-toolbar > .button-internal-box > .button-text-container
+    {
+      padding-left        : 4px;
+    }    
+
+  .button-toolbar > .button-internal-box,
+  .button-toolbar:hover:active > .button-internal-box
+    {
+      padding             : 0px 4px 0px 3px;
+      vertical-align      : middle;
+      text-align          : center;
+    }
+    
+  .button-toolbar-1[disabled="true"],
+  .button-toolbar-1[disabled="true"]:hover,
+  .button-toolbar-1[disabled="true"]:hover:active,
+  .button-toolbar-2[disabled="true"],
+  .button-toolbar-2[disabled="true"]:hover,
+  .button-toolbar-2[disabled="true"]:hover:active,
   .button-toolbar-4[disabled="true"],
   .button-toolbar-4[disabled="true"]:hover,
   .button-toolbar-4[disabled="true"]:hover:active
@@ -131,44 +118,85 @@
       color               : graytext;
     }
     
-    
-  /* Personal Toolbar items */    
-  .bookmarkitem.button-toolbar, .bookmarkfolder.button-toolbar
+  .button-toolbar[disabled="true"],
+  .button-toolbar[disabled="true"]:hover,
+  .button-toolbar[disabled="true"]:hover:active    
     {
-      border              : none;
-      margin              : 0px; 
-      padding             : 1px 0px 1px 0px;
+      color               : graytext;
     }
 
-  .bookmarkitem.button-toolbar:hover, .bookmarkfolder.button-toolbar:hover
+/* internal frame */
+  .button-toolbar-1:hover > .button-internal-box,
+  .button-toolbar-2:hover > .button-internal-box,
+  .button-toolbar-4:hover > .button-internal-box
     {
-      color               : #0000FF;
-      text-decoration     : underline;
-      cursor              : pointer;
-    }
-    
-  .bookmarkitem.button-toolbar:hover:active, .bookmarkfolder.button-toolbar:hover:active
-    {
-      padding             : 1px 0px 1px 0px;
-      color               : #FF0000;
-      text-decoration     : underline;
-      border              : none;
-    }
-  
-  .bookmarkitem > .toolbarbutton-left-text
-    {
-      margin-left         : 1px;
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
     }
 
-/** Low profile rollover buttons, e.g. "search"
+  .button-toolbar-1:hover:active > .button-internal-box,
+  .button-toolbar-2:hover:active > .button-internal-box
+    {
+      padding             : 3px 6px 1px 7px;
+      border-left         : 1px solid threedshadow !important;
+      border-top          : 1px solid threedshadow !important;
+      border-right        : 1px solid threedhighlight !important;
+      border-bottom       : 1px solid threedhighlight !important;
+    }
+    
+  .button-toolbar-4:hover:active > .button-internal-box
+    {
+      padding             : 0px;
+      border-left         : 1px solid threedshadow !important;
+      border-top          : 1px solid threedshadow !important;
+      border-right        : 1px solid threedhighlight !important;
+      border-bottom       : 1px solid threedhighlight !important;
+    }
+
+  .button-toolbar-1 > .button-internal-box > .button-text-container,
+  .button-toolbar > .button-internal-box > .button-text-container,
+  .button-toolbar-2 > .button-internal-box > .button-text-container,
+  .button-toolbar-4 > .button-internal-box > .button-text-container
+    {
+      text-align          : center;
+    }
+    
+  .button-toolbar-1[disabled="true"] > .button-internal-box,
+  .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box,
+  .button-toolbar-2[disabled="true"] > .button-internal-box,
+  .button-toolbar-2[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
+    {
+      padding             : 2px 7px 2px 6px !important;
+      border              : 1px solid transparent !important;
+    }
+      
+  .button-toolbar-4[disabled="true"] > .button-internal-box,
+  .button-toolbar-4[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar-4[disabled="true"]:hover:active > .button-internal-box
+    {
+      padding             : 0px !important;
+      border              : 1px solid transparent !important;
+    }
+
+  .button-toolbar[disabled="true"] > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover:active > .button-internal-box,
+    {
+      padding             : 2px 8px 2px 7px !important;
+    }
+
+/** "Green" buttons, e.g. "Search"
+ *  class="button-toolbar-3"
  **/  
-  .button-toolbar-3,
-  .button-toolbar-3[disabled="true"],
-  .button-toolbar-3[disabled="true"]:hover,
-  .button-toolbar-3[disabled="true"]:hover:active
+  .button-toolbar-3 
     {
       behavior              : url("chrome://global/content/xulBindings.xml#buttonleft");
-      margin                : 1px 1px 2px 4px !important;
+      margin                : 1px 1px 1px 4px !important;
+      font-weight           : bold;
       border                : 0px;
       background-color      : threedface;
       min-width             : 0px;
@@ -177,19 +205,16 @@
     
   .button-toolbar-3:hover, .button-toolbar-3:hover:active
     {
-      margin                : 0px 0px 1px 3px !important;
+      margin                : 0px 0px 0px 3px !important;
       border                : 1px solid threeddarkshadow;
     }
     
-  .button-toolbar-3 > .button-internal-box,
-  .button-toolbar-3 > .button-internal-box[disabled="true"],
-  .button-toolbar-3:hover > .button-internal-box[disabled="true"],
-  .button-toolbar-3:hover:active > .button-internal-box[disabled="true"]
+  .button-toolbar-3 > .button-internal-box
     {
-      border-left           : 1px solid threedhighlight !important;
-      border-top            : 1px solid threedhighlight !important;
-      border-right          : 1px solid threedshadow !important;
-      border-bottom         : 1px solid threedshadow !important;
+      border-left           : 1px solid threedhighlight;
+      border-top            : 1px solid threedhighlight;
+      border-right          : 1px solid threedshadow;
+      border-bottom         : 1px solid threedshadow;
       padding               : 1px 4px 1px 4px;
     }
     

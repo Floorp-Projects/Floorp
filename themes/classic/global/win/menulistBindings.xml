@@ -14,7 +14,7 @@
       <xul:box class="menulist-internal-box" flex="1">
         <xul:box class="menulist-display-box" flex="1" valign="middle" autostretch="never">
           <xul:image class="menulist-icon" inherits="src"/>
-          <xul:text class="menulist-text" inherits="value,accesskey,crop" crop="right"/>
+          <xul:text class="menulist-text" inherits="value,accesskey" crop="right" flex="1"/>
         </xul:box>
         <xul:box class="menulist-dropmarker-box-1" valign="middle" inherits="open">
           <xul:box class="menulist-dropmarker-box-2" flex="1" autostretch="never" valign="middle" inherits="open">
@@ -38,7 +38,7 @@
       <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spring flex="1"/>
-        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right"/>
+        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right" flex="1"/>
       </xul:box>
     </content>
   </binding>

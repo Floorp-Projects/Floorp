@@ -205,9 +205,10 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 
 /* Image URLs for all Editor toolbar buttons */
 
-#boldButton, #boldButton[toggled="true"]:hover, #boldButton[toggled="true"]:hover:active {
-  list-style-image:url(chrome://editor/skin/images/bold.gif); 
-}
+#boldButton 
+  {
+    list-style-image      : url(chrome://editor/skin/images/bold.gif); 
+  }
 
 #boldButton[disabled="true"],
 #boldButton[disabled="true"]:hover,
@@ -226,9 +227,9 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/bold-hover-active.gif");
   } 
 
-#italicButton, #italicButton[toggled="true"]:hover, #italicButton[toggled="true"]:hover:active
+#italicButton
   {
-	  list-style-image      : url("chrome://editor/skin/images/italic.gif");
+    list-style-image      : url("chrome://editor/skin/images/italic.gif");
   } 
 
 #italicButton[disabled="true"],
@@ -248,7 +249,7 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/italic-hover-active.gif");
   } 
 
-#underlineButton, #underlineButton[toggled="true"]:hover, #underlineButton[toggled="true"]:hover:active
+#underlineButton
   {
 	  list-style-image      : url("chrome://editor/skin/images/underline.gif");
   } 
@@ -272,7 +273,7 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 
 #newButton 
   {
-	  list-style-image      : url("chrome://editor/skin/images/newfile.gif");
+    list-style-image      : url("chrome://editor/skin/images/newfile.gif");
   } 
 
 #newButton[disabled="true"],
@@ -622,9 +623,10 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/inc-font-size-hover-active.gif"); 
   }
   
-#ulButton {
-	list-style-image:url("chrome://editor/skin/images/bullets.gif");
-}
+#ulButton 
+  {
+	  list-style-image      :url("chrome://editor/skin/images/bullets.gif");
+  }
 
 #ulButton[disabled="true"],
 #ulButton[disabled="true"]:hover,
@@ -643,9 +645,10 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/bullets-hover-active.gif"); 
   }
 
-#olButton {
-	list-style-image:url("chrome://editor/skin/images/numbers.gif");
-}
+#olButton 
+  {
+	  list-style-image      : url("chrome://editor/skin/images/numbers.gif");
+  }
 
 #olButton[disabled="true"],
 #olButton[disabled="true"]:hover,
@@ -800,11 +803,10 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/right-hover-active.gif"); 
   }
 
-#text-align-justify,
-#align-justify-button
-{
-	list-style-image:url("chrome://editor/skin/images/justify.gif");
-}
+#text-align-justify, #align-justify-button
+  {
+	  list-style-image      : url("chrome://editor/skin/images/justify.gif");
+  }
 
 #text-align-justify[disabled="true"],
 #text-align-justify[disabled="true"]:hover,
