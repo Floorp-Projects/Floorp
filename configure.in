@@ -1017,6 +1017,9 @@ case "$target" in
 *-aix4.3*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
+*-openvms*)
+    NO_LD_ARCHIVE_FLAGS=
+    ;;
 esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
