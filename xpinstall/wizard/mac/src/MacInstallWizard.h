@@ -878,6 +878,7 @@ void        InitDLProgControls(Boolean onlyLabels);
 void        ClearDLProgControls(Boolean onlyLabels);
 void		InitProgressBar(void);
 Boolean     CRCCheckDownloadedArchives(Handle dlPath, short dlPathLen, int count);
+Boolean     IsArchiveFile( char *path );
 
 
 /*-----------------------------------------------------------*
