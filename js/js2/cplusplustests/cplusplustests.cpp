@@ -22,6 +22,14 @@ void *operator new(size_t size, Arena &arena)
 	return p;
 }
 
+#ifndef __MWERKS__
+void operator delete(void *p, Arena &arena)
+{
+	printf("Deleting object at %p using arena \"%s\"\n", p, arena.name);
+}
+#endif
+
+
 void operator delete(void *p)
 {
 	printf("Deleting object at %p\n", p);
