@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.151 $ ';
+$::UtilsVersion = '$Revision: 1.152 $ ';
 
 package TinderUtils;
 
@@ -348,7 +348,7 @@ sub SetupPath {
         $ENV{PATH} = "/bin:/usr/bin:$ENV{PATH}";
         $Settings::ConfigureEnvArgs = 'CC=cc CXX=c++';
         $Settings::Compiler = 'cc';
-        $Settings::mail ||= '/usr/bin/mail';
+        $Settings::mail = '/usr/bin/mail';
     }
 
     if ($Settings::OS eq 'FreeBSD') {
