@@ -59,7 +59,7 @@
 #include "jsscript.h"
 
 #ifdef PERLCONNECT
-#include "jsperl.h"
+#include "perlconnect/jsperl.h"
 #endif
 
 #ifdef LIVECONNECT
