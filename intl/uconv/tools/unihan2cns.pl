@@ -14,21 +14,33 @@ $tagtofilemap{"kCNS1992-2" } = IO::File->new("|sort> cns1992p2.txt")
 $tagtofilemap{"kCNS1992-3" } = IO::File->new("|sort> cns1992p3.txt") 
       or die "cannot open cns1992p3.txt"; 
 $tagtofilemap{"kIRG_TSource-1" } = IO::File->new("|sort> cnsIRGTp1.txt") 
-      or die "cannot open IRGTp1.txt"; 
+      or die "cannot open cnsIRGTp1.txt"; 
 $tagtofilemap{"kIRG_TSource-2" } = IO::File->new("|sort> cnsIRGTp2.txt") 
-      or die "cannot open IRGTp2.txt"; 
+      or die "cannot open cnsIRGTp2.txt"; 
 $tagtofilemap{"kIRG_TSource-3" } = IO::File->new("|sort> cnsIRGTp3.txt") 
-      or die "cannot open IRGTp3.txt"; 
+      or die "cannot open cnsIRGTp3.txt"; 
 $tagtofilemap{"kIRG_TSource-4" } = IO::File->new("|sort> cnsIRGTp4.txt") 
-      or die "cannot open IRGTp4.txt"; 
+      or die "cannot open cnsIRGTp4.txt"; 
 $tagtofilemap{"kIRG_TSource-5" } = IO::File->new("|sort> cnsIRGTp5.txt") 
-      or die "cannot open IRGTp5.txt"; 
+      or die "cannot open cnsIRGTp5.txt"; 
 $tagtofilemap{"kIRG_TSource-6" } = IO::File->new("|sort> cnsIRGTp6.txt") 
-      or die "cannot open IRGTp6.txt"; 
+      or die "cannot open cnsIRGTp6.txt"; 
 $tagtofilemap{"kIRG_TSource-7" } = IO::File->new("|sort> cnsIRGTp7.txt") 
-      or die "cannot open IRGTp7.txt"; 
+      or die "cannot open cnsIRGTp7.txt"; 
 $tagtofilemap{"kIRG_TSource-F" } = IO::File->new("|sort> cnsIRGTp15.txt") 
-      or die "cannot open IRGTp15.txt";
+      or die "cannot open cnsIRGTp15.txt";
+$tagtofilemap{"kIRG_TSource-3ExtB" } = IO::File->new("|sort> cnsIRGTp3ExtB.txt") 
+      or die "cannot open cnsIRGTp3ExtB.txt"; 
+$tagtofilemap{"kIRG_TSource-4ExtB" } = IO::File->new("|sort> cnsIRGTp4ExtB.txt") 
+      or die "cannot open cnsIRGTp4ExtB.txt"; 
+$tagtofilemap{"kIRG_TSource-5ExtB" } = IO::File->new("|sort> cnsIRGTp5ExtB.txt") 
+      or die "cannot open cnsIRGTp5ExtB.txt"; 
+$tagtofilemap{"kIRG_TSource-6ExtB" } = IO::File->new("|sort> cnsIRGTp6ExtB.txt") 
+      or die "cannot open cnsIRGTp6ExtB.txt"; 
+$tagtofilemap{"kIRG_TSource-7ExtB" } = IO::File->new("|sort> cnsIRGTp7ExtB.txt") 
+      or die "cannot open cnsIRGTp7ExtB.txt"; 
+$tagtofilemap{"kIRG_TSource-FExtB" } = IO::File->new("|sort> cnsIRGTp15ExtB.txt") 
+      or die "cannot open cnsIRGTp15ExtB.txt";
 
 $nonhan =  IO::File->new("< nonhan.txt") 
       or die "cannot open nonhan.txt";
@@ -49,8 +61,17 @@ while(<STDIN>)
     if($tag =~ m/(kCNS|kIRG_TSource)/)
     {
          ($pnum, $cvalue) = split(/-/,$value);
-         $fd = $tagtofilemap{$tag . "-" . $pnum};
-         $fd->print("0x" . $cvalue . "\t0x" . substr($u,2,4) . "\t# <CJK>\n");
+         $tagkey = $tag . "-" . $pnum;
+         if(length($u) > 6) {
+           $tagkey .= "ExtB";
+         }
+         $fd = $tagtofilemap{$tagkey};
+         if(length($u) > 6) {
+           $mapping = substr($u,3,4); # trunkcate 0x2 from 0x2abcd
+         } else {
+           $mapping = substr($u,2,4); # trunkcate 0x from 0xabcd
+         }
+         $fd->print("0x" . $cvalue . "\t0x" . $mapping . "\t# <CJK>\n");
     }
   }
 }
