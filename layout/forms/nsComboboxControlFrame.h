@@ -51,7 +51,6 @@
 //#define DO_NEW_REFLOW
 #endif
 
-#include "nsIDOMMouseListener.h"
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
@@ -65,6 +64,7 @@
 #include "nsIScrollableViewProvider.h"
 #include "nsIStatefulFrame.h"
 
+class nsIDOMMouseListener;
 class nsIView;
 class nsStyleContext;
 class nsIHTMLContent;
