@@ -337,7 +337,38 @@ void
 nsInlineReflow::ApplyTopLeftMargins()
 {
   PerFrameData* pfd = mFrameData;
-  pfd->mBounds.x = mX;
+
+  // If this is the first frame of a block, and its the first line of
+  // a block then see if the text-indent property amounts to anything.
+  nscoord indent = 0;
+  if (mOuterIsBlock &&
+      (0 == mLineLayout.GetLineNumber()) &&
+      (0 == mFrameNum)) {
+    const nsStyleText* text;
+    mOuterFrame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) text);
+    nsStyleUnit unit = text->mTextIndent.GetUnit();
+    if (eStyleUnit_Coord == unit) {
+      indent = text->mTextIndent.GetCoordValue();
+    }
+    else if (eStyleUnit_Percent == unit) {
+      nscoord width;
+      if (mOuterReflowState.HaveConstrainedWidth()) {
+        width = mOuterReflowState.minWidth;
+      }
+      else if (NS_UNCONSTRAINEDSIZE == mOuterReflowState.maxSize.width) {
+        // We are unconstrained only when a table cell is reflowing
+        // the block. Therefore don't bother with the indent until
+        // the next reflow.
+        width = 0;
+      }
+      else {
+        width = mOuterReflowState.maxSize.width;
+      }
+      indent = nscoord(text->mTextIndent.GetPercentValue() * width);
+    }
+  }
+
+  pfd->mBounds.x = mX + indent;
   pfd->mBounds.y = mTopEdge;
 
   // Compute left margin
