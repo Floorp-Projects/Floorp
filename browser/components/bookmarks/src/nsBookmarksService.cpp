@@ -3454,7 +3454,7 @@ nsBookmarksService::GetLastModifiedFolders(nsISimpleEnumerator **aResult)
         if (NS_FAILED(rv))
             return rv;
 
-        if (nodeType == kNC_Folder)
+        if (nodeType == kNC_Folder && element != kNC_BookmarksTopRoot)
             folderArray.AppendObject(element);
     }
 
