@@ -54,6 +54,8 @@
 
 #include "nsPICertNotification.h"
 
+#include "nsWeakReference.h"
+
 #define NS_XPIDIALOGSERVICE_CONTRACTID "@mozilla.org/embedui/xpinstall-dialog-service;1"
 #define XPI_PROGRESS_TOPIC "xpinstall-progress"
 
@@ -63,7 +65,8 @@ class nsXPInstallManager : public nsIXPIListener,
                            public nsIStreamListener,
                            public nsIProgressEventSink,
                            public nsIInterfaceRequestor,
-                           public nsPICertNotification
+                           public nsPICertNotification,
+                           public nsSupportsWeakReference
 {
     public:
         nsXPInstallManager();

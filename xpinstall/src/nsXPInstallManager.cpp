@@ -101,28 +101,31 @@ nsXPInstallManager::nsXPInstallManager()
     mLastUpdate = PR_Now();
 
     nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_FALSE);
+    if (os)
+        os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
 }
 
 
 nsXPInstallManager::~nsXPInstallManager()
 {
     nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    os->RemoveObserver(this, XPI_PROGRESS_TOPIC);
+    if (os)
+        os->RemoveObserver(this, XPI_PROGRESS_TOPIC);
  
     if (mTriggers)
         delete mTriggers;
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS7( nsXPInstallManager,
+NS_IMPL_THREADSAFE_ISUPPORTS8( nsXPInstallManager,
                                nsIXPIListener,
                                nsIXPIDialogService,
                                nsIObserver,
                                nsIStreamListener,
                                nsIProgressEventSink,
                                nsIInterfaceRequestor,
-                               nsPICertNotification)
+                               nsPICertNotification,
+                               nsISupportsWeakReference)
 
 
 NS_IMETHODIMP
