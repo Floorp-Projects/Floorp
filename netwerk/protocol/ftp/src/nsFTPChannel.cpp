@@ -291,6 +291,8 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 NS_IMETHODIMP
 nsFTPChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
 {
+    if (mProxyChannel)
+        return mProxyChannel->GetLoadAttributes(aLoadAttributes);
     *aLoadAttributes = mLoadAttributes;
     return NS_OK;
 }
@@ -298,6 +300,8 @@ nsFTPChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
 NS_IMETHODIMP
 nsFTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 {
+    if (mProxyChannel)
+        return mProxyChannel->SetLoadAttributes(aLoadAttributes);
     mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
