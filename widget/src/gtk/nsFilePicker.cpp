@@ -187,7 +187,7 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
+NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(*aFile);
   if (mWidget) {
@@ -199,8 +199,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
 
     file->InitWithPath(fn);
 
-    file->QueryInterface(NS_GET_IID(nsIFile), (void**)aFile);
-    NS_ADDREF(*aFile);
+    file->QueryInterface(NS_GET_IID(nsILocalFile), (void**)aFile);
   }
   return NS_OK;
 }
@@ -239,7 +238,7 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 // Set the display directory
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
+NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
 {
   mDisplayDirectory = aDirectory;
   return NS_OK;
@@ -250,7 +249,7 @@ NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
 // Get the display directory
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsIFile **aDirectory)
+NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 {
   *aDirectory = mDisplayDirectory;
   NS_IF_ADDREF(*aDirectory);

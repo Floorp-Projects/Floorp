@@ -41,7 +41,6 @@ const FILEPICKER_CID      = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8
 const nsILocalFile        = Components.interfaces.nsILocalFile;
 const nsISupports         = Components.interfaces.nsISupports;
 const nsIFactory          = Components.interfaces.nsIFactory;
-const nsIFile             = Components.interfaces.nsIFile;
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 
 function nsFilePicker()
@@ -54,11 +53,11 @@ function nsFilePicker()
 
 nsFilePicker.prototype = {
 
-  /* attribute nsIFile displayDirectory; */
+  /* attribute nsILocalFile displayDirectory; */
   set displayDirectory(a) { this.mDisplayDirectory = a; },
   get displayDirectory()  { return this.mDisplayDirectory; },
 
-  /* readonly attribute nsIFile file; */
+  /* readonly attribute nsILocalFile file; */
   set file(a) { throw "readonly property"; },
   get file()  { debug("getter called " + this.mFile); return this.mFile; },
 

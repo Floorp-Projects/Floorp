@@ -62,7 +62,7 @@ protected:
   const nsString*	mTitles;
   const nsString*	mFilters;
   nsString		  mDefault;
-  nsCOMPtr<nsIFile> mDisplayDirectory;
+  nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16       mSelectedType;
 };
 
