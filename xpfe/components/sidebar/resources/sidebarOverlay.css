@@ -75,7 +75,7 @@ box#sidebar-box {
 box#sidebar-panels {
   min-width: 1px;
   min-height: 1px;
-  border-bottom: 4px solid #003366;
+  border-bottom: 2px solid #003366;
 }
 
 box#sidebar-box[hidden="true"] {
