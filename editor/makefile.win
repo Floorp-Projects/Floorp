@@ -18,6 +18,10 @@
 DEPTH=..
 IGNORE_MANIFEST=1
 
-DIRS=public core guimgr txmgr
+!if defined(MOZ_EDITOR)
+DIRS= public core guimgr txmgr
+!else
+DIRS= public
+!endif
 
 include <$(DEPTH)\config\rules.mak>
