@@ -39,6 +39,10 @@ var prefixTo;
 var prefixCc;
 var prefixBcc;
 
+var gToButton;
+var gCcButton;
+var gBccButton;
+
 var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
 
@@ -106,6 +110,15 @@ function OnLoadSelectAddress()
   
   var companyCol = document.getElementById("Company");
   companyCol.setAttribute("hidden", "true");
+
+  gToButton = document.getElementById("toButton");
+  gTcButton = document.getElementById("ccButton");
+  gBccButton = document.getElementById("bccButton");
+
+  var abResultsTree = document.getElementById("abResultsTree");
+  abResultsTree.focus();
+
+  gActivatedButton = gToButton;
 
   document.documentElement.addEventListener("keypress", OnReturnHit, true);
 }
@@ -197,16 +210,19 @@ function SelectAddressOKButton()
 function SelectAddressToButton()
 {
   AddSelectedAddressesIntoBucket(prefixTo);
+  gActivatedButton = gToButton;
 }
 
 function SelectAddressCcButton()
 {
   AddSelectedAddressesIntoBucket(prefixCc);
+  gActivatedButton = gCcButton;
 }
 
 function SelectAddressBccButton()
 {
   AddSelectedAddressesIntoBucket(prefixBcc);
+  gActivatedButton = gBccButton;
 }
 
 function AddSelectedAddressesIntoBucket(prefix)
@@ -380,9 +396,16 @@ function DropOnBucketPane(event)
 
 function OnReturnHit(event)
 {
-  if (event.keyCode == 13 && (document.commandDispatcher.focusedElement == gSearchInput.inputField))
-	event.preventBubble();
+  if (event.keyCode == 13) {
+    var focusedElement = document.commandDispatcher.focusedElement;
+    if (focusedElement && (focusedElement.id == "addressBucket"))
+      return;
+    event.preventBubble();
+    if (focusedElement && (focusedElement.id == "abResultsTree"))
+      gActivatedButton.doCommand();
+  }
 }
+
 
 function onEnterInSearchBar()
 {
