@@ -38,86 +38,68 @@ pref("news.category_columns_win",           "");
 pref("font.name.serif.ar", "Times New Roman");
 pref("font.name.sans-serif.ar", "Arial");
 pref("font.name.monospace.ar", "Courier New");
-pref("font.name.cursive.ar", "XXX.cursive");
-pref("font.name.fantasy.ar", "XXX.fantasy");
+pref("font.name.cursive.ar", "Comic Sans MS");
 
 pref("font.name.serif.el", "Times New Roman");
 pref("font.name.sans-serif.el", "Arial");
 pref("font.name.monospace.el", "Courier New");
-pref("font.name.cursive.el", "XXX.cursive");
-pref("font.name.fantasy.el", "XXX.fantasy");
+pref("font.name.cursive.el", "Comic Sans MS");
 
 pref("font.name.serif.he", "Times New Roman");
 pref("font.name.sans-serif.he", "Arial");
 pref("font.name.monospace.he", "Courier New");
-pref("font.name.cursive.he", "XXX.cursive");
-pref("font.name.fantasy.he", "XXX.fantasy");
+pref("font.name.cursive.he", "Comic Sans MS");
 
 pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
 pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
 pref("font.name.monospace.ja", "ＭＳ ゴシック"); // "MS Gothic"
-pref("font.name.cursive.ja", "XXX.cursive");
-pref("font.name.fantasy.ja", "XXX.fantasy");
 
 pref("font.name.serif.ko", "굴림체"); // "GulimChe" 
 pref("font.name.sans-serif.ko", "굴림체"); // "GulimChe" 
 pref("font.name.monospace.ko", "굴림체"); // "GulimChe" 
-pref("font.name.cursive.ko", "XXX.cursive");
-pref("font.name.fantasy.ko", "XXX.fantasy");
 
 pref("font.name.serif.th", "Times New Roman");
 pref("font.name.sans-serif.th", "Arial");
 pref("font.name.monospace.th", "Courier New");
-pref("font.name.cursive.th", "XXX.cursive");
-pref("font.name.fantasy.th", "XXX.fantasy");
+pref("font.name.cursive.th", "Comic Sans MS");
 
 pref("font.name.serif.tr", "Times New Roman");
 pref("font.name.sans-serif.tr", "Arial");
 pref("font.name.monospace.tr", "Courier New");
-pref("font.name.cursive.tr", "XXX.cursive");
-pref("font.name.fantasy.tr", "XXX.fantasy");
+pref("font.name.cursive.tr", "Comic Sans MS");
 
 pref("font.name.serif.x-baltic", "Times New Roman");
 pref("font.name.sans-serif.x-baltic", "Arial");
 pref("font.name.monospace.x-baltic", "Courier New");
-pref("font.name.cursive.x-baltic", "XXX.cursive");
-pref("font.name.fantasy.x-baltic", "XXX.fantasy");
+pref("font.name.cursive.x-baltic", "Comic Sans MS");
 
 pref("font.name.serif.x-central-euro", "Times New Roman");
 pref("font.name.sans-serif.x-central-euro", "Arial");
 pref("font.name.monospace.x-central-euro", "Courier New");
-pref("font.name.cursive.x-central-euro", "XXX.cursive");
-pref("font.name.fantasy.x-central-euro", "XXX.fantasy");
+pref("font.name.cursive.x-central-euro", "Comic Sans MS");
 
 pref("font.name.serif.x-cyrillic", "Times New Roman");
 pref("font.name.sans-serif.x-cyrillic", "Arial");
 pref("font.name.monospace.x-cyrillic", "Courier New");
-pref("font.name.cursive.x-cyrillic", "XXX.cursive");
-pref("font.name.fantasy.x-cyrillic", "XXX.fantasy");
+pref("font.name.cursive.x-cyrillic", "Comic Sans MS");
 
 pref("font.name.serif.x-unicode", "Times New Roman");
 pref("font.name.sans-serif.x-unicode", "Arial");
 pref("font.name.monospace.x-unicode", "Courier New");
-pref("font.name.cursive.x-unicode", "XXX.cursive");
-pref("font.name.fantasy.x-unicode", "XXX.fantasy");
+pref("font.name.cursive.x-unicode", "Comic Sans MS");
 
 pref("font.name.serif.x-western", "Times New Roman");
 pref("font.name.sans-serif.x-western", "Arial");
 pref("font.name.monospace.x-western", "Courier New");
-pref("font.name.cursive.x-western", "XXX.cursive");
-pref("font.name.fantasy.x-western", "XXX.fantasy");
+pref("font.name.cursive.x-western", "Comic Sans MS");
 
 pref("font.name.serif.zh-CN", "MS Song");
 pref("font.name.sans-serif.zh-CN", "MS Hei");
 pref("font.name.monospace.zh-CN", "MS Hei");
-pref("font.name.cursive.zh-CN", "XXX.cursive");
-pref("font.name.fantasy.zh-CN", "XXX.fantasy");
 
 pref("font.name.serif.zh-TW", "細明體"); // "MingLiU" 
 pref("font.name.sans-serif.zh-TW", "細明體"); // "MingLiU" 
 pref("font.name.monospace.zh-TW", "細明體"); // "MingLiU" 
-pref("font.name.cursive.zh-TW", "XXX.cursive");
-pref("font.name.fantasy.zh-TW", "XXX.fantasy");
 
 
 pref("taskbar.x",                           -1); 
