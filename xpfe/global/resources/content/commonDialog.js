@@ -168,7 +168,8 @@ function commonDialogOnLoad()
   gCommonDialogParam.SetInt(0, 1); 
 
   // initialize the checkbox
-  if (setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1)))
+  if (setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1)) &&
+      gCommonDialogParam.GetInt(3) == 0)  // if no text fields
     firstButton.focus(); // Don't focus checkbox, focus first button instead
 
   getAttention();
