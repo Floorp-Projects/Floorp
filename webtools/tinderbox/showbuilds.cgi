@@ -280,7 +280,8 @@ BEGIN {
     }
     
     my $hour_color = '';
-    $hour_color = ' bgcolor=#e7e7e7' if $build_time_times->[$tt] % 7200 <= 3600;
+    $hour_color = ' bgcolor=#e7e7e7'
+      if ($build_time_times->[$tt] + 1) % 7200 <= 3600;
     print "<tr align=center><td align=right$hour_color>",
       "$query_link\n$pretty_time$end_query</td>\n";
     
@@ -337,7 +338,7 @@ BEGIN {
       # What Changed
       #
       # Only add the "C" link if there have been changes since the last build.
-      if( $br->{previousbuildtime} ){
+      if ($br->{previousbuildtime}) {
         my $previous_br = $build_table->[$tt+$rowspan][$build_index];
         my $previous_rowspan = $previous_br->{rowspan};
         if (&has_who_list($tt+$rowspan,
@@ -593,7 +594,7 @@ sub print_javascript {
         + builds[buildindex] + "</B><BR>"
         + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
         + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
-        + "<A HREF=" + commenturl + ">Add a Comment</A><BR>"
+        + "<A HREF=" + commenturl + ">Add a Comment</A>"
 	+ "</TD></TR></TABLE>");
       q.document.close();
       return false;
