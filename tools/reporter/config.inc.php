@@ -40,15 +40,15 @@
 $config['debug'] = false;
 
 // Paths
-$config['app_url']                      = 'http://localhost/rmo/app';
-$config['app_path']                     = 'C:\Program Files\Apache Group\Apache\htdocs\rmo\app';
+$config['app_url']                      = 'http://reporter.host.tld/app';
+$config['app_path']                     = '/opt/webtools/reporter';
 
 // Database
 $config['db_type']                      = 'mysql';
 $config['db_server']                    = 'localhost';
-$config['db_user']                      = 'root';
-$config['db_pass']                      = 'kj5fc';
-$config['db_database']                  = 'reporter';
+$config['db_user']                      = 'USERNAME';
+$config['db_pass']                      = 'DB_PASSWORD';
+$config['db_database']                  = 'DATABASE_NAME';
 $config['db_dsn']                       = $config['db_type'].'://'.$config['db_user'].':'.$config['db_pass'].'@'.$config['db_server'].'/'.$config['db_database'];
 $config['db_options']                   = array(
                                                 'debug'       => 2,
