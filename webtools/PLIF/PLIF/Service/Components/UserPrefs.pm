@@ -75,17 +75,24 @@ sub cmdUserPrefs {
 
     # get the data for each user being edited
     my $userData = {};
+    my @notifications;
     foreach my $userID (@userIDs) {
         my $targetUser = $userFactory->getUserByID($app, $userID);
         if (defined($targetUser)) {
             $userData->{$userID} = $self->populateUserPrefsHash($app, $userDataSource, $user, $targetUser, $userID, $userID == $user->userID, @rights);
         } else {
             $self->warn(2, "someone tried to get the details of invalid user $userID");
+            push(@notifications, [$userID, '', 'user.noSuchUser']);
         }
     }
 
-    # put it all together
-    $app->output->userPrefs(\@userIDs, $userData, $self->populateUserPrefsMetaData($app, $userDataSource));
+    if (not scalar(@notifications)) {
+        # put it all together
+        $app->output->userPrefs(\@userIDs, $userData, $self->populateUserPrefsMetaData($app, $userDataSource));
+    } else {
+        $app->output->userPrefsNotification(\@notifications);
+    }
+
 }
 
 sub populateUserPrefsRights {
