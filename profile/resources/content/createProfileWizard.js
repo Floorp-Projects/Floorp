@@ -81,6 +81,7 @@ function onCancel()
 function onFinish()
 {
   dump("*** IN ONFINISH\n");
+
   // check if we're at final stage 
   if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
     return;
