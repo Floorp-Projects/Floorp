@@ -92,7 +92,7 @@ sub EmitElement ($$)
     if ($editall) {
         print qq{<TD><INPUT SIZE=64 MAXLENGTH=255 NAME="$name" VALUE="$value"></TD>\n};
     } else {
-        print qq{<TD>$value</TD>\n};
+        print qq{<TD>$value<INPUT TYPE=HIDDEN  NAME="$name" VALUE="$value"></TD>\n};
     }
 }
 
