@@ -506,12 +506,21 @@ endif
 
 splitsymbols:
 ifdef MOZILLA_OFFICIAL
+ifdef MOZ_DEBUG_SYMBOLS
+	echo finding pdb files
+	mkdir -p $(DIST)/$(BUILDID)
+	-cp `/bin/find . -path "./dist" -prune -o -name "*.dll" | sed "s/\.dll$$/\.pdb/" | xargs` $(DIST)/$(BUILDID)
+	-cp `/bin/find . -path "./dist" -prune -o -name "*.exe" | sed "s/\.exe$$/\.pdb/" | xargs` $(DIST)/$(BUILDID)
+	-cp `/bin/find . -path "./dist" -prune -o -name "*.EXE" | sed "s/\.EXE$$/\.pdb/" | xargs` $(DIST)/$(BUILDID)
+endif # MOZ_DEBUG_SYMBOLS
+ifdef MOZ_PROFILE
 	echo splitting symbols out of binaries
 	/bin/find $(DIST) -name "*.dll" -exec splitsym {} \;
 	/bin/find $(DIST) -name "*.exe" -exec splitsym {} \;
 	/bin/find $(DIST) -name "*.EXE" -exec splitsym {} \;
 	mkdir -p $(DIST)/$(BUILDID)
 	/bin/find $(DIST) -name "*.dbg" -exec mv {} $(DIST)/$(BUILDID) \;
+endif # MOZ_PROFILE
 endif # MOZILLA_OFFICIAL
 
 signnss:

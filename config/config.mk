@@ -307,9 +307,14 @@ else
 # if MOZ_DEBUG is not set and MOZ_PROFILE is set, then we generate
 # an optimized build with debugging symbols. Useful for debugging
 # compiler optimization bugs, as well as running with Quantify.
-ifdef MOZ_PROFILE
+# MOZ_DEBUG_SYMBOLS works the same way as MOZ_PROFILE, but generates debug
+# symbols in separate PDB files, rather than embedded into the binary.
+ifneq (,$(MOZ_PROFILE)$(MOZ_DEBUG_SYMBOLS))
 MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
+OS_LDFLAGS = /DEBUG /OPT:REF /OPT:nowin98
+ifdef MOZ_PROFILE
+OS_LDFLAGS += /PDB:NONE
+endif
 WIN32_EXE_LDFLAGS=/FIXED:NO
 endif
 
