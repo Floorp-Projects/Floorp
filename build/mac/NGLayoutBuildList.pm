@@ -362,6 +362,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",							"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",							"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpcom:threads:MANIFEST_IDL",							"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST_IDL",							"$distdirectory:idl:");
 
 	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST",								"$distdirectory:xpcom:");
