@@ -1810,22 +1810,23 @@ nsWebShellWindow::ShowModalInternal()
   subshell->Spinup();
 
   nsIWidget *window = GetWidget();
-  window->SetModal();
+  window->SetModal(PR_TRUE);
   NS_ADDREF(window);
   mContinueModalLoop = PR_TRUE;
-  while (NS_SUCCEEDED(rv) && mContinueModalLoop == PR_TRUE) {
+  while (NS_SUCCEEDED(rv) && mContinueModalLoop) {
     void      *data;
     PRBool    isRealEvent,
               processEvent;
 
     rv = subshell->GetNativeEvent(isRealEvent, data);
     if (NS_SUCCEEDED(rv)) {
-      subshell->EventIsForModalWindow(isRealEvent, data, window, &processEvent);
-      if (processEvent == PR_TRUE)
+      window->ModalEventFilter(isRealEvent, data, &processEvent);
+      if (processEvent)
         subshell->DispatchNativeEvent(isRealEvent, data);
     }
   }
 
+  window->SetModal(PR_FALSE);
   subshell->Spindown();
   NS_RELEASE(window);
   NS_RELEASE(subshell);
