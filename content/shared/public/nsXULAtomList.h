@@ -141,8 +141,10 @@ XUL_ATOM(flex, "flex")
 XUL_ATOM(spring, "spring")
 XUL_ATOM(orient, "orient")
 XUL_ATOM(autostretch, "autostretch")
-XUL_ATOM(minwidth, "min-width")
-XUL_ATOM(minheight, "min-height")
+XUL_ATOM(minwidth, "minwidth")
+XUL_ATOM(minheight, "minheight")
+XUL_ATOM(maxwidth, "maxwidth")
+XUL_ATOM(maxheight, "maxheight")
 
 XUL_ATOM(autorepeatbutton, "autorepeatbutton")
 
