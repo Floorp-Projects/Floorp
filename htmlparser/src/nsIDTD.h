@@ -83,6 +83,18 @@ class nsIDTD : public nsISupports {
      */ //----------------------------------------------------
     virtual PRBool CanOmit(PRInt32 aParent,PRInt32 aChild)const=0;
 
+    /** ------------------------------------------------------
+     * This method gets called at various times by the parser
+     * whenever we want to verify a valid context stack. This
+     * method also gives us a hook to add debugging metrics.
+     *
+     * @update	gess4/6/98
+     * @param   aStack[] array of ints (tokens)
+     * @param   aCount number of elements in given array
+     * @return  TRUE if stack is valid, else FALSE
+     */ //-----------------------------------------------------
+    virtual PRBool VerifyContextStack(PRInt32 aStack[],PRInt32 aCount) const=0;
+
     /** -------------------------------------------------------
      * This method does two things: 1st, help construct
      * our own internal model of the content-stack; and

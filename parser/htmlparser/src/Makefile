@@ -28,14 +28,12 @@ CPPSRCS =			\
 	nsToken.cpp		\
 	nsTokenizer.cpp		\
 	nsTokenHandler.cpp \
-	nsHTMLParser.cpp	\
-	nsHTMLTokens.cpp	\
-	nsHTMLDelegate.cpp	\
-	nsHTMLDTD.cpp \
 	CNavDelegate.cpp	\
 	CNavDTD.cpp \
 	COtherDelegate.cpp	\
 	COtherDTD.cpp \
+	nsHTMLParser.cpp	\
+	nsHTMLTokens.cpp	\
 	$(NULL)
 
 EXPORTS =			\

@@ -363,7 +363,7 @@ PRBool nsHTMLParser::IterateTokens() {
         //later you have to Handle them, because they're relevent to certain containers (eg PRE).
         break;
     }
-    mDTD->VerifyContextStack(mContextStack,mContextStackPos);
+//    mDTD->VerifyContextStack(mContextStack,mContextStackPos);
     ++(*mCurrentPos);
     done=PRBool(e==*mCurrentPos);
   }
@@ -410,15 +410,18 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
     result=PR_TRUE;
     mParseMode=aMode;
     ITokenizerDelegate* theDelegate=0;
-
+    
+    mDTD=0;
     switch(mParseMode) {
       case eParseMode_navigator:
         theDelegate=new CNavDelegate();
-        mDTD= new CNavDTD();
+        if(theDelegate)
+          mDTD=theDelegate->GetDTD();
         break;
       case eParseMode_other:
         theDelegate=new COtherDelegate();
-        mDTD= new COtherDTD();
+        if(theDelegate)
+          mDTD=theDelegate->GetDTD();
         break;
       default:
         break;
@@ -426,9 +429,6 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
     if(!theDelegate) {
       NS_ERROR(kNullTokenizer);
       return PR_FALSE;
-    }
-    if(!mDTD) {
-      mDTD= new nsHTMLDTD();
     }
 
     mTokenizer=new CTokenizer(aURL, theDelegate, mParseMode);

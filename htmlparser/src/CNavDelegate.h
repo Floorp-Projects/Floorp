@@ -20,8 +20,7 @@
  * MODULE NOTES:
  * @update  gess 4/1/98
  *  
- * This class is used as the HTML tokenizer delegate for
- * netscape navigator compatibility.
+ * This class is used as the HTML tokenizer delegate.
  *
  * The tokenzier class has the smarts to open an source,
  * and iterate over its characters to produce a list of
@@ -37,32 +36,46 @@
  * scanner.stream, and produces an HTML specific CToken.
  */
 
-#ifndef	__NAV_DELEGATE
-#define	__NAV_DELEGATE
+#ifndef	_NAV_DELEGATE
+#define	_NAV_DELEGATE
 
-#include "nsToken.h"
-#include "nsHTMLDelegate.h"
+#include "nsHTMLTokens.h"
+#include "nsITokenizerDelegate.h"
+#include "nsDeque.h"
+#include "nsIDTD.h"
 
-
-class CNavDelegate : public CHTMLTokenizerDelegate {
+class CNavDelegate : public ITokenizerDelegate {
 	public:
-                          CNavDelegate();
-                          CNavDelegate(CNavDelegate& aDelegate);
+    							        CNavDelegate();
+    							        CNavDelegate(CNavDelegate& aDelegate);
 
       virtual	CToken*	    GetToken(CScanner& aScanner,PRInt32& anErrorCode);
-      virtual eParseMode  GetParseMode() const;
+      virtual PRBool      WillAddToken(CToken& aToken);
 
+		  virtual	PRBool      WillTokenize();
+		  virtual	PRBool      DidTokenize();
+
+      virtual eParseMode  GetParseMode() const;
+      virtual nsIDTD*     GetDTD(void) const;
+      static void         SelfTest();
 
    protected:
 
-      virtual CToken* 	  ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-      virtual CToken* 	  ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-      virtual CToken* 	  ConsumeEntity(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+      virtual CToken*     CreateTokenOfType(eHTMLTokenTypes aType);
+
+					    CToken* 	  ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+					    CToken* 	  ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+					    void		    ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+					    CToken* 	  ConsumeText(const nsString& aString,CScanner& aScanner,PRInt32& anErrorCode);
+					    CToken* 	  ConsumeEntity(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+					    CToken* 	  ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+					    CToken* 	  ConsumeComment(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+					    CToken* 	  ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
 
                     //the only special case method...
       virtual CToken*     ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
 
-      virtual CToken*     CreateTokenOfType(eHTMLTokenTypes aType);
+              nsDeque     mTokenDeque;
 
 };
 

@@ -72,7 +72,7 @@ class CTokenizer;
 class IContentSink;
 class nsIHTMLContentSink;
 class nsIURL;
-class nsHTMLDTD;
+class nsIDTD;
 
 
 class nsHTMLParser : public nsIParser {
@@ -153,7 +153,7 @@ friend class CTokenHandler;
             PRInt32             mTokenHandlerCount;
             nsDequeIterator*    mCurrentPos;
 
-            nsHTMLDTD*          mDTD;
+            nsIDTD*             mDTD;
             eParseMode          mParseMode;
 };
 

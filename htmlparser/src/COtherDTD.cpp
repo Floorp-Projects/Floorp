@@ -30,7 +30,6 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
-static NS_DEFINE_IID(kHTMLDTDIID,   NS_IHTML_DTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOtherHTML_DTD_IID); 
 
 
@@ -98,7 +97,7 @@ NS_IMPL_RELEASE(COtherDTD)
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-COtherDTD::COtherDTD() : nsHTMLDTD() {
+COtherDTD::COtherDTD() : nsIDTD() {
 }
 
 /**-------------------------------------------------------
@@ -121,7 +120,347 @@ COtherDTD::~COtherDTD(){
  *  @return  PR_TRUE if parent can contain child
  */ //----------------------------------------------------
 PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
-  PRBool result=nsHTMLDTD::CanContain(aParent,aChild);
+  PRBool result=PR_FALSE;
+
+    //tagset1 has 61 members...
+  static char  gTagSet1[]={ 
+    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
+    eHTMLTag_bold,      eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,
+    eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
+    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
+    eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_em,        eHTMLTag_fieldset,
+    eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
+    eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
+    eHTMLTag_hr,        eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_img,
+    eHTMLTag_input,     eHTMLTag_isindex,   eHTMLTag_kbd,       eHTMLTag_label,
+    eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_noframes,  eHTMLTag_noscript,
+    eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_paragraph, eHTMLTag_pre,
+    eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,
+    eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,
+    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_textarea,
+    eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        eHTMLTag_userdefined,
+    eHTMLTag_var,   0};
+
+    //tagset2 has 37 members...
+  static char  gTagSet2[]={ 
+    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
+    eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
+    eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
+    eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        eHTMLTag_italic,    
+    eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     eHTMLTag_kbd,       
+    eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_object,    eHTMLTag_paragraph, 
+    eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,    
+    eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
+    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_tt,        eHTMLTag_textarea,  
+    eHTMLTag_u,         eHTMLTag_var,0};
+
+    //tagset3 has 53 members...
+  static char  gTagSet3[]={ 
+    eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
+    eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
+    eHTMLTag_body,      eHTMLTag_caption,   eHTMLTag_center,    eHTMLTag_cite,
+    eHTMLTag_code,      eHTMLTag_dd,        eHTMLTag_del,       eHTMLTag_dfn,        
+    eHTMLTag_div,       eHTMLTag_dt,        eHTMLTag_em,        eHTMLTag_fieldset,    
+    eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
+    eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
+    eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
+    eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_listitem,  eHTMLTag_noframes,
+    eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_paragraph, eHTMLTag_pre,
+    eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_small,
+    eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
+    eHTMLTag_td,        eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         
+    eHTMLTag_var,0};
+
+    //This hack code is here because we don't yet know what to do
+    //with userdefined tags...  XXX Hack
+  if(eHTMLTag_userdefined==aChild)  // XXX Hack: For now...
+    result=PR_TRUE;
+
+  switch(aParent) {
+    case eHTMLTag_a:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_acronym:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_address:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_applet:
+      {
+        static char okTags[]={  
+          eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
+          eHTMLTag_basefont,eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
+          eHTMLTag_button,  eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
+          eHTMLTag_em,      eHTMLTag_font,      eHTMLTag_italic,    eHTMLTag_iframe,
+          eHTMLTag_img,     eHTMLTag_input,     eHTMLTag_kbd,       eHTMLTag_label,
+          eHTMLTag_map,     eHTMLTag_object,    eHTMLTag_param,     eHTMLTag_quotation,
+          eHTMLTag_samp,    eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
+          eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,    eHTMLTag_sub,
+          eHTMLTag_sup,     eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,
+          eHTMLTag_var,0};
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+
+
+    case eHTMLTag_area:
+    case eHTMLTag_base:
+    case eHTMLTag_basefont:
+    case eHTMLTag_br:
+      break;  //singletons can't contain other tags
+
+    case eHTMLTag_bdo:
+    case eHTMLTag_big:
+    case eHTMLTag_blink:
+    case eHTMLTag_bold:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_blockquote:
+    case eHTMLTag_body:
+      if(eHTMLTag_userdefined==aChild)
+        result=PR_TRUE;
+      else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      break;
+
+    case eHTMLTag_button:
+      result=PRBool(0!=strchr(gTagSet3,aChild)); break;
+
+    case eHTMLTag_caption:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_center:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_cite:   case eHTMLTag_code:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_col:
+    case eHTMLTag_colgroup:
+      break;    //singletons can't contain anything...
+
+    case eHTMLTag_dd:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_del:  case eHTMLTag_dfn:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_div:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_dl:
+      {
+        char okTags[]={eHTMLTag_dd,eHTMLTag_dt,0};
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+      break;
+
+    case eHTMLTag_dt:
+      break;    //singletons can't contain anything...
+
+    case eHTMLTag_em:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_fieldset:
+      if(eHTMLTag_legend==aChild)
+        result=PR_TRUE;
+      else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      break;
+
+    case eHTMLTag_font:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_form:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_frame:
+      break;  //singletons can't contain other tags
+
+    case eHTMLTag_frameset:
+      {
+        static char okTags[]={eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes,0};
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+
+    case eHTMLTag_h1: case eHTMLTag_h2:
+    case eHTMLTag_h3: case eHTMLTag_h4:
+    case eHTMLTag_h5: case eHTMLTag_h6:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_head:
+      {
+        static char  okTags[]={
+          eHTMLTag_base,  eHTMLTag_isindex, eHTMLTag_link,  eHTMLTag_meta,
+          eHTMLTag_script,eHTMLTag_style,   eHTMLTag_title, 0};
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+      break;
+
+    case eHTMLTag_hr:			
+      break;    //singletons can't contain anything...
+
+    case eHTMLTag_html:
+      {
+        static char  okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,0};
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+      break;
+
+    case eHTMLTag_iframe:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_img:
+    case eHTMLTag_input:
+    case eHTMLTag_isindex:
+    case eHTMLTag_spacer:
+    case eHTMLTag_wbr:
+      break;    //singletons can't contain anything...
+
+    case eHTMLTag_italic:
+    case eHTMLTag_ins:
+    case eHTMLTag_kbd:
+    case eHTMLTag_label:
+    case eHTMLTag_legend:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_layer:
+      break;
+
+    case eHTMLTag_link:
+      break;    //singletons can't contain anything...
+
+      // XXX hey rickg: listing is like xmp or plaintext and has
+      // NOTHING to do with html lists.
+    case eHTMLTag_listing:
+      result=PRBool(eHTMLTag_listitem==aChild); break;
+
+    case eHTMLTag_map:
+      result=PRBool(eHTMLTag_area==aChild); break;
+
+    case eHTMLTag_marquee:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_math:
+      break; //nothing but plain text...
+
+    case eHTMLTag_meta:
+      break;  //singletons can't contain other tags
+
+    case eHTMLTag_noframes:
+      if(eHTMLTag_body==aChild)
+        result=PR_TRUE;
+      else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      break;
+
+    case eHTMLTag_noscript:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_note:
+
+    case eHTMLTag_object:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_menu:
+    case eHTMLTag_dir:
+    case eHTMLTag_ol:
+    case eHTMLTag_ul:
+      // XXX kipp was here
+      result = PR_TRUE;
+      break;
+
+    case eHTMLTag_listitem:
+      if (eHTMLTag_listitem == aChild) {
+        return PR_FALSE;
+      }
+      result = PR_TRUE;
+      break;
+
+    case eHTMLTag_option:
+      break;  //singletons can't contain other tags
+
+    case eHTMLTag_paragraph:
+      if(eHTMLTag_paragraph==aChild)
+        result=PR_FALSE;
+      else result=PRBool(0!=strchr(gTagSet2,aChild)); 
+      break;
+
+    case eHTMLTag_param:
+      break;  //singletons can't contain other tags
+
+    case eHTMLTag_plaintext:
+      break;
+
+    case eHTMLTag_pre:
+    case eHTMLTag_quotation:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_strike:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_script:
+      break; //unadorned script text...
+
+    case eHTMLTag_select:
+      result=PRBool(eHTMLTag_option==aChild); break;
+
+    case eHTMLTag_small:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_span:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_style:
+      break;  //singletons can't contain other tags
+
+    case eHTMLTag_strong:
+    case eHTMLTag_samp:
+    case eHTMLTag_sub:
+    case eHTMLTag_sup:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+    case eHTMLTag_table:
+      {
+        static char  okTags[]={ 
+          eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,eHTMLTag_tbody,   
+          eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,   0};
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+      break;
+
+    case eHTMLTag_tbody:
+    case eHTMLTag_tfoot:
+    case eHTMLTag_thead:
+      result=PRBool(eHTMLTag_tr==aChild); break;
+
+    case eHTMLTag_td:
+    case eHTMLTag_th:
+      result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      break;
+
+    case eHTMLTag_textarea:
+    case eHTMLTag_title:
+      break; //nothing but plain text...
+
+    case eHTMLTag_tr:
+      {
+        static char  okTags[]={eHTMLTag_td,eHTMLTag_th,0};
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+      break;
+
+    case eHTMLTag_tt:
+    case eHTMLTag_u:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_var:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+
+    case eHTMLTag_userdefined:
+      result=PR_TRUE; break; //XXX for now...
+
+    case eHTMLTag_xmp:
+    default:
+      break;
+  } //switch
   return result;
 }
 
@@ -136,7 +475,39 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  *  @return  PR_TRUE if parent can contain child
  */ //----------------------------------------------------
 PRBool COtherDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
-  PRBool result=nsHTMLDTD::CanContainIndirect(aParent,aChild);
+  PRBool result=PR_FALSE;
+
+  switch(aParent) {
+
+    case eHTMLTag_html:
+      {
+        static char  okTags[]={
+          eHTMLTag_head,    eHTMLTag_body,
+          eHTMLTag_header,  eHTMLTag_footer,0
+        };
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+
+    case eHTMLTag_body:
+      result=PR_TRUE; break;
+
+    case eHTMLTag_table:
+      {
+        static char  okTags[]={
+          eHTMLTag_caption, eHTMLTag_colgroup,
+          eHTMLTag_tbody,   eHTMLTag_tfoot,
+          eHTMLTag_thead,   eHTMLTag_tr,
+          eHTMLTag_td,      eHTMLTag_th,
+          eHTMLTag_col,     0};
+        result=PRBool(0!=strchr(okTags,aChild));
+      }
+      break;
+
+      result=PR_TRUE; break;
+
+    default:
+      break;
+  }
   return result;
 }
 
@@ -180,7 +551,27 @@ PRBool COtherDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
  *  @return  PR_TRUE if given tag can contain other tags
  */ //----------------------------------------------------
 PRBool COtherDTD::IsContainer(PRInt32 aTag) const {
-  PRBool result=nsHTMLDTD::IsContainer(aTag);
+  PRBool result=PR_FALSE;
+
+  switch(aTag){
+    case eHTMLTag_area:       case eHTMLTag_base:
+    case eHTMLTag_basefont:   case eHTMLTag_br:
+    case eHTMLTag_col:        case eHTMLTag_colgroup:
+    case eHTMLTag_frame:
+    case eHTMLTag_hr:         case eHTMLTag_img:
+    case eHTMLTag_input:      case eHTMLTag_isindex:
+    case eHTMLTag_link:
+    case eHTMLTag_math:       case eHTMLTag_meta:
+    case eHTMLTag_option:     case eHTMLTag_param:
+    case eHTMLTag_style:      case eHTMLTag_spacer:
+    case eHTMLTag_wbr:
+    case eHTMLTag_form:
+      result=PR_FALSE;
+      break;
+
+    default:
+      result=PR_TRUE;
+  }
   return result;
 }
 
@@ -270,7 +661,7 @@ PRInt32 COtherDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
  * @param   aCount number of elements in given array
  * @return  TRUE if stack is valid, else FALSE
  */ //-----------------------------------------------------
-PRBool COtherDTD::VerifyContextStack(eHTMLTags aStack[],PRInt32 aCount) const {
+PRBool COtherDTD::VerifyContextStack(PRInt32 aStack[],PRInt32 aCount) const {
   PRBool result=PR_TRUE;
 
   if(aCount>0) {
