@@ -235,10 +235,15 @@ NET_StreamBuilder  (FO_Present_Types format_out,
         if(format_out == cs_ptr->format_out)
             if(net_compare_mime_types(URL_s->content_type, cs_ptr->format_in))
               {
+                  NET_StreamClass *ret_str;
                   net_ConverterElement *elem = XP_ListPeekTopObject(cs_ptr->converter_stack);
                   PR_ASSERT(elem != (net_ConverterElement *)0);
-				return( (NET_StreamClass *) (*elem->converter) (format_out, 
-                                             	elem->data_obj, URL_s, context));
+		  ret_str = (NET_StreamClass *) (*elem->converter) (format_out, 
+					elem->data_obj, URL_s, context);
+		  if (ret_str != NULL)
+		    {
+			  return(ret_str);
+		    }
 	          }
       }
 
