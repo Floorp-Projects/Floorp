@@ -58,7 +58,6 @@
 #include "plhash.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
-#include "nsUnicharUtils.h"
 #include "nsUnicodeRange.h"
 
 #define DEFAULT_TTF_SYMBOL_ENCODING "windows-1252"
@@ -3631,10 +3630,7 @@ nsFontMetricsWin::RealizeFont()
   // space available. Baseline need to be raised so that underline will stay 
   // within boundary.
   // only do this for CJK to minimize possible risk
-  if (mLangGroup.get() == gJA || 
-      mLangGroup.get() == gKO || 
-      mLangGroup.get() == gZHTW || 
-      mLangGroup.get() == gZHCN ) {
+  if (IsCJKLangGroupAtom(mLangGroup.get())) {
     if (gDoingLineheightFixup && 
         mInternalLeading+mExternalLeading > mUnderlineSize &&
         descentPos < mUnderlineOffset) {
@@ -3983,6 +3979,32 @@ nsFontWin::~nsFontWin()
     mFont = nsnull;
   }
 }
+
+PRInt32
+nsFontWin::GetWidth(HDC aDC, const char* aString, PRUint32 aLength)
+{
+  SIZE size;
+  ::GetTextExtentPoint32(aDC, aString, aLength, &size);
+  return size.cx;
+}
+
+void
+nsFontWin::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+  const char* aString, PRUint32 aLength, INT* lpDx)
+{
+  ::ExtTextOut(aDC, aX, aY, 0, NULL, aString, aLength, lpDx);
+}
+
+#ifdef MOZ_MATHML
+nsresult
+nsFontWin::GetBoundingMetrics(HDC                aDC, 
+                              const char*        aString,
+                              PRUint32           aLength,
+                              nsBoundingMetrics& aBoundingMetrics)
+{
+  return GetBoundingMetricsCommonA(aDC, aString, aLength, aBoundingMetrics);
+}
+#endif
 
 nsFontWinUnicode::nsFontWinUnicode(LOGFONT* aLogFont, HFONT aFont,
   PRUint16* aCCMap) : nsFontWin(aLogFont, aFont, aCCMap)
