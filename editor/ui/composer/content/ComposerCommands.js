@@ -422,9 +422,9 @@ var nsRevertCommand =
       var result = {value:0};
 
       // Put the page title in the message string
-      var title = window.editorShell.editorDocument.title;
-      if (!title || title.length == 0)
-        title = window.editorShell.GetTitle("untitled");
+      var title = window.editorShell.GetDocumentTitle();
+      if (!title)
+        title = window.editorShell.GetString("untitled");
 
       var msg = window.editorShell.GetString("AbandonChanges").replace(/%title%/,title);
 
@@ -836,7 +836,7 @@ var nsHLineCommand =
             if (shading) {
               hLine.removeAttribute("noshade");
             } else {
-              hLine.setAttribute("noshade", "");
+              hLine.setAttribute("noshade", "noshade");
             }
           }
           catch (ex) {
