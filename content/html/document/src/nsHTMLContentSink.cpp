@@ -117,7 +117,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 #else
 #define SINK_TRACE(_bit,_args)
-#define SINK_TRACE_NODE(_bit,_msg,_node)
+#define SINK_TRACE_NODE(_bit,_msg,_node,_obj)
 #endif
 
 //----------------------------------------------------------------------
