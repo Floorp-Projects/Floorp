@@ -1,67 +1,78 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 
-<!DOCTYPE window> 
+<!DOCTYPE window
+[
+<!ENTITY findDialog.title "Find on Page">
+<!ENTITY findField.label "Find:">
+<!ENTITY caseSensitiveCheckbox.label "Case Sensitive">
+<!ENTITY wrapCheckbox.label "Wrap">
+<!ENTITY backwardsCheckbox.label "Backwards">
+<!ENTITY cancelButton.label "Cancel">
+<!ENTITY findButton.label "Find">
+]>
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<xul:window xmlns="http://www.w3.org/TR/REC-html40"
+		xmlns.xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="padding:5px;"
-        title="Search">
+        title="&findDialog.title;">
 
-    <data>
-        <broadcaster id="data.findKey" type="string" value=""/>
-        <broadcaster id="data.caseSensitive" type="boolean" value="false"/>
-        <broadcaster id="data.searchBackwards" type="boolean" value="false"/>
-        <broadcaster id="data.wrap" type="boolean" value="false"/>
-        <broadcaster id="data.execute" command="" findKey="" caseSensitive="" searchBackwards="" wrap=""/>
-        <broadcaster id="dialog.start" ready="false"/>
-        <observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
-    </data>
+    <xul:data>
+        <xul:broadcaster id="data.findKey" type="string" value=""/>
+        <xul:broadcaster id="data.caseSensitive" type="boolean" value="false"/>
+        <xul:broadcaster id="data.searchBackwards" type="boolean" value="false"/>
+        <xul:broadcaster id="data.wrap" type="boolean" value="false"/>
+        <xul:broadcaster id="data.execute" command="" findKey="" caseSensitive="" searchBackwards="" wrap=""/>
+        <xul:broadcaster id="dialog.start" ready="false"/>
+        <xul:observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
+    </xul:data>
 
-  <html:script language="JavaScript" src="resource:/res/samples/finddialog.js">
-  </html:script>
+  <!-- This should be using a chrome URL -->
+  <script language="JavaScript" src="resource:/res/samples/finddialog.js">
+  </script>
 
-    <html:table border="0" style="width:100%;">
-        <html:tr>
-            <html:td class="fieldlabel">
-                Find:
-            </html:td>
-            <html:td align="left">
-                <html:input id="dialog.findKey" style="width:300px;" onkeyup="onTyping(event.which)"/>
-            </html:td>
-        </html:tr>
+    <table border="0" style="width:100%;">
+        <tr>
+            <td class="fieldlabel">
+                &findField.label;
+            </td>
+            <td align="left">
+                <input id="dialog.findKey" style="width:300px;" onkeyup="onTyping(event.which)"/>
+            </td>
+        </tr>
     
-        <html:tr class="checkboxrow">
-            <html:td align="right">
-            </html:td>
-            <html:td class="buttonlabel">
-                <html:input type="checkbox" id="dialog.caseSensitive"/>
-                Case Sensitive
-            </html:td>
-        </html:tr>
+        <tr class="checkboxrow">
+            <td align="right">
+            </td>
+            <td class="buttonlabel">
+                <input type="checkbox" id="dialog.caseSensitive"/>
+                <label class="disabled" for="dialog.caseSensitive">&caseSensitiveCheckbox.label;</label>
+            </td>
+        </tr>
     
-        <html:tr>
-            <html:td align="right">
-            </html:td>
-            <html:td  class="buttonlabel" align="left">
-                <html:input type="checkbox" id="dialog.wrap"/>
-                Wrap
-            </html:td>
-        </html:tr>
+        <tr>
+            <td align="right">
+            </td>
+            <td  class="buttonlabel" align="left">
+               <input type="checkbox" id="dialog.wrap"/>
+               <label class="disabled" for="dialog.wrap">&wrapCheckbox.label;</label>
+            </td>
+        </tr>
 
-        <html:tr>
-            <html:td align="right">
-            </html:td>
-            <html:td  class="buttonlabel" align="left">
-                <html:input type="checkbox" id="dialog.searchBackwards"/>
-                Backwards
-            </html:td>
-        </html:tr>
-        <html:tr>
-            <html:td align="right" colspan="2">
-                <html:button class="cancelbutton" id="dialog.cancel" onclick="cancel()">Cancel</html:button>
-                <html:button class="defaultbutton" id="dialog.find" onclick="find()">Find</html:button>
-            </html:td>
-        </html:tr>
-    </html:table>
-</window>
+        <tr>
+            <td align="right">
+            </td>
+            <td  class="buttonlabel" align="left">
+               <input type="checkbox" id="dialog.searchBackwards"/>
+               <label class="disabled" for="dialog.searchBackwards">&backwardsCheckbox.label;</label>
+            </td>
+        </tr>
+        <tr>
+            <td align="right" colspan="2">
+                <button class="cancelbutton" id="dialog.cancel" onclick="cancel()">&cancelButton.label;</button>
+                <button class="defaultbutton" id="dialog.find" onclick="find()">&findButton.label;</button>
+            </td>
+        </tr>
+    </table>
+  
+</xul:window>
