@@ -7,7 +7,7 @@
 #   mozilla/gc, , 10/25/2000 12:00:00
 #
 
-mozilla/nsprpub,        NSPRPUB_CLIENT_TAG
+mozilla/nsprpub,        NSPRPUB_PRE_4_2_CLIENT_BRANCH
 mozilla/security/nss,   NSS_CLIENT_TAG
 mozilla/security/manager,
 mozilla/accessible,
