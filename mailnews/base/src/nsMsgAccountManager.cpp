@@ -1465,13 +1465,14 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 
 			numAccounts++;
 				
-			// psuedo-name is of the form newsrc-<host>.  need to get the host part out.
-
-			NS_ASSERTION(PL_strncmp(PSUEDO_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_NAME_PREFIX)) == 0, "all psuedo names should begin with newsrc-");
+			// psuedo-name is of the form newsrc-<host> or snewsrc-<host>.  
+			// right now, we can't handle snewsrc, so if we get one of those
+			// gracefully handle it by ignoring it.
 			if (PL_strncmp(PSUEDO_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_NAME_PREFIX)) != 0) {
-				return 0;
+				continue;
 			}
 
+			// check that there is a hostname to get after the "newsrc-" part
 			NS_ASSERTION(PL_strlen(psuedo_name) > PL_strlen(PSUEDO_NAME_PREFIX), "psuedo_name is too short");
 			if (PL_strlen(psuedo_name) <= PL_strlen(PSUEDO_NAME_PREFIX)) {
 				return 0;
