@@ -27,7 +27,7 @@
 <head>
 
 <!-- script below is ngdriverspecific  -->
-<script type="text/javascript" src="http://bubblegum/ngdriver/suites/testlib.js">
+<script type="text/javascript" src="http://testlib.js">
 </script>
 
 <script type="text/javascript">
@@ -74,10 +74,10 @@ function constructResult(initialcharset, charset)
   charsetcolor = "white";
 
   if(initialcharset != null) initialcharsetvalue = "Pass" ;
-  if(charset == "UTF-8") charsetvalue = "Pass" ;
+  if(charset == setCharsetValueTo) charsetvalue = "Pass" ;
 
   if(initialcharset == null) initailcharsetcolor = "red" ;
-  if(charset != "UTF-8") charsetcolor = "red" ;
+  if(charset != setCharsetValueTo) charsetcolor = "red" ;
 
   results = results + "<html><br>";
   results = results + "  <table bgcolor='white' border='4'>";
@@ -168,6 +168,7 @@ document.write('<input name="resultsfile" type="hidden" value="' + window.opener
 
 var domWindow = getnsIDOMWindow();
 var docCharset = getdocCharset();
+var setCharsetValueTo = "ISO-8859-1";
 
 if(readCookie("docCharset") == null)
 {
@@ -176,7 +177,7 @@ if(readCookie("docCharset") == null)
     netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var charsetValue = docCharset.charset;
-    docCharset.charset = "Shift_JIS";
+    docCharset.charset = setCharsetValueTo;
   }
   catch(e) {
     dump ("\nError getting nsIDocCharset\n");
