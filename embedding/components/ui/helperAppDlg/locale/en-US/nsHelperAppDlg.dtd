@@ -22,14 +22,18 @@
 <!ENTITY default.set.label     "Set Default...">
 <!ENTITY default.set.accesskey "e">
 
-<!ENTITY alwaysAsk.label       "Always show this dialog for this type of file">
+<!ENTITY alwaysAsk.label       "Always ask before opening this type of file">
 <!ENTITY alwaysAsk.accesskey   "a">
 
 <!ENTITY saveToDisk.label      "Save this file to Disk">
 <!ENTITY saveToDisk.accesskey  "d">
 
-<!ENTITY openUsing.label       "Open with application">
+<!-- LOCALIZATION NOTE:  do not localize "#1" -->
+<!ENTITY openUsing.label       "Open using #1">
 <!ENTITY openUsing.accesskey   "o">
+
+<!-- LOCALIZATION NOTE:  do not localize "&lt;" and "&gt;" -->
+<!ENTITY noApplicationSpecified.label " &lt;no application specified&gt;">
 
 <!ENTITY chooseApp.label       "Choose...">
 <!ENTITY chooseApp.accesskey   "c">

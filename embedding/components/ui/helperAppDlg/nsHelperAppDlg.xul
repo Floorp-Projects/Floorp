@@ -34,7 +34,7 @@
   <!ENTITY % nsHelperAppDlgDTD SYSTEM "chrome://global/locale/nsHelperAppDlg.dtd" >
   %nsHelperAppDlgDTD;
 ]>            
- 
+
 <window id="nsHelperAppDlg"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -43,58 +43,51 @@
         style="width: 40em;"
         class="dialog"
         align="vertical">
-              
+
+            
     <keyset id="dialogKeys"/>
            
     <vbox>
-        <html id="intro">&intro.label;</html>     
+      <hbox flex="1">
+        <vbox flex="1">
+          <html id="intro">&intro.label;</html>     
+          <separator orient="horizontal" class="thin"/>
+          <html id="prompt">&prompt.label;</html>
+        </vbox>
+        <image id="contentTypeImage"/>
+      </hbox>
 
-        <html id="prompt">&prompt.label;</html>
-
-        <radiogroup id="option" orient="vertical" oncommand="dialog.option()">
-            <radio id="default"
-                   group="option"
-                   label="&default.label;"
-                   accesskey="&default.accesskey;"/>
-            <vbox class="indent">
-                <hbox>
-                    <textbox id="explanation" readonly="true" flex="1"/>
-                    <button id="default.set"
-                            label="&default.set.label;"
-                            accesskey="&default.set.accesskey;"
-                            oncommand="dialog.setDefault()"/>
-                </hbox>
-                <!-- Make user go to Set Default... for this (for now)
-                <checkbox id="alwaysAsk"
-                          label="&alwaysAsk.label;"
-                          accesskey="&alwaysAsk.accesskey;"
-                          checked="true"/>
-                -->
-            </vbox>
-            <radio id="different"
-                   group="option"
-                   label="&different.label;"
-                   accesskey="&different.accesskey;"/>
-        </radiogroup>
-        <vbox class="indent">
-            <radiogroup id="different-option" orient="vertical" oncommand="dialog.differentOption()">
-                <radio id="saveToDisk"
-                       group="different-option"
+      <separator orient="horizontal" class="thin"/>
+      <radiogroup id="mode" orient="vertical" oncommand="dialog.toggleChoice()">
+        <hbox flex="1">
+          <box autostretch="never" flex = "1">
+            <radio id="openUsing" flex="1"
+                   group="mode"
+                   label="&openUsing.label;"
+                   accesskey="&openUsing.accesskey;"/>
+          </box>
+               
+          <box class="indent">
+            <button id="chooseApp"
+                    class="dialog"
+                    label="&chooseApp.label;"
+                    accesskey="&chooseApp.accesskey;"
+                    oncommand="dialog.chooseApp()"/>
+          </box>
+        </hbox>
+        <vbox>
+          <box autostretch="never">
+            <radio id="saveToDisk"
+                       group="mode"
                        label="&saveToDisk.label;"
                        accesskey="&saveToDisk.accesskey;"/>
-                    <hbox>
-                        <radio id="openUsing"
-                               group="different-option"
-                               label="&openUsing.label;"
-                               accesskey="&openUsing.accesskey;"/>
-                        <textbox id="appName" flex="1" oninput="dialog.updateOKButton()"/>
-                        <button id="chooseApp"
-                                label="&chooseApp.label;"
-                                accesskey="&chooseApp.accesskey;"
-                                oncommand="dialog.chooseApp()"/>
-                    </hbox>
-            </radiogroup>
+          </box>
         </vbox>
+      </radiogroup>
+      <separator orient="horizontal" class="thin"/>
+      <box autostretch="never">
+        <checkbox id="alwaysAskMe" label="&alwaysAsk.label;" accesskey="&alwaysAsk.accesskey;"/>
+      </box>
     </vbox>
 
     <separator class="groove"/>
@@ -106,10 +99,9 @@
         <string id="brandShortName">         &brandShortName;         </string>
         <string id="intro.withDesc">         &intro.label;            </string>
         <string id="intro.noDesc">           &intro.noDesc.label;     </string>
-        <string id="explanation.saveToDisk"> &explanation.saveToDisk; </string>
-        <string id="explanation.openUsing">  &explanation.openUsing;  </string>
-        <string id="explanation.defaultApp"> &explanation.defaultApp; </string>
+        <string id="openUsingString">        &openUsing.label;  </string>
         <string id="badApp">                 &badApp;                 </string>
         <string id="badApp.title">           &badApp.title;           </string>
+        <string id="noApplicationSpecified"> &noApplicationSpecified.label;</string>
     </strings>
 </window>
