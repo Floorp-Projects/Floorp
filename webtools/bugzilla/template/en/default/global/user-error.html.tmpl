@@ -174,7 +174,8 @@
 
   [% ELSIF error == "bugs_not_changed" %]
     [% title = BLOCK %][% terms.Bugs %] Not Changed[% END %]
-    Um, you apparently did not change anything on the selected [% terms.bugs %].
+    You do not seem to have made any changes in the selected [% terms.bugs %],
+    so there is nothing to Commit.
 
   [% ELSIF error == "chart_too_large" %]
     [% title = "Chart Too Large" %]
