@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.16 1999/03/10 22:58:54 endico%mozilla.org Exp $
+# $Id: Common.pm,v 1.17 1999/04/23 19:55:04 endico%mozilla.org Exp $
 
 package LXR::Common;
 
@@ -84,8 +84,12 @@ sub urlargs {
 sub fileref {
     my ($desc, $path, $line, @args) = @_;
 
+    #$path =~ s/\+/ /;
     # jwz: URL-quote any special characters.
-    $path =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
+    # endico: except plus. plus signs are normally used to represent spaces
+    # but here we need to allow plus signs in file names for gtk+
+    # hopefully this doesn't break anything else
+    $path =~ s|([^-a-zA-Z0-9.+\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
 
     return("<a href=\"$Conf->{virtroot}/source$path".
 	   &urlargs(@args).
@@ -117,7 +121,10 @@ sub idref {
 
 sub http_wash {
     my $t = shift;
-    $t =~ s/\+/ /g;
+    # $t =~ s/\+/%2B/g;
+    #endico: don't use plus signs to represent spaces as is the normal
+    #case. we need to use them in file names for gtk+
+
     $t =~ s/\%([\da-f][\da-f])/pack("C", hex($1))/gie;
 
     # Paranoia check. Regexp-searches in Glimpse won't work.
