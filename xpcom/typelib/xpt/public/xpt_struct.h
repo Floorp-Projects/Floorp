@@ -414,11 +414,11 @@ XPT_FillParamDescriptor(XPTArena *arena,
  * interface method.
  */
 struct XPTMethodDescriptor {
-    PRUint8             flags;
     char                *name;
-    PRUint8             num_args;
     XPTParamDescriptor  *params;
     XPTParamDescriptor  *result;
+    PRUint8             flags;
+    PRUint8             num_args;
 };
 
 /* flag bits -- jband and fur were right, and I was miserably wrong */
