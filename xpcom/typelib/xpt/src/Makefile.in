@@ -56,8 +56,8 @@ GARBAGE		+= libhostxpt.$(LIB_SUFFIX) $(HOSTOBJS)
 
 libhostxpt.$(LIB_SUFFIX): $(HOSTOBJS)
 	rm -f $@
-	$(AR) $(AR_FLAGS) $@ $(HOSTOBJS)
-	$(RANLIB) $@
+	$(HOST_AR) $(AR_FLAGS) $@ $(HOSTOBJS)
+	$(HOST_RANLIB) $@
 
 ifdef HOST_NSPR_MDCPUCFG
 HOST_CFLAGS     += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
