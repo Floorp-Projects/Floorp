@@ -5,13 +5,16 @@
 nsIWeakReference*
 NS_GetWeakReference( nsISupports* aInstance, nsresult* aResult )
 	{
-		nsIWeakReference* result = 0;
-		nsCOMPtr<nsISupportsWeakReference> factory = do_QueryInterface(aInstance, aResult);
+		nsresult status;
+		if ( !aResult )
+			aResult = &status;
 
-		nsIWeakReference* w
-		if ( factory )
-			result = factory->GetWeakReference();
-		return result;
+		nsCOMPtr<nsISupportsWeakReference> factoryP = do_QueryInterface(aInstance, aResult);
+
+		nsIWeakReference* weakP = 0;
+		if ( factoryP )
+			status = factoryP->GetWeakReference(&weakP);
+		return weakP;
 	}
 
 nsresult
@@ -39,7 +42,7 @@ nsSupportsWeakReference::GetWeakReference( nsIWeakReference** aInstancePtr )
 nsrefcnt
 nsWeakReference::AddRef()
 	{
-		return ++mRefCount
+		return ++mRefCount;
 	}
 
 nsrefcnt
@@ -79,5 +82,5 @@ nsWeakReference::QueryInterface( const nsIID& aIID, void** aInstancePtr )
 nsresult
 nsWeakReference::QueryReference( const nsIID& aIID, void** aInstancePtr )
 	{
-		return mReferent ? mReferent->QueryInterface(aIID, aInstancePtr) : NS_ERROR_NULL_PTR;
+		return mReferent ? mReferent->QueryInterface(aIID, aInstancePtr) : NS_ERROR_NULL_POINTER;
 	}
