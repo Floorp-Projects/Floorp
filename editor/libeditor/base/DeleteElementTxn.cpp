@@ -87,13 +87,11 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 
 #ifdef NS_DEBUG
   // begin debug output
-  nsCOMPtr<nsIDOMElement> element;
-  element = do_QueryInterface(mElement);
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mElement);
   nsAutoString elementTag(NS_LITERAL_STRING("text node"));
   if (element)
     element->GetTagName(elementTag);
-  nsCOMPtr<nsIDOMElement> parentElement;
-  parentElement = do_QueryInterface(mParent);
+  nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(mParent);
   nsAutoString parentElementTag(NS_LITERAL_STRING("text node"));
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
@@ -102,10 +100,8 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
   p = ToNewCString(parentElementTag);
   if (c&&p)
   {
-#ifdef NS_DEBUG
     if (gNoisy)
       printf("  DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
-#endif
 
     nsCRT::free(c);
     nsCRT::free(p);
@@ -122,9 +118,7 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
     mRangeUpdater->SelAdjDeleteNode(mElement);
 
   nsCOMPtr<nsIDOMNode> resultNode;
-  result = mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
-
-  return result;
+  return mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
 }
 
 NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
@@ -138,13 +132,11 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
 
 #ifdef NS_DEBUG
   // begin debug output
-  nsCOMPtr<nsIDOMElement> element;
-  element = do_QueryInterface(mElement);
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mElement);
   nsAutoString elementTag(NS_LITERAL_STRING("text node"));
   if (element)
     element->GetTagName(elementTag);
-  nsCOMPtr<nsIDOMElement> parentElement;
-  parentElement = do_QueryInterface(mParent);
+  nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(mParent);
   nsAutoString parentElementTag(NS_LITERAL_STRING("text node"));
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
@@ -165,8 +157,7 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
 #endif
 
   nsCOMPtr<nsIDOMNode> resultNode;
-  nsresult result = mParent->InsertBefore(mElement, mRefNode, getter_AddRefs(resultNode));
-  return result;
+  return mParent->InsertBefore(mElement, mRefNode, getter_AddRefs(resultNode));
 }
 
 NS_IMETHODIMP DeleteElementTxn::RedoTransaction(void)
@@ -182,15 +173,14 @@ NS_IMETHODIMP DeleteElementTxn::RedoTransaction(void)
     mRangeUpdater->SelAdjDeleteNode(mElement);
 
   nsCOMPtr<nsIDOMNode> resultNode;
-  nsresult result = mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
-  return result;
+  return mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
 }
 
 
 NS_IMETHODIMP DeleteElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
-  if (nsnull!=aDidMerge)
-    *aDidMerge=PR_FALSE;
+  if (aDidMerge)
+    *aDidMerge = PR_FALSE;
   return NS_OK;
 }
 
