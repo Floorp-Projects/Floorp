@@ -79,6 +79,7 @@
 #include "nsIHTMLToTextSink.h"
 #include "nsIDocumentEncoder.h" 
 
+#include "nsIncompleteGamma.h"
 #include <math.h>
 
 static PRLogModuleInfo *BayesianFilterLogModule = nsnull;
@@ -923,21 +924,28 @@ PR_STATIC_CALLBACK(int) compareTokens(const void* p1, const void* p2, void* /* d
 inline double dmax(double x, double y) { return (x > y ? x : y); }
 inline double dmin(double x, double y) { return (x < y ? x : y); }
 
-double chi2Q (double x2, PRUint32 v) 
+// Chi square functions are implemented by an incomplete gamma function.
+// Note that chi2P's callers multiply the arguments by 2 but chi2P
+// divides them by 2 again. Inlining chi2P gives the compiler a
+// chance to notice this.
+
+// Both chi2P and nsIncompleteGammaP set *error negative on domain
+// errors and nsIncompleteGammaP sets it posivive on internal errors.
+// This may be useful but the chi2P callers treat any error as fatal.
+
+// Note that converting unsigned ints to floating point can be slow on
+// some platforms (like Intel) so use signed quantities for the numeric
+// routines.
+static inline double chi2P (double chi2, double nu, PRInt32 *error)
 {
-  PRUint32 i;
-  double m = x2 / 2.0;
-  double sum = exp(-m);
-  double term = sum;
-
-  NS_ASSERTION(!(v & 1), "chi2Q called with odd value");
-  for (i=1; i < v/2; ++i) 
-  {
-    term *= m / i;
-    sum += term;
-  }
-
-  return dmin(sum,1.0);
+    // domain checks; set error and return a dummy value
+    if (chi2 < 0.0 || nu <= 0.0)
+    {
+        *error = -1;
+        return 0.0;
+    }
+    // reversing the arguments is intentional
+    return nsIncompleteGammaP (nu/2.0, chi2/2.0, error);
 }
 
 void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* messageURI,
@@ -1037,12 +1045,18 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
 
     if (goodclues > 0) 
     {
-      S = 1.0 - chi2Q(-2.0 * S, 2 * goodclues);
-      H = 1.0 - chi2Q(-2.0 * H, 2 * goodclues);
-      prob = (S-H +1.0) / 2.0;
+        PRInt32 chi_error;
+        S = chi2P(-2.0 * S, 2.0 * goodclues, &chi_error);
+        if (!chi_error)
+            H = chi2P(-2.0 * H, 2.0 * goodclues, &chi_error);
+        // if any error toss the entire calculation
+        if (!chi_error)
+            prob = (S-H +1.0) / 2.0;
+        else
+            prob = 0.5;
     } 
     else 
-      prob = 0.5;
+        prob = 0.5;
 
     PRBool isJunk = (prob >= mJunkProbabilityThreshold);
     PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("%s is junk probability = (%f)  HAM SCORE:%f SPAM SCORE:%f", messageURI, prob,H,S));
