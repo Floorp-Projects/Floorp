@@ -819,7 +819,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             if(dwSetupType != ST_RADIO0)
             {
               ResetComponentAttributes(szFileIniConfig);
-              SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
+              SiCNodeSetItemsSelected(ST_RADIO0, diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
             }
 
             dwSetupType     = ST_RADIO0;
@@ -830,7 +830,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             if(dwSetupType != ST_RADIO1)
             {
               ResetComponentAttributes(szFileIniConfig);
-              SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
+              SiCNodeSetItemsSelected(ST_RADIO1, diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
             }
 
             dwSetupType     = ST_RADIO1;
@@ -841,7 +841,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             if(dwSetupType != ST_RADIO2)
             {
               ResetComponentAttributes(szFileIniConfig);
-              SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
+              SiCNodeSetItemsSelected(ST_RADIO2, diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
             }
 
             dwSetupType     = ST_RADIO2;
@@ -852,7 +852,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             if(dwSetupType != ST_RADIO3)
             {
               ResetComponentAttributes(szFileIniConfig);
-              SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
+              SiCNodeSetItemsSelected(ST_RADIO3, diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
             }
 
             dwSetupType     = ST_RADIO3;

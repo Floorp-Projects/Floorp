@@ -2217,7 +2217,7 @@ BOOL IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected)
   return(FALSE);
 }
 
-void SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
+void SiCNodeSetItemsSelected(DWORD dwSetupType, DWORD dwItems, DWORD *dwItemsSelected)
 {
   DWORD i;
   siC   *siCTemp;
@@ -2230,6 +2230,13 @@ void SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
       if((siCTemp->lRandomInstallPercentage != 0) &&
          (siCTemp->lRandomInstallPercentage <= siCTemp->lRandomInstallValue))
         siCTemp->dwAttributes &= ~SIC_SELECTED;
+      else if(sgProduct.dwCustomType != dwSetupType)
+        // If the user selected the Custom Setup Type, then do not set the
+        // Selected bit.  Leave as default - which is what is set in
+        // config.ini originally.
+        // Else, make sure it's set because this component is listed in
+        // the dwSetupType's section to be installed.
+        siCTemp->dwAttributes |= SIC_SELECTED;
     }
     else
       siCTemp->dwAttributes &= ~SIC_SELECTED;
@@ -4500,25 +4507,25 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   {
     dwSetupType     = ST_RADIO0;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
+    SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 1") == 0) && diSetupType.stSetupType1.bVisible)
   {
     dwSetupType     = ST_RADIO1;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
+    SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 2") == 0) && diSetupType.stSetupType2.bVisible)
   {
     dwSetupType     = ST_RADIO2;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
+    SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
   }
   else if((lstrcmpi(szBuf, "Setup Type 3") == 0) && diSetupType.stSetupType3.bVisible)
   {
     dwSetupType     = ST_RADIO3;
     dwTempSetupType = dwSetupType;
-    SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
+    SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
   }
   else
   {
@@ -4526,25 +4533,25 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     {
       dwSetupType     = ST_RADIO0;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
+      SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType0.dwCItems, diSetupType.stSetupType0.dwCItemsSelected);
     }
     else if(diSetupType.stSetupType1.bVisible)
     {
       dwSetupType     = ST_RADIO1;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
+      SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType1.dwCItems, diSetupType.stSetupType1.dwCItemsSelected);
     }
     else if(diSetupType.stSetupType2.bVisible)
     {
       dwSetupType     = ST_RADIO2;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
+      SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType2.dwCItems, diSetupType.stSetupType2.dwCItemsSelected);
     }
     else if(diSetupType.stSetupType3.bVisible)
     {
       dwSetupType     = ST_RADIO3;
       dwTempSetupType = dwSetupType;
-      SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
+      SiCNodeSetItemsSelected(dwSetupType, diSetupType.stSetupType3.dwCItems, diSetupType.stSetupType3.dwCItemsSelected);
     }
   }
 
