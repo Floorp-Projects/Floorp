@@ -59,7 +59,7 @@ function addEntryToRegistry(category, entry, value)
     var categorySubtree;
     try {
         categorySubtree = registry.getSubtreeRaw(categoriesKey, category);
-    } catch (e : 
+    } catch (e if
              e instanceof Components.interfaces.nsIXPCException &&
              e.result === 0x80510003 /* XXX NS_ERROR_REG_NOT_FOUND */) { 
         categorySubtree = registry.addSubtreeRaw(categoriesKey, category);
@@ -90,7 +90,7 @@ function deleteEntryFromRegistry(category, entry)
     try {
         var categorySubtree = registry.getSubtreeRaw(categoriesKey, category);
         registry.deleteValue(categorySubtree, entry);
-    } catch (e :
+    } catch (e if
              e instanceof Components.interfaces.nsIXPCException &&
              e.result === 0x80510003 /* XXX NS_ERROR_REG_NOT_FOUND */) {
         return false;
@@ -112,7 +112,7 @@ proto.deleteCategoryEntry = function (category, entry, persist) {
 function deleteCategoryFromRegistry(category) {
     try {
         registry.removeSubtreeRaw(categoriesKey, category);
-    } catch (e :
+    } catch (e if
              e instanceof Components.interfaces.nsIXPCException &&
              e.result === 0x80510003 /* XXX NS_ERROR_REG_NOT_FOUND */) {
         return false;
@@ -167,7 +167,7 @@ proto.loadRegistryData = function() {
         categoriesKey =
             registry.getSubtree(nsIRegistry.Common,
                                 "Software/Mozilla/XPCOM/Categories");
-    } catch (e :
+    } catch (e if
              e instanceof Components.interfaces.nsIXPCException &&
              e.result === 0x80510003 /* XXX NS_ERROR_REG_NOT_FOUND */) {
         dump("creating Categories registry point\n");
@@ -196,7 +196,7 @@ proto.loadRegistryData = function() {
         try {
             node = en.currentItem();
             node = node.QueryInterface(Components.interfaces.nsIRegistryNode);
-        } catch (e  : e instanceof Components.interfaces.nsIXPCException) {
+        } catch (e if e instanceof Components.interfaces.nsIXPCException) {
             try { en.next(); } catch (e) { }
             continue;
         }
@@ -213,7 +213,7 @@ proto.loadRegistryData = function() {
             try {
                 entry = catenum.currentItem();
                 entry = entry.QueryInterface(Components.interfaces.nsIRegistryValue);
-            } catch (e : e instanceof Components.interfaces.nsIXPCException) {
+            } catch (e if e instanceof Components.interfaces.nsIXPCException) {
                 dump("not a value?\n");
                 try { catenum.next(); } catch (e) { }
                 continue;
