@@ -60,13 +60,6 @@
 // change the definition of nscoord in gfx/idl/gfxtypes.idl.
 //#define NS_COORD_IS_FLOAT
 
-inline void VERIFY_COORD(nscoord aCoord) {
-#ifdef NS_COORD_IS_FLOAT
-  NS_ASSERTION(floorf(aCoord) == aCoord,
-               "Coords cannot have fractions");
-#endif
-}
-
 inline float NS_IEEEPositiveInfinity() {
   float f;
   *(PRUint32*)&f = 0x7F800000;
@@ -87,6 +80,13 @@ typedef PRInt32 nscoord;
 #endif
 
 #define nscoord_MIN (-nscoord_MAX)
+
+inline void VERIFY_COORD(nscoord aCoord) {
+#ifdef NS_COORD_IS_FLOAT
+  NS_ASSERTION(floorf(aCoord) == aCoord,
+               "Coords cannot have fractions");
+#endif
+}
 
 inline nscoord NSCoordMultiply(nscoord aCoord, float aVal) {
   VERIFY_COORD(aCoord);
