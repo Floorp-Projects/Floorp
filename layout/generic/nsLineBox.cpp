@@ -265,19 +265,6 @@ nsLineBox::FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame)
   return nsnull;
 }
 
-void
-nsLineBox::UnplaceFloaters(nsISpaceManager* aSpaceManager)
-{
-  if (nsnull != mFloaters) {
-    PRInt32 i, n = mFloaters->Count();
-    for (i = 0; i < n; i++) {
-      nsPlaceholderFrame* pf = (nsPlaceholderFrame*) mFloaters->ElementAt(i);
-      nsIFrame* floater = pf->GetAnchoredItem();
-      aSpaceManager->RemoveRegion(floater);
-    }
-  }
-}
-
 #ifdef NS_DEBUG
 PRBool
 nsLineBox::CheckIsBlock() const

@@ -150,8 +150,6 @@ public:
 
   PRBool Contains(nsIFrame* aFrame) const;
 
-  void UnplaceFloaters(nsISpaceManager* aSpaceManager);
-
 #ifdef NS_DEBUG
   void Verify();
 #endif
