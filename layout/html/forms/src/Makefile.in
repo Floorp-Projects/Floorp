@@ -63,6 +63,7 @@ override NO_STATIC_LIB=
 CHROME_DIR	= locales/en-US
 CHROME_L10N_DIR	= communicator/locale/layout
 CHROME_L10N	= ./HtmlForm.properties
+CHROME_L10N = ./ImageDocument.properties
 
 include $(topsrcdir)/config/rules.mk
 
