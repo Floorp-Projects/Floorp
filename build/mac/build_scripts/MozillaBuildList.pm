@@ -602,6 +602,7 @@ sub BuildClientDist()
 	    
 	    #LIBIMG2
 	    InstallFromManifest(":mozilla:modules:libpr0n:public:MANIFEST_IDL",            "$distdirectory:libimg2:");
+	    InstallFromManifest(":mozilla:modules:libpr0n:decoders:icon:MANIFEST_IDL",     "$distdirectory:icondecoder:");
     }
     
     #PLUGIN
@@ -1043,6 +1044,7 @@ sub BuildIDLProjects()
 	if ($main::options{useimg2}) {
 	    BuildIDLProject(":mozilla:gfx2:macbuild:gfx2IDL.mcp",                       "gfx2");      
 	    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:libimg2IDL.mcp",         "libimg2");
+	    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:icondecoderIDL.mcp",         "icondecoder");
     }
     
     BuildIDLProject(":mozilla:modules:plugin:macbuild:pluginIDL.mcp",               "plugin");
@@ -1320,6 +1322,7 @@ sub BuildImglib2Projects()
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:pngdecoder2.mcp",         "pngdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:gifdecoder2.mcp",        "gifdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
         BuildOneProject(":mozilla:modules:libpr0n:macbuild:jpegdecoder2.mcp",       "jpegdecoder2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:modules:libpr0n:macbuild:icondecoder.mcp",       "icondecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
         
         # MNG
         if ($main::options{mng})
