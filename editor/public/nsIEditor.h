@@ -27,7 +27,7 @@ class nsIDOMNode;
 class nsITransaction;
 class nsIEditActionListener;
 class nsIFileSpec;
-class nsIDOMTextRangeList;
+class nsIPrivateTextRangeList;
 class nsICSSStyleSheet;
 class nsIOutputStream;
 class nsIDocumentStateListener;
@@ -35,7 +35,7 @@ class nsIDOMDocument;
 class nsIDOMSelection;
 class nsIPresShell;
 class nsString;
-
+struct nsTextEventReply;
 /*
 Editor interface to outside world
 */
@@ -203,7 +203,7 @@ public:
    * BeginComposition must be called prior to this.
    */
 
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList) = 0;
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList, nsTextEventReply* aReply) = 0;
 
   /**
    * BeginComposition() Handles the end of inline input composition.

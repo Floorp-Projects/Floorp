@@ -21,7 +21,7 @@
 
 #include "EditTxn.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMTextRangeList.h"
+#include "nsIPrivateTextRange.h"
 #include "nsCOMPtr.h"
 
 // {D4D25721-2813-11d3-9EA3-0060089FE59B}
@@ -59,7 +59,7 @@ public:
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
                   PRUint32 aOffset,
 				  PRUint32 aReplaceLength,
-				  nsIDOMTextRangeList* aTextRangeList,
+				  nsIPrivateTextRangeList* aTextRangeList,
                   const nsString& aString,
                   nsIPresShell* aPresShell);
 
@@ -87,7 +87,7 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /** return the string data associated with this transaction */
-  NS_IMETHOD GetData(nsString& aResult, nsIDOMTextRangeList** aTextRangeList);
+  NS_IMETHOD GetData(nsString& aResult, nsIPrivateTextRangeList** aTextRangeList);
 
   /** must be called before any IMETextTxn is instantiated */
   static nsresult ClassInit();
@@ -109,7 +109,7 @@ protected:
   nsString mStringToInsert;
 
   /** the range list **/
-  nsCOMPtr<nsIDOMTextRangeList>	mRangeList;
+  nsCOMPtr<nsIPrivateTextRangeList>	mRangeList;
 
   /** the presentation shell, which we'll need to get the selection */
   nsIPresShell* mPresShell;

@@ -26,7 +26,7 @@
 #include "nsIWidget.h"
 #include "nsIWebShell.h"
 #include "nsIPresShell.h"
-#include "nsDOMTextRange.h"
+#include "nsPrivateTextRange.h"
 #include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
@@ -36,6 +36,7 @@ static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMUIEventIID, NS_IDOMUIEVENT_IID);
 static NS_DEFINE_IID(kIDOMNSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
+static NS_DEFINE_IID(kIPrivateTextEventIID, NS_IPRIVATETEXTEVENT_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static char* mEventNames[] = {
@@ -63,19 +64,19 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
 	  // build the range list -- ranges need to be DOM-ified since the IME transaction
 	  //  will hold a ref, the widget representation isn't persistent
 	  //
-	  nsIDOMTextRange** tempTextRangeList = new nsIDOMTextRange*[((nsTextEvent*)aEvent)->rangeCount];
+	  nsIPrivateTextRange** tempTextRangeList = new nsIPrivateTextRange*[((nsTextEvent*)aEvent)->rangeCount];
 	  if (tempTextRangeList!=nsnull) {
 		for(PRUint16 i=0;i<((nsTextEvent*)aEvent)->rangeCount;i++) {
-			nsDOMTextRange* tempDOMTextRange = new nsDOMTextRange((((nsTextEvent*)aEvent)->rangeArray[i]).mStartOffset,
+			nsPrivateTextRange* tempPrivateTextRange = new nsPrivateTextRange((((nsTextEvent*)aEvent)->rangeArray[i]).mStartOffset,
 														(((nsTextEvent*)aEvent)->rangeArray[i]).mEndOffset,
 														(((nsTextEvent*)aEvent)->rangeArray[i]).mRangeType);
-			if (tempDOMTextRange!=nsnull) {
-				tempDOMTextRange->AddRef();
-				tempTextRangeList[i] = (nsIDOMTextRange*)tempDOMTextRange;
+			if (tempPrivateTextRange!=nsnull) {
+				tempPrivateTextRange->AddRef();
+				tempTextRangeList[i] = (nsIPrivateTextRange*)tempPrivateTextRange;
 			}
 		}
 		
-		mTextRange = (nsIDOMTextRangeList*) new nsDOMTextRangeList(((nsTextEvent*)aEvent)->rangeCount,tempTextRangeList);
+		mTextRange = (nsIPrivateTextRangeList*) new nsPrivateTextRangeList(((nsTextEvent*)aEvent)->rangeCount,tempTextRangeList);
 		if (mTextRange!=nsnull)  mTextRange->AddRef();
 	  }
   }
@@ -121,6 +122,11 @@ nsresult nsDOMEvent::QueryInterface(const nsIID& aIID,
     *aInstancePtrResult = (void*) ((nsIPrivateDOMEvent*)this);
     AddRef();
     return NS_OK;
+  }
+  if (aIID.Equals(kIPrivateTextEventIID)) {
+	*aInstancePtrResult=(void*)((nsIPrivateTextEvent*)this);
+	AddRef();
+	return NS_OK;
   }
   return NS_NOINTERFACE;
 }
@@ -243,7 +249,7 @@ NS_METHOD nsDOMEvent::GetText(nsString& aText)
 	return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsDOMEvent::GetInputRange(nsIDOMTextRangeList** aInputRange)
+NS_METHOD nsDOMEvent::GetInputRange(nsIPrivateTextRangeList** aInputRange)
 {
 	if (mEvent->message == NS_TEXT_EVENT) {
 		*aInputRange = mTextRange;
@@ -253,8 +259,13 @@ NS_METHOD nsDOMEvent::GetInputRange(nsIDOMTextRangeList** aInputRange)
 	return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsDOMEvent::SetInputRange(nsIDOMTextRangeList* aInputRange)
+NS_METHOD nsDOMEvent::GetEventReply(nsTextEventReply** aReply)
 {
+	if (mEvent->message==NS_TEXT_EVENT) {
+			*aReply = &(((nsTextEvent*)mEvent)->theReply);
+			return NS_OK;
+	}
+
 	return NS_ERROR_FAILURE;
 }
 

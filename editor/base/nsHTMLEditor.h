@@ -106,7 +106,7 @@ public:
   NS_IMETHOD InsertHTML(const nsString& aInputString);
 
   NS_IMETHOD BeginComposition(void);
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRange);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRange, nsTextEventReply* aReply);
   NS_IMETHOD EndComposition(void);
 
   NS_IMETHOD OutputToString(nsString& aOutputString,

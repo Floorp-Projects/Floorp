@@ -28,6 +28,8 @@ EXPORTS =			    \
 	nsIEventListenerManager.h   \
 	nsIEventStateManager.h	    \
 	nsIPrivateDOMEvent.h	    \
+	nsIPrivateTextEvent.h		\
+	nsIPrivateTextRange.h		\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

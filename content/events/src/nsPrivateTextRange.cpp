@@ -16,12 +16,12 @@
  * Reserved.
  */
 
-#include "nsDOMTextRange.h"
+#include "nsPrivateTextRange.h"
 
-static NS_DEFINE_IID(kIDOMTextRange, NS_IDOMTEXTRANGE_IID);
-static NS_DEFINE_IID(kIDOMTextRangeList,NS_IDOMTEXTRANGELIST_IID);
+static NS_DEFINE_IID(kIPrivateTextRange, NS_IPRIVATETEXTRANGE_IID);
+static NS_DEFINE_IID(kIPrivateTextRangeList,NS_IPRIVATETEXTRANGELIST_IID);
 
-nsDOMTextRange::nsDOMTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd, PRUint16 aRangeType)
+nsPrivateTextRange::nsPrivateTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd, PRUint16 aRangeType)
 :	mRangeStart(aRangeStart),
 	mRangeEnd(aRangeEnd),
 	mRangeType(aRangeType)
@@ -29,23 +29,23 @@ nsDOMTextRange::nsDOMTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd, PRUint1
 	NS_INIT_REFCNT();
 }
 
-nsDOMTextRange::~nsDOMTextRange(void)
+nsPrivateTextRange::~nsPrivateTextRange(void)
 {
 
 }
 
-NS_IMPL_ADDREF(nsDOMTextRange)
-NS_IMPL_RELEASE(nsDOMTextRange)
+NS_IMPL_ADDREF(nsPrivateTextRange)
+NS_IMPL_RELEASE(nsPrivateTextRange)
 
-nsresult nsDOMTextRange::QueryInterface(const nsIID& aIID,
+nsresult nsPrivateTextRange::QueryInterface(const nsIID& aIID,
                                        void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDOMTextRange)) {
-    *aInstancePtrResult = (void*) ((nsIDOMTextRange*)this);
+  if (aIID.Equals(kIPrivateTextRange)) {
+    *aInstancePtrResult = (void*) ((nsIPrivateTextRange*)this);
     AddRef();
     return NS_OK;
   }
@@ -53,44 +53,44 @@ nsresult nsDOMTextRange::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-NS_METHOD nsDOMTextRange::GetRangeStart(PRUint16* aRangeStart)
+NS_METHOD nsPrivateTextRange::GetRangeStart(PRUint16* aRangeStart)
 {
 	*aRangeStart = mRangeStart;
 	return NS_OK;
 }
 
-NS_METHOD nsDOMTextRange::SetRangeStart(PRUint16 aRangeStart) 
+NS_METHOD nsPrivateTextRange::SetRangeStart(PRUint16 aRangeStart) 
 {
 	mRangeStart = aRangeStart;
 	return NS_OK;
 }
 
-NS_METHOD nsDOMTextRange::GetRangeEnd(PRUint16* aRangeEnd)
+NS_METHOD nsPrivateTextRange::GetRangeEnd(PRUint16* aRangeEnd)
 {
 	*aRangeEnd = mRangeEnd;
 	return NS_OK;
 }
 
-NS_METHOD nsDOMTextRange::SetRangeEnd(PRUint16 aRangeEnd)
+NS_METHOD nsPrivateTextRange::SetRangeEnd(PRUint16 aRangeEnd)
 {
 	mRangeEnd = aRangeEnd;
 	return NS_OK;
 }
 
-NS_METHOD nsDOMTextRange::GetRangeType(PRUint16* aRangeType)
+NS_METHOD nsPrivateTextRange::GetRangeType(PRUint16* aRangeType)
 {
 	*aRangeType = mRangeType;
 	return NS_OK;
 }
 
-NS_METHOD nsDOMTextRange::SetRangeType(PRUint16 aRangeType)
+NS_METHOD nsPrivateTextRange::SetRangeType(PRUint16 aRangeType)
 {
 	mRangeType = aRangeType;
 	return NS_OK;
 }
 
 
-nsDOMTextRangeList::nsDOMTextRangeList(PRUint16 aLength,nsIDOMTextRange** aList)
+nsPrivateTextRangeList::nsPrivateTextRangeList(PRUint16 aLength,nsIPrivateTextRange** aList)
 :	mLength(aLength),
 	mList(aList)
 {
@@ -100,25 +100,25 @@ nsDOMTextRangeList::nsDOMTextRangeList(PRUint16 aLength,nsIDOMTextRange** aList)
 	NS_INIT_REFCNT();
 }
 
-nsDOMTextRangeList::~nsDOMTextRangeList(void)
+nsPrivateTextRangeList::~nsPrivateTextRangeList(void)
 {
 	int	i;
 	for(i=0;i<mLength;i++)
 		mList[i]->Release();
 }
 
-NS_IMPL_ADDREF(nsDOMTextRangeList)
-NS_IMPL_RELEASE(nsDOMTextRangeList)
+NS_IMPL_ADDREF(nsPrivateTextRangeList)
+NS_IMPL_RELEASE(nsPrivateTextRangeList)
 
-nsresult nsDOMTextRangeList::QueryInterface(const nsIID& aIID,
+nsresult nsPrivateTextRangeList::QueryInterface(const nsIID& aIID,
                                        void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDOMTextRangeList)) {
-    *aInstancePtrResult = (void*) ((nsIDOMTextRangeList*)this);
+  if (aIID.Equals(kIPrivateTextRangeList)) {
+    *aInstancePtrResult = (void*) ((nsIPrivateTextRangeList*)this);
     AddRef();
     return NS_OK;
   }
@@ -126,13 +126,13 @@ nsresult nsDOMTextRangeList::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-NS_METHOD nsDOMTextRangeList::GetLength(PRUint16* aLength)
+NS_METHOD nsPrivateTextRangeList::GetLength(PRUint16* aLength)
 {
 	*aLength = mLength;
 	return NS_OK;
 }
 
-NS_METHOD nsDOMTextRangeList::Item(PRUint16 aIndex, nsIDOMTextRange** aReturn)
+NS_METHOD nsPrivateTextRangeList::Item(PRUint16 aIndex, nsIPrivateTextRange** aReturn)
 {
 	if (aIndex>mLength) {
 		*aReturn = nsnull;

@@ -26,7 +26,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMTextRangeList.h"
+#include "nsIPrivateTextRange.h"
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
 #include "nsITransactionManager.h"
@@ -185,7 +185,7 @@ public:
 
   NS_IMETHOD BeginComposition(void);
 
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList, nsTextEventReply *aReply);
 
   NS_IMETHOD EndComposition(void);
   
@@ -316,7 +316,7 @@ protected:
                                     InsertTextTxn ** aTxn);
 
   NS_IMETHOD CreateTxnForIMEText(const nsString & aStringToInsert,
-								 nsIDOMTextRangeList* aTextRangeList,
+								 nsIPrivateTextRangeList* aTextRangeList,
                                  IMETextTxn ** aTxn);
 
   /** create a transaction for adding a style sheet
@@ -334,7 +334,7 @@ protected:
     */
   NS_IMETHOD DoInitialInsert(const nsString & aStringToInsert);
 
-  NS_IMETHOD DoInitialInputMethodInsert(const nsString& aStringToInsert,nsIDOMTextRangeList* aTextRangeList);
+  NS_IMETHOD DoInitialInputMethodInsert(const nsString& aStringToInsert,nsIPrivateTextRangeList* aTextRangeList);
 
 
   NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
@@ -373,7 +373,7 @@ protected:
 
   NS_IMETHOD DebugDumpContent() const;
 
-  NS_IMETHOD SetInputMethodText(const nsString& aStringToInsert, nsIDOMTextRangeList* aTextRangeList);
+  NS_IMETHOD SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRangeList* aTextRangeList);
 
   // called each time we modify the document. Increments the mod
   // count of the doc.

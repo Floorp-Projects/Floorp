@@ -810,7 +810,7 @@ nsJSEditorLog::BeginComposition(void)
 }
 
 NS_IMETHODIMP
-nsJSEditorLog::SetCompositionString(const nsString& aCompositionString,nsIDOMTextRangeList* aTextRangeList)
+nsJSEditorLog::SetCompositionString(const nsString& aCompositionString,nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

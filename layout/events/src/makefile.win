@@ -30,18 +30,18 @@ CPPSRCS=    nsEventListenerManager.cpp  \
 	    nsEventStateManager.cpp  \
 	    nsDOMEvent.cpp		\
 	    nsDOMEventsIIDs.cpp		\
-		nsDOMTextRange.cpp		\
+		nsPrivateTextRange.cpp		\
 	    $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 	    .\$(OBJDIR)\nsEventStateManager.obj  \
 	    .\$(OBJDIR)\nsDOMEvent.obj	    \
 	    .\$(OBJDIR)\nsDOMEventsIIDs.obj	    \
-	    .\$(OBJDIR)\nsDOMTextRange.obj	    \
+	    .\$(OBJDIR)\nsPrivateTextRange.obj	    \
 	    $(NULL)
 
 
-EXPORTS= nsEventListenerManager.h nsEventStateManager.h	nsDOMEvent.h nsDOMEventsIIDs.h nsDOMTextRange.h
+EXPORTS= nsEventListenerManager.h nsEventStateManager.h	nsDOMEvent.h nsDOMEventsIIDs.h nsPrivateTextRange.h
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
   -I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\..\html\base\src -I$(PUBLIC)\netlib

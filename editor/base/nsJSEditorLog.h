@@ -143,7 +143,7 @@ public:
   NS_IMETHOD JoinTableCells();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD BeginComposition(void);
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
   NS_IMETHOD EndComposition(void);
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
   NS_IMETHOD StopLogging();

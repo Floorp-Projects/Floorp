@@ -114,7 +114,7 @@ public:
 
 // Input/Output
   NS_IMETHOD BeginComposition(void);
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aRangeList);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aRangeList, nsTextEventReply* aReply);
   NS_IMETHOD EndComposition(void);
 
   NS_IMETHOD OutputToString(nsString& aOutputString,
