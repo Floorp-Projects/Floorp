@@ -994,7 +994,6 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                         }
                     }
                 }
-				mDatabase->Commit(kLargeCommit);
             }
         }
     }
@@ -2284,10 +2283,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURL *aUrl, nsresult aExitCode)
             case nsIImapUrl::nsImapDeleteMsg:
             case nsIImapUrl::nsImapOnlineMove:
             case nsIImapUrl::nsImapOnlineCopy:
-#ifdef NOT_YET
                 if (m_transactionManager)
                     m_transactionManager->Do(m_pendingUndoTxn);
-#endif
                 m_pendingUndoTxn = null_nsCOMPtr();
                 break;
             default:
