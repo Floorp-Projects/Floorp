@@ -1368,7 +1368,7 @@ Edit <a href="userprefs.cgi">prefs</a>
             $html .= ", <a href=\"editgroups.cgi\">groups</a>\n";
         }
         if (UserInGroup("editkeywords")) {
-            $html .= ", <a href=\"editkeywords\".cgi>keywords</a>\n";
+            $html .= ", <a href=\"editkeywords.cgi\">keywords</a>\n";
         }
         if (UserInGroup("tweakparams")) {
             $html .= "| <a href=\"sanitycheck.cgi\">Sanity&nbsp;check</a> |\n";
@@ -1403,7 +1403,7 @@ Edit <a href="userprefs.cgi">prefs</a>
         }
         $html .= "</TD></TR>\n";
     } else {
-    $html .= "</TD><TD>&nbsp;</TD><TD valign=\"middle\" align=\"right\">\n";
+        $html .= "</TD><TD>&nbsp;</TD><TD valign=\"middle\" align=\"right\">\n";
         $html .=
             " <a href=\"createaccount.cgi\">New&nbsp;account</a>\n";
         $html .=
