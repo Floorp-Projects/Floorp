@@ -31,8 +31,7 @@
 # GPL.
 # 
 
-CORE_DEPTH = ../../../..
-DEPTH = ../../../..
+CORE_DEPTH = ../../..
 
 EXPORTS = \
 	protocol.h \
@@ -63,7 +62,5 @@ endif
 #	prelib.c
 
 REQUIRES = security dbm nspr
-
-DEFINES += -DNSPR20 
 
 LIBRARY_NAME = protocol
