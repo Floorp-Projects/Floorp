@@ -63,6 +63,7 @@ nsNativeScrollbar::nsNativeScrollbar()
   : nsChildView()
   , mContent(nsnull)
   , mMediator(nsnull)
+  , mScrollbar(nsnull)
   , mValue(0)
   , mMaxValue(0)
   , mVisibleImageSize(0)
@@ -143,7 +144,7 @@ nsNativeScrollbar::DoScroll(NSScrollerPart inPart)
       newPos = oldPos - (mLineIncrement ? mLineIncrement : 1);
       if ( mMediator ) {
         BoundsCheck(0, newPos, mMaxValue);
-        mMediator->ScrollbarButtonPressed(oldPos, newPos);
+        mMediator->ScrollbarButtonPressed(mScrollbar, oldPos, newPos);
       } else {
         UpdateContentPosition(newPos);
       }
@@ -153,7 +154,7 @@ nsNativeScrollbar::DoScroll(NSScrollerPart inPart)
       newPos = oldPos + (mLineIncrement ? mLineIncrement : 1);
       if ( mMediator ) {
         BoundsCheck(0, newPos, mMaxValue);
-        mMediator->ScrollbarButtonPressed(oldPos, newPos);
+        mMediator->ScrollbarButtonPressed(mScrollbar, oldPos, newPos);
       } else {
         UpdateContentPosition(newPos); 
       }
@@ -174,7 +175,7 @@ nsNativeScrollbar::DoScroll(NSScrollerPart inPart)
         PRInt32 op = oldPos, np = mValue;
         if ( np < 0 )
           np = 0;
-        mMediator->PositionChanged(op, np);
+        mMediator->PositionChanged(mScrollbar, op, np);
       }
       break;
     
@@ -185,7 +186,7 @@ nsNativeScrollbar::DoScroll(NSScrollerPart inPart)
         PRInt32 op = oldPos, np = mValue;
         if ( np < 0 )
           np = 0;
-        mMediator->PositionChanged(op, np);
+        mMediator->PositionChanged(mScrollbar, op, np);
       }
       break;
     
@@ -202,7 +203,7 @@ nsNativeScrollbar::DoScroll(NSScrollerPart inPart)
         PRInt32 op = oldPos, np = mValue;
         if ( np < 0 )
           np = 0;
-        mMediator->PositionChanged(op, np);
+        mMediator->PositionChanged(mScrollbar, op, np);
       }
       break;
     
@@ -414,10 +415,12 @@ nsNativeScrollbar::GetNarrowSize(PRInt32* outSize)
 // care about the mediator for <outliner> so we can do row-based scrolling.
 //
 NS_IMETHODIMP
-nsNativeScrollbar::SetContent(nsIContent* inContent, nsIScrollbarMediator* inMediator)
+nsNativeScrollbar::SetContent(nsIContent* inContent, nsISupports* inScrollbar, 
+                              nsIScrollbarMediator* inMediator)
 {
   mContent = inContent;
   mMediator = inMediator;
+  mScrollbar = inScrollbar;
   
   if ( mContent ) {
     // we may have to re-create the scrollbar view as horizontal. Check the

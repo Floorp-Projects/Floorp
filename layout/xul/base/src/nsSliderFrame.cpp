@@ -267,7 +267,7 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
           nsCOMPtr<nsIScrollbarMediator> mediator;
           scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
           if (mediator) {
-            mediator->PositionChanged(GetCurrentPosition(scrollbar), current);
+            mediator->PositionChanged(scrollbarFrame, GetCurrentPosition(scrollbar), current);
           }
         }
 
@@ -833,7 +833,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
     nsCOMPtr<nsIScrollbarMediator> mediator;
     scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
     if (mediator) {
-      mediator->PositionChanged(GetCurrentPosition(scrollbar), newpos);
+      mediator->PositionChanged(scrollbarFrame, GetCurrentPosition(scrollbar), newpos);
       UpdateAttribute(scrollbar, newpos, PR_FALSE, aIsSmooth);
       CurrentPositionChanged(GetPresContext());
       return;
