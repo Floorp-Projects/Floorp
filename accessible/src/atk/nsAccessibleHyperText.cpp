@@ -41,6 +41,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccessibleHyperText.h"
 #include "nsHTMLLinkAccessibleWrap.h"
+#include "nsPIAccessNode.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
 #include "nsIServiceManager.h"
@@ -412,15 +413,18 @@ NS_IMETHODIMP nsAccessibleHyperText::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
         if (cachedAcc) {
           // Retrieved from cache
           nsCOMPtr<nsIAccessibleHyperLink> cachedLink(do_QueryInterface(cachedAcc));
-          if (cachedLink)
+          if (cachedLink) {
             *aLink = cachedLink;
+            NS_IF_ADDREF(*aLink);
+          }
         }
         if (!(*aLink)) {
           *aLink = new nsHTMLLinkAccessibleWrap(parentNode, weakShell);
-          nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(*aLink));
+          NS_ENSURE_TRUE(*aLink, NS_ERROR_OUT_OF_MEMORY);
+          NS_ADDREF(*aLink);
+          nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(*aLink));
           accessNode->Init();
         }
-        NS_IF_ADDREF(*aLink);
         break;
       }
     }
