@@ -38,7 +38,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= java
+MODULE		= liveconnect
 LIBRARY_NAME	= jsj
 EXPORT_LIBRARY = 1
 ifeq ($(OS_ARCH),WINNT)
@@ -48,6 +48,7 @@ endif
 REQUIRES	= js \
 		  xpcom \
 		  xpconnect \
+		  java \
 		  $(NULL)
 
 CSRCS		= \

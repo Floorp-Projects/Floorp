@@ -219,10 +219,11 @@ digraph G {
     unicharutil -> xpcom;
     unicharutil -> necko;
     unicharutil -> uconv;
-    java -> string;
-    java -> xpconnect;
-    java -> xpcom;
-    java -> js;
+    liveconnect -> string;
+    liveconnect -> xpconnect;
+    liveconnect -> xpcom;
+    liveconnect -> js;
+    liveconnect -> java;
     jar -> string;
     jar -> zlib;
     jar -> xpcom;
@@ -847,6 +848,7 @@ digraph G {
     oji -> dom;
     oji -> gfx;
     oji -> java;
+    oji -> liveconnect;
     oji -> docshell;
     oji -> xpconnect;
     oji -> js;
