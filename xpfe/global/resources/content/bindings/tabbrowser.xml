@@ -250,8 +250,9 @@
             // Update the URL bar.
             var loc = ({ spec: this.mCurrentBrowser.contentWindow.location.href });
             var webProgress = this.mCurrentBrowser.webProgress;
-            for (var i = 0; i < this.mProgressListeners.length; i++) {
-              var p = this.mProgressListeners[i];
+            var i, p;
+            for (i = 0; i < this.mProgressListeners.length; i++) {
+              p = this.mProgressListeners[i];
               if (p)
                 p.onLocationChange(webProgress, null, loc);
             }
@@ -265,8 +266,8 @@
             if (this.mCurrentTab.getAttribute("busy") == "true" && !this.mIsBusy) {
               this.mIsBusy = true;
               var webProgress = this.mCurrentBrowser.webProgress;
-              for (var i = 0; i < this.mProgressListeners.length; i++) {
-                var p = this.mProgressListeners[i];
+              for (i = 0; i < this.mProgressListeners.length; i++) {
+                p = this.mProgressListeners[i];
                 if (p)
                   p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_START | nsIWebProgressListener.STATE_IS_NETWORK, 0);
               }
@@ -277,8 +278,8 @@
             if (this.mCurrentTab.getAttribute("busy") != "true" && this.mIsBusy) {
               this.mIsBusy = false;
               var webProgress = this.mCurrentBrowser.webProgress;
-              for (var i = 0; i < this.mProgressListeners.length; i++) {
-                var p = this.mProgressListeners[i];
+              for (i = 0; i < this.mProgressListeners.length; i++) {
+                p = this.mProgressListeners[i];
                 if (p)
                   p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_STOP | nsIWebProgressListener.STATE_IS_NETWORK, 0);
               }
@@ -338,9 +339,9 @@
               }
 
               // Wire up a progress listener to our tab.
-              var t = (this.mTabProgressListener)(this, this.mCurrentTab);
-              this.webProgress.addProgressListener(t);
-              this.mTabListeners[0] = t;
+              var listener = (this.mTabProgressListener)(this, this.mCurrentTab);
+              this.webProgress.addProgressListener(listener);
+              this.mTabListeners[0] = listener;
             }
 
             var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
