@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *  John Wolfe <wolfe@lobo.us>
+ * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -47,19 +48,50 @@
 //////////////////////////////////////////////////////////
 
 // From asswert.cpp
+#ifdef _assert
+#undef _assert
+#endif
 #define _assert		mozce_assert
+
+#ifdef assert
+#undef assert
+#endif
 #define assert		mozce_assert
 
+
 // From direct.cpp
+#ifdef mkdir
+#undef mkdir
+#endif
 #define mkdir		mozce_mkdir
+
+#ifdef rmdir
+#undef rmdir
+#endif
 #define rmdir		mozce_rmdir
 
+
 // From errno.cpp
+#ifdef errno
+#undef errno
+#endif
 #define errno		mozce_errno
 
+
 // From io.cpp
+#ifdef chmod
+#undef chmod
+#endif
 #define chmod		mozce_chmod
+
+#ifdef _isatty
+#undef _isatty
+#endif
 #define _isatty		mozce_isatty
+
+#ifdef isatty
+#undef isatty
+#endif
 #define isatty		mozce_isatty
 
 // math.cpp
@@ -80,242 +112,975 @@
   #define fd_atan2 atan2
   #define fd_copysign _copysign
   #define fd_pow pow
+
 */
 
 // From mbstring.cpp
+#ifdef _mbsinc
+#undef _mbsinc
+#endif
 #define _mbsinc		mozce_mbsinc
+
+#ifdef _mbspbrk
+#undef _mbspbrk
+#endif
 #define _mbspbrk	mozce_mbspbrk
+
+#ifdef _mbsrchr
+#undef _mbsrchr
+#endif
 #define _mbsrchr	mozce_mbsrchr
+
+#ifdef _mbschr
+#undef _mbschr
+#endif
 #define _mbschr		mozce_mbschr
+
+#ifdef _mbctolower
+#undef _mbctolower
+#endif
 #define _mbctolower tolower 
 
+
 // From process.cpp
+#ifdef abort
+#undef abort
+#endif
 #define abort		mozce_abort
+
+#ifdef getenv
+#undef getenv
+#endif
 #define getenv		mozce_getenv
+
+#ifdef putenv
+#undef putenv
+#endif
 #define putenv		mozce_putenv
+
+#ifdef getpid
+#undef getpid
+#endif
 #define getpid		mozce_getpid
 
+
 // From signal.cpp
+#ifdef raise
+#undef raise
+#endif
 #define raise		mozce_raise
+
+#ifdef signal
+#undef signal
+#endif
 #define signal		mozce_signal
 
+
 // From stat.cpp
+#ifdef stat
+#undef stat
+#endif
 #define stat		mozce_stat
 
+
 // From stdio.cpp
+#ifdef rewind
+#undef rewind
+#endif
 #define rewind		mozce_rewind
+
+#ifdef _fdopen
+#undef _fdopen
+#endif
 #define	_fdopen		mozce_fdopen
+
+#ifdef perror
+#undef perror
+#endif
 #define	perror		mozce_perror
+
+#ifdef remove
+#undef remove
+#endif
 #define remove		mozce_remove
 
+
+#ifdef _getcwd
+#undef _getcwd
+#endif
 #define _getcwd     mozce_getcwd
+
+#ifdef getcwd
+#undef getcwd
+#endif
 #define getcwd      mozce_getcwd
 
 
+
 // From stdlib.cpp
+#ifdef _fullpath
+#undef _fullpath
+#endif
 #define _fullpath	mozce_fullpath
+
+#ifdef _splitpath
+#undef _splitpath
+#endif
 #define _splitpath	mozce_splitpath
+
+#ifdef _makepath
+#undef _makepath
+#endif
 #define _makepath	mozce_makepath
 
+
+#ifdef strdup
+#undef strdup
+#endif
 #define strdup      _strdup
+
+#ifdef stricmp
+#undef stricmp
+#endif
 #define stricmp     _stricmp
+
+#ifdef strcmpi
+#undef strcmpi
+#endif
 #define strcmpi     _stricmp
+
+#ifdef strnicmp
+#undef strnicmp
+#endif
 #define strnicmp    _strnicmp
 
 
+
 // From string.cpp
+#ifdef strerror
+#undef strerror
+#endif
 #define strerror	mozce_strerror
 
+
 // From time.cpp
+#ifdef strftime
+#undef strftime
+#endif
 #define strftime	mozce_strftime
+
+#ifdef localtime_r
+#undef localtime_r
+#endif
 #define localtime_r	mozce_localtime_r
+
+#ifdef localtime
+#undef localtime
+#endif
 #define localtime	mozce_localtime
+
+#ifdef gmtime_r
+#undef gmtime_r
+#endif
 #define gmtime_r	mozce_gmtime_r
+
+#ifdef gmtime
+#undef gmtime
+#endif
 #define gmtime	    mozce_gmtime
+
+#ifdef mktime
+#undef mktime
+#endif
 #define mktime	    mozce_mktime
+
+//#ifdef time
+//#undef time
+//#endif
 //#define time		mozce_time
+
+#ifdef ctime
+#undef ctime
+#endif
 #define ctime		mozce_ctime
 
+
+#ifdef localeconv
+#undef localeconv
+#endif
 #define localeconv  mozce_localeconv
+
+//#ifdef lconv
+//#undef lconv
+//#endif
 //#define lconv       mozce_lconv
 
+
 // From win32.cpp
+#ifdef Arc
+#undef Arc
+#endif
 #define Arc                       mozce_Arc
+
+#ifdef CallNextHookEx
+#undef CallNextHookEx
+#endif
 #define CallNextHookEx            mozce_CallNextHookEx
+
+#ifdef CreateDIBitmap
+#undef CreateDIBitmap
+#endif
 #define CreateDIBitmap            mozce_CreateDIBitmap
+
+#ifdef EnumChildWindows
+#undef EnumChildWindows
+#endif
 #define EnumChildWindows          mozce_EnumChildWindows
+
+#ifdef EnumFontFamiliesEx
+#undef EnumFontFamiliesEx
+#endif
 #define EnumFontFamiliesEx        mozce_EnumFontFamiliesEx
+
+#ifdef EnumThreadWindows
+#undef EnumThreadWindows
+#endif
 #define EnumThreadWindows         mozce_EnumThreadWindows
-#define ExpandEnvironmentStrings  mozce_ExpandEnvironmentStrings
+
+#ifdef ExtSelectClipRgn
+#undef ExtSelectClipRgn
+#endif
 #define ExtSelectClipRgn          mozce_ExtSelectClipRgn
+
+#ifdef FIXED
+#undef FIXED
+#endif
 #define FIXED                     mozce_FIXED
+
+#ifdef FlashWindow
+#undef FlashWindow
+#endif
 #define FlashWindow               mozce_FlashWindow
+
+#ifdef FrameRect
+#undef FrameRect
+#endif
 #define FrameRect                 mozce_FrameRect
+
+#ifdef GLYPHMETRICS
+#undef GLYPHMETRICS
+#endif
 #define GLYPHMETRICS              mozce_GLYPHMETRICS
-#define GdiFlush                  mozce_GdiFlush
-#define GetACP                    mozce_GetACP
+
+#ifdef GetCurrentProcess
+#undef GetCurrentProcess
+#endif
 #define GetCurrentProcess         mozce_GetCurrentProcess
+
+#ifdef GetCurrentThreadId
+#undef GetCurrentThreadId
+#endif
 #define GetCurrentThreadId        mozce_GetCurrentThreadId
+
+#ifdef GetDIBits
+#undef GetDIBits
+#endif
 #define GetDIBits                 mozce_GetDIBits
+
+#ifdef GetEnvironmentVariable
+#undef GetEnvironmentVariable
+#endif
 #define GetEnvironmentVariable    mozce_GetEnvironmentVariable
+
+#ifdef GetFontData
+#undef GetFontData
+#endif
 #define GetFontData               mozce_GetFontData
+
+#ifdef GetFullPathName
+#undef GetFullPathName
+#endif
 #define GetFullPathName           mozce_GetFullPathName
+
+#ifdef GetIconInfo
+#undef GetIconInfo
+#endif
 #define GetIconInfo               mozce_GetIconInfo
+
+#ifdef GetMapMode
+#undef GetMapMode
+#endif
 #define GetMapMode                mozce_GetMapMode
+
+#ifdef GetMessageTime
+#undef GetMessageTime
+#endif
 #define GetMessageTime            mozce_GetMessageTime
+
+#ifdef GetOutlineTextMetrics
+#undef GetOutlineTextMetrics
+#endif
 #define GetOutlineTextMetrics     mozce_GetOutlineTextMetrics
+
+#ifdef GetScrollPos
+#undef GetScrollPos
+#endif
 #define GetScrollPos              mozce_GetScrollPos
+
+#ifdef GetScrollRange
+#undef GetScrollRange
+#endif
 #define GetScrollRange            mozce_GetScrollRange
+
+#ifdef GetShortPathName
+#undef GetShortPathName
+#endif
 #define GetShortPathName          mozce_GetShortPathName
+
+#ifdef GetSystemTimeAsFileTime
+#undef GetSystemTimeAsFileTime
+#endif
 #define GetSystemTimeAsFileTime   mozce_GetSystemTimeAsFileTime
+
+#ifdef GetTextCharset
+#undef GetTextCharset
+#endif
 #define GetTextCharset            mozce_GetTextCharset
+
+#ifdef GetTextCharsetInfo
+#undef GetTextCharsetInfo
+#endif
 #define GetTextCharsetInfo        mozce_GetTextCharsetInfo
+
+#ifdef GetUserName
+#undef GetUserName
+#endif
 #define GetUserName               mozce_GetUserName
+
+#ifdef InvertRgn
+#undef InvertRgn
+#endif
 #define InvertRgn                 mozce_InvertRgn
+
+#ifdef IsIconic
+#undef IsIconic
+#endif
 #define IsIconic                  mozce_IsIconic
+
+#ifdef LINEDDAPROC
+#undef LINEDDAPROC
+#endif
 #define LINEDDAPROC               mozce_LINEDDAPROC
+
+#ifdef LPtoDP
+#undef LPtoDP
+#endif
 #define LPtoDP                    mozce_LPtoDP
+
+#ifdef LineDDA
+#undef LineDDA
+#endif
 #define LineDDA                   mozce_LineDDA
+
+#ifdef LineDDAProc
+#undef LineDDAProc
+#endif
 #define LineDDAProc               mozce_LineDDAProc
+
+#ifdef MAT2
+#undef MAT2
+#endif
 #define MAT2                      mozce_MAT2
+
+#ifdef MsgWaitForMultipleObjects
+#undef MsgWaitForMultipleObjects
+#endif
 #define MsgWaitForMultipleObjects mozce_MsgWaitForMultipleObjects 
+
+#ifdef MulDiv
+#undef MulDiv
+#endif
 #define MulDiv                    mozce_MulDiv
+
+#ifdef OUTLINETEXTMETRIC
+#undef OUTLINETEXTMETRIC
+#endif
 #define OUTLINETEXTMETRIC         mozce_OUTLINETEXTMETRIC
+
+#ifdef OpenIcon
+#undef OpenIcon
+#endif
 #define OpenIcon                  mozce_OpenIcon
+
+#ifdef Pie
+#undef Pie
+#endif
 #define Pie                       mozce_Pie
+
+#ifdef RegCreateKey
+#undef RegCreateKey
+#endif
 #define RegCreateKey              mozce_RegCreateKey
+
+#ifdef SetArcDirection
+#undef SetArcDirection
+#endif
 #define SetArcDirection           mozce_SetArcDirection
+
+#ifdef SetDIBits
+#undef SetDIBits
+#endif
 #define SetDIBits                 mozce_SetDIBits
+
+#ifdef SetMenu
+#undef SetMenu
+#endif
 #define SetMenu                   mozce_SetMenu
+
+#ifdef SetPolyFillMode
+#undef SetPolyFillMode
+#endif
 #define SetPolyFillMode           mozce_SetPolyFillMode
+
+#ifdef SetStretchBltMode
+#undef SetStretchBltMode
+#endif
 #define SetStretchBltMode         mozce_SetStretchBltMode
+
+#ifdef SetWindowsHookEx
+#undef SetWindowsHookEx
+#endif
 #define SetWindowsHookEx          mozce_SetWindowsHookEx
+
+#ifdef TlsAlloc
+#undef TlsAlloc
+#endif
 #define TlsAlloc                  mozce_TlsAlloc
+
+#ifdef TlsFree
+#undef TlsFree
+#endif
 #define TlsFree                   mozce_TlsFree
+
+#ifdef UnhookWindowsHookEx
+#undef UnhookWindowsHookEx
+#endif
 #define UnhookWindowsHookEx       mozce_UnhookWindowsHookEx
+
+#ifdef WaitMessage
+#undef WaitMessage
+#endif
 #define WaitMessage               mozce_WaitMessage
+
+#ifdef _CoLockObjectExternal
+#undef _CoLockObjectExternal
+#endif
 #define _CoLockObjectExternal     mozce_CoLockObjectExternal
+
+#ifdef _OleFlushClipboard
+#undef _OleFlushClipboard
+#endif
 #define _OleFlushClipboard        mozce_OleFlushClipboard
+
+#ifdef _OleGetClipboard
+#undef _OleGetClipboard
+#endif
 #define _OleGetClipboard          mozce_OleGetClipboard
+
+#ifdef _OleQueryLinkFromData
+#undef _OleQueryLinkFromData
+#endif
 #define _OleQueryLinkFromData     mozce_OleQueryLinkFromData
+
+#ifdef _OleSetClipboard
+#undef _OleSetClipboard
+#endif
 #define _OleSetClipboard          mozce_OleSetClipboard
+
 
 
 // From win32a.cpp
 
+#ifdef CopyFileA
+#undef CopyFileA
+#endif
 #define CopyFileA                 mozce_CopyFileA
+
+#ifdef CreateDCA
+#undef CreateDCA
+#endif
 #define CreateDCA                 mozce_CreateDCA
+
+#ifdef CreateDCA2
+#undef CreateDCA2
+#endif
 #define CreateDCA2                mozce_CreateDCA2
+
+#ifdef CreateDirectoryA
+#undef CreateDirectoryA
+#endif
 #define CreateDirectoryA          mozce_CreateDirectoryA
 
-#pragma warning(disable : 4005) // 
-// We use a method named CreateEvent.  We do not want to map
-// CreateEvent to CreateEventA
-#define CreateEvent               CreateEvent
-#pragma warning(default : 4005) // restore default
-
+#ifdef CreateEventA
+#undef CreateEventA
+#endif
 #define CreateEventA              mozce_CreateEventA
+
+#ifdef CreateFileA
+#undef CreateFileA
+#endif
 #define CreateFileA               mozce_CreateFileA
+
+#ifdef CreateFileMappingA
+#undef CreateFileMappingA
+#endif
 #define CreateFileMappingA        mozce_CreateFileMappingA
+
+#ifdef CreateFontIndirectA
+#undef CreateFontIndirectA
+#endif
 #define CreateFontIndirectA       mozce_CreateFontIndirectA
+
+#ifdef CreateProcessA
+#undef CreateProcessA
+#endif
 #define CreateProcessA            mozce_CreateProcessA
+
+#ifdef CreateSemaphoreA
+#undef CreateSemaphoreA
+#endif
 #define CreateSemaphoreA          mozce_CreateSemaphoreA
+
+#ifdef CreateWindowExA
+#undef CreateWindowExA
+#endif
 #define CreateWindowExA           mozce_CreateWindowExA
+
+#ifdef DefWindowProcA
+#undef DefWindowProcA
+#endif
 #define DefWindowProcA            mozce_DefWindowProcA
+
+#ifdef DeleteFileA
+#undef DeleteFileA
+#endif
 #define DeleteFileA               mozce_DeleteFileA
+
+#ifdef DrawTextA
+#undef DrawTextA
+#endif
 #define DrawTextA                 mozce_DrawTextA
+
+#ifdef EnumFontFamiliesA
+#undef EnumFontFamiliesA
+#endif
 #define EnumFontFamiliesA         mozce_EnumFontFamiliesA
+
+#ifdef ExtTextOutA
+#undef ExtTextOutA
+#endif
 #define ExtTextOutA               mozce_ExtTextOutA
+
+#ifdef FindResourceA
+#undef FindResourceA
+#endif
 #define FindResourceA             mozce_FindResourceA
+
+#ifdef FindWindowA
+#undef FindWindowA
+#endif
 #define FindWindowA               mozce_FindWindowA
+
+#ifdef FormatMessageA
+#undef FormatMessageA
+#endif
 #define FormatMessageA            mozce_FormatMessageA
+
+#ifdef GetClassInfoA
+#undef GetClassInfoA
+#endif
 #define GetClassInfoA             mozce_GetClassInfoA
+
+#ifdef GetClassNameA
+#undef GetClassNameA
+#endif
 #define GetClassNameA             mozce_GetClassNameA
+
+#ifdef GetCurrentDirectoryA
+#undef GetCurrentDirectoryA
+#endif
 #define GetCurrentDirectoryA      mozce_GetCurrentDirectoryA
+
+#ifdef GetDlgItemTextA
+#undef GetDlgItemTextA
+#endif
 #define GetDlgItemTextA           mozce_GetDlgItemTextA
+
+#ifdef GetEnvironmentVariableA
+#undef GetEnvironmentVariableA
+#endif
 #define GetEnvironmentVariableA   mozce_GetEnvironmentVariableA
+
+#ifdef GetFileAttributesA
+#undef GetFileAttributesA
+#endif
 #define GetFileAttributesA        mozce_GetFileAttributesA
+
+#ifdef GetFileVersionInfoA
+#undef GetFileVersionInfoA
+#endif
 #define GetFileVersionInfoA       mozce_GetFileVersionInfoA
+
+#ifdef GetFileVersionInfoSizeA
+#undef GetFileVersionInfoSizeA
+#endif
 #define GetFileVersionInfoSizeA   mozce_GetFileVersionInfoSizeA
+
+#ifdef GetGlyphOutlineA
+#undef GetGlyphOutlineA
+#endif
 #define GetGlyphOutlineA          mozce_GetGlyphOutlineA
+
+#ifdef GetLocaleInfoA
+#undef GetLocaleInfoA
+#endif
 #define GetLocaleInfoA            mozce_GetLocaleInfoA
+
+#ifdef GetModuleFileNameA
+#undef GetModuleFileNameA
+#endif
 #define GetModuleFileNameA        mozce_GetModuleFileNameA
+
+#ifdef GetModuleHandleA
+#undef GetModuleHandleA
+#endif
 #define GetModuleHandleA          mozce_GetModuleHandleA
+
+#ifdef GetObjectA
+#undef GetObjectA
+#endif
 #define GetObjectA                mozce_GetObjectA
+
+#ifdef GetOpenFileNameA
+#undef GetOpenFileNameA
+#endif
 #define GetOpenFileNameA          mozce_GetOpenFileNameA
+
+#ifdef GetProcAddress
+#undef GetProcAddress
+#endif
 #define GetProcAddress            mozce_GetProcAddressA
+
+#ifdef GetProcAddressA
+#undef GetProcAddressA
+#endif
 #define GetProcAddressA           mozce_GetProcAddressA
+
+#ifdef GetPropA
+#undef GetPropA
+#endif
 #define GetPropA                  mozce_GetPropA
+
+#ifdef GetSaveFileNameA
+#undef GetSaveFileNameA
+#endif
 #define GetSaveFileNameA          mozce_GetSaveFileNameA
+
+#ifdef GetSystemDirectory
+#undef GetSystemDirectory
+#endif
 #define GetSystemDirectory        mozce_GetSystemDirectoryA
+
+#ifdef GetSystemDirectoryA
+#undef GetSystemDirectoryA
+#endif
 #define GetSystemDirectoryA       mozce_GetSystemDirectoryA
+
+#ifdef GetTextExtentExPointA
+#undef GetTextExtentExPointA
+#endif
 #define GetTextExtentExPointA     mozce_GetTextExtentExPointA
+
+#ifdef GetTextFaceA
+#undef GetTextFaceA
+#endif
 #define GetTextFaceA              mozce_GetTextFaceA
+
+#ifdef GetTextMetricsA
+#undef GetTextMetricsA
+#endif
 #define GetTextMetricsA           mozce_GetTextMetricsA
+
+#ifdef GetVersionExA
+#undef GetVersionExA
+#endif
 #define GetVersionExA             mozce_GetVersionExA
+
+#ifdef GetWindowsDirectory
+#undef GetWindowsDirectory
+#endif
 #define GetWindowsDirectory       mozce_GetWindowsDirectoryA
+
+#ifdef GetWindowsDirectoryA
+#undef GetWindowsDirectoryA
+#endif
 #define GetWindowsDirectoryA      mozce_GetWindowsDirectoryA
+
+#ifdef GlobalAddAtomA
+#undef GlobalAddAtomA
+#endif
 #define GlobalAddAtomA            mozce_GlobalAddAtomA
+
+#ifdef LoadCursorA
+#undef LoadCursorA
+#endif
 #define LoadCursorA               mozce_LoadCursorA
+
+#ifdef LoadIconA
+#undef LoadIconA
+#endif
 #define LoadIconA                 mozce_LoadIconA
+
+#ifdef LoadImageA
+#undef LoadImageA
+#endif
 #define LoadImageA                mozce_LoadImageA
+
+#ifdef LoadLibraryA
+#undef LoadLibraryA
+#endif
 #define LoadLibraryA              mozce_LoadLibraryA
+
+#ifdef LoadMenuA
+#undef LoadMenuA
+#endif
 #define LoadMenuA                 mozce_LoadMenuA
+
+#ifdef LoadStringA
+#undef LoadStringA
+#endif
 #define LoadStringA               mozce_LoadStringA
+
+#ifdef MessageBoxA
+#undef MessageBoxA
+#endif
 #define MessageBoxA               mozce_MessageBoxA
+
+#ifdef MoveFileA
+#undef MoveFileA
+#endif
 #define MoveFileA                 mozce_MoveFileA
+
+#ifdef OpenSemaphoreA
+#undef OpenSemaphoreA
+#endif
 #define OpenSemaphoreA            mozce_OpenSemaphoreA
+
+#ifdef OutputDebugStringA
+#undef OutputDebugStringA
+#endif
 #define OutputDebugStringA        mozce_OutputDebugStringA
+
+#ifdef PeekMessageA
+#undef PeekMessageA
+#endif
 #define PeekMessageA              mozce_PeekMessageA
+
+#ifdef PostMessageA
+#undef PostMessageA
+#endif
 #define PostMessageA              mozce_PostMessageA
+
+#ifdef RegEnumKeyExA
+#undef RegEnumKeyExA
+#endif
 #define RegEnumKeyExA             mozce_RegEnumKeyExA
+
+#ifdef RegOpenKeyExA
+#undef RegOpenKeyExA
+#endif
 #define RegOpenKeyExA             mozce_RegOpenKeyExA
+
+#ifdef RegQueryValueExA
+#undef RegQueryValueExA
+#endif
 #define RegQueryValueExA          mozce_RegQueryValueExA
+
+#ifdef RegisterClassA
+#undef RegisterClassA
+#endif
 #define RegisterClassA            mozce_RegisterClassA
+
+#ifdef RegisterClipboardFormatA
+#undef RegisterClipboardFormatA
+#endif
 #define RegisterClipboardFormatA  mozce_RegisterClipboardFormatA
+
+#ifdef RegisterWindowMessageA
+#undef RegisterWindowMessageA
+#endif
 #define RegisterWindowMessageA    mozce_RegisterWindowMessageA
+
+#ifdef RemoveDirectoryA
+#undef RemoveDirectoryA
+#endif
 #define RemoveDirectoryA          mozce_RemoveDirectoryA
+
+#ifdef RemovePropA
+#undef RemovePropA
+#endif
 #define RemovePropA               mozce_RemovePropA
+
+#ifdef SendMessageA
+#undef SendMessageA
+#endif
 #define SendMessageA              mozce_SendMessageA
-#define SetCurrentDirectory       mozce_SetCurrentDirectoryA
+
+#ifdef SetCurrentDirectoryA
+#undef SetCurrentDirectoryA
+#endif
 #define SetCurrentDirectoryA      mozce_SetCurrentDirectoryA
+
+#ifdef SetDlgItemTextA
+#undef SetDlgItemTextA
+#endif
 #define SetDlgItemTextA           mozce_SetDlgItemTextA
+
+#ifdef SetEnvironmentVariable
+#undef SetEnvironmentVariable
+#endif
 #define SetEnvironmentVariable    mozce_SetEnvironmentVariableA
+
+#ifdef SetEnvironmentVariableA
+#undef SetEnvironmentVariableA
+#endif
 #define SetEnvironmentVariableA   mozce_SetEnvironmentVariableA
+
+#ifdef SetPropA
+#undef SetPropA
+#endif
 #define SetPropA                  mozce_SetPropA
+
+#ifdef StartDocA
+#undef StartDocA
+#endif
 #define StartDocA                 mozce_StartDocA
+
+#ifdef UnregisterClassA
+#undef UnregisterClassA
+#endif
 #define UnregisterClassA          mozce_UnregisterClassA
+
+#ifdef VerQueryValueA
+#undef VerQueryValueA
+#endif
 #define VerQueryValueA            mozce_VerQueryValueA
 
+
+#ifdef CreateDialogIndirectParamA
+#undef CreateDialogIndirectParamA
+#endif
 #define CreateDialogIndirectParamA CreateDialogIndirectParamW
-#define DialogBoxIndirectParamA    DialogBoxIndirectParamW
+
+#ifdef SystemParametersInfoA
+#undef SystemParametersInfoA
+#endif
 #define SystemParametersInfoA      SystemParametersInfoW
+
+#ifdef GetMessageA
+#undef GetMessageA
+#endif
 #define GetMessageA                GetMessageW
+
+#ifdef DispatchMessageA
+#undef DispatchMessageA
+#endif
 #define DispatchMessageA           DispatchMessageW
+
+#ifdef CallWindowProcA
+#undef CallWindowProcA
+#endif
 #define CallWindowProcA            CallWindowProcW
+
+#ifdef GetWindowLongA
+#undef GetWindowLongA
+#endif
 #define GetWindowLongA             GetWindowLongW
+
+#ifdef SetWindowLongA
+#undef SetWindowLongA
+#endif
 #define SetWindowLongA             SetWindowLongW
+
 
 #undef FindFirstFile
 #undef FindNextFile
 
+#ifdef FindFirstFile
+#undef FindFirstFile
+#endif
 #define FindFirstFile              FindFirstFileW
+
+#ifdef FindNextFile
+#undef FindNextFile
+#endif
 #define FindNextFile               FindNextFileW
 
 
+
+#ifdef GetProp
+#undef GetProp
+#endif
 #define GetProp                   mozce_GetPropA
+
+#ifdef SetProp
+#undef SetProp
+#endif
 #define SetProp                   mozce_SetPropA
+
+#ifdef RemoveProp
+#undef RemoveProp
+#endif
 #define RemoveProp                mozce_RemovePropA
 
 
+
 // From win32w.cpp
+#ifdef GetCurrentDirectory
+#undef GetCurrentDirectory
+#endif
 #define GetCurrentDirectory       mozce_GetCurrentDirectoryW
+
+#ifdef GetCurrentDirectoryW
+#undef GetCurrentDirectoryW
+#endif
 #define GetCurrentDirectoryW      mozce_GetCurrentDirectoryW
+
+#ifdef GetGlyphOutlineW
+#undef GetGlyphOutlineW
+#endif
 #define GetGlyphOutlineW          mozce_GetGlyphOutlineW
+
+#ifdef GetSystemDirectoryW
+#undef GetSystemDirectoryW
+#endif
 #define GetSystemDirectoryW       mozce_GetSystemDirectoryW
+
+#ifdef GetWindowsDirectoryW
+#undef GetWindowsDirectoryW
+#endif
 #define GetWindowsDirectoryW      mozce_GetWindowsDirectoryW
+
+#ifdef OpenSemaphoreW
+#undef OpenSemaphoreW
+#endif
 #define OpenSemaphoreW            mozce_OpenSemaphoreW
+
+#ifdef SetCurrentDirectoryW
+#undef SetCurrentDirectoryW
+#endif
 #define SetCurrentDirectoryW      mozce_SetCurrentDirectoryW
+
 
 //////////////////////////////////////////////////////////
 // Function Declarations
