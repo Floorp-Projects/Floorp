@@ -217,21 +217,11 @@ class nsEditorShell :   public nsIEditorShell,
 		NS_IMETHOD  	  PrepareDocumentForEditing();
 		NS_IMETHOD      DoFind(PRBool aFindNext);
 		
-
-// еее fix me
-nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
-
-	nsString mId;
-	nsString mScript;
-	void *mScriptObject;
-	nsIScriptContext		*mScriptContext;
-
+		// this returns an AddReffed nsIScriptContext. You must relase it.
+		nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
 
     nsString            mEnableScript;     
     nsString            mDisableScript;     
-
-    nsIScriptContext   *mToolbarScriptContext;
-    nsIScriptContext   *mContentScriptContext;
 
     nsIDOMWindow       *mToolbarWindow;				// weak reference
     nsIDOMWindow       *mContentWindow;				// weak reference

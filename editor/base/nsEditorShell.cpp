@@ -132,11 +132,8 @@ nsEditorShell::nsEditorShell()
   printf("Created nsEditorShell\n");
 #endif
 
-  //mScriptObject         = nsnull;
   mToolbarWindow        = nsnull;
-  mToolbarScriptContext = nsnull;
   mContentWindow        = nsnull;
-  mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
   mSuggestedWordIndex   = 0;
@@ -146,15 +143,14 @@ nsEditorShell::nsEditorShell()
 
 nsEditorShell::~nsEditorShell()
 {
-  NS_IF_RELEASE(mToolbarScriptContext);
-  NS_IF_RELEASE(mContentScriptContext);
+ // NS_IF_RELEASE(mToolbarScriptContext);
+ // NS_IF_RELEASE(mContentScriptContext);
 
   //NS_IF_RELEASE(mToolbarWindow);
   //NS_IF_RELEASE(mContentWindow);
   //NS_IF_RELEASE(mWebShellWin);
   //NS_IF_RELEASE(mWebShell);
 }
-
 
 NS_IMPL_ADDREF(nsEditorShell)
 NS_IMPL_RELEASE(nsEditorShell)
@@ -184,15 +180,8 @@ nsEditorShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
-/*
-  else if (aIID.Equals(nsINetSupport::GetIID())) {
-    *aInstancePtr = (void*) ((nsINetSupport*)this);
-    AddRef();
-    return NS_OK;
-  }
-*/
-  else if (aIID.Equals(nsIStreamObserver::GetIID())) {
-    *aInstancePtr = (void*) ((nsIStreamObserver*)this);
+  else if (aIID.Equals(nsIDocumentLoaderObserver::GetIID())) {
+    *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
      AddRef();
     return NS_OK;
   }
@@ -673,7 +662,7 @@ nsEditorShell::SetToolbarWindow(nsIDOMWindow* aWin)
 
   mToolbarWindow = aWin;
   //NS_ADDREF(aWin);
-  mToolbarScriptContext = GetScriptContext(aWin);
+  //mToolbarScriptContext = GetScriptContext(aWin);
 
   return NS_OK;
 }
@@ -686,7 +675,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
       return NS_ERROR_NULL_POINTER;
 
   mContentWindow = aWin;
-  mContentScriptContext = GetScriptContext(mContentWindow);		// XXX does this AddRef?
+  //mContentScriptContext = GetScriptContext(mContentWindow);		// XXX does this AddRef?
 
   nsresult  rv;
   nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow, &rv);
@@ -766,13 +755,13 @@ nsEditorShell::CreateWindowWithURL(const char* urlStr)
     return rv;
 
   nsCOMPtr<nsIURL> url = nsnull;
-  nsIWebShellWindow* newWindow = nsnull;
+  nsCOMPtr<nsIWebShellWindow> newWindow;
   
   rv = NS_NewURL(getter_AddRefs(url), urlStr);
   if (NS_FAILED(rv) || !url)
     goto done;
 
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, *getter_AddRefs(newWindow),
               nsnull, nsnull, 615, 480);
   
 done:
