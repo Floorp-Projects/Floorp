@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: mpi-test.c,v 1.8 2000/10/24 21:32:51 nelsonb%netscape.com Exp $
+ * $Id: mpi-test.c,v 1.9 2000/11/08 01:52:52 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -1878,12 +1878,33 @@ int test_pprime(void)
 {
   mp_int   p;
   int      err = 0;
+  mp_err   res;
 
   mp_init(&p);
   mp_read_radix(&p, mp7, 16);
 
   if(mpp_pprime(&p, 5) != MP_YES) {
     reason("error: %s failed Rabin-Miller test, but is prime\n", mp7);
+    err = 1;
+  }
+
+  IFOK( mp_set_int(&p, 9) );
+  res = mpp_pprime(&p, 50);
+  if (res == MP_YES) {
+    reason("error: 9 is composite but passed Rabin-Miller test\n");
+    err = 1;
+  } else if (res != MP_NO) {
+    reason("test mpp_pprime(9, 50) failed: error %d\n", res); 
+    err = 1;
+  }
+
+  IFOK( mp_set_int(&p, 15) );
+  res = mpp_pprime(&p, 50);
+  if (res == MP_YES) {
+    reason("error: 15 is composite but passed Rabin-Miller test\n");
+    err = 1;
+  } else if (res != MP_NO) {
+    reason("test mpp_pprime(15, 50) failed: error %d\n", res); 
     err = 1;
   }
 

@@ -295,36 +295,31 @@ mp_err  mpp_pprime(mp_int *a, int nt)
 {
   mp_err   res;
   mp_int   x, amo, m, z;	/* "amo" = "a minus one" */
-  int      iter, jx, b;
+  int      iter, jx;
+  mp_size  b;
 
   ARGCHK(a != NULL, MP_BADARG);
 
-  /* Initialize temporaries... */
-  if((res = mp_init(&amo)) != MP_OKAY)
-    return res;
-  /* Compute amo = a - 1 for what follows...    */
-  if ((res = mp_sub_d(a, 1, &amo)) != MP_OKAY)
-    goto X;
+  MP_DIGITS(&x) = 0;
+  MP_DIGITS(&amo) = 0;
+  MP_DIGITS(&m) = 0;
+  MP_DIGITS(&z) = 0;
 
-  /* How many times does 2 divide (a - 1)?    */
-  for (b = 0; (res = mpl_get_bit(&amo, b)) == 0; ++b) {
-    /* do nothing */
-  }
-  if (res < 0)
-    goto X;
+  /* Initialize temporaries... */
+  MP_CHECKOK( mp_init(&amo));
+  /* Compute amo = a - 1 for what follows...    */
+  MP_CHECKOK( mp_sub_d(a, 1, &amo) );
+
+  b = mp_trailing_zeros(&amo);
   if (!b) { /* a was even ? */
     res = MP_NO;
-    goto X;
+    goto CLEANUP;
   }
 
-  if((res = mp_init_size(&x, USED(a))) != MP_OKAY)
-    goto X;
-  if((res = mp_init(&z)) != MP_OKAY)
-    goto Z;
-  if ((res = mp_init(&m)) != MP_OKAY)
-    goto M;
-  if ((res = mp_div_2d(&amo, b, &m, 0)) != MP_OKAY)
-    goto CLEANUP;
+  MP_CHECKOK( mp_init_size(&x, MP_USED(a)) );
+  MP_CHECKOK( mp_init(&z) );
+  MP_CHECKOK( mp_init(&m) );
+  MP_CHECKOK( mp_div_2d(&amo, b, &m, 0) );
 
   /* Do the test nt times... */
   for(iter = 0; iter < nt; iter++) {
@@ -332,23 +327,21 @@ mp_err  mpp_pprime(mp_int *a, int nt)
     /* Choose a random value for x < a          */
     s_mp_pad(&x, USED(a));
     mpp_random(&x);
-    if((res = mp_mod(&x, a, &x)) != MP_OKAY)
-      goto CLEANUP;
+    MP_CHECKOK( mp_mod(&x, a, &x) );
 
     /* Compute z = (x ** m) mod a               */
-    if((res = mp_exptmod(&x, &m, a, &z)) != MP_OKAY)
-      goto CLEANUP;
+    MP_CHECKOK( mp_exptmod(&x, &m, a, &z) );
     
     if(mp_cmp_d(&z, 1) == 0 || mp_cmp(&z, &amo) == 0) {
       res = MP_YES;
       continue;
     }
     
+    res = MP_NO;  /* just in case the following for loop never executes. */
     for (jx = 1; jx < b; jx++) {
       /* z = z^2 (mod a) */
-      if((res = mp_sqrmod(&z, a, &z)) != MP_OKAY)
-	goto CLEANUP;
-	
+      MP_CHECKOK( mp_sqrmod(&z, a, &z) );
+
       if(mp_cmp_d(&z, 1) == 0) {
 	res = MP_NO;
 	break;
@@ -371,11 +364,8 @@ mp_err  mpp_pprime(mp_int *a, int nt)
   
 CLEANUP:
   mp_clear(&m);
-M:
   mp_clear(&z);
-Z:
   mp_clear(&x);
-X:
   mp_clear(&amo);
   return res;
 
