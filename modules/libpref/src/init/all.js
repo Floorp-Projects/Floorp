@@ -362,6 +362,18 @@ pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
 pref("dom.disable_window_status_change",    false);
 
+pref("dom.disable_window_open_feature.titlebar",    false);
+pref("dom.disable_window_open_feature.close",       false);
+pref("dom.disable_window_open_feature.toolbar",     false);
+pref("dom.disable_window_open_feature.location",    false);
+pref("dom.disable_window_open_feature.directories", false);
+pref("dom.disable_window_open_feature.personalbar", false);
+pref("dom.disable_window_open_feature.menubar",     false);
+pref("dom.disable_window_open_feature.scrollbars",  false);
+pref("dom.disable_window_open_feature.resizable",   false);
+pref("dom.disable_window_open_feature.minimizable", false);
+pref("dom.disable_window_open_feature.status",      false);
+
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);

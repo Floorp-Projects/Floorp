@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  caps \
 		  content \
+		  pref \
 		  necko \
 		  uriloader \
 		  docshell \

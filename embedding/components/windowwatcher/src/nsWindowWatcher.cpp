@@ -76,6 +76,9 @@
 #include "nsIXPConnect.h"
 #include "nsPIDOMWindow.h"
 
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+
 #ifdef XP_UNIX
 // please see bug 78421 for the eventual "right" fix for this
 #define HAVE_LAME_APPSHELL
@@ -1082,6 +1085,16 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
     }
 }
 
+#define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag)               \
+    prefBranch->GetBoolPref(feature, &forceEnable);               \
+    if (forceEnable && !isChrome) {                               \
+      chromeFlags |= flag;                                        \
+    } else {                                                      \
+      chromeFlags |= WinHasOption(aFeatures, feature,             \
+                                  0, &presenceFlag)               \
+                     ? flag : 0;                                  \
+    }
+
 /**
  * Calculate the chrome bitmask from a string list of features.
  * @param aFeatures a string containing a list of named chrome features
@@ -1120,27 +1133,45 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
 
   /* Next, allow explicitly named options to override the initial settings */
 
-  chromeFlags |= WinHasOption(aFeatures, "titlebar", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_TITLEBAR : 0;
-  chromeFlags |= WinHasOption(aFeatures, "close", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_WINDOW_CLOSE : 0;
-  chromeFlags |= WinHasOption(aFeatures, "toolbar", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_TOOLBAR : 0;
-  chromeFlags |= WinHasOption(aFeatures, "location", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_LOCATIONBAR : 0;
-  chromeFlags |= (WinHasOption(aFeatures, "directories", 0, &presenceFlag) ||
-                  WinHasOption(aFeatures, "personalbar", 0, &presenceFlag))
-                 ? nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR : 0;
-  chromeFlags |= WinHasOption(aFeatures, "status", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_STATUSBAR : 0;
-  chromeFlags |= WinHasOption(aFeatures, "menubar", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_MENUBAR : 0;
-  chromeFlags |= WinHasOption(aFeatures, "scrollbars", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_SCROLLBARS : 0;
-  chromeFlags |= WinHasOption(aFeatures, "resizable", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_WINDOW_RESIZE : 0;
-  chromeFlags |= WinHasOption(aFeatures, "minimizable", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::CHROME_WINDOW_MIN : 0;
+  nsCOMPtr<nsIScriptSecurityManager>
+    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+
+  PRBool isChrome = PR_FALSE;
+  securityManager->SubjectPrincipalIsSystem(&isChrome);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  rv = prefs->GetBranch("dom.disable_window_open_feature.", getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  PRBool forceEnable = PR_FALSE;
+
+  NS_CALCULATE_CHROME_FLAG_FOR("titlebar",
+                               nsIWebBrowserChrome::CHROME_TITLEBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("close",
+                               nsIWebBrowserChrome::CHROME_WINDOW_CLOSE);
+  NS_CALCULATE_CHROME_FLAG_FOR("toolbar",
+                               nsIWebBrowserChrome::CHROME_TOOLBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("location",
+                               nsIWebBrowserChrome::CHROME_LOCATIONBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("directories",
+                               nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("personalbar",
+                               nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("status",
+                               nsIWebBrowserChrome::CHROME_STATUSBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("menubar",
+                               nsIWebBrowserChrome::CHROME_MENUBAR);
+  NS_CALCULATE_CHROME_FLAG_FOR("scrollbars",
+                               nsIWebBrowserChrome::CHROME_SCROLLBARS);
+  NS_CALCULATE_CHROME_FLAG_FOR("resizable",
+                               nsIWebBrowserChrome::CHROME_WINDOW_RESIZE);
+  NS_CALCULATE_CHROME_FLAG_FOR("minimizable",
+                               nsIWebBrowserChrome::CHROME_WINDOW_MIN);
 
   chromeFlags |= WinHasOption(aFeatures, "popup", 0, &presenceFlag)
                  ? nsIWebBrowserChrome::CHROME_WINDOW_POPUP : 0; 
@@ -1197,16 +1228,10 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
      chromeFlags->copy_history
    */
 
-  //Check security state for use in determing window dimensions
-  nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
-
+  // Check security state for use in determing window dimensions
   PRBool enabled;
   nsresult res =
     securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
-
-   res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
  
   if (NS_FAILED(res) || !enabled) {
     //If priv check fails, set all elements to minimum reqs., else leave them alone.
@@ -1235,7 +1260,7 @@ nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
 
   while (PR_TRUE) {
     while (nsCRT::IsAsciiSpace(*aOptions))
-      aOptions++;
+      ++aOptions;
 
     comma = PL_strchr(aOptions, ',');
     if (comma)

@@ -51,6 +51,7 @@ function changeDisabledState(state){
   document.getElementById("allowDocumentCookieGet").disabled = state;
   document.getElementById("allowWindowStatusChange").disabled = state;
   document.getElementById("allowWindowFlip").disabled = state;
+  document.getElementById("allowHideStatusBar").disabled = state;
 }
 
 function javascriptEnabledChange(){
@@ -87,10 +88,16 @@ function Startup(){
 
   //If scriptData does not exist, then it is the first time the panel was shown and we default to false 
   if (!("scriptData" in data)){
-    var changedList = ["allowWindowOpenChanged", "allowTargetNewChanged",
-                       "allowWindowMoveResizeChanged", "allowWindowStatusChangeChanged",
-                       "allowWindowFlipChanged", "allowDocumentCookieSetChanged",
-                       "allowDocumentCookieGetChanged", "allowImageSrcChangeChanged"];
+    var changedList = ["allowWindowOpenChanged",
+                       "allowTargetNewChanged",
+                       "allowWindowMoveResizeChanged",
+                       "allowWindowStatusChangeChanged",
+                       "allowWindowFlipChanged",
+                       "allowDocumentCookieSetChanged",
+                       "allowDocumentCookieGetChanged",
+                       "allowImageSrcChangeChanged",
+                       "allowHideStatusBarChanged"];
+
     data.scriptData = [];
     for(var run = 0; run < changedList.length; run++ ){
       data.scriptData[ changedList[run] ] = [];
@@ -105,28 +112,13 @@ function Startup(){
     document.getElementById("allowImageSrcChange").checked = getPrefValueForCheckbox("dom.disable_image_src_set");
     document.getElementById("allowDocumentCookieGet").checked = getPrefValueForCheckbox("dom.disable_cookie_get");
     document.getElementById("allowDocumentCookieSet").checked = getPrefValueForCheckbox("dom.disable_cookie_set");
+    document.getElementById("allowHideStatusBar").checked = getPrefValueForCheckbox("dom.disable_window_open_feature.status");
 
     //If we don't have a checkbox under groupbox pluginPreferences, we should hide it
     var pluginGroup = document.getElementById("pluginPreferences")
     var children = pluginGroup.childNodes;
     if (!children || children.length <= 1)    // 1 for the caption
       pluginGroup.setAttribute("hidden", "true");
-
-  } else { //not first time it was loaded, get default values from data 
-
-    document.getElementById("allowWindowOpen").checked = data["allowWindowOpen"].checked;
-    document.getElementById("allowTargetNew").checked = data["allowTargetNew"].checked;
-    document.getElementById("allowWindowMoveResize").checked = data["allowWindowMoveResize"].checked;
-    document.getElementById("allowWindowFlip").checked = data["allowWindowFlip"].checked;
-    document.getElementById("allowWindowStatusChange").checked = data["allowWindowStatusChange"].checked;
-    document.getElementById("allowImageSrcChange").checked = data["allowImageSrcChange"].checked;
-    document.getElementById("allowDocumentCookieSet").checked = data["allowDocumentCookieSet"].checked;
-    document.getElementById("allowDocumentCookieGet").checked = data["allowDocumentCookieGet"].checked;
-    document.getElementById("javascriptAllowNavigator").checked = data["javascriptAllowNavigator"].checked;
-
-    if (document.getElementById("javascriptAllowMailnews")) {
-      document.getElementById("javascriptAllowMailNews").checked = data["javascriptAllowMailNews"].checked;
-    }
   }
 
   javascriptEnabledChange();
@@ -192,6 +184,11 @@ function doOnOk(){
   if (data.scriptData["allowImageSrcChangeChanged"].value){
     parent.hPrefWindow.setPref("bool", "dom.disable_image_src_set",
       !getCheckboxValue("allowImageSrcChange"));
+  }
+
+  if (data.scriptData["allowHideStatusBarChanged"].value) {
+    parent.hPrefWindow.setPref("bool", "dom.disable_window_open_feature.status",
+      !getCheckboxValue("allowHideStatusBar"));
   }
 }
 
