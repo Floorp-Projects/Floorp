@@ -8,11 +8,10 @@
         title="&prefWindow.title;" 
         style="&prefWindow.size;"
         windowtype="mozilla:preferences"
-        buttons="accept,cancel,help"
+        buttons="accept,cancel"
         onload="Startup();"
         ondialogaccept="return hPrefWindow.onOK(event);"
         ondialogcancel="return hPrefWindow.onCancel(event);"
-        ondialoghelp="return doHelpButton(event)"
         persist="screenX screenY"> 
 
   <script>
