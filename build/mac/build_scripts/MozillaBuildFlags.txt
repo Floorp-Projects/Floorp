@@ -62,6 +62,10 @@ bidi            1      IBMBIDI
 p3p             0
 jsdebugger      0
 moz_logging     1
+chatzilla       1
+xml_rpc         1
+cview           1
+help            1
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"

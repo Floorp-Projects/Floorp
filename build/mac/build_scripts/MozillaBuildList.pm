@@ -304,30 +304,36 @@ sub ProcessJarManifests()
     # a hash of jars passed as context to the following calls
     my(%jars);
     
-    if ($main::build{extensions})
+    if ($main::options{chatzilla})
     {
       CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
+    }
+    if ($main::options{cview})
+    {
       CreateJarFromManifest(":mozilla:extensions:cview:resources:jar.mn", $chrome_dir, \%jars);
+    }
+    if ($main::options{help})
+    {
       CreateJarFromManifest(":mozilla:extensions:help:resources:jar.mn", $chrome_dir, \%jars);
-      if ($main::options{vixen})
-      {
-        CreateJarFromManifest(":mozilla:extensions:vixen:resources:jar.mn", $chrome_dir, \%jars);
-      }
-      if ($main::options{inspector})
-      {
-        CreateJarFromManifest(":mozilla:extensions:inspector:resources:content:jar.mn", $chrome_dir, \%jars);
-        CreateJarFromManifest(":mozilla:extensions:inspector:resources:locale:en-US:jar.mn", $chrome_dir, \%jars);
-        CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:classic:jar.mn", $chrome_dir, \%jars);
-        CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:modern:jar.mn", $chrome_dir, \%jars);
-      }
-      if ($main::options{p3p})
-      {
-        CreateJarFromManifest(":mozilla:extensions:p3p:resources:jar.mn", $chrome_dir, \%jars);
-      }
-      if ($main::options{jsdebugger})
-      {
-        CreateJarFromManifest(":mozilla:extensions:venkman:resources:jar.mn", $chrome_dir, \%jars);
-      }
+    }
+    if ($main::options{vixen})
+    {
+      CreateJarFromManifest(":mozilla:extensions:vixen:resources:jar.mn", $chrome_dir, \%jars);
+    }
+    if ($main::options{inspector})
+    {
+      CreateJarFromManifest(":mozilla:extensions:inspector:resources:content:jar.mn", $chrome_dir, \%jars);
+      CreateJarFromManifest(":mozilla:extensions:inspector:resources:locale:en-US:jar.mn", $chrome_dir, \%jars);
+      CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:classic:jar.mn", $chrome_dir, \%jars);
+      CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:modern:jar.mn", $chrome_dir, \%jars);
+    }
+    if ($main::options{p3p})
+    {
+      CreateJarFromManifest(":mozilla:extensions:p3p:resources:jar.mn", $chrome_dir, \%jars);
+    }
+    if ($main::options{jsdebugger})
+    {
+      CreateJarFromManifest(":mozilla:extensions:venkman:resources:jar.mn", $chrome_dir, \%jars);
     }
     
     CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
@@ -1761,10 +1767,16 @@ sub BuildExtensionsProjects()
     my($packages_chrome_dir) = "$chrome_dir" . "packages:";
 
     # Chatzilla
-    InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS",     "${dist_dir}Components");
+    if ($main::options{chatzilla})
+    {
+      InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS",     "${dist_dir}Components");
+    }
     
     # XML-RPC
-    InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS", "${dist_dir}Components");
+    if ($main::options{xml_rpc})
+    {
+      InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS", "${dist_dir}Components");
+    }
     
     # Transformiix
     if ($main::options{transformiix})
