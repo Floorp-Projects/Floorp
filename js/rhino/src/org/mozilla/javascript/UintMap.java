@@ -44,7 +44,7 @@ import java.io.ObjectOutputStream;
  * Map to associate non-negative integers to objects or integers.
  * The map does not synchronize any of its operation, so either use
  * it from a single thread or do own synchronization or perform all mutation
- * operations on one thread before passing the map to others
+ * operations on one thread before passing the map to others.
  *
  * @author Igor Bukanov
  *

@@ -1609,30 +1609,32 @@ public class Context {
     }
 
     /**
-     * if hasFeature(FEATURE_NON_ECMA_GET_YEAR) returns true,
-     * Date.prototype.getYear subtructs 1900 only if 1900 <= date < 2000
-     * in deviation with Ecma B.2.4
+     * If hasFeature(FEATURE_NON_ECMA_GET_YEAR) returns true,
+     * Date.prototype.getYear subtructs 1900 only if 1900 <= date < 2000.
+     * The default behavior is always to subtruct 1900 as rquired
+     * by Ecma B.2.4.
      */
     public static final int FEATURE_NON_ECMA_GET_YEAR = 1;
 
     /**
-     * if hasFeature(FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME) returns true,
-     * allow 'function <MemberExpression>(...) { ... }' to be syntax sugar for
-     * '<MemberExpression> = function(...) { ... }', when <MemberExpression>
+     * If hasFeature(FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME) returns true,
+     * allow 'function memberExpression(args) { body }' to be syntax sugar
+     * for
+     * 'memberExpression = function(args) { body }', when memberExpression
      * is not simply identifier.
-     * See Ecma-262, section 11.2 for definition of <MemberExpression>
+     * See Ecma-262, section 11.2 for definition of memberExpression.
      */
     public static final int FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME = 2;
 
     /**
-     * if hasFeature(RESERVED_KEYWORD_AS_IDENTIFIER) returns true,
+     * If hasFeature(RESERVED_KEYWORD_AS_IDENTIFIER) returns true,
      * treat future reserved keyword (see  Ecma-262, section 7.5.3) as ordinary
      * identifiers but warn about this usage
      */
     public static final int FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER = 3;
 
     /**
-     * if hasFeature(FEATURE_TO_STRING_AS_SOURCE) returns true,
+     * If hasFeature(FEATURE_TO_STRING_AS_SOURCE) returns true,
      * calling toString on JS objects gives JS source with code to create an
      * object with all enumeratable fields of the original object instead of
      * printing "[object <object-type>]".
