@@ -46,7 +46,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS) && !defined(_WIN32_WCE)
 #include <conio.h>
 #include <io.h>
 #define QUIET_FGETS quiet_fgets
@@ -82,13 +82,16 @@ static void echoOn(int fd)
 char *SEC_GetPassword(FILE *input, FILE *output, char *prompt,
 			       PRBool (*ok)(char *))
 {
-    char phrase[200];
-    int infd = fileno(input);
 #if defined(_WINDOWS) || defined(OS2)
     int isTTY = (input == stdin);
+#define echoOn(x)
+#define echoOff(x)
 #else
+    int infd  = fileno(input);
     int isTTY = isatty(infd);
 #endif
+    char phrase[200];
+
     for (;;) {
 	/* Prompt for password */
 	if (isTTY) {
@@ -167,8 +170,11 @@ static char * quiet_fgets (char *buf, int length, FILE *input)
 
   while (1)
     {
-    c = getch();
-
+#if defined (_WIN32_WCE)
+    c = getchar();	/* gets a character from stdin */
+#else
+    c = getch();	/* getch gets a character from the console */
+#endif
     if (c == '\b')
       {
       if (end > buf)

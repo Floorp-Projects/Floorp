@@ -8,14 +8,15 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* $Id: zutil.h,v 1.1 2000/03/31 20:13:19 relyea%netscape.com Exp $ */
+/* $Id: zutil.h,v 1.2 2002/04/04 00:00:18 nelsonb%netscape.com Exp $ */
 
 #ifndef _Z_UTIL_H
 #define _Z_UTIL_H
 
 #include "zlib.h"
 
-#if defined(MSDOS)||defined(VMS)||defined(CRAY)||defined(WIN32)||defined(RISCOS)
+#if defined(_WIN32_WCE)
+#elif defined(MSDOS)||defined(VMS)||defined(CRAY)||defined(WIN32)||defined(RISCOS)
 #   include <stddef.h>
 #   include <errno.h>
 #else
