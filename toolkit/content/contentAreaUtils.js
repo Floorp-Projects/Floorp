@@ -223,6 +223,8 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
   catch (e) {
     var saveAsTypeResult = { rv: 0 };
     file = getTargetFile(aData, aSniffer, contentType, isDocument, aSkipPrompt, saveAsTypeResult);
+    if (!file)
+      return;
     saveAsType = saveAsTypeResult.rv;
   }
 
@@ -289,7 +291,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
 
 function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, aSaveAsTypeResult)
 {
-  aSaveAsTypeResult.rv = kSaveAsType_Complete;                                           
+  aSaveAsTypeResult.rv = kSaveAsType_Complete;
   
   // Determine what the 'default' string to display in the File Picker dialog 
   // should be. 
@@ -382,7 +384,7 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
     fp.defaultString = defaultString;
   
     if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
-      return;
+      return null;
   
     var useDownloadDir = false;
     try {
@@ -501,11 +503,9 @@ nsHeaderSniffer.prototype = {
           // corresponding to each encoding starting from the end, so the first
           // thing it returns corresponds to the outermost encoding.
           var encodingEnumerator = encodedChannel.contentEncodings;
-          if (encodingEnumerator && encodingEnumerator.hasMoreElements()) {
+          if (encodingEnumerator && encodingEnumerator.hasMore()) {
             try {
-              this.contentEncodingType =
-                encodingEnumerator.getNext().
-                  QueryInterface(Components.interfaces.nsISupportsCString).data;
+              this.contentEncodingType = encodingEnumerator.getNext();
             } catch (e) {
             }
           }
@@ -602,16 +602,29 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
       var extEnumerator = mimeInfo.getFileExtensions();
 
       var extString = "";
+      var defaultDesc = "";
+      var plural = false;
       while (extEnumerator.hasMore()) {
+        if (defaultDesc) {
+          defaultDesc += ", ";
+          plural = true;
+        }
         var extension = extEnumerator.getNext();
         if (extString)
           extString += "; ";    // If adding more than one extension,
                                 // separate by semi-colon
         extString += "*." + extension;
+        defaultDesc += extension.toUpperCase();
       }
 
       if (extString) {
-        aFilePicker.appendFilter(mimeInfo.description, extString);
+        var desc = mimeInfo.Description;
+        if (!desc) { 
+          var key = plural ? "unknownDescriptionFilesPluralFilter" : 
+                             "unknownDescriptionFilesFilter";
+          desc = getStringBundle().formatStringFromName(key, [defaultDesc], 1);
+        }
+        aFilePicker.appendFilter(desc, extString);
       } else {
         aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
       }        
@@ -661,7 +674,7 @@ function makeWebBrowserPersist()
 function makeURL(aURL)
 {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                .getService(Components.interfaces.nsIIOService);
+                            .getService(Components.interfaces.nsIIOService);
   return ioService.newURI(aURL, null, null);
 }
 
