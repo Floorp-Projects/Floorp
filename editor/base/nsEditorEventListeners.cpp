@@ -151,6 +151,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 
             case nsIDOMUIEvent::VK_DELETE:
                mEditor->DeleteSelection(nsIEditor::eDeleteNext);
+               ScrollSelectionIntoView();
                break;
 
    //      case nsIDOMUIEvent::VK_RETURN:
@@ -200,6 +201,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
                   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
                    if (htmlEditor)
                       htmlEditor->InsertText(key);
+                  ScrollSelectionIntoView();
                   return NS_ERROR_BASE; // this means "I handled the event, don't do default processing"
                }
                else {
@@ -267,7 +269,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       if (nsIDOMUIEvent::VK_BACK==keyCode) 
       {
         mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
-         return NS_ERROR_BASE; // consumed
+        ScrollSelectionIntoView();
+        return NS_ERROR_BASE; // consumed
       }   
       if (nsIDOMUIEvent::VK_RETURN==keyCode) 
       {
@@ -275,6 +278,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
         {
           htmlEditor->InsertBreak();
+          ScrollSelectionIntoView();
           return NS_ERROR_BASE; // consumed
         }
         else 
@@ -293,8 +297,11 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }
       key += character;
       htmlEditor->InsertText(key);
+      ScrollSelectionIntoView();
     }
   }
+  else
+    ScrollSelectionIntoView();
 
   return NS_ERROR_BASE; // consumed
   
@@ -587,7 +594,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             else {
               htmlEditor->RemoveInlineProperty(nsIEditProperty::u, nsnull);
             }
-
           }
         }
         break;
@@ -833,7 +839,21 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
   return NS_OK;
 }
 
+nsresult
+nsTextEditorKeyListener::ScrollSelectionIntoView()
+{
+  nsCOMPtr<nsIPresShell> presShell;
+  
+  nsresult result = mEditor->GetPresShell(getter_AddRefs(presShell));
 
+  if (NS_FAILED(result))
+    return result;
+
+  if (!presShell)
+    return NS_ERROR_NULL_POINTER;
+
+  return presShell->ScrollSelectionIntoView(SELECTION_NORMAL, SELECTION_FOCUS_REGION);
+}
 
 /*
  * nsTextEditorMouseListener implementation
@@ -1653,6 +1673,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
               doc->SetDisplaySelection(PR_TRUE);
             }
           }
+#ifdef USE_HACK_REPAINT
   // begin hack repaint
           nsCOMPtr<nsIViewManager> viewmgr;
           ps->GetViewManager(getter_AddRefs(viewmgr));
@@ -1662,8 +1683,11 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
             if (view) {
               viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
             }
-  // end hack repaint
           }
+  // end hack repaint
+#else
+          ps->RepaintSelection(SELECTION_NORMAL);
+#endif
         }
       }
     }
@@ -1696,6 +1720,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
             doc->SetDisplaySelection(PR_FALSE);
           }
         }
+#ifdef USE_HACK_REPAINT
 // begin hack repaint
         nsCOMPtr<nsIViewManager> viewmgr;
         ps->GetViewManager(getter_AddRefs(viewmgr));
@@ -1708,6 +1733,9 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
           }
         }
 // end hack repaint
+#else
+        ps->RepaintSelection(SELECTION_NORMAL);
+#endif
       }
     }
   }

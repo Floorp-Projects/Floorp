@@ -121,7 +121,7 @@ public:
   nsresult      GetFocusNodeRect(nsRect *aRect);
   nsresult      ScrollRectIntoView(nsRect& aRect, PRIntn  aVPercent, PRIntn  aHPercent);
 
-  NS_IMETHOD    ScrollIntoView();
+  NS_IMETHOD    ScrollIntoView(SelectionRegion aRegion=SELECTION_FOCUS_REGION);
   nsresult      AddItem(nsIDOMRange *aRange);
   nsresult      RemoveItem(nsIDOMRange *aRange);
 
@@ -148,6 +148,7 @@ public:
   NS_IMETHOD   GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset);
   NS_IMETHOD   LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                              SelectionDetails **aReturnDetails, SelectionType aType);
+  NS_IMETHOD   Repaint();
 
 private:
   friend class nsRangeListIterator;
@@ -195,6 +196,8 @@ public:
   NS_IMETHOD SetMouseDownState(PRBool aState);
   NS_IMETHOD GetMouseDownState(PRBool *aState);
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
+  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
+  NS_IMETHOD RepaintSelection(SelectionType aType);
 /*END nsIFrameSelection interfacse*/
 
 
@@ -992,13 +995,37 @@ nsRangeList::GetMouseDownState(PRBool *aState)
 NS_IMETHODIMP
 nsRangeList::GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection)
 {
-  if (aType < SELECTION_NORMAL || aType > NUM_SELECTIONTYPES)
+  if (aType < SELECTION_NORMAL || aType >= NUM_SELECTIONTYPES)
     return NS_ERROR_FAILURE;
   if (!aDomSelection)
     return NS_ERROR_NULL_POINTER;
   *aDomSelection = mDomSelections[aType];
   (*aDomSelection)->AddRef();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRangeList::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion)
+{
+  if (aType < SELECTION_NORMAL || aType >= NUM_SELECTIONTYPES)
+    return NS_ERROR_FAILURE;
+
+  if (!mDomSelections[aType])
+    return NS_ERROR_NULL_POINTER;
+
+  return mDomSelections[aType]->ScrollIntoView(aRegion);
+}
+
+NS_IMETHODIMP
+nsRangeList::RepaintSelection(SelectionType aType)
+{
+  if (aType < SELECTION_NORMAL || aType >= NUM_SELECTIONTYPES)
+    return NS_ERROR_FAILURE;
+
+  if (!mDomSelections[aType])
+    return NS_ERROR_NULL_POINTER;
+
+  return mDomSelections[aType]->Repaint();
 }
 
 //////////END FRAMESELECTION
@@ -1172,6 +1199,7 @@ nsDOMSelection::nsDOMSelection(nsRangeList *aList)
 {
   mRangeList = aList;
   mFixupState = PR_FALSE;
+  mDirection = eDirNext;
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   mScriptObject = nsnull;
   NS_INIT_REFCNT();
@@ -1741,7 +1769,50 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMSelection::Repaint()
+{
+  PRUint32 arrCount = 0;
 
+  if (!mRangeArray)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsISupports> isupp;
+  nsCOMPtr<nsIDOMRange> range;
+
+  nsresult result = mRangeArray->Count(&arrCount);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (arrCount < 1)
+    return NS_OK;
+
+  PRUint32 i;
+
+  for (i = 0; i < arrCount; i++)
+  {
+    result = mRangeArray->GetElementAt(i, getter_AddRefs(isupp));
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!isupp)
+      return NS_ERROR_NULL_POINTER;
+
+    range = do_QueryInterface(isupp);
+
+    if (!range)
+      return NS_ERROR_NULL_POINTER;
+
+    result = selectFrames(range, PR_TRUE);
+
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDOMSelection::GetEnumerator(nsIEnumerator **aIterator)
@@ -2793,6 +2864,9 @@ nsDOMSelection::GetFocusNodeRect(nsRect *aRect)
   if (NS_FAILED(result))
     return result;
 
+  if (!frame)
+    return NS_ERROR_NULL_POINTER;
+
   if (focusNodeType == nsIDOMNode::TEXT_NODE)
   {
     nsIFrame *childFrame = 0;
@@ -2987,9 +3061,12 @@ nsDOMSelection::ScrollRectIntoView(nsRect& aRect,
 }
 
 NS_IMETHODIMP
-nsDOMSelection::ScrollIntoView()
+nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
 {
   nsresult result;
+
+  if (mRangeList->GetBatching())
+    return NS_OK;
 
   //
   // Shut the caret off before scrolling to avoid

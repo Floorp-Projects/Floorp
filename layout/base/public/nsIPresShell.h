@@ -54,10 +54,14 @@ class nsIFrameManager;
 #define NS_PRESSHELL_SCROLL_ANYWHERE -1
 
 typedef enum SelectionType{SELECTION_NORMAL = 0, 
-                   SELECTION_SPELLCHECK, 
-                   SELECTION_IME_SOLID, 
-                   SELECTION_IME_DASHED, 
-                   NUM_SELECTIONTYPES} SelectionType;
+                           SELECTION_SPELLCHECK, 
+                           SELECTION_IME_SOLID, 
+                           SELECTION_IME_DASHED, 
+                           NUM_SELECTIONTYPES} SelectionType;
+
+typedef enum SelectionRegion{SELECTION_ANCHOR_REGION = 0, 
+                             SELECTION_FOCUS_REGION,
+                             NUM_SELECTION_REGIONS} SelectionRegion;
 
 
 /**
@@ -105,6 +109,22 @@ public:
    * @param aSelection will hold the return value
    */
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection** aSelection) = 0;
+
+  /**
+   * ScrollSelectionIntoView scrolls a region of the selection,
+   * so that it is visible in the scrolled view.
+   *
+   * @param aType the selection to scroll into view.
+   * @param aRegion the region inside the selection to scroll into view.
+   */
+  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion) = 0;
+
+  /**
+   * RepaintSelection repaints the selection specified by aType.
+   *
+   * @param aType specifies the selection to repaint.
+   */
+  NS_IMETHOD RepaintSelection(SelectionType aType) = 0;
 
   /**
    * GetFrameSelection will return the Frame based selection API you 
