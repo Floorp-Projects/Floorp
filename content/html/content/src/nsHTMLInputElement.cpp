@@ -1280,6 +1280,10 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+  else if (aAttribute == nsHTMLAtoms::checked) {
+    aResult.Assign(NS_LITERAL_STRING("checked"));
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   else if (IsImage() && ImageAttributeToString(aAttribute, aValue,
                                                aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
