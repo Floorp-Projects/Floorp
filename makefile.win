@@ -41,6 +41,7 @@ DEPTH=.
 DIRS = \
 !if defined(DIST_DIRS)
   config			\
+  db				\
   dbm				\
   include			\
   jpeg				\
