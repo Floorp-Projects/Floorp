@@ -55,6 +55,10 @@ public:
   static nsIAtom* bulletList;
   static nsIAtom* colGroupList;
   static nsIAtom* floaterList;
+
+  // Alphabetical list of pseudo tag names for non-element content
+  static nsIAtom* textTagName;
+  static nsIAtom* commentTagName;
 };
 
 #endif /* nsLayoutAtoms_h___ */

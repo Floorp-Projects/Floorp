@@ -43,6 +43,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIFocusTracker.h"
 #include "nsHTMLParts.h"
+#include "nsLayoutAtoms.h"
 
 // Some Misc #defines
 #define SELECTION_DEBUG        0
@@ -1609,7 +1610,7 @@ nsFrame::MakeFrameName(const char* aType, nsString& aResult) const
   if (nsnull != mContent) {
     nsIAtom* tag;
     mContent->GetTag(tag);
-    if (tag != nsnull) {
+    if ((tag != nsnull) && (tag != nsLayoutAtoms::textTagName)) {
       aResult.Append("(");
       nsAutoString buf;
       tag->ToString(buf);

@@ -22,6 +22,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
 #include "nsFrame.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 
@@ -100,6 +101,14 @@ nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
+NS_IMETHODIMP 
+nsCommentNode::GetTag(nsIAtom*& aResult) const
+{
+  aResult = nsLayoutAtoms::commentTagName;
+  NS_ADDREF(aResult);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsCommentNode::GetNodeName(nsString& aNodeName)
 {
@@ -141,7 +150,7 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, " refcount=%d<", mRefCnt);
+  fprintf(out, "Comment refcount=%d<", mRefCnt);
 
   nsAutoString tmp;
   mInner.ToCString(tmp, 0, mInner.mText.GetLength());

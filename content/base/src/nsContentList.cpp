@@ -25,6 +25,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsGenericElement.h"
 
+#include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
 
 nsIAtom* nsContentList::gWildCardAtom = nsnull;
@@ -320,7 +321,8 @@ nsContentList::Match(nsIContent *aContent, PRBool *aMatch)
 
     // If we have to match all, only do those that have
     // a tagName i.e. only the elements.
-    if (mMatchAll && (nsnull != name)) {
+    if (mMatchAll && (nsLayoutAtoms::textTagName != name) &&
+        (nsLayoutAtoms::commentTagName != name)) {
       *aMatch = PR_TRUE;
     }
     // XXX We don't yet match on namespace. Maybe we should??
