@@ -70,16 +70,16 @@ DIRS = \
 # the following are associated with the layout engine
   expat				\
   htmlparser			\
+  widget			\
+  editor 			\
   gfx				\
   dom				\
   view				\
-  widget			\
   layout			\
   rdf                           \
   silentdl                      \
   webshell			\
   xpfe				\
-  editor 			\
   mailnews			\
   $(NULL)
 
