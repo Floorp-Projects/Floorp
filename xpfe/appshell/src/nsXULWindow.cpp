@@ -400,9 +400,14 @@ NS_IMETHODIMP nsXULWindow::Destroy()
 
 NS_IMETHODIMP nsXULWindow::SetPosition(PRInt32 aX, PRInt32 aY)
 {
-   NS_ENSURE_SUCCESS(mWindow->Move(aX, aY), NS_ERROR_FAILURE);
-   PersistPositionAndSize(PR_TRUE, PR_FALSE, PR_FALSE);
-   return NS_OK;
+  /* any attempt to set the window's size or position overrides the window's
+     zoom state. this is important when these two states are competing while
+     the window is being opened. but it should probably just always be so. */
+  mWindow->SetSizeMode(nsSizeMode_Normal);
+    
+  NS_ENSURE_SUCCESS(mWindow->Move(aX, aY), NS_ERROR_FAILURE);
+  PersistPositionAndSize(PR_TRUE, PR_FALSE, PR_FALSE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::GetPosition(PRInt32* aX, PRInt32* aY)
@@ -412,24 +417,36 @@ NS_IMETHODIMP nsXULWindow::GetPosition(PRInt32* aX, PRInt32* aY)
 
 NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
-   mIntrinsicallySized = PR_FALSE;
-   NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
-   PersistPositionAndSize(PR_FALSE, PR_TRUE, PR_FALSE);
-   return NS_OK;
+  /* any attempt to set the window's size or position overrides the window's
+     zoom state. this is important when these two states are competing while
+     the window is being opened. but it should probably just always be so. */
+  mWindow->SetSizeMode(nsSizeMode_Normal);
+
+  mIntrinsicallySized = PR_FALSE;
+
+  NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
+  PersistPositionAndSize(PR_FALSE, PR_TRUE, PR_FALSE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::GetSize(PRInt32* aCX, PRInt32* aCY)
 {
-   return GetPositionAndSize(nsnull, nsnull, aCX, aCY);
+  return GetPositionAndSize(nsnull, nsnull, aCX, aCY);
 }
 
 NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY, 
    PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
-   mIntrinsicallySized = PR_FALSE;
-   NS_ENSURE_SUCCESS(mWindow->Resize(aX, aY, aCX, aCY, aRepaint), NS_ERROR_FAILURE);
-   PersistPositionAndSize(PR_TRUE, PR_TRUE, PR_FALSE);
-   return NS_OK;
+  /* any attempt to set the window's size or position overrides the window's
+     zoom state. this is important when these two states are competing while
+     the window is being opened. but it should probably just always be so. */
+  mWindow->SetSizeMode(nsSizeMode_Normal);
+
+  mIntrinsicallySized = PR_FALSE;
+
+  NS_ENSURE_SUCCESS(mWindow->Resize(aX, aY, aCX, aCY, aRepaint), NS_ERROR_FAILURE);
+  PersistPositionAndSize(PR_TRUE, PR_TRUE, PR_FALSE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
