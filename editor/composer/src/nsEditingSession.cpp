@@ -41,7 +41,9 @@
 
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsISelectionPrivate.h"
 #include "nsITransactionManager.h"
@@ -55,6 +57,8 @@
 #include "nsIControllers.h"
 #include "nsIController.h"
 #include "nsIControllerContext.h"
+#include "nsICommandManager.h"
+#include "nsPICommandUpdater.h"
 
 #include "nsIPresShell.h"
 
@@ -74,7 +78,6 @@
 #include "nsEditorParserObserver.h"
 
 #if DEBUG
-#include "nsIURI.h"
 //#define NOISY_DOC_LOADING  1
 #endif
 
@@ -571,7 +574,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
       {
         nsXPIDLCString spec;
         uri->GetSpec(spec);
-        printf(" **** STATE_START: CHANNEL URI=%s, flags=%x\n",spec.get(), aStateFlags);
+        printf(" **** STATE_START: CHANNEL URI=%s, 
+               flags=%x\n",spec.get(), aStateFlags);
       }
     }
     else
@@ -636,7 +640,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
       {
         nsXPIDLCString spec;
         uri->GetSpec(spec);
-        printf(" **** STATE_STOP: CHANNEL URI=%s, flags=%x\n",spec.get(), aStateFlags);
+        printf(" **** STATE_STOP: CHANNEL URI=%s,
+                flags=%x\n",spec.get(), aStateFlags);
       }
     }
     else
@@ -699,10 +704,34 @@ nsEditingSession::OnProgressChange(nsIWebProgress *aWebProgress,
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP
 nsEditingSession::OnLocationChange(nsIWebProgress *aWebProgress, 
-                                   nsIRequest *aRequest, nsIURI *location)
+                                   nsIRequest *aRequest, nsIURI *aURI)
 {
-    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-    return NS_OK;
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsresult rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  rv = domWindow->GetDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc) return NS_ERROR_FAILURE;
+
+  rv = doc->SetDocumentURL(aURI);
+  if (NS_FAILED(rv)) return rv;
+
+  // Notify the location-changed observer that
+  //  the document URL has changed
+  nsCOMPtr<nsIDocShell> docShell;
+  rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShell);
+  nsCOMPtr<nsPICommandUpdater> commandUpdater =
+                                  do_QueryInterface(commandManager);
+  if (!commandUpdater) return NS_ERROR_FAILURE;
+
+  return commandUpdater->CommandStatusChanged("obs_documentLocationChanged");
 }
 
 /*---------------------------------------------------------------------------
@@ -812,7 +841,8 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
 #ifdef NOISY_DOC_LOADING
   printf("Editing shell EndDocumentLoad\n");
 #endif
-  // We want to call the base class EndDocumentLoad, but avoid some of the stuff
+  // We want to call the base class EndDocumentLoad,
+  // but avoid some of the stuff
   // that nsWebShell does (need to refactor).
   
   // OK, time to make an editor on this document
@@ -853,9 +883,10 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
         if (NS_FAILED(rv)) return rv;
 
         mEditorStatus = eEditorCreationInProgress;
-        mLoadBlankDocTimer->InitWithFuncCallback(nsEditingSession::TimerCallback,
-                                                 (void*)docShell,
-                                                 10, nsITimer::TYPE_ONE_SHOT);
+        mLoadBlankDocTimer->InitWithFuncCallback(
+                                        nsEditingSession::TimerCallback,
+                                        (void*)docShell,
+                                        10, nsITimer::TYPE_ONE_SHOT);
       }
     }
   }
@@ -977,7 +1008,10 @@ nsEditingSession::PrepareForEditing()
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
   if (!webProgress) return NS_ERROR_FAILURE;
 
-  return webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
+  return webProgress->AddProgressListener(this,
+                            (nsIWebProgress::NOTIFY_STATE_NETWORK  | 
+                             nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                             nsIWebProgress::NOTIFY_LOCATION));
 }
 
 /*---------------------------------------------------------------------------
@@ -988,10 +1022,11 @@ nsEditingSession::PrepareForEditing()
   get and return the controller ID, and set the refCon
 ----------------------------------------------------------------------------*/
 nsresult
-nsEditingSession::SetupEditorCommandController(const char *aControllerClassName,
-                                               nsIDOMWindow *aWindow,
-                                               nsISupports *aRefCon,
-                                               PRUint32 *aControllerId)
+nsEditingSession::SetupEditorCommandController(
+                                  const char *aControllerClassName,
+                                  nsIDOMWindow *aWindow,
+                                  nsISupports *aRefCon,
+                                  PRUint32 *aControllerId)
 {
   NS_ENSURE_ARG_POINTER(aControllerClassName);
   NS_ENSURE_ARG_POINTER(aWindow);
@@ -999,7 +1034,8 @@ nsEditingSession::SetupEditorCommandController(const char *aControllerClassName,
   NS_ENSURE_ARG_POINTER(aControllerId);
 
   nsresult rv;
-  nsCOMPtr<nsIDOMWindowInternal> domWindowInt = do_QueryInterface(aWindow, &rv);
+  nsCOMPtr<nsIDOMWindowInternal> domWindowInt =
+                                    do_QueryInterface(aWindow, &rv);
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIControllers> controllers;      
@@ -1043,7 +1079,8 @@ nsEditingSession::SetEditorOnControllers(nsIDOMWindow *aWindow,
   nsresult rv;
   
   // set the editor on the controller
-  nsCOMPtr<nsIDOMWindowInternal> domWindowInt = do_QueryInterface(aWindow, &rv);
+  nsCOMPtr<nsIDOMWindowInternal> domWindowInt =
+                                     do_QueryInterface(aWindow, &rv);
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIControllers> controllers;      

@@ -1238,6 +1238,44 @@ PRBool nsHTMLEditor::IsModifiable()
 #pragma mark -
 #endif
 
+NS_IMETHODIMP
+nsHTMLEditor::UpdateBaseURL()
+{
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  GetDocument(getter_AddRefs(domDoc));
+  if (!domDoc) return NS_ERROR_FAILURE;
+
+  // Look for an HTML <base> tag
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsresult rv = domDoc->GetElementsByTagName(NS_LITERAL_STRING("base"), getter_AddRefs(nodeList));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> baseNode;
+  if (nodeList)
+  {
+    PRUint32 count;
+    nodeList->GetLength(&count);
+    if (count >= 1)
+    {
+      rv = nodeList->Item(0, getter_AddRefs(baseNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  // If no base tag, then set baseURL to the document's URL
+  // This is very important, else relative URLs for links and images are wrong
+  if (!baseNode)
+  {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    if (!doc) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIURI> uri;
+    rv = doc->GetDocumentURL(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return doc->SetBaseURL(uri);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
 {
   PRUint32 keyCode, character;

@@ -124,6 +124,8 @@ public:
   NS_IMETHODIMP BeginningOfDocument();
 
   /* ------------ nsIHTMLEditor methods -------------- */
+  NS_IMETHOD UpdateBaseURL();
+
   NS_IMETHOD CopyLastEditableChildStyles(nsIDOMNode *aPreviousBlock, nsIDOMNode *aNewBlock,
                                          nsIDOMNode **aOutBrNode);
 
