@@ -2260,7 +2260,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   }
 
   // Make head part
-  rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("head"),
+  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::head,
                                      nsnull, kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4022,7 +4022,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     // Create content object
     nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("base"), nsnull,
+    mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::base, nsnull,
                                   kNameSpaceID_None,
                                   getter_AddRefs(nodeInfo));
 
@@ -4174,7 +4174,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
   // Create content object
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("meta"), nsnull,
+  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::meta, nsnull,
                                      kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -49,7 +49,6 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxScrollFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsIXMLContent.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
@@ -384,7 +383,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("scrollbar"), nsnull,
+  nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollbar, nsnull,
                                kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
 
   ScrollbarStyles styles = GetScrollbarStyles();
@@ -409,7 +408,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   }
 
   if (canHaveHorizontal && canHaveVertical) {
-    nodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("scrollcorner"), nsnull,
+    nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollcorner, nsnull,
                                  kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
     nsCOMPtr<nsIContent> content;
     elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
