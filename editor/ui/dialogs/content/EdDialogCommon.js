@@ -836,7 +836,7 @@ function GetHTTPEquivMetaElement(name)
         for (var i = 0; i < metaNodes.length; i++)
         {
           var metaNode = metaNodes.item(i);
-          if (metaNode && metaNode.getAttribute("http-equiv") == name)
+          if (metaNode && metaNode.getAttribute("http-equiv").toLowerCase() == name)
             return metaNode;
         }
       }
