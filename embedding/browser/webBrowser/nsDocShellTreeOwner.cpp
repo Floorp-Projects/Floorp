@@ -66,7 +66,7 @@
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIDragDropOverride.h"
-
+#include "nsIContent.h"
 
 static const char sWindowWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 
@@ -872,6 +872,11 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSITOOLTIPTEXTPROVIDER
+    
+protected:
+    nsCOMPtr<nsIAtom>   mTag_dialog;
+    nsCOMPtr<nsIAtom>   mTag_dialogheader;
+    nsCOMPtr<nsIAtom>   mTag_window;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(DefaultTooltipTextProvider, nsITooltipTextProvider)
@@ -879,6 +884,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(DefaultTooltipTextProvider, nsITooltipTextProvider
 DefaultTooltipTextProvider::DefaultTooltipTextProvider()
 {
     NS_INIT_REFCNT();
+    
+    // There are certain element types which we don't want to use
+    // as tool tip text. 
+    mTag_dialog       = getter_AddRefs(NS_NewAtom("dialog"));
+    mTag_dialogheader = getter_AddRefs(NS_NewAtom("dialogheader"));
+    mTag_window       = getter_AddRefs(NS_NewAtom("window"));   
 }
 
 /* void getNodeText (in nsIDOMNode aNode, out wstring aText); */
@@ -886,7 +897,7 @@ NS_IMETHODIMP DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnich
 {
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_ARG_POINTER(aText);
-
+    
   nsString outText;
 
   PRBool found = PR_FALSE;
@@ -894,15 +905,24 @@ NS_IMETHODIMP DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnich
   while ( !found && current ) {
     nsCOMPtr<nsIDOMElement> currElement ( do_QueryInterface(current) );
     if ( currElement ) {
-      // first try the normal title attribute...
-      currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
-      if ( outText.Length() )
-        found = PR_TRUE;
-      else {
-        // ...ok, that didn't work, try it in the XLink namespace
-        currElement->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"), NS_LITERAL_STRING("title"), outText);
-        if ( outText.Length() )
-          found = PR_TRUE;
+      nsCOMPtr<nsIContent> content(do_QueryInterface(currElement));
+      if (content) {
+        nsCOMPtr<nsIAtom> tagAtom;
+        content->GetTag(*getter_AddRefs(tagAtom));
+        if (tagAtom != mTag_dialog &&
+            tagAtom != mTag_dialogheader &&
+            tagAtom != mTag_window) {
+          // first try the normal title attribute...
+          currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
+          if ( outText.Length() )
+            found = PR_TRUE;
+          else {
+            // ...ok, that didn't work, try it in the XLink namespace
+            currElement->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"), NS_LITERAL_STRING("title"), outText);
+            if ( outText.Length() )
+              found = PR_TRUE;
+          }
+        }
       }
     }
     

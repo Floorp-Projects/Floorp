@@ -1209,9 +1209,9 @@ Boolean CBrowserShell::FindNext()
 }
 
 
-NS_METHOD CBrowserShell::OnShowContextMenu(PRUint32 aContextFlags,
-                                           nsIDOMEvent *aEvent,
-                                           nsIDOMNode *aNode)
+NS_IMETHODIMP CBrowserShell::OnShowContextMenu(PRUint32 aContextFlags,
+                                               nsIDOMEvent *aEvent,
+                                               nsIDOMNode *aNode)
 {
     // Find our CWebBrowserCMAttachment, if any
     CWebBrowserCMAttachment *aCMAttachment = nsnull;
@@ -1244,16 +1244,55 @@ NS_METHOD CBrowserShell::OnShowContextMenu(PRUint32 aContextFlags,
     return NS_OK;
 }
                                           
-NS_METHOD CBrowserShell::OnShowTooltip(PRInt32 aXCoords,
-                                       PRInt32 aYCoords,
-                                       const PRUnichar *aTipText)
+NS_IMETHODIMP CBrowserShell::OnShowTooltip(PRInt32 aXCoords,
+                                           PRInt32 aYCoords,
+                                           const PRUnichar *aTipText)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+    
+#if TARGET_CARBON
+    if ((Ptr)HMDisplayTag != (Ptr)kUnresolvedCFragSymbolAddress &&
+        (Ptr)HMHideTag != (Ptr)kUnresolvedCFragSymbolAddress)
+    {
+        HMHelpContentRec contentRec;
+        Point location;
+
+        location.h = aXCoords; location.v = aYCoords;
+        FocusDraw();
+        LocalToPortPoint(location);
+        PortToGlobalPoint(location);
+        
+        contentRec.version = kMacHelpVersion;
+        contentRec.absHotRect.top = contentRec.absHotRect.bottom = location.v;
+        contentRec.absHotRect.left = contentRec.absHotRect.right = location.h;
+        ::InsetRect(&contentRec.absHotRect, -4, -4);
+        contentRec.tagSide = kHMOutsideBottomScriptAligned;
+        contentRec.content[kHMMinimumContentIndex].contentType = kHMCFStringContent;
+        contentRec.content[kHMMinimumContentIndex].u.tagCFString = 
+            ::CFStringCreateWithCharactersNoCopy(NULL, (const UniChar *)aTipText, nsCRT::strlen(aTipText), kCFAllocatorNull);
+        contentRec.content[kHMMaximumContentIndex].contentType = kHMNoContent;
+        
+        ::HMDisplayTag(&contentRec);
+        rv = NS_OK;
+    }
+#endif
+
+    return rv;
 }
 
-NS_METHOD CBrowserShell::OnHideTooltip()
+NS_IMETHODIMP CBrowserShell::OnHideTooltip()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+    
+#if TARGET_CARBON
+    if ((Ptr)HMHideTag != (Ptr)kUnresolvedCFragSymbolAddress)
+    {
+        ::HMHideTag();
+        rv = NS_OK;
+    }
+#endif
+
+    return rv;
 }
 
 
