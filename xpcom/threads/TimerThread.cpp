@@ -43,19 +43,14 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(TimerThread, nsIRunnable)
 
-#undef ACCEPT_WRONG_TIMES
-
-#ifdef ACCEPT_WRONG_TIMES
-// allow the thread to wake up and process timers +/- 3ms of when they
-// are really supposed to fire.
-static const PRIntervalTime kThreeMS = PR_MillisecondsToInterval(3);
-#endif
-
 TimerThread::TimerThread() :
-  mCondVar(nsnull),
   mLock(nsnull),
+  mCondVar(nsnull),
   mProcessing(PR_FALSE),
-  mWaiting(PR_FALSE)
+  mWaiting(PR_FALSE),
+  mDelayLineCounter(0),
+  mMinTimerPeriod(0),
+  mTimeoutAdjustment(0)
 {
   NS_INIT_REFCNT();
 }
@@ -119,79 +114,136 @@ nsresult TimerThread::Shutdown()
       RemoveTimerInternal(timer);
     }
   }
-  
+
   mThread->Join();    // wait for the thread to die
   return NS_OK;
+}
+
+// Keep track of how early (positive slack) or late (negative slack) timers
+// are running, and use the filtered slack number to adaptively estimate how
+// early timers should fire to be "on time".
+void TimerThread::UpdateFilter(PRUint32 aDelay, PRIntervalTime aTimeout,
+                               PRIntervalTime aNow)
+{
+  PRInt32 slack = (PRInt32) (aTimeout - aNow);
+  double smoothSlack = 0;
+  PRUint32 i, filterLength;
+  static PRIntervalTime kFilterFeedbackMaxTicks =
+    PR_MillisecondsToInterval(FILTER_FEEDBACK_MAX);
+
+  if (slack > 0) {
+    if (slack > (PRInt32)kFilterFeedbackMaxTicks)
+      slack = kFilterFeedbackMaxTicks;
+  } else {
+    if (slack < -(PRInt32)kFilterFeedbackMaxTicks)
+      slack = -(PRInt32)kFilterFeedbackMaxTicks;
+  }
+  mDelayLine[mDelayLineCounter & DELAY_LINE_LENGTH_MASK] = slack;
+  if (++mDelayLineCounter < DELAY_LINE_LENGTH) {
+    // Startup mode: accumulate a full delay line before filtering.
+    PR_ASSERT(mTimeoutAdjustment == 0);
+    filterLength = 0;
+  } else {
+    // Past startup: compute number of filter taps based on mMinTimerPeriod.
+    if (mMinTimerPeriod == 0) {
+      mMinTimerPeriod = (aDelay != 0) ? aDelay : 1;
+    } else if (aDelay != 0 && aDelay < mMinTimerPeriod) {
+      mMinTimerPeriod = aDelay;
+    }
+
+    filterLength = (PRUint32) (FILTER_DURATION / mMinTimerPeriod);
+    if (filterLength > DELAY_LINE_LENGTH)
+      filterLength = DELAY_LINE_LENGTH;
+    else if (filterLength < 4)
+      filterLength = 4;
+
+    for (i = 1; i <= filterLength; i++)
+      smoothSlack += mDelayLine[(mDelayLineCounter-i) & DELAY_LINE_LENGTH_MASK];
+    smoothSlack /= filterLength;
+
+    // XXXbe do we need amplification?  hacking a fudge factor, need testing...
+    mTimeoutAdjustment = (PRInt32) (smoothSlack * 1.5);
+  }
+
+#ifdef DEBUG_TIMERS
+  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+    PR_LOG(gTimerLog, PR_LOG_DEBUG,
+           ("UpdateFilter: smoothSlack = %g, filterLength = %u\n",
+            smoothSlack, filterLength));
+  }
+#endif
 }
 
 /* void Run(); */
 NS_IMETHODIMP TimerThread::Run()
 {
+  nsAutoLock lock(mLock);
   mProcessing = PR_TRUE;
 
   while (mProcessing) {
-    nsTimerImpl *theTimer = nsnull;
+    PRIntervalTime now = PR_IntervalNow();
+    nsTimerImpl *timer = nsnull;
 
     if (mTimers.Count() > 0) {
-      nsAutoLock lock(mLock);
-      nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[0]);
+      timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[0]);
 
-      PRIntervalTime itIsNow = PR_IntervalNow();
-#ifdef ACCEPT_WRONG_TIMES
-      if (itIsNow + kThreeMS > timer->mTimeout - kThreeMS)
-#else
-      if (itIsNow >= timer->mTimeout)
-#endif
-      {
+      if (now >= timer->mTimeout + mTimeoutAdjustment) {
+  next:
         RemoveTimerInternal(timer);
-        theTimer = timer;
-        NS_ADDREF(theTimer);
-      }
-    }
+        NS_ADDREF(timer);
 
-    if (theTimer) {
+        // We release mLock around the Fire call, of course, to avoid deadlock.
+        lock.unlock();
+
 #ifdef DEBUG_TIMERS
-      if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-        PRIntervalTime now = PR_IntervalNow();
-        PR_LOG(gTimerLog, PR_LOG_DEBUG, ("Timer thread woke up %dms from when it was supposed to\n",
-          ((now > theTimer->mTimeout) ? PR_IntervalToMilliseconds(now - theTimer->mTimeout) :
-                                        -(PRInt32)PR_IntervalToMilliseconds(theTimer->mTimeout - now))));
-      }
+        if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+          PR_LOG(gTimerLog, PR_LOG_DEBUG,
+                 ("Timer thread woke up %dms from when it was supposed to\n",
+                  (now >= timer->mTimeout)
+                  ? PR_IntervalToMilliseconds(now - timer->mTimeout)
+                  : -(PRInt32)PR_IntervalToMilliseconds(timer->mTimeout - now))
+                );
+        }
 #endif
 
-      // We are going to let the call to Fire here handle the release of the timer so that
-      // we don't end up releasing the timer on the TimerThread
-      theTimer->Fire();
+        // We are going to let the call to Fire here handle the release of the
+        // timer so that we don't end up releasing the timer on the TimerThread
+        // instead of on the thread it targets.
+        timer->Fire();
+        timer = nsnull;
 
-      theTimer = nsnull;
+        lock.lock();
+        if (!mProcessing)
+          break;
+
+        // Update now, as Fire plus the locking may have taken a tick or two,
+        // and we may goto next below.
+        now = PR_IntervalNow();
+      }
     }
-
-    nsAutoLock lock(mLock);
 
     PRIntervalTime waitFor = PR_INTERVAL_NO_TIMEOUT;
 
     if (mTimers.Count() > 0) {
-      PRIntervalTime now = PR_IntervalNow();
-      PRIntervalTime timeout = NS_STATIC_CAST(nsTimerImpl *, mTimers[0])->mTimeout;
+      timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[0]);
 
-#ifdef ACCEPT_WRONG_TIMES
-      if (timeout > now + kThreeMS)
-#else
-      if (timeout > now)
-#endif
-        waitFor = timeout - now;
-      else
-        waitFor = PR_INTERVAL_NO_WAIT;
+      PRIntervalTime timeout = timer->mTimeout + mTimeoutAdjustment;
+
+      // Don't wait at all (even for PR_INTERVAL_NO_WAIT) if the next timer is
+      // due now or overdue.
+      if (now >= timeout)
+        goto next;
+      waitFor = timeout - now;
     }
 
 #ifdef DEBUG_TIMERS
     if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
       if (waitFor == PR_INTERVAL_NO_TIMEOUT)
-        PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
-      else if (waitFor == PR_INTERVAL_NO_WAIT)
-        PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for PR_INTERVAL_NO_WAIT\n"));
+        PR_LOG(gTimerLog, PR_LOG_DEBUG,
+               ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
       else
-        PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
+        PR_LOG(gTimerLog, PR_LOG_DEBUG,
+               ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
     }
 #endif
 
@@ -243,7 +295,7 @@ PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
   PRInt32 i = 0;
   for (; i < count; i++) {
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[i]);
-  
+
     if (aTimer->mTimeout < timer->mTimeout) {
       break;
     }

@@ -46,6 +46,7 @@
 #include "nsVoidArray.h"
 
 #include "prcvar.h"
+#include "prinrval.h"
 #include "prlock.h"
 
 class TimerThread : public nsIRunnable
@@ -63,6 +64,12 @@ public:
   nsresult AddTimer(nsTimerImpl *aTimer);
   nsresult TimerDelayChanged(nsTimerImpl *aTimer);
   nsresult RemoveTimer(nsTimerImpl *aTimer);
+
+#define FILTER_DURATION         1e3     /* one second */
+#define FILTER_FEEDBACK_MAX     100     /* 1/10th of a second */
+
+  void UpdateFilter(PRUint32 aDelay, PRIntervalTime aTimeout,
+                    PRIntervalTime aNow);
 
   // For use by nsTimerImpl::Fire()
   nsCOMPtr<nsIEventQueueService> mEventQueueService;
@@ -82,6 +89,15 @@ private:
   PRPackedBool mWaiting;
 
   nsVoidArray mTimers;
+
+#define DELAY_LINE_LENGTH_LOG2  5
+#define DELAY_LINE_LENGTH_MASK  PR_BITMASK(DELAY_LINE_LENGTH_LOG2)
+#define DELAY_LINE_LENGTH       PR_BIT(DELAY_LINE_LENGTH_LOG2)
+
+  PRInt32  mDelayLine[DELAY_LINE_LENGTH];
+  PRUint32 mDelayLineCounter;
+  PRUint32 mMinTimerPeriod;     // milliseconds
+  PRInt32  mTimeoutAdjustment;
 };
 
 #endif /* TimerThread_h___ */

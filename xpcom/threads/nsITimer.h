@@ -49,16 +49,18 @@
 class nsITimer;
 class nsITimerCallback;
 
-// Implementations of nsITimer should be written such that there are no limitations
-// on what can be called by the TimerCallbackFunc. On platforms like the Macintosh this
-// means that callback functions must be called from the main event loop NOT from
-// an interrupt.
+/**
+ * Implementations of nsITimer should be written such that there are no
+ * limitations on what can be called by the TimerCallbackFunc.  On platforms
+ * such as the Macintosh this means that callback functions must be called
+ * from the main event loop, NOT from an interrupt.
+ */
 
-/// Signature of timer callback function
+// Signature of timer callback function
 typedef void
 (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
 
-/// Interface IID for nsITimer
+// Interface IID for nsITimer
 #define NS_ITIMER_IID         \
 { 0x497eed20, 0xb740, 0x11d1,  \
 { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
@@ -72,22 +74,32 @@ typedef void
 #define NS_PRIORITY_LOWEST 0
 
 // --- Timer types ---
-#define NS_TYPE_ONE_SHOT 0           // Timer which fires once only
+enum nsTimerType {
+  /**
+   * Type of a timer that fires once only.
+   */
+  NS_TYPE_ONE_SHOT = 0,
 
-#define NS_TYPE_REPEATING_SLACK 1    // After firing, timer is stopped and not 
-                                     // restarted until notifcation routine completes.   
-                                     // Specified timer period will be at least time between 
-                                     // when processing for last firing notifcation completes 
-                                     // and when the next firing occurs.  This is the preferable
-                                     // repeating type for most situations.
+  /**
+   * After firing, a NS_REPEATING_SLACK timer is stopped and not restarted
+   * until its callback completes.  Specified timer period will be at least
+   * the time between when processing for last firing the callback completes
+   * and when the next firing occurs.
+   *
+   * This is the preferable repeating type for most situations.
+   */
+  NS_TYPE_REPEATING_SLACK = 1,
 
-#define NS_TYPE_REPEATING_PRECISE 2  // Timer which aims to have constant time between firings.
-                                     // The processing time for each timer notification should
-                                     // not influence timer period.   However, if the processing
-                                     // for the last timer firing could not be completed until  
-                                     // just before the next firing occurs, then you could have 
-                                     // two timer notification routines being executed in quick 
-                                     // sucession.
+  /**
+   * An NS_REPEATING_PRECISE repeating timer aims to have constant period
+   * between firings.  The processing time for each timer callback should not
+   * influence the timer period.  However, if the processing for the last
+   * timer firing could not be completed until just before the next firing
+   * occurs, then you could have two timer notification routines being
+   * executed in quick succession.
+   */
+  NS_TYPE_REPEATING_PRECISE = 2
+};
 
 #define REPEATING_TIMERS 1
 
