@@ -180,6 +180,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     NSSCryptoContext *context;
     NSSArena *arena;
     CERTCertificate *cc;
+    NSSCertificate *tempCert;
     NSSCryptoContext *gCC = STAN_GetDefaultCryptoContext();
     if (!isperm) {
 	NSSDER encoding;
@@ -241,9 +242,25 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	                          PORT_Strlen(cc->emailAddr));
     }
     context = STAN_GetDefaultCryptoContext();
+    /* this function cannot detect if the cert exists as a temp cert now, but
+     * didn't when CERT_NewTemp was first called.
+     */
     nssrv = NSSCryptoContext_ImportCertificate(context, c);
     if (nssrv != PR_SUCCESS) {
 	goto loser;
+    }
+    /* so find the entry in the temp store */
+    tempCert = NSSCryptoContext_FindCertificateByIssuerAndSerialNumber(context,
+                                                                   &c->issuer,
+                                                                   &c->serial);
+    /* destroy the copy */
+    NSSCertificate_Destroy(c);
+    if (tempCert) {
+	/* and use the "official" entry */
+	c = tempCert;
+	cc = STAN_GetCERTCertificate(c);
+    } else {
+	return NULL;
     }
     c->object.trustDomain = STAN_GetDefaultTrustDomain();
     cc->istemp = PR_TRUE;
