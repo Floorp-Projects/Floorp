@@ -133,9 +133,7 @@ nsHttpAuthCache::SetCredentials(const char *host,
     rv = list->SetCredentials(path, realm, creds);
     if (NS_SUCCEEDED(rv) && (list->Count() == 0)) {
         // the list has no longer has any entries
-        // XXX leak.. need to free key
         PL_HashTableRemove(mDB, key.get());
-        delete list;
     }
 
     return rv;
