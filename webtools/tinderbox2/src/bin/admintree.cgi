@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.22 $ 
-# $Date: 2002/05/03 02:21:52 $ 
+# $Revision: 1.23 $ 
+# $Date: 2002/05/03 03:29:14 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -278,7 +278,7 @@ sub format_input_page {
               password_field(-name=>'passwd', -size=>8,),
               p(),
               checkbox( -label=>("If correct, ".
-                                 "remember password and email field".
+                                 "remember password and email field ".
                                  "as a cookie"),
                         -name=>'use_cookie'),
               p(),
