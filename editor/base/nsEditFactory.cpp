@@ -39,11 +39,14 @@ getEditFactory(nsIFactory **aFactory)
   {
     nsEditFactory *factory = new nsEditFactory(getter_AddRefs(g_pNSIFactory));
     *aFactory = g_pNSIFactory;
+    NS_IF_RELEASE(*aFactory);
+    if (factory)
+      result = NS_OK;
   }
   else
     result = g_pNSIFactory->QueryInterface(kIFactoryIID, (void **)aFactory);
   PR_ExitMonitor(getEditorMonitor());
-  return NS_ERROR_FAILURE;
+  return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////
