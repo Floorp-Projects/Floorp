@@ -778,6 +778,9 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 !if defined(MOZ_LIBTEST)
 	/DLAYPROBE_API \
 !endif
+!if defined(MOZ_SMOOTH_PROGRESS)
+        /DSMOOTH_PROGRESS \
+!endif
     /DMOZILLA_CLIENT
 
 
