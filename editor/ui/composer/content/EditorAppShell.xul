@@ -36,6 +36,7 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="EditorOnLoad()"
         onunload="EditorShutdown()" title="&editorWindow.title;" align="vertical"
         width="640" height="480">
 
