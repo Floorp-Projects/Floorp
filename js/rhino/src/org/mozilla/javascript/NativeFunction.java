@@ -759,6 +759,14 @@ public class NativeFunction extends BaseFunction {
     }
 
     /**
+     * For backwards compatibility keep an old method name used by
+     * Batik and possibly others.
+     */
+    public String jsGet_name() {
+        return getFunctionName();
+    }
+
+    /**
      * The "argsNames" array has the following information:
      * argNames[0] through argNames[argCount - 1]: the names of the parameters
      * argNames[argCount] through argNames[args.length-1]: the names of the
