@@ -400,8 +400,24 @@ var gEditorDocumentObserver =
             HideItem("hlineButton");
             HideItem("tableButton");
 
-            SetElementEnabledById("cmd_viewFormatToolbar", false);
-            SetElementEnabledById("cmd_viewEditModeToolbar", false);
+            HideItem("fileExportToText");
+            HideItem("previewInBrowser");
+
+/* XXX When paste actually converts formatted rich text to pretty formatted plain text
+       and pasteNoFormatting is fixed to paste the text without formatting (what paste
+       currently does), then this item shouldn't be hidden: */
+            HideItem("menu_pasteNoFormatting"); 
+
+            HideItem("cmd_viewFormatToolbar");
+            HideItem("cmd_viewEditModeToolbar");
+
+            HideItem("viewSep1");
+            HideItem("viewNormalMode");
+            HideItem("viewAllTagsMode");
+            HideItem("viewSourceMode");
+            HideItem("viewPreviewMode");
+
+            HideItem("structSpacer");
 
             // Hide everything in "Insert" except for "Symbols"
             var menuPopup = document.getElementById("insertMenuPopup");
