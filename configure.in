@@ -2571,6 +2571,12 @@ MOZ_ARG_ENABLE_BOOL(gprof,
 [  --enable-gprof          Enable gprof symbols],
   [ _GPROF_CFLAGS="-pg" ])
 
+dnl Enable performance metrics.
+MOZ_ARG_ENABLE_BOOL(perf-metrics,
+[  --enable-perf-metrics   Enable performance metrics],
+  MOZ_PERF=1
+  AC_DEFINE(MOZ_PERF_METRICS))
+
 MOZ_ARG_ENABLE_BOOL(insure,
 [  --enable-insure         Enable insure++ instrumentation (linux only)],
   [ MOZ_INSURE="insure" MOZ_INSURIFYING=1 MOZ_INSURE_DIRS="." MOZ_INSURE_EXCLUDE_DIRS="config" ])
@@ -2834,6 +2840,7 @@ AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZILLA_GPROF)
+AC_SUBST(MOZ_PERF_METRICS)
 AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
