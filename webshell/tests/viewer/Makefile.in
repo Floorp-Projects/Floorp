@@ -37,6 +37,8 @@ EXPORT_RESOURCE_SAMPLES := \
 	$(wildcard $(srcdir)/samples/cform.css) \
 	$(wildcard $(srcdir)/samples/mozform.css) \
 	$(wildcard $(srcdir)/samples/demoform.css) \
+	$(wildcard $(srcdir)/samples/slider*.xul) \
+	$(wildcard $(srcdir)/samples/scrollbar*.xul) \
 	$(srcdir)/resources/find.html \
 	$(srcdir)/resources/printsetup.html \
 	$(srcdir)/resources/image_props.html \
