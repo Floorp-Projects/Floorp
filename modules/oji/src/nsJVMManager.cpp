@@ -727,7 +727,6 @@ nsJVMManager::ShutdownJVM(PRBool fullShutdown)
 {
     if (fStatus == nsJVMStatus_Running) {
         PR_ASSERT(fJVM != NULL);
-        (void)MaybeShutdownLiveConnect();
         // XXX need to shutdown JVM via ServiceManager
 //        nsresult err = fJVM->ShutdownJVM(fullShutdown);
 //        if (err == NS_OK)
