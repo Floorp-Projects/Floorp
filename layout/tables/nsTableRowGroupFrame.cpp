@@ -1123,6 +1123,36 @@ NS_METHOD nsTableRowGroupFrame::IncrementalReflow(nsIPresContext& aPresContext,
   return rv;
 }
 
+// Helper function. It marks the table frame as dirty and generates
+// a reflow command
+nsresult
+nsTableRowGroupFrame::AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
+                                                 nsIPresShell&   aPresShell,
+                                                 nsIFrame*       aTableFrame)
+{
+  nsFrameState      frameState;
+  nsIFrame*         tableParentFrame;
+  nsIReflowCommand* reflowCmd;
+  nsresult          rv;
+
+  // Mark the table frame as dirty
+  aTableFrame->GetFrameState(&frameState);
+  frameState |= NS_FRAME_IS_DIRTY;
+  aTableFrame->SetFrameState(frameState);
+
+  // Target the reflow comamnd at its parent frame
+  aTableFrame->GetParent(&tableParentFrame);
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, tableParentFrame,
+                               nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    rv = aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsTableRowGroupFrame::AppendFrames(nsIPresContext& aPresContext,
                                    nsIPresShell&   aPresShell,
@@ -1175,26 +1205,81 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext& aPresContext,
 
     // Generate a reflow command so we reflow the table itself. This will
     // do a pass-1 reflow of all the rows including any rows we just added
-    nsFrameState      frameState;
-    nsIFrame*         tableParentFrame;
-    nsIReflowCommand* reflowCmd;
-
-    // Mark the table frame as dirty
-    tableFrame->GetFrameState(&frameState);
-    frameState |= NS_FRAME_IS_DIRTY;
-    tableFrame->SetFrameState(frameState);
-
-    // Target the reflow comamnd at its parent frame
-    tableFrame->GetParent(&tableParentFrame);
-    if (NS_SUCCEEDED(NS_NewHTMLReflowCommand(&reflowCmd, tableParentFrame,
-                                             nsIReflowCommand::ReflowDirty))) {
-      // Add the reflow command
-      aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
+    AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableRowGroupFrame::InsertFrames(nsIPresContext& aPresContext,
+                                   nsIPresShell&   aPresShell,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aPrevFrame,
+                                   nsIFrame*       aFrameList)
+{
+  // Get the table frame
+  nsTableFrame* tableFrame = nsnull;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+
+  // Insert the frames
+  mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+
+  // We need to rebuild the cell map, because currently we can't insert
+  // new frames except at the end (append)
+  tableFrame->InvalidateCellMap();
+
+  // We should try and avoid doing a pass1 reflow on all the cells and just
+  // do it for the newly added frames, but we need to add these frames to the
+  // cell map before we reflow them
+  tableFrame->InvalidateFirstPassCache();
+
+  // Because the number of columns may have changed invalidate the column
+  // cache. Note that this has the side effect of recomputing the column
+  // widths, so we don't need to call InvalidateColumnWidths()
+  tableFrame->InvalidateColumnCache();
+
+  // Generate a reflow command so we reflow the table itself. This will
+  // do a pass-1 reflow of all the rows including any rows we just added
+  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableRowGroupFrame::RemoveFrame(nsIPresContext& aPresContext,
+                                  nsIPresShell&   aPresShell,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aOldFrame)
+{
+  nsresult              rv;
+  const nsStyleDisplay *display;
+  aOldFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+
+  // Remove the frame and destroy it
+  rv = mFrames.DestroyFrame(aPresContext, aOldFrame);
+  if (NS_SUCCEEDED(rv)) {
+    if ((NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) ||
+        (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay)) {
+      // Get the table frame
+      nsTableFrame* tableFrame = nsnull;
+      nsTableFrame::GetTableFrame(this, tableFrame);
+
+      // We need to rebuild the cell map, because currently we can't incrementally
+      // remove rows
+      tableFrame->InvalidateCellMap();
+      
+      // Because the number of columns may have changed invalidate the column
+      // cache. Note that this has the side effect of recomputing the column
+      // widths, so we don't need to call InvalidateColumnWidths()
+      tableFrame->InvalidateColumnCache();
+
+      // Because we haven't added any new frames we don't need to do a pass1
+      // reflow. Just generate a reflow command so we reflow the table itself
+      AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+    }
+  }
+
+  return rv;
 }
 
 NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
@@ -1228,49 +1313,6 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     aReflowState.tableFrame->InvalidateColumnWidths();  
     break;
 
-  case nsIReflowCommand::FrameInserted :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
-    {
-      rv = IR_RowInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                          (nsTableRowFrame *)objectFrame, PR_FALSE);
-    }
-    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
-    {
-      rv = IR_RowGroupInserted(aPresContext, aDesiredSize, aReflowState, aStatus,
-                               (nsTableRowGroupFrame*)objectFrame, PR_FALSE);
-    }
-    else
-    {
-      rv = AddFrame(aReflowState.reflowState, objectFrame);
-    }
-    break;
-  
-  /*
-  case nsIReflowCommand::FrameReplaced :
-
-  */
-
-  case nsIReflowCommand::FrameRemoved :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
-    {
-      rv = IR_RowRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                         (nsTableRowFrame *)objectFrame);
-    }
-    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
-    {
-      rv = IR_RowGroupRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                             (nsTableRowGroupFrame *)objectFrame);
-    }
-    else
-    {
-      rv = mFrames.DestroyFrame(aPresContext, objectFrame);
-    }
-    break;
-
   case nsIReflowCommand::StyleChanged :
     rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
@@ -1280,14 +1322,10 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     rv = NS_ERROR_ILLEGAL_VALUE;
     break;
   
-  case nsIReflowCommand::PullupReflow:
-  case nsIReflowCommand::PushReflow:
-  case nsIReflowCommand::CheckPullupReflow :
-  case nsIReflowCommand::UserDefined :
   default:
-    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
+    NS_NOTYETIMPLEMENTED("unexpected reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TRGF IR: reflow command not implemented.\n");
+    if (PR_TRUE==gsDebugIR) printf("TRGF IR: unexpected reflow command not implemented.\n");
     break;
   }
 
@@ -1295,70 +1333,6 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   if (mNextInFlow) {
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
-  return rv;
-}
-
-NS_METHOD nsTableRowGroupFrame::IR_RowGroupInserted(nsIPresContext&        aPresContext,
-                                                    nsHTMLReflowMetrics&   aDesiredSize,
-                                                    RowGroupReflowState&   aReflowState,
-                                                    nsReflowStatus&        aStatus,
-                                                    nsTableRowGroupFrame * aInsertedFrame,
-                                                    PRBool                 aReplace)
-{
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupInserted for frame %p\n", aInsertedFrame);
-  nsresult rv = AddFrame(aReflowState.reflowState, aInsertedFrame);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  aReflowState.tableFrame->InvalidateCellMap();
-  aReflowState.tableFrame->InvalidateColumnCache();
-
-  return rv;
-}
-
-NS_METHOD nsTableRowGroupFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
-                                                   nsHTMLReflowMetrics&   aDesiredSize,
-                                                   RowGroupReflowState& aReflowState,
-                                                   nsReflowStatus&        aStatus,
-                                                   nsTableRowGroupFrame * aDeletedFrame)
-{
-  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupRemoved for frame %p\n", aDeletedFrame);
-  nsresult rv = mFrames.DestroyFrame(aPresContext, aDeletedFrame);
-  aReflowState.tableFrame->InvalidateCellMap();
-  aReflowState.tableFrame->InvalidateColumnCache();
-
-  // if any column widths have to change due to this, rebalance column widths
-  //XXX need to calculate this, but for now just do it
-  aReflowState.tableFrame->InvalidateColumnWidths();
-
-  return rv;
-}
-
-NS_METHOD nsTableRowGroupFrame::IR_RowInserted(nsIPresContext&      aPresContext,
-                                               nsHTMLReflowMetrics& aDesiredSize,
-                                               RowGroupReflowState& aReflowState,
-                                               nsReflowStatus&      aStatus,
-                                               nsTableRowFrame *    aInsertedFrame,
-                                               PRBool               aReplace)
-{
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_RowInserted\n");
-  nsresult rv = AddFrame(aReflowState.reflowState, (nsIFrame*)aInsertedFrame);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (PR_TRUE==aReflowState.tableFrame->RequiresPass1Layout())
-  {
-    // do a pass-1 layout of all the cells in the inserted row
-    //XXX: check the table frame to see if we can skip this
-    rv = ReflowMappedChildren(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              aInsertedFrame, eReflowReason_Initial, PR_FALSE);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  aReflowState.tableFrame->InvalidateCellMap();
-  aReflowState.tableFrame->InvalidateColumnCache();
-
   return rv;
 }
 
@@ -1435,82 +1409,6 @@ NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nscoord& aResult)
     GetNextFrame(rowFrame, &rowFrame);
   }
   return NS_OK;
-}
-
-// since we know we're doing an append here, we can optimize
-NS_METHOD nsTableRowGroupFrame::IR_RowAppended(nsIPresContext&      aPresContext,
-                                               nsHTMLReflowMetrics& aDesiredSize,
-                                               RowGroupReflowState& aReflowState,
-                                               nsReflowStatus&      aStatus,
-                                               nsTableRowFrame *    aAppendedFrame)
-{
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_RowAppended\n");
-  // hook aAppendedFrame into the child list
-  nsresult rv = AddFrame(aReflowState.reflowState, (nsIFrame*)aAppendedFrame);
-  if (NS_FAILED(rv))
-    return rv;
-
-  /* we have 2 paths to choose from.  If we know that aAppendedFrame is
-   * the last row in the table, we can optimize.  Otherwise, we have to
-   * treat it like an insert
-   */
-  if (PR_TRUE==NoRowsFollow())
-  { // aAppendedRow is the last row, so do the optimized route
-    // account for the cells in the row aAppendedFrame
-    // this will add the content of the rowgroup to the cell map
-    rv = DidAppendRow(aAppendedFrame);
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (PR_TRUE==aReflowState.tableFrame->RequiresPass1Layout())
-    {
-      // do a pass1 reflow of the new row
-      //XXX: check the table frame to see if we can skip this
-      rv = ReflowMappedChildren(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                                aAppendedFrame, eReflowReason_Initial, PR_FALSE);
-      if (NS_FAILED(rv))
-        return rv;
-    }
-
-    // if any column widths have to change due to this, rebalance column widths
-    //XXX need to calculate this, but for now just do it
-    aReflowState.tableFrame->InvalidateColumnWidths();  
-  }
-  else
-  {
-    // do a pass1 reflow of the new row
-    //XXX: check the table frame to see if we can skip this
-    rv = ReflowMappedChildren(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              aAppendedFrame, eReflowReason_Initial, PR_FALSE);
-    if (NS_FAILED(rv))
-      return rv;
-
-    aReflowState.tableFrame->InvalidateCellMap();
-    aReflowState.tableFrame->InvalidateColumnCache();
-  }
-
-  return rv;
-}
-
-NS_METHOD nsTableRowGroupFrame::IR_RowRemoved(nsIPresContext&      aPresContext,
-                                              nsHTMLReflowMetrics& aDesiredSize,
-                                              RowGroupReflowState& aReflowState,
-                                              nsReflowStatus&      aStatus,
-                                              nsTableRowFrame *    aDeletedFrame)
-{
-  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_RowRemoved\n");
-  nsresult rv = mFrames.DestroyFrame(aPresContext, (nsIFrame *)aDeletedFrame);
-  if (NS_SUCCEEDED(rv))
-  {
-    aReflowState.tableFrame->InvalidateCellMap();
-    aReflowState.tableFrame->InvalidateColumnCache();
-
-    // if any column widths have to change due to this, rebalance column widths
-    //XXX need to calculate this, but for now just do it
-    aReflowState.tableFrame->InvalidateColumnWidths();
-  }
-
-  return rv;
 }
 
 NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
