@@ -17,7 +17,7 @@
  */
 /*Factory for internal browser security resource managers*/
 
-#if 1
+#if 0
 
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
