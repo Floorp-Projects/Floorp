@@ -53,7 +53,6 @@ class nsIURI;
 class nsIWebShellWindow;
 class nsIFindComponent;
 
-#define SH_IN_FRAMES
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserInstance:
@@ -107,9 +106,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
     static PRBool       sCmdLineURLUsed;
 
     nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
-#ifdef SH_IN_FRAMES
-	nsCOMPtr<nsISHistory>   mSessionHistory;
-#endif
+
+	  nsCOMPtr<nsISHistory>   mSessionHistory;
 
     nsWeakPtr          mContentAreaDocShellWeak;
 
