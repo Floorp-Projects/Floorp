@@ -28,7 +28,6 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
-#include "nsIRDFResourceFactory.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase

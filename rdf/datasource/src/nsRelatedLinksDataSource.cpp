@@ -27,7 +27,6 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
-#include "nsIRDFResourceFactory.h"
 #include "nsIServiceManager.h"
 #include "nsEnumeratorUtils.h"
 #include "nsString.h"
