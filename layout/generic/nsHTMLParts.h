@@ -239,6 +239,9 @@ NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 PR_EXTERN(nsresult)
 NS_CreateHTMLElement(nsIHTMLContent** aResult,
                      const nsString& aTag);
+PR_EXTERN(nsresult)
+NS_CreateHTMLElement(nsIHTMLContent** aResult,
+                     PRInt32 aID);
 
 // Factory methods for creating html layout objects
 

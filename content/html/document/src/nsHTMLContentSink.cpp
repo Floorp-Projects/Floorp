@@ -929,6 +929,32 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
   return rv;
 }
 
+nsresult
+NS_CreateHTMLElement(nsIHTMLContent** aResult, PRInt32 aID)
+{
+  nsresult rv = NS_OK;
+
+  if (eHTMLTag_userdefined == nsHTMLTag(aID)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_WITH_SERVICE(nsIParserService,
+                  parserService, 
+                  kParserServiceCID,
+                  &rv);
+
+  if (NS_SUCCEEDED(rv)) {
+    // Create atom for tag and then create content object
+    nsAutoString tag;
+    rv = parserService->HTMLIdToStringTag(aID, tag);
+    nsIAtom* atom = NS_NewAtom(tag.GetUnicode());
+    rv = MakeContentObject(nsHTMLTag(aID), atom, nsnull, nsnull, aResult);
+    NS_RELEASE(atom);
+  }
+
+  return rv;
+}
+
 //----------------------------------------------------------------------
 
 

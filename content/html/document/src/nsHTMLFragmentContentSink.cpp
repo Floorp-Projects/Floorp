@@ -24,6 +24,7 @@
 #include "nsIParser.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsHTMLAtoms.h"
 #include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsHTMLParts.h"
@@ -107,6 +108,9 @@ public:
   nsresult AddText(const nsString& aString);
   nsresult FlushText();
 
+  void ProcessBaseTag(nsIHTMLContent* aContent);
+  void AddBaseTagInfo(nsIHTMLContent* aContent);
+
   PRBool mHitSentinel;
   PRBool mSeenBody;
 
@@ -120,6 +124,9 @@ public:
   PRUnichar* mText;
   PRInt32 mTextLength;
   PRInt32 mTextSize;
+
+  nsString mBaseHREF;
+  nsString mBaseTarget;
 };
 
 
@@ -360,6 +367,31 @@ nsHTMLFragmentContentSink::CloseMap(const nsIParserNode& aNode)
   return CloseContainer(aNode);
 }
 
+void
+nsHTMLFragmentContentSink::ProcessBaseTag(nsIHTMLContent* aContent)
+{
+  nsAutoString value;
+  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
+    mBaseHREF = value;
+  }
+  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
+    mBaseTarget = value;
+  }
+}
+
+void
+nsHTMLFragmentContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
+{
+  if (aContent) {
+    if (mBaseHREF.Length() > 0) {
+      aContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
+    }
+    if (mBaseTarget.Length() > 0) {
+      aContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
+    }
+  }
+}
+
 static char* kSentinelStr = "endnote";
 
 NS_IMETHODIMP 
@@ -375,8 +407,9 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
   else if (mHitSentinel) {
     FlushText();
     
+    nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
     nsIHTMLContent *content = nsnull;
-    result = NS_CreateHTMLElement(&content, tag);
+    result = NS_CreateHTMLElement(&content, nodeType);
 
     if (NS_OK == result) {
       result = AddAttributes(aNode, content);
@@ -390,6 +423,19 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
         parent->AppendChildTo(content, PR_FALSE);
         PushContent(content);
       }
+    }
+
+    switch(nodeType) {
+      case eHTMLTag_table:
+      case eHTMLTag_thead:
+      case eHTMLTag_tbody:
+      case eHTMLTag_tfoot:
+      case eHTMLTag_tr:
+      case eHTMLTag_td:
+      case eHTMLTag_th:
+        // XXX if navigator_quirks_mode (only body in html supports background)
+        AddBaseTagInfo(content);     
+        break;
     }
   }
 
@@ -408,6 +454,7 @@ nsHTMLFragmentContentSink::CloseContainer(const nsIParserNode& aNode)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 {
@@ -419,9 +466,9 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         FlushText();
         
         // Create new leaf content object
-        nsIHTMLContent* content;
-        nsAutoString tag = aNode.GetText();
-        result = NS_CreateHTMLElement(&content, tag);
+        nsCOMPtr<nsIHTMLContent> content;
+        nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+        result = NS_CreateHTMLElement(getter_AddRefs(content), nodeType);
         
         if (NS_OK == result) {
           result = AddAttributes(aNode, content);
@@ -434,7 +481,17 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
             
             parent->AppendChildTo(content, PR_FALSE);
           }
-          NS_RELEASE(content);
+        }
+
+        switch(nodeType) {
+          case eHTMLTag_img:    // elements with 'SRC='
+          case eHTMLTag_frame:
+          case eHTMLTag_input:
+            AddBaseTagInfo(content);     
+            break;
+          case eHTMLTag_base:
+            ProcessBaseTag(content);
+            break;
         }
       }
       break;
