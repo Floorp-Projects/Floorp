@@ -47,7 +47,6 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
 
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -132,6 +131,8 @@
    <command id="close_calendar_command" key="key_close" oncommand="closeCalendar()"/>
    
    <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
+
+   <command id="cmd_CustomizeToolbars" oncommand="CalendarCustomizeToolbar()"/>
 </commandset>
 
 <keyset>
@@ -403,14 +404,23 @@
              observes="publish_calendar"/>
 </popup>
 
+<popup id="toolbar-context-menu">
+  <menuitem command="cmd_CustomizeToolbars"
+            label="&calendar.context.customize.label;"
+            accesskey="&calendar.context.customize.accesskey;"/>
+</popup>
+
 <commandset id="commands"/>
 
-<toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
+<toolbox id="calendar-toolbox" class="toolbox-top">
    <!-- Menu -->
-   <menubar id="main-menubar" persist="collapsed"/>
+   <toolbar type="menubar" id="main-menubar" class="chromeclass-menubar" customizable="true"
+            defaultset="menubar-items"
+            mode="icons" iconsize="small" context="toolbar-context-menu">
+      <toolbaritem id="menubar-items" align="center"/>
+   </toolbar>
 
-   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar" persist="collapsed" tbalign="stretch">
-		<!--<toolbarbutton class="toolbarbutton-1" id="calendar-new-task-button"   label="&calendar.newtask.button.label;"         tooltiptext="&calendar.newtask.button.tooltip;"      observes="new_todo_command"/>-->
+   <toolbarpalette id="calendarToolbarPalette">
       <toolbarbutton class="toolbarbutton-1"
                      id="calendar-new-event-button"
                      label="&calendar.newevent.button.label;"
@@ -426,7 +436,6 @@
                      label="&calendar.delete.button.label;"
                      tooltiptext="&calendar.delete.button.tooltip;"
                      observes="delete_command"/>
-      <toolbarseparator class="toolbarseparator-primary"/>
       <toolbarbutton class="toolbarbutton-1"
                      id="calendar-day-view-button"
                      label="&calendar.dayview.button.label;"
@@ -448,14 +457,19 @@
                      tooltiptext="&calendar.monthview.button.tooltip;"
                      observes="month_view_command"/>
 
-      <spacer flex="1"/>
-
       <toolbaritem id="throbber-box" align="center" pack="center">
          <button id="navigator-throbber2" 
                  oncommand="openAboutDialog();"
                  tooltiptext="&aboutCmd.label;"/>
       </toolbaritem>
-   </toolbar>
+   </toolbarpalette>
+   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar"
+            iconsize="big"
+            defaultset="calendar-new-event-button,calendar-edit-event-button,calendar-delete-event-button,separator,calendar-day-view-button,calendar-week-view-button,calendar-multiweek-view-button,calendar-month-view-button,spring,throbber-box"
+            customizable="true" mode="full"
+            toolbarname="&calendar.maintoolbar.name;" accesskey="&calendar.maintoolbar.accesskey;"
+            context="toolbar-context-menu"/>
+   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 </toolbox>
 
 <tooltip id="eventTreeListTooltip" onpopupshowing="changeToolTipTextForEvent( event );return( checkTooltip( event ) );"/>
@@ -527,10 +541,7 @@
             </tabpanel>
             </tabpanels>
          </tabbox>
-         <splitter id="calendar-todo-splitter" collapse="before" persist="state"
-            class="chromeclass-extrachrome" orient="vertical">
-            <grippy/>
-         </splitter>
+         <splitter id="calendar-todo-splitter" collapse="before" persist="state" orient="vertical"/>
          <vbox id="left-hand-below-splitter" flex="1" persist="height">
             <box align="left">
                <label flex="1" crop="end" style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
@@ -595,9 +606,8 @@
          </vbox>
     
          <splitter id="calendar-splitter" collapse="before" persist="state"
-          class="chromeclass-extrachrome sidebar-splitter" orient="horizontal" onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarSplitter()', 1 );">
-            <grippy class="sidebar-splitter-grippy"/>
-         </splitter>
+                   class="chromeclass-extrachrome sidebar-splitter" orient="horizontal"
+                   onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarSplitter()', 1 );"/>
          
          <vbox flex="1">
             <vbox id="bottom-events-box" persist="height">

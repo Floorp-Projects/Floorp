@@ -249,6 +249,9 @@ function calendarInit()
 
    //All is settled, enable feedbacks to observers
    gICalLib.batchMode = false;
+
+   var toolbox = document.getElementById("calendar-toolbox");
+   toolbox.customizeDone = CalendarToolboxCustomizeDone;
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -1598,4 +1601,31 @@ function srGetStrBundle(path)
         dump("\n--** strBundle createInstance failed **--\n");
   }
   return strBundle;
+}
+
+function CalendarCustomizeToolbar()
+{
+  // Disable the toolbar context menu items
+  var menubar = document.getElementById("main-menubar");
+  for (var i = 0; i < menubar.childNodes.length; ++i)
+    menubar.childNodes[i].setAttribute("disabled", true);
+    
+  var cmd = document.getElementById("cmd_CustomizeToolbars");
+  cmd.setAttribute("disabled", "true");
+  
+  window.openDialog("chrome://calendar/content/customizeToolbar.xul", "CustomizeToolbar",
+                    "chrome,all,dependent", document.getElementById("calendar-toolbox"));
+}
+
+function CalendarToolboxCustomizeDone(aToolboxChanged)
+{
+  // Re-enable parts of the UI we disabled during the dialog
+  var menubar = document.getElementById("main-menubar");
+  for (var i = 0; i < menubar.childNodes.length; ++i)
+    menubar.childNodes[i].setAttribute("disabled", false);
+  var cmd = document.getElementById("cmd_CustomizeToolbars");
+  cmd.removeAttribute("disabled");
+
+  // XXX Shouldn't have to do this, but I do
+  window.focus();
 }

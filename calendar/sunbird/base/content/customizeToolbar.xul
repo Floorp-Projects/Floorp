@@ -1,0 +1,93 @@
+<?xml version="1.0"?> 
+
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+# 
+# Contributor(s): 
+#   David Hyatt (hyatt@apple.com)
+#   Blake Ross (blaker@netscape.com)
+
+<!DOCTYPE dialog [
+<!ENTITY % customizeToolbarDTD SYSTEM "chrome://global/locale/customizeToolbar.dtd">
+  %customizeToolbarDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/content/customizeToolbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/customizeToolbar.css" type="text/css"?>
+
+<window id="CustomizeToolbarWindow"
+        title="&dialog.title;"
+        onload="onLoad();"
+        onunload="onUnload();"
+        onclose="onAccept(); return false;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript">
+  <![CDATA[
+    toolbox = window.arguments[0];
+    toolboxDocument = toolbox.ownerDocument;
+
+    var sheetList = toolboxDocument.styleSheets;
+    for (var i=0; i < sheetList.length; ++i) {
+      var newPI = document.createProcessingInstruction("xml-stylesheet", 'href="'+sheetList[i].href+'" type="text/css"');
+      document.insertBefore(newPI, document.firstChild);    
+    }
+  ]]>
+</script>
+
+<script type="application/x-javascript" src="chrome://global/content/customizeToolbar.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+
+<stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
+
+<vbox id="main-box" flex="1" collapsed="true">
+  <description id="instructions">
+  &instructions.description;
+  </description>
+
+  <vbox flex="1" id="palette-box"
+        ondraggesture="gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragStartObserver);"
+        ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+        ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
+
+  <box align="center">
+    <label value="&show.label;"/>
+    <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
+      <menupopup>
+        <menuitem value="full" label="&iconsAndText.label;"/>
+        <menuitem value="icons" label="&icons.label;"/>
+        <menuitem value="text" label="&text.label;"/>
+      </menupopup>
+    </menulist>
+    
+    <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
+    
+    <button label="&addNewToolbar.label;" oncommand="addNewToolbar();"/>
+    <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();"/>
+  </box>
+
+  <separator class="groove"/>
+
+  <hbox align="center" pack="end">
+    <button label="&saveChanges.label;" oncommand="onAccept();" default="true"/>
+  </hbox>
+</vbox>
+
+</window>

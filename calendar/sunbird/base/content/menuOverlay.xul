@@ -89,11 +89,12 @@
 
   
   <!-- Menu -->
-  <menubar id="main-menubar" class="chromeclass-menubar">
-   <menu id="menu_File"
-    label="&fileMenu.label;"
-     accesskey="&fileMenu.accesskey;">
-      <menupopup id="menu_FilePopup">
+  <toolbaritem id="menubar-items">
+    <menubar id="main-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
+     <menu id="menu_File"
+           label="&fileMenu.label;"
+           accesskey="&fileMenu.accesskey;">
+       <menupopup id="menu_FilePopup">
          <menuitem id="calendar-new-event-menu"
                    key="new_event_key"
                    label="&event.new.event;"
@@ -129,13 +130,13 @@
                    label="&calendar.print.label;"
                    accesskey="&calendar.print.accesskey;"
                    observes="print_command"/>
-      </menupopup>
-   </menu>
+       </menupopup>
+     </menu>
 
-   <menu id="menu_Edit"
-    label="&editMenu.label;"
-     accesskey="&editMenu.accesskey;">
-      <menupopup id="mppEdit">
+     <menu id="menu_Edit"
+           label="&editMenu.label;"
+            accesskey="&editMenu.accesskey;">
+       <menupopup id="mppEdit">
          <menuitem id="calendar-cut-menu"
                    key="key_cut"
                    label="&calendar.cut.label;"
@@ -166,13 +167,13 @@
                    label="&calendar.selectall.label;"
                    accesskey="&calendar.selectall.accesskey;"
                    observes="select_all_command"/>
-      </menupopup>
-   </menu>
+       </menupopup>
+     </menu>
    
-   <menu id="menu_View"
-    label="&viewMenu.label;"
-     accesskey="&viewMenu.accesskey;">
-      <menupopup id="mppView">
+     <menu id="menu_View"
+           label="&viewMenu.label;"
+           accesskey="&viewMenu.accesskey;">
+       <menupopup id="mppView">
          <menuitem id="calendar-view-menu-day"
                    key="view_day_key"
                    label="&calendar.flat.topbar.dayview;"
@@ -240,13 +241,13 @@
                       label="&calendar.menu.numberofweeks.6;"/>
 	 </menupopup>
 	 </menu>	 
-      </menupopup>
-   </menu>
+       </menupopup>
+     </menu>
    
-   <menu id="menu_Go"
-         label="&goMenu.label;"
-         accesskey="&goMenu.accesskey;">
-      <menupopup id="mppView">
+     <menu id="menu_Go"
+           label="&goMenu.label;"
+           accesskey="&goMenu.accesskey;">
+       <menupopup id="mppView">
          <menuitem id="calendar-go-menu-today"
                    key="go_to_today_key"
                    label="&goTodayCmd.label;"
@@ -267,13 +268,13 @@
                    label="&goNextCmd.label;"
                    accesskey="&goNextCmd.accesskey;"
                    observes="next_command"/>
-      </menupopup>
-   </menu>
+       </menupopup>
+     </menu>
    
-    <menu id="tasksMenu"
-         label="&toolsMenu.label;"
-         accesskey="&toolsMenu.accesskey;">
-      <menupopup id="taskPopup">
+     <menu id="tasksMenu"
+           label="&toolsMenu.label;"
+           accesskey="&toolsMenu.accesskey;">
+       <menupopup id="taskPopup">
          <menuitem id="calendar-wizard-menu"
                    key="wizard_key"
                    label="&calendar.wizard.label;"
@@ -307,14 +308,14 @@
                        label="&preferencesCmd.label;"
                        accesskey="&preferencesCmd.accesskey;"
                        oncommand="openPreferences();"/>
-      </menupopup>
-   </menu>
+       </menupopup>
+     </menu>
 
 
-   <menu id="menu_Help"
-         label="&helpMenu.label;"
-         accesskey="&helpMenu.accesskey;">
-      <menupopup id="menu_HelpPopup">
+     <menu id="menu_Help"
+           label="&helpMenu.label;"
+           accesskey="&helpMenu.accesskey;">
+       <menupopup id="menu_HelpPopup">
          <menuitem accesskey="&releaseCmd.accesskey;"
                    label="&releaseCmd.label;"
                    oncommand="openTopWin('&releaseURL;');"/>
@@ -323,8 +324,8 @@
                    label="&aboutCmd.label;"
                    accesskey="&aboutCmd.accesskey;"
                    oncommand="openAboutDialog();"/>
-      </menupopup>
-   </menu>
-</menubar>
-
+       </menupopup>
+      </menu>
+     </menubar>
+  </toolbaritem>
 </overlay>

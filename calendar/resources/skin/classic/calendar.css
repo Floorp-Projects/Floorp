@@ -64,6 +64,7 @@
 
 .toolbarbutton-1 {
   list-style-image: url("chrome://calendar/skin/btn1.png");
+  -moz-box-orient: vertical;
 }
 
 
