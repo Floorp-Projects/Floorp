@@ -313,8 +313,8 @@ protected:
                            nscoord aContainingBlockWidth,
                            nscoord aContainingBlockHeight);
 
-  void CalculateLeftRightMargin(const nsHTMLReflowState* aContainingBlockRS,
-                                nscoord                  aComputedWidth);
+  void CalculateBlockSideMargins(const nsHTMLReflowState* aContainingBlockRS,
+                                 nscoord                  aComputedWidth);
 
   void ComputeHorizontalValue(nscoord aContainingBlockWidth,
                                      nsStyleUnit aUnit,
