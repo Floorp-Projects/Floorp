@@ -65,6 +65,13 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    */
   virtual nsresult DragDrop(nsIDOMEvent* aMouseEvent) = 0;
+  
+  /**
+   * Processes a drag gesture event
+   * @param aMouseEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  virtual nsresult DragGesture(nsIDOMEvent* aMouseEvent) = 0;
 
 };
 
