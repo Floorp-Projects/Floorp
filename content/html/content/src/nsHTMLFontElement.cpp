@@ -263,8 +263,9 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
         if ((value.GetUnit() == eHTMLUnit_Integer) ||
             (value.GetUnit() == eHTMLUnit_Enumerated)) { 
           PRInt32 size = value.GetIntValue();
-          if (size) {
-            if (value.GetUnit() == eHTMLUnit_Integer) // int (+/-)
+          nsHTMLUnit unit = value.GetUnit();
+          if (size || unit == eHTMLUnit_Integer) { // unit is integer if attr was "+0" or "-0"
+            if (unit == eHTMLUnit_Integer) // int (+/-)
 	            size = 3 + size;  // XXX should be BASEFONT, not three
 	            
             size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
