@@ -103,9 +103,10 @@ function serverPageInit() {
       newsServer.value = pageData.newsserver.hostname.value;
     }
     catch (ex){}
+    // never show this UI for news accounts
+    document.getElementById("downloadMsgs").hidden = true;
   }
     
-
   // Server type selection (pop3 or imap) is for mail accounts only
   var pageData = parent.GetPageData();
   var isMailAccount = pageData.accounttype.mailaccount;
@@ -197,5 +198,4 @@ function setServerType()
                        (window.opener.location.href == "chrome://messenger/content/mail3PaneWindowVertLayout.xul");
          
   document.getElementById("downloadMsgs").hidden = (openedFromMail && serverType == "pop3" && !ioService.offline) ? false : true;
-  
 }
