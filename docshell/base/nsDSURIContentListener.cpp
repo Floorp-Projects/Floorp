@@ -46,6 +46,7 @@ nsDSURIContentListener::Init()
 {
     nsresult rv = NS_OK;
     mCatMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     return rv;
 }
 
@@ -111,6 +112,7 @@ nsDSURIContentListener::DoContent(const char* aContentType,
 
     if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {
         nsCOMPtr<nsIDOMWindowInternal> domWindow = do_GetInterface(NS_STATIC_CAST(nsIDocShell*, mDocShell));
+        NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
         domWindow->Focus();
     }
 
@@ -162,7 +164,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
 
     *aCanHandleContent = PR_FALSE;
 
-    if (aContentType)
+    if (aContentType && mCatMgr)
     {
         nsXPIDLCString value;
         rv = mCatMgr->GetCategoryEntry("Gecko-Content-Viewers",

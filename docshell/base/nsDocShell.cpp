@@ -2506,6 +2506,7 @@ nsDocShell::Destroy()
 
     if (mContentListener) {
         mContentListener->DocShell(nsnull);
+        mContentListener->SetParentContentListener(nsnull);
         NS_RELEASE(mContentListener);
     }
 
