@@ -45,7 +45,7 @@ my $defaultflagstring = "ExcludeSelf~on~";
 
 my @roles = ("Owner", "Reporter", "QAcontact", "CClist", "Voter");
 my @reasons = ("Removeme", "Comments", "Attachments", "Status", "Resolved", 
-               "Keywords", "CC", "Other");
+               "Keywords", "CC", "Other", "Unconfirmed");
 
 foreach my $role (@roles) {
     foreach my $reason (@reasons) {

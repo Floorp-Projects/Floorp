@@ -38,6 +38,7 @@ use RelationSet;
 sub processmail_sillyness {
     my $zz;
     $zz = $::db;
+    $zz = $::unconfirmedstate;
 }
 
 $| = 1;
@@ -232,7 +233,10 @@ sub ProcessOneBug {
     #
     my $count = 0;
 
-    my @currentEmailAttributes = getEmailAttributes($newcomments, @diffs);
+    # Get a list of the reasons a user might receive email about the bug.
+    my @currentEmailAttributes = 
+      getEmailAttributes(\%values, \@diffs, $newcomments);
+    
     my (@assigned_toList,@reporterList,@qa_contactList,@ccList) = ();
 
     #open(LOG, ">>/tmp/maillog");
@@ -401,12 +405,17 @@ sub filterExcludeList ($$) {
 # if no flags are set and there was some other field change
 #       set the Status flag
 #
-sub getEmailAttributes ($@) {
+sub getEmailAttributes (\%\@$) {
     
-    my ($commentField,@fieldDiffs) = @_;
+    my ($bug, $fieldDiffs, $commentField) = @_;
     my (@flags,@uniqueFlags,%alreadySeen) = ();
     
-    foreach my $ref (@fieldDiffs) {
+    # Add a flag if the status of the bug is "unconfirmed".
+    if ($bug->{'bug_status'} eq $::unconfirmedstate) {
+        push (@flags, 'Unconfirmed')
+    };
+    
+    foreach my $ref (@$fieldDiffs) {
         my ($who, $fieldName, $when, $old, $new) = (@$ref);
         
         #print qq{field: $fieldName $new<br>};
@@ -448,7 +457,7 @@ sub getEmailAttributes ($@) {
     }
     
     # default fallthrough for any unflagged change is 'Other'
-    if ( @flags == 0 && @fieldDiffs != 0 ) {
+    if ( @flags == 0 && @$fieldDiffs != 0 ) {
         push (@flags, 'Other');
     }
     
@@ -470,168 +479,131 @@ sub getEmailAttributes ($@) {
 }
 
 sub filterEmailGroup ($$$) {
+    # This function figures out who should receive email about the bug
+    # based on the user's role with regard to the bug (assignee, reporter 
+    # etc.), the changes that occurred (new comments, attachment added, 
+    # status changed etc.) and the user's email preferences.
     
-    my ($emailGroup,$refAttributes,$emailList) = @_;
-    my @emailAttributes = @$refAttributes;
-    my @emailList = split(/,/,$emailList);
-    my @filteredList = ();
+    # Returns a filtered list of those users who would receive email
+    # about these changes, and adds the names of those users who would
+    # not receive email about them to the global @excludedAddresses list.
     
+    my ($role, $reasons, $users) = @_;
+    
+    # Make a list of users to filter.
+    my @users = split( /,/ , $users );
+    
+    # Treat users who are in the process of being removed from this role
+    # as if they were still in it.
+    push @users, @{$force{$role}};
 
-    # the force list for this email group needs to be checked as well
-    #
-    push @emailList, @{$force{$emailGroup}};
-
-    # Check this user for any watchers... doing this here allows them to inhert the
-    # relationship to the bug of the person they are watching (if the person they
-    # are watching is an owner, their mail is filtered as if they were the owner).
-    if (Param("supportwatchers")) {
-        my @watchers;
-        foreach my $person(@emailList) {
-            my $personId = DBname_to_id($person);
-            SendSQL("SELECT watcher FROM watch WHERE watched = $personId");
-            while(MoreSQLData()) {
-                my ($watcher) = FetchSQLData();
-                if ($watcher) {
-                    push (@watchers, DBID_to_name($watcher));
-                }
-            }
-        }
-        push(@emailList, @watchers);
+    # If this installation supports user watching, add to the list those
+    # users who are watching other users already on the list.  By doing
+    # this here, we allow watchers to inherit the roles of the people 
+    # they are watching while at the same time filtering email for watchers
+    # based on their own preferences.
+    if (Param("supportwatchers") && scalar(@users)) {
+        # Convert the unfiltered list of users into an SQL-quoted, 
+        # comma-separated string suitable for use in an SQL query.
+        my $watched = join(",", map(SqlQuote($_), @users));
+        SendSQL("SELECT watchers.login_name 
+                   FROM watch, profiles AS watchers, profiles AS watched
+                  WHERE watched.login_name IN ($watched)
+                    AND watched.userid = watch.watched
+                    AND watch.watcher = watchers.userid");
+        push (@users, FetchOneColumn()) while MoreSQLData();
     }
 
+    # Initialize the list of recipients.
+    my @recipients = ();
 
-    foreach my $person (@emailList) {
+    USER: foreach my $user (@users) {
+        next unless $user;
         
-        my $lastCount = @filteredList;
-
-        if ( $person eq '' ) { next; }
-
-        my $userid = DBname_to_id($person);
-
-        if ( ! $userid ) {
-            push(@filteredList,$person);
+        # Get the user's unique ID, and if the user is not registered
+        # (no idea why unregistered users should even be on this list,
+        # but the code that was here before I re-wrote it allows this),
+        # then we do not have any preferences for them, so assume the
+        # default preference to receive all mail for any reason.
+        my $userid = DBname_to_id($user);
+        if (!$userid) {
+            push(@recipients, $user);
             next;
         }
         
-        SendSQL("SELECT emailflags FROM profiles WHERE " .
-                "userid = $userid" );
-
-        my ($userFlagString) = FetchSQLData();
+        # Get the user's email preferences from the database.
+        SendSQL("SELECT emailflags FROM profiles WHERE userid = $userid");
+        my $prefs = FetchOneColumn();
         
-        # If the sender doesn't want email, exclude them from list
-        
-        if (lc($person) eq $nametoexclude) {
-            
-            if ( defined ($userFlagString) && 
-                 $userFlagString =~ /ExcludeSelf\~on/ ) {
-                
-                push (@excludedAddresses,$person);
-                next;
-            }
+        # If the user's preferences are empty, assume the default preference 
+        # to receive all mail.  This happens when the installation upgraded
+        # from a version of Bugzilla without email preferences to one with
+        # them, but the user has not set their preferences yet.
+        if (!defined($prefs) || $prefs !~ /email/) {
+            push(@recipients, $user);
+            next;
         }
         
-        # if the users database entry is empty, send them all email
-        # by default (they have not accessed userprefs.cgi recently).
+        # Write the user's preferences into a Perl record indexed by 
+        # preference name.  We pass the value "255" to the split function 
+        # because otherwise split will trim trailing null fields, causing 
+        # Perl to generate lots of warnings.  Any suitably large number 
+        # would do.
+        my %prefs = split(/~/, $prefs, 255);
         
-        if ( !defined($userFlagString) || !($userFlagString =~ /email/) ) {
-            push(@filteredList,$person);
+        # If this user is the one who made the change in the first place,
+        # and they prefer not to receive mail about their own changes,
+        # filter them from the list.
+        if (lc($user) eq $nametoexclude && $prefs{'ExcludeSelf'} eq 'on') {
+            push(@excludedAddresses, $user);
+            next;
         }
-        else {
-
-            # the 255 param is here, because without a third param, 
-            # split will trim any trailing null fields, which causes perl 
-            # to eject lots of warnings.  any suitably large number would 
-            # do.
-                
-            my %userFlags = split(/~/, $userFlagString, 255);
-
-            # The default condition is to send each person email.
-            # If we match the email attribute with the user flag, and
-            # they do not want email, then remove them from the list.
-
-            push(@filteredList,$person);            
-
-            my $detectedOn = 0;
-            
-            foreach my $attribute (@emailAttributes) {
-
-                my $matchName = 'email' . $emailGroup . $attribute;
-                
-                # **** Kludge... quick and dirty fix for 2.12
-                #      http://bugzilla.mozilla.org/show_bug.cgi?id=73665
-                # If this pref is new (it's been added since this user
-                # last updated their filtering prefs, $userFlags{$matchName}
-                # will be undefined.  This should be considered a match
-                # so that new prefs will default to 'on'
-                if (!defined($userFlags{$matchName})) {
-                    $detectedOn = 1;
-                }
-
-                while ((my $flagName, my $flagValue) = each %userFlags) {
-                    
-                    if ($flagName !~ /$emailGroup/) { 
-                        next; 
-                    }
-
-                    if ($flagName eq $matchName){
-                        if ($flagValue eq 'on') {
-                            $detectedOn = 1;
-                        }
-                    }
-
-                } # for each userFlag
-
-            } # for each email attribute
-
-            # if the current flag hasn't been detected on at least once, 
-            # this person gets filtered from this group.
-            #
-            if (! $detectedOn) {
-                pop(@filteredList);
+        
+        # If the user doesn't want to receive email about unconfirmed
+        # bugs, that setting overrides their other preferences, including
+        # the preference to receive email when they are added to or removed
+        # from a role, so remove them from the list before checking their
+        # other preferences.
+        if (grep(/Unconfirmed/, @$reasons)
+            && exists($prefs{"email${role}Unconfirmed"})
+            && $prefs{"email${role}Unconfirmed"} eq '')
+        {
+            push(@excludedAddresses, $user);
+            next;
+        }
+        
+        # If the user was added to or removed from this role, and they
+        # prefer to receive email when that happens, send them mail.
+        # Note: This was originally written to send email when users
+        # were removed from roles and was later enhanced for additions,
+        # but for simplicity's sake the name "Removeme" was retained.
+        if (grep($_ eq $user, @{$force{$role}})
+            && $prefs{"email${role}Removeme"} eq 'on')
+        {
+            push (@recipients, $user);
+            next;
+        }
+        
+        # If the user prefers to be included in mail about this change,
+        # or they haven't specified a preference for it (because they
+        # haven't visited the email preferences page since the preference
+        # was added, in which case we include them by default), add them
+        # to the list of recipients.
+        foreach my $reason (@$reasons) {
+            my $pref = "email$role$reason";
+            if (!exists($prefs{$pref}) || $prefs{$pref} eq 'on') {
+                push(@recipients, $user);
+                next USER;
             }
+        }
+    
+        # At this point there's no way the user wants to receive email
+        # about this change, so exclude them from the list of recipients.
+        push(@excludedAddresses, $user);
+    
+    } # for each user on the unfiltered list
 
-            # check to see if the person was added to or removed from  
-            # this email group.
-            # Note: This was originally written as only removed from
-            # and was rewritten to be Added/Removed, but for simplicity
-            # sake, the name "Removeme" wasn't changed.
-            # http://bugzilla.mozilla.org/show_bug.cgi?id=71912 
-
-            if ( grep ($_ eq $person, @{$force{$emailGroup}} ) ) {
-
-                # if so, see if they want mail about that
-                #
-                if ( $userFlags{'email' . $emailGroup . 'Removeme'} eq 'on' ) {
-
-                    # we definitely want mail sent to this person, since
-                    # inclusion on a mail takes precedence over the previous
-                    # exclusion
-
-                    # have they been filtered for some other reason?
-                    #
-                    if (@filteredList == $lastCount) {
-                        
-                        # if so, put them back
-                        #
-                        push (@filteredList, $person);
-                    }
-                }
-            }
-
-        } # if $userFlagString is valid
-
-        # has the person been moved off the filtered list?
-        #
-        if (@filteredList == $lastCount ) {
-
-            # mark them as excluded
-            #
-            push (@excludedAddresses,$person);
-        } 
-            
-    } # for each person
-
-    return @filteredList;
+    return @recipients;
 }
 
 sub NewProcessOnePerson ($$$$$$$$$$$$) {
