@@ -35,11 +35,20 @@ function EditorFillContextMenu(event, contextMenuNode)
 
   // Setup object property menuitem
   var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");
+  var isImage = objectName == "img";
+  var isInLink = objectName == "href";
+
+  // Special case of an image inside a link
+  if (isImage)
+    isInLink = gEditor.getElementOrParentByTagName("href", GetObjectForProperties());
+
+  // Disable "Create Link" if in a link
+  SetElementEnabledById("createLink_cm", !isInLink);
+
+  // Enable "Edit link in new Composer" if in a link
+  SetElementEnabledById("editLink_cm", isInLink);
 
   InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm", "removeNamedAnchorsMenuitem_cm");
-
-  // This item is present only in context menu:
-  SetElementEnabledById("editLink_cm", objectName == "href");
 
   var inCell = IsInTableCell();
   // Set appropriate text for join cells command
@@ -58,7 +67,6 @@ function EditorFillContextMenu(event, contextMenuNode)
   }
 
   // The 'Save image (imagename)' menuitem:
-  var isImage = (objectName == "img");
   ShowMenuItem("menu_saveImage_cm", isImage);
 
   // Remove separators if all items in immediate group above are hidden
@@ -98,7 +106,8 @@ function EditorFillContextMenu(event, contextMenuNode)
 
      saveImageMenuItem.setAttribute('label',menutext);
 
-     var onCommand = "savePage('"+ imagePtr.getAttribute("src") + "',true)";
+    // XXX BUSTED! This command was removed!
+     var onCommand = "saveURL('"+ imagePtr.getAttribute("src") + "','SaveImageTitle',false)";
      saveImageMenuItem.setAttribute('oncommand',onCommand);
   }
 
