@@ -521,6 +521,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   NS_RELEASE(content);
   NS_RELEASE(widget);
 
+  mWebShell->SetObserver(mTempObserver);
   mWebShell->Show();
 
   return NS_OK;
@@ -555,7 +556,6 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
       TempMakeAbsURL(content, url, absURL);
 
       rv = mWebShell->LoadURL(absURL,          // URL string
-                              mTempObserver,   // Observer
                               nsnull);         // Post Data
     }
     NS_RELEASE(content);
