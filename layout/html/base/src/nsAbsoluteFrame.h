@@ -60,11 +60,12 @@ protected:
   nsIView*  CreateView(nsIView*         aContainingView,
                        const nsRect&    aRect,
                        nsStylePosition* aPosition,
-                       nsStyleDisplay*  aDisplay);
-  nsIFrame* GetContainingBlock();
-  void      ComputeViewBounds(const nsRect&    aContainingInnerRect,
+                       nsStyleDisplay*  aDisplay) const;
+  nsIFrame* GetContainingBlock() const;
+  void      ComputeViewBounds(nsIFrame*        aContainingBlock,
                               nsStylePosition* aPosition,
-                              nsRect&          aRect);
+                              nsRect&          aRect) const;
+  void      GetOffsetFromFrame(nsIFrame* aFrameTo, nsPoint& aOffset) const;
 };
 
 #endif /* nsAbsoluteFrame_h___ */

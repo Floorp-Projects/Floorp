@@ -61,7 +61,7 @@ nsAbsoluteFrame::~nsAbsoluteFrame()
 nsIView* nsAbsoluteFrame::CreateView(nsIView*         aContainingView,
                                      const nsRect&    aRect,
                                      nsStylePosition* aPosition,
-                                     nsStyleDisplay*  aDisplay)
+                                     nsStyleDisplay*  aDisplay) const
 {
   nsIView*  view;
 
@@ -137,58 +137,91 @@ nsIView* nsAbsoluteFrame::CreateView(nsIView*         aContainingView,
   return view;
 }
 
-void nsAbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
-                                        nsStylePosition* aPosition,
-                                        nsRect&          aRect)
+// Returns the offset from this frame to aFrameTo
+void nsAbsoluteFrame::GetOffsetFromFrame(nsIFrame* aFrameTo, nsPoint& aOffset) const
 {
+  nsIFrame* frame = (nsIFrame*)this;
+
+  aOffset.MoveTo(0, 0);
+  do {
+    nsPoint origin;
+
+    frame->GetOrigin(origin);
+    aOffset += origin;
+    frame->GetGeometricParent(frame);
+  } while ((nsnull != frame) && (frame != aFrameTo));
+}
+
+void nsAbsoluteFrame::ComputeViewBounds(nsIFrame*        aContainingBlock,
+                                        nsStylePosition* aPosition,
+                                        nsRect&          aRect) const
+{
+  nsRect    containingRect;
+
+  // XXX We should be using the inner rect, and not just the bounding rect.
+  // Because of the way the frame sizing protocol works (it's top-down, and
+  // the size of a container is set after reflowing its children), get the
+  // rect from the containing block's view
+  nsIView*  containingView;
+  aContainingBlock->GetView(containingView);
+  containingView->GetBounds(containingRect);
+  NS_RELEASE(containingView);
+  containingRect.x = containingRect.y = 0;
+
   // Compute the offset and size of the view based on the position properties
   // and the inner rect of the containing block
   nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
 
+  // If either the left or top are 'auto' then get the offset of our frame from
+  // the containing block
+  nsPoint offset;  // offset from containing block
+  if ((eStyleUnit_Auto == position->mLeftOffset.GetUnit()) ||
+      (eStyleUnit_Auto == position->mTopOffset.GetUnit())) {
+    GetOffsetFromFrame(aContainingBlock, offset);
+  }
+
   // x-offset
   if (eStyleUnit_Auto == position->mLeftOffset.GetUnit()) {
-    // XXX This isn't correct. We should use the current x-offset of our frame
-    // translated into the coordinate space of the containing block. But, we
-    // don't know it yet...
-    aRect.x = 0;
+    // Use the current x-offset of our frame translated into the coordinate space
+    // of the containing block
+    aRect.x = offset.x;
   } else if (eStyleUnit_Coord == position->mLeftOffset.GetUnit()) {
     aRect.x = position->mLeftOffset.GetCoordValue();
   } else {
     NS_ASSERTION(eStyleUnit_Percent == position->mLeftOffset.GetUnit(),
                  "unexpected offset type");
     // Percentage values refer to the width of the containing block
-    aRect.x = aContainingInnerRect.x + 
-              (nscoord)((float)aContainingInnerRect.width *
+    aRect.x = containingRect.x + 
+              (nscoord)((float)containingRect.width *
                         position->mLeftOffset.GetPercentValue());
   }
 
   // y-offset
   if (eStyleUnit_Auto == position->mTopOffset.GetUnit()) {
-    // XXX This isn't correct. We should use the current y-offset of our frame
-    // translated into the coordinate space of the containing block. But, we
-    // don't know it yet...
-    aRect.y = 0;
+    // Use the current y-offset of our frame translated into the coordinate space
+    // of the containing block
+    aRect.y = offset.y;
   } else if (eStyleUnit_Coord == position->mTopOffset.GetUnit()) {
     aRect.y = position->mTopOffset.GetCoordValue();
   } else {
     NS_ASSERTION(eStyleUnit_Percent == position->mTopOffset.GetUnit(),
                  "unexpected offset type");
     // Percentage values refer to the height of the containing block
-    aRect.y = aContainingInnerRect.y + 
-              (nscoord)((float)aContainingInnerRect.height *
+    aRect.y = containingRect.y + 
+              (nscoord)((float)containingRect.height *
                         position->mTopOffset.GetPercentValue());
   }
 
   // width
   if (eStyleUnit_Auto == position->mWidth.GetUnit()) {
     // Use the right-edge of the containing block
-    aRect.width = aContainingInnerRect.width - aRect.x;
+    aRect.width = containingRect.width - aRect.x;
   } else if (eStyleUnit_Coord == position->mWidth.GetUnit()) {
     aRect.width = position->mWidth.GetCoordValue();
   } else {
     NS_ASSERTION(eStyleUnit_Percent == position->mWidth.GetUnit(),
                  "unexpected width type");
-    aRect.width = (nscoord)((float)aContainingInnerRect.width * 
+    aRect.width = (nscoord)((float)containingRect.width * 
                             position->mWidth.GetPercentValue());
   }
 
@@ -201,16 +234,16 @@ void nsAbsoluteFrame::ComputeViewBounds(const nsRect&    aContainingInnerRect,
   } else {
     NS_ASSERTION(eStyleUnit_Percent == position->mHeight.GetUnit(),
                  "unexpected height type");
-    aRect.height = (nscoord)((float)aContainingInnerRect.height * 
+    aRect.height = (nscoord)((float)containingRect.height * 
                              position->mHeight.GetPercentValue());
   }
 }
 
-nsIFrame* nsAbsoluteFrame::GetContainingBlock()
+nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
 {
   // Look for a containing frame that is absolutely positioned. If we don't
   // find one then use the initial containg block which is the root frame
-  nsIFrame* lastFrame = this;
+  nsIFrame* lastFrame = (nsIFrame*)this;
   nsIFrame* result;
 
   GetContentParent(result);
@@ -247,9 +280,8 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     if (mContent->CanContainChildren()) {
       nsBodyFrame::NewFrame(&mFrame, mContent, this);
 
-      // Resolve style for the pseudo-frame. We can't use our style context
-      nsIStyleContextPtr styleContext = aPresContext->ResolveStyleContextFor(mContent, this);
-      mFrame->SetStyleContext(aPresContext,styleContext);
+      // Use our style context for the pseudo-frame
+      mFrame->SetStyleContext(aPresContext, mStyleContext);
 
     } else {
       // Create the absolutely positioned item as a pseudo-frame child. We'll
@@ -267,27 +299,17 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     // Get the containing block, and its associated view
     nsIFrame* containingBlock = GetContainingBlock();
     
-    // Get the inner rect of the containing block. Because of the way the frame
-    // sizing protocol works (it's top-down and the size of a container is set
-    // after reflowing its children), get the rect from the containing block's
-    // view
-    nsIView*  containingView;
-    nsRect    containingRect;
-
-    // XXX We should be using the inner rect, and not just the bounding rect
-    containingBlock->GetView(containingView);
-    containingView->GetBounds(containingRect);
-    containingRect.x = containingRect.y = 0;
-
     // Use the position properties to determine the offset and size
     nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
     nsRect            rect;
 
-    ComputeViewBounds(containingRect, position, rect);
+    ComputeViewBounds(containingBlock, position, rect);
 
     // Create a view for the frame
     nsStyleDisplay*  display = (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
-    nsIView*  view = CreateView(containingView, rect, position, display);
+    nsIView*         containingView;
+    containingBlock->GetView(containingView);
+    nsIView*         view = CreateView(containingView, rect, position, display);
     NS_RELEASE(containingView);
 
     mFrame->SetView(view);  
