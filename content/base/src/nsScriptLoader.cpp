@@ -368,34 +368,39 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       if (NS_SUCCEEDED(rv) && !shouldLoad) {
         return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
       }
+
+      request->mURI = scriptURI;
+      request->mIsInline = PR_FALSE;
+      request->mWasPending = PR_TRUE;
+      request->mLoading = PR_TRUE;
+
+      // Add the request to our pending requests list
+      mPendingRequests.AppendElement(reqsup);
+
+      nsCOMPtr<nsILoadGroup> loadGroup;
+      nsCOMPtr<nsIStreamLoader> loader;
+
+      (void) mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+
+      nsCOMPtr<nsIDocShell> docshell;
+      rv = globalObject->GetDocShell(getter_AddRefs(docshell));
+      if (NS_FAILED(rv)) {
+        mPendingRequests.RemoveElement(reqsup, 0);
+        return FireErrorNotification(rv, aElement, aObserver);
+      }
+
+      nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
+
+      rv = NS_NewStreamLoader(getter_AddRefs(loader), scriptURI, this,
+                              reqsup, loadGroup, prompter,
+                              nsIChannel::LOAD_NORMAL);
+      if (NS_FAILED(rv)) {
+        mPendingRequests.RemoveElement(reqsup, 0);
+        return FireErrorNotification(rv, aElement, aObserver);
+      }
     }
-
-    request->mURI = scriptURI;
-    request->mIsInline = PR_FALSE;
-    request->mWasPending = PR_TRUE;
-    request->mLoading = PR_TRUE;
-
-    // Add the request to our pending requests list
-    mPendingRequests.AppendElement(reqsup);
-
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    nsCOMPtr<nsIStreamLoader> loader;
-
-    mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-
-    nsCOMPtr<nsIDocShell> docshell;
-    globalObject->GetDocShell(getter_AddRefs(docshell));
-    nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
-
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), scriptURI, this,
-                            reqsup, loadGroup, prompter,
-                            nsIChannel::LOAD_NORMAL);
-    if (NS_FAILED(rv)) {
-      mPendingRequests.RemoveElement(reqsup, 0);
-      return FireErrorNotification(rv, aElement, aObserver);
-    }
-  }
-  else {
+    
+  } else {
     request->mLoading = PR_FALSE;
     request->mIsInline = PR_TRUE;
     mDocument->GetDocumentURL(getter_AddRefs(request->mURI));
