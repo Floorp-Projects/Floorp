@@ -50,7 +50,7 @@ sub LoadConfig() {
 
 sub Run() {
     my $start_time = time();
-    while (1) {
+    OUTER: while (1) {
         # $BuildSleep is the minimum amount of time a build is allowed to take.
         # It prevents sending too many messages to the tinderbox server when
         # something is broken.
@@ -59,6 +59,16 @@ sub Run() {
                 die "Tree $treeentry->{tree} does not exist";
             system("./build-seamonkey.pl --once $treeentry->{args}");
             chdir("..");
+
+	    # We sleep 15 seconds to open up a window for stopping a build.
+	    sleep 15;
+
+	    # Provide a fall-over technique that stops the multi-tinderbox
+	    # script once the current build cycle has completed.
+	    if ( -e "fall-over" ) {
+		system("mv fall-over fall-over.$$.done");
+		last OUTER;
+	    }
         }
 
         my $sleep_time = ($Settings::BuildSleep * 60) - (time() - $start_time);
