@@ -348,7 +348,10 @@ function createSearchTermsWithList(aTermsArray)
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                   .getService(Components.interfaces.nsIIOService);
 
-  gSearchSession.addScopeTerm(gSearchInput.searchMode == kQuickSearchBody && !ioService.offline ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail, selectedFolder);
+  gSearchSession.addScopeTerm(gSearchInput.searchMode == kQuickSearchBody && 
+                              !ioService.offline && 
+                              selectedFolder.server.type == 'imap' ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail, 
+                              selectedFolder);
 
   // add each item in termsArray to the search session
 
