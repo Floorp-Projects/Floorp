@@ -437,10 +437,14 @@ PRInt32 _MD_LSeek(PRFileDesc *fd, PRInt32 offset, PRSeekWhence how)
 	}
 
 	/* set the new mark and extend the file if seeking beyond current EOF */
+	/* making sure to set the mark after any required extend */
 	if (err == noErr) {
 		err = SetFPos(refNum, fsFromStart, endPos);
 		if (err == eofErr) {
 			err = SetEOF(refNum, endPos);
+			if (err == noErr) {
+				err = SetFPos(refNum, fsFromStart, endPos);
+			}
 		}
 	}
 

@@ -721,22 +721,8 @@ static REGERR nr_ReadHdr(REGFILE *reg)
 
 static REGERR nr_WriteHdr(REGFILE *reg)
 {
-#ifdef XP_MAC
-  #define HACK_WRITE_ENTIRE_RESERVE 1
-#endif
-
     REGERR err;
-#if HACK_WRITE_ENTIRE_RESERVE
-    /* 
-     * pinkerton
-     * Until NSPR can be fixed to seek out past the EOF on MacOS, we need to make
-     * sure that we write all 128 bytes to push out the EOF to the right location
-     */
-    char hdrBuf[HDRRESERVE];
-    XP_MEMSET(hdrBuf, NULL, HDRRESERVE);
-#else
     char hdrBuf[sizeof(REGHDR)];
-#endif
 
     XP_ASSERT(reg);
 
@@ -786,21 +772,6 @@ static REGERR nr_CreateRoot(REGFILE *reg)
     root.valuelen   = 0;
     root.valuebuf   = 0;
     root.parent     = 0;
-
-#ifdef XP_MAC
-  #define HACK_UNTIL_NSPR_DOES_SEEK_CORRECTLY 1
-#endif
-#if HACK_UNTIL_NSPR_DOES_SEEK_CORRECTLY
-    /* 
-     * pinkerton
-     * The AppendName() and AppendDesc() code that follows assumes that it can just
-     * seek out past the end of the file and write a name and descriptor. However,
-     * mac doesn't allow that. NSPR needs to be "fixed" somehow, but in the meantime,
-     * we can just write out the header first, extending the EOF to 128 bytes where
-     * the name and desc can follow w/out silently failing.
-     */
-    nr_WriteHdr(reg);
-#endif
 
     err = nr_AppendName(reg, ROOTKEY_STR, &root);
     if (err != REGERR_OK)
