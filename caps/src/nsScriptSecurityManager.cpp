@@ -1083,6 +1083,14 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     EnsurePrefsLoaded();
     JSContext *cx = GetCurrentContext();
     JSStackFrame *fp;
+
+    //Error checks for capability string length (200)
+    if(PL_strlen(capability)>200) {
+		static const char msg[] = "Capability name too long";
+		JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+        return NS_ERROR_FAILURE;
+    }
+    
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), 
                                        &fp)))
