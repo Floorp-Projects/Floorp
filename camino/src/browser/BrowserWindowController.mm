@@ -3067,21 +3067,24 @@ enum BWCOpenDest {
 //
 // updateLock:
 //
-// Sets the lock icon in the status bar to the appropriate image
+// Sets the lock icon in the status bar to the appropriate image and updates
+// the url bar display of security state appropriately.
 //
 - (void)updateLock:(unsigned int)inSecurityState
 {
-  switch ( inSecurityState & 0x000000FF ) {
+  unsigned char securityState = inSecurityState & 0x000000FF;
+  switch ( securityState ) {
     case nsIWebProgressListener::STATE_IS_INSECURE:
       [mLock setImage:[BrowserWindowController insecureIcon]];
       break;
     case nsIWebProgressListener::STATE_IS_SECURE:
-      [mLock setImage:[BrowserWindowController secureIcon]];
+      [mLock setImage:[BrowserWindowController secureIcon]];;
       break;
     case nsIWebProgressListener::STATE_IS_BROKEN:
       [mLock setImage:[BrowserWindowController brokenIcon]];
       break;
   }
+  [mURLBar setSecureState:securityState];
 }
 
 + (NSImage*) insecureIcon

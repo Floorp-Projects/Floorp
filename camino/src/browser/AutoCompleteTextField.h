@@ -36,6 +36,9 @@
   NSWindow *mPopupWin;
   NSTableView *mTableView;
   
+  NSImageView* mLock;                 // STRONG, lock that shows when a page is secure, hidden otherwise
+  NSColor* mSecureBackgroundColor;    // STRONG, yellow color for bg when on a secure page, cached for perf
+  
   AutoCompleteDataSource *mDataSource;
 
   nsIAutoCompleteSession *mSession;
@@ -90,5 +93,9 @@
 
 - (void) setURI:(NSString*)aURI;
 - (id) fieldEditor;
+
+// Changes the display of the text field to indicate whether the page
+// is secure or not.
+- (void) setSecureState:(unsigned char)inState;
 
 @end

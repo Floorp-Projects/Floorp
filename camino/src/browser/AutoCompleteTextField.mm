@@ -30,12 +30,17 @@
 #import "CHBrowserService.h"
 
 #include "nsIServiceManager.h"
+#include "nsIWebProgressListener.h"
 #include "nsMemory.h"
 #include "nsString.h"
 #include "UserDefaults.h"
 
 static const int kMaxRows = 6;
 static const int kFrameMargin = 1;
+
+const float kSecureIconRightOffset = 19.0;    // offset from right size of url bar
+const float kSecureIconYOrigin = 3.0;
+const float kSecureIconSize = 16.0;
 
 
 // stole this from NSPasteboard+Utils.mm
@@ -62,17 +67,56 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 // Text cell subclass used to make room for the proxy icon inside the textview
 //
 @interface AutoCompleteTextCell : NSTextFieldCell
+{
+  BOOL mDisplaySecureIcon;    // YES if currently displaying the security icon
+}
+- setDisplaySecureIcon:(BOOL)inIsVisible;
 @end
 
 @implementation AutoCompleteTextCell
 
+//
+// -initTextCell:
+//
+// Handles initializing our members, start out assuming we're not showing a secure icon
+//
+- (id)initTextCell:(NSString*)inStr
+{
+  if ((self == [super initTextCell:inStr])) {
+    mDisplaySecureIcon = NO;
+  }
+  return self;
+}
+
+//
+// -drawingRectForBounds:
+//
+// Overridden to adjust the bounds we draw into inside the full rectangle. The proxy icon
+// takes away space on the left side (always) and the secure icon (if visilbe) takes away space
+// on the right side. The remainder in the middle is where we're allowed to draw the text of
+// the text field.
+//
 - (NSRect)drawingRectForBounds:(NSRect)theRect
 {
-  const float kProxIconOffset = 19.0;
+  const float kProxyIconOffset = 19.0;
   
-  theRect.origin.x += kProxIconOffset;
-  theRect.size.width -= kProxIconOffset;
+  theRect.origin.x += kProxyIconOffset;
+  theRect.size.width -= kProxyIconOffset;
+  if (mDisplaySecureIcon)
+    theRect.size.width -= kSecureIconRightOffset;
   return [super drawingRectForBounds:theRect];
+}
+
+//
+// -setDisplaySecureIcon:
+//
+// Indicates whether or now we need to take away space on the right side for the security
+// icon. Causes the cell's drawing rect to be recalculated.
+//
+- setDisplaySecureIcon:(BOOL)inIsVisible
+{
+  mDisplaySecureIcon = inIsVisible;
+  [(NSControl*)[self controlView] calcSize];
 }
 
 @end
@@ -188,6 +232,17 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [mTableView addTableColumn: column];
   }
   
+  // cache the bg color for secure pages. create a secure icon view which we'll display at the far right
+  // of the url bar. We hold onto a strong ref so that it doesn't get destroyed when we remove it from
+  // the view hierarchy (for non-secure pages). Set its resize mask so that it moves as you resize the
+  // window and mark this view that it needs to resize its subviews so it will automagically move the
+  // secure icon when it's visible.
+  mSecureBackgroundColor = [[NSColor colorWithDeviceRed:1.0 green:1.0 blue:0.777 alpha:1.0] retain];
+  mLock = [[NSImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kSecureIconRightOffset, 
+                                                          kSecureIconYOrigin, kSecureIconSize, kSecureIconSize)];  // we own this
+  [mLock setAutoresizingMask:(NSViewNotSizable | NSViewMinXMargin)];
+  [self setAutoresizesSubviews:YES];
+
   // create the text columns
   column = [[[NSTableColumn alloc] initWithIdentifier:@"col1"] autorelease];
   [mTableView addTableColumn: column];
@@ -253,6 +308,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [mSearchString release]; mSearchString = nil;
   [mPopupWin release];     mPopupWin = nil;
   [mDataSource release];   mDataSource = nil;
+  [mSecureBackgroundColor release]; mSecureBackgroundColor = nil;
+  [mLock release]; mLock = nil;
 
   NS_IF_RELEASE(mSession);
   NS_IF_RELEASE(mResults);
@@ -522,6 +579,56 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   }
 }
 
+//
+// -displaySecureIcon:
+//
+// Shows or hides the security icon depending on |inShouldDisplay|.
+//
+- (void)displaySecureIcon:(BOOL)inShouldDisplay
+{
+  if (inShouldDisplay && ![mLock superview]) {
+    // showing the icon. The user may have resized the window (and thus this view) while
+    // the view was hidden (and thus not part of the view hierarchy) so we have to reposition
+    // it manually before we add it.
+    [[self cell] setDisplaySecureIcon:YES];
+    [mLock setFrameOrigin:NSMakePoint([self bounds].size.width - kSecureIconRightOffset, kSecureIconYOrigin)];
+    [self addSubview:mLock];
+  }
+  else if (!inShouldDisplay && [mLock superview]) {
+    // hiding the icon. We don't have to do anything more than remove it from view.
+    [[self cell] setDisplaySecureIcon:NO];
+    [mLock removeFromSuperview];
+  }
+}
+
+//
+// -setSecureState:
+//
+// Changes the display of the text field to indicate whether the page
+// is secure or not.
+//
+- (void)setSecureState:(unsigned char)inState
+{
+  NSColor* urlBarColor = [NSColor whiteColor];
+  BOOL isSecure = NO;
+  switch (inState) {
+    case nsIWebProgressListener::STATE_IS_INSECURE:
+      [mLock setImage:[BrowserWindowController insecureIcon]];
+      break;
+    case nsIWebProgressListener::STATE_IS_SECURE:
+      [mLock setImage:[BrowserWindowController secureIcon]];
+      urlBarColor = mSecureBackgroundColor;
+      isSecure = YES;
+      break;
+    case nsIWebProgressListener::STATE_IS_BROKEN:
+      [mLock setImage:[BrowserWindowController brokenIcon]];
+      urlBarColor = mSecureBackgroundColor;
+      isSecure = YES;
+      break;
+  }
+  [self setBackgroundColor:urlBarColor];
+  [self displaySecureIcon:isSecure];
+}
 
 //
 // -setURI
