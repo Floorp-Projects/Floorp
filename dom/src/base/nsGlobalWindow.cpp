@@ -961,6 +961,12 @@ NS_IMETHODIMP
 GlobalWindowImpl::SetLocation(jsval aLocation)
 {
   nsresult result;
+
+  if (!mLocation && mDocShell) {
+    mLocation = new LocationImpl(mDocShell);
+    NS_IF_ADDREF(mLocation);
+  }
+
   if (mLocation) {
     nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
     NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
