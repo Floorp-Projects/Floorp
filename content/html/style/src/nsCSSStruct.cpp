@@ -597,30 +597,32 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  nsresult  GetData(const nsID& aSID, nsCSSStruct** aData);
-  nsresult  EnsureData(const nsID& aSID, nsCSSStruct** aData);
+  NS_IMETHOD GetData(const nsID& aSID, nsCSSStruct** aData);
+  NS_IMETHOD EnsureData(const nsID& aSID, nsCSSStruct** aData);
 
-  nsresult AppendValue(PRInt32 aProperty, const nsCSSValue& aValue);
-  nsresult SetValueImportant(PRInt32 aProperty);
-  nsresult AppendComment(const nsString& aComment);
+  NS_IMETHOD AppendValue(PRInt32 aProperty, const nsCSSValue& aValue);
+  NS_IMETHOD SetValueImportant(PRInt32 aProperty);
+  NS_IMETHOD AppendComment(const nsString& aComment);
 
-  nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue);
-  nsresult GetValue(PRInt32 aProperty, nsString& aValue);
-  nsresult GetValue(const nsString& aProperty, nsString& aValue);
+  NS_IMETHOD GetValue(PRInt32 aProperty, nsCSSValue& aValue);
+  NS_IMETHOD GetValue(PRInt32 aProperty, nsString& aValue);
+  NS_IMETHOD GetValue(const nsString& aProperty, nsString& aValue);
 
-  nsresult GetImportantValues(nsICSSDeclaration*& aResult);
-  nsresult GetValueIsImportant(PRInt32 aProperty, PRBool& aIsImportant);
-  nsresult GetValueIsImportant(const nsString& aProperty, PRBool& aIsImportant);
+  NS_IMETHOD GetImportantValues(nsICSSDeclaration*& aResult);
+  NS_IMETHOD GetValueIsImportant(PRInt32 aProperty, PRBool& aIsImportant);
+  NS_IMETHOD GetValueIsImportant(const nsString& aProperty, PRBool& aIsImportant);
 
   PRBool   AppendValueToString(PRInt32 aProperty, nsString& aResult);
   PRBool   AppendValueToString(PRInt32 aProperty, const nsCSSValue& aValue, nsString& aResult);
 
-  virtual nsresult ToString(nsString& aString);
+  NS_IMETHOD ToString(nsString& aString);
 
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   
-  nsresult Count(PRUint32* aCount);
-  nsresult GetNthProperty(PRUint32 aIndex, nsString& aReturn);
+  NS_IMETHOD Count(PRUint32* aCount);
+  NS_IMETHOD GetNthProperty(PRUint32 aIndex, nsString& aReturn);
+
+  NS_IMETHOD GetStyleImpact(PRInt32* aHint) const;
 
 private:
   CSSDeclarationImpl(const CSSDeclarationImpl& aCopy);
@@ -706,7 +708,8 @@ NS_IMPL_ISUPPORTS(CSSDeclarationImpl, kICSSDeclarationIID);
 #define CSS_IF_GET_ELSE(sid,ptr,result) \
   if (sid.Equals(kCSS##ptr##SID))  { *result = m##ptr;  } else
 
-nsresult CSSDeclarationImpl::GetData(const nsID& aSID, nsCSSStruct** aDataPtr)
+NS_IMETHODIMP
+CSSDeclarationImpl::GetData(const nsID& aSID, nsCSSStruct** aDataPtr)
 {
   if (nsnull == aDataPtr) {
     return NS_ERROR_NULL_POINTER;
@@ -735,7 +738,8 @@ nsresult CSSDeclarationImpl::GetData(const nsID& aSID, nsCSSStruct** aDataPtr)
     *result = m##ptr;                                     \
   } else
 
-nsresult CSSDeclarationImpl::EnsureData(const nsID& aSID, nsCSSStruct** aDataPtr)
+NS_IMETHODIMP
+CSSDeclarationImpl::EnsureData(const nsID& aSID, nsCSSStruct** aDataPtr)
 {
   if (nsnull == aDataPtr) {
     return NS_ERROR_NULL_POINTER;
@@ -788,7 +792,8 @@ nsresult CSSDeclarationImpl::EnsureData(const nsID& aSID, nsCSSStruct** aDataPtr
   }                                   \
   else
 
-nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aValue)
+NS_IMETHODIMP
+CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aValue)
 {
   nsresult result = NS_OK;
 
@@ -1270,7 +1275,8 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
 #define CSS_CASE_IMPORTANT(prop,data) \
   case prop: mImportant->data = data; data.Reset(); break
 
-nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
+NS_IMETHODIMP
+CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
 {
   nsresult result = NS_OK;
 
@@ -1901,7 +1907,8 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
   return result;
 }
 
-nsresult CSSDeclarationImpl::AppendComment(const nsString& aComment)
+NS_IMETHODIMP
+CSSDeclarationImpl::AppendComment(const nsString& aComment)
 {
   nsresult result = NS_ERROR_OUT_OF_MEMORY;
 
@@ -1919,7 +1926,8 @@ nsresult CSSDeclarationImpl::AppendComment(const nsString& aComment)
   return result;
 }
 
-nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
+NS_IMETHODIMP
+CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
 {
   nsresult result = NS_OK;
 
@@ -2410,7 +2418,8 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
 }
 
 
-nsresult CSSDeclarationImpl::GetValue(const nsString& aProperty, nsString& aValue)
+NS_IMETHODIMP
+CSSDeclarationImpl::GetValue(const nsString& aProperty, nsString& aValue)
 {
   char prop[50];
   aProperty.ToCString(prop, sizeof(prop));
@@ -2573,7 +2582,8 @@ PRBool CSSDeclarationImpl::AppendValueToString(PRInt32 aProperty, const nsCSSVal
    (eCSSUnit_Null != strct->rect->mBottom.GetUnit()) && \
    (eCSSUnit_Null != strct->rect->mLeft.GetUnit())) 
 
-nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
+NS_IMETHODIMP
+CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
 {
   PRBool  isImportant = PR_FALSE;
   GetValueIsImportant(aProperty, isImportant);
@@ -2837,7 +2847,8 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
   return NS_OK;
 }
 
-nsresult CSSDeclarationImpl::GetImportantValues(nsICSSDeclaration*& aResult)
+NS_IMETHODIMP
+CSSDeclarationImpl::GetImportantValues(nsICSSDeclaration*& aResult)
 {
   if (nsnull != mImportant) {
     aResult = mImportant;
@@ -2849,8 +2860,9 @@ nsresult CSSDeclarationImpl::GetImportantValues(nsICSSDeclaration*& aResult)
   return NS_OK;
 }
 
-nsresult CSSDeclarationImpl::GetValueIsImportant(const nsString& aProperty,
-                                                 PRBool& aIsImportant)
+NS_IMETHODIMP
+CSSDeclarationImpl::GetValueIsImportant(const nsString& aProperty,
+                                        PRBool& aIsImportant)
 {
   char prop[50];
   aProperty.ToCString(prop, sizeof(prop));
@@ -2858,8 +2870,9 @@ nsresult CSSDeclarationImpl::GetValueIsImportant(const nsString& aProperty,
   return GetValueIsImportant(propID, aIsImportant);
 }
 
-nsresult CSSDeclarationImpl::GetValueIsImportant(PRInt32 aProperty,
-                                                 PRBool& aIsImportant)
+NS_IMETHODIMP
+CSSDeclarationImpl::GetValueIsImportant(PRInt32 aProperty,
+                                        PRBool& aIsImportant)
 {
   nsCSSValue val;
 
@@ -2879,7 +2892,8 @@ nsresult CSSDeclarationImpl::GetValueIsImportant(PRInt32 aProperty,
   return NS_OK;
 }
 
-nsresult CSSDeclarationImpl::ToString(nsString& aString)
+NS_IMETHODIMP
+CSSDeclarationImpl::ToString(nsString& aString)
 {
   if (nsnull != mOrder) {
     PRInt32 count = mOrder->Count();
@@ -2959,7 +2973,7 @@ void CSSDeclarationImpl::List(FILE* out, PRInt32 aIndent) const
   }
 }
 
-nsresult
+NS_IMETHODIMP
 CSSDeclarationImpl::Count(PRUint32* aCount)
 {
   if (nsnull != mOrder) {
@@ -2972,7 +2986,7 @@ CSSDeclarationImpl::Count(PRUint32* aCount)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 CSSDeclarationImpl::GetNthProperty(PRUint32 aIndex, nsString& aReturn)
 {
   aReturn.SetLength(0);
@@ -2983,6 +2997,30 @@ CSSDeclarationImpl::GetNthProperty(PRUint32 aIndex, nsString& aReturn)
     }
   }
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSDeclarationImpl::GetStyleImpact(PRInt32* aHint) const
+{
+  NS_ASSERTION(nsnull != aHint, "null pointer");
+  if (nsnull == aHint) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
+  if (nsnull != mOrder) {
+    PRInt32 count = mOrder->Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      PRInt32 property = (PRInt32)mOrder->ElementAt(index);
+      if (0 <= property) {
+        if (hint < nsCSSProps::kHintTable[property]) {
+          hint = nsCSSProps::kHintTable[property];
+        }
+      }
+    }
+  }
+  *aHint = hint;
   return NS_OK;
 }
 

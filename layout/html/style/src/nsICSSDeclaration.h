@@ -315,27 +315,29 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
 
 class nsICSSDeclaration : public nsISupports {
 public:
-  virtual nsresult GetData(const nsID& aIID, nsCSSStruct** aData) = 0;
-  virtual nsresult EnsureData(const nsID& aSID, nsCSSStruct** aData) = 0;
+  NS_IMETHOD GetData(const nsID& aIID, nsCSSStruct** aData) = 0;
+  NS_IMETHOD EnsureData(const nsID& aSID, nsCSSStruct** aData) = 0;
 
-  virtual nsresult AppendValue(PRInt32 aProperty, const nsCSSValue& aValue) = 0;
-  virtual nsresult SetValueImportant(PRInt32 aProperty) = 0;
-  virtual nsresult AppendComment(const nsString& aComment) = 0;
+  NS_IMETHOD AppendValue(PRInt32 aProperty, const nsCSSValue& aValue) = 0;
+  NS_IMETHOD SetValueImportant(PRInt32 aProperty) = 0;
+  NS_IMETHOD AppendComment(const nsString& aComment) = 0;
 
 // XXX make nscolor a struct to avoid type conflicts
-  virtual nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue) = 0;
+  NS_IMETHOD GetValue(PRInt32 aProperty, nsCSSValue& aValue) = 0;
 
-  virtual nsresult GetValue(PRInt32 aProperty, nsString& aValue) = 0;
-  virtual nsresult GetValue(const nsString& aProperty, nsString& aValue) = 0;
+  NS_IMETHOD GetValue(PRInt32 aProperty, nsString& aValue) = 0;
+  NS_IMETHOD GetValue(const nsString& aProperty, nsString& aValue) = 0;
 
-  virtual nsresult GetImportantValues(nsICSSDeclaration*& aResult) = 0;
-  virtual nsresult GetValueIsImportant(PRInt32 aProperty, PRBool& aIsImportant) = 0;
-  virtual nsresult GetValueIsImportant(const nsString& aProperty, PRBool& aIsImportant) = 0;
+  NS_IMETHOD GetImportantValues(nsICSSDeclaration*& aResult) = 0;
+  NS_IMETHOD GetValueIsImportant(PRInt32 aProperty, PRBool& aIsImportant) = 0;
+  NS_IMETHOD GetValueIsImportant(const nsString& aProperty, PRBool& aIsImportant) = 0;
 
-  virtual nsresult Count(PRUint32* aCount) = 0;
-  virtual nsresult GetNthProperty(PRUint32 aIndex, nsString& aReturn) = 0;
+  NS_IMETHOD Count(PRUint32* aCount) = 0;
+  NS_IMETHOD GetNthProperty(PRUint32 aIndex, nsString& aReturn) = 0;
 
-  virtual nsresult ToString(nsString& aString) = 0;
+  NS_IMETHOD GetStyleImpact(PRInt32* aHint) const = 0;
+
+  NS_IMETHOD ToString(nsString& aString) = 0;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };
