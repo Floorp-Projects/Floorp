@@ -227,6 +227,8 @@ viewer:res:rdf:xpidl-test-1.xul
 viewer:res:samples:*
 ; the line above will skip aliases to subdirectories; let's list them explicitly
 viewer:res:samples:sampleimages
+viewer:res:builtin:htmlBindings.xml
+viewer:res:builtin:platformHTMLBindings.xml
 
 -viewer:res:samples:.cvsignore
 -viewer:res:samples:Makefile.in
