@@ -76,10 +76,9 @@ typedef struct nsLookupElement {
 
 #endif
 
-class nsDNSLookup : public nsISupports
+class nsDNSLookup
 {
 public:
-	NS_DECL_ISUPPORTS
 
 	nsDNSLookup(nsISupports * clientContext, const char * hostName, nsIDNSListener* listener);
     	virtual ~nsDNSLookup(void);
@@ -92,8 +91,10 @@ public:
 
 
 protected:
-#ifdef XP_MAC
+#if defined(XP_MAC)
     friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+#elif defined(XP_PC)
+    friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
     char *                      mHostName;
     nsHostEnt                   mHostEntry;
@@ -105,14 +106,17 @@ protected:
     nsCOMPtr<nsISupportsArray>  mRequestQueue;     // XXX - maintain a list of nsDNSRequests.
 
 #if defined(XP_MAC)
-    nsLookupElement     mLookupElement;
-    nsInetHostInfo      mInetHostInfo;
+    nsLookupElement             mLookupElement;
+    nsInetHostInfo              mInetHostInfo;
 #endif
-    nsIDNSListener *    mListener;        // belongs with nsDNSRequest
-    nsISupports *       mContext;         // belongs with nsDNSRequest
+
+#if defined(XP_PC)
+    HANDLE                      mLookupHandle;
+#endif
+    nsCOMPtr<nsIDNSListener>    mListener;        // belongs with nsDNSRequest
+    nsCOMPtr<nsISupports>       mContext;         // belongs with nsDNSRequest
 };
 
-NS_IMPL_ISUPPORTS1(nsDNSLookup, nsISupports)
 
 
 class nsDNSRequest : public nsIRequest
@@ -203,9 +207,9 @@ nsDNSLookup::nsDNSLookup(nsISupports * clientContext, const char * hostName, nsI
 #if defined(XP_MAC)
     mInetHostInfo.lookup = this;
     mLookupElement.lookup = this;
+#endif
     mContext = clientContext;			// belongs with nsDNSRequest
     mListener = listener;               // belongs with nsDNSRequest
-#endif
 }
 
 
@@ -288,12 +292,15 @@ nsDNSLookup::CallOnFound(void)
     }
     result = mListener->OnStopLookup(mContext, mHostName, mResult);
 
+	mListener = 0;
+	mContext = 0;
+	
     return result;
 }
 
 
 nsresult
-nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)  // I don't want to have to pass this in...
+nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)
 {
 	nsresult rv = NS_OK;
 	
@@ -303,6 +310,16 @@ nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)  // I don't want to ha
     err = OTInetStringToAddress(dnsService->mServiceRef, (char *)mHostName, (InetHostInfo *)&mInetHostInfo);
     if (err != noErr)
         rv = NS_ERROR_UNEXPECTED;
+#endif
+
+#if defined(XP_PC)
+    mLookupHandle = WSAAsyncGetHostByName(dnsService->mDNSWindow, dnsService->mMsgFoundDNS,
+                                     mHostName, (char *)&mHostEntry.hostEnt, PR_NETDB_BUF_SIZE);
+
+    // check for error conditions
+    if (mLookupHandle == nsnull) {
+        rv = NS_ERROR_UNEXPECTED;  // or call WSAGetLastError() for details;
+    }
 #endif
 
 	return rv;
@@ -339,6 +356,53 @@ pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OT
 }
 #endif
 
+#if defined(XP_PC)
+
+static LRESULT CALLBACK
+nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT result = nsnull;
+    int     error = nsnull;
+
+    nsDNSService *  dnsService = (nsDNSService *)GetWindowLong(hWnd, GWL_USERDATA);
+	
+
+    if ((dnsService != nsnull) && (uMsg == dnsService->mMsgFoundDNS)) {
+        // dns lookup complete - get error code
+        error = WSAGETASYNCERROR(lParam);
+        
+        // which lookup completed?  fetch lookup for this (HANDLE)wParam
+        PRInt32 index;
+        nsDNSLookup * lookup;
+        nsresult    rv;
+        
+        index = dnsService->mCompletionQueue.Count();
+        while (index) {
+            lookup = (nsDNSLookup *)dnsService->mCompletionQueue.ElementAt(index-1);
+            if (lookup->mLookupHandle == (HANDLE)wParam) {
+                result = dnsService->mCompletionQueue.RemoveElement(lookup);
+                // check result
+                lookup->mComplete = PR_TRUE;
+                
+                if (error != 0) {
+                    lookup->mResult = NS_ERROR_UNKNOWN_HOST;
+                }
+                rv = lookup->CallOnFound();
+                delete lookup;  // for now, until we implement a dns cache
+                break;
+            }
+			index--;
+        }
+
+        result = 0;
+    } else {
+        result = DefWindowProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    return result;
+}
+
+#endif
 
 nsDNSService::nsDNSService()
 {
@@ -355,17 +419,16 @@ nsDNSService::nsDNSService()
     mCompletionQueue.qTail = nsnull;
     
 #if TARGET_CARBON
-    mCLientContext = nsnull;
+    mClientContext = nsnull;
 #endif /* TARGET_CARBON */
 #endif /* defined(XP_MAC) */
-    
-    
 }
 
 
 nsresult
 nsDNSService::Init()
 {
+    nsresult rv = NS_OK;
 //    initialize DNS cache (persistent?)
 #if defined(XP_MAC)
 //    create Open Transport Service Provider for DNS Lookups
@@ -392,34 +455,50 @@ nsDNSService::Init()
     NS_ASSERTION(errOT == kOTNoError, "error installing dns notification routine.");
 
     /* Put us into async mode */
-    errOT = OTSetAsynchronous(mServiceRef);
-    NS_ASSERTION(errOT == kOTNoError, "error setting service to async mode.");
-
-	// if either of the two previous calls failed then dealloc service ref and return NS_FAILED
-	
-    nsresult rv = NS_OK;
-    rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
-	
-
-
-#elif defined(_WIN)
-//    create DNS EventHandler Window
-#elif defined(XP_UNIX)
-//    XXXX - ?
+	if (errOT == kOTNoError) {
+	    errOT = OTSetAsynchronous(mServiceRef);
+	    NS_ASSERTION(errOT == kOTNoError, "error setting service to async mode.");
+	} else {
+	// if either of the two previous calls failed then dealloc service ref and return NS_ERROR_UNEXPECTED
+		OSStatus status = OTCloseProvider((ProviderRef)mServiceRef);
+		return NS_ERROR_UNEXPECTED;
+	}
 #endif
 
-	return NS_OK;
+#if defined(XP_PC)
+    // sync with DNS thread to allow it to create the DNS window
+    PRMonitor * monitor;
+    PRStatus    status;
+
+    monitor = PR_CEnterMonitor(this);
+#endif
+
+#if defined(XP_MAC) || defined(XP_PC)
+    // create DNS thread
+    rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
+#endif
+
+
+#if defined(XP_PC)
+    status = PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
+    status = PR_CExitMonitor(this);
+#endif
+
+	return rv;
 }
 
 
 nsDNSService::~nsDNSService()
 {
 //    deallocate cache
+
 #if defined(XP_MAC)
-    CloseOpenTransport();							// should be moved to terminate routine
 //    deallocate Open Transport Service Provider
-#elif defined(_WIN)
+	OSStatus status = OTCloseProvider((ProviderRef)mServiceRef);
+    CloseOpenTransport();           // should be moved to terminate routine
+#elif defined(XP_PC)
 //    dispose DNS EventHandler Window
+	(void) DestroyWindow(mDNSWindow);
 #elif defined(XP_UNIX)
 //    XXXX - ?
 #endif
@@ -456,6 +535,47 @@ nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
     return rv;
 }
 
+nsresult
+nsDNSService::InitDNSThread(void)
+{
+#if defined(XP_PC)
+    WNDCLASS    wc;
+    char *      windowClass = "Mozilla:DNSWindowClass";
+
+    // allocate message id for event handler
+    mMsgFoundDNS = RegisterWindowMessage("Mozilla:DNSMessage");
+
+    // register window class for DNS event receiver window
+    wc.style            = 0;
+    wc.lpfnWndProc      = nsDNSEventProc;
+    wc.cbClsExtra       = 0;
+    wc.cbWndExtra       = 0;
+    wc.hInstance        = NULL;
+    wc.hIcon            = NULL;
+    wc.hbrBackground    = (HBRUSH) NULL;
+    wc.lpszMenuName     = (LPCSTR) NULL;
+    wc.lpszClassName    = windowClass;
+    RegisterClass(&wc);
+
+    // create DNS event receiver window
+    mDNSWindow = CreateWindow(windowClass, "Mozilla:DNSWindow",
+                              0, 0, 0, 10, 10, NULL, NULL, NULL, NULL);
+
+	(void) SetWindowLong(mDNSWindow, GWL_USERDATA, (long)this);
+
+    // sync with Create thread
+    PRMonitor * monitor;
+    PRStatus    status;
+    
+    monitor = PR_CEnterMonitor(this);
+    mState = NS_OK;
+    status = PR_CNotify(this);
+    status = PR_CExitMonitor(this);
+#endif
+
+    return NS_OK;
+}
+
 //
 // --------------------------------------------------------------------------
 // nsIRunnable implementation...
@@ -464,11 +584,23 @@ nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsDNSService::Run(void)
 {
+    nsresult            rv = NS_OK;
+
+#if defined(XP_PC)
+    MSG msg;
+    
+    InitDNSThread();
+
+    while(GetMessage(&msg, mDNSWindow, 0, 0)) {
+        // no TranslateMessage() because we're not expecting input
+        DispatchMessage(&msg);
+    }
+#endif
+
 #if defined(XP_MAC)
     OSErr			    err;
     nsLookupElement *   lookupElement;
     nsDNSLookup *       lookup;
-    nsresult            rv;
     
     mThreadRunning = PR_TRUE;
 	
@@ -499,7 +631,10 @@ nsDNSService::Run(void)
 
 	}
 #endif
-    return NS_OK;
+
+
+
+    return rv;
 }
 
     
@@ -516,6 +651,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
 {
     nsresult	rv, result = NS_OK;
 
+#if defined(XP_MAC) || defined (XP_PC)
     //    initateLookupNeeded = false;
     //    lock dns service
     //    search cache for existing nsDNSLookup with matching hostname
@@ -541,13 +677,18 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     //    }
     //    
 
-#if defined(XP_MAC)
 
     // create nsDNSLookup
     nsDNSLookup * lookup = new nsDNSLookup(clientContext, hostName, listener);
+
     if (lookup == nsnull)
     	return NS_ERROR_OUT_OF_MEMORY;
-        
+
+#if defined(XP_PC)
+    // save on outstanding lookup queue
+    mCompletionQueue.AppendElement(lookup);
+#endif
+
     rv = listener->OnStartLookup(clientContext, hostName);
     // what do we do with the return value here?
 

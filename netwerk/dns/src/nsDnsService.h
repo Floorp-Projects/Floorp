@@ -26,12 +26,14 @@
 #include "nsIDNSService.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
+#include "nsVoidArray.h"
 #if defined(XP_MAC)
 #include <OSUtils.h>
 #include <OpenTransport.h>
 #include <OpenTptInternet.h>
 #elif defined (XP_PC)
 #include <windows.h>
+#include <Winsock2.h>
 #endif
 
 class nsIDNSListener;
@@ -49,6 +51,7 @@ public:
     nsDNSService();
     virtual ~nsDNSService();
     nsresult Init();
+    nsresult InitDNSThread();
  
     // Define a Create method to be used with a factory:
     static NS_METHOD
@@ -59,12 +62,16 @@ public:
 
 protected:
     friend class nsDNSLookup;
-#ifdef XP_MAC
+#if defined(XP_MAC)
     friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+#elif defined(XP_PC)
+    friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
 
-    nsIThread *   mThread;
-    PRBool        mThreadRunning;
+    nsIThread *     mThread;
+    PRBool          mThreadRunning;
+    nsresult        mState;
+
     // nsDNSLookup cache? - list of nsDNSLookups, hash table (nsHashTable, nsStringKey)
     // list of nsDNSLookups in order of expiration (PRCList?)
 
@@ -77,15 +84,13 @@ protected:
     OTClientContextPtr  mClientContext;
     OTNotifyUPP         nsDnsServiceNotifierRoutineUPP;
 #endif /* TARGET_CARBON */
-	
+
+#elif defined(XP_PC)
+    HWND                mDNSWindow;
+    UINT                mMsgFoundDNS;
+    nsVoidArray         mCompletionQueue;
 #elif defined(XP_UNIX)
     //XXX - to be defined
-
-#elif defined(_WIN32)
-    WNDCLASS wc;
-    HWND     DNSWindow;
-    UINT     msgAsyncSelect;
-    UINT     msgFoundDNS;
 #endif
 };
 
