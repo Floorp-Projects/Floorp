@@ -2044,38 +2044,38 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
     return NS_OK;
 }
 
-#define numInvalidReferrerSchemes 8
-
-static const char *const invalidReferrerSchemes [numInvalidReferrerSchemes] = 
-{
-  "chrome",
-  "resource",
-  "file",
-  "mailbox",
-  "imap",
-  "news",
-  "snews",
-  "imaps"
-};
-
 NS_IMETHODIMP
 nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
 {
+    static const char *const invalidReferrerSchemes[] = {
+        "chrome",
+        "resource",
+        "file",
+        "mailbox",
+        "imap",
+        "news",
+        "snews",
+        "imaps",
+        "data",
+        nsnull
+    };
+
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
     if (nsHttpHandler::get()->ReferrerLevel() < referrerType)
         return NS_OK;
 
     // don't remember this referrer if it's on our black list....
-    if (referrer)
-    {
-      PRBool invalidScheme = PR_FALSE;
-      for (PRUint32 i = 0; i < numInvalidReferrerSchemes && !invalidScheme; i++)
-         referrer->SchemeIs(invalidReferrerSchemes[i], &invalidScheme);
+    if (referrer) {
+        PRBool match = PR_FALSE;
 
-      if (invalidScheme) return NS_OK; // kick out....
+        const char *const *scheme = invalidReferrerSchemes;
+        for (; *scheme && !match; ++scheme)
+            referrer->SchemeIs(*scheme, &match);
+
+        if (match)
+            return NS_OK; // kick out....
     }
-
 
     // Handle secure referrals.
     // Support referrals from a secure server if this is a secure site
