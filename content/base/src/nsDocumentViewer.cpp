@@ -3685,17 +3685,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, "@mozilla.org/chrome/chrome-registry;1", &rv);
     if (NS_SUCCEEDED(rv) && chromeRegistry) {
       nsCOMPtr<nsISupportsArray> sheets;
-      nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
-      chromeRegistry->GetBackstopSheets(ds, getter_AddRefs(sheets));
-      if(sheets){
-        nsCOMPtr<nsICSSStyleSheet> sheet;
-        PRUint32 count;
-        sheets->Count(&count);
-        for(PRUint32 i=0; i<count; i++) {
-          sheets->GetElementAt(i, getter_AddRefs(sheet));
-          (*aStyleSet)->AppendBackstopStyleSheet(sheet);
-        }
-      }
 
       // Now handle the user sheets.
       nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
@@ -3712,6 +3701,19 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
           sheets->GetElementAt(i, getter_AddRefs(sheet));
           // XXX For now, append as backstop until we figure out something
           // better to do.
+          (*aStyleSet)->AppendBackstopStyleSheet(sheet);
+        }
+      }
+
+      // Append chrome sheets (scrollbars + forms).
+      nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
+      chromeRegistry->GetBackstopSheets(ds, getter_AddRefs(sheets));
+      if(sheets){
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+        PRUint32 count;
+        sheets->Count(&count);
+        for(PRUint32 i=0; i<count; i++) {
+          sheets->GetElementAt(i, getter_AddRefs(sheet));
           (*aStyleSet)->AppendBackstopStyleSheet(sheet);
         }
       }
