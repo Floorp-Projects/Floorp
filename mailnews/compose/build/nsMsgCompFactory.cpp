@@ -42,7 +42,7 @@
 #include "nsMsgComposeContentHandler.h"
 #include "nsMsgCompose.h"
 #include "nsMsgComposeParams.h"
-#include "nsMsgComposeProgress.h"
+#include "nsMsgComposeProgressParams.h"
 #include "nsMsgSend.h"
 #include "nsMsgQuote.h"
 #include "nsIMsgDraft.h"
@@ -60,7 +60,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpServer);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompose);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeParams);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSendListener);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeProgress);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeProgressParams);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompFields);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeAndSend);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSendLater);
@@ -109,10 +109,10 @@ static nsModuleComponentInfo components[] =
     NS_MSGCOMPOSESENDLISTENER_CID,
     NS_MSGCOMPOSESENDLISTENER_CONTRACTID,
     nsMsgComposeSendListenerConstructor },
-  { "Msg Compose Progress",
-    NS_MSGCOMPOSEPROGRESS_CID,
-    NS_MSGCOMPOSEPROGRESS_CONTRACTID,
-    nsMsgComposeProgressConstructor },
+  { "Msg Compose Progress Parameters",
+    NS_MSGCOMPOSEPROGRESSPARAMS_CID,
+    NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID,
+    nsMsgComposeProgressParamsConstructor },
   { "Msg Compose Fields",
     NS_MSGCOMPFIELDS_CID,
     NS_MSGCOMPFIELDS_CONTRACTID,

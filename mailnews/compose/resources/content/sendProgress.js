@@ -24,13 +24,14 @@
  *     jean-Francois Ducarroz <ducarroz@netscape.com>
  */
 
-var prefContractID             = "@mozilla.org/preferences;1";
+var msgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
+var prefContractID = "@mozilla.org/preferences;1";
 
 // dialog is just an array we'll use to store various properties from the dialog document...
 var dialog;
 
-// the msgComposeProgress is a nsIMsgComposeProgress object
-var msgComposeProgress = null; 
+// the msgProgress is a nsIMsgProgress object
+var msgProgress = null; 
 
 // random global variables...
 var keepProgressWindowUpBox;
@@ -176,11 +177,19 @@ function replaceInsert( text, index, value ) {
 
 function onLoad() {
     // Set global variables.
-    var subject = window.arguments[0];
-    itsASaveOperation = window.arguments[1];
-    msgComposeProgress = window.arguments[2];
+    var subject = "";
+    msgProgress = window.arguments[0];
+    if (window.arguments[1])
+    {
+      var progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIMsgComposeProgressParams)
+      if (progressParams)
+      {
+        itsASaveOperation = (progressParams.deliveryMode != msgCompDeliverMode.Now);
+        subject = progressParams.subject;
+      }
+    }
 
-    if ( !msgComposeProgress ) {
+    if ( !msgProgress ) {
         dump( "Invalid argument to downloadProgress.xul\n" );
         window.close()
         return;
@@ -202,7 +211,7 @@ function onLoad() {
     loadDialog();
 
     // set our web progress listener on the helper app launcher
-    msgComposeProgress.registerListener(progressListener);
+    msgProgress.registerListener(progressListener);
     window.moveTo(opener.screenX + 16, opener.screenY + 32);
 
     //We need to delay the set title else dom will overwrite it
@@ -219,12 +228,12 @@ function onUnload()
       prefs.SetBoolPref("mailnews.send.progressDnldDialog.keepAlive", keepProgressWindowUpBox.checked);
   }
 
-  if (msgComposeProgress)
+  if (msgProgress)
   {
    try 
    {
-     msgComposeProgress.unregisterListener(progressListener);
-     msgComposeProgress = null;
+     msgProgress.unregisterListener(progressListener);
+     msgProgress = null;
    }
     
    catch( exception ) {}
@@ -247,7 +256,7 @@ function onCancel ()
   // Cancel app launcher.
    try 
    {
-     msgComposeProgress.processCanceledByUser = true;
+     msgProgress.processCanceledByUser = true;
    }
    catch( exception ) {return true;}
     

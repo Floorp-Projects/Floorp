@@ -3406,7 +3406,7 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 						  const nsMsgAttachedFile           *preloaded_attachments,
 						  void                              *relatedPart,
 						  nsIDOMWindowInternal              *parentWindow,
-						  nsIMsgComposeProgress             *progress,
+						  nsIMsgProgress                    *progress,
               nsIMsgSendListener                *aListener
               )
 {
@@ -4151,7 +4151,7 @@ NS_IMETHODIMP nsMsgComposeAndSend::SetPendingAttachmentCount(PRUint32 aPendingAt
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgComposeAndSend::GetProgress(nsIMsgComposeProgress **_retval)
+NS_IMETHODIMP nsMsgComposeAndSend::GetProgress(nsIMsgProgress **_retval)
 {
   NS_ENSURE_ARG(_retval);
   *_retval = mSendProgress;

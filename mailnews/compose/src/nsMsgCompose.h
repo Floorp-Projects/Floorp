@@ -111,7 +111,7 @@ private:
 	nsCOMPtr<nsIOutputStream>         mBaseStream;
 
 	nsCOMPtr<nsIMsgSend>              mMsgSend;   // for composition back end
-	nsCOMPtr<nsIMsgComposeProgress>   mProgress;  // use by the back end to report progress to the front end
+	nsCOMPtr<nsIMsgProgress>          mProgress;  // use by the back end to report progress to the front end
 
   // Deal with quoting issues...
   nsString                          mCiteReference;

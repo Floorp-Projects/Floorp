@@ -255,7 +255,7 @@ nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     attachmentHdl->GetMimeDeliveryState(getter_AddRefs(sendPtr));
     if (sendPtr)
     {
-      nsCOMPtr<nsIMsgComposeProgress> progress;
+      nsCOMPtr<nsIMsgProgress> progress;
       sendPtr->GetProgress(getter_AddRefs(progress));
       if (progress)
       {

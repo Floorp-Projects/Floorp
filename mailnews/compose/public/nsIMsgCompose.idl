@@ -27,7 +27,7 @@
 #include "nsIEditorShell.idl"
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgSend.idl"
-#include "nsIMsgComposeProgress.idl"
+#include "nsIMsgProgress.idl"
 
 
 %{ C++
@@ -120,7 +120,7 @@ interface nsIMsgCompose : nsISupports {
 	void UnregisterStateListener(in nsIMsgComposeStateListener stateListener);
 
 	/* ... */
-	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in nsIMsgComposeProgress progress);
+	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in nsIMsgProgress progress);
 
 	/* ... */
   void CloseWindow();
@@ -208,10 +208,10 @@ interface nsIMsgCompose : nsISupports {
 	[noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType);
 
   /* Retreive the progress object */
-  [nocript] nsIMsgComposeProgress getProgress();
+  [noscript] nsIMsgProgress getProgress();
   
   /* Retreive the message send object */
-  [nocript] nsIMsgSend getMessageSend();
+  [noscript] nsIMsgSend getMessageSend();
   
 	/* ... */
   [noscript] void buildBodyMessageAndSignature();

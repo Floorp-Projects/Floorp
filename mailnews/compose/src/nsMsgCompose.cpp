@@ -82,9 +82,8 @@
 #include "nsIDateTimeFormat.h"
 #include "nsILocaleService.h"
 #include "nsILocale.h"
-
-
 #include "nsMsgComposeService.h"
+#include "nsIMsgComposeProgressParams.h"
 #include "nsMsgUtils.h"
 
 // Defines....
@@ -644,7 +643,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
                     nsnull,             					      // const struct nsMsgAttachedFile    *preloaded_attachments,
                     nsnull,             					      // nsMsgSendPart                     *relatedPart,
                     m_window,                           // nsIDOMWindowInternal              *parentWindow;
-                    mProgress,                          // nsIMsgComposeProgress             *progress,
+                    mProgress,                          // nsIMsgProgress                    *progress,
                     sendListener);                      // listener
 
       // Cleanup converted body...
@@ -663,7 +662,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
   return rv;
 }
 
-nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity, nsIMsgComposeProgress *progress)
+nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity, nsIMsgProgress *progress)
 {
 	nsresult rv = NS_OK;
 	PRBool entityConversionDone = PR_FALSE;
@@ -683,7 +682,14 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 		  prefs->GetBoolPref("mailnews.show_send_progress", &showProgress);
       if (showProgress)
       {
-        mProgress->OpenProgress(m_window, (const PRUnichar*)msgSubject, deliverMode != nsIMsgSend::nsMsgDeliverNow);
+        nsCOMPtr<nsIMsgComposeProgressParams> params = do_CreateInstance(NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID, &rv);
+        if (NS_FAILED(rv) || !params)
+          return NS_ERROR_FAILURE;
+
+        params->SetSubject((const PRUnichar*) msgSubject);
+        params->SetDeliveryMode(deliverMode);
+        
+        mProgress->OpenProgressDialog(m_window, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
         mProgress->GetPrompter(getter_AddRefs(prompt));
       }
     }
@@ -700,7 +706,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
     // The plain text compose window was used
     const char contentType[] = "text/plain";
 		nsAutoString msgBody;
-		PRUnichar *bodyText = NULL;
+		PRUnichar *bodyText = nsnull;
     nsAutoString format; format.AssignWithConversion(contentType);
     PRUint32 flags = nsIDocumentEncoder::OutputFormatted;
 
@@ -710,16 +716,16 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
     
     rv = m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
 	  
-    if (NS_SUCCEEDED(rv) && NULL != bodyText)
+    if (NS_SUCCEEDED(rv) && nsnull != bodyText)
     {
 	    msgBody = bodyText;
       nsMemory::Free(bodyText);
 
 	    // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-	    char *outCString = NULL;
+	    char *outCString = nsnull;
       rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
                                   msgBody.GetUnicode(), &outCString);
-	    if (NS_SUCCEEDED(rv) && NULL != outCString) 
+	    if (NS_SUCCEEDED(rv) && nsnull != outCString) 
 	    {
         // body contains multilingual data, confirm send to the user
         if (NS_ERROR_UENC_NOMAPPING == rv && nsIMsgSend::nsMsgDeliverNow == deliverMode) {
@@ -751,7 +757,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
         nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
 
     if (progress)
-      progress->CloseProgress(PR_TRUE);
+      progress->CloseProgressDialog(PR_TRUE);
 	}
 	
 	return rv;
@@ -1100,7 +1106,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   return rv;
 }
 
-NS_IMETHODIMP nsMsgCompose::GetProgress(nsIMsgComposeProgress **_retval)
+NS_IMETHODIMP nsMsgCompose::GetProgress(nsIMsgProgress **_retval)
 {
   NS_ENSURE_ARG(_retval);
   *_retval = mProgress;
@@ -1784,7 +1790,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
   nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
 	if (compose)
 	{
-	  nsCOMPtr<nsIMsgComposeProgress> progress;
+	  nsCOMPtr<nsIMsgProgress> progress;
 	  compose->GetProgress(getter_AddRefs(progress));
 	  
     //Unregister ourself from msg compose progress
@@ -1812,7 +1818,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 			    {
 			      compose->NotifyStateListeners(eComposeProcessDone);
             if (progress)
-              progress->CloseProgress(PR_FALSE);
+              progress->CloseProgressDialog(PR_FALSE);
             compose->CloseWindow();
           }
         }
@@ -1821,7 +1827,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       {
 			  compose->NotifyStateListeners(eComposeProcessDone);
         if (progress)
-          progress->CloseProgress(PR_FALSE);
+          progress->CloseProgressDialog(PR_FALSE);
         compose->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
                                      // windows hanging around to prevent the app from exiting.
       }
@@ -1840,7 +1846,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #endif
 			compose->NotifyStateListeners(eComposeProcessDone);
       if (progress)
-        progress->CloseProgress(PR_TRUE);
+        progress->CloseProgressDialog(PR_TRUE);
 		}
 	}
 
@@ -1889,10 +1895,10 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
     // we have to do something with the window....SHOW if failed, Close
     // if succeeded
 
-	  nsCOMPtr<nsIMsgComposeProgress> progress;
+	  nsCOMPtr<nsIMsgProgress> progress;
 	  compose->GetProgress(getter_AddRefs(progress));
     if (progress)
-      progress->CloseProgress(NS_FAILED(aStatus));
+      progress->CloseProgressDialog(NS_FAILED(aStatus));
 		compose->NotifyStateListeners(eComposeProcessDone);
 
 		if (NS_SUCCEEDED(aStatus))
@@ -2037,7 +2043,7 @@ NS_IMETHODIMP nsMsgComposeSendListener::OnStateChange(nsIWebProgress *aWebProgre
     nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
 	  if (compose)
 	  {
-  	  nsCOMPtr<nsIMsgComposeProgress> progress;
+  	  nsCOMPtr<nsIMsgProgress> progress;
   	  compose->GetProgress(getter_AddRefs(progress));
   	  
       //Time to stop any pending operation...

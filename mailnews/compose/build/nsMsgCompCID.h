@@ -85,15 +85,15 @@
  {0x9d, 0xaa, 0xba, 0xcd, 0xea, 0xc1, 0xee, 0xfc}}
 
 //
-// nsMsgComposeProgress
+// nsMsgComposeProgressParams
 //
-#define NS_MSGCOMPOSEPROGRESS_CONTRACTID \
-  "@mozilla.org/messengercompose/composeprogress;1"
+#define NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID \
+  "@mozilla.org/messengercompose/composeprogressparameters;1"
 
-#define NS_MSGCOMPOSEPROGRESS_CID						  \
-{ /* 2080d501-149e-11d5-9daa-e276a42bc27c */      \
- 0x2080d501, 0x149e, 0x11d5,                      \
- {0x9d, 0xaa, 0xe2, 0x76, 0xa4, 0x2b, 0xc2, 0x7c}}
+#define NS_MSGCOMPOSEPROGRESSPARAMS_CID						  \
+{ /* 1e0e7c01-3e4c-11d5-9daa-f88d288130fc */      \
+ 0x1e0e7c01, 0x3e4c, 0x11d5,                      \
+ {0x9d, 0xaa, 0xf8, 0x8d, 0x28, 0x81, 0x30, 0xfc}}
 
 //
 // nsMsgCompFields

@@ -1121,7 +1121,7 @@ function GenericSendMessage( msgType )
 			  windowLocked = true;
 			  CommandUpdate_MsgCompose();
 			  
-        var progress = Components.classes["@mozilla.org/messengercompose/composeprogress;1"].createInstance(Components.interfaces.nsIMsgComposeProgress);
+        var progress = Components.classes["@mozilla.org/messenger/progress;1"].createInstance(Components.interfaces.nsIMsgProgress);
         if (progress)
         {
           progress.registerListener(progressListener);

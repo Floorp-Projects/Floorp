@@ -289,8 +289,8 @@ public:
 
   // These are needed for callbacks to the FE...
   nsCOMPtr<nsIDOMWindowInternal>  mParentWindow;
-  nsCOMPtr<nsIMsgComposeProgress> mSendProgress;
-  nsCOMPtr<nsIMsgSendListener> mListener;
+  nsCOMPtr<nsIMsgProgress>        mSendProgress;
+  nsCOMPtr<nsIMsgSendListener>    mListener;
 
   PRBool                    mSendMailAlso;
   nsIFileSpec               *mReturnFileSpec;     // a holder for file spec's to be returned to caller

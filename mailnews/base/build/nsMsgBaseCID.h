@@ -415,4 +415,15 @@
  {0xa5, 0xbf, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 }}
 
 
+//
+// nsMsgProgress
+// 
+#define NS_MSGPROGRESS_CONTRACTID \
+  "@mozilla.org/messenger/progress;1"
+
+#define NS_MSGPROGRESS_CID									      \
+{ /* 9f4dd201-3b1f-11d5-9daa-c345c9453d3c */			\
+ 0x9f4dd201, 0x3b1f, 0x11d5,											\
+ {0x9d, 0xaa, 0xc3, 0x45, 0xc9, 0x45, 0x3d, 0x3c }}
+
 #endif // nsMessageBaseCID_h__

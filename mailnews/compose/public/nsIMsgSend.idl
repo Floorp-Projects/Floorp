@@ -36,7 +36,7 @@
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgSendListener.idl"
 #include "nsIEditorShell.idl"
-#include "nsIMsgComposeProgress.idl"
+#include "nsIMsgProgress.idl"
 #include "domstubs.idl"
 #include "nsIPrompt.idl"
 #include "MailNewsTypes2.idl"
@@ -178,7 +178,7 @@ interface nsIMsgSend : nsISupports
                               [const] in nsMsgAttachedFile    preloaded_attachments,
                               in voidPtr                      relatedPart,
                               in nsIDOMWindowInternal         parentWindow,
-                              in nsIMsgComposeProgress        progress,
+                              in nsIMsgProgress               progress,
                               in nsIMsgSendListener           aListener
                              );
                               
@@ -226,7 +226,7 @@ interface nsIMsgSend : nsISupports
     [noscript] readonly attribute unsigned long attachmentCount;
     [noscript] attribute unsigned long pendingAttachmentCount;
 
-    [noscript] nsIMsgComposeProgress getProgress();
+    [noscript] nsIMsgProgress getProgress();
     
     [noscript] nsOutputFileStream getOutputStream();
 

@@ -36,3 +36,4 @@ nsIIncomingServerListener.idl
 nsIMsgHdr.idl
 nsIMsgStringService.idl
 nsIMsgPrintEngine.idl
+nsIMsgProgress.idl
