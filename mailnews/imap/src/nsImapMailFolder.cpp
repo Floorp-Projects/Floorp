@@ -5813,6 +5813,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgFolder *oldFolder)
 
      nsCOMPtr<nsIFileSpec> dbFileSpec;
      NS_NewFileSpecWithSpec(newPath, getter_AddRefs(dbFileSpec));
+
      nsCOMPtr<nsIMsgFolder> child;
 				
      nsXPIDLString folderName;
