@@ -4952,9 +4952,10 @@ BCMapCellIterator::SetNewRowGroup(PRBool aFindFirstDamagedRow)
   for (PRInt32 rgX = mRowGroupIndex; rgX < numRowGroups; rgX++) {
     nsIFrame* frame = (nsTableRowGroupFrame*)mRowGroups.ElementAt(mRowGroupIndex); if (!frame) ABORT1(PR_FALSE);
     mRowGroup = mTableFrame.GetRowGroupFrame(frame); if (!mRowGroup) ABORT1(PR_FALSE);
+    PRInt32 rowCount = mRowGroup->GetRowCount();
     mRowGroupStart = mRowGroup->GetStartRowIndex();
-    mRowGroupEnd   = mRowGroupStart + mRowGroup->GetRowCount() - 1;
-    if (mRowGroupEnd >= 0) {
+    mRowGroupEnd   = mRowGroupStart + rowCount - 1;
+    if (rowCount > 0) {
       mCellMap = mTableCellMap->GetMapFor(*mRowGroup); if (!mCellMap) ABORT1(PR_FALSE);
       nsTableRowFrame* firstRow = mRowGroup->GetFirstRow();
       if (aFindFirstDamagedRow) {
@@ -5073,14 +5074,19 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
   nsCellMap* cellMap = mCellMap;
   nsTableRowFrame* nextRow = nsnull;
   if (rowIndex > mRowGroupEnd) {
-    nsIFrame* frame = (nsTableRowGroupFrame*)mRowGroups.ElementAt(mRowGroupIndex + 1); if (!frame) ABORT0();
-    rg = mTableFrame.GetRowGroupFrame(frame);
-    if (rg) {
-      cellMap = mTableCellMap->GetMapFor(*rg); if (!cellMap) ABORT0();
-      rgRowIndex = 0;
-      nextRow = rg->GetFirstRow();
+    PRInt32 nextRgIndex = mRowGroupIndex;
+    do {
+      nextRgIndex++;
+      nsIFrame* frame = (nsTableRowGroupFrame*)mRowGroups.ElementAt(nextRgIndex); if (!frame) ABORT0();
+      rg = mTableFrame.GetRowGroupFrame(frame);
+      if (rg) {
+        cellMap = mTableCellMap->GetMapFor(*rg); if (!cellMap) ABORT0();
+        rgRowIndex = 0;
+        nextRow = rg->GetFirstRow();
+      }
     }
-    else return;
+    while (rg && !nextRow);
+    if(!rg) return;
   }
   else {
     // get the row within the same row group
