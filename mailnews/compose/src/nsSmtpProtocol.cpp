@@ -707,7 +707,10 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
 	ptr = PL_strcasestr(m_responseText, "DSN");
 	if (ptr && nsCRT::ToUpper(*(ptr-1)) != 'X')
+	{
 		SetFlag(SMTP_EHLO_DSN_ENABLED);
+		ClearFlag(SMTP_EHLO_DSN_ENABLED); 
+	}
 	else
 		ClearFlag(SMTP_EHLO_DSN_ENABLED); 
 	
@@ -827,7 +830,8 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   {
 	  base64Str = NET_Base64Encode(net_smtp_name,
 								   PL_strlen(net_smtp_name));
-  } else if (m_authMethod == 2)
+  } 
+  else if (m_authMethod == 2)
   {
 	  char plain_string[512];
 	  int len = 1; /* first <NUL> char */
