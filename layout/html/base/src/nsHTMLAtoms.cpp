@@ -48,6 +48,7 @@ nsIAtom* nsHTMLAtoms::compact;
 nsIAtom* nsHTMLAtoms::coords;
 nsIAtom* nsHTMLAtoms::data;
 nsIAtom* nsHTMLAtoms::dir;
+nsIAtom* nsHTMLAtoms::disabled;
 nsIAtom* nsHTMLAtoms::div;
 nsIAtom* nsHTMLAtoms::dl;
 nsIAtom* nsHTMLAtoms::encoding;
@@ -99,6 +100,7 @@ nsIAtom* nsHTMLAtoms::pagey;
 nsIAtom* nsHTMLAtoms::pointSize;
 nsIAtom* nsHTMLAtoms::pre;
 nsIAtom* nsHTMLAtoms::prompt;
+nsIAtom* nsHTMLAtoms::readonly;
 nsIAtom* nsHTMLAtoms::rel;
 nsIAtom* nsHTMLAtoms::rightpadding;
 nsIAtom* nsHTMLAtoms::rows;
@@ -167,6 +169,7 @@ void nsHTMLAtoms::AddrefAtoms()
     coords = NS_NewAtom("COORDS");
     dir = NS_NewAtom("DIR");
     div = NS_NewAtom("DIV");
+    disabled = NS_NewAtom("DISABLED");
     dl = NS_NewAtom("DL");
     data = NS_NewAtom("DATA");
     encoding = NS_NewAtom("ENCODING");
@@ -218,6 +221,7 @@ void nsHTMLAtoms::AddrefAtoms()
     pointSize = NS_NewAtom("POINT-SIZE");
     pre = NS_NewAtom("PRE");
     prompt = NS_NewAtom("PROMPT");
+    readonly = NS_NewAtom("READONLY");
     rel = NS_NewAtom("REL");
     rightpadding = NS_NewAtom("RIGHTPADDING");
     rows = NS_NewAtom("ROWS");
@@ -286,6 +290,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(compact);
     NS_RELEASE(coords);
     NS_RELEASE(dir);
+    NS_RELEASE(disabled);
     NS_RELEASE(div);
     NS_RELEASE(dl);
     NS_RELEASE(data);
@@ -338,6 +343,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(pointSize);
     NS_RELEASE(pre);
     NS_RELEASE(prompt);
+    NS_RELEASE(readonly);
     NS_RELEASE(rel);
     NS_RELEASE(rightpadding);
     NS_RELEASE(rows);

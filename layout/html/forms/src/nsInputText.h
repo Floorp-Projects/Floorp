@@ -26,9 +26,10 @@ class nsString;
 class nsView;
 
 enum nsInputTextType {
-  kInputTextText,
-  kInputTextPassword,
-  kInputTextArea
+  kInputText_Text,
+  kInputText_FileText,
+  kInputText_Password,
+  kInputText_Area
 };
 
 // this class definition will move to nsInputText.cpp

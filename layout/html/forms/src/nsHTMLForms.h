@@ -52,6 +52,15 @@ NS_NewHTMLInputButton(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager);
 
 /** 
+  * Construct an nsIHTMLContent with behavior of an html button to
+  * be used with a nsInputFile as the browse button. 
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
+extern nsresult
+NS_NewHTMLInputBrowse(nsIHTMLContent** aInstancePtrResult,
+                      nsIAtom* aTag, nsIFormManager* aManager);
+
+/** 
   * Construct an nsIHTMLContent with behavior of an html reset button
   * @see NS_NewHTMLInputButton for parameter and return values
   */
@@ -139,6 +148,15 @@ NS_NewHTMLSelect(nsIHTMLContent** aInstancePtrResult,
 extern nsresult
 NS_NewHTMLInputText(nsIHTMLContent** aInstancePtrResult,
                     nsIAtom* aTag, nsIFormManager* aManager);
+
+/** 
+  * Construct an nsIHTMLContent with behavior of an html input text that
+  * serves as the text for an html input file.
+  * @see NS_NewHTMLInputButton for parameter and return values
+  */
+extern nsresult
+NS_NewHTMLInputFileText(nsIHTMLContent** aInstancePtrResult,
+                        nsIAtom* aTag, nsIFormManager* aManager);
 
 /** 
   * Construct an nsIHTMLContent with behavior of an html text area

@@ -62,7 +62,7 @@ struct nsInputCallbackData
 };
 
 nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aParentFrame)
+  : nsInputFrameSuper(aContent, aParentFrame)
 {
   mLastMouseState = eMouseNone;
 }
@@ -240,7 +240,8 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 
     GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, mWidgetSize);
 
-    nsRect boundBox(0, 0, mWidgetSize.width, mWidgetSize.height); 
+    //nsRect boundBox(0, 0, mWidgetSize.width, mWidgetSize.height); 
+    nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
 
     nsIFrame* parWithView;
 	  nsIView *parView;
@@ -249,7 +250,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  parWithView->GetView(parView);
 
 	  const nsIID& id = GetCID();
-    nsWidgetInitData* initData = GetWidgetInitData(); // needs to be deleted
+    nsWidgetInitData* initData = GetWidgetInitData(*aPresContext); // needs to be deleted
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView, &id, initData,
                         nsnull, 0, nsnull,
@@ -305,7 +306,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 }
 
 nsWidgetInitData* 
-nsInputFrame::GetWidgetInitData()
+nsInputFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 {
   return nsnull;
 }

@@ -48,7 +48,7 @@ class nsSelectFrame : public nsInputFrame {
 public:
   nsSelectFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  virtual nsWidgetInitData* GetWidgetInitData();
+  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
@@ -204,6 +204,7 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     if (textSize.width > maxWidth) {
       maxWidth = textSize.width;
     }
+    NS_RELEASE(option);  // YYY remove this comment if ok
   }
 
   PRInt32 rowHeight = 0;
@@ -243,18 +244,25 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 nsWidgetInitData*
-nsSelectFrame::GetWidgetInitData()
+nsSelectFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 {
-  nsListBoxInitData* data = nsnull;
-  nsSelect* content;
-  GetContent((nsIContent *&) content);
-  if (content->IsMultiple()) {
-    data = new nsListBoxInitData();
-    data->mMultiSelect = PR_TRUE;
+  if (mIsComboBox) {
+    nsComboBoxInitData* initData = new nsComboBoxInitData();
+    float twipToPix = aPresContext.GetTwipsToPixels();
+    initData->mDropDownHeight = NS_TO_INT_ROUND(mWidgetSize.height * twipToPix);
+    return initData;
   }
-  NS_RELEASE(content);
-
-  return data;
+  else {
+    nsListBoxInitData* initData = nsnull;
+    nsSelect* content;
+    GetContent((nsIContent *&) content);
+    if (content->IsMultiple()) {
+      initData = new nsListBoxInitData();
+      initData->mMultiSelect = PR_TRUE;
+    }
+    NS_RELEASE(content);
+    return initData;
+  }
 }
 
 NS_METHOD
@@ -285,6 +293,7 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
       text = " ";
     }
     list->AddItemAt(text, i);
+    NS_RELEASE(option); // YYY remove comment if ok
   }
 
   NS_RELEASE(view);
@@ -378,6 +387,7 @@ nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
       nsOption* selected = (nsOption*)ChildAt(index);
       selected->GetNamesValues(aMaxNumValues, aNumValues, aValues, aNames);
       aNames[0] = *mName;
+      NS_RELEASE(selected); // YYY remove this comment if ok
       return PR_TRUE;
     }
     else {
@@ -402,6 +412,7 @@ nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                  aValues + i, aNames + i);  // options can only have 1 value
         aNames[i] = *mName;
         aNumValues += 1;
+        NS_RELEASE(selected); // YYY remove this comment if ok
       }
       return PR_TRUE;
     }
@@ -437,6 +448,7 @@ nsSelect::Reset()
         break;  
       }
     }
+    NS_RELEASE(option);  // YYY remove this comment if ok
   }
 }  
 
