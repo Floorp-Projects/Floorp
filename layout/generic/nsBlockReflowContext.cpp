@@ -56,6 +56,8 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
     mBlockShouldInvalidateItself(PR_FALSE)
 {
   mStyleSpacing = nsnull;
+  if (mComputeMaximumWidth)
+    mMetrics.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
 }
 
 PRBool
@@ -265,11 +267,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     reason = eReflowReason_Incremental;
     // Make sure we only incrementally reflow once
     mNextRCFrame = nsnull;
-
-    // If we should compute the maximum width, then let the block know
-    if (mComputeMaximumWidth) {
-      mMetrics.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
-    }
   }
   else if (mOuterReflowState.reason == eReflowReason_StyleChange) {
     reason = eReflowReason_StyleChange;
@@ -458,13 +455,17 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 
     // Update the reflow metrics with the maximum width
     mMetrics.mMaximumWidth = mMetrics.width;
-
+#ifdef NOISY_REFLOW
+    printf("*** nsBlockReflowContext::ReflowBlock block %p returning max width %d\n", 
+           aFrame, mMetrics.mMaximumWidth);
+#endif
     // The second reflow is just as a resize reflow with the constrained
     // width
     reflowState.availableWidth = oldAvailableWidth;
     reflowState.mComputedWidth = oldComputedWidth;
     reason = eReflowReason_Resize;
   }
+
   rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
                       aFrameReflowStatus);
   mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
