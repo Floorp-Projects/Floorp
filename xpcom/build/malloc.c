@@ -255,7 +255,7 @@
     probably don't want to touch unless you are extending or adapting malloc.
 
 */
-
+#include "xpcom-private.h"
 
 
 
