@@ -365,7 +365,7 @@ public:
   ~PrintData(); // non-virtual
 
   // Listener Helper Methods
-  void OnEndPrinting(nsresult aResult);
+  void OnEndPrinting();
   void OnStartPrinting();
   static void DoOnProgressChange(nsVoidArray& aListeners, 
                                  PRInt32      aProgess, 
@@ -804,10 +804,10 @@ PrintData::PrintData() :
 
 PrintData::~PrintData() 
 {
-
-  // printing is complete, clean up now
-
-  OnEndPrinting(NS_OK); // removes listener
+  // Only Send an OnEndPrinting if we have started printing
+  if (mOnStartSent) {
+    OnEndPrinting();
+  }
 
   if (mPrintDC && !mDebugFilePtr) {
 #ifdef DEBUG_PRINTING
@@ -856,11 +856,8 @@ void PrintData::OnStartPrinting()
   }
 }
 
-void PrintData::OnEndPrinting(nsresult aResult)
+void PrintData::OnEndPrinting()
 {
-  // Make sure OnStartPrinting was called
-  OnStartPrinting();
-
   DoOnProgressChange(mPrintProgressListeners, 100, 100, PR_TRUE, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT);
   if (mPrintProgress && mShowProgressDialog) {
     mPrintProgress->CloseProgressDialog(PR_TRUE);
@@ -1419,7 +1416,6 @@ DocumentViewerImpl::Destroy()
   // used from JS.
 
   if (mPrt) {
-    mPrt->OnEndPrinting(NS_ERROR_FAILURE);
     delete mPrt;
     mPrt = nsnull;
   }
@@ -5705,7 +5701,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {
     if (mPrt) {
-      mPrt->OnEndPrinting(rv);
       delete mPrt;
       mPrt = nsnull;
     }
@@ -6199,7 +6194,6 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     }
     
     if (mPrt) {
-      mPrt->OnEndPrinting(rv);
       delete mPrt;
       mPrt = nsnull;
     }
