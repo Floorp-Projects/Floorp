@@ -895,11 +895,11 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
         NS_ENSURE_TRUE(mSlots, NS_ERROR_UNEXPECTED);
 
         rv = NS_NewXULElement(getter_AddRefs(result), mSlots->mNodeInfo);
-        if (NS_SUCCEEDED(rv)) {
-            // XXX setting document on nodes not in a document so XBL will bind
-            // and chrome won't break. Make XBL bind to document-less nodes!
-            result->SetDocument(mDocument, PR_TRUE, PR_TRUE);
-        }
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // XXX setting document on nodes not in a document so XBL will bind
+        // and chrome won't break. Make XBL bind to document-less nodes!
+        result->SetDocument(mDocument, PR_TRUE, PR_TRUE);
     }
 
     // Copy attributes

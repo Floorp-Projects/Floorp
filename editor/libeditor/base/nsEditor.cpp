@@ -102,6 +102,7 @@
 #include "nsEditorUtils.h"
 #include "nsISelectionDisplay.h"
 #include "nsINameSpaceManager.h"
+#include "nsIHTMLDocument.h"
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -5069,9 +5070,13 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
   if (!tag)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // XXX If editor starts supporting XHTML documents, the kNameSpaceID_None
-  //     should be kNameSpaceID_XHTML for those documents.
-  return doc->CreateElem(tag, nsnull, kNameSpaceID_None, PR_TRUE, aContent);
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(tempDoc);
+  if (htmlDoc) {
+      return doc->CreateElem(tag, nsnull, doc->GetDefaultNamespaceID(),
+                             PR_TRUE, aContent);
+  }
+
+  return doc->CreateElem(tag, nsnull, kNameSpaceID_XHTML, PR_FALSE, aContent);
 }
 
 nsresult
