@@ -73,6 +73,7 @@ MakeXpiFile("talkback");
 MakeXpiFile("deflenus");
 MakeXpiFile("langenus");
 MakeXpiFile("regus");
+MakeXpiFile("venkman");
 
 # Make the config.ini file
 MakeConfigFile();

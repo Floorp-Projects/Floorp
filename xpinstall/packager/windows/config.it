@@ -189,12 +189,13 @@ C2=Component MailNews
 C3=Component PSM
 C4=Component Uninstaller
 C5=Component Chatzilla
-C6=Component US English Profile Defaults
-C7=Component En US lang pack
-C8=Component US region pack
+C6=Component Venkman
+C7=Component US English Profile Defaults
+C8=Component En US lang pack
+C9=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C9=Component QFA
+C10=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -213,12 +214,13 @@ C2=Component MailNews
 C3=Component PSM
 C4=Component Uninstaller
 C5=Component Chatzilla
-C6=Component US English Profile Defaults
-C7=Component En US lang pack
-C8=Component US region pack
+C6=Component Venkman
+C7=Component US English Profile Defaults
+C8=Component En US lang pack
+C9=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C9=Component QFA
+C10=Component QFA
 
 
 
@@ -647,6 +649,17 @@ $InstallSizeSystem$
 $InstallSizeArchive$:chatzilla.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Chrome\chatzilla.jar
+
+[Component Venkman]
+Description Short=Debugger
+;*** LOCALIZE ME BABY ***
+Description Long=JavaScript Debugger
+Archive=venkman.xpi
+$InstallSize$:venkman
+$InstallSizeSystem$
+$InstallSizeArchive$:venkman.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\Chrome\venkman.jar
 
 [Component US English Profile Defaults]
 Description Short=US English profile defaults
