@@ -36,6 +36,9 @@ public:
   PRBool  TestGetBandData();
 
 protected:
+#ifdef AIX
+public:
+#endif // AIX
   struct BandInfo {
     nscoord   yOffset;
     nscoord   height;
@@ -47,6 +50,9 @@ protected:
     PRIntn   numBands;
     BandInfo bands[25];
   };
+#ifdef AIX
+protected:
+#endif // AIX
 
   void  GetBandsInfo(BandsInfo&);
 };
