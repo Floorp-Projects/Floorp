@@ -1067,12 +1067,10 @@ XRemoteService::GetProfileName(nsACString &aProfile)
   if (!profileMgr)
     return;
 
-  PRUnichar *name;
-  rv = profileMgr->GetCurrentProfile(&name);
-  if (!name)
-    return;
-
-  LossyCopyUTF16toASCII(name, aProfile);
+  nsXPIDLString name;
+  rv = profileMgr->GetCurrentProfile(getter_Copies(name));
+  if (NS_SUCCEEDED(rv))
+    LossyCopyUTF16toASCII(name, aProfile);
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(XRemoteService)
