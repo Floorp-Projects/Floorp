@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.19 $ $Date: 2002/04/19 23:06:43 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.20 $ $Date: 2002/04/26 14:34:04 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -494,6 +494,18 @@ nssPKIObjectCollection_Traverse
 (
   nssPKIObjectCollection *collection,
   nssPKIObjectCallback *callback
+);
+
+/* This function is being added for NSS 3.5.  It corresponds to the function
+ * nssToken_TraverseCertificates.  The idea is to use the collection during
+ * a traversal, creating certs each time a new instance is added for which
+ * a cert does not already exist.
+ */
+NSS_EXTERN PRStatus
+nssPKIObjectCollection_AddInstanceAsObject
+(
+  nssPKIObjectCollection *collection,
+  nssCryptokiObject *instance
 );
 
 /* nssPKIObjectCollection_GetCertificates
