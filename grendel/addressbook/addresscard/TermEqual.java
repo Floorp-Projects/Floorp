@@ -39,4 +39,10 @@ public class TermEqual implements ITerm {
     public AC_IDSet getSet (IQuerySet iqs) {
         return iqs.opEqual (fAttribute);
     }
+
+  /** No-op for now
+   *  (Jeff)
+   */
+  public AC_IDSet evaluate_ACSP (IQuerySet iqs) { return null; }
+
 }

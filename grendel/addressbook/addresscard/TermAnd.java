@@ -54,4 +54,10 @@ public class TermAnd implements ITerm {
 
         return mergedIDs;
     }
+
+  /** no-op for now
+   *  (Jeff)
+   */
+  public AC_IDSet evaluate_ACSP (IQuerySet iqs) { return null; }
+
 }

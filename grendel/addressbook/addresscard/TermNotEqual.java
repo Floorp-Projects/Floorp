@@ -43,4 +43,11 @@ public class TermNotEqual implements ITerm {
     public AC_IDSet getSet (IQuerySet iqs) {
         return iqs.opNotEqual (fAttribute);
     }
+
+  /** No-op for now
+   *  (Jeff)
+   */
+  public AC_IDSet evaluate_ACSP (IQuerySet iqs) { return null; }
+
+
 }

@@ -70,5 +70,12 @@ public class TermOr implements ITerm {
 
         return mergedIDs;
     }
+
+  /** No-op for now 
+   *  (Jeff)
+   */
+  public AC_IDSet evaluate_ACSP (IQuerySet iqs) { return null; }
+
+
 }
 
