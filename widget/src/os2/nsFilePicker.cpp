@@ -64,6 +64,7 @@ nsFilePicker::nsFilePicker()
   mWnd = NULL;
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
+  mSelectedType   = 0;
   mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
   pszFDFileExists[0] = '\0';
 }
@@ -174,7 +175,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     apszFilterList[i] = 0;
     pmydata->papszIFilterList = (PAPSZ)apszFilterList;
 
-    pmydata->ulCurExt = 0;
+    pmydata->ulCurExt = mSelectedType;
 
     PRBool fileExists;
     do {
