@@ -23,7 +23,7 @@
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  *
- *	$Id: XDisAsm.c,v 1.5 1999/02/26 16:11:37 fur%netscape.com Exp $
+ *	$Id: XDisAsm.c,v 1.6 1999/02/28 00:24:21 fur%netscape.com Exp $
  */
 
 /*
@@ -47,7 +47,10 @@
 #define FALSE 0
 typedef uint32 db_addr_t;
 typedef int boolean_t;
-#define __P(x) x
+
+#ifndef __P
+#    define __P(x) x
+#endif
 
 #define DB_STGY_ANY 0
 #define DB_STGY_XTRN 1
