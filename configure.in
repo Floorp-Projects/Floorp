@@ -46,7 +46,7 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GTK_MAJ_VER=1
 GTK_MIN_VER=1
-GTK_REL_VER=2
+GTK_REL_VER=5
 GTK_VERSION=${GTK_MAJ_VER}.${GTK_MIN_VER}.${GTK_REL_VER}
 
 dnl Set various checks
