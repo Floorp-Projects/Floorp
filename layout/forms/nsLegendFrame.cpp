@@ -49,7 +49,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
-#include "nsLayoutAtoms.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
@@ -159,12 +158,3 @@ nsLegendFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("Legend"), aResult);
 }
 #endif
-
-NS_IMETHODIMP
-nsLegendFrame::GetFrameType(nsIAtom** aType) const
-{
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::legendFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
-}

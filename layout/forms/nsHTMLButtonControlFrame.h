@@ -55,7 +55,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsISupports.h"
 #include "nsHTMLAtoms.h"
-#include "nsLayoutAtoms.h"
 #include "nsIImage.h"
 #include "nsStyleUtil.h"
 #include "nsStyleConsts.h"
@@ -67,7 +66,6 @@
 #include "nsColor.h"
 #include "nsIDocument.h"
 #include "nsButtonFrameRenderer.h"
-
 
 class nsHTMLButtonControlFrame : public nsHTMLContainerFrame,
                                  public nsIFormControlFrame 
@@ -130,7 +128,7 @@ public:
 
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
-  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
+
   NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD GetValue(nsAString* aName);

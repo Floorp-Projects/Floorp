@@ -217,14 +217,6 @@ nsHTMLButtonControlFrame::GetDefaultLabel(nsString& aString)
   } 
 }
 
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetFrameType(nsIAtom** aType) const
-{
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::htmlButtonFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetType(PRInt32* aType) const

@@ -111,8 +111,6 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
-
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
