@@ -8,6 +8,7 @@ SmallAnimPath=%Root%Configs\MyIsp\Workspace\AnimLogo\animlogo16.gif
 LargeAnimPath=%Root%Configs\MyIsp\Workspace\AnimLogo\animlogo32.gif
 SmallStillPath=%Root%Configs\MyIsp\Workspace\AnimLogo\staticlogo16.gif
 LargeStillPath=%Root%Configs\MyIsp\Workspace\AnimLogo\staticlogo32.gif
+SidebarPath=%Root%Configs\MyIsp\Workspace\Sidebar\panels.rdf
 CompanyName=MyIsp
 HomePageURL=http://home.netscape.com
 HelpMenuCommandName=
