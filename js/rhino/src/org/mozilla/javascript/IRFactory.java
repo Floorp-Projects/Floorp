@@ -768,7 +768,7 @@ public class IRFactory {
                                         : Token.SUB,
                                     childNode,
                                     rhs,
-                                    ScriptRuntime.NumberClass,
+                                    true,
                                     nodeOp == Token.POST);
         }
 
@@ -813,18 +813,18 @@ public class IRFactory {
     public Object createAssignment(int assignOp, Object left, Object right)
     {
         return createAssignment(assignOp, (Node) left, (Node) right,
-                                null, false);
+                                false, false);
     }
 
     private Node createAssignment(int assignOp, Node left, Node right,
-                                  Class convert, boolean postfix)
+                                  boolean tonumber, boolean postfix)
     {
         int nodeType = left.getType();
         String idString;
         Node id = null;
         switch (nodeType) {
           case Token.NAME:
-            return createSetName(assignOp, left, right, convert, postfix);
+            return createSetName(assignOp, left, right, tonumber, postfix);
 
           case Token.GETPROP:
             idString = (String) left.getProp(Node.SPECIAL_PROP_PROP);
@@ -835,7 +835,7 @@ public class IRFactory {
             if (id == null)
                 id = left.getLastChild();
             return createSetProp(nodeType, assignOp, left.getFirstChild(),
-                                 id, right, convert, postfix);
+                                 id, right, tonumber, postfix);
           default:
             // TODO: This should be a ReferenceError--but that's a runtime
             //  exception. Should we compile an exception into the code?
@@ -844,16 +844,12 @@ public class IRFactory {
         }
     }
 
-    private Node createConvert(Class toType, Node expr) {
-        if (toType == null)
-            return expr;
-        Node result = new Node(Token.CONVERT, expr);
-        result.putProp(Node.TYPE_PROP, ScriptRuntime.NumberClass);
-        return result;
+    private Node createToNumber(Node expr) {
+        return new Node(Token.TONUMBER, expr);
     }
 
     private Node createSetName(int assignOp, Node left, Node right,
-                               Class convert, boolean postfix)
+                               boolean tonumber, boolean postfix)
     {
         if (assignOp == Token.NOP) {
             left.setType(Token.BINDNAME);
@@ -869,8 +865,8 @@ public class IRFactory {
         }
 
         Node opLeft = Node.newString(Token.NAME, s);
-        if (convert != null)
-            opLeft = createConvert(convert, opLeft);
+        if (tonumber)
+            opLeft = createToNumber(opLeft);
         if (postfix)
             opLeft = createNewTemp(opLeft);
         Node op = new Node(assignOp, opLeft, right);
@@ -948,7 +944,7 @@ public class IRFactory {
     }
 
     private Node createSetProp(int nodeType, int assignOp, Node obj, Node id,
-                               Node expr, Class convert, boolean postfix)
+                               Node expr, boolean tonumber, boolean postfix)
     {
         int type = nodeType == Token.GETPROP
                    ? Token.SETPROP
@@ -993,8 +989,8 @@ public class IRFactory {
             opLeft = new Node(nodeType, obj, id);
         }
 
-        if (convert != null)
-            opLeft = createConvert(convert, opLeft);
+        if (tonumber)
+            opLeft = createToNumber(opLeft);
         if (postfix)
             opLeft = createNewTemp(opLeft);
         Node op = new Node(assignOp, opLeft, expr);

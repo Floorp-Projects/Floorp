@@ -1258,41 +1258,38 @@ public class Codegen extends Interpreter {
                 visitBitOp(node, type, child);
                 break;
 
-              case Token.CONVERT: {
-                    Object toType = node.getProp(Node.TYPE_PROP);
-                    if (toType == ScriptRuntime.NumberClass) {
-                        addByteCode(ByteCode.NEW, "java/lang/Double");
-                        addByteCode(ByteCode.DUP);
-                        generateCodeFromNode(child, node);
-                        addScriptRuntimeInvoke("toNumber",
-                                               "(Ljava/lang/Object;)D");
-                        addDoubleConstructor();
-                    } else if (toType == ScriptRuntime.DoubleClass) {
-                        // cnvt to double (not Double)
-                        generateCodeFromNode(child, node);
-                        addScriptRuntimeInvoke("toNumber",
-                                               "(Ljava/lang/Object;)D");
-                    } else if (toType == ScriptRuntime.ObjectClass) {
-                        // convert from double
-                        int prop = -1;
-                        if (child.getType() == Token.NUMBER) {
-                            prop = child.getIntProp(Node.ISNUMBER_PROP, -1);
-                        }
-                        if (prop != -1) {
-                            child.removeProp(Node.ISNUMBER_PROP);
-                            generateCodeFromNode(child, node);
-                            child.putIntProp(Node.ISNUMBER_PROP, prop);
-                        } else {
-                            addByteCode(ByteCode.NEW, "java/lang/Double");
-                            addByteCode(ByteCode.DUP);
-                            generateCodeFromNode(child, node);
-                            addDoubleConstructor();
-                        }
-                    } else {
-                        badTree();
-                    }
+              case Token.TONUMBER:
+                addByteCode(ByteCode.NEW, "java/lang/Double");
+                addByteCode(ByteCode.DUP);
+                generateCodeFromNode(child, node);
+                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                addDoubleConstructor();
+                break;
+
+              case Optimizer.TO_DOUBLE:
+                // cnvt to double (not Double)
+                generateCodeFromNode(child, node);
+                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+                break;
+
+              case Optimizer.TO_OBJECT: {
+                // convert from double
+                int prop = -1;
+                if (child.getType() == Token.NUMBER) {
+                    prop = child.getIntProp(Node.ISNUMBER_PROP, -1);
+                }
+                if (prop != -1) {
+                    child.removeProp(Node.ISNUMBER_PROP);
+                    generateCodeFromNode(child, node);
+                    child.putIntProp(Node.ISNUMBER_PROP, prop);
+                } else {
+                    addByteCode(ByteCode.NEW, "java/lang/Double");
+                    addByteCode(ByteCode.DUP);
+                    generateCodeFromNode(child, node);
+                    addDoubleConstructor();
                 }
                 break;
+              }
 
               case Token.RELOP:
                 // need a result Object
@@ -2784,12 +2781,10 @@ public class Codegen extends Interpreter {
 
     private Node getConvertToObjectOfNumberNode(Node node)
     {
-        if (node.getType() == Token.CONVERT) {
-            Object toType = node.getProp(Node.TYPE_PROP);
-            if (toType == ScriptRuntime.ObjectClass) {
-                Node convertChild = node.getFirstChild();
-                if (convertChild.getType() == Token.NUMBER)
-                    return convertChild;
+        if (node.getType() == Optimizer.TO_OBJECT) {
+            Node convertChild = node.getFirstChild();
+            if (convertChild.getType() == Token.NUMBER) {
+                return convertChild;
             }
         }
         return null;

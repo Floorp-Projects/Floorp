@@ -215,7 +215,7 @@ public class Token
         ENUMDONE    = 116,
         EXPRSTMT    = 117,
         PARENT      = 118,
-        CONVERT     = 119,
+        TONUMBER    = 119,
         JSR         = 120,
         NEWLOCAL    = 121,
         USELOCAL    = 122,
@@ -347,7 +347,7 @@ public class Token
                 case ENUMDONE:        return "enumdone";
                 case EXPRSTMT:        return "exprstmt";
                 case PARENT:          return "parent";
-                case CONVERT:         return "convert";
+                case TONUMBER:        return "tonumber";
                 case JSR:             return "jsr";
                 case NEWLOCAL:        return "newlocal";
                 case USELOCAL:        return "uselocal";
@@ -355,6 +355,6 @@ public class Token
             }
             return "<unknown="+token+">";
         }
-        return "";
+        return null;
     }
 }

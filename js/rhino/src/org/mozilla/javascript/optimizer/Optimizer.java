@@ -47,11 +47,15 @@ import java.io.IOException;
 
 import java.util.Hashtable;
 
-class Optimizer {
+class Optimizer
+{
 
     static final int NoType = 0;
     static final int NumberType = 1;
     static final int AnyType = 3;
+
+    static final int TO_OBJECT = Token.LAST_TOKEN + 1;
+    static final int TO_DOUBLE = Token.LAST_TOKEN + 2;
 
     // It is assumed that (NumberType | AnyType) == AnyType
 
@@ -426,11 +430,7 @@ class Optimizer {
                         if ((theVar != null) && theVar.isNumber()) {
                             if (rType != NumberType) {
                                 n.removeChild(rChild);
-                                Node newRChild = new Node(Token.CONVERT,
-                                                          rChild);
-                                newRChild.putProp(Node.TYPE_PROP,
-                                                  ScriptRuntime.DoubleClass);
-                                n.addChildToBack(newRChild);
+                                n.addChildToBack(new Node(TO_DOUBLE, rChild));
                             }
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             markDCPNumberContext(rChild);
@@ -440,10 +440,8 @@ class Optimizer {
                             if (rType == NumberType) {
                                 if (!convertParameter(rChild)) {
                                     n.removeChild(rChild);
-                                    Node newRChild = new Node(Token.CONVERT, rChild);
-                                    newRChild.putProp(Node.TYPE_PROP,
-                                                      ScriptRuntime.ObjectClass);
-                                    n.addChildToBack(newRChild);
+                                    n.addChildToBack(new Node(TO_OBJECT,
+                                                              rChild));
                                 }
                             }
                             return NoType;
@@ -463,19 +461,13 @@ class Optimizer {
                         if (lType == NumberType) {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
-                                Node nuChild = new Node(Token.CONVERT, lChild);
-                                nuChild.putProp(Node.TYPE_PROP,
-                                                ScriptRuntime.ObjectClass);
-                                n.addChildToFront(nuChild);
+                                n.addChildToFront(new Node(TO_OBJECT, lChild));
                             }
                         }
                         if (rType == NumberType) {
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
-                                Node nuChild = new Node(Token.CONVERT, rChild);
-                                nuChild.putProp(Node.TYPE_PROP,
-                                                ScriptRuntime.ObjectClass);
-                                n.addChildToBack(nuChild);
+                                n.addChildToBack(new Node(TO_OBJECT, rChild));
                             }
                         }
                     }
@@ -589,10 +581,7 @@ class Optimizer {
                         else {
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
-                                Node newRChild = new Node(Token.CONVERT, rChild);
-                                newRChild.putProp(Node.TYPE_PROP,
-                                                  ScriptRuntime.DoubleClass);
-                                n.addChildToBack(newRChild);
+                                n.addChildToBack(new Node(TO_DOUBLE, rChild));
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
                             return NumberType;
@@ -602,10 +591,7 @@ class Optimizer {
                         if (rType == NumberType) {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
-                                Node newLChild = new Node(Token.CONVERT, lChild);
-                                newLChild.putProp(Node.TYPE_PROP,
-                                                  ScriptRuntime.DoubleClass);
-                                n.addChildToFront(newLChild);
+                                n.addChildToFront(new Node(TO_DOUBLE, lChild));
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
                             return NumberType;
@@ -613,17 +599,11 @@ class Optimizer {
                         else {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
-                                Node newLChild = new Node(Token.CONVERT, lChild);
-                                newLChild.putProp(Node.TYPE_PROP,
-                                                  ScriptRuntime.DoubleClass);
-                                n.addChildToFront(newLChild);
+                                n.addChildToFront(new Node(TO_DOUBLE, lChild));
                             }
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
-                                Node newRChild = new Node(Token.CONVERT, rChild);
-                                newRChild.putProp(Node.TYPE_PROP,
-                                                  ScriptRuntime.DoubleClass);
-                                n.addChildToBack(newRChild);
+                                n.addChildToBack(new Node(TO_DOUBLE, rChild));
                             }
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             return NumberType;
@@ -638,10 +618,7 @@ class Optimizer {
                     if (baseType == NumberType) {// can never happen ???
                         if (!convertParameter(arrayBase)) {
                             n.removeChild(arrayBase);
-                            Node nuChild = new Node(Token.CONVERT, arrayBase);
-                            nuChild.putProp(Node.TYPE_PROP,
-                                            ScriptRuntime.ObjectClass);
-                            n.addChildToFront(nuChild);
+                            n.addChildToFront(new Node(TO_OBJECT, arrayBase));
                         }
                     }
                     int indexType = rewriteForNumberVariables(arrayIndex);
@@ -656,10 +633,7 @@ class Optimizer {
                     if (rValueType == NumberType) {
                         if (!convertParameter(rValue)) {
                             n.removeChild(rValue);
-                            Node nuChild = new Node(Token.CONVERT, rValue);
-                            nuChild.putProp(Node.TYPE_PROP,
-                                            ScriptRuntime.ObjectClass);
-                            n.addChildToBack(nuChild);
+                            n.addChildToBack(new Node(TO_OBJECT, rValue));
                         }
                     }
                     return NoType;
@@ -671,10 +645,7 @@ class Optimizer {
                     if (baseType == NumberType) {// can never happen ???
                         if (!convertParameter(arrayBase)) {
                             n.removeChild(arrayBase);
-                            Node nuChild = new Node(Token.CONVERT, arrayBase);
-                            nuChild.putProp(Node.TYPE_PROP,
-                                            ScriptRuntime.ObjectClass);
-                            n.addChildToFront(nuChild);
+                            n.addChildToFront(new Node(TO_OBJECT, arrayBase));
                         }
                     }
                     int indexType = rewriteForNumberVariables(arrayIndex);
@@ -721,9 +692,7 @@ class Optimizer {
                         if (type == NumberType) {
                             if (!convertParameter(child)) {
                                 n.removeChild(child);
-                                Node nuChild = new Node(Token.CONVERT, child);
-                                nuChild.putProp(Node.TYPE_PROP,
-                                                ScriptRuntime.ObjectClass);
+                                Node nuChild = new Node(TO_OBJECT, child);
                                 if (nextChild == null)
                                     n.addChildToBack(nuChild);
                                 else

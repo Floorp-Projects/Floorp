@@ -600,16 +600,10 @@ public class Interpreter
                 itsStackDepth--;
                 break;
 
-            case Token.CONVERT : {
+            case Token.TONUMBER:
                 iCodeTop = generateICode(child, iCodeTop);
-                Object toType = node.getProp(Node.TYPE_PROP);
-                if (toType == ScriptRuntime.NumberClass) {
-                    iCodeTop = addToken(Token.POS, iCodeTop);
-                } else {
-                    badTree(node);
-                }
+                iCodeTop = addToken(Token.POS, iCodeTop);
                 break;
-            }
 
             case Token.UNARYOP :
                 iCodeTop = generateICode(child, iCodeTop);

@@ -291,10 +291,9 @@ public class Node implements Cloneable {
         CASES_PROP        = 12,
         DEFAULT_PROP      = 13,
         CASEARRAY_PROP    = 14,
-        TYPE_PROP         = 15,
-        SPECIAL_PROP_PROP = 16,
-        LABEL_PROP        = 17,
-        FINALLY_PROP      = 18,
+        SPECIAL_PROP_PROP = 15,
+        LABEL_PROP        = 16,
+        FINALLY_PROP      = 17,
     /*
         the following properties are defined and manipulated by the
         optimizer -
@@ -309,13 +308,13 @@ public class Node implements Cloneable {
                           matches.
     */
 
-        TARGETBLOCK_PROP  = 19,
-        VARIABLE_PROP     = 20,
-        LASTUSE_PROP      = 21,
-        ISNUMBER_PROP     = 22,
-        DIRECTCALL_PROP   = 23,
+        TARGETBLOCK_PROP  = 18,
+        VARIABLE_PROP     = 19,
+        LASTUSE_PROP      = 20,
+        ISNUMBER_PROP     = 21,
+        DIRECTCALL_PROP   = 22,
 
-        SPECIALCALL_PROP  = 24;
+        SPECIALCALL_PROP  = 23;
 
     public static final int    // this value of the ISNUMBER_PROP specifies
         BOTH = 0,               // which of the children are Number types
@@ -346,7 +345,6 @@ public class Node implements Cloneable {
                 case CASES_PROP:         return "cases";
                 case DEFAULT_PROP:       return "default";
                 case CASEARRAY_PROP:     return "casearray";
-                case TYPE_PROP:          return "type";
                 case SPECIAL_PROP_PROP:  return "special_prop";
                 case LABEL_PROP:         return "label";
                 case FINALLY_PROP:       return "finally";
