@@ -43,6 +43,8 @@
 #include "nsCodebasePrincipal.h"
 #include "nsCertificatePrincipal.h"
 #include "nsScriptSecurityManager.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptObjectOwner.h"
 
 #include "nsTraceRefcnt.h"
 
@@ -102,8 +104,6 @@ nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAll
 NS_METHOD 
 nsCSecurityContext::GetOrigin(char* buf, int buflen)
 {
-    nsCOMPtr<nsIPrincipal> principal = NULL;
-  
     // Get the Script Security Manager.
 
     nsresult rv      = NS_OK;
@@ -112,20 +112,49 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
     if (NS_FAILED(rv) || !secMan) return NS_ERROR_FAILURE;
 
 
-    if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
-        return NS_ERROR_FAILURE;
+    // First, try to get the principal from the security manager.
+    // Next, try to get it from the dom.
+    // If neither of those work, the qi for codebase will fail.
 
-    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+    if (!m_pPrincipal) {
+        if (NS_FAILED(secMan->GetSubjectPrincipal(&m_pPrincipal))) 
+        // return NS_ERROR_FAILURE;
+        ; // Don't return here because the security manager returns 
+          // NS_ERROR_FAILURE when there is no subject principal. In
+          // that case we are not done.
+        
+        if (!m_pPrincipal && m_pJSCX ) {
+            JSPrincipals *jsprin = nsnull;
+
+            nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(m_pJSCX);
+            if (scriptContext) {
+                nsCOMPtr<nsIScriptGlobalObject> global = scriptContext->GetGlobalObject();
+                NS_ASSERTION(global, "script context has no global object");
+
+                if (global) {
+                    nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
+                    if (globalData) {
+                        // ISSUE: proper ref counting.
+                        if (NS_FAILED(globalData->GetPrincipal(&m_pPrincipal)))
+                            return NS_ERROR_FAILURE; 
+                       
+                   }
+                }
+            }
+        }
+    }
+
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(m_pPrincipal);
     if (!codebase) 
         return NS_ERROR_FAILURE;
 
     char* origin=nsnull;
     codebase->GetOrigin(&origin);
 
-    if( origin ) {
+    if (origin) {
         PRInt32 originlen = (PRInt32) nsCRT::strlen(origin);
-        if(!buf || buflen<=originlen) {
-            if( origin ) {
+        if (!buf || buflen<=originlen) {
+            if (origin) {
                 nsCRT::free(origin);
             }
             return NS_ERROR_FAILURE;
@@ -165,7 +194,7 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
     char* certificate = nsnull;
     cprincipal->GetCertificateID(&certificate);
 
-    if( certificate ) {
+    if (certificate) {
         PRInt32 certlen = (PRInt32) nsCRT::strlen(certificate);
         if( buflen<=certlen ) {
             nsCRT::free(certificate);
@@ -219,8 +248,43 @@ nsCSecurityContext::nsCSecurityContext(JSContext* cx)
 
     PRBool equals;
     if (!principal || 
-        NS_SUCCEEDED(principal->Equals(sysprincipal, &equals)) && equals) 
-    {
+        NS_SUCCEEDED(principal->Equals(sysprincipal, &equals)) && equals) {
+        // We have native code or the system principal: just allow general access
+        m_HasUniversalBrowserReadCapability = PR_TRUE;
+        m_HasUniversalJavaCapability = PR_TRUE;
+    }
+    else {
+        // Otherwise, check with the js security manager.
+        secMan->IsCapabilityEnabled("UniversalBrowserRead",&m_HasUniversalBrowserReadCapability);
+        secMan->IsCapabilityEnabled("UniversalJavaPermission",&m_HasUniversalJavaCapability);
+    }
+}
+
+nsCSecurityContext::nsCSecurityContext(nsIPrincipal *principal)
+                   : m_pJStoJavaFrame(NULL), m_pJSCX(NULL),
+                     m_pPrincipal(principal),
+                     m_HasUniversalBrowserReadCapability(PR_FALSE),
+                     m_HasUniversalJavaCapability(PR_FALSE)
+{
+    MOZ_COUNT_CTOR(nsCSecurityContext);
+    NS_INIT_REFCNT();
+
+      // Get the Script Security Manager.
+
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
+    if (NS_FAILED(rv) || !secMan) return;
+
+    nsCOMPtr<nsIPrincipal> sysprincipal;
+    if (NS_FAILED(secMan->GetSystemPrincipal(getter_AddRefs(sysprincipal))))
+        return;
+
+    // Do early evaluation of "UniversalJavaPermission" capability.
+
+    PRBool equals;
+    if (!m_pPrincipal || 
+        NS_SUCCEEDED(m_pPrincipal->Equals(sysprincipal, &equals)) && equals) {
         // We have native code or the system principal: just allow general access
         m_HasUniversalBrowserReadCapability = PR_TRUE;
         m_HasUniversalJavaCapability = PR_TRUE;

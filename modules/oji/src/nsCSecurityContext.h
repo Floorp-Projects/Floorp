@@ -86,6 +86,7 @@ public:
     // from nsCSecurityContext:
 
     nsCSecurityContext(JSContext* cx);
+    nsCSecurityContext(nsIPrincipal* principal);
     virtual ~nsCSecurityContext(void);
 
 protected:
@@ -95,7 +96,6 @@ private:
     nsIPrincipal *m_pPrincipal;
     PRBool        m_HasUniversalJavaCapability;
     PRBool        m_HasUniversalBrowserReadCapability;
-
 };
 
 #endif // nsCSecurityContext_h___
