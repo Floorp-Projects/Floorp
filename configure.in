@@ -316,8 +316,13 @@ case "$target" in
 
 *-irix5*)
     DSO_LDOPTS='-elf -shared'
-    MKSHLIB_FORCE_ALL='-all'
-    MKSHLIB_UNFORCE_ALL='-none'
+    if test "$GNU_CC"; then
+       MKSHLIB_FORCE_ALL='-Wl,-all'
+       MKSHLIB_UNFORCE_ALL='-Wl,-none'
+    else
+       MKSHLIB_FORCE_ALL='-all'
+       MKSHLIB_UNFORCE_ALL='-none'
+    fi
     ;;
 
 *-irix6*)
