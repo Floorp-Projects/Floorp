@@ -53,7 +53,6 @@
 #include "nsIProxy.h"
 #include "nsMimeTypes.h"
 #include "nsIPrompt.h"
-#include "nsISocketTransport.h"
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
 // platforms
 #include "nsIPref.h"
@@ -92,7 +91,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mState(HS_IDLE),
     mLoadAttributes(LOAD_NORMAL),
     mLoadGroup(nsnull),
-    mTransport(nsnull),
     mCachedResponse(nsnull),
     mCachedContentIsAvailable(PR_FALSE),
     mCachedContentIsValid(PR_FALSE),
@@ -159,7 +157,7 @@ nsHTTPChannel::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::Cancel(void)
+nsHTTPChannel::Cancel (void)
 {
   nsresult rv;
 
@@ -668,7 +666,7 @@ nsresult nsHTTPChannel::Init(nsILoadGroup *aLoadGroup)
     Set up a request object - later set to a clone of a default 
     request from the handler. TODO
   */
-  mRequest = new nsHTTPRequest(mURI);
+  mRequest = new nsHTTPRequest(mURI, mHandler, mBufferSegmentSize, mBufferMaxSize);
   if (!mRequest) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -942,7 +940,7 @@ nsHTTPChannel::ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount)
     // Create a listener that intercepts cache reads and fires off 
     // the appropriate events such as OnHeadersAvailable
     nsHTTPResponseListener* listener;
-    listener = new nsHTTPCacheListener(this);
+    listener = new nsHTTPCacheListener(this, mHandler);
     if (!listener)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(listener);
@@ -1141,105 +1139,93 @@ nsHTTPChannel::Open(void)
         }
     }
 
-    rv = mHandler->RequestTransport(mURI, this, 
-                                    mBufferSegmentSize, mBufferMaxSize, 
-                                    getter_AddRefs(mTransport));
+    if (mState != HS_WAITING_FOR_OPEN)
+    {
+        // Check for any modules that want to set headers before we
+        // send out a request.
+        NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    if (NS_ERROR_BUSY == rv) {
+        nsCOMPtr<nsISimpleEnumerator> pModules;
+        rv = pNetModuleMgr->EnumerateModules(
+                NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID,
+                getter_AddRefs(pModules));
+        if (NS_FAILED(rv)) return rv;
+
+        // Go through the external modules and notify each one.
+        nsCOMPtr<nsISupports> supEntry;
+        rv = pModules->GetNext(getter_AddRefs(supEntry));
+        while (NS_SUCCEEDED(rv)) 
+        {
+            nsCOMPtr<nsINetModRegEntry> entry = do_QueryInterface(supEntry, &rv);
+            if (NS_FAILED(rv)) 
+                return rv;
+
+            nsCOMPtr<nsINetNotify> syncNotifier;
+            entry->GetSyncProxy(getter_AddRefs(syncNotifier));
+            nsCOMPtr<nsIHTTPNotify> pNotify = do_QueryInterface(syncNotifier, &rv);
+
+            if (NS_SUCCEEDED(rv)) 
+            {
+                // send off the notification, and block.
+                // make the nsIHTTPNotify api call
+                pNotify->ModifyRequest((nsISupports*)(nsIRequest*)this);
+                // we could do something with the return code from the external
+                // module, but what????            
+            }
+            rv = pModules->GetNext(getter_AddRefs(supEntry)); // go around again
+        }
+
+        // if using proxy...
+        nsXPIDLCString requestSpec;
+        rv = mRequest->GetOverrideRequestSpec(getter_Copies(requestSpec));
+        // no one has overwritten this value as yet...
+        if (!requestSpec && mProxy && *mProxy)
+        {
+            nsXPIDLCString strurl;
+            if(NS_SUCCEEDED(mURI->GetSpec(getter_Copies(strurl))))
+                mRequest->SetOverrideRequestSpec(strurl);
+        }
+
+        // Check to see if an authentication header is required
+        nsAuthEngine* pAuthEngine = nsnull; 
+        if (NS_SUCCEEDED(mHandler->GetAuthEngine(&pAuthEngine)) && pAuthEngine)
+        {
+            nsXPIDLCString authStr;
+            if (NS_SUCCEEDED(pAuthEngine->GetAuthString(mURI, 
+                getter_Copies(authStr))))
+            {
+                if (authStr && *authStr)
+                    rv = mRequest->SetHeader(nsHTTPAtoms::Authorization, authStr);
+            }
+
+            if (mProxy && *mProxy)
+            {
+                nsXPIDLCString proxyAuthStr;
+                if (NS_SUCCEEDED(pAuthEngine->GetProxyAuthString(mProxy, 
+                                mProxyPort,
+                            getter_Copies(proxyAuthStr))))
+                {
+                    if (proxyAuthStr && *proxyAuthStr)
+                        rv = mRequest->SetHeader(nsHTTPAtoms::Proxy_Authorization, 
+                                proxyAuthStr);
+                }
+            }
+        }
+    } /* WAITING_FOR_OPEN */
+
+    rv = mRequest -> WriteRequest ();
+
+    if (NS_ERROR_BUSY == rv)
+    {
         mState = HS_WAITING_FOR_OPEN;
         return NS_OK;
     }
-    if (NS_FAILED(rv)) {
-      // Unable to create a transport...  End the request...
-      (void) ResponseCompleted(mResponseDataListener, rv, nsnull);
-      return rv;
-    }
-    
-    // pass ourself in to act as a proxy for progress callbacks
-    rv = mTransport->SetNotificationCallbacks(this);
-    if (NS_FAILED(rv)) {
-      // Unable to create a transport...  End the request...
-      (void) ResponseCompleted(mResponseDataListener, rv, nsnull);
-      (void) ReleaseTransport(mTransport);
-      return rv;
-    }
-
-    // Check for any modules that want to set headers before we
-    // send out a request.
-    NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISimpleEnumerator> pModules;
-    rv = pNetModuleMgr->EnumerateModules(
-            NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID,
-            getter_AddRefs(pModules));
-    if (NS_FAILED(rv)) return rv;
-
-    // Go through the external modules and notify each one.
-    nsCOMPtr<nsISupports> supEntry;
-    rv = pModules->GetNext(getter_AddRefs(supEntry));
-    while (NS_SUCCEEDED(rv)) 
+    if (NS_FAILED(rv)) 
     {
-        nsCOMPtr<nsINetModRegEntry> entry = do_QueryInterface(supEntry, &rv);
-        if (NS_FAILED(rv)) 
-            return rv;
-
-        nsCOMPtr<nsINetNotify> syncNotifier;
-        entry->GetSyncProxy(getter_AddRefs(syncNotifier));
-        nsCOMPtr<nsIHTTPNotify> pNotify = do_QueryInterface(syncNotifier, &rv);
-
-        if (NS_SUCCEEDED(rv)) 
-        {
-            // send off the notification, and block.
-            // make the nsIHTTPNotify api call
-            pNotify->ModifyRequest((nsISupports*)(nsIRequest*)this);
-            // we could do something with the return code from the external
-            // module, but what????            
-        }
-        rv = pModules->GetNext(getter_AddRefs(supEntry)); // go around again
+        ResponseCompleted (mResponseDataListener, rv, nsnull);
+        return rv;
     }
-
-    mRequest->SetTransport(mTransport);
-
-    // if using proxy...
-    nsXPIDLCString requestSpec;
-    rv = mRequest->GetOverrideRequestSpec(getter_Copies(requestSpec));
-    // no one has overwritten this value as yet...
-    if (!requestSpec && mProxy && *mProxy)
-    {
-        nsXPIDLCString strurl;
-        if(NS_SUCCEEDED(mURI->GetSpec(getter_Copies(strurl))))
-            mRequest->SetOverrideRequestSpec(strurl);
-    }
-
-    // Check to see if an authentication header is required
-    nsAuthEngine* pAuthEngine = nsnull; 
-    if (NS_SUCCEEDED(mHandler->GetAuthEngine(&pAuthEngine)) && pAuthEngine)
-    {
-        nsXPIDLCString authStr;
-        if (NS_SUCCEEDED(pAuthEngine->GetAuthString(mURI, 
-                getter_Copies(authStr))))
-        {
-            if (authStr && *authStr)
-                rv = mRequest->SetHeader(nsHTTPAtoms::Authorization, authStr);
-        }
-
-        if (mProxy && *mProxy)
-        {
-            nsXPIDLCString proxyAuthStr;
-            if (NS_SUCCEEDED(pAuthEngine->GetProxyAuthString(mProxy, 
-                            mProxyPort,
-                            getter_Copies(proxyAuthStr))))
-            {
-                if (proxyAuthStr && *proxyAuthStr)
-                    rv = mRequest->SetHeader(nsHTTPAtoms::Proxy_Authorization, 
-                            proxyAuthStr);
-            }
-        }
-    }
-
-    rv = mRequest->WriteRequest();
-    if (NS_FAILED(rv)) return rv;
     
     mState = HS_WAITING_FOR_RESPONSE;
     mConnected = PR_TRUE;
@@ -1401,17 +1387,6 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
   mResponseDataListener = 0;
   NS_IF_RELEASE(mCachedResponse);
 
-  return rv;
-}
-
-nsresult nsHTTPChannel::ReleaseTransport (nsIChannel *aTransport, PRBool keepAlive)
-{
-  nsresult rv = NS_OK;
-  if (aTransport) {
-    (void) mRequest->ReleaseTransport (aTransport);
-    rv   = mHandler->ReleaseTransport (aTransport, keepAlive);
-  }
-  
   return rv;
 }
 
@@ -1859,7 +1834,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
 
     // Create a new HTTPCacheListener...
     nsHTTPResponseListener *cacheListener;
-    cacheListener = new nsHTTPCacheListener(this);
+    cacheListener = new nsHTTPCacheListener(this, mHandler);
     if (!cacheListener) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2020,15 +1995,19 @@ nsHTTPChannel::GetUsingProxy(PRBool *aUsingProxy)
 
 
 NS_IMETHODIMP 
-nsHTTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+nsHTTPChannel::GetSecurityInfo (nsISupports * *aSecurityInfo)
 {
     *aSecurityInfo = nsnull;
     
     if (!aSecurityInfo)
         return NS_ERROR_NULL_POINTER;
 
-    if (!mTransport)
-        return NS_OK;
-    
-    return mTransport->GetSecurityInfo(aSecurityInfo);
+    nsIChannel * trans;
+    if (mRequest)
+    {
+        mRequest -> GetTransport (&trans);
+        if (trans)
+            return trans -> GetSecurityInfo (aSecurityInfo);
+    }
+    return NS_OK;
 }

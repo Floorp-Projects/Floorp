@@ -30,7 +30,7 @@ MODULE		= converters
 LIBRARY_NAME	= converters
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom
+REQUIRES	= xpcom zlib
 
 CPPSRCS		= \
 		nsMultiMixedConv.cpp \
@@ -39,6 +39,7 @@ CPPSRCS		= \
 		mozTXTToHTMLConv.cpp \
 		nsUnknownDecoder.cpp \
 		nsHTTPChunkConv.cpp \
+		nsHTTPCompressConv.cpp \
 		$(NULL)
 
 EXPORTS		= \

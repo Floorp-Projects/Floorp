@@ -98,7 +98,6 @@ public:
     nsresult            ResponseCompleted(nsIStreamListener* aListener,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg);
-    nsresult            ReleaseTransport (nsIChannel *aTransport, PRBool keepAlive = PR_FALSE);
 
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
@@ -148,8 +147,6 @@ protected:
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
 
     nsCOMPtr<nsISupports>               mOwner;
-    
-    nsCOMPtr<nsIChannel>                mTransport;               
     
     // Cache-related members
     nsCOMPtr<nsICachedNetData>          mCacheEntry;

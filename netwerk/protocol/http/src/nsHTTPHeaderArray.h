@@ -60,6 +60,8 @@ public:
   nsresult      GetEnumerator(nsISimpleEnumerator** aResult);
   static void   GetStandardHeaderName(nsIAtom* aHeader, const char** aResult);
 
+  void Clear ();
+
 protected:
   PRInt32   GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult);
   PRBool    IsHeaderMultiple(nsIAtom* aHeader);
@@ -79,7 +81,6 @@ public:
   // nsISimpleEnumerator methods:
   NS_IMETHOD HasMoreElements(PRBool* aResult);
   NS_IMETHOD GetNext(nsISupports** aResult);
-
 
   // Class methods:
   nsHTTPHeaderEnumerator(nsISupportsArray* aHeaderArray);

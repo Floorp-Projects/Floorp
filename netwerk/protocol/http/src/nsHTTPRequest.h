@@ -32,6 +32,7 @@
 #include "nsIChannel.h"
 #include "nsHTTPHeaderArray.h"
 #include "nsHTTPEnums.h"
+#include "nsHTTPHandler.h"
 
 class nsIInputStream;
 class nsHTTPChannel;
@@ -64,7 +65,7 @@ class nsHTTPRequest : public nsIStreamObserver,
 public:
 
     // Constructor
-    nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method=HM_GET);
+    nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize, HTTPMethod i_Method=HM_GET);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMOBSERVER
@@ -104,8 +105,9 @@ public:
         
     nsresult            SetConnection(nsHTTPChannel* i_Connection);
 
-    nsresult            SetTransport(nsIChannel *aTransport);
-    nsresult            ReleaseTransport(nsIChannel *aTransport);
+    nsresult            SetTransport (nsIChannel * aTransport);
+    nsresult            GetTransport (nsIChannel **aTransport);
+//    nsresult            ReleaseTransport(nsIChannel *aTransport);
 
     // Build the actual request string based on the settings. 
     nsresult            WriteRequest();
@@ -144,18 +146,23 @@ protected:
     nsCOMPtr<nsIURL>            mURI;
     PRUint32					mVersion;
     PRUint32                    mKeepAliveTimeout;
+    PRUint32                    mAttempts;
     PRBool                      mDoKeepAlive;
     nsCOMPtr<nsIChannel>        mTransport;
     nsHTTPChannel*              mConnection;
 
     nsHTTPHeaderArray           mHeaders;
 
-    nsCString                       mRequestBuffer;
-    nsCOMPtr<nsIInputStream>        mPostDataStream;
+    nsCString                   mRequestBuffer;
+    nsCOMPtr<nsIInputStream>    mPostDataStream;
     char*                       mRequestSpec; 
-};
 
-#define NS_HTTP_REQUEST_SEGMENT_SIZE     (4*1024)
-#define NS_HTTP_REQUEST_BUFFER_SIZE      (16*1024)
+    nsHTTPHandler*              mHandler;
+
+    PRUint32                    mBufferSegmentSize;
+    PRUint32                    mBufferMaxSize;
+
+    nsresult formHeaders ();
+};
 
 #endif /* _nsHTTPRequest_h_ */
