@@ -64,44 +64,45 @@ iframe {
 /**
  * toolbar button images
  */
-#getmsg-btn {
+
+#button-getmsg {
 	list-style-image:url("chrome://messenger/skin/getmsg.gif");
 }
 
-#newmsg-btn{
+#button-newmsg {
 	list-style-image:url("chrome://messenger/skin/newmsg.gif");
 }
 
-#reply-btn{
+#button-reply {
 	list-style-image:url("chrome://messenger/skin/reply.gif");
 }
 
-#replyall-btn{
+#button-replyall {
 	list-style-image:url("chrome://messenger/skin/replyall.gif");
 }
 
-#forward-btn{
+#button-forward {
 	list-style-image:url("chrome://messenger/skin/forward.gif");
 }
 
-#file-btn{
+#button-file {
 	list-style-image:url("chrome://messenger/skin/file.gif");
 }
 
-#next-btn{
+#button-next {
 	list-style-image:url("chrome://messenger/skin/next.gif");
 }
 
-#delete-btn{
+#button-delete {
 	list-style-image:url("chrome://messenger/skin/trash.gif");
 }
 
-#print-btn{
-	list-style-image:url("chrome://messenger/skin/print.gif");
+#button-print {
+	list-style-image:url("chrome://global/skin/print.gif");
 }
 
-#stop-btn{
-	list-style-image:url("chrome://messenger/skin/stop.gif");
+#button-stop {
+	list-style-image:url("chrome://global/skin/stop.gif");
 }
 
 
@@ -167,45 +168,6 @@ iframe {
     list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
 
-#button_getmsg {
-	list-style-image:url("chrome://messenger/skin/getmsg.gif");
-}
-
-#button_newmsg {
-	list-style-image:url("chrome://messenger/skin/newmsg.gif");
-}
-
-#button_reply {
-	list-style-image:url("chrome://messenger/skin/reply.gif");
-}
-
-#button_replyall {
-	list-style-image:url("chrome://messenger/skin/replyall.gif");
-}
-
-#button_forward {
-	list-style-image:url("chrome://messenger/skin/forward.gif");
-}
-
-#button_file {
-	list-style-image:url("chrome://messenger/skin/file.gif");
-}
-
-#button_next {
-	list-style-image:url("chrome://messenger/skin/next.gif");
-}
-
-#button_delete {
-	list-style-image:url("chrome://messenger/skin/trash.gif");
-}
-
-#button_print {
-	list-style-image:url("chrome://global/skin/print.gif");
-}
-
-#button_stop {
-	list-style-image:url("chrome://global/skin/stop.gif");
-}
 
 menu.push {
   border: 1px outset white;

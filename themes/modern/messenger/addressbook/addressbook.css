@@ -26,7 +26,7 @@ Rights Reserved.
 /* CardView styles - used in the Card View Pane*/
 
 #CardViewBox {
-	overflow: auto;
+/*	overflow: auto;*/
 	background-color: #EEEEEE;
 	min-width: 150px;
 	user-focus: ignore;
@@ -128,31 +128,31 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
   visibility: collapse;
 }
 
-#button_newcard {
+#button-newcard {
 	list-style-image:url("chrome://messenger/skin/addressbook/newcard.gif");
 }
 
-#button_newlist {
+#button-newlist {
 	list-style-image:url("chrome://messenger/skin/addressbook/newlist.gif");
 }
 
-#button_editcard {
+#button-editcard {
 	list-style-image:url("chrome://messenger/skin/addressbook/edit.gif");
 }
 
-#button_newmessage {
+#button-newmessage {
 	list-style-image:url("chrome://messenger/skin/addressbook/newmsgab.gif");
 }
 
-#button_delete {
+#button-elete {
 	list-style-image:url("chrome://messenger/skin/trash.gif");
 }
 
-#button_stop {
+#button-stop {
 	list-style-image:url("chrome://global/skin/stop.gif");
 }
 
-#button_search {
+#button-search {
 	list-style-image:url("chrome://global/skin/search.gif");
 }
 
@@ -170,3 +170,8 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 	padding: 0px;
 }
 
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
+                                                                                                                                               
+  list-style-image: none !important;                                             
+                                                                                                                                               
+}    

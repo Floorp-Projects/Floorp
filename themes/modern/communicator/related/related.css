@@ -28,32 +28,17 @@
 
 @import url(chrome://global/skin/global.css);
 
-treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > .tree-icon
+treeitem[container="true"][open="true"] > treerow > .tree-icon
 {
-    list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
-}
-
-treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon {
     list-style-image: url("resource:/res/rdf/folder-open.gif");
 }
 
-treeitem[container="true"] > treerow > treecell > .tree-icon {
+treeitem[container="true"] > treerow > .tree-icon
+{
     list-style-image: url("resource:/res/rdf/folder-closed.gif");
 }
 
-treeitem[container="true"][id="NC:SiteMapRoot"] > treerow > treecell > .tree-icon {
-    list-style-image: url("chrome://communicator/skin/related/sitemap.gif");
-}
-
-treeitem[container="true"][open="true"][id="NC:SiteMapRoot"] > treerow > treecell > .tree-icon {
-    list-style-image: url("chrome://communicator/skin/related/sitemap.gif");
-}
-
-treeitem > treerow > treecell > .tree-icon {
+.tree-icon
+{
     list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
-
-treeitem > treerow > treecell > .tree-icon > .twisty {
-  display: none;
-}
-

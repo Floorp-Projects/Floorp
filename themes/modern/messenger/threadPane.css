@@ -100,3 +100,9 @@ treecell.readColumnHeader > .tree-header-image {
 treecell.flagColumnHeader > .tree-header-image {
   list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
 }
+
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
+                                                                                                                                               
+  list-style-image: none !important;                                             
+                                                                                                                                               
+ }    

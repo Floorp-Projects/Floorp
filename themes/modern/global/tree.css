@@ -93,10 +93,6 @@ treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
  text-decoration: none;
 }
 
-treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
- list-style-image: none !important;
-}
-
 .tree-cell-twisty[disabled="true"] {
  list-style-image: none;
 }

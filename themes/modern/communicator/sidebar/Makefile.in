@@ -42,7 +42,15 @@ EXPORT_RESOURCE_SAMPLES = \
         list-down.gif \
         sidebar-bottomright-cap.gif \
         sidebarOverlay.css \
-        $(NULL)
+	sbgrippy-left-hover.gif \
+	sbgrippy-left.gif \
+	sbgrippy-right-hover.gif \
+	sbgrippy-right.gif \
+	sidebar-close-hover.gif \
+	sidebar-close.gif \
+	sidebar-open-hover.gif \
+	sidebar-open.gif \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
