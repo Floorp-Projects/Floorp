@@ -533,10 +533,6 @@ nsMsgIncomingServer::ToString(PRUnichar** aResult) {
 
 NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
 {
-	// if remember password is turned on, write the password to preferences
-	// otherwise, just set the password so we remember it for the rest of the current
-	// session.
-
 	m_password = aPassword;
 
 	return NS_OK;
@@ -544,9 +540,11 @@ NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
 
 NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
 {
-	nsresult rv = NS_OK;
+    NS_ENSURE_ARG_POINTER(aPassword);
+
 	*aPassword = m_password.ToNewCString();
-    return rv;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -555,12 +553,11 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
                                        nsIMsgWindow* aMsgWindow,
                                        char **aPassword) 
 {
-
-    nsXPIDLCString prefvalue;
-    GetPassword(getter_Copies(prefvalue));
-
     nsresult rv = NS_OK;
-    if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
+
+    NS_ENSURE_ARG_POINTER(aMsgWindow);
+    NS_ENSURE_ARG_POINTER(aPassword);
+
     if (m_password.IsEmpty()) {
 		// prompt the user for the password
         nsCOMPtr<nsIWebShell> webShell;
@@ -573,12 +570,13 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
         nsCOMPtr<nsINetPrompt> dialog( do_QueryInterface( topLevelWindow, &rv ) );
 		if (NS_SUCCEEDED(rv))
 		{
-			PRUnichar * uniPassword;
+            nsXPIDLString uniPassword;
 			PRBool okayValue = PR_TRUE;
 			nsXPIDLCString serverUri;
 			rv = GetServerURI(getter_Copies(serverUri));
 			if (NS_FAILED(rv)) return rv;
-			dialog->PromptPassword(serverUri, aPromptTitle, aPromptMessage, &uniPassword, &okayValue);
+			rv = dialog->PromptPassword(serverUri, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), &okayValue);
+            if (NS_FAILED(rv)) return rv;
 				
 			if (!okayValue) // if the user pressed cancel, just return NULL;
 			{
@@ -589,11 +587,12 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			// we got a password back...so remember it
 			nsCString aCStr(uniPassword); 
 
-			SetPassword((const char *) aCStr);
+			rv = SetPassword((const char *) aCStr);
+            if (NS_FAILED(rv)) return rv;
 		} // if we got a prompt dialog
 	} // if the password is empty
 
-	*aPassword = m_password.ToNewCString();
+    rv = GetPassword(aPassword);
 	return rv;
 }
 
