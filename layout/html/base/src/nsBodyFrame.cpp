@@ -35,10 +35,6 @@
 #include "nsHTMLValue.h"
 #include "nsHTMLParts.h"
 
-// XXX TEMP. See HandleEvent()...
-#include "nsIEventStateManager.h"
-#include "nsDOMEvent.h"
-
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 nsIAtom* nsBodyFrame::gAbsoluteAtom;
