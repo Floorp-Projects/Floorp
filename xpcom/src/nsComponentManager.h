@@ -177,6 +177,7 @@ protected:
     nsIRegistry*     mRegistry;
 	nsIRegistry::Key mXPCOMKey;
 	nsIRegistry::Key mClassesKey;
+	nsIRegistry::Key mCLSIDKey;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
