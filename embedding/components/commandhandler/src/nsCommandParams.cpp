@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "xpcom-config.h"
 #include NEW_H    // for placement new
 #include "nscore.h"
 #include "nsCRT.h"

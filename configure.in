@@ -1866,7 +1866,10 @@ case $target in
 *-darwin*)
 	;;
 *)
-	AC_CHECK_LIB(dl, dlopen)
+	AC_CHECK_LIB(dl, dlopen,
+        AC_CHECK_HEADER(dlfcn.h, 
+            LIBS="-ldl $LIBS"
+            AC_DEFINE(HAVE_LIBDL)))
 	;;
 esac
 if test ! "$GNU_CXX"; then
@@ -2208,7 +2211,7 @@ dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint)
-AC_CHECK_FUNCS(nl_langinfo flockfile)
+AC_CHECK_FUNCS(nl_langinfo flockfile getpagesize)
 
 dnl localtime_r and strtok_r are only present on MacOS version 10.2 and higher
 if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100200"; then
@@ -5266,7 +5269,36 @@ AC_SUBST(ac_configure_args)
 dnl Spit out some output
 dnl ========================================================
 
-AC_CONFIG_HEADER(gfx/gfx-config.h netwerk/necko-config.h)
+dnl The following defines are used by xpcom
+_NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES
+CPP_THROW_NEW
+HAVE_CPP_2BYTE_WCHAR_T
+HAVE_CPP_ACCESS_CHANGING_USING
+HAVE_CPP_AMBIGUITY_RESOLVING_USING
+HAVE_CPP_BOOL
+HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
+HAVE_CPP_EXPLICIT
+HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
+HAVE_CPP_NAMESPACE_STD
+HAVE_CPP_NEW_CASTS
+HAVE_CPP_PARTIAL_SPECIALIZATION
+HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
+HAVE_CPP_TYPENAME
+HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
+HAVE_STATVFS
+NEED_CPP_UNUSED_IMPLEMENTATIONS
+NEW_H
+HAVE_64BIT_OS
+HAVE_GETPAGESIZE
+HAVE_ICONV
+HAVE_ICONV_WITH_CONST_INPUT
+HAVE_MBRTOWC
+HAVE_SYS_MOUNT_H
+HAVE_SYS_VFS_H
+HAVE_WCRTOMB
+"
+
+AC_CONFIG_HEADER(gfx/gfx-config.h netwerk/necko-config.h xpcom/xpcom-config.h)
 
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
