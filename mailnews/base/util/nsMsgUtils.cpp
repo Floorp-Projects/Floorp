@@ -36,6 +36,7 @@
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgImapCID.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -336,7 +337,17 @@ nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
 
 nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& pathString)
 {
-	nsCAutoString oldPath(folderURI);
+	// A file name has to be in native charset, convert from UTF-8.
+	nsCAutoString oldPath;
+	const nsString fileCharset(nsMsgI18NFileSystemCharset());
+	char *nativeString;
+	nsresult rv = ConvertFromUnicode(fileCharset, nsAutoString(NS_ConvertUTF8toUCS2(folderURI)), &nativeString);
+	if (NS_SUCCEEDED(rv))
+		oldPath.Assign(nativeString);
+	else
+		oldPath.Assign(folderURI);
+	PR_FREEIF(nativeString);
+
 	nsCAutoString pathPiece;
 
 	PRInt32 startSlashPos = oldPath.FindChar('/');

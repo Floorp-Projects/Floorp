@@ -509,18 +509,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   nsCAutoString uri(mURI);
   uri.Append('/');
 
-  // Convert from Unicode to filesystem charactorset
-  // XXX URI should use UTF-8?
+  // URI should use UTF-8
   // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
 
-  const nsString fileCharset(nsMsgI18NFileSystemCharset());
-  char *convertedName;
-  rv = ConvertFromUnicode(fileCharset, *name, &convertedName);
-  if (NS_FAILED(rv))
-    return rv;
-
-  uri.Append(convertedName);
-  PR_Free((void*) convertedName);
+  char *escapedName = nsEscape(NS_ConvertUCS2toUTF8(name->GetUnicode()), url_Path);
+  if (escapedName)
+  {
+    uri.Append(escapedName);
+    PR_FREEIF(escapedName);
+  }
 
 	nsCOMPtr<nsIRDFResource> res;
 	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));

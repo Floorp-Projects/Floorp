@@ -49,6 +49,7 @@
 #include "nsRDFCID.h"
 #include "nsIPref.h"
 #include "nsIRDFService.h"
+#include "nsMsgI18N.h"
 
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -103,7 +104,10 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
         nsXPIDLCString tempfolder;
         rv = ioServ->Unescape(folderName, getter_Copies(tempfolder));
 
-        m_folderName.Assign(NS_ConvertUTF8toUCS2(tempfolder));
+        // convert from OS native charset to unicode
+        rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), tempfolder, m_folderName);
+        if (NS_FAILED(rv))
+          m_folderName.AssignWithConversion(tempfolder);
 
 		if (fileName)
 		{

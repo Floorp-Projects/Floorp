@@ -308,8 +308,17 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 		nsFileSpec folderPath;
 		nsMsgKey msgKey;
         const char *part = PL_strstr(aSrcMsgMailboxURI, "part=");
-		
 		rv = nsParseLocalMessageURI(aSrcMsgMailboxURI, folderURI, &msgKey);
+
+		// Unescape folder name
+		char *unescapedFolderURI = nsCRT::strdup(folderURI);
+		if (unescapedFolderURI)
+		{
+			nsUnescape(unescapedFolderURI);
+			folderURI.Assign(unescapedFolderURI);
+			PR_Free(unescapedFolderURI);
+		}
+
 		rv = nsLocalURI2Path(kMailboxMessageRootURI, folderURI, folderPath);
 
 		if (NS_SUCCEEDED(rv))
