@@ -25,8 +25,10 @@
 
 #ifndef NSCAP_NO_NEW_CASTS
   #define STATIC_CAST(T,x)  static_cast<T>(x)
+  #define REINTERPRET_CAST(T,x) reinterpret_cast<T>(x)
 #else
   #define STATIC_CAST(T,x)  ((T)(x))
+  #define REINTERPRET_CAST(T,x) ((T)(x))
 #endif
 
 
@@ -289,6 +291,87 @@ AVoidPtrPtrContext( void** )
 
 
 
+static
+nsresult
+TestBloat_Raw()
+	{
+		IBar* barP = 0;
+		nsresult result = CreateIBar(REINTERPRET_CAST(void**, &barP));
+
+		if ( barP )
+			{
+				try
+					{
+						IFoo* fooP = 0;
+						if ( NS_SUCCEEDED( result = barP->QueryInterface(IFoo::IID(), REINTERPRET_CAST(void**, &fooP)) ) )
+							{
+								try
+									{
+										fooP->print_totals();
+									}
+								catch( ... )
+									{
+										NS_RELEASE(fooP);
+										throw;
+									}
+
+								NS_RELEASE(fooP);
+							}
+					}
+				catch( ... )
+					{
+						NS_RELEASE(barP);
+						throw;
+					}
+
+				NS_RELEASE(barP);
+			}
+
+		return result;
+	}
+
+
+
+static
+nsresult
+TestBloat_Raw_Unsafe()
+	{
+		IBar* barP = 0;
+		nsresult result = CreateIBar(REINTERPRET_CAST(void**, &barP));
+
+		if ( barP )
+			{
+				IFoo* fooP = 0;
+				if ( NS_SUCCEEDED( result = barP->QueryInterface(IFoo::IID(), REINTERPRET_CAST(void**, &fooP)) ) )
+					{
+						fooP->print_totals();
+						NS_RELEASE(fooP);
+					}
+
+				NS_RELEASE(barP);
+			}
+
+		return result;
+	}
+
+
+static
+nsresult
+TestBloat_Smart()
+	{
+		nsCOMPtr<IBar> barP;
+		nsresult result = CreateIBar( getter_AddRefs(barP) );
+
+		nsCOMPtr<IFoo> fooP( do_QueryInterface(barP, &result) );
+
+		if ( fooP )
+			fooP->print_totals();
+
+		return result;
+	}
+
+
+
 
 nsCOMPtr<IFoo> gFoop;
 
@@ -298,6 +381,10 @@ main()
     cout << ">>main()" << endl;
 
 		cout << "sizeof(nsCOMPtr<IFoo>) --> " << sizeof(nsCOMPtr<IFoo>) << endl;
+
+		TestBloat_Raw();
+		TestBloat_Raw_Unsafe();
+		TestBloat_Smart();
 
 
     {
@@ -348,7 +435,7 @@ main()
       IFoo* raw_foo2p = foo2p.get();
 
       cout << endl << "### Test  8: can you compare a |nsCOMPtr| with a raw interface pointer [!=]?" << endl;
-      if ( foo1p != raw_foo2p )
+      if ( foo1p.get() != raw_foo2p )
         cout << "foo1p != raw_foo2p" << endl;
       else
         cout << "foo1p == raw_foo2p" << endl;
@@ -364,10 +451,18 @@ main()
         cout << "foo1p != foo2p" << endl;
 
       cout << endl << "### Test 11: can you compare a |nsCOMPtr| with a raw interface pointer [==]?" << endl;
-      if ( raw_foo2p == foo2p )
+      if ( raw_foo2p == foo2p.get() )
         cout << "raw_foo2p == foo2p" << endl;
       else
         cout << "raw_foo2p != foo2p" << endl;
+
+#if 1
+      cout << endl << "### Test 11.5: can you compare a |nsCOMPtr| with a raw interface pointer [==]?" << endl;
+      if ( nsCOMPtr<IFoo>( dont_QueryInterface(raw_foo2p) ) == foo2p )
+        cout << "raw_foo2p == foo2p" << endl;
+      else
+        cout << "raw_foo2p != foo2p" << endl;
+#endif
 
       cout << endl << "### Test 12: bare pointer test?" << endl;
       if ( foo1p )
@@ -463,7 +558,7 @@ main()
 
 			cout << "### Test 23: is |QueryInterface| called when assigning in a smart-pointer of a different type?" << endl;
 
-			nsCOMPtr<IFoo> fooP( barP );
+			nsCOMPtr<IFoo> fooP( do_QueryInterface(barP) );
 			if ( fooP )
 				cout << "an IBar* is an IFoo*" << endl;
 		}
@@ -482,21 +577,7 @@ main()
     cout << "### End Test 24" << endl;
 
 
-		{
-			cout << endl << "### setup for Test 25" << endl;
-			nsCOMPtr<IFoo> fooP( new IFoo );
-			nsCOMPtr<IBar> barP;
-			
-			cout << "### Test 25: will an assignment fail when the interface is not supported, is the error available?" << endl;
-			barP = fooP;
-			cout << "barP.assignment_error() --> " << barP.assignment_error() << endl;
-			cout << "### cleanup for Test 25" << endl;
-		}
-		cout << "### End Test 25" << endl;
-
-
-
-    cout << endl << "### Test 26: will a static |nsCOMPtr| |Release| before program termination?" << endl;
+    cout << endl << "### Test 25: will a static |nsCOMPtr| |Release| before program termination?" << endl;
     gFoop = new IFoo;
     
     cout << "<<main()" << endl;
