@@ -20,6 +20,7 @@
 #include "pratom.h"
 #include "nsUUDll.h"
 #include "nsHankakuToZenkakuCID.h"
+#include "nsTextTransformFactory.h"
 
 #include "nsIFactory.h"
 
@@ -62,6 +63,10 @@ static PRUnichar gBasicMapping[0x40] =
 #define NIGORI_MODIFIER 1
 #define MARU_MODIFIER   2
  
+// function prototype 
+void HankakuToZenkaku (
+    const PRUnichar* aSrc, PRInt32 aLen, 
+    PRUnichar* aDest, PRInt32 aDestLen, PRInt32* oLen);
 
 void HankakuToZenkaku (
     const PRUnichar* aSrc, PRInt32 aLen, 
@@ -194,7 +199,7 @@ NS_IMETHODIMP nsHankakuToZenkakuFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
-nsIFactory* NEW_HANKAKUTOZENKAKUFACTORY()
+nsIFactory* NEW_HANKAKU_TO_ZENKAKU_FACTORY()
 {
   return new nsHankakuToZenkakuFactory();
 }
