@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 *
 * The contents of this file are subject to the Netscape Public
@@ -32,6 +31,9 @@
 * file under either the NPL or the GPL.
 */
 
+
+/* JS2 Engine - */
+
 #ifdef _WIN32
  // Turn off warnings about identifiers too long in browser information
 #pragma warning(disable: 4786)
@@ -39,13 +41,72 @@
 #pragma warning(disable: 4710)
 #endif
 
-
-#include "js2metadata.h"
-
-
 namespace JavaScript {
 namespace MetaData {
 
 
-}; // namespace MetaData
-}; // namespace Javascript
+
+
+enum JS2Op {
+    ePlus,
+    eTrue,
+    eFalse,
+    eLexicalRead,       // <multiname index>
+    eLexicalWrite,
+};
+
+
+
+class JS2Engine {
+public:
+
+    JS2Engine(World &world);
+
+    void interpret(uint8 *pc);
+
+    void interpreterLoop();
+
+    void *gc_alloc_8();
+    float64 *newDoubleValue(float64 x);
+
+    void pushNumber(float64 x);
+
+#define MAX_EXEC_STACK (20)
+
+    void push(js2val x) { ASSERT(sp < (execStack + MAX_EXEC_STACK)); *sp++ = x; }
+    js2val pop()        { ASSERT(sp > execStack); return *--sp; }
+
+    String *convertValueToString(js2val x);
+    js2val convertValueToPrimitive(js2val x);
+    float64 convertValueToDouble(js2val x);
+
+    String *toString(js2val x)      { if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
+    js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
+    float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
+
+    JS2Op *pc;
+
+    float64 *nanValue;
+    float64 *float64Table[256];
+
+    StringAtom &true_StringAtom;
+    StringAtom &false_StringAtom;
+    StringAtom &null_StringAtom;
+    StringAtom &undefined_StringAtom;
+    StringAtom &public_StringAtom;
+    
+    js2val *execStack;
+    js2val *sp;
+
+
+    static int getStackEffect(JS2Op op);
+
+
+};
+
+
+
+
+
+}
+}

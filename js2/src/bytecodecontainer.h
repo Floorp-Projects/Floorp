@@ -32,20 +32,39 @@
 * file under either the NPL or the GPL.
 */
 
-#ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
-#endif
 
+#include "world.h"
+#include "utilities.h"
 
-#include "js2metadata.h"
+#include "js2value.h"
 
 
 namespace JavaScript {
 namespace MetaData {
 
 
-}; // namespace MetaData
-}; // namespace Javascript
+class BytecodeContainer {
+public:
+    BytecodeContainer() : mBuffer(new CodeBuffer), mStackTop(0), mStackMax(0) { }
+    
+
+
+    void emitOp(JS2Op op)                   { adjustStack(op); addByte((uint8)op); }
+    void adjustStack(JS2Op op)              { mStackTop += JS2Engine::getStackEffect(op); if (mStackTop > mStackMax) mStackMax = mStackTop; ASSERT(mStackTop >= 0); }
+
+    void addByte(uint8 v)                   { mBuffer->push_back(v); }
+    
+    void addMultiname(
+
+
+    typedef std::vector<uint8> CodeBuffer;
+
+    CodeBuffer *mBuffer;
+    int32 mStackTop;                // keep these as signed so as to
+    int32 mStackMax;                // track if they go negative.
+
+};
+
+
+}
+}

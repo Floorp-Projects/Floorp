@@ -32,20 +32,25 @@
 * file under either the NPL or the GPL.
 */
 
-#ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
-#endif
 
 
-#include "js2metadata.h"
+        case ePlus: {
+	    js2val a = pop();
+	    js2val b = pop();
+	    a = toPrimitive(a);
+	    b = toPrimitive(b);
+	    if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
+	        String *astr = toString(a);
+	        String *bstr = toString(b);
+                String *c = new String(*astr);
+                *c += *bstr;
+	        push(STRING_TO_JS2VAL(c));
+	    }
+	    else {
+                float64 anum = toNumber(a);
+                float64 bnum = toNumber(b);
+                pushNumber(anum + bnum);
+	    } 
+        }
+        break;
 
-
-namespace JavaScript {
-namespace MetaData {
-
-
-}; // namespace MetaData
-}; // namespace Javascript

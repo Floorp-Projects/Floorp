@@ -90,6 +90,7 @@ namespace JavaScript {
 // Parser
 //
 
+
     // The structures below are generally allocated inside an arena.  The
     // structures' destructors may never be called, so these structures should not
     // hold onto any data that needs to be destroyed explicitly.  Strings are
@@ -98,6 +99,7 @@ namespace JavaScript {
         size_t pos;                     // Position of this statement or expression
 
         explicit ParseNode(size_t pos): pos(pos) {}
+
     };
 
 

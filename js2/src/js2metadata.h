@@ -32,15 +32,17 @@
 * file under either the NPL or the GPL.
 */
 
-#include "jsapi.h"
-#include "jsstr.h"
 
 #include "world.h"
 #include "utilities.h"
+
 #include "parser.h"
 
+#include "js2value.h"
+#include "js2engine.h"
+#include "bytecodecontainer.h"
+
 #include <map>
-#include <time.h>
 
 
 namespace JavaScript {
@@ -55,7 +57,6 @@ class StaticBinding;
 class Environment;
 class Context;
 class CompoundAttribute;
-typedef jsval js2val;
 
 typedef void (Invokable)();
 typedef Invokable Callor;
@@ -117,15 +118,17 @@ typedef NamespaceList::iterator NamespaceListIterator;
 class Multiname {
 public:
     
-    Multiname(StringAtom &name) : name(name) { }
+    Multiname(const StringAtom &name) : name(name) { }
+    Multiname(const StringAtom &name, Context &cxt) : name(name) { addNamespace(cxt); }
     void addNamespace(Namespace *ns)    { nsList.push_back(ns); }
-    void addNamespace(Context *cxt);
+    void addNamespace(Context &cxt);
 
     bool matches(QualifiedName &q)      { return (name == q.id) && onList(q.nameSpace); }
     bool onList(Namespace *nameSpace);
 
     NamespaceList nsList;
-    StringAtom &name;
+    const StringAtom &name;
+
 };
 
 
@@ -167,7 +170,7 @@ public:
 
 class Variable : public StaticMember {
 public:
-    Variable() : StaticMember(StaticMember::Variable), type(NULL), value(JSVAL_VOID), immutable(false) { }
+    Variable() : StaticMember(StaticMember::Variable), type(NULL), value(JS2VAL_VOID), immutable(false) { }
 
     JS2Class *type;                 // Type of values that may be stored in this variable
     js2val value;                   // This variable's current value; future if the variable has not been declared yet;
@@ -177,7 +180,7 @@ public:
 
 class HoistedVar : public StaticMember {
 public:
-    HoistedVar() : StaticMember(StaticMember::HoistedVariable), value(JSVAL_VOID), hasFunctionInitializer(false) { }
+    HoistedVar() : StaticMember(StaticMember::HoistedVariable), value(JS2VAL_VOID), hasFunctionInitializer(false) { }
     js2val value;                   // This variable's current value
     bool hasFunctionInitializer;    // true if this variable was created by a function statement
 };
@@ -356,7 +359,16 @@ public:
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
 };
 
-class LexicalReference : public JS2Object {
+// Base class for all references (lvalues)
+class Reference {
+public:
+    virtual void emitReadBytecode(BytecodeContainer *bCon)              { ASSERT(false); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon)             { ASSERT(false); }
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon)            { ASSERT(false); };
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon)     { ASSERT(false); }
+};
+
+class LexicalReference : public Reference {
 // A LEXICALREFERENCE tuple has the fields below and represents an lvalue that refers to a variable with one
 // of a given set of qualified names. LEXICALREFERENCE tuples arise from evaluating identifiers a and qualified identifiers
 // q::a.
@@ -367,14 +379,18 @@ public:
     Environment *env;               // The environment in which the reference was created.
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
     
+
+    
+    virtual void emitReadBytecode(BytecodeContainer *bCon)              { bCon->emitOp(eLexicalRead); bCon->addMultiname(variableMultiname); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon)             { bCon->emitOp(eLexicalWrite); bCon->addMultiname(variableMultiname); }
 };
 
-class DotReference : public JS2Object {
+class DotReference : public Reference {
 // A DOTREFERENCE tuple has the fields below and represents an lvalue that refers to a property of the base
 // object with one of a given set of qualified names. DOTREFERENCE tuples arise from evaluating subexpressions such as a.b or
 // a.q::b.
 public:
-    jsval base;                     // The object whose property was referenced (a in the examples above). The
+    js2val base;                     // The object whose property was referenced (a in the examples above). The
                                     // object may be a LIMITEDINSTANCE if a is a super expression, in which case
                                     // the property lookup will be restricted to members defined in proper ancestors
                                     // of base.limit.
@@ -398,12 +414,12 @@ public:
 };
 
 
-class BracketReference : public JS2Object {
+class BracketReference : public Reference {
 // A BRACKETREFERENCE tuple has the fields below and represents an lvalue that refers to the result of
 // applying the [] operator to the base object with the given arguments. BRACKETREFERENCE tuples arise from evaluating
 // subexpressions such as a[x] or a[x,y].
 public:
-    jsval base;                     // The object whose property was referenced (a in the examples above). The object may be a
+    js2val base;                     // The object whose property was referenced (a in the examples above). The object may be a
                                     // LIMITEDINSTANCE if a is a super expression, in which case the property lookup will be
                                     // restricted to definitions of the [] operator defined in proper ancestors of base.limit.
     ArgumentList args;              // The list of arguments between the brackets (x or x,y in the examples above)
@@ -422,7 +438,7 @@ public:
     FunctionFrame() : Frame(Function) { }
 
     Plurality plurality;
-    jsval thisObject;               // The value of this; none if this function doesn't define this;
+    js2val thisObject;               // The value of this; none if this function doesn't define this;
                                     // inaccessible if this function defines this but the value is not 
                                     // available because this function hasn't been called yet.
 
@@ -441,9 +457,9 @@ public:
 
 class LookupKind {
 public:
-    LookupKind(bool isLexical, jsval thisObject) : isLexical(isLexical), thisObject(thisObject) { }
+    LookupKind(bool isLexical, js2val thisObject) : isLexical(isLexical), thisObject(thisObject) { }
     bool isLexical;         // if isLexical, use the 'this' below. Otherwise it's a propertyLookup
-    jsval thisObject;
+    js2val thisObject;
 };
 
 // Environments contain the bindings that are visible from a given point in the source code. An ENVIRONMENT is 
@@ -459,9 +475,9 @@ public:
     Frame *getTopFrame()                { return firstFrame; }
     Frame *getPackageOrGlobalFrame();
 
-    jsval findThis(bool allowPrototypeThis);
-    jsval lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
-    void lexicalWrite(JS2Metadata *meta, Multiname *multiname, jsval newValue, bool createIfMissing, Phase phase);
+    js2val findThis(bool allowPrototypeThis);
+    js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
+    void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
 
 
 private:
@@ -521,7 +537,7 @@ public:
     void setCurrentParser(Parser *parser) { mParser = parser; }
 
     void ValidateStmtList(StmtNode *p);
-    jsval EvalStmtList(Phase phase, StmtNode *p);
+    js2val EvalStmtList(Phase phase, StmtNode *p);
 
 
     void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
@@ -531,39 +547,39 @@ public:
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 
-    jsval EvalStmtList(Environment *env, Phase phase, StmtNode *p);
-    jsval EvalExpression(Environment *env, Phase phase, ExprNode *p);
-    bool EvalExprNode(Environment *env, Phase phase, ExprNode *p, String &s);
+    js2val EvalStmtList(Environment *env, Phase phase, StmtNode *p);
+    js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);
+    Reference *EvalExprNode(Environment *env, Phase phase, ExprNode *p);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
-    jsval EvalStmt(Environment *env, Phase phase, StmtNode *p);
+    js2val EvalStmt(Environment *env, Phase phase, StmtNode *p);
 
 
-    JS2Class *objectType(jsval obj);
+    JS2Class *objectType(js2val obj);
 
     StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
 
 
-    bool readProperty(jsval container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
-    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
-    bool readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
-    bool readStaticMember(StaticMember *m, Phase phase, jsval *rval);
+    bool readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+    bool readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+    bool readStaticMember(StaticMember *m, Phase phase, js2val *rval);
 
 
-    bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, jsval newValue, Phase phase);
-    bool writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, jsval newValue, Phase phase);
-    bool writeStaticMember(StaticMember *m, jsval newValue, Phase phase);
+    bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
+    bool writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
+    bool writeStaticMember(StaticMember *m, js2val newValue, Phase phase);
 
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String& name);
 
 
-    void initializeMonkey();
-    jsval execute(String *str, size_t pos);
-
     // Used for interning strings
     World &world;
 
+    // The execution engine
+    JS2Engine *engine;
+    
     // The one and only 'public' namespace
     Namespace *publicNamespace;
 
@@ -576,19 +592,15 @@ public:
     JS2Class *stringClass;
     JS2Class *objectClass;
 
-    
     Parser *mParser;                // used for error reporting
     size_t errorPos;
 
+    BytecodeContainer *bCon;
 
     GlobalObject glob;
     Environment env;
     Context cxt;
 
-    // SpiderMonkey execution data:
-    JSRuntime *monkeyRuntime;
-    JSContext *monkeyContext;
-    JSObject *monkeyGlobalObject;
 
 };
 

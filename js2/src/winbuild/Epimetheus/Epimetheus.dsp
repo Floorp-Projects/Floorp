@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\..\..\js\src" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\..\..\js\src" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /D "IS_LITTLE_ENDIAN" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -66,7 +66,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\..\js\src" /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /D "IS_LITTLE_ENDIAN" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -100,6 +100,10 @@ SOURCE=..\..\formatter.cpp
 # Begin Source File
 
 SOURCE=..\..\hash.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\js2engine.cpp
 # End Source File
 # Begin Source File
 
@@ -151,6 +155,10 @@ SOURCE=..\..\world.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\..\bytecodecontainer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\exception.h
 # End Source File
 # Begin Source File
@@ -160,6 +168,10 @@ SOURCE=..\..\formatter.h
 # Begin Source File
 
 SOURCE=..\..\hash.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\js2engine.h
 # End Source File
 # Begin Source File
 

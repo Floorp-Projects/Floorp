@@ -44,8 +44,6 @@
 
 
 #include "js2metadata.h"
-#include "numerics.h"
-
 
 
 namespace JavaScript {
@@ -151,8 +149,8 @@ namespace MetaData {
     /*
      * Evaluate the linked list of statement nodes beginning at 'p'
      */
-    jsval JS2Metadata::EvalStmtList(Phase phase, StmtNode *p) {
-        jsval retval = JSVAL_VOID;
+    js2val JS2Metadata::EvalStmtList(Phase phase, StmtNode *p) {
+        js2val retval = JS2VAL_VOID;
         while (p) {
             retval = EvalStmt(&env, phase, p);
             p = p->next;
@@ -163,9 +161,9 @@ namespace MetaData {
     /*
      * Evaluate an individual statement 'p', including it's children
      */
-    jsval JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
+    js2val JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
     {
-        jsval retval = JSVAL_VOID;
+        js2val retval = JS2VAL_VOID;
         switch (p->getKind()) {
         case StmtNode::block:
         case StmtNode::group:
@@ -196,8 +194,8 @@ namespace MetaData {
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                 retval = EvalExpression(env, phase, e->expr);
-                if (JSVAL_IS_OBJECT(retval)) {
-                    JSObject *obj = JSVAL_TO_OBJECT(retval);
+                if (JS2VAL_IS_OBJECT(retval)) {
+                    JS2Object *obj = JS2VAL_TO_OBJECT(retval);
                 }
 
             }
@@ -324,10 +322,10 @@ namespace MetaData {
             {
                 // anything else (just references of one kind or another) must
                 // be compile-time constant values that resolve to namespaces
-                jsval av = EvalExpression(env, CompilePhase, p);
-                if (JSVAL_IS_NULL(av) || JSVAL_IS_VOID(av) || !JSVAL_IS_OBJECT(av))
+                js2val av = EvalExpression(env, CompilePhase, p);
+                if (JS2VAL_IS_NULL(av) || JS2VAL_IS_VOID(av) || !JS2VAL_IS_OBJECT(av))
                     reportError(Exception::badValueError, "Namespace expected in attribute", p->pos);
-                JSObject *obj = JSVAL_TO_OBJECT(av);
+                JS2Object *obj = JS2VAL_TO_OBJECT(av);
 
             }
             break;
@@ -471,30 +469,21 @@ namespace MetaData {
      * result is the value of this expression.
      *
      */
-    jsval JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
+    js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
-        String s;
-        if (EvalExprNode(env, phase, p, s))
-            s += ".readReference()";
+        Reference *rVal = EvalExprNode(env, phase, p);
         try {
-            return execute(&s, p->pos);
         }
         catch (const char *err) {
             reportError(Exception::internalError, err, p->pos);
-            return JSVAL_VOID;
+            return JS2VAL_VOID;
         }
     }
 
-    const String numberToString(float64 &number)
+    Reference *JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p)
     {
-        char buf[dtosStandardBufferSize];
-        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, number, dtosStandard, 0);
-        return JavaScript::String(widenCString(chrp));
-    }
+        Reference *returnRef = NULL;
 
-    bool JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p, String &s)
-    {
-        bool returningRef = false;
         switch (p->getKind()) {
         case ExprNode::index:
             {
@@ -505,26 +494,24 @@ namespace MetaData {
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                if (EvalExprNode(env, phase, b->op1, s)) {
-                    String r;
-                    s += ".writeReference(";
-                    if (EvalExprNode(env, phase, b->op2, r))
-                        s += r + ".readReference())";
-                    else
-                        s += r + ")";
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                if (lVal) {
+                    Reference *rVal = EvalExprNode(env, phase, b->op2);
+                    if (rVal) rVal->emitReadBytecode(bCon);
+                    lVal->emitWriteBytecode(bCon);
                 }
                 else
-                    ASSERT(false);    // not an lvalue, shouldn't this have been checked by validate?
+                    reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
             }
             break;
         case ExprNode::add:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                if (EvalExprNode(env, phase, b->op1, s))
-                    s += ".readReference()";
-                s += " + ";
-                if (EvalExprNode(env, phase, b->op2, s))
-                    s += ".readReference()";
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                if (lVal) lVal->emitReadBytecode(bCon);
+                if (rVal) rVal->emitReadBytecode(bCon);
+                bCon->emitOp(ePlus);
             }
             break;
 
@@ -532,40 +519,33 @@ namespace MetaData {
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                if (!EvalExprNode(env, phase, u->op, s))
+                Reference *lVal = EvalExprNode(env, phase, u->op);
                     ASSERT(false);  // not an lvalue
-                // rather than inserting "(r = , a = readRef(), r.writeRef(a + 1), a)" with
-                // all the attendant performance overhead and temp. handling issues.
-                s += ".postIncrement()";
-                returningRef = true;
             }
             break;
 
         case ExprNode::number:
             {
-                s += numberToString(checked_cast<NumberExprNode *>(p)->value);
             }
             break;
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
-                s += "new LexicalReference(\"" + i->name + "\")";
-                returningRef = true;
+                returnRef = new LexicalReference(new Multiname(i->name, cxt), env, cxt.strict);
             }
             break;
         case ExprNode::boolean:
             if (checked_cast<BooleanExprNode *>(p)->value) 
-                s += "true";
+                bCon->emitOp(eTrue);
             else 
-                s += "false";
+                bCon->emitOp(eFalse);
             break;
         case ExprNode::objectLiteral:
-            s += "new JS2Object()";
             break;
         default:
             NOT_REACHED("Not Yet Implemented");
         }
-        return returningRef;
+        return returnRef;
     }
 
     void JS2Metadata::ValidateTypeExpression(ExprNode *e)
@@ -615,27 +595,27 @@ namespace MetaData {
     // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
     // by either an instance member of a class or a prototype function. If allowPrototypeThis is 
     // false, allow this to be defined only by an instance member of a class.
-    jsval Environment::findThis(bool allowPrototypeThis)
+    js2val Environment::findThis(bool allowPrototypeThis)
     {
         Frame *pf = firstFrame;
         while (pf) {
             if ((pf->kind == Frame::Function)
-                    && !JSVAL_IS_NULL(checked_cast<FunctionFrame *>(pf)->thisObject))
+                    && !JS2VAL_IS_NULL(checked_cast<FunctionFrame *>(pf)->thisObject))
                 if (allowPrototypeThis || !checked_cast<FunctionFrame *>(pf)->prototype)
                     return checked_cast<FunctionFrame *>(pf)->thisObject;
             pf = pf->nextFrame;
         }
-        return JSVAL_VOID;
+        return JS2VAL_VOID;
     }
 
     // Read the value of a lexical reference - it's an error if that reference
     // doesn't have a binding somewhere
-    jsval Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase)
+    js2val Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
         Frame *pf = firstFrame;
         while (pf) {
-            jsval rval;
+            js2val rval;
             // have to wrap the frame in a Monkey object in order
             // to have readProperty handle it...
             if (meta->readProperty(pf, multiname, &lookup, phase, &rval))
@@ -644,10 +624,10 @@ namespace MetaData {
             pf = pf->nextFrame;
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->errorPos, multiname->name);
-        return JSVAL_VOID;
+        return JS2VAL_VOID;
     }
 
-    void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, jsval newValue, bool createIfMissing, Phase phase)
+    void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
         Frame *pf = firstFrame;
@@ -695,12 +675,13 @@ namespace MetaData {
         return false;
     }
 
-    void Multiname::addNamespace(Context *cxt)
+    void Multiname::addNamespace(Context &cxt)
     {
-        for (NamespaceListIterator nli = cxt->openNamespaces.begin(), end = cxt->openNamespaces.end();
+        for (NamespaceListIterator nli = cxt.openNamespaces.begin(), end = cxt.openNamespaces.end();
                 (nli != end); nli++)
             nsList.push_back(*nli);
     }
+
 
 /************************************************************************************
  *
@@ -761,31 +742,32 @@ namespace MetaData {
 
     JS2Metadata::JS2Metadata(World &world) :
         world(world),
-        publicNamespace(new Namespace(world.identifiers["public"])),
+        engine(new JS2Engine(world)),
+        publicNamespace(new Namespace(engine->public_StringAtom)),
+        bCon(new BytecodeContainer()),
         glob(world),
         env(new MetaData::SystemFrame(), &glob)
     {
-        initializeMonkey();
     }
 
     // objectType(o) returns an OBJECT o's most specific type.
-    JS2Class *JS2Metadata::objectType(jsval obj)
+    JS2Class *JS2Metadata::objectType(js2val obj)
     {
-        if (JSVAL_IS_VOID(obj))
+        if (JS2VAL_IS_VOID(obj))
             return undefinedClass;
-        if (JSVAL_IS_NULL(obj))
+        if (JS2VAL_IS_NULL(obj))
             return nullClass;
-        if (JSVAL_IS_BOOLEAN(obj))
+        if (JS2VAL_IS_BOOLEAN(obj))
             return booleanClass;
-        if (JSVAL_IS_NUMBER(obj))
+        if (JS2VAL_IS_NUMBER(obj))
             return numberClass;
-        if (JSVAL_IS_STRING(obj)) {
-            if (JS_GetStringLength(JSVAL_TO_STRING(obj)) == 1)
+        if (JS2VAL_IS_STRING(obj)) {
+            if (JS2VAL_TO_STRING(obj)->length() == 1)
                 return characterClass;
             else 
                 return stringClass;
         }
-        ASSERT(JSVAL_IS_OBJECT(obj));
+        ASSERT(JS2VAL_IS_OBJECT(obj));
         return NULL;
 /*
             NAMESPACE do return namespaceClass;
@@ -798,17 +780,17 @@ namespace MetaData {
 */
     }
 
-    bool JS2Metadata::readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval)
+    bool JS2Metadata::readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         return true;
     }
 
-    bool JS2Metadata::writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, jsval newValue, Phase phase)
+    bool JS2Metadata::writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
     {
         return true;
     }
 
-    bool JS2Metadata::readStaticMember(StaticMember *m, Phase phase, jsval *rval)
+    bool JS2Metadata::readStaticMember(StaticMember *m, Phase phase, js2val *rval)
     {
         if (m == NULL)
             return false;   // 'None'
@@ -830,7 +812,7 @@ namespace MetaData {
         return false;
     }
 
-    bool JS2Metadata::writeStaticMember(StaticMember *m, jsval newValue, Phase phase)
+    bool JS2Metadata::writeStaticMember(StaticMember *m, js2val newValue, Phase phase)
     {
         if (m == NULL)
             return false;   // 'None'
@@ -853,14 +835,14 @@ namespace MetaData {
 
     // Read the value of a property in the container. Return true/false if that container has
     // the property or not. If it does, return it's value
-    bool JS2Metadata::readProperty(jsval container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval)
+    bool JS2Metadata::readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         return true;
     }
 
     // Read the value of a property in the frame. Return true/false if that frame has
     // the property or not. If it does, return it's value
-    bool JS2Metadata::readProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval)
+    bool JS2Metadata::readProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         StaticMember *m = findFlatMember(container, multiname, ReadAccess, phase);
         if (!m && (container->kind == Frame::GlobalObject))
@@ -871,7 +853,7 @@ namespace MetaData {
 
     // Write the value of a property in the frame. Return true/false if that frame has
     // the property or not.
-    bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, jsval newValue, Phase phase)
+    bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase)
     {
         StaticMember *m = findFlatMember(container, multiname, WriteAccess, phase);
         if (!m && (container->kind == Frame::GlobalObject))
