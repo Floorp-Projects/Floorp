@@ -903,8 +903,8 @@ PRInt32 nsCString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOff
  *  @param   aCount tell us how many chars to search from offset; -1 means use full length.
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsCString::FindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::FindChar1(*this,aChar,aIgnoreCase,anOffset,aCount);
+PRInt32 nsCString::FindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::FindChar1(*this,aChar,anOffset,aCount);
   return result;
 }
 
@@ -1028,8 +1028,8 @@ PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset
  *  @param   aCount tell us how many chars to search from offset; -1 means use full length.
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsCString::RFindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindChar1(*this,aChar,aIgnoreCase,anOffset,aCount);
+PRInt32 nsCString::RFindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::RFindChar1(*this,aChar,anOffset,aCount);
   return result;
 }
 

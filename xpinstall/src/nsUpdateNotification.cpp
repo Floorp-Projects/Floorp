@@ -347,7 +347,7 @@ nsXPINotifierImpl::StringToVersionNumbers(const nsString& version, int32 *aMajor
 {
     PRInt32 errorCode;
 
-    int dot = version.FindChar('.', PR_FALSE,0);
+    int dot = version.FindChar('.', 0);
     
     if ( dot == -1 ) 
     {
@@ -360,7 +360,7 @@ nsXPINotifierImpl::StringToVersionNumbers(const nsString& version, int32 *aMajor
         *aMajor  = majorStr.ToInteger(&errorCode);
 
         int prev = dot+1;
-        dot = version.FindChar('.',PR_FALSE,prev);
+        dot = version.FindChar('.',prev);
         if ( dot == -1 ) 
         {
             nsString minorStr;
@@ -374,7 +374,7 @@ nsXPINotifierImpl::StringToVersionNumbers(const nsString& version, int32 *aMajor
             *aMinor = minorStr.ToInteger(&errorCode);
 
             prev = dot+1;
-            dot = version.FindChar('.',PR_FALSE,prev);
+            dot = version.FindChar('.',prev);
             if ( dot == -1 ) 
             {
                 nsString releaseStr;

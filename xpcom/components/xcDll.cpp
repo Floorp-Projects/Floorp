@@ -511,7 +511,7 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
         PRInt32 start = 0;
         do
         {
-            ofset = envList.FindChar(':', PR_TRUE, start);
+            ofset = envList.FindChar(':', start);
             sBreakList[sBreakListCount] = new nsCString();
             envList.Mid(*(sBreakList[sBreakListCount]), start, ofset);
             sBreakListCount++;

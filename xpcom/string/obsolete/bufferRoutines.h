@@ -358,7 +358,7 @@ void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
   PRBool illegal= PR_FALSE;
 #endif
   //now loop over characters, shifting them left...
-  while(first<last) {
+  while(first < last) {
     *to=(PRUnichar)(*first);  
 #ifdef DEBUG_ILLEGAL_CAST_UP
     if(track_illegal && track_latin1 && ((*to)& 0x80))
@@ -394,8 +394,8 @@ void CopyChars2To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
   PRBool illegal= PR_FALSE;
 #endif
   //now loop over characters, shifting them left...
-  while(first<last) {
-    if(*first<256)
+  while(first < last) {
+    if(*first < 256)
       *to=(char)*first;  
     else { 
       *to='.';
@@ -471,13 +471,13 @@ CopyChars gCopyChars[2][2]={
  */
 inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
 
-  if(anOffset<0)
+  if(anOffset < 0)
     anOffset=0;
 
-  if(aCount<0)
+  if(aCount < 0)
     aCount = (PRInt32)aDestLength;
 
-  if((aChar<256) && (0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+  if((aChar < 256) && (0 < aDestLength) && ((PRUint32)anOffset < aDestLength)) {
 
     //We'll only search if the given aChar is within the normal ascii a range,
     //(Since this string is definitely within the ascii range).
@@ -492,9 +492,12 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
       if(aIgnoreCase) {
         // safe because aChar < 256
         char theChar=nsCRT::ToUpper(char(aChar));
+        
         while(left<end){
+          
           if(nsCRT::ToUpper(*left)==theChar)
             return left-aDest;
+          
           ++left;
         }
       }
@@ -502,11 +505,13 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
 
         PRInt32 theMax = end-left;
         if(0<theMax) {
+          
           unsigned char theChar = (unsigned char) aChar;
           const char* result=(const char*)memchr(left, (int)theChar, theMax);
-          if(result) {
+          
+          if(result)
             return result-aDest;
-          }
+          
         }
       }
     }
@@ -530,13 +535,13 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
  */
 inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
-  if(anOffset<0)
+  if(anOffset < 0)
     anOffset=0;
 
-  if(aCount<0)
+  if(aCount < 0)
     aCount = (PRInt32)aDestLength;
 
-  if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+  if((0<aDestLength) && ((PRUint32)anOffset < aDestLength)) {
  
     if(0<aCount) {
 
@@ -547,8 +552,10 @@ inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anO
       const PRUnichar* end  = (last<max) ? last : max;
 
       while(left<end){
+        
         if(*left==aChar)
           return (left-root);
+        
         ++left;
       }
     }
@@ -571,42 +578,32 @@ inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anO
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 
-inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
+inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
-  if(anOffset<0)
+  if(anOffset < 0)
     anOffset=(PRInt32)aDestLength-1;
 
-  if(aCount<0)
+  if(aCount < 0)
     aCount = PRInt32(aDestLength);
 
-  if((aChar<256) && (0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+  if((aChar<256) && (0 < aDestLength) && ((PRUint32)anOffset < aDestLength)) {
 
     //We'll only search if the given aChar is within the normal ascii a range,
     //(Since this string is definitely within the ascii range).
  
-    if(0<aCount) {
+    if(0 < aCount) {
 
-      const char* rightmost = aDest+anOffset;  
-      const char* min       = rightmost-aCount+1;
+      const char* rightmost = aDest + anOffset;  
+      const char* min       = rightmost - aCount + 1;
       const char* leftmost  = (min<aDest) ? aDest: min;
 
-      if(aIgnoreCase) {
-        // safe because aChar < 256
-        char theChar=nsCRT::ToUpper(char(aChar));
-        while(leftmost<rightmost){
-          if(nsCRT::ToUpper(*rightmost)==theChar)
-            return rightmost-aDest;
-          --rightmost;
-        }
-      }
-      else {
-
-        char theChar=(char)aChar;
-        while(leftmost<=rightmost){
-          if((*rightmost)==theChar)
-            return rightmost-aDest;
-          --rightmost;
-        }
+      char theChar=(char)aChar;
+      while(leftmost <= rightmost){
+        
+        if((*rightmost) == theChar)
+          return rightmost - aDest;
+        
+        --rightmost;
       }
     }
   }
@@ -629,24 +626,26 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
  */
 inline PRInt32 RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
-  if(anOffset<0)
+  if(anOffset < 0)
     anOffset=(PRInt32)aDestLength-1;
 
-  if(aCount<0)
+  if(aCount < 0)
     aCount = PRInt32(aDestLength);
 
-  if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+  if((0 < aDestLength) && ((PRUint32)anOffset < aDestLength)) {
  
-    if(0<aCount) {
+    if(0 < aCount) {
 
       const PRUnichar* root      = aDest;
-      const PRUnichar* rightmost = root+anOffset;  
-      const PRUnichar* min       = rightmost-aCount+1;
+      const PRUnichar* rightmost = root + anOffset;  
+      const PRUnichar* min       = rightmost - aCount + 1;
       const PRUnichar* leftmost  = (min<root) ? root: min;
       
-      while(leftmost<=rightmost){
-        if((*rightmost)==aChar)
-          return rightmost-root;
+      while(leftmost <= rightmost){
+        
+        if((*rightmost) == aChar)
+          return rightmost - root;
+        
         --rightmost;
       }
     }

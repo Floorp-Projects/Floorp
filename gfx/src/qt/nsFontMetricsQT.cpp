@@ -591,7 +591,7 @@ static void ParseFontPref(nsCAutoString &aPrefValue,QString &aFontName,
  
     /* Try both foundry-name and name */
     start = aPrefValue.FindChar('-');
-    end = aPrefValue.FindChar('-',PR_FALSE,start + 1);
+    end = aPrefValue.FindChar('-',start + 1);
     aPrefValue.Left(fontFoundryName,end);
     aPrefValue.Right(fontCharSetName,len - end - 1);
     aPrefValue.Mid(fontName,start + 1,end - start - 1);
