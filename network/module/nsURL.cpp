@@ -471,12 +471,13 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
     }
     else {
       if (fgets(resourceBase, MAXPATHLEN, pp)) {
-        resourceBase[strlen(resourceBase)-1] = 0;
+        printf("[%s] %d\n", resourceBase, PL_strlen(resourceBase));
+        resourceBase[PL_strlen(resourceBase)-1] = 0;
       }
-      else
+      else {
        printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 2\n");
-
-     return(nsnull);
+       return(nsnull);
+      }
    }
 
    printf("RESOURCE name %s\n", resourceBase);
