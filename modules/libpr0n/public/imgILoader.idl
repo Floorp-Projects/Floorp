@@ -34,11 +34,13 @@ interface nsIURI;
 
 interface nsISimpleEnumerator;
 
+#include "nsIRequest.idl" // for nsLoadFlags
+
 /**
  * imgILoader interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 0.1
+ * @version 0.2
  * @see imagelib2
  */
 [scriptable, uuid(4c8cf1e0-1dd2-11b2-aff9-c51cdbfcb6da)]
@@ -46,11 +48,13 @@ interface imgILoader : nsISupports
 {
   /**
    * Start the load and decode of an image.
-   * @param uri the URI to load
+   * @param aURI the URI to load
+   * @param aLoadGroup Loadgroup to put the image load into
    * @param aObserver the observer
-   * @param cx some random data
+   * @param aCX some random data
+   * @param aLoadFlags Load flags for the request
    */
-  imgIRequest loadImage(in nsIURI uri, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports cx);
+  imgIRequest loadImage(in nsIURI aURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags);
 
   /**
    * Start the load and decode of an image.

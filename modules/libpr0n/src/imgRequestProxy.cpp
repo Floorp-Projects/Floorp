@@ -47,6 +47,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(imgRequestProxy, imgIRequest, nsIRequest,
                               nsIRequestObserver)
 
 imgRequestProxy::imgRequestProxy() :
+  mLoadFlags(nsIRequest::LOAD_NORMAL),
   mCanceled(PR_FALSE),
   mLock(nsnull)
 {
@@ -200,12 +201,13 @@ NS_IMETHODIMP imgRequestProxy::SetLoadGroup(nsILoadGroup *loadGroup)
 /* attribute nsLoadFlags loadFlags */
 NS_IMETHODIMP imgRequestProxy::GetLoadFlags(nsLoadFlags *flags)
 {
-  *flags = nsIRequest::LOAD_NORMAL;
+  *flags = mLoadFlags;
   return NS_OK;
 }
 NS_IMETHODIMP imgRequestProxy::SetLoadFlags(nsLoadFlags flags)
 {
-    return NS_OK;
+  mLoadFlags = flags;
+  return NS_OK;
 }
 
 /**  imgIRequest methods **/
