@@ -22,15 +22,19 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=smtp
-LIBRARY_NAME=smtp
+MODULE = mailnews
+LIBRARY_NAME=compose
+
 
 EXPORTS = \
-	nsSmtpUrl.h		\
+	nsSmtpUrl.h	\
 	$(NULL)
 
 CPPSRCS = \
-	nsSmtpUrl.cpp		\
+	MsgCompGlue.cpp \
+	nsMsgCompose.cpp \
+	nsMsgCompFields.cpp \
+	nsSmtpUrl.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -20,22 +20,27 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-
-LIBRARY_NAME=smtp
+LIBRARY_NAME=compose
 MODULE= mailnews
 REQUIRES=xpcom js nspr netlib mailnews
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=    nsSmtpUrl.cpp				\
-			$(NULL)
+CPPSRCS=    nsMsgCompFields.cpp \
+            nsMsgCompose.cpp    \
+            nsSmtpUrl.cpp		\
+            MsgCompGlue.cpp     \
+            $(NULL)
 
-CPP_OBJS=   .\$(OBJDIR)\nsSmtpUrl.obj	\
-			$(NULL)
+CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
+            .\$(OBJDIR)\nsMsgCompose.obj    \
+            .\$(OBJDIR)\nsSmtpUrl.obj		\
+            .\$(OBJDIR)\MsgCompGlue.obj     \
+            $(NULL)
 
 
-EXPORTS=	nsSmtpUrl.h					\
-			nsSmtpProtocol.h			\
+EXPORTS=    nsSmtpUrl.h                 \
+            nsSmtpProtocol.h            \
             $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
@@ -48,7 +53,7 @@ LCFLAGS = \
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+    rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
