@@ -205,14 +205,10 @@ JSMATH_PRELINK	= jsmathtemp.o
 # against fdlibm to pull in only what is needed
 jsmath.o: $(FDLIBM_LIBRARY) $(JSMATH_PRELINK)
 	@$(MAKE_OBJDIR)
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
+ifeq ($(OS_ARCH),IRIX)
+	$(LD) -n32 -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
 else
-ifeq ($(OS_ARCH), IRIX)
-	ld -n32 -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
-else
-	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
-endif
+	$(LD) -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
 endif
 
 $(JSMATH_PRELINK): jsmath.c
@@ -227,12 +223,12 @@ ALL_TRASH += $(JSMATH_PRELINK)
 
 # ripped from $(topsrcdir)/config/rules.mk
 $(FDLIBM_LIBRARY):
-			set -e;					\
-			set $(EXIT_ON_ERROR);			\
-			echo "cd $(@D); $(MAKE) $(@F)";		\
-			oldDir=`pwd`;				\
-			cd $(@D); $(MAKE) $(@F); cd $$oldDir;	\
-			set +e;
+	set -e;					\
+	set $(EXIT_ON_ERROR);			\
+	echo "cd $(@D); $(MAKE) $(@F)";		\
+	oldDir=`pwd`;				\
+	cd $(@D); $(MAKE) $(@F); cd $$oldDir;	\
+	set +e;
 
 js:
 	$(MAKE) $(OBJDIR)/js$(BIN_SUFFIX)
@@ -241,13 +237,13 @@ js:
 
 ifneq ($(OS_ARCH),OS2)
 $(OBJDIR)/js$(BIN_SUFFIX): $(OBJDIR)/js.o $(LIBRARY)
-	    @$(MAKE_OBJDIR)
-	    $(CC) -o $@ $(OBJDIR)/js.o $(LIBRARY) $(LDFLAGS)
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ $(OBJDIR)/js.o $(LIBRARY) $(LDFLAGS)
 else
 OS_CFLAGS += -tm-
 $(OBJDIR)/js$(BIN_SUFFIX): $(OBJDIR)/js.o $(LIBRARY)
-	    @$(MAKE_OBJDIR)
-	    $(LINK_EXE) -OUT:$@ $(OBJDIR)/js.o  $(LIBRARIES) $(EXTRA_LIBS)
+	@$(MAKE_OBJDIR)
+	$(LINK_EXE) -OUT:$@ $(OBJDIR)/js.o  $(LIBRARIES) $(EXTRA_LIBS)
 endif
 
 # hardwire dependencies on jsopcode.tbl
