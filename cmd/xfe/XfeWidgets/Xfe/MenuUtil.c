@@ -763,7 +763,7 @@ XfeDestroyMenuWidgetTree(WidgetList	children,
 {
     int i;
 
-    if (num_children <= 0)
+    if ((num_children <= 0) || (children == NULL))
 	{
 		return;
 	}
