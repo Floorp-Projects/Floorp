@@ -58,25 +58,7 @@ public class PrintingPort implements GraphicsHost {
 			mPipeline = null;
 		}
 	}
-	
-	/**
-	 * Creates a graphics object that wraps the specified printing port.
-	 * Assumes that the underlying port's coordinate system is already
-	 * set up to have (0, 0) as the upper left corner.
-	 */
-	public Graphics getGraphics(Component component) {
-		mClipping = component.getBounds();
-		mClipping.x = mOriginX; mClipping.y = mOriginY;
-		QDGraphics graphics = new QDPrintGraphics();
-		graphics.initialize(mPrintingPort, this, mPortManager,
-							mOriginX, mOriginY, mClipping, component.getForeground(),
-							component.getFont());
-		return graphics;
-	}
 
-	/** methods to satisfy GraphicsHost interface. */
-	public void graphicsCreated(QDGraphics g) throws OutOfMemoryError {}
-	
 	private static final short MAXSHORT = 32767, MINSHORT = -32768;
 	
 	static short pinToShort(int value) {
@@ -86,18 +68,45 @@ public class PrintingPort implements GraphicsHost {
 			return MINSHORT;
 		return (short) value;
 	}
-	
-	public void graphicsDisposed(QDGraphics g) {
-		synchronized (VToolkit.LOCK) {
-			// restore the origin so that printing comes out in correct location.
-			// this fixes a bug in QDGraphics, which uses SetOrigin so native components
-			// come out in the right location, but causes the commands in the pipeline
-			// to come out in the wrong location.
+
+	final class PrintingGraphics extends QDGraphics {
+		/** Creates a new PrintingGraphics. You must call <code>initialize</code> on it next. */
+		public PrintingGraphics() {
+			super();
+		}
+
+	    public synchronized Graphics create() {
+			if( !internalMarkHostInUse ( ) )
+				throw new AWTError("Using invalid Graphics object");
+			try {
+	    		return (new PrintingGraphics()).initialize(this,fXoff,fYoff,fClip);
+	    	} finally {
+				internalDoneUsingHost ( );
+			}
+	    }
+
+	    public synchronized Graphics create(int x, int y, int width, int height) {
+			if( !internalMarkHostInUse() )
+				throw new AWTError("Using invalid Graphics object");
+			try {
+				VToolkit.intersect(sRectangle, fClip, fXoff+x,fYoff+y,width,height);
+				return (new PrintingGraphics()).initialize(this,fXoff+x,fYoff+y,sRectangle);
+	    	} finally {
+				internalDoneUsingHost ( );
+			}
+		}
+
+		/**
+		 * Override QDGraphics.restore(), to reset origin and clipping during drawing.
+		 */
+		void restore() {
+			super.restore();
+			
 	 		int port = VAWTDirect.FastGetThePort();
 			if (port != mPrintingPort)
 				QuickdrawFunctions.SetPort(mPrintingPort);
 			
-			// restore original orgin.
+			// restore default orgin.
 			QuickdrawFunctions.SetOrigin((short)0, (short)0);
 			
 			// set up correct clipping.
@@ -111,8 +120,26 @@ public class PrintingPort implements GraphicsHost {
 		}
 	}
 	
+	/**
+	 * Creates a graphics object that wraps the specified printing port.
+	 * Assumes that the underlying port's coordinate system is already
+	 * set up to have (0, 0) as the upper left corner.
+	 */
+	public Graphics getGraphics(Component component) {
+		mClipping = component.getBounds();
+		mClipping.x = mOriginX; mClipping.y = mOriginY;
+		QDGraphics graphics = new PrintingGraphics();
+		graphics.initialize(mPrintingPort, this, mPortManager,
+							mOriginX, mOriginY, mClipping, component.getForeground(),
+							component.getFont());
+		return graphics;
+	}
+
+	/** methods to satisfy GraphicsHost interface. */
+	public void graphicsCreated(QDGraphics g) throws OutOfMemoryError {}
+	public void graphicsDisposed(QDGraphics g) {}
 	public RGBColorValue getBackgroundRGB() { return new RGBColorValue(Color.white); }
-	public void repaint(com.apple.mrj.macos.generated.RectStruct r) {}
+	public void repaint(RectStruct r) {}
 	public boolean markInUse() { return (mPortManager != null); }
 	public void doneUsingIt() {}
 }
