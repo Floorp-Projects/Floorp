@@ -29,123 +29,70 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 
-// Interface ID for our ConverterManager interface
-// {1E3F79F0-6B6B-11d2-8A86-00600811A836}
-// NS_DECLARE_ID(kICharsetConverterManagerIID,
-//  0x1e3f79f0, 0x6b6b, 0x11d2, 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+#define NS_ICHARSETCONVERTERMANAGER_IID \
+  {0x3c1c0161, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
 
-#define NS_ICHARSETCONVERTERMANAGER_IID											 \
-{ /* 1E3F79F0-6B6B-11d2-8A86-00600811A836 */         \
-    0x1e3f79f0,                                      \
-    0x6b6b,                                          \
-    0x11d2,                                          \
-    {0x8a, 0x86, 0x00, 0x60, 0x08, 0x11, 0xa8, 0x36} \
-}
+// XXX change to NS_CHARSETCONVERTERMANAGER_CID
+#define NS_ICHARSETCONVERTERMANAGER_CID \
+  {0x3c1c0163, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
 
-// Class ID for our ConverterManager implementation
-// {1E3F79F1-6B6B-11d2-8A86-00600811A836}
-// NS_DECLARE_ID(kCharsetConverterManagerCID, 
-//  0x1e3f79f1, 0x6b6b, 0x11d2, 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+// XXX change to NS_CHARSETCONVERTERMANAGER_PID
+#define NS_CHARSETCONVERTERMANAGER_PROGID "charset-converter-manager"
 
-#define NS_ICHARSETCONVERTERMANAGER_CID											 \
-{ /* 1E3F79F1-6B6B-11d2-8A86-00600811A836 */         \
-    0x1e3f79f1,                                      \
-    0x6b6b,                                          \
-    0x11d2,                                          \
-    {0x8a, 0x86, 0x00, 0x60, 0x08, 0x11, 0xa8, 0x36} \
-}
 
-#define NS_CHARSETCONVERTERMANAGER_PROGID "component://netscape/intl/charsetconvertermanager"
+#define NS_REGISTRY_UCONV_BASE "software/netscape/intl/uconv/"
 
 #define NS_ERROR_UCONV_NOCONV \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV,1)
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x01)
+
+#define SET_FOR_BROWSER(_val) (_val |= 0x00000001)
+#define SET_NOT_FOR_BROWSER(_val) (_val |= (!0x00000001))
+#define GET_FOR_BROWSER(_val) ((_val &= 0x00000001) != 0)
+
+#define SET_FOR_EDITOR(_val) (_val |= 0x00000001)
+#define SET_NOT_FOR_EDITOR(_val) (_val |= (!0x00000001))
+#define GET_FOR_EDITOR(_val) ((_val &= 0x00000001) != 0)
+
+#define SET_FOR_MAILNEWS(_val) (_val |= 0x00000002)
+#define SET_NOT_FOR_MAILNEWS(_val) (_val |= (!0x00000002))
+#define GET_FOR_MAILNEWS(_val) ((_val &= 0x00000002) != 0)
+
+#define SET_FOR_MAILNEWSEDITOR(_val) (_val |= 0x00000002)
+#define SET_NOT_FOR_MAILNEWSEDITOR(_val) (_val |= (!0x00000002))
+#define GET_FOR_MAILNEWSEDITOR(_val) ((_val &= 0x00000002) != 0)
 
 /**
  * Interface for a Manager of Charset Converters.
- *
+ * 
+ * This Manager's data is a caching of Registry available stuff. But the access 
+ * methods are also doing all the work to get it and provide it.
+ * 
  * Note: The term "Charset" used in the classes, interfaces and file names 
  * should be read as "Coded Character Set". I am saying "charset" only for 
  * length considerations: it is a much shorter word. This convention is for 
  * source-code only, in the attached documents I will be either using the 
- * full expression or I'll specify a different convetion.
+ * full expression or I'll specify a different convention.
  *
- * XXX Move the ICharsetManager methods (the last 2 methods in the interface) 
- * into a separate interface. They are conceptually independent. I left them 
- * here only for easier implementation.
+ * A DECODER converts from a random encoding into Unicode.
+ * An ENCODER converts from Unicode into a random encoding.
+ * All our data structures and APIs are divided like that.
  *
- * XXX Add HasUnicodeEncoder() and HasUnicodeDecoder() methods.
- *
- * @created         17/Nov/1998
+ * @created         15/Nov/1999
  * @author  Catalin Rotaru [CATA]
  */
 class nsICharsetConverterManager : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETCONVERTERMANAGER_IID)
 
-  static const nsIID& GetIID() { static nsIID iid = NS_ICHARSETCONVERTERMANAGER_IID; return iid; }
-  /**
-   * Find and instantiate a Converter able to encode from Unicode into the 
-   * destination charset.
-   *
-   * @param aDest   [IN] the known name/alias of the destination charset
-   * @param aResult [OUT] the charset converter
-   * @return        NS_ERROR_UCONV_NOCONV if no converter was found for
-   *                this charset
-   */
   NS_IMETHOD GetUnicodeEncoder(const nsString * aDest, 
       nsIUnicodeEncoder ** aResult) = 0;
-
-  /**
-   * Find and instantiate a Converter able to decode from the source charset 
-   * into Unicode.
-   *
-   * @param aSrc    [IN] the known name/alias of the source charset
-   * @param aResult [OUT] the charset converter
-   * @return        NS_ERROR_UCONV_NOCONV if no converter was found for
-   *                this charset
-   */
   NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
       nsIUnicodeDecoder ** aResult) = 0;
-
-  /**
-   * Returns a list of charsets for which we have converters from Unicode.
-   *
-   * @param aResult     [OUT] an array of pointers to Strings (charset names)
-   * @param aCount      [OUT] the size (number of elements) of that array
-   */
-  NS_IMETHOD GetEncodableCharsets(nsString *** aResult, PRInt32 * aCount) = 0;
-
-  /**
-   * Returns a list of charsets for which we have converters into Unicode.
-   *
-   * @param aResult     [OUT] an array of pointers to Strings (charset names)
-   * @param aCount      [OUT] the size (number of elements) of that array
-   */
-  NS_IMETHOD GetDecodableCharsets(nsString *** aResult, PRInt32 * aCount) = 0;
-
-  /**
-   * Resolves the canonical name of a charset. If the given name is unknown 
-   * to the resolver, a new identical string will be returned! This way, 
-   * new & unknown charsets are not rejected and they are treated as any other
-   * charset except they can't have aliases.
-   *
-   * @param aCharset    [IN] the known name/alias of the character set
-   * @param aResult     [OUT] the canonical name of the character set
-   */
-  NS_IMETHOD GetCharsetName(const nsString * aCharset, 
-      nsString ** aResult) = 0;
-
-  /**
-   * Returns a list containing all the legal names for a given charset. The
-   * list will allways have at least 1 element: the cannonical name for that
-   * charset.
-   *
-   * @param aCharset    [IN] a known name/alias of the character set
-   * @param aResult     [OUT] the list; in the first position is the 
-   *                    cannonical name, then the other aliases
-   */
-  NS_IMETHOD GetCharsetNames(const nsString * aCharset, 
-      nsString *** aResult, PRInt32 * aCount) = 0;
+  NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount) = 0;
+  NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount) = 0;
+  NS_IMETHOD GetDecoderFlags(nsString * aName, PRInt32 * aFlags) = 0;
+  NS_IMETHOD GetEncoderFlags(nsString * aName, PRInt32 * aFlags) = 0;
 };
 
 #endif /* nsICharsetConverterManager_h___ */
