@@ -1026,10 +1026,12 @@ nsresult nsParser::BuildModel() {
 
     //Get the root DTD for use in model building...
 
-  nsresult result=NS_OK;
   CParserContext* theRootContext=mParserContext;
-  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+  nsITokenizer*   theTokenizer=0;
+
+  nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
   if(theTokenizer){
+
     while(theRootContext->mPrevContext) {
       theRootContext=theRootContext->mPrevContext;
     }
@@ -1057,7 +1059,7 @@ nsresult nsParser::BuildModel() {
 nsITokenizer* nsParser::GetTokenizer(void) {
   nsITokenizer* theTokenizer=0;
   if(mParserContext && mParserContext->mDTD) {
-    theTokenizer=mParserContext->mDTD->GetTokenizer();
+    mParserContext->mDTD->GetTokenizer(theTokenizer);
   }
   return theTokenizer;
 }
@@ -1274,56 +1276,62 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
     mParserContext->mTransferBuffer=new char[newLength+20];
   }
 
-  PRUint32  theTotalRead=0; 
-  PRUint32  theNumRead=1;   //init to a non-zero value
-  int       theStartPos=0;
   nsresult result=NS_OK;
 
-  PRBool needCheckFirst4Bytes = 
-          ((0 == sourceOffset) && (mCharsetSource<kCharsetFromAutoDetection));
-  while ((theNumRead>0) && (aLength>theTotalRead) && (NS_OK==result)) {
-    result = pIStream->Read(mParserContext->mTransferBuffer, aLength, &theNumRead);
-    if(NS_SUCCEEDED(result) && (theNumRead>0)) {
-      if(needCheckFirst4Bytes && (theNumRead >= 4)) {
-         nsCharsetSource guessSource;
-         nsAutoString guess("");
+  if(mParserContext->mTransferBuffer) {
+
+      //We need to add code to defensively deal with the case where the transfer buffer is null.
+
+    PRUint32  theTotalRead=0; 
+    PRUint32  theNumRead=1;   //init to a non-zero value
+    int       theStartPos=0;   
+
+    PRBool needCheckFirst4Bytes = 
+            ((0 == sourceOffset) && (mCharsetSource<kCharsetFromAutoDetection));
+    while ((theNumRead>0) && (aLength>theTotalRead) && (NS_OK==result)) {
+      result = pIStream->Read(mParserContext->mTransferBuffer, aLength, &theNumRead);
+      if(NS_SUCCEEDED(result) && (theNumRead>0)) {
+        if(needCheckFirst4Bytes && (theNumRead >= 4)) {
+           nsCharsetSource guessSource;
+           nsAutoString guess("");
          
-         needCheckFirst4Bytes = PR_FALSE;
-         if(detectByteOrderMark((const unsigned char*)mParserContext->mTransferBuffer,
-                                theNumRead, guess, guessSource)) 
-         {
-#ifdef DEBUG_XMLENCODING
-            printf("xmlencoding detect- %s\n", guess.ToNewCString());
-#endif
-            this->SetDocumentCharset(guess, guessSource);
-			      mParserContext->mScanner->SetDocumentCharset(guess, guessSource);
-         }
-      }
-      theTotalRead+=theNumRead;
-      if(mParserFilter)
-         mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &theNumRead);
-
-#ifdef NS_DEBUG
-      unsigned int index=0;
-      for(index=0;index<theNumRead;index++) {
-        if(0==mParserContext->mTransferBuffer[index]){
-          printf("\nNull found at buffer[%i] provided by netlib...\n",index);
-          break;
+           needCheckFirst4Bytes = PR_FALSE;
+           if(detectByteOrderMark((const unsigned char*)mParserContext->mTransferBuffer,
+                                  theNumRead, guess, guessSource)) 
+           {
+  #ifdef DEBUG_XMLENCODING
+              printf("xmlencoding detect- %s\n", guess.ToNewCString());
+  #endif
+              this->SetDocumentCharset(guess, guessSource);
+			        mParserContext->mScanner->SetDocumentCharset(guess, guessSource);
+           }
         }
-      }
-#endif
+        theTotalRead+=theNumRead;
+        if(mParserFilter)
+           mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &theNumRead);
 
-      mParserContext->mScanner->Append(mParserContext->mTransferBuffer,theNumRead);
+  #ifdef NS_DEBUG
+        unsigned int index=0;
+        for(index=0;index<theNumRead;index++) {
+          if(0==mParserContext->mTransferBuffer[index]){
+            printf("\nNull found at buffer[%i] provided by netlib...\n",index);
+            break;
+          }
+        }
+  #endif
 
-#ifdef rickgdebug
-      (*gDumpFile) << mParserContext->mTransferBuffer;
-#endif
+        mParserContext->mScanner->Append(mParserContext->mTransferBuffer,theNumRead);
 
-    } //if
-    theStartPos+=theNumRead;
-  }//while
+  #ifdef rickgdebug
+        (*gDumpFile) << mParserContext->mTransferBuffer;
+  #endif
 
-  result=ResumeParse();     
+      } //if
+      theStartPos+=theNumRead;
+    }//while
+
+    result=ResumeParse();     
+  }
   return result;
 }
 
@@ -1395,12 +1403,12 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
  *  @return  TRUE if it's ok to proceed
  */
 PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
-  nsresult rv = NS_OK;
-  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+  nsITokenizer* theTokenizer=0;
+  nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
   if (theTokenizer) {
-    rv = theTokenizer->WillTokenize(aIsFinalChunk);
+    result = theTokenizer->WillTokenize(aIsFinalChunk);
   }  
-  return rv;
+  return result;
 }
 
 
@@ -1414,11 +1422,11 @@ PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
  */
 nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
 
-  nsresult result=NS_OK;
-
   ++mMajorIteration; 
 
-  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+  nsITokenizer* theTokenizer=0;
+  nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
+
   if(theTokenizer){    
 
     MOZ_TIMER_START(mTokenizeTime);
@@ -1461,7 +1469,9 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
 PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   PRBool result=PR_TRUE;
 
-  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+  nsITokenizer* theTokenizer=0;
+  nsresult rv=mParserContext->mDTD->GetTokenizer(theTokenizer);
+
   if (theTokenizer) {
     result = theTokenizer->DidTokenize(aIsFinalChunk);
     if(mTokenObserver) {
@@ -1479,7 +1489,10 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
 
 void nsParser::DebugDumpSource(nsOutputStream& aStream) {
   PRInt32 theIndex=-1;
-  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+
+  nsITokenizer* theTokenizer=0;
+  nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
+
   if(theTokenizer){
     CToken* theToken;
     while(nsnull != (theToken=theTokenizer->GetTokenAt(++theIndex))) {

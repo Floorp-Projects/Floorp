@@ -435,9 +435,12 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
  * @return
  */
 nsITokenRecycler* CViewSourceHTML::GetTokenRecycler(void){
-  nsITokenizer* theTokenizer=GetTokenizer();
-  if(theTokenizer)
+  nsITokenizer* theTokenizer=0;
+  nsresult result=GetTokenizer(theTokenizer);
+
+  if (NS_SUCCEEDED(result)) {
     return theTokenizer->GetTokenRecycler();
+  }
   return 0;
 }
 
@@ -455,18 +458,22 @@ nsresult  CViewSourceHTML::Terminate(void) {
   return NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
+
 /**
  * Retrieve the preferred tokenizer for use by this DTD.
- * @update	gess12/28/98
+ * @update  gess12/28/98
  * @param   none
  * @return  ptr to tokenizer
  */
-nsITokenizer* CViewSourceHTML::GetTokenizer(void) {
+nsresult CViewSourceHTML::GetTokenizer(nsITokenizer*& aTokenizer) {
+  nsresult result=NS_OK;
   if(!mTokenizer) {
-    nsresult result=NS_NewHTMLTokenizer(&mTokenizer);
+    result=NS_NewHTMLTokenizer(&mTokenizer);
   }
-  return mTokenizer;
+  aTokenizer=mTokenizer;
+  return result;
 }
+
 
 /**
  * 

@@ -129,7 +129,7 @@ class CStartToken: public CHTMLToken {
 
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
   
-            nsAutoString  mTrailingContent;
+            nsString      mTrailingContent;
             PRInt32       mOrigin;
   protected:
             PRBool        mAttributed;      

@@ -144,11 +144,11 @@ class CViewSourceHTML: public nsIDTD {
 
     /**
      * 
-     * @update	gess12/28/98
-     * @param 
-     * @return
+     * @update	gess 12/20/99
+     * @param   ptr-ref to (out) tokenizer
+     * @return  nsresult
      */
-    nsITokenizer* GetTokenizer(void);
+    NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer);
 
     
     /**

@@ -240,8 +240,9 @@ NS_IMETHODIMP CValidDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,n
  * @param 
  * @return
  */
-nsITokenizer* CValidDTD::GetTokenizer(void){
-  return 0;
+nsresult CValidDTD::GetTokenizer(nsITokenizer*& aTokenizer){
+  aTokenizer=0;
+  return NS_OK;
 }
 
 /**

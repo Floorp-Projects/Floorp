@@ -47,6 +47,7 @@ MOZ_DECL_CTOR_COUNTER(CObserverService);
 
  **************************************************************************************/
 
+
 /**
  * Default constructor
  * @update	harishd 04/04/99
@@ -218,7 +219,7 @@ nsIParserNode* nsEntryStack::Pop(void) {
       PRUint32 sindex=0;
 
       nsTagEntry *theStyleEntry=theStyleStack->mEntries;
-      for(sindex=scount-1;sindex>=0;sindex--){            
+      for(sindex=scount-1;sindex>0;sindex--){            
         if(theStyleEntry->mTag==mEntries[mCount].mTag) {
           theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
           break;
@@ -317,7 +318,7 @@ eHTMLTags nsEntryStack::Last() const {
  */
 PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
   int theIndex=0;
-  for(theIndex=mCount-1;theIndex>=0;theIndex--){
+  for(theIndex=mCount-1;theIndex>0;theIndex--){
     if(aTag==TagAt(theIndex))
       return theIndex;
   }
@@ -339,6 +340,7 @@ PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
 nsDTDContext::nsDTDContext() : mStack() {
 
   MOZ_COUNT_CTOR(nsDTDContext);
+  mResidualStyleCount=0;
 
 #ifdef  NS_DEBUG
   memset(mXTags,0,sizeof(mXTags));
@@ -356,30 +358,12 @@ nsDTDContext::~nsDTDContext() {
 
 /**
  * 
- * @update  gess7/9/98, harishd 04/04/99 
- */
-PRInt32 nsDTDContext::GetCount(void) {
-  return mStack.mCount;
-}
-
-
-/**
- * 
  * @update  gess7/9/98
  */
 PRBool nsDTDContext::HasOpenContainer(eHTMLTags aTag) const {
-  PRInt32 theIndex=mStack.FindLast(aTag);
+  PRInt32 theIndex=mStack.LastOf(aTag);
   return PRBool(-1<theIndex);
 }
-
-/**
- * 
- * @update  gess7/9/98
- */
-PRInt32 nsDTDContext::GetTopmostIndexOf(eHTMLTags aTag) const {
-  PRInt32 result=mStack.FindLast(aTag);
-  return result;
-} 
 
 /**
  * 
@@ -446,6 +430,14 @@ eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
 
 
 /**
+ * 
+ * @update  gess7/9/98
+ */
+nsTagEntry* nsDTDContext::LastEntry(void) const {
+  return mStack.EntryAt(mStack.mCount-1);
+}
+
+/**
  *  
  * @update  gess7/9/98
  */
@@ -485,6 +477,7 @@ void nsDTDContext::PushStyle(const nsIParserNode* aNode){
     }
     if(theStack) {
       theStack->Push(aNode);
+      mResidualStyleCount++;
     }
   } //if
 }
@@ -512,6 +505,7 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
         for(sindex=0;sindex<scount;sindex++){            
           theEntry->mParent=0;  //this tells us that the style is not open at any level
           theEntry++;
+          mResidualStyleCount++;
         } //for
 
       }
@@ -533,6 +527,7 @@ nsIParserNode* nsDTDContext::PopStyle(void){
     nsEntryStack* theStyleStack=theEntry->mParent;
     if(theStyleStack){
       result=theStyleStack->Pop();
+      mResidualStyleCount--;
     }
   } //if
   return result;
@@ -551,6 +546,7 @@ nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
     if(theStack) {
       if(aTag==theStack->Last()) {
         return theStack->Pop();
+        mResidualStyleCount--;
       } else {
         // NS_ERROR("bad residual style entry");
       }

@@ -210,7 +210,7 @@ class CToken {
 protected:
     PRInt32				mTypeID;
     PRInt16				mAttrCount;
-    nsAutoString	mTextValue;
+    nsString      mTextValue;
 };
 
 

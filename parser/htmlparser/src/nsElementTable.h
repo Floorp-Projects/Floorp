@@ -35,13 +35,41 @@
 #include "nsHTMLTokens.h"
 #include "nsDTDUtils.h"
 
-struct TagList {
-  PRUint32    mCount;
-  eHTMLTags   mTags[10];
-};
 
-extern PRInt32    GetTopmostIndexOf(nsDTDContext& aContext,TagList& aTagList);
-extern eHTMLTags  GetTagAt(PRUint32 anIndex,TagList& aTagList);
+//*********************************************************************************************
+// The following ints define the standard groups of HTML elements...
+//*********************************************************************************************
+
+static const int kNone= 0x0;
+
+static const int kHTMLContent   = 0x0001; //  HEAD, (FRAMESET | BODY)
+static const int kHeadContent   = 0x0002; //  TITLE, ISINDEX, BASE
+static const int kHeadMisc      = 0x0004; //  SCRIPT, STYLE, META,  LINK, OBJECT
+
+static const int kSpecial       = 0x0008; //  A,    IMG,  APPLET, OBJECT, FONT, BASEFONT, BR, SCRIPT, 
+                                          //  MAP,  Q,    SUB,    SUP,    SPAN, BDO,      IFRAME
+
+static const int kFormControl   = 0x0010; //  INPUT SELECT  TEXTAREA  LABEL BUTTON
+static const int kPreformatted  = 0x0020; //  PRE
+static const int kPreExclusion  = 0x0040; //  IMG,  OBJECT, APPLET, BIG,  SMALL,  SUB,  SUP,  FONT, BASEFONT
+static const int kFontStyle     = 0x0080; //  TT, I, B, U, S, STRIKE, BIG, SMALL, BLINK
+static const int kPhrase        = 0x0100; //  EM, STRONG, DFN, CODE, SAMP, KBD, VAR, CITE, ABBR, ACRONYM
+static const int kHeading       = 0x0200; //  H1..H6
+static const int kBlockMisc     = 0x0400; //  OBJECT, SCRIPT
+static const int kBlock         = 0x0800; //  ADDRESS, BLOCKQUOTE, CENTER, DIV, DL, FIELDSET, FORM, 
+                                          //  ISINDEX, HR, NOSCRIPT, NOFRAMES, P, TABLE
+static const int kList          = 0x1000; //  UL, OL, DIR, MENU
+static const int kPCDATA        = 0x2000; //  just plain text...
+static const int kSelf          = 0x4000; //  whatever THIS tag is...
+static const int kExtensions    = 0x8000; //  BGSOUND, WBR, NOBR
+static const int kTable         = 0x10000;//  TR,TD,THEAD,TBODY,TFOOT,CAPTION,TH
+static const int kDLChild       = 0x20000;//  DL, DT
+
+static const int kInlineEntity  = (kPCDATA|kFontStyle|kPhrase|kSpecial|kFormControl|kExtensions);  //  #PCDATA, %fontstyle, %phrase, %special, %formctrl
+static const int kBlockEntity   = (kHeading|kList|kPreformatted|kBlock); //  %heading, %list, %preformatted, %block
+static const int kFlowEntity    = (kBlockEntity|kInlineEntity); //  %blockentity, %inlineentity
+static const int kAllTags       = 0xffffff;
+
 
 //*********************************************************************************************
 // The following ints define the standard groups of HTML elements...
@@ -49,6 +77,23 @@ extern eHTMLTags  GetTagAt(PRUint32 anIndex,TagList& aTagList);
 
 
 extern void InitializeElementTable(void);
+
+
+/**
+ * We're asking the question: is aTest a member of bitset. 
+ *
+ * @update	gess 01/04/99
+ * @param 
+ * @return TRUE or FALSE
+ */
+inline PRBool TestBits(int aBitset,int aTest) {
+  if(aTest) {
+    PRInt32 result=(aBitset & aTest);
+    return PRBool(result==aTest);
+  }
+  return PR_FALSE;
+}
+
 
 /**
  * 
@@ -62,11 +107,47 @@ struct nsHTMLElement {
   static  void    DebugDumpContainment(const char* aFilename,const char* aTitle);
   static  void    DebugDumpContainType(const char* aFilename);
 
-  static  PRBool  IsBlockEntity(eHTMLTags aTag);
   static  PRBool  IsInlineEntity(eHTMLTags aTag);
   static  PRBool  IsFlowEntity(eHTMLTags aTag);
   static  PRBool  IsBlockCloser(eHTMLTags aTag);
+
+  inline  PRBool  IsBlock(void) { 
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                      return TestBits(mParentBits,kBlock);
+                    } 
+                    return PR_FALSE;
+                  }
+
+  inline  PRBool  IsBlockEntity(void) { 
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                      return TestBits(mParentBits,kBlockEntity);
+                    } 
+                    return PR_FALSE;
+                  }
+
+  inline  PRBool  IsSpecialEntity(void) { 
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                      return TestBits(mParentBits,kSpecial);
+                    } 
+                    return PR_FALSE;
+                  }
+
+  inline  PRBool  IsPhraseEntity(void) { 
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                      return TestBits(mParentBits,kPhrase);
+                    } 
+                    return PR_FALSE;
+                  }
+
+  inline  PRBool  IsFontStyleEntity(void) { 
+                    if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
+                      return TestBits(mParentBits,kFontStyle);
+                    } 
+                    return PR_FALSE;
+                  }
+
   static  int     GetSynonymousGroups(eHTMLTags aTag);
+
 
   TagList*        GetSynonymousTags(void) const {return mSynonymousTags;}
   TagList*        GetRootTags(void) const {return mRootNodes;}
@@ -94,7 +175,7 @@ struct nsHTMLElement {
  
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
-  static  PRBool  IsStyleTag(eHTMLTags aTag) ;
+  static  PRBool  IsResidualStyleTag(eHTMLTags aTag) ;
   static  PRBool  IsHeadingTag(eHTMLTags aTag) ;
   static  PRBool  IsTextTag(eHTMLTags aTag);
   static  PRBool  IsWhitespaceTag(eHTMLTags aTag);
@@ -133,44 +214,13 @@ static const int kLegalOpen        = 0x0004; //Lets BODY, TITLE, SCRIPT to reope
 static const int kOmitWS           = 0x0008; //If set, the tag can omit all ws and newlines
 static const int kNoPropagate      = 0x0010; //If set, this tag won't propagate as a child
 static const int kBadContentWatch  = 0x0020; 
+
 static const int kNoStyleLeaksIn   = 0x0040; 
 static const int kNoStyleLeaksOut  = 0x0080; 
+
 static const int kMustCloseSelf    = 0x0100; 
 static const int kSaveMisplaced    = 0x0200; //If set, then children this tag can't contain are pushed onto the misplaced stack
 static const int kNonContainer     = 0x0400; //If set, then this tag is not a container.
-
-//*********************************************************************************************
-// The following ints define the standard groups of HTML elements...
-//*********************************************************************************************
-
-static const int kNone= 0x0;
-
-static const int kHTMLContent   = 0x0001; //  HEAD, (FRAMESET | BODY)
-static const int kHeadContent   = 0x0002; //  TITLE, ISINDEX, BASE
-static const int kHeadMisc      = 0x0004; //  SCRIPT, STYLE, META,  LINK, OBJECT
-
-static const int kSpecial       = 0x0008; //  A,    IMG,  APPLET, OBJECT, FONT, BASEFONT, BR, SCRIPT, 
-                                          //  MAP,  Q,    SUB,    SUP,    SPAN, BDO,      IFRAME
-
-static const int kFormControl   = 0x0010; //  INPUT SELECT  TEXTAREA  LABEL BUTTON
-static const int kPreformatted  = 0x0020; //  PRE
-static const int kPreExclusion  = 0x0040; //  IMG,  OBJECT, APPLET, BIG,  SMALL,  SUB,  SUP,  FONT, BASEFONT
-static const int kFontStyle     = 0x0080; //  TT, I, B, U, S, STRIKE, BIG, SMALL, BLINK
-static const int kPhrase        = 0x0100; //  EM, STRONG, DFN, CODE, SAMP, KBD, VAR, CITE, ABBR, ACRONYM
-static const int kHeading       = 0x0200; //  H1..H6
-static const int kBlockMisc     = 0x0400; //  OBJECT, SCRIPT
-static const int kBlock         = 0x0800; //  ADDRESS, BLOCKQUOTE, CENTER, DIV, DL, FIELDSET, FORM, 
-                                          //  ISINDEX, HR, NOSCRIPT, NOFRAMES, P, TABLE
-static const int kList          = 0x1000; //  UL, OL, DIR, MENU
-static const int kPCDATA        = 0x2000; //  just plain text...
-static const int kSelf          = 0x4000; //  whatever THIS tag is...
-static const int kExtensions    = 0x8000; //  BGSOUND, WBR, NOBR
-static const int kTable         = 0x10000;//  TR,TD,THEAD,TBODY,TFOOT,CAPTION,TH
-
-static const int kInlineEntity  = (kPCDATA|kFontStyle|kPhrase|kSpecial|kFormControl|kExtensions);  //  #PCDATA, %fontstyle, %phrase, %special, %formctrl
-static const int kBlockEntity   = (kHeading|kList|kPreformatted|kBlock); //  %heading, %list, %preformatted, %blockmisc
-static const int kFlowEntity    = (kBlockEntity|kInlineEntity); //  %block, %inline
-static const int kAllTags       = 0xffffff;
 
 
 #endif

@@ -279,9 +279,12 @@ NS_IMETHODIMP nsExpatDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,
  * @return
  */
 nsITokenRecycler* nsExpatDTD::GetTokenRecycler(void){
-  nsITokenizer* theTokenizer=GetTokenizer();
-  if(theTokenizer)
+  nsITokenizer* theTokenizer=0;  
+  nsresult result=GetTokenizer(theTokenizer);
+
+  if (NS_SUCCEEDED(result)) {
     return theTokenizer->GetTokenRecycler();
+  }
   return 0;
 }
 
@@ -319,21 +322,24 @@ void nsExpatDTD::SetupExpatCallbacks(void) {
   }
 }
 
+
 /**
  * Retrieve the preferred tokenizer for use by this DTD.
- * @update	gess12/28/98
+ * @update  gess12/28/98
  * @param   none
  * @return  ptr to tokenizer
  */
-nsITokenizer* nsExpatDTD::GetTokenizer(void) {
+nsresult nsExpatDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
+  nsresult result=NS_OK;
   if(!mTokenizer) {
-    nsresult result=NS_New_Expat_Tokenizer(&mTokenizer);
+    result=NS_New_Expat_Tokenizer(&mTokenizer);
     mExpatParser = XML_ParserCreate(NULL);
     if (mExpatParser) {
       SetupExpatCallbacks();
     }
   }
-  return mTokenizer;
+  aTokenizer=mTokenizer;
+  return result;
 }
 
 

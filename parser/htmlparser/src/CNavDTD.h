@@ -244,8 +244,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param 
      * @return
      */
-    nsITokenizer* GetTokenizer(void);
-
+    NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer);
     
     /**
      * 
@@ -291,7 +290,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanPropagate(eHTMLTags aParent,eHTMLTags aChild,PRBool aParentContains) const;
+    virtual PRBool CanPropagate(eHTMLTags aParent,eHTMLTags aChild,PRBool aParentContains) ;
 
     /**
      *  This method gets called to determine whether a given 
@@ -303,7 +302,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @param   aParentContains -- can be 0,1,-1 (false,true, unknown)
      *  @return  PR_TRUE if given tag can be omitted
      */
-    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains) const;
+    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains) ;
 
     /**
      *  This method gets called to determine whether a given 
@@ -386,7 +385,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   tag to be found
      * @return  index of topmost tag occurance -- may be -1 (kNotFound).
      */
-    virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
+    virtual PRInt32 LastOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
 
     /**
      * Use this id you want to stop the building content model
@@ -508,6 +507,7 @@ protected:
     nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsCParserNode*  CreateNode(void);
     void            RecycleNode(nsCParserNode* aNode);
+    void            RecycleNodes(nsEntryStack *aNodeStack);
 
     nsIHTMLContentSink* mSink;
 
