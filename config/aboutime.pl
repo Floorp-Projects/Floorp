@@ -2,14 +2,18 @@ open INFILE, "<$ARGV[1]";
 $build = <INFILE>;
 close INFILE;
 chop $build;
-open INFILE, "<$ARGV[0]";
-open OUTFILE, ">$ARGV[0].old";
+open INFILE, "<$ARGV[0]" || die;
+open OUTFILE, ">$ARGV[0].old" || die;
 
 while (<INFILE>) {
-if (/<TITLE>Version/) {
-s/-[0-9]+/-$build/;
-}
-print OUTFILE $_;
+
+$id = $_;
+   if ($id =~ "Build ID:") {
+     print OUTFILE "Build ID: " . $build . "\n";
+   }
+   else {
+      print OUTFILE $_;
+   }
 }
 
 close INFILE;
