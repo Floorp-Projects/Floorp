@@ -61,8 +61,6 @@ LCFLAGS = $(LCFLAGS) \
 # These are the libraries we need to link with to create the dll
 LLIBS= $(LLIBS)       \
  ../lib/globals.lib \
- $(DIST)\lib\jar_s.lib  \
- $(DIST)\lib\zlib_s.lib  \
  $(NULL)  
 
 !ifdef MOZ_NO_DEBUG_RTL
