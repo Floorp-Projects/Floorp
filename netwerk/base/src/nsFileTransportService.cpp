@@ -47,8 +47,11 @@
 #include "nsFileSpec.h"
 #include "nsAutoLock.h"
 #include "nsNetCID.h"
+#include "nsCExternalHandlerService.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+
+nsFileTransportService* nsFileTransportService::mInstance = nsnull;
 
 nsFileTransportService::nsFileTransportService()    :
     mConnectedTransports (0),
@@ -58,6 +61,7 @@ nsFileTransportService::nsFileTransportService()    :
     mLock(nsnull)
 {
     NS_INIT_REFCNT();
+    mInstance = this;
 }
 
 #define NS_FILE_TRANSPORT_WORKER_STACK_SIZE     (64 * 1024) /* (8*1024) */
@@ -84,6 +88,7 @@ nsFileTransportService::~nsFileTransportService()
 {
     if (mLock)
         PR_DestroyLock(mLock);
+    mInstance = nsnull;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileTransportService, nsFileTransportService);
@@ -104,6 +109,16 @@ nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
     }
     NS_RELEASE(ph);
     return rv;
+}
+
+
+nsIMIMEService* 
+nsFileTransportService::GetCachedMimeService()
+{
+    if (!mMimeService) {
+        mMimeService = do_GetService(NS_MIMESERVICE_CONTRACTID);
+    }
+    return mMimeService.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
