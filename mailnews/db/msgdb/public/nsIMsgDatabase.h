@@ -28,6 +28,7 @@ class nsIEnumerator;
 class nsThreadMessageHdr;       // XXX where's the public interface to this?
 class nsMsgKeyArray;
 class nsIDBFolderInfo;
+class nsIMsgThread;
 
 enum nsMsgDBCommitType {
   kSmallCommit,
@@ -182,6 +183,8 @@ public:
   // but also useful to tell the summary to mark itself invalid
   NS_IMETHOD SetSummaryValid(PRBool valid) = 0;
 
+  NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result) = 0;
+  NS_IMETHOD GetThreadContainingMsgHdr(nsIMessage *msgHdr, nsIMsgThread **result) = 0;
 };
 
 #endif // nsIMsgDatabase_h__

@@ -2378,17 +2378,40 @@ nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 	return msgHdr;
 }
 
-nsMsgThread *	nsMsgDatabase::GetThreadContainingMsgHdr(nsMsgHdr *msgHdr)
+NS_IMETHODIMP nsMsgDatabase::GetThreadContainingMsgHdr(nsIMessage *msgHdr, nsIMsgThread **result)
 {
-	NS_ASSERTION(PR_FALSE, "not implemented yet.");
-	return nsnull;
+	nsresult ret = NS_OK;
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+	*result = nsnull;
+	nsMsgKey threadId = nsMsgKey_None;
+	(void)msgHdr->GetThreadId(&threadId);
+	if (threadId != nsMsgKey_None)
+		*result = GetThreadForThreadId(threadId);
+
+	return ret;
 }
 
 
-nsMsgThread *nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey)
+NS_IMETHODIMP nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result)
 {
-	NS_ASSERTION(PR_FALSE, "not implemented yet.");
-	return nsnull;
+	nsresult ret = NS_OK;
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+	*result = nsnull;
+
+	nsIMessage *msg = NULL;
+    ret = GetMsgHdrForKey(msgKey, &msg);
+
+	if (NS_SUCCEEDED(ret) && msg)
+	{
+		ret = GetThreadContainingMsgHdr(msg, result);
+		NS_RELEASE(msg);
+	}
+
+	return ret;
 }
 
 // caller needs to unrefer.

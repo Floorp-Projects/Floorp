@@ -169,6 +169,8 @@ public:
   // but also useful to tell the summary to mark itself invalid
   NS_IMETHOD SetSummaryValid(PRBool valid);
 
+  NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
+  NS_IMETHOD GetThreadContainingMsgHdr(nsIMessage *msgHdr, nsIMsgThread **result) ;
   //////////////////////////////////////////////////////////////////////////////
   // nsMsgDatabase methods:
 	nsMsgDatabase();
@@ -227,7 +229,6 @@ protected:
 	// retrieval methods
 	nsMsgThread *	GetThreadForReference(nsString2 &msgID);
 	nsMsgThread *	GetThreadForSubject(const char * subject);
-	nsMsgThread *	GetThreadForMsgKey(nsMsgKey msgKey);
 	nsMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
 	nsMsgHdr	*	GetMsgHdrForReference(nsString2 &reference);
 	nsMsgHdr	*	GetMsgHdrForMessageID(nsString2 &msgID);
