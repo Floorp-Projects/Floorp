@@ -29,8 +29,8 @@
 #include "nsScrollbar.h"
 #include "nsCheckButton.h"
 #include "nsRadioButton.h"
-//#include "nsTextWidget.h"
-//#include "nsTextAreaWidget.h"
+#include "nsTextWidget.h"
+#include "nsTextAreaWidget.h"
 #include "nsFileWidget.h"
 #include "nsListBox.h"
 #include "nsComboBox.h"
@@ -135,10 +135,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
 
     *aResult = NULL;  
   
-    if (nsnull != aOuter && !aIID.Equals(kISupportsIID)) {
-        // aggregation with IID != nsISupports
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
 
     nsISupports *inst = nsnull;
     if (aIID.Equals(kCWindow)) {
@@ -160,12 +156,12 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = nsnull;
         fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
     }
-    //else if (mClassID.Equals(kCTextWidgetCID)) {
-        //inst = (nsISupports *)(nsIWidget *)new nsTextWidget();
-    //}
-    //else if (mClassID.Equals(kCTextAreaWidgetCID)) {
-        //inst = (nsISupports *)(nsIWidget *)new nsTextAreaWidget();
-    //}
+    else if (mClassID.Equals(kCTextWidgetCID)) {
+        inst = (nsISupports *)(nsIWidget *)new nsTextWidget();
+    }
+    else if (mClassID.Equals(kCTextAreaWidgetCID)) {
+        inst = (nsISupports *)(nsIWidget *)new nsTextAreaWidget();
+    }
     else if ( mClassID.Equals(kCRadioButtonCID)) {
         inst = (nsISupports *)(nsIWidget *)new nsRadioButton();
     }
