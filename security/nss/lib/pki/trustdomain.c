@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.13 $ $Date: 2001/11/08 05:19:30 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.14 $ $Date: 2001/11/08 20:46:09 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -704,8 +704,8 @@ NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
     ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
     /* Set the unique id */
     NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, issuer);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 1, serialNumber);
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 1, issuer);
+    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 2, serialNumber);
     /* Try the cache */
     rvCert = nssTrustDomain_GetCertForIssuerAndSNFromCache(td,
                                                            issuer, 
@@ -721,7 +721,8 @@ NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
 	    if (object != CK_INVALID_HANDLE) {
 		/* Could not find cert, so create it */
 		rvCert = nssCertificate_CreateFromHandle(NULL, object, 
-		                                         NULL, tok->slot);
+		                                         tok->defaultSession,
+		                                         tok->slot);
 		if (rvCert) {
 		    /* cache it */
 		    nssTrustDomain_AddCertsToCache(td, &rvCert, 1);
@@ -862,9 +863,10 @@ NSSTrustDomain_FindCertificateByEncodedCertificate
 	    object = nssToken_FindObjectByTemplate(tok, NULL,
 	                                           cert_template, ctsize);
 	    if (object != CK_INVALID_HANDLE) {
-		/* Could not find cert, so create it */
+		/* found it */
 		rvCert = nssCertificate_CreateFromHandle(NULL, object, 
-		                                         NULL, tok->slot);
+		                                         tok->defaultSession,
+		                                         tok->slot);
 		if (rvCert) {
 		    /* cache it */
 		    nssTrustDomain_AddCertsToCache(td, &rvCert, 1);

@@ -566,8 +566,9 @@ loser:
 SECItem *
 CERT_FindSMimeProfile(CERTCertificate *cert)
 {
+    PK11SlotInfo *slot = NULL;
     return 
-	PK11_FindSMimeProfile(NULL, cert->emailAddr, &cert->derSubject, NULL);
+	PK11_FindSMimeProfile(&slot, cert->emailAddr, &cert->derSubject, NULL);
 }
 
 /*

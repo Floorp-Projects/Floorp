@@ -46,8 +46,6 @@ PRIVATE_EXPORTS = \
 
 MODULE = security
 
-DEFINES=-DSTAN_CERT_DB
-
 CSRCS = \
 	alg1485.c \
 	certdb.c \

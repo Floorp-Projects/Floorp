@@ -119,13 +119,13 @@ pk11_buildNickname(PK11SlotInfo *slot,CK_ATTRIBUTE *cert_label,
     char buildNew[sizeof(DEFAULT_STRING)+MAX_CERT_ID*2];
     char *next,*nickname;
 
-    if ((cert_label) && (cert_label->pValue)) {
+    if (cert_label && (cert_label->ulValueLen)) {
 	suffixLen = cert_label->ulValueLen;
 	suffix = (char*)cert_label->pValue;
-    } else if (key_label && (key_label->pValue)) {
+    } else if (key_label && (key_label->ulValueLen)) {
 	suffixLen = key_label->ulValueLen;
 	suffix = (char*)key_label->pValue;
-    } else if ((cert_id) && cert_id->pValue) {
+    } else if (cert_id && cert_id->ulValueLen > 0) {
 	int i,first = cert_id->ulValueLen - MAX_CERT_ID;
 	int offset = sizeof(DEFAULT_STRING);
 	char *idValue = (char *)cert_id->pValue;
@@ -1138,7 +1138,7 @@ PK11_FindObjectsFromNickname(char *nickname,PK11SlotInfo **slotptr,
    
 CERTCertificate *
 PK11_FindCertFromNickname(char *nickname, void *wincx) {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     PK11SlotInfo *slot;
     int count=0;
     CK_OBJECT_HANDLE *certID = PK11_FindObjectsFromNickname(nickname,&slot,
@@ -1197,7 +1197,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 
 CERTCertList *
 PK11_FindCertsFromNickname(char *nickname, void *wincx) {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     PK11SlotInfo *slot;
     int i,count = 0;
     CK_OBJECT_HANDLE *certID = PK11_FindObjectsFromNickname(nickname,&slot,
@@ -2016,7 +2016,7 @@ CERTCertificate *
 PK11_FindCertByIssuerAndSN(PK11SlotInfo **slotPtr, CERTIssuerAndSN *issuerSN,
 							 void *wincx)
 {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     CK_OBJECT_HANDLE certHandle;
     CERTCertificate *cert = NULL;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
@@ -2060,7 +2060,7 @@ PK11_FindCertByIssuerAndSN(PK11SlotInfo **slotPtr, CERTIssuerAndSN *issuerSN,
                                                   &serial);
     if (cert) {
 	rvCert = STAN_GetCERTCertificate(cert);
-	/* XXX *slotPtr = cert->slot; */
+	if (slotPtr) *slotPtr = rvCert->slot;
     }
     return rvCert;
 #endif
@@ -2220,7 +2220,7 @@ SECStatus
 PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
 {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     pk11DoCertCallback caller;
     pk11TraverseSlot callarg;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
@@ -2281,7 +2281,7 @@ SECStatus
 PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
 {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     pk11DoCertCallback caller;
     pk11TraverseSlot callarg;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
@@ -2347,7 +2347,7 @@ SECStatus
 PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
 {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     pk11DoCertCallback caller;
     pk11TraverseSlot callarg;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
@@ -2394,7 +2394,7 @@ CERTCertificate *
 PK11_FindCertFromDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
 								 void *wincx)
 {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
     CK_ATTRIBUTE theTemplate[] = {
 	{ CKA_VALUE, NULL, 0 },
@@ -2861,7 +2861,7 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
 CERTCertList *
 PK11_ListCerts(PK11CertListType type, void *pwarg)
 {
-#ifndef NSS_SOFTOKEN_MODULE
+#ifdef NSS_CLASSIC
     CERTCertList *certList = NULL;
     struct listCertsStr listCerts;
     
@@ -3282,10 +3282,12 @@ SECStatus
 PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
 				 SECItem *emailProfile,  SECItem *profileTime)
 {
-    CK_OBJECT_CLASS smimeClass = CKO_NETSCAPE_CRL;
+    CK_OBJECT_CLASS smimeClass = CKO_NETSCAPE_SMIME;
+    CK_BBOOL ck_true = CK_TRUE;
     CK_ATTRIBUTE theTemplate[] = {
-	{ CKA_SUBJECT, NULL, 0 },
 	{ CKA_CLASS, NULL, 0 },
+	{ CKA_TOKEN, NULL, 0 },
+	{ CKA_SUBJECT, NULL, 0 },
 	{ CKA_NETSCAPE_EMAIL, NULL, 0 },
 	{ CKA_NETSCAPE_SMIME_TIMESTAMP, NULL, 0 },
 	{ CKA_VALUE, NULL, 0 }
@@ -3297,8 +3299,9 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
     CK_SESSION_HANDLE rwsession;
     CK_RV crv;
 
-    PK11_SETATTRS(attrs, CKA_SUBJECT, derSubj->data, derSubj->len); attrs++;
     PK11_SETATTRS(attrs, CKA_CLASS, &smimeClass, sizeof(smimeClass)); attrs++;
+    PK11_SETATTRS(attrs, CKA_TOKEN, &ck_true, sizeof(ck_true)); attrs++;
+    PK11_SETATTRS(attrs, CKA_SUBJECT, derSubj->data, derSubj->len); attrs++;
     PK11_SETATTRS(attrs, CKA_NETSCAPE_EMAIL, 
 				emailAddr, PORT_Strlen(emailAddr)+1); attrs++;
     if (profileTime) {
@@ -3306,6 +3309,8 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
 	                                            profileTime->len); attrs++;
 	PK11_SETATTRS(attrs, CKA_VALUE,emailProfile->data,
 	                                            emailProfile->len); attrs++;
+    } else {
+	tsize -= 2;
     }
 
     if (slot == NULL) {
@@ -3320,7 +3325,7 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
     }
 
     crv = PK11_GETTAB(slot)->
-                        C_CreateObject(rwsession,attrs,tsize,&smimeh);
+                        C_CreateObject(rwsession,theTemplate,tsize,&smimeh);
     if (crv != CKR_OK) {
         PORT_SetError( PK11_MapError(crv) );
     }
