@@ -768,6 +768,10 @@
     <!-- InsertPopupButton is used by messengercompose.xul -->
     <titledbutton id="InsertPopupButton" class="format popup"/>
 
+    <!-- Paste as quotation is used by mail compose,
+         but in composer it has to go in the debug menu
+     -->
+    <menuitem id="menu_pasteQuote" value="&pasteAsQuotationCmd.label;" accesskey="&editpastequotation.accesskey;" oncommand="EditorPasteAsQuotation()"/>
 
     <!-- DEBUG only -->
     <menu id="debugMenu" value="&debugMenu.label;">
@@ -781,6 +785,7 @@
       <menuitem value="&outputXIFCmd.label;"
              oncommand="EditorGetXIF()"/>
       <menuseparator />
+      <menuitem value="&pasteAsQuotationCmd.label;" accesskey="&editpastequotation.accesskey;" oncommand="EditorPasteAsQuotation()"/>
       <menuitem value="&insertTextCmd.label;"
              oncommand="EditorInsertText('All good things come to those who wait. ')"/>
       <menuseparator />
