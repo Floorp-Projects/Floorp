@@ -174,7 +174,7 @@ nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeLis
 
 
 // Helper routine - lowest level of flag setting
-PRBool nsMailDatabase::SetHdrFlag(nsMsgHdr *msgHdr, PRBool bSet, MsgFlags flag)
+PRBool nsMailDatabase::SetHdrFlag(nsIMessage *msgHdr, PRBool bSet, MsgFlags flag)
 {
 	nsIOFileStream *fileStream = NULL;
 	PRBool		ret = PR_FALSE;
@@ -210,7 +210,7 @@ int msg_UnHex(char C)
 // and we don't want to open and close the file every time through.
 // As an experiment, try caching the fid in the db as m_folderFile.
 // If this is set, use it but don't return *pFid.
-void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet, 
+void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet, 
 							  MsgFlags flag, nsIOFileStream **ppFileStream)
 {
 	static char buf[30];
@@ -249,7 +249,7 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 			{
 				if (strncmp(buf, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN) == 0 &&
 					strncmp(buf + X_MOZILLA_STATUS_LEN, ": ", 2) == 0 &&
-					strlen(buf) > X_MOZILLA_STATUS_LEN + 6) 
+					strlen(buf) >= X_MOZILLA_STATUS_LEN + 6) 
 				{
                     PRUint32 flags;
                     (void)mailHdr->GetFlags(&flags);
@@ -284,7 +284,7 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 					{
 						if (strncmp(buf, X_MOZILLA_STATUS2, X_MOZILLA_STATUS2_LEN) == 0 &&
 							strncmp(buf + X_MOZILLA_STATUS2_LEN, ": ", 2) == 0 &&
-							strlen(buf) > X_MOZILLA_STATUS2_LEN + 10) 
+							strlen(buf) >= X_MOZILLA_STATUS2_LEN + 10) 
 						{
 							PRUint32 dbFlags;
                             (void)mailHdr->GetFlags(&dbFlags);

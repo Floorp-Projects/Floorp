@@ -74,8 +74,8 @@ public:
 	virtual	nsresult		PrePopulate();
 #endif
 protected:
-	virtual PRBool			SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
-	virtual void			UpdateFolderFlag(nsMsgHdr *msgHdr, PRBool bSet, 
+	virtual PRBool			SetHdrFlag(nsIMessage *, PRBool bSet, MsgFlags flag);
+	virtual void			UpdateFolderFlag(nsIMessage *msgHdr, PRBool bSet, 
 									 MsgFlags flag, nsIOFileStream **ppFileStream);
 	virtual void			SetReparse(PRBool reparse);
 

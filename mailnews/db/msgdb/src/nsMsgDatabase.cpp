@@ -62,6 +62,8 @@ nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, n
 							PRBool getKeyFromHeader)
 {
     nsMsgHdr* msgHdr = new nsMsgHdr(this, hdrRow);
+	msgHdr->AddRef();	// why weren't we doing this????
+
 	if(getKeyFromHeader)
 		msgHdr->GetMessageKey(&key);
     char *folderURI;
@@ -659,6 +661,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
 {
 	nsresult	err = NS_OK;
 	mdb_pos		rowPos;
+	mdb_pos		desiredRowPos;
 	mdbOid		rowObjectId;
 
 
@@ -668,18 +671,28 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
 	*pmsgHdr = NULL;
 	rowObjectId.mOid_Id = key;
 	rowObjectId.mOid_Scope = m_hdrRowScopeToken;
-	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &rowPos);
+	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &desiredRowPos);
 	if (err == NS_OK)
 	{
 		nsIMdbTableRowCursor* rowCursor;
+		rowPos = -1;
 		err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), rowPos, &rowCursor);
-		if (err == NS_OK && rowPos >= 0) // ### is rowPos > 0 the right thing to check?
+		if (err == NS_OK && rowCursor /*rowPos >= 0*/) // ### is rowPos > 0 the right thing to check?
 		{
-			nsIMdbRow	*hdrRow;
-			err = rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
-            if (NS_SUCCEEDED(err)) {
-                err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr);
-            }
+			do
+			{
+				nsIMdbRow	*hdrRow;
+				err = rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
+				if (!NS_SUCCEEDED(err) || rowPos < 0 || !hdrRow)
+					break;
+				if (rowPos == desiredRowPos)
+				{
+					err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr);
+					break;
+				}
+			}
+			while (TRUE);
+
             NS_RELEASE(rowCursor);
 		}
 	}
@@ -728,10 +741,10 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMessage *msg, nsIDBChangeListener *
 {
     nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, msg);  // closed system, so this is ok
 	nsMsgKey key;
-    (void)msgHdr->GetMessageKey(&key);
+    (void)msg->GetMessageKey(&key);
 	// only need to do this for mail - will this speed up news expiration? 
 //	if (GetMailDB())
-		SetHdrFlag(msgHdr, PR_TRUE, MSG_FLAG_EXPUNGED);	// tell mailbox (mail)
+		SetHdrFlag(msg, PR_TRUE, MSG_FLAG_EXPUNGED);	// tell mailbox (mail)
 
 	if (m_newSet)	// if it's in the new set, better get rid of it.
 		m_newSet->Remove(key);
@@ -746,14 +759,14 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMessage *msg, nsIDBChangeListener *
 			m_dbFolderInfo->ChangeNumNewMessages(-1);
 
         PRUint32 size;
-        (void)msgHdr->GetMessageSize(&size);
+        (void)msg->GetMessageSize(&size);
 		m_dbFolderInfo->m_expungedBytes += size;
 
 	}	
 
 	if (notify) {
         PRUint32 flags;
-        (void)msgHdr->GetFlags(&flags);
+        (void)msg->GetFlags(&flags);
 		NotifyKeyDeletedAll(key, flags, instigator); // tell listeners
     }
 
@@ -761,7 +774,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMessage *msg, nsIDBChangeListener *
 		RemoveHeaderFromDB(msgHdr);
 	if (commit)
 		Commit(kSmallCommit);			// ### dmb is this a good time to commit?
-	NS_RELEASE(msgHdr);	// even though we're deleting it from the db, need to Release.
+	NS_RELEASE(msg);	// even though we're deleting it from the db, need to Release.
 	return NS_OK;
 }
 
@@ -1654,7 +1667,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 {
 	yarn->mYarn_Buf = str->ToNewCString();
 	yarn->mYarn_Size = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
-	yarn->mYarn_Fill = yarn->mYarn_Size;
+	yarn->mYarn_Fill = yarn->mYarn_Size - 1;
 	yarn->mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
 	return yarn;
 }
@@ -1662,7 +1675,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 /* static */struct mdbYarn *nsMsgDatabase::UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i)
 {
 	PR_snprintf((char *) yarn->mYarn_Buf, yarn->mYarn_Size, "%lx", i);
-	yarn->mYarn_Fill = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
+	yarn->mYarn_Fill = PL_strlen((const char *) yarn->mYarn_Buf);
 	yarn->mYarn_Form = 0;	// what to do with this? Should be parsed out of the mime2 header?
 	return yarn;
 }
