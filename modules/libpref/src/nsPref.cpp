@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -265,7 +265,8 @@ nsPref::~nsPref()
 nsresult nsPref::useDefaultPrefFile()
 //----------------------------------------------------------------------------------------
 {
-    nsIFileSpec* prefsFile = NS_LocateFileOrDirectory(nsSpecialFileSpec::App_PreferencesFile50);
+    nsCOMPtr<nsIFileSpec> prefsFile;
+    prefsFile = getter_AddRefs(NS_LocateFileOrDirectory(nsSpecialFileSpec::App_PreferencesFile50));
     nsresult rv = NS_OK;
     if (!prefsFile)
     {
@@ -276,7 +277,7 @@ nsresult nsPref::useDefaultPrefFile()
         	(const char*)NS_FILESPEC_PROGID,
         	(nsISupports*)nsnull,
         	(const nsID&)nsIFileSpec::GetIID(),
-        	(void**)&prefsFile);
+        	(void**)getter_AddRefs(prefsFile));
         NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
 	    if (!prefsFile)
 	    	return NS_ERROR_FAILURE;
