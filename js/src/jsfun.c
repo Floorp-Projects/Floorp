@@ -1081,7 +1081,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSString *atomstr;
     char *propname;
     JSScopeProperty *sprop;
-    jsid userid;
+    uint32 userid;              /* NB: holds a signed int-tagged jsval */
     JSAtom *atom;
     uintN i, n, dupflag;
     uint32 type;
@@ -1157,7 +1157,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 userid = INT_TO_JSVAL(sprop->shortid);
                 propname = ATOM_BYTES((JSAtom *)sprop->id);
                 if (!JS_XDRUint32(xdr, &type) ||
-                    !JS_XDRUint32(xdr, (uint32 *)&userid) ||
+                    !JS_XDRUint32(xdr, &userid) ||
                     !JS_XDRCString(xdr, &propname)) {
                     if (mark)
                         JS_ARENA_RELEASE(&cx->tempPool, mark);
@@ -1173,7 +1173,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
                 if (!JS_XDRUint32(xdr, &type) ||
-                    !JS_XDRUint32(xdr, (uint32 *)&userid) ||
+                    !JS_XDRUint32(xdr, &userid) ||
                     !JS_XDRCString(xdr, &propname)) {
                     return JS_FALSE;
                 }
