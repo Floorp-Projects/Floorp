@@ -32,8 +32,6 @@ LOCAL_INCLUDES	= -I. -I$(OBJDIR)
 ICONS_GEN_HDR	= $(OBJDIR)/icon_extern.h
 ICONS_GEN_SRC	= $(OBJDIR)/icondata.c
 
-ANIM_PRIV = $(DEPTH)/../ns_priv/xfe/icons/anim
-
 include $(DEPTH)/config/rules.mk
 
 #### NEXT FEW LINES ARE ONLY FOR TESTING -- full build!
@@ -113,11 +111,12 @@ ifdef MOZ_NETCAST
 ICONS += images/Desk_Netcaster.gif
 endif
 
-ANIM		= $(wildcard anim/main/*.gif)
-
 ifdef XFEPRIVDIR
--include $(XFEPRIVDIR)/icons/Animation.mk
+ANIM		= $(wildcard $(XFEPRIVDIR)/icons/anim/main/*.gif)
+else
+ANIM		= $(wildcard anim/main/*.gif)
 endif
+
 
 ICONLIST	 = $(OBJDIR)/icon.list
 ICONANIMLIST = $(OBJDIR)/iconanim.list
