@@ -1224,18 +1224,16 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
   if (mChromeLoaded)
     return NS_OK;
 
-  //
   // If this document notification is for a frame then ignore it...
-  //
-  nsCOMPtr<nsIDOMWindow> domWindow, topDOMWindow;
-
-  (void) aProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  if (domWindow) {
-    domWindow->GetTop(getter_AddRefs(topDOMWindow));
-
-    if (domWindow != topDOMWindow) {
+  nsCOMPtr<nsIDOMWindow> eventWin;
+  aProgress->GetDOMWindow(getter_AddRefs(eventWin));
+  nsCOMPtr<nsPIDOMWindow> eventPWin(do_QueryInterface(eventWin));
+  if (eventPWin) {
+    nsCOMPtr<nsIDOMWindowInternal> rootiwin;
+    eventPWin->GetPrivateRoot(getter_AddRefs(rootiwin));
+    nsCOMPtr<nsPIDOMWindow> rootPWin(do_QueryInterface(rootiwin));
+    if (eventPWin != rootPWin)
       return NS_OK;
-    }
   }
 
   mChromeLoaded = PR_TRUE;
