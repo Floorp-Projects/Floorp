@@ -25,5 +25,4 @@ nsDBFolderInfo.h
 nsMsgHdr.h
 nsIDBChangeListener.h
 nsIDBFolderInfo.h
-nsIMsgHdr.h
 nsMsgThread.h
