@@ -60,7 +60,6 @@ CSRCS		= nsPrintdGTK.c
 X11SHARED_LCPPSRCS = \
 		nsAntiAliasedGlyph.cpp \
 		nsFontFreeType.cpp \
-		nsFreeType.cpp \
 		nsFT2FontNode.cpp \
 		nsFT2FontCatalog.cpp \
 		nsX11AlphaBlend.cpp \
@@ -187,12 +186,14 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
 		-I$(srcdir)/../shared \
+		-I$(srcdir)/../freetype \
 		-I$(srcdir)/../x11shared \
 		$(NULL)
 
 ifdef MOZ_ENABLE_FREETYPE2
 DEFINES         += -DMOZ_ENABLE_FREETYPE2
 INCLUDES        += $(FT2_CFLAGS)
+EXTRA_DSO_LDOPTS += $(LIBS_DIR) -lgfxft2
 # due to runtime linking with PR_LoadLibrary
 # EXTRA_DSO_LDOPTS does not need $(FT2_LIBS)
 endif

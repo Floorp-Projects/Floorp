@@ -24,23 +24,68 @@
 #ifndef nsFreeType_h__
 #define nsFreeType_h__
 
+#if (defined(MOZ_ENABLE_FREETYPE2))
+
 void     nsFreeTypeFreeGlobals(void);
 nsresult nsFreeTypeInitGlobals(void);
 
-#if (defined(MOZ_ENABLE_FREETYPE2))
-
+#include "nspr.h"
+#include "nsHashtable.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsIFontCatalogService.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_CACHE_H
 #include FT_CACHE_IMAGE_H
 #include FT_TRUETYPE_TABLES_H
-#include "nsFT2FontCatalog.h"
 
 typedef struct FT_FaceRec_*  FT_Face;
 
-class nsFreeTypeFace;
+typedef struct {
+  const char   *mFontFileName;
+  time_t        mMTime;
+  PRUint32      mFlags;
+  const char   *mFontType;
+  int           mFaceIndex;
+  int           mNumFaces;
+  const char   *mFamilyName;
+  const char   *mStyleName;
+  FT_UShort     mWeight;
+  FT_UShort     mWidth;
+  int           mNumGlyphs;
+  int           mNumUsableGlyphs;
+  FT_Long       mFaceFlags;
+  FT_Long       mStyleFlags;
+  FT_Long       mCodePageRange1;
+  FT_Long       mCodePageRange2;
+  char          mVendorID[5];
+  const char   *mFoundryName;
+  int           mNumEmbeddedBitmaps;
+  int          *mEmbeddedBitmapHeights;
+  PRUint16     *mCCMap;       // compressed char map
+} nsFontCatalogEntry;
 
-nsFreeTypeFace * nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce);
+#define FCE_FLAGS_ISVALID 0x01
+#define FCE_FLAGS_UNICODE 0x02
+#define FCE_FLAGS_SYMBOL  0x04
+#define FREE_IF(x) if(x) free((void*)x)
+
+typedef struct {
+  const char             *mConverterName;
+  PRUint8                 mCmapPlatformID;
+  PRUint8                 mCmapEncoding;
+  nsIUnicodeEncoder*      mConverter;
+} nsTTFontEncoderInfo;
+
+typedef struct nsTTFontFamilyEncoderInfo {
+  const char             *mFamilyName;
+  nsTTFontEncoderInfo    *mEncodingInfo;
+} nsTTFontFamilyEncoderInfo;
+
+typedef struct {
+  unsigned long bit;
+  const char *charsetName;
+} nsulCodePageRangeCharSetName;
 
 //
 // the FreeType2 function type declarations
@@ -65,6 +110,10 @@ typedef FT_Error (*FTC_Manager_New_t)(FT_Library, FT_UInt, FT_UInt, FT_ULong,
                        FTC_Face_Requester, FT_Pointer, FTC_Manager*);
 typedef FT_Error (*FTC_Image_Cache_New_t)(FTC_Manager, FTC_Image_Cache*);
 
+class nsFreeTypeFace;
+
+nsFreeTypeFace * nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce);
+
 // class nsFreeType class definition
 class nsFreeType {
 public:
@@ -74,6 +123,11 @@ public:
   inline static FTC_Image_Cache GetImageCache() { return sImageCache; };
   static void FreeGlobals();
   static nsresult InitGlobals();
+
+  static PRUint16*   GetCCMap(nsFontCatalogEntry *aFce);
+  static const char* GetRange1CharSetName(unsigned long aBit);
+  static const char* GetRange2CharSetName(unsigned long aBit);
+  static nsTTFontFamilyEncoderInfo* GetCustomEncoderInfo(const char *);
 
   // run time loaded (function pointers)
   static FT_Done_Face_t            nsFT_Done_Face;
@@ -108,6 +162,7 @@ protected:
   static PRBool InitLibrary();
   static PRBool LoadSharedLib();
   static void UnloadSharedLib();
+  static nsICharsetConverterManager2* GetCharSetManager();
 
   static PRLibrary      *sSharedLib;
   static PRBool          sInited;
@@ -116,21 +171,35 @@ protected:
   static FT_Library      sFreeTypeLibrary;
   static FTC_Manager     sFTCacheManager;
   static FTC_Image_Cache sImageCache;
+
+  static nsHashtable   *sFontFamilies;
+  static nsHashtable   *sRange1CharSetNames;
+  static nsHashtable   *sRange2CharSetNames;
+  static nsICharsetConverterManager2* sCharSetManager;
 };
 
 // class nsFreeTypeFace definition
 /* this simple record is used to model a given `installed' face */
-class nsFreeTypeFace {
+class nsFreeTypeFace : public nsITrueTypeFontCatalogEntry {
 public:
-  nsFreeTypeFace(nsFontCatalogEntry *aFce);
-  ~nsFreeTypeFace();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITRUETYPEFONTCATALOGENTRY
+  
+  nsFreeTypeFace();
+  virtual ~nsFreeTypeFace();
+  virtual nsresult Init(nsFontCatalogEntry *aFce);
+  /* additional members */
+  NS_IMETHODIMP GetFontCatalogType(PRUint16 *aFontCatalogType);
+
   static PRBool FreeFace(nsHashKey* aKey, void* aData, void* aClosure);
-  const char *GetFilename() { return nsFT2FontCatalog::GetFileName(mFce); }
-  int *GetEmbeddedBitmapHeights() {
-                  return nsFT2FontCatalog::GetEmbeddedBitmapHeights(mFce); } ;
-  int GetFaceIndex() { return nsFT2FontCatalog::GetFaceIndex(mFce); }
-  int GetNumEmbeddedBitmaps() {
-                  return nsFT2FontCatalog::GetNumEmbeddedBitmaps(mFce); } ;
+  const char *GetFilename()
+                  { return mFce->mFontFileName; }
+  int *GetEmbeddedBitmapHeights()
+                  { return mFce->mEmbeddedBitmapHeights; } ;
+  int GetFaceIndex()
+                  { return mFce->mFaceIndex; }
+  int GetNumEmbeddedBitmaps()
+                  { return mFce->mNumEmbeddedBitmaps; } ;
   PRUint16 *GetCCMap();
   nsFontCatalogEntry* GetFce() { return mFce; };
 

@@ -44,19 +44,20 @@
 #endif
 
 #include "nsFontFreeType.h"
-#include "nsX11AlphaBlend.h"
-#include "nsAntiAliasedGlyph.h"
-#include "nsFontDebug.h"
 
 #if (!defined(MOZ_ENABLE_FREETYPE2))
 
 nsFreeTypeFont *
-nsFreeTypeFont::NewFont(nsFreeTypeFace *, PRUint16, const char *)
+nsFreeTypeFont::NewFont(nsITrueTypeFontCatalogEntry *, PRUint16, const char *)
 {
   return nsnull;
 }
 
 #else
+
+#include "nsX11AlphaBlend.h"
+#include "nsAntiAliasedGlyph.h"
+#include "nsFontDebug.h"
 
 // macros to handle FreeType2 26.6 numbers (26 bit number with 6 bit fraction)
 #define FT_CEIL(x) (((x) + 63) & -64)
@@ -78,7 +79,7 @@ PRUint8 nsFreeTypeFont::sLinearWeightTable[256];
 //
 class nsFreeTypeXImage : public nsFreeTypeFont {
 public:
-  nsFreeTypeXImage(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
+  nsFreeTypeXImage(nsITrueTypeFontCatalogEntry *aFaceID, PRUint16 aPixelSize,
                    const char *aName);
   gint DrawString(nsRenderingContextGTK* aContext,
                             nsDrawingSurfaceGTK* aSurface, nscoord aX,
@@ -93,8 +94,8 @@ protected:
 //
 class nsFreeTypeXImageSBC : public nsFreeTypeXImage {
 public:
-  nsFreeTypeXImageSBC(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
-                      const char *aName);
+  nsFreeTypeXImageSBC(nsITrueTypeFontCatalogEntry *aFaceID,
+                      PRUint16 aPixelSize, const char *aName);
 #ifdef MOZ_MATHML
   virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
                                       PRUint32           aLength,
@@ -133,8 +134,8 @@ nsFreeTypeFont::nsFreeTypeFont()
 }
 
 nsFreeTypeFont *
-nsFreeTypeFont::NewFont(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
-                        const char *aName)
+nsFreeTypeFont::NewFont(nsITrueTypeFontCatalogEntry *aFaceID,
+                        PRUint16 aPixelSize, const char *aName)
 {
   // for now we only support ximage (XGetImage/alpha-blend/XPutImage) display
   // when we support XRender then we will need to test if it is
@@ -142,8 +143,10 @@ nsFreeTypeFont::NewFont(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
   PRBool ximage = PR_TRUE;
   PRBool render = PR_FALSE;
   nsFreeTypeFont *ftfont;
-  nsFontCatalogEntry* fce = aFaceID->GetFce();
-  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  nsCAutoString familyName;
+  aFaceID->GetFamilyName(familyName);
+  nsTTFontFamilyEncoderInfo *ffei =
+    nsFreeType::GetCustomEncoderInfo(familyName.get());
   if (ximage) {
     if (ffei) {
       ftfont = new nsFreeTypeXImageSBC(aFaceID, aPixelSize, aName);
@@ -174,7 +177,7 @@ nsFreeTypeFont::getFTFace()
   return face;
 }
 
-nsFreeTypeFont::nsFreeTypeFont(nsFreeTypeFace *aFaceID,
+nsFreeTypeFont::nsFreeTypeFont(nsITrueTypeFontCatalogEntry *aFaceID,
                                PRUint16 aPixelSize, const char *aName)
 {
   PRBool anti_alias = PR_TRUE;
@@ -197,12 +200,14 @@ nsFreeTypeFont::nsFreeTypeFont(nsFreeTypeFace *aFaceID,
   if (nsFreeType::gFreeType2Unhinted)
     mImageDesc.image_type |= ftc_image_flag_unhinted;
 
+  PRUint32  num_embedded_bitmaps, i;
+  PRInt32*  embedded_bitmapheights;
+  mFaceID->GetEmbeddedBitmapHeights(&num_embedded_bitmaps,
+                                    &embedded_bitmapheights);
   // check if we have an embedded bitmap
   if (aPixelSize <= nsFreeType::gEmbeddedBitmapMaximumHeight) {
-    int num_embedded_bitmaps = mFaceID->GetNumEmbeddedBitmaps();
     if (num_embedded_bitmaps) {
-      int *embedded_bitmapheights = mFaceID->GetEmbeddedBitmapHeights();
-      for (int i=0; i<num_embedded_bitmaps; i++) {
+      for (i=0; i<num_embedded_bitmaps; i++) {
         if (embedded_bitmapheights[i] == aPixelSize) {
           embedded_bimap = PR_TRUE;
           // unhinted must be set for embedded bitmaps to be used
@@ -230,11 +235,14 @@ nsFreeTypeFont::LoadFont()
   }
 
   mAlreadyCalledLoadFont = PR_TRUE;
-  mCCMap = mFaceID->GetCCMap();
+  PRUint32 size;
+  mFaceID->GetCCMap(&size, &mCCMap);
 #ifdef NS_FONT_DEBUG_LOAD_FONT
+  nsCAutoString fileName;
+  mFaceID->GetFileName(fileName);
   if (gFontDebug & NS_FONT_DEBUG_LOAD_FONT) {
     printf("loaded \"%s\", size=%d, filename=%s\n",
-                 mName, mSize, mFaceID->GetFilename());
+                 mName, mSize, fileName.get());
   }
 #endif
 }
@@ -568,8 +576,8 @@ nsFreeTypeXImage::nsFreeTypeXImage()
   NS_ERROR("should never call nsFreeTypeXImage::nsFreeTypeXImage");
 }
 
-nsFreeTypeXImage::nsFreeTypeXImage(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
-                                   const char *aName)
+nsFreeTypeXImage::nsFreeTypeXImage(nsITrueTypeFontCatalogEntry *aFaceID,
+                                   PRUint16 aPixelSize, const char *aName)
 : nsFreeTypeFont(aFaceID, aPixelSize, aName)
 {
   //NS_ERROR("should never call nsFreeTypeXImage::nsFreeTypeXImage");
@@ -779,7 +787,7 @@ nsFreeTypeXImageSBC::nsFreeTypeXImageSBC()
   NS_ERROR("should never call nsFreeTypeXImageSBC::nsFreeTypeXImageSBC");
 }
 
-nsFreeTypeXImageSBC::nsFreeTypeXImageSBC(nsFreeTypeFace *aFaceID,
+nsFreeTypeXImageSBC::nsFreeTypeXImageSBC(nsITrueTypeFontCatalogEntry *aFaceID,
                                          PRUint16 aPixelSize,
                                          const char *aName)
 : nsFreeTypeXImage(aFaceID, aPixelSize, aName)
@@ -796,8 +804,10 @@ nsFreeTypeXImageSBC::GetBoundingMetrics(const PRUnichar*   aString,
   char buf[512];
   PRInt32 bufLen = sizeof(buf);
   PRInt32 stringLen = aLength;
-  nsFontCatalogEntry* fce = mFaceID->GetFce();
-  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  nsCAutoString familyName;
+  mFaceID->GetFamilyName(familyName);
+  nsTTFontFamilyEncoderInfo *ffei =
+    nsFreeType::GetCustomEncoderInfo(familyName.get());
   NS_ASSERTION(ffei,"failed to find font encoder info");
   if (!ffei)
     return NS_ERROR_FAILURE;
@@ -826,8 +836,10 @@ nsFreeTypeXImageSBC::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   char buf[512];
   PRInt32 bufLen = sizeof(buf);
   PRInt32 stringLen = aLength;
-  nsFontCatalogEntry* fce = mFaceID->GetFce();
-  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  nsCAutoString familyName;
+  mFaceID->GetFamilyName(familyName);
+  nsTTFontFamilyEncoderInfo *ffei =
+    nsFreeType::GetCustomEncoderInfo(familyName.get());
   NS_ASSERTION(ffei,"failed to find font encoder info");
   if (!ffei)
     return NS_ERROR_FAILURE;
@@ -859,8 +871,10 @@ nsFreeTypeXImageSBC::DrawString(nsRenderingContextGTK* aContext,
   char buf[512];
   PRInt32 bufLen = sizeof(buf);
   PRInt32 stringLen = aLength;
-  nsFontCatalogEntry* fce = mFaceID->GetFce();
-  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  nsCAutoString familyName;
+  mFaceID->GetFamilyName(familyName);
+  nsTTFontFamilyEncoderInfo *ffei =
+    nsFreeType::GetCustomEncoderInfo(familyName.get());
   NS_ASSERTION(ffei,"failed to find font encoder info");
   if (!ffei)
     return NS_ERROR_FAILURE;

@@ -38,25 +38,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "math.h"
+#include "nsIPref.h"
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsCompressedCharMap.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIRenderingContext.h"
-#include "nsFontDebug.h"
 #include "nsFreeType.h"
 
-PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
-
-#if (!defined(MOZ_ENABLE_FREETYPE2))
-// nsFreeType stubs for development systems without a FreeType dev env
-nsresult nsFreeTypeInitGlobals() { 
-  FREETYPE_FONT_PRINTF(("direct freetype not compiled in"));
-  NS_WARNING("direct freetype not compiled in");
-  return NS_OK;
-};
-
-void nsFreeTypeFreeGlobals() {};
-
-#else
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
@@ -66,6 +55,16 @@ void nsFreeTypeFreeGlobals() {};
 #include "freetype/ftcache.h"
 #include "freetype/cache/ftcimage.h"
 
+# define FREETYPE_PRINTF(x) \
+            PR_BEGIN_MACRO \
+              if (gFreeTypeDebug) { \
+                printf x ; \
+                printf(", %s %d\n", __FILE__, __LINE__); \
+              } \
+            PR_END_MACRO
+
+PRUint32 gFreeTypeDebug = 0;
+
 char*             nsFreeType::gFreeType2SharedLibraryName = nsnull;
 PRBool            nsFreeType::gEnableFreeType2 = PR_FALSE;
 PRBool            nsFreeType::gFreeType2Autohinted = PR_FALSE;
@@ -74,7 +73,14 @@ PRUint8           nsFreeType::gAATTDarkTextMinValue = 64;
 double            nsFreeType::gAATTDarkTextGain = 0.8;
 PRInt32           nsFreeType::gAntiAliasMinimum = 8;
 PRInt32           nsFreeType::gEmbeddedBitmapMaximumHeight = 1000000;
+nsHashtable*      nsFreeType::sFontFamilies = nsnull;
+nsHashtable*      nsFreeType::sRange1CharSetNames = nsnull;
+nsHashtable*      nsFreeType::sRange2CharSetNames = nsnull;
+nsICharsetConverterManager2* nsFreeType::sCharSetManager = nsnull;
 
+extern nsulCodePageRangeCharSetName ulCodePageRange1CharSetNames[];
+extern nsulCodePageRangeCharSetName ulCodePageRange2CharSetNames[];
+extern nsTTFontFamilyEncoderInfo    gFontFamilyEncoderInfo[];
 
 typedef int Error;
 
@@ -141,6 +147,44 @@ static FtFuncList FtFuncs [] = {
   {nsnull,                    (PRFuncPtr*)nsnull},
 };
 
+nsTTFontEncoderInfo FEI_Adobe_Symbol_Encoding = {
+  "Adobe-Symbol-Encoding", TT_PLATFORM_MICROSOFT, TT_MS_ID_SYMBOL_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_ttf_cmr = {
+  "x-ttf-cmr", TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_ttf_cmmi = {
+  "x-ttf-cmmi", TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_ttf_cmsy = {
+  "x-ttf-cmsy", TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_ttf_cmex = {
+  "x-ttf-cmex", TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica1 = {
+  "x-mathematica1", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica2 = {
+  "x-mathematica2", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica3 = {
+  "x-mathematica3", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica4 = {
+  "x-mathematica4", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica5 = {
+  "x-mathematica5", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mtextra = {
+  "x-mtextra", TT_PLATFORM_MICROSOFT, TT_MS_ID_SYMBOL_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_windows_1252 = {
+  "windows-1252", TT_PLATFORM_MICROSOFT, TT_MS_ID_SYMBOL_CS, nsnull
+};
+
+
 ///////////////////////////////////////////////////////////////////////
 //
 // class nsFreeType data/functions
@@ -157,12 +201,13 @@ nsFreeTypeFreeGlobals()
 nsresult
 nsFreeTypeInitGlobals()
 {
-  FREETYPE_FONT_PRINTF(("initialize freetype"));
+  FREETYPE_PRINTF(("initialize freetype"));
 
   nsresult rv = nsFreeType::InitGlobals();
 
   return rv;
 }
+
 
 // FREETYPE Globals
 PRLibrary      *nsFreeType::sSharedLib;
@@ -225,7 +270,24 @@ nsFreeType::FreeGlobals()
     (*nsFreeType::nsFT_Done_FreeType)(sFreeTypeLibrary);
     sFreeTypeLibrary = nsnull;
   }
-  nsFT2FontCatalog::FreeGlobals();
+  
+  if (sRange1CharSetNames)
+    delete sRange1CharSetNames;
+  if (sRange2CharSetNames)
+    delete sRange2CharSetNames;
+  if (sFontFamilies)
+    delete sFontFamilies;
+  
+  NS_IF_RELEASE(sCharSetManager);
+  
+  // release any encoders that were created
+  int i;
+  for (i=0; gFontFamilyEncoderInfo[i].mFamilyName; i++) {
+    nsTTFontFamilyEncoderInfo *ffei = &gFontFamilyEncoderInfo[i];
+    nsTTFontEncoderInfo *fei = ffei->mEncodingInfo;
+    NS_IF_RELEASE(fei->mConverter);
+  }
+
   UnloadSharedLib();
   ClearFunctions();
   ClearGlobals();
@@ -237,7 +299,9 @@ nsFreeType::InitGlobals(void)
   NS_ASSERTION(sInited==PR_FALSE, "InitGlobals called more than once");
   // set all the globals to default values
   ClearGlobals();
-  
+
+  nsulCodePageRangeCharSetName *crn = nsnull;
+  nsTTFontFamilyEncoderInfo *ff = gFontFamilyEncoderInfo;
   nsCOMPtr<nsIPref> mPref = do_GetService(NS_PREF_CONTRACTID);
   
   if (!mPref) {
@@ -250,14 +314,14 @@ nsFreeType::InitGlobals(void)
   rv = mPref->GetBoolPref("font.FreeType2.enable", &enable_freetype2);
   if (NS_SUCCEEDED(rv)) {
     gEnableFreeType2 = enable_freetype2;
-    FREETYPE_FONT_PRINTF(("gEnableFreeType2 = %d", gEnableFreeType2));
+    FREETYPE_PRINTF(("gEnableFreeType2 = %d", gEnableFreeType2));
   }
 
   rv = mPref->GetCharPref("font.freetype2.shared-library",
                           &gFreeType2SharedLibraryName);
   if (NS_FAILED(rv)) {
     enable_freetype2 = PR_FALSE;
-    FREETYPE_FONT_PRINTF((
+    FREETYPE_PRINTF((
                   "gFreeType2SharedLibraryName missing, FreeType2 disabled"));
     gFreeType2SharedLibraryName = nsnull;
   }
@@ -266,21 +330,21 @@ nsFreeType::InitGlobals(void)
   rv = mPref->GetBoolPref("font.FreeType2.autohinted", &freetype2_autohinted);
   if (NS_SUCCEEDED(rv)) {
     gFreeType2Autohinted = freetype2_autohinted;
-    FREETYPE_FONT_PRINTF(("gFreeType2Autohinted = %d", gFreeType2Autohinted));
+    FREETYPE_PRINTF(("gFreeType2Autohinted = %d", gFreeType2Autohinted));
   }
   
   PRBool freetype2_unhinted = PR_TRUE;
   rv = mPref->GetBoolPref("font.FreeType2.unhinted", &freetype2_unhinted);
   if (NS_SUCCEEDED(rv)) {
     gFreeType2Unhinted = freetype2_unhinted;
-    FREETYPE_FONT_PRINTF(("gFreeType2Unhinted = %d", gFreeType2Unhinted));
+    FREETYPE_PRINTF(("gFreeType2Unhinted = %d", gFreeType2Unhinted));
   }
 
   PRInt32 int_val = 0;
   rv = mPref->GetIntPref("font.scale.tt_bitmap.dark_text.min", &int_val);
   if (NS_SUCCEEDED(rv)) {
     gAATTDarkTextMinValue = int_val;
-    SIZE_FONT_PRINTF(("gAATTDarkTextMinValue = %d", gAATTDarkTextMinValue));
+    FREETYPE_PRINTF(("gAATTDarkTextMinValue = %d", gAATTDarkTextMinValue));
   }
 
   nsXPIDLCString str;
@@ -288,21 +352,21 @@ nsFreeType::InitGlobals(void)
                            getter_Copies(str));
   if (NS_SUCCEEDED(rv)) {
     gAATTDarkTextGain = atof(str.get());
-    SIZE_FONT_PRINTF(("gAATTDarkTextGain = %g", gAATTDarkTextGain));
+    FREETYPE_PRINTF(("gAATTDarkTextGain = %g", gAATTDarkTextGain));
   }
 
   PRInt32 antialias_minimum = 8;
   rv = mPref->GetIntPref("font.antialias.min", &antialias_minimum);
   if (NS_SUCCEEDED(rv)) {
     gAntiAliasMinimum = antialias_minimum;
-    FREETYPE_FONT_PRINTF(("gAntiAliasMinimum = %d", gAntiAliasMinimum));
+    FREETYPE_PRINTF(("gAntiAliasMinimum = %d", gAntiAliasMinimum));
   }
 
   PRInt32 embedded_bitmaps_maximum = 1000000;
   rv = mPref->GetIntPref("font.embedded_bitmaps.max",&embedded_bitmaps_maximum);
   if (NS_SUCCEEDED(rv)) {
     gEmbeddedBitmapMaximumHeight = embedded_bitmaps_maximum;
-    FREETYPE_FONT_PRINTF(("gEmbeddedBitmapMaximumHeight = %d",
+    FREETYPE_PRINTF(("gEmbeddedBitmapMaximumHeight = %d",
                              gEmbeddedBitmapMaximumHeight));
   }
   
@@ -328,10 +392,49 @@ nsFreeType::InitGlobals(void)
   }
   gFreeTypeFaces = new nsHashtable();
   if (!gFreeTypeFaces) {
+    FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  if (!nsFT2FontCatalog::InitGlobals(nsFreeType::GetLibrary())) {
-    return NS_ERROR_FAILURE;
+
+  sRange1CharSetNames = new nsHashtable();
+  if (!sRange1CharSetNames) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  crn = ulCodePageRange1CharSetNames;
+  while (crn->charsetName) {
+    char buf[32];
+    sprintf(buf, "0x%08lx", crn->bit);
+    nsCStringKey key(buf);
+    sRange1CharSetNames->Put(&key, (void*)crn->charsetName);
+    crn++;
+  }
+
+  sRange2CharSetNames = new nsHashtable();
+  if (!sRange2CharSetNames) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  crn = ulCodePageRange2CharSetNames;
+  while (crn->charsetName) {
+    char buf[32];
+    sprintf(buf, "0x%08lx", crn->bit);
+    nsCStringKey key(buf);
+    sRange2CharSetNames->Put(&key, (void*)crn->charsetName);
+    crn++;
+  }
+
+  sFontFamilies = new nsHashtable();
+  if (!sFontFamilies) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  while (ff->mFamilyName) {
+    nsCAutoString name(ff->mFamilyName);
+    ToLowerCase(name);
+    nsCStringKey key(name);
+    sFontFamilies->Put(&key, (void*)ff);
+    ff++;
   }
 
   return NS_OK;
@@ -358,7 +461,7 @@ nsFreeType::InitLibrary()
 
     sInitError = (*nsFreeType::nsFT_Init_FreeType)(&sFreeTypeLibrary);
     if (sInitError) {
-      FREETYPE_FONT_PRINTF(("\n\n*********\nFreeType initialization error = %d",
+      FREETYPE_PRINTF(("\n\n*********\nFreeType initialization error = %d",
                            sInitError));
       sFreeTypeLibrary = nsnull;
       goto cleanup_and_return;
@@ -423,22 +526,265 @@ nsFreeType::UnloadSharedLib()
   sSharedLib = nsnull;
 }
 
+const char *
+nsFreeType::GetRange1CharSetName(unsigned long aBit)
+{
+  char buf[32];
+  sprintf(buf, "0x%08lx", aBit);
+  nsCStringKey key(buf);
+  const char *charsetName = (const char *)sRange1CharSetNames->Get(&key);
+  return charsetName;
+}
+
+const char *
+nsFreeType::GetRange2CharSetName(unsigned long aBit)
+{
+  char buf[32];
+  sprintf(buf, "0x%08lx", aBit);
+  nsCStringKey key(buf);
+  const char *charsetName = (const char *)sRange2CharSetNames->Get(&key);
+  return charsetName;
+}
+
+nsTTFontFamilyEncoderInfo*
+nsFreeType::GetCustomEncoderInfo(const char * aFamilyName)
+{
+  if (!sFontFamilies)
+    return nsnull;
+
+  nsTTFontFamilyEncoderInfo *ffei;
+  nsCAutoString name(aFamilyName);
+  ToLowerCase(name);
+  nsCStringKey key(name);
+  ffei = (nsTTFontFamilyEncoderInfo*)sFontFamilies->Get(&key);
+  if (!ffei)
+    return nsnull;
+
+  // init the converter
+  if (!ffei->mEncodingInfo->mConverter) {
+    nsTTFontEncoderInfo *fei = ffei->mEncodingInfo;
+    //
+    // build the converter
+    //
+    nsICharsetConverterManager2* charSetManager = GetCharSetManager();
+    if (!charSetManager)
+      return nsnull;
+    nsCOMPtr<nsIAtom> charset(dont_AddRef(NS_NewAtom(fei->mConverterName)));
+    if (charset) {
+      nsresult res;
+      res = charSetManager->GetUnicodeEncoder(charset, &fei->mConverter);
+      if (NS_FAILED(res)) {
+        return nsnull;
+      }
+    }
+  }
+  return ffei;
+}
+
+nsICharsetConverterManager2*
+nsFreeType::GetCharSetManager()
+{
+  if (!sCharSetManager) {
+    //
+    // get the sCharSetManager
+    //
+    nsServiceManager::GetService(kCharSetManagerCID,
+                                 NS_GET_IID(nsICharsetConverterManager2),
+                                 (nsISupports**) &sCharSetManager);
+    NS_ASSERTION(sCharSetManager,"failed to create the charset manager");
+  }
+  return sCharSetManager;
+}
+
+PRUint16*
+nsFreeType::GetCCMap(nsFontCatalogEntry *aFce)
+{
+  nsCompressedCharMap ccmapObj;
+  ccmapObj.SetChars(aFce->mCCMap);
+  return ccmapObj.NewCCMap();
+}
+
 ///////////////////////////////////////////////////////////////////////
 //
 // class nsFreeTypeFace data/functions
 //
 ///////////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS1(nsFreeTypeFace, nsITrueTypeFontCatalogEntry)
 
-nsFreeTypeFace::nsFreeTypeFace(nsFontCatalogEntry *aFce)
+nsFreeTypeFace::nsFreeTypeFace()
 {
-  mFce = aFce;
+}
+
+nsresult nsFreeTypeFace::Init(nsFontCatalogEntry *aFce)
+{
+  NS_ASSERTION(aFce, "init of nsFreeTypeFace needs nsFontCatalogEntry");
+  NS_INIT_ISUPPORTS();
+  if (aFce)
+    mFce = aFce;
+  else {
+    mFce = new nsFontCatalogEntry;
+    NS_ASSERTION(mFce, "memory error while creating nsFontCatalogEntry");
+    if (!mFce)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
   mCCMap = nsnull;
+  return NS_OK;
 }
 
 nsFreeTypeFace::~nsFreeTypeFace()
 {
   if (mCCMap)
     FreeCCMap(mCCMap);
+}
+
+NS_IMETHODIMP nsFreeTypeFace::GetFontCatalogType(
+                              PRUint16 *aFontCatalogType)
+{
+  *aFontCatalogType = FONT_CATALOG_TRUETYPE;
+  return NS_OK;
+}
+
+/* readonly attribute ACString fileName; */
+NS_IMETHODIMP nsFreeTypeFace::GetFileName(nsACString & aFileName)
+{
+  aFileName.Assign(mFce->mFontFileName);
+  return NS_OK;
+}
+
+/* readonly attribute ACString familyName; */
+NS_IMETHODIMP nsFreeTypeFace::GetFamilyName(nsACString & aFamilyName)
+{
+  aFamilyName.Assign(mFce->mFamilyName);
+  return NS_OK;
+}
+
+/* readonly attribute ACString styleName; */
+NS_IMETHODIMP nsFreeTypeFace::GetStyleName(nsACString & aStyleName)
+{
+  aStyleName.Assign(mFce->mStyleName);
+  return NS_OK;
+}
+
+/* readonly attribute ACString vendorID; */
+NS_IMETHODIMP nsFreeTypeFace::GetVendorID(nsACString & aVendorID)
+{
+  aVendorID.Assign(mFce->mVendorID);
+  return NS_OK;
+}
+
+/* readonly attribute short faceIndex; */
+NS_IMETHODIMP nsFreeTypeFace::GetFaceIndex(PRInt16 *aFaceIndex)
+{
+  *aFaceIndex = mFce->mFaceIndex;
+  return NS_OK;
+}
+
+/* readonly attribute short numFaces; */
+NS_IMETHODIMP nsFreeTypeFace::GetNumFaces(PRInt16 *aNumFaces)
+{
+  *aNumFaces = mFce->mNumFaces;
+  return NS_OK;
+}
+
+/* readonly attribute short numEmbeddedBitmaps; */
+NS_IMETHODIMP nsFreeTypeFace::GetNumEmbeddedBitmaps(
+                              PRInt16 *aNumEmbeddedBitmaps)
+{
+  *aNumEmbeddedBitmaps = mFce->mNumEmbeddedBitmaps;
+  return NS_OK;
+}
+
+/* readonly attribute long numGlyphs; */
+NS_IMETHODIMP nsFreeTypeFace::GetNumGlyphs(PRInt32 *aNumGlyphs)
+{
+  *aNumGlyphs = mFce->mNumGlyphs;
+  return NS_OK;
+}
+
+/* readonly attribute long numUsableGlyphs; */
+NS_IMETHODIMP nsFreeTypeFace::GetNumUsableGlyphs(
+                              PRInt32 *aNumUsableGlyphs)
+{
+  *aNumUsableGlyphs = mFce->mNumUsableGlyphs;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned short weight; */
+NS_IMETHODIMP nsFreeTypeFace::GetWeight(PRUint16 *aWeight)
+{
+  *aWeight = mFce->mWeight;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned short width; */
+NS_IMETHODIMP nsFreeTypeFace::GetWidth(PRUint16 *aWidth)
+{
+  *aWidth = mFce->mWidth;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned long flags; */
+NS_IMETHODIMP nsFreeTypeFace::GetFlags(PRUint32 *aFlags)
+{
+  *aFlags = mFce->mFlags;
+  return NS_OK;
+}
+
+/* readonly attribute long long faceFlags; */
+NS_IMETHODIMP nsFreeTypeFace::GetFaceFlags(PRInt64 *aFaceFlags)
+{
+  *aFaceFlags = mFce->mFaceFlags;
+  return NS_OK;
+}
+
+/* readonly attribute long long styleFlags; */
+NS_IMETHODIMP nsFreeTypeFace::GetStyleFlags(PRInt64 *aStyleFlags)
+{
+  *aStyleFlags = mFce->mStyleFlags;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned long codePageRange1; */
+NS_IMETHODIMP nsFreeTypeFace::GetCodePageRange1(
+                              PRUint32 *aCodePageRange1)
+{
+  *aCodePageRange1 = mFce->mCodePageRange1;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned long codePageRange2; */
+NS_IMETHODIMP nsFreeTypeFace::GetCodePageRange2(
+                              PRUint32 *aCodePageRange2)
+{
+  *aCodePageRange2 = mFce->mCodePageRange2;
+  return NS_OK;
+}
+
+/* readonly attribute long long time; */
+NS_IMETHODIMP nsFreeTypeFace::GetFileModTime(PRInt64 *aTime)
+{
+  *aTime = mFce->mMTime;
+  return NS_OK;
+}
+
+/* void getCCMap (out unsigned long size,
+ * [array, size_is (size), retval] out unsigned short ccMaps); */
+NS_IMETHODIMP nsFreeTypeFace::GetCCMap(
+                              PRUint32 *size, PRUint16 **ccMaps)
+{
+  *ccMaps = nsFreeType::GetCCMap(mFce);
+  *size = CCMAP_SIZE(*ccMaps);
+  return NS_OK;
+}
+
+/* void getEmbeddedBitmapHeights (out unsigned long size,
+ * [array, size_is (size), retval] out short heights); */
+NS_IMETHODIMP nsFreeTypeFace::GetEmbeddedBitmapHeights(
+                              PRUint32 *size, PRInt32 **heights)
+{
+  *heights = mFce->mEmbeddedBitmapHeights;
+  *size = mFce->mNumEmbeddedBitmaps;
+  return NS_OK;
 }
 
 PRBool
@@ -454,11 +800,10 @@ PRUint16 *
 nsFreeTypeFace::GetCCMap()
 {
   if (!mCCMap) {
-    mCCMap = nsFT2FontCatalog::GetCCMap(mFce);
+    mCCMap = nsFreeType::GetCCMap(mFce);
   }
   return mCCMap;
 }
-
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -478,7 +823,7 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
   // since all interesting data is in the nsFreeTypeFace object
   // we do not currently need to use request_data
   fterror = (*nsFreeType::nsFT_New_Face)(nsFreeType::GetLibrary(),
-                     faceID->GetFilename(), 
+                     faceID->GetFilename(),
                      faceID->GetFaceIndex(), aFace);
   if (fterror)
     return fterror;
@@ -487,7 +832,8 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
   FT_UShort platform_id = TT_PLATFORM_MICROSOFT;
   FT_UShort encoding_id = TT_MS_ID_UNICODE_CS;
   nsFontCatalogEntry* fce = faceID->GetFce();
-  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  nsTTFontFamilyEncoderInfo *ffei =
+                     nsFreeType::GetCustomEncoderInfo(fce->mFamilyName);
   if (ffei) {
     platform_id = ffei->mEncodingInfo->mCmapPlatformID;
     encoding_id = ffei->mEncodingInfo->mCmapEncoding;
@@ -497,7 +843,7 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
         && (face->charmaps[i]->encoding_id == encoding_id)) {
       fterror = (*nsFreeType::nsFT_Set_Charmap)(face, face->charmaps[i]);
       if (fterror) {
-        FREETYPE_FONT_PRINTF(("failed to set cmap"));
+        FREETYPE_PRINTF(("failed to set cmap"));
         (*nsFreeType::nsFT_Done_Face)(face);
         *aFace = nsnull;
       }
@@ -513,19 +859,99 @@ nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce)
   // We need to have separate keys for the different faces in a ttc file.
   // We append a slash and the face index to the file name to give us a 
   // unique key for each ttc face.
-  nsCAutoString key_str(nsFT2FontCatalog::GetFileName(aFce));
+  nsCAutoString key_str(aFce->mFontFileName);
   key_str.Append('/');
-  key_str.AppendInt(nsFT2FontCatalog::GetFaceIndex(aFce));
+  key_str.AppendInt(aFce->mFaceIndex);
   nsCStringKey key(key_str);
   nsFreeTypeFace *face = (nsFreeTypeFace *)gFreeTypeFaces->Get(&key);
   if (!face) {
-    face = new nsFreeTypeFace(aFce);
+    face = new nsFreeTypeFace;
     NS_ASSERTION(face, "memory error while creating nsFreeTypeFace");
     if (!face)
+      return nsnull;
+    nsresult rv = face->Init(aFce);
+    if (NS_FAILED(rv))
       return nsnull;
     gFreeTypeFaces->Put(&key, face);
   }
   return face;
 }
 
-#endif /* (!defined(MOZ_ENABLE_FREETYPE2)) */
+nsTTFontFamilyEncoderInfo gFontFamilyEncoderInfo[] = {
+  { "symbol",         &FEI_Adobe_Symbol_Encoding },
+  { "cmr10",          &FEI_x_ttf_cmr,            },
+  { "cmmi10",         &FEI_x_ttf_cmmi,           },
+  { "cmsy10",         &FEI_x_ttf_cmsy,           },
+  { "cmex10",         &FEI_x_ttf_cmex,           },
+  { "math1",          &FEI_x_mathematica1,       },
+  { "math1-bold",     &FEI_x_mathematica1,       },
+  { "math1mono",      &FEI_x_mathematica1,       },
+  { "math1mono-bold", &FEI_x_mathematica1,       },
+  { "math2",          &FEI_x_mathematica2,       },
+  { "math2-bold",     &FEI_x_mathematica2,       },
+  { "math2mono",      &FEI_x_mathematica2,       },
+  { "math2mono-bold", &FEI_x_mathematica2,       },
+  { "ahMn",           &FEI_x_mathematica3,       }, // weird name for Math3
+  { "math3",          &FEI_x_mathematica3,       },
+  { "math3-bold",     &FEI_x_mathematica3,       },
+  { "math3mono",      &FEI_x_mathematica3,       },
+  { "math3mono-bold", &FEI_x_mathematica3,       },
+  { "math4",          &FEI_x_mathematica4,       },
+  { "math4-bold",     &FEI_x_mathematica4,       },
+  { "math4mono",      &FEI_x_mathematica4,       },
+  { "math4mono-bold", &FEI_x_mathematica4,       },
+  { "math5",          &FEI_x_mathematica5,       },
+  { "math5-bold",     &FEI_x_mathematica5,       },
+  { "math5bold",      &FEI_x_mathematica5,       },
+  { "math5mono",      &FEI_x_mathematica5,       },
+  { "math5mono-bold", &FEI_x_mathematica5,       },
+  { "math5monobold",  &FEI_x_mathematica5,       },
+  { "mtextra",        &FEI_x_mtextra,            },
+  { "mt extra",       &FEI_x_mtextra,            },
+  { "wingdings",      &FEI_windows_1252,         },
+  { "webdings",       &FEI_windows_1252,         },
+  { nsnull },
+};
+
+nsulCodePageRangeCharSetName ulCodePageRange1CharSetNames[] = {
+{ TT_OS2_CPR1_LATIN1,       "iso8859-1"         },
+{ TT_OS2_CPR1_LATIN2,       "iso8859-2"         },
+{ TT_OS2_CPR1_CYRILLIC,     "iso8859-5"         },
+{ TT_OS2_CPR1_GREEK,        "iso8859-7"         },
+{ TT_OS2_CPR1_TURKISH,      "iso8859-9"         },
+{ TT_OS2_CPR1_HEBREW,       "iso8859-8"         },
+{ TT_OS2_CPR1_ARABIC,       "iso8859-6"         },
+{ TT_OS2_CPR1_BALTIC,       "iso8859-13"        },
+{ TT_OS2_CPR1_VIETNAMESE,   "viscii1.1-1"       },
+{ TT_OS2_CPR1_THAI,         "tis620.2533-1"     },
+{ TT_OS2_CPR1_JAPANESE,     "jisx0208.1990-0"   },
+{ TT_OS2_CPR1_CHINESE_SIMP, "gb2312.1980-1"     },
+{ TT_OS2_CPR1_KO_WANSUNG,   "ksc5601.1992-3"    },
+{ TT_OS2_CPR1_CHINESE_TRAD, "big5-0"            },
+{ TT_OS2_CPR1_KO_JOHAB,     "ksc5601.1992-3"    },
+{ TT_OS2_CPR1_MAC_ROMAN,    "iso8859-1"         },
+{ TT_OS2_CPR1_OEM,          "fontspecific-0"    },
+{ TT_OS2_CPR1_SYMBOL,       "fontspecific-0"    },
+{ 0,                         nsnull             },
+};
+
+nsulCodePageRangeCharSetName ulCodePageRange2CharSetNames[] = {
+{ TT_OS2_CPR2_GREEK,        "iso8859-7"         },
+{ TT_OS2_CPR2_RUSSIAN,      "koi8-r"            },
+{ TT_OS2_CPR2_NORDIC,       "iso8859-10"        },
+{ TT_OS2_CPR2_ARABIC,       "iso8859-6"         },
+{ TT_OS2_CPR2_CA_FRENCH,    "iso8859-1"         },
+{ TT_OS2_CPR2_HEBREW,       "iso8859-8"         },
+{ TT_OS2_CPR2_ICELANDIC,    "iso8859-1"         },
+{ TT_OS2_CPR2_PORTUGESE,    "iso8859-1"         },
+{ TT_OS2_CPR2_TURKISH,      "iso8859-9"         },
+{ TT_OS2_CPR2_CYRILLIC,     "iso8859-5"         },
+{ TT_OS2_CPR2_LATIN2,       "iso8859-2"         },
+{ TT_OS2_CPR2_BALTIC,       "iso8859-4"         },
+{ TT_OS2_CPR2_GREEK_437G,   "iso8859-7"         },
+{ TT_OS2_CPR2_ARABIC_708,   "iso8859-6"         },
+{ TT_OS2_CPR2_WE_LATIN1,    "iso8859-1"         },
+{ TT_OS2_CPR2_US,           "iso8859-1"         },
+{ 0,                         nsnull             },
+};
+
