@@ -621,12 +621,6 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
   PRInt32   strOffset = 0;
   PRInt32   lineLength, oldLineEnd;
   
-  // Make sure we haven't gone too far already
-  if (mColPos > mMaxColumn) {
-    AppendToString(mLineBreak, aOutputStr);
-    mColPos = 0;
-  }
-  
   // Find the end of the first old line
   oldLineEnd = aStr.FindChar(PRUnichar('\n'), 0);
   
@@ -647,12 +641,18 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
 
     // if we can fill up the new line with less than what's
     // in the current old line...
-    if ((strOffset + leftInLine) < oldLineLimit) {
+    if (((strOffset + leftInLine) < oldLineLimit) || (leftInLine < 0))  {
       addLineBreak = PR_TRUE;
       
       // Look for the next word end to break
-      indx = aStr.FindChar(PRUnichar(' '), strOffset + leftInLine);
-      
+      if (leftInLine < 0) {
+        //if we have already crossed the limit of 72 columns, immediately start searching for next white space.
+        indx = aStr.FindChar(PRUnichar(' '), strOffset);
+      }
+      else {
+        //if the limit of 72 chars is not yet reached, start looking for next appropriate break only after 72 column.
+        indx = aStr.FindChar(PRUnichar(' '), strOffset + leftInLine);
+      }
       // If it's after the end of the current line, then break at
       // the current line
       if ((indx == kNotFound) || 
