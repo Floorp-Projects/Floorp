@@ -1,3 +1,12 @@
+1998-08-13  Leif Hedstrom  <leif@netscape.com>
+
+	* All: Cleaned up some hash indexes, to make sure they are
+	properly quoted, and there are no conflicts to resolve.
+	
+	* Entry.pm (STORE): Fixed a bug with attribute names not being
+	properly added to _oc_order_.
+	(addValue): Dito, added the same code as for STORE.
+
 1998-08-06  Leif Hedstrom  <leif@netscape.com>
 
 	* Entry.pm (printLDIF): Copied/modified from the Utils.pm library.
