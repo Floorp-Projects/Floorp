@@ -108,10 +108,10 @@ public:
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
   NS_IMETHOD EndComposition(void);
-  NS_IMETHOD OutputTextToString(nsString& aOutputString);
-  NS_IMETHOD OutputHTMLToString(nsString& aOutputString);
-  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
-  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
+  NS_IMETHOD OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly);
+  NS_IMETHOD OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly);
+  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride, PRBool aSelectionOnly);
+  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride, PRBool aSelectionOnly);
 
 // Logging methods
 

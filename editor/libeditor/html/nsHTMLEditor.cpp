@@ -663,12 +663,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputTextToString(nsString& aOutputString)
+NS_IMETHODIMP nsHTMLEditor::OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly)
 {
-  return nsTextEditor::OutputTextToString(aOutputString);
+  return nsTextEditor::OutputTextToString(aOutputString, aSelectionOnly);
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
+NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly)
 {
 #if defined(DEBUG_akkana)
   printf("============Content dump:===========\n");
@@ -688,17 +688,17 @@ NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
   }
 #endif
 
-  return nsTextEditor::OutputHTMLToString(aOutputString);
+  return nsTextEditor::OutputHTMLToString(aOutputString, aSelectionOnly);
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset)
+NS_IMETHODIMP nsHTMLEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset, PRBool aSelectionOnly)
 {
-  return nsTextEditor::OutputTextToStream(aOutputStream, aCharset);
+  return nsTextEditor::OutputTextToStream(aOutputStream, aCharset, aSelectionOnly);
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset)
+NS_IMETHODIMP nsHTMLEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset, PRBool aSelectionOnly)
 {
-  return nsTextEditor::OutputHTMLToStream(aOutputStream, aCharset);
+  return nsTextEditor::OutputHTMLToStream(aOutputStream, aCharset, aSelectionOnly);
 }
 
 

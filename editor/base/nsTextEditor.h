@@ -112,10 +112,10 @@ public:
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
   NS_IMETHOD EndComposition(void);
-  NS_IMETHOD OutputTextToString(nsString& aOutputString);
-  NS_IMETHOD OutputHTMLToString(nsString& aOutputString);
-  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
-  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
+  NS_IMETHOD OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly);
+  NS_IMETHOD OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly);
+  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly);
+  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly);
 
 // Plain text wrapping control
   NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);

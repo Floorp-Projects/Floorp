@@ -102,11 +102,11 @@ public:
 
   NS_IMETHOD InsertHTML(const nsString &aInputString)=0;
 
-  NS_IMETHOD OutputTextToString(nsString& aOutputString)=0;
-  NS_IMETHOD OutputHTMLToString(nsString& aOutputString)=0;
+  NS_IMETHOD OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly)=0;
+  NS_IMETHOD OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly)=0;
 
-  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
-  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
+  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly)=0;
+  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly)=0;
 
 // Miscellaneous Methods
   /** Set the background color of the selected table cell, row, columne, or table,
