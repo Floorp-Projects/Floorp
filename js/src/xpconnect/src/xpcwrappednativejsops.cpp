@@ -913,57 +913,55 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     old = ccx.SetResolveName(old);
     NS_ASSERTION(old == idval, "bad nest");
 
-    if(NS_SUCCEEDED(rv))
+    if(NS_FAILED(rv))
     {
-        if(obj2FromScriptable)
-        {
-            *objp = obj2FromScriptable;
-        }
-        else if(wrapper->HasMutatedSet())
-        {
-            // We are here if scriptable did not resolve this property and
-            // it *might* be in the instance set but not the proto set.
-
-            XPCNativeSet* set = wrapper->GetSet();
-            XPCNativeSet* protoSet = wrapper->HasProto() ?
-                                        wrapper->GetProto()->GetSet() : nsnull;
-            XPCNativeMember* member;
-            XPCNativeInterface* iface;
-            JSBool IsLocal;
-
-            if(set->FindMember(idval, &member, &iface, protoSet, &IsLocal) &&
-               IsLocal)
-            {
-                XPCWrappedNative* oldResolvingWrapper;
-
-                XPCNativeScriptableFlags siFlags(0);
-                if(si)
-                    siFlags = si->GetFlags();
-
-                uintN enumFlag =
-                    siFlags.DontEnumStaticProps() ? 0 : JSPROP_ENUMERATE;
-
-                XPCWrappedNative* wrapperForInterfaceNames =
-                    siFlags.DontReflectInterfaceNames() ? nsnull : wrapper;
-
-                JSBool resolved;
-                oldResolvingWrapper = ccx.SetResolvingWrapper(wrapper);
-                retval = DefinePropertyIfFound(ccx, obj, idval,
-                                               set, iface, member,
-                                               wrapper->GetScope(),
-                                               JS_FALSE,
-                                               wrapperForInterfaceNames,
-                                               nsnull, si,
-                                               enumFlag, &resolved);
-                (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
-                if(retval && resolved)
-                    *objp = obj;
-            }
-        }
+        return Throw(rv, cx);
     }
-    else
+
+    if(obj2FromScriptable)
     {
-        Throw(rv, cx);
+        *objp = obj2FromScriptable;
+    }
+    else if(wrapper->HasMutatedSet())
+    {
+        // We are here if scriptable did not resolve this property and
+        // it *might* be in the instance set but not the proto set.
+
+        XPCNativeSet* set = wrapper->GetSet();
+        XPCNativeSet* protoSet = wrapper->HasProto() ?
+                                    wrapper->GetProto()->GetSet() : nsnull;
+        XPCNativeMember* member;
+        XPCNativeInterface* iface;
+        JSBool IsLocal;
+
+        if(set->FindMember(idval, &member, &iface, protoSet, &IsLocal) &&
+           IsLocal)
+        {
+            XPCWrappedNative* oldResolvingWrapper;
+
+            XPCNativeScriptableFlags siFlags(0);
+            if(si)
+                siFlags = si->GetFlags();
+
+            uintN enumFlag =
+                siFlags.DontEnumStaticProps() ? 0 : JSPROP_ENUMERATE;
+
+            XPCWrappedNative* wrapperForInterfaceNames =
+                siFlags.DontReflectInterfaceNames() ? nsnull : wrapper;
+
+            JSBool resolved;
+            oldResolvingWrapper = ccx.SetResolvingWrapper(wrapper);
+            retval = DefinePropertyIfFound(ccx, obj, idval,
+                                           set, iface, member,
+                                           wrapper->GetScope(),
+                                           JS_FALSE,
+                                           wrapperForInterfaceNames,
+                                           nsnull, si,
+                                           enumFlag, &resolved);
+            (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
+            if(retval && resolved)
+                *objp = obj;
+        }
     }
 
     return retval;
