@@ -103,6 +103,9 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
   if (!aWrapColumn) {
     mMaxColumn = 72;
   }
+  else {
+    mMaxColumn = aWrapColumn;
+  }
 
   mDoFormat = (mFlags & nsIDocumentEncoder::OutputFormatted) ? PR_TRUE
                                                              : PR_FALSE;
