@@ -41,6 +41,7 @@ extern "C" {
 #include "nsString.h"
 #include "nsINetlibURL.h"
 #include "nsIProtocolConnection.h"
+#include "nsINetlibURL.h"
 #include "nsIProtocolURLFactory.h"
 #include "nsIProtocol.h"
 #include "nsIURLGroup.h"
@@ -608,11 +609,13 @@ loser:
 }
 
 static NS_DEFINE_IID(kIProtocolConnectionIID, NS_IPROTOCOLCONNECTION_IID);
+static NS_DEFINE_IID(kINetLibUrlIID, NS_INETLIBURL_IID);
 
 NS_IMETHODIMP
 nsNetlibService::InterruptStream(nsIURL* aURL)
 {
-  nsIProtocolConnection *pProtocol;
+  nsINetlibURL * pNetUrl = nsnull;
+
   nsresult rv = NS_OK;
 
   if (nsnull == aURL) {
@@ -620,16 +623,16 @@ nsNetlibService::InterruptStream(nsIURL* aURL)
     goto done;
   }
 
-  rv = aURL->QueryInterface(kIProtocolConnectionIID, (void**)&pProtocol);
+  rv = aURL->QueryInterface(kINetLibUrlIID, (void**)&pNetUrl);
    if (NS_SUCCEEDED(rv)) {
      URL_Struct* URL_s;
      int status = -1;
 
-     pProtocol->GetURLInfo(&URL_s);
+     pNetUrl->GetURLInfo(&URL_s);
      if (nsnull != URL_s) {
        status = NET_InterruptStream(URL_s);
      }
-     NS_RELEASE(pProtocol);
+     NS_RELEASE(pNetUrl);
 
      if (status != 0) {
        rv = NS_ERROR_FAILURE;
