@@ -50,12 +50,14 @@ report_java_initialization_error(JNIEnv *jEnv, const char *js_error_msg)
     const char *error_msg, *java_error_msg;
 
     java_error_msg = NULL;
-
+#if 0   /* This can never work here, because jsj_GetJavaErrorMessage relies on 
+           jlThrowable_toString which is set up by the initialization that calls 
+           this function. */
     if (jEnv) {
         java_error_msg = jsj_GetJavaErrorMessage(jEnv);
         (*jEnv)->ExceptionClear(jEnv);
     }
-
+#endif
     if (java_error_msg) { 
         error_msg = PR_smprintf("initialization error: %s (%s)\n",
                                 js_error_msg, java_error_msg);

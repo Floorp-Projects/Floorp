@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -228,9 +228,13 @@ enumerate_remove_java_obj(JSJHashEntry *he, PRIntn i, void *arg)
 void
 jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
 {
-    JSJ_HashTableEnumerateEntries(java_obj_reflections,
-                                  enumerate_remove_java_obj,
-                                  (void*)jEnv);
+    if (java_obj_reflections) {
+        JSJ_HashTableEnumerateEntries(java_obj_reflections,
+                                      enumerate_remove_java_obj,
+                                      (void*)jEnv);
+        JSJ_HashTableDestroy(java_obj_reflections);
+        java_obj_reflections = NULL;
+    }
 }
 
 PR_CALLBACK JSBool
