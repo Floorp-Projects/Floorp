@@ -79,7 +79,9 @@ public:
 
     NS_IMETHOD GetLength(PRUint32 *_retval) {
         if (!mResult) {
-            Eval();
+            nsresult rv = Eval();
+            if (NS_FAILED(rv))
+                return rv;
             NS_ASSERTION(mResult, "Eval didn't set mResult");
         }
         PRUint32 rest = mLength - mReadCursor;
@@ -135,17 +137,17 @@ public:
         // Finally, we have everything needed to evaluate the expression.
         nsAutoString ret;
         PRBool isUndefined;
-        nsresult ok;
-        ok = scriptContext->EvaluateString(nsString(jsExpr),
-                                           nsnull, 0, ret, &isUndefined);
+        rv = scriptContext->EvaluateString(nsString(jsExpr), nsnull, 0, ret,
+                                           &isUndefined);
         nsCRT::free(jsExpr);
-        if (NS_SUCCEEDED(ok)) {
-//            JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
+        if (NS_FAILED(rv)) {
+            rv = NS_ERROR_MALFORMED_URI;
+        } else {
             // Find out if it can be converted into a string
             if (isUndefined) {
                 mResult = nsCRT::strdup("");
             } else {
-#if 0	// plaintext is apparently busted
+#if 0   // plaintext is apparently busted
                 if (ret[0] != PRUnichar('<'))
                     ret.Insert("<plaintext>\n", 0);
 #endif
