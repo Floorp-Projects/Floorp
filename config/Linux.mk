@@ -35,9 +35,15 @@ endif
 endif
 GFX_ARCH		:= x
 
+# Dont do the detect hackery for autoconf builds.  It makes them painfully
+# slow and its not needed anyway, since autoconf does it much better.
+ifndef USE_AUTOCONF
+
 # Include the automagically generated makefile.  This generated makefile
 # should contain lots of magic paths and flags.
 -include $(MOZILLA_DETECT_GEN)
+
+endif # USE_AUTOCONF
 
 OS_INCLUDES		= $(MOZILLA_XFE_MOTIF_INCLUDE_FLAGS) $(MOZILLA_XFE_X11_INCLUDE_FLAGS)
 G++INCLUDES		= -I/usr/include/g++

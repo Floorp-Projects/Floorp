@@ -798,11 +798,17 @@ $(MKDEPEND)::
 	cd $(DEPTH)/config; $(MAKE) nsinstall tweak_nspr
 	cd $(MKDEPEND_DIR); $(MAKE)
 
+# Dont do the detect hackery for autoconf builds.  It makes them painfully
+# slow and its not needed anyway, since autoconf does it much better.
+ifndef USE_AUTOCONF
+
 # Rules to for detection
 $(MOZILLA_DETECT_GEN):
 	cd $(MOZILLA_DETECT_DIR); $(MAKE)
 
 detect: $(MOZILLA_DETECT_GEN)
+
+endif
 
 ifdef OBJS
 depend:: $(MKDEPEND) $(MKDEPENDENCIES)
