@@ -600,14 +600,25 @@ NET_AskForAuthString(MWContext *context,
     
         if(prev_auth)
           {
-			char *tmp;
+		char *tmp;
+		int skipProtoHost;
 
-			net_remove_stored_http_password(prev_auth->path);
+		net_remove_stored_http_password(prev_auth->path);
+
+		tmp = NET_ParseURL(prev_auth->path, GET_HOST_PART | GET_PROTOCOL_PART);
+		skipProtoHost = XP_STRLEN(tmp);
+		XP_ASSERT(!strncasecomp(
+			tmp, 
+			NET_ParseURL(new_address, GET_HOST_PART | GET_PROTOCOL_PART), 
+			skipProtoHost));
+		FREE(tmp);
 
             /* compare the two url paths until they deviate
-             * once they deviate truncate
+             * once they deviate truncate.
+             * skip ptr1, ptr2 past the host names 
+             * which we have already compared
              */
-            for(ptr1 = prev_auth->path, ptr2 = new_address; *ptr1 && *ptr2; ptr1++, ptr2++)
+            for(ptr1 = prev_auth->path + skipProtoHost, ptr2 = new_address + skipProtoHost; *ptr1 && *ptr2; ptr1++, ptr2++)
 			  {
                 if(*ptr1 != *ptr2)
                   {
