@@ -261,6 +261,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 	if (NS_FAILED(rv))
 		return rv;        
 
+    folder->SetParent(this);
 	nsAllocator::Free(uriStr);
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
@@ -289,7 +290,6 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 	NS_ASSERTION(supports, "couldn't get isupports from imap folder");
 	if (supports)
 		mSubFolders->AppendElement(supports);
-    folder->SetParent(this);
 	*child = folder;
 	NS_IF_ADDREF(*child);
 	return rv;

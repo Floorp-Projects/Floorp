@@ -265,6 +265,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	if (NS_FAILED(rv))
 		return rv;
 
+	folder->SetParent(this);
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
 	PRBool isServer;
@@ -297,7 +298,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	nsCOMPtr<nsISupports> supports = do_QueryInterface(folder);
 	if(folder)
 		mSubFolders->AppendElement(supports);
-	folder->SetParent(this);
 	*child = folder;
 	NS_ADDREF(*child);
 

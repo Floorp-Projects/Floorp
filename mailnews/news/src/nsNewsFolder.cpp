@@ -200,7 +200,9 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
   
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
-		return rv;        
+		return rv;
+  
+	folder->SetParent(this);
 
 	rv = folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
   if (NS_FAILED(rv))
@@ -229,7 +231,6 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
 	nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(folder));
 	if(folderSupports)
 		mSubFolders->AppendElement(folderSupports);
-	folder->SetParent(this);
 	*child = folder;
 	folder->SetParent(this);
 	NS_ADDREF(*child);
