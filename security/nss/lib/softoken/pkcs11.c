@@ -263,27 +263,42 @@ static const struct mechanismList mechanisms[] = {
       */
 
      /* ------------------------- RSA Operations ---------------------------*/
-     {CKM_RSA_PKCS_KEY_PAIR_GEN,{128,CK_MAX,CKF_GENERATE_KEY_PAIR},PR_TRUE},
-     {CKM_RSA_PKCS,		{128,CK_MAX,CKF_DUZ_IT_ALL},	PR_TRUE},
+     {CKM_RSA_PKCS_KEY_PAIR_GEN,{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_GENERATE_KEY_PAIR},PR_TRUE},
+     {CKM_RSA_PKCS,             {RSA_MIN_MODULUS_BITS,CK_MAX,
+                                 CKF_DUZ_IT_ALL},       PR_TRUE},
 #ifdef PK11_RSA9796_SUPPORTED
-     {CKM_RSA_9796,		{128,CK_MAX,CKF_DUZ_IT_ALL},	PR_TRUE}, 
+     {CKM_RSA_9796,		{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_DUZ_IT_ALL},       PR_TRUE},
 #endif
-     {CKM_RSA_X_509,		{128,CK_MAX,CKF_DUZ_IT_ALL},	PR_TRUE}, 
+     {CKM_RSA_X_509,		{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_DUZ_IT_ALL},       PR_TRUE},
      /* -------------- RSA Multipart Signing Operations -------------------- */
-     {CKM_MD2_RSA_PKCS,		{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
-     {CKM_MD5_RSA_PKCS,		{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
-     {CKM_SHA1_RSA_PKCS,	{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
-     {CKM_SHA256_RSA_PKCS,	{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
-     {CKM_SHA384_RSA_PKCS,	{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
-     {CKM_SHA512_RSA_PKCS,	{128,CK_MAX,CKF_SN_VR}, 	PR_TRUE},
+     {CKM_MD2_RSA_PKCS,		{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_SN_VR}, 	PR_TRUE},
+     {CKM_MD5_RSA_PKCS,		{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_SN_VR}, 	PR_TRUE},
+     {CKM_SHA1_RSA_PKCS,	{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_SN_VR}, 	PR_TRUE},
+     {CKM_SHA256_RSA_PKCS,	{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_SN_VR}, 	PR_TRUE},
+     {CKM_SHA384_RSA_PKCS,	{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_SN_VR}, 	PR_TRUE},
+     {CKM_SHA512_RSA_PKCS,	{RSA_MIN_MODULUS_BITS,CK_MAX,
+				 CKF_SN_VR}, 	PR_TRUE},
      /* ------------------------- DSA Operations --------------------------- */
-     {CKM_DSA_KEY_PAIR_GEN,	{512, 1024, CKF_GENERATE_KEY_PAIR}, PR_TRUE},
-     {CKM_DSA,			{512, 1024, CKF_SN_VR},		PR_TRUE},
-     {CKM_DSA_SHA1,		{512, 1024, CKF_SN_VR},		PR_TRUE},
+     {CKM_DSA_KEY_PAIR_GEN,	{DSA_MIN_P_BITS, DSA_MAX_P_BITS,
+				 CKF_GENERATE_KEY_PAIR}, PR_TRUE},
+     {CKM_DSA,			{DSA_MIN_P_BITS, DSA_MAX_P_BITS, 
+				 CKF_SN_VR},              PR_TRUE},
+     {CKM_DSA_SHA1,		{DSA_MIN_P_BITS, DSA_MAX_P_BITS,
+				 CKF_SN_VR},              PR_TRUE},
      /* -------------------- Diffie Hellman Operations --------------------- */
      /* no diffie hellman yet */
-     {CKM_DH_PKCS_KEY_PAIR_GEN,	{128, 1024, CKF_GENERATE_KEY_PAIR}, PR_TRUE}, 
-     {CKM_DH_PKCS_DERIVE,	{128, 1024, CKF_DERIVE}, 	PR_TRUE}, 
+     {CKM_DH_PKCS_KEY_PAIR_GEN,	{DH_MIN_P_BITS, DH_MAX_P_BITS, 
+				 CKF_GENERATE_KEY_PAIR}, PR_TRUE}, 
+     {CKM_DH_PKCS_DERIVE,	{DH_MIN_P_BITS, DH_MAX_P_BITS,
+				 CKF_DERIVE}, 	PR_TRUE}, 
 #ifdef NSS_ENABLE_ECC
      /* -------------------- Elliptic Curve Operations --------------------- */
      {CKM_EC_KEY_PAIR_GEN,      {112, 571, CKF_GENERATE_KEY_PAIR|CKF_EC_BPNU}, PR_TRUE}, 
@@ -1025,37 +1040,61 @@ pk11_handlePublicKeyObject(PK11Session *session, PK11Object *object,
     CK_BBOOL derive = CK_FALSE;
     CK_BBOOL verify = CK_TRUE;
     CK_ATTRIBUTE_TYPE pubKeyAttr = CKA_VALUE;
+    PK11Attribute *attribute;
     CK_RV crv;
 
     switch (key_type) {
     case CKK_RSA:
-	if ( !pk11_hasAttribute(object, CKA_MODULUS)) {
-	    return CKR_TEMPLATE_INCOMPLETE;
+	crv = pk11_ConstrainAttribute(object, CKA_MODULUS,
+						 RSA_MIN_MODULUS_BITS, 0, 2);
+	if (crv != CKR_OK) {
+	    return crv;
 	}
-	if ( !pk11_hasAttribute(object, CKA_PUBLIC_EXPONENT)) {
-	    return CKR_TEMPLATE_INCOMPLETE;
+	crv = pk11_ConstrainAttribute(object, CKA_PUBLIC_EXPONENT, 2, 0, 0);
+	if (crv != CKR_OK) {
+	    return crv;
 	}
 	pubKeyAttr = CKA_MODULUS;
 	break;
     case CKK_DSA:
-	if ( !pk11_hasAttribute(object, CKA_SUBPRIME)) {
-	    return CKR_TEMPLATE_INCOMPLETE;
+	crv = pk11_ConstrainAttribute(object, CKA_SUBPRIME, 
+						DSA_Q_BITS, DSA_Q_BITS, 0);
+	if (crv != CKR_OK) {
+	    return crv;
 	}
-	/* fall through */
+	crv = pk11_ConstrainAttribute(object, CKA_PRIME, 
+					DSA_MIN_P_BITS, DSA_MAX_P_BITS, 64);
+	if (crv != CKR_OK) {
+	    return crv;
+	}
+	crv = pk11_ConstrainAttribute(object, CKA_BASE, 1, DSA_MAX_P_BITS, 0);
+	if (crv != CKR_OK) {
+	    return crv;
+	}
+	crv = pk11_ConstrainAttribute(object, CKA_VALUE, 1, DSA_MAX_P_BITS, 0);
+	if (crv != CKR_OK) {
+	    return crv;
+	}
+	encrypt = CK_FALSE;
+	recover = CK_FALSE;
+	wrap = CK_FALSE;
+	break;
     case CKK_DH:
-	if ( !pk11_hasAttribute(object, CKA_PRIME)) {
-	    return CKR_TEMPLATE_INCOMPLETE;
+	crv = pk11_ConstrainAttribute(object, CKA_PRIME, 
+					DH_MIN_P_BITS, DH_MAX_P_BITS, 0);
+	if (crv != CKR_OK) {
+	    return crv;
 	}
-	if ( !pk11_hasAttribute(object, CKA_BASE)) {
-	    return CKR_TEMPLATE_INCOMPLETE;
+	crv = pk11_ConstrainAttribute(object, CKA_BASE, 1, DH_MAX_P_BITS, 0);
+	if (crv != CKR_OK) {
+	    return crv;
 	}
-	if ( !pk11_hasAttribute(object, CKA_VALUE)) {
-	    return CKR_TEMPLATE_INCOMPLETE;
+	crv = pk11_ConstrainAttribute(object, CKA_VALUE, 1, DH_MAX_P_BITS, 0);
+	if (crv != CKR_OK) {
+	    return crv;
 	}
-	if (key_type == CKK_DH) {
-	    verify = CK_FALSE;
-	    derive = CK_TRUE;
- 	}
+	verify = CK_FALSE;
+	derive = CK_TRUE;
 	encrypt = CK_FALSE;
 	recover = CK_FALSE;
 	wrap = CK_FALSE;

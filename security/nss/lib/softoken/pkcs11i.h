@@ -582,6 +582,10 @@ extern CK_RV pk11_AddAttributeType(PK11Object *object, CK_ATTRIBUTE_TYPE type,
 				  CK_ULONG length);
 extern CK_RV pk11_Attribute2SecItem(PLArenaPool *arena, SECItem *item,
 				    PK11Object *object, CK_ATTRIBUTE_TYPE type);
+extern unsigned int pk11_GetLengthInBits(unsigned char *buf,
+							 unsigned int bufLen);
+extern CK_RV pk11_ConstrainAttribute(PK11Object *object, 
+	CK_ATTRIBUTE_TYPE type, int minLength, int maxLength, int minMultiple);
 extern PRBool pk11_hasAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type);
 extern PRBool pk11_isTrue(PK11Object *object, CK_ATTRIBUTE_TYPE type);
 extern void pk11_DeleteAttributeType(PK11Object *object,

@@ -2946,7 +2946,6 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 }
 
 
-
 /* NSC_GenerateKeyPair generates a public-key/private-key pair, 
  * creating new key objects. */
 CK_RV NSC_GenerateKeyPair (CK_SESSION_HANDLE hSession,
@@ -2965,6 +2964,7 @@ CK_RV NSC_GenerateKeyPair (CK_SESSION_HANDLE hSession,
     CK_OBJECT_CLASS 	privClass = CKO_PRIVATE_KEY;
     int 		i;
     PK11Slot *		slot 	= pk11_SlotFromSessionHandle(hSession);
+    unsigned int bitSize;
 
     /* RSA */
     int 		public_modulus_bits = 0;
@@ -3064,10 +3064,23 @@ CK_RV NSC_GenerateKeyPair (CK_SESSION_HANDLE hSession,
 	    crv = CKR_TEMPLATE_INCOMPLETE;
 	    break;
 	}
+	if (public_modulus_bits < RSA_MIN_MODULUS_BITS) {
+	    crv = CKR_ATTRIBUTE_VALUE_INVALID;
+	    break;
+	}
+	if (public_modulus_bits % 2 != 0) {
+	    crv = CKR_ATTRIBUTE_VALUE_INVALID;
+	    break;
+	}
 
 	/* extract the exponent */
 	crv=pk11_Attribute2SSecItem(NULL,&pubExp,publicKey,CKA_PUBLIC_EXPONENT);
 	if (crv != CKR_OK) break;
+        bitSize = pk11_GetLengthInBits(pubExp.data, pubExp.len);
+	if (bitSize < 2) {
+	    crv = CKR_ATTRIBUTE_VALUE_INVALID;
+	    break;
+	}
         crv = pk11_AddAttributeType(privateKey,CKA_PUBLIC_EXPONENT,
 				    		    pk11_item_expand(&pubExp));
 	if (crv != CKR_OK) {
@@ -3161,6 +3174,32 @@ kpg_done:
 	    break;
 	}
 
+        bitSize = pk11_GetLengthInBits(pqgParam.subPrime.data, 
+							pqgParam.subPrime.len);
+        if (bitSize != DSA_Q_BITS)  {
+	    crv = CKR_TEMPLATE_INCOMPLETE;
+	    PORT_Free(pqgParam.prime.data);
+	    PORT_Free(pqgParam.subPrime.data);
+	    PORT_Free(pqgParam.base.data);
+	    break;
+	}
+        bitSize = pk11_GetLengthInBits(pqgParam.prime.data,pqgParam.prime.len);
+        if ((bitSize <  DSA_MIN_P_BITS) || (bitSize > DSA_MAX_P_BITS)) {
+	    crv = CKR_TEMPLATE_INCOMPLETE;
+	    PORT_Free(pqgParam.prime.data);
+	    PORT_Free(pqgParam.subPrime.data);
+	    PORT_Free(pqgParam.base.data);
+	    break;
+	}
+        bitSize = pk11_GetLengthInBits(pqgParam.base.data,pqgParam.base.len);
+        if ((bitSize <  1) || (bitSize > DSA_MAX_P_BITS)) {
+	    crv = CKR_TEMPLATE_INCOMPLETE;
+	    PORT_Free(pqgParam.prime.data);
+	    PORT_Free(pqgParam.subPrime.data);
+	    PORT_Free(pqgParam.base.data);
+	    break;
+	}
+	    
 	/* Generate the key */
 	rv = DSA_NewKey(&pqgParam, &dsaPriv);
 
@@ -3200,26 +3239,46 @@ dsagn_done:
 	if (crv != CKR_OK) break;
 	crv = pk11_Attribute2SSecItem(NULL, &dhParam.base, publicKey, CKA_BASE);
 	if (crv != CKR_OK) {
-	  PORT_Free(dhParam.prime.data);
-	  break;
+	    PORT_Free(dhParam.prime.data);
+	    break;
 	}
 	crv = pk11_AddAttributeType(privateKey, CKA_PRIME, 
 				    pk11_item_expand(&dhParam.prime));
 	if (crv != CKR_OK) {
-	  PORT_Free(dhParam.prime.data);
-	  PORT_Free(dhParam.base.data);
-	  break;
+	    PORT_Free(dhParam.prime.data);
+	    PORT_Free(dhParam.base.data);
+	    break;
 	}
 	crv = pk11_AddAttributeType(privateKey, CKA_BASE, 
 				    pk11_item_expand(&dhParam.base));
-	if (crv != CKR_OK) goto dhgn_done;
+	if (crv != CKR_OK) {
+	    PORT_Free(dhParam.prime.data);
+	    PORT_Free(dhParam.base.data);
+	    break;
+	}
+        bitSize = pk11_GetLengthInBits(dhParam.prime.data,dhParam.prime.len);
+        if ((bitSize <  DH_MIN_P_BITS) || (bitSize > DH_MAX_P_BITS)) {
+	    crv = CKR_TEMPLATE_INCOMPLETE;
+	    PORT_Free(pqgParam.prime.data);
+	    PORT_Free(pqgParam.subPrime.data);
+	    PORT_Free(pqgParam.base.data);
+	    break;
+	}
+        bitSize = pk11_GetLengthInBits(dhParam.base.data,dhParam.base.len);
+        if ((bitSize <  1) || (bitSize > DH_MAX_P_BITS)) {
+	    crv = CKR_TEMPLATE_INCOMPLETE;
+	    PORT_Free(pqgParam.prime.data);
+	    PORT_Free(pqgParam.subPrime.data);
+	    PORT_Free(pqgParam.base.data);
+	    break;
+	}
 
 	rv = DH_NewKey(&dhParam, &dhPriv);
 	PORT_Free(dhParam.prime.data);
 	PORT_Free(dhParam.base.data);
 	if (rv != SECSuccess) { 
-	  crv = CKR_DEVICE_ERROR;
-	  break;
+	    crv = CKR_DEVICE_ERROR;
+	    break;
 	}
 
 	crv=pk11_AddAttributeType(publicKey, CKA_VALUE, 
