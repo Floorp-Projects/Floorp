@@ -456,6 +456,8 @@ MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT) $(MOZ_XLIBRGB_LDFLAGS)'
 WIDGET_DLL='\"libwidget_$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
 GFXWIN_DLL='\"libgfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\"'
 
+MOZ_ENABLE_POSTSCRIPT=1 
+
 if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
     OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
@@ -954,6 +956,7 @@ case "$target" in
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
+    MOZ_ENABLE_POSTSCRIPT=
 
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
@@ -1097,6 +1100,7 @@ case "$target" in
     MOZ_GFX_TOOLKIT_LDFLAGS='$(DIST)/lib/gfx_$(MOZ_WIDGET_TOOLKIT)'
     WIDGET_DLL='\"wdgt$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
     GFXWIN_DLL='\"gfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\"'
+    MOZ_ENABLE_POSTSCRIPT=
 
     # EMX/GCC build
     if test "$GNU_CC"; then
@@ -2947,8 +2951,6 @@ AC_SUBST(MOZ_ENABLE_FREETYPE2)
 dnl ========================================================
 dnl = PostScript print module
 dnl ========================================================
-MOZ_ENABLE_POSTSCRIPT=1
-
 MOZ_ARG_DISABLE_BOOL(postscript,
 [  --disable-postscript        Disable PostScript printing support ],
     MOZ_ENABLE_POSTSCRIPT=,
