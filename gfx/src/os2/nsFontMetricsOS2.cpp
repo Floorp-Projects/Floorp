@@ -1944,12 +1944,12 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
   if( str1.First() == PRUnichar('@') )
   {
     if( str2.First() == PRUnichar('@') )
-      return str1.CompareWithConversion( str2 );
+      return Compare( str1, str2, nsCaseInsensitiveStringComparator() );
     else
     {
       nsString temp( str1 );
       temp.Trim( "@", PR_TRUE, PR_FALSE );
-      int rv = temp.Equals( str2, nsCaseInsensitiveStringComparator() );
+      int rv = Compare( temp, str2, nsCaseInsensitiveStringComparator() );
       if( rv == 0 )
         return 1;
       else
@@ -1960,14 +1960,14 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
   {
     nsString temp( str2 );
     temp.Trim( "@", PR_TRUE, PR_FALSE );
-    int rv = str2.Equals( temp, nsCaseInsensitiveStringComparator() );
+    int rv = Compare( str1, temp, nsCaseInsensitiveStringComparator() );
     if( rv == 0 )
       return -1;
     else
       return rv;
   }
   else
-    return str2.Equals( str2, nsCaseInsensitiveStringComparator() );
+    return Compare( str1, str2, nsCaseInsensitiveStringComparator() );
 }
 
 NS_IMETHODIMP
