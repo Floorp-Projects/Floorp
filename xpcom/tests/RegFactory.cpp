@@ -71,7 +71,7 @@ nsresult Register(const char *path)
   if (NS_FAILED(res)) return res;
   res = spec->SetNativePath((char *)path);
   if (NS_FAILED(res)) return res;
-  res = nsComponentManager::AutoRegisterComponent(nsIComponentManager::NS_Startup, spec);
+  res = nsComponentManager::AutoRegisterComponent(nsIComponentManagerObsolete::NS_Startup, spec);
   return res;
 }
 
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     if (argc <= 1)
     {
         nsresult rv = nsComponentManager::AutoRegister(
-                                                       nsIComponentManager::NS_Startup,
+                                                       nsIComponentManagerObsolete::NS_Startup,
                                                        NULL /* default location */);
         ret = (NS_FAILED(rv)) ? -1 : 0;
     }

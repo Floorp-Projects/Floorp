@@ -76,6 +76,9 @@ Module.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     dump("*** Registering -venkman handler.\n");
+    
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
     compMgr.registerComponentWithType(CLINE_SERVICE_CID,
                                       "Venkman CommandLine Service",
                                       CLINE_SERVICE_CTRID, fileSpec,
@@ -91,6 +94,8 @@ function (compMgr, fileSpec, location, type)
 Module.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
     compMgr.unregisterComponentSpec(CLINE_SERVICE_CID, fileSpec);
 	catman = Components.classes[CATMAN_CTRID].getService(nsICategoryManager);
 	catman.deleteCategoryEntry("command-line-argument-handlers",

@@ -298,7 +298,7 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
   }
   else file = stdin;
 
-  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 0);
+  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, 0);
   NS_SetupRegistry();
 
   // Read in the string: very inefficient, but who cares?

@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.18 $
+ *  Version: $Revision: 1.19 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.18 2001/11/30 08:04:24 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.19 2001/12/19 00:11:33 dougt%netscape.com Exp $
  */
 
 /*
@@ -1176,6 +1176,8 @@ PushbackInputStream.prototype = {
 /* nsXmlRpcClient Module (for XPCOM registration) */
 var nsXmlRpcClientModule = {
     registerSelf: function(compMgr, fileSpec, location, type) {
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
         compMgr.registerComponentWithType(XMLRPCCLIENT_CID, 
             'XML-RPC Client JS component', XMLRPCCLIENT_CONTRACTID, fileSpec,
             location, true, true, type);

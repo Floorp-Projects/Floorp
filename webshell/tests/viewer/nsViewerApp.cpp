@@ -255,7 +255,7 @@ NS_METHOD nsTestFormProcessor::ProvideContent(const nsString& aFormType,
 nsresult
 nsViewerApp::AutoregisterComponents()
 {
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
                                                  NULL /* default */);
 
   return rv;

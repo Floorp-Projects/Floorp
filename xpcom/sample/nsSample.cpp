@@ -53,7 +53,7 @@
 
 nsSampleImpl::nsSampleImpl() : mValue(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mValue = PL_strdup("initial value");
 }
 

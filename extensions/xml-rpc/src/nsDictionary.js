@@ -18,9 +18,9 @@
 
 /*
  *  nsDictionary XPCOM component
- *  Version: $Revision: 1.4 $
+ *  Version: $Revision: 1.5 $
  *
- *  $Id: nsDictionary.js,v 1.4 2000/09/13 23:51:27 rayw%netscape.com Exp $
+ *  $Id: nsDictionary.js,v 1.5 2001/12/19 00:11:33 dougt%netscape.com Exp $
  */
 
 /*
@@ -83,6 +83,7 @@ nsDictionary.prototype= {
 /* nsDictionary Module (for XPCOM registration) */
 var nsDictionaryModule = {
     registerSelf: function(compMgr, fileSpec, location, type) {
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
         compMgr.registerComponentWithType(DICTIONARY_CID, 
             "nsDictionary JS component", DICTIONARY_CONTRACTID, fileSpec, location,
             true, true, type);

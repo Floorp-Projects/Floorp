@@ -48,7 +48,7 @@ NS_DEFINE_CID(kTestLoadedFactoryCID, NS_TESTLOADEDFACTORY_CID);
 int main(int argc, char **argv) {
   nsresult rv;
 
-  rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+  rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
                                         NULL /* default */);
   if (NS_FAILED(rv)) return rv;
 

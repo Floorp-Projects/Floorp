@@ -418,8 +418,8 @@ nsresult nsDll::GetDllSpec(nsIFile **fsobj)
 
 nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
 {
-    nsIComponentManager *compMgr;
-    nsresult rv = NS_GetGlobalComponentManager(&compMgr);
+    nsCOMPtr<nsIComponentManager> compMgr;
+    nsresult rv = NS_GetComponentManager(getter_AddRefs(compMgr));
     NS_ASSERTION(compMgr, "Global Component Manager is null" );
     if (NS_FAILED(rv)) return rv;
 

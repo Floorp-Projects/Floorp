@@ -67,6 +67,7 @@ var filterModule = new Object();
 filterModule.registerSelf = 
     function (compMgr, fileSpec, location, type) {
         dump("*** Registering Web Filters (a Javascript module!)\n");
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
         compMgr.registerComponentWithType(kFILTERS_CID,
             "Javascript Web Filters",
             kFILTERS_CONTRACTID,

@@ -66,7 +66,7 @@ void GetPaths(nsILocalFile* file)
 extern "C" void
 NS_SetupRegistry()
 {
-  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL);
+  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL);
 }
 
 void InitTest(const char* creationPath, const char* appendPath)

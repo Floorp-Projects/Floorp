@@ -40,6 +40,7 @@
 
 #include "nscore.h"
 
+class nsIComponentManager;
 class nsIServiceManager;
 class nsIFile;
 class nsIDirectoryServiceProvider;
@@ -109,6 +110,19 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
  */
 extern "C" NS_COM nsresult
 NS_GetServiceManager(nsIServiceManager* *result);
+
+/**
+ * Public Method to access to the component manager.
+ * 
+ * @status FROZEN
+ * @param result Interface pointer to the service 
+ *
+ * @return NS_OK for success;
+ *         other error codes indicate a failure during initialisation.
+ *
+ */
+extern "C" NS_COM nsresult
+NS_GetComponentManager(nsIComponentManager* *result);
 
 /**
  * Public Method to access to the memory manager.  See nsIMemory

@@ -63,7 +63,7 @@ main(int argc, char* argv[])
     rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return -1;
     
-    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL);
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL);
 
     if (argc > 1 && argv[1] != nsnull) 
     {

@@ -55,6 +55,7 @@
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsComponentManagerObsolete.h"
 #include "nsCOMPtr.h"
 
 #include "nsIEventQueueService.h"

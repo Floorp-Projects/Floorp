@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is XPCOM
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
+ * The Initial Developer of the Original Code is Netscape Communications 
+ * Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,33 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
-/*
- * This evil file will go away when the XPCOM registry can be 
- * externally initialized!
- *
- * Until then, include the real file to keep everything in sync.
- */
-#ifdef XP_MAC
-#include ":::webshell:tests:viewer:nsSetupRegistry.cpp"
-#else
-#include "../../webshell/tests/viewer/nsSetupRegistry.cpp"
+#ifndef nsIComponentManagerUtils_h__
+#define nsIComponentManagerUtils_h__
+
+
+
 #endif
-
-extern "C" void
-NS_SetupRegistry_1( PRBool needAutoreg )
-{
-  if ( needAutoreg )
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                     NULL /* default */);
-
-  /*
-   * Call the standard NS_SetupRegistry() implemented in 
-   * webshell/tests/viewer/nsSetupregistry.cpp
-   */
-  NS_SetupRegistry();
-}
-
-
-
-

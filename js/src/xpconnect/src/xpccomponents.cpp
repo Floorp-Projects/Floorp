@@ -369,8 +369,8 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     {
         case JSENUMERATE_INIT:
         {
-            nsIComponentManager* compMgr;
-            if(NS_FAILED(NS_GetGlobalComponentManager(&compMgr)) ||
+            nsIComponentManagerObsolete* compMgr;
+            if(NS_FAILED(NS_GetGlobalComponentManager((nsIComponentManager**)&compMgr)) ||
                !compMgr || NS_FAILED(compMgr->EnumerateContractIDs(&e)) || !e ||
                NS_FAILED(e->First()))
 
@@ -529,8 +529,8 @@ nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     {
         case JSENUMERATE_INIT:
         {
-            nsIComponentManager* compMgr;
-            if(NS_FAILED(NS_GetGlobalComponentManager(&compMgr)) ||
+            nsIComponentManagerObsolete* compMgr;
+            if(NS_FAILED(NS_GetGlobalComponentManager((nsIComponentManager**)&compMgr)) ||
                !compMgr || NS_FAILED(compMgr->EnumerateCLSIDs(&e)) || !e ||
                NS_FAILED(e->First()))
 
@@ -590,8 +590,8 @@ IsRegisteredCLSID(const char* str)
     if(!id.Parse(str))
         return PR_FALSE;
 
-    nsIComponentManager* compMgr;
-    if(NS_FAILED(NS_GetGlobalComponentManager(&compMgr)) ||
+    nsIComponentManagerObsolete* compMgr;
+    if(NS_FAILED(NS_GetGlobalComponentManager((nsIComponentManager**)&compMgr)) ||
        !compMgr || NS_FAILED(compMgr->IsRegistered(id, &registered)))
         return PR_FALSE;
 
@@ -1612,17 +1612,7 @@ NS_IMETHODIMP
 nsXPCComponents::GetManager(nsIComponentManager * *aManager)
 {
     NS_ASSERTION(aManager, "bad param");
-
-    nsIComponentManager* cm;
-    if(NS_FAILED(NS_GetGlobalComponentManager(&cm)))
-    {
-        *aManager = nsnull;
-        return NS_ERROR_FAILURE;
-    }
-    NS_IF_ADDREF(cm);
-    *aManager = cm;
-
-    return NS_OK;
+    return NS_GetComponentManager(aManager);
 }
 
 /**********************************************/

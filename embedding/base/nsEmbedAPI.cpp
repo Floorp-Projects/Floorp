@@ -111,7 +111,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
         // XXX hack method
         NS_SetupRegistry();
         
-        rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+        rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
                                               NULL /* default */);
         if (NS_FAILED(rv))
         {

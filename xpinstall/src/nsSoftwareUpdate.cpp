@@ -435,7 +435,7 @@ nsSoftwareUpdate::StartupTasks( PRBool *needAutoreg )
     // is not the actual BuildID, or if we couldn't get the BuildID
     if ( autoReg || NS_FAILED(rv) || buildID != NS_BUILD_ID )
     {
-        rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,0);
+        rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,0);
 
         if (NS_SUCCEEDED(rv))
         {

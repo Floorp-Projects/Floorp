@@ -278,6 +278,8 @@ var nsLDAPPrefsModule = new Object();
 nsLDAPPrefsModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
     compMgr.registerComponentWithType(NS_LDAPPREFSSERVICE_CID,
                                       "nsLDAPPrefs Service",
                                       NS_LDAPPREFSSERVICE_CONTRACTID, fileSpec,
@@ -287,6 +289,7 @@ function (compMgr, fileSpec, location, type)
 nsLDAPPrefsModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
     compMgr.unregisterComponentSpec(NS_LDAPPREFSSERVICE_CID, fileSpec);
 }
 

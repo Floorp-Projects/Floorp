@@ -323,6 +323,9 @@ XMLtermModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     dump("*** Registering -terminal handler.\n");
+    
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
     compMgr.registerComponentWithType(XMLTERMCLINE_SERVICE_CID,
                                       "XMLterm CommandLine Service",
                                       XMLTERMCLINE_SERVICE_CONTRACTID, fileSpec,
@@ -351,6 +354,7 @@ function (compMgr, fileSpec, location, type)
 XMLtermModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
     compMgr.unregisterComponentSpec(XMLTERMCLINE_SERVICE_CID, fileSpec);
 	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);

@@ -44,6 +44,10 @@
 
 #include "nsIObserverService.h"
 
+#ifndef OBSOLETE_MODULE_LOADING
+#include "nsObsoleteModuleLoading.h"
+#endif
+
 #if defined(XP_MAC)  // sdagley dougt fix
 #include <Files.h>
 #include <Errors.h>
@@ -372,7 +376,7 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
 
     // When shutting down, whether we can unload the dll or not,
     // we will shutdown the dll to release any memory it has got
-    if (when == nsIComponentManager::NS_Shutdown)
+    if (when == nsIComponentManagerObsolete::NS_Shutdown)
     {
         dll->Shutdown();
     }
@@ -426,7 +430,7 @@ nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure)
     struct freeLibrariesClosure *callData = (struct freeLibrariesClosure *) closure;
     nsFreeLibrary(dll,
                   (callData ? callData->serviceMgr : NULL),
-                  (callData ? callData->when : nsIComponentManager::NS_Timer));
+                  (callData ? callData->when : nsIComponentManagerObsolete::NS_Timer));
     return PR_TRUE;
 }
 
@@ -634,7 +638,13 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
         if (NS_FAILED(res)) return res;
         // Get registry location for spec
         nsXPIDLCString registryName;
-        res = mCompMgr->RegistryLocationForSpec(fs, getter_Copies(registryName));
+                
+        // what I want to do here is QI for a Component Registration Manager.  Since this 
+        // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+        nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &res);
+        if (obsoleteManager)
+            res = obsoleteManager->RegistryLocationForSpec(fs, getter_Copies(registryName));
+
         if (NS_FAILED(res)) return res;
         mobj->UnregisterSelf(mCompMgr, fs, registryName);
     }
@@ -662,8 +672,12 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
     nsresult rv = NS_ERROR_FAILURE;
 
     nsXPIDLCString persistentDescriptor;
-    rv = mCompMgr->RegistryLocationForSpec(component,
-                                           getter_Copies(persistentDescriptor));
+    // what I want to do here is QI for a Component Registration Manager.  Since this 
+    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+    nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
+    if (obsoleteManager)
+        rv = obsoleteManager->RegistryLocationForSpec(component,
+                                                      getter_Copies(persistentDescriptor));
     if (NS_FAILED(rv)) return rv;
 
     // Notify observers, if any, of autoregistration work
@@ -784,8 +798,12 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         return NS_OK;
 
     nsXPIDLCString persistentDescriptor;
-    rv = mCompMgr->RegistryLocationForSpec(component, 
-                                           getter_Copies(persistentDescriptor));
+    // what I want to do here is QI for a Component Registration Manager.  Since this 
+    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+    nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
+    if (obsoleteManager)
+        rv = obsoleteManager->RegistryLocationForSpec(component, 
+                                                      getter_Copies(persistentDescriptor));
     if (NS_FAILED(rv))
         return rv;
 
@@ -1132,8 +1150,12 @@ nsNativeComponentLoader::CreateDll(nsIFile *aSpec, const char *aLocation,
             dll = new nsDll(aLocation+4, 1 /* dumb magic flag */);
             if (!dll) return NS_ERROR_OUT_OF_MEMORY;
         } else {
-            rv = mCompMgr->SpecForRegistryLocation(aLocation,
-                                                   getter_AddRefs(spec));
+            // what I want to do here is QI for a Component Registration Manager.  Since this 
+            // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+            nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
+            if (obsoleteManager)
+                rv = obsoleteManager->SpecForRegistryLocation(aLocation,
+                                                              getter_AddRefs(spec));
             if (NS_FAILED(rv))
                 return rv;
         }

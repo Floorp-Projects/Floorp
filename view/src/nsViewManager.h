@@ -407,6 +407,9 @@ private:
 
   nsISupportsArray  *mCompositeListeners;
   void DestroyZTreeNode(DisplayZTreeNode* aNode);
+
+  nsresult CreateRegion(nsIRegion* *result);
+  nsCOMPtr<nsIFactory> mRegionFactory;
 protected:
   nsView            *mRootView;
   nscoord           mX;

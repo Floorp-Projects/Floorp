@@ -1357,7 +1357,9 @@ var nsLDAPDataSourceModule = {
     registerSelf: function (compMgr, fileSpec, location, type) {
         debug("*** Registering LDAP datasource components" +
               " (all right -- a JavaScript module!)\n");
-
+        
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+        
         compMgr.registerComponentWithType(
                 NS_LDAPDATASOURCE_CID, 
                 'LDAP RDF DataSource', 

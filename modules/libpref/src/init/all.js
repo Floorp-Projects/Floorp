@@ -399,9 +399,7 @@ pref("network.http.proxy.ssl.connect",true);
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
 
-// until the directory view has an owner
-// necko will produce html -- dougt
-pref("network.dir.generate_html", true);
+pref("network.dir.generate_html", false);
 
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only

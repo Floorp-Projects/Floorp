@@ -207,6 +207,8 @@ filePickerModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     debug("registering (all right -- a JavaScript module!)");
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
     compMgr.registerComponentWithType(FILEPICKER_CID, "FilePicker JS Component",
                                       FILEPICKER_CONTRACTID, fileSpec, location,
                                       true, true, type);

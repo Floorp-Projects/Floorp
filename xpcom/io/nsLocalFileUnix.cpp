@@ -1492,16 +1492,18 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
         // Escape the path with the directory mask
         rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
         if (NS_SUCCEEDED(rv)) {
-        
+            if (escPath[escPath.Length() - 1] != '/') {
+                PRBool dir;
+                rv = IsDirectory(&dir);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "Cannot tell if this is a directory");
+                if (NS_SUCCEEDED(rv) && dir && ) {
+                    // make sure we have a trailing slash
+                    escPath += "/";
+                }
+            }
+
             escPath.Insert("file://", 0);
 
-            PRBool dir;
-            rv = IsDirectory(&dir);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "Cannot tell if this is a directory");
-            if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
-                // make sure we have a trailing slash
-                escPath += "/";
-            }
             *aURL = ToNewCString(escPath);
             rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
         }

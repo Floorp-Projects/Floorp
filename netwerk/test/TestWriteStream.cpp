@@ -197,7 +197,7 @@ TestSyncWrites(char* filenamePrefix, PRUint32 startPosition, PRInt32 length)
 nsresult
 NS_AutoregisterComponents()
 {
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
   return rv;
 }
 

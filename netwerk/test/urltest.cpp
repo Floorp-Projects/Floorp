@@ -395,7 +395,7 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
 
 nsresult NS_AutoregisterComponents()
 {
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
   return rv;
 }
 

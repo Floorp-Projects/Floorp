@@ -420,11 +420,29 @@ nsrefcnt nsViewManager::Release(void)
   return mRefCnt;
 }
 
-static nsresult CreateRegion(nsIComponentManager* componentManager, nsIRegion* *result)
+nsresult 
+nsViewManager::CreateRegion(nsIRegion* *result)
 {
-  *result = nsnull;
+  nsresult rv;
+  
+  if (!mRegionFactory) {
+    nsCOMPtr<nsIComponentManager> compMgr;
+    rv = NS_GetComponentManager(getter_AddRefs(compMgr));
+        
+    if (NS_SUCCEEDED(rv))
+      rv = compMgr->GetClassObject(kRegionCID, 
+                                   NS_GET_IID(nsIFactory), 
+                                   getter_AddRefs(mRegionFactory));
+    
+    if (!mRegionFactory) {
+      *result = nsnull;
+      return NS_ERROR_FAILURE;
+        }
+  }
+  
+  
   nsIRegion* region = nsnull;
-  nsresult rv = componentManager->CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
+  rv = mRegionFactory->CreateInstance(nsnull, NS_GET_IID(nsIRegion), (void**)&region);
   if (NS_SUCCEEDED(rv)) {
     rv = region->Init();
     *result = region;
@@ -462,14 +480,10 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
   // create regions
   mOpaqueRgn = nsnull;
   mTmpRgn = nsnull;
-
-  nsIComponentManager* componentManager = nsnull;
-  rv = NS_GetGlobalComponentManager(&componentManager);
-  if (NS_SUCCEEDED(rv)) {
-    CreateRegion(componentManager, &mOpaqueRgn);
-    CreateRegion(componentManager, &mTmpRgn);
-  }
-
+  
+  CreateRegion(&mOpaqueRgn);
+  CreateRegion(&mTmpRgn);
+  
   if (nsnull == mEventQueue) {
     // Cache the event queue of the current UI thread
     nsCOMPtr<nsIEventQueueService> eventService = 
@@ -1747,12 +1761,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                     // printf("refreshing: view: %x, %d, %d, %d, %d\n", view, damrect.x, damrect.y, damrect.width, damrect.height);
                     // Refresh the view
                     if (mRefreshEnabled) {
-                      nsIComponentManager* componentManager = nsnull;
-                      nsresult rv = NS_GetGlobalComponentManager(&componentManager);
                       nsCOMPtr<nsIRegion> rgn;
+                      nsresult rv = CreateRegion(getter_AddRefs(rgn));
                       if (NS_SUCCEEDED(rv)) {
-                        rv = CreateRegion(componentManager, getter_AddRefs(rgn));
-                        if (NS_SUCCEEDED(rv)) {
                           // Eventually we would like the platform paint event to include a region
                           // we can use. This could improve paint performance when the invalid area
                           // is more complicated than a rectangle. Right now the event's region field
@@ -1761,9 +1772,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                           rgn->SetTo(damrect.x, damrect.y, damrect.width, damrect.height);
                           Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, rgn, updateFlags);
                           doDefault = PR_FALSE;
-                        }
                       }
                     }
+                    
 
                     // since we got an NS_PAINT event, we need to
                     // draw something so we don't get blank areas.

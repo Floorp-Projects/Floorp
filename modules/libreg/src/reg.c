@@ -2405,6 +2405,121 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
 
 
 
+static REGERR NR_RegOpen( char *filename, HREG *hReg )
+{
+    REGERR    status = REGERR_OK;
+    REGFILE   *pReg;
+    REGHANDLE *pHandle;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* initialize output handle in case of error */
+    if ( hReg == NULL ) {
+        return REGERR_PARAM;
+    }
+    *hReg = NULL;
+    
+    /* Look for named file in list of open registries */
+    filename = nr_GetRegName( filename );
+    if (filename == NULL) {
+        filename = "";
+    }
+    pReg = vr_findRegFile( filename );
+
+    /* if registry not already open */
+    if (pReg == NULL) {
+
+        /* ...then open it */
+        pReg = (REGFILE*)XP_ALLOC( sizeof(REGFILE) );
+        if ( pReg == NULL ) {
+            status = REGERR_MEMORY;
+            goto bail;
+        }
+        XP_MEMSET(pReg, 0, sizeof(REGFILE));
+
+        pReg->inInit = TRUE;
+        pReg->filename = XP_STRDUP(filename);
+        if (pReg->filename == NULL) {
+            XP_FREE( pReg );
+            status = REGERR_MEMORY;
+            goto bail;
+        }
+
+        status = nr_OpenFile( filename, &(pReg->fh) );
+        if (status == REGERR_READONLY) {
+            /* Open, but read only */
+            pReg->readOnly = TRUE;
+            status = REGERR_OK;
+        }
+        if ( status != REGERR_OK ) {
+            XP_FREE( pReg->filename );
+            XP_FREE( pReg );
+
+            goto bail;
+        }
+
+        /* ...read and validate the header */
+        status = nr_ReadHdr( pReg );
+        if ( status != REGERR_OK ) {
+            nr_CloseFile( &(pReg->fh) );
+            XP_FREE( pReg->filename );
+            XP_FREE( pReg );
+            goto bail;
+        }
+
+        /* ...other misc initialization */
+        pReg->refCount = 0;
+
+#ifndef STANDALONE_REGISTRY
+        pReg->uniqkey = PR_Now();
+#endif
+
+        status = nr_InitStdRkeys( pReg );
+        if ( status == REGERR_OK ) {
+            /* ...and add it to the list */
+            nr_AddNode( pReg );
+        }
+        else {
+            nr_CloseFile( &(pReg->fh) );
+            XP_FREE( pReg->filename );
+            XP_FREE( pReg );
+            goto bail;
+        }
+
+#ifndef STANDALONE_REGISTRY
+        pReg->lock = PR_NewLock();
+#endif
+
+        /* now done with everything that needs to protect the header */
+        pReg->inInit = FALSE;
+    }
+
+    /* create a new handle to the regfile */
+    pHandle = (REGHANDLE*)XP_ALLOC( sizeof(REGHANDLE) );
+    if ( pHandle == NULL ) {
+        /* we can't create the handle */
+        if ( pReg->refCount == 0 ) {
+            /* we've just opened it so close it and remove node */
+            nr_CloseFile( &(pReg->fh) );
+            nr_DeleteNode( pReg );
+        }
+
+        status = REGERR_MEMORY;
+        goto bail;
+    }
+
+    pHandle->magic   = MAGIC_NUMBER;
+    pHandle->pReg    = pReg;
+
+    /* success: bump the reference count and return the handle */
+    pReg->refCount++;
+    *hReg = (void*)pHandle;
+
+bail:
+    return status;
+
+}   /* nr_RegOpen */
+
 
 /* ---------------------------------------------------------------------
  * NR_RegClose - Close a netscape XP registry

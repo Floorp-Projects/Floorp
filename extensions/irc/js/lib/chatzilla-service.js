@@ -281,6 +281,9 @@ ChatzillaModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     dump("*** Registering -chat handler.\n");
+    
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
     compMgr.registerComponentWithType(CLINE_SERVICE_CID,
                                       "Chatzilla CommandLine Service",
                                       CLINE_SERVICE_CONTRACTID, fileSpec,
@@ -309,6 +312,9 @@ function (compMgr, fileSpec, location, type)
 ChatzillaModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
+
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
     compMgr.unregisterComponentSpec(CLINE_SERVICE_CID, fileSpec);
 	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);

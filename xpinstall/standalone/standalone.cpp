@@ -63,7 +63,7 @@ static NS_DEFINE_IID(kSoftwareUpdateCID, NS_SoftwareUpdate_CID);
 extern "C" void
 NS_SetupRegistry()
 {
-    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
                                      nsnull /* default */);
 }
   /***************************************************************************/

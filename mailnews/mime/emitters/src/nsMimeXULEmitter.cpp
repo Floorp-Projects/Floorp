@@ -232,12 +232,7 @@ nsMimeXULEmitter::GetStatusObjForContractID(nsCString aContractID)
   if (NS_FAILED(rv)) 
     return nsnull;
   
-  nsCID         cid;
-  rv = comMgr->ContractIDToClassID(aContractID.get(), &cid);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = comMgr->CreateInstance(cid, nsnull, NS_GET_IID(nsIMimeMiscStatus), (void**)&obj);  
+  rv = comMgr->CreateInstanceByContractID(aContractID.get(), nsnull, NS_GET_IID(nsIMimeMiscStatus), (void**)&obj);  
   if (NS_FAILED(rv))
     return nsnull;
   else

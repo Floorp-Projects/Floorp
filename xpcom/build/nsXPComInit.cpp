@@ -183,8 +183,13 @@ RegisterGenericFactory(nsIComponentManager* compMgr,
     nsIGenericFactory* fact;
     rv = NS_NewGenericFactory(&fact, info);
     if (NS_FAILED(rv)) return rv;
-    rv = compMgr->RegisterFactory(info->mCID, info->mDescription,
-                                  info->mContractID, fact, PR_TRUE);
+
+    // what I want to do here is QI for a Component Registration Manager.  Since this 
+    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+    nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(compMgr, &rv);
+    if (obsoleteManager)
+        rv = obsoleteManager->RegisterFactory(info->mCID, info->mDescription,
+                                              info->mContractID, fact, PR_TRUE);
     NS_RELEASE(fact);
     return rv;
 }

@@ -57,7 +57,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prevInstance, LPSTR lpszCmdLine,
 			return -1;
 			}
       
-		nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+		nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
 
 		nsCOMPtr<nsINativeApp> nativeAppService(do_GetService(kNativeAppCID, &rv));
 

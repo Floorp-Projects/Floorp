@@ -345,6 +345,8 @@ sidebarModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     debug("registering (all right -- a JavaScript module!)");
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
     compMgr.registerComponentWithType(SIDEBAR_CID, "Sidebar JS Component",
                                       SIDEBAR_CONTRACTID, fileSpec, location,
                                       true, true, type);

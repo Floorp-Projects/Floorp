@@ -169,14 +169,8 @@ nsResProtocolHandler::SetSpecialDir(const char *root, const char *dir)
     rv = NS_GetSpecialDirectory(dir, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString spec;
-    rv = file->GetURL(getter_Copies(spec));
-    if (NS_FAILED(rv)) return rv;
-
-    LOG(("root=\"%s\" -> baseURI=%s\n", root, spec.get()));
-
     nsCOMPtr<nsIURI> uri;
-    mIOService->NewURI(spec, nsnull, getter_AddRefs(uri));
+    mIOService->NewFileURI(file, getter_AddRefs(uri));
 
     return SetSubstitution(root, uri);
 }

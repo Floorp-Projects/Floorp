@@ -92,6 +92,7 @@ var module = {
             this.firstTime = false;
             throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
         }
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
         compMgr.registerComponentWithType( this.cid,
                                            "Close All Windows",
                                            this.contractId,

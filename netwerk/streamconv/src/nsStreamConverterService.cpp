@@ -439,10 +439,6 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
     contractID.AppendWithConversion(aToType);
     const char *cContractID = contractID.get();
 
-    nsIComponentManager *comMgr;
-    rv = NS_GetGlobalComponentManager(&comMgr);
-    if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsIStreamConverter> converter(do_CreateInstance(cContractID, &rv));
     if (NS_FAILED(rv)) {
         // couldn't go direct, let's try walking the graph of converters.
@@ -541,10 +537,6 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
     contractID.Append("&to=");
     contractID.AppendWithConversion(aToType);
     const char *cContractID = contractID.get();
-
-    nsIComponentManager *comMgr;
-    rv = NS_GetGlobalComponentManager(&comMgr);
-    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStreamConverter> listener(do_CreateInstance(cContractID, &rv));
     if (NS_FAILED(rv)) {
