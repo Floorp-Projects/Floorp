@@ -125,6 +125,18 @@ XFE_NavCenterFrame::showHistory (Widget toplevel, XFE_Frame *parent_frame)
 	theFrame->show();
 }
 //////////////////////////////////////////////////////////////////////////
+/*static*/ void
+XFE_NavCenterFrame::editToolbars (Widget toplevel, XFE_Frame *parent_frame)
+{
+  // not a static global, since we can have multiple browsers.
+	XFE_NavCenterFrame *theFrame;
+	MWContext *theContext = NULL;
+	
+	theFrame = new XFE_NavCenterFrame(toplevel, parent_frame, NULL);
+    theFrame->getNavCenterView()->newToolbarPane();
+	theFrame->show();
+}
+//////////////////////////////////////////////////////////////////////////
 extern "C" MWContext *
 fe_showNavCenter(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec, URL_Struct * /* url */)
 {

@@ -30,6 +30,7 @@
 #include "MozillaApp.h"
 #include "ViewGlue.h"
 #include "RDFToolbox.h"
+#include "NavCenterFrame.h"
 #include "Logo.h"
 #include "xpassert.h"
 #include "csid.h"
@@ -149,6 +150,7 @@ MenuSpec XFE_BrowserFrame::edit_menu_spec[] = {
   { xfeCmdSearchAddress,	PUSHBUTTON },
   MENU_SEPARATOR,
 #endif
+  { xfeCmdEditToolbars,	PUSHBUTTON },
   { xfeCmdEditPreferences,	PUSHBUTTON },
   { NULL }
 };
@@ -522,6 +524,7 @@ XFE_BrowserFrame::isCommandEnabled(CommandType			cmd,
 		|| cmd == xfeCmdTogglePersonalToolbar
 #endif /*OLD_PERSONALTOOLBAR*/
 		|| cmd == xfeCmdToggleNavCenter
+        || cmd == xfeCmdEditToolbars
 		)
 	{
 		return True;
@@ -604,6 +607,12 @@ XFE_BrowserFrame::doCommand(CommandType			cmd,
 
 		m_urlBar->clearText();
 	}
+    else if (cmd == xfeCmdEditToolbars)
+    {
+        XFE_NavCenterFrame::editToolbars(m_widget, this);
+
+        return;
+    }
 	else
 	{
 		XFE_Frame::doCommand(cmd, calldata, info);
@@ -623,7 +632,9 @@ XFE_BrowserFrame::handlesCommand(CommandType		cmd,
 #ifdef OLD_PERSONALTOOLBAR
 		|| cmd == xfeCmdTogglePersonalToolbar
 #endif /*OLD_PERSONALTOOLBAR*/
-		|| cmd == xfeCmdToggleNavCenter)
+		|| cmd == xfeCmdToggleNavCenter
+        || cmd == xfeCmdEditToolbars
+        )
 	{
 		return True;
 	}

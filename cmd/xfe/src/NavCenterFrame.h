@@ -39,6 +39,8 @@ public:
   static void     showBookmarks   (Widget toplevel, XFE_Frame *parent_frame);
   static void     showHistory     (Widget toplevel, XFE_Frame *parent_frame);
 
+  static void     editToolbars    (Widget toplevel, XFE_Frame *parent_frame);
+
   XFE_NavCenterView * getNavCenterView() {return (XFE_NavCenterView*)m_view;}
 
 private:
