@@ -68,7 +68,6 @@ static NS_DEFINE_IID(kIViewIID,               NS_IVIEW_IID);
 static NS_DEFINE_IID(kViewCID,                NS_VIEW_CID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 
-
 nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :     
                   mFont("Times", 
                          NS_FONT_STYLE_NORMAL,
@@ -144,7 +143,81 @@ nsXPFCCanvas :: ~nsXPFCCanvas()
 
 }
 
-NS_IMPL_AGGREGATED(nsXPFCCanvas)
+NS_IMETHODIMP                                                               
+nsXPFCCanvas::QueryInterface(const nsIID& aIID, void** aInstancePtr)              
+{                                                                           
+    /* try our own interfaces first before delegating to outer */           
+    nsresult rslt = AggregatedQueryInterface(aIID, aInstancePtr);           
+    if (rslt != NS_OK && fOuter)                                            
+        return fOuter->QueryInterface(aIID, aInstancePtr);                  
+    else                                                                    
+        return rslt;                                                        
+}                                                                           
+                                                                            
+NS_IMETHODIMP_(nsrefcnt)                                                    
+nsXPFCCanvas::AddRef(void)                                                        
+{                                                                           
+    ++mRefCnt; /* keep track of our refcount as well as outer's */          
+    if (fOuter)                                                             
+        return NS_ADDREF(fOuter);                                           
+    else                                                                    
+        return mRefCnt;                                                     
+}                                                                           
+                                                                            
+NS_IMETHODIMP_(nsrefcnt)                                                    
+nsXPFCCanvas::Release(void)                                                       
+{                                                                           
+    if (fOuter) {                                                           
+        nsISupports* outer = fOuter;    /* in case we release ourself */    
+        nsIOuter* outerIntf;                                                
+        static NS_DEFINE_IID(kIOuterIID, NS_IOUTER_IID);                    
+        if (mRefCnt == 1 &&                                                 
+            outer->QueryInterface(kIOuterIID,                               
+                                  (void**)&outerIntf) == NS_OK) {           
+            outerIntf->ReleaseInner(GetInner());                            
+            outerIntf->Release();                                           
+        }                                                                   
+        else                                                                
+            --mRefCnt; /* keep track of our refcount as well as outer's */  
+        return outer->Release();                                            
+    }                                                                       
+    else {                                                                  
+        if (--mRefCnt == 0) {                                               
+            delete this;                                                    
+            return 0;                                                       
+        }                                                                   
+        return mRefCnt;                                                     
+    }                                                                       
+}                                                                           
+                                                                            
+NS_IMETHODIMP                                                               
+nsXPFCCanvas::Internal::QueryInterface(const nsIID& aIID, void** aInstancePtr)    
+{                                                                           
+    nsXPFCCanvas* agg = (nsXPFCCanvas*)((char*)(this) - offsetof(nsXPFCCanvas, fAggregated)); 
+    return agg->AggregatedQueryInterface(aIID, aInstancePtr);               
+}                                                                           
+                                                                            
+NS_IMETHODIMP_(nsrefcnt)                                                    
+nsXPFCCanvas::Internal::AddRef(void)                                              
+{                                                                           
+    nsXPFCCanvas* agg = (nsXPFCCanvas*)((char*)(this) - offsetof(nsXPFCCanvas, fAggregated)); 
+    return ++agg->mRefCnt;                                                  
+}                                                                           
+                                                                            
+NS_IMETHODIMP_(nsrefcnt)                                                    
+nsXPFCCanvas::Internal::Release(void)                                             
+{                                                                           
+    nsXPFCCanvas* agg = (nsXPFCCanvas*)((char*)(this) - offsetof(nsXPFCCanvas, fAggregated)); 
+    if (--agg->mRefCnt == 0) {                                              
+        delete agg;                                                         
+        return 0;                                                           
+    }                                                                       
+    return agg->mRefCnt;                                                    
+}                                                                           
+
+
+
+
 
 nsresult nsXPFCCanvas::AggregatedQueryInterface(const nsIID &aIID, 
                                                void** aInstancePtr)
@@ -940,7 +1013,7 @@ nsEventStatus nsXPFCCanvas :: OnResize(nscoord aX, nscoord aY, nscoord aWidth, n
     bounds.x = 0;
     bounds.y = 0;
 
-    gXPFCToolkit->GetViewManager()->UpdateView(mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
+    if (gXPFCToolkit) gXPFCToolkit->GetViewManager()->UpdateView(mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
   }
 
   mLayout->Layout();
@@ -1032,10 +1105,16 @@ void nsXPFCCanvas :: RemoveChildCanvas(nsIXPFCCanvas * aChildCanvas)
 
 void nsXPFCCanvas :: Reparent(nsIXPFCCanvas * aParentCanvas)
 {
+  nsIXPFCCanvas * me = this;
+
+  NS_ADDREF(me);
+
   if (GetParent() != nsnull)
     GetParent()->RemoveChildCanvas(this);
 
   aParentCanvas->AddChildCanvas(this);
+
+  NS_RELEASE(me);
 
   return ;
 }
@@ -1395,7 +1474,7 @@ nsEventStatus nsXPFCCanvas :: HandleEvent(nsGUIEvent *aEvent)
               canvas->mView->GetBounds(bounds);
               bounds.x = 0;
               bounds.y = 0;
-              gXPFCToolkit->GetViewManager()->UpdateView(canvas->mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
+              if (gXPFCToolkit) gXPFCToolkit->GetViewManager()->UpdateView(canvas->mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
             }
 
             iterator->Next();
@@ -2028,7 +2107,7 @@ nsEventStatus nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
     bounds.x = 0;
     bounds.y = 0;
 
-    gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
+    if (gXPFCToolkit) gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
 
 
   }
@@ -2268,7 +2347,7 @@ void nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
     bounds.x = 0;
     bounds.y = 0;
     aImageRequest->RemoveObserver((nsIImageRequestObserver*)this);
-    gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
+    if (gXPFCToolkit) gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
   }
   return ;
 }

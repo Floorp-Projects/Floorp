@@ -140,13 +140,10 @@ nsresult nsVector :: Append(nsComponent aComponent)
 
 nsresult nsVector :: Remove(nsComponent aComponent)
 {
-  nsresult res = NS_OK;
-
   if (PR_TRUE == mVoidArray->RemoveElement(aComponent))
     return NS_OK ;
 
-  // XXX What to return here
-  return res ;
+  return NS_ERROR_FAILURE ;
 }
 
 nsresult nsVector :: RemoveAll()
