@@ -136,7 +136,8 @@ sub ProcessFormStuff {
                       "changedin", "votes", "short_desc", "short_desc_type",
                       "long_desc", "long_desc_type", "bug_file_loc",
                       "bug_file_loc_type", "status_whiteboard",
-                      "status_whiteboard_type", "keywords") {
+                      "status_whiteboard_type", "keywords", "bug_id",
+                      "bugidtype") {
         $default{$name} = "";
         $type{$name} = 0;
     }
@@ -489,7 +490,32 @@ print "
 $emailinput1<p>
 </td></tr><tr><td colspan=2>
 $emailinput2<p>
-</td></tr>
+</td></tr>";
+
+my $inclselected = "SELECTED";
+my $exclselected = "";
+
+    
+if ($default{'bugidtype'} eq "exclude") {
+    $inclselected = "";
+    $exclselected = "SELECTED";
+}
+my $bug_id = value_quote($default{'bug_id'}); 
+
+print qq{
+<TR>
+<TD COLSPAN="3">
+<SELECT NAME="bugidtype">
+<OPTION VALUE="include" $inclselected>Only
+<OPTION VALUE="exclude" $exclselected>Exclude
+</SELECT>
+bugs numbered: 
+<INPUT TYPE="text" NAME="bug_id" VALUE="$bug_id" SIZE=30>
+</TD>
+</TR>
+};
+
+print "
 <tr>
 <td>
 Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE=\"$default{'changedin'}\"> days.</NOBR>

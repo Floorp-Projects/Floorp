@@ -297,6 +297,8 @@ query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
     if (!$::FORM{'order'}) {
         $::FORM{'order'} = 'reuse last sort';
     }
+    $::buffer = "bug_id=" . $::FORM{'bug_id'} . "&order=" .
+        url_quote($::FORM{'order'});
 }
 
 if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
@@ -311,10 +313,24 @@ if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
 my $needlongdescs = 0;          # Whether we need to patch in the longdescs
                                 # table.
 
+
+if ($::MFORM{'bug_id'}) {
+    my @list = grep(!/^$/, split(/[^0-9]+/, join(',', @{$::MFORM{'bug_id'}})));
+    if (@list) {
+        my $verb = "IN";
+        if ($::FORM{'bugidtype'} && $::FORM{'bugidtype'} eq 'exclude') {
+            $verb = "NOT IN";
+        }
+        $query .= " AND bugs.bug_id $verb (" . join(',', @list) . ") ";
+    }
+}
+    
+
+
 if (defined $::FORM{'sql'}) {
   $query .= "and (\n$::FORM{'sql'}\n)"
 } else {
-  my @legal_fields = ("bug_id", "product", "version", "rep_platform", "op_sys",
+  my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                       "bug_status", "resolution", "priority", "bug_severity",
                       "assigned_to", "reporter", "component",
                       "target_milestone", "groupset");
@@ -1055,13 +1071,18 @@ if ($count > 0) {
     print "<FORM METHOD=POST ACTION=\"long_list.cgi\">
 <INPUT TYPE=HIDDEN NAME=buglist VALUE=$buglist>
 <INPUT TYPE=SUBMIT VALUE=\"Long Format\">
-<A HREF=\"query.cgi\">Query Page</A>
-&nbsp;&nbsp;<A HREF=\"enter_bug.cgi\">Enter New Bug</A>
-&nbsp;&nbsp;<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>";
+<NOBR><A HREF=\"query.cgi\">Query Page</A></NOBR>
+&nbsp;&nbsp;
+<NOBR><A HREF=\"enter_bug.cgi\">Enter New Bug</A></NOBR>
+&nbsp;&nbsp;
+<NOBR><A HREF=\"colchange.cgi?$::buffer\">Change columns</A></NOBR>";
     if (!$dotweak && $count > 1) {
-        print "&nbsp;&nbsp;<A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
-        print "Change several bugs at once</A>\n";
+        print "&nbsp;&nbsp;\n";
+        print "<NOBR><A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
+        print "Change several bugs at once</A></NOBR>\n";
     }
+    print qq{&nbsp;&nbsp;\n};
+    print qq{<NOBR><A HREF="query.cgi?$::buffer">Edit this query</A></NOBR>\n};
     print "</FORM>\n";
 }
 PutFooter();
