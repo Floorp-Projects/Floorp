@@ -85,6 +85,7 @@ public:
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
 protected:
   PRBool mIsLink;

@@ -219,8 +219,9 @@ nsHTMLAnchorElement::SetFocus(nsPresContext* aPresContext)
                                                        NS_EVENT_STATE_FOCUS);
 
     // Make sure the presentation is up-to-date
-    if (IsInDoc()) {
-      GetOwnerDoc()->FlushPendingNotifications(Flush_Layout);
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      doc->FlushPendingNotifications(Flush_Layout);
     }
 
     nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -244,15 +245,17 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
   }
 
   PRBool isFocusable = PR_FALSE;
-  nsAutoString href;
-  GetAttribute(NS_LITERAL_STRING("href"), href);
-  if (href.IsEmpty() && !HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
-    // Not tabbable or focusable without href (bug 17605), unless
-    // forced to be via presence of nonnegative tabindex attribute
-    if (aTabIndex) {
-      *aTabIndex = -1;
+  if (!HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+    // check whether we're actually a link
+    nsCOMPtr<nsIURI> linkURI = nsContentUtils::GetLinkURI(this);
+    if (!linkURI) {
+      // Not tabbable or focusable without href (bug 17605), unless
+      // forced to be via presence of nonnegative tabindex attribute
+      if (aTabIndex) {
+        *aTabIndex = -1;
+      }
+      return PR_FALSE;
     }
-    return PR_FALSE;
   }
 
   if (aTabIndex && (sTabFocusModel & eTabFocus_linksMask) == 0) {
