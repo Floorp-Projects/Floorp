@@ -25,14 +25,12 @@
  *   The 10LE Team (in alphabetical order)
  *   -------------------------------------
  *
- *    Carlos Aguiar     <carlos.aguiar@indt.org.br>
- *    Ilias Biris	    <ext-ilias.biris@indt.org.br> - Coordinator
+ *    Ilias Biris	<ext-ilias.biris@indt.org.br> - Coordinator
+ *    Afonso Costa      <afonso.costa@indt.org.br>
  *    Antonio Gomes     <ext-antonio.araujo-neto@nokia.com>
  *    Diego Gonzalez    <diego.gonzalez@indt.org.br>
  *    Raoni Novellino   <raoni.novellino@indt.org.br>
  *    Andre Pedralho    <ext-andre.pedralho@nokia.com>
- *    Afonso Rabelo     <afonso.rabelo@indt.org.br>
- *    Claudia Roessing  <claudia.roessing@indt.org.br>  
  *
  *
  *
@@ -206,6 +204,8 @@ static void decrease_font_size (GtkButton *button, MinimoBrowser *browser);
 static void full_screen_cb (GtkButton *button, MinimoBrowser* browser);
 static void unfull_screen_cb (GtkButton *button, MinimoBrowser* browser);
 
+static GtkWidget *populate_menu_button(MinimoBrowser* browser);
+
 /* Building the Minimo Browser */
 static MinimoBrowser *new_gtk_browser(guint32 chromeMask);
 static GtkWidget* create_minimo_progress(MinimoBrowser* browser);
@@ -246,8 +246,8 @@ static gboolean mozilla_find(GtkMozEmbed *b, const char *exp, PRBool IgnoreCase,
                              PRBool SearchBackWards, PRBool DoWrapFind,
                              PRBool SearchEntireWord, PRBool SearchInFrames,
                              PRBool DidFind);
-static gboolean mozilla_preference_set (const char *preference_name, const char *new_value);
-static gboolean mozilla_preference_set_boolean (const char *preference_name, gboolean new_boolean_value);
+//static gboolean mozilla_preference_set (const char *preference_name, const char *new_value);
+//static gboolean mozilla_preference_set_boolean (const char *preference_name, gboolean new_boolean_value);
 static gboolean mozilla_preference_set_int (const char *preference_name, gint  new_int_value);
 static gboolean mozilla_save(GtkMozEmbed *b, gchar *file_name, gint all);
 static gchar *mozilla_get_link_message (GtkWidget *embed);
@@ -304,7 +304,7 @@ mozilla_find(GtkMozEmbed *b, const char *exp, PRBool IgnoreCase,
  * mozilla_preference_set: Method used to set up some specific text-based parameters of the gecko render engine
  *
  */
-static gboolean
+/*static gboolean
 mozilla_preference_set (const char *preference_name, const char *new_value)
 {
   g_return_val_if_fail (preference_name != NULL, FALSE);
@@ -318,13 +318,13 @@ mozilla_preference_set (const char *preference_name, const char *new_value)
     return ( NS_SUCCEEDED (rv) ? TRUE : FALSE );
   }
   return (FALSE);
-}
+}*/
 
 /*
  * mozilla_preference_set: Method used to set up some specific boolean-based parameters of the gecko render engine
  *
  */
-static gboolean
+/*static gboolean
 mozilla_preference_set_boolean (const char *preference_name, gboolean new_boolean_value)
 {
   
@@ -339,7 +339,7 @@ mozilla_preference_set_boolean (const char *preference_name, gboolean new_boolea
   }
   
   return (FALSE);
-}
+}*/
 
 /*
  * mozilla_preference_set: Method used to set up some specific integer-based parameters of the gecko render engine
@@ -716,8 +716,9 @@ new_gtk_browser(guint32 chromeMask)
   // set the chrome type so it's stored in the object
   gtk_moz_embed_set_chrome_mask(GTK_MOZ_EMBED(browser->mozEmbed), chromeMask);
   
+// #ifdef GTK_VERSION < 2.6
   create_minimo_expander_bar(browser);
-  
+// #endif
   browser->progressPopup = create_minimo_progress(browser);
   
   // add it to the toplevel vbox
@@ -922,6 +923,7 @@ static void quick_message(gchar* message)
 void setup_toolbar(MinimoBrowser* browser)
 {
   MinimoToolbar* toolbar = &browser->toolbar;
+  GtkWidget *menu;
   
 #ifdef MOZ_WIDGET_GTK
   toolbar->toolbar = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_TOOLBAR_ICONS);
@@ -961,21 +963,114 @@ void setup_toolbar(MinimoBrowser* browser)
   gtk_widget_show (toolbar->StopButton);
   gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->StopButton);
   gtk_signal_connect(GTK_OBJECT(toolbar->StopButton), "clicked", GTK_SIGNAL_FUNC(stop_clicked_cb), browser);
-  
-  toolbar->PrefsButton =(GtkWidget*) gtk_tool_button_new_from_stock ("gtk-preferences");
+
+// #ifdef GTK_VERSION > 2.6
+  toolbar->PrefsButton = (GtkWidget*) gtk_menu_tool_button_new_from_stock("gtk-preferences");
   gtk_widget_show (toolbar->PrefsButton);
   gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->PrefsButton);
   gtk_signal_connect(GTK_OBJECT(toolbar->PrefsButton), "clicked", GTK_SIGNAL_FUNC(pref_clicked_cb), browser);
-  
+  menu = populate_menu_button (browser);
+  gtk_menu_tool_button_set_menu ((GtkMenuToolButton *)toolbar->PrefsButton,menu);
+// #elif  
+  //toolbar->PrefsButton =(GtkWidget*) gtk_tool_button_new_from_stock ("gtk-preferences");
+  //toolbar->PrefsButton =(GtkWidget*) gtk_tool_button_new_from_stock ("gtk-preferences");
+  //gtk_widget_show (toolbar->PrefsButton);
+  //gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->PrefsButton);
+  //gtk_signal_connect(GTK_OBJECT(toolbar->PrefsButton), "clicked", GTK_SIGNAL_FUNC(pref_clicked_cb), browser);
+
   toolbar->InfoButton = (GtkWidget*) gtk_tool_button_new_from_stock ("gtk-dialog-info");
   gtk_widget_show(toolbar->InfoButton);
   gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->InfoButton);
   gtk_signal_connect(GTK_OBJECT(toolbar->InfoButton), "clicked", GTK_SIGNAL_FUNC(info_clicked_cb), browser);
-  
+
   toolbar->QuitButton = (GtkWidget*) gtk_tool_button_new_from_stock ("gtk-quit");
   gtk_widget_show(toolbar->QuitButton);
   gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->QuitButton);  
   gtk_signal_connect(GTK_OBJECT(toolbar->QuitButton), "clicked", GTK_SIGNAL_FUNC(destroy_cb), browser);
+}
+
+// #ifdef GTK_VERSION > 2.6
+static GtkWidget *populate_menu_button(MinimoBrowser* browser){
+  
+  GtkWidget *menu, *menu_item;
+  GtkWidget *image;
+  
+  menu = gtk_menu_new();
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Show/Hide Tabs");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(show_hide_tabs_cb), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_DND_MULTIPLE, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Add Tab");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(open_new_tab_cb), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_ADD, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Close Tab");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(close_current_tab_cb), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_REMOVE, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Open Bookmark Window");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(open_bookmark_window_cb), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_HARDDISK, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Add Bookmark");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(add_bookmark_cb), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_YES, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Find");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(create_find_dialog), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_FIND, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Save As");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(create_save_document), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_SAVE_AS, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Open From File");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(create_open_document_from_file), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_OPEN, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Increase Font Size");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(increase_font_size), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Decrease Font Size");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(decrease_font_size), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_image_menu_item_new_with_label ("Full Screen");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(full_screen_cb), browser);
+  image = gtk_image_new_from_stock(GTK_STOCK_ZOOM_FIT, GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
+  
+  menu_item = gtk_menu_item_new_with_label ("Unfull Screen");
+  gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(unfull_screen_cb), browser);
+  
+  gtk_widget_show_all(menu);
+  
+  return (menu);
+
 }
 
 static void destroy_dialog_params_cb(GtkWidget *widget, OpenDialogParams* params)
@@ -1108,6 +1203,8 @@ static GtkWidget* create_minimo_progress (MinimoBrowser* browser)
   return Minimo_Progress;
 }
 
+
+// #ifdef GTK_VERSION 2.6
 /* Create the 'Expand Bar', with buttons as "Hide/Show Tabs", "Add/Manage Bookmark", "Find", "Save As", "Open" ... */
 static void create_minimo_expander_bar(MinimoBrowser* browser)
 {
@@ -1126,15 +1223,15 @@ static void create_minimo_expander_bar(MinimoBrowser* browser)
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
-  toolbar->ToolbarDown = gtk_toolbar_new();
-  gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar->ToolbarDown),GTK_ORIENTATION_HORIZONTAL);
-  gtk_toolbar_set_style(GTK_TOOLBAR(toolbar->ToolbarDown),GTK_TOOLBAR_ICONS);
+  browser->ToolbarDown = gtk_toolbar_new();
+  gtk_toolbar_set_orientation(GTK_TOOLBAR(browser->ToolbarDown),GTK_ORIENTATION_HORIZONTAL);
+  gtk_toolbar_set_style(GTK_TOOLBAR(browser->ToolbarDown),GTK_TOOLBAR_ICONS);
 #endif /* MOZ_WIDGET_GTK2 */
 
   gtk_widget_show (browser->ToolbarDown);
   gtk_container_add (GTK_CONTAINER (browser->expanderBar), browser->ToolbarDown);
 
-  gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar->ToolbarDown), GTK_ICON_SIZE_SMALL_TOOLBAR);
+  gtk_toolbar_set_icon_size(GTK_TOOLBAR(browser->ToolbarDown), GTK_ICON_SIZE_SMALL_TOOLBAR);
 
   /*
    * Show or hide notebooks
@@ -1265,6 +1362,7 @@ static void create_minimo_expander_bar(MinimoBrowser* browser)
                             GTK_SIGNAL_FUNC(full_screen_cb),
                             browser);
 }
+// #endif
 
 /* METHODS THAT CREATE DIALOG FOR SPECIFICS TASK */
 
@@ -2030,3 +2128,4 @@ gint escape_key_handler(GtkWidget *window, GdkEventKey *ev)
   }
   return (0);
 }
+
