@@ -85,7 +85,7 @@ public:
 /*END implementations of nsIDOMMouseListener interface*/
 
 protected:
-  PRBool IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc);
+  PRBool IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, PRBool& aIsLegalChild);
 
   nsToolbarFrame * mToolbar;
   nsIPresContext * mPresContext;
