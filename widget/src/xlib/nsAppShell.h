@@ -60,6 +60,7 @@ class nsAppShell : public nsIAppShell
   static void HandleUnmapNotifyEvent(XEvent *event, nsWidget *aWidget);
   static void HandleEnterEvent(XEvent *event, nsWidget *aWidget);
   static void HandleLeaveEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleClientMessageEvent(XEvent *event, nsWidget *aWidget);
   static PRBool DieAppShellDie;
 
 protected:

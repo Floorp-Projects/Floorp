@@ -41,6 +41,12 @@ nsHashtable *nsWidget::window_list = nsnull;
 
 nsXlibWindowCallback *nsWidget::mWindowCallback = nsnull;
 
+// this is for implemention the WM_PROTOCOL code
+PRBool nsWidget::WMProtocolsInitialized = PR_FALSE;
+Atom   nsWidget::WMDeleteWindow = 0;
+Atom   nsWidget::WMTakeFocus = 0;
+Atom   nsWidget::WMSaveYourself = 0;
+
 class nsWindowKey : public nsHashKey {
 protected:
   Window mKey;
@@ -170,6 +176,10 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   mBounds = aRect;
   // call the native create function
   CreateNative(parent, mBounds);
+  // set up our wm hints if it's appropriate
+  if (mIsToplevel == PR_TRUE) {
+    SetUpWMHints();
+  }
   XSync(mDisplay, False);
   return NS_OK;
 }
@@ -701,6 +711,31 @@ nsWidget::OnPaint(nsPaintEvent &event)
   return result;
 }
 
+PRBool nsWidget::OnDeleteWindow(void)
+{
+  printf("nsWidget::OnDeleteWindow()\n");
+  nsBaseWidget::OnDestroy();
+  // emit a destroy signal
+  return DispatchDestroyEvent();
+}
+
+PRBool nsWidget::DispatchDestroyEvent(void) {
+  PRBool result = PR_FALSE;
+  if (nsnull != mEventCallback) {
+    nsGUIEvent event;
+    event.eventStructType = NS_GUI_EVENT;
+    event.message = NS_DESTROY;
+    event.widget = this;
+    event.time = 0;
+    event.point.x = 0;
+    event.point.y = 0;
+    AddRef();
+    result = DispatchWindowEvent(event);
+    Release();
+  }
+  return result;
+}
+
 PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent) 
 {
   PRBool result = PR_FALSE;
@@ -1011,4 +1046,22 @@ nsWidget::XWindowDestroyed(Window aWindow) {
     mWindowCallback->WindowDestroyed(aWindow);
   }
   return NS_OK;
+}
+
+void
+nsWidget::SetUpWMHints(void) {
+  // check to see if we need to get the atoms for the protocols
+  if (WMProtocolsInitialized == PR_FALSE) {
+    WMDeleteWindow = XInternAtom(mDisplay, "WM_DELETE_WINDOW", True);
+    WMTakeFocus = XInternAtom(mDisplay, "WM_TAKE_FOCUS", True);
+    WMSaveYourself = XInternAtom(mDisplay, "WM_SAVE_YOURSELF", True);
+    WMProtocolsInitialized = PR_TRUE;
+  }
+  Atom WMProtocols[2];
+  WMProtocols[0] = WMDeleteWindow;
+  WMProtocols[1] = WMTakeFocus;
+  // note that we only set two of the above protocols
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Setting up wm hints for window 0x%lx\n",
+                                       mBaseWindow));
+  XSetWMProtocols(mDisplay, mBaseWindow, WMProtocols, 2);
 }

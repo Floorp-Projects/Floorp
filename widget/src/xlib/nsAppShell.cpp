@@ -239,9 +239,8 @@ nsresult nsAppShell::Run()
     // check to see if there's data avilable for
     // xlib
     if (FD_ISSET(xlib_fd, &select_set)) {
-      //printf("xlib data available.\n");
-      //XNextEvent(mDisplay, &event);
-      while (XCheckMaskEvent(mDisplay, ALL_EVENTS, &event)) {
+      while (XPending(mDisplay)) {
+        XNextEvent(mDisplay, &event);
         DispatchXEvent(&event);
       }
     }
@@ -360,6 +359,9 @@ nsAppShell::DispatchXEvent(XEvent *event)
     break;
   case VisibilityNotify:
     HandleVisibilityNotifyEvent(event, widget);
+    break;
+  case ClientMessage:
+    HandleClientMessageEvent(event, widget);
     break;
   default:
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unhandled window event: Window 0x%lx Got a %s event\n",
@@ -714,4 +716,16 @@ void nsAppShell::HandleUnmapNotifyEvent(XEvent *event, nsWidget *aWidget)
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("UnmapNotifyEvent for window 0x%lx\n",
                                        event->xunmap.window));
   aWidget->SetMapStatus(PR_FALSE);
+}
+
+void nsAppShell::HandleClientMessageEvent(XEvent *event, nsWidget *aWidget)
+{
+  // check to see if it's a WM_DELETE message
+  printf("handling client message\n");
+  if (nsWidget::WMProtocolsInitialized) {
+    if ((Atom)event->xclient.data.l[0] == nsWidget::WMDeleteWindow) {
+      printf("got a delete window event\n");
+      aWidget->OnDeleteWindow();
+    }
+  }
 }
