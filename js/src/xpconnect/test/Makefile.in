@@ -54,7 +54,7 @@ TARGETS= $(PROGS)
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(PUBLIC)/xpcom -I$(PUBLIC)/js -I$(PUBLIC)/xpconnect \
-               -I$(PUBLIC)/raptor -I../../../../xpcom/src
+               -I$(PUBLIC)/raptor
 
 #$(PROGS): $(OBJS)
 #	@$(MAKE_OBJDIR)
