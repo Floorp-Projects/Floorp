@@ -125,6 +125,9 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
     <!-- tasks menu filled from tasksOverlay -->
     <menu id="tasksMenu"/>
 
+    <!-- window menu filled from tasksOverlay -->
+    <menu id="windowMenu"/>
+
     <!-- help menu filled from globalOverlay -->
     <menu id="menu_Help"/>
   </menubar>
