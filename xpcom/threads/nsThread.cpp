@@ -40,6 +40,7 @@ nsThread::Init(nsIRunnable* runnable,
     mRunnable = runnable;
     NS_ADDREF(mRunnable);
 
+    NS_ADDREF_THIS();   // released in nsIThread::Exit
     mThread = PR_CreateThread(type, Main, this,
                               priority, scope, PR_JOINABLE_THREAD, stackSize);
     if (mThread == nsnull)
@@ -49,6 +50,7 @@ nsThread::Init(nsIRunnable* runnable,
 
 nsThread::~nsThread()
 {
+    NS_IF_RELEASE(mRunnable);
 }
 
 void
@@ -194,8 +196,6 @@ nsThread::RegisterThreadSelf()
     status = PR_SetThreadPrivate(kIThreadSelf, this);
     if (status != PR_SUCCESS) return NS_ERROR_FAILURE;
 
-    NS_ADDREF(this);    // released in nsThread::Exit
-    
     return NS_OK;
 }
 
@@ -218,6 +218,7 @@ nsIThread::GetCurrent(nsIThread* *result)
         thread = new nsThread();
         if (thread == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(thread);
         thread->SetPRThread(PR_CurrentThread());
         nsresult rv = thread->RegisterThreadSelf();
         if (NS_FAILED(rv)) return rv;
