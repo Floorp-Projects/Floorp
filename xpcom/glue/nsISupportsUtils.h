@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Scott Collins <scc@ScottCollins.net>
+ *   Dan Mosedale <dmose@mozilla.org>
  */
 
 #ifndef __nsISupportsUtils_h
@@ -1285,6 +1286,77 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 
 #define NS_ENSURE_PROPER_AGGREGATION(outer, iid) \
   NS_ENSURE_FALSE(outer && !iid.Equals(NS_GET_IID(nsISupports)), NS_ERROR_INVALID_ARG)
+
+
+/** 
+ * Macro to free all elements of an XPCOM array of a given size using
+ * freeFunc, then frees the array itself using nsMemory::Free().  
+ *
+ * Note that this macro (and its wrappers) can be used to deallocate a
+ * partially- or completely-built array while unwinding an error
+ * condition inside the XPCOM routine that was going to return the
+ * array.  For this to work on a partially-built array, your code
+ * needs to be building the array from index 0 upwards, and simply
+ * pass the number of elements that have already been built (and thus
+ * need to be freed) as |size|.
+ *
+ * Thanks to <alecf@netscape.com> for suggesting this form, which
+ * allows the macro to be used with NS_RELEASE / NS_RELEASE_IF in
+ * addition to nsMemory::Free.
+ * 
+ * @param size      Number of elements in the array.  If not a constant, this 
+ *                  should be a PRInt32.  Note that this means this macro 
+ *                  will not work if size >= 2^31.
+ * @param array     The array to be freed.
+ * @param freeFunc  The function or macro to be used to free it. 
+ *                  For arrays of nsISupports (or any class derived
+ *                  from it), NS_IF_RELEASE (or NS_RELEASE) should be
+ *                  passed as freeFunc.  For most (all?) other pointer
+ *                  types (including XPCOM strings and wstrings),
+ *                  nsMemory::Free should be used, since the
+ *                  shared-allocator (nsMemory) is what will have been
+ *                  used to allocate the memory.  
+ */
+#define NS_FREE_XPCOM_POINTER_ARRAY(size, array, freeFunc)                   \
+    PR_BEGIN_MACRO                                                           \
+        PRInt32 iter_ = PRInt32(size);                                       \
+        while (--iter_ >= 0)                                                 \
+            freeFunc((array)[iter_]);                                        \
+        nsMemory::Free((array));                                             \
+    PR_END_MACRO
+
+// convenience macros for commonly used calls.  mmmmm.  syntactic sugar.
+
+/** 
+ * Macro to free arrays of non-refcounted objects allocated by the
+ * shared allocator (nsMemory) such as strings and wstrings.  A
+ * convenience wrapper around NS_FREE_XPCOM_POINTER_ARRAY.
+ *
+ * @param size      Number of elements in the array.  If not a constant, this 
+ *                  should be a PRInt32.  Note that this means this macro 
+ *                  will not work if size >= 2^31.
+ * @param array     The array to be freed.
+ */
+#define NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(size, array)                    \
+    NS_FREE_XPCOM_POINTER_ARRAY((size), (array), nsMemory::Free)
+
+/**
+ * Macro to free an array of pointers to nsISupports (or classes
+ * derived from it).  A convenience wrapper around
+ * NS_FREE_XPCOM_POINTER_ARRAY.
+ *
+ * Note that if you know that none of your nsISupports pointers are
+ * going to be 0, you can gain a bit of speed by calling
+ * NS_FREE_XPCOM_POINTER_ARRAY directly and using NS_RELEASE as your
+ * free function.
+ *
+ * @param size      Number of elements in the array.  If not a constant, this 
+ *                  should be a PRInt32.  Note that this means this macro 
+ *                  will not work if size >= 2^31.
+ * @param array     The array to be freed.
+ */
+#define NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(size, array)                    \
+    NS_FREE_XPCOM_POINTER_ARRAY((size), (array), NS_IF_RELEASE)
 
 
 ///////////////////////////////////////////////////////////////////////////////
