@@ -114,6 +114,56 @@ IDI_MOZILLABROWSER      ICON    DISCARDABLE     "MozillaBrowser.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Menu
+//
+
+IDR_POPUP_PAGE MENU DISCARDABLE 
+BEGIN
+    POPUP "Page Popup"
+    BEGIN
+        MENUITEM "&Back",                       ID_BROWSE_BACK
+        MENUITEM "&Forward",                    ID_BROWSE_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All",                 ID_EDIT_SELECTALL
+        MENUITEM "&Paste",                      ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&View Source",                ID_FILE_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "Pr&int",                      ID_FILE_PRINT
+        MENUITEM "&Refresh",                    ID_FILE_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties",                 ID_PAGE_PROPERTIES
+    END
+END
+
+IDR_POPUP_LINK MENU DISCARDABLE 
+BEGIN
+    POPUP "Link Popup"
+    BEGIN
+        MENUITEM "&Open",                       ID_FILE_OPEN
+        MENUITEM "Open in &New Window",         ID_FILE_OPENINNEWWINDOW
+        MENUITEM SEPARATOR
+        MENUITEM "Copy Shor&tcut",              ID_EDIT_COPYSHORTCUT
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties",                 ID_LINK_PROPERTIES
+    END
+END
+
+IDR_POPUP_CLIPBOARD MENU DISCARDABLE 
+BEGIN
+    POPUP "Selection Popup"
+    BEGIN
+        MENUITEM "Cu&t",                        ID_EDIT_CUT, GRAYED
+        MENUITEM "&Copy",                       ID_EDIT_COPY
+        MENUITEM "&Paste",                      ID_EDIT_PASTE, GRAYED
+        MENUITEM "Select &All",                 ID_EDIT_SELECTALL
+        MENUITEM "Print",                       ID_SELECTIONPOPUP_PRINT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
