@@ -182,18 +182,23 @@ pref("offline.send.unsent_messages",            0);
 pref("offline.download.download_messages",  0);
 pref("offline.prompt_synch_on_exit",            true);
 
-// Expose only select protocol handlers. All others should go                   
-// through the external protocol handler route.                                 
-pref("network.protocol-handler.expose-all", false);                             
+// Expose only select protocol handlers. All others should go
+// through the external protocol handler route.
+pref("network.protocol-handler.expose-all", false);
 pref("network.protocol-handler.expose.mailto", true);
 pref("network.protocol-handler.expose.news", true);
 pref("network.protocol-handler.expose.snews", true);
 pref("network.protocol-handler.expose.nntp", true);
 pref("network.protocol-handler.expose.imap", true);
 pref("network.protocol-handler.expose.addbook", true);
-pref("network.protocol-handler.expose.pop", true);                                                                                                            
-pref("network.protocol-handler.expose.mailbox", true);  
-pref("network.protocols.useSystemDefaults",   false);  
+pref("network.protocol-handler.expose.pop", true);
+pref("network.protocol-handler.expose.mailbox", true);
+
+// suppress external-load warning for standard browser schemes
+pref("network.protocol-handler.warn-external.http", false);
+pref("network.protocol-handler.warn-external.https", false);
+pref("network.protocol-handler.warn-external.ftp", false);
+
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 
