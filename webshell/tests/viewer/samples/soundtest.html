@@ -1,0 +1,20 @@
+<html>
+<head>
+<title>Sound Service Play Example</title>
+</head>
+
+<body>
+<script>
+var filespec = Components.classes["component://netscape/filespec"].createInstance();
+filespec = filespec.QueryInterface(Components.interfaces.nsIFileSpec);
+filespec.URLString = "file://res/samples/test.wav";
+
+var sample = Components.classes["component://netscape/sound"].createInstance();
+sample = sample.QueryInterface(Components.interfaces.nsISound);
+</script>
+
+<form name="form">
+<input type="button" value="Play Sound" onclick="sample.Play(filespec);">
+<form>
+</body>
+</html>
