@@ -145,7 +145,6 @@ GetScheme(const char* inURI, char* *scheme)
     if (!inURI) return NS_ERROR_NULL_POINTER;
     char c;
     const char* URI = inURI;
-    PRUint32 i = 0;
     PRUint32 length = 0;
     // skip leading white space
     while (isspace(*URI))

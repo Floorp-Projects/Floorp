@@ -224,7 +224,6 @@ nsPipe::GetReadSegment(PRUint32 segmentLogicalOffset,
 
     PRInt32 offset = (PRInt32)segmentLogicalOffset;
     PRInt32 segCount = mBuffer.GetSegmentCount();
-    PRBool atEnd = PR_FALSE;
     for (PRInt32 i = 0; i < segCount; i++) {
         char* segStart = mBuffer.GetSegment(i);
         char* segEnd = segStart + mBuffer.GetSegmentSize();

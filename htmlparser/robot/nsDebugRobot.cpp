@@ -310,7 +310,6 @@ extern "C" NS_EXPORT int DebugRobot(
       while (!g_bReadyForNextUrl) {
         if (yieldProc != NULL) {
 #ifdef NECKO
-          char* spec;
           (void)url->GetSpec(&spec);
           (*yieldProc)(spec);
           nsCRT::free(spec);

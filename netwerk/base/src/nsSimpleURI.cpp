@@ -87,14 +87,14 @@ NS_IMETHODIMP
 nsSimpleURI::SetSpec(const char* aSpec)
 {
     nsAutoString spec(aSpec);
-    PRUint32 pos = spec.Find(":");
+    PRInt32 pos = spec.Find(":");
     if (pos == -1)
         return NS_ERROR_FAILURE;
     nsAutoString scheme;
-    PRUint32 n = spec.Left(scheme, pos);
+    PRInt32 n = spec.Left(scheme, pos);
     NS_ASSERTION(n == pos, "Left failed");
     nsAutoString path;
-    PRUint32 count = spec.Length() - pos - 1;
+    PRInt32 count = spec.Length() - pos - 1;
     n = spec.Mid(path, pos + 1, count);
     NS_ASSERTION(n == count, "Mid failed");
     if (mScheme) 

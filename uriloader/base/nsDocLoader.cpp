@@ -341,7 +341,7 @@ nsDocLoaderImpl::Init()
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader:%p: load group %x.\n", this, mLoadGroup));
+           ("DocLoader:%p: load group %x.\n", this, mLoadGroup.get()));
 
     rv = mLoadGroup->SetGroupListenerFactory(this);
     if (NS_FAILED(rv)) return rv;
