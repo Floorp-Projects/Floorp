@@ -18,37 +18,44 @@
  * Rights Reserved.
  */
 
-var serverArray;
+var accountArray;
 
-var accounts;
+var lastServerId;
+var lastPageId;
+
+// services used
+var RDF;
+var accountManager;
+
 // called when the whole document loads
+// perform initialization here
 function onLoad() {
-  
-  serverArray = new Array;
+  accountArray = new Array;
+  RDF = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
 
   var mailsession =
     Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
 
-  var am = mailsession.accountManager;
-  accounts = am.accounts;
+  accountManager = mailsession.accountManager;
 }
 
 // called when a prefs page is done loading
 function onPageLoad(event, name) {
   // page needs to be filled with values.
   // how do we determine which account we should be using?
-  dump("loaded " + name + "\n");
 }
 
-// called when someone clicks on a 
+//
+// called when someone clicks on an account
+// figure out context by what they clicked on
+//
 function onAccountClick(event) {
 
   // get the page to load
   // (stored in the PageTag attribute of this node)
   var node = event.target.parentNode.parentNode;
   if (node.tagName != "treeitem") return;
-  
-  var pageUrl = node.getAttribute('PageTag');
+  var pageId = node.getAttribute('PageTag');
 
 
   // get the server's ID
@@ -56,53 +63,171 @@ function onAccountClick(event) {
   var servernode = node.parentNode.parentNode;
   
   // for toplevel treeitems, we just use the current treeitem
-  dump("servernode is " + servernode + "\n");
+  //  dump("servernode is " + servernode + "\n");
   if (servernode.tagName != "treeitem") {
     servernode = node;
   }
   var serverid = servernode.getAttribute('id');
   
-  dump("before showPage(" + serverid + "," + pageUrl + ");\n");
-  showPage(serverid, pageUrl);
+  //dump("before showPage(" + serverid + "," + pageId + ");\n");
+  showPage(serverid, pageId);
 
 }
-// load pageUrl in the deck for the given server
 
-function showPage(serverid, pageUrl) {
+// show the page for the given server:
+// - save the old values
+// - initialize the widgets with the new values
+function showPage(serverId, pageId) {
 
-  dump("showPage(" + serverid + "," + pageUrl + ");\n");
-  // find the IFRAME that corresponds to this server
-  var destFrame = top.window.frames[serverid];
+  if (pageId == lastPageId &&
+      serverId == lastServerId) return;
 
-  var newLocation="";
-  var oldLocation = new String(destFrame.location);
+  savePage(lastServerId, lastPageId);
 
-  // this is a quick hack to make this work for now.
-  //  newLocation = pageURI;
+  restorePage(serverId, pageId);
+  showDeckPage(pageId);
 
-  var lastSlashPos = oldLocation.lastIndexOf('/');
-  
-  if (lastSlashPos >= 0) {
-    newLocation = oldLocation.slice(0, lastSlashPos+1);
-  }
-  newLocation += pageUrl;
-  
-  if (oldLocation != newLocation) {
-    destFrame.location = newLocation;
-  }
+  lastServerId = serverId;
+  lastPageId = pageId;
+}
 
-  // now see if we need to bring this server into view
+//
+// show the page with the given id
+//
+function showDeckPage(deckBoxId) {
 
-  // find the box's index in the <deck> and bring it forward
-  var deckBox= top.document.getElementById(serverid);
+  /* bring the deck to the front */
+  var deckBox = top.document.getElementById(deckBoxId);
   var deck = deckBox.parentNode;
   var children = deck.childNodes;
-  var i;
-  for (i=0; i<children.length; i++) {
+
+  // search through deck children, and find the index to load
+  for (var i=0; i<children.length; i++) {
     if (children[i] == deckBox) break;
   }
 
-  deck.setAttribute("value", i-1);
+  deck.setAttribute("value", i);
+
 }
 
+//
+// save the values of the widgets to the given server
+//
+function savePage(serverId, pageId) {
+  if (!serverId || !pageId) return;
+  
+  var accountValues = getValueArrayFor(serverId);
+  var pageElements = getPageFormElements(pageId);
+
+  // store the value in the account
+  for (var i=0; i<pageElements.length; i++) {
+    accountValues[pageElements[i].name] =
+      getFormElementValue(pageElements[i]);
+  }
+
+}
+
+//
+// restore the values of the widgets from the given server
+//
+function restorePage(serverId, pageId) {
+  if (!serverId || !pageId) return;
+  
+  var account = getValueArrayFor(serverId);
+  var pageElements = getPageFormElements(pageId);
+
+  // restore the value from the account
+  for (var i=0; i<pageElements.length; i++) {
+    setFormElementValue(pageElements[i],account[pageElements[i].name]);
+  }
+}
+
+//
+// gets the value of a widget
+//
+function getFormElementValue(formElement) {
+  dump("Getting " + formElement.name + " value = " + formElement.value + "\n");
+  return formElement.value;
+}
+
+//
+// sets the value of a widget
+//
+function setFormElementValue(formElement, value) {
+  dump("Setting " + formElement.name + " to " + value + "\n");
+  if (value) {
+    formElement.value = value;
+  } else {
+    formElement.value = formElement.defaultValue;
+  }
+}
+
+//
+// return an array that has all the values for the given account
+//
+function createAccountValues(account) {
+  var accountvalues = new Array;
+  var i;
+
+  var identity = account.defaultIdentity;
+  for (i in identity) {
+    if (typeof(identity[i]) != "function")
+      accountvalues["identity." + i] = identity[i];
+  }
+
+  var server = account.incomingServer;
+  for (i in server) {
+    if (typeof(server[i]) != "function")
+      accountvalues["server." + i] = server[i];
+  }
+
+  for (i in accountvalues) {
+    dump("accountvalues[" + i + "] = " + accountvalues[i] + "\n");
+  }
+
+  return accountvalues;
+}
+
+//
+// conversion routines - get data associated
+// with a given pageId, serverId, etc
+//
+
+//
+// get the account associated with this serverId
+//
+function getAccountFromServerId(serverId) {
+  // get the account by dipping into RDF and then into the acount manager
+  var serverResource = RDF.GetResource(serverId);
+  var serverFolder =
+    serverResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+  var incomingServer = serverFolder.server;
+
+  var account = accountManager.FindAccountForServer(incomingServer);
+  return account;
+}
+
+//
+// get the array of form elements for the given page
+//
+function getPageFormElements(pageId) {
+  var pageFrame = top.frames[pageId];
+  var pageDoc = top.frames[pageId].document;
+  var pageElements = pageDoc.getElementsByTagName("FORM")[0].elements;
+
+  return pageElements;
+}
+
+//
+// get the value array for the given serverId
+//
+function getValueArrayFor(serverId) {
+  if (accountArray[serverId] == null) {
+    var account = getAccountFromServerId(serverId);
+    accountArray[serverId] = createAccountValues(account);
+  }
+  
+  return accountArray[serverId];
+}
 

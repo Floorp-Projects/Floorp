@@ -21,6 +21,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) accounttree.css		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) AccountManager.css	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) wizard.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) winclassic.gif	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) winwide.gif	$(DIST)\bin\chrome\messenger\skin\default

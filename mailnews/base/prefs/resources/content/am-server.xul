@@ -2,12 +2,34 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-server-top.dtd" >
 
-<xul:window xmlns="http://www.w3.org/TR/REC-html40"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload = "">
-<frameset rows="20%,80%">
-  <frame id="server-top" src="am-server-top.xul" scrolling="auto" border="0"/>
-  <frame id="server-type" src="am-server-pop3.xul" scrolling="auto" border="0"/>
-</frameset>
-</xul:window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40" align="vertical">
+
+  <html:div>&serverSettings.label;</html:div>
+  <box align="vertical" class="cleanborder">
+  <box align="horizontal">
+    <html:div flex="20%">&serverType.label;</html:div>
+    <html:div flex="80%">&popServer.label;</html:div>
+  </box>
+
+  <box align="horizontal">
+    <html:div flex="20%">&serverName.label;</html:div>
+    <html:input flex="80%" type="text" name="server.hostName"/>
+  </box>
+
+  <box>
+    <html:div flex="20%">&userName.label;</html:div>
+    <html:input flex="80%" type="text" name="server.username"/>
+  </box>
+
+  <html:div><html:input type="checkbox"/>&savePassword.label;</html:div>
+  <html:div><html:input type="checkbox"/>&biffStart.label;
+            <html:spacer/>
+            <html:input type="text" size="3"/>
+            <html:spacer/>&biffEnd.label;
+  </html:div>
+  </box>
+  <html:iframe id="server-type" src="am-server-pop3.xul" scrolling="auto" style="border: none" flex="100%"/>
+</window>

@@ -17,7 +17,7 @@
     <box align="horizontal">
       <html:div>&accountName.label;</html:div>
       <html:spacer/>
-      <html:input type="text" name="accountname" flex="100%"/>
+      <html:input type="text" name="server.prettyName" flex="100%"/>
     </box>
     </box>
 
@@ -26,35 +26,35 @@
     <html:div>&identityDesc.label;</html:div>
     <box align="horizonal">
       <html:div flex="40%">&name.label;</html:div>
-      <html:input name="fullName" type="text" flex="60%"/>
+      <html:input name="identity.fullName" type="text" flex="60%"/>
     </box>
     <box align="horizonal">
       <html:div flex="40%">&email.label;</html:div>
-      <html:input name="email" type="text" flex="60%"/>
+      <html:input name="identity.email" type="text" flex="60%"/>
     </box>
     <box align="horizonal">
       <html:div flex="40%">&replyTo.label;</html:div>
-      <html:input name="replyTo" type="text" flex="60%"/>
+      <html:input name="identity.replyTo" type="text" flex="60%"/>
     </box>
     <box align="horizonal">
       <html:div flex="40%">&organization.label;</html:div>
-      <html:input name="organization" type="text" flex="60%"/>
+      <html:input name="identity.organization" type="text" flex="60%"/>
     </box>
     <box align="horizontal">
       <html:div>
-        <html:input name="composeHtml" type="checkbox"/>
+        <html:input name="identity.composeHtml" type="checkbox"/>
         &useHtml.label;</html:div>
     </box>
     <box align="horizontal">
       <html:div>
-        <html:input name="attachVCard" type="checkbox"/>
+        <html:input name="identity.attachVCard" type="checkbox"/>
         &attachVCard.label;</html:div>
     </box>
     <box align="horizontal">
-      <html:input type="checkbox"/>
+      <html:input name="identity.attachSignature" type="checkbox"/>
       &signature.label;
       <html:spacer/>
-      <html:select name="signature" id="pref">
+      <html:select name="identity.signature" id="pref">
          <html:option value="sig1">&sampleSig1.label;</html:option>
          <html:option value="sig2">&sampleSig2.label;</html:option>
          <html:option value="sig3">&sampleSig3.label;</html:option>

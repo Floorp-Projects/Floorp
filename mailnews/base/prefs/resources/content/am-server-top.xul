@@ -8,17 +8,4 @@
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       align="vertical">
 
-  <html:div>&serverSettings.label;</html:div>
-  <box align="vertical" class="cleanborder" flex="100%">
-  <html:div>
-    <spring flex="100%"/>
-    Account Type
-    <html:select>
-      <html:option name="pop3">&popServer.label;</html:option>
-      <html:option name="imap">&imapServer.label;</html:option>
-      <html:option name="news">&newsServer.label;</html:option>
-      <html:option name="webmail">&webmail.label;</html:option>
-    </html:select>
-  </html:div>
-  </box>
 </window>

@@ -5,4 +5,10 @@
 <!ENTITY imapServer.label "IMAP Mail server">
 <!ENTITY newsServer.label "News Server">
 <!ENTITY webmail.label "Web mail account">
+<!ENTITY serverType.label "Server Type:">
+<!ENTITY serverName.label "Server Name:">
+<!ENTITY userName.label "User Name:">
+<!ENTITY savePassword.label "Save password.">
+<!ENTITY biffStart.label "Check for new messages every ">
+<!ENTITY biffEnd.label "minutes.">
 

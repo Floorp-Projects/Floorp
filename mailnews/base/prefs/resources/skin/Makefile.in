@@ -30,6 +30,7 @@ SAMPLES_DIR = $(DIST)/bin/chrome/messenger/skin/default
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/accounttree.css		\
+	$(srcdir)/AccountManager.css	\
 	$(srcdir)/wizard.css			\
 	$(srcdir)/winclassic.gif \
 	$(srcdir)/winwide.gif \

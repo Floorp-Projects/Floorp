@@ -10,24 +10,6 @@
       onload = "">
 
 <box align="vertical" class="cleanborder" flex="100%">
-  <box align="horizontal">
-    <spring flex="100%"/>
-    <html:div>&hostname.label;</html:div>
-    <spring class="spacer"/>
-    <html:input type="text"/>
-  </box>
-  <box align="horizontal">
-    <spring flex="100%"/>
-    <html:div>&username.label;</html:div>
-    <spring class="spacer"/>
-    <html:input type="text"/>
-  </box>
-  <html:div><html:input type="checkbox"/>&savePassword.label;</html:div>
-  <html:div><html:input type="checkbox"/>&biffStart.label;
-            <html:spacer/>
-            <html:input type="text" size="3"/>
-            <html:spacer/>&biffEnd.label;
-  </html:div>
   <html:div><html:input type="checkbox"/>&leaveOnServer.label;</html:div>
   <html:div><html:input type="checkbox"/>&deleteOnServer.label;</html:div>
   <html:div><html:input type="checkbox"/>&emptyTrashOnExit.label;</html:div>

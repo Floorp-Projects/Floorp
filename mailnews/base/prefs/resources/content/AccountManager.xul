@@ -8,6 +8,7 @@
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&accountManagerTitle.label;"
         width="600" height="420"
+        onload="onLoad(event);"
 		align="horizontal">
 
     <html:script src="resource:/res/samples/DumpDOM.js"/>
@@ -23,20 +24,25 @@
             </box>
 		</box>
         <box flex="75%">
-           <tabcontrol flex="100%" align="horizontal">
-             <deck id="mydeck" flex="100%"
-               rdf:datasources="rdf:msgaccountmanager"
-               ref="msgaccounts:/">
-               <template>
-                 <rule>
-                     <box uri="...">
-                     <html:iframe src="about:blank" name="..."
+           <tabcontrol flex="100%" align="vertical">
+             <deck id="mydeck" flex="100%">
+                <box id="am-main.xul" flex="100%">
+                     <html:iframe src="am-main.xul" name="am-main.xul"
                           style="border: none" flex="100%"/>
-                     </box>
-                 </rule>
-               </template>
-                
-             </deck>
+                </box>
+                <box id="am-server.xul" flex="100%">
+                     <html:iframe src="am-server.xul" name="am-server.xul"
+                          style="border: none" flex="100%"/>
+                </box>
+                <box id="am-copies.xul" flex="100%">
+                     <html:iframe src="am-copies.xul" name="am-copies.xul"
+                          style="border: none" flex="100%"/>
+                </box>
+                <box id="am-advanced.xul" flex="100%">
+                     <html:iframe src="am-advanced.xul" name="am-advanced.xul"
+                          style="border: none" flex="100%"/>
+                </box>
+              </deck>
            </tabcontrol>
         </box>
 	</box>
