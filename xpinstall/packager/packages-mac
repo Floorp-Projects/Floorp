@@ -13,6 +13,8 @@
 ; en-US 
 viewer:chrome:en-US.jar
 viewer:chrome:en-mac.jar
+viewer:chrome:en-unix.jar
+viewer:chrome:en-win.jar
 
 [regus]
 ;
