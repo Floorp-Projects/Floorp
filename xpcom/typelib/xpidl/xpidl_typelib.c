@@ -1115,6 +1115,7 @@ typelib_const_dcl(TreeState *state)
     const char *name = IDL_IDENT(dcl->ident).str;
     gboolean success;
     gboolean is_long;
+    IDL_tree real_type;
 
     /* const -> list -> interface */
     if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
@@ -1126,9 +1127,12 @@ typelib_const_dcl(TreeState *state)
         return TRUE;
     }
 
-    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(dcl->const_type));
+    /* Could be a typedef; try to map it to the real type. */
+    real_type = find_underlying_type(dcl->const_type);
+    real_type = real_type ? real_type : dcl->const_type;
+    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(real_type));
     if(success) {
-        switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
+        switch(IDL_TYPE_INTEGER(real_type).f_type) {
         case IDL_INTEGER_TYPE_SHORT:
             is_long = FALSE;
             break;
@@ -1180,99 +1184,6 @@ typelib_const_dcl(TreeState *state)
         return FALSE;
     }
     return TRUE;
-
-#if 0
-    XPTInterfaceDescriptor *id;
-    XPTConstDescriptor *cd;
-    struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
-
-    /* const -> list -> interface */
-    if (IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree)))
-        != IDLN_INTERFACE) {
-        XPIDL_WARNING((state->tree, IDL_WARNING1,
-                       "const decl not inside interface!\n"));
-        return TRUE;
-    }
-
-    id = CURRENT(state);
-    if (!XPT_InterfaceDescriptorAddConsts(ARENA(state), id, 1))
-        return FALSE;
-    cd = &id->const_descriptors[NEXT_CONST(state)];
-
-    cd->name = IDL_IDENT(dcl->ident).str;
-#ifdef DEBUG_shaver_const
-    fprintf(stderr, "DBG: adding const %s\n", cd->name);
-#endif
-
-    if (!fill_td_from_type(state, &cd->type, dcl->const_type))
-        return FALSE;
-
-    switch (IDL_NODE_TYPE(dcl->const_type)) {
-      case IDLN_TYPE_INTEGER: {
-          IDL_longlong_t value = IDL_INTEGER(dcl->const_exp).value;
-          gboolean sign = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
-          switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
-            case IDL_INTEGER_TYPE_SHORT:
-              if(sign)
-                  cd->value.i16 = value;
-              else
-                  cd->value.ui16 = value;
-              break;
-            case IDL_INTEGER_TYPE_LONG:
-              if(sign)
-                  cd->value.i32 = value;
-              else
-                  cd->value.ui32 = value;
-              break;
-            case IDL_INTEGER_TYPE_LONGLONG:
-              /* XXXshaver value -> PRInt64 not legal conversion? */
-              if (sign)
-                  LL_I2L(cd->value.i64, value);
-              else
-                  LL_UI2L(cd->value.ui64, value);
-              break;
-          }
-          break;
-      }
-      case IDLN_TYPE_CHAR:
-        cd->value.ch = IDL_CHAR(dcl->const_exp).value[0];
-        XPT_ASSERT(cd->value.ch);
-        break;
-      case IDLN_TYPE_WIDE_CHAR:
-        cd->value.wch = IDL_WIDE_CHAR(dcl->const_exp).value[0];
-        XPT_ASSERT(cd->value.wch);
-        break;
-      case IDLN_TYPE_STRING:
-        cd->value.string = XPT_NewStringZ(ARENA(state), 
-                                          IDL_STRING(dcl->const_exp).value);
-        if (!cd->value.string)
-            return FALSE;
-        break;
-      case IDLN_TYPE_WIDE_STRING:
-        XPT_ASSERT(0);
-        break;
-      case IDLN_TYPE_BOOLEAN:
-        cd->value.bul = IDL_BOOLEAN(dcl->const_exp).value;
-        break;
-      case IDLN_TYPE_FLOAT:
-        cd->value.flt = (float)IDL_FLOAT(dcl->const_exp).value;
-        break;
-#if 0 /* IDL doesn't have double */
-      case IDLN_TYPE_DOUBLE:
-        cd->value.dbl = IDL_FLOAT(dcl->const_exp).value;
-#endif
-        break;
-      case IDLN_IDENT:
-        /* XXX check for nsID? */
-        break;
-      default:
-        IDL_tree_error(state->tree, "illegal type for const\n");
-        return FALSE;
-    }
-
-    NEXT_CONST(state)++;
-    return TRUE;
-#endif
 }
 
 static gboolean

@@ -198,6 +198,13 @@ xpidl_parse_iid(nsID *id, const char *str);
                              UP_IS_AGGREGATE(node)))
 
 /*
+ * Find the underlying type of an identifier typedef.  Returns NULL
+ * (and doesn't complain) on failure.
+ */
+IDL_tree /* IDL_TYPE_DCL */
+find_underlying_type(IDL_tree typedef_ident);
+
+/*
  * Check that scriptable attributes in scriptable interfaces actually are.
  */
 gboolean
