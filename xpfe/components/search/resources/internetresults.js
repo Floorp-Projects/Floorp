@@ -2,48 +2,42 @@
 function onLoadInternetResults()
 {
 	var isupports = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-	if (!isupports)    return(false);
+	if (!isupports)    
+    return(false);
 	var internetSearchService = isupports.QueryInterface(Components.interfaces.nsIInternetSearchService);
-	if (!internetSearchService)    return(false);
+	if (!internetSearchService)    
+    return(false);
 	internetSearchService.ClearResultSearchSites();
 
-	dump("Cleared result search sites.\n");
-
-	return(true);
+	return true;
 }
 
-
-
-function doEngineClick(node)
+function loadResultsTree( aSearchURL )
 {
-	dump("doEngineClick entered.\n");
+  var resultsTree = document.getElementById( "internetresultstree" );
+  if( !resultsTree )
+    return false;
+  resultsTree.setAttribute( "ref", aSearchURL );
+  return true;
+}
 
+function doEngineClick( aNode )
+{
 	var resultsTree = document.getElementById("internetresultstree");
-	if (!resultsTree)	return;
 	var contentArea = document.getElementById("content");
-	if (!contentArea)	return;
-	var statusNode = document.getElementById("status-button");
-	if (statusNode)
-	{
-		statusNode.setAttribute("value", "");
-	}
-
-	var html="";
-
-	var engineURI = node.getAttribute("id");
+  var splitter = document.getElementById("gray_horizontal_splitter");
+	var engineURI = aNode.getAttribute("id");
 	if (engineURI == "allEngines")
 	{
-		dump("Show all engine results.\n");
-
-		resultsTree.setAttribute("style", "height: 70%; width: 100%;");
+		resultsTree.setAttribute("style", "display: table;");
+    splitter.setAttribute("style","display: block;");
 		contentArea.setAttribute("style", "height: 100; width: 100%;");
 	}
 	else
 	{
-		dump("Show HTML for '" + engineURI + "'\n");
 		resultsTree.setAttribute("style", "display: none;");
+    splitter.setAttribute("style","display: none");
 		contentArea.setAttribute("style", "height: 100%; width: 100%;");
-
 		try
 		{
 			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
@@ -55,11 +49,9 @@ function doEngineClick(node)
 				{
 					var src = rdf.GetResource(engineURI, true);
 					var htmlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#HTML", true);
-
-					html = internetSearchStore.GetTarget(src, htmlProperty, true);
-					if (html)	html = html.QueryInterface(Components.interfaces.nsIRDFLiteral);
-					if (html)	html = html.Value;
-
+ 				  html = internetSearchStore.GetTarget(src, htmlProperty, true);
+					if ( html )	html = html.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          if ( html ) html = html.Value
 				}
 			}
 		}
@@ -68,18 +60,15 @@ function doEngineClick(node)
 		}
 	}
 
-	if ((html) && (html != ""))
+	if ( html )
 	{
 		var doc = window.frames[0].document;
 		doc.open("text/html", "replace");
-		doc.writeln(html);
+		doc.writeln( html );
 		doc.close();
 	}
 	else
-	{
 		window.frames[0].document.location = "chrome://search/content/default.htm";
-	}
-
 }
 
 
@@ -124,7 +113,7 @@ function doResultClick(node)
 				if (target)	target = target.Value;
 				if (target)
 				{
-					var text = "<HTML><HEAD><TITLE>Search</TITLE><BASE TARGET='_blank'></HEAD><BODY><FONT POINT-SIZE='9'>";
+					var text = "<HTML><HEAD><TITLE>Search</TITLE><BASE TARGET='_top'></HEAD><BODY><FONT POINT-SIZE='9'>";
 
 					if (banner)
 					{

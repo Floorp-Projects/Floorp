@@ -19,5 +19,13 @@
    - Contributor(s):
   --> 
 
-<!ENTITY search.text.label        "Text:">
 <!ENTITY search.button.label      "Search">
+<!ENTITY search.results.tab       "Results">
+<!ENTITY search.advanced.tab      "Advanced">
+<!ENTITY allengines.label         "All Categories">
+<!ENTITY within.label             "within">
+<!ENTITY whenSearching.label      "When Searching">
+<!ENTITY useTheseProviders.label  "use these providers">
+<!ENTITY engine.column.label      "Engine">
+<!ENTITY checkbox.column.label    "">
+<!ENTITY stop.button.label        "Stop">

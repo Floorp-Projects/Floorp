@@ -29,3 +29,38 @@ titledbutton.sidebartitle:hover {
 titledbutton.paneltitle { 
   horizontal-align: left;
 }
+
+treecol.checkboxColumn {
+  width: 20px ! important;
+}
+
+box.spaced { 
+  padding-bottom: 5px;
+}
+
+box#engineTabs {
+  background-color: #808080;
+  border-bottom: 1px solid threedhighlight;
+}
+
+box#engineTabs > titledbutton {
+  background-color: #CCCCCC;
+  margin-bottom: 0px;
+  border-bottom: 1px solid #CCCCCC;
+}
+
+titledbutton#allEngines {
+  margin-right: 12px;
+}
+
+treecol[sortActive="true"] {
+ background-color: lightgray;
+}
+
+titledbutton.engine[loading="true"] {
+ list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+}
+
+titledbutton.iconic {
+ list-style-image: url("resource:/res/rdf/document.gif") ! important ;
+}
