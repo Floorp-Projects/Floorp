@@ -745,7 +745,8 @@ nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
                                                  nsCSSProperty aPropertyName,
                                                  nsAString& aResult) const
 {
-  NS_ASSERTION(aProperty, "null CSS property passed to AppendPropertyAndValueToString.");
+  NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
+               "property enum out of range");
   AppendASCIItoUTF16(nsCSSProps::GetStringValue(aPropertyName), aResult);
   aResult.Append(NS_LITERAL_STRING(": "));
   AppendValueToString(aProperty, aResult);
