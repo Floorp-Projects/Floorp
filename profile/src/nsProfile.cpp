@@ -846,19 +846,6 @@ NS_IMETHODIMP nsProfile::GetFirstProfile(char **profileName)
 }
 
 
-NS_IMETHODIMP
-nsProfile::GetCurrentProfileDirFromJS(nsIFileSpec **spec)
-{
-        nsresult rv;
-        nsFileSpec dir;
-
-        rv = GetCurrentProfileDir(&dir);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = NS_NewFileSpecWithSpec(dir, spec);
-        return rv;
-}                  
-
 // Returns the name of the current profile i.e., the last used profile
 NS_IMETHODIMP
 nsProfile::GetCurrentProfile(char **profileName)

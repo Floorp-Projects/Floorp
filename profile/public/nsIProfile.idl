@@ -54,7 +54,6 @@ interface nsIProfile : nsISupports {
 
     // eventually we need to depricate getCurrentProfileDir
     [noscript] void getCurrentProfileDir(in nsFileSpec profileDir);
-    nsIFileSpec getCurrentProfileDirFromJS();
 
     [noscript] void setProfileDir(in string profileName,
                                   in nsFileSpecRef profileDir);
