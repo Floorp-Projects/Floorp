@@ -225,7 +225,17 @@ DER_AsciiToTime(int64 *dst, char *string)
 SECStatus
 DER_UTCTimeToTime(int64 *dst, SECItem *time)
 {
-    return DER_AsciiToTime(dst, (char*) time->data);
+    char localBuf[100]; 
+
+    /* Minimum valid UTCTime is yymmddhhmmZ  which is 11 bytes. */
+    /* 80 should be large enough for all valid encoded times. */
+    if (time && time->len >= 11 && time->len <= 80 && time->data) { 
+	memcpy(localBuf, time->data, time->len);
+	PORT_Memset(localBuf + time->len, 0, (sizeof localBuf) - time->len);
+	return DER_AsciiToTime(dst, localBuf);
+    }
+    PORT_SetError(SEC_ERROR_INVALID_TIME);
+    return SECFailure;
 }
 
 /*
@@ -298,8 +308,16 @@ DER_GeneralizedTimeToTime(int64 *dst, SECItem *time)
     char *string;
     long hourOff, minOff;
     uint16 century;
+    char localBuf[100];
 
-    string = (char *)time->data;
+    /* minimum valid GeneralizeTime is ccyymmddhhmmZ which is 13 bytes. */
+    if (time && time->len >= 13 && time->len < 80 && time->data) {
+        memcpy(localBuf, time->data, time->len);
+	PORT_Memset(localBuf + time->len, 0, (sizeof localBuf) - time->len);
+    } else 
+        goto loser;
+
+    string = localBuf;
     PORT_Memset (&genTime, 0, sizeof (genTime));
 
     /* Verify time is formatted properly and capture information */
