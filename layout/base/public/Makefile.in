@@ -44,8 +44,6 @@ EXPORTS =				\
 	nsIPresShell.h			\
 	nsIReflowCommand.h		\
 	nsIFrameSelection.h			\
-	nsIDOMSelection.h		\
-	nsIDOMSelectionListener.h		\
 	nsISpaceManager.h		\
 	nsIStyledContent.h      \
 	nsIStyleContext.h		\
@@ -63,7 +61,7 @@ EXPORTS =				\
 	nsStyleCoord.h			\
 	nsStyleStruct.h			\
 	nsTextFragment.h		\
-        $(NULL)
+	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
