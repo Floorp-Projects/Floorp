@@ -149,6 +149,13 @@ static CTraceFile gTrace;
 
 #endif
 
+inline char ascii_tolower(char aChar)
+{
+  if (aChar >= 'A' && aChar <= 'Z')
+    return aChar + ('a' - 'A');
+  return aChar;
+}
+
 inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
   return (PRUnichar)aString[anIndex];
 }
@@ -677,8 +684,8 @@ PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRB
           // can't do case conversion on characters out of our range
           if (aIgnoreCase && c1<128 && c2<128) {
 
-              c1 = tolower(char(c1));
-              c2 = tolower(char(c2));
+              c1 = ascii_tolower(char(c1));
+              c2 = ascii_tolower(char(c2));
             
               if (c1 == c2) continue;
           }
