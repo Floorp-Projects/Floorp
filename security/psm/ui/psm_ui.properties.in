@@ -935,19 +935,19 @@ left3-1tabs:
 :left3-1tabs
 left3-2tabs:
 {link_left_tab {text_mine},3,1}
-{select_left_tab {text_others},3,2}
+{_addOthersCerts}
 {link_left_tab {text_websites},3,3}
 {link_left_tab {text_authorities},3,4}
 :left3-2tabs
 left3-3tabs:
 {link_left_tab {text_mine},3,1}
-{link_left_tab {text_others},3,2}
+{_addOthersCerts}
 {select_left_tab {text_websites},3,3}
 {link_left_tab {text_authorities},3,4}
 :left3-3tabs
 left3-4tabs:
 {link_left_tab {text_mine},3,1}
-{link_left_tab {text_others},3,2}
+{_addOthersCerts}
 {link_left_tab {text_websites},3,3}
 {select_left_tab {text_authorities},3,4}
 :left3-4tabs
