@@ -55,12 +55,6 @@ class nsIFocusTracker : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOCUSTRACKER_IID)
 
-  /** ScrollFrameIntoView
-   *  limited version of nsPresShell::ScrollFrameIntoView
-   *  @param aFrame will be the frame to scroll into view.
-   */
-  NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame) = 0;
-
   /**
    * Returns the primary frame associated with the content object.
    *

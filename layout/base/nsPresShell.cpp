@@ -1231,8 +1231,6 @@ public:
                             nsEventStatus* aStatus);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
-  //nsIFocusTracker interface
-  NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame);
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **aOutCaret);
   NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
@@ -1413,7 +1411,6 @@ protected:
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
   PRInt16                       mSelectionFlags;
-  PRPackedBool                  mScrollingEnabled; //used to disable programmable scrolling from outside
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
   PresShellViewEventListener    *mViewEventListener;
   nsCOMPtr<nsIEventQueueService> mEventQueueService;
@@ -1467,11 +1464,6 @@ private:
                                  PRBool& aHandled, nsIContent *aZombieFocusedContent);
 
   void FreeDynamicStack();
-
-  //helper funcs for disabing autoscrolling
-  void DisableScrolling(){mScrollingEnabled = PR_FALSE;}
-  void EnableScrolling(){mScrollingEnabled = PR_TRUE;}
-  PRBool IsScrollingEnabled(){return mScrollingEnabled;}
 
   //helper funcs for event handling
   nsIFrame* GetCurrentEventFrame();
@@ -1612,8 +1604,7 @@ PresShell::PresShell():
 #ifdef IBMBIDI
   mBidiLevel(BIDI_LEVEL_UNDEFINED),
 #endif
-  mEnablePrefStyleSheet(PR_TRUE),
-  mScrollingEnabled(PR_TRUE)
+  mEnablePrefStyleSheet(PR_TRUE)
 {
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = new ReflowCountMgr();
@@ -3126,18 +3117,6 @@ PresShell::FireResizeEvent()
   if (globalObj) {
     globalObj->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
-}
-
-NS_IMETHODIMP
-PresShell::ScrollFrameIntoView(nsIFrame *aFrame)
-{
-  if (!aFrame)
-    return NS_ERROR_NULL_POINTER;
-  
-  if (IsScrollingEnabled())
-    return ScrollFrameIntoView(aFrame, NS_PRESSHELL_SCROLL_ANYWHERE,
-                               NS_PRESSHELL_SCROLL_ANYWHERE);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
