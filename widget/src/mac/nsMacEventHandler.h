@@ -185,7 +185,7 @@ public:
 protected:
 #if 1
 		virtual void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, 
-                                    nsWindow* aFocusedWidget,
+                              nsWindow* aFocusedWidget, PRUint32 aMessage, 
                               PRBool* aIsChar=nsnull, PRBool aConvertChar=PR_TRUE);
 		virtual PRBool		IsSpecialRaptorKey(UInt32 macKeyCode);
 		virtual PRUint32	ConvertKeyEventToUnicode(EventRecord& aOSEvent);

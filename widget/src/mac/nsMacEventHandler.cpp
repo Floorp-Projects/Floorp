@@ -898,7 +898,7 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 //-------------------------------------------------------------------------
 
 void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, 
-    EventRecord& aOSEvent, nsWindow* aFocusedWidget,
+    EventRecord& aOSEvent, nsWindow* aFocusedWidget, PRUint32 aMessage,
     PRBool* aIsChar, PRBool aConvertChar)
 {
 	//
@@ -1146,7 +1146,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 		case keyUp:
       {
         nsKeyEvent keyUpEvent(NS_KEY_UP);
-        InitializeKeyEvent(keyUpEvent, aOSEvent, focusedWidget);
+        InitializeKeyEvent(keyUpEvent, aOSEvent, focusedWidget, NS_KEY_UP);
         result = focusedWidget->DispatchWindowEvent(keyUpEvent);
         break;
       }
@@ -1154,7 +1154,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
     case keyDown:	
       {
         nsKeyEvent keyDownEvent(NS_KEY_DOWN), keyPressEvent(NS_KEY_PRESS);
-        InitializeKeyEvent(keyDownEvent, aOSEvent, focusedWidget);
+        InitializeKeyEvent(keyDownEvent, aOSEvent, focusedWidget, NS_KEY_DOWN);
         result = focusedWidget->DispatchWindowEvent(keyDownEvent);
 
         // get the focused widget again in case something happened to it on the previous event
@@ -1166,7 +1166,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
         if (checkFocusedWidget != focusedWidget)
           return result;
 
-        InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget);
+        InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS);
 
         // before we dispatch this key, check if it's the contextmenu key.
         // If so, send a context menu event instead.
@@ -1186,7 +1186,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
     case autoKey:
       {
         nsKeyEvent keyPressEvent(NS_KEY_PRESS);
-        InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget);
+        InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS);
         result = focusedWidget->DispatchWindowEvent(keyPressEvent);
         break;
       }
@@ -1252,7 +1252,7 @@ PRBool nsMacEventHandler::HandleUKeyEvent(PRUnichar* text, long charCount, Event
   if (aOSEvent.what == keyDown)
   {
     nsKeyEvent keyDownEvent(NS_KEY_DOWN);
-    InitializeKeyEvent(keyDownEvent, aOSEvent, focusedWidget, &isCharacter, PR_FALSE);
+    InitializeKeyEvent(keyDownEvent, aOSEvent, focusedWidget, NS_KEY_DOWN, &isCharacter, PR_FALSE);
     result = focusedWidget->DispatchWindowEvent(keyDownEvent);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent keydown");
 
@@ -1266,7 +1266,7 @@ PRBool nsMacEventHandler::HandleUKeyEvent(PRUnichar* text, long charCount, Event
 
   // simulate key press events
   nsKeyEvent keyPressEvent(NS_KEY_PRESS);
-  InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, &isCharacter, PR_FALSE);
+  InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS, &isCharacter, PR_FALSE);
 
   if (isCharacter) 
   {
