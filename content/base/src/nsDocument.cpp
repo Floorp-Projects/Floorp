@@ -77,6 +77,8 @@
 #include "nsIDOMRange.h"
 #include "nsIEnumerator.h"
 #include "nsDOMError.h"
+#include "nsIScrollableView.h"
+#include "nsIFrame.h"
 
 #include "nsIScriptSecurityManager.h"
 
@@ -1967,6 +1969,100 @@ NS_IMETHODIMP
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
   return NS_NewRange(aReturn);
+}
+
+
+nsresult
+nsDocument::GetPixelDimensions(nsIPresShell* aShell,
+                               PRInt32* aWidth,
+                               PRInt32* aHeight)
+{
+  nsresult result = NS_OK;
+  nsSize size;
+  nsIFrame* frame;
+
+  result = aShell->GetPrimaryFrameFor(mRootContent, &frame);
+  if (NS_SUCCEEDED(result) && frame) {
+    nsIView* view;
+
+    result = frame->GetView(&view);
+    if (NS_SUCCEEDED(result)) {
+      // If we have a view check if it's scrollable. If not,
+      // just use the view size itself
+      if (view) {
+        nsIScrollableView* scrollableView;
+        
+        if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView))) {
+          scrollableView->GetScrolledView(view);
+        }
+
+        result = view->GetDimensions(&size.width, &size.height);
+      }
+      // If we don't have a view, use the frame size
+      else {
+        result = frame->GetSize(size);
+      }
+    }
+
+    // Convert from twips to pixels
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIPresContext> context;
+      
+      result = aShell->GetPresContext(getter_AddRefs(context));
+      
+      if (NS_SUCCEEDED(result)) {
+        float scale;
+        context->GetTwipsToPixels(&scale);
+        
+        *aWidth = NSTwipsToIntPixels(size.width, scale);
+        *aHeight = NSTwipsToIntPixels(size.height, scale);
+      }
+    }
+  }
+  else {
+    *aWidth = 0;
+    *aHeight = 0;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsDocument::GetWidth(PRInt32* aWidth)
+{
+  nsresult result;
+  nsCOMPtr<nsIPresShell> shell;
+
+  // We make the assumption that the first presentation shell
+  // is the one for which we need information.
+  shell = getter_AddRefs(GetShellAt(0));
+  if (shell) {
+    PRInt32 width, height;
+
+    result = GetPixelDimensions(shell, &width, &height);
+    *aWidth = width;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsDocument::GetHeight(PRInt32* aHeight)
+{
+  nsresult result;
+  nsCOMPtr<nsIPresShell> shell;
+
+  // We make the assumption that the first presentation shell
+  // is the one for which we need information.
+  shell = getter_AddRefs(GetShellAt(0));
+  if (shell) {
+    PRInt32 width, height;
+
+    result = GetPixelDimensions(shell, &width, &height);
+    *aHeight = height;
+  }
+
+  return result;
 }
 
 //
