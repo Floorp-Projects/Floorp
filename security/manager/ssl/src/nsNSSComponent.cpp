@@ -406,38 +406,51 @@ nsNSSComponent::InstallLoadableRoots()
                                modName);
     if (NS_FAILED(rv)) return;
 
-    nsCOMPtr<nsILocalFile> mozFile;
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
     if (!directoryService)
       return;
+
+    const char *possible_ckbi_locations[] = {
+      NS_GRE_DIR,
+      NS_XPCOM_CURRENT_PROCESS_DIR
+    };
     
-    directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
-                           NS_GET_IID(nsILocalFile), 
-                           getter_AddRefs(mozFile));
+    for (size_t il = 0; il < sizeof(possible_ckbi_locations)/sizeof(const char*); ++il) {
+      nsCOMPtr<nsILocalFile> mozFile;
+      directoryService->Get( possible_ckbi_locations[il],
+                             NS_GET_IID(nsILocalFile), 
+                             getter_AddRefs(mozFile));
     
-    if (!mozFile) {
-      return;
-    }
-    char *fullModuleName = nsnull;
+      if (!mozFile) {
+        continue;
+      }
+
+      char *fullModuleName = nsnull;
 #ifdef XP_MAC
-    nsCAutoString nativePath;
-    mozFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
-    mozFile->AppendNative(LOADABLE_CERTS_MODULE);
-    mozFile->GetNativePath(nativePath);    
-    fullModuleName = (char *) nativePath.get();
+      nsCAutoString nativePath;
+      mozFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
+      mozFile->AppendNative(LOADABLE_CERTS_MODULE);
+      mozFile->GetNativePath(nativePath);    
+      fullModuleName = (char *) nativePath.get();
 #else
-    nsCAutoString processDir;
-    mozFile->GetNativePath(processDir);
-    fullModuleName = PR_GetLibraryName(processDir.get(), "nssckbi");
+      nsCAutoString processDir;
+      mozFile->GetNativePath(processDir);
+      fullModuleName = PR_GetLibraryName(processDir.get(), "nssckbi");
 #endif
-    /* If a module exists with the same name, delete it. */
-    NS_ConvertUCS2toUTF8 modNameUTF8(modName);
-    int modType;
-    SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
-    SECMOD_AddNewModule(NS_CONST_CAST(char*, modNameUTF8.get()), fullModuleName, 0, 0);
+      /* If a module exists with the same name, delete it. */
+      NS_ConvertUCS2toUTF8 modNameUTF8(modName);
+      int modType;
+      SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
+      SECStatus rv_add = 
+        SECMOD_AddNewModule(NS_CONST_CAST(char*, modNameUTF8.get()), fullModuleName, 0, 0);
 #ifndef XP_MAC
-    PR_Free(fullModuleName); // allocated by NSPR
+      PR_Free(fullModuleName); // allocated by NSPR
 #endif
+      if (SECSuccess == rv_add) {
+        // found a module, no need to try other directories
+        break;
+      }
+    }
   }
 }
 
