@@ -56,6 +56,10 @@ extern char **environ;
 #define SA_RESTART 0
 #endif
 
+#if defined(VMS)
+static PRLock *_pr_vms_fork_lock = NULL;
+#endif
+
 /*
  **********************************************************************
  *
@@ -166,7 +170,10 @@ ForkAndExec(
     char *const *childEnvp;
     char **newEnvp = NULL;
     int flags;
-	
+#ifdef VMS
+    char VMScurdir[FILENAME_MAX+1] = { '\0' } ;
+#endif	
+
     process = PR_NEW(PRProcess);
     if (!process) {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
@@ -198,6 +205,66 @@ ForkAndExec(
         childEnvp = newEnvp;
     }
 
+#ifdef VMS
+/*
+** Since vfork/exec is implemented VERY differently on OpenVMS, we have to
+** handle the setting up of the standard streams very differently. And since
+** none of this code can ever execute in the context of the child, we have
+** to perform the chdir in the parent so the child is born into the correct
+** directory (and then switch the parent back again).
+*/
+{
+    int decc$set_child_standard_streams(int,int,int);
+    int n, fd_stdin=0, fd_stdout=1, fd_stderr=2;
+
+    /* Set up any standard streams we are given, assuming defaults */
+    if (attr) {
+       if (attr->stdinFd)
+           fd_stdin = attr->stdinFd->secret->md.osfd;
+       if (attr->stdoutFd)
+           fd_stdout = attr->stdoutFd->secret->md.osfd;
+       if (attr->stderrFd)
+           fd_stderr = attr->stderrFd->secret->md.osfd;
+    }
+
+    /*
+    ** Put a lock around anything that isn't going to be thread-safe.
+    */
+    PR_Lock(_pr_vms_fork_lock);
+
+    /*
+    ** Prepare the child's streams. We always do this in case a previous fork
+    ** has left the stream assignments in some non-standard way.
+    */
+    n = decc$set_child_standard_streams(fd_stdin,fd_stdout,fd_stderr);
+    if (n == -1) {
+       PR_SetError(PR_BAD_DESCRIPTOR_ERROR, errno);
+       PR_DELETE(process);
+       if (newEnvp) {
+           PR_DELETE(newEnvp);
+       }
+       PR_Unlock(_pr_vms_fork_lock);
+       return NULL;
+    }
+
+    /* Switch directory if we have to */
+    if (attr) {
+       if (attr->currentDirectory) {
+           if ( (getcwd(VMScurdir,sizeof(VMScurdir)) == NULL) ||
+                (chdir(attr->currentDirectory) < 0) ) {
+               PR_SetError(PR_DIRECTORY_OPEN_ERROR, errno);
+               PR_DELETE(process);
+               if (newEnvp) {
+                   PR_DELETE(newEnvp);
+               }
+               PR_Unlock(_pr_vms_fork_lock);
+               return NULL;
+           }
+       }
+    }
+}
+#endif /* VMS */
+
 #ifdef AIX
     process->md.pid = (*pr_wp.forkptr)();
 #else
@@ -218,6 +285,9 @@ ForkAndExec(
          * the parent process's standard I/O data structures.
          */
 
+#ifdef VMS
+       /* OpenVMS has already handled all this above */
+#else
         if (attr) {
             /* the osfd's to redirect stdin, stdout, and stderr to */
             int in_osfd = -1, out_osfd = -1, err_osfd = -1;
@@ -271,6 +341,7 @@ ForkAndExec(
                 }
             }
         }
+#endif /* !VMS */
 
         if (childEnvp) {
             (void)execve(path, argv, childEnvp);
@@ -279,12 +350,35 @@ ForkAndExec(
             (void)execv(path, argv);
         }
         /* Whoops! It returned. That's a bad sign. */
+#ifdef VMS
+       /*
+       ** On OpenVMS we are still in the context of the parent, and so we
+       ** can (and should!) perform normal error handling.
+       */
+       PR_SetError(PR_UNKNOWN_ERROR, errno);
+       PR_DELETE(process);
+       if (newEnvp) {
+           PR_DELETE(newEnvp);
+       }
+       if (VMScurdir[0] != '\0')
+           chdir(VMScurdir);
+       PR_Unlock(_pr_vms_fork_lock);
+       return NULL;
+#else
         _exit(1);
+#endif /* VMS */
     }
 
     if (newEnvp) {
         PR_DELETE(newEnvp);
     }
+#ifdef VMS
+    /* If we switched directories, then remember to switch back */
+    if (VMScurdir[0] != '\0') {
+       chdir(VMScurdir); /* can't do much if it fails */
+    }
+    PR_Unlock(_pr_vms_fork_lock);
+#endif /* VMS */
 
 #if defined(_PR_NATIVE_THREADS)
     PR_Lock(pr_wp.ml);
@@ -691,6 +785,11 @@ static PRStatus _MD_InitProcesses()
 
     pr_wp.ml = PR_NewLock();
     PR_ASSERT(NULL != pr_wp.ml);
+
+#if defined(VMS)
+    _pr_vms_fork_lock = PR_NewLock();
+    PR_ASSERT(NULL != _pr_vms_fork_lock);
+#endif
 
 #if defined(_PR_NATIVE_THREADS)
     pr_wp.numProcs = 0;
