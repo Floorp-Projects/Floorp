@@ -47,6 +47,9 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
+static int gFontMetricsGTKCount = 0;
+static nsIPref* gPref = nsnull;
+
 nsFontMetricsGTK::nsFontMetricsGTK()
 {
   NS_INIT_REFCNT();
@@ -69,6 +72,8 @@ nsFontMetricsGTK::nsFontMetricsGTK()
   mUnderlineSize = 0;
   mUnderlineOffset = 0;
   mSpaceWidth = 0;
+
+  gFontMetricsGTKCount++;
 }
 
 nsFontMetricsGTK::~nsFontMetricsGTK()
@@ -96,6 +101,10 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
   }
 
   mFontHandle = nsnull;
+
+  if (!--gFontMetricsGTKCount) {
+    NS_IF_RELEASE(gPref);
+  }
 }
 
 NS_IMPL_ISUPPORTS1(nsFontMetricsGTK, nsIFontMetrics)
@@ -2368,8 +2377,6 @@ FindFamily(nsFontSearch* aSearch, nsString* aName)
   }
   TryFamily(aSearch, family);
 }
-
-static nsIPref* gPref = nsnull;
 
 static void
 PrefEnumCallback(const char* aName, void* aClosure)
