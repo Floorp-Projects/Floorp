@@ -5112,13 +5112,13 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
           nsIFrame* insertionPoint = nsnull;
           frameManager->GetInsertionPoint(aPresShell, frame, explicitItems.childList, &insertionPoint);
           if (!insertionPoint) {
-            nsCOMPtr<nsIStyleContext> styleContext;
-            frame->GetStyleContext(getter_AddRefs(styleContext));
+            nsCOMPtr<nsIStyleContext> styleContextForFrame;
+            frame->GetStyleContext(getter_AddRefs(styleContextForFrame));
             nsIFrame* walkit = explicitItems.childList;
             while (walkit) {
               nsIFrame* realFrame = GetRealFrame(walkit);
               realFrame->SetParent(frame);
-              aPresContext->ReParentStyleContext(realFrame, styleContext);
+              aPresContext->ReParentStyleContext(realFrame, styleContextForFrame);
               walkit->GetNextSibling(&walkit);
             }
           }
@@ -8029,8 +8029,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                 parent->GetAttribute(kNameSpaceID_None, nsXULAtoms::open, open);
                 if (open.EqualsIgnoreCase("true")) {
                   // Clear our undisplayed content.
-                  nsCOMPtr<nsIPresShell>    shell;
-                  aPresContext->GetShell(getter_AddRefs(shell));
                   nsCOMPtr<nsIFrameManager> frameManager;
                   shell->GetFrameManager(getter_AddRefs(frameManager));
                   frameManager->ClearUndisplayedContentIn(aContainer, parent);
@@ -10947,12 +10945,12 @@ keepLooking:
       nsCOMPtr<nsIContent> parentScope;
       kidContent->GetBindingParent(getter_AddRefs(parentScope));
       if (parentContent == kidContent || IsFrameSpecial(kidFrame) || 
-          (parentContent && (parentContent == parentScope.get()))) 
+          (parentContent && (parentContent == parentScope))) 
       {
 #ifdef NOISY_FINDFRAME
         FFWC_recursions++;
         printf("  recursing with new parent set to kidframe=%p, parentContent=%p\n", 
-               kidFrame, parentContent);
+               kidFrame, parentContent.get());
 #endif
         nsIFrame* matchingFrame = FindFrameWithContent(aPresContext, kidFrame, parentContent,
                                                        aContent, nsnull);
