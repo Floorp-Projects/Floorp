@@ -3948,15 +3948,12 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
 
   nsIView *view = aFrame->GetClosestView();
 
-  nsCOMPtr<nsIWidget> widget;
-  if (view) {
-    view->GetViewManager()->GetWidgetForView(view, getter_AddRefs(widget));
-  }
+  nsIWidget* widget = view ? view->GetNearestWidget(nsnull) : nsnull;
 
   nsIRenderingContext* result = nsnull;
   nsIDeviceContext *deviceContext = mPresContext->DeviceContext();
   if (widget) {
-    rv = deviceContext->CreateRenderingContext(widget.get(), result);
+    rv = deviceContext->CreateRenderingContext(widget, result);
   }
   else {
     rv = deviceContext->CreateRenderingContext(result);

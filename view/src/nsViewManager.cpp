@@ -757,7 +757,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
   if (nsnull == aContext)
     {
-      localcx = getter_AddRefs(CreateRenderingContext(*aView));
+      localcx = CreateRenderingContext(*aView);
 
       //couldn't get rendering context. this is ok at init time atleast
       if (nsnull == localcx) {
@@ -909,13 +909,12 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
 void nsViewManager::DefaultRefresh(nsView* aView, const nsRect* aRect)
 {
-  nsCOMPtr<nsIWidget> widget;
-  GetWidgetForView(aView, getter_AddRefs(widget));
+  NS_PRECONDITION(aView, "Must have a view to work with!");
+  nsIWidget* widget = aView->GetNearestWidget(nsnull);
   if (! widget)
     return;
 
-  nsCOMPtr<nsIRenderingContext> context
-    = getter_AddRefs(CreateRenderingContext(*aView));
+  nsCOMPtr<nsIRenderingContext> context = CreateRenderingContext(*aView);
 
   if (! context)
     return;
@@ -1143,6 +1142,8 @@ static void PopState(nsIRenderingContext **aRCs, PRInt32 aCount) {
 
 void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceContext* aContext,
                                                      nsView* aRootView) {
+  NS_PRECONDITION(aRootView, "Must have root view");
+  
   // We accumulate the bounds of widgets obscuring aRootView's widget into opaqueRgn.
   // In OptimizeDisplayList, display list elements which lie behind obscuring native
   // widgets are dropped.
@@ -1157,8 +1158,7 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
   // We may be required to paint behind them
   aRgn.SetEmpty();
 
-  nsCOMPtr<nsIWidget> widget;
-  GetWidgetForView(aRootView, getter_AddRefs(widget));
+  nsIWidget* widget = aRootView->GetNearestWidget(nsnull);
   if (!widget) {
     return;
   }
@@ -1602,8 +1602,7 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
   if (nsViewVisibility_kHide == aWidgetView->GetVisibility()) {
 #ifdef DEBUG
     // Assert if view is hidden but widget is visible
-    nsCOMPtr<nsIWidget> widget;
-    GetWidgetForView(aWidgetView, getter_AddRefs(widget));
+    nsIWidget* widget = aWidgetView->GetNearestWidget(nsnull);
     if (widget) {
       PRBool visible;
       widget->IsVisible(visible);
@@ -1620,8 +1619,7 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
     return noCropping;
   }
 
-  nsCOMPtr<nsIWidget> widget;
-  GetWidgetForView(aWidgetView, getter_AddRefs(widget));
+  nsIWidget* widget = aWidgetView->GetNearestWidget(nsnull);
   if (!widget) {
     // The root view or a scrolling view might not have a widget
     // (for example, during printing). We get here when we scroll
@@ -2348,6 +2346,9 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
 
 void nsViewManager::ReparentWidgets(nsIView* aView, nsIView *aParent)
 {
+  NS_PRECONDITION(aParent, "Must have a parent");
+  NS_PRECONDITION(aView, "Must have a view");
+  
   // Quickly determine whether the view has pre-existing children or a
   // widget. In most cases the view will not have any pre-existing 
   // children when this is called.  Only in the case
@@ -2357,8 +2358,7 @@ void nsViewManager::ReparentWidgets(nsIView* aView, nsIView *aParent)
   // it's descendants.
   nsView* view = NS_STATIC_CAST(nsView*, aView);
   if (view->HasWidget() || view->GetFirstChild()) {
-    nsCOMPtr<nsIWidget> parentWidget;
-    GetWidgetForView(aParent, getter_AddRefs(parentWidget));
+    nsIWidget* parentWidget = aParent->GetNearestWidget(nsnull);
     if (parentWidget) {
       ReparentChildWidgets(aView, parentWidget);
       return;
@@ -3032,7 +3032,8 @@ const nsVoidArray* nsViewManager::GetViewManagerArray()
   return gViewManagers;
 }
 
-nsIRenderingContext * nsViewManager::CreateRenderingContext(nsView &aView)
+already_AddRefed<nsIRenderingContext>
+nsViewManager::CreateRenderingContext(nsView &aView)
 {
   nsView              *par = &aView;
   nsIWidget*          win;
@@ -3229,28 +3230,6 @@ NS_IMETHODIMP nsViewManager::RemoveCompositeListener(nsICompositeListener* aList
   }
   return NS_ERROR_FAILURE;
 }
-
-NS_IMETHODIMP nsViewManager::GetWidgetForView(nsIView *aView, nsIWidget **aWidget)
-{
-  nsView *view = NS_STATIC_CAST(nsView*, aView);
-
-  while (view && !view->HasWidget()) {
-    view = view->GetParent();
-  }
-
-  if (view) {
-    // Widget was found in the view hierarchy
-    *aWidget = view->GetWidget();
-    NS_ADDREF(*aWidget);
-  } else {
-    // If there was a widget associated with our root view, we'd have found it
-    // above. So there are no widgets anywhere.
-    *aWidget = nsnull;
-  }
-
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsViewManager::GetWidget(nsIWidget **aWidget)
 {
