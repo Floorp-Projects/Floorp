@@ -58,7 +58,7 @@ sub init {
     my($app, $user, $fieldID, $fieldCategory, $fieldName, $fieldTypeData, $fieldMode, $fieldData) = @_;
     # do not hold on to $user!
     $self->app($app);
-    $self->userID($user->userID); # change this at your peril
+    $self->userID($user->userID); # only change this if it started as undef
     $self->fieldID($fieldID); # change this at your peril
     $self->category($fieldCategory); # change this at your peril
     $self->name($fieldName); # change this at your peril
