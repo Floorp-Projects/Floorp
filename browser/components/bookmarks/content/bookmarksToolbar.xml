@@ -66,11 +66,11 @@
           var buttons = (document.getAnonymousNodes(theToolbar))[0].firstChild;
           var menu = buttons.nextSibling.childNodes[1];
           var width = window.innerWidth;
-          if (theToolbar.boxObject.width < width)
+          /*if (theToolbar.boxObject.width < width)
             width = theToolbar.boxObject.width;
-          width -= theToolbar.boxObject.x;
-          var overflowed = false;
+          */var overflowed = false;
           menu.collapsed = true;
+
           for (var i=4; i<buttons.childNodes.length; i++) {
             var button = buttons.childNodes[i];
             if (!overflowed)
@@ -84,7 +84,7 @@
               if (menu.collapsed) {
                 menu.collapsed = false;
                 var overflowPadder = document.getElementById("overflow-padder");
-                overflowPadder.width = width - menu.boxObject.width;
+                overflowPadder.width = width - menu.boxObject.width - theToolbar.boxObject.x;
               }
             }
           }
