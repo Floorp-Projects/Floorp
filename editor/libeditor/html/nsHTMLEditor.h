@@ -177,8 +177,6 @@ public:
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected);
 
-
-  NS_IMETHOD InsertTable();
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter);
@@ -195,11 +193,14 @@ public:
 
   // Table utilities
   
-  // All of the above need to get the same basic context data
+// All of the above need to get the same basic context data
   NS_IMETHOD GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
                             nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMElement> &aCell, 
                             nsCOMPtr<nsIDOMNode> &aCellParent, PRInt32& aCellOffset, 
                             PRInt32& aRow, PRInt32& aCol);
+
+  // Use the selection iterator to find the first cell in the selection
+  NS_IMETHOD GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell);
 
   // Setting caret to a logical place can get tricky,
   //  especially after deleting table stuff

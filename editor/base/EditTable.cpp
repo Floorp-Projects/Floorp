@@ -26,26 +26,19 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMSelection.h"
+#include "nsLayoutCID.h"
+#include "nsIContent.h"
+#include "nsIContentIterator.h"
 #include "nsIAtom.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsITableCellLayout.h" // For efficient access to table cell
 #include "nsITableLayout.h"     //  data owned by the table and cell frames
-
-// transactions the editor knows how to build
-//#include "TransactionFactory.h"
-//#include "EditAggregateTxn.h"
-//#include "nsIDOMHTMLCollection.h"
 #include "nsHTMLEditor.h"
 
-// Table Editing methods
+static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 
-NS_IMETHODIMP
-nsHTMLEditor::InsertTable()
-{
-  nsresult res=NS_ERROR_NOT_INITIALIZED;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+// Table Editing methods
 
 NS_IMETHODIMP
 nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
@@ -78,6 +71,7 @@ nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
 NS_IMETHODIMP
 nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 {
+  //TODO: HANDLE CASE OF aAfter = true
   nsCOMPtr<nsIDOMSelection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> cell;
@@ -87,21 +81,37 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
   
   if (NS_SUCCEEDED(res))
   {
-    PRInt32 rowCount, colCount, row, col, curRow, curCol;
+    nsAutoEditBatch beginBatching(this);
+
+    PRInt32 rowCount, colCount, row;
     if (NS_FAILED(GetTableSize(table, rowCount, colCount)))
       return NS_ERROR_FAILURE;
     for ( row = 0; row < rowCount; row++)
     {
       nsCOMPtr<nsIDOMElement> curCell;
-      PRInt32 startRow, startCol, rowSpan, colSpan;
-      PRBool  isSelected;
-      res = GetCellDataAt(table, row, col, *getter_AddRefs(curCell),
-                          startRow, startCol, rowSpan, colSpan, isSelected);
+      PRInt32 curStartRow, curStartCol, rowSpan, colSpan;
+      PRBool  curIsSelected;
+      res = GetCellDataAt(table, row, startCol, *getter_AddRefs(curCell),
+                          curStartRow, curStartCol, rowSpan, colSpan, curIsSelected);
       if (NS_SUCCEEDED(res) && curCell)
       {
-        //FINISH ME!
+        if (curStartCol < startCol)
+        {
+          // We have a cell spanning this location
+          // Simply increase its rowspan to keep table rectangular
+          nsString newColSpan;
+          newColSpan.Append(colSpan+aNumber, 10);
+          SetAttribute(curCell, "colspan", newColSpan);
+        } else {
+          // Simply set selection to the current cell 
+          //  so we can let InsertTableCell() do the work
+          // Insert a new cell before current one
+          selection->Collapse(curCell, 0);
+          res = InsertTableCell(aNumber, PR_FALSE);
+        }
       }
     }
+    SetCaretAfterTableEdit(table, startRow, startCol, ePreviousColumn);  
   }
   return res;
 }
@@ -118,6 +128,8 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   
   if (NS_SUCCEEDED(res))
   {
+    nsAutoEditBatch beginBatching(this);
+    //TODO: FINISH ME! 
     selection->ClearSelection();
   }
   return res;
@@ -135,19 +147,27 @@ nsHTMLEditor::DeleteTable()
     
   if (NS_SUCCEEDED(res))
   {
+    nsAutoEditBatch beginBatching(this);
+
     // Save where we need to restore the selection
     nsCOMPtr<nsIDOMNode> tableParent;
     PRInt32 tableOffset;
     if(NS_FAILED(table->GetParentNode(getter_AddRefs(tableParent))) || !tableParent)
       return NS_ERROR_FAILURE;
+    if(NS_FAILED(GetChildOffset(table, tableParent, tableOffset)))
+      return NS_ERROR_FAILURE;
 
-    res = DeleteNode(table);
-
-    // Restore the selection (caret)
+    // Place selection just before the table
+    // This is correct by selection rules, but doesn't work 
+    //  now (8/4/99) because the caret system needs to be smarter
+    //  when locating selection in non-text nodes
     nsCOMPtr<nsIDOMSelection>selection;
     res = nsEditor::GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res) || !selection)
       return res;
+
+    res = DeleteNode(table);
+
     selection->Collapse(tableParent, tableOffset);
   }
   return res;
@@ -165,6 +185,8 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
   
   if (NS_SUCCEEDED(res))
   {
+    nsAutoEditBatch beginBatching(this);
+
     selection->ClearSelection();
     PRInt32 i;
     for (i = 0; i < aNumber; i++)
@@ -342,35 +364,26 @@ nsHTMLEditor::GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
   if (NS_FAILED(res) || !aSelection)
     return res;
 
-  // TODO: Should we look for the "first" cell instead?
-  // Messy! We would need to iterate through the selection to find the first enclosing cell
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  if(NS_FAILED(aSelection->GetAnchorNode(getter_AddRefs(anchorNode))) || !anchorNode)
-    return NS_ERROR_FAILURE;
-  
-  // Test if anchor is a cell node (should I bother to check header as well?
-  nsCOMPtr<nsIDOMHTMLTableCellElement> cellElement = do_QueryInterface(anchorNode);
-  if (cellElement)
-  {
-    aCell = do_QueryInterface(anchorNode);
-  } else {
-    // Get the anchor's first child, in case the selection is composed of cells
-    PRInt32 offset;
-    if (NS_FAILED(aSelection->GetAnchorOffset(&offset)))
-      return NS_ERROR_FAILURE;
+  // Find the first selected cell
+  res = GetFirstSelectedCell(aCell);
+  if (NS_FAILED(res))
+    return res;
 
-    nsCOMPtr<nsIDOMNode> anchorChild = GetChildAt(anchorNode, offset);
-    if(!anchorChild)
+  if (!aCell)
+  {
+    //If a cell wasn't selected, then assume the selection is INSIDE 
+    //  and use anchor node to search up to the containing cell
+    nsCOMPtr<nsIDOMNode> anchorNode;
+    if(NS_FAILED(aSelection->GetAnchorNode(getter_AddRefs(anchorNode))) || !anchorNode)
       return NS_ERROR_FAILURE;
 
     // Get the cell enclosing the selection anchor
-    if(NS_FAILED(GetElementOrParentByTagName("td", anchorChild, getter_AddRefs(aCell))) || !aCell)
+    if(NS_FAILED(GetElementOrParentByTagName("td", anchorNode, getter_AddRefs(aCell))) || !aCell)
       return NS_ERROR_FAILURE;
   }
-
+  // Get containing table and the immediate parent of the cell
   if(NS_FAILED(GetElementOrParentByTagName("table", aCell, getter_AddRefs(aTable))) || !aTable)
     return NS_ERROR_FAILURE;
-
   if(NS_FAILED(aCell->GetParentNode(getter_AddRefs(aCellParent))) || !aCellParent)
     return NS_ERROR_FAILURE;
 
@@ -379,9 +392,65 @@ nsHTMLEditor::GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
   if(NS_FAILED(res))
     return res;
 
+  // And the parent and offsets needed to do an insert
   return GetChildOffset(aCell, aCellParent, aCellOffset);
 }
 
+NS_IMETHODIMP 
+nsHTMLEditor::GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell)
+{
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res) || !selection)
+    return res;
+
+  // The most straight forward way of finding a selected cell
+  //   is to use the selection iterator
+  nsCOMPtr<nsIEnumerator> enumerator;
+  res = selection->GetEnumerator(getter_AddRefs(enumerator));
+  if (NS_SUCCEEDED(res) && enumerator)
+  {
+    enumerator->First(); 
+    nsCOMPtr<nsISupports> currentItem;
+    res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+    if ((NS_SUCCEEDED(res)) && currentItem)
+    {
+      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+      nsCOMPtr<nsIContentIterator> iter;
+      res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                                  nsIContentIterator::GetIID(), 
+                                                  getter_AddRefs(iter));
+      if ((NS_SUCCEEDED(res)) && iter)
+      {
+        iter->Init(range);
+        // loop through the content iterator for each content node
+        nsCOMPtr<nsIContent> content;
+
+        while (NS_COMFALSE == iter->IsDone())
+        {
+          res = iter->CurrentNode(getter_AddRefs(content));
+          // Not likely!
+          if (NS_FAILED(res))
+            return NS_ERROR_FAILURE;
+
+          nsCOMPtr<nsIAtom> atom;
+          content->GetTag(*getter_AddRefs(atom));
+          if (atom.get() == nsIEditProperty::td ||
+              atom.get() == nsIEditProperty::th )
+          {
+            // We found a cell   
+            aCell = do_QueryInterface(content);
+            break;
+          }
+          iter->Next();
+        }
+      }
+    }
+  } else {
+    printf("Could not create enumerator for GetCellContext\n");
+  }
+  return res;
+}
 
 NS_IMETHODIMP
 nsHTMLEditor::SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aCol, PRInt32 aRow, SetCaretSearchDirection aDirection)
@@ -399,6 +468,17 @@ nsHTMLEditor::SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aCol, PRInt3
 #endif
     return NS_ERROR_FAILURE;
   }
+  nsCOMPtr<nsIDOMElement> cell;
+  res = GetCellAt(aTable, aCol, aRow, *getter_AddRefs(cell));
+  nsCOMPtr<nsIDOMNode> cellNode = do_QueryInterface(cell);
+  if (NS_SUCCEEDED(res) && cell)
+  {
+    // Set the caret to just before the first child of the cell?
+    // TODO: Should we really be placing the caret at the END
+    //  of the cell content?
+    selection->Collapse(cell, 0);
+  }
+    //TODO: SEARCH FOR NEAREST CELL TO PLACE CARET INTO
   return res;
 }
 

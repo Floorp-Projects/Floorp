@@ -181,13 +181,13 @@
 <!ENTITY tableMenu.label "Table">
 <!ENTITY tableInsertMenu.label "Insert">
 <!ENTITY tableTable.label "Table">
-<!ENTITY tableRow.label "Row">
+<!ENTITY tableRow.label ".Row">
 <!ENTITY tableColumn.label "Column">
 <!ENTITY tableCell.label "Cell">
 <!ENTITY tableCellBefore.label "Cell before">
 <!ENTITY tableCellAfter.label "Cell after">
 <!ENTITY tableDeleteMenu.label "Delete">
-<!ENTITY tableJoinCells.label "Join Cells">
+<!ENTITY tableJoinCells.label ".Join Cells">
 <!ENTITY properties.label "Properties...">
 
 <!ENTITY toolsMenu.label "Tools">
