@@ -1,0 +1,171 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; This is a sample NPAPI plugin script file with all NPAPI calls present.
+;;
+;;
+;; [Options] section specifies how to conduct the script.
+;; 'first' key says from where to start the script (default 1).
+;; 'last' key MUST present, and it says when to stop the script cycle.
+;; All sections with numbers less than that of specified in the 'first' key and 
+;; more than that of specified in the 'last' key are ignored by the script 
+;; reading code.
+;; So you can pick any part of existing long script for executing.
+;;
+;; Two other keys are optional, 'repetitions' being the number of times
+;; the script cycle is going to be executed (default 1), and 'delay' being
+;; the time delay in milliseconds between cycle repetitions (default 0)
+;;
+;; ['Numeric'] sections are actual script, each representing one NPAPI call.
+;; Calls will be executed in their numeric order, some numbers could be
+;; missing, so you can start to write your script with numbers multiple
+;; by say ten in order to be able to insert new script items later.
+;;
+;; 'arg*' keys represent NPAPI function call arguments and they depend on
+;; actual call. 
+;;
+;; In some cases you may not specify an argument if you have no control
+;; over it. E.g. pointer to the plugin instance or pointer to a stream
+;; created by NPN_NewStream. Scripter code will pick up right ones for you.
+;; If you specify them explicitely it will take them but be prepared for
+;; boom. This is appropriate if you want to test an API call with invalid
+;; arguments.
+;;
+;; String should can be represented by actual string.
+;;
+;; Arguments other than numeric like NPPVariable, NPReason etc. should be 
+;; represented by their enum types from npapi.h like NPPVpluginNameString 
+;; or NPRES_DONE. Also NPBool should read TRUE or FALSE
+;;
+;; If you want to test real numeric values in place of this args, say
+;; 0x00000000 for string pointers, use a special prefix '_true_numeric_value_'
+;; The following example will execute NPN_GetURL(instance, -1, "some_target")
+;; with real instance, invalid URL and valid target:
+;;
+;;    [1]
+;;    APICall=NPN_GetURL
+;;    arg2=true_numeric_value_-1
+;;    arg3=some_target
+;;
+;; The latter is also true for NPBool, NPReason, NPNVariable ans NPPVariable.
+;;
+;; In case of NPRect* or NPSize* type of argument you can use either arg*=0x0000
+;; (or any other value) or not using arg* use top=..., left=..., right=...,
+;; bottom=... or width=..., height=...
+;;
+;; All these sections may also contain 'delay' key (default 0) which would insert
+;; sleep time (in ms) after the corresponding call.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[Options]
+first=1
+last=23
+repetitions=1
+delay=0
+
+[1]
+APICall=NPN_Version
+delay=0
+
+[2]
+APICall=NPN_GetURL
+arg2=http://w3
+arg3=_npapi_Display
+
+[3]
+APICall=NPN_GetURLNotify
+arg2=http://w3
+arg3=_npapi_Display
+arg4=1
+
+[4]
+APICall=NPN_PostURL
+arg2=http://w3
+arg3=_npapi_Display
+arg4=4
+arg5=test
+arg6=FALSE
+
+[5]
+APICall=NPN_PostURLNotify
+arg2=http://w3
+arg3=_npapi_Display
+arg4=4
+arg5=test
+arg6=FALSE
+arg7=1
+
+;[6]
+;APICall=NPN_RequestRead
+
+[7]
+APICall=NPN_NewStream
+arg2=text/plain
+arg3=_npapi_Display
+
+[8]
+APICall=NPN_Write
+arg3=21
+arg4=this is a test string
+
+[9]
+APICall=NPN_DestroyStream
+arg3=NPRES_DONE
+
+[10]
+APICall=NPN_Status
+arg2=Some message
+
+[11]
+APICall=NPN_UserAgent
+
+[12]
+APICall=NPN_MemAlloc
+arg1=256
+
+[13]
+APICall=NPN_MemFree
+
+[14]
+APICall=NPN_MemFlush
+arg1=256
+
+[15]
+APICall=NPN_ReloadPlugins
+arg1=TRUE
+
+[16]
+APICall=NPN_GetJavaEnv
+
+[17]
+APICall=NPN_GetJavaPeer
+
+[18]
+APICall=NPN_GetValue
+arg2=NPNVnetscapeWindow
+
+[19]
+APICall=NPN_SetValue
+arg2=NPPVpluginNameString
+arg3=NPAPI Tester Plugin
+
+;; Case for setting new embed size
+[20]
+APICall=NPN_SetValue
+arg2=NPPVpluginWindowSize
+width=200
+height=400
+
+[21]
+APICall=NPN_InvalidateRect
+top=0
+left=0
+right=200
+bottom=100
+
+[22]
+APICall=NPN_InvalidateRegion
+arg2=0
+
+[23]
+APICall=NPN_ForceRedraw

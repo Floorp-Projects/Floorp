@@ -1,0 +1,217 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winresrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG_TESTER DIALOG DISCARDABLE  0, 0, 119, 335
+STYLE WS_CHILD | WS_VISIBLE
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Mode:",IDC_STATIC_MODE,7,7,21,8
+    CONTROL         "Manual",IDC_RADIO_MODE_MANUAL,"Button",
+                    BS_AUTORADIOBUTTON,35,7,39,10
+    CONTROL         "Auto",IDC_RADIO_MODE_AUTO,"Button",BS_AUTORADIOBUTTON,
+                    78,7,31,10
+    GROUPBOX        "Log",IDC_STATIC,7,20,105,70
+    CONTROL         "To file:",IDC_CHECK_LOG_TO_FILE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,33,34,10
+    EDITTEXT        IDC_EDIT_LOG_FILE_NAME,50,31,55,14,ES_AUTOHSCROLL
+    CONTROL         "To frame",IDC_CHECK_LOG_TO_FRAME,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,60,41,10
+    PUSHBUTTON      "Flush",IDC_BUTTON_FLUSH,57,59,24,12
+    PUSHBUTTON      "Clear",IDC_BUTTON_CLEAR,81,59,24,12
+    CONTROL         "Flush immediately",IDC_CHECK_SHOW_LOG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,26,75,71,10
+END
+
+IDD_DIALOG_MANUAL DIALOG DISCARDABLE  0, 0, 119, 227
+STYLE WS_CHILD | WS_VISIBLE
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "API call:",IDC_STATIC_APICALL,7,0,27,8
+    COMBOBOX        IDC_COMBO_API_CALL,7,9,84,236,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Go",IDC_BUTTON_GO,93,10,19,12
+    LTEXT           "Static",IDC_STATIC_ARG1,7,26,105,8
+    EDITTEXT        IDC_EDIT_ARG1,7,35,105,14,ES_AUTOHSCROLL
+    LTEXT           "Static",IDC_STATIC_ARG2,7,53,105,8
+    EDITTEXT        IDC_EDIT_ARG2,7,62,105,14,ES_AUTOHSCROLL
+    LTEXT           "Static",IDC_STATIC_ARG3,7,80,105,8
+    EDITTEXT        IDC_EDIT_ARG3,7,89,105,14,ES_AUTOHSCROLL
+    LTEXT           "Static",IDC_STATIC_ARG4,7,107,105,8
+    EDITTEXT        IDC_EDIT_ARG4,7,116,105,14,ES_AUTOHSCROLL
+    LTEXT           "Static",IDC_STATIC_ARG5,7,134,105,8
+    EDITTEXT        IDC_EDIT_ARG5,7,142,105,14,ES_AUTOHSCROLL
+    LTEXT           "Static",IDC_STATIC_ARG6,7,160,105,8
+    EDITTEXT        IDC_EDIT_ARG6,7,169,105,14,ES_AUTOHSCROLL
+    LTEXT           "Static",IDC_STATIC_ARG7,7,187,105,8
+    EDITTEXT        IDC_EDIT_ARG7,7,196,105,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Paste...",IDC_BUTTON_PASTE,7,214,105,13
+    LTEXT           "Static",IDC_STATIC_INFO,7,51,105,8
+    COMBOBOX        IDC_COMBO_ARG1,7,35,105,42,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_COMBO_ARG6,7,170,105,55,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_ARG2,8,63,104,83,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_COMBO_ARG3,7,90,105,67,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
+IDD_DIALOG_AUTO DIALOG DISCARDABLE  0, 0, 119, 227
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Script file name:",IDC_STATIC,7,0,51,8
+    EDITTEXT        IDC_EDIT_SCRIPT_FILE_NAME,7,9,84,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Go",IDC_BUTTON_GO,93,10,19,12
+    RTEXT           "Static",IDC_STATIC_REPETITIONS_LEFT,61,31,18,8
+    LTEXT           "Repetitions left:",IDC_STATIC_REPETITIONS_LABEL,7,31,50,
+                    8
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,4,0,0
+ PRODUCTVERSION 1,4,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x3L
+#else
+ FILEFLAGS 0x2L
+#endif
+ FILEOS 0x10001L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "Netscape Communications Corp.\0"
+            VALUE "FileDescription", "32-bit NPAPI test plugin\0"
+            VALUE "FileExtents", "pts\0"
+            VALUE "FileOpenName", "API (*.pts)\0"
+            VALUE "FileVersion", "1, 4, 0, 0\0"
+            VALUE "InternalName", "npapi.dll\0"
+            VALUE "LegalCopyright", "Copyright © 1997-2001\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "MIMEType", "application/npapi-test\0"
+            VALUE "OriginalFilename", "npapi.dll\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "Netscape NPAPI Tester Plugin\0"
+            VALUE "ProductVersion", "1, 4, 0, 0\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DIALOG_TESTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 112
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 328
+    END
+
+    IDD_DIALOG_MANUAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 112
+    END
+
+    IDD_DIALOG_AUTO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 112
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resrc1.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""resource.h""\r\n"
+    "#include ""winresrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
