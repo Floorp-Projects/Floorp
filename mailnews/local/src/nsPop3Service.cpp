@@ -506,6 +506,14 @@ nsPop3Service::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNa
 }
 
 NS_IMETHODIMP
+nsPop3Service::GetCanLoginAtStartUp(PRBool *aCanLoginAtStartUp)
+{
+        NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
+        *aCanLoginAtStartUp = PR_TRUE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPop3Service::GetCanDelete(PRBool *aCanDelete)
 {
         NS_ENSURE_ARG_POINTER(aCanDelete);

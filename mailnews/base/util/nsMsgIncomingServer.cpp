@@ -68,10 +68,10 @@ MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
 
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefs(0),
+    m_serverBusy(PR_FALSE),
     m_rootFolder(0)
 {
   NS_INIT_REFCNT();
-  m_serverBusy = PR_FALSE;
 }
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
@@ -174,7 +174,6 @@ nsMsgIncomingServer::CloseCachedConnections()
 	// derived class should override if they cache connections.
 	return NS_OK;
 }
-
 
 // construct <localStoreType>://[<username>@]<hostname
 NS_IMETHODIMP
@@ -802,7 +801,7 @@ nsMsgIncomingServer::SetRememberPassword(PRBool value)
         ForgetPassword();
     }
     else {
-	StorePassword();
+        StorePassword();
     }
     return SetBoolValue("remember_password", value);
 }
@@ -1054,18 +1053,6 @@ nsMsgIncomingServer::getProtocolInfo(nsIMsgProtocolInfo **aResult)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgIncomingServer::GetCanDelete(PRBool* value)
-{
-    NS_ENSURE_ARG_POINTER(value);
-
-    return GetBoolValue("canDelete", value);
-}
-
-NS_IMETHODIMP nsMsgIncomingServer::SetCanDelete(PRBool value)
-{
-    return SetBoolValue("canDelete", value);
-}
-
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
@@ -1081,4 +1068,5 @@ NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, Valid, "valid");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, RedirectorType,  "redirector_type");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, EmptyTrashOnExit,
                         "empty_trash_on_exit");
-
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, CanDelete, "canDelete");
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, LoginAtStartUp, "login_at_startup");

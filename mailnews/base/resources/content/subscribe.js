@@ -158,10 +158,6 @@ function SubscribeOnLoad()
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0]) {
-		if ( window.arguments[0].title ) {
-			top.window.title = window.arguments[0].title;
-		}
-		
 		if ( window.arguments[0].okCallback ) {
 			top.okCallback = window.arguments[0].okCallback;
 		}

@@ -14,8 +14,6 @@
   <script src="chrome://global/content/strres.js"/>
 
   <text hidden="true" wsm_persist="true" id="server.type"/>
-  <text hidden="true" wsm_persist="true" id="server.hostName"/>
-  <text hidden="true" wsm_persist="true" id="server.username"/>
 
   <box class="box-smallheader" title="&serverSettings.label;"/>
 
@@ -30,19 +28,26 @@
         <text class="label" id="servertype.verbose"/>
       </row>
       <row autostretch="never">
-        <text class="label" value="&serverName.label;"/>
-        <text class="label" id="servername.verbose"/>
+            <text class="label" value="&serverName.label;"/>
+            <!-- when #14295 is fixed, remove disabled="true" -->
+            <textfield wsm_persist="true" disabled="true" size="25" id="server.hostName"/>
       </row>
       <row autostretch="never">
-        <text class="label" value="&userName.label;"/>
-        <text class="label" id="username.verbose"/>
+        <box iscontrolcontainer="true" autostretch="never">
+            <text hidable="true" hidefor="nntp" class="label" id="userNameLabel" value="&userName.label;"/>
+        </box>
+        <box iscontrolcontainer="true" autostretch="never">
+            <!-- when #14295 is fixed, remove disabled="true" -->
+            <textfield hidable="true" hidefor="nntp" wsm_persist="true" disabled="true" size="25" id="server.username"/>
+        </box>
       </row>
-      <row autostretch="never">
-        <box>
-          <text class="label" value="&port.label;"/>
-          <textfield wsm_persist="true" size="4" id="server.port"/>
-          <spring flex="1"/>
-        </box> 
+      <row>
+        <box autostretch="never">
+            <text class="label" value="&port.label;"/>
+        </box>
+        <box autostretch="never">
+            <textfield autostretch="never" wsm_persist="true" size="5" id="server.port"/>
+        </box>
       </row>
     </rows>
   </grid>
@@ -51,11 +56,11 @@
 
   <titledbox>
   <title value="&serverSettings.label;"/>
-  <box id="serverPrefContainer" orient="vertical" flex="1">
-
-  <checkbox wsm_persist="true" id="server.isSecure" value="&isSecure.label;" hidefor="pop3" oncommand="secureSelect();"/>
+  <box orient="vertical" flex="1">
+  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.isSecure" value="&isSecure.label;" hidefor="pop3" oncommand="secureSelect();"/>
+  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.loginAtStartUp" hidefor="nntp" value="&loginAtStartup.label;"/>
 <!--
-  <checkbox wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
+  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>
 -->
   <box orient="horizontal" autostretch="never">
@@ -63,16 +68,20 @@
     <textfield wsm_persist="true" id="server.biffMinutes" size="3"/>
     <text class="label" for="server.biffMinutes" value="&biffEnd.label;"/>
   </box>
-  <checkbox style="margin-left: 2em" hidefor="imap,nntp"
+  <!-- POP3 -->
+  <box orient="vertical" iscontrolcontainer="true" autostretch="never">
+    <checkbox hidable="true" style="margin-left: 2em" hidefor="imap,nntp"
             wsm_persist="true" id="server.downloadOnBiff"
             value="&downloadOnBiff.label;"/>
-  <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
+
+    <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
             value="&leaveOnServer.label;"/>
 
-  <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer"
+    <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer"
             value="&deleteOnServer.label;"/>
+  </box>
   <box iscontrolcontainer="true" autostretch="never">
-    <checkbox wsm_persist="true" value="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
+    <checkbox hidable="true" hidefor="imap,nntp" wsm_persist="true" value="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
     <textfield wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
     <text value="&maxMessageSizePostfix.label;" for="pop3.limitMessageSize" class="label"/>
   </box>
@@ -80,7 +89,7 @@
   <!-- IMAP -->
   <box iscontrolcontainer="true" autostretch="never">
     <text class="label" value="&deleteMessagePrefix.label;"/>
-    <menulist wsm_persist="true" id="imap.deleteModel">
+    <menulist hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.deleteModel">
       <menupopup>
         <menuitem data="1" value="&modelMoveToTrash.label;"/>
         <menuitem data="0" value="&modelMarkDeleted.label;"/>
@@ -91,10 +100,10 @@
   </box>
   <separator class="thin"/>
 
-  <checkbox wsm_persist="true" id="imap.cleanupInboxOnExit"
-            value="&expungeOnExit.label;"/>
-  <checkbox wsm_persist="true" id="server.emptyTrashOnExit" iscontrolcontainer="true"
-            value="&emptyTrashOnExit.label;" hidefor="nntp"/>
+  <checkbox hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.cleanupInboxOnExit"
+            value="&expungeOnExit.label;" iscontrolcontainer="true"/>
+  <checkbox hidable="true" hidefor="nntp" wsm_persist="true" id="server.emptyTrashOnExit" 
+            value="&emptyTrashOnExit.label;" iscontrolcontainer="true"/>
 
   <box iscontrolcontainer="true" flex="1">
     <box flex="1">
@@ -103,7 +112,7 @@
               oncommand="openImapAdvanced(event);"/>
     </box>
 
-    <checkbox hidden="true" wsm_persist="true" id="imap.dualUseFolders"/>
+    <checkbox hidable="true" hidefor="pop3,nntp" hidden="true" wsm_persist="true" id="imap.dualUseFolders"/>
     <checkbox hidden="true" wsm_persist="true" id="imap.usingSubscription"/>
     <text hidden="true" wsm_persist="true" id="imap.personalNamespace"/>
     <text hidden="true" wsm_persist="true" id="imap.publicNamespace"/>
@@ -112,9 +121,9 @@
     <checkbox hidden="true" wsm_persist="true" id="imap.overrideNamespaces"/>
   </box>
 
-  <!-- News -->
-  <box orient="horizontal">
-    <checkbox wsm_persist="true" id="nntp.notifyOn"
+  <!-- NNTP -->
+  <box iscontrolcontainer="true" orient="horizontal">
+    <checkbox hidable="true" hidefor="pop3,imap" wsm_persist="true" id="nntp.notifyOn"
                 value="&maxMessagesStart.label;"/>
     <box iscontrolcontainer="true" autostretch="never">
       <textfield wsm_persist="true" id="nntp.maxArticles" size="6"/>
@@ -126,7 +135,7 @@
       <titledbox orient="vertical">
          <title><text class="header label" value="&abbreviate.label;"/></title>
 
-         <radiogroup orient="vertical" wsm_persist="true" id="nntp.abbreviate">
+         <radiogroup hidable="true" hidefor="pop3,imap" orient="vertical" wsm_persist="true" id="nntp.abbreviate">
            <radio group="nntp.abbreviate" wsm_persist="true" data="true" value="&abbreviateOn.label;"/>
            <radio group="nntp.abbreviate" wsm_persist="true" data="false" value="&abbreviateOff.label;"/>
          </radiogroup>
@@ -136,7 +145,7 @@
 
   <box orient="vertical" iscontrolcontainer="true">
     <text class="label" value="&newsrcFilePath.label;" for="nntp.newsrcFilePath"/>
-    <textfield wsm_persist="true" id="nntp.newsrcFilePath"
+    <textfield hidable="true" hidefor="imap,pop3" wsm_persist="true" id="nntp.newsrcFilePath"
                datatype="nsIFileSpec"/>
   </box>
   </box>

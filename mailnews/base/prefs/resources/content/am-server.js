@@ -42,40 +42,30 @@ function initServerType() {
 
   verboseName = stringBundle.GetStringFromName(propertyName);
 
-  var hostname = document.getElementById("server.hostName").getAttribute("value");
-  var username = document.getElementById("server.username").getAttribute("value");
-
   setDivText("servertype.verbose", verboseName);
-  setDivText("servername.verbose", hostname);
-  setDivText("username.verbose", username);
-
 }
 
 function hideShowControls(serverType)
 {
-    var controls = document.getElementsByAttribute("wsm_persist", "true");
+    var controls = document.getElementsByAttribute("hidable", "true");
     var len = controls.length;
     for (var i=0; i<len; i++) {
         var control = controls[i];
-        var controlName = control.id;
-        if (!controlName) continue;
-        var controlNameSplit = controlName.split(".");
-        
-        if (controlNameSplit.length < 2) continue;
-        var controlType = controlNameSplit[0];
 
-        // skip generic server/identity things
         var hideFor = control.getAttribute("hidefor");
-        if ((!hideFor || hideFor == "") &&
-            (controlType == "server" ||
-             controlType == "identity")) continue;
+        if (!hideFor || hideFor == "") {
+            dump("this should not happen, things that are hidable should have hidefor set\n");
+            continue;
+        }
 
         var box = getEnclosingContainer(control);
 
-        if (!box) continue;
+        if (!box) {
+            dump("this should not happen, things that are hidable should be in a box\n");
+            continue;
+        }
 
         // hide unsupported server type
-
         // adding support for hiding multiple server types using hideFor="server1,server2"
         var hideForBool = false;
         var hideForTokens = hideFor.split(",");
@@ -86,20 +76,13 @@ function hideShowControls(serverType)
             }
         }
 
-        if ((controlType != "server" &&
-             controlType != "identity" &&
-             controlType != serverType) ||
-            hideForBool) {
+        if (hideForBool) {
             box.setAttribute("hidden", "true");
         }
         else {
             box.removeAttribute("hidden");
         }
     }
-
-    var serverPrefContainer = document.getElementById("serverPrefContainer");
-    if (serverPrefContainer)
-        serverPrefContainer.removeAttribute("hidden");
 }
 
 

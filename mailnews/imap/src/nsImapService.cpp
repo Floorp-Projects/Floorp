@@ -3050,6 +3050,14 @@ nsImapService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNa
 }
 
 NS_IMETHODIMP
+nsImapService::GetCanLoginAtStartUp(PRBool *aCanLoginAtStartUp)
+{
+        NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
+        *aCanLoginAtStartUp = PR_TRUE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImapService::GetCanDelete(PRBool *aCanDelete)
 {
         NS_ENSURE_ARG_POINTER(aCanDelete);

@@ -44,7 +44,7 @@ public:
 
     NS_IMETHOD GetLocalStoreType(char **);
     NS_IMETHOD PerformBiff();
-    
+   
 private:
 
     static nsresult setSubFolderFlag(nsIFolder *aRootFolder,

@@ -32,8 +32,8 @@
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsMsgRDFDataSource::nsMsgRDFDataSource():
-    mInitialized(PR_FALSE),
     m_shuttingDown(PR_FALSE),
+    mInitialized(PR_FALSE),
     mRDFService(nsnull)
 {
     NS_INIT_REFCNT();

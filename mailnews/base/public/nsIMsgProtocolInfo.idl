@@ -64,6 +64,11 @@ interface nsIMsgProtocolInfo : nsISupports
     readonly attribute boolean canDelete;
 
     /**
+     * can this type of server log in at startup?
+     */
+    readonly attribute boolean canLoginAtStartUp;
+
+    /**
      * can you duplicate this server?
      * for instance, local mail is unique and should not be duplicated.
      */

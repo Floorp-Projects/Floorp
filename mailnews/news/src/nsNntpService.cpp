@@ -1370,6 +1370,14 @@ nsNntpService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNa
 }
 
 NS_IMETHODIMP
+nsNntpService::GetCanLoginAtStartUp(PRBool *aCanLoginAtStartUp)
+{
+        NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
+        *aCanLoginAtStartUp = PR_FALSE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNntpService::GetCanDelete(PRBool *aCanDelete)
 {
         NS_ENSURE_ARG_POINTER(aCanDelete);

@@ -189,6 +189,7 @@ interface nsIMsgIncomingServer : nsISupports {
    */
   attribute boolean canDelete;
 
+  attribute boolean loginAtStartUp;
 };
 
 %{C++

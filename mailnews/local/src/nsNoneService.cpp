@@ -140,6 +140,14 @@ nsNoneService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNa
 }
 
 NS_IMETHODIMP
+nsNoneService::GetCanLoginAtStartUp(PRBool *aCanLoginAtStartUp)
+{
+        NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
+        *aCanLoginAtStartUp = PR_FALSE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNoneService::GetCanDelete(PRBool *aCanDelete)
 {
         NS_ENSURE_ARG_POINTER(aCanDelete);

@@ -585,6 +585,14 @@ nsMovemailService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPret
 }
 
 NS_IMETHODIMP
+nsMovemailService::GetCanLoginAtStartUp(PRBool *aCanLoginAtStartUp)
+{
+        NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
+        *aCanLoginAtStartUp = PR_FALSE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMovemailService::GetCanDelete(PRBool *aCanDelete)
 {
         NS_ENSURE_ARG_POINTER(aCanDelete);
