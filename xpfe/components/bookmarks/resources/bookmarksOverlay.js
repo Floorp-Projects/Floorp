@@ -212,7 +212,7 @@ BookmarksUIElement.prototype = {
     // bm_open
     // bm_openfolder
     // bm_openinnewwindow
-    // /* bm_openinnewtab not yet supported */
+    // bm_openinnewtab 
     // ---------------------
     // /* bm_find removed */
     // bm_newfolder
@@ -233,7 +233,7 @@ BookmarksUIElement.prototype = {
                   "bm_delete"];
       break;
     case "http://home.netscape.com/NC-rdf#Bookmark":
-      commands = ["bm_open", "bm_openinnewwindow", /* "bm_openinnewtab", */ "bm_separator",
+      commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
                   "bm_newfolder", "bm_separator",
                   "bm_cut", "bm_copy", "bm_paste", "bm_fileBookmark", "bm_separator",
                   "bm_delete", "bm_rename", "bm_separator",
@@ -306,7 +306,7 @@ BookmarksUIElement.prototype = {
       var selectedItem = selection[0];
     switch (aCommandID) {
     case "bm_open":
-      this.open(null, selectedItem, false);
+      this.open(null, selectedItem, "current_window");
       break;
     case "bm_openfolder":
       this.commands.openFolder(selectedItem);
@@ -315,7 +315,10 @@ BookmarksUIElement.prototype = {
       if (BookmarksUtils.resolveType(selectedItem.id) == NC_NS + "Folder")
         this.openFolderInNewWindow(selectedItem);
       else
-        this.open(null, selectedItem, true);
+        this.open(null, selectedItem, "new_window");
+      break;
+    case "bm_openinnewtab":
+      this.open(null, selectedItem, "new_tab");
       break;
     case "bm_rename":
       // XXX - this is SO going to break if we ever do column re-ordering.
@@ -664,7 +667,7 @@ BookmarksUIElement.prototype = {
     kRDFC.RemoveElement(krSrc, true);
   },
   
-  open: function (aEvent, aRDFNode, aInNewWindow) 
+  open: function (aEvent, aRDFNode, aTarget) 
   { 
     var urlValue = LITERAL(this.db, aRDFNode, NC_NS + "URL");
     
@@ -673,8 +676,25 @@ BookmarksUIElement.prototype = {
     
     if (aEvent && aEvent.altKey)   
       this.showPropertiesForNode (aRDFNode);
-    else if (aInNewWindow)
+    else if (aTarget == "new_window")
       openDialog (getBrowserURL(), "_blank", "chrome,all,dialog=no", urlValue);
+    else if (aTarget == "new_tab") {
+      var browser = null;
+      if ("getBrowser" in window)
+        browser = getBrowser();
+      if (browser && "localName" in browser && browser.localName == "tabbrowser") {
+        var theTab, loadInBackground;
+        theTab = browser.addTab(urlValue); // open link in a new tab
+        try {
+          if (pref)
+            loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
+          if (!loadInBackground)
+            browser.selectedTab = theTab;
+        }
+        catch (e) {
+        }
+      }
+    }  
     else
       openTopWin (urlValue);
     if (aEvent) 
