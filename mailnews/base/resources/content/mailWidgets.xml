@@ -1441,6 +1441,9 @@
             if (hasAttachmentStatus.item(0)) 
               children[7].selectedItem = hasAttachmentStatus[0];
           }
+          else if (attrib == nsMsgSearchAttrib.Size) {
+            children[0].value = val.size;
+          }
           else 
             children[0].value = val.str;
           return val;

@@ -299,6 +299,13 @@ nsMsgSearchValidityManager::InitOfflineMailTable()
   m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::HasAttachmentStatus, nsMsgSearchOp::Isnt, 1);
   m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::HasAttachmentStatus, nsMsgSearchOp::Isnt, 1);
   
+  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsGreaterThan, 1);
+  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsGreaterThan, 1);
+  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsLessThan, 1);
+  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsLessThan, 1);
+  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Size, nsMsgSearchOp::Is, 1);
+  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::Is, 1);
+
   m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
   m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
   m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
@@ -612,7 +619,13 @@ nsMsgSearchValidityManager::InitOfflineMailFilterTable()
   // labels, junk status and attachment status not available for offline mail (POP) filters
   // because we won't know those until after the message has been analyzed.
   // see bug #185937
-  
+  m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsGreaterThan, 1);
+  m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsGreaterThan, 1);
+  m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsLessThan, 1);
+  m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsLessThan, 1);
+  m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Size, nsMsgSearchOp::Is, 1);
+  m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::Is, 1);
+
   m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
   m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
   m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);

@@ -6,6 +6,7 @@
 <!ENTITY keyword.label "keyword">
 <!ENTITY age.label "age in days">
 <!ENTITY to.label "to">
+<!ENTITY size.label "size">
 
 <!-- LOCALIZATION NOTE (cc.label): DONT_TRANSLATE -->
 <!ENTITY cc.label "Cc">
