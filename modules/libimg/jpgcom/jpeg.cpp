@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.24 2000/10/28 22:15:46 warren%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 1.25 2000/12/29 20:06:09 bryner%uiuc.edu Exp $
  */
 
 
@@ -32,7 +32,7 @@
 #include "nsCRT.h"
 #include "nsJPGDecoder.h"
 #include "jpeg.h"
-#include "merrors.h"
+#include "ilErrors.h"
 #include "il.h"
 
 #include <ctype.h>      /* to declare isprint() */

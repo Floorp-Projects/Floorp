@@ -42,6 +42,7 @@ EXPORTS		= \
 		ilISystemServices.h \
 		dummy_nc.h \
 		xpcompat.h \
+		ilErrors.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

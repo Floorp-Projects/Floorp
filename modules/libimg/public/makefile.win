@@ -47,7 +47,7 @@ LCFLAGS		= $(LCFLAGS) /TP
 MODULE=img 
 DEPTH=..\..\.. 
 EXPORTS=il_types.h ni_pixmp.h libimg.h il_icons.h il_strm.h il_util.h \
-    ilINetContext.h ilIURL.h ilINetReader.h ilIImageRenderer.h \
+    ilErrors.h ilINetContext.h ilIURL.h ilINetReader.h ilIImageRenderer.h \
     ilISystemServices.h
 
 
