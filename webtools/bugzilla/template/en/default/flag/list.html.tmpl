@@ -69,7 +69,10 @@
 
 <table id="flags">
 
+  [%# Step 1: Display every flag type (except inactive types with no flags). %]
   [% FOREACH type = flag_types %]
+    
+    [%# Step 1a: Display existing flag(s). %]
     [% FOREACH flag = type.flags %]
       <tr>
         <td>
@@ -94,7 +97,7 @@
           </select>
         </td>
         <td>
-          [% IF type.is_active && type.is_requestable %]
+          [% IF type.is_active && type.is_requesteeble %]
             <span style="white-space: nowrap;">
               (<input type="text" size="8" maxlength="255"
                       id="requestee-[% flag.id %]" 
@@ -108,6 +111,8 @@
         </td>
       </tr>
     [% END %]
+    
+    [%# Step 1b: Display UI for setting flag. %]
     [% IF (!type.flags || type.flags.size == 0) && type.is_active %]
       <tr>
         <td>&nbsp;</td>
@@ -124,16 +129,19 @@
           </select>
         </td>
         <td>
+          [% IF type.is_requesteeble %]
             <span style="white-space: nowrap;">
               (<input type="text" size="8" maxlength="255"
                       id="requestee_type-[% type.id %]" 
                       name="requestee_type-[% type.id %]">)
             </span>
+          [% END %]
         </td>
       </tr>
     [% END %]
   [% END %]
 
+  [%# Step 2: Display flag type again (if type is multiplicable). %]
   [% FOREACH type = flag_types %]
     [% NEXT UNLESS type.flags.size > 0 && type.is_multiplicable && type.is_active %]
     [% IF !separator_displayed %]
@@ -154,7 +162,7 @@
         </select>
       </td>
       <td>
-        [% IF type.is_requestable && type.is_requesteeble %]
+        [% IF type.is_requesteeble %]
             <span style="white-space: nowrap;">
               (<input type="text" size="8" maxlength="255"
                       id="requestee_type-[% type.id %]" 
