@@ -54,6 +54,7 @@ nsIAtom* nsLayoutAtoms::areaFrame;
 nsIAtom* nsLayoutAtoms::pageFrame;
 nsIAtom* nsLayoutAtoms::rootFrame;
 nsIAtom* nsLayoutAtoms::scrollFrame;
+nsIAtom* nsLayoutAtoms::textFrame;
 nsIAtom* nsLayoutAtoms::viewportFrame;
 
 static nsrefcnt gRefCnt;
@@ -91,6 +92,7 @@ void nsLayoutAtoms::AddrefAtoms()
     pageFrame = NS_NewAtom("PageFrame");
     rootFrame = NS_NewAtom("RootFrame");
     scrollFrame = NS_NewAtom("ScrollFrame");
+    textFrame = NS_NewAtom("TextFrame");
     viewportFrame = NS_NewAtom("ViewportFrame");
   }
   ++gRefCnt;
@@ -130,6 +132,7 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(pageFrame);
     NS_RELEASE(rootFrame);
     NS_RELEASE(scrollFrame);
+    NS_RELEASE(textFrame);
     NS_RELEASE(viewportFrame);
   }
 }
