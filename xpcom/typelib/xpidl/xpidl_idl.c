@@ -814,15 +814,15 @@ xpidl_parse_iid(struct nsID *id, const char *str)
  * Common method verification code, called by *op_dcl in the various backends.
  */
 gboolean
-verify_method_declaration(TreeState *state)
+verify_method_declaration(IDL_tree method_tree)
 {
-    struct _IDL_OP_DCL *op = &IDL_OP_DCL(state->tree);
+    struct _IDL_OP_DCL *op = &IDL_OP_DCL(method_tree);
     IDL_tree iface;
     gboolean scriptable_interface;
 
     if (op->f_varargs) {
         /* We don't currently support varargs. */
-        IDL_tree_error(state->tree, "varargs are not currently supported\n");
+        IDL_tree_error(method_tree, "varargs are not currently supported\n");
         return FALSE;
     }
 
@@ -830,15 +830,15 @@ verify_method_declaration(TreeState *state)
      * Verify that we've been called on an interface, and decide if the
      * interface was marked [scriptable].
      */
-    if (IDL_NODE_UP(state->tree) && IDL_NODE_UP(IDL_NODE_UP(state->tree)) &&
-        IDL_NODE_TYPE(iface = IDL_NODE_UP(IDL_NODE_UP(state->tree))) 
+    if (IDL_NODE_UP(method_tree) && IDL_NODE_UP(IDL_NODE_UP(method_tree)) &&
+        IDL_NODE_TYPE(iface = IDL_NODE_UP(IDL_NODE_UP(method_tree))) 
         == IDLN_INTERFACE)
     {
         scriptable_interface =
             (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable")
              != NULL);
     } else {
-        IDL_tree_error(state->tree, "verify_op_dcl called on a non-interface?");
+        IDL_tree_error(method_tree, "verify_op_dcl called on a non-interface?");
         return FALSE;
     }
 
@@ -868,7 +868,7 @@ verify_method_declaration(TreeState *state)
                 IDL_tree_property_get(param_type, "nsid") == NULL &&
                 IDL_tree_property_get(simple_decl, "iid_is") == NULL)
             {
-                IDL_tree_error(state->tree,
+                IDL_tree_error(method_tree,
                                "methods in [scriptable] interfaces which are "
                                "non-scriptable because they refer to native "
                                "types (parameter \"%s\") must be marked "
@@ -879,7 +879,7 @@ verify_method_declaration(TreeState *state)
         
         /* How about the return type? */
         if (op->op_type_spec != NULL && UP_IS_NATIVE(op->op_type_spec)) {
-            IDL_tree_error(state->tree,
+            IDL_tree_error(method_tree,
                            "methods in [scriptable] interfaces which are "
                            "non-scriptable because they return native "
                            "types must be marked [noscript]\n");

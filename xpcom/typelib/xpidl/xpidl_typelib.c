@@ -864,7 +864,7 @@ typelib_op_dcl(TreeState *state)
     gboolean op_noscript = (IDL_tree_property_get(op->ident, "noscript")
                             != NULL);
 
-    if (!verify_method_declaration(state))
+    if (!verify_method_declaration(state->tree))
         return FALSE;
 
     if (!XPT_InterfaceDescriptorAddMethods(id, 1))

@@ -23,6 +23,10 @@
 #include "xpidl.h"
 #include <ctype.h>
 
+static gboolean write_method_signature(IDL_tree method_tree, FILE *outfile);
+static gboolean write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
+                                    gboolean getter);
+
 static void
 write_header(gpointer key, gpointer value, gpointer user_data)
 {
@@ -73,6 +77,7 @@ interface(TreeState *state)
 {
     IDL_tree iface = state->tree, iter;
     char *className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
+    char *classNameUpper;
     const char *iid;
     const char *name_space;
     struct nsID id;
@@ -123,12 +128,83 @@ interface(TreeState *state)
         fprintf(state->file, " \\\n"
                 "  {0x%.8x, 0x%.4x, 0x%.4x, \\\n"
                 "    { 0x%.2x, 0x%.2x, 0x%.2x, 0x%.2x, "
-                "0x%.2x, 0x%.2x, 0x%.2x, 0x%.2x }}\n\n",
+                "0x%.2x, 0x%.2x, 0x%.2x, 0x%.2x }}\n",
                 id.m0, id.m1, id.m2,
                 id.m3[0], id.m3[1], id.m3[2], id.m3[3],
                 id.m3[4], id.m3[5], id.m3[6], id.m3[7]);
     }
 
+    /*
+     * #define NS_DECL_NSIFOO - create method prototypes that can be used in
+     * class definitions that support this interface.
+     *
+     * Walk the tree explicitly to prototype a reworking of xpidl to get rid of
+     * the callback mechanism.
+     */
+    fputc('\n', state->file);
+    fputs("/* Use this when declaring classes that implement this "
+          "interface. */\n", state->file);
+    fputs("#define NS_DECL_", state->file);
+    classNameUpper = className;
+    while (*classNameUpper != '\0')
+        fputc(toupper(*classNameUpper++), state->file);
+    fputs(" \\\n", state->file);
+    if (IDL_INTERFACE(state->tree).body == NULL)
+        fputs("/* no methods */", state->file);
+
+    for (iter = IDL_INTERFACE(state->tree).body;
+         iter != NULL;
+         iter = IDL_LIST(iter).next)
+    {
+        IDL_tree data = IDL_LIST(iter).data;
+
+        switch(IDL_NODE_TYPE(data)) {
+          case IDLN_OP_DCL:
+            fputs("  ", state->file); /* XXX abstract to 'indent' */
+            write_method_signature(data, state->file);
+            break;
+
+          case IDLN_ATTR_DCL:
+            fputs("  ", state->file);
+            if (!write_attr_accessor(data, state->file, TRUE))
+                return FALSE;
+            if (!IDL_ATTR_DCL(state->tree).f_readonly) {
+                fputs("  ", state->file);
+                if (!write_attr_accessor(data, state->file, FALSE))
+                    return FALSE;
+            }
+            break;
+
+          case IDLN_CONST_DCL:
+              /* ignore it here; it doesn't contribute to the macro. */
+              continue;
+
+          case IDLN_CODEFRAG:
+              IDL_tree_warning(iter, IDL_WARNING1,
+                               "%%{ .. %%} code fragment within interface "
+                               "ignored when generating NS_DECL_IFOO macro; "
+                               "if the code fragment contains method "
+                               "declarations, the macro probably isn't "
+                               "complete.");
+              break;
+
+          default:
+            IDL_tree_error(iter,
+                           "unexpected node type %d! "
+                           "Please file a bug against the xpidl component.",
+                           IDL_NODE_TYPE(data));
+            return FALSE;
+        }
+
+        if (IDL_LIST(iter).next != NULL) {
+            fprintf(state->file, "; \\\n");
+        } else {
+            fprintf(state->file, "; \n");
+        }
+    }
+    fprintf(state->file, "\n");
+
+    /* The interface declaration itself. */
     fprintf(state->file, "class %s", className);
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         fputs(" : ", state->file);
@@ -169,82 +245,82 @@ list(TreeState *state)
     return TRUE;
 }
 
-/* XXXbe static */ gboolean
-xpcom_type(TreeState *state)
+static gboolean
+write_type(IDL_tree type_tree, FILE *outfile)
 {
-    if (!state->tree) {
-        fputs("void", state->file);
+    if (!type_tree) {
+        fputs("void", outfile);
         return TRUE;
     }
 
-    switch (IDL_NODE_TYPE(state->tree)) {
+    switch (IDL_NODE_TYPE(type_tree)) {
       case IDLN_TYPE_INTEGER: {
-        gboolean sign = IDL_TYPE_INTEGER(state->tree).f_signed;
-        switch (IDL_TYPE_INTEGER(state->tree).f_type) {
+        gboolean sign = IDL_TYPE_INTEGER(type_tree).f_signed;
+        switch (IDL_TYPE_INTEGER(type_tree).f_type) {
           case IDL_INTEGER_TYPE_SHORT:
-            fputs(sign ? "PRInt16" : "PRUint16", state->file);
+            fputs(sign ? "PRInt16" : "PRUint16", outfile);
             break;
           case IDL_INTEGER_TYPE_LONG:
-            fputs(sign ? "PRInt32" : "PRUint32", state->file);
+            fputs(sign ? "PRInt32" : "PRUint32", outfile);
             break;
           case IDL_INTEGER_TYPE_LONGLONG:
-            fputs(sign ? "PRInt64" : "PRUint64", state->file);
+            fputs(sign ? "PRInt64" : "PRUint64", outfile);
             break;
           default:
             g_error("Unknown integer type %d\n",
-                    IDL_TYPE_INTEGER(state->tree).f_type);
+                    IDL_TYPE_INTEGER(type_tree).f_type);
             return FALSE;
         }
         break;
       }
       case IDLN_TYPE_CHAR:
-        fputs("char", state->file);
+        fputs("char", outfile);
         break;
       case IDLN_TYPE_WIDE_CHAR:
-        fputs("PRUnichar", state->file); /* wchar_t? */
+        fputs("PRUnichar", outfile); /* wchar_t? */
         break;
       case IDLN_TYPE_WIDE_STRING:
-        fputs("PRUnichar *", state->file);
+        fputs("PRUnichar *", outfile);
         break;
       case IDLN_TYPE_STRING:
-        fputs("char *", state->file);
+        fputs("char *", outfile);
         break;
       case IDLN_TYPE_BOOLEAN:
-        fputs("PRBool", state->file);
+        fputs("PRBool", outfile);
         break;
       case IDLN_TYPE_OCTET:
-        fputs("PRUint8", state->file);
+        fputs("PRUint8", outfile);
         break;
       case IDLN_TYPE_FLOAT:
-        switch (IDL_TYPE_FLOAT(state->tree).f_type) {
+        switch (IDL_TYPE_FLOAT(type_tree).f_type) {
           case IDL_FLOAT_TYPE_FLOAT:
-            fputs("float", state->file);
+            fputs("float", outfile);
             break;
           case IDL_FLOAT_TYPE_DOUBLE:
-            fputs("double", state->file);
+            fputs("double", outfile);
             break;
           /* XXX 'long double' just ignored, or what? */
           default:
-            fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
+            fprintf(outfile, "unknown_type_%d", IDL_NODE_TYPE(type_tree));
             break;
         }
         break;
       case IDLN_IDENT:
-        if (UP_IS_NATIVE(state->tree)) {
-            fputs(IDL_NATIVE(IDL_NODE_UP(state->tree)).user_type, state->file);
-            if (IDL_tree_property_get(state->tree, "ptr")) {
-                fputs(" *", state->file);
-            } else if (IDL_tree_property_get(state->tree, "ref")) {
-                fputs(" &", state->file);
+        if (UP_IS_NATIVE(type_tree)) {
+            fputs(IDL_NATIVE(IDL_NODE_UP(type_tree)).user_type, outfile);
+            if (IDL_tree_property_get(type_tree, "ptr")) {
+                fputs(" *", outfile);
+            } else if (IDL_tree_property_get(type_tree, "ref")) {
+                fputs(" &", outfile);
             }
         } else {
-            fputs(IDL_IDENT(state->tree).str, state->file);
+            fputs(IDL_IDENT(type_tree).str, outfile);
         }
-        if (UP_IS_AGGREGATE(state->tree))
-            fputs(" *", state->file);
+        if (UP_IS_AGGREGATE(type_tree))
+            fputs(" *", outfile);
         break;
       default:
-        fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
+        fprintf(outfile, "unknown_type_%d", IDL_NODE_TYPE(type_tree));
         break;
     }
     return TRUE;
@@ -266,19 +342,17 @@ xpcom_type(TreeState *state)
 #define ATTR_TYPE(tree) (IDL_NODE_TYPE(ATTR_TYPE_DECL(tree)))
 
 static gboolean
-attr_accessor(TreeState *state, gboolean getter)
+write_attr_accessor(IDL_tree attr_tree, FILE * outfile, gboolean getter)
 {
-    char *attrname = ATTR_IDENT(state->tree).str;
-    IDL_tree orig = state->tree;
-    fprintf(state->file, "  NS_IMETHOD %cet%c%s(",
+    char *attrname = ATTR_IDENT(attr_tree).str;
+
+    fprintf(outfile, "NS_IMETHOD %cet%c%s(",
             getter ? 'G' : 'S',
             toupper(attrname[0]), attrname + 1);
-    state->tree = ATTR_TYPE_DECL(state->tree);
-    if (!xpcom_type(state))
+    if (!write_type(ATTR_TYPE_DECL(attr_tree), outfile))
         return FALSE;
-    state->tree = orig;
-    fprintf(state->file, "%s%sa%c%s) = 0;\n",
-            (STARRED_TYPE(orig) ? "" : " "),
+    fprintf(outfile, "%s%sa%c%s)",
+            (STARRED_TYPE(attr_tree) ? "" : " "),
             getter ? "*" : "",
             toupper(attrname[0]), attrname + 1);
     return TRUE;
@@ -287,9 +361,20 @@ attr_accessor(TreeState *state, gboolean getter)
 static gboolean
 attr_dcl(TreeState *state)
 {
-    gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
     xpidl_write_comment(state, 2);
-    return attr_accessor(state, TRUE) && (ro || attr_accessor(state, FALSE));
+
+    fputs("  ", state->file);
+    if (!write_attr_accessor(state->tree, state->file, TRUE))
+        return FALSE;
+    fputs(" = 0;\n", state->file);
+
+    if (!IDL_ATTR_DCL(state->tree).f_readonly) {
+        fputs("  ", state->file);
+        if (!write_attr_accessor(state->tree, state->file, FALSE))
+            return FALSE;
+        fputs(" = 0;\n", state->file);
+    }
+    return TRUE;
 }
 
 static gboolean
@@ -368,7 +453,7 @@ do_typedef(TreeState *state)
     } else {
         state->tree = type;
         fputs("typedef ", state->file);
-        if (!xpcom_type(state))
+        if (!write_type(state->tree, state->file))
             return FALSE;
         fputs(" ", state->file);
         if (IDL_NODE_TYPE(complex = IDL_LIST(dcls).data) == IDLN_TYPE_ARRAY) {
@@ -392,39 +477,38 @@ do_typedef(TreeState *state)
  * inout string foo     -->     nsString **foo;
  */
 
-/* XXXbe static */ gboolean
-xpcom_param(TreeState *state)
+static gboolean
+write_param(IDL_tree param_tree, FILE *outfile)
 {
-    IDL_tree param = state->tree;
-    state->tree = IDL_PARAM_DCL(param).param_type_spec;
+    IDL_tree param_type_spec = IDL_PARAM_DCL(param_tree).param_type_spec;
 
     /* in string, wstring, nsid, and any explicitly marked [const] are const */
-    if (IDL_PARAM_DCL(param).attr == IDL_PARAM_IN &&
-        (IDL_NODE_TYPE(state->tree) == IDLN_TYPE_STRING ||
-         IDL_NODE_TYPE(state->tree) == IDLN_TYPE_WIDE_STRING ||
-         IDL_tree_property_get(IDL_PARAM_DCL(param).simple_declarator,
+    if (IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_IN &&
+        (IDL_NODE_TYPE(param_type_spec) == IDLN_TYPE_STRING ||
+         IDL_NODE_TYPE(param_type_spec) == IDLN_TYPE_WIDE_STRING ||
+         IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator,
                                "const") ||
-         IDL_tree_property_get(state->tree, "nsid"))) {
-        fputs("const ", state->file);
+         IDL_tree_property_get(param_type_spec, "nsid"))) {
+        fputs("const ", outfile);
     }
-    else if (IDL_PARAM_DCL(param).attr == IDL_PARAM_OUT &&
-             IDL_tree_property_get(IDL_PARAM_DCL(param).simple_declarator, 
+    else if (IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_OUT &&
+             IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator, 
                                    "shared")) {
-        fputs("const ", state->file);
+        fputs("const ", outfile);
     }
 
-    if (!xpcom_type(state))
+    if (!write_type(param_type_spec, outfile))
         return FALSE;
 
     /* unless the type ended in a *, add a space */
-    if (!STARRED_TYPE(state->tree))
-        fputc(' ', state->file);
+    if (!STARRED_TYPE(param_type_spec))
+        fputc(' ', outfile);
 
     /* out and inout params get a bonus *! */
-    if (IDL_PARAM_DCL(param).attr != IDL_PARAM_IN)
-        fputc('*', state->file);
+    if (IDL_PARAM_DCL(param_tree).attr != IDL_PARAM_IN)
+        fputc('*', outfile);
 
-    fputs(IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str, state->file);
+    fputs(IDL_IDENT(IDL_PARAM_DCL(param_tree).simple_declarator).str, outfile);
     return TRUE;
 }
 
@@ -443,41 +527,32 @@ forward_dcl(TreeState *state)
 }
 
 /*
- * A method is an `operation', therefore a method decl is an `op dcl'.
- * I blame Elliot.
+ * Shared between the interface class declaration and the NS_DECL_IFOO macro
+ * provided to aid declaration of implementation classes.
  */
 static gboolean
-op_dcl(TreeState *state)
-{
-    struct _IDL_OP_DCL *op = &IDL_OP_DCL(state->tree);
+write_method_signature(IDL_tree method_tree, FILE *outfile) {
+    struct _IDL_OP_DCL *op = &IDL_OP_DCL(method_tree);
     gboolean no_generated_args = TRUE;
     gboolean op_notxpcom =
         (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
     IDL_tree iter;
 
-    if (!verify_method_declaration(state))
-        return FALSE;
-
-    xpidl_write_comment(state, 2);
-
-    fputs("  ", state->file);
     if (op_notxpcom) {
-        state->tree = op->op_type_spec;
-        fputs("NS_IMETHOD_(", state->file);
-        if (!xpcom_type(state))
+        fputs("NS_IMETHOD_(", outfile);
+        if (!write_type(op->op_type_spec, outfile))
             return FALSE;
-        fputc(')', state->file);
+        fputc(')', outfile);
     } else {
-        fputs("NS_IMETHOD", state->file);
+        fputs("NS_IMETHOD", outfile);
     }
-    fprintf(state->file, " %s(", IDL_IDENT(op->ident).str);
+    fprintf(outfile, " %s(", IDL_IDENT(op->ident).str);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-        state->tree = IDL_LIST(iter).data;
-        if (!xpcom_param(state))
+        if (!write_param(IDL_LIST(iter).data, outfile))
             return FALSE;
         if ((IDL_LIST(iter).next ||
              (!op_notxpcom && op->op_type_spec) || op->f_varargs))
-            fputs(", ", state->file);
+            fputs(", ", outfile);
         no_generated_args = FALSE;
     }
 
@@ -488,17 +563,16 @@ op_dcl(TreeState *state)
                                                 IDL_ident_new("_retval"));
         if (!fake_param)
             return FALSE;
-        state->tree = fake_param;
-        if (!xpcom_param(state))
+        if (!write_param(fake_param, outfile))
             return FALSE;
         if (op->f_varargs)
-            fputs(", ", state->file);
+            fputs(", ", outfile);
         no_generated_args = FALSE;
     }
 
     /* varargs go last */
     if (op->f_varargs) {
-        fputs("nsVarArgs *_varargs", state->file);
+        fputs("nsVarArgs *_varargs", outfile);
         no_generated_args = FALSE;
     }
 
@@ -507,10 +581,35 @@ op_dcl(TreeState *state)
      * behavior of disabling type checking.
      */
     if (no_generated_args) {
-        fputs("void", state->file);
+        fputs("void", outfile);
     }
 
-    fputs(") = 0;\n", state->file);
+    fputs(")", outfile);
+
+    return TRUE;
+}
+
+/*
+ * A method is an `operation', therefore a method decl is an `op dcl'.
+ * I blame Elliot.
+ */
+static gboolean
+op_dcl(TreeState *state)
+{
+    /*
+     * Verify that e.g. non-scriptable methods in [scriptable] interfaces
+     * are declared so.  Do this in a seperate verification pass?
+     */
+    if (!verify_method_declaration(state->tree))
+        return FALSE;
+
+    xpidl_write_comment(state, 2);
+
+    fputs("  ", state->file);
+    if (!write_method_signature(state->tree, state->file))
+        return FALSE;
+    fputs(" = 0;\n", state->file);
+
     return TRUE;
 }
 

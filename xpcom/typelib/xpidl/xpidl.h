@@ -174,6 +174,6 @@ xpidl_parse_iid(nsID *id, const char *str);
  * Perform various validation checks on methods.
  */
 gboolean
-verify_method_declaration(TreeState *state);
+verify_method_declaration(IDL_tree method_tree);
 
 #endif /* __xpidl_h */
