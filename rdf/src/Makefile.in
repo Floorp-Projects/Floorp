@@ -32,13 +32,16 @@ CPPSRCS =				\
         nsMemoryDataSource.cpp          \
         nsRDFContentSink.cpp            \
         nsRDFDocument.cpp               \
+	nsRDFHTMLDocument.cpp		\
 	nsRDFDocumentContentSink.cpp	\
         nsRDFElement.cpp                \
         nsRDFFactory.cpp                \
         nsRDFRegistryImpl.cpp           \
         nsRDFResourceManager.cpp        \
 	nsRDFSimpleContentSink.cpp	\
+	nsRDFTreeDocument.cpp		\
         nsSimpleDataBase.cpp            \
+	rdfutil.cpp			\
 	$(NULL)
 
 EXPORTS = \

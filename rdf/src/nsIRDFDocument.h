@@ -22,10 +22,9 @@
 
 #include "nsIXMLDocument.h"
 
-class nsString;
-class nsIRDFDataBase;
-class nsIRDFDataSource;
 class nsIRDFNode;
+class nsIRDFDataBase;
+class nsISupportsArray;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IRDFDOCUMENT_IID \
@@ -37,6 +36,12 @@ class nsIRDFNode;
 class nsIRDFDocument : public nsIXMLDocument {
 public:
   NS_IMETHOD GetDataBase(nsIRDFDataBase*& rDataBase) = 0;
+
+  NS_IMETHOD CreateChildren(nsIRDFNode* resource, nsISupportsArray* children) = 0;
 };
+
+// factory functions
+nsresult NS_NewRDFHTMLDocument(nsIRDFDocument** result);
+nsresult NS_NewRDFTreeDocument(nsIRDFDocument** result);
 
 #endif // nsIRDFDocument_h___
