@@ -58,6 +58,6 @@ OS_LIBS			= -lm
 
 DSO_CFLAGS		= -fPIC
 DSO_LDFLAGS		= -Wl,export-dynamic
-DSO_LDOPTS		= -shared
+DSO_LDOPTS		= -shared -Xlinker -E
 
 PERL			= perl
