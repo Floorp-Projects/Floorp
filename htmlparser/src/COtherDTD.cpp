@@ -243,7 +243,7 @@ COtherDTD::COtherDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mSh
   mExpectedCRC32=0;
   mDTDState=NS_OK;
   mStyleHandlingEnabled=PR_TRUE;
-  mIsText=PR_FALSE;
+  mDocType=ePlainText;
 
   if(!gHTMLElements) {
     InitializeElementTable();
@@ -469,12 +469,12 @@ PRBool COtherDTD::Verify(nsString& aURLRef,nsIParser* aParser){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult COtherDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
+eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
   
-  if(!aCommand.Equals(kViewSourceCommand)) {
-    if(PR_TRUE==(aContentType.Equals(kHTMLTextContentType) || aContentType.Equals(kPlainTextContentType))) {
+  if(eViewSource!=aParserContext.mParserCommand) {
+    if(PR_TRUE==(aParserContext.mMimeType.Equals(kHTMLTextContentType) || aParserContext.mMimeType.Equals(kPlainTextContentType))) {
       result=ePrimaryDetect;
     }
     else {
@@ -482,8 +482,8 @@ eAutoDetectResult COtherDTD::CanParse(nsString& aContentType, nsString& aCommand
       PRBool theBufHasXML=PR_FALSE;
       if(BufferContainsHTML(aBuffer,theBufHasXML)){
         result = eValidDetect ;
-        if(0==aContentType.Length()) {
-          aContentType=kHTMLTextContentType;
+        if(0==aParserContext.mMimeType.Length()) {
+          aParserContext.SetMimeType(kHTMLTextContentType);
           result = (theBufHasXML) ? eValidDetect : ePrimaryDetect;
         }
       }
@@ -494,32 +494,37 @@ eAutoDetectResult COtherDTD::CanParse(nsString& aContentType, nsString& aCommand
 
 
 /**
- * 
- * @update  gess5/18/98
- * @param 
- * @return
- */
-nsresult COtherDTD::WillBuildModel(nsString& aFilename,
-                                 PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,
-                                 nsString& aCommand,nsIContentSink* aSink){
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	rickg 03.20.2000
+  * @param	aParserContext
+  * @param	aSink
+  * @return	error code (almost always 0)
+  */
+nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
-  mFilename=aFilename;
+  mFilename=aParserContext.mScanner->GetFilename();
   mHasOpenBody=PR_FALSE;
   mHadBody=PR_FALSE;
   mHadFrameset=PR_FALSE;
   mLineNumber=1;
   mHasOpenScript=PR_FALSE;
-  mParseMode=aParseMode;
+  mParseMode=aParserContext.mParseMode;
+  mParserCommand=aParserContext.mParserCommand;
+
   mStyleHandlingEnabled=(eParseMode_quirks==mParseMode);
     
-  if((aNotifySink) && (aSink)) {
+  if((!aParserContext.mPrevContext) && (aSink)) {
 
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::WillBuildModel(), this=%p\n", this));
 
     mTokenRecycler=0;
     mStyleHandlingEnabled=PR_TRUE;
+
+    mDocType=aParserContext.mDocType;
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
@@ -536,8 +541,6 @@ nsresult COtherDTD::WillBuildModel(nsString& aFilename,
       mExpectedCRC32=0;
     }
   }
-
-  mIsText=aSourceType.Equals(kPlainTextContentType);
 
   return result;
 }
@@ -622,7 +625,7 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
 
       mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content 
 
-      if(mIsText) {
+      if(ePlainText==mDocType) {
         CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre,"pre");
         mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
       }
@@ -3465,7 +3468,7 @@ nsresult COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
 nsresult COtherDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,mIsText);
+    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,mDocType,mParserCommand);
   }
   aTokenizer=mTokenizer;
   return result;

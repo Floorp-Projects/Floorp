@@ -32,6 +32,7 @@
 #include "nsScanner.h"
 #include "nsElementTable.h"
 #include "nsHTMLEntities.h"
+#include "CParserContext.h"
 
 /************************************************************************
   And now for the main class -- nsHTMLTokenizer...
@@ -93,12 +94,12 @@ nsHTMLTokenizer::FreeTokenRecycler(void) {
  *  @return  NS_xxx error result
  */
 
-NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,PRInt32 aMode,PRBool aPlaintext) {
+NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,PRInt32 aMode,eParserDocType aDocType, eParserCommands aCommand) {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLTokenizer* it = new nsHTMLTokenizer(aMode,aPlaintext);
+  nsHTMLTokenizer* it = new nsHTMLTokenizer(aMode,aDocType,aCommand);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -117,13 +118,16 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
  *  @param   
  *  @return  
  */
-nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,PRBool aPlainText) : 
+ nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
+                                  eParserDocType aDocType,
+                                  eParserCommands aCommand) :
   nsITokenizer(), mTokenDeque(0), mParseMode(aParseMode)
 {
   NS_INIT_REFCNT();
   mDoXMLEmptyTags=PR_FALSE;
-  mPlainText=aPlainText;
+  mDocType=aDocType;
   mRecordTrailingContent=PR_FALSE;
+  mParserCommand=aCommand;
 }
 
 
@@ -303,7 +307,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
     case NS_OK:
     default:
 
-      if(!mPlainText) {
+      if(ePlainText!=mDocType) {
         if(kLessThan==theChar) {
           return ConsumeTag(theChar,theToken,aScanner,aFlushTokens);
         }
@@ -395,12 +399,13 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
  *  This method is called just after we've consumed a start
  *  tag, and we now have to consume its attributes.
  *  
- *  @update  gess 3/25/98
+ *  @update  rickg  03.23.2000
  *  @param   aChar: last char read
  *  @param   aScanner: see nsScanner.h
+ *  @param   aLeadingWS: contains ws chars that preceeded the first attribute
  *  @return  
  */
-nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner) {
+nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner,nsString& aLeadingWS) {
   PRBool done=PR_FALSE;
   nsresult result=NS_OK;
   PRInt16 theAttrCount=0;
@@ -410,7 +415,12 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
   while((!done) && (result==NS_OK)) {
     CToken* theToken= (CAttributeToken*)theRecycler->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown);
     if(theToken){
-      result=theToken->Consume(aChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
+      if(aLeadingWS.Length()) {
+        nsString& theKey=((CAttributeToken*)theToken)->GetKey();
+        theKey=aLeadingWS;
+        aLeadingWS.Truncate(0);
+      }
+      result=theToken->Consume(aChar,aScanner,PRBool(eViewSource==mParserCommand));  //tell new token to finish consuming text...    
  
       //Much as I hate to do this, here's some special case code.
       //This handles the case of empty-tags in XML. Our last
@@ -492,14 +502,34 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
   
   if(aToken) {
     ((CStartToken*)aToken)->mOrigin=aScanner.GetOffset()-1; // Save the position after '<' for use in recording traling contents. Ref: Bug. 15204.
-    result= aToken->Consume(aChar,aScanner,mPlainText);     //tell new token to finish consuming text...    
+    result= aToken->Consume(aChar,aScanner,eHTMLText==mDocType);     //tell new token to finish consuming text...    
+
     if(NS_SUCCEEDED(result)) {
      
       AddToken(aToken,result,&mTokenDeque,theRecycler);
       eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
+
+       //Good. Now, let's see if the next char is ">". 
+       //If so, we have a complete tag, otherwise, we have attributes.
+      mScratch.Truncate(0);
+      PRBool theTagHasAttributes=PR_FALSE;
+      if(NS_OK==result) { 
+        result=(eViewSource==mParserCommand) ? aScanner.ReadWhitespace(mScratch) : aScanner.SkipWhitespace();
+        aToken->mNewlineCount += aScanner.GetNewlinesSkipped();
+        if(NS_OK==result) {
+          result=aScanner.GetChar(aChar);
+          if(NS_OK==result) {
+            if(kGreaterThan!=aChar) { //look for '>' 
+             //push that char back, since we apparently have attributes...
+              result=aScanner.PutBack(aChar);
+              theTagHasAttributes=PR_TRUE;
+            } //if
+          } //if
+        }//if
+      }
       
-      if(((CStartToken*)aToken)->IsAttributed()) {
-        result=ConsumeAttributes(aChar,(CStartToken*)aToken,aScanner);
+      if(theTagHasAttributes) {
+        result=ConsumeAttributes(aChar,(CStartToken*)aToken,aScanner,mScratch);
       }
 
       /*  Now that that's over with, we have one more problem to solve.

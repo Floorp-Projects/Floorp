@@ -288,6 +288,25 @@ struct CRCStruct {
   PRInt32   mOperation; //usually open or close
 };
 
+/**************************************************************
+  This defines the topic object used by the observer service.
+  The observerService uses a list of these, 1 per topic when
+  registering tags.
+ **************************************************************/
+
+class nsObserverTopic {
+public:
+            nsObserverTopic(const nsString& aTopic);
+            ~nsObserverTopic();
+  PRBool    Matches(const nsString& aTopic);
+  void      RegisterObserverForTag(nsIElementObserver *anObserver,eHTMLTags aTag);
+  nsDeque*  GetObserversForTag(eHTMLTags aTag);
+  nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID,nsIParser* aParser);
+
+  nsString  mTopic;
+  nsDeque*  mObservers[NS_HTML_TAG_MAX + 1];
+};
+
 /******************************************************************************
   This class is used to store ref's to token observers during the parse phase.
   Note that for simplicity, this is a singleton that is constructed in the
@@ -300,15 +319,19 @@ public:
   CObserverService();
   ~CObserverService();
 
-  nsDeque*  GetObserversForTag(eHTMLTags aTag);
-  nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,
-                   PRUint32 aUniqueID, const char* aCommand,
-                   nsIParser* aParser);
+  nsDeque*  GetObserversForTagInTopic(eHTMLTags aTag,const nsString& aTopic);
+  nsresult  Notify( eHTMLTags aTag,
+                    nsIParserNode& aNode,
+                    PRUint32 aUniqueID, 
+                    const nsString& aTopic,
+                    nsIParser* aParser);
+  nsObserverTopic* GetTopic(const nsString& aTopic);
+  nsObserverTopic* CreateTopic(const nsString& aTopic);
 
 protected:
-  void      RegisterObservers(nsString& aTopicList);
-  void      UnregisterObservers();
-  nsDeque*  mObservers[NS_HTML_TAG_MAX + 1];
+  void      RegisterObservers(const nsString& aTopic);
+  void      UnregisterObservers(const nsString& aTopic);
+  nsDeque   mTopics;  //each topic holds a list of observers per tag.
 };
 
 /************************************************************** 

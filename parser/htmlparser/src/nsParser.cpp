@@ -194,7 +194,7 @@ void nsParser::FreeSharedObjects(void) {
  *  @param   
  *  @return   
  */
-nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput("") , mCharset("ISO-8859-1") {
+nsParser::nsParser(nsITokenObserver* anObserver) : mUnusedInput("") , mCharset("ISO-8859-1") {
   NS_INIT_REFCNT();
   mParserFilter = 0;
   mObserver = 0;
@@ -207,6 +207,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;
   mObserversEnabled=PR_TRUE;
+  mCommand=eViewNormal;
 
   MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
   MOZ_TIMER_RESET(mParseTime);  
@@ -310,9 +311,24 @@ nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
  *  @return	 ptr to previously set contentsink (usually null)  
  */
 void nsParser::SetCommand(const char* aCommand){
-  mCommand=aCommand;
+  nsAutoString theCommand(aCommand);
+  if(theCommand.Equals(kViewSourceCommand))
+    mCommand=eViewSource;
+  else mCommand=eViewNormal;
 }
 
+/**
+ *  Call this method once you've created a parser, and want to instruct it
+ *  about the command which caused the parser to be constructed. For example,
+ *  this allows us to select a DTD which can do, say, view-source.
+ *  
+ *  @update  gess 01/04/99
+ *  @param   aContentSink -- ptr to content sink that will receive output
+ *  @return	 ptr to previously set contentsink (usually null)  
+ */
+void nsParser::SetCommand(eParserCommands aParserCommand){
+  mCommand=aParserCommand;
+}
 
 
 /**
@@ -410,18 +426,15 @@ eParseMode nsParser::GetParseMode(void){
  *  @return  
  */
 static
-PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsString& aBuffer) {
+PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
   
   //Let's start by trying the defaultDTD, if one exists...
   if(aParserContext.mDTD)
-    if(aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0))
+    if(aParserContext.mDTD->CanParse(aParserContext,aBuffer,0))
       return PR_TRUE;
 
   CSharedParserObjects& gSharedObjects=GetSharedObjects();
 
-#if 0
-  aParserContext.mSourceType="text/rtf";
-#endif
 
   aParserContext.mAutoDetectStatus=eUnknownDetect;
   PRInt32 theDTDIndex=0;
@@ -432,7 +445,7 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
   while((theDTDIndex<=gSharedObjects.mDTDDeque.GetSize()) && (aParserContext.mAutoDetectStatus!=ePrimaryDetect)){
     theDTD=(nsIDTD*)gSharedObjects.mDTDDeque.ObjectAt(theDTDIndex++);
     if(theDTD) {
-      aParserContext.mAutoDetectStatus=theDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0);
+      aParserContext.mAutoDetectStatus=theDTD->CanParse(aParserContext,aBuffer,0);
       if(eValidDetect==aParserContext.mAutoDetectStatus){
         theBestDTD=theDTD;
       }
@@ -685,15 +698,10 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
     if(eUnknownDetect==mParserContext->mAutoDetectStatus) {  
       mMajorIteration=-1; 
       mMinorIteration=-1; 
-      if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand,mParserContext->mScanner->GetBuffer())) {
+      if(PR_TRUE==FindSuitableDTD(*mParserContext,mParserContext->mScanner->GetBuffer())) {
         mParserContext->mParseMode=DetermineParseMode(*this);  
        // mParserContext->mStreamListenerState=eOnDataAvail;
-        mParserContext->mDTD->WillBuildModel( aFilename,
-                                              PRBool(0==mParserContext->mPrevContext),
-                                              mParserContext->mSourceType,
-                                              mParserContext->mParseMode,
-                                              mCommand,
-                                              mSink);
+        mParserContext->mDTD->WillBuildModel( *mParserContext,mSink);
       }//if        
     }//if
   } 
@@ -868,7 +876,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
     nsCRT::free(spec);
 
     nsScanner* theScanner=new nsScanner(theName,PR_FALSE,mCharset,mCharsetSource);
-    CParserContext* pc=new CParserContext(theScanner,aKey,aListener);
+    CParserContext* pc=new CParserContext(theScanner,aKey,mCommand,aListener);
     if(pc && theScanner) {
       pc->mMultipart=PR_TRUE;
       pc->mContextType=CParserContext::eCTURL;
@@ -889,7 +897,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aKey,eParseMode aMode){
+nsresult nsParser::Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBool aVerifyEnabled, void* aKey,eParseMode aMode){
 
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
@@ -900,10 +908,10 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
   nsInputStream input(&aStream);
     
   nsScanner* theScanner=new nsScanner(theUnknownFilename,input,mCharset,mCharsetSource);
-  CParserContext* pc=new CParserContext(theScanner,aKey,0);
+  CParserContext* pc=new CParserContext(theScanner,aKey,mCommand,0);
   if(pc && theScanner) {
     PushContext(*pc);
-    pc->mSourceType=kHTMLTextContentType;
+    pc->SetMimeType(aMimeType);
     pc->mStreamListenerState=eOnStart;  
     pc->mMultipart=PR_FALSE;
     pc->mContextType=CParserContext::eCTStream;
@@ -926,16 +934,16 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
  *
  * @update	gess5/11/98
  * @param   aSourceBuffer contains a string-full of real content
- * @param   aContentType tells us what type of content to expect in the given string
+ * @param   aMimeType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString&
-aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){ 
+aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){ 
   
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again! 
 
-#if 0 
+#if 0
     //this is only for debug purposes 
   aSourceBuffer.DebugDump(); 
 #endif 
@@ -957,14 +965,14 @@ aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
       nsIDTD *theDTD=0; 
       eAutoDetectResult theStatus=eUnknownDetect; 
 
-      if(mParserContext && (mParserContext->mSourceType==aContentType)) { 
+      if(mParserContext && (mParserContext->mMimeType==aMimeType)) { 
         mParserContext->mDTD->CreateNewInstance(&theDTD); // To fix 32263
         theStatus=mParserContext->mAutoDetectStatus; 
 
         //added this to fix bug 32022.
       } 
 
-      pc=new CParserContext(theScanner,aKey, 0,theDTD,theStatus,aLastCall); 
+      pc=new CParserContext(theScanner,aKey, mCommand,0,theDTD,theStatus,aLastCall); 
 
       if(pc && theScanner) { 
         PushContext(*pc); 
@@ -976,7 +984,7 @@ aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
 
         pc->mStreamListenerState = (pc->mMultipart) ? eOnDataAvail : eOnStop; 
         pc->mContextType=CParserContext::eCTString; 
-        pc->mSourceType=aContentType; 
+        pc->SetMimeType(aMimeType);
         mUnusedInput.Truncate(0); 
 
         //printf("Parse(string) iterate: %i",PR_FALSE); 
@@ -1007,10 +1015,10 @@ aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
  *  @update  gess 04/01/99
  *  @param   aSourceBuffer contains the content blob you're trying to insert
  *  @param   aInsertPos tells us where in the context stack you're trying to do the insertion
- *  @param   aContentType tells us what kind of stuff you're inserting
+ *  @param   aMimeType tells us what kind of stuff you're inserting
  *  @return  TRUE if valid, otherwise FALSE
  */
-PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode){
+PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,eParseMode aMode){
 
   /************************************************************************************
     This method works like this:
@@ -1043,7 +1051,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
     nsIHTMLContentSink*  theSink=0;
     nsresult theResult=NS_New_HTML_ContentSinkStream(&theSink,&theOutput,0);
     SetContentSink(theSink);
-    theResult=Parse(theBuffer,(void*)&theBuffer,aContentType,PR_FALSE,PR_TRUE);
+    theResult=Parse(theBuffer,(void*)&theBuffer,aMimeType,PR_FALSE,PR_TRUE);
     theOutput.StripWhitespace();
     if(NS_OK==theResult){
       theOutput.Cut(0,theContext.Length());
@@ -1063,7 +1071,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
  *  @param   
  *  @return  
  */
-nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode){
+nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,eParseMode aMode){
 
   nsresult result=NS_OK;
   nsAutoString  theContext;
@@ -1109,7 +1117,7 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
     //now it's time to try to build the model from this fragment
 
     mObserversEnabled=PR_FALSE; //disable observers for fragments
-    result=Parse(theBuffer,(void*)&theBuffer,aContentType,PR_FALSE,PR_TRUE);
+    result=Parse(theBuffer,(void*)&theBuffer,aMimeType,PR_FALSE,PR_TRUE);
     mObserversEnabled=PR_TRUE; //now reenable.
   }
 
@@ -1377,7 +1385,7 @@ nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
   rv = channel->GetContentType(&contentType);
   if (NS_SUCCEEDED(rv))
   {
-    mParserContext->mSourceType = contentType;
+    mParserContext->SetMimeType(contentType);
 	  nsCRT::free(contentType);
   }
   else
@@ -1583,6 +1591,13 @@ theContext->mTransferBufferSize;
     #endif 
 
           theContext->mScanner->Append(theContext->mTransferBuffer,theNumRead); 
+
+#if 0
+          int dump=0;
+          if(dump) {
+            printf("\n-----------------\n%s",theContext->mTransferBuffer);
+          }
+#endif
 
     #ifdef rickgdebug 
           theContext->mTransferBuffer[theNumRead]=0; 

@@ -175,8 +175,8 @@ class nsScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      nsresult GetIdentifier(nsSubsumeStr& aString);
-      nsresult ReadIdentifier(nsString& aString,PRBool aIgnore=PR_FALSE);
+      nsresult GetIdentifier(nsSubsumeStr& aString,PRBool allowPunct=PR_FALSE);
+      nsresult ReadIdentifier(nsString& aString,PRBool allowPunct=PR_FALSE);
       nsresult ReadNumber(nsString& aString);
       nsresult ReadWhitespace(nsString& aString);
 

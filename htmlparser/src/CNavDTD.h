@@ -165,7 +165,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
    	 *			being asked to parse).
      * @return  TRUE if this DTD parse the given type; FALSE otherwise.
      */
-    virtual eAutoDetectResult CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion);
+    virtual eAutoDetectResult CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion);
 
     /**
      * Called by the parser to initiate dtd verification of the
@@ -181,16 +181,12 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
       * The parser uses a code sandwich to wrap the parsing process. Before
       * the process begins, WillBuildModel() is called. Afterwards the parser
       * calls DidBuildModel(). 
-      * @update	gess5/18/98
-      * @param	aFilename is the name of the file being parsed.
+      * @update	rickg 03.20.2000
+      * @param	aParserContext
+      * @param	aSink
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(  nsString& aFilename,
-                                PRBool aNotifySink,
-                                nsString& aSourceType,
-                                eParseMode  aParseMode,
-                                nsString& aCommand,
-                                nsIContentSink* aSink=0);
+    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
@@ -503,6 +499,7 @@ protected:
     PRBool              mHasOpenMap;
     PRInt32             mHasOpenHead;
     PRBool              mHasOpenBody;
+    PRInt32             mHasOpenNoXXX;  //true when NOFRAMES, NOSCRIPT, NOEMBED, NOLAYER are open
     PRBool              mHadFrameset;
     PRBool              mHadBody;
     nsString            mFilename;
@@ -519,14 +516,16 @@ protected:
     nsDeque             mSharedNodes;
     nsresult            mDTDState;
     eParseMode          mParseMode;
+    eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
+    eParserDocType      mDocType;
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
     nsAutoString        mScratch;  //used for various purposes; non-persistent
     PRBool              mStyleHandlingEnabled;
-    PRBool              mIsText;
     PRBool              mRequestedHead;
     PRBool              mIsFormContainer;
+    nsAutoString        mMimeType;  
 
 #ifdef NS_DEBUG
     PRInt32 gNodeCount;

@@ -49,8 +49,9 @@ public:
     enum {eTransferBufferSize=4096};
     enum eContextType {eCTNone,eCTURL,eCTString,eCTStream};
 
-   CParserContext( nsScanner* aScanner, 
+   CParserContext(  nsScanner* aScanner,
                     void* aKey=0, 
+                    eParserCommands aCommand=eViewNormal,
                     nsIStreamObserver* aListener=0, 
                     nsIDTD *aDTD=0, 
                     eAutoDetectResult aStatus=eUnknownDetect, 
@@ -60,7 +61,8 @@ public:
 
 
     ~CParserContext();
-                          
+
+    void  SetMimeType(const nsString& aMimeType);
 
     CParserContext*     mPrevContext;
     eParseMode          mParseMode;
@@ -68,9 +70,11 @@ public:
     PRBool              mMultipart;
     eContextType        mContextType;
     eAutoDetectResult   mAutoDetectStatus;
+    eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
     nsIChannel*         mChannel; // provided by necko to differnciate different input streams
 
-    nsString            mSourceType;
+    nsAutoString        mMimeType;
+    eParserDocType      mDocType;
 
     nsScanner*          mScanner;
     nsIDTD*             mDTD;

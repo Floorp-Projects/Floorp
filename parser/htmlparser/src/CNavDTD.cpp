@@ -134,7 +134,12 @@ NS_IMPL_RELEASE(CNavDTD)
  *  @param   
  *  @return  
  */
-CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mSharedNodes(0), mScratch("") {
+CNavDTD::CNavDTD() : nsIDTD(), 
+    mMisplacedContent(0), 
+    mSkippedContent(0), 
+    mSharedNodes(0), 
+    mScratch(""),
+    mMimeType("") {
   NS_INIT_REFCNT();
   mSink = 0; 
   mParser=0;       
@@ -144,6 +149,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mHasOpenHead=0;
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
+  mHasOpenNoXXX=0;
   mHeadContext=new nsDTDContext();
   mBodyContext=new nsDTDContext();
   mFormContext=0;
@@ -154,7 +160,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mExpectedCRC32=0;
   mDTDState=NS_OK;
   mStyleHandlingEnabled=PR_TRUE;
-  mIsText=PR_FALSE;
+  mDocType=eHTMLText;
   mRequestedHead=PR_FALSE;
   mIsFormContainer=PR_FALSE;
 
@@ -365,23 +371,23 @@ PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
+eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
 
-  if(aCommand.Equals(kViewSourceCommand)) {
-    if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
+  if(eViewSource==aParserContext.mParserCommand) {
+    if(PR_TRUE==aParserContext.mMimeType.Equals(kPlainTextContentType)) {
       result=ePrimaryDetect;
     }
-    else if(aContentType.Equals(kRTFTextContentType)){ 
+    else if(aParserContext.mMimeType.Equals(kRTFTextContentType)){ 
       result=ePrimaryDetect;
     }
   }
   else {
-    if(PR_TRUE==aContentType.Equals(kHTMLTextContentType)) {
+    if(PR_TRUE==aParserContext.mMimeType.Equals(kHTMLTextContentType)) {
       result=ePrimaryDetect;
     }
-    else if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
+    else if(PR_TRUE==aParserContext.mMimeType.Equals(kPlainTextContentType)) {
       result=ePrimaryDetect;
     }
     else {
@@ -389,8 +395,8 @@ eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, 
       PRBool theBufHasXML=PR_FALSE;
       if(BufferContainsHTML(aBuffer,theBufHasXML)){
         result = eValidDetect ;
-        if(0==aContentType.Length()) {
-          aContentType=kHTMLTextContentType;
+        if(0==aParserContext.mMimeType.Length()) {
+          aParserContext.SetMimeType(kHTMLTextContentType);
           result = (theBufHasXML) ? eValidDetect : ePrimaryDetect;
         }
       }
@@ -399,37 +405,41 @@ eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, 
   return result;
 }
 
-
 /**
- * 
- * @update  gess5/18/98
- * @param 
- * @return
- */
-nsresult CNavDTD::WillBuildModel(nsString& aFilename,
-                                 PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,
-                                 nsString& aCommand,nsIContentSink* aSink){
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	rickg 03.20.2000
+  * @param	aParserContext
+  * @param	aSink
+  * @return	error code (almost always 0)
+  */
+nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink) {
   nsresult result=NS_OK;
 
-  mFilename=aFilename;
+  mFilename=aParserContext.mScanner->GetFilename();
   mHasOpenBody=PR_FALSE;
   mHadBody=PR_FALSE;
   mHadFrameset=PR_FALSE;
   mLineNumber=1;
   mHasOpenScript=PR_FALSE;
-  mParseMode=aParseMode;
+  mHasOpenNoXXX=0;
+  mParseMode=aParserContext.mParseMode;
+  mParserCommand=aParserContext.mParserCommand;
   mStyleHandlingEnabled=(eParseMode_quirks==mParseMode);
   mRequestedHead=PR_FALSE;
+  mMimeType=aParserContext.mMimeType;
     
-  if((aNotifySink) && (aSink)) {
+  if((!aParserContext.mPrevContext) && (aSink)) {
 
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
 
+
+    mDocType=aParserContext.mDocType;
+    
     mTokenRecycler=0;
     mStyleHandlingEnabled=PR_TRUE;
-
-    mIsText=aSourceType.Equals(kPlainTextContentType) || aSourceType.Equals(kRTFTextContentType);
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
@@ -478,7 +488,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
           CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,"html");
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
 
-          if(mIsText) {
+          if(ePlainText==mDocType) {
               //we do this little trick for text files, in both normal and viewsource mode...
             CStartToken *theToken2=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre);
             HandleStartToken(theToken2); 
@@ -695,7 +705,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         case eHTMLTag_script:
         case eHTMLTag_markupDecl:
           break;  // simply pass these through to token handler without further ado...
-                  // Userdefined tags shouldn't just pass through. -- Fix for 31694,31940
         case eHTMLTag_newline:
         case eHTMLTag_whitespace:
           if(mMisplacedContent.GetSize()<=0) // fix for bugs 17017,18308,23765, and 24275
@@ -1376,7 +1385,14 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           aToken->SetTypeID(theChildTag=eHTMLTag_img);
           break;
 
+        case eHTMLTag_noframes:
+        case eHTMLTag_nolayer:
+        case eHTMLTag_noembed:
+          mHasOpenNoXXX++;
+          break;
+
         case eHTMLTag_noscript:
+          mHasOpenNoXXX++;
           isTokenHandled=PR_TRUE; // XXX - Throwing NOSCRIPT to the floor...yet another time..
           break;
 
@@ -1608,6 +1624,13 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
     case eHTMLTag_html:
       StripWSFollowingTag(theChildTag,mTokenizer,mTokenRecycler,mLineNumber);
       break;
+
+    case eHTMLTag_noframes:
+    case eHTMLTag_nolayer:
+    case eHTMLTag_noembed:
+    case eHTMLTag_noscript:
+      mHasOpenNoXXX--;
+      //and allow to fall through...
 
     default:
      {
@@ -2688,9 +2711,9 @@ nsresult CNavDTD::CloseBody(const nsIParserNode *aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
-  // Include TD and TH to fix bug 29735.
-  static eHTMLTags gTableElements[]={eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th,
-                                     eHTMLTag_col,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup};
+  static eHTMLTags gTableElements[]={eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,
+                                     eHTMLTag_td,eHTMLTag_th,eHTMLTag_col,
+                                     eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup};
   if(mHasOpenForm)
     CloseForm(aNode);
     
@@ -3052,7 +3075,14 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
         //  (aClosedByStartTag) ? gHTMLElements[aTarget].HasSpecialProperty(kNoStyleLeaksOut) 
         //                      :  gHTMLElements[theParent].HasSpecialProperty(kNoStyleLeaksOut);
 
-        if(theTagIsStyle) {
+        
+          /*************************************************************
+            I've added a check (mhasOpenNoXXX) below to prevent residual
+            style handling from getting invoked in these cases. 
+            This fixes bug 25214.
+           *************************************************************/
+
+        if(theTagIsStyle && (0==mHasOpenNoXXX)) {
 
           PRBool theTargetTagIsStyle=nsHTMLElement::IsResidualStyleTag(aTarget);
 
@@ -3402,11 +3432,11 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
       }
     }  
   }
-
   return result;
 }
 
  
+
 
 /**
  *  This method gets called to create a valid context stack
@@ -3464,7 +3494,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
 nsresult CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,mIsText);
+    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,mDocType,mParserCommand);
   }
   aTokenizer=mTokenizer;
   return result;

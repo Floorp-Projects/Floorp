@@ -1901,6 +1901,20 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
       }
     }
   }
+  else if(IsMemberOf(kList)){
+    while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
+      eHTMLTags theTag=aContext.TagAt(theIndex);
+      if(theTag!=mTagID) {
+        if(!CanContain(theTag)) {
+          break; //it's not something I can close
+        }
+      }
+      else {
+        result=theTag; //stop because you just found yourself on the stack
+        break; 
+      }
+    }
+  }
   else if(IsResidualStyleTag(mTagID)){
 
       //we intentionally make 2 passes: 
@@ -1947,6 +1961,12 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
     TagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();
     if(theCloseTags){
       if(FindTagInSet(mTagID,theCloseTags->mTags,theCloseTags->mCount))
+        return PR_FALSE;
+    }
+
+    if(gHTMLElements[aChild].mExcludableParents) {
+      TagList* theParents=gHTMLElements[aChild].mExcludableParents;
+      if(FindTagInSet(mTagID,theParents->mTags,theParents->mCount))
         return PR_FALSE;
     }
     

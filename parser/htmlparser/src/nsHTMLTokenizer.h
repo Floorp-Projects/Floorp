@@ -54,7 +54,9 @@
 
 CLASS_EXPORT_HTMLPARS nsHTMLTokenizer : public nsITokenizer {
 public:
-          nsHTMLTokenizer(PRInt32 aParseMode=eParseMode_quirks,PRBool aPlainText=PR_FALSE);
+          nsHTMLTokenizer( PRInt32 aParseMode=eParseMode_quirks,
+                           eParserDocType aDocType=eHTMLText,
+                           eParserCommands aCommand=eViewNormal);
   virtual ~nsHTMLTokenizer();
 
           NS_DECL_ISUPPORTS
@@ -80,7 +82,7 @@ protected:
   virtual nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner);
+  virtual nsresult ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner,nsString& aLeadingWS);
   virtual nsresult ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
@@ -93,14 +95,19 @@ protected:
 
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,CTokenRecycler* aRecycler);
 
-  nsDeque mTokenDeque;
-  PRBool  mDoXMLEmptyTags;
-  PRInt32 mParseMode;
-  PRBool  mPlainText;
-  PRBool  mRecordTrailingContent;
+  nsDeque         mTokenDeque;
+  PRBool          mDoXMLEmptyTags;
+  PRInt32         mParseMode;
+  eParserDocType  mDocType;
+  PRBool          mRecordTrailingContent;
+  eParserCommands mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
+  nsAutoString    mScratch;
 };
 
-extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,PRInt32 aMode,PRBool aPlaintext);
+extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(  nsITokenizer** aInstancePtrResult,
+                                                  PRInt32 aMode,
+                                                  eParserDocType aDocType,
+                                                  eParserCommands aCommand);
 
 #endif
 

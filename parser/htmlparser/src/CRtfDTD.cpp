@@ -341,31 +341,36 @@ nsresult CRtfDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult CRtfDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
+eAutoDetectResult CRtfDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
-  if(aContentType.Equals(kRTFTextContentType)) {
-    result=ePrimaryDetect;
-  }
-  else if(kNotFound!=aBuffer.Find(kRTFDocHeader)) {
-    result=ePrimaryDetect;
+
+  if(eViewSource!=aParserContext.mParserCommand) {
+    if(aParserContext.mMimeType.Equals(kRTFTextContentType)) {
+      result=ePrimaryDetect;
+    }
+    else if(kNotFound!=aBuffer.Find(kRTFDocHeader)) {
+      result=ePrimaryDetect;
+    }
   }
   return result;
 }
 
 /**
- * 
- * @update  gess 1/31/00
- * @param 
- * @return
- */
-NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
-                                      nsString& aSourceType,eParseMode aParseMode,
-                                      nsString& aCommand,nsIContentSink* aSink){
+  * The parser uses a code sandwich to wrap the parsing process. Before
+  * the process begins, WillBuildModel() is called. Afterwards the parser
+  * calls DidBuildModel(). 
+  * @update	rickg 03.20.2000
+  * @param	aParserContext
+  * @param	aSink
+  * @return	error code (almost always 0)
+  */
+nsresult CRtfDTD::WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink){
+
   nsresult result=NS_OK;
   mGroupCount=0;
 
 
-  if((aNotifySink) && (aSink)) {
+  if((!aParserContext.mPrevContext) && (aSink)) {
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);

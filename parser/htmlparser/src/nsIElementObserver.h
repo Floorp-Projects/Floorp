@@ -17,13 +17,13 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Rick Gessner
  */
 
 
 /**
  * MODULE NOTES:
- * @update  ftang 4/20/99
+ * @update  rickg 03.23.2000  //removed unused NS_PARSER_SUBJECT and predecl of nsString
  * 
  */
 
@@ -34,15 +34,11 @@
 #include "prtypes.h"
 #include "nsHTMLTokens.h"
 
-class nsString;
 
 // {4672AA04-F6AE-11d2-B3B7-00805F8A6670}
 #define NS_IELEMENTOBSERVER_IID      \
 { 0x4672aa04, 0xf6ae, 0x11d2, { 0xb3, 0xb7, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
-
-#define NS_PARSER_SUBJECT "htmlparser"
-#define NS_XMLPARSER_SUBJECT "xmlparser"
 
 class nsIElementObserver : public nsISupports {
 public:
