@@ -854,6 +854,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   mNativeDragTarget = nsnull;
   mIsTopWidgetWindow = PR_FALSE;
+  mLastKeyboardLayout = 0;
 
   sInstanceCount++;
 
@@ -866,6 +867,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 
 HKL nsWindow::gKeyboardLayout = 0;
 UINT nsWindow::gCurrentKeyboardCP = 0;
+PRBool nsWindow::gSwitchKeyboardLayout = PR_FALSE;
 
 //-------------------------------------------------------------------------
 //
@@ -1577,6 +1579,11 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
                                                  &trimOnMinimize))
             && !trimOnMinimize)
           gTrimOnMinimize = 0;
+
+        PRBool switchKeyboardLayout;
+        if (NS_SUCCEEDED(prefBranch->GetBoolPref("intl.keyboard.per_window_layout",
+                                                 &switchKeyboardLayout)))
+          gSwitchKeyboardLayout = switchKeyboardLayout;
       }
     }
   }
@@ -4184,6 +4191,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         if (WA_INACTIVE == fActive) {
           gJustGotDeactivate = PR_TRUE;
+          if (mIsTopWidgetWindow)
+            mLastKeyboardLayout = gKeyboardLayout;
         } else {
           gJustGotActivate = PR_TRUE;
           nsMouseEvent event(NS_MOUSE_ACTIVATE, this);
@@ -4198,6 +4207,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             *aRetValue = MA_ACTIVATE;
           else
             *aRetValue = MA_NOACTIVATE;
+
+          if (gSwitchKeyboardLayout && mLastKeyboardLayout)
+            ActivateKeyboardLayout(mLastKeyboardLayout, 0);
         }
       }
       break;
