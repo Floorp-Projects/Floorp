@@ -998,8 +998,12 @@ endif
 endif # OS2
 	chmod +x $@
 ifndef NO_COMPONENT_LINK_MAP
+ifndef MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS
+ifndef MOZ_DEBUG
 ifeq ($(OS_ARCH)_$(IS_COMPONENT),Darwin_1)
 	nmedit -s $(BUILD_TOOLS)/gnu-ld-scripts/components-export-list $@
+endif
+endif
 endif
 endif
 ifdef ENABLE_STRIP
