@@ -238,21 +238,15 @@ public:
   	nsCppSharedAllocator<PRUnichar> shared_allocator;
   	shared_allocator.deallocate(str, 0 /*we never new or kept the size*/);
   }
-#if 0
-  /// Compute a hashcode for a C string
-  static PRUint32 HashValue(const char* s1);
 
-  /// Same as above except that we return the length in s1len
-  static PRUint32 HashValue(const char* s1, PRUint32* s1len);
+  // Computes the hashcode for a c-string, returns the string length as an added bonus.
+  static PRUint32 HashCode(const char* str, PRUint32* resultingStrLen = nsnull);
 
-  /// Compute a hashcode for a ucs2 string
-  static PRUint32 HashValue(const PRUnichar* s1);
+  // Computes the hashcode for a ucs2 string, returns the string length as an added bonus.
+  static PRUint32 HashCode(const PRUnichar* str, PRUint32* resultingStrLen = nsnull);
 
-  /// Same as above except that we return the length in s1len
-  static PRUint32 HashValue(const PRUnichar* s1, PRUint32* s1len);
-#endif
-  static PRUint32 HashCode(const char* str, PRUint32 strLen);
-  static PRUint32 HashCode(const PRUnichar* str, PRUint32 strLen);
+  // Computes the hashcode for a buffer with a specified length.
+  static PRUint32 BufferHashCode(const char* str, PRUint32 strLen);
 
   /// String to integer.
   static PRInt32 atoi( const PRUnichar *string );

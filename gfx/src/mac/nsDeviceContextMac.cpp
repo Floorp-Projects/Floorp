@@ -767,7 +767,7 @@ PRUint32 FontNameKey::HashCode(void) const
 {
   nsString str;
   mString.ToLowerCase(str);
-	return nsCRT::HashCode(str.GetUnicode(), str.Length());
+	return nsCRT::HashCode(str.GetUnicode());
 }
 
 PRBool FontNameKey::Equals(const nsHashKey *aKey) const

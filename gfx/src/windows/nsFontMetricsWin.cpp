@@ -454,7 +454,7 @@ HashKey(const void* aString)
 {
   const nsString* str = (const nsString*)aString;
   return (PLHashNumber)
-    nsCRT::HashCode(str->GetUnicode(), str->Length());
+    nsCRT::HashCode(str->GetUnicode());
 }
 
 static PRIntn
@@ -2113,7 +2113,7 @@ HashKeyFontWeight(const void* aFontWeightEntry)
 {
   const nsString* string = &((const nsFontWeightEntry*) aFontWeightEntry)->mFontName;
   return (PLHashNumber)
-    nsCRT::HashCode(string->GetUnicode(), string->Length());
+    nsCRT::HashCode(string->GetUnicode());
 }
 
 static PRIntn
