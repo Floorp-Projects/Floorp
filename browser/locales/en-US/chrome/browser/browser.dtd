@@ -184,18 +184,8 @@
 <!ENTITY goHomeCmd.accesskey "h">
 <!ENTITY earlierHistory.label "Earlier History">
 
-<!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey     "H"> 
-<!-- LOCALIZATION NOTE some localizations of Windows (ex:french, german) use "?"
-                       for the help button in the menubar but Gnome does not.   -->
-<!ENTITY helpMenuWin.label      "Help"> 
-<!ENTITY helpMenuWin.accesskey  "H"> 
-
 <!ENTITY releaseCmd.accesskey "R">
 <!ENTITY releaseCmd.label     "Release Notes">
-
-<!ENTITY aboutCmd.label         "About &brandFullName;">
-<!ENTITY aboutCmd.accesskey       "A">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.accesskey             "d">
@@ -340,12 +330,6 @@
 <!ENTITY closeCmd.label                 "Close">  
 <!ENTITY closeCmd.key                   "W">  
 <!ENTITY closeCmd.accesskey             "C">
-
-<!ENTITY minimizeWindow.key "m">
-<!ENTITY minimizeWindow.label "Minimize">
-<!ENTITY bringAllToFront.label "Bring All to Front">
-<!ENTITY zoomWindow.label "Zoom">
-<!ENTITY windowMenu.label "Window">
 
 <!ENTITY pageStyleMenu.label "Page Style">
 <!ENTITY pageStyleMenu.accesskey "y">

@@ -49,6 +49,8 @@
 
 #ifdef XP_MACOSX
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#else
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 #endif
 
 # All DTD information is stored in a separate file so that it can be shared by

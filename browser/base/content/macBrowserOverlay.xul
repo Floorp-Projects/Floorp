@@ -49,6 +49,8 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+
 # All JS files that browser.xul wishes to include *must* go into the browser-scripts.inc file
 # so that they can be shared by hiddenWindow.xul.
 #include browser-scripts.inc

@@ -164,11 +164,6 @@
     <command id="Tools:Extensions" oncommand="BrowserOpenExtensions('extensions');"/>
     <command id="Tools:Themes" oncommand="BrowserOpenExtensions('themes');"/>
     <command id="Tools:Sanitize" oncommand="gSanitizeListener.sanitize(window || null);"/>
-    
-#ifdef XP_MACOSX
-    <command id="minimizeWindow" label="&minimizeWindow.label;" oncommand="window.minimize();" />
-    <command id="zoomWindow" label="&zoomWindow.label;" oncommand="zoomWindow();" />
-#endif
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
@@ -329,10 +324,12 @@
     <key id="key_textZoomReset"   key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
     
     <key id="key_switchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_switchTextDirection" modifiers="accel,shift" />
-#ifdef XP_MACOSX
-    <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
-#endif
 
     <key id="key_sanitize" command="Tools:Sanitize" keycode="VK_DELETE" modifiers="accel,shift"/>
   </keyset>
 
+# Used by baseMenuOverlay
+#ifdef XP_MACOSX
+  <commandset id="baseMenuCommandSet" />
+#endif
+  <keyset id="baseMenuKeyset" />

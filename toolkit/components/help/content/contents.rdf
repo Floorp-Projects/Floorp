@@ -51,23 +51,4 @@
     <RDF:Description RDF:about="urn:mozilla:package:help"
         chrome:name="help" />
 
-# Overlays Points
-    <RDF:Seq RDF:about="urn:mozilla:overlays">
-#ifdef MOZ_THUNDERBIRD
-        <RDF:li RDF:resource="chrome://messenger/content/mailWindowOverlay.xul"/>
-#elifdef MOZ_PHOENIX
-        <RDF:li RDF:resource="chrome://browser/content/browser.xul"/>
-#endif
-    </RDF:Seq>
-
-# Overlays
-#ifdef MOZ_THUNDERBIRD
-    <RDF:Seq RDF:about="chrome://messenger/content/mailWindowOverlay.xul">
-        <RDF:li>chrome://help/content/helpMenuOverlay.xul</RDF:li>
-    </RDF:Seq>
-#elifdef MOZ_PHOENIX
-    <RDF:Seq RDF:about="chrome://browser/content/browser.xul">
-        <RDF:li>chrome://help/content/helpMenuOverlay.xul</RDF:li>
-    </RDF:Seq>
-#endif
 </RDF:RDF>

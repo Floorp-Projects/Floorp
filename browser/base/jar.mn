@@ -28,6 +28,7 @@ browser.jar:
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
 *       content/browser/web-panels.js                 (content/web-panels.js)
 *       content/browser/web-panels.xul                (content/web-panels.xul)
+*       content/browser/baseMenuOverlay.xul           (content/baseMenuOverlay.xul)
 #ifndef MOZ_USE_OFFICIAL_BRANDING
   content/branding/contents.rdf                  (branding/contents.rdf)
   content/branding/about.png                     (branding/about.png)
