@@ -97,7 +97,7 @@ CPPSRCS=attendee.cpp bydmgntr.cpp bydwgntr.cpp \
     tmbevent.cpp tzpart.cpp unistrto.cpp uri.cpp valarm.cpp \
     vevent.cpp vfrbsy.cpp \
     vjournal.cpp vtimezne.cpp vtodo.cpp
-REQUIRES=julian nls nspr
+REQUIRES=julian nls nspr raptor
 CPP_OBJS=.\$(OBJDIR)\attendee.obj \
     .\$(OBJDIR)\bydmgntr.obj \
     .\$(OBJDIR)\bydwgntr.obj .\$(OBJDIR)\bydygntr.obj \
@@ -122,7 +122,7 @@ CPP_OBJS=.\$(OBJDIR)\attendee.obj \
     .\$(OBJDIR)\valarm.obj .\$(OBJDIR)\vevent.obj .\$(OBJDIR)\vfrbsy.obj \
     .\$(OBJDIR)\vjournal.obj .\$(OBJDIR)\vtimezne.obj \
     .\$(OBJDIR)\vtodo.obj
-LINCS=-I$(XPDIST)\public\julian -I$(XPDIST)\public\nls \
+LINCS=-I$(XPDIST)\public\julian -I$(XPDIST)\public\nls -I$(XPDIST)\public\raptor -I$(XPDIST)\public\xpcom \
     -I$(XPDIST)\public\nspr
 
 

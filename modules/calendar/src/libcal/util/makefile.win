@@ -56,7 +56,7 @@ CPP_OBJS=.\$(OBJDIR)\jatom.obj .\$(OBJDIR)\jlog.obj \
     .\$(OBJDIR)\jlogerr.obj .\$(OBJDIR)\jlogvctr.obj \
     .\$(OBJDIR)\julnstr.obj \
     .\$(OBJDIR)\ptrarray.obj .\$(OBJDIR)\uidrgntr.obj
-LINCS=-I$(XPDIST)\public\julian -I$(XPDIST)\public\nls \
+LINCS=-I$(XPDIST)\public\julian -I$(XPDIST)\public\nls -I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
     -I$(XPDIST)\public\java -I$(XPDIST)\public\security
 
 include <$(NS_DEPTH)/config/rules.mak>
