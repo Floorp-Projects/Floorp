@@ -38,7 +38,7 @@ public:
                     nsReflowStatus&      aStatus);
 
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
-		       nsDidReflowStatus aStatus);
+                       nsDidReflowStatus aStatus);
 
 protected:
   virtual ~nsObjectFrame();
