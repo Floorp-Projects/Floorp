@@ -21,12 +21,9 @@
 *   william@dell.wisner.name (William Dell Wisner)
 */
 
-#import <Cocoa/Cocoa.h>
-#import <PreferencePanes/NSPreferencePane.h>
+#import <PreferencePaneBase.h>
 
-class nsIPref;
-
-@interface OrgMozillaChimeraPreferenceNavigation : NSPreferencePane
+@interface OrgMozillaChimeraPreferenceNavigation : PreferencePaneBase
 {
   // IBOutlet NSButton *buttonSystemPreferences;
 	IBOutlet NSTextField *textFieldHomePage;
@@ -41,8 +38,7 @@ class nsIPref;
   
   IBOutlet NSSlider *sliderHistoryDays;
   IBOutlet NSTextField *textFieldHistoryDays;
-  
-  nsIPref* 				mPrefService;					// strong, but can't use a comptr here
+
 }
 
 - (IBAction)openSystemInternetPanel:(id)sender;
@@ -54,13 +50,5 @@ class nsIPref;
 
 - (NSString*)getSystemHomePage;
 - (NSString*)getCurrentHomePage;
-
-- (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
-- (BOOL)getBooleanPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
-- (int)getIntPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
-
-- (void)setPref: (const char*)prefName toString:(NSString*)value;
-- (void)setPref: (const char*)prefName toBoolean:(BOOL)value;
-- (void)setPref: (const char*)prefName toInt:(int)value;
 
 @end
