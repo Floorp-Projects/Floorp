@@ -809,6 +809,7 @@ public:
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType);  
   NS_IMETHOD CancelAllReflowCommands();
+  NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
   NS_IMETHOD FlushPendingNotifications();
 
   /**
@@ -4187,9 +4188,36 @@ PresShell::HandlePostedAttributeChanges()
 }
 
 NS_IMETHODIMP 
+PresShell::IsSafeToFlush(PRBool& aIsSafeToFlush)
+{
+  aIsSafeToFlush = PR_TRUE;
+
+  if (mIsReflowing) {
+    // Not safe if we are reflowing
+    aIsSafeToFlush = PR_FALSE;
+  } else {
+    // Not safe if we are painting
+    nsCOMPtr<nsIViewManager> viewManager;
+    nsresult rv = GetViewManager(getter_AddRefs(viewManager));
+    if (NS_SUCCEEDED(rv) && (nsnull != viewManager)) {
+      PRBool isPainting = PR_FALSE;
+      viewManager->IsPainting(isPainting);
+      if (isPainting) {
+        aIsSafeToFlush = PR_FALSE;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
 PresShell::FlushPendingNotifications()
 {
-  if (!mIsReflowing) {
+  PRBool isSafeToFlush;
+  IsSafeToFlush(isSafeToFlush);
+
+  if (isSafeToFlush) {
     ProcessReflowCommands(PR_FALSE);
   }
 
