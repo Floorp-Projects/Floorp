@@ -341,7 +341,7 @@ public:
 
   typedef void (*CallChildFunc)(nsIMarkupDocumentViewer* aViewer,
                                 void* aClosure);
-  nsresult CallChildren(CallChildFunc aFunc, void* aClosure);
+  void CallChildren(CallChildFunc aFunc, void* aClosure);
 
   // nsIDocumentViewerPrint Printing Methods
   NS_DECL_NSIDOCUMENTVIEWERPRINT
@@ -2268,7 +2268,7 @@ NS_IMETHODIMP DocumentViewerImpl::SetAllowPlugins(PRBool aAllowPlugins)
    return NS_OK;
 }
 
-nsresult
+void
 DocumentViewerImpl::CallChildren(CallChildFunc aFunc, void* aClosure)
 {
   nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
@@ -2297,7 +2297,6 @@ DocumentViewerImpl::CallChildren(CallChildFunc aFunc, void* aClosure)
       }
     }
   }
-  return NS_OK;
 }
 
 struct TextZoomInfo
@@ -2315,6 +2314,18 @@ SetChildTextZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
 NS_IMETHODIMP
 DocumentViewerImpl::SetTextZoom(float aTextZoom)
 {
+  if (mViewManager) {
+    mViewManager->BeginUpdateViewBatch();
+  }
+      
+  // Set the text zoom on all children of mContainer (even if our zoom didn't
+  // change, our children's zoom may be different, though it would be unusual).
+  // Do this first, in case kids are auto-sizing and post reflow commands on
+  // our presshell (which should be subsumed into our own style change reflow).
+  struct TextZoomInfo textZoomInfo = { aTextZoom };
+  CallChildren(SetChildTextZoom, &textZoomInfo);
+
+  // Now change our own zoom
   if (mDeviceContext) {
     float oldTextZoom = 1.0;  // just in case mDeviceContext doesn't implement
     // Don't reflow if there's no change in the textZoom.
@@ -2325,11 +2336,11 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
     }
   }
 
-  // now set the text zoom on all children of mContainer (even if our zoom
-  // didn't change, our children's zoom may be different, though it would
-  // be unusual).
-  struct TextZoomInfo textZoomInfo = { aTextZoom };
-  return CallChildren(SetChildTextZoom, &textZoomInfo);
+  if (mViewManager) {
+    mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2359,7 +2370,8 @@ DocumentViewerImpl::SetAuthorStyleDisabled(PRBool aStyleDisabled)
   if (mPresShell) {
     mPresShell->SetAuthorStyleDisabled(aStyleDisabled);
   }
-  return CallChildren(SetChildAuthorStyleDisabled, &aStyleDisabled);
+  CallChildren(SetChildAuthorStyleDisabled, &aStyleDisabled);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2404,8 +2416,8 @@ DocumentViewerImpl::SetDefaultCharacterSet(const nsACString& aDefaultCharacterSe
 {
   mDefaultCharacterSet = aDefaultCharacterSet;  // this does a copy of aDefaultCharacterSet
   // now set the default char set on all children of mContainer
-  return CallChildren(SetChildDefaultCharacterSet,
-                      (void*) &aDefaultCharacterSet);
+  CallChildren(SetChildDefaultCharacterSet, (void*) &aDefaultCharacterSet);
+  return NS_OK;
 }
 
 // XXX: SEMANTIC CHANGE!
@@ -2429,7 +2441,8 @@ DocumentViewerImpl::SetForceCharacterSet(const nsACString& aForceCharacterSet)
 {
   mForceCharacterSet = aForceCharacterSet;
   // now set the force char set on all children of mContainer
-  return CallChildren(SetChildForceCharacterSet, (void*) &aForceCharacterSet);
+  CallChildren(SetChildForceCharacterSet, (void*) &aForceCharacterSet);
+  return NS_OK;
 }
 
 // XXX: SEMANTIC CHANGE!
@@ -2476,8 +2489,8 @@ NS_IMETHODIMP
 DocumentViewerImpl::SetPrevDocCharacterSet(const nsACString& aPrevDocCharacterSet)
 {
   mPrevDocCharacterSet = aPrevDocCharacterSet;  
-  return CallChildren(SetChildPrevDocCharacterSet,
-                      (void*) &aPrevDocCharacterSet);
+  CallChildren(SetChildPrevDocCharacterSet, (void*) &aPrevDocCharacterSet);
+  return NS_OK;
 }
 
 
@@ -2492,8 +2505,9 @@ DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharacterSetSource)
 {
   mHintCharsetSource = aHintCharacterSetSource;
   // now set the hint char set source on all children of mContainer
-  return CallChildren(SetChildHintCharacterSetSource,
+  CallChildren(SetChildHintCharacterSetSource,
                       (void*) aHintCharacterSetSource);
+  return NS_OK;
 }
 
 static void
@@ -2508,7 +2522,8 @@ DocumentViewerImpl::SetHintCharacterSet(const nsACString& aHintCharacterSet)
 {
   mHintCharset = aHintCharacterSet;
   // now set the hint char set on all children of mContainer
-  return CallChildren(SetChildHintCharacterSet, (void*) &aHintCharacterSet);
+  CallChildren(SetChildHintCharacterSet, (void*) &aHintCharacterSet);
+  return NS_OK;
 }
 
 static void
