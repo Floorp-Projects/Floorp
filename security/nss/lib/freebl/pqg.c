@@ -34,7 +34,7 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-1.
  *
- * $Id: pqg.c,v 1.5 2000/09/29 04:03:34 nelsonb%netscape.com Exp $
+ * $Id: pqg.c,v 1.6 2001/01/18 16:39:10 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -48,8 +48,9 @@
 #include "mplogic.h"
 #include "secmpi.h"
 
-#define MAX_ITERATIONS 5  /* Maximum number of iterations of primegen */
-#define NUMITER        40 /* Number iterations for primality tests    */
+#define MAX_ITERATIONS 600  /* Maximum number of iterations of primegen */
+#define PQG_Q_PRIMALITY_TESTS 18 /* from HAC table 4.4 */
+#define PQG_P_PRIMALITY_TESTS 5  /* from HAC table 4.4 */
 
  /* XXX to be replaced by define in blapit.h */
 #define BITS_IN_Q 160
@@ -469,7 +470,7 @@ step_1:
     ** "will give an acceptable probability of error."
     */
     /*CHECK_SEC_OK( prm_RabinTest(&Q, &passed) );*/
-    err = mpp_pprime(&Q, 40);
+    err = mpp_pprime(&Q, PQG_Q_PRIMALITY_TESTS);
     passed = (err == MP_YES) ? SECSuccess : SECFailure;
     /* ******************************************************************
     ** Step 5. "If q is not prime, goto step 1."
@@ -509,7 +510,7 @@ step_7:
     ** "Perform a robust primality test on p."
     */
     /*CHECK_SEC_OK( prm_RabinTest(&P, &passed) );*/
-    err = mpp_pprime(&P, 40);
+    err = mpp_pprime(&P, PQG_P_PRIMALITY_TESTS);
     passed = (err == MP_YES) ? SECSuccess : SECFailure;
     /* ******************************************************************
     ** Step 12. "If p passes the test performed in step 11, go to step 15."
@@ -618,9 +619,9 @@ PQG_VerifyParams(const PQGParams *params,
     CHECK_MPI_OK( mp_mod(&P, &Q, &r) );
     CHECKPARAM( mp_cmp_d(&r, 1) == 0 );
     /* 5.  Q is prime */
-    CHECKPARAM( mpp_pprime(&Q, NUMITER) == MP_YES );
+    CHECKPARAM( mpp_pprime(&Q, PQG_Q_PRIMALITY_TESTS) == MP_YES );
     /* 6.  P is prime */
-    CHECKPARAM( mpp_pprime(&P, NUMITER) == MP_YES );
+    CHECKPARAM( mpp_pprime(&P, PQG_P_PRIMALITY_TESTS) == MP_YES );
     /* Steps 7-12 are done only if the optional PQGVerify is supplied. */
     if (!vfy) goto cleanup;
     /* 7.  counter < 4096 */
