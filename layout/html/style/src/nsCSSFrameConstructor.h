@@ -29,6 +29,8 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleContext.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIXBLService.h"
+#include "nsIServiceManager.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -43,12 +45,15 @@ class nsVoidArray;
 class nsIFrameManager;
 class nsFrameConstructorState;
 class nsIDOMHTMLSelectElement;
-class nsIXBLService;
 
 class nsCSSFrameConstructor : public nsIStyleFrameConstruction, public nsICSSFrameConstructor {
 public:
   nsCSSFrameConstructor(void);
   virtual ~nsCSSFrameConstructor(void);
+
+  // Maintain global objects - gXBLService
+  static nsresult InitGlobals() { return CallGetService("@mozilla.org/xbl;1", &gXBLService); }
+  static void ReleaseGlobals() { NS_IF_RELEASE(gXBLService); }
 
 private: 
   // These are not supported and are not implemented! 
@@ -950,6 +955,8 @@ protected:
   PRBool              mHasGfxScrollbars;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
+
+  static nsIXBLService * gXBLService;
 };
 
 #endif /* nsCSSFrameConstructor_h___ */

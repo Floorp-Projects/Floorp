@@ -147,6 +147,9 @@
 
 class nsIWebShell;
 
+// Global object maintenance
+nsIXBLService * nsXULElement::gXBLService = nsnull;
+
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
@@ -753,8 +756,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))){
       nsCOMPtr<nsIAtom> tag;
       PRInt32 dummy;
-      nsCOMPtr<nsIXBLService> xblService = 
-               do_GetService("@mozilla.org/xbl;1", &rv);
+      nsIXBLService *xblService = GetXBLService();
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::tree) {
         // We delegate XULTreeElement APIs to an aggregate object
@@ -780,8 +782,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
 
         nsCOMPtr<nsIAtom> tag;
         PRInt32 dummy;
-        nsCOMPtr<nsIXBLService> xblService = 
-                 do_GetService("@mozilla.org/xbl;1", &rv);
+        nsIXBLService *xblService = GetXBLService();
         xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
         if (tag.get() == nsXULAtoms::tree) {
             inst = nsContentUtils::
@@ -2079,7 +2080,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
     if (! mScriptObject) {
         // Use the XBL service to get the `base' tag, which'll be how
         // we determine what kind of script object to cook up.
-        nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1", &rv);
+        nsIXBLService *xblService = GetXBLService();
         NS_ASSERTION(xblService != nsnull, "couldn't get XBL service");
         if (! xblService)
             return NS_ERROR_UNEXPECTED;

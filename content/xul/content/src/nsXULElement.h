@@ -36,7 +36,7 @@
 // XXX because nsIEventListenerManager has broken includes
 #include "nslayout.h" 
 #include "nsIDOMEvent.h"
-
+#include "nsIServiceManager.h"
 #include "nsHTMLValue.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
@@ -61,12 +61,12 @@
 #include "nsXULAttributes.h"
 #include "nsIChromeEventHandler.h"
 #include "nsXULAttributeValue.h"
+#include "nsIXBLService.h"
 
 class nsISizeOfHandler;
 
 class nsIDocument;
 class nsIRDFService;
-class nsIXBLService;
 class nsISupportsArray;
 class nsIXULContentUtils;
 class nsIXULPrototypeDocument;
@@ -331,6 +331,13 @@ class nsXULElement : public nsIXULContent,
                      public nsIChromeEventHandler
 {
 public:
+    static nsIXBLService* GetXBLService() {
+        if (!gXBLService)
+            CallGetService("@mozilla.org/xbl;1", &gXBLService);
+        return gXBLService;
+    }
+    static void ReleaseGlobals() { NS_IF_RELEASE(gXBLService); }
+
 protected:
     // pseudo-constants
     static nsrefcnt             gRefCnt;
@@ -552,6 +559,8 @@ protected:
     nsIRDFResource*            OwnedResource() const      { return mSlots ? mSlots->mOwnedResource.get()      : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
     nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }
+
+    static nsIXBLService *gXBLService;
 };
 
 
