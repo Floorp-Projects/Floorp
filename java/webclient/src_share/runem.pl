@@ -123,7 +123,12 @@ else {
 #tack on the java library path
 $cmd = $cmd . " -Djava.library.path=" . $BINDIR . $CPSEP . $BINDIR . $SEP . "components";
 #tack on the debug arguments
-cmd = $cmd . "-Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n";
+if ($IS_UNIX) {
+  $cmd = $cmd . " -Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n";
+}
+else {
+  $cmd = $cmd . " -Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n";
+}
 #tack on the classpath, class name, and bin dir
 $cmd = $cmd . " -classpath " . $ENV{"CLASSPATH"} . " " . $CLASSNAME . " " . 
   $BINDIR;
