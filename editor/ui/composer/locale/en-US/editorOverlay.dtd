@@ -35,8 +35,8 @@
 <!ENTITY openremoteCmd.label "Open Web Location...">
 <!ENTITY fileopenremote.accesskey "l">
 <!ENTITY fileopenremote.keybinding "l">
-<!ENTITY recentFilesMenu.label "Recent Files">
-<!ENTITY recentFilesMenu.accesskey "r">
+<!ENTITY fileRecentMenu.label "Recent Files">
+<!ENTITY filerecentmenu.accesskey "r">
 <!ENTITY fileRevert.label "Revert">
 <!ENTITY filerevert.accesskey "v">
 <!ENTITY saveCmd.label "Save">
@@ -524,19 +524,41 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY setFocusCmd.label "Set Focus">
 
 <!-- toolbar-only items -->
+<!ENTITY newToolbarCmd.tooltip "New Blank Page">
 <!ENTITY openToolbarCmd.label "Open">
+<!ENTITY openToolbarCmd.tooltip "Open Local Page">
+<!ENTITY saveToolbarCmd.tooltip "Save Page Locally">
 <!ENTITY previewToolbarCmd.label "Preview">
+<!ENTITY previewToolbarCmd.tooltip "Preview Page in Navigator">
 <!ENTITY printToolbarCmd.label "Print">
+<!ENTITY printToolbarCmd.tooltip "Print Page">
 <!ENTITY findToolbarCmd.label "Find">
-<!ENTITY linkToolbarCmd.label "Link">
-<!ENTITY imageToolbarCmd.label "Image">
-<!ENTITY anchorToolbarCmd.label "Anchor">
-<!ENTITY hruleToolbarCmd.label "H.Line">
-<!ENTITY tableToolbarCmd.label "Table">
+<!ENTITY findToolbarCmd.tooltip "Find string in Page">
 <!ENTITY spellToolbarCmd.label "Spell">
+<!ENTITY spellToolbarCmd.tooltip "Check Spelling of Selection or Entire Page">
+<!ENTITY imageToolbarCmd.label "Image">
+<!ENTITY imageToolbarCmd.tooltip "Edit Selected Image Properties or Insert New Image">
+<!ENTITY hruleToolbarCmd.label "H.Line">
+<!ENTITY hruleToolbarCmd.tooltip "Edit Selected Horizontal Line or Insert New Horizontal Line">
+<!ENTITY tableToolbarCmd.label "Table">
+<!ENTITY tableToolbarCmd.tooltip "Edit Selected Table or Insert New Table">
+<!ENTITY linkToolbarCmd.label "Link">
+<!ENTITY linkToolbarCmd.tooltip "Edit Selected Link or Insert New Link">
+<!ENTITY anchorToolbarCmd.label "Anchor">
+<!ENTITY anchorToolbarCmd.tooltip "Edit Selected Anchor or Insert New Anchor (Target)">
 <!ENTITY textColorCaption.label "Text Color">
 
 <!-- editor toolbar -->
+<!ENTITY decreaseFontSizeToolbarCmd.tooltip "Decrease Font Size">
+<!ENTITY increaseFontSizeToolbarCmd.tooltip "Increase Font Size">
+<!ENTITY boldToolbarCmd.tooltip "Make Selected or New Text Bold">
+<!ENTITY italicToolbarCmd.tooltip "Make Selected or New Text Italic">
+<!ENTITY underlineToolbarCmd.tooltip "Make Selected or New Text Underline">
+<!ENTITY bulletListToolbarCmd.tooltip "Make Bulleted List">
+<!ENTITY numberListToolbarCmd.tooltip "Make Numbered List">
+<!ENTITY outdentToolbarCmd.tooltip "Outdent Text (Move to the left)">
+<!ENTITY indentToolbarCmd.tooltip "Indent Text (Move to the right)">
+<!ENTITY alignmentToolbarCmd.tooltip "Set Alignment of Text">
 
 <!-- formatting toolbar not used, but may be in future -->
 <!ENTITY formatToolbar.boldChar "B">
