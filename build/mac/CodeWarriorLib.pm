@@ -188,7 +188,7 @@ sub activate () {
 
 	foreach $psi (values(%Process)) {
 		if ($psi->processSignature() eq $app) {
-			$appath = $psi->processAppSpec(), "\n";
+			$appath = $psi->processAppSpec();
 			_save_appath($filepath, $appath);
 			last;
 		}
