@@ -83,7 +83,11 @@ nsViewerApp::nsViewerApp()
   NS_INIT_REFCNT();
 
   char * text = PR_GetEnv("NGLAYOUT_HOME");
-  mStartURL = text ? text : "resource:/res/samples/test0.html";
+//  mStartURL = text ? text : "resource:/res/samples/test0.html";
+
+  //rickg 20Nov98: For the sake of a good demo, pre-load a decent URL...
+  mStartURL = text ? text : "http://www.netscape.com";
+
   mDelay = 1;
   mRepeatCount = 1;
   mNumSamples = 10;
@@ -298,6 +302,10 @@ AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
   }
 
   fclose(fp);
+}
+
+int _CrtSetDbgFlag(int arg){
+  return arg;
 }
 
 NS_IMETHODIMP
