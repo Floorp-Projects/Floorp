@@ -839,6 +839,11 @@ nsHTTPChannel::OpenCacheEntry()
     NS_ENSURE_TRUE(mHandler, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(!mCacheEntry, NS_ERROR_FAILURE);
 
+    // for now we only cache GET and HEAD transactions.
+    if ((mRequest->Method() != nsHTTPAtoms::Get) &&
+        (mRequest->Method() != nsHTTPAtoms::Head))
+        return NS_ERROR_NOT_AVAILABLE;
+
     nsCacheStoragePolicy storagePolicy;
     if (mLoadAttributes & INHIBIT_PERSISTENT_CACHING)
         storagePolicy = nsICache::STORE_IN_MEMORY;
@@ -2138,7 +2143,8 @@ nsHTTPChannel::Connect()
     }
     
 #ifdef MOZ_NEW_CACHE
-    SetRequestTime(NowInSeconds());
+    if (mCacheEntry)
+        SetRequestTime(NowInSeconds());
 #endif
 
     mState = HS_WAITING_FOR_RESPONSE;
