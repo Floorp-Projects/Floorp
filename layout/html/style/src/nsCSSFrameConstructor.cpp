@@ -77,7 +77,7 @@ static NS_DEFINE_IID(kIComboboxControlFrameIID, NS_ICOMBOBOXCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIListControlFrameIID,     NS_ILISTCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
-
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 // Structure used when constructing formatting object trees.
 struct nsFrameItems {
@@ -1372,6 +1372,15 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     NS_NewScrollFrame(scrollFrame);
     // XXX should probably be a scrolled content pseudo style context
     scrollFrame->Init(*aPresContext, nsnull, viewportFrame, viewportPseudoStyle);
+
+    // Inform the view manager about the root scrollable view
+    nsIView*            scrollFrameView;
+    nsIScrollableView*  scrollingView;
+
+    scrollFrame->GetView(&scrollFrameView);
+    NS_ASSERTION(scrollFrameView, "scroll frame has no view");
+    scrollFrameView->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+    viewManager->SetRootScrollableView(scrollingView);
   }
 
   PRBool isPaginated;

@@ -2046,41 +2046,28 @@ HTMLContentSink::ScrollToRef()
           nsCOMPtr<nsIViewManager> vm;
           shell->GetViewManager(getter_AddRefs(vm));
           if (vm) {
-            nsIView* viewportView = nsnull;
-            vm->GetRootView(viewportView);
-            if (nsnull != viewportView) {
-              nsIView* viewportScrollView;
-              viewportView->GetChild(0, viewportScrollView);
+            nsIScrollableView* sview = nsnull;
+            vm->GetRootScrollableView(&sview);
 
-              // Try and get the nsIScrollableView interface
-              nsIScrollableView* sview = nsnull;
-              viewportScrollView->QueryInterface(kIScrollableViewIID, (void**) &sview);
-              if (nsnull != sview) {
-                // Determine the x,y scroll offsets for the given
-                // frame. The offsets are relative to the
-                // ScrollableView's upper left corner so we need frame
-                // coordinates that are relative to that.
-                nsPoint offset;
-                nsIView* view;
-                frame->GetOffsetFromView(offset, &view);
-                if (view == viewportView) {
-// XXX write me!
-// printf("view==rootView ");
-                }
-                nscoord x = 0;
-                nscoord y = offset.y;
-#if 0
-nsIPresContext* cx = shell->GetPresContext();
-float t2p = cx->GetTwipsToPixels();
-printf("x=%d y=%d\n", NSTwipsToIntPixels(x, t2p), NSTwipsToIntPixels(y, t2p));
-NS_RELEASE(cx);
-#endif
-                sview->SetScrollPreference(mOriginalScrollPreference);
-                sview->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE);
+            if (sview) {
+              // Determine the x,y scroll offsets for the given
+              // frame. The offsets are relative to the
+              // ScrollableView's upper left corner so we need frame
+              // coordinates that are relative to that.
+              nsPoint offset;
+              nsIView* view;
+              frame->GetOffsetFromView(offset, &view);
+              nscoord x = 0;
+              nscoord y = offset.y;
+              sview->SetScrollPreference(mOriginalScrollPreference);
+              // XXX If view != scrolledView, then there is a scrolled frame,
+              // e.g., a DIV with 'overflow' of 'scroll', somewhere in the middle,
+              // or maybe an absolutely positioned element that has a view. We
+              // need to handle these cases...
+              sview->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE);
 
-                // Note that we did this so that we don't bother doing it again
-                mNotAtRef = PR_FALSE;
-              }
+              // Note that we did this so that we don't bother doing it again
+              mNotAtRef = PR_FALSE;
             }
           }
         }

@@ -1323,31 +1323,24 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
         // Get the primary frame
         if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
           if (nsnull != mViewManager) {
-            nsIView* viewportView = nsnull;
-            mViewManager->GetRootView(viewportView);
-            if (nsnull != viewportView) {
-              nsIView* viewportScrollView;
-              viewportView->GetChild(0, viewportScrollView);
+            nsIScrollableView* scrollingView;
+            mViewManager->GetRootScrollableView(&scrollingView);
 
-              // Try and get the nsIScrollableView interface
-              nsIScrollableView* scrollingView;
-              if (NS_SUCCEEDED(viewportScrollView->QueryInterface(kIScrollableViewIID,
-                                                                  (void**)&scrollingView))) {
-                // Determine the offset for the given frame relative to the
-                // scrolled view
-                nsIView*  scrolledView;
-                nsPoint   offset;
-                nsIView*  view;
-                
-                scrollingView->GetScrolledView(scrolledView);
-                frame->GetOffsetFromView(offset, &view);
-
-                // XXX If view != scrolledView, then there is a scrolled frame,
-                // e.g., a DIV with 'overflow' of 'scroll', somewhere in the middle,
-                // or maybe an absolutely positioned element that has a view. We
-                // need to handle these cases...
-                scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
-              }
+            if (scrollingView) {
+              // Determine the offset for the given frame relative to the
+              // scrolled view
+              nsIView*  scrolledView;
+              nsPoint   offset;
+              nsIView*  view;
+                  
+              scrollingView->GetScrolledView(scrolledView);
+              frame->GetOffsetFromView(offset, &view);
+  
+              // XXX If view != scrolledView, then there is a scrolled frame,
+              // e.g., a DIV with 'overflow' of 'scroll', somewhere in the middle,
+              // or maybe an absolutely positioned element that has a view. We
+              // need to handle these cases...
+              scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
             }
           }
         }
