@@ -62,6 +62,9 @@ var gIconSize = "";
 var gMustLoadSidebar = false;
 var gURIFixup = null;
 
+var gProgressMeterPanel = null;
+var gProgressCollapseTimer = null;
+
 var gPrefService = null;
 
 var appCore = null;
@@ -233,6 +236,8 @@ function Startup()
   gReportButton = document.getElementById("page-report-button");
 
   gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
+
+  gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
 
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
@@ -2917,7 +2922,12 @@ nsBrowserStatusHandler.prototype =
         }
 
         // Turn the status meter on.
-        this.statusMeter.parentNode.collapsed = false;
+        if (gProgressCollapseTimer) {
+          window.cancelTimeout(gProgressCollapseTimer);
+          gProgressCollapseTimer = null;
+        }
+        else
+          this.statusMeter.parentNode.collapsed = false;
 
         // XXX: This needs to be based on window activity...
         this.stopCommand.removeAttribute("disabled");
@@ -2977,7 +2987,9 @@ nsBrowserStatusHandler.prototype =
 
         // Turn the progress meter and throbber off.
         this.statusMeter.value = 0;  // be sure to clear the progress bar
-        this.statusMeter.parentNode.collapsed = true;
+
+        gProgressCollapseTimer = window.setTimeout("gProgressMeterPanel.collapsed = true; gProgressCollapseTimer = null;",
+                                                   50);
 
         if (this.throbberElement)
           this.throbberElement.removeAttribute("busy");
