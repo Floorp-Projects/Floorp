@@ -44,8 +44,12 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
+// Non-interface helpers
+  PRBool IsActive() { return mIsActive; };
+
 protected:
   nsMenuBarListener* mMenuBarListener;
+  PRBool mIsActive;
 }; // class nsMenuBarFrame
 
 #endif
