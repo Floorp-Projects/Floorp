@@ -21,15 +21,34 @@
 
 #include "prtypes.h"
 #include "string.h"
+#include "nsCom.h"
 
 /**
  * A "unique identifier". This is modeled after OSF DCE UUIDs.
  */
+
 struct nsID {
+  /**
+   * @name Indentifier values
+   */
+
+  //@{
   PRUint32 m0;
-  PRUint16 m1, m2;
+  PRUint16 m1;
+  PRUint16 m2;
   PRUint8 m3[8];
- 
+  //@}
+
+  /**
+   * @name Methods
+   */
+
+  //@{
+  /**
+   * Equivalency method. Compares this nsID with another.
+   * @return <b>PR_TRUE</b> if they are the same, <b>PR_FALSE</b> if not.
+   */
+
   inline PRBool Equals(const nsID& other) const {
     return (PRBool)
       ((((PRUint32*) &m0)[0] == ((PRUint32*) &other.m0)[0]) &&
@@ -38,14 +57,33 @@ struct nsID {
        (((PRUint32*) &m0)[3] == ((PRUint32*) &other.m0)[3]));
   }
 
-  // Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} string into
-  // an nsID
-  PRBool Parse(char *aIDStr);
+  /**
+   * nsID Parsing method. Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
+   * string into an nsID
+   */
+  NS_COM PRBool Parse(char *aIDStr);
 
-  // Returns an allocated string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
-  // format. Caller should free string.
-  char* ToString() const;
+  /**
+   * nsID string encoder. Returns an allocated string in 
+   * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format. Caller should free string.
+   */
+  NS_COM char* ToString() const;
+  //@}
 };
+
+/**
+ * Declare an ID. If NS_IMPL_IDS is set, a variable <i>_name</i> is declared
+ * with the given values, otherwise <i>_name</i> is declared as an 
+ * <tt>extern</tt> variable.
+ */
+
+#ifdef NS_IMPL_IDS
+#define NS_DECLARE_ID(_name,m0,m1,m2,m30,m31,m32,m33,m34,m35,m36,m37) \
+  extern "C" const nsID _name = {m0,m1,m2,{m30,m31,m32,m33,m34,m35,m36,m37}}
+#else
+#define NS_DECLARE_ID(_name,m0,m1,m2,m30,m31,m32,m33,m34,m35,m36,m37) \
+  extern "C" const nsID _name
+#endif
 
 #endif
 

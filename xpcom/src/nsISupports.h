@@ -21,74 +21,110 @@
 
 #include "nsDebug.h"
 #include "nsID.h"
+#include "nsError.h"
 
-// An "interface id" which can be used to uniquely identify a given
-// interface. Primarily used as an argument to nsISupports.QueryInterface
-// method.
+/*@{*/
+
+/**
+ * An "interface id" which can be used to uniquely identify a given
+ * interface.
+ */
 
 typedef nsID nsIID;
 
-// Define an IID
+/**
+ * A macro shorthand for <tt>const nsIID&<tt>
+ */
+
+#define REFNSIID const nsIID&
+
+/**
+ * Define an IID (obsolete)
+ */
+
 #define NS_DEFINE_IID(_name, _iidspec) \
   const nsIID _name = _iidspec
 
 //----------------------------------------------------------------------
 
-// IID for the nsISupports interface
-// {00000000-0000-0000-c000-000000000046}
+/**
+ * IID for the nsISupports interface
+ * {00000000-0000-0000-c000-000000000046}
+ */
+
 #define NS_ISUPPORTS_IID      \
 { 0x00000000, 0x0000, 0x0000, \
   {0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46} }
 
-#define NS_FAILED(_nsresult) ((_nsresult) & 0x80000000)
-#define NS_SUCCEEDED(_nsresult) (!((_nsresult) & 0x80000000))
+/**
+ * Generic result data type
+ */
 
-// Standard "it worked" return value
-#define NS_OK 0
-
-#define NS_ERROR_BASE ((nsresult) 0xC1F30000)
-
-// Some standard error codes we use
-#define NS_ERROR_OUT_OF_MEMORY (NS_ERROR_BASE + 0)
-#define NS_ERROR_NO_AGGREGATION (NS_ERROR_BASE + 1)
-#define NS_ERROR_NULL_POINTER (NS_ERROR_BASE + 2)
-#define NS_ERROR_ILLEGAL_VALUE (NS_ERROR_BASE + 3)
-#define NS_ERROR_NOT_INITIALIZED (NS_ERROR_BASE + 4)
-#define NS_ERROR_ALREADY_INITIALIZED (NS_ERROR_BASE + 5)
-#define NS_ERROR_NOT_IMPLEMENTED (NS_ERROR_BASE + 6)
-#define NS_ERROR_FAILURE (NS_ERROR_BASE + 7)
-
-// Generic result data type
 typedef PRUint32 nsresult;
 
-// This is returned by QueryInterface when a given interface is not
-// supported.
-#define NS_NOINTERFACE ((nsresult) 0x80004002L)
-
-// Reference count values
+/**
+ * Reference count values
+ */
 typedef PRUint32 nsrefcnt;
 
-// Basic component object model interface. Objects which implement
-// this interface support runtime interface discovery (QueryInterface)
-// and a reference counted memory model (AddRef/Release). This is
-// modelled after the win32 IUnknown API.
+/**
+ * Basic component object model interface. Objects which implement
+ * this interface support runtime interface discovery (QueryInterface)
+ * and a reference counted memory model (AddRef/Release). This is
+ * modelled after the win32 IUnknown API.
+ */
+
 class nsISupports {
 public:
-  NS_IMETHOD QueryInterface(const nsIID& aIID,
+  /**
+   * @name Methods
+   */
+
+  //@{
+  /**
+   * A run time mechanism for interface discovery.
+   * @param aIID [in] A requested interface IID
+   * @param aInstancePtr [out] A pointer to an interface pointer to
+   * receive the result.
+   * @return <b>NS_OK</b> if the interface is supported by the associated
+   * instance, <b>NS_NOINTERFACE</b> if it is not. 
+   * <b>NS_ERROR_INVALID_POINTER</b> if <i>aInstancePtr</i> is <b>NULL</b>.
+   */
+  NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr) = 0;
+  /**
+   * Increases the reference count for this interface.
+   * The associated instance will not be deleted unless
+   * the reference count is returned to zero.
+   *
+   * @return The resulting reference count.
+   */
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
+
+  /**
+   * Decreases the reference count for this interface.
+   * Generally, if the reference count returns to zero,
+   * the associated instance is deleted.
+   *
+   * @return The resulting reference count.
+   */
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
+  //@}
 };
 
 //----------------------------------------------------------------------
 
-// Some convenience macros for implementing AddRef and Release
+/**
+ * Some convenience macros for implementing AddRef and Release
+ */
 
-// Declare the reference count variable and the implementations of the
-// AddRef and QueryInterface methods.
+/**
+ * Declare the reference count variable and the implementations of the
+ * AddRef and QueryInterface methods.
+ */
 #define NS_DECL_ISUPPORTS                                                   \
 public:                                                                     \
-  NS_IMETHOD QueryInterface(const nsIID& aIID,                              \
+  NS_IMETHOD QueryInterface(REFNSIID aIID,                                  \
                             void** aInstancePtr);                           \
   NS_IMETHOD_(nsrefcnt) AddRef(void);                                       \
   NS_IMETHOD_(nsrefcnt) Release(void);                                      \
@@ -96,35 +132,60 @@ protected:                                                                  \
   nsrefcnt mRefCnt;                                                         \
 public:
 
-// Initialize the reference count variable. Add this to each and every
-// constructor you implement.
+/**
+ * Initialize the reference count variable. Add this to each and every
+ * constructor you implement.
+ */
 #define NS_INIT_REFCNT() mRefCnt = 0
 
-// Use this macro to implement the AddRef method for a given _class
+/**
+ * Use this macro to implement the AddRef method for a given <i>_class</i>
+ * @param _class The name of the class implementing the method
+ */
 #define NS_IMPL_ADDREF(_class)                               \
 nsrefcnt _class::AddRef(void)                                \
 {                                                            \
   return ++mRefCnt;                                          \
 }
 
+/**
+ * Macro for adding a reference to an interface.
+ * @param _ptr The interface pointer.
+ */
 #define NS_ADDREF(_ptr) \
  (_ptr)->AddRef()
 
+/**
+ * Macro for adding a reference to an interface that checks for NULL.
+ * @param _ptr The interface pointer.
+ */
 #define NS_IF_ADDREF(_ptr)  \
 ((0 != (_ptr)) ? (_ptr)->AddRef() : 0);
 
+/**
+ * Macro for releasing a reference to an interface.
+ * @param _ptr The interface pointer.
+ */
 #define NS_RELEASE(_ptr) \
  (_ptr)->Release();      \
  (_ptr) = NULL
 
+/**
+ * Macro for releasing a reference to an interface that checks for NULL;
+ * @param _ptr The interface pointer.
+ */
 #define NS_IF_RELEASE(_ptr)             \
  ((0 != (_ptr)) ? (_ptr)->Release() : 0); \
  (_ptr) = NULL
 
-// Use this macro to implement the Release method for a given _class
+/**
+ * Use this macro to implement the Release method for a given <i>_class</i>
+ * @param _class The name of the class implementing the method
+ */
 #define NS_IMPL_RELEASE(_class)                        \
 nsrefcnt _class::Release(void)                         \
 {                                                      \
+  NS_PRECONDITION(0 != mRefCnt, "dup release");        \
   if (--mRefCnt == 0) {                                \
     delete this;                                       \
     return 0;                                          \
@@ -134,18 +195,23 @@ nsrefcnt _class::Release(void)                         \
 
 //----------------------------------------------------------------------
 
-// Some convenience macros for implementing QueryInterface
+/*
+ * Some convenience macros for implementing QueryInterface
+ */
 
-// This implements query interface with two assumptions: First, the
-// class in question implements nsISupports and it's own interface and
-// nothing else. Second, the implementation of the class's primary
-// inheritance chain leads to it's own interface.
-//
-// _class is the name of the class implementing the method
-// _classiiddef is the name of the #define symbol that defines the IID
-// for the class (e.g. NS_ISUPPORTS_IID)
+/** 
+ * This implements query interface with two assumptions: First, the
+ * class in question implements nsISupports and it's own interface and
+ * nothing else. Second, the implementation of the class's primary
+ * inheritance chain leads to it's own interface.
+ *
+ * @param _class The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ */
+
 #define NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)                     \
-nsresult _class::QueryInterface(const nsIID& aIID, void** aInstancePtr)  \
+nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 {                                                                        \
   if (NULL == aInstancePtr) {                                            \
     return NS_ERROR_NULL_POINTER;                                        \
@@ -165,9 +231,19 @@ nsresult _class::QueryInterface(const nsIID& aIID, void** aInstancePtr)  \
   return NS_NOINTERFACE;                                                 \
 }
 
+/**
+ * Convenience macro for implementing all nsISupports methods for
+ * a simple class.
+ * @param _class The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ */
+
 #define NS_IMPL_ISUPPORTS(_class,_classiiddef) \
   NS_IMPL_ADDREF(_class)                       \
   NS_IMPL_RELEASE(_class)                      \
   NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)
+
+/*@}*/
 
 #endif /* nsISupports_h___ */

@@ -27,9 +27,6 @@ NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kTestLoadedFactoryCID, NS_TESTLOADEDFACTORY_CID);
 NS_DEFINE_IID(kTestClassIID, NS_ITESTCLASS_IID);
 
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
-
 /**
  * ITestClass implementation
  */
@@ -39,13 +36,7 @@ class TestDynamicClassImpl: public ITestClass {
 
   TestDynamicClassImpl() {
     NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_InstanceCount);
   }
-
-  ~TestDynamicClassImpl() {
-    PR_AtomicDecrement(&g_InstanceCount);
-  }
-
   void Test();
 };
 
@@ -59,28 +50,32 @@ void TestDynamicClassImpl::Test() {
  * TestFactory implementation
  */
 
+static PRInt32 g_FactoryCount = 0;
+static PRInt32 g_LockCount = 0;
+
 class TestDynamicFactory: public nsIFactory {
   NS_DECL_ISUPPORTS
   
   TestDynamicFactory() {
     NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_InstanceCount);
+    PR_AtomicIncrement(&g_FactoryCount);
   }
 
   ~TestDynamicFactory() {
-    PR_AtomicDecrement(&g_InstanceCount);
+    PR_AtomicDecrement(&g_FactoryCount);
   }
 
   NS_IMETHOD CreateInstance(nsISupports *aDelegate,
                             const nsIID &aIID,
                             void **aResult);
 
-  NS_IMETHOD_(void) LockFactory(PRBool aLock) {
+  NS_IMETHOD LockFactory(PRBool aLock) {
     if (aLock) {
       PR_AtomicIncrement(&g_LockCount);
     } else {
       PR_AtomicDecrement(&g_LockCount);
     }
+    return NS_OK;
   };
 };
 
@@ -128,7 +123,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID,
 }
 
 extern "C" NS_EXPORT PRBool NSCanUnload() {
-  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+  return PRBool(g_FactoryCount == 0 && g_LockCount == 0);
 }
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)

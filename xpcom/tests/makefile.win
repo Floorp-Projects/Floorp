@@ -24,7 +24,13 @@ DIRS = dynamic windows
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestFactory.exe
 PROG2 = .\$(OBJDIR)\RegFactory.exe
-PROGRAMS = $(PROG1) $(PROG2)
+PROG3 = .\$(OBJDIR)\TestArray.exe
+PROG4 = .\$(OBJDIR)\TestID.exe
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4)
+
+LCFLAGS=-DUSE_NSREG
+
+REQUIRES=libreg
 
 LINCS=-I..\src
 
@@ -59,4 +65,6 @@ clobber::
 
 $(PROG1): $(OBJDIR) TestFactory.cpp
 $(PROG2): $(OBJDIR) RegFactory.cpp
+$(PROG3): $(OBJDIR) TestArray.cpp
+$(PROG3): $(OBJDIR) TestID.cpp
 

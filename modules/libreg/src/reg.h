@@ -22,9 +22,9 @@
 #ifndef _REG_H_
 #define _REG_H_
 
-#ifdef STANDALONE_REGISTRY
 #include "vr_stubs.h"
-#else
+
+#ifndef STANDALONE_REGISTRY
 #include "prmon.h"
 #endif
 

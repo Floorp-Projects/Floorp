@@ -37,36 +37,10 @@
 #include <io.h>
 #endif
 
-#ifndef STANDALONE_REGISTRY
-#include "xp_mcom.h"
-#include "xp_core.h"
-#ifndef NSPR20
-#include "prosdep.h"
-#else
-#ifdef XP_MAC
-#include <Folders.h>
-#include "prosdep.h"
-#else
-#include "md/prosdep.h"
-#endif
-#endif
-#include "prmon.h"
-#ifdef BROKEN
-#include "su_folderspec.h"
-#endif
-#else
-#ifdef XP_MAC
-  #include <types.h>
-  #include <stat.h>
-#else
-  #include <sys/types.h>
-  #include <sys/stat.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#endif
 
 #include "reg.h"
 #include "NSReg.h"
@@ -115,6 +89,7 @@ XP_Bool bGlobalRegistry = FALSE;
 PRMonitor *vr_monitor = NULL;
 #endif
 
+static char *app_dir = NULL;
 
 /* ---------------------------------------------------------------------
  * local functions
@@ -160,14 +135,14 @@ static REGERR vr_Init(void)
 
     if (!isInited)
     {
-#ifndef STANDALONE_REGISTRY
-#ifdef BROKEN
-        curPath = FE_GetDirectoryPath(eCommunicatorFolder);
-#else
-        /* can't use Version Registry interface until "BROKEN" works */
-        err = REGERR_FAIL;
-        goto done;
-#endif
+#if !defined(STANDALONE_REGISTRY)
+        curPath = app_dir;
+        if (curPath == NULL) {
+          /* can't use Version Registry interface until "BROKEN" works */
+          err = REGERR_FAIL;
+          goto done;
+        }
+
 #ifdef XP_UNIX
         if (curPath != NULL) {
             regbuf = (char*)XP_ALLOC( 10 + XP_STRLEN(curPath) );
@@ -259,7 +234,6 @@ static REGERR vr_Init(void)
 done:
 #ifndef STANDALONE_REGISTRY
     PR_ExitMonitor(vr_monitor);
-    XP_FREEIF(curPath);
 #ifdef XP_UNIX
     XP_FREEIF(regbuf);
 #endif
@@ -1101,7 +1075,7 @@ VR_INTERFACE(REGERR) VR_ValidateComponent(char *component_path)
     }
 
     urlPath = path;
-#ifndef STANDALONE_REGISTRY
+#ifdef BROKEN
     url = XP_PlatformFileToURL(path);
     if ( url == NULL )
         return REGERR_MEMORY;
@@ -1143,5 +1117,18 @@ VR_INTERFACE(REGERR) VR_ValidateComponent(char *component_path)
 #ifdef XP_MAC
 #pragma export reset
 #endif
+
+VR_INTERFACE(REGERR) VR_SetRegDirectory(const char *path)
+{
+  char *tmp = XP_STRDUP(path);
+  if (NULL == tmp) {
+    return REGERR_MEMORY;
+  }
+
+  XP_FREEIF(app_dir);
+  app_dir = tmp;
+
+  return REGERR_OK;
+}
 
 /* EOF: VerReg.c */

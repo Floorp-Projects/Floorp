@@ -46,10 +46,10 @@ typedef nsID nsCID;
 class nsIFactory: public nsISupports {
 public:
   NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
+                            REFNSIID aIID,
                             void **aResult) = 0;
 
-  NS_IMETHOD_(void) LockFactory(PRBool aLock) = 0;
+  NS_IMETHOD LockFactory(PRBool aLock) = 0;
 };
 
 /**
@@ -65,7 +65,7 @@ public:
 class nsIFactory2: public nsIFactory {
 public:
   NS_IMETHOD CreateInstance2(nsISupports *aOuter,
-                             const nsIID &aIID,
+                             REFNSIID aIID,
                              void *aSignature,
                              void **aResult) = 0;
 };

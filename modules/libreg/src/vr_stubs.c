@@ -19,10 +19,12 @@
 /* this file contains stubs needed to build the registry routines
  * into a stand-alone library for use with our installers
  */
-#ifdef STANDALONE_REGISTRY
 
 #include <stdio.h>
 #include <string.h>
+#ifndef STANDALONE_REGISTRY
+#include "prtypes.h"
+#endif
 #include "vr_stubs.h"
 
 #ifdef XP_MAC
@@ -176,6 +178,7 @@ char *strdup(const char *source)
         return newAllocation;
 }
 
+
 int strcasecmp(const char *str1, const char *str2)
 {
 	char 	currentChar1, currentChar2;
@@ -255,31 +258,62 @@ int strncasecmp(const char *str1, const char *str2, int length)
 #include "NSReg.h"
 #include "VerReg.h"
 
-char *TheRegistry; 
+char *TheRegistry = "registry"; 
 char *Flist;
 /* WARNING: build hackery */
+#ifdef STANDALONE_REGISTRY
 long BUILDNUM =
 #include "../../../build/build_number"
 ;
-
+#endif
 
 REGERR vr_ParseVersion(char *verstr, VERSION *result);
-int main(int argc, char *argv[]);
 
 #ifdef XP_UNIX
-XP_File VR_StubOpen (const char * mode)
+
+#define DEF_REG "/.netscape/registry"
+
+XP_File VR_StubOpen (const char *name, const char * mode)
 {
 	XP_File fh;
     struct stat st;
 
-    if ( stat( TheRegistry, &st ) == 0 )
-        fh = fopen( TheRegistry, XP_FILE_UPDATE_BIN );
-    else
-        fh = fopen( TheRegistry, XP_FILE_WRITE_BIN );
-
-	return fh;
-}
+#ifndef STANDALONE_REGISTRY
+    char *def = NULL;
+    if (name == NULL || *name == '\0') {
+      char *home = getenv("HOME");
+      if (home != NULL) {
+        def = (char *) XP_ALLOC(XP_STRLEN(home) + XP_STRLEN(DEF_REG));
+        if (def != NULL) {
+          XP_STRCPY(def, home);
+          XP_STRCAT(def, DEF_REG);
+        }
+      }
+      if (def != NULL) {
+        name = def;
+      } else {
+        name = TheRegistry;
+      }
+    }
+#else
+    name = TheRegistry;
 #endif
+
+    if ( stat( name, &st ) == 0 )
+        fh = fopen( name, XP_FILE_UPDATE_BIN );
+    else
+        fh = fopen( name, XP_FILE_WRITE_BIN );
+
+#ifndef STANDALONE_REGISTRY
+    XP_FREEIF(def);
+#endif
+	
+    return fh;
+}
+
+#endif
+
+#ifdef STANDALONE_REGISTRY
 
 int main(int argc, char *argv[])
 {
@@ -361,6 +395,7 @@ int main(int argc, char *argv[])
 	fclose( fh );
 	return 0;
 }
-#endif /* XP_UNIX || XP_OS2 */
 
 #endif /* STANDALONE_REGISTRY */
+
+#endif /* XP_UNIX || XP_OS2 */

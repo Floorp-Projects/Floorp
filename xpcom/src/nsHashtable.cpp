@@ -25,11 +25,11 @@
 
 static PR_CALLBACK PLHashNumber _hashValue(const void *key) 
 {
-  return ((nsHashKey *) key)->HashValue();
+  return ((const nsHashKey *) key)->HashValue();
 }
 
 static PR_CALLBACK PRIntn _hashKeyCompare(const void *key1, const void *key2) {
-  return ((nsHashKey *) key1)->Equals((nsHashKey *) key2);
+  return ((const nsHashKey *) key1)->Equals((const nsHashKey *) key2);
 }
 
 static PR_CALLBACK PRIntn _hashValueCompare(const void *value1,
@@ -76,6 +76,17 @@ static PR_CALLBACK PRIntn _hashEnumerate(PLHashEntry *he, PRIntn i, void *arg)
   return ((nsHashtableEnumFunc) arg)((nsHashKey *) he->key, he->value) ? 
     HT_ENUMERATE_NEXT : 
     HT_ENUMERATE_STOP;
+}
+
+//
+// HashKey 
+//
+nsHashKey::nsHashKey(void)
+{
+}
+
+nsHashKey::~nsHashKey(void)
+{
 }
 
 nsHashtable::nsHashtable(PRUint32 aInitSize) {

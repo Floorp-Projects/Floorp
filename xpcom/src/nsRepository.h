@@ -23,28 +23,34 @@
 #include "prmon.h"
 #include "nsCom.h"
 #include "nsID.h"
+#include "nsError.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsHashtable.h"
 
 /*
- * NSIRepository class
+ * Prototypes for dynamic library export functions
  */
 
-// Errors
-#define NS_ERROR_FACTORY_EXISTS               (NS_ERROR_BASE + 0x100)
-#define NS_ERROR_FACTORY_NOT_REGISTERED       (NS_ERROR_BASE + 0x101)
-#define NS_ERROR_FACTORY_NOT_LOADED           (NS_ERROR_BASE + 0x102)
-#define NS_ERROR_FACTORY_NO_SIGNATURE_SUPPORT (NS_ERROR_BASE + 0x103)
-#define NS_ERROR_FACTORY_NOT_UNREGISTERED     (NS_ERROR_BASE + 0x104)
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
+                                           nsIFactory **aFactory);
+extern "C" NS_EXPORT PRBool   NSCanUnload(void);
+extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path);
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path);
+
+/*
+ * Dynamic library export function types
+ */
 
 typedef nsresult (*nsFactoryProc)(const nsCID &aCLass,
                                   nsIFactory **aFactory);
-typedef PRBool (*nsCanUnloadProc)();
+typedef PRBool (*nsCanUnloadProc)(void);
 typedef nsresult (*nsRegisterProc)(const char *path);
 typedef nsresult (*nsUnregisterProc)(const char *path);
 
-class FactoryEntry;
+/*
+ * NSRepository class
+ */
 
 class NS_COM NSRepository {
 private:

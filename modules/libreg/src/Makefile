@@ -22,7 +22,7 @@ LIBRARY_NAME	= reg
 
 REQUIRES	= libreg nspr dbm pref js
 
-CSRCS		= reg.c VerReg.c
+CSRCS		= reg.c VerReg.c vr_stubs.c
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
 BIN_OBJS	= $(addprefix $(OBJDIR)/R_,$(BIN_SRCS:.c=.o))
@@ -42,9 +42,9 @@ PROGRAM		= $(OBJDIR)/vreg$(BIN_SUFFIX)
 $(PROGRAM): $(BIN_OBJS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), OS2)
-	$(LINK_EXE) -OUT:$@ $(BIN_OBJS) $(LDFLAGS) $(OS_LIBS) $(DIST)/lib/libxp.$(LIB_SUFFIX) 
+	$(LINK_EXE) -OUT:$@ $(BIN_OBJS) $(LDFLAGS) $(OS_LIBS)
 else
-	$(CCF) -o $@ $(BIN_OBJS) $(LDFLAGS) $(DIST)/lib/lib$(LITE_PREFIX)xp.$(LIB_SUFFIX)
+	$(CCF) -o $@ $(BIN_OBJS) $(LDFLAGS)
 endif	
 
 $(OBJDIR)/R_VerReg.o:	VerReg.c

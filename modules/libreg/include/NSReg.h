@@ -81,17 +81,17 @@ typedef struct _reginfo
 #define UNIX_GLOBAL_FLAG     "MOZILLA_SHARED_REGISTRY"
 
 /* Platform-dependent declspec for library interface */
-#if defined(STANDALONE_REGISTRY) && defined(XP_PC)
- #if defined(WIN32)
- #define VR_INTERFACE(type)     __declspec(dllexport) type __stdcall
- #elif defined(XP_OS2)
- #define VR_INTERFACE(type)     type _Optlink
- #else
- #define VR_INTERFACE(type)     type _far _pascal _export
- #endif
+#if defined(XP_PC)
+  #if defined(WIN32)
+  #define VR_INTERFACE(type)     __declspec(dllexport) type __stdcall
+  #elif defined(XP_OS2)
+  #define VR_INTERFACE(type)     type _Optlink
+  #else
+  #define VR_INTERFACE(type)     type _far _pascal _export
+  #endif
 #else
- #define VR_INTERFACE(type)     type
-#endif /* STANDALONE_REGISTRY and XP_PC */
+#define VR_INTERFACE(type)     type
+#endif
 
 
 XP_BEGIN_PROTOS
@@ -111,6 +111,10 @@ VR_INTERFACE(REGERR) NR_RegClose(
 
 VR_INTERFACE(REGERR) NR_RegPack(
          HREG hReg         /* handle of open registry to pack */
+       );
+
+VR_INTERFACE(REGERR) NR_RegSetUsername(
+	 const char *name  /* name of current user */
        );
 
 /* ---------------------------------------------------------------------
@@ -207,8 +211,8 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries(
        );
 
 #ifndef STANDALONE_REGISTRY
-void NR_ShutdownRegistry(void);
-void NR_StartupRegistry(void);
+VR_INTERFACE(void) NR_ShutdownRegistry(void);
+VR_INTERFACE(void) NR_StartupRegistry(void);
 #endif /* STANDALONE_REGISTRY */
 
 XP_END_PROTOS

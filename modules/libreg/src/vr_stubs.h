@@ -69,12 +69,17 @@
 #define XP_FileFlush(file)              fflush(file)
 #define XP_FileClose(file)              fclose(file)
 
+#ifdef XP_UNIX
+#define XP_FileOpen(name,type,mode)     VR_StubOpen((name), (mode))
+#else
 #define XP_FileOpen(name,type,mode)     VR_StubOpen((mode))
+#endif
 
 #define XP_BEGIN_PROTOS
 #define XP_END_PROTOS
 
 #define XP_ASSERT(x)        ((void)0)
+#define XP_STRCAT(a,b)      strcat((a),(b))
 #define XP_STRCPY(a,b)      strcpy((a),(b))
 #define XP_STRLEN(x)        strlen(x)
 #define XP_SPRINTF          sprintf
@@ -88,34 +93,25 @@
 #define XP_MEMSET(d, c, l)      memset((d), (c), (l))
 
 #ifdef XP_PC
-#define XP_STRCASECMP(x,y)  strcmpi((x),(y))
-
-#ifdef XP_OS2
+#define XP_STRCASECMP(x,y)  stricmp((x),(y))
 #define XP_STRNCASECMP(x,y,n) strnicmp((x),(y),(n))
+
 #else
-#define XP_STRNCASECMP(x,y,n) strncmpi((x),(y),(n))
-#endif
 
-#endif
-
-#ifdef XP_MAC
 #define XP_STRCASECMP(x,y)  strcasecmp((x),(y))
 #define XP_STRNCASECMP(x,y,n) strncasecmp((x),(y),(n))
-extern int strcasecmp(const char *str1, const char *str2);
-extern int strncasecmp(const char *str1, const char *str2, int length);
-#endif
 
-#ifdef XP_UNIX
-#define XP_STRCASECMP	strcasecomp   /* from libxp.a */
 #endif
 
 typedef FILE          * XP_File;
 
+#ifdef STANDALONE_REGISTRY /* included from prmon.h otherwise */
 typedef long            int32;
 typedef unsigned long   uint32;
 typedef short           int16;
 typedef unsigned short  uint16;
 typedef unsigned char   uint8;
+#endif
 
 typedef char            Bool;
 typedef int             XP_Bool;
@@ -128,7 +124,16 @@ typedef int             XP_Bool;
 #define  XP_Stat(file,data,type)     stat((file),(data))
 #endif
 
+#ifdef XP_UNIX
+extern XP_File VR_StubOpen (const char *name, const char * mode);
+#else
 extern XP_File VR_StubOpen (const char * mode);
+#endif
 
+#ifdef XP_MAC
+extern int strcasecmp(const char *str1, const char *str2);
+extern int strncasecmp(const char *str1, const char *str2, int length);
+extern char * strdup(const char *str);
+#endif
 
 #endif /* _VR_STUBS_H_ */

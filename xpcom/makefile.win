@@ -20,6 +20,6 @@ IGNORE_MANIFEST=1
 # 
 
 DEPTH=.. 
-DIRS=src 
+DIRS=src tests
 
 include <$(DEPTH)\config\rules.mak>

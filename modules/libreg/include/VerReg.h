@@ -54,14 +54,10 @@ VR_INTERFACE(REGERR) VR_InRegistry(char *path);
 VR_INTERFACE(REGERR) VR_ValidateComponent(char *path);
 VR_INTERFACE(REGERR) VR_Enum(REGENUM *state, char *buffer, uint32 buflen);
 
-
-#ifndef STANDALONE_REGISTRY
-VR_INTERFACE(void) VR_Initialize(void* env);
-#endif
+VR_INTERFACE(REGERR) VR_SetRegDirectory(const char *path);
 
 XP_END_PROTOS
 
 #endif   /* _VERREG_H_ */
 
 /* EOF: VerReg.h */
-

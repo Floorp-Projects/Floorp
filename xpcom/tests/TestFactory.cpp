@@ -97,7 +97,7 @@ public:
                             const nsIID &aIID,
                             void **aResult);
 
-  NS_IMETHOD_(void) LockFactory(PRBool aLock) {};
+  NS_IMETHOD LockFactory(PRBool aLock) { return NS_OK; }
 };
 
 NS_IMPL_ISUPPORTS(TestFactory, kFactoryIID);
@@ -134,7 +134,7 @@ extern "C" void RegisterTestFactories() {
                                 PR_FALSE);
 
   // Windows can use persistant registry  
-#ifndef XP_PC
+#ifndef USE_NSREG
   NSRepository::RegisterFactory(kTestLoadedFactoryCID,
                                 "libtestdynamic.so",
                                 PR_FALSE,
