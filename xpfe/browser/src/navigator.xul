@@ -193,10 +193,9 @@
   <menubar>
     <menu name="File">
       <menuitem name="New Window" onclick="BrowserNewWindow();"/>
-      <menuitem name="Change Icons" onclick="BrowserPrintPreview();"/>
       <separator />
       <menuitem name="Print Setup" onclick=""/>
-      <menuitem name="Print Preview" onclick="BrowserPrintPreview();"/>
+      <menuitem name="Print Preview" onclick=""/>
       <menuitem name="Print" onclick=""/>
       <separator />
       <menuitem name="Close" onclick=""/>
