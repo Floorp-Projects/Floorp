@@ -196,22 +196,32 @@ nsAccessibleWrap::~nsAccessibleWrap()
             delete mInterfaces[index];
 }
 
+NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
+{
+    *aOutAccessible = nsnull;
+
+    if (!mMaiAtkObject) {
+        CreateMaiInterfaces();
+        mMaiAtkObject =
+            NS_REINTERPRET_CAST(AtkObject *,
+                                g_object_new(GetMaiAtkType(), NULL));
+        NS_ENSURE_TRUE(mMaiAtkObject, NS_ERROR_OUT_OF_MEMORY);
+
+        atk_object_initialize(mMaiAtkObject, this);
+        mMaiAtkObject->role = ATK_ROLE_INVALID;
+        mMaiAtkObject->layer = ATK_LAYER_INVALID;
+    }
+
+    *aOutAccessible = mMaiAtkObject;
+    return NS_OK;
+}
+
 AtkObject *
 nsAccessibleWrap::GetAtkObject(void)
 {
-    if (mMaiAtkObject)
-        return mMaiAtkObject;
-
-    CreateMaiInterfaces();
-    mMaiAtkObject =
-        NS_REINTERPRET_CAST(AtkObject *,
-                            g_object_new(GetMaiAtkType(), NULL));
-    NS_ENSURE_TRUE(mMaiAtkObject, nsnull);
-
-    atk_object_initialize(mMaiAtkObject, this);
-    mMaiAtkObject->role = ATK_ROLE_INVALID;
-    mMaiAtkObject->layer = ATK_LAYER_INVALID;
-    return mMaiAtkObject;
+    void *atkObj = nsnull;
+    GetNativeInterface(&atkObj);
+    return NS_STATIC_CAST(AtkObject *, atkObj);
 }
 
 /* private */

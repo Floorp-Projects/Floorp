@@ -656,21 +656,23 @@ NS_IMETHODIMP nsAppRootAccessible::GetAccPreviousSibling(nsIAccessible * *aAccPr
     return NS_OK;  
 }
 
-AtkObject *
-nsAppRootAccessible::GetAtkObject(void)
+NS_IMETHODIMP nsAppRootAccessible::GetNativeInterface(void **aOutAccessible)
 {
-    if (mMaiAtkObject)
-        return mMaiAtkObject;
+    *aOutAccessible = nsnull;
 
-    mMaiAtkObject =
-        NS_REINTERPRET_CAST(AtkObject *,
-                            g_object_new(MAI_TYPE_ATK_OBJECT, NULL));
-    NS_ENSURE_TRUE(mMaiAtkObject, nsnull);
+    if (!mMaiAtkObject) {
+        mMaiAtkObject =
+            NS_REINTERPRET_CAST(AtkObject *,
+                                g_object_new(MAI_TYPE_ATK_OBJECT, NULL));
+        NS_ENSURE_TRUE(mMaiAtkObject, NS_ERROR_OUT_OF_MEMORY);
 
-    atk_object_initialize(mMaiAtkObject, this);
-    mMaiAtkObject->role = ATK_ROLE_INVALID;
-    mMaiAtkObject->layer = ATK_LAYER_INVALID;
-    return mMaiAtkObject;
+        atk_object_initialize(mMaiAtkObject, this);
+        mMaiAtkObject->role = ATK_ROLE_INVALID;
+        mMaiAtkObject->layer = ATK_LAYER_INVALID;
+    }
+
+    *aOutAccessible = mMaiAtkObject;
+    return NS_OK;
 }
 
 nsresult
