@@ -126,7 +126,8 @@ Rights Reserved.
                     <treerow>
                       <treecell label="?LeafName" properties="ServerType-?ServerType"/>
                       <treecell properties="Subscribed-?Subscribed"/>
-                      <treecell label="?TotalMessages"/>
+                      <!-- commenting out until bug 38906 is fixed 
+                      <treecell label="?TotalMessages"/> -->
                     </treerow>
                   </treeitem>
                 </treechildren>
@@ -140,9 +141,10 @@ Rights Reserved.
             <splitter class="tree-splitter"/>
             <treecol id="subscribedColumn" persist="hidden" label="&subscribedHeader.label;"
                      sort="?Subscribed"/>
+            <!-- commenting out until bug 38906 is fixed 
             <splitter class="tree-splitter"/>
             <treecol id="messagesColumn" persist="hidden" label="&messagesHeader.label;"
-                     sort="?TotalMessages"/>
+                     sort="?TotalMessages"/> -->
           </treecols>
         </tree>
      </hbox>
@@ -155,8 +157,9 @@ Rights Reserved.
            <treecol id="nameColumn2" persist="hidden" flex="1" primary="true" label="..." />
            <splitter class="tree-splitter"/>
            <treecol id="subscribedColumn2" persist="hidden" label="&subscribedHeader.label;" />
+           <!-- commenting out until bug 38906 is fixed 
            <splitter class="tree-splitter"/>
-           <treecol id="messagesColumn2" persist="hidden" label="&messagesHeader.label;" />
+           <treecol id="messagesColumn2" persist="hidden" label="&messagesHeader.label;" /> -->
          </treecols>
          <treechildren id="searchTreeBody"/>
        </tree>
