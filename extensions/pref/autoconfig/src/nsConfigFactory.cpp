@@ -41,7 +41,9 @@
 #include "nsReadConfig.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsICategoryManager.h"
+#if defined(MOZ_LDAP_XPCOM)
 #include "nsLDAPSyncQuery.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAutoConfig, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsReadConfig, Init)
