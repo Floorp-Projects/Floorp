@@ -31,9 +31,6 @@
 <overlay id="sidebarOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
-
-
   <command id="toggleSidebar" oncommand="SidebarShowHide();"/>
   <key id="showHideSidebar" keycode="VK_F9" command="toggleSidebar"/>
   <popup id="sidebarPopup" 
@@ -59,15 +56,12 @@
 
   <!-- Overlay the sidebar panels -->
   <vbox id="sidebar-box" persist="hidden width collapsed">
-    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
     <splitter id="sidebar-panels-splitter" collapse="after" persist="state"
       onmouseup="PersistHeight();" hidden="true">
       <grippy/>
     </splitter>
-
     <vbox id="sidebar-panels-splitter-box" flex="1" 
       persist="collapsed">
-
       <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
         label="&sidebar.panels.label;" persist="hidden" type="box"
         collapse="after" onmouseup="PersistHeight();">
@@ -159,8 +153,7 @@
                 <iframe class="iframe-panel" flex="1*" src="about:blank"
                   hidden="true" collapsed="true" content="?content"/>
                 <iframe class="iframe-panel" flex="1*" src="about:blank"
-                  hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"
-                  tooltip="aHTMLTooltip"/>
+                  hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"/>
               </vbox>
             </action>
           </rule>
