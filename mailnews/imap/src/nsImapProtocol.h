@@ -62,6 +62,7 @@
 #include "nsXPIDLString.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgLogonRedirector.h"
+#include "nsIStreamContentInfo.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -576,7 +577,7 @@ private:
 //
 // Threading concern: This class lives entirely in the UI thread.
 
-class nsImapMockChannel : public nsIImapMockChannel
+class nsImapMockChannel : public nsIImapMockChannel, public nsIRequest, public nsIStreamContentInfo
 {
 public:
 
@@ -584,6 +585,7 @@ public:
   NS_DECL_NSIIMAPMOCKCHANNEL
   NS_DECL_NSICHANNEL
   NS_DECL_NSIREQUEST
+  NS_DECL_NSISTREAMCONTENTINFO
 	
   nsImapMockChannel();
 	virtual ~nsImapMockChannel();

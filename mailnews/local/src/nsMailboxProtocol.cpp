@@ -35,6 +35,7 @@
 #include "nsIMessage.h"
 #include "nsMsgDBCID.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsIStreamContentInfo.h"
 
 //#include "allxpstr.h"
 #include "prtime.h"
@@ -82,10 +83,13 @@ NS_IMETHODIMP nsMailboxProtocol::GetContentLength(PRInt32 * aContentLength)
   {
     // our file transport knows the entire length of the berkley mail folder
     // so get it from there.
-    if (m_channel)
-      return m_channel->GetContentLength(aContentLength);
-    else
+    if (!m_request)
       return NS_OK;
+
+    nsCOMPtr<nsIStreamContentInfo> info = do_QueryInterface(m_request);
+    if (info) 
+        info->GetContentLength(aContentLength);
+    return NS_OK;
 
   }
   else if (m_runningUrl)
@@ -144,7 +148,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
+NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsINewsURL. If it doesn't support a news URL interface then
@@ -152,19 +156,19 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIChannel * aChannel, nsISuppor
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that it's time to start...
-		m_mailboxParser->OnStartRequest(aChannel, ctxt);
+		m_mailboxParser->OnStartRequest(request, ctxt);
 	}
 
-	return nsMsgProtocol::OnStartRequest(aChannel, ctxt);
+	return nsMsgProtocol::OnStartRequest(request, ctxt);
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
+NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
 {
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that there is no more incoming data...
-		m_mailboxParser->OnStopRequest(aChannel, ctxt, aStatus, nsnull);
+		m_mailboxParser->OnStopRequest(request, ctxt, aStatus, nsnull);
 	}
 	else if (m_nextState == MAILBOX_READ_MESSAGE) 
 	{
@@ -196,7 +200,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIChannel * aChannel, nsISupport
    */
 	if (aStatus == NS_BINDING_ABORTED)
 		aStatus = NS_OK;
-	nsMsgProtocol::OnStopRequest(aChannel, ctxt, aStatus, aMsg);
+	nsMsgProtocol::OnStopRequest(request, ctxt, aStatus, aMsg);
 	return CloseSocket(); 
 }
 
@@ -479,8 +483,8 @@ nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * 
 			case MAILBOX_DONE:
 			case MAILBOX_ERROR_DONE:
 				{
-					nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningUrl);
-					url->SetUrlState(PR_FALSE, m_nextState == MAILBOX_DONE ?
+					nsCOMPtr <nsIMsgMailNewsUrl> anotherUrl = do_QueryInterface(m_runningUrl);
+					anotherUrl->SetUrlState(PR_FALSE, m_nextState == MAILBOX_DONE ?
                                      NS_OK : NS_ERROR_FAILURE);
 					m_nextState = MAILBOX_FREE;
 				}

@@ -45,6 +45,7 @@
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
 #include "prlog.h"
+#include "nsIStreamContentInfo.h"
 
 static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
 
@@ -268,7 +269,9 @@ NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIOutputStream* out)
       PRUint32 bytesAvailable = 0;
       rv = mInputStream->Available(&bytesAvailable);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Available failed");
-      rv = mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesAvailable);
+      // DOUGT - where did the request come from??!
+      rv = mOutListener->OnDataAvailable(/*mChannel*/nsnull, mURL, mInputStream, 0, bytesAvailable);
+
   }
   else 
     rv = NS_ERROR_NULL_POINTER;
@@ -519,7 +522,12 @@ nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
   {
     char    *contentType = nsnull;
     
-    if (NS_SUCCEEDED(mChannel->GetContentType(&contentType)) && contentType)
+    // check if the channel supports direct content info 
+    nsCOMPtr<nsIStreamContentInfo> contentInfo = do_QueryInterface(mChannel);
+    if (!contentInfo)
+      return NS_ERROR_FAILURE;
+
+    if (NS_SUCCEEDED(contentInfo->GetContentType(&contentType)) && contentType)
     {
       char *cPtr = (char *) PL_strcasestr(contentType, "charset=");
 
@@ -544,7 +552,7 @@ nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
       char *newContentType = (char *) PR_smprintf("%s; charset=%s", contentType, aCharset);
       if (newContentType)
       {
-        mChannel->SetContentType(newContentType); 
+        contentInfo->SetContentType(newContentType); 
         PR_FREEIF(newContentType);
       }
       
@@ -850,7 +858,8 @@ nsMimeBaseEmitter::Complete()
     PRUint32 bytesInStream;
     nsresult rv2 = mInputStream->Available(&bytesInStream);
 	NS_ASSERTION(NS_SUCCEEDED(rv2), "Available failed");
-    rv2 = mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesInStream);
+    // DOUGT - where did the request come from??!
+    rv2 = mOutListener->OnDataAvailable(/*mChannel*/nsnull, mURL, mInputStream, 0, bytesInStream);
 	NS_ASSERTION(NS_SUCCEEDED(rv2), "OnDataAvailable failed");
   }
 

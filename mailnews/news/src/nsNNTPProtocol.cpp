@@ -694,9 +694,9 @@ public:
   nsNntpCacheStreamListener ();
   virtual ~nsNntpCacheStreamListener();
 
-  nsresult Init(nsIStreamListener * aStreamListener, nsIChannel * aChannelToUse, nsIMsgMailNewsUrl *aRunningUrl);
+  nsresult Init(nsIStreamListener * aStreamListener, nsIChannel* channel, nsIMsgMailNewsUrl *aRunningUrl);
 protected:
-  nsCOMPtr<nsIChannel> mChannelToUse;
+    nsCOMPtr<nsIChannel> mChannelToUse;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIMsgMailNewsUrl> mRunningUrl;
 };
@@ -718,36 +718,37 @@ nsNntpCacheStreamListener::nsNntpCacheStreamListener()
 nsNntpCacheStreamListener::~nsNntpCacheStreamListener()
 {}
 
-nsresult nsNntpCacheStreamListener::Init(nsIStreamListener * aStreamListener, nsIChannel * aChannelToUse,
+nsresult nsNntpCacheStreamListener::Init(nsIStreamListener * aStreamListener, nsIChannel* channel,
                                          nsIMsgMailNewsUrl *aRunningUrl)
 {
   NS_ENSURE_ARG(aStreamListener);
-  NS_ENSURE_ARG(aChannelToUse);
+  NS_ENSURE_ARG(channel);
+  
+  mChannelToUse = channel;
 
-  mChannelToUse = aChannelToUse;
   mListener = aStreamListener;
   mRunningUrl = aRunningUrl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNntpCacheStreamListener::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
+nsNntpCacheStreamListener::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
   nsCOMPtr <nsILoadGroup> loadGroup;
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-    loadGroup->AddChannel(mChannelToUse, nsnull /* context isupports */);
-  return mListener->OnStartRequest(mChannelToUse, aCtxt);
+    loadGroup->AddRequest(request, nsnull /* context isupports */);
+  return mListener->OnStartRequest(request, aCtxt);
 }
 
 NS_IMETHODIMP
-nsNntpCacheStreamListener::OnStopRequest(nsIChannel * aChannel, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
+nsNntpCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
 {
-  nsresult rv = mListener->OnStopRequest(mChannelToUse, aCtxt, aStatus, aMsg);
+  nsresult rv = mListener->OnStopRequest(request, aCtxt, aStatus, aMsg);
   nsCOMPtr <nsILoadGroup> loadGroup;
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-			loadGroup->RemoveChannel(mChannelToUse, nsnull, aStatus, nsnull);
+      loadGroup->RemoveRequest(request, nsnull, aStatus, nsnull);
 
   // clear out mem cache entry so we're not holding onto it.
   if (mRunningUrl)
@@ -759,13 +760,14 @@ nsNntpCacheStreamListener::OnStopRequest(nsIChannel * aChannel, nsISupports * aC
 }
 
 NS_IMETHODIMP
-nsNntpCacheStreamListener::OnDataAvailable(nsIChannel * aChannel, nsISupports * aCtxt, nsIInputStream * aInStream, PRUint32 aSourceOffset, PRUint32 aCount)
+nsNntpCacheStreamListener::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt, nsIInputStream * aInStream, PRUint32 aSourceOffset, PRUint32 aCount)
 {
-  return mListener->OnDataAvailable(mChannelToUse, aCtxt, aInStream, aSourceOffset, aCount);
+  return mListener->OnDataAvailable(request, aCtxt, aInStream, aSourceOffset, aCount);
 }
 
 
-NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
+NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt,
+                                        PRUint32 transferOffset, PRUint32 transferCount, nsIRequest **_retval)
 {
   nsresult rv;
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL, &rv);
@@ -794,7 +796,8 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
         nsMsgKey key = nsMsgKey_None;
         rv = m_runningURL->GetMessageKey(&key);
         nsCOMPtr<nsIFileChannel> fileChannel;
-        rv = folder->GetOfflineFileChannel(key, getter_AddRefs(fileChannel));
+        PRUint32 offset=0, size=0;
+        rv = folder->GetOfflineFileChannel(key, &offset, &size, getter_AddRefs(fileChannel));
         // get the file channel from the folder, somehow (through the message or
         // folder sink?) We also need to set the transfer offset to the message offset
         if (fileChannel && NS_SUCCEEDED(rv))
@@ -804,7 +807,8 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
           nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
           NS_ADDREF(cacheListener);
           cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this), mailnewsUrl);
-          rv = fileChannel->AsyncRead(cacheListener, m_channelContext);
+          nsCOMPtr<nsIRequest> request;
+          rv = fileChannel->AsyncRead(cacheListener, m_channelContext, offset, size, getter_AddRefs(request));
           NS_RELEASE(cacheListener);
           MarkCurrentMsgRead();
 
@@ -840,10 +844,13 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
         {
           // we're going to fill up this cache entry, 
           // do we have a listener here?
-          nsIStreamListener *listener = m_channelListener;
-          rv = cacheEntry->InterceptAsyncRead(listener, 0, getter_AddRefs(m_channelListener));
+          nsIStreamListener *anotherListener = m_channelListener;
+          rv = cacheEntry->InterceptAsyncRead(anotherListener, 0, getter_AddRefs(m_channelListener));
+          nsCOMPtr<nsIRequest> request;
           if (NS_SUCCEEDED(rv))
-            return nsMsgProtocol::AsyncRead(m_channelListener, ctxt);
+            return nsMsgProtocol::AsyncRead(m_channelListener, ctxt, 
+                                            transferOffset, transferCount, 
+                                            getter_AddRefs(request));
         }
       }
     }
@@ -860,7 +867,10 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
         SetLoadGroup(m_loadGroup);
         m_typeWanted = ARTICLE_WANTED;
         cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this), mailnewsUrl);
-        rv = cacheChannel->AsyncRead(cacheListener, m_channelContext);
+        nsCOMPtr<nsIRequest> request;
+        rv = cacheChannel->AsyncRead(cacheListener, m_channelContext, 
+                                     transferOffset, transferCount, 
+                                     getter_AddRefs(request));
         NS_RELEASE(cacheListener);
 
         MarkCurrentMsgRead();
@@ -875,7 +885,8 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
     }
 
   }
-  return nsMsgProtocol::AsyncRead(listener, ctxt);
+  nsCOMPtr<nsIRequest> parentRequest;
+  return nsMsgProtocol::AsyncRead(listener, ctxt, transferOffset, transferCount, getter_AddRefs(parentRequest));
 }
 
 nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
@@ -1211,9 +1222,9 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg)
 {
-		nsMsgProtocol::OnStopRequest(aChannel, aContext, aStatus, aMsg);
+		nsMsgProtocol::OnStopRequest(request, aContext, aStatus, aMsg);
 
     // nsMsgProtocol::OnStopRequest() has called m_channelListener. There is
     // no need to be called again in CloseSocket(). Let's clear it here.
@@ -5402,7 +5413,7 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
 		rv = m_channelListener->OnStopRequest(this, m_channelContext, NS_OK, nsnull);
 
 	if (m_loadGroup)
-		m_loadGroup->RemoveChannel(NS_STATIC_CAST(nsIChannel *, this), nsnull, NS_OK, nsnull);
+		m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, NS_OK, nsnull);
 	if (m_newsgroupList)
 	{
 		int status;

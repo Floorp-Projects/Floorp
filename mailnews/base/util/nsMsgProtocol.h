@@ -33,6 +33,7 @@
 #include "nsIFileSpec.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
+#include "nsIStreamContentInfo.h"
 
 class nsIPrompt;
 class nsIMsgMailNewsUrl;
@@ -42,7 +43,11 @@ class nsIMsgMailNewsUrl;
 // it unifies the core networking code for the protocols. My hope is that
 // this will make unification with Necko easier as we'll only have to change
 // this class and not all of the mailnews protocols.
-class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener, public nsIChannel
+class NS_MSG_BASE nsMsgProtocol 
+: public nsIStreamListener, 
+  public nsIChannel, 
+  public nsIRequest, 
+  public nsIStreamContentInfo
 {
 public:
 	nsMsgProtocol(nsIURI * aURL);
@@ -52,6 +57,7 @@ public:
 	// nsIChannel support
 	NS_DECL_NSICHANNEL
 	NS_DECL_NSIREQUEST
+    NS_DECL_NSISTREAMCONTENTINFO
   
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSISTREAMOBSERVER
@@ -102,7 +108,9 @@ protected:
 
 	// Ouput stream for writing commands to the socket
 	nsCOMPtr<nsIChannel>		m_channel; 
-	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
+	nsCOMPtr<nsIRequest>        m_request;
+
+    nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
 
 	PRBool	  m_socketIsOpen; // mscott: we should look into keeping this state in the nsSocketTransport...
 							  // I'm using it to make sure I open the socket the first time a URL is loaded into the connection

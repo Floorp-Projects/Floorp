@@ -581,10 +581,12 @@ nsresult nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
   return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileChannel(nsMsgKey msgKey, nsIFileChannel **aFileChannel)
+NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileChannel(nsMsgKey msgKey, PRUint32 *offset, PRUint32 *size, nsIFileChannel **aFileChannel)
 {
   NS_ENSURE_ARG(aFileChannel);
 
+  *offset = *size = 0;
+  
   nsresult rv;
 
   rv = nsComponentManager::CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID, nsnull, 
@@ -606,12 +608,8 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileChannel(nsMsgKey msgKey, nsIFileChann
 	      rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
         if (hdr && NS_SUCCEEDED(rv))
         {
-          PRUint32 messageOffset;
-          PRUint32 messageSize;
-          hdr->GetMessageOffset(&messageOffset);
-          hdr->GetOfflineMessageSize(&messageSize);
-          (*aFileChannel)->SetTransferOffset(messageOffset);
-          (*aFileChannel)->SetTransferCount(messageSize);
+          hdr->GetMessageOffset(offset);
+          hdr->GetOfflineMessageSize(size);
         }
       }
     }
@@ -643,8 +641,8 @@ nsresult nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStre
         rv = fileChannel->Init(localStore, PR_CREATE_FILE | PR_RDWR, 0);
         if (NS_FAILED(rv)) 
           return rv; 
-        fileChannel->SetTransferOffset(fileSize);
-        rv = fileChannel->OpenOutputStream(outputStream);
+      //bad see dougt    fileChannel->SetTransferOffset(fileSize);
+      //bad see dougt  rv = fileChannel->OpenOutputStream(outputStream);
         if (NS_FAILED(rv)) 
           return rv; 
       }
@@ -690,7 +688,6 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 	//					(c) does not already exist on the disk
 	// then we simply return nsCRT::strdup(userLeafName)
 	// Otherwise we mangle it
-
 	// mangledPath is the entire path to the newly mangled leaf name
 	nsCAutoString mangledLeaf(userLeafName);
 

@@ -59,7 +59,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 #include "nsMimeTypes.h"
-
+#include "nsIStreamContentInfo.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsIMsgWindow.h"
@@ -1897,8 +1897,10 @@ ResetChannelCharset(MimeObject *obj)
       char *ptr = PL_strstr(ct, "charset="); 
       if (ptr)
       {
-        // First, setup the channel!
-        msd->channel->SetContentType(ct); 
+      // check to see if the channel allows this
+      nsCOMPtr<nsIStreamContentInfo> contentInfo = do_QueryInterface(msd->channel);
+      if (contentInfo)
+        contentInfo->SetContentType(obj->content_type);
 
         // Second, if this is a Save As operation, then we need to convert
         // to override the output charset!

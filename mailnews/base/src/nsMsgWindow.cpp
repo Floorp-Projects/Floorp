@@ -398,7 +398,7 @@ NS_IMETHODIMP nsMsgWindow::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHa
 }
 
 NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, 
-                                     nsIChannel *aChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+                                     nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   if (aContentType)
   {
@@ -408,6 +408,10 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand 
     nsCOMPtr<nsIURIContentListener> ctnListener = do_QueryInterface(messageWindowDocShell);
     if (ctnListener)
     {
+        nsCOMPtr<nsIChannel> aChannel;
+        request->GetParent(getter_AddRefs(aChannel));
+        if (!aChannel) return NS_ERROR_FAILURE;
+
       // get the url for the channel...let's hope it is a mailnews url so we can set our msg hdr sink on it..
       // right now, this is the only way I can think of to force the msg hdr sink into the mime converter so it can
       // get too it later...
@@ -419,7 +423,7 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand 
         if (mailnewsUrl)
           mailnewsUrl->SetMsgWindow(this);
       }
-      return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, aChannel, aContentHandler, aAbortProcess);
+      return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, request, aContentHandler, aAbortProcess);
     }
   }
   return NS_OK;

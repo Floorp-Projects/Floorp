@@ -76,8 +76,8 @@ public:
 	// we suppport the nsIStreamListener interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
-	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg);
+	NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports *ctxt);
+	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg);
   NS_IMETHOD GetContentLength(PRInt32 * aContentLength);
 
 private:
@@ -127,3 +127,9 @@ private:
 };
 
 #endif  // nsMailboxProtocol_h___
+
+
+
+
+
+

@@ -341,7 +341,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   nsIMsgDBHdr GetMessageHeader(in nsMsgKey msgKey);
   boolean shouldStoreMsgOffline(in nsMsgKey msgKey);
   boolean hasMsgOffline(in nsMsgKey msgKey);
-  nsIFileChannel getOfflineFileChannel(in nsMsgKey msgKey);
+  nsIFileChannel getOfflineFileChannel(in nsMsgKey msgKey, out PRUint32 offset, out PRUint32 size);
   void DownloadMessagesForOffline(in nsISupportsArray messages);        
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
 

@@ -28,6 +28,7 @@
 #include "nsMimeTypes.h"
 #include "nsMimeStringResources.h"
 #include "nsCRT.h"
+#include "nsIStreamContentInfo.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeInlineImage, MimeInlineImageClass,
@@ -135,7 +136,10 @@ MimeInlineImage_parse_begin (MimeObject *obj)
     mime_stream_data  *msd = (mime_stream_data *) (obj->options->stream_closure);
     if ( (msd) && (msd->channel) )
     {
-      msd->channel->SetContentType(obj->content_type);
+      // check to see if the channel allows this
+      nsCOMPtr<nsIStreamContentInfo> contentInfo = do_QueryInterface(msd->channel);
+      if (contentInfo)
+        contentInfo->SetContentType(obj->content_type);
     }
   }
 
