@@ -244,7 +244,7 @@ PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
   }
 
   if (mDepth == 24) {
-    newcolor = aColor & 0x00ffffff;
+    newcolor = (PRUint32)aColor & 0x00ffffff;
   }
   
   return (newcolor);
