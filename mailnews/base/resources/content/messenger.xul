@@ -522,13 +522,14 @@ Rights Reserved.
           
           <box id="sidebar-box">
 		    <splitter class="sidebar-main-header" collapse="after"
+		              persist="state"
 		              onclick="sidebarOpenClosePanel(this)"> 
 		 		<html:div class="panel-bar">&mail-sidebar-header.label;</html:div>
 		    </splitter>
             <html:div id="folder-panel"/>
           </box>
           
-          <splitter id="sidebar-splitter" collapse="before" persist="state"/>
+          <splitter id="sidebar-splitter"/>
           
           <box align="vertical" flex="1">
      
