@@ -61,6 +61,7 @@ class nsIFile;
 class nsIChannel;
 class nsIRegistry;
 class nsPluginHostImpl;
+class nsISupportsArray;
 
 /**
  * A linked-list of plugin information that is used for
@@ -152,7 +153,7 @@ public:
   PRUint32 getStoppedCount();
   nsActivePlugin * findOldestStopped();
   void removeAllStopped();
-  void stopRunning();
+  void stopRunning(nsISupportsArray* aReloadDocs);
   PRBool IsLastInstance(nsActivePlugin * plugin);
 };
 

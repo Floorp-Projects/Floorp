@@ -65,7 +65,7 @@
 #include "nsGUIEvent.h"
 #include "nsIPluginViewer.h"
 #include "nsContentCID.h"
-
+#include "nsIScriptGlobalObject.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
@@ -326,6 +326,17 @@ PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
       GetURI(getter_AddRefs(uri));
       if (uri)
         mDocument->SetDocumentURL(uri);
+       
+      // we're going to need the docshell later to reload this full-page plugin in the event of a plugins refresh
+      // so stuff it in the document we created
+      nsCOMPtr<nsIScriptGlobalObject> global (do_GetInterface(mContainer));
+      if (global) {
+        mDocument->SetScriptGlobalObject(global);
+        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
+        if (domdoc)
+          global->SetNewDocument(domdoc, PR_TRUE);
+      }
+
     }
 
     nsRect r;
