@@ -1439,29 +1439,35 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
         InvalidateDesiredX();
         pos.mDirection = eDirNext;
         mHint = HINTLEFT;//stick to this line
+        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
         InvalidateDesiredX();
         mHint = HINTRIGHT;//stick to opposite of movement
+        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_DOWN : 
         pos.mAmount = eSelectLine;
         pos.mDirection = eDirNext;//no break here
+        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_UP : 
         pos.mAmount = eSelectLine;
+        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_HOME :
         InvalidateDesiredX();
         pos.mAmount = eSelectBeginLine;
         InvalidateDesiredX();
         mHint = HINTRIGHT;//stick to opposite of movement
+        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_END :
         InvalidateDesiredX();
         pos.mAmount = eSelectEndLine;
         InvalidateDesiredX();
         mHint = HINTLEFT;//stick to this line
+        PostReason(nsIDOMSelectionListener::KEYPRESS_REASON);
      break;
   default :return NS_ERROR_FAILURE;
   }
