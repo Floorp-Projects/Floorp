@@ -41,10 +41,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#stopButton {
-  list-style-image: url("chrome://communicator/skin/icons/loading.gif");
-}
-
 /* :::: undo regular search listbox selection look :::: */
 
 .searchresult-item[selected="true"] {
