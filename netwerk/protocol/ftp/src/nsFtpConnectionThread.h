@@ -227,8 +227,9 @@ private:
     nsCOMPtr<nsIEventQueue>mUIEventQ;
     PLEvent                *mAsyncReadEvent;
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
-    PRUint32               mWriteCount;  // The amount of data to write to the server.
-    PRBool                 mAsyncOpened; // This is set when the consumer wants AsyncOpen info.
+    PRUint32               mWriteCount;    // The amount of data to write to the server.
+    PRBool                 mAsyncOpened;   // This is set when the consumer wants AsyncOpen info.
+    PRBool                 mFireCallbacks; // Fire the listener callbacks.
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

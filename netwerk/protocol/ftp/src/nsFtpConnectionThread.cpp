@@ -67,7 +67,7 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
     // bool init
     mAsyncOpened = mConnected = mResetMode = mList = mRetryPass = mCachedConn = mSentStart = PR_FALSE;
-    mUsePasv = mBin = mKeepRunning = mAnonymous = PR_TRUE;
+    mFireCallbacks = mUsePasv = mBin = mKeepRunning = mAnonymous = PR_TRUE;
 
     mAction = GET;
     mState = FTP_COMMAND_CONNECT;
@@ -143,11 +143,18 @@ nsFtpConnectionThread::Process() {
 
                     // get the output stream so we can write to the server
                     rv = mCPipe->OpenOutputStream(0, getter_AddRefs(mCOutStream));
-                    if (NS_FAILED(rv)) return rv;
+                    if (NS_FAILED(rv)) {
+                        mInternalError = rv;
+                        mState = FTP_ERROR;
+                        break;
+                    }
 
                     rv = mCPipe->OpenInputStream(0, -1, getter_AddRefs(mCInStream));
-                    if (NS_FAILED(rv)) return rv;
-
+                    if (NS_FAILED(rv)) {
+                        mInternalError = rv;
+                        mState = FTP_ERROR;
+                        break;
+                    }
                     // cache this stuff.
                     mConn = new nsConnectionCacheObj(mCPipe, mCInStream, mCOutStream);
                     if (!mConn) return NS_ERROR_OUT_OF_MEMORY;
@@ -270,10 +277,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_ERROR:
                 {
-                // if something went wrong, delete this connection entry and don't
-                // bother putting it in the cache.
-                NS_ASSERTION(mConn, "we should have created the conn obj upon Init()");
-                delete mConn;
+                if (mConn) delete mConn;
 
                 if (mResponseCode == 421) {
                     // The command channel dropped for some reason. Fire it back up.
@@ -1359,7 +1363,7 @@ nsFtpConnectionThread::S_list() {
                                                          mDPipe,
                                                          mListenerContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
-
+    mFireCallbacks = PR_FALSE; // listener callbacks will be handled by the transport.
     return event->Fire(mUIEventQ);
 }
 
@@ -1404,7 +1408,7 @@ nsFtpConnectionThread::S_retr() {
                                                          mDPipe,
                                                          mListenerContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
-
+    mFireCallbacks = PR_FALSE; // listener callbacks will be handled by the transport.
     return event->Fire(mUIEventQ);
 }
 
@@ -1458,7 +1462,7 @@ nsFtpConnectionThread::S_stor() {
                                                            mDPipe,
                                                            mObserverContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
-
+    mFireCallbacks = PR_FALSE; // observer callbacks will be handled by the transport.
     return event->Fire(mUIEventQ);
 }
 
@@ -1932,6 +1936,36 @@ nsFtpConnectionThread::StopProcessing() {
     // if we have an observer, end the transaction
     if (mAsyncOpened && mObserver) {
         rv = mObserver->OnStopRequest(mChannel, mObserverContext, mInternalError, errorMsg);
+    }
+
+    if (mFireCallbacks) {
+        // we never got to the point that the transport would be
+        // taking over notifications. we'll handle them our selves.
+        if (mObserver && !mAsyncOpened) {
+            rv = mObserver->OnStartRequest(mChannel, mObserverContext);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = mObserver->OnStopRequest(mChannel, mObserverContext, mInternalError, errorMsg);
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        if (mListener) {
+            NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+            if(NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIStreamListener> listener;
+            rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
+                                                      NS_GET_IID(nsIStreamListener), 
+                                                      mListener,
+                                                      PROXY_ASYNC | PROXY_ALWAYS,
+                                                      getter_AddRefs(listener));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = listener->OnStartRequest(mChannel, mListenerContext);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = listener->OnStopRequest(mChannel, mListenerContext, mInternalError, errorMsg);
+            if (NS_FAILED(rv)) return rv;
+        }
     }
 
     return rv;
