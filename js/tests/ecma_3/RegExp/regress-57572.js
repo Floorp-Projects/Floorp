@@ -13,10 +13,10 @@
 *
 * The Initial Developer of the Original Code is Netscape
 * Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation. 
+* Copyright (C) 1998 Netscape Communications Corporation.
 * All Rights Reserved.
 *
-* Contributor(s): pschwartau@netscape.com  
+* Contributor(s): pschwartau@netscape.com
 * Date: 28 December 2000
 *
 * SUMMARY: Testing regular expressions containing the ? character.
@@ -25,6 +25,7 @@
 *  See http://bugzilla.mozilla.org/show_bug.cgi?id=57572
 */
 //-------------------------------------------------------------------------------------------------
+var i = 0;
 var bug = 57572;
 var summary = 'Testing regular expressions containing "?"\n';
 var cnEmptyString = ''; var cnSingleSpace = ' ';
@@ -34,7 +35,7 @@ var actualmatch = '';  var actualmatches = new Array();
 var expectedmatch = ''; var expectedmatches = new Array();
 
 
-pattern = /(\S+)?(.*)/; 
+pattern = /(\S+)?(.*)/;
 string = 'Test this';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Test',  ' this');  //single space in front of  'this'
@@ -46,48 +47,48 @@ actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Test',  'this');  //NO space in front of  'this'
 addThis(); 
 
-pattern = /(\S+)????(.*)/;   
+pattern = /(\S+)????(.*)/;
 string= 'Test this';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, cnEmptyString, string);
-addThis(); 
+addThis();
 
-pattern = /(\S+)?(.*)/; 
+pattern = /(\S+)?(.*)/;
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Stupid',  ' phrase, with six - (short) words');  //single space in front of 'phrase'
-addThis(); 
+addThis();
 
 pattern = /(\S+)? ?(.*)/;  //single space between the ? characters
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string,  'Stupid',  'phrase, with six - (short) words');  //NO space in front of 'phrase'
-addThis(); 
+addThis();
 
 // let's add an extra back-reference this time - three instead of two -
 pattern = /(\S+)?( ?)(.*)/;  //single space before second ? character
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string,  'Stupid', cnSingleSpace, 'phrase, with six - (short) words'); 
-addThis(); 
+expectedmatch = Array(string,  'Stupid', cnSingleSpace, 'phrase, with six - (short) words');
+addThis();
 
 pattern = /^(\S+)?( ?)(B+)$/;  //single space before second ? character
 string = 'AAABBB';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string,  'AAABB', cnEmptyString,  'B');  
-addThis(); 
+expectedmatch = Array(string,  'AAABB', cnEmptyString,  'B');
+addThis();
 
 pattern = /(\S+)?(!?)(.*)/;
 string = 'WOW !!! !!!';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, 'WOW', cnEmptyString,  ' !!! !!!');
-addThis(); 
+addThis();
 
 pattern = /(.+)?(!?)(!+)/;
 string = 'WOW !!! !!!';
 actualmatch = string.match(pattern);
 expectedmatch = Array(string, 'WOW !!! !!', cnEmptyString,  '!');
-addThis(); 
+addThis();
 
 
 
@@ -97,19 +98,19 @@ test();
 
 
 
-function addThis() 
+function addThis()
 {
-  i++;
   patterns[i] = pattern;
   strings[i] = string;
   actualmatches[i] = actualmatch;
   expectedmatches[i] = expectedmatch;
+  i++;
 }
 
 
-function test() 
+function test()
 {
-  enterFunc ('test'); 
+  enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
   testRegExp(patterns, strings, actualmatches, expectedmatches);
