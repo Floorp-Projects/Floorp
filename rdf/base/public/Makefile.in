@@ -26,19 +26,7 @@ MODULE = rdf
 
 EXPORTS =				\
         rdf.h                   	\
-	nsIRDFCompositeDataSource.h	\
-	nsIRDFContainer.h		\
-	nsIRDFContainerUtils.h		\
 	nsIRDFContentSink.h		\
-	nsIRDFDataSource.h      	\
-	nsIRDFLiteral.h			\
-        nsIRDFNode.h            	\
-	nsIRDFObserver.h        	\
-	nsIRDFPurgeableDataSource.h	\
-	nsIRDFResource.h		\
-        nsIRDFService.h         	\
-	nsIRDFXMLDataSource.h		\
-        nsIRDFXMLSource.h       	\
 	nsRDFInterfaces.h		\
         $(NULL)
 
