@@ -39,16 +39,17 @@ class nsIFileListTransferable : public nsISupports {
     static const nsIID& GetIID() { static nsIID iid = NS_IFILELISTTRANSFERABLE_IID; return iid; }
 
   /**
-    * Sets a list of nsFileSpecs
+    * Copies the list of nsFileSpecs items from aFileList to the internal data member
     *
     */
     NS_IMETHOD SetFileList(nsVoidArray * aFileList) = 0;
 
   /**
-    * Gets a list of nsFileSpecs
+    * Copies the list of nsFileSpecs items from the internal data member to the 
+    * aFileList nsVoidArray
     *
     */
-    NS_IMETHOD GetFileList(nsVoidArray ** aFileList) = 0;
+    NS_IMETHOD GetFileList(nsVoidArray * aFileList) = 0;
 
 };
 
