@@ -120,15 +120,17 @@ nsLoggingProgressListener::OnInstallStart(const PRUnichar *URL)
             bTryProfileDir = PR_TRUE;
     }
 
-    if (bTryProfileDir)
-    {
+    if (bTryProfileDir && !nsSoftwareUpdate::GetProgramDirectory())
+    {   
         // failed to create the log file in the application directory
         // so try to create the log file in the user's profile directory
+        // while we are not in the stub installer
         nsCOMPtr<nsIProperties> dirSvc =
                  do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        if (!dirSvc) return NS_ERROR_FAILURE;
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         dirSvc->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
                     getter_AddRefs(iFile));
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
         if (!nsSoftwareUpdate::GetLogName())
             rv = iFile->Append(INSTALL_LOG);
