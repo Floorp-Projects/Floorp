@@ -52,6 +52,7 @@ class nsIXBLBinding;
 class nsISupportsArray;
 class nsCString; 
 class nsIScriptContext;
+class nsXBLProtoImpl;
 
 // {34D700F5-C1A2-4408-A0B1-DD8F891DD1FE}
 #define NS_IXBLPROTOTYPEBINDING_IID \
@@ -82,11 +83,17 @@ public:
   NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler)=0;
   NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler)=0;
   
-  NS_IMETHOD GetPrototypeProperties(nsIXBLPrototypeProperty** aResult) = 0;
-  NS_IMETHOD SetProtoTypeProperties(nsIXBLPrototypeProperty* aResult) = 0;
-  NS_IMETHOD GetCompiledClassObject(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject) = 0;
-  
+  NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult)=0;
+  NS_IMETHOD SetConstructor(nsIXBLPrototypeHandler* aConstructor)=0;
+  NS_IMETHOD GetDestructor(nsIXBLPrototypeHandler** aResult)=0;
+  NS_IMETHOD SetDestructor(nsIXBLPrototypeHandler* aDestructor)=0;
+
   NS_IMETHOD InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject) = 0;
+  
+  NS_IMETHOD SetImplementation(nsXBLProtoImpl* aImpl)=0;
+  NS_IMETHOD InstallImplementation(nsIContent* aBoundElement)=0;
+
+  NS_IMETHOD ConstructInterfaceTable(const nsAReadableString& aImpls)=0;
   
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
                               nsIContent* aChangedElement, nsIContent* aAnonymousContent)=0;
@@ -125,8 +132,6 @@ public:
   NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult)=0;
 
   NS_IMETHOD AddResourceListener(nsIContent* aBoundElement)=0;
-
-  NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult)=0;
 
   NS_IMETHOD Initialize()=0;
 };

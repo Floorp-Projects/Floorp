@@ -52,7 +52,6 @@ class nsIXBLBinding;
 class nsIXBLDocumentInfo;
 class nsIXBLPrototypeHandler;
 class nsIXBLPrototypeBinding;
-class nsIXBLPrototypeProperty;
 class nsINameSpaceManager;
 class nsIContent;
 class nsIDocument;
@@ -114,10 +113,6 @@ public:
   // can also peek without building.
   NS_IMETHOD GetBindingInternal(nsIContent* aBoundElement, const nsCString& aURLStr, 
                                 PRBool aPeekFlag, PRBool* aIsReady, nsIXBLBinding** aResult);
-
-  // This method walks a binding document and removes any text nodes
-  // that contain only whitespace.
-  static nsresult BuildPropertyChain(nsIXBLPrototypeBinding * aPrototypeBinding, nsIContent * aContent, nsIXBLPrototypeProperty ** aResult);
 
 // MEMBER VARIABLES
 public:

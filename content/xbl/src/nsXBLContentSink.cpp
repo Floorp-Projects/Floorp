@@ -51,6 +51,9 @@
 #include "nsTextFragment.h"
 #include "nsXULElement.h"
 #include "nsXULAtoms.h"
+#include "nsXBLProtoImplProperty.h"
+#include "nsXBLProtoImplMethod.h"
+#include "nsXBLProtoImplField.h"
 
 static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 
@@ -79,6 +82,11 @@ nsXBLContentSink::nsXBLContentSink()
   mSecondaryState = eXBL_None;
   mDocInfo = nsnull;
   mIsChromeOrResource = PR_FALSE;
+  mImplementation = nsnull;
+  mImplMember = nsnull;
+  mProperty = nsnull;
+  mMethod = nsnull;
+  mField = nsnull;
 }
 
 nsXBLContentSink::~nsXBLContentSink()
@@ -137,13 +145,57 @@ nsXBLContentSink::OnOpenContainer(const nsIParserNode& aNode, PRInt32 aNameSpace
       mState = eXBL_InResources;
       ret = PR_FALSE; // The XML content sink should ignore all <resources>.
     }
-    else if (mState == eXBL_InResources && (aTagName == nsXBLAtoms::stylesheet || aTagName == nsXBLAtoms::image)) {
-      ConstructResource(aNode, aTagName);
-      ret = PR_FALSE; // The XML content sink should ignore all <resources>.
+    else if (mState == eXBL_InResources) {
+      if (aTagName == nsXBLAtoms::stylesheet || aTagName == nsXBLAtoms::image)
+        ConstructResource(aNode, aTagName);
+      ret = PR_FALSE; // The XML content sink should ignore everything within a <resources> block.
     }
     else if (aTagName == nsXBLAtoms::implementation) {
-     // mState = eXBL_InImplementation;
-     // ret = PR_FALSE; // The XML content sink should ignore the <implementation>.
+      mState = eXBL_InImplementation;
+      ConstructImplementation(aNode);
+      ret = PR_FALSE; // The XML content sink should ignore the <implementation>.
+    }
+    else if (mState == eXBL_InImplementation) {
+      if (aTagName == nsXBLAtoms::constructor) {
+        mSecondaryState = eXBL_InConstructor;
+        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
+        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
+                                  nsnull, nsnull, nsnull, nsnull, nsnull,
+                                  getter_AddRefs(newHandler));
+        newHandler->SetEventName(nsXBLAtoms::constructor);
+        mBinding->SetConstructor(newHandler);
+      }
+      else if (aTagName == nsXBLAtoms::destructor) {
+        mSecondaryState = eXBL_InDestructor;
+        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
+        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
+                                  nsnull, nsnull, nsnull, nsnull, nsnull,
+                                  getter_AddRefs(newHandler));
+        newHandler->SetEventName(nsXBLAtoms::destructor);
+        mBinding->SetDestructor(newHandler);
+      }
+      else if (aTagName == nsXBLAtoms::field) {
+        mSecondaryState = eXBL_InField;
+        ConstructField(aNode);
+      }
+      else if (aTagName == nsXBLAtoms::property) {
+        mSecondaryState = eXBL_InProperty;
+        ConstructProperty(aNode);
+      }
+      else if (aTagName == nsXBLAtoms::getter)
+        mSecondaryState = eXBL_InGetter;
+      else if (aTagName == nsXBLAtoms::setter)
+        mSecondaryState = eXBL_InSetter;
+      else if (aTagName == nsXBLAtoms::method) {
+        mSecondaryState = eXBL_InMethod;
+        ConstructMethod(aNode);
+      }
+      else if (aTagName == nsXBLAtoms::parameter)
+        ConstructParameter(aNode);
+      else if (aTagName == nsXBLAtoms::body)
+        mSecondaryState = eXBL_InBody;
+
+      ret = PR_FALSE; // Ignore everything we encounter inside an <implementation> block.
     }
   }
 
@@ -186,6 +238,32 @@ nsXBLContentSink::CloseContainer(const nsIParserNode& aNode)
       else if (mState == eXBL_InResources) {
         if (tagAtom == nsXBLAtoms::resources)
           mState = eXBL_InBinding;
+        return NS_OK;
+      }
+      else if (mState == eXBL_InImplementation) {
+        if (tagAtom == nsXBLAtoms::implementation)
+          mState = eXBL_InBinding;
+        else if (tagAtom == nsXBLAtoms::property) {
+          mSecondaryState = eXBL_None;
+          mProperty = nsnull;
+        }
+        else if (tagAtom == nsXBLAtoms::method) {
+          mSecondaryState = eXBL_None;
+          mMethod = nsnull;
+        }
+        else if (tagAtom == nsXBLAtoms::field) {
+          mSecondaryState = eXBL_None;
+          mField = nsnull;
+        }
+        else if (tagAtom == nsXBLAtoms::constructor ||
+                 tagAtom == nsXBLAtoms::destructor)
+          mSecondaryState = eXBL_None;
+        else if (tagAtom == nsXBLAtoms::getter ||
+                 tagAtom == nsXBLAtoms::setter)
+          mSecondaryState = eXBL_InProperty;
+        else if (tagAtom == nsXBLAtoms::parameter ||
+                 tagAtom == nsXBLAtoms::body)
+          mSecondaryState = eXBL_InMethod;
         return NS_OK;
       }
 
@@ -243,19 +321,123 @@ nsXBLContentSink::AddLeaf(const nsIParserNode& aNode)
       // Get the text and add it to the event handler.
       switch (aNode.GetTokenType()) {
         case eToken_text:
+        case eToken_whitespace:
+        case eToken_newline:
         case eToken_cdatasection:
-          mHandler->SetHandlerText(aNode.GetText());
+          mHandler->AppendHandlerText(aNode.GetText());
+          break;
         case eToken_entity:
         {
           nsAutoString tmp;
           PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
           if (unicode < 0)
-            mHandler->SetHandlerText(aNode.GetText());
+            mHandler->AppendHandlerText(aNode.GetText());
           else
-            mHandler->SetHandlerText(aNode.GetText());
+            mHandler->AppendHandlerText(tmp);
         }
       }
     }
+    return NS_OK;
+  }
+  else if (mState == eXBL_InImplementation) {
+    if (mSecondaryState == eXBL_InConstructor ||
+        mSecondaryState == eXBL_InDestructor) {
+      // Construct a handler for the constructor/destructor.
+      // XXXdwh This is just awful.  These used to be handlers called
+      // BindingAttached and BindingDetached, and they're still implemented
+      // using handlers.  At some point, we need to change these to just
+      // be special functions on the class instead.
+      nsCOMPtr<nsIXBLPrototypeHandler> handler;
+      if (mSecondaryState == eXBL_InConstructor)
+        mBinding->GetConstructor(getter_AddRefs(handler));
+      else
+        mBinding->GetDestructor(getter_AddRefs(handler));
+
+      // Get the text and add it to the constructor/destructor.
+      switch (aNode.GetTokenType()) {
+        case eToken_text:
+        case eToken_whitespace:
+        case eToken_newline:
+        case eToken_cdatasection:
+          handler->AppendHandlerText(aNode.GetText());
+          break;
+        case eToken_entity:
+        {
+          nsAutoString tmp;
+          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+          if (unicode < 0)
+            handler->AppendHandlerText(aNode.GetText());
+          else
+            handler->AppendHandlerText(tmp);
+        }
+      }
+    }
+    else if (mSecondaryState == eXBL_InGetter ||
+             mSecondaryState == eXBL_InSetter) {
+      // Get the text and add it to the constructor/destructor.
+      PRBool getter = mSecondaryState == eXBL_InGetter;
+      switch (aNode.GetTokenType()) {
+        case eToken_text:
+        case eToken_whitespace:
+        case eToken_newline:
+        case eToken_cdatasection:
+          getter ? mProperty->AppendGetterText(aNode.GetText()) : 
+                   mProperty->AppendSetterText(aNode.GetText());
+          break;
+        case eToken_entity:
+        {
+          nsAutoString tmp;
+          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+          if (unicode < 0) 
+            getter ? mProperty->AppendGetterText(aNode.GetText()) : 
+                     mProperty->AppendSetterText(aNode.GetText());
+          else
+            getter ? mProperty->AppendGetterText(tmp) : 
+                     mProperty->AppendSetterText(tmp);
+        }
+      }
+    }
+    else if (mSecondaryState == eXBL_InBody) {
+      // Get the text and add it to the method
+      switch (aNode.GetTokenType()) {
+        case eToken_text:
+        case eToken_whitespace:
+        case eToken_newline:
+        case eToken_cdatasection:
+          mMethod->AppendBodyText(aNode.GetText());
+          break;
+        case eToken_entity:
+        {
+          nsAutoString tmp;
+          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+          if (unicode < 0)
+            mMethod->AppendBodyText(aNode.GetText());
+          else
+            mMethod->AppendBodyText(tmp);
+        }
+      }
+    }
+    else if (mSecondaryState == eXBL_InField) {
+      // Get the text and add it to the method
+      switch (aNode.GetTokenType()) {
+        case eToken_text:
+        case eToken_whitespace:
+        case eToken_newline:
+        case eToken_cdatasection:
+          mField->AppendFieldText(aNode.GetText());
+          break;
+        case eToken_entity:
+        {
+          nsAutoString tmp;
+          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+          if (unicode < 0)
+            mField->AppendFieldText(aNode.GetText());
+          else
+            mField->AppendFieldText(tmp);
+        }
+      }
+    }
+
     return NS_OK;
   }
 
@@ -500,6 +682,187 @@ nsXBLContentSink::ConstructResource(const nsIParserNode& aNode, nsIAtom* aResour
     // Is this attribute one of the ones we care about?
     if (key.Equals(NS_LITERAL_STRING("src"))) {
       mBinding->AddResource(aResourceType, aNode.GetValueAt(i));
+      break;
+    }
+  }
+}
+
+void
+nsXBLContentSink::ConstructImplementation(const nsIParserNode& aNode)
+{
+  mImplementation = nsnull;
+  mImplMember = nsnull;
+      
+  if (!mBinding)
+    return;
+
+  nsAReadableString* name       = nsnull;
+  
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  PRInt32 ac = aNode.GetAttributeCount();
+  for (PRInt32 i = 0; i < ac; i++) {
+    // Get upper-cased key
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
+      continue;
+
+    // Is this attribute one of the ones we care about?
+    if (key.Equals(NS_LITERAL_STRING("name")))
+      name = &(aNode.GetValueAt(i));
+    else if (key.Equals(NS_LITERAL_STRING("implements")))
+      mBinding->ConstructInterfaceTable(aNode.GetValueAt(i));
+  }
+
+  NS_NewXBLProtoImpl(mBinding, name, &mImplementation);
+}
+
+void
+nsXBLContentSink::ConstructField(const nsIParserNode& aNode)
+{
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  PRInt32 ac = aNode.GetAttributeCount();
+
+  nsAReadableString* name       = nsnull;
+  nsAReadableString* readonly   = nsnull;
+  
+  for (PRInt32 i = 0; i < ac; i++) {
+    // Get upper-cased key
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
+      continue;
+
+    // Is this attribute one of the ones we care about?
+    if (key.Equals(NS_LITERAL_STRING("name")))
+      name = &(aNode.GetValueAt(i));
+    else if (key.Equals(NS_LITERAL_STRING("readonly")))
+      readonly = &(aNode.GetValueAt(i));
+  }
+
+  // All of our pointers are now filled in.  Construct our field with all of these
+  // parameters.
+  mField = new nsXBLProtoImplField(name, readonly);
+  if (mField) {
+    // Add this member to our chain.
+    if (mImplMember)
+      mImplMember->SetNext(mField); // Already have a chain. Just append to the end.
+    else
+      mImplementation->SetMemberList(mField); // We're the first member in the chain.
+
+    mImplMember = mField; // Adjust our pointer to point to the new last member in the chain.
+  }
+}
+
+void
+nsXBLContentSink::ConstructProperty(const nsIParserNode& aNode)
+{
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  PRInt32 ac = aNode.GetAttributeCount();
+
+  nsAReadableString* name       = nsnull;
+  nsAReadableString* readonly   = nsnull;
+  nsAReadableString* onget      = nsnull;
+  nsAReadableString* onset      = nsnull;
+  
+  for (PRInt32 i = 0; i < ac; i++) {
+    // Get upper-cased key
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
+      continue;
+
+    // Is this attribute one of the ones we care about?
+    if (key.Equals(NS_LITERAL_STRING("name")))
+      name = &(aNode.GetValueAt(i));
+    else if (key.Equals(NS_LITERAL_STRING("readonly")))
+      readonly = &(aNode.GetValueAt(i));
+    else if (key.Equals(NS_LITERAL_STRING("onget")))
+      onget = &(aNode.GetValueAt(i));
+    else if (key.Equals(NS_LITERAL_STRING("onset")))
+      onset = &(aNode.GetValueAt(i));
+  }
+
+  // All of our pointers are now filled in.  Construct our property with all of these
+  // parameters.
+  mProperty = new nsXBLProtoImplProperty(name, onget, onset, readonly);
+  if (mProperty) {
+    // Add this member to our chain.
+    if (mImplMember)
+      mImplMember->SetNext(mProperty); // Already have a chain. Just append to the end.
+    else
+      mImplementation->SetMemberList(mProperty); // We're the first member in the chain.
+
+    mImplMember = mProperty; // Adjust our pointer to point to the new last member in the chain.
+  }
+}
+
+void
+nsXBLContentSink::ConstructMethod(const nsIParserNode& aNode)
+{
+  mMethod = nsnull;
+
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  PRInt32 ac = aNode.GetAttributeCount();
+
+  for (PRInt32 i = 0; i < ac; i++) {
+    // Get upper-cased key
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
+      continue;
+
+    // Is this attribute one of the ones we care about?
+    if (key.Equals(NS_LITERAL_STRING("name"))) {
+      mMethod = new nsXBLProtoImplMethod(aNode.GetValueAt(i));
+      break;
+    }
+  }
+
+  if (mMethod) {
+    // Add this member to our chain.
+    if (mImplMember)
+      mImplMember->SetNext(mMethod); // Already have a chain. Just append to the end.
+    else
+      mImplementation->SetMemberList(mMethod); // We're the first member in the chain.
+
+    mImplMember = mMethod; // Adjust our pointer to point to the new last member in the chain.
+  }
+}
+
+void
+nsXBLContentSink::ConstructParameter(const nsIParserNode& aNode)
+{
+  if (!mMethod)
+    return;
+
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  PRInt32 ac = aNode.GetAttributeCount();
+  for (PRInt32 i = 0; i < ac; i++) {
+    // Get upper-cased key
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
+      continue;
+
+    // Is this attribute one of the ones we care about?
+    if (key.Equals(NS_LITERAL_STRING("name"))) {
+      mMethod->AddParameter(aNode.GetValueAt(i));
       break;
     }
   }

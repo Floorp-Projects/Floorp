@@ -76,7 +76,7 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD GenerateAnonymousContent();
   NS_IMETHOD InstallEventHandlers();
-  NS_IMETHOD InstallProperties();
+  NS_IMETHOD InstallImplementation();
   
   NS_IMETHOD HasStyleSheets(PRBool* aResolveStyle);
   

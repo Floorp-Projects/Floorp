@@ -81,7 +81,7 @@ public:
 
   NS_IMETHOD GetHandlerElement(nsIContent** aResult);
 
-  NS_IMETHOD SetHandlerText(const nsAReadableString& aText);
+  NS_IMETHOD AppendHandlerText(const nsAReadableString& aText);
 
   NS_IMETHOD GetPhase(PRUint8* aResult) { *aResult = mPhase; return NS_OK; };
 

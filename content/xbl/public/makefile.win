@@ -30,7 +30,6 @@ EXPORTS =				\
     nsIXBLPrototypeBinding.h \
     nsIXBLPrototypeHandler.h \
     nsIXBLService.h \
-    nsIXBLPrototypeProperty.h \
     $(NULL)
 
 MODULE=content

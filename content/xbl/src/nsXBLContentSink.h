@@ -43,6 +43,7 @@
 #include "nsXBLDocumentInfo.h"
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIXBLPrototypeHandler.h"
+#include "nsXBLProtoImpl.h"
 #include "nsICSSParser.h"
 #include "nsLayoutCID.h"
 
@@ -62,10 +63,16 @@ typedef enum {
   eXBL_InField,
   eXBL_InBody,
   eXBL_InGetter,
-  eXBL_InSetter
+  eXBL_InSetter,
+  eXBL_InConstructor,
+  eXBL_InDestructor
 } XBLSecondaryState;
 
 class nsXULPrototypeElement;
+class nsXBLProtoImplMember;
+class nsXBLProtoImplProperty;
+class nsXBLProtoImplMethod;
+class nsXBLProtoImplField;
 
 // The XBL content sink overrides the XML content sink to
 // builds its own lightweight data structures for the <resources>,
@@ -100,6 +107,12 @@ protected:
   void ConstructBinding();
   void ConstructHandler(const nsIParserNode& aNode);
   void ConstructResource(const nsIParserNode& aNode, nsIAtom* aResourceType);
+  void ConstructImplementation(const nsIParserNode& aNode);
+  void ConstructProperty(const nsIParserNode& aNode);
+  void ConstructMethod(const nsIParserNode& aNode);
+  void ConstructParameter(const nsIParserNode& aNode);
+  void ConstructField(const nsIParserNode& aNode);
+
   nsresult AddAttributesToXULPrototype(const nsIParserNode& aNode, nsXULPrototypeElement* aElement);
 
 protected:
@@ -112,6 +125,11 @@ protected:
 
   nsCOMPtr<nsIXBLPrototypeBinding> mBinding;
   nsCOMPtr<nsIXBLPrototypeHandler> mHandler;
+  nsXBLProtoImpl* mImplementation;
+  nsXBLProtoImplMember* mImplMember;
+  nsXBLProtoImplProperty* mProperty;
+  nsXBLProtoImplMethod* mMethod;
+  nsXBLProtoImplField* mField;
 };
 
 

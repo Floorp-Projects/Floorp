@@ -62,7 +62,10 @@ CPPSRCS		= \
     nsXBLResourceLoader.cpp \
     nsXBLDocumentInfo.cpp \
     nsXBLContentSink.cpp \
-    nsXBLPrototypeProperty.cpp \
+    nsXBLProtoImplProperty.cpp \
+    nsXBLProtoImplMethod.cpp \
+    nsXBLProtoImplField.cpp \
+    nsXBLProtoImpl.cpp \
     nsXBLEventHandler.cpp \
     nsXBLWindowHandler.cpp \
     nsXBLWindowKeyHandler.cpp \

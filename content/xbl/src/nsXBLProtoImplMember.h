@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Original Author: Scott MacGregor (mscott@netscape.com)
+ *   David Hyatt <hyatt@netscape.com> (Original Author)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,37 +37,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
+#ifndef nsXBLProtoImplMember_h__
+#define nsXBLProtoImplMember_h__
 
-  Private interface to the XBL PrototypeProperty
+#include "nsIAtom.h"
+#include "nsString.h"
+#include "jsapi.h"
+#include "nsIContent.h"
+#include "nsString.h"
+#include "nsIJSRuntimeService.h"
+#include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 
-*/
-
-#ifndef nsIXBLPrototypeProperty_h__
-#define nsIXBLPrototypeProperty_h__
-
-class nsIContent;
 class nsIScriptContext;
-class nsIXBLPrototypeBinding;
 
-// {FDDD1C5C-F47C-4b10-9CBC-34E087D1279A}
-#define NS_IXBLPROTOTYPEPROPERTY_IID \
-{ 0xfddd1c5c, 0xf47c, 0x4b10, { 0x9c, 0xbc, 0x34, 0xe0, 0x87, 0xd1, 0x27, 0x9a } }
-
-class nsIXBLPrototypeProperty : public nsISupports
+class nsXBLProtoImplMember
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLPROTOTYPEPROPERTY_IID)
+  nsXBLProtoImplMember(const nsAReadableString* aName) :mNext(nsnull) { mName = ToNewUnicode(*aName); };
+  virtual ~nsXBLProtoImplMember() { nsMemory::Free(mName); delete mNext; };
+  virtual void Destroy(PRBool aIsCompiled)=0;
 
-  NS_IMETHOD GetNextProperty(nsIXBLPrototypeProperty** aProperty) = 0;
-  NS_IMETHOD SetNextProperty(nsIXBLPrototypeProperty* aProperty) = 0;
+  nsXBLProtoImplMember* GetNext() { return mNext; };
+  void SetNext(nsXBLProtoImplMember* aNext) { mNext = aNext; };
 
-  NS_IMETHOD ConstructProperty(nsIContent * aInterfaceElement, nsIContent* aPropertyElement) = 0;
-  NS_IMETHOD InstallProperty(nsIScriptContext * aContext, nsIContent *aBoundElement, void * aScriptObject, void * aTargetClassObject) = 0;
-  NS_IMETHOD InitTargetObjects(nsIScriptContext * aContext, nsIContent * aBoundElement, void ** aScriptObject, void ** aTargetClassObject) = 0;
+  virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
+                                 void* aScriptObject, void* aTargetClassObject)=0;
+  virtual nsresult CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr, void* aClassObject)=0;
+
+protected:
+  nsXBLProtoImplMember* mNext;  // The members of an implementation are chained.
+  PRUnichar* mName;               // The name of the field, method, or property.
 };
 
-extern nsresult
-NS_NewXBLPrototypeProperty(nsIXBLPrototypeBinding * aPrototypeBinding, nsIXBLPrototypeProperty ** aResult);
-
-#endif // nsIXBLPrototypeProperty_h__
+#endif // nsXBLProtoImplMember_h__

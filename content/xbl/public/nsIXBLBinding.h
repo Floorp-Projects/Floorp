@@ -82,7 +82,7 @@ public:
 
   NS_IMETHOD GenerateAnonymousContent() = 0;
   NS_IMETHOD InstallEventHandlers() = 0;
-  NS_IMETHOD InstallProperties() = 0;
+  NS_IMETHOD InstallImplementation() = 0;
   
   NS_IMETHOD HasStyleSheets(PRBool* aResolveStyle) = 0;
 

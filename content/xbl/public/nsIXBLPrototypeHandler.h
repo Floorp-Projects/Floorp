@@ -69,7 +69,7 @@ public:
   NS_IMETHOD KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent, PRBool* aResult) = 0;
 
   NS_IMETHOD GetHandlerElement(nsIContent** aResult) = 0;
-  NS_IMETHOD SetHandlerText(const nsAReadableString& aText) = 0;
+  NS_IMETHOD AppendHandlerText(const nsAReadableString& aText) = 0;
 
   NS_IMETHOD GetPhase(PRUint8* aPhase) = 0;
 
