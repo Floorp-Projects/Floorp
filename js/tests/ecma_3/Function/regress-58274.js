@@ -49,7 +49,7 @@
 *    (new String("function f\xB1() {}"))
 *
 *
-* See how the high-byte information (02) has been lost?
+* See how the high-byte information (the 02) has been lost?
 * The same thing was happening with the toString() method:
 *
 *    js> f\u02B1.toString();
@@ -147,23 +147,23 @@ test();
  *
  * Rhino uses a Unicode representation for f.toString(); whereas
  * SpiderMonkey uses an ASCII representation, putting escape sequences
- * for non-ASCII characters. For example, If a function is called f\u02B1,
+ * for non-ASCII characters. For example, if a function is called f\u02B1,
  * then in Rhino the toString() method will present a 2-character Unicode
  * string for its name, whereas SpiderMonkey will present a 7-character
  * ASCII string for its name: the string literal 'f\u02B1'.
  *
- * So we force the lexer to condense the string before returning it.
+ * So we force the lexer to condense the string before using it.
  * This will give uniform results in Rhino and SpiderMonkey.
  */
 function getFunctionName(f)
 {
-  var s = f.toString();
+  var s = condenseStr(f.toString());
   var re = /\s*function\s+(\S+)\s*\(/;
   var arr = s.match(re);
 
   if (!(arr && arr[1]))
     return ERR_MALFORMED_NAME + s;
-  return condenseStr(arr[1]);
+  return arr[1];
 }
 
 

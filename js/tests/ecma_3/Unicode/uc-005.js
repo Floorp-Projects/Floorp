@@ -49,7 +49,7 @@
 *    (new String("function f\xB1() {}"))
 *
 *
-* See how the high-byte information (02) has been lost?!
+* See how the high-byte information (the 02) has been lost?
 * The same thing was happening with the toString() method:
 *
 *    js> f\u02B1.toString();
@@ -191,7 +191,7 @@ test();
  *
  * Rhino uses a Unicode representation for f.toString(); whereas
  * SpiderMonkey uses an ASCII representation, putting escape sequences
- * for non-ASCII characters. For example, If a function is called f\u02B1,
+ * for non-ASCII characters. For example, if a function is called f\u02B1,
  * then in Rhino the toString() method will present a 2-character Unicode
  * string for its name, whereas SpiderMonkey will present a 7-character
  * ASCII string for its name: the string literal 'f\u02B1'.
@@ -201,7 +201,8 @@ test();
  */
 function getIdentifiers(f)
 {
-  var arr = f.toString().split('Z');
+  var str = condenseStr(f.toString());
+  var arr = str.split('Z');
 
   /*
    * The identifiers are the 1st char of each split substring
@@ -211,11 +212,7 @@ function getIdentifiers(f)
    * the 2nd one in |arr[2]|, etc., making the indexing easy -
    */
   for (i in arr)
-  {
-    arr[i] = condenseStr(arr[i]);
     arr[i] = arr[i].charAt(0);
-  }
-
   return arr;
 }
 
