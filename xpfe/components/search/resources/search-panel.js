@@ -628,7 +628,11 @@ function openURL(event, treeitem, root)
 	{
 	}
 
-	window.content.location = id;
+  if ( window.content )
+    window.content.location = id;
+  else {
+    window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", id );
+  }
 }
 
 // this should go somewhere else. 
