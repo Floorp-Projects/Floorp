@@ -237,7 +237,6 @@
 <!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
 
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; debug --> 
-<!ENTITY domviewer.label "DOM Viewer">
 <!ENTITY browserbuster.label "chofmann's browser buster">
 <!ENTITY editor-test-page.label "Composer with test page">
 <!ENTITY flush-memory.label "Flush Memory">
