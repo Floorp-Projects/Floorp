@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -37,11 +37,6 @@
 #include HG09893
 
 /* include event sink interfaces for news */
-#include "nsIMsgXOVERParser.h"
-#include "nsIMsgNewsArticleList.h"
-#include "nsIMsgNewsHost.h"
-#include "nsIMsgOfflineNewsState.h" 
-#include "nsIMsgNewsgroup.h"
 
 #include "nsIMsgRFC822Parser.h" 
 #include "nsMsgRFC822Parser.h"
@@ -151,10 +146,11 @@ PR_LOG(NNTP, out, buf) ;
 /* mscott: I wonder if we still need these? I'd like to abstract them out into a NNTP protocol manager
    (the object that is going to manage the NNTP connections. it would keep track of the connection list.)
 */
-PRIVATE XP_List * nntp_connection_list=0;
+/* PRIVATE XP_List * nntp_connection_list=0; */
 PRIVATE XP_Bool net_news_last_username_probably_valid=FALSE;
 PRIVATE int32 net_NewsChunkSize=-1;  /* default */
-PRIVATE int32 net_news_timeout = 170; /* seconds that an idle NNTP conn can live */
+/* PRIVATE int32 net_news_timeout = 170; */
+/* seconds that an idle NNTP conn can live */
 
 static char * last_password = 0;
 static char * last_password_hostname = 0;
@@ -183,8 +179,8 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL /* , nsITransportLayer * transport
 	// data out of it and set our event sink member variables from it. For now, just set them
 	// to NULL. 
 
-	m_xoverParser = NULL;
-	m_articleList = NULL; 
+    m_newsgroupList = NULL;
+	m_articleList = NULL;
 	m_newsHost	  = NULL;
 	m_newsgroup	  = NULL;
 	m_offlineNewsState = NULL; 
@@ -1652,7 +1648,7 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
 
 		net_news_last_username_probably_valid = TRUE;
-        rv = m_xoverParser->Reset();
+        rv = m_newsgroupList->ResetXOVER();
         return(0);
 	  }
 	else
@@ -1975,11 +1971,14 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	{
       nsresult rv;
       /* XXX - parse state stored in MSG_Pane cd->pane */
-      rv = m_articleList->AddToKnownArticles(m_firstArticle,
-                                                m_lastArticle);
+      nsINNTPNewsgroupList *newsgroupList;
+      rv = m_newsHost->GetNewsgroupList(&newsgroupList);
+      if (NS_SUCCEEDED(rv))
+        rv = newsgroupList->AddToKnownArticles(m_firstArticle,
+                                               m_lastArticle);
       
-	  if (status < 0) 
-	  {
+	  if (NS_FAILED(rv))
+      {
 		PR_FREEIF (host_and_port);
 		return status;
 	  }
@@ -1996,15 +1995,19 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 
 
     /* XXX - parse state stored in MSG_Pane cd->pane */
+    nsINNTPNewsgroupList *newsgroupList;
+    rv = m_newsHost->GetNewsgroupList(&newsgroupList);
+    
+    if (NS_SUCCEEDED(rv))
     rv =
-      m_articleList->GetRangeOfArtsToDownload(&status,
+      newsgroupList->GetRangeOfArtsToDownload(&status,
                                                  m_firstPossibleArticle,
                                                  m_lastPossibleArticle,
                                                  m_numArticlesWanted -
                                                  m_numArticlesLoaded,
                                                  &(m_firstArticle),
                                                  &(m_lastArticle));
-	if (status < 0) 
+	if (NS_FAILED(rv)) 
 	{
 	  PR_FREEIF (host_and_port);
 	  return status;
@@ -2025,11 +2028,11 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	m_articleNumber = m_firstArticle;
 
 #ifdef UNREADY_CODE
-    rv = NS_NewMsgXOVERParser(&m_xoverParser,
-                                   m_newsHost, m_newsgroup,
-                                   m_firstArticle, m_lastArticle,
-                                   m_firstPossibleArticle,
-                                   m_lastPossibleArticle);
+    rv = NS_NewNewsgroupList(&m_newsgroupList,
+                              m_newsHost, m_newsgroup,
+                              m_firstArticle, m_lastArticle,
+                              m_firstPossibleArticle,
+                              m_lastPossibleArticle);
 #endif
     /* convert nsresult->status */
     status = !NS_SUCCEEDED(rv);
@@ -2168,7 +2171,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 #endif
 	}
 
-	 rv = m_xoverParser->Process(line, &status);
+	 rv = m_newsgroupList->ProcessXOVER(line, &status);
 	 PR_ASSERT(NS_SUCCEEDED(rv));
 
 	m_numArticlesLoaded++;
@@ -2185,7 +2188,7 @@ PRInt32 nsNNTPProtocol::ProcessXover()
     nsresult rv;
 	PRInt32 status = 0;
     /* xover_parse_state stored in MSG_Pane cd->pane */
-    rv = m_xoverParser->Finish(0,&status);
+    rv = m_newsgroupList->FinishXOVER(0,&status);
 
 	if (NS_SUCCEEDED(rv) && status < 0) return status;
 
@@ -2234,7 +2237,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupResponse()
 		*m_messageID = '\0';
 
 	  /* Give the message number to the header parser. */
-      rv = m_xoverParser->ProcessNonXOVER(m_responseText);
+      rv = m_newsgroupList->ProcessNonXOVER(m_responseText);
       /* convert nsresult->status */
       return !NS_SUCCEEDED(rv);
   }
@@ -2293,7 +2296,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 	/* The NNTP server quotes all lines beginning with "." by doubling it. */
 	line++;
 
-  rv = m_xoverParser->ProcessNonXOVER(line);
+  rv = m_newsgroupList->ProcessNonXOVER(line);
   /* convert nsresult->status */
   return !NS_SUCCEEDED(rv);
 }
@@ -2977,6 +2980,8 @@ PRInt32 nsNNTPProtocol::ListXActive()
     nsresult rv = m_newsgroup->GetName(&group_name);
 	PRInt32 status = 0;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
+
+    if (NS_FAILED(rv)) group_name=NULL;
     
 	PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
@@ -3117,8 +3122,8 @@ PRInt32 nsNNTPProtocol::ListGroup()
 			"listgroup %.512s" CRLF,
                 group_name);
 #ifdef UNREADY_CODE
-    rv = NS_NewMsgNewsArticleList(&m_articleList,
-                                  m_newsHost, m_newsgroup);
+    rv = NS_NewNNTPArticleList(&m_articleList,
+                               m_newsHost, m_newsgroup);
 #endif
 	
 	status = SendData(outputBuffer); 
@@ -3163,7 +3168,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
             nsresult rv;
 			sscanf(line, "%ld", &found_id);
             
-            rv = m_articleList->AddArticleKeyToGroup(found_id);
+            rv = m_articleList->AddArticleKey(found_id);
 		}
 		else
 		{
@@ -3594,29 +3599,30 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 
 PRInt32 nsNNTPProtocol::CloseConnection()
 {
-  /* do we need to know if we're parsing xover to call finish xover? 
+  /* do we need to know if we're parsing xover to call finish xover?  */
   /* yes, I think we do! Why did I think we should??? */
   /* If we've gotten to NEWS_FREE and there is still XOVER
      data, there was an error or we were interrupted or
      something.  So, tell libmsg there was an abnormal
      exit so that it can free its data. */
             
-	if (m_xoverParser != NULL)
+	if (m_newsgroupList != NULL)
 	{
 		int status;
         nsresult rv;
        /* XXX - how/when to Release() this? */
-        rv = m_xoverParser->Finish(status,&status);
+        rv = m_newsgroupList->FinishXOVER(status,&status);
 		PR_ASSERT(NS_SUCCEEDED(rv));
 		if (NS_SUCCEEDED(rv))
-			NS_RELEASE(m_xoverParser);
+			NS_RELEASE(m_newsgroupList);
 		if (NS_SUCCEEDED(rv) && status >= 0 && status < 0)
 					  status = status;
 	}
 	else
 	{
-		/* XXX - state is stored in the MSG_Pane cd->pane */
-        NS_RELEASE(m_articleList);
+      /* XXX - state is stored in the newshost - should
+         we be releasing it here? */
+      /* NS_RELEASE(m_newsgroup->GetNewsgroupList()); */
 	}
 #ifdef UNREADY_CODE
 	if (cd->control_con)

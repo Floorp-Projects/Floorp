@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -23,6 +23,15 @@
 #include "rosetta.h"
 #include HG40855
 
+#include "nsIOutputStream.h"
+
+#include "nsINNTPNewsgroupList.h"
+#include "nsINNTPArticleList.h"
+#include "nsIMsgNewsHost.h"
+#include "nsIMsgNewsgroup.h"
+#include "nsIMsgOfflineNewsState.h"
+
+
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)
@@ -36,15 +45,6 @@
 #define NNTP_DESTROY_PROGRESS_GRAPH 0x00000040  /* do we need to destroy graph progress */  
 #define NNTP_SOME_PROTOCOL_SUCCEEDED 0x0000080  /* some protocol has suceeded so don't kill the connection */
 #define NNTP_NO_XOVER_SUPPORT       0x00000100  /* xover command is not supported here */
-
-/* forward declarations */
-class nsIMsgXOVERParser;
-class nsIMsgNewsArticleList;
-class nsIMsgOfflineNewsState;
-class nsIMsgNewsHost;
-class nsIMsgNewsgroup;
-class nsIMsgOfflineNewsState;
-class nsIOutputStream;
 
 /* states of the machine
  */
@@ -133,7 +133,7 @@ public:
 	// a transport layer. 
 	nsNNTPProtocol(nsIURL * aURL /* , nsITransportLayer * transportLayer */);
 	
-	~nsNNTPProtocol();
+	virtual ~nsNNTPProtocol();
 
 	NS_DECL_ISUPPORTS
 
@@ -173,8 +173,8 @@ public:
 
 private:
 	// News Event Sinks
-    nsIMsgXOVERParser *		m_xoverParser;
-    nsIMsgNewsArticleList *	m_articleList;
+    nsINNTPNewsgroupList *  m_newsgroupList;
+    nsINNTPArticleList *	m_articleList;
 
 	nsIMsgNewsHost			* m_newsHost;
 	nsIMsgNewsgroup			* m_newsgroup;
