@@ -886,7 +886,7 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest ()
         return NS_ERROR_FAILURE;
 
     req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
-    if (req != NULL)
+    if (req)
     {
         mTransport -> SetNotificationCallbacks (nsnull);
         req -> mPipelinedRequest = nsnull;
@@ -901,7 +901,7 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest ()
 
     req = dont_AddRef ((nsHTTPRequest *) mRequests -> ElementAt (0));
 
-    if (req != NULL)
+    if (req)
         mTransport -> SetNotificationCallbacks (req -> mConnection);
 
     return NS_OK;
