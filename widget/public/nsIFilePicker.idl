@@ -74,7 +74,7 @@ interface nsIFilePicker : nsISupports
                     in wstring filter);
 
   /* what is this? */
-  attribute string defaultString;
+  attribute wstring defaultString;
 
  /**
   * Set the directory that the file open/save dialog initially displays
