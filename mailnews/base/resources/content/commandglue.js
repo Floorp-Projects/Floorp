@@ -712,8 +712,10 @@ function FolderPaneSelectionChange()
         ClearThreadPane();
     }
 
-    if (!gAccountCentralLoaded) 
-        ClearMessagePane();
+    if (gAccountCentralLoaded)
+      UpdateMailToolbar("gAccountCentralLoaded");
+    else
+      ClearMessagePane();
 
     if (gDisplayStartupPage)
     {
