@@ -73,6 +73,8 @@ nsIButton     *toolTipButton2 = NULL;
 
 nsITooltipWidget *tooltipWindow = NULL;
 
+nsIRadioButton * gRadioBtns[16];
+int    gNumRadioBtns = 0;
 
 char * gFailedMsg = NULL;
 
@@ -862,9 +864,21 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
             if (DEBUG_MOUSE) printf("NS_MOUSE_MOVE\n");
             break;
         
-        case NS_MOUSE_LEFT_BUTTON_UP:
+        case NS_MOUSE_LEFT_BUTTON_UP: {
             if (DEBUG_MOUSE) printf("NS_MOUSE_LEFT_BUTTON_UP\n");
-            break;
+            int i = 0;
+            for (i=0;i<gNumRadioBtns;i++) {
+              nsIWidget * win;
+              if (NS_OK == gRadioBtns[i]->QueryInterface(kIWidgetIID, (void**)&win)) {
+                printf("%d  0x%x  0x%x\n", i, win, aEvent->widget);
+                if (win == aEvent->widget) {
+                  gRadioBtns[i]->SetState(PR_TRUE);
+                } else {
+                  gRadioBtns[i]->SetState(PR_FALSE);
+                }
+              }
+            }
+            } break;
         
 
         case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -1468,6 +1482,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsString rbLabel("RadioButton1");
     radioButton->SetLabel(rbLabel);
     radioButton->Show(PR_TRUE);
+    gRadioBtns[gNumRadioBtns++] = radioButton;
     //NS_RELEASE(radioButton);
     y += rect.height + 5;
 
@@ -1481,6 +1496,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsString rbLabel2("RadioButton2");
     radioButton->SetLabel(rbLabel2);
     radioButton->Show(PR_TRUE);
+    gRadioBtns[gNumRadioBtns++] = radioButton;
     //NS_RELEASE(radioButton);
     y += rect.height + 5;
 
