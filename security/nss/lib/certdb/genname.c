@@ -191,13 +191,11 @@ CERT_CreateGeneralNameList(CERTGeneralName *name) {
     if (arena == NULL) {
 	goto done;
     }
-    list = (CERTGeneralNameList *)
-	PORT_ArenaZAlloc(arena, sizeof(CERTGeneralNameList));
+    list = PORT_ArenaZNew(arena, CERTGeneralNameList);
     if (!list)
     	goto loser;
     if (name != NULL) {
-	list->name = (CERTGeneralName *)
-	    PORT_ArenaZAlloc(arena, sizeof(CERTGeneralName));
+	list->name = PORT_ArenaZNew(arena, CERTGeneralName);
 	if (!list->name)
 	    goto loser;
 	list->name->l.next = list->name->l.prev = &list->name->l;
@@ -259,7 +257,9 @@ CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest, PRArenaPool *are
 	goto loser;
     }
     if (dest == NULL) {
-	dest = (SECItem *) PORT_ArenaZAlloc(arena, sizeof(SECItem));
+	dest = PORT_ArenaZNew(arena, SECItem);
+	if (!dest)
+	    goto loser;
     }
     switch (genName->type) {
       case certURI:
@@ -343,8 +343,7 @@ cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names)
 	++count;
     }
     current_name = cert_get_next_general_name(current_name);
-    items = (SECItem **) PORT_ArenaAlloc(arena, sizeof(SECItem *) * (count + 1));
-    
+    items = PORT_ArenaNewArray(arena, SECItem *, count + 1);
     if (items == NULL) {
 	goto loser;
     }
@@ -371,7 +370,9 @@ CERT_DecodeGeneralName(PRArenaPool      *arena,
 
     PORT_Assert(arena);
     if (genName == NULL) {
-	genName = (CERTGeneralName *) PORT_ArenaZAlloc(arena, sizeof(CERTGeneralName));
+	genName = PORT_ArenaZNew(arena, CERTGeneralName);
+	if (!genName)
+	    goto loser;
     }
     genNameType = (CERTGeneralNameType)((*(encodedName->data) & 0x0f) + 1);
     switch (genNameType) {
@@ -484,7 +485,7 @@ cert_EncodeNameConstraint(CERTNameConstraint  *constraint,
 {
     PORT_Assert(arena);
     if (dest == NULL) {
-	dest = (SECItem *) PORT_ArenaZAlloc(arena, sizeof(SECItem));
+	dest = PORT_ArenaZNew(arena, SECItem);
 	if (dest == NULL) {
 	    return NULL;
 	}
@@ -519,8 +520,7 @@ cert_EncodeNameConstraintSubTree(CERTNameConstraint  *constraints,
 	++count;
     }
     current_constraint = cert_get_next_name_constraint(current_constraint);
-    items = (SECItem **) PORT_ArenaZAlloc(arena, sizeof(SECItem *) * (count + 1));
-    
+    items = PORT_ArenaZNewArray(arena, SECItem *, count + 1);
     if (items == NULL) {
 	goto loser;
     }
@@ -583,7 +583,7 @@ cert_DecodeNameConstraint(PRArenaPool       *arena,
     CERTGeneralName        *temp;
 
     PORT_Assert(arena);
-    constraint = (CERTNameConstraint *) PORT_ArenaZAlloc(arena, sizeof(CERTNameConstraint));
+    constraint = PORT_ArenaZNew(arena, CERTNameConstraint);
     if (!constraint)
     	goto loser;
     rv = SEC_ASN1DecodeItem(arena, constraint, CERTNameConstraintTemplate, encodedConstraint);
@@ -646,8 +646,7 @@ cert_DecodeNameConstraints(PRArenaPool   *arena,
 
     PORT_Assert(arena);
     PORT_Assert(encodedConstraints);
-    constraints = (CERTNameConstraints *) PORT_ArenaZAlloc(arena, 
-							   sizeof(CERTNameConstraints));
+    constraints = PORT_ArenaZNew(arena, CERTNameConstraints);
     if (constraints == NULL) {
 	goto loser;
     }
@@ -719,11 +718,9 @@ CERT_CopyGeneralName(PRArenaPool      *arena,
 	if (src != srcHead) {
 	    if (dest->l.next == &destHead->l) {
 		if (arena) {
-		    temp = (CERTGeneralName *) 
-		      PORT_ArenaZAlloc(arena, sizeof(CERTGeneralName));
+		    temp = PORT_ArenaZNew(arena, CERTGeneralName);
 		} else {
-		    temp = (CERTGeneralName *)
-		      PORT_ZAlloc(sizeof(CERTGeneralName));
+		    temp = PORT_ZNew(CERTGeneralName);
 		}
 		if (!temp)
 		    return SECFailure;
@@ -760,7 +757,9 @@ CERT_CopyNameConstraint(PRArenaPool         *arena,
     SECStatus  rv;
     
     if (dest == NULL) {
-	dest = (CERTNameConstraint *) PORT_ArenaZAlloc(arena, sizeof(CERTNameConstraint));
+	dest = PORT_ArenaZNew(arena, CERTNameConstraint);
+	if (!dest)
+	    goto loser;
 	/* mark that it is not linked */
 	dest->name.l.prev = dest->name.l.next = &(dest->name.l);
     }
@@ -948,7 +947,7 @@ CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena)
     SECStatus        rv;
 
 
-    DN = (CERTGeneralName *) PORT_ArenaZAlloc(arena, sizeof(CERTGeneralName));
+    DN = PORT_ArenaZNew(arena, CERTGeneralName);
     if (DN == NULL) {
 	goto loser;
     }
@@ -1510,7 +1509,8 @@ loser:
     return returnName;
 }
 
-
+#if 0
+/* not exported from shared libs, not used.  Turn on if we ever need it. */
 SECStatus
 CERT_CompareGeneralName(CERTGeneralName *a, CERTGeneralName *b)
 {
@@ -1600,7 +1600,13 @@ CERT_CompareGeneralNameLists(CERTGeneralNameList *a, CERTGeneralNameList *b)
     }
     return rv;
 }
+#endif
 
+#if 0
+/* This function is not exported from NSS shared libraries, and is not
+** used inside of NSS.
+** XXX it doesn't check for failed allocations. :-(
+*/
 void *
 CERT_GetGeneralNameFromListByType(CERTGeneralNameList *list,
 				  CERTGeneralNameType type,
@@ -1624,9 +1630,9 @@ CERT_GetGeneralNameFromListByType(CERTGeneralNameList *list,
 	  case certX400Address:
 	  case certURI:
 	    if (arena != NULL) {
-		item = (SECItem *)PORT_ArenaAlloc(arena, sizeof(SECItem));
+		item = PORT_ArenaNew(arena, SECItem);
 		if (item != NULL) {
-		    SECITEM_CopyItem(arena, item, (SECItem *) data);
+XXX		    SECITEM_CopyItem(arena, item, (SECItem *) data);
 		}
 	    } else { 
 		item = SECITEM_DupItem((SECItem *) data);
@@ -1636,36 +1642,38 @@ CERT_GetGeneralNameFromListByType(CERTGeneralNameList *list,
 	  case certOtherName:
 	    other = (OtherName *) data;
 	    if (arena != NULL) {
-		tmpOther = (OtherName *)PORT_ArenaAlloc(arena, 
-							sizeof(OtherName));
+		tmpOther = PORT_ArenaNew(arena, OtherName);
 	    } else {
-		tmpOther = (OtherName *) PORT_Alloc(sizeof(OtherName));
+		tmpOther = PORT_New(OtherName);
 	    }
 	    if (tmpOther != NULL) {
-		SECITEM_CopyItem(arena, &tmpOther->oid, &other->oid);
-		SECITEM_CopyItem(arena, &tmpOther->name, &other->name);
+XXX		SECITEM_CopyItem(arena, &tmpOther->oid, &other->oid);
+XXX		SECITEM_CopyItem(arena, &tmpOther->name, &other->name);
 	    }
 	    PZ_Unlock(list->lock);
 	    return tmpOther;
 	  case certDirectoryName:
-	    if (arena == NULL) {
-		PZ_Unlock(list->lock);
-		return NULL;
-	    } else {
-		name = (CERTName *) PORT_ArenaZAlloc(list->arena, 
-						    sizeof(CERTName));
-		if (name != NULL) {
-		    CERT_CopyName(arena, name, (CERTName *) data);
+	    if (arena) {
+		name = PORT_ArenaZNew(list->arena, CERTName);
+		if (name) {
+XXX		    CERT_CopyName(arena, name, (CERTName *) data);
 		}
-		PZ_Unlock(list->lock);
-		return name;
 	    }
+	    PZ_Unlock(list->lock);
+	    return name;
 	}
     }
     PZ_Unlock(list->lock);
     return NULL;
 }
+#endif
 
+#if 0
+/* This function is not exported from NSS shared libraries, and is not
+** used inside of NSS.
+** XXX it should NOT be a void function, since it does allocations
+** that can fail.
+*/
 void
 CERT_AddGeneralNameToList(CERTGeneralNameList *list, 
 			  CERTGeneralNameType type,
@@ -1675,8 +1683,9 @@ CERT_AddGeneralNameToList(CERTGeneralNameList *list,
 
     if (list != NULL && data != NULL) {
 	PZ_Lock(list->lock);
-	name = (CERTGeneralName *) 
-	    PORT_ArenaZAlloc(list->arena, sizeof(CERTGeneralName));
+	name = PORT_ArenaZNew(list->arena, CERTGeneralName);
+	if (!name)
+	    goto done;
 	name->type = type;
 	switch (type) {
 	  case certDNSName:
@@ -1686,23 +1695,25 @@ CERT_AddGeneralNameToList(CERTGeneralNameList *list,
 	  case certRFC822Name:
 	  case certX400Address:
 	  case certURI:
-	    SECITEM_CopyItem(list->arena, &name->name.other, (SECItem *)data);
+XXX	    SECITEM_CopyItem(list->arena, &name->name.other, (SECItem *)data);
 	    break;
 	  case certOtherName:
-	    SECITEM_CopyItem(list->arena, &name->name.OthName.name,
+XXX	    SECITEM_CopyItem(list->arena, &name->name.OthName.name,
 			     (SECItem *) data);
-	    SECITEM_CopyItem(list->arena, &name->name.OthName.oid,
+XXX	    SECITEM_CopyItem(list->arena, &name->name.OthName.oid,
 			     oid);
 	    break;
 	  case certDirectoryName:
-	    CERT_CopyName(list->arena, &name->name.directoryName,
+XXX	    CERT_CopyName(list->arena, &name->name.directoryName,
 			  (CERTName *) data);
 	    break;
 	}
 	name->l.prev = name->l.next = &name->l;
 	list->name = cert_CombineNamesLists(list->name, name);
 	list->len++;
+done:
 	PZ_Unlock(list->lock);
     }
     return;
 }
+#endif
