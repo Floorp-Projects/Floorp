@@ -89,8 +89,12 @@ class MouseTrailer {
 public:
     static  MouseTrailer * GetMouseTrailer(DWORD aThreadID);
     static  nsWindow     * GetMouseTrailerWindow();
+    static  nsWindow     * GetCaptureWindow() { return mCaptureWindow; }
+
     static  void           SetMouseTrailerWindow(nsWindow * aNSWin);
+    static  void           SetCaptureWindow(nsWindow * aNSWin);
     static  void           IgnoreNextCycle() { gIgnoreNextCycle = PR_TRUE; } 
+
 
 private:
       /// Global nsToolkit Instance
@@ -123,6 +127,8 @@ private:
     //@{
       /// last window
     static nsWindow* mHoldMouse;
+    static nsWindow* mCaptureWindow;
+    static PRBool    mIsInCaptureMode;
       /// timer ID
     UINT   mTimerId;
     static PRBool gIgnoreNextCycle;

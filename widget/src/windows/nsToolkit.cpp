@@ -26,9 +26,11 @@ NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
 
 HINSTANCE nsToolkit::mDllInstance = 0;
 
-nsWindow     *MouseTrailer::mHoldMouse;
-MouseTrailer *MouseTrailer::theMouseTrailer;
+nsWindow     *MouseTrailer::mCaptureWindow  = NULL;
+nsWindow     *MouseTrailer::mHoldMouse      = NULL;
+MouseTrailer *MouseTrailer::theMouseTrailer = NULL;
 PRBool        MouseTrailer::gIgnoreNextCycle(PR_FALSE);
+PRBool        MouseTrailer::mIsInCaptureMode(PR_FALSE);
 
 //
 // Dll entry point. Keep the dll instance
@@ -315,6 +317,17 @@ void MouseTrailer::DestroyTimer()
   }
 
 }
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void MouseTrailer::SetCaptureWindow(nsWindow * aNSWin) 
+{ 
+  mCaptureWindow = aNSWin;
+  if (nsnull != mCaptureWindow) {
+    mIsInCaptureMode = PR_TRUE;
+  }
+}
 
 #define TIMER_DEBUG 1
 //-------------------------------------------------------------------------
@@ -323,6 +336,26 @@ void MouseTrailer::DestroyTimer()
 //-------------------------------------------------------------------------
 void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD time)
 {
+  // Check to see if we are in mouse capture mode,
+  // Once capture ends we could still get back one more timer event 
+  // Capture could end outside our window
+  // Also, for some reason when the mouse is on the frame it thinks that
+  // it is inside the window that is being captured.
+  if (nsnull != MouseTrailer::mCaptureWindow) {
+    if (MouseTrailer::mCaptureWindow != MouseTrailer::mHoldMouse) {
+      return;
+    }
+  } else {
+    if (mIsInCaptureMode) {
+      // the mHoldMouse could be bad from rolling over the frame, so clear 
+      // it if we were capturing and now this is the first timer call back 
+      // since we canceled the capture
+      MouseTrailer::mHoldMouse = nsnull;
+      mIsInCaptureMode = PR_FALSE;
+      return;
+    }
+  }
+
     if (MouseTrailer::mHoldMouse && ::IsWindow(MouseTrailer::mHoldMouse->GetWindowHandle())) {
       if (gIgnoreNextCycle) {
         gIgnoreNextCycle = PR_FALSE;
@@ -351,7 +384,6 @@ void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD tim
       MouseTrailer::theMouseTrailer->DestroyTimer();
       MouseTrailer::mHoldMouse = NULL;
     }
-    
 }
 
 
