@@ -732,7 +732,7 @@ nsDocument::Reset(nsIURL *aURL)
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(psindex);
       nsCOMPtr<nsIStyleSet> set;
       if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
-        if (nsnull != set) {
+        if (set) {
           set->RemoveDocStyleSheet(sheet);
         }
       }
@@ -997,7 +997,7 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
       nsCOMPtr<nsIStyleSet> set;
       if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
-        if (nsnull != set) {
+        if (set) {
           set->AddDocStyleSheet(aSheet, this);
         }
       }
@@ -1025,7 +1025,7 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
       nsCOMPtr<nsIStyleSet> set;
       if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
-        if (nsnull != set) {
+        if (set) {
           if (aDisabled) {
             set->RemoveDocStyleSheet(aSheet);
           }
