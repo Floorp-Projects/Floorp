@@ -117,6 +117,7 @@ public:
     static NS_DefWindowProc     mDefWindowProc;
     static NS_CallWindowProc    mCallWindowProc;
     static NS_SetWindowLong     mSetWindowLong;
+    static NS_GetWindowLong     mGetWindowLong;
     static NS_SendMessage       mSendMessage;
     static NS_DispatchMessage   mDispatchMessage;
     static NS_GetMessage        mGetMessage;
@@ -126,6 +127,8 @@ public:
     static NS_GetClassName      mGetClassName;
     static NS_CreateWindowEx    mCreateWindowEx;
     static NS_RegisterClass     mRegisterClass;
+    static NS_SHGetPathFromIDList mSHGetPathFromIDList;
+    static NS_SHBrowseForFolder   mSHBrowseForFolder;
 #endif
 };
 
