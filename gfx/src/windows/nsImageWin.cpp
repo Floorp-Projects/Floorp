@@ -211,24 +211,24 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 		                aUpdateRect->x * 3;
       PRUint8 *gamma = aContext->GetGammaTable();
 
-      // Gamma correct the image.
-      // XXX We shouldn't waste time doing this unless the user requested
-      // gamma correction...
-      for (y = 0; y < aUpdateRect->height; y++)
+      // Gamma correct the image
+      if (aContext->GetGamma() != 1.0)
       {
-        for (x = 0, idx = 0; x < aUpdateRect->width; x++)
+        for (y = 0; y < aUpdateRect->height; y++)
         {
-          pixels[idx] = gamma[pixels[idx]];
-          idx++;
-          pixels[idx] = gamma[pixels[idx]];
-          idx++;
-          pixels[idx] = gamma[pixels[idx]];
-          idx++;
+          for (x = 0, idx = 0; x < aUpdateRect->width; x++)
+          {
+            pixels[idx] = gamma[pixels[idx]];
+            idx++;
+            pixels[idx] = gamma[pixels[idx]];
+            idx++;
+            pixels[idx] = gamma[pixels[idx]];
+            idx++;
+          }
+  
+          pixels += span;
         }
-
-        pixels += span;
       }
-
     }
   }
 }
