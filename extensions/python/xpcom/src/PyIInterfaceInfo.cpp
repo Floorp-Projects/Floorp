@@ -309,12 +309,12 @@ static PyObject *PyGetTypeForParam(PyObject *self, PyObject *args)
 	const nsXPTMethodInfo *pmi;
 	if (!__GetMethodInfoHelper(pii, mi, pi, &pmi))
 		return NULL;
-        nsXPTType datumType;
+	nsXPTType datumType;
 	const nsXPTParamInfo& param_info = pmi->GetParam((PRUint8)pi);
 	nsresult n = pii->GetTypeForParam(mi, &param_info, dim, &datumType);
 	if (NS_FAILED(n))
 		return PyXPCOM_BuildPyException(n);
-	return PyObject_FromXPTTypeDescriptor((const XPTTypeDescriptor *)&datumType);
+	return PyObject_FromXPTType(&datumType);
 }
 
 static PyObject *PyGetSizeIsArgNumberForParam(PyObject *self, PyObject *args)
