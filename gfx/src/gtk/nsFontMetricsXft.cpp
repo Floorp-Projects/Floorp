@@ -76,6 +76,8 @@
 // |nsFontMetricsXft| class is made up of a collection of these little 
 // fonts, really.
 
+class nsAutoDrawSpecBuffer;
+
 class nsFontXft {
 public:
     nsFontXft(FcPattern *aPattern, FcPattern *aFontName);
@@ -98,8 +100,8 @@ public:
     virtual PRBool     HasChar(PRUint32 aChar) = 0;
     virtual FT_UInt    CharToGlyphIndex(FcChar32 aChar);
 
-    virtual nsresult   FillDrawStringSpec(FcChar32* aString, PRUint32 aLen,
-                                          void *aData);
+    virtual nsresult   DrawStringSpec(FcChar32* aString, PRUint32 aLen,
+                                      void *aData);
                                       
     // a reference to the font loaded and information about it.  
     XftFont   *mXftFont;
@@ -149,14 +151,14 @@ public:
     virtual FT_UInt  CharToGlyphIndex   (FcChar32 aChar);
     virtual nsresult GetTextExtents32   (const FcChar32 *aString, 
                                          PRUint32 aLen, XGlyphInfo &aGlyphInfo);
-    virtual nsresult FillDrawStringSpec (FcChar32* aString, PRUint32 aLen,
+    virtual nsresult DrawStringSpec     (FcChar32* aString, PRUint32 aLen,
                                          void *aData);
 
 private:
     nsFontXftInfo *mFontInfo; 
 
     // freetype fontface : used for direct access to glyph indices
-    // in GetWidth32() and FillDrawStringSpec().
+    // in GetWidth32() and DrawStringSpec().
     FT_Face    mFT_Face;
     nsresult   SetFT_FaceCharmap (void);
 };
@@ -219,11 +221,8 @@ struct DrawStringData {
     nsRenderingContextGTK *context;
     XftDraw               *draw;
     XftColor               color;
-    PRUint32               specBufferLen;
-    PRUint32               specBufferSize;
-    XftGlyphFontSpec      *specBuffer;
-    PRBool                 foundGlyph;
     float                  p2t;
+    nsAutoDrawSpecBuffer  *drawBuffer;
 };
 
 #ifdef MOZ_MATHML
@@ -250,12 +249,6 @@ static nsresult EnumFontsXft     (nsIAtom* aLangGroup, const char* aGeneric,
 
 static const MozXftLangGroup* FindFCLangGroup (nsACString &aLangGroup);
 
-static inline XftGlyphFontSpec *AllocSpecBuffer(PRUint32 aLen, PRUint32 &aSize);
-static inline XftGlyphFontSpec *ReallocSpecBuffer(PRUint32 aOldLen, 
-                                                  PRUint32 aNewLen,
-                                                  XftGlyphFontSpec *aBuffer);
-static inline void              FreeSpecBuffer (XftGlyphFontSpec *aBuffer);
-
 static        void ConvertCharToUCS4    (const char *aString,
                                          PRUint32 aLength,
                                          nsAutoBuffer &aOutBuffer,
@@ -280,11 +273,32 @@ static void GdkRegionSetXftClip(GdkRegion *aGdkRegion, XftDraw *aDraw);
 // that value instead of the requested size.
 #define FONT_MAX_FONT_SCALE 2
 
-#define FONT_SPEC_BUFFER_SIZE 3000
+#define AUTO_BUFFER_SIZE 3000
 #define UCS2_REPLACEMENT 0xFFFD
 
 #define IS_NON_BMP(c) ((c) >> 16)
 #define IS_NON_SURROGATE(c) ((c < 0xd800 || c > 0xdfff))
+
+// a helper class for Xft glyph drawings
+class nsAutoDrawSpecBuffer {
+public:
+    enum {BUFFER_LEN=1024};
+    nsAutoDrawSpecBuffer(XftDraw *aDraw, XftColor *aColor) :
+                         mDraw(aDraw), mColor(aColor), mSpecPos(0) {}
+
+    ~nsAutoDrawSpecBuffer() {
+        Flush();
+    }
+
+    void Flush();
+    void Draw(nscoord x, nscoord y, XftFont *font, FT_UInt glyph);
+
+private:
+    XftDraw         *mDraw;
+    XftColor        *mColor;
+    PRUint32         mSpecPos;
+    XftGlyphFontSpec mSpecBuffer[BUFFER_LEN];
+};
 
 // a helper class for automatic  buffer allocation
 class nsAutoBuffer {
@@ -295,11 +309,9 @@ public:
 
 private:
     char* mArray;
-    char  mAutoArray[FONT_SPEC_BUFFER_SIZE];
+    char  mAutoArray[AUTO_BUFFER_SIZE];
     PRInt32  mCount;
 };
-
-static XftGlyphFontSpec gFontSpecBuffer[FONT_SPEC_BUFFER_SIZE];
 
 PRLogModuleInfo *gXftFontLoad = nsnull;
 static int gNumInstances = 0;
@@ -648,28 +660,13 @@ nsFontMetricsXft::DrawString(const char *aString, PRUint32 aLength,
     data.context = aContext;
     mDeviceContext->GetDevUnitsToAppUnits(data.p2t);
 
-    data.specBuffer = AllocSpecBuffer(aLength, data.specBufferSize);
-    if (!data.specBuffer)
-        return NS_ERROR_FAILURE;
-
     PrepareToDraw(aContext, aSurface, &data.draw, data.color);
 
-    nsresult rv;
-    rv = EnumerateGlyphs(aString, aLength,
-                         &nsFontMetricsXft::DrawStringCallback, &data);
-    if (NS_FAILED(rv)) {
-        FreeSpecBuffer(data.specBuffer);
-        return rv;
-    }
+    nsAutoDrawSpecBuffer drawBuffer(data.draw, &data.color);
+    data.drawBuffer = &drawBuffer;
 
-    // go forth and blit!
-    if (data.foundGlyph)
-        XftDrawGlyphFontSpec(data.draw, &data.color, data.specBuffer,
-                             data.specBufferLen);
-
-    FreeSpecBuffer(data.specBuffer);
-
-    return NS_OK;
+    return EnumerateGlyphs(aString, aLength,
+                           &nsFontMetricsXft::DrawStringCallback, &data);
 }
 
 nsresult
@@ -692,29 +689,14 @@ nsFontMetricsXft::DrawString(const PRUnichar* aString, PRUint32 aLength,
     data.context = aContext;
     mDeviceContext->GetDevUnitsToAppUnits(data.p2t);
 
-    data.specBuffer = AllocSpecBuffer(aLength, data.specBufferSize);
-    if (!data.specBuffer)
-        return NS_ERROR_FAILURE;
-
     // set up our colors and clip regions
     PrepareToDraw(aContext, aSurface, &data.draw, data.color);
 
-    nsresult rv;
-    rv = EnumerateGlyphs(aString, aLength,
-                         &nsFontMetricsXft::DrawStringCallback, &data);
-    if (NS_FAILED(rv)) {
-        FreeSpecBuffer(data.specBuffer);
-        return rv;
-    }
+    nsAutoDrawSpecBuffer drawBuffer(data.draw, &data.color);
+    data.drawBuffer = &drawBuffer;
 
-    // Go forth and blit!
-    if (data.foundGlyph)
-        XftDrawGlyphFontSpec(data.draw, &data.color,
-                             data.specBuffer, data.specBufferLen);
-
-    FreeSpecBuffer(data.specBuffer);
-
-    return NS_OK;
+    return EnumerateGlyphs(aString, aLength,
+                           &nsFontMetricsXft::DrawStringCallback, &data);
 }
 
 #ifdef MOZ_MATHML
@@ -1439,7 +1421,7 @@ nsFontMetricsXft::EnumerateXftGlyphs(const FcChar32 *aString, PRUint32 aLen,
     for ( ; i < aLen; i ++) {
         nsFontXft *currFont = FindFont(aString[i]);
 
-        if(currFont != prevFont) {
+        if (currFont != prevFont) {
             if (i > start) {
                 rv = (this->*aCallback)(&aString[start], i - start, prevFont,
                                         aCallbackData);
@@ -1574,10 +1556,10 @@ nsFontMetricsXft::DrawStringCallback(const FcChar32 *aString, PRUint32 aLen,
         return NS_OK;
     }
 
-    // actually fill up the specbuffer converting the input string
-    // to custom font code  if necessary.
-    return aFont->FillDrawStringSpec(NS_CONST_CAST(FcChar32 *, aString), 
-                                     aLen, data);
+    // actually process the specbuffer converting the input string
+    // to custom font code if necessary.
+    return aFont->DrawStringSpec(NS_CONST_CAST(FcChar32 *, aString), 
+                                 aLen, data);
 }
 
 nsresult
@@ -2009,15 +1991,12 @@ nsFontXft::CharToGlyphIndex(FcChar32 aChar)
 
 // used by DrawStringCallback
 nsresult
-nsFontXft::FillDrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
+nsFontXft::DrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
 {
     DrawStringData *data = (DrawStringData *)aData;
 
     if (!mXftFont && !GetXftFont())
             return NS_ERROR_NOT_AVAILABLE;
-
-    XftGlyphFontSpec *const specBuffer = data->specBuffer;
-    PRUint32& specBufferLen = data->specBufferLen;
 
     FcChar32 *pstr = aString;
     const FcChar32 *end = aString + aLen;
@@ -2033,19 +2012,8 @@ nsFontXft::FillDrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
            argument                                           
         */                                                  
 
-        specBuffer[specBufferLen].x = x;                    
-        specBuffer[specBufferLen].y = y;                   
-        specBuffer[specBufferLen].font = mXftFont;
         FT_UInt glyph = CharToGlyphIndex(*pstr);
-        specBuffer[specBufferLen].glyph = glyph;
-                                                               
-        /* check to see if this glyph is non-empty */ 
-        if (!data->foundGlyph) {                           
-            XGlyphInfo info;                        
-            XftGlyphExtents(GDK_DISPLAY(), mXftFont, &glyph, 1, &info);
-            if (info.width && info.height)                  
-              data->foundGlyph = PR_TRUE;                      
-        }                                                 
+        data->drawBuffer->Draw(x, y, mXftFont, glyph);
 
         if (data->spacing) {
             data->xOffset += *data->spacing;
@@ -2057,7 +2025,6 @@ nsFontXft::FillDrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
             data->xOffset += NSToCoordRound(info.xOff * data->p2t);
         }
 
-        ++specBufferLen;
         ++pstr;
     }                                                          
     return NS_OK;
@@ -2147,11 +2114,9 @@ nsFontXftCustom::CharToGlyphIndex(FcChar32 aChar)
 // used by DrawStringCallback
 // Convert the input to custom font code before filling up the buffer.
 nsresult
-nsFontXftCustom::FillDrawStringSpec(FcChar32* aString, PRUint32 aLen,
-                                    void* aData)
+nsFontXftCustom::DrawStringSpec(FcChar32* aString, PRUint32 aLen,
+                                void* aData)
 {
-    DrawStringData *data = (DrawStringData *)aData;
-
     nsresult rv = NS_OK;
     nsAutoBuffer buffer;
     PRUint32 destLen = aLen;
@@ -2163,19 +2128,6 @@ nsFontXftCustom::FillDrawStringSpec(FcChar32* aString, PRUint32 aLen,
 
     if (!mXftFont && !GetXftFont())
             return NS_ERROR_NOT_AVAILABLE;
-
-    // The string after the conversion can be longer than the original.
-    // Realloc if necessary.
-    if (destLen > aLen && 
-        data->specBufferLen + destLen > data->specBufferSize) {
-        data->specBuffer = ReallocSpecBuffer(data->specBufferSize, 
-                            data->specBufferSize + (destLen - aLen) * 2,
-                            data->specBuffer);
-        if (!data->specBuffer)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        data->specBufferSize += (destLen - aLen) * 2;
-    }
 
     if (!isWide) {
         // For some narrow fonts(Mathematica, Symbol, and MTExtra),  
@@ -2191,9 +2143,7 @@ nsFontXftCustom::FillDrawStringSpec(FcChar32* aString, PRUint32 aLen,
 
     FcChar32 *str = NS_STATIC_CAST(FcChar32 *, buffer.GetArray());
 
-    rv = nsFontXft::FillDrawStringSpec(str, destLen, aData);
-
-    return rv;
+    return nsFontXft::DrawStringSpec(str, destLen, aData);
 }
 
 nsresult
@@ -2222,7 +2172,7 @@ nsFontXftCustom::SetFT_FaceCharmap(void)
 
 nsAutoBuffer::nsAutoBuffer()
     : mArray(mAutoArray),
-      mCount(FONT_SPEC_BUFFER_SIZE)
+      mCount(AUTO_BUFFER_SIZE)
 {
 }
 
@@ -2250,6 +2200,41 @@ void* nsAutoBuffer::GetArray(PRInt32 aMinLen)
     }
 
     return (void *) mArray;
+}
+
+void
+nsAutoDrawSpecBuffer::Draw(nscoord x, nscoord y, XftFont *font, FT_UInt glyph)
+{
+    if (mSpecPos >= BUFFER_LEN-1)
+        Flush();
+
+    mSpecBuffer[mSpecPos].x = x;
+    mSpecBuffer[mSpecPos].y = y;
+    mSpecBuffer[mSpecPos].font = font;
+    mSpecBuffer[mSpecPos].glyph = glyph;
+    ++mSpecPos;
+}
+
+void
+nsAutoDrawSpecBuffer::Flush()
+{
+    if (mSpecPos) {
+        // Some Xft libraries will crash if none of the glyphs have any
+        // area.  So before we draw, we scan through the glyphs.  If we
+        // find any that have area, we can draw.
+        for (PRUint32 i = 0; i < mSpecPos; i++) {
+            XftGlyphFontSpec *sp = &mSpecBuffer[i];
+            XGlyphInfo info;
+            XftGlyphExtents(GDK_DISPLAY(), sp->font, &sp->glyph, 1, &info);
+            if (info.width && info.height) {
+                // If we get here it means we found a drawable glyph.  We will
+                // Draw all the remaining glyphs and then break out of the loop
+                XftDrawGlyphFontSpec(mDraw, mColor, mSpecBuffer+i, mSpecPos-i);
+                break;
+            }
+        }
+        mSpecPos = 0;
+    }
 }
 
 // Static functions
@@ -2570,40 +2555,6 @@ FindFCLangGroup (nsACString &aLangGroup)
     }
 
     return nsnull;
-}
-
-/* static inline */
-XftGlyphFontSpec *
-AllocSpecBuffer(PRUint32 aLen, PRUint32 &aSize)
-{
-    if (aLen > FONT_SPEC_BUFFER_SIZE) {
-        aSize = aLen;
-        return new XftGlyphFontSpec[aLen];
-    }
-    aSize = FONT_SPEC_BUFFER_SIZE;
-    return gFontSpecBuffer;
-}
-
-/* static inline */
-XftGlyphFontSpec *
-ReallocSpecBuffer(PRUint32 aOldLen, PRUint32 aNewLen, XftGlyphFontSpec *aBuffer)
-{
-    XftGlyphFontSpec *buffer = new XftGlyphFontSpec[aNewLen];
-    if (buffer) {
-        memcpy(buffer, aBuffer, aOldLen * sizeof(XftGlyphFontSpec));
-        FreeSpecBuffer(aBuffer);
-        return buffer;
-    }
-    FreeSpecBuffer(aBuffer);
-    return nsnull;
-}
-
-/* static inline */
-void
-FreeSpecBuffer (XftGlyphFontSpec *aBuffer)
-{
-    if (aBuffer != gFontSpecBuffer)
-        delete [] aBuffer;
 }
 
 /* static */
