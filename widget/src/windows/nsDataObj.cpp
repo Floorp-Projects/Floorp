@@ -69,12 +69,6 @@
 #include "nsPrintfCString.h"
 #include "nsIStringBundle.h"
 
-#include <ole2.h>
-#ifndef __MINGW32__
-#include <urlmon.h>
-#endif
-#include <shlobj.h>
-
 #if 0
 #define PRNTDEBUG(_x) printf(_x);
 #define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
