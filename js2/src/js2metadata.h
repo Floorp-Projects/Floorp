@@ -1060,9 +1060,11 @@ public:
     Environment env;
     Context cxt;
 
-    TargetList targetList;
+    TargetList targetList;          // stack of potential break/continue targets
 
     void mark();
+
+    bool showTrees;                 // debug only, causes parse tree dump 
 
 };
 

@@ -71,7 +71,7 @@ namespace MetaData {
         try {
             StmtNode *parsedStatements = p.parseProgram();
             ASSERT(p.lexer.peek(true).hasKind(Token::end));
-            if (true)
+            if (showTrees)
             {
                 PrettyPrinter f(stdOut, 80);
                 {
@@ -2771,7 +2771,8 @@ doUnary:
         publicNamespace(new Namespace(engine->public_StringAtom)),
         bCon(new BytecodeContainer()),
         glob(new GlobalObject(world)),
-        env(new MetaData::SystemFrame(), glob)
+        env(new MetaData::SystemFrame(), glob),
+        showTrees(false)
     {
         engine->meta = this;
 

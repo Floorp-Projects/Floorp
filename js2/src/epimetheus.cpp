@@ -115,7 +115,7 @@ static int readEvalPrint(FILE *in)
         try {
             Pragma::Flags flags = Pragma::es4;
             Parser p(world, a, flags, buffer, ConsoleName);
-            if (showTokens) {
+            if (metadata->showTrees) {
                 Lexer &l = p.lexer;
                 while (true) {
                     const Token &t = l.get(true);
@@ -165,15 +165,19 @@ static int readEvalPrint(FILE *in)
     return result;
 }
 
-static bool processArgs(int argc, char **argv, int *result)
+static bool processArgs(int argc, char **argv, int *result, bool *doTrees)
 {
     bool doInteractive = true;
+    *doTrees = false;
     for (int i = 0; i < argc; i++)  {    
         if (argv[i][0] == '-') {
             switch (argv[i][1]) {
             default:
                 stdOut << "unrecognized command line switch\n";
                 i = argc;
+                break;
+            case 't':
+                *doTrees = true;
                 break;
             case 'i':
                 doInteractive = true;
@@ -287,7 +291,7 @@ int main(int argc, char **argv)
         bool doInteractive = true;
         int result = 0;
         if (argc > 1) {
-            doInteractive = processArgs(argc - 1, argv + 1, &result);
+            doInteractive = processArgs(argc - 1, argv + 1, &result, &metadata->showTrees);
         }
         if (doInteractive)
             result = readEvalPrint(stdin);
