@@ -1191,7 +1191,7 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
     else if (aDirection == NS_VK_HOME)
       GetNextMenuItem(nsnull, &nextItem);
     else
-      GetPreviousMenuItem(mCurrentMenu, &nextItem);
+      GetPreviousMenuItem(nsnull, &nextItem);
 
     SetCurrentMenuItem(nextItem);
 
