@@ -64,6 +64,8 @@ defaults\pref\*
 defaults\messenger\mailViews.dat
 defaults\profile\localstore.rdf
 defaults\profile\mimeTypes.rdf
+defaults\profile\US\localstore.rdf
+defaults\profile\US\mimeTypes.rdf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; App extensions to Mail
