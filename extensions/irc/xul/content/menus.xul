@@ -149,15 +149,16 @@
         <!-- File menu -->
         <menu id="menu_File">
           <menupopup id="menu_FilePopup">
-            <menu label="&OptionsCmd.label;">
+            <menu label="&OptionsCmd.label;" accesskey="&OptionsCmd.accesskey;">
               <menupopup>
   
-                <menu label="&MungerCmd.label;">
+                <menu label="&MungerCmd.label;" accesskey="&MungerCmd.accesskey;">
                   <menupopup id="menu-munger">
                     <menuitem id="menu-munger-global"
                       label="&DisableMunger.label;"
                       oncommand="onToggleMunger()" type="checkbox"/>
-                    <menuitem id="menu-colors" label="&EnableColors.label;"
+                    <menuitem id="menu-colors" label="&EnableColors.label;" 
+                      accesskey="&EnableColors.accesskey;"
                       oncommand="onToggleColors();" type="checkbox"/>
                     <menuseparator/>
                   </menupopup>
@@ -172,10 +173,10 @@
                 <menuseparator/>
   
                 <menuitem id="menu-settings-save-now"
-                  label="&SaveSetNowCmd.label;"
+                  label="&SaveSetNowCmd.label;" accesskey="&SaveSetNowCmd.akey;"
                   oncommand="writeIRCPrefs()"/>
                 <menuitem id="menu-settings-autosave"
-                  label="&SaveSetExitCmd.label;"
+                  label="&SaveSetExitCmd.label;" accesskey="&SaveSetExitCmd.akey;"
                   oncommand="onToggleSaveOnExit()" type="checkbox"/>
   
               </menupopup>
@@ -208,7 +209,7 @@
         <menu label="&ViewCmd.label;" accesskey="&ViewCmd.aKey;">
           <menupopup onpopupshowing="return onViewMenuShowing();">
   
-            <menu label="&ShowCmd.label;">
+            <menu label="&ShowCmd.label;" accesskey="&ShowCmd.akey;">
               <menupopup>
                 <menuitem id="menu-view-tabstrip"
                   label="&ShowTabStripCmd.label;" 

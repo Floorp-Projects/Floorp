@@ -21,18 +21,25 @@
 <!ENTITY users.label "Users">
 <!ENTITY lag.label   "Lag">
 
-<!ENTITY OptionsCmd.label    "Options">
-<!ENTITY MungerCmd.label     "Munger">
-<!ENTITY DisableMunger.label "Disable All">
-<!ENTITY EnableColors.label  "Color Codes">
+<!ENTITY OptionsCmd.label        "Options">
+<!ENTITY OptionsCmd.accesskey    "O">
+<!ENTITY MungerCmd.label         "Munger">
+<!ENTITY MungerCmd.accesskey     "M">
+<!ENTITY DisableMunger.label     "Disable All">
+<!ENTITY DisableMunger.accesskey "D">
+<!ENTITY EnableColors.label      "Color Codes">
+<!ENTITY EnableColors.accesskey  "C">
 
 <!ENTITY DebugMsgCmd.label      "Debug Mode">
 <!ENTITY DebugMsgCmd.aKey       "D">
 <!ENTITY SaveSetNowCmd.label    "Save Settings Now">
+<!ENTITY SaveSetNowCmd.akey     "N">
 <!ENTITY SaveSetExitCmd.label   "Save Settings on Exit">
+<!ENTITY SaveSetExitCmd.akey    "E">
 <!ENTITY ViewCmd.label          "View">
 <!ENTITY ViewCmd.aKey           "V">
 <!ENTITY ShowCmd.label          "Show/Hide">
+<!ENTITY ShowCmd.akey           "S">
 <!ENTITY ShowTabStripCmd.label  "Tabs">
 <!ENTITY ShowTabStripCmd.aKey   "T">
 <!ENTITY ShowUserlistCmd.label  "Userlist">
@@ -59,9 +66,9 @@
 <!ENTITY StartupVisitCmd.label  "Open at Startup">
 <!ENTITY StartupVisitCmd.aKey   "">
 <!ENTITY ClearViewCmd.label     "Clear View">
-<!ENTITY ClearViewCmd.aKey      "">
+<!ENTITY ClearViewCmd.aKey      "e">
 <!ENTITY DeleteViewCmd.label    "Close View">
-<!ENTITY DeleteViewCmd.aKey     "">
+<!ENTITY DeleteViewCmd.aKey     "o">
 <!ENTITY StatusCmd.label        "Connection Status">
 <!ENTITY StatusCmd.aKey         "C">
 
