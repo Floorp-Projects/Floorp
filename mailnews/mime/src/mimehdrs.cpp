@@ -667,7 +667,7 @@ MimeHeaders_default_news_link_generator (const char *dest, void *closure,
 	  PL_strcpy (result, prefix);
 	  PL_strcat (result, new_dest);
 	}
-  PR_FREEIF (new_dest);
+  nsCRT::free (new_dest);
   return result;
 }
 
@@ -796,7 +796,7 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 	PR_Free(tmp);
 	if (!tmp2) break;
 	result = PR_smprintf("addbook:add?vcard=%s", tmp2);
-	PR_Free(tmp2);
+	nsCRT::free(tmp2);
 	break;
   }
   PR_FREEIF(names);

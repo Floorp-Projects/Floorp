@@ -1053,7 +1053,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 	if (needEscape)
 		dupParm = nsEscape(parmValue, url_Path);
 	else 
-		dupParm = PL_strdup(parmValue);
+		dupParm = nsCRT::strdup(parmValue);
 
 	if (!dupParm)
 		return NULL;
@@ -1181,7 +1181,7 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 	}
 
 done:
-	PR_FREEIF(dupParm);
+	nsCRT::free(dupParm);
 	return foldedParm;
 }
 

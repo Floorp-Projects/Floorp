@@ -200,8 +200,11 @@ MimeExternalBody_make_url(const char *ct,
 	  PL_strcpy(s, "file:");
 
 	  s2 = nsEscape(name, url_Path);
-	  if (s2) PL_strcat(s, s2);
-	  PR_FREEIF(s2);
+	  if (s2)
+	  {
+	      PL_strcat(s, s2);
+	      nsCRT::free(s2);
+	  }
 	  return s;
 	}
   else if (!PL_strcasecmp(at, "mail-server"))
@@ -216,22 +219,31 @@ MimeExternalBody_make_url(const char *ct,
 	  PL_strcpy(s, "mailto:");
 
 	  s2 = nsEscape(svr, url_XAlphas);
-	  if (s2) PL_strcat(s, s2);
-	  PR_FREEIF(s2);
+	  if (s2)
+	  {
+	      PL_strcat(s, s2);
+	      nsCRT::free(s2);
+	  }
 
 	  if (subj)
 		{
 		  s2 = nsEscape(subj, url_XAlphas);
 		  PL_strcat(s, "?subject=");
-		  if (s2) PL_strcat(s, s2);
-		  PR_FREEIF(s2);
+		  if (s2)
+		  {
+		      PL_strcat(s, s2);
+		      nsCRT::free(s2);
+		  }
 		}
 	  if (body)
 		{
 		  s2 = nsEscape(body, url_XAlphas);
 		  PL_strcat(s, (subj ? "&body=" : "?body="));
-		  if (s2) PL_strcat(s, s2);
-		  PR_FREEIF(s2);
+		  if (s2)
+		  {
+		      PL_strcat(s, s2);
+		      nsCRT::free(s2);
+		  }
 		}
 	  return s;
 	}
@@ -402,7 +414,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 									   PL_strlen(suf) + 1);
 			  if (!body)
 				{
-				  PR_Free(s2);
+				  nsCRT::free(s2);
 				  goto FAIL;
 				}
 			  PL_strcpy(body, pre);

@@ -483,7 +483,7 @@ nsMsgGroupRecord::GetSaveString()
 							   (long) m_uniqueId);
 	}
 	delete [] fullname;
-	if (pretty) PR_Free(pretty);
+	if (pretty) nsCRT::free(pretty);
 	m_flags &= ~F_DIRTY;
 	return result;
 }

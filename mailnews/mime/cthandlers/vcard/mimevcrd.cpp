@@ -1070,7 +1070,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 
 	if (!htmlLine1 && !htmlLine2)
 	{
-		PR_FREEIF (vEscCard);
+		nsCRT::free (vEscCard);
 		PR_FREEIF (htmlLine1);
 		PR_FREEIF (htmlLine2);
 		return VCARD_OUT_OF_MEMORY;
