@@ -25,8 +25,14 @@
  */
 
 #define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
-  public: \
   static const nsIID& GetIID() {static nsIID iid = the_iid; return iid;}
+
+/**
+ * A macro to build the static const CID accessor method
+ */
+
+#define NS_DEFINE_STATIC_CID_ACCESSOR(the_cid) \
+  static const nsID& GetCID() {static nsID cid = the_cid; return cid;}
 
 /**
  * Some convenience macros for implementing AddRef and Release
