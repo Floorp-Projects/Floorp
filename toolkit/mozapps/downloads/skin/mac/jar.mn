@@ -1,13 +1,16 @@
 classic.jar:
   skin/classic/mozapps/downloads/unknownContentType.css
-  skin/classic/mozapps/downloads/viewFader.png
-  skin/classic/mozapps/downloads/downloadFader.png
-  skin/classic/mozapps/downloads/downloadSelected.png
-  skin/classic/mozapps/downloads/downloadsBG.png
-  skin/classic/mozapps/downloads/downloadIcon.png
-  skin/classic/mozapps/downloads/downloadCleanup.png
-  skin/classic/mozapps/downloads/downloadCleanupDisabled.png
-  skin/classic/mozapps/downloads/downloadOptions.png
+  skin/classic/mozapps/downloads/background-gradient.png
+  skin/classic/mozapps/downloads/background-stripe.png
+  skin/classic/mozapps/downloads/cleanup-button.png
+  skin/classic/mozapps/downloads/cleanup-button-pressed.png
+  skin/classic/mozapps/downloads/cleanup-button-disabled.png
+  skin/classic/mozapps/downloads/download-inprogress.png
+  skin/classic/mozapps/downloads/options-button.png
+  skin/classic/mozapps/downloads/options-button-pressed.png
+  skin/classic/mozapps/downloads/progress-bar-paused.gif
+  skin/classic/mozapps/downloads/progress-bar.gif
+  skin/classic/mozapps/downloads/progress-remainder.gif
   skin/classic/mozapps/downloads/downloads.css
   skin/classic/mozapps/downloads/downloads.xml
   
