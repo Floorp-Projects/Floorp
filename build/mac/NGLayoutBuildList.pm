@@ -1173,7 +1173,7 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:components:find:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
 	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST",		"$samples_dir");
-	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:MANIFEST",		"$samples_dir");
+	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:en-US:MANIFEST",		"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
