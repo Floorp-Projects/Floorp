@@ -330,7 +330,11 @@ ifndef LIBS_NEQ_INSTALL
 libs install:: $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
+ifdef IS_COMPONENT
+	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib/components
+else
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
+endif
 endif
 endif
 ifdef MAPS
@@ -356,7 +360,11 @@ else
 libs:: $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(SHARED_LIBRARY_LIBS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
+ifdef IS_COMPONENT
+	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib/components
+else
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
+endif
 endif
 endif
 ifdef SHARED_LIBRARY
