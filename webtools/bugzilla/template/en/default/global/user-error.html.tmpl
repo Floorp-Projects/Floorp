@@ -371,7 +371,7 @@
   [% ELSIF error == "need_quip" %]
     [% title = "Quip Required" %]
     Please enter a quip in the text field.
-    
+
   [% ELSIF error == "new_password_missing" %]
     [% title = "New Password Missing" %]
     You must enter a new password.
@@ -479,6 +479,10 @@
   [% ELSIF error == "quips_disabled" %]
     [% title = "Quips Disabled" %]
     Quips are disabled.
+
+  [% ELSIF error == "quips_edit_denied" %]
+    [% title = "Permission Denied" %]
+    You do not have permission to edit quips.
 
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]

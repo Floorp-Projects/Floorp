@@ -58,6 +58,34 @@ if ($action eq "show") {
     $vars->{'show_quips'} = 1;
 }
 
+if ($action eq "edit") {
+    if (!UserInGroup('admin')) {
+        ThrowUserError("quips_edit_denied");
+    }
+    # Read in the entire quip list
+    SendSQL("SELECT quipid,userid,quip FROM quips");
+
+    my $quips;
+    my @quipids;
+    while (MoreSQLData()) {
+        my ($quipid, $userid, $quip) = FetchSQLData();
+        $quips->{$quipid} = {'userid' => $userid, 'quip' => $quip};
+        push(@quipids, $quipid);
+    }
+
+    my $users;
+    foreach my $quipid (@quipids) {
+        if (not defined $users->{$userid}) {
+            SendSQL("SELECT login_name FROM profiles WHERE userid = $userid");
+            $users->{$userid} = FetchSQLData();
+        }
+    }
+    $vars->{'quipids'} = \@quipids;
+    $vars->{'quips'} = $quips;
+    $vars->{'users'} = $users;
+    $vars->{'edit_quips'} = 1;
+}
+
 if ($action eq "add") {
     (Param('enablequips') eq "on") || ThrowUserError("no_new_quips");
     
@@ -69,6 +97,19 @@ if ($action eq "add") {
     SendSQL("INSERT INTO quips (userid, quip) VALUES (". $userid . ", " . SqlQuote($comment) . ")");
 
     $vars->{'added_quip'} = $comment;
+}
+
+if ($action eq "delete") {
+    if (!UserInGroup('admin')) {
+        ThrowUserError("quips_edit_denied");
+    }
+    my $quipid = $::FORM{"quipid"};
+    ThrowCodeError("need_quipid") unless $quipid =~ /(\d+)/; 
+    $quipid = $1;
+
+    SendSQL("SELECT quip FROM quips WHERE quipid = $quipid");
+    $vars->{'deleted_quip'} = FetchSQLData();
+    SendSQL("DELETE FROM quips WHERE quipid = $quipid");
 }
 
 print "Content-type: text/html\n\n";

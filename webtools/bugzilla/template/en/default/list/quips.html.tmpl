@@ -39,6 +39,14 @@
   </p>
 [% END %]
 
+[% IF deleted_quip %]
+  <p>
+    <font color="red">
+      The quip '<tt>[% deleted_quip FILTER html %]</tt>' has been deleted.
+    </font>
+  </p>
+[% END %]
+
 <p>
   Bugzilla will pick a random quip for the headline on each bug list, and 
   you can extend the quip list. Type in something clever or funny or boring 
@@ -62,11 +70,38 @@
       <li>[% quip FILTER html %]</li>
     [% END %]
   </ul>
+[% ELSIF edit_quips %]
+  <h2>Edit existing quips:</h2>
+  <table border="1">
+    <thead><tr>
+      <th>Action</th>
+      <th>User</th>
+      <th>Quip</th>
+    </tr></thead><tbody>
+    [% FOREACH quipid = quipids %]
+      <tr>
+        <td>
+          <a href="quips.cgi?action=delete&amp;quipid=[% quipid FILTER uri%]">
+            Delete
+          </a>
+        </td>
+        <td>
+          [% userid = quips.$quipid.userid  %]
+          [% users.$userid FILTER html      %]
+          [% "Unknown" IF NOT users.$userid %]
+        </td>
+        <td>[% quips.$quipid.quip FILTER html %]</td>
+      </tr>
+    [% END %]
+    </tbody></table>
 [% ELSE %]
   <p>
     Those who like their wisdom in large doses can 
     <a href="quips.cgi?action=show">view the whole quip list</a>.
   </p>
+  [% IF UserInGroup('admin') %]
+    <p><a href="quips.cgi?action=edit">Edit</a> the quip list.</p>
+  [% END %]
 [% END %]
 
 [% PROCESS global/footer.html.tmpl %]

@@ -177,6 +177,9 @@
     No Y axis was defined when creating report. The X axis is optional,
     but the Y axis is compulsory.
     
+  [% ELSIF error == "need_quipid" %]
+    A valid quipid is needed.
+
   [% ELSIF error == "request_queue_group_invalid" %]
     The group field <em>[% group FILTER html %]</em> is invalid.
 
