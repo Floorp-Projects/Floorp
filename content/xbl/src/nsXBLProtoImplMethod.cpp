@@ -40,11 +40,14 @@
 #include "nsString.h"
 #include "jsapi.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsXBLProtoImplMethod.h"
 #include "nsIScriptContext.h"
+#include "nsIXPConnect.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod)
 
@@ -158,8 +161,11 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
   }
 
   nsDependentString body(mUncompiledMethod->mBodyText.GetText());
-  if (body.IsEmpty())
+  if (body.IsEmpty()) {
+    delete mUncompiledMethod;
+    mUncompiledMethod = nsnull;
     return NS_OK;
+  }
 
   // We have a method.
   // Allocate an array for our arguments.
@@ -218,5 +224,63 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     AddJSGCRoot(&mJSMethodObject, "nsXBLProtoImplMethod::mJSMethodObject");
   }
   
+  return NS_OK;
+}
+
+nsresult
+nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
+{
+  if (!mJSMethodObject) {
+    // Nothing to do here
+    return NS_OK;
+  }
+
+  // Get the script context the same way
+  // nsXBLProtoImpl::InstallImplementation does.
+  nsIDocument* document = aBoundElement->GetDocument();
+  if (!document) {
+    return NS_OK;
+  }
+
+  nsIScriptGlobalObject* global = document->GetScriptGlobalObject();
+  if (!global) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIScriptContext> context = global->GetContext();
+  if (!context) {
+    return NS_OK;
+  }
+  
+  JSContext* cx = (JSContext*) context->GetNativeContext();
+
+  JSObject* globalObject = ::JS_GetGlobalObject(cx);
+
+  JSObject* method = ::JS_CloneFunctionObject(cx, mJSMethodObject,
+                                              globalObject);
+  if (!method) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+  rv = xpc->WrapNative(cx, globalObject, aBoundElement,
+                       NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject* thisObject;
+  rv = wrapper->GetJSObject(&thisObject);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now call the method
+  jsval retval;
+  if (!::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
+                              0 /* argc */, nsnull /* argv */, &retval)) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }

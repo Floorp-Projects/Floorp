@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeResources.h"
 #include "nsXBLPrototypeHandler.h"
+#include "nsXBLProtoImplMethod.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsWeakReference.h"
@@ -80,8 +81,8 @@ public:
 
   nsresult GetAllowScripts(PRBool* aResult);
 
-  nsresult BindingAttached(nsIDOMEventReceiver* aRec);
-  nsresult BindingDetached(nsIDOMEventReceiver* aRec);
+  nsresult BindingAttached(nsIContent* aBoundElement);
+  nsresult BindingDetached(nsIContent* aBoundElement);
 
   PRBool LoadResources();
   nsresult AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
@@ -91,10 +92,10 @@ public:
   nsXBLPrototypeHandler* GetPrototypeHandlers() { return mPrototypeHandler; }
   void SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler) { mPrototypeHandler = aHandler; }
 
-  nsXBLPrototypeHandler* GetConstructor();
-  nsresult SetConstructor(nsXBLPrototypeHandler* aConstructor);
-  nsXBLPrototypeHandler* GetDestructor();
-  nsresult SetDestructor(nsXBLPrototypeHandler* aDestructor);
+  nsXBLProtoImplAnonymousMethod* GetConstructor();
+  nsresult SetConstructor(nsXBLProtoImplAnonymousMethod* aConstructor);
+  nsXBLProtoImplAnonymousMethod* GetDestructor();
+  nsresult SetDestructor(nsXBLProtoImplAnonymousMethod* aDestructor);
 
   nsresult InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject);
   

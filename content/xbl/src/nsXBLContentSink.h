@@ -150,6 +150,8 @@ protected:
 
 protected:
   nsresult ReportUnexpectedElement(nsIAtom* aElementName, PRUint32 aLineNumber);
+
+  void AddMember(nsXBLProtoImplMember* aMember);
   
   XBLPrimaryState mState;
   XBLSecondaryState mSecondaryState;
