@@ -38,7 +38,7 @@ interface nsINntpService : nsISupports {
 
   nsIURI postMessage (in nsIFileSpec fileToPost, in string newsgroupNames, in string newshostName, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
-  nsIURI getNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
+  nsIURI getNewNews (in nsINntpIncomingServer nntpServer, in string uri, in boolean getOld, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
   nsIURI cancelMessages (in string hostname, in string newsgroupname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
  

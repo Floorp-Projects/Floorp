@@ -184,6 +184,15 @@ function MsgGetMessage()
 	GetNewMessages(folders, compositeDataSource);
 }
 
+function MsgGetNextNMessages()
+{
+	var folder = GetFirstSelectedMsgFolder();
+	if(folder)
+	{
+		GetNextNMessages(folder)
+	}
+}
+
 function MsgDeleteMessage(reallyDelete, fromToolbar)
 {
 
@@ -641,6 +650,25 @@ function IsGetNewMessagesEnabled()
 		return false;
 	else
 		return true;	
+}
+
+function IsGetNextNMessagesEnabled()
+{
+	var selectedFolders = GetSelectedMsgFolders();
+    var numFolders = selectedFolders.length;
+    if(numFolders !=1)
+        return false;
+
+    var folder = selectedFolders[0];
+    if (!folder)
+        return false;
+   
+    var server = folder.server;
+    var serverType = server.type;
+   
+    if((serverType == "nntp"))
+        return true;
+    else return false;
 }
 
 function IsEmptyTrashEnabled()

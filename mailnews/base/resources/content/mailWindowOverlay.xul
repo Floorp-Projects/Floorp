@@ -100,6 +100,7 @@ Rights Reserved.
 	<broadcaster id="cmd_viewPageSource" oncommand="goDoCommand('cmd_viewPageSource')" disabled="true"/>
 	<broadcaster id="cmd_reload" oncommand="goDoCommand('cmd_reload')" disabled="true"/>
 	<broadcaster id="cmd_getNewMessages" oncommand="goDoCommand('cmd_getNewMessages')" disabled="true"/>
+	<broadcaster id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
 	<broadcaster id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
 	<broadcaster id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
 	<broadcaster id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead')" disabled="true"/>
@@ -572,6 +573,8 @@ Rights Reserved.
 			 accesskey="&getNewMsgCmd.accesskey;"
 			 key="key_getNewMessages"
 			 observes="cmd_getNewMessages"/>
+			<menuitem value="&getNextNMsgCmd.label;"
+			 observes="cmd_getNextNMessages"/>
 			<menuitem value="&sendUnsentCmd.label;"
 			 accesskey="&sendUnsentCmd.accesskey;"
 			 oncommand="MsgSendUnsentMsg();"/>

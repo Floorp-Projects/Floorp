@@ -83,8 +83,6 @@ private:
 #ifdef HAVE_CHANGELISTENER
   virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
 #endif
-  void				SetGetOldMessages(PRBool getOldMessages) {m_getOldMessages = getOldMessages;}
-  PRBool			GetGetOldMessages() {return m_getOldMessages;}
   nsresult			ParseLine(char *line, PRUint32 *message_number);
   PRBool			msg_StripRE(const char **stringP, PRUint32 *lengthP);
   nsresult			GetDatabase(const char *uri, nsIMsgDatabase **db);

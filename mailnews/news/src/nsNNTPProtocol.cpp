@@ -3047,10 +3047,7 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
                                                  m_lastArticle);
       }
 
-	  if (NS_FAILED(rv))
-      {
-		return status;
-	  }
+	  if (NS_FAILED(rv)) return status;
 	}
 										 
 
@@ -3069,6 +3066,14 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	}
         
     if (NS_SUCCEEDED(rv) && m_newsgroupList) {
+		PRBool getOldMessages = PR_FALSE;
+		if (m_runningURL) {
+  			rv = m_runningURL->GetGetOldMessages(&getOldMessages);
+			if (NS_FAILED(rv)) return status;
+		}
+		rv = m_newsgroupList->SetGetOldMessages(getOldMessages);
+		if (NS_FAILED(rv)) return status;
+		
         rv = m_newsgroupList->GetRangeOfArtsToDownload(m_msgWindow,
 					      m_firstPossibleArticle,
                                               m_lastPossibleArticle,
@@ -3080,8 +3085,7 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	
 	}
 
-	if (NS_FAILED(rv))
-	  return status;
+	if (NS_FAILED(rv)) return status;
 
 	if (m_firstArticle <= 0 || m_firstArticle > m_lastArticle) 
 	{

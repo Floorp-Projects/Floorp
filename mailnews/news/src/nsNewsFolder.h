@@ -108,6 +108,7 @@ protected:
   PRInt32 RememberLine(const char *line);
   nsresult RememberUnsubscribedGroup(const char *newsgroup, const char *setStr);
   nsresult ForgetLine(void);
+	nsresult GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool getOld);
 
   PRInt32 HandleNewsrcLine(char *line, PRUint32 line_size);
   virtual const char *GetIncomingServerType() {return "nntp";}

@@ -463,8 +463,6 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
                 // use nsINewsDownloadHeadersDialogArgs instead of nsIDialogParamBlock
                 // don't use prefs for dialog values, use the arg block
 				// m_promptedAlready may not be saved
-				// m_getOldMessages may not be set.
-			
 #ifdef DEBUG_NEWS
 				printf("Download Header Dialog:  %d\n",*last - *first + 1);
 				printf("download = %d\n", download);
@@ -1130,3 +1128,17 @@ nsNNTPNewsgroupList::SetProgressStatus(char *message)
         }
         PR_FREEIF(progressMsg);
 }     
+
+NS_IMETHODIMP nsNNTPNewsgroupList::SetGetOldMessages(PRBool aGetOldMessages) 
+{
+	m_getOldMessages = aGetOldMessages;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsNNTPNewsgroupList::GetGetOldMessages(PRBool *aGetOldMessages) 
+{
+	NS_ENSURE_ARG(aGetOldMessages);
+
+	*aGetOldMessages = m_getOldMessages;
+	return NS_OK;
+}

@@ -58,6 +58,7 @@ interface nsINntpUrl : nsISupports {
   attribute nsMsgKey messageKey;
   attribute string newsgroupName;
   attribute nsNewsAction newsAction;
+  attribute boolean getOldMessages;
 
   /* these are nsMailboxActions */
   const long ActionGetNewNews = 0;

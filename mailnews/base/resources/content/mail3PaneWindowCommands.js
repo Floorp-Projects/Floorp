@@ -213,6 +213,7 @@ var DefaultController =
 			case "cmd_viewPageSource":
 			case "cmd_reload":
 			case "cmd_getNewMessages":
+			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
 			case "cmd_markAsRead":
@@ -305,6 +306,8 @@ var DefaultController =
 				return IsRenameFolderEnabled();
 			case "cmd_getNewMessages":
 				return IsGetNewMessagesEnabled();
+			case "cmd_getNextNMessages":
+				return IsGetNextNMessagesEnabled();
 			case "cmd_emptyTrash":
 				return IsEmptyTrashEnabled();
 			case "cmd_compactFolder":
@@ -322,6 +325,9 @@ var DefaultController =
 		{
 			case "cmd_getNewMessages":
 				MsgGetMessage();
+				break;
+			case "cmd_getNextNMessages":
+				MsgGetNextNMessages();
 				break;
 			case "cmd_reply":
 				MsgReplyMessage(null);
@@ -513,6 +519,7 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_collapseAllThreads');
 	goUpdateCommand('cmd_renameFolder');
 	goUpdateCommand('cmd_getNewMessages');
+	goUpdateCommand('cmd_getNextNMessages');
 	goUpdateCommand('cmd_find');
 	goUpdateCommand('cmd_findAgain');
 	goUpdateCommand('cmd_markAllRead');

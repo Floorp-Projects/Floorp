@@ -70,5 +70,7 @@ interface nsINNTPNewsgroupList : nsISupports {
   string GetGroupName();
 
   void Initialize(in nsINNTPHost host, in nsINntpUrl runningURL, in nsINNTPNewsgroup newsgroup, in string username, in string hostname, in string groupname);
+
+  attribute boolean getOldMessages;
 };
 

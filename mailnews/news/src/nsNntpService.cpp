@@ -985,7 +985,7 @@ nsNntpService::RunNewsUrl(nsIURI * aUri, nsIMsgWindow *aMsgWindow, nsISupports *
   return rv;
 }
 
-NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
+NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, PRBool aGetOld, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
   if (!uri) return NS_ERROR_NULL_POINTER;
 
@@ -1043,8 +1043,13 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
 	rv = ConstructNntpUrl(uriStr, newsgroupName, nsMsgKey_None, aUrlListener,  aMsgWindow, getter_AddRefs(aUrl));
 	if (NS_FAILED(rv)) return rv;
 	nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(aUrl);
-	if (nntpUrl)
-		nntpUrl->SetNewsAction(nsINntpUrl::ActionGetNewNews);
+	if (nntpUrl) {
+		rv = nntpUrl->SetNewsAction(nsINntpUrl::ActionGetNewNews);
+		if (NS_FAILED(rv)) return rv;
+		
+		rv = nntpUrl->SetGetOldMessages(aGetOld);
+		if (NS_FAILED(rv)) return rv;
+	}
 	nsCOMPtr<nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aUrl);
 	if (mailNewsUrl)
 	{

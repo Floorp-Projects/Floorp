@@ -63,6 +63,7 @@ nsNntpUrl::nsNntpUrl()
   m_addDummyEnvelope = PR_FALSE;
   m_canonicalLineEnding = PR_FALSE;
 	m_filePath = nsnull;
+	m_getOldMessages = PR_FALSE;
 }
  
 nsNntpUrl::~nsNntpUrl()
@@ -89,6 +90,19 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsINntpUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsNntpUrl::SetGetOldMessages(PRBool aGetOldMessages)
+{
+	m_getOldMessages = aGetOldMessages;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsNntpUrl::GetGetOldMessages(PRBool * aGetOldMessages)
+{
+	NS_ENSURE_ARG(aGetOldMessages);
+	*aGetOldMessages = m_getOldMessages;
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsNntpUrl::GetNewsAction(nsNewsAction *aNewsAction)
 {

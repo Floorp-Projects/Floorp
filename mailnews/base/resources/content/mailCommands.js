@@ -169,6 +169,16 @@ function SendUnsentMessages(folder)
 
 }
 
+function GetNextNMessages(folder)
+{
+	if (folder) {
+		var newsFolder = folder.QueryInterface(Components.interfaces.nsIMsgNewsFolder);
+		if (newsFolder) {
+			newsFolder.getNextNMessages(msgWindow);
+		}
+	}
+}
+
  function ComposeMessage(type, format, folder, messageArray) //type is a nsIMsgCompType and format is a nsIMsgCompFormat
 {
 	var msgComposeType = Components.interfaces.nsIMsgCompType;

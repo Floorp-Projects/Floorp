@@ -925,12 +925,22 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
   return rv;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aWindow)
+NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aMsgWindow)
+{
+  return GetNewsMessages(aMsgWindow, PR_FALSE);
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::GetNextNMessages(nsIMsgWindow *aMsgWindow)
+{
+  return GetNewsMessages(aMsgWindow, PR_TRUE);
+}
+
+nsresult nsMsgNewsFolder::GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool aGetOld)
 {
   nsresult rv = NS_OK;
 
 #ifdef DEBUG_NEWS
-  printf("GetNewMessages (for news)  uri = %s\n",mURI);
+  printf("GetNewsMessages() uri = %s\n",mURI);
 #endif
 
   PRBool isNewsServer = PR_FALSE;
@@ -950,10 +960,10 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aWindow)
   if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_NEWS
-  printf("Getting new news articles....\n");
+  printf("Getting news articles....\n");
 #endif
 
-  rv = nntpService->GetNewNews(nntpServer, mURI, this, aWindow, nsnull);
+  rv = nntpService->GetNewNews(nntpServer, mURI, aGetOld, this, aMsgWindow, nsnull);
   return rv;
 }
 
