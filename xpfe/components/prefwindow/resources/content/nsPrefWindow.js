@@ -318,6 +318,14 @@ nsPrefWindow.prototype =
       onpageload: 
         function ( aPageTag )
           {
+            var prefPanelTree = document.getElementById( "prefsTree" );
+            var selectedIndex = prefPanelTree.currentIndex;
+            if (selectedIndex >= 0 &&
+                prefPanelTree.view.isContainer(selectedIndex) &&
+                !prefPanelTree.view.isContainerEmpty(selectedIndex) &&
+                !prefPanelTree.view.isContainerOpen(selectedIndex))
+              prefPanelTree.view.toggleOpenState(selectedIndex);
+
             var header = document.getElementById("header");
             header.setAttribute("title",
                                 window.frames[this.contentFrame].document.documentElement.getAttribute("headertitle"));
