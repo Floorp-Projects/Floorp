@@ -47,10 +47,12 @@ nsLineData::nsLineData()
   mHasBullet = PR_FALSE;
   mIsBlock = PR_FALSE;
   mBounds.SetRect(0, 0, 0, 0);
+  mFloaters = nsnull;
 }
 
 nsLineData::~nsLineData()
 {
+  delete mFloaters;
 }
 
 void
