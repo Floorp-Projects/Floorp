@@ -255,14 +255,7 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
 NS_IMETHODIMP
 nsAppShellService::CloseTopLevelWindow(nsIWebShellWindow* aWindow)
 {
-  nsresult closerv, unregrv;
-
-  closerv = aWindow->Close();
-  unregrv = UnregisterTopLevelWindow(aWindow);
-  if (0 == mWindowList->Count())
-    mAppShell->Exit();
-
-  return closerv == NS_OK ? unregrv : closerv;
+  return aWindow->Close();
 }
 
 /*
@@ -331,6 +324,8 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
     mWindowList->RemoveElement(wsc);
     NS_RELEASE(wsc);
   }
+  if (0 == mWindowList->Count())
+    mAppShell->Exit();
   return rv;
 }
 
