@@ -47,10 +47,10 @@ JS_BEGIN_EXTERN_C
 #define GCX_STRING              1               /* JSString */
 #define GCX_DOUBLE              2               /* jsdouble */
 #define GCX_EXTERNAL_STRING     3               /* JSString w/ external chars */
-#define GCX_NTYPES_LOG2         3
+#define GCX_NTYPES_LOG2         3               /* type index bits */
 #define GCX_NTYPES              JS_BIT(GCX_NTYPES_LOG2)
 
-/* GC flag definitions (type index goes in low bits). */
+/* GC flag definitions, must fit in 8 bits (type index goes in the low bits). */
 #define GCF_TYPEMASK    JS_BITMASK(GCX_NTYPES_LOG2)
 #define GCF_MARK        JS_BIT(GCX_NTYPES_LOG2)
 #define GCF_FINAL       JS_BIT(GCX_NTYPES_LOG2 + 1)
@@ -61,7 +61,8 @@ JS_BEGIN_EXTERN_C
 #if 1
 /*
  * Since we're forcing a GC from JS_GC anyway, don't bother wasting cycles
- * loading oldval.  XXX remove implied force, etc.
+ * loading oldval.  XXX remove implied force, fix jsinterp.c's "second arg
+ * ignored", etc.
  */
 #define GC_POKE(cx, oldval) ((cx)->runtime->gcPoke = JS_TRUE)
 #else
@@ -154,6 +155,7 @@ typedef struct JSGCStats {
     uint32  recycle;    /* number of things recycled through gcFreeList */
     uint32  retry;      /* allocation attempt retries after running the GC */
     uint32  fail;       /* allocation failures */
+    uint32  finalfail;  /* finalizer calls allocator failures */
     uint32  lock;       /* valid lock calls */
     uint32  unlock;     /* valid unlock calls */
     uint32  stuck;      /* stuck reference counts seen by lock calls */
@@ -163,10 +165,9 @@ typedef struct JSGCStats {
     uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
     uint32  poke;       /* number of potentially useful GC calls */
     uint32  nopoke;     /* useless GC calls where js_PokeGC was not set */
-    uint32  badarena;   /* thing arena corruption */
-    uint32  badflag;    /* flags arena corruption */
     uint32  afree;      /* thing arenas freed so far */
-    uint32  fafree;     /* flags arenas freed so far */
+    uint32  stackseg;   /* total extraordinary stack segments scanned */
+    uint32  segslots;   /* total stack segment jsval slots scanned */
 } JSGCStats;
 
 extern void

@@ -2275,7 +2275,8 @@ read_only:
 unlocked_read_only:
 	if (JSVERSION_IS_ECMA(cx->version))
 	    return JS_TRUE;
-	str = js_DecompileValueGenerator(cx, JS_FALSE, js_IdToValue(id), NULL);
+	str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
+                                         js_IdToValue(id), NULL);
         if (str) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_READ_ONLY, JS_GetStringBytes(str));
@@ -2416,7 +2417,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 	    *rval = JSVAL_FALSE;
 	    return JS_TRUE;
 	}
-	str = js_DecompileValueGenerator(cx, JS_FALSE, js_IdToValue(id), NULL);
+	str = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
+                                         js_IdToValue(id), NULL);
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_PERMANENT, JS_GetStringBytes(str));
@@ -2543,7 +2545,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 	    str = NULL;
 	}
 	*vp = OBJECT_TO_JSVAL(obj);
-	str = js_DecompileValueGenerator(cx, JS_TRUE, v, str);
+	str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, str);
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_CANT_CONVERT_TO,
@@ -2901,7 +2903,7 @@ js_ValueToNonNullObject(JSContext *cx, jsval v)
     if (!js_ValueToObject(cx, v, &obj))
 	return NULL;
     if (!obj) {
-	str = js_DecompileValueGenerator(cx, JS_TRUE, v, NULL);
+	str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_NO_PROPERTIES, JS_GetStringBytes(str));

@@ -983,8 +983,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
          * Throw a runtime error if instanceof is called on a function that
          * has a non-object as its .prototype value.
          */
-        str = js_DecompileValueGenerator(cx, JS_TRUE, OBJECT_TO_JSVAL(obj),
-                                         NULL);
+        str = js_DecompileValueGenerator(cx, -1, OBJECT_TO_JSVAL(obj), NULL);
         if (str) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_PROTOTYPE, JS_GetStringBytes(str));
@@ -1741,14 +1740,8 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
     type = JS_TypeOfValue(cx, *vp);
     fallback = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
     fp = cx->fp;
-    if (fp) {
-        jsval *sp = fp->sp;
-        fp->sp = vp;
-        str = js_DecompileValueGenerator(cx, JS_TRUE, *vp, fallback);
-        fp->sp = sp;
-    } else {
-        str = js_DecompileValueGenerator(cx, JS_TRUE, *vp, fallback);
-    }
+    str = js_DecompileValueGenerator(cx, fp ? vp - fp->sp : JSDVG_IGNORE_STACK,
+                                     *vp, fallback);
     if (str) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              (uintN)(constructing ? JSMSG_NOT_CONSTRUCTOR

@@ -2307,10 +2307,10 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
 }
 
 JSString *
-js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
+js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 			   JSString *fallback)
 {
-    JSStackFrame *fp;
+    JSStackFrame *fp, *down;
     jsbytecode *pc, *begin, *end, *tmp;
     jsval *sp, *base, *limit;
     JSScript *script;
@@ -2325,129 +2325,137 @@ js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
 
     fp = cx->fp;
     if (!fp)
-	goto do_fallback;
+        goto do_fallback;
 
     /* Try to find sp's generating pc depth slots under it on the stack. */
     pc = fp->pc;
-    limit = (jsval *) cx->stackPool.current->avail;
-    if (!pc && fp->argv && fp->down) {
-	/*
-	 * Current frame is native, look under it for a scripted call in which
-	 * a decompilable bytecode string that generated the value might exist.
-	 * But if we're told not to check the stack for v, give up.
-	 */
-	if (!checkStack)
-	    goto do_fallback;
-	script = fp->down->script;
-	if (!script)
-	    goto do_fallback;
+    if (spindex == JSDVG_SEARCH_STACK) {
+        if (!pc) {
+            /*
+             * Current frame is native: look under it for a scripted call
+             * in which a decompilable bytecode string that generated the
+             * value as an actual argument might exist.
+             */
+            JS_ASSERT(!fp->script && fp->fun && fp->fun->native);
+            down = fp->down;
+            if (!down)
+                goto do_fallback;
+            script = down->script;
+            base = fp->argv;
+            limit = base + fp->argc;
+        } else {
+            /*
+             * This should be a script activation, either a top-level
+             * script or a scripted function.  But be paranoid about calls
+             * to js_DecompileValueGenerator from code that hasn't fully
+             * initialized a (default-all-zeroes) frame.
+             */
+            script = fp->script;
+            base = fp->spbase;
+            limit = fp->sp;
+        }
 
-	/*
-	 * Native frame called by script: try to match v with actual argument.
-	 * If (fp->sp < fp->argv), normally an impossibility, then we are in
-	 * js_ReportIsNotFunction and sp points to the offending non-function
-	 * on the stack.
-	 */
-	for (sp = (fp->sp < fp->argv) ? fp->sp : fp->argv; sp < limit; sp++) {
-	    if (*sp == v) {
-		depth = (intN)script->depth;
-		pc = (jsbytecode *) sp[-depth];
-		break;
-	    }
-	}
+        /*
+         * Pure paranoia about default-zeroed frames being active while
+         * js_DecompileValueGenerator is called.  It can't hurt much now;
+         * error reporting performance is not an issue.
+         */
+        if (!script || !base || !limit)
+            goto do_fallback;
+
+        /*
+         * Try to find operand-generating pc depth slots below sp.
+         *
+         * In the native case, we know the arguments have generating pc's
+         * under them, on account of fp->down->script being non-null: all
+         * compiled scripts get depth slots for generating pc's allocated
+         * upon activation, at the top of js_Interpret.
+         *
+         * In the script or scripted function case, the same reasoning
+         * applies to fp rather than to fp->down.
+         */
+        for (sp = base; sp < limit; sp++) {
+            if (*sp == v) {
+                depth = (intN)script->depth;
+                pc = (jsbytecode *) sp[-depth];
+                break;
+            }
+        }
     } else {
-	/*
-	 * At this point, pc may or may not be null.  I.e., we could be in a
-	 * script activation, or we could be in a native frame that was called
-	 * by another native function.  Check script.
-	 */
-	script = fp->script;
-	if (!script)
-	    goto do_fallback;
+        /*
+         * At this point, pc may or may not be null, i.e., we could be in
+         * a script activation, or we could be in a native frame that was
+         * called by another native function.  Check pc and script.
+         */
+        if (!pc)
+            goto do_fallback;
+        script = fp->script;
+        if (!script)
+            goto do_fallback;
 
-	/*
-	 * OK, we're in an interpreted frame.  The interpreter calls us just
-	 * after popping one or two operands for a given bytecode at fp->pc.
-	 * So try the operand at sp, or one above it.
-	 */
-	if (checkStack) {
-	    sp = fp->sp;
-	    if (sp[0] != v && sp + 1 < limit && sp[1] == v)
-		sp++;
+        if (spindex != JSDVG_IGNORE_STACK) {
+            depth = (intN)script->depth;
+            JS_ASSERT(-depth <= spindex && spindex < 0);
+            spindex -= depth;
 
-	    if (sp[0] == v) {
-		/* Try to find an operand-generating pc just above fp's vars. */
-		depth = (intN)script->depth;
-		base = fp->vars
-		       ? fp->vars + fp->nvars
-		       : (jsval *) cx->stackPool.current->base;
-		if (JS_UPTRDIFF(sp - depth, base) < JS_UPTRDIFF(limit, base))
-		    pc = (jsbytecode *) sp[-depth];
-	    }
-	}
-
-	/*
-	 * If fp->pc was null, and either we had no luck checking the stack,
-	 * or our caller synthesized v himself and does not want us to check
-	 * the stack, then we fall back.
-	 */
-	if (!pc)
-	    goto do_fallback;
+            base = (jsval *) cx->stackPool.current->base;
+            limit = (jsval *) cx->stackPool.current->avail;
+            sp = fp->sp + spindex;
+            if (JS_UPTRDIFF(sp, base) < JS_UPTRDIFF(limit, base))
+                pc = (jsbytecode *) *sp;
+        }
     }
 
     /*
-     * Be paranoid about loading an invalid pc from sp[-depth].
-     *
-     * Using an object for which js_DefaultValue fails as part of an expression
-     * blows this assert.  Disabled for now.  XXXbe true w/ JSINVOKE_INTERNAL?
-     * JS_ASSERT(JS_UPTRDIFF(pc, script->code) < (jsuword)script->length);
+     * Again, be paranoid, this time about possibly loading an invalid pc
+     * from sp[-(1+depth)].
      */
     if (JS_UPTRDIFF(pc, script->code) >= (jsuword)script->length) {
-	pc = fp->pc;
-	if (!pc)
-	    goto do_fallback;
+        pc = fp->pc;
+        if (!pc)
+            goto do_fallback;
     }
     op = (JSOp) *pc;
     if (op == JSOP_TRAP)
-	op = JS_GetTrapOpcode(cx, script, pc);
+        op = JS_GetTrapOpcode(cx, script, pc);
     cs = &js_CodeSpec[op];
     format = cs->format;
     mode = (format & JOF_MODEMASK);
 
     /* NAME ops are self-contained, but others require left context. */
     if (mode == JOF_NAME) {
-	begin = pc;
+        begin = pc;
     } else {
-	sn = js_GetSrcNote(script, pc);
-	if (!sn || SN_TYPE(sn) != SRC_PCBASE)
-	    goto do_fallback;
-	begin = pc - js_GetSrcNoteOffset(sn, 0);
+        sn = js_GetSrcNote(script, pc);
+        if (!sn || SN_TYPE(sn) != SRC_PCBASE)
+            goto do_fallback;
+        begin = pc - js_GetSrcNoteOffset(sn, 0);
     }
     end = pc + cs->length;
     len = PTRDIFF(end, begin, jsbytecode);
 
     if (format & (JOF_SET | JOF_DEL | JOF_INCDEC | JOF_IMPORT)) {
-	tmp = (jsbytecode *) JS_malloc(cx, len * sizeof(jsbytecode));
-	if (!tmp)
-	    return NULL;
-	memcpy(tmp, begin, len * sizeof(jsbytecode));
-	if (mode == JOF_NAME) {
-	    tmp[0] = JSOP_NAME;
-	} else {
-	    /*
-	     * We must replace the faulting pc's bytecode with a corresponding
-	     * JSOP_GET* code.  For JSOP_SET{PROP,ELEM}, we must use the "2nd"
-	     * form of JSOP_GET{PROP,ELEM}, to throw away the assignment op's
-	     * right-hand operand and decompile it as if it were a GET of its
-	     * left-hand operand.
-	     */
-	    off = len - cs->length;
-	    JS_ASSERT(off == (uintN) PTRDIFF(pc, begin, jsbytecode));
-	    if (mode == JOF_PROP) {
-		tmp[off] = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
-	    } else if (mode == JOF_ELEM) {
-		tmp[off] = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
-	    } else {
+        tmp = (jsbytecode *) JS_malloc(cx, len * sizeof(jsbytecode));
+        if (!tmp)
+            return NULL;
+        memcpy(tmp, begin, len * sizeof(jsbytecode));
+        if (mode == JOF_NAME) {
+            tmp[0] = JSOP_NAME;
+        } else {
+            /*
+             * We must replace the faulting pc's bytecode with a corresponding
+             * JSOP_GET* code.  For JSOP_SET{PROP,ELEM}, we must use the "2nd"
+             * form of JSOP_GET{PROP,ELEM}, to throw away the assignment op's
+             * right-hand operand and decompile it as if it were a GET of its
+             * left-hand operand.
+             */
+            off = len - cs->length;
+            JS_ASSERT(off == (uintN) PTRDIFF(pc, begin, jsbytecode));
+            if (mode == JOF_PROP) {
+                tmp[off] = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
+            } else if (mode == JOF_ELEM) {
+                tmp[off] = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
+            } else {
 #if JS_HAS_LVALUE_RETURN
                 JS_ASSERT(op == JSOP_SETCALL);
                 tmp[off] = JSOP_CALL;
@@ -2455,21 +2463,21 @@ js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
                 JS_ASSERT(0);
 #endif
             }
-	}
-	begin = tmp;
+        }
+        begin = tmp;
     } else {
-	/* No need to revise script bytecode. */
-	tmp = NULL;
+        /* No need to revise script bytecode. */
+        tmp = NULL;
     }
 
     jp = js_NewPrinter(cx, "js_DecompileValueGenerator", 0, JS_FALSE);
     if (jp && js_DecompileCode(jp, script, begin, len))
-	name = js_GetPrinterOutput(jp);
+        name = js_GetPrinterOutput(jp);
     else
-	name = NULL;
+        name = NULL;
     js_DestroyPrinter(jp);
     if (tmp)
-	JS_free(cx, tmp);
+        JS_free(cx, tmp);
     return name;
 
   do_fallback:

@@ -62,6 +62,7 @@ struct JSStackFrame {
     JSObject        *scopeChain;    /* scope chain */
     jsbytecode      *pc;            /* program counter */
     jsval           *sp;            /* stack pointer */
+    jsval           *spbase;        /* operand stack base */
     uintN           sharpDepth;     /* array/object initializer depth */
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     JSPackedBool    constructing;   /* true if called via new operator */
@@ -73,7 +74,6 @@ struct JSStackFrame {
 
 typedef struct JSInlineFrame {
     JSStackFrame    frame;          /* base struct */
-    jsval           *oldsp;         /* old frame's operand stack base */
     void            *mark;          /* mark before inline frame */
     void            *hookData;      /* debugger call hook data */
 } JSInlineFrame;

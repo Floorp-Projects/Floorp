@@ -103,9 +103,8 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
             while ((b = *ap) != NULL) {         /* reclaim a free arena */
                 /*
                  * Insist on exact arenasize match if nb is not greater than
-                 * arenasize.  Otherwise take any arena big enough, but not
-                 * more than nb + arenasize.  The JS GC counts on arenasize
-                 * matching to keep its thing and flags arenas parallel.
+                 * arenasize.  Otherwise take any arena big enough, but not by
+                 * more than nb + arenasize.
                  */
                 sz = (JSUint32)(b->limit - b->base);
                 if ((nb > pool->arenasize)
