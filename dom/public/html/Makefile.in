@@ -56,6 +56,7 @@ EXPORTS =               \
 	nsIDOMHTMLIsIndexElement.h \
 	nsIDOMHTMLLIElement.h \
 	nsIDOMHTMLLabelElement.h \
+	nsIDOMHTMLLayerElement.h \
 	nsIDOMHTMLLegendElement.h \
 	nsIDOMHTMLLinkElement.h \
 	nsIDOMHTMLMapElement.h \

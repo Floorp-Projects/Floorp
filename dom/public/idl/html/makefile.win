@@ -51,6 +51,7 @@ IDLSRCS =  \
 	HTMLIsIndexElement.idl \
 	HTMLLIElement.idl \
 	HTMLLabelElement.idl \
+	HTMLLayerElement.idl \
 	HTMLLegendElement.idl \
 	HTMLLinkElement.idl \
 	HTMLMapElement.idl \

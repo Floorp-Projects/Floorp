@@ -54,6 +54,7 @@ CPPSRCS =			\
 	nsJSHTMLIsIndexElement.cpp \
 	nsJSHTMLLIElement.cpp \
 	nsJSHTMLLabelElement.cpp \
+	nsJSHTMLLayerElement.cpp \
 	nsJSHTMLLegendElement.cpp \
 	nsJSHTMLLinkElement.cpp \
 	nsJSHTMLMapElement.cpp \
@@ -113,6 +114,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSHTMLIsIndexElement.obj \
 	.\$(OBJDIR)\nsJSHTMLLIElement.obj \
 	.\$(OBJDIR)\nsJSHTMLLabelElement.obj \
+	.\$(OBJDIR)\nsJSHTMLLayerElement.obj \
 	.\$(OBJDIR)\nsJSHTMLLegendElement.obj \
 	.\$(OBJDIR)\nsJSHTMLLinkElement.obj \
 	.\$(OBJDIR)\nsJSHTMLMapElement.obj \
