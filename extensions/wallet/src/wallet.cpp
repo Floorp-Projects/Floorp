@@ -46,6 +46,7 @@
 #include "xp_mem.h"
 #include "prmem.h"
 #include "prprf.h"  
+#include "nsIProfile.h"
 
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -57,6 +58,7 @@ static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -686,10 +688,29 @@ Wallet_BadKey() {
 
 PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
 
-  nsIFileSpec* spec = NS_LocateFileOrDirectory(
-  							nsSpecialFileSpec::App_UserProfileDirectory50);
-  if (!spec)
-  	return NS_ERROR_FAILURE;
+  /* make sure a profile exists (i.e., don't create one if there wasn't already one) */
+  nsIProfile* profileService = nsnull;
+  nsresult rv = nsServiceManager::GetService(
+      kProfileCID, 
+      nsIProfile::GetIID(), 
+      (nsISupports **)&profileService);
+  if (NS_SUCCEEDED(rv)) {
+    profileService->Startup(nsnull);
+    int numProfiles = 0;
+    profileService->GetProfileCount(&numProfiles);
+    if (numProfiles < 1) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+  /* return the profile */
+  nsIFileSpec* spec =
+    NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);
+  if (!spec) {
+    return NS_ERROR_FAILURE;
+  }
   return spec->GetFileSpec(&dirSpec);
 }
 
