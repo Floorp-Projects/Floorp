@@ -93,7 +93,8 @@ class basic_nsAReadableString
     public:
       enum FragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
 
-        // Damn!  Had to make |GetConstFragment| public because the compilers suck.  Should be protected.
+        // Damn!  Had to make |GetConstFragment| and |Implementation| public because the compilers suck.  Should be protected.
+      virtual const char* Implementation() const;
       virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 = 0 ) const = 0;
 
       friend class ConstIterator;
@@ -393,6 +394,13 @@ basic_nsAReadableString<PRUnichar>::GetUnicode() const
     return fragment.mStart;
   }
 
+template <class CharT>
+const char*
+basic_nsAReadableString<CharT>::Implementation() const
+  {
+    return 0;
+  }
+
 
 
   /*
@@ -445,7 +453,7 @@ template <class CharT>
 PRUint32
 basic_nsAReadableString<CharT>::CountChar( CharT c ) const
   {
-    return count(Begin(), End(), c);
+    return PRUint32(count(Begin(), End(), c));
   }
 
 
