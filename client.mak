@@ -446,7 +446,9 @@ deliver::
 #//------------------------------------------------------------------------
 
 # Check to see if it is set at all
-!if "$(MOZ_SRC)"!=""
+!if "$(MOZ_SRC)"==""
+MOZ_SRC = $(MAKEDIR)\..
+!endif
 
 #
 # create a temp file at the root and make sure it is visible from MOZ_SRC
@@ -460,12 +462,6 @@ MOZ_SRC isn't set correctly: [$(MOZ_SRC)\mozilla]!=[$(MAKEDIR)]
 !endif
 
 !if [del $(MAKEDIR)\xyzzy.tmp]
-!endif
-
-!else
-# MOZ_SRC isn't set at all
-ERR_MESSAGE=$(ERR_MESSAGE)^
-Environment variable MOZ_SRC isn't set.
 !endif
 
 #//------------------------------------------------------------------------
@@ -502,7 +498,6 @@ nmake -f client.mak [MOZ_BRANCH=<cvs_branch_name>] ^
 Environment variables:^
 ^
 MOZ_BITS    set to 32^
-MOZ_SRC     set to the directory above mozilla or "$(MAKEDIR)\.."^
 MOZ_TOOLS   set to the directory containing the needed tools ^
 
 !ERROR $(ERR_MESSAGE)
