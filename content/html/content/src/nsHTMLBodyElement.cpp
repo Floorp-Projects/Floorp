@@ -406,123 +406,43 @@ nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background)
 
-NS_IMETHODIMP
-nsHTMLBodyElement::GetVLink(nsAString& aVlinkColor)
-{
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::vlink, aVlinkColor);
-
-  // If we don't have an attribute, find the default color from the
-  // UA stylesheet.
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    nsCOMPtr<nsIPresContext> context;
-    GetPresContext(this, getter_AddRefs(context));
-
-    if (context) {
-      nscolor vlinkColor;
-      context->GetDefaultVisitedLinkColor(&vlinkColor);
-
-      nsHTMLValue value(vlinkColor);
-      value.ToString(aVlinkColor);
-    }
-  }
-
-  return NS_OK;
+#define NS_IMPL_HTMLBODY_COLOR_ATTR(attr_, func_, default_)         \
+NS_IMETHODIMP                                                       \
+nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
+{                                                                   \
+  aColor.Truncate();                                                \
+  nsAutoString color;                                               \
+  nscolor attrColor;                                                \
+  if (NS_CONTENT_ATTR_NOT_THERE ==                                  \
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::attr_, color)) {      \
+                                                                    \
+    nsCOMPtr<nsIPresContext> presContext;                           \
+    GetPresContext(this, getter_AddRefs(presContext));              \
+                                                                    \
+    if (presContext) {                                              \
+      presContext->GetDefault##default_(&attrColor);                \
+      nsHTMLValue(attrColor).ToString(aColor);                      \
+    }                                                               \
+  } else if (NS_ColorNameToRGB(color, &attrColor)) {                \
+    nsHTMLValue(attrColor).ToString(aColor);                        \
+  } else {                                                          \
+    aColor.Assign(color);                                           \
+  }                                                                 \
+  return NS_OK;                                                     \
+}                                                                   \
+NS_IMETHODIMP                                                       \
+nsHTMLBodyElement::Set##func_(const nsAString& aColor)              \
+{                                                                   \
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::attr_, aColor,     \
+                 PR_TRUE);                                          \
 }
 
-NS_IMETHODIMP
-nsHTMLBodyElement::SetVLink(const nsAString& aVlinkColor)
-{
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::vlink, aVlinkColor, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsHTMLBodyElement::GetALink(nsAString& aAlinkColor)
-{
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::alink, aAlinkColor);
-
-  // If we don't have an attribute, find the default color from the
-  // UA stylesheet.
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    nsCOMPtr<nsIPresContext> context;
-    GetPresContext(this, getter_AddRefs(context));
-
-    if (context) {
-      // XXX We don't have the backend or the UI to get ALINKs from the
-      // UA stylesheet yet, so we'll piggyback to the default link color like IE.
-      nscolor alinkColor;
-      context->GetDefaultLinkColor(&alinkColor);
-
-      nsHTMLValue value(alinkColor);
-      value.ToString(aAlinkColor);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBodyElement::SetALink(const nsAString& aAlinkColor)
-{
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::alink, aAlinkColor, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsHTMLBodyElement::GetLink(nsAString& aLinkColor)
-{
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::link, aLinkColor);
-
-  // If we don't have an attribute, find the default color from the
-  // UA stylesheet.
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    nsCOMPtr<nsIPresContext> context;
-    GetPresContext(this, getter_AddRefs(context));
-
-    if (context) {
-      nscolor linkColor;
-      context->GetDefaultLinkColor(&linkColor);
-
-      nsHTMLValue value(linkColor);
-      value.ToString(aLinkColor);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBodyElement::SetLink(const nsAString& aLinkColor)
-{
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::link, aLinkColor, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsHTMLBodyElement::GetText(nsAString& aTextColor)
-{
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::text, aTextColor);
-
-  // If we don't have an attribute, find the default color from the
-  // UA stylesheet.
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    nsCOMPtr<nsIPresContext> context;
-    GetPresContext(this, getter_AddRefs(context));
-
-    if (context) {
-      nscolor textColor;
-      context->GetDefaultColor(&textColor);
-
-      nsHTMLValue value(textColor);
-      value.ToString(aTextColor);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBodyElement::SetText(const nsAString& aTextColor)
-{
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::text, aTextColor, PR_TRUE);
-}
+NS_IMPL_HTMLBODY_COLOR_ATTR(vlink, VLink, VisitedLinkColor)
+NS_IMPL_HTMLBODY_COLOR_ATTR(alink, ALink, LinkColor)
+NS_IMPL_HTMLBODY_COLOR_ATTR(link, Link, LinkColor)
+// XXX Should text check the body frame's style struct for color,
+// like we do for bgColor?
+NS_IMPL_HTMLBODY_COLOR_ATTR(text, Text, Color)
 
 NS_IMETHODIMP 
 nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
