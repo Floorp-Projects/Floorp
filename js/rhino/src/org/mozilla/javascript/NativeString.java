@@ -142,54 +142,48 @@ final class NativeString extends IdScriptable {
                     return jsConstructor(args, thisObj == null);
 
                 case Id_toString:
-                    return realThis(thisObj, f).jsFunction_toString();
+                    return realThis(thisObj, f).js_toString();
 
                 case Id_valueOf:
-                    return realThis(thisObj, f).jsFunction_valueOf();
+                    return realThis(thisObj, f).js_valueOf();
 
                 case Id_charAt:
-                    return jsFunction_charAt
-                        (ScriptRuntime.toString(thisObj), args);
+                    return js_charAt(ScriptRuntime.toString(thisObj), args);
 
                 case Id_charCodeAt:
-                    return wrap_double(jsFunction_charCodeAt
+                    return wrap_double(js_charCodeAt
                         (ScriptRuntime.toString(thisObj), args));
 
                 case Id_indexOf:
-                    return wrap_int(jsFunction_indexOf
+                    return wrap_int(js_indexOf
                         (ScriptRuntime.toString(thisObj), args));
 
                 case Id_lastIndexOf:
-                    return wrap_int(jsFunction_lastIndexOf
+                    return wrap_int(js_lastIndexOf
                         (ScriptRuntime.toString(thisObj), args));
 
                 case Id_split:
-                    return jsFunction_split
+                    return js_split
                         (cx, scope, ScriptRuntime.toString(thisObj), args);
 
                 case Id_substring:
-                    return jsFunction_substring
+                    return js_substring
                         (cx, ScriptRuntime.toString(thisObj), args);
 
                 case Id_toLowerCase:
-                    return jsFunction_toLowerCase
-                        (ScriptRuntime.toString(thisObj));
+                    return js_toLowerCase(ScriptRuntime.toString(thisObj));
 
                 case Id_toUpperCase:
-                    return jsFunction_toUpperCase
-                        (ScriptRuntime.toString(thisObj));
+                    return js_toUpperCase(ScriptRuntime.toString(thisObj));
 
                 case Id_substr:
-                    return jsFunction_substr
-                        (ScriptRuntime.toString(thisObj), args);
+                    return js_substr(ScriptRuntime.toString(thisObj), args);
 
                 case Id_concat:
-                    return jsFunction_concat
-                        (ScriptRuntime.toString(thisObj), args);
+                    return js_concat(ScriptRuntime.toString(thisObj), args);
 
                 case Id_slice:
-                    return jsFunction_slice
-                     (ScriptRuntime.toString(thisObj), args);
+                    return js_slice(ScriptRuntime.toString(thisObj), args);
 
                 case Id_bold:
                     return tagify(thisObj, "b", null, null);
@@ -231,12 +225,12 @@ final class NativeString extends IdScriptable {
                     return tagify(thisObj, "a", "name", args);
 
                 case Id_equals:
-                    return wrap_boolean(jsFunction_equals
+                    return wrap_boolean(js_equals
                         (ScriptRuntime.toString(thisObj),
                          ScriptRuntime.toString(args, 0)));
 
                 case Id_equalsIgnoreCase:
-                    return wrap_boolean(jsFunction_equalsIgnoreCase
+                    return wrap_boolean(js_equalsIgnoreCase
                         (ScriptRuntime.toString(thisObj),
                          ScriptRuntime.toString(args, 0)));
 
@@ -321,11 +315,11 @@ final class NativeString extends IdScriptable {
     }
 
     /* ECMA 15.5.4.2: 'the toString function is not generic.' */
-    private String jsFunction_toString() {
+    private String js_toString() {
         return string;
     }
 
-    private String jsFunction_valueOf() {
+    private String js_valueOf() {
         return string;
     }
 
@@ -350,7 +344,7 @@ final class NativeString extends IdScriptable {
      *
      * See ECMA 15.5.4.[4,5]
      */
-    private static String jsFunction_charAt(String target, Object[] args) {
+    private static String js_charAt(String target, Object[] args) {
         // this'll return 0 if undefined... seems
         // to be ECMA.
         double pos = ScriptRuntime.toInteger(args, 0);
@@ -361,7 +355,7 @@ final class NativeString extends IdScriptable {
         return target.substring((int)pos, (int)pos + 1);
     }
 
-    private static double jsFunction_charCodeAt(String target, Object[] args) {
+    private static double js_charCodeAt(String target, Object[] args) {
         double pos = ScriptRuntime.toInteger(args, 0);
 
         if (pos < 0 || pos >= target.length()) {
@@ -376,7 +370,7 @@ final class NativeString extends IdScriptable {
      * See ECMA 15.5.4.6.  Uses Java String.indexOf()
      * OPT to add - BMH searching from jsstr.c.
      */
-    private static int jsFunction_indexOf(String target, Object[] args) {
+    private static int js_indexOf(String target, Object[] args) {
         String search = ScriptRuntime.toString(args, 0);
         double begin = ScriptRuntime.toInteger(args, 1);
 
@@ -394,7 +388,7 @@ final class NativeString extends IdScriptable {
      * See ECMA 15.5.4.7
      *
      */
-    private static int jsFunction_lastIndexOf(String target, Object[] args) {
+    private static int js_lastIndexOf(String target, Object[] args) {
         String search = ScriptRuntime.toString(args, 0);
         double end = ScriptRuntime.toNumber(args, 1);
 
@@ -533,8 +527,8 @@ final class NativeString extends IdScriptable {
      * a limit argument and accepts a regular expression as the split
      * argument.
      */
-    private static Object jsFunction_split(Context cx, Scriptable scope,
-                                           String target, Object[] args)
+    private static Object js_split(Context cx, Scriptable scope,
+                                   String target, Object[] args)
     {
         // create an empty Array to return;
         Scriptable top = getTopLevelScope(scope);
@@ -623,8 +617,8 @@ final class NativeString extends IdScriptable {
     /*
      * See ECMA 15.5.4.15
      */
-    private static String jsFunction_substring(Context cx, String target,
-                                               Object[] args)
+    private static String js_substring(Context cx, String target,
+                                       Object[] args)
     {
         int length = target.length();
         double start = ScriptRuntime.toInteger(args, 0);
@@ -663,22 +657,22 @@ final class NativeString extends IdScriptable {
      *
      * See ECMA 15.5.4.[11,12]
      */
-    private static String jsFunction_toLowerCase(String target) {
+    private static String js_toLowerCase(String target) {
         return target.toLowerCase();
     }
 
-    private static String jsFunction_toUpperCase(String target) {
+    private static String js_toUpperCase(String target) {
         return target.toUpperCase();
     }
 
-    int jsGet_length() {
+    int getLength() {
         return string.length();
     }
 
     /*
      * Non-ECMA methods.
      */
-    private static String jsFunction_substr(String target, Object[] args) {
+    private static String js_substr(String target, Object[] args) {
         if (args.length < 1)
             return target;
 
@@ -711,20 +705,29 @@ final class NativeString extends IdScriptable {
     /*
      * Python-esque sequence operations.
      */
-    private static String jsFunction_concat(String target, Object[] args) {
+    private static String js_concat(String target, Object[] args) {
         int N = args.length;
         if (N == 0) { return target; }
 
-        StringBuffer result = new StringBuffer();
+        // Find total capacity for the final string to avoid unnecessary
+        // re-allocations in StringBuffer
+        int size = target.length();
+        String[] argsAsStrings = new String[N];
+        for (int i = 0; i != N; ++i) {
+            String s = ScriptRuntime.toString(args[i]);
+            argsAsStrings[i] = s;
+            size += s.length();
+        }
+
+        StringBuffer result = new StringBuffer(size);
         result.append(target);
-
-        for (int i = 0; i < N; i++)
-            result.append(ScriptRuntime.toString(args[i]));
-
+        for (int i = 0; i != N; ++i) {
+            result.append(argsAsStrings[i]);
+        }
         return result.toString();
     }
 
-    private static String jsFunction_slice(String target, Object[] args) {
+    private static String js_slice(String target, Object[] args) {
         if (args.length != 0) {
             double begin = ScriptRuntime.toInteger(args[0]);
             double end;
@@ -756,13 +759,12 @@ final class NativeString extends IdScriptable {
         return target;
     }
 
-    private static boolean jsFunction_equals(String target, String strOther) {
+    private static boolean js_equals(String target, String strOther) {
         return target.equals(strOther);
     }
 
 
-    private static boolean jsFunction_equalsIgnoreCase(String target,
-                                                       String strOther)
+    private static boolean js_equalsIgnoreCase(String target, String strOther)
     {
         return target.equalsIgnoreCase(strOther);
     }
