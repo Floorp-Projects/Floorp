@@ -37,7 +37,6 @@ interface nsIMsgParseMailMsgState : nsISupports {
 
     void SetMailDB(in nsIMsgDatabase aDatabase);
     void Clear();
-    void SetState(in nsMailboxParseState aState);
     void SetEnvelopePos(in unsigned long aEnvelopePos);
 
     void ParseAFolderLine(in string line, in unsigned long lineLength);
@@ -46,6 +45,7 @@ interface nsIMsgParseMailMsgState : nsISupports {
 
     long GetAllHeaders(out string headers);
 
+	attribute nsMailboxParseState state;
     /* these are nsMailboxParseState */
     const long ParseEnvelopeState=0;
     const long ParseHeadersState=1;
