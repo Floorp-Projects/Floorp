@@ -59,6 +59,7 @@
 #include "nsIImportAddressBooks.h"
 #include "nsIImportABDescriptor.h"
 #include "nsIImportFieldMap.h"
+#include "nsISupportsPrimitives.h"
 #include "WabObject.h"
 #include "nsOEAddressIterator.h"
 #include "nsIOutputStream.h"
@@ -266,8 +267,12 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 					pGeneric->SetData( "mailInterface", pMail);
 					nsString name;
 					nsOEStringBundle::GetStringByID( OEIMPORT_NAME, name);
-					pGeneric->SetData( "name", (nsISupports *) name.get());
-					rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
+					nsCOMPtr<nsISupportsWString> nameString (do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv));
+					if (NS_SUCCEEDED(rv)) {
+						nameString->SetData(name.get());
+						pGeneric->SetData( "name", nameString);
+						rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
+					}
 				}
 			}
 		}

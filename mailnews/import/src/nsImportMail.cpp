@@ -288,6 +288,7 @@ NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_re
 
 NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *item)
 {
+    nsresult rv = NS_OK;
 	NS_PRECONDITION(dataId != nsnull, "null ptr");
     if (!dataId)
         return NS_ERROR_NULL_POINTER;
@@ -318,17 +319,17 @@ NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *ite
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "name")) {
-		// BIG CHEAT, is this OK to do?
-		PRUnichar *pName = (PRUnichar *)item;
 		if (m_pName)
 			nsCRT::free( m_pName);
-		if (pName)
-			m_pName = nsCRT::strdup( pName);
-		else
-			m_pName = nsnull;
+		m_pName = nsnull;
+		nsCOMPtr<nsISupportsWString> nameString;
+		if (item) {
+			item->QueryInterface( NS_GET_IID(nsISupportsWString), getter_AddRefs(nameString));
+			rv = nameString->GetData(&m_pName);
+		}
 	}
 
-	return( NS_OK);
+	return rv;
 }
 
 NS_IMETHODIMP nsImportGenericMail::GetStatus( const char *statusKind, PRInt32 *_retval)

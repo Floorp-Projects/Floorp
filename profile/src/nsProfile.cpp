@@ -1052,6 +1052,15 @@ NS_IMETHODIMP nsProfile::GetProfilePath(const PRUnichar *profileName, PRUnichar 
     return prettyDir->GetUnicodePath(_retval);
 }
 
+NS_IMETHODIMP nsProfile::GetOriginalProfileDir(const PRUnichar *profileName, nsILocalFile **originalDir)
+{
+    NS_ENSURE_ARG(profileName);
+    NS_ENSURE_ARG_POINTER(originalDir);
+    *originalDir = nsnull;
+
+    return gProfileDataAccess->GetOriginalProfileDir(profileName, originalDir);
+}
+
 NS_IMETHODIMP nsProfile::GetDefaultProfileParentDir(nsIFile **aDefaultProfileParentDir)
 {
     NS_ENSURE_ARG_POINTER(aDefaultProfileParentDir);
@@ -1443,6 +1452,7 @@ nsresult nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *profile
     aProfile->profileName     = profileName;
     aProfile->SetResolvedProfileDir(localFile);
     aProfile->isMigrated = PR_TRUE;
+    aProfile->isImportType = PR_FALSE;
 
     gProfileDataAccess->SetValue(aProfile);
     
@@ -1840,9 +1850,29 @@ NS_IMETHODIMP nsProfile::GetProfileListX(PRUint32 whichKind, PRUint32 *length, P
     NS_ENSURE_ARG_POINTER(profileNames);
     *profileNames = nsnull;
     
+    if (whichKind == nsIProfileInternal::LIST_FOR_IMPORT)
+        Update4xProfileInfo();
     return gProfileDataAccess->GetProfileList(whichKind, length, profileNames);
 }
 
+// this will add all the 4x profiles (with isImportType flag set) to the 
+// profiles list. The adding of profiles is done only once per session.
+nsresult nsProfile::Update4xProfileInfo()
+{
+    nsresult rv = NS_OK;
+
+#if defined(XP_PC) || defined(XP_MAC)
+
+    char * oldRegFile = GetOldRegLocation();
+    rv = gProfileDataAccess->Get4xProfileInfo(oldRegFile, PR_TRUE);
+    nsMemory::Free(oldRegFile);
+#elif defined (XP_BEOS)
+#else
+    /* XP_UNIX */
+    rv = gProfileDataAccess->Get4xProfileInfo(nsnull, PR_TRUE);
+#endif /* XP_PC || XP_MAC */
+    return rv;
+}
 
 // launch the application with a profile of user's choice
 // Prefs and FileLocation services are used here.
@@ -1880,17 +1910,9 @@ nsresult nsProfile::LoadNewProfilePrefs()
     return NS_OK;
 }
 
-
-// Migrate profile information from the 4x registry to 5x registry.
-NS_IMETHODIMP nsProfile::MigrateProfileInfo()
+char * nsProfile::GetOldRegLocation()
 {
-    nsresult rv = NS_OK;
-
 #if defined(XP_PC) || defined(XP_MAC)
-
-#if defined(DEBUG_profile_verbose)
-    printf("Entered MigrateProfileInfo.\n");
-#endif
 
     char oldRegFile[_MAX_LENGTH] = {'\0'};
 
@@ -1913,13 +1935,33 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
     
     PL_strcpy(oldRegFile, regLocation.GetNativePathCString());
 #endif /* XP_PC */
+    char * result = (char *)nsMemory::Alloc((PL_strlen(oldRegFile)+1) * sizeof(char));
+    PL_strcpy(result, oldRegFile);
+    return result;
+#endif /* XP_PC || XP_MAC */
+    return nsnull;
+}
 
-    rv = gProfileDataAccess->Get4xProfileInfo(oldRegFile);
+
+// Migrate profile information from the 4x registry to 5x registry.
+NS_IMETHODIMP nsProfile::MigrateProfileInfo()
+{
+    nsresult rv = NS_OK;
+
+#if defined(XP_PC) || defined(XP_MAC)
+
+#if defined(DEBUG_profile_verbose)
+    printf("Entered MigrateProfileInfo.\n");
+#endif
+
+    char * oldRegFile = GetOldRegLocation();
+    rv = gProfileDataAccess->Get4xProfileInfo(oldRegFile, PR_FALSE);
+    nsMemory::Free(oldRegFile);
 
 #elif defined (XP_BEOS)
 #else
     /* XP_UNIX */
-    rv = gProfileDataAccess->Get4xProfileInfo(nsnull);
+    rv = gProfileDataAccess->Get4xProfileInfo(nsnull, PR_FALSE);
 #endif /* XP_PC || XP_MAC */
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;

@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src text
+DIRS		= public src text comm4x
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= eudora

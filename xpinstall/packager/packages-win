@@ -361,6 +361,8 @@ bin\components\importOE.dll
 bin\components\impOutlk.dll
 bin\components\impEudra.dll
 bin\components\impText.dll
+bin\components\impComm4xMail.dll
+bin\components\impComm4xMail.xpt
 bin\components\absyncsv.dll
 bin\components\absync.xpt
 bin\components\nsLDAPPrefsService.js

@@ -233,6 +233,7 @@ en-US.jar:
     locale/en-US/messenger/messengercompose/sendProgress.dtd            (compose/resources/locale/en-US/sendProgress.dtd)
     locale/en-US/messenger/messengercompose/composeMsgs.properties      (compose/resources/locale/en-US/composeMsgs.properties)
     locale/en-US/messenger/imapMsgs.properties                          (imap/resources/locale/en-US/imapMsgs.properties)
+    locale/en-US/messenger/comm4xMailImportMsgs.properties              (import/comm4x/resources/locale/en-US/comm4xMailImportMsgs.properties)
     locale/en-US/messenger/eudoraImportMsgs.properties                  (import/eudora/resources/locale/en-US/eudoraImportMsgs.properties)
     locale/en-US/messenger/oeImportMsgs.properties                      (import/oexpress/resources/locale/en-us/oeImportMsgs.properties)
     locale/en-US/messenger/outlookImportMsgs.properties                 (import/outlook/resources/locale/en-us/outlookImportMsgs.properties)

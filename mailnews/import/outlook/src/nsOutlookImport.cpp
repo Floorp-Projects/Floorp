@@ -58,6 +58,7 @@
 #include "nsIImportAddressBooks.h"
 #include "nsIImportABDescriptor.h"
 #include "nsIImportFieldMap.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIOutputStream.h"
 #include "nsIAddrDatabase.h"
 #include "nsOutlookSettings.h"
@@ -266,8 +267,12 @@ NS_IMETHODIMP nsOutlookImport::GetImportInterface( const char *pImportType, nsIS
 					pGeneric->SetData( "mailInterface", pMail);
 					nsString name;
 					nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_NAME, name);
-					pGeneric->SetData( "name", (nsISupports *) name.get());
-					rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
+					nsCOMPtr<nsISupportsWString> nameString (do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv));
+					if (NS_SUCCEEDED(rv)) {
+						nameString->SetData(name.get());
+						pGeneric->SetData( "name", nameString);
+						rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
+					}
 				}
 			}
 		}

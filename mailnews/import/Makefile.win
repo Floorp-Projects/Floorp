@@ -21,7 +21,7 @@
 
 DEPTH=..\..
 
-LocalDirs=public src resources eudora text
+LocalDirs=public src resources eudora text comm4x
 
 MODULE=import
 

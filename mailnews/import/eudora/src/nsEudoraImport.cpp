@@ -41,6 +41,7 @@
 #include "nsIImportABDescriptor.h"
 #include "nsIImportSettings.h"
 #include "nsIImportFieldMap.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIOutputStream.h"
 #include "nsIAddrDatabase.h"
 #include "nsTextFormatter.h"
@@ -286,8 +287,12 @@ NS_IMETHODIMP nsEudoraImport::GetImportInterface( const char *pImportType, nsISu
 					pGeneric->SetData( "mailInterface", pMail);
 					nsString name;
 					nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_NAME, name);
-					pGeneric->SetData( "name", (nsISupports *) name.get());
-					rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
+					nsCOMPtr<nsISupportsWString> nameString (do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv));
+					if (NS_SUCCEEDED(rv)) {
+						nameString->SetData(name.get());
+						pGeneric->SetData( "name", nameString);
+						rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
+					}
 				}
 			}
 		}
