@@ -2377,7 +2377,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		}
 
 		// look for relevance
-		nsAutoString	relItem("-");
+		nsAutoString	relItem;
 		PRInt32		relStart;
 		if ((relStart = resultItem.Find(relevanceStartStr, PR_TRUE)) >= 0)
 		{
@@ -2400,6 +2400,37 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 				const PRUnichar	*relUni = relItem.GetUnicode();
 				if (relUni)
 				{
+					// take out any characters that aren't numeric or "%"
+					nsAutoString	relStr(relUni);
+					PRInt32	len = relStr.Length();
+					for (PRInt32 x=len-1; x>=0; x--)
+					{
+						PRUnichar	ch;
+						ch = relStr.CharAt(x);
+						if ((ch != PRUnichar('%')) &&
+							((ch < PRUnichar('0')) || (ch > PRUnichar('9'))))
+						{
+							relStr.Cut(x, 1);
+						}
+					}
+					// make sure it ends with a "%"
+					len = relStr.Length();
+					if (len > 0)
+					{
+						PRUnichar	ch;
+						ch = relStr.CharAt(len - 1);
+						if (ch != PRUnichar('%'))
+						{
+							relStr += PRUnichar('%');
+						}
+					}
+					else
+					{
+						relStr = "-";
+					}
+					
+					relUni = relStr.GetUnicode();
+
 					nsCOMPtr<nsIRDFLiteral>	relLiteral;
 					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relUni, getter_AddRefs(relLiteral))))
 					{
