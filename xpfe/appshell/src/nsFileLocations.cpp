@@ -47,7 +47,7 @@
 #endif
 
 // header file for profiles
-#ifdef XP_PC
+#if defined(XP_PC) && defined(BUILD_PROFILE)
 #include "nsIProfile.h"
 #endif //XP_PC
 
@@ -57,7 +57,7 @@
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 // for profile manager
-#ifdef XP_PC
+#if defined(XP_PC) && defined(BUILD_PROFILE)
 	static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 #endif // XP_PC
 
@@ -152,6 +152,7 @@ void nsSpecialFileSpec::operator = (Type aType)
                 // MAC	: ./profile
 
 				    #ifdef XP_PC
+					#ifdef BUILD_PROFILE
 						nsIProfile *profile = nsnull;
 						static nsFileSpec* profileDir = nsnull;
 
@@ -173,6 +174,10 @@ void nsSpecialFileSpec::operator = (Type aType)
 						if (profileDir) {
 							*this = *profileDir;
 						}
+					#else
+						*this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
+						*this += "profile";
+					#endif
 					#endif // XP_PC
 
 					#ifdef XP_UNIX

@@ -55,7 +55,9 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\dom                   \
       -I$(PUBLIC)\js                    \
       -I$(PUBLIC)\pref                  \
+!ifdef BUILD_PROFILE
 	  -I$(PUBLIC)\profile               \
+!endif
       -I$(PUBLIC)\appcores              \
       -I$(PUBLIC)\netlib		\
       -I$(PUBLIC)\rdf
