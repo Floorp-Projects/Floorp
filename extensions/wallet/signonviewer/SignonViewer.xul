@@ -32,11 +32,11 @@
         title="&windowtitle.label;"
         alttitle="&windowalttitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: 30em!important;"
         buttons="accept,help"
         onload="Startup()"
         onunload="Shutdown()"
-        ondialoghelp="return doHelpButton();">
+        ondialoghelp="return doHelpButton();"
+        persist="screenX screenY width height">
 
   <script src="chrome://communicator/content/wallet/SignonViewer.js"/>
   <script src="chrome://global/content/strres.js"/>
@@ -63,10 +63,10 @@
                 onselect="SignonSelected();">
             <treecols>
               <treecol id="siteCol" label="&treehead.site.label;" flex="5"
-                           onclick="SignonColumnSort('host');"/>
+                           onclick="SignonColumnSort('host');" persist="width"/>
               <splitter class="tree-splitter"/>
-              <treecol id="userCol" label="&treehead.username.label;" flex="5"
-                           onclick="SignonColumnSort('user');"/>
+              <treecol id="userCol" label="&treehead.username.label;" flex="2"
+                           onclick="SignonColumnSort('user');" persist="width"/>
             </treecols>
             <treechildren/>
           </tree>
