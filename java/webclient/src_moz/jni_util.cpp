@@ -93,8 +93,8 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
 {
 #ifdef BAL_INTERFACE
     if (nsnull != externalEventOccurred) {
-        externalEventOccurred((void *) yourEnv, (void *) nativeEventThread,
-                              (void *) webclientEventListener, eventType);
+        externalEventOccurred(yourEnv, nativeEventThread,
+                              webclientEventListener, eventType);
     }
 #else
     if (nsnull == gVm) {
@@ -220,13 +220,7 @@ jclass util_FindClass(JNIEnv *env, const char *fullyQualifiedClassName)
 {
     jclass result = nsnull;
 #ifdef BAL_INTERFACE
-    // PENDING(edburns): there will be a function in jni_util_export
-    // that UNO can use to populate a 2d array with const char *, type
-    // pairs.  The const char* will be the fullyQualifiedClassName
-    // argument, the type will be returned from this function.
-
-    // For now we just return the argument
-    result = (jclass) fullyQualifiedClassName;
+    result = util_GetClassMapping(fullyQualifiedClassName);
 #else
     result = env->FindClass(fullyQualifiedClassName);
 #endif
@@ -259,12 +253,9 @@ jboolean util_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
 {
     jboolean result = JNI_FALSE;
 #ifdef BAL_INTERFACE
-    // PENDING(edburns): the user will set the value of a function
-    // pointer.  This function will do QI type stuff.  This function
-    // pointer must be initialized at startup.  
-
-    // for now we just return JNI_TRUE
-    result = JNI_TRUE;
+    if (nsnull != externalInstanceOf) {
+        result = externalInstanceOf(env, obj, clazz);
+    }
 #else
     result = env->IsInstanceOf(obj, clazz);
 #endif

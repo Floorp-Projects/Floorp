@@ -61,10 +61,88 @@ JNIEXPORT jstring JNICALL util_NewString(JNIEnv *env, const jchar *inString,
 
 JNIEXPORT  void JNICALL util_DeleteString(JNIEnv *env, jstring toDelete); 
 
-typedef JNIEXPORT void (JNICALL * fpEventOccurredType) (void *env, 
-                                                        void *nativeEventThread,
-                                                        void *webclientEventListener,
+//
+// BAL methods
+//
+
+/*
+
+ * The following methods are used by non Java JNI clients, such a
+ * StarOfficeDesktop.
+
+ */
+
+/**
+
+ * This method is used to store a mapping from a jniClass Name, such as
+ * "org/mozilla/webclient/DocumentLoadListener" to some external class
+ * type, such as
+ * org::mozilla::webclient::wrapper_native::uno::DocumentLoadListener.
+
+ * This table is used in util_IsInstanceOf.
+
+ * @see util_SetInstanceOfFunction
+
+ * @ret 0 on success
+
+ */
+
+JNIEXPORT jint JNICALL util_StoreClassMapping(const char* jniClassName,
+                                              jclass yourClassType);
+
+JNIEXPORT jclass JNICALL util_GetClassMapping(const char* jniClassName);
+
+
+/**
+
+ * Function declaration for the user defined InstanceOf function.  It
+ * tells whether the second argument, which is an instance, is an
+ * instance of the type in the third argument.
+
+ * @see util_SetInstanceOfFunction
+
+ */
+
+
+typedef JNIEXPORT jboolean (JNICALL *fpInstanceOfType) (JNIEnv *env,
+                                                        jobject obj,
+                                                        jclass clazz);
+
+/**
+
+ * Function declaration for the user defined EventOccurred function.  It
+ * is called when an event occurrs.  The second argument is the context
+ * for the event, passed in by the user as the second argument to
+ * NativeEventThreadImpl_nativeAddListener().  The third arcument is the
+ * listener object, passed in as the last argument to
+ * NativeEventThreadImpl_nativeAddListener().  The last argument is a
+ * listener specific type field, to indicate what kind of sub-event
+ * within the listener has occurred.
+
+ */
+
+typedef JNIEXPORT void (JNICALL * fpEventOccurredType) (JNIEnv *env, 
+                                                        jobject nativeEventThread,
+                                                        jobject webclientEventListener,
                                                         jlong eventType);
+
+/**
+
+ * This function must be called at app initialization.
+
+ * @see fpInstanceOfType
+
+ */
+
+JNIEXPORT void JNICALL util_SetInstanceOfFunction(fpInstanceOfType fp);
+
+/**
+
+ * This function must be called at app initialization.
+
+ * @see fpEventOccurredType
+
+ */
 
 JNIEXPORT void JNICALL util_SetEventOccurredFunction(fpEventOccurredType fp);
 
@@ -77,6 +155,16 @@ JNIEXPORT void JNICALL util_SetEventOccurredFunction(fpEventOccurredType fp);
  */
 
 extern fpEventOccurredType externalEventOccurred;
+
+/**
+
+ * defined in jni_util_export.cpp
+
+ * The function pointer set with util_SetInstanceOfFunction.
+
+ */
+
+extern fpInstanceOfType externalInstanceOf;
 
 #ifdef __cplusplus
 } /* extern "C" */
