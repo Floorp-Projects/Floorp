@@ -532,7 +532,14 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     if (this == targetFrame) {
       Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
-      reflowState.reason = eReflowReason_Resize;
+      nsIReflowCommand::ReflowType  reflowType;
+      aReflowState.reflowCommand->GetType(reflowType);
+      if (nsIReflowCommand::StyleChanged == reflowType) {
+        reflowState.reason = eReflowReason_StyleChange;
+      }
+      else {
+        reflowState.reason = eReflowReason_Resize;
+      }
     } else {
       nsIFrame* nextFrame;
 
