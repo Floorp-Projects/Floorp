@@ -93,6 +93,7 @@ typedef enum {
   MimeMultipartHeaders,
   MimeMultipartPartFirstLine,
   MimeMultipartPartLine,
+  MimeMultipartSkipPartLine,
   MimeMultipartEpilogue
 } MimeMultipartParseState;
 

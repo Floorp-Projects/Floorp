@@ -266,7 +266,7 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
         // If "multipart/alternative" or the first part is a message body
         // then we should check for a charset and notify the emitter  
         // if one exists.                                                     
-        if (obj->options && (isAlternative || isBody))
+        if (obj->options && ((isAlternative && mult->state != MimeMultipartSkipPartLine) || isBody))
         {
           {
            char *ct = MimeHeaders_get(mult->hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
@@ -313,6 +313,10 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
 																	  PR_FALSE));
 	  if (status < 0) return status;
 	  break;
+
+  case MimeMultipartSkipPartLine:
+    /* we are skipping that part, therefore just ignore the line */
+    break;
 
 	default:
 	  PR_ASSERT(0);

@@ -165,11 +165,10 @@ MimeMultipartAlternative_create_child(MimeObject *obj)
   }
   else
   {
-    /* If this part is not displayable, then we're done -- all that is left
-     to do is to flush out the part that is currently in the cache.
+    /* If this part is not displayable, then skip it. maybe the next one will be...
      */
-    mult->state = MimeMultipartEpilogue;
-    return MimeMultipartAlternative_display_cached_part(obj);
+    mult->state = MimeMultipartSkipPartLine;
+    return 0;
   }
 }
 
