@@ -1091,12 +1091,6 @@ static PRBool suspendAllOn = PR_FALSE;
 
 static PRBool suspendAllSuspended = PR_FALSE;
 
-/* Are all GCAble threads (except gc'ing thread) suspended? */
-PR_IMPLEMENT(PRBool) PR_SuspendAllSuspended()
-{
-	return suspendAllSuspended;
-} /* PR_SuspendAllSuspended */
-
 PR_IMPLEMENT(PRStatus) PR_EnumerateThreads(PREnumerator func, void *arg)
 {
     PRIntn count = 0;
@@ -1247,12 +1241,12 @@ static void suspend_signal_handler(PRIntn sig)
         ("End suspend_signal_handler thred = %X tid = %X\n", me, me->id));
 }  /* suspend_signal_handler */
 
-static void PR_SuspendSet(PRThread *thred)
+static void pt_SuspendSet(PRThread *thred)
 {
     PRIntn rv;
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("PR_SuspendSet thred %X thread id = %X\n", thred, thred->id));
+	   ("pt_SuspendSet thred %X thread id = %X\n", thred, thred->id));
 
 
     /*
@@ -1262,7 +1256,7 @@ static void PR_SuspendSet(PRThread *thred)
     PR_ASSERT((thred->suspend & PT_THREAD_SUSPENDED) == 0);
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("doing pthread_kill in PR_SuspendSet thred %X tid = %X\n",
+	   ("doing pthread_kill in pt_SuspendSet thred %X tid = %X\n",
 	   thred, thred->id));
 #if defined(VMS)
     rv = thread_suspend(thred);
@@ -1272,10 +1266,10 @@ static void PR_SuspendSet(PRThread *thred)
     PR_ASSERT(0 == rv);
 }
 
-static void PR_SuspendTest(PRThread *thred)
+static void pt_SuspendTest(PRThread *thred)
 {
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("Begin PR_SuspendTest thred %X thread id = %X\n", thred, thred->id));
+	   ("Begin pt_SuspendTest thred %X thread id = %X\n", thred, thred->id));
 
 
     /*
@@ -1301,13 +1295,13 @@ static void PR_SuspendTest(PRThread *thred)
 #endif
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS,
-        ("End PR_SuspendTest thred %X tid %X\n", thred, thred->id));
-}  /* PR_SuspendTest */
+        ("End pt_SuspendTest thred %X tid %X\n", thred, thred->id));
+}  /* pt_SuspendTest */
 
-PR_IMPLEMENT(void) PR_ResumeSet(PRThread *thred)
+static void pt_ResumeSet(PRThread *thred)
 {
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("PR_ResumeSet thred %X thread id = %X\n", thred, thred->id));
+	   ("pt_ResumeSet thred %X thread id = %X\n", thred, thred->id));
 
     /*
      * Clear the global state and set the thread state so that it will
@@ -1327,12 +1321,12 @@ PR_IMPLEMENT(void) PR_ResumeSet(PRThread *thred)
 #endif
 #endif
 
-}  /* PR_ResumeSet */
+}  /* pt_ResumeSet */
 
-PR_IMPLEMENT(void) PR_ResumeTest(PRThread *thred)
+static void pt_ResumeTest(PRThread *thred)
 {
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("Begin PR_ResumeTest thred %X thread id = %X\n", thred, thred->id));
+	   ("Begin pt_ResumeTest thred %X thread id = %X\n", thred, thred->id));
 
     /*
      * Wait for the threads resume state to change
@@ -1356,8 +1350,8 @@ PR_IMPLEMENT(void) PR_ResumeTest(PRThread *thred)
     thred->suspend &= ~PT_THREAD_RESUMED;
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, (
-        "End PR_ResumeTest thred %X tid %X\n", thred, thred->id));
-}  /* PR_ResumeTest */
+        "End pt_ResumeTest thred %X tid %X\n", thred, thred->id));
+}  /* pt_ResumeTest */
 
 static pthread_once_t pt_gc_support_control = PTHREAD_ONCE_INIT;
 
@@ -1384,7 +1378,7 @@ PR_IMPLEMENT(void) PR_SuspendAll(void)
     while (thred != NULL)
     {
 	    if ((thred != me) && _PT_IS_GCABLE_THREAD(thred))
-    		PR_SuspendSet(thred);
+    		pt_SuspendSet(thred);
         thred = thred->next;
     }
 
@@ -1393,7 +1387,7 @@ PR_IMPLEMENT(void) PR_SuspendAll(void)
     while (thred != NULL)
     {
 	    if ((thred != me) && _PT_IS_GCABLE_THREAD(thred))
-            PR_SuspendTest(thred);
+            pt_SuspendTest(thred);
         thred = thred->next;
     }
 
@@ -1426,7 +1420,7 @@ PR_IMPLEMENT(void) PR_ResumeAll(void)
     while (thred != NULL)
     {
 	    if ((thred != me) && _PT_IS_GCABLE_THREAD(thred))
-    	    PR_ResumeSet(thred);
+    	    pt_ResumeSet(thred);
         thred = thred->next;
     }
 
@@ -1434,7 +1428,7 @@ PR_IMPLEMENT(void) PR_ResumeAll(void)
     while (thred != NULL)
     {
 	    if ((thred != me) && _PT_IS_GCABLE_THREAD(thred))
-    	    PR_ResumeTest(thred);
+    	    pt_ResumeTest(thred);
         thred = thred->next;
     }
 
