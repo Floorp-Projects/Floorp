@@ -1884,15 +1884,10 @@ dnl = the NSPR environment config and override files get copied
 dnl = to the right place.
 dnl = 
 dnl ========================================================
-
-dnl
-dnl XXX commented out pending NSPR checkin
-dnl
-
-dnl if test ! "$MOZ_NATIVE_NSPR"
-dnl then
-dnl   rm -f nsprpub/config/my_config.mk
-dnl   rm -f nsprpub/config/my_overrides.mk
-dnl   cp build/unix/nspr_my_config.mk nsprpub/config/my_config.mk
-dnl   cp build/unix/nspr_my_overrides.mk nsprpub/config/my_overrides.mk
-dnl fi
+if test ! "$MOZ_NATIVE_NSPR"
+then
+  rm -f nsprpub/config/my_config.mk
+  rm -f nsprpub/config/my_overrides.mk
+  cp build/unix/nspr_my_config.mk nsprpub/config/my_config.mk
+  cp build/unix/nspr_my_overrides.mk nsprpub/config/my_overrides.mk
+fi
