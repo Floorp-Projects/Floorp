@@ -1250,7 +1250,7 @@ public class TreeTable extends JComponent implements Scrollable,
     fDropTarget = dt;
   }
 
-  public DropTarget getDropTarget() {
+  public DropTarget getGrendelDropTarget() {
     return fDropTarget;
   }
 
