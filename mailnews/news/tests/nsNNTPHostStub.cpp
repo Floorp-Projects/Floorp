@@ -241,6 +241,7 @@ protected:
 
 	nsMsgGroupRecord* m_groupTree; // Tree of groups we're remembering.
 	PRInt64 m_lastGroupUpdate;
+	PRInt32 m_numCallsToGetCounts;
 	
 };
 
@@ -252,6 +253,7 @@ nsNNTPHostStub::nsNNTPHostStub(const char * name, PRInt32 port)
 	m_supportsExtensions = PR_FALSE;
 	m_postingAllowed = PR_FALSE;
 	m_lastGroupUpdate = 0;
+	m_numCallsToGetCounts = 0;
 	NS_NewISupportsArray(&m_groups);
 }
 
@@ -464,13 +466,34 @@ nsresult nsNNTPHostStub::AddNewNewsgroup(const char *groupName,
 nsresult nsNNTPHostStub::GetNumGroupsNeedingCounts(PRInt32 * aNumGroups)
 {
 	printf("Getting number of groups needing counts. \n");
-	*aNumGroups = 0;
+	// for now we'll pretend that all groups need counts since we don't actually have a newsrc file to read in from...
+	PRInt32 numGroupsToCount = m_groups->Count() - m_numCallsToGetCounts;
+	*aNumGroups = numGroupsToCount > 0 ? numGroupsToCount : 0 /* if negative, no more groups to count */;
 	return NS_OK;
 }
 
 nsresult nsNNTPHostStub::GetFirstGroupNeedingCounts(char ** aFirstGroup)
 {
-	*aFirstGroup = nsnull;
+	nsISupports * groupToBe = m_groups->ElementAt(m_numCallsToGetCounts);
+	if (groupToBe)
+	{
+		nsINNTPNewsgroup * group = nsnull;
+		groupToBe->QueryInterface(kINNTPNewsgroupIID, (void **) &group);
+		if (group)
+		{
+			group->GetName(aFirstGroup);
+			printf("%s needs count information.\n", *aFirstGroup);
+		}
+		else
+			*aFirstGroup = nsnull;
+
+		NS_IF_RELEASE(group);
+	}
+	else
+		*aFirstGroup = nsnull;
+
+	m_numCallsToGetCounts++; // increment # calls into this function....
+
 	return NS_OK;
 }
 
@@ -587,7 +610,6 @@ nsresult nsNNTPHostStub::FindGroup(const char * name, nsINNTPNewsgroup ** retVal
 {
 	PRBool found = PR_FALSE;
 	*retVal = nsnull;
-	printf ("Looking up group %s.\n", name);
 	for (PRInt32 count = 0; count < m_groups->Count() && !found; count++)
 	{
 		nsISupports * elem = m_groups->ElementAt(count);
