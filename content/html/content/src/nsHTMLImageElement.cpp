@@ -547,16 +547,6 @@ nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::align)) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
-  else if (aAttribute == nsHTMLAtoms::src) {
-    // If 'src' changed and we don't have a real image frame,
-    // we need to cause a reframe.
-    nsIImageFrame* imageFrame;
-    // cast away |const| because the underlying interfaces don't use it.
-    nsHTMLImageElement* mutable_this = NS_CONST_CAST(nsHTMLImageElement*,
-                                                     this);
-    mutable_this->GetImageFrame(&imageFrame);
-    aHint = imageFrame ? NS_STYLE_HINT_CONTENT : NS_STYLE_HINT_FRAMECHANGE;
-  }
   else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
       if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
@@ -760,8 +750,9 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 {
   nsresult result = SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aSrc,
                             PR_TRUE);
+  NS_ENSURE_SUCCESS(result, result);
 
-  if (NS_SUCCEEDED(result) && !mDocument) {
+  if (!mDocument) {
     nsCOMPtr<nsIDocument> doc;
     mNodeInfo->GetDocument(*getter_AddRefs(doc));
 
@@ -835,6 +826,18 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         // XXX: initialDocumentURI is NULL!
         il->LoadImage(uri, nsnull, documentURI, loadGroup, this, context, nsIRequest::LOAD_NORMAL,
                       nsnull, nsnull, getter_AddRefs(mRequest));
+      }
+    }
+  } else {
+    nsIImageFrame* imageFrame;
+    GetImageFrame(&imageFrame);
+    if (!imageFrame) {
+      // If we don't have an image frame, reconstruct the frame
+      // so that the new image can load.
+      nsCOMPtr<nsIPresShell> shell;
+      mDocument->GetShellAt(0, getter_AddRefs(shell));
+      if (shell) {
+        shell->RecreateFramesFor(this);
       }
     }
   }
