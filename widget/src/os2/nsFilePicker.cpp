@@ -156,8 +156,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
        filedlg.fl |= FDS_OPEN_DIALOG;
     }
     PMYDATA pmydata;
-    pmydata = (PMYDATA)malloc(sizeof(MYDATA));
-    memset(pmydata, 0, sizeof(MYDATA));
+    pmydata = (PMYDATA)calloc(1, sizeof(MYDATA));
     filedlg.ulUser = (ULONG)pmydata;
     filedlg.pfnDlgProc = FileDialogProc;
 

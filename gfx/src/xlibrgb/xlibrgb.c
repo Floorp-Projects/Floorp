@@ -437,8 +437,7 @@ xxlib_rgb_make_colorcube (XlibRgbHandle *handle, unsigned long *pixels, int nr, 
   unsigned char rt[16], gt[16], bt[16];
   int i;
 
-  handle->colorcube = malloc(sizeof(unsigned char) * 4096);
-  memset(handle->colorcube, 0, (sizeof(unsigned char) * 4096));
+  handle->colorcube = calloc(4096, 1);
   for (i = 0; i < 16; i++)
   {
     rt[i] = ng * nb * ((i * 17 * (nr - 1) + 128) >> 8);
@@ -462,8 +461,7 @@ xxlib_rgb_make_colorcube_d (XlibRgbHandle *handle, unsigned long *pixels, int nr
   int r, g, b;
   int i;
 
-  handle->colorcube_d = malloc(sizeof(unsigned char) * 512);
-  memset(handle->colorcube_d, 0, (sizeof(unsigned char) * 512));
+  handle->colorcube_d = calloc(512, 1);
   for (i = 0; i < 512; i++)
   {
     r = MIN (nr - 1, i >> 6);

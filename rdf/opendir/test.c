@@ -43,8 +43,7 @@
 #include <stdio.h>
 
 void  main () {
-  char* nextQuery = malloc(200);
-  memset(nextQuery, '\0', 200);
+  char* nextQuery = calloc(200, sizeof(char));
   RDF_Initialize();
   while (1) {
     int n;
