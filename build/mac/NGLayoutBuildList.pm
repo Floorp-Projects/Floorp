@@ -902,6 +902,11 @@ sub InstallNonChromeResources()
     my($domds_dir) = "$samples_dir" . "rdf:";
     _InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",                    "$domds_dir");
 
+    # Search - make copies (not aliases) of the various search files
+    my($searchPlugins) = "${dist_dir}Search Plugins";
+    print("--- Starting Search Plugins copying: $searchPlugins\n");
+    _InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",              "$searchPlugins", 1);
+
     # QA Menu
     _InstallResources(":mozilla:intl:strres:tests:MANIFEST",            "$resource_dir");
 
