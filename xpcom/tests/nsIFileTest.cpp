@@ -146,7 +146,7 @@ void CreationTest(char* creationPath, char* appendPath,
     rv = file->Append(appendPath);
     VerifyResult(rv);
     
-    printf("Check For Existance\n");
+    printf("Check For Existence\n");
 
     PRBool exists;
     file->Exists(&exists);
