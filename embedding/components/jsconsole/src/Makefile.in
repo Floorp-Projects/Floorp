@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= embedcomponents
 LIBRARY_NAME	= jsconsole_s
+LIBXUL_LIBRARY	= 1
+
 REQUIRES	= jsconsole \
 		  xpcom \
 		  string \

@@ -189,24 +189,15 @@ tier_9_dirs	+= \
 		dom \
 		view \
 		widget \
-		$(NULL)
-
-ifdef MOZ_ENABLE_LIBXUL
-tier_9_dirs += \
-		toolkit/library \
-		xpcom/stub \
-		$(NULL)
-endif
-
-tier_9_dirs += \
 		content \
 		layout \
-		db \
 		xpfe/components/shistory \
 		docshell \
 		webshell \
 		embedding \
 		editor \
+		xpfe/appshell \
+		xpfe/components/xremote/public \
 		$(NULL)
 
 ifdef MOZ_OJI
@@ -216,23 +207,15 @@ tier_9_dirs	+= \
 		$(NULL)
 endif
 
-tier_9_dirs	+= \
-		xpfe/appshell \
-		xpfe/components/xremote/public \
-		$(NULL)
-
 ifdef ACCESSIBILITY
 tier_9_dirs    += accessible
 endif
 
-ifdef MOZ_LDAP_XPCOM
-tier_9_dirs	+= directory/xpcom
-endif
-
-ifdef MOZ_XUL_APP
-ifdef MOZ_ENABLE_GTK2
-tier_9_dirs    += toolkit/components/gnome
-endif
+ifdef MOZ_ENABLE_LIBXUL
+tier_9_dirs += \
+		toolkit/library \
+		xpcom/stub \
+		$(NULL)
 endif
 
 # 
@@ -264,7 +247,11 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 tier_50_dirs	+= xpfe/bootstrap/appleevents
 endif
 
-tier_50_dirs	+= xpfe themes
+tier_50_dirs	+= \
+	db \
+	xpfe \
+	themes \
+	$(NULL)
 
 ifdef MOZ_LEAKY
 tier_50_dirs        += tools/leaky
@@ -295,6 +282,16 @@ endif
 
 ifdef MOZ_STORAGE
 tier_50_dirs += db/sqlite3/src storage
+endif
+
+ifdef MOZ_LDAP_XPCOM
+tier_50_dirs	+= directory/xpcom
+endif
+
+ifdef MOZ_XUL_APP
+ifdef MOZ_ENABLE_GTK2
+tier_50_dirs    += toolkit/components/gnome
+endif
 endif
 
 #

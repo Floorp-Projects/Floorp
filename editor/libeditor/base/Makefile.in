@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= editor
 LIBRARY_NAME	= editorbase_s
+LIBXUL_LIBRARY	= 1
 
 REQUIRES	= xpcom \
 		  string \

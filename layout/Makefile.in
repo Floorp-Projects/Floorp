@@ -69,7 +69,9 @@ endif
 DIRS           += build
 
 ifdef ENABLE_TESTS
-DIRS		+= html/tests
+ifndef MOZ_ENABLE_LIBXUL
+TOOL_DIRS	+= html/tests
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

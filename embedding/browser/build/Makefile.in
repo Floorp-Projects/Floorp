@@ -41,16 +41,15 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE		= webbrwsr
-
-IS_COMPONENT	= 1
-MODULE_NAME	= Browser_Embedding_Module
-
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= webbrwsr
 LIBRARY_NAME	= webbrwsr
-EXPORT_LIBRARY = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= Browser_Embedding_Module
+EXPORT_LIBRARY	= 1
 GRE_MODULE	= 1
+LIBXUL_LIBRARY	= 1
 
 PACKAGE_FILE = webbrowser.pkg
 

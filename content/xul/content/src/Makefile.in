@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xul
 LIBRARY_NAME	= gkconxulcon_s
+LIBXUL_LIBRARY	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  gfx \

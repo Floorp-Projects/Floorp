@@ -134,6 +134,18 @@
 #define XREMOTE_MODULES
 #endif
 
+#ifdef OJI
+#define OJI_MODULES MODULE(nsCJVMManagerModule)
+#else
+#define OJI_MODULES
+#endif
+
+#ifdef ACCESSIBILITY
+#define ACCESS_MODULES MODULE(nsAccessibilityModule)
+#else
+#define ACCESS_MODULES
+#endif
+
 #define XUL_MODULES                          \
     MODULE(xpcomObsoleteModule)              \
     MODULE(xpconnect)                        \
@@ -156,6 +168,16 @@
     MODULE(nsImageLib2Module)                \
     ICON_MODULE                              \
     MODULE(nsPluginModule)                   \
+    MODULE(nsLayoutModule)                   \
+    MODULE(docshell_provider)                \
+    MODULE(embedcomponents)                  \
+    MODULE(Browser_Embedding_Module)         \
+    MODULE(nsEditorModule)                   \
+    OJI_MODULES                              \
+    ACCESS_MODULES                           \
+    MODULE(appshell)                         \
+    MODULE(nsTransactionManagerModule)       \
+    MODULE(nsComposerModule)                 \
     /* end of list */
 
 #define MODULE(_name)                                           \

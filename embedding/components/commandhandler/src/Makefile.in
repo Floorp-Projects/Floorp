@@ -57,6 +57,7 @@ REQUIRES	= string \
 		  $(NULL)
 
 LIBRARY_NAME	= commandhandler_s
+LIBXUL_LIBRARY	= 1
 
 CPPSRCS		= \
       nsBaseCommandController.cpp \
