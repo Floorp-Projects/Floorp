@@ -71,7 +71,7 @@ treecell.flagcol > .tree-button {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
 }
 
-treeitem[Flagged="flagged"] treerow > treecell.flagcol > .tree-button{
+treeitem[Flagged="flagged"] > treerow > treecell.flagcol > .tree-button{
   list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
 }
 
