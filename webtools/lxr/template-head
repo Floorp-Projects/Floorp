@@ -19,8 +19,8 @@ function js_dir_menu(dir,d) {
         return true;
     }
     l = document.layers['popup'];
-    urlmonth="http://cvs1.mozilla.org/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=month&mindate=&maxdate=&cvsroot=%2Fcvsroot";
-    urlweek="http://cvs1.mozilla.org/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=week&mindate=&maxdate=&cvsroot=%2Fcvsroot";
+    urlmonth="/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=month&mindate=&maxdate=&cvsroot=%2Fcvsroot";
+    urlweek="/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=week&mindate=&maxdate=&cvsroot=%2Fcvsroot";
     text="<table border><tr><td><a href=\"mozilla/source"+dir+"\"><a href=\""+urlweek+"\">Checkins to mozilla"+dir+" in the last week</a> <br><a href=\""+urlmonth+"\">Checkins to mozilla"+dir+" in the last month</a> </td></tr> </table>"
     l.document.write(text);
     l.top = d.target.y;
@@ -40,7 +40,7 @@ function js_file_menu(file,d) {
     }
     l = document.layers['popup'];
 
-    text="<table border><tr><td><a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvslog.cgi?file=/mozilla"+file+"&root=/cvsroot\">mozilla"+file+" change log</a><br><a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvsblame.cgi?&file=mozilla"+file+"&root=/cvsroot\">mozilla"+file+" with change log annotations</a></td></tr></table>"
+    text="<table border><tr><td><a href=\"/webtools/bonsai/cvslog.cgi?file=/mozilla"+file+"&root=/cvsroot\">mozilla"+file+" change log</a><br><a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvsblame.cgi?&file=mozilla"+file+"&root=/cvsroot\">mozilla"+file+" with change log annotations</a></td></tr></table>"
     l.document.write(text);
     l.top = d.target.y;
     l.left = d.target.x +  110;
