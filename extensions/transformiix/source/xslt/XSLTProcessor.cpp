@@ -52,6 +52,7 @@
 #include "Tokenizer.h"
 #include "URIUtils.h"
 #include "txAtoms.h"
+#include "TxLog.h"
 #include "txRtfHandler.h"
 #ifndef TX_EXE
 #include "nsIObserverService.h"
@@ -65,7 +66,6 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptLoader.h"
 #else
-#include "TxLog.h"
 #include "txHTMLOutput.h"
 #include "txTextOutput.h"
 #include "txXMLOutput.h"
@@ -1298,7 +1298,16 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (actionElement->getAttr(txXSLTAtoms::name,
                                            kNameSpaceID_None, templateName)) {
                     Element* xslTemplate = aPs->getNamedTemplate(templateName);
-                    if ( xslTemplate ) {
+                    if (xslTemplate) {
+                        #ifdef PR_LOGGING
+                        char *nameBuf = 0, *uriBuf = 0;
+                        PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+                               ("CallTemplate, Name %s, Stylesheet %s\n",
+                                (nameBuf = templateName.toCharArray()),
+                                (uriBuf = xslTemplate->getBaseURI().toCharArray())));
+                        delete nameBuf;
+                        delete uriBuf;
+                        #endif
                         NamedMap* actualParams = processParameters(actionElement, aNode, aPs);
                         processTemplate(aNode, xslTemplate, aPs, actualParams);
                         delete actualParams;

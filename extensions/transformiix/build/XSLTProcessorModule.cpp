@@ -38,6 +38,7 @@
 #include "nsXPIDLString.h"
 #include "txAtoms.h"
 #include "XSLTProcessor.h"
+#include "TxLog.h"
 
 /* 1c1a3c01-14f6-11d6-a7f2-ea502af815dc */
 #define TRANSFORMIIX_DOMCI_EXTENSION_CID   \
@@ -158,6 +159,7 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
     return rv;
 }
 
+TX_LG_IMPL;
 static PRBool gInitialized = PR_FALSE;
 static nsIExceptionProvider *sXPathExceptionProvider = 0;
 
@@ -189,6 +191,7 @@ Initialize(nsIModule* aSelf)
         return NS_ERROR_OUT_OF_MEMORY;
     if (!txHTMLAtoms::init())
         return NS_ERROR_OUT_OF_MEMORY;
+    TX_LG_CREATE;
     return NS_OK;
 }
 
@@ -221,6 +224,7 @@ Shutdown(nsIModule* aSelf)
     txXPathAtoms::shutdown();
     txXSLTAtoms::shutdown();
     txHTMLAtoms::shutdown();
+    TX_LG_DELETE;
 }
 
 // Component Table
