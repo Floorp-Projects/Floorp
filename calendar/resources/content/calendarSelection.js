@@ -156,6 +156,8 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
       {
          document.getElementById("send_event_command").removeAttribute("disabled");
       }
+
+      document.getElementById( "print_command" ).removeAttribute( "disabled" );
    }
    else
    {
@@ -169,6 +171,8 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
       document.getElementById( "modify_command" ).setAttribute( "disabled", "true" );
 
       document.getElementById("send_event_command").setAttribute("disabled", "true");
+
+      document.getElementById("print_command").setAttribute("disabled", "true");
    }
 
    for( var index in this.observerList )

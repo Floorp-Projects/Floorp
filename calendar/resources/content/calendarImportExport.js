@@ -39,6 +39,8 @@
  *
  ****/
 
+// XSL stylesheet directory
+var convertersDirectory = "chrome://calendar/content/converters/";
 
 // File constants copied from file-utils.js
 const MODE_RDONLY   = 0x01;
@@ -49,6 +51,21 @@ const MODE_APPEND   = 0x10;
 const MODE_TRUNCATE = 0x20;
 const MODE_SYNC     = 0x40;
 const MODE_EXCL     = 0x80;
+
+const filterCalendar    = "Calendar Files";
+const extensionCalendar = ".ics";
+const filterXcs         = "iCalendar XML Document";
+const extensionXcs      = ".xcs";
+const filterXml         = "XML Document";
+const extensionXml      = ".xml";
+const filterRtf         = "Rich Text Format (RTF)";
+const extensionRtf      = ".rtf";
+const filterHtml        = "HTML Files";
+const extensionHtml     = ".html";
+const filterCsv         = "Comma Separated";
+const extensionCsv      = ".csv";
+const filterRdf         = "iCalendar RDF";
+const extensionRdf      = ".rdf";
 
 
 /**** loadEventsFromFile
@@ -63,18 +80,27 @@ function loadEventsFromFile()
      
    fp.init(window, "Open", nsIFilePicker.modeOpen);
 	
-   // fp.defaultString = "*.ics";
    fp.defaultExtension = "ics"
    
-   fp.appendFilter( "Calendar Files", "*.ics" );
+   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
+   fp.appendFilter( filterXcs, "*" + extensionXcs );
    
    fp.show();
 
    if (fp.file && fp.file.path.length > 0) 
    {
       var aDataStream = readDataFromFile( fp.file.path );
-      var calendarEventArray = parseIcalData( aDataStream );
+      var calendarEventArray;
 
+      switch (fp.filterIndex) {
+      case 0 : // ics
+         calendarEventArray = parseIcalData( aDataStream );
+         break;
+      case 1 : // xcs
+         calendarEventArray = parseXCSData( aDataStream );
+         break;
+      }
+   
       // Show a dialog with option to import events with or without dialogs
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
       promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
@@ -89,17 +115,20 @@ function loadEventsFromFile()
             null,null,null,null, result); 
       if(buttonPressed == 0) // YES
       { 
-      addEventsToCalendar( calendarEventArray );
-   }
+         addEventsToCalendar( calendarEventArray );
+         return true;
+      }
       else if(buttonPressed == 1) // NO
       { 
-        addEventsToCalendar( calendarEventArray, true );
+         addEventsToCalendar( calendarEventArray, true );
+         return true;
       } 
       else if(buttonPressed == 2) // CANCEL
       { 
          return false; 
       } 
    }
+   return false;
 }
 
 
@@ -247,13 +276,13 @@ function parseIcalData( icalStr )
 
       calendarEvent = createEvent();
 
+      // if parsing import iCalendar failed, add date as description
       if ( !calendarEvent.parseIcalString(eventData) )
-      // parsing import iCalendar failed. 
       {
          // initialize start and end dates.
          initCalendarEvent( calendarEvent );
 
-         // Save clipboard text into description.
+         // Save the parsed text as description.
          calendarEvent.description = icalStr;      
       }
 
@@ -263,6 +292,20 @@ function parseIcalData( icalStr )
    }
    
    return calendarEventArray;
+}
+
+/**** parseXCSData
+ *
+ */
+ 
+function parseXCSData( xcsString )
+{
+   var gParser = new DOMParser;
+   var xmlDocument = gParser.parseFromString(xcsString, 'text/xml');   
+
+   var result = serializeDocument(xmlDocument, "xcs2ics.xsl");
+
+   return parseIcalData( result );
 }
 
 
@@ -318,7 +361,7 @@ function readDataFromFile( aFilePath )
 function saveEventsToFile( calendarEventArray )
 {
    if( !calendarEventArray)
-      var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
+      calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
 
    if (calendarEventArray.length == 0)
    {
@@ -328,38 +371,65 @@ function saveEventsToFile( calendarEventArray )
 
    // No show the 'Save As' dialog and ask for a filename to save to
    const nsIFilePicker = Components.interfaces.nsIFilePicker;
-   
+
    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-   
+
    // caller can force disable of sand box, even if ON globally
-   
+
    fp.init(window, "Save As", nsIFilePicker.modeSave);
-	
-   fp.defaultString = "Mozilla Calendar events";
+
+   if(calendarEventArray.length == 1 && calendarEventArray[0].title)
+      fp.defaultString = calendarEventArray[0].title;
+   else
+      fp.defaultString = "Mozilla Calendar events";
+
    fp.defaultExtension = "ics";
 
-   fp.appendFilter( "Calendar Files", "*.ics" );
-   fp.appendFilter( "Rich Text Format (RTF)", "*.rtf" );
+   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
+   fp.appendFilter( filterRtf, "*" + extensionRtf );
    fp.appendFilters(nsIFilePicker.filterHTML);
-   
+   fp.appendFilter( filterCsv, "*" + extensionCsv );
+   fp.appendFilter( filterXcs, "*" + extensionXcs );
+   fp.appendFilter( filterRdf, "*" + extensionRdf );
+
    fp.show();
 
    // Now find out as what to save, convert the events and save to file.
    if (fp.file && fp.file.path.length > 0) 
    {
       var aDataStream;
+      var extension;
       switch (fp.filterIndex) {
       case 0 : // ics
          aDataStream = eventArrayToICalString( calendarEventArray, true );
+         extension   = extensionCalendar;
          break;
       case 1 : // rtf
          aDataStream = eventArrayToRTF( calendarEventArray );
+         extension   = extensionRtf;
          break;
       case 2 : // html
          aDataStream = eventArrayToHTML( calendarEventArray );
+         extension   = ".htm";
+         break;
+      case 3 : // csv
+         aDataStream = eventArrayToCsv( calendarEventArray );
+         extension   = extensionCsv;
+         break;
+      case 4 : // xCal
+         aDataStream = eventArrayToXCS( calendarEventArray );
+         extension   = extensionXcs;
+         break;
+      case 5 : // rdf
+         aDataStream = eventArrayToRdf( calendarEventArray );
+         extension   = extensionRdf;
          break;
       }
-      saveDataToFile(fp.file.path, aDataStream);
+      var filePath = fp.file.path;
+      if(filePath.indexOf(".") == -1 )
+          filePath += extension;
+
+      saveDataToFile(filePath, aDataStream);
    }
 }
 
@@ -485,6 +555,74 @@ function eventArrayToRTF( calendarEventArray )
 }
 
 
+/**** eventArrayToXML
+* Converts a array of events to a XML string
+*/
+/*
+function eventArrayToXML( calendarEventArray )
+{
+   var xmlDocument = getXmlDocument( calendarEventArray );
+   var serializer = new XMLSerializer;
+   
+   return serializer.serializeToString (xmlDocument )
+}
+*/
+
+/**** eventArrayToCsv
+* Converts a array of events to comma delimited  text.
+*/
+
+function eventArrayToCsv( calendarEventArray )
+{
+   var xcsDocument = getXcsDocument( calendarEventArray );
+
+   return serializeDocument( xcsDocument, "xcs2csv.xsl" );
+}
+
+
+/**** eventArrayToRdf
+* Converts a array of events to RDF
+*/
+
+function eventArrayToRdf( calendarEventArray )
+{
+   var xcsDocument = getXcsDocument( calendarEventArray );
+
+   return serializeDocument( xcsDocument, "xcs2rdf.xsl" );
+}
+
+
+/**** eventArrayToXCS
+* Converts a array of events to a xCal string
+*/
+
+function eventArrayToXCS( calendarEventArray )
+{
+   var xmlDoc = getXmlDocument( calendarEventArray );
+   var xcsDoc = transformXML( xmlDoc, "xml2xcs.xsl" );
+   // add the doctype
+/* Doctype uri blocks excel import
+   var newdoctype = xcsDoc.implementation.createDocumentType(
+       "iCalendar", 
+       "-//IETF//DTD XCAL//iCalendar XML//EN",
+       "http://www.ietf.org/internet-drafts/draft-ietf-calsch-many-xcal-02.txt");
+   if (newdoctype)
+      xcsDoc.insertBefore(newdoctype, xcsDoc.firstChild);
+*/
+   var serializer = new XMLSerializer;
+
+   // XXX MAJOR UGLY HACK!! Serializer doesn't insert XML Declaration
+   // http://bugzilla.mozilla.org/show_bug.cgi?id=63558
+   var serialDocument = serializer.serializeToString ( xcsDoc );
+
+   if( serialDocument.indexOf( "<?xml" ) == -1 )
+      serialDocument = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + serialDocument;
+
+   return serialDocument;
+   // return serializer.serializeToString ( xcsDoc )
+}
+
+
 /**** saveDataToFile
  *
  * Save data to a file. Creates a new file or overwrites an existing file.
@@ -500,7 +638,7 @@ function saveDataToFile(aFilePath, aDataStream)
    var localFileInstance;
    var outputStream;
    
-   LocalFileInstance = Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+   var LocalFileInstance = Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
    LocalFileInstance.initWithPath(aFilePath);
 
    outputStream = Components.classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
@@ -515,4 +653,333 @@ function saveDataToFile(aFilePath, aDataStream)
    {
       alert("Unable to write to file: " + aFilePath );
    }
+}
+
+
+////////////////////////////////////
+// XML/XSL functions              //
+////////////////////////////////////
+
+/**
+*   Get the local path to the chrome directory
+*/
+/*
+function getChromeDir()
+{
+    const JS_DIR_UTILS_FILE_DIR_CID = "@mozilla.org/file/directory_service;1";
+    const JS_DIR_UTILS_I_PROPS      = "nsIProperties";
+    const JS_DIR_UTILS_DIR          = new Components.Constructor(JS_DIR_UTILS_FILE_DIR_CID, JS_DIR_UTILS_I_PROPS);
+    const JS_DIR_UTILS_CHROME_DIR                          = "AChrom";
+
+    var rv;
+
+    try
+    {
+      rv=(new JS_DIR_UTILS_DIR()).get(JS_DIR_UTILS_CHROME_DIR, Components.interfaces.nsIFile);
+    }
+
+    catch (e)
+    {
+       //jslibError(e, "(unexpected error)", "NS_ERROR_FAILURE", JS_DIR_UTILS_FILE+":getChromeDir");
+       rv=null;
+    }
+
+    return rv;
+}
+
+function getTemplatesPath( templateName )
+{
+   var templatesDir = getChromeDir();
+   templatesDir.append( "calendar" );
+   templatesDir.append( "content" );
+   templatesDir.append( "templates" );
+   templatesDir.append( templateName );
+   return templatesDir.path;
+}
+
+function xslt(xmlUri, xslUri)
+{
+   // TODO: Check uri's for CHROME:// and convert path to local path
+   var xslProc = new XSLTProcessor();
+
+   var result = document.implementation.createDocument("", "", null);
+   var xmlDoc = document.implementation.createDocument("", "", null);
+   var xslDoc = document.implementation.createDocument("", "", null);
+
+   xmlDoc.load(xmlUri, "text/xml");
+   xslDoc.load(xslUri, "text/xml");
+   xslProc.transformDocument(xmlDoc, xslDoc, result, null);
+
+   return result;
+}
+
+*/
+
+/** PRIVATE
+*
+*   Opens a file and returns the content
+*   It supports Uri's like chrome://
+*/
+
+function loadFile(aUriSpec)
+{
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var serv = Components.classes["@mozilla.org/network/io-service;1"].
+        getService(Components.interfaces.nsIIOService);
+    if (!serv) {
+        throw Components.results.ERR_FAILURE;
+    }
+    var chan = serv.newChannel(aUriSpec, null, null);
+    var instream = 
+        Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+    instream.init(chan.open());
+
+    return instream.read(instream.available());
+}
+
+/** PUBLIC GetXcsDocument
+*
+*/
+
+function getXcsDocument( calendarEventArray )
+{
+   var xmlDocument = getXmlDocument( calendarEventArray );
+
+   var xcsDocument = transformXML( xmlDocument, "xml2xcs.xsl" );
+
+   var processingInstruction = xcsDocument.createProcessingInstruction(
+      "xml", "version=\"1.0\" encoding=\"UTF-8\"");
+   // xcsDocument.insertBefore(processingInstruction, xcsDocument.firstChild);
+   
+   return xcsDocument;
+}
+
+
+/** PUBLIC
+*
+*   Opens a xsl transformation file and applies it to xmlDocuments.
+*   xslFile can be in the convertersDirectory, or a full Uri
+*   Returns the resulting document
+*/
+
+function transformXML( xmlDocument, xslFilename )
+{
+   var xslProc = new XSLTProcessor();
+   var gParser = new DOMParser;
+   // .load isn't synchrone
+   // var xslDoc = document.implementation.createDocument("", "", null);
+   // xslDoc.load(path, "text/xml");
+
+   // if only passsed a filename, assume it is a file in the default directory
+   if( xslFilename.indexOf( ":" ) == -1 )
+     xslFilename = convertersDirectory + xslFilename;
+
+   var xslContent = loadFile( xslFilename );
+   var xslDocument = gParser.parseFromString(xslContent, 'text/xml');
+   var result = document.implementation.createDocument("", "", null);
+
+   xslProc.transformDocument(xmlDocument, xslDocument, result, null);
+
+   return result;
+}
+
+/** PUBLIC
+*
+*   Serializes a DOM document.if stylesheet is null, returns the document serialized
+*   Applies the stylesheet when available, and return the serialized transformed document,
+*   or the transformiix data
+*/
+
+function serializeDocument( xmlDocument, stylesheet )
+{
+   var serializer = new XMLSerializer;
+   if( stylesheet )
+   {
+      var resultDocument = transformXML( xmlDocument, stylesheet );
+      var transformiixResult = resultDocument.getElementById( "transformiixResult" );
+      if( transformiixResult && transformiixResult.hasChildNodes() )
+      {  // It's a document starting with:
+         // <a0:html xmlns:a0="http://www.w3.org/1999/xhtml">
+         // <a0:head/><a0:body><a0:pre id="transformiixResult">
+         var textNode = transformiixResult.firstChild;
+         if( textNode.nodeType == textNode.TEXT_NODE )
+            return textNode.nodeValue;
+         else
+            return serializer.serializeString( transformiixResult );
+      }
+      else
+         // No transformiixResult, return the serialized transformed document
+         return serializer.serializeToString ( resultDocument );
+   }
+   else
+      // No transformation, return the serialized xmlDocument
+      return serializer.serializeToString ( xmlDocument );
+}
+
+/** PUBLIC
+*
+*   not used?
+*/
+
+function deserializeDocument(text, stylesheet )
+{
+   var gParser = new DOMParser;
+   var xmlDocument = gParser.parseFromString(text, 'text/xml');
+}
+
+/** PRIVATE
+*
+*   transform a calendar event into a dom node.
+*   hack, this is going to be part of libical
+*/
+
+function makeXmlNode( xmlDocument, calendarEvent )
+{
+
+   // Adds a property node to a event node
+   //  do not add empty properties, valueType is optional
+   var addPropertyNode = function( xmlDocument, eventNode, name, value, valueType )
+   {
+      if(!value)
+         return;
+
+      var propertyNode = xmlDocument.createElement( "property" );
+      propertyNode.setAttribute( "name", name );
+
+      var valueNode = xmlDocument.createElement( "value" );
+      var textNode  = xmlDocument.createTextNode( value );
+
+      if( valueType )
+         valueNode.setAttribute( "value", valueType );
+
+      valueNode.appendChild( textNode );
+      propertyNode.appendChild( valueNode );
+      eventNode.appendChild( propertyNode );
+   }
+
+     var checkString = function( str )
+    {
+        if( typeof( str ) == "string" )
+            return str;
+        else
+            return ""
+    }
+
+    var checkNumber = function( num )
+    {
+        if( typeof( num ) == "undefined" || num == null )
+            return "";
+        else
+            return num
+    }
+
+    var checkBoolean = function( bool )
+    {
+        if( bool == "false")
+            return "false"
+        else if( bool )      // this is false for: false, 0, undefined, null, ""
+            return "true";
+        else
+            return "false"
+    }
+
+    // create a string in the iCalendar format, UTC time '20020412T121314Z'
+    var checkDate = function ( dt, isDate )
+    {   var dateObj = new Date( dt.getTime() );
+        var result = "";
+        result += dateObj.getUTCFullYear();
+
+        if( dateObj.getMonth() + 1 < 10 )
+           result += "0";
+        result += dateObj.getUTCMonth() + 1;
+
+        if( dateObj.getUTCDate() < 10 )
+           result += "0";
+        result += dateObj.getUTCDate();
+
+        if( !isDate )
+        {
+           result += "T"
+
+           if( dateObj.getUTCHours() < 10 )
+              result += "0";
+           result += dateObj.getUTCHours();
+
+           if( dateObj.getUTCMinutes() < 10 )
+              result += "0";
+           result += dateObj.getUTCMinutes();
+        
+           if( dateObj.getUTCSeconds() < 10 )
+              result += "0";
+           result += dateObj.getUTCSeconds();
+           result += "Z";
+        }
+           return result;
+    }
+
+    // make the event tag
+    var calendarNode = xmlDocument.createElement( "component" );
+    calendarNode.setAttribute( "name", "VCALENDAR" );
+
+    addPropertyNode( xmlDocument, calendarNode, "PRODID", "-//Mozilla.org/NONSGML Mozilla Calendar V 1.0 //EN" );
+    addPropertyNode( xmlDocument, calendarNode, "VERSION", "2.0" );
+    if(calendarEvent.method == calendarEvent.ICAL_METHOD_PUBLISH)
+       addPropertyNode( xmlDocument, calendarNode, "METHOD", "PUBLISH" );
+    else if(calendarEvent.method == calendarEvent.ICAL_METHOD_REQUEST )
+       addPropertyNode( xmlDocument, calendarNode, "METHOD", "REQUEST" );
+
+    var eventNode = xmlDocument.createElement( "component" );
+    eventNode.setAttribute( "name", "VEVENT" );
+
+    addPropertyNode( xmlDocument, eventNode, "UID", calendarEvent.id );
+    addPropertyNode( xmlDocument, eventNode, "SUMMARY", checkString( calendarEvent.title ) );
+    addPropertyNode( xmlDocument, eventNode, "DTSTAMP", checkDate( calendarEvent.stamp ) );
+    if( calendarEvent.allDay )
+       addPropertyNode( xmlDocument, eventNode, "DTSTART", checkDate( calendarEvent.start, true ), "DATE" );
+    else
+    {
+       addPropertyNode( xmlDocument, eventNode, "DTSTART", checkDate( calendarEvent.start ) );
+       addPropertyNode( xmlDocument, eventNode, "DTEND", checkDate( calendarEvent.end ) );
+    }
+
+    addPropertyNode( xmlDocument, eventNode, "DESCRIPTION", checkString( calendarEvent.description ) );
+    addPropertyNode( xmlDocument, eventNode, "CATEGORIES", checkString( calendarEvent.categories ) );
+    addPropertyNode( xmlDocument, eventNode, "LOCATION", checkString( calendarEvent.location ) );
+    addPropertyNode( xmlDocument, eventNode, "PRIVATEEVENT", checkString( calendarEvent.privateEvent ) );
+    addPropertyNode( xmlDocument, eventNode, "URL", checkString( calendarEvent.url ) );
+    addPropertyNode( xmlDocument, eventNode, "PRIORITY", checkNumber( calendarEvent.priority ) );
+
+    calendarNode.appendChild( eventNode );
+    return calendarNode;
+}
+
+/** PUBLIC
+*
+*   Transforms an array of calendar events into a dom-document
+*   hack, this is going to be part of libical
+*/
+
+function getXmlDocument ( eventList )
+{
+    // use the domparser to create the XML 
+    var domParser = new DOMParser;
+    // start with one tag
+    var xmlDocument = domParser.parseFromString( "<libical/>", "text/xml" );
+    
+    // get the top tag, there will only be one.
+    var topNodeList = xmlDocument.getElementsByTagName( "libical" );
+    var topNode = topNodeList[0];
+
+
+    // add each event as an element
+ 
+    for( var index = 0; index < eventList.length; ++index )
+    {
+        var calendarEvent = eventList[ index ];
+        
+        var eventNode = this.makeXmlNode( xmlDocument, calendarEvent );
+        
+        topNode.appendChild( eventNode );
+    }
+    return xmlDocument;
 }

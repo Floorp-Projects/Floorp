@@ -664,9 +664,9 @@ function changeToolTipTextForToDo( event )
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
-   var DateHtml = document.createElement( "description" );
+   DateHtml = document.createElement( "description" );
    var dueDate = new Date( toDoItem.due.getTime() );
-   var DateText = document.createTextNode( "Due Date: "+gCalendarWindow.dateFormater.getFormatedDate( dueDate ) );
+   DateText = document.createTextNode( "Due Date: "+gCalendarWindow.dateFormater.getFormatedDate( dueDate ) );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
@@ -720,9 +720,9 @@ function getPreviewText( calendarEvent )
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
-   var DateHtml = document.createElement( "description" );
+   DateHtml = document.createElement( "description" );
    var endDate = new Date( calendarEvent.end.getTime() );
-   var DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( endDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( endDate ) );
+   DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( endDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( endDate ) );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
@@ -773,4 +773,81 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
 function reloadApplication()
 {
 	gCalendarWindow.currentView.refreshEvents();
+}
+
+
+/** PUBLIC
+*
+*   Print events using a stylesheet.
+*   Mostly Hack to get going, Should probably be rewritten later when stylesheets are available
+*   XXX Is it possible to directly load the document into a window without tempfile?
+*/
+
+var printWindow;
+var tempfile;
+
+// the print is called with a timeout, otherwise the document isn't loaded before printing.
+// onload event didn't seem to fire.
+function delayedPrint()
+{
+   printWindow.print();
+   printWindow.close();
+   if( tempfile.exists() )
+      tempfile.remove( false );
+}
+
+// returns a nsIFile object of a unique file in the temp directory
+function makeTempFile( extension )
+{
+   const osTempDir  = "TmpD";
+   const flContractID = "@mozilla.org/file/directory_service;1";
+   const flIID = Components.interfaces.nsIProperties;
+   var fileLocator = Components.classes[flContractID].getService(flIID);
+   var tempFile = fileLocator.get(osTempDir, Components.interfaces.nsIFile);
+   tempFile.append("~tmp" + Math.floor(Math.random() * 1000) + extension );
+
+   return tempFile;
+}
+
+function printEventArray( calendarEventArray, stylesheet )
+{
+   var xcsDocument = getXcsDocument( calendarEventArray );
+
+   var newProcessInstruction = xcsDocument.createProcessingInstruction(
+      "xml-stylesheet",
+      "href=\"" + stylesheet + "\" type=\"text/xsl\"");
+   xcsDocument.insertBefore(newProcessInstruction, xcsDocument.firstChild);
+
+   newProcessInstruction = xcsDocument.createProcessingInstruction(
+      "xml", "version=\"1.0\" encoding=\"UTF-8\"");
+   xcsDocument.insertBefore(newProcessInstruction, xcsDocument.firstChild);
+
+   var serializer = new XMLSerializer;
+   var serialDocument = serializer.serializeToString ( xcsDocument );
+
+   // XXX TODO Can we directly load the xml-document into a window???
+   tempfile = makeTempFile( ".xml" );
+   saveDataToFile(tempfile.path, serialDocument);
+
+   var tempfileUrl = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
+   tempfileUrl.file = tempfile;
+
+   printWindow = window.open( tempfileUrl.spec );
+   if( printWindow )
+   {
+      printWindow.locationbar.visible = false;
+      printWindow.personalbar.visible = false;
+      printWindow.statusbar.visible = false;
+      printWindow.toolbar.visible = false;
+
+      // XXX HACK open is async, find a way to detect if content is loaded
+      // using onload doesn't fire?
+      setTimeout("delayedPrint()", 1000);
+   }
+}
+
+function print()
+{
+   printEventArray(
+      gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
 }

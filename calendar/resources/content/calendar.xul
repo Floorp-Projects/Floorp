@@ -87,6 +87,7 @@
    <command id="delete_command_no_confirm" oncommand="unifinderDeleteCommand( true )" disabled="true"/>
    <command id="modify_command" oncommand="unifinderEditCommand()" disabled="true"/>
    <command id="send_event_command" oncommand="sendEvent()" disabled="true"/>
+   <command id="print_command" oncommand="print()" disabled="true"/>
    <command id="cut_command" oncommand="cutToClipboard()" disabled="true"/>
    <command id="copy_command" oncommand="copyToClipboard()" disabled="true"/>
    <command id="paste_command" oncommand="pasteFromClipboard()"/>
@@ -114,6 +115,7 @@
   <key id="new_event_key" key="N" modifiers="control" observes="new_command"/>
   <key id="new_todo_key" key="M" modifiers="control" observes="new_todo_command"/>
   <key id="modify_event_key" key="E" modifiers="control" observes="modify_command"/>
+  <key id="print_key" key="P" modifiers="control" observes="print_command"/>
   <key id="import_key" key="I" modifiers="control" observes="import_command"/>
   <key id="export_key" key="O" modifiers="control" observes="export_command"/>
   

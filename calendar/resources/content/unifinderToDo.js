@@ -225,6 +225,7 @@ function unifinderMouseDownToDo( event )
       // TODO HACK notifiers should be rewritten to integrate events and todos
       document.getElementById( "delete_command" ).removeAttribute( "disabled" );
       document.getElementById( "delete_command_no_confirm" ).removeAttribute( "disabled" );
+      document.getElementById( "print_command" ).setAttribute( "disabled", "true" );
    } else
    {
       if(event.button == 2)
@@ -234,6 +235,8 @@ function unifinderMouseDownToDo( event )
       // TODO HACK notifiers should be rewritten to integrate events and todos
       document.getElementById( "delete_command" ).setAttribute( "disabled", "true" );
       document.getElementById( "delete_command_no_confirm" ).setAttribute( "disabled", "true" );
+      //  printing tasks not supported
+      document.getElementById( "print_command" ).setAttribute( "disabled", "true" );
    }
 }
 

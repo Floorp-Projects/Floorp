@@ -155,10 +155,6 @@ DayView.prototype.refreshEvents = function( )
    //}
    //TextNode.setAttribute( "value", "All-Day Events: " );
    
-   //set the seperator to nothing. After the first one, we'll change it to ", " so that we add commas between text.
-   
-   var Seperator = " ";
-
    // get the events for the day and loop through them
    
    var dayEventList = this.calendarWindow.eventSource.getEventsForDay( this.calendarWindow.getSelectedDate() );
@@ -247,10 +243,6 @@ DayView.prototype.refreshEvents = function( )
          //note the use of the AllDayText Attribute.  
          //This is used to remove the text when the day is changed.
          
-         SeperatorNode = document.createElement( "label" );
-         SeperatorNode.setAttribute( "value", Seperator );
-         //SeperatorNode.setAttribute( "AllDayText", "true" );
-
          newTextNode = document.createElement( "label" );
          newTextNode.setAttribute( "value", eventText );
          newTextNode.calendarEventDisplay = calendarEventDisplay;
@@ -258,8 +250,7 @@ DayView.prototype.refreshEvents = function( )
          newTextNode.setAttribute( "onclick", "dayEventItemClick( this, event )" );
          newTextNode.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
          newTextNode.setAttribute( "tooltip", "savetip" );
-         
-         //newTextNode.setAttribute( "AllDayText", "true" );
+         newTextNode.setAttribute( "AllDayText", "true" );
          
          newImage = document.createElement("image");
          newImage.setAttribute( "class", "all-day-event-class" );
@@ -270,12 +261,8 @@ DayView.prototype.refreshEvents = function( )
          newImage.setAttribute( "tooltip", "savetip" );
          //newImage.setAttribute( "AllDayText", "true" );
          
-         AllDayBox.appendChild( SeperatorNode );
          AllDayBox.appendChild( newImage );
          AllDayBox.appendChild( newTextNode );
-         
-         //change the seperator to add commas after the text.
-         Seperator = ", ";
       }
       else
       {
