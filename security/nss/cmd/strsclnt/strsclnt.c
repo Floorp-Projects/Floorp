@@ -717,8 +717,8 @@ do_connects(
 {
     PRNetAddr  *        addr		= (PRNetAddr *)  a;
     PRFileDesc *        model_sock	= (PRFileDesc *) b;
-    PRFileDesc *        ssl_sock;
-    PRFileDesc *        tcp_sock;
+    PRFileDesc *        ssl_sock	= 0;
+    PRFileDesc *        tcp_sock	= 0;
     PRStatus	        prStatus;
     SECStatus   	result;
     int                 rv 		= SECSuccess;
@@ -748,6 +748,7 @@ retry:
 	    goto retry;
 	}
 	errWarn("PR_Connect");
+	rv = SECFailure;
 	goto done;
     }
 
@@ -771,7 +772,11 @@ retry:
     }
 
 done:
-    PR_Close(ssl_sock);
+    if (ssl_sock) {
+	PR_Close(ssl_sock);
+    } else if (tcp_sock) {
+	PR_Close(tcp_sock);
+    }
     return SECSuccess;
 }
 
