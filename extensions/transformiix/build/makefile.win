@@ -29,11 +29,11 @@ REQUIRES=xpcom raptor
 IS_COMPONENT = 1
 
 CPPSRCS=						\
-	XSLProcessorFactory.cpp		\
+	XSLTProcessorModule.cpp		\
 	$(NULL)
 
 CPP_OBJS=									\
-	.\$(OBJDIR)\XSLProcessorFactory.obj		\
+	.\$(OBJDIR)\XSLTProcessorModule.obj		\
 	$(NULL)
 
 MAKE_OBJ_TYPE = DLL
@@ -47,8 +47,8 @@ LCFLAGS = \
 
 LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I..\source\xml\dom \
-      -I..\source\xsl\expr -I..\source\xsl\util -I..\source\xml -I..\source\xsl \
-      -I..\source\base \
+      -I..\source\xpath -I..\source\xslt\util -I..\source\xml -I..\source\xslt \
+      -I..\source\base -I..\source\net -I..\source\xml\parser
       
 # These are the libraries we need to link with to create the dll
 LLIBS=												\
