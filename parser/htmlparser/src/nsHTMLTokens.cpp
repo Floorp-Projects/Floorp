@@ -29,6 +29,7 @@
 #include "nsHTMLTags.h"
 #include "nsHTMLEntities.h"
 #include "nsCRT.h"
+#include "nsStr.h"
 
 //#define GESS_MACHINE
 #ifdef GESS_MACHINE
@@ -1589,7 +1590,9 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
       temp+=aChar; 
       result=aScanner.ReadUntil(temp,kLessThan,PR_FALSE); 
     } 
-    done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE)); 
+    nsAutoString temp2;
+    temp.Right(temp2,mTextValue.Length());
+    done=PRBool(0==temp2.Compare(mTextValue.GetUnicode(),PR_TRUE,mTextValue.Length())); 
   } 
   int len=temp.Length(); 
   temp.Truncate(len-mTextValue.Length()); 
