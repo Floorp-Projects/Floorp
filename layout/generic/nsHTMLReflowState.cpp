@@ -27,6 +27,7 @@
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 #include "nsIRenderingContext.h"
+#include "nsIFontMetrics.h"
 
 #ifdef NS_DEBUG
 #undef NOISY_VERTICAL_ALIGN
@@ -1334,81 +1335,112 @@ nsHTMLReflowState::CalculateTableSideMargins(const nsHTMLReflowState* cbrs,
 }
 #endif
 
-nscoord
-nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
-                                  nsIFrame* aFrame)
+static nsIStyleContext*
+GetNonInheritedLineHeightStyleContext(nsIStyleContext* aStyleContext)
 {
-  nscoord lineHeight = -1;
-  nsIStyleContext* sc;
-  aFrame->GetStyleContext(&sc);
-  const nsStyleFont* elementFont = nsnull;
-  if (nsnull != sc) {
-    elementFont = (const nsStyleFont*)sc->GetStyleData(eStyleStruct_Font);
-    for (;;) {
-      const nsStyleText* text = (const nsStyleText*)
-        sc->GetStyleData(eStyleStruct_Text);
-      if (nsnull != text) {
-        nsStyleUnit unit = text->mLineHeight.GetUnit();
-        if (eStyleUnit_Normal == unit) {
-          // Normal value
-#ifdef NOISY_VERTICAL_ALIGN
-          printf("  line-height: normal\n");
-#endif
-          break;
-        } else if (eStyleUnit_Factor == unit) {
-          // CSS2 spec says that the number is inherited, not the
-          // computed value. Therefore use the font size of the
-          // element times the inherited number.
-          nscoord size = elementFont->mFont.size;
-          lineHeight = nscoord(size * text->mLineHeight.GetFactorValue());
-          if (lineHeight < 0) {
-            lineHeight = -1;
-          }
-#ifdef NOISY_VERTICAL_ALIGN
-          printf("  line-height: factor=%g result=%d\n",
-                 text->mLineHeight.GetFactorValue(), lineHeight);
-#endif
-          break;
-        }
-        else if (eStyleUnit_Coord == unit) {
-          lineHeight = text->mLineHeight.GetCoordValue();
-          if (lineHeight < 0) {
-            lineHeight = -1;
-          }
-          break;
-        }
-        else if (eStyleUnit_Percent == unit) {
-          // XXX This could arguably be the font-metrics actual height
-          // instead since the spec says use the computed height.
-          const nsStyleFont* font = (const nsStyleFont*)
-            sc->GetStyleData(eStyleStruct_Font);
-          nscoord size = font->mFont.size;
-          lineHeight = nscoord(size * text->mLineHeight.GetPercentValue());
-          if (lineHeight < 0) {
-            lineHeight = -1;
-          }
-          break;
-        }
-        else if (eStyleUnit_Inherit == unit) {
-          nsIStyleContext* parentSC;
-          parentSC = sc->GetParent();
-          if (nsnull == parentSC) {
-            // Note: Break before releasing to avoid double-releasing sc
-            break;
-          }
-          NS_RELEASE(sc);
-          sc = parentSC;
-        }
-        else {
-          // other units are not part of the spec so don't bother
-          // looping
-          break;
-        }
+  nsCOMPtr<nsIStyleContext> parentSC;
+  parentSC = getter_AddRefs(aStyleContext->GetParent());
+  if (parentSC) {
+    const nsStyleText* text = (const nsStyleText*)
+      parentSC->GetStyleData(eStyleStruct_Text);
+    if (eStyleUnit_Inherit == text->mLineHeight.GetUnit()) {
+      return GetNonInheritedLineHeightStyleContext(parentSC);
+    }
+  }
+  return parentSC;
+}
+
+static nscoord
+ComputeLineHeight(nsIRenderingContext* aRenderingContext,
+                  nsIStyleContext* aStyleContext)
+{
+  nscoord lineHeight = 0;
+
+  const nsStyleText* text = (const nsStyleText*)
+    aStyleContext->GetStyleData(eStyleStruct_Text);
+  const nsStyleFont* font = (const nsStyleFont*)
+    aStyleContext->GetStyleData(eStyleStruct_Font);
+
+  nsStyleUnit unit = text->mLineHeight.GetUnit();
+  if (eStyleUnit_Inherit == unit) {
+    // Inherit parents line-height value
+    nsCOMPtr<nsIStyleContext> parentSC =
+      getter_AddRefs(GetNonInheritedLineHeightStyleContext(aStyleContext));
+    if (parentSC) {
+      text = (const nsStyleText*) parentSC->GetStyleData(eStyleStruct_Text);
+      unit = text->mLineHeight.GetUnit();
+      if (eStyleUnit_Percent == unit) {
+        // For percent, we inherit the computed value so updated the
+        // font to use the parent's font not our font.
+        font = (const nsStyleFont*) parentSC->GetStyleData(eStyleStruct_Font);
       }
     }
-    NS_RELEASE(sc);
   }
 
+  if (eStyleUnit_Coord == unit) {
+    // For length values just use the pre-computed value
+    lineHeight = text->mLineHeight.GetCoordValue();
+  }
+  else {
+    // For "normal", factor or percentage units the computed value of
+    // the line-height property is found by multiplying the factor by
+    // the font's <b>actual</b> height. For "normal" we use a factor
+    // value of "1.0".
+    float factor = 1.0f;
+    if (eStyleUnit_Factor == unit) {
+      factor = text->mLineHeight.GetFactorValue();
+    }
+    else if (eStyleUnit_Percent == unit) {
+      factor = text->mLineHeight.GetPercentValue();
+    }
+    aRenderingContext->SetFont(font->mFont);
+    nsCOMPtr<nsIFontMetrics> fm;
+    aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
+    if (fm) {
+      fm->GetHeight(lineHeight);
+    }
+
+#ifdef DEBUG_kipp
+    // Note: we normally use the actual font height for computing the
+    // line-height raw value from the style context. On systems where
+    // they disagree the actual font height is more appropriate. This
+    // little hack lets us override that behavior to allow for more
+    // precise layout in the face of imprecise fonts.
+    static PRBool useComputedHeight = PR_FALSE;
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+    static PRBool firstTime = 1;
+    if (firstTime) {
+      if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
+        useComputedHeight = PR_TRUE;
+      }
+      firstTime = 0;
+    }
+#endif
+    if (useComputedHeight) {
+      lineHeight = font->mFont.size;
+    }
+#endif
+
+    lineHeight = NSToCoordRound(factor * lineHeight);
+  }
+
+  return lineHeight;
+}
+
+nscoord
+nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
+                                  nsIRenderingContext* aRenderingContext,
+                                  nsIFrame* aFrame)
+{
+  nscoord lineHeight = 0;
+  nsCOMPtr<nsIStyleContext> sc;
+  aFrame->GetStyleContext(getter_AddRefs(sc));
+  if (sc) {
+    lineHeight = ComputeLineHeight(aRenderingContext, sc);
+  }
+  if (lineHeight < 0) {
+    lineHeight = 0;
+  }
   return lineHeight;
 }
 
