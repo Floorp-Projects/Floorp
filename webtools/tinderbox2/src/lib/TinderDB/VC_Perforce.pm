@@ -22,7 +22,7 @@
 # The only perforce commands this module runs are:
 #
 #		 'p4 describe -s $num'
-#		 'p4 changes  -s \@$date_str\@now $filespec'
+#		 'p4 changes  -s submitted \@$date_str\@now $filespec'
 
 # 			which looks like this 
 
@@ -75,8 +75,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.20 $ 
-# $Date: 2003/12/23 13:35:49 $ 
+# $Revision: 1.21 $ 
+# $Date: 2004/03/10 03:42:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -156,7 +156,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.20 $ )[1];
+$VERSION = ( qw $Revision: 1.21 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -910,7 +910,7 @@ sub get_new_change_sets {
 
   $filespec = TreeData::Tree2Filespec($tree);
   my (@cmd) = (
-               'p4', 'changes', '-s', 
+               'p4', 'changes', '-s', 'submitted',
                '@'.$date_str.',@now', 
                $filespec,
                );
