@@ -19,6 +19,8 @@
 #define nsSpaceManager_h___
 
 #include "nsISpaceManager.h"
+#include "prclist.h"
+#include "plhash.h"
 
 /**
  * Implementation of nsISpaceManager that maintains a region data structure of
@@ -27,10 +29,12 @@
 class SpaceManager : public nsISpaceManager {
 public:
   SpaceManager(nsIFrame* aFrame);
+  ~SpaceManager();
 
   // nsISupports
   NS_DECL_ISUPPORTS
 
+  // nsISpaceManager
   virtual nsIFrame* GetFrame() const;
 
   virtual void    Translate(nscoord aDx, nscoord aDy);
@@ -52,64 +56,76 @@ public:
   virtual void   ClearRegions();
 
 protected:
-  struct BandRect : nsRect {
-    PRIntn  numFrames;  // number of frames occupying this rect
+  // Structure that maintains information about the region associated
+  // with a particular frame
+  struct FrameInfo {
+    nsIFrame* const frame;
+    nsRect          rect;       // rectangular region
 
+    FrameInfo(nsIFrame* aFrame, const nsRect& aRect);
+  };
+
+  // Doubly linked list of band rects
+  struct BandRect : PRCListStr {
+    nscoord   left, top;
+    nscoord   right, bottom;
+    PRIntn    numFrames;    // number of frames occupying this rect
     union {
       nsIFrame*    frame;   // single frame occupying the space
       nsVoidArray* frames;  // list of frames occupying the space
     };
 
+    BandRect(nscoord aLeft, nscoord aTop,
+             nscoord aRight, nscoord aBottom,
+             nsIFrame*);
+    BandRect(nscoord aLeft, nscoord aTop,
+             nscoord aRight, nscoord aBottom,
+             nsVoidArray*);
+    ~BandRect();
+
+    // Split the band rect into two vertically, with this band rect becoming
+    // the top part, and a new band rect being allocated and returned for the
+    // bottom part
+    BandRect* SplitVertically(nscoord aBottom);
+
+    // Split the band rect into two horizontally, with this band rect becoming
+    // the left part, and a new band rect being allocated and returned for the
+    // right part
+    BandRect* SplitHorizontally(nscoord aRight);
+
+    // Accessor functions
     PRBool  IsOccupiedBy(nsIFrame*);
     void    AddFrame(nsIFrame*);
     void    RemoveFrame(nsIFrame*);
   };
 
-  class RectArray {
-  public:
-    RectArray();
-    ~RectArray();
-
-    // Functions to add rects
-    void Append(const nsRect& aRect, nsIFrame* aFrame);
-    void InsertAt(const nsRect& aRect, PRInt32 aIndex, nsIFrame* aFrame);
-    void InsertAt(const nsRect& aRect, PRInt32 aIndex, const nsVoidArray* aFramesList);
-    void RemoveAt(PRInt32 aIndex);
-
-    // Clear the list of rectangles
-    void Clear();
-
-    // Returns the y-most of the bottom band
-    nscoord YMost() const;
-
-  public:
-    // Access to the underlying storage
-    BandRect*   mRects;  // y-x banded array of rectangles of unavailable space
-    PRInt32     mCount;  // current number of rects
-    PRInt32     mMax;    // capacity of rect array
-  };
-
-  nsIFrame* const mFrame;      // frame associated with the space manager
-  nscoord         mX, mY;      // translation from local to global coordinate space
-  RectArray       mRectArray;  // y-x banded array of rectangles of unavailable space
-  RectArray       mEmptyRects; // list of empty rects
+  nsIFrame* const mFrame;     // frame associated with the space manager
+  nscoord         mX, mY;     // translation from local to global coordinate space
+  PRCListStr      mBandList;
+  PLHashTable*    mFrameInfoMap;
 
 protected:
-  PRBool  GetNextBand(BandRect*& aRect, PRInt32& aIndex) const;
-  PRInt32 LengthOfBand(const BandRect* aBand, PRInt32 aIndex) const;
-  PRBool  CoalesceBand(BandRect* aBand, PRInt32 aIndex);
-  void    DivideBand(BandRect* aBand, PRInt32 aIndex, nscoord aB1Height);
-  void    AddRectToBand(BandRect* aBand, PRInt32 aIndex,
-                        const nsRect& aRect, nsIFrame* aFrame);
-  PRInt32 GetBandAvailableSpace(const BandRect* aBand,
-                                PRInt32         aIndex,
-                                nscoord         aY,
-                                const nsSize&   aMaxSize,
-                                nsBandData&     aAvailableSpace) const;
+  FrameInfo* GetFrameInfoFor(nsIFrame* aFrame);
+  FrameInfo* CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect);
+  void       DestroyFrameInfo(FrameInfo*);
+
+  void       ClearFrameInfo();
+  void       ClearBandRects();
+
+  BandRect*  GetNextBand(const BandRect* aBandRect) const;
+  void       DivideBand(BandRect* aBand, nscoord aBottom);
+  void       AddRectToBand(BandRect* aBand, BandRect* aBandRect);
+  void       InsertBandRect(BandRect* aBandRect);
+
+  PRInt32    GetBandAvailableSpace(const BandRect* aBand,
+                                   nscoord         aY,
+                                   const nsSize&   aMaxSize,
+                                   nsBandData&     aAvailableSpace) const;
 
 private:
 	SpaceManager(const SpaceManager&);    // no implementation
 	void operator=(const SpaceManager&);  // no implementation
+  friend PR_CALLBACK PRIntn NS_RemoveFrameInfoEntries(PLHashEntry*, PRIntn, void*);
 };
 
 #endif /* nsSpaceManager_h___ */
