@@ -28,6 +28,20 @@ Rights Reserved.
 <!ENTITY prefColumnHeader.tooltip "Click to sort"> 
 <!ENTITY columnChooser.tooltip "Click to select columns to display"> 
 
-
-
-
+<!--Context Menu-->
+<!ENTITY copyName.label "Copy Name">
+<!ENTITY copyName.accesskey "C">
+<!ENTITY copyValue.label "Copy Value">
+<!ENTITY copyValue.accesskey "V">
+<!ENTITY modify.label "Modify">
+<!ENTITY modify.accesskey "M">
+<!ENTITY reset.label "Reset">
+<!ENTITY reset.accesskey "R">
+<!ENTITY new.label "New">
+<!ENTITY new.accesskey "N">
+<!ENTITY string.label "String">
+<!ENTITY string.accesskey "S">
+<!ENTITY integer.label "Integer">
+<!ENTITY integer.accesskey "I">
+<!ENTITY boolean.label "Boolean">
+<!ENTITY boolean.accesskey "B">

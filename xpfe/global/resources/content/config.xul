@@ -24,6 +24,7 @@ Rights Reserved.
 Contributors:
 Chip Clark <chipc@netscape.com>
 Seth Spitzer <sspitzer@netscape.com>
+Neil Rashbrook <neil@parkwaycc.co.uk>
 -->
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/config.dtd">
@@ -32,34 +33,47 @@ Seth Spitzer <sspitzer@netscape.com>
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         width="750"
         height="500"
+        onunload="onConfigUnload();"
         onload="onConfigLoad();">
 
 <script src="chrome://global/content/config.js"/>
 
-<tree id="configTree" flex="1" onclick="ConfigOnClick(event);" class="plain">
+<popup id="configContext" onpopupshowing="return updateContextMenu(this);">
+  <menuitem label="&copyName.label;" accesskey="&copyName.accesskey;" oncommand="copyName();"/>
+  <menuitem label="&copyValue.label;" accesskey="&copyValue.accesskey;" oncommand="copyValue();"/>
+  <menu label="&new.label;" accesskey="&new.accesskey;">
+    <menupopup>
+      <menuitem label="&string.label;" accesskey="&string.accesskey;" oncommand="NewPref(nsIPrefBranch.PREF_STRING);"/>
+      <menuitem label="&integer.label;" accesskey="&integer.accesskey;" oncommand="NewPref(nsIPrefBranch.PREF_INT);"/>
+      <menuitem label="&boolean.label;" accesskey="&boolean.accesskey;" oncommand="NewPref(nsIPrefBranch.PREF_BOOL);"/>
+    </menupopup>
+  </menu>
+  <menuitem label="&modify.label;" accesskey="&modify.accesskey;" oncommand="ModifySelected();"/>
+  <menuitem label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
+</popup>
+
+<tree id="configTree" flex="1" class="plain" seltype="single"
+      enableColumnDrag="true" context="configContext">
   <treecols>
-    <treecol id="indexCol" label="&idxColumn.label;" flex="1"
-        class="sortDirectionIndicator"
-        persist="hidden width sortActive sortDirection"/>
-    <splitter class="tree-splitter" />
     <treecol id="prefCol" label="&prefColumn.label;" flex="7"
         class="sortDirectionIndicator"
-        persist="hidden width sortActive sortDirection"/>
+        ignoreincolumnpicker="true"
+        persist="hidden width ordinal sortDirection"/>
     <splitter class="tree-splitter" />
-    <treecol id="lockCol" label="&lockColumn.label;"  flex="1"
+    <treecol id="lockCol" label="&lockColumn.label;" flex="1"
         class="sortDirectionIndicator"
-        persist="hidden width sortActive sortDirection"/>
+        persist="hidden width ordinal sortDirection"/>
     <splitter class="tree-splitter" />
-    <treecol id="typeCol" label="&typeColumn.label;"  flex="1"
+    <treecol id="typeCol" label="&typeColumn.label;" flex="1"
         class="sortDirectionIndicator"
-        persist="hidden width sortActive sortDirection"/>
+        persist="hidden width ordinal sortDirection"/>
     <splitter class="tree-splitter" />
     <treecol id="valueCol" label="&valueColumn.label;" flex="10"
         class="sortDirectionIndicator"
-        persist="hidden width sortActive sortDirection"/>
+        persist="hidden width ordinal sortDirection"/>
   </treecols>
 
-  <treechildren id="configTreeBody"/>
+  <treechildren id="configTreeBody" ondblclick="if (event.button == 0) ModifySelected();"/>
 </tree>
 </window>
 
