@@ -21,7 +21,6 @@
 #include "nscore.h"
 #include "celldata.h"
 #include "nsVoidArray.h"
-#include "stdio.h" // XXX look at this when bug 10911 get fixed
 class nsTableColFrame;
 class nsTableCellFrame;
 
@@ -164,7 +163,8 @@ inline CellData* nsCellMap::GetCellAt(PRInt32 aRowIndex,
 {
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount) || 
       (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
-    printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
+    //bug 9024 tickled this
+    //printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
     return nsnull;
   }
   
@@ -180,7 +180,8 @@ inline CellData* nsCellMap::GetMapCellAt(PRInt32 aMapRowIndex,
 {
   if ((0 > aMapRowIndex) || (aMapRowIndex >= mRows.Count()) || 
       (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
-    printf("%s \n", "nsCellMap::GetMapCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
+    //see bug 9024 comments above 
+    //printf("%s \n", "nsCellMap::GetMapCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
     return nsnull;
   }
 
@@ -196,7 +197,8 @@ inline nsTableCellFrame* nsCellMap::GetCellFrameAt(PRInt32 aRowIndex,
 {
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount) || 
       (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
-    printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
+    //see bug 9024 comments above 
+    //printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
     return nsnull;
   }
 
