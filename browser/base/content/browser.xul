@@ -665,6 +665,8 @@ Contributor(s):
         <menu id="bookmarks-menu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:BookmarksRoot" flags="dont-test-empty"
+              onpopupshowing="document.getElementById('bookmarks-toolbar').showOpenInTabsMenuItem(event.originalTarget)"
+              onpopupshidden="document.getElementById('bookmarks-toolbar').hideOpenInTabsMenuItem(event.originalTarget)"
               oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.originalTarget, this.database)"
               onclick="BookmarksUtils.loadBookmarkBrowserMiddleClick(event, this.database)"
               ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
@@ -705,12 +707,6 @@ Contributor(s):
                           label="rdf:http://home.netscape.com/NC-rdf#Name" 
                           image="rdf:http://home.netscape.com/NC-rdf#Icon"
                           status="rdf:http://home.netscape.com/WEB-rdf#status"/>
-                <vbox>
-                  <menuseparator/>
-                  <menuitem class="menuitem-iconic groupmark-item"
-                            label="&openInTabs.label;" accesskey="&openInTabs.accesskey;"
-                            oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.parentNode.parentNode.parentNode, this.database); event.preventBubble();"/>
-                </vbox>
               </menupopup>
             </rule>
           </template>

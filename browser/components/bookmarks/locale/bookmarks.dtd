@@ -98,8 +98,6 @@
 
 <!-- bookmarksToolbar.xml -->
 <!ENTITY emptyItem.label "(Empty)">
-<!ENTITY openInTabs.label "Open in Tabs">
-<!ENTITY openInTabs.accesskey "O">
 
 <!-- selectBookmark.xul -->
 <!ENTITY selectBookmark.title      "Select a bookmark...">
