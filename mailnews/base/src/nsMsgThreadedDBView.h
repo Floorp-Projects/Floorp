@@ -53,6 +53,7 @@ protected:
   virtual void OnHeaderAddedOrDeleted();
 	void			ClearPrevIdArray();
   virtual nsresult RemoveByIndex(nsMsgViewIndex index);
+  nsMsgViewIndex GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex threadIndex, PRInt32 targetLevel);
 
   // these are used to save off the previous view so that bopping back and forth
   // between two views is quick (e.g., threaded and flat sorted by date).

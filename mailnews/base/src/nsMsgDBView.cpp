@@ -1096,6 +1096,14 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
 
 NS_IMETHODIMP nsMsgDBView::Close()
 {
+  if (mOutliner) 
+    mOutliner->RowCountChanged(0, -GetSize());
+  // this is important, because the outliner will ask us for our
+  // row count, which get determine from the number of keys.
+  m_keys.RemoveAll();
+  // be consistent
+  m_flags.RemoveAll();
+  m_levels.RemoveAll();
   if (m_db)
   {
   	m_db->RemoveListener(this);
@@ -2778,7 +2786,7 @@ nsMsgViewIndex nsMsgDBView::GetIndexForThread(nsIMsgDBHdr *hdr)
 		// and put new header before found header, or at end.
 		for (PRInt32 i = GetSize() - 1; i >= 0; i--) 
 		{
-			if (m_levels[i])
+			if (m_levels[i] == 0)
 			{
 				if (insertKey < m_keys.GetAt(i))
 					prevInsertIndex = i;
@@ -3043,7 +3051,7 @@ PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex start
     return m_levels[parentIndex] + 1;
   else
   {
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
     NS_ASSERTION(PR_FALSE, "couldn't find parent of msg");
 #endif
     return 1; // well, return level 1.

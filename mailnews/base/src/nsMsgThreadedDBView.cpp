@@ -294,8 +294,8 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
 
 				numListed++;
 			}
-      else
-        NS_ASSERTION(NS_SUCCEEDED(rv) && msgHdr, "couldn't get header for some reason");
+//      else
+//        NS_ASSERTION(NS_SUCCEEDED(rv) && msgHdr, "couldn't get header for some reason");
 		}
 		else if (threadsRemoved < 10 && !(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED)))
 		{
@@ -438,8 +438,7 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 				PRUint32	flags = m_flags[threadIndex];
 				// if we have a collapsed thread which just got a new
 				// top of thread, change the keys array.
-                nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
-                PRInt32 level = FindLevelInThread(msgHdr, insertIndex);
+        PRInt32 level = FindLevelInThread(msgHdr, threadIndex);
 				if ((flags & MSG_FLAG_ELIDED)
 					&& (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) || !(msgFlags & MSG_FLAG_READ)))
 				{
@@ -463,6 +462,7 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 				{								// insert child into thread
 					                            // levels of other hdrs may have changed!
 					PRUint32	newFlags = msgFlags;
+					nsMsgViewIndex insertIndex = GetInsertInfoForNewHdr(msgHdr, threadIndex, level);
 					// this header is the new king! try collapsing the existing thread,
 					// removing it, installing this header as king, and expanding it.
 					if (level == 0)	
@@ -495,6 +495,28 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 	else
 		rv = NS_MSG_MESSAGE_NOT_FOUND;
 	return rv;
+}
+
+nsMsgViewIndex nsMsgThreadedDBView::GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex threadIndex, PRInt32 targetLevel)
+{
+  nsMsgKey threadParent;
+  newHdr->GetThreadParent(&threadParent);
+  nsMsgViewIndex parentIndex = m_keys.FindIndex(threadParent, threadIndex);
+  PRInt32 viewSize = GetSize();
+  nsMsgViewIndex insertIndex = parentIndex + 1;
+  if (parentIndex != nsMsgViewIndex_None)
+  {
+    PRInt32 parentLevel = m_levels[parentIndex];
+    NS_ASSERTION(targetLevel == parentLevel + 1, "levels are screwed up");
+    while ((PRInt32) insertIndex < viewSize)
+    {
+      // loop until we find a message at a level less than or equal to the parent level
+      if (m_levels[insertIndex] <= parentLevel)
+        break;
+      insertIndex++;
+    }
+  }
+  return insertIndex;
 }
 
 nsresult nsMsgThreadedDBView::AddMsgToThreadNotInView(nsIMsgThread *threadHdr, nsIMsgDBHdr *msgHdr, PRBool ensureListed)
