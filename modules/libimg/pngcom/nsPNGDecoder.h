@@ -37,6 +37,8 @@ public:
  
   NS_DECL_ISUPPORTS
 
+  static NS_METHOD Create(nsISupports *aOuter, const nsIID &aIID, void **aResult);
+
   /* stream */
   NS_IMETHOD ImgDInit();
 

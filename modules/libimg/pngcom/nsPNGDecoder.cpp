@@ -42,7 +42,35 @@ PNGDecoder::~PNGDecoder(void)
 {
 };
 
-NS_IMPL_ISUPPORTS(PNGDecoder, NS_GET_IID(nsIImgDecoder))
+
+NS_IMPL_ISUPPORTS1(PNGDecoder, nsIImgDecoder)
+
+NS_METHOD
+PNGDecoder::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  if (aOuter) return NS_ERROR_NO_AGGREGATION;
+
+  il_container *ic = new il_container();
+  if (!ic) return NS_ERROR_OUT_OF_MEMORY;
+
+  PNGDecoder *decoder = new PNGDecoder(ic);
+  if (!decoder) {
+    delete ic;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(decoder);
+  rv = decoder->QueryInterface(aIID, aResult);
+  NS_RELEASE(decoder);
+
+
+  /* why are we creating and destroying this object for no reason? */
+  delete ic; /* is a place holder */
+
+  return rv;
+}
+
 
 /*----------------------------------------------------*/
 // api functions
