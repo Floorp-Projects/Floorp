@@ -277,11 +277,25 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   [mContainerPane editColumn:0 row:index withEvent:nil select:YES];
 }
 
--(IBAction) addSeparator:(id)aSender;
+-(IBAction)addSeparator:(id)aSender;
 {
   Bookmark *aBookmark = [[Bookmark alloc] init];
   [aBookmark setIsSeparator:YES];
-  [[[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder] insertChild:aBookmark];
+  BookmarkFolder *parentFolder = nil;
+  unsigned index = 0;
+  if ([mItemPane numberOfSelectedRows] == 1){
+    int row = [mItemPane selectedRow];
+    BookmarkItem *item = [mItemPane itemAtRow:row];
+    if ([item respondsToSelector:@selector(parent)]) {
+      parentFolder = [item parent];
+      index = [parentFolder indexOfObject:item] + 1;
+    }
+  }
+  if (!parentFolder) {
+    parentFolder = [self activeCollection];
+    index = [parentFolder count];
+  }
+  [parentFolder insertChild:aBookmark atIndex:index isMove:NO];  
 }
 
 -(void)addItem:(id)aSender isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
@@ -289,8 +303,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   // We ALWAYS use the selected item to determine the parent.
   BookmarkFolder *parentFolder = nil;
   BookmarkItem* item = nil;
-  if ([mItemPane numberOfSelectedRows] == 1)
-  {
+  if ([mItemPane numberOfSelectedRows] == 1) {
     // There is only one selected row.  If it is a folder, use it as our parent.
     // Otherwise, use selected row's parent.
     int index = [mItemPane selectedRow];
@@ -807,7 +820,12 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void) selectContainer:(int)inRowIndex
 {
   [mContainerPane selectRow:inRowIndex byExtendingSelection:NO];
-  [mAddSeparatorButton setEnabled:(inRowIndex == kBookmarkMenuContainerIndex)];
+  BookmarkFolder *activeCollection = [mRootBookmarks objectAtIndex:inRowIndex];
+  BOOL enableSeparator = YES;
+  if ([activeCollection isRoot] || [activeCollection isSmartFolder]) {
+    enableSeparator = NO;
+  }
+  [mAddSeparatorButton setEnabled:enableSeparator];
   if (inRowIndex == kHistoryContainerIndex) {
     [mItemPane setDataSource:mHistorySource];
     [mItemPane setDelegate:mHistorySource];
@@ -820,7 +838,6 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   else {
     [mItemPane setDataSource:self];
     [mItemPane setDelegate:self];
-    BookmarkFolder *activeCollection = [mRootBookmarks objectAtIndex:inRowIndex];
     [self setActiveCollection:activeCollection];
     [self restoreFolderExpandedStates];
     [mItemPane setTarget:self];

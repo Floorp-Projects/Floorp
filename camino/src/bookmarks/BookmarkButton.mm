@@ -101,22 +101,25 @@
   [aItem retain];
   [mItem release];
   mItem = aItem;
-  [self setTitle:[aItem title]];
-  [self setImage:[aItem icon]];
-  [self setTarget:self];
-  if ([aItem isKindOfClass:[Bookmark class]])
-  {
+
+  if ([aItem isKindOfClass:[Bookmark class]]) {
+    if ([(Bookmark *)aItem isSeparator]) {
+      [self setTitle:nil];
+      return;
+    }
     [self setAction:@selector(openBookmark:)];
     [self setToolTip:[(Bookmark *)aItem url]];
   }
-  else
-  {
+  else {
     [[self cell] setClickHoldTimeout:0.5];
     if ([(BookmarkFolder *)aItem isGroup])
       [self setAction:@selector(openBookmark:)];
     else 
       [self setAction:@selector(showFolderPopupAction:)];
   }
+  [self setTitle:[aItem title]];
+  [self setImage:[aItem icon]];
+  [self setTarget:self];
 }
 
 - (void)bookmarkChanged:(BOOL*)outNeedsReflow

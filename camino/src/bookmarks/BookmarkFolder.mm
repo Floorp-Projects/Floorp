@@ -483,11 +483,7 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   } else if ([aChild isKindOfClass:[Bookmark class]]){
     if ([aNewParent isRoot])
       return;
-    if ((isSeparator = [(Bookmark *)aChild isSeparator])) {
-      BookmarkFolder *menuFolder = [[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder];
-      if ((aNewParent != menuFolder) && (![aNewParent isChildOfItem: menuFolder]))
-        return;
-    }
+    isSeparator = [(Bookmark *)aChild isSeparator];
   }
   [undoManager beginUndoGrouping];
   // What we do depends on if we're moving into a new folder, or just

@@ -149,11 +149,12 @@ static const int kBMBarScanningStep = 5;
   if ([mButtons count] == count)
     return;
 
-  for (unsigned int i = 0; i < count; i ++)
-  {
+  for (unsigned int i = 0; i < count; i++) {
     BookmarkButton* button = [self makeNewButtonWithItem:[toolbar objectAtIndex:i]];
-    [self addSubview: button];
-    [mButtons addObject: button];
+    if (button) {
+      [self addSubview:button];
+      [mButtons addObject:button];
+    }
   }
   if ([self isShown])
     [self reflowButtons];
@@ -174,6 +175,8 @@ static const int kBMBarScanningStep = 5;
 -(void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex
 {
   BookmarkButton* button = [self makeNewButtonWithItem:aItem];
+  if (!button)
+    return;
   [self addSubview: button];
   [mButtons insertObject: button atIndex: aIndex];
   if ([self isShown])
@@ -202,11 +205,9 @@ static const int kBMBarScanningStep = 5;
 -(void)removeButton:(BookmarkItem*)aItem
 {
   int count = [mButtons count];
-  for (int i = 0; i < count; i++)
-  {
+  for (int i = 0; i < count; i++) {
     BookmarkButton* button = [mButtons objectAtIndex: i];
-    if ([button bookmarkItem] == aItem)
-    {
+    if ([button bookmarkItem] == aItem) {
       [mButtons removeObjectAtIndex: i];
       [button removeFromSuperview];
       if (count > i && [self isShown])
@@ -242,19 +243,19 @@ static const int kBMBarScanningStep = 5;
   float curRowYOrigin = kBookmarkToolbarTopPadding;
   float curX          = kBookmarkButtonHorizPadding;
 
-  for (int i = 0; i < count; i ++)
-  {
-    BookmarkButton* button = [mButtons objectAtIndex: i];
-    NSRect           buttonRect;
-
-    if (i < aIndex)
-    {
+  for (int i = 0; i < count; i++) {
+    BookmarkButton* button = [mButtons objectAtIndex:i];
+    BookmarkItem *item = [button bookmarkItem];
+    NSRect buttonRect;
+    if ([item isKindOfClass:[Bookmark class]] && [(Bookmark *)item isSeparator]){
+      continue;
+    }
+    else if (i < aIndex) {
       buttonRect = [button frame];
       curRowYOrigin = NSMinY(buttonRect) - kBookmarkButtonVerticalPadding;
       curX = NSMaxX(buttonRect) + kBookmarkButtonHorizPadding;
     }
-    else
-    {
+    else {
       [button sizeToFit];
       float width = [button frame].size.width;
 
@@ -264,8 +265,7 @@ static const int kBMBarScanningStep = 5;
       buttonRect = NSMakeRect(curX, curRowYOrigin + kBookmarkButtonVerticalPadding, width, kBookmarkButtonHeight);
       curX += NSWidth(buttonRect) + kBookmarkButtonHorizPadding;
 
-      if (NSMaxX(buttonRect) > NSWidth([self bounds]))
-      {
+      if (NSMaxX(buttonRect) > NSWidth([self bounds])) {
         // jump to the next line
         curX = kBookmarkButtonHorizPadding;
         curRowYOrigin += (kBookmarkButtonHeight + 2 * kBookmarkButtonVerticalPadding);
@@ -280,8 +280,7 @@ static const int kBMBarScanningStep = 5;
   float computedHeight = curRowYOrigin + (kBookmarkButtonHeight + 2 * kBookmarkButtonVerticalPadding + kBookmarkToolbarBottomPadding);
 
   // our size has changed, readjust our view's frame and the content area
-  if (computedHeight != oldHeight)
-  {
+  if (computedHeight != oldHeight) {
     [super setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
                                 [self frame].size.width, computedHeight)];
 

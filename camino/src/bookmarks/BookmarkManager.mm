@@ -398,10 +398,6 @@ static unsigned gFirstUserCollection = 0;
     } else if ([aBookmark isKindOfClass:[Bookmark class]]) {
       if (parent == [self rootBookmarks])
         return NO;
-      BookmarkFolder *menuFolder = [self bookmarkMenuFolder];
-      if ([aBookmark isSeparator] &&
-          ((![parent isChildOfItem:menuFolder]) && (parent != menuFolder)))
-        return NO;
     }
     if ([parent isChildOfItem:aBookmark])
       return NO;
