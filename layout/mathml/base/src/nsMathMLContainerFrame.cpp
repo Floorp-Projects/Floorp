@@ -1559,57 +1559,51 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsIPresContext*      aPresContext,
   mParent->GetContent(getter_AddRefs(parentContent));
   parentContent->GetTag(*getter_AddRefs(parentTag));
   if (parentTag.get() == nsMathMLAtoms::math) {
-    nscoord gap = 0;
-    nscoord leftCorrection, italicCorrection;
-    if (mNextSibling) {
+    nsIFrame* childFrame;
+    mParent->FirstChild(aPresContext, nsnull, &childFrame);
+    nsFrameList frameList(childFrame);
+    nsIFrame* prevSibling = frameList.GetPrevSiblingFor(this);
+    nscoord gap = 0, leftCorrection, italicCorrection;
+    if (prevSibling) {
       nsIMathMLFrame* mathMLFrame;
-      nsresult res = mNextSibling->QueryInterface(
+      nsresult res = prevSibling->QueryInterface(
         NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
       if (NS_SUCCEEDED(res) && mathMLFrame) {
-         // get thinspace
-         nsCOMPtr<nsIStyleContext> parentContext;
-         mParent->GetStyleContext(getter_AddRefs(parentContext));
-         const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-           parentContext->GetStyleData(eStyleStruct_Font));
-         nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
-         // add inter frame spacing to our width
-         nsCOMPtr<nsIAtom> frameType;
-         GetFrameType(getter_AddRefs(frameType));
-         nsCOMPtr<nsIAtom> nextFrameType;
-         mNextSibling->GetFrameType(getter_AddRefs(nextFrameType));
-         nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
-           frameType, nextFrameType);
-         gap += space * thinSpace;
-         // look ahead and also add the left italic correction of the next frame
-         nsBoundingMetrics bmNext;
-         mathMLFrame->GetBoundingMetrics(bmNext);
-         GetItalicCorrection(bmNext, leftCorrection, italicCorrection);
-         gap += leftCorrection;
+        // get thinspace
+        nsCOMPtr<nsIStyleContext> parentContext;
+        mParent->GetStyleContext(getter_AddRefs(parentContext));
+        const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+          parentContext->GetStyleData(eStyleStruct_Font));
+        nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
+        // add inter frame spacing to our width
+        nsCOMPtr<nsIAtom> frameType;
+        GetFrameType(getter_AddRefs(frameType));
+        nsCOMPtr<nsIAtom> prevFrameType;
+        prevSibling->GetFrameType(getter_AddRefs(prevFrameType));
+        nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
+          prevFrameType, frameType);
+        gap += space * thinSpace;
       }
     }
     // add our own italic correction
     GetItalicCorrection(mBoundingMetrics, leftCorrection, italicCorrection);
-    gap += italicCorrection;
-    // see if we should shift our own children to account for the left correction
-    // only shift if we are the first child of <math> - the look-ahead fixes the rest
-    if (leftCorrection) {
-      nsIFrame* childFrame;
-      mParent->FirstChild(aPresContext, nsnull, &childFrame);
-      if (this == childFrame) {
-        gap += leftCorrection;
-        childFrame = mFrames.FirstChild();
-        while (childFrame) {
-          nsPoint origin;
-          childFrame->GetOrigin(origin);
-          childFrame->MoveTo(aPresContext, origin.x + leftCorrection, origin.y);
-          childFrame->GetNextSibling(&childFrame);
-        }
-        mBoundingMetrics.leftBearing += leftCorrection;
-        mBoundingMetrics.rightBearing += leftCorrection;
-        mBoundingMetrics.width += leftCorrection;
+    gap += leftCorrection;
+    // see if we should shift our children to account for the correction
+    if (gap) {
+      childFrame = mFrames.FirstChild();
+      while (childFrame) {
+        nsPoint origin;
+        childFrame->GetOrigin(origin);
+        childFrame->MoveTo(aPresContext, origin.x + gap, origin.y);
+        childFrame->GetNextSibling(&childFrame);
       }
+      mBoundingMetrics.leftBearing += gap;
+      mBoundingMetrics.rightBearing += gap;
+      mBoundingMetrics.width += gap;
+      aDesiredSize.width += gap;
     }
-    aDesiredSize.width += gap;
+    mBoundingMetrics.width += italicCorrection;
+    aDesiredSize.width += italicCorrection;
   }
   return NS_OK;
 }
