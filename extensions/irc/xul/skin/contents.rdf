@@ -18,4 +18,17 @@
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+
+  <RDF:Seq about="urn:mozilla:stylesheets">
+    <RDF:li resource="chrome://browser/content/browser.xul"/>
+    <RDF:li resource="chrome://global/content/customizeToolbar.xul"/>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://browser/content/browser.xul">
+    <RDF:li>chrome://chatzilla/skin/browserOverlay.css</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://global/content/customizeToolbar.xul">
+    <RDF:li>chrome://chatzilla/skin/browserOverlay.css</RDF:li>
+  </RDF:Seq>
 </RDF:RDF>
