@@ -439,9 +439,9 @@ nsHTMLFrameSetElement::ParseRowColSpec(nsString&       aSpec,
   static const PRUnichar sPercent('%');
   static const PRUnichar sComma(',');
 
-  // remove whitespace (Bug 33699)
+  // remove whitespace (Bug 33699) and quotation marks (bug 224598)
   // also remove leading/trailing commas (bug 31482)
-  aSpec.StripChars(" \n\r\t");
+  aSpec.StripChars(" \n\r\t\"\'");
   aSpec.Trim(",");
   
   // Count the commas 
