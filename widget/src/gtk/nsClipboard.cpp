@@ -514,6 +514,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 #ifdef DEBUG_CLIPBOARD
     g_print("        Error retrieving selection: length was %d\n", aSD->length);
 #endif
+    mSelectionData.length = aSD->length;
     return;
   }
 
