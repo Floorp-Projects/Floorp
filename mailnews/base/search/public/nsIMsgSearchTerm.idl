@@ -31,7 +31,7 @@ interface nsIMsgSearchScopeTerm;
 
 native nsCStringRef(nsCString&);
 
-[script, uuid(678dc5b8-56f2-40ec-8fd6-0742e8cc6269)]
+[scriptable, uuid(52db94d7-71c8-46c9-9692-91ff880a8cb7)]
 interface nsIMsgSearchTerm : nsISupports {
     readonly attribute nsMsgSearchAttribValue attrib;
     readonly attribute nsMsgSearchOpValue op;
