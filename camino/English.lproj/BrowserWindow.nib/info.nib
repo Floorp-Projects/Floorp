@@ -38,8 +38,10 @@
 	<key>IBLastGroupID</key>
 	<string>4</string>
 	<key>IBLockedObjects</key>
+	<array/>
+	<key>IBOpenObjects</key>
 	<array>
-		<integer>497</integer>
+		<integer>10</integer>
 	</array>
 	<key>IBSystem Version</key>
 	<string>5S66</string>
