@@ -389,10 +389,10 @@ nsMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
     return NS_ERROR_NULL_POINTER;
 
   mEnv = aEnv;
-  mEnv->AddStrongRef(mEnv);
+  NS_ADDREF(mEnv);
 
   mTable = aTable;
-  mTable->AddStrongRef(mEnv);
+  NS_ADDREF(mTable);
 
   mdb_err err;
   err = mTable->GetTableRowCursor(mEnv, -1, &mCursor);
@@ -404,17 +404,13 @@ nsMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
 
 nsMdbTableEnumerator::~nsMdbTableEnumerator()
 {
-  if (mCurrent)
-    mCurrent->CutStrongRef(mEnv);
+  NS_IF_RELEASE(mCurrent);
 
-  if (mCursor)
-    mCursor->CutStrongRef(mEnv);
+  NS_IF_RELEASE(mCursor);
 
-  if (mTable)
-    mTable->CutStrongRef(mEnv);
+  NS_IF_RELEASE(mTable);
 
-  if (mEnv)
-    mEnv->CutStrongRef(mEnv);
+  NS_IF_RELEASE(mEnv);
 }
 
 
@@ -441,7 +437,7 @@ nsMdbTableEnumerator::HasMoreElements(PRBool* _result)
 
       // Otherwise, drop the ref to the row we retrieved, and continue
       // on to the next one.
-      mCurrent->CutStrongRef(mEnv);
+      NS_RELEASE(mCurrent);
       mCurrent = nsnull;
     }
   }
@@ -465,7 +461,7 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 
   rv = ConvertToISupports(mCurrent, _result);
 
-  mCurrent->CutStrongRef(mEnv);
+  NS_RELEASE(mCurrent);
   mCurrent = nsnull;
 
   return rv;
@@ -600,8 +596,8 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
   rv = gRDFService->GetDateLiteral(aDate, getter_AddRefs(date));
   if (NS_FAILED(rv)) return rv;
 
-  nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
+  nsCOMPtr<nsIMdbRow> row;
+  rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
 
   if (NS_SUCCEEDED(rv)) {
 
@@ -637,7 +633,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     
   }
   else {
-    rv = AddNewPageToDatabase(aURL, aDate, getter_Acquires(row));
+    rv = AddNewPageToDatabase(aURL, aDate, getter_AddRefs(row));
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddNewPageToDatabase failed; see bug 88961");
     if (NS_FAILED(rv)) return rv;
     
@@ -697,8 +693,8 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   if (! mTable)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsMdbPtr<nsIMdbRow> row(mEnv);
-  err = mTable->NewRow(mEnv, &rowId, getter_Acquires(row));
+  nsCOMPtr<nsIMdbRow> row;
+  err = mTable->NewRow(mEnv, &rowId, getter_AddRefs(row));
   if (err != 0) return NS_ERROR_FAILURE;
 
   // Set the URL
@@ -716,7 +712,7 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   SetRowValue(row, kToken_HostnameColumn, hostname);
 
   *aResult = row;
-  (*aResult)->AddStrongRef(mEnv);
+  NS_ADDREF(*aResult);
 
   return NS_OK;
 }
@@ -892,8 +888,8 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
   if (! aTitle)
     aTitle = kEmptyString;
 
-  nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
+  nsCOMPtr<nsIMdbRow> row;
+  rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
   if (NS_FAILED(rv))
     return rv;
 
@@ -938,8 +934,8 @@ nsGlobalHistory::RemovePage(const char *aURL)
 
   if (!mTable) return NS_ERROR_NOT_INITIALIZED;
   // find the old row, ignore it if we don't have it
-  nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
+  nsCOMPtr<nsIMdbRow> row;
+  rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
   if (NS_FAILED(rv)) return NS_OK;
 
   // get the resource so we can do the notification
@@ -1044,8 +1040,8 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   nsCOMPtr<nsIRDFResource> resource;
   // XXX from here until end batch, no early returns!
   for (mdb_pos pos = count - 1; pos >= 0; --pos) {
-    nsMdbPtr<nsIMdbRow> row(mEnv);
-    err = mTable->PosToRow(mEnv, pos, getter_Acquires(row));
+    nsCOMPtr<nsIMdbRow> row;
+    err = mTable->PosToRow(mEnv, pos, getter_AddRefs(row));
     NS_ASSERTION(err == 0, "unable to get row");
     if (err != 0)
       break;
@@ -1112,8 +1108,8 @@ nsGlobalHistory::IsVisited(const char *aURL, PRBool *_retval)
   nsresult rv;
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_NOT_INITIALIZED);
 
-  nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
+  nsCOMPtr<nsIMdbRow> row;
+  rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
 
   if (NS_FAILED(rv))
     *_retval = PR_FALSE;
@@ -1163,9 +1159,9 @@ nsGlobalHistory::HidePage(const char *aURL)
 {
   nsresult rv;
   
-  nsMdbPtr<nsIMdbRow> row(mEnv);
+  nsCOMPtr<nsIMdbRow> row;
 
-  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
+  rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
 
   if (NS_FAILED(rv)) {
     // it hasn't been visited yet, but if one ever comes in, we need
@@ -1173,7 +1169,7 @@ nsGlobalHistory::HidePage(const char *aURL)
     rv = AddPage(aURL);
     if (NS_FAILED(rv)) return rv;
     
-    rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
+    rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -1477,8 +1473,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     }
     // ok, we got this far, so we have to retrieve something from
     // the row in the database
-    nsMdbPtr<nsIMdbRow> row(mEnv);
-    rv = FindRow(kToken_URLColumn, uri, getter_Acquires(row));
+    nsCOMPtr<nsIMdbRow> row;
+    rv = FindRow(kToken_URLColumn, uri, getter_AddRefs(row));
     if (NS_FAILED(rv)) return NS_RDF_NO_VALUE;
 
     mdb_err err;
@@ -1826,8 +1822,8 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
     searchQuery query;
     FindUrlToSearchQuery(uri, query);
     
-    nsMdbPtr<nsIMdbRow> row(mEnv);
-    rv = FindRow(kToken_URLColumn, uri, getter_Acquires(row));
+    nsCOMPtr<nsIMdbRow> row;
+    rv = FindRow(kToken_URLColumn, uri, getter_AddRefs(row));
     // not even in history. don't bother trying
     if (NS_FAILED(rv)) {
       *aHasAssertion = PR_FALSE;
@@ -2234,9 +2230,9 @@ nsGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *filePath)
 
   nsIMdbHeap* dbHeap = 0;
   mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
-  nsMdbPtr<nsIMdbFile> oldFile(mEnv); // ensures file is released
+  nsCOMPtr<nsIMdbFile> oldFile; // ensures file is released
   err = factory->OpenOldFile(mEnv, dbHeap, filePath,
-                             dbFrozen, getter_Acquires(oldFile));
+                             dbFrozen, getter_AddRefs(oldFile));
 
   // don't assert, the file might just not be there
   if ((err !=0) || !oldFile) return NS_ERROR_FAILURE;
@@ -2267,8 +2263,7 @@ nsGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *filePath)
     err = factory->ThumbToOpenStore(mEnv, thumb, &mStore);
   }
 
-  thumb->CutStrongRef(mEnv);
-  thumb = nsnull;
+  NS_IF_RELEASE(thumb);
 
   if (err != 0) return NS_ERROR_FAILURE;
 
@@ -2297,9 +2292,9 @@ nsGlobalHistory::OpenNewFile(nsIMdbFactory *factory, const char *filePath)
   mdb_err err;
   
   nsIMdbHeap* dbHeap = 0;
-  nsMdbPtr<nsIMdbFile> newFile(mEnv); // ensures file is released
+  nsCOMPtr<nsIMdbFile> newFile; // ensures file is released
   err = factory->CreateNewFile(mEnv, dbHeap, filePath,
-                               getter_Acquires(newFile));
+                               getter_AddRefs(newFile));
 
   if ((err != 0) || !newFile) return NS_ERROR_FAILURE;
   
@@ -2317,8 +2312,8 @@ nsGlobalHistory::OpenNewFile(nsIMdbFactory *factory, const char *filePath)
   if (!mTable) return NS_ERROR_FAILURE;
 
   // Force a commit now to get it written out.
-  nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-  err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
+  nsCOMPtr<nsIMdbThumb> thumb;
+  err = mStore->LargeCommit(mEnv, getter_AddRefs(thumb));
   if (err != 0) return NS_ERROR_FAILURE;
 
   mdb_count total;
@@ -2380,10 +2375,10 @@ nsGlobalHistory::CheckHostnameEntries()
 
   mdb_err err;
 
-  nsMdbPtr<nsIMdbTableRowCursor> cursor(mEnv);
-  nsMdbPtr<nsIMdbRow> row(mEnv);
+  nsCOMPtr<nsIMdbTableRowCursor> cursor;
+  nsCOMPtr<nsIMdbRow> row;
 
-  err = mTable->GetTableRowCursor(mEnv, -1, getter_Acquires(cursor));
+  err = mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(cursor));
   if (err != 0) return NS_ERROR_FAILURE;
 
   int marker;
@@ -2392,7 +2387,7 @@ nsGlobalHistory::CheckHostnameEntries()
   if (err != 0) return NS_ERROR_FAILURE;
   
   mdb_pos pos;
-  err = cursor->NextRow(mEnv, getter_Acquires(row), &pos);
+  err = cursor->NextRow(mEnv, getter_AddRefs(row), &pos);
   if (err != 0) return NS_ERROR_FAILURE;
 
   // comment out this code to rebuild the hostlist at startup
@@ -2434,7 +2429,7 @@ nsGlobalHistory::CheckHostnameEntries()
     if (NS_SUCCEEDED(rv))
       SetRowValue(row, kToken_NameColumn, title.get());
 #endif
-    cursor->NextRow(mEnv, getter_Acquires(row), &pos);
+    cursor->NextRow(mEnv, getter_AddRefs(row), &pos);
   }
 
   // Finish the batch.
@@ -2492,7 +2487,7 @@ nsresult nsGlobalHistory::Commit(eCommitType commitType)
     return NS_OK;
 
   nsresult	err = NS_OK;
-  nsMdbPtr<nsIMdbThumb> thumb(mEnv);
+  nsCOMPtr<nsIMdbThumb> thumb;
 
   if (commitType == kLargeCommit || commitType == kSessionCommit)
   {
@@ -2536,13 +2531,13 @@ nsresult nsGlobalHistory::Commit(eCommitType commitType)
   switch (commitType)
   {
   case kLargeCommit:
-    err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
+    err = mStore->LargeCommit(mEnv, getter_AddRefs(thumb));
     break;
   case kSessionCommit:
-    err = mStore->SessionCommit(mEnv, getter_Acquires(thumb));
+    err = mStore->SessionCommit(mEnv, getter_AddRefs(thumb));
     break;
   case kCompressCommit:
-    err = mStore->CompressCommit(mEnv, getter_Acquires(thumb));
+    err = mStore->CompressCommit(mEnv, getter_AddRefs(thumb));
     break;
   }
   if (err == 0) {
@@ -2590,13 +2585,13 @@ nsGlobalHistory::CloseDB()
   err = Commit(kSessionCommit);
 
   if (mTable)
-    mTable->CutStrongRef(mEnv);
+    mTable->Release();
 
   if (mStore)
-    mStore->CutStrongRef(mEnv);
+    mStore->Release();
 
   if (mEnv)
-    mEnv->CloseMdbObject(mEnv /* XXX */);
+    mEnv->Release();
 
   mTable = nsnull; mEnv = nsnull; mStore = nsnull;
 
@@ -2612,10 +2607,10 @@ nsGlobalHistory::FindRow(mdb_column aCol,
   mdbYarn yarn = { (void*) aValue, len, len, 0, 0, nsnull };
 
   mdbOid rowId;
-  nsMdbPtr<nsIMdbRow> row(mEnv);
+  nsCOMPtr<nsIMdbRow> row;
   err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
                         aCol, &yarn,
-                        &rowId, getter_Acquires(row));
+                        &rowId, getter_AddRefs(row));
 
 
   if (!row) return NS_ERROR_NOT_AVAILABLE;
@@ -2628,7 +2623,7 @@ nsGlobalHistory::FindRow(mdb_column aCol,
   if (!hasRow) return NS_ERROR_NOT_AVAILABLE;
   
   *aResult = row;
-  (*aResult)->AddStrongRef(mEnv);
+  (*aResult)->AddRef();
   
   return NS_OK;
 }
@@ -2642,8 +2637,8 @@ nsGlobalHistory::IsURLInHistory(nsIRDFResource* aResource)
   rv = aResource->GetValueConst(&url);
   if (NS_FAILED(rv)) return PR_FALSE;
 
-  nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindRow(kToken_URLColumn, url, getter_Acquires(row));
+  nsCOMPtr<nsIMdbRow> row;
+  rv = FindRow(kToken_URLColumn, url, getter_AddRefs(row));
 
   return (NS_SUCCEEDED(rv)) ? PR_TRUE : PR_FALSE;
 }
