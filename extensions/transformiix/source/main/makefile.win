@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
+include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE = EXE
 PROGRAM = ..\..\transformiix.exe
