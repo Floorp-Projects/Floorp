@@ -57,8 +57,6 @@ use vars qw($db_name
 
 if (length($::buffer) == 0) {
     print "Refresh: 10; URL=query.cgi\n";
-    print "Content-Type: text/html\n\n";
-    $vars->{'header_done'} = 1;
     ThrowUserError("buglist_parameters_required");
 }    
 
