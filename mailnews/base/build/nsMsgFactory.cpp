@@ -43,14 +43,12 @@
 #include "nsMsgAccount.h"
 #include "nsMsgAccountManager.h"
 #include "nsMsgIdentity.h"
+#include "nsMsgIncomingServer.h"
 #include "nsMessageViewDataSource.h"
 #include "nsMsgFolderDataSource.h"
 #include "nsMsgMessageDataSource.h"
 
 #include "nsMsgAccountManagerDS.h"
-#include "nsMsgAccountDataSource.h"
-#include "nsMsgServerDataSource.h"
-#include "nsMsgIdentityDataSource.h"
 
 #include "nsMsgBiffManager.h"
 #include "nsMsgNotificationManager.h"
@@ -85,12 +83,10 @@ static NS_DEFINE_CID(kCMessageViewDataSourceCID, NS_MESSAGEVIEWDATASOURCE_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
+static NS_DEFINE_CID(kMsgIncomingServerCID, NS_MSGINCOMINGSERVER_CID);
 
 // account manager RDF stuff
 static NS_DEFINE_CID(kMsgAccountManagerDataSourceCID, NS_MSGACCOUNTMANAGERDATASOURCE_CID);
-static NS_DEFINE_CID(kMsgAccountDataSourceCID, NS_MSGACCOUNTDATASOURCE_CID);
-static NS_DEFINE_CID(kMsgIdentityDataSourceCID, NS_MSGIDENTITYDATASOURCE_CID);
-static NS_DEFINE_CID(kMsgServerDataSourceCID, NS_MSGSERVERDATASOURCE_CID);
 
 // search and filter stuff
 static NS_DEFINE_CID(kMsgSearchSessionCID, NS_MSGSEARCHSESSION_CID);
@@ -185,7 +181,7 @@ NS_IMPL_ADDREF(nsMsgFactory)
 NS_IMPL_RELEASE(nsMsgFactory)
 
 nsresult
-nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
+nsMsgFactory::CreateInstance(nsISupports * aOuter,
                              const nsIID &aIID,
                              void **aResult)  
 {
@@ -250,6 +246,16 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
         delete identity;
     }
   }
+  else if (mClassID.Equals(kMsgIncomingServerCID)) {
+    nsMsgIncomingServer *server = new nsMsgIncomingServer();
+    if (!server)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    else {
+      rv = server->QueryInterface(aIID, aResult);
+      if (NS_FAILED(rv))
+        delete server;
+    }
+  }
 	else if (mClassID.Equals(kMailNewsFolderDataSourceCID)) 
 	{
 		rv = NS_NewMsgFolderDataSource(aIID, aResult);
@@ -266,15 +272,6 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
   // account manager RDF datasources
   else if (mClassID.Equals(kMsgAccountManagerDataSourceCID)) {
     rv = NS_NewMsgAccountManagerDataSource(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMsgAccountDataSourceCID)) {
-    rv = NS_NewMsgAccountDataSource(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMsgIdentityDataSourceCID)) {
-    rv = NS_NewMsgIdentityDataSource(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMsgServerDataSourceCID)) {
-    rv = NS_NewMsgServerDataSource(aIID, aResult);
   }
   else if (mClassID.Equals(kMsgFilterServiceCID)) {
     rv = NS_NewMsgFilterService(aIID, aResult);
@@ -307,6 +304,8 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
       rv = NS_NewMsgStatusFeedback(aIID, aResult);
   }
 
+  if (NS_SUCCEEDED(rv))
+    PR_AtomicIncrement(&g_InstanceCount);
   return rv;
 }  
 
@@ -428,6 +427,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
   
+  rv = compMgr->RegisterComponent(kMsgIncomingServerCID,
+                                  "Messenger Incoming Server",
+                                  NS_MSGINCOMINGSERVER_PROGID,
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+  
   rv = compMgr->RegisterComponent(kCMsgMailSessionCID,
                                   "Mail Session",
                                   NS_MSGMAILSESSION_PROGID,
@@ -458,22 +464,6 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->RegisterComponent(kMsgAccountManagerDataSourceCID,
                                   "Mail/News Account Manager Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "msgaccountmanager",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->RegisterComponent(kMsgAccountDataSourceCID,
-                                  "Mail/News Account Data Source",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "msgaccounts",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
- 
-  rv = compMgr->RegisterComponent(kMsgIdentityDataSourceCID,
-                                  "Mail/News Identity Data Source",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "msgidentities",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->RegisterComponent(kMsgServerDataSourceCID,
-                                  "Mail/News Server Data Source",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "msgservers",
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
@@ -551,12 +541,6 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 
   // Account Manager RDF stuff
   rv = compMgr->UnregisterComponent(kMsgAccountManagerDataSourceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kMsgAccountDataSourceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kMsgIdentityDataSourceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kMsgServerDataSourceCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kMsgFilterServiceCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
