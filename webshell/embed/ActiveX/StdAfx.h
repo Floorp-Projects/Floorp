@@ -85,11 +85,9 @@ typedef long int32;
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
-#include "nsXPComCIID.h"
 #include "nsString.h"
 
 #include "nsIURL.h"
