@@ -63,7 +63,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsFileLocations.obj        \
   .\$(OBJDIR)\nsNetSupportDialog.obj        \
      .\$(OBJDIR)\nsWindowMediator.obj        \
-     .\$(OBJDIR)\nsSessionHistory.obj \
     .\$(OBJDIR)\nsDialogParamBlock.obj \
 	.\$(OBJDIR)\nsCommonDialogs.obj \
 	.\$(OBJDIR)\nsAbout.obj \
