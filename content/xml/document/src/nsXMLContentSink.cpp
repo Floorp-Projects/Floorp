@@ -400,8 +400,6 @@ nsXMLContentSink::DidBuildModel()
     }
   }
 
-  mDocument->SetRootContent(mDocElement);
-
   // Check if we want to prettyprint
   MaybePrettyPrint();
 
@@ -492,13 +490,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     // Transform succeeded or it failed and we have an error
     // document to display.
     NS_RELEASE(mDocument);
-    CallQueryInterface(aResultDocument, &mDocument); // addrefs
-  }
-  else
-  {
-    // Transform failed and we don't have an error document, display the
-    // untransformed source document.
-    mDocument->SetRootContent(mDocElement);
+    CallQueryInterface(aResultDocument, &mDocument);
   }
 
   nsCOMPtr<nsIScriptLoader> loader;
@@ -1746,11 +1738,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
       mDocElement = content;
       NS_ADDREF(mDocElement);
 
-      // For XSLT, we need to wait till after the transform
-      // to set the root content object.
-      if (!mXSLTProcessor) {
-        mDocument->SetRootContent(mDocElement);
-      }
+      mDocument->SetRootContent(mDocElement);
     }
     else if (appendContent) {
       nsCOMPtr<nsIContent> parent = GetCurrentContent();
