@@ -97,7 +97,6 @@ med3(char *a, char *b, char *c, cmp_t* cmp, void *data)
               :(cmp(b, c, data) > 0 ? b : (cmp(a, c, data) < 0 ? a : c ));
 }
 
-extern "C"
 void nsQuickSort (
 	void *a,
 	unsigned int n,
