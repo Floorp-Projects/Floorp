@@ -192,19 +192,6 @@ NS_METHOD nsHTMLContainerFrame::ContentAppended(nsIPresShell*   aShell,
   return NS_OK;
 }
 
-NS_METHOD nsHTMLContainerFrame::ContentChanged(nsIPresShell*   aShell,
-                                               nsIPresContext* aPresContext,
-                                               nsIContent*     aContainer,
-                                               nsISupports*    aSubContent)
-{
-  // Generate a reflow command with our geometric parent as the target,
-  // and us as the child frame
-  nsReflowCommand* cmd = new nsReflowCommand(aPresContext, mGeometricParent,
-                                             nsReflowCommand::FrameAppended, this);
-  aShell->AppendReflowCommand(cmd);
-  return NS_OK;
-}
-
 static PRBool
 HasSameMapping(nsIFrame* aFrame, nsIContent* aContent)
 {

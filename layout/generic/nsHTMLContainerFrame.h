@@ -51,11 +51,6 @@ public:
                              nsIContent*     aChild,
                              PRInt32         aIndexInParent);
 
-  NS_IMETHOD  ContentChanged(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent*     aChild,
-                             nsISupports*    aSubContent);
-
 protected:
   virtual ~nsHTMLContainerFrame();
 
