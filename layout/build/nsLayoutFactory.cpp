@@ -227,10 +227,16 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kCRangeListCID)) {
-    res = NS_NewRangeList((nsICollection **)&inst);
+    nsICollection *coll;
+    res = NS_NewRangeList((nsICollection **)&coll);
     if (!NS_SUCCEEDED(res)) {
       return res;
     }
+    res = coll->QueryInterface(kISupportsIID, (void **)&inst);
+    if (!NS_SUCCEEDED(res)) {
+      return res;
+    }
+    NS_IF_RELEASE(coll);
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kCRangeCID)) {
@@ -257,11 +263,6 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kTextNodeCID)) {
     // XXX ibid
     if (NS_FAILED(res = NS_NewTextNode((nsIHTMLContent**) &inst)))
-      return res;
-    refCounted = PR_TRUE;
-  }
-  else if (mClassID.Equals(kSelectionCID)) {
-    if (NS_FAILED(res = NS_NewSelection((nsISelection**) &inst)))
       return res;
     refCounted = PR_TRUE;
   }

@@ -30,11 +30,7 @@ class nsIDocumentContainer;
 class nsIDocumentObserver;
 class nsIPresContext;
 class nsIPresShell;
-#if XP_NEW_SELECTION
 class nsICollection;
-#else
-class nsISelection;
-#endif
 
 class nsIStreamListener;
 class nsIStreamObserver;
@@ -207,11 +203,7 @@ public:
   /**
     * Returns the Selection Object
    */
-#if XP_NEW_SELECTION
   NS_IMETHOD GetSelection(nsICollection ** aSelection) = 0;
-#else
-  NS_IMETHOD GetSelection(nsISelection *& aSelection) = 0;
-#endif
   /**
     * Selects all the Content
    */

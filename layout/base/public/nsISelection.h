@@ -18,9 +18,9 @@
 #ifndef nsISelection_h___
 #define nsISelection_h___
 
-#include "nsSelectionRange.h"
-#include "nslayout.h"
 #include "nsISupports.h"
+#include "nsIFrame.h"
+   
 
 // IID for the nsISelection interface
 #define NS_ISELECTION_IID      \
@@ -33,37 +33,14 @@
 class nsISelection : public nsISupports {
 public:
 
-  /**
-    * Returns whether there is a valid selection
-   */ 
-  virtual PRBool IsValidSelection() = 0;
-
-  /**
-    * Clears the current selection (invalidates the selection)
-   */ 
-  virtual void ClearSelection() = 0;
-
-  /**
-    * Copies the data from the param into the internal Range
-   */ 
-  virtual void SetRange(nsSelectionRange * aRange) = 0;
-
-  /**
-    * Copies the param's (aRange) contents with the Range's data
-   */ 
-  virtual void GetRange(nsSelectionRange * aRange) = 0;
-
-  /**
-    * Copies the param's (aRange) contents with the Range's data
-   */ 
-  virtual nsSelectionRange * GetRange() = 0;
-
-  virtual char * ToString() = 0;
-
+  /** HandleKeyEvent will accept an event and frame and 
+   *  will return NS_OK if it handles the event or NS_COMFALSE if not.
+   *  <P>DOES NOT ADDREF<P>
+   *  @param aGuiEvent is the event that should be dealt with by aFocusFrame
+   *  @param aFrame is the frame that MAY handle the event
+   */
+  virtual nsresult HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame) = 0;
 };
 
-// XXX Belongs somewhere else
-extern NS_LAYOUT nsresult
-   NS_NewSelection(nsISelection** aInstancePtrResult);
 
 #endif /* nsISelection_h___ */
