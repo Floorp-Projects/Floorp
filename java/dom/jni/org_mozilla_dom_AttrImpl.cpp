@@ -139,7 +139,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
     return;
 
   nsresult rv = attr->SetValue(*cstr);
-  nsString::Recycle(cstr);
+  nsMemory::Free(cstr);
 
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 

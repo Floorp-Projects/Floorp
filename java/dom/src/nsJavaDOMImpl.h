@@ -25,23 +25,23 @@ class nsJavaDOMImpl : public nsIJavaDOM {
 				 const char* aCommand);
 
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-			       nsIChannel* channel, 
+			       nsIRequest* request, 
 			       nsresult aStatus);
 
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-			    nsIChannel* channel); 
+			    nsIRequest* channel); 
 
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-			       nsIChannel* channel, 
+			       nsIRequest* request, 
 			       PRUint32 aProgress, 
                                PRUint32 aProgressMax);
 
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-			     nsIChannel* channel, 
+			     nsIRequest* request, 
 			     nsString& aMsg);
 
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-			  nsIChannel* channel, 
+			  nsIRequest* request, 
 			  nsresult aStatus);
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,

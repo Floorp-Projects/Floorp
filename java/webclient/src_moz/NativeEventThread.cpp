@@ -35,6 +35,7 @@
 #include "nsEmbedAPI.h"  // for NS_InitEmbedding
 
 #include "nsIProfile.h" // for the profile manager
+#include "nsIProfileInternal.h" // for the profile manager
 #include "nsICmdLineService.h" // for the cmdline service to give to the
                                // profile manager.
 
@@ -510,24 +511,26 @@ void DoMozInitialization(WebShellInitContext * initContext)
         int i, argc = 0;
         argv[0] = strdup(gBinDir);
         if (numProfiles > 1) {
-            PRUnichar * Names;
-            rv = profile->GetProfileList(&Names);
-            // PENDING(edburns): fix for 70656.  Really we should have a way
-            // for the embedding app to specify which profile to use.  
-            // For now we just get the name of the first profile.
+            PRUnichar **Names;
+            PRUint32 NamesLen = 0;
+            rv = profile->GetProfileList(&NamesLen, &Names);
             argv[1] = strdup("-p");
-            char * temp = new char[100]; // de-allocated in following for loop
-            for (i = 0; i<100; i++) {
-                if ((char) Names[i] != ',')
-                    temp[i] = (char) Names[i];
-                else {
-                    temp[i] = '\0';
-                    break;
+            if (NS_SUCCEEDED(rv)) {
+                PR_ASSERT(NamesLen >= 1);
+                // PENDING(edburns): fix for 70656.  Really we should have a way
+                // for the embedding app to specify which profile to use.  
+                // For now we just get the name of the first profile.
+                char * temp = new char[100]; // de-allocated in following for loop
+                for (i = 0; Names[0][i] != '\0'; i++) {
+                    temp[i] = (char) Names[0][i];
                 }
+                nsMemory::Free(Names);
+                argv[2] = temp;
+                argc = 3;
             }
-            nsCRT::free(Names);
-            argv[2] = temp;
-            argc = 3;
+            else {
+                argv[2] = strdup("default");
+            }    
             printf("debug: edburns: argv[1]: %s argv[2]: %s\n", argv[1],
                    argv[2]);
         }
@@ -542,8 +545,15 @@ void DoMozInitialization(WebShellInitContext * initContext)
             ::util_ThrowExceptionToJava(env, "Can't initialize nsICmdLineService.");
             return;
         }
-        rv = profile->StartupWithArgs(cmdLine);
-        if (NS_FAILED(rv)) {
+        nsCOMPtr<nsIProfileInternal> profileInt = do_QueryInterface(profile);
+        if (profileInt) {
+            rv = profileInt->StartupWithArgs(cmdLine);
+            if (NS_FAILED(rv)) {
+                ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
+                return;
+            }
+        }
+        else {
             ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
             return;
         }

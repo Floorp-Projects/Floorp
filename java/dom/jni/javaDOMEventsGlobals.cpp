@@ -237,7 +237,7 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
 
       clazz = uiEventClass;
     }
-    nsString::Recycle(&eventType);
+    nsMemory::Free(&eventType);
 
     event->Release();
     event = (nsIDOMEvent *) target;

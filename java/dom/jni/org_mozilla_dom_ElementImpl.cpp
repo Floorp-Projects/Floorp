@@ -50,7 +50,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
 
   nsString attr;
   nsresult rv = element->GetAttribute(*cname, attr);  
-  nsString::Recycle(cname);
+  nsMemory::Free(cname);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -90,7 +90,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNode
 
   nsIDOMAttr* attr = nsnull;
   nsresult rv = element->GetAttributeNode(*cname, &attr);  
-  nsString::Recycle(cname);
+  nsMemory::Free(cname);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -140,7 +140,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagName
 
   nsIDOMNodeList* nodes = nsnull;
   nsresult rv = element->GetElementsByTagName(*cname, &nodes);
-  nsString::Recycle(cname);
+  nsMemory::Free(cname);
 
   if (NS_FAILED(rv) || !nodes) {
     JavaDOMGlobals::ThrowException(env,
@@ -245,7 +245,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttribute
     return;
 
   nsresult rv = element->RemoveAttribute(*name);  
-  nsString::Recycle(name);
+  nsMemory::Free(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -336,13 +336,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
 
   nsString* value = JavaDOMGlobals::GetUnicode(env, jvalue);
   if (!value) {
-    nsString::Recycle(name);
+    nsMemory::Free(name);
     return;
   }
 
   nsresult rv = element->SetAttribute(*name, *value);
-  nsString::Recycle(value);
-  nsString::Recycle(name);
+  nsMemory::Free(value);
+  nsMemory::Free(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -438,14 +438,14 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNS
 
   nsString* localName = JavaDOMGlobals::GetUnicode(env, jlocalName);
   if (!localName) {
-      nsString::Recycle(namespaceURI);
+      nsMemory::Free(namespaceURI);
       return NULL;
   }
 
   nsString ret;
   nsresult rv = element->GetAttributeNS(*namespaceURI, *localName, ret);
-  nsString::Recycle(namespaceURI);
-  nsString::Recycle(localName);
+  nsMemory::Free(namespaceURI);
+  nsMemory::Free(localName);
 
   if (NS_FAILED(rv)) {
       JavaDOMGlobals::ThrowException(env,
@@ -484,21 +484,21 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNS
 
   nsString* qualifiedName = JavaDOMGlobals::GetUnicode(env, jqualifiedName);
   if (!qualifiedName) {
-      nsString::Recycle(namespaceURI);
+      nsMemory::Free(namespaceURI);
       return;
   }
 
   nsString* value = JavaDOMGlobals::GetUnicode(env, jvalue);
   if (!value) {
-      nsString::Recycle(namespaceURI);
-      nsString::Recycle(qualifiedName);
+      nsMemory::Free(namespaceURI);
+      nsMemory::Free(qualifiedName);
       return;
   }
 
   nsresult rv = element->SetAttributeNS(*namespaceURI, *qualifiedName, *value);
-  nsString::Recycle(namespaceURI);
-  nsString::Recycle(qualifiedName);
-  nsString::Recycle(value);
+  nsMemory::Free(namespaceURI);
+  nsMemory::Free(qualifiedName);
+  nsMemory::Free(value);
 
   if (NS_FAILED(rv)) {
       JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -535,13 +535,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNS
 
   nsString* localName = JavaDOMGlobals::GetUnicode(env, jlocalName);
   if (!localName) {
-      nsString::Recycle(namespaceURI);
+      nsMemory::Free(namespaceURI);
       return;
   }
 
   nsresult rv = element->RemoveAttributeNS(*namespaceURI, *localName);
-  nsString::Recycle(namespaceURI);
-  nsString::Recycle(localName);
+  nsMemory::Free(namespaceURI);
+  nsMemory::Free(localName);
 
   if (NS_FAILED(rv)) {
       JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -575,14 +575,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNodeNS
 
   nsString* localName = JavaDOMGlobals::GetUnicode(env, jlocalName);
   if (!localName) {
-      nsString::Recycle(namespaceURI);
+      nsMemory::Free(namespaceURI);
       return NULL;
   }
 
   nsIDOMAttr* attr = nsnull;
   nsresult rv = element->GetAttributeNodeNS(*namespaceURI, *localName, &attr);
-  nsString::Recycle(namespaceURI);
-  nsString::Recycle(localName);
+  nsMemory::Free(namespaceURI);
+  nsMemory::Free(localName);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -662,14 +662,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagNameN
 
   nsString* localName = JavaDOMGlobals::GetUnicode(env, jlocalName);
   if (!localName) {
-      nsString::Recycle(namespaceURI);
+      nsMemory::Free(namespaceURI);
       return NULL;
   }
 
   nsIDOMNodeList* nodes = nsnull;
   nsresult rv = element->GetElementsByTagNameNS(*namespaceURI, *localName, &nodes);
-  nsString::Recycle(namespaceURI);
-  nsString::Recycle(localName);
+  nsMemory::Free(namespaceURI);
+  nsMemory::Free(localName);
 
   if (NS_FAILED(rv) || !nodes) {
     JavaDOMGlobals::ThrowException(env,
@@ -717,7 +717,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_hasAttribute
 
   PRBool hasAttr = PR_FALSE;
   nsresult rv = element->HasAttribute(*name, &hasAttr);
-  nsString::Recycle(name);
+  nsMemory::Free(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -751,14 +751,14 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_hasAttributeNS
 
   nsString* localName = JavaDOMGlobals::GetUnicode(env, jlocalName);
   if (!localName) {
-      nsString::Recycle(namespaceURI);
+      nsMemory::Free(namespaceURI);
       return JNI_FALSE;
   }
 
   PRBool hasAttr = PR_FALSE;
   nsresult rv = element->HasAttributeNS(*namespaceURI, *localName, &hasAttr);
-  nsString::Recycle(namespaceURI);
-  nsString::Recycle(localName);
+  nsMemory::Free(namespaceURI);
+  nsMemory::Free(localName);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,

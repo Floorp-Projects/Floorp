@@ -157,7 +157,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
   if (jversion) {
       version = JavaDOMGlobals::GetUnicode(env, jversion);
       if (!version) {
-	  nsString::Recycle(feature);
+	  nsMemory::Free(feature);
 	  return JNI_FALSE;
       }
   } else {
@@ -166,8 +166,8 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
 
   PRBool ret = PR_FALSE;
   nsresult rv = dom->HasFeature(*feature, *version, &ret);
-  nsString::Recycle(feature);
-  nsString::Recycle(version);
+  nsMemory::Free(feature);
+  nsMemory::Free(version);
 
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
@@ -199,22 +199,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocum
 
   nsString* publicID = JavaDOMGlobals::GetUnicode(env, jpublicID);
   if (!publicID) {
-      nsString::Recycle(qualifiedName);
+      nsMemory::Free(qualifiedName);
       return NULL;
   }
 
   nsString* systemID = JavaDOMGlobals::GetUnicode(env, jsystemID);
   if (!systemID) {
-      nsString::Recycle(qualifiedName);
-      nsString::Recycle(publicID);
+      nsMemory::Free(qualifiedName);
+      nsMemory::Free(publicID);
       return NULL;
   }
 
   nsIDOMDocumentType* docType = nsnull;
   nsresult rv = dom->CreateDocumentType(*qualifiedName, *publicID, *systemID, &docType);
-  nsString::Recycle(qualifiedName);
-  nsString::Recycle(publicID);
-  nsString::Recycle(systemID);
+  nsMemory::Free(qualifiedName);
+  nsMemory::Free(publicID);
+  nsMemory::Free(systemID);
 
   if (NS_FAILED(rv)) {
       JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -253,7 +253,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocum
 
   nsString* qualifiedName = JavaDOMGlobals::GetUnicode(env, jqualifiedName);
   if (!qualifiedName) {
-      nsString::Recycle(namespaceURI);
+      nsMemory::Free(namespaceURI);
       return NULL;
   }
 
@@ -270,8 +270,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocum
 
   nsIDOMDocument* doc = nsnull;
   nsresult rv = dom->CreateDocument(*namespaceURI, *qualifiedName, docType, &doc);
-  nsString::Recycle(namespaceURI);
-  nsString::Recycle(qualifiedName);
+  nsMemory::Free(namespaceURI);
+  nsMemory::Free(qualifiedName);
 
   if (NS_FAILED(rv)) {
       JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;

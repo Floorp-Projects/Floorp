@@ -827,7 +827,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
     return;
 
   nsresult rv = node->SetNodeValue(*value);
-  nsString::Recycle(value);
+  nsMemory::Free(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -876,7 +876,7 @@ JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
     
     nsresult rv = target->AddEventListener(*type, listener, useCapture);
     target->Release();
-    nsString::Recycle(type);
+    nsMemory::Free(type);
 
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
@@ -923,7 +923,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
     nsresult rv = target->RemoveEventListener(*type, 
 			      (nsIDOMEventListener*) jlistener, useCapture);
     target->Release();
-    nsString::Recycle(type);
+    nsMemory::Free(type);
 
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,        
@@ -956,7 +956,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_supports
   if (jversion) {
       version = JavaDOMGlobals::GetUnicode(env, jversion);
       if (!version) {
-	  nsString::Recycle(feature);
+	  nsMemory::Free(feature);
 	  return JNI_FALSE;
       }
   } else {
@@ -965,8 +965,8 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_supports
 
   PRBool ret = PR_FALSE;
   nsresult rv = node->IsSupported(*feature, *version, &ret);
-  nsString::Recycle(feature);
-  nsString::Recycle(version);
+  nsMemory::Free(feature);
+  nsMemory::Free(version);
 
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
@@ -1065,7 +1065,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setPrefix
     return;
 
   nsresult rv = node->SetPrefix(*prefix);
-  nsString::Recycle(prefix);
+  nsMemory::Free(prefix);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;

@@ -46,7 +46,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
     return;
 
   nsresult rv = data->AppendData(*value);
-  nsString::Recycle(value);
+  nsMemory::Free(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -182,7 +182,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
     return;
 
   nsresult rv = data->InsertData((PRUint32) offset, *value);
-  nsString::Recycle(value);
+  nsMemory::Free(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -226,7 +226,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
     return;
 
   nsresult rv = data->ReplaceData((PRUint32) offset, (PRUint32) count, *value);
-  nsString::Recycle(value);
+  nsMemory::Free(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -262,7 +262,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
     return;
 
   nsresult rv = data->SetData(*value);
-  nsString::Recycle(value);
+  nsMemory::Free(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;

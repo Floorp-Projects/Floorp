@@ -431,7 +431,7 @@ NS_IMETHODIMP CBrowserContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHan
 
 
 /* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP CBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIChannel *aOpenedChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+NS_IMETHODIMP CBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -480,6 +480,24 @@ NS_IMETHODIMP CBrowserContainer::SetParentContentListener(nsIURIContentListener 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocShellTreeOwner
 
+NS_IMETHODIMP
+CBrowserContainer::SetPersistence(PRBool aPersistPosition, 
+                                  PRBool aPersistSize, PRBool aPersistSizeMode)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CBrowserContainer::GetPersistence(PRBool *aPersistPosition, 
+                                  PRBool *aPersistSize, 
+                                  PRBool *aPersistSizeMode)
+{
+    return NS_ERROR_FAILURE;
+}
+
+
+
+
 
 NS_IMETHODIMP
 CBrowserContainer::FindItemWithName(const PRUnichar* aName,
@@ -515,22 +533,6 @@ CBrowserContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
 	// Ignore request to be resized
 	return NS_OK;
 }
-
-
-NS_IMETHODIMP
-CBrowserContainer::ShowModal()
-{
-	// Ignore request to be shown modally
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-CBrowserContainer::ExitModalLoop(nsresult aStatus)
-{
-	// Ignore request to be shown modally
-	return NS_OK;
-}
-
 
 NS_IMETHODIMP CBrowserContainer::GetNewWindow(PRInt32 aChromeFlags, 
    nsIDocShellTreeItem** aDocShellTreeItem)
@@ -694,6 +696,23 @@ CBrowserContainer::SetTitle(const PRUnichar * aTitle)
 // nsIWebBrowserChrome implementation
 
 NS_IMETHODIMP
+CBrowserContainer::DestroyBrowserWindow()
+{
+    PR_ASSERT(PR_FALSE);
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CBrowserContainer::IsWindowModal(PRBool *retVal)
+{
+    if (!retVal) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *retVal = PR_FALSE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
 CBrowserContainer::SetStatus(PRUint32 statusType, const PRUnichar *status)
 {
 	return NS_ERROR_FAILURE;
@@ -734,13 +753,6 @@ nsIWebBrowser **aWebBrowser)
 }
 
 NS_IMETHODIMP
-CBrowserContainer::FindNamedBrowserItem(const PRUnichar *aName, nsIDocShellTreeItem **_retval)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
 CBrowserContainer::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
 	return NS_ERROR_FAILURE;
@@ -759,26 +771,13 @@ CBrowserContainer::ExitModalEventLoop(nsresult aStatus)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-CBrowserContainer::SetPersistence(PRBool persistX, PRBool persistY, PRBool persistCX, PRBool persistCY, PRBool persistSizeMode)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-CBrowserContainer::GetPersistence(PRBool *persistX, PRBool *persistY, PRBool *persistCX, PRBool *persistCY, PRBool *persistSizeMode)
-{
-    return NS_ERROR_FAILURE;
-}
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver implementation
 
 
 NS_IMETHODIMP
-CBrowserContainer::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
+CBrowserContainer::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
 
 	return NS_OK;
@@ -786,7 +785,7 @@ CBrowserContainer::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 
 
 NS_IMETHODIMP
-CBrowserContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
+CBrowserContainer::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
 {
 	return NS_OK;
 }
@@ -850,7 +849,7 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 
 // we need this to fire the document complete 
 NS_IMETHODIMP
-CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aChannel, nsresult aStatus)
+CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest *aRequest, nsresult aStatus)
 {
     if (nsnull != loader) {
         if (mInitContext->currentDocument = dom_getDocumentFromLoader(loader)){
@@ -890,7 +889,8 @@ CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCha
 
 
 NS_IMETHODIMP
-CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel)
+CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, 
+                                  nsIRequest* aRequest)
 { 
 	//NOTE: This appears to get fired once for each individual item on a page.
     if (!mDocTarget) {
@@ -914,7 +914,10 @@ CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChanne
 
 
 NS_IMETHODIMP
-CBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, PRUint32 aProgress, PRUint32 aProgressMax)
+CBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                                     nsIRequest* aRequest, 
+                                     PRUint32 aProgress, 
+                                     PRUint32 aProgressMax)
 { 
     if (!mDocTarget) {
         return NS_OK;
@@ -939,7 +942,7 @@ CBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aCha
 
 NS_IMETHODIMP
 CBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                   nsIChannel* channel, nsString& aMsg)
+                                   nsIRequest* request, nsString& aMsg)
 { 
 
 	//NOTE: This appears to get fired for each individual item on a page, indicating the status of that item.
@@ -976,7 +979,7 @@ CBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 
 NS_IMETHODIMP
-CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
+CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest* request, nsresult aStatus)
 {
   //NOTE: This appears to get fired once for each individual item on a page.
     if (!mDocTarget) {

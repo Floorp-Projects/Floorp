@@ -48,23 +48,23 @@ class nsIJavaDOM : public nsIDocumentLoaderObserver {
 				 const char* aCommand) = 0;
 
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-			       nsIChannel* channel, 
+			       nsIRequest* request, 
 			       nsresult aStatus) = 0;
 
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-			    nsIChannel* channel) = 0;
+			    nsIRequest* request) = 0;
 
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-			       nsIChannel* channel, 
+			       nsIRequest* request, 
 			       PRUint32 aProgress, 
                                PRUint32 aProgressMax) = 0;
 
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-			     nsIChannel* channel, 
+			     nsIRequest* request, 
 			     nsString& aMsg) = 0;
 
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-			  nsIChannel* channel, 
+			  nsIRequest* request, 
 			  nsresult aStatus) = 0;
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,

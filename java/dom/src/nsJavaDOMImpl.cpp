@@ -274,7 +274,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
-					       nsIChannel* channel, 
+					       nsIRequest* request, 
 					       nsresult aStatus)
 {
   JNIEnv* env = NULL;
@@ -282,6 +282,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
   jstring jURL = env->NewStringUTF(urlSpec);
@@ -298,13 +299,14 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
-					    nsIChannel* channel)
+					    nsIRequest* request)
 {
   JNIEnv* env = NULL;
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
 
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
   jstring jURL = env->NewStringUTF(urlSpec);
@@ -329,7 +331,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
-					       nsIChannel* channel, 
+					       nsIRequest* request, 
 					       PRUint32 aProgress, 
 					       PRUint32 aProgressMax)
 {
@@ -338,6 +340,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
 
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
   jstring jURL = env->NewStringUTF(urlSpec);
@@ -355,14 +358,15 @@ NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader, 
-					     nsIChannel* channel, 
+					     nsIRequest* request, 
 					     nsString& aMsg)
 {
   JNIEnv* env = NULL;
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
 
   char* urlSpec = (char*) "";
-  nsIURI* url = nsnull;
+  nsIURI* url = nsnull; 
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
   jstring jURL = env->NewStringUTF(urlSpec);
@@ -383,7 +387,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader, 
-					  nsIChannel* channel, 
+					  nsIRequest* request, 
 					  nsresult aStatus)
 {
   JNIEnv* env = NULL;
@@ -391,6 +395,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader,
 
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
     url->GetSpec(&urlSpec);
   jstring jURL = env->NewStringUTF(urlSpec);

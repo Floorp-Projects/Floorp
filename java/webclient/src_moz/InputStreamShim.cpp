@@ -68,7 +68,7 @@ InputStreamShim::~InputStreamShim()
 NS_IMETHODIMP_(nsrefcnt) InputStreamShim::AddRef(void)                
 {                                                            
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  
-  NS_ASSERT_OWNINGTHREAD(InputStreamShim);                            
+  // Note that we intentionally don't check for owning thread safety.
   ++mRefCnt;                                                 
   NS_LOG_ADDREF(this, mRefCnt, "InputStreamShim", sizeof(*this));      
   return mRefCnt;                                            
@@ -77,7 +77,7 @@ NS_IMETHODIMP_(nsrefcnt) InputStreamShim::AddRef(void)
 NS_IMETHODIMP_(nsrefcnt) InputStreamShim::Release(void)          
 {                                                            
     NS_PRECONDITION(0 != mRefCnt, "dup release");              
-    NS_ASSERT_OWNINGTHREAD(_class);                            
+    // Note that we intentionally don't check for owning thread safety.
     --mRefCnt;                                                 
     NS_LOG_RELEASE(this, mRefCnt, "InputStreamShim");
     if (mRefCnt == 0) {                                        

@@ -115,7 +115,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_setData
     return;
 
   nsresult rv = pi->SetData(*data);
-  nsString::Recycle(data);
+  nsMemory::Free(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;

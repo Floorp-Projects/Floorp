@@ -362,7 +362,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
 				      (PRUint16)jbuttonArg, 
 				      (PRUint16)jdetailArg);
 
-  nsString::Recycle(cvalue);
+  nsMemory::Free(cvalue);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,

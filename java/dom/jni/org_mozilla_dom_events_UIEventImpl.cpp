@@ -112,7 +112,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_UIEventImpl_initUIEvent
   // REMIND: need to deal with AbstractView
   // NS_IMETHOD    InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)=0;
   nsresult rv = event->InitUIEvent(*cvalue, canBubble, cancelable, NULL, (PRUint32)jdetailArg);
-  nsString::Recycle(cvalue);
+  nsMemory::Free(cvalue);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,

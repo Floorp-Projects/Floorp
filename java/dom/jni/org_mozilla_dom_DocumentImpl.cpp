@@ -66,7 +66,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
     return NULL;
 
   nsresult rv = doc->CreateAttribute(*name, &ret);  
-  nsString::Recycle(name);
+  nsMemory::Free(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -119,7 +119,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
     return NULL;
 
   nsresult rv = doc->CreateCDATASection(*data, &ret);
-  nsString::Recycle(data);
+  nsMemory::Free(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -171,7 +171,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
     return NULL;
 
   nsresult rv = doc->CreateComment(*data, &ret);  
-  nsString::Recycle(data);
+  nsMemory::Free(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -260,7 +260,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
   if (!tagName)
       return NULL;
   nsresult rv = doc->CreateElement(*tagName, &ret); 
-  nsString::Recycle(tagName);
+  nsMemory::Free(tagName);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -313,7 +313,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
     return NULL;
 
   nsresult rv = doc->CreateEntityReference(*name, &ret);  
-  nsString::Recycle(name);
+  nsMemory::Free(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -369,13 +369,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
 
   nsString* data = JavaDOMGlobals::GetUnicode(env, jdata);
   if (!data) {
-    nsString::Recycle(target);
+    nsMemory::Free(target);
     return NULL;
   }
 
   nsresult rv = doc->CreateProcessingInstruction(*target, *data, &ret);
-  nsString::Recycle(target);
-  nsString::Recycle(data);
+  nsMemory::Free(target);
+  nsMemory::Free(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -429,7 +429,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
     return NULL;
 
   nsresult rv = doc->CreateTextNode(*data, &ret);  
-  nsString::Recycle(data);
+  nsMemory::Free(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -560,7 +560,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
     return NULL;
 
   nsresult rv = doc->GetElementsByTagName(*tagName, &elements);  
-  nsString::Recycle(tagName);
+  nsMemory::Free(tagName);
 
   if (NS_FAILED(rv) || !elements) {
     JavaDOMGlobals::ThrowException(env,
@@ -658,7 +658,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEvent
 
   nsIDOMEvent* event = nsnull;
   nsresult rv = docEvent->CreateEvent(*type, &event);
-  nsString::Recycle(type);
+  nsMemory::Free(type);
 
   if (NS_FAILED(rv) || !event) {
     JavaDOMGlobals::ThrowException(env,
@@ -691,15 +691,15 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
 
   nsString* localName = JavaDOMGlobals::GetUnicode(env, jlocalName);
   if (!localName) {
-    nsString::Recycle(namespaceURI);
+    nsMemory::Free(namespaceURI);
     return NULL;
   }
 
   nsIDOMNodeList* elements = nsnull;
 
   nsresult rv = doc->GetElementsByTagNameNS(*namespaceURI, *localName, &elements);  
-  nsString::Recycle(namespaceURI);
-  nsString::Recycle(localName);
+  nsMemory::Free(namespaceURI);
+  nsMemory::Free(localName);
 
   if (NS_FAILED(rv) || !elements) {
     JavaDOMGlobals::ThrowException(env,
@@ -747,7 +747,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementById
 
   nsIDOMElement* element = nsnull;
   nsresult rv = doc->GetElementById(*elementId, &element);  
-  nsString::Recycle(elementId);
+  nsMemory::Free(elementId);
 
   if (NS_FAILED(rv) || !element) {
     JavaDOMGlobals::ThrowException(env,

@@ -76,7 +76,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
     return NULL;
 
   nsresult rv = map->GetNamedItem(*name, &node);
-  nsString::Recycle(name);
+  nsMemory::Free(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -146,7 +146,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
     return NULL;
 
   nsresult rv = map->RemoveNamedItem(*name, &node);
-  nsString::Recycle(name);
+  nsMemory::Free(name);
 
   if (NS_FAILED(rv) || !node) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;

@@ -77,7 +77,6 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS = \
 	$(DIST)\lib\baseembed_s.lib \
-	$(DIST)\lib\appfilelocprovider_s.lib \
 	$(DIST)\lib\raptorbasewidget_s.lib \
 	$(DIST)\lib\gkwidget.lib \
 	$(DIST)\lib\xpcom.lib \

@@ -324,7 +324,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
   PRBool cancelable = jcancelableArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
   nsresult rv = event->InitEvent(*cvalue, canBubble, cancelable);
-  nsString::Recycle(cvalue);
+  nsMemory::Free(cvalue);
 
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
