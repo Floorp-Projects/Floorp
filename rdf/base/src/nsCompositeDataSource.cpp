@@ -210,7 +210,7 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
 
     // Otherwise, we'll need to find a next target, switching cursors
     // if necessary.
-    while (mNext < mCompositeDataSource->mDataSources.Count()) {
+    for ( ; mNext < mCompositeDataSource->mDataSources.Count(); ++mNext) {
         if (! mCurrent) {
             // We don't have a current enumerator, so create a new one on
             // the next data source.
@@ -219,6 +219,10 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
 
             rv = GetEnumerator(datasource, &mCurrent);
             if (NS_FAILED(rv)) return rv;
+
+            NS_ASSERTION(mCurrent != nsnull, "you're always supposed to return an enumerator from GetEnumerator, punk.");
+            if (! mCurrent)
+                continue;
         }
 
         do {
@@ -308,8 +312,6 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
 
             return NS_OK;
         } while (1);
-
-        ++mNext;
     }
 
     // if we get here, there aren't any elements left.
