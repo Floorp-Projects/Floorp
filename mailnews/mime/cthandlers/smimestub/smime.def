@@ -17,6 +17,6 @@
 ;
 ; Contributor(s): 
 
-LIBRARY smime.dll
+LIBRARY smimestb.dll
 
 EXPORTS	
