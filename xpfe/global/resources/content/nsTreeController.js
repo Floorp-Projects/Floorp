@@ -50,11 +50,6 @@ var bmTypeRes = RDF.GetResource(NC_NS + "Bookmark");
 // this is a hack for now - just assume containment
 var containment = RDF.GetResource(NC_NS + "child");
 
-function debug(foo)
-{
-    //    dump(foo);
-}
-
 function isContainer(node)
 {
     return node.getAttribute("container") == "true";
@@ -110,7 +105,6 @@ function nsTreeController_copy(tree)
         
         var theName = nameNode.Value;
 
-        debug("Node " + nodeIndex + ": " + ID + "    name: " + theName + "\n");
         url += "ID:{" + ID + "};";
         url += "NAME:{" + theName + "};";
 
@@ -135,7 +129,6 @@ function nsTreeController_copy(tree)
     }
 
     if (url == "") return false;
-    debug("Copy URL: " + url + "\n");
 
     // get some useful components
     var trans = Components.classes[nsTransferable_contractid].createInstance(nsITransferable);
@@ -168,9 +161,7 @@ function nsTreeController_paste(tree)
     var datasource = tree.database;
     
     var pasteNodeID = select_list[0].id;
-    debug("Paste onto " + pasteNodeID + "\n");
     var isContainerFlag = isContainer(select_list[0]);
-    debug("Container status: " + isContainerFlag + "\n");
 
 
     var trans_uri = "@mozilla.org/widget/transferable;1";
@@ -214,15 +205,11 @@ function nsTreeController_paste(tree)
     }
     RDFC.Init(datasource, pasteContainerRes);
 
-    debug("Inited RDFC\n");
-
     if (isContainerFlag == false)
     {
         pasteNodeIndex = RDFC.IndexOf(pasteNodeRes);
         if (pasteNodeIndex < 0) return false; // how did that happen?
     }
-
-    debug("Loop over strings\n");
 
     var dirty = false;
     for (var x=0; x<strings.length; x=x+2)
@@ -237,15 +224,12 @@ function nsTreeController_paste(tree)
         
         theID = theID.substr(4, theID.length-5);
         theName = theName.substr(6, theName.length-7);
-        debug("Paste  ID: " + theID + "    NAME: " + theName + "\n");
         
         var IDRes = RDF.GetResource(theID);
         if (!IDRes) continue;
         
         if (RDFC.IndexOf(IDRes) > 0)
         {
-            debug("Unable to add ID:'" + theID +
-                  "' as its already in this folder.\n");
             continue;
         }
         
@@ -261,12 +245,10 @@ function nsTreeController_paste(tree)
         if (isContainerFlag == true)
         {
             RDFC.AppendElement(IDRes);
-            debug("Appended node onto end of container\n");
         }
         else
         {
             RDFC.InsertElementAt(IDRes, pasteNodeIndex++, true);
-            debug("Pasted at index # " + pasteNodeIndex + "\n");
         }
         dirty = true;
 
@@ -276,7 +258,6 @@ function nsTreeController_paste(tree)
         {
             // set default bookmark type
             datasource.Assert(IDRes, typeRes, bmTypeRes, true);
-            debug("Setting default bookmark type\n");
         }
     }
     
@@ -286,7 +267,6 @@ function nsTreeController_paste(tree)
         if (remote)
         {
             remote.Flush();
-            debug("Wrote out bookmark changes.\n");
         }
     }
     return true;
@@ -303,8 +283,6 @@ function nsTreeController_delete(tree)
     if (select_list.length < 1) return false;
     
     var datasource = tree.database;
-
-    debug("# of Nodes selected: " + select_list.length);
 
     if (promptFlag == true)
     {
@@ -344,9 +322,6 @@ function nsTreeController_delete(tree)
             parentID = node.parentNode.parentNode.id;
         if (!parentID) continue;
 
-        debug("Node " + nodeIndex + ": " + ID);
-        debug("Parent Node " + nodeIndex + ": " + parentID);
-
         var IDRes = RDF.GetResource(ID);
         if (!IDRes) continue;
         var parentIDRes = RDF.GetResource(parentID);
@@ -369,7 +344,6 @@ function nsTreeController_delete(tree)
         try {
             var remote = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
             remote.Flush();
-            debug("Wrote out bookmark changes.");
         } catch (ex) {
         }
     }
@@ -459,7 +433,6 @@ nsTreeController.prototype =
             case "cmd_selectAll":
                 return this.getTree().selectAll();
         }
-        dump("How did I get here?\n");
         return false;
     },
     copy: nsTreeController_copy,
