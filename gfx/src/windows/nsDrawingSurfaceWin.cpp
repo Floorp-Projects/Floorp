@@ -265,6 +265,8 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Lock(PRInt32 aX, PRInt32 aY,
       }
       else
       {
+        if (!(aFlags & NS_LOCK_SURFACE_WRITE_ONLY))
+          ::GdiFlush();
         mLockedBitmap = mSelectedBitmap;
         mBitmap.bmBits = mDIBits + mBitmap.bmWidthBytes * aY;
       }
