@@ -59,6 +59,8 @@ class nsIThread : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHREAD_IID);
 
+    static NS_BASE nsresult GetCurrent(nsIThread* *result);
+
     NS_IMETHOD Join() = 0;
 
     NS_IMETHOD GetPriority(PRThreadPriority *result) = 0;
@@ -70,6 +72,7 @@ public:
     NS_IMETHOD GetType(PRThreadType *result) = 0;
     NS_IMETHOD GetState(PRThreadState *result) = 0;
 
+    NS_IMETHOD GetPRThread(PRThread* *result) = 0;
 };
 
 extern NS_BASE nsresult
@@ -103,6 +106,10 @@ public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHREADPOOL_IID);
 
     NS_IMETHOD DispatchRequest(nsIRunnable* runnable) = 0;
+
+    NS_IMETHOD Join() = 0;
+
+    NS_IMETHOD Interrupt() = 0;
 };
 
 extern NS_BASE nsresult
