@@ -27,17 +27,6 @@ VPATH		= @srcdir@
 
 CORE_DEPTH=$(topsrcdir)/security
 
-include $(CORE_DEPTH)/coreconf/arch.mk
-ifeq (,$(filter-out NetBSD,$(OS_TARGET)))
-include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
-else
-include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
-endif
-include $(CORE_DEPTH)/coreconf/prefix.mk
-CPU_TAG = _$(CPU_ARCH)
-LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
-CORECONF_OBJDIR=$(OBJDIR_NAME)
-
 include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_DEBUG
@@ -46,14 +35,24 @@ BUILD_OPT=1
 OBJDIR_TAG=_OPT
 endif
 
+include $(CORE_DEPTH)/coreconf/arch.mk
+ifeq (,$(filter-out NetBSD,$(OS_TARGET)))
+include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
+else
+include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
+endif
+include $(CORE_DEPTH)/coreconf/prefix.mk
+CPU_TAG := _$(CPU_ARCH)
+LOADABLE_ROOT_MODULE := $(DLL_PREFIX)nssckbi.$(DLL_SUFFIX)
+CORECONF_OBJDIR:=$(OBJDIR_NAME)
+
+include $(DEPTH)/config/autoconf.mk
+
 DEFAULT_GMAKE_FLAGS = -f Makefile $(OPT_GMAKE_FLAGS)
+DEFAULT_GMAKE_FLAGS += SOURCE_MDHEADERS_DIR=$(MOZ_BUILD_ROOT)/dist/include/nspr
+DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 
 CORECONF_INSTALL     = $(DIST)/$(CORECONF_OBJDIR)
-CORECONF_DIST        = $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR)
-DEFAULT_GMAKE_FLAGS += DIST=$(CORECONF_DIST)
-DEFAULT_GMAKE_FLAGS += SOURCE_LIB_DIR=$(CORECONF_DIST)/lib
-DEFAULT_GMAKE_FLAGS += SOURCE_BIN_DIR=$(CORECONF_DIST)/bin
-DEFAULT_GMAKE_FLAGS += SOURCE_XP_DIR=$(CORECONF_DIST)
 
 SUBMAKEFILES = ssl/Makefile pki/Makefile
 
@@ -76,10 +75,9 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 endif
 	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
 	cd $(MOZ_BUILD_ROOT)/security/nss; $(MAKE) $(DEFAULT_GMAKE_FLAGS) moz_import
+	cd $(MOZ_BUILD_ROOT)/security/nss; $(INSTALL) $(DIST)/include $(DIST)/public/dbm
 	cd $(MOZ_BUILD_ROOT)/security/nss/lib; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
-	$(INSTALL) -m 644 $(CORECONF_INSTALL)/public $(DIST)
-	$(INSTALL) -m 644 $(CORECONF_INSTALL)/private $(DIST)
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
