@@ -80,6 +80,9 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Reload(PRInt32 aType);
 #endif
     NS_IMETHOD    Stop();
+	  NS_IMETHOD    BackButtonPopup();
+	  NS_IMETHOD    ForwardButtonPopup();
+	  NS_IMETHOD    GotoHistoryIndex(PRInt32 aIndex);
 
     NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm);
     NS_IMETHOD    SignonViewer(nsIDOMWindow* aWin);
@@ -209,6 +212,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     void InitializeSearch(nsIFindComponent*);
     void BeginObserving();
     void EndObserving();
+    NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
 
     nsIScriptContext   *mToolbarScriptContext;			// weak reference
     nsIScriptContext   *mContentScriptContext;			// weak reference
