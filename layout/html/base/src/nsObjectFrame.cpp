@@ -2275,6 +2275,7 @@ NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDragListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPluginInstanceOwner)
 NS_INTERFACE_MAP_END
 
@@ -3769,79 +3770,33 @@ nsPluginInstanceOwner::Destroy()
     NS_RELEASE(mCXMenuListener);
   }
 
-  // Unregister focus event listener
-  if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMFocusListener> focusListener;
-      QueryInterface(NS_GET_IID(nsIDOMFocusListener), getter_AddRefs(focusListener));
-      if (focusListener) { 
-        receiver->RemoveEventListenerByIID(focusListener, NS_GET_IID(nsIDOMFocusListener));
-      }
-      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
-    }
-    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
-  }
-  else NS_ASSERTION(PR_FALSE, "plugin had no content");
-  
-  // Unregister mouse event listener
-  if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMMouseListener> mouseListener;
-      QueryInterface(NS_GET_IID(nsIDOMMouseListener), getter_AddRefs(mouseListener));
-      if (mouseListener) { 
-        receiver->RemoveEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
-      }
-      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
-      // now for the mouse motion listener
-      nsCOMPtr<nsIDOMMouseMotionListener> mouseMotionListener;
-      QueryInterface(NS_GET_IID(nsIDOMMouseMotionListener), getter_AddRefs(mouseMotionListener));
-      if (mouseMotionListener) { 
-        receiver->RemoveEventListenerByIID(mouseMotionListener, NS_GET_IID(nsIDOMMouseMotionListener));
-      }
-      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
-    }
-    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
-  }
-  else NS_ASSERTION(PR_FALSE, "plugin had no content");
-  
-  // Unregister key event listener;
-  if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMKeyListener> keyListener;
-      QueryInterface(NS_GET_IID(nsIDOMKeyListener), getter_AddRefs(keyListener));
-      if (keyListener) { 
-        receiver->RemoveEventListener(NS_LITERAL_STRING("keypress"), keyListener, PR_TRUE);
-        receiver->RemoveEventListener(NS_LITERAL_STRING("keydown"), keyListener, PR_TRUE);
-        receiver->RemoveEventListener(NS_LITERAL_STRING("keyup"), keyListener, PR_TRUE);
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+  if (receiver) {
 
-      }
-      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
-    }
-    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
-  }
-  else NS_ASSERTION(PR_FALSE, "plugin had no content");
+    nsCOMPtr<nsIDOMEventListener> listener;
+    QueryInterface(NS_GET_IID(nsIDOMEventListener), getter_AddRefs(listener));
 
-  // Unregister drag event listener;
-  if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMDragListener> dragListener;
-      QueryInterface(NS_GET_IID(nsIDOMDragListener), getter_AddRefs(dragListener));
-      if (dragListener) { 
-        receiver->RemoveEventListener(NS_LITERAL_STRING("dragdrop"), dragListener, PR_TRUE);
-        receiver->RemoveEventListener(NS_LITERAL_STRING("dragover"), dragListener, PR_TRUE);
-        receiver->RemoveEventListener(NS_LITERAL_STRING("dragexit"), dragListener, PR_TRUE);
-        receiver->RemoveEventListener(NS_LITERAL_STRING("dragenter"), dragListener, PR_TRUE);
-        receiver->RemoveEventListener(NS_LITERAL_STRING("draggesture"), dragListener, PR_TRUE);
-      }
-      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
-    }
-    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
+    // Unregister focus event listener
+    receiver->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMFocusListener));
+
+    // Unregister mouse event listener
+    receiver->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseListener));
+
+    // now for the mouse motion listener
+    receiver->RemoveEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseMotionListener));
+
+    // Unregister key event listener;
+    receiver->RemoveEventListener(NS_LITERAL_STRING("keypress"), listener, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("keydown"), listener, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("keyup"), listener, PR_TRUE);
+
+    // Unregister drag event listener;
+    receiver->RemoveEventListener(NS_LITERAL_STRING("dragdrop"), listener, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("dragover"), listener, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("dragexit"), listener, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("dragenter"), listener, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
   }
-  else NS_ASSERTION(PR_FALSE, "plugin had no content");
 
   // Unregister scroll position listener
   nsIFrame* parentWithView;
@@ -4003,23 +3958,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   nsCOMPtr<nsIContent> content;
   mOwner->GetContent(getter_AddRefs(content));
   
-  // This is way of ensure the previous document is gone. Important when reloading either 
-  // the page or refreshing plugins. In the case of an OBJECT frame,
-  // we want to flush out the prevous content viewer which will cause the previous document
-  // and plugins to be cleaned up. Then we can create our new plugin without the old instance
-  // hanging around.
-
-  nsCOMPtr<nsISupports> container;
-  aPresContext->GetContainer(getter_AddRefs(container));
-  if (container) {
-    nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
-    if (cvc) {
-      nsCOMPtr<nsIContentViewer> cv;
-      cvc->GetContentViewer(getter_AddRefs(cv));
-      if (cv)
-        cv->Show();
-    }
-  }
+  // Some plugins require a specific sequence of shutdown and startup when
+  // a page is reloaded. Shutdown happens usually when the last instance
+  // is destroyed. Here we make sure the plugin instance in the old
+  // document is destroyed before we try to create the new one.
+  nsCOMPtr<nsIPresShell> shell;
+  mContext->GetShell(getter_AddRefs(shell));
+  if (shell)
+    shell->UnsuppressPainting();
 
   // register context menu listener
   mCXMenuListener = new nsPluginDOMContextMenuListener();
@@ -4028,64 +3974,32 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
     mCXMenuListener->Init(aFrame);
   }
 
-  // Register focus listener
-  if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMFocusListener> focusListener;
-      QueryInterface(NS_GET_IID(nsIDOMFocusListener), getter_AddRefs(focusListener));
-      if (focusListener) {
-        receiver->AddEventListenerByIID(focusListener, NS_GET_IID(nsIDOMFocusListener));
-      }
-    }
-  }
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+  if (receiver) {
 
-  // Register mouse listener
-  if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMMouseListener> mouseListener;
-      QueryInterface(NS_GET_IID(nsIDOMMouseListener), getter_AddRefs(mouseListener));
-      if (mouseListener) {
-        receiver->AddEventListenerByIID(mouseListener, NS_GET_IID(nsIDOMMouseListener));
-      }
-      // now do the mouse motion listener
-      nsCOMPtr<nsIDOMMouseMotionListener> mouseMotionListener;
-      QueryInterface(NS_GET_IID(nsIDOMMouseMotionListener), getter_AddRefs(mouseMotionListener));
-      if (mouseMotionListener) {
-        receiver->AddEventListenerByIID(mouseMotionListener, NS_GET_IID(nsIDOMMouseMotionListener));
-      }
-    }
-  }
+    nsCOMPtr<nsIDOMEventListener> listener;
+    QueryInterface(NS_GET_IID(nsIDOMEventListener), getter_AddRefs(listener));
 
-  // Register key listener
-  if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMKeyListener> keyListener;
-      QueryInterface(NS_GET_IID(nsIDOMKeyListener), getter_AddRefs(keyListener));
-      if (keyListener) {
-        receiver->AddEventListener(NS_LITERAL_STRING("keypress"), keyListener, PR_TRUE);
-        receiver->AddEventListener(NS_LITERAL_STRING("keydown"), keyListener, PR_TRUE);
-        receiver->AddEventListener(NS_LITERAL_STRING("keyup"), keyListener, PR_TRUE);
-      }
-    }
-  }
+    // Register focus listener
+    receiver->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMFocusListener));
 
-  // Register drag listener
-  if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMDragListener> dragListener;
-      QueryInterface(NS_GET_IID(nsIDOMDragListener), getter_AddRefs(dragListener));
-      if (dragListener) {
-        receiver->AddEventListener(NS_LITERAL_STRING("dragdrop"), dragListener, PR_TRUE);
-        receiver->AddEventListener(NS_LITERAL_STRING("dragover"), dragListener, PR_TRUE);
-        receiver->AddEventListener(NS_LITERAL_STRING("dragexit"), dragListener, PR_TRUE);
-        receiver->AddEventListener(NS_LITERAL_STRING("dragenter"), dragListener, PR_TRUE);
-        receiver->AddEventListener(NS_LITERAL_STRING("draggesture"), dragListener, PR_TRUE);
-      }
-    }
+    // Register mouse listener
+    receiver->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseListener));
+
+    // now do the mouse motion listener
+    receiver->AddEventListenerByIID(listener, NS_GET_IID(nsIDOMMouseMotionListener));
+
+    // Register key listener
+    receiver->AddEventListener(NS_LITERAL_STRING("keypress"), listener, PR_TRUE);
+    receiver->AddEventListener(NS_LITERAL_STRING("keydown"), listener, PR_TRUE);
+    receiver->AddEventListener(NS_LITERAL_STRING("keyup"), listener, PR_TRUE);
+
+    // Register drag listener
+    receiver->AddEventListener(NS_LITERAL_STRING("dragdrop"), listener, PR_TRUE);
+    receiver->AddEventListener(NS_LITERAL_STRING("dragover"), listener, PR_TRUE);
+    receiver->AddEventListener(NS_LITERAL_STRING("dragexit"), listener, PR_TRUE);
+    receiver->AddEventListener(NS_LITERAL_STRING("dragenter"), listener, PR_TRUE);
+    receiver->AddEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
   }
   
   // Register scroll position listener
