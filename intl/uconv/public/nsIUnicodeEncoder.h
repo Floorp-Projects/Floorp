@@ -29,10 +29,18 @@
 NS_DECLARE_ID(kIUnicodeEncoderIID,
   0x2b2ca3d0, 0xa4c9, 0x11d2, 0x8a, 0xa1, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+#define NS_IUNICODEENCODER_IID \
+	{ 0x2b2ca3d0, 0xa4c9, 0x11d2, \
+		{ 0x8a, 0xa1, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 }}  
+
 // Interface ID for our Unicode Character Encoder interface
 // {299BCCD0-C6DF-11d2-8AA8-00600811A836}
 NS_DECLARE_ID(kIUnicharEncoderIID,
   0x299bccd0, 0xc6df, 0x11d2, 0x8a, 0xa8, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+#define NS_IUNICHARENCODER_IID	\
+	{ 0x299bccd0, 0xc6df, 0x11d2, \
+		{0x8a, 0xa8, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 }}
 
 #define NS_OK_UENC_EXACTLENGTH      \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 0x21)
@@ -56,6 +64,7 @@ NS_DECLARE_ID(kIUnicharEncoderIID,
 class nsIUnicharEncoder : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICHARENCODER_IID)
 
   /**
    * Converts a character from Unicode to a Charset.
@@ -72,6 +81,7 @@ public:
 class nsIUnicodeEncoder : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICODEENCODER_IID)
 
   enum {
     kOnError_Signal,        // on an error, stop and signal
