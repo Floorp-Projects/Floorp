@@ -271,7 +271,7 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
     else
     {
       if (PR_TRUE==IsInitialized()) {
-        result = mEditor->OutputTextToString(*aText);
+        result = mEditor->OutputTextToString(*aText, PR_FALSE);
       }
       else {
         result = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
@@ -533,7 +533,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
 {
   aValue = "";  // initialize out param
   if (PR_TRUE==IsInitialized()) {
-    mEditor->OutputTextToString(aValue);
+    mEditor->OutputTextToString(aValue, PR_FALSE);
   }
 }     
 
@@ -542,7 +542,7 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
   if (PR_TRUE==IsInitialized()) 
   {
     nsAutoString currentValue;
-    nsresult result = mEditor->OutputTextToString(currentValue);
+    nsresult result = mEditor->OutputTextToString(currentValue, PR_FALSE);
     if (PR_TRUE==IsSingleLineTextControl()) {
       RemoveNewlines(currentValue); 
     }
@@ -1281,14 +1281,14 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
 NS_IMETHODIMP
 nsGfxTextControlFrame::InternalContentChanged()
 {
-  if (PR_FALSE==IsInitialized()) { return NS_ERROR_NOT_INITIALIZED; }
-  nsAutoString value;
+  if (!IsInitialized()) { return NS_ERROR_NOT_INITIALIZED; }
+  nsAutoString textValue;
   // XXX: need to check here if we're an HTML edit field or a text edit field
-  mEditor->OutputTextToString(value);
-  if (PR_TRUE==IsSingleLineTextControl()) {
-    RemoveNewlines(value); 
+  mEditor->OutputTextToString(textValue, PR_FALSE);
+  if (IsSingleLineTextControl()) {
+    RemoveNewlines(textValue); 
   }
-  SetTextControlFrameState(value);   // set new text value
+  SetTextControlFrameState(textValue);   // set new text value
   return NS_OK;
 }
 

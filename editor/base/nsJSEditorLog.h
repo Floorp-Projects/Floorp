@@ -98,11 +98,11 @@ public:
 
   NS_IMETHOD InsertHTML(const nsString &aInputString);
 
-  NS_IMETHOD OutputTextToString(nsString& aOutputString);
-  NS_IMETHOD OutputHTMLToString(nsString& aOutputString);
+  NS_IMETHOD OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly);
+  NS_IMETHOD OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly);
 
-  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull);
-  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull);
+  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly);
+  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride, PRBool aSelectionOnly);
 
   NS_IMETHOD GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn);
   NS_IMETHOD SetBackgroundColor(const nsString& aColor);

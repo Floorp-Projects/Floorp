@@ -83,6 +83,8 @@ class nsEditorShell :   public nsIEditorShell,
     /* nsIEditorShell interface */
 	  NS_IMETHOD GetContentsAsText(PRUnichar * *aContentsAsText);
 	  NS_IMETHOD GetContentsAsHTML(PRUnichar * *aContentsAsHTML);
+    NS_IMETHOD GetSelectionAsHTML(PRUnichar * *aSelectionAsHTML);
+    NS_IMETHOD GetSelectionAsText(PRUnichar * *aSelectionAsText);
 
 	  NS_IMETHOD GetEditorDocument(nsIDOMDocument * *aEditorDocument);
 	  NS_IMETHOD GetEditorSelection(nsIDOMSelection * *aEditorSelection);

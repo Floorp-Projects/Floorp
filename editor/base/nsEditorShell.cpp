@@ -1460,14 +1460,14 @@ nsEditorShell::GetContentsAsText(PRUnichar * *contentsAsText)
       {
         nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
         if (textEditor)
-          err = textEditor->OutputTextToString(aContentsAsText);
+          err = textEditor->OutputTextToString(aContentsAsText, PR_FALSE);
       }
       break;
     case eHTMLTextEditorType:
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->OutputTextToString(aContentsAsText);
+          err = htmlEditor->OutputTextToString(aContentsAsText, PR_FALSE);
       }
       break;
     default:
@@ -1492,14 +1492,78 @@ nsEditorShell::GetContentsAsHTML(PRUnichar * *contentsAsHTML)
       {
         nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
         if (textEditor)
-          err = textEditor->OutputHTMLToString(aContentsAsHTML);
+          err = textEditor->OutputHTMLToString(aContentsAsHTML, PR_FALSE);
       }
       break;
     case eHTMLTextEditorType:
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->OutputHTMLToString(aContentsAsHTML);
+          err = htmlEditor->OutputHTMLToString(aContentsAsHTML, PR_FALSE);
+      }
+      break;
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  *contentsAsHTML = aContentsAsHTML.ToNewUnicode();
+  
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetSelectionAsText(PRUnichar * *contentsAsText)
+{
+  nsresult  err = NS_NOINTERFACE;
+  
+  nsString aContentsAsText;
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->OutputTextToString(aContentsAsText, PR_TRUE);
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->OutputTextToString(aContentsAsText, PR_TRUE);
+      }
+      break;
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  *contentsAsText = aContentsAsText.ToNewUnicode();
+  
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetSelectionAsHTML(PRUnichar * *contentsAsHTML)
+{
+  nsresult  err = NS_NOINTERFACE;
+  
+  nsString aContentsAsHTML;
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->OutputHTMLToString(aContentsAsHTML, PR_TRUE);
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->OutputHTMLToString(aContentsAsHTML, PR_TRUE);
       }
       break;
     default:
