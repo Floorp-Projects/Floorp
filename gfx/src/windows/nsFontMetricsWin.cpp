@@ -607,6 +607,11 @@ static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
     return 1;
   }
 
+  // XXX ignore vertical fonts
+  if (logFont->lfFaceName[0] == '@') {
+    return 1;
+  }
+
   // XXX make this smarter: don't add font to list if we already have a font
   // with the same font signature -- erik
   if (nsFontMetricsWin::gGlobalFontsCount == gGlobalFontsAlloc) {
