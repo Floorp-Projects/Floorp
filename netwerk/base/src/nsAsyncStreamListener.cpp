@@ -65,6 +65,8 @@ nsStreamListenerEvent::nsStreamListenerEvent(nsAsyncStreamObserver* listener,
                                              nsIChannel* channel, nsISupports* context)
     : mListener(listener), mChannel(channel), mContext(context), mEvent(nsnull)
 {
+    MOZ_COUNT_CTOR(nsStreamListenerEvent);
+
     NS_IF_ADDREF(mListener);
     NS_IF_ADDREF(mChannel);
     NS_IF_ADDREF(mContext);
@@ -72,6 +74,8 @@ nsStreamListenerEvent::nsStreamListenerEvent(nsAsyncStreamObserver* listener,
 
 nsStreamListenerEvent::~nsStreamListenerEvent()
 {
+    MOZ_COUNT_DTOR(nsStreamListenerEvent);
+
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mChannel);
     NS_IF_RELEASE(mContext);
