@@ -1376,23 +1376,27 @@ nsComputedDOMStyle::GetZIndex(nsIFrame *aFrame,
   nsAutoString zindex;
 
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position, aFrame);
-  while (position) {
-    if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-      zindex.AppendInt(position->mZIndex.GetIntValue(), 10);
-      break;
+  if (position) {
+    switch (position->mZIndex.GetUnit()) {
+      case eStyleUnit_Integer:
+        zindex.AppendInt(position->mZIndex.GetIntValue(), 10);
+        val->SetString(zindex);
+        break;
+      case eStyleUnit_Auto:
+        val->SetString(NS_LITERAL_STRING("auto"));
+        break;
+      case eStyleUnit_Inherit:
+        val->SetString(NS_LITERAL_STRING("inherit"));
+        break;
+      default:
+        NS_WARNING("Double Check the Unit!");
+        val->SetString(NS_LITERAL_STRING("auto"));
+        break;
     }
-    if (aFrame) {
-      aFrame->GetParent(&aFrame);
-    }
-    if (aFrame) {
-      aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-    } else {
-      position = nsnull;
-    }
+  } else {
+    val->SetString(NS_LITERAL_STRING("auto"));
   }
-
-  val->SetString(zindex);
-
+    
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
 }
@@ -1703,7 +1707,10 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
+  PRBool calcHeight = PR_FALSE;
+  
   if (aFrame) {
+    calcHeight = PR_TRUE;
     // Flush all pending notifications so that our frames are up to date
     nsCOMPtr<nsIDocument> document;
     mContent->GetDocument(*getter_AddRefs(document));
@@ -1718,11 +1725,12 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
       nsFrameState frameState;
       aFrame->GetFrameState(&frameState);
       if (! (frameState & NS_FRAME_REPLACED_ELEMENT)) {
-        // XXX no useful height we can give for non-replaced inlines yet
-        return NS_ERROR_NOT_IMPLEMENTED;
+        calcHeight = PR_FALSE;
       }
     }
-      
+  }
+
+  if (calcHeight) {
     nsRect rect;
     nsMargin padding;
     nsMargin border;
@@ -1741,8 +1749,31 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
     val->SetTwips(rect.height - padding.top - padding.bottom -
                   border.top - border.bottom);
   } else {
-    // XXX no frame.  This property makes no sense in this case
-    val->SetTwips(0);
+    // Just return the value in the style context
+    const nsStylePosition* positionData = nsnull;
+    GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+    if (positionData) {
+      switch (positionData->mHeight.GetUnit()) {
+        case eStyleUnit_Coord:
+          val->SetTwips(positionData->mHeight.GetCoordValue());
+          break;
+        case eStyleUnit_Percent:
+          val->SetPercent(positionData->mHeight.GetPercentValue());
+          break;
+        case eStyleUnit_Auto:
+          val->SetString(NS_LITERAL_STRING("auto"));
+          break;
+        case eStyleUnit_Inherit:
+          val->SetString(NS_LITERAL_STRING("inherit"));
+          break;
+        default:
+          NS_WARNING("Double check the unit");
+          val->SetTwips(0);
+          break;
+      }
+    } else {
+      val->SetTwips(0);
+    }
   }
   
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
@@ -2375,12 +2406,6 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
                                     nsIDOMCSSPrimitiveValue*& aValue)
 
 {
-  /*
-    This does not work correctly yet.  Specifically, we _always_
-    return computed values here.  This needs to be worked on.
-  */
-  return NS_ERROR_NOT_IMPLEMENTED;
-#if 0
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2406,16 +2431,12 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
         break;
     }
 
-    char buf[16];
-    PRInt32 len;
     switch(coord.GetUnit()) {
       case eStyleUnit_Coord:
         val->SetTwips(coord.GetCoordValue());
         break;
       case eStyleUnit_Percent:
-        len = PR_snprintf(buf, sizeof(buf), "%d%%",
-                          int(coord.GetPercentValue() * 100.0));
-        val->SetString(buf);
+        val->SetPercent(coord.GetPercentValue());
         break;
       default:
         NS_WARNING("double check the unit");
@@ -2426,7 +2447,6 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
   
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
-#endif
 }
 
 
@@ -2738,7 +2758,10 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
+  PRBool calcWidth = PR_FALSE;
+
   if (aFrame) {
+    calcWidth = PR_TRUE;
     // Flush all pending notifications so that our frames are up to date
     nsCOMPtr<nsIDocument> document;
     mContent->GetDocument(*getter_AddRefs(document));
@@ -2753,11 +2776,12 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
       nsFrameState frameState;
       aFrame->GetFrameState(&frameState);
       if (! (frameState & NS_FRAME_REPLACED_ELEMENT)) {
-        // XXX no useful width we can give for non-replaced inlines yet
-        return NS_ERROR_NOT_IMPLEMENTED;
+        calcWidth = PR_FALSE;
       }
     }
-    
+  }
+
+  if (calcWidth) {
     nsRect rect;
     nsMargin padding;
     nsMargin border;
@@ -2775,8 +2799,31 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
     val->SetTwips(rect.width - padding.left - padding.right -
                   border.left - border.right);
   } else {
-    // XXX no frame.  This property makes no sense in this case
-    val->SetTwips(0);
+    // Just return the value in the style context
+    const nsStylePosition* positionData = nsnull;
+    GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+    if (positionData) {
+      switch (positionData->mWidth.GetUnit()) {
+        case eStyleUnit_Coord:
+          val->SetTwips(positionData->mWidth.GetCoordValue());
+          break;
+        case eStyleUnit_Percent:
+          val->SetPercent(positionData->mWidth.GetPercentValue());
+          break;
+        case eStyleUnit_Auto:
+          val->SetString(NS_LITERAL_STRING("auto"));
+          break;
+        case eStyleUnit_Inherit:
+          val->SetString(NS_LITERAL_STRING("inherit"));
+          break;
+        default:
+          NS_WARNING("Double check the unit");
+          val->SetTwips(0);
+          break;
+      }
+    } else {
+      val->SetTwips(0);
+    }
   }
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),

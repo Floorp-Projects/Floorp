@@ -63,6 +63,12 @@ public:
   nsROCSSPrimitiveValue(nsISupports *aOwner, float aP2T);
   virtual ~nsROCSSPrimitiveValue();
 
+  void SetPercent(float aValue)
+  {
+    mFloat = aValue;
+    mType = CSS_PERCENTAGE;
+  }
+
   void SetTwips(nscoord aValue)
   {
     mTwips = aValue;
@@ -85,6 +91,7 @@ private:
 
   nscoord mTwips;
   nsString mString;
+  float mFloat;
 
   nsISupports *mOwner;
 
