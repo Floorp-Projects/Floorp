@@ -92,11 +92,10 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Reply);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Forward);
 
 ////////////////////////////////////////////////////////////////////////
-// The RDF service manager. Cached in the address book data source's
-// constructor
+// The cached service managers
 
 static nsIRDFService* gRDFService = nsnull;
-
+static nsIMsgRFC822Parser *gRFC822Parser = nsnull;
 ////////////////////////////////////////////////////////////////////////
 // Utilities
 
@@ -165,6 +164,11 @@ nsMSGFolderDataSource::nsMSGFolderDataSource()
                                              nsIRDFService::GetIID(),
                                              (nsISupports**) &gRDFService); // XXX probably need shutdown listener here
 
+	rv = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
+													NULL, 
+													nsIMsgRFC822Parser::GetIID(), 
+													(void **) &gRFC822Parser);
+
   PR_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -197,6 +201,9 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_Forward, refcnt);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService); // XXX probably need shutdown listener here
+	if(gRFC822Parser)		
+		NS_RELEASE(gRFC822Parser);	
+  gRFC822Parser =  nsnull;
   gRDFService = nsnull;
 }
 
@@ -361,7 +368,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     if (peq(kNC_Name, property) ||
         peq(kNC_Subject, property)) {
       nsAutoString subject;
-      rv = message->GetProperty("subject", subject);
+	  rv = message->GetMime2EncodedSubject(subject);
 	  PRUint32 flags;
 	  message->GetFlags(&flags);
 	  if(flags & MSG_FLAG_HAS_RE)
@@ -375,7 +382,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     else if (peq(kNC_Sender, property))
     {
       nsAutoString sender, senderUserName;
-      rv = message->GetProperty("sender", sender);
+	  rv = message->GetMime2EncodedAuthor(sender);
 			if(NS_SUCCEEDED(rv = GetSenderName(sender, &senderUserName)))
 				createNode(senderUserName, target);
     }
@@ -416,16 +423,12 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 nsresult nsMSGFolderDataSource::GetSenderName(nsAutoString& sender, nsAutoString *senderUserName)
 {
 	//XXXOnce we get the csid, use Intl version
-	nsIMsgRFC822Parser *parser; 
 	nsresult rv = NS_OK;
-	if(NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
-													NULL, 
-													nsIMsgRFC822Parser::GetIID(), 
-													(void **) &parser)))
+	if(gRFC822Parser)
 	{
 		char *name;
 		char *senderStr = sender.ToNewCString();
-		if(NS_SUCCEEDED(rv = parser->ExtractRFC822AddressName (senderStr, &name)))
+		if(NS_SUCCEEDED(rv = gRFC822Parser->ExtractRFC822AddressName (senderStr, &name)))
 		{
 			*senderUserName = name;
 		}
@@ -433,7 +436,6 @@ nsresult nsMSGFolderDataSource::GetSenderName(nsAutoString& sender, nsAutoString
 			PL_strfree(name);
 		if(senderStr)
 			delete[] senderStr;
-		NS_RELEASE(parser);
 	}
 	return rv;
 }
