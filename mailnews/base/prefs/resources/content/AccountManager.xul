@@ -9,7 +9,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&accountManagerTitle.label;"
         class="dialog"
-        width="620" height="470"
+        width="&account-manager.width;" height="&account-manager.height;"
         persist="screenX screenY width height"
         onload="onLoad(event);">
 

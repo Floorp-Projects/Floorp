@@ -9,3 +9,13 @@
 
 <!ENTITY nameCol.label "Name">
 <!ENTITY duplicate.label "Duplicate">
+
+<!-- AccountManager.xul -->
+<!-- LOCALIZATION NOTE : this is part of an inline-style attribute on the account
+     setting dialog, which specifies the width and height in em units of the dialog.
+     Localizers ONLY can increase these widths if they are having difficulty getting
+     panel content to fit. 1em = the width of the letter 'm' in the selected font.
+     XUL/FE DEVELOPERS: DO NOT MODIFY THIS VALUE. It represents the correct size of
+     this window for en-US. -->
+<!ENTITY account-manager.width "620">
+<!ENTITY account-manager.height "470">
