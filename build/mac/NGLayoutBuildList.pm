@@ -1132,6 +1132,9 @@ sub BuildIDLProjects()
 			WaitNextEvent();
 			WaitNextEvent();
 			WaitNextEvent();
+			WaitNextEvent();
+			WaitNextEvent();
+			WaitNextEvent();
 			CodeWarriorLib::activate();
 			WaitNextEvent();
 			WaitNextEvent();
