@@ -1664,7 +1664,7 @@ var BookmarkEditMenuTxnListener =
   }
 }
 
-#ifdef DEBUG
+#ifdef 0
 
 var _dumpTIME;
 function dumpTIME(aString)

@@ -23,16 +23,18 @@
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css"?>
+<?xml-stylesheet href="chrome://global/skin/arrow.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/bookmarks/addBookmark.dtd">
 
-<dialog id="addBookmarkDialog" style="width: 22em;"
+<dialog id="addBookmarkDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         ondialogaccept="return onOK(event)"
         title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
         onload="Startup();"
-        persist="screenX screenY selectedFolder"
-        screenX="24" screenY="24">
+        onunload="setFolderTreeHeight();"
+        persist="screenX screenY width">
    
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/addBookmark2.js"/>
@@ -43,18 +45,30 @@
     <columns>
       <column/>
       <column flex="1"/>
+      <column/>
     </columns>
     <rows>
       <row align="center">
         <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
         <textbox id="name" oninput="onFieldInput();"/>
+        <button id="expander" class="down" oncommand="expandTree();" persist="class"/>
       </row>
       <row align="center">
         <label id="createinlabel" value="&createin.label;"/>
         <menulist id="select-menu"
-                  oncommand="selectFolder(event);">
+                  oncommand="selectMenulistFolder(event);">
                   <menupopup id="select-folder"/>
         </menulist>
+
+#        <menulist id="select-menu" oncommand="selectMenulistFolder(event);"
+#                  datasources="rdf:bookmarks" ref="NC:LastModifiedFoldersRoot">
+#          <template>
+#            <menupopup>
+#              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+#            </menupopup>
+#          </template>
+#        </menulist>
+
       </row>
     </rows>
   </grid>
@@ -64,6 +78,11 @@
   </hbox>
 
   <separator class="thin"/>
+
+  <bookmarks-tree id="folder-tree" flex="1" type="folders" collapsed="true"
+                  seltype="single" persist="height" rows="6"
+                  onselect="selectTreeFolder();"/>
+ 
   <script type="application/x-javascript"><![CDATA[
     if (!window.arguments[5])
       document.getElementById("addgroup").setAttribute("hidden", "true");

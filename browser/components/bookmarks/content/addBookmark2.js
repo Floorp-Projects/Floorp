@@ -73,29 +73,24 @@
 
 var gSelectedFolder;
 var gName;
+var gMenulist;
+var gBookmarkTree;
 var gGroup;
-var gList;
-var gIndentation; // temporary hack to indent the folders
-var gNameArc;
 
 function Startup()
 {
+  sizeToContent(); //XXXpch buggy imo, we shouldn't need it
   initServices();
   initBMService();
-  gNameArc = RDF.GetResource(NC_NS+"Name");
   gName  = document.getElementById("name");
   gGroup = document.getElementById("addgroup");
-  gList  = document.getElementById("select-menu");
+  gMenulist = document.getElementById("select-menu");
+  gBookmarkTree = document.getElementById("folder-tree");
   gName.value = window.arguments[0];
   gName.select();
   gName.focus();
   onFieldInput();
   setTimeout(fillSelectFolderMenupopup, 0);
-  gIndentation = Array(16);
-  gIndentation[0] = "";
-  for (var i=1; i<16; ++i)
-    gIndentation[i]=gIndentation[i-1]+"  "; 
- 
 } 
 
 function onFieldInput()
@@ -106,9 +101,7 @@ function onFieldInput()
 
 function onOK()
 {
-  document.getElementById("addBookmarkDialog").setAttribute("selectedFolder",gSelectedFolder);
-  var rFolder = RDF.GetResource(gSelectedFolder);
-  RDFC.Init(BMDS, rFolder);
+  RDFC.Init(BMDS, gSelectedFolder);
 
   var url, rSource;
   if (gGroup && gGroup.checked) {
@@ -125,7 +118,7 @@ function onOK()
   }
 
   var selection = BookmarksUtils.getSelectionFromResource(rSource);
-  var target    = BookmarksUtils.getTargetFromFolder(rFolder);
+  var target    = BookmarksUtils.getTargetFromFolder(gSelectedFolder);
   BookmarksUtils.insertAndCheckSelection("newbookmark", selection, target);
   
   if (window.arguments[6] && rSource) {
@@ -164,51 +157,49 @@ function getNormalizedURL(url)
   return url;
 }
 
-function fillFolder(aPopup, aFolder, aDepth)
+function selectMenulistFolder(aEvent)
 {
-  RDFC.Init(BMDS, aFolder);
-  var children = RDFC.GetElements();
-  while (children.hasMoreElements()) {
-    var curr = children.getNext();
-    if (RDFCU.IsContainer(BMDS, curr)) {
-      curr = curr.QueryInterface(Components.interfaces.nsIRDFResource);
-      var element = document.createElementNS(XUL_NS, "menuitem");
-      var name = BMDS.GetTarget(curr, gNameArc, true).QueryInterface(kRDFLITIID).Value;
-      element.setAttribute("label", gIndentation[aDepth]+name);
-      element.setAttribute("id", curr.Value);
-      aPopup.appendChild(element);
-      if (curr.Value == gSelectedFolder)
-        gList.selectedItem = element;
-      fillFolder(aPopup, curr, ++aDepth);
-      --aDepth;
-    }
-  }
+  gSelectedFolder = RDF.GetResource(aEvent.target.id);
 }
 
-function fillSelectFolderMenupopup ()
+function selectTreeFolder()
+{
+  gSelectedFolder = gBookmarkTree._selection.item[0];
+  gMenulist.label = BookmarksUtils.getProperty(gSelectedFolder, NC_NS+"Name");
+}
+
+function expandTree()
+{
+  setFolderTreeHeight();
+  var isCollapsed = gBookmarkTree.collapsed;
+  document.getElementById("expander").setAttribute("class", isCollapsed? "up":"down");
+  gBookmarkTree.collapsed = !isCollapsed;
+  sizeToContent();
+}
+
+function setFolderTreeHeight()
+{
+  var isCollapsed = gBookmarkTree.collapsed;
+  if (!isCollapsed)
+    gBookmarkTree.setAttribute("height", gBookmarkTree.boxObject.height);
+}
+
+function fillSelectFolderMenupopup()
 {
 
-  gSelectedFolder = document.getElementById("addBookmarkDialog").getAttribute("selectedFolder");
   var popup = document.getElementById("select-folder");
   // clearing the old menupopup
   while (popup.hasChildNodes()) 
     popup.removeChild(popup.firstChild);
 
-  // to be removed once I checkin the top folder
-  var element = document.createElementNS(XUL_NS, "menuitem");
-  element.setAttribute("label", "Bookmarks");
-  element.setAttribute("id", "NC:BookmarksRoot");
-  popup.appendChild(element);
-
-  var folder = RDF.GetResource("NC:BookmarksRoot");
-  fillFolder(popup, folder, 1);
-  if (gList.selectedIndex == -1) {
-    gList.selectedIndex = 0;
-    gSelectedFolder = "NC:BookmarksRoot";
+  var arcs=BMSVC.GetTargets(RDF.GetResource("NC:LastModifiedFoldersRoot"), RDF.GetResource(NC_NS+"child"), true);
+  while (arcs.hasMoreElements()) {
+    var arc = arcs.getNext().QueryInterface(kRDFRSCIID);
+    var element = document.createElementNS(XUL_NS, "menuitem");
+    element.setAttribute("id", arc.Value);
+    element.setAttribute("label", BookmarksUtils.getProperty(arc, NC_NS+"Name"));
+    popup.appendChild(element);
   }
-}
-
-function selectFolder(aEvent)
-{
-  gSelectedFolder = aEvent.target.id;
+  gMenulist.selectedIndex = 0;
+  gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
 }
