@@ -63,7 +63,7 @@ ifdef MOZ_SECURITY
 INCLUDES	+= -I$(DEPTH)/lib/libmime -I$(DIST)/public/security
 endif
 
-INCLUDES 	+= ./
+INCLUDES 	+= -I./
 
 #
 # Building the "mimefilt" executable, which reads a message from stdin and
