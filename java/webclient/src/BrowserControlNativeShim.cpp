@@ -68,7 +68,7 @@ nsMacMessageSink gMessageSink;
 
 #ifdef XP_UNIX
 #include <gtk/gtk.h>
-#include "motif/MozillaEventThread.h"
+#include "motif/NativeEventThread.h"
 #endif
 
 #include "nsActions.h"
