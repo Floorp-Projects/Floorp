@@ -3374,6 +3374,12 @@ PR_IMPLEMENT(PRBool) _pr_test_ipv6_socket()
 {
 PRInt32 osfd;
 
+    /*
+     * HP-UX only: HP-UX IPv6 Porting Guide (dated February 2001)
+     * suggests that we call open("/dev/ip6", O_RDWR) to determine
+     * whether IPv6 APIs and the IPv6 stack are on the system.
+     * Our portable test below seems to work fine, so I am using it.
+     */
 	osfd = socket(AF_INET6, SOCK_STREAM, 0);
 	if (osfd != -1) {
 		close(osfd);
