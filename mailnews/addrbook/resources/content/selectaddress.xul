@@ -1,0 +1,44 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+
+<!DOCTYPE window
+[
+
+<!ENTITY selectAddressWindow.title "Select Addresses">
+
+<!-- menu items:  the . means that the menu item isn't implemented yet -->
+<!-- File menu items -->
+
+<!-- Toolbar items -->  
+<!ENTITY search.label "Show names containing:">  
+]> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&selectAddressWindow.title;"
+        style="width:100%;height:100%">
+
+<html:script src="resource:/res/mailnews/messenger/widgetglue.js"/>
+<html:script src="resource:/res/mailnews/messenger/commandglue.js"/>
+<html:script src="resource:/res/mailnews/messenger/shareglue.js"/>
+<html:script src="resource:/res/mailnews/addrbook/addressbook.js"/>
+
+
+	<box id="header" align="vertical" style="width:100%;height:100%">
+		<box align="horizontal">
+			<spring style="width: 10px"/>
+			<html:p>&search.label;</html:p>
+			<spring style="width: 5px"/>
+		  	<html:input id="searchtext" type="text" style="min-width: 200px; min-height: 22px"/>   
+
+          	<spring flex="100%"/>
+			<titledbutton id="stop" value="Stop" class="push" onclick="SelectAddressStopButton()" />	
+			<spring style="width: 10px"/>
+		</box>
+
+		<html:iframe src="resource:/res/mailnews/addrbook/selectaddress.html" name="bigframe" flex="100%" />
+		
+	</box>
+</window>
+
