@@ -38,6 +38,7 @@ public:
   virtual void SetCacheSize(PRInt32 aCacheSize);
   virtual PRInt32 GetCacheSize(void);
   virtual PRInt32 ShrinkCache(void);
+  NS_IMETHOD FlushCache(void);
   virtual nsImageType GetImageType(const char *buf, PRInt32 length);
 
 private:
@@ -97,6 +98,13 @@ PRInt32
 ImageManagerImpl::ShrinkCache(void)
 {
   return IL_ShrinkCache();
+}
+
+NS_IMETHODIMP
+ImageManagerImpl::FlushCache(void)
+{
+  IL_FlushCache();
+  return NS_OK;
 }
  
 nsImageType 
