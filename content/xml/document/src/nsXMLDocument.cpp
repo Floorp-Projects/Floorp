@@ -728,6 +728,8 @@ nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName,
                                           const nsString& aNameSpace, 
                                           nsIDOMElement** aReturn)
 {
+  printf ("Deprecated method CreateElementWithNameSpace() used, use CreateElementNS() in stead!\n");
+
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;

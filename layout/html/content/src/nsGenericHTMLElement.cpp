@@ -95,6 +95,8 @@
 // XXX todo: add in missing out-of-memory checks
 NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 
+#include "nsIPref.h" // Used by the temp pref, should be removed!
+
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
@@ -390,10 +392,27 @@ static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
 static int gGenericHTMLElementCount = 0;
 static nsILanguageAtomService* gLangService = nsnull;
 
+
+static PRBool kStrictDOMLevel2 = PR_FALSE; // Only used for temp DOM hack
+
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
   mAttributes = nsnull;
   gGenericHTMLElementCount++;
+
+  static PRInt32 been_here = 0;
+
+// Temporary hack that tells if some new DOM Level 2 features are on or off
+  if (!been_here) {
+    kStrictDOMLevel2 = PR_FALSE; // Default in case of failure
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
+    }
+    been_here = 1;
+  }
+// End of temp hack.
 }
 
 nsGenericHTMLElement::~nsGenericHTMLElement()
@@ -430,19 +449,19 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
 nsresult
 nsGenericHTMLElement::GetTagName(nsString& aTagName)
 {
-  nsGenericElement::GetTagName(aTagName);
-  aTagName.ToUpperCase();
-  return NS_OK;
+  return GetNodeName(aTagName);
 }
 
 nsresult
 nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
 {
   // This whole method needs revriting to work properly with XHTML...
-#ifdef MOZILLA_IS_READY_FOR_THIS
-  mNodeInfo->GetPrefix(aNodeName);
-  if (aNodeName.Length()) {
-    aNodeName.Append(PRUnichar(':'));
+
+  if (kStrictDOMLevel2) {
+    mNodeInfo->GetPrefix(aNodeName);
+    if (aNodeName.Length()) {
+      aNodeName.Append(PRUnichar(':'));
+    }
 
     nsAutoString tmp;
     mNodeInfo->GetName(tmp);
@@ -450,10 +469,17 @@ nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
     tmp.ToUpperCase();
 
     aNodeName.Append(tmp);
+  } else {
+    mNodeInfo->GetName(aNodeName);
   }
-#else
-  mNodeInfo->GetName(aNodeName);
-#endif
+
+  if (kStrictDOMLevel2) {
+    PRInt32 pos = aNodeName.FindChar(':');
+    if (pos >= 0) {
+      nsCAutoString tmp; tmp.AssignWithConversion(aNodeName);
+      printf ("Possible DOM Error: .nodeName or .tagName requisted on the HTML alement '%s', is this OK?\n", (const char *)tmp);
+    }
+  }
 
   return NS_OK;
 }

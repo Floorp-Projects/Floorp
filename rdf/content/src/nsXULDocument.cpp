@@ -129,6 +129,12 @@
 #include "nsIDOMDocumentType.h"
 
 #include "nsIXIFConverter.h"
+
+// Used for the temporary DOM Level2 hack
+#include "nsIPref.h"
+static PRBool kStrictDOMLevel2 = PR_FALSE;
+
+
 //----------------------------------------------------------------------
 //
 // CIDs
@@ -410,6 +416,14 @@ nsXULDocument::nsXULDocument(void)
 {
     NS_INIT_REFCNT();
     mCharSetID.AssignWithConversion("UTF-8");
+
+// Temporary hack that tells if some new DOM Level 2 features are on or off
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
+    }
+// End of temp hack.
 }
 
 nsXULDocument::~nsXULDocument()
@@ -2333,6 +2347,32 @@ nsXULDocument::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn)
 
     nsresult rv;
 
+    nsCOMPtr<nsIAtom> name, prefix;
+
+    if (kStrictDOMLevel2) {
+        PRInt32 pos = aTagName.FindChar(':');
+        if (pos >= 0) {
+          nsCAutoString tmp; tmp.AssignWithConversion(aTagName);
+          printf ("Possible DOM Error: CreateElement(\"%s\") called, use CreateElementNS() in stead!\n", (const char *)tmp);
+        }
+
+        name = dont_AddRef(NS_NewAtom(aTagName));
+        NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
+    } else {
+        // parse the user-provided string into a tag name and a namespace ID
+        rv = ParseTagString(aTagName, *getter_AddRefs(name),
+                            *getter_AddRefs(prefix));
+        if (NS_FAILED(rv)) {
+#ifdef PR_LOGGING
+            char* tagNameStr = aTagName.ToNewCString();
+            PR_LOG(gXULLog, PR_LOG_ERROR,
+                   ("xul[CreateElement] unable to parse tag '%s'; no such namespace.", tagNameStr));
+            nsCRT::free(tagNameStr);
+#endif
+            return rv;
+        }
+    }
+
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
       char* tagCStr = aTagName.ToNewCString();
@@ -2344,22 +2384,7 @@ nsXULDocument::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn)
     }
 #endif
 
-    nsCOMPtr<nsIAtom> name, prefix;
-
     *aReturn = nsnull;
-
-    // parse the user-provided string into a tag name and a namespace ID
-    rv = ParseTagString(aTagName, *getter_AddRefs(name),
-                        *getter_AddRefs(prefix));
-    if (NS_FAILED(rv)) {
-#ifdef PR_LOGGING
-        char* tagNameStr = aTagName.ToNewCString();
-        PR_LOG(gXULLog, PR_LOG_ERROR,
-               ("xul[CreateElement] unable to parse tag '%s'; no such namespace.", tagNameStr));
-        nsCRT::free(tagNameStr);
-#endif
-        return rv;
-    }
 
     nsCOMPtr<nsINodeInfo> ni;
 
@@ -2455,6 +2480,14 @@ nsXULDocument::CreateEntityReference(const nsString& aName, nsIDOMEntityReferenc
 NS_IMETHODIMP
 nsXULDocument::GetElementsByTagName(const nsString& aTagName, nsIDOMNodeList** aReturn)
 {
+    if (kStrictDOMLevel2) {
+        PRInt32 pos = aTagName.FindChar(':');
+        if (pos >= 0) {
+          nsCAutoString tmp; tmp.AssignWithConversion(aTagName);
+          printf ("Possible DOM Error: GetElementsByTagName(\"%s\") called, use GetElementsByTagNameNS() in stead!\n", (const char *)tmp);
+        }
+    }
+
     nsresult rv;
     nsRDFDOMNodeList* elements;
     if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
@@ -2659,6 +2692,8 @@ nsXULDocument::CreateElementWithNameSpace(const nsString& aTagName,
                                             const nsString& aNameSpace,
                                             nsIDOMElement** aResult)
 {
+  printf ("Deprecated method CreateElementWithNameSpace() used, use CreateElementNS() in stead!\n");
+
     // Create a DOM element given a namespace URI and a tag name.
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)

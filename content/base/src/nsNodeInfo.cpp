@@ -27,11 +27,28 @@
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 
+#include "nsIServiceManager.h"
+#include "nsIPref.h" // Used by the temp pref, should be removed!
+static PRBool kStrictDOMLevel2 = PR_FALSE;
 
 nsNodeInfo::nsNodeInfo()
   : mInner(), mOwnerManager(nsnull)
 {
   NS_INIT_REFCNT();
+
+  static PRInt32 been_here = 0;
+
+// Temporary hack that tells if some new DOM Level 2 features are on or off
+  if (!been_here) {
+    kStrictDOMLevel2 = PR_FALSE; // Default in case of failure
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
+    }
+    been_here = 1;
+  }
+// End of temp hack.
 }
 
 
@@ -104,21 +121,21 @@ nsNodeInfo::GetQualifiedName(nsString& aQualifiedName)
 {
   NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
 
-#ifdef MOZILLA_IS_READY_FOR_THIS
-  if (mInner.mPrefix) {
+  if (mInner.mPrefix && kStrictDOMLevel2) {
     mInner.mPrefix->ToString(aQualifiedName);
 
     aQualifiedName.Append(PRUnichar(':'));
   }
 
-  nsAutoString tmp;
-  mInner.mName->ToString(tmp);
+  const PRUnichar *name;
+  mInner.mName->GetUnicode(&name);
 
-  aQualifiedName.Append(tmp);
+  aQualifiedName.Append(name);
 
-#else
-  mInner.mName->ToString(aQualifiedName);
-#endif
+  if (kStrictDOMLevel2 && mInner.mPrefix) {
+    nsCAutoString tmp; tmp.AssignWithConversion(aQualifiedName);
+    printf ("Possible DOM Error: .name, .nodeName or .tagName requested on a namespace element/attribute with the qulaified name '%s', is this OK?\n", (const char *)tmp);
+  }
 
   return NS_OK;
 }
