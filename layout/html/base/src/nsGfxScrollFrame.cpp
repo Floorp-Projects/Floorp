@@ -951,16 +951,26 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
         nsCOMPtr<nsIPresShell> presShell;
         mOuter->mPresContext->GetShell(getter_AddRefs(presShell));
         
-        // Fire the onScroll event.
-        if (presShell && targetFrame && targetContent)
-          presShell->HandleEventWithTarget(&event, targetFrame, targetContent,
-                                            NS_EVENT_FLAG_INIT, &status);
-
+        // Make sure the scrollbars indeed moved before firing the event.
+        // I think it is OK to prevent the call to ScrollbarChanged()
+        // if we didn't actually move. The following check is the first
+        // thing ScrollbarChanged() does anyway, before deciding to move 
+        // the scrollbars. 
+        nscoord curPosX=0, curPosY=0;
         nsIScrollableView* s = GetScrollableView(mOuter->mPresContext);
-        s->RemoveScrollPositionListener(this);
-        ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel);
-        s->AddScrollPositionListener(this);
-
+        if (s) {
+          s->GetScrollPosition(curPosX, curPosY);
+          if ((x*mOnePixel) == curPosX && (y*mOnePixel) == curPosY)
+            return NS_OK;
+        
+          // Fire the onScroll event.
+          if (presShell && targetFrame && targetContent)
+            presShell->HandleEventWithTarget(&event, targetFrame, targetContent,
+                                            NS_EVENT_FLAG_INIT, &status);        
+          s->RemoveScrollPositionListener(this);
+          ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel);
+          s->AddScrollPositionListener(this);
+        }
      }
    }
 
