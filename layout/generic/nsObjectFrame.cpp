@@ -2765,7 +2765,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   if (cattrs < 0x0000FFFF)
     mNumCachedAttrs = NS_STATIC_CAST(PRUint16, cattrs);  // signed 32 bits to unsigned 16 bits conversion
   else 
-    mNumCachedParams = 0x0000FFFF;
+    mNumCachedParams = 0xFFFF;
 
   // now, we need to find all the PARAM tags that are children of us
   // however, be carefull NOT to include any PARAMs that don't have us as a direct
@@ -2835,7 +2835,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   if (cparams < 0x0000FFFF)
     mNumCachedParams = NS_STATIC_CAST(PRUint16, cparams);
   else 
-    mNumCachedParams = 0x0000FFFF;
+    mNumCachedParams = 0xFFFF;
 
 
   // now lets make the arrays
