@@ -19,7 +19,7 @@ If you don't have Perl installed, get it from
 If you need a webserver, take a look at Apache at
 <URL:http://www.apache.org/>
 
-If you want Glimpse and the freetext searching facilites, visit
+If you want Glimpse and the freetext searching facilities, visit
 <URL:http://glimpse.cs.arizona.edu/>.
 
 
@@ -109,7 +109,7 @@ The lxr.conf file:
 
  baseurl
   The url for the root directory of your source. Tree name (if any) 
-  is appened to this.
+  is appended to this.
  
 
  htmlhead

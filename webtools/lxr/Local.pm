@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.6 2001/02/21 05:14:10 endico%mozilla.org Exp $
+# $Id: Local.pm,v 1.7 2001/07/16 20:15:03 timeless%mac.com Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <endico@mozilla.org>
@@ -26,14 +26,14 @@ use LXR::Common;
 # In mozilla search the beginning of a source file for a short 
 # description. Not all files have them and the ones that do use 
 # many different formats. Try to find as many of these without
-# printing gobbeldygook or something silly like a file name or a date.
+# printing gobbledygook or something silly like a file name or a date.
 #
 # Read in the beginning of the file into a string. I chose 60 because the 
 # Berkeley copyright notice is around 40 lines long so we need a bit more 
 # than this.
 #
 # Its common for file descriptions to be delimited by the file name or
-# the word "Description" which preceeds the description. Search the entire
+# the word "Description" which precedes the description. Search the entire
 # string for these. Sometimes they're put in odd places such as inside
 # the copyright notice or after the code begins. The file name should be
 # followed by a colon or some pattern of dashes. 
@@ -95,10 +95,10 @@ sub fdescexpand {
     # save a copy for later
     $copy = $desc;
 
-    # Look for well behaved <filename><seperator> formatted 
+    # Look for well behaved <filename><separator> formatted 
     # descriptions before we go to the trouble of looking for
     # one in the first comment. The whitespace between the 
-    # delimeter and the description may include a newline.
+    # delimiter and the description may include a newline.
     if (($desc =~ s/(?:.*?$filename\s*?- ?-*\s*)([^\n]*)(?:.*)/$1/sgi) || 
         ($desc =~ s/(?:.*?$filename\s*?:\s*)([^\n]*)(?:.*)/$1/sgi) ||
         ($desc =~ s/(?:.*?Description:\s*)([^\n]*)(?:.*)/$1/sgi) 
@@ -190,7 +190,7 @@ sub fdescexpand {
     }
 
     # If the description is still too long then assume it will look
-    # like gobbeldygook and give up
+    # like gobbledygook and give up
     if (length($desc) > 200 ) {
 	return("&nbsp;");
     }
@@ -228,7 +228,7 @@ sub descexpand {
 
         # Make sure there is no <span> embedded in our string. If so 
         # then we've matched against the wrong /span and this string is junk
-        # so we'll throw it away and refrain from writing a descrioption.
+        # so we'll throw it away and refrain from writing a description.
         # Disallowing embedded spans theoretically removes some flexibility
         # but this seems to be a little used tag and doing this makes lxr 
         # a lot faster.
@@ -284,7 +284,7 @@ sub descexpand {
 # it exists. If the file is short then just print the whole thing.
 # For longer files print the first paragraph or so. As much as 
 # possible make this work for randomly formatted files rather than 
-# inventing strict rules which create gobbeldygook when they're broken.
+# inventing strict rules which create gobbledygook when they're broken.
 sub dirdesc {
     my ($path) = @_;
 
@@ -407,7 +407,7 @@ sub descreadme {
 	}
 
 	# if we have more than $maxlines then truncate to $chopto
-	# and add an elipsis. 
+	# and add an ellipsis. 
 	if ($count > $maxlines) {
 	    $string =~ s/^((?:[\S \t]*\n){$chopto}?)(.*)/$1/s;
 	    chomp($string);
@@ -435,7 +435,7 @@ sub descreadme {
     }
 }
 
-# dme: substitute carraige returns and spaces in original text
+# dme: substitute carriage returns and spaces in original text
 # for html equivalent so we don't need to use <pre> and can
 # use variable width fonts but preserve the formatting
 sub convertwhitespace {

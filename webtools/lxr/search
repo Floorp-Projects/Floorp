@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: search,v 1.7 1999/09/17 01:07:34 endico%mozilla.org Exp $
+# $Id: search,v 1.8 2001/07/16 20:15:02 timeless%mac.com Exp $
 
 # search --	Freetext search
 #
@@ -73,7 +73,7 @@ sub search {
                 $searchtext =~ s/([;,#><\-\$.^*[^|()\!])/\\$1/g;
             }
 	    exec($Conf->glimpsebin,"-i","-H".$Conf->dbdir,'-y','-n',$searchtext);
-	    print("Glimpse subprocess died unexpextedly: $!\n");
+	    print("Glimpse subprocess died unexpectedly: $!\n");
 	    exit;
 	}
 
