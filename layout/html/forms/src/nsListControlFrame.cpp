@@ -384,19 +384,6 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     mIsScrollbarVisible = PR_FALSE; // XXX temp code
   }
 
-  // options that are null <option></option> end up with no height
-  // so we need to make sure the list box size is at some small minimum
-  // because we could have a select with a single <option></option>
-  // which means we size the select do to almost nothing.
-  // We also have to make sure we set the mMaxWidth & mMaxHeight
-  // because these are used to calculate the size of the select
-  // get the css size 
-  //nsSize  txtSize;
-  //nsFormControlHelper::GetTextSize(aPresContext, this,nsAutoString("."), txtSize, aReflowState.rendContext);
-  /*if (visibleWidth < scrollbarWidth) {
-    visibleWidth  = scrollbarWidth;
-    mMaxWidth     = scrollbarWidth;
-  }*/
   if (visibleHeight < scrollbarHeight) {
     visibleHeight  = scrollbarHeight;
     mMaxHeight     = scrollbarHeight;
