@@ -41,8 +41,11 @@
 #include "nsILocalFile.h"
 #include "nsIContentViewerFile.h"
 #include "nsISelectionController.h"
+#include "nsIWebBrowserPersist.h"
+#include "nsIClipboardCommands.h"
 
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMHTMLAnchorElement.h"
 
 #include "nsEmbedAPI.h"
 
@@ -132,6 +135,10 @@ CMozillaBrowser::CMozillaBrowser()
 	mSystemRegKey.Create(HKEY_LOCAL_MACHINE, c_szMozillaControlKey);
 	mUserRegKey.Create(HKEY_CURRENT_USER, c_szMozillaControlKey);
 
+    // Browser helpers
+    mBrowserHelperList = NULL;
+    mBrowserHelperListCount = 0;
+
 	CheckBinDirPath();//szBinDirPath, dwBinDirPath);
 
 	// Initialise the web shell
@@ -174,7 +181,7 @@ STDMETHODIMP CMozillaBrowser::InterfaceSupportsErrorInfo(REFIID riid)
 //
 // ShowContextMenu
 //
-void CMozillaBrowser::ShowContextMenu(PRUint32 aContextFlags)
+void CMozillaBrowser::ShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
 {
     POINT pt;
     GetCursorPos(&pt);
@@ -253,9 +260,36 @@ void CMozillaBrowser::ShowContextMenu(PRUint32 aContextFlags)
     {
         HMENU hMenu = LoadMenu(_Module.m_hInstResource, pszMenuResource);
         HMENU hPopupMenu = GetSubMenu(hMenu, 0);
-        TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, m_hWnd, NULL);
+        mContextNode = do_QueryInterface(aNode);
+        UINT nCmd = TrackPopupMenu(hPopupMenu, TPM_NONOTIFY | TPM_RETURNCMD, pt.x, pt.y, 0, m_hWnd, NULL);
         DestroyMenu(hMenu);
+        if (nCmd != 0)
+        {
+            SendMessage(WM_COMMAND, nCmd);
+        }
+        mContextNode = nsnull;
     }
+}
+
+
+//
+// ShowURIPropertyDlg
+//
+void CMozillaBrowser::ShowURIPropertyDlg(const nsString &aURI)
+{
+    CPropertyDlg dlg;
+    CPPageDlg linkDlg;
+    dlg.AddPage(&linkDlg);
+
+    if (aURI.Length() > 0)
+    {
+        USES_CONVERSION;
+        linkDlg.mProtocol = "HyperText Transfer Protocol"; // TODO
+        linkDlg.mType = "HTML Document"; // TODO
+        linkDlg.mURL.AssignWithConversion(aURI);
+    }
+
+    dlg.DoModal();
 }
 
 
@@ -320,6 +354,9 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	// Clip the child windows out of paint operations
 	SetWindowLong(GWL_STYLE, GetWindowLong(GWL_STYLE) | WS_CLIPCHILDREN);
 
+    // Turn on the 3d border
+//    SetWindowLong(GWL_EXSTYLE, GetWindowLong(GWL_EXSTYLE) | WS_EX_CLIENTEDGE);
+
     // Create the NGLayout WebShell
     CreateBrowser();
 
@@ -367,11 +404,24 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnSize);
 
+    RECT rc;
+    rc.top = 0;
+    rc.left = 0;
+    rc.right = LOWORD(lParam);
+    rc.bottom = HIWORD(lParam);
+    
+    AdjustWindowRectEx(&rc, GetWindowLong(GWL_STYLE), FALSE, GetWindowLong(GWL_EXSTYLE));
+
+    rc.right -= rc.left;
+    rc.bottom -= rc.top;
+    rc.left = 0;
+    rc.top = 0;
+
     // Pass resize information down to the WebShell...
     if (mWebBrowserAsWin)
 	{
-		mWebBrowserAsWin->SetPosition(0, 0);
-		mWebBrowserAsWin->SetSize(LOWORD(lParam), HIWORD(lParam), PR_TRUE);
+		mWebBrowserAsWin->SetPosition(rc.left, rc.top);
+		mWebBrowserAsWin->SetSize(rc.right - rc.left, rc.bottom - rc.top, PR_TRUE);
 	}
 	return 0;
 }
@@ -431,7 +481,7 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 	OPENFILENAME SaveFileName;
 
-	char szFile[256];
+	char szFile[_MAX_PATH];
 	char szFileTitle[256];
 	BSTR pageName = NULL;
 
@@ -508,46 +558,19 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	HRESULT hr = S_OK;
 	if (GetSaveFileName(&SaveFileName))
 	{
-		// Get the current DOM document
-		nsIDOMDocument* pDocument = nsnull;
-		hr = GetDOMDocument(&pDocument);
-		if (FAILED(hr))
-		{
-			return hr;
-		}
-		
-		// Get an nsIDiskDocument interface to the DOM document
-		nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(pDocument);
-		if (!diskDoc)
-		{
-			return E_NOINTERFACE;
-		}
+        nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
 
-		// Create an nsILocalFile from the selected file path.
-		nsresult rv;
-		nsCOMPtr<nsILocalFile> theFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-		if (NS_FAILED(rv))
-			return rv;
+        char szDataFile[_MAX_PATH];
+        char szDataPath[_MAX_PATH];
+        char drive[_MAX_DRIVE];
+        char dir[_MAX_DIR];
+        char fname[_MAX_FNAME];
+        char ext[_MAX_EXT];
 
-		hr = theFile->InitWithPath(szFile);
-		if (FAILED(hr))
-		  return hr;
-		  		
-        // Figure out the mime type from the selection
-        nsAutoString mimeType; 
-        switch (SaveFileName.nFilterIndex)
-        {
-        case 1:
-            mimeType.AssignWithConversion("text/html");
-            break;
-        case 2:
-        default:
-            mimeType.AssignWithConversion("text/plain");
-            break;
-        }
-
-		// Save the file.
-		hr = diskDoc->SaveFile(theFile, PR_TRUE, PR_TRUE, mimeType.GetUnicode(), NS_LITERAL_STRING(""), 0, 72);
+        _splitpath(szFile, drive, dir, fname, ext);
+        sprintf(szDataFile, "%s_files", fname);
+        _makepath(szDataPath, drive, dir, szDataFile, "");
+        persist->SaveDocument(nsnull, szFile, szDataPath);
 	}
 
 	return hr;
@@ -564,10 +587,10 @@ LRESULT CMozillaBrowser::OnProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnCut);
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_GetInterface(mWebBrowser));
-    if (contentViewerEdit)
+    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(mWebBrowser));
+    if (clipboard)
     {
-        contentViewerEdit->CutSelection();
+        clipboard->CutSelection();
     }
     return 0;
 }
@@ -575,10 +598,10 @@ LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnCopy);
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_GetInterface(mWebBrowser));
-    if (contentViewerEdit)
+    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(mWebBrowser));
+    if (clipboard)
     {
-        contentViewerEdit->CopySelection();
+        clipboard->CopySelection();
     }
     return 0;
 }
@@ -586,10 +609,10 @@ LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 LRESULT CMozillaBrowser::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnPaste);
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_GetInterface(mWebBrowser));
-    if (contentViewerEdit)
+    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(mWebBrowser));
+    if (clipboard)
     {
-        contentViewerEdit->Paste();
+        clipboard->Paste();
     }
     return 0;
 }
@@ -597,10 +620,10 @@ LRESULT CMozillaBrowser::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 LRESULT CMozillaBrowser::OnSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnSelectAll);
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_GetInterface(mWebBrowser));
-    if (contentViewerEdit)
+    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(mWebBrowser));
+    if (clipboard)
     {
-        contentViewerEdit->SelectAll();
+        clipboard->SelectAll();
     }
     return 0;
 }
@@ -621,8 +644,9 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 	nsXPIDLCString aURI;
 	mWebBrowserContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
 
-	USES_CONVERSION;
-	std::wstring strURI = std::wstring(L"view-source:") + A2W(aURI);
+    nsAutoString strURI;
+    strURI.AssignWithConversion("view-source:");
+    strURI.AppendWithConversion(aURI);
 
 	CIPtr(IDispatch) spDispNew;
 	VARIANT_BOOL bCancel = VARIANT_FALSE;
@@ -634,36 +658,11 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 		if (spOther)
 		{
 			// tack in the viewsource command
-			BSTR bstrURL = SysAllocString(strURI.c_str());
+			CComBSTR bstrURL(strURI.GetUnicode());
 			CComVariant vURL(bstrURL);
 			VARIANT vNull;
 			vNull.vt = VT_NULL;
-
 			spOther->Navigate2(&vURL, &vNull, &vNull, &vNull, &vNull);			
-
-			// when and if we can get the container we should
-			// be able to tell the other windows container not to show toolbars, menus, etc.
-			// we would also be able to show the window.  one fix would be to 
-			// change the navigate method to set a flag if it's viewing source, and to 
-			// have it's document complete method tell it's container to hide toolbars and menu.
-			/*
-			IDispatch *pOtherContainer = NULL;
-			pOther->get_Container(&pOtherContainer);
-			if(pOtherContainer != NULL)
-			{
-				DWebBrowserEvents2 *pOtherEventSink;
-				if(SUCCEEDED(pOtherContainer->QueryInterface(IID_IDWebBrowserEvents2,(void**)&pOtherEventSink)))
-				{
-					__asm int 3
-
-					pOtherEventSink->Release();
-				}
-
-				pOtherContainer->Release();
-			}
-			*/
-
-			SysFreeString(bstrURL);
 		}
 	}
 
@@ -689,18 +688,43 @@ LRESULT CMozillaBrowser::OnDocumentForward(WORD wNotifyCode, WORD wID, HWND hWnd
 }
 
 
+LRESULT CMozillaBrowser::OnDocumentSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    return OnSelectAll(wNotifyCode, wID, hWndCtl, bHandled);
+}
+
+
 LRESULT CMozillaBrowser::OnDocumentPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     return OnPrint(wNotifyCode, wID, hWndCtl, bHandled);
 }
 
 
+LRESULT CMozillaBrowser::OnDocumentRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    Refresh();
+    return 0;
+}
+
+
 LRESULT CMozillaBrowser::OnDocumentProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    CPropertyDlg dlg;
-    CPPageDlg linkDlg;
-    dlg.AddPage(&linkDlg);
-    dlg.DoModal();
+    nsCOMPtr<nsIDOMDocument> ownerDoc;
+    if (mContextNode)
+    {
+        mContextNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
+    }
+
+    // Get the document URL
+    nsAutoString uri;
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(ownerDoc);
+    if (htmlDoc)
+    {
+        htmlDoc->GetURL(uri);
+    }
+
+    ShowURIPropertyDlg(uri);
+
     return 0;
 }
 
@@ -711,9 +735,101 @@ LRESULT CMozillaBrowser::OnDocumentProperties(WORD wNotifyCode, WORD wID, HWND h
 
 LRESULT CMozillaBrowser::OnLinkOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    GoForward();
+    nsAutoString uri;
+
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement = do_QueryInterface(mContextNode);
+    if (anchorElement)
+    {
+        anchorElement->GetHref(uri);
+    }
+
+    if (uri.Length() > 0)
+    {
+        CComBSTR bstrURI(uri.GetUnicode());
+		CComVariant vFlags(0);
+        Navigate(bstrURI, &vFlags, NULL, NULL, NULL);
+    }
+
     return 0;
 }
+
+
+LRESULT CMozillaBrowser::OnLinkOpenInNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    nsAutoString uri;
+
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement = do_QueryInterface(mContextNode);
+    if (anchorElement)
+    {
+        anchorElement->GetHref(uri);
+    }
+
+    if (uri.Length() > 0)
+    {
+        CComBSTR bstrURI(uri.GetUnicode());
+		CComVariant vFlags(navOpenInNewWindow);
+        Navigate(bstrURI, &vFlags, NULL, NULL, NULL);
+    }
+
+    return 0;
+}
+
+
+LRESULT CMozillaBrowser::OnLinkCopyShortcut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    nsAutoString uri;
+
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement = do_QueryInterface(mContextNode);
+    if (anchorElement)
+    {
+        anchorElement->GetHref(uri);
+    }
+
+    if (uri.Length() > 0 && OpenClipboard())
+    {
+        EmptyClipboard();
+
+        // CF_TEXT
+        HGLOBAL hmemText = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, uri.Length() + 1);
+        char *pszText = (char *) GlobalLock(hmemText);
+        uri.ToCString(pszText, uri.Length() + 1);
+        GlobalUnlock(hmemText);
+        SetClipboardData(CF_TEXT, hmemText);
+
+        // UniformResourceLocator - CFSTR_SHELLURL
+        const UINT cfShellURL = RegisterClipboardFormat(CFSTR_SHELLURL);
+        HGLOBAL hmemURL = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, uri.Length() + 1);
+        char *pszURL = (char *) GlobalLock(hmemURL);
+        uri.ToCString(pszURL, uri.Length() + 1);
+        GlobalUnlock(hmemURL);
+        SetClipboardData(cfShellURL, hmemURL);
+
+        // TODO
+        // FileContents - CFSTR_FILECONTENTS
+        // FileGroupDescriptor - CFSTR_FILEDESCRIPTORA
+        // FileGroupDescriptorW - CFSTR_FILEDESCRIPTORW
+
+        CloseClipboard();
+    }
+    return 0;
+}
+
+
+LRESULT CMozillaBrowser::OnLinkProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    nsAutoString uri;
+
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement = do_QueryInterface(mContextNode);
+    if (anchorElement)
+    {
+        anchorElement->GetHref(uri);
+    }
+
+    ShowURIPropertyDlg(uri);
+
+    return 0;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -909,7 +1025,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
 	PRBool aAllowPlugins = PR_TRUE;
 
-	// Create web shell
+	// Create the web browser
 	mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID, &rv);
 	if (NS_FAILED(rv))
 	{
@@ -959,6 +1075,9 @@ HRESULT CMozillaBrowser::CreateBrowser()
     }
 	rootDocShell->SetDocLoaderObserver(NS_STATIC_CAST(nsIDocumentLoaderObserver*, mWebBrowserContainer));
 	mWebBrowserAsWin->SetVisibility(PR_TRUE);
+
+    // Subscribe for progress notifications
+    mWebBrowser->AddWebBrowserListener(NS_STATIC_CAST(nsIWebBrowserChrome*, mWebBrowserContainer), NS_GET_IID(nsIWebProgressListener));
 
 	mValidBrowserFlag = TRUE;
 
@@ -1116,6 +1235,8 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::LoadBrowserHelpers);
 
+    UnloadBrowserHelpers();
+
 	// IE loads browser helper objects from a branch of the registry
 	// Search the branch looking for objects to load with the control.
 
@@ -1126,11 +1247,35 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
 		return S_FALSE;
 	}
 
-	std::vector<CLSID> cClassList;
-
-	DWORD nKey = 0;
+    // Count the number of browser helper object keys
+    ULONG nHelperKeys = 0;
 	LONG nResult = ERROR_SUCCESS;
 	while (nResult == ERROR_SUCCESS)
+	{
+		TCHAR szCLSID[50];
+		DWORD dwCLSID = sizeof(szCLSID) / sizeof(TCHAR);
+		FILETIME cLastWrite;
+		
+		// Read next subkey
+		nResult = RegEnumKeyEx(cKey, nHelperKeys, szCLSID, &dwCLSID, NULL, NULL, NULL, &cLastWrite);
+		if (nResult != ERROR_SUCCESS)
+		{
+			break;
+		}
+        nHelperKeys++;
+    }
+    if (nHelperKeys == 0)
+    {
+     	NG_TRACE(_T("No browser helper objects found\n"));
+		return S_FALSE;
+    }
+
+    // Get the CLSID for each browser helper object
+    CLSID *pClassList = new CLSID[nHelperKeys];
+	DWORD nHelpers = 0;
+    DWORD nKey = 0;
+	nResult = ERROR_SUCCESS;
+    while (nResult == ERROR_SUCCESS)
 	{
 		TCHAR szCLSID[50];
 		DWORD dwCLSID = sizeof(szCLSID) / sizeof(TCHAR);
@@ -1153,20 +1298,15 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
 			continue;
 		}
 
-		cClassList.push_back(clsid);
+        pClassList[nHelpers++] = clsid;
 	}
 
-	// Empty list?
-	if (cClassList.empty())
-	{
-		NG_TRACE(_T("No browser helper objects found\n"));
-		return S_FALSE;
-	}
+    mBrowserHelperList = new CComUnkPtr[nHelpers];
 
 	// Create each object in turn
-	for (std::vector<CLSID>::const_iterator i = cClassList.begin(); i != cClassList.end(); i++)
+	for (ULONG i = 0; i < nHelpers; i++)
 	{
-		CLSID clsid = *i;
+		CLSID clsid = pClassList[i];
 		HRESULT hr;
 		CComQIPtr<IObjectWithSite, &IID_IObjectWithSite> cpObjectWithSite;
 
@@ -1181,8 +1321,10 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
 
 		// Store in the list
 		CComUnkPtr cpUnk = cpObjectWithSite;
-		mBrowserHelperList.push_back(cpUnk);
+        mBrowserHelperList[mBrowserHelperListCount++] = cpUnk;
 	}
+
+    delete []pClassList;
 		
 	return S_OK;
 }
@@ -1192,16 +1334,29 @@ HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::UnloadBrowserHelpers);
 
-	for (ObjectList::const_iterator i = mBrowserHelperList.begin(); i != mBrowserHelperList.end(); i++)
+    if (mBrowserHelperList == NULL)
+    {
+        return S_OK;
+    }
+
+    // Destroy each helper    
+	for (ULONG i = 0; i < mBrowserHelperListCount; i++)
 	{
-		CComUnkPtr cpUnk = *i;
-		CComQIPtr<IObjectWithSite, &IID_IObjectWithSite> cpObjectWithSite = cpUnk;
-		if (cpObjectWithSite)
-		{
-			cpObjectWithSite->SetSite(NULL);
-		}
+		CComUnkPtr cpUnk = mBrowserHelperList[i];
+        if (cpUnk)
+        {
+		    CComQIPtr<IObjectWithSite, &IID_IObjectWithSite> cpObjectWithSite = cpUnk;
+		    if (cpObjectWithSite)
+		    {
+			    cpObjectWithSite->SetSite(NULL);
+		    }
+        }
 	}
-	mBrowserHelperList.clear();
+
+    // Cleanup the array
+    mBrowserHelperListCount = 0;
+    delete []mBrowserHelperList;
+    mBrowserHelperList = NULL;
 
 	return S_OK;
 }
@@ -1451,7 +1606,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 		RETURN_E_UNEXPECTED();
 	}
 
-	OLECHAR * sUrl = L"http://home.netscape.com";
+    nsAutoString sUrl;
+    sUrl.AssignWithConversion("http://home.netscape.com");
 
 	// Find the home page stored in prefs
 	if (mPrefs)
@@ -1461,12 +1617,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 		rv = mPrefs->GetLocalizedUnicharPref(c_szPrefsHomePage, getter_Copies(szBuffer));
 		if (rv == NS_OK)
 		{
-			USES_CONVERSION;
-			sUrl = A2OLE(NS_ConvertUCS2toUTF8(szBuffer));
+			sUrl.AssignWithConversion(NS_ConvertUCS2toUTF8(szBuffer));
 		}
 	}
 	// Navigate to the home page
-	Navigate(sUrl, NULL, NULL, NULL, NULL);
+    CComBSTR bstrUrl(sUrl.GetUnicode());
+	Navigate(bstrUrl , NULL, NULL, NULL, NULL);
 	
 	return S_OK;
 }
@@ -1514,11 +1670,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		RETURN_E_INVALIDARG();
 	}
 
-	std::wstring sUrl(URL);
+    nsAutoString sUrl(URL);
 
 	// Check for a view-source op - this is a bit kludgy
 	// TODO
-	if (sUrl.compare(0, 12, L"view-source:") == 0)
+	if (sUrl.CompareWithConversion(L"view-source:", PR_TRUE, 12) == 0)
  	{
 		// Broken code - appears to want to replace view-source: with view: to 
 		// get Mozilla to respond to the IE view-source: protocol.
@@ -1610,7 +1766,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
 	if (spIWebNavigation)
 	{
-		res = spIWebNavigation->LoadURI(sUrl.c_str(), nsIWebNavigation::LOAD_FLAGS_NONE);
+		res = spIWebNavigation->LoadURI(sUrl.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 	}
 
 	return res;
@@ -1878,7 +2034,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Type(BSTR __RPC_FAR *Type)
 		nsIDOMDocumentType *pIDOMDocumentType = nsnull;
 		if ( SUCCEEDED(pIDOMDocument->GetDoctype(&pIDOMDocumentType)) )
 		{
-			nsString docName;
+			nsAutoString docName;
 			pIDOMDocumentType->GetName(docName);
 			//NG_TRACE("pIDOMDocumentType returns: %s", docName);
 			//Still need to manipulate docName so that it goes into *Type param of this function.

@@ -128,6 +128,7 @@ BEGIN
         MENUITEM "&Paste",                      ID_DOCUMENT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&View Source",                ID_DOCUMENT_VIEWSOURCE
+        , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Pr&int",                      ID_DOCUMENT_PRINT
         MENUITEM "&Refresh",                    ID_DOCUMENT_REFRESH
@@ -166,7 +167,7 @@ BEGIN
     POPUP "Image Popup"
     BEGIN
         MENUITEM "Cu&t",                        ID_EDIT_CUT, GRAYED
-        MENUITEM "&Copy",                       ID_EDIT_COPY
+        MENUITEM "&Copy",                       ID_EDIT_COPY, GRAYED
         MENUITEM "&Paste",                      ID_EDIT_PASTE, GRAYED
         MENUITEM "Select &All",                 ID_EDIT_SELECTALL
         MENUITEM "Print",                       ID_SELECTIONPOPUP_PRINT
@@ -317,7 +318,8 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,88,183,50,14
     PUSHBUTTON      "Close",IDCLOSE,142,183,50,14
-    CONTROL         "",IDC_PPAGE_MARKER,"Static",SS_BLACKFRAME,7,7,185,170
+    CONTROL         "",IDC_PPAGE_MARKER,"Static",SS_BLACKFRAME | NOT 
+                    WS_VISIBLE,7,7,185,170
 END
 
 IDD_PPAGE_LINK DIALOG DISCARDABLE  0, 0, 185, 170
@@ -327,10 +329,11 @@ BEGIN
     LTEXT           "Address: (URL)",IDC_STATIC,0,68,27,20
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,32,185,1
     LTEXT           "Type:",IDC_STATIC,0,53,19,8
-    LTEXT           "type",IDC_TYPE,35,53,14,8
+    LTEXT           "type",IDC_TYPE,35,53,149,8
     LTEXT           "Protocol:",IDC_STATIC,0,38,28,8
-    LTEXT           "protocol",IDC_PROTOCOL,35,38,26,8
-    EDITTEXT        IDC_ADDRESS,35,68,149,61,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "protocol",IDC_PROTOCOL,35,38,149,8
+    EDITTEXT        IDC_ADDRESS,35,68,149,61,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY
     ICON            IDI_MOZILLABROWSER,IDC_STATIC,5,6,20,20
 END
 

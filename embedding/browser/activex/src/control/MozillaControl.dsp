@@ -64,7 +64,7 @@ CFG=MozillaControl - Win32 Debug
 # PROP Intermediate_Dir "Debug"
 # PROP Cmd_Line "nmake /f makefile.win"
 # PROP Rebuild_Opt "/a"
-# PROP Target_File "win32_d.obj\mozctl.dll"
+# PROP Target_File "M:\source\mozilla\dist\WIN32_D.OBJ\bin\mozctl.dll"
 # PROP Bsc_Name ""
 # PROP Target_Dir ""
 

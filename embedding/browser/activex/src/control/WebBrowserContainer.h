@@ -27,7 +27,9 @@
 
 #include "nsIContextMenuListener.h"
 #include "nsICommandHandler.h"
+#include "nsIWebBrowserSiteWindow.h"
 #include "nsWeakReference.h"
+
 
 // This is the class that handles the XPCOM side of things, callback
 // interfaces into the web shell and so forth.

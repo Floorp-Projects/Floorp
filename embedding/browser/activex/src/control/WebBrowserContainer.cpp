@@ -57,8 +57,8 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
-	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
-	NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
@@ -89,7 +89,7 @@ NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & uuid, void * *res
 
 NS_IMETHODIMP CWebBrowserContainer::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
 {
-    m_pOwner->ShowContextMenu(aContextFlags);
+    m_pOwner->ShowContextMenu(aContextFlags, aEvent, aNode);
     return NS_OK;
 }
 

@@ -31,8 +31,15 @@ class CPPageDlg : public CDialogImpl<CPPageDlg>
 public:
     enum { IDD = IDD_PPAGE_LINK };
 
+    nsCString mProtocol;
+    nsCString mType;
+    nsCString mURL;
+
     BEGIN_MSG_MAP(CPPageLinkDlg)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
     END_MSG_MAP()
+
+    LRESULT OnInitDialog(UINT uMsg, WPARAM wParam,  LPARAM lParam, BOOL& bHandled);
 };
 
 
