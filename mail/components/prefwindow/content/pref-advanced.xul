@@ -76,7 +76,6 @@
                        
                        // return receipts
                        "alwaysRequest", "receiptFolder", "receiptSend", "notInToCcPref", "outsideDomainPref", "otherCasesPref",
-                       "mailPaneConfig",
                        
                        // addressing prefs
                        "emailCollectionOutgoing", "addressingAutocomplete", "autocompleteLDAP",
@@ -158,7 +157,7 @@
     <expander id="privacySettings" class="prefExpander" label="&privacyTitle.label;" persist="open">
       <label class="expanderDescription" value="&privacyFeature.label;" flex="1"/>
 
-      <vbox id="contentEnablingBox">
+      <vbox id="contentEnablingBox" class="indent">
         <checkbox id="javascriptAllowMailNews" 
                   label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
                   prefstring="javascript.allow.mailnews"/>
@@ -168,7 +167,7 @@
                   prefattribute="checked"/>
         <checkbox id="networkImageDisableImagesInMailNews" 
                   label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
-                  pref="true" preftype="bool" prefstring="mailnews.message_display.disable_remote_image"
+                  pref="true" preftype="bool" prefstring="mailnews.message_+"
                   prefinverted="true" prefattribute="checked"/>
         <checkbox id="networkDisableCookieForMailNews"
                   label="&disableCookieForMailNews.label;" accesskey="&disableCookieForMailNews.accesskey;"
@@ -222,17 +221,6 @@
                oncommand="onEditDirectories();"
                accesskey="&editDirectories.accesskey;"/>
       </hbox>
-    </expander>
-    
-    <!-- Window Settings -->
-    <expander id="windowSettings" class="prefExpander" label="&windowSettings.label;" persist="open">
-      <label class="expanderDescription" value="&selectWindowLayout.label;" control="mailPaneConfig" flex="1"/>
-      <hbox align="center" class="indent">
-        <radiogroup id="mailPaneConfig" prefstring="mail.pane_config" orient="horizontal">
-          <radio class="iconic" value="0" id="classic"/>
-          <radio class="iconic" value="1" id="wide"/>
-        </radiogroup>
-      </hbox> 
     </expander>
 
     <!-- Return Receipts -->

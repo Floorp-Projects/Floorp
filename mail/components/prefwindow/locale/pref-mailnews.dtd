@@ -18,3 +18,6 @@
 <!ENTITY warnOnSendAccelKey.label         "Confirm when using keyboard shortcut to send message">
 <!ENTITY warnOnSendAccelKey.accesskey     "o">
 
+<!ENTITY windowSettings.label             "Windows">
+<!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail.">
+<!ENTITY selectWindowLayout.accesskey     "S">

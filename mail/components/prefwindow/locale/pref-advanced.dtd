@@ -57,6 +57,3 @@
 <!ENTITY  noproxy.accesskey             "n">
 <!ENTITY  noproxyExplain.label          "Example: .mozilla.org, .net.nz">
 
-<!ENTITY windowSettings.label             "Windows">
-<!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail.">
-<!ENTITY selectWindowLayout.accesskey     "l">

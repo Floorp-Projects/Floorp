@@ -39,8 +39,7 @@
   <script type="application/x-javascript">
   <![CDATA[
 
-    var _elementIDs = ["mailnewsConfirmMoveFoldersToTrash", 
-                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailRememberLastMsg",
+    var _elementIDs = ["mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailPaneConfig", "mailRememberLastMsg",
                        "mailnewsSoundFileUrl", "newMailNotification", "newMailNotificationType",
                         "newMailNotificationAlert"];
   ]]>
@@ -49,12 +48,6 @@
   <groupbox>
     <caption label="&generalSettings.label;"/>
     
-    <hbox align="center">
-      <checkbox id="mailnewsConfirmMoveFoldersToTrash" label="&confirmMove.label;"
-                prefstring="mailnews.confirm.moveFoldersToTrash"
-                accesskey="&confirmMove.accesskey;"/>
-    </hbox>
-
     <hbox align="start" id="mapi"/>
 
     <hbox align="center">
@@ -65,6 +58,17 @@
 
     <separator class="thin"/>
     
+  </groupbox>
+  
+  <groupbox>
+    <caption label="&windowSettings.label;"/>
+    <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
+    <hbox align="center" class="indent">
+      <radiogroup id="mailPaneConfig" prefstring="mail.pane_config" orient="horizontal">
+        <radio class="iconic" value="0" id="classic"/>
+        <radio class="iconic" value="1" id="wide"/>
+      </radiogroup>
+    </hbox> 
   </groupbox>
 
   <groupbox>
@@ -118,5 +122,4 @@
       </hbox>
     </hbox>
   </groupbox>
-
 </page>
