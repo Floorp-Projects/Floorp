@@ -563,21 +563,19 @@ nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMViewCSS **aViewCSS)
   // if we have an element node
   if (element) {
     // find the owner document
-    nsIDOMDocument* doc;
+    nsCOMPtr<nsIDOMDocument> doc;
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
-    res = node->GetOwnerDocument(&doc);
+    res = node->GetOwnerDocument(getter_AddRefs(doc));
     if (NS_FAILED(res)) return res;
     if (doc) {
-      nsIDOMDocumentView* documentView;
-      nsIDOMAbstractView* abstractView;
+      nsCOMPtr<nsIDOMDocumentView> documentView;
+      nsCOMPtr<nsIDOMAbstractView> abstractView;
       // from the document, get the abtractView
-      doc->QueryInterface(NS_GET_IID(nsIDOMDocumentView),
-                          (void **) &documentView);
-      res = documentView->GetDefaultView(&abstractView);
+      documentView = do_QueryInterface(doc);
+      res = documentView->GetDefaultView(getter_AddRefs(abstractView));
       if (NS_FAILED(res)) return res;
       // from the abstractView, get the CSS view
-      abstractView->QueryInterface(NS_GET_IID(nsIDOMViewCSS),
-                          (void **) aViewCSS);
+      CallQueryInterface(abstractView, aViewCSS);
       return NS_OK;
     }
   }
