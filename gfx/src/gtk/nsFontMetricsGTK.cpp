@@ -1130,6 +1130,8 @@ static nsFontCharSetMap gCharSetMap[] =
 #ifdef MOZ_MATHML
   { "adobe-fontspecific", &Special       },
 #endif
+  { "big5-0",             &Big5          },
+  { "big5.et-0",          &Big5          },
   { "cns11643.1986-1",    &CNS116431     },
   { "cns11643.1986-2",    &CNS116432     },
   { "cns11643.1992-1",    &CNS116431     },
