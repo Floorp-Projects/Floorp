@@ -411,11 +411,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) performSearch
 {
+  // sometimes we get a null mSession, and if we don't check for that we crash
   if (mSession) {
     nsAutoString searchString;
     [mSearchString assignTo_nsAString:searchString];
-    if (mSession == nsnull)
-      NSLog(@"mSession is equal to nsnull");
     nsresult rv = mSession->OnStartLookup(searchString.get(), mResults, mListener);
     if (NS_FAILED(rv))
       NSLog(@"Unable to perform autocomplete lookup");
