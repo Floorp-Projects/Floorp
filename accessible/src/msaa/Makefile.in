@@ -74,7 +74,6 @@ CPPSRCS = \
   nsRootAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
   nsXULMenuAccessibleWrap.cpp \
-  nsXULTabAccessibleWrap.cpp \
   nsXULTreeAccessibleWrap.cpp \
   $(NULL)
 
@@ -86,7 +85,6 @@ EXPORTS = \
   nsRootAccessibleWrap.h \
   nsHTMLWin32ObjectAccessible.h \
   nsXULMenuAccessibleWrap.h \
-  nsXULTabAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
   $(NULL)
 

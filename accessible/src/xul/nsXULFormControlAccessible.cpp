@@ -497,29 +497,6 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetState(PRUint32 *_retval)
 }
 
 /**
-  * This gets the parent of the RadioGroup (our grandparent) and sets it 
-  *  as our parent, for future calls. 
-  */
-NS_IMETHODIMP nsXULRadioButtonAccessible::GetParent(nsIAccessible **  aParent)
-{
-  if (! mParent) {
-    nsCOMPtr<nsIAccessible> tempParent;
-    nsAccessible::GetParent(getter_AddRefs(tempParent));
-    if (tempParent) {
-      tempParent->GetParent(getter_AddRefs(mParent));
-      if (!mParent) {
-        *aParent = nsnull;
-        return NS_ERROR_FAILURE; // Shutting down
-      }
-    }
-  }
- 
-  *aParent = mParent;
-  NS_ADDREF(*aParent);
-  return NS_OK;
-}
-
-/**
   * XUL Radio Group
   *   The Radio Group proxies for the Radio Buttons themselves. The Group gets
   *   focus whereas the Buttons do not. So we only have an accessible object for

@@ -47,6 +47,7 @@
 #include "nsINodeInfo.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
+#include "nsTextFormatter.h"
 #include "nsIView.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
@@ -267,6 +268,57 @@ STDMETHODIMP nsAccessibleWrap::get_accValue(
   return S_OK;
 }
 
+NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
+{
+  // For items that are a choice in a list of choices, 
+  // use MSAA description field to shoehorn positional info, it's becoming
+  // a defacto standard use for the field.
+  // Tree items override this, because they provide the current level as well
+
+  aDescription.Truncate();
+  PRUint32 currentRole;
+  nsresult rv = GetFinalRole(&currentRole);
+  if (NS_FAILED(rv) ||
+      (currentRole != ROLE_LISTITEM && currentRole != ROLE_MENUITEM &&
+       currentRole != ROLE_RADIOBUTTON && currentRole != ROLE_PAGETAB)) {
+    return rv;
+  }
+  
+  nsCOMPtr<nsIAccessible> parent;
+  GetParent(getter_AddRefs(parent));
+  if (!parent) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  PRInt32 indexInParent = 0, numSiblings = 0;
+  
+  nsCOMPtr<nsIAccessible> sibling, nextSibling;
+  parent->GetFirstChild(getter_AddRefs(sibling));
+  NS_ENSURE_TRUE(sibling, NS_ERROR_FAILURE);
+  
+  PRBool foundCurrent = PR_FALSE;
+  PRUint32 siblingRole;
+  while (sibling) {
+    sibling->GetFinalRole(&siblingRole);
+    if (siblingRole == currentRole) {
+      ++ numSiblings;
+      if (!foundCurrent) {
+        ++ indexInParent;
+        if (sibling == this) {
+          foundCurrent = PR_TRUE;        
+        }
+      }
+    }
+    sibling->GetNextSibling(getter_AddRefs(nextSibling));
+    sibling = nextSibling;
+  }
+  
+  // Don't localize the string "of" -- that's just the format of this string.
+  // The AT will parse the relevant numbers out and add its own localization.
+  nsTextFormatter::ssprintf(aDescription, L"%d of %d", indexInParent, numSiblings);
+
+  return NS_OK;
+}
 
 STDMETHODIMP nsAccessibleWrap::get_accDescription( 
       /* [optional][in] */ VARIANT varChild,
