@@ -23,11 +23,9 @@
 #ifndef _xfe_builtintreeview_h
 #define _xfe_builtintreeview_h
 
-class XFE_RDFTreeView;
+#include "RDFTreeView.h"
 
-#include "RDFBase.h"
-
-class XFE_BuiltinTreeView : public XFE_RDFBase
+class XFE_BuiltinTreeView : public XFE_RDFTreeView
 {
  public:
 	XFE_BuiltinTreeView(XFE_Component *toplevel_component, 
@@ -37,14 +35,15 @@ class XFE_BuiltinTreeView : public XFE_RDFBase
 						LO_BuiltinStruct *builtin_struct);
 	virtual ~XFE_BuiltinTreeView();
 
-	Widget getBaseWidget();
+    // Override RDFBase method
+    virtual void          notify      (HT_Resource n, HT_Event whatHappened);
 
  protected:
-	XFE_RDFTreeView *m_view;
-	Widget          mainForm;
-	char            *url;
-	char            *target;
-	char            *classId;
+    XFE_RDFTreeView *    _rdftree;
+	Widget               mainForm;
+	char                 *url;
+	char                 *target;
+	char                 *classId;
 };
 
 

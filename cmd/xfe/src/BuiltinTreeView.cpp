@@ -28,23 +28,22 @@
 #include "xp_ncent.h"
 #include "xfe.h"
 
+#if DEBUG_slamm
+#define D(x) x
+#else
+#define D(x)
+#endif
+
+
 XFE_BuiltinTreeView::XFE_BuiltinTreeView(XFE_Component *toplevel_component, 
 										 Widget         parent, 
 										 XFE_View      *parent_view,
 										 MWContext     *context,
 										 LO_BuiltinStruct *builtin_struct)
-	: XFE_RDFBase()
+    : XFE_RDFTreeView(toplevel_component, parent, parent_view, context)
 {
 	printf("XFE_BuiltinTreeView::XFE_BuiltinTreeView()\n");
 
-	// Create our form to live in.
-	mainForm = XtVaCreateManagedWidget("builtinTreeViewMainForm",
-									   xmFormWidgetClass,
-									   parent,
-									   NULL);
-	
-#if 1
-	
 	// Hunt the builtin_struct.
 	classId = LO_GetBuiltInAttribute(builtin_struct, "classid");
 	url     = LO_GetBuiltInAttribute(builtin_struct, "data");
@@ -55,16 +54,10 @@ XFE_BuiltinTreeView::XFE_BuiltinTreeView(XFE_Component *toplevel_component,
 				   builtin_struct->attributes.names, 
 				   builtin_struct->attributes.values);
 
-	// Create an RDF View instance and give it our form.
-	m_view = new XFE_RDFTreeView(toplevel_component,
-								 mainForm,
-								 parent_view, 
-								 context);
+    setHTView(HT_GetSelectedView(_ht_pane));
 
-	m_view->setBaseWidget(mainForm);
 
-	m_view->show();
-#else
+#if 0
 	// Test, I'm not seeing a tree yet.  Please delete this soon :-)
 	{
 		Widget testHack = XmCreatePushButton(mainForm, "RDFTreeView", NULL, 0);
@@ -79,14 +72,26 @@ XFE_BuiltinTreeView::XFE_BuiltinTreeView(XFE_Component *toplevel_component,
 
 XFE_BuiltinTreeView::~XFE_BuiltinTreeView()
 {
-	if(m_view) {
-		delete m_view;
-	}
 }
-
-
-Widget
-XFE_BuiltinTreeView::getBaseWidget()
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_BuiltinTreeView::notify(HT_Resource		n, 
+                            HT_Event		whatHappened)
 {
-	return mainForm;
+  D(debugEvent(n, whatHappened,"Builtin"););
+
+  if (whatHappened == HT_EVENT_VIEW_SELECTED)
+  {
+      HT_View view = HT_GetView(n);
+      
+      if (view != HT_GetSelectedView(_ht_pane))
+      {
+          HT_SetSelectedView(_ht_pane, view);
+      }
+      
+      _ht_view = view;
+      setHTView(view);
+  }
+  XFE_RDFTreeView::notify(n, whatHappened);
 }
+//////////////////////////////////////////////////////////////////////
