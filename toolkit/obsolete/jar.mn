@@ -8,8 +8,3 @@ toolkit.jar:
 +  content/global/nsUserSettings.js             (content/nsUserSettings.js)
 +  content/global/strres.js                     (content/strres.js)
 +  content/global/widgetStateManager.js         (content/widgetStateManager.js)
-
-en-US.jar:
-+  locale/en-US/global/charset.dtd              (locale/charset.dtd)
-*+ locale/en-US/global/dialogOverlay.dtd        (locale/dialogOverlay.dtd)
-+  locale/en-US/global/nsTreeSorting.properties (locale/nsTreeSorting.properties)
