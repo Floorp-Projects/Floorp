@@ -26,7 +26,6 @@
 #include "nsIByteBufferInputStream.h" // for our internal stream state
 #include "nsIInputStream.h"
 
-#include "prcmon.h"
 #include "prprf.h"
 #include "netCore.h"
 #include "ftpCore.h"
