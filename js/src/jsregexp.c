@@ -1161,7 +1161,7 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags, JSBool flat)
                 len = 0;
             }
             if (ren) {
-                if (!SetNext(&state, ren, ren2));
+                if (!SetNext(&state, ren, ren2))
                     goto out;
             }
             else
