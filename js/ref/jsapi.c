@@ -806,7 +806,7 @@ JS_MaybeGC(JSContext *cx)
     bytes = rt->gcBytes;
     lastBytes = rt->gcLastBytes;
     if (bytes > 8192 && bytes > lastBytes + lastBytes / 2)
-	js_GC(cx);
+	JS_GC(cx);
 }
 
 JS_PUBLIC_API(JSGCCallback)
