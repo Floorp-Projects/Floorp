@@ -26,6 +26,8 @@
 
 #define AutoCapture
 #include "wallet.h"
+#include "singsign.h"
+
 #include "nsNetUtil.h"
 
 #include "nsIServiceManager.h"
@@ -51,7 +53,6 @@
 #include "prprf.h"  
 #include "nsIProfile.h"
 #include "nsIContent.h"
-#include "nsVoidArray.h"
 
 #include "nsIWalletService.h"
 
@@ -97,23 +98,7 @@ PRLogModuleInfo* gWalletLog = nsnull;
 /* The following data and procedures are for preference */
 /********************************************************/
 
-typedef int (*PR_CALLBACK PrefChangedFunc) (const char *, void *);
-
-extern void
-SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
-
-extern PRBool
-SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
-
-extern void
-SI_SetBoolPref(const char * prefname, PRBool prefvalue);
-
-extern void
-SI_SetCharPref(const char * prefname, const char * prefvalue);
-
-extern void
-SI_GetCharPref(const char * prefname, char** aPrefvalue);
-
+static const char *pref_Caveat = "wallet.caveat";
 #ifdef AutoCapture
 static const char *pref_captureForms = "wallet.captureForms";
 static const char *pref_enabled = "wallet.enabled";
@@ -735,6 +720,15 @@ Wallet_Localize(char* genericString) {
   }
   v = ptrv;
   nsCRT::free(ptrv);
+
+  /* convert # to newlines */
+  PRUint32 i;
+  for (i=0; i<v.Length(); i++) {
+    if (v.CharAt(i) == '#') {
+      v.SetCharAt('\n', i);
+    }
+  }
+
   return v.ToNewUnicode();
 }
 
@@ -797,10 +791,6 @@ Wallet_ConfirmYN(PRUnichar * szMessage) {
   Recycle(confirm_string);
   return (buttonPressed == 0);
 }
-
-#define YES_BUTTON 0
-#define NO_BUTTON 1
-#define NEVER_BUTTON 2
 
 PUBLIC PRInt32
 Wallet_3ButtonConfirm(PRUnichar * szMessage)
@@ -990,18 +980,14 @@ wallet_CryptSetup() {
   return NS_OK;
 }
 
-#include "nsIPref.h"
+#define PREFIX "~"
 #include "plbase64.h"
 
 PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
 
   /* use SecretDecoderRing if encryption pref is set */
-  PRBool prefvalue = PR_FALSE;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
-  if (NS_SUCCEEDED(rv) && 
-      NS_SUCCEEDED(prefs->GetBoolPref("wallet.crypto", &prefvalue)) &&
-      prefvalue) {
+  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     rv = wallet_CryptSetup();
     if (NS_SUCCEEDED(rv)) {
       rv = gSecretDecoderRing->EncryptString(text, &crypt);
@@ -1013,9 +999,6 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
   }
 
   /* otherwise do our own obscuring using Base64 encoding */
-
-#define PREFIX "~"
-
   char * crypt0 = PL_Base64Encode((const char *)text, 0, NULL);
   if (!crypt0) {
     return NS_ERROR_FAILURE;
@@ -1030,6 +1013,15 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
   }
   crypt[PL_strlen(PREFIX) + PL_strlen(crypt0)] = '\0';
   Recycle(crypt0);
+
+  /* test for first obscuring ever and give caveat if so */
+  if (!SI_GetBoolPref(pref_Caveat, PR_FALSE)) {
+    SI_SetBoolPref(pref_Caveat, PR_TRUE);
+    PRUnichar * message = Wallet_Localize("Caveat");
+    Wallet_Alert(message);
+    Recycle(message);
+  }
+
   return NS_OK;
 }
 
@@ -1514,8 +1506,6 @@ PUBLIC nsresult Wallet_ResourceDirectory(nsFileSpec& dirSpec) {
   return res;
 }
 
-extern void SI_InitSignonFileName();
-
 PUBLIC char *
 Wallet_RandomName(char* suffix)
 {
@@ -1527,8 +1517,6 @@ Wallet_RandomName(char* suffix)
   PR_snprintf(name, 13, "%lu.%s", ((int)curTime%100000000), suffix);
   return PL_strdup(name);
 }
-
-#define HEADER_VERSION "#2c"
 
 /*
  * get a line from a file
@@ -1884,7 +1872,10 @@ wallet_GetHostFile(nsIURI * url) {
   }
   urlName.AppendWithConversion(file);
   nsCRT::free(file);
-  return urlName;
+
+  nsAutoString retString;
+  urlName.Left(retString, urlName.FindChar('?')); /* strip off query string */
+  return retString;
 }
 
 /*
@@ -1930,20 +1921,18 @@ PRInt32 FieldToValue(
         for (PRInt32 i=0; i<count; i++) {
           ptr1 = NS_STATIC_CAST(wallet_Sublist*, itemList2->ElementAt(i));
 
-         /* skip over values found previously */
-         /*   note: a returned index of -1 means not-found.  So we will use the
-          *   negative even numbers (-2, -4, -6) to designate found as a concatenation
-          *   where -2 means first value of each concatenation, -4 means second value, etc.
-          */
-         PRInt32 index3 = 0;
-         for (PRInt32 j=0; j>index; j -= 2) {
-           if (!wallet_ReadFromList
-              (ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
-             break;
-           }
-         }
-
-
+          /* skip over values found previously */
+          /*   note: a returned index of -1 means not-found.  So we will use the
+           *   negative even numbers (-2, -4, -6) to designate found as a concatenation
+           *   where -2 means first value of each concatenation, -4 means second value, etc.
+           */
+          PRInt32 index3 = 0;
+          for (PRInt32 j=0; j>index; j -= 2) {
+            if (!wallet_ReadFromList
+               (ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
+              break;
+            }
+          }
 
           if (wallet_ReadFromList
               (ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
@@ -2465,12 +2454,6 @@ WLLT_GetPrefillListForViewer(nsAutoString& aPrefillList)
   aPrefillList = buffer;
 }
 
-extern PRBool
-SI_InSequence(nsAutoString sequence, int number);
-
-extern PRUnichar*
-SI_FindValueInArgs(nsAutoString results, nsAutoString name);
-
 PRIVATE void
 wallet_FreeURL(wallet_MapElement *url) {
 
@@ -2810,9 +2793,6 @@ PUBLIC void
 WLLT_ReencryptAll() {
 }
 
-extern PRBool
-SINGSIGN_ReencryptAll();
-
 MODULE_PRIVATE int PR_CALLBACK
 wallet_ReencryptAll(const char * newpref, void * data) {
   PRUnichar * message;
@@ -2863,6 +2843,20 @@ if (!changingPassword) {
   if (!SINGSIGN_ReencryptAll()) {
     goto fail;
   }
+
+  /* force a rewriting of prefs.js to make sure pref_Crypto got updated
+   *
+   *   Note: In the event of a crash after changing this pref (either way), the user
+   *   could get misled as to what state his storage was in.  If the crash occurred 
+   *   after changing to encrypted, he could think he was encrypting in the future (because
+   *   he remembered changed to encypting at one time) but his new values are only being
+   *   obscurred.  If the crash occurred after changing to obscured, later on he might
+   *   think his store was encrypted (because he checked the pref panel and that's what
+   *   it told him) whereas some of the earlier values are actually obscured and so not
+   *   protected.  For both these reasons, we force this rewriting of the prefs file now.
+   */
+  SI_SetBoolPref(pref_Crypto, SI_GetBoolPref(pref_Crypto, PR_TRUE));
+
 //  message = Wallet_Localize("Converted");
 //  Wallet_Alert(message);
 //  Recycle(message);
@@ -2870,7 +2864,7 @@ if (!changingPassword) {
   return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
 fail:
   /* toggle the pref back to its previous value */
-  SI_SetBoolPref("wallet.crypto", !SI_GetBoolPref("wallet.crypto", PR_TRUE));
+  SI_SetBoolPref(pref_Crypto, !SI_GetBoolPref(pref_Crypto, PR_TRUE));
 
   /* alert the user to the failure */
   message = Wallet_Localize("NotConverted");
@@ -2882,7 +2876,7 @@ fail:
 
 PUBLIC void
 WLLT_InitReencryptCallback() {
-  SI_RegisterCallback("wallet.crypto", wallet_ReencryptAll, NULL);
+  SI_RegisterCallback(pref_Crypto, wallet_ReencryptAll, NULL);
 }
 
 /*
@@ -3172,9 +3166,6 @@ wallet_ClearStopwatch();
     return NS_OK; // indicates that caller is to display preview screen
   }
 }
-
-extern void
-SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData);
 
 PUBLIC void
 WLLT_RequestToCapture(nsIPresShell* shell) {

@@ -31,6 +31,8 @@
 
 #include "ntypes.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
+
 class nsIPrompt;
 XP_BEGIN_PROTOS
 
@@ -72,6 +74,36 @@ SINGSIGN_StorePassword
 extern nsresult
 SINGSIGN_HaveData(const char* passwordRealm, const PRUnichar *userName, PRBool *retval);
 
+typedef int (*PR_CALLBACK PrefChangedFunc) (const char *, void *);
+
+extern void
+SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
+
+extern PRBool
+SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
+
+extern void
+SI_SetBoolPref(const char * prefname, PRBool prefvalue);
+
+extern void
+SI_SetCharPref(const char * prefname, const char * prefvalue);
+
+extern void
+SI_GetCharPref(const char * prefname, char** aPrefvalue);
+
+extern void SI_InitSignonFileName();
+
+extern PRBool
+SI_InSequence(nsAutoString sequence, int number);
+
+extern PRUnichar*
+SI_FindValueInArgs(nsAutoString results, nsAutoString name);
+
+extern PRBool
+SINGSIGN_ReencryptAll();
+
+extern void
+SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData);
 
 XP_END_PROTOS
 

@@ -32,10 +32,17 @@
 #include "ntypes.h"
 #include "nsIPresShell.h"
 #include "nsString.h"
-#include "nsIURL.h"
-#include "nsIKeyedStreamGenerator.h"
+#include "nsFileSpec.h"
 
 XP_BEGIN_PROTOS
+
+#define HEADER_VERSION "#2c"
+
+#define YES_BUTTON 0
+#define NO_BUTTON 1
+#define NEVER_BUTTON 2
+
+static const char *pref_Crypto = "wallet.crypto";
 
 extern void
 WLLT_ChangePassword();
@@ -84,6 +91,31 @@ Wallet_Encrypt (nsAutoString text, nsAutoString& crypt);
 
 extern nsresult
 Wallet_Decrypt (nsAutoString crypt, nsAutoString& text);
+
+extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
+
+extern PRUnichar * Wallet_Localize(char * genericString);
+
+extern char* Wallet_RandomName(char* suffix);
+
+extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage);
+
+extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage);
+
+extern nsresult
+Wallet_Encrypt2 (nsAutoString text, nsAutoString& crypt);
+
+extern nsresult
+Wallet_Decrypt2 (nsAutoString crypt, nsAutoString& text);
+
+extern void
+Wallet_UTF8Put(nsOutputFileStream strm, PRUnichar c);
+
+extern PRUnichar
+Wallet_UTF8Get(nsInputFileStream strm);
+
+extern void
+Wallet_SignonViewerReturn (nsAutoString results);
 
 XP_END_PROTOS
 

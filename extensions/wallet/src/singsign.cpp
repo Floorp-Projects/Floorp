@@ -24,6 +24,7 @@
 #define alphabetize 1
 
 #include "singsign.h"
+#include "wallet.h"
 
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */
@@ -45,8 +46,7 @@
 #include "nsIURL.h"
 #include "nsIDOMHTMLDocument.h"
 #include "prmem.h"
-#include "prprf.h"  
-#include "nsVoidArray.h"
+#include "prprf.h"
 #include "nsXPIDLString.h"
 
 static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
@@ -82,212 +82,6 @@ si_SaveSignonDataInKeychain();
 
 #define USERNAMEFIELD "\\=username=\\"
 #define PASSWORDFIELD "\\=password=\\"
-
-/*************************************
- * Externs to Routines in Wallet.cpp *
- *************************************/
-
-extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
-extern PRUnichar * Wallet_Localize(char * genericString);
-
-
-/***********
- * Dialogs *
- ***********/
-
-extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage);
-PRIVATE PRBool
-si_ConfirmYN(PRUnichar * szMessage) {
-  return Wallet_ConfirmYN(szMessage);
-}
-
-#define YES_BUTTON 0
-#define NO_BUTTON 1
-#define NEVER_BUTTON 2
-
-extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage);
-PRIVATE PRInt32
-si_3ButtonConfirm(PRUnichar * szMessage) {
-  return Wallet_3ButtonConfirm(szMessage);
-}
-
-// This will go away once select is passed a prompter interface
-#include "nsAppShellCIDs.h" // TODO remove later
-
-PRIVATE PRBool
-si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) {
-  if (si_UserHasBeenSelected) {
-    /* a user was already selected for this form, use same one again */
-    *pCount = 0; /* last user selected is now at head of list */
-    return PR_TRUE;
-  }
-  nsresult rv;
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-  if (NS_FAILED(rv)) {
-    return PR_FALSE;
-  }
-  PRInt32 selectedIndex;
-  PRBool rtnValue;
-  PRUnichar * title_string = Wallet_Localize("SelectUserTitleLine");
-  rv = dialog->Select( title_string, szMessage, *pCount, NS_CONST_CAST(const PRUnichar**, pList), &selectedIndex, &rtnValue );
-  Recycle(title_string);
-  *pCount = selectedIndex;
-  si_UserHasBeenSelected = PR_TRUE;
-  return rtnValue;  
-}
-
-nsresult
-si_CheckGetPassword
-  (PRUnichar ** password,
-  const PRUnichar * szMessage,
-  PRBool* checkValue)
-{
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
-  PRUnichar * check_string = Wallet_Localize("SaveThisValue");
-
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    prompt_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    check_string, /* This is the checkbox message */
-    NULL, /* first button text, becomes OK by default */
-    NULL, /* second button text, becomes CANCEL by default */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    NULL, /* first edit field label */
-    NULL, /* second edit field label */
-    password, /* first edit field initial and final value */
-    NULL, /* second edit field initial and final value */
-    NULL,  /* icon: question mark by default */
-    checkValue, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    1, /* number of edit fields */
-    1, /* is first edit field a password field */
-    &buttonPressed);
-
-  Recycle(prompt_string);
-  Recycle(check_string);
-
-  if (NS_FAILED(res)) {
-    return res;
-  }
-  if (buttonPressed == 0) {
-    return NS_OK;
-  } else {
-    return NS_ERROR_FAILURE; /* user pressed cancel */
-  }
-}
-
-nsresult
-si_CheckGetData
-  (PRUnichar ** data,
-  const PRUnichar * szMessage,
-  PRBool* checkValue)
-{
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * prompt_string = Wallet_Localize("PromptForData");
-  PRUnichar * check_string = Wallet_Localize("SaveThisValue");
-
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    prompt_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    check_string, /* This is the checkbox message */
-    NULL, /* first button text, becomes OK by default */
-    NULL, /* second button text, becomes CANCEL by default */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    NULL, /* first edit field label */
-    NULL, /* second edit field label */
-    data, /* first edit field initial and final value */
-    NULL, /* second edit field initial and final value */
-    NULL,  /* icon: question mark by default */
-    checkValue, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    1, /* number of edit fields */
-    0, /* is first edit field a password field */
-    &buttonPressed);
-
-  Recycle(prompt_string);
-  Recycle(check_string);
-
-  if (NS_FAILED(res)) {
-    return res;
-  }
-  if (buttonPressed == 0) {
-    return NS_OK;
-  } else {
-    return NS_ERROR_FAILURE; /* user pressed cancel */
-  }
-}
-
-nsresult
-si_CheckGetUsernamePassword
-  (PRUnichar ** username,
-  PRUnichar ** password,
-  const PRUnichar * szMessage,
-  PRBool* checkValue)
-{
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
-  PRUnichar * check_string = Wallet_Localize("SaveTheseValues");
-  PRUnichar * user_string = Wallet_Localize("UserName");
-  PRUnichar * password_string = Wallet_Localize("Password");
-
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    prompt_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    check_string, /* This is the checkbox message */
-    NULL, /* first button text, becomes OK by default */
-    NULL, /* second button text, becomes CANCEL by default */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    user_string, /* first edit field label */
-    password_string, /* second edit field label */
-    username, /* first edit field initial and final value */
-    password, /* second edit field initial and final value */
-    NULL,  /* icon: question mark by default */
-    checkValue, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    2, /* number of edit fields */
-    0, /* is first edit field a password field */
-    &buttonPressed);
-
-  Recycle(prompt_string);
-  Recycle(check_string);
-  Recycle(user_string);
-  Recycle(password_string);
-
-  if (NS_FAILED(res)) {
-    return res;
-  }
-  if (buttonPressed == 0) {
-    return NS_OK;
-  } else {
-    return NS_ERROR_FAILURE; /* user pressed cancel */
-  }
-}
-
 
 /******************
  * Key Management *
@@ -343,8 +137,6 @@ si_unlock_signon_list(void) {
 /********************************
  * Preference Utility Functions *
  ********************************/
-
-typedef int (*PR_CALLBACK PrefChangedFunc) (const char *, void *);
 
 PUBLIC void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
@@ -515,14 +307,219 @@ si_GetSignonRememberingPref(void) {
 #endif
 }
 
-extern char* Wallet_RandomName(char* suffix);
-
 PUBLIC void
 SI_InitSignonFileName() {
   SI_GetCharPref(pref_SignonFileName, &signonFileName);
   if (!signonFileName) {
     signonFileName = Wallet_RandomName("s");
     SI_SetCharPref(pref_SignonFileName, signonFileName);
+  }
+}
+
+
+/***********
+ * Dialogs *
+ ***********/
+
+PRIVATE PRBool
+si_ConfirmYN(PRUnichar * szMessage) {
+  return Wallet_ConfirmYN(szMessage);
+}
+
+PRIVATE PRInt32
+si_3ButtonConfirm(PRUnichar * szMessage) {
+  return Wallet_3ButtonConfirm(szMessage);
+}
+
+// This will go away once select is passed a prompter interface
+#include "nsAppShellCIDs.h" // TODO remove later
+
+PRIVATE PRBool
+si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) {
+  if (si_UserHasBeenSelected) {
+    /* a user was already selected for this form, use same one again */
+    *pCount = 0; /* last user selected is now at head of list */
+    return PR_TRUE;
+  }
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
+  PRInt32 selectedIndex;
+  PRBool rtnValue;
+  PRUnichar * title_string = Wallet_Localize("SelectUserTitleLine");
+  rv = dialog->Select( title_string, szMessage, *pCount, NS_CONST_CAST(const PRUnichar**, pList), &selectedIndex, &rtnValue );
+  Recycle(title_string);
+  *pCount = selectedIndex;
+  si_UserHasBeenSelected = PR_TRUE;
+  return rtnValue;  
+}
+
+nsresult
+si_CheckGetPassword
+  (PRUnichar ** password,
+  const PRUnichar * szMessage,
+  PRBool* checkValue)
+{
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
+  PRUnichar * check_string;
+  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+    check_string = Wallet_Localize("SaveThisValueEncrypted");
+  } else {
+    check_string = Wallet_Localize("SaveThisValueObscured");
+  }
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    prompt_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    check_string, /* This is the checkbox message */
+    NULL, /* first button text, becomes OK by default */
+    NULL, /* second button text, becomes CANCEL by default */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    NULL, /* first edit field label */
+    NULL, /* second edit field label */
+    password, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    checkValue, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    1, /* number of edit fields */
+    1, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(prompt_string);
+  Recycle(check_string);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+  if (buttonPressed == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE; /* user pressed cancel */
+  }
+}
+
+nsresult
+si_CheckGetData
+  (PRUnichar ** data,
+  const PRUnichar * szMessage,
+  PRBool* checkValue)
+{
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * prompt_string = Wallet_Localize("PromptForData");
+  PRUnichar * check_string;
+  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+    check_string = Wallet_Localize("SaveThisValueEncrypted");
+  } else {
+    check_string = Wallet_Localize("SaveThisValueObscured");
+  }
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    prompt_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    check_string, /* This is the checkbox message */
+    NULL, /* first button text, becomes OK by default */
+    NULL, /* second button text, becomes CANCEL by default */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    NULL, /* first edit field label */
+    NULL, /* second edit field label */
+    data, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    checkValue, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    1, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(prompt_string);
+  Recycle(check_string);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+  if (buttonPressed == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE; /* user pressed cancel */
+  }
+}
+
+nsresult
+si_CheckGetUsernamePassword
+  (PRUnichar ** username,
+  PRUnichar ** password,
+  const PRUnichar * szMessage,
+  PRBool* checkValue)
+{
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
+  PRUnichar * user_string = Wallet_Localize("UserName");
+  PRUnichar * password_string = Wallet_Localize("Password");
+  PRUnichar * check_string;
+  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+    check_string = Wallet_Localize("SaveTheseValuesEncrypted");
+  } else {
+    check_string = Wallet_Localize("SaveTheseValuesObscured");
+  }
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    prompt_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    check_string, /* This is the checkbox message */
+    NULL, /* first button text, becomes OK by default */
+    NULL, /* second button text, becomes CANCEL by default */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    user_string, /* first edit field label */
+    password_string, /* second edit field label */
+    username, /* first edit field initial and final value */
+    password, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    checkValue, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    2, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(prompt_string);
+  Recycle(check_string);
+  Recycle(user_string);
+  Recycle(password_string);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+  if (buttonPressed == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE; /* user pressed cancel */
   }
 }
 
@@ -642,12 +639,6 @@ si_Randomize(nsAutoString& password) {
 
 // don't understand why linker doesn't let me call Wallet_Encrypt and Wallet_Decrypt
 // directly but it doesn't.  Need to introduce Wallet_Enctrypt2 and Wallet_Decrypt2 instead.
-
-extern nsresult
-Wallet_Encrypt2 (nsAutoString text, nsAutoString& crypt);
-
-extern nsresult
-Wallet_Decrypt2 (nsAutoString crypt, nsAutoString& text);
 
 nsresult
 si_Encrypt (nsAutoString text, nsAutoString& crypt) {
@@ -1411,6 +1402,9 @@ si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
    */
   PRInt32 userCount = LIST_COUNT(url->signonUser_list);
   for (PRInt32 i2=0; i2<userCount; i2++) {
+    if (!save) {
+      break; /* otherwise we could be asked for master password when loading signon data */
+    }
     user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i2));
     PRInt32 j = 0;
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
@@ -1548,14 +1542,6 @@ si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
 /*****************************
  * Managing the Signon Files *
  *****************************/
-
-#define HEADER_VERSION "#2c"
-
-extern void
-Wallet_UTF8Put(nsOutputFileStream strm, PRUnichar c);
-
-extern PRUnichar
-Wallet_UTF8Get(nsInputFileStream strm);
 
 #define BUFFER_SIZE 4096
 
@@ -1876,7 +1862,13 @@ si_OkToSave(char *passwordRealm, nsAutoString userName) {
     return PR_FALSE;
   }
 
-  PRUnichar * message = Wallet_Localize("WantToSavePassword?");
+  PRUnichar * message;
+  if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+    message = Wallet_Localize("WantToSavePasswordEncrypted?");
+  } else {
+    message = Wallet_Localize("WantToSavePasswordObscured?");
+  }
+
   PRInt32 button = si_3ButtonConfirm(message);
   if (button == NEVER_BUTTON) {
     si_PutReject(strippedRealm, userName, PR_TRUE);
@@ -2380,9 +2372,6 @@ SI_FindValueInArgs(nsAutoString results, nsAutoString name) {
   results.Mid(value, start, length);
   return value.ToNewUnicode();
 }
-
-extern void
-Wallet_SignonViewerReturn (nsAutoString results);
 
 PUBLIC void
 SINGSIGN_SignonViewerReturn (nsAutoString results) {
