@@ -590,40 +590,15 @@ class JavaMembers
     static JavaMembers lookupClass(Scriptable scope, Class dynamicType,
                                    Class staticType)
     {
+        JavaMembers members;
         Hashtable ct = classTable;  // use local reference to avoid synchronize
-        JavaMembers members = (JavaMembers) ct.get(dynamicType);
-        if (members != null)
-            return members;
-
-        if (staticType == dynamicType) {
-            staticType = null;
-        }
 
         Class cl = dynamicType;
-        if (!Modifier.isPublic(dynamicType.getModifiers())) {
-            if (staticType == null
-                || !Modifier.isPublic(staticType.getModifiers()))
-            {
-                cl = getPublicSuperclass(dynamicType);
-                if (cl == null) {
-                    // Can happen if dynamicType is interface
-                    cl = dynamicType;
-                }
-            } else if (staticType.isInterface()) {
-                // If the static type is an interface, use it
-                cl = staticType;
-            } else {
-                // We can use the static type, and that is OK, but we'll trace
-                // back the java class chain here to look for public superclass
-                // comming before staticType
-                cl = getPublicSuperclass(dynamicType);
-                if (cl == null) {
-                    // Can happen if dynamicType is interface
-                    cl = dynamicType;
-                }
-            }
-        }
         for (;;) {
+            members = (JavaMembers)ct.get(cl);
+            if (members != null) {
+                return members;
+            }
             try {
                 members = new JavaMembers(scope, cl);
                 break;
@@ -631,42 +606,28 @@ class JavaMembers
                 // Reflection may fail for objects that are in a restricted
                 // access package (e.g. sun.*).  If we get a security
                 // exception, try again with the static type if it is interface.
-                // Otherwise, try public superclass
+                // Otherwise, try superclass
                 if (staticType != null && staticType.isInterface()) {
                     cl = staticType;
                     staticType = null; // try staticType only once
-                    continue;
-                }
-                Class parent = getPublicSuperclass(cl);
-                if (parent == null) {
-                    if (cl.isInterface()) {
-                        // last resort
-                        parent = ScriptRuntime.ObjectClass;
-                    } else {
-                        throw e;
+                } else {
+                    Class parent = cl.getSuperclass();
+                    if (parent == null) {
+                        if (cl.isInterface()) {
+                            // last resort after failed staticType interface
+                            parent = ScriptRuntime.ObjectClass;
+                        } else {
+                            throw e;
+                        }
                     }
+                    cl = parent;
                 }
-                cl = parent;
             }
         }
 
         if (Context.isCachingEnabled)
             ct.put(cl, members);
         return members;
-    }
-
-    private static Class getPublicSuperclass(Class cl)
-    {
-        if (cl == ScriptRuntime.ObjectClass) {
-            return null;
-        }
-        do {
-            cl = cl.getSuperclass();
-            if (cl == null || cl == ScriptRuntime.ObjectClass) {
-                break;
-            }
-        } while (!Modifier.isPublic(cl.getModifiers()));
-        return cl;
     }
 
     RuntimeException reportMemberNotFound(String memberName)
