@@ -190,6 +190,11 @@ sub query_checkins {
             foreach my $k (sort(keys %mod_map)) {
                 print value_quote("$k => $mod_map{$k}") . "\n";
             }
+            print "\n\nDump of parsed module file:\n";
+            foreach my $k(sort(keys %$::modules)) {
+                print value_quote("$k => " .
+                                  join(",", @{$::modules->{$k}})) . "\n";
+            }
         }
         print "</pre>\n";
     }
