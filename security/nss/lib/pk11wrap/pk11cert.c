@@ -3308,19 +3308,6 @@ struct listCertsStr {
     CERTCertList *certList;
 };
 
-static PRBool
-isOnList(CERTCertList *certList,NSSCertificate *c)
-{
-	CERTCertListNode *cln;
-
-	for (cln = CERT_LIST_HEAD(certList); !CERT_LIST_END(cln,certList);
-			cln = CERT_LIST_NEXT(cln)) {
-	    if (cln->cert->nssCertificate == c) {
-		return PR_TRUE;
-	    }
-	}
-	return PR_FALSE;
-}
 static PRStatus
 pk11ListCertCallback(NSSCertificate *c, void *arg)
 {
