@@ -177,18 +177,12 @@ ifdef MOZ_CO_DATE
   CVS_CO_DATE_FLAGS := -D "$(MOZ_CO_DATE)"
 endif
 
-ifeq "$(origin MOZ_MAKE_FLAGS)" "undefined"
-  MOZ_MAKE_ENV :=
-else
-  MOZ_MAKE_ENV := MAKE="$(MAKE) $(MOZ_MAKE_FLAGS)"
-endif
-
 ifdef MOZ_OBJDIR
   OBJDIR := $(MOZ_OBJDIR)
-  MOZ_MAKE := $(MOZ_MAKE_ENV) $(MAKE) -C $(OBJDIR)
+  MOZ_MAKE := $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
 else
   OBJDIR := $(TOPSRCDIR)
-  MOZ_MAKE := $(MOZ_MAKE_ENV) $(MAKE)
+  MOZ_MAKE := $(MAKE) $(MOZ_MAKE_FLAGS)
 endif
 
 ####################################
