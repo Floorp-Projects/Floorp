@@ -90,6 +90,7 @@
 #include "nsIMsgProtocolInfo.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMAPNamespace.h"
+#include "nsISignatureVerifier.h"
 
 #include "nsITimer.h"
 #include "nsMsgUtils.h"
@@ -439,14 +440,14 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(aImapUrl, &rv);
   if (aProtocol)
   {
-    rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
+    rv = aProtocol->LoadImapUrl(mailnewsurl, aConsumer);
     // *** jt - in case of the time out situation or the connection gets
     // terminated by some unforseen problems let's give it a second chance
     // to run the url
     if (NS_FAILED(rv))
     {
       NS_ASSERTION(PR_FALSE, "shouldn't get an error loading url");
-      rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
+      rv = aProtocol->LoadImapUrl(mailnewsurl, aConsumer);
     }
   }
   else
@@ -508,7 +509,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(nsIImapProtocol *aProtocol, PRBool *aRes
           if (NS_SUCCEEDED(rv) && url)
           {
             nsImapProtocol::LogImapUrl("playing queued url", aImapUrl);
-            rv = protocolInstance->LoadUrl(url, aConsumer);
+            rv = protocolInstance->LoadImapUrl(url, aConsumer);
             NS_ASSERTION(NS_SUCCEEDED(rv), "failed running queued url");
             urlRun = PR_TRUE;
             removeUrlFromQueue = PR_TRUE;
@@ -846,8 +847,18 @@ nsImapIncomingServer::CreateProtocolInstance(nsIEventQueue *aEventQueue,
   // create a new connection and add it to the connection cache
   // we may need to flag the protocol connection as busy so we don't get
   // a race condition where someone else goes through this code 
+
+  PRBool useSecAuth;
+  GetUseSecAuth(&useSecAuth);
+  nsresult rv;
+  // pre-flight that we have nss - on the ui thread
+  if (useSecAuth)
+  {
+    nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   nsIImapProtocol * protocolInstance = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
+  rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
     NS_GET_IID(nsIImapProtocol),
     (void **) &protocolInstance);
   if (NS_SUCCEEDED(rv) && protocolInstance)
@@ -1794,15 +1805,15 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
         currentImapFolder->GetIsNamespace(&isNamespace);
         if (!isNamespace) // don't list namespaces explicitly
         {
-        // If there are no subfolders and this is unverified, we don't want to run
-        // this url.  That is, we want to undiscover the folder.
-        // If there are subfolders and no descendants are verified, we want to 
-        // undiscover all of the folders.
-        // Only if there are subfolders and at least one of them is verified do we want
-        // to refresh that folder's flags, because it won't be going away.
-        currentImapFolder->SetExplicitlyVerify(PR_FALSE);
-        currentImapFolder->List();
-      }
+          // If there are no subfolders and this is unverified, we don't want to run
+          // this url.  That is, we want to undiscover the folder.
+          // If there are subfolders and no descendants are verified, we want to 
+          // undiscover all of the folders.
+          // Only if there are subfolders and at least one of them is verified do we want
+          // to refresh that folder's flags, because it won't be going away.
+          currentImapFolder->SetExplicitlyVerify(PR_FALSE);
+          currentImapFolder->List();
+        }
       }
       else
       {
@@ -1988,6 +1999,7 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIMsgFolder *curFolder)
     
     return rv;
 }
+
 
 PRBool nsImapIncomingServer::NoDescendentsAreVerified(nsIMsgFolder *parentFolder)
 {
@@ -2708,7 +2720,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
         nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
         if (NS_SUCCEEDED(rv) && url)
         {
-          rv = protocolInstance->LoadUrl(url, aConsumer);
+          rv = protocolInstance->LoadImapUrl(url, aConsumer);
           urlRun = PR_TRUE;
         }
         

@@ -152,7 +152,8 @@ public:
   void	UseCachedShell(nsIMAPBodyShell *cachedShell);
   void SetHostSessionList(nsIImapHostSessionList *aHostSession);
   nsIImapHostSessionList *GetHostSessionList();
-  char           *fCRAMDigest;    // the digest returned by the server in response to authenticate using CRAM-MD5...
+  char  *fAuthChallenge;    // the challenge returned by the server in
+                            //response to authenticate using CRAM-MD5 or NTLM
 
 protected:
   virtual void    flags();
@@ -169,7 +170,7 @@ protected:
   virtual void    text();
   virtual void    parse_folder_flags();
   virtual void    language_data();
-  virtual void    cramResponse_data();
+  virtual void    authChallengeResponse_data();
   virtual void    resp_text_code();
   virtual void    response_done();
   virtual void    response_tagged();

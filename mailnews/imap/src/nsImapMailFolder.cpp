@@ -854,7 +854,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         if (NS_FAILED(rv)) return rv;
         nsCAutoString leafnameC;
         leafnameC.AssignWithConversion(leafName);
-		return parentFolder->CreateClientSubfolderInfo(leafnameC.get(), hierarchyDelimiter,flags, suppressNotification);
+        return parentFolder->CreateClientSubfolderInfo(leafnameC.get(), hierarchyDelimiter,flags, suppressNotification);
     }
     
   // if we get here, it's really a leaf, and "this" is the parent.
@@ -876,7 +876,10 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     rv = CreateFileSpecForDB(folderName, path, getter_AddRefs(dbFileSpec));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
+    //Now let's create the actual new folder
+    rv = AddSubfolderWithPath(folderNameStr, dbFileSpec, getter_AddRefs(child));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mailDBFactory->OpenFolderDB(child, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 
     if (NS_SUCCEEDED(rv) && unusedDB)
     {
@@ -888,11 +891,6 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         // ### DMB used to be leafNameFromUser?
 //        folderInfo->SetMailboxName(&folderNameStr);
 //      }
-
-      //Now let's create the actual new folder
-      rv = AddSubfolderWithPath(folderNameStr, dbFileSpec, getter_AddRefs(child));
-//      if (NS_SUCCEEDED(rv) && child)
-//        child->SetPath(dbFileSpec);
 
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
       if (imapFolder)
@@ -4618,21 +4616,20 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             }
             break;
         case nsIImapUrl::nsImapListFolder:
-          // check if folder is now verified - if not,
-          // we should remove it?
-          if (NS_SUCCEEDED(aExitCode) && !m_verifiedAsOnlineFolder)
-          {
-            nsCOMPtr<nsIMsgFolder> parent;
-            rv = GetParent(getter_AddRefs(parent));
-    
-    
-            if (NS_SUCCEEDED(rv) && parent)
+            // check if folder is now verified - if not,
+            // we should remove it?
+            if (NS_SUCCEEDED(aExitCode) && !m_verifiedAsOnlineFolder)
             {
-              nsCOMPtr<nsIMsgImapMailFolder> imapParent = do_QueryInterface(parent);
-              if (imapParent)
-                imapParent->RemoveSubFolder(this);
+              nsCOMPtr<nsIMsgFolder> parent;
+              rv = GetParent(getter_AddRefs(parent));
+
+              if (NS_SUCCEEDED(rv) && parent)
+              {
+                nsCOMPtr<nsIMsgImapMailFolder> imapParent = do_QueryInterface(parent);
+                if (imapParent)
+                  imapParent->RemoveSubFolder(this);
+              }
             }
-          }
           break;
         case nsIImapUrl::nsImapRefreshFolderUrls:
           // we finished getting an admin url for the folder.

@@ -56,7 +56,7 @@ interface nsIImapProtocol : nsISupports {
 	// I think. Imap happens to be the only case where we need to push back
 	// a thread safe object to our test app. 
 	///////////////////////////////////////////////////////////////////////// */
-	void LoadUrl(in nsIURI aUrl, in nsISupports aConsumer);
+	void LoadImapUrl(in nsIURI aUrl, in nsISupports aConsumer);
 
 	///////////////////////////////////////////////////////////////////////// 
 	// IsBusy returns true if the connection is currently processing a url

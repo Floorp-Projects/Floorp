@@ -112,7 +112,7 @@ nsImapOfflineSync::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
   nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(url);
 
   if (imapUrl)
-    nsImapProtocol::LogImapUrl(NS_SUCCEEDED(rv) ? "offline imap url succeeded:" : "offline imap url failed:", imapUrl);
+    nsImapProtocol::LogImapUrl(NS_SUCCEEDED(rv) ? "offline imap url succeeded " : "offline imap url failed ", imapUrl);
   // NS_BINDING_ABORTED is used for the user pressing stop, which
   // should cause us to abort the offline process. Other errors
   // should allow us to continue.
@@ -140,6 +140,8 @@ nsresult nsImapOfflineSync::AdvanceToNextServer()
 
   if (!m_allServers)
   {
+    NS_ASSERTION(!m_currentServer, "this shouldn't be set");
+    m_currentServer = nsnull;
     nsCOMPtr<nsIMsgAccountManager> accountManager = 
              do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     NS_ASSERTION(accountManager && NS_SUCCEEDED(rv), "couldn't get account mgr");
@@ -206,7 +208,6 @@ nsresult nsImapOfflineSync::AdvanceToNextFolder()
 
   if (NS_SUCCEEDED(rv) && m_serverEnumerator)
   {
-    // ### argh, this doesn't go into sub-folders of each folder.
     nsCOMPtr <nsISupports> supports;
     rv = m_serverEnumerator->CurrentItem(getter_AddRefs(supports));
     m_currentFolder = do_QueryInterface(supports);

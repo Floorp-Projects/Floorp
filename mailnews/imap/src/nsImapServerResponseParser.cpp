@@ -91,7 +91,7 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
   fDownloadingHeaders = PR_FALSE;
   fGotPermanentFlags = PR_FALSE;
   fFolderUIDValidity = 0;
-  fCRAMDigest = nsnull;
+  fAuthChallenge = nsnull;
   fStatusUnseenMessages = 0;
   fStatusRecentMessages = 0;
   fStatusNextUID = nsMsgKey_None;
@@ -110,7 +110,7 @@ nsImapServerResponseParser::~nsImapServerResponseParser()
   PR_Free( fManageListsUrl );
   PR_Free( fManageFiltersUrl );
   PR_Free( fSelectedMailboxName );
-  PR_Free(fCRAMDigest);
+  PR_Free(fAuthChallenge);
 
   NS_IF_RELEASE (fHostSessionList);
   fCopyResponseKeyArray.RemoveAll();
@@ -189,8 +189,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 {
   
   NS_ASSERTION(currentCommand && *currentCommand != '\r' && 
-    *currentCommand != '\n' && *currentCommand != ' ', 
-    "Invailid command string");
+    *currentCommand != '\n' && *currentCommand != ' ', "Invailid command string");
   PRBool sendingIdleDone = !strcmp(currentCommand, "DONE"CRLF);
   if (sendingIdleDone)
     fWaitingForMoreClientInput = PR_FALSE;
@@ -226,7 +225,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
       fCurrentCommandTag = PL_strdup(tagToken);
       if (!fCurrentCommandTag)
         HandleMemoryFailure();
-      inIdle = !strcmp(commandToken, "IDLE");
+      inIdle = commandToken && !strcmp(commandToken, "IDLE");
     }
     
     if (commandToken && ContinueParse())
@@ -251,10 +250,12 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
             " didn't get the number of tagged responses we expected");
           numberOfTaggedResponsesReceived = fNumberOfTaggedResponsesExpected;
           if (commandToken && !nsCRT::strcasecmp(commandToken, "authenticate") && placeInTokenString && 
-            !nsCRT::strncasecmp(placeInTokenString, "CRAM-MD5", strlen("CRAM-MD5")))
+            (!nsCRT::strncasecmp(placeInTokenString, "CRAM-MD5", strlen("CRAM-MD5"))
+             || !nsCRT::strncasecmp(placeInTokenString, "NTLM", strlen("NTLM"))
+             || !nsCRT::strncasecmp(placeInTokenString, "MSN", strlen("MSN"))))
           {
-            // we need to store the digest from the server if we are using CRAM-MD5. 
-            cramResponse_data();
+            // we need to store the challenge from the server if we are using CRAM-MD5 or NTLM. 
+            authChallengeResponse_data();
           }
         }
         else
@@ -2131,6 +2132,10 @@ void nsImapServerResponseParser::capability_data()
         fCapabilityFlag |= kHasAuthPlainCapability;
       else if (! PL_strcasecmp(fNextToken, "AUTH=CRAM-MD5"))
         fCapabilityFlag |= kHasCRAMCapability;
+      else if (! PL_strcasecmp(fNextToken, "AUTH=NTLM"))
+        fCapabilityFlag |= kHasAuthNTLMCapability;
+      else if (! PL_strcasecmp(fNextToken, "AUTH=MSN"))
+        fCapabilityFlag |= kHasAuthMSNCapability;
       else if (! PL_strcasecmp(fNextToken, "X-NETSCAPE"))
         fCapabilityFlag |= kHasXNetscapeCapability;
       else if (! PL_strcasecmp(fNextToken, "XSENDER"))
@@ -2248,17 +2253,18 @@ void nsImapServerResponseParser::language_data()
   } while (fNextToken && !at_end_of_line() && ContinueParse());
 }
 
-// cram response data ::= "+" SPACE digest/challenge CRLF
-// the server expects more client data after issuing it's challenge
+// cram/auth response data ::= "+" SPACE challenge CRLF
+// the server expects more client data after issuing its challenge
 
-void nsImapServerResponseParser::cramResponse_data()
+void nsImapServerResponseParser::authChallengeResponse_data()
 {
   fNextToken = GetNextToken();
-  fCRAMDigest = nsCRT::strdup(fNextToken);
+  fAuthChallenge = nsCRT::strdup(fNextToken);
   fWaitingForMoreClientInput = PR_TRUE; 
   
   skip_to_CRLF();
 }
+
 
 void nsImapServerResponseParser::namespace_data()
 {
