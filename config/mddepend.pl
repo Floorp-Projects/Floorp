@@ -68,7 +68,7 @@ foreach $deps (@alldeps) {
       $modtimes{$dep_file} = $dep_mtime;
     }
     if ($dep_mtime eq '' or $dep_mtime > $mtime) {
-      print "$obj($mtime) older than $dep_file($dep_mtime)\n";
+      print "$obj($mtime) older than $dep_file($dep_mtime)\n" if $debug;
       push @objs, $obj;
       last;
     }
