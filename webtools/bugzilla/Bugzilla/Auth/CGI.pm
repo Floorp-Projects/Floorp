@@ -58,7 +58,7 @@ sub login {
         my $ipaddr = $cgi->remote_addr;
         unless ($cgi->param('Bugzilla_restrictlogin') ||
                 Param('loginnetmask') == 32) {
-            $ipaddr = get_netaddr($ipaddr);
+            $ipaddr = Bugzilla::Auth::get_netaddr($ipaddr);
         }
 
         # The IP address is valid, at least for comparing with itself in a
