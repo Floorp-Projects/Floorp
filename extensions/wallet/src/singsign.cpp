@@ -1667,12 +1667,8 @@ SI_LoadSignonData() {
   /* read the reject list */
   si_lock_signon_list();
   while (NS_SUCCEEDED(si_ReadLine(strm, buffer))) {
-    if (buffer.Length() == 0) {
-      /* something's wrong */
-      si_unlock_signon_list();
-      return -1;
-    }
-    if (buffer.CharAt(0) == '.') {
+    /* a blank line is perfectly valid here -- corresponds to a local file */
+    if (!buffer.IsEmpty() && buffer.CharAt(0) == '.') {
       break; /* end of reject list */
     }
     si_StripLF(buffer);
