@@ -30,8 +30,10 @@ interface nsIKeyedStreamGenerator: nsISupports {
   /* information about what type of stream this generates */
   readonly attribute string signature;      
   
-  /* consumer will be a nsIPasswordSink for now, but not limited to that. */
-  void setup(in unsigned long salt, in nsISupports consumer);    
+  /* consumer will be a nsIPasswordSink for now, but not limited to that.
+   * Use NULL consumer to reset the KeyedStreamGenerator's state.
+   */
+  void setup(in unsigned long salt, in nsISupports consumer);
     
   /* the "quality level" of this stream 
    * why a float?  if we assign 1 and 2, what do we do when something comes
