@@ -1,0 +1,139 @@
+<HTML>
+<--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is the Netscape security libraries.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation.  Portions created by Netscape are 
+   - Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   - 
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU General Public License Version 2 or later (the
+   - "GPL"), in which case the provisions of the GPL are applicable 
+   - instead of those above.  If you wish to allow use of your 
+   - version of this file only under the terms of the GPL and not to
+   - allow others to use your version of this file under the MPL,
+   - indicate your decision by deleting the provisions above and
+   - replace them with the notice and other provisions required by
+   - the GPL.  If you do not delete the provisions above, a recipient
+   - may use your version of this file under either the MPL or the
+   - GPL.
+-->
+<SCRIPT>
+
+
+// ---------------------- Configuration variables ----------------
+var pkcs11jar="fortpk11.jar";
+//var pkcs11base="file://d|/dogbert/ns/dist/";
+pkcs11base="";
+
+var comm_platforms = pk_init_array (
+	"Win32", "Win16", "Mac68k", "MacPPC", 
+	"AIX4.1", "HP-UXA.09", "HP-UXB.10", 
+	"SunOS4.1.3_U1", "SunOS5.4", "SunOS5.5.1" );
+var directories = pk_init_array (
+	"win32", "win16", "none", "macppc",
+	"aix", "hpux", "hpux",
+	"sunos", "sol24", 
+	"sol251" );
+
+function mapPlatform(InPlat)
+{
+	for (i=0; i < comm_platforms.length; i++) {
+	    if (InPlat == comm_platforms[i]) {
+		return directories[i];
+	    }
+	}
+	return InPlat;
+}
+
+
+function pk_init_array()
+{
+	var numArgs = pk_init_array.arguments.length;
+	var a = new Array(numArgs);
+
+	for (var i = 0; i < numArgs; i++) {
+	    a[i] = pk_init_array.arguments[i];
+	}
+	return a;
+}
+
+function getPlatform() {
+	return navigator.platform;
+//	var string = navigator.appVersion;
+//	start = string.indexOf("(",0);
+//	if (start == -1) {
+//	    return "unknown";
+//	}
+//	end = string.indexOf(";",start);
+//	if (end == -1) {
+//	    end = string.indexOf(")",start);
+//	}
+//	if (end == -1) {
+//	   end = string.length;
+//	}
+//	platform = string.substring(start+1,end);
+//	return platform;
+}
+
+function getURLPath() {
+	var string = window.location.href;
+	end = string.lastIndexOf("/");
+	if (end == -1) {
+	   end = string.length-1;
+	}
+	return string.substring(0,end+1);
+}
+
+
+
+plat=getPlatform();
+platDir = mapPlatform(plat);
+if (pkcs11base == "") pkcs11base=getURLPath();
+
+if (plat == "MacPPC") {
+   pkcs11jar= "macinst.htm"
+}
+
+function DoInstall(url) {
+	window.location.href = url;
+}
+
+function DoCancel() {
+	// set window.location.href to your home page if you wish
+	//alert('Cancel Installation?');
+	history.back();
+}
+
+// ------  Change the following for your own Message --------
+document.write("<CENTER><H1>Netscape Fortezza PKCS #11 Module Installer</H1>");
+document.write("</CENTER>");
+document.write("<Table><TR><TD>");
+document.write("<DD><p><IMG SRC=about:logo WIDTH=90 Height=77 NAME=LITRONIC></TD>");
+document.write("<TD VAlign=Center><i> Netscape Fortezza PKCS #11 Modules require Litronic's MACI drivers to be installed on your platform.");
+document.write(" If you haven't already installed theLitronic MACI drivers, please to do so now.</I>");
+document.write("</TD></TR></Table>");
+// ----- end of generic message section --------
+document.write("<p>Netscape has detected you are installing on <b>"+plat+"</b>.<br>");
+document.write("Installing: <b>"+pkcs11base+platDir+"/"+pkcs11jar+"</b><br>");
+document.write("<FORM>");
+document.write("<CENTER><Table><TR><TD><Input Type=Button name=install value='Install Now' onclick=DoInstall("+ "\"" +pkcs11base+platDir+"/"+pkcs11jar+"\""+")>");
+document.write("</TD><TD><Input type=Button name=cancel value=Cancel Onclick=DoCancel()>");
+document.write("</TD></TR></Table></CENTER>");
+document.write("</FORM>");
+document.close();
+</SCRIPT>
+</HTML>

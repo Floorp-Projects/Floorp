@@ -1,0 +1,180 @@
+<HTML>
+<TITLE>Generic PKCS #11 Installer</TITLE>
+<--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is the Netscape security libraries.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation.  Portions created by Netscape are 
+   - Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   - 
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU General Public License Version 2 or later (the
+   - "GPL"), in which case the provisions of the GPL are applicable 
+   - instead of those above.  If you wish to allow use of your 
+   - version of this file only under the terms of the GPL and not to
+   - allow others to use your version of this file under the MPL,
+   - indicate your decision by deleting the provisions above and
+   - replace them with the notice and other provisions required by
+   - the GPL.  If you do not delete the provisions above, a recipient
+   - may use your version of this file under either the MPL or the
+   - GPL.
+-->
+<SCRIPT>
+// Crypto Mechanism Flags 
+PKCS11_MECH_RSA_FLAG           =  0x1<<0; 
+PKCS11_MECH_DSA_FLAG           =  0x1<<1; 
+PKCS11_MECH_RC2_FLAG           =  0x1<<2; 
+PKCS11_MECH_RC4_FLAG           =  0x1<<3; 
+PKCS11_MECH_DES_FLAG           =  0x1<<4; 
+PKCS11_MECH_DH_FLAG            =  0x1<<5; //Diffie-Hellman 
+PKCS11_MECH_SKIPJACK_FLAG      =  0x1<<6; //SKIPJACK algorithm as in Fortezza cards 
+PKCS11_MECH_RC5_FLAG           =  0x1<<7; 
+PKCS11_MECH_SHA1_FLAG          =  0x1<<8; 
+PKCS11_MECH_MD5_FLAG           =  0x1<<9; 
+PKCS11_MECH_MD2_FLAG           =  0x1<<10; 
+PKCS11_MECH_RANDOM_FLAG        =  0x1<<27; //Random number generator 
+PKCS11_PUB_READABLE_CERT_FLAG  =  0x1<<28; //Stored certs can be read off the token w/o logging in 
+PKCS11_DISABLE_FLAG            =  0x1<<30; //tell Navigator to disable this slot by default 
+
+// Important: 
+// 0x1<<11, 0x1<<12, ... , 0x1<<26, 0x1<<29, and 0x1<<31 are reserved 
+// for internal use in Navigator. 
+// Therefore, these bits should always be set to 0; otherwise, 
+// Navigator might exhibit unpredictable behavior. 
+
+// These flags indicate which mechanisms should be turned on by 
+pkcs11MechanismFlags = PKCS11_MECH_RANDOM_FLAG; 
+  
+
+// Ciphers that support SSL or S/MIME 
+PKCS11_CIPHER_FORTEZZA_FLAG    = 0x1<<0; 
+
+// Important: 
+// 0x1<<1, 0x1<<2, ... , 0x1<<31 are reserved 
+// for internal use in Navigator. 
+// Therefore, these bits should ALWAYS be set to 0; otherwise, 
+// Navigator might exhibit unpredictable behavior. 
+
+// These flags indicate which SSL ciphers are supported 
+pkcs11CipherFlags = PKCS11_CIPHER_FORTEZZA_FLAG; 
+  
+
+// Return values of pkcs11.addmodule() & pkcs11.delmodule() 
+// success codes 
+JS_OK_ADD_MODULE                 = 3 // Successfully added a module 
+JS_OK_DEL_EXTERNAL_MODULE        = 2 // Successfully deleted ext. module 
+JS_OK_DEL_INTERNAL_MODULE        = 1 // Successfully deleted int. module 
+
+// failure codes 
+JS_ERR_OTHER                     = -1 // Other errors than the followings 
+JS_ERR_USER_CANCEL_ACTION        = -2 // User abort an action 
+JS_ERR_INCORRECT_NUM_OF_ARGUMENTS= -3 // Calling a method w/ incorrect # of arguments 
+JS_ERR_DEL_MODULE                = -4 // Error deleting a module 
+JS_ERR_ADD_MODULE                = -5 // Error adding a module 
+JS_ERR_BAD_MODULE_NAME           = -6 // The module name is invalid 
+JS_ERR_BAD_DLL_NAME              = -7 // The DLL name is bad 
+JS_ERR_BAD_MECHANISM_FLAGS       = -8 // The mechanism flags are invalid 
+JS_ERR_BAD_CIPHER_ENABLE_FLAGS   = -9 // The SSL, S/MIME cipher flags are invalid 
+
+var new_window;
+var has_new_window = 0;
+
+function HandleCipher(checkBox) {
+	if (checkBox.checked) {
+		pkcs11MechanismFlags |= checkBox.value;
+	} else {
+		pkcs11MechanismFlags &= ~checkBox.value;
+	}
+}
+
+function HandleSSL(checkBox) {
+	if (checkBox.checked) {
+		pkcs11CipherFlags |= checkBox.value;
+	} else {
+		pkcs11CipherFlags &= ~checkBox.value;
+	}
+}
+
+function colonize(string) {
+	len = string.length;
+	end = len -1;
+
+	if (len == 0) return string;
+
+
+	for (i=0; i < len; i++) {
+	   if (string.charAt(i) == "/") {
+		if (i == 0) {
+		    new_string = ":" + string.substring(1,len);
+		} else if (i == end) {
+		    new_string = string.substring(0,i)+':';
+		} else {
+		    new_string = string.substring(0,i)+':'+
+						string.substring(i+1,len);
+		}
+		string = new_string;
+	   }
+	}
+
+	if (string.charAt(0) == ":") string = string.substring(1,len);
+	return string;
+}
+
+function DoInstall(name,module) {
+	if ((navigator.platform == "MacPPC") 
+			|| (navigator.platform == "Mac68K")) {
+	    module = colonize(module);
+	}
+	result = pkcs11.addmodule(name, module, 
+			pkcs11MechanismFlags, pkcs11CipherFlags); 
+	if ( result < 0) { 
+	  window.alert("New module setup failed.  Error code: " + result); 
+	}
+	if (has_new_window) new_window.close();
+}
+
+default_name = "Netscape FORTEZZA Module"
+
+default_module = "D:/dogbert/ns/dist/WIN32_D.OBJ/bin/fort32.dll"
+document.writeln("<FORM name=instform target=_self> <H2>PKCS #11 Installer</H2>");
+document.writeln(" Module name: <Input Type=Text Name=modName value=\""+default_name+"\" size=50 required><br>");
+document.writeln(" Module Library: <Input Type=FILE required Name=module><p>");
+document.writeln("<hr><TABLE><TR><TD>");
+document.writeln("<Input type=Checkbox name=RSA value="+PKCS11_MECH_RSA_FLAG+" onclick=HandleCipher(document.instform.RSA)> RSA<br>");
+document.writeln("<Input type=Checkbox name=DSA value="+PKCS11_MECH_DSA_FLAG+" onclick=HandleCipher(document.instform.DSA)> DSA<br>");
+document.writeln("<Input type=Checkbox name=RC2 value="+PKCS11_MECH_RC2_FLAG+" onclick=HandleCipher(document.instform.RC2)> RC2<br>");
+document.writeln("<Input type=Checkbox name=RC4 value="+PKCS11_MECH_RC4_FLAG+" onclick=HandleCipher(document.instform.RC4)> RC4<br>");
+document.writeln("</TD><TD>");
+document.writeln("<Input type=Checkbox name=DES value="+PKCS11_MECH_DES_FLAG+" onclick=HandleCipher(document.instform.DES)> DES<br>");
+document.writeln("<Input type=Checkbox name=DH value="+PKCS11_MECH_DH_FLAG+" onclick=HandleCipher(document.instform.DH)> DH<br>");
+document.writeln("<Input type=Checkbox name=SKIPJACK value="+PKCS11_MECH_SKIPJACK_FLAG+" onclick=HandleCipher(document.instform.SKIPJACK)> SKIPJACK<br>");
+document.writeln("<Input type=Checkbox name=RC5 value="+PKCS11_MECH_RC5_FLAG+" onclick=HandleCipher(document.instform.RC5)> RC5<br>");
+document.writeln("</TD><TD>");
+document.writeln("<Input type=Checkbox name=SHA1 value="+PKCS11_MECH_SHA1_FLAG+" onclick=HandleCipher(document.instform.SHA1)> SHA1<br>");
+document.writeln("<Input type=Checkbox name=MD5 value="+PKCS11_MECH_MD5_FLAG+" onclick=HandleCipher(document.instform.MD5)> MD5<br>");
+document.writeln("<Input type=Checkbox name=MD2 value="+PKCS11_MECH_MD2_FLAG+" onclick=HandleCipher(document.instform.MD2)> MD2<br>");
+document.writeln("</TD><TD>");
+document.writeln("<Input type=Checkbox name=Random value="+PKCS11_MECH_RANDOM_FLAG+" CHECKED onclick=HandleCipher(document.instform.Random)> Random Number Generation<br>");
+document.writeln("<Input type=Checkbox name=readCert value="+PKCS11_PUB_READABLE_CERT_FLAG+" onclick=HandleCipher(document.instform.ReadCert)> Public Readable Certificates<br>");
+document.writeln("<Input type=Checkbox name=Disable value="+PKCS11_DISABLE_FLAG+" onclick=HandleCipher(document.instform.Disable)> Disable<br>");
+document.writeln("</TD></TR></TABLE>");
+document.writeln("<hr>");
+document.writeln("<Input type=Checkbox name=fortssl value="+ PKCS11_CIPHER_FORTEZZA_FLAG +" checked onclick=HandleSSL(document.instform.fortssl)> Enable FORTEZZA menus<br>");
+document.writeln("<hr>");
+document.write("<Input type=submit Name=Install Value=Install onclick=DoInstall(");
+document.writeln(  "document.instform.modName.value,document.instform.module.value) >");
+document.writeln("</FORM>");
+</SCRIPT>

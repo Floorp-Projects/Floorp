@@ -1,0 +1,211 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Netscape security libraries.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ *
+ * key.h - public data structures and prototypes for the private key library
+ *
+ * $Id: keyhi.h,v 1.1 2000/03/31 19:45:18 relyea%netscape.com Exp $
+ */
+
+#ifndef _KEYHI_H_
+#define _KEYHI_H_
+
+#include "plarena.h"
+
+#include "seccomon.h"
+#include "secoidt.h"
+#include "secdert.h"
+#include "keythi.h"
+#include "certt.h"
+#include "secpkcs5.h"
+
+SEC_BEGIN_PROTOS
+
+
+/*
+** Destroy a subject-public-key-info object.
+*/
+extern void SECKEY_DestroySubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki);
+
+/*
+** Copy subject-public-key-info "src" to "dst". "dst" is filled in
+** appropriately (memory is allocated for each of the sub objects).
+*/
+extern SECStatus SECKEY_CopySubjectPublicKeyInfo(PRArenaPool *arena,
+					     CERTSubjectPublicKeyInfo *dst,
+					     CERTSubjectPublicKeyInfo *src);
+
+/*
+** Update the PQG parameters for a cert's public key.
+** Only done for DSA and Fortezza certs
+*/
+extern SECStatus
+SECKEY_UpdateCertPQG(CERTCertificate * subjectCert);
+
+
+/* Compare the KEA parameters of two public keys.  
+ * Only used by fortezza.      */
+
+extern SECStatus
+SECKEY_KEAParamCompare(CERTCertificate *cert1,CERTCertificate *cert2);
+
+/*
+** Return the strength of the public key
+*/
+extern unsigned SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk);
+
+
+/*
+** Make a copy of the private key "privKey"
+*/
+extern SECKEYPrivateKey *SECKEY_CopyPrivateKey(SECKEYPrivateKey *privKey);
+
+/*
+** Make a copy of the public key "pubKey"
+*/
+extern SECKEYPublicKey *SECKEY_CopyPublicKey(SECKEYPublicKey *pubKey);
+
+/*
+** Convert a private key "privateKey" into a public key
+*/
+extern SECKEYPublicKey *SECKEY_ConvertToPublicKey(SECKEYPrivateKey *privateKey);
+
+/*
+ * create a new RSA key pair. The public Key is returned...
+ */
+SECKEYPrivateKey *SECKEY_CreateRSAPrivateKey(int keySizeInBits,
+					   SECKEYPublicKey **pubk, void *cx);
+/*
+** Create a subject-public-key-info based on a public key.
+*/
+extern CERTSubjectPublicKeyInfo *
+SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *k);
+
+/*
+** Decode a DER encoded public key into an SECKEYPublicKey structure.
+*/
+extern SECKEYPublicKey *SECKEY_DecodeDERPublicKey(SECItem *pubkder);
+
+/*
+** Convert a base64 ascii encoded DER public key to our internal format.
+*/
+extern SECKEYPublicKey *SECKEY_ConvertAndDecodePublicKey(char *pubkstr);
+
+/*
+** Convert a base64 ascii encoded DER public key and challenge to spki,
+** and verify the signature and challenge data are correct
+*/
+extern CERTSubjectPublicKeyInfo *
+SECKEY_ConvertAndDecodePublicKeyAndChallenge(char *pkacstr, char *challenge,
+								void *cx);
+
+/*
+** Decode a DER encoded subject public key info into a
+** CERTSubjectPublicKeyInfo structure.
+*/
+extern CERTSubjectPublicKeyInfo *
+SECKEY_DecodeDERSubjectPublicKeyInfo(SECItem *spkider);
+
+/*
+** Convert a base64 ascii encoded DER subject public key info to our
+** internal format.
+*/
+extern CERTSubjectPublicKeyInfo *
+SECKEY_ConvertAndDecodeSubjectPublicKeyInfo(char *spkistr);
+
+/*
+** Destroy a private key object.
+**	"key" the object
+*/
+extern void SECKEY_DestroyPrivateKey(SECKEYPrivateKey *key);
+
+/*
+** Destroy a public key object.
+**	"key" the object
+*/
+extern void SECKEY_DestroyPublicKey(SECKEYPublicKey *key);
+
+/* Destroy and zero out a private key info structure.  for now this
+ * function zero's out memory allocated in an arena for the key 
+ * since PORT_FreeArena does not currently do this.  
+ *
+ * NOTE -- If a private key info is allocated in an arena, one should 
+ * not call this function with freeit = PR_FALSE.  The function should 
+ * destroy the arena.  
+ */
+extern void
+SECKEY_DestroyPrivateKeyInfo(SECKEYPrivateKeyInfo *pvk, PRBool freeit);
+
+/* Destroy and zero out an encrypted private key info.
+ *
+ * NOTE -- If a encrypted private key info is allocated in an arena, one should 
+ * not call this function with freeit = PR_FALSE.  The function should 
+ * destroy the arena.  
+ */
+extern void
+SECKEY_DestroyEncryptedPrivateKeyInfo(SECKEYEncryptedPrivateKeyInfo *epki,
+				      PRBool freeit);
+
+/* Copy private key info structure.  
+ *  poolp is the arena into which the contents of from is to be copied.
+ *	NULL is a valid entry.
+ *  to is the destination private key info
+ *  from is the source private key info
+ * if either from or to is NULL or an error occurs, SECFailure is 
+ * returned.  otherwise, SECSuccess is returned.
+ */
+extern SECStatus
+SECKEY_CopyPrivateKeyInfo(PRArenaPool *poolp,
+			  SECKEYPrivateKeyInfo *to,
+			  SECKEYPrivateKeyInfo *from);
+
+/* Copy encrypted private key info structure.  
+ *  poolp is the arena into which the contents of from is to be copied.
+ *	NULL is a valid entry.
+ *  to is the destination encrypted private key info
+ *  from is the source encrypted private key info
+ * if either from or to is NULL or an error occurs, SECFailure is 
+ * returned.  otherwise, SECSuccess is returned.
+ */
+extern SECStatus
+SECKEY_CopyEncryptedPrivateKeyInfo(PRArenaPool *poolp,
+				   SECKEYEncryptedPrivateKeyInfo *to,
+				   SECKEYEncryptedPrivateKeyInfo *from);
+/*
+ * Accessor functions for key type of public and private keys.
+ */
+KeyType SECKEY_GetPrivateKeyType(SECKEYPrivateKey *privKey);
+KeyType SECKEY_GetPublicKeyType(SECKEYPublicKey *pubKey);
+
+
+SEC_END_PROTOS
+
+#endif /* _KEYHI_H_ */
