@@ -421,10 +421,12 @@
       <!-- normal, single click -->
       <handler event="click">
       <![CDATA[
-         if (event.originalTarget.getAttribute('twisty') == 'true') {
-           var n = event.originalTarget.parentNode.parentNode.parentNode;
-           n.toggleOpenState();
-         }
+         try {
+           if (event.originalTarget.getAttribute('twisty') == 'true') {
+             var n = event.originalTarget.parentNode.parentNode.parentNode;
+             n.toggleOpenState();
+            }
+         } catch (e) {}
       ]]>
       </handler>
       
