@@ -177,6 +177,10 @@ public:
     mFirstLetterStyleOK = aSetting;
   }
 
+  void SetFirstLetterFrame(nsIFrame* aFrame) {
+    mFirstLetterFrame = aFrame;
+  }
+
   //----------------------------------------
   // Text run usage methods. These methods are using during reflow to
   // track the current text run and to advance through text runs.
@@ -221,6 +225,7 @@ protected:
   // This state varies during the reflow of a line but is line
   // "global" state not span "local" state.
   nsIFrame* mBRFrame;
+  nsIFrame* mFirstLetterFrame;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
   PRBool mEndsInWhiteSpace;

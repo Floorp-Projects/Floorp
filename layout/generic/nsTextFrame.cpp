@@ -331,6 +331,10 @@ protected:
 
 #define TEXT_TRIMMED_WS      0x10
 
+// This bit is set on the first frame in a continuation indicating
+// that it was choppsed short because of :first-letter style.
+#define TEXT_FIRST_LETTER    0x20
+
 //----------------------------------------------------------------------
 
 static PRBool gBlinkTextOff;
@@ -512,7 +516,7 @@ TextFrame::Paint(nsIPresContext& aPresContext,
                  const nsRect& aDirtyRect,
                  nsFramePaintLayer aWhichLayer)
 {
-  if (eFramePaintLayer_Content != aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
   }
   if ((0 != (mFlags & TEXT_BLINK_ON)) && gBlinkTextOff) {
@@ -2207,14 +2211,17 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   // Loop over words and whitespace in content and measure. Set inWord
   // to true if we are part of a previous piece of text's word. This
   // is only valid for one pass through the measuring loop.
-  PRBool inWord = lineLayout.InWord();
+  PRBool inWord = lineLayout.InWord() ||
+    ((nsnull != mPrevInFlow) &&
+     (((TextFrame*)mPrevInFlow)->mFlags & TEXT_FIRST_LETTER));
   if (inWord) {
     mFlags |= TEXT_IN_WORD;
   }
+  mFlags &= ~TEXT_FIRST_LETTER;
+
   PRInt32 column = lineLayout.GetColumn();
   PRInt32 prevColumn = column;
   mColumn = column;
-
   PRBool breakable = lineLayout.LineIsBreakable();
   for (;;) {
     // Get next word/whitespace from the text
@@ -2395,7 +2402,9 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
     lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
   }
   if (justDidFirstLetter) {
+    lineLayout.SetFirstLetterFrame(this);
     lineLayout.SetFirstLetterStyleOK(PR_FALSE);
+    mFlags |= TEXT_FIRST_LETTER;
   }
 
   // Setup metrics for caller; store final max-element-size information
@@ -2811,9 +2820,11 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the first/last content offset and prev/next in flow info
   PRBool isComplete = (mContentOffset + mContentLength) == contentLength;
-  fprintf(out, "[%d,%d,%c] ", 
+  fprintf(out, "[%d,%d,%c][%x] ", 
           mContentOffset, mContentOffset+mContentLength-1,
-          isComplete ? 'T':'F');
+          isComplete ? 'T':'F',
+          mFlags);
+  
   if (nsnull != mPrevInFlow) {
     fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
   }

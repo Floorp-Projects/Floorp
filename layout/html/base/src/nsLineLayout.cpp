@@ -800,6 +800,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // the state out. We need to know how to treat the current frame
   // when breaking.
   PRBool notSafeToBreak = CanPlaceFloaterNow() || InWord();
+  PRBool firstLetterOK = mFirstLetterStyleOK;
 
   // Apply left margins (as appropriate) to the frame computing the
   // new starting x,y coordinates for the frame.
@@ -937,6 +938,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         aFrame->GetParent((nsIFrame**) &parent);
         parent->DeleteChildsNextInFlow(mPresContext, aFrame);
       }
+    }
+    if (firstLetterOK && !mFirstLetterStyleOK) {
     }
 
     // See if we can place the frame. If we can't fit it, then we
