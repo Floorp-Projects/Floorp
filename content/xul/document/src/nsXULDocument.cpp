@@ -398,6 +398,8 @@ public:
     // nsIDocument interface
     virtual nsIArena* GetArena();
 
+    NS_IMETHOD GetContentType(nsString& aContentType) const;
+
     NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
                                  nsIContentViewerContainer* aContainer,
                                  nsIStreamListener **aDocListener,
@@ -988,6 +990,14 @@ XULDocumentImpl::GetArena()
     nsIArena* result = mArena;
     NS_IF_ADDREF(result);
     return result;
+}
+
+NS_IMETHODIMP 
+XULDocumentImpl::GetContentType(nsString& aContentType) const
+{
+    // XXX Is this right, Chris?
+    aContentType.SetString("text/xul");
+    return NS_OK;
 }
 
 static
