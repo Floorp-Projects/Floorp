@@ -30,8 +30,6 @@ LIBRARY_NAME = raptorbasewidget_s
 
 CPPSRCS= \
     nsBaseWidget.cpp         \
-	nsMenuButton.cpp         \
-	nsImageButton.cpp        \
 	nsTransferable.cpp       \
 	nsXIFFormatConverter.cpp \
 	nsBaseDragService.cpp    \

@@ -26,8 +26,6 @@ CPPSRCS = \
 	nsFileListTransferable.cpp      \
     nsBaseDragService.cpp      \
     nsBaseWidget.cpp      \
-	nsMenuButton.cpp        \
-	nsImageButton.cpp         \
 	nsFileChooser.cpp         \
 	nsBaseClipboard.cpp         \
 	nsTransferable.cpp         \
@@ -40,8 +38,6 @@ OBJS= \
 	.\$(OBJDIR)\nsFileListTransferable.obj  \
 	.\$(OBJDIR)\nsBaseDragService.obj  \
 	.\$(OBJDIR)\nsBaseWidget.obj  \
-	.\$(OBJDIR)\nsMenuButton.obj  \
-	.\$(OBJDIR)\nsImageButton.obj  \
 	.\$(OBJDIR)\nsFileChooser.obj  \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
