@@ -180,7 +180,7 @@ clean::
 	+$(LOOP_OVER_DIRS)
 
 clobber::
-	rm -f $(OBJS) $(TARGETS) $(GARBAGE) so_locations $(NOSUCHFILE)
+	rm -rf $(OBJS) $(TARGETS) $(OBJDIR) $(GARBAGE) so_locations $(NOSUCHFILE)
 	+$(LOOP_OVER_DIRS)
 
 realclean clobber_all::
@@ -195,7 +195,7 @@ ifdef RELEASE_LIBS
 		false; \
 	fi
 	@if test ! -d $(RELEASE_LIB_DIR); then \
-		rm -f $(RELEASE_LIB_DIR); \
+		rm -rf $(RELEASE_LIB_DIR); \
 		$(NSINSTALL) -D $(RELEASE_LIB_DIR);\
 	fi
 	cp $(RELEASE_LIBS) $(RELEASE_LIB_DIR)
