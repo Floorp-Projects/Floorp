@@ -246,7 +246,7 @@ void nsWindow::NativeGrab(PRBool aGrab)
     retval = XGrabPointer(mDisplay, mBaseWindow, PR_TRUE, (ButtonPressMask |
                           ButtonReleaseMask | EnterWindowMask | LeaveWindowMask 
                           | PointerMotionMask), GrabModeAsync, GrabModeAsync, 
-                          (Window*)NULL, newCursor, CurrentTime);
+                          (Window)0, newCursor, CurrentTime);
 
     if (retval != GrabSuccess)
       fprintf(stderr, "Grab pointer failed!\n");
