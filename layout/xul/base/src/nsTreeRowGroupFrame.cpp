@@ -698,7 +698,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
   ComputeVisibleRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
 
   if (mShouldHaveScrollbar && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
-      mIsFull) {
+      (mIsFull || mScrollbar)) {
     // Ensure the scrollbar has been created.
     if (!mScrollbar)
       CreateScrollbar(aPresContext);
