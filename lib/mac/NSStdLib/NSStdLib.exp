@@ -24,11 +24,11 @@
 # ClearIsStationery
 # ClearNameLocked
 # CopyDirectoryAccess
-# CopyFileMgrAttributes
+CopyFileMgrAttributes
 # CopyFork
 # CreateFileIDRef
 # CreatorTypeFileSearch
-# DTCopyComment
+DTCopyComment
 # DTGetAPPL
 # DTGetComment
 # DTGetIcon
@@ -106,7 +106,7 @@ FSpResolveFileIDRef
 # FSpShare
 # FSpUnshare
 FSp_fopen
-# FileCopy
+FileCopy
 # FilteredDirectoryCopy
 # FindDrive
 # FlushFile
@@ -126,8 +126,8 @@ MWUnmangle
 # GetCatInfoNoName
 # GetDInfo
 # GetDirItems
-# GetDirName
-# GetDirectoryID
+GetDirName
+GetDirectoryID
 # GetDiskBlocks
 # GetDriverName
 # GetFileLocation
@@ -186,7 +186,7 @@ RemoveConsole
 # SetIsStationery
 # SetNameLocked
 # Share
-# TruncPString
+TruncPString
 # UnlockRange
 # UnmountAndEject
 UnregisterMallocHeap
@@ -195,7 +195,7 @@ ValidateMallocHeap
 # VolumeMount
 WriteCharsToConsole
 # XGetVInfo
-# XGetVolumeInfoNoName
+XGetVolumeInfoNoName
 # __FileRead
 # __FileWrite
 # __MemInitialize
