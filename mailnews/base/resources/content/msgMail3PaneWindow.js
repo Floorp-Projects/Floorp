@@ -1352,15 +1352,17 @@ function SetNextMessageAfterDelete()
 {
   var treeSelection = GetThreadTree().treeBoxObject.selection;
 
-  // Only set gThreadPaneDeleteOrMoveOccurred to true if the message was
-  // truly moved to the trash or deleted, as opposed to an IMAP delete
-  // (where it is only "marked as deleted".  This will prevent bug 142065.
-  //
-  // If it's an IMAP delete, then just set gNextMessageViewIndexAfterDelete
-  // to treeSelection.currentIndex (where the outline is at) because nothing
-  // was moved or deleted from the folder.
-  if(gDBView.removeRowOnMoveOrDelete)
+  if (treeSelection.isSelected(treeSelection.currentIndex))
+    gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
+  else if(gDBView.removeRowOnMoveOrDelete)
   {
+    // Only set gThreadPaneDeleteOrMoveOccurred to true if the message was
+    // truly moved to the trash or deleted, as opposed to an IMAP delete
+    // (where it is only "marked as deleted".  This will prevent bug 142065.
+    //
+    // If it's an IMAP delete, then just set gNextMessageViewIndexAfterDelete
+    // to treeSelection.currentIndex (where the outline is at) because nothing
+    // was moved or deleted from the folder.
     gThreadPaneDeleteOrMoveOccurred = true;
     gNextMessageViewIndexAfterDelete = treeSelection.currentIndex - NumberOfSelectedMessagesAboveCurrentIndex(treeSelection.currentIndex);
   }
