@@ -255,7 +255,7 @@ public:
 //----------------------------------------------------------------------------------------
 
 
-struct NS_COM nsStr {  
+struct nsStr {  
 
 protected:
   nsStr() {
@@ -311,13 +311,19 @@ private:
       (mCapacityAndFlags & ~NSSTR_OWNSBUFFER_MASK |
        (aOwnsBuffer ? 1 : 0) << NSSTR_OWNSBUFFER_BIT);
   }
+
+  inline PRUnichar GetCharAt(PRUint32 anIndex) const {
+    if(anIndex<mLength)  {
+      return (eTwoByte==GetCharSize()) ? mUStr[anIndex] : (PRUnichar)mStr[anIndex];
+    }//if
+    return 0;
+  }
   
 public:
   friend NS_COM
   char*
   ToNewUTF8String( const nsAString& aSource );
   friend inline void AddNullTerminator(nsStr& aDest);
-  friend inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex);
   friend class nsStrPrivate;
   friend class nsString;
   friend class nsCString;
@@ -352,22 +358,6 @@ inline void AddNullTerminator(nsStr& aDest) {
  */
 inline void Recycle( char* aBuffer) { nsMemory::Free(aBuffer); }
 inline void Recycle( PRUnichar* aBuffer) { nsMemory::Free(aBuffer); }
-
-/**
-* This method is used to access a given char in the given string
-*
-* @update	gess 01/04/99
-* @param  aDest is the nsStr to be appended to
-* @param  anIndex tells us where in dest to get the char from
-* @return the given char, or 0 if anIndex is out of range
-*/
-inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex) {
-  if(anIndex<aDest.mLength)  {
-    return (eTwoByte==aDest.GetCharSize()) ? aDest.mUStr[anIndex] : (PRUnichar)aDest.mStr[anIndex];
-  }//if
-  return 0;
-}
-
 
 #ifdef NS_STR_STATS
 
