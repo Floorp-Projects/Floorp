@@ -1094,11 +1094,6 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   if (!TestFlag(IMAP_RECEIVED_GREETING))
     EstablishServerConnection();
 
-  // Update the security status for this URL
-#ifdef UNREADY_CODE
-  UpdateSecurityStatus();
-#endif
-
   // Step 1: If we have not moved into the authenticated state yet then do so
   // by attempting to logon.
   if (!DeathSignalReceived() && (GetConnectionStatus() >= 0) &&
@@ -7344,8 +7339,25 @@ NS_IMETHODIMP nsImapMockChannel::GetStatus(nsresult *status)
 
 NS_IMETHODIMP nsImapMockChannel::Cancel(nsresult status)
 {
-    m_cancelStatus = status;
-    return NS_OK;
+  m_cancelStatus = status;
+
+  // if we aren't reading from the cache and we get canceled...doom our cache entry...
+  if (m_url)
+  {
+    PRBool readingFromMemCache = PR_FALSE;
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(m_url);
+    imapUrl->GetMsgLoadingFromCache(&readingFromMemCache);
+    if (!readingFromMemCache)
+    {
+      nsCOMPtr<nsICacheEntryDescriptor>  cacheEntry;
+      mailnewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
+      if (cacheEntry)
+        cacheEntry->Doom();
+    }
+  }
+    
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::Suspend()
