@@ -33,9 +33,11 @@
  * GPL.
  */
 
-#ifndef NeedFunctionPrototypes 
-#define NeedFunctionPrototypes (1) /* is this legal from within an app. !? */
-#endif
+/* Force ANSI C prototypes from X11 headers */
+#ifndef FUNCPROTO 
+#define FUNCPROTO 15
+#endif /* !FUNCPROTO */
+
 #include <X11/Xlibint.h>
 #include <X11/extensions/Print.h>
 #include <X11/Intrinsic.h>

@@ -46,6 +46,11 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h> /* for strerror & memset */
+
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#define PR_LOGGING 1
+#include "prlog.h"
+
 #include "imgScaler.h"
 #include "nsXPrintContext.h"
 #include "nsDeviceContextXP.h"
@@ -170,10 +175,50 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
   
   mScreen = XpGetScreenOfContext(mPDisplay, mPContext);
   mScreenNumber = XScreenNumberOfScreen(mScreen);
-  mXlibRgbHandle = xxlib_rgb_create_handle_with_depth("xprint", mPDisplay, mScreen, prefDepth);
+
+  XlibRgbArgs xargs;
+  memset(&xargs, 0, sizeof(xargs));
+  xargs.handle_name           = "xprint";
+  xargs.disallow_image_tiling = True; /* XlibRGB's "Image tiling"-hack is 
+                                       * incompatible to Xprint API */
+  
+  /* What about B/W-only printers ?! */
+  if (mIsGrayscale)
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("printing grayscale\n"));
+    /* 1st attempt using StaticGray */
+    xargs.xtemplate.c_class = StaticGray;
+    xargs.xtemplate.depth   = 8;
+    xargs.xtemplate_mask    = VisualClassMask|VisualDepthMask;
+    mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+    if (!mXlibRgbHandle)
+    { 
+      /* 2nd attempt using GrayScale */
+      xargs.xtemplate.c_class = GrayScale;
+      xargs.xtemplate.depth   = 8;
+      xargs.xtemplate_mask    = VisualClassMask|VisualDepthMask;
+      mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);             
+      if (!mXlibRgbHandle)
+      {
+        /* Last attempt: Emulate StaticGray via Pseudocolor colormap */
+        xargs.xtemplate_mask  = 0L;
+        xargs.xtemplate.depth = 0;
+        xargs.pseudogray      = True;
+        mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+      }
+    }
+  }
+  else
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("printing color\n"));
+    xargs.xtemplate.depth   = prefDepth;
+    xargs.xtemplate.c_class = (prefDepth>12)?(TrueColor):(PseudoColor);
+    xargs.xtemplate_mask    = VisualDepthMask|VisualClassMask;
+    mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+  }
+  
   if (!mXlibRgbHandle)
     return NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE;
-  xxlib_disallow_image_tiling(mXlibRgbHandle, TRUE);
 
   XpGetPageDimensions(mPDisplay, mPContext, &width, &height, &rect);
   rv = SetupWindow(rect.x, rect.y, rect.width, rect.height);
@@ -841,24 +886,13 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
     image_gc = *xgc;
   }
 
-  if( mIsGrayscale )
-  {
-    xxlib_draw_gray_image(mXlibRgbHandle,
-                          mDrawable,
-                          image_gc,
-                          aX, aY, aWidth, aHeight,
-                          NS_XPRINT_RGB_DITHER,
-                          image_bits, row_bytes);  
-  }
-  else
-  {
-    xxlib_draw_rgb_image(mXlibRgbHandle,
-                         mDrawable,
-                         image_gc,
-                         aX, aY, aWidth, aHeight,
-                         NS_XPRINT_RGB_DITHER,
-                         image_bits, row_bytes);
-  }
+
+  xxlib_draw_rgb_image(mXlibRgbHandle,
+                       mDrawable,
+                       image_gc,
+                       aX, aY, aWidth, aHeight,
+                       NS_XPRINT_RGB_DITHER,
+                       image_bits, row_bytes);
   
   if( alpha_pixmap != None ) 
   {   

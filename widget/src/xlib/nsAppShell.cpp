@@ -176,69 +176,86 @@ PR_END_EXTERN_C
 
 NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
-  char *mArgv[1]; 
-  int mArgc = 0;
-
-  int argc = bac ? *bac : 0;
-  char **argv = bav;
-  nsresult rv;
-
-  nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID);
-  if (cmdLineArgs) {
-    rv = cmdLineArgs->GetArgc(&argc);
-    if(NS_FAILED(rv))
-      argc = bac ? *bac : 0;
-
-    rv = cmdLineArgs->GetArgv(&argv);
-    if(NS_FAILED(rv))
-      argv = bav;
-  }
-
-#ifdef NOT_NOW  
-  if (!XInitThreads()) {
-    NS_WARNING("XInitThreads failed");
-    /* fatal ! */
-    exit(EXIT_FAILURE);
-  }
-#endif  
-
-  char *displayName=nsnull;
-  bool synchronize=false;
-
-  for (int i = 0; ++i < argc-1; )
-    /*allow both --display and -display*/
-    if (COMPARE_FLAG12 ("display",argv[i])){
-      displayName=argv[i+1];
-      break;
-    }
-  for (int j = 0; ++j < argc; )
-    if (COMPARE_FLAG2 ("sync",argv[j])){
-      synchronize=true;
-      break;
-    } 
-
-  /* setup locale */
-  if (!setlocale (LC_ALL,""))
-    NS_WARNING("locale not supported by C library");
-  
-  if (!XSupportsLocale ()) {
-    NS_WARNING("locale not supported by Xlib, locale set to C");
-    setlocale (LC_ALL, "C");
-  }
-  
-  if (!XSetLocaleModifiers (""))
-    NS_WARNING("can not set locale modifiers");
-
-  // Open the display
+  /* Create the Xt Application context... */
   if (mAppContext == nsnull) {
+    int      argc = bac ? *bac : 0;
+    char   **argv = bav;
+    nsresult rv;
+
+    nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID);
+    if (cmdLineArgs) {
+      rv = cmdLineArgs->GetArgc(&argc);
+      if(NS_FAILED(rv))
+        argc = bac ? *bac : 0;
+
+      rv = cmdLineArgs->GetArgv(&argv);
+      if(NS_FAILED(rv))
+        argv = bav;
+    }
+
+    char        *displayName    = nsnull;
+    Bool         synchronize    = False;
+    int          i;
+    XlibRgbArgs  xargs;
+    memset(&xargs, 0, sizeof(xargs));
+    /* Use a "well-known" name that other modules can "look-up" this handle
+     * via |xxlib_find_handle| ... */
+    xargs.handle_name = XXLIBRGB_DEFAULT_HANDLE;
+
+    for (i = 0; ++i < argc-1; ) {
+      /* allow both --display and -display */
+      if (COMPARE_FLAG12 ("display", argv[i])) {
+        displayName=argv[i+1];
+        break;
+      }
+    }
+    for (i = 0; ++i < argc-1; ) {
+      if (COMPARE_FLAG1 ("visual", argv[i])) {
+        xargs.xtemplate_mask |= VisualIDMask;
+        xargs.xtemplate.visualid = strtol(argv[i+1], NULL, 0);
+        break;
+      }
+    }   
+    for (i = 0; ++i < argc; ) {
+      if (COMPARE_FLAG1 ("sync", argv[i])) {
+        synchronize = True;
+        break;
+      }
+    }
+    for (i = 0; ++i < argc; ) {
+      /* allow both --no-xshm and -no-xshm */
+      if (COMPARE_FLAG12 ("no-xshm", argv[i])) {
+        xargs.disallow_mit_shmem = True;
+        break;
+      }
+    }    
+    for (i = 0; ++i < argc; ) {
+      if (COMPARE_FLAG1 ("install_colormap", argv[i])) {
+        xargs.install_colormap = True;
+        break;
+      }
+    }
+    
+    /* setup locale */
+    if (!setlocale (LC_ALL,""))
+      NS_WARNING("locale not supported by C library");
+  
+    if (!XSupportsLocale ()) {
+      NS_WARNING("locale not supported by Xlib, locale set to C");
+      setlocale (LC_ALL, "C");
+    }
+  
+    if (!XSetLocaleModifiers (""))
+      NS_WARNING("can not set locale modifiers");
+
     XtToolkitInitialize();
     mAppContext = XtCreateApplicationContext();
 
     if (!(mDisplay = XtOpenDisplay (mAppContext, displayName, 
                                     "Mozilla5", "Mozilla5", nsnull, 0, 
-                                    &mArgc, mArgv))) 
+                                    &argc, argv))) 
     {
-      fprintf (stderr, "%s:  unable to open display \"%s\"\n", mArgv[0], XDisplayName(displayName));
+      fprintf (stderr, "%s:  unable to open display \"%s\"\n", argv[0], XDisplayName(displayName));
       exit (EXIT_FAILURE);
     }
     
@@ -253,10 +270,14 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
       NS_WARNING("running via unbuffered X connection.");
       XSynchronize(mDisplay, True);
     }
-    
-    mXlib_rgb_handle = xxlib_rgb_create_handle(XXLIBRGB_DEFAULT_HANDLE, mDisplay, XDefaultScreenOfDisplay(mDisplay));
+       
+    mXlib_rgb_handle = xxlib_rgb_create_handle(mDisplay, XDefaultScreenOfDisplay(mDisplay),
+                                               &xargs);
     if (!mXlib_rgb_handle)
-      abort();
+    {
+      fprintf (stderr, "%s:  unable to create Xlib context\n", argv[0]);
+      exit (EXIT_FAILURE);
+    }
   }
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsAppShell::Create(dpy=%p)\n",

@@ -52,14 +52,16 @@
 #ifndef __XLIB_RGB_H__
 #define __XLIB_RGB_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+/* Force ANSI C prototypes from X11 headers */
+#undef FUNCPROTO
+#define FUNCPROTO 15
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
 #include <X11/Intrinsic.h>
+
+_XFUNCPROTOBEGIN
 
 /* Porting Note:
  * If you are going to use this code somewhere other than mozilla
@@ -93,17 +95,24 @@ typedef enum
   XLIB_RGB_DITHER_MAX
 } XlibRgbDither;
 
-XlibRgbHandle *
-xxlib_rgb_create_handle (const char *name, Display *display, Screen *screen);
+typedef struct
+{
+  const char *handle_name;
+  int         pseudogray; /* emulate GrayScale via PseudoColor visuals */
+  int         install_colormap;
+  int         disallow_image_tiling;
+  int         disallow_mit_shmem;
+  int         verbose;
+  XVisualInfo xtemplate;
+  long        xtemplate_mask;
+} XlibRgbArgs;
 
 XlibRgbHandle *
-xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *screen, int prefDepth);
-
+xxlib_rgb_create_handle (Display *display, Screen *screen, 
+                         XlibRgbArgs *args);
+                                  
 void
 xxlib_rgb_destroy_handle (XlibRgbHandle *handle);
-
-void 
-xxlib_disallow_image_tiling (XlibRgbHandle *handle, Bool disallow_it);
 
 unsigned long
 xxlib_rgb_xpixel_from_rgb (XlibRgbHandle *handle, uint32 rgb);
@@ -186,10 +195,6 @@ xxlib_rgb_ditherable (XlibRgbHandle *handle);
 void
 xxlib_rgb_set_verbose (XlibRgbHandle *handle, Bool verbose);
 
-/* experimental colormap stuff */
-void
-xxlib_rgb_set_install (XlibRgbHandle *handle, Bool install);
-
 void
 xxlib_rgb_set_min_colors (XlibRgbHandle *handle, int min_colors);
 
@@ -230,9 +235,7 @@ xxlib_deregister_handle(const char *name);
 XlibRgbHandle *
 xxlib_find_handle(const char *name);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+_XFUNCPROTOEND
 
+#endif /* !__XLIB_RGB_H__ */
 
-#endif /* __XLIB_RGB_H__ */
