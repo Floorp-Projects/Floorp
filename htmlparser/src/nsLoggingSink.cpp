@@ -183,6 +183,7 @@ nsLoggingSink::SetOutputStream(ostream& aStream) {
   return NS_OK;
 }
 
+static
 void WriteTabs(ostream& anOutputStream,int aTabCount) {
 	int tabs;
 	for(tabs=0;tabs<aTabCount;tabs++)
