@@ -127,6 +127,16 @@ protected:
   nsStyleUnit GetRealMarginLeftUnit();
   nsStyleUnit GetRealMarginRightUnit();
 
+  nsresult DoReflowBlock(nsHTMLReflowState &aReflowState,
+                         nsReflowReason aReason,
+                         nsIFrame* aFrame,
+                         const nsRect& aSpace,
+                         PRBool aApplyTopMargin,
+                         nscoord aPrevBottomMargin,
+                         PRBool aIsAdjacentWithTop,
+                         nsMargin& aComputedOffsets,
+                         nsReflowStatus& aReflowStatus);
+
   nsIPresContext* mPresContext;
   const nsHTMLReflowState& mOuterReflowState;
 
