@@ -42,13 +42,12 @@ nsToolbarItemHolder::nsToolbarItemHolder() : nsIToolbarItemHolder(), nsIToolbarI
 {
   NS_INIT_REFCNT();
 
-  mWidget    = nsnull;
 }
 
 //--------------------------------------------------------------------
 nsToolbarItemHolder::~nsToolbarItemHolder()
 {
-  NS_IF_RELEASE(mWidget);
+
 }
 
 //--------------------------------------------------------------------
@@ -58,7 +57,6 @@ nsresult nsToolbarItemHolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kCToolbarItemHolderCID);
   
   if (aIID.Equals(kCIToolbarItemHolderIID)) {                                          
     *aInstancePtr = (void*) (nsIToolbarItemHolder *)this;                                        
@@ -67,11 +65,6 @@ nsresult nsToolbarItemHolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }                                                                      
   if (aIID.Equals(kCIToolbarItemIID)) {                                          
     *aInstancePtr = (void*) (nsIToolbarItem *)this;                                        
-    AddRef();                                                            
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kClassIID)) {                                          
-    *aInstancePtr = (void*) (nsToolbarItemHolder *)this;                                        
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
@@ -90,7 +83,6 @@ nsresult nsToolbarItemHolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_METHOD nsToolbarItemHolder::SetWidget(nsIWidget * aWidget)
 {
   mWidget = aWidget;
-  NS_ADDREF(mWidget);
   return NS_OK;
 }
 
@@ -99,7 +91,6 @@ NS_METHOD nsToolbarItemHolder::SetWidget(nsIWidget * aWidget)
 NS_METHOD nsToolbarItemHolder::GetWidget(nsIWidget *&aWidget)
 {
   aWidget = mWidget;
-  NS_ADDREF(mWidget);
   return NS_OK;
 }
 
@@ -107,27 +98,24 @@ NS_METHOD nsToolbarItemHolder::GetWidget(nsIWidget *&aWidget)
 NS_METHOD nsToolbarItemHolder::Repaint(PRBool aIsSynchronous)
 
 {
-  if (nsnull != mWidget) {
+  if ( mWidget )
     mWidget->Invalidate(aIsSynchronous);
-  }
   return NS_OK;
 }
     
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarItemHolder::GetBounds(nsRect & aRect)
 {
-  if (nsnull != mWidget) {
+  if ( mWidget )
     mWidget->GetBounds(aRect);
-  }
   return NS_OK;
 }
 
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarItemHolder::SetBounds(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-  if (nsnull != mWidget) {
+  if ( mWidget )
     mWidget->Resize(aWidth, aHeight, aRepaint);
-  }
   return NS_OK;
 }
     
@@ -138,9 +126,8 @@ NS_METHOD nsToolbarItemHolder::SetBounds(PRUint32 aX,
                                           PRUint32 aHeight,
                                           PRBool   aRepaint)
 {
-  if (nsnull != mWidget) {
+  if ( mWidget )
     mWidget->Resize(aX, aY, aWidth, aHeight, aRepaint);
-  }
   return NS_OK;
 }
 
