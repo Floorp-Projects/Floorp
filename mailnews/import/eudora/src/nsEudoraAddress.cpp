@@ -319,13 +319,8 @@ CAliasEntry *nsEudoraAddress::ProcessAlias( const char *pLine, PRInt32 len, nsSt
 		}
 	}
 	
-	if (pEntry->m_list.Count())
-		return( pEntry);
-	
-	// TLR: FIXME: Put an error string in the log indicating this alias could not be parsed.
-	
-	delete pEntry;
-	return( nsnull);	
+  // Always return the entry even if there's no other attribute associated with the contact.
+  return( pEntry);	
 }
 
 
