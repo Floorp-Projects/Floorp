@@ -1485,20 +1485,18 @@ get_ascii_file_data(SECItem *item, char *mode, char *type, int num)
 	SECStatus rv;
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, mode, type, num);
 	file = PR_Open(filename, PR_RDONLY, 00440);
-	if (file) {
-		rv = SECU_FileToItem(item, file);
-	} else {
+	if (!file) {
 		/* Not a failure if "mode" does not need "type". */
 		return SECSuccess;
 	}
-	if ((PL_strcmp(mode, "rsa") == 0 || PL_strcmp(mode, "dsa") == 0) && 
-	    PL_strcmp(type, "key") == 0)
+	if (((PL_strcmp(mode, "rsa") == 0 || PL_strcmp(mode, "dsa") == 0) && 
+	      PL_strcmp(type, "key") == 0) ||
+	   (PL_strcmp(mode, "dsa") == 0 && PL_strcmp(type, "plaintext") == 0)) {
+		rv = SECU_FileToItem(item, file);
 		atob(SECITEM_DupItem(item), item);
-	if (PL_strcmp(mode, "dsa") == 0 && PL_strcmp(type, "plaintext") == 0)
-		atob(SECITEM_DupItem(item), item);
-	/* remove a trailing newline, else byte count will be wrong */
-	if (item->data[item->len-1] == '\n')
-		item->len--;
+	} else {
+		rv = SECU_TextFileToItem(item, file);
+	}
 	PR_Close(file);
 	return rv;
 }
@@ -1625,15 +1623,14 @@ get_file_data(char *filename, SECItem *item, PRBool b64)
 	SECStatus rv = SECSuccess;
 	PRFileDesc *file = PR_Open(filename, PR_RDONLY, 006600);
 	if (file) {
-		SECItem asciiItem = { 0, 0, 0 };
-		rv = SECU_FileToItem(&asciiItem, file);
-		CHECKERROR(rv, __LINE__);
 		if (b64) {
+			SECItem asciiItem = { 0, 0, 0 };
+			rv = SECU_FileToItem(&asciiItem, file);
+			CHECKERROR(rv, __LINE__);
 			rv = atob(&asciiItem, item);
 		} else {
-			SECITEM_CopyItem(NULL, item, &asciiItem);
-			if (item->data[item->len-1] == '\n')
-				item->len--;
+			rv = SECU_FileToItem(item, file);
+			CHECKERROR(rv, __LINE__);
 		}
 		CHECKERROR(rv, __LINE__);
 		PR_Close(file);
