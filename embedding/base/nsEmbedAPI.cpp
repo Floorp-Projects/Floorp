@@ -24,7 +24,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsIChromeRegistry.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIStringBundle.h"
 
@@ -141,15 +140,6 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     }
 #endif
 
-    // Init the chrome registry.
-    nsCOMPtr<nsIChromeRegistry> chromeReg;
-    chromeReg = do_GetService("@mozilla.org/chrome/chrome-registry;1", &rv);
-    if (chromeReg)
-    {
-        // Ignore the return value here.  If chrome is already initialized
-        // this call will return an error even though nothing is wrong.
-        (void) chromeReg->CheckForNewChrome();
-    }
     return NS_OK;
 
 }
