@@ -33,7 +33,7 @@
 
 class nsIDocument;
 class nsIScrollableView;
-class nsISelfScrollingFrame;
+class nsIPresShell;
 
 /*
  * Event listener manager
@@ -114,26 +114,11 @@ protected:
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
   PRBool CheckDisabled(nsIContent* aContent);
+  void EnsureDocument(nsIPresShell* aPresShell);
+  void EnsureDocument(nsIPresContext* aPresContext);
 
-  // These functions are all for mousewheel scrolling
-  nsISelfScrollingFrame* GetParentSelfScrollingFrame(nsIFrame* aFrame);
+  // These functions are for mousewheel scrolling
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
-
-  // This function MAY CHANGE the PresContext that you pass into it.  It
-  // will be changed to the PresContext for the main document.  If the
-  // new PresContext differs from the one you passed in, you should
-  // be sure to release the new one.
-
-  nsIFrame* GetDocumentFrame(nsIPresContext* &aPresContext);
-
-  // This function may call GetDocumentFrame, so read the warning above
-  // regarding the PresContext that you pass into this function.
-
-  nsresult  GetScrollableFrameOrView(nsIPresContext* &aPresContext,
-                                     nsIFrame* aTargetFrame, nsIView* aView,
-                                     nsIScrollableView* &sv,
-                                     nsISelfScrollingFrame* &sf,
-                                     nsIView* &focusView);
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefService();
   nsresult ChangeTextSize(PRInt32 change);
