@@ -396,6 +396,7 @@ private:
   
   nsresult MigratePopAccount(nsIMsgIdentity *identity);
   
+  nsresult CreateLocalMailAccount(nsIMsgIdentity *identity);
   nsresult MigrateLocalMailAccount(nsIMsgIdentity *identity);
   nsresult MigrateOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
   
@@ -1294,10 +1295,13 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_ACCOUNTMANAGER
       printf("FAIL:  don't proceed with migration.\n");
 #endif
+      // but before we do that, create the default Local Mail Account
+      rv = CreateLocalMailAccount(nsnull /* no identity yet */);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create the Local Mail account");
       // return NS_ERROR_FAILURE because we failed to upgrade the pref.js
       // by returning a failure code, this will case the Account Wizard
       // to be automatically opened.
-      return rv;
+      return NS_ERROR_FAILURE;
     }
 #ifdef DEBUG_ACCOUNTMANAGER
     else {
@@ -1326,6 +1330,10 @@ nsMsgAccountManager::UpgradePrefs()
     if ( oldMailType == POP_4X_MAIL_TYPE) {
       // in 4.x, you could only have one pop account
       rv = MigratePopAccount(identity);
+      if (NS_FAILED(rv)) return rv;
+
+      // you got to have one, so we just create it here.
+      rv = CreateLocalMailAccount(identity);
       if (NS_FAILED(rv)) return rv;
 	}
     else if (oldMailType == IMAP_4X_MAIL_TYPE) {
@@ -1539,6 +1547,144 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
   return NS_OK;
 }
 
+nsresult 
+nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
+{
+  nsresult rv;
+  
+  // create the account
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = CreateAccount(getter_AddRefs(account));
+  if (NS_FAILED(rv)) return rv;
+
+  // create the server
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = CreateIncomingServer("none", getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
+  // "none" is the type we use for migrate Local Mail
+  server->SetType("none");
+  server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
+
+  // we don't want "nobody at Local Mail" to show up in the
+  // folder pane, so we set the pretty name to "Local Mail"
+  nsString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
+  server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
+
+  // the server needs a username
+  server->SetUsername(LOCAL_MAIL_FAKE_USER_NAME);
+
+
+  // create the identity
+  nsCOMPtr<nsIMsgIdentity> copied_identity;
+  rv = CreateIdentity(getter_AddRefs(copied_identity));
+  if (NS_FAILED(rv)) return rv;
+
+    // this only makes sense if we have 4.x prefs, but we don't if identity is null
+  if (identity) {
+    // make this new identity to copy of the identity
+    // that we created out of the 4.x prefs
+    rv = CopyIdentity(identity,copied_identity);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetMailCcAndFccValues(copied_identity);
+    if (NS_FAILED(rv)) return rv;
+  }
+  else {
+    char *profileName = nsnull;
+    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = profile->GetCurrentProfile(&profileName);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = copied_identity->SetEmail(profileName);
+    // find out the proper way to delete this
+    // until then, leak it.
+    // PR_FREEIF(profileName);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  // hook them together
+  account->SetIncomingServer(server);
+  account->AddIdentity(copied_identity);
+
+  nsCOMPtr<nsINoIncomingServer> noServer;
+  noServer = do_QueryInterface(server, &rv);
+  if (NS_FAILED(rv)) return rv;
+   
+  // create the directory structure for old 4.x "Local Mail"
+  // under <profile dir>/Mail/Local Mail or
+  // <"mail.directory" pref>/Local Mail
+  nsCOMPtr <nsIFileSpec> mailDir;
+  nsFileSpec dir;
+  PRBool dirExists;
+
+  char *mail_directory_value = nsnull;
+  // if the "mail.directory" pref is set, use that.
+  // if they used -installer, this pref will point to where their files got copied
+  if (identity) {
+    rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
+  }
+  else {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  if (NS_SUCCEEDED(rv) && mail_directory_value && (PL_strlen(mail_directory_value) > 0)) {
+    dir = mail_directory_value;
+    PR_FREEIF(mail_directory_value);
+  }
+  else {    
+    nsFileSpec profileDir;
+    
+    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = profile->GetCurrentProfileDir(&profileDir);
+    if (NS_FAILED(rv)) return rv;
+    
+    dir = profileDir;
+
+    // we want <profile>/Mail, not <profile>
+    dir += NEW_MAIL_DIR_NAME;
+
+    // create <profile>/Mail if it doesn't exist
+    if (!dir.Exists()) {
+      dir.CreateDir();
+    }
+  }
+
+  rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(mailDir));
+  if (NS_FAILED(rv)) return rv;
+
+  // set the default local path for "none"
+  rv = server->SetDefaultLocalPath(mailDir);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mailDir->Exists(&dirExists);  
+  if (!dirExists) {
+    mailDir->CreateDir();
+  }
+
+  // set the local path for this "none" server
+  //
+  // we need to set this to <profile>/Mail/Local Mail, because that's where
+  // the 4.x local mail (when using imap) got copied.
+  // it would be great to use the server key, but we don't know it
+  // when we are copying of the mail.
+  rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
+  if (NS_FAILED(rv)) return rv; 
+  rv = server->SetLocalPath(mailDir);
+  if (NS_FAILED(rv)) return rv;
+    
+  rv = mailDir->Exists(&dirExists);
+  if (!dirExists) {
+    mailDir->CreateDir();
+  }
+  
+  return NS_OK;
+}
+
 nsresult
 nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity) 
 {
@@ -1647,7 +1793,7 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
     
   rv = mailDir->Exists(&dirExists);
- if (!dirExists) {
+  if (!dirExists) {
     mailDir->CreateDir();
   }
   

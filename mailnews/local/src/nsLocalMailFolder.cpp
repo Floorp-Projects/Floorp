@@ -55,6 +55,7 @@
 #include "nsIMsgCopyService.h"
 #include "nsLocalUndoTxn.h"
 #include "nsMsgTxn.h"
+#include "nsIFileSpec.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -388,25 +389,34 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       {
         // TODO:  move this into the IncomingServer
     	if (PL_strcmp(type, "pop3") == 0) {
-		// make sure we have all the default mailbox created
-		nsFileSpec fileSpec;
-		fileSpec = path + "Inbox";
-		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-		fileSpec = path + "Trash";
-		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-		fileSpec = path + "Sent";
-		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-		fileSpec = path + "Drafts";
-		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-		fileSpec = path + "Templates";
-		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
-		fileSpec = path + "Unsent Messages";
-		if (!fileSpec.Exists()) { nsOutputFileStream outStream(fileSpec); }
+            nsCOMPtr<nsIMsgIncomingServer> server;
+            rv = GetServer(getter_AddRefs(server));
+
+            nsCOMPtr<nsIPop3IncomingServer> popServer;
+            rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                        (void **)&popServer);
+            if (NS_SUCCEEDED(rv)) {
+		nsCOMPtr<nsIFileSpec> spec;
+		rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
+		if (NS_FAILED(rv)) return rv;
+                rv = popServer->CreateDefaultMailboxes(spec);
+		if (NS_FAILED(rv)) return rv;
+            }
 	}
 	else if (PL_strcmp(type, "none") == 0) {
-#ifdef DEBUG_seth
-		printf("don't create any special folders for type=none\n");
-#endif
+            nsCOMPtr<nsIMsgIncomingServer> server;
+            rv = GetServer(getter_AddRefs(server));
+
+            nsCOMPtr<nsINoIncomingServer> noneServer;
+            rv = server->QueryInterface(nsINoIncomingServer::GetIID(),
+                                        (void **)&noneServer);
+            if (NS_SUCCEEDED(rv)) {
+		nsCOMPtr<nsIFileSpec> spec;
+		rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
+		if (NS_FAILED(rv)) return rv;
+                rv = noneServer->CreateDefaultMailboxes(spec);
+		if (NS_FAILED(rv)) return rv;
+            }
 	}
  	else {
 		NS_ASSERTION(0,"error, don't know about this server type yet.\n");

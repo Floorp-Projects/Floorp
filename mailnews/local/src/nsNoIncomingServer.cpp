@@ -21,6 +21,7 @@
 #include "nsMsgIncomingServer.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
+#include "nsIFileSpec.h"
 
 #include "nsIPref.h"
 
@@ -36,6 +37,7 @@ class nsNoIncomingServer : public nsMsgIncomingServer,
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSINOINCOMINGSERVER
 
     nsNoIncomingServer();
     virtual ~nsNoIncomingServer();
@@ -75,6 +77,62 @@ nsNoIncomingServer::GetServerURI(char **uri)
                        (const char *)username,
                        (const char *)hostname);
     return rv;
+}
+
+NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
+{
+        nsresult rv;
+        PRBool exists;
+        if (!path) return NS_ERROR_NULL_POINTER;
+
+        // todo, use a string bundle for this
+
+	// notice, no Inbox
+
+        rv =path->AppendRelativeUnixPath("Trash");
+        if (NS_FAILED(rv)) return rv;
+        rv = path->Exists(&exists);
+        if (!exists) {
+                rv = path->Touch();
+                if (NS_FAILED(rv)) return rv;
+        }
+
+        rv = path->SetLeafName("Sent");
+        if (NS_FAILED(rv)) return rv;
+        rv = path->Exists(&exists);
+        if (NS_FAILED(rv)) return rv;
+        if (!exists) {
+                rv = path->Touch();
+                if (NS_FAILED(rv)) return rv;
+        }
+
+        rv = path->SetLeafName("Drafts");
+        if (NS_FAILED(rv)) return rv;
+        rv = path->Exists(&exists);
+        if (NS_FAILED(rv)) return rv;
+        if (!exists) {
+                rv = path->Touch();
+                if (NS_FAILED(rv)) return rv;
+        }
+
+        rv = path->SetLeafName("Templates");
+        if (NS_FAILED(rv)) return rv;
+        rv = path->Exists(&exists);
+        if (NS_FAILED(rv)) return rv;
+        if (!exists) {
+                rv = path->Touch();
+                if (NS_FAILED(rv)) return rv;
+        }
+
+        rv = path->SetLeafName("Unsent Messages");
+        if (NS_FAILED(rv)) return rv;
+        rv = path->Exists(&exists);
+        if (NS_FAILED(rv)) return rv;
+        if (!exists) {
+                rv = path->Touch();
+                if (NS_FAILED(rv)) return rv;
+        }
+        return rv;
 }
 
 nsresult NS_NewNoIncomingServer(const nsIID& iid,
