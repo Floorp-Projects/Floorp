@@ -126,7 +126,10 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 		if(rootMsgFolder)
 		{
 			PRUint32 numFolders;
-			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
+			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
+                                                   &numFolders,
+                                                   getter_AddRefs(inbox));
+            if (NS_FAILED(rv) || numFolders != 1) return rv;
 		}
 	}
 
@@ -139,7 +142,15 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 
 	rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
 	if(NS_SUCCEEDED(rv))
-		rv = pop3Service->CheckForNewMail(msgWindow, nsnull, inbox, this, nsnull);
+    {
+        PRBool downloadOnBiff = PR_FALSE;
+        rv = GetDownloadOnBiff(&downloadOnBiff);
+        if (downloadOnBiff)
+            rv = pop3Service->GetNewMail(msgWindow, nsnull, this, nsnull);
+        else
+            rv = pop3Service->CheckForNewMail(msgWindow, nsnull, inbox, this,
+                                              nsnull);
+    }
 
 	return NS_OK;
 }

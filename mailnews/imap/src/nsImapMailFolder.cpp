@@ -58,6 +58,9 @@
 #include "nsIMsgFilterService.h"
 #include "nsImapMoveCoalescer.h"
 #include "nsIPrompt.h"
+#include "nsIWebShell.h"
+#include "nsIDocShell.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsINetSupportDialogService.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
@@ -1506,6 +1509,8 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     nsCOMPtr<nsIMsgFolder> trashFolder;
     PRUint32 i, folderCount = 0;
     nsresult rv;
+    PRBool deleteFromTrash = InTrash(this);;
+    PRBool moveToTrash = PR_FALSE;
 
     NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv))
@@ -1514,6 +1519,18 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
         if (NS_SUCCEEDED(rv))
         {
             rv = GetTrashFolder(getter_AddRefs(trashFolder));
+            nsCOMPtr<nsIWebShell> webShell;
+            if (!msgWindow) return NS_ERROR_NULL_POINTER;
+            msgWindow->GetRootWebShell(getter_AddRefs(webShell));
+            nsCOMPtr<nsIDocShell> docShell;
+            if (webShell) docShell = do_QueryInterface(webShell);
+            nsCOMPtr<nsIPrompt> dialog;
+            if (docShell) dialog = do_GetInterface(docShell);
+            PRUnichar *moveToTrashStr = IMAPGetStringByID(IMAP_MOVE_FOLDER_TO_TRASH);
+
+            if (dialog && moveToTrashStr)
+                dialog->Confirm (moveToTrashStr, &moveToTrash);
+                
             for (i = 0; i < folderCount; i++)
             {
                 folderSupport = getter_AddRefs(folders->ElementAt(i));
@@ -1521,12 +1538,12 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
                 if (NS_SUCCEEDED(rv))
                 {
                     urlListener = do_QueryInterface(curFolder);
-                    if (InTrash(curFolder))
+                    if (deleteFromTrash)
                         rv = imapService->DeleteFolder(m_eventQueue,
                                                        curFolder,
                                                        urlListener,
                                                        nsnull);
-                    else
+                    else if (moveToTrash)
                         rv = imapService->MoveFolder(m_eventQueue,
                                                      curFolder,
                                                      trashFolder,
@@ -1534,10 +1551,15 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
                                                      nsnull);
                 }
             }
+            if (moveToTrashStr)
+                nsCRT::free(moveToTrashStr);
         }
     }
-        
-    return nsMsgFolder::DeleteSubFolders(folders, nsnull);
+    
+    if (deleteFromTrash || moveToTrash)
+        return nsMsgFolder::DeleteSubFolders(folders, nsnull);
+    else
+        return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)

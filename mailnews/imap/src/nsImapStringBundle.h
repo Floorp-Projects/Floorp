@@ -86,5 +86,6 @@ NS_END_EXTERN_C
 #define IMAP_UNKNOWN_HOST_ERROR						5052
 #define IMAP_CONNECTION_REFUSED_ERROR               5053
 #define IMAP_NET_TIMEOUT_ERROR                      5054
+#define IMAP_MOVE_FOLDER_TO_TRASH                   5055
 
 #endif /* _nsImapStringBundle_H__ */
