@@ -596,6 +596,7 @@ NPError NewControl(const char *pluginType,
         return NPERR_GENERIC_ERROR;
     }
     
+#ifdef XPC_IDISPATCH_SUPPORT
     nsEventSinkInstance *pSink = NULL;
     nsEventSinkInstance::CreateInstance(&pSink);
     if (pSink)
@@ -606,10 +607,10 @@ NPError NewControl(const char *pluginType,
         pSite->GetControlUnknown(&control);
         pSink->SubscribeToEvents(control);
     }
-
+    pData->pControlEventSink = pSink;
+#endif
     pData->nType = itControl;
     pData->pControlSite = pSite;
-    pData->pControlEventSink = pSink;
 
     return NPERR_NO_ERROR;
 }
@@ -708,11 +709,13 @@ NPP_Destroy(NPP instance, NPSavedData** save)
             pSite->Detach();
             pSite->Release();
         }
+#ifdef XPC_IDISPATCH_SUPPORT
         if (pData->pControlEventSink)
         {
             pData->pControlEventSink->UnsubscribeFromEvents();
             pData->pControlEventSink->Release();
         }
+#endif
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
         if (pData->pScriptingPeer)
         {

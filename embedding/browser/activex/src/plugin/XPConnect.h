@@ -121,6 +121,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS __RPC_FAR *pDispParams, VARIANT __RPC_FAR *pVarResult, EXCEPINFO __RPC_FAR *pExcepInfo, UINT __RPC_FAR *puArgErr);
 };
 
+#ifdef XPC_IDISPATCH_SUPPORT
 class nsEventSink : public CControlEventSink
 {
 public:
@@ -130,6 +131,7 @@ public:
 };
 
 typedef CComObject<nsEventSink> nsEventSinkInstance;
+#endif
 
 extern void xpc_AddRef();
 extern void xpc_Release();
