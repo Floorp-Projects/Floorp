@@ -63,7 +63,7 @@ sub ShowAccount {
               qq{<input type=password name="pwd1">});
     EmitEntry("Re-enter new password", 
               qq{<input type=password name="pwd2">});
-    EmitEntry("Your username (optional)",
+    EmitEntry("Your real name (optional)",
               qq{<INPUT SIZE=35 NAME="realname" VALUE="$realname">});
 }
 
