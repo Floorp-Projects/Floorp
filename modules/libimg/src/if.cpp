@@ -836,29 +836,30 @@ il_size(il_container *ic)
 int
 IL_StreamWriteReady(il_container *ic)
 {
- 
-    nsresult rv= NS_OK;
-    PRUint32 chunksize;
+    nsresult rv= NS_ERROR_FAILURE;
+    PRUint8 max_read = 0;
 
     if (ic->imgdec)
-          rv = ic->imgdec->ImgDWriteReady(&chunksize);
+          rv = ic->imgdec->ImgDWriteReady(&max_read);
 
-      if(NS_FAILED(rv))
-          return -1;
+    if(max_read == 0)
+        return 0; //send no more data please
+
+     if(NS_FAILED(rv))
+          return 0; //IL_OFFSCREEN_CHUNK; 
+
 	/*
      * It could be that layout aborted image loading by calling IL_FreeImage
      * before the netlib finished transferring data.  Don't do anything.
      */
 
     if(ic->state == IC_ABORT_PENDING)
-        chunksize = IL_OFFSCREEN_CHUNK;
-	else if (!ic->sized)
+        return IL_OFFSCREEN_CHUNK;
+	if (!ic->sized)
 		/* A (small) default initial chunk */
-        chunksize = IL_SIZE_CHUNK;
-    else
-        chunksize = IL_PREFERRED_CHUNK;
+         return IL_SIZE_CHUNK;
 
-    return chunksize;
+    return IL_PREFERRED_CHUNK;
 
 }
 
@@ -955,11 +956,11 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
      * us data.  Force the netlib to abort.
      */
     if (ic->state == IC_ABORT_PENDING)
-        return NS_ERROR_FAILURE;
+        return -1;
 
     /* Has user hit the stop button ? */
     if (il_image_stopped(ic))
-        return NS_ERROR_FAILURE;
+        return -1;
 
     ic->bytes_consumed += len;
     
@@ -970,9 +971,9 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
     il_progress_notify(ic);
 
     if(NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
+		return -1;
 	else
-        return NS_OK;
+        return len;
 }
 
 
@@ -1034,17 +1035,16 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
     default : PL_strcpy(imgtype, "");
     }
 
-    sprintf(imgtypestr, "component://netscape/image/decoder&type=image/%s"
+  sprintf(imgtypestr, "component://netscape/image/decoder&type=image/%s"
             , imgtype );
 
-    static NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
-    rv = nsComponentManager::CreateInstance(imgtypestr, NULL,    
+  static NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
+  rv = nsComponentManager::CreateInstance(imgtypestr, NULL,    
                                                 kIImgDecoderIID, // XXX was previously kImgDecoderIID
                                                 (void **)&imgdec);
 
   if (NS_FAILED(rv))
     return MK_IMAGE_LOSSAGE;
-  
   
   imgdec->SetContainer(ic);
   ic->imgdec = imgdec;
@@ -1056,7 +1056,7 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
     return MK_OUT_OF_MEMORY;
   }
 		
-	return 0;
+	return 0; //ok
 }
 
 
