@@ -66,6 +66,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsMsgPrompts.h"
+#include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -1690,12 +1691,26 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
 
     // Now, we know the types of objects this node can be, so we will do
     // our query interface here and see what we come up with 
+    nsCOMPtr<nsIDOMHTMLBodyElement>     body = (do_QueryInterface(node));
     nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(node));
     nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(node));
     nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(node));
     
-    // First, try to see if this is an embedded image 
-    if (image)
+    // First, try to see if the body as a background image
+    if (body)
+    {
+      nsAutoString    tUrl;
+      if (NS_SUCCEEDED(body->GetBackground(tUrl)))
+      {
+        nsCAutoString turlC;
+        turlC.AssignWithConversion(tUrl);
+        if (NS_SUCCEEDED(nsMsgNewURL(&attachment.url, turlC.get())))      
+          NS_IF_ADDREF(attachment.url);
+        else
+          continue;
+      }
+    }
+    else if (image)        // Is this an image?
     {
       nsString    tUrl;
       nsString    tName;
@@ -1917,6 +1932,11 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
         image->GetSrc(domURL);
         image->SetSrc(newSpec);
       }
+      else if (body)
+      {
+        body->GetBackground(domURL);
+        body->SetBackground(newSpec);
+      }
 
       if (!domURL.IsEmpty())
         domSaveArray[j].url = ToNewCString(domURL);
@@ -1936,6 +1956,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
 
     // Now, we know the types of objects this node can be, so we will do
     // our query interface here and see what we come up with 
+    nsCOMPtr<nsIDOMHTMLBodyElement>     body = (do_QueryInterface(domSaveArray[i].node));
     nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(domSaveArray[i].node));
     nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(domSaveArray[i].node));
     nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(domSaveArray[i].node));
@@ -1948,6 +1969,8 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       link->SetHref(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
     else if (image)
       image->SetSrc(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
+    else if (body)
+      body->SetBackground(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
 
     nsMemory::Free(domSaveArray[i].url);
   }
