@@ -84,7 +84,7 @@ PRBool nsTextEditRules::IsEditable(nsIDOMNode *aNode)
       if (0==data.Length()) {
         return PR_FALSE;
       }
-      if ('\n'==data[0]) {
+      if ('\n'==data.CharAt(0)) {
         return PR_FALSE;
       }
       else {

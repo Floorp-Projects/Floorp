@@ -250,9 +250,9 @@ BookmarkParser::Parse(nsIRDFResource* aContainer)
             rv = ParseBookmark(line, aContainer);
         }
         else if ((offset = line.Find(kOpenHeading)) >= 0 &&
-                 nsString::IsDigit(line[offset + 2])) {
+                 nsString::IsDigit(line.CharAt(offset + 2))) {
             // XXX Ignore <H1> so that bookmarks root _is_ <H1>
-            if (line[offset + 2] != PRUnichar('1'))
+            if (line.CharAt(offset + 2) != PRUnichar('1'))
                 rv = ParseBookmarkHeader(line, aContainer);
         }
         else if ((offset = line.Find(kSeparator)) >= 0) {

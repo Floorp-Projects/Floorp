@@ -355,7 +355,7 @@ nsWebCrawler::GetOutputFile(nsIURL *aURL, nsString& aOutputName)
       char *c = inputFileName;
       for (PRInt32 i=fileNameOffset+1; i<fileNameOffset+len; i++)
       {
-        char ch = (char) inputFileFullPath[i];
+        char ch = (char) inputFileFullPath.CharAt(i);
         if (ch == '.') {
           // Stop on dot so that we don't keep the old extension
           break;

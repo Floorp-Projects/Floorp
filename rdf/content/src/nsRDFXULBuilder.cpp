@@ -2247,14 +2247,14 @@ RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
     PRInt32 first = 0;
 
     while(1) {
-        while (first < aDataSources.Length() && nsString::IsSpace(aDataSources[first]))
+        while (first < aDataSources.Length() && nsString::IsSpace(aDataSources.CharAt(first)))
             ++first;
 
         if (first >= aDataSources.Length())
             break;
 
         PRInt32 last = first;
-        while (last < aDataSources.Length() && !nsString::IsSpace(aDataSources[last]))
+        while (last < aDataSources.Length() && !nsString::IsSpace(aDataSources.CharAt(last)))
             ++last;
 
         nsAutoString uri;
