@@ -60,10 +60,8 @@ public:
 
 private:
   GdkRegion           *mRegion;
-  nsRegionComplexity  mRegionType;
 
   void SetRegionEmpty();
-
 };
 
 #endif  // nsRegionGTK_h___ 
