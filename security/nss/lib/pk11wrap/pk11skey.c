@@ -73,7 +73,7 @@ static PRBool pk11_FindAttrInTemplate(CK_ATTRIBUTE *attr,
 	unsigned int numAttrs, CK_ATTRIBUTE_TYPE target);
 
 #ifdef NSS_ENABLE_ECC
-extern int SECKEY_ECParamsToKeySize(SECItem *params);
+extern int SECKEY_ECParamsToKeySize(const SECItem *params);
 #endif /* NSS_ENABLE_ECC */
 
 /*
