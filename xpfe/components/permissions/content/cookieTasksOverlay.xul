@@ -91,17 +91,20 @@
       // make sure p3p dll exists, else we can't keep pref set
       if (!("@mozilla.org/cookie-consent;1" in Components.classes)) {
         gPref.setIntPref("network.cookie.cookieBehavior", 0);
-      } else {
-
-        // p3p pref is set so create an observer for changes in visibility of cookie icon
-        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-        observerService.addObserver(cookieIconObserver, "cookieIcon", false);
-
-        // determine whether or not cookie icon in this new window should be displayed
-        // we need to wait until window is created before displaying icon
-        addEventListener("load", listener, false);
       }
     }
+
+    if ("@mozilla.org/cookie-consent;1" in Components.classes) {
+
+      // p3p dll exists so create an observer for changes in visibility of cookie icon
+      var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+      observerService.addObserver(cookieIconObserver, "cookieIcon", false);
+
+      // determine whether or not cookie icon in this new window should be displayed
+      // we need to wait until window is created before displaying icon
+      addEventListener("load", listener, false);
+    }
+
   ]]>
   </script>         
 
