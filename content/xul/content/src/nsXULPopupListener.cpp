@@ -250,8 +250,12 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       break;
     
     case eXULPopupType_tooltip:
+      // get rid of the tooltip on a mousedown.
+      ClosePopup();
+      break;
+      
     case eXULPopupType_blur:
-      // ignore
+      // what on earth is this?!
       break;
 
   }
