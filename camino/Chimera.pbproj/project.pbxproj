@@ -865,6 +865,7 @@
 				3FB2BB010545EBF2002B9691,
 				3FB2BB020545EBF2002B9691,
 				3FB2BB030545EBF2002B9691,
+				3F63719C057CE0DE00B62EE2,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1363,6 +1364,24 @@
 		};
 		3F558E960552122E006156FD = {
 			fileRef = 3F558E950552122E006156FD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F63719B057CE0DE00B62EE2 = {
+			isa = PBXFileReference;
+			name = manager.tif;
+			path = resources/images/toolbar/manager.tif;
+			refType = 2;
+		};
+		3F63719C057CE0DE00B62EE2 = {
+			fileRef = 3F63719B057CE0DE00B62EE2;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F63719D057CE0DE00B62EE2 = {
+			fileRef = 3F63719B057CE0DE00B62EE2;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -4402,6 +4421,7 @@
 				F5566DC1038E075F01A80166,
 				F5566DC2038E075F01A80166,
 				F5566DC3038E075F01A80166,
+				3F63719B057CE0DE00B62EE2,
 			);
 			isa = PBXGroup;
 			name = "Toolbar-Browser";
@@ -8696,6 +8716,7 @@
 				3FB2BAF80545EBF2002B9691,
 				3FB2BAF90545EBF2002B9691,
 				3FB2BAFA0545EBF2002B9691,
+				3F63719D057CE0DE00B62EE2,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
