@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsDrawingSurfaceOS2.h"
+#include "nsICollation.h"
 
 #ifndef FM_DEFN_LATIN1
 #define FM_DEFN_LATIN1          0x0010   /* Base latin character set     */
@@ -76,31 +77,36 @@ class nsFontOS2
   void      DrawString( HPS aPS, nsDrawingSurfaceOS2* aSurface,
                         PRInt32 aX, PRInt32 aY,
                         const PRUnichar* aString, PRUint32 aLength );
-                      
-  FATTRS    fattrs;
-  SIZEF     charbox;
-  ULONG     ulHashMe;
+
+  FATTRS    mFattrs;
+  SIZEF     mCharbox;
+  ULONG     mHashMe;
   nscoord   mMaxAscent;
   nscoord   mMaxDescent;
 };
 
-typedef struct _nsMiniFontMetrics
+struct nsMiniFontMetrics
 {
   char    szFamilyname[FACESIZE];
   char    szFacename[FACESIZE];
   USHORT  fsType;
   USHORT  fsDefn;
   USHORT  fsSelection;
- #ifdef DEBUG_pedemont
-  LONG    lMatch;
- #endif 
-} nsMiniFontMetrics;
+};
 
-typedef struct _nsGlobalFont
+class nsGlobalFont
 {
-  nsMiniFontMetrics metrics;
-  int           nextFamily;
-} nsGlobalFont;
+ public:
+      nsGlobalFont(void)  { key = nsnull; };
+     ~nsGlobalFont(void)  { if(key) nsMemory::Free(key); };
+     
+  nsAutoString        name;
+  nsMiniFontMetrics   metrics;
+  int                 nextFamily;
+  PRUint8*            key;
+  PRUint32            len;
+};
+
 
 /**
  * nsFontSwitchCallback
@@ -183,14 +189,14 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nsFontOS2*          FindLocalFont( HPS aPS );
   nsFontOS2*          FindUserDefinedFont( HPS aPS );
   nsFontOS2*          LoadFont (HPS aPS, nsString* aName );
-  nsFontOS2*          LoadFont (HPS aPS, const char* aFamilyName );
-  static nsVoidArray* InitializeGlobalFonts();
+  static nsresult     InitializeGlobalFonts();
 
-  static nsVoidArray* gGlobalFonts;
-  static PLHashTable* gFamilyNames;
-  static nscoord      gDPI;
-  static long         gSystemRes;
-
+  static nsVoidArray*  gGlobalFonts;
+  static PLHashTable*  gFamilyNames;
+  static nscoord       gDPI;
+  static long          gSystemRes;
+  static nsICollation* gCollation;
+  
   nsStringArray       mFonts;
   PRUint16            mFontsIndex;
   nsVoidArray         mFontIsGeneric;
@@ -208,6 +214,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
  protected:
   nsresult      RealizeFont(void);
   PRBool        GetVectorSubstitute( HPS aPS, const char* aFacename, char* alias );
+  PRBool        GetVectorSubstitute( HPS aPS, nsString* aFacename, char* alias );
   nsFontOS2*    GetUnicodeFont( HPS aPS );
   void          SetFontHandle( HPS aPS, nsFontOS2* aFH );
   PLHashTable*  InitializeFamilyNames(void);
@@ -236,6 +243,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nsDeviceContextOS2 *mDeviceContext;
 
   static PRBool       gSubstituteVectorFonts;
+  static int          gCachedIndex;
 };
 
 class nsFontEnumeratorOS2 : public nsIFontEnumerator

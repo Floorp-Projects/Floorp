@@ -1354,10 +1354,10 @@ do_GetWidth(const nsFontSwitch* aFontSwitch,
   nsFontOS2* font = aFontSwitch->mFont;
 
   GetWidthData* data = (GetWidthData*)aData;
-  if( !AreFattrsEqual( data->mFattrs, font->fattrs ))
+  if( !AreFattrsEqual( data->mFattrs, font->mFattrs ))
   {
      // the desired font is not the current font in the PS
-    data->mFattrs = font->fattrs;
+    data->mFattrs = font->mFattrs;
     if( data->mOldLCID == 0 )
     {   // set 'other' font
       data->mOldLCID = GpiQueryCharSet(data->mPS);
@@ -1380,7 +1380,7 @@ do_GetWidth(const nsFontSwitch* aFontSwitch,
 
   return PR_TRUE; // don't stop till the end
 }
-
+                            
 NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
                                                PRUint32 aLength,
                                                nscoord &aWidth,
@@ -1615,10 +1615,10 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
 
   // Make sure the font is selected
   BreakGetTextDimensionsData* data = (BreakGetTextDimensionsData*)aData;
-  if( !AreFattrsEqual( data->mFattrs, font->fattrs ))
+  if( !AreFattrsEqual( data->mFattrs, font->mFattrs ))
   {
      // the desired font is not the current font in the PS
-    data->mFattrs = font->fattrs;
+    data->mFattrs = font->mFattrs;
     if( data->mOldLCID == 0 )
     {   // set 'other' font
       data->mOldLCID = GpiQueryCharSet(data->mPS);
@@ -2068,9 +2068,9 @@ do_GetTextDimensions(const nsFontSwitch* aFontSwitch,
   nsFontOS2* font = aFontSwitch->mFont;
   
   GetTextDimensionsData* data = (GetTextDimensionsData*)aData;
-  if( !AreFattrsEqual( data->mFattrs, font->fattrs ))
+  if( !AreFattrsEqual( data->mFattrs, font->mFattrs ))
   {
-    data->mFattrs = font->fattrs;
+    data->mFattrs = font->mFattrs;
     if( data->mOldLCID == 0 )
     {   // set 'other' font
       data->mOldLCID = GpiQueryCharSet(data->mPS);
@@ -2206,9 +2206,9 @@ do_DrawString(const nsFontSwitch* aFontSwitch,
 
   PRInt32 x, y;
   DrawStringData* data = (DrawStringData*)aData;
-  if( !AreFattrsEqual( data->mFattrs, font->fattrs ))
+  if( !AreFattrsEqual( data->mFattrs, font->mFattrs ))
   {
-    data->mFattrs = font->fattrs;
+    data->mFattrs = font->mFattrs;
     if( data->mOldLCID == 0 )
     {   // set 'other' font
       data->mOldLCID = GpiQueryCharSet(data->mPS);
@@ -2600,7 +2600,7 @@ void nsRenderingContextOS2::SetupFontAndColor (void)
         nsFontHandle fh;
         mCurrFontMetrics->GetFontHandle(fh);
         nsFontOS2* font = (nsFontOS2*)fh;
-        mCurrFont = font->fattrs;
+        mCurrFont = font->mFattrs;
       }
    }
 
