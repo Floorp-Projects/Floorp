@@ -1307,28 +1307,6 @@ nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBo
   return rv;
 }
 
-// include the file name without the directory
-const char*
-nsFormFrame::GetFileNameWithinPath(char* aPathName)
-{
-#ifdef XP_MAC
-  // On a Mac the only invalid character in a file name is a : so we have to avoid
-  // the test for '\'
-  char* fileNameStart = PL_strrchr(aPathName, ':');
-#else
-  char* fileNameStart = PL_strrchr(aPathName, '\\'); // windows
-  if (!fileNameStart) { // try unix
-    fileNameStart = PL_strrchr(aPathName, '/');
-  }
-#endif
-  if (fileNameStart) { 
-    return fileNameStart+1;
-  }
-  else {
-    return aPathName;
-  }
-}
-
 nsresult
 nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 {
@@ -1470,8 +1448,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           // File inputs also list filename on Content-Disp line
           if (NS_FORM_INPUT_FILE == type) { 
             contentLen += PL_strlen(FILENAME);
-            const char* fileNameStart = GetFileNameWithinPath(value);
-	          contentLen += PL_strlen(fileNameStart);
+            contentLen += PL_strlen(value);
           }
           // End Content-Disp Line (quote plus CRLF)
           contentLen += 1 + crlfLen;  // ending name quote plus CRLF
@@ -1615,8 +1592,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             if (NS_FORM_INPUT_FILE == type) {
               rv = postDataFile->Write(FILENAME, wantbytes = PL_strlen(FILENAME), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-              const char* fileNameStart = GetFileNameWithinPath(value);
-              rv = postDataFile->Write(fileNameStart, wantbytes = PL_strlen(fileNameStart), &gotbytes);
+              rv = postDataFile->Write(value, wantbytes = PL_strlen(value), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
