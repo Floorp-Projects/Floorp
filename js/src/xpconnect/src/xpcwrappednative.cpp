@@ -1314,6 +1314,74 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
             }
         }
 
+        // Guard against trying to build a tearoff for an interface that is
+        // aggregated and is implemented as a nsIXPConnectWrappedJS using this
+        // self-same JSObject. The XBL system does this. If we mutate the set
+        // of this wrapper then we will shadow the method that XBL as added to
+        // The JSObject that it has inserted in the JS proto chain between our 
+        // JSObject and our XPCWrappedNativeProto's JSObject. If we let this
+        // set mutation happen then the interface's methods will be added to 
+        // our JSObject, but calls on those methods will get routed up to
+        // native code and into the wrappedJS - which will do a method lookup
+        // on *our* JSObject and find the same method and make another call
+        // into an infinite loop.
+        // see: http://bugzilla.mozilla.org/show_bug.cgi?id=96725
+
+        nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(obj));
+        if(wrappedJS)
+        {
+            JSObject* jso;
+            if(NS_SUCCEEDED(wrappedJS->GetJSObject(&jso)) &&
+               jso == GetFlatJSObject())
+            {
+                // The implementing JSObject is the same as ours! Just say OK
+                // without actually extending the set.
+                //
+                // XXX It is a little cheesy to have FindTearOff return an
+                // 'empty' tearoff. But this is the cetralized place to do the
+                // QI activities on the underlying object. *And* most caller to
+                // FindTearOff only look for a non-null result and ignore the
+                // actual tearoff returned. The only callers that do use the
+                // returned tearoff make sure to check for either a non-null 
+                // JSObject or a matching Interface before proceeding.
+                // I think we can get away with this bit of ugliness.
+                
+#ifdef DEBUG_xpc_hacker
+                {
+                    // I want to make sure this only happens in xbl-like cases.
+                    // So, some debug code to verify that there is at least
+                    // *some* object between our JSObject and its inital proto.
+                    // XXX This is a pretty funky test. Someone might hack it
+                    // a bit if false positives start showing up. Note that 
+                    // this is only going to run for the few people in the
+                    // DEBUG_xpc_hacker list.
+                    if(HasProto())
+                    {
+                        JSObject* proto  = nsnull;
+                        JSObject* proto2 = nsnull;
+                        JSObject* our_proto = GetProto()->GetJSProtoObject();
+                    
+                        if(nsnull != (proto = JS_GetPrototype(ccx, jso)))
+                            proto2 = JS_GetPrototype(ccx, proto);
+                    
+                        NS_WARN_IF_FALSE(proto && proto != our_proto,
+                            "!!! xpconnect/xbl check - wrapper has no special proto");
+
+                        NS_WARN_IF_FALSE(proto2 && proto2 == our_proto,
+                            "!!! xpconnect/xbl check - wrapper has extra proto");
+                    }
+                    else
+                    {
+                        NS_WARNING("!!! xpconnect/xbl check - wrapper has no proto");
+                    }
+                }
+#endif
+                NS_RELEASE(obj);
+                aTearOff->SetInterface(nsnull);
+                return NS_OK;
+            }         
+        }
+
         nsIXPCSecurityManager* sm;
            sm = ccx.GetXPCContext()->GetAppropriateSecurityManager(
                                 nsIXPCSecurityManager::HOOK_CREATE_WRAPPER);
@@ -2435,7 +2503,7 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)
         printf("\n!!! Object's nsIClassInfo lies about it's interfaces!!!\n"
                "   classname: %s \n"
                "   contractid: %s \n"
-               "   unimplmented interface name: %s\n\n",
+               "   unimplemented interface name: %s\n\n",
                className ? className : "<unknown>",
                contractID ? contractID : "<unknown>",
                interfaceName);
