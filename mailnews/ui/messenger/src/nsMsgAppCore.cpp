@@ -22,6 +22,13 @@
 #include "nsIDOMBaseAppCore.h"
 #include "nsJSMsgAppCore.h"
 
+/* rhp - for access to webshell */
+#include "nsCOMPtr.h"
+#include "nsIDOMWindow.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsIScriptGlobalObject.h"
+
 static NS_DEFINE_IID(kIMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDOMBaseAppCoreIID, NS_IDOMBASEAPPCORE_IID);
@@ -44,11 +51,17 @@ public:
 
   // nsIMsgAppCore
   NS_IMETHOD GetNewMail();
+  NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
+
 
 private:
   
   nsString mId;
   void *mScriptObject;
+
+  /* rhp - need this to drive message display */
+  nsIDOMWindow       *mWindow;
+  nsIWebShell        *mWebShell;
 };
 
 //
@@ -58,7 +71,7 @@ nsMsgAppCore::nsMsgAppCore()
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
-  
+  mWebShell = nsnull; 
 }
 
 nsMsgAppCore::~nsMsgAppCore()
@@ -174,4 +187,42 @@ NS_NewMsgAppCore(nsIDOMMsgAppCore **aResult)
 
   }
   return NS_ERROR_NOT_INITIALIZED;
+}
+
+
+NS_IMETHODIMP    
+nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
+{
+  mWindow = aWin;
+  NS_ADDREF(aWin);
+
+  /* rhp - Needed to access the webshell to drive message display */
+  printf("nsMsgAppCore::SetWindow(): Getting the webShell of interest...\n");
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( aWin );
+  if (!globalObj) 
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIWebShell *webShell;
+  globalObj->GetWebShell(&webShell);
+  if (nsnull != webShell) 
+  {
+    nsIWebShellContainer *webShellContainer;
+    webShell->GetContainer(webShellContainer);
+    if (nsnull != webShellContainer) 
+    {
+      /* NOTE: Need to know what the name of the frame for the message window is
+               named */
+      webShellContainer->FindWebShellWithName(nsAutoString("browser.messagewindow"), 
+                                              mWebShell);
+      NS_RELEASE(webShellContainer);
+      printf("nsMsgAppCore::SetWindow(): Got the webShell of interest...\n");
+    }
+
+    NS_RELEASE(webShell);
+  }
+
+	return NS_OK;
 }

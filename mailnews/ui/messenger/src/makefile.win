@@ -29,6 +29,11 @@ DLL=.\$(OBJDIR)\$(MODULE).dll
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
+OBJS = \
+    .\$(OBJDIR)\nsJSMsgAppCore.obj       \
+    .\$(OBJDIR)\nsMsgAppCore.obj         \
+    $(NULL)
+
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
@@ -56,16 +61,10 @@ LLIBS =				            \
     $(DIST)\lib\js3250.lib      \
     $(DIST)\lib\jsdombase_s.lib \
     $(DIST)\lib\raptorbase.lib  \
-	$(DIST)\lib\raptorgfxwin.lib	\
-	$(LIBNSPR)		            \
+    $(DIST)\lib\raptorgfxwin.lib	\
+    $(LIBNSPR)		            \
     $(DIST)\lib\libplc21.lib    \
     $(NULL)
-
-OBJS = \
-    .\$(OBJDIR)\nsJSMsgAppCore.obj       \
-    .\$(OBJDIR)\nsMsgAppCore.obj         \
-    $(NULL)
-
 
 include <$(DEPTH)\config\rules.mak>
 
