@@ -910,8 +910,8 @@ Content-type: text/html
         }
         if (!defined $nexturl || $nexturl eq "") {
 	    # Sets nexturl to be argv0, stripping everything up to and
-	    # including the last slash.
-	    $0 =~ m:[^/]*$:;
+	    # including the last slash (or backslash on Windows).
+	    $0 =~ m:[^/\\]*$:;
 	    $nexturl = $&;
         }
         my $method = "POST";
