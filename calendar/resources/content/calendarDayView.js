@@ -164,7 +164,8 @@ DayView.prototype.refreshEvents = function( )
                  thisCalendarEventDisplay.displayDate.getTime() < calendarEventDisplay.event.end.getTime() ) ||
                   ( calendarEventDisplay.displayDate >= thisCalendarEventDisplay.displayDate &&
                  calendarEventDisplay.displayDate.getTime() < thisCalendarEventDisplay.event.end.getTime() ) ) &&
-                 calendarEventDisplay.event.id != thisCalendarEventDisplay.event.id )
+                 calendarEventDisplay.event.id != thisCalendarEventDisplay.event.id &&
+                 thisCalendarEventDisplay.event.allDay != true )
             {
                   //get the spot that this event will go in.
                var ThisSpot = thisCalendarEventDisplay.CurrentSpot;
