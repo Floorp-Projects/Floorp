@@ -98,7 +98,6 @@ exit
 fdcach
 fileio
 foreign
-freeif
 fsync
 gethost
 getproto
