@@ -149,7 +149,8 @@ nsIAtom *nsEditor::gIMETxnName;
 nsIAtom *nsEditor::gDeleteTxnName;
 
 nsEditor::nsEditor()
-:  mModCount(0)
+:  mContentMIMEType(nsnull)
+,  mModCount(0)
 ,  mPresShellWeak(nsnull)
 ,  mViewManager(nsnull)
 ,  mUpdateCount(0)
@@ -171,7 +172,6 @@ nsEditor::nsEditor()
 ,  mActionListeners(nsnull)
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
-,  mContentMIMEType(nsnull)
 ,  mDocWeak(nsnull)
 {
   //initialize member variables here
