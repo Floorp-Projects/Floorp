@@ -20,11 +20,3 @@ en-US.jar:
 +  locale/en-US/global/printPreview.dtd             (locale/printPreview.dtd)
 +  locale/en-US/global/printPreviewProgress.dtd     (locale/printPreviewProgress.dtd)
 +  locale/en-US/global/printProgress.dtd            (locale/printProgress.dtd)
-
-classic.jar:
-+  skin/classic/global/Landscape.png                (skin/Landscape.png)
-+  skin/classic/global/Landscape-small.png          (skin/Landscape-small.png)
-+  skin/classic/global/Portrait.png                 (skin/Portrait.png)
-+  skin/classic/global/Portrait-small.png           (skin/Portrait-small.png)
-+  skin/classic/global/printPageSetup.css           (skin/printPageSetup.css)
-+  skin/classic/global/printPreview.css             (skin/printPreview.css)
