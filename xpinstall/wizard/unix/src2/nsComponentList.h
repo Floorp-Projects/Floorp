@@ -66,6 +66,33 @@ public:
     nsComponent *   GetTail();
     
     /**
+     * GetLength
+     *
+     * Returns the number of components held by this list.
+     *
+     * @return mLength  the size of this list
+     */
+    int             GetLength();
+
+    /**
+     * GetLengthVisible
+     * 
+     * Returns the number of visible components held by this list.
+     *
+     * @return numVisible   the number of visible components
+     */
+    int             GetLengthVisible();
+
+    /**
+     * GetLengthSelected
+     *
+     * Returns the number of selected components held by this list.
+     *
+     * @return numSleected  the number of selected components
+     */
+    int             GetLengthSelected();
+
+    /**
      * AddComponent
      *
      * Adds the supplied component to the list's tail.
@@ -85,6 +112,28 @@ public:
      * @return err          integer error code (zero means OK)
      */
     int             RemoveComponent(nsComponent *aComponent);
+
+    /**
+     * GetCompByIndex
+     *
+     * Searches the list and returns the first component that
+     * matches the supplied index.
+     *
+     * @param aIndex        the index of the component being sought
+     * @return comp         the component matching the index
+     */
+    nsComponent     *GetCompByIndex(int aIndex);
+
+    /**
+     * GetCompByArchive
+     * 
+     * Searches the list and returns the first component that matches
+     * the archive name supplied.
+     * 
+     * @param aArcive       the archive name of the component
+     * @return comp         the component matching the archive
+     */
+    nsComponent     *GetCompByArchive(char *aArchive);
 
 private:
     nsComponent     *mHead; 

@@ -27,6 +27,7 @@
 
 #include <malloc.h>
 #include "XIErrors.h"
+#include "XIDefines.h"
 
 #include "nsINIParser.h"
 
@@ -45,10 +46,15 @@ public:
 /*-------------------------------------------------------------------*
  *   Navigation
  *-------------------------------------------------------------------*/
-    virtual int     Back() = 0;
-    virtual int     Next() = 0;
+    // NOTE: Please define these static methods too 
+    //       (static methods can't be virtual)
+    // static void     Back(GtkWidget *aWidget, gpointer aData);
+    // static void     Next(GtkWidget *aWidget, gpointer aData);
 
     virtual int     Parse(nsINIParser *aParser) = 0;
+
+    virtual int     Show(int aDirection) = 0;
+    virtual int     Hide(int aDirection) = 0;
 
 /*-------------------------------------------------------------------*
  *   INI Properties
@@ -58,15 +64,24 @@ public:
     int             SetTitle(char *aTitle);
     char            *GetTitle();
 
+    void            SetPageNum(int aPageNum);
+    int             GetPageNum();
+
     enum
     {
-        SKIP_DLG = 0,
-        SHOW_DLG = 1
+        SKIP_DIALOG     = 0,
+        SHOW_DIALOG     = 1,
+
+        FORWARD_MOVE    = 555,
+        BACKWARD_MOVE   = -555
     };
 
 protected:
-    int     mShowDlg;
-    char    *mTitle;
+    int         mShowDlg;
+    char        *mTitle;
+    int         mPageNum;      // GtkNotebook page number for this dlg
+    int         mWidgetsInit;  // FALSE until widgets are created (first Show())
+    GtkWidget   *mTable;
 };
 
-#endif /* _NS_INSTALLERDLG_H_ */
+#endif /* _NS_XINSTALLERDLG_H_ */

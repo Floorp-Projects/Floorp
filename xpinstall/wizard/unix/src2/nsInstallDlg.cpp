@@ -23,6 +23,10 @@
  */
 
 #include "nsInstallDlg.h"
+#include "nsXInstaller.h"
+#include "nsXIEngine.h"
+#include <signal.h>
+#include <pthread.h>
 
 nsInstallDlg::nsInstallDlg() :
     mMsg0(NULL)
@@ -31,31 +35,209 @@ nsInstallDlg::nsInstallDlg() :
 
 nsInstallDlg::~nsInstallDlg()
 {
-    if (mMsg0)
-        free (mMsg0);
+    XI_IF_FREE(mMsg0);  
 }
 
-int
-nsInstallDlg::Back()
+void
+nsInstallDlg::Back(GtkWidget *aWidget, gpointer aData)
 {
-    return OK;
+    DUMP("Back");
+    if (aData != gCtx->idlg) return;
+    if (gCtx->bMoving)
+    {
+        gCtx->bMoving = FALSE;
+        return;
+    }
+
+    // hide this notebook page
+    gCtx->idlg->Hide(nsXInstallerDlg::BACKWARD_MOVE);
+
+    // disconnect this dlg's nav btn signal handlers
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+
+    // show the last dlg
+    if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
+        gCtx->cdlg->Show(nsXInstallerDlg::BACKWARD_MOVE);
+    else
+        gCtx->sdlg->Show(nsXInstallerDlg::BACKWARD_MOVE);
+    gCtx->bMoving = TRUE;
 }
 
-int
-nsInstallDlg::Next()
+void
+nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
-    return OK;
+    DUMP("Next");
+    int err = OK;
+    pthread_t ength;
+    pthread_t *me = (pthread_t *) malloc(sizeof(pthread_t));
+
+    if (aData != gCtx->idlg) return;
+    if (gCtx->bMoving)
+    {
+        gCtx->bMoving = FALSE;
+        return;
+    }
+
+    // initialize progress bar cleanly
+    gtk_label_set_text(GTK_LABEL(sMajorLabel), DOWNLOADING);
+    gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE);
+    gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), 1);
+    gtk_widget_show(sMajorLabel);
+    gtk_widget_show(sMajorProgBar);
+
+    gtk_widget_hide(gCtx->back);
+    gtk_widget_hide(gCtx->next);
+    // XXX hide msg0?
+
+    *me = pthread_self();
+    pthread_create(&ength, NULL, WorkDammitWork, (void*) me);
+
+    gtk_timeout_add(1, ProgressUpdater, NULL);
+
+    gCtx->bMoving = TRUE;
+    return;
+
+BAIL:
+    return;
 }
 
 int
 nsInstallDlg::Parse(nsINIParser *aParser)
 {
     int err = OK;
+    int bufsize = 0;
+    char *showDlg = NULL;
+    
+    /* compulsory keys*/
+    XI_ERR_BAIL(aParser->GetStringAlloc(DLG_START_INSTALL, 
+                XPINSTALL_ENGINE, &sXPInstallEngine, &bufsize));
+    if (bufsize == 0 || !sXPInstallEngine)
+        return E_INVALID_KEY;
+
+    /* optional keys */
+    bufsize = 0;
+    err = aParser->GetStringAlloc(DLG_START_INSTALL, MSG0, &mMsg0, &bufsize);
+    if (err != OK && err != nsINIParser::E_NO_KEY) goto BAIL; else err = OK;
+
+    bufsize = 5;
+    XI_ERR_BAIL(aParser->GetStringAlloc(DLG_START_INSTALL, SHOW_DLG, 
+                &showDlg, &bufsize));
+    if (bufsize != 0 && showDlg)
+    {
+        if (0 == strncmp(showDlg, "TRUE", 4))
+            mShowDlg = nsXInstallerDlg::SHOW_DIALOG;
+        else if (0 == strncmp(showDlg, "FALSE", 5))
+            mShowDlg = nsXInstallerDlg::SKIP_DIALOG;
+    }
+
+    bufsize = 0;
+    XI_ERR_BAIL(aParser->GetStringAlloc(DLG_START_INSTALL, TITLE, 
+                &mTitle, &bufsize));
+    if (bufsize == 0)
+            XI_IF_FREE(mTitle); 
 
     return err;
 
 BAIL:
     return err;
+}
+
+int
+nsInstallDlg::Show(int aDirection)
+{
+    int err = OK;
+    GtkWidget *msg0 = NULL;
+    GtkWidget *hbox = NULL;
+    GtkWidget *vbox = NULL;
+
+    XI_VERIFY(gCtx);
+    XI_VERIFY(gCtx->notebook);
+
+    if (mWidgetsInit == FALSE)
+    {
+        // create a new table and add it as a page of the notebook
+        mTable = gtk_table_new(4, 1, FALSE);
+        gtk_notebook_append_page(GTK_NOTEBOOK(gCtx->notebook), mTable, NULL);
+        mPageNum = gtk_notebook_get_current_page(GTK_NOTEBOOK(gCtx->notebook));
+        gtk_widget_show(mTable);
+
+        // insert a static text widget in the first row
+        msg0 = gtk_label_new(mMsg0);
+        hbox = gtk_hbox_new(FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), msg0, FALSE, FALSE, 0);
+        gtk_widget_show(hbox);
+        gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 1, 2,
+                        GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
+        gtk_widget_show(msg0);
+
+        // vbox with two widgets packed in: label0 / progmeter0 (major)
+        vbox = gtk_vbox_new(FALSE, 0);
+        sMajorLabel = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(vbox), sMajorLabel, FALSE, FALSE, 0);
+        gtk_widget_show(sMajorLabel);
+
+        sMajorProgBar = gtk_progress_bar_new();
+        gtk_box_pack_start(GTK_BOX(vbox), sMajorProgBar, FALSE, FALSE, 0);
+        // gtk_widget_show(sMajorProgBar);
+
+        gtk_table_attach(GTK_TABLE(mTable), vbox, 0, 1, 2, 3, 
+                        GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
+        gtk_widget_show(vbox); 
+
+        // vbox with two widgets packed in: label1 / progmeter1 (minor)
+        vbox = gtk_vbox_new(FALSE, 0);
+        sMinorLabel = gtk_label_new("");
+        gtk_box_pack_start(GTK_BOX(vbox), sMinorLabel, FALSE, FALSE, 0);
+        gtk_widget_show(sMinorLabel);
+
+        sMinorProgBar = gtk_progress_bar_new();
+        gtk_box_pack_start(GTK_BOX(vbox), sMinorProgBar, FALSE, FALSE, 0);
+        // gtk_widget_show(sMinorProgBar); 
+
+        gtk_table_attach(GTK_TABLE(mTable), vbox, 0, 1, 3, 4, 
+                        GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
+        gtk_widget_show(vbox); 
+        
+        mWidgetsInit = TRUE;
+    }
+    else
+    {
+        gtk_notebook_set_page(GTK_NOTEBOOK(gCtx->notebook), mPageNum);
+        gtk_widget_show(mTable);
+    }
+
+    // signal connect the buttons
+    gCtx->backID = gtk_signal_connect(GTK_OBJECT(gCtx->back), "clicked",
+                   GTK_SIGNAL_FUNC(nsInstallDlg::Back), gCtx->idlg);
+    gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "released",
+                   GTK_SIGNAL_FUNC(nsInstallDlg::Next), gCtx->idlg);
+
+    if (gCtx->opt->mSetupType != (gCtx->sdlg->GetNumSetupTypes() - 1))
+    {
+        // show back btn again after setup type dlg where we couldn't go back
+        gtk_widget_show(gCtx->back);
+    }
+
+    // always change title of next button to "Install"
+    gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->nextLabel); 
+    gCtx->installLabel = gtk_label_new(INSTALL);
+    gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->installLabel);
+    gtk_widget_show(gCtx->installLabel);
+    gtk_widget_show(gCtx->next);
+
+    return err;
+
+BAIL:
+    return err;
+}
+
+int
+nsInstallDlg::Hide(int aDirection)
+{
+    gtk_widget_hide(mTable);
+
+    return OK;
 }
 
 int
@@ -76,4 +258,147 @@ nsInstallDlg::GetMsg0()
         return mMsg0;
 
     return NULL;
+}
+
+void *
+nsInstallDlg::WorkDammitWork(void *arg)
+{
+    DUMP("WorkDammitWork");
+
+    int err = OK;
+    pthread_t *mainth = (pthread_t *) arg;
+
+    // perform the installation
+    nsXIEngine *engine = new nsXIEngine();
+    if (!engine)
+    {
+        ErrorHandler(E_MEM);
+        return NULL;
+    }
+
+    // get the component list for the current setup type
+    nsComponentList *comps = NULL;
+    nsComponent *xpiengine = NULL;
+    int bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
+    comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents(); 
+    if (!comps)
+    {
+        ErrorHandler(E_NO_COMPONENTS);
+        return NULL;
+    }
+    
+    if (!sXPInstallEngine) return NULL;
+    xpiengine = comps->GetCompByArchive(sXPInstallEngine);
+
+    // 1> download
+    sActivity = nsInstallDlg::ACT_DOWNLOAD;
+    XI_ERR_BAIL(engine->Download(bCus, comps));
+
+    // 2> extract engine
+    sActivity = nsInstallDlg::ACT_EXTRACT;
+    XI_ERR_BAIL(engine->Extract(xpiengine));
+    
+    // 3> install .xpis
+    sActivity = nsInstallDlg::ACT_INSTALL;
+    XI_ERR_BAIL(engine->Install(bCus, comps, gCtx->opt->mDestination));
+
+    // destroy xpiengine
+    XI_IF_DELETE(xpiengine);
+
+    // XXX call gCtx->me->Shutdown();  ???
+    gtk_main_quit();
+    exit(0);
+
+BAIL:
+    // destroy xpiengine
+    XI_IF_DELETE(xpiengine);
+
+    return NULL;
+}
+
+static int bExtractStarted = FALSE;
+static int bInstallStarted = FALSE;
+
+gint
+nsInstallDlg::ProgressUpdater(gpointer aData)
+{
+    switch (sActivity)
+    {
+        case nsInstallDlg::ACT_DOWNLOAD: 
+            // DUMP("Downloading...");
+            return 1;
+
+        case nsInstallDlg::ACT_EXTRACT:
+            // DUMP("Extracting...");
+            if (!bExtractStarted)
+            {
+                gtk_label_set_text(GTK_LABEL(sMajorLabel), EXTRACTING);
+                gtk_widget_show(sMajorLabel);
+
+                bExtractStarted = TRUE;
+            }
+            return 1;
+
+        case nsInstallDlg::ACT_INSTALL:
+            // DUMP("Installing...");
+            if (!bInstallStarted)
+            {
+                gtk_label_set_text(GTK_LABEL(sMajorLabel), "Installing...");
+                gtk_widget_show(sMajorLabel);
+
+                bInstallStarted = TRUE;
+            }
+            return 1;
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+void
+nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
+{
+    // DUMP("XPIProgressCB");
+
+    gtk_label_set_text(GTK_LABEL(sMinorLabel), aMsg);
+    gtk_widget_show(sMinorLabel);
+
+    if (aMax != 0)
+    {
+        gfloat percent = aVal/aMax;
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), percent);
+        gtk_widget_show(sMinorProgBar);
+    }
+    else
+    {
+        gtk_progress_set_activity_mode(GTK_PROGRESS(sMinorProgBar), FALSE);
+        // gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), 1);
+        gtk_widget_show(sMinorProgBar);
+    }
+}
+
+void
+nsInstallDlg::MajorProgressCB(char *aCompName, int aCompNum, int aTotalComps)
+{
+    // DUMP("MajorProgressCB");
+
+    char msg[256];
+
+    if (!aCompName)
+        return;
+
+    memset(msg, 0, 256);
+    sprintf(msg, "%s %s...", INSTALLING, aCompName);
+    
+    gtk_label_set_text(GTK_LABEL(sMajorLabel), msg);
+    gtk_widget_show(sMajorLabel);
+
+    if (aTotalComps <= 0)
+        return;
+
+    gfloat percent = aCompNum/aTotalComps;
+    gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
+    gtk_widget_show(sMajorProgBar);
 }

@@ -32,6 +32,7 @@
 #include "nsSetupTypeDlg.h"
 #include "nsComponentsDlg.h"
 #include "nsInstallDlg.h"
+#include "nsXIOptions.h"
 
 class nsXInstaller;
 
@@ -52,16 +53,32 @@ public:
     nsComponentsDlg     *cdlg;
     nsInstallDlg        *idlg;
 
+    nsXIOptions         *opt;
+
 /*-------------------------------------------------------------------*
  *   Global Widgets
  *-------------------------------------------------------------------*/
     GtkWidget           *window;    /* unique canvas for dialogs */
     GtkWidget           *back;      /* back button */
     GtkWidget           *next;      /* next button */
+    GtkWidget           *nextLabel;     /* "Next" label */
+    GtkWidget           *backLabel;     /* "Back" label */
+    GtkWidget           *acceptLabel;   /* "Accept" label */
+    GtkWidget           *declineLabel;  /* "Decline" label */
+    GtkWidget           *installLabel;  /* "Install" label */
     GtkWidget           *logo;      /* branding icon: an xpm image */
     GtkWidget           *mainbox;   /* vbox holding all except logo */
     GtkWidget           *canvas;    /* vbox for mutable dlgs (no nav btns) */
+    GtkWidget           *notebook;  /* notebook whose pages are dlgs */
 
+    int                 backID;     /* signal handler id for back btn */
+    int                 nextID;     /* signal handler id for next btn */
+    int                 bMoving;    /* when moving between dlgs signals are
+                                       emitted twice; this notes the state */
+/*-------------------------------------------------------------------*
+ *   Utilities
+ *-------------------------------------------------------------------*/
+    char    *itoa(int n);
 };
 
 #endif /* _NS_XICONTEXT_H_ */

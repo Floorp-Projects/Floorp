@@ -29,6 +29,7 @@
 
 #include "nsXInstallerDlg.h"
 #include "nsComponentList.h"
+#include "nsSetupType.h"
 
 class nsComponentsDlg : public nsXInstallerDlg
 {
@@ -39,10 +40,16 @@ public:
 /*--------------------------------------------------------------------*
  *   Navigation
  *--------------------------------------------------------------------*/
-    int     Back();
-    int     Next();
+    static void     Back(GtkWidget *aWidget, gpointer aData);
+    static void     Next(GtkWidget *aWidget, gpointer aData);
 
-    int     Parse(nsINIParser* aParser);
+    int             Parse(nsINIParser* aParser);
+
+    int             Show(int aDirection);
+    int             Hide(int aDirection);
+    
+    static void     RowSelected(GtkWidget *aWidget, gint aRow, gint aColumn,
+                                GdkEventButton *aEvent, gpointer aData);
 
 /*--------------------------------------------------------------------*
  *   INI Properties
@@ -57,5 +64,8 @@ private:
     char            *mMsg0;
     nsComponentList *mCompList;
 };
+
+static nsSetupType     *sCustomST; // cache a pointer to the custom setup type
+static GtkWidget       *sDescLong;
 
 #endif /* _NS_COMPONENTSDLG_H_ */

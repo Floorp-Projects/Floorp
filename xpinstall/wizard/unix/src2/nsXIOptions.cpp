@@ -22,51 +22,15 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-#ifndef _NS_XINSTALLER_H_
-#define _NS_XINSTALLER_H_
+#include "nsXIOptions.h"
 
-#include <gtk/gtk.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "XIDefines.h"
-#include "XIErrors.h"
-
-#include "nsINIParser.h"
-#include "nsLicenseDlg.h"
-#include "nsXIContext.h"
-
-extern nsXIContext *gCtx; 
-
-class nsXInstaller
+nsXIOptions::nsXIOptions() :
+    mDestination(NULL),
+    mSetupType(-1)
 {
-public:
-    nsXInstaller();
-    ~nsXInstaller();
+}
 
-    int ParseConfig();
-    int RunWizard(int argc, char **argv);
-    int Download();
-    int Extract();
-    int Install();
-
-    static gint Kill(GtkWidget *widget, GtkWidget *event, gpointer data);
-
-private:
-    int InitContext();
-    int DrawLogo();
-    int DrawNavButtons();
-};
-
-int     main(int argc, char **argv);
-
-
-#define CONFIG_INI "config.ini"
-
-#if defined(DEBUG_sgehani) || defined(DEBUG_druidd) || defined(DEBUG_root)
-#define DUMP(_msg) printf("%s %d: %s \n", __FILE__, __LINE__, _msg);
-#else
-#define DUMP(_msg)
-#endif
-
-
-#endif /*_NS_XINSTALLER_H_ */
+nsXIOptions::~nsXIOptions()
+{
+    XI_IF_FREE(mDestination);
+}

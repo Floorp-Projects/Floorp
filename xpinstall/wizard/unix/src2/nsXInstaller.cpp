@@ -24,7 +24,7 @@
 
 
 #include "nsXInstaller.h"
-#include "logo-star.xpm"
+#include "logo.xpm"
 
 nsXIContext *gCtx = NULL;
 
@@ -54,8 +54,8 @@ nsXInstaller::ParseConfig()
 
     XI_ERR_BAIL(gCtx->ldlg->Parse(parser));
     XI_ERR_BAIL(gCtx->wdlg->Parse(parser));
+    XI_ERR_BAIL(gCtx->cdlg->Parse(parser)); // components before setup type
     XI_ERR_BAIL(gCtx->sdlg->Parse(parser));
-    XI_ERR_BAIL(gCtx->cdlg->Parse(parser));
     XI_ERR_BAIL(gCtx->idlg->Parse(parser));
 
     return OK;
@@ -113,18 +113,31 @@ nsXInstaller::RunWizard(int argc, char **argv)
 
     gCtx->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     XI_VERIFY(gCtx->window);
+    gtk_signal_connect (GTK_OBJECT(gCtx->window), "delete_event",
+                              GTK_SIGNAL_FUNC(Kill), NULL);
 
     gtk_widget_set_usize(gCtx->window, XI_WIN_WIDTH, XI_WIN_HEIGHT);
     gtk_container_set_border_width(GTK_CONTAINER(gCtx->window), 5);
+    gtk_window_set_title(GTK_WINDOW(gCtx->window), "Mozilla Installer"); // XXX
     gtk_widget_show(gCtx->window);
 
     // create and display the logo
     DrawLogo();
 
-    // create and register the nav buttons
+    // create and display the nav buttons
     XI_ERR_BAIL(DrawNavButtons());
 
-    // populate with license dlg
+    // create the notebook whose pages are dlgs
+    gCtx->notebook = gtk_notebook_new();
+    XI_VERIFY(gCtx->notebook);
+    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(gCtx->notebook), FALSE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(gCtx->notebook), FALSE);
+    gtk_notebook_set_scrollable(GTK_NOTEBOOK(gCtx->notebook), FALSE);
+    gtk_widget_show(gCtx->notebook);
+    gtk_container_add(GTK_CONTAINER(gCtx->canvas), gCtx->notebook);
+
+    // show welcome dlg
+    gCtx->wdlg->Show(nsXInstallerDlg::FORWARD_MOVE); 
 
     // pop over to main event loop
     gtk_main();
@@ -135,42 +148,51 @@ BAIL:
     return err;
 }
 
+gint
+nsXInstaller::Kill(GtkWidget *widget, GtkWidget *event, gpointer data)
+{
+    // XXX call Shutdown() ?
+
+    gtk_main_quit();
+    return FALSE;
+}
+
 int
 nsXInstaller::DrawLogo()
 {
     int err = OK;
 
-    GdkPixmap *pixmap;
-    GdkBitmap *mask;
-    GtkStyle *style;
-    GtkWidget *mainhbox;
-    GtkWidget *logovbox;
-    GtkWidget *canvasvbox;
+    GtkWidget *logo = NULL;
+    GdkPixmap *pixmap = NULL;
+    GdkBitmap *mask = NULL;
+    GtkStyle *style = NULL;
+    GtkWidget *mainhbox = NULL;
+    GtkWidget *logovbox = NULL;
+    GtkWidget *canvasvbox = NULL;
 
     style = gtk_widget_get_style(gCtx->window);
     pixmap = gdk_pixmap_create_from_xpm_d(gCtx->window->window, &mask,
                                           &style->bg[GTK_STATE_NORMAL],
-                                          (gchar **)logo_star_xpm);
+                                          (gchar **)logo_xpm);
 
-    gCtx->logo = gtk_pixmap_new(pixmap, mask);
-    XI_VERIFY(gCtx->logo);
-    gtk_widget_show(gCtx->logo);
+    logo = gtk_pixmap_new(pixmap, mask);
+    gtk_widget_show(logo);
 
     mainhbox = gtk_hbox_new(FALSE, 10);
-    logovbox = gtk_vbox_new(FALSE, 10);
+    logovbox = gtk_vbox_new(FALSE, 30);
     canvasvbox = gtk_vbox_new(FALSE, 10);
 
-    gtk_box_pack_start(GTK_BOX(logovbox), gCtx->logo, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(logovbox), logo, FALSE, FALSE, 0);
     gtk_widget_show(logovbox);
     gtk_widget_show(canvasvbox);
 
     gtk_box_pack_start(GTK_BOX(mainhbox), logovbox, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(mainhbox), canvasvbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(mainhbox), canvasvbox, TRUE, TRUE, 0);
     gtk_widget_show(mainhbox);
 
     gtk_container_add(GTK_CONTAINER(gCtx->window), mainhbox);
 
-    gCtx->mainbox = canvasvbox; /* canvasvbox = canvas - nav btns' box */
+    gCtx->mainbox = canvasvbox; /* canvasvbox = canvas + nav btns' box */
     return err;
 }
 
@@ -185,25 +207,31 @@ nsXInstaller::DrawNavButtons()
 
     XI_VERIFY(gCtx->mainbox);
 
-    gCtx->next = gtk_button_new_with_label("Accept");  // XXX from license dlg
-    gCtx->back = gtk_button_new_with_label("Decline"); // XXX parse keys
+    gCtx->next = gtk_button_new();  
+    gCtx->back = gtk_button_new(); 
+    gCtx->nextLabel = gtk_label_new(NEXT);
+    gCtx->backLabel = gtk_label_new(BACK);
     XI_VERIFY(gCtx->next);
     XI_VERIFY(gCtx->back);
     gtk_widget_show(gCtx->next);
     gtk_widget_show(gCtx->back);
-
-    navbtnhbox = gtk_hbutton_box_new();
-    canvasvbox = gtk_vbox_new(FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(gCtx->mainbox), canvasvbox, TRUE, FALSE, 0); 
+    gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
+    gtk_container_add(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
+    gtk_widget_show(gCtx->nextLabel);
+    gtk_widget_show(gCtx->backLabel);
+    
+    navbtnhbox = gtk_hbox_new(TRUE, 10);
+    canvasvbox = gtk_vbox_new(TRUE, 10);
+    gtk_box_pack_start(GTK_BOX(gCtx->mainbox), canvasvbox, TRUE, TRUE, 0); 
     gtk_box_pack_start(GTK_BOX(gCtx->mainbox), navbtnhbox, FALSE, FALSE, 0); 
 
     // put a table in the nav btn box
     navbtntable = gtk_table_new(1, 6, TRUE);
     gtk_box_pack_start(GTK_BOX(navbtnhbox), navbtntable, TRUE, TRUE, 0);
 
-    gtk_table_attach(GTK_TABLE(navbtntable), gCtx->back, 5, 6, 0, 1, 
+    gtk_table_attach(GTK_TABLE(navbtntable), gCtx->back, 4, 5, 0, 1, 
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 5, 5);
-    gtk_table_attach(GTK_TABLE(navbtntable), gCtx->next, 6, 7, 0, 1,
+    gtk_table_attach(GTK_TABLE(navbtntable), gCtx->next, 5, 6, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 5, 5);
 
     gtk_widget_show(navbtntable);    

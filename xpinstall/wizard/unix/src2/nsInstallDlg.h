@@ -37,10 +37,27 @@ public:
 /*------------------------------------------------------------------*
  *   Navigation
  *------------------------------------------------------------------*/
-    int     Back();
-    int     Next();
+    static void     Back(GtkWidget *aWidget, gpointer aData);
+    static void     Next(GtkWidget *aWidget, gpointer aData);
 
     int     Parse(nsINIParser* aParser);
+
+    int     Show(int aDirection);
+    int     Hide(int aDirection);
+
+    static void     *WorkDammitWork(void *arg); // worker thread main
+    static gint     ProgressUpdater(gpointer aData);
+
+    static void    XPIProgressCB(const char *aMsg, int aVal, int aMax);
+    static void    MajorProgressCB(char *aCompName, int aCompNum, 
+                                   int aTotalComps);
+
+    enum
+    {
+        ACT_DOWNLOAD,
+        ACT_EXTRACT,
+        ACT_INSTALL
+    };
 
 /*------------------------------------------------------------------*
  *   INI Properties
@@ -51,5 +68,12 @@ public:
 private:
     char    *mMsg0;
 };
+
+static char         *sXPInstallEngine;
+static GtkWidget    *sMajorLabel;
+static GtkWidget    *sMinorLabel;
+static GtkWidget    *sMajorProgBar;
+static GtkWidget    *sMinorProgBar;
+static int          sActivity;
 
 #endif /* _NS_INSTALLDLG_H_ */

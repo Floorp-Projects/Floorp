@@ -22,38 +22,19 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-#ifndef _NS_WELCOMEDLG_H_
-#define _NS_WELCOMEDLG_H_
+#ifndef _NS_XIOPTIONS_H_
+#define _NS_XIOPTIONS_H_
 
-#include "nsXInstallerDlg.h"
-#include "XIErrors.h"
+#include "XIDefines.h"
 
-class nsWelcomeDlg : public nsXInstallerDlg
+class nsXIOptions
 {
 public:
-    nsWelcomeDlg();
-    ~nsWelcomeDlg();
-
-/*--------------------------------------------------------------------*
- *   Navigation
- *--------------------------------------------------------------------*/
-    static void     Back(GtkWidget *aWidget, gpointer aData);
-    static void     Next(GtkWidget *aWidget, gpointer aData);
+    nsXIOptions();
+    ~nsXIOptions();
     
-    int     Parse(nsINIParser *aParser);
-
-    int     Show(int aDirection);
-    int     Hide(int aDirection);
-
-/*--------------------------------------------------------------------*
- *   INI Properties
- *--------------------------------------------------------------------*/
-    int     SetReadmeFile(char *aReadmeFile);
-    char    *GetReadmeFile();
-    char    *GetReadmeContents();
-    
-private:
-    char    *mReadmeFile;
+    char    *mDestination;
+    int     mSetupType;
 };
-
-#endif /* _NS_WELCOMEDLG_H_ */
+    
+#endif /* _NS_XIOPTIONS_H_ */

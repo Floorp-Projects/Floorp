@@ -34,10 +34,21 @@ nsXIContext::nsXIContext()
     cdlg = NULL;
     idlg = NULL;
 
+    opt = new nsXIOptions();
+
     window = NULL;
     back = NULL;
     next = NULL;
+    nextLabel = NULL;
+    backLabel = NULL;
+    acceptLabel = NULL;
+    declineLabel = NULL;
+    installLabel = NULL;
     logo = NULL; 
+
+    backID = 0;
+    nextID = 0;
+    bMoving = FALSE;
 }
 
 nsXIContext::~nsXIContext()
@@ -50,8 +61,57 @@ nsXIContext::~nsXIContext()
     XI_IF_DELETE(cdlg);
     XI_IF_DELETE(idlg);
 
+    XI_IF_DELETE(opt);
+
     XI_IF_FREE(window);
     XI_IF_FREE(back);
     XI_IF_FREE(next);
+    XI_IF_FREE(nextLabel);
+    XI_IF_FREE(backLabel);
+    XI_IF_FREE(acceptLabel);
+    XI_IF_FREE(declineLabel);
+    XI_IF_FREE(installLabel);
     XI_IF_FREE(logo);
+}
+
+char *
+nsXIContext::itoa(int n)
+{
+	char *s;
+	int i, j, sign, tmp;
+	
+	/* check sign and convert to positive to stringify numbers */
+	if ( (sign = n) < 0)
+		n = -n;
+	i = 0;
+	s = (char*) malloc(sizeof(char));
+	
+	/* grow string as needed to add numbers from powers of 10 
+     * down till none left 
+     */
+	do
+	{
+		s = (char*) realloc(s, (i+1)*sizeof(char));
+		s[i++] = n % 10 + '0';  /* '0' or 30 is where ASCII numbers start */
+		s[i] = '\0';
+	}
+	while( (n /= 10) > 0);	
+	
+	/* tack on minus sign if we found earlier that this was negative */
+	if (sign < 0)
+	{
+		s = (char*) realloc(s, (i+1)*sizeof(char));
+		s[i++] = '-';
+	}
+	s[i] = '\0';
+	
+	/* pop numbers (and sign) off of string to push back into right direction */
+	for (i = 0, j = strlen(s) - 1; i < j; i++, j--)
+	{
+		tmp = s[i];
+		s[i] = s[j];
+		s[j] = tmp;
+	}
+	
+	return s;
 }

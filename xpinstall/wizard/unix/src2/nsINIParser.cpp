@@ -124,7 +124,7 @@ nsINIParser::GetStringAlloc( char *aSection, char *aKey,
 
     *aOutBuf = (char *) malloc(bufsize + 1);
     strncpy(*aOutBuf, buf, bufsize);
-    strcat(*aOutBuf, "\0");
+    *(*aOutBuf + bufsize) = 0;
     *aOutBufSize = bufsize + 1;
 
     return mError;
@@ -250,8 +250,9 @@ nsINIParser::FindKey(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize)
                 return mError;
             }
                 
-            *aIOValSize = nextNL - nextEq;
+            *aIOValSize = nextNL - (nextEq + 1); 
             strncpy(aVal, (nextEq + 1), *aIOValSize);
+            *(aVal + *aIOValSize) = 0; // null terminate
             mError = OK;
             return mError;
         }

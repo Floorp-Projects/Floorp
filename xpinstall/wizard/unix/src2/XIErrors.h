@@ -36,7 +36,24 @@
         E_MEM           = -601,     /* out of memory */
         E_PARAM         = -602,     /* invalid param */
         E_NO_MEMBER     = -603,     /* invalid member variable */
-        E_INVALID_PTR   = -604      /* invalid pointer */
+        E_INVALID_PTR   = -604,     /* invalid pointer */
+        E_INVALID_KEY   = -605,     /* parse key has no value */
+        E_EMPTY_README  = -606,     /* failed to read readme */
+        E_EMPTY_LICENSE = -607,     /* failed to read license */
+        E_OUT_OF_BOUNDS = -608,     /* out of bounds of comp/st list */
+        E_REF_COUNT     = -609,     /* mismatched ref counts: mem leak */
+        E_NO_COMPONENTS = -610,     /* no components in the INI file */
+        E_NO_SETUPTYPES = -611,     /* no setup types in the INI file */
+        E_URL_ALREADY   = -612,     /* URL at this index already exists */
+        E_DIR_CREATE    = -613,     /* couldn't create the directory (tmp) */
+        E_BAD_FTP_URL   = -614,     /* ftp url malformed */
+        E_NO_DOWNLOAD   = -615,     /* download failed  */
+        E_EXTRACTION    = -616,     /* extraction of xpcom failed */
+        E_FORK_FAILED   = -617,     /* failed to fork a process */
+        E_LIB_OPEN      = -418,     /* couldn't open stub lib */
+        E_LIB_SYM       = -419,     /* couldn't get symbol in lib */
+        E_XPI_FAIL      = -420,     /* a xpistub call failed */
+        E_INSTALL       = -421      /* a .xpi failed to install */
     };
 
 #define FATAL_ERR_THRESHOLD -500    /* errs below this cause app quit */

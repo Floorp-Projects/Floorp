@@ -1,0 +1,128 @@
+==================================================================
+
+                Mozilla Preview Release Read Me
+
+==================================================================
+
+Mozilla is subject to the terms detailed in the license 
+agreement accompanying it.
+
+This read-me file contains information about system requirements
+and installation instructions. 
+
+Before you install Mozilla, be sure to read the Release Notes, 
+which describe known problems and installation issues:
+
+ http://mozilla.org/.../relnotes/pv-1.html 
+
+To submit bugs or other feedback, from the Help menu choose 
+Feedback Center.
+
+==================================================================
+
+                    System Requirements
+
+==================================================================
+
+*Mac OS
+
+	-System 8.5 or later
+	-604/200 MHz or faster processor
+	-64 MB RAM
+	-26 MB of free hard disk space on an HFS+ volume (to install 
+	all components)
+
+*Windows 
+
+	-Windows 95, Windows 98, Windows NT 4.0, or Windows 2000 
+	-Pentium 133 MHz (or faster) processor
+	-32 MB of RAM (or greater) for Windows 95/98; 48 MB of RAM 
+	(or greater) for Windows NT and Windows 2000
+	-hard disk space?
+
+*Unix
+
+	-Red Hat Linux 6.0 or later
+	-Pentium 133 MHz (or faster) processor
+	-[RAM? Hard Disk Space?]
+
+	
+
+==================================================================
+
+                    Installation Instructions
+
+==================================================================
+
+For Mac OS and Windows users, it is strongly recommended that you
+exit all programs before running the setup program. Also, you
+should temporarily disable virus-detection software.
+
+Install into a clean (new) directory. Installing on top of released
+product builds may cause problems.
+
+*Installation Instructions -- Windows
+
+[NOT SURE WHAT CD OR DOWNLOAD PAGE EXPERIENCE WILL BE]
+	
+	1. Click the MozillaSetup.exe link to download it to your 
+	machine.
+	
+	2. Double-click the MozillaSetup program icon on your machine
+	to begin the Setup program.
+	
+	3. Follow the on-screen instructions in the Setup program.
+
+You do not need to restart your machine once the installation 
+process has completed.
+
+*Installation Instructions -- Mac OS
+
+	1. Click the MozillaInstaller.sea.bin link to download it
+	to your machine. 
+	
+	By default, the download file (compressed, in .bin format) 
+	is downloaded to your desktop.
+	
+	If the downloaded file does not expand automatically, you 
+	must expand the file using a program such as StuffIt Expander.
+	If you don't have StuffIt Expander, you can get a copy by
+	visiting http://www.aladdinsys.com.
+	
+	2. Double-click the Mozilla Install folder.
+	
+	3. Double-click the Mozilla Installer.
+	
+	4. Follow the on-screen instructions to complete the installation
+	process.
+	
+*Installation Instructions -- Unix
+
+	1.Create a directory named "mozilla" and move the tar.gz file 
+	into the mozilla directory. 
+
+		mkdir mozilla; 
+		mv mozilla*.tar.gz mozilla
+
+	2.Change to the mozilla directory and untar the archive. This will 
+	create a directory called "package". 
+
+		cd mozilla; 
+		gzip -dc mozilla-i686-pc-linux-gnu.tar.gz | tar -xvf -
+
+	3.Change to the "package" directory. 
+
+		mv mozilla*.tar.gz ../ ; 
+		cd package
+
+	4.Run the Mozilla Preview Release software with the run script: 
+
+		./mozilla
+
+		
+2.24.00
+
+
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+         1         2         3         4         5         6         7         8
+

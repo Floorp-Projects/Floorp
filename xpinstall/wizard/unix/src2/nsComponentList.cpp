@@ -42,7 +42,7 @@ nsComponentList::~nsComponentList()
     {
         next = NULL;
         next = curr->GetNext();
-        delete curr;
+        curr->Release();
         curr = next;
     }
 
@@ -87,6 +87,50 @@ nsComponentList::GetTail()
 }
 
 int
+nsComponentList::GetLength()
+{
+    return mLength;
+}
+
+int
+nsComponentList::GetLengthVisible()
+{
+    int numVisible = 0;
+    nsComponent *curr;
+
+    curr = mHead;
+    if (!curr) return 0;
+
+    while (curr)
+    {
+        if (!curr->IsInvisible())
+            numVisible++;
+        curr = curr->GetNext();
+    }
+        
+    return numVisible;
+}
+
+int
+nsComponentList::GetLengthSelected()
+{
+    int numSelected = 0;
+    nsComponent *curr;
+
+    curr = mHead;
+    if (!curr) return 0;
+
+    while (curr)
+    {
+        if (!curr->IsSelected())
+            numSelected++;
+        curr = curr->GetNext();
+    }
+        
+    return numSelected;
+}
+
+int
 nsComponentList::AddComponent(nsComponent *aComponent)
 {
     if (!aComponent)
@@ -98,6 +142,9 @@ nsComponentList::AddComponent(nsComponent *aComponent)
         mHead = aComponent;
         mHead->InitNext();
         mTail = mHead;
+        aComponent->AddRef();
+        mLength = 1;
+        mHead->SetIndex(0);
 
         return OK;
     }
@@ -106,6 +153,9 @@ nsComponentList::AddComponent(nsComponent *aComponent)
     mTail->SetNext(aComponent);
     mTail = aComponent;
     mTail->InitNext();
+    aComponent->AddRef();
+    mLength++;
+    mTail->SetIndex(mLength - 1);
 
     return OK;
 }
@@ -135,7 +185,8 @@ nsComponentList::RemoveComponent(nsComponent *aComponent)
                     mTail = NULL;
             }
 
-            delete aComponent;
+            aComponent->Release();
+            mLength--;
             
             return OK;
         }
@@ -146,4 +197,46 @@ nsComponentList::RemoveComponent(nsComponent *aComponent)
             curr = GetNext();
         }
     }
+}
+
+nsComponent *
+nsComponentList::GetCompByIndex(int aIndex)
+{
+    nsComponent *comp = GetHead();
+    int i;
+
+    // param check
+    if (!comp || mLength == 0) return NULL;
+
+    for (i=0; i<mLength; i++)
+    { 
+        if (aIndex == comp->GetIndex())
+            return comp;
+
+        comp = GetNext();
+        if (!comp) break;
+    }
+
+    return NULL;
+}
+
+nsComponent *
+nsComponentList::GetCompByArchive(char *aArchive)
+{
+    nsComponent *comp = GetHead();
+    int i;
+
+    // param check
+    if (!comp || mLength == 0 || !aArchive) return NULL;
+
+    for (i=0; i<mLength; i++)
+    { 
+        if (0==strncmp(aArchive, comp->GetArchive(), strlen(aArchive)))
+            return comp;
+
+        comp = GetNext();
+        if (!comp) break;
+    }
+
+    return NULL;
 }
