@@ -47,6 +47,7 @@ interface nsIURI;
 interface nsIProgressEventSink;
 interface nsIChannel;
 interface nsIStreamListener;
+interface nsIInputStream;
 
 [scriptable, uuid(40AECB53-8B65-11d3-989D-001083010E9B)]
 interface nsIURILoader : nsISupports
@@ -64,9 +65,12 @@ interface nsIURILoader : nsISupports
   /* OpenURI requires the following parameters.....
      aURI --> the uri you wish to open
 	 aWindowTarget -> the name of the desired target window (can be null)
-	 aProgressEventSink -> a progress event sink associated with the url (can be null)
-     aContentListener --> a content listener you want to give first crack
-                          at handling the uri. (can be null) 
+	 aWindowContext --> if you are running the url from a doc shell or a web shell,
+					    this is your window context. If you have a content listener
+						you want to give first crack to, the uri loader needs to be able
+						to get it from the window context (we'll use nsIInterfaceRequestor).
+						we will also be using nsIInterfaceRequestor to get at the progress event
+						sink interface.
      aReferringURI --> if a uri referral was involved....
 	 aOpenContext (in) --> if you've already opened a url before, and you still have
 						   the associated open context, you should pass it in here (can be null)
@@ -78,8 +82,7 @@ interface nsIURILoader : nsISupports
 
   void openURI(in nsIURI aURI, 
 			   in string aWindowTarget,
-			   in nsIProgressEventSink aProgressEventSink,
-			   in nsIURIContentListener aContentListener, 
+			   in nsISupports aWindowContext,
 			   in nsIURI aReferringURI,
 			   in nsISupports aOpenContext,
 			   out nsISupports aCurrentOpenContext);
@@ -90,8 +93,7 @@ interface nsIURILoader : nsISupports
 
   void openURIVia(in nsIURI aURI,
 				  in string aWindowTarget,
-				  in nsIProgressEventSink aProgressEventSink,
-			      in nsIURIContentListener aContentListener, 
+				  in nsISupports aWindowContext,
 			      in nsIURI aReferringURI,
 			      in nsISupports aOpenContext,
 			      out nsISupports aCurrentOpenContext,
@@ -107,4 +109,34 @@ interface nsIURILoader : nsISupports
 					   in nsIURIContentListener aContentListener,
 					   out string aDesiredContentType,
 					   out nsIURIContentListener aTargetListener);
+};
+
+/* This is a private interface used by layout in order to invoke the uri loader
+   while passing through a post data stream. I'm using a private interface instead of 
+   bloating the generic nsIURILoader's openURI
+*/
+
+[scriptable, uuid(1A7CACA5-A1D8-11d3-98A4-001083010E9B)]
+interface nsPIURILoaderWithPostData : nsISupports
+{
+  void openURIWithPostData(in nsIURI aURI, 
+			   in string aWindowTarget,
+			   in nsISupports aWindowContext,
+			   in nsIURI aReferringURI,
+			   in nsIInputStream aPostDataStream,
+			   in nsISupports aOpenContext,
+			   out nsISupports aCurrentOpenContext);
+
+
+  /* same call as OpenURI except this one takes an IP address to use as well...
+     adapterBinding -> the local IP address to bind to*/			   
+
+  void openURIWithPostDataVia(in nsIURI aURI,
+				  in string aWindowTarget,
+				  in nsISupports aWindowContext,
+			      in nsIURI aReferringURI,
+				  in nsIInputStream aPostDataStream,
+			      in nsISupports aOpenContext,
+			      out nsISupports aCurrentOpenContext,
+				  in unsigned long adapterBinding); 	
 };
