@@ -839,21 +839,6 @@ void MRJContext::showDocument(JMAppletViewerRef viewer, JMTextRef urlString, JMT
     }
 }
 
-void MRJContext::setStatusMessage(JMAppletViewerRef viewer, JMTextRef statusMsg)
-{
-    MRJContext* thisContext;
-    OSStatus status = ::JMGetAppletViewerData(viewer, (JMClientData*)&thisContext);
-    if (status == noErr) {
-        Handle messageHandle = ::JMTextToMacOSCStringHandle(statusMsg);
-        if (messageHandle != NULL) {
-            ::HLock(messageHandle);
-            const char* message = *messageHandle;
-            thisContext->showStatus(message);
-            ::DisposeHandle(messageHandle);
-        }
-    }
-}
-
 #endif /* !TARGET_CARBON */
 
 
@@ -924,14 +909,6 @@ void MRJContext::showURL(const char* url, const char* target)
         thePluginManager->GetURL(pluginInstance, url, target);
 #endif
     }
-}
-
-void MRJContext::showStatus(const char* message)
-{
-    ensureValidPort();
-    
-    if (mPeer != NULL)
-        mPeer->ShowStatus(message);
 }
 
 static SInt16 nextMenuId = 20000;
@@ -1042,7 +1019,8 @@ pascal void TimedMessage::TimedMessageHandler(EventLoopTimerRef inTimer, void *i
 
 static char* getCString(CFStringRef stringRef)
 {
-    CFIndex len = 1 + ::CFStringGetLength(stringRef);
+	// worst case length scenario would encode every character
+    CFIndex len = (1 + ::CFStringGetLength(stringRef)) * 3;
     char* result = new char[len];
     if (result)
         CFStringGetCString(stringRef, result, len, kCFStringEncodingUTF8);

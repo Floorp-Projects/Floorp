@@ -142,9 +142,6 @@ private:
 	static SInt16 getUniqueMenuID(JMAWTContextRef context, Boolean isSubmenu);
 	static void exceptionOccurred(JMAWTContextRef context, JMTextRef exceptionName, JMTextRef exceptionMsg, JMTextRef stackTrace);
 
-	static void showDocument(JMAppletViewerRef viewer, JMTextRef urlString, JMTextRef windowName);
-	static void setStatusMessage(JMAppletViewerRef viewer, JMTextRef statusMsg);
-	
 	SInt16 allocateMenuID(Boolean isSubmenu);
 
 	OSStatus createFrame(JMFrameRef frameRef, JMFrameKind kind, const Rect* initialBounds, Boolean resizeable);
