@@ -130,7 +130,7 @@ nsXULAttribute::GetNodeName(nsString& aNodeName)
 NS_IMETHODIMP
 nsXULAttribute::GetNodeValue(nsString& aNodeValue)
 {
-    aNodeValue.SetString(mValue);
+    aNodeValue=mValue;
     return NS_OK;
 }
 NS_IMETHODIMP
@@ -262,7 +262,7 @@ nsXULAttribute::GetSpecified(PRBool* aSpecified)
 NS_IMETHODIMP
 nsXULAttribute::GetValue(nsString& aValue)
 {
-    aValue.SetString(mValue);
+    aValue=mValue;
     return NS_OK;
 }
 
@@ -621,7 +621,7 @@ static const PRUnichar kNullCh = PRUnichar('\0');
   nsAutoString  classStr(aClassString);  // copy to work buffer
   classStr.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr;
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr.GetUnicode();
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {

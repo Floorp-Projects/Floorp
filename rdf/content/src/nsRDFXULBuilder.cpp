@@ -1296,7 +1296,7 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
     nsAutoString oldValue;
     if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
         nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue.GetUnicode(), getter_AddRefs(value)))) {
             NS_ERROR("unable to construct literal");
             return rv;
         }
@@ -1308,7 +1308,7 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
     // Assert the new value
     {
         nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
+        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue.GetUnicode(), getter_AddRefs(value)))) {
             NS_ERROR("unable to construct literal");
             return rv;
         }
@@ -1368,7 +1368,7 @@ RDFXULBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aN
         nsAutoString oldValue;
         if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
             nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue.GetUnicode(), getter_AddRefs(value)))) {
                 NS_ERROR("unable to construct literal");
                 return rv;
             }
@@ -2337,7 +2337,7 @@ RDFXULBuilderImpl::GetGraphNodeForXULElement(nsIDOMNode* aNode, nsIRDFNode** aRe
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFLiteral> literal;
-        rv = gRDFService->GetLiteral(data, getter_AddRefs(literal));
+        rv = gRDFService->GetLiteral(data.GetUnicode(), getter_AddRefs(literal));
         if (NS_FAILED(rv)) return rv;
 
         *aResult = literal;
@@ -2425,7 +2425,7 @@ RDFXULBuilderImpl::GetResource(PRInt32 aNameSpaceID,
 
     uri.Append(tag);
 
-    nsresult rv = gRDFService->GetUnicodeResource(uri, aResource);
+    nsresult rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     return rv;
 }

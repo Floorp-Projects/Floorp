@@ -213,7 +213,7 @@ nsRDFContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = rdf->GetUnicodeResource(uri, aResult);
+    rv = rdf->GetUnicodeResource(uri.GetUnicode(), aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
     if (NS_FAILED(rv)) return rv;
 

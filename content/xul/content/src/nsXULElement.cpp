@@ -2391,7 +2391,7 @@ RDFElementImpl::GetResource(nsIRDFResource** aResource)
             NS_RELEASE(docURL);
           }
         }
-        return gRDFService->GetUnicodeResource(uri, aResource);
+        return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
     }
 
     *aResource = nsnull;

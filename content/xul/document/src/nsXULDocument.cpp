@@ -2515,7 +2515,7 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
     rdf_PossiblyMakeAbsolute(documentURL, uri);
 
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, getter_AddRefs(resource)))) {
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(resource)))) {
         NS_ERROR("unable to get resource");
         return rv;
     }
@@ -3598,6 +3598,6 @@ XULDocumentImpl::MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIRDFResourc
 
     uri.Append(aTag->GetUnicode());
 
-    rv = gRDFService->GetUnicodeResource(uri, aResult);
+    rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResult);
     return rv;
 }
