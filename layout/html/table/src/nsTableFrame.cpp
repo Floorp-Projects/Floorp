@@ -1744,7 +1744,12 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
           (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP != childDisplay->mDisplay) &&
           (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    != childDisplay->mDisplay) &&
           (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP != childDisplay->mDisplay))
-      {
+      { // it's an unknown frame type, give it a generic reflow and ignore the results
+        nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
+                                         availSize, aReason);
+        if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 1 of unknown frame %p of type %d with reason=%d\n", 
+                                       kidFrame, childDisplay->mDisplay, aReason);
+        ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
         continue;
       }
       nsSize maxKidElementSize(0,0);
@@ -2453,7 +2458,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
   nsIFrame* prevKidFrame = nsnull;
   nsSize    kidMaxElementSize(0,0);
   nsSize*   pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
-  PRBool    result = PR_TRUE;
+  nsresult  rv = NS_OK;
 
   nsReflowReason reason;
   if (PR_FALSE==RequiresPass1Layout())
@@ -2500,14 +2505,15 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       nscoord x = aReflowState.leftInset + kidMargin.left;
       nscoord y = aReflowState.topInset + aReflowState.y + topMargin;
       if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 2 of frame %p with reason=%d\n", kidFrame, reason);
-      ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+      rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
       // Did the child fit?
       if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
       {
-        // The child is too wide to fit in the available space, and it's
+        // The child is too tall to fit in the available space, and it's
         // not our first child
+        // XXX TROY: checking mFirstChild here is probably wrong.  Should check to see if its the first row group?
         PushChildren(kidFrame, prevKidFrame);
-        result = PR_FALSE;
+        //XXX TROY: set aStatus?
         break;
       }
 
@@ -2568,6 +2574,15 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         break;
       }
     }
+    else
+    {// it's an unknown frame type, give it a generic reflow and ignore the results
+        nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState.reflowState,
+                                         nsSize(0,0), eReflowReason_Resize);
+        nsHTMLReflowMetrics desiredSize(nsnull);
+        if (PR_TRUE==gsDebug) printf("\nTIF : Reflow Pass 2 of unknown frame %p of type %d with reason=%d\n", 
+                                       kidFrame, childDisplay->mDisplay, eReflowReason_Resize);
+        ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+    }
 
     // Get the next child
     kidFrame->GetNextSibling(kidFrame);
@@ -2576,7 +2591,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
   }
 
   // Update the child count
-  return result;
+  return rv;
 }
 
 /**
