@@ -44,6 +44,13 @@ struct nsRect;
 struct nsBoundingMetrics;
 #endif
 
+
+#ifdef USE_IMG2
+/* gfx2 */
+#include "gfxtypes.h"
+class imgIContainer;
+#endif
+
 //cliprect/region combination methods
 
 typedef enum
@@ -755,6 +762,21 @@ public:
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics,
                      PRInt32*           aFontID = nsnull) = 0;
+#endif
+
+
+#ifdef USE_IMG2
+  /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
+  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint) = 0;
+
+  /* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
+  NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect) = 0;
+
+  /* [noscript] void drawTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, [const] in nsRect aTargetRect); */
+  NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect) = 0;
+
+  /* [noscript] void drawScaledTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, in nscoord aTileWidth, in nscoord aTileHeight, [const] in nsRect aTargetRect); */
+  NS_IMETHOD DrawScaledTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, nscoord aTileWidth, nscoord aTileHeight, const nsRect * aTargetRect) = 0;
 #endif
 };
 

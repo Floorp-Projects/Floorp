@@ -1299,3 +1299,9 @@ nsImageWin::GetBits()
 
 } // GetBits
 
+#ifdef USE_IMG2
+NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
+{
+  return NS_OK;
+}
+#endif
