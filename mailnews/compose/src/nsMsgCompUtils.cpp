@@ -1067,6 +1067,24 @@ GIVE_UP_ON_CONTENT_BASE:
   return buffer;
 }
 
+static PRBool isValidHost( const char* host )
+{
+  if ( host )
+    for (const char *s = host; *s; ++s)
+      if  (  !nsCRT::IsAsciiAlpha(*s)
+         && !nsCRT::IsAsciiDigit(*s)
+         && *s != '-'
+         && *s != '_'
+         && *s != '.'
+         )
+      {
+       host = nsnull;
+       break;
+      }
+
+  return nsnull != host;
+}
+
 char *
 msg_generate_message_id (nsIMsgIdentity *identity)
 {
@@ -1081,29 +1099,29 @@ msg_generate_message_id (nsIMsgIdentity *identity)
   PRUint32 salt = 0;
   const char *host = 0;
   
+  nsXPIDLCString forcedFQDN;
   nsXPIDLCString from;
-  nsresult rv = identity->GetEmail(getter_Copies(from));
-  if (NS_FAILED(rv)) return nsnull;
+  nsresult rv = NS_OK;
 
-  GenerateGlobalRandomBytes((unsigned char *) &salt, sizeof(salt));
-  if (from) {
-    host = PL_strchr (from, '@');
-    if (host) {
-      const char *s;
-      for (s = ++host; *s; s++)
-        if (!nsCRT::IsAsciiAlpha(*s) && !nsCRT::IsAsciiDigit(*s) &&
-            *s != '-' && *s != '_' && *s != '.') {
-          host = 0;
-          break;
-        }
-    }
-  }
+  rv = identity->GetCharAttribute("FQDN", getter_Copies(forcedFQDN));
 
-  if (! host)
+  if (NS_SUCCEEDED(rv) && forcedFQDN)
+    host = forcedFQDN.get();
+
+  if (!isValidHost(host))
+  {
+    nsresult rv = identity->GetEmail(getter_Copies(from));
+    if (NS_SUCCEEDED(rv) && from)
+      host = PL_strchr (from, '@');
+      ++host;
+ }
+
+  if (!isValidHost(host))
   /* If we couldn't find a valid host name to use, we can't generate a
      valid message ID, so bail, and let NNTP and SMTP generate them. */
     return 0;
 
+  GenerateGlobalRandomBytes((unsigned char *) &salt, sizeof(salt));
   return PR_smprintf("<%lX.%lX@%s>",
            (unsigned long) now, (unsigned long) salt, host);
 }
