@@ -20,13 +20,19 @@
  * Contributor(s): 
  */
 
-#include "nsVoidArray.h"
-#include "nsTimerBeOS.h"
-#include "nsCOMPtr.h"
-
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
+#include "nsCRT.h"
+#include "prlog.h"
+#include <stdio.h>
+#include <limits.h>
+#include <OS.h>
 #include <Application.h>
+#include <Autolock.h>
 #include <Message.h>
 #include <signal.h>
+#include <List.h>
+#include <prthread.h>
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
@@ -54,7 +60,81 @@ static sem_id my_find_sem(const char *name)
 	return ret;
 }
 
-TimerManager nsTimerBeOS::sTimerManager;
+
+class TimerImpl;
+class TimerManager;
+
+class TimerManager : public BList
+{
+public:
+					TimerManager();
+					~TimerManager();
+	void			AddRequest(TimerImpl *);
+	bool			RemoveRequest(TimerImpl *);
+
+private:
+	BLocker			mLocker;
+	sem_id			mSyncSem;
+	thread_id		mTimerThreadID;
+	bool			mQuitRequested;
+
+	static int32	sTimerThreadFunc(void *);
+	int32			TimerThreadFunc();
+	TimerImpl		*FirstRequest()				{ return (TimerImpl *)FirstItem(); }
+};
+
+
+class TimerImpl : public nsITimer
+{
+	friend class TimerManager;
+public:
+					TimerImpl();
+	virtual			~TimerImpl();
+												
+  virtual nsresult Init(nsTimerCallbackFunc aFunc,
+                void *aClosure,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
+
+  virtual nsresult Init(nsITimerCallback *aCallback,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
+					
+    NS_DECL_ISUPPORTS
+
+    virtual void		Cancel();
+    virtual PRUint32	GetDelay()					{ return mDelay; }
+    virtual void		SetDelay(PRUint32);
+  virtual PRUint32 GetPriority() {}
+  virtual void SetPriority(PRUint32 aPriority) {}
+
+  virtual PRUint32 GetType() {}
+  virtual void SetType(PRUint32 aType) {}
+    virtual void*		GetClosure()				{ return mClosure; }
+
+	void				FireTimeout();
+
+private:
+    nsresult			Init(PRUint32 aDelay);	// Initialize the timer.
+
+	bigtime_t			mWhen;		// Time when this request should be done
+    PRUint32			mDelay;	    // The delay set in Init()
+    nsTimerCallbackFunc	mFunc;	    // The function to call back when expired
+    void				*mClosure;  // The argumnet to pass it.
+    nsITimerCallback	*mCallback; // An interface to notify when expired.
+	bool				mCanceled;
+	PRThread			*mThread;
+//  PRBool		mRepeat;    // A repeat, not implemented yet.
+
+public:
+	static TimerManager	sTimerManager;
+};
+
+TimerManager TimerImpl::sTimerManager;
 
 TimerManager::TimerManager()
  : BList(40)
@@ -82,7 +162,7 @@ TimerManager::~TimerManager()
 	wait_for_thread(mTimerThreadID, &junk);
 }
 
-void TimerManager::AddRequest(nsITimer *inRequest)
+void TimerManager::AddRequest(TimerImpl *inRequest)
 {
 	if(mLocker.Lock())
 	{
@@ -93,8 +173,8 @@ void TimerManager::AddRequest(nsITimer *inRequest)
 		int32 pos;
 		for(pos = 0; pos < count; pos++)
 		{
-			nsITimer *entry = (nsITimer *)ItemAtFast(pos);
-			if(((nsTimerBeOS *)entry)->mSchedTime > ((nsTimerBeOS*)inRequest)->mSchedTime)
+			TimerImpl *entry = (TimerImpl *)ItemAtFast(pos);
+			if(entry->mWhen > inRequest->mWhen)
 				break;
 		}
 		AddItem(inRequest, pos);
@@ -107,7 +187,7 @@ void TimerManager::AddRequest(nsITimer *inRequest)
 	}
 }
 
-bool TimerManager::RemoveRequest(nsITimer *inRequest)
+bool TimerManager::RemoveRequest(TimerImpl *inRequest)
 {
 	bool	found = false;
 
@@ -140,49 +220,47 @@ int32 TimerManager::TimerThreadFunc()
 
 	while(! mQuitRequested)
 	{
-		nsITimer *tobj = 0;
+		TimerImpl *tobj = 0;
 
 		mLocker.Lock();
 
 		bigtime_t now = system_time();
 
 		// Fire expired pending requests
-		while((tobj = FirstRequest()) != 0 && ((nsTimerBeOS*)tobj)->mSchedTime <= now)
+		while((tobj = FirstRequest()) != 0 && tobj->mWhen <= now)
 		{
-			nsTimerBeOS *tobjbeos = (nsTimerBeOS *)tobj;
-			
 			RemoveItem((int32)0);
 			mLocker.Unlock();
 
-			if(! tobjbeos->mCanceled)
+			if(! tobj->mCanceled)
 			{
 				// fire it
-				if(tobjbeos->mThread != cached)
+				if(tobj->mThread != cached)
 				{
-					sprintf(portname, "event%lx", (uint32)tobjbeos->mThread);
-					sprintf(semname, "sync%lx", (uint32)tobjbeos->mThread);
+					sprintf(portname, "event%lx", tobj->mThread);
+					sprintf(semname, "sync%lx", tobj->mThread);
 
 					eventport = find_port(portname);
 					syncsem = my_find_sem(semname);
-					cached = tobjbeos->mThread;
+					cached = tobj->mThread;
 				}
 
 				// call timer synchronously so we're sure tobj is alive
 				ThreadInterfaceData	 id;
-				id.data = tobjbeos;
+				id.data = tobj;
 				id.sync = true;
 				if(write_port(eventport, 'WMti', &id, sizeof(id)) == B_OK)
 					while(acquire_sem(syncsem) == B_INTERRUPTED)
 						;
 			}
-			NS_RELEASE(tobjbeos);
+			NS_RELEASE(tobj);
 
 			mLocker.Lock();
 		}
 		mLocker.Unlock();
 
 		if(acquire_sem_etc(mSyncSem, 1, B_ABSOLUTE_TIMEOUT, 
-					tobj ? ((nsTimerBeOS *)tobj)->mSchedTime : B_INFINITE_TIMEOUT) == B_BAD_SEM_ID)
+					tobj ? tobj->mWhen : B_INFINITE_TIMEOUT) == B_BAD_SEM_ID)
 			break;
 	}
 
@@ -190,9 +268,9 @@ int32 TimerManager::TimerThreadFunc()
 }
 
 //
-// nsTimerBeOS
+// TimerImpl
 //
-void nsTimerBeOS::FireTimeout()
+void TimerImpl::FireTimeout()
 {
 	if( ! mCanceled)
 	{
@@ -203,68 +281,60 @@ void nsTimerBeOS::FireTimeout()
 	}
 }
 
-nsTimerBeOS::nsTimerBeOS()
+TimerImpl::TimerImpl()
 {
 	NS_INIT_REFCNT();
 	mFunc			= 0;
 	mCallback		= 0;
 	mDelay			= 0;
 	mClosure		= 0;
-	mSchedTime			= 0;
+	mWhen			= 0;
 	mCanceled		= false;
 }
 
-nsTimerBeOS::~nsTimerBeOS()
+TimerImpl::~TimerImpl()
 {
 	Cancel();
 	NS_IF_RELEASE(mCallback);
 }
 
-void nsTimerBeOS::SetDelay(PRUint32 aDelay)
+void TimerImpl::SetDelay(PRUint32 aDelay)
 {
 	mDelay = aDelay;
-	mSchedTime = system_time() + mDelay * 1000;
+	mWhen = system_time() + mDelay * 1000;
 
 	NS_ADDREF(this);
-	if (nsTimerBeOS::sTimerManager.RemoveRequest(this))
-		nsTimerBeOS::sTimerManager.AddRequest(this);
-	Release();	
+	if (TimerImpl::sTimerManager.RemoveRequest(this))
+		TimerImpl::sTimerManager.AddRequest(this);
+//	NS_RELEASE(this);	// ?*?*?*?* doesn't work...
+	Release();		// Is it the right way ?
 }
 
-void nsTimerBeOS::SetPriority(PRUint32 aPriority)
-{
-  mPriority = aPriority;
-}
-
-void nsTimerBeOS::SetType(PRUint32 aType)
-{
-  mType = aType;
-}
-
-nsresult nsTimerBeOS::Init(nsTimerCallbackFunc aFunc, void *aClosure,
+nsresult TimerImpl::Init(nsTimerCallbackFunc aFunc, void *aClosure,
                 PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
 {
     mFunc = aFunc;
     mClosure = aClosure;
+    // mRepeat = aRepeat;
 
     return Init(aDelay);
 }
 
-nsresult nsTimerBeOS::Init(nsITimerCallback *aCallback,
+nsresult TimerImpl::Init(nsITimerCallback *aCallback,
                 PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
 {
     mCallback = aCallback;
     NS_ADDREF(mCallback);
-
+    // mRepeat = aRepeat;
     return Init(aDelay);
 }
 
 
-nsresult nsTimerBeOS::Init(PRUint32 aDelay)
+nsresult TimerImpl::Init(PRUint32 aDelay)
 {
 	mDelay = aDelay;
 	NS_ADDREF(this);	// this is for clients of the timer
-	mSchedTime = system_time() + aDelay * 1000;
+	mWhen = system_time() + aDelay * 1000;
 	
 	mThread = PR_GetCurrentThread();
 
@@ -273,13 +343,13 @@ nsresult nsTimerBeOS::Init(PRUint32 aDelay)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsTimerBeOS, kITimerIID);
+NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID);
 
 
-void nsTimerBeOS::Cancel()
+void TimerImpl::Cancel()
 {
 	mCanceled = true;
-	nsTimerBeOS::sTimerManager.RemoveRequest(this);
+	TimerImpl::sTimerManager.RemoveRequest(this);
 }
 
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
@@ -288,7 +358,7 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
     if(nsnull == aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER;
 
-    nsTimerBeOS *timer = new nsTimerBeOS();
+    TimerImpl *timer = new TimerImpl();
     if(nsnull == timer)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -297,8 +367,7 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 
 void nsTimerExpired(void *aCallData)
 {
-  nsTimerBeOS *timer = (nsTimerBeOS *)aCallData;
-  timer->FireTimeout();
-  NS_RELEASE(timer);
+	TimerImpl* timer = (TimerImpl *)aCallData;
+	timer->FireTimeout();
+	NS_RELEASE(timer);
 }
-
