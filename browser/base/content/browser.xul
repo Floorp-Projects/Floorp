@@ -283,7 +283,6 @@ Contributor(s):
               label="&setWallpaperCmd.label;"
               accesskey="&setWallpaperCmd.accesskey;"
               oncommand="gContextMenu.setWallpaper();"/>
-    <menuseparator id="context-sep-image"/>
     <menuitem id="context-back"
               label="&backCmd.label;"
               accesskey="&backCmd.accesskey;"
