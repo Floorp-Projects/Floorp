@@ -17,16 +17,16 @@
  */
 #include "nscore.h" 
 
-extern PRUnichar gUpperToTitle[] = { 
+static PRUnichar gUpperToTitle[] = { 
    0x01F1,    0x01F2, 
    0x01CA,    0x01CB, 
    0x01C4,    0x01C5, 
    0x01C7,    0x01C8, 
 };
 
-extern PRUint32 gUpperToTitleItems = 4;
+static PRUint32 gUpperToTitleItems = 4;
 
-extern PRUnichar gToUpper[] = 
+static PRUnichar gToUpper[] = 
 { /*   From    To      Every   Diff   */ 
        0x0061, 0x007a, 0x0001, 0xffe0  ,
        0x00e0, 0x00f6, 0x0001, 0xffe0  ,
@@ -133,9 +133,9 @@ extern PRUnichar gToUpper[] =
        0xff41, 0xff5a, 0x0001, 0xffe0  
 };
 
-extern PRUint32 gToUpperItems = 103;
+static PRUint32 gToUpperItems = 103;
 
-extern PRUnichar gToLower[] = 
+static PRUnichar gToLower[] = 
 { /*   From    To      Every   Diff   */ 
        0x0041, 0x005a, 0x0001, 0x0020  ,
        0x00c0, 0x00d6, 0x0001, 0x0020  ,
@@ -235,5 +235,5 @@ extern PRUnichar gToLower[] =
        0xff21, 0xff3a, 0x0001, 0x0020  
 };
 
-extern PRUint32 gToLowerItems = 96;
+static PRUint32 gToLowerItems = 96;
 
