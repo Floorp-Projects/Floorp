@@ -280,18 +280,24 @@ nsBrowserAppCore::SetDocumentCharset(const nsString& aCharset)
 NS_IMETHODIMP    
 nsBrowserAppCore::Back()
 {
+/*
   ExecuteScript(mToolbarScriptContext, mDisableScript);
   ExecuteScript(mContentScriptContext, "window.back();");
   ExecuteScript(mToolbarScriptContext, mEnableScript);
+*/
+  mContentAreaWebShell->Back();
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsBrowserAppCore::Forward()
 {
+/*
   ExecuteScript(mToolbarScriptContext, mDisableScript);
   ExecuteScript(mContentScriptContext, "window.forward();");
   ExecuteScript(mToolbarScriptContext, mEnableScript);
+*/
+  mContentAreaWebShell->Forward();
 	return NS_OK;
 }
 
@@ -489,8 +495,7 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
 
 
   /* Ask nsWebShell to load the URl */
-  mContentAreaWebShell->LoadURL(nsString(urlstr), nsnull, nsnull);
-
+  mContentAreaWebShell->LoadURL(nsString(urlstr), nsnull, PR_TRUE);
   delete[] urlstr;
 
   return NS_OK;
