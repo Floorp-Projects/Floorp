@@ -1,6 +1,5 @@
 <!--LOCALIZATION NOTE msgViewPickerOverlay.dtd UI for showing various views on a folder -->
 
-<!ENTITY mailViewListTitle.label "Message Views">
-<!ENTITY mailViewListHeading.label "Message views enable you to display only those messages that match certain criteria.">
+<!ENTITY mailViewListTitle.label "Customize Message Views">
 <!ENTITY viewName.label "View Name">
 
