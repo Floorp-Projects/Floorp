@@ -8,9 +8,8 @@
 <!ENTITY navigator.accesskey         "r">
 
 <!ENTITY enableJavaScript.label          "Enable JavaScript for">
-<!ENTITY allowScripts.label              "Allow webpages to:">
+<!ENTITY allowScripts.label              "Allow scripts to:">
 <!ENTITY allowWindowOpen.label           "Open unrequested windows">
-<!ENTITY allowTargetNew.label            "Open a link in a new window (requires restarting &brandShortName;)">
 <!ENTITY allowWindowMoveResize.label     "Move or resize existing windows">
 <!ENTITY allowWindowFlip.label           "Raise or lower windows">
 <!ENTITY allowWindowStatusChange.label   "Change status bar text">
