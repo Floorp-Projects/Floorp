@@ -104,6 +104,8 @@
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsIBookmarksService.h"
 #include "nsIXMLContent.h" //for createelementNS
+#include "nsHTMLParts.h" //for createelementNS
+
 
 #define DETECTOR_PROGID_MAX 127
 static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
@@ -1259,6 +1261,42 @@ nsHTMLDocument::FlushPendingNotifications()
   return result;
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::CreateElementNS(const nsString& aNamespaceURI,
+                               const nsString& aQualifiedName,
+                               nsIDOMElement** aReturn)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 namespaceID;
+  nodeInfo->GetNamespaceID(namespaceID);
+
+  nsCOMPtr<nsIContent> content;
+  if (namespaceID == kNameSpaceID_HTML) {
+    nsCOMPtr<nsIHTMLContent> htmlContent;
+
+    rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
+    content = do_QueryInterface(htmlContent);
+  }
+  else {
+    nsCOMPtr<nsIXMLContent> xmlContent;
+    rv = NS_NewXMLElement(getter_AddRefs(xmlContent), nodeInfo);
+    content = do_QueryInterface(xmlContent);
+  }
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  content->SetContentID(mNextContentID++);
+
+  return content->QueryInterface(kIDOMElementIID, (void**)aReturn);
+}
+
+
 //
 // nsIDOMDocument interface implementation
 //
@@ -2193,41 +2231,6 @@ nsHTMLDocument::ImportNode(nsIDOMNode* aImportedNode,
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::CreateElementNS(const nsString& aNamespaceURI,
-                               const nsString& aQualifiedName,
-                               nsIDOMElement** aReturn)
-{
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
-                                     *getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 namespaceID;
-  nodeInfo->GetNamespaceID(namespaceID);
-
-  nsIContent* content;
-  if (namespaceID == kNameSpaceID_HTML) {
-    nsIHTMLContent* htmlContent;
-
-    rv = NS_CreateHTMLElement(&htmlContent, nodeInfo);
-    content = (nsIContent*)htmlContent;
-  }
-  else {
-    nsIXMLContent* xmlContent;
-    rv = NS_NewXMLElement(&xmlContent, nodeInfo);
-    content = NS_STATIC_CAST(nsIXMLContent *, xmlContent);
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  content->SetContentID(mNextContentID++);
-
-  return content->QueryInterface(kIDOMElementIID, (void**)aReturn);
 }
 
 NS_IMETHODIMP
