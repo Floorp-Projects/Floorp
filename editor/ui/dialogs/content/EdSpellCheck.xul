@@ -22,8 +22,8 @@
    - Contributor(s): 
   -->
 
-<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
-<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?> 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorSpellCheck.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
@@ -47,7 +47,10 @@
   <broadcaster id="args" value=""/>
 
   <grid>
-    <columns><column/><column style="min-width 15em; width: 15em"/></columns>
+    <columns>
+      <column/>
+      <column style="min-width 15em; width: 15em"/>
+    </columns>
     <rows>
       <row valign="middle" autostretch="never">
         <text class="label" id="MisspelledWordLabel" value="&misspelledWord.label;"/>
@@ -64,30 +67,52 @@
     </rows>
   </grid>
   <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
-  <grid>
-    <columns><column style="width: 15em;"/><column style="width: 15em; max-width: 15em"/></columns>
+  <grid flex="1">
+    <columns>
+      <column flex="1"/>
+      <column flex="1"/>
+    </columns>
     <rows>
-      <row>
+      <row flex="1">
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
         <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()">
-          <treecolgroup><treecol flex="1"/></treecolgroup>
+          <treecolgroup>
+            <treecol flex="1"/>
+          </treecolgroup>
         </tree>
         <grid flex="1">
-          <columns><column style="min-width: 8em"/><column style="min-width: 8em"/></columns>
+          <columns>
+            <column flex="1"/>
+            <column flex="1"/>
+          </columns>
           <rows>
             <row>
-              <button class="dialog" id="Ignore" oncommand="Ignore()" label="&ignoreButton.label;"/>
-              <button class="dialog" id="IgnoreAll" oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
+              <box>
+                <button class="dialog" id="Ignore" oncommand="Ignore()" label="&ignoreButton.label;"/>
+              </box>
+              <box>
+                <button class="dialog" id="IgnoreAll" oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
+              </box>
             </row>
             <row>
+              <box>
               <button class="dialog" id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
+              </box>
+              <box>
               <button class="dialog" id="ReplaceAll" oncommand="ReplaceAll()" label="&changeAllButton.label;"/>
+              </box>
             </row>
+           
             <spring class="bigspacer"/>
             <text class="label" value="&userDictionary.label;"/>
+           
             <row>
-              <button class="dialog" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;"/>
+              <box>
+                <button class="dialog" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;"/>
+              </box>
+              <box>
               <button class="dialog" id="EditDictionary"  oncommand="EditDictionary()" label="&editUserDictionaryButton.label;"/>
+              </box>
             </row>
           </rows> 
         </grid>
@@ -98,10 +123,14 @@
       </row>
       <row>
         <menulist id="LanguageMenulist" oncommand="SelectLanguage()"/>
-          <!-- contents are appended by JS -->
+         <!-- contents are appended by JS -->
         <box flex="1">
-          <button class="dialog" id="Recheck" flex="1" label="&recheckButton.label;" oncommand="Recheck()"/>
-          <button class="dialog" id="Close"   flex="1" label="&closeButton.label;"   oncommand="onClose()"/>
+          <box>
+            <button class="dialog" id="Recheck" flex="1" label="&recheckButton.label;" oncommand="Recheck()"/>
+          </box>
+          <box>
+            <button class="dialog" id="Close"   flex="1" label="&closeButton.label;"   oncommand="onClose()"/>
+          </box>
         </box>
       </row>
     </rows>
