@@ -203,6 +203,7 @@ protected:
   nsString mMethodName;
   nsCOMPtr<nsIWSDLOperation> mOperation;
   nsCOMPtr<nsISOAPCallCompletion> mCompletion;
+  nsCOMPtr<nsISOAPResponse> mResponse;
   nsresult mStatus;
   nsCOMPtr<nsIException> mException;
   nsCOMPtr<nsISupports> mAsyncListener;
