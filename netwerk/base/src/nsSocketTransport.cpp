@@ -158,7 +158,7 @@ nsSocketTransport::nsSocketTransport():
   // Set up Internet defaults...
   //
   memset(&mNetAddress, 0, sizeof(mNetAddress));
-  PR_InitializeNetAddr(PR_IpAddrNull, 0, &mNetAddress);
+  PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &mNetAddress);
 
   //
   // Initialize the global connect timeout value if necessary...
@@ -631,14 +631,14 @@ nsresult nsSocketTransport::doResolveHost(void)
   //
   // The hostname has not been resolved yet...
   //
-  if (! mNetAddress.inet.ip) {
+  if (PR_IsNetAddrType(&mNetAddress, PR_IpAddrAny)) {
     //
     // Initialize the port used for the connection...
     //
     // XXX: The list of ports must be restricted - see net_bad_ports_table[] in 
     //      mozilla/network/main/mkconect.c
     //
-    mNetAddress.inet.port = PR_htons(mPort);
+    mNetAddress.ipv6.port = PR_htons(mPort);
 
     NS_WITH_SERVICE(nsIDNSService,
                     pDNSService,
@@ -663,7 +663,7 @@ nsresult nsSocketTransport::doResolveHost(void)
       //
       // The DNS lookup has finished...  It has either failed or succeeded.
       //
-      if (NS_FAILED(mStatus) || mNetAddress.inet.ip) {
+      if (NS_FAILED(mStatus) || !PR_IsNetAddrType(&mNetAddress, PR_IpAddrAny)) {
         mDNSRequest = null_nsCOMPtr();
         rv = mStatus;
       } 
@@ -721,7 +721,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
     //
     if (!mSocketType) 
     {
-      mSocketFD = PR_NewTCPSocket();
+      mSocketFD = PR_OpenTCPSocket(PR_AF_INET6);
     }
     else 
     {
@@ -1579,21 +1579,26 @@ nsSocketTransport::OnFound(nsISupports *aContext,
   // Enter the socket transport lock...
   nsAutoMonitor mon(mMonitor);
   nsresult rv = NS_OK;
+#ifdef PR_LOGGING
+  char addrbuf[50];
+#endif
 
   if (aHostEnt->hostEnt.h_addr_list
       && aHostEnt->hostEnt.h_addr_list[0]) {
-    memcpy(&mNetAddress.inet.ip, aHostEnt->hostEnt.h_addr_list[0], 
-           sizeof(mNetAddress.inet.ip));
-
+      if (aHostEnt->hostEnt.h_addrtype == PR_AF_INET6) {
+          memcpy(&mNetAddress.ipv6.ip, aHostEnt->hostEnt.h_addr_list[0], sizeof(mNetAddress.ipv6.ip));
+      } else {
+          PR_ConvertIPv4AddrToIPv6(*(PRUint32*)aHostEnt->hostEnt.h_addr_list[0], &mNetAddress.ipv6.ip);
+    }
+#ifdef PR_LOGGING
+    PR_NetAddrToString(&mNetAddress, addrbuf, sizeof(addrbuf));
     PR_LOG(gSocketLog, PR_LOG_DEBUG, 
            ("nsSocketTransport::OnFound(...) [%s:%d %x]."
-            "  DNS lookup succeeded => %s (%d.%d.%d.%d)\n", 
+            "  DNS lookup succeeded => %s (%s)\n",
             mHostName, mPort, this,
             aHostEnt->hostEnt.h_name,
-            mNetAddress.inet.ip & 0xff,
-            (mNetAddress.inet.ip >> 8) & 0xff,
-            (mNetAddress.inet.ip >> 16) & 0xff,
-            (mNetAddress.inet.ip >> 24) & 0xff));
+            addrbuf));
+#endif
   } else {
     // XXX: What should happen here?  The GetHostByName(...) succeeded but 
     //      there are *no* A records...

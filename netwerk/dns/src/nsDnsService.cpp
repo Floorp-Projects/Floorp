@@ -423,11 +423,11 @@ nsDNSLookup::FinishHostEntry(void)
     
     // copy name
     len = nsCRT::strlen(mInetHostInfo.hostInfo.name);
-    mHostEntry.hostEnt.h_name = BufAlloc(len, &mHostEntry.bufPtr, &mHostEntry.bufLen, 0);
+    mHostEntry.hostEnt.h_name = BufAlloc(len + 1, &mHostEntry.bufPtr, &mHostEntry.bufLen, 0);
     NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_name,"nsHostEnt buffer full.");
     if (mHostEntry.hostEnt.h_name == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsCRT::memcpy(mHostEntry.hostEnt.h_name, mInetHostInfo.hostInfo.name, len);
+    nsCRT::memcpy(mHostEntry.hostEnt.h_name, mInetHostInfo.hostInfo.name, len + 1);
     
     // set aliases to nsnull
     mHostEntry.hostEnt.h_aliases = (char **)BufAlloc(sizeof(char *), &mHostEntry.bufPtr, &mHostEntry.bufLen, sizeof(char *));
@@ -437,13 +437,14 @@ nsDNSLookup::FinishHostEntry(void)
     *mHostEntry.hostEnt.h_aliases = nsnull;
     
     // fill in address type
-    mHostEntry.hostEnt.h_addrtype = AF_INET;
+    mHostEntry.hostEnt.h_addrtype = PR_AF_INET6;
     
     // set address length
-    mHostEntry.hostEnt.h_length = sizeof(long);
+    mHostEntry.hostEnt.h_length = sizeof(PRIPv6Addr);
     
     // count addresses and allocate storage for the pointers
-    for (count = 1; count < kMaxHostAddrs && mInetHostInfo.hostInfo.addrs[count] != nsnull; count++){;}
+    for (count = 0; count < kMaxHostAddrs && mInetHostInfo.hostInfo.addrs[count] != nsnull; count++){;}
+    count++; // for terminating null address
     mHostEntry.hostEnt.h_addr_list = (char **)BufAlloc(count * sizeof(char *), &mHostEntry.bufPtr, &mHostEntry.bufLen, sizeof(char *));
     NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_addr_list,"nsHostEnt buffer full.");
     if (mHostEntry.hostEnt.h_addr_list == nsnull)
@@ -455,10 +456,14 @@ nsDNSLookup::FinishHostEntry(void)
     {
         mHostEntry.hostEnt.h_addr_list[i] = BufAlloc(len, &mHostEntry.bufPtr, &mHostEntry.bufLen, len);
         NS_ASSERTION(nsnull != mHostEntry.hostEnt.h_addr_list[i],"nsHostEnt buffer full.");
-        if (mHostEntry.hostEnt.h_addr_list[i] == nsnull)
+        if (mHostEntry.hostEnt.h_addr_list[i] == nsnull) {
+        	if (i > 0) break;  // if we have at least one address, then don't fail completely
             return NS_ERROR_OUT_OF_MEMORY;
-        *(InetHost *)mHostEntry.hostEnt.h_addr_list[i] = mInetHostInfo.hostInfo.addrs[i];
+        }
+        PR_ConvertIPv4AddrToIPv6(mInetHostInfo.hostInfo.addrs[i],
+                                 (PRIPv6Addr *)mHostEntry.hostEnt.h_addr_list[i]);
     }
+    mHostEntry.hostEnt.h_addr_list[i] = nsnull;
 
     return NS_OK;
 }
@@ -478,24 +483,31 @@ nsresult
 nsDNSLookup::InitiateLookup(void)
 {
     nsresult rv = NS_OK;
-//    nsAutoCMonitor mon(this);	// XXX don't think we need this
 	
     PRStatus status = PR_SUCCESS;
-
+    
     PRBool numeric = PR_TRUE;
+    PRBool hex = PR_TRUE;
+    PRBool colon = PR_FALSE;
     for (const char *hostCheck = mHostName; *hostCheck; hostCheck++) {
         if (!nsCRT::IsAsciiDigit(*hostCheck) && (*hostCheck != '.') ) {
             numeric = PR_FALSE;
-            break;
+            if (*hostCheck == ':') {
+                colon = PR_TRUE;
+            } else if ((*hostCheck < 'A') && (*hostCheck > 'F') &&
+                       (*hostCheck < 'a') && (*hostCheck > 'f')) {
+                hex = PR_FALSE;
+                break;
+            }
         }
     }
 
-    if (numeric) {
-        // If it is numeric then try to convert it into an IP-Address
-        PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
+    if (numeric || (colon && hex)) {
+        // presume it is numeric and try to converting to an IP-Address
+        PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));    
         if (!netAddr) return NS_ERROR_OUT_OF_MEMORY;
 
-        status = PR_StringToNetAddr(mHostName, netAddr);
+        status = PR_StringToNetAddr(mHostName, netAddr);;
         if (PR_SUCCESS == status) {
             // slam the IP in and move on.
             mHostEntry.bufLen = PR_NETDB_BUF_SIZE;
@@ -511,10 +523,10 @@ nsDNSLookup::InitiateLookup(void)
                                                             (char**)&mHostEntry.bufPtr,
                                                             &mHostEntry.bufLen,
                                                             sizeof(char **));
-            mHostEntry.hostEnt.h_aliases[0] = '\0';
+            mHostEntry.hostEnt.h_aliases[0] = nsnull;
 
-            mHostEntry.hostEnt.h_addrtype = 2;
-            mHostEntry.hostEnt.h_length = 4;
+            mHostEntry.hostEnt.h_addrtype = PR_AF_INET6;
+            mHostEntry.hostEnt.h_length = sizeof(PRIPv6Addr);
             mHostEntry.hostEnt.h_addr_list = (char**)BufAlloc(2 * sizeof(char*),
                                                               (char**)&mHostEntry.bufPtr,
                                                               &mHostEntry.bufLen,
@@ -523,16 +535,20 @@ nsDNSLookup::InitiateLookup(void)
                                                                 (char**)&mHostEntry.bufPtr,
                                                                 &mHostEntry.bufLen,
                                                                 0);
-            memcpy(mHostEntry.hostEnt.h_addr_list[0], &netAddr->inet.ip, mHostEntry.hostEnt.h_length);
-            mHostEntry.hostEnt.h_addr_list[1] = '\0';
+            if (PR_NetAddrFamily(netAddr) == PR_AF_INET6) {
+                memcpy(mHostEntry.hostEnt.h_addr_list[0], &netAddr->ipv6.ip, mHostEntry.hostEnt.h_length);
+            } else {
+                PR_ConvertIPv4AddrToIPv6(netAddr->inet.ip,
+                                         (PRIPv6Addr *)mHostEntry.hostEnt.h_addr_list[0]);
+            }
+            mHostEntry.hostEnt.h_addr_list[1] = nsnull;
 
             rv = CompletedLookup(NS_OK);
         }
         nsAllocator::Free(netAddr);
-		if(PR_SUCCESS == status) 
-			return rv;
+        if(PR_SUCCESS == status) // it WAS numeric, we're done.
+            return rv;
     }
-
     // Incomming hostname is not a numeric ip address. Need to do the actual
     // dns lookup.
 
@@ -569,8 +585,12 @@ nsDNSLookup::InitiateLookup(void)
 
 #ifdef XP_UNIX
     // temporary SYNC version
-    status = PR_GetHostByName(mHostName, mHostEntry.buffer, PR_NETDB_BUF_SIZE, &(mHostEntry.hostEnt));
-    if (PR_SUCCESS != status) rv = NS_ERROR_UNKNOWN_HOST;
+    status = PR_GetIPNodeByName(mHostName, 
+                                PR_AF_INET6,
+                                PR_AI_DEFAULT,
+                                mHostEntry.buffer, 
+                                PR_NETDB_BUF_SIZE, 
+                                &(mHostEntry.hostEnt));    if (PR_SUCCESS != status) rv = NS_ERROR_UNKNOWN_HOST;
 
     return CompletedLookup(rv);
 #endif /* XP_UNIX */
