@@ -244,6 +244,17 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
   PRUint32 vis_end_min   = GetTimeContext()->GetLastVisibleTime(nsCalPeriodFormat_kHour) * 60 + GetTimeContext()->GetLastVisibleTime(nsCalPeriodFormat_kMinute);
   PRFloat64 div_ratio =  ((PRFloat64)(1)) / (PRFloat64)(vis_end_min - vis_start_min) ;
 
+  /* 
+   * set the font... 
+   */
+  aRenderingContext.PushState();
+  nsFont font(/* m_sFontName*/ "Arial", NS_FONT_STYLE_NORMAL,
+		    NS_FONT_VARIANT_NORMAL,
+		    NS_FONT_WEIGHT_BOLD,
+		    0,
+		    10);
+  aRenderingContext.SetFont(font) ;
+
   /*
    * XXX. This whole algorithm must be changed. We need to grab all
    *      the events first, determine how many overlap. Then determine
@@ -394,6 +405,7 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
       }
     }
   }
+  aRenderingContext.PopState();
             
   delete evtVctr;
 

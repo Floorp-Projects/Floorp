@@ -1721,7 +1721,7 @@ void nsCalMonthContextController::GetFontInfo(
 
         nsIRenderingContext * ctx = mRenderingContext;
 
-	    nsFont font("Times", NS_FONT_STYLE_NORMAL,
+	    nsFont font(m_sFontName, NS_FONT_STYLE_NORMAL,
 		        NS_FONT_VARIANT_NORMAL,
 		        NS_FONT_WEIGHT_NORMAL,
 		        0,

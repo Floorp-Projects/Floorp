@@ -103,6 +103,14 @@ nsresult nsCalTimebarScale::PaintInterval(nsIRenderingContext& aRenderingContext
 {
   int i;
 
+  aRenderingContext.PushState();
+  nsFont font(/* m_sFontName*/ "Arial", NS_FONT_STYLE_NORMAL,
+		    NS_FONT_VARIANT_NORMAL,
+		    NS_FONT_WEIGHT_BOLD,
+		    0,
+		    12);
+  aRenderingContext.SetFont(font) ;
+
   /*
    * Paint this interval in it's entirety
    */
@@ -156,6 +164,7 @@ nsresult nsCalTimebarScale::PaintInterval(nsIRenderingContext& aRenderingContext
 
   DrawTime(aRenderingContext, rect, aIndex);
 
+  aRenderingContext.PopState();
   return NS_OK ;
 }
 

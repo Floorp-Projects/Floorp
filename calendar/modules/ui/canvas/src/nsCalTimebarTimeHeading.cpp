@@ -89,6 +89,17 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsIRenderingContext& aR
 
   GetTimeContext()->GetDTFirstVisible()->strftime(pattern, &string);
 
+  /* 
+   * set the font... 
+   */
+  aRenderingContext.PushState();
+  nsFont font(/* m_sFontName*/ "Arial", NS_FONT_STYLE_NORMAL,
+		    NS_FONT_VARIANT_NORMAL,
+		    NS_FONT_WEIGHT_BOLD,
+		    0,
+		    12);
+  aRenderingContext.SetFont(font) ;
+
   /*
    * compute the Metrics for the string
    */
@@ -117,6 +128,8 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsIRenderingContext& aR
 
   aRenderingContext.SetColor(GetForegroundColor());
   aRenderingContext.DrawString(*string,nsCRT::strlen(*string),x,y,0);
+
+  aRenderingContext.PopState();
 
   return nsEventStatus_eConsumeNoDefault;  
 }
