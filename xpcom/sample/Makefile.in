@@ -39,6 +39,29 @@ CPPSRCS		=		   \
 
 XPIDLSRCS	= nsISample.idl
 
+TESTCPPSRCS = nsTestSample.cpp
+SIMPLE_PROGRAMS	= $(TESTCPPSRCS:.cpp=$(BIN_SUFFIX))
+
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_ARCH)$(OS_TEST),NetBSDarm32)
+NO_LD_ARCHIVE_FLAGS := 1
+endif
+
+ifdef NO_LD_ARCHIVE_FLAGS
+LOST_SYM_LIBS	= -lxpcomds_s -lxpcomio_s -lxptinfo -lmozreg_s
+endif
+
+LIBS		+= \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+# Needed to resolve __yylex (?)
+ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
+LIBS		+= -lpcap
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
