@@ -73,7 +73,7 @@ function Startup()
     if (GetCurrentEditor())
     {
       window.title = GetString(ColorType+"Color");
-      if (ColorType == "Page" && IsCSSPrefChecked && isHTMLEditor())
+      if (ColorType == "Page" && IsCSSPrefChecked && IsHTMLEditor())
         window.title = GetString("BlockColor");
     }
   }

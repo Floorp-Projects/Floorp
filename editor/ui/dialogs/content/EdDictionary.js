@@ -26,12 +26,15 @@ var gWordToAdd;
 
 function Startup()
 {
-  if (!InitEditorShell())
+  if (!GetCurrentEditor())
+  {
+    window.close();
     return;
-  dump("EditoreditorShell found for dialog\n");
-
+  }
   // Get the SpellChecker shell
-  gSpellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
+  if ("gSpellChecker" in window.opener && window.opener.gSpellChecker)
+    gSpellChecker = window.opener.gSpellChecker;
+
   if (!gSpellChecker)
   {
     dump("SpellChecker not found!!!\n");

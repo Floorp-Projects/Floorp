@@ -29,7 +29,7 @@ var gActiveEditor;
 // dialog initialization code
 function Startup()
 {
-  gActiveEditor = GetCurrentEditor();
+  gActiveEditor = GetCurrentTableEditor();
   if (!gActiveEditor)
   {
     dump("Failed to get active editor!\n");
@@ -57,7 +57,7 @@ function Startup()
   // Make a copy to use for AdvancedEdit
   globalElement = gTableElement.cloneNode(false);
   try {
-    if (GetPrefs().getBoolPref("editor.use_css") && isHTMLEditor()
+    if (GetPrefs().getBoolPref("editor.use_css") && IsHTMLEditor()
         && !(gActiveEditor.flags & Components.interfaces.nsIPlaintextEditor.eEditorMailMask))
     {
       // only for Composer and not for htmlmail
