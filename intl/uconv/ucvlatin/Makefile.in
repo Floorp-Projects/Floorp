@@ -64,6 +64,7 @@ CPPSRCS		= \
                   nsVISCIIToUnicode.cpp           \
                   nsVPSToUnicode.cpp              \
                   nsUTF8ToUnicode.cpp \
+                  nsMUTF7ToUnicode.cpp \
                   nsUnicodeToISO88591.cpp \
                   nsUnicodeToISO88592.cpp \
                   nsUnicodeToISO88593.cpp \
@@ -99,6 +100,7 @@ CPPSRCS		= \
                   nsUnicodeToVISCII.cpp           \
                   nsUnicodeToVPS.cpp              \
                   nsUnicodeToUTF8.cpp \
+                  nsUnicodeToMUTF7.cpp \
                   ns1ByteToUnicodeBase.cpp \
 		  nsUCvLatinSupport.cpp \
                   nsUCvLatinDll.cpp \
