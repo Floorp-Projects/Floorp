@@ -42,7 +42,6 @@
 #include "nsIHTMLContent.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
-#include "nsIDOMHTMLParagraphElement.h"
 
 // XXX temporary for :first-letter support
 #include "nsITextContent.h"
@@ -964,7 +963,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       aMetrics.width = borderPadding.left + aReflowState.computedWidth +
         borderPadding.right;
       // XXX quote css1 section here
-      if (aMetrics.width < minWidth) {
+      if ((0 == aReflowState.computedWidth) && (aMetrics.width < minWidth)) {
         aMetrics.width = minWidth;
       }
 
@@ -1364,11 +1363,7 @@ nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
     const nsStyleSpacing* spacing;
     frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
     // XXX use a reflow-state to do the necessary computations for blocks
-#if XXX_fix_me
-    nsBlockReflowContext::ComputeMarginsFor(aState.mPresContext, frame,
-                                            spacing, aState.mReflowState,
-                                            childMargins);
-#endif
+    // XXX_fix_me
   }
 
   aState.mPrevBottomMargin = 0;
@@ -4805,21 +4800,12 @@ nsBlockFrame::Init(nsIPresContext&  aPresContext,
     SetFlags(blockFrame->mFlags);
   }
 
-  // See if the content is an html paragraph to support some html
-  // compatability code.
-  if (nsnull != aContent) {
-    static NS_DEFINE_IID(kIDOMHTMLParagraphElementIID, NS_IDOMHTMLPARAGRAPHELEMENT_IID);
-    nsIDOMHTMLParagraphElement* p;
-    nsresult rv = aContent->QueryInterface(kIDOMHTMLParagraphElementIID,
-                                           (void**) &p);
-    if (NS_SUCCEEDED(rv) && p) {
-      mState |= NS_BLOCK_IS_HTML_PARAGRAPH;
-      NS_RELEASE(p);
-    }
+  nsresult rv = nsBlockFrameSuper::Init(aPresContext, aContent, aParent,
+                                        aContext, aPrevInFlow);
+  if (nsBlockReflowContext::IsHTMLParagraph(this)) {
+    mState |= NS_BLOCK_IS_HTML_PARAGRAPH;
   }
-  
-  return nsBlockFrameSuper::Init(aPresContext, aContent, aParent,
-                                 aContext, aPrevInFlow);
+  return rv;
 }
 
 NS_IMETHODIMP
