@@ -1657,8 +1657,8 @@ PRBool HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure)
   return PR_TRUE;
 }
 
-PRBool HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure);
-PRBool HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure)
+PRBool PR_CALLBACK HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure);
+PRBool PR_CALLBACK HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure)
 {
   PRUint32 nCount = 0;
 
