@@ -22,6 +22,7 @@
 #include "nsProperties.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -34,11 +35,19 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
 
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kPropertiesCID, NULL, NULL,
                                   path, PR_TRUE, PR_TRUE);
+
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -47,10 +56,18 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
 
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterFactory(kPropertiesCID, path);
+
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
