@@ -18,7 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
- *                 Warren Harris <warren@netscape.com>
+ *		   Warren Harris <warren@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -54,7 +54,7 @@ static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
 static NS_DEFINE_IID(kILoadGroupIID, NS_ILOADGROUP_IID);
 static NS_DEFINE_IID(kIProgressEventSink, NS_IPROGRESSEVENTSINK_IID);
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,    
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
                               nsILDAPMessageListener);
 
 nsLDAPChannel::nsLDAPChannel()
@@ -64,9 +64,6 @@ nsLDAPChannel::nsLDAPChannel()
 
 nsLDAPChannel::~nsLDAPChannel()
 {
-    if (mCurrentOperationMonitor) {
-        PR_DestroyMonitor(mCurrentOperationMonitor);
-    }
 }
 
 // initialize the channel
@@ -124,14 +121,7 @@ nsLDAPChannel::Init(nsIURI *uri)
         return NS_ERROR_FAILURE;
     }
 
-#else   
-    mCurrentOperationMonitor = PR_NewMonitor();
-    if (!mCurrentOperationMonitor) {
-        NS_ERROR("nsLDAPChannel::Init(): could not create "
-                 "mCurrentOperationMonitor");
-        return NS_ERROR_FAILURE;
-    }
-
+#else 	
     mCallback = this;
 #endif
     
@@ -185,10 +175,13 @@ nsLDAPChannel::Cancel(nsresult aStatus)
 {
     nsresult rv;
 
-    // if there is an operation running, abandon it and remove it from the 
-    // queue.  this will cause all cleanup to be done from the other thread
+    // set the status
     //
-    PR_EnterMonitor(mCurrentOperationMonitor);
+    mStatus = aStatus;
+
+    // if there is an operation running, abandon it and remove it from the 
+    // queue
+    //
     if (mCurrentOperation) {
 
         // if this fails in a non-debug build, there's not much we can do
@@ -201,14 +194,7 @@ nsLDAPChannel::Cancel(nsresult aStatus)
         // 
         mCurrentOperation = 0;
 
-        // XXXdmose wait on a cond var here if we need to be sure that
-        // cancel has finished before returning
-
-    } else {
-
-    // set the status
-    //
-    mStatus = aStatus;
+    }
 
     // if the read pipe exists and hasn't already been closed, close it
     //
@@ -228,21 +214,16 @@ nsLDAPChannel::Cancel(nsresult aStatus)
     if (mLoadGroup) {
         rv = mLoadGroup->RemoveChannel(this, mResponseContext, aStatus,
                                        nsnull);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
-                     "mLoadGroup->RemoveChannel() failed");
+        if (NS_FAILED(rv)) 
+            return rv;
     }
 
     // call listener's onstoprequest
     //
     if (mUnproxiedListener) {
         rv = mListener->OnStopRequest(this, mResponseContext, aStatus, nsnull);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
-                     "mListener->OnStopRequest() failed");
-    } 
-
-    return NS_OK;
-
-        // XXX cleanup on this thread
+        if (NS_FAILED(rv)) 
+            return rv;
     }
 
     return NS_OK;
@@ -760,7 +741,7 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     } 
 
     // get an AsyncStreamListener to proxy for mListener, if we're
-    // compiled to have the LDAP callbacnks happen on the LDAP connection=
+    // compiled to have the LDAP callbacks happen on the LDAP connection=
     // thread.
     //
 #if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
@@ -803,7 +784,7 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     }
 
     // create and initialize an LDAP operation (to be used for the bind)
-    //  
+    //	
     mCurrentOperation = do_CreateInstance(
         "@mozilla.org/network/ldap-operation;1", &rv);
     if (NS_FAILED(rv)) {
@@ -870,13 +851,6 @@ nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage)
         return NS_ERROR_UNEXPECTED;
     }
 
-    // XXXdmose - we may want a small state machine either here or
-    // or in the nsLDAPConnection object, to make sure that things are 
-    // happening in the right order and timing out appropriately.  this will
-    // certainly depend on how timeouts are implemented, and if binding
-    // gets subsumed into the nsLDAPConnection object as part of making
-    // connections shared.
-    // 
     switch (messageType) {
 
     case LDAP_RES_BIND:
@@ -896,7 +870,7 @@ nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage)
     case LDAP_RES_SEARCH_RESULT:
 
         // the search is finished; we're all done
-        //  
+        //	
         return OnLDAPSearchResult(aMessage);
         break;
 
@@ -936,11 +910,11 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     nsresult rv;
 
     // XXX should call ldap_parse_result() here
-    //
-    mCurrentOperation = 0;  // done with bind op; make nsCOMPtr release it
+
+    mCurrentOperation = 0;	// done with bind op; make nsCOMPtr release it
 
     // create and initialize an LDAP operation (to be used for the search
-    //  
+    //	
     mCurrentOperation = do_CreateInstance(
         "@mozilla.org/network/ldap-operation;1", &rv);
     if (NS_FAILED(rv)) {
@@ -995,7 +969,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
 nsresult
 nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
 {
-    PRInt32 errorCode;  // the LDAP error code
+    PRInt32 errorCode;	// the LDAP error code
     nsresult rv;
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("result returned\n"));
@@ -1008,7 +982,6 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
         PR_fprintf(PR_STDERR, " %s\n", ldap_err2string(errorCode));
 #endif
         return NS_ERROR_FAILURE;
-
     }
 
     // we're done with the current operation.  cause nsCOMPtr to Release() it
@@ -1105,7 +1078,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         if (NS_FAILED(rv)) {
             NS_WARNING("nsLDAPChannel:OnLDAPSearchEntry(): "
                        "aMessage->GetValues() failed\n");
-            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(attrCount, attrs);
+            NSLDAP_FREE_XPIDL_ARRAY(attrCount, attrs, nsMemory::Free);
             return rv;;
         }
 
@@ -1117,10 +1090,10 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
             entry.Append(vals[j]);
             entry.Append("\n");
         }
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(valueCount, vals);
+        NSLDAP_FREE_XPIDL_ARRAY(valueCount, vals, nsMemory::Free);
 
     }
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(attrCount, attrs);
+    NSLDAP_FREE_XPIDL_ARRAY(attrCount, attrs, nsMemory::Free);
 
     // XXXdmose better error handling
     //
@@ -1158,53 +1131,6 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     mReadPipeOffset += entryLength;
-
-    return NS_OK;
-}
-
-/**
- * Called from the LDAP Connection thread to cleanup resources used in the 
- * OnLDAP*Message functions.  For nsILDAPMessageListener interface.
- */
-NS_IMETHODIMP 
-nsLDAPChannel::OnLDAPOperationRemoval()
-{
-    nsresult rv;
-
-    // set the status
-    //
-    nsresult aStatus;
-    mStatus = aStatus;
-
-    // if the read pipe exists and hasn't already been closed, close it
-    //
-    if (mReadPipeOut != 0 && !mReadPipeClosed) {
-        
-        // XXX set mReadPipeClosed?
-
-        // if this fails in a non-debug build, there's not much we can do
-        //
-        rv = mReadPipeOut->Close();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
-                     "mReadPipeOut->Close() failed");
-    }
-
-    // remove self from loadgroup to stop the throbber
-    //
-    if (mLoadGroup) {
-        rv = mLoadGroup->RemoveChannel(this, mResponseContext, aStatus,
-                                       nsnull);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
-                     "mLoadGroup->RemoveChannel() failed");
-    }
-
-    // call listener's onstoprequest
-    //
-    if (mUnproxiedListener) {
-        rv = mListener->OnStopRequest(this, mResponseContext, aStatus, nsnull);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
-                     "mListener->OnStopRequest() failed");
-    } 
 
     return NS_OK;
 }

@@ -106,7 +106,7 @@ protected:
   PRBool mReadPipeClosed; // has the pipe already been closed?
   nsCOMPtr<nsILDAPMessageListener> mCallback; // callback
   nsCOMPtr<nsIProgressEventSink> mEventSink; // fire status against this
-  PRMonitor *mCurrentOperationMonitor; // guard mCurrentOperation
+
 };
 
 #endif // nsLDAPChannel_h__
