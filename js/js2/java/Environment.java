@@ -3,7 +3,12 @@ import java.util.Hashtable;
 
 class Environment {
 
-    JSObject scope = new JSObject("globals");
+    JSObject scope = new JSObject("globals", null);
+
+    void enterNewScope(JSObject newScope)
+    {
+        
+    }
 
     String print()
     {
