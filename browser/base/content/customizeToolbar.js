@@ -59,7 +59,6 @@ function buildDialog()
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
   var paletteBox = document.getElementById("palette-box");
   var enclosure;
-
   // Create a new toolbar that will model the one the user is trying to customize.
   // We won't just cloneNode() because we want to wrap each element on the toolbar in a
   // <toolbarpaletteitem/>, to prevent them from getting events (so they aren't styled on
@@ -67,6 +66,7 @@ function buildDialog()
   var newToolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "toolbar");
   newToolbar.id = "cloneToolbar";
+  newToolbar.setAttribute("minheight", toolbar.boxObject.height);
 
   // Walk through and manually clone the children of the to-be-customized toolbar.
   // Make sure all buttons look enabled (and that textboxes are disabled).
@@ -204,8 +204,10 @@ var dropObserver = {
     enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
     cleanUpItemForAdding(paletteItem);
     enclosure.appendChild(paletteItem);
-
-    toolbar.insertBefore(enclosure, gCurrentDragOverItem);
+    if (gCurrentDragOverItem.id == "cloneToolbar")
+      toolbar.appendChild(enclosure);
+    else
+      toolbar.insertBefore(enclosure, gCurrentDragOverItem);
     gCurrentDragOverItem.removeAttribute("dragactive");
     gCurrentDragOverItem = null;
 
