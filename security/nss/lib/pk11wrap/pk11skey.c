@@ -158,7 +158,7 @@ pk11_ExitKeyMonitor(PK11SymKey *symKey) {
 static PK11SymKey *pk11SymKeyHead = NULL;
 static PK11SymKey *
 pk11_getKeyFromList(PK11SlotInfo *slot) {
-    PK11SymKey *symKey;
+    PK11SymKey *symKey = NULL;
 
 
     PK11_USE_THREADS(PR_Lock(slot->freeListLock);)
