@@ -73,13 +73,8 @@ JAVA_DEFINES		= -DJAR_NAME=\"$(JAR_NAME)\" -DJRTDLL=\"$(JRTDLL)\" -DMMDLL=\"$(MM
 JINT_FLAGS		= -ms8m
 
 # to run the compiler in the interpreter
-ifneq ($(JDKHOME),)
-JAVAC_PROG		= $(JDKHOME)/bin/javac $(JAVAC_FLAGS)
-JAVAC 			= $(JAVAC_PROG)
-else
 JAVAC_PROG		= $(JINT_FLAGS) $(PDJAVA_FLAGS) -classpath $(JAVAC_ZIP) sun.tools.javac.Main
 JAVAC			= $(JAVA_PROG) $(JAVAC_PROG) $(JAVAC_FLAGS)
-endif
 
 # std set of options passed to the compiler
 JAVAC_FLAGS		= -classpath $(JAVAC_CLASSPATH) $(JAVAC_OPTIMIZER) -d $(JAVA_DESTPATH)
