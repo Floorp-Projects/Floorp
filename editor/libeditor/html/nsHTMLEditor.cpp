@@ -3167,171 +3167,6 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   return bodyElement->SetAttribute(styleName, styleValue);
 }
 
-// 
-// HTML PasteAsQuotation: Paste in a blockquote type=cite
-//
-NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation()
-{
-  nsAutoString citation("");
-  return PasteAsCitedQuotation(citation);
-}
-
-NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
-{
-  nsAutoEditBatch beginBatching(this);
-  nsCOMPtr<nsIDOMNode> newNode;
-  nsAutoString tag("blockquote");
-  nsresult res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
-  if (NS_FAILED(res)) return res;
-  if (!newNode) return NS_ERROR_NULL_POINTER;
-
-  // Try to set type=cite.  Ignore it if this fails.
-  nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
-  if (newElement)
-  {
-    nsAutoString type ("type");
-    nsAutoString cite ("cite");
-    newElement->SetAttribute(type, cite);
-  }
-
-  // Set the selection to the underneath the node we just inserted:
-  nsCOMPtr<nsIDOMSelection> selection;
-  res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res) || !selection)
-  {
-#ifdef DEBUG_akkana
-    printf("Can't get selection!");
-#endif
-  }
-  if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_NULL_POINTER;
-
-  res = selection->Collapse(newNode, 0);
-  if (NS_FAILED(res))
-  {
-#ifdef DEBUG_akkana
-    printf("Couldn't collapse");
-#endif
-    // XXX: error result:  should res be returned here?
-  }
-
-  res = Paste();
-  return res;
-}
-
-//
-// Paste a plaintext quotation
-//
-NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
-{
-  // Get Clipboard Service
-  nsresult rv;
-  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // Create generic Transferable for getting the data
-  nsCOMPtr<nsITransferable> trans;
-  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                          nsITransferable::GetIID(), 
-                                          (void**) getter_AddRefs(trans));
-  if (NS_SUCCEEDED(rv) && trans)
-  {
-    // We only handle plaintext pastes here
-    trans->AddDataFlavor(kTextMime);
-
-    // Get the Data from the clipboard
-    clipboard->GetData(trans);
-
-    // Now we ask the transferable for the data
-    // it still owns the data, we just have a pointer to it.
-    // If it can't support a "text" output of the data the call will fail
-    nsCOMPtr<nsISupports> genericDataObj;
-    PRUint32 len = 0;
-    rv = trans->GetTransferData(kTextMime, getter_AddRefs(genericDataObj), &len);
-    if (NS_SUCCEEDED(rv) && genericDataObj && len > 0)
-    {
-      nsCOMPtr<nsISupportsWString> dataObj ( do_QueryInterface(genericDataObj) );
-      if ( dataObj ) {
-        PRUnichar* textData = nsnull;
-        dataObj->ToString ( &textData );
-        nsAutoString text ( textData );
-        rv = InsertAsPlaintextQuotation(text);
-      }
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
-{
-  nsAutoString citation ("");
-  return InsertAsCitedQuotation(aQuotedText, citation);
-}
-
-// text insert.
-NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText)
-{
-  // Now we have the text.  Cite it appropriately:
-  nsCOMPtr<nsICiter> citer;
-  nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  char *citationType = 0;
-  rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
-                          
-  if (NS_SUCCEEDED(rv) && citationType[0])
-  {
-    if (!strncmp(citationType, "aol", 3))
-      citer = new nsAOLCiter;
-    else
-      citer = new nsInternetCiter;
-    PL_strfree(citationType);
-  }
-  else
-    citer = new nsInternetCiter;
-  
-  // Let the citer quote it for us:
-  nsString quotedStuff;
-  rv = citer->GetCiteString(aQuotedText, quotedStuff);
-  if (!NS_SUCCEEDED(rv))
-    return rv;
-
-  // Insert blank lines after the quoted text:
-  quotedStuff += "\n\n";
-
-  nsAutoEditBatch beginBatching(this);
-  return InsertText(quotedStuff);
-}
-
-NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
-                                                   const nsString& aCitation)
-{
-  nsAutoEditBatch beginBatching(this);
-  nsCOMPtr<nsIDOMNode> newNode;
-  nsAutoString tag("blockquote");
-  nsresult res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
-  if (NS_FAILED(res)) return res;
-  if (!newNode) return NS_ERROR_NULL_POINTER;
-
-  // Try to set type=cite.  Ignore it if this fails.
-  nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
-  if (newElement)
-  {
-    nsAutoString type ("type");
-    nsAutoString cite ("cite");
-    newElement->SetAttribute(type, cite);
-
-    if (aCitation.Length() > 0)
-      newElement->SetAttribute(cite, aCitation);
-  }
-
-  res = InsertHTML(aQuotedText);
-  return res;
-}
-
-
 NS_IMETHODIMP
 nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 {
@@ -3518,6 +3353,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
         trans->AddDataFlavor(kJPEGImageMime);
         trans->AddDataFlavor(kHTMLMime);
       }
+      trans->AddDataFlavor(kUnicodeMime);
       trans->AddDataFlavor(kTextMime);
 
       // Get the Data from the clipboard
@@ -3530,9 +3366,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
         {
           nsAutoString flavor ( bestFlavor );   // just so we can use flavor.Equals()
 #ifdef DEBUG_akkana
-          char* flav = flavor.ToNewCString();
-          printf("Got flavor [%s]\n", flav);
-          nsCRT::free(flav);
+          printf("Got flavor [%s]\n", bestFlavor);
 #endif
           if (flavor.Equals(kHTMLMime))
           {
@@ -3558,6 +3392,18 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
               rv = InsertText(stuffToPaste);
             }
           }
+          else if (flavor.Equals(kUnicodeMime))
+          {
+            nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+            if (textDataObj && len > 0)
+            {
+              PRUnichar* text = nsnull;
+              textDataObj->ToString ( &text );
+              stuffToPaste.SetString ( text, len / 2 );
+              nsAutoEditBatch beginBatching(this);
+              rv = InsertText(stuffToPaste);
+            }
+          }
           else if (flavor.Equals(kJPEGImageMime))
           {
             // Insert Image code here
@@ -3573,6 +3419,206 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
   }
 
   return rv;
+}
+
+// 
+// HTML PasteAsQuotation: Paste in a blockquote type=cite
+//
+NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation()
+{
+  if (mFlags & eEditorPlaintextMask)
+    return PasteAsPlaintextQuotation();
+
+  nsAutoString citation("");
+  return PasteAsCitedQuotation(citation);
+}
+
+NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
+{
+  nsAutoEditBatch beginBatching(this);
+  nsCOMPtr<nsIDOMNode> newNode;
+  nsAutoString tag("blockquote");
+  nsresult res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+  if (NS_FAILED(res)) return res;
+  if (!newNode) return NS_ERROR_NULL_POINTER;
+
+  // Try to set type=cite.  Ignore it if this fails.
+  nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
+  if (newElement)
+  {
+    nsAutoString type ("type");
+    nsAutoString cite ("cite");
+    newElement->SetAttribute(type, cite);
+  }
+
+  // Set the selection to the underneath the node we just inserted:
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res) || !selection)
+  {
+#ifdef DEBUG_akkana
+    printf("Can't get selection!");
+#endif
+  }
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  res = selection->Collapse(newNode, 0);
+  if (NS_FAILED(res))
+  {
+#ifdef DEBUG_akkana
+    printf("Couldn't collapse");
+#endif
+    // XXX: error result:  should res be returned here?
+  }
+
+  res = Paste();
+  return res;
+}
+
+//
+// Paste a plaintext quotation
+//
+NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
+{
+  // Get Clipboard Service
+  nsresult rv;
+  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // Create generic Transferable for getting the data
+  nsCOMPtr<nsITransferable> trans;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                          nsITransferable::GetIID(), 
+                                          (void**) getter_AddRefs(trans));
+  if (NS_SUCCEEDED(rv) && trans)
+  {
+    // We only handle plaintext pastes here
+    trans->AddDataFlavor(kUnicodeMime);
+    trans->AddDataFlavor(kTextMime);
+
+    // Get the Data from the clipboard
+    clipboard->GetData(trans);
+
+    // Now we ask the transferable for the data
+    // it still owns the data, we just have a pointer to it.
+    // If it can't support a "text" output of the data the call will fail
+    nsCOMPtr<nsISupports> genericDataObj;
+    PRUint32 len = 0;
+    char* flav = 0;
+    rv = trans->GetAnyTransferData(&flav, getter_AddRefs(genericDataObj),
+                                   &len);
+    if (NS_FAILED(rv))
+    {
+#ifdef DEBUG_akkana
+      printf("PasteAsPlaintextQuotation: GetAnyTransferData failed, %d\n", rv);
+#endif
+      return rv;
+    }
+#ifdef DEBUG_akkana
+    printf("Got flavor [%s]\n", flav);
+#endif
+    nsAutoString flavor(flav);
+    nsAutoString stuffToPaste;
+    if (flavor.Equals(kTextMime))
+    {
+      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
+      if (textDataObj && len > 0)
+      {
+        char* text = nsnull;
+        textDataObj->ToString ( &text );
+        stuffToPaste.SetString ( text, len );
+        nsAutoEditBatch beginBatching(this);
+        rv = InsertAsPlaintextQuotation(stuffToPaste);
+      }
+    }
+    else if (flavor.Equals(kUnicodeMime))
+    {
+      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      if (textDataObj && len > 0)
+      {
+        PRUnichar* text = nsnull;
+        textDataObj->ToString ( &text );
+        stuffToPaste.SetString ( text, len / 2 );
+        nsAutoEditBatch beginBatching(this);
+        rv = InsertAsPlaintextQuotation(stuffToPaste);
+      }
+    }
+    nsCRT::free(flav);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
+{
+  if (mFlags & eEditorPlaintextMask)
+    return InsertAsPlaintextQuotation(aQuotedText);
+
+  nsAutoString citation ("");
+  return InsertAsCitedQuotation(aQuotedText, citation);
+}
+
+// text insert.
+NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText)
+{
+  // Now we have the text.  Cite it appropriately:
+  nsCOMPtr<nsICiter> citer;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  char *citationType = 0;
+  rv = prefs->CopyCharPref("mail.compose.citationType", &citationType);
+                          
+  if (NS_SUCCEEDED(rv) && citationType[0])
+  {
+    if (!strncmp(citationType, "aol", 3))
+      citer = new nsAOLCiter;
+    else
+      citer = new nsInternetCiter;
+    PL_strfree(citationType);
+  }
+  else
+    citer = new nsInternetCiter;
+  
+  // Let the citer quote it for us:
+  nsString quotedStuff;
+  rv = citer->GetCiteString(aQuotedText, quotedStuff);
+  if (!NS_SUCCEEDED(rv))
+    return rv;
+
+  // Insert blank lines after the quoted text:
+  quotedStuff += "\n\n";
+
+  nsAutoEditBatch beginBatching(this);
+  return InsertText(quotedStuff);
+}
+
+NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
+                                                   const nsString& aCitation)
+{
+  nsAutoEditBatch beginBatching(this);
+  nsCOMPtr<nsIDOMNode> newNode;
+  nsAutoString tag("blockquote");
+  nsresult res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+  if (NS_FAILED(res)) return res;
+  if (!newNode) return NS_ERROR_NULL_POINTER;
+
+  // Try to set type=cite.  Ignore it if this fails.
+  nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
+  if (newElement)
+  {
+    nsAutoString type ("type");
+    nsAutoString cite ("cite");
+    newElement->SetAttribute(type, cite);
+
+    if (aCitation.Length() > 0)
+      newElement->SetAttribute(cite, aCitation);
+  }
+
+  res = InsertHTML(aQuotedText);
+  return res;
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
