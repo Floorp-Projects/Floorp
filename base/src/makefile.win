@@ -36,10 +36,11 @@ CPP_OBJS=.\$(OBJDIR)\nsArena.obj .\$(OBJDIR)\nsAtomTable.obj \
     .\$(OBJDIR)\nsVoidArray.obj 
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
-    nsBTree.h nsCRT.h nsDeque.h nsIInputStream.h nsITimer.h \
+    nsBTree.h nsCRT.h nsDeque.h nsITimer.h \
     nsITimerCallback.h nsIUnicharBuffer.h nsRBTree.h \
     nsIUnicharInputStream.h nsString.h nsVoidArray.h \
-    nsUnitConversion.h 
+    nsUnitConversion.h \
+    nsIBaseStream.h nsIInputStream.h nsIOutputStream.h
 
 MODULE=raptor 
 
