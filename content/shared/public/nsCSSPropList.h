@@ -43,6 +43,10 @@
 
 
 CSS_PROP(_moz_border_radius, VISUAL)
+CSS_PROP(_moz_border_radius_topLeft, VISUAL)
+CSS_PROP(_moz_border_radius_topRight, VISUAL)
+CSS_PROP(_moz_border_radius_bottomLeft, VISUAL)
+CSS_PROP(_moz_border_radius_bottomRight, VISUAL)
 CSS_PROP(azimuth, AURAL)
 CSS_PROP(background, VISUAL)
 CSS_PROP(background_attachment, VISUAL)

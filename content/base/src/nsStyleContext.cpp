@@ -566,7 +566,7 @@ void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* 
   mBorderColor[2] = NS_RGB(0, 0, 0);  
   mBorderColor[3] = NS_RGB(0, 0, 0); 
 
-  mBorderRadius.SetCoordValue(0);
+  mBorderRadius.Reset();
 
   mOutlineWidth = medium;
   mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;

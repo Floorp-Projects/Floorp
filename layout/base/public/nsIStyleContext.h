@@ -84,7 +84,8 @@ struct nsStyleSpacing: public nsStyleStruct {
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
   nsStyleSides  mBorder;          // [reset] length, enum (see nsStyleConsts.h)
 
-  nsStyleCoord  mBorderRadius;    // [reset] length, percent, inherit
+  nsStyleSides  mBorderRadius;    // [reset] length, percent, inherit
+  																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
   nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
 

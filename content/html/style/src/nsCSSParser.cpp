@@ -205,6 +205,7 @@ protected:
                          const nsCSSProperty aPropIDs[], PRInt32& aChangeHint);
   PRBool ParseBorderStyle(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBorderWidth(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
+  PRBool ParseBorderRadius(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseContent(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseCounterData(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
@@ -2632,6 +2633,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
     return ParseBorderSide(aErrorCode, aDeclaration, kBorderTopIDs, aChangeHint);
   case eCSSProperty_border_width:
     return ParseBorderWidth(aErrorCode, aDeclaration, aChangeHint);
+  case eCSSProperty__moz_border_radius:
+    return ParseBorderRadius(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_clip:
     return ParseClip(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_content:
@@ -2814,7 +2817,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_border_top_width:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKL,
                         nsCSSProps::kBorderWidthKTable);
-  case eCSSProperty__moz_border_radius:
+  case eCSSProperty__moz_border_radius_topLeft:
+  case eCSSProperty__moz_border_radius_topRight:
+  case eCSSProperty__moz_border_radius_bottomRight:
+  case eCSSProperty__moz_border_radius_bottomLeft:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
   case eCSSProperty_bottom:
   case eCSSProperty_top:
@@ -3290,6 +3296,12 @@ static const nsCSSProperty kBorderColorIDs[] = {
   eCSSProperty_border_bottom_color,
   eCSSProperty_border_left_color
 };
+static const nsCSSProperty kBorderRadiusIDs[] = {
+  eCSSProperty__moz_border_radius_topLeft,
+  eCSSProperty__moz_border_radius_topRight,
+  eCSSProperty__moz_border_radius_bottomRight,
+  eCSSProperty__moz_border_radius_bottomLeft
+};
 
 PRBool CSSParserImpl::ParseBorder(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
                                   PRInt32& aChangeHint)
@@ -3405,6 +3417,13 @@ PRBool CSSParserImpl::ParseBorderWidth(PRInt32& aErrorCode, nsICSSDeclaration* a
 {
   return ParseBoxProperties(aErrorCode, aDeclaration, kBorderWidthIDs, aChangeHint);
 }
+
+PRBool CSSParserImpl::ParseBorderRadius(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 
+                                       PRInt32& aChangeHint)
+{
+  return ParseBoxProperties(aErrorCode, aDeclaration, kBorderRadiusIDs, aChangeHint);
+}
+
 
 PRBool CSSParserImpl::ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
                                 PRInt32& aChangeHint)
