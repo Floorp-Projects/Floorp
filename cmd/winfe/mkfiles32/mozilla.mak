@@ -318,7 +318,7 @@ BINREL_DIST=$(XPDIST)\WIN954.0_OPT.OBJ
 BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 !endif
 !endif
-	
+
 LINK_LIBS= \
 !if "$(MOZ_BITS)"=="32"
 !ifndef NSPR20
@@ -550,7 +550,10 @@ CDISTINCLUDES= \
     /I$(DIST)\include \
     /I$(XPDIST)\public\dbm \
     /I$(XPDIST)\public\java \
+!ifdef MOZ_JAVA
     /I$(XPDIST)\public\applet \
+    /I$(XPDIST)\public\softupdt \
+!endif
     /I$(XPDIST)\public\libreg \
     /I$(XPDIST)\public\hook \
     /I$(XPDIST)\public\pref \
@@ -560,11 +563,11 @@ CDISTINCLUDES= \
     /I$(XPDIST)\public\jsdebug \
     /I$(XPDIST)\public\security \
     /I$(XPDIST)\public\htmldlgs \
-    /I$(XPDIST)\public\softupdt \
     /I$(XPDIST)\public\zlib \
     /I$(XPDIST)\public\httpurl \
     /I$(XPDIST)\public\netcache \
     /I$(XPDIST)\public\network \
+    /I$(XPDIST)\public\netcnvts\
     /I$(XPDIST)\public\util \
 #!ifdef MOZ_LOC_INDEP
 	/I$(XPDIST)\public\li \
@@ -1479,7 +1482,7 @@ $(GENDIR)\tdlogo.rc: $(DEPTH)\lib\xp\tdlogo.gif
 
 AboutImages: $(GENDIR) \
 	$(GENDIR)\flamer.rc
-	
+
 $(GENDIR)\flamer.rc: $(DEPTH)\lib\xp\flamer.gif
 	$(BIN2RC) $(DEPTH)\lib\xp\flamer.gif image/gif > $(GENDIR)\flamer.rc
 !endif
@@ -1493,7 +1496,7 @@ prebuild: $(GENDIR) $(GENDIR)\initpref.rc $(GENDIR)\allpref.rc \
 	$(GENDIR)\allpref2.rc $(GENDIR)\allpref3.rc $(GENDIR)\allpref4.rc\
 	$(GENDIR)\winpref.rc $(GENDIR)\config.rc NavCenterImages \
 	AboutImages
-	
+
 $(GENDIR)\initpref.rc: $(DEPTH)\modules\libpref\src\initpref.js
 	$(TXT2RC) init_prefs $(DEPTH)\modules\libpref\src\initpref.js \
 		$(GENDIR)\initpref.rc
@@ -1611,7 +1614,7 @@ install:    \
 	    $(OUTDIR)\uni3200.dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\awt32$(VERSION_NUMBER).dll)
- 	    $(OUTDIR)\java\bin\awt32$(VERSION_NUMBER).dll   \
+	    $(OUTDIR)\java\bin\awt32$(VERSION_NUMBER).dll   \
 !ENDIF
 !if defined(MOZ_TRACKGDI)
 !IF EXIST($(DIST)\bin\trackgdi.dll)
@@ -2620,7 +2623,7 @@ symbols:
 	@echo "MOZ_USERNAME = $(MOZ_USERNAME)"  
 	@echo "MOZ_USERDEBUG = $(MOZ_USERDEBUG)"
 !endif
-	
+
 
 ns.zip:
 	cd $(OUTDIR)
