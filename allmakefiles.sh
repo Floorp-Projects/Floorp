@@ -886,9 +886,6 @@ extensions/sql/pgsql/src/Makefile
 extensions/sql/build/Makefile
 extensions/sql/build/src/Makefile
 extensions/sql/packager/Makefile
-extensions/sql/packager/mac/Makefile
-extensions/sql/packager/unix/Makefile
-extensions/sql/packager/win/Makefile
 extensions/sql/tests/Makefile
 "
 
