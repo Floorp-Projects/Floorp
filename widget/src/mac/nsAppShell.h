@@ -33,12 +33,13 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
+#include "nsCOMPtr.h"
 
 #include <memory>
 
 class nsMacMessagePump;
 class nsMacMessageSink;
-class nsToolkit;
+class nsIToolkit;
 
 
 class nsAppShell : public nsIAppShell
@@ -52,7 +53,7 @@ class nsAppShell : public nsIAppShell
   
   private:
     nsDispatchListener             *mDispatchListener;    // note: we don't own this, but it can be NULL
-    auto_ptr<nsToolkit>            mToolKit;
+    nsCOMPtr<nsIToolkit>           mToolkit;
     auto_ptr<nsMacMessagePump>     mMacPump;
     auto_ptr<nsMacMessageSink>     mMacSink;             //€€€ this will be COM, so use scc's COM_auto_ptr
     PRBool                         mExitCalled;

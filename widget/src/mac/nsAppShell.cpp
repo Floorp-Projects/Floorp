@@ -77,9 +77,13 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 
 NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 {
-	mToolKit = auto_ptr<nsToolkit>( new nsToolkit() );
+	nsresult rv;
+	rv = NS_GetCurrentToolkit(getter_AddRefs(mToolkit));
+	if (NS_FAILED(rv))
+		return rv;
 	mMacSink = auto_ptr<nsMacMessageSink>( new nsMacMessageSink() );
-	mMacPump = auto_ptr<nsMacMessagePump>( new nsMacMessagePump(mToolKit.get(), mMacSink.get()) );
+	nsIToolkit* toolkit = mToolkit.get();
+	mMacPump = auto_ptr<nsMacMessagePump>( new nsMacMessagePump(static_cast<nsToolkit*>(toolkit), mMacSink.get()) );
 	return NS_OK;
 }
 
