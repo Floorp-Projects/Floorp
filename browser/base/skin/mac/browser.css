@@ -249,7 +249,6 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 #reload-button {
   -moz-image-region: rect(0px 128px 32px 96px);
-  padding-left: 3px;
 }
 #reload-button:active {
   -moz-image-region: rect(32px 128px 64px 96px);
@@ -376,150 +375,14 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 /* ::::: small primary toolbar buttons ::::: */
 
+
 toolbar[iconsize="small"] .toolbarbutton-1 {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   padding: 1px 3px 1px 3px !important;
 }
 
-toolbar[iconsize="small"] #back-button {
-  -moz-image-region: rect(0px 24px 24px 0px);
-}
+toolbar[iconsize="small"] #back-button {  -moz-image-region: rect(0px 26px 24px 0px);}toolbar[iconsize="small"] #back-button[buttondown="true"] {  -moz-image-region: rect(24px 26px 48px 0px);}toolbar[iconsize="small"] #back-button[disabled="true"] {  -moz-image-region: rect(48px 26px 72px 0px);}toolbar[iconsize="small"] #forward-button {  -moz-image-region: rect(0px 52px 24px 26px);  padding-right: 2px;}toolbar[iconsize="small"] #forward-button[buttondown="true"] {  -moz-image-region: rect(24px 52px 48px 26px);}toolbar[iconsize="small"] #forward-button[disabled="true"] {  -moz-image-region: rect(48px 52px 72px 26px) !important;}toolbar[iconsize="small"] #stop-button {  -moz-image-region: rect(0px 78px 24px 52px);}toolbar[iconsize="small"] #stop-button:active {  -moz-image-region: rect(24px 78px 48px 52px);}toolbar[iconsize="small"] #stop-button[disabled="true"] {  -moz-image-region: rect(48px 78px 72px 52px) !important;}toolbar[iconsize="small"] #reload-button {  -moz-image-region: rect(0px 104px 24px 78px);}toolbar[iconsize="small"] #reload-button:active {  -moz-image-region: rect(24px 104px 48px 78px);}toolbar[iconsize="small"] #reload-button[disabled="true"] {  -moz-image-region: rect(48px 104px 72px 78px) !important;}toolbar[iconsize="small"] #home-button {  -moz-image-region: rect(0px 130px 24px 104px);}toolbar[iconsize="small"] #home-button:active {  -moz-image-region: rect(24px 130px 48px 104px);}toolbar[iconsize="small"] #downloads-button {  -moz-image-region: rect(0px 154px 24px 130px);}toolbar[iconsize="small"] #downloads-button:active {  -moz-image-region: rect(24px 154px 48px 130px);}toolbar[iconsize="small"] #downloads-button[disabled="true"] {  -moz-image-region: rect(48px 154px 72px 130px) !important;}toolbar[iconsize="small"] #history-button {  -moz-image-region: rect(0px 178px 24px 154px);}toolbar[iconsize="small"] #history-button:active {  -moz-image-region: rect(24px 178px 48px 154px);}toolbar[iconsize="small"] #history-button[disabled="true"] {  -moz-image-region: rect(48px 178px 72px 154px) !important;}toolbar[iconsize="small"] #bookmarks-button {  -moz-image-region: rect(0px 202px 24px 178px);}toolbar[iconsize="small"] #bookmarks-button:active {  -moz-image-region: rect(24px 202px 48px 178px);}toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {  -moz-image-region: rect(48px 202px 72px 178px) !important;}toolbar[iconsize="small"] #print-button {  -moz-image-region: rect(0px 226px 24px 202px);}toolbar[iconsize="small"] #print-button:active {  -moz-image-region: rect(24px 226px 48px 202px);}toolbar[iconsize="small"] #print-button[disabled="true"] {  -moz-image-region: rect(48px 226px 72px 202px);}toolbar[iconsize="small"] #new-tab-button {  -moz-image-region: rect(0px 250px 24px 226px);}toolbar[iconsize="small"] #new-tab-button:active,toolbar[iconsize="small"] #new-tab-button[checked="true"] {  -moz-image-region: rect(24px 250px 48px 226px);}toolbar[iconsize="small"] #new-tab-button[disabled="true"] {  -moz-image-region: rect(48px 250px 72px 226px) !important;}toolbar[iconsize="small"] #new-window-button {  -moz-image-region: rect(0px 274px 24px 250px);}toolbar[iconsize="small"] #new-window-button:active {  -moz-image-region: rect(24px 274px 48px 250px);}toolbar[iconsize="small"] #new-window-button[disabled="true"] {  -moz-image-region: rect(48px 274px 72px 250px) !important;}toolbar[iconsize="small"] #cut-button {  -moz-image-region: rect(0px 298px 24px 274px);}toolbar[iconsize="small"] #cut-button:active {  -moz-image-region: rect(24px 298px 48px 274px);}toolbar[iconsize="small"] #cut-button[disabled="true"] {  -moz-image-region: rect(48px 298px 72px 274px) !important;}toolbar[iconsize="small"] #copy-button {  -moz-image-region: rect(0px 322px 24px 298px);}toolbar[iconsize="small"] #copy-button:active {  -moz-image-region: rect(24px 322px 48px 298px);}toolbar[iconsize="small"] #copy-button[disabled="true"] {  -moz-image-region: rect(48px 322px 72px 298px) !important;}toolbar[iconsize="small"] #paste-button {  -moz-image-region: rect(0px 346px 24px 322px);}toolbar[iconsize="small"] #paste-button:active {  -moz-image-region: rect(24px 346px 48px 322px);}toolbar[iconsize="small"] #paste-button[disabled="true"] {  -moz-image-region: rect(48px 346px 72px 322px) !important;}
 
-toolbar[iconsize="small"] #back-button[buttondown="true"] {
-  -moz-image-region: rect(24px 24px 48px 0px);
-}
-toolbar[iconsize="small"] #back-button[disabled="true"] {
-  -moz-image-region: rect(48px 24px 72px 0px);
-}
-
-toolbar[iconsize="small"] #forward-button {
-  -moz-image-region: rect(0px 48px 24px 24px);
-  padding-right: 2px;
-}
-toolbar[iconsize="small"] #forward-button[buttondown="true"] {
-  -moz-image-region: rect(24px 48px 48px 24px);
-}
-toolbar[iconsize="small"] #forward-button[disabled="true"] {
-  -moz-image-region: rect(48px 48px 72px 24px) !important;
-}
-
-toolbar[iconsize="small"] #reload-button {
-  -moz-image-region: rect(0px 96px 24px 72px);
-}
-toolbar[iconsize="small"] #reload-button:active {
-  -moz-image-region: rect(24px 96px 48px 72px);
-}
-toolbar[iconsize="small"] #reload-button[disabled="true"] {
-  -moz-image-region: rect(48px 96px 72px 72px) !important;
-}
-
-toolbar[iconsize="small"] #stop-button {
-  -moz-image-region: rect(0px 72px 24px 48px);
-}
-toolbar[iconsize="small"] #stop-button:active {
-  -moz-image-region: rect(24px 72px 48px 48px);
-}
-toolbar[iconsize="small"] #stop-button[disabled="true"] {
-  -moz-image-region: rect(48px 72px 72px 48px) !important;
-}
-
-toolbar[iconsize="small"] #home-button {
-  -moz-image-region: rect(0px 120px 24px 96px);
-}
-toolbar[iconsize="small"] #home-button:active {
-  -moz-image-region: rect(24px 120px 48px 96px);
-}
-
-toolbar[iconsize="small"] #print-button {
-  -moz-image-region: rect(0px 216px 24px 192px);
-}
-toolbar[iconsize="small"] #print-button:active {
-  -moz-image-region: rect(24px 216px 48px 192px);
-}
-toolbar[iconsize="small"] #print-button[disabled="true"] {
-  -moz-image-region: rect(48px 216px 72px 192px);
-}
-
-toolbar[iconsize="small"] #downloads-button {
-  -moz-image-region: rect(0px 144px 24px 120px);
-}
-toolbar[iconsize="small"] #downloads-button:active {
-  -moz-image-region: rect(24px 144px 48px 120px);
-}
-toolbar[iconsize="small"] #downloads-button[disabled="true"] {
-  -moz-image-region: rect(48px 144px 72px 120px) !important;
-}
-
-toolbar[iconsize="small"] #new-tab-button {
-  -moz-image-region: rect(0px 240px 24px 216px);
-}
-toolbar[iconsize="small"] #new-tab-button:active,
-toolbar[iconsize="small"] #new-tab-button[checked="true"] {
-  -moz-image-region: rect(24px 240px 48px 216px);
-}
-toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
-  -moz-image-region: rect(48px 240px 72px 216px) !important;
-}
-
-toolbar[iconsize="small"] #new-window-button {
-  -moz-image-region: rect(0px 264px 24px 240px);
-}
-toolbar[iconsize="small"] #new-window-button:active {
-  -moz-image-region: rect(24px 264px 48px 240px);
-}
-toolbar[iconsize="small"] #new-window-button[disabled="true"] {
-  -moz-image-region: rect(48px 264px 72px 240px) !important;
-}
-
-toolbar[iconsize="small"] #bookmarks-button {
-  -moz-image-region: rect(0px 192px 24px 168px);
-}
-toolbar[iconsize="small"] #bookmarks-button:active {
-  -moz-image-region: rect(24px 192px 48px 168px);
-}
-toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
-  -moz-image-region: rect(48px 192px 72px 168px) !important;
-}
-
-toolbar[iconsize="small"] #history-button {
-  -moz-image-region: rect(0px 168px 24px 144px);
-}
-toolbar[iconsize="small"] #history-button:active, {
-  -moz-image-region: rect(24px 168px 48px 144px);
-}
-toolbar[iconsize="small"] #history-button[disabled="true"] {
-  -moz-image-region: rect(48px 168px 72px 144px) !important;
-}
-
-toolbar[iconsize="small"] #cut-button {
-  -moz-image-region: rect(0px 288px 24px 264px);
-}
-toolbar[iconsize="small"] #cut-button:active {
-  -moz-image-region: rect(24px 288px 48px 264px);
-}
-toolbar[iconsize="small"] #cut-button[disabled="true"] {
-  -moz-image-region: rect(48px 288px 72px 264px) !important;
-}
-
-toolbar[iconsize="small"] #copy-button {
-  -moz-image-region: rect(0px 312px 24px 288px);
-}
-toolbar[iconsize="small"] #copy-button:active {
-  -moz-image-region: rect(24px 312px 48px 288px);
-}
-toolbar[iconsize="small"] #copy-button[disabled="true"] {
-  -moz-image-region: rect(48px 312px 72px 288px) !important;
-}
-
-toolbar[iconsize="small"] #paste-button {
-  -moz-image-region: rect(0px 336px 24px 312px);
-}
-toolbar[iconsize="small"] #paste-button:active {
-  -moz-image-region: rect(24px 336px 48px 312px);
-}
-toolbar[iconsize="small"] #paste-button[disabled="true"] {
-  -moz-image-region: rect(48px 336px 72px 312px) !important;
-}
 /* ::::: fullscreen window controls ::::: */
 
 #window-controls {
@@ -546,6 +409,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 
+
 /* ::::: page proxy icon ::::: */
 
 #page-proxy-deck,
@@ -560,7 +424,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 
 #page-proxy-deck {
   cursor: -moz-grab;
-  //margin: 2px 3px;
 }
 
 #page-proxy-favicon {
@@ -584,10 +447,19 @@ statusbarpanel#statusbar-display {
 /* ::::: search-bar ::::: */
 
 #search-proxy-button {
- padding: 3px 0px 2px 7px;
-  list-style-image: url("chrome://browser/skin/Search-bar-wdropmarker.png");
-    background: url("chrome://browser/skin/SearchBarLeft.png") no-repeat;
-  width: 23px !important;
+	min-width: 22px;
+	margin: 0px 3px 0px 5px;  
+}
+
+.search-proxy-button-image {
+ padding: 0px;
+ list-style-image: url("chrome://browser/skin/Search-bar.png");
+}
+
+.search-proxy-button-dropmarker {
+	list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+	padding: 6px 0px 5px 17px;
+
 }
 
 #miSearchModeFind, #__PhoenixFindInPage {
@@ -596,6 +468,23 @@ statusbarpanel#statusbar-display {
 
 #miSearchModeFind[checked="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check.png");
+}
+
+#search-bar > .autocomplete-textbox-container  {
+  border: none;
+  padding-right: 10px;
+  height: 21px !important;
+  margin: 0px;
+}
+
+#search-bar {
+  background: url("chrome://browser/skin/search-bar-background.png") no-repeat;
+  margin: 4px 3px 4px 3px;
+  -moz-appearance: none;
+  font: icon;
+  height: 22px !important;
+  width: 182px !important;
+  border: none !important;
 }
 
 /* ::::: autocomplete ::::: */
@@ -647,7 +536,6 @@ sidebarheader {
 }
 
 #sidebar-splitter {
-	 // background: url("chrome://global/skin/splitter/splitter-hrz-mid.png") transparent repeat center;
 	 border-right: 1px solid #8e8e8e;
          border-left: 1px solid #bebebe;
          background-color: #ececec;
@@ -745,30 +633,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 
-#search-bar > .autocomplete-textbox-container  {
-  background: url("chrome://browser/skin/SearchBarRight.png") right center no-repeat;
-  border: none;
-  padding-right: 10px;
-  margin: 0px;
-}
-
-#search-bar  {
-  width: 14em;
-  margin: 4px 5px 4px 5px;
-  background: transparent;
-  -moz-appearance: none !important;
-  height: 21px !important;
-  border: none !important;
-}
-#search-bar .textbox-input-box  {
-  background: url("chrome://browser/skin/SearchBarMiddle.png") repeat-x !important;
-  margin: 0px 0px 0px -2px;
-  padding: 2px 0px 0px 6px;
-  font: icon;
-}
-
 #PersonalToolbar {
-	//background: url("chrome://browser/skin/personal-toolbar-background.png") #FFFFFF repeat-x center center !important;
         background-image: none;
 }
 
