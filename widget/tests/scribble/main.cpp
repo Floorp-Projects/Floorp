@@ -29,7 +29,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 {
   int     argC = 0;
   char ** argv = NULL;
-  return(CreateApplication(&argc, argv));
+  return(CreateApplication(&argC, argv));
 }
 
 void main(int argc, char **argv)
