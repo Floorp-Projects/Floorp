@@ -19,6 +19,7 @@
 #define nsILayerCollection_h___
 
 #include "nsISupports.h"
+#include "nsIIterator.h"
 
 //91cd3b90-4ccb-11d2-924a-00805f8a7ab6
 #define NS_ILAYER_COLLECTION_IID   \
@@ -30,6 +31,13 @@ class nsILayerCollection : public nsISupports
 
 public:
   NS_IMETHOD Init() = 0;
+
+  NS_IMETHOD CreateIterator(nsIIterator ** aIterator) = 0;
+
+  NS_IMETHOD AddLayer(nsILayer * aLayer) = 0;
+  NS_IMETHOD RemoveLayer(nsILayer * aLayer) = 0;
+
+
 
 };
 

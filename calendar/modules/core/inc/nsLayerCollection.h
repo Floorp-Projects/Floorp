@@ -21,6 +21,7 @@
 
 #include "nsILayer.h"
 #include "nsILayerCollection.h"
+#include "nsIVector.h"
 
 class nsLayerCollection : public nsILayerCollection,
                                  nsILayer
@@ -33,6 +34,14 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init();
+
+  NS_IMETHOD CreateIterator(nsIIterator ** aIterator) ;
+
+  NS_IMETHOD AddLayer(nsILayer * aLayer);
+  NS_IMETHOD RemoveLayer(nsILayer * aLayer);
+
+private:
+  nsIVector * mLayers ;
 
 };
 

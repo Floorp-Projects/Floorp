@@ -17,8 +17,10 @@
  */
 
 #include <stdio.h>
+#include "nscore.h"
 #include "nsLayerCollection.h"
 #include "nsCoreCIID.h"
+#include "nsxpfcCIID.h"
 
 static NS_DEFINE_IID(kILayerIID,                 NS_ILAYER_IID);
 static NS_DEFINE_IID(kILayerCollectionIID,       NS_ILAYER_COLLECTION_IID);
@@ -27,6 +29,8 @@ static NS_DEFINE_IID(kCLayerCollectionCID,       NS_LAYER_COLLECTION_CID);
 nsLayerCollection::nsLayerCollection(nsISupports* outer)
 {
   NS_INIT_REFCNT();
+  mLayers = nsnull;
+
 }
 
 nsresult nsLayerCollection::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
@@ -65,12 +69,47 @@ NS_IMPL_RELEASE(nsLayerCollection)
 
 nsLayerCollection::~nsLayerCollection()
 {
+  // XXX: Need to add a way to remove ref when delete all!
+  NS_IF_RELEASE(mLayers);
 }
 
 nsresult nsLayerCollection::Init()
 {
+  static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+
+  nsresult res = nsRepository::CreateInstance(kCVectorCID, 
+                                              nsnull, 
+                                              kCVectorCID, 
+                                              (void **)&mLayers);
+
+  if (NS_OK != res)
+    return res ;
+
+  mLayers->Init();
 
   return (NS_OK);
 }
 
 
+nsresult nsLayerCollection :: CreateIterator(nsIIterator ** aIterator)
+{
+  if (mLayers) {
+    mLayers->CreateIterator(aIterator);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsLayerCollection :: AddLayer(nsILayer * aLayer)
+{
+  mLayers->Append(aLayer);
+  NS_ADDREF(aLayer);
+  return NS_OK;
+}
+
+nsresult nsLayerCollection :: RemoveLayer(nsILayer * aLayer)
+{
+  mLayers->Remove(aLayer);
+  NS_IF_RELEASE(aLayer);
+  return NS_OK;
+}
