@@ -112,7 +112,6 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsRDFCID.h"
-#include "nsRDFDOMNodeList.h"
 #include "nsStyleConsts.h"
 #include "nsXPIDLString.h"
 #include "nsXULControllers.h"
@@ -125,7 +124,6 @@
 #include "nsCSSDeclaration.h"
 #include "nsIListBoxObject.h"
 #include "nsContentUtils.h"
-#include "nsGenericElement.h"
 #include "nsContentList.h"
 #include "nsMutationEvent.h"
 #include "nsIDOMMutationEvent.h"
@@ -642,31 +640,17 @@ nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 nsXULElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-    nsresult rv;
+    nsresult rv = EnsureSlots();
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRDFDOMNodeList* children = new nsRDFDOMNodeList();
-    NS_ENSURE_TRUE(children, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(children);
-
-    PRUint32 count = GetChildCount();
-
-    for (PRUint32 i = 0; i < count; ++i) {
-        nsIContent *child = GetChildAt(i);
-
-        nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(child);
-        if (!domNode) {
-            NS_WARNING("child content doesn't support nsIDOMNode");
-            continue;
+    if (!mSlots->mChildNodes) {
+        mSlots->mChildNodes = new nsChildContentList(this);
+        if (!mSlots->mChildNodes) {
+            return NS_ERROR_OUT_OF_MEMORY;
         }
-
-        rv = children->AppendNode(domNode);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append node to list");
-        if (NS_FAILED(rv))
-            break;
     }
-
-    // Create() addref'd for us
-    *aChildNodes = children;
+    
+    NS_ADDREF(*aChildNodes = mSlots->mChildNodes);
     return NS_OK;
 }
 
@@ -4029,6 +4013,10 @@ nsXULElement::Slots::Slots()
 nsXULElement::Slots::~Slots()
 {
     MOZ_COUNT_DTOR(nsXULElement::Slots);
+
+    if (mChildNodes) {
+        mChildNodes->DropReference();
+    }
 }
 
 

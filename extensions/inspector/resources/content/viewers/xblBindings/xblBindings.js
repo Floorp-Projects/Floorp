@@ -386,9 +386,8 @@ XBLBindings.prototype =
   
   clearChildren: function(aEl)
   {
-    var kids = aEl.childNodes;
-    for (var i = kids.length-1; i >=0; --i)
-      aEl.removeChild(kids[i]);
+    while (aEl.hasChildNodes())
+      aEl.removeChild(aEl.lastChild);
   },
   
   readDOMText: function(aEl)

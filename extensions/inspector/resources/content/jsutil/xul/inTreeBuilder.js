@@ -257,7 +257,7 @@ inTreeBuilder.prototype =
   resetTree: function()
   {
     var kids = this.mTree.childNodes;
-    for (var i = 0 ; i < kids.length; ++i)
+    for (var i = kids.length - 1; i >= 0; --i)
       if (kids[i].localName != "treechildren")
         this.mTree.removeChild(kids[i]);
       
@@ -268,7 +268,7 @@ inTreeBuilder.prototype =
 
   clearChildren: function(aEl)
   {
-    while (aEl.childNodes.length)
+    while (aEl.hasChildNodes())
       aEl.removeChild(aEl.lastChild);
   },
 
