@@ -41,6 +41,8 @@ public:
 
    // A table whose index is the tag id (from nsCSSPropIDs)
   static const NameTableEntry kNameTable[];
+
+  static const PRInt32  kHintTable[];
 };
 
 #endif /* nsCSSProps_h___ */
