@@ -32,7 +32,7 @@
 #define href "href"
 #define XLL   "XML-Link"
 
-#define BUF_SIZE 500
+#define BUF_SIZE 4096
 
 int
 parseNextXMLCSSBlob (NET_StreamClass *stream, char* blob, int32 size)
@@ -54,6 +54,7 @@ parseNextXMLCSSBlob (NET_StreamClass *stream, char* blob, int32 size)
     if (ss->holdOver[0] != '\0') {
       memcpy(ss->line, ss->holdOver, strlen(ss->holdOver));
       m = strlen(ss->holdOver);
+      somethingseenp = 1;
       memset(ss->holdOver, '\0', BUF_SIZE);
     }
     while ((m < 300) && (c != '{') && (c != '}')) {
@@ -70,15 +71,15 @@ parseNextXMLCSSBlob (NET_StreamClass *stream, char* blob, int32 size)
     n++;
     if (m > 0) {
       if ((c == '}') || (c == '{')) {
-	last = n;
-	if (c == '{') ss->holdOver[0] = '{'; 
-	if (somethingseenp) {
-	  parseNextXMLCSSElement(ss, ss->line);
-	} else if (size > last) {
-	  memcpy(ss->holdOver, ss->line, m);
-	}
-      } else if (c == '{') ss->holdOver[0] = '{';
-    }
+        last = n;
+        if (c == '{') ss->holdOver[0] = '{'; 
+        if (somethingseenp) {
+          parseNextXMLCSSElement(ss, ss->line);
+        }
+      }  else if (size > last) {
+          memcpy(ss->holdOver, ss->line, m);
+      }
+    } else if (c == '{') ss->holdOver[0] = '{';
   }
   return(size);
 }
@@ -273,12 +274,14 @@ outputAllStyles(XMLFile xf)
   outputToStream(xf, "<style>\n");
   for (ss = xf->ss; (ss != NULL) ; ss = ss->next) {    
     for (se = ss->el; (se != NULL) ; se = se->next) {
+      if (se->style) { 
       ssline = PR_smprintf(".xml%d {%s}\n", se->id, se->style);
       PR_ASSERT(ssline);
       if (!ssline)
           return;
       outputToStream(xf, ssline);
       free(ssline);
+	  }
     }
   }
   outputToStream(xf, "</style>\n");

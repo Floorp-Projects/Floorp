@@ -41,7 +41,7 @@
 
 /* xmlglue.c data structures and defines */
 
-#define XML_LINE_SIZE 500
+#define XML_LINE_SIZE 4096
 
 
 #include <stdlib.h>
