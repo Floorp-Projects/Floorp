@@ -3489,7 +3489,21 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
           break;
         newAncestor = dont_AddRef(parent);
       }
-      NS_ASSERTION(oldAncestor == newAncestor, "different documents");
+#ifdef DEBUG
+      if (oldAncestor != newAncestor) {
+        // This could be a performance problem.
+        nsCOMPtr<nsIDocument> oldDoc;
+        oldAncestor->GetDocument(*getter_AddRefs(oldDoc));
+        // The |!oldDoc| case (that the old hover node has been removed
+        // from the document) could be a slight performance problem.
+        // It's rare enough that it shouldn't be an issue, but common
+        // enough that we don't want to assert..
+        NS_ASSERTION(!oldDoc,
+                     "moved hover between nodes in different documents");
+        // XXX Why don't we ever hit this code because we're not using
+        // |GetBindingParent|?
+      }
+#endif
       if (oldAncestor == newAncestor) {
         oldAncestor = mHoverContent;
         newAncestor = aContent;
