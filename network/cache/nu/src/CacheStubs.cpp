@@ -31,8 +31,7 @@
 void
 Cache_Init(void)
 {
-    /* Most of the initilization gets done in the constructor for the 
-     * nsCacheManager class. */ 
+    CACHEMGR->Init();
 }
 
 void 

@@ -38,23 +38,30 @@ static nsCacheManager TheManager;
 
 PRUint32 NumberOfObjects(void);
 
-nsCacheManager::nsCacheManager(): m_pFirstModule(0), m_bOffline(PR_FALSE)
+nsCacheManager::nsCacheManager(): 
+    m_pFirstModule(0), 
+    m_bOffline(PR_FALSE),
+    m_pPrefs(0)
 {
-    Init();
 }
 
 nsCacheManager::~nsCacheManager()
 {
-    if (m_pBkgThd)
+    if (m_pPrefs)
     {
-        m_pBkgThd->Stop();
-        delete m_pBkgThd;
-        m_pBkgThd = 0;
+        delete m_pPrefs;
+        m_pPrefs = 0;
     }
     if (m_pFirstModule)
     {
         delete m_pFirstModule;
         m_pFirstModule = 0;
+    }
+    if (m_pBkgThd)
+    {
+        m_pBkgThd->Stop();
+        delete m_pBkgThd;
+        m_pBkgThd = 0;
     }
 }
 
@@ -205,6 +212,11 @@ void
 nsCacheManager::Init() 
 {
     MonitorLocker ml(this);
+    
+    //Init prefs
+    if (!m_pPrefs)
+        m_pPrefs = new nsCachePref();
+
     if (m_pFirstModule)
         delete m_pFirstModule;
 
