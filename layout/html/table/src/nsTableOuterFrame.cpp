@@ -500,12 +500,12 @@ GetMarginPadding(nsIPresContext*          aPresContext,
 nscoord CalcAutoMargin(nscoord aAutoMargin,
                        nscoord aOppositeMargin,
                        nscoord aContainBlockSize,
-                       nscoord aFrameSize)
+                       nscoord aFrameSize,
+                       float   aPixelToTwips)
 {
   nscoord margin;
-  if (NS_AUTOMARGIN == aOppositeMargin) {
-    margin = (aContainBlockSize - aFrameSize) / 2;
-  }
+  if (NS_AUTOMARGIN == aOppositeMargin) 
+    margin = nsTableFrame::RoundToPixel((aContainBlockSize - aFrameSize) / 2, aPixelToTwips);
   else {
     margin = aContainBlockSize - aFrameSize - aOppositeMargin;
   }
@@ -761,12 +761,15 @@ nsTableOuterFrame::GetCaptionOrigin(nsIPresContext*  aPresContext,
   }
   if (!mCaptionFrame) return NS_OK;
 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+
   nscoord collapseMargin;
   switch(aCaptionSide) {
   case NS_SIDE_BOTTOM:
     if (NS_AUTOMARGIN == aCaptionMargin.left) {
       aCaptionMargin.left = CalcAutoMargin(aCaptionMargin.left, aCaptionMargin.right,
-                                           aContainBlockSize.width, aCaptionSize.width);
+                                           aContainBlockSize.width, aCaptionSize.width, p2t);
     }
     aOrigin.x = aCaptionMargin.left;
     if (NS_AUTOMARGIN == aCaptionMargin.top) {
@@ -776,14 +779,14 @@ nsTableOuterFrame::GetCaptionOrigin(nsIPresContext*  aPresContext,
     if (NS_AUTOMARGIN == aCaptionMargin.bottom) {
       nscoord height = aInnerSize.height + collapseMargin + aCaptionSize.height;
       aCaptionMargin.bottom = CalcAutoMargin(aCaptionMargin.bottom, aInnerMargin.top,
-                                             aContainBlockSize.height, height);
+                                             aContainBlockSize.height, height, p2t);
     }
     aOrigin.y = aInnerMargin.top + aInnerSize.height + collapseMargin;
     break;
   default: // all others are treated as top for now
     if (NS_AUTOMARGIN == aCaptionMargin.left) {
       aCaptionMargin.left = CalcAutoMargin(aCaptionMargin.left, aCaptionMargin.right,
-                                           aContainBlockSize.width, aCaptionSize.width);
+                                           aContainBlockSize.width, aCaptionSize.width, p2t);
     }
     aOrigin.x = aCaptionMargin.left;
     if (NS_AUTOMARGIN == aCaptionMargin.bottom) {
@@ -793,7 +796,7 @@ nsTableOuterFrame::GetCaptionOrigin(nsIPresContext*  aPresContext,
       collapseMargin = PR_MAX(aCaptionMargin.bottom, aInnerMargin.top);
       nscoord height = aCaptionSize.height + collapseMargin + aInnerSize.height;
       aCaptionMargin.top = CalcAutoMargin(aCaptionMargin.top, aInnerMargin.bottom,
-                                          aContainBlockSize.height, height);
+                                          aContainBlockSize.height, height, p2t);
     }
     aOrigin.y = aCaptionMargin.top;
     break;
@@ -818,12 +821,15 @@ nsTableOuterFrame::GetInnerOrigin(nsIPresContext*  aPresContext,
     return NS_OK;
   }
 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+
   nscoord collapseMargin;
   switch(aCaptionSide) {
   case NS_SIDE_BOTTOM:
     if (NS_AUTOMARGIN == aInnerMargin.left) {
       aInnerMargin.left = CalcAutoMargin(aInnerMargin.left, aInnerMargin.right,
-                                         aContainBlockSize.width, aInnerSize.width);
+                                         aContainBlockSize.width, aInnerSize.width, p2t);
     }
     aOrigin.x = aInnerMargin.left;
     if (NS_AUTOMARGIN == aInnerMargin.bottom) {
@@ -833,7 +839,7 @@ nsTableOuterFrame::GetInnerOrigin(nsIPresContext*  aPresContext,
       collapseMargin = PR_MAX(aInnerMargin.bottom, aCaptionMargin.top);
       nscoord height = aInnerSize.height + collapseMargin + aCaptionSize.height;
       aInnerMargin.top = CalcAutoMargin(aInnerMargin.top, aCaptionMargin.bottom,
-                                        aContainBlockSize.height, height);
+                                        aContainBlockSize.height, height, p2t);
     }
     aOrigin.y = aInnerMargin.top;
     break;
@@ -841,7 +847,7 @@ nsTableOuterFrame::GetInnerOrigin(nsIPresContext*  aPresContext,
   default: // all others are treated as top for now
     if (NS_AUTOMARGIN == aInnerMargin.left) {
       aInnerMargin.left = CalcAutoMargin(aInnerMargin.left, aInnerMargin.right,
-                                         aContainBlockSize.width, aInnerSize.width);
+                                         aContainBlockSize.width, aInnerSize.width, p2t);
     }
     aOrigin.x = aInnerMargin.left;
     if (NS_AUTOMARGIN == aInnerMargin.top) {
@@ -851,7 +857,7 @@ nsTableOuterFrame::GetInnerOrigin(nsIPresContext*  aPresContext,
     if (NS_AUTOMARGIN == aInnerMargin.bottom) {
       nscoord height = aCaptionSize.height + collapseMargin + aInnerSize.height;
       aInnerMargin.bottom = CalcAutoMargin(aCaptionMargin.bottom, aInnerMargin.top,
-                                           aContainBlockSize.height, height);
+                                           aContainBlockSize.height, height, p2t);
     }
     aOrigin.y = aCaptionMargin.top + aCaptionSize.height + collapseMargin;
     break;
@@ -947,7 +953,7 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
   }
 
   nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame,
-                            nsSize(availWidth, aOuterRS.availableHeight));
+                            nsSize(availWidth, availHeight));
   childRS.reason = aReflowReason;
 
   // If mComputedWidth > availWidth and availWidth >= minWidth for a nested percent table 
