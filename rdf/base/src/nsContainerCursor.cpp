@@ -197,7 +197,7 @@ ContainerCursorImpl::Advance(void)
 
     // initialize rv to the case where mNextIndex has advanced past the
     // last element
-    rv = NS_ERROR_RDF_CURSOR_EMPTY;
+    rv = NS_RDF_CURSOR_EMPTY;
 
     while (mNextIndex < last) {
         NS_IF_RELEASE(mOrdinalProperty);
@@ -205,10 +205,11 @@ ContainerCursorImpl::Advance(void)
             break;
 
         rv = mDataSource->GetTarget(mContainer, mOrdinalProperty, PR_TRUE, &mCurrent);
+        if (NS_FAILED(rv)) return rv;
 
         ++mNextIndex;
 
-        if (NS_SUCCEEDED(rv)) {
+        if (rv == NS_OK) {
             // Don't bother releasing mCurrent; we'll let the AddRef
             // serve as the implicit addref that GetNext() should
             // perform.

@@ -246,7 +246,14 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
     }
 
-    while (NS_SUCCEEDED(rv = arcs->Advance())) {
+    while (1) {
+        rv = arcs->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFResource> property;
         if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get cursor value");
@@ -304,11 +311,6 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // XXX: This is a hack until the menu folks get their act together.
     menuItem->SetAttribute(kNameSpaceID_None, kOpenAtom, "true", PR_FALSE);
-      
-    if (NS_FAILED(rv) && (rv != NS_ERROR_RDF_CURSOR_EMPTY)) {
-        NS_ERROR("error advancing cursor");
-        return rv;
-    }
 
     // Finally, mark this as a "container" so that we know to
     // recursively generate kids if they're asked for.

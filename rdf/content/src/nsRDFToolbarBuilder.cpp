@@ -228,7 +228,14 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
     }
 
-    while (NS_SUCCEEDED(rv = arcs->Advance())) {
+    while (1) {
+        rv = arcs->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFResource> property;
         if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get cursor value");
@@ -288,11 +295,6 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
         nsIAtom* imagesrc = NS_NewAtom("src");
         toolbarItem->SetAttribute(kNameSpaceID_None, alignment, "right", PR_FALSE);
         toolbarItem->SetAttribute(kNameSpaceID_None, imagesrc, "resource:/res/toolbar/TB_Location.gif", PR_FALSE);
-    }
-
-    if (NS_FAILED(rv) && (rv != NS_ERROR_RDF_CURSOR_EMPTY)) {
-        NS_ERROR("error advancing cursor");
-        return rv;
     }
 
     // Finally, mark this as a "container" so that we know to

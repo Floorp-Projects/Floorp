@@ -457,7 +457,14 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 	nsVoidArray	*tempArray;
         if ((tempArray = new nsVoidArray()) == nsnull)	return (NS_ERROR_OUT_OF_MEMORY);
 
-    while (NS_SUCCEEDED(rv = properties->Advance())) {
+    while (1) {
+        rv = properties->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFResource> property;
 
         if (NS_FAILED(rv = properties->GetLabel(getter_AddRefs(property))))
@@ -478,7 +485,14 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
             return rv;
         }
 
-        while (NS_SUCCEEDED(rv = assertions->Advance())) {
+        while (1) {
+            rv = assertions->Advance();
+            if (NS_FAILED(rv))
+                return rv;
+
+            if (rv == NS_RDF_CURSOR_EMPTY)
+                break;
+
             nsCOMPtr<nsIRDFNode> value;
             if (NS_FAILED(rv = assertions->GetValue(getter_AddRefs(value)))) {
                 NS_ERROR("unable to get cursor value");
@@ -539,11 +553,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
         }
         delete tempArray;
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        // This is a normal return code from nsIRDFCursor::Advance()
-        rv = NS_OK;
-
-    return rv;
+    return NS_OK;
 }
 
 
@@ -1114,7 +1124,7 @@ RDFGenericBuilderImpl::FindChildByTag(nsIContent* aElement,
         return NS_OK;
     }
 
-    return NS_ERROR_RDF_NO_VALUE; // not found
+    return NS_RDF_NO_VALUE; // not found
 }
 
 
@@ -1169,7 +1179,7 @@ RDFGenericBuilderImpl::FindChildByTagAndResource(nsIContent* aElement,
         return NS_OK;
     }
 
-    return NS_ERROR_RDF_NO_VALUE; // not found
+    return NS_RDF_NO_VALUE; // not found
 }
 
 
@@ -1181,23 +1191,23 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
 {
     nsresult rv;
 
-    if (NS_SUCCEEDED(rv = FindChildByTag(parent, nameSpaceID, tag, result)))
-        return NS_OK;
-
-    if (rv != NS_ERROR_RDF_NO_VALUE)
-        return rv; // something really bad happened
-
-    // if we get here, we need to construct a new child element.
-    nsCOMPtr<nsIContent> element;
-
-    if (NS_FAILED(rv = NS_NewRDFElement(nameSpaceID, tag, getter_AddRefs(element))))
+    rv = FindChildByTag(parent, nameSpaceID, tag, result);
+    if (NS_FAILED(rv))
         return rv;
 
-    if (NS_FAILED(rv = parent->AppendChildTo(element, PR_FALSE)))
-        return rv;
+    if (rv == NS_RDF_NO_VALUE) {
+        // we need to construct a new child element.
+        nsCOMPtr<nsIContent> element;
 
-    *result = element;
-    NS_ADDREF(*result);
+        if (NS_FAILED(rv = NS_NewRDFElement(nameSpaceID, tag, getter_AddRefs(element))))
+            return rv;
+
+        if (NS_FAILED(rv = parent->AppendChildTo(element, PR_FALSE)))
+            return rv;
+
+        *result = element;
+        NS_ADDREF(*result);
+    }
     return NS_OK;
 }
 
@@ -1382,7 +1392,15 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
         return result;
     }
 
-    while (NS_SUCCEEDED(arcs->Advance())) {
+    while (1) {
+        nsresult rv = arcs->Advance();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "severe error advancing cursor");
+        if (NS_FAILED(rv))
+            return PR_FALSE;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFResource> property;
         if (NS_FAILED(arcs->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get cursor value");
@@ -1575,7 +1593,7 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
     }
     else rv = FindChildByTag(aElement, kNameSpaceID_XUL, parentAtom, getter_AddRefs(parentNode));
 
-    if (rv == NS_ERROR_RDF_NO_VALUE) {
+    if (rv == NS_RDF_NO_VALUE) {
         // No tag; must've already been closed
         return NS_OK;
     }

@@ -286,7 +286,7 @@ FTPDataSource::GetTarget(nsIRDFResource *source,
                           PRBool tv,
                           nsIRDFNode **target /* out */)
 {
-	nsresult		rv = NS_ERROR_RDF_NO_VALUE;
+	nsresult		rv = NS_RDF_NO_VALUE;
 
 	// we only have positive assertions in the FTP data source.
 	if (! tv)
@@ -328,7 +328,7 @@ FTPDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else
 		{
-			rv = NS_ERROR_RDF_NO_VALUE;
+			rv = NS_RDF_NO_VALUE;
 		}
 	}
 	return(rv);
@@ -702,7 +702,7 @@ NS_IMETHODIMP
 FTPDataSource::ArcLabelsOut(nsIRDFResource *source,
                              nsIRDFArcsOutCursor **labels /* out */)
 {
-	nsresult		rv = NS_ERROR_RDF_NO_VALUE;
+	nsresult		rv = NS_RDF_NO_VALUE;
 
 	*labels = nsnull;
 
@@ -853,7 +853,7 @@ FTPCursor::Advance(void)
 	if (!mArray)
 		return NS_ERROR_NULL_POINTER;
 	if (mArray->Count() <= mCount)
-		return NS_ERROR_RDF_CURSOR_EMPTY;
+		return NS_RDF_CURSOR_EMPTY;
 	NS_IF_RELEASE(mValue);
 	mTarget = mValue = (nsIRDFNode *)mArray->ElementAt(mCount++);
 	NS_ADDREF(mValue);

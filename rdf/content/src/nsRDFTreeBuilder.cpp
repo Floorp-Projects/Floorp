@@ -559,7 +559,14 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
     }
 
-    while (NS_SUCCEEDED(rv = arcs->Advance())) {
+    while (1) {
+        rv = arcs->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFResource> property;
         if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property)))) {
             NS_ERROR("unable to get cursor value");
@@ -618,11 +625,6 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 		    }
 		    treeItem->SetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos, PR_FALSE);
 	    }
-    }
-
-    if (NS_FAILED(rv) && (rv != NS_ERROR_RDF_CURSOR_EMPTY)) {
-        NS_ERROR("error advancing cursor");
-        return rv;
     }
 
     if (markAsContainer)
@@ -955,11 +957,21 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
 
             // ...then query the RDF back-end
             nsCOMPtr<nsIRDFNode> value;
-            if (NS_SUCCEEDED(rv = mDB->GetTarget(treeItemResource,
-                                                 property,
-                                                 PR_TRUE,
-                                                 getter_AddRefs(value)))) {
+            rv = mDB->GetTarget(treeItemResource,
+                                property,
+                                PR_TRUE,
+                                getter_AddRefs(value));
 
+            if (rv == NS_RDF_NO_VALUE) {
+                // There was no value for this. It'll have to get set
+                // later, when an OnAssert() comes in (if it even has
+                // a value at all...)
+            }
+            else if (NS_FAILED(rv)) {
+                NS_ERROR("error getting cell's value");
+                return rv; // XXX something serious happened
+            }
+            else {
                 // Attach a plain old text node: nothing fancy. Here's
                 // where we'd do wacky stuff like pull in an icon or
                 // whatever.
@@ -967,15 +979,6 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
                     NS_ERROR("unable to attach text node to xul:treecell");
                     return rv;
                 }
-            }
-            else if (rv == NS_ERROR_RDF_NO_VALUE) {
-                // otherwise, there was no value for this. It'll have to
-                // get set later, when an OnAssert() comes in (if it even
-                // has a value at all...)
-            }
-            else {
-                NS_ERROR("error getting cell's value");
-                return rv; // XXX something serious happened
             }
         }
 

@@ -41,6 +41,7 @@ LINCS=  -I$(PUBLIC)\rdf         \
         -I$(PUBLIC)\raptor      \
         -I$(PUBLIC)\js          \
         -I$(PUBLIC)\dom         \
+        -I$(PUBLIC)\brprof      \
         -I$(DEPTH)\rdf\base\src \
         $(NULL)
 

@@ -1099,11 +1099,18 @@ RDFXMLDataSourceImpl::SerializeProperty(nsIOutputStream* aStream,
 {
     nsresult rv;
 
-    nsIRDFAssertionCursor* assertions = nsnull;
-    if (NS_FAILED(rv = mInner->GetTargets(aResource, aProperty, PR_TRUE, &assertions)))
+    nsCOMPtr<nsIRDFAssertionCursor> assertions;
+    if (NS_FAILED(rv = mInner->GetTargets(aResource, aProperty, PR_TRUE, getter_AddRefs(assertions))))
         return rv;
 
-    while (NS_SUCCEEDED(rv = assertions->Advance())) {
+    while (1) {
+        rv = assertions->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsIRDFNode* value;
         if (NS_FAILED(rv = assertions->GetValue(&value)))
             break;
@@ -1115,11 +1122,7 @@ RDFXMLDataSourceImpl::SerializeProperty(nsIOutputStream* aStream,
             break;
     }
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        rv = NS_OK;
-
-    NS_RELEASE(assertions);
-    return rv;
+    return NS_OK;
 }
 
 
@@ -1153,11 +1156,18 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     rdf_BlockingWrite(aStream, uri);
     rdf_BlockingWrite(aStream, kRDFDescription2, sizeof(kRDFDescription2) - 1);
 
-    nsIRDFArcsOutCursor* arcs = nsnull;
-    if (NS_FAILED(rv = mInner->ArcLabelsOut(aResource, &arcs)))
+    nsCOMPtr<nsIRDFArcsOutCursor> arcs;
+    if (NS_FAILED(rv = mInner->ArcLabelsOut(aResource, getter_AddRefs(arcs))))
         return rv;
 
-    while (NS_SUCCEEDED(rv = arcs->Advance())) {
+    while (1) {
+        rv = arcs->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsIRDFResource* property;
         if (NS_FAILED(rv = arcs->GetLabel(&property)))
             break;
@@ -1169,13 +1179,8 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
             break;
     }
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        rv = NS_OK;
-
-    NS_IF_RELEASE(arcs);
     rdf_BlockingWrite(aStream, kRDFDescription3, sizeof(kRDFDescription3) - 1);
-
-    return rv;
+    return NS_OK;
 }
 
 nsresult
@@ -1189,14 +1194,21 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
     // there may for some random reason be two or more elements with
     // the same ordinal value. Okay, I'm paranoid.
 
-    nsIRDFAssertionCursor* cursor;
-    if (NS_FAILED(rv = mInner->GetTargets(aContainer, aProperty, PR_TRUE, &cursor)))
+    nsCOMPtr<nsIRDFAssertionCursor> cursor;
+    if (NS_FAILED(rv = mInner->GetTargets(aContainer, aProperty, PR_TRUE, getter_AddRefs(cursor))))
         return rv;
 
     nsXPIDLCString docURI;
     mInner->GetURI(getter_Copies(docURI));
 
-    while (NS_SUCCEEDED(rv = cursor->Advance())) {
+    while (1) {
+        rv = cursor->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsIRDFNode* node;
 
         if (NS_FAILED(rv = cursor->GetTarget(&node)))
@@ -1246,11 +1258,7 @@ static const char kRDFLILiteral2[] = "</RDF:li>\n";
             break;
     }
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        rv = NS_OK;
-
-    NS_RELEASE(cursor);
-    return rv;
+    return NS_OK;
 }
 
 
@@ -1310,11 +1318,18 @@ static const char kRDFAlt[] = "RDF:Alt";
     // We iterate through all of the arcs, in case someone has applied
     // properties to the bag itself.
 
-    nsIRDFArcsOutCursor* arcs;
-    if (NS_FAILED(rv = mInner->ArcLabelsOut(aContainer, &arcs)))
+    nsCOMPtr<nsIRDFArcsOutCursor> arcs;
+    if (NS_FAILED(rv = mInner->ArcLabelsOut(aContainer, getter_AddRefs(arcs))))
         return rv;
 
-    while (NS_SUCCEEDED(rv = arcs->Advance())) {
+    while (1) {
+        rv = arcs->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsIRDFResource* property;
 
         if (NS_FAILED(rv = arcs->GetLabel(&property)))
@@ -1352,18 +1367,12 @@ static const char kRDFAlt[] = "RDF:Alt";
             break;
     }
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        rv = NS_OK;
-
-    NS_RELEASE(arcs);
-
-
     // close the container tag
     rdf_BlockingWrite(aStream, "  </", 4);
     rdf_BlockingWrite(aStream, tag);
     rdf_BlockingWrite(aStream, ">\n", 2);
 
-    return rv;
+    return NS_OK;
 }
 
 
@@ -1431,15 +1440,24 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Serialize(nsIOutputStream* aStream)
 {
     nsresult rv;
-    nsIRDFResourceCursor* resources = nsnull;
+    nsCOMPtr<nsIRDFResourceCursor> resources;
 
-    if (NS_FAILED(rv = mInner->GetAllResources(&resources)))
-        goto done;
+    rv = mInner->GetAllResources(getter_AddRefs(resources));
+    if (NS_FAILED(rv))
+        return rv;
 
-    if (NS_FAILED(rv = SerializePrologue(aStream)))
-        goto done;
+    rv = SerializePrologue(aStream);
+    if (NS_FAILED(rv))
+        return rv;
 
-    while (NS_SUCCEEDED(rv = resources->Advance())) {
+    while (1) {
+        rv = resources->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsIRDFResource* resource;
         if (NS_FAILED(rv = resources->GetResource(&resource)))
             break;
@@ -1456,16 +1474,7 @@ RDFXMLDataSourceImpl::Serialize(nsIOutputStream* aStream)
             break;
     }
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        rv = NS_OK;
-
-    if (NS_FAILED(rv))
-        goto done;
-
     rv = SerializeEpilogue(aStream);
-
-done:
-    NS_IF_RELEASE(resources);
     return rv;
 }
 

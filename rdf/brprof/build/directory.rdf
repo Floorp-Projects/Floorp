@@ -1,8 +1,6 @@
-<RDF xmlns:r="http://www.w3.org/TR/RDF/"
+<r:RDF xmlns:r="http://www.w3.org/TR/WD-rdf-syntax#"
      xmlns:d="http://purl.org/dc/elements/1.0/"  
      xmlns="http://directory.mozilla.org/rdf">
-
-
 
 <Topic r:about="Arts/Books">
   <catid>1</catid>
@@ -1710,4 +1708,4 @@
 
 
 
-</RDF>
+</r:RDF>

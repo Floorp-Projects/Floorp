@@ -296,7 +296,7 @@ DBArcsInOutCursor::Advance(void)
     while (mInCursor || mOutCursor) {
         nsresult result = (mInCursor ? mInCursor->Advance() : mOutCursor->Advance());
         
-        while (NS_SUCCEEDED(result)) {
+        while (NS_SUCCEEDED(result) && (result != NS_RDF_CURSOR_EMPTY)) {
             nsIRDFNode* obj ;
             result = GetValue(&obj);
             NS_ASSERTION(NS_SUCCEEDED(result), "Advance is broken");
@@ -307,7 +307,7 @@ DBArcsInOutCursor::Advance(void)
             result = (mInCursor ? mInCursor->Advance() : mOutCursor->Advance());        
         }
 
-        if (result != NS_ERROR_RDF_CURSOR_EMPTY)
+        if (NS_FAILED(result))
             return result;
 
         NS_IF_RELEASE(mInCursor);
@@ -325,7 +325,7 @@ DBArcsInOutCursor::Advance(void)
             ds->ArcLabelsOut(mSource, &mOutCursor);
         }
     }
-    return NS_ERROR_RDF_CURSOR_EMPTY;
+    return NS_RDF_CURSOR_EMPTY;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -509,7 +509,9 @@ DBGetSTCursor::Advance(void)
     nsIRDFDataSource* ds;
     while (mCurrentCursor) {
         nsresult result = mCurrentCursor->Advance();
-        while (NS_ERROR_RDF_CURSOR_EMPTY != result) {
+        if (NS_FAILED(result)) return result;
+
+        while (NS_RDF_CURSOR_EMPTY != result) {
             nsIRDFResource* src;
             nsIRDFNode*     trg;            
             mCurrentCursor->GetSource(&src);
@@ -534,7 +536,7 @@ DBGetSTCursor::Advance(void)
         else 
             ds->GetSources(mLabel, mTarget, mTruthValue, &mCurrentCursor);
     }
-    return NS_ERROR_RDF_CURSOR_EMPTY;
+    return NS_RDF_CURSOR_EMPTY;
 }
 
 
@@ -634,7 +636,11 @@ CompositeDataSourceImpl::GetSource(nsIRDFResource* property,
     for (PRInt32 i = 0; i < count; ++i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
 
-        if (NS_FAILED(ds->GetSource(property, target, tv, source)))
+        nsresult rv;
+        rv = ds->GetSource(property, target, tv, source);
+        if (NS_FAILED(rv)) return rv;
+
+        if (rv == NS_RDF_NO_VALUE)
             continue;
 
         // okay, found it. make sure we don't have the opposite
@@ -643,9 +649,9 @@ CompositeDataSourceImpl::GetSource(nsIRDFResource* property,
             return NS_OK;
 
         NS_RELEASE(*source);
-        return NS_ERROR_RDF_NO_VALUE;
+        return NS_RDF_NO_VALUE;
     }
-    return NS_ERROR_RDF_NO_VALUE;
+    return NS_RDF_NO_VALUE;
 }
 
 NS_IMETHODIMP
@@ -675,7 +681,12 @@ CompositeDataSourceImpl::GetTarget(nsIRDFResource* source,
     for (PRInt32 i = 0; i < count; ++i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
 
-        if (NS_FAILED(ds->GetTarget(source, property, tv, target)))
+        nsresult rv;
+        rv = ds->GetTarget(source, property, tv, target);
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_NO_VALUE)
             continue;
 
         // okay, found it. make sure we don't have the opposite
@@ -684,10 +695,10 @@ CompositeDataSourceImpl::GetTarget(nsIRDFResource* source,
             return NS_OK;
 
         NS_RELEASE(*target);
-        return NS_ERROR_RDF_NO_VALUE;
+        return NS_RDF_NO_VALUE;
     }
 
-    return NS_ERROR_RDF_NO_VALUE;
+    return NS_RDF_NO_VALUE;
 }
 
 PRBool

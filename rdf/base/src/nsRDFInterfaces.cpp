@@ -1777,7 +1777,8 @@ nsIRDFCompositeDataSource::InitJSClass(JSContext *cx)
   JSObject *globj = JS_GetGlobalObject(cx);
   if (!globj)
     return 0;
-  JSObject *proto = JS_InitClass(cx, globj, 0, &nsIRDFCompositeDataSource_class, nsIRDFCompositeDataSource_ctor, 0,
+  JSObject *parentProto = nsIRDFDataSource::InitJSClass(cx);
+  JSObject *proto = JS_InitClass(cx, globj, parentProto, &nsIRDFCompositeDataSource_class, nsIRDFCompositeDataSource_ctor, 0,
                                  0, nsIRDFCompositeDataSource_funcs, 0, 0);
   return proto;
 }

@@ -68,7 +68,7 @@ public:
 
     // nsIRDFCursor
     NS_IMETHOD Advance(void) {
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     }
 
     // nsIRDFAssertionCursor
@@ -139,7 +139,7 @@ public:
 
     // nsIRDFCursor
     NS_IMETHOD Advance(void) {
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     }
 
     // nsIRDFArcsOutCursor
@@ -206,7 +206,7 @@ public:
 
     // nsIRDFCursor
     NS_IMETHOD Advance(void) {
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     }
 
     // nsIRDFArcsInCursor

@@ -42,13 +42,13 @@ NS_IMETHODIMP nsRDFArrayCursor::Advance(void)
     if (!mStarted) {
         mStarted = PR_TRUE;
         nsresult rv = First();
-        if (NS_FAILED(rv)) return NS_ERROR_RDF_CURSOR_EMPTY;
+        if (NS_FAILED(rv)) return NS_RDF_CURSOR_EMPTY;
     }
     else {
         nsresult rv = Next();
-        if (NS_FAILED(rv)) return NS_ERROR_RDF_CURSOR_EMPTY;
+        if (NS_FAILED(rv)) return NS_RDF_CURSOR_EMPTY;
     }
-    return IsDone() == NS_OK ? NS_ERROR_RDF_CURSOR_EMPTY : NS_OK;
+    return IsDone() == NS_OK ? NS_RDF_CURSOR_EMPTY : NS_OK;
 }
 
 NS_IMETHODIMP nsRDFArrayCursor::GetDataSource(nsIRDFDataSource** aDataSource)
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::Advance(void)
 {
     if (!mConsumed) {
         mConsumed = PR_TRUE;    
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     }
     return NS_OK;
 }
@@ -175,7 +175,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetDataSource(nsIRDFDataSource** aD
 NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetValue(nsIRDFNode** aValue)
 {
     if (mConsumed)
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     if (mValue == nsnull) {
         if (mInverse)
             return mDataSource->GetSource(mPredicate, mNode, mTruthValue,
@@ -191,7 +191,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetValue(nsIRDFNode** aValue)
 NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetSource(nsIRDFResource* *aSubject)
 {
     if (mConsumed)
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     if (mInverse) {
         return GetValue((nsIRDFNode**)aSubject); 
     }
@@ -205,7 +205,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetSource(nsIRDFResource* *aSubject
 NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetLabel(nsIRDFResource* *aPredicate)
 {
     if (mConsumed)
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     *aPredicate = mPredicate;
     NS_ADDREF(mPredicate);
     return NS_OK;
@@ -214,7 +214,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetLabel(nsIRDFResource* *aPredicat
 NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetTarget(nsIRDFNode* *aObject)
 {
     if (mConsumed)
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     if (mInverse) {
         *aObject = mNode;
         NS_ADDREF(mNode);
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetTarget(nsIRDFNode* *aObject)
 NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetTruthValue(PRBool *aTruthValue)
 {
     if (mConsumed)
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
     *aTruthValue = mTruthValue;
     return NS_OK;
 }
@@ -300,13 +300,13 @@ NS_IMETHODIMP nsRDFEnumeratorCursor::Advance(void)
     if (!mStarted) {
         mStarted = PR_TRUE;
         nsresult rv = mEnum->First();
-        if (NS_FAILED(rv)) return NS_ERROR_RDF_CURSOR_EMPTY;
+        if (NS_FAILED(rv)) return NS_RDF_CURSOR_EMPTY;
     }
     else {
         nsresult rv = mEnum->Next();
-        if (NS_FAILED(rv)) return NS_ERROR_RDF_CURSOR_EMPTY;
+        if (NS_FAILED(rv)) return NS_RDF_CURSOR_EMPTY;
     }
-    return mEnum->IsDone() == NS_OK ? NS_ERROR_RDF_CURSOR_EMPTY : NS_OK;
+    return mEnum->IsDone() == NS_OK ? NS_RDF_CURSOR_EMPTY : NS_OK;
 }
 
 NS_IMETHODIMP nsRDFEnumeratorCursor::GetDataSource(nsIRDFDataSource** aDataSource)
