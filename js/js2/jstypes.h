@@ -77,10 +77,15 @@ namespace JSTypes {
         };
         
         enum {
-            i8_tag, u8_tag, i16_tag, u16_tag, i32_tag, u32_tag, i64_tag, u64_tag, f32_tag, f64_tag,
-            object_tag, array_tag, function_tag, undefined_tag
+            i8_tag, u8_tag,
+            i16_tag, u16_tag,
+            i32_tag, u32_tag,
+            i64_tag, u64_tag,
+            f32_tag, f64_tag,
+            object_tag, array_tag, function_tag,
+            undefined_tag
         } tag;
-          
+        
         JSValue() : f64(0.0), tag(undefined_tag) {}
         explicit JSValue(int32 i32) : i32(i32), tag(i32_tag) {}
         explicit JSValue(float64 f64) : f64(f64), tag(f64_tag) {}
@@ -93,6 +98,8 @@ namespace JSTypes {
         JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
         JSArray*& operator=(JSArray* array)             { return (tag = array_tag, this->array = array); }
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
+        
+        int operator==(const JSValue& value) const;
     };
 
     Formatter& operator<<(Formatter& f, const JSValue& value);
@@ -127,6 +134,8 @@ namespace JSTypes {
         JSProperties mProperties;
         JSObject* mPrototype;
     public:
+        JSObject() : mPrototype(0) {}
+    
         bool hasProperty(const String& name)
         {
             return (mProperties.count(name) != 0);
@@ -166,18 +175,6 @@ namespace JSTypes {
         }
     };
     
-    /**
-     * Private representation of a JS function. This simply
-     * holds a reference to the iCode module that is the
-     * compiled code of the function.
-     */
-    class JSFunction : public JSObject {
-        ICodeModule* mICode;
-    public:
-        JSFunction(ICodeModule* iCode) : mICode(iCode) {}
-        ICodeModule* getICode() { return mICode; }
-    };
-        
     /**
      * Private representation of a JavaScript array.
      */
@@ -226,6 +223,18 @@ namespace JSTypes {
         }
     };
         
+    /**
+     * Private representation of a JS function. This simply
+     * holds a reference to the iCode module that is the
+     * compiled code of the function.
+     */
+    class JSFunction : public JSObject {
+        ICodeModule* mICode;
+    public:
+        JSFunction(ICodeModule* iCode) : mICode(iCode) {}
+        ICodeModule* getICode() { return mICode; }
+    };
+        
     class JSException : public gc_base {
     public:
         JSException(JSValue v) : value(v) { }
@@ -233,12 +242,19 @@ namespace JSTypes {
     };
     
     /**
-     * Provides a set of nested scopes.
+     * Provides a set of nested scopes. 
      */
-    class JSNamespace : private JSObject {
+    class JSScope : private JSObject {
     protected:
-        JSNamespace* mParent;
+        JSScope* mParent;
     public:
+        JSScope(JSScope* parent = 0, JSObject* prototype = 0)
+            : mParent(parent)
+        {
+            if (prototype)
+                setPrototype(prototype);
+        }
+    
         bool isDefined(const String& name)
         {
             if (hasProperty(name))
