@@ -46,7 +46,6 @@ EXPORTS=						\
 	nsMsgStatusFeedback.h \
 	nsMsgWindow.h \
 	nsMessengerMigrator.h \
-	nsMsgViewNavigationService.h \
 	nsMsgServiceProvider.h	\
 	nsSubscribeDataSource.h	\
 	nsSubscribableServer.h \

@@ -759,14 +759,9 @@ function MsgDownloadSelected()
 
 function MsgMarkThreadAsRead()
 {
-    dump("XXX fix MsgMarkThreadAsRead(), this won't work anymore\n");
-    var messageList = GetSelectedMessages();
-    if(messageList.length == 1)
-    {
-        var message = messageList[0];
-        var compositeDataSource = GetCompositeDataSource("MarkThreadAsRead");
-
-        MarkThreadAsRead(compositeDataSource, message);
+    var uri = GetFirstSelectedMessage();
+    if (uri) {
+        MarkThreadAsRead(uri);
     }
 }
 

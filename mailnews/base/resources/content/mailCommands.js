@@ -398,7 +398,7 @@ function DownloadSelectedMessages(compositeDataSource, messages, markFlagged)
     dump("fix DownloadSelectedMessages()\n");
 }
 
-function MarkThreadAsRead(compositeDataSource, message)
+function MarkThreadAsRead(message)
 {
   gDBView.doCommand(nsMsgViewCommandType.markThreadRead);
 }

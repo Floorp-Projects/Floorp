@@ -2049,7 +2049,13 @@ nsMsgDBView::GetCollationKey(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType,
         break;
     }
 
-    NS_ENSURE_SUCCESS(rv,rv);
+    // bailing out with failure will stop the sort and leave us in
+    // a bad state.  try to continue on, instead
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the collation key");
+    if (NS_FAILED(rv)) {
+        *result = nsnull;
+        *len = 0;
+    }
     return NS_OK;
 }
 
