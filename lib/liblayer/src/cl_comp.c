@@ -1484,7 +1484,7 @@ CL_ScrollCompositorWindow(CL_Compositor *compositor,
     
     LOCK_COMPOSITOR(compositor);
 
-#if defined(XP_WIN) && _MSC_VER >= 1100
+#if defined(XP_WIN) && _MSC_VER == 1100
     /* Hack to avoid optimizer bug in VC++ v5 */
     delta_x = (compositor->x_offset != x_origin ) ||
               (compositor->y_offset != y_origin );
