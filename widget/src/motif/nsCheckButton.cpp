@@ -70,7 +70,7 @@ void nsCheckButton::Create(nsIWidget *aParent,
 
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
-  mWidget = ::XtVaCreateManagedWidget("button",
+  mWidget = ::XtVaCreateManagedWidget("",
                                     xmToggleButtonWidgetClass,
                                     parentWidget,
                                     XmNwidth, aRect.width,
