@@ -67,5 +67,6 @@
 
   <html id="finishtext">&pnl2.finish.text;</html> 
 
-  <data id="ProfileLocale" />
+  <data id="ProfileLanguage" />
+  <data id="ProfileRegion" />
 </window>

@@ -111,11 +111,19 @@ function onFinish()
 
   var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
   var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
-  var profLocale = wizardManager.WSM.PageData["newProfile1_2"].ProfileLocale.value;
+  var profLang = wizardManager.WSM.PageData["newProfile1_2"].ProfileLanguage.value;
+  var profRegion = wizardManager.WSM.PageData["newProfile1_2"].ProfileRegion.value;
 
   // Get & select langcode
-  proceed = processCreateProfileData(profName, profDir, profLocale); 
+  proceed = processCreateProfileData(profName, profDir, profLang, profRegion); 
+  
   if( proceed ) {
+
+    //select locale region
+    if (profRegion) {
+    selectLocale(profRegion);
+    }
+
     if( window.opener ) {
       window.opener.CreateProfile(profName, profDir);
       window.close();
@@ -134,7 +142,7 @@ function onFinish()
  *  - in:  nothing
  *  - out: nothing
  **/               
-function processCreateProfileData( aProfName, aProfDir, langcode)
+function processCreateProfileData( aProfName, aProfDir, langcode, regioncode)
 {
   try {
     // note: deleted check for empty profName string here as this should be

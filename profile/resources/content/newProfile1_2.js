@@ -32,11 +32,13 @@ function GetFields()
   var profDir  = document.getElementById("ProfileDir");
   var profDirContent = profDir.hasChildNodes() ? profDir.firstChild.nodeValue : "";
   var profDirRootFolder = profDir.getAttribute("rootFolder");
-  var profLocale = document.getElementById("ProfileLocale").getAttribute("data");
+  var profLanguage = document.getElementById("ProfileLanguage").getAttribute("data");
+  var profRegion = document.getElementById("ProfileRegion").getAttribute("data");
   var rv = { 
     ProfileName: { id: "ProfileName", value: profName },
     ProfileDir:  { id: "ProfileDir",  value: profDirRootFolder },
-    ProfileLocale: { id: "ProfileLocale", value: profLocale }
+    ProfileLanguage:    { id: "ProfileLanguage",    value: profLanguage         },
+    ProfileRegion:      { id: "ProfileRegion",      value: profRegion           }
   }
   return rv; 
 }
@@ -55,9 +57,14 @@ function SetFields( aElement, aValue, aDataObject )
     case "ProfileName":
       element.value = aValue;
       break;
-    case "ProfileLocale":
-      document.getElementById("ProfileLocale").setAttribute("data", aValue);
+    case "ProfileLanguage": {
+      document.getElementById("ProfileLanguage").setAttribute("data", aValue);
       break;
+  }
+    case "ProfileRegion": {
+      document.getElementById("ProfileRegion").setAttribute("data", aValue);
+      break;
+      }
   }
 }  
 
@@ -161,6 +168,7 @@ function setDisplayToDefaultFolder()
 
 function showLangDialog()
 {
-  var selectedLanguage = document.getElementById("ProfileLocale").getAttribute("data");
-  var selectLang = window.openDialog("chrome://communicator/content/profile/selectLang.xul","","modal=yes,titlebar,resizable=no",selectedLanguage);
+  var selectedLanguage = document.getElementById("ProfileLanguage").getAttribute("data");
+  var selectedRegion = document.getElementById("ProfileRegion").getAttribute("data");
+  var selectLang = window.openDialog("chrome://communicator/content/profile/selectLang.xul","","modal=yes,titlebar,resizable=no", selectedLanguage, selectedRegion);
 }
