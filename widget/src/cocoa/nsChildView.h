@@ -42,6 +42,7 @@
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
 #include "nsDeleteObserver.h"
+#include "nsIEventSink.h"
 
 #include "nsIWidget.h"
 #include "nsIKBStateControl.h"
@@ -65,7 +66,6 @@ struct nsPluginPort;
 #import <Cocoa/Cocoa.h>
 
 class nsChildView;
-class nsIEventSink;
 
 
 @interface ChildView : NSQuickDrawView<mozView>
@@ -93,6 +93,8 @@ class nsIEventSink;
 - (void) convert:(NSEvent*)aKeyEvent message:(PRUint32)aMessage 
            isChar:(PRBool*)outIsChar
            toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
+- (void) convert:(NSPoint)inPoint message:(PRInt32)inMsg 
+          modifiers:(unsigned int)inMods toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
 -(NSMenu*)getContextMenu;
 
@@ -106,7 +108,7 @@ class nsIEventSink;
 //
 //-------------------------------------------------------------------------
 
-class nsChildView : public nsBaseWidget, public nsDeleteObserved, public nsIKBStateControl
+class nsChildView : public nsBaseWidget, public nsDeleteObserved, public nsIKBStateControl, public nsIEventSink
 {
 private:
   typedef nsBaseWidget Inherited;
@@ -116,7 +118,8 @@ public:
   virtual                 ~nsChildView();
   
   NS_DECL_ISUPPORTS_INHERITED
-  
+  NS_DECL_NSIEVENTSINK 
+ 
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
                                  const nsRect &aRect,
