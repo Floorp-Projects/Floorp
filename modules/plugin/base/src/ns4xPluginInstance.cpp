@@ -273,8 +273,8 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   if(!callbacks)
     return NS_ERROR_FAILURE;
 
-  PRUint32  numtowrite = 0;
-  PRUint32  amountRead = 0;
+  PRInt32   numtowrite = 0;
+  PRInt32   amountRead = 0;
   PRInt32   writeCount = 0;
   PRUint32  leftToRead = 0;         // just in case OnDataaAvail tries to overflow our buffer
   PRBool   createdHere = PR_FALSE;  // we did malloc in locally, so we must free locally
@@ -300,7 +300,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     leftToRead = length - MAX_PLUGIN_NECKO_BUFFER; // break it up
     length     = MAX_PLUGIN_NECKO_BUFFER;
   }
-  nsresult rv = input->Read(mStreamBuffer, length, &amountRead);
+  nsresult rv = input->Read(mStreamBuffer, length, (PRUint32*)&amountRead);
   if (NS_FAILED(rv))
     goto error;
 
@@ -406,8 +406,8 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   if(!callbacks)
     return NS_ERROR_FAILURE;
 
-  PRUint32  numtowrite = 0;
-  PRUint32  amountRead = 0;
+  PRInt32   numtowrite = 0;
+  PRInt32   amountRead = 0;
   PRInt32   writeCount = 0;
   PRUint32  leftToRead = 0;         // just in case OnDataaAvail tries to overflow our buffer
   PRBool   createdHere = PR_FALSE;  // we did malloc in locally, so we must free locally
@@ -441,7 +441,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     leftToRead = length - MAX_PLUGIN_NECKO_BUFFER; // break it up
     length     = MAX_PLUGIN_NECKO_BUFFER;
   }
-  nsresult rv = input->Read(mStreamBuffer, length, &amountRead);
+  nsresult rv = input->Read(mStreamBuffer, length, (PRUint32*)&amountRead);
   if (NS_FAILED(rv))
     goto error;
 
