@@ -40,6 +40,7 @@
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
 #include "nsINetSupportDialogService.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -767,10 +768,18 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       }
       else    // Good ole' normal tag...
       {
+        char      *utfString = nsString2(aName).ToNewUTF8String();
+
         tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
         tProtLine.Append(NS_ConvertASCIItoUCS2(mSchemaMappingList[i].serverField));
         tProtLine.Append(NS_ConvertASCIItoUCS2("="));
-        tProtLine.Append(aName);
+        if (utfString)
+        {
+          tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
+          PR_FREEIF(utfString);
+        }
+        else
+          tProtLine.Append(aName);
       }
     }
   }
@@ -2300,6 +2309,17 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   // as to their type...this is not the case with phone numbers.
   //
   PRUnichar aChar = '_';
+  nsString  outValue;
+  char      *tValue = nsnull;
+
+  tValue = aTagValue->ToNewCString();
+  if (tValue)
+  {
+    rv = nsMsgI18NConvertToUnicode(nsCString("UTF-8"), tValue, outValue);
+    if (NS_SUCCEEDED(rv))
+      aTagValue->Assign(outValue);
+    PR_FREEIF(tValue);
+  }
 
   if (!aTagName->CompareWithConversion("phone", PR_TRUE, 5))
   {

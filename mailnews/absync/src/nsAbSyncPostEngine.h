@@ -108,12 +108,13 @@ private:
   // Since we need to do authentication a bit differently, do it here!
   PRBool                          mAuthenticationRunning;
   nsCOMPtr<nsIAbSyncMojo>         mSyncMojo;
-  char                            *mSyncSpec;
-  PRInt32                         mSyncPort;
   nsCOMPtr<nsIChannel>            mChannel;
 
   char                            *mSyncProtocolRequest;
   char                            *mSyncProtocolRequestPrefix;
+
+  char                            *mMojoSyncSpec;
+  PRInt32                         mMojoSyncPort;
 }; 
 
 #endif /* nsAbSyncPostEngine_h_ */

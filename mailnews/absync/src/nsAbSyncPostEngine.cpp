@@ -101,10 +101,10 @@ nsAbSyncPostEngine::nsAbSyncPostEngine()
   mAuthenticationRunning = PR_TRUE;
   mCookie = nsnull;
   mUser = nsnull;
-  mSyncSpec = nsnull;
   mSyncProtocolRequest = nsnull;
   mSyncProtocolRequestPrefix = nsnull;
   mChannel = nsnull;
+  mMojoSyncSpec = nsnull;
 }
 
 nsAbSyncPostEngine::~nsAbSyncPostEngine()
@@ -117,7 +117,7 @@ nsAbSyncPostEngine::~nsAbSyncPostEngine()
   PR_FREEIF(mSyncProtocolRequestPrefix);
   PR_FREEIF(mCookie);
   PR_FREEIF(mUser);
-  PR_FREEIF(mSyncSpec);
+  PR_FREEIF(mMojoSyncSpec);
   DeleteListeners();
 }
 
@@ -468,7 +468,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */
   {
     nsresult  rv;
     if (mSyncMojo)
-      rv = mSyncMojo->GetAbSyncMojoResults(&mUser, &mCookie);
+      rv = mSyncMojo->GetAbSyncMojoResults(&mUser, &mCookie, &mMojoSyncSpec, &mMojoSyncPort);
 
     if (NS_SUCCEEDED(rv))
     {
@@ -745,10 +745,6 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
   if (NS_FAILED(mSyncMojo->StartAbSyncMojo(this)))
     return NS_ERROR_FAILURE;  
 
-  // Stash these away for later...
-  mSyncSpec = nsCRT::strdup(aSpec);
-  mSyncPort = aPort;
-
   // Set transaction ID and save/init Sync info...
   mTransactionID = aTransactionID;
 
@@ -795,15 +791,15 @@ nsAbSyncPostEngine::KickTheSyncOperation(void)
     goto GetOuttaHere;
   }
 
-  rv = nsEngineNewURI(&workURI, mSyncSpec, nsnull);
+  rv = nsEngineNewURI(&workURI, mMojoSyncSpec, nsnull);
   if (NS_FAILED(rv) || (!workURI))
   {
     rv = NS_ERROR_FAILURE;  // we couldn't allocate the string 
     goto GetOuttaHere;
   }
 
-  if (mSyncPort > 0)
-    workURI->SetPort(mSyncPort);
+  if (mMojoSyncPort > 0)
+    workURI->SetPort(mMojoSyncPort);
 
   rv = FireURLRequest(workURI, tCommand);
 
