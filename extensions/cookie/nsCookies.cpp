@@ -875,10 +875,10 @@ COOKIE_GetCookie(nsIURI * address) {
       cookiePathLen--;
     }
 
-    if (path.Length() > cookiePathLen &&
-        Substring(path, 0, cookiePathLen).Equals(Substring(cookie_s->path, 0, cookiePathLen))) {
+    if (Substring(path, 0, cookiePathLen).Equals(Substring(cookie_s->path, 0, cookiePathLen))) {
       char pathLastChar = path.CharAt(cookiePathLen);
-      if (pathLastChar != '/' && pathLastChar != '?' && pathLastChar != '#' && pathLastChar != ';') {
+      if (path.Length() > cookiePathLen &&
+          pathLastChar != '/' && pathLastChar != '?' && pathLastChar != '#' && pathLastChar != ';') {
         /*
          * note that the '?' test above allows a site at host/abc?def to receive a cookie that
          * has a path attribute of abc.  This seems strange but at least one major site
@@ -928,7 +928,7 @@ COOKIE_GetCookie(nsIURI * address) {
 
   /* may be nsnull */
   COOKIE_LOGSUCCESS(GET_COOKIE, address, cookieData, nsnull);
-  return ToNewCString(cookieData);
+  return cookieData.IsEmpty() ? nsnull : ToNewCString(cookieData);
 }
 
 /* Determines whether the inlineHost is in the same domain as the currentHost.
