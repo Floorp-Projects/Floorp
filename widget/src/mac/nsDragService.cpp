@@ -199,6 +199,7 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
 NS_IMETHODIMP
 nsDragService :: InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTransferableArray, nsIScriptableRegion * aDragRgn, PRUint32 aActionType)
 {
+  ::InitCursor();
   nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferableArray, aDragRgn, aActionType );
   
   Rect frameRect = { 0, 0, 0, 0 };
