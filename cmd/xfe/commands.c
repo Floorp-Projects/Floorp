@@ -2432,6 +2432,49 @@ fe_open_url_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
     }
 }
 
+static void
+fe_print_remote_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
+{
+  /* Silent print for remote. Valid invocations are
+     print(filename, remote)           : print URL of context to filename
+     print(remote)                     : print URL of context to printer
+     print(remote)                     : print URL of context to printer
+  */
+  MWContext *context = fe_WidgetToMWContext (widget);
+  URL_Struct *url_struct = NULL;
+  Boolean toFile = False;
+  char *filename = NULL;
+
+  XP_ASSERT (context);
+  if (!context) return;
+  fe_UserActivity (context);
+
+  if (*ac && av[*ac-1] && !strcmp (av[*ac-1], "<remote>"))
+    (*ac)--;
+  else
+    return;    /* this is valid only for remote */
+
+  if (*ac && av[*ac-1]) {
+    filename = av[*ac-1];
+    if (*filename) toFile = True;
+    (*ac)--;
+  }
+
+  if (*ac > 0)
+    fprintf (stderr, "%s: usage: print([filename])\n", fe_progname);
+
+  url_struct = SHIST_CreateWysiwygURLStruct (context,
+                                       SHIST_GetCurrent (&context->hist));
+
+  if (url_struct)
+    {
+      if (!toFile || filename)
+    fe_Print(context, url_struct, toFile, filename);
+      else
+        NET_FreeURLStruct (url_struct);
+    }
+}
+
 #ifdef MOZ_MAIL_NEWS
 static void
 fe_mailto_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
@@ -2593,6 +2636,7 @@ XtActionsRec fe_CommandActions [] =
   { "mailto",		fe_mailto_action },
 #endif
 
+  { "print",        fe_print_remote_action },
   { "fishcam",		fe_fishcam_action	},
   { "net_showstatus",	fe_net_showstatus_action	},
   { "PageDown",		fe_page_forward_action	},
