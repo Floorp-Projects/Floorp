@@ -119,7 +119,13 @@ interface nsIServerSocket : nsISupports
     readonly attribute long port;
 
     /**
-     * Returns the address of this server socket.
+     * Returns the address to which this server socket is bound.  Since a
+     * server socket may be bound to multiple network devices, this address
+     * may not necessarily be specific to a single network device.  In the
+     * case of an IP socket, the IP address field would be zerod out to
+     * indicate a server socket bound to all network devices.  Therefore,
+     * this method cannot be used to determine the IP address of the local
+     * system.  See nsIDNSService::myHostName if this is what you need.
      */
     [noscript] PRNetAddr getAddress();
 };
