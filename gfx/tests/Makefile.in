@@ -37,19 +37,7 @@ INCLUDES+=-I$(srcdir)/../src -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom
 LIBS = \
 	-lraptorgfx \
 	-lgfx$(MOZ_TOOLKIT) \
-	-lnetlib \
-	-lhttpurl \
-	-lgophurl \
-	-labouturl \
-	-lremoturl \
-	-lfileurl \
-	-lftpurl \
-	-lnetwork \
-	-lsockstuburl \
-	-lmimetype \
-	-lnetcnvts \
-	-lnetcache \
-	-lpwcac \
+	-lgfxps \
 	$(TK_LIBS) \
 	-lxpcom \
 	-lreg \
@@ -64,6 +52,29 @@ LIBS = \
 	$(NSPR_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NULL)
+
+ifndef NECKO
+LIBS +=		\
+	-lnetlib \
+	-lhttpurl \
+	-lgophurl \
+	-labouturl \
+	-lremoturl \
+	-lfileurl \
+	-lftpurl \
+	-lnetwork \
+	-lsockstuburl \
+	-lmimetype \
+	-lnetcnvts \
+	-lnetcache \
+	-lpwcac \
+	$(NULL)
+else
+LIBS +=		\
+	-lneckoutil_s \
+	$(NULL)
+endif
+
 
 SIMPLE_PROGRAMS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 

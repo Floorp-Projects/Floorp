@@ -22,16 +22,24 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(topsrcdir)/config/config.mk
+
+ifndef NECKO
 PROGRAM		= htmlrobot
+else
+LIBRARY_NAME	= DebugRobot
+endif
 
 CPPSRCS		= nsDebugRobot.cpp nsRobotSink.cpp
 
-include $(topsrcdir)/config/config.mk
-
+ifndef NECKO
 LIBS		= \
 		-lraptorhtmlpars \
 		-lexpat \
 		-lxmltok \
+		-lsecfree \
+		-lpref \
+		-lxp \
 		-lnetlib \
 		-lftpurl \
 		-lfileurl \
@@ -45,9 +53,6 @@ LIBS		= \
 		-lnetcache \
 		-lhttpurl \
 		-lpwcac \
-		-lsecfree \
-		-lpref \
-		-lxp \
 		-l$(MOZ_LIB_JS_PREFIX)js \
 		-lgfx$(MOZ_TOOLKIT) \
 		-lraptorgfx \
@@ -64,5 +69,10 @@ LIBS		= \
 ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
 LIBS		+= -lpcap
 endif
+else
+DIRS = test
+endif
+
+
 
 include $(topsrcdir)/config/rules.mk

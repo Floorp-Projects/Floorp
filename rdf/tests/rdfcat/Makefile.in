@@ -78,6 +78,7 @@ NETLIB_LIBS =	      \
 	-ljsurl	      \
 	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
 	-lpwcac	      \
+	$(NULL)
 else
 NETLIB_LIBS =	      \
 	-lneckoutil_s \
@@ -86,7 +87,6 @@ NETLIB_LIBS =	      \
 	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
 	$(NULL)
 endif
-	$(NULL)
 
 LIBS		= \
 	$(GECKO_LIBS) \

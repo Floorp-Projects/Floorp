@@ -48,19 +48,6 @@ LIBS = \
 	-lraptorgfx	\
 	$(TOOLKIT_GFX_LIB)\
 	-lreg		\
-	-labouturl	\
-	-lhttpurl	\
-	-lsockstuburl 	\
-	-lfileurl	\
-	-lgophurl	\
-	-lftpurl	\
-	-lremoturl	\
-	-lxp		\
-	-lnetcache	\
-	-lnetcnvts	\
-	-lmimetype	\
-	-lnetwork	\
-	-lnetlib	\
 	-lraptorwebwidget	\
 	-lraptorhtmlpars	\
 	-lexpat \
@@ -77,9 +64,32 @@ LIBS = \
 	-lxpcom		\
 	$(ZLIB_LIBS)	\
 	$(NSPR_LIBS)	\
-	-lpwcac		\
 	$(TK_LIBS)	\
 	$(NULL)
+
+ifndef NECKO
+LIBS += 		\
+	-labouturl	\
+	-lhttpurl	\
+	-lsockstuburl 	\
+	-lfileurl	\
+	-lgophurl	\
+	-lftpurl	\
+	-lremoturl	\
+	-lxp		\
+	-lnetcache	\
+	-lnetcnvts	\
+	-lmimetype	\
+	-lnetwork	\
+	-lnetlib	\
+	-lpwcac		\
+	$(NULL)
+else
+LIBS += 		\
+	-lneckoutil_s	\
+	$(NULL)
+endif
+
 
 CPPSRCS = \
 	nsAppRunner.cpp 	\
