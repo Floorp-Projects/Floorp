@@ -895,9 +895,8 @@ PUBLIC int INTL_CharLen(
  * @see INTL_CharLen
  */
 PUBLIC int 
-#ifdef NSPR20
+
 PR_CALLBACK 
-#endif
 INTL_IsLeadByte(
     int charSetID,
     unsigned char ch

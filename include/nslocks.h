@@ -25,13 +25,11 @@
  * it was only included if java was included.
  */
 #include "prmon.h"
-#ifdef NSPR20
 #ifdef XP_MAC
 #include "prpriv.h"	/* for MonitorEntryCount */
 #else
 #include "private/prpriv.h"
 #endif
-#endif /* NSPR20 */
 
 #if defined(JAVA) || defined(NS_MT_SUPPORTED)
 

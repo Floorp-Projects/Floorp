@@ -201,13 +201,13 @@ struct LO_AnchorData_struct {
     PA_Block anchor;        /* really a (char *) */
     PA_Block target;        /* really a (char *) */
     PA_Block alt;           /* really a (char *) */
-#ifdef MOCHA
+
     LO_Element *element;	/* Needed for mocha reflection
                                of layout position. */
     CL_Layer *layer;	/* Layer containing anchor */
     struct JSObject *mocha_object;
     XP_Bool event_handler_present; /*Indicates whether there's a JS handler */
-#endif
+
     uint8 flags;            /* Indicates whether to suppress visual feedback */
     double prevalue;	/* <A HREF="http://gagan/PrefetchingThoughts.html" PRE=0.5> */
 };
@@ -483,9 +483,9 @@ struct LO_ImageStruct_struct {
     int32 percent_width;	/* For relayout */
     int32 percent_height;	/* For relayout */
     
-#ifdef MOCHA
+
     struct JSObject *mocha_object;
-#endif
+
     CL_Layer *layer;
     XP_Rect valid_rect;
     IL_ImageReq *image_req; /* Image library representation. */
@@ -769,10 +769,10 @@ struct LO_FormElementStruct_struct {
     int32 edit_offset;
 
     int32 layer_id;
-#ifdef MOCHA
+
     struct JSObject *mocha_object;
     XP_Bool event_handler_present; /*Indicates whether there's a JS handler */
-#endif
+
 
     int16 border_vert_space;
     int16 border_horiz_space;
@@ -986,9 +986,9 @@ struct LO_CommonPluginStruct_struct {
     int32 percent_width; /* needed for relayout. */
     int32 percent_height; /* needed for relayout. */
     PA_Block base_url;
-#ifdef MOCHA
+
     struct JSObject *mocha_object;
-#endif		
+	
     int16 sub_type;
 };
 
@@ -1016,9 +1016,9 @@ struct LO_BuiltinStruct_struct {
 		uint16 ele_attrmask; /* floating, secure, selected, etc. */
 		int32 builtin_index;	/* Unique ID within this doc */
 		struct LO_BuiltinStruct_struct *nextBuiltin;
-#ifdef MOCHA
+
 		struct JSObject *mocha_object;
-#endif
+
 		PA_Tag *tag;
 		CL_Layer *layer;
 

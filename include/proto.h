@@ -31,12 +31,6 @@
 #include "ntypes.h"
 #include "lo_ele.h"
 
-#ifndef NSPR20
-#if defined(__sun)
-# include "sunos4.h"
-#endif /* __sun */
-#endif /* NSPR20 */
-
 XP_BEGIN_PROTOS
 
 /* put your prototypes here..... */
