@@ -29,5 +29,6 @@ NS_END_EXTERN_C
 #define	IMAP_OUT_OF_MEMORY                                 -1000
 #define	LOCAL_STATUS_SELECTING_MAILBOX                      4000
 #define	LOCAL_STATUS_DOCUMENT_DONE							4001
+#define LOCAL_STATUS_RECEIVING_MESSAGE_OF					4002
 
 #endif /* _nsImapStringBundle_H__ */
