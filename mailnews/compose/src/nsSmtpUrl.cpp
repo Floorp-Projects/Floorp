@@ -376,7 +376,8 @@ NS_IMETHODIMP nsMailtoUrl::GetScheme(nsACString &aScheme)
 
 NS_IMETHODIMP nsMailtoUrl::SetScheme(const nsACString &aScheme)
 {
-	return m_baseURL->SetScheme(aScheme);
+	m_baseURL->SetScheme(aScheme);
+	return ParseUrl();
 }
 
 NS_IMETHODIMP nsMailtoUrl::GetUserPass(nsACString &aUserPass)
@@ -386,7 +387,8 @@ NS_IMETHODIMP nsMailtoUrl::GetUserPass(nsACString &aUserPass)
 
 NS_IMETHODIMP nsMailtoUrl::SetUserPass(const nsACString &aUserPass)
 {
-	return m_baseURL->SetUserPass(aUserPass);
+	m_baseURL->SetUserPass(aUserPass);
+	return ParseUrl();
 }
 
 NS_IMETHODIMP nsMailtoUrl::GetUsername(nsACString &aUsername)
@@ -396,7 +398,8 @@ NS_IMETHODIMP nsMailtoUrl::GetUsername(nsACString &aUsername)
 
 NS_IMETHODIMP nsMailtoUrl::SetUsername(const nsACString &aUsername)
 {
-	return m_baseURL->SetUsername(aUsername);
+	m_baseURL->SetUsername(aUsername);
+	return ParseUrl();
 }
 
 NS_IMETHODIMP nsMailtoUrl::GetPassword(nsACString &aPassword)
@@ -406,7 +409,8 @@ NS_IMETHODIMP nsMailtoUrl::GetPassword(nsACString &aPassword)
 
 NS_IMETHODIMP nsMailtoUrl::SetPassword(const nsACString &aPassword)
 {
-	return m_baseURL->SetPassword(aPassword);
+	m_baseURL->SetPassword(aPassword);
+	return ParseUrl();
 }
 
 NS_IMETHODIMP nsMailtoUrl::GetHostPort(nsACString &aHostPort)
@@ -416,7 +420,8 @@ NS_IMETHODIMP nsMailtoUrl::GetHostPort(nsACString &aHostPort)
 
 NS_IMETHODIMP nsMailtoUrl::SetHostPort(const nsACString &aHostPort)
 {
-	return m_baseURL->SetHost(aHostPort);
+	m_baseURL->SetHost(aHostPort);
+	return ParseUrl();
 }
 
 NS_IMETHODIMP nsMailtoUrl::GetHost(nsACString &aHost)
@@ -426,7 +431,8 @@ NS_IMETHODIMP nsMailtoUrl::GetHost(nsACString &aHost)
 
 NS_IMETHODIMP nsMailtoUrl::SetHost(const nsACString &aHost)
 {
-	return m_baseURL->SetHost(aHost);
+	m_baseURL->SetHost(aHost);
+	return ParseUrl();
 }
 
 NS_IMETHODIMP nsMailtoUrl::GetPort(PRInt32 *aPort)
@@ -436,7 +442,8 @@ NS_IMETHODIMP nsMailtoUrl::GetPort(PRInt32 *aPort)
 
 NS_IMETHODIMP nsMailtoUrl::SetPort(PRInt32 aPort)
 {
-	return m_baseURL->SetPort(aPort);
+	m_baseURL->SetPort(aPort);
+	return ParseUrl();
 }
 
 NS_IMETHODIMP nsMailtoUrl::GetPath(nsACString &aPath)
@@ -446,7 +453,8 @@ NS_IMETHODIMP nsMailtoUrl::GetPath(nsACString &aPath)
 
 NS_IMETHODIMP nsMailtoUrl::SetPath(const nsACString &aPath)
 {
-	return m_baseURL->SetPath(aPath);
+	m_baseURL->SetPath(aPath);
+	return ParseUrl();
 }
 
 NS_IMETHODIMP nsMailtoUrl::GetAsciiHost(nsACString &aHostA)
