@@ -10,12 +10,12 @@
      0       -r   -w_nss_-n_TestUser      TLS Request don't require client auth (client auth)
      0     -r_-r       -w_nss                TLS Require client auth (client does not provide auth)
 # this one should fail
-     2     -r_-r -w_bogus_-n_TestUser     TLS Require client auth (bad password)
+    254    -r_-r -w_bogus_-n_TestUser     TLS Require client auth (bad password)
      0     -r_-r  -w_nss_-n_TestUser_      TLS Require client auth (client auth)
      0       -r       -T_-w_nss             SSL3 Request don't require client auth (client does not provide auth)
      0       -r  -T_-n_TestUser_-w_bogus SSL3 Request don't require client auth (bad password)
      0       -r   -T_-n_TestUser_-w_nss  SSL3 Request don't require client auth (client auth)
      0     -r_-r       -T_-w_nss            SSL3 Require client auth (client does not provide auth)
 # this one should fail
-     2     -r_-r -T_-n_TestUser_-w_bogus SSL3 Require client auth (bad password)
+    254    -r_-r -T_-n_TestUser_-w_bogus SSL3 Require client auth (bad password)
      0     -r_-r  -T_-n_TestUser_-w_nss  SSL3 Require client auth (client auth)

@@ -633,7 +633,7 @@ int main(int argc, char **argv)
 			if (err != PR_WOULD_BLOCK_ERROR) {
 			    SECU_PrintError(progName, 
 			                    "write to SSL socket failed");
-			    error=2;
+			    error=254;
 			    goto done;
 			}
 			cc = 0;
