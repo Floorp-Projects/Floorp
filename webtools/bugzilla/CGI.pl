@@ -1037,7 +1037,7 @@ Content-type: text/html
         # (except for Bugzilla_login and Bugzilla_password which we
         # already added as text fields above).
         foreach my $i ( grep( $_ !~ /^Bugzilla_/ , keys %::FORM ) ) {
-          if (scalar(@{$::MFORM{$i}}) > 1) {
+          if (defined $::MFORM{$i} && scalar(@{$::MFORM{$i}}) > 1) {
             # This field has multiple values; add each one separately.
             foreach my $val (@{$::MFORM{$i}}) {
               print qq|<input type="hidden" name="$i" value="@{[value_quote($val)]}">\n|;
