@@ -25,7 +25,6 @@
 #include "nsINetPluginInstance.h"
 #include "nsRepository.h"
 #include "nsNetConverterStream.h"
-#include "magic.h"
 
 
 static NS_DEFINE_CID(kINetPluginCID, NS_INET_PLUGIN_CID);
@@ -164,6 +163,7 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 	nsINetOStream *instance_stream;
 	nsINetOStream *out_stream;
 	nsNetConverterStream *converter_stream;
+	nsCID classID = {0};
 
 	if (URL_s->transfer_encoding != NULL)
 	{
@@ -186,18 +186,14 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 		return NULL;
 	}
 
-	const nsCID &magicCID = MAGIC_FindCID(mime_type);
-	if (magicCID.Equals(kINetPluginCID))
+	if (nsRepository::ProgIDToCLSID(mime_type, &classID) != NS_OK)
 	{
 		unregister_converter(mime_type, (void *)URL_s);
 		return NULL;
 	}
 
-	nsRepository::CreateInstance(magicCID, (nsISupports *)nsnull, kINetPluginInstanceIID, (void **)&plugin_inst);
+	nsRepository::CreateInstance(classID, (nsISupports *)nsnull, kINetPluginInstanceIID, (void **)&plugin_inst);
 
-/*
-	plugin_inst = (nsINetPluginInstance *)MAGIC_FindAndLoadDLL(kINetPluginInstanceIID, mime_type);
-*/
 	if (plugin_inst == NULL)
 	{
 		unregister_converter(mime_type, (void *)URL_s);

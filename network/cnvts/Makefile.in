@@ -26,7 +26,6 @@ MODULE		= netcnvts
 LIBRARY_NAME	= netcnvts
 
 CPPSRCS		= \
-	magic.cpp	\
 	cvplugin.cpp	\
 	nsNetConverterStream.cpp \
 	$(NULL)
@@ -52,8 +51,6 @@ CSRCS += \
 endif
 
 EXPORTS= \
-    magic.h	\
-    magicCID.h	\
     nsINetPlugin.h \
     nsINetPluginInstance.h \
     nsINetOStream.h	\
