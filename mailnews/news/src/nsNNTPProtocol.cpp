@@ -2522,8 +2522,6 @@ nsresult nsNNTPProtocol::MarkCurrentMsgRead()
       msgHdr->GetIsRead(&isRead);
       if (!isRead)
         msgHdr->MarkRead(PR_TRUE);
-
-      printf("do work here\n");
     }
   }
   return rv;
