@@ -1728,6 +1728,10 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
 
 static PRBool GetWantSplashScreen(int argc, char* argv[])
 {
+  #ifdef MOZ_PHOENIX
+  return PR_FALSE;
+  #endif
+
   int i;
   PRBool dosplash;
   // We can't use the command line service here because it isn't running yet
