@@ -278,11 +278,16 @@ vpath %.s $(FREEBL_PARENT)/ecl:$(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 vpath %.asm $(FREEBL_PARENT)/ecl:$(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 INCLUDES += -I$(FREEBL_PARENT) -I$(FREEBL_PARENT)/mpi -I$(FREEBL_PARENT)/ecl
 else
-vpath %.h mpi:ecl
-vpath %.c mpi:ecl
-vpath %.S mpi:ecl
-vpath %.s mpi:ecl
-vpath %.asm mpi:ecl
+vpath %.h mpi
+vpath %.h ecl
+vpath %.c mpi
+vpath %.c ecl
+vpath %.S mpi
+vpath %.S ecl
+vpath %.s mpi
+vpath %.s ecl
+vpath %.asm mpi
+vpath %.asm ecl
 INCLUDES += -Impi -Iecl
 endif
 
