@@ -770,25 +770,110 @@ HandleTreeWindowEvent(nsGUIEvent *aEvent)
   return result;
 }
 
+
+// XXX This is a hack to get tree widget/RDF testing alive. It should
+// most definitely go away ASAP. It creates the bookmark data source,
+// attaches it to an RDF document, and sets the document's root
+// resource to be the top-level bookmark node.
+#include "nsRDFCID.h"
+#include "nsIRDFDataBase.h"
+#include "nsIRDFDataSource.h"
+#include "nsIRDFDocument.h"
+#include "nsIRDFNode.h"
+#include "nsIRDFResourceManager.h"
+#include "nsIContent.h"
+#include "nsIServiceManager.h"
+
+static nsresult
+rdf_CreateBookmarkDocument(nsIDocument*& result)
+{
+static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
+static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
+static NS_DEFINE_IID(kIDocumentIID,             NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFDataBaseIID,          NS_IRDFDATABASE_IID);
+static NS_DEFINE_IID(kIRDFDataSourceIID,        NS_IRDFDATASOURCE_IID);
+static NS_DEFINE_IID(kIRDFDocumentIID,          NS_IRDFDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFResourceManagerIID,   NS_IRDFRESOURCEMANAGER_IID);
+
+  nsresult rv;
+
+  nsIRDFDataSource* ds       = nsnull;
+  nsIRDFDataBase* db         = nsnull;
+  nsIRDFDocument* doc        = nsnull;
+  nsIRDFResourceManager* mgr = nsnull;
+  nsIRDFNode* root           = nsnull;
+
+  result = nsnull; // reasonable default
+
+  if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFBookmarkDataSourceCID,
+                                                  nsnull,
+                                                  kIRDFDataSourceIID,
+                                                  (void**) &ds)))
+    goto done;
+
+  if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFTreeDocumentCID,
+                                                  nsnull,
+                                                  kIRDFDocumentIID,
+                                                  (void**) &doc)))
+    goto done;
+
+  if (NS_FAILED(rv = doc->Init()))
+    goto done;
+
+  if (NS_FAILED(rv = doc->GetDataBase(db)))
+    goto done;
+
+  if (NS_FAILED(rv = db->AddDataSource(ds)))
+    goto done;
+
+  if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
+                                                  kIRDFResourceManagerIID,
+                                                  (nsISupports**) &mgr)))
+    goto done;
+
+  if (NS_FAILED(rv = mgr->GetNode("rdf:bookmarks", root)))
+    goto done;
+
+  if (NS_FAILED(rv = doc->SetRootResource(root)))
+    goto done;
+
+  if (NS_FAILED(rv = doc->QueryInterface(kIDocumentIID, (void**) &result)))
+    goto done;
+
+  // implicit addref on "result" from the QI
+
+done:
+  NS_IF_RELEASE(root);
+  if (mgr) {
+    nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
+    mgr = nsnull;
+  }
+  NS_IF_RELEASE(doc);
+  NS_IF_RELEASE(db);
+  NS_IF_RELEASE(ds);
+  return rv;
+}
+
 void
 nsBrowserWindow::DoTreeView()
 {
 	// Create top level window
 	nsIWidget* pTreeWindow;
 
-    nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWindowIID,
-					     (void**)&pTreeWindow);
-    if (NS_OK != rv) {
-      return;
-	}
-    nsWidgetInitData initData;
-    initData.mBorderStyle = eBorderStyle_dialog;
+  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWindowIID,
+                                    (void**)&pTreeWindow);
+
+  if (NS_FAILED(rv))
+    return;
+  nsWidgetInitData initData;
+  initData.mBorderStyle = eBorderStyle_dialog;
 	nsRect r;
 	
 	mWindow->GetClientBounds(r);
 	
-    pTreeWindow->Create((nsIWidget*)NULL, r, HandleTreeWindowEvent,
-		                 nsnull, mAppShell, nsnull, &initData);
+  pTreeWindow->Create((nsIWidget*)NULL, r, HandleTreeWindowEvent,
+                      nsnull, mAppShell, nsnull, &initData);
   
 	pTreeWindow->SetTitle("Tree Widget Tester");
 
@@ -798,20 +883,33 @@ nsBrowserWindow::DoTreeView()
 	r = nsRect(0,0,r.width,r.height);
 
 	rv = nsRepository::CreateInstance(kCTreeViewCID, nsnull, kITreeViewIID,
-									(void**)&mTreeView);
+                                    (void**)&mTreeView);
 	if (NS_OK != rv) {
 	  return;
 	}
 	nsIWidget* widget;
 	
 	if (NS_OK == mTreeView->QueryInterface(kIWidgetIID, (void**)&widget))
-	{
+    {
 		  widget->Create(pTreeWindow, r, nsnull, nsnull);
 		  widget->Show(PR_TRUE);
 		  NS_IF_RELEASE(widget);
-	}
+    }
 
 	pTreeWindow->Show(PR_TRUE);
+
+  nsIDocument* doc;
+  if (NS_SUCCEEDED(rv = rdf_CreateBookmarkDocument(doc))) {
+    nsIContent* root = doc->GetRootContent();
+    if (root) {
+      // XXX do whatever here. Note that the RDF nsIContent currently
+      // doesn't refcount the document in which it lives, so you'll
+      // need to keep a pointer to *both* the document and the
+      // content.
+      NS_RELEASE(root);
+    }
+    NS_RELEASE(doc); // i.e., unless you've refcounted "doc", root dies _now_
+  }
 }
 
 void
