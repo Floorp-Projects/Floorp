@@ -5,7 +5,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="button-base" extends="chrome://global/content/bindings/general.xml#basetext">
+  <binding id="button-base" extends="chrome://global/content/widgets/general.xml#basetext">
     <implementation implements="nsIDOMXULButtonElement, nsIAccessibleProvider">
       <property name="accessible">
         <getter>
@@ -128,8 +128,9 @@
             event.keyCode == KeyEvent.DOM_VK_RIGHT)
           return window.document.commandDispatcher.advanceFocus();
 
-        if (event.keyCode || event.charCode <= ' ')
-          return;  // No arrow key or potential accesskey pressed
+        if (event.keyCode || event.charCode <= 32 || event.altKey || 
+            event.ctrlKey || event.metaKey)
+          return;  // No printable char pressed, not a potential accesskey
 
         // Possible accesskey pressed
         var charPressedLower = String.fromCharCode(event.charCode).toLowerCase();
@@ -162,7 +163,7 @@
   </binding>
 
   <binding id="button" display="xul:button"
-           extends="chrome://global/content/bindings/button.xml#button-base">
+           extends="chrome://global/content/widgets/button.xml#button-base">
     <resources>
       <stylesheet src="chrome://global/skin/button.css"/>
     </resources>
@@ -180,7 +181,7 @@
   </binding>
 
   <binding id="menu" display="xul:menu"
-           extends="chrome://global/content/bindings/button.xml#button">
+           extends="chrome://global/content/widgets/button.xml#button">
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:hbox class="box-inherit button-box" xbl:inherits="align,dir,pack,orient"
@@ -195,7 +196,7 @@
   </binding>           
 
   <binding id="menu-button-base"
-           extends="chrome://global/content/bindings/button.xml#button-base">
+           extends="chrome://global/content/widgets/button.xml#button-base">
     <implementation>
       <constructor>
         this.init();
@@ -297,7 +298,7 @@
   </binding>
 
   <binding id="menu-button" display="xul:menu"
-           extends="chrome://global/content/bindings/button.xml#menu-button-base">
+           extends="chrome://global/content/widgets/button.xml#menu-button-base">
     <resources>
       <stylesheet src="chrome://global/skin/button.css"/>
     </resources>
@@ -315,7 +316,7 @@
   </binding>
   
   <binding id="button-image" display="xul:button"
-           extends="chrome://global/content/bindings/button.xml#button">
+           extends="chrome://global/content/widgets/button.xml#button">
     <content>
       <xul:image class="button-image-icon" xbl:inherits="src=image"/>
     </content>
