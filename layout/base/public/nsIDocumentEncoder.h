@@ -92,7 +92,11 @@ public:
     OutputFormatFlowed  = 64,
 
     // Convert links, image src, and script src to absolute URLs when possible
-    OutputAbsoluteLinks = 128
+    OutputAbsoluteLinks = 128,
+
+    // Encode entities when outputting to a string.
+    // E.g. If set, we'll output &nbsp; if clear, we'll output 0xa0.
+    OutputEncodeEntities = 256
   };
   
   static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }

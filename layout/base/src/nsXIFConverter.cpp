@@ -516,8 +516,8 @@ void nsXIFConverter::WriteDebugFile() {
 #endif
 
   ofstream out(filename);
-  char* s = mBuffer.ToNewCString();
-  if(s) {
+  char* s = mBuffer.ToNewUTF8String();
+  if (s) {
     out << s;
     Recycle(s);
   }
