@@ -250,8 +250,33 @@ function UpdateBookmarksLastVisitedDate(event)
     var win = document.getElementById( "main-window" );
     var x = win.getAttribute( "x" );
     var y = win.getAttribute( "y" );
+    dump(" move to "+x+" "+y+"\n");
     window.moveTo( x, y );
+  //  TileWindow();
+    // Make sure window fits on screen initially
+   // FitToScreen();
+	
+	// Set default home page
+	 var pref = Components.classes['component://netscape/preferences'];
+     if (pref)
+     {
+     	pref = pref.getService();
+     	dump("QIing for pref interface\n");
+     	
+     	pref = pref.QueryInterface(Components.interfaces.nsIPref);
+      	if ( pref )
+      	{
+         	var homebutton = document.getElementById("home-button")
+      		if ( homebutton )
+      		{
+      			var defaultURL = homebutton.getAttribute("defaultURL" );
+      		//	dump("Set default homepage to +"+defaultURL+" \n");
+      			pref.SetDefaultCharPref( "browser.startup.homepage",defaultURL);
+      		}
+      	}
+      }
 
+	
     if ( useOldAppCore ) {
         dump("Doing Startup...\n");
         dump("Creating browser app core\n");
@@ -293,7 +318,9 @@ function UpdateBookmarksLastVisitedDate(event)
     var y = window.screenY;
     var h = window.outerHeight;
     var w = window.outerWidth;
-
+	
+	
+	
     // Store these into the window attributes (for persistence).
     var win = document.getElementById( "main-window" );
     win.setAttribute( "x", x );
@@ -1174,4 +1201,110 @@ function OpenSearch(tabName, searchStr)
 
 function BrowserReload() {
     dump( "Sorry, command not implemented: " + window.event.srcElement + "\n" );
+}
+
+// Tile
+function TileWindow()
+{
+	var xShift = 25;
+	var yShift = 50;
+	var done = false;
+	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+	dump("got window Manager \n");
+	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+	
+	var enumerator = windowManagerInterface.GetEnumerator( null );
+	
+	var xOffset = screen.availLeft;
+	var yOffset = screen.availRight;
+	do
+	{
+		var currentWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );
+		if ( currentWindow.screenX == screenX && currentWindow.screenY == screenY )
+		{
+			alreadyThere = true;
+			break;
+		}	
+	} while ( enumerator.HasMoreElements() )
+	
+	if ( alreadyThere )
+	{
+		enumerator = windowManagerInterface.GetEnumerator( null );
+		do
+		{
+			var currentWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );
+			if ( currentWindow.screenX == screenX+xOffset*xShift+yOffset*xShift   && currentWindow.screenY == screenY+yShift*xOffset && window != currentWindow )
+			{
+				xOffset++;
+				if ( (screenY+outerHeight  < screen.availHeight) && (screenY+outerHeight+yShift*xOffset > screen.availHeight ) )
+				{
+					dump(" increment yOffset");
+					yOffset++;
+					xOffset = 0;
+				}
+				enumerator = windowManagerInterface.GetEnumerator( null );
+			}	
+		} while ( enumerator.HasMoreElements() )
+	}
+	
+	if ( xOffset > 0 || yOffset >0 )
+	{
+		dump( "offsets:"+xOffset+" "+yOffset+"\n");
+		dump("Move by ("+ xOffset*xShift + yOffset*xShift +","+ yShift*xOffset +")\n");
+		moveBy( xOffset*xShift + yOffset*xShift, yShift*xOffset );
+	}
+}
+// Make sure that a window fits fully on the screen. Will move to preserve size, and then shrink to fit
+function FitToScreen()
+{
+	var moveX = screenX;
+	var sizeX = outerWidth;
+	var moveY = screenY;
+	var sizeY = outerHeight;
+	
+	dump( " move to ("+moveX+","+moveY+") size to ("+sizeX+","+sizeY+") \n");
+	var totalWidth = screenX+outerWidth;
+	if ( totalWidth > screen.availWidth )
+	{	
+		if( outerWidth > screen.availWidth )
+		{
+			sizeX = screen.availWidth;
+			moveX = screen.availLeft;
+		}
+		else
+		{
+			moveX = screen.availWidth- outerWidth;
+		}
+	}
+	
+	var totalHeight = screenY+outerHeight;
+	if ( totalHeight > screen.availHeight )
+	{	
+		if( outerWidth > screen.availHeight )
+		{
+			sizeY = screen.availHeight;
+			moveY = screen.availTop;
+		}
+		else
+		{
+			moveY = screen.availHeight- outerHeight;
+		}
+	}
+	
+	
+	dump( " move to ("+moveX+","+moveY+") size to ("+sizeX+","+sizeY+") \n");
+	if ( (moveY- screenY != 0 ) ||	(moveX-screenX != 0 ) )
+		moveTo( moveX,moveY );
+	
+	// Maintain a minimum size
+	if ( sizeY< 100 )
+		sizeY = 100;
+	if ( sizeX < 100 )
+		sizeX = 100; 
+	if ( (sizeY- outerHeight != 0 ) ||	(sizeX-outerWidth != 0 ) )
+	{
+		//outerHeight = sizeY;
+		//outerWidth = sizeX;
+		resizeTo( sizeX,sizeY );	
+	}
 }
