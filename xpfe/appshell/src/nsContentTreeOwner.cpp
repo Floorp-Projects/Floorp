@@ -141,7 +141,10 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
       if(shellAsTreeItem)
          {
          if(fIs_Content)
+		    {
             *aFoundItem = shellAsTreeItem;
+            NS_ADDREF(*aFoundItem);
+            }
          else if(aRequestor != shellAsTreeItem.get())
             {
             // Do this so we can pass in the tree owner as the requestor so the child knows not
@@ -153,7 +156,7 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
             shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports, aFoundItem);
             }
          if(*aFoundItem)
-            return NS_OK;   
+            return NS_OK;
          }
       windowEnumerator->HasMoreElements(&more);
       }
