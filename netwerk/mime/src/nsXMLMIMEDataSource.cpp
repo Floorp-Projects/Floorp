@@ -419,9 +419,13 @@ nsXMLMIMEDataSource::InitFromHack() {
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi");
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi-dcx_axpexe");
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "dcx_axpexe");
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(APPLICATION_OCTET_STREAM, "pcsi-dcx_vaxexe");
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "dcx_vaxexe");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "sfx_axpexe");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(APPLICATION_OCTET_STREAM, "sfx_vaxexe");
     if (NS_FAILED(rv)) return rv;
 #endif
 
