@@ -3493,9 +3493,44 @@ DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return JS_FALSE;
   }
 
-  if (class_name_struct->mType != nsGlobalNameStruct::eTypeClassProto &&
-      class_name_struct->mType != nsGlobalNameStruct::eTypeInterface) {
-    *bp = (name_struct == class_name_struct);
+  if (name_struct == class_name_struct) {
+    *bp = JS_TRUE;
+
+    return JS_TRUE;
+  }
+
+  const nsIID *class_iid;
+  if (class_name_struct->mType == nsGlobalNameStruct::eTypeInterface ||
+      class_name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
+    class_iid = &class_name_struct->mIID;
+  } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+    class_iid =
+      sClassInfoData[class_name_struct->mDOMClassInfoID].mProtoChainInterface;
+  } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+    class_iid = class_name_struct->mData->mProtoChainInterface;
+  } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+    const nsGlobalNameStruct* alias_struct =
+      gNameSpaceManager->GetConstructorProto(class_name_struct);
+    if (!alias_struct) {
+      NS_ERROR("Couldn't get constructor prototype.");
+      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+
+      return JS_FALSE;
+    }
+
+    if (alias_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+      class_iid =
+        sClassInfoData[alias_struct->mDOMClassInfoID].mProtoChainInterface;
+    } else if (alias_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+      class_iid = alias_struct->mData->mProtoChainInterface;
+    } else {
+      NS_ERROR("Expected eTypeClassConstructor or eTypeExternalClassInfo.");
+      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+
+      return JS_FALSE;
+    }
+  } else {
+    *bp = JS_FALSE;
 
     return JS_TRUE;
   }
@@ -3535,7 +3570,7 @@ DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   PRUint32 count = 0;
   const nsIID* class_interface;
   while ((class_interface = ci_data->mInterfaces[count++])) {
-    if (class_name_struct->mIID.Equals(*class_interface)) {
+    if (class_iid->Equals(*class_interface)) {
       *bp = JS_TRUE;
 
       return JS_TRUE;
@@ -3549,7 +3584,7 @@ DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
       return JS_FALSE;
     }
 
-    if_info->HasAncestor(&class_name_struct->mIID, bp);
+    if_info->HasAncestor(class_iid, bp);
 
     if (*bp) {
       return JS_TRUE;
