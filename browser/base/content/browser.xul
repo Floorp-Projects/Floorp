@@ -60,7 +60,6 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/fullScreen.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsBrowserStatusHandler.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsBrowserContentListener.js"/>
@@ -152,8 +151,7 @@ Contributor(s):
   <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
   
   <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
-  <command id="Browser:ManageBookmark"
-           oncommand="BrowserEditBookmarks();" />
+  <command id="Browser:ManageBookmark" oncommand="BrowserEditBookmarks();"/>
   
   <command id="Browser:Home"    oncommand="BrowserHome();"/>
   <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
@@ -163,9 +161,6 @@ Contributor(s):
     
   <broadcaster id="canGoBack"    disabled="true"/>
   <broadcaster id="canGoForward" disabled="true"/>
-  <broadcaster id="Communicator:WorkMode"
-               label="&offlineGoOfflineCmd.label;"
-               oncommand="toggleOfflineStatus();"/>
   <broadcaster id="isImage"/>
 
   <keyset>
@@ -342,7 +337,7 @@ Contributor(s):
                 oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
       <menuseparator id="frame-sep"/>
       <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
-        <menupopup id="frame_popup">
+        <menupopup>
           <menuitem label="&showOnlyThisFrameCmd.label;"
                     accesskey="&showOnlyThisFrameCmd.accesskey;"
                     oncommand="gContextMenu.showOnlyThisFrame();"/>
@@ -353,8 +348,7 @@ Contributor(s):
                     accesskey="&openFrameCmdInTab.accesskey;"
                     oncommand="gContextMenu.openFrameInTab();"/>
           <menuseparator/>
-          <menuitem id="context-reload-frame"
-                    label="&reloadFrameCmd.label;"
+          <menuitem label="&reloadFrameCmd.label;"
                     accesskey="&reloadFrameCmd.accesskey;"
                     oncommand="gContextMenu.reloadFrame();"/>
           <menuseparator/>
@@ -413,7 +407,7 @@ Contributor(s):
             <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
             <menuseparator/>
             <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
-            <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
+            <menuitem label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
             <menuseparator/>
             <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="BrowserPrintSetup();"/>
             <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="BrowserPrintPreview();"/>
@@ -591,7 +585,7 @@ Contributor(s):
             <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
             <menuseparator />
             <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
-              <menupopup id="theme" datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)" onpopupshowing="checkTheme()">
+              <menupopup datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)" onpopupshowing="checkTheme()">
                 <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
                           oncommand="goPreferences('appearance','chrome://communicator/content/pref/pref-themes.xul', 'themes-panel')"/>
                 <menuitem label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;" oncommand="getNewThemes();"/>
@@ -940,6 +934,5 @@ Contributor(s):
     </statusbarpanel>
   <statusbarpanel id="security-button" class="statusbarpanel-iconic"
                   onclick="displayPageInfo()"/>    
-  </statusbar> 
-
+  </statusbar>
 </window>
