@@ -38,6 +38,7 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
 *       8. rm(path);
 *       9. copy(source, dest);
 *       10.leaf(path);
+*       11.readDir(dirPath);
 *
 *       Instructions:
 *
@@ -114,7 +115,7 @@ exists : function (path) {
 
     try{ 
 
-        var file           			= new FilePath(path);
+        var file                = new FilePath(path);
         var fileExists          = file.exists();
 
     }
@@ -265,7 +266,7 @@ write : function(buffer, perms){
     try{
 
     if(!this.fileChannel)
-        this.fileChannel             = new FileChannel();
+        this.fileChannel        = new FileChannel();
 
     if(perms){
 
@@ -390,7 +391,7 @@ mkdir : function(path, permissions){
 
     try{ 
 
-    this.fileInst            = new FilePath(path);
+    this.fileInst  = new FilePath(path);
 
     if (!fileExists){
 
@@ -490,6 +491,11 @@ copy  : function (source, dest) {
 
   var copyName      = fileInst.leafName;
 
+  if(fileInst.isDirectory()){
+  dump("Sorry, you can't copy a directory yet\n\n");
+  return
+  }
+
   if(!this.exists(dest) || !dir.isDirectory()){
   copyName          = dir.leafName;
   dump(dir.path.replace(copyName,'')+'\n\n');
@@ -520,7 +526,6 @@ copy  : function (source, dest) {
   catch (error){ dump("**** ERROR:"+error+"\n\n"); }
   this.close();
 
-
 },
 
 /********************* COPY *****************************/
@@ -543,6 +548,42 @@ leaf  : function (path) {
 /********************* LEAF *****************************/
 
 /********************* APPEND ***************************/
+
+/********************* READDIR **************************/
+
+readDir : function (dirPath) {
+
+  if(!dirPath){
+  dump('Please enter a dir path as arg\n');
+  return null;
+  }
+
+  if(!this.exists(dirPath)){
+  dump("Sorry, directory "+dirPath+" doesn't exist\n\n");
+  return;
+  }
+
+  var file      = new FilePath(dirPath);
+
+  if(!file.isDirectory()){
+  dump("Sorry, "+dirPath+" is not a directory\n\n");
+  return;
+  }
+
+  var files     = file.directoryEntries;
+  var listings  = new Array();
+
+  i=0;
+  while(files.hasMoreElements()){
+  listings[i]   = files.getNext().QueryInterface(Components.interfaces.nsILocalFile).path;
+  i++;
+  }
+
+  return eval(listings.toSource());
+
+},
+
+/********************* READDIR **************************/
 
 append : function (dirPath, fileName) {
 
