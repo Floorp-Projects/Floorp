@@ -44,13 +44,13 @@ var BookmarksMenu = {
   showOpenInTabsMenuItem: function (aTarget)
   {
     if (!this.validOpenInTabsMenuItem(aTarget) ||
-        aTarget.lastChild.id == "openintabs-menuitem")
+        aTarget.lastChild.getAttribute("class") == "openintabs-menuitem")
       return;
     var element = document.createElementNS(XUL_NS, "menuseparator");
-    element.setAttribute("id", "openintabs-menuseparator");
+    element.setAttribute("class", "openintabs-menuseparator");
     aTarget.appendChild(element);
     element = document.createElementNS(XUL_NS, "menuitem");
-    element.setAttribute("id", "openintabs-menuitem");
+    element.setAttribute("class", "openintabs-menuitem");
     element.setAttribute("label", BookmarksUtils.getLocaleString("cmd_bm_openfolder"));
     element.setAttribute("accesskey", BookmarksUtils.getLocaleString("cmd_bm_openfolder_accesskey"));
     aTarget.appendChild(element);
@@ -65,7 +65,7 @@ var BookmarksMenu = {
   {
     if (!gOpenInTabsParent.hasChildNodes())
       return;
-    if (gOpenInTabsParent.lastChild.id == "openintabs-menuitem") {
+    if (gOpenInTabsParent.lastChild.getAttribute("class") == "openintabs-menuitem") {
       gOpenInTabsParent.removeChild(gOpenInTabsParent.lastChild);
       gOpenInTabsParent.removeChild(gOpenInTabsParent.lastChild);
     }
@@ -83,12 +83,17 @@ var BookmarksMenu = {
   // hides the 'Open in Tabs' on popuphidden so that we won't duplicate it -->
   hideOpenInTabsMenuItem: function (aTarget)
   {
-    if (!aTarget.hasChildNodes())
-      return;
-    if (aTarget.lastChild.id == "openintabs-menuitem") {
-      aTarget.removeChild(aTarget.lastChild);
-      aTarget.removeChild(aTarget.lastChild);
-    }
+#   sometimes insertions occur between the "open in tabs" menuitem and
+#   menuseparator. the eventual children of the menupopup have should
+#   have already been closed at this stage, so it''s ok to grab the first
+#   "open in tabs" menuitem and menuseparator.
+    var nodeList;
+    nodeList = aTarget.getElementsByAttribute("class", "openintabs-menuitem");
+    if (nodeList.length > 0)
+      aTarget.removeChild(nodeList[0]);
+    nodeList = aTarget.getElementsByAttribute("class", "openintabs-menuseparator");
+    if (nodeList.length > 0)
+      aTarget.removeChild(nodeList[0]);
   },
 #endif
 
@@ -517,13 +522,15 @@ var BookmarksMenuDNDObserver = {
     // hide the 'open in tab' menuseparator because bookmarks
     // can be inserted after it if they are dropped after the last bookmark
     // a more comprehensive fix would be in the menupopup template builder
+    var menuSeparator = null;
     var menuTarget = (target.localName == "toolbarbutton" ||
                       target.localName == "menu")         && 
                      orientation == BookmarksUtils.DROP_ON?
                      target.lastChild:target.parentNode;
     if (menuTarget.hasChildNodes() &&
-        menuTarget.lastChild.id == "openintabs-menuitem") {
-      menuTarget.removeChild(menuTarget.lastChild.previousSibling);
+        menuTarget.lastChild.getAttribute("class") == "openintabs-menuitem") {
+      menuSeparator = menuTarget.lastChild.previousSibling;
+      menuTarget.removeChild(menuSeparator);
     }
 
     if (aDragSession.dragAction & kCopyAction)
@@ -532,11 +539,8 @@ var BookmarksMenuDNDObserver = {
       BookmarksUtils.moveAndCheckSelection("drag", selection, selTarget);
 
     // show again the menuseparator
-    if (menuTarget.hasChildNodes() &&
-        menuTarget.lastChild.id == "openintabs-menuitem") {
-      var element = document.createElementNS(XUL_NS, "menuseparator");
-      menuTarget.insertBefore(element, menuTarget.lastChild);
-    }
+    if (menuSeparator)
+      menuTarget.insertBefore(menuSeparator, menuTarget.lastChild);
 
   },
 
