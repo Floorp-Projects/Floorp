@@ -44,8 +44,6 @@ const short kWindowMarginWidth = 6;
 const short kDialogTitleBarHeight = 26;
 const short kDialogMarginWidth = 6;
 
-NS_IMPL_ADDREF(nsMacWindow);
-NS_IMPL_RELEASE(nsMacWindow);
 
 //-------------------------------------------------------------------------
 //
@@ -57,7 +55,6 @@ nsMacWindow::nsMacWindow() : nsWindow()
 	, mIsDialog(PR_FALSE)
 	, mMacEventHandler(nsnull)
 {
-	NS_INIT_REFCNT();
 	mMacEventHandler.reset(new nsMacEventHandler(this));
 	strcpy(gInstanceClassName, "nsMacWindow");
 }
@@ -83,23 +80,6 @@ nsMacWindow::~nsMacWindow()
 
 //-------------------------------------------------------------------------
 //
-//
-//-------------------------------------------------------------------------
-nsresult nsMacWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    static NS_DEFINE_IID(kIWindowIID, NS_IWINDOW_IID);
-    if (aIID.Equals(kIWindowIID)) {
-        *aInstancePtr = (void*) ((nsIWidget*)(nsISupports*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-	return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
-
-
-//-------------------------------------------------------------------------
-//
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
 //-------------------------------------------------------------------------
@@ -118,10 +98,48 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	// build the main native window
 	if (aNativeParent == nsnull)
 	{
-			Rect			wRect;
-			short			wDefProcID;
-			Boolean		goAwayFlag;
+		nsBorderStyle borderStyle;
+		if (aInitData)
+			borderStyle = aInitData->mBorderStyle;
+		else
+			borderStyle = (mIsDialog ? eBorderStyle_dialog : eBorderStyle_window);
 
+		short			wDefProcID;
+		Boolean		goAwayFlag;
+		short			hOffset;
+		short			vOffset;
+		switch (borderStyle)
+		{
+			case eBorderStyle_none:
+				wDefProcID = plainDBox;
+				goAwayFlag = false;
+				hOffset = 0;
+				vOffset = 0;
+				break;
+
+			case eBorderStyle_dialog:
+				wDefProcID = kWindowMovableModalDialogProc;
+				goAwayFlag = true;
+				hOffset = kDialogMarginWidth;
+				vOffset = kDialogTitleBarHeight;
+				break;
+
+			case eBorderStyle_window:
+				wDefProcID = kWindowFullZoomGrowDocumentProc;
+				goAwayFlag = true;
+				hOffset = kWindowMarginWidth;
+				vOffset = kWindowTitleBarHeight;
+				break;
+
+			case eBorderStyle_3DChildWindow:
+				wDefProcID = altDBoxProc;
+				goAwayFlag = false;
+				hOffset = 0;
+				vOffset = 0;
+				break;
+		}
+
+		Rect wRect;
 		nsRectToMacRect(aRect, wRect);
 
 #ifdef WINDOW_SIZE_TWEAKING
@@ -129,19 +147,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		wRect.right --;
 		wRect.bottom --;
 #endif
-		
-		if (mIsDialog)
-		{
-			wDefProcID = kWindowMovableModalDialogProc;
-			goAwayFlag = false;
-			::OffsetRect(&wRect, kDialogMarginWidth, kDialogTitleBarHeight + ::LMGetMBarHeight());
-		}
-		else
-		{
-			wDefProcID = kWindowFullZoomGrowDocumentProc;
-			goAwayFlag = true;
-			::OffsetRect(&wRect, kWindowMarginWidth, kWindowTitleBarHeight + ::LMGetMBarHeight());
-		}
+		::OffsetRect(&wRect, hOffset, vOffset + ::LMGetMBarHeight());
 		
 		
 		// HACK!!!!! This really should be part of the window manager
