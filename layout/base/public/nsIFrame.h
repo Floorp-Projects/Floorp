@@ -168,6 +168,9 @@ typedef PRUint32 nsFrameState;
 // If this bit is set, the frame has dirty children.
 #define NS_FRAME_HAS_DIRTY_CHILDREN 0x00001000
 
+// If this bit is set, the frame has an associated view
+#define NS_FRAME_HAS_VIEW 0x00002000
+
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
 
