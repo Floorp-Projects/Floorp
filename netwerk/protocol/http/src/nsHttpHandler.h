@@ -84,8 +84,9 @@ public:
                                        PRUint32 capabilities);
 
     const char   *UserAgent();
-    nsHttpVersion DefaultVersion() { return (nsHttpVersion) mHttpVersion; }
-    PRUint32      ReferrerLevel()  { return mReferrerLevel; }
+    nsHttpVersion DefaultVersion()  { return (nsHttpVersion) mHttpVersion; }
+    PRUint32      ReferrerLevel()   { return mReferrerLevel; }
+    const char   *AcceptEncodings() { return mAcceptEncodings; }
 
     nsHttpAuthCache *AuthCache() { return mAuthCache; }
 

@@ -324,18 +324,21 @@ nsHttpChannel::SetupTransaction()
     return mTransaction->SetupRequest(&mRequestHead, mUploadStream);
 }
 
-nsresult
+void
 nsHttpChannel::ApplyContentConversions()
 {
+    if (!mResponseHead)
+        return;
+
     LOG(("nsHttpChannel::ApplyContentConversions [this=%x]\n", this));
 
     if (!mApplyConversion) {
         LOG(("not applying conversion per mApplyConversion\n"));
-        return NS_OK;
+        return;
     }
 
     const char *val = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
-    if (val) {
+    if (val && PL_strcasestr(nsHttpHandler::get()->AcceptEncodings(), val)) {
         nsCOMPtr<nsIStreamConverterService> serv;
         nsresult rv = nsHttpHandler::get()->
                 GetStreamConverterService(getter_AddRefs(serv));
@@ -355,7 +358,6 @@ nsHttpChannel::ApplyContentConversions()
             }
         }
     }
-    return NS_OK;
 }
 
 nsresult
@@ -427,8 +429,17 @@ nsHttpChannel::ProcessNormal()
 
     LOG(("nsHttpChannel::ProcessNormal [this=%x]\n", this));
 
-    // install stream converter if required
-    ApplyContentConversions();
+    // For .gz files, apache sends both a Content-Type: application/x-gzip
+    // as well as Content-Encoding: gzip, which is completely wrong.  In
+    // this case, we choose to ignore the rogue Content-Encoding header. We
+    // must do this early on so as to prevent it from being seen up stream.
+    const char *encoding = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
+    if (encoding && PL_strcasestr(encoding, "gzip") && (
+        !PL_strcmp(mResponseHead->ContentType(), APPLICATION_GZIP) ||
+        !PL_strcmp(mResponseHead->ContentType(), APPLICATION_GZIP2))) {
+        // clear the Content-Encoding header
+        mResponseHead->SetHeader(nsHttp::Content_Encoding, nsnull); 
+    }
 
     // install cache listener if we still have a cache entry open
     if (mCacheEntry) {
@@ -440,7 +451,12 @@ nsHttpChannel::ProcessNormal()
     rv = nsHttpHandler::get()->OnExamineResponse(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnExamineResponse failed");
 
-    return mListener->OnStartRequest(this, mListenerContext);
+    rv = mListener->OnStartRequest(this, mListenerContext);
+    if (NS_FAILED(rv)) return rv;
+
+    // install stream converter if required
+    ApplyContentConversions();
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -865,9 +881,6 @@ nsHttpChannel::ReadFromCache()
         mResponseHead = mCachedResponseHead;
         mCachedResponseHead = 0;
     }
-
-    // install stream converter if required
-    ApplyContentConversions();
 
     // if we don't already have security info, try to get it from the cache 
     // entry. there are two cases to consider here: 1) we are just reading
@@ -2045,7 +2058,12 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     }
 
     // there won't be a response head if we've been cancelled
-    return mListener->OnStartRequest(this, mListenerContext);
+    nsresult rv = mListener->OnStartRequest(this, mListenerContext);
+    if (NS_FAILED(rv)) return rv;
+
+    // install stream converter if required
+    ApplyContentConversions();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
