@@ -228,9 +228,9 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
 static void Usage(char *progName)
 {
     fprintf(stderr,
-	    "Usage:  %s -L [-n nickname[ [-d keydir] [-t crlType]\n"
-	    "        %s -D -n nickname [-d keydir]\n"
-	    "        %s -I -i crl -t crlType [-u url] [-d keydir] [-B]\n",
+	    "Usage:  %s -L [-n nickname] [-d keydir] [-P dbprefix] [-t crlType]\n"
+	    "        %s -D -n nickname [-d keydir] [-P dbprefix]\n"
+	    "        %s -I -i crl -t crlType [-u url] [-d keydir] [-P dbprefix] [-B]\n",
 	    progName, progName, progName);
 
     fprintf (stderr, "%-15s List CRL\n", "-L");
@@ -238,6 +238,8 @@ static void Usage(char *progName)
 	    "-n nickname");
     fprintf(stderr, "%-20s Key database directory (default is ~/.netscape)\n",
 	    "-d keydir");
+    fprintf(stderr, "%-20s Cert & Key database prefix (default is \"\")\n",
+	    "-P dbprefix");
    
     fprintf (stderr, "%-15s Delete a CRL from the cert dbase\n", "-D");    
     fprintf(stderr, "%-20s Specify the nickname for the CA certificate\n",
@@ -254,7 +256,7 @@ static void Usage(char *progName)
     fprintf(stderr, "%-20s \t 0 - SEC_KRL_TYPE\n", " ");
     fprintf(stderr, "%-20s \t 1 - SEC_CRL_TYPE\n", " ");        
     fprintf(stderr, "\n%-20s Bypass CA certificate checks.\n", "-B");
-    fprintf(stderr, "\n%-20s Partial decode for faster operation.\n", "-P");
+    fprintf(stderr, "\n%-20s Partial decode for faster operation.\n", "-p");
 
     exit(-1);
 }
@@ -271,6 +273,7 @@ int main(int argc, char **argv)
     int rv;
     char *nickName;
     char *url;
+    char *dbPrefix = "";
     int crlType;
     PLOptState *optstate;
     PLOptStatus status;
@@ -293,16 +296,12 @@ int main(int argc, char **argv)
     /*
      * Parse command line arguments
      */
-    optstate = PL_CreateOptState(argc, argv, "PBIALd:i:Dn:Ct:u:");
+    optstate = PL_CreateOptState(argc, argv, "BCDILP:d:i:n:pt:u:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
 	    Usage(progName);
 	    break;
-
-          case 'P':
-            decodeOptions |= CRL_DECODE_SKIP_ENTRIES;
-            break;
 
 	  case 'B':
             importOptions |= CRL_IMPORT_BYPASS_CHECKS;
@@ -323,6 +322,10 @@ int main(int argc, char **argv)
 	  case 'L':
 	      listCRL = 1;
 	      break;
+
+	  case 'P':
+	    dbPrefix = strdup(optstate->value);
+	    break;
 	           
 	  case 'd':
 	    SECU_ConfigDirectory(optstate->value);
@@ -340,11 +343,11 @@ int main(int argc, char **argv)
 	  case 'n':
 	    nickName = strdup(optstate->value);
 	    break;
-	    
-	  case 'u':
-	    url = strdup(optstate->value);
-	    break;
 
+	  case 'p':
+	    decodeOptions |= CRL_DECODE_SKIP_ENTRIES;
+	    break;
+	    
 	  case 't': {
 	    char *type;
 	    
@@ -355,6 +358,10 @@ int main(int argc, char **argv)
 		return -1;
 	    }
 	    break;
+
+	  case 'u':
+	    url = strdup(optstate->value);
+	    break;
           }
 	}
     }
@@ -364,7 +371,8 @@ int main(int argc, char **argv)
     if (importCRL && !inFile) Usage (progName);
     
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    secstatus = NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
+    secstatus = NSS_Initialize(SECU_ConfigDirectory(NULL), dbPrefix, dbPrefix,
+			       "secmod.db", 0);
     if (secstatus != SECSuccess) {
 	SECU_PrintPRandOSError(progName);
 	return -1;
