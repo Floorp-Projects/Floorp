@@ -252,7 +252,7 @@ nsHTMLContentSinkStream::InitEncoders()
                                 nsISaveAsCharset::attr_htmlTextDefault :
                                 nsISaveAsCharset::attr_EntityAfterCharsetConv
                                  + nsISaveAsCharset::attr_FallbackDecimalNCR,
-                                nsIEntityConverter::html40);
+                                nsIEntityConverter::html32);
   }
 
   return res;
