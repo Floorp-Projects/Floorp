@@ -3003,6 +3003,8 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
   if (m_filterList && numActions)
     (void)m_filterList->GetLoggingEnabled(&loggingEnabled);
 
+  PRBool msgIsNew = PR_TRUE;
+
   for (PRUint32 actionIndex = 0; actionIndex < numActions && *applyMore; actionIndex++)
   {
     nsCOMPtr<nsIMsgRuleAction> filterAction;
@@ -3051,6 +3053,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
             StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
             m_msgMovedByFilter = PR_TRUE; // this will prevent us from adding the header to the db.
           }
+          msgIsNew = PR_FALSE;
         }
         // note that delete falls through to move.
         case nsMsgFilterAction::MoveToFolder:
@@ -3082,6 +3085,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
           nsMsgKeyArray keysToFlag;
           keysToFlag.Add(msgKey);
           StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
+          msgIsNew = PR_FALSE;
         }
         break;
         case nsMsgFilterAction::MarkFlagged:
@@ -3126,6 +3130,12 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
           (void) filter->LogRuleHit(filterAction, msgHdr);
       }
     }
+  }
+  if (!msgIsNew)
+  {
+    PRInt32 numNewMessages;
+    GetNumNewMessages(PR_FALSE, &numNewMessages);
+    SetNumNewMessages(numNewMessages - 1);
   }
   return NS_OK;
 }
