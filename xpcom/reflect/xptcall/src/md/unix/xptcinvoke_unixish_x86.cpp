@@ -133,8 +133,13 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "pushl %%ecx\n\t"
     "movl  (%%ecx), %%edx\n\t"
     "movl  %2, %%eax\n\t"   /* function index */
+#if (__GNUC__ == 2) && (__GNUC_MINOR__ == 7)
+    "shl   $3, %%eax\n\t"   /* *= 8 */
+    "addl  $0x0c, %%eax\n\t"   /* += 12 */
+#else
     "shl   $2, %%eax\n\t"   /* *= 4 */
     "addl  $8, %%eax\n\t"   /* += 8 */
+#endif
     "addl  %%eax, %%edx\n\t"
     "call  *(%%edx)\n\t"    /* safe to not cleanup esp */
     "movl  %%eax, %0"
