@@ -31,6 +31,9 @@ function HistoryInit() {
     if (children.firstChild)
         tree.selectItem(children.firstChild);
     tree.focus();
+
+    // do a sort
+    RefreshSort();
 }
 
 var historyDNDObserver = {
