@@ -146,7 +146,7 @@
              oncommand="goDoCommand('cmd_delete')"
              valueDefault="&deleteCmd.label;"
              disabled="true"/>
-    <command id="cmd_selectAll" observes="isImage"
+    <command id="cmd_selectAll"
              oncommand="goDoCommand('cmd_selectAll')"
              disabled="true"/>
 
@@ -154,8 +154,8 @@
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
   
-    <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
-    <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
+    <command id="Browser:Find" oncommand="BrowserFind();"/>
+    <command id="Browser:FindAgain" oncommand="BrowserFindAgain();"/>
   
     <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
   
@@ -182,8 +182,6 @@
     <broadcaster id="viewHistorySidebar" autoCheck="false" label="&historyButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
-
-    <broadcaster id="isImage"/>     
   </broadcasterset>
 
   <keyset id="mainKeyset">
@@ -573,11 +571,10 @@
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
             <menuseparator/>
             <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
-                      command="cmd_textZoomEnlarge" observes="isImage"/>
+                      command="cmd_textZoomEnlarge"/>
             <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;"
-                      command="cmd_textZoomReduce" observes="isImage"/>
-            <menu observes="isImage"
-                  label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;"
+                      command="cmd_textZoomReduce"/>
+            <menu label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;"
                   datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"
                   oncommand="MultiplexHandler(event)" onpopupshowing="CreateMenu('browser');UpdateMenus(event)" onpopupshown="CreateMenu('more-menu');">
                 <template>
