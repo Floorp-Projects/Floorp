@@ -17,7 +17,7 @@ P { text-align: justify; }
 <h1 align="center">
 Change Log for Rhino</h1>
 
-<h2>Release candidate 1 for Rhino 1.6R1</h2>
+<h2>Release candidate 2 for Rhino 1.6R1</h2>
 
 <h3>Release overview</h3>
 <p>
@@ -51,12 +51,31 @@ The class gives the uniform way to access information about the script origin of
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=244492">Bugzilla 244492</a> for details.
 </p>
 
-<h4>Removal of code complexity limits in the interpretr</h4>
+<h4>Removal of code complexity limits in the interpreter</h4>
 <p>
 The interpreter mode in Rhino does not limit any longer the script size or code complexity. It should be possible to execute any script as long as JVM resources allow so.
 </p>
 <p>
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=244014">Bugzilla 244014</a> and <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=256339">Bugzilla 256339</a>  for details.
+</p>
+
+<h4>Tail call elimination in the interpreter</h4>
+<p>
+The interpreter mode in Rhino implements tail call elimination to avoid excessive stack space consumption when a function returns result of a call to another function. 
+</p>
+<p>
+See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=257128">Bugzilla 257128</a>.
+</p>
+
+<h4>Experimental support for continuations in the interpreter</h4>
+<p>
+The interpreter mode in Rhino contains an experimental support for continuations. It is based on the original implementation of Christopher Oliver and ideas from <a href="http://sisc.sourceforge.net/">SISC</a> project. To enable the continuation support in Java application please refer to the following <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=258844#c8">comment</a> in <a href="http://bugzilla.mozilla.org/">Bugzilla</a>. To use continuations with <a href="shell.html">Rhino shell</a> pass <tt>-continuations</tt> flag when invoking the shell.
+</p>
+<p> 
+Please note that the details of implementation and Java and JavaScript API for continuations may change in future in incompatible way.
+</p>
+<p>
+See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=258844">Bugzilla 258844</a>.
 </p>
 
 <h4>JavaImporter constructor</h4>

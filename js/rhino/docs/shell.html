@@ -18,21 +18,35 @@ Invoking the Shell</h2>
 <tt>java org.mozilla.javascript.tools.shell.Main [<i>options</i>] 
 <i>script-filename-or-url</i> [<i>script-arguments</i>]</tt>
 <p>where <tt><i>options</i></tt> are:
-<p><tt>-e <i>script-source</i></tt>
+<p>
+
+<tt>-e <i>script-source</i></tt>
 <blockquote>Executes <i>script-source</i> as a JavaScript script.</blockquote>
 <tt>-f <i>script-filename-or-url</i></tt>
 <blockquote>Reads <i>script-filename-or-url</i> content and execute it as a JavaScript script.</blockquote>
+
 <tt>-opt <i>optLevel</i></tt>
 <br><tt>-O <i>optLevel</i></tt>
-<ul>Optimizes at level <i>optLevel</i>, which must be an integer between
-0 and 9. See <a href="opt.html">Optimization</a> for more details.</ul>
+<blockquote>
+Optimizes at level <i>optLevel</i>, which must be an integer between
+0 and 9. See <a href="opt.html">Optimization</a> for more details.
+</blockquote>
+
 <tt>-version <i>versionNumber</i></tt>
-<ul>Specifies the language version to compile with. The string <i>versionNumber</i>
+<blockquote>
+Specifies the language version to compile with. The string <i>versionNumber</i>
 must be one of <tt>100</tt>, <tt>110</tt>, <tt>120</tt>, <tt>130</tt>,
 or <tt>140</tt>. See <a href="overview.html#versions">JavaScript Language
-Versions</a> for more information on language versions.</ul>
+Versions</a> for more information on language versions.
+</blockquote>
+
+<tt>-continuations</tt>
+<blockquote>
+Enable experiments support for continuations and set the optimization level to -1 to force interpretation mode.
+</blockquote>
 
 If the shell is invoked with the system property rhino.use_java_policy_security set to true and with a security manager installed, the shell restricts scripts permissions based on their URLs according to Java policy settings. This is available only if JVM implements Java2 security model.
+
 <h2>
 Predefined Properties</h2>
 Scripts executing in the shell have access to some additional properties
