@@ -484,9 +484,12 @@ NS_IMETHODIMP nsMsgDBView::ReloadMessage()
   return NS_OK;
 }
 
-// given a URI, we will load the message for it.
+// given a msg key, we will load the message for it.
 NS_IMETHODIMP nsMsgDBView::LoadMessageByMsgKey(nsMsgKey aMsgKey)
 {
+  NS_ASSERTION(aMsgKey != nsMsgKey_None,"trying to load nsMsgKey_None");
+  if (aMsgKey == nsMsgKey_None) return NS_ERROR_UNEXPECTED;
+
   if (!mSupressMsgDisplay && (m_currentlyDisplayedMsgKey != aMsgKey))
   {
     nsXPIDLCString uri;

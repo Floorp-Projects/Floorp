@@ -112,8 +112,12 @@ function HandleDeleteOrMoveMsgCompleted(folder)
     if (gNextMessageViewIndexAfterDelete != -1) 
     {
       var nextMstKey = gDBView.getKeyAt(gNextMessageViewIndexAfterDelete);
-      gDBView.loadMessageByMsgKey(nextMstKey);
-
+      if (nextMstKey != -1) {
+        gDBView.loadMessageByMsgKey(nextMstKey);
+      }
+      else {
+        window.close();
+      }
     }
     else
     {
@@ -205,10 +209,10 @@ function OnLoadMessageWindow()
   else if (gCurrentFolderUri) {
     SetUpToolbarButtons(gCurrentFolderUri);
   }
-    
+ 
   setTimeout("var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); gDBView.loadMessageByMsgKey(msgKey); gNextMessageViewIndexAfterDelete = gDBView.firstSelected;", 0);
-  SetupCommandUpdateHandlers();
 
+  SetupCommandUpdateHandlers();
 }
 
 function extractMsgKeyFromURI()
