@@ -460,7 +460,6 @@ xpcom/tools/registry/Makefile
 #
 # End of xpcom Makefiles
 #
-silentdl/Makefile
 xpinstall/Makefile
 xpinstall/notifier/Makefile
 xpinstall/packager/Makefile
