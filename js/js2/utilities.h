@@ -26,6 +26,7 @@
 #include "systemtypes.h"
 
 using std::size_t;
+using std::ptrdiff_t;
 using std::string;
 using std::istream;
 using std::ostream;
@@ -76,7 +77,12 @@ namespace JavaScript {
 	// A string of UTF-16 characters.  Nulls are allowed just like any other character.
 	// The string is not null-terminated.
 	// Use wstring if char16 is wchar_t.  Otherwise use basic_string<uint16>.
+	//
+	// Eventually we'll want to use a custom class better suited for JavaScript that generates less
+	// code bloat and separates the concepts of a fixed, read-only string from a mutable buffer that
+	// is expanding.  For now, though, we use the standard basic_string.
 	typedef std::basic_string<char16> String;
+
 
 	typedef uint32 char16orEOF;		// A type that can hold any char16 plus one special value: ueof.
 	const char16orEOF char16eof = static_cast<char16orEOF>(-1);
@@ -96,11 +102,29 @@ namespace JavaScript {
 	
 	inline char16 widen(char ch) {return static_cast<char16>(static_cast<uchar>(ch));}
 
-	String widenCString(const char *cstr);
-	void appendChars(String &str, const char *chars, size_t length);
+	// Return a String containing the characters of the null-terminated C string cstr
+	// (without the trailing null).
+	inline String widenCString(const char *cstr)
+	{
+		size_t len = std::strlen(cstr);
+		const uchar *ucstr = reinterpret_cast<const uchar *>(cstr);
+		return String(ucstr, ucstr+len);
+	}
+
+
+	// Widen and append length characters starting at chars to the end of str.
+	inline void appendChars(String &str, const char *chars, size_t length)
+	{
+		const uchar *uchars = reinterpret_cast<const uchar *>(chars);
+		str.append(uchars, uchars + length);
+	}
+
+
 	String &operator+=(String &str, const char *cstr);
 	String operator+(const String &str, const char *cstr);
 	String operator+(const char *cstr, const String &str);
+	inline String &operator+=(String &str, char c) {return str += widen(c);}
+	inline void clear(String &s) {s.resize(0);}
 
 
 	class CharInfo {
@@ -196,6 +220,37 @@ namespace JavaScript {
 	
 	inline bool isASCIIDecimalDigit(char16 c) {return c >= '0' && c <= '9';}
 	bool isASCIIHexDigit(char16 c, uint &digit);
+
+	const char16 *skipWhiteSpace(const char16 *str, const char16 *strEnd);
+
+
+//
+// Array auto_ptr's
+//
+
+	// An ArrayAutoPtr holds a pointer to an array initialized by new T[x].
+	// A regular auto_ptr cannot be used here because it deletes its pointer using
+	// delete rather than delete[].
+	// An appropriate operator[] is also provided.
+	template <typename T>
+	class ArrayAutoPtr {
+		T *ptr;
+		
+	  public:
+		explicit ArrayAutoPtr(T *p = 0): ptr(p) {}
+		ArrayAutoPtr(ArrayAutoPtr &a): ptr(a.ptr) {a.ptr = 0;}
+		ArrayAutoPtr &operator=(ArrayAutoPtr &a) {reset(a.release());}
+		~ArrayAutoPtr() {delete[] ptr;}
+		
+		T &operator*() const {return *ptr;}
+		T &operator->() const {return *ptr;}
+		template<class N> T &operator[](N i) const {return ptr[i];}
+		T *get() const {return ptr;}
+		T *release() {T *p = ptr; ptr = 0; return p;}
+		void reset(T *p = 0) {delete[] ptr; ptr = p;}
+	};
+	
+	typedef ArrayAutoPtr<char> CharAutoPtr;
 
 
 //

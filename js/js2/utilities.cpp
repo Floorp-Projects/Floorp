@@ -161,26 +161,6 @@ uint JS::floorLog2(uint32 n)
 //
 
 
-// Return a String containing the characters of the null-terminated C string cstr
-// (without the trailing null).
-JS::String JS::widenCString(const char *cstr)
-{
-	size_t len = std::strlen(cstr);
-	String s(len, uni::null);
-	std::transform(cstr, cstr+len, s.begin(), widen);
-	return s;
-}
-
-
-// Widen and append length characters starting at chars to the end of str.
-void JS::appendChars(String &str, const char *chars, size_t length)
-{
-	String::size_type strLen = str.size();
-	str.append(length, uni::null);
-	std::transform(chars, chars+length, str.begin()+strLen, widen);
-}
-
-
 // Widen and append the null-terminated string cstr to the end of str.
 // Return str.
 JS::String &JS::operator+=(String &str, const char *cstr)
@@ -193,8 +173,7 @@ JS::String &JS::operator+=(String &str, const char *cstr)
 // Return the concatenation of str and the null-terminated string cstr.
 JS::String JS::operator+(const String &str, const char *cstr)
 {
-	String s = widenCString(cstr);
-	return str + s;
+	return str + widenCString(cstr);
 }
 
 
@@ -202,7 +181,8 @@ JS::String JS::operator+(const String &str, const char *cstr)
 JS::String JS::operator+(const char *cstr, const String &str)
 {
 	String s = widenCString(cstr);
-	return s += str;
+	s += str;
+	return s;
 }
 
 
@@ -1520,6 +1500,14 @@ bool JS::isASCIIHexDigit(char16 c, uint &digit)
 }
 
 
+// Return str advanced past white space characters, but no further than strEnd.
+const char16 *JS::skipWhiteSpace(const char16 *str, const char16 *strEnd)
+{
+	while (str != strEnd && isSpace(*str))
+		str++;
+	return str;
+}
+
 
 //
 // C++ I/O
@@ -1534,10 +1522,28 @@ JS::SaveFormat::~SaveFormat()
 }
 
 
+// Quotes for printing non-ASCII characters on an ASCII stream
+#ifdef XP_MAC
+ const char beginUnprintable = char(0xC7);
+ const char endUnprintable = char(0xC8);
+#else
+ const char beginUnprintable = '{';
+ const char endUnprintable = '}';
+#endif
+
 void JS::showChar(ostream &out, char16 ch)
 {
-	SaveFormat sf(out);
-	out << '[' << std::hex << std::uppercase << std::setw(4) << std::setfill('0') << (uint16)ch << ']';
+#ifdef XP_MAC_MPW
+	if (ch == '\n')
+		out << '\r';
+	else
+#endif
+	if (uchar16(ch) <= 0x7E && (uchar16(ch) >= ' ' || ch == '\n' || ch == '\t'))
+		out << static_cast<char>(ch);
+	else {
+		SaveFormat sf(out);
+		out << beginUnprintable << std::hex << std::uppercase << std::setw(4) << std::setfill('0') << (uint16)ch << endUnprintable;
+	}
 }
 
 
