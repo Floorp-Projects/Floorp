@@ -244,7 +244,7 @@ function updateColors()
     // Setup css classes for category colors
     var catergoryPrefBranch = prefService.getBranch("");
     var pbi = catergoryPrefBranch.QueryInterface(
-        Components.interfaces.nsIPrefBranchInternal);
+        Components.interfaces.nsIPrefBranch2);
     pbi.addObserver("calendar.category.color.", categoryPrefObserver, false);
     categoryPrefObserver.mCalendarStyleSheet = calStyleSheet;
     categoryPrefObserver.observe(null, null, "");
@@ -300,7 +300,7 @@ function calendarFinish()
    finishCalendarToDoUnifinder();
 
    var pbi = prefService.getBranch("");
-   pbi = pbi.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+   pbi = pbi.QueryInterface(Components.interfaces.nsIPrefBranch2);
    pbi.removeObserver("calendar.category.color.", categoryPrefObserver);
 
    gCalendarWindow.close();

@@ -785,7 +785,7 @@ function OnLoadMessenger()
 /* Functions related to startup */
 function delayedOnLoadMessenger()
 {
-  pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
   pref.addObserver("mail.pane_config.dynamic", MailPrefObserver, false);
   pref.addObserver("mail.showFolderPaneColumns", MailPrefObserver, false);
 
@@ -844,7 +844,7 @@ function OnUnloadMessenger()
 {
   OnLeavingFolder(gMsgFolderSelected);  // mark all read in current folder
   accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
-  pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
   pref.removeObserver("mail.pane_config.dynamic", MailPrefObserver);
   pref.removeObserver("mail.showFolderPaneColumns", MailPrefObserver);
 

@@ -698,7 +698,7 @@ function ShowHideToolBarButtons()
 function AddToolBarPrefListener()
 {
   try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pbi.addObserver(gMailToolBarPrefListener.domain, gMailToolBarPrefListener, false);
   } catch(ex) {
     dump("Failed to observe prefs: " + ex + "\n");
@@ -708,7 +708,7 @@ function AddToolBarPrefListener()
 function RemoveToolBarPrefListener()
 {
   try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pbi.removeObserver(gMailToolBarPrefListener.domain, gMailToolBarPrefListener);
   } catch(ex) {
     dump("Failed to remove pref observer: " + ex + "\n");

@@ -42,7 +42,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIDocShell.h"
 #include "nsContentPolicyUtils.h"
 #include "nsString.h"
@@ -71,7 +71,7 @@ nsMailnewsContentBlocker::nsMailnewsContentBlocker()
 nsresult
 nsMailnewsContentBlocker::Init()
 {
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
     prefBranch->AddObserver(kBlockRemotePrefName, this, PR_TRUE);
 

@@ -49,7 +49,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
@@ -291,7 +291,7 @@ nsStandardURL::~nsStandardURL()
 void
 nsStandardURL::InitGlobalObjects()
 {
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
+    nsCOMPtr<nsIPrefBranch2> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
     if (prefBranch) {
         nsCOMPtr<nsIObserver> obs( new nsPrefObserver() );
         prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE); 

@@ -46,7 +46,7 @@
 #include "nsIPrompt.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "prmem.h"
 #include "nsIStringBundle.h"
 #include "nsArray.h"
@@ -239,7 +239,7 @@ nsPasswordManager::Init()
 
   mPrefBranch->GetBoolPref("rememberSignons", &sRememberPasswords);
 
-  nsCOMPtr<nsIPrefBranchInternal> branchInternal = do_QueryInterface(mPrefBranch);
+  nsCOMPtr<nsIPrefBranch2> branchInternal = do_QueryInterface(mPrefBranch);
 
   // Have the pref service hold a weak reference; the service manager
   // will be holding a strong reference.

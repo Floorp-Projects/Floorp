@@ -88,7 +88,7 @@ function initFindBar()
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
 
-  var pbi = prefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  var pbi = prefService.QueryInterface(Components.interfaces.nsIPrefBranch2);
 
   gQuickFindTimeoutLength = prefService.getIntPref("accessibility.typeaheadfind.timeout");
   gFlashFindBar = prefService.getIntPref("accessibility.typeaheadfind.flashBar");
@@ -104,7 +104,7 @@ function uninitFindBar()
    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
 
-   var pbi = prefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+   var pbi = prefService.QueryInterface(Components.interfaces.nsIPrefBranch2);
    pbi.removeObserver(gTypeAheadFind.useTAFPref, gTypeAheadFind);
    pbi.removeObserver(gTypeAheadFind.searchLinksPref, gTypeAheadFind);
 

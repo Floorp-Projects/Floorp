@@ -46,7 +46,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIDocShell.h"
 #include "nsString.h"
 #include "nsContentPolicyUtils.h"
@@ -91,7 +91,7 @@ nsresult nsImgManager::Init()
   // other things, like mailnews blocking
   mPermissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
 
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
     prefBranch->AddObserver(kImageBehaviorPrefName, this, PR_TRUE);
 

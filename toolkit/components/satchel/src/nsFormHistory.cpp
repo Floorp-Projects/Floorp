@@ -57,7 +57,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsVoidArray.h"
 #include "nsCOMArray.h"
 
@@ -149,7 +149,7 @@ nsFormHistory::FormHistoryEnabled()
     gFormHistory->mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE,
                                            &gFormHistoryEnabled);
 
-    nsCOMPtr<nsIPrefBranchInternal> branchInternal =
+    nsCOMPtr<nsIPrefBranch2> branchInternal =
       do_QueryInterface(gFormHistory->mPrefBranch);
     branchInternal->AddObserver(PREF_FORMFILL_ENABLE, gFormHistory, PR_TRUE);
 

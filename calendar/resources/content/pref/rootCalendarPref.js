@@ -40,7 +40,7 @@ function calendarPrefObserver( CalendarPreferences )
 {
    this.CalendarPreferences = CalendarPreferences;
    try {
-     var pbi = rootPrefNode.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+     var pbi = rootPrefNode.QueryInterface(Components.interfaces.nsIPrefBranch2);
      pbi.addObserver("calendar.", this, false);
      window.addEventListener("unload", this, false);
   } catch(ex) {
@@ -108,7 +108,7 @@ calendarPrefObserver.prototype =
 
     handleEvent: function handleEvent(event)
     {
-      var pbi = rootPrefNode.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      var pbi = rootPrefNode.QueryInterface(Components.interfaces.nsIPrefBranch2);
       pbi.removeObserver(this.domain, this);
     }
 }

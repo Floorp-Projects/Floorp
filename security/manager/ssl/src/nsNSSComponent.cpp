@@ -62,7 +62,7 @@
 #include "prlog.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsAutoLock.h"
@@ -1167,7 +1167,7 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       PK11_SetPasswordFunc(PK11PasswordPrompt);
 
       // Register an observer so we can inform NSS when these prefs change
-      nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefBranch);
+      nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
       pbi->AddObserver("security.", this, PR_FALSE);
 
       PRBool enabled;
@@ -1249,7 +1249,7 @@ nsNSSComponent::ShutdownNSS()
     PK11_SetPasswordFunc((PK11PasswordFunc)nsnull);
 
     if (mPrefBranch) {
-      nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefBranch);
+      nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
       pbi->RemoveObserver("security.", this);
     }
 

@@ -42,7 +42,7 @@
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsCRT.h"
 
 // pref string constants
@@ -58,7 +58,7 @@ NS_IMPL_ISUPPORTS2(nsP3PService, nsICookieConsent, nsIObserver)
 nsP3PService::nsP3PService() 
 {
   // we can live without a prefservice, so errors here aren't fatal
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
     prefBranch->AddObserver(kCookiesP3PStringPref, this, PR_FALSE);
   }

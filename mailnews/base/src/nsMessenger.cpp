@@ -141,7 +141,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIMIMEService.h"
@@ -340,7 +340,7 @@ NS_IMPL_GETSET(nsMessenger, SendingUnsentMsgs, PRBool, mSendingUnsentMsgs)
 NS_IMETHODIMP    
 nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
 {
-  nsCOMPtr<nsIPrefBranchInternal> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch2> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   if(!aWin)
   {

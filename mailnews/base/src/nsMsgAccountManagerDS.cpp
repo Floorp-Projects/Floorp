@@ -61,7 +61,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 
 // turn this on to see useful output
 #undef DEBUG_amds
@@ -209,7 +209,7 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
     kDefaultServerAtom = NS_NewAtom("DefaultServer");
   }
 
-  nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch2> prefBranchInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefBranchInternal)
     prefBranchInternal->AddObserver(PREF_SHOW_FAKE_ACCOUNT, this, PR_FALSE);
 }
@@ -1408,7 +1408,7 @@ nsMsgAccountManagerDataSource::Observe(nsISupports *aSubject, const char *aTopic
     }
   }
   else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch2> prefBranchInternal = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefBranchInternal)
       prefBranchInternal->RemoveObserver(PREF_SHOW_FAKE_ACCOUNT, this);
   }

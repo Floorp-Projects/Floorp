@@ -67,7 +67,7 @@
 static const char *gScheme[] = {"chrome", "file", "http", "jar", "resource"};
 
 class nsIPrefBranch;
-class nsIPrefBranchInternal;
+class nsIPrefBranch2;
 
 class nsIOService : public nsIIOService
                   , public nsIObserver
@@ -96,7 +96,7 @@ protected:
 
     // Prefs wrangling
     NS_HIDDEN_(void) PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
-    NS_HIDDEN_(void) GetPrefBranch(nsIPrefBranchInternal **);
+    NS_HIDDEN_(void) GetPrefBranch(nsIPrefBranch2 **);
     NS_HIDDEN_(void) ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
 
 protected:

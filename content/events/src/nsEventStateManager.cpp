@@ -82,7 +82,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -214,7 +214,7 @@ nsEventStateManager::Init()
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
+  nsCOMPtr<nsIPrefBranch2> prefBranch =
     do_QueryInterface(nsContentUtils::GetPrefBranch());
 
   if (prefBranch) {
@@ -304,7 +304,7 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
+  nsCOMPtr<nsIPrefBranch2> prefBranch =
     do_QueryInterface(nsContentUtils::GetPrefBranch());
 
   if (prefBranch) {

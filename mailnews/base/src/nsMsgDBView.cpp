@@ -58,7 +58,7 @@
 #include "nsMsgMimeCID.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIMsgSearchSession.h"
 #include "nsIMsgCopyService.h"
@@ -290,7 +290,7 @@ nsresult nsMsgDBView::AddLabelPrefObservers()
   nsresult rv;
   nsCString prefString;
 
-  nsCOMPtr<nsIPrefBranchInternal> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIPrefBranch2> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   InitLabelPrefs();
@@ -315,7 +315,7 @@ nsresult nsMsgDBView::RemoveLabelPrefObservers()
   nsresult rv;
   nsCString prefString;
 
-  nsCOMPtr<nsIPrefBranchInternal> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIPrefBranch2> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   for(PRInt32 i = 0; i < PREF_LABELS_MAX; i++)

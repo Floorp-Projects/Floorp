@@ -42,7 +42,7 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -136,7 +136,7 @@ NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const char
   }
   else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
   {
-    nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
+    nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(prefBranch);
     if (pbi) 
     {
       rv = pbi->RemoveObserver(kMAILNEWS_VIEW_DEFAULT_CHARSET, this);
@@ -230,7 +230,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
       if (gFolderCharsetObserver)
       {
         NS_ADDREF(gFolderCharsetObserver);
-        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
+        nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(prefBranch);
         if (pbi) {
           rv = pbi->AddObserver(kMAILNEWS_VIEW_DEFAULT_CHARSET, gFolderCharsetObserver, PR_FALSE);
           rv = pbi->AddObserver(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, gFolderCharsetObserver, PR_FALSE);

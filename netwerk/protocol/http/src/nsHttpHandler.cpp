@@ -60,7 +60,7 @@
 #include "nsCategoryManagerUtils.h"
 #include "nsICacheService.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
@@ -209,7 +209,7 @@ nsHttpHandler::Init()
     InitUserAgentComponents();
 
     // monitor some preference changes
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefBranch) {
         prefBranch->AddObserver(HTTP_PREF_PREFIX, this, PR_TRUE);
         prefBranch->AddObserver(UA_PREF_PREFIX, this, PR_TRUE);

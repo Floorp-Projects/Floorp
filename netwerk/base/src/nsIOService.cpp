@@ -53,7 +53,7 @@
 #include "netCore.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsICategoryManager.h"
 #include "nsXPCOM.h"
@@ -212,7 +212,7 @@ nsIOService::Init()
         mRestrictedPortList.AppendElement(NS_REINTERPRET_CAST(void *, gBadPortList[i]));
 
     // Further modifications to the port list come from prefs
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch;
+    nsCOMPtr<nsIPrefBranch2> prefBranch;
     GetPrefBranch(getter_AddRefs(prefBranch));
     if (prefBranch) {
         prefBranch->AddObserver(PORT_PREF_PREFIX, this, PR_TRUE);
@@ -310,7 +310,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 
     PRBool externalProtocol = PR_FALSE;
     PRBool listedProtocol   = PR_TRUE;
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch;
+    nsCOMPtr<nsIPrefBranch2> prefBranch;
     GetPrefBranch(getter_AddRefs(prefBranch));
     if (prefBranch) {
         nsCAutoString externalProtocolPref("network.protocol-handler.external.");
@@ -658,7 +658,7 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool r
 }
 
 void
-nsIOService::GetPrefBranch(nsIPrefBranchInternal **result)
+nsIOService::GetPrefBranch(nsIPrefBranch2 **result)
 {
     *result = nsnull;
     CallGetService(NS_PREFSERVICE_CONTRACTID, result);

@@ -787,7 +787,7 @@ function delayedStartup()
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
 
-  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranch2);
 
   // Enable/Disable Form Fill
   gFormFillPrefListener = new FormFillPrefListener();
@@ -909,7 +909,7 @@ function Shutdown()
   }
 
   try {
-    var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pbi.removeObserver(gFormFillPrefListener.domain, gFormFillPrefListener);
     pbi.removeObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener);
     pbi.removeObserver(gAutoHideTabbarPrefListener.domain, gAutoHideTabbarPrefListener);

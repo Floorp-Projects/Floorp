@@ -80,7 +80,7 @@
 
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "lcglue.h"
 
@@ -373,7 +373,7 @@ nsJVMManager::nsJVMManager(nsISupports* outer)
 {
     NS_INIT_AGGREGATED(outer);
 
-    nsCOMPtr<nsIPrefBranchInternal> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (branch)
         branch->AddObserver("security.enable_java", this, PR_FALSE);
 }

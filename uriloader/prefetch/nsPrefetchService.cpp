@@ -40,7 +40,7 @@
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIDocCharset.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
@@ -227,7 +227,7 @@ nsPrefetchService::Init()
     nsresult rv;
 
     // read prefs and hook up pref observer
-    nsCOMPtr<nsIPrefBranchInternal> prefs(do_GetService(kPrefServiceCID, &rv));
+    nsCOMPtr<nsIPrefBranch2> prefs(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv)) {
       PRBool enabled;
       rv = prefs->GetBoolPref(PREFETCH_PREF, &enabled);

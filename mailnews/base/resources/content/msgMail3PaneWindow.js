@@ -693,7 +693,7 @@ function OnLoadMessenger()
 {
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
-  pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pref.QueryInterface(Components.interfaces.nsIPrefBranch2);
   pref.addObserver("mail.pane_config.dynamic", MailPaneConfigObserver, false);
   UpdateMailPaneConfig();
   Create3PaneGlobals();

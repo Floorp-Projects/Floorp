@@ -130,7 +130,7 @@ const gLabelPrefListener = {
 function AddLabelPrefListener()
 {
   try {
-    gPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    gPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranch2);
     gPrefBranch.addObserver(kLabelPrefs, gLabelPrefListener, false);
   } catch(ex) {
     dump("Failed to observe prefs: " + ex + "\n");
@@ -140,7 +140,7 @@ function AddLabelPrefListener()
 function RemoveLabelPrefListener()
 {
   try {
-    gPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    gPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranch2);
     gPrefBranch.removeObserver(kLabelPrefs, gLabelPrefListener);
   } catch(ex) {
     dump("Failed to remove pref observer: " + ex + "\n");

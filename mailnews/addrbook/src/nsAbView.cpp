@@ -53,7 +53,7 @@
 #include "nsITreeColumns.h"
 
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefLocalizedString.h"
 
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsAbView::GetURI(char **aURI)
 nsresult nsAbView::SetGeneratedNameFormatFromPrefs()
 {
   nsresult rv;
-  nsCOMPtr<nsIPrefBranchInternal> prefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIPrefBranch2> prefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = prefBranchInt->GetIntPref(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, &mGeneratedNameFormat);
@@ -168,7 +168,7 @@ nsresult nsAbView::AddPrefObservers()
 {
   nsresult rv;
 
-  nsCOMPtr<nsIPrefBranchInternal> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIPrefBranch2> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = pbi->AddObserver(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, this, PR_FALSE);
@@ -179,7 +179,7 @@ nsresult nsAbView::RemovePrefObservers()
 {
   nsresult rv;
 
-  nsCOMPtr<nsIPrefBranchInternal> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIPrefBranch2> pbi(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = pbi->RemoveObserver(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, this);
@@ -1169,7 +1169,7 @@ NS_IMETHODIMP nsAbView::SwapFirstNameLastName()
   PRBool displayNameAutoGeneration;
   PRBool displayNameLastnamefirst = PR_FALSE;
 
-  nsCOMPtr<nsIPrefBranchInternal> pPrefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIPrefBranch2> pPrefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = pPrefBranchInt->GetBoolPref(PREF_MAIL_ADDR_BOOK_DISPLAYNAME_AUTOGENERATION, &displayNameAutoGeneration);

@@ -59,7 +59,7 @@
 #include "nsISOAPBlock.h"
 #include "nsIVariant.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIJSContextStack.h"
 
 #define WSA_GRANT_ACCESS_TO_ALL     (1 << 0)

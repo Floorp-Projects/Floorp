@@ -54,7 +54,7 @@ try {
  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefService);
  sPrefs = prefService.getBranch(null);
- sPrefBranchInternal = sPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+ sPrefBranchInternal = sPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
 }
 catch (ex) {
  dump("failed to preferences services\n");

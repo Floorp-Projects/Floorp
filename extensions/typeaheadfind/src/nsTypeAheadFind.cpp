@@ -58,7 +58,7 @@
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -171,7 +171,7 @@ nsTypeAheadFind::~nsTypeAheadFind()
   RemoveDocListeners();
   mTimer = nsnull;
 
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch2> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefInternal) {
     prefInternal->RemoveObserver("accessibility.typeaheadfind", this);
     prefInternal->RemoveObserver("accessibility.browsewithcaret", this);
@@ -185,7 +185,7 @@ nsTypeAheadFind::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
 
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch2> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
   mSearchRange = do_CreateInstance(kRangeCID);
   mStartPointRange = do_CreateInstance(kRangeCID);
   mEndPointRange = do_CreateInstance(kRangeCID);

@@ -43,7 +43,7 @@
 
 #include "nsIIOService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "nsICookieConsent.h"
 #include "nsICookiePermission.h"
@@ -396,7 +396,7 @@ nsCookieService::Init()
   }
 
   // init our pref and observer
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
     prefBranch->AddObserver(kPrefCookiesPermissions, this, PR_TRUE);
     prefBranch->AddObserver(kPrefMaxNumberOfCookies, this, PR_TRUE);
