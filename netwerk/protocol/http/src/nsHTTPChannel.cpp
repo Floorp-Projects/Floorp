@@ -279,7 +279,7 @@ NS_IMETHODIMP
 nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
   *aLoadGroup = mLoadGroup;
-  NS_ADDREF(*aLoadGroup);
+  NS_IF_ADDREF(*aLoadGroup);
   return NS_OK;
 }
 
