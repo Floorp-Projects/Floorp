@@ -39,6 +39,7 @@
 #include <fstream.h>
 #include <time.h>
 #include "prmem.h"
+#include "nsQuickSort.h"
 
 #define CONTEXT_VECTOR_MAP	"/vector.map"
 #define CONTEXT_VECTOR_STAT	"/vector.stat"
@@ -47,7 +48,7 @@
 // structure to store the vector statistic information
 
 typedef struct vector_info {
-    PRInt32 references;     // number of occurances counted
+    PRInt32 references;     // number of occurrences counted
     PRInt32 count;          // number of tags in the vector
     PRBool  good_vector;    // is this a valid vector?
     eHTMLTags* vector;       // and the vector
@@ -221,7 +222,7 @@ PRBool CDTDDebug::DebugRecord(char * path, nsString& aURLRef, char * filename)
 
 	  // get the file size, read in the file and parse it line at
 	  // a time to check to see if we have already recorded this
-	  // occurance
+	  // occurrence
 
       PRInt32 iSize = PR_Seek(recordFile,0,PR_SEEK_END);
       if (iSize) {
@@ -289,10 +290,10 @@ PRBool CDTDDebug::DebugRecord(char * path, nsString& aURLRef, char * filename)
 
 /**
  * compare function for quick sort.  Compares references and
- * sorts in decending order
+ * sorts in descending order
  */
 
-static int compare( const void *arg1, const void *arg2 )
+static int compare( const void *arg1, const void *arg2 , void *unused)
 {
 	VectorInfo ** p1 = (VectorInfo**)arg1;
 	VectorInfo ** p2 = (VectorInfo**)arg2;
@@ -359,7 +360,7 @@ void CDTDDebug::NoteVector(eHTMLTags aTags[],PRInt32 count, PRBool good_vector)
 			mVectorInfoArray,
 			(sizeof(VectorInfo*)*((mVectorCount/TABLE_SIZE)+1)*TABLE_SIZE));
 	  if (mVectorCount) {
-		  qsort((void*)mVectorInfoArray,(size_t)mVectorCount,sizeof(VectorInfo*),compare);
+		  NS_QuickSort((void*)mVectorInfoArray,(size_t)mVectorCount,sizeof(VectorInfo*),compare, NULL);
 	  }
 	}
 }
@@ -379,7 +380,7 @@ void CDTDDebug::MakeVectorString(char * vector_string, VectorInfo * pInfo)
  *  This debug routine dumps out the vector statistics to a text
  *  file in the verification directory and defaults to the name
  *  "vector.stat".  It contains all parsed context vectors and there
- *  occurance count sorted in decending order.
+ *  occurrence count sorted in descending order.
  *  
  *  @update     jevering 6/11/98
  *  @param
@@ -413,11 +414,11 @@ void CDTDDebug::DumpVectorRecord(void)
 
       // oh what the heck, sort it again
       if (mVectorCount) {
-	      qsort((void*)mVectorInfoArray,(size_t)mVectorCount,sizeof(VectorInfo*),compare);
+	      NS_QuickSort((void*)mVectorInfoArray,(size_t)mVectorCount,sizeof(VectorInfo*),compare, NULL);
       }
 
       // cute little header
-      sprintf(vector_string,"Context vector occurance results. Processed %d unique vectors.\r\n\r\n", mVectorCount);
+      sprintf(vector_string,"Context vector occurrence results. Processed %d unique vectors.\r\n\r\n", mVectorCount);
       ps << vector_string;
 
       ps << "Invalid context vector summary (see " CONTEXT_VECTOR_STAT ") for mapping.\r\n";

@@ -92,7 +92,7 @@ MODULE_PRIVATE NET_FileEntryInfo * NET_CreateFileEntryInfoStruct (void)
  *
  */
 PRIVATE int
-NET_CompareFileEntryInfoStructs (const void *ent2, const void *ent1)
+NET_CompareFileEntryInfoStructs (const void *ent2, const void *ent1, void *unused)
 {
     int status;
     const NET_FileEntryInfo *entry1 = *(NET_FileEntryInfo **) ent1;

@@ -17,7 +17,7 @@
  */
 #include "mkutils.h"
 #include "mksort.h"
-#include "xp_qsort.h"
+#include "nsQuickSort.h"
 
 #define CHUNK_SIZE 400
 
@@ -122,9 +122,9 @@ NET_SortInsert(SortStruct * sort_struct, void * insert_before, void * new_object
 }
 
 MODULE_PRIVATE void
-NET_DoSort(SortStruct * sort_struct, int (*compar) (const void *, const void *))
+NET_DoSort(SortStruct * sort_struct, int (*compar) (const void *, const void *, void *))
 {
-    XP_QSORT(sort_struct->list, sort_struct->num_entries, sizeof(void *), compar);
+    NS_QuickSort(sort_struct->list, sort_struct->num_entries, sizeof(void *), compar, NULL);
 } 
 
 /* unloads backwards :(

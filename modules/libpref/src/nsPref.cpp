@@ -33,6 +33,7 @@
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
 #include "nsIProfile.h"
+#include "nsQuickSort.h"
 
 #include "plhash.h"
 #include "prmem.h"
@@ -44,8 +45,6 @@
 #ifdef _WIN32
 #include "windows.h"
 #endif /* _WIN32 */
-
-#define XP_QSORT qsort
 
 #define PREFS_HEADER_LINE_1 "// Mozilla User Preferences"
 #define PREFS_HEADER_LINE_2	"// This is a generated file!"
@@ -1180,7 +1179,7 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
     PR_HashTableEnumerateEntries(gHashTable, heSaveProc, valueArray);
     
     /* Sort the preferences to make a readable file on disk */
-    XP_QSORT(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings);
+    NS_QuickSort(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings, NULL);
     char** walker = valueArray;
     for (PRUint32 valueIdx = 0; valueIdx < gHashTable->nentries; valueIdx++,walker++)
     {
