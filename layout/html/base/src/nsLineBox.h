@@ -338,7 +338,9 @@ public:
   // used for painting-related things, but should never be used for
   // layout (except for handling of 'overflow').
   void SetCombinedArea(const nsRect& aCombinedArea);
-  void GetCombinedArea(nsRect* aResult);
+  nsRect GetCombinedArea() {
+    return mData ? mData->mCombinedArea : mBounds;
+  }
   PRBool CombinedAreaIntersects(const nsRect& aDamageRect) {
     nsRect* ca = (mData ? &mData->mCombinedArea : &mBounds);
     return !((ca->YMost() <= aDamageRect.y) ||
