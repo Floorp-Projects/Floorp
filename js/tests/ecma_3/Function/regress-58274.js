@@ -49,7 +49,7 @@
 *    (new String("function f\xB1() {}"))
 *
 *
-* See how the high-byte information (the 02) has been lost?
+* See how the high-byte information (02) has been lost?
 * The same thing was happening with the toString() method:
 *
 *    js> f\u02B1.toString();
@@ -134,6 +134,7 @@ test();
 //-----------------------------------------------------------------------------
 
 
+
 /*
  * Goal: test that f.toString() contains the proper function name.
  *
@@ -144,6 +145,15 @@ test();
  * Here we assume that f has been defined by means of a function statement,
  * and not a function expression (where it wouldn't have to have a name).
  *
+ * Rhino uses a Unicode representation for f.toString(); whereas
+ * SpiderMonkey uses an ASCII representation, putting escape sequences
+ * for non-ASCII characters. For example, If a function is called f\u02B1,
+ * then in Rhino the toString() method will present a 2-character Unicode
+ * string for its name, whereas SpiderMonkey will present a 7-character
+ * ASCII string for its name: the string literal 'f\u02B1'.
+ *
+ * So we force the lexer to condense the string before returning it.
+ * This will give uniform results in Rhino and SpiderMonkey.
  */
 function getFunctionName(f)
 {
@@ -153,7 +163,37 @@ function getFunctionName(f)
 
   if (!(arr && arr[1]))
     return ERR_MALFORMED_NAME + s;
-  return arr[1];
+  return condenseStr(arr[1]);
+}
+
+
+/*
+ * This function is the opposite of functions like escape(), which take
+ * Unicode characters and return escape sequences for them. Here, we force
+ * the lexer to turn escape sequences back into single characters.
+ *
+ * Note we can't simply do |eval(str)|, since in practice |str| will be an
+ * identifier somewhere in the program (e.g. a function name); thus |eval(str)|
+ * would return the object that the identifier represents: not what we want.
+ *
+ * So we surround |str| lexicographically with quotes to force the lexer to
+ * evaluate it as a string. Have to strip out any linefeeds first, however -
+ */
+function condenseStr(str)
+{
+  /*
+   * You won't be able to do the next step if |str| has
+   * any carriage returns or linefeeds in it. For example:
+   *
+   *  js> eval("'" + '\nHello' + "'");
+   *  1: SyntaxError: unterminated string literal:
+   *  1: '
+   *  1: ^
+   *
+   * So replace them with the empty string -
+   */
+  str = str.replace(/[\r\n]/g, '') 
+  return eval("'" + str + "'");
 }
 
 
