@@ -787,7 +787,6 @@ static NS_DEFINE_IID(kCheckButtonCID, NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kLabelCID,       NS_LABEL_CID);
 
 
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID,  NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIWidgetIID,      NS_IWIDGET_IID);
@@ -949,11 +948,13 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nscolor textBGColor = NS_RGB(255,255,255);
   nscolor textFGColor = NS_RGB(255,255,255);
 
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
-     lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
-     lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+  {
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+    if (lookAndFeel) {
+      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+      lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
+      lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+    }
   }
   
   nscoord w  = 65;
@@ -1464,11 +1465,13 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     nscolor textBGColor = NS_RGB(255,255,255);
     nscolor textFGColor = NS_RGB(255,255,255);
 
-    nsILookAndFeel * lookAndFeel;
-    if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-       lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
-       lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
-       lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+    {
+      nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+      if (lookAndFeel) {
+        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+        lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
+        lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+      }
     }
 
     // Create TextField
@@ -1483,7 +1486,6 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
       widget->SetBackgroundColor(textBGColor);
       widget->SetForegroundColor(textFGColor);
     }
-    NS_IF_RELEASE(lookAndFeel);
 
     nsString str;
     str.AppendInt(0);

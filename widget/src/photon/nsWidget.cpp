@@ -92,12 +92,8 @@ nsWidget*						nsWidget::sFocusWidget = 0;
 nsWidget::nsWidget()
 {
   if (!sLookAndFeel) {
-    if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
-                                                    nsnull,
-                                                    NS_GET_IID(nsILookAndFeel),
-                                                    (void**)&sLookAndFeel))
-		sLookAndFeel = nsnull;
-  	}
+    CallGetService(kLookAndFeelCID, &sLookAndFeel);
+  }
 
   if( sLookAndFeel )
     sLookAndFeel->GetColor( nsILookAndFeel::eColor_WindowBackground, mBackground );
