@@ -176,7 +176,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LOCATEMOZILLA       "The browser control does not know where Mozilla is installed and may not function correctly.\nDo you want to locate Mozilla now?"
     IDS_LOCATEMOZILLATITLE  "Cannot locate Mozilla bin directory"
-    IDS_CANNOTCREATEPREFS   "The Mozilla control cannot create a critical component. This prevents the control from functioning correctly. Possible reasons for the problem are:\n\n1. The PATH environment variable does not point to the Mozilla bin directory.\n2. The registry key HKEY_LOCAL_MACHINE\\Software\\Mozilla\\BinDirectoryPath registry key has not been set or is incorrect\n3. The file component.reg has not been generated.\n\nPlease refer to http://www.iol.ie/~locka/mozilla/mozilla.htm for guidance on how to resolve these problems."
+    IDS_CANNOTCREATEPREFS   "The Mozilla control cannot create a critical component. This prevents the control from functioning correctly. Possible reasons for the problem are:\n\n1. The PATH environment variable does not point to the Mozilla bin directory.\n2. The registry key HKEY_LOCAL_MACHINE\\Software\\Mozilla\\BinDirectoryPath registry key has not been set or is incorrect\n3. The file component.reg has not been generated or is empty.\n\nPlease refer to http://www.iol.ie/~locka/mozilla/mozilla.htm for guidance on how to resolve these problems."
 END
 
 #endif    // English (U.S.) resources
