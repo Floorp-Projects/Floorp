@@ -128,11 +128,20 @@ struct ImageManagerInit {
   }
 };
 
+#ifdef XP_MAC
+static ImageManagerInit* imageManagerInit = NULL;
+#else
 static ImageManagerInit imageManagerInit;
+#endif
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageManager(nsIImageManager **aInstancePtrResult)
 {
+#ifdef XP_MAC
+  if (imageManagerInit == NULL)
+    imageManagerInit = new ImageManagerInit;
+#endif
+
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
