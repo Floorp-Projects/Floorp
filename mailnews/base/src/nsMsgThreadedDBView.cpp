@@ -203,74 +203,75 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
 	PRBool hasMore = PR_FALSE;
 
   nsCOMPtr <nsIMsgThread> threadHdr ;
-	while (NS_SUCCEEDED(rv = m_threadEnumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+	PRInt32	threadsRemoved = 0;
+	for (numListed = 0; numListed < numToList
+    && NS_SUCCEEDED(rv = m_threadEnumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE);)
 	{
     nsCOMPtr <nsISupports> supports;
     rv = m_threadEnumerator->GetNext(getter_AddRefs(supports));
-    NS_ENSURE_SUCCESS(rv,rv);
-    threadHdr = do_QueryInterface(supports);
-
-		PRInt32	threadsRemoved = 0;
-		for (numListed = 0; numListed < numToList && threadHdr != nsnull;)
-		{
-    	nsCOMPtr <nsIMsgDBHdr> msgHdr;
-      PRUint32 numChildren;
-      if (unreadOnly)
-        threadHdr->GetNumUnreadChildren(&numChildren);
-      else
-        threadHdr->GetNumChildren(&numChildren);
-			PRUint32 threadFlags;
-      threadHdr->GetFlags(&threadFlags);
-			if (numChildren != 0)	// not empty thread
-			{
-				if (pTotalHeaders)
-					*pTotalHeaders += numChildren;
-    		if (unreadOnly)
-					rv = threadHdr->GetFirstUnreadChild(getter_AddRefs(msgHdr));
-				else
-					rv = threadHdr->GetChildAt(0, getter_AddRefs(msgHdr));
-				if (NS_SUCCEEDED(rv) && msgHdr != nsnull && WantsThisThread(threadHdr))
-				{
-          PRUint32 msgFlags;
-          PRUint32 newMsgFlags;
-          nsMsgKey msgKey;
-          msgHdr->GetMessageKey(&msgKey);
-          msgHdr->GetFlags(&msgFlags);
-          // turn off high byte of msg flags - used for view flags.
-          msgFlags &= ~MSG_VIEW_FLAGS;
-					pOutput[numListed] = msgKey;
-					pLevels[numListed] = 0;
-					// DMB TODO - This will do for now...Until we decide how to
-					// handle thread flags vs. message flags, if we do decide
-					// to make them different.
-					msgHdr->OrFlags(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newMsgFlags);
-					PRBool	isRead = PR_FALSE;
-
-					// make sure DB agrees with newsrc, if we're news.
-					m_db->IsRead(msgKey, &isRead);
-					m_db->MarkHdrRead(msgHdr, isRead, nsnull);
-					// try adding in MSG_VIEW_FLAG_ISTHREAD flag for unreadonly view.
-					pFlags[numListed] = msgFlags | MSG_VIEW_FLAG_ISTHREAD | threadFlags;
-					if (numChildren > 1)
-						pFlags[numListed] |= MSG_VIEW_FLAG_HASCHILDREN;
-
-					numListed++;
-				}
-			}
-			else if (threadsRemoved < 10 && !(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED)))
-			{
-				// ### remove thread.
-				threadsRemoved++;	// don't want to remove all empty threads first time
-									// around as it will choke preformance for upgrade.
-#ifdef DEBUG_bienvenu
-				printf("removing empty non-ignored non-watched thread\n");
-#endif
-			}
-      rv = m_threadEnumerator->GetNext(getter_AddRefs(supports));
-      threadHdr = do_QueryInterface(supports);
-		}
-    if (numListed >= numToList)
+    if (!NS_SUCCEEDED(rv))
+    {
+      threadHdr = nsnull;
       break;
+    }
+    threadHdr = do_QueryInterface(supports);
+    if (!threadHdr)
+      break;
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    PRUint32 numChildren;
+    if (unreadOnly)
+      threadHdr->GetNumUnreadChildren(&numChildren);
+    else
+      threadHdr->GetNumChildren(&numChildren);
+		PRUint32 threadFlags;
+    threadHdr->GetFlags(&threadFlags);
+		if (numChildren != 0)	// not empty thread
+		{
+			if (pTotalHeaders)
+				*pTotalHeaders += numChildren;
+    	if (unreadOnly)
+				rv = threadHdr->GetFirstUnreadChild(getter_AddRefs(msgHdr));
+			else
+				rv = threadHdr->GetChildAt(0, getter_AddRefs(msgHdr));
+			if (NS_SUCCEEDED(rv) && msgHdr != nsnull && WantsThisThread(threadHdr))
+			{
+        PRUint32 msgFlags;
+        PRUint32 newMsgFlags;
+        nsMsgKey msgKey;
+        msgHdr->GetMessageKey(&msgKey);
+        msgHdr->GetFlags(&msgFlags);
+        // turn off high byte of msg flags - used for view flags.
+        msgFlags &= ~MSG_VIEW_FLAGS;
+				pOutput[numListed] = msgKey;
+				pLevels[numListed] = 0;
+				// DMB TODO - This will do for now...Until we decide how to
+				// handle thread flags vs. message flags, if we do decide
+				// to make them different.
+				msgHdr->OrFlags(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newMsgFlags);
+				PRBool	isRead = PR_FALSE;
+
+				// make sure DB agrees with newsrc, if we're news.
+				m_db->IsRead(msgKey, &isRead);
+				m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+				// try adding in MSG_VIEW_FLAG_ISTHREAD flag for unreadonly view.
+				pFlags[numListed] = msgFlags | MSG_VIEW_FLAG_ISTHREAD | threadFlags;
+				if (numChildren > 1)
+					pFlags[numListed] |= MSG_VIEW_FLAG_HASCHILDREN;
+
+				numListed++;
+			}
+      else
+        NS_ASSERTION(NS_SUCCEEDED(rv) && msgHdr, "couldn't get header for some reason");
+		}
+		else if (threadsRemoved < 10 && !(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED)))
+		{
+			// ### remove thread.
+			threadsRemoved++;	// don't want to remove all empty threads first time
+								// around as it will choke preformance for upgrade.
+#ifdef DEBUG_bienvenu
+			printf("removing empty non-ignored non-watched thread\n");
+#endif
+		}
 	}
 
 	if (threadHdr)
