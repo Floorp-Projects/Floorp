@@ -25,6 +25,8 @@
 		// establish some essential PowerPlant macros:
 		#define PP_StdDialogs_Option	PP_StdDialogs_ClassicOnly	// use classic standard dialog implementation
 
+        #include <ControlDefinitions.h>
+        
 		// include powerplant headers
 		#if wantDebugging
 			#include <PP_DebugHeaders.cp>
