@@ -696,6 +696,8 @@ nsGlobalHistory::nsGlobalHistory()
     mBatchesInProgress(0),
     mNowValid(PR_FALSE),
     mDirty(PR_FALSE),
+    mDataCaptureMode(0),
+    mLearningMode(0),
     mAutoCompleteLearner(nsnull),
     mACFeatures(nsnull),
     mURLDataFile(nsnull),
