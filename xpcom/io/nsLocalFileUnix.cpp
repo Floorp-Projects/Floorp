@@ -244,7 +244,7 @@ nsLocalFile::Clone(nsIFile **file)
     
     // Just copy-construct ourselves
     nsCOMPtr<nsILocalFile> localFile = new nsLocalFile(*this);
-    if (localFile == NULL)
+    if (!localFile)
       return NS_ERROR_OUT_OF_MEMORY;
 
     *file = localFile;
