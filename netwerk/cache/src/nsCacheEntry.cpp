@@ -109,7 +109,11 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
         if (!mMetaData)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    return mMetaData->SetElement(&key, &value);
+    nsresult rv = mMetaData->SetElement(key, value);
+    if (NS_SUCCEEDED(rv))
+        MarkMetaDataDirty();
+
+    return rv;
 }
 
 

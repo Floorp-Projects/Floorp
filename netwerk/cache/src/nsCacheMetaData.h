@@ -53,8 +53,8 @@ public:
 
     nsAReadableCString *  GetElement(const nsAReadableCString * key);
 
-    nsresult              SetElement(const nsAReadableCString * key,
-                                     const nsAReadableCString * value);
+    nsresult              SetElement(const nsAReadableCString& key,
+                                     const nsAReadableCString& value);
 
     nsresult              GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
                                            PRUint32 *                     count);
