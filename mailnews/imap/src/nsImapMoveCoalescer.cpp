@@ -49,7 +49,7 @@ nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
 	if (m_destFolders)
 	{
 		PRInt32 folderIndex = m_destFolders->IndexOf(folder);
-		nsMsgKeyArray *keysToAdd;
+		nsMsgKeyArray *keysToAdd=nsnull;
 		if (folderIndex >= 0)
 		{
 			keysToAdd = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(folderIndex);
