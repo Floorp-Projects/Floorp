@@ -126,7 +126,7 @@ nsRenderingContextOS2::nsRenderingContextOS2()
   mSurface = nsnull;
   mPS = 0;
   mMainSurface = nsnull;
-  mColor = 0xffffffff;
+  mColor = NS_RGB( 0, 0, 0);
   mFontMetrics = nsnull;
   mLineStyle = nsLineStyle_kSolid;
   mPreservedInitialClipRegion = PR_FALSE;
@@ -134,10 +134,10 @@ nsRenderingContextOS2::nsRenderingContextOS2()
 
   // Need to enforce setting color values for first time. Make cached values different from current ones.
   mCurrFontMetrics = mFontMetrics + 1;
-  mCurrTextColor   = 0xffffffff;
-  mCurrLineColor   = 0xffffffff;
+  mCurrTextColor   = mColor + 1;
+  mCurrLineColor   = mColor + 1;
   mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
-  mCurrFillColor   = 0xffffffff;
+  mCurrFillColor   = mColor + 1;
 
   mStateCache = new nsVoidArray();
   mRightToLeftText = PR_FALSE;
@@ -293,10 +293,10 @@ nsresult nsRenderingContextOS2::SetupPS (void)
 
    // Need to enforce setting color values for first time. Make cached values different from current ones.
    mCurrFontMetrics = mFontMetrics + 1;
-   mCurrTextColor   = 0xffffffff;
-   mCurrLineColor   = 0xffffffff;
+   mCurrTextColor   = mColor + 1;
+   mCurrLineColor   = mColor + 1;
    mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
-   mCurrFillColor   = 0xffffffff;
+   mCurrFillColor   = mColor + 1;
 
    return NS_OK;
 }
@@ -885,7 +885,7 @@ LONG nsRenderingContextOS2::GetGPIColor (void)
 
 void nsRenderingContextOS2::SetupLineColorAndStyle (void)
 {
-   if ((mColor != mCurrLineColor) || (mCurrLineColor == 0xffffffff))
+   if (mColor != mCurrLineColor)
    {
       LINEBUNDLE lineBundle;
       lineBundle.lColor = GetGPIColor ();
@@ -915,7 +915,7 @@ void nsRenderingContextOS2::SetupLineColorAndStyle (void)
 
 void nsRenderingContextOS2::SetupFillColor (void)
 {
-   if ((mColor != mCurrFillColor) || (mCurrFillColor == 0xffffffff))
+   if (mColor != mCurrFillColor)
    {
       AREABUNDLE areaBundle;
       areaBundle.lColor = GetGPIColor ();
@@ -2549,7 +2549,7 @@ void nsRenderingContextOS2::SetupFontAndColor (void)
       }
    }
 
-   if ((mColor != mCurrTextColor) || (mCurrTextColor == 0xffffffff))
+   if (mColor != mCurrTextColor)
    {
       CHARBUNDLE cBundle;
       cBundle.lColor = GetGPIColor ();
@@ -2563,7 +2563,6 @@ void nsRenderingContextOS2::SetupFontAndColor (void)
 
       mCurrTextColor = mColor;
    }
-
 }
 
 void nsRenderingContextOS2::PushClipState(void)
