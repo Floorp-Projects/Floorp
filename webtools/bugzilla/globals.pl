@@ -905,10 +905,12 @@ sub quoteUrls {
 
     # attachment links - handle both cases separatly for simplicity
     $text =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\))
-              ~<a href=\"attachment.cgi?id=$2&amp;action=view\">$1</a>~igx;
+              ~GetAttachmentLink($2, $1)
+              ~egmx;
 
     $text =~ s~\b(attachment\s*\#?\s*(\d+))
-              ~<a href=\"attachment.cgi?id=$2&amp;action=view\">$1</a>~igx;
+              ~GetAttachmentLink($2, $1)
+              ~egmx;
 
     # This handles bug a, comment b type stuff. Because we're using /g
     # we have to do this in one pattern, and so this is semi-messy.
@@ -935,6 +937,60 @@ sub quoteUrls {
     $text =~ s/$chr1\0/\0/g;
 
     return $text;
+}
+
+# GetAttachmentLink creates a link to an attachment,
+# including its title.
+
+sub GetAttachmentLink {
+    my ($attachid, $link_text) = @_;
+    detaint_natural($attachid) ||
+        die "GetAttachmentLink() called with non-integer attachment number";
+
+    # If we've run GetAttachmentLink() for this attachment before,
+    # %::attachlink will contain an anonymous array ref of relevant
+    # values.  If not, we need to get the information from the database.
+    if (! defined $::attachlink{$attachid}) {
+        # Make sure any unfetched data from a currently running query
+        # is saved off rather than overwritten
+        PushGlobalSQLState();
+
+        SendSQL("SELECT bug_id, isobsolete, description 
+                 FROM attachments WHERE attach_id = $attachid");
+
+        if (MoreSQLData()) {
+            my ($bugid, $isobsolete, $desc) = FetchSQLData();
+            my $title = "";
+            my $className = "";
+            if (CanSeeBug($bugid, $::userid)) {
+                $title = $desc;
+            }
+            if ($isobsolete) {
+                $className = "bz_obsolete";
+            }
+            $::attachlink{$attachid} = [value_quote($title), $className];
+        }
+        else {
+            # Even if there's nothing in the database, we want to save a blank
+            # anonymous array in the %::attachlink hash so the query doesn't get
+            # run again next time we're called for this attachment number.
+            $::attachlink{$attachid} = [];
+        }
+        # All done with this sidetrip
+        PopGlobalSQLState();
+    }
+
+    # Now that we know we've got all the information we're gonna get, let's
+    # return the link (which is the whole reason we were called :)
+    my ($title, $className) = @{$::attachlink{$attachid}};
+    # $title will be undefined if the bug didn't exist in the database.
+    if (defined $title) {
+        my $linkval = "attachment.cgi?id=$attachid&amp;action=view";
+        return qq{<a href="$linkval" class="$className" title="$title">$link_text</a>};
+    }
+    else {
+        return qq{$link_text};
+    }
 }
 
 # GetBugLink creates a link to a bug, including its title.
