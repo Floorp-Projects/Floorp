@@ -29,18 +29,20 @@
 
 MOZ_DECL_CTOR_COUNTER(nsLineBox);
 
-nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
+nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
 {
   MOZ_COUNT_CTOR(nsLineBox);
   mFirstChild = aFrame;
   mChildCount = aCount;
-  mState = LINE_IS_DIRTY | flags;
+  mAllFlags = 0;
+  MarkDirty();
+  SetIsBlock(aIsBlock);
   mNext = nsnull;
   mBounds.SetRect(0,0,0,0);
   mCombinedArea.SetRect(0,0,0,0);
 //XXX  mCarriedOutTopMargin = 0;
   mCarriedOutBottomMargin = 0;
-  mBreakType = NS_STYLE_CLEAR_NONE;
+  mFlags.mBreakType = NS_STYLE_CLEAR_NONE;
   mMaxElementWidth = 0;
 }
 
@@ -81,9 +83,9 @@ char*
 nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 {
   PR_snprintf(aBuf, aBufSize, "%s,%s[0x%x]",
-              (mState & LINE_IS_DIRTY) ? "dirty" : "clean",
-              (mState & LINE_IS_BLOCK) ? "block" : "inline",
-              mState);
+              IsDirty() ? "dirty" : "clean",
+              IsBlock() ? "block" : "inline",
+              mAllFlags);
   return aBuf;
 }
 
@@ -216,11 +218,17 @@ nsLineBox::CheckIsBlock() const
 #endif
 
 #ifdef DEBUG
-void
+PRBool
 nsLineBox::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
   NS_PRECONDITION(aResult, "null OUT parameter pointer");
   *aResult = sizeof(*this);
+
+  PRBool big = PR_TRUE;
+  if ((IsBlock() || mFloaters.IsEmpty()) &&
+      (mBounds == mCombinedArea)) {
+    big = PR_FALSE;
+  }
 
   // Add in the size needed for floaters associated with this line
   if (mFloaters.NotEmpty()) {
@@ -231,6 +239,8 @@ nsLineBox::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     floatersSize -= sizeof(mFloaters);
     aHandler->AddSize(nsLayoutAtoms::lineBoxFloaters, floatersSize);
   }
+
+  return big;
 }
 #endif
 
@@ -321,12 +331,13 @@ NS_IMETHODIMP
 nsLineIterator::GetLine(PRInt32 aLineNumber,
                         nsIFrame** aFirstFrameOnLine,
                         PRInt32* aNumFramesOnLine,
-                        nsRect& aLineBounds)
+                        nsRect& aLineBounds,
+                        PRUint32* aLineFlags)
 {
-  NS_PRECONDITION(aFirstFrameOnLine && aNumFramesOnLine, "null OUT ptr");
-  if (!aFirstFrameOnLine || !aNumFramesOnLine) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aFirstFrameOnLine);
+  NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
+  NS_ENSURE_ARG_POINTER(aLineFlags);
+
   if ((aLineNumber < 0) || (aLineNumber >= mNumLines)) {
     *aFirstFrameOnLine = nsnull;
     *aNumFramesOnLine = 0;
@@ -337,6 +348,19 @@ nsLineIterator::GetLine(PRInt32 aLineNumber,
   *aFirstFrameOnLine = line->mFirstChild;
   *aNumFramesOnLine = line->mChildCount;
   aLineBounds = line->mBounds;
+
+  PRUint32 flags = 0;
+  if (line->IsBlock()) {
+    flags |= NS_LINE_FLAG_IS_BLOCK;
+  }
+  else {
+    if (line->IsTrimmed())
+      flags |= NS_LINE_FLAG_IS_TRIMMED;
+    if (line->HasBreak())
+      flags |= NS_LINE_FLAG_ENDS_IN_BREAK;
+  }
+  *aLineFlags = flags;
+
   return NS_OK;
 }
 

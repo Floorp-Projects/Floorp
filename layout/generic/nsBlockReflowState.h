@@ -90,10 +90,6 @@
 
 // Debugging support code
 
-#ifdef DEBUG
-static PRBool gShowDirtyLines = PR_FALSE;
-#endif
-
 #ifdef NOISY_INCREMENTAL_REFLOW
 static PRInt32 gNoiseIndent;
 static const char* kReflowCommandType[] = {
@@ -816,9 +812,9 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   }
 
   // The line may have clear before semantics.
-  if (aLine->IsBlock() && (NS_STYLE_CLEAR_NONE != aLine->mBreakType)) {
+  if (aLine->IsBlock() && aLine->HasBreak()) {
     // Clear past floaters before the block if the clear style is not none
-    aApplyTopMargin = ClearPastFloaters(aLine->mBreakType);
+    aApplyTopMargin = ClearPastFloaters(aLine->GetBreakType());
 #ifdef NOISY_VERTICAL_MARGINS
     nsFrame::ListTag(stdout, mBlock);
     printf(": RecoverStateFrom: y=%d child ", mY);
@@ -924,12 +920,13 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   }
 
   // It's possible that the line has clear after semantics
-  if (!aLine->IsBlock() && (NS_STYLE_CLEAR_NONE != aLine->mBreakType)) {
-    switch (aLine->mBreakType) {
+  if (!aLine->IsBlock() && aLine->HasBreak()) {
+    PRUint8 breakType = aLine->GetBreakType();
+    switch (breakType) {
     case NS_STYLE_CLEAR_LEFT:
     case NS_STYLE_CLEAR_RIGHT:
     case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
-      ClearFloaters(mY, aLine->mBreakType);
+      ClearFloaters(mY, breakType);
       break;
     }
   }
@@ -1437,16 +1434,6 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-#ifdef DEBUG
-  if (gShowDirtyLines && (eReflowReason_Resize == aReflowState.reason)) {
-    nsLineBox* line = mLines;
-    while (nsnull != line) {
-      line->ClearWasDirty();
-      line = line->mNext;
-    }
-  }
-#endif
-
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
   printf(": availSize=%d,%d computed=%d,%d metrics=%d,%d carriedMargin=%d\n",
@@ -1854,12 +1841,12 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   return NS_OK;
 }
 
-void
+nsresult
 nsBlockFrame::UpdateBulletPosition()
 {
   if (nsnull == mBullet) {
     // Don't bother if there is no bullet
-    return;
+    return NS_OK;
   }
   const nsStyleList* styleList;
   GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
@@ -1906,12 +1893,13 @@ nsBlockFrame::UpdateBulletPosition()
 #ifdef DEBUG
   VerifyLines(PR_TRUE);
 #endif
+  return NS_OK;
 }
 
 nsresult
 nsBlockFrame::PrepareStyleChangedReflow(nsBlockReflowState& aState)
 {
-  UpdateBulletPosition();
+  nsresult rv = UpdateBulletPosition();
 
   // Mark everything dirty
   nsLineBox* line = mLines;
@@ -1919,7 +1907,7 @@ nsBlockFrame::PrepareStyleChangedReflow(nsBlockReflowState& aState)
     line->MarkDirty();
     line = line->mNext;
   }
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -1956,7 +1944,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       // - there are no floaters associated with the line (reflowing the
       //   placeholder frame causes the floater to be reflowed)
       if (line->IsBlock() ||
-          (!aState.mNoWrap && line->mNext && (line->mBreakType == NS_STYLE_CLEAR_NONE)) ||
+          (!aState.mNoWrap && line->mNext && !line->HasBreak()) ||
           line->mFloaters.NotEmpty() ||
           (line->mBounds.XMost() > newAvailWidth)) {
 
@@ -2330,10 +2318,6 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                          PRBool aDamageDirtyArea)
 {
   nsresult rv = NS_OK;
-
-#ifdef DEBUG
-  aLine->MarkWasDirty();
-#endif
 
   // If the line is empty then first pull a frame into it so that we
   // know what kind of line it is (block or inline).
@@ -2913,9 +2897,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   }
 
   // Clear past floaters before the block if the clear style is not none
-  aLine->mBreakType = display->mBreakType;
-  if (NS_STYLE_CLEAR_NONE != aLine->mBreakType) {
-    PRBool alsoApplyTopMargin = aState.ClearPastFloaters(aLine->mBreakType);
+  PRUint8 breakType = display->mBreakType;
+  aLine->SetBreakType(breakType);
+  if (NS_STYLE_CLEAR_NONE != breakType) {
+    PRBool alsoApplyTopMargin = aState.ClearPastFloaters(breakType);
     if (alsoApplyTopMargin) {
       applyTopMargin = PR_TRUE;
     }
@@ -2987,7 +2972,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // made one.
         if (madeContinuation) {
           frame->GetNextSibling(&frame);
-          nsLineBox* line = new nsLineBox(frame, 1, LINE_IS_BLOCK);
+          nsLineBox* line = new nsLineBox(frame, 1, PR_TRUE);
           if (nsnull == line) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
@@ -3388,7 +3373,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   // break-after-not-complete. There are two situations: we are a
   // block or we are an inline. This makes a total of 10 cases
   // (fortunately, there is some overlap).
-  aLine->mBreakType = NS_STYLE_CLEAR_NONE;
+  aLine->SetBreakType(NS_STYLE_CLEAR_NONE);
   if (NS_INLINE_IS_BREAK(frameReflowStatus)) {
     // Always abort the line reflow (because a line break is the
     // minimal amount of break we do).
@@ -3419,7 +3404,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     }
     else {
       // Break-after cases
-      aLine->mBreakType = breakType;
+      aLine->SetBreakType(breakType);
       if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
         // Create a continuation for the incomplete frame. Note that the
         // frame may already have a continuation.
@@ -3548,7 +3533,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
       // as it's continuation. This causes all sorts of bad side
       // effects so we don't allow it.
       if (0 != to->ChildCount()) {
-        nsLineBox* insertedLine = new nsLineBox(aFrame, pushCount, 0);
+        nsLineBox* insertedLine = new nsLineBox(aFrame, pushCount, PR_FALSE);
         if (nsnull == insertedLine) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -3561,7 +3546,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
         to->MarkDirty();
       }
     } else {
-      to = new nsLineBox(aFrame, pushCount, 0);
+      to = new nsLineBox(aFrame, pushCount, PR_FALSE);
       if (nsnull == to) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -3629,7 +3614,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   nsresult rv = NS_OK;
 
   // Trim extra white-space from the line before placing the frames
-  aLineLayout.TrimTrailingWhiteSpace();
+  PRBool trimmed = aLineLayout.TrimTrailingWhiteSpace();
+  aLine->SetTrimmed(trimmed);
 
   // Vertically align the frames on this line.
   //
@@ -3783,11 +3769,12 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
 
   // Apply break-after clearing if necessary
-  switch (aLine->mBreakType) {
+  PRUint8 breakType = aLine->GetBreakType();
+  switch (breakType) {
   case NS_STYLE_CLEAR_LEFT:
   case NS_STYLE_CLEAR_RIGHT:
   case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
-    aState.ClearFloaters(aState.mY, aLine->mBreakType);
+    aState.ClearFloaters(aState.mY, breakType);
     break;
   }
 
@@ -4242,7 +4229,7 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     PRInt32 rem = prevSibLine->mChildCount - prevSiblingIndex - 1;
     if (rem) {
       // Split the line in two where the frame(s) are being inserted.
-      nsLineBox* line = new nsLineBox(prevSiblingNextFrame, rem, 0);
+      nsLineBox* line = new nsLineBox(prevSiblingNextFrame, rem, PR_FALSE);
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -4263,9 +4250,8 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
   // structures to fit.
   nsIFrame* newFrame = aFrameList;
   while (newFrame) {
-    PRUint32 isBlock = nsLineLayout::TreatFrameAsBlock(newFrame)
-      ? LINE_IS_BLOCK
-      : 0;
+    PRBool isBlock = nsLineLayout::TreatFrameAsBlock(newFrame);
+
     // If the frame is a block frame, or if there is no previous line
     // or if the previous line is a block line then make a new line.
     if (isBlock || !prevSibLine || prevSibLine->IsBlock()) {
@@ -5459,14 +5445,6 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
                    aWhichLayer);
         kid->GetNextSibling(&kid);
       }
-#ifdef DEBUG
-      if (gShowDirtyLines) {
-        if (line->WasDirty()) {
-          aRenderingContext.SetColor(NS_RGB(128, 255, 128));
-          aRenderingContext.DrawRect(line->mBounds);
-        }
-      }
-#endif
     }
 #ifdef NOISY_DAMAGE_REPAIR
     else {
@@ -5547,7 +5525,8 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
       //incase we hit another block frame.
       for (i = 0; i< countLines;i++)
       {
-        result = it->GetLine(i, &firstFrame, &lineFrameCount,rect);
+        PRUint32 flags;
+        result = it->GetLine(i, &firstFrame, &lineFrameCount,rect,&flags);
         if (NS_FAILED(result))
           continue;//do not handle
         rect+=origin;
@@ -5702,15 +5681,19 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   nsLineBox* line = mLines;
   while (line) {
     PRUint32  lineBoxSize;
-    line->SizeOf(aHandler, &lineBoxSize);
-    aHandler->AddSize(nsLayoutAtoms::lineBox, lineBoxSize);
+    PRBool big = line->SizeOf(aHandler, &lineBoxSize);
+    aHandler->AddSize((big
+                       ? nsLayoutAtoms::lineBoxBig
+                       : nsLayoutAtoms::lineBoxSmall), lineBoxSize);
     line = line->mNext;
   }
   line = mOverflowLines;
   while (line) {
     PRUint32  lineBoxSize;
-    line->SizeOf(aHandler, &lineBoxSize);
-    aHandler->AddSize(nsLayoutAtoms::lineBox, lineBoxSize);
+    PRBool big = line->SizeOf(aHandler, &lineBoxSize);
+    aHandler->AddSize((big
+                       ? nsLayoutAtoms::lineBoxBig
+                       : nsLayoutAtoms::lineBoxSmall), lineBoxSize);
     line = line->mNext;
   }
 

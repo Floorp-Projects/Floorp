@@ -24,15 +24,6 @@
 #include "nsILineIterator.h"
 #include "nsISizeOfHandler.h"
 
-// bits in nsLineBox.mState
-#define LINE_IS_DIRTY               0x1
-#define LINE_IS_BLOCK               0x2
-#define LINE_IS_IMPACTED_BY_FLOATER 0x4
-#ifdef BLOCK_DOES_FIRST_LINE
-#define LINE_IS_FIRST_LINE          0x8
-#endif
-#define LINE_WAS_DIRTY              0x10
-
 class nsISpaceManager;
 class nsLineBox;
 
@@ -151,6 +142,37 @@ protected:
  */
 class nsLineBox {
 public:
+  nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
+  ~nsLineBox();
+
+  PRBool IsBlock() const {
+    return mFlags.mBlock;
+  }
+
+  PRBool IsInline() const {
+    return 0 == mFlags.mBlock;
+  }
+
+  // XXX Turn into a bit-field to simplify this code
+  void SetTrimmed(PRBool aOn) {
+    mFlags.mTrimmed = aOn;
+  }
+
+  PRBool IsTrimmed() const {
+    return mFlags.mTrimmed;
+  }
+
+  PRBool HasBreak() const {
+    return NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
+  }
+
+  void SetBreakType(PRUint8 aBreakType) {
+    mFlags.mBreakType = aBreakType;
+  }
+
+  PRUint8 GetBreakType() const {
+    return mFlags.mBreakType;
+  }
 
   nscoord GetCarriedOutBottomMargin() const {
     return mCarriedOutBottomMargin;
@@ -160,9 +182,7 @@ public:
 
   //----------------------------------------------------------------------
   // XXX old junk
-  nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags);
 
-  ~nsLineBox();
 
   static void DeleteLineList(nsIPresContext& aPresContext, nsLineBox* aLine);
 
@@ -181,77 +201,28 @@ public:
 
   PRBool IsLastChild(nsIFrame* aFrame) const;
 
-  PRBool IsBlock() const {
-    return 0 != (LINE_IS_BLOCK & mState);
-  }
-
-  void SetIsBlock() {
-    mState |= LINE_IS_BLOCK;
-  }
-
-  void ClearIsBlock() {
-    mState &= ~LINE_IS_BLOCK;
-  }
-
   void SetIsBlock(PRBool aValue) {
-    if (aValue) {
-      SetIsBlock();
-    }
-    else {
-      ClearIsBlock();
-    }
+    mFlags.mBlock = aValue;
   }
 
   void SetLineIsImpactedByFloater(PRBool aValue) {
-    if (aValue) {
-      mState |= LINE_IS_IMPACTED_BY_FLOATER;
-    }
-    else {
-      mState &= ~LINE_IS_IMPACTED_BY_FLOATER;
-    }
+    mFlags.mImpactedByFloater = aValue;
   }
 
   PRBool IsImpactedByFloater() const {
-    return 0 != (LINE_IS_IMPACTED_BY_FLOATER & mState);
+    return mFlags.mImpactedByFloater;
   }
-
-#ifdef BLOCK_DOES_FIRST_LINE
-  PRBool IsFirstLine() const {
-    return 0 != (LINE_IS_FIRST_LINE & mState);
-  }
-
-  void SetIsFirstLine(PRBool aValue) {
-    if (aValue) {
-      mState |= LINE_IS_FIRST_LINE;
-    }
-    else {
-      mState &= ~LINE_IS_FIRST_LINE;
-    }
-  }
-#endif
 
   void MarkDirty() {
-    mState |= LINE_IS_DIRTY;
+    mFlags.mDirty = 1;
   }
 
   void ClearDirty() {
-    mState &= ~LINE_IS_DIRTY;
+    mFlags.mDirty = 0;
   }
 
   PRBool IsDirty() const {
-    return 0 != (LINE_IS_DIRTY & mState);
-  }
-
-  void ClearWasDirty() {
-    mState &= ~LINE_WAS_DIRTY;
-  }
-
-  void MarkWasDirty() {
-    mState |= LINE_WAS_DIRTY;
-  }
-
-  PRBool WasDirty() const {
-    return 0 != (LINE_WAS_DIRTY & mState);
+    return mFlags.mDirty;
   }
 
   char* StateToString(char* aBuf, PRInt32 aBufSize) const;
@@ -267,19 +238,34 @@ public:
 #endif
 
 #ifdef DEBUG
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  PRBool SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
   nsIFrame* mFirstChild;
   PRUint16 mChildCount;
-  PRUint8 mState;
-  PRUint8 mBreakType;
   nsRect mBounds;
   nsRect mCombinedArea;
   nscoord mCarriedOutBottomMargin;/* XXX switch to 16 bits */
   nsFloaterCacheList mFloaters;
   nsLineBox* mNext;
   nscoord mMaxElementWidth;  // width part of max-element-size
+
+  struct FlagBits {
+    PRUint32 mDirty : 1;
+    PRUint32 mBlock : 1;
+    PRUint32 mImpactedByFloater : 1;
+    PRUint32 mTrimmed : 1;
+
+    PRUint32 reserved : 20;
+
+    PRUint32 mBreakType : 8;
+  };
+
+protected:
+  union {
+    PRUint32 mAllFlags;
+    FlagBits mFlags;
+  };
 };
 
 //----------------------------------------------------------------------
@@ -296,7 +282,8 @@ public:
   NS_IMETHOD GetLine(PRInt32 aLineNumber,
                      nsIFrame** aFirstFrameOnLine,
                      PRInt32* aNumFramesOnLine,
-                     nsRect& aLineBounds);
+                     nsRect& aLineBounds,
+                     PRUint32* aLineFlags);
   NS_IMETHOD FindLineContaining(nsIFrame* aFrame,
                                 PRInt32* aLineNumberResult);
   NS_IMETHOD FindLineAt(nscoord aY,

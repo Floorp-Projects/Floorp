@@ -344,7 +344,7 @@ protected:
 
   PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
-  void UpdateBulletPosition();
+  nsresult UpdateBulletPosition();
 
   void ReflowBullet(nsBlockReflowState& aState,
                     nsHTMLReflowMetrics& aMetrics);
