@@ -555,8 +555,9 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
         mDirtyRegion->GetBoundingBox(&rrect.x, &rrect.y, &rrect.width, &rrect.height);
         rrect *= mContext->GetPixelsToTwips();
 #endif
+        rrect.IntersectRect(rrect, vrect);
 
-        if ((((float)rrect.width * rrect.height) / (float)varea) >  0.75f)
+        if ((((float)rrect.width * rrect.height) / (float)varea) >  0.25f)
           aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
         else
           aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;

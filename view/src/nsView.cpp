@@ -32,6 +32,7 @@
 #include "nsIScrollableView.h"
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 //#define SHOW_VIEW_BORDERS
 //#define HIDE_ALL_WIDGETS
@@ -68,6 +69,32 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
         {
           // Convert from pixels to twips
           float p2t = presContext->GetPixelsToTwips();
+          nsIScrollableView *scrollView;
+
+          //XXX hey look, a hack! :) i'm not proud of it, but it does
+          //work. the purpose is to prevent resizes of the view if the
+          //clip size (assumed to be the size of this window) is the same
+          //as the new size we get here. MMP
+
+          if (NS_OK == rootView->QueryInterface(kIScrollableViewIID, (void **)&scrollView))
+          {
+            nscoord sizex, sizey;
+            float t2p = presContext->GetTwipsToPixels();
+
+            scrollView->GetClipSize(&sizex, &sizey);
+
+            NS_RELEASE(scrollView);
+
+            if ((width == NS_TO_INT_ROUND(sizex * t2p)) &&
+                (height == NS_TO_INT_ROUND(sizey * t2p)))
+            {
+              NS_IF_RELEASE(rootView);
+              NS_RELEASE(presContext);
+              NS_RELEASE(vm);
+              break;
+            }
+          }
+
           vm->SetWindowDimensions(NS_TO_INT_ROUND(width * p2t),
                                   NS_TO_INT_ROUND(height * p2t));
           result = nsEventStatus_eConsumeNoDefault;

@@ -386,7 +386,7 @@ public:
 #define NS_VMREFRESH_IMMEDIATE          0x0004
 //prevent "sync painting"
 #define NS_VMREFRESH_NO_SYNC            0x0008
-//if the total damage area is greater than 75% of the
+//if the total damage area is greater than 25% of the
 //area of the root view, use double buffering
 #define NS_VMREFRESH_AUTO_DOUBLE_BUFFER 0x0010
 
