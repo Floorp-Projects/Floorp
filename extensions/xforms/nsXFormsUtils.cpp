@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
+ *  Allan Beaufour <abeaufour@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -252,6 +253,7 @@ nsXFormsUtils::EvaluateNodeset(nsIDOMElement *aElement, PRUint16 aResultType)
 /* static */ already_AddRefed<nsIDOMXPathResult>
 nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
                                    PRUint32        aElementFlags,
+                                   const nsString &aBindingAttr,
                                    const nsString &aDefaultRef,
                                    PRUint16        aResultType,
                                    nsIDOMNode    **aModel,
@@ -272,9 +274,9 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
   if (*aBind)
     return EvaluateNodeset(*aBind, aResultType);
 
-  // If not, we expect there to be a ref attribute.
+  // If not, we expect there to be a |aBindingAttr| attribute.
   nsAutoString expr;
-  aElement->GetAttribute(NS_LITERAL_STRING("ref"), expr);
+  aElement->GetAttribute(aBindingAttr, expr);
 
   if (expr.IsEmpty())
   {

@@ -44,6 +44,7 @@
 #include "nsString.h"
 
 NS_HIDDEN_(nsresult) NS_NewXFormsInputElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
 
 NS_IMPL_ISUPPORTS1(nsXFormsElementFactory, nsIXTFElementFactory)
 
@@ -59,6 +60,8 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsStubElement(aElement);
   if (aTagName.EqualsLiteral("input"))
     return NS_NewXFormsInputElement(aElement);
+  if (aTagName.EqualsLiteral("output"))
+    return NS_NewXFormsOutputElement(aElement);
   if (aTagName.EqualsLiteral("submission"))
     return NS_NewXFormsSubmissionElement(aElement);
 

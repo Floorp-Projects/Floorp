@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
+ *  Allan Beaufour <abeaufour@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -90,10 +91,10 @@ public:
                     nsIDOMElement **aBindElement);
 
   /**
-   * Evaluate a 'bind' or 'ref' attribute on |aElement|.  |aResultType| is
-   * used as the desired result type for the XPath evaluation.  The model and
-   * bind elements (if applicable) are located as part of this evaluation,
-   * and are returned (addrefed) in |aModel| and |aBind|.
+   * Evaluate a 'bind' or |aBindingAttr| attribute on |aElement|.
+   * |aResultType| is used as the desired result type for the XPath evaluation.
+   * The model and bind elements (if applicable) are located as part of this
+   * evaluation, and are returned (addrefed) in |aModel| and |aBind|.
    *
    * The return value is an XPathResult as returned from
    * nsIDOMXPathEvaluator::Evaluate().
@@ -101,6 +102,7 @@ public:
   static NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)
     EvaluateNodeBinding(nsIDOMElement  *aElement,
                         PRUint32        aElementFlags,
+                        const nsString &aBindingAttr,
                         const nsString &aDefaultRef,
                         PRUint16        aResultType,
                         nsIDOMNode    **aModel,
