@@ -1,4 +1,4 @@
-#!gmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,22 +17,40 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s):
+# Contributor(s): 
 # Igor Kushnirskiy <idk@eng.sun.com>
 #
-DEPTH   = ../..
-topsrcdir       = @top_srcdir@
-VPATH           = @srcdir@
-srcdir          = @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
+DEPTH=..\..\..
 
-DIRS=   \
-        connect \
-	xpcom   \
-	wrappers \
-	java    \
-#	xpcom/test/ \
-        $(NULL)
 
-include $(topsrcdir)/config/rules.mk
+MAKE_OBJ_TYPE = DLL
+MODULE=bcXPCOMWrappers
+COMPONENT = 1
+DLLNAME = bcXPCOMWrappers
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+XPIDLSRCS = \
+	bcIXPCOMWrappers.idl \
+	nsIXPIDLServiceManagerpublic.idl \
+	$(NULL)
+	
+EXPORTS = \
+	bcXPCOMWrappers.h \
+	bcXPCOMWrappersCID.h \
+       $(NULL)
+
+OBJS= \
+	.\$(OBJDIR)\bcXPCOMWrappers.obj \
+	.\$(OBJDIR)\nsXPIDLServiceManager.obj \
+	$(NULL)
+
+LLIBS=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+clobber::
+	rm -f "$(DIST)\bin\components\$(DLLNAME).dll"
+

@@ -86,7 +86,3 @@ EXTRA_DSO_LDOPTS += \
 
 include $(topsrcdir)/config/rules.mk
 CCC += $(CXXFLAGS) # I want to have $(JDKHOME)/include before $(DIST) include
-
-
-test:
-	echo $(OS_ARCH)

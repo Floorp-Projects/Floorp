@@ -46,7 +46,6 @@ $(COMPONENT).jar.comp: manifest $(CLASSES)
 	$(JDKHOME)/bin/jar cvfm $(COMPONENT).jar.comp  manifest *.class
 .java.class:
 	$(JDKHOME)/bin/javac -classpath .:../classes:$(DIST)/classes $<
-	
 bcIBlackConnectInit.java : bcIBlackConnectInit.idl
 
 install-component: $(COMPONENT).jar.comp $(COMPONENT).jar.info

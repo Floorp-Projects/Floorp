@@ -39,7 +39,14 @@ public class bcBlackConnectInit implements bcIBlackConnectInit {
         Components.setComponentManager(cm);
         Debug.log("Components.setComponentManager(cm);");
     }
+    /* void initServiceManager (in nsIXPIDLServiceManager sm); */
+    public void initServiceManager(nsIXPIDLServiceManager sm) {
+        Components.setServiceManager(sm);
+	Debug.log("Components.setServiceManager(sm);");
+    }
     static {
         InterfaceRegistry.register(nsIComponentManager.class);
+	InterfaceRegistry.register(nsIXPIDLServiceManager.class);
     }
 }
+

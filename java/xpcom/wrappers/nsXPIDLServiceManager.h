@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -19,22 +19,17 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
+#ifndef __nsXPIDLServiceManager_h__
+#define __nsXPIDLServiceManager_h__
+#include "nsIXPIDLServiceManager.h"
 
-package org.mozilla.xpcom;
-
-public class Components {
-  public static nsIComponentManager getComponentManager() {
-    return componentMgr;
-  }
-  public static void setComponentManager(nsIComponentManager mgr) {
-    componentMgr = mgr;
-  }
-  public static nsIXPIDLServiceManager getServiceManager() {
-    return serviceMgr;
-  }
-  public static void setServiceManager(nsIXPIDLServiceManager mgr) {
-    serviceMgr = mgr;
-  }
-  private static nsIComponentManager componentMgr = null;
-  private static nsIXPIDLServiceManager serviceMgr = null;
+class nsIServiceManager;
+class nsXPIDLServiceManager : public nsIXPIDLServiceManager {
+    NS_DECL_ISUPPORTS
+    nsXPIDLServiceManager();
+    virtual ~nsXPIDLServiceManager();
+    NS_DECL_NSIXPIDLSERVICEMANAGER
 };
+#endif
+
+

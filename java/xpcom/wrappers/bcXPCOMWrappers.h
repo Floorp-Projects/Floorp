@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,21 +20,15 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
-package org.mozilla.xpcom;
+#ifndef __bcXPCOMWrappers_h__
+#define __bcXPCOMWrappers_h__
+#include "bcIXPCOMWrappers.h"
 
-public class Components {
-  public static nsIComponentManager getComponentManager() {
-    return componentMgr;
-  }
-  public static void setComponentManager(nsIComponentManager mgr) {
-    componentMgr = mgr;
-  }
-  public static nsIXPIDLServiceManager getServiceManager() {
-    return serviceMgr;
-  }
-  public static void setServiceManager(nsIXPIDLServiceManager mgr) {
-    serviceMgr = mgr;
-  }
-  private static nsIComponentManager componentMgr = null;
-  private static nsIXPIDLServiceManager serviceMgr = null;
+class bcXPCOMWrappers : public  bcIXPCOMWrappers {
+    NS_DECL_ISUPPORTS
+    bcXPCOMWrappers();
+    virtual ~bcXPCOMWrappers();
+    NS_DECL_BCIXPCOMWRAPPERS
 };
+
+#endif

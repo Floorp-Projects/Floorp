@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,21 +20,21 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
-package org.mozilla.xpcom;
+#include "nsISupports.idl"
 
-public class Components {
-  public static nsIComponentManager getComponentManager() {
-    return componentMgr;
-  }
-  public static void setComponentManager(nsIComponentManager mgr) {
-    componentMgr = mgr;
-  }
-  public static nsIXPIDLServiceManager getServiceManager() {
-    return serviceMgr;
-  }
-  public static void setServiceManager(nsIXPIDLServiceManager mgr) {
-    serviceMgr = mgr;
-  }
-  private static nsIComponentManager componentMgr = null;
-  private static nsIXPIDLServiceManager serviceMgr = null;
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(1f29f516-1dd2-11b2-9751-f129d72134d0)]
+
+interface bcIXPCOMWrappers : nsISupports {
+     nsISupports getWrapper(in nsISupports wrapped, in nsIIDRef wrappedIID, out nsIIDPtr wrapperIID);
 };
+
+
+
+
+
+
+
+

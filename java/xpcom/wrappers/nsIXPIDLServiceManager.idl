@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,21 +20,14 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
-package org.mozilla.xpcom;
+#include "nsISupports.idl"
 
-public class Components {
-  public static nsIComponentManager getComponentManager() {
-    return componentMgr;
-  }
-  public static void setComponentManager(nsIComponentManager mgr) {
-    componentMgr = mgr;
-  }
-  public static nsIXPIDLServiceManager getServiceManager() {
-    return serviceMgr;
-  }
-  public static void setServiceManager(nsIXPIDLServiceManager mgr) {
-    serviceMgr = mgr;
-  }
-  private static nsIComponentManager componentMgr = null;
-  private static nsIXPIDLServiceManager serviceMgr = null;
+[scriptable, uuid(7c7916a0-1dd2-11b2-863a-d54576ccc0fe)]
+
+interface nsIXPIDLServiceManager : nsISupports
+{
+    void registerService(in nsCIDRef aClass, in nsISupports aService);
+    void unregisterService(in nsCIDRef aClass);
+    nsISupports getService(in nsCIDRef aClass, in nsIIDRef aIID);
+    void ReleaseService(in nsCIDRef aClass, in nsISupports service);
 };

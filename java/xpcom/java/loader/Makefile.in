@@ -41,8 +41,4 @@ CPPSRCS		=  \
 
 CXXFLAGS        += -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public
 
-EXTRA_DSO_LDOPTS += \
-      -L$(DIST)/bin/components/ \
-      $(NULL)
-
 include $(topsrcdir)/config/rules.mk

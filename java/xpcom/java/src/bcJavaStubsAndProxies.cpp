@@ -42,6 +42,7 @@ jclass bcJavaStubsAndProxies::org_mozilla_xpcom_ProxyHandler = 0;
 jmethodID bcJavaStubsAndProxies::getOIDID = 0;
 
 NS_DEFINE_CID(kORBComponent,BC_ORBCOMPONENT_CID);
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaStubsAndProxies);
 
 static  nsModuleComponentInfo components[] =
@@ -54,27 +55,7 @@ static  nsModuleComponentInfo components[] =
     }
 };
 
-//NS_IMPL_NSGETMODULE("BlackConnect Java stubs and proxies",components_stubs);
-
-
-PRUint32 NSGetModule_components_count =                                    
-           sizeof(components) / sizeof(components[0]);                   
-                                                                           
-nsModuleComponentInfo* NSGetModule_components_idk = (components);             
-                                                                           
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,    
-                                          nsIFile* location,               
-                                          nsIModule** result)              
-{          
-    return NS_NewGenericModule("BlackConnect Java stubs and proxies",
-                               NSGetModule_components_count,               
-                               NSGetModule_components_idk,                     
-                               nsnull, result);                             
-}
-
-
-
-
+NS_IMPL_NSGETMODULE("BlackConnect Java stubs and proxies",components);
 
 NS_IMPL_ISUPPORTS(bcJavaStubsAndProxies,NS_GET_IID(bcJavaStubsAndProxies));
 

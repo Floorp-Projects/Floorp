@@ -22,12 +22,18 @@
 
 #include "bcIBlackConnectInit.h"
 #include "nsIModule.h"
+#include "nsIXPIDLServiceManager.h"
+#include "bcIXPCOMWrappers.h"
+#include "bcXPCOMWrappersCID.h"
 
-static int counter = 0;  //we do not need to call it on unload time;
+
+NS_DEFINE_CID(kXPCOMWrappers,BC_XPCOMWRAPPERS_CID);
+
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
                                           nsIFile *location,
                                           nsIModule** result)  //I am using it for initialization only
 {
+    static int counter = 0;  //we do not need to call it on unload time;
     nsresult r;
     if (counter == 0) {
         counter ++;
@@ -38,11 +44,21 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
                                                (void**)&blackConnectInit);
         if (NS_SUCCEEDED(r)) {
             nsIComponentManager* cm;
-            r = NS_GetGlobalComponentManager(&cm);
-            if (NS_SUCCEEDED(r)) {
-                blackConnectInit->InitComponentManager(cm);
-            }
-        }
+	    nsIXPIDLServiceManager *sm;
+	    r = NS_GetGlobalComponentManager(&cm);
+	    if (NS_SUCCEEDED(r)) {
+	        blackConnectInit->InitComponentManager(cm);
+	    }
+	    NS_WITH_SERVICE(bcIXPCOMWrappers,xpcomWrappers,kXPCOMWrappers,&r);
+	    nsIID * wrapperIID;
+	    if (NS_SUCCEEDED(r)) {
+	        r = xpcomWrappers->GetWrapper((nsISupports*)NULL,NS_GET_IID(nsIServiceManager),&wrapperIID, (nsISupports**)&sm);
+		if (NS_SUCCEEDED(r)) {
+		    printf("--[c++]about to call blackConnectInit->InitServiceManager(sm)\n");
+		    blackConnectInit->InitServiceManager(sm);
+		}
+	    }
+	}
     }
     return NS_ERROR_FAILURE;
 }

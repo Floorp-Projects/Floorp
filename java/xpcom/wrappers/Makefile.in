@@ -20,19 +20,33 @@
 # Contributor(s):
 # Igor Kushnirskiy <idk@eng.sun.com>
 #
-DEPTH   = ../..
-topsrcdir       = @top_srcdir@
-VPATH           = @srcdir@
-srcdir          = @srcdir@
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+LIBRARY_NAME = bcXPCOMWrappers
+MODULE  = bcXPCOMWrappers
+
+IS_COMPONENT    = 1
+XPIDL_MODULE	= bcXPCOMWrappaers
+XPIDLSRCS	=  \
+	bcIXPCOMWrappers.idl \
+	nsIXPIDLServiceManager.idl \
+	$(NULL)
+EXPORTS = \
+	bcXPCOMWrappers.h \
+	bcXPCOMWrappersCID.h \
+	$(NULL)
+CPPSRCS         =  \
+	bcXPCOMWrappers.cpp \
+	nsXPIDLServiceManager.cpp \
+	$(NULL)	
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
-DIRS=   \
-        connect \
-	xpcom   \
-	wrappers \
-	java    \
-#	xpcom/test/ \
-        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+

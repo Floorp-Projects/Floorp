@@ -39,7 +39,10 @@ public class bcJavaSample implements bcIJavaSample {
         return result;
     }
     public void test0() {
-        System.out.println("--[java]bcJavaSample.test0 ");
+        System.out.println("--[java]bcJavaSample.test0");
+        nsIXPIDLServiceManager sm = Components.getServiceManager();
+	nsISupports service = sm.getService(new CID("f0032af2-1dd1-11b2-bb75-c242dcb4f47a"), new IID("1f29f516-1dd2-11b2-9751-f129d72134d0"));
+      
     }
     public void test1(int l) {
         System.out.println("--[java]bcJavaSample.test1 "+l+"\n");

@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,21 +20,14 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
-package org.mozilla.xpcom;
+#ifndef __bcXPCOMWrappersCID_h__
+#define __bcXPCOMWrappersCID_h__
 
-public class Components {
-  public static nsIComponentManager getComponentManager() {
-    return componentMgr;
-  }
-  public static void setComponentManager(nsIComponentManager mgr) {
-    componentMgr = mgr;
-  }
-  public static nsIXPIDLServiceManager getServiceManager() {
-    return serviceMgr;
-  }
-  public static void setServiceManager(nsIXPIDLServiceManager mgr) {
-    serviceMgr = mgr;
-  }
-  private static nsIComponentManager componentMgr = null;
-  private static nsIXPIDLServiceManager serviceMgr = null;
-};
+/* f0032af2-1dd1-11b2-bb75-c242dcb4f47a */
+#define BC_XPCOMWRAPPERS_CID \
+     {0xf0032af2, 0x1dd1, 0x11b2, \
+     {0xbb, 0x75, 0xc2, 0x42, 0xdc, 0xb4, 0xf4, 0x7a}}
+
+#define BC_XPCOMWRAPPERS_CONTRACTID "@mozilla.org/blackwood/blackconnect/xpcom-wrappers;1"
+
+#endif

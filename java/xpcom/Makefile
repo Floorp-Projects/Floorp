@@ -30,6 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS=   \
         connect \
 	xpcom   \
+	wrappers \
 	java    \
 #	xpcom/test/ \
         $(NULL)

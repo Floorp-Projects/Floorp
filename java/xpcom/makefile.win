@@ -26,6 +26,7 @@ DEPTH = ..\..
 DIRS=   \
         connect \
 	xpcom   \
+	wrappers \
 	java    \
         $(NULL)
 

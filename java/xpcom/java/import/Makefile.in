@@ -29,8 +29,8 @@ JAVAXPIDLSRCS = nsISupports.idl \
 	nsIComponentManager.idl \
 	nsIFactory.idl \
 	nsISupportsPrimitives.idl \
+	nsIXPIDLServiceManager.idl \
 	$(NULL)
-		
 include $(DEPTH)/config/rules.mk
 include ../config/rules.mk
 
