@@ -55,8 +55,8 @@ nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStrea
 		if (NS_SUCCEEDED(rv) && url)
 		{
 			// okay now generate the url string
-			nsFilePath path(aMailboxPath);
-			char * urlSpec = PR_smprintf("mailbox://%s", (const char *) path);
+			nsFilePath filePath(aMailboxPath); // convert to file url representation...
+			char * urlSpec = PR_smprintf("mailbox://%s", (const char *) filePath);
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
 			url->SetMailboxParser(aMailboxParser);
@@ -95,10 +95,11 @@ nsresult nsMailboxService::DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgK
 		{
 			// okay now generate the url string
 			char * urlSpec = nsnull;
+			nsFilePath filePath(aMailboxPath); // convert to file url representation...
 			if (aMessageID) 
-				urlSpec = PR_smprintf("mailboxMessage://%s?messageId=%s&number=%d", (const char *) aMailboxPath, aMessageKey);
+				urlSpec = PR_smprintf("mailboxMessage://%s?messageId=%s&number=%d", (const char *) filePath, aMessageKey);
 			else
-				urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) aMailboxPath, aMessageKey);
+				urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, aMessageKey);
 			
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
