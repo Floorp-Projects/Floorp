@@ -43,5 +43,6 @@ class nsIParserService : public nsISupports {
                                         nsCString& aEntity) const =0;
 
   NS_IMETHOD IsContainer(nsString& aTag, PRBool& aIsContainer) const =0;
+  NS_IMETHOD IsBlock(nsString& aTag, PRBool& aIsBlock) const =0;
 };
 

@@ -64,6 +64,7 @@ public:
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
                                         nsCString& aEntity) const;
   NS_IMETHOD IsContainer(nsString& aTag, PRBool& aIsContainer) const;
+  NS_IMETHOD IsBlock(nsString& aTag, PRBool& aIsBlock) const;
 };
 
 nsParserService::nsParserService()
@@ -115,6 +116,25 @@ nsParserService::IsContainer(nsString& aTag, PRBool& aIsContainer) const
 {
   PRInt32 id = nsHTMLTags::LookupTag(aTag);
   aIsContainer = nsHTMLElement::IsContainer((eHTMLTags)id);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsParserService::IsBlock(nsString& aTag, PRBool& aIsBlock) const
+{
+  PRInt32 id = nsHTMLTags::LookupTag(aTag);
+
+  if((id>eHTMLTag_unknown) && (id<eHTMLTag_userdefined)) {
+    aIsBlock=((gHTMLElements[id].IsMemberOf(kBlock))       || 
+              (gHTMLElements[id].IsMemberOf(kBlockEntity)) || 
+              (gHTMLElements[id].IsMemberOf(kHeading))     || 
+              (gHTMLElements[id].IsMemberOf(kPreformatted))|| 
+              (gHTMLElements[id].IsMemberOf(kList))); 
+  }
+  else {
+    aIsBlock = PR_FALSE;
+  }
+
   return NS_OK;
 }
 
