@@ -155,6 +155,10 @@ class nsRenderingContextXlib : public nsIRenderingContext,
   // XXX uncomment this...
   NS_DECL_IDOMRENDERINGCONTEXT
 
+private:
+  nsDrawingSurfaceXlib   *mRenderingSurface;
+
+  nsTransform2D         *mTMatrix;
 };
 
 #endif

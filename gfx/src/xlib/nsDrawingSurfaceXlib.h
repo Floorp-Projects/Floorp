@@ -40,11 +40,12 @@ public:
   NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
   GC         GetGC(void) { return mGC; }
+  Drawable   GetDrawable(void) { return mPixmap; }  
+
 private:
   GC mGC;
   Pixmap mPixmap;
   nsPixelFormat mPixFormat;
-  
 };
 
 #endif
