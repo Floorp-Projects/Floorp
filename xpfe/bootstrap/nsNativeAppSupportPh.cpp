@@ -37,6 +37,9 @@ public:
      /* initialize widget library and attach to Photon */
       if( PtInit( NULL ) )
          exit( EXIT_FAILURE );
+
+     /* increase the draw buffer */
+      PgSetDrawBufferSize( 0x8000 );
     }
     ~nsSplashScreenPh() {
        Hide();
@@ -93,7 +96,8 @@ nsSplashScreenPh::Show()
   PhRegion_t  region;
   PhRect_t    rect;
   PRInt32     aWidth, aHeight;
-  
+  PhRect_t  console;
+
    /* Get the Screen Size and Depth, so I can center the splash dialog, there has to be a better way!*/
    p = getenv("PHIG");
    if (p == nsnull)
@@ -110,15 +114,24 @@ nsSplashScreenPh::Show()
    aWidth  = rect.lr.x - rect.ul.x + 1;
    aHeight = rect.lr.y - rect.ul.y + 1;  
 
+   /* Get the current console offset */
+   if (PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, inp_grp, &console ) == 0)
+      
    mDialog = nsnull;   
-   if (img = PxLoadImage("splash.bmp",NULL))
+
+   if (img = PxLoadImage("splash.bmp", NULL))
    {
      PtArg_t     arg[5];
      PhPoint_t   pos;
      
+       img->flags = img->flags | Ph_RELEASE_IMAGE_ALL;
+
        pos.x = (aWidth/2)  - (img->size.w/2);
        pos.y = (aHeight/2) - (img->size.h/2);
-       
+
+      pos.x += console.ul.x;
+      pos.y += console.ul.y;
+             
        PtSetArg( &arg[0], Pt_ARG_DIM, &img->size, 0 );
        PtSetArg( &arg[1], Pt_ARG_POS, &pos, 0 );
        PtSetArg( &arg[2], Pt_ARG_WINDOW_RENDER_FLAGS, 0, 0xFFFFFFFF );
@@ -128,6 +141,7 @@ nsSplashScreenPh::Show()
        PtSetArg( &arg[1], Pt_ARG_LABEL_DATA, img, sizeof(PhImage_t) );
        PtCreateWidget( PtLabel, mDialog, 2, arg );
        PtRealizeWidget( mDialog );
+       PgFlush();
    }
    else
    {
