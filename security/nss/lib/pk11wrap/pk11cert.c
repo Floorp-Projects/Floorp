@@ -101,10 +101,6 @@ static PRStatus convert_and_cache_cert(NSSCertificate *c, void *arg)
      * a CERTCertificate and fed into the callback.
      */
     nssrv = nssTrustDomain_AddCertsToCache(td, &c, 1);
-    if (!nssList_Get(nss3cb->cached, c)) {
-	nssCertificate_AddRef(c);
-	nssList_Add(nss3cb->cached, c);
-    }
     /* This is why the hack of copying the cert was done above.  The pointer
      * c passed to this function is provided by retrieve_cert.  That function
      * will destroy the pointer once this function returns.  Since c is a local
@@ -1426,16 +1422,14 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	    search.cbarg = &token_cb;
 	    search.cached = certList;
 	    search.searchType = nssTokenSearchType_TokenOnly;
-	    /* then filter the list of cached certs for only those on the
-	     * token
-	     */
-	    nssCertificateList_DoCallback(certList, 
-	                                  token_callback, 
-	                                  &token_cb);
 	    /* now search the token */
 	    nssToken_TraverseCertificatesByNickname(token, NULL, 
 	                                            (NSSUTF8 *)nickname,
 	                                            &search);
+	    /* filter the list of cached certs for only those on the token */
+	    nssCertificateList_DoCallback(certList, 
+	                                  token_callback, 
+	                                  &token_cb);
 	}
 	if (certList) {
 	    nssList_Clear(certList, cert_destructor);
@@ -1458,12 +1452,12 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	                                                          nickname, 
 	                                                          certList);
 		search.cached = certList;
-		nssCertificateList_DoCallback(certList, 
-		                              token_callback,
-		                              &token_cb);
 		nssToken_TraverseCertificatesByEmail(token, NULL, 
 		                                     (NSSASCII7 *)nickname,
 		                                     &search);
+		nssCertificateList_DoCallback(certList, 
+		                              token_callback,
+		                              &token_cb);
 	    }
 	    if (certList) {
 		nssList_Clear(certList, cert_destructor);
@@ -2733,18 +2727,18 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
 	}
 	(void)nssTrustDomain_GetCertsForSubjectFromCache(td, &subject, 
 	                                                 subjectList);
-	filter_list_for_token_certs(subjectList, token);
 	/* set the search criteria */
 	search.callback = convert_and_cache_cert;
 	search.cbarg = &pk11cb;
 	search.cached = subjectList;
 	search.searchType = nssTokenSearchType_TokenOnly;
 	pk11cb.cached = subjectList;
-	nssrv = nssCertificateList_DoCallback(subjectList, 
-	                                      convert_cert, &pk11cb);
+	nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
+	                                               &subject, &search);
 	if (nssrv == PR_SUCCESS) {
-	    nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
-                                                           &subject, &search);
+	    filter_list_for_token_certs(subjectList, token);
+	    nssrv = nssCertificateList_DoCallback(subjectList, 
+	                                          convert_cert, &pk11cb);
 	}
     }
     if (subjectList) {
@@ -2820,18 +2814,18 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     } else {
 	nameList = nssList_Create(NULL, PR_FALSE);
 	(void)nssTrustDomain_GetCertsForNicknameFromCache(td, nick, nameList);
-	filter_list_for_token_certs(nameList, token);
 	/* set the search criteria */
 	search.callback = convert_and_cache_cert;
 	search.cbarg = &pk11cb;
 	search.cached = nameList;
 	search.searchType = nssTokenSearchType_TokenOnly;
 	pk11cb.cached = nameList;
-	nssrv = nssCertificateList_DoCallback(nameList, 
-	                                      convert_cert, &pk11cb);
+	nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
+	                                                nick, &search);
 	if (nssrv == PR_SUCCESS) {
-	    nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
-                                                            nick, &search);
+	    filter_list_for_token_certs(nameList, token);
+	    nssrv = nssCertificateList_DoCallback(nameList, 
+	                                          convert_cert, &pk11cb);
 	}
     }
     if (nameList) {
@@ -2891,17 +2885,17 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
 	    return SECFailure;
 	}
 	(void *)nssTrustDomain_GetCertsFromCache(td, certList);
-	filter_list_for_token_certs(certList, tok);
 	/* set the search criteria */
 	search.callback = convert_and_cache_cert;
 	search.cbarg = &pk11cb;
 	search.cached = certList;
 	search.searchType = nssTokenSearchType_TokenOnly;
 	pk11cb.cached = certList;
-	nssrv = nssCertificateList_DoCallback(certList, 
-	                                      convert_cert, &pk11cb);
+	nssrv = nssToken_TraverseCertificates(tok, NULL, &search);
 	if (nssrv == PR_SUCCESS) {
-	    nssrv = nssToken_TraverseCertificates(tok, NULL, &search);
+	    filter_list_for_token_certs(certList, tok);
+	    nssrv = nssCertificateList_DoCallback(certList, 
+	                                          convert_cert, &pk11cb);
 	}
 	nssList_Clear(certList, cert_destructor);
 	nssList_Destroy(certList);
