@@ -98,6 +98,7 @@ diAS            diAdvancedSettings;
 diSI            diStartInstall;
 diDL            diDownloading;
 diI             diInstalling;
+diIS            diInstallSuccessful;
 diD             diDownload;
 diR             diReboot;
 siSD            siSDObject;
