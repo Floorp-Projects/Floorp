@@ -521,10 +521,6 @@ protected:
   PRPackedBool                  mDocumentIsLoading;  // A flag that is true while the document is loading.
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.
 
-  // XXX Temporary till we sort out ownership and order of 
-  // destruction issues
-  PRBool                        mContainerDestroyed;
-
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation 
 
@@ -662,7 +658,6 @@ PresShell::PresShell()
   mPendingReflowEvent = PR_FALSE;  
   mDocumentIsLoading = PR_TRUE;
   mBatchReflows = PR_FALSE;
-  mContainerDestroyed = PR_FALSE;
 
 #ifdef DEBUG_nisheeth
   mReflows = 0;
@@ -1114,21 +1109,6 @@ PresShell::EndObservingDocument()
       return NS_ERROR_UNEXPECTED;
     mSelection->ShutDown();
   }
-
-  // Revoke pending reflow events, since we no longer care
-  if (mPendingReflowEvent) {
-    mPendingReflowEvent = PR_FALSE;
-    mEventQueue->RevokeEvents(this);
-  }
-
-  if (mViewManager) {
-    // Disable paints during tear down of the frame tree
-    mViewManager->DisableRefresh();
-    mViewManager = nsnull;
-  }
-
-  mContainerDestroyed = PR_TRUE;
-
   return NS_OK;
 }
 
@@ -1641,9 +1621,6 @@ PresShell::SelectAll()
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
 {
-  if (mContainerDestroyed) {
-    return NS_OK;
-  }
   EnterReflowLock();
 
   nsIFrame* rootFrame;
@@ -2073,7 +2050,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       nsSize          maxSize;
       rootFrame->GetSize(maxSize);
       if (aInterruptible) beforeReflow = PR_Now();      
-      rc->Dispatch(mPresContext, desiredSize, maxSize, *rcx);
+      rc->Dispatch(mPresContext, desiredSize, maxSize, *rcx); // dispatch the reflow command
       if (aInterruptible) afterReflow = PR_Now();
       NS_RELEASE(rc);
       VERIFY_STYLE_TREE;
@@ -2536,7 +2513,9 @@ PresShell::FlushPendingNotifications()
   // besides Enter/ExitReflowLock should call ProcessReflowCommands.
   // Will be changed by Nisheeth.
   if (!mReflowLockCount) {
+    EnterReflowLock();        // grab the reflow lock (fix for bug 30738, prevents recursive reflows)
     ProcessReflowCommands(PR_FALSE);
+    ExitReflowLock(PR_FALSE); // release the reflow lock
   }
 
   return NS_OK;
