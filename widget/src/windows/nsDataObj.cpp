@@ -329,7 +329,7 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   char     * data;
   PRUint32   len;
 
-  // NOTE: Transferable keeps ownership of the memory
+  // NOTE: Transferable creates new memory, that needs to be deleted
   mTransferable->GetTransferData(aDF, (void **)&data, &len);
   if (0 == len) {
 	  return ResultFromScode(E_FAIL);
@@ -386,6 +386,9 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   }
 
   aSTG.hGlobal = hGlobalMemory;
+
+  // Now, delete the memory that was created by the transferable
+  delete [] data;
 
 	return ResultFromScode(S_OK);
 }
