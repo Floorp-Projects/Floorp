@@ -18,7 +18,6 @@
     
   <box class="box-smallheader" title="&pane.title;"/>
 
-
 	<titledbox orient="vertical">
     <title><text value="&emailCollectiontitle.label;"/></title>
 	<html>&emailCollectiontext.label;</html>
@@ -26,5 +25,7 @@
               pref="true" preftype="bool" prefstring="mail.collect_email_address"
               prefattribute="checked"/>
 	</titledbox>
+	
+	<box orient="vertical" id="additional_addrbook_prefs"/>
 
 </window>
