@@ -3200,11 +3200,15 @@ MOZ_ARG_DISABLE_BOOL(ldap,
 dnl ========================================================
 dnl = Phoenix
 dnl ========================================================
+MOZ_XUL_APP=
 if test "$MOZ_PHOENIX"; then
    AC_DEFINE(MOZ_PHOENIX)
+   MOZ_XUL_APP=1
+   AC_DEFINE(MOZ_XUL_APP)
 fi
 
 AC_SUBST(MOZ_PHOENIX)
+AC_SUBST(MOZ_XUL_APP)
 
 dnl ========================================================
 dnl = FreeType2
