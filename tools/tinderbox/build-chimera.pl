@@ -75,8 +75,8 @@ sub main {
     chdir $chimera_dir;
     
     if ($status == 0) {
-      TinderUtils::print_log "Deleting binary...\n";
-      TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
+      #TinderUtils::print_log "Deleting binary...\n";
+      #TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
 
       # Always do a clean build; gecko dependencies don't work correctly
       # for Chimera.
