@@ -43,8 +43,8 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
-	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
+	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
+	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
 
 	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
 
