@@ -1620,7 +1620,9 @@ nsPlaintextEditor::SetCompositionString(const nsString& aCompositionString, nsIP
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   ps->GetCaret(getter_AddRefs(caretP));
-  caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed,selection);
+  caretP->SetCaretDOMSelection(selection);
+  caretP->GetCaretCoordinates(nsICaret::eTopLevelWindowCoordinates, selection,
+            &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
 
   // second part of 23558 fix:
   if (aCompositionString.IsEmpty()) 
