@@ -430,39 +430,39 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
 
 void nsImapOfflineSync::ProcessCopyOperation(nsIMsgOfflineImapOperation *currentOp)
 {
-	nsMsgKeyArray matchingFlagKeys;
-	PRUint32 currentKeyIndex = m_KeyIndex;
-	nsXPIDLCString copyDestination;
-	currentOp->GetCopyDestination(0, getter_Copies(copyDestination));
-	PRBool copyMatches = PR_TRUE;
-	
-	do {	// loop for all messsages with the same destination
-			if (copyMatches)
-			{
-        nsMsgKey curKey;
-        currentOp->GetMessageKey(&curKey);
-			  matchingFlagKeys.Add(curKey);
-        currentOp->ClearOperation(nsIMsgOfflineImapOperation::kMsgCopy);
-			}
-			currentOp = nsnull;
-			
-		if (++currentKeyIndex < m_CurrentKeys.GetSize())
-		{
-			nsXPIDLCString nextDestination;
-			nsresult rv = m_currentDB->GetOfflineOpForKey(m_CurrentKeys[currentKeyIndex], PR_FALSE, &currentOp);
+  nsMsgKeyArray matchingFlagKeys;
+  PRUint32 currentKeyIndex = m_KeyIndex;
+  nsXPIDLCString copyDestination;
+  currentOp->GetCopyDestination(0, getter_Copies(copyDestination));
+  PRBool copyMatches = PR_TRUE;
+  
+  do {	// loop for all messsages with the same destination
+    if (copyMatches)
+    {
+      nsMsgKey curKey;
+      currentOp->GetMessageKey(&curKey);
+      matchingFlagKeys.Add(curKey);
+      currentOp->ClearOperation(nsIMsgOfflineImapOperation::kMsgCopy);
+    }
+    currentOp = nsnull;
+    
+    if (++currentKeyIndex < m_CurrentKeys.GetSize())
+    {
+      nsXPIDLCString nextDestination;
+      nsresult rv = m_currentDB->GetOfflineOpForKey(m_CurrentKeys[currentKeyIndex], PR_FALSE, &currentOp);
       copyMatches = PR_FALSE;
-			if (NS_SUCCEEDED(rv) && currentOp)
+      if (NS_SUCCEEDED(rv) && currentOp)
       {
         nsOfflineImapOperationType opType; 
         currentOp->GetOperation(&opType);
         if (opType & nsIMsgOfflineImapOperation::kMsgCopy)
         {
-        	currentOp->GetCopyDestination(0, getter_Copies(copyDestination));
+          currentOp->GetCopyDestination(0, getter_Copies(nextDestination));
           copyMatches = nsCRT::strcmp(copyDestination, nextDestination) == 0;
         }
       }
-		}
-	} 
+    }
+  } 
   while (currentOp);
 	
   nsCAutoString uids;
