@@ -45,27 +45,43 @@ run_tests() {
         echo "no tests file specified to run_tests()"
         exit 1
     fi
-
+    w1=`uname | grep WIN`
     if [ "$mode" = "baseline" ]; then
+        echo baseline
         rm -r -f baseline
         mkdir baseline
         echo
+        if [ "$w1" = "" ]; then
         echo $MOZ_TEST_VIEWER $print_flags -o baseline/ -f $tests_file
         $MOZ_TEST_VIEWER $print_flags -o baseline/ -f $tests_file
+        else
+        echo $MOZ_TEST_VIEWER $print_flags -o baseline\\ -f $tests_file
+        $MOZ_TEST_VIEWER $print_flags -o baseline\\ -f $tests_file
+        fi
     elif [ "$mode" = "verify" ]; then
         rm -r -f verify
         mkdir verify
         echo
-        echo $MOZ_TEST_VIEWER $print_flags -o baseline/ -f $tests_file
-        $MOZ_TEST_VIEWER $print_flags -o verify/ -rd baseline/ -f $tests_file
+        if [ "$w1" = "" ]; then
+          echo $MOZ_TEST_VIEWER $print_flags -o verify/ -f $tests_file
+          $MOZ_TEST_VIEWER $print_flags -o verify/ -rd baseline/ -f $tests_file
+        else
+          echo $MOZ_TEST_VIEWER $print_flags -o verify\\ -rd baseline\\ -f $tests_file
+          $MOZ_TEST_VIEWER $print_flags -o verify\\ -rd baseline\\ -f $tests_file
+        fi
     else
         echo "no mode specified to run_tests()"
         exit 1
     fi
 }
-
-TESTS_FILE=/tmp/$$-tests.txt
-
+w1=`uname | grep WIN`
+if [ "$w1" = "" ]; then
+ TESTS_FILE=/tmp/$$-tests.txt
+else
+ TESTS_FILE=$TEMP\\$$-tests.txt
+ TESTS_FILE=`cygpath -w $TESTS_FILE`
+fi
+MOZ_TEST_BASE=`echo $MOZ_TEST_BASE | sed -e"s,cygdrive/\(.\),\1:,"`
 cp /dev/null $TESTS_FILE
 
 for FILE in `ls file_list.txt file_list[0-9].txt 2> /dev/null`; do
