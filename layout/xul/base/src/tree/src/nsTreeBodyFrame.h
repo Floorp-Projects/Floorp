@@ -437,8 +437,9 @@ protected:
   // Get the base element, <tree> or <select>
   nsresult GetBaseElement(nsIContent** aElement);
 
-  void GetCellWidth(PRInt32 aRow, const nsAString& aColID, nscoord& aDesiredSize,
-                    nscoord& aCurrentSize);
+  void GetCellWidth(PRInt32 aRow, const nsAString& aColID,
+                    nsIRenderingContext* aRenderingContext,
+                    nscoord& aDesiredSize, nscoord& aCurrentSize);
   nscoord CalcMaxRowWidth(nsBoxLayoutState& aState);
 
   PRBool CanAutoScroll(PRInt32 aRowIndex);
