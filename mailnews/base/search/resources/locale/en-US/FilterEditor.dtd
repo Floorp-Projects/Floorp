@@ -16,6 +16,7 @@
 <!ENTITY contains.label "contains">
 <!ENTITY nocontains.label "doesn't contain">
 <!ENTITY filterAction.label "Action">
+<!ENTITY filterActionDesc.label "When messages match the above conditions, perform the following action:">
 <!ENTITY moveToFolder.label "Move To Folder">
 <!ENTITY changePriority.label "Change Priority">
 <!ENTITY delete.label "Delete">

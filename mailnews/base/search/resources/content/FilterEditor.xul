@@ -58,8 +58,10 @@ Rights Reserved.
     <box id="searchTermListBox" flex="1"/>
   </titledbox>
 
-  <titledbox autostretch="never" orient="horizontal">
+  <titledbox autostretch="never" orient="vertical">
     <label value="&filterAction.label;"/>
+    <text value="&filterActionDesc.label;"/>
+    <separator class="thin"/>
     <box orient="horizontal" flex="1">
       <menulist id="actionMenu" oncommand="onActionChanged(event)">
         <menupopup>
