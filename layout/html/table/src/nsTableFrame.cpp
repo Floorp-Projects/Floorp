@@ -2750,7 +2750,7 @@ DivideBCBorderSize(nscoord  aPixelSize,
                    nscoord& aLargeHalf)
 {
   aSmallHalf = aPixelSize / 2;
-  aLargeHalf = ((aSmallHalf + aSmallHalf) < aPixelSize) ? aSmallHalf + 1 : aSmallHalf;
+  aLargeHalf = aPixelSize - aSmallHalf;
 }
 
 nsMargin
