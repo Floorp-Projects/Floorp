@@ -88,7 +88,7 @@
 #define NS_ERROR_MODULE_SECURITY   21
 #define NS_ERROR_MODULE_DOM_XPATH  22
 #define NS_ERROR_MODULE_DOM_RANGE  23
-// NS_ERROR_MODULE_GENERAL should be used by modules that don't
+// NS_ERROR_MODULE_GENERAL should be used by modules that do not
 // care if return code values overlap. Callers of methods that
 // return such codes should be aware that they are not
 // globally unique. Implementors should be careful about blindly
@@ -289,6 +289,7 @@
 // This will return the nsresult corresponding to the most recent NSPR failure
 // returned by PR_GetError.
 
+// do not depend on this function as it will be going away!
 extern NS_COM nsresult
 NS_ErrorAccordingToNSPR();
 
