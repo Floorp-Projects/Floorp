@@ -29,6 +29,7 @@ CPPSRCS  = nsWidgetSupport.cpp nsWinWidgetFactory.cpp
 CPP_OBJS = .\$(OBJDIR)\nsWidgetSupport.obj .\$(OBJDIR)\nsWinWidgetFactory.obj
 
 MISCDEP =                       \
+ $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorbasewidget_s.lib		\
  $(DIST)\lib\raptorwidget_s.lib	\
  $(DIST)\lib\xpcom32.lib        \
@@ -61,6 +62,7 @@ LLIBS=                                  \
  ole32.lib								\
  shell32.lib                           \
  $(DIST)\lib\xpcom32.lib                \
+ $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorgfxwin.lib           \
  $(DIST)\lib\raptorbase.lib             \
  $(DIST)\lib\raptorbasewidget_s.lib		  \
