@@ -1990,17 +1990,24 @@ nsListControlFrame::SetContentSelected(PRInt32        aIndex,
     return;
   }
 
-#ifdef NS_DEBUG
+  // Check to see that the index is in the proper range.  It could be out of 
+  // range due to something like a back button being hit and the 
+  // script that populates the list box not being executed (eg bug 88343)
   PRInt32 numOptions = 0;
   if (NS_SUCCEEDED(GetNumberOfOptions(&numOptions))) {
     if (aIndex >= numOptions || aIndex < 0) {
+       mSelectedIndex = kNothingSelected;
+#ifdef NS_DEBUG
       printf("Index: %d Range 0:%d  (setting to %s)\n", aIndex, numOptions, aSelected?"TRUE":"FALSE");
       NS_ASSERTION(0, "Bad Index has been passed into SetContentSelected!");
+#endif
+      return;    
     }
   } else {
+#ifdef NS_DEBUG
     NS_ASSERTION(0, "Couldn't get number of options for select!");
-  }
 #endif
+  }
 
   nsIContent* content = GetOptionContent(aIndex);
   NS_ASSERTION(content != nsnull, "Content should not be null!");
