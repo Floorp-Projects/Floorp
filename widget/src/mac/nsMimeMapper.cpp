@@ -115,7 +115,14 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
   switch ( inMacType ) {
   
     case 'TEXT': outMimeStr = kTextMime; break;
-   
+    
+    // This flavor is the old 4.x Composer flavor for HTML. The actual data is a binary
+    // data structure which we do NOT want to deal with in any way shape or form. I am
+    // only including this flavor here so we don't accidentally use it ourselves and
+    // get very very confused. 
+    case 'EHTM':
+      // Fall through to the unknown case.
+  
     default:
 
       outMimeStr = "unknown";
