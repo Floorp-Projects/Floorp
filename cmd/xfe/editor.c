@@ -7295,8 +7295,7 @@ fe_EditorStaticInit()
  * not for highlighting selected rows/columns.
  */
 void
-FE_DisplayAddRowOrColBorder(MWContext* context, XP_Rect *pRect,
-                            XP_Bool bErase)
+FE_DisplayAddRowOrColBorder(MWContext* context, XP_Rect *pRect, XP_Bool bErase)
 {
     GC gc;
     XGCValues gcv;
@@ -7304,27 +7303,19 @@ FE_DisplayAddRowOrColBorder(MWContext* context, XP_Rect *pRect,
     fe_Drawable *fe_drawable = CONTEXT_DATA(context)->drawable;
 
 #ifdef DEBUG_TABLE_SELECTION
-    printf("FE_DisplayAddRowOrColBorder\n");
+    printf("FE_DisplayAddRowOrColBorder(bErase=%d)\n", bErase);
 #endif /* DEBUG_TABLE_SELECTION */
 
-    if (bErase)
-    {
-        gc_flags = GCForeground /* | GCLineWidth */ | GCLineStyle;
-        gcv.foreground = CONTEXT_DATA(context)->select_bg_pixel;
-    }
-    else
-    {
-        gc_flags = GCForeground /* | GCLineWidth */ | GCLineStyle;
-        gcv.foreground = CONTEXT_DATA(context)->select_bg_pixel;
-        gcv.line_style = LineOnOffDash;
-    }
-    /*gcv.line_width = iSelectionBorderThickness;*/
-    gc = fe_GetGC(CONTEXT_WIDGET(context),
-                    GCForeground|GCFunction, &gcv);
+    gc_flags = GCForeground | GCLineStyle | GCFunction /*| GCLineWidth */;
+    gcv.foreground = 0xFFFFFF;
+    gcv.function = GXxor;
+    gcv.line_style = LineOnOffDash;
+    /* gcv.line_width = iSelectionBorderThickness; */
+    gc = fe_GetGC(CONTEXT_WIDGET(context), gc_flags, &gcv);
     XDrawRectangle(fe_display,
                    XtWindow(CONTEXT_DATA(context)->drawing_area), gc,
                    pRect->left, pRect->top,
-                   pRect->left - pRect->right, pRect->bottom - pRect->top);
+                   pRect->right - pRect->left, pRect->bottom - pRect->top);
 }
 
 void 
