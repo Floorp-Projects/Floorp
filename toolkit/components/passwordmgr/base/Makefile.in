@@ -63,6 +63,10 @@ REQUIRES = 	\
 
 XPIDLSRCS	= nsIPassword.idl
 
-CPPSRCS		= nsPasswordManager.cpp
+CPPSRCS		= 	\
+		nsPasswordManager.cpp \
+		nsSingleSignonPrompt.cpp \
+		$(NULL)
+
 
 include $(topsrcdir)/config/rules.mk

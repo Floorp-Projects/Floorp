@@ -40,10 +40,8 @@
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsCOMPtr.h"
-#include "nsIAuthPromptWrapper.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsIPrompt.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIWebProgressListener.h"
 #include "nsIDOMFocusListener.h"
@@ -54,13 +52,7 @@
 #define NS_PASSWORDMANAGER_CID \
 {0x360565c4, 0x2ef3, 0x4f6a, {0xba, 0xb9, 0x94, 0xcc, 0xa8, 0x91, 0xb2, 0xa7}}
 
-/* 1baf3398-f759-4a72-a21f-0abdc9cc9960 */
-#define NS_SINGLE_SIGNON_PROMPT_CID \
-{0x1baf3398, 0xf759, 0x4a72, {0xa2, 0x1f, 0x0a, 0xbd, 0xc9, 0xcc, 0x99, 0x60}}
-
-
 class nsIFile;
-class nsIPrompt;
 class nsIStringBundle;
 class nsIComponentManager;
 class nsIContent;
@@ -105,6 +97,11 @@ public:
 
   static void Shutdown();
 
+  static void GetLocalizedString(const nsAString& key,
+                                 nsAString& aResult,
+                                 PRBool aFormatted = PR_FALSE,
+                                 const PRUnichar** aFormatArgs = nsnull,
+                                 PRUint32 aFormatArgsLength = 0);
 
   static nsresult DecryptData(const nsAString& aData, nsAString& aPlaintext);
   static nsresult EncryptData(const nsAString& aPlaintext,
@@ -190,24 +187,4 @@ protected:
   nsDataHashtable<nsISupportsHashKey,PRInt32> mAutoCompleteInputs;
 
   nsCOMPtr<nsIFile> mSignonFile;
-};
-
-// Our wrapper for username/password prompts - this allows us to prefill
-// the password dialog and add a "remember this password" checkbox.
-
-class nsSingleSignonPrompt : public nsIAuthPromptWrapper
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAUTHPROMPT
-  NS_DECL_NSIAUTHPROMPTWRAPPER
-
-  nsSingleSignonPrompt() { }
-  virtual ~nsSingleSignonPrompt() { }
-
-protected:
-  void GetLocalizedString(const nsAString& aKey, nsAString& aResult);
-
-  nsCOMPtr<nsIPrompt> mPrompt;
-  nsCOMPtr<nsIStringBundle> mBundle;
 };
