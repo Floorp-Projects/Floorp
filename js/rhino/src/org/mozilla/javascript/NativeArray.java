@@ -63,7 +63,8 @@ public class NativeArray extends IdScriptable {
 
     public static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeArray obj = new NativeArray();
-        obj.addAsPrototype(cx, scope, sealed);
+        obj.prototypeFlag = true;
+        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
     /**
@@ -102,42 +103,37 @@ public class NativeArray extends IdScriptable {
         return super.getIdDefaultAttributes(id);
     }
 
-    protected Object getIdValue(int id, Scriptable start) {
+    protected Object getIdValue(int id) {
         if (id == Id_length) {
-            return wrap_double(realInstance(start).length);
+            return wrap_double(length);
         }
-        return super.getIdValue(id, start);
+        return super.getIdValue(id);
     }
     
-    protected void setIdValue(int id, Scriptable start, Object value) {
+    protected void setIdValue(int id, Object value) {
         if (id == Id_length) {
-            realInstance(start).jsSet_length(value); return;
+            jsSet_length(value); return;
         }
-        super.setIdValue(id, start, value);
+        super.setIdValue(id, value);
     }
     
-    private NativeArray realInstance(Scriptable start) {
-        for (; start != null; start = start.getPrototype()) {
-            if (start instanceof NativeArray) { return (NativeArray)start; }
-        }
-        return this;
-    }
-
     public int methodArity(int methodId) {
-        switch (methodId) {
-        case Id_constructor:     return 1;
-        case Id_toString:        return 0;
-        case Id_toLocaleString:  return 1;
-        case Id_join:            return 1;
-        case Id_reverse:         return 0;
-        case Id_sort:            return 1;
-        case Id_push:            return 1;
-        case Id_pop:             return 1;
-        case Id_shift:           return 1;
-        case Id_unshift:         return 1;
-        case Id_splice:          return 1;
-        case Id_concat:          return 1;
-        case Id_slice:           return 1;
+        if (prototypeFlag) {
+            switch (methodId) {
+                case Id_constructor:     return 1;
+                case Id_toString:        return 0;
+                case Id_toLocaleString:  return 1;
+                case Id_join:            return 1;
+                case Id_reverse:         return 0;
+                case Id_sort:            return 1;
+                case Id_push:            return 1;
+                case Id_pop:             return 1;
+                case Id_shift:           return 1;
+                case Id_unshift:         return 1;
+                case Id_splice:          return 1;
+                case Id_concat:          return 1;
+                case Id_slice:           return 1;
+            }
         }
         return super.methodArity(methodId);
     }
@@ -147,47 +143,48 @@ public class NativeArray extends IdScriptable {
          Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        switch (methodId) {
-        case Id_constructor:
-            return jsConstructor(cx, scope, args, f, thisObj == null);
+        if (prototypeFlag) {
+            switch (methodId) {
+                case Id_constructor:
+                    return jsConstructor(cx, scope, args, f, thisObj == null);
 
-        case Id_toString:
-            return jsFunction_toString(cx, thisObj, args);
+                case Id_toString:
+                    return jsFunction_toString(cx, thisObj, args);
 
-        case Id_toLocaleString:
-            return jsFunction_toLocaleString(cx, thisObj, args);
+                case Id_toLocaleString:
+                    return jsFunction_toLocaleString(cx, thisObj, args);
 
-        case Id_join:
-            return jsFunction_join(cx, thisObj, args);
+                case Id_join:
+                    return jsFunction_join(cx, thisObj, args);
 
-        case Id_reverse:
-            return jsFunction_reverse(cx, thisObj, args);
+                case Id_reverse:
+                    return jsFunction_reverse(cx, thisObj, args);
 
-        case Id_sort:
-            return jsFunction_sort(cx, thisObj, args, f);
+                case Id_sort:
+                    return jsFunction_sort(cx, thisObj, args, f);
 
-        case Id_push:
-            return jsFunction_push(cx, thisObj, args);
+                case Id_push:
+                    return jsFunction_push(cx, thisObj, args);
 
-        case Id_pop:
-            return jsFunction_pop(cx, thisObj, args);
+                case Id_pop:
+                    return jsFunction_pop(cx, thisObj, args);
 
-        case Id_shift:
-            return jsFunction_shift(cx, thisObj, args);
+                case Id_shift:
+                    return jsFunction_shift(cx, thisObj, args);
 
-        case Id_unshift:
-            return jsFunction_unshift(cx, thisObj, args);
+                case Id_unshift:
+                    return jsFunction_unshift(cx, thisObj, args);
 
-        case Id_splice:
-            return jsFunction_splice(cx, thisObj, args, f);
+                case Id_splice:
+                    return jsFunction_splice(cx, thisObj, args, f);
 
-        case Id_concat:
-            return jsFunction_concat(cx, thisObj, args, f);
+                case Id_concat:
+                    return jsFunction_concat(cx, thisObj, args, f);
 
-        case Id_slice:
-            return jsFunction_slice(cx, thisObj, args);
+                case Id_slice:
+                    return jsFunction_slice(cx, thisObj, args);
+            }
         }
-
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
@@ -1048,30 +1045,46 @@ public class NativeArray extends IdScriptable {
         return result;
     }
 
-    protected int getMaximumId() { return MAX_ID; }
+    protected int maxInstanceId() { return MAX_INSTANCE_ID; }
 
     protected String getIdName(int id) {
-        switch (id) {
-        case Id_constructor:     return "constructor";
-        case Id_toString:        return "toString";
-        case Id_toLocaleString:  return "toLocaleString";
-        case Id_join:            return "join";
-        case Id_reverse:         return "reverse";
-        case Id_sort:            return "sort";
-        case Id_push:            return "push";
-        case Id_pop:             return "pop";
-        case Id_shift:           return "shift";
-        case Id_unshift:         return "unshift";
-        case Id_splice:          return "splice";
-        case Id_concat:          return "concat";
-        case Id_slice:           return "slice";
+        if (id == Id_length) { return "length"; }
+
+        if (prototypeFlag) {
+            switch (id) {
+                case Id_constructor:     return "constructor";
+                case Id_toString:        return "toString";
+                case Id_toLocaleString:  return "toLocaleString";
+                case Id_join:            return "join";
+                case Id_reverse:         return "reverse";
+                case Id_sort:            return "sort";
+                case Id_push:            return "push";
+                case Id_pop:             return "pop";
+                case Id_shift:           return "shift";
+                case Id_unshift:         return "unshift";
+                case Id_splice:          return "splice";
+                case Id_concat:          return "concat";
+                case Id_slice:           return "slice";
+            }
         }
         return null;
     }
 
-// #string_id_map#
+    private static final int
+        Id_length        =  1,
+        MAX_INSTANCE_ID  =  1;
 
     protected int mapNameToId(String s) {
+        if (s.equals("length")) { return Id_length; }
+        else if (prototypeFlag) { 
+            return toPrototypeId(s); 
+        }
+        return 0;
+    }
+
+// #string_id_map#
+
+    private static int toPrototypeId(String s) {
         int id;
 // #generated# Last update: 2001-04-23 11:46:01 GMT+02:00
         L0: { id = 0; String X = null; int c;
@@ -1106,28 +1119,27 @@ public class NativeArray extends IdScriptable {
     }
 
     private static final int
-        Id_constructor          =  1,
-        Id_toString             =  2,
-        Id_toLocaleString       =  3,
-        Id_join                 =  4,
-        Id_reverse              =  5,
-        Id_sort                 =  6,
-        Id_push                 =  7,
-        Id_pop                  =  8,
-        Id_shift                =  9,
-        Id_unshift              = 10,
-        Id_splice               = 11,
-        Id_concat               = 12,
-        Id_slice                = 13,
+        Id_constructor          = MAX_INSTANCE_ID + 1,
+        Id_toString             = MAX_INSTANCE_ID + 2,
+        Id_toLocaleString       = MAX_INSTANCE_ID + 3,
+        Id_join                 = MAX_INSTANCE_ID + 4,
+        Id_reverse              = MAX_INSTANCE_ID + 5,
+        Id_sort                 = MAX_INSTANCE_ID + 6,
+        Id_push                 = MAX_INSTANCE_ID + 7,
+        Id_pop                  = MAX_INSTANCE_ID + 8,
+        Id_shift                = MAX_INSTANCE_ID + 9,
+        Id_unshift              = MAX_INSTANCE_ID + 10,
+        Id_splice               = MAX_INSTANCE_ID + 11,
+        Id_concat               = MAX_INSTANCE_ID + 12,
+        Id_slice                = MAX_INSTANCE_ID + 13,
 
-        Id_length               = 14,
-
-        MAX_ID                  = 14;
+        MAX_PROTOTYPE_ID        = MAX_INSTANCE_ID + 13;
 
 // #/string_id_map#
-
 
     private long length;
     private Object[] dense;
     private static final int maximumDenseLength = 10000;
+    
+    private boolean prototypeFlag;
 }

@@ -46,7 +46,8 @@ public class NativeMath extends IdScriptable
 {
     public static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeMath obj = new NativeMath();
-        obj.activateIdMap(cx, sealed);
+        obj.setSealFunctionsFlag(sealed);
+        obj.setFunctionParametrs(cx);
         obj.setPrototype(getObjectPrototype(scope));
         obj.setParentScope(scope);
         if (sealed) { obj.sealObject(); }
@@ -63,14 +64,14 @@ public class NativeMath extends IdScriptable
         return super.getIdDefaultAttributes(id);
     }
 
-    protected Object getIdValue(int id, Scriptable start) {
+    protected Object getIdValue(int id) {
         if (id > LAST_METHOD_ID) {
-            return cacheIdValue(id, getField(id));
+            return cacheIdValue(id, wrap_double(getField(id)));
         }
-        return super.getIdValue(id, start);
+        return super.getIdValue(id);
     }
 
-    private Double getField(int fieldId) {
+    private double getField(int fieldId) {
         switch (fieldId) {
             case Id_E:       return E;
             case Id_PI:      return PI;
@@ -81,7 +82,7 @@ public class NativeMath extends IdScriptable
             case Id_SQRT1_2: return SQRT1_2;
             case Id_SQRT2:   return SQRT2;
         }
-        return null;
+        return 0; // Unreachable
     }
 
     public int methodArity(int methodId) {
@@ -272,7 +273,7 @@ public class NativeMath extends IdScriptable
 
     private double js_tan(double x) { return Math.tan(x); }
 
-    protected int getMaximumId() { return MAX_ID; }
+    protected int maxInstanceId() { return MAX_INSTANCE_ID; }
 
     protected String getIdName(int id) {
         switch (id) {
@@ -388,18 +389,17 @@ public class NativeMath extends IdScriptable
         Id_SQRT1_2      = 25,
         Id_SQRT2        = 26,
 
-        MAX_ID          = 26;
+        MAX_INSTANCE_ID = 26;
 
 // #/string_id_map#
 
-    private static final Double
-        E       = new Double(Math.E),
-        PI      = new Double(Math.PI),
-        LN10    = new Double(2.302585092994046),
-        LN2     = new Double(0.6931471805599453),
-        LOG2E   = new Double(1.4426950408889634),
-        LOG10E  = new Double(0.4342944819032518),
-        SQRT1_2 = new Double(0.7071067811865476),
-        SQRT2   = new Double(1.4142135623730951);
+    private static final double
+        E       = Math.E,
+        PI      = Math.PI,
+        LN10    = 2.302585092994046,
+        LN2     = 0.6931471805599453,
+        LOG2E   = 1.4426950408889634,
+        LOG10E  = 0.4342944819032518,
+        SQRT1_2 = 0.7071067811865476,
+        SQRT2   = 1.4142135623730951;
 }
-

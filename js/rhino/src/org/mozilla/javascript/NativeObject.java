@@ -47,7 +47,8 @@ public class NativeObject extends IdScriptable {
 
     public static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeObject obj = new NativeObject();
-        obj.addAsPrototype(cx, scope, sealed);
+        obj.prototypeFlag = true;
+        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
     public String getClassName() {
@@ -55,14 +56,16 @@ public class NativeObject extends IdScriptable {
     }
 
     public int methodArity(int methodId) {
-        switch (methodId) {
-        case Id_constructor:           return 1;
-        case Id_toString:              return 0;
-        case Id_toLocaleString:        return 0;
-        case Id_valueOf:               return 0;
-        case Id_hasOwnProperty:        return 1;
-        case Id_propertyIsEnumerable:  return 1;
-        case Id_isPrototypeOf:         return 1;
+        if (prototypeFlag) {
+            switch (methodId) {
+                case Id_constructor:           return 1;
+                case Id_toString:              return 0;
+                case Id_toLocaleString:        return 0;
+                case Id_valueOf:               return 0;
+                case Id_hasOwnProperty:        return 1;
+                case Id_propertyIsEnumerable:  return 1;
+                case Id_isPrototypeOf:         return 1;
+            }
         }
         return super.methodArity(methodId);
     }
@@ -72,21 +75,29 @@ public class NativeObject extends IdScriptable {
          Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        switch (methodId) {
-        case Id_constructor:
-            return jsConstructor(cx, args, f, thisObj == null);
-        case Id_toString:
-            return jsFunction_toString(cx, thisObj);
-        case Id_toLocaleString:
-            return jsFunction_toLocaleString(cx, thisObj);
-        case Id_valueOf:
-            return jsFunction_valueOf(thisObj);
-        case Id_hasOwnProperty:
-            return jsFunction_hasOwnProperty(thisObj, args);
-        case Id_propertyIsEnumerable:
-            return jsFunction_propertyIsEnumerable(cx, thisObj, args);
-        case Id_isPrototypeOf:
-            return jsFunction_isPrototypeOf(cx, thisObj, args);
+        if (prototypeFlag) {
+            switch (methodId) {
+                case Id_constructor:
+                    return jsConstructor(cx, args, f, thisObj == null);
+
+                case Id_toString:
+                    return jsFunction_toString(cx, thisObj);
+
+                case Id_toLocaleString:
+                    return jsFunction_toLocaleString(cx, thisObj);
+
+                case Id_valueOf:
+                    return jsFunction_valueOf(thisObj);
+
+                case Id_hasOwnProperty:
+                    return jsFunction_hasOwnProperty(thisObj, args);
+
+                case Id_propertyIsEnumerable:
+                    return jsFunction_propertyIsEnumerable(cx, thisObj, args);
+
+                case Id_isPrototypeOf:
+                    return jsFunction_isPrototypeOf(cx, thisObj, args);
+            }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
@@ -225,17 +236,17 @@ public class NativeObject extends IdScriptable {
         return Boolean.FALSE;
     }
 
-    protected int getMaximumId() { return MAX_ID; }
-
     protected String getIdName(int id) {
-        switch (id) {
-        case Id_constructor:           return "constructor";
-        case Id_toString:              return "toString";
-        case Id_toLocaleString:        return "toLocaleString";
-        case Id_valueOf:               return "valueOf";
-        case Id_hasOwnProperty:        return "hasOwnProperty";
-        case Id_propertyIsEnumerable:  return "propertyIsEnumerable";
-        case Id_isPrototypeOf:         return "isPrototypeOf";
+        if (prototypeFlag) {
+            switch (id) {
+                case Id_constructor:          return "constructor";
+                case Id_toString:             return "toString";
+                case Id_toLocaleString:       return "toLocaleString";
+                case Id_valueOf:              return "valueOf";
+                case Id_hasOwnProperty:       return "hasOwnProperty";
+                case Id_propertyIsEnumerable: return "propertyIsEnumerable";
+                case Id_isPrototypeOf:        return "isPrototypeOf";
+            }
         }
         return null;
     }
@@ -243,6 +254,7 @@ public class NativeObject extends IdScriptable {
 // #string_id_map#
 
     protected int mapNameToId(String s) {
+        if (!prototypeFlag) { return 0; }
         int id;
 // #generated# Last update: 2001-04-24 12:37:03 GMT+02:00
         L0: { id = 0; String X = null; int c;
@@ -271,8 +283,9 @@ public class NativeObject extends IdScriptable {
         Id_hasOwnProperty        = 5,
         Id_propertyIsEnumerable  = 6,
         Id_isPrototypeOf         = 7,
-        MAX_ID                   = 7;
+        MAX_PROTOTYPE_ID         = 7;
 
 // #/string_id_map#
 
+    private boolean prototypeFlag;
 }

@@ -47,14 +47,17 @@ public class NativeError extends IdScriptable {
 
     public static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeError obj = new NativeError();
+        obj.prototypeFlag = true;
         obj.defineProperty("message", "", ScriptableObject.EMPTY);
         obj.defineProperty("name", "Error", ScriptableObject.EMPTY);
-        obj.addAsPrototype(cx, scope, sealed);
+        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
     
     public int methodArity(int methodId) {
-        if (methodId == Id_constructor) return 1;
-        if (methodId == Id_toString) return 0;
+        if (prototypeFlag) {
+            if (methodId == Id_constructor) return 1;
+            if (methodId == Id_toString) return 0;
+        }
         return super.methodArity(methodId);
     }
 
@@ -63,14 +66,14 @@ public class NativeError extends IdScriptable {
          Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        switch (methodId) {
-        case Id_constructor: 
-            return jsConstructor(cx, args, f, thisObj == null);
-
-        case Id_toString: 
-            return realThis(thisObj, f).jsFunction_toString();
+        if (prototypeFlag) {
+            if (methodId == Id_constructor) {
+                return jsConstructor(cx, args, f, thisObj == null);
+            }
+            else if (methodId == Id_toString) {
+                return realThis(thisObj, f).jsFunction_toString();
+            }
         }
-
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
@@ -113,17 +116,18 @@ public class NativeError extends IdScriptable {
                 ScriptRuntime.getProp(this, "message", this));
     }    
 
-    protected int getMaximumId() { return MAX_ID; }
-
     protected String getIdName(int id) {
-        if (id == Id_constructor) return "constructor";
-        if (id == Id_toString) return "toString";
+        if (prototypeFlag) {
+            if (id == Id_constructor) return "constructor";
+            if (id == Id_toString) return "toString";
+        }
         return null;        
     }
     
 // #string_id_map#
 
     protected int mapNameToId(String s) {
+        if (!prototypeFlag) { return 0; }
         int id;
 // #generated# Last update: 2001-04-23 10:03:24 CEST
         L0: { id = 0; String X = null;
@@ -139,8 +143,9 @@ public class NativeError extends IdScriptable {
     private static final int
         Id_constructor           = 1,
         Id_toString              = 2,
-        MAX_ID                   = 2;
+        MAX_PROTOTYPE_ID         = 2;
 
 // #/string_id_map#
     
+    private boolean prototypeFlag;
 }

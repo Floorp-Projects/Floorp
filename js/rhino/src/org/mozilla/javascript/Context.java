@@ -628,86 +628,15 @@ public class Context {
      * @return the initialized scope
      * @since 1.4R3
      */
-    public ScriptableObject initStandardObjects(ScriptableObject scope, 
-                                                boolean sealed) 
+    public ScriptableObject initStandardObjects(ScriptableObject scope,
+                                                boolean sealed)
     {
-        final String omj = "org.mozilla.javascript.";
+        if (scope == null)
+            scope = new NativeObject();
+
         try {
-            if (scope == null)
-                scope = new NativeObject();
             ScriptableObject.defineClass(scope, NativeFunction.class, sealed);
-            NativeObject.init(this, scope, sealed);
-
-            Scriptable objectProto = ScriptableObject.
-                                      getObjectPrototype(scope);
-
-            // Function.prototype.__proto__ should be Object.prototype
-            Scriptable functionProto = ScriptableObject.
-                                        getFunctionPrototype(scope);
-            functionProto.setPrototype(objectProto);
-
-            // Set the prototype of the object passed in if need be
-            if (scope.getPrototype() == null)
-                scope.setPrototype(objectProto);
-            
-            // must precede NativeGlobal since it's needed therein
-            NativeError.init(this, scope, sealed);
-            NativeGlobal.init(this, scope, sealed);
-
-            NativeArray.init(this, scope, sealed);
-            NativeString.init(this, scope, sealed);
-            NativeBoolean.init(this, scope, sealed);
-            NativeNumber.init(this, scope, sealed);
-            NativeDate.init(this, scope, sealed);
-            NativeMath.init(this, scope, sealed);
-            NativeWith.init(this, scope, sealed);
-                                
-            String[] classes = { "NativeCall",          "Call",
-                                 "regexp.NativeRegExp", "RegExp",
-                                 "NativeScript",        "Script",
-                               };
-            for (int i=0; i < classes.length; i+=2) {
-                try {
-                    if (sealed) {
-                        Class c = Class.forName(omj + classes[i]);
-                        ScriptableObject.defineClass(scope, c, sealed);
-                    } else {
-                        String s = omj + classes[i];
-                        new LazilyLoadedCtor(scope, classes[i+1], s, 
-                                             ScriptableObject.DONTENUM);
-                    }
-                } catch (ClassNotFoundException e) {
-                    continue;
-                }
-            }
-            
-            // Define the JavaAdapter class, allowing it to be overridden.
-            String adapterName = "org.mozilla.javascript.JavaAdapter";
-            try {
-                adapterName = System.getProperty(adapterName, adapterName);
-            } catch (SecurityException e) {
-                // We may not be allowed to get system properties. Just
-                // use the default adapter in that case.
-            }
-            try {
-                Class adapterClass = Class.forName(adapterName);
-                ScriptableObject.defineClass(scope, adapterClass, sealed);
-                
-                // This creates the Packages and java package roots.
-                Class c = Class.forName(omj + "NativeJavaPackage");
-                ScriptableObject.defineClass(scope, c, sealed);
-            } catch (ClassNotFoundException e) {
-                // If the class is not found, proceed without it.
-            } catch (SecurityException e) {
-                // Ignore AccessControlExceptions that may occur if a
-                //    SecurityManager is installed:
-                //  java.lang.RuntimePermission createClassLoader
-                //  java.util.PropertyPermission 
-                //        org.mozilla.javascript.JavaAdapter read
-            }
         }
-        // All of these exceptions should not occur since we are initializing
-        // from known classes
         catch (IllegalAccessException e) {
             throw WrappedException.wrapException(e);
         }
@@ -723,6 +652,65 @@ public class Context {
         catch (PropertyException e) {
             throw WrappedException.wrapException(e);
         }
+
+        NativeObject.init(this, scope, sealed);
+
+        Scriptable objectProto = ScriptableObject.
+                                  getObjectPrototype(scope);
+
+        // Function.prototype.__proto__ should be Object.prototype
+        Scriptable functionProto = ScriptableObject.
+                                    getFunctionPrototype(scope);
+        functionProto.setPrototype(objectProto);
+
+        // Set the prototype of the object passed in if need be
+        if (scope.getPrototype() == null)
+            scope.setPrototype(objectProto);
+
+        // must precede NativeGlobal since it's needed therein
+        NativeError.init(this, scope, sealed);
+        NativeGlobal.init(this, scope, sealed);
+
+        NativeArray.init(this, scope, sealed);
+        NativeString.init(this, scope, sealed);
+        NativeBoolean.init(this, scope, sealed);
+        NativeNumber.init(this, scope, sealed);
+        NativeDate.init(this, scope, sealed);
+        NativeMath.init(this, scope, sealed);
+        NativeWith.init(this, scope, sealed);
+
+        String[] classes = {
+            "org.mozilla.javascript.NativeCall",          "Call",
+            "org.mozilla.javascript.regexp.NativeRegExp", "RegExp",
+            "org.mozilla.javascript.NativeScript",        "Script",
+
+            // This creates the Packages and java package roots.
+            "org.mozilla.javascript.NativeJavaPackage",   "Packages",
+            "org.mozilla.javascript.NativeJavaPackage",   "java",
+            "org.mozilla.javascript.NativeJavaPackage",   "getClass",
+        };
+
+        for (int i=0; i < classes.length; i+=2) {
+            String property = classes[i+1];
+            String javaClass = classes[i];
+            new LazilyLoadedCtor(scope, property, javaClass, sealed);
+        }
+
+        // Define the JavaAdapter class, allowing it to be overridden.
+        String adapterClass = "org.mozilla.javascript.JavaAdapter";
+        String adapterProperty = "JavaAdapter";
+        try {
+            adapterClass = System.getProperty(adapterClass, adapterClass);
+            adapterProperty = System.getProperty
+                ("org.mozilla.javascript.JavaAdapterClassName",
+                 adapterProperty);
+        }
+        catch (SecurityException e) {
+            // We may not be allowed to get system properties. Just
+            // use the default adapter in that case.
+        }
+
+        new LazilyLoadedCtor(scope, adapterProperty, adapterClass, sealed);
 
         return scope;
     }

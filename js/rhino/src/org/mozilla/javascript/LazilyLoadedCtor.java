@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -42,47 +42,78 @@ import java.lang.reflect.*;
  *
  * <p> This improves startup time and average memory usage.
  */
-class LazilyLoadedCtor {
+final class LazilyLoadedCtor {
 
-    LazilyLoadedCtor(ScriptableObject scope, String ctorName,
-                     String className, int attributes)
-        throws PropertyException
+    LazilyLoadedCtor(ScriptableObject scope,
+                     String ctorName, String className, boolean sealed)
     {
+
         this.className = className;
         this.ctorName = ctorName;
-        Class cl = getClass();
-        Method[] getter = FunctionObject.findMethods(cl, "getProperty");
-        Method[] setter = FunctionObject.findMethods(cl, "setProperty");
-        scope.defineProperty(this.ctorName, this, getter[0], setter[0],
-                             attributes);
-    }
+        this.sealed = sealed;
 
-    public Object getProperty(ScriptableObject obj) {
+        if (getter == null) {
+            Method[] all = FunctionObject.getMethodList(getClass());
+            getter = FunctionObject.findMethods(all, "getProperty")[0];
+            setter = FunctionObject.findMethods(all, "setProperty")[0];
+        }
+
         try {
-            synchronized (obj) {
-                if (!isReplaced)
-                    ScriptableObject.defineClass(obj, Class.forName(className));
-                isReplaced = true;
-            }
-        }
-        catch (ClassNotFoundException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (InstantiationException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (ClassDefinitionException e) {
-            throw WrappedException.wrapException(e);
+            scope.defineProperty(ctorName, this, getter, setter,
+                                 ScriptableObject.DONTENUM);
         }
         catch (PropertyException e) {
             throw WrappedException.wrapException(e);
         }
+    }
+
+    public Object getProperty(ScriptableObject obj) {
+        synchronized (obj) {
+            if (!isReplaced) {
+                boolean removeOnError = false;
+
+                // Treat security exceptions as absence of object.
+                // They can be due to the following reasons:
+                //  java.lang.RuntimePermission createClassLoader
+                //  java.util.PropertyPermission
+                //        org.mozilla.javascript.JavaAdapter read
+
+                Class cl = null;
+                try { cl = Class.forName(className); }
+                catch (ClassNotFoundException ex) { removeOnError = true; }
+                catch (SecurityException ex) { removeOnError = true; }
+
+                if (cl != null) {
+                    try {
+                        ScriptableObject.defineClass(obj, cl, sealed);
+                        isReplaced = true;
+                    }
+                    catch (InstantiationException e) {
+                        throw WrappedException.wrapException(e);
+                    }
+                    catch (IllegalAccessException e) {
+                        throw WrappedException.wrapException(e);
+                    }
+                    catch (InvocationTargetException e) {
+                        throw WrappedException.wrapException(e);
+                    }
+                    catch (ClassDefinitionException e) {
+                        throw WrappedException.wrapException(e);
+                    }
+                    catch (PropertyException e) {
+                        throw WrappedException.wrapException(e);
+                    }
+                    catch (SecurityException ex) {
+                        removeOnError = true;
+                    }
+                }
+                if (removeOnError) {
+                    obj.delete(ctorName);
+                    return Scriptable.NOT_FOUND;
+                }
+            }
+        }
+        // Get just added object
         return obj.get(ctorName, obj);
     }
 
@@ -93,7 +124,10 @@ class LazilyLoadedCtor {
         }
     }
 
+    private static Method getter, setter;
+
     private String ctorName;
     private String className;
+    private boolean sealed;
     private boolean isReplaced;
 }
