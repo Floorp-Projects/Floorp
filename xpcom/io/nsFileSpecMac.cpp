@@ -679,7 +679,11 @@ void nsFileSpec::operator = (const nsFileSpec& inSpec)
 	mPath.SetToEmpty();
 	mSpec.vRefNum = inSpec.mSpec.vRefNum;
 	mSpec.parID = inSpec.mSpec.parID;
-	memcpy(mSpec.name, inSpec.mSpec.name, inSpec.mSpec.name[0] + 1);
+
+	PRInt32 copySize = inSpec.mSpec.name[0] + 1;
+	if (copySize > sizeof(inSpec.mSpec.name))
+		copySize = sizeof(inSpec.mSpec.name);
+	memcpy(mSpec.name, inSpec.mSpec.name, copySize);
 	mError = inSpec.Error();	// note that the error is propagated
 } // nsFileSpec::operator =
 
@@ -758,7 +762,7 @@ char* nsFileSpec::GetLeafName() const
 // Result needs to be nsCRT::free()ed.
 //----------------------------------------------------------------------------------------
 {
-	char leaf[64];
+	char leaf[sizeof(mSpec.name)];
 	memcpy(leaf, &mSpec.name[1], mSpec.name[0]);
 	leaf[mSpec.name[0]] = '\0';
 	return nsCRT::strdup(leaf);
@@ -1202,6 +1206,7 @@ static void AssignFromPath(nsFilePath& ioPath, const char* inString, PRBool inCr
 	FSSpec spec;
 	spec.vRefNum = 0;
 	spec.parID = 0;
+	spec.name[0] = 0;
 	MacFileHelpers::FSSpecFromUnixPath(
 		inString,
 		spec,
