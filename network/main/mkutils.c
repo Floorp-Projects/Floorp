@@ -1442,9 +1442,17 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
             else if(!PL_strncasecmp(name,"LINK:",5))
               {
 #define PAGE_SERVICES_REL "pageServices"
+
+#ifdef PRIVACY_POLICIES
+#define PRIVACY_POLICY_REL "privacyPolicy"
+				enum { UNKNOWN_REL_TYPE, PRIVACY_POLICY_REL_TYPE, 
+					PAGE_SERVICES_REL_TYPE } rel_type;
+#else
+				enum { UNKNOWN_REL_TYPE, PAGE_SERVICES_REL_TYPE } rel_type;
+#endif /* PRIVACY_POLICIES */
+
                 char * next_arg = strtok(value, ";");
 				char * link_val;
-				enum { UNKNOWN_REL_TYPE, PAGE_SERVICES_REL_TYPE } rel_type;
 
 				found_one = TRUE;
 
@@ -1471,7 +1479,11 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 
 						if(!PL_strcasecmp(rel, PAGE_SERVICES_REL))
 							rel_type = PAGE_SERVICES_REL_TYPE;
-                      }
+#ifdef PRIVACY_POLICIES
+						else if (!PL_strcasecmp(rel, PRIVACY_POLICY_REL))
+							rel_type = PRIVACY_POLICY_REL_TYPE; 
+#endif /* PRIVACY_POLICIES */
+                     }
 
                 	next_arg = strtok(NULL, ";");
                   }
@@ -1479,6 +1491,10 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 				/* if we fount a rel for page services assign it */
 				if(rel_type == PAGE_SERVICES_REL_TYPE)
 					URL_s->page_services_url = link_val;
+#ifdef PRIVACY_POLICIES
+				else if (rel_type == PRIVACY_POLICY_REL_TYPE)
+					URL_s->privacy_policy_url = link_val;
+#endif /* PRIVACY_POLICIES */
 				else
 					PR_FREEIF(link_val);
 	

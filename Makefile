@@ -41,6 +41,10 @@ ifndef NO_SECURITY
 DIRS		+= security
 endif
 
+ifdef MOZ_PRIVACY
+DIRS		+= privacy
+endif
+
 DIRS		+= modules lib l10n cmd
 
 ifeq ($(STAND_ALONE_JAVA),1)

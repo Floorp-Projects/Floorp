@@ -2688,6 +2688,9 @@ net_ProcessPop3 (ActiveEntry *ce)
                                  (host ? XP_STRLEN(host) : 0) + 300) 
 								 * sizeof(char);
 					char *prompt = (char *) XP_ALLOC (len);
+#if defined(SingleSignon)
+					char *usernameAndHost=0;
+#endif
 					if (!prompt) {
 						FREEIF(host);
 						net_pop3_block = FALSE;
@@ -2701,10 +2704,32 @@ net_ProcessPop3 (ActiveEntry *ce)
 									? cd->command_response
 									: XP_GetString(XP_NO_ANSWER)),
 								   net_pop3_username, host);
+#if defined(SingleSignon)
+					StrAllocCopy
+					    (usernameAndHost, 
+					    net_pop3_username);
+					StrAllocCat(usernameAndHost, "@");
+					StrAllocCat(usernameAndHost, host);
+
+					if (cd->password_failed) {
+					    SI_RemoveUser
+						(host, 
+						net_pop3_username, 
+						TRUE);
+					}
 					FREEIF (host);
 
+					password = SI_PromptPassword
+					    (ce->window_id, prompt,
+					    usernameAndHost, FALSE);
 					cd->password_failed = FALSE;
-					password = FE_PromptPassword(ce->window_id, prompt);
+					XP_FREE(usernameAndHost);
+#else
+					FREEIF (host);
+					cd->password_failed = FALSE;
+					password = FE_PromptPassword
+					    (ce->window_id, prompt);
+#endif
 					XP_FREE(prompt);
 
 					if (password == NULL)

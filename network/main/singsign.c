@@ -1337,8 +1337,9 @@ si_RestoreOldSignonDataFromBrowser
     si_lock_signon_list();
     user = si_GetUser(context, URLName, pickFirstUser);
     if (!user) {
-	*username = 0;
-	*password = 0;
+	/* leave original username and password from caller unchanged */
+	/* username = 0; */
+	/* *password = 0; */
 	si_unlock_signon_list();
 	return;
     }
@@ -1396,10 +1397,11 @@ SI_PromptUsernameAndPassword
 /* Browser-generated prompt for password */
 PUBLIC char *
 SI_PromptPassword
-    (MWContext *context, char *prompt, char *URLName,
-    Bool pickFirstUser, Bool useLastPassword)
+    (MWContext *context, char *prompt, char *URLName, Bool pickFirstUser)
 {
     char *password=0, *username=0, *copyOfPrompt=0, *result;
+    char *urlname = URLName;
+    char *s;
 
     /* just for safety -- really is a problem in SI_Prompt */
     StrAllocCopy(copyOfPrompt, prompt);
@@ -1411,12 +1413,32 @@ SI_PromptPassword
 	return result;
     }
 
-    /* get previous password used  with this username */
-    if (useLastPassword) {
-	si_RestoreOldSignonDataFromBrowser
-	    (context, URLName, pickFirstUser, &username, &password);
+    /* get host part of URL which is of form user@host */
+    s = URLName;
+    while (*s && (*s != '@')) {
+	s++;
     }
-    if (password && XP_STRLEN(password)) {
+    if (*s) {
+	/* @ found, host is URL part following the @ */
+	urlname = s+1; /* urlname is part of URL after the @ */
+    }
+
+    /* get previous password used with this username */
+    si_RestoreOldSignonDataFromBrowser
+	(context, urlname, pickFirstUser, &username, &password);
+
+    /* return if a password was found */
+    /*
+     * Note that we reject a password of " ".  It is a dummy password
+     * that was put in by a preceding call to SI_Prompt.  This occurs
+     * in mknews which calls on SI_Prompt to get the username and then
+     * SI_PromptPassword to get the password (why they didn't simply
+     * call on SI_PromptUsernameAndPassword is beyond me).  So the call
+     * to SI_Prompt will save the username along with the dummy password.
+     * In this call to SI_Password, the real password gets saved in place
+     * of the dummy one.
+     */
+    if (password && XP_STRLEN(password) && XP_STRCMP(password, " ")) {
 	XP_FREEIF(copyOfPrompt);
 	return password;
     }
@@ -1424,14 +1446,28 @@ SI_PromptPassword
     /* if no password found, get new password from user */
     password = FE_PromptPassword(context, copyOfPrompt);
 
-    /* if username wasn't even found, substitute the URLName */
+    /* if username wasn't even found, extract it from URLName */
     if (!username) {
-	StrAllocCopy(username, URLName);
+	s = URLName;
+
+	/* get to @ in URL if any */
+        while (*s && (*s != '@')) {
+	    s++;
+	}
+	if (*s) {
+	    /* @ found, username is URL part preceding the @ */
+            *s = '\0';
+	    StrAllocCopy(username, URLName);
+            *s = '@';
+	} else {
+	    /* no @ found, use entire URL as uername */
+	    StrAllocCopy(username, URLName);
+	}
     }
 
     /* remember these values for next time */
     if (password && XP_STRLEN(password)) {
-	si_RememberSignonDataFromBrowser (URLName, username, password);
+	si_RememberSignonDataFromBrowser (urlname, username, password);
     }
 
     /* cleanup and return */
@@ -1474,7 +1510,20 @@ SI_Prompt (MWContext *context, char *prompt,
 
     /* remember this username for next time */
     if (result && XP_STRLEN(result)) {
-        si_RememberSignonDataFromBrowser (URLName, result, "");
+        if (username && (XP_STRCMP(username, result) == 0)) {
+            /*
+             * User is re-using the same user name as from previous time
+             * so keep the previous password as well
+             */
+            si_RememberSignonDataFromBrowser (URLName, result, password);
+        } else {
+            /*
+             * We put in a dummy password of " " which we will test
+             * for in a following call to SI_PromptPassword.  See comments
+             * in that routine.
+             */
+            si_RememberSignonDataFromBrowser (URLName, result, " ");
+        }
     }
 
     /* cleanup and return */

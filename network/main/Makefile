@@ -32,6 +32,7 @@ CSRCS		= \
 	mkconect.c	\
 	mkfsort.c	\
 	mkgeturl.c	\
+	singsign.c	\
 	mkhelp.c	\
 	mkmessag.c	\
 	mkpadpac.c	\
@@ -81,4 +82,3 @@ TEST_LIBS	= $(LIBRARY) \
 test:
 	$(CC) -g -o $(OBJDIR)/style_test $(CFLAGS) -DSS_TEST stystruc.c $(TEST_LIBS)
 	$(CC) -g -o $(OBJDIR)/stack_test $(CFLAGS) -DTEST_STYLESTACK stystack.c $(TEST_LIBS)
-

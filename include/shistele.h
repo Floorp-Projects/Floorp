@@ -111,6 +111,11 @@ struct _History_entry {
 	/* HTTP_11 support*/
 	char	*etag;					/* Unique entity tag */
 	char    *origin_url;            /* original referrer of javascript: URL */
+
+#ifdef PRIVACY_POLICIES
+	/* Privacy Policy support */
+	char	*privacy_policy_url;	/* Associated privacy policy, if any */
+#endif /* PRIVACY_POLICIES */
 };
 
 #define SHIST_CAME_FROM_NETWORK       0
