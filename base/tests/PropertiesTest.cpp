@@ -43,7 +43,7 @@
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define RAPTORBASE_DLL "libraptorbase.so"
-#define XPCOM_DLL "libxpcom32.so"
+#define XPCOM_DLL "libxpcom.so"
 #endif
 #endif
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
