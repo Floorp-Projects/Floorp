@@ -152,7 +152,7 @@ public class IdFunction extends BaseFunction
         return new RuntimeException("BAD FUNCTION ID="+id+" MASTER="+master);
     }
 
-    protected IdFunctionMaster master;
-    protected int methodId;
+    IdFunctionMaster master;
+    private int methodId;
     private boolean useCallAsConstructor;
 }
