@@ -1,0 +1,108 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIWebProgressListener is the interface implemented by clients wishing to 
+ * listen in on a progress object.
+ */
+
+interface nsIChannel;
+
+[scriptable, uuid(570F39D1-EFD0-11d3-B093-00A024FFC08C)]
+interface nsIWebProgressListener : nsISupports
+{
+	/*
+	Notification of that the progress has changed for the main object we are 
+	tracking progress for.
+
+	@param channel - The main channel that is loading that we are tracking
+		progress for.
+
+	@param curSelfProgress - The current position of progress.  This is
+		between 0 and maxSelfProgress.  This is the position of only this 
+		progress object.  It doesn not include the progress of all children.
+
+	@param maxSelfProgress - The maximum position that progress will go to.
+		This sets a relative position point for the current progress to relate
+		to.  This is the max position of only this progress object.  It does not
+		include the progress of all the children.
+
+	@param curTotalProgress - The current position of progress for this object
+		and all children added together.  This is between 0 and maxTotalProgress.
+		
+	@param maxTotalProgress - The maximum position that progress will go to for
+		the max of this progress object and all children.  This sets the relative
+		position point for the current progress to relate to.
+	*/
+	void onProgressChange(in nsIChannel channel, in long curSelfProgress, 
+		in long maxSelfProgress, in long curTotalProgress, 
+		in long maxTotalProgress);
+
+	/*
+	Notification that the progress has changed for a child of the main object
+	we are tracking progress for.
+
+	@param channel - The child channel that we are getting this progress change
+		for.
+
+	@param curSelfProgress - The current position of progress.  This is
+		between 0 and maxSelfProgress.  This is the position of only this 
+		progress object.  It doesn not include the progress of all children.
+
+	@param maxSelfProgress - The maximum position that progress will go to.
+		This sets a relative position point for the current progress to relate
+		to.  This is the max position of only this progress object.  It does not
+		include the progress of all the children.
+
+	@param curTotalProgress - The current position of progress for this object
+		and all children added together.  This is between 0 and maxTotalProgress.
+		
+	@param maxTotalProgress - The maximum position that progress will go to for
+		the max of this progress object and all children.  This sets the relative
+		position point for the current progress to relate to.
+	*/
+	void onChildProgressChange(in nsIChannel channel, in long curSelfProgress,
+		in long curTotalProgress);
+
+	/*
+	Notification that the progress status flags have changed for the main item
+	we are tracking progress for.
+
+	@param channel - The main channel that is loading that we are tracking
+		progress for.
+	@param progressStatusFlags - This is the current progressStatusFlags.  This
+		will be one or a combination of the progress status flags.
+	*/
+	void onStatusChange(in nsIChannel channel, in long progressStatusFlags);
+
+	/*
+	Notification that the progress status flags have changed for a child of the
+	main item we are tracking progress for..
+
+	@param channel - The child channel that this status change message is for.
+	@param progressStatusFlags - This is the current progressStatusFlags.  This
+		will be one or a combination of the progress status flags.
+	*/
+	void onChildStatusChange(in nsIChannel channel, in long progressStatusFlags);
+};
