@@ -779,7 +779,7 @@ NS_IMETHODIMP nsMsgCompFields::SetSecurityInfo(nsISupports * aSecurityInfo)
   return NS_OK;
 }
 
-inline nsresult nsMsgCompFields::GetDefaultCharacterSet(char * *aDefaultCharacterSet)
+NS_IMETHODIMP nsMsgCompFields::GetDefaultCharacterSet(char * *aDefaultCharacterSet)
 {
   NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
   *aDefaultCharacterSet = nsCRT::strdup(m_DefaultCharacterSet.get());
