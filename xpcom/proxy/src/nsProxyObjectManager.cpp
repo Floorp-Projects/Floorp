@@ -93,7 +93,6 @@ nsProxyObjectManager::nsProxyObjectManager()
 {
     NS_INIT_REFCNT();
     
-    mMapLock = PR_NewLock();
     mProxyClassMap = new nsHashtable(256, PR_TRUE);
     mProxyObjectMap = new nsHashtable(256, PR_TRUE);
 }
@@ -112,10 +111,17 @@ nsProxyObjectManager::~nsProxyObjectManager()
         mProxyClassMap->Reset((nsHashtableEnumFunc)PurgeProxyClasses, nsnull);
         delete mProxyClassMap;
     }
+
     delete mProxyObjectMap;
     nsProxyObjectManager::mInstance = nsnull;
-    
-    PR_DestroyLock(mMapLock);
+}
+
+PRBool
+nsProxyObjectManager::IsManagerShutdown()
+{
+    if (mInstance) 
+        return PR_FALSE;
+    return PR_TRUE;
 }
 
 nsProxyObjectManager *
