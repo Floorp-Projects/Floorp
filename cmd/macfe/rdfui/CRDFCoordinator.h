@@ -19,11 +19,17 @@
 //
 // Mike Pinkerton, Netscape Communications
 //
-// The view that contains the "selector widget" (an object that selects the different 
-// RDF "views" stored in the RDF database) and the the "tree view" which displays the selected RDF
-// view like the Finder list view.
-//
-// It's mainly responsible for coordinating the UI with the HT/RDF XP code.
+// The RDFCoordiator suite of classes handles interactions between HT (the HyperTree interface
+// to RDF) and the front end. The Coordinator's big job is funneling HT events to the right UI
+// element (tree, title bar, etc). Right now, there are 4 basic types of Coordiators:
+//   - CDockedRDFCoordinator
+//       Tree is docked in the left of the window (handles opening/closing/etc of shelf)
+//   - CShackRDFCoordinator
+//       Tree is embedded in HTML content
+//   - CWindowRDFCoordinator
+//       Tree is in a standalone window
+//   - CPopupRDFCoordinator
+//       Tree is popped up from a container on the toolbar
 //
 
 #pragma once
@@ -37,6 +43,8 @@
 
 
 class CHyperTreeFlexTable;
+class CNavCenterTitle;
+class CNavCenterCommandStrip;
 
 
 //
@@ -59,19 +67,25 @@ struct ViewFEData {
 
 #pragma mark class CRDFCoordinator
 
+//
+// class CRDFCoordinator
+//
+// The base-class of all coordinators. Don't instantiate one of these, only one of it's
+// subclasses. The creation of the HT_Pane is left up to each subclass since they all vary
+// in how the pane is initialized (url, HT_Resource, or nothing).
+// 
+
 class CRDFCoordinator :	public LView,
 						public LListener, public LCommander, LBroadcaster,
 						public CRDFNotificationHandler
 {
-public:
-	enum { class_ID = 'RCoo', pane_ID = 'RCoo' };
-
-//	static const char* Pref_EditWorkspace;
-//	static const char* Pref_ShowNavCenterSelector;
-//	static const char* Pref_ShowNavCenterShelf;
-		
+protected:
+		// protected to prevent anyone from instantiating once of these by itself.
 					CRDFCoordinator(LStream* inStream);
 	virtual			~CRDFCoordinator();
+	
+public:
+	enum { class_ID = 'RCoo', pane_ID = 'RCoo' };
 
 		// Set the current workspace to a particular kind of workspace
 	virtual void SelectView ( HT_ViewType inPane ) ;
@@ -82,10 +96,19 @@ public:
 	
 		// because sometimes you just need to get to the top-level HT pane....
 	HT_Pane HTPane ( ) const { return mHTPane; } ;
-	void HTPane ( HT_Pane inPane ) { mHTPane = inPane; } ;		// an imp for now...
 
+		// get/set the frame to which urls are dispatched. It's ok not to set
+		// this as the default will be the top-most HTML view.
+	virtual void	SetTargetFrame ( const char* inFrame ) ;
+	
 protected:
 
+		// handle showing/hiding column headers. Should be called after the HT_Pane has
+		// been created.
+	virtual void	ShowOrHideColumnHeaders ( ) ;
+	virtual void	ShowColumnHeaders ( ) ;
+	virtual void	HideColumnHeaders ( ) ;
+	
 		// PowerPlant overrides
 	virtual	void	FinishCreateSelf();
 	virtual Boolean	ObeyCommand ( CommandT inCommand, void* ioParam );
@@ -100,15 +123,30 @@ protected:
 	virtual	void	HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event, void *token, uint32 tokenType);
 	virtual void	ListenToMessage( MessageT inMessage, void *ioParam);
 
-	PaneIDT					mTreePaneID;		// for the tree view shelf
-	CHyperTreeFlexTable*	mTreePane;
+	PaneIDT					mTreePaneID;		// hyperTree pane
+	PaneIDT					mColumnHeaderID;	// column header pane
+	PaneIDT					mTitleStripID;		// title strip pane
+	PaneIDT					mTitleCommandID;	// title command pane
 	
-	HT_Pane			mHTPane;					// the HT pane containing all the workspaces
+	CHyperTreeFlexTable*	mTreePane;
+	LPane*					mColumnHeaders;
+	CNavCenterTitle*		mTitleStrip;
+	CNavCenterCommandStrip*	mTitleCommandArea;
+	
+	HT_Pane					mHTPane;			// the HT pane containing all the workspaces
 	
 }; // CRDFCoordinator
 
 
 #pragma mark class CDockedRDFCoordinator
+
+
+//
+// class CDockedRDFCoordinator
+//
+// Handles everything involved with having the tree docked in the browser window on the left,
+// especially opening/closing the spring-open shelf. 
+//
 
 class CDockedRDFCoordinator : public CRDFCoordinator
 {
@@ -133,9 +171,83 @@ protected:
 
 	virtual void	FinishCreateSelf ( ) ;
 	virtual void	ListenToMessage( MessageT inMessage, void *ioParam);
-	
 
 private:
 	CShelf* 		mNavCenter;
 
 }; // CDockedRDFCoordinator
+
+
+#pragma mark class CShackRDFCoordinator
+
+
+//
+// class CShackRDFCoordinator
+//
+// Use this when the tree is to be embedded in the HTML content area (code name: Shack).
+// Really the only difference here is that it creates its HT_Pane from a url provided in
+// the HTML data.
+//
+
+class CShackRDFCoordinator : public CRDFCoordinator
+{
+public:
+	enum { class_ID = 'RCoS', pane_ID = 'RCoS' };
+
+					CShackRDFCoordinator(LStream* inStream);
+	virtual			~CShackRDFCoordinator();
+
+	virtual void	BuildHTPane ( const char* inURL, unsigned int inCount, 
+									char** inParamNames, char** inParamValues ) ;
+	
+}; // CShackRDFCoordinator
+
+
+#pragma mark class CWindowRDFCoordinator
+
+
+//
+// class CWindowRDFCoordinator
+//
+// Use this when the tree is in a standalone window. All this does differently than the
+// default is create the HT_Pane w/out any special arguments. It's not really specific to
+// being in a window, but until there are other things that init this way as well, the
+// name is descriptive enough.
+//
+
+class CWindowRDFCoordinator : public CRDFCoordinator
+{
+public:
+	enum { class_ID = 'RCoW', pane_ID = 'RCoW' };
+
+					CWindowRDFCoordinator(LStream* inStream);
+	virtual			~CWindowRDFCoordinator();
+
+protected:
+
+	virtual void	FinishCreateSelf ( ) ;
+
+}; // CWindowRDFCoordinator
+
+
+#pragma mark class CWindowRDFCoordinator
+
+
+//
+// class CPopupRDFCoordinator
+//
+// Use this when the tree is popped up from a container on the toolbars. This knows
+// how to create itself from an HT_Resource.
+//
+
+class CPopupRDFCoordinator : public CRDFCoordinator
+{
+public:
+	enum { class_ID = 'RCoP', pane_ID = 'RCoP' };
+
+					CPopupRDFCoordinator(LStream* inStream);
+	virtual			~CPopupRDFCoordinator();
+
+	virtual void	BuildHTPane ( HT_Resource inNode ) ;
+
+}; // CPopupRDFCoordinator

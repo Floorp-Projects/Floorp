@@ -19,55 +19,21 @@
 //
 // Mike Pinkerton, Netscape Communications
 //
-// The CRDFCoordinator is the view that contains the
-// "selector widget," object that selects the different RDF "views" stored
-// in the RDF database, and the view that displays the "hyper tree"
-// representation of the selected RDF view.
+// <<Third time's the charm, I guess. I had this huge description of the complicated
+// interactions of the tree and the selector widget and HT and it all _made sense_, and
+// then we decided to go and rethink the UI from scratch. Sigh. So anyway, here's take 3.>>
 //
-// It's responsible for coordinating the UI with the HT/RDF XP code. How does it
-// do that? Let's take a look at the interactions.
-//
-// There are two kinds of messages that we need to respond to, and the goal is to
-// keep them as separate as possible. The first kind are PowerPlant messages, sent
-// via the broadcaster/listener architecture. These messages should denote that
-// an event in the front end (eg, a user click) caused something to change and HT
-// (along with the rest of the UI) needs to know about it. The second kind of messages
-// come from HT itself, and are the result of a change within HT by calling HT functions
-// directly (or possibly by javascript, etc).
-//
-// Let's say the shelf is closed, and no workspaces are selected. The user then clicks
-// on one of the workspace icons. The CNavCenterSelectorPane figures out which HT view
-// corresponds to this icon and updates its internal state. In doing this, a
-// "active selection changed" message is broadcast to the coordinator. When this message
-// is received by the coordinator (CRDFCoordinator::ListenToMessage()), it tells the tree 
-// view to match the contents of the current HT view (CHyperTreeFlexTable::OpenView()). 
-// The coordinator also tells HT about the new active workspace by calling HT_SetSelectedView(),
-// but first it turns off HT notifications because we don't need to be told about this event
-// again (it has already been handled by PP's messages in the FE). Control then returns to the
-// selector pane which broadcasts a "shelf state changed" message to open the shelf. This 
-// is again received by the coordinator which tells the Navcenter shelf to spring out. Note
-// that this is done _after_ the tree view has been correctly set to avoid tons of asserts 
-// in the flex table code.
-//
-// When the user clicks either the close box or that same workspace icon, a message is sent to
-// the coordinator to close the shelf. The coordinator then tells the selector about the change
-// by calling SetActiveWorkspace(NULL) and closes the shelf.
-//
-// There are several times when HT wants to set the active workspace on its own, the most notable
-// occurs when a new window is created at startup. HT remembers the last active workspace
-// when the user quits and will reset when the new window is created. It does this by making a
-// call to HT_SetSelectedView() which sends an HT event to the coordinator (handled in 
-// CRDFCoordinator::HandleNotification()). The first thing the coordinator does is to call
-// SelectView() which opens the tree and ensures that the selector is up to date with the
-// current selection. Then it sends messages to open the shelf (if need be) and to update
-// the title in the title bar. Note that these last two things are done in different places
-// when the change comes from the FE so we don't end up doing them over and over again when
-// HT makes a change.
-//
-// My first stab at all this was to have one single flow of control that could handle view selection
-// from both the user and HT in one line. While possible (the last implementation did it), it was
-// very confusing. Hopefully this new world will make things somewhat easier to follow because
-// the messages are more separated based on where the action that kicked it off came from.
+// The RDFCoordiator suite of classes handles interactions between HT (the HyperTree interface
+// to RDF) and the front end. The Coordinator's big job is funneling HT events to the right UI
+// element (tree, title bar, etc). Right now, there are 4 basic types of Coordiators:
+//   - CDockedRDFCoordinator
+//       Tree is docked in the left of the window (handles opening/closing/etc of shelf)
+//   - CShackRDFCoordinator
+//       Tree is embedded in HTML content
+//   - CWindowRDFCoordinator
+//       Tree is in a standalone window
+//   - CPopupRDFCoordinator
+//       Tree is popped up from a container on the toolbar
 //
 
 #include "CRDFCoordinator.h"
@@ -90,10 +56,6 @@
 #include "divview.h"
 #include "LGAIconSuiteControl.h"
 
-
-//const char* CRDFCoordinator::Pref_EditWorkspace = "browser.editWorkspace";
-//const char* CRDFCoordinator::Pref_ShowNavCenterSelector = "browser.chrome.show_navcenter_selector";
-//const char* CRDFCoordinator::Pref_ShowNavCenterShelf = "browser.chrome.show_navcenter_shelf";
 
 #if 0
 ViewFEData :: ViewFEData ( )
@@ -123,6 +85,9 @@ CRDFCoordinator::CRDFCoordinator(LStream* inStream)
 	mHTPane(NULL)
 {
 	*inStream >> mTreePaneID;
+	*inStream >> mColumnHeaderID;
+	*inStream >> mTitleStripID;
+	*inStream >> mTitleCommandID;
 	
 } // constructor
 
@@ -133,12 +98,10 @@ CRDFCoordinator::~CRDFCoordinator()
 	// of course, the HTPane won't be around anymore to update the selection....boom....
 	SwitchTarget(nil);
 	
-	UnregisterNavCenter();
-	HT_DeletePane ( mHTPane );
-
-	// do this _after_ the call to delete the pane so we still get the notifications that
-	// the views are going away
-	HT_SetNotificationMask ( mHTPane, HT_EVENT_NO_NOTIFICATION_MASK );
+	if ( HTPane() ) {
+		UnregisterNavCenter();
+		HT_DeletePane ( mHTPane );
+	}
 	
 } // destructor
 
@@ -146,30 +109,96 @@ CRDFCoordinator::~CRDFCoordinator()
 void
 CRDFCoordinator::FinishCreateSelf()
 {
+	// receive notifications from the tree view
 	mTreePane = dynamic_cast<CHyperTreeFlexTable*>(FindPaneByID(mTreePaneID));
-
 	Assert_( mTreePane != NULL );
+	if (mTreePane)
+		mTreePane->AddListener(this);
 
-	// Register the title bar as a listener so we can update it when the view
+	mColumnHeaders = dynamic_cast<LPane*>(FindPaneByID(mColumnHeaderID));
+	Assert_( mColumnHeaders != NULL );
+	
+	// Register the title strip as a listener so we can update it when the view
 	// changes.
-	CNavCenterTitle* titleBar =
-			dynamic_cast<CNavCenterTitle*>(FindPaneByID(CNavCenterTitle::pane_ID));
-	if ( titleBar )
-		AddListener(titleBar);
+	mTitleStrip = dynamic_cast<CNavCenterTitle*>(FindPaneByID(mTitleStripID));
+	Assert_( mTitleStrip != NULL );
+	if ( mTitleStrip )
+		AddListener(mTitleStrip);
 
-//¥¥¥ we probably want to defer this until the pane is actually needed....
-	mHTPane = CreateHTPane();
-	if (mHTPane)
-	{
-		// receive notifications from the tree view
-		if (mTreePane)
-			mTreePane->AddListener(this);
+	// Register the title command area as a listener so we can update it when the view
+	// changes
+	mTitleCommandArea = dynamic_cast<CNavCenterCommandStrip*>(FindPaneByID(mTitleCommandID));
+	Assert_ ( mTitleCommandArea != NULL );
+	if ( mTitleCommandArea ) {
+		AddListener(mTitleCommandArea);
 
-	} // if HT pane is valid
+		// If the "show details" caption is there, register this class as a listener so we get the
+		// mode toggle message
+		LBroadcaster* showDetails = 
+				dynamic_cast<LBroadcaster*>(FindPaneByID(CNavCenterCommandStrip::kDetailsPaneID));
+		if ( showDetails )
+			showDetails->AddListener(this);
+	}
 
 } // FinishCreateSelf
 
 
+//
+// ShowOrHideColumnHeaders
+//
+// Wrapper that checks the HT property to determine if we need to show or hide
+// the column headers.
+//
+void
+CRDFCoordinator :: ShowOrHideColumnHeaders ( )
+{
+	if ( !mColumnHeaders || !HTPane() )
+		return;
+	
+	HT_Resource topNode = HT_TopNode(HT_GetSelectedView(HTPane()));
+	bool shouldShowHeaders = URDFUtilities::PropertyValueBool(topNode, gNavCenter->showColumnHeaders, true);
+	if ( shouldShowHeaders && mColumnHeaders->GetVisibleState() == triState_Off )
+		ShowColumnHeaders();
+	else if ( !shouldShowHeaders && mColumnHeaders->GetVisibleState() != triState_Off )
+		HideColumnHeaders();
+
+} // ShowOrHideColumnHeaders
+
+
+//
+// ShowColumnHeaders
+//
+// Make the column headers visible. Assumes they are invisible.
+//
+void
+CRDFCoordinator :: ShowColumnHeaders ( )
+{
+	SDimension16 columnHeaderFrame;
+	mColumnHeaders->GetFrameSize ( columnHeaderFrame );
+	mColumnHeaders->Show();
+	
+	mTreePane->MoveBy ( 0, columnHeaderFrame.height, false );
+	mTreePane->ResizeFrameBy ( 0, -columnHeaderFrame.height, false );
+
+} // ShowColumnHeaders
+
+
+//
+// HideColumnHeaders
+//
+// Make the column headers invisible. Assumes they are visible.
+//
+void
+CRDFCoordinator :: HideColumnHeaders ( )
+{
+	SDimension16 columnHeaderFrame;
+	mColumnHeaders->GetFrameSize ( columnHeaderFrame );
+	mColumnHeaders->Hide();
+	
+	mTreePane->MoveBy ( 0, -columnHeaderFrame.height, false );
+	mTreePane->ResizeFrameBy ( 0, columnHeaderFrame.height, false );
+
+} // HideColumnHeaders
 
 
 //
@@ -192,6 +221,25 @@ void CRDFCoordinator::HandleNotification(
 	
 	switch (event)
 	{
+		case HT_EVENT_VIEW_MODECHANGED:
+
+			// tell the command bar about the mode switch
+			BroadcastMessage ( CNavCenterCommandStrip::msg_ModeSwitch ) ;
+			
+			ShowOrHideColumnHeaders();
+			
+			// redraw the tree with new colors, etc
+			if ( view == mTreePane->GetHTView() ) {
+				// if the new mode doesn't want selection, make sure there isn't one
+				if ( URDFUtilities::PropertyValueBool(node, gNavCenter->useSelection, true) == false )
+					mTreePane->UnselectAllCells();
+
+				mTitleStrip->Refresh();
+				mTreePane->Refresh();
+			}
+			
+			break;
+			
 		case HT_EVENT_NODE_ADDED:
 		{
 			if ( view == mTreePane->GetHTView() ) {
@@ -367,7 +415,12 @@ void
 CRDFCoordinator::ListenToMessage ( MessageT inMessage, void *ioParam )
 {
 	switch (inMessage) {
-	
+
+		case CNavCenterCommandStrip::msg_ModeSwitch:
+			// this will cause us to get a HT_EVENT_VIEW_MODECHANGED event above
+			HT_ToggleTreeMode ( HT_GetSelectedView(HTPane()) );
+			break;
+			
 #if 0
 //¥¥¥ This might be useful, depending on how the command pane works out...
 		// the user clicked in the selector pane to change the selected workspace. Tell
@@ -449,7 +502,6 @@ CRDFCoordinator :: ObeyCommand ( CommandT inCommand, void* ioParam )
 } // ObeyCommand
 
 
-
 //
 // RegisterNavCenter
 //
@@ -458,7 +510,8 @@ CRDFCoordinator :: ObeyCommand ( CommandT inCommand, void* ioParam )
 void
 CRDFCoordinator :: RegisterNavCenter ( MWContext* inContext )
 {
-	XP_RegisterNavCenter ( mHTPane, inContext );
+	if ( HTPane() )
+		XP_RegisterNavCenter ( mHTPane, inContext );
 
 } // RegisterNavCenter
 
@@ -471,9 +524,24 @@ CRDFCoordinator :: RegisterNavCenter ( MWContext* inContext )
 void
 CRDFCoordinator :: UnregisterNavCenter ( )
 {
-	XP_UnregisterNavCenter ( mHTPane );	
+	if ( HTPane() )
+		XP_UnregisterNavCenter ( mHTPane );	
 
 } // UnregisterNavCenter
+
+
+//
+// SetTargetFrame
+//
+// Pass-through to the tree to tell it which pane to target when items (url's) are
+// double-clicked.
+//
+void
+CRDFCoordinator :: SetTargetFrame ( const char* inFrame )
+{
+	mTreePane->SetTargetFrame ( inFrame );
+
+} // SetTargetFrame
 
 
 #pragma mark -
@@ -481,8 +549,11 @@ CRDFCoordinator :: UnregisterNavCenter ( )
 CDockedRDFCoordinator :: CDockedRDFCoordinator(LStream* inStream)
 	: CRDFCoordinator(inStream), mNavCenter(NULL)
 {
-
-
+	// don't create the HT_pane until we actually need it (someone opens a node
+	// and the want it to be docked).
+	//
+	//¥¥¥NOTE: We now need to create it somewhere because it will be null until someone
+	//¥¥¥       puts the code in.
 }
 
 
@@ -509,12 +580,12 @@ CDockedRDFCoordinator :: FinishCreateSelf ( )
 	if ( navCenter )
 		mNavCenter = new CShelf ( navCenter, NULL );
 
-	// If the close box is there, register this class as a listener so we get the
+	// If the close caption is there, register this class as a listener so we get the
 	// close message
-	LGAIconSuiteControl* closeBox = 
-			dynamic_cast<LGAIconSuiteControl*>(FindPaneByID(CNavCenterTitle::kCloseBoxPaneID));
-	if ( closeBox )
-		closeBox->AddListener(this);
+	LBroadcaster* closeCaption = 
+			dynamic_cast<LBroadcaster*>(FindPaneByID(CNavCenterCommandStrip::kClosePaneID));
+	if ( closeCaption )
+		closeCaption->AddListener(this);
 	
 } // FinishCreateSelf
 
@@ -551,6 +622,11 @@ CDockedRDFCoordinator :: RestorePlace ( LStream* inStreamData )
 } // RestorePlace
 
 
+//
+// ListenToMessages
+//
+// Respond to "shelf-related" messages. If it's not one of those, pass it to the base class.
+//
 void
 CDockedRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
 {
@@ -561,23 +637,25 @@ CDockedRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
 		// commander and get called on to handle the menus. Since there will be no
 		// view, HT will barf.
 		case CDockedRDFCoordinator::msg_ShelfStateShouldChange:
-			bool nowOpen = *(reinterpret_cast<bool*>(ioParam));
-			mNavCenter->SetShelfState ( nowOpen );
-			if ( nowOpen ) {
-				mTreePane->SetRightmostVisibleColumn(1);	//¥¥Êavoid annoying columns
-				SwitchTarget(this);
+			if ( mNavCenter ) {
+				bool nowOpen = *(reinterpret_cast<bool*>(ioParam));
+				mNavCenter->SetShelfState ( nowOpen );
+				if ( nowOpen ) {
+					mTreePane->SetRightmostVisibleColumn(1);	//¥¥Êavoid annoying columns
+					SwitchTarget(this);
+				}
+				else
+					SwitchTarget(GetSuperCommander());
 			}
-			else
-				SwitchTarget(GetSuperCommander());
 			break;
 		
 		// similar to above, but can cut out the crap because we are closing things
-		// down explicitly. Also make sure to tell the selector pane that nothing is 
-		// active, which the above message cannot do because it is responding to the
-		// code that just changed the workspace.
-		case CNavCenterTitle::msg_CloseShelfNow:
-			mNavCenter->SetShelfState ( false );
-			SwitchTarget(GetSuperCommander());
+		// down explicitly.
+		case CNavCenterCommandStrip::msg_CloseShelfNow:
+			if ( mNavCenter ) {
+				mNavCenter->SetShelfState ( false );
+				SwitchTarget(GetSuperCommander());
+			}
 			break;
 
 		default:
@@ -586,3 +664,94 @@ CDockedRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
 	} // case of which message
 
 } // ListenToMessage
+
+
+#pragma mark -
+
+
+CShackRDFCoordinator :: CShackRDFCoordinator ( LStream* inStream )
+	: CRDFCoordinator ( inStream )
+{
+	// don't create a default HT_Pane, it has to be done later
+}
+
+
+CShackRDFCoordinator :: ~CShackRDFCoordinator ( )
+{
+
+}
+
+
+void
+CShackRDFCoordinator :: BuildHTPane ( const char* inURL, unsigned int inCount, 
+										char** inParamNames, char** inParamValues )
+{
+	mHTPane = CreateHTPane ( inURL, inCount, inParamNames, inParamValues );
+	
+	if ( mHTPane ) {
+		ShowOrHideColumnHeaders();
+		
+		// we don't get a view selected event like other trees, so setup the tree 
+		// view to point to the already selected view in HT and broadcast to tell 
+		// the title bar to update the title.
+		HT_View view =  HT_GetSelectedView(mHTPane);
+		SelectView ( view );		
+		BroadcastMessage ( CNavCenterSelectorPane::msg_ActiveSelectorChanged, view );
+	}
+
+} // BuildHTPane
+
+
+#pragma mark -
+
+
+CWindowRDFCoordinator :: CWindowRDFCoordinator ( LStream* inStream )
+	: CRDFCoordinator ( inStream )
+{
+}
+
+CWindowRDFCoordinator :: ~CWindowRDFCoordinator ( )
+{
+}
+
+
+void
+CWindowRDFCoordinator :: FinishCreateSelf ( )
+{
+	CRDFCoordinator::FinishCreateSelf();
+	
+	// just create a default pane. We have to do this _after_ FinishCreateSelf()
+	// because HT can send us notifications that rely on the tree view, etc being
+	// initialized.
+	mHTPane = CreateHTPane();
+	ShowOrHideColumnHeaders();
+
+} // FinishCreateSelf
+
+
+#pragma mark -
+
+
+CPopupRDFCoordinator :: CPopupRDFCoordinator ( LStream* inStream )
+	: CRDFCoordinator ( inStream )
+{
+}
+
+CPopupRDFCoordinator :: ~CPopupRDFCoordinator ( )
+{
+}
+
+void
+CPopupRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
+{
+	mHTPane = CreateHTPane ( inNode );
+	if ( mHTPane ) {
+		ShowOrHideColumnHeaders();
+		
+		// we don't get a view selected event like other trees, so setup the tree 
+		// view to point to the already selected view in HT and broadcast to tell 
+		// the title bar to update the title.
+		SelectView ( HT_GetSelectedView(mHTPane) );
+	}
+
+} // BuildHTPane
