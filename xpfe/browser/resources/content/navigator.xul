@@ -330,15 +330,19 @@ Contributor(s): ______________________________________. -->
     </vbox>  
    </hbox>
      
-      <statusbar id="status-bar" class="chromeclass-status">
+      <statusbar id="status-bar" class="chromeclass-status"
+         ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
+         ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
+      >
         <box id="component-bar"/>
         <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
         <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
         <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
         <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
+        <resizer class="window-diagonal"/>
       </statusbar> 
        
-      <resizer class="window-diagonal"/>
+      
       
 
 
