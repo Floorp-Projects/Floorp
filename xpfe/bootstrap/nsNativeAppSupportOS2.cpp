@@ -66,6 +66,7 @@
 
 
 #include <sys/stat.h>
+#include <stdlib.h>
 
 #include "prprf.h"
 
