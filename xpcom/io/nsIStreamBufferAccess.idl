@@ -127,11 +127,31 @@ interface nsIStreamBufferAccess : nsISupports
 // XXXbe shouldn't NSPR's LL_INIT work for non-constant arguments in all cases?
 
 # if defined HAVE_LONG_LONG
-#  define NS_SWAP64(x) ((NS_SWAP32((x) & 0xffffffff) << 32) |                 \
-                        (NS_SWAP32((x) >> 32)))
+#  if PR_BYTES_PER_LONG == 8
+#   define ULL_(x)     x ## UL
+#  elif (defined WIN32 || defined WIN16) && !defined __GNUC__
+#   define ULL_(x)     ((uint64) x ## i64)
+#  else
+#   define ULL_(x)     x ## ULL
+#  endif
+
+#  define NS_SWAP64(x) ((((x) /* & ULL_(0xff00000000000000) */) >> 56) |      \
+                        (((x)    & ULL_(0x00ff000000000000))    >> 40) |      \
+                        (((x)    & ULL_(0x0000ff0000000000))    >> 24) |      \
+                        (((x)    & ULL_(0x000000ff00000000))    >> 8)  |      \
+                        (((x)    & ULL_(0x00000000ff000000))    << 8)  |      \
+                        (((x)    & ULL_(0x0000000000ff0000))    << 24) |      \
+                        (((x)    & ULL_(0x000000000000ff00))    << 40) |      \
+                        (((x) /* & ULL_(0x00000000000000ff) */) << 56))
 # else
-#  define NS_SWAP64(x) LL_INIT(NS_SWAP32(*(PRUint32*)&(x)),                   \
-                               NS_SWAP32(*((PRUint32*)&(x)+1)))
+#  define NS_SWAP64(x) LL_INIT((((x).lo /* & 0xff000000ul */) >> 24) |        \
+                               (((x).lo    & 0x00ff0000ul)    >> 8)  |        \
+                               (((x).lo    & 0x0000ff00ul)    << 8)  |        \
+                               (((x).lo /* & 0x000000fful */) << 24),         \
+                               (((x).hi /* & 0xff000000ul */) >> 24) |        \
+                               (((x).hi    & 0x00ff0000ul)    >> 8)  |        \
+                               (((x).hi    & 0x0000ff00ul)    << 8)  |        \
+                               (((x).hi /* & 0x000000fful */) << 24))
 # endif
 
 #elif defined IS_BIG_ENDIAN
