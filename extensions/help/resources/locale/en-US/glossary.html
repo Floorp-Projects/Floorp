@@ -8,7 +8,7 @@
 
 <h1><A NAME="glossary"></A><A NAME="996904">
 Glossary 
-</A></h1><dl><p>
+</A></h1><p>
 <A NAME="authentication"></A><A NAME="998782">
 <B>authentication.</B>&nbsp;
 </A>
@@ -30,14 +30,14 @@ A certificate that identifies a certificate authority. See also <a href="glossar
 </A>
 
 <p><a name="cache"></a>
-<b>cache.</b>&nbsp;A collection of web page copies stored on your computer's hard disk. The browser accumulates these copies as you browse the Web. When you click a link or type an <a href="#Uniform_Resource_Locator_(URL)">URL</a> to fetch a particular web page for which the cache already contains a copy, the browser compares the cached copy to the original. If there have been no changes, the browser uses the cached copy rather than refetching the original, saving processing and download time. <p>
+<b>cache.</b>&nbsp;A collection of web page copies stored on your computer's hard disk. The browser accumulates these copies as you browse the Web. When you click a link or type a <a href="#Uniform_Resource_Locator_(URL)">URL</a> to fetch a particular web page for which the cache already contains a copy, the browser compares the cached copy to the original. If there have been no changes, the browser uses the cached copy rather than refetching the original, saving processing and download time. <p>
 
 
 
 <A NAME="certificate"></A><A NAME="1018895">
 <B>certificate.</B>&nbsp;
 </A><A NAME="1018896">
-The digital equivalent of an ID card. A certificate specifies the name of an individual, company, or other entity and certifies that a public key, which is included in the certificate, belongs to that entity. When you digitally sign a message or other data, the digital signature for that message is created with the aid of the private key that corresponds to the public key in your certificate. A certificate is issued and digitally signed by a <a href="glossary.html#1020903">certificate authority (CA)</a>. A certificate's validity can be verified by checking the CA's <a href="glossary.html#1013995">digital signature</a>. Also called digital ID, digital passport, public-key certificate X.509 certificate, and security certificate. See also <a href="glossary.html#1019178">public-key cryptography</a>.<P>
+The digital equivalent of an ID card. A certificate specifies the name of an individual, company, or other entity and certifies that a public key, which is included in the certificate, belongs to that entity. When you digitally sign a message or other data, the digital signature for that message is created with the aid of the private key that corresponds to the public key in your certificate. A certificate is issued and digitally signed by a <a href="glossary.html#1020903">certificate authority (CA)</a>. A certificate's validity can be verified by checking the CA's <a href="glossary.html#1013995">digital signature</a>. Also called digital ID, digital passport, public-key certificate, X.509 certificate, and security certificate. See also <a href="glossary.html#1019178">public-key cryptography</a>.<P>
 </A>
 
 <A NAME="certificate_authority_(CA)"></A><A NAME="1020903">
@@ -93,7 +93,7 @@ A list of revoked certificates that is generated and signed by a <a href="glossa
 <A NAME="certificate_verification"></A><A NAME="1025527">
 <B>certificate verification.</B>&nbsp;
 </A><A NAME="1025531">
-When <a href="#Certificate_Manager">Certificate Manager</a> verifies a certificate, it confirms that the digital signature was created by a CA whose own CA certificate is both on file with Certificate Manager and marked as trusted for issuing that kind of certificate. It also confirms that the certificate being verified has not itself been marked as untrusted. Finally, if the <a href="glossary.html#1029304">Online Certificate Status Protocol (OCSP)</a> has been activated, Certificate Manager also performs an online check. It does so by looking up the certificate in a list of valid certificates maintained at a URL that is specified either in the certificate itself or in the browser's validation preferences. If any of these checks fail, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.<P>
+When <a href="#Certificate_Manager">Certificate Manager</a> verifies a certificate, it confirms that the digital signature was created by a CA whose own CA certificate is both on file with Certificate Manager and marked as trusted for issuing that kind of certificate. It also confirms that the certificate being verified has not itself been marked as untrusted. Finally, if the <a href="glossary.html#1029304">Online Certificate Status Protocol (OCSP)</a> has been activated, Certificate Manager also performs an online check. It does so by looking up the certificate in a list of valid certificates maintained at a URL that is specified either in the certificate itself or in the browser's Validation preferences. If any of these checks fail, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.<P>
 </A>
 
 <A NAME="cipher"></A><A NAME="1021048">
@@ -122,7 +122,7 @@ A certificate that a <a href="glossary.html#1029510">client</a> (such as browser
 
 
 <p><a name="cookie"></a>
-<b>cookie.</b>&nbsp;A small bit of information stored on your computer by some web sites. When you visit such a site, it asks your browser to place one or more cookies on your hard disk. Later, when you return to the site, your browser sends the site the cookies that belong to it. Cookies help web sites keep track of information about you, such as the contents of your shopping cart. You can set your cookie preferences to control how cookies are used and how much information you are willing to let web sites store on them. See also <a href="#foreign_cookie">foreign_cookie</a>.<p>
+<b>cookie.</b>&nbsp;A small bit of information stored on your computer by some web sites. When you visit such a site, the site asks your browser to place one or more cookies on your hard disk. Later, when you return to the site, your browser sends the site the cookies that belong to it. Cookies help web sites keep track of information about you, such as the contents of your shopping cart. You can set your cookie preferences to control how cookies are used and how much information you are willing to let web sites store on them. See also <a href="#foreign_cookie">foreign_cookie</a>.<p>
 
 
 <A NAME="cryptographic_algorithm"></A><A NAME="1019976">
@@ -218,23 +218,23 @@ Federal Information Processing Standards Publications (FIPS PUBS) 140-1 is a US 
 <p><a name="Hypertext_Markup_Language_(HTML)"></a>
 <b>Hypertext Markup Language (HTML).</b>&nbsp; The document format used for Web pages. The HTML standard defines tags, or codes, used to define the text layout, fonts, style, images, and other elements that make up a web page. <p>
 
-<p><a name="implicit_consent"></a><b>implicit consent.</b>&nbsp; Used to describe privacy settings that may allow web sites to gather information about you, for example by means of <a href="#cookie">cookies</a> and on-line forms, unless you explicitly choose to withhold your consent by selecting an option on a page that the web site provides for that purpose. Your consent may not be requested when the information is actually gathered.<p>
+<p><a name="implicit_consent"></a><b>implicit consent.</b>&nbsp; Used to describe privacy settings that may allow web sites to gather information about you (for example by means of <a href="#cookie">cookies</a> and online forms) unless you explicitly choose to withhold your consent by selecting an option on a page that the web site provides for that purpose. Your consent may not be requested when the information is actually gathered.<p>
 
 <p><a NAME="IMAP_glossary"></a>
-<b>Internet Message Access Protocol (IMAP).</b>&nbsp;A standard mail server protocol that allows you to store all your messages and any changes to them on the server rather than on your computer's hard disk. Using IMAP rather than <a href="#POP_glossary">POP</a> saves disk space and allows you to acess your entire mailbox, including sent mail, drafts, and custom folders, from any location. Using an IMAP server over a modem is generally faster than using a POP mail server, since you initially download message headers only. Not all ISPs support IMAP. <p>
+<b>Internet Message Access Protocol (IMAP).</b>&nbsp;A standard mail server protocol that allows you to store all your messages and any changes to them on the server rather than on your computer's hard disk. Using IMAP rather than <a href="#POP_glossary">POP</a> saves disk space and allows you to access your entire mailbox, including sent mail, drafts, and custom folders, from any location. Using an IMAP server over a modem is generally faster than using a POP mail server, since you initially download message headers only. Not all ISPs support IMAP. <p>
 
 <p><a name="Internet"></a>
 <b>Internet.</b>&nbsp;A worldwide network of millions of computers that communicate with each other using standard protocols such as <a href="#Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)">TCP/IP</a>. Originally developed for the US military in 1969, the Internet grew to include educational and research institutions and, in the late 1990s, millions of businesses, organizations, and individuals. Today the Internet is used for email, browsing the <a href="#World_Wide_Web">World Wide Web</a>, instant messaging, usegroups, and many other purposes.<p>
 
 <p><a name=" Internet_protocol_address_(IP address)"></a>
-<b>Internet protocol address (IP address).</b>&nbsp;The address of a computer on a <a href="#Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)">TCP/IP</a> network. Every computer on the Internet has an IP address. Clients have either a permanent IP address or one that is dynamically assigned to them each time they connect with the network. IP addresses are written as four sets of numbers, like this: 204.171.64.2.
+<b>Internet protocol address (IP address).</b>&nbsp;The address of a computer on a <a href="#Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)">TCP/IP</a> network. Every computer on the Internet has an IP address. <a href="#client">Clients</a> have either a permanent IP address or one that is dynamically assigned to them each time they connect with the network. IP addresses are written as four sets of numbers, like this: 204.171.64.2.
 
 
 <p><a name="Java"></a>
 <b>Java.</b>&nbsp;A programming language developed by Sun Microsystems. A single Java program can run on many different kinds of computers, thus avoiding the need for programmers to create a separate version of each program for each kind of computer. Your browser can automatically download and run Java programs (also called applets).<p>
 
 <p><a name="JavaScript"></a>
-<b>JavaScript.</b>&nbsp;A scripting language commonly used to construct web pages. Programmers use JavaScript to make web pages more interactive, for example to display forms and buttons. JavaScript can be used with Java, but is technically completely separate. Java is not required for JavaScript to work correctly.<p>
+<b>JavaScript.</b>&nbsp;A scripting language commonly used to construct web pages. Programmers use JavaScript to make web pages more interactive; for example, to display forms and buttons. JavaScript can be used with Java, but is technically a  separate language. Java is not required for JavaScript to work correctly.<p>
 
 
 
@@ -263,7 +263,7 @@ A symmetric key used by Certificate Manager to encrypt information. For example,
 <A NAME="master_password"></A><A NAME="1032744">
 <B>master password.</B>&nbsp;
 </A><A NAME="1032748">
-A password used by Certificate Manager to protect the master key and/or private keys stored on a <a href="glossary.html#1028962">security device</a>. Certificate Manager needs to access your private keys, for example, when you sign email messages or use one of your own certificates to identify yourself to a web site. It needs to access your master key when Password Manager or Form Manager read or add to your personal information. You can set or change your master password from the Master Passwords preferences panel. Each security device requires a separate master password. See also <a href="glossary.html#1015387">private key</a>, <a href="glossary.html#1032598">master key</a>.<P>
+A password used by Certificate Manager to protect the master key and/or private keys stored on a <a href="glossary.html#1028962">security device</a>. Certificate Manager needs to access your private keys, for example, when you sign email messages or use one of your own certificates to identify yourself to a web site. It needs to access your master key when Password Manager or Form Manager reads or adds to your personal information. You can set or change your master password from the Master Passwords preferences panel. Each security device requires a separate master password. See also <a href="glossary.html#1015387">private key</a>, <a href="glossary.html#1032598">master key</a>.<P>
 </A>
 
 
@@ -335,7 +335,7 @@ One of a pair of <a href="#key">keys</a> used in public-key cryptography. The pr
 </A>
 
 <p><a name="proxy"></a>
-<b>proxy.</b>&nbsp;An intermediary, or go-between, program that acts as both a <a href="#server">server</a> and a <a href="#client">client</a> for the purpose of making requests on behalf of other clients.<p>
+<b>proxy.</b>&nbsp;An intermediary or &quot;go-between&quot; program that acts as both a <a href="#server">server</a> and a <a href="#client">client</a> for the purpose of making requests on behalf of other clients.<p>
 
 <A NAME="public_key"></A><A NAME="1019172">
 <B>public key.</B>&nbsp;
@@ -380,7 +380,7 @@ See <a href="glossary.html#1018895">certificate</a>.<P>
 <A NAME="security_device"></A><A NAME="1028962">
 <B>security device.</B>&nbsp;
 </A><A NAME="1028963">
-Hardware or software that provides cryptographic services such as encryption and decryption and can store certificates and keys. A smart card is one example of a security device implemented in hardware. <a href="#Certificate_Manager">Certificate_Manager</a> contains its own built-in security device, called the <a href="glossary.html#software_security_device">software security device</a>, that is always available while the browser is running. Each security device is protected by its own <a href="glossary.html#1032744">master password</a>.<P>
+Hardware or software that provides cryptographic services such as encryption and decryption and can store certificates and keys. A smart card is one example of a security device implemented in hardware. <a href="#Certificate_Manager">Certificate Manager</a> contains its own built-in security device, called the <a href="glossary.html#software_security_device">software security device</a>, that is always available while the browser is running. Each security device is protected by its own <a href="glossary.html#1032744">master password</a>.<P>
 </A>
 
 <A NAME="security_module"></A><A NAME="1029083">
@@ -504,7 +504,7 @@ See <a href="glossary.html#1028962">security device</a>.<P>
 
 <p><a name="Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)"></a>
 <a name="tcp"></a>
-<b>Transmission Control Protocol/Internet Protocol (TCP/IP).</b>&nbsp;A Unix protocol used to connect compuers running a variety of operating systems. TCP/IP is an essential Internet protocol and has become a global standard.<p>
+<b>Transmission Control Protocol/Internet Protocol (TCP/IP).</b>&nbsp;A Unix protocol used to connect computers running a variety of operating systems. TCP/IP is an essential Internet protocol and has become a global standard.<p>
 
 
 
@@ -517,21 +517,18 @@ Confident reliance on a person or other entity. In the context of <a href="gloss
 
 
 <p><a name="Uniform_Resource_Locator_(URL)"></a>
-<b>Uniform Resource Locator (URL)</b>&nbsp;The standardized address that tells your browser how to locate a file or other resource on the Web. For example: <tt>http://www.netscape.com.</tt> You can type URLs into the browser's location bar to access web pages. URLs are also used in the links on web pages that you can click to go to other web pages. Also known as an Internet address or Web address.<p>
+<b>Uniform Resource Locator (URL).</b>&nbsp;The standardized address that tells your browser how to locate a file or other resource on the Web. For example: <tt>http://www.netscape.com.</tt> You can type URLs into the browser's location bar to access web pages. URLs are also used in the links on web pages that you can click to go to other web pages. Also known as an Internet address or Web address.<p>
 
 <p><a name="web_page"></a>
-<b>web page</b>&nbsp;A single document on the World Wide Web that is specified by a unique address or URL and that may contain text, hyperlinks, and graphics.<p>
+<b>web page.</b>&nbsp;A single document on the World Wide Web that is specified by a unique address or URL and that may contain text, hyperlinks, and graphics.<p>
 
 <p><a name="web_site"></a>
-<b>web site</b>&nbsp;A group of related web pages linked by hyperlinks and managed by a single company, organization, or individual. A web site may include text, graphics, audio and video files, and links to other web sites.<p>
+<b>web site.</b>&nbsp;A group of related web pages linked by hyperlinks and managed by a single company, organization, or individual. A web site may include text, graphics, audio and video files, and links to other web sites.<p>
 
 <p><a name="World_Wide_Web"></a>
-<b>World Wide Web</b>&nbsp;Also known as the Web. A portion of the Internet that made up of web pages stored by web <a href="#server">servers</a> and displayed by <a href="#client">clients</a> called web browsers (such as Netscape Navigator).<p>
+<b>World Wide Web.</b>&nbsp;Also known as the Web. A portion of the Internet that is made up of web pages stored by web <a href="#server">servers</a> and displayed by <a href="#client">clients</a> called web browsers (such as Netscape Navigator).<p>
 
-<A NAME="1028719">
-<B></B><a href="glossary.html#1028962"></a><P>
-</A>
-</dl>
+
 
 
 <p>
@@ -539,7 +536,7 @@ Confident reliance on a person or other entity. In the context of <a href="gloss
 </p>
 
 <hr>
-<p><i>3 June 2002</i></p>
+<p><i>6 June 2002</i></p>
 <p>Copyright &copy; 1998-2002 Netscape Communications Corporation</p>
 
 <BR>

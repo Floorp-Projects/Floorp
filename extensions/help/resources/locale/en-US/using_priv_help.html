@@ -45,13 +45,13 @@ Using the Cookie Manager</h1>
 <a NAME="cookies_manage"></a>
 <h2>Enabling &amp; Disabling Cookies</h2>
 
-<p>You can specify how cookies should be handled by setting your cookie preferences.</p>
+<p>You can specify how cookies should be handled by setting your Cookies preferences.</p>
 
-<p>To change your cookie preferences:
+<p>To change your Cookies preferences:
 <ol>
 <li>Open the Edit menu and choose Preferences.
 <li>Under the Privacy &amp; Security category, choose Cookies. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-<li>Set your cookie preferences.
+<li>Set your Cookies preferences.
 </ol>
  
 <p>For more information about the effect of each setting, see <a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a>.
@@ -114,7 +114,7 @@ Using the Cookie Manager</h1>
 </ol>
 
 
-<p>Even though you've removed the cookies now, you will reacquire those same cookies the next time you return to the web site. To prevent that from happening, select the checkbox labelled "Don't allow removed cookies to be reaccepted later". That will cause the web sites for the cookies that you are removing to be added to the list of sites whose cookies will automatically be rejected.
+<p>Even though you've removed the cookies now, you will reacquire those same cookies the next time you return to the web site. To prevent that from happening, select the checkbox labeled &quot;Don't allow removed cookies to be reaccepted later&quot;. That will cause the web sites for the cookies that you are removing to be added to the list of sites whose cookies will automatically be rejected.
   
 <p>You must click OK for your changes to take effect.
 
@@ -133,7 +133,7 @@ Using the Cookie Manager</h1>
 
 <p>Many web sites publish their privacy policies according to the Platform for Privacy Preferences (P3P) standard. A web site's privacy policy describes what kind of information the site collects, to whom it gives that information, and how it uses the information. For information about viewing a web site's privacy policy, see <a href="#form_forms">Viewing Privacy Policies</a>.
 
-<p>You can choose to have your browser make the decision to accept cookies based on the web site's published privacy policy and the level of privacy or lack thereof that you are willing to accept. To indicate your desired level of privacy, you adjust your privacy settings. When cookies are enabled in this manner, the browser checks your current privacy settings against the web site's published privacy policy (if present) and takes appropriate action. 
+<p>You can choose to have your browser make the decision to accept cookies based on the web site's published privacy policy and the level of privacy or lack thereof that you are willing to accept. You can adjust your privacy settings to indicate your desired level of privacy. When cookies are enabled in this manner, the browser checks your current privacy settings against the web site's published privacy policy (if present) and takes appropriate action. 
 
 <p>For example, your privacy settings may require the browser to reject cookies that collect personal information without informing you. Alternatively, you can adjust your privacy settings so that the browser simply warns you when a cookie is used in this way, while allowing the action to take place.
 
@@ -166,7 +166,7 @@ Using the Cookie Manager</h1>
 
 <a NAME="cookie_settings"></a><hr><h1>Cookie Manager Settings</h1>
 
-<p>This section describes how to set your cookie preferences and control other aspects of cookie handling. 
+<p>This section describes how to set your Cookies preferences and control other aspects of cookie handling. 
 
 <p>For step-by-step descriptions of various tasks related to cookies, see <a href="using_priv_help.html#using_cookies">Using the Cookie Manager</a>.</p>
 
@@ -274,7 +274,7 @@ Using the Cookie Manager</h1>
 
 <tr>
 <td valign="top">Information</td>
-<td valign="top">A string of characters contining the information a web site tracks for you. It might contain a user key or name by which you are identified to the web site, information about your interests, and so forth.</td>
+<td valign="top">A string of characters containing the information a web site tracks for you. It might contain a user key or name by which you are identified to the web site, information about your interests, and so forth.</td>
 </tr>
 
 <tr>
@@ -300,6 +300,12 @@ Using the Cookie Manager</h1>
 <td valign="top">Expires</td>
 <td valign="top">The date and time at which the cookie will be deactivated. The browser regularly removes expired cookies from your computer.</td>
 </tr>
+
+<tr>
+<td valign="top">Policy</td>
+<td valign="top">The type of privacy policy information that the site has explicitly declared that it publishes. (Even if this field is blank, it may still be possible to view the site's policy; see <a href="using_priv_help.html#form_forms">Viewing Privacy Policies</a> for details.)</td>
+</tr>
+
 </table>
 
 <p>To remove cookies, click one of these buttons:
@@ -391,7 +397,7 @@ Using the Cookie Manager</h1>
 	</ul>
 	<li><b>custom:</b> Select this only if you want to set your own custom Cookie Acceptance Policy. The default settings for &quot;custom&quot; are whatever they happened to be just before you select this option. You can modify them by selecting from the drop-down menus in the Cookie Acceptance Policy portion of the dialog box.
 </ul>
-<p>To see the exact effect of each privacy level setting, select it and then examine the Cookie Acceptance Policy settings.
+<p>To see the exact effect of each privacy-level setting, select it and then examine the Cookie Acceptance Policy settings.
 
 
 <p>&nbsp;</p>
@@ -406,7 +412,7 @@ Using the Cookie Manager</h1>
 	<li><b>Accept:</b> Accept all cookies in the category.
 	<li><b>Session:</b> Accept all cookies in the category for the current session only&mdash;that is, until you exit the browser.
 	<li><b>Reject:</b> Reject all cookies in the category.
-	<li><b>Flag:</b> Lists the cookie's status as "flagged" in the status column of the Cookie Manager's <a href="cookies_stored">Stored Cookies</a> tab and display the cookie notifiation icon.
+	<li><b>Flag:</b> Lists the cookie's status as "flagged" in the status column of the Cookie Manager's <a href="cookies_stored">Stored Cookies</a> tab and display the cookie notification icon.
 </ul>
 
 <p>The cookie notification icon (<img src="chrome://cookie/content/taskbar-cookie.gif">) appears near the lower-right corner of the browser window. You can click it to get information about the affected cookies or modify your privacy settings.
@@ -429,10 +435,10 @@ Using the Cookie Manager</h1>
 <p>This section describes how to use the Cookie Notification dialog box, which appears when you click the Cookie Notification icon. You can take the following actions from this dialog box:
 
 <ul>	
-	<li><b>Turn Off Privacy Settings.</b> Click this button to disable your Privacy Settings. This has the same effect as selecting &quot;Enable all cookies&quot; in <a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a>. After you take this action, your browser will accept all cookies.
-	<li><b>View Cookie Manager.</b> Click this button to open the Cookie Manager, where you can view the current status of all your cookies and identify the cookies that caused the notification icon to appear.
-	<li><b>View Privacy Settings.</b> Click this button to open the Privacy Settings dialog box. The settings in this dialog box determine how web sites can use cookies on your computer and what actions cause the cookie notification icon to be displayed.
-	<li><b>Close.</b> Click this button to exit the Cookie Notification dialog box without taking any action.</ul>
+	<li><b>Turn Off Privacy Settings:</b> Click this button to disable your Privacy Settings. This has the same effect as selecting &quot;Enable all cookies&quot; in <a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a>. After you take this action, your browser will accept all cookies.
+	<li><b>View Cookie Manager:</b> Click this button to open the Cookie Manager, where you can view the current status of all your cookies and identify the cookies that caused the notification icon to appear.
+	<li><b>View Privacy Settings:</b> Click this button to open the Privacy Settings dialog box. The settings in this dialog box determine how web sites can use cookies on your computer and what actions cause the cookie notification icon to be displayed.
+	<li><b>Close:</b> Click this button to exit the Cookie Notification dialog box without taking any action.</ul>
 
 <p>For more information about using privacy settings, see <a href="#privacy_levels">Setting Privacy Levels</a>.
 
@@ -490,7 +496,7 @@ Using the Cookie Manager</h1>
 
 <p>If the Password Manager dialog box described above does not appear when you click Submit after typing your user name and password, Password Manager may be turned off or the web site may disallow its use. 
 
-<p>To check whether Password Manager is currently active, follow the instructions at <a href="#passwords_onoff">Turning Password Manager On and Off</a>. 
+<p>To check whether Password Manager is currently active, see <a href="#passwords_onoff">Turning Password Manager On and Off</a>. 
 
 <p>&nbsp;</p>
 <a NAME="passwords_auto"></a>
@@ -508,7 +514,7 @@ Using the Cookie Manager</h1>
 <ol>
 <li>Open the Edit menu and choose Preferences.
 <li>Under the Privacy &amp; Security category, choose Passwords. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-<li>In the Password Manager section, deselect &quot;Remember passwords for sites that require me to log in&quot; to turn Password Manager off.
+<li>In the Password Manager section, deselect &quot;Remember passwords&quot; to turn Password Manager off.
 </ol>
 
 <p>To turn Password Manager on, follow steps 1 and 2 above, but select the checkbox in step 3 rather than deselecting it.
@@ -520,16 +526,15 @@ Using the Cookie Manager</h1>
 <p>To see a list of the user names and passwords you have stored:</p>
 
 <ol>
-<li>Open the Tools menu, choose Privacy &amp; Security, and then choose Password Manager.
-<li>Select Manage Stored Passwords from the submenu. You see the Password Manager window.</li>
+<li>Open the Tools menu, choose Password Manager, and then choose Manage Stored Passwords from the submenu. You see the Password Manager window.</li>
 <li>Click the Passwords Saved tab. You see a list of all the stored sites and user names. (Passwords are not listed.)</li> 
 <ul>
 	<li>To remove a user name, click it and then click Remove. The next time you visit the web site, you will need to enter your user name and password again, since Password Manager will no longer have the information.</li>
 	<li>Click the Passwords Never Saved tab to see a list of the web sites for which you instructed Password Manager never to store user names. To remove a web site from this list, click it and then click Remove. The next time you log into the web site, you can use the stored user name and password (if available) or indicate that you want Password Manager to save the information for that site.</li>
 </ul>
+	<li>Click OK to accept your changes.
 </ol>
 
-<p>You must click OK for your changes to take effect.
 <p>
 [&nbsp;<A HREF="#using_password">Return to beginning of section</A>&nbsp;]
 </p>
@@ -581,13 +586,13 @@ Using the Cookie Manager</h1>
 <p>When Form Manager asks if you want to save values that you've entered in a form (the first method described above), it gives you three options:
 
 <ul>
-	<li><b>Yes.</b> Click this button to save the information you entered. In the future, you can automatically fill in a form that requests the same information.</li>
+	<li><b>Yes:</b> Click this button to save the information you entered. In the future, you can automatically fill in a form that requests the same information.</li>
 
-	<li><b>Never for this site.</b> Click this button to ensure that Form Manager will not ask in the future if you want to save information that you enter in forms at this site. 
+	<li><b>Never for this site:</b> Click this button to ensure that Form Manager will not ask in the future if you want to save information that you enter in forms at this site. 
 
-<p>You may want to do this if you want to ensure that you'll always have to enter sensitive information manually at a particular site. You can change your mind later if you like; for details, see <a href="#form_sites_view_edit">Editing Stored Site Information</a>.
+	<p>You may want to do this if you want to ensure that you'll always have to enter sensitive information manually at a particular site. You can change your mind later if you like; for details, see <a href="#form_sites_view_edit">Editing Stored Site Information</a>.
 
-	<li><b>No.</b> Form Manager won't save the information you entered, but will ask again the next time you enter form information at this site.
+	<li><b>No:</b> Form Manager won't save the information you entered, but will ask again the next time you enter form information at this site.
 </ul>
 
 <p>Form Manager stores your personal data on your own computer in a file that's difficult, but not impossible, for an intruder to read. See <a href="#using_encrypt">Encrypting Stored Sensitive Information</a> for information on protecting your information with encryption technology.
@@ -614,7 +619,7 @@ Using the Cookie Manager</h1>
 <li>Go to the online form you want to fill out.
 <li>Open the Edit menu and choose Fill in Form. 
 
-<p>Note that the Prefill Form menu item won't be accessible if the Form Manager hasn't yet stored any relevant information.
+<p>Note that the Fill in Form menu item won't be accessible if the Form Manager hasn't yet stored any relevant information.
 
 
 <li>A dialog box called Prefill Form Data appears (unless you have previously chosen to bypass it for this site). This shows exactly what information Form Manager is about to fill in. You can use this dialog box as follows:</li>
@@ -635,7 +640,7 @@ Using the Cookie Manager</h1>
 <ul>
 	<li>Prefill Form Data can help you prevent malicious web sites from collecting data you are not aware of. 
 
-	<p>For example, it's possible for a web site to hide a field on a form where you can't see it and specify that field to be a credit card number. If you prefill the form without first examining the information deisplayed in the Prefill Form Data dialog box, you may end up providing your credit card number to such a web site without realizing it. Prefill Form Data lets you see every value that will be provided to the site, allowing you to detect such tricks.
+	<p>For example, it's possible for a web site to hide a field on a form where you can't see it and specify that field to be a credit card number. If you prefill the form without first examining the information displayed in the Prefill Form Data dialog box, you may end up providing your credit card number to such a web site without realizing it. Prefill Form Data lets you see every value that will be provided to the site, allowing you to detect such tricks.
 	
 	<li>Prefill Form Data allows you to select which of several saved values for a given field you want to use for a particular web site.
 </ul>
@@ -660,7 +665,7 @@ Using the Cookie Manager</h1>
 
 <p>Note that deselecting this option turns off the notification feature, but not Form Manager. The form data it may have already collected is still available. 
 
-<p>You can still pull down the Edit menu and choose Save Form Info any time you want to save information from a form you've just filled in, or choose Prefill Form (or double-click each field) to fill in a form automatically.
+<p>You can still open the Edit menu and choose Save Form Info any time you want to save information from a form you've just filled in, or choose Fill in Form (or double-click each field) to fill in a form automatically.
 <p>
 [&nbsp;<A HREF="#using_forms">Return to beginning of section</A>&nbsp;]
 </p>
@@ -681,7 +686,7 @@ Using the Cookie Manager</h1>
 
 	<p>The Form Manager dialog box for editing data appears. Click the subcategories on the left to view or edit the corresponding data in the panel on the right. To view subcategories that aren't visible, double-click a category to expand the list.
 
-<p>To add information not currently included in one  of the drop down lists on the right, select the blank item and start typing. Similarly, select existing text to edit or (if you remove every character) erase it.
+<p>To add information not currently included in one  of the drop down lists on the right, select the blank item and start typing. Similarly, select existing text to edit or delete it.
 
 <p>The last category on the left side, Other Saved Information, includes panels for two special kinds of data: 
 
@@ -730,18 +735,18 @@ Using the Cookie Manager</h1>
 <p>&nbsp;</p>
 <a NAME="form_forms"></a><h2>Viewing Privacy Policies</h2>
 
-<p>If you provide personal information such as your name, phone number, or email address to a web site, it is free to store that information and use it later. A web site might use your information to improve its service to you or target advertising to your interests. Or it could sell your information to other companies.
+<p>When you provide personal information such as your name, phone number, or email address to a web site, it can use the information for its own purposes (such as shipping you a product) or potentially share it with others. 
 
 <p>Before providing personal information on an online form, you must decide whether or not you trust the web site&mdash;just as you judge whether or not you trust a catalog company before you provide your credit card number on the company's order form.
 
-<p>One way to evaluate a web site's trustworthiness is to examine its published privacy policy. Many web sites publish such policies according to the Platform for Privacy Preferences (P3P) standard. 
+<p>One way to evaluate a web site's trustworthiness is to examine its published privacy policy. Web sites publish privacy statements online, and some of them publish such statements according to the Platform for Privacy Preferences (P3P) standard. 
 
 <p>A web site's privacy policy describes what kind of information the site collects, to whom it gives that information, and how it uses the information. Web sites publish privacy policies in both human-readable form and as a file that can be interpreted by the browser according to your <a href="#privacy_levels_window">Privacy Settings</a>.
 
 <p>To view a web site's privacy policy, browse to the site and follow these steps: 
 
 <ul>
-	<li>Open the View menu and choose Page info.
+	<li>Open the View menu and choose Page Info. The Page Info window appears.
 	<li>Click the Privacy tab.
 	<li>Click these buttons to see the corresponding information:</li>
 	<ul>
@@ -829,8 +834,8 @@ Using the Cookie Manager</h1>
 <p>If your master password has not previously been set, you can set at this time:
 
 <ol>
-<li>Open the Tools menu, choose Privacy &amp; Security, and then choose Password Manager.</li>
-<li>Select Change Master Password from the submenu (even though you are setting it for the first time, not changing it). You see the Set Master Password dialog box.
+<li>Open the Tools menu, choose Password Manager, and then choose Change Master Password from the submenu (even though you are setting it for the first time, not changing it). 
+	<p>You see the Set Master Password dialog box.
 <li>Enter your desired master password, and retype it to confirm the spelling.</li>
 <li>Click OK.
 </ol>
@@ -862,7 +867,7 @@ Using the Cookie Manager</h1>
 
 <p>Normally, you are asked for your master password once during each browser session during which you access any of your stored sensitive information. 
 
-<p>It's also possible to require that your master password be requested each time it is needed, or after a certain amount of time has passed. For details, see <a href="passwords_help.html#Master_Password_Timeout">Master_Password_Timeout</a>.
+<p>It's also possible to require that your master password be requested each time it is needed, or after a certain amount of time has passed. For details, see <a href="passwords_help.html#Master_Password_Timeout">Master Password Timeout</a>.
 
 <p>You can log out of your master password so that it must be entered again before any sensitive information can be stored or retrieved. This is useful if you are going to leave your computer unattended for a period of time.</p>
 
@@ -870,7 +875,7 @@ Using the Cookie Manager</h1>
 <p>To log out of your master password:</p>
 
 <ol>
-<li>Open the Tools menu, choose Privacy &amp; Security, and then choose Password Manager.
+<li>Open the Tools menu and choose Password Manager.
 <li>Select Log Out from the submenu.</li>
 </ol>
 
@@ -930,12 +935,13 @@ Privacy &amp; Security Preferences - Images</h2>
 
 <p>&nbsp;</p>
 <h3>Image Acceptance Policy</h3>
-<p>Image acceptance preferences allow you to control whether Navigator displays images:</p>
+<p>Image Acceptance preferences allow you to control whether and where Navigator displays images:</p>
 
 <ul>
 
-	<li><b>Do not load any images.</b> Select this if you do not want Navigator to display images.
-	<li><b>Accept all images.</b> Select this if you want Navigator to display all images.
+	<li><b>Do not load any images:</b> Select this option if you do not want Navigator to display images.
+	<li><b>Accept all images:</b> Select this option if you want Navigator to display all images.
+	<li><b>Do not load remote images in Mail & Newsgroup messages:</b> Select this checkbox if you want to avoid downloading images embedded in web pages sent as message attachments.
 </ul>
 
 <p>&nbsp;</p>
@@ -944,9 +950,9 @@ Privacy &amp; Security Preferences - Images</h2>
 
 
 <ul>
-	<li><b>As many times as the image specifies.</b> Select this if you want image animation to repeat as many times as specified within each image.
-	<li><b>Once.</b> Select this if you want image animation to occur once, overriding the number of times specified within each image.
-	<li><b>Never.</b> Select this if you do not want image animation.
+	<li><b>As many times as the image specifies:</b> Select this if you want image animation to repeat as many times as specified within each image.
+	<li><b>Once:</b> Select this if you want image animation to occur once, overriding the number of times specified within each image.
+	<li><b>Never:</b> Select this if you do not want image animation.
 </ul>
 
 
@@ -1005,7 +1011,7 @@ Privacy &amp; Security Preferences - Images</h2>
 
 	<li><b>Save form data from web pages when completing forms:</b> Select this checkbox if you want to be asked whether to save form data every time you submit a new form. If this option is not selected, Form Manager never asks if you want to save form data.
 
-	<p>Note that deselecting this option turns off the notification feature, but not Form Manager. The form data it may have already collected is still available. You can still pull down the Edit menu and choose Save Form Data any time you want to save information from a form you've just filled in, or choose Prefill Form to fill in a form automatically.
+	<p>Note that deselecting this option turns off the notification feature, but not Form Manager. The form data it may have already collected is still available. You can still open the Edit menu and choose Save Form Info any time you want to save information from a form you've just filled in, or choose Fill in Form to fill in a form automatically.
 
 	<li><b>Manage Stored Form Data.</b> Click this button to examine or edit personal data that Form Manager has saved. For details, see <a href="#forms_data">Form Manager - Data</a>.
 
@@ -1031,7 +1037,7 @@ Privacy &amp; Security Preferences - Images</h2>
 <ul>
 	<li><b>Category:</b> Double-click a category in the Category column to view its subcategories, and click a subcategory to view its data on the right side of the window. To edit or add to the displayed data, click in a field and type.
 
-	<p>To add information not currently included in one of the drop down lists on the right, select the blank item and start typing. Similarly, select existing text to edit or (if you remove every character) erase it. 
+	<p>To add information not currently included in one of the drop down lists on the right, select the blank item and start typing. Similarly, select existing text to edit or delete it. 
 	<li><b>Remove All Saved Data:</b> Click this button to remove all the saved data at once.
 </ul>
 
@@ -1066,7 +1072,7 @@ Privacy &amp; Security Preferences - Images</h2>
 <p>The Form Manager window for managing sites has two tabs:
 
 <ul>
-	<li><b>Forms Never Previewed:</b> Click this tab to view the list of sites for which you selected &quot;Bypass this screen when prefilling this form in the future&quot; after choosing Prefill Form from the Edit menu. 
+	<li><b>Forms Never Previewed:</b> Click this tab to view the list of sites for which you selected &quot;Bypass this screen when prefilling this form in the future&quot; after choosing Fill in Form from the Edit menu. 
 
 	<p>If you remove an entry from this list, Form Manager will again give you an opportunity to review form data for that site before filling it in.
 	<li><b>Forms Never Saved:</b> Click this tab to view the list of sites for which you selected &quot;Never for this  
@@ -1093,17 +1099,17 @@ site&quot; in response to the Form Manager's request to store form data.
 <a NAME="forms_prefill"></a>
 <hr><h2>Prefill Form Data</h2>
 
-<p>This section describes the window that normally appears when you open the Edit menu and choose Prefill Form Data. 
+<p>This section describes the window that normally appears when you open the Edit menu and choose Fill In Form.
 
-<p>However, the Prefill Form Data menu item is enabled only if you have previously used Form Manager to save some form data and are now viewing a web page that is requesting some of the same data. For step-by-step instructions on working with form data, see <a href="#using_forms">Using the Form Manager</a>.
+<p>However, the Fill in Form menu item is enabled only if you have previously used Form Manager to save some form data and are now viewing a web page that is requesting some of the same data. For step-by-step instructions on working with form data, see <a href="#using_forms">Using the Form Manager</a>.
 
 <p>The Prefill Form Data window allows you to perform these actions:
 
 <ul>
 	<li><b>Click in a field to edit the displayed data:</b> Any changes you make here will be reflected in the data used to fill in this form, but won't change your stored data.
-	<li><b>Select alternative data:</b> Click the arrow on the right side of any field to display a drop-down menu for that field. If you have previously used Form Manager to save alternate information, for example a different mailing address, the available alternates are listed in the menu.
+	<li><b>Select alternate data:</b> Click the arrow on the right side of any field to display a drop-down menu for that field. If you have previously used Form Manager to save alternate information (for example, a different mailing address), the available alternates are listed in the menu.
 	<li><b>Check the items that you would like to have prefilled:</b> Only the items with checkmarks beside them will be filled in automatically. When you first open the window, all the items are checked. Click to deselect any that you don't want filled in automatically.
-	<li><b>Bypass this screen when prefilling this form in the future:</b> Select this checkbox to avoid seeing this window the next time you visit this web site. This can be conveninent, for example, if you frequently need to enter the same data at the same web site and don't need to check it every time before Form Manager fills it in for you.
+	<li><b>Bypass this screen when prefilling this form in the future:</b> Select this checkbox to avoid seeing this window the next time you visit this web site. This can be convenient; for example, if you frequently need to enter the same data at the same web site and don't need to check it every time before Form Manager fills it in for you.
 	<p>If you change your mind about this decision, you can restore the Prefill Form Data window for this web site. For details, see <a href="#forms_sites">Form Manager - Sites</a>.
 	<li><b>View Stored Form Data:</b> Click this button to examine or edit all personal data that Form Manager has saved. For details, see <a href="#forms_data">Form Manager - Data</a>.
 </ul>
@@ -1115,7 +1121,7 @@ site&quot; in response to the Form Manager's request to store form data.
 
 <hr>
 
-<p><i>3 June 2002</i></p>
+<p><i>6 June 2002</i></p>
 
 <hr>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
