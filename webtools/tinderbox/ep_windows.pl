@@ -33,7 +33,7 @@ sub has_error {
     or /Unknown host / # . . . . . . . . . . cvs error
     or /\[checkout aborted\]/  # . . . . . . cvs error
     or /\: cannot find module/ # . . . . . . cvs error
-;
+    ;
 }
 
 
@@ -41,7 +41,7 @@ sub has_warning {
   local $_ = $_[0];
   /: warning/    # Link error
     or / error / # C error
-;
+    ;
 }
 
 sub has_errorline {
@@ -52,7 +52,7 @@ sub has_errorline {
 
   if(/(mozilla([\\\/][-a-z0-9\._]+)*)/i) {
     $out->{error_file}     = $1;
-    $out->{error_file_ref} = lc $1;
+    $out->{error_file_ref} = $1;
     $out->{error_file_ref} =~ s|\\|/|g;
 
     /\(([0-9]+)\)/ and $out->{error_line} = $1;
@@ -62,7 +62,7 @@ sub has_errorline {
 
   if( $line =~ m@(^([A-Za-z0-9_]+\.[A-Za-z])+\(([0-9]+)\))@ ){
     $out->{error_file}     = $1;
-    $out->{error_file_ref} = lc $2;
+    $out->{error_file_ref} = $2;
     $out->{error_line}     = $3;
     $out->{error_guess}    = 1;
     $out->{error_file_ref} =~ s@\\@/@g;
