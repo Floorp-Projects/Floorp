@@ -282,6 +282,11 @@ BEGIN
             MENUITEM "GetName",                     ID_INTERFACES_NSIDOMWINDOW_GETNAME
 
             MENUITEM SEPARATOR
+            MENUITEM "GetTextZoom",                 ID_INTERFACES_NSIDOMWINDOW_GETTEXTZOOM
+
+            MENUITEM "SetTextZoom",                 ID_INTERFACES_NSIDOMWINDOW_SETTEXTZOOM
+
+            MENUITEM SEPARATOR
             MENUITEM "GetScsollX",                  ID_INTERFACES_NSIDOMWINDOW_GETSCSOLLX
 
             MENUITEM "GetScrollY",                  ID_INTERFACES_NSIDOMWINDOW_GETSCROLLY
@@ -375,6 +380,29 @@ BEGIN
             MENUITEM "ShutDownCurrentProfile",      ID_INTERFACES_NSIPROFILE_SHUTDOWNCURRENTPROFILE
 
         END
+        POPUP "nsIClipboardCommands"
+        BEGIN
+            MENUITEM "CanCopySelection",            ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCOPYSELECTION
+
+            MENUITEM "CanCutSelection",             ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCUTSELECTION
+
+            MENUITEM "CanPaste",                    ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANPASTE
+
+            MENUITEM SEPARATOR
+            MENUITEM "CopySelection",               ID_INTERFACES_NSICLIPBOARDCOMMANDS_COPYSELECTION
+
+            MENUITEM "CutSelection",                ID_INTERFACES_NSICLIPBOARDCOMMANDS_CUTSELECTION
+
+            MENUITEM "Paste",                       ID_INTERFACES_NSICLIPBOARDCOMMANDS_PASTE
+
+            MENUITEM "CopyLinkLocation",            ID_INTERFACES_NSICLIPBOARDCOMMANDS_COPYLINKLOCATION
+
+            MENUITEM SEPARATOR
+            MENUITEM "SelectAll",                   ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTALL
+
+            MENUITEM "SelectNone",                  ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTNONE
+
+        END
         POPUP "CallBacks"
         BEGIN
             MENUITEM "nsIStreamListener",           ID_INTERFACES_CALLBACKS_NSISTREAMLISTENER
@@ -396,22 +424,6 @@ BEGIN
     BEGIN
         MENUITEM "&70228",                      ID_VERIFYBUGS_70228
         MENUITEM "90195",                       ID_VERIFYBUGS_90195
-    END
-    POPUP "Clip&BoardTest"
-    BEGIN
-        MENUITEM "&Copy Selection",             ID_CLIPBOARDCMD_COPYSELECTION
-
-        MENUITEM "&Paste",                      ID_CLIPBOARDCMD_PASTE
-        MENUITEM "Select &All",                 ID_CLIPBOARDCMD_SELECTALL
-        MENUITEM "Select &None",                ID_CLIPBOARDCMD_SELECTNONE
-        MENUITEM "Cu&t Selection",              ID_CLIPBOARDCMD_CUTSELECTION
-        MENUITEM "Copy &Link Location",         ID_CLIPBOARDCMD_COPYLINKLOCATION
-
-        MENUITEM "Can Copy &Selection",         ID_CLIPBOARDCMD_CANCOPYSELECTION
-
-        MENUITEM "Can C&ut Selection",          ID_CLIPBOARDCMD_CANCUTSELECTION
-
-        MENUITEM "Can Pas&Te",                  ID_CLIPBOARDCMD_CANPASTE
     END
 END
 

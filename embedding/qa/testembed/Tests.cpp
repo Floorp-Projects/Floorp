@@ -59,6 +59,7 @@
 #include "domwindow.h"
 #include "selection.h"
 #include "nsProfile.h"
+#include "nsIClipboardCmd.h"
 #include "QaUtils.h"
 #include <stdio.h>
 
@@ -87,15 +88,6 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD2, OnToolsTestYourMethod2)
 	ON_COMMAND(ID_VERIFYBUGS_70228, OnVerifybugs70228)
-    ON_COMMAND(ID_CLIPBOARDCMD_PASTE, OnPasteTest)
-    ON_COMMAND(ID_CLIPBOARDCMD_COPYSELECTION, OnCopyTest)
-    ON_COMMAND(ID_CLIPBOARDCMD_SELECTALL, OnSelectAllTest)
-    ON_COMMAND(ID_CLIPBOARDCMD_SELECTNONE, OnSelectNoneTest)
-    ON_COMMAND(ID_CLIPBOARDCMD_CUTSELECTION, OnCutSelectionTest)
-    ON_COMMAND(ID_CLIPBOARDCMD_COPYLINKLOCATION, copyLinkLocationTest)
-    ON_COMMAND(ID_CLIPBOARDCMD_CANCOPYSELECTION, canCopySelectionTest)
-    ON_COMMAND(ID_CLIPBOARDCMD_CANCUTSELECTION, canCutSelectionTest)
-    ON_COMMAND(ID_CLIPBOARDCMD_CANPASTE, canPasteTest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_CANCEL, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_RUNALLTESTS, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_INIT, OnInterfacesNsidirectoryservice)
@@ -183,6 +175,17 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SETLOADGROUP, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SUSPEND, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_RUNALLTESTS, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETTEXTZOOM, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SETTEXTZOOM, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCOPYSELECTION, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCUTSELECTION, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANPASTE, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_COPYLINKLOCATION, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_COPYSELECTION, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CUTSELECTION, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_PASTE, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTALL, OnInterfacesNsiclipboardcommands)
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTNONE, OnInterfacesNsiclipboardcommands)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -634,153 +637,6 @@ void CTests::FileMoveTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir)
 }
 
 // ***********************************************************************
-//DHARMA	- nsIClipboardCommands
-// Checking the paste() method.
-void CTests::OnPasteTest()
-{
-    QAOutput("testing paste command", 1);
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-        rv = clipCmds->Paste();
-		RvTestResult(rv, "nsIClipboardCommands::Paste()' rv test", 1);
-
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-// Checking the copySelection() method.
-void CTests::OnCopyTest()
-{
-    QAOutput("testing copyselection command");
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-        rv = clipCmds->CopySelection();
-		RvTestResult(rv, "nsIClipboardCommands::CopySelection()' rv test", 1);
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-// Checking the selectAll() method.
-void CTests::OnSelectAllTest()
-{
-    QAOutput("testing selectall method");
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-        rv = clipCmds->SelectAll();
-		RvTestResult(rv, "nsIClipboardCommands::SelectAll()' rv test", 1);
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-// Checking the selectNone() method.
-void CTests::OnSelectNoneTest()
-{
-    QAOutput("testing selectnone method");
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-        rv = clipCmds->SelectNone();
-		RvTestResult(rv, "nsIClipboardCommands::SelectNone()' rv test", 1);
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-// Checking the cutSelection() method.
-void CTests::OnCutSelectionTest()
-{
-    QAOutput("testing cutselection method");
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-        rv = clipCmds->CutSelection();
-		RvTestResult(rv, "nsIClipboardCommands::CutSelection()' rv test", 1);
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-// Checking the copyLinkLocation() method.
-void CTests::copyLinkLocationTest()
-{
-    QAOutput("testing CopyLinkLocation method", 2);
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-        rv = clipCmds->CopyLinkLocation();
-		RvTestResult(rv, "nsIClipboardCommands::CopyLinkLocation()' rv test", 1);
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-// Checking the canCopySelection() method.
-void CTests::canCopySelectionTest()
-{
-    PRBool canCopySelection = PR_FALSE;
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-       rv = clipCmds->CanCopySelection(&canCopySelection);
-	   RvTestResult(rv, "nsIClipboardCommands::CanCopySelection()' rv test", 1);
-
-       if(canCopySelection)
-          QAOutput("The selection you made Can be copied", 2);
-       else
-          QAOutput("Either you did not make a selection or The selection you made Cannot be copied", 2);
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-// Checking the canCutSelection() method.
-void CTests::canCutSelectionTest()
-{
-    PRBool canCutSelection = PR_FALSE;
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-       rv = clipCmds->CanCutSelection(&canCutSelection);
-	   RvTestResult(rv, "nsIClipboardCommands::CanCutSelection()' rv test", 1);
-
-	   if(canCutSelection)
-          QAOutput("The selection you made Can be cut", 2);
-       else
-          QAOutput("Either you did not make a selection or The selection you made Cannot be cut", 2);
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-// Checking the canPaste() method.
-void CTests::canPasteTest()
-{
-    PRBool canPaste = PR_FALSE;
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-    if (clipCmds)
-	{
-        rv = clipCmds->CanPaste(&canPaste);
-	    RvTestResult(rv, "nsIClipboardCommands::CanPaste()' rv test", 1);
-
-		if(canPaste)
-			QAOutput("The clipboard contents can be pasted here", 2);
-		else
-			QAOutput("The clipboard contents cannot be pasted here", 2);
-	}
-	else
-		QAOutput("We didn't get the clipboard object.", 1);
-}
-
-//DHARMA
-
-
-// ***********************************************************************
 // ***************** Bug Verifications ******************
 // ***********************************************************************
 
@@ -867,3 +723,9 @@ void CTests::OnInterfacesNsiwebnav()
 	oWebNav.OnStartTests(nCommandID);	
 }		
 
+
+void CTests::OnInterfacesNsiclipboardcommands() 
+{
+	CNsIClipBoardCmd  oClipCmd(qaWebBrowser) ;
+	oClipCmd.OnStartTests(nCommandID);
+}

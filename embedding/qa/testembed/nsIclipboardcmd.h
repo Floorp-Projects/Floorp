@@ -39,37 +39,32 @@
 
 // File Overview....
 // 
-// Header file for nsIDOMWindow interface test cases
+// Header file for nsIClipBoardCommand interface test cases
 
-class CDomWindow
-{
+class CNsIClipBoardCmd
+{	
 public:
-	CDomWindow(nsIWebBrowser* mWebBrowser);
-private:
+
+	CNsIClipBoardCmd(nsIWebBrowser* mWebBrowser);
+
+public:
+	~CNsIClipBoardCmd();
 
 public:
 	nsCOMPtr<nsIWebBrowser> qaWebBrowser ;
+
 	void OnStartTests(UINT nMenuID);
-	void RunAllTests();
-	void GetContentDOMWindow();
-	void GetTop();
-	void GetParent();
-	void GetScrollbars();
-	void GetFrames();
-	void GetDocument();
-	void GetSelection();
-	void GetTextZoom();
-	void SetTextZoom();
-	void GetScrollX();
-	void GetScrollY();
-	void ScrollTo();
-	void ScrollBy();
-	void ScrollByLines();
-	void ScrollByPages();
-	void SizeToContent();
-	nsIDOMWindow* GetDOMOWindowObject();
-public:
-	virtual ~CDomWindow();
+	void OnPasteTest();
+	void OnCopyTest();
+	void OnSelectAllTest();
+	void OnSelectNoneTest();
+	void OnCutSelectionTest();
+	void copyLinkLocationTest();
+	void canCopySelectionTest();
+	void canCutSelectionTest();
+	void canPasteTest();
 
 protected:
+
+
 };

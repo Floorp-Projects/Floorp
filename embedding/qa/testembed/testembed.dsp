@@ -130,6 +130,10 @@ SOURCE=.\MostRecentUrls.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\nsIClipboardCmd.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsiDirServ.cpp
 # End Source File
 # Begin Source File
@@ -227,6 +231,10 @@ SOURCE=.\IBrowserFrameGlue.h
 # Begin Source File
 
 SOURCE=.\MostRecentUrls.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsIClipboardCmd.h
 # End Source File
 # Begin Source File
 
