@@ -136,44 +136,6 @@ nsresult nsCollation::CompareString(nsICollation *inst, const nsCollationStrengt
   return res;
 }
 
-nsresult nsCollation::CreateSortKey(nsICollation *inst, const nsCollationStrength strength, 
-                                    const nsString& stringIn, nsString& key)
-{
-  PRUint32 aLength;
-  PRUint8 *aKey;
-  nsresult res;
-
-  res = inst->GetSortKeyLen(strength, stringIn, &aLength);
-  if (NS_SUCCEEDED(res)) {
-	  PRUint32 bufferLength = (aLength==0) ? 2 :((aLength + 1) / 2 * 2);  // should be even
-	
-    aKey = new PRUint8[bufferLength];
-    if (nsnull != aKey) {
-      aKey[bufferLength-1] = 0;                     // pre-set zero to the padding
-      res = inst->CreateRawSortKey(strength, stringIn, aKey, &aLength);
-      if (NS_SUCCEEDED(res)) {
-        PRUnichar *aKeyInUnichar = (PRUnichar *) aKey;
-        PRUint32 aLengthUnichar = bufferLength / 2;
-
-        // to avoid nsString to assert, chop off the last null word (padding)
-        // however, collation key may contain zero's anywhere in the key
-        // so we may still get assertion as long as nsString is used to hold collation key
-        // use CreateRawSortKey instead (recommended) to avoid this to happen
-        if (aKeyInUnichar[aLengthUnichar-1] == 0)
-          aLengthUnichar--;
-
-        key.Assign(aKeyInUnichar, aLengthUnichar);
-      }
-      delete [] aKey;
-    }
-    else {
-      res = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  return res;
-}
-
 PRInt32 nsCollation::CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
                                        const PRUint8* key2, const PRUint32 len2)
 {
@@ -186,19 +148,6 @@ PRInt32 nsCollation::CompareRawSortKey(const PRUint8* key1, const PRUint32 len1,
   }
 
   return result;
-}
-
-PRInt32 nsCollation::CompareSortKey(const nsString& key1, const nsString& key2) 
-{
-  PRUint8 *rawKey1, *rawKey2;
-  PRUint32 len1, len2;
-
-  rawKey1 = (PRUint8 *) key1.GetUnicode();
-  len1 = key1.Length() * sizeof(PRUnichar);
-  rawKey2 = (PRUint8 *) key2.GetUnicode();
-  len2 = key2.Length() * sizeof(PRUnichar);
-
-  return CompareRawSortKey(rawKey1, len1, rawKey2, len2);
 }
 
 nsresult nsCollation::NormalizeString(nsString& stringInOut)
