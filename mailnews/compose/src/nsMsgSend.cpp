@@ -108,6 +108,7 @@
 #include "nsIMsgCompose.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "nsIMsgAccountManager.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -3528,8 +3529,8 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     // we might not have a msg window if only the compose window is open.
     if(NS_FAILED(rv))
       msgWindow = nsnull;
-    
-    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mCompFields->GetNewspostUrl(),
+
+    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mUserIdentity,
       uriListener, msgWindow, nsnull);
     if (NS_FAILED(rv)) return rv;
   }

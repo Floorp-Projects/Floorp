@@ -769,128 +769,31 @@ nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
 }
 
 nsresult 
-nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames, const char *newspostingUrl, char **newsUrlSpec)
+nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames, nsIMsgIdentity *aSenderIdentity, char **newsUrlSpec)
 {
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(nntpUrl);
   NS_ENSURE_ARG_POINTER(newsgroupsNames);
   if (*newsgroupsNames == '\0') return NS_ERROR_FAILURE;
 
-  // XXX TODO rewrite this
-  // instead of using the hostname, we need to keep track of the current server id
-  // if newspostingUrl is non-null, we'll use that to determine the initial currentServer
-  // before we do that, I need to make sure the newspostingUrl we pass in is correct.
-  // until then, it is going to be safer to ignore it and try to determine the posting host
-  // from the newsgroups.
-
   nsCAutoString host;
+  nsXPIDLCString temphost;
+  PRInt32 port;
 
-  // newsgroupsNames can be a comma separated list of these:
-  // news://host/group
-  // news://group
-  // host/group
-  // group
-
-  //nsCRT::strtok is going destroy what we pass to it, so we need to make a copy of newsgroupsNames.
-  char *list = nsCRT::strdup(newsgroupsNames);
-  char *token = nsnull;
-  char *rest = list;
-  nsCAutoString str;
-  PRUint32 numGroups = 0;   // the number of newsgroup we are attempt to post to
-  nsCAutoString currentGroup;
-
-  token = nsCRT::strtok(rest, ",", &rest);
-  while (token && *token) {
-    str = token;
-    str.StripWhitespace();
-
-    if (!str.IsEmpty()) {
-      nsCAutoString theRest;
-      nsCAutoString currentHost;
-      
-      // does str start with "news:/"?
-      if (str.Find(kNewsRootURI) == 0) 
-      {
-        // we have news://group or news://host/group
-        // set theRest to what's after news://
-        str.Right(theRest, str.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */);
-      }
-      else if (str.Find(":/") != -1) 
-      {
-        // we have x:/y where x != news. this is bad, return failure
-        CRTFREEIF(list);
-        return NS_ERROR_FAILURE;
-      }
-      else 
-      {
-        theRest = str;
-      }
-      // theRest is "group" or "host/group"
-      PRInt32 slashpos = theRest.FindChar('/');
-      if (slashpos > 0 )
-      {
-        // theRest is "host/group"
-        theRest.Left(currentHost, slashpos);
-        theRest.Right(currentGroup, theRest.Length() - slashpos);
-      }
-      else 
-      {
-        // str is "group"
-        rv = FindHostFromGroup(currentHost, str);
-        currentGroup = str;
-        if (NS_FAILED(rv)) 
-        {
-          CRTFREEIF(list);
-          return rv;
-        }
-      }
-
-      numGroups++;
-      if (!currentHost.IsEmpty()) 
-      {
-        if (host.IsEmpty()) 
-        {
-          host = currentHost;
-        }
-        else 
-        {
-          if (!host.Equals(currentHost)) 
-          {
-            // yikes, we are trying to cross post
-            CRTFREEIF(list);
-            return NS_ERROR_NNTP_NO_CROSS_POSTING;
-          }
-        }
-      }
-      
-      str = "";
-      currentHost = "";
-    }
-    token = nsCRT::strtok(rest, ",", &rest);
-  }    
-  CRTFREEIF(list);
-  
-  // if we don't have a news host, find the first news server and use it
-  if (host.IsEmpty()) 
+  nsCOMPtr<nsIMsgIncomingServer> nntpServer;
+  rv = GetNntpServerByIdentity(aSenderIdentity, getter_AddRefs(nntpServer));
+  if (NS_SUCCEEDED(rv) && nntpServer)
   {
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = accountManager->FindServer("","","nntp", getter_AddRefs(server));
-    if (NS_SUCCEEDED(rv) && server) 
-    {
-      nsXPIDLCString newsHostName;
-      rv = server->GetRealHostName(getter_Copies(newsHostName));
-      if (NS_SUCCEEDED(rv)) 
-        host = newsHostName;
-    }
+    nntpServer->GetRealHostName(getter_Copies(temphost));
+    host = temphost;
+    nntpServer->GetPort(&port);
   }
 
   // if we *still* don't have a hostname, use "news"
   if (host.IsEmpty()) 
     host = "news";
 
-  *newsUrlSpec = PR_smprintf("%s/%s",kNewsRootURI,host.get());
+  *newsUrlSpec = PR_smprintf("%s/%s:%d",kNewsRootURI, host.get(), port);
   if (!*newsUrlSpec) return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -1026,8 +929,49 @@ nsNntpService::GenerateNewsHeaderValsForPosting(const char *newsgroupsList, char
   return NS_OK;
 }
 
+nsresult
+nsNntpService::GetNntpServerByIdentity(nsIMsgIdentity *aSenderIdentity, nsIMsgIncomingServer **aNntpServer)
+{
+  NS_ENSURE_ARG_POINTER(aNntpServer);
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (aSenderIdentity)
+  {
+    nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsISupportsArray> servers;
+    accountManager->GetServersForIdentity(aSenderIdentity, getter_AddRefs(servers));
+    if (!servers) return NS_ERROR_FAILURE;
+
+    PRUint32 cnt = 0, i;
+    servers->Count(&cnt);
+    for (i=0; i<cnt; i++)
+    {
+      nsCOMPtr<nsIMsgIncomingServer> inServer; 
+      inServer = do_QueryElementAt(servers, i, &rv);
+      if(NS_FAILED(rv) || (!inServer))
+        continue;
+
+      nsXPIDLCString serverType;
+      rv = inServer->GetType(getter_Copies(serverType));
+      if(serverType.Equals("nntp"))
+      {
+        *aNntpServer = inServer;
+        break;
+      }
+    }
+
+    // if we don't have a news host, find the first news server and use it
+    if (!*aNntpServer)
+      rv = accountManager->FindServer("","","nntp", aNntpServer);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP
-nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, const char *newspostingUrl, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
+nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, nsIMsgIdentity *aSenderIdentity, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
   // aMsgWindow might be null
   NS_ENSURE_ARG_POINTER(newsgroupsNames);
@@ -1045,7 +989,7 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsXPIDLCString newsUrlSpec;
-  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames, newspostingUrl, getter_Copies(newsUrlSpec));
+  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames, aSenderIdentity, getter_Copies(newsUrlSpec));
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl, &rv);
@@ -1070,7 +1014,7 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
   nsCOMPtr <nsIURI> url = do_QueryInterface(nntpUrl);
   rv = RunNewsUrl(url, aMsgWindow, nsnull /* consumer */);
   NS_ENSURE_SUCCESS(rv,rv);
-		
+
   if (_retval)
     rv = CallQueryInterface(nntpUrl, _retval);
     
@@ -1217,6 +1161,15 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
                                 hostName.get(),
                                 "nntp",
                                 getter_AddRefs(server));
+
+  if (!server)
+  {
+    // try the "real" settings ("realservername" and "realusername")
+    rv = accountManager->FindRealServer("",
+                                hostName.get(),
+                                "nntp",
+                                getter_AddRefs(server));
+  }
 
   // if we didn't find the server, and path was "/", this is a news://group url
   if (!server && !strcmp("/",path.get())) 
