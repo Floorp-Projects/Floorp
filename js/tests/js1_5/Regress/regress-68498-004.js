@@ -24,19 +24,20 @@
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=68498
 * See http://bugzilla.mozilla.org/showattachment.cgi?attach_id=25251
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=69441 (!!!)
 *
 * Brendan:
 *
 * "ECMA-262 Edition 3, 10.1.3 requires a FunctionDeclaration parsed as part 
 * of  a Program by eval to create a property of eval's caller's variable object.
-* This test evals in the body of a with statement, whose scope chain is not
+* This test evals in the body of a with statement, whose scope chain *is*
 * relevant to the effect of parsing the FunctionDeclaration."
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 68498;
 var summary = 'Testing self.eval(str) inside a function';
-var statprefix = '; currently at statement ';
-var statsuffix = ' within test -';
+var statprefix = '; currently at expect[';
+var statsuffix = '] within test -';
 var sToEval='';
 var actual=[ ];
 var expect=[ ];
@@ -53,7 +54,7 @@ function f(o,s,x) {with(o) eval(s); return z;};
 
 // Run-time statements to pass to the eval inside f
 sToEval += 'actual[0] = typeof g;'
-sToEval += 'function g(){actual[1]=(typeof w); return x};'
+sToEval += 'function g(){actual[1]=(typeof w == "undefined"  ||  w); return x};'
 sToEval += 'actual[2] = w;'
 sToEval += 'actual[3] = typeof g;'
 sToEval += 'var z=g();'
@@ -77,7 +78,7 @@ actual[5] = 'z' in self && z;
 *      this far up the scope chain to find x...therefore we expect 'inner'
 */
 expect[0] = 'function';
-expect[1] = 'undefined';
+expect[1] = 44;
 expect[2] = 44;
 expect[3] = 'function';
 expect[4] = 'inner';
