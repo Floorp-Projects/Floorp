@@ -8,7 +8,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIPermission.h"
 #include "nsISupportsArray.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 
 // prefs for keychain password autofill
@@ -236,7 +236,7 @@ const int kDisableAllCookies = 2;
       }
       else {
         // allow/deny column
-        PRUInt32 capability = PR_FALSE;
+        PRUint32 capability = PR_FALSE;
         perm->GetCapability(&capability);
         if ( capability == nsIPermissionManager::ALLOW_ACTION)
           retVal = [self getLocalizedString:@"Allow"];
