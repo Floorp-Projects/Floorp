@@ -22,15 +22,6 @@ package org.mozilla.pluglet.mozilla;
 import org.mozilla.pluglet.*;
 import java.net.URL;
 public interface  PlugletManager {
-    public static final int APPCONTEXT = 2;
-    public static final int DISPLAY    = 1;
-    /**
-     * Returns the value of a variable associated with the pluglet manager.
-     *
-     * @param variable the pluglet manager variable to get
-     */
-    public String getValue(int variable);
-
     /**
      * Causes the pluglets directory to be searched again for new pluglet 
      * libraries.

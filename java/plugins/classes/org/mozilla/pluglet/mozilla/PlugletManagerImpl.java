@@ -28,13 +28,6 @@ public class PlugletManagerImpl implements PlugletManager {
 	nativeInitialize();
     }
     /**
-     * Returns the value of a variable associated with the pluglet manager.
-     *
-     * @param variable the pluglet manager variable to get
-     */
-    public native String getValue(int variable);
-
-    /**
      * Causes the pluglets directory to be searched again for new pluglet 
      * libraries.
      *

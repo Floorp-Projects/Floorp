@@ -29,14 +29,6 @@ extern "C" {
 #endif
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletManagerImpl
- * Method:    getValue
- * Signature: (I)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_getValue
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     org_mozilla_pluglet_mozilla_PlugletManagerImpl
  * Method:    reloadPluglets
  * Signature: (Z)V
  */

@@ -24,23 +24,6 @@
 static jfieldID peerFID = NULL;
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletManagerImpl
- * Method:    getValue
- * Signature: (I)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_getValue
-    (JNIEnv *env, jobject jthis, jint param) {
-    nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
-    char *res = NULL;
-    if (NS_FAILED(manager->GetValue((nsPluginManagerVariable)param,&res))
-	|| !res) {
-        return NULL;
-    } else {
-        return env->NewStringUTF(res);
-    }
-}
-
-/*
- * Class:     org_mozilla_pluglet_mozilla_PlugletManagerImpl
  * Method:    reloadPluglets
  * Signature: (Z)V
  */
