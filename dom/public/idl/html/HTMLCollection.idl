@@ -1,5 +1,5 @@
    interface HTMLCollection {
-     attribute long            length;
-     Node                      item(in long index);
+     readonly attribute unsigned long   length;
+     Node                      item(in unsigned long index);
      Node                      namedItem(in wstring name);
    };
