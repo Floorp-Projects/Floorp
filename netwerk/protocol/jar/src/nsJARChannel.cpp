@@ -667,11 +667,8 @@ nsJARChannel::GetContentType(char* *aContentType)
     nsresult rv = NS_OK;
     if (mContentType == nsnull) {
         if (!mJAREntry)
-          return NS_ERROR_FAILURE;
-
-        char* fileName = new char[PL_strlen(mJAREntry)+1];
-        PL_strcpy(fileName, mJAREntry);
-
+            return NS_ERROR_FAILURE;
+        char* fileName = nsCRT::strdup(mJAREntry);
         if (fileName != nsnull) {
             PRInt32 len = nsCRT::strlen(fileName);
             const char* ext = nsnull;
@@ -689,7 +686,7 @@ nsJARChannel::GetContentType(char* *aContentType)
                 }
             }
             else 
-                rv = NS_ERROR_FAILURE;
+                rv = NS_ERROR_OUT_OF_MEMORY;
 		
             delete []fileName;
         } 
