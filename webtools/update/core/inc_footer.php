@@ -41,10 +41,9 @@
 		<ul id="bn">
 		<li><a href="/about/policies/">Terms of Use</a></li>
 		<li><a href="/about/contact/">Contact Us</a></li>
-		<li><a href="http://www.mozilla.org/foundation/donate.html">Donate</a></li>
+		<li><a href="http://www.mozilla.org/foundation/donate.html">Donate to Mozilla</a></li>
 		</ul>
-		<p><strong>Update-Beta is pre-release software. It is provided for testing only.<br>It is not guaranteed to be current or reliable.</strong><br>
-		Copyright &copy; 2004 The Mozilla Organization</p>
+		<p>Copyright &copy; 2004-2005 The Mozilla Organization</p>
 	</div>
   <!-- closes #footer-->
 

@@ -67,10 +67,11 @@ include"$page_header";
     <h2 class="first"><A HREF="http://www.adobe.com/products/acrobat/readermain.html">Acrobat Reader</A></h2>
     <P class="first">By <A HREF="http://www.adobe.com">Adobe Systems</A></P>
     <p class="first">For viewing and printing Adobe Portable Document Format (PDF) files</p>
+    <p><img src="/images/faq_small.png" style="float: left;" height=16 width=16 alt="">&nbsp;Adobe Reader 7.0 requires Windows 2000 or later. If you are using Windows 98 SE, Windows Me, or Windows NT 4.0, you will need to use Adobe Reader 6.0.3</p>
     <h3><IMG SRC="/images/install.png" HEIGHT=24 WIDTH=24 ALT="">&nbsp;Download</h3>
-    <DIV style="margin-top: 5px; height: 38px">
-        <DIV class="iconbar"><IMG SRC="/images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://ardownload.adobe.com/pub/adobe/reader/win/6.x/6.0/enu/AdbeRdr60_enu_full.exe">Version 6.01</a></DIV>
-        <DIV class="iconbar"><IMG SRC="/images/linux_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Linux:<BR>&nbsp;&nbsp;<a href="ftp://download.adobe.com/pub/adobe/acrobatreader/unix/5.x/linux-509.tar.gz">Version 5.09</a></DIV>
+    <DIV style="margin-top: 5px; height: 50px">
+        <DIV class="iconbar"><IMG SRC="/images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://ardownload.adobe.com/pub/adobe/reader/win/7x/7.0/enu/AdbeRdr70_enu_full.exe">Version 7.0</a><br><a href="http://ardownload.adobe.com/pub/adobe/reader/win/6.x/6.0/enu/AdbeRdr602_distrib_enu.exe">6.02 Full</a> / <a href="http://ardownload.adobe.com/pub/adobe/acrobat/win/6.x/6.0.3/misc/Acro-Reader_603_Update.exe">6.03 Update</a></DIV>
+        <DIV class="iconbar"><IMG SRC="/images/linux_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Linux:<BR>&nbsp;&nbsp;<a href="http://ardownload.adobe.com/pub/adobe/acrobatreader/unix/5.x/linux-5010.tar.gz">Version 5.10</a></DIV>
         <DIV class="iconbar"><IMG SRC="/images/macosx_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For MacOSX:<BR>&nbsp;&nbsp;Unsupported <a href="http://plugindoc.mozdev.org/OSX.html#Acrobat">(Details)</a></DIV>
     </DIV>
     <DIV class="baseline"><img src="/images/faq_small.png" style="float: left;" height=16 width=16 alt="">&nbsp;Support Documentation: <a href="http://plugindoc.mozdev.org/windows.html#Acrobat">Windows</a>, <a href="http://plugindoc.mozdev.org/linux.html#Acrobat">Linux</a>, <a href="http://plugindoc.mozdev.org/OSX.html#Acrobat">MacOSX</a> | <a href="http://plugindoc.mozdev.org/faqs/acroread.html">Acrobat Reader FAQ</a></DIV>
@@ -95,8 +96,8 @@ include"$page_header";
     <p class="first">The Java Runtime Enviroment enables your computer to run applications and applets that use Java technology.</p>
     <h3><IMG SRC="/images/install.png" HEIGHT=24 WIDTH=24 ALT="">&nbsp;Download</h3>
     <DIV style="margin-top: 5px; height: 38px">
-        <DIV class="iconbar"><IMG SRC="/images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://javashoplm.sun.com/ECom/docs/Welcome.jsp?StoreId=22&amp;PartDetailId=jre-1.5.0-oth-JPR&amp;SiteId=JSC&amp;TransactionId=noreg">Version 5.0</a></DIV>
-        <DIV class="iconbar"><IMG SRC="/images/linux_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Linux:<BR>&nbsp;&nbsp;<a href="http://javashoplm.sun.com/ECom/docs/Welcome.jsp?StoreId=22&amp;PartDetailId=jre-1.5.0-oth-JPR&amp;SiteId=JSC&amp;TransactionId=noreg">Version 5.0</a></DIV>
+        <DIV class="iconbar"><IMG SRC="/images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://javashoplm.sun.com/ECom/docs/Welcome.jsp?StoreId=22&amp;PartDetailId=jre-1.5.0_01-oth-JPR&amp;SiteId=JSC&amp;TransactionId=noreg">Version 5.0 Update 1</a></DIV>
+        <DIV class="iconbar"><IMG SRC="/images/linux_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Linux:<BR>&nbsp;&nbsp;<a href="http://javashoplm.sun.com/ECom/docs/Welcome.jsp?StoreId=22&amp;PartDetailId=jre-1.5.0_01-oth-JPR&amp;SiteId=JSC&amp;TransactionId=noreg">Version 5.0 Update 1</a></DIV>
         <DIV class="iconbar"><IMG SRC="/images/macosx_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For MacOSX:<BR>&nbsp;&nbsp;<a href="http://plugindoc.mozdev.org/OSX.html#Java">Details</a></DIV>
     </DIV>
     <DIV class="baseline"><img src="/images/faq_small.png" style="float: left;" height=16 width=16 alt="">&nbsp;Support Documentation: <a href="http://plugindoc.mozdev.org/windows.html#Java">Windows</a>, <a href="http://plugindoc.mozdev.org/linux.html#Java">Linux</a>, <a href="http://plugindoc.mozdev.org/OSX.html#Java">MacOSX</a> | <a href="http://plugindoc.mozdev.org/faqs/java.html">Java Plugin FAQ</a></DIV>
@@ -156,7 +157,7 @@ include"$page_header";
 </DIV>
 
 <h2>Looking for a plugin not listed here?</h2>
-<p class="first">This page only lists common popular plugins. For more information about other plugins available for Mozilla-based Browsers, visit <a href="http://plugindoc.mozdev.org">PluginDoc</a>.</p>
+<p class="first">This page only lists the most common and most popular plugins. For more information about other plugins available for Mozilla-based Browsers, visit <a href="http://plugindoc.mozdev.org">PluginDoc</a>.</p>
 
 </div>
 
