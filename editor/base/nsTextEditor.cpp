@@ -1,4 +1,4 @@
-/* -*- Mode: C++ tab-width: 2 indent-tabs-mode: nil c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL") you may not use this file except in
@@ -1513,7 +1513,9 @@ NS_IMETHODIMP nsTextEditor::OutputToString(nsString& aOutputString,
   else
   { // default processing
     nsCOMPtr<nsITextEncoder> encoder;
-    char progid[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+    char* progid = new char[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+    if (! progid)
+      return NS_ERROR_OUT_OF_MEMORY;
     strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
     char* type = aFormatType.ToNewCString();
     strcat(progid, type);
@@ -1522,6 +1524,8 @@ NS_IMETHODIMP nsTextEditor::OutputToString(nsString& aOutputString,
                                             nsnull,
                                             nsIDocumentEncoder::GetIID(),
                                             getter_AddRefs(encoder));
+
+    delete[] progid;
     if (NS_FAILED(rv))
     {
       printf("Couldn't get progid %s\n", progid);
@@ -1583,7 +1587,10 @@ NS_IMETHODIMP nsTextEditor::OutputToStream(nsIOutputStream* aOutputStream,
 {
   nsresult rv;
   nsCOMPtr<nsITextEncoder> encoder;
-  char progid[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+  char* progid = new char[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+  if (! progid)
+      return NS_ERROR_OUT_OF_MEMORY;
+
   strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
   char* type = aFormatType.ToNewCString();
   strcat(progid, type);
@@ -1592,6 +1599,8 @@ NS_IMETHODIMP nsTextEditor::OutputToStream(nsIOutputStream* aOutputStream,
                                           nsnull,
                                           nsIDocumentEncoder::GetIID(),
                                           getter_AddRefs(encoder));
+
+  delete[] progid;
   if (NS_FAILED(rv))
   {
     printf("Couldn't get progid %s\n", progid);
