@@ -768,9 +768,8 @@
          nc:link="mail_help.xhtml#about_internet_message_access_protocol"/>
      </rdf:li>
      <rdf:li>
-       <rdf:Description ID="import_certificates"
-         nc:name="import certificates"
-	 nc:link="certs_help.xhtml#your_certificates"/>
+       <rdf:Description ID="import"
+         nc:name="import"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="intermediate_server_CA_certificates"
@@ -832,6 +831,36 @@
        <rdf:Description ID="IMAP:server_settings"
          nc:name="IMAP server settings"
          nc:link="mail_help.xhtml#imap_server_settings"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#import">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="import:address_book"
+         nc:name="import address books"
+         nc:link="mail_help.xhtml#importing_address_books"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="import:bookmark_list"
+         nc:name="import bookmarks"
+         nc:link="customize_help.xhtml#exporting_or_importing_a_bookmark_list"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="import:certificates"
+         nc:name="import certificates"
+         nc:link="certs_help.xhtml#your_certificates"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="import:crls"
+         nc:name="import CRLs"
+         nc:link="using_certs_help.xhtml#importing_crls"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="import:mail"
+         nc:name="import mail or settings from other programs"
+         nc:link="mail_help.xhtml#importing_mail_from_other_programs"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
