@@ -2046,6 +2046,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
       scrollEvent.isShift = (aGdkButtonEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
       scrollEvent.isControl = (aGdkButtonEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
       scrollEvent.isAlt = (aGdkButtonEvent->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+      scrollEvent.isMeta = PR_FALSE;  // GTK+ doesn't support the meta key
       scrollEvent.time = aGdkButtonEvent->time;
       AddRef();
       if (mEventCallback)
