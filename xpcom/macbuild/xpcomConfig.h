@@ -1,3 +1,5 @@
+#error "Don't use me"
+
 #define EDITOR 1
 
 #include "NSCrossProductDefines.h"
