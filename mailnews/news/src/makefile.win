@@ -31,6 +31,8 @@ CPPSRCS=    nsNNTPProtocol.cpp				\
 			nsNNTPArticleList.cpp			\
 			nsNNTPNewsgroupList.cpp			\
 			nsNNTPNewsgroupPost.cpp			\
+			nsNNTPNewsgroup.cpp	\
+			nsNNTPCategoryContainer.cpp \
 			nsNNTPHost.cpp					\
 			nsNntpService.cpp				\
 			nsNewsFolder.cpp	\
@@ -46,6 +48,8 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNNTPNewsgroupList.obj			\
 			.\$(OBJDIR)\nsNNTPNewsgroupPost.obj			\
 			.\$(OBJDIR)\nsNNTPHost.obj					\
+			.\$(OBJDIR)\nsNNTPNewsgroup.obj	\
+			.\$(OBJDIR)\nsNNTPCategoryContainer.obj \
 			.\$(OBJDIR)\nsNntpService.obj				\
 			.\$(OBJDIR)\nsNewsFolder.obj				\
 			.\$(OBJDIR)\nsNntpIncomingServer.obj			\

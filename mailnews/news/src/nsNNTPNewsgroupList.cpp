@@ -43,8 +43,15 @@ class MessageDBView;
 
 
 #include "nsNNTPNewsgroupList.h"
+
 #include "nsINNTPArticleList.h"
 #include "nsNNTPArticleSet.h"
+
+#include "nsINNTPNewsgroup.h"
+#include "nsNNTPNewsgroup.h"
+
+#include "nsINNTPHost.h"
+#include "nsNNTPHost.h"
 
 #include "msgCore.h"
 
@@ -66,6 +73,7 @@ class MessageDBView;
 #include "msgpane.h"
 #endif
 
+#if 0
 extern "C"
 {
 	extern int MK_OUT_OF_MEMORY;
@@ -73,6 +81,7 @@ extern "C"
 	extern int MK_HDR_DOWNLOAD_COUNT;
 	extern int MK_NO_NEW_DISC_MSGS;
 }
+#endif
 
 extern PRInt32 net_NewsChunkSize;
 
@@ -86,7 +95,7 @@ class nsNNTPNewsgroupList : public nsINNTPNewsgroupList
 #endif
 {
 public:
-  nsNNTPNewsgroupList(nsINNTPHost *, nsINNTPNewsgroup*);
+  nsNNTPNewsgroupList(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char*url);
   nsNNTPNewsgroupList();
   virtual  ~nsNNTPNewsgroupList();
   NS_DECL_ISUPPORTS
@@ -102,16 +111,16 @@ public:
 
   // XOVER parser to populate this class
   NS_IMETHOD InitXOVER(PRInt32 first_msg, PRInt32 last_msg);
-  NS_IMETHOD ProcessXOVER(const char *line, PRUint32 * status);
+  NS_IMETHOD ProcessXOVERLINE(const char *line, PRUint32 * status);
   NS_IMETHOD ResetXOVER();
   NS_IMETHOD ProcessNonXOVER(const char *line);
-  NS_IMETHOD FinishXOVER(int status, int *newstatus);
+  NS_IMETHOD FinishXOVERLINE(int status, int *newstatus);
   NS_IMETHOD ClearXOVERState();
+  NS_IMETHOD GetGroupName(char **retval);
 
     
 private:
-  NS_METHOD Init(nsINNTPHost *, nsINNTPNewsgroup*) { return NS_OK;}
-  NS_METHOD InitNewsgroupList(const char *url, const char *groupName);
+  void Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *url);
 
   NS_METHOD CleanUp();
     
@@ -128,7 +137,6 @@ private:
 #endif
   PRBool          m_finishingXover;
   nsINNTPHost*	GetHost() {return m_host;}
-  const char *	GetGroupName() {return m_groupName;}
   const char *	GetURL() {return m_url;}
   
 #ifdef HAVE_CHANGELISTENER
@@ -154,6 +162,7 @@ protected:
   PRInt32			m_maxArticles;
   char			*m_groupName;
   nsINNTPHost	*m_host;
+  nsINNTPNewsgroup *m_newsgroup;
   char			*m_url;			// url we're retrieving
 #ifdef HAVE_MASTER
   MSG_Master		*m_master;
@@ -173,10 +182,12 @@ protected:
 
 
 nsNNTPNewsgroupList::nsNNTPNewsgroupList(nsINNTPHost* host,
-                                         nsINNTPNewsgroup *newsgroup)
+                                         nsINNTPNewsgroup *newsgroup,
+										 const char *name,
+										 const char *url)
 {
     NS_INIT_REFCNT();
-    Init(host, newsgroup);
+    Init(host, newsgroup, name, url);
 }
 
 
@@ -186,11 +197,9 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 
 NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
 
-nsresult
-nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)
-#ifdef HAVE_PANES
-, MSG_Pane *pane);
-#endif
+
+void 
+nsNNTPNewsgroupList::Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *url)
 {
 #ifdef HAVE_NEWSDB
 	m_newsDB = NULL;
@@ -198,7 +207,7 @@ nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)
 #ifdef HAVE_DBVIEW
 	m_msgDBView = NULL;
 #endif
-	m_groupName = PL_strdup(groupName);
+	m_groupName = PL_strdup(name);
 	m_host = NULL;
 	m_url = PL_strdup(url);
 	m_lastProcessedNumber = 0;
@@ -214,24 +223,16 @@ nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)
 	m_startedUpdate = PR_FALSE;
 	memset(&m_knownArts, 0, sizeof(m_knownArts));
 	m_knownArts.group_name = m_groupName;
-#ifdef HAVE_URLPARSER
-	char* host_and_port = NET_ParseURL(url, GET_HOST_PART);
-#ifdef HAVE_MASTER
-	m_host = m_master->FindHost(host_and_port,
-								(url[0] == 's' || url[0] == 'S'),
-								-1);
-#endif
-    PR_FREEIF(host_and_port);
-#endif
+	m_host = host;
+	m_newsgroup = newsgroup;
 	m_knownArts.host = m_host;
+	m_knownArts.set = nsNNTPArticleSet::Create();
 	m_getOldMessages = PR_FALSE;
 	m_promptedAlready = PR_FALSE;
 	m_downloadAll = PR_FALSE;
 	m_maxArticles = 0;
 	m_firstMsgToDownload = 0;
 	m_lastMsgToDownload = 0;
-
-    return NS_MSG_SUCCESS;
 }
 
 nsresult
@@ -248,7 +249,10 @@ nsNNTPNewsgroupList::CleanUp() {
 	if (m_newsDB)
 		m_newsDB->Close();
 #endif
-	delete m_knownArts.set;
+	if (m_knownArts.set) {
+		delete m_knownArts.set;
+		m_knownArts.set = nsnull;
+	}
     
     return NS_OK;
 }
@@ -322,10 +326,16 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				newsGroupInfo->GetKnownArtsSet(knownArtsString);
 				if (last_possible < newsGroupInfo->GetHighWater())
 					newsGroupInfo->SetHighWater(last_possible, TRUE);
+				if (m_knownArts.set) {
+					delete m_knownArts.set;
+				}
 				m_knownArts.set = nsNNTPArticleSet::Create(knownArtsString);
 			}
 			else
-			{
+			{	
+				if (m_knownArts.set) {
+					delete m_knownArts.set;
+				}
 				m_knownArts.set = nsNNTPArticleSet::Create();
 				m_knownArts.set->AddRange(m_newsDB->GetLowWaterArticleNum(), m_newsDB->GetHighwaterArticleNum());
 			}
@@ -476,11 +486,13 @@ nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 		m_knownArts.host = host;
 		PR_FREEIF(m_knownArts.group_name);
 		m_knownArts.group_name = PL_strdup(group_name);
-		delete m_knownArts.set;
+		if (m_knownArts.set) {
+			delete m_knownArts.set;
+		}
 		m_knownArts.set = nsNNTPArticleSet::Create();
 
 		if (!m_knownArts.group_name || !m_knownArts.set) {
-		  return MK_OUT_OF_MEMORY;
+		  return NS_ERROR_OUT_OF_MEMORY;
 		}
 
 	}
@@ -536,7 +548,7 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 #define NEWS_ART_DISPLAY_FREQ		10
 
 nsresult
-nsNNTPNewsgroupList::ProcessXOVER(const char *line, PRUint32 *status)
+nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 {
 	const char *next;
 	PRUint32 message_number=0;
@@ -545,7 +557,7 @@ nsNNTPNewsgroupList::ProcessXOVER(const char *line, PRUint32 *status)
 
 	PR_ASSERT (line);
 	if (!line)
-      return NS_MSG_FAILURE;
+      return NS_ERROR_NULL_POINTER;
     
 #ifdef HAVE_DBVIEW
 	if (m_msgDBView != NULL)
@@ -671,7 +683,7 @@ nsNNTPNewsgroupList::ProcessNonXOVER (const char * /*line*/)
 
 
 nsresult
-nsNNTPNewsgroupList::FinishXOVER (int status, int *newstatus)
+nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 {
 	struct MSG_NewsKnown* k;
 
@@ -701,6 +713,11 @@ nsNNTPNewsgroupList::FinishXOVER (int status, int *newstatus)
 #endif
 
 	k = &m_knownArts;
+
+	if (k == nsnull) {
+		return NS_ERROR_NULL_POINTER;
+	}
+
 
 	if (k->set) 
 	{
@@ -783,5 +800,27 @@ nsresult
 nsNNTPNewsgroupList::ClearXOVERState()
 {
     return NS_OK;
+}
+
+nsresult
+nsNNTPNewsgroupList::GetGroupName(char **retval)
+{
+	*retval = m_groupName;
+	return NS_OK;
+}
+
+extern "C" nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
+                    nsINNTPHost *newsHost,
+                    nsINNTPNewsgroup *newsgroup,
+					const char *name,
+					const char *url)
+{
+	nsNNTPNewsgroupList *list = nsnull;
+	list = new nsNNTPNewsgroupList(newsHost, newsgroup, name, url);
+	if (list == nsnull) {
+			return NS_ERROR_OUT_OF_MEMORY;
+	}
+	nsresult rv = list->QueryInterface(nsINNTPNewsgroupList::GetIID(), (void **) aInstancePtrResult);
+	return rv;
 }
 

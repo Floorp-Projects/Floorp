@@ -39,6 +39,8 @@ public:
 	NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
 						   nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
+	NS_IMETHOD PostMessage (nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL ** aURL);
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIMsgMessageService Interface 
 	////////////////////////////////////////////////////////////////////////////////////////

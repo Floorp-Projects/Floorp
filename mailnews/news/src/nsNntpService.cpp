@@ -23,17 +23,28 @@
 #include <windows.h>    // for InterlockedIncrement
 #endif
 
-
 #include "nsNntpService.h"
+
 #include "nsINetService.h"
+
 #include "nsINntpUrl.h"
 #include "nsNNTPProtocol.h"
+
+#include "nsNNTPNewsgroupPost.h"
+#include "nsINetService.h"
+
+#include "nsIMsgMailSession.h"
+#include "nsIMsgIdentity.h"
+
+#include "nsString2.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 nsNntpService::nsNntpService()
 {
@@ -51,16 +62,17 @@ nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     if (nsnull == aInstancePtr)
         return NS_ERROR_NULL_POINTER;
  
-    if (aIID.Equals(nsINntpService::GetIID()) || aIID.Equals(kISupportsIID)) 
+    if (aIID.Equals(nsINntpService::GetIID()) 
+        || aIID.Equals(kISupportsIID)) 
 	{
         *aInstancePtr = (void*) ((nsINntpService*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(nsIMsgMessageService::GetIID())) 
 	{
         *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 
@@ -82,16 +94,16 @@ nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
 										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
-	// this function is just a shell right now....eventually we'll implement displaymessage such
-	// that we break down the URI and extract the news host and article number. We'll then
-	// build up a url that represents that action, create a connection to run the url
-	// and load the url into the connection. 
-	
-	// HACK ALERT: For now, the only news url we run is a display message url. So just forward
-	// this URI to RunNewUrl
+  // this function is just a shell right now....eventually we'll implement displaymessage such
+  // that we break down the URI and extract the news host and article number. We'll then
+  // build up a url that represents that action, create a connection to run the url
+  // and load the url into the connection. 
+  
+  // HACK ALERT: For now, the only news url we run is a display message url. So just forward
+  // this URI to RunNewUrl
+  nsString uri = aMessageURI;
 
-	return RunNewsUrl(aMessageURI, aDisplayConsumer, aUrlListener, aURL);
-
+  return RunNewsUrl(uri, aDisplayConsumer, aUrlListener, aURL);
 }
 
 nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
@@ -104,9 +116,53 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsINntpService support
 ////////////////////////////////////////////////////////////////////////////////////////
+nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL ** aURL)
+{
+  nsresult rv = NS_OK;
 
-NS_IMETHODIMP nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer, 
-										nsIUrlListener *aUrlListener, nsIURL ** aUrl)
+#ifdef DEBUG_sspitzer
+  printf("nsNntpService::PostMessage(%s,%s,%s,??,??)\n",(const char *)pathToFile,subject,newsgroup);
+#endif
+
+  NS_LOCK_INSTANCE();
+
+  // get the current identity from the news session....
+  NS_WITH_SERVICE(nsIMsgMailSession,newsSession,kCMsgMailSessionCID,&rv);
+
+  if (NS_SUCCEEDED(rv) && newsSession)
+	{
+      nsIMsgIdentity * identity = nsnull;
+      rv = newsSession->GetCurrentIdentity(&identity);
+
+      if (NS_SUCCEEDED(rv) && identity)
+		{
+          char * fullname = nsnull;
+          char * email = nsnull;
+          char * organization = nsnull;
+
+          identity->GetFullName(&fullname);
+          identity->GetEmail(&email);
+          identity->GetOrganization(&organization);
+
+#ifdef DEBUG_sspitzer
+          printf("post message as: %s,%s,%s\n",fullname,email,organization);
+#endif
+
+          // todo:  are we leaking fullname, email and organization?
+
+          // release the identity
+          NS_IF_RELEASE(identity);
+		} // if we have an identity
+      else
+        NS_ASSERTION(0, "no current identity found for this user....");
+	} // if we had a news session
+  
+  NS_UNLOCK_INSTANCE();
+  return rv;
+}
+
+nsresult nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer, 
+										nsIUrlListener *aUrlListener, nsIURL ** aURL)
 {
 	// for now, assume the url is a news url and load it....
 	nsINntpUrl		*nntpUrl = nsnull;
@@ -147,10 +203,12 @@ NS_IMETHODIMP nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports *
 				nntpProtocol = new nsNNTPProtocol(nntpUrl, transport);
 				if (nntpProtocol)
 					nntpProtocol->LoadURL(nntpUrl, aConsumer);
+
+                //delete nntpProtocol;
 			}
 
-			if (aUrl)
-				*aUrl = nntpUrl; // transfer ref count
+			if (aURL)
+				*aURL = nntpUrl; // transfer ref count
 			else
 				NS_RELEASE(nntpUrl);
 		} // if nntpUrl

@@ -849,6 +849,11 @@ nsresult nsNntpUrl::GetSpec(const char* *result) const
 
 nsresult nsNntpUrl::SetSpec(const char *aNewSpec)
 {
+#ifdef DEBUG_sspitzer
+    if (aNewSpec) {
+	printf("nsNntpUrl::SetSpec(%s)\n", aNewSpec);
+    }
+#endif
     // XXX is this right, or should we call ParseURL?
     nsresult rv = NS_OK;
 //    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");

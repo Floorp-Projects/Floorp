@@ -57,6 +57,8 @@ typedef struct MSG_NewsKnown {
 extern "C" nsresult
 NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
                     nsINNTPHost *newsHost,
-                    nsINNTPNewsgroup *newsgroup);
+                    nsINNTPNewsgroup *newsgroup,
+					const char *name,
+					const char *url);
     
 #endif

@@ -118,7 +118,7 @@ nsNNTPArticleList::~nsNNTPArticleList()
 nsresult
 nsNNTPArticleList::AddArticleKey(PRInt32 key)
 {
-#ifdef DEBUG_mscott
+#if defined(DEBUG_mscott) || defined(DEBUG_sspitzer)
 	char * groupname = nsnull;
 	if (m_newsgroup)
 		m_newsgroup->GetName(&groupname);

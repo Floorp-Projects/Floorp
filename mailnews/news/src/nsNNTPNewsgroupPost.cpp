@@ -143,6 +143,8 @@ NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost::GetIID());
 
 nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
 {
+	NS_INIT_REFCNT();
+
     int i;
     for (i=0; i <= HEADER_LAST; i++)
         m_header[i]=nsnull;

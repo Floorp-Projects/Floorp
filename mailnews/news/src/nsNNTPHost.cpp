@@ -35,9 +35,16 @@
 #include "nsINNTPNewsgroup.h"
 #include "nsNNTPNewsgroup.h"
 
+#include "nsINNTPNewsgroupList.h"
+#include "nsNNTPNewsgroupList.h"
+
 #include "nsIMsgFolder.h"
 #include "nsISupportsArray.h"
 #include "nsIEnumerator.h"
+
+#include "nsFileStream.h"
+
+#include "nsNewsUtils.h"
 
 #include "prprf.h"
 #include "prmem.h"
@@ -55,16 +62,6 @@ static const char LINEBREAK_START = '\015';
 #endif
 
 #define PROTOCOL_DEBUG
-
-/* externally declare this function...it doesn't exist in mailnews yet though...hmmm */
-
-extern int msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
-						   char **bufferP, PRUint32 *buffer_sizeP,
-						   PRUint32 *buffer_fpP,
-						   PRBool convert_newlines_p,
-						   PRInt32 (*per_line_fn) (char *line, PRUint32 line_length, void *closure),
-						   void *closure);
-
 
 class nsNNTPHost : public nsINNTPHost {
 public:
@@ -84,48 +81,47 @@ public:
                          m_supportsExtensions);
     
 	NS_IMETHOD AddExtension (const char *ext);
-	NS_IMETHOD QueryExtension (const char *ext, PRBool *_retval);
+	NS_IMETHOD QueryExtension (const char *ext, PRBool *retval);
     
     NS_IMPL_CLASS_GETSET(PostingAllowed, PRBool, m_postingAllowed);
     
     NS_IMPL_CLASS_GETTER(GetPushAuth, PRBool, m_pushAuth);
     NS_IMETHOD SetPushAuth(PRBool value);
     
-    NS_IMPL_CLASS_GETSET(LastUpdatedTime, PRInt64, m_lastGroupUpdate);
+    NS_IMPL_CLASS_GETSET(LastUpdatedTime, PRTime, m_lastGroupUpdate);
 
-    NS_IMETHOD GetNewsgroupList(const char *groupname,
-		nsINNTPNewsgroupList **_retval) { NS_ASSERTION(0, "unimplemented"); return NS_OK;};
-
+    NS_IMETHOD GetNewsgroupList(const char *name,nsINNTPNewsgroupList **retval);
+	
     NS_IMETHOD GetNewsgroupAndNumberOfID(const char *message_id,
                                          nsINNTPNewsgroup **group,
                                          PRUint32 *messageNumber);
 
     /* get this from MSG_Master::FindNewsFolder */
-    NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create,
-		nsINNTPNewsgroup **_retval) { NS_ASSERTION(0, "unimplemented!"); return NS_OK;}
+    NS_IMETHOD FindNewsgroup(const char *name, PRBool create,
+		nsINNTPNewsgroup **retval) { NS_ASSERTION(0, "unimplemented!"); return NS_OK;}
     
 	NS_IMETHOD AddPropertyForGet (const char *property, const char *value);
-	NS_IMETHOD QueryPropertyForGet (const char *property, char **_retval);
+	NS_IMETHOD QueryPropertyForGet (const char *property, char **retval);
 
-    NS_IMETHOD AddSearchableGroup(const char *groupname);
+    NS_IMETHOD AddSearchableGroup(const char *name);
     // should these go into interfaces?
 	NS_IMETHOD QuerySearchableGroup (const char *group, PRBool *);
     NS_IMETHOD QuerySearchableGroupCharsets(const char *group, char **);
 
     // Virtual groups
     NS_IMETHOD AddVirtualGroup(const char *responseText) { return NS_OK;}
-    NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual);
-    NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual,
+    NS_IMETHOD SetIsVirtualGroup(const char *name, PRBool isVirtual);
+    NS_IMETHOD SetIsVirtualGroup(const char *name, PRBool isVirtual,
                                  nsMsgGroupRecord *inGroupRecord);
-    NS_IMETHOD GetIsVirtualGroup(const char *groupname, PRBool *_retval);
+    NS_IMETHOD GetIsVirtualGroup(const char *name, PRBool *retval);
 
     // custom/searchable headers
     NS_IMETHOD AddSearchableHeader(const char *headerName);
-    NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval);
+    NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *retval);
     
 	// Go load the newsrc for this host.  Creates the subscribed hosts as
 	// children of the given nsIMsgFolder.
-	NS_IMETHOD LoadNewsrc();
+	NS_IMETHOD LoadNewsrc(const char *uri);
     
 	// Write out the newsrc for this host right now.  In general, either
 	// MarkDirty() or WriteIfDirty() should be called instead.
@@ -148,18 +144,18 @@ public:
     // (this is what the pre-mozilla API looked like)
     char *GetNewsrcFileName() { return m_filename; };
     
-    NS_IMETHOD FindGroup(const char* name, nsINNTPNewsgroup* *_retval);
-    NS_IMETHOD AddGroup(const char *groupname,
+    NS_IMETHOD FindGroup(const char* name, nsINNTPNewsgroup* *retval);
+    NS_IMETHOD AddGroup(const char *name,
                         nsINNTPNewsgroup **retval);
     
-    NS_IMETHOD AddGroup(const char *groupname,
+    NS_IMETHOD AddGroup(const char *name,
                         nsMsgGroupRecord *groupRecord,
                         nsINNTPNewsgroup **retval);
     
-    NS_IMETHOD RemoveGroupByName(const char *groupName);
+    NS_IMETHOD RemoveGroupByName(const char *name);
     NS_IMETHOD RemoveGroup(nsINNTPNewsgroup*);
     
-    NS_IMETHOD AddNewNewsgroup(const char *groupName,
+    NS_IMETHOD AddNewNewsgroup(const char *name,
                                PRInt32 first,
                                PRInt32 last,
                                const char *flags,
@@ -167,7 +163,7 @@ public:
 
 	/* Name of directory to store newsgroup
        databases in.  This needs to have
-       "/groupname" appended to it, and the
+       "/name" appended to it, and the
        whole thing can be passed to the XP_File
        stuff with a type of xpXoverCache. */
     NS_IMETHOD GetDbDirName(char * *aDbDirName) {NS_ASSERTION(0, "unimplemented"); return NS_OK;};
@@ -177,9 +173,9 @@ public:
     /* Returns a list of newsgroups.  The result
        must be free'd using PR_Free(); the
        individual strings must not be free'd. */
-    NS_IMETHOD GetGroupList(char **_retval) { return NS_OK;}
+    NS_IMETHOD GetGroupList(char **retval) { return NS_OK;}
 
-    NS_IMETHOD DisplaySubscribedGroup(const char *groupname,
+    NS_IMETHOD DisplaySubscribedGroup(const char *name,
                                       PRInt32 first_message,
                                       PRInt32 last_message,
                                       PRInt32 total_messages,
@@ -187,6 +183,9 @@ public:
     // end of nsINNTPHost
     
 private:
+	nsresult LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile);
+	nsresult MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile);
+	nsresult GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &newsrcFile);
 
     // simplify the QueryInterface calls
     static nsIMsgFolder *getFolderFor(nsINNTPNewsgroup *group);
@@ -273,50 +272,50 @@ private:
 
 	// Returns the pretty name for the given group.  The resulting string
 	// must be free'd using delete[].
-	char* GetPrettyName(char* groupname);
-	NS_IMETHOD SetPrettyName(const char* groupname, const char* prettyname);
+	char* GetPrettyName(char* name);
+	NS_IMETHOD SetPrettyName(const char* name, const char* prettyname);
 
-	time_t GetAddTime(char* groupname);
+	PRTime GetAddTime(char* name);
 
 	// Returns a unique integer associated with this newsgroup.  This is
 	// mostly used by Win16 to generate a 8.3 filename.
-	PRInt32 GetUniqueID(char* groupname);
+	PRInt32 GetUniqueID(char* name);
 
-	PRBool IsCategory(char* groupname);
-	PRBool IsCategoryContainer(char* groupname);
-	int SetIsCategoryContainer(const char* groupname, PRBool value, nsMsgGroupRecord *inGroupRecord = NULL);
+	PRBool IsCategory(char* name);
+	PRBool IsCategoryContainer(char* name);
+	int SetIsCategoryContainer(const char* name, PRBool value, nsMsgGroupRecord *inGroupRecord = NULL);
 	
-	NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool value);
+	NS_IMETHOD SetGroupNeedsExtraInfo(const char *name, PRBool value);
 	// Finds the container newsgroup for this category (or NULL if this isn't
 	// a category).  The resulting string must be free'd using delete[].
-	char* GetCategoryContainer(const char* groupname, nsMsgGroupRecord *inGroupRecord = NULL);
-	nsINNTPNewsgroup *GetCategoryContainerFolderInfo(const char *groupname);
+	char* GetCategoryContainer(const char* name, nsMsgGroupRecord *inGroupRecord = NULL);
+	nsINNTPNewsgroup *GetCategoryContainerFolderInfo(const char *name);
 
 
 	// Get/Set whether this is a real group (as opposed to a container of
 	// other groups, like "mcom".)
-	PRBool IsGroup(char* groupname);
-	int SetIsGroup(char* groupname, PRBool value);
+	PRBool IsGroup(char* name);
+	int SetIsGroup(char* name, PRBool value);
 	
 
 	// Returns PR_TRUE if it's OK to post HTML in this group (either because the
 	// bit is on for this group, or one of this group's ancestor's has marked
 	// all of its descendents as being OK for HTML.)
-	PRBool IsHTMLOk(char* groupname);
+	PRBool IsHTMLOk(char* name);
 
 	// Get/Set if it's OK to post HTML in just this group.
-	PRBool IsHTMLOKGroup(char* groupname);
-	int SetIsHTMLOKGroup(char* groupname, PRBool value);
+	PRBool IsHTMLOKGroup(char* name);
+	int SetIsHTMLOKGroup(char* name, PRBool value);
 
 	// Get/Set if it's OK to post HTML in this group and all of its subgroups.
-	PRBool IsHTMLOKTree(char* groupname);
-	int SetIsHTMLOKTree(char* groupname, PRBool value);
+	PRBool IsHTMLOKTree(char* name);
+	int SetIsHTMLOKTree(char* name, PRBool value);
 
 	// Create the given group (if not already present).  Returns 0 if the
 	// group is already present, 1 if we had to create it, negative on error.
 	// The given group will have the "isgroup" bit set on it (in other words,
 	// it is not to be just a container of other groups, like "mcom" is.)
-	int NoticeNewGroup(const char* groupname, nsMsgGroupRecord **outGroupRecord = NULL);
+	int NoticeNewGroup(const char* name, nsMsgGroupRecord **outGroupRecord = NULL);
 	
 
 	// Makes sure that we have records in memory for all known descendants
@@ -339,28 +338,28 @@ private:
 	int EmptyInhale();
 
 	nsMsgGroupRecord* GetGroupTree() {return m_groupTree;}
-	time_t GetFirstNewDate() {return m_firstnewdate;}
+	PRTime GetFirstNewDate() {return m_firstnewdate;}
 	
-	NS_IMETHOD GroupNotFound(const char *groupName, PRBool opening);
+	NS_IMETHOD GroupNotFound(const char *name, PRBool opening);
 
 	int ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupToMoveBefore, PRInt32 *newIdx);
 
 protected:
 	void OpenGroupFile(const PRIntn = PR_WRONLY);
-	PRInt32 RememberLine(char* line);
-	static PRInt32 ProcessLine_s(char* line, PRUint32 line_size, void* closure);
-	PRInt32 ProcessLine(char* line, PRUint32 line_size);
+	nsresult RememberLine(char* line);
+	static nsresult ProcessLine_s(char* line, PRUint32 line_size, void* closure);
+	nsresult ProcessLine(char* line, PRUint32 line_size);
 	static void WriteTimer(void* closure);
 	int CreateFileHeader();
 	int ReadInitialPart();
 	nsMsgGroupRecord* FindGroupInBlock(nsMsgGroupRecord* parent,
-									  char* groupname,
+									  char* name,
 									  PRInt32* comp);
 	nsMsgGroupRecord* LoadSingleEntry(nsMsgGroupRecord* parent,
-									 char* groupname,
+									 char* name,
 									 PRInt32 min, PRInt32 max);
 	static PRInt32 InhaleLine(char* line, PRUint32 length, void* closure);
-	nsMsgGroupRecord* FindOrCreateGroup(const char* groupname,
+	nsMsgGroupRecord* FindOrCreateGroup(const char* name,
 									   int* statusOfMakingGroup = NULL);	
 
 	nsINNTPCategoryContainer *SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo);
@@ -373,6 +372,8 @@ protected:
 	char* m_fullUIName;
 
 	nsISupportsArray* m_groups;	// List of nsINNTPNewsgroup* objects.
+	nsISupportsArray* m_newsgrouplists;  // List of nsINNTPNewsgroupList* objects.
+
 #ifdef HAVE_MASTER
 	MSG_Master* m_master;
 #endif
@@ -430,8 +431,8 @@ protected:
 	PRBool m_pushAuth; // PR_TRUE if we should volunteer authentication without a
 						// challenge
 
-	time_t m_lastGroupUpdate;
-	time_t m_firstnewdate;
+	PRTime m_lastGroupUpdate;
+	PRTime m_firstnewdate;
 
 
 	nsMsgGroupRecord* m_groupTree; // Tree of groups we're remembering.
@@ -492,6 +493,7 @@ nsNNTPHost::nsNNTPHost(const char *name, PRInt32 port)
 	m_optionLines = NULL;
 	m_filename = NULL;
 	m_groups = NULL;
+	m_newsgrouplists = NULL;
 	m_dbfilename = NULL;
 	m_dirty = 0;
 	m_writetimer = NULL;
@@ -519,6 +521,7 @@ nsNNTPHost::CleanUp() {
 	PR_FREEIF(m_nameAndPort);
 	PR_FREEIF(m_fullUIName);
 	NS_IF_RELEASE(m_groups);
+	NS_IF_RELEASE(m_newsgrouplists);
 	delete [] m_dbfilename;
 	delete m_groupTree;
 	if (m_block)
@@ -587,7 +590,7 @@ nsNNTPHost::OpenGroupFile(const PRIntn permissions)
 
 void nsNNTPHost::ClearNew()
 {
-	m_firstnewdate = time(0) + 1;
+	m_firstnewdate = PR_Now() + 1;
 }
 
 
@@ -605,7 +608,7 @@ PRInt32 nsNNTPHost::getPort()
 
 #if 0 
 NS_IMETHODIMP
-nsNNTPHost::GetLastUpdatedTime(PRInt64* aLastUpdatedTime)
+nsNNTPHost::GetLastUpdatedTime(PRTime* aLastUpdatedTime)
 {
   
   *aLastUpdatedTime = m_lastGroupUpdate;
@@ -613,7 +616,7 @@ nsNNTPHost::GetLastUpdatedTime(PRInt64* aLastUpdatedTime)
 }
 
 NS_IMETHODIMP
-nsNNTPHost::setLastUpdate(PRInt64 aLastUpdatedTime)
+nsNNTPHost::setLastUpdate(PRTime aLastUpdatedTime)
 {
 	m_lastGroupUpdate = aLastUpdatedTime;
     return NS_MSG_SUCCESS;
@@ -639,41 +642,256 @@ const char* nsNNTPHost::getFullUIName()
 	return m_fullUIName;
 }
 
-PRInt32
-nsNNTPHost::RememberLine(char* line)
+/* sspitzer:  from mozilla/network/protocol/pop3/mkpop3.c */
+
+static PRInt32
+msg_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
+				char **buffer, PRUint32 *size)
 {
-	char* new_data;
-	if (m_optionLines) {
-		new_data =
-			(char *) PR_REALLOC(m_optionLines,
-								PL_strlen(m_optionLines)
-								+ PL_strlen(line) + 4);
-	} else {
-		new_data = (char *) PR_Malloc(PL_strlen(line) + 3);
+  if (*size <= desired_size)
+	{
+	  char *new_buf;
+	  PRUint32 increment = desired_size - *size;
+	  if (increment < quantum) /* always grow by a minimum of N bytes */
+		increment = quantum;
+
+#ifdef TESTFORWIN16
+	  if (((*size + increment) * (element_size / sizeof(char))) >= 64000)
+		{
+		  /* Make sure we don't choke on WIN16 */
+		  PR_ASSERT(0);
+		  return -1;
+		}
+#endif /* DEBUG */
+
+	  new_buf = (*buffer
+				 ? (char *) PR_Realloc (*buffer, (*size + increment)
+										* (element_size / sizeof(char)))
+				 : (char *) PR_Malloc ((*size + increment)
+									  * (element_size / sizeof(char))));
+	  if (! new_buf)
+      return -1; // NS_ERROR_OUT_OF_MEMORY;
+	  *buffer = new_buf;
+	  *size += increment;
 	}
-	if (!new_data) return MK_OUT_OF_MEMORY;
-	PL_strcpy(new_data, line);
-	PL_strcat(new_data, MSG_LINEBREAK);
-
-	m_optionLines = new_data;
-
-	return 0;
-
+  return 0;
 }
 
+/* Take the given buffer, tweak the newlines at the end if necessary, and
+   send it off to the given routine.  We are guaranteed that the given
+   buffer has allocated space for at least one more character at the end. */
+static PRInt32
+msg_convert_and_send_buffer(char* buf, PRUint32 length, PRBool convert_newlines_p,
+							nsresult (*per_line_fn) (char *line,
+												  PRUint32 line_length,
+												  void *closure),
+							void *closure)
+{
+  /* Convert the line terminator to the native form.
+   */
+  char* newline;
 
-PRInt32
+  PR_ASSERT(buf && length > 0);
+  if (!buf || length <= 0) return -1;
+  newline = buf + length;
+  PR_ASSERT(newline[-1] == CR || newline[-1] == LF);
+  if (newline[-1] != CR && newline[-1] != LF) return -1;
+
+  if (!convert_newlines_p)
+	{
+	}
+#if (LINEBREAK_LEN == 1)
+  else if ((newline - buf) >= 2 &&
+		   newline[-2] == CR &&
+		   newline[-1] == LF)
+	{
+	  /* CRLF -> CR or LF */
+	  buf [length - 2] = LINEBREAK[0];
+	  length--;
+	}
+  else if (newline > buf + 1 &&
+		   newline[-1] != LINEBREAK[0])
+	{
+	  /* CR -> LF or LF -> CR */
+	  buf [length - 1] = LINEBREAK[0];
+	}
+#else
+  else if (((newline - buf) >= 2 && newline[-2] != CR) ||
+		   ((newline - buf) >= 1 && newline[-1] != LF))
+	{
+	  /* LF -> CRLF or CR -> CRLF */
+	  length++;
+	  buf[length - 2] = LINEBREAK[0];
+	  buf[length - 1] = LINEBREAK[1];
+	}
+#endif
+
+  return (*per_line_fn)(buf, length, closure);
+}
+
+static PRInt32
+msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
+				char **bufferP, PRUint32 *buffer_sizeP, PRUint32 *buffer_fpP,
+				PRBool convert_newlines_p,
+				nsresult (*per_line_fn) (char *line, PRUint32 line_length,
+									  void *closure),
+				void *closure)
+{
+#ifdef DEBUG_sspitzer_
+  printf("msg_LineBuffer()\n");
+#endif
+
+  PRInt32 status = 0;
+  if (*buffer_fpP > 0 && *bufferP && (*bufferP)[*buffer_fpP - 1] == CR &&
+	  net_buffer_size > 0 && net_buffer[0] != LF) {
+	/* The last buffer ended with a CR.  The new buffer does not start
+	   with a LF.  This old buffer should be shipped out and discarded. */
+	PR_ASSERT(*buffer_sizeP > *buffer_fpP);
+	if (*buffer_sizeP <= *buffer_fpP) return -1;
+	status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
+										 convert_newlines_p,
+										 per_line_fn, closure);
+	if (status < 0) return status;
+	*buffer_fpP = 0;
+  }
+  while (net_buffer_size > 0)
+	{
+	  const char *net_buffer_end = net_buffer + net_buffer_size;
+	  const char *newline = 0;
+	  const char *s;
+
+
+	  for (s = net_buffer; s < net_buffer_end; s++)
+		{
+		  /* Move forward in the buffer until the first newline.
+			 Stop when we see CRLF, CR, or LF, or the end of the buffer.
+			 *But*, if we see a lone CR at the *very end* of the buffer,
+			 treat this as if we had reached the end of the buffer without
+			 seeing a line terminator.  This is to catch the case of the
+			 buffers splitting a CRLF pair, as in "FOO\r\nBAR\r" "\nBAZ\r\n".
+		   */
+		  if (*s == CR || *s == LF)
+			{
+			  newline = s;
+			  if (newline[0] == CR)
+				{
+				  if (s == net_buffer_end - 1)
+					{
+					  /* CR at end - wait for the next character. */
+					  newline = 0;
+					  break;
+					}
+				  else if (newline[1] == LF)
+					/* CRLF seen; swallow both. */
+					newline++;
+				}
+			  newline++;
+			  break;
+			}
+		}
+
+	  /* Ensure room in the net_buffer and append some or all of the current
+		 chunk of data to it. */
+	  {
+		const char *end = (newline ? newline : net_buffer_end);
+		PRUint32 desired_size = (end - net_buffer) + (*buffer_fpP) + 1;
+
+		if (desired_size >= (*buffer_sizeP))
+		  {
+			status = msg_GrowBuffer (desired_size, sizeof(char), 1024,
+									 bufferP, buffer_sizeP);
+			if (status < 0) return status;
+		  }
+		nsCRT::memcpy((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
+		(*buffer_fpP) += (end - net_buffer);
+	  }
+
+	  /* Now *bufferP contains either a complete line, or as complete
+		 a line as we have read so far.
+
+		 If we have a line, process it, and then remove it from `*bufferP'.
+		 Then go around the loop again, until we drain the incoming data.
+	   */
+	  if (!newline)
+		return 0;
+
+	  status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
+										   convert_newlines_p,
+										   per_line_fn, closure);
+	  if (status < 0) return status;
+
+	  net_buffer_size -= (newline - net_buffer);
+	  net_buffer = newline;
+	  (*buffer_fpP) = 0;
+	}
+  return 0;
+}
+
+nsresult 
+nsNNTPHost::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
+{
+	char *ibuffer = 0;
+	PRUint32 ibuffer_size = 0;
+	PRUint32 ibuffer_fp = 0;
+  int size = 1024;
+  char *buffer;
+  buffer = new char[size];
+  nsresult rv = NS_OK;
+  PRInt32 numread = 0;
+  PRInt32 status = 0;
+
+  PR_FREEIF(m_optionLines);
+
+  if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
+
+  nsInputFileStream inputStream(newsrcFile); 
+  while (1) {
+    numread = inputStream.read(buffer, size);
+    if (numread == 0) {
+      break;
+    }
+    else {
+#ifdef DEBUG_sspitzer_
+      printf("%d: %s\n", numread, buffer);
+#endif
+      status = msg_LineBuffer(buffer, numread,
+                     &ibuffer, &ibuffer_size, &ibuffer_fp,
+                     FALSE,
+#ifdef XP_OS2
+                     (nsresult (_Optlink*) (char*,PRUint32,void*))
+#endif /* XP_OS2 */
+                     nsNNTPHost::ProcessLine_s, this);
+      if (numread <= 0) {
+        break;
+      }
+    }
+  }
+
+  if (status == 0 && ibuffer_fp > 0) {
+    rv = ProcessLine_s(ibuffer, ibuffer_fp, this);
+    ibuffer_fp = 0;
+  }
+
+  inputStream.close();
+  delete [] buffer;
+  
+  return rv;
+}
+
+nsresult
 nsNNTPHost::ProcessLine_s(char* line, PRUint32 line_size, void* closure)
 {
-	return ((nsNNTPHost*) closure)->ProcessLine(line, line_size);
+#ifdef DEBUG_sspitzer_
+  printf("nsNNTPHost::ProcessLine_s()\n");
+#endif
+  return ((nsNNTPHost*) closure)->ProcessLine(line, line_size);
 }
 
-
-PRInt32
+nsresult
 nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 {
 	/* guard against blank line lossage */
-	if (line[0] == '#' || line[0] == CR || line[0] == LF) return 0;
+	if (line[0] == '#' || line[0] == CR || line[0] == LF) return NS_OK;
 
 	line[line_size] = 0;
 
@@ -696,7 +914,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	}
 
 	set = nsNNTPArticleSet::Create(s + 1, this);
-	if (!set) return MK_OUT_OF_MEMORY;
+	if (!set) return NS_ERROR_OUT_OF_MEMORY;
 
 	PRBool subscribed = (*s == ':');
 	*s = '\0';
@@ -704,10 +922,10 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	if (PL_strlen(line) == 0)
 	{
 		delete set;
-		return 0;
+		return NS_OK;
 	}
 
-	nsINNTPNewsgroup* info=NULL;
+	nsINNTPNewsgroup* info=nsnull;
     nsresult rv=NS_ERROR_NOT_INITIALIZED;
     
 	if (subscribed && IsCategoryContainer(line))
@@ -736,7 +954,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
                 // autosubscribe, if we haven't seen this one.
                 char* groupLine = PR_smprintf("%s:", fullname);
                 if (groupLine) {
-                    ProcessLine(groupLine, PL_strlen(groupLine));
+                    rv = ProcessLine(groupLine, PL_strlen(groupLine));
                     PR_Free(groupLine);
                 }
             } else {
@@ -746,17 +964,28 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 		}
 	}
 	else {
-        PRUint32 depth;
-        rv = m_hostinfo->GetDepth(&depth);
+        PRUint32 depth = 1;
+		rv = NS_OK;
+        /* rv = m_hostinfo->GetDepth(&depth); */
 
-#if 0                           // not defined yet
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             rv = NS_NewNewsgroup(&info, line, set, subscribed, this,
                                  depth+1);
-#endif
+
+			if (NS_SUCCEEDED(rv)) {
+				nsINNTPNewsgroupList *newsgroupList = nsnull;
+
+				rv = NS_NewNewsgroupList(&newsgroupList, this, info, line, "foobar");
+				if (NS_SUCCEEDED(rv) && (newsgroupList != nsnull)) {
+					//add newsgroupList to host's list of newsgroups
+					if (m_newsgrouplists != nsnull) 
+						m_newsgrouplists->AppendElement(newsgroupList);
+				}
+			}
+		}
     }
 
-	if (NS_FAILED(rv) || !info) return MK_OUT_OF_MEMORY;
+	if (NS_FAILED(rv) || !info) return NS_ERROR_OUT_OF_MEMORY;
 
 	// for now, you can't subscribe to category by itself.
     nsINNTPCategory *category;
@@ -774,7 +1003,12 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
         NS_RELEASE(category);
 	}
 
-	m_groups->AppendElement(info);
+	if (m_groups != nsnull) {
+		m_groups->AppendElement(info);
+	}
+	else {
+		printf("m_groups is null.\n");
+	}
 
 	// prime the folder info from the folder cache while it's still around.
 	// Except this might disable the update of new counts - check it out...
@@ -782,66 +1016,229 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 	m_master->InitFolderFromCache (info);
 #endif
 
-	return 0;
+	return NS_OK;
+}
+
+nsresult
+nsNNTPHost::RememberLine(char* line)
+{
+	char* new_data;
+	if (m_optionLines) {
+		new_data =
+			(char *) PR_Realloc(m_optionLines,
+								PL_strlen(m_optionLines)
+								+ PL_strlen(line) + 4);
+	} else {
+		new_data = (char *) PR_Malloc(PL_strlen(line) + 3);
+	}
+	if (!new_data) 
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	PL_strcpy(new_data, line);
+	PL_strcat(new_data, LINEBREAK);
+
+	m_optionLines = new_data;
+
+	return NS_OK;
 }
 
 
-nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
+#ifdef USE_NEWSRC_MAP_FILE
+
+#define NEWSRC_MAP_FILE_COOKIE "netscape-newsrc-map-file"
+
+nsresult
+nsNNTPHost::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile)
 {
-	char *ibuffer = 0;
-	PRUint32 ibuffer_size = 0;
-	PRUint32 ibuffer_fp = 0;
+  char *lookingFor = nsnull;
+	char buffer[512];
+	char psuedo_name[512];
+	char filename[512];
+	char is_newsgroup[512];
+  PRBool rv;
+
+#ifdef DEBUG_sspitzer_
+  printf("MapHostToNewsrcFile(%s,%s,%s,??)\n",newshostname,(const char *)fatFile, newshostname);
+#endif
+  lookingFor = PR_smprintf("newsrc-%s",newshostname);
+  if (lookingFor == nsnull) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsInputFileStream inputStream(fatFile);
+ 
+  if (inputStream.eof()) {
+    newsrcFile = "";
+    inputStream.close();
+    PR_FREEIF(lookingFor);
+    return NS_ERROR_FAILURE;
+  }
+
+  /* we expect the first line to be NEWSRC_MAP_FILE_COOKIE */
+	rv = inputStream.readline(buffer, sizeof(buffer));
+#ifdef DEBUG_sspitzer_
+  printf("buffer = %s\n", buffer);
+#endif
+  if ((!rv) || (PL_strncmp(buffer, NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE)))) {
+    newsrcFile = "";
+    inputStream.close();
+    PR_FREEIF(lookingFor);
+    return NS_ERROR_FAILURE;
+  }   
+
+	while (!inputStream.eof()) {
+    char * p;
+    int i;
+
+    rv = inputStream.readline(buffer, sizeof(buffer));
+    if (!rv) {
+      newsrcFile = "";
+      inputStream.close();
+      PR_FREEIF(lookingFor);
+      return NS_ERROR_FAILURE;
+    }  
+
+#ifdef DEBUG_sspitzer_
+    printf("buffer = %s\n", buffer);    
+#endif
+    
+    /*
+      This used to be scanf() call which would incorrectly
+      parse long filenames with spaces in them.  - JRE
+    */
+    
+    filename[0] = '\0';
+    is_newsgroup[0]='\0';
+    
+    for (i = 0, p = buffer; *p && *p != '\t' && i < 500; p++, i++)
+      psuedo_name[i] = *p;
+    psuedo_name[i] = '\0';
+    if (*p) 
+      {
+        for (i = 0, p++; *p && *p != '\t' && i < 500; p++, i++)
+          filename[i] = *p;
+        filename[i]='\0';
+        if (*p) 
+          {
+            for (i = 0, p++; *p && *p != '\r' && i < 500; p++, i++)
+              is_newsgroup[i] = *p;
+            is_newsgroup[i]='\0';
+          }
+      }
+
+		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {
+#ifdef DEBUG_sspitzer_
+      printf("is_newsgroups_file = TRUE\n");
+#endif
+    }
+    else {
+#ifdef DEBUG_sspitzer_
+      printf("is_newsgroups_file = FALSE\n");
+#endif
+    }
+    
+#ifdef DEBUG_sspitzer_
+    printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
+#endif
+    if (!PL_strncmp(psuedo_name,lookingFor,PL_strlen(lookingFor))) {
+#ifdef DEBUG_sspitzer_
+      printf("found a match for %s\n",lookingFor);
+#endif
+      newsrcFile = filename;
+      inputStream.close();
+      PR_FREEIF(lookingFor);
+      return NS_OK;
+    }
+  }
+
+  // failed to find a match in the map file
+  newsrcFile = "";
+  inputStream.close();
+  PR_FREEIF(lookingFor);
+  return NS_ERROR_FAILURE;
+}
+#endif /* USE_NEWSRC_MAP_FILE */
+
+nsresult 
+nsNNTPHost::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &newsrcFile)
+{
+  nsresult rv = NS_OK;
+  
+  if (newshostname == nsnull) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+#ifdef USE_NEWSRC_MAP_FILE
+  // the fat file lives in the same directory as
+  // the newsrc files
+  nsFileSpec fatFile(path);
+  fatFile.SetLeafName("fat");
+
+  rv = MapHostToNewsrcFile(newshostname, fatFile, newsrcFile);
+#else
+  char *str = nsnull;
+
+  str = PR_smprintf(".newsrc-%s", newshostname);
+  if (str == nsnull) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  newsrcFile = path;
+  newsrcFile.SetLeafName(str);
+  PR_FREEIF(str);
+  str = nsnull;
+  rv = NS_OK;
+#endif /* USE_NEWSRC_MAP_FILE */
+
+  return rv;
+}
+
+
+nsresult nsNNTPHost::LoadNewsrc(const char *uri/* , nsIMsgFolder* hostinfo*/)
+{
+	nsresult rv = NS_OK;
 
     /*	m_hostinfo = hostinfo; 
 	PR_ASSERT(m_hostinfo);
 	if (!m_hostinfo) return -1;
     */
-#ifdef UNREADY_CODE
-	int status = 0;
-
-	PR_FREEIF(m_optionLines);
-
-	if (!m_groups) {
-		int size = 2048;
-		char* buffer;
-		buffer = new char[size];
-		if (!buffer) return MK_OUT_OF_MEMORY;
-
-		m_groups = NS_NewISupportsArray();
-		if (!m_groups) {
-			delete [] buffer;
-			return MK_OUT_OF_MEMORY;
+	if (!m_newsgrouplists) {
+		rv = NS_NewISupportsArray(&m_newsgrouplists);
+		if (NS_FAILED(rv) || (m_newsgrouplists == nsnull)) {
+			return NS_ERROR_OUT_OF_MEMORY;
 		}
-
-        XP_File fid = XP_FileOpen(GetNewsrcFileName(),
-                          xpNewsRC,
-                          XP_FILE_READ_BIN);
-        
-		if (fid) {
-			do {
-				status = XP_FileRead(buffer, size, fid);
-				if (status > 0) {
-					msg_LineBuffer(buffer, status,
-								   &ibuffer, &ibuffer_size, &ibuffer_fp,
-								   PR_FALSE,
-#ifdef XP_OS2
-								   (PRInt32 (_Optlink*) (char*,PRUint32,void*))
-#endif
-								   nsNNTPHost::ProcessLine_s, this);
-				}
-			} while (status > 0);
-			XP_FileClose(fid);
-		}
-		if (status == 0 && ibuffer_fp > 0) {
-			status = ProcessLine(ibuffer, ibuffer_fp);
-			ibuffer_fp = 0;
-		}
-
-		delete [] buffer;
-		PR_FREEIF(ibuffer);
-
 	}
 
+	if (!m_groups) {
+
+		rv = NS_NewISupportsArray(&m_groups);
+		if (NS_FAILED(rv) || (m_groups == nsnull)) {
+			return NS_ERROR_OUT_OF_MEMORY;
+		}
+
+	    nsFileSpec newsrcFile("");
+		nsFileSpec path("");
+
+		// turn uri into path
+		rv = nsNewsURI2Path(kNewsRootURI, uri, path);
+		if (NS_FAILED(rv)) {
+			return rv;
+		}
+
+		rv = GetNewsrcFile(m_hostname, path, newsrcFile);
+		if (NS_FAILED(rv)) {
+			return rv;
+		}
+
+#ifdef DEBUG_sspitzer
+		printf("newsrc file = %s\n",(const char *)newsrcFile);
+#endif	
+		rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFile);
+		if (NS_FAILED(rv)) {
+			return rv;
+		}
+	}
+
+#if 0
 	// build up the category tree for each category container so that roll-up 
 	// of counts will work before category containers are opened.
 	for (PRInt32 i = 0; i < m_groups->Count(); i++) {
@@ -854,11 +1251,11 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
                                        (void **)&catContainer);
 		if (NS_SUCCEEDED(rv)) {
               
-			char* groupname;
-            nsresult rv = newsgroup->GetName(&groupname);
+			char* name;
+            nsresult rv = newsgroup->GetName(&name);
             
 			nsMsgGroupRecord* group =
-                m_groupTree->FindDescendant(groupname);
+                m_groupTree->FindDescendant(name);
             
 			PR_ASSERT(NS_SUCCEEDED(rv) && group);
             
@@ -868,17 +1265,16 @@ nsresult nsNNTPHost::LoadNewsrc(/* nsIMsgFolder* hostinfo*/)
                                 MSG_FOLDER_FLAG_DIRECTORY);
                 NS_RELEASE(folder);
 #ifdef HAVE_MASTER
-				catContainer->BuildCategoryTree(catContainer, groupname, group,
+				catContainer->BuildCategoryTree(catContainer, name, group,
 					2, m_master);
 #endif
 			}
             NS_RELEASE(catContainer);
 		}
 	}
+#endif /* 0 */
 
-#endif
-
-	return 0;
+	return NS_OK;
 }
 
 
@@ -948,14 +1344,14 @@ nsNNTPHost::WriteNewsrc()
 			status = MK_OUT_OF_MEMORY;
 			break;
 		}
-        char *newsgroupName=NULL;
+        char *name=NULL;
         char *line;
-        rv = newsgroup->GetName(&newsgroupName);
+        rv = newsgroup->GetName(&name);
         
         PRBool isSubscribed=PR_FALSE;
         rv = newsgroup->GetSubscribed(&isSubscribed);
         line = PR_smprintf("%s%s %s" MSG_LINEBREAK,
-                                 newsgroupName, 
+                                 name, 
 								 isSubscribed ? ":" : "!", str);
 		if (!line) {
 			delete [] str;
@@ -1038,11 +1434,11 @@ nsNNTPHost::SetNewsRCFilename(char* name)
 {
 	delete [] m_filename;
 	m_filename = new char [PL_strlen(name) + 1];
-	if (!m_filename) return MK_OUT_OF_MEMORY;
+	if (!m_filename) return NS_ERROR_OUT_OF_MEMORY;
 	PL_strcpy(m_filename, name);
 
 	m_hostinfofilename = PR_smprintf("%s/hostinfo.dat", GetDBDirName());
-	if (!m_hostinfofilename) return MK_OUT_OF_MEMORY;
+	if (!m_hostinfofilename) return NS_ERROR_OUT_OF_MEMORY;
 #ifdef UNREADY_CODE
 	XP_StatStruct st;
 	if (XP_Stat (m_hostinfofilename, &st, xpXoverCache) == 0) {
@@ -1125,7 +1521,7 @@ nsNNTPHost::SetNewsRCFilename(char* name)
 
 	return ReadInitialPart();
 #else
-	return 0;
+	return NS_OK;
 #endif
 }
 
@@ -1561,7 +1957,7 @@ nsNNTPHost::Inhale(PRBool force)
 								&buffer, &buffer_size, &buffer_fp,
 								PR_FALSE, 
 #ifdef XP_OS2
-								(PRInt32 (_Optlink*) (char*,PRUint32,void*))
+								(nsresult (_Optlink*) (char*,PRUint32,void*))
 #endif
 								nsNNTPHost::InhaleLine, &state);
 	} while (status >= 0);
@@ -1609,18 +2005,28 @@ nsresult
 nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
 {
     nsresult result = NS_ERROR_NOT_INITIALIZED;
-    
+
+	if (name == nsnull) {
+		return NS_ERROR_NULL_POINTER;
+	}
+#ifdef DEBUG_sspitzer
+		printf("FindGroup(%s)\n",name);
+#endif
+			
 	if (m_groups == NULL) return result;
 	int n = m_groups->Count();
 	for (int i=0 ; i<n ; i++) {
-        char *newsgroupName;
-        nsresult rv;
+        char *name = nsnull;
+        nsresult rv = NS_OK;
         
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) (*m_groups)[i];
-        rv = info->GetName(&newsgroupName);
-        
-		if (NS_SUCCEEDED(rv) &&
-            PL_strcmp(newsgroupName, name) == 0) {
+        rv = info->GetName(&name);
+       
+#ifdef DEBUG_sspitzer
+		printf("%d = %s\n",i,name?name:"null");
+#endif
+
+		if (NS_SUCCEEDED(rv) && (name != nsnull) && PL_strcmp(name, name) == 0) {
 			*retval = info;
             result = NS_OK;
 		}
@@ -1629,25 +2035,28 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
 }
 
 nsresult
-nsNNTPHost::AddGroup(const char *groupName,
+nsNNTPHost::AddGroup(const char *name,
                      nsINNTPNewsgroup **retval)
 {
-    return AddGroup(groupName, NULL, retval);
+    return AddGroup(name, NULL, retval);
 }
 
 
 nsresult
-nsNNTPHost::AddGroup(const char *groupName,
+nsNNTPHost::AddGroup(const char *name,
                      nsMsgGroupRecord *inGroupRecord,
                      nsINNTPNewsgroup **retval)
 {
+#ifdef DEBUG_sspitzer
+	printf("nsNNTPHost::AddGroup(%s)\n",name);
+#endif
 	nsINNTPNewsgroup *newsInfo = NULL;
 	nsINNTPCategoryContainer *categoryContainer = NULL;
 	char* containerName = NULL;
 	PRBool needpaneupdate = PR_FALSE;
     PRBool isSubscribed=FALSE;
     
-	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupName);
+	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(name);
 	if (!group) goto DONE;	// Out of memory.
 
 	if (!group->IsCategoryContainer() && group->IsCategory()) {
@@ -1669,8 +2078,8 @@ nsNNTPHost::AddGroup(const char *groupName,
             
             if (NS_FAILED(rv) || !isSubscribed)
                 {
-                    groupName = containerName;
-                    group = FindOrCreateGroup(groupName);
+                    name = containerName;
+                    group = FindOrCreateGroup(name);
                 }
             NS_RELEASE(newsInfo);
             // categoryContainer released at the end of this function
@@ -1682,7 +2091,7 @@ nsNNTPHost::AddGroup(const char *groupName,
 	needpaneupdate = m_hostinfo && !group->IsCategory();
 
     nsresult rv;
-    rv = FindGroup(groupName, &newsInfo);
+    rv = FindGroup(name, &newsInfo);
 	if (NS_SUCCEEDED(rv)) {	// seems to be already added
         PRBool subscribed;
         rv = newsInfo->GetSubscribed(&subscribed);
@@ -1702,22 +2111,27 @@ nsNNTPHost::AddGroup(const char *groupName,
 			goto DONE;
 		}
 	} else {
-		char* groupLine = PR_smprintf("%s:", groupName);
+		char* groupLine = PR_smprintf("%s:", name);
 		if (!groupLine) {
 			goto DONE;			// Out of memory.
 		}
 	
 		// this will add and auto-subscribe - OK, a cheap hack.
 		if (ProcessLine(groupLine, PL_strlen(groupLine)) == 0) {
-			// groups are added at end so look there first...
-			newsInfo = (nsINNTPNewsgroup *)
-				(*m_groups)[m_groups->Count() - 1];
 
-            char *newsgroupName;
-            rv = newsInfo->GetName(&newsgroupName);
+			if (m_groups != nsnull) {
+				// groups are added at end so look there first...
+				newsInfo = (nsINNTPNewsgroup *)
+					(*m_groups)[m_groups->Count() - 1];
+			}
+			
+			if (!newsInfo) goto DONE;
+
+            char *name;
+            rv = newsInfo->GetName(&name);
 			if (NS_SUCCEEDED(rv) &&
-                PL_strcmp(newsgroupName, groupName)) {
-				rv = FindGroup(groupName, &newsInfo);
+                PL_strcmp(name, name)) {
+				rv = FindGroup(name, &newsInfo);
 				PR_ASSERT(NS_SUCCEEDED(rv));
 			}
 		}
@@ -1778,7 +2192,7 @@ nsNNTPHost::AddGroup(const char *groupName,
 			folder->SetFlag(MSG_FOLDER_FLAG_ELIDED);
             NS_IF_RELEASE(folder);
 #ifdef HAVE_MASTER
-			catContainer->BuildCategoryTree(catContainer, groupName, group,
+			catContainer->BuildCategoryTree(catContainer, name, group,
 											);
 #endif
             NS_RELEASE(catContainer);
@@ -1787,7 +2201,7 @@ nsNNTPHost::AddGroup(const char *groupName,
 	else if (group->IsCategory() && categoryContainer)
 	{
 #ifdef HAVE_MASTER
-		categoryContainer->AddToCategoryTree(categoryContainer, groupName, group, m_master);
+		categoryContainer->AddToCategoryTree(categoryContainer, name, group, m_master);
 #endif
 	}
 
@@ -1916,11 +2330,11 @@ nsNNTPHost::RemoveGroup (nsINNTPNewsgroup *newsInfo)
 }
 
 nsresult
-nsNNTPHost::RemoveGroupByName(const char* groupName)
+nsNNTPHost::RemoveGroupByName(const char* name)
 {
 	nsINNTPNewsgroup *newsInfo = NULL;
 
-    nsresult rv = FindGroup(groupName, &newsInfo);
+    nsresult rv = FindGroup(name, &newsInfo);
     if (NS_SUCCEEDED(rv))
         RemoveGroup (newsInfo);
 
@@ -2021,10 +2435,10 @@ nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
             wantNewTotals &&
             subscribed) {
 			info->SetWantNewTotals(PR_FALSE);
-            char *newsgroupName;
-            nsresult rv = info->GetName(&newsgroupName);
+            char *name;
+            nsresult rv = info->GetName(&name);
 			if (NS_SUCCEEDED(rv)) {
-                *result = PL_strdup(newsgroupName);
+                *result = PL_strdup(name);
                 return NS_OK;
             }
 		}
@@ -2125,27 +2539,27 @@ nsNNTPHost::AddSearchableGroup (const char *group)
 }
 
 nsresult
-nsNNTPHost::QuerySearchableGroup (const char *group, PRBool *_retval)
+nsNNTPHost::QuerySearchableGroup (const char *group, PRBool *retval)
 {
-    *_retval = FALSE;
+    *retval = FALSE;
 	for (int i = 0; i < m_searchableGroups.Count(); i++)
 	{
 		const char *searchableGroup = (const char*) m_searchableGroups[i];
 		char *starInSearchableGroup = NULL;
 
 		if (!PL_strcmp(searchableGroup, "*")) {
-			*_retval = PR_TRUE; // everything is searchable
+			*retval = PR_TRUE; // everything is searchable
             return NS_OK;
         }
 		else if (NULL != (starInSearchableGroup = PL_strchr(searchableGroup, '*')))
 		{
 			if (!PL_strncasecmp(group, searchableGroup, PL_strlen(searchableGroup)-2)) {
-				*_retval = PR_TRUE; // this group is in a searchable hierarchy
+				*retval = PR_TRUE; // this group is in a searchable hierarchy
                 return NS_OK;
             }
 		}
 		else if (!PL_strcasecmp(group, searchableGroup)) {
-            *_retval = PR_TRUE; // this group is individually searchable
+            *retval = PR_TRUE; // this group is individually searchable
             return NS_OK;
         }
 	}
@@ -2322,9 +2736,9 @@ int nsNNTPHost::RemoveHost()
 
 
 char*
-nsNNTPHost::GetPrettyName(char* groupname)
+nsNNTPHost::GetPrettyName(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (group) {
 		const char* orig = group->GetPrettyName();
 		if (orig) {
@@ -2340,15 +2754,15 @@ nsNNTPHost::GetPrettyName(char* groupname)
 
 
 nsresult
-nsNNTPHost::SetPrettyName(const char* groupname, const char* prettyname)
+nsNNTPHost::SetPrettyName(const char* name, const char* prettyname)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return MK_OUT_OF_MEMORY;
 	nsresult rv = group->SetPrettyName(prettyname);
 	if (NS_FAILED(rv))
 	{
 		nsINNTPNewsgroup *newsFolder;
-        rv = FindGroup(groupname, &newsFolder);
+        rv = FindGroup(name, &newsFolder);
 		// make news folder forget prettyname so it will query again
 		if (NS_SUCCEEDED(rv) && newsFolder)	
 			newsFolder->SetPrettyName(NULL);
@@ -2362,53 +2776,53 @@ nsNNTPHost::SetPrettyName(const char* groupname, const char* prettyname)
 }
 
 
-time_t
-nsNNTPHost::GetAddTime(char* groupname)
+PRTime
+nsNNTPHost::GetAddTime(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return 0;
 	return group->GetAddTime();
 }
 
 
 PRInt32
-nsNNTPHost::GetUniqueID(char* groupname)
+nsNNTPHost::GetUniqueID(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return 0;
 	return group->GetUniqueID();
 }
 
 
 PRBool
-nsNNTPHost::IsCategory(char* groupname)
+nsNNTPHost::IsCategory(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return PR_FALSE;
 	return group->IsCategory();
 }
 
 
 PRBool
-nsNNTPHost::IsCategoryContainer(char* groupname)
+nsNNTPHost::IsCategoryContainer(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return PR_FALSE;
 	return group->IsCategoryContainer();
 }
 
 int
-nsNNTPHost::SetIsCategoryContainer(const char* groupname, PRBool value, nsMsgGroupRecord *inGroupRecord)
+nsNNTPHost::SetIsCategoryContainer(const char* name, PRBool value, nsMsgGroupRecord *inGroupRecord)
 {
     nsresult rv;
-	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(name);
 	if (!group) return MK_OUT_OF_MEMORY;
 	int status = group->SetIsCategoryContainer(value);
 	m_groupTreeDirty |= status;
 	if (status > 0)
 	{
 		nsINNTPNewsgroup *newsgroup;
-        rv = FindGroup(groupname, &newsgroup);
+        rv = FindGroup(name, &newsgroup);
         
         nsIMsgFolder *newsFolder = getFolderFor(newsgroup);
 
@@ -2456,9 +2870,9 @@ nsNNTPHost::SetIsCategoryContainer(const char* groupname, PRBool value, nsMsgGro
 }
 
 nsresult
-nsNNTPHost::SetGroupNeedsExtraInfo(const char *groupname, PRBool value)
+nsNNTPHost::SetGroupNeedsExtraInfo(const char *name, PRBool value)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return MK_OUT_OF_MEMORY;
 	nsresult rv = group->SetNeedsExtraInfo(value);
 	if (NS_SUCCEEDED(rv)) m_groupTreeDirty |= 1;
@@ -2467,9 +2881,9 @@ nsNNTPHost::SetGroupNeedsExtraInfo(const char *groupname, PRBool value)
 
 
 char*
-nsNNTPHost::GetCategoryContainer(const char* groupname, nsMsgGroupRecord *inGroupRecord)
+nsNNTPHost::GetCategoryContainer(const char* name, nsMsgGroupRecord *inGroupRecord)
 {
-	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(name);
 	if (group) {
 		group = group->GetCategoryContainer();
 		if (group) return group->GetFullName();
@@ -2478,19 +2892,19 @@ nsNNTPHost::GetCategoryContainer(const char* groupname, nsMsgGroupRecord *inGrou
 }
 
 nsINNTPNewsgroup *
-nsNNTPHost::GetCategoryContainerFolderInfo(const char *groupname)
+nsNNTPHost::GetCategoryContainerFolderInfo(const char *name)
 {
     nsINNTPNewsgroup *newsgroup=NULL;
     nsresult rv;
 	// because GetCategoryContainer returns NULL for a category container...
-	nsMsgGroupRecord *group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord *group = FindOrCreateGroup(name);
 	if (group->IsCategoryContainer()) {
-        rv = FindGroup(groupname, &newsgroup);
+        rv = FindGroup(name, &newsgroup);
         if (NS_SUCCEEDED(rv)) return newsgroup;
         else return NULL;
     }
 
-	char *categoryContainerName = GetCategoryContainer(groupname);
+	char *categoryContainerName = GetCategoryContainer(name);
 	if (categoryContainerName)
 	{
 		rv = FindGroup(categoryContainerName, &newsgroup);
@@ -2501,9 +2915,9 @@ nsNNTPHost::GetCategoryContainerFolderInfo(const char *groupname)
 
 
 nsresult
-nsNNTPHost::GetIsVirtualGroup(const char* groupname, PRBool *retval)
+nsNNTPHost::GetIsVirtualGroup(const char* name, PRBool *retval)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) {
         *retval = PR_FALSE;
         return NS_OK;
@@ -2514,15 +2928,15 @@ nsNNTPHost::GetIsVirtualGroup(const char* groupname, PRBool *retval)
 
 
 nsresult
-nsNNTPHost::SetIsVirtualGroup(const char* groupname, PRBool value)
+nsNNTPHost::SetIsVirtualGroup(const char* name, PRBool value)
 {
-    return SetIsVirtualGroup(groupname, value, nsnull);
+    return SetIsVirtualGroup(name, value, nsnull);
 }
 nsresult
-nsNNTPHost::SetIsVirtualGroup(const char* groupname, PRBool value,
+nsNNTPHost::SetIsVirtualGroup(const char* name, PRBool value,
                               nsMsgGroupRecord* inGroupRecord)
 {
-	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(name);
 
 	if (!group) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2534,18 +2948,18 @@ nsNNTPHost::SetIsVirtualGroup(const char* groupname, PRBool value,
 
 
 PRBool
-nsNNTPHost::IsGroup(char* groupname)
+nsNNTPHost::IsGroup(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return PR_FALSE;
 	return group->IsGroup();
 }
 
 
 int
-nsNNTPHost::SetIsGroup(char* groupname, PRBool value)
+nsNNTPHost::SetIsGroup(char* name, PRBool value)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return MK_OUT_OF_MEMORY;
 	int status = group->SetIsGroup(value);
 	m_groupTreeDirty |= status;
@@ -2554,9 +2968,9 @@ nsNNTPHost::SetIsGroup(char* groupname, PRBool value)
 
 
 PRBool
-nsNNTPHost::IsHTMLOk(char* groupname)
+nsNNTPHost::IsHTMLOk(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return PR_FALSE;
 	if (group->IsHTMLOKGroup()) return PR_TRUE;
 	for ( ; group ; group = group->GetParent()) {
@@ -2567,18 +2981,18 @@ nsNNTPHost::IsHTMLOk(char* groupname)
 
 
 PRBool
-nsNNTPHost::IsHTMLOKGroup(char* groupname)
+nsNNTPHost::IsHTMLOKGroup(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return PR_FALSE;
 	return group->IsHTMLOKGroup();
 }
 
 
 int
-nsNNTPHost::SetIsHTMLOKGroup(char* groupname, PRBool value)
+nsNNTPHost::SetIsHTMLOKGroup(char* name, PRBool value)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return MK_OUT_OF_MEMORY;
 	int status = group->SetIsHTMLOKGroup(value);
 	m_groupTreeDirty |= status;
@@ -2587,18 +3001,18 @@ nsNNTPHost::SetIsHTMLOKGroup(char* groupname, PRBool value)
 
 
 PRBool
-nsNNTPHost::IsHTMLOKTree(char* groupname)
+nsNNTPHost::IsHTMLOKTree(char* name)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return PR_FALSE;
 	return group->IsHTMLOKTree();
 }
 
 
 int
-nsNNTPHost::SetIsHTMLOKTree(char* groupname, PRBool value)
+nsNNTPHost::SetIsHTMLOKTree(char* name, PRBool value)
 {
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (!group) return MK_OUT_OF_MEMORY;
 	int status = group->SetIsHTMLOKTree(value);
 	m_groupTreeDirty |= status;
@@ -2611,7 +3025,7 @@ nsNNTPHost::SetIsHTMLOKTree(char* groupname, PRBool value)
 
 nsMsgGroupRecord*
 nsNNTPHost::FindGroupInBlock(nsMsgGroupRecord* parent,
-							   char* groupname,
+							   char* name,
 							   PRInt32* comp)
 {
 #ifdef UNREADY_CODE
@@ -2640,7 +3054,7 @@ RESTART:
 		}
 		while (*ptr == CR || *ptr == LF) ptr++;
 		*ptr2 = '\0';
-		PRInt32 c = nsMsgGroupRecord::GroupNameCompare(groupname, ptr);
+		PRInt32 c = nsMsgGroupRecord::nameCompare(name, ptr);
 		*ptr2 = ',';
 		if (c < 0) {
 			if (*comp > 0) {
@@ -2704,7 +3118,7 @@ RELOAD:
 
 
 nsMsgGroupRecord*
-nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* groupname,
+nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* name,
 							  PRInt32 min, PRInt32 max)
 {
 #ifdef UNREADY_CODE
@@ -2715,7 +3129,7 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* groupname,
 	if (parent != m_groupTree) {
 		char* pname = parent->GetFullName();
 		if (pname) {
-			PR_ASSERT(PL_strncmp(pname, groupname, PL_strlen(pname)) == 0);
+			PR_ASSERT(PL_strncmp(pname, name, PL_strlen(pname)) == 0);
 			delete [] pname;
 			pname = NULL;
 		}
@@ -2731,7 +3145,7 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* groupname,
 	// First, check if we happen to already have the line for this group in
 	// memory.
 	if (m_block[0]) {
-		result = FindGroupInBlock(parent, groupname, &comp);
+		result = FindGroupInBlock(parent, name, &comp);
 	}
 
 	while (!result && comp != 0 && min < max) {
@@ -2742,7 +3156,7 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* groupname,
 		if (length < 0) length = 0;
 		m_block[length] = '\0';
 
-		result = FindGroupInBlock(parent, groupname, &comp);
+		result = FindGroupInBlock(parent, name, &comp);
 
 		if (comp > 0) {
 			min = mid + 1;
@@ -2758,17 +3172,17 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* groupname,
 
 
 nsMsgGroupRecord*
-nsNNTPHost::FindOrCreateGroup(const char* groupname,
+nsNNTPHost::FindOrCreateGroup(const char* name,
 								int* statusOfMakingGroup)
 {
 	char buf[256];
 	
 	nsMsgGroupRecord* parent = m_groupTree;
-	const char* start = groupname;
+	const char* start = name;
 	PR_ASSERT(start && *start);
 	if (!start || !*start) return NULL;
 
-	PR_ASSERT(*start != '.');	// groupnames can't start with ".".
+	PR_ASSERT(*start != '.');	// names can't start with ".".
 	if (*start == '.') return NULL;
 	
 	while (*start)
@@ -2777,7 +3191,7 @@ nsNNTPHost::FindOrCreateGroup(const char* groupname,
 		const char* end = PL_strchr(start, '.');
 		if (!end) end = start + PL_strlen(start);
 		int length = end - start;
-		PR_ASSERT(length > 0);	// groupnames can't contain ".." or end in
+		PR_ASSERT(length > 0);	// names can't contain ".." or end in
 								// a ".".
 		if (length <= 0) return NULL;
 		PR_ASSERT(length < sizeof(buf));
@@ -2808,10 +3222,10 @@ nsNNTPHost::FindOrCreateGroup(const char* groupname,
 				{
 					ptr = parent->GetSiblingOrAncestorSibling();
 				}
-				length = end - groupname;
+				length = end - name;
 				char* tmp = new char[length + 1];
 				if (!tmp) return NULL;
-				PL_strncpyz(tmp, groupname, length + 1);
+				PL_strncpyz(tmp, name, length + 1);
 				tmp[length] = '\0';
 				ptr = LoadSingleEntry(parent, tmp,
 									  prev->GetFileOffset(),
@@ -2827,7 +3241,7 @@ nsNNTPHost::FindOrCreateGroup(const char* groupname,
 			if (!ptr) 
 			{
 				m_groupTreeDirty = 2;
-				ptr = nsMsgGroupRecord::Create(parent, buf, time(0),
+				ptr = nsMsgGroupRecord::Create(parent, buf, PR_Now(),
 											  m_uniqueId++, 0);
 				if (!ptr) return NULL;
 			}
@@ -2843,10 +3257,10 @@ nsNNTPHost::FindOrCreateGroup(const char* groupname,
 
 
 int
-nsNNTPHost::NoticeNewGroup(const char* groupname, nsMsgGroupRecord **outGroupRecord)
+nsNNTPHost::NoticeNewGroup(const char* name, nsMsgGroupRecord **outGroupRecord)
 {
 	int status = 0;
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupname, &status);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name, &status);
 	if (!group) return MK_OUT_OF_MEMORY;
 	if (outGroupRecord)
 		*outGroupRecord = group;
@@ -2884,7 +3298,7 @@ nsNNTPHost::AssureAllDescendentsLoaded(nsMsgGroupRecord* group)
 								&buffer, &buffer_size, &buffer_fp,
 								PR_FALSE, 
 #ifdef XP_OS2
-								(PRInt32 (_Optlink*) (char*,PRUint32,void*))
+								(nsresult (_Optlink*) (char*,PRUint32,void*))
 #endif
 								nsNNTPHost::InhaleLine, &state);
 	} while (status >= 0);
@@ -2906,7 +3320,7 @@ nsNNTPHost::AssureAllDescendentsLoaded(nsMsgGroupRecord* group)
 }
 
 nsresult
-nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
+nsNNTPHost::GroupNotFound(const char *name, PRBool opening)
 {
 	// if no group command has succeeded, don't blow away categories.
 	// The server might be wedged...
@@ -2914,14 +3328,14 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 		return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv;
-	nsMsgGroupRecord* group = FindOrCreateGroup(groupName);
+	nsMsgGroupRecord* group = FindOrCreateGroup(name);
 	if (group && (group->IsCategory() || opening))
 	{
 		nsINNTPNewsgroup *newsInfo = NULL;
         nsIMsgFolder *newsFolder = NULL;
 
         // get the group and corresponding folder
-        rv = FindGroup(groupName, &newsInfo);
+        rv = FindGroup(name, &newsInfo);
         if (NS_SUCCEEDED(rv))
             newsFolder = getFolderFor(newsInfo);
         
@@ -2929,7 +3343,7 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 		m_groupTreeDirty |= 2;	// deleting a group has to force a rewrite anyway
 		if (group->IsCategory())
 		{
-			nsINNTPNewsgroup *catCont = GetCategoryContainerFolderInfo(groupName);
+			nsINNTPNewsgroup *catCont = GetCategoryContainerFolderInfo(name);
 			if (catCont)
 			{
                 nsIMsgFolder *catFolder = getFolderFor(catCont);
@@ -2945,13 +3359,11 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
                 }
 			}
 		}
-		else if (newsInfo)
 #ifdef HAVE_MASTER
+		else if (newsInfo) {
 			m_master->BroadcastFolderDeleted (newsInfo);
-#else
-        ;
+		}
 #endif
-
 		if (newsInfo)
 		{
             m_hostinfo->RemoveElement(newsFolder);
@@ -3070,6 +3482,39 @@ int nsNNTPHost::DeleteFiles ()
 	return 0;
 }
 
+nsresult
+nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **retval)
+{
+	nsresult result = NS_ERROR_NOT_INITIALIZED;
+
+	if (name == nsnull) {
+		return NS_ERROR_NULL_POINTER;
+	}
+#ifdef DEBUG_sspitzer
+	printf("GetNewsgroupList(%s)\n",name);	
+#endif
+			
+	if (m_newsgrouplists == NULL) return result;
+	int n = m_newsgrouplists->Count();
+	for (int i=0 ; i<n ; i++) {
+        char *newsgroupname = nsnull;
+        nsresult rv = NS_OK;
+		
+		nsINNTPNewsgroupList* list = (nsINNTPNewsgroupList*) (*m_newsgrouplists)[i];
+        rv = list->GetGroupName(&newsgroupname);
+       
+#ifdef DEBUG_sspitzer
+		printf("%d = %s\n",i,newsgroupname?newsgroupname:"null");
+#endif
+
+		if (NS_SUCCEEDED(rv) && (newsgroupname != nsnull) && PL_strcmp(name,newsgroupname) == 0) {
+			*retval = list;
+            result = NS_OK;
+		}
+	}
+    return result;
+}
+
 /* given a message id like asl93490@ahost.com, convert
  * it to a newsgroup and a message number within that group
  * (stolen from msgglue.cpp - MSG_NewsGroupAndNumberOfID)
@@ -3094,7 +3539,7 @@ nsNNTPHost::GetNewsgroupAndNumberOfID(const char *message_id,
     {
         MSG_FolderInfoNews *newsFolderInfo =
             (MSG_FolderInfoNews *) folderInfo;
-        *groupName = newsFolderInfo->GetNewsgroupName();
+        *name = newsFolderInfo->GetNewsgroupName();
     }
 #endif
     return NS_OK;
@@ -3103,7 +3548,7 @@ nsNNTPHost::GetNewsgroupAndNumberOfID(const char *message_id,
 /* this function originally lived in a pane
  */
 nsresult
-nsNNTPHost::AddNewNewsgroup(const char *groupName,
+nsNNTPHost::AddNewNewsgroup(const char *name,
                             PRInt32 first,
                             PRInt32 last,
                             const char *flags,
@@ -3112,7 +3557,11 @@ nsNNTPHost::AddNewNewsgroup(const char *groupName,
     nsMsgGroupRecord     *groupRecord = NULL;
     nsresult rv;
     
-    int status = NoticeNewGroup(groupName, &groupRecord);
+#ifdef DEBUG_sspitzer
+	printf("nsNNTPHost::AddNewNewsgroup(%s,...)\n",name);
+#endif
+
+    int status = NoticeNewGroup(name, &groupRecord);
     if (status < 0) return status;
     
     /* this used to be for the pane */
@@ -3140,14 +3589,14 @@ nsNNTPHost::AddNewNewsgroup(const char *groupName,
     }
     if (xactiveFlags)
     {
-        SetIsCategoryContainer(groupName, bIsCategoryContainer, groupRecord);
-        SetIsVirtualGroup(groupName, bIsVirtual, groupRecord);
+        SetIsCategoryContainer(name, bIsCategoryContainer, groupRecord);
+        SetIsVirtualGroup(name, bIsVirtual, groupRecord);
     }
 
     if (status > 0) {
         // If this really is a new newsgroup, then if it's a category of a
         // subscribed newsgroup, then automatically subscribe to it.
-        char* containerName = GetCategoryContainer(groupName, groupRecord);
+        char* containerName = GetCategoryContainer(name, groupRecord);
         if (containerName) {
             nsINNTPNewsgroup* categoryInfo;
             rv = FindGroup(containerName, &categoryInfo);
@@ -3158,7 +3607,7 @@ nsNNTPHost::AddNewNewsgroup(const char *groupName,
                 if (isSubscribed) {
                     // this autosubscribes categories of subscribed newsgroups.
                     nsINNTPNewsgroup *newsgroup;
-                    rv = AddGroup(groupName, groupRecord, &newsgroup);
+                    rv = AddGroup(name, groupRecord, &newsgroup);
                     if (NS_SUCCEEDED(rv)) NS_RELEASE(newsgroup);
                     
                 }
@@ -3225,11 +3674,15 @@ MSG_IMPL_GETFOLDER(nsINNTPCategoryContainer)
 nsresult
 NS_NewNNTPHost(nsINNTPHost **aNNTPHost, const char* name, PRUint32 port)
 {
-    nsresult rv;
     nsNNTPHost *aHost = new nsNNTPHost(name, port);
-    if (aHost)
+    if (aHost) {
         return aHost->QueryInterface(nsINNTPHost::GetIID(),
                                      (void **)aNNTPHost);
-    return NS_ERROR_NOT_INITIALIZED;
-
+	}
+	else {
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
 }
+
+
+

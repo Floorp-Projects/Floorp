@@ -532,7 +532,20 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   {
 	  rv = NS_NewNNTPHost(&m_newsHost, hostAndPort, port ? port : NEWS_PORT);
 	  // save it on our url for future use....
+
+	  if (NS_FAILED(rv) || (m_newsHost == nsnull)) {
+			status = -1;
+			goto FAIL;
+	  }
+
 	  m_runningURL->SetNntpHost(m_newsHost);
+
+	  // read in the newsrc file now, to build up the host correctly.
+	  rv = m_newsHost->LoadNewsrc("news://news.mozilla.org");
+	  if (NS_FAILED(rv)) {
+			status = -1;
+			goto FAIL;
+	  }
   }
 
   PR_ASSERT(NS_SUCCEEDED(rv));
@@ -1580,6 +1593,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 
 		nsresult rv;
         nsINNTPNewsgroup *newsgroup;
+		if (m_newsHost == nsnull) {
+			printf("m_newsHost is null, panic!\n");
+			return -1;
+		}
         rv = m_newsHost->GetNewsgroupAndNumberOfID(m_path,
                                                    &newsgroup,
                                                    &number);
@@ -1618,7 +1635,11 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	{
         PRTime last_update;
         nsresult rv;
-
+		
+		if (m_newsHost == nsnull) {
+			printf("m_newsHost is null, panic!\n");
+			return -1;
+		}
         rv = m_newsHost->GetLastUpdatedTime(&last_update);
 		char small_buf[64];
         PRExplodedTime  expandedTime;
@@ -1634,7 +1655,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		last_update -= NEWGROUPS_TIME_OFFSET;
 
         {
-           int64  secToUSec, timeInSec, timeInUSec;
+           PRInt64  secToUSec, timeInSec, timeInUSec;
            LL_I2L(timeInSec, last_update);
            LL_I2L(secToUSec, PR_USEC_PER_SEC);
            LL_MUL(timeInUSec, timeInSec, secToUSec);
@@ -1651,7 +1672,12 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	
 		ClearFlag(NNTP_USE_FANCY_NEWSGROUP);
         PRTime last_update;
-        nsresult rv = m_newsHost->GetLastUpdatedTime(&last_update);
+      	
+		if (m_newsHost == nsnull) {
+			printf("m_newsHost is null, panic!\n");
+			return -1;
+		}
+		nsresult rv = m_newsHost->GetLastUpdatedTime(&last_update);
         
         if (NS_SUCCEEDED(rv) && last_update!=0)
 		{
@@ -1695,9 +1721,14 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
         nsresult rv=NS_ERROR_NULL_POINTER;
 
         NET_SACopy(&command, "GROUP ");
-        if (m_newsgroup)
-            rv = m_newsgroup->GetName(&group_name);
+        if (m_newsgroup == nsnull) {
+			printf("m_newsgroup is null, panic!\n");
+			return -1;
+		}
+            
+		rv = m_newsgroup->GetName(&group_name);
         slash = PL_strchr(group_name, '/');
+		
         m_firstArticle = 0;
         m_lastArticle = 0;
         if (slash)
@@ -1713,6 +1744,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	{
 		nsresult rv;
 		PRBool searchable=PR_FALSE;
+		if (m_newsHost == nsnull) {
+			printf("m_newsHost is null, panic!\n");
+			return -1;
+		}
 		rv = m_newsHost->QueryExtension("SEARCH", &searchable);
 		if (NS_SUCCEEDED(rv) && searchable)
 		{
@@ -1737,6 +1772,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
             
 			/* for XPAT, we have to GROUP into the group before searching */
 			NET_SACopy(&command, "GROUP ");
+			if (m_newsgroup == nsnull) {
+				printf("m_newsgroup is null, panic!\n");
+				return -1;
+			}
             rv = m_newsgroup->GetName(&group_name);
             NET_SACat (&command, group_name);
 			m_nextState = NNTP_RESPONSE;
@@ -2695,7 +2734,7 @@ PRInt32 nsNNTPProtocol::BeginReadXover()
 
 	/* We now know there is a summary line there; make sure it has the
 	   right numbers in it. */
-    char *group_name;
+    char *group_name = nsnull;
     m_newsgroup->GetName(&group_name);
     
     m_newsHost->DisplaySubscribedGroup(group_name,
@@ -2703,6 +2742,7 @@ PRInt32 nsNNTPProtocol::BeginReadXover()
                                           m_lastPossibleArticle,
                                           count, PR_TRUE);
     PR_Free(group_name);
+	group_name = nsnull;
 	if (status < 0) return status;
 
 	m_numArticlesLoaded = 0;
@@ -2725,19 +2765,23 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 
 	if (m_firstArticle > 0) 
 	{
-      nsresult rv;
+      nsresult rv = NS_OK;
       char *groupName;
-      nsINNTPNewsgroupList *newsgroupList;
-
-      rv = m_newsgroup->GetName(&groupName);
+      
+	  rv = m_newsgroup->GetName(&groupName);
       /* XXX - parse state stored in MSG_Pane cd->pane */
       if (NS_SUCCEEDED(rv))
-          rv = m_newsHost->GetNewsgroupList(groupName, &newsgroupList);
+          rv = m_newsHost->GetNewsgroupList(groupName, &m_newsgroupList);
       
-      if (NS_SUCCEEDED(rv))
-          rv = newsgroupList->AddToKnownArticles(m_firstArticle,
+#ifdef DEBUG_sspitzer
+	  printf("add to known articles:  %d - %d\n", m_firstArticle, m_lastArticle);
+#endif
+
+      if (NS_SUCCEEDED(rv) && m_newsgroupList != nsnull) {
+          rv = m_newsgroupList->AddToKnownArticles(m_firstArticle,
                                                  m_lastArticle);
-      
+      }
+
 	  if (NS_FAILED(rv))
       {
 		return status;
@@ -2753,27 +2797,28 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	}
 
 
-    char *groupName;
-    nsINNTPNewsgroupList *newsgroupList;
+    char *groupName = nsnull;
     
-    rv = m_newsgroup->GetName(&groupName);
-    if (NS_SUCCEEDED(rv))
-        rv = m_newsHost->GetNewsgroupList(groupName, &newsgroupList);
+	if (m_newsgroupList == nsnull) {
+	    rv = m_newsgroup->GetName(&groupName);
+		if (NS_SUCCEEDED(rv))
+			rv = m_newsHost->GetNewsgroupList(groupName, &m_newsgroupList);
+	}
         
-    if (NS_SUCCEEDED(rv))
-    rv =
-      newsgroupList->GetRangeOfArtsToDownload(m_firstPossibleArticle,
+    if (NS_SUCCEEDED(rv) && m_newsgroupList != nsnull) {
+        rv = m_newsgroupList->GetRangeOfArtsToDownload(m_firstPossibleArticle,
                                               m_lastPossibleArticle,
                                               m_numArticlesWanted -
                                               m_numArticlesLoaded,
                                               &(m_firstArticle),
                                               &(m_lastArticle),
                                               &status);
-	if (NS_FAILED(rv)) 
-	{
-	  return status;
+	
 	}
 
+	if (NS_FAILED(rv)) {
+	  return status;
+	}
 
 	if (m_firstArticle <= 0 || m_firstArticle > m_lastArticle) 
 	{
@@ -2788,9 +2833,9 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	m_articleNumber = m_firstArticle;
 
     /* was MSG_InitXOVER() */
-    rv = m_newsgroup->GetNewsgroupList(&m_newsgroupList);
-    if (NS_SUCCEEDED(rv))
+    if (m_newsgroupList != nsnull) {
         rv = m_newsgroupList->InitXOVER(m_firstArticle, m_lastArticle);
+	}
 
     /* convert nsresult->status */
     status = !NS_SUCCEEDED(rv);
@@ -2818,7 +2863,9 @@ PRInt32 nsNNTPProtocol::XoverSend()
 				m_firstArticle, 
 				m_lastArticle);
 
-	/* printf("XOVER %ld-%ld\n", m_firstArticle, m_lastArticle); */
+#ifdef DEBUG_sspitzer
+	printf("XOVER %ld-%ld\n", m_firstArticle, m_lastArticle);
+#endif
 
 	NNTP_LOG_WRITE(outputBuffer);
 
@@ -2874,7 +2921,7 @@ PRInt32 nsNNTPProtocol::ReadXoverResponse()
 
 PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 {
-    char *line;
+	char *line;
     nsresult rv;
 	PRUint32 status = 1;
 
@@ -2924,7 +2971,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 #endif
 	}
 
-	 rv = m_newsgroupList->ProcessXOVER(line, &status);
+	 rv = m_newsgroupList->ProcessXOVERLINE(line, &status);
 	 PR_ASSERT(NS_SUCCEEDED(rv));
 
 	m_numArticlesLoaded++;
@@ -2941,8 +2988,13 @@ PRInt32 nsNNTPProtocol::ProcessXover()
 {
     nsresult rv;
 	PRInt32 status = 0;
+
     /* xover_parse_state stored in MSG_Pane cd->pane */
-    rv = m_newsgroupList->FinishXOVER(0,&status);
+	if (m_newsgroupList == nsnull) {
+		return NS_ERROR_NULL_POINTER;
+	}
+
+    rv = m_newsgroupList->FinishXOVERLINE(0,&status);
 
 	if (NS_SUCCEEDED(rv) && status < 0) return status;
 
@@ -4512,7 +4564,7 @@ PRInt32 nsNNTPProtocol::CloseConnection()
 		int status;
         nsresult rv;
        /* XXX - how/when to Release() this? */
-        rv = m_newsgroupList->FinishXOVER(status,&status);
+        rv = m_newsgroupList->FinishXOVERLINE(status,&status);
 		PR_ASSERT(NS_SUCCEEDED(rv));
 		if (NS_SUCCEEDED(rv))
 			NS_RELEASE(m_newsgroupList);
@@ -4527,7 +4579,7 @@ PRInt32 nsNNTPProtocol::CloseConnection()
 	}
 #ifdef UNREADY_CODE
 	if (cd->control_con)
-		cd->control_con->last_used_time = XP_TIME();
+		cd->control_con->last_used_time = PR_Now();
 #endif
 
     PR_FREEIF(m_path);

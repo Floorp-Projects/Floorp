@@ -21,9 +21,15 @@
 
 #include "nsINNTPHost.h"
 
+/* some platforms (like Windows and Mac) use a map file, because of
+ * file name length limitations. */
+#ifndef XP_UNIX
+#define USE_NEWSRC_MAP_FILE
+#endif
+
 NS_BEGIN_EXTERN_C
 
-nsresult NS_NewNNTPHost(nsINNTPHost **aInstancePtrResult, const char * name, PRUint32 port);
+nsresult NS_NewNNTPHost(nsINNTPHost **aInstancePtrResult, const char *name, PRUint32 port);
 
 NS_END_EXTERN_C
 

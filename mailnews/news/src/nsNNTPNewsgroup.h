@@ -33,5 +33,6 @@ NS_NewNewsgroup(nsINNTPNewsgroup **info,
                 int depth);
 
 NS_END_EXTERN_C
+
 #endif
 
