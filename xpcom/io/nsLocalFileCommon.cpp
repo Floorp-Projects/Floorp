@@ -139,7 +139,9 @@ nsFSStringConversion::PrepareFSCharset()
    { 
      // lazy eval of the file system charset
      NS_WITH_SERVICE(nsIPlatformCharset, pcharset, NS_PLATFORMCHARSET_PROGID, &res);
-     NS_ASSERTION((NS_SUCCEEDED(res) && pcharset), "cannot get platform charset");
+     if (!(NS_SUCCEEDED(res) && pcharset)) {
+       NS_WARNING("cannot get platform charset");
+     }
      if(NS_SUCCEEDED(res) && pcharset) {
         res = pcharset->GetCharset(kPlatformCharsetSel_FileName, mFSCharset);
      } 
