@@ -251,7 +251,7 @@ nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE, kNone,	  
+    /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE|kBlockEntity, kNone,	  
     /*special props, prop-range*/       0,kDefaultPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
@@ -756,7 +756,7 @@ nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE, kNone,	
+    /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE|kBlockEntity, kNone,	
     /*special props, prop-range*/       kOmitWS, kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gMapKids,eHTMLTag_unknown},
 
