@@ -106,9 +106,6 @@ TREX_TREX_DIR           = mozilla/calendar
 LIBNLS_BRANCH           = -r libnls_v3_Normandy
 LIBNLS_DIR              = ns/modules/libnls
 
-JULIAN_BRANCH           = 
-JULIAN_DIR              = $(MOZ_TOP)/modules/calendar
-
 # $(MOZ_TOP)/LICENSE
 # $(MOZ_TOP)/LEGAL
 # $(MOZ_TOP)/lib/liblayer
@@ -209,7 +206,6 @@ pull_julian::
     cd $(MOZ_SRC)\ns\.
     -$(CVST) -d config ns/clientconfig
     cd $(MOZ_SRC)\.
-    -$(CVS) $(JULIAN_BRANCH) $(JULIAN_DIR)
     -$(CVST) $(LIBNLS_BRANCH) $(LIBNLS_DIR)
     cd $(MOZ_SRC)\.
 
@@ -238,10 +234,10 @@ build_platform::
     cd $(MOZ_SRC)\.
 
 build_julian:: 
+!if !defined(MOZ_TREX_FREE)
     cd $(MOZ_SRC)\ns\modules\libnls
     nmake -f makefile.win
-    cd $(MOZ_SRC)\mozilla\modules\calendar
-    nmake -f makefile.win
+!endif
     cd $(MOZ_SRC)\.
 
 build_trex:: 
@@ -259,10 +255,10 @@ depend_dist::
     cd $(MOZ_SRC)\.
 
 depend_julian::
+!if !defined(MOZ_TREX_FREE)
     cd $(MOZ_SRC)\ns\modules\libnls
     nmake -f makefile.win depend
-    cd $(MOZ_SRC)\$(MOZ_TOP)\modules\calendar
-    nmake -f makefile.win depend
+!endif
     cd $(MOZ_SRC)\.
 
 depend_trex::
@@ -278,9 +274,9 @@ clobber_dist::
     cd $(MOZ_SRC)\.
 
 clobber_julian::
+!if !defined(MOZ_TREX_FREE)
     cd $(MOZ_SRC)\ns\modules\libnls
-    nmake -f makefile.win clobber_all
-    cd $(MOZ_SRC)\$(MOZ_TOP)\modules\calendar
+!endif
     nmake -f makefile.win clobber_all
     cd $(MOZ_SRC)\.
 
