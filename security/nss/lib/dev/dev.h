@@ -41,7 +41,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.31 $ $Date: 2002/08/30 22:56:58 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.32 $ $Date: 2003/01/30 03:02:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -732,8 +732,7 @@ nssCryptokiCertificate_GetAttributes
   NSSDER *encodingOpt,
   NSSDER *issuerOpt,
   NSSDER *serialOpt,
-  NSSDER *subjectOpt,
-  NSSASCII7 **emailOpt
+  NSSDER *subjectOpt
 );
 
 NSS_EXTERN PRStatus

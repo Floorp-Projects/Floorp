@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.18 $ $Date: 2003/01/09 04:29:01 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.19 $ $Date: 2003/01/30 03:02:35 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1015,8 +1015,7 @@ cert_getUIDFromInstance(nssCryptokiObject *instance, NSSItem *uid,
                                                 &uid[0], /* encoding */
                                                 NULL,  /* issuer   */
                                                 NULL,  /* serial   */
-                                                NULL,  /* subject  */
-                                                NULL); /* email    */
+                                                NULL);  /* subject  */
 #else
     return nssCryptokiCertificate_GetAttributes(instance,
                                                 NULL,  /* XXX sessionOpt */
@@ -1026,8 +1025,7 @@ cert_getUIDFromInstance(nssCryptokiObject *instance, NSSItem *uid,
                                                 NULL,  /* encoding */
                                                 &uid[0], /* issuer */
                                                 &uid[1], /* serial */
-                                                NULL,  /* subject  */
-                                                NULL); /* email    */
+                                                NULL);  /* subject  */
 #endif /* NSS_3_4_CODE */
 }
 
