@@ -409,3 +409,13 @@ pref("security.policy.default.node.parentnode", "sameOrigin");
 pref("security.policy.default.node.previoussibling", "sameOrigin");
 pref("security.policy.default.node.removechild", "sameOrigin");
 pref("security.policy.default.node.replacechild", "sameOrigin");
+
+/* 0=lines, 1=pages, 2=history */
+pref("mousewheel.withnokey",0);	
+pref("mousewheel.withnokey.numlines",1);	
+pref("mousewheel.withcontrolkey",1);	
+pref("mousewheel.withcontrolkey.numlines",1);	
+pref("mousewheel.withshiftkey",2);	
+pref("mousewheel.withshiftkey.numlines",1);	
+pref("mousewheel.withaltkey",0);	
+pref("mousewheel.withaltkey.numlines",10);	
