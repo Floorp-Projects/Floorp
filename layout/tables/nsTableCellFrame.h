@@ -58,6 +58,8 @@ public:
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);

@@ -32,7 +32,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
-
 nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFrame(aContent, aParentFrame)
 {
