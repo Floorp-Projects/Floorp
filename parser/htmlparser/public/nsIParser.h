@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -154,18 +154,17 @@ class nsIParser : public nsISupports {
      * Select given content sink into parser for parser output
      * @update	gess5/11/98
      * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
+     * @return  
      */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink)=0;
+    NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink)=0;
 
 
     /**
-     * retrive the sink set into the parser 
+     * retrieve the sink set into the parser 
      * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
+     * @return  current sink
      */
-    virtual nsIContentSink* GetContentSink(void)=0;
+    NS_IMETHOD_(nsIContentSink*) GetContentSink(void)=0;
 
     /**
      *  Call this method once you've created a parser, and want to instruct it
@@ -176,9 +175,9 @@ class nsIParser : public nsISupports {
      *  @param   aCommand -- ptrs to string that contains command
      *  @return	 nada
      */
-    virtual void GetCommand(nsString& aCommand)=0;
-    virtual void SetCommand(const char* aCommand)=0;
-    virtual void SetCommand(eParserCommands aParserCommand)=0;
+    NS_IMETHOD_(void) GetCommand(nsString& aCommand)=0;
+    NS_IMETHOD_(void) SetCommand(const char* aCommand)=0;
+    NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand)=0;
 
     /**
      *  Call this method once you've created a parser, and want to instruct it
@@ -189,10 +188,10 @@ class nsIParser : public nsISupports {
      *  @param   aCharsetSource- the soure of the chares
      *  @return	 nada
      */
-    virtual void SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource)=0;
-    virtual void GetDocumentCharset(nsAString& oCharset, PRInt32& oSource)=0;
+    NS_IMETHOD_(void) SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource)=0;
+    NS_IMETHOD_(void) GetDocumentCharset(nsAString& oCharset, PRInt32& oSource)=0;
 
-    virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter) = 0;
+    NS_IMETHOD_(void) SetParserFilter(nsIParserFilter* aFilter) = 0;
 
     /** 
      * Get the channel associated with this parser
@@ -217,32 +216,45 @@ class nsIParser : public nsISupports {
      ******************************************************************************************/
     
     // Call this method to resume the parser from the blocked state..
-    virtual nsresult  ContinueParsing()   =0;
+    NS_IMETHOD ContinueParsing() = 0;
     
     // Stops parsing temporarily.
-    virtual void      BlockParser()     =0;
+    NS_IMETHOD_(void) BlockParser() = 0;
     
     // Open up the parser for tokenization, building up content 
     // model..etc. However, this method does not resume parsing 
     // automatically. It's the callers' responsibility to restart
     // the parsing engine.
-    virtual void      UnblockParser()   =0;
+    NS_IMETHOD_(void) UnblockParser() = 0;
 
-    virtual PRBool    IsParserEnabled() =0;
-    virtual PRBool    IsComplete() =0;
+    NS_IMETHOD_(PRBool) IsParserEnabled() = 0;
+    NS_IMETHOD_(PRBool) IsComplete() = 0;
     
-    virtual nsresult  Parse(nsIURI* aURL,nsIRequestObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
-    virtual nsresult  Parse(nsIInputStream* aStream, const nsACString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
-    virtual nsresult  Parse(const nsAString& aSourceBuffer,void* aKey,const nsACString& aMimeType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
+    NS_IMETHOD Parse(nsIURI* aURL,
+                     nsIRequestObserver* aListener = nsnull,
+                     PRBool aEnableVerify = PR_FALSE,
+                     void* aKey = 0,
+                     nsDTDMode aMode = eDTDMode_autodetect) = 0;
+    NS_IMETHOD Parse(nsIInputStream* aStream,
+                     const nsACString& aMimeType,
+                     PRBool aEnableVerify = PR_FALSE,
+                     void* aKey = 0,
+                     nsDTDMode aMode = eDTDMode_autodetect) = 0;
+    NS_IMETHOD Parse(const nsAString& aSourceBuffer,
+                     void* aKey,
+                     const nsACString& aMimeType,
+                     PRBool aEnableVerify,
+                     PRBool aLastCall,
+                     nsDTDMode aMode = eDTDMode_autodetect) = 0;
     
-    virtual nsresult  Terminate(void) = 0;
+    NS_IMETHOD Terminate(void) = 0;
 
-    virtual nsresult  ParseFragment(const nsAString& aSourceBuffer,
-                                    void* aKey,
-                                    nsVoidArray& aTagStack,
-                                    PRUint32 anInsertPos,
-                                    const nsACString& aContentType,
-                                    nsDTDMode aMode=eDTDMode_autodetect) = 0;
+    NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
+                             void* aKey,
+                             nsVoidArray& aTagStack,
+                             PRUint32 anInsertPos,
+                             const nsACString& aContentType,
+                             nsDTDMode aMode = eDTDMode_autodetect) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
@@ -250,7 +262,7 @@ class nsIParser : public nsISupports {
      * @update	gess5/11/98
      * @return  error code -- 0 if model building went well .
      */
-    virtual nsresult  BuildModel(void)=0;
+    NS_IMETHOD BuildModel(void) = 0;
 
 
     /**
@@ -259,7 +271,7 @@ class nsIParser : public nsISupports {
      *  @update  gess 6/9/98
      *  @return  ptr to scanner
      */
-    virtual nsDTDMode GetParseMode(void)=0;
+    NS_IMETHOD_(nsDTDMode) GetParseMode(void) = 0;
 
     /**
      *  Call this method to cancel any pending parsing events.
@@ -271,7 +283,7 @@ class nsIParser : public nsISupports {
      *  @return  NS_OK if succeeded else ERROR.
      */
 
-    NS_IMETHOD CancelParsingEvents()=0;
+    NS_IMETHOD CancelParsingEvents() = 0;
 };
 
 /* ===========================================================*

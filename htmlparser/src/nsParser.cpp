@@ -44,12 +44,10 @@
 
 #include "nsIAtom.h"
 #include "nsParser.h"
-#include "nsIContentSink.h"
 #include "nsString.h"
 #include "nsCRT.h" 
 #include "nsScanner.h"
 #include "plstr.h"
-#include "nsIParserFilter.h"
 #include "nsViewSourceHTML.h" 
 #include "nsIStringStream.h"
 #include "nsIChannel.h"
@@ -300,7 +298,7 @@ static PRBool gDumpContent=PR_FALSE;
  *  @param   
  *  @return   
  */
-nsParser::nsParser(nsITokenObserver* anObserver) {
+nsParser::nsParser() {
 #ifdef NS_DEBUG
   if(!gDumpContent) {
     gDumpContent=(PR_GetEnv("PARSER_DUMP_CONTENT"))? PR_TRUE:PR_FALSE;
@@ -308,11 +306,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
 #endif
 
   mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-  mParserFilter = 0;
-  mObserver = 0;
-  mSink=0;
   mParserContext=0;
-  mTokenObserver=anObserver;
   mStreamStatus=0;
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;;
@@ -359,10 +353,6 @@ nsParser::~nsParser() {
     }
   }
 #endif
-
-  NS_IF_RELEASE(mObserver);
-  NS_IF_RELEASE(mSink);
-  NS_IF_RELEASE(mParserFilter);
 
   //don't forget to add code here to delete 
   //what may be several contexts...
@@ -443,20 +433,13 @@ nsParser::PostContinueEvent()
  * @param 
  * @return
  */
-nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
+NS_IMETHODIMP_(void) nsParser::SetParserFilter(nsIParserFilter * aFilter)
 {
-  nsIParserFilter* old=mParserFilter;
-  if(old)
-    NS_RELEASE(old);
-  if(aFilter) {
-    mParserFilter=aFilter;
-    NS_ADDREF(aFilter);
-  }
-  return old;
+  mParserFilter = aFilter;
 }
 
 
-void nsParser::GetCommand(nsString& aCommand)
+NS_IMETHODIMP_(void) nsParser::GetCommand(nsString& aCommand)
 {
   aCommand = mCommandStr;  
 }
@@ -467,10 +450,10 @@ void nsParser::GetCommand(nsString& aCommand)
  *  this allows us to select a DTD which can do, say, view-source.
  *  
  *  @update  gess 01/04/99
- *  @param   aContentSink -- ptr to content sink that will receive output
- *  @return	 ptr to previously set contentsink (usually null)  
+ *  @param   aCommand the command string to set
  */
-void nsParser::SetCommand(const char* aCommand){
+NS_IMETHODIMP_(void) nsParser::SetCommand(const char* aCommand)
+{
   nsCAutoString theCommand(aCommand);
   if(theCommand.Equals(kViewSourceCommand))
     mCommand=eViewSource;
@@ -486,11 +469,11 @@ void nsParser::SetCommand(const char* aCommand){
  *  this allows us to select a DTD which can do, say, view-source.
  *  
  *  @update  gess 01/04/99
- *  @param   aContentSink -- ptr to content sink that will receive output
- *  @return	 ptr to previously set contentsink (usually null)  
+ *  @param   aParserCommand the command to set
  */
-void nsParser::SetCommand(eParserCommands aParserCommand){
-  mCommand=aParserCommand;
+NS_IMETHODIMP_(void) nsParser::SetCommand(eParserCommands aParserCommand)
+{
+  mCommand = aParserCommand;
 }
 
 
@@ -499,11 +482,13 @@ void nsParser::SetCommand(eParserCommands aParserCommand){
  *  about what charset to load
  *  
  *  @update  ftang 4/23/99
- *  @param   aCharset- the charest of a document
- *  @param   aCharsetSource- the soure of the chares
+ *  @param   aCharset- the charset of a document
+ *  @param   aCharsetSource- the source of the charset
  *  @return	 nada
  */
-void nsParser::SetDocumentCharset(const nsAString& aCharset, PRInt32 aCharsetSource){
+NS_IMETHODIMP_(void)
+nsParser::SetDocumentCharset(const nsAString& aCharset, PRInt32 aCharsetSource)
+{
   mCharset = aCharset;
   mCharsetSource = aCharsetSource; 
   if(mParserContext && mParserContext->mScanner)
@@ -525,26 +510,23 @@ void nsParser::SetSinkCharset(nsAString& aCharset)
  *  @param   nsIContentSink interface for node receiver
  *  @return  
  */
-nsIContentSink* nsParser::SetContentSink(nsIContentSink* aSink) {
-  NS_PRECONDITION(0!=aSink,"sink cannot be null!");
-  nsIContentSink* old=mSink;
-
-  NS_IF_RELEASE(old);
-  if(aSink) {
-    mSink=aSink;
-    NS_ADDREF(aSink);
+NS_IMETHODIMP_(void) nsParser::SetContentSink(nsIContentSink* aSink)
+{
+  NS_PRECONDITION(aSink,"sink cannot be null!");
+  mSink = aSink;
+  
+  if (mSink) {
     mSink->SetParser(this);
   }
-  return old;
 }
 
 /**
  * retrive the sink set into the parser 
  * @update	gess5/11/98
- * @param   aSink is the new sink to be used by parser
- * @return  old sink, or NULL
+ * @return  current sink 
  */
-nsIContentSink* nsParser::GetContentSink(void){
+NS_IMETHODIMP_(nsIContentSink*) nsParser::GetContentSink(void)
+{
   return mSink;
 }
 
@@ -556,8 +538,9 @@ nsIContentSink* nsParser::GetContentSink(void){
  *  @param   aDTD  is the object to be registered.
  *  @return  nothing.
  */
-nsresult
-nsParser::RegisterDTD(nsIDTD* aDTD){
+NS_IMETHODIMP
+nsParser::RegisterDTD(nsIDTD* aDTD)
+{
   CSharedParserObjects* sharedObjects;
   nsresult rv = GetSharedObjects(&sharedObjects);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -565,25 +548,13 @@ nsParser::RegisterDTD(nsIDTD* aDTD){
 }
 
 /**
- *  Retrieve scanner from topmost parsecontext
- *  
- *  @update  gess 01/04/99
- *  @return  ptr to internal scanner
- */
-nsScanner* nsParser::GetScanner(void){
-  if(mParserContext)
-    return mParserContext->mScanner;
-  return 0;
-}
-
-
-/**
  *  Retrieve parsemode from topmost parser context
  *  
  *  @update  gess 01/04/99
  *  @return  parsemode
  */
-nsDTDMode nsParser::GetParseMode(void){
+NS_IMETHODIMP_(nsDTDMode) nsParser::GetParseMode(void)
+{
   if(mParserContext)
     return mParserContext->mDTDMode;
   NS_NOTREACHED("no parser context");
@@ -1207,7 +1178,8 @@ FindSuitableDTD(CParserContext& aParserContext,
 }
 
 NS_IMETHODIMP 
-nsParser::CancelParsingEvents() {
+nsParser::CancelParsingEvents()
+{
   if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
     NS_ASSERTION(mEventQueue,"Event queue is null");
     // Revoke all pending continue parsing events 
@@ -1334,7 +1306,8 @@ CParserContext* nsParser::PopContext() {
  *  @param   aState determines whether we parse/tokenize or just cache.
  *  @return  current state
  */
-void nsParser::SetUnusedInput(nsString& aBuffer) {
+void nsParser::SetUnusedInput(nsString& aBuffer)
+{
   mUnusedInput=aBuffer;
 }
 
@@ -1346,7 +1319,8 @@ void nsParser::SetUnusedInput(nsString& aBuffer) {
  *  @update  gess 7/4/99
  *  @return  should return NS_OK once implemented
  */
-nsresult nsParser::Terminate(void){
+NS_IMETHODIMP nsParser::Terminate(void)
+{
   nsresult result = NS_OK;
   if (mParserContext && mParserContext->mDTD) {
     mParserContext->mDTD->Terminate();
@@ -1373,8 +1347,8 @@ nsresult nsParser::Terminate(void){
  *  @param   aState determines whether we parse/tokenize or just cache.
  *  @return  current state
  */
-nsresult nsParser::ContinueParsing(){
-    
+NS_IMETHODIMP nsParser::ContinueParsing()
+{    
   // If the stream has already finished, there's a good chance
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
@@ -1401,7 +1375,8 @@ nsresult nsParser::ContinueParsing(){
  *  @update  
  *  @return  
  */
-void nsParser::BlockParser() {
+NS_IMETHODIMP_(void) nsParser::BlockParser()
+{
   mFlags &= ~NS_PARSER_FLAG_PARSER_ENABLED;
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::BlockParser(), this=%p\n", this));
   MOZ_TIMER_STOP(mParseTime);
@@ -1416,7 +1391,8 @@ void nsParser::BlockParser() {
  *  @update  
  *  @return  
  */
-void nsParser::UnblockParser() {
+NS_IMETHODIMP_(void) nsParser::UnblockParser()
+{
   mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::UnblockParser(), this=%p\n", this));
   MOZ_TIMER_START(mParseTime);
@@ -1428,7 +1404,8 @@ void nsParser::UnblockParser() {
  *  @update  vidur 4/12/99
  *  @return  current state
  */
-PRBool nsParser::IsParserEnabled() {
+NS_IMETHODIMP_(PRBool) nsParser::IsParserEnabled()
+{
   return mFlags & NS_PARSER_FLAG_PARSER_ENABLED;
 }
 
@@ -1438,7 +1415,8 @@ PRBool nsParser::IsParserEnabled() {
  *  @update  rickg 5/12/01
  *  @return  complete state
  */
-PRBool nsParser::IsComplete() {
+NS_IMETHODIMP_(PRBool) nsParser::IsComplete()
+{
   return !(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT);
 }
 
@@ -1472,13 +1450,18 @@ void nsParser::SetCanInterrupt(PRBool aCanInterrupt) {
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode) {  
+NS_IMETHODIMP
+nsParser::Parse(nsIURI* aURL,
+                nsIRequestObserver* aListener,
+                PRBool aVerifyEnabled,
+                void* aKey,
+                nsDTDMode aMode)
+{  
 
   NS_PRECONDITION(aURL, "Error: Null URL given");
 
   nsresult result=kBadURL;
   mObserver = aListener;
-  NS_IF_ADDREF(mObserver);
  
   if (aVerifyEnabled) {
     mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
@@ -1518,7 +1501,13 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVeri
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIInputStream* aStream,const nsACString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
+NS_IMETHODIMP
+nsParser::Parse(nsIInputStream* aStream,
+                const nsACString& aMimeType,
+                PRBool aVerifyEnabled,
+                void* aKey,
+                nsDTDMode aMode)
+{
   if (aVerifyEnabled) {
     mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
   }
@@ -1564,10 +1553,14 @@ nsresult nsParser::Parse(nsIInputStream* aStream,const nsACString& aMimeType,PRB
  * @param   aMimeType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
-                         const nsACString& aMimeType,
-                         PRBool aVerifyEnabled, PRBool aLastCall,
-                         nsDTDMode aMode){ 
+NS_IMETHODIMP
+nsParser::Parse(const nsAString& aSourceBuffer,
+                void* aKey,
+                const nsACString& aMimeType,
+                PRBool aVerifyEnabled,
+                PRBool aLastCall,
+                nsDTDMode aMode)
+{ 
 
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again! 
@@ -1676,13 +1669,14 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
  *  @param   
  *  @return  
  */
-nsresult nsParser::ParseFragment(const nsAString& aSourceBuffer,
-                                 void* aKey,
-                                 nsVoidArray& aTagStack,
-                                 PRUint32 anInsertPos,
-                                 const nsACString& aMimeType,
-                                 nsDTDMode aMode){
-
+NS_IMETHODIMP
+nsParser::ParseFragment(const nsAString& aSourceBuffer,
+                        void* aKey,
+                        nsVoidArray& aTagStack,
+                        PRUint32 anInsertPos,
+                        const nsACString& aMimeType,
+                        nsDTDMode aMode)
+{
   nsresult result = NS_OK;
   nsAutoString  theContext;
   PRUint32 theCount = aTagStack.Count();
@@ -1901,7 +1895,7 @@ nsresult nsParser::BuildModel() {
     if (theRootDTD) {      
       MOZ_TIMER_START(mDTDTime);
       
-      result = theRootDTD->BuildModel(this, theTokenizer, mTokenObserver, mSink);  
+      result = theRootDTD->BuildModel(this, theTokenizer, nsnull, mSink);  
       
       MOZ_TIMER_STOP(mDTDTime);
     }
@@ -1951,7 +1945,7 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
                   "Parser's nsIStreamListener API was not setup "
                   "correctly in constructor.");
 
-  if (nsnull != mObserver) {
+  if (mObserver) {
     mObserver->OnStartRequest(request, aContext);
   }
   mParserContext->mStreamListenerState = eOnStart;
@@ -2454,7 +2448,7 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
 
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
-  if (nsnull != mObserver) {
+  if (mObserver) {
     mObserver->OnStopRequest(request, aContext, status);
   }
 
@@ -2591,15 +2585,6 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
 
   if (NS_SUCCEEDED(rv) && theTokenizer) {
     result = theTokenizer->DidTokenize(aIsFinalChunk);
-    if(mTokenObserver) {
-      PRInt32 theCount=theTokenizer->GetCount();
-      PRInt32 theIndex;
-      for(theIndex=0;theIndex<theCount;++theIndex){
-        if((*mTokenObserver)(theTokenizer->GetTokenAt(theIndex))){
-          //add code here to pull unwanted tokens out of the stack...
-        }
-      }//for      
-    }//if
   }
   return result;
 }
