@@ -1718,14 +1718,9 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 		return;
 
 	// initialize the paint event
-	nsPaintEvent paintEvent;
-	paintEvent.eventStructType  = NS_PAINT_EVENT;   // nsEvent
-	paintEvent.message          = NS_PAINT;
-	paintEvent.widget           = this;             // nsGUIEvent
-	paintEvent.nativeMsg        = NULL;
+	nsPaintEvent paintEvent(NS_PAINT, this);
 	paintEvent.renderingContext = aContext;         // nsPaintEvent
 	paintEvent.rect             = &aRect;
-  paintEvent.region           = nsnull;
 
 	// draw the widget
 	StartDraw(aContext);
@@ -2118,16 +2113,9 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
 PRBool nsWindow::ReportDestroyEvent()
 {
 	// nsEvent
-	nsGUIEvent moveEvent;
-	moveEvent.eventStructType = NS_GUI_EVENT;
+	nsGUIEvent moveEvent(NS_DESTROY, this);
 	moveEvent.message			= NS_DESTROY;
-	moveEvent.point.x			= 0;
-	moveEvent.point.y			= 0;
 	moveEvent.time				= PR_IntervalNow();
-
-	// nsGUIEvent
-	moveEvent.widget			= this;
-	moveEvent.nativeMsg		= nsnull;
 
 	// dispatch event
 	return (DispatchWindowEvent(moveEvent));
@@ -2140,16 +2128,10 @@ PRBool nsWindow::ReportDestroyEvent()
 PRBool nsWindow::ReportMoveEvent()
 {
 	// nsEvent
-	nsGUIEvent moveEvent;
-	moveEvent.eventStructType = NS_GUI_EVENT;
-	moveEvent.message			= NS_MOVE;
+	nsGUIEvent moveEvent(NS_MOVE, this);
 	moveEvent.point.x			= mBounds.x;
 	moveEvent.point.y			= mBounds.y;
 	moveEvent.time				= PR_IntervalNow();
-
-	// nsGUIEvent
-	moveEvent.widget			= this;
-	moveEvent.nativeMsg		= nsnull;
 
 	// dispatch event
 	return (DispatchWindowEvent(moveEvent));
@@ -2162,16 +2144,8 @@ PRBool nsWindow::ReportMoveEvent()
 PRBool nsWindow::ReportSizeEvent()
 {
 	// nsEvent
-	nsSizeEvent sizeEvent;
-	sizeEvent.eventStructType = NS_SIZE_EVENT;
-	sizeEvent.message			= NS_SIZE;
-	sizeEvent.point.x			= 0;
-	sizeEvent.point.y			= 0;
+	nsSizeEvent sizeEvent(NS_SIZE, this);
 	sizeEvent.time				= PR_IntervalNow();
-
-	// nsGUIEvent
-	sizeEvent.widget			= this;
-	sizeEvent.nativeMsg		= nsnull;
 
 	// nsSizeEvent
 	sizeEvent.windowSize	= &mBounds;

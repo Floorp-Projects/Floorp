@@ -1498,20 +1498,13 @@ PRBool nsCocoaWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UIn
 //-------------------------------------------------------------------------
 void nsCocoaWindow::ComeToFront() {
 #if 0
-  nsZLevelEvent  event;
+  nsZLevelEvent  event(NS_SETZLEVEL, this);
 
   event.point.x = mBounds.x;
   event.point.y = mBounds.y;
   event.time = PR_IntervalNow();
-  event.widget = this;
-  event.nativeMsg = nsnull;
-  event.eventStructType = NS_ZLEVEL_EVENT;
-  event.message = NS_SETZLEVEL;
 
-  event.mPlacement = nsWindowZTop;
-  event.mReqBelow = 0;
   event.mImmediate = PR_TRUE;
-  event.mAdjusted = PR_FALSE;
 
   DispatchWindowEvent(event);
 #endif
@@ -1571,10 +1564,8 @@ nsCocoaWindow::DispatchEvent ( void* anEvent, void* aView, PRBool *_retval )
   
   ChildView* view = NS_REINTERPRET_CAST(ChildView*, aView);
   
-  nsMouseEvent geckoEvent;
-  geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  nsMouseEvent geckoEvent(0, view ? [view widget] : this)
   
-  geckoEvent.widget = this;
   geckoEvent.nativeMsg = anEvent;
   geckoEvent.time = PR_IntervalNow();
   NSPoint mouseLoc = [event locationInWindow];
@@ -1582,8 +1573,6 @@ nsCocoaWindow::DispatchEvent ( void* anEvent, void* aView, PRBool *_retval )
   geckoEvent.refPoint.y = NS_STATIC_CAST(nscoord, mouseLoc.y);
 //printf("-- global mouse click at (%ld,%ld)\n", geckoEvent.refPoint.x, geckoEvent.refPoint.y );
   if ( view ) {
-    geckoEvent.widget = [view widget];
-    
     // convert point to view coordinate system
     NSPoint localPoint = [view convertPoint:mouseLoc fromView:nil];
     geckoEvent.point.x = NS_STATIC_CAST(nscoord, localPoint.x);
@@ -1671,16 +1660,8 @@ void
 nsCocoaWindow::ReportSizeEvent()
 {
   // nsEvent
-  nsSizeEvent sizeEvent;
-  sizeEvent.eventStructType = NS_SIZE_EVENT;
-  sizeEvent.message     = NS_SIZE;
-  sizeEvent.point.x     = 0;
-  sizeEvent.point.y     = 0;
+  nsSizeEvent sizeEvent(NS_SIZE, this);
   sizeEvent.time        = PR_IntervalNow();
-
-  // nsGUIEvent
-  sizeEvent.widget      = this;
-  sizeEvent.nativeMsg   = nsnull;
 
   // nsSizeEvent
   sizeEvent.windowSize  = &mBounds;

@@ -245,9 +245,8 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 // Initialize an event to dispatch
 //
 //-------------------------------------------------------------------------
-void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
+void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 {
-	event.widget = this;
 	NS_ADDREF(event.widget);
 
 	if (nsnull == aPoint) // use the point from the event
@@ -262,7 +261,6 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 		event.point.y = aPoint->y;
 	}
 	event.time = PR_IntervalNow();
-	event.message = aEventType;
 }
 
 //-------------------------------------------------------------------------
@@ -305,9 +303,8 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 
 PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 {
-	nsGUIEvent event;
-	event.eventStructType = NS_GUI_EVENT;
-	InitEvent(event, aMsg);
+	nsGUIEvent event(aMsg, this)
+	InitEvent(event);
 
 	PRBool result = DispatchWindowEvent(&event);
 	NS_RELEASE(event.widget);
@@ -1773,16 +1770,12 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		{
 			NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
 
-			nsMouseScrollEvent scrollEvent;
+			nsMouseScrollEvent scrollEvent(NS_MOUSE_SCROLL, this);
 
 			scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
 
 			scrollEvent.delta = (info->args)[0];
 
-			scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
-			scrollEvent.message   = NS_MOUSE_SCROLL;
-			scrollEvent.nativeMsg = nsnull;
-			scrollEvent.widget    = this;
 			scrollEvent.time      = PR_IntervalNow();
 
 			// XXX implement these items?
@@ -2240,13 +2233,13 @@ PRBool nsWindow::OnKeyUp(PRUint32 aEventType, const char *bytes,
 PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
                                   PRUint32 aKeyCode)
 {
-	nsKeyEvent event;
+	nsKeyEvent event(aEventType, this);
 	nsPoint point;
 
 	point.x = 0;
 	point.y = 0;
 
-	InitEvent(event, aEventType, &point); // this add ref's event.widget
+	InitEvent(event, &point); // this add ref's event.widget
 
 	event.charCode = aCharCode;
 	event.keyCode  = aKeyCode;
@@ -2267,7 +2260,6 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
 	event.isControl = mIsControlDown;
 	event.isMeta   =  mIsMetaDown;
 	event.isAlt     = mIsAltDown;
-	event.eventStructType = NS_KEY_EVENT;
 
 	PRBool result = DispatchWindowEvent(&event);
 	NS_RELEASE(event.widget);
@@ -2317,11 +2309,10 @@ void nsWindow::OnDestroy()
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 {
-	nsGUIEvent event;
-	InitEvent(event, NS_MOVE);
+	nsGUIEvent event(NS_MOVE, this);
+	InitEvent(event);
 	event.point.x = aX;
 	event.point.y = aY;
-	event.eventStructType = NS_GUI_EVENT;
 
 	PRBool result = DispatchWindowEvent(&event);
 	NS_RELEASE(event.widget);
@@ -2346,12 +2337,11 @@ PRBool nsWindow::OnPaint(nsRect &r)
 			invalid.Include(BRect(r.x, r.y, r.x + r.width - 1, r.y + r.height - 1));
 			mView->ConstrainClippingRegion(&invalid);
 
-			nsPaintEvent event;
+			nsPaintEvent event(NS_PAINT, this);
 
-			InitEvent(event, NS_PAINT);
+			InitEvent(event);
 			event.region = nsnull;
 			event.rect = &r;
-			event.eventStructType = NS_PAINT_EVENT;
 
 			static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 			static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
@@ -2386,10 +2376,9 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 	// call the event callback
 	if (mEventCallback)
 	{
-		nsSizeEvent event;
-		InitEvent(event, NS_SIZE);
+		nsSizeEvent event(NS_SIZE, this);
+		InitEvent(event);
 		event.windowSize = &aWindowRect;
-		event.eventStructType = NS_SIZE_EVENT;
 		if(mView && mView->LockLooper())
 		{
 			BRect r = mView->Bounds();
@@ -2420,14 +2409,13 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 	PRBool result = PR_FALSE;
 	if(nsnull != mEventCallback || nsnull != mMouseListener)
 	{
-		nsMouseEvent event;
-		InitEvent (event, aEventType, &aPoint);
+		nsMouseEvent event(aEventType, this);
+		InitEvent (event, &aPoint);
 		event.isShift   = mod & B_SHIFT_KEY;
 		event.isControl = mod & B_CONTROL_KEY;
 		event.isAlt     = mod & B_COMMAND_KEY;
 		event.isMeta     = mod & B_OPTION_KEY;
 		event.clickCount = clicks;
-		event.eventStructType = NS_MOUSE_EVENT;
 
 		// call the event callback
 		if(nsnull != mEventCallback)

@@ -77,15 +77,8 @@ static PRBool suppressNextKeyDown = PR_FALSE;
 
 //==============================================================
 void InitAllocationEvent(GtkAllocation *aAlloc,
-                         gpointer   p,
-                         nsSizeEvent &anEvent,
-                         PRUint32   aEventType)
+                         nsSizeEvent &anEvent)
 {
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_SIZE_EVENT;
-
   if (aAlloc != nsnull) {
     // HACK
     //    nsRect *foo = new nsRect(aAlloc->x, aAlloc->y, aAlloc->width, aAlloc->height);
@@ -94,8 +87,6 @@ void InitAllocationEvent(GtkAllocation *aAlloc,
     //    anEvent.point.x = aAlloc->x;
     //    anEvent.point.y = aAlloc->y;
     // HACK
-    anEvent.point.x = 0;
-    anEvent.point.y = 0;
     anEvent.mWinWidth = aAlloc->width;
     anEvent.mWinHeight = aAlloc->height;
   }
@@ -375,38 +366,24 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
 
 //==============================================================
 void InitKeyEvent(GdkEventKey *aGEK,
-                            gpointer   p,
-                            nsKeyEvent &anEvent,
-                            PRUint32   aEventType)
+                            nsKeyEvent &anEvent)
 {
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_KEY_EVENT;
-
   if (aGEK != nsnull) {
     anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
-    anEvent.charCode = 0;
     anEvent.time = aGEK->time;
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isMeta = (aGEK->state & GDK_MOD4_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.point.x = 0;
-    anEvent.point.y = 0;
   }
 }
 
 void InitKeyPressEvent(GdkEventKey *aGEK,
-                       gpointer p,
                        nsKeyEvent &anEvent)
 {
   //
   // init the basic event fields
   //
-  anEvent.eventStructType = NS_KEY_EVENT;
-  anEvent.message = NS_KEY_PRESS;
-  anEvent.widget = (nsWidget*)p;
 
   if (aGEK!=nsnull) {
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
@@ -416,8 +393,6 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
 
     anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
     if (anEvent.charCode) {
-      anEvent.keyCode = 0;
-      
       // if the control, meta, or alt key is down, then we should leave
       // the isShift flag alone (probably not a printable character)
       // if none of the other modifier keys are pressed then we need to
@@ -460,8 +435,6 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
 #endif
 
     anEvent.time = aGEK->time;
-    anEvent.point.x = 0;
-    anEvent.point.y = 0;
   }
 }
 
@@ -473,9 +446,9 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
   nsWindow *widget = (nsWindow *)p;
-  nsSizeEvent event;
+  nsSizeEvent event(NS_SIZE, widget);
 
-  InitAllocationEvent(alloc, p, event, NS_SIZE);
+  InitAllocationEvent(alloc, event);
   NS_ADDREF(widget);
   widget->OnResize(&event);
   NS_RELEASE(widget);
@@ -506,8 +479,8 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
     return PR_TRUE;
 
   NS_ADDREF(win);
-  nsKeyEvent keyDownEvent;
-  InitKeyEvent(event, p, keyDownEvent, NS_KEY_DOWN);
+  nsKeyEvent keyDownEvent(NS_KEY_DOWN, p);
+  InitKeyEvent(event, keyDownEvent);
   win->OnKey(keyDownEvent);
 
   //
@@ -515,8 +488,8 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-  nsKeyEvent keyPressEvent;
-  InitKeyPressEvent(event,p, keyPressEvent);
+  nsKeyEvent keyPressEvent(NS_KEY_PRESS, p);
+  InitKeyPressEvent(event, keyPressEvent);
   win->OnKey(keyPressEvent);
 
   NS_RELEASE(win);
@@ -532,8 +505,8 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
 gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
                                        gpointer p)
 {
-  nsKeyEvent kevent;
   nsTextWidget* win = (nsTextWidget*)p;
+  nsKeyEvent kevent(NS_KEY_UP, win);
 
   // Don't pass shift, control and alt as key release events
   if (event->keyval == GDK_Shift_L
@@ -545,7 +518,7 @@ gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
      )
     return PR_TRUE;
 
-  InitKeyEvent(event, p, kevent, NS_KEY_UP);
+  InitKeyEvent(event, kevent);
   NS_ADDREF(win);
   win->OnKey(kevent);
   NS_RELEASE(win);
@@ -588,8 +561,8 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //   but lie about where it came from and say it is from the
   //   window that currently has focus inside our app...
   //
-  nsKeyEvent keyDownEvent;
-  InitKeyEvent(event, win, keyDownEvent, NS_KEY_DOWN);
+  nsKeyEvent keyDownEvent(NS_KEY_DOWN, win);
+  InitKeyEvent(event, keyDownEvent);
   // if we need to suppress this NS_KEY_DOWN event, reset the flag
   if (suppressNextKeyDown == PR_TRUE)
     suppressNextKeyDown = PR_FALSE;
@@ -604,8 +577,8 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //
 
   // Call nsConvertCharCodeToUnicode() here to get kevent.charCode 
-  nsKeyEvent keyPressEvent;
-  InitKeyPressEvent(event, win, keyPressEvent);
+  nsKeyEvent keyPressEvent(NS_KEY_PRESS, win);
+  InitKeyPressEvent(event, keyPressEvent);
 
   if (event->length) {
     if (keyPressEvent.charCode || keyPressEvent.keyCode) {
@@ -677,8 +650,8 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
   if (nsWidget::sFocusWindow)
     win = nsWidget::sFocusWindow;
 
-  nsKeyEvent kevent;
-  InitKeyEvent(event, win, kevent, NS_KEY_UP);
+  nsKeyEvent kevent(NS_KEY_UP, win);
+  InitKeyEvent(event, kevent);
 
   NS_ADDREF(win);
   win->OnKey(kevent);

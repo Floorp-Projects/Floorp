@@ -252,7 +252,6 @@ public:
   inline PRBool     DispatchStandardEvent(PRUint32 aMsg)
 		{
 		nsGUIEvent event;
-		event.eventStructType = NS_GUI_EVENT;
 		InitEvent(event, aMsg);
 		return DispatchWindowEvent(&event);
 		}

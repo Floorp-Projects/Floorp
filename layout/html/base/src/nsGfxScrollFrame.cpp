@@ -1041,10 +1041,7 @@ nsGfxScrollFrameInner::CurPosAttributeChanged(nsIPresContext* aPresContext,
           // Fire the onScroll event now that we have scrolled
           nsIPresShell *presShell = mOuter->mPresContext->GetPresShell();
           if (presShell) {
-            nsScrollbarEvent  event;
-            event.eventStructType = NS_SCROLLBAR_EVENT;
-            event.message = NS_SCROLL_EVENT;
-            event.flags = 0;        
+            nsScrollbarEvent event(NS_SCROLL_EVENT);
             nsEventStatus status = nsEventStatus_eIgnore;
             // note if hcontent is non-null then hframe must be non-null.
             // likewise for vcontent and vframe. Thus targetFrame will always

@@ -1372,7 +1372,7 @@ nsSelection::HandleTextEvent(nsGUIEvent *aGUIEvent)
   printf("nsSelection: HandleTextEvent\n");
 #endif
   nsresult result(NS_OK);
-  if (NS_TEXT_EVENT == aGUIEvent->message) {
+  if (NS_TEXT_TEXT == aGUIEvent->message) {
     PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     result = mDomSelections[index]->ScrollIntoView();
   }

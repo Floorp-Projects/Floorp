@@ -261,14 +261,8 @@ void  nsMacControl::ControlChanged(PRInt32 aNewValue)
 		mValue = aNewValue;
 		mLastValue = mValue;	// safely assume that the control has been repainted already
 
-		nsGUIEvent guiEvent;
-		nsPoint point(0,0);
-		guiEvent.eventStructType = NS_GUI_EVENT;
-		guiEvent.message	= NS_CONTROL_CHANGE;
- 		guiEvent.point		= point;
+		nsGUIEvent guiEvent(NS_CONTROL_CHANGE, this);
  		guiEvent.time	 	= PR_IntervalNow();
- 		guiEvent.widget	 	= this;
- 		guiEvent.nativeMsg	= nsnull;
 		Inherited::DispatchWindowEvent(guiEvent);
 	}
 }

@@ -603,10 +603,7 @@ nsHTMLFormElement::Reset()
     // the frame does not exist.  This does not have an effect right now, but
     // If PresShell::HandleEventWithTarget() ever starts to work for elements
     // without frames, that should be called instead.
-    nsFormEvent event;
-    event.eventStructType = NS_FORM_EVENT;
-    event.message         = NS_FORM_RESET;
-    event.originator      = nsnull;
+    nsFormEvent event(NS_FORM_RESET);
     nsEventStatus status  = nsEventStatus_eIgnore;
     HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }

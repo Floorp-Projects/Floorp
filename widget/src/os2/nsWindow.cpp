@@ -152,8 +152,6 @@ static int currentWindowIdentifier = 0;
 // Drag and Drop flags and global data
 // see the D&D section toward the end of this file for additional info
 
-#define DispatchDragDropEvent(msg) DispatchStandardEvent(msg,NS_DRAGDROP_EVENT)
-
 // actions that might cause problems during d&d
 #define ACTION_PAINT    1
 #define ACTION_DRAW     2
@@ -402,11 +400,9 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 // Initialize an event to dispatch
 //
 //-------------------------------------------------------------------------
-void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
+void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 {
-    event.widget = this;
     NS_ADDREF(event.widget);
-    event.nativeMsg = 0;
 
     if (nsnull == aPoint) {     // use the point from the event
       // for most events, get the message position;  for drag events,
@@ -442,7 +438,6 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
    }
 
    event.time = WinQueryMsgTime( 0/*hab*/);
-   event.message = aEventType;
 
    /* OS2TODO
    mLastPoint.x = event.point.x;
@@ -502,11 +497,10 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus) {
 //
 //-------------------------------------------------------------------------
 
-PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg, PRUint8 aEST)
+PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 {
-  nsGUIEvent event;
-  event.eventStructType = aEST;
-  InitEvent(event, aMsg);
+  nsGUIEvent event(aMsg, this);
+  InitEvent(event);
 
   PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
@@ -2151,7 +2145,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 //
 PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 {
-   nsKeyEvent event, pressEvent;
+   nsKeyEvent pressEvent;
    USHORT     fsFlags = SHORT1FROMMP(mp1);
    USHORT     usVKey = SHORT2FROMMP(mp2);
    USHORT     usChar = SHORT1FROMMP(mp2);
@@ -2197,13 +2191,13 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    // have the unicode charcode in.
 
    nsPoint point(0,0);
-   InitEvent( event, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN, &point);
+   nsKeyEvent event((fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN, this);
+   InitEvent( event, &point);
    event.keyCode   = WMChar2KeyCode( mp1, mp2);
    event.isShift   = (fsFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
    event.isControl = (fsFlags & KC_CTRL) ? PR_TRUE : PR_FALSE;
    event.isAlt     = (fsFlags & KC_ALT) ? PR_TRUE : PR_FALSE;
    event.isMeta    = PR_FALSE;
-   event.eventStructType = NS_KEY_EVENT;
    event.charCode = 0;
    // OS2 does not set the shift, ctl, or alt on keyup
    if( fsFlags & (KC_VIRTUALKEY|KC_KEYUP|KC_LONEKEY))
@@ -2307,11 +2301,10 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 
 void nsWindow::ConstrainZLevel(HWND *aAfter) {
 
-  nsZLevelEvent  event;
+  nsZLevelEvent  event(NS_SETZLEVEL, this);
   nsWindow      *aboveWindow = 0;
 
-  event.eventStructType = NS_ZLEVEL_EVENT;
-  InitEvent(event, NS_SETZLEVEL);
+  InitEvent(event);
 
   if (*aAfter == HWND_BOTTOM)
     event.mPlacement = nsWindowZBottom;
@@ -2356,10 +2349,9 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 //#if 0
         case WM_COMMAND: // fire off menu selections
         {
-           nsMenuEvent event;
+           nsMenuEvent event(NS_MENU_SELECTED, this);
            event.mCommand = SHORT1FROMMP(mp1);
-           event.eventStructType = NS_MENU_EVENT;
-           InitEvent(event, NS_MENU_SELECTED);
+           InitEvent(event);
            result = DispatchWindowEvent(&event);
            NS_RELEASE(event.widget);
         }
@@ -2382,10 +2374,9 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 #if 0  // Tooltips appear to be gone
         case WMU_SHOW_TOOLTIP:
         {
-          nsTooltipEvent event;
-          InitEvent( event, NS_SHOW_TOOLTIP);
+          nsTooltipEvent event(NS_SHOW_TOOLTIP, this);
+          InitEvent( event );
           event.tipIndex = LONGFROMMP(mp1);
-          event.eventStructType = NS_TOOLTIP_EVENT;
           result = DispatchWindowEvent(&event);
           NS_RELEASE(event.widget);
           break;
@@ -2456,14 +2447,11 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         case WM_QUERYCONVERTPOS:
           {
             PRECTL pCursorRect = (PRECTL)mp1;
-            nsCompositionEvent event;
+            nsCompositionEvent event(NS_COMPOSITION_QUERY, this);
             nsPoint point;
             point.x = 0;
             point.y = 0;
-            InitEvent(event,NS_COMPOSITION_QUERY,&point);
-            event.widget = NS_STATIC_CAST(nsIWidget *, this);
-            event.eventStructType = NS_COMPOSITION_QUERY;
-            event.compositionMessage = NS_COMPOSITION_QUERY;
+            InitEvent(event,&point);
             DispatchWindowEvent(&event);
             if ((event.theReply.mCursorPosition.x) || 
                 (event.theReply.mCursorPosition.y)) 
@@ -2546,9 +2534,9 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
                   (WinQuerySysValue(HWND_DESKTOP, SV_CYMOTIONSTART) / 2))
               isCopy = TRUE;
 
-            nsKeyEvent event;
+            nsKeyEvent event(NS_KEY_PRESS, this);
             nsPoint point(0,0);
-            InitEvent( event, NS_KEY_PRESS, &point);
+            InitEvent( event, &point);
 
             event.keyCode   = NS_VK_INSERT;
             if (isCopy) {
@@ -2838,11 +2826,10 @@ void nsWindow::OnDestroy()
 PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 {            
   // Params here are in XP-space for the desktop
-  nsGUIEvent event;
-  InitEvent( event, NS_MOVE);
+  nsGUIEvent event(NS_MOVE, this);
+  InitEvent( event);
   event.point.x = aX;
   event.point.y = aY;
-  event.eventStructType = NS_GUI_EVENT;
 
   PRBool result = DispatchWindowEvent( &event);
   NS_RELEASE(event.widget);
@@ -2877,8 +2864,8 @@ PRBool nsWindow::OnPaint()
           // call the event callback 
           if (mEventCallback) 
           {
-              nsPaintEvent event;
-              InitEvent(event, NS_PAINT);
+              nsPaintEvent event(NS_PAINT, this);
+              InitEvent(event);
      
               // build XP rect from in-ex window rect
               nsRect rect;
@@ -2888,7 +2875,6 @@ PRBool nsWindow::OnPaint()
               rect.height = rcl.yTop - rcl.yBottom;
               event.rect = &rect;
               event.region = nsnull;
-              event.eventStructType = NS_PAINT_EVENT;
      
 #ifdef NS_DEBUG
           debug_DumpPaintEvent(stdout,
@@ -2955,11 +2941,10 @@ PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
 {
    PRBool result;
    // call the event callback 
-   nsSizeEvent event;
+   nsSizeEvent event(NS_SIZE, this);
    nsRect      rect( 0, 0, aX, aY);
 
-   InitEvent( event, NS_SIZE);
-   event.eventStructType = NS_SIZE_EVENT;
+   InitEvent( event);
    event.windowSize = &rect;             // this is the *client* rectangle
    event.mWinWidth = mBounds.width;
    event.mWinHeight = mBounds.height;
@@ -2982,7 +2967,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
     return result;
   }
 
-  nsMouseEvent event;
+  nsMouseEvent event(aEventType, this);
 
   // Mouse leave & enter messages don't seem to have position built in.
   if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
@@ -2997,7 +2982,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
     }
     PM2NS(ptl);
     nsPoint pt( ptl.x, ptl.y);
-    InitEvent( event, aEventType, &pt);
+    InitEvent( event, &pt);
 
     USHORT usFlags = SHORT2FROMMP( mp2);
     event.isShift = (usFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
@@ -3006,14 +2991,13 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
   }
   else
   {
-    InitEvent( event, aEventType, nsnull);
+    InitEvent( event, nsnull);
     event.isShift = WinIsKeyDown( VK_SHIFT);
     event.isControl = WinIsKeyDown( VK_CTRL);
     event.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
   }
 
   event.isMeta    = PR_FALSE;
-  event.eventStructType = NS_MOUSE_EVENT;
 
   //Dblclicks are used to set the click count, then changed to mousedowns
   if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
@@ -3208,9 +3192,8 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
 {
   // call the event callback 
   if (mEventCallback) {
-    nsFocusEvent event;
-    event.eventStructType = NS_FOCUS_EVENT;
-    InitEvent(event, aEventType);
+    nsFocusEvent event(aEventType, this);
+    InitEvent(event);
 
     //focus and blur event should go to their base widget loc, not current mouse pos
     event.point.x = 0;
@@ -3258,9 +3241,8 @@ PRBool nsWindow::OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2)
 PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
 {
     if (nsnull != mEventCallback) {
-        nsMouseScrollEvent scrollEvent;
-        scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
-        InitEvent(scrollEvent, NS_MOUSE_SCROLL);
+        nsMouseScrollEvent scrollEvent(NS_MOUSE_SCROLL, this);
+        InitEvent(scrollEvent);
         scrollEvent.isShift = WinIsKeyDown( VK_SHIFT);
         scrollEvent.isControl = WinIsKeyDown( VK_CTRL);
         scrollEvent.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
@@ -3294,9 +3276,8 @@ PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
 PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
 {
     if (nsnull != mEventCallback) {
-        nsMouseScrollEvent scrollEvent;
-        scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
-        InitEvent(scrollEvent, NS_MOUSE_SCROLL);
+        nsMouseScrollEvent scrollEvent(NS_MOUSE_SCROLL, this);
+        InitEvent(scrollEvent);
         scrollEvent.isShift = WinIsKeyDown( VK_SHIFT);
         scrollEvent.isControl = WinIsKeyDown( VK_CTRL);
         scrollEvent.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
@@ -3601,10 +3582,10 @@ PRBool nsWindow::OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &mr)
         mDragStatus = gDragStatus = (dragFlags & DND_DragStatus);
 
         if (dragFlags & DND_DispatchEnterEvent)
-          DispatchDragDropEvent(NS_DRAGDROP_ENTER);
+          DispatchStandardEvent(NS_DRAGDROP_ENTER);
 
         if (dragFlags & DND_DispatchEvent)
-          DispatchDragDropEvent(eventType);
+          DispatchStandardEvent(eventType);
 
         if (dragFlags & DND_GetDragoverResult)
           dragSession->GetDragoverResult(mr);

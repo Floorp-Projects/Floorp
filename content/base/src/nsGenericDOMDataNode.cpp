@@ -1141,13 +1141,10 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
 
   if (mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
-    nsMutationEvent mutation;
-    mutation.eventStructType = NS_MUTATION_EVENT;
-    mutation.message = NS_MUTATION_CHARACTERDATAMODIFIED;
-    mutation.mTarget = node;
+    nsMutationEvent mutation(NS_MUTATION_CHARACTERDATAMODIFIED, node);
 
     // XXX Handle the setting of prevValue!
-    nsAutoString newVal(aBuffer);
+    nsDependentString newVal(aBuffer);
     if (!newVal.IsEmpty())
       mutation.mNewAttrValue = do_GetAtom(newVal);
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -1180,15 +1177,11 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
 
   if (mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
-    nsMutationEvent mutation;
-    mutation.eventStructType = NS_MUTATION_EVENT;
-    mutation.message = NS_MUTATION_CHARACTERDATAMODIFIED;
-    mutation.mTarget = node;
+    nsMutationEvent mutation(NS_MUTATION_CHARACTERDATAMODIFIED, node);
 
     // XXX Handle the setting of prevValue!
-    nsAutoString newVal; newVal.AssignWithConversion(aBuffer);
-    if (!newVal.IsEmpty())
-      mutation.mNewAttrValue = do_GetAtom(newVal);
+    if (*aBuffer)
+      mutation.mNewAttrValue = do_GetAtom(aBuffer);
     nsEventStatus status = nsEventStatus_eIgnore;
     HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);
@@ -1214,15 +1207,11 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
 
   if (mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
-    nsMutationEvent mutation;
-    mutation.eventStructType = NS_MUTATION_EVENT;
-    mutation.message = NS_MUTATION_CHARACTERDATAMODIFIED;
-    mutation.mTarget = node;
+    nsMutationEvent mutation(NS_MUTATION_CHARACTERDATAMODIFIED, node);
 
     // XXX Handle the setting of prevValue!
-    nsAutoString newVal(aStr);
-    if (!newVal.IsEmpty())
-      mutation.mNewAttrValue = do_GetAtom(newVal);
+    if (!aStr.IsEmpty())
+      mutation.mNewAttrValue = do_GetAtom(aStr);
     nsEventStatus status = nsEventStatus_eIgnore;
     HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);

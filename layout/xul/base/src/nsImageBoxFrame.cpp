@@ -130,9 +130,7 @@ HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = aMessage;
+  nsEvent event(aMessage);
 
   aContent->HandleDOMEvent(pres_context, &event, nsnull, aFlags, &status);
 }

@@ -1070,19 +1070,13 @@ nsHTMLInputElement::MaybeSubmitForm(nsIPresContext* aPresContext)
     if (submitControl) {
       // Fire the button's onclick handler and let the button handle
       // submitting the form.
-      nsGUIEvent event;
-      event.eventStructType = NS_MOUSE_EVENT;
-      event.message = NS_MOUSE_LEFT_CLICK;
-      event.widget = nsnull;
+      nsGUIEvent event(NS_MOUSE_LEFT_CLICK);
       nsEventStatus status = nsEventStatus_eIgnore;
       shell->HandleDOMEventWithTarget(submitControl, &event, &status);
     } else if (numTextControlsFound == 1) {
       // If there's only one text control, just submit the form
       nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
-      nsFormEvent event;
-      event.eventStructType = NS_FORM_EVENT;
-      event.message         = NS_FORM_SUBMIT;
-      event.originator      = nsnull;
+      nsFormEvent event(NS_FORM_SUBMIT);
       nsEventStatus status  = nsEventStatus_eIgnore;
       shell->HandleDOMEventWithTarget(form, &event, &status);
     }
@@ -1147,9 +1141,7 @@ nsHTMLInputElement::FireOnChange()
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_FORM_CHANGE;
+  nsEvent event(NS_FORM_CHANGE);
   HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 }
 
@@ -1284,9 +1276,7 @@ nsHTMLInputElement::Select()
     
     //If already handling select event, don't dispatch a second.
     if (!GET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT)) {
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_FORM_SELECTED;
+      nsEvent event(NS_FORM_SELECTED);
   
       SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_TRUE);
       rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
@@ -1372,15 +1362,7 @@ nsHTMLInputElement::Click()
 
       if (context) {
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_MOUSE_EVENT;
-        event.message = NS_MOUSE_LEFT_CLICK;
-        event.isShift = PR_FALSE;
-        event.isControl = PR_FALSE;
-        event.isAlt = PR_FALSE;
-        event.isMeta = PR_FALSE;
-        event.clickCount = 0;
-        event.widget = nsnull;
+        nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
 
         SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
 
@@ -1609,15 +1591,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               case NS_FORM_INPUT_IMAGE: // Bug 34418
               {
                 nsEventStatus status = nsEventStatus_eIgnore;
-                nsMouseEvent event;
-                event.eventStructType = NS_MOUSE_EVENT;
-                event.message = NS_MOUSE_LEFT_CLICK;
-                event.isShift = PR_FALSE;
-                event.isControl = PR_FALSE;
-                event.isAlt = PR_FALSE;
-                event.isMeta = PR_FALSE;
-                event.clickCount = 0;
-                event.widget = nsnull;
+                nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
                 rv = HandleDOMEvent(aPresContext, &event, nsnull,
                                     NS_EVENT_FLAG_INIT, &status);
               } // case
@@ -1705,9 +1679,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             case NS_FORM_INPUT_IMAGE:
               {
                 if (mForm) {
-                  nsFormEvent event;
-                  event.eventStructType = NS_FORM_EVENT;
-                  event.message         = (mType == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT;
+                  nsFormEvent event((mType == NS_FORM_INPUT_RESET) ?
+                                    NS_FORM_RESET : NS_FORM_SUBMIT);
                   event.originator      = this;
                   nsEventStatus status  = nsEventStatus_eIgnore;
 

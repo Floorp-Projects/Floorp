@@ -171,7 +171,7 @@ public:
   // nsIKBStateControl
   NS_IMETHOD ResetInputState();
 
-  void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
+  void InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
     
   // Utility functions
 
@@ -367,8 +367,7 @@ protected:
                      GtkSignalFunc aSignalFunction);
   
   void InitMouseEvent(GdkEventButton * aGdkButtonEvent,
-                      nsMouseEvent &   anEvent,
-                      PRUint32         aEventType);
+                      nsMouseEvent &   anEvent);
 
 #ifdef DEBUG
   nsCAutoString  debug_GetName(GtkObject * aGtkWidget);

@@ -234,6 +234,7 @@ protected:
   nsresult SetEventType(const nsAString& aEventTypeArg);
   const char* GetEventName(PRUint32 aEventType);
   already_AddRefed<nsIDOMEventTarget> GetTargetFromFrame();
+  void AllocateEvent(const nsAString& aEventType);
 
   nsEvent* mEvent;
   nsCOMPtr<nsIPresContext> mPresContext;

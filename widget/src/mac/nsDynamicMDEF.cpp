@@ -246,14 +246,8 @@ pascal void nsDynamicMDEFMain(
       		  if(listener) {
               //printf("MenuPop \n");
               
-              nsMenuEvent mevent;
-              mevent.message = NS_MENU_SELECTED;
-              mevent.eventStructType = NS_MENU_EVENT;
-              mevent.point.x = 0;
-              mevent.point.y = 0;
-              mevent.widget = nsnull;
+              nsMenuEvent mevent(NS_MENU_SELECTED);
               mevent.time = PR_IntervalNow();
-              mevent.mCommand = (PRUint32) nsnull;
               
               // UNDO
               listener->MenuDeselected(mevent);
@@ -392,12 +386,7 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
     return;
   }
    
-  nsMenuEvent mevent;
-  mevent.message = NS_MENU_SELECTED;
-  mevent.eventStructType = NS_MENU_EVENT;
-  mevent.point.x = 0;
-  mevent.point.y = 0;
-  mevent.widget = nsnull;
+  nsMenuEvent mevent(NS_MENU_SELECTED);
   mevent.time = PR_IntervalNow();
   mevent.mCommand = (PRUint32) theMenu;
         
@@ -538,14 +527,8 @@ void nsPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJ
         if( menuHandle != aMenuHandleJustBuilt ) {           
           nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menu));
           if(listener) {
-            nsMenuEvent mevent;
-            mevent.message = NS_MENU_SELECTED;
-            mevent.eventStructType = NS_MENU_EVENT;
-            mevent.point.x = 0;
-            mevent.point.y = 0;
-            mevent.widget = nsnull;
+            nsMenuEvent mevent(NS_MENU_SELECTED);
             mevent.time = PR_IntervalNow();
-            mevent.mCommand = (PRUint32) nsnull;
             
             // UNDO
             listener->MenuDeselected(mevent);

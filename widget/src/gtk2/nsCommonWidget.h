@@ -68,20 +68,11 @@ public:
     void CommonCreate(nsIWidget *aParent, PRBool aListenForResizes);
 
     // event handling code
-    void InitPaintEvent(nsPaintEvent &aEvent);
-    void InitSizeEvent(nsSizeEvent &aEvent);
-    void InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg);
-    void InitMouseEvent(nsMouseEvent &aEvent, PRUint32 aMsg);
-    void InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
+    void InitButtonEvent(nsMouseEvent &aEvent,
                          GdkEventButton *aGdkEvent);
     void InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
-                              GdkEventScroll *aGdkEvent, PRUint32 aMsg);
-    void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent, PRUint32 aMsg);
-    void InitSizeModeEvent(nsSizeModeEvent &aEvent);
-
-#ifdef ACCESSIBILITY
-    void InitAccessibleEvent(nsAccessibleEvent &aEvent);
-#endif
+                              GdkEventScroll *aGdkEvent);
+    void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent);
 
     void DispatchGotFocusEvent(void);
     void DispatchLostFocusEvent(void);

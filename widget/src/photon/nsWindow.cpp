@@ -596,7 +596,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		nsSizeEvent sevent;
 		sevent.message = NS_SIZE;
 		sevent.widget = this;
-		sevent.eventStructType = NS_SIZE_EVENT;
 		
 		sevent.windowSize = new nsRect (0, 0, aWidth, aHeight); 	
 		
@@ -633,7 +632,6 @@ int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 			  
 			  event.message = NS_XUL_CLOSE;
 			  event.widget  = win;
-			  event.eventStructType = NS_GUI_EVENT;
 			  
 			  event.time = 0;
 			  event.point.x = 0;
@@ -687,7 +685,6 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 		new_damage = intersect;
 		
 		pWin->InitEvent(pev, NS_PAINT);
-		pev.eventStructType = NS_PAINT_EVENT;
 		pev.region = nsnull;
 		pev.renderingContext = nsnull;
 		pev.renderingContext = pWin->GetRenderingContext();
@@ -702,7 +699,6 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
 			/* Re-Setup Paint Event */
 			pWin->InitEvent(pev, NS_PAINT);
-			pev.eventStructType = NS_PAINT_EVENT;
 			pev.point.x = nsDmg.x;
 			pev.point.y = nsDmg.y;
 			pev.rect = &nsDmg;

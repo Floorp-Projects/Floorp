@@ -310,15 +310,7 @@ nsHTMLButtonElement::Click()
       shell->GetPresContext(getter_AddRefs(context));
       if (context) {
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_MOUSE_EVENT;
-        event.message = NS_MOUSE_LEFT_CLICK;
-        event.isShift = PR_FALSE;
-        event.isControl = PR_FALSE;
-        event.isAlt = PR_FALSE;
-        event.isMeta = PR_FALSE;
-        event.clickCount = 0;
-        event.widget = nsnull;
+        nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
         HandleDOMEvent(context, &event, nsnull,
                        NS_EVENT_FLAG_INIT, &status);
       }
@@ -507,15 +499,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
           if ((keyEvent->keyCode == NS_VK_RETURN && NS_KEY_PRESS == aEvent->message) ||
               keyEvent->keyCode == NS_VK_SPACE  && NS_KEY_UP == aEvent->message) {
             nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event;
-            event.eventStructType = NS_MOUSE_EVENT;
-            event.message = NS_MOUSE_LEFT_CLICK;
-            event.isShift = PR_FALSE;
-            event.isControl = PR_FALSE;
-            event.isAlt = PR_FALSE;
-            event.isMeta = PR_FALSE;
-            event.clickCount = 0;
-            event.widget = nsnull;
+            nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
             rv = HandleDOMEvent(aPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &status);
           }
@@ -526,10 +510,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
         {
           if (mForm) {
             if (mType == NS_FORM_BUTTON_SUBMIT || mType == NS_FORM_BUTTON_RESET) {
-              nsFormEvent event;
-              event.eventStructType = NS_FORM_EVENT;
-              event.message         = (mType == NS_FORM_BUTTON_RESET)
-                                       ? NS_FORM_RESET : NS_FORM_SUBMIT;
+              nsFormEvent event((mType == NS_FORM_BUTTON_RESET)
+                                ? NS_FORM_RESET : NS_FORM_SUBMIT);
               event.originator      = this;
               nsEventStatus status  = nsEventStatus_eIgnore;
 

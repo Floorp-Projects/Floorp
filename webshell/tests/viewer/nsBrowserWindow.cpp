@@ -689,36 +689,6 @@ HandleLocationEvent(nsGUIEvent *aEvent)
       }
       break;
 
-    case NS_DRAGDROP_EVENT: {
-      /*printf("Drag & Drop Event\n");
-      nsDragDropEvent * ev = (nsDragDropEvent *)aEvent;
-      nsAutoString fileURL;
-      BuildFileURL(ev->mURL, fileURL);
-      nsAutoString fileName(ev->mURL);
-      char * str = ToNewCString(fileName);
-
-      PRInt32 len = strlen(str);
-      PRInt32 sum = len + sizeof(FILE_PROTOCOL);
-      char* lpszFileURL = new char[sum];
-  
-      // Translate '\' to '/'
-      for (PRInt32 i = 0; i < len; i++) {
-        if (str[i] == '\\') {
-          str[i] = '/';
-        }
-      }
-
-      // Build the file URL
-      PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, str);
-
-      // Ask the Web widget to load the file URL
-      nsString urlStr(lpszFileURL);
-      const PRUnichar * uniStr = fileURL.get();
-      bw->GoTo(uniStr);
-      //delete [] lpszFileURL;
-      //delete [] str;*/
-      } break;
-
     default:
       break;
     }

@@ -247,15 +247,7 @@ NS_IMETHODIMP nsLinkableAccessible::DoAction(PRUint8 index)
     if (IsALink()) {
       nsCOMPtr<nsIPresContext> presContext(GetPresContext());
       if (presContext) {
-        nsMouseEvent linkClickEvent;
-        linkClickEvent.eventStructType = NS_EVENT;
-        linkClickEvent.message = NS_MOUSE_LEFT_CLICK;
-        linkClickEvent.isShift = PR_FALSE;
-        linkClickEvent.isControl = PR_FALSE;
-        linkClickEvent.isAlt = PR_FALSE;
-        linkClickEvent.isMeta = PR_FALSE;
-        linkClickEvent.clickCount = 0;
-        linkClickEvent.widget = nsnull;
+        nsMouseEvent linkClickEvent(NS_MOUSE_LEFT_CLICK);
 
         nsEventStatus eventStatus =  nsEventStatus_eIgnore;
         mLinkContent->HandleDOMEvent(presContext, 

@@ -182,9 +182,7 @@ NS_ScriptErrorReporter(JSContext *cx,
           docShell->GetPresContext(getter_AddRefs(presContext));
 
           if (presContext && errorDepth < 2) {
-            nsScriptErrorEvent errorevent;
-            errorevent.eventStructType = NS_EVENT;
-            errorevent.message = NS_SCRIPT_ERROR;
+            nsScriptErrorEvent errorevent(NS_SCRIPT_ERROR);
 
             errorevent.fileName = fileName.get();
             errorevent.errorMsg = msg.get();

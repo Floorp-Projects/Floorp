@@ -269,9 +269,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
         if (presShell) 
         {
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsEvent event;
-          event.eventStructType = NS_EVENT;
-          event.message = NS_FORM_SELECTED;
+          nsEvent event(NS_FORM_SELECTED);
 
           presShell->HandleEventWithTarget(&event,mFrame,content,NS_EVENT_FLAG_INIT,&status);
         }
@@ -2809,11 +2807,7 @@ nsTextControlFrame::FireOnInput()
   
   // Dispatch the "input" event
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent event;
-  event.eventStructType = NS_GUI_EVENT;
-  event.widget = nsnull;
-  event.message = NS_FORM_INPUT;
-  event.flags = NS_EVENT_FLAG_INIT;
+  nsGUIEvent event(NS_FORM_INPUT);
 
   // Have the content handle the event, propagating it according to normal
   // DOM rules.
@@ -2862,15 +2856,7 @@ nsTextControlFrame::FireOnChange()
   if (NS_SUCCEEDED(GetFormContent(*getter_AddRefs(content))))
   {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsInputEvent event;
-    event.eventStructType = NS_INPUT_EVENT;
-    event.widget = nsnull;
-    event.message = NS_FORM_CHANGE;
-    event.flags = NS_EVENT_FLAG_INIT;
-    event.isShift = PR_FALSE;
-    event.isControl = PR_FALSE;
-    event.isAlt = PR_FALSE;
-    event.isMeta = PR_FALSE;
+    nsInputEvent event(NS_FORM_CHANGE);
 
     // Have the content handle the event.
     nsWeakPtr &shell = mTextSelImpl->GetPresShell();

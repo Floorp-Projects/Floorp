@@ -1799,20 +1799,13 @@ nsMacWindow::Idle()
 NS_IMETHODIMP
 nsMacWindow::ComeToFront()
 {
-  nsZLevelEvent  event;
+  nsZLevelEvent  event(NS_SETZLEVEL, this);
 
   event.point.x = mBounds.x;
   event.point.y = mBounds.y;
   event.time = PR_IntervalNow();
-  event.widget = this;
-  event.nativeMsg = nsnull;
-  event.eventStructType = NS_ZLEVEL_EVENT;
-  event.message = NS_SETZLEVEL;
 
-  event.mPlacement = nsWindowZTop;
-  event.mReqBelow = 0;
   event.mImmediate = PR_TRUE;
-  event.mAdjusted = PR_FALSE;
 
   DispatchWindowEvent(event);
   

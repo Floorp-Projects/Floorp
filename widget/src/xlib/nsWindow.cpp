@@ -381,7 +381,7 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSyn
 NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise)
 {
   nsEventStatus status;
-  nsGUIEvent event; 
+  nsFocusEvent event(NS_GOTFOCUS, this);
   //  nsGUIEvent eventActivate;
 
   if (mBaseWindow)
@@ -392,26 +392,14 @@ NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise)
    
   mBlockFocusEvents = PR_TRUE;
  
-  event.message = NS_GOTFOCUS;
-  event.widget  = this;
-  event.eventStructType = NS_GUI_EVENT;
-  event.time = 0;
-  event.point.x = 0;
-  event.point.y = 0;
-  
   AddRef();
   DispatchEvent(&event, status);
   Release();
   
-  event.message = NS_ACTIVATE;
-  event.widget  = this;
-  event.eventStructType = NS_GUI_EVENT;
-  event.time = 0;
-  event.point.x = 0;
-  event.point.y = 0;
+  nsGUIEvent actEvent(NS_ACTIVATE, this);
   
   AddRef();
-  DispatchWindowEvent(event);
+  DispatchWindowEvent(actEvent);
   Release();
   
   mBlockFocusEvents = PR_FALSE;
@@ -460,17 +448,11 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth,
   }
   nsWidget::Resize(aWidth, aHeight, aRepaint);
 
-  nsSizeEvent sevent;
+  nsSizeEvent sevent(NS_SIZE, this);
   nsRect sevent_windowSize(0, 0, aWidth, aHeight);
-  sevent.message = NS_SIZE;
-  sevent.widget = this;
-  sevent.eventStructType = NS_SIZE_EVENT;
   sevent.windowSize = &sevent_windowSize;
-  sevent.point.x = 0;
-  sevent.point.y = 0;
   sevent.mWinWidth = aWidth;
   sevent.mWinHeight = aHeight;
-  sevent.time = 0;
   AddRef();
   OnResize(sevent);
   Release();
@@ -499,17 +481,11 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX,
 
   nsWidget::Resize(aX, aY, aWidth, aHeight, aRepaint);
 
-  nsSizeEvent sevent;
+  nsSizeEvent sevent(NS_SIZE, this);
   nsRect sevent_windowSize(0, 0, aWidth, aHeight);
-  sevent.message = NS_SIZE;
-  sevent.widget = this;
-  sevent.eventStructType = NS_SIZE_EVENT;
   sevent.windowSize = &sevent_windowSize;
-  sevent.point.x = 0;
-  sevent.point.y = 0;
   sevent.mWinWidth = aWidth;
   sevent.mWinHeight = aHeight;
-  sevent.time = 0;
   AddRef();
   OnResize(sevent);
   Release();
@@ -572,16 +548,12 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                    nsIRegion *aClipRegion)
 {
   if (mEventCallback) {
-    nsPaintEvent event;
+    nsPaintEvent event(NS_PAINT, this);
     nsRect rect(aX, aY, aWidth, aHeight);
-    event.message = NS_PAINT;
-    event.widget = this;
-    event.eventStructType = NS_PAINT_EVENT;
     event.point.x = aX;
     event.point.y = aY; 
     event.time = PR_Now(); /* No time in EXPOSE events */
     event.rect = &rect;
-    event.region = nsnull;
     
     event.renderingContext = GetRenderingContext();
     if (event.renderingContext) {

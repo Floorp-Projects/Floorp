@@ -181,7 +181,6 @@ public:
 
 	virtual PRBool          AutoErase();
 	void                    InitEvent(nsGUIEvent& event, 
-	                                  PRUint32 aEventType, 
 	                                  nsPoint* aPoint = nsnull);
 
 protected:
