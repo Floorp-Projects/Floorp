@@ -152,8 +152,8 @@ CookieViewerImpl::AddPermission(nsIDOMWindow* aWin, PRBool permission, PRInt32 t
     return rv;
   }
 
-  nsIDocument* doc = nsnull;
-  rv = presShell->GetDocument(&doc);
+  nsCOMPtr<nsIDocument> doc;
+  rv = presShell->GetDocument(getter_AddRefs(doc));
   if (NS_FAILED(rv)) {
     return rv;
   }
