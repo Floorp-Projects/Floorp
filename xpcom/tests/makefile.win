@@ -45,6 +45,7 @@ PROG17 = .\$(OBJDIR)\TestShutdown.exe
 PROG18 = .\$(OBJDIR)\TestStackCrawl.exe
 PROG19 = .\$(OBJDIR)\TestVoidBTree.exe
 PROG20 = .\$(OBJDIR)\nsIFileEnumerator.exe
+PROG21 = .\$(OBJDIR)\TestCOMPtrEq.exe
 
 RESFILE = timer.res
 
@@ -66,6 +67,7 @@ PROGRAMS = $(PROG1) \
            $(PROG18) \
            $(PROG19) \
            $(PROG20) \
+           $(PROG21) \
            $(NULL)
 
 LCFLAGS=-DUSE_NSREG -GX
@@ -105,5 +107,6 @@ $(PROG17): $(OBJDIR) TestShutdown.cpp
 $(PROG18): $(OBJDIR) TestStackCrawl.cpp
 $(PROG19): $(OBJDIR) TestVoidBTree.cpp
 $(PROG20): $(OBJDIR) nsIFileEnumerator.cpp
+$(PROG21): $(OBJDIR) TestCOMPtrEq.cpp
 
 
