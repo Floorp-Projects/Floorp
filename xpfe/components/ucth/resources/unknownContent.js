@@ -30,6 +30,7 @@ function initData()
     data = new Object;
     data.channel     = window.arguments[0];
     data.contentType = window.arguments[1];
+    data.contentDisp = window.arguments[2];
 
     // Get location from channel.
     data.location = data.channel.URI.spec;
@@ -52,9 +53,16 @@ function initDialog() {
 
 function loadDialog() 
 {
-  dump("data.contentType = " + data.contentType + "\n");
   // Set initial dialog field contents.
-  dialog.contentType.setAttribute( "value", data.contentType );
+
+  // Get raw content.
+  var text = dialog.contentType.childNodes[0].nodeValue;
+
+  // Replace #1 with actual content type.
+  text = text.replace( /#1/, data.contentType );
+
+  // Put it back into the dialog.
+  dialog.contentType.childNodes[0].nodeValue = text;
 }
 
 function onUnload() 
@@ -88,6 +96,20 @@ function pick()
     alert( "PickApp not implemented yet!" );
 }
 
+// Parse out suggested file name from content disposition.
+function fileNameFromContentDisp( contentDisp ) {
+    // content-disposition: has format
+    //     disposition-type < ; filename=value >
+    var result = "";
+    try {
+        result = contentDisp.toString().match( /.*;\s*filename\s*=\s*(\S*)/ )[ 1 ];
+    } catch ( exception ) {
+        // ignored
+    }
+    return result;
+
+}
+
 function save() 
 {
     // Use stream xfer component to prompt for destination and save.
@@ -99,7 +121,10 @@ function save()
         // do SelectFileAndTransferLocation!
 
         // Use this for now...
-        xfer.SelectFileAndTransferLocationSpec( data.location, window.opener );
+        var result = xfer.SelectFileAndTransferLocationSpec( data.location,
+                                                             window,
+                                                             data.contentType.toString(),
+                                                             fileNameFromContentDisp( data.contentDisp ) );
     } catch( exception ) {
         // Failed (or cancelled), give them another chance.
         retry = true;

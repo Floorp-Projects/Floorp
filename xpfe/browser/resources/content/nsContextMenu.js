@@ -508,7 +508,7 @@ nsContextMenu.prototype = {
             // do SelectFileAndTransferLocation!
 
             // Use this for now...
-            xfer.SelectFileAndTransferLocationSpec( url, window );
+            xfer.SelectFileAndTransferLocationSpec( url, window, "", "" );
         } catch( exception ) {
             // Failed (or cancelled), give them another chance.
             dump( "SelectFileAndTransferLocationSpec failed, rv=" + exception + "\n" );

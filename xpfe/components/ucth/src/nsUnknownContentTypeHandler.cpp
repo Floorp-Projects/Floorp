@@ -30,6 +30,8 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIStreamObserver.h"
+#include "nsIHTTPChannel.h"
+#include "nsXPIDLString.h"
 
 // {42770B50-03E9-11d3-8068-00600811A9C3}
 #define NS_UNKNOWNCONTENTTYPEHANDLER_CID \
@@ -61,6 +63,7 @@ private:
 }; // nsUnknownContentTypeHandler
 
 // HandleUnknownContentType (from nsIUnknownContentTypeHandler) implementation.
+// XXX We can get the content type from the channel now so that arg could be dropped.
 NS_IMETHODIMP
 nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                                                        const char *aContentType,
@@ -68,10 +71,25 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
     nsresult rv = NS_OK;
 
     nsCOMPtr<nsISupports> channel;
+    nsCAutoString         contentDisp;
 
     if ( aChannel ) {
         // Need root nsISupports for later JS_PushArguments call.
         channel = do_QueryInterface( aChannel );
+
+        // Try to get HTTP channel.
+        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+        if ( httpChannel ) {
+            // Get content-disposition response header.
+            nsCOMPtr<nsIAtom> atom = NS_NewAtom( "content-disposition" );
+            if ( atom ) {
+                nsXPIDLCString disp; 
+                rv = httpChannel->GetResponseHeader( atom, getter_Copies( disp ) );
+                if ( NS_SUCCEEDED( rv ) && disp ) {
+                    contentDisp = disp; // Save the response header to pass to dialog.
+                }
+            }
+        }
 
         // Cancel input channel now.
         rv = aChannel->Cancel(NS_BINDING_ABORTED);
@@ -83,7 +101,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
 
     if ( NS_SUCCEEDED( rv ) && channel && aContentType && aWindow ) {
         // Open "Unknown content type" dialog.
-        // We pass in the channel and the content type.
+        // We pass in the channel, the content type, and the content disposition.
         // Note that the "parent" browser window will be window.opener within the
         // new dialog.
     
@@ -98,16 +116,17 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                     void *stackPtr;
                     jsval *argv = JS_PushArguments( jsContext,
                                                     &stackPtr,
-                                                    "sss%ips",
+                                                    "sss%ipss",
                                                     "chrome://global/content/unknownContent.xul",
                                                     "_blank",
                                                     "chrome",
                                                     (const nsIID*)(&NS_GET_IID(nsIChannel)),
                                                     (nsISupports*)channel.get(),
-                                                    aContentType );
+                                                    aContentType,
+                                                    (const char*)contentDisp.GetBuffer() );
                     if ( argv ) {
                         nsCOMPtr<nsIDOMWindow> newWindow;
-                        rv = aWindow->OpenDialog( jsContext, argv, 5, getter_AddRefs( newWindow ) );
+                        rv = aWindow->OpenDialog( jsContext, argv, 6, getter_AddRefs( newWindow ) );
                         if ( NS_FAILED( rv ) ) {
                             DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenDialog failed, rv=0x%08X\n",
                                           (char*)__FILE__, (int)__LINE__, (int)rv );
