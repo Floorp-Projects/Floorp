@@ -19,13 +19,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.cpp,v 1.9 2001/04/12 14:12:11 peterv%netscape.com Exp $
+ * $Id: DOMHelper.cpp,v 1.10 2001/06/10 11:30:40 axel%pike.org Exp $
  */
 
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2001/04/12 14:12:11 $
+ * @version $Revision: 1.10 $ $Date: 2001/06/10 11:30:40 $
 **/
 
 #include "DOMHelper.h"
@@ -116,7 +116,7 @@ Node* DOMHelper::getParentNode(Node* node) {
     if (node->getNodeType() != Node::ATTRIBUTE_NODE)
         return node->getParentNode();
 
-#ifdef MOZ_XSL
+#ifndef TX_EXE
     // XXX temporary fix for 70979
     nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(node->getNSObj()));
     nsCOMPtr<nsIDOMElement> tmpParent;

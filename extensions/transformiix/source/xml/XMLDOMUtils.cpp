@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.13 2001/05/14 14:22:41 axel%pike.org Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.14 2001/06/10 11:30:30 axel%pike.org Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.13 $ $Date: 2001/05/14 14:22:41 $
+ * @version $Revision: 1.14 $ $Date: 2001/06/10 11:30:30 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -63,7 +63,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
             Document* newDoc = new Document();
             if (!newDoc)
                 break;
-#ifdef MOZ_XSL
+#ifndef TX_EXE
             owner->addWrapper(newDoc);
 #endif
             NodeList* nl = doc->getChildNodes();
@@ -86,7 +86,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
         case Node::ELEMENT_NODE :
         {
             Element* element = (Element*)node;
-#ifdef MOZ_XSL
+#ifndef TX_EXE
             String name, nameSpaceURI;
             name = element->getNodeName();
             resolver->getResultNameSpaceURI(name, nameSpaceURI);
@@ -100,7 +100,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
             if ( attList ) {
                 for ( i = 0; i < attList->getLength(); i++ ) {
                     Attr* attr = (Attr*) attList->item(i);
-#ifdef MOZ_XSL
+#ifndef TX_EXE
                     resolver->getResultNameSpaceURI(attr->getName(), nameSpaceURI);
                     newElement->setAttributeNS(nameSpaceURI, attr->getName(), attr->getValue());
 #else

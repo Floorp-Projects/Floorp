@@ -22,7 +22,7 @@
 DEPTH=..\..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-!ifdef MOZ_XSL
+!ifndef TX_EXE
 DIRS = mozImpl
 !else
 DIRS = standalone
