@@ -1,0 +1,70 @@
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is mozilla.org code
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 2001 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+#
+
+DEPTH		= ../../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= uninstall
+PROGRAM		= uninstall$(BIN_SUFFIX)
+RESFILE		= uninstall.res
+REQUIRES	= $(ZLIB_REQUIRES)
+EXTRA_DSO_LIBS	= mozz_s
+USE_NON_MT_LIBS = 1
+
+EXPORTS		= logkeys.h
+
+CSRCS		= \
+		uninstall.c \
+		extra.c \
+		dialogs.c \
+		parser.c \
+		ifuncns.c \
+		rdi.c \
+		process.c \
+		$(NULL)
+
+MOZ_WINCONSOLE = 0
+
+LOCAL_INCLUDES	= -I$(srcdir)
+
+ifdef GNU_CC
+OS_LIBS		+= -lshell32 -lversion -lgdi32
+else
+OS_LIBS		+= shell32.lib version.lib
+endif
+
+NO_DIST_INSTALL	= 1
+
+include $(topsrcdir)/config/rules.mk
+
+libs:: $(PROGRAM)
+	$(INSTALL) $(PROGRAM) $(DIST)/install
+
+install:: $(PROGRAM)
+	$(INSTALL) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+
+clean clobber realclean clobber_all::
+	$(RM) $(DIST)/install/$(PROGRAM)
+
