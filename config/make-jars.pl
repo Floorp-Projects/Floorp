@@ -96,6 +96,7 @@ if ($verbose) {
 my $win32 = ($^O =~ /((MS)?win32)|cygwin|os2/i) ? 1 : 0;
 my $macos = ($^O =~ /MacOS|darwin/i) ? 1 : 0;
 my $unix  = !($win32 || $macos) ? 1 : 0;
+my $vms   = ($^O =~ /VMS/i) ? 1 : 0;
 
 sub foreignPlatformFile
 {
@@ -343,9 +344,22 @@ sub EnsureFileInDir
 		# convert to a cygwin path
 		$preproc_file =~ s|^([a-zA-Z]):|/cygdrive/\1|;
 	    }
-            if (system("$^X $preprocessor $defines $preproc_file > $destPath") != 0) {
-                die "Preprocessing of $file failed: ".($? >> 8);
-            }
+	    if ($vms) {
+		# use a temporary file otherwise cmd is too long for system()
+		my $tmpFile = "$destPath.tmp";
+		open(TMP, ">$tmpFile") || die("$tmpFile: $!");
+		print(TMP "$^X $preprocessor $defines $preproc_file > $destPath");
+		close(TMP);
+		print "+++ preprocessing $preproc_file > $destPath\n";
+        	if (system("bash \"$tmpFile\"") != 0) {
+                    die "Preprocessing of $file failed (VMS): ".($? >> 8);
+        	}
+		unlink("$tmpFile") || die("$tmpFile: $!");
+	    } else {
+		if (system("$^X $preprocessor $defines $preproc_file > $destPath") != 0) {
+		    die "Preprocessing of $file failed: ".($? >> 8);
+		}
+	    }
         } else {
             copy($file, $destPath) || die "copy($file, $destPath) failed: $!";
         }
