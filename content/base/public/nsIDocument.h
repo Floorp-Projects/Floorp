@@ -175,6 +175,16 @@ public:
   NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver) = 0;
 
   /**
+   * Get the Content-Type of this document.
+   */
+  NS_IMETHOD GetContentType(nsAString& aContentType) = 0;
+
+  /**
+   * Set the Content-Type of this document.
+   */
+  NS_IMETHOD SetContentType(const nsAString& aContentType) = 0;
+
+  /**
    * Return the language of this document.
    */
   NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const = 0;

@@ -312,6 +312,17 @@ public:
   NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal);
 
   /**
+   * Get the Content-Type of this document.
+   */
+  // NS_IMETHOD GetContentType(nsAString& aContentType);
+  // Already declared in nsIDOMNSDocument
+
+  /**
+   * Get the Content-Type of this document.
+   */
+  NS_IMETHOD SetContentType(const nsAString& aContentType);
+
+  /**
    * Return the content language of this document.
    */
   NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const;

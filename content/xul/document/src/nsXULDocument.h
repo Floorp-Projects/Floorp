@@ -187,6 +187,11 @@ public:
     
     NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource);
 
+    // NS_IMETHOD GetContentType(nsAString& aContentType);
+    // Already declared in nsIDOMNSDocument
+
+    NS_IMETHOD SetContentType(const nsAString& aContentType);
+
     NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const;
 
 #ifdef IBMBIDI

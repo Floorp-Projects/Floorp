@@ -621,6 +621,16 @@ nsXULDocument::GetContentType(nsAString& aContentType)
 }
 
 NS_IMETHODIMP
+nsXULDocument::SetContentType(const nsAString& aContentType)
+{
+    NS_ASSERTION(aContentType.Equals(NS_LITERAL_STRING("application/vnd.mozilla.xul+xml")),
+                 "xul-documents always has content-type application/vnd.mozilla.xul+xml");
+    // Don't do anything, xul always has the mimetype
+    // application/vnd.mozilla.xul+xml
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULDocument::GetContentLanguage(nsAString& aContentLanguage) const
 {
     aContentLanguage.Truncate();
