@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.68 2004/06/19 03:21:39 jpierre%netscape.com Exp $ */
+/* $Id: ssl3con.c,v 1.69 2005/03/09 05:20:44 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -5587,8 +5587,13 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 		    ss->sec.ci.peer.pr_s6_addr32[1], 
 		    ss->sec.ci.peer.pr_s6_addr32[2],
 		    ss->sec.ci.peer.pr_s6_addr32[3]));
-	sid = (*ssl_sid_lookup)(&ss->sec.ci.peer, sidBytes.data, sidBytes.len,
-	                        ss->dbHandle);
+	if (ssl_sid_lookup) {
+	    sid = (*ssl_sid_lookup)(&ss->sec.ci.peer, sidBytes.data, 
+	                            sidBytes.len, ss->dbHandle);
+    	} else {
+	    errCode = SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED;
+	    goto loser;
+	}
     }
     SECITEM_FreeItem(&sidBytes, PR_FALSE);
 
@@ -8021,7 +8026,12 @@ xmit_loser:
      * The connection continues normally however.
      */
     if (!ss->noCache && rv == SECSuccess) {
-	(*ss->sec.cache)(sid);
+	if (ss->sec.cache) {
+	    (*ss->sec.cache)(sid);
+    	} else {
+	    PORT_SetError(SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED);
+	    return SECFailure;
+	}
     }
   }
     ss->ssl3->hs.ws = idle_handshake;
