@@ -1324,7 +1324,7 @@ typedef enum _envelopeItemType
 
 typedef struct 
 {
-	const char * const name;
+	const char * name;
 	envelopeItemType type;
 } envelopeItem;
 
