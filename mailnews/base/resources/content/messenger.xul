@@ -89,7 +89,12 @@ Rights Reserved.
   <broadcaster id="Messenger:Throbber" busy="false"/>
   <broadcaster id="Messenger:Status"/>
   <broadcaster id="Messenger:LoadingProgress"/>
-  <toolbox>
+     <!-- The main mail three pane frame -->
+    <box align="horizontal" style="height:100px" flex="1">
+      <box id="sidebarbox" />
+      <splitter id="sidebarsplitter" collapse="before" persist="hidden"/>
+      <box align="vertical"  flex="1"  style="border-left:solid black 1px">
+       <toolbox>
      <menubar>
     <menu id="menu_File">
 	  <menupopup id="menu_FilePopup">
@@ -436,12 +441,6 @@ Rights Reserved.
   </menubar>
 
     </toolbox>
-
-    <!-- The main mail three pane frame -->
-    <box align="horizontal" style="height:100px" flex="1">
-      <box id="sidebarbox" />
-      <splitter id="sidebarsplitter" collapse="before" persist="hidden"/>
-      <box align="vertical"  flex="1"  style="border-left:solid black 1px">
 	  <toolbox>
 		  <toolbar>
 		  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
