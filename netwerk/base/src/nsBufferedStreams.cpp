@@ -43,6 +43,7 @@
 #endif
 
 #ifdef METERING
+# include <stdio.h>
 # define METER(x)       x
 # define MAX_BIG_SEEKS  20
 
@@ -54,8 +55,8 @@ static struct {
     PRUint32            mBytesReadFromBuffer;
     PRUint32            mBigSeekIndex;
     struct {
-        PRUint32        mOldOffset;
-        PRUint32        mNewOffset;
+        PRInt64         mOldOffset;
+        PRInt64         mNewOffset;
     } mBigSeek[MAX_BIG_SEEKS];
 } bufstats;
 #else
@@ -195,7 +196,7 @@ nsBufferedStream::Seek(PRInt32 whence, PRInt64 offset)
 
     METER(if (bufstats.mBigSeekIndex < MAX_BIG_SEEKS)
               bufstats.mBigSeek[bufstats.mBigSeekIndex].mOldOffset =
-                  mBufferStartOffset + mCursor);
+                  mBufferStartOffset + nsInt64(mCursor));
     const nsInt64 minus1 = -1;
     if (absPos == minus1) {
         // then we had the SEEK_END case, above
