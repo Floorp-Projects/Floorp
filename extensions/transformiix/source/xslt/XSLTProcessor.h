@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.9 2000/06/13 12:10:09 axel%pike.org Exp $
+ * $Id: XSLTProcessor.h,v 1.10 2000/06/19 07:09:02 kvisco%ziplink.net Exp $
  */
 
 
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2000/06/13 12:10:09 $
+ * @version $Revision: 1.10 $ $Date: 2000/06/19 07:09:02 $
 **/
 class XSLTProcessor
 #ifdef MOZILLA
@@ -275,7 +275,7 @@ private:
     /**
      * Processes the xsl:with-param elements of the given xsl action
     **/
-    void processParameters(Element* xslAction, Node* context, ProcessorState* ps);
+    NamedMap* processParameters(Element* xslAction, Node* context, ProcessorState* ps);
 
     /**
      * Looks up the given XSLType with the given name
@@ -339,8 +339,8 @@ private:
     void processAttrValueTemplate
         (const String& attValue, String& result, Node* context, ProcessorState* ps);
 
-    void processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps);
-    void processTemplateParams(Node* xslTemplate, Node* context, ProcessorState* ps);
+    void processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps, NamedMap* actualParams = NULL);
+    void processTemplateParams(Node* xslTemplate, Node* context, ProcessorState* ps, NamedMap* actualParams);
 
     void processTopLevel(Document* xslDocument, ProcessorState* ps);
     void processTopLevel(Element* stylesheet, ProcessorState* ps);
