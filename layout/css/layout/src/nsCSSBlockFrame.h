@@ -19,45 +19,25 @@
 #ifndef nsCSSBlockFrame_h___
 #define nsCSSBlockFrame_h___
 
-#include "nsCSSContainerFrame.h"
-#include "nsIFloaterContainer.h"
-#include "nsIRunaround.h"
-#include "nsISpaceManager.h"
+#include "nsContainerFrame.h"
+#include "nsCSSLineLayout.h"
+#include "nsCSSInlineLayout.h"
 #include "nsVoidArray.h"
+#include "nsISpaceManager.h"
 
+class nsCSSBlockFrame;
 struct nsCSSInlineLayout;
-class nsPlaceholderFrame;
-struct FrameData;
+struct LineData;
 
-struct nsBlockBandData : public nsBandData {
-  // Trapezoids used during band processing
-  nsBandTrapezoid data[12];
-
-  // Bounding rect of available space between any left and right floaters
-  nsRect          availSpace;
-
-  nsBlockBandData() {
-    size = 12;
-    trapezoids = data;
-  }
-
-  /**
-   * Computes the bounding rect of the available space, i.e. space
-   * between any left and right floaters Uses the current trapezoid
-   * data, see nsISpaceManager::GetBandData(). Also updates member
-   * data "availSpace".
-   */
-  void ComputeAvailSpaceRect();
-};
-
-//----------------------------------------------------------------------
+// XXX hide this as soon as list bullet code is cleaned up
 
 struct nsCSSBlockReflowState : public nsReflowState {
   nsCSSBlockReflowState(nsIPresContext*      aPresContext,
-                   nsISpaceManager*     aSpaceManager,
-                   nsCSSContainerFrame* aBlock,
-                   const nsReflowState& aReflowState,
-                   nsSize*              aMaxElementSize);
+                        nsISpaceManager*     aSpaceManager,
+                        nsCSSBlockFrame*     aBlock,
+                        nsIStyleContext*     aBlockSC,
+                        const nsReflowState& aReflowState,
+                        nsSize*              aMaxElementSize);
 
   ~nsCSSBlockReflowState();
 
@@ -74,16 +54,18 @@ struct nsCSSBlockReflowState : public nsReflowState {
 
   nsIPresContext* mPresContext;
   nsISpaceManager* mSpaceManager;
-  nsBlockBandData mCurrentBand;
-  nsCSSContainerFrame* mBlock;
+  nsCSSBlockFrame* mBlock;
   PRBool mBlockIsPseudo;
-  nsIStyleContext* mBlockSC;
+  nsCSSBlockFrame* mNextInFlow;
+  PRUint8 mTextAlign;
+  PRUint8 mDirection;
 
   nsMargin mBorderPadding;
-  nsSize mAvailSize;
+  nsSize mInnerSize;            // inner area after removing border+padding
   nsSize mStyleSize;
   PRIntn mStyleSizeFlags;
   nscoord mDeltaWidth;
+  nscoord mBottomEdge;          // maximum Y
 
   PRPackedBool mUnconstrainedWidth, mUnconstrainedHeight;
   PRPackedBool mNoWrap;
@@ -94,83 +76,45 @@ struct nsCSSBlockReflowState : public nsReflowState {
 
   nsSize* mMaxElementSize;
 
+  nsCSSLineLayout mLineLayout;
+
+  nsCSSInlineLayout mInlineLayout;
+  PRBool mInlineLayoutPrepared;
+
+  nsIFrame* mPrevChild;
+
+  LineData* mFreeList;
+
   nsVoidArray mPendingFloaters;
 
-  nsCSSInlineLayout* mCurrentLine;
-  nsIFrame* mChildPrevInFlow;
+  LineData* mPrevLine;
 
   // XXX The next list ordinal for counting list bullets
   PRInt32 mNextListOrdinal;
-};
 
-//----------------------------------------------------------------------
+  // XXX what happens if we need more than 12 trapezoids?
+  struct BlockBandData : public nsBandData {
+    // Trapezoids used during band processing
+    nsBandTrapezoid data[12];
 
-class nsCSSBlockFrame : public nsCSSContainerFrame,
-                        public nsIRunaround,
-                        public nsIFloaterContainer
-{
-public:
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    // Bounding rect of available space between any left and right floaters
+    nsRect          availSpace;
 
-  // nsIFrame
-  NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD ListTag(FILE* out) const;
-  // XXX implement regular reflow method too!
+    BlockBandData() {
+      size = 12;
+      trapezoids = data;
+    }
 
-  // nsIRunaround
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
-                    nsISpaceManager*     aSpaceManager,
-                    nsReflowMetrics&     aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsRect&              aDesiredRect,
-                    nsReflowStatus&      aStatus);
+    /**
+     * Computes the bounding rect of the available space, i.e. space
+     * between any left and right floaters Uses the current trapezoid
+     * data, see nsISpaceManager::GetBandData(). Also updates member
+     * data "availSpace".
+     */
+    void ComputeAvailSpaceRect();
+  };
 
-  // nsIFloaterContainer
-  virtual PRBool AddFloater(nsIPresContext*      aPresContext,
-                            const nsReflowState& aPlaceholderReflowState,
-                            nsIFrame*            aFloater,
-                            nsPlaceholderFrame*  aPlaceholder);
-
-protected:
-  nsCSSBlockFrame(nsIContent* aContent, nsIFrame* aParent);
-  ~nsCSSBlockFrame();
-
-  virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
-
-  virtual PRIntn GetSkipSides() const;
-
-  void RecoverState(nsCSSBlockReflowState& aStatus, FrameData* fp);
-
-  nsresult FrameAppendedReflow(nsCSSBlockReflowState& aState);
-
-  nsresult ChildIncrementalReflow(nsCSSBlockReflowState& aState);
-
-  nsresult ResizeReflow(nsCSSBlockReflowState& aState);
-
-  void ComputeFinalSize(nsCSSBlockReflowState& aState,
-                        nsReflowMetrics&       aMetrics,
-                        nsRect&                aDesiredRect);
-
-  void ReflowFloater(nsIPresContext*        aPresContext,
-                     nsCSSBlockReflowState& aState,
-                     nsIFrame*              aFloaterFrame);
-
-  PRBool IsLeftMostChild(nsIFrame* aFrame);
-
-  FrameData* mFrames;
-
-  // placeholder frames for floaters to display at the top line
-  nsVoidArray* mRunInFloaters;
-
-  friend nsresult NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,
-                                      nsIContent* aContent,
-                                      nsIFrame*   aParent);
+  BlockBandData mCurrentBand;
 };
 
 extern nsresult NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,

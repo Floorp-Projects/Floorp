@@ -41,8 +41,6 @@ struct nsCSSInlineReflowState : public nsReflowState {
 
   nsIFrame* mLastChild;         // last child we have reflowed (so far)
 
-  PRInt32 mKidContentIndex;     // content index of last child reflowed
-
   nsMargin mBorderPadding;
   PRBool mNoWrap;
   PRIntn mStyleSizeFlags;
@@ -102,6 +100,9 @@ protected:
   nsInlineReflowStatus ReflowUnmapped(nsCSSInlineReflowState& aState);
 
   nsInlineReflowStatus PullUpChildren(nsCSSInlineReflowState& aState);
+
+  nsIFrame* PullOneChild(nsCSSInlineFrame* aNextInFlow,
+                         nsIFrame*         aLastChild);
 
   nsresult MaybeCreateNextInFlow(nsCSSInlineReflowState& aState,
                                  nsIFrame*               aFrame);
