@@ -32,8 +32,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  shistory \
 		  webshell \
-		  mimetype \
-		  exthandler \
 		  timer \
 		  windowwatcher \
 		  wallet \
@@ -41,6 +39,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  content \
 		  history \
+		  webbrowserpersist \
 		  $(NULL)
 
 EXPORTS =                  \
@@ -57,7 +56,6 @@ XPIDLSRCS=                        \
     .\nsIWebBrowserChromeFocus.idl \
     .\nsICommandHandler.idl        \
     .\nsIWebBrowserSetup.idl       \
-    .\nsIWebBrowserPersist.idl     \
     .\nsIEmbeddingSiteWindow.idl   \
     .\nsIWebBrowserFocus.idl       \
     .\nsIWebBrowserPrint.idl        \
@@ -69,8 +67,6 @@ CPP_OBJS=                            \
     .\$(OBJDIR)\nsDocShellTreeOwner.obj     \
     .\$(OBJDIR)\nsWebBrowser.obj            \
     .\$(OBJDIR)\nsCommandHandler.obj        \
-    .\$(OBJDIR)\nsWebBrowserPersist.obj     \
-    .\$(OBJDIR)\nsDOMWalker.obj             \
     .\$(OBJDIR)\nsNonPersistAuthPrompt.obj  \
     .\$(OBJDIR)\nsWebBrowserContentPolicy.obj \
     $(NULL)

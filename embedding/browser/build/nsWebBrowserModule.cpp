@@ -27,7 +27,6 @@
 #include "nsXPIDLString.h"
 
 #include "nsWebBrowser.h"
-#include "nsWebBrowserPersist.h"
 #include "nsCommandHandler.h"
 #include "nsWebBrowserContentPolicy.h"
 
@@ -36,7 +35,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserPersist)
 
 static NS_METHOD
 RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
@@ -73,8 +71,6 @@ UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 static nsModuleComponentInfo components[] =
 {
-   { "WebBrowserPersist Component", NS_WEBBROWSERPERSIST_CID, 
-     NS_WEBBROWSERPERSIST_CONTRACTID, nsWebBrowserPersistConstructor },
    { "WebBrowser Component", NS_WEBBROWSER_CID, 
      NS_WEBBROWSER_CONTRACTID, nsWebBrowserConstructor },
    { "CommandHandler Component", NS_COMMANDHANDLER_CID,

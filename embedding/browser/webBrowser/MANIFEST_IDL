@@ -26,7 +26,6 @@ nsIWebBrowserChrome.idl
 nsIWebBrowserChromeFocus.idl
 nsIWebBrowserSetup.idl
 nsIEmbeddingSiteWindow.idl
-nsIWebBrowserPersist.idl
 nsIWebBrowserFocus.idl
 nsIWebBrowserPrint.idl
 nsITooltipListener.idl

@@ -25,12 +25,18 @@ REQUIRES	= js \
 		  xpcom \
 		  string \
 		  windowwatcher \
+		  webbrowserpersist \
 		  jsconsole \
 		  find \
 		  embed_base \
 		  dom \
 		  txtsvc \
+		  mimetype \
+		  necko \
+		  content \
+		  uriloader \
 		  $(NULL)
+
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=embedcomponents
@@ -47,6 +53,7 @@ SUB_LIBRARIES = \
 	$(DIST)\lib\jsconsole_s.lib \
 	$(DIST)\lib\appstartupnotifier_s.lib \
 	$(DIST)\lib\find_s.lib \
+	$(DIST)\lib\webbrowserpersist_s.lib \
 	$(NULL)
 
 LLIBS = \
@@ -60,6 +67,7 @@ INCS = $(INCS) \
 	-I$(DEPTH)\embedding\components\jsconsole\src \
 	-I$(DEPTH)\embedding\components\appstartup\src \
 	-I$(DEPTH)\embedding\components\find\src \
+	-I$(DEPTH)\embedding\components\webbrowserpersist\src \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

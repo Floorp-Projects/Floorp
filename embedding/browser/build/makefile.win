@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  content \
 		  mimetype \
+                  webbrowserpersist \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
