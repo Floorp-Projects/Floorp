@@ -9,6 +9,7 @@ $function = $_GET["function"];
 <TITLE>Mozilla Update :: Developer Control Panel :: Manage Approval Queue</TITLE>
 <?php
 include"$page_header";
+$skipqueue="true";
 include"inc_sidebar.php";
 ?>
 
