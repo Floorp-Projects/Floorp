@@ -29,7 +29,7 @@ OBJS = $(OBJS) .\$(OBJDIR)\imewrap.obj
 OBJS = $(OBJS) .\$(OBJDIR)\imewrp16.obj
 !endif
 
-LLIBS = $(DIST)\lib\nsdlg$(MOZ_BITS).lib
+LLIBS = $(DIST)\lib\nsdlg$(MOZ_BITS).lib comdlg32.lib
 
 MODULE=edtrcdll 
 DEPTH=..\..\..\.. 

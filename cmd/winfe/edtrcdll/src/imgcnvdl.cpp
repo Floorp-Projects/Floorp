@@ -31,10 +31,225 @@
 #include "windowsx.h"
 #include "xp_help.h"
 
-int LOADDS 
+// This function is used to enumerate the SaveAs dialog's children
+// (in order to update the file name field when the type changes).
+static BOOL CALLBACK updateFileNameField( HWND hwnd, LPARAM lParam ) {
+    CImageConversionDialog *pdlg = (CImageConversionDialog*)lParam;
+    // Test direct children, only.
+    if ( GetParent( hwnd ) == GetParent(pdlg->m_hwndDlg) ) {
+        // Get control's class name.
+        CString temp;
+        LPTSTR pClassName = temp.BufferSetLength( 16 );
+        GetClassName( hwnd, pClassName, 16 );
+        // Check if this is the edit field.
+        if ( temp == "Edit" ) {
+            // Get the text.
+            char text[ MAX_PATH ];
+            GetWindowText( hwnd, text, sizeof text );
+            CString filename = text;
+            int i = filename.ReverseFind( '.' );
+            if ( i != -1 ) {
+                // Get extension (past last '.').
+                temp = (LPCTSTR)filename + i + 1;
+                // Compare to what we provided.
+                if ( pdlg->m_outfilevalue == temp ) {
+                    // User didn't change it, remember extension we are providing this time.
+                    pdlg->m_outfilevalue = pdlg->m_Doptionarray[pdlg->m_Doutputimagetype].m_pfileextention;
+                    // Attach new extension to base part of name.
+                    filename.SetAt( i+1, 0 ); // Truncate old extension.
+                    temp = (LPCTSTR)filename;
+                    temp += pdlg->m_outfilevalue;
+                    // Put into edit field.
+                    SetWindowText( hwnd, (LPCTSTR)temp );
+                } else {
+                    // User typed their own thing, leave it alone.
+                }
+            } else {
+                // No extension, so we won't tack one on.
+            }
+            // Quit after we've seen the edit field.
+            return FALSE;
+        }
+    }
+    // Go on to next child.
+    return TRUE;
+}
+
+// SaveAs dialog hook procedure to handle certain interactions.
+static UINT APIENTRY
+HookProc( HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+    UINT result = 0;
+    OFNOTIFY *pNote;
+    OPENFILENAME *pofn;
+    CImageConversionDialog *pdlg;
+    int index;
+    switch ( msg ) {
+        case WM_NOTIFY:
+            pNote = (OFNOTIFY*)lParam;
+            pofn  = pNote->lpOFN;
+            pdlg  = (CImageConversionDialog*)pofn->lCustData;
+
+            switch ( pNote->hdr.code ) {
+                case CDN_INITDONE:
+                    // Stash dialog handle.
+                    pdlg->m_hwndDlg = hwndDlg;
+                    break;
+
+                case CDN_TYPECHANGE:
+                    // Set new index (note that nFilterIndex is 1-based!).
+                    index = pdlg->m_Doutputimagetype = pofn->nFilterIndex - 1;
+
+                    assert( index >= 0 && index < (int)pdlg->m_Doptionarraycount );
+
+                    // Update extension in file name field (if not modified by user).
+                    // Note that hwndDlg is actually a child of the *real* dialog
+                    // (don't ask me why; it's a Windoze thing, I guess).
+                    EnumChildWindows( GetParent(hwndDlg), (WNDENUMPROC)updateFileNameField, (LPARAM)pdlg );
+                    break;
+
+                case CDN_HELP:
+                    // Display our help.
+                    if (pdlg->m_wfeiface)
+                    {
+                        pdlg->m_wfeiface->WinHelp(HELP_IMAGE_CONVERSION);
+                        result = TRUE;
+                    }
+                    break;
+
+                case CDN_FILEOK:
+                    // Store resulting file name in m_Doutfilename1.
+                    pdlg->m_Doutfilename1 = pofn->lpstrFile;
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+
+        default:
+            break;
+    };
+    return result;
+}
+
+int LOADDS
 CImageConversionDialog::DoModal()
 {
-    return CDialog::DoModal(m_parent);
+    // Calculate length of lpstrFilter.
+    unsigned int i, len = 0;
+    CString builtin, plugin;
+    builtin.LoadString( g_instance, IDS_BUILT_IN );
+    plugin.LoadString( g_instance, IDS_PLUGIN );
+    for ( i=0;i<m_Doptionarraycount;i++)
+    {
+        // First string is encoder name...
+        len += strlen( m_Doptionarray[i].m_pencodername );
+        // ...followed by " (builtin)" or " (plugin)"...
+        if (m_Doptionarray[i].m_builtin)
+            len += builtin.GetLength() + 1;
+        else
+            len += plugin.GetLength() + 1;
+        // ...followed by " (*.ext)" plus null.
+        len += strlen( m_Doptionarray[i].m_pfileextention );
+        len += strlen( " (*.)" ) + 1;
+
+        // Second string is *. followed by file extension plus null.
+        len += strlen( "*." ) + strlen( m_Doptionarray[i].m_pfileextention ) + 1;
+    }
+    // Allocate and fill lpstrFilter.
+    LPTSTR lpstrFilter = new char[ len + 1 ];
+    LPTSTR p = lpstrFilter;
+    for ( i=0;i<m_Doptionarraycount;i++ )
+    {
+        // First string.
+        strcpy( p, m_Doptionarray[i].m_pencodername );
+        p += strlen( m_Doptionarray[i].m_pencodername );
+        if (m_Doptionarray[i].m_builtin)
+        {
+            strcpy( p, builtin );
+            p += builtin.GetLength();
+        }
+        else 
+        {
+            strcpy( p, plugin );
+            p += plugin.GetLength();
+        }
+        strcpy( p, " (*." );
+        p += strlen( " (*." );
+        strcpy( p, m_Doptionarray[i].m_pfileextention );
+        p += strlen( m_Doptionarray[i].m_pfileextention );
+        strcpy( p, ")" );
+        p += strlen( ")" ) + 1;
+
+        // Second string.
+        strcpy( p, "*." );
+        p += strlen( "*." );
+        strcpy( p, m_Doptionarray[i].m_pfileextention );
+        p += strlen( m_Doptionarray[i].m_pfileextention ) + 1;
+    }
+
+    // Add consecutive terminating null at end.
+    *p = 0;
+
+    // Set up default file name and dir name.
+    CString filename;
+    CString dirname = filename = m_Doutfilename1;
+    i = dirname.ReverseFind( '\\' );
+
+    // Truncate directory at last \.
+    dirname.SetAt( max( i, 0 ), 0 );
+
+    // Get file name part.
+    filename = (LPCTSTR)filename + ( i >= 0 ? i + 1 : 0 );
+
+    // Remember the extension we will provide.
+    m_outfilevalue = m_Doptionarray[m_Doutputimagetype].m_pfileextention;
+
+    // Add default extension to file name contents.
+    filename += ".";
+    filename += m_outfilevalue;
+
+    CString temp = filename;
+
+    // Pad filename string to sufficient length.
+    strcpy( filename.BufferSetLength( MAX_PATH ), temp );
+
+    // SaveAs dialog flags.
+    DWORD flags = OFN_HIDEREADONLY | 
+                  OFN_NOREADONLYRETURN | 
+                  OFN_PATHMUSTEXIST |
+                  OFN_OVERWRITEPROMPT |
+                  OFN_EXPLORER |
+                  OFN_ENABLEHOOK;
+
+    // Create standard "save as" dialog.
+    OPENFILENAME ofn = { sizeof ofn,           // lStructSize; 
+                         m_parent,             // hwndOwner; 
+                         NULL,                 // hInstance; 
+                         lpstrFilter,          // lpstrFilter; 
+                         NULL,                 // lpstrCustomFilter; 
+                         NULL,                 // nMaxCustFilter; 
+                         m_Doutputimagetype+1, // nFilterIndex; 
+                         (LPTSTR)(LPCTSTR)filename, // lpstrFile; 
+                         MAX_PATH,             // nMaxFile; 
+                         NULL,                 // lpstrFileTitle; 
+                         NULL,                 // nMaxFileTitle; 
+                         dirname,              // lpstrInitialDir; 
+                         NULL,                 // lpstrTitle; 
+                         flags,                // Flags; 
+                         0,                    // nFileOffset; 
+                         0,                    // nFileExtension; 
+                         m_outfilevalue,       // lpstrDefExt; 
+                         (long)(void*)this,    // lCustData; 
+                         HookProc,             // lpfnHook; 
+                         NULL };               // lpTemplateName;
+
+    int result = GetSaveFileName( &ofn );
+
+    delete lpstrFilter;
+
+    return result;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -42,149 +257,11 @@ CImageConversionDialog::DoModal()
 
 
 CImageConversionDialog::CImageConversionDialog(HWND pParent /*=NULL*/)
-:CDialog(g_instance,IDD_FECONVERTIMAGE),m_parent(pParent)
+:m_parent(pParent)
 {
 	m_Doutputimagetype=0;
     m_Doptionarraycount=0;
-    m_filenamelock=FALSE;
-    m_listboxindex=0;
     m_wfeiface=NULL;
-}
-
-void
-CImageConversionDialog::setListBoxChange(int p_index)
-{
-    if (checkLock())
-        return;//someone has modified the filename by hand do NOT TOUCH
-    if ((p_index<0)||(p_index>=(int)m_Doptionarraycount))
-    {
-        assert(FALSE);
-        return;
-    }
-    attachExtention(m_outfilevalue,m_Doptionarray[p_index].m_pfileextention);
-}
-
-
-void
-CImageConversionDialog::attachExtention(CString &p_string,const CString &p_ext)
-{
-    CString t_string(p_string);
-    int t_index=t_string.ReverseFind('.');
-    if ((t_index>0)&&((t_string.GetLength()-t_index)<5))//trying to avoid file names of c:\fred.stuff\hi
-    {
-        t_string=t_string.Mid(0,t_index);
-        p_string=t_string;
-    }
-    p_string+='.';
-    p_string+=p_ext;
-
-}
-
-BOOL
-CImageConversionDialog::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
-{
-    CString t_teststring;
-    if (id==IDC_NETHELP)
-    {
-        if (m_wfeiface)
-            m_wfeiface->WinHelp(HELP_IMAGE_CONVERSION);
-    }
-
-    switch (notifyCode)
-    {
-    case LBN_SELCHANGE:
-        {
-        DoTransfer(TRUE);
-        setListBoxChange(m_listboxindex);
-        DoTransfer(FALSE);
-        return TRUE;
-        break;
-        }
-    case EN_CHANGE :
-        {
-            DoTransfer(TRUE);
-            if (m_listboxindex<0) //too early
-                return TRUE;
-            attachExtention(m_oldstring,m_Doptionarray[m_listboxindex].m_pfileextention);
-            if (strcmp(m_oldstring,m_outfilevalue)) //if non 0 returns then it is different!
-                m_filenamelock=TRUE;
-            else
-                m_filenamelock=FALSE;
-            return TRUE;
-        break;
-        }
-    default:
-        break;
-    }
-    return CDialog::OnCommand(id, hwndCtl,notifyCode);
-}
-
-BOOL
-CImageConversionDialog::DoTransfer(BOOL bSaveAndValidate)
-{
-    EditFieldTransfer(IDC_OUTFILE,m_outfilevalue,bSaveAndValidate);
-    ListBoxTransfer(IDC_CONVERTLIST,m_listboxindex,bSaveAndValidate);
-    return TRUE;//no validation
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-// CImageConversionDialog message handlers
-
-BOOL CImageConversionDialog::InitDialog() 
-{
-    CDialog::InitDialog();
-    //init listbox
-    HWND t_wnd;
-    t_wnd=GetDlgItem(m_hwndDlg,IDC_CONVERTLIST);
-    if(!t_wnd)
-        return FALSE;
-    CString t_string;
-    CString t_append;
-    for (DWORD i=0;i<m_Doptionarraycount;i++)
-    {
-        t_string=m_Doptionarray[i].m_pencodername;
-        t_string+=" (.";
-        t_string+=m_Doptionarray[i].m_pfileextention;
-        t_string+=')';
-        if (m_Doptionarray[i].m_builtin)
-            t_append.LoadString(g_instance, IDS_BUILT_IN);
-        else 
-            t_append.LoadString(g_instance, IDS_PLUGIN);
-        
-        t_string+=t_append;
-        ListBox_AddString(t_wnd,t_string);
-    }
-    ListBox_SetCurSel(t_wnd,m_Doutputimagetype);
-	// TODO: Add extra initialization here
-    m_outfilevalue=m_Doutfilename1;
-    m_oldstring=m_outfilevalue;//initialize m_oldstring to be the same so m_filenamelock remains false BEFORE you put on the extention!
-    SetFocus(t_wnd);//set focus on the listbox
-    setListBoxChange(m_Doutputimagetype);
-    DoTransfer(FALSE);
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
-}
-
-void CImageConversionDialog::OnOK() 
-{
-	// TODO: Add extra validation here
-	DoTransfer(TRUE);
-    m_Doutfilename1=m_outfilevalue;
-
-    HWND t_wnd;
-    t_wnd=GetDlgItem(m_hwndDlg,IDC_CONVERTLIST);
-    m_Doutputimagetype=ListBox_GetCurSel(t_wnd);
-    assert(LB_ERR!=m_Doutputimagetype);
-    EndDialog(m_hwndDlg,IDOK);
-}
-
-void CImageConversionDialog::OnCancel() 
-{
-	// TODO: Add extra cleanup here
-	
-    EndDialog(m_hwndDlg,IDCANCEL);
 }
 
 

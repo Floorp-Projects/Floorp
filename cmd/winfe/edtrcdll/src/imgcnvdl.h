@@ -20,7 +20,7 @@
 /*new dialog box for image conversion using Troy Chevalier's dialog box class*/
 #include "edtiface.h"
 
-class CImageConversionDialog : public CDialog ,public IImageConversionDialog
+class CImageConversionDialog : public IImageConversionDialog
 {
 public:
     virtual int LOADDS DoModal();
@@ -28,26 +28,11 @@ public:
 private:
     IWFEInterface *m_wfeiface;
     HWND m_parent;
+    HWND m_hwndDlg;
 // Dialog Data
 	enum { IDD = IDD_FECONVERTIMAGE };
 	CString	m_outfilevalue;
-    int m_listboxindex;
-/* necessary overrides */
-	virtual BOOL	DoTransfer(BOOL bSaveAndValidate);
-    virtual BOOL	OnCommand(int id, HWND hwndCtl, UINT notifyCode);
-/*elected overrides*/
-    virtual BOOL InitDialog();
 
-/*called by OnCommand*/
-    void OnOK();
-	void OnCancel();
-private://methods
-    void setListBoxChange(int p_index);//update the text and the .ext on the filename
-    BOOL checkLock(){return m_filenamelock;}
-    void attachExtention(CString &p_string,const CString &p_ext);
-private://members set internally only
-    BOOL m_filenamelock;
-    CString m_oldstring; //used for comparison to see if variable changed
 private://members set from the outside
 	CString m_Doutfilename1;
 	CString m_Dinputimagetype;
@@ -65,6 +50,9 @@ public:
 	DWORD LOADDS getOutputImageType1(){return m_Doutputimagetype;}
 
     void LOADDS setWFEInterface(IWFEInterface *iface){m_wfeiface=iface;}
+
+    friend static UINT APIENTRY HookProc(HWND,UINT,WPARAM,LPARAM);
+    friend static BOOL CALLBACK updateFileNameField(HWND,LPARAM);
 };
 
 
