@@ -4,8 +4,8 @@
    
   .bookmarks-window-tree
     {
-      border-top          : 1px solid ThreeDDarkShadow !important;
-      border-bottom       : 1px solid ThreeDFace;
+      border-top          : none !important;
+      border-bottom       : none;
       border-left         : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
     }
