@@ -19,6 +19,9 @@
 // within OpenTptInternet.h and will stupidly define these to 1 if they
 // have not been previously defined. The new PowerPlant (CWPro1) requires that
 // this be set to 0. (pinkerton)
+
+#error "Don't use me"
+
 #define OLDROUTINENAMES 0
 #ifndef OLDROUTINELOCATIONS
 	#define OLDROUTINELOCATIONS	0
