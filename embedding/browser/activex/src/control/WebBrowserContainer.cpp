@@ -52,7 +52,7 @@ NS_IMPL_ADDREF(CWebBrowserContainer)
 NS_IMPL_RELEASE(CWebBrowserContainer)
 
 NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
+	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
@@ -62,8 +62,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
-	NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-	NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
 NS_INTERFACE_MAP_END
 
 
@@ -79,9 +78,18 @@ NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & uuid, void * *res
 		AddRef();
 		return NS_OK;
 	}
-    return NS_ERROR_FAILURE;
+    return QueryInterface(uuid, result);
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIContextMenuListener
+
+NS_IMETHODIMP CWebBrowserContainer::OnShowContextMenu(PRInt32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+{
+    m_pOwner->ShowContextMenu(aContextFlags);
+    return NS_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIPrompt
@@ -119,6 +127,7 @@ NS_IMETHODIMP CWebBrowserContainer::ConfirmCheck(const PRUnichar* dialogTitle, c
 NS_IMETHODIMP CWebBrowserContainer::Prompt(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm,
                                            PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
+    // TODO show dialog with entry field
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -127,6 +136,7 @@ NS_IMETHODIMP CWebBrowserContainer::PromptUsernameAndPassword(const PRUnichar* d
                                                               const PRUnichar* passwordRealm, PRUint32 savePassword,
                                                               PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
+    // TODO show dialog with entry field and password field
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -135,6 +145,7 @@ NS_IMETHODIMP CWebBrowserContainer::PromptPassword(const PRUnichar* dialogTitle,
                                                    const PRUnichar* passwordRealm, PRUint32 savePassword,
                                                    PRUnichar **pwd, PRBool *_retval)
 {
+    // TODO show dialog with password field
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -319,14 +330,17 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, const char *aWi
 		m_pOwner->mBusyFlag = TRUE;
 	}
 
-	//NOTE:	The IE control fires a DownloadBegin after the first BeforeNavigate.  It then fires a 
-	//		DownloadComplete after the engine has made it's initial connection to the server.  It
-	//		then fires a second DownloadBegin/DownloadComplete pair around the loading of everything
-	//		on the page.  These events get fired out of CWebBrowserContainer::StartDocumentLoad() and
-	//		CWebBrowserContainer::EndDocumentLoad().
-	//		We don't appear to distinguish between the initial connection to the server and the
-	//		actual transfer of data.  Firing these events here simulates, appeasing applications
-	//		that are expecting that initial pair.
+	//NOTE:	The IE control fires a DownloadBegin after the first BeforeNavigate.
+    //      It then fires a DownloadComplete after the engine has made it's
+    //      initial connection to the server.  It then fires a second
+    //      DownloadBegin/DownloadComplete pair around the loading of
+    //      everything on the page.  These events get fired out of
+    //      CWebBrowserContainer::StartDocumentLoad() and
+    //      CWebBrowserContainer::EndDocumentLoad().
+	//		We don't appear to distinguish between the initial connection to
+    //      the server and the actual transfer of data.  Firing these events
+    //      here simulates, appeasing applications that are expecting that
+    //      initial pair.
 
 	m_pEvents1->Fire_DownloadBegin();
 	m_pEvents2->Fire_DownloadBegin();
@@ -623,21 +637,36 @@ CWebBrowserContainer::SetTitle(const PRUnichar * aTitle)
 NS_IMETHODIMP
 CWebBrowserContainer::SetJSStatus(const PRUnichar *status)
 {
-	return NS_ERROR_FAILURE;
+	//Fire a StatusTextChange event
+	BSTR bstrStatus = SysAllocString(status);
+	m_pEvents1->Fire_StatusTextChange(bstrStatus);
+	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+    SysFreeString(bstrStatus);
+	return NS_OK;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::SetJSDefaultStatus(const PRUnichar *status)
 {
-	return NS_ERROR_FAILURE;
+	//Fire a StatusTextChange event
+	BSTR bstrStatus = SysAllocString(status);
+	m_pEvents1->Fire_StatusTextChange(bstrStatus);
+	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+    SysFreeString(bstrStatus);
+	return NS_OK;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::SetOverLink(const PRUnichar *link)
 {
-	return NS_ERROR_FAILURE;
+	//Fire a StatusTextChange event
+	BSTR bstrStatus = SysAllocString(link);
+	m_pEvents1->Fire_StatusTextChange(bstrStatus);
+	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+    SysFreeString(bstrStatus);
+	return NS_OK;
 }
 
 
@@ -766,6 +795,13 @@ CWebBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *a
 {
 	NG_TRACE(_T("CWebBrowserContainer::OnEndDocumentLoad(...,  \"\")\n"));
 
+    if (m_pOwner->mIERootDocument)
+    {
+        // allow to keep old document around
+        m_pOwner->mIERootDocument->Release();
+        m_pOwner->mIERootDocument = NULL;
+    }
+
 	//Fire a DownloadComplete
 	m_pEvents1->Fire_DownloadComplete();
 	m_pEvents2->Fire_DownloadComplete();
@@ -794,6 +830,7 @@ CWebBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *a
 	BSTR bstrStatus = SysAllocString(A2OLE((CHAR *) "Done"));
 	m_pEvents1->Fire_StatusTextChange(bstrStatus);
 	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+    SysFreeString(bstrStatus);
 
 	return NS_OK; 
 } 
@@ -829,6 +866,7 @@ CWebBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* aCh
 	BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aMsg.GetUnicode()));
 	m_pEvents1->Fire_StatusTextChange(bstrStatus);
 	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+    SysFreeString(bstrStatus);
 	
 	return NS_OK; 
 } 
@@ -845,49 +883,3 @@ CWebBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channe
 } 
 
 
-nsresult
-CWebBrowserContainer::HandleEvent(nsIDOMEvent* aEvent)
-{
-	return NS_OK; 
-}
-
-
-nsresult
-CWebBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
-{
-	return NS_OK; 
-}
-
-
-nsresult
-CWebBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
-{
-	return NS_OK; 
-}
-
-nsresult
-CWebBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-	return NS_OK; 
-}
-
-
-nsresult
-CWebBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
-{
-	return NS_OK; 
-}
-
-
-nsresult
-CWebBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
-{
-	return NS_OK; 
-}
-
-
-nsresult
-CWebBrowserContainer::MouseOut(nsIDOMEvent* aMouseEvent)
-{
-	return NS_OK; 
-}
