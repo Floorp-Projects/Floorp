@@ -27,20 +27,27 @@
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 
-class BRFrame : public nsFrame
-{
+class BRFrame : public nsFrame, public nsIInlineFrame {
 public:
   BRFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  // nsIFrame
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
-                    nsReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
   NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
                               nsReflowMetrics& aMetrics);
+
+  // nsIInlineFrame
+  NS_IMETHOD ReflowInline(nsLineLayout&        aLineLayout,
+                          nsReflowMetrics&     aDesiredSize,
+                          const nsReflowState& aReflowState,
+                          nsReflowStatus&      aStatus);
 
 protected:
   virtual ~BRFrame();
@@ -54,6 +61,34 @@ BRFrame::BRFrame(nsIContent* aContent,
 
 BRFrame::~BRFrame()
 {
+}
+
+nsrefcnt
+BRFrame::AddRef(void)
+{
+  NS_ERROR("not supported");
+  return 0;
+}
+
+nsrefcnt
+BRFrame::Release(void)
+{
+  NS_ERROR("not supported");
+  return 0;
+}
+
+NS_IMETHODIMP
+BRFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIInlineFrameIID)) {
+    *aInstancePtrResult = (void*) ((nsIInlineFrame*)this);
+    return NS_OK;
+  }
+  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
 NS_METHOD
@@ -117,30 +152,22 @@ BRFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-NS_METHOD
-BRFrame::Reflow(nsIPresContext*      aPresContext,
-                nsReflowMetrics&     aDesiredSize,
-                const nsReflowState& aMaxSize,
-                nsReflowStatus&      aStatus)
+NS_IMETHODIMP
+BRFrame::ReflowInline(nsLineLayout&        aLineLayout,
+                      nsReflowMetrics&     aDesiredSize,
+                      const nsReflowState& aReflowState,
+                      nsReflowStatus&      aStatus)
 {
-  GetReflowMetrics(aPresContext, aDesiredSize);
+  GetReflowMetrics(aLineLayout.mPresContext, aDesiredSize);
   aStatus = NS_FRAME_COMPLETE;
 
-  // Get cached state for containing block frame
-  nsBlockReflowState* state =
-    nsBlockFrame::FindBlockReflowState(aPresContext, this);
-  if (nsnull != state) {
-    nsLineLayout* lineLayoutState = state->mCurrentLine;
-    if (nsnull != lineLayoutState) {
-      lineLayoutState->mReflowResult =
-        NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-        mStyleContext->GetStyleData(eStyleStruct_Display);
-      lineLayoutState->mPendingBreak = display->mBreakType;
-      if (NS_STYLE_CLEAR_NONE == lineLayoutState->mPendingBreak) {
-        lineLayoutState->mPendingBreak = NS_STYLE_CLEAR_LINE;
-      }
-    }
+  aLineLayout.mReflowResult =
+    NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+  aLineLayout.mPendingBreak = display->mBreakType;
+  if (NS_STYLE_CLEAR_NONE == aLineLayout.mPendingBreak) {
+    aLineLayout.mPendingBreak = NS_STYLE_CLEAR_LINE;
   }
 
   return NS_OK;
