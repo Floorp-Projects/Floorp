@@ -154,7 +154,7 @@
 <!ENTITY newtodo.duedate.warning    "Sua data de in&#xED;cio &#xE9; ap&#xF4;s a sua data prevista para t&#xE9;rmino.">
 <!ENTITY newtodo.repeatstart.warning "Hora de in&#xED;cio necess&#xE1;ria para recorr&#xEA;ncia.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "Voc&#xEA; tem certeza de que deseja apagar todos os eventos selecionados?" >
 <!ENTITY calendar.confirm.deleteevent "Voc&#xEA; tem certeza de que quer apagar o seguinte evento: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Voc&#xEA; tem certeza de que quer apagar este evento sem t&#xED;tulo?" >
 
@@ -222,10 +222,10 @@
 <!ENTITY calendar.events.filter.month.label "Eventos Do Pr&#xF3;ximo M&#xEA;s">
 <!ENTITY calendar.events.filter.future.label "Todos os Eventos Futuros">
 <!ENTITY calendar.events.filter.current.label "Dia Atualmente Selecionado">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Eventos nos Pr&#xF3;ximos 7 Dias">
+<!ENTITY calendar.events.filter.next14Days.label "Eventos nos Pr&#xF3;ximos 14 Dias">
+<!ENTITY calendar.events.filter.next31Days.label "Eventos nos Pr&#xF3;ximos 31 Dias">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Eventos neste M&#xEA;s do Calend&#xE1;rio">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Feito">
 <!ENTITY calendar.unifinder.tree.priority.label      "Prioridade">
@@ -282,10 +282,10 @@
 <!ENTITY calendar.subscribe.button.label           "Subscrever" >
 <!ENTITY calendar.publish.button.label             "Publicar" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Recarregar Localmente" >
+<!ENTITY calendar.localreload.button.tooltip  "Recarrega todos os calend&#xE1;rios locais" >
+<!ENTITY calendar.remotereload.button.label   "Recarregar" >
+<!ENTITY calendar.remotereload.button.tooltip   "Recarrega todos os calend&#xE1;rios remotos" >
 
 <!ENTITY calendar.dayview.button.label          "Dia" >
 <!ENTITY calendar.weekview.button.label         "Semana" >
