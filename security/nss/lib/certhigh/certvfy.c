@@ -287,16 +287,6 @@ SEC_CheckCRL(CERTCertDBHandle *handle,CERTCertificate *cert,
     	goto done;
     }
 
-    /* Verify the date validity of the KRL */
-    validity = SEC_CheckCrlTimes(&crl->crl,t);
-    if (validity == secCertTimeExpired) {
-	PORT_SetError(SEC_ERROR_CRL_EXPIRED);
-        rv = SECWouldBlock; /* Soft error, ask the user */
-    } else if (validity == secCertTimeNotValidYet) {
-	PORT_SetError(SEC_ERROR_CRL_NOT_YET_VALID);
-	rv = SECWouldBlock; /* Soft error, ask the user */
-    }
-
     /* now make sure the key is not on the revocation list */
     for (crlEntry = crl->crl.entries; crlEntry && *crlEntry; crlEntry++) {
 	if (SECITEM_CompareItem(&(*crlEntry)->serialNumber,&cert->serialNumber) == SECEqual) {
