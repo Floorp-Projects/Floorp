@@ -50,6 +50,7 @@
 #include "nsDOMError.h"
 #include "txURIUtils.h"
 #include "nsIHTMLDocument.h"
+#include "nsIDOMDocument.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
