@@ -163,6 +163,14 @@ PRIVATE PRBool uCheckAndGen2ByteGRPrefix8EA7(
 		PRUint32 				outbuflen,
 		PRUint32*				outlen
 );
+PRIVATE PRBool uCheckAndGenAlways1ByteShiftGL(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
 
 PRIVATE PRBool uGenAlways2Byte(
 		PRUint16 				in,
@@ -207,6 +215,7 @@ PRIVATE uGeneratorFunc m_generator[uNumOfCharsetType] =
 	uCheckAndGen2ByteGRPrefix8EA5,
 	uCheckAndGen2ByteGRPrefix8EA6,
 	uCheckAndGen2ByteGRPrefix8EA7,
+	uCheckAndGenAlways1ByteShiftGL,
 };
 
 /*=================================================================================
@@ -644,4 +653,27 @@ PRIVATE PRBool uCheckAndGen2ByteGRPrefix8EA7( uShiftTable 			*shift,
 		out[3] = (in  & 0xff)  | 0x80;
 		return PR_TRUE;
 	}
+}
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCheckAndGenAlways1ByteShiftGL(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+	/*	Don't check inlen. The caller should ensure it is larger than 0 */
+    /*  Oops, I don't agree. Code changed to check every time. [CATA] */
+	if(outbuflen < 1)
+		return PR_FALSE;
+	else
+	{
+        *outlen = 1;
+	    out[0] = in & 0x7f;
+	    return PR_TRUE;
+    }
 }
