@@ -240,7 +240,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			 <menuseparator />
 			<menuitem id="ISO-2022-JP" type="radio" name="charsetGroup" value="&dcharJapanCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
-			<menuitem id="Big5" type="radio" name="charsetGroup" value="&dcharTradChiBigCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
+			<menuitem id="BIG5" type="radio" name="charsetGroup" value="&dcharTradChiBigCmd.label;" oncommand="SetDocumentCharacterSet('Big5');"/>
 			<menuitem id="GB2312" type="radio" name="charsetGroup" value="&dcharSimpChiGbCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			 <menuseparator />
 			<menuitem id="EUC-KR" type="radio" name="charsetGroup" value="&dcharKoreanCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
