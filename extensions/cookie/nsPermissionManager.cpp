@@ -931,15 +931,24 @@ nsPermissionManager::Write()
   }
 
   delete[] hostList;
-  mChangedList = PR_FALSE;
+
+  // XXX hack for bug 251648, to avoid dataloss:
+  // flush the buffered stream's data first
+  rv = bufferedOutputStream->Flush();
 
   // All went ok. Maybe except for problems in Write(), but the stream detects
   // that for us
   nsCOMPtr<nsISafeFileOutputStream> safeStream = do_QueryInterface(fileOutputStream);
-  if (safeStream)
-    safeStream->Finish();
+  if (NS_SUCCEEDED(rv) && safeStream)
+    rv = safeStream->Finish();
 
-  return NS_OK;
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to save permissions file! possible dataloss");
+    return rv;
+  }
+
+  mChangedList = PR_FALSE;
+  return rv;
 }
 
 nsresult
