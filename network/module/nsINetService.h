@@ -109,6 +109,9 @@ struct nsINetService : public nsISupports
 
 #ifdef CookieManagement
     NS_IMETHOD NET_DisplayCookieInfoAsHTML()=0;
+#ifndef HTMLDialogs
+    NS_IMETHOD NET_CookieViewerReturn()=0;
+#endif
 #ifdef PrivacySiteInfo
     NS_IMETHOD NET_DisplayCookieInfoOfSiteAsHTML(char * URLName)=0;
     NS_IMETHOD NET_CookiePermission(char* URLName, PRInt32* permission)=0;
