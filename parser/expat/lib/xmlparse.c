@@ -1278,13 +1278,8 @@ doContent(XML_Parser parser,
 	  return XML_ERROR_NO_MEMORY;
 	entity = (ENTITY *)lookup(&dtd.generalEntities, name, 0);
 	poolDiscard(&dtd.pool);
-	if (!entity) {
-	  if (dtd.complete || dtd.standalone)
-	    return XML_ERROR_UNDEFINED_ENTITY;
-	  if (defaultHandler)
-	    reportDefault(parser, enc, s, next);
-	  break;
-	}
+	if (!entity)
+	  return XML_ERROR_UNDEFINED_ENTITY;
 	if (entity->open)
 	  return XML_ERROR_RECURSIVE_ENTITY_REF;
 	if (entity->notation)
@@ -2959,8 +2954,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, int isCdata,
 	  if (dtd.complete) {
 	    if (enc == encoding)
 	      eventPtr = ptr;
-	    return XML_ERROR_UNDEFINED_ENTITY;
 	  }
+	  return XML_ERROR_UNDEFINED_ENTITY;
 	}
 	else if (entity->open) {
 	  if (enc == encoding)
