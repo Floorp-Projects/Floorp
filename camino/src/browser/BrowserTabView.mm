@@ -240,14 +240,22 @@
 	}
 }
 
-
-// return the frame we want to have to make us display correctly in the supplied frame.
-const float kTabsVisibleTopGap    = 4.0;    // space above the tabs
-const float kTabsInvisibleTopGap  = -7.0;		// space removed to push tab content up when no tabs are visible
-
+//
+// -getExtraTopSpace
+//
+// return the gap we want to have to make us display correctly. Note the tab dimensions
+// changed in panther so we have to use different constants.
+//
 - (float)getExtraTopSpace;
 {
-	return ([self tabsVisible]) ? kTabsVisibleTopGap : kTabsInvisibleTopGap;
+  const float kPantherAppKit = 743.0;
+  
+  const float kTabsVisibleTopGap    = 4.0;      // space above the tabs
+  const float kTabsVisibleTopGapPanther = 0.0;  // no gap above tabs on panther
+  const float kTabsInvisibleTopGap  = -7.0;		  // space removed to push tab content up when no tabs are visible
+  
+	return ([self tabsVisible]) ? 
+    ((NSAppKitVersionNumber >= kPantherAppKit) ? kTabsVisibleTopGapPanther : kTabsVisibleTopGap) : kTabsInvisibleTopGap;
 }
 
 - (BOOL)tabsVisible
