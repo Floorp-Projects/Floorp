@@ -880,7 +880,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
 
         PRUnichar *user, *passwd;
         PRBool retval;
-        static nsAutoString message = "Enter username for "; //TODO localize it!
+        nsAutoString message = "Enter username for "; //TODO localize it!
 		message += iChallenge; // later on change to only show realm and then host's info. 
 		PRUnichar* msg = message.ToNewUnicode();
 		rv = authdialog->PromptUsernameAndPassword(
