@@ -120,6 +120,11 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
     //    ((nsISupports *)initContext->docShell)->Release();
     initContext->docShell = nsnull;
     //    ((nsISupports *)initContext->webShell)->Release();
+
+    // PENDING(edburns): this is a leak.  For some reason, webShell's
+    // refcount is two.  I believe it should be one.
+    // see http://bugzilla.mozilla.org/show_bug.cgi?id=38271
+
     initContext->webShell = nsnull;
 
     //NOTE we don't de-allocate the global session history here.
