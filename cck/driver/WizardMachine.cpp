@@ -439,8 +439,6 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 		{
 			char localBuffer[MAX_SIZE] = {'\0'};
 
-			//GlobalWidgetArray[GlobalArrayIndex].cached = TRUE;
-
 			GetPrivateProfileString(iniSection, "Name", "", buffer, MAX_SIZE, iniFile);
 			strcpy(localBuffer, buffer);
 
@@ -1147,14 +1145,17 @@ WIDGET* CWizardMachineApp::SetGlobal(CString theName, CString theValue)
 	WIDGET* w = findWidget((char *)(LPCTSTR) theName);
 	if (w == NULL)
 	{
-		if (++GlobalArrayIndex >= sizeof(GlobalWidgetArray))
+		// Make sure we can add this value
+		if (GlobalArrayIndex >= sizeof(GlobalWidgetArray))
 		{
 			fprintf(out, "----------------** TERMINATED - Out of Global Space **---------------\n");
 			exit(11);
 		}
 
+		GlobalWidgetArray[GlobalArrayIndex].name  = theName;
 		GlobalWidgetArray[GlobalArrayIndex].value = theValue;
 		w = &GlobalWidgetArray[GlobalArrayIndex];
+		GlobalArrayIndex++;
 	}
 	else 
 		w->value = theValue;
