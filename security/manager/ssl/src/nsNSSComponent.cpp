@@ -1436,7 +1436,7 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
 
   //-- Verify signature
   PRBool rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner,
-                                               &digest, HASH_AlgSHA1, PR_TRUE);
+                                               &digest, HASH_AlgSHA1, PR_FALSE);
   if (rv != PR_TRUE) {
     *aErrorCode = PR_GetError();
   }
