@@ -811,8 +811,12 @@ function loadURI(uri)
 function BrowserLoadURL()
 {
   var url = gURLBar.value;
-  loadURI(getShortcutOrURI(url));
-  _content.focus();
+  if (url.match(/^view-source:/)) {
+    BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null);
+  } else {
+    loadURI(getShortcutOrURI(url));
+    _content.focus();
+  }
 }
 
 function getShortcutOrURI(url)
@@ -899,11 +903,16 @@ function BrowserViewSource()
   if (focusedWindow)
     var docCharset = "charset=" + focusedWindow.document.characterSet;
 
-  //now try to open a view-source window while inheriting the charset (if any)
+  BrowserViewSourceOfURL(_content.location, docCharset);
+}
+
+function BrowserViewSourceOfURL(url, charset)
+{
+  // try to open a view-source window while inheriting the charset (if any)
   openDialog("chrome://navigator/content/viewSource.xul",
              "_blank",
              "scrollbars,resizable,chrome,dialog=no",
-             _content.location, docCharset);
+             url, charset);
 }
 
 // doc=null for regular page, doc=owner document for frame.
