@@ -30,9 +30,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public res src stub wizard/libxpnet
+DIRS		= public res src stub
 
 ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
+DIRS		+= wizard/libxpnet
 ifdef MOZ_ENABLE_GTK
 DIRS		+= wizard/unix/src2
 endif
