@@ -23,6 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= libreg
+#LIBRARY_NAME	= mozreg
 LIBRARY_NAME	= reg
 
 REQUIRES	= libreg pref js
@@ -58,8 +59,8 @@ ifeq ($(OS_ARCH), OSF1)
 	$(CC) -o $@ $(BIN_OBJS) $(LDFLAGS)
 else
 	$(CCF) -o $@ $(BIN_OBJS) $(LDFLAGS)
-endif	
-endif	
+endif
+endif
 
 $(OBJDIR)/R_VerReg.o:	VerReg.c
 	@$(MAKE_OBJDIR)
@@ -89,3 +90,10 @@ $(BIN_OBJS): $(BIN_SRCS)
 
 install:: $(PROGRAM)
 	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
+	@cp -p $(LIBRARY) $(OBJDIR)/libmoz$(LIBRARY_NAME).$(LIB_SUFFIX)
+	$(INSTALL) -m 444 $(OBJDIR)/libmoz$(LIBRARY_NAME).$(LIB_SUFFIX) $(DIST)/lib
+ifdef SHARED_LIBRARY
+	@cp -p $(SHARED_LIBRARY) $(OBJDIR)/libmoz$(LIBRARY_NAME).$(DLL_SUFFIX)
+	$(INSTALL) -m 555 $(OBJDIR)/libmoz$(LIBRARY_NAME).$(DLL_SUFFIX) $(DIST)/lib
+	$(INSTALL) -m 555 $(OBJDIR)/libmoz$(LIBRARY_NAME).$(DLL_SUFFIX) $(DIST)/bin
+endif
