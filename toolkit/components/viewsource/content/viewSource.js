@@ -23,7 +23,6 @@
 
 const pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
 var gBrowser = null;
-var appCore = null;
 var gPrefs = null;
 
 try {
@@ -35,33 +34,15 @@ try {
 
 function onLoadViewSource() 
 {
+  gBrowser = document.getElementById("content");
   viewSource(window.arguments[0]);
-  window._content.focus();
-}
-
-function getBrowser()
-{
-  if (!gBrowser)
-    gBrowser = document.getElementById("content");
-  return gBrowser;
+  document.commandDispatcher.focusedWindow = content;
 }
 
 function viewSource(url)
 {
   if (!url)
     return false; // throw Components.results.NS_ERROR_FAILURE;
-
-  try {
-    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
-                        .createInstance(Components.interfaces.nsIBrowserInstance);
-
-    // Initialize browser instance..
-    appCore.setWebShellWindow(window);
-  } catch(ex) {
-    // Give up.
-    window.close();
-    return false;
-  }
 
   var loadFromURL = true;
   //
@@ -99,7 +80,7 @@ function viewSource(url)
 
       try {
         if (typeof(arg) == "object" && arg != null) {
-          var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+          var PageLoader = gBrowser.webNavigation.QueryInterface(pageLoaderIface);
 
           //
           // Load the page using the page descriptor rather than the URL.
@@ -123,7 +104,7 @@ function viewSource(url)
     //
     var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
     var viewSrcUrl = "view-source:" + url;
-    getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
+    gBrowser.webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
   }
 
   //check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
@@ -136,11 +117,11 @@ function viewSource(url)
     } catch (ex) {
     }
     try {
-      document.getElementById("cmd_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
+      document.getElementById("menu_highlightSyntax").setAttribute("checked", gPrefs.getBoolPref("view_source.syntax_highlight"));
     } catch (ex) {
     }
   } else {
-    document.getElementById("cmd_highlightSyntax").setAttribute("hidden", "true");
+    document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
   }
 
   window._content.focus();
@@ -200,20 +181,24 @@ function wrapLongLines()
 //pref to persist the last state
 function highlightSyntax()
 {
-  var highlightSyntaxCmd = document.getElementById("cmd_highlightSyntax");
-  var highlightSyntax = highlightSyntaxCmd.getAttribute("checked") != "true";
-  highlightSyntaxCmd.setAttribute("checked", highlightSyntax);
+  var highlightSyntaxMenu = document.getElementById("menu_highlightSyntax");
+  var highlightSyntax = (highlightSyntaxMenu.getAttribute("checked") == "true");
   gPrefs.setBoolPref("view_source.syntax_highlight", highlightSyntax);
 
-  var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+  var PageLoader = gBrowser.webNavigation.QueryInterface(pageLoaderIface);
   PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
 
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var docCharset = getBrowser().docShell.QueryInterface(
-                            Components.interfaces.nsIDocCharset);
+  var docCharset = gBrowser.docShell
+                           .QueryInterface(Components.interfaces.nsIDocCharset);
   docCharset.charset = aCharset;
-  var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+  var PageLoader = gBrowser.webNavigation.QueryInterface(pageLoaderIface);
   PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+}
+
+function BrowserFind()
+{
+  findInPage(gBrowser, window._content, window._content)
 }
