@@ -46,11 +46,11 @@ private:
     class ContentListItem {
     public:
         ContentListItem(nsIContent* aContent) : mNext(nsnull), mContent(aContent) {
-            MOZ_COUNT_CTOR(RDF_nsElementMap_ContentListItem);
+            MOZ_COUNT_CTOR(XUL_nsElementMap_ContentListItem);
         }
 
         ~ContentListItem() {
-            MOZ_COUNT_DTOR(RDF_nsElementMap_ContentListItem);
+            MOZ_COUNT_DTOR(XUL_nsElementMap_ContentListItem);
         }
 
         ContentListItem* mNext;
