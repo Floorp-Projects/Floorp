@@ -22,6 +22,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIAtom.h"
 
+class nsTableFrame;
 class nsTableRowFrame;
 struct RowGroupReflowState;
 
@@ -211,6 +212,7 @@ protected:
   nsresult SplitRowGroup(nsIPresContext&          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
+                         nsTableFrame*            aTableFrame,
                          nsReflowStatus&          aStatus);
 
 private:

@@ -122,6 +122,14 @@ public:
 
   virtual PRBool Contains(const nsPoint& aPoint);
 
+  /** used by yje row group frame code */
+  void ReflowCellFrame(nsIPresContext&          aPresContext,
+                       const nsHTMLReflowState& aReflowState,
+                       nsTableCellFrame*        aCellFrame,
+                       nscoord                  aAvailableHeight,
+                       nsReflowStatus&          aStatus);
+  void InsertCellFrame(nsTableCellFrame* aFrame, nsTableCellFrame* aPrevSibling);
+
 protected:
 
   /** protected constructor.
