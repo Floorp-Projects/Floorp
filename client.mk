@@ -90,6 +90,7 @@ run_for_side_effects := \
   $(shell cd $(TOPSRCDIR); \
           if test ! -f $(MOZCONFIG2DEFS); then \
 	    (cd ..; cvs co mozilla/$(MOZCONFIG2DEFS) mozilla/$(FIND_MOZCONFIG); ) \
+	  else true; \
 	  fi; \
 	  $(MOZCONFIG2DEFS) .client-defs.mk)
 include $(TOPSRCDIR)/.client-defs.mk
@@ -210,6 +211,7 @@ pull_and_build_all: checkout build
 checkout:
 	@if test -f $(CVSCO_LOGFILE) ; then \
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
+	else true; \
 	fi
 	@date > $(CVSCO_LOGFILE)
 	cd $(ROOTDIR) && \
@@ -220,6 +222,7 @@ checkout:
 	  echo "$$conflicts" ;\
 	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE) for full log." ;\
 	  exit 1; \
+	else true; \
 	fi
 
 #
@@ -232,8 +235,10 @@ webconfig:
           cd $(TOPSRCDIR); \
           if test ! -f $(MOZCONFIG2URL); then \
 	    (cd ..; cvs co mozilla/$(MOZCONFIG2URL) mozilla/$(FIND_MOZCONFIG);) \
+	  else true; \
 	  fi; \
 	  url=$$url`$(MOZCONFIG2URL)`; \
+	else true; \
 	fi; \
 	echo Running netscape with the following url: ;\
 	echo ;\
@@ -271,7 +276,7 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 endif
 
 $(OBJDIR)/Makefile: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
-	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); fi
+	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR); 
 	@echo LD_LIBRARY_PATH=$(MOZ_WITH_NSPR)/lib:$(LD_LIBRARY_PATH) \\
 	@echo ../configure $(CONFIG_FLAGS)
