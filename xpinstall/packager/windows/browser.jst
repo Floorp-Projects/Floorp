@@ -281,6 +281,7 @@ function registerMainKeys(winreg)
   // "SOFTWARE\\Mozilla" must not be localized!
   subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$";
   winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "GeckoVer", "1.0.1");
 
   subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$\\Extensions";
   winreg.createKey(subkey,"");
