@@ -48,6 +48,7 @@ bin/components/gfx.xpt
 bin/components/history.xpt
 bin/components/intl.xpt
 bin/components/jar.xpt
+bin/components/jsconsole-clhandler.js
 bin/components/libnsappshell.so
 bin/components/libbookmarks.so
 bin/components/libcaps.so
@@ -123,6 +124,7 @@ bin/components/necko_res.xpt
 bin/components/necko_socket.xpt
 bin/components/nsFilePicker.js
 bin/components/nsSidebar.js
+bin/components/xpcom_xpti.xpt
 bin/components/xpinstall.xpt
 bin/components/oji.xpt
 bin/components/pref.xpt

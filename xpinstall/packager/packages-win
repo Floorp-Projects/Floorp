@@ -67,6 +67,7 @@ bin\components\gkview.dll
 bin\components\history.dll
 bin\components\history.xpt
 bin\components\intl.xpt
+bin\components\jsconsole-clhandler.js
 bin\components\jsloader.dll
 bin\components\jsurl.dll
 bin\components\jsurl.xpt
@@ -159,6 +160,7 @@ bin\components\xpcom_eventloop_xp.xpt
 bin\components\xpcom_io.xpt
 bin\components\xpcom_nativeapp.xpt
 bin\components\xpcom_thread.xpt
+bin\components\xpcom_xpti.xpt
 bin\components\xpconnect.xpt
 bin\components\xpinstall.xpt
 bin\components\xppref32.dll
