@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -184,7 +184,7 @@ nsContextMenu.prototype = {
         this.onLink     = false;
         this.inFrame    = false;
         this.hasBGImage = false;
-    
+
         // Remember the node that was clicked.
         this.target = node;
     
@@ -258,14 +258,12 @@ nsContextMenu.prototype = {
                                                      this.target.getAttribute( "background" ) );
             } else if ( "HTTPIndex" in _content &&
                         _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
-                // The above test is a roundabout way of determining whether
-                // the content area contains chrome://global/content/directory/directory.xul.
                 this.inDirList = true;
-                // Bubble outward till we get to an element with id= attribute
+                // Bubble outward till we get to an element with URL attribute
                 // (which should be the href).
                 var root = this.target;
                 while ( root && !this.link ) {
-                    if ( root.getAttribute( "id" ) ) {
+                    if ( root.getAttribute( "URL" ) ) {
                         if ( root.tagName == "tree" ) {
                             // Hit root of tree; must have clicked in empty space;
                             // thus, no link.
@@ -273,7 +271,7 @@ nsContextMenu.prototype = {
                         }
                         // Build pseudo link object so link-related functions work.
                         this.onLink = true;
-                        this.link = { href : root.getAttribute( "id" ) };
+                        this.link = { href : root.getAttribute("URL") }; 
                         // If element is a directory, then you can't save it.
                         if ( root.getAttribute( "container" ) == "true" ) {
                             this.onSaveableLink = false;

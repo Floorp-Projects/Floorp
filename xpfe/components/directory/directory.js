@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4; -*-
  * 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Bradley Baetz <bbaetz@student.usyd.edu.au>
  */
 
 /*
@@ -56,7 +57,7 @@ const nsISupportsWString    = Components.interfaces.nsISupportsWString;
 function debug(msg)
 {
     // Uncomment to print out debug info.
-    // dump(msg);
+    //dump(msg);
 }
 
 
@@ -167,9 +168,10 @@ function Init()
         	debug("append traiing slash to FTP directory URL\n");
         	baseURI += "/";
         }
-
+    }
+    if (baseURI && (baseURI.indexOf("file://") != 0)) {
         // Note: DON'T add the HTTPIndex datasource into the tree
-        // for file URLs, only do it for FTP URLs; the "rdf:files"
+        // for file URLs, only do it for FTP/Gopher/etc URLs; the "rdf:files"
         // datasources handles file URLs
         tree.database.AddDataSource(HTTPIndex.DataSource);
     }
@@ -209,8 +211,6 @@ function Init()
     tree.setAttribute("ref", baseURI);
 }
 
-
-
 function DoUnload()
 {
 	var tree = document.getElementById("tree");
@@ -232,21 +232,33 @@ function OnClick(event, node)
       return(false);
 
     var tree = document.getElementById("tree");
-    if( tree.selectedItems.length == 1 ) 
-      {
+    if( tree.selectedItems.length == 1 ) {
         var selectedItem = tree.selectedItems[0];
-        var theID = selectedItem.getAttribute("id");
-
-	window._content.location.href = theID;
-
+        var url = selectedItem.getAttribute("URL");
+        
+        window._content.location.href = url;
+        
         // set window title
         var theWindow = window._content.parentWindow;
         if (theWindow)
-            theWindow.title = theID;
-      }
+            theWindow.title = url;
+    }
 }
 
+function OnMouseOver(event, node)
+{
+    if (node.nodeName != "treeitem")
+        return false;
+    var url = node.getAttribute("URL");
+    window._content.status = url;
+    return true;
+}
 
+function OnMouseOut(event, node)
+{
+    window._content.status = "";
+    return true;
+}
 
 function doSort(sortColName)
 {

@@ -22,6 +22,7 @@
 
 #include "nsIGenericFactory.h"
 
+#include "nsGopherHandler.h"
 #include "nsFtpProtocolHandler.h"
 #include "nsFingerHandler.h"
 #include "nsDateTimeHandler.h"
@@ -32,6 +33,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
 // Module implementation for the net library
 
 static nsModuleComponentInfo gNetModuleInfo[] = {
+    //gopher:
+    { "The Gopher Protocol Handler", 
+      NS_GOPHERHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "gopher",
+      nsGopherHandler::Create
+    },
+
     // from netwerk/protocol/ftp:
     { "The FTP Protocol Handler", 
       NS_FTPPROTOCOLHANDLER_CID,

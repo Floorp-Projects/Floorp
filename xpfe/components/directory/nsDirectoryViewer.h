@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -76,6 +76,7 @@ private:
 
 	nsIRDFResource		*kNC_Child;
 	nsIRDFResource		*kNC_loading;
+    nsIRDFResource      *kNC_URL;
 	nsIRDFLiteral		*kTrueLiteral;
 	nsIRDFLiteral		*kFalseLiteral;
 
@@ -100,7 +101,10 @@ protected:
 	nsresult	CommonInit(void);
 	nsresult 	Init(nsIURI* aBaseURL);
 	PRBool		isWellknownContainerURI(nsIRDFResource *r);
-static	void	FireTimer(nsITimer* aTimer, void* aClosure);
+    
+    // Get the destination of the nsIRDFResource
+    char* GetDestination(nsIRDFResource *r);
+    static void FireTimer(nsITimer* aTimer, void* aClosure);
 
 public:
 			    nsHTTPIndex();
