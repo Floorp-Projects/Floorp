@@ -1541,6 +1541,7 @@ void CAttributeToken::AppendSourceTo(nsAString& anOutputString){
   // anOutputString.Append(NS_LITERAL_STRING(";"));
 }
 
+static void AppendNCR(nsString& aString, PRInt32 aNCRValue);
 /*
  *  @param   aScanner -- controller of underlying input source
  *  @param   aFlag -- If NS_IPARSER_FLAG_VIEW_SOURCE do not reduce entities...
@@ -1595,7 +1596,7 @@ nsresult ConsumeAttributeEntity(nsString& aString,
         else {
           PRInt32 err;
           theNCRValue=entity.ToInteger(&err,kAutoDetect);
-          aString.Append(PRUnichar(theNCRValue));
+          AppendNCR(aString, theNCRValue);
         }
       }
     }
@@ -2143,6 +2144,23 @@ static PRUint16 PA_HackTable[] = {
 #define L_SURROGATE(s)  ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) & 0x3ff) + (PRUnichar)0xdc00)
 #define IS_IN_BMP(ucs4)   ((ucs4) < 0x10000)
 
+static void AppendNCR(nsString& aString, PRInt32 aNCRValue)
+{
+#ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
+  /* for some illegal, but popular usage */
+  if ((aNCRValue >= 0x0080) && (aNCRValue <= 0x009f)) {
+    aNCRValue = PA_HackTable[aNCRValue - 0x0080];
+  }
+#endif
+
+  if (IS_IN_BMP(aNCRValue))
+    aString.Append(PRUnichar(aNCRValue));
+  else {
+    aString.Append(PRUnichar(H_SURROGATE(aNCRValue)));
+    aString.Append(PRUnichar(L_SURROGATE(aNCRValue)));
+  }
+}
+
 /*
  *  This method converts this entity into its underlying
  *  unicode equivalent.
@@ -2163,18 +2181,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
       value=mTextValue.ToInteger(&err,kAutoDetect);
 
       if(0==err) {
-  #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
-        /* for some illegal, but popular usage */
-        if ((value >= 0x0080) && (value <= 0x009f)) {
-          value = PA_HackTable[value - 0x0080];
-        }
-  #endif
-        if (IS_IN_BMP(value))
-          aString.Append(PRUnichar(value));
-        else {
-          aString.Append(PRUnichar(H_SURROGATE(value)));
-          aString.Append(PRUnichar(L_SURROGATE(value)));
-        }
+        AppendNCR(aString, value);
       }
     }
     else{
