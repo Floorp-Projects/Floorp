@@ -107,9 +107,24 @@ nsresult ConvertFromUnicode(const nsString aCharset,
       // allocale an output buffer
       *outCString = (char *) PR_Malloc(dstLength + 1);
       if (*outCString != nsnull) {
+        PRInt32 originalLength = unicharLength;
+        PRInt32 estimatedLength = dstLength;
         // convert from unicode
         res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
-        (*outCString)[dstLength] = '\0';
+        // buffer was too small, reallocate buffer and try again
+        if (unicharLength < originalLength) {
+          PR_Free(*outCString);
+          unicharLength = originalLength;
+          dstLength = estimatedLength * 4;  // estimation was not correct
+          *outCString = (char *) PR_Malloc(dstLength + 1);
+          if (*outCString != nsnull) {
+            res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
+            NS_ASSERTION(unicharLength == originalLength, "unicharLength != originalLength");
+          }
+        }
+        if (*outCString != nsnull) {
+          (*outCString)[dstLength] = '\0';
+        }
       }
       else {
         res = NS_ERROR_OUT_OF_MEMORY;
