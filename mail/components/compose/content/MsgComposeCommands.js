@@ -378,6 +378,7 @@ var defaultController =
       //Edit Menu
       case "cmd_delete":
       case "cmd_selectAll":
+      case "cmd_openAttachment":
       case "cmd_account":
 
       //View Menu
@@ -422,9 +423,11 @@ var defaultController =
 
       //Edit Menu
       case "cmd_delete":
-        return MessageHasSelectedAttachments();
+        return MessageGetNumSelectedAttachments();
       case "cmd_selectAll":
         return MessageHasAttachments();
+      case "cmd_openAttachment":
+        return MessageGetNumSelectedAttachments() == 1;
       case "cmd_account":
 
       //View Menu
@@ -478,8 +481,9 @@ var defaultController =
       case "cmd_print"              : DoCommandPrint(); break;
 
       //Edit Menu
-      case "cmd_delete"             : if (MessageHasSelectedAttachments()) RemoveSelectedAttachment();         break;
+      case "cmd_delete"             : if (MessageGetNumSelectedAttachments()) RemoveSelectedAttachment();         break;
       case "cmd_selectAll"          : if (MessageHasAttachments()) SelectAllAttachments();                     break;
+      case "cmd_openAttachment"     : if (MessageGetNumSelectedAttachments() == 1) OpenSelectedAttachment();          break;
       case "cmd_account"            : MsgAccountManager(null); break;
 
       //View Menu
@@ -600,6 +604,7 @@ function updateEditItems() {
   goUpdateCommand("cmd_pasteQuote");
   goUpdateCommand("cmd_delete");
   goUpdateCommand("cmd_selectAll");
+  goUpdateCommand("cmd_openAttachment");
   goUpdateCommand("cmd_find");
   goUpdateCommand("cmd_findNext");
   goUpdateCommand("cmd_findPrev");
@@ -2358,13 +2363,14 @@ function MessageHasAttachments()
   return false;
 }
 
-function MessageHasSelectedAttachments()
+function MessageGetNumSelectedAttachments()
 {
   var bucketList = document.getElementById("attachmentBucket");
 
   if (bucketList)
-    return (MessageHasAttachments() && bucketList.selectedItems && bucketList.selectedItems.length);
-  return false;
+    return bucketList.selectedItems.length;
+  else
+    return 0;
 }
 
 function AttachPage()
@@ -2472,6 +2478,76 @@ function AttachmentElementHasItems()
 
   return element ? element.childNodes.length : 0;
 }  
+
+function OpenSelectedAttachment()
+{
+  var child;
+  var bucket = document.getElementById("attachmentBucket");
+  if (bucket.selectedItems.length == 1) 
+  {
+    var attachmentItem = bucket.getSelectedItem(0);
+
+    // turn the url into a nsIURL object then open it
+
+    var url = gIOService.newURI(attachmentItem.attachment.url, null, null);
+    url = url.QueryInterface( Components.interfaces.nsIURL );
+
+    if (url)
+    {
+      var channel = gIOService.newChannelFromURI(url);
+      if (channel)
+      {
+        var uriLoader = Components.classes["@mozilla.org/uriloader;1"].getService(Components.interfaces.nsIURILoader);
+        uriLoader.openURI(channel, true, new nsAttachmentOpener());
+      } // if channel
+    } // if url
+
+  } // if one attachment selected
+}
+
+function nsAttachmentOpener()
+{
+}
+
+nsAttachmentOpener.prototype =
+{
+  QueryInterface: function(iid)
+  {
+    if (iid.equals(Components.interfaces.nsIURIContentListener) ||
+        iid.equals(Components.interfaces.nsIInterfaceRequestor) ||
+        iid.equals(Components.interfaces.nsISupports))
+        return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  onStartURIOpen: function(uri)
+  {
+    return;
+  },
+
+  doContent: function(contentType, isContentPreferred, request, contentHandler)
+  {
+    return;
+  },
+
+  isPreferred: function(contentType, desiredContentType)
+  {
+    return;
+  },
+
+  canHandleContent: function(contentType, isContentPreferred, desiredContentType)
+  {
+    return false;
+  },
+
+  getInterface: function(iid)
+  {
+    return this.QueryInterface(iid);
+  },
+
+  loadCookie: null,
+  parentContentListener: null
+}
 
 function DetermineHTMLAction(convertible)
 {
@@ -2732,6 +2808,8 @@ function AttachmentBucketClicked(event)
 
   if (event.originalTarget.localName == "listboxbody")
     goDoCommand('cmd_attachFile');
+  else if (event.originalTarget.localName == "listitem" && event.detail == 2)
+    OpenSelectedAttachment();    
 }
 
 // we can drag and drop addresses, files, messages and urls into the compose envelope

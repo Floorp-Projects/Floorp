@@ -126,6 +126,7 @@
   <command id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
   <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')" valueDefault="&deleteCmd.label;" disabled="true"/>
   <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')" disabled="true"/>
+  <command id="cmd_openAttachment" oncommand="goDoCommand('cmd_openAttachment')" disabled="true"/>  
   <command id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
 
   <!-- View Menu -->
@@ -228,6 +229,7 @@
 </popup>
 
 <popup id="msgComposeAttachmentContext" onpopupshowing="updateEditItems();">
+  <menuitem label="&openAttachment.label;" accesskey="&openAttachment.accesskey;" command="cmd_openAttachment"/>
   <menuitem label="&delete.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
   <menuitem label="&selectAll.label;" accesskey="&selectAll.accesskey;" command="cmd_selectAll"/>
   <menuseparator/>

@@ -255,6 +255,9 @@
 <!ENTITY paste.accesskey "P">
 <!ENTITY pasteQuote.label "Paste As Quotation">
 <!ENTITY pasteQuote.accesskey "Q">
+
+<!ENTITY openAttachment.label "Open">
+<!ENTITY openAttachment.accesskey "O">
 <!ENTITY delete.label "Delete">
 <!ENTITY delete.accesskey "D">
 <!ENTITY selectAll.label "Select All">
