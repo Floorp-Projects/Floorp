@@ -115,29 +115,34 @@ nsresult nsSelectionMgr::CopyToClipboard()
 
 nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
 {
-  if (aPastedText)
+  if (!aPastedText)
     return NS_ERROR_NULL_POINTER;
   
   aPastedText->Truncate(0);
   
-  long     scrapOffset;
-  long     theLength = 0;
-  Handle   destHandle;
+  long     scrapOffset = 0;
+  Handle   destHandle = ::NewHandle(0);
+  if (!destHandle) return NS_ERROR_OUT_OF_MEMORY;
+  
   // Just Grab TEXT for now, later we will grab HTML, XIF, etc.
-  OSErr err = GetScrap(destHandle,'TEXT',&scrapOffset);
+  long		scrapLen = ::GetScrap(destHandle, 'TEXT', &scrapOffset);
+  if (scrapLen < 0)  // really an error, no text in scrap
+  	goto done;
   
-  if (err < 0)  // really an error, no text in scrap
-  {
-    return NS_OK;
-  }
-  else          // err is the length
-    theLength = err;
-  
-  char cMemTags = HGetState(destHandle);
-  char* text = &((*destHandle)[scrapOffset]);
+  // IM says that scrapOffset can be garbage if the Translation Manager is
+  // installed, but everyone seems to use it. So sanity check.
+  long		handSize = ::GetHandleSize(destHandle);
+  if (scrapOffset + scrapLen > handSize)
+  	scrapLen = handSize - scrapOffset;
+  	
+  if (scrapLen < 0)  // really an error, no text in scrap
+    goto done;
+
   HLock(destHandle);
-  aPastedText->SetString(text, theLength);
-  HSetState(destHandle, cMemTags);
+  aPastedText->SetString(*destHandle + scrapOffset, scrapLen);
+  
+done:
+  ::DisposeHandle(destHandle);
   return NS_OK;
 }
 
