@@ -107,7 +107,9 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  PRBool IsHorizontal() const { return mHorizontal; }
+  virtual PRBool IsHorizontal() const { return mHorizontal; }
+
+  virtual void ResizeChildTo(nscoord aChildIndex, nscoord aNewSize);
 
   
   NS_IMETHOD_(nsrefcnt) AddRef(void);

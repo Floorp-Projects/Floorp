@@ -34,6 +34,7 @@
 #include "nsScrollFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsIWebShell.h"
+#include "nsIBox.h"
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
@@ -577,7 +578,16 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   // Reflow the child and get its desired size. Let it be as high as it
   // wants
   PRBool              unconstrainedWidth = (NS_UNCONSTRAINEDSIZE == scrollAreaSize.width);
-  nsSize              kidReflowSize(scrollAreaSize.width, NS_UNCONSTRAINEDSIZE);
+
+  nscoord theHeight;
+  nsIBox* box;
+  nsresult result = kidFrame->QueryInterface(kIBoxIID, (void**)&box);
+  if (NS_SUCCEEDED(result))
+     theHeight = scrollAreaSize.height;
+  else 
+     theHeight = NS_INTRINSICSIZE;
+
+  nsSize              kidReflowSize(scrollAreaSize.width, theHeight);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
                                      kidFrame, kidReflowSize);
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize);
@@ -589,7 +599,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
                                     aReflowState.mComputedPadding.left -
                                     aReflowState.mComputedPadding.right;
   }
-  kidReflowState.mComputedHeight = NS_AUTOHEIGHT;
+  kidReflowState.mComputedHeight = theHeight;
 
   ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
               aStatus);

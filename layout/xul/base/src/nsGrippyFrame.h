@@ -44,15 +44,17 @@ public:
   static nsIFrame* GetChildAt(nsIFrame* parent, PRInt32 index);
   static PRInt32 IndexOf(nsIFrame* parent, nsIFrame* child);
   static PRInt32 CountFrames(nsIFrame* aFrame);
-  nsGrippyFrame();
+  nsGrippyFrame();  
 
 protected:
   virtual void MouseClicked(nsIPresContext& aPresContext);
+
+private:
+
   PRBool mCollapsed;
   nsString mCollapsedChildStyle;
   nsCOMPtr<nsIContent> mCollapsedChild;
-
-  
+  PRBool mDidDrag;
 }; // class nsTabFrame
 
 

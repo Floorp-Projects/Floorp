@@ -36,10 +36,16 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsIReflowCommand.h"
-#include "nsSliderFrame.h"
+//#include "nsSliderFrame.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsDocument.h"
+#include "nsHTMLParts.h"
+#include "nsIPresShell.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
+#include "nsHTMLContainerFrame.h"
+
 
 //
 // NS_NewToolbarFrame
@@ -65,7 +71,6 @@ NS_NewGrippyFrame ( nsIFrame** aNewFrame )
 nsGrippyFrame::nsGrippyFrame():mCollapsed(PR_FALSE)
 {
 }
-
 void
 nsGrippyFrame::MouseClicked(nsIPresContext& aPresContext) 
 {
@@ -113,7 +118,20 @@ nsGrippyFrame::MouseClicked(nsIPresContext& aPresContext)
   mCollapsedChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, style, PR_TRUE);
 
   mCollapsed = !mCollapsed;
+
+  /*
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext.GetShell(getter_AddRefs(shell));
+  
+  nsCOMPtr<nsIReflowCommand> reflowCmd;
+  nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                        nsIReflowCommand::StyleChanged);
+  if (NS_SUCCEEDED(rv)) 
+    shell->AppendReflowCommand(reflowCmd);
+    */
 }
+
+
 
 nsIFrame*
 nsGrippyFrame::GetChildBeforeAfter(nsIFrame* start, PRBool before)
