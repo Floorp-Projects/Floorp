@@ -182,6 +182,8 @@ localDefPref("browser.navcenter.docked.selector.visible", true);
 localDefPref("browser.navcenter.docked.tree.width", 250); // Percent of parent window consumed by docked nav center
 localDefPref("browser.navcenter.floating.rect", "20, 20, 400, 600"); // Window dimensions when floating
 
+// Default Capability Preferences: Security-Critical! 
+// Editing these may create a security risk - be sure you know what you're doing
 pref("capability.policy.default.barprop.visible.write", "UniversalBrowserWrite");
 
 pref("capability.policy.default.history.current.read", "UniversalBrowserRead");
@@ -201,8 +203,12 @@ pref("capability.policy.default.location.search.write", "allAccess");
 pref("capability.policy.default.navigator.preference.read", "UniversalPreferencesRead");
 pref("capability.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
 pref("capability.policy.default.windowinternal.location.write", "allAccess");
+
+// window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
 pref("capability.policy.default.windowinternal.opendialog", "noAccess");
 
+pref("capability.policy.mailnews.sites", "mailbox: imap: news: pop: pop3:");
+pref("capability.policy.mailnews.window.name", "noAccess");
 
 localDefPref("ghist.expires.pos",          4);
 localDefPref("ghist.expires.width",        1400);
