@@ -794,7 +794,8 @@ sub PutHeader {
 
 
 sub PutFooter {
-    print PerformSubsts(Param("footerhtml")); 
+    print PerformSubsts(Param("footerhtml"));
+    SyncAnyPendingShadowChanges();
 }
 
 

@@ -96,6 +96,15 @@ sub ReconnectToShadowDatabase {
     }
 }
 
+my $shadowchanges = 0;
+sub SyncAnyPendingShadowChanges {
+    if ($shadowchanges) {
+        system("./syncshadowdb &");
+        $shadowchanges = 0;
+    }
+}
+    
+
 my $dosqllog = (-e "data/sqllog") && (-w "data/sqllog");
 
 sub SqlLog {
@@ -137,7 +146,7 @@ sub SendSQL {
         if ($insertid) {
             SendSQL("SET LAST_INSERT_ID = $insertid");
         }
-        system("./syncshadowdb &");
+        $shadowchanges++;
     }
 }
 
