@@ -68,8 +68,18 @@ const int kReadBufSize = 1024;
 static int sbWinSockInited = FALSE;
 #endif
 
+nsSocket::nsSocket(char *aHost, int aPort, int (*aEventPumpCB)(void)) :
+    mHost(aHost),
+    mEventPumpCB( aEventPumpCB ),
+    mPort(aPort),
+    mFd(-1),
+    mListenFd(-1)
+{
+}
+
 nsSocket::nsSocket(char *aHost, int aPort) :
     mHost(aHost),
+    mEventPumpCB( NULL ),
     mPort(aPort),
     mFd(-1),
     mListenFd(-1)
@@ -253,6 +263,8 @@ nsSocket::Send(unsigned char *aBuf, int *aBufSize)
         if (!FD_ISSET(mFd, &selset))
         {
             timeout += kTimeoutSelectUsecs;
+            if ( mEventPumpCB != NULL )
+                    mEventPumpCB();
             continue;           /* not ready to write; retry */
         }
         else
@@ -312,8 +324,11 @@ nsSocket::Recv(unsigned char *aBuf, int *aBufSize)
         }
 
         // XXX TODO: prevent inf loop returning at kTimeoutThresholdUsecs
-        if (!FD_ISSET(mFd, &selset))
+        if (!FD_ISSET(mFd, &selset)) {
+            if ( mEventPumpCB != NULL )
+                    mEventPumpCB();
             continue;           /* not ready to read; retry */
+        }
 
         bufsize = *aBufSize - bytesrd;
         rv = read(mFd, lbuf, bufsize);

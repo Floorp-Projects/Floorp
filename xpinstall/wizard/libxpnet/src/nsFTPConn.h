@@ -33,6 +33,7 @@ class nsFTPConn
 {
 public:
     nsFTPConn(char *aHost);
+    nsFTPConn(char *aHost, int (*aEventPumpCB)(void));
     ~nsFTPConn();
 
     /* ftp type */
@@ -88,6 +89,7 @@ private:
     int         ParseAddr(char *aBuf, char **aHost, int *aPort);
     int         DataInit(char *aHost, int aPort, nsSocket **aSock); 
 
+    int         (*mEventPumpCB)(void);
     char        *mHost;
     int         mState;
     int         mPassive;
