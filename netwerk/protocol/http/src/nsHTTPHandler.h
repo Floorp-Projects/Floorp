@@ -129,24 +129,24 @@ public:
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
     PRTime GetSessionStartTime() { return mSessionStartTime; }
 
-    void    PrefsChanged(const char* pref = 0);
+    void PrefsChanged(const char* pref = 0);
 
     nsresult FollowRedirects(PRBool bFollow=PR_TRUE);
 
     PRUint32 ReferrerLevel(void) { return mReferrerLevel; } ;
 
-    nsresult    AddPipelinedRequest (nsHTTPPipelinedRequest *pReq);
-    nsresult    GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req);
-    nsresult    ReleasePipelinedRequest (nsHTTPPipelinedRequest *pReq);
+    nsresult AddPipelinedRequest (nsHTTPPipelinedRequest *pReq);
+    nsresult GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req);
+    nsresult ReleasePipelinedRequest (nsHTTPPipelinedRequest *pReq);
 
     enum BrokenServerMatchFlags {
         BAD_SERVERS_MATCH_EXACT,    BAD_SERVERS_MATCH_ALL
     };
 
-    nsresult    GetProxySSLConnectAllowed (PRBool *a_Allowed);
+    nsresult GetProxySSLConnectAllowed (PRBool *a_Allowed);
 
 #ifdef MOZ_NEW_CACHE
-    nsresult    GetCacheSession(nsICacheSession **);
+    nsresult GetCacheSession(nsCacheStoragePolicy, nsICacheSession **);
 #endif
 
 protected:
@@ -163,7 +163,8 @@ protected:
     nsCOMPtr<nsISupportsArray> mIdleTransports;
 
 #ifdef MOZ_NEW_CACHE
-    nsCOMPtr<nsICacheSession> mCacheSession;
+    nsCOMPtr<nsICacheSession> mCacheSession_ANY;
+    nsCOMPtr<nsICacheSession> mCacheSession_MEM;
 #endif
 
     char*               mAcceptLanguages;

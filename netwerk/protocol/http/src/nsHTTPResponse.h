@@ -17,13 +17,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
  */
 
-#ifndef _nsHTTPResponse_h_
-#define _nsHTTPResponse_h_
+#ifndef nsHTTPResponse_h__
+#define nsHTTPResponse_h__
 
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
@@ -86,10 +85,17 @@ public:
  
     nsresult            ParseDateHeader(nsIAtom *aAtom, PRTime *aResultTime, PRBool *aHeaderIsPresent);
 
+#ifdef MOZ_NEW_CACHE
+    nsresult            GetAgeValue(PRUint32 *, PRBool *isAvail);
+    nsresult            GetDateValue(PRTime *, PRBool *isAvail);
+    nsresult            GetLastModifiedValue(PRTime *, PRBool *isAvail);
+    nsresult            GetExpiresValue(PRTime *, PRBool *isAvail);
+#endif
+    nsresult            GetMaxAge(PRUint32 *, PRBool *isAvail);
+
 protected:
     virtual ~nsHTTPResponse();
     nsresult            ParseDateHeader(nsIAtom *aAtom, PRUint32 *aResultTime, PRBool *aHeaderIsPresent);
-    nsresult            GetMaxAge(PRUint32* aMaxAge, PRBool* aMaxAgeIsPresent);
 
     HTTPVersion         mServerVersion;
     nsCString           mStatusString;
@@ -100,4 +106,4 @@ protected:
     nsHTTPHeaderArray   mHeaders;
 };
 
-#endif /* _nsHTTPResponse_h_ */
+#endif /* nsHTTPResponse_h__ */

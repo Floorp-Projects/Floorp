@@ -1038,13 +1038,13 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
        
         if (NS_FAILED(rv)) return rv;
 
-        nsLoadFlags flags = nsIChannel::LOAD_NORMAL;
-        i_Channel->GetLoadAttributes(&flags);
+        nsLoadFlags loadFlags = nsIChannel::LOAD_NORMAL;
+        i_Channel->GetLoadAttributes(&loadFlags);
 
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
         i_Channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
         trans->SetNotificationCallbacks(callbacks,
-                                        (flags & nsIChannel::LOAD_BACKGROUND));
+                                        (loadFlags & nsIChannel::LOAD_BACKGROUND));
 
         nsCOMPtr<nsISocketTransport> socketTrans = do_QueryInterface(trans, &rv);
         if (NS_SUCCEEDED(rv)) {
@@ -1747,30 +1747,54 @@ nsHTTPHandler::GetProxySSLConnectAllowed (PRBool *a_Allowed)
 #ifdef MOZ_NEW_CACHE
 
 nsresult
-nsHTTPHandler::GetCacheSession(nsICacheSession **result)
+nsHTTPHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy, nsICacheSession **result)
 {
-    if (!mCacheSession) {
-        nsresult rv;
+    static PRBool checkedPref = PR_FALSE;
+    static PRBool useCache = PR_TRUE;
+    nsresult rv;
 
+    if (!checkedPref) {
+        // XXX should register a prefs changed callback for this
         nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        // Skip cache if disabled in preferences
-        PRBool useCache = PR_FALSE;
         prefs->GetBoolPref("browser.cache.enable", &useCache);
-        if (!useCache)
-            return NS_ERROR_NOT_AVAILABLE;
 
+        checkedPref = PR_TRUE;
+    }
+
+    // Skip cache if disabled in preferences
+    if (!useCache)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    if (!mCacheSession_ANY) {
         nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         rv = serv->CreateSession("HTTP",
                                  nsICache::STORE_ANYWHERE,
                                  nsICache::STREAM_BASED,
-                                 getter_AddRefs(mCacheSession));
+                                 getter_AddRefs(mCacheSession_ANY));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mCacheSession_ANY->SetDoomEntriesIfExpired(PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = serv->CreateSession("HTTP-memory-only",
+                                 nsICache::STORE_IN_MEMORY,
+                                 nsICache::STREAM_BASED,
+                                 getter_AddRefs(mCacheSession_MEM));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mCacheSession_MEM->SetDoomEntriesIfExpired(PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
-    NS_ADDREF(*result = mCacheSession);
+
+    if (storagePolicy == nsICache::STORE_IN_MEMORY)
+        NS_ADDREF(*result = mCacheSession_MEM);
+    else
+        NS_ADDREF(*result = mCacheSession_ANY);
+
     return NS_OK;
 }
 

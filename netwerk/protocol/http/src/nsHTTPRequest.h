@@ -137,27 +137,6 @@ public:
 protected:
     virtual ~nsHTTPRequest();
 
-    // Use a method string corresponding to the method.
-    const char*         MethodToString(HTTPMethod i_Method=HM_GET)
-    {
-        static const char methods[][TOTAL_NUMBER_OF_METHODS] = 
-        {
-            "DELETE ",
-            "GET ",
-            "HEAD ",
-            "INDEX ",
-            "LINK ",
-            "OPTIONS ",
-            "POST ",
-            "PUT ",
-            "PATCH ",
-            "TRACE ",
-            "UNLINK "
-        };
-
-        return methods[i_Method];
-    }
-
     nsCOMPtr<nsIAtom>           mMethod;
     PRUint32                    mVersion;
     PRUint32                    mKeepAliveTimeout;
