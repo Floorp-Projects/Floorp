@@ -52,9 +52,8 @@ static const nsModuleComponentInfo components[] = {
 PR_STATIC_CALLBACK(nsresult)
 SchemaValidatorModuleCtor(nsIModule* aSelf)
 {
-
   return NS_OK;
 }
 
-NS_IMPL_NSGETMODULE_WITH_CTOR(nsSchemaValidatorModule, components, SchemaValidatorModuleCtor)
+NS_IMPL_NSGETMODULE_WITH_CTOR(schemavalidation, components, SchemaValidatorModuleCtor)
 

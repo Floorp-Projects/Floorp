@@ -42,19 +42,19 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= schema-validation
+MODULE		= schemavalidation
 LIBRARY_NAME	= schemavalidation
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 GRE_MODULE      = 1
-MODULE_NAME	= schema-validation
+MODULE_NAME	= schemavalidation
 REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  xpconnect \
 		  caps \
 		  widget \
-      unicharutil \
+		  unicharutil \
 		  content \
 		  js \
 		  necko \
