@@ -404,12 +404,9 @@ function initHost(obj)
     obj.networks["quakenet"] =
         new CIRCNetwork ("quakenet", [{name: "irc.quakenet.org", port:6667}],
                          obj.eventPump);
-    obj.networks["opennet"] =
-        new CIRCNetwork ("opennet",         
-                         [{name: "irc.openprojects.net", port:6667},
-                          {name: "eu.opirc.nu", port:6667},
-                          {name: "au.opirc.nu", port:6667},
-                          {name: "us.opirc.nu", port:6667}],
+    obj.networks["freenode"] =
+        new CIRCNetwork ("freenode",         
+                         [{name: "irc.freenode.net", port:6667}],
                          obj.eventPump);
 
     obj.primNet = obj.networks["efnet"];
