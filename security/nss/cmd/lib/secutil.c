@@ -47,6 +47,7 @@
 #include "secrng.h"
 #include <sys/stat.h>
 #include <stdarg.h>
+#include <errno.h>
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -56,12 +57,10 @@
 #include "cert.h"
 #include "certt.h"
 #include "certdb.h"
-#include "cdbhdl.h"
 
-#include "secmod.h"
+/* #include "secmod.h" */
 #include "pk11func.h"
 #include "secoid.h"
-#include "blapi.h"	/* for RNG_RNGInit */
 
 static char consoleName[] =  {
 #ifdef XP_UNIX
@@ -124,27 +123,6 @@ secu_ClearPassword(char *p)
     }
 }
 
-static SECItem *
-secu_GetZeroLengthPassword(SECKEYKeyDBHandle *handle)
-{
-    SECItem *pwitem;
-    SECStatus rv;
-
-    /* hash the empty string as a password */
-    pwitem = SECKEY_DeriveKeyDBPassword(handle, "");
-    if (pwitem == NULL) {
-	return NULL;
-    }
-
-    /* check to see if this is the right password */
-    rv = SECKEY_CheckKeyDBPassword(handle, pwitem);
-    if (rv == SECFailure) {
-	return NULL;
-    }
-
-    return pwitem;
-}
-
 char *
 SECU_GetPasswordString(void *arg, char *prompt)
 {
@@ -185,48 +163,6 @@ SECU_GetPasswordString(void *arg, char *prompt)
 #endif
 }
 
-SECItem *
-SECU_GetPassword(void *arg, SECKEYKeyDBHandle *handle)
-{
-    char *p = NULL;
-    SECStatus rv;
-    SECItem *pwitem;
-
-    /* Check to see if zero length password or not */
-    pwitem = secu_GetZeroLengthPassword(handle);
-    if (pwitem) {
-	return pwitem;
-    }
-
-    p = SECU_GetPasswordString(arg,"Password: ");
-
-    /* Check to see if zero length password or not */
-    pwitem = secu_GetZeroLengthPassword(handle);
-    if (pwitem) {
-	return pwitem;
-    }
-    /* hash the password */
-    pwitem = SECKEY_DeriveKeyDBPassword(handle, p);
-    
-    /* clear out the password strings */
-    secu_ClearPassword(p);
-    
-
-    if ( pwitem == NULL ) {
-	fprintf(stderr, "Error hashing password\n");
-	return NULL;
-    }
-
-    /* confirm the password */
-    rv = SECKEY_CheckKeyDBPassword(handle, pwitem);
-    if (rv) {
-	fprintf(stderr, "Sorry\n");
-	SECITEM_ZfreeItem(pwitem, PR_TRUE);
-	return NULL;
-    }
-    
-    return pwitem;
-}
 
 /*
  *  p a s s w o r d _ h a r d c o d e 
@@ -440,337 +376,6 @@ struct matchobj {
     PRBool found;
 };
 
-
-static SECStatus
-secu_match_nickname(DBT *k, DBT *d, void *pdata)
-{
-    struct matchobj *match;
-    unsigned char *buf;
-    char *nname;
-    int nnlen;
-
-    match = (struct matchobj *)pdata;
-    buf = (unsigned char *)d->data;
-
-    if (match->found == PR_TRUE)
-	return SECSuccess;
-
-    nnlen = buf[2];
-    nname = (char *)(buf + 3 + buf[1]);
-    if (PORT_Strncmp(match->nname, nname, nnlen) == 0) {
-	match->index.len = k->size;
-	match->index.data = PORT_ZAlloc(k->size + 1);
-	PORT_Memcpy(match->index.data, k->data, k->size);
-	match->found = PR_TRUE;
-    }
-    return SECSuccess;
-}
-
-SECItem *
-SECU_GetKeyIDFromNickname(char *name)
-{
-    struct matchobj match;
-    SECKEYKeyDBHandle *handle;
-    SECItem *keyid;
-
-    match.nname = name;
-    match.found = PR_FALSE;
-
-    handle = SECKEY_GetDefaultKeyDB();
-
-    SECKEY_TraverseKeys(handle, secu_match_nickname, &match);
-
-    if (match.found == PR_FALSE)
-	return NULL;
-
-    keyid = SECITEM_DupItem(&match.index);
-    return keyid;
-}
-
-PRBool
-SECU_CheckKeyNameExists(SECKEYKeyDBHandle *handle, char *nickname)
-{
-    SECItem *keyid;
-
-    keyid = SECU_GetKeyIDFromNickname(nickname);
-    if(keyid == NULL)
-	return PR_FALSE;
-    SECITEM_FreeItem(keyid, PR_TRUE);
-    return PR_TRUE;
-}
-
-SECKEYPrivateKey *
-SECU_FindPrivateKeyFromNickname(char *name)
-{
-    SECItem *         keyid;
-    SECKEYPrivateKey *key;
-    PK11SlotInfo *    slot = PK11_GetInternalKeySlot();
-    SECStatus         rv;
-
-    keyid = SECU_GetKeyIDFromNickname(name);
-    if (keyid == NULL)
-	return NULL;
-
-    PK11_SetPasswordFunc(SECU_GetModulePassword);
-    if(PK11_NeedLogin(slot) && !PK11_IsLoggedIn(slot,NULL)) {
-	rv = PK11_DoPassword(slot, PR_TRUE, NULL);
-	if (rv != SECSuccess)
-	    return NULL;
-    }
-
-    key = PK11_FindKeyByKeyID(slot, keyid, NULL);
-    SECITEM_FreeItem(keyid, PR_TRUE);
-    return key;
-}
-
-SECKEYLowPrivateKey *
-SECU_FindLowPrivateKeyFromNickname(char *name)
-{
-    SECItem *keyID;
-    SECKEYLowPrivateKey *key;
-
-    keyID = SECU_GetKeyIDFromNickname(name);
-    if (keyID == NULL)
-	return NULL;
-
-    key = SECKEY_FindKeyByPublicKey(SECKEY_GetDefaultKeyDB(), keyID,
-				    SECU_GetPassword, NULL);
-    SECITEM_FreeItem(keyID, PR_TRUE);
-    return key;
-}
-
-SECStatus
-SECU_DeleteKeyByName(SECKEYKeyDBHandle *handle, char *nickname)
-{
-    SECItem *keyID = NULL;
-    SECStatus rv;
-
-    keyID = SECU_GetKeyIDFromNickname(nickname);
-    if (keyID == NULL)
-	return SECFailure;
-
-    rv = SECKEY_DeleteKey(handle, keyID);
-    SECITEM_FreeItem(keyID, PR_TRUE);
-
-    return rv;
-}
-
-SECKEYLowPrivateKey *
-SECU_GetPrivateKey(SECKEYKeyDBHandle *handle, char *nickname)
-{
-    return SECU_FindLowPrivateKeyFromNickname(nickname);
-}
-
-SECStatus
-SECU_ChangeKeyDBPassword(SECKEYKeyDBHandle *handle)
-{
-    static SECItem *newpwitem, *oldpwitem;
-    char *p0 = 0;
-    char *p1 = 0;
-    int isTTY;
-    SECStatus rv;
-    int failed = 0;
-    FILE *input, *output;
-    PRBool newdb = PR_FALSE;
-
-    if (SECKEY_HasKeyDBPassword(handle) == SECFailure) {
-	fprintf(stderr, "Database not initialized.  Setting password.\n");
-	newdb = PR_TRUE;
-    }
-    
-    /* check for password file */
-    /*
-    if (newdb && pwFile != NULL) {
-	p0 = SECU_FilePasswd(NULL, 0, NULL);
-	goto pwfinish;
-    }
-    */
-
-    /* check if old password is empty string */
-    oldpwitem = secu_GetZeroLengthPassword(handle);
-
-    /* open terminal */
-#ifdef _WINDOWS
-    input = stdin;
-#else
-    input = fopen(consoleName, "r");
-    if (input == NULL) {
-	fprintf(stderr, "Error opening input terminal\n");
-	return SECFailure;
-    }
-#endif
-
-    output = fopen(consoleName, "w");
-    if (output == NULL) {
-	fprintf(stderr, "Error opening output terminal\n");
-	return SECFailure;
-    }
-
-    /* if old password is not zero length, ask for new password */
-    if ((newdb == PR_FALSE) && (oldpwitem == NULL)) {
-	p0 = SEC_GetPassword(input, output, "Old Password: ",
-			   SEC_BlindCheckPassword);
-
-	oldpwitem = SECKEY_DeriveKeyDBPassword(handle, p0);
-	secu_ClearPassword(p0);
-
-	if (oldpwitem == NULL) {
-	    fprintf(stderr, "Error hashing password\n");
-	    fclose(input);
-	    fclose(output);
-	    return SECFailure;
-	}
-
-	rv = SECKEY_CheckKeyDBPassword(handle, oldpwitem);
-	if (rv) {
-	    fprintf(stderr, "Sorry\n");
-	    SECITEM_ZfreeItem(oldpwitem, PR_TRUE);
-	    fclose(input);
-	    fclose(output);
-	    return SECFailure;
-	}
-    }
-
-    isTTY = isatty(0);
-    for (;;) {
-	p0 = SEC_GetPassword(input, output, "Enter new password: ",
-				 SEC_BlindCheckPassword);
-	if (isTTY) {
-	    p1 = SEC_GetPassword(input, output, "Re-enter password: ",
-				 SEC_BlindCheckPassword);
-	}
-	
-	if (!isTTY || ( PORT_Strcmp(p0, p1) == 0) ) {
-	    break;
-	}
-	fprintf(stderr, "Passwords do not match. Try again.\n");
-    }
-    
-    newpwitem = SECKEY_DeriveKeyDBPassword(handle, p0);
-
-    /*
-    fclose(input);
-    fclose(output);
-    */
-    
-  pwfinish:
-    
-    secu_ClearPassword(p0);
-    secu_ClearPassword(p1);
-
-    if (newpwitem == NULL) {
-	fprintf(stderr, "Error hashing new password\n");
-	SECITEM_ZfreeItem(oldpwitem, PR_TRUE);
-	fclose(input);
-	fclose(output);
-	return SECFailure;
-    }
-
-    if (newdb == PR_TRUE) {
-	rv = SECKEY_SetKeyDBPassword(handle, newpwitem);
-	if (rv) {
-	    fprintf(stderr, "Error setting database password\n");
-	    failed = 1;
-	}
-    } else {
-	rv = SECKEY_ChangeKeyDBPassword(handle, oldpwitem, newpwitem);
-	if (rv) {
-	    fprintf(stderr, "Error changing database password\n");
-	    failed = 1;
-	}
-    }
-
-    SECITEM_ZfreeItem(newpwitem, PR_TRUE);
-    SECITEM_ZfreeItem(oldpwitem, PR_TRUE);
-
-    if (input != stdin) fclose(input);
-    fclose(output);
-
-    if (failed) {
-	return SECFailure;
-    }
-
-    return SECSuccess;
-}
-
-#ifdef notdef
-static SECItem *
-secu_GetDonglePassword(void *arg, SECKEYKeyDBHandle *handle)
-{
-    SECItem *pwitem;
-    char *p = NULL;
-    char *pathname;
-    SECStatus rv;
-    int fd;
-    
-    pathname = (char *)arg;
-    
-    fd = open((char *)pathname, O_RDONLY);
-    if (!fd) {
-        fprintf(stderr, "Unable to open dongle file \"%s\".\n", (char *)arg);
-    }
-    
-    p = SEC_ReadDongleFile(fd);
-    if (!p) {
-        fprintf(stderr, "Unable to obtain dongle password\n");
-    }
-    
-    /* check if we need to update the key database */
-    if ( handle->version < PRIVATE_KEY_DB_FILE_VERSION ) {
-	SECKEY_UpdateKeyDB(handle, p);
-    }
-
-    /* hash the password */
-    pwitem = SECKEY_DeriveKeyDBPassword(handle, p);
-
-    /* clear out the password strings */
-    secu_ClearPassword(p);
-
-    if (pwitem == NULL) {
-	fprintf(stderr, "Error hashing password\n");
-	return NULL;
-    }
-
-    /* confirm the password */
-    rv = SECKEY_CheckKeyDBPassword(handle, pwitem);
-    if (rv) {
-	fprintf(stderr, "Sorry, dongle password is invalid\n");
-	SECITEM_ZfreeItem(pwitem, PR_TRUE);
-	return NULL;
-    }
-
-    return pwitem;
-}
-
-SECKEYPrivateKey *
-SECU_GetPrivateDongleKey(SECKEYKeyDBHandle *handle, char *nickname, 
-			 char *pathname)
-{
-    SECKEYPrivateKey *key;
-    char *fullpath;
-    int rv;
-    
-    fullpath = SECU_AppendFilenameToDir(pathname, "dongle");
-    
-    /* If dongle file doesn't exist, prompt for password */
-    rv = access(fullpath, R_OK);
-    if (rv < 0) {
-	return SECU_GetPrivateKey(handle, nickname);
-    }
-    
-    /* try dongle file */
-    key = SECKEY_FindKeyByName(handle, nickname, secu_GetDonglePassword,
-			    fullpath);
-
-    /* if no key, maybe dongle is broken, so prompt for password */
-    if (key == NULL) {
-	key = SECU_GetPrivateKey(handle, nickname);
-    }
-
-    return key;
-}
-#endif
-
 char *
 SECU_DefaultSSLDir(void)
 {
@@ -829,116 +434,6 @@ SECU_ConfigDirectory(const char* base)
 
     initted = PR_TRUE;
     return buf;
-}
-
-char *
-SECU_CertDBNameCallback(void *arg, int dbVersion)
-{
-    char *fnarg;
-    char *dir;
-    char *filename;
-    
-    dir = SECU_ConfigDirectory(NULL);
-    
-    switch ( dbVersion ) {
-      case 7:
-	fnarg = "7";
-	break;
-      case 6:
-	fnarg = "6";
-	break;
-      case 5:
-	fnarg = "5";
-	break;
-      case 4:
-      default:
-	fnarg = "";
-	break;
-    }
-    filename = PR_smprintf("%s/cert%s.db", dir, fnarg);
-    return(filename);
-}
-
-char *
-SECU_KeyDBNameCallback(void *arg, int dbVersion)
-{
-    char *fnarg;
-    char *dir;
-    char *filename;
-    struct stat fd;
-    
-    dir = SECU_ConfigDirectory(NULL);
-
-    if (stat(dir, &fd) != 0) {
-	fprintf(stderr, "No directory \"%s\" exists.\n", dir);
-	return NULL;
-    }
-    
-    
-    switch ( dbVersion ) {
-      case 3:
-	fnarg = "3";
-	break;
-      case 2:
-      default:
-	fnarg = "";
-	break;
-    }
-    filename = PR_smprintf("%s/key%s.db", dir, fnarg);
-    return(filename);
-}
-
-char *
-SECU_SECModDBName(void)
-{
-    char *dir;
-    char *filename;
-    
-    dir = SECU_ConfigDirectory(NULL);
-    
-    filename = PR_smprintf("%s/secmod.db", dir);
-    return(filename);
-}
-
-SECKEYKeyDBHandle *
-SECU_OpenKeyDB(PRBool readOnly)
-{
-    SECKEYKeyDBHandle *handle;
-    
-    handle = SECKEY_OpenKeyDB(readOnly, SECU_KeyDBNameCallback, NULL);
-    SECKEY_SetDefaultKeyDB(handle);
-    
-    return(handle);
-}
-
-CERTCertDBHandle *
-SECU_OpenCertDB(PRBool readOnly)
-  /* NOTE: This routine has been modified to allow the libsec/pcertdb.c
-   * routines to automatically find and convert the old cert database
-   * into the new v3.0 format (cert db version 5).
-   */
-{
-    CERTCertDBHandle *certHandle;
-    SECStatus rv;
-
-    /* Allocate a handle to fill with CERT_OpenCertDB below */
-    certHandle = (CERTCertDBHandle *)PORT_ZAlloc(sizeof(CERTCertDBHandle));
-    if (!certHandle) {
-	return NULL;
-    }
-
-    rv = CERT_OpenCertDB(certHandle, readOnly, SECU_CertDBNameCallback, NULL);
-
-    if (rv) {
-	if (certHandle) 
-	    PORT_Free (certHandle);  
-	    /* we don't want to leave anything behind... */
-	return NULL;
-    } else {
-	CERT_SetDefaultCertDB(certHandle);
-    }
-
-    return certHandle;
 }
 
 /*Turn off SSL for now */
@@ -1116,7 +611,7 @@ SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii)
 
 	/* Read in ascii data */
 	rv = SECU_FileToItem(&filedata, inFile);
-	asc = filedata.data;
+	asc = (char *)filedata.data;
 	if (!asc) {
 	    fprintf(stderr, "unable to read data from input file\n");
 	    return SECFailure;
@@ -1926,106 +1421,6 @@ SECU_PrintName(FILE *out, CERTName *name, char *msg, int level)
     secu_Newline(out);
 }
 
-static int keyindex;
-
-static SECStatus
-secu_PrintKeyNickname(DBT *k, DBT *d, void *data)
-{
-    FILE *out;
-    char *name;
-    unsigned char *buf;
-
-    buf = (unsigned char *)d->data;
-    out = (FILE *)data;
-
-    name = (char *)PORT_Alloc(buf[2]);
-    if (name == NULL) {
-	return(SECFailure);
-    }
-
-    PORT_Memcpy(name, (buf + 3 + buf[1]), buf[2]);
-
-    /* print everything but password-check entry */
-    if (PORT_Strcmp(name, "password-check") != 0) {
-	keyindex++;
-	fprintf(out, "<%d> %s\n", keyindex, name);
-    }
-    PORT_Free(name);
-
-    return (SECSuccess);
-}
-
-int
-SECU_PrintKeyNames(SECKEYKeyDBHandle *handle, FILE *out)
-{
-    int rv;
-
-    SECU_Indent(out, 0);
-    fprintf(out, "Version %d database\n\n", SECKEY_GetKeyDBVersion(handle));
-    fprintf(out, "<Key Index>  Key Name\n--------\n");
-    keyindex = 0;
-    rv = SECKEY_TraverseKeys(handle, secu_PrintKeyNickname, out);
-    if (rv) {
-	return -1;
-    }
-
-    return 0;
-}
-
-#if 0
-struct indexedkey
-{
-    int index;
-    SECKEY_LowPrivateKey *key;
-};
-
-static SECStatus
-secu_GetKeyIndex(DBT *k, DBT *d, void *data)
-{
-    char *name;
-    unsigned char *buf;
-    struct indexedkey *idkey = (struct indexedkey*)data;
-    /*SECKEYLowPrivateKey *key = *(SECKEYLowPrivateKey**)data;*/
-
-    buf = (unsigned char *)d->data;
-
-    name = (char *)PORT_Alloc(buf[2]);
-    if (name == NULL) {
-	return(SECFailure);
-    }
-
-    PORT_Memcpy(name, (buf + 3 + buf[1]), buf[2]);
-
-    /* print everything but password-check entry */
-    if (PORT_Strcmp(name, "password-check") != 0) {
-	keyindex++;
-	if (keyindex == idkey->index)
-	    idkey->key = SECKEY_DecryptKey(k,idkey->slot->password,
-	                                  SECKEY_GetDefaultKeyDB());
-    }
-    PORT_Free(name);
-
-    return (SECSuccess);
-}
-
-SECKEYLowPrivateKey*
-secu_GetPrivKeyFromIndex(int index, PK11Slot slot);
-{
-    /*SECKEYLowPrivateKey* key;*/
-    struct indexedkey idkey = { index, NULL };
-
-    keyindex = 0;
-    rv = SECKEY_TraverseKeys(SECKEY_GetDefaultKeyDB(), 
-                             secu_GetKeyIndex, &idkey);
-
-    if (rv) {
-	return NULL;
-    }
-    return key;
-}
-#endif
-
-
 void
 printflags(char *trusts, unsigned int flags)
 {
@@ -2098,149 +1493,6 @@ SECU_PrintCertNickname(CERTCertificate *cert, void *data)
     }
 
     return (SECSuccess);
-}
-
-typedef struct {
-    char *		name;
-    CERTCertTrust	trust;
-} certNameAndTrustEntry;
-
-typedef struct {
-    int numCerts;
-    certNameAndTrustEntry *nameAndTrustEntries;
-} certNameAndTrustList;
-
-SECStatus
-sec_CountCerts(CERTCertificate *cert, SECItem *unknown, void *arg)
-{
-    (*(int*)arg)++;
-    return SECSuccess;
-}
-
-SECStatus
-sec_CollectCertNamesAndTrust(CERTCertificate *cert, SECItem *unknown, void *arg)
-{
-    certNameAndTrustList *pCertNames = (certNameAndTrustList*)arg;
-    char *name;
-    int i;
-
-    i = pCertNames->numCerts;
-    name = cert->dbEntry->nickname ? cert->dbEntry->nickname : cert->emailAddr;
-
-    if (name)
-	pCertNames->nameAndTrustEntries[i].name = PORT_Strdup(name);
-    else
-	pCertNames->nameAndTrustEntries[i].name = PORT_Strdup("<unknown>");
-
-    PORT_Memcpy(&pCertNames->nameAndTrustEntries[i].trust, cert->trust, sizeof(*cert->trust));
-
-    pCertNames->numCerts++;
-
-    return SECSuccess;
-}
-
-static int
-sec_name_and_trust_compare_by_name(const void *p1, const void *p2)
-{
-    certNameAndTrustEntry *e1 = (certNameAndTrustEntry *)p1;
-    certNameAndTrustEntry *e2 = (certNameAndTrustEntry *)p2;
-    return PORT_Strcmp(e1->name, e2->name);
-}
-
-static int
-sec_combine_trust_flags(CERTCertTrust *trust)
-{
-    if (trust == NULL)
-	return NULL;
-    return trust->sslFlags | trust->emailFlags | trust->objectSigningFlags;
-}
-
-static int
-sec_name_and_trust_compare_by_trust(const void *p1, const void *p2)
-{
-    certNameAndTrustEntry *e1 = (certNameAndTrustEntry *)p1;
-    certNameAndTrustEntry *e2 = (certNameAndTrustEntry *)p2;
-    int e1_is_ca, e2_is_ca;
-    int e1_is_user, e2_is_user;
-    int rv;
-
-    e1_is_ca = (sec_combine_trust_flags(&e1->trust) & CERTDB_VALID_CA) != 0;
-    e2_is_ca = (sec_combine_trust_flags(&e2->trust) & CERTDB_VALID_CA) != 0;
-    e1_is_user = (sec_combine_trust_flags(&e1->trust) & CERTDB_USER) != 0;
-    e2_is_user = (sec_combine_trust_flags(&e2->trust) & CERTDB_USER) != 0;
-
-    /* first, sort by user status, then CA status, */
-    /*  then by actual comparison of CA flags, then by name */
-    if ((rv = (e2_is_user - e1_is_user)) == 0 && (rv = (e1_is_ca - e2_is_ca)) == 0)
-	if (e1_is_ca || (rv = memcmp(&e1->trust, &e2->trust, sizeof(CERTCertTrust))) == 0)
-	    return PORT_Strcmp(e1->name, e2->name);
-	else
-	    return rv;
-    else
-	return rv;
-}
-
-SECStatus
-SECU_PrintCertificateNames(CERTCertDBHandle *handle, PRFileDesc *out, 
-                           PRBool sortByName, PRBool sortByTrust)
-{
-    certNameAndTrustList certNames = { 0, NULL };
-    int numCerts, i;
-    SECStatus rv;
-    int (*comparefn)(const void *, const void *);
-    char trusts[30];
-
-    numCerts = 0;
-
-    rv = SEC_TraversePermCerts(handle, sec_CountCerts, &numCerts);
-    if (rv != SECSuccess)
-	return SECFailure;
-
-    certNames.nameAndTrustEntries = 
-		(certNameAndTrustEntry *)PORT_Alloc(numCerts * sizeof(certNameAndTrustEntry));
-    if (certNames.nameAndTrustEntries == NULL)
-	return SECFailure;
-
-    rv = SEC_TraversePermCerts(handle, sec_CollectCertNamesAndTrust, &certNames);
-    if (rv != SECSuccess)
-	return SECFailure;
-
-    if (sortByName)
-	comparefn = sec_name_and_trust_compare_by_name;
-    else if (sortByTrust)
-	comparefn = sec_name_and_trust_compare_by_trust;
-    else
-	comparefn = NULL;
-
-    if (comparefn)
-	qsort(certNames.nameAndTrustEntries, certNames.numCerts, 
-			    sizeof(certNameAndTrustEntry), comparefn);
-
-    PR_fprintf(out, "\n%-60s %-5s\n\n", "Certificate Name", "Trust Attributes");
-    for (i = 0; i < certNames.numCerts; i++) {
-	PORT_Memset (trusts, 0, sizeof(trusts));
-	printflags(trusts, certNames.nameAndTrustEntries[i].trust.sslFlags);
-	PORT_Strcat(trusts, ",");
-	printflags(trusts, certNames.nameAndTrustEntries[i].trust.emailFlags);
-	PORT_Strcat(trusts, ",");
-	printflags(trusts, certNames.nameAndTrustEntries[i].trust.objectSigningFlags);
-	PR_fprintf(out, "%-60s %-5s\n", 
-	           certNames.nameAndTrustEntries[i].name, trusts);
-    }
-    PR_fprintf(out, "\n");
-    PR_fprintf(out, "p    Valid peer\n");
-    PR_fprintf(out, "P    Trusted peer (implies p)\n");
-    PR_fprintf(out, "c    Valid CA\n");
-    PR_fprintf(out, "T    Trusted CA to issue client certs (implies c)\n");
-    PR_fprintf(out, "C    Trusted CA to certs(only server certs for ssl) (implies c)\n");
-    PR_fprintf(out, "u    User cert\n");
-    PR_fprintf(out, "w    Send warning\n");
-
-    for (i = 0; i < certNames.numCerts; i++)
-	PORT_Free(certNames.nameAndTrustEntries[i].name);
-    PORT_Free(certNames.nameAndTrustEntries);
-
-    return rv;
 }
 
 int
@@ -2385,12 +1637,12 @@ SECU_PrintPrivateKey(FILE *out, SECItem *der, char *m, int level)
 int
 SECU_PrintFingerprints(FILE *out, SECItem *derCert, char *m, int level)
 {
-    char fingerprint[20];
+    unsigned char fingerprint[20];
     char *fpStr = NULL;
     SECItem fpItem;
     /* print MD5 fingerprint */
     memset(fingerprint, 0, sizeof fingerprint);
-    MD5_HashBuf(fingerprint, derCert->data, derCert->len);
+    PK11_HashBuf(SEC_OID_MD5,fingerprint, derCert->data, derCert->len);
     fpItem.data = fingerprint;
     fpItem.len = MD5_LENGTH;
     fpStr = CERT_Hexify(&fpItem, 1);
@@ -2400,7 +1652,7 @@ SECU_PrintFingerprints(FILE *out, SECItem *derCert, char *m, int level)
     fpStr = NULL;
     /* print SHA1 fingerprint */
     memset(fingerprint, 0, sizeof fingerprint);
-    SHA1_HashBuf(fingerprint, derCert->data, derCert->len);
+    PK11_HashBuf(SEC_OID_SHA1,fingerprint, derCert->data, derCert->len);
     fpItem.data = fingerprint;
     fpItem.len = SHA1_LENGTH;
     fpStr = CERT_Hexify(&fpItem, 1);
@@ -2982,97 +2234,6 @@ int SECU_PrintSignedData(FILE *out, SECItem *der, char *m,
 
 }
 
-SECStatus
-SECU_PKCS11Init(PRBool readOnly) {
-    static PRBool      isInit = PR_FALSE;
-    SECKEYKeyDBHandle *kdb_handle;
-    char *             secmodule;
-    int                rv;
-
-    if (isInit) 
-    	return SECSuccess;
-
-    isInit = PR_TRUE;
-
-    /*
-     * Initialize the private key database.
-     */
-    /* in the "ideal world"(tm), the Key database would be initialized in
-     * the Software PKCS#11 module. Unfortunately there's not enough of
-     * an interface to pass all the info to the PCKS#11 module, so go ahead
-     * and initialize here...
-     */
-    RNG_RNGInit(); /* Guess what SECKEY_OpenKeyDB calls if there is
-		    * no keyDB? You got it Get Random Data... just one more
-		    * reason to want to move this call into pkcs11.c
-		    */
-    RNG_SystemInfoForRNG();
-
-    kdb_handle = SECU_OpenKeyDB(readOnly);
-    
-    if (kdb_handle != NULL) {
-	SECKEY_SetDefaultKeyDB(kdb_handle);
-    }
-
-    /*
-     * set our default password function
-     */
-    PK11_SetPasswordFunc(SECU_GetModulePassword);
-    /*
-     * OK, now we initialize the PKCS11 subsystems
-     */
-    secmodule = SECU_SECModDBName();
-    SECMOD_init(secmodule);
-    return SECSuccess; /*  check the return codes?? */
-}
-
-SECKEYLowPublicKey *SECU_ConvHighToLow(SECKEYPublicKey *pubk) 
-{
-    SECKEYLowPublicKey *copyk;
-    PRArenaPool *arena;
-    
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (arena == NULL) {
-	PORT_SetError (SEC_ERROR_NO_MEMORY);
-	return NULL;
-    }
-
-    copyk = (SECKEYLowPublicKey *) 
-			PORT_ArenaZAlloc (arena, sizeof (SECKEYLowPublicKey));
-    if (copyk != NULL) {
-	SECStatus rv = SECSuccess;
-
-	copyk->arena = arena;
-	copyk->keyType = pubk->keyType;
-	switch (pubk->keyType) {
-	  case rsaKey:
-	    rv = SECITEM_CopyItem(arena, &copyk->u.rsa.modulus,
-				  &pubk->u.rsa.modulus);
-	    if (rv == SECSuccess) {
-		rv = SECITEM_CopyItem (arena, &copyk->u.rsa.publicExponent,
-				       &pubk->u.rsa.publicExponent);
-		if (rv == SECSuccess)
-		    return copyk;
-	    }
-	    break;
-	  case nullKey:
-	    return copyk;
-	  default:
-	    rv = SECFailure;
-	    break;
-	}
-	if (rv == SECSuccess)
-	    return copyk;
-
-	SECKEY_LowDestroyPublicKey (copyk);
-    } else {
-	PORT_SetError (SEC_ERROR_NO_MEMORY);
-    }
-
-    PORT_FreeArena (arena, PR_FALSE);
-    return NULL;
-}
-
 
 #ifdef AIX
 int _OS_SELECT (int nfds, void *readfds, void *writefds,
@@ -3135,7 +2296,7 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName, secuCommand *cmd)
 	    if (cmd->commands[i].flag == optstate->option) {
 		cmd->commands[i].activated = PR_TRUE;
 		if (optstate->value) {
-		    cmd->commands[i].arg = optstate->value;
+		    cmd->commands[i].arg = (char *)optstate->value;
 		}
 		found = PR_TRUE;
 		break;
@@ -3149,7 +2310,7 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName, secuCommand *cmd)
 	    if (cmd->options[i].flag == optstate->option) {
 		cmd->options[i].activated = PR_TRUE;
 		if (optstate->value) {
-		    cmd->options[i].arg = optstate->value;
+		    cmd->options[i].arg = (char *)optstate->value;
 		}
 		found = PR_TRUE;
 		break;
