@@ -1627,6 +1627,9 @@ nsBookmarksService::Init()
             nsICache::STREAM_BASED, getter_AddRefs(mCacheSession));
     }
 
+    mTransactionManager = do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     /* create a URL for the string resource file */
     nsCOMPtr<nsIURI>    uri;
     if (NS_SUCCEEDED(rv = mNetService->NewURI(bookmark_properties, nsnull, nsnull,
@@ -3394,6 +3397,16 @@ nsBookmarksService::HandleSystemBookmarks(nsIRDFNode* aNode)
 #endif
 }
 #endif
+
+NS_IMETHODIMP
+nsBookmarksService::GetTransactionManager(nsITransactionManager** aTransactionManager)
+{
+    NS_ENSURE_ARG_POINTER(aTransactionManager);
+
+    NS_ADDREF(*aTransactionManager = mTransactionManager);
+
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDataSource

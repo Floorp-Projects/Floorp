@@ -63,8 +63,6 @@ function Startup()
 
   windowNode.setAttribute("title", titleString);
 
-  gBMtxmgr = BookmarksUtils.getTransactionManager();
- 
   document.getElementById("CommandUpdate_Bookmarks").setAttribute("commandupdater","true");
   bookmarksView.tree.focus();
 

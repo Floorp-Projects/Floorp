@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  appshell \
 		  browser \
+		  txmgr \
 		  $(NULL)
 
 ifndef MOZ_PHOENIX

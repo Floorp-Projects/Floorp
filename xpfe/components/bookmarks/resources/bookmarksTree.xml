@@ -908,11 +908,10 @@
     <implementation>
       <constructor>
         // Adding the transaction listener
-        gBMtxmgr = BookmarksUtils.getTransactionManager();
-        gBMtxmgr.AddListener(this.bookmarkTreeTransactionListener)
+        BMSVC.transactionManager.AddListener(this.bookmarkTreeTransactionListener);
       </constructor>  
       <destructor>
-        gBMtxmgr.RemoveListener(this.bookmarkTreeTransactionListener)
+        BMSVC.transactionManager.RemoveListener(this.bookmarkTreeTransactionListener);
       </destructor>  
       <field name="clickCount">2</field>
     </implementation>
@@ -969,9 +968,6 @@
       </tree>
     </xbl:content>
     <implementation>
-      <constructor>
-        gBMtxmgr = BookmarksUtils.getTransactionManager();
-      </constructor>  
       <field name="clickCount">1</field>
     </implementation>
   </binding>
@@ -1002,9 +998,6 @@
       </tree>
     </xbl:content>
     <implementation>
-      <constructor>
-        gBMtxmgr = BookmarksUtils.getTransactionManager();
-      </constructor>  
       <field name="clickCount">2</field>
     </implementation>
   </binding>
