@@ -203,12 +203,16 @@ nsBlockFrame::IsSplittable(SplittableType& aIsSplittable) const
 }
 
 NS_METHOD
-nsBlockFrame::CreateContinuingFrame(nsIPresContext* aCX,
-                                    nsIFrame* aParent,
-                                    nsIFrame*& aContinuingFrame)
+nsBlockFrame::CreateContinuingFrame(nsIPresContext*  aCX,
+                                    nsIFrame*        aParent,
+                                    nsIStyleContext* aStyleContext,
+                                    nsIFrame*&       aContinuingFrame)
 {
   nsBlockFrame* cf = new nsBlockFrame(mContent, aParent);
-  PrepareContinuingFrame(aCX, aParent, cf);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  PrepareContinuingFrame(aCX, aParent, aStyleContext, cf);
   aContinuingFrame = cf;
   return NS_OK;
 }
@@ -964,37 +968,9 @@ PRBool
 nsBlockFrame::MoreToReflow(nsBlockReflowState& aState)
 {
   PRBool rv = PR_FALSE;
-#if 0
-  // XXX Don't need this anymore now that body has changed...
-  if (aState.mBlockIsPseudo) {
-    // Get the next content object that we would like to reflow
-    PRInt32 kidIndex = NextChildOffset();
-    nsIContentPtr kid = mContent->ChildAt(kidIndex);
-    if (kid.IsNotNull()) {
-      // Resolve style for the kid
-      nsIStyleContextPtr kidSC =
-        aState.mPresContext->ResolveStyleContextFor(kid, this);
-      nsStyleDisplay* kidStyleDisplay = (nsStyleDisplay*)
-        kidSC->GetData(kStyleDisplaySID);
-      switch (kidStyleDisplay->mDisplay) {
-      case NS_STYLE_DISPLAY_BLOCK:
-      case NS_STYLE_DISPLAY_LIST_ITEM:
-        // Block pseudo-frames do not contain other block elements
-        break;
-
-      default:
-        rv = PR_TRUE;
-        break;
-      }
-    }
-  } else {
-#endif
-    if (NextChildOffset() < mContent->ChildCount()) {
-      rv = PR_TRUE;
-    }
-#if 0
+  if (NextChildOffset() < mContent->ChildCount()) {
+    rv = PR_TRUE;
   }
-#endif
   return rv;
 }
 
@@ -1244,7 +1220,17 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
       }
 
       // Reflow unmapped children
-      rv = ReflowUnmapped(state);
+      PRInt32 kidIndex = NextChildOffset();
+      PRInt32 contentChildCount = mContent->ChildCount();
+      if (kidIndex == contentChildCount) {
+        // There is nothing to do here
+        if (nsnull != lastLine) {
+          state.mY = lastLine->mBounds.YMost();
+        }
+      }
+      else {
+        rv = ReflowUnmapped(state);
+      }
 
       // Set return status
       aStatus = frComplete;
