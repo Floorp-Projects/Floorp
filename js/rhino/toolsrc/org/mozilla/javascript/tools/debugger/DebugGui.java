@@ -20,8 +20,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Christopher Oliver
+ * Igor Bukanov
  * Matt Gould
+ * Christopher Oliver
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -132,13 +133,13 @@ DocumentListener {
             ignored.printStackTrace();
         }
         String text = segment.toString();
-        if (debugGui.main.stringIsCompilableUnit(text)) {
+        if (debugGui.dim.stringIsCompilableUnit(text)) {
             if (text.trim().length() > 0) {
                history.addElement(text);
                historyIndex = history.size();
             }
             append("\n");
-            String result = debugGui.main.eval(text);
+            String result = debugGui.dim.eval(text);
             if (result.length() > 0) {
                 append(result);
                 append("\n");
@@ -546,7 +547,7 @@ class MoreWindows extends JDialog implements ActionListener {
         setButton.addActionListener(this);
         getRootPane().setDefaultButton(setButton);
 
-        //main part of the dialog
+        //dim part of the dialog
         list = new JList(new DefaultListModel());
         DefaultListModel model = (DefaultListModel)list.getModel();
         model.clear();
@@ -643,9 +644,9 @@ class FindFunction extends JDialog implements ActionListener {
                 return;
             }
             setVisible(false);
-            Main.FunctionSource item = debugGui.main.functionSourceByName(value);
+            Dim.FunctionSource item = debugGui.dim.functionSourceByName(value);
             if (item != null) {
-                Main.SourceInfo si = item.sourceInfo();
+                Dim.SourceInfo si = item.sourceInfo();
                 String url = si.url();
                 int lineNumber = item.firstLine();
                 FileWindow w = debugGui.getFileWindow(url);
@@ -693,7 +694,7 @@ class FindFunction extends JDialog implements ActionListener {
         DefaultListModel model = (DefaultListModel)list.getModel();
         model.clear();
 
-        String[] a = debugGui.main.functionNames();
+        String[] a = debugGui.dim.functionNames();
         java.util.Arrays.sort(a);
         for (int i = 0; i < a.length; i++) {
             model.addElement(a[i]);
@@ -877,7 +878,7 @@ class FileHeader extends JPanel implements MouseListener {
 class FileWindow extends JInternalFrame implements ActionListener {
 
     DebugGui debugGui;
-    Main.SourceInfo sourceInfo;
+    Dim.SourceInfo sourceInfo;
     FileTextArea textArea;
     FileHeader fileHeader;
     JScrollPane p;
@@ -941,7 +942,7 @@ class FileWindow extends JInternalFrame implements ActionListener {
         }
     }
 
-    FileWindow(DebugGui debugGui, Main.SourceInfo sourceInfo) {
+    FileWindow(DebugGui debugGui, Dim.SourceInfo sourceInfo) {
         super(DebugGui.getShortName(sourceInfo.url()),
               true, true, true, true);
         this.debugGui = debugGui;
@@ -974,7 +975,7 @@ class FileWindow extends JInternalFrame implements ActionListener {
         return sourceInfo.url();
     }
 
-    void updateText(Main.SourceInfo sourceInfo) {
+    void updateText(Dim.SourceInfo sourceInfo) {
         this.sourceInfo = sourceInfo;
         String newText = sourceInfo.source();
         if (!textArea.getText().equals(newText)) {
@@ -1061,7 +1062,7 @@ class MyTableModel extends AbstractTableModel
             expressions.setElementAt(expr, row);
             String result = "";
             if (expr.length() > 0) {
-                result = debugGui.main.eval(expr);
+                result = debugGui.dim.eval(expr);
                 if (result == null) result = "";
             }
             values.setElementAt(result, row);
@@ -1084,7 +1085,7 @@ class MyTableModel extends AbstractTableModel
             String expr = value.toString();
             String result = "";
             if (expr.length() > 0) {
-                result = debugGui.main.eval(expr);
+                result = debugGui.dim.eval(expr);
                 if (result == null) result = "";
             } else {
                 result = "";
@@ -1134,7 +1135,7 @@ class VariableModel implements TreeTableModel {
 
     private static final VariableNode[] CHILDLESS = new VariableNode[0];
 
-    private Main debugger;
+    private Dim debugger;
 
     private VariableNode root;
 
@@ -1142,7 +1143,7 @@ class VariableModel implements TreeTableModel {
     {
     }
 
-    VariableModel(Main debugger, Object scope)
+    VariableModel(Dim debugger, Object scope)
     {
         this.debugger = debugger;
         this.root = new VariableNode(scope, "this");
@@ -1625,7 +1626,7 @@ class ContextWindow extends JPanel implements ActionListener
     public void actionPerformed(ActionEvent e) {
         if (!enabled) return;
         if (e.getActionCommand().equals("ContextSwitch")) {
-            Main.ContextData contextData = debugGui.main.currentContextData();
+            Dim.ContextData contextData = debugGui.dim.currentContextData();
             if (contextData == null) { return; }
             int frameIndex = context.getSelectedIndex();
             context.setToolTipText(toolTips.elementAt(frameIndex).toString());
@@ -1633,18 +1634,18 @@ class ContextWindow extends JPanel implements ActionListener
             if (frameIndex >= frameCount) {
                 return;
             }
-            Main.StackFrame frame = contextData.getFrame(frameIndex);
+            Dim.StackFrame frame = contextData.getFrame(frameIndex);
             Object scope = frame.scope();
             Object thisObj = frame.thisObj();
-            thisTable.resetTree(new VariableModel(debugGui.main, thisObj));
+            thisTable.resetTree(new VariableModel(debugGui.dim, thisObj));
             VariableModel scopeModel;
             if (scope != thisObj) {
-                scopeModel = new VariableModel(debugGui.main, scope);
+                scopeModel = new VariableModel(debugGui.dim, scope);
             } else {
                 scopeModel = new VariableModel();
             }
             localsTable.resetTree(scopeModel);
-            debugGui.main.contextSwitch(frameIndex);
+            debugGui.dim.contextSwitch(frameIndex);
             debugGui.showStopLine(frame);
             tableModel.updateModel();
         }
@@ -1807,15 +1808,15 @@ class Menubar extends JMenuBar implements ActionListener
         } else {
             Object source = e.getSource();
             if (source == breakOnExceptions) {
-                debugGui.main.setBreakOnExceptions(breakOnExceptions.isSelected());
-            }else if (source == breakOnEnter) {
-                debugGui.main.setBreakOnEnter(breakOnEnter.isSelected());
-            }else if (source == breakOnReturn) {
-                debugGui.main.setBreakOnReturn(breakOnReturn.isSelected());
-            }else {
+                debugGui.dim.breakOnExceptions = breakOnExceptions.isSelected();
+            } else if (source == breakOnEnter) {
+                debugGui.dim.breakOnEnter = breakOnEnter.isSelected();
+            } else if (source == breakOnReturn) {
+                debugGui.dim.breakOnReturn = breakOnReturn.isSelected();
+            } else {
                 debugGui.actionPerformed(e);
             }
-               return;
+            return;
         }
         try {
             UIManager.setLookAndFeel(plaf_name);
@@ -1881,7 +1882,7 @@ class OpenFile implements Runnable
 
     public void run() {
         try {
-            debugGui.main.compileScript(fileName, text);
+            debugGui.dim.compileScript(fileName, text);
         } catch (RuntimeException ex) {
             MessageDialogWrapper.showMessageDialog(debugGui,
                                                    ex.getMessage(),
@@ -1905,7 +1906,7 @@ class LoadFile implements Runnable
     public void run()
     {
         try {
-            debugGui.main.evalScript(fileName, text);
+            debugGui.dim.evalScript(fileName, text);
         } catch (RuntimeException ex) {
             MessageDialogWrapper.showMessageDialog(debugGui,
                                                    ex.getMessage(),
@@ -1917,7 +1918,7 @@ class LoadFile implements Runnable
 
 class DebugGui extends JFrame implements GuiCallback
 {
-    Main main;
+    Dim dim;
     Runnable exitAction;
     JDesktopPane desk;
     ContextWindow context;
@@ -1935,9 +1936,11 @@ class DebugGui extends JFrame implements GuiCallback
 
     JFileChooser dlg;
 
-    DebugGui(Main main, String title) {
+    private static EventQueue awtEventQueue;
+
+    DebugGui(Dim dim, String title) {
         super(title);
-        this.main = main;
+        this.dim = dim;
         init();
     }
 
@@ -2092,7 +2095,7 @@ class DebugGui extends JFrame implements GuiCallback
         if (exitAction != null) {
             SwingUtilities.invokeLater(exitAction);
         }
-        main.setReturnValue(Main.EXIT);
+        dim.setReturnValue(Dim.EXIT);
     }
 
     FileWindow getFileWindow(String url) {
@@ -2168,7 +2171,7 @@ class DebugGui extends JFrame implements GuiCallback
         windowMenu.revalidate();
     }
 
-    void showStopLine(Main.StackFrame frame)
+    void showStopLine(Dim.StackFrame frame)
     {
         String sourceName = frame.getUrl();
         if (sourceName == null || sourceName.equals("<stdin>")) {
@@ -2181,13 +2184,13 @@ class DebugGui extends JFrame implements GuiCallback
             if (w != null) {
                 setFilePosition(w, lineNumber);
             } else {
-                Main.SourceInfo si = frame.sourceInfo();
+                Dim.SourceInfo si = frame.sourceInfo();
                 createFileWindow(si, lineNumber);
             }
         }
     }
 
-    void createFileWindow(Main.SourceInfo sourceInfo, int line)
+    void createFileWindow(Dim.SourceInfo sourceInfo, int line)
     {
         boolean activate = true;
 
@@ -2262,7 +2265,7 @@ class DebugGui extends JFrame implements GuiCallback
 
     // Implementing GuiCallback
 
-    public void updateSourceText(final Main.SourceInfo sourceInfo)
+    public void updateSourceText(final Dim.SourceInfo sourceInfo)
     {
         SwingUtilities.invokeLater(new Runnable() {
             public void run()
@@ -2280,7 +2283,7 @@ class DebugGui extends JFrame implements GuiCallback
 
     }
 
-    public void enterInterrupt(final Main.StackFrame lastFrame,
+    public void enterInterrupt(final Dim.StackFrame lastFrame,
                                final String threadTitle,
                                final String alertMessage)
     {
@@ -2296,7 +2299,34 @@ class DebugGui extends JFrame implements GuiCallback
         }
     }
 
-    void enterInterruptImpl(Main.StackFrame lastFrame, String threadTitle,
+    public boolean isGuiEventThread()
+    {
+        return SwingUtilities.isEventDispatchThread();
+    }
+
+    public void dispatchNextGuiEvent()
+        throws InterruptedException
+    {
+        EventQueue queue = awtEventQueue;
+        if (queue == null) {
+            queue = Toolkit.getDefaultToolkit().getSystemEventQueue();
+            awtEventQueue = queue;
+        }
+        AWTEvent event = queue.getNextEvent();
+        if (event instanceof ActiveEvent) {
+            ((ActiveEvent)event).dispatch();
+        } else {
+            Object source = event.getSource();
+            if (source instanceof Component) {
+                Component comp = (Component)source;
+                comp.dispatchEvent(event);
+            } else if (source instanceof MenuComponent) {
+                ((MenuComponent)source).dispatchEvent(event);
+            }
+        }
+    }
+
+    void enterInterruptImpl(Dim.StackFrame lastFrame, String threadTitle,
                             String alertMessage)
     {
         statusBar.setText("Thread: " + threadTitle);
@@ -2327,7 +2357,7 @@ class DebugGui extends JFrame implements GuiCallback
         // raise the debugger window
         toFront();
 
-        Main.ContextData contextData = lastFrame.contextData();
+        Dim.ContextData contextData = lastFrame.contextData();
 
         context.enable();
         JComboBox ctx = context.context;
@@ -2340,7 +2370,7 @@ class DebugGui extends JFrame implements GuiCallback
         ctx.setSelectedItem(null);
         toolTips.removeAllElements();
         for (int i = 0; i < frameCount; i++) {
-            Main.StackFrame frame = contextData.getFrame(i);
+            Dim.StackFrame frame = contextData.getFrame(i);
             String url = frame.getUrl();
             int lineNumber = frame.getLineNumber();
             String shortName = url;
@@ -2406,15 +2436,15 @@ class DebugGui extends JFrame implements GuiCallback
                 ((ActionListener)f).actionPerformed(e);
             }
         } else if (cmd.equals("Step Over")) {
-            returnValue = Main.STEP_OVER;
+            returnValue = Dim.STEP_OVER;
         } else if (cmd.equals("Step Into")) {
-            returnValue = Main.STEP_INTO;
+            returnValue = Dim.STEP_INTO;
         } else if (cmd.equals("Step Out")) {
-            returnValue = Main.STEP_OUT;
+            returnValue = Dim.STEP_OUT;
         } else if (cmd.equals("Go")) {
-            returnValue = Main.GO;
+            returnValue = Dim.GO;
         } else if (cmd.equals("Break")) {
-            main.doBreak();
+            dim.breakFlag = true;
         } else if (cmd.equals("Exit")) {
             exit();
         } else if (cmd.equals("Open")) {
@@ -2523,7 +2553,7 @@ class DebugGui extends JFrame implements GuiCallback
         }
         if (returnValue != -1) {
             disableInterruptOnlyGui();
-            main.setReturnValue(returnValue);
+            dim.setReturnValue(returnValue);
         }
     }
 

@@ -40,9 +40,14 @@ package org.mozilla.javascript.tools.debugger;
 
 public interface GuiCallback
 {
-    public void updateSourceText(Main.SourceInfo sourceInfo);
+    public void updateSourceText(Dim.SourceInfo sourceInfo);
 
-    public void enterInterrupt(Main.StackFrame lastFrame,
+    public void enterInterrupt(Dim.StackFrame lastFrame,
                                String threadTitle,
                                String alertMessage);
+
+    public boolean isGuiEventThread();
+
+    public void dispatchNextGuiEvent()
+        throws InterruptedException;
 }
