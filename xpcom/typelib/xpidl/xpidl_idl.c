@@ -104,14 +104,19 @@ static int
 msg_callback(int level, int num, int line, const char *file,
              const char *message)
 {
+    char *warning_message;
+
+    if (!file)
+        file = "<unknown file>";
+    warning_message = g_strdup_printf("%s:%d: %s\n", file, line, message);
+
 #ifdef XP_MAC
-    static char warning_message[1024];
-    sprintf(warning_message, "%s:%d: %s\n", file, line, message);
     mac_warning(warning_message);
 #else
-    /* XXX Mac */
-    fprintf(stderr, "%s:%d: %s\n", file, line, message);
+    fputs(warning_message, stderr);
 #endif
+
+    free(warning_message);
     return 1;
 }
 
@@ -887,4 +892,51 @@ verify_method_declaration(IDL_tree method_tree)
         }
     }
     return TRUE;
+}
+
+/*
+ * Verify that a native declaration has an associated C++ expression, i.e. that
+ * it's of the form native <idl-name>(<c++-name>)
+ */
+gboolean
+check_native(TreeState *state)
+{
+    char *native_name;
+    /* require that native declarations give a native type */
+    if (IDL_NATIVE(state->tree).user_type) 
+        return TRUE;
+    native_name = IDL_IDENT(IDL_NATIVE(state->tree).ident).str;
+    IDL_tree_error(state->tree,
+                   "``native %s;'' needs C++ type: ``native %s(<C++ type>);''",
+                   native_name, native_name);
+    return FALSE;
+}
+
+/*
+ * Our own version of IDL_tree_warning, which we use when IDL_tree_warning
+ * would crash on us.
+ */
+void
+xpidl_tree_warning(IDL_tree p, int level, const char *fmt, ...)
+{
+    va_list ap;
+    char *msg, *file;
+    int lineno;
+
+    /* XXX need to check against __IDL_max_msg_level, no accessor */
+    va_start(ap, fmt);
+    msg = g_strdup_vprintf(fmt, ap);
+
+    if (p) {
+        file = p->_file;
+        lineno = p->_line;
+    } else {
+        file = NULL;
+        lineno = 0;
+    }
+
+    /* call our message callback, like IDL_tree_warning would */
+    msg_callback(level, 0 /* unused in callee */, lineno, file, msg);
+
+    va_end(ap);
 }
