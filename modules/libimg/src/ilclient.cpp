@@ -454,7 +454,7 @@ il_get_container(IL_GroupContext *img_cx,
 
 	// if it is chrome, record that fact, and ensure it is not purged
 
-        if(cache_reload_policy == DONT_USE_IMG_CACHE && ic->moz_type != TYPE_CHROME){
+        if(cache_reload_policy == DONT_USE_IMG_CACHE && ic && ic->moz_type != TYPE_CHROME){
 		ILTRACE(2,("il:  il_get_container: DONT_USE_IMG_CACHE ic=0x%08x discarding\n", ic)); 
             /* Don't use old copy and purge it from cache.*/
             	if (!ic->is_in_use) {
