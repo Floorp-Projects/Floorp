@@ -290,6 +290,11 @@ PRBool nsMacMessagePump::BrowserIsBusy()
 
 	do    // convenience for breaking. We'll start by assuming that we're busy.
 	{
+  /*
+   * Don't count connections for now; mailnews holds server connections open,
+   * and that causes us to behave as busy even when we're not, which eats CPU
+   * time and makes machines run hot.
+    
   	nsCOMPtr<nsISocketTransportService> socketTransport = do_GetService(kSocketTransportServiceCID);
   	if (socketTransport)
   	{
@@ -307,7 +312,7 @@ PRBool nsMacMessagePump::BrowserIsBusy()
   		if (inUseTransports > 0)
   		  break;
   	}
-  	
+  */
   	if (mToolkit->ToolkitBusy())
   	  break;
 
