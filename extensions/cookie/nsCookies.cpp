@@ -1275,7 +1275,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
     }
     iter = PL_strrchr(cur_path.get(), '/');
     if(iter) {
-      *iter = '\0';
+      *(iter+1) = '\0';
     }
     path_from_header = nsCRT::strdup(cur_path.get());
   }
