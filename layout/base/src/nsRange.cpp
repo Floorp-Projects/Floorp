@@ -788,21 +788,23 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
           {
             nsCOMPtr<nsIDOMNode> domNode;
             res = GetDOMNodeFromContent(cN, &domNode);
-            NS_PRECONDITION(NS_SUCCEEDED(res), "error updating range list");
-            NS_PRECONDITION(domNode, "error updating range list");
+            NS_POSTCONDITION(NS_SUCCEEDED(res), "error updating range list");
+            NS_POSTCONDITION(domNode, "error updating range list");
             // sanity check - do range and content agree over ownership?
             res = theRange->ContentOwnsUs(domNode);
-            NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
+            NS_POSTCONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
 
             if (theRange->mStartParent == domNode)
             {
               // promote start point up to replacement point
-              theRange->SetStart(aDestNode, aOffset);
+              res = theRange->SetStart(aDestNode, aOffset);
+              NS_POSTCONDITION(NS_SUCCEEDED(res), "nsRange::PopRanges() got error from SetStart()");
             }
             if (theRange->mEndParent == domNode)
             {
               // promote end point up to replacement point
-              theRange->SetEnd(aDestNode, aOffset);
+              res = theRange->SetEnd(aDestNode, aOffset);
+              NS_POSTCONDITION(NS_SUCCEEDED(res), "nsRange::PopRanges() got error from SetEnd()");
             }          
           }
           // must refresh theRangeList - it might have gone away!
