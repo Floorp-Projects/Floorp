@@ -628,6 +628,12 @@ NS_IMETHODIMP
 nsMessenger::OnUnload()
 {
     // ** clean up
+    // *** jt - We seems have one extra ref count. I have no idea where it
+    // came from. This could be the global object we created in commandglue.js
+    // which causes us to have one more ref count. Call Release() here
+    // seems the right thing to do. This gurantees the nsMessenger instance
+    // gets delete after we close down the messenger window.
+    Release();
     return NS_OK;
 }
 
