@@ -908,7 +908,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     //
     NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (LPVOID*)&window);
     nsRect rect(100, 100, 600, 700);
+   
+    window->SetBorderStyle(eBorderStyle_dialog);
     window->Create((nsIWidget*)NULL, rect, HandleEvent, NULL);
+    window->SetTitle("TOP-LEVEL window");
 
     //
     // create a child
