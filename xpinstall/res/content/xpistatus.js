@@ -47,7 +47,7 @@ function onLoad()
 	for (i = 0; i < numberOfDialogTreeElements; i++)
 	{
 		moduleName = param.GetString(i);
-		URL = param.GetString(i++);
+		URL = param.GetString(++i);
         addTreeItem(row++, moduleName, URL);
 	}
 	manager.DialogOpened(window);

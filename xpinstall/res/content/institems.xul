@@ -33,8 +33,6 @@ Contributor(s):
         title="&items.label;"
         class = "dialog"
         align = "vertical"
-        height = "250"
-        width = "400"
 > 
 
     <html:script language="javascript" src="institems.js"/>
