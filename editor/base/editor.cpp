@@ -56,7 +56,7 @@ PRMonitor *getEditorMonitor() //if more than one person asks for the monitor at 
     return getEditorMonitor();
   return ns_editlock;
 }
-z
+
 
 
 /*
