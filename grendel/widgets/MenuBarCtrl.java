@@ -32,7 +32,7 @@ import java.util.Enumeration;
  * This is a menubar with a keyed lookup rather than a flat iteration model
  * which JMenuBar by default uses.
  */
-public class MenuBarCtrl extends JMenuBar {
+public class MenuBarCtrl extends JMenuBar implements Control {
 
   protected Hashtable controls = new Hashtable();
   protected Hashtable menus = new Hashtable();
@@ -71,7 +71,7 @@ public class MenuBarCtrl extends JMenuBar {
    * @param name the control's name
    * @param component the control
    */
-  public void addItemByName(String name, JMenuItem component) {
+  public void addItemByName(String name, Component component) {
     controls.put(name, component);
     add(component);
   }

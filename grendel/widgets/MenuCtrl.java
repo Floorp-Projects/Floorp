@@ -28,7 +28,7 @@ import javax.swing.JMenuItem;
 import java.util.Hashtable;
 import java.util.Enumeration;
 
-public class MenuCtrl extends JMenu {
+public class MenuCtrl extends JMenu implements Control {
   protected Hashtable controls = new Hashtable();
 
   /**

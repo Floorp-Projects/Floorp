@@ -48,15 +48,6 @@ public abstract class XMLWidgetBuilder {
   protected Class ref;
 
   /**
-   * Process the node.
-   * 
-   * @param node the node tho be processed
-   * @param component the parent component that the node will be added to 
-   * (if applicable)
-   */
-  protected abstract void processNode(Node node, JComponent component);
-
-  /**
    * Set the reference point for URL location.
    * 
    * @param ref the reference point for local urls to be loaded from.

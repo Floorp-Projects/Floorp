@@ -55,6 +55,7 @@ import org.xml.sax.SAXParseException;
 
 import grendel.widgets.MenuCtrl;
 import grendel.widgets.MenuBarCtrl;
+import grendel.widgets.Control;
 
 /**
  * Build a menu bar from an XML data source. This builder supports:
@@ -147,8 +148,6 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     }
   }
 
-
-
   /**
    * Build a menu bar from the data in the tree
    *
@@ -207,15 +206,9 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
       Element current = (Element)node;
       if (item instanceof JSeparator) {
         parent.add(item);
-      } else if (parent instanceof MenuCtrl) {
-        ((MenuCtrl)parent).addItemByName(current.getAttribute(id_attr), 
-                                         (JMenuItem)item);
-        System.out.println("adding " + current.getAttribute(id_attr));
-	
-      } else if (parent instanceof MenuBarCtrl) {
-        ((MenuBarCtrl)parent).addItemByName(current.getAttribute(id_attr), 
-                                            (JMenuItem)item);
-        System.out.println("adding " + current.getAttribute(id_attr));
+      } else if (parent instanceof Control) {
+        ((Control)parent).addItemByName(current.getAttribute(id_attr), 
+                                        (JMenuItem)item);
       }
     }
   }
@@ -251,7 +244,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
       UIAction action;
       
       // which type of menuitem?
-      if (type == null || type.equals("")) { 
+      if (type.equals("")) { 
         // no type ? it's a regular menuitem
         comp = buildMenuItem(current);
       } else if (type.equals(separator_attr)) { // separator
@@ -279,15 +272,13 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     finishComponent(comp, current);
     
     // do we add to a button group?
-    if (group != null) {
-      if (button_group.containsKey(group)) {
-        bg = (ButtonGroup)button_group.get(group);
-      } else {
-        bg = new ButtonGroup();
-        button_group.put(group, bg);
-      }
-      bg.add((JRadioButtonMenuItem)comp);
+    if (button_group.containsKey(group)) {
+      bg = (ButtonGroup)button_group.get(group);
+    } else {
+      bg = new ButtonGroup();
+      button_group.put(group, bg);
     }
+    bg.add((JRadioButtonMenuItem)comp);
     
     comp.setFont(new Font("Helvetica", Font.PLAIN, 12));
     return comp;

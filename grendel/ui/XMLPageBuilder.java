@@ -80,14 +80,14 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   static final String panel_tag = "panel";
   static final String input_tag = "input";
   static final String layout_attr = "layout";
-
+  
   PageUI component;
   String title;
   String id;
   String attr;
   PageModel model;
   Hashtable group = new Hashtable();
-
+  
   /**
    * Build a menu builder which operates on XML formatted data
    * 
@@ -102,8 +102,8 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     this(attr, id, model, panel);
     setReference(reference);
   }
-
-
+  
+  
   /**
    * Build a menu builder which operates on XML formatted data
    * 
@@ -117,7 +117,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     this(attr, id, model);
     component = panel;
   }
-
+  
   /**
    * Build a menu builder which operates on XML formatted data
    * 
@@ -130,7 +130,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     this.id = id;
     this.model = model;
   }
-
+  
   /**
    * Read the input stream and build a menubar from it
    * 
@@ -142,25 +142,25 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     Node node;
     URL linkURL;
     Element current;
-
+    
     try {
       doc = XmlDocument.createXmlDocument(stream, false);
       current = doc.getDocumentElement();
       tree = new TreeWalker(current);
-
+      
       node = 
         tree.getNextElement("head").getElementsByTagName("link").item(0);
-
+      
       // set the configuration contained in this node
       setConfiguration((Element)node);
-
+      
       // skip to the body
       buildFrom(new TreeWalker(tree.getNextElement("body")));
     } catch (Throwable t) {
       t.printStackTrace();
     }
   }
-
+  
   /**
    * Build a menu bar from the data in the tree
    *
@@ -169,7 +169,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   public void buildFrom(TreeWalker tree) {
     Element current  ;
     Node node;
-
+    
     node = tree.getCurrent();
     current = (Element)node;
     
@@ -186,20 +186,20 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       node = node.getNextSibling();
     }
   }
-
+  
   boolean conditionMatch(Node node) {
     boolean match = false;
     if (node.getNodeType() == Node.ELEMENT_NODE) {
       Element current = (Element)node;
       String id_str = current.getAttribute(attr);
-
+      
       // is the id the same as the on we're looking for?
-      match = (id_str != null && id_str.equals(id)); 
+      match = id_str.equals(id); 
     }
-
-   return match;
+    
+    return match;
   }
-
+  
   /**
    * Process the node, extracting a widget and adding it as necessary.
    *
@@ -209,38 +209,84 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   protected void processNode(Node node, JComponent parent) {
     JComponent item = null;
     Element current;
-
+    
     if (node == null) return;
-
+    
     if (node.getNodeType() != Node.ELEMENT_NODE) {
       processNode(node.getNextSibling(), parent);
       return;
     }
-
+    
     current = (Element)node;
     String tag = current.getTagName();
-
+    
     if (tag.equals(dialog_tag)) { // dialog tag .. this gets us title
       title = getReferencedLabel(current, "title");
       node = node.getFirstChild().getNextSibling();
       processNode(node, component);
     } else if (tag.equals(panel_tag)) { // panel tag ... meat!
       PageUI panel = new PageUI();
+
       // first panel
       if (component == null) {
 	component = panel;
       }
-      component.setLayout(new GridBagLayout());
+
+      panel.setLayout(new GridBagLayout());
       node = node.getFirstChild().getNextSibling();
-      processNode(node, component);
+      processNode(node, panel);
     } else {
       item = buildComponent(current, parent);
-
+      
       // move on to the next item
       processNode(node.getNextSibling(), parent);
     }
   }
+  
+  private int parseGridConstant(String data) {
+    int result = 1;
+    
+    try {
+      data = data.trim();
+      result = Integer.parseInt(data);
+    } catch (NumberFormatException nfe) {
+      if (data.equals("remainder")) {
+        result = GridBagConstraints.REMAINDER;
+      } else if (data.equals("relative")) {
+        result = GridBagConstraints.RELATIVE;
+      }
+    } finally {
+      return result;
+    }
+  }
 
+  private int parseFillConstant(String fill) {
+    int result = GridBagConstraints.NONE;
+    
+    fill = fill.trim();
+    
+    if (fill.equals("horizontal")) {
+      result = GridBagConstraints.HORIZONTAL;
+    } else if (fill.equals("vertical")) {
+      result = GridBagConstraints.VERTICAL;
+    } else if (fill.equals("both")) {
+      result = GridBagConstraints.BOTH;
+    }
+
+    return result;
+  }
+
+  private float parseWeightConstant(String weight) {
+    float result = 0.0f;
+    
+    try {
+      result = Float.valueOf(weight).floatValue();
+    } catch (NumberFormatException nfe) {
+    } finally {
+      return result;
+    }
+  }
+  
   /**
    * Build a constraint from the element's details.
    *
@@ -251,112 +297,75 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     GridBagConstraints constraints = new GridBagConstraints();
     CustomInsets inset = 
       new CustomInsets(current.getAttribute("insets"));
-    float weightx = 0.0f;
-    String fill = null;
-    String width = null;
-    String height = null;
 
-    try {
-      String s = current.getAttribute("weightx");
-      if (s != null) {
-	weightx = Float.valueOf(s).floatValue();
-      }
-    } catch (NumberFormatException nfe) {}
-
+    constraints.weightx = 
+      parseWeightConstant(current.getAttribute("weightx"));
+    
     // fill
-    fill = current.getAttribute("fill");
-    if (fill != null) {
-      if (fill.trim().equals("horizontal")) {
-	constraints.fill = GridBagConstraints.HORIZONTAL;
-      }
-    }
-
-    width = current.getAttribute("gridwidth");
-    if (width != null) {
-      width = width.trim();
-      try {
-        constraints.gridwidth = Integer.parseInt(width);
-      } catch (NumberFormatException nfe) {
-        if (width.equals("remainder")) {
-          constraints.gridwidth = GridBagConstraints.REMAINDER;
-        } else if (width.equals("relative")) {
-          constraints.gridwidth = GridBagConstraints.RELATIVE;
-        }
-      }
-    }
-
-    height = current.getAttribute("gridheight");
-    if (height != null) {
-      height = height.trim();
-      try {
-        constraints.gridheight = Integer.parseInt(height);
-      } catch (NumberFormatException nfe) {
-        if (width.equals("remainder")) {
-          constraints.gridwidth = GridBagConstraints.REMAINDER;
-        } else if (width.equals("relative")) {
-          constraints.gridwidth = GridBagConstraints.RELATIVE;
-        }
-      }
-    }
-
+    constraints.fill = parseFillConstant(current.getAttribute("fill"));
+    
+    constraints.gridwidth = 
+      parseGridConstant(current.getAttribute("gridwidth"));
+    
+    constraints.gridheight = 
+      parseGridConstant(current.getAttribute("gridheight"));
+    
     constraints.insets = inset;
-
+    
     return constraints;
   }
-
+  
   protected JComponent buildComponent(Element current) {
     JComponent item = null;
     String tag = current.getTagName();
-
+    
     if (tag.equals("input")) { // input tag
       item = buildInput(current);
     } else if (tag.equals("label")) {
       item = buildLabel(current);
     }
-
+    
     return item;
   }
-
+  
   protected JPasswordField buildPasswordField(Element current) {
     JPasswordField item = null;
-
+    
     item = new JPasswordField();
     textFieldAdjustments(item, current);
     return item;
   }
-
+  
   private void textFieldAdjustments(JTextField item, Element current) {
-    if (current.getAttribute("columns") != null) {
-      String s = current.getAttribute("columns");
-      s = s.trim();
-      try {
-	int column = Integer.parseInt(s);
-	item.setColumns(column);
-      } catch (NumberFormatException nfe) {
-      }
+    String s = current.getAttribute("columns");
+    s = s.trim();
+    try {
+      int column = Integer.parseInt(s);
+      item.setColumns(column);
+    } catch (NumberFormatException nfe) {
     }
   }
-
+  
   protected JTextField buildTextField(Element current) {
     JTextField item = null;
-
+    
     item = new JTextField();
     textFieldAdjustments(item, current);
-
+    
     return item;
   }
-
+  
   protected JRadioButton buildRadioButton(Element current) {
     JRadioButton item = null;
     String label = getReferencedLabel(current, "title");
     String group_str = current.getAttribute("group");
-
+    
     // the label
     item = new JRadioButton();
     if (label != null) {
       item.setText(label);
     }
-
+    
     // button group matters
     if (group_str != null) {
       ButtonGroup bg = null;
@@ -371,11 +380,11 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     
     return item;
   }
-
+  
   protected JComponent buildInput(Element current) {
     JComponent item = null;
     String type = current.getAttribute("type");
-
+    
     String ID = current.getAttribute("ID");
     if (type.equals("radio")) { // radio type
       item = buildRadioButton(current);
@@ -393,21 +402,21 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     
     return item;
   }
-
+  
   protected JCheckBox buildCheckBox(Element current) {
     return new JCheckBox(getReferencedLabel(current, "title"));
   }
-
+  
   protected JButton buildButton(Element current) {
     JButton button =  new JButton(getReferencedLabel(current, "title"));
     button.addActionListener(model);
     button.setActionCommand(getReferencedLabel(current, "command"));
     return button;
   }
-
+  
   protected JList buildList(Element current) {
     JList list = new JList();
-
+    
     return list;
   }
   
@@ -415,14 +424,14 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     JLabel label = new JLabel(getReferencedLabel(current, "title"));
     return label;
   }
-
+  
   public JPanel getComponent() {
     return component;
   }
-
+  
   protected JComponent buildComponent(Element current, JComponent parent) {
     JComponent item = buildComponent(current);
-
+    
     // item could be null if we don't know about the "type" tag for
     // example
     if (item != null) {
@@ -431,31 +440,21 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 	cons = buildConstraints(current);
       }
       
-      if (cons == null) { // no constraints
-        if (parent instanceof PageUI) {
-          ((PageUI)parent).addCtrl(current.getAttribute("ID"), item);
-        }
-        else {
-          parent.add(item);
-        }
-      } else { // we have constraints
-        if (parent instanceof PageUI) {
-          ((PageUI)parent).addCtrl(current.getAttribute("ID"), 
-                                   item, cons);
-        }
-        else {
-          parent.add(item, cons);
-        }
+      if (parent instanceof PageUI) {
+        ((PageUI)parent).addCtrl(current.getAttribute("ID"), item, cons);
+      }
+      else {
+        parent.add(item, cons);
       }
     }
     
     return item;
   }
-
+  
   public String getTitle() {
     return title;
   }
-
+  
   public static void main(String[] args) throws Exception {
     javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
     PageModel model = new PageModel();
@@ -464,49 +463,51 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     builder.buildFrom(url.openStream());
     JPanel panel = builder.getComponent();
     JDialog dialog = new JDialog();
-
-    dialog.getContentPane().add(panel);
+    
+    dialog.getContentPane().setLayout(new java.awt.GridBagLayout());
+    dialog.getContentPane().add(panel, null);
     dialog.setTitle(builder.getTitle());
     dialog.pack();
     dialog.setVisible(true);
   }
+  
+}
 
-  class CustomInsets extends Insets {
-    CustomInsets(String inset) {
-      super(0, 0, 0, 0);
-      
-      inset = inset.trim();
-      
-      if (inset != null && inset.length() >= 9 
-	  && (inset.charAt(0) == '[' 
+class CustomInsets extends Insets {
+  CustomInsets(String inset) {
+    super(0, 0, 0, 0);
+    
+    inset = inset.trim();
+    
+    if (inset != null && inset.length() >= 9 
+        && (inset.charAt(0) == '[' 
 	    || inset.charAt(inset.length() - 1) == ']')) {
-	inset = inset.substring(1, inset.length() - 1);
-	int[] val = parseInset(inset); // guaranteed to be a length of 4
-	
-	top = val[0];
+      inset = inset.substring(1, inset.length() - 1);
+      int[] val = parseInset(inset); // guaranteed to be a length of 4
+      
+      top = val[0];
       left = val[1];
       bottom = val[2];
       right = val[3];
-      }
     }
+  }
+  
+  private int[] parseInset(String inset) {
+    // if all else fails, it's 0
+    int[] val = { 0, 0, 0, 0 };
+    StringTokenizer tok = new StringTokenizer(inset, ",");
     
-    private int[] parseInset(String inset) {
-      // if all else fails, it's 0
-      int[] val = { 0, 0, 0, 0 };
-      StringTokenizer tok = new StringTokenizer(inset, ",");
-      
-      // assign the values into
-      for (int i = 0; i < val.length; i++) {
-	try {
-	  String s = tok.nextToken();
-	  val[i] = Integer.parseInt(s);
-	} catch (NoSuchElementException nse) {
-	  // ignore. if it's fubared, we use 0 as the value
-	} catch (NumberFormatException nfe) {
-	  // ignore. if it's fubared, we use 0 as the value
-	}
+    // assign the values into
+    for (int i = 0; i < val.length; i++) {
+      try {
+        String s = tok.nextToken();
+        val[i] = Integer.parseInt(s);
+      } catch (NoSuchElementException nse) {
+        // ignore. if it's fubared, we use 0 as the value
+      } catch (NumberFormatException nfe) {
+        // ignore. if it's fubared, we use 0 as the value
       }
-      return val;
     }
+    return val;
   }
 }
