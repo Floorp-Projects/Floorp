@@ -87,7 +87,7 @@ class nsPermissionEnumerator : public nsISimpleEnumerator
 {
   public:
     NS_DECL_ISUPPORTS
-    
+ 
     nsPermissionEnumerator(const nsTHashtable<nsHostEntry> *aHostTable,
                            const char*   *aHostList,
                            const PRUint32 aHostCount,
