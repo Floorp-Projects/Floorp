@@ -26,8 +26,8 @@
    <TABLE BORDER CELLPADDING=12 CELLSPACING=0>
     <TR>
      <TD NOWRAP BGCOLOR="#FAFAFA">
-      <A HREF="http://cvs-mirror.mozilla.org/webtools/bonsai/cvslog.cgi?file=mozilla$pathname">Full Change Log</A><BR>
-      <A HREF="http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?file=mozilla$pathname">Blame-Annotated Source</A><BR>
+      <A HREF="http://cvs-mirror.mozilla.org/webtools/bonsai/cvslog.cgi?file=mozilla$pathname">CVS Log</A><BR>
+      <A HREF="http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?file=mozilla$pathname">CVS Blame</A><BR>
       <BR>
      </TD>
     </TR>
