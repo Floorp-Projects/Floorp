@@ -31,6 +31,7 @@
 #include <time.h>
 #include "net.h"
 #include "jsurl.h"
+#include "nsIURL.h"
 #include "nsIConnectionInfo.h"
 #include "nsIStreamListener.h"
 #include "nsIDocumentLoadInfo.h"
@@ -122,7 +123,6 @@ unescape (char * str)
 
 }
 
-NS_DEFINE_IID(kIDocumentLoadInfoIID,      NS_IDOCUMENTLOADINFO_IID);
 NS_DEFINE_IID(kIConnectionInfoIID,        NS_ICONNECTIONINFO_IID);
 NS_DEFINE_IID(kIScriptContextOwnerIID,    NS_ISCRIPTCONTEXTOWNER_IID);
 
@@ -136,73 +136,67 @@ evaluate_script(URL_Struct* urls, const char *what, JSConData *con_data)
   supports = (nsISupports *)urls->fe_data;
   if (supports && 
       (NS_OK == supports->QueryInterface(kIConnectionInfoIID, (void**)&con_info))) {
-    nsIStreamListener *consumer;
-    nsIDocumentLoadInfo *load_info;
-    
-    con_info->GetConsumer(&consumer);
-    if (consumer &&
-        (NS_OK == consumer->QueryInterface(kIDocumentLoadInfoIID, (void **)&load_info))) {
-      nsIContentViewerContainer *viewer;
-      nsIScriptContextOwner *context_owner;
+
+    nsIURL *url;
+    nsISupports *viewer = nsnull;
+    nsIScriptContextOwner *context_owner;
+
+    // Get the container (which hopefully supports nsIScriptContextOwner) 
+    // from the nsIURL...
+    con_info->GetURL(&url);
+    NS_RELEASE(con_info);
+
+    if (nsnull != url) {
+      viewer = url->GetContainer();
+      NS_RELEASE(url);
+    }
+    // Now see if the container supports nsIScriptContextOwner...
+    if (viewer &&
+        (NS_OK == viewer->QueryInterface(kIScriptContextOwnerIID, (void **)&context_owner))) {
+      nsIScriptContext *script_context;
       
-      if (load_info) {
-        load_info->GetContainer(&viewer);
-        if (viewer &&
-            (NS_OK == viewer->QueryInterface(kIScriptContextOwnerIID, (void **)&context_owner))) {
-          nsIScriptContext *script_context;
+      if (context_owner) {
+        context_owner->GetScriptContext(&script_context);
+        if (script_context) {
+          jsval ret;
           
-          if (context_owner) {
-            context_owner->GetScriptContext(&script_context);
-            if (script_context) {
-              jsval ret;
-              
-              if (script_context->EvaluateString(nsString(what),
-                                                 nsnull, 0,
-                                                 &ret)) {
-                JSContext *cx = (JSContext *)script_context->GetNativeContext();
-                // Find out if it can be converted into a string
-                if ((ret != JSVAL_VOID) && 
-                    JS_ConvertValue(cx, ret, JSTYPE_STRING, &ret)) {
-                  con_data->len = JS_GetStringLength(JSVAL_TO_STRING(ret));
-                  con_data->str = (char *)PR_MALLOC(con_data->len + 1);
-                  PL_strcpy(con_data->str, JS_GetStringBytes(JSVAL_TO_STRING(ret)));
-                }
-                else {
-                  con_data->str = nsnull;
-                }
-                con_data->status = MK_DATA_LOADED;
-              }
-              else {
-                con_data->status = MK_MALFORMED_URL_ERROR;
-                result = -1;
-              }
-              con_data->is_valid = TRUE;
-              
-              NS_RELEASE(script_context);
+          if (script_context->EvaluateString(nsString(what),
+                                             nsnull, 0,
+                                             &ret)) {
+            JSContext *cx = (JSContext *)script_context->GetNativeContext();
+            // Find out if it can be converted into a string
+            if ((ret != JSVAL_VOID) && 
+                JS_ConvertValue(cx, ret, JSTYPE_STRING, &ret)) {
+              con_data->len = JS_GetStringLength(JSVAL_TO_STRING(ret));
+              con_data->str = (char *)PR_MALLOC(con_data->len + 1);
+              PL_strcpy(con_data->str, JS_GetStringBytes(JSVAL_TO_STRING(ret)));
             }
             else {
-              result = -1;
+              con_data->str = nsnull;
             }
-            NS_RELEASE(context_owner);
+            con_data->status = MK_DATA_LOADED;
           }
           else {
+            con_data->status = MK_MALFORMED_URL_ERROR;
             result = -1;
           }
+          con_data->is_valid = TRUE;
           
-          NS_RELEASE(viewer);
+          NS_RELEASE(script_context);
         }
         else {
-          NS_IF_RELEASE(viewer);
           result = -1;
         }
-        
-        NS_RELEASE(load_info);
+        NS_RELEASE(context_owner);
+      }
+      else {
+        result = -1;
       }
       
-      NS_RELEASE(consumer);
+      NS_RELEASE(viewer);
     }
     else {
-      NS_IF_RELEASE(consumer);
+      NS_IF_RELEASE(viewer);
       result = -1;
     }
   }
