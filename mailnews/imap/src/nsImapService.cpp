@@ -2372,7 +2372,7 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb,
     // XXX this mock channel stuff is wrong -- the channel really should be owning the URL
     // and the originalURL, not the other way around
     rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
-    if (NS_FAILED(rv) || !mockChannel) return rv;
+    if (NS_FAILED(rv) || !mockChannel) return NS_ERROR_FAILURE;
 
     // XXX this seems wrong to do to this shared mock channel too, 
     // but oh well...
