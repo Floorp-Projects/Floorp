@@ -54,7 +54,9 @@ LLIBS=$(DIST)\lib\png.lib \
 	$(DIST)\lib\util.lib            \
 	$(DIST)\lib\zip$(MOZ_BITS)$(VERSION_NUMBER).lib \
 	$(DIST)\lib\xpcom32.lib \
+!ifdef NU_CACHE
 	$(DIST)\lib\cache.lib \
+!endif
 	$(NULL)
 !else
 LLIBS=$(DIST)\lib\png.lib \
@@ -116,7 +118,7 @@ EXTRA_LIBS=$(DIST)/lib/libzlib.a $(DIST)/lib/libpng.a
 !ifdef STANDALONE_IMAGE_LIB
 CPPSRCS=color.cpp colormap.cpp dither.cpp gif.cpp if.cpp ilclient.cpp il_util.cpp \
     ilNetReader.cpp jpeg.cpp scale.cpp xbm.cpp ipng.cpp png_png.cpp xpcompat.cpp
-REQUIRES=zlib nspr jpeg util img png xpcom cache
+REQUIRES=zlib nspr jpeg util img png xpcom
 CPP_OBJS=.\$(OBJDIR)\color.obj .\$(OBJDIR)\colormap.obj \
     .\$(OBJDIR)\dither.obj .\$(OBJDIR)\gif.obj .\$(OBJDIR)\if.obj \
     .\$(OBJDIR)\ilclient.obj .\$(OBJDIR)\il_util.obj \
@@ -127,7 +129,9 @@ CPP_OBJS=.\$(OBJDIR)\color.obj .\$(OBJDIR)\colormap.obj \
 !if "$(MOZ_BITS)" != "16"
 LINCS=-I$(XPDIST)\public\zlib -I$(XPDIST)\public\nspr \
     -I$(XPDIST)\public\jpeg -I$(XPDIST)\public\util -I$(XPDIST)\public\img \
+!ifdef NU_CACHE
     -I$(XPDIST)\public\cache \
+!endif
     -I$(XPDIST)\public\png -I$(XPDIST)\public\xpcom 
 !endif
 
@@ -135,7 +139,7 @@ LINCS=-I$(XPDIST)\public\zlib -I$(XPDIST)\public\nspr \
 !else
 CPPSRCS=color.cpp colormap.cpp dither.cpp dummy_nc.cpp external.cpp gif.cpp if.cpp \
    ilclient.cpp il_util.cpp jpeg.cpp scale.cpp xbm.cpp ipng.cpp png_png.cpp ilNetReader.cpp 
-REQUIRES=jtools java zlib nspr dbm jpeg util img png layer js xpcom cache
+REQUIRES=jtools java zlib nspr dbm jpeg util img png layer js xpcom
 EXPORTS=PIMGCB.h PPSIMGCB.h 
 JMC_HEADERS=$(JMC_GEN_DIR)\MIMGCB.h $(JMC_GEN_DIR)\MPSIMGCB.h 
 JMC_STUBS=$(JMC_GEN_DIR)\MIMGCB.c $(JMC_GEN_DIR)\MPSIMGCB.c 
@@ -154,7 +158,9 @@ LINCS=-I$(XPDIST)\public\jtools -I$(XPDIST)\public\java \
     -I$(XPDIST)\public\dbm -I$(XPDIST)\public\jpeg \
     -I$(XPDIST)\public\util -I$(XPDIST)\public\img \
     -I$(XPDIST)\public\png -I$(XPDIST)\public\layer \
+!ifdef NU_CACHE
     -I$(XPDIST)\public\cache \
+!endif
     -I$(XPDIST)\public\js -I$(XPDIST)\public\xpcom
 !endif
 !endif

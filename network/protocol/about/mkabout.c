@@ -152,8 +152,7 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 							  : URL_s->memory_copy ? 
 								XP_GetString(XP_CURRENTLY_IN_MEM_CACHE) 
 								: XP_GetString(XP_CURRENTLY_NO_CACHE));
-#endif 
-/* NU_CACHE */
+#endif /* NU_CACHE */
 
 	ADD_CELL(XP_GetString(XP_LOCAL_CACHE_FILE_), URL_s->cache_file 
 								 ? URL_s->cache_file

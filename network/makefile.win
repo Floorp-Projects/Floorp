@@ -30,7 +30,9 @@ DIRS= \
         util \
 	main \
 	mimetype \
-	cache\nu \
+!ifdef NU_CACHE
+	cache\nu	\
+!endif
 	cache \
 	protocol \
 	cnvts \

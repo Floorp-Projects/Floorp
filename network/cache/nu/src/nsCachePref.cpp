@@ -36,10 +36,10 @@ static const PRUint32 BKG_THREAD_SLEEP = 60;//TODO- Testing 15*60; /*in seconds,
 static const PRUint16 BUGS_FOUND_SO_FAR = 0;
 
 //Preferences
-static const char* MEM_CACHE_PREF   = "browser.cache.memory_cache_size";
-static const char* DISK_CACHE_PREF  = "browser.cache.disk_cache_size";
-static const char* CACHE_DIR_PREF   = "browser.cache.directory";
-static const char* FREQ_PREF        = "browser.cache.check_doc_frequency";
+static const char const* MEM_CACHE_PREF   = "browser.cache.memory_cache_size";
+static const char const* DISK_CACHE_PREF  = "browser.cache.disk_cache_size";
+static const char const* CACHE_DIR_PREF   = "browser.cache.directory";
+static const char const* FREQ_PREF        = "browser.cache.check_doc_frequency";
 
 /* Find a bug in NU_CACHE, get these many chocolates */
 static const PRUint16 CHOCOLATES_PER_BUG_FOUND = 2^BUGS_FOUND_SO_FAR; 
