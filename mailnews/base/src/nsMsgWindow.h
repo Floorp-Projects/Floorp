@@ -29,19 +29,21 @@
 #include "nsIMessageView.h"
 #include "nsIMsgFolder.h"
 #include "nsIWebShell.h"
+#include "nsIURIContentListener.h"
 
 #include "nsCOMPtr.h"
 
-class nsMsgWindow : public nsIMsgWindow {
+class nsMsgWindow : public nsIMsgWindow, nsIURIContentListener {
 
 public:
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
 	nsMsgWindow();
 	virtual ~nsMsgWindow();
 	nsresult Init();
 	NS_DECL_NSIMSGWINDOW
+  NS_DECL_NSIURICONTENTLISTENER
 
 protected:
 	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
@@ -50,6 +52,7 @@ protected:
 	nsCOMPtr<nsIMsgFolder> mOpenFolder;
 	// let's not make this a strong ref - we don't own it.
 	nsIWebShell *mRootWebShell;
+  nsIWebShell *mMessageWindowWebShell;
 };
 
 
