@@ -19,10 +19,16 @@ DEPTH	= ..
 
 include $(DEPTH)/config/config.mk
 
-ifeq ($(OS_ARCH),Rhapsody)
-DIRS  = ybfe
+ifndef NO_X11
+DIRS = xfe
 else
-DIRS  = xfe
+
+# Rhapsody needs to be able to go to both xfe (Mozilla/x11)
+# and ybfe (NGLayout).
+ifeq ($(OS_ARCH),Rhapsody)
+DIRS = ybfe
+endif
+
 endif
 
 include $(DEPTH)/config/rules.mk

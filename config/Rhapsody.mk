@@ -32,17 +32,16 @@ OS_REL_CFLAGS           = -Dppc
 CPU_ARCH                = ppc
 endif
 
-OS_INCLUDES		=
+OS_INCLUDES		= 
 G++INCLUDES		= -I/usr/include/g++
 LOC_LIB_DIR		= 
 MOTIF			=
 MOTIFLIB		=
-OS_LIBS			= -lstdc++
-NO_X11          = 1
+OS_LIBS			= -lstdc++ 
 
 PLATFORM_FLAGS		= -DRHAPSODY -Wall -pipe
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
-PORT_FLAGS		= -DSW_THREADS -DHAVE_STDDEF_H -DHAVE_STDLIB_H -DHAVE_FILIO_H -DNTOHL_ENDIAN_H -DMACHINE_ENDIAN_H -DNO_REGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_TZNAME -DNO_X11 -DNEEDS_GETCWD
+PORT_FLAGS		= -DSW_THREADS -DHAVE_STDDEF_H -DHAVE_STDLIB_H -DHAVE_FILIO_H -DNTOHL_ENDIAN_H -DMACHINE_ENDIAN_H -DNO_REGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_TZNAME -DNEEDS_GETCWD -DHAVE_SYSERRLIST #-DNO_X11
 PDJAVA_FLAGS		=
 
 # "Commons" are tentative definitions in a global scope, like this:
@@ -55,6 +54,16 @@ PDJAVA_FLAGS		=
 # definitions so that the linker can catch multiply-defined symbols.
 # Also, common symbols are not allowed with Rhapsody dynamic libraries.
 DSO_FLAGS		= -fno-common
+
+# Build Mozilla/X11 version, else build NGLayout/ybfe.
+ifdef HAVE_X11
+OS_INCLUDES 		+= -I/usr/X11R6/include
+OS_LIBS 		+= -L/usr/X11R6/lib -lXm -lXt -lXext -lX11
+PORT_FLAGS		+= 
+else
+NO_X11			= 1
+endif
+
 
 ifdef USE_AUTOCONF
 OS_CFLAGS		= $(DSO_FLAGS)
