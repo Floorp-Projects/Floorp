@@ -2440,4 +2440,14 @@ NS_IMETHODIMP oeICalFilter::ParseTodoIcalString(const nsACString& aNewVal, PRBoo
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+NS_IMETHODIMP oeICalFilter::SetDuration(PRBool is_negative, PRUint16 weeks, PRUint16 days, PRUint16 hours, PRUint16 minutes, PRUint16 seconds)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetDuration(PRBool *is_negative, PRUint16 *weeks, PRUint16 *days, PRUint16 *hours, PRUint16 *minutes, PRUint16 *seconds)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 

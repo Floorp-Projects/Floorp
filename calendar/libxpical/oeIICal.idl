@@ -121,6 +121,10 @@ interface oeIICalEvent : nsISupports
     attribute short priority;
     attribute eventMethodProperty method;
     attribute eventStatusProperty status;
+    void setDuration( in boolean is_negative, in unsigned short weeks, in unsigned short days, in unsigned short hours,
+                      in unsigned short minutes, in unsigned short seconds );
+    void getDuration( out boolean is_negative, out unsigned short weeks, out unsigned short days, out unsigned short hours,
+                      out unsigned short minutes, out unsigned short seconds );
     boolean getNextRecurrence( in PRTime begin, out PRTime result);
     boolean getPreviousOccurrence( in PRTime beforethis, out PRTime result);
     AUTF8String getIcalString();

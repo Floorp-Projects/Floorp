@@ -267,6 +267,7 @@ oeICalEventImpl::oeICalEventImpl()
     m_recurweekdays = 0;
     m_recurweeknumber = 0;
     m_lastalarmack = icaltime_null_time();
+    m_duration = icaldurationtype_null_duration();
     SetAlarmUnits( DEFAULT_ALARM_UNITS );
     SetRecurUnits( DEFAULT_RECUR_UNITS );
     SetSyncId( "" );
@@ -1483,6 +1484,22 @@ NS_IMETHODIMP oeICalEventImpl::RemoveContacts()
     return NS_OK;
 }
 
+NS_IMETHODIMP oeICalEventImpl::SetDuration(PRBool is_negative, PRUint16 weeks, PRUint16 days, PRUint16 hours, PRUint16 minutes, PRUint16 seconds)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventImpl::SetDuration()\n" );
+#endif
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalEventImpl::GetDuration(PRBool *is_negative, PRUint16 *weeks, PRUint16 *days, PRUint16 *hours, PRUint16 *minutes, PRUint16 *seconds)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventImpl::GetDuration()\n" );
+#endif
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 {
 #ifdef ICAL_DEBUG_ALL
@@ -1781,16 +1798,30 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_start->m_datetime = icaltime_null_time();
     }
     
-    //enddate
-    prop = icalcomponent_get_first_property( vevent, ICAL_DTEND_PROPERTY );
+    //duration
+    prop = icalcomponent_get_first_property( vevent, ICAL_DURATION_PROPERTY );
     if ( prop != 0) {
-        icaltimetype end;
-        end = icalproperty_get_dtstart( prop );
-        m_end->m_datetime = end;
-    } else if( !icaltime_is_null_time( m_start->m_datetime ) ) {
-        m_end->m_datetime = m_start->m_datetime;
+        m_duration = icalproperty_get_duration( prop );
     } else {
-        m_end->m_datetime = icaltime_null_time();
+        m_duration = icaldurationtype_null_duration();
+    }
+
+    //enddate
+    if( icaldurationtype_is_null_duration( m_duration ) ) {
+        prop = icalcomponent_get_first_property( vevent, ICAL_DTEND_PROPERTY );
+        if ( prop != 0) {
+            m_end->m_datetime = icalproperty_get_dtend( prop );
+        } else if( !icaltime_is_null_time( m_start->m_datetime ) ) {
+            m_end->m_datetime = m_start->m_datetime;
+        } else {
+            m_end->m_datetime = icaltime_null_time();
+        }
+    } else {
+        if( !icaltime_is_null_time( m_start->m_datetime ) ) {
+            m_end->m_datetime = icaltime_add( m_start->m_datetime, m_duration );
+        } else {
+            m_end->m_datetime = icaltime_null_time();
+        }
     }
     
     //stampdate

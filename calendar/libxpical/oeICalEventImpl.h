@@ -141,6 +141,7 @@ private:
     char *m_recurunits;
     short m_recurweekdays;
     short m_recurweeknumber;
+    icaldurationtype m_duration;
     oeDateTimeImpl *m_start;
     oeDateTimeImpl *m_end;
     oeDateTimeImpl *m_stamp;

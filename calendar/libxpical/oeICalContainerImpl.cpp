@@ -1298,6 +1298,16 @@ NS_IMETHODIMP oeICalContainerFilter::ParseTodoIcalString(const nsACString& aNewV
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalContainerFilter::SetDuration(PRBool is_negative, PRUint16 weeks, PRUint16 days, PRUint16 hours, PRUint16 minutes, PRUint16 seconds)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalContainerFilter::GetDuration(PRBool *is_negative, PRUint16 *weeks, PRUint16 *days, PRUint16 *hours, PRUint16 *minutes, PRUint16 *seconds)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void oeICalContainerFilter::UpdateAllFilters( PRInt32 icaltype )
 {
     switch ( icaltype ) {
