@@ -115,11 +115,11 @@
                 <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>headers</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
-                    <SETTING><NAME>Path</NAME><VALUE>Netscape Source:Project Stuff:mozilla:dist:autoconfig:</VALUE></SETTING>
+                    <SETTING><NAME>Path</NAME><VALUE>::::dist:autoconfig:</VALUE></SETTING>
                     <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
-                    <SETTING><NAME>PathRoot</NAME><VALUE>Absolute</VALUE></SETTING>
+                    <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                 </SETTING>
-                <SETTING><NAME>SaveEntriesUsingRelativePaths</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>SaveEntriesUsingRelativePaths</NAME><VALUE>true</VALUE></SETTING>
 
                 <!-- Settings for "File Mappings" panel -->
                 <SETTING><NAME>FileMappings</NAME>
@@ -307,7 +307,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>2633qmb66362da2&#144;&#213;&#169;&#216;</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -711,22 +711,28 @@
             </SETTINGLIST>
             <FILELIST>
                 <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIAutoConfig.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsIAutoConfig.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsILDAPSyncQuery.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsILDAPSyncQuery.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIReadConfig.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsIReadConfig.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -734,18 +740,24 @@
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIAutoConfig.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsIAutoConfig.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsILDAPSyncQuery.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsILDAPSyncQuery.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIReadConfig.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsIReadConfig.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -816,7 +828,7 @@
                     <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                     <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                 </SETTING>
-                <SETTING><NAME>SaveEntriesUsingRelativePaths</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>SaveEntriesUsingRelativePaths</NAME><VALUE>true</VALUE></SETTING>
 
                 <!-- Settings for "File Mappings" panel -->
                 <SETTING><NAME>FileMappings</NAME>
@@ -1004,7 +1016,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>25mqrb65q2ha2%&#144;&#213;&#169;&#216;</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1408,22 +1420,28 @@
             </SETTINGLIST>
             <FILELIST>
                 <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIAutoConfig.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsIAutoConfig.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsILDAPSyncQuery.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsILDAPSyncQuery.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIReadConfig.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsIReadConfig.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -1431,18 +1449,24 @@
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIAutoConfig.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsIAutoConfig.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsILDAPSyncQuery.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsILDAPSyncQuery.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIReadConfig.idl</PATH>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+                    <PATH>:nsIReadConfig.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1457,20 +1481,26 @@
     <GROUPLIST>
         <FILEREF>
             <TARGETNAME>headers</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIAutoConfig.idl</PATH>
+            <PATHTYPE>PathRelative</PATHTYPE>
+            <PATHROOT>Project</PATHROOT>
+            <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+            <PATH>:nsIAutoConfig.idl</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
             <TARGETNAME>headers</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsILDAPSyncQuery.idl</PATH>
+            <PATHTYPE>PathRelative</PATHTYPE>
+            <PATHROOT>Project</PATHROOT>
+            <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+            <PATH>:nsILDAPSyncQuery.idl</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
             <TARGETNAME>headers</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIReadConfig.idl</PATH>
+            <PATHTYPE>PathRelative</PATHTYPE>
+            <PATHROOT>Project</PATHROOT>
+            <ACCESSPATH>::autoconfig:public:</ACCESSPATH>
+            <PATH>:nsIReadConfig.idl</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
     </GROUPLIST>
