@@ -311,7 +311,7 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	if (m_pIWebShell)
 	{
 		nsIContentViewer *pContentViewer = nsnull;
-		res = mDocShell->GetContentViewer(&pContentViewer);
+		res = m_pIDocShell->GetContentViewer(&pContentViewer);
 		if (NS_SUCCEEDED(res))
 		{
             nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
@@ -675,7 +675,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	// Create top level window
 	rv = nsComponentManager::CreateInstance(kWindowCID, nsnull,
-		   kIWidgetIID, (void**)&mWindow);
+		   kIWidgetIID, (void**)&m_pIWindow);
 	if (NS_OK != rv)
 	{
 		return rv;
@@ -691,48 +691,47 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	r.width  = rcLocation.right  - rcLocation.left;
 	r.height = rcLocation.bottom - rcLocation.top;
 
-	// TODO set parent window to this control
-	mWindow->Create((nsIWidget*)NULL, r, nsnull, nsnull, nsnull, nsnull, &initData);
-	mWindow->GetClientBounds(r);
+	// Create the window that the browser will live inside
+	m_pIWindow->Create(nsNativeWidget(m_hWnd), r, nsnull, nsnull, nsnull, nsnull, &initData);
+	m_pIWindow->GetClientBounds(r);
+	m_pIWindow->Show(PR_TRUE);
 
-	  // Create web shell
-	mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
+	// Create web shell
+	m_pIWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
 /*  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
                                           NS_GET_IID(nsIDocShell),
-                                          (void**)&mDocShell);
+                                          (void**)&m_pIDocShell);
 */
 	if (NS_OK != rv)
 	{
 		return rv;
 	}
 	r.x = r.y = 0;
-	nsCOMPtr<nsIBaseWindow> webBrowserWin(do_QueryInterface(mWebBrowser));
-	rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
-	webBrowserWin->Create();
-	mWebBrowser->GetDocShell(&mDocShell);
-	mDocShell->SetAllowPlugins(aAllowPlugins);
+	m_pIWebBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), (void **) &m_pIWebShellWin);
+	rv = m_pIWebShellWin->InitWindow(nsnull, m_pIWindow, r.x, r.y, r.width, r.height);
+	m_pIWebShellWin->Create();
+	m_pIWebBrowser->GetDocShell(&m_pIDocShell);
+	m_pIDocShell->SetAllowPlugins(aAllowPlugins);
 	nsCOMPtr<nsIDocumentLoader> docLoader;
-	nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-	webShell->SetContainer((nsIWebShellContainer*) this);
+
+	m_pIDocShell->QueryInterface(NS_GET_IID(nsIWebShell), (void **) &m_pIWebShell);
 
 	// Create the container object
 	m_pWebShellContainer = new CWebShellContainer(this);
 	m_pWebShellContainer->AddRef();
 
-	webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
+	m_pIWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
 	if (docLoader)
 	{
 		docLoader->AddObserver(m_pWebShellContainer);
 	}
-	webBrowserWin->SetVisibility(PR_TRUE);
 
-
-	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(m_pIDocShell));
 	docShellAsItem->SetTreeOwner(m_pWebShellContainer);
 
 //	m_pIWebShell->SetPrefs(m_pIPref);
-	webShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
-	mDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
+	m_pIDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
 //	m_pIWebShell->SetWebShellType(nsWebShellContent);
 
 	m_pIWebShellWin->SetVisibility(PR_TRUE);
@@ -892,7 +891,7 @@ HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 	}
 	
 	nsIContentViewer* pIContentViewer = nsnull;
-	res = mDocShell->GetContentViewer(&pIContentViewer);
+	res = m_pIDocShell->GetContentViewer(&pIContentViewer);
 	if (NS_SUCCEEDED(res) && pIContentViewer)
 	{
 		nsIDocumentViewer* pIDocViewer = nsnull;
@@ -938,7 +937,7 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 	}
 	
 	nsIContentViewer * pCViewer = nsnull;
-	res = mDocShell->GetContentViewer(&pCViewer);
+	res = m_pIDocShell->GetContentViewer(&pCViewer);
 	if (NS_SUCCEEDED(res) && pCViewer)
 	{
 		nsIDocumentViewer * pDViewer = nsnull;
@@ -1234,7 +1233,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoBack(void)
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pIWebBrowser));
 	PRBool aCanGoBack = PR_FALSE;
 	webNav->GetCanGoBack(&aCanGoBack);
 	if (aCanGoBack == PR_TRUE)
@@ -1256,7 +1255,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoForward(void)
 		RETURN_E_UNEXPECTED();
 	}
 
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pIWebBrowser));
 	PRBool aCanGoForward = PR_FALSE;
 	webNav->GetCanGoForward(&aCanGoForward);
 	if (aCanGoForward == PR_TRUE)

@@ -52,12 +52,60 @@ NS_INTERFACE_MAP_BEGIN(CWebShellContainer)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
 //	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
 	NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 	NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 NS_INTERFACE_MAP_END
 
+///////////////////////////////////////////////////////////////////////////////
+// nsIURIContentListener
+
+
+/* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
+NS_IMETHODIMP CWebShellContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
+NS_IMETHODIMP CWebShellContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIChannel *aOpenedChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
+NS_IMETHODIMP CWebShellContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
+NS_IMETHODIMP CWebShellContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsISupports loadCookie; */
+NS_IMETHODIMP CWebShellContainer::GetLoadCookie(nsISupports * *aLoadCookie)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP CWebShellContainer::SetLoadCookie(nsISupports * aLoadCookie)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsIURIContentListener parentContentListener; */
+NS_IMETHODIMP CWebShellContainer::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP CWebShellContainer::SetParentContentListener(nsIURIContentListener * aParentContentListener)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocShellTreeOwner
@@ -444,7 +492,7 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsres
 	CComVariant vURL(bstrURL);
 	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
 
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->mWebBrowser));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->m_pIWebBrowser));
 
 	// Fire the new NavigateForward state
 	VARIANT_BOOL bEnableForward = VARIANT_FALSE;
