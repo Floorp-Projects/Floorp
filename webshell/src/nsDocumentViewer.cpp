@@ -46,7 +46,7 @@
 #include "nsIView.h"
 
 #include "nsIPref.h"
-
+#include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 
 #ifdef NS_DEBUG
@@ -538,11 +538,14 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         //lay it out...
         ps->InitialReflow(width, height);
 
-        newdx->BeginDocument();
-        newdx->BeginPage();
-        vm->Display();
-        newdx->EndPage();
-        newdx->EndDocument();
+        // Ask the page sequence frame to print all the pages
+        nsIPageSequenceFrame* pageSequence;
+        nsPrintOptions        options;
+
+        options.range = ePrintRange_AllPages;
+        ps->GetPageSequenceFrame(pageSequence);
+        NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
+        pageSequence->Print(*cx, options, nsnull);
 
         NS_RELEASE(ps);
         NS_RELEASE(vm);
