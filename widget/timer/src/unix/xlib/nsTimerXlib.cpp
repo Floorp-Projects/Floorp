@@ -38,10 +38,8 @@
 
 #include "nsTimerXlib.h"
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 #include "nsIXlibWindowService.h"
 #include "nsIServiceManager.h"
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 #include "nsVoidArray.h"
 #include <unistd.h>
@@ -53,13 +51,8 @@
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 static int  NS_TimeToNextTimeout(struct timeval *aTimer);
 static void NS_ProcessTimeouts(Display *aDisplay);
-#else
-extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
-extern "C" void NS_ProcessTimeouts(Display *aDisplay);
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 nsVoidArray *nsTimerXlib::gHighestList = (nsVoidArray *)nsnull;
 nsVoidArray *nsTimerXlib::gHighList = (nsVoidArray *)nsnull;
@@ -327,15 +320,12 @@ void nsTimerXlib::SetType(PRUint32 aType)
 }
            
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
 static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 nsresult
 nsTimerXlib::EnsureWindowService()
 {
-#ifndef MOZ_MONOLITHIC_TOOLKIT
   nsIXlibWindowService * xlibWindowService = nsnull;
 
   nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
@@ -351,19 +341,13 @@ nsTimerXlib::EnsureWindowService()
 
     NS_RELEASE(xlibWindowService);
   }
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
   return NS_OK;
 }
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 static
-#else
-extern "C"
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 int NS_TimeToNextTimeout(struct timeval *aTimer) 
 {
-#ifndef MOZ_MONOLITHIC_TOOLKIT
   static int once = 1;
 
   if (once)
@@ -372,7 +356,6 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
 
     printf("NS_TimeToNextTimeout() lives!\n");
   }
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
   
   nsTimerXlib *timer;
 
@@ -426,15 +409,10 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
   }
 }
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 static
-#else
-extern "C"
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 void
 NS_ProcessTimeouts(Display *aDisplay) 
 {
-#ifndef MOZ_MONOLITHIC_TOOLKIT
   static int once = 1;
 
   if (once)
@@ -443,8 +421,6 @@ NS_ProcessTimeouts(Display *aDisplay)
 
     printf("NS_ProcessTimeouts() lives!\n");
   }
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
-
 
   nsTimerXlib::gProcessingTimer = PR_TRUE;
 
@@ -468,19 +444,3 @@ NS_ProcessTimeouts(Display *aDisplay)
   nsTimerXlib::gProcessingTimer = PR_FALSE;
 }
 
-#ifdef MOZ_MONOLITHIC_TOOLKIT
-nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }  
-  
-  nsTimerXlib *timer = new nsTimerXlib();
-  if (nsnull == timer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
-}
-#endif /* MOZ_MONOLITHIC_TOOLKIT */

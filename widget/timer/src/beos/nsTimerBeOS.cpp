@@ -447,18 +447,3 @@ void nsTimerBeOS::Cancel()
 #endif
 }
 
-#ifdef MOZ_MONOLITHIC_TOOLKIT
-nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
-{
-    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if(nsnull == aInstancePtrResult)
-		return NS_ERROR_NULL_POINTER;
-
-    nsTimerBeOS *timer = new nsTimerBeOS();
-    if(nsnull == timer)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
-}
-#endif
-

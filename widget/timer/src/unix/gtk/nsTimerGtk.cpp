@@ -453,28 +453,3 @@ void nsTimerGtk::Cancel()
   }
 }
 
-#ifdef MOZ_MONOLITHIC_TOOLKIT
-nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }  
-  
-  nsTimerGtk *timer = new nsTimerGtk();
-  if (nsnull == timer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
-}
-
-int NS_TimeToNextTimeout(struct timeval *aTimer) 
-{
-  return 0;
-}
-
-void NS_ProcessTimeouts(void) 
-{
-}
-#endif /* MOZ_MONOLITHIC_TOOLKIT */
