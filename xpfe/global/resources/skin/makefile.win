@@ -30,6 +30,7 @@ include <$(DEPTH)\config\rules.mak>
 install::
 	$(MAKE_INSTALL) htmlBindings.xml $(DISTXUL)
 	$(MAKE_INSTALL) xulBindings.xml $(DISTXUL)
+	$(MAKE_INSTALL) radioBindings.xml $(DISTXUL)
 	$(MAKE_INSTALL) menulistBindings.xml $(DISTXUL)
 	$(MAKE_INSTALL) xul.css $(DISTXUL)
 
@@ -37,5 +38,6 @@ clobber::
 	$(RM) $(DISTXUL)\htmlBindings.xml
 	$(RM) $(DISTXUL)\xulBindings.xml
 	$(RM) $(DISTXUL)\menulistBindings.xml
+	$(RM) $(DISTXUL)\radioBindings.xml
 	$(RM) $(DISTXUL)\xul.css
 
