@@ -1239,11 +1239,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       break;    //singletons can't contain anything...
 
     case eHTMLTag_li:
-      if ((eHTMLTag_li == aChild) || //XXX this is temporary!!!
-          (eHTMLTag_ul == aChild) ||
-          (eHTMLTag_ol == aChild) ||
-          (eHTMLTag_menu == aChild) ||
-          (eHTMLTag_dir == aChild)) {
+      if (eHTMLTag_li == aChild) {
         return PR_FALSE;
       }
       result=PRBool(!strchr(gHeadingTags,aChild)); break;
