@@ -127,7 +127,8 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
   GtkWidget *widget;
 
   widget = gtk_menu_item_new_with_label (labelStr);
-  gtk_menu_append (GTK_MENU (mMenu), widget);
+//  gtk_menu_append (GTK_MENU (mMenu), widget);
+  gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
 
   delete[] labelStr;
 
@@ -143,7 +144,7 @@ NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
   aMenuItem->GetNativeData(voidData);
   widget = GTK_WIDGET(voidData);
 
-  gtk_menu_append (GTK_MENU (mMenu), widget);
+  gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
 
   // XXX add aMenuItem to internal data structor list
   return NS_OK;
@@ -163,12 +164,15 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 
   labelStr = Label.ToNewCString();
 
-  parentmenu = GetNativeParent();
+  aMenu->GetNativeData(voidData);
+  parentmenu = GTK_WIDGET(voidData);
 
   item = gtk_menu_item_new_with_label (labelStr);
-  gtk_menu_append (GTK_MENU (parentmenu), item);
+  gtk_menu_shell_append (GTK_MENU_SHELL (parentmenu), item);
 
   delete[] labelStr;
+
+  voidData = NULL;
 
   aMenu->GetNativeData(voidData);
   newmenu = GTK_WIDGET(voidData);
@@ -185,7 +189,7 @@ NS_METHOD nsMenu::AddSeparator()
 {
   GtkWidget *widget;
   widget = gtk_menu_item_new ();
-  gtk_menu_append (GTK_MENU (mMenu), widget);
+  gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
   return NS_OK;
 }
 
