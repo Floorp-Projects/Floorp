@@ -265,6 +265,7 @@ dumpCertificate(CERTCertificate *cert, int num, PRFileDesc *outfile)
 	int64 timeBefore, timeAfter;
 	PRExplodedTime beforePrintable, afterPrintable;
 	char *beforestr, *afterstr;
+        /* needs to be able to handle GeneralizedTime too */
 	DER_UTCTimeToTime(&timeBefore, &cert->validity.notBefore);
 	DER_UTCTimeToTime(&timeAfter, &cert->validity.notAfter);
 	PR_ExplodeTime(timeBefore, PR_GMTParameters, &beforePrintable);
