@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -17,6 +17,10 @@
  */
 #include "mkutils.h"
 #include "mktrace.h"
+#include "timing.h"
+#include "prprf.h"
+#include "prlog.h"
+#include "prtime.h"
 
 /* If you want to trace netlib, set this to 1, or use CTRL-ALT-T
  * stroke (preferred method) to toggle it on and off */
@@ -79,3 +83,105 @@ void _MK_TraceMsg(char *fmt, ...) {
 }
 
 #endif /* DEBUG || NETLIB_TRACE_ON */
+
+
+/************************************************
+ *
+ *  Runtime performance tracing stubs.
+ *
+ */
+
+
+static PRLogModuleInfo* gTimingLog   = NULL;
+static const char* gTimingModuleName = "nsTiming";
+
+/**
+ * Ensure that the log module actually exists before trying to use it.
+ * @return <tt>FALSE</tt> if something goes wrong.
+ */
+static PRBool
+EnsureLogModule(void)
+{
+    if (gTimingLog == NULL) {
+        if ((gTimingLog = PR_NewLogModule(gTimingModuleName)) != NULL) {
+            /* Off to start with */
+            gTimingLog->level = PR_LOG_NONE;
+        }
+    }
+
+    return (gTimingLog != NULL) ? PR_TRUE : PR_FALSE;
+}
+
+/**
+ * Write a message to the log. You should use the TIMING_MSG() macro,
+ * rather than calling this directly.
+ */
+PUBLIC void
+TimingWriteMessage(const char* fmtstr, ...)
+{
+    char line[256];
+    va_list ap;
+
+    if (! EnsureLogModule())
+        return;
+
+    if (gTimingLog->level == PR_LOG_NONE)
+        return;
+
+    va_start(ap, fmtstr);
+
+    {
+        PRExplodedTime now;
+        PRUint32 nb;
+
+        PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
+
+        /* Print out "YYYYMMDD.HHMMSS.UUUUUU: " */
+        nb = PR_snprintf(line, sizeof(line) - 1,
+                         "%04d%02d%02d.%02d%02d%02d.%06d: ",
+                         now.tm_year, now.tm_month + 1, now.tm_mday,
+                         now.tm_hour, now.tm_min, now.tm_sec,
+                         now.tm_usec);
+
+        /* ...followed by the "real" message */
+        nb += PR_vsnprintf(line + nb, sizeof(line) - nb - 1, fmtstr, ap);
+    }
+
+    PR_LOG(gTimingLog, PR_LOG_NOTICE, (line));
+}
+
+
+/**
+ * Enable or disable the timing log.
+ */
+PUBLIC void
+TimingSetEnabled(PRBool enabled)
+{
+    if (! EnsureLogModule())
+        return;
+
+    if (enabled) {
+        if (gTimingLog->level == PR_LOG_NONE) {
+            gTimingLog->level = PR_LOG_NOTICE;
+            TimingWriteMessage("(tracing enabled)");
+        }
+    } else {
+        if (gTimingLog->level != PR_LOG_NONE) {
+            TimingWriteMessage("(tracing disabled)");
+            gTimingLog->level = PR_LOG_NONE;
+        }
+    }
+}
+
+/**
+ * Query whether the timing log is enabled.
+ */
+PUBLIC PRBool
+TimingIsEnabled(void)
+{
+    if (! EnsureLogModule())
+        return PR_FALSE;
+
+    return (gTimingLog->level == PR_LOG_NONE) ? PR_FALSE : PR_TRUE;
+}
+
