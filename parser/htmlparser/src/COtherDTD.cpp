@@ -606,8 +606,8 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
     eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
-    eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
-    PRBool          execSkipContent=PR_FALSE;
+//    eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
+//    PRBool          execSkipContent=PR_FALSE;
 
     theToken->mUseCount=0;  //assume every token coming into this system needs recycling.
 
@@ -725,10 +725,10 @@ void WriteTokenToLog(CToken* aToken) {
  */
 nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode& aNode){
   nsresult result=NS_OK; 
-  PRInt32 theAttrCount  = aNode.GetAttributeCount(); 
 
     //first let's see if there's some skipped content to deal with... 
 #if 0
+  PRInt32 theAttrCount  = aNode.GetAttributeCount(); 
   if(*gElementTable->mElements[aTag].mSkipTarget) { 
     result=CollectSkippedContent(aNode,theAttrCount); 
   } 
@@ -888,7 +888,7 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
     case eHTMLTag_body: //we intentionally don't let the user close HTML or BODY
     case eHTMLTag_html:  
       break;
-
+ 
     case eHTMLTag_script:
       mHasOpenScript=PR_FALSE;
 
@@ -918,7 +918,7 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   nsresult  result=NS_OK;  
-  eHTMLTags theParentTag=mBodyContext->Last(); 
+//  eHTMLTags theParentTag=mBodyContext->Last(); 
 
   nsCParserNode* theNode=CreateNode();
   if(theNode) { 
@@ -1786,7 +1786,7 @@ nsresult COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool 
 
     while(mBodyContext->GetCount()>anIndex) {
 
-      eHTMLTags     theTag=mBodyContext->Last();
+//      eHTMLTags     theTag=mBodyContext->Last();
       nsEntryStack  *theChildStyleStack=0;      
       nsCParserNode *theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyleStack);
 

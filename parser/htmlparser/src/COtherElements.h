@@ -751,6 +751,9 @@ public:
     CTextContainer::Initialize(*this,aTag);
   }
 
+  virtual ~CTextContainer() {
+  }
+
   virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
@@ -1424,7 +1427,6 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
       printf("block inline ");
     }
     else {
-      PRBool done=PR_FALSE;
 
       if (aTag->mContainsGroups.mBits.mBlockEntity)  {
         printf("blockEntity ");
@@ -1523,7 +1525,7 @@ void CElementTable::DebugDumpContainment(const char* aTitle){
   printf("==================================================\n");
   printf("%s\n",aTitle);
   printf("==================================================\n");
-  int i,j=0;
+  int i=0;
 
   for(i=1;i<eHTMLTag_text;i++){
     //DebugDumpContainment(mElements[i]);
@@ -1654,7 +1656,7 @@ nsresult CElement::HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDCon
 
             if(NS_SUCCEEDED(result)){
               theParentTag=aContext->Last();
-              CElement* theParent=gElementTable->mElements[theParentTag];
+              theParent=gElementTable->mElements[theParentTag];
               return theParent->HandleStartToken(aNode,aTag,aContext,aSink);
             }
             else return result;
@@ -1722,7 +1724,7 @@ static nsresult CloseContainer(eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLCont
 nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
   nsresult result=NS_OK;
 
-  CElement* theCloser=gElementTable->mElements[aTag];
+//  CElement* theCloser=gElementTable->mElements[aTag];
 
   if(mTag==aTag) {
     result=CloseContainer(aTag,aContext,aSink);
