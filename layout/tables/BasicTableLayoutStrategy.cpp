@@ -1527,6 +1527,8 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
       float cellPct = 0.0f;
       if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
         cellPct = cellPosition->mWidth.GetPercentValue();
+        if (colSpan == numEffCols)
+          cellPct = 1.0f; // overwrite spurious percent colspan width's - bug 46944
         cellPctWidth = nsTableFrame::RoundToPixel(NSToCoordRound( ((float)basis) * cellPct ), aPixelToTwips);
         if (!mIsNavQuirksMode) { 
           // need to add padding 
