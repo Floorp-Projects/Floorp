@@ -64,7 +64,7 @@ xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
 
 	boolProperty = true;
 	shortProperty = 32767;
-	longProperty = 9223372036854776000;
+	longProperty =  2147483647;
 	charProperty = 'X';
 
 	const char _id[] = "a68cc6a6-6552-11d3-82ef-0060b0eb596f";
@@ -165,7 +165,7 @@ xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
 
 	boolProperty = true;
 	shortProperty = 32767;
-	longProperty = 9223372036854776;
+	longProperty =  2147483647;
 	charProperty = 'X';
 
 	const char s[] = "XPConnect Read-Writable String";

@@ -51,56 +51,5 @@ interface nsIXPCTestConst : nsISupports {
 
 	const short              shortConst   = 254;
 	const long               longConst    = 1234567890;
-	const long long          longLongConst= 12345678901234567890;
-	const unsigned short     unsignedShortConst = 255;
-	const unsigned long      unsignedLongConst  = 123456789;
-	const unsigned long long unsignedLongLongConst = 123456789;
-	const long				longExpressionConst = 500*500;
-
-	const PRUint8            prUint8Const   = 255;
-	const PRUint16           prUint16Const  = 65535;
-	const PRUint32           prUint32Const  = 4294967295;
-	const PRUint64           prUint64Const  = 18446744073709552000;
-
-/*
-// built-in types
-	const boolean            booleanConstTrue = "TRUE";
-	const boolean			 booleanConstFalse = "FALSE";
-
-	//const octet              octetConst   = 255;
-
-	const float              floatConst  = 0.123456789;
-	const double             doubleConst = -0.123456789;
-	const char               charConst   = 'Z';
-	const wchar              wcharConst  = 'B';
-	const string             stringConst = "XPConnect const string";
-	const wstring            wstringConst= "XPConnect const wstring";
-
-
-*/
-/*
-// PRTypes
-	const PRBool             prBoolConst    = TRUE;
-	const PRUnichar          prUnicharConst = 'X';
-
-	const PRInt16            prInt16Const   = 255;
-	const PRInt32            prInt32Const   = 65535;
-	const PRInt64            prInt64Const   = 4294967295;
-	const PRTime             prTimeConst    = 18446744073709552000;
-	const nsrefcnt           nsrefcntConst  = 4294967295;
-	const nsresult           nsresultConst  = 4294967295;
-*/
-// natives
-/*
-	[noscript] const native voidStar    voidStarConst=
-	[noscript] const native voidRef     voidRefConst =
-	[noscript] const native nsIDRef     nsIDRefConst =
-	[noscript] const native nsIIDRef    nsIIDRefConst=
-	[noscript] const native nsCIDRef    nsCIDRefConst=
-	[noscript] const native nsIDPtr     nsIDPtrConst =
-	[noscript] const native nsIIDPtr    nsIIDPtrConst=
-	[noscript] const native nsCIDPtr    nsCIDPtrConst=
-	[noscript] const native nsQIResult  nsQIResultConst=
-*/
 };
 

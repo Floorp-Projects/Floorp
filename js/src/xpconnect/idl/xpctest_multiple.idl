@@ -59,7 +59,7 @@ interface nsIXPCTestChild3 : nsIXPCTestParentOne {
 };
 
 [scriptable, uuid(a6d22202-622b-11d3-82ef-0060b0eb596f)]
-interface nsIXPCTestChild4 : nsIsupports {
+interface nsIXPCTestChild4 : nsISupports {
 	attribute string ChildAttribute;
 	string ChildMethod();
 };
