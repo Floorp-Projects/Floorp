@@ -18,6 +18,7 @@ ucvko    - Korean charsets - ISO-2022-KR, EUC-KR
 ucvlatin - Latin charsets - ISO-8859-1,2,3,4,9,14,15, CP1250,1252,1254, 
                             Mac Roman, Central European, Romanian, Icelandic, 
                             etc
+ucvmath  - Mathematical charsets (symbols for MathML/scientific documents)
 ucvth    - Thai charsets
 ucvtw    - Traditional Chinese charsets Set 1 - Big5
 ucvtw2   - Traditional Chinese charsets Set 2 - EUC-TW, ISO-2022-CN,  
