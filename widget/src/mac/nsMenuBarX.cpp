@@ -982,7 +982,7 @@ MenuHelpersX::WebShellToPresContext (nsIWebShell* inWebShell, nsIPresContext** o
   if ( contentViewer ) {
     nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(contentViewer) );
     if ( docViewer )
-      docViewer->GetPresContext(*outContext);     // AddRefs for us
+      docViewer->GetPresContext(outContext);     // AddRefs for us
     else
       retval = NS_ERROR_FAILURE;
   }
