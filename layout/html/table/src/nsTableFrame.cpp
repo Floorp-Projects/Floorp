@@ -215,6 +215,9 @@ nsTableFrame::Init(nsIPresContext*  aPresContext,
   rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
                                   aPrevInFlow);
 
+  // record that children that are ignorable whitespace should be excluded 
+  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
+
   if (aPrevInFlow) {
     // set my width, because all frames in a table flow are the same width and
     // code in nsTableOuterFrame depends on this being set

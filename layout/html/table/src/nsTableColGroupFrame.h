@@ -56,6 +56,12 @@ public:
   friend nsresult 
   NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
