@@ -63,7 +63,7 @@ else
 	print("<html><head><title>Bug Reports</title></head><body bgcolor=\"#FFFFFF\">");
         }
 
-ConnectToDatabase();
+ConnectToDatabase(1);
 GetVersionTable();
 
 my @myproducts;
