@@ -132,11 +132,8 @@ JAVA_PROG		= $(JAVA_BIN)java
 PERL			= /usr/bin/perl
 PROCESSOR_ARCHITECTURE	= _$(CPU_ARCH)
 RANLIB			= /usr/bin/ranlib
-
-ifneq ($(CPU_ARCH),ppc)
 UNZIP_PROG		= /usr/bin/unzip
 ZIP_PROG		= /usr/bin/zip
-endif
 
 ######################################################################
 # Other
