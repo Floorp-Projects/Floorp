@@ -1409,8 +1409,8 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
      * function.  If so, pretend we didn't find it, so that the real arg or
      * var property can be found in the function's call object, later on in
      * the scope chain.  But skip unshared arg and var properties -- those
-     * result when a script sets a function "static" property explicitly.
-     * See jsinterp.c:SetFunctionSlot.
+     * result when a script explicitly sets a function "static" property of
+     * the same name.  See jsinterp.c:SetFunctionSlot.
      *
      * XXX blame pre-ECMA reflection of function args and vars as properties
      */
