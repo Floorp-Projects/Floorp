@@ -1749,7 +1749,8 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
 
   if (m_tempMessageStream)
   {
-    if (line[0] == '.' && line[1] == 0)
+    // line now contains the linebreak.
+    if (line[0] == '.' && line[MSG_LINEBREAK_LEN + 1] == 0)
     {
       // end of article.
       if (m_offlineHeader)
@@ -1766,8 +1767,6 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
       PRUint32 count = 0;
       rv = m_tempMessageStream->Write(line, 
            strlen(line), &count);
-      if (NS_SUCCEEDED(rv))
-        rv = m_tempMessageStream->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to write to stream");
     }
   }
