@@ -82,6 +82,7 @@ protected:
   PRBool mIsInitialized;
   PRInt32 mWidth, mHeight;
   PRBool mShowLoadTimes;
+  PRBool mJustShutdown;
 };
 
 class nsNativeViewerApp : public nsViewerApp {

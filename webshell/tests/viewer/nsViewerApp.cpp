@@ -117,6 +117,7 @@ nsViewerApp::nsViewerApp()
   mIsInitialized = PR_FALSE;
   mWidth = DEFAULT_WIDTH;
   mHeight = DEFAULT_HEIGHT;
+  mJustShutdown = PR_FALSE;
 }
 
 nsViewerApp::~nsViewerApp()
@@ -208,9 +209,11 @@ nsViewerApp::SetupRegistry()
   nsIFactory* bwf;
   NS_NewBrowserWindowFactory(&bwf);
   nsComponentManager::RegisterFactory(kBrowserWindowCID, 0, 0, bwf, PR_FALSE);
+  NS_RELEASE(bwf);
 
   NS_NewXPBaseWindowFactory(&bwf);
   nsComponentManager::RegisterFactory(kXPBaseWindowCID, 0, 0, bwf, PR_FALSE);
+  NS_RELEASE(bwf);
 
   return NS_OK;
 }
@@ -243,7 +246,7 @@ nsViewerApp::Initialize(int argc, char** argv)
 
   // Create widget application shell
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
-                                    (void**)&mAppShell);
+                                          (void**)&mAppShell);
   if (NS_OK != rv) {
     return rv;
   }
@@ -252,7 +255,7 @@ nsViewerApp::Initialize(int argc, char** argv)
 
   // Load preferences
   rv = nsComponentManager::CreateInstance(kPrefCID, NULL, kIPrefIID,
-                                    (void **) &mPrefs);
+                                          (void **) &mPrefs);
   if (NS_OK != rv) {
     return rv;
   }
@@ -318,16 +321,21 @@ nsViewerApp::Initialize(int argc, char** argv)
 nsresult
 nsViewerApp::Exit()
 {
-
-  Destroy();
-  mAppShell->Exit();
-  NS_RELEASE(mAppShell);
-
-  if (nsnull != mEventQService) {
-    nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
-    mEventQService = nsnull;
+  nsresult rv = NS_OK;
+  if (mAppShell) {
+    Destroy();
+    mAppShell->Exit();
+    NS_RELEASE(mAppShell);
   }
-  return NS_OK;
+  if (mEventQService) {
+    printf("Going to destroy the event queue\n");
+    rv = mEventQService->DestroyThreadEventQueue();
+    if (nsnull != mEventQService) {
+      nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
+      mEventQService = nsnull;
+    }
+  }
+  return rv;
 }
 
 static void
@@ -351,6 +359,7 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "-S domain -- add a domain/host that is safe to crawl (e.g. www.netscape.com)\n");
   fprintf(stderr, "-A domain -- add a domain/host that should be avoided (e.g. microsoft.com)\n");
   fprintf(stderr, "-N pages -- set the max # of pages to crawl\n");
+  fprintf(stderr, "-x -- startup and just shutdown to test for leaks under Purify\n");
 #if defined(NS_DEBUG) && defined(XP_WIN)
   fprintf(stderr, "-md # -- set the crt debug flags to #\n");
 #endif
@@ -415,15 +424,17 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
   int i;
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
+      if (PL_strcmp(argv[i], "-x") == 0) {
+        mJustShutdown = PR_TRUE;
+      }
 #if defined(NS_DEBUG) && defined(XP_WIN)
-      if (PL_strcmp(argv[i], "-md") == 0) {
+      else if (PL_strcmp(argv[i], "-md") == 0) {
         int old = _CrtSetDbgFlag(0);
         old |= _CRTDBG_CHECK_ALWAYS_DF;
         _CrtSetDbgFlag(old);
       }
-      else
 #endif
-      if (PL_strncmp(argv[i], "-p", 2) == 0) {
+      else if (PL_strncmp(argv[i], "-p", 2) == 0) {
         char *optionalSampleStopIndex = &(argv[i][2]);
         if ('\0' != *optionalSampleStopIndex)
         {
