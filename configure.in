@@ -2367,6 +2367,25 @@ then
   exit 1
 fi
 
+dnl ========================================================
+dnl =
+dnl = MOZ_TIMER_LIBS
+dnl =
+dnl = Set the timer libs according to MOZ_MONOLITHIC_TOOLKIT
+dnl =
+dnl ========================================================
+if test "$MOZ_MONOLITHIC_TOOLKIT"
+then
+  MOZ_TIMER_LIBS=-ltimer_"$MOZ_WIDGET_TOOLKIT"_s
+else
+  MOZ_TIMER_LIBS=-ltimer_s
+fi
+dnl ========================================================
+dnl =
+dnl = End MOZ_TIMER_LIBS
+dnl =
+dnl ========================================================
+
 dnl MOZ_ARG_ENABLE_BOOL(mail-compose,
 dnl [  --enable-mail-compose   Enable old Messenger mail composer],
 dnl  [ MOZ_MAIL_COMPOSE=1 MOZ_EDITOR=1 ])
@@ -2413,6 +2432,7 @@ AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(NECKO)
 AC_SUBST(MOZ_MONOLITHIC_TOOLKIT)
+AC_SUBST(MOZ_TIMER_LIBS)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_JAVA)

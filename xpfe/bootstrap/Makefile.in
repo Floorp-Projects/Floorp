@@ -82,7 +82,7 @@ XP_DIST_LIBS = \
 		$(GECKO_LIBS) \
 		$(NETLIB_LIBS) \
 		$(IMGLIB_LIBS) \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(BASE_LIBS) \
 		$(OJI_LIBS) \
 		$(NULL)
