@@ -45,7 +45,9 @@
 
 class nsAntiAliasedGlyph;
 
+#ifdef DEBUG
 void AADrawBox(XImage *, PRInt32, PRInt32, PRInt32, PRInt32, nscolor, PRUint8);
+#endif
 
 void     nsX11AlphaBlendFreeGlobals(void);
 nsresult nsX11AlphaBlendInitGlobals(Display *dsp);
