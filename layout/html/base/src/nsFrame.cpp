@@ -1101,7 +1101,7 @@ nsFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 }
 
 NS_IMETHODIMP
-nsFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+nsFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRC,
                                 nscoord& aDeltaWidth)
 {
@@ -1110,7 +1110,7 @@ nsFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::MoveInSpaceManager(nsIPresContext& aPresContext,
+nsFrame::MoveInSpaceManager(nsIPresContext* aPresContext,
                             nsISpaceManager* aSpaceManager,
                             nscoord aDeltaX, nscoord aDeltaY)
 {
