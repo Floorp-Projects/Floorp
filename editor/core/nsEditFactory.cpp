@@ -90,7 +90,7 @@ nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult
   //more class ids to support. here
 
 
-  if (NS_FAILED(obj->QueryInterface(aIID, (void**)aResult)) ) 
+  if (obj && NS_FAILED(obj->QueryInterface(aIID, (void**)aResult)) ) 
   {
     delete obj;
     return NS_NOINTERFACE;

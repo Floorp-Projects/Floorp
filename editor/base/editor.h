@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "editorInterfaces.h"
 #include "nsITransactionManager.h"
+#include "nsRepository.h"
 //#include "nsISelection.h"
 
 class nsIDOMCharacterData;
@@ -48,7 +49,8 @@ private:
 //  nsCOMPtr<nsISelection>        mSelectionP;
   //nsCOMPtr<nsITransactionManager> mTxnMgrP;
   nsITransactionManager * mTxnMgr;
-
+  friend PRBool NSCanUnload(void);
+  static PRInt32 gInstanceCount;
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
@@ -59,8 +61,7 @@ public:
    */
   virtual ~nsEditor();
 
-/*BEGIN nsIEditor interfaces*/
-/*see the nsIEditor for more details*/
+/*BEGIN nsIEdieditor for more details*/
   
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
