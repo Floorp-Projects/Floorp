@@ -772,15 +772,6 @@ function GetPrefs()
   return null;
 }
 
-function GetScriptFileSpec()
-{
-  var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
-  dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
-  var processDir = dirServ.get("CurProcD", Components.interfaces.nsIFile);
-  processDir.append("journal.js");
-  return processDir;
-}
-
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function GetLocalFileURL(filterType)
@@ -812,17 +803,8 @@ function GetLocalFileURL(filterType)
     dump("filePicker.chooseInputFile threw an exception\n");
     return null;
   }
-  
-  // Convert native filepath to the URL format
-  var fs = GetScriptFileSpec();
-  if (fs)
-  {
-dump(fp.file.path+" = native file path\n");
-    fs.nativePath = fp.file.path;
-dump(fs.URLString+" = URL string\n");
-    return fs.URLString;
-  }
-  return null;
+
+  return fp.fileURL.spec;
 }
 
 function GetMetaElement(name)
