@@ -58,6 +58,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../xml/document/src \
 		-I$(srcdir)/../../../html/base/src \
 		-I$(srcdir)/../../../html/document/src \
+		-I$(srcdir)/../../../html/style/src \
 		-I$(srcdir)/../../../base/src \
 		$(NULL)
 
