@@ -39,7 +39,7 @@
     var _elementIDs = ["startupPage", "browserStartupHomepage",
                        "bookmarksButton", "goButton",
                        "homeButton", "printButton",
-                       "searchButton" ];
+                       "searchButton"];
   ]]>
   </script>
   
@@ -75,6 +75,10 @@
                 oncommand="selectFile();"
                 id="browserChooseFile"
                 prefstring="pref.browser.homepage.disable_button.select_file"/>
+        <button label="&useDefault.label;" accesskey="&useDefault.accesskey;"
+                oncommand="setHomePageToDefaultPage();"
+                id="browserUseDefault"
+                prefstring="pref.browser.homepage.disable_button.default_page"/>
       </hbox>
     </vbox>
   </groupbox>
