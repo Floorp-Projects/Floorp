@@ -78,6 +78,15 @@ void nsInput::SetClickPoint(nscoord aX, nscoord aY)
   mLastClickPoint.y = aY;
 }
 
+void nsInput::SetContent(const nsString& aValue)
+{
+  if (nsnull == mValue) {
+    mValue = new nsString(aValue);
+  } else {
+    *mValue = aValue;
+  }
+}
+
 void nsInput::MapAttributesInto(nsIStyleContext* aContext, 
                                 nsIPresContext* aPresContext)
 {
@@ -188,6 +197,17 @@ nsIWidget*
 nsInput::GetWidget()
 {
   return mWidget;
+}
+
+PRBool nsInput::GetContent(nsString& aResult) const
+{
+  if (nsnull == mValue) {
+    aResult.SetLength(0);
+    return PR_FALSE;
+  } else {
+    aResult = *mValue;
+    return PR_TRUE;
+  }
 }
 
 void 
@@ -488,4 +508,14 @@ void nsInput::AggInputControl::GetType(nsString& aName) const
 PRBool nsInput::AggInputControl::IsSuccessful(nsIFormControl* aSubmitter) const
 {
   return GET_OUTER()->IsSuccessful(aSubmitter);
+}
+
+void nsInput::AggInputControl::SetContent(const nsString& aValue)
+{
+  GET_OUTER()->SetContent(aValue);
+}
+
+PRBool nsInput::AggInputControl::GetContent(nsString& aResult) const
+{
+  return GET_OUTER()->GetContent(aResult);
 }
