@@ -120,31 +120,3 @@ CNavCenterContextMenuAttachment :: PruneMenu ( LMenu* /*inMenu*/ )
 	return 1;
 
 } // PruneMenu
-
-
-#pragma mark -- class CNavCenterSelectorContextMenuAttachment --
-
-
-//
-// NewHTContextMenuCursor
-//
-// Create the HT context menu cursor that is appropriate for this view
-//
-HT_Cursor
-CNavCenterSelectorContextMenuAttachment :: NewHTContextMenuCursor ( )
-{
-	CNavCenterSelectorPane* selectorPane = dynamic_cast<CNavCenterSelectorPane*>(mOwnerHost);
-	Assert_(selectorPane != NULL);
-	
-	// check if mouse is in background
-	Point where;
-	::GetMouse(&where);
-	bool inBackground = selectorPane->FindSelectorForPoint(where) == NULL;
-	
-	HT_View currView = NULL;
-	if ( !inBackground )
-		currView = selectorPane->GetActiveWorkspace();
-	return HT_NewContextualMenuCursor ( currView, PR_TRUE, inBackground ? PR_TRUE : PR_FALSE );
-
-} // NewHTContextMenuCursor
-

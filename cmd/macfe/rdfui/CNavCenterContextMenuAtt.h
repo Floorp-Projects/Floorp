@@ -25,10 +25,6 @@
 //		A version of the contextual menu attachment that generates the menu from the
 //		RDF backend.
 //
-// ¥ CNavCenterSelectorContextMenuAttachment
-//		inherits from above but overrides to create a different HT iterator for 
-//		the selector pane. 
-//
 
 #pragma once
 
@@ -52,19 +48,3 @@ protected:
 	virtual UInt16 PruneMenu ( LMenu* inMenu ) ;
 
 }; // CNavCenterContextMenuAttachment
-
-
-
-class CNavCenterSelectorContextMenuAttachment : public CNavCenterContextMenuAttachment //whew!
-{
-public:
-	enum { class_ID = 'NSxM' } ;
-	
-	CNavCenterSelectorContextMenuAttachment(LStream* inStream) : CNavCenterContextMenuAttachment(inStream) { };
-	virtual	~CNavCenterSelectorContextMenuAttachment() { };
-
-protected:	
-
-	virtual HT_Cursor NewHTContextMenuCursor ( ) ; 
-
-}; // CNavCenterSelectorContextMenuAttachment
