@@ -55,3 +55,9 @@ EdColorProps.js
 EdAECSSAttributes.js
 EdAEHTMLAttributes.js
 EdAEJSEAttributes.js
+EdImageMap.js
+EdImageMap.xul
+EdImageMapHotSpot.js
+EdImageMapHotSpot.xul
+EdImageMapShapes.js
+EdImageMapPage.html
