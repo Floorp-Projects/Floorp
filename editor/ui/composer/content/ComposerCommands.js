@@ -643,10 +643,6 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     var docURI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
     docURI.spec = urlstring;
 
-      window.editorShell.editor.SaveFile(docURI, replacing, aSaveCopy, aMimeType);
-// remove the "if" and curly braces and the above line to get the nsWebBrowserPersist saving!
-if (!success)
-{
     if (!tempLocalFile)
     {
       tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
@@ -673,7 +669,6 @@ if (!success)
     var persistAPI = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Components.interfaces.nsIWebBrowserPersist);
     persistAPI.progressListener = gEditorOutputProgressListener;
     persistAPI.saveDocument(editorDoc, tempLocalFile, parentDir, aMimeType, outputFlags, wrapColumn);
-}
   }
   catch (e)
   {
