@@ -51,7 +51,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 
-class nsCookieAttributes;
+struct nsCookieAttributes;
 class nsICookieConsent;
 class nsICookiePermission;
 class nsIPrefBranch;
