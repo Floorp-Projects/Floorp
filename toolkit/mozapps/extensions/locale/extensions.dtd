@@ -1,0 +1,67 @@
+<!ENTITY extensions.title                 "Extensions">
+
+<!ENTITY cmd.info.commandKey              "i">
+<!ENTITY cmd.options.commandKey           ",">
+<!ENTITY cmd.close.commandKey             "w">
+
+<!-- Command Bar items -->
+<!ENTITY cmd.uninstall.label              "Uninstall">
+<!ENTITY cmd.uninstall.tooltip            "Uninstalls the selected Extension">
+<!ENTITY cmd.uninstall.accesskey          "i">
+<!ENTITY cmd.update.label                 "Update">
+<!ENTITY cmd.update.accesskey             "U">
+<!ENTITY cmd.update.tooltip               "Checks for Updates to your Extensions">
+<!ENTITY cmd.useTheme.label               " Use Theme">
+<!ENTITY cmd.useTheme.accesskey           "U">
+<!ENTITY cmd.useTheme.tooltip             "Changes &brandShortName;'s theme.">
+<!-- the following command bar items are used by thunderbird only -->
+<!ENTITY cmd.install.label              "Install">
+<!ENTITY cmd.install.tooltip            "Install an extension">
+<!ENTITY cmd.install.accesskey          "n">
+
+<!-- Context Menu Options: Extension -->
+<!ENTITY cmd.options.label                "Options">
+<!ENTITY cmd.options.accesskey            "O">
+<!ENTITY cmd.optionsUnix.label            "Preferences">
+<!ENTITY cmd.optionsUnix.accesskey        "r">
+<!ENTITY cmd.homepage.label               "Visit Home Page">
+<!ENTITY cmd.homepage.accesskey           "H">
+<!ENTITY cmd.about.label                  "About this Extension">
+<!ENTITY cmd.about.accesskey              "A">
+<!ENTITY cmd.uninstall.label              "Uninstall">
+<!ENTITY cmd.uninstall.accesskey          "i">
+<!ENTITY cmd.update.label                 "Update">
+<!ENTITY cmd.update.accesskey             "U">
+<!ENTITY cmd.enable.label                 "Enable">
+<!ENTITY cmd.enable.accesskey             "E">
+<!ENTITY cmd.disable.label                "Disable">
+<!ENTITY cmd.disable.accesskey            "D">
+<!ENTITY cmd.moveToTop.label              "Move to Top">
+<!ENTITY cmd.moveToTop.accesskey          "T">
+<!ENTITY cmd.moveUp.label                 "Move Up">
+<!ENTITY cmd.moveUp.accesskey             "p">
+<!ENTITY cmd.moveDn.label                 "Move Down">
+<!ENTITY cmd.moveDn.accesskey             "w">
+
+<!-- Extension Items -->
+<!ENTITY options.tooltip                  "Options">
+<!ENTITY optionsUnix.tooltip              "Preferences">
+<!ENTITY about.tooltip                    "About">
+<!ENTITY homepage.tooltip                 "Home Page">
+
+<!ENTITY extensionItem.toBeDisabled.label     "This item will be disabled after you restart &brandShortName;.">
+<!ENTITY extensionItem.toBeEnabled.label      "This item will be enabled after you restart &brandShortName;.">
+<!ENTITY extensionItem.toBeInstalled.label    "This item will be installed after you restart &brandShortName;.">
+<!ENTITY extensionItem.toBeUninstalled.label  "This item will be uninstalled after you restart &brandShortName;.">
+<!ENTITY extensionItem.done.label             "Install Success">
+<!ENTITY extensionItem.waiting.label          "Waiting...">
+<!ENTITY extensionItem.installing.label       "Installing...">
+
+<!ENTITY getMoreExtensions.label          "Get More Extensions">
+<!ENTITY getMoreExtensions.tooltip        "Get More Extensions from update.mozilla.org">
+<!ENTITY getMoreThemes.label              "Get More Themes">
+<!ENTITY getMoreThemes.tooltip            "Get More Themes from update.mozilla.org">
+
+<!ENTITY previewNoThemeSelected.label     "No Theme Selected">
+<!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
+

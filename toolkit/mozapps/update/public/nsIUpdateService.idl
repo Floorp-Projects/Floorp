@@ -1,0 +1,108 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Extension Manager.
+ *
+ * The Initial Developer of the Original Code is Ben Goodger.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Ben Goodger <ben@bengoodger.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindowInternal;
+
+[scriptable, uuid(37648f86-0f77-4007-929e-673a75d5438f)]
+interface nsIUpdateItem : nsISupports
+{
+  readonly attribute string   id;
+  readonly attribute string   version;
+  readonly attribute wstring  name;
+  readonly attribute long     row;
+  readonly attribute wstring  updateURL;
+  readonly attribute wstring  iconURL;
+  readonly attribute wstring  updateRDF;
+
+  const unsigned short TYPE_ANY         = 0x01;
+  const unsigned short TYPE_APP         = 0x02;
+  const unsigned short TYPE_ADDON       = 0x04;
+
+  const unsigned short TYPE_EXTENSION   = 0x08;
+  const unsigned short TYPE_THEME       = 0x10;
+  const unsigned short TYPE_LOCALE      = 0x20;
+
+  readonly attribute long     type;
+
+  void init(in string aID, in string aVersion, in wstring aName, 
+            in long aRow, in wstring aUpdateURL, in wstring aIconURL, 
+            in wstring aUpdateRDF, in long aType);
+
+  readonly attribute wstring objectSource;
+};
+
+[scriptable, uuid(c8a2339e-770a-417d-ab9c-efde1f23ba24)]
+interface nsIUpdateService : nsISupports
+{
+  void watchForUpdates();
+
+  const unsigned short SOURCE_EVENT_USER        = 0x01;
+  const unsigned short SOURCE_EVENT_BACKGROUND  = 0x02;
+  const unsigned short SOURCE_EVENT_MISMATCH    = 0x04;
+
+  void checkForUpdates([array, size_is(aItemCount)] in nsIUpdateItem aItems,
+                       in unsigned long aItemCount,
+                       in unsigned short aUpdateTypes, 
+                       in unsigned short aSourceEvent,
+                       in nsIDOMWindowInternal aParentWindow);
+  void checkForUpdatesInternal([array, size_is(aItemCount)] in nsIUpdateItem aItems,
+                               in unsigned long aItemCount,
+                               in unsigned short aUpdateTypes, 
+                               in unsigned short aSourceEvent);
+
+  readonly attribute long updateCount;
+  readonly attribute unsigned short updateSeverity;
+
+  readonly attribute string appUpdateVersion;
+  readonly attribute wstring appUpdateDescription;
+  readonly attribute wstring appUpdateURL;
+};
+
+[scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]
+interface nsIVersionChecker : nsISupports
+{
+  // -ve      if B is newer
+  // equal    if A == B
+  // +ve      if A is newer
+  long compare(in string aVersionA, in string aVersionB);
+
+  boolean isValidVersion(in string aVersion);
+};
+
