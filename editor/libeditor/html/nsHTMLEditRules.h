@@ -54,30 +54,51 @@ protected:
                             const nsString *inString,
                             nsString       *outString,
                             TypeInState    typeInState);
-  nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
-
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Direction aDir, PRBool *aCancel);
 
   nsresult InsertTab(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
   nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
 
+  nsresult ReturnInHeader(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
+  nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel);
+  nsresult ReturnInListItem(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
+
   // helper methods
+  static nsresult GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  static nsresult GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  static nsresult GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  static nsresult GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  
   static nsresult GetTabAsNBSPs(nsString *outString);
   static nsresult GetTabAsNBSPsAndSpace(nsString *outString);
+  
+  static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
   static PRBool IsInlineNode(nsIDOMNode *aNode);
   static PRBool IsBlockNode(nsIDOMNode *aNode);
   static nsCOMPtr<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
   static PRBool HasSameBlockNodeParent(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
+  
   static PRBool IsTextOrElementNode(nsIDOMNode *aNode);
   static PRBool IsTextNode(nsIDOMNode *aNode);
+  static PRBool IsEmptyTextNode(nsIDOMNode *aNode);
+  
+  static PRInt32 GetIndexOf(nsIDOMNode *aParent, nsIDOMNode *aChild);
+  
+  static PRBool IsHeader(nsIDOMNode *aNode);
+  static PRBool IsParagraph(nsIDOMNode *aNode);
+  static PRBool IsListItem(nsIDOMNode *aNode);
+  static PRBool IsBreak(nsIDOMNode *aNode);
+ 
   static nsCOMPtr<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
   static nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
+  static nsresult GetEndNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
   
   nsresult IsPreformatted(nsIDOMNode *aNode, PRBool *aResult);
   nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
   nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
 
+  nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset);
 
   // data
   static nsIAtom *sAAtom;
@@ -107,6 +128,17 @@ protected:
   static nsIAtom *sUAtom;
   static nsIAtom *sVarAtom;
   static nsIAtom *sWbrAtom;
+ 
+  static nsIAtom *sH1Atom;
+  static nsIAtom *sH2Atom;
+  static nsIAtom *sH3Atom;
+  static nsIAtom *sH4Atom;
+  static nsIAtom *sH5Atom;
+  static nsIAtom *sH6Atom;
+  static nsIAtom *sParagraphAtom;
+  static nsIAtom *sListItemAtom;
+  static nsIAtom *sBreakAtom;
+  
   
   static PRInt32 sInstanceCount;
 };

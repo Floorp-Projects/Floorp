@@ -746,6 +746,7 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
   nsTextRulesInfo ruleInfo(nsTextEditRules::kDeleteSelection);
+  ruleInfo.dir = aDir;
   result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {

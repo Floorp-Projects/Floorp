@@ -126,7 +126,7 @@ class nsTextRulesInfo : public nsRulesInfo
 {
  public:
  
-  nsTextRulesInfo(int aAction) : nsRulesInfo(aAction),placeTxn(0),inString(0),outString(0),typeInState() {}
+  nsTextRulesInfo(int aAction) : nsRulesInfo(aAction),placeTxn(0),inString(0),outString(0),typeInState(),dir(nsIEditor::eLTR) {}
   virtual ~nsTextRulesInfo() {}
   
   // used by kInsertText
@@ -134,6 +134,8 @@ class nsTextRulesInfo : public nsRulesInfo
   const nsString *inString;
   nsString *outString;
   TypeInState typeInState;
+  
+  nsIEditor::Direction dir;
 };
 
 #endif //nsTextEditRules_h__
