@@ -89,7 +89,7 @@ public:
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   NS_IMETHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                    nsFont&         aFont);
+                    const nsFont*&   aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);

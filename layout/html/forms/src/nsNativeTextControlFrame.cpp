@@ -249,9 +249,10 @@ nsNativeTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   PRInt32 type;
   GetType(&type);
 
-  nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
-  GetFont(aPresContext, font);
-  mWidget->SetFont(font);
+  const nsFont * font = nsnull;
+  if (NS_SUCCEEDED(GetFont(aPresContext, font))) {
+    mWidget->SetFont(*font);
+  }
   SetColors(aPresContext);
 
   PRUint32 ignore;
@@ -406,10 +407,13 @@ nsNativeTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
 
     aRenderingContext.SetColor(NS_RGB(0,0,0));
 
-    nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
-    GetFont(aPresContext, font);
+    const nsFont * font = nsnull;
+    nsresult res = GetFont(aPresContext, font);
+    if (NS_SUCCEEDED(res) && font != nsnull) {
+      mWidget->SetFont(*font);
+      aRenderingContext.SetFont(*font);
+    }
 
-    aRenderingContext.SetFont(font);
 
     nscoord textWidth;
     nscoord textHeight;
@@ -417,7 +421,9 @@ nsNativeTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
     aRenderingContext.GetWidth(aText, textWidth);
 
     nsIFontMetrics* metrics;
-    context->GetMetricsFor(font, metrics);
+    if (font != nsnull) {
+      context->GetMetricsFor(*font, metrics);
+    }
     metrics->GetHeight(textHeight);
 
     PRInt32 type;

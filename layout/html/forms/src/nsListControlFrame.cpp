@@ -622,8 +622,8 @@ nsListControlFrame::GetFormContent(nsIContent*& aContent) const
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::GetFont(nsIPresContext*        aPresContext, 
-                             nsFont&                aFont)
+nsListControlFrame::GetFont(nsIPresContext*  aPresContext, 
+                            const nsFont*&   aFont)
 {
   nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
   return NS_OK;
