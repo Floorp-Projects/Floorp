@@ -248,7 +248,7 @@ function doSelect(e)
   
     cell.setAttribute("class","FocusSelected");
     input.setAttribute("class","FocusSelected");
-    SetTextfieldFocus(input);
+    SetTextboxFocus(input);
   }
 }
 */
@@ -263,7 +263,7 @@ function AddTreeItem ( name, value, treekidsId, attArray, valueCaseFunc )
   var attrcell    = document.createElementNS ( XUL_NS, "treecell" );
   attrcell.setAttribute( "class", "propertylist" );
   attrcell.setAttribute( "value", name );
-  // Modify treerow selection to better show focus in textfield
+  // Modify treerow selection to better show focus in textbox
   treeitem.setAttribute( "class", "ae-selection");
 
   treerow.appendChild ( attrcell );
@@ -289,27 +289,27 @@ function CreateCellWithField( name, value )
   if (!valCell) return null;
   valCell.setAttribute ( "class", "value propertylist" );
   valCell.setAttribute ( "allowevents", "true" );
-  var valField    = document.createElementNS ( XUL_NS, "textfield" );
+  var valField    = document.createElementNS ( XUL_NS, "textbox" );
   if ( name  ) valField.setAttribute ( "id", name );
   if (!valField) return null;
   if ( value ) valField.setAttribute ( "value", value );
   valField.setAttribute ( "flex", "1" );
   valField.setAttribute ( "class", "plain" );
-  valField.setAttribute ( "onfocus", "SelectItemWithTextfield(\""+name+"\")");
+  valField.setAttribute ( "onfocus", "SelectItemWithTextbox(\""+name+"\")");
   valField.setAttribute ( "allowevents", "true");
   valCell.appendChild ( valField );
   return valCell;
 }
 
-function SelectItemWithTextfield(id)
+function SelectItemWithTextbox(id)
 {
-  var textfield = document.getElementById(id);
-  if (textfield)
+  var textbox = document.getElementById(id);
+  if (textbox)
   {
-    var treeItem = textfield.parentNode.parentNode.parentNode;
+    var treeItem = textbox.parentNode.parentNode.parentNode;
     if (treeItem)
     {
-      // Prevent SelectTreeItem() from setting selection to entire textfield
+      // Prevent SelectTreeItem() from setting selection to entire textbox
       gSelecting = true;
       treeItem.parentNode.parentNode.selectItem(treeItem);
       gSelecting = false;
@@ -317,20 +317,20 @@ function SelectItemWithTextfield(id)
   }
 }
 
-// When a "name" treecell is selected, shift focus to the textfield
+// When a "name" treecell is selected, shift focus to the textbox
 function SelectTreeItem(tree)
 {
-  // Prevent infinite loop -- SetTextfieldFocusById triggers recursive call
+  // Prevent infinite loop -- SetTextboxFocusById triggers recursive call
   if (gSelecting) return;
   gSelecting = true;  
   if (tree && tree.selectedItems && tree.selectedItems.length)
   {
-    // 2nd cell (value column) contains the textfield
-    var textfieldCell = tree.selectedItems[0].firstChild.firstChild.nextSibling;
-    if (textfieldCell)
+    // 2nd cell (value column) contains the textbox
+    var textboxCell = tree.selectedItems[0].firstChild.firstChild.nextSibling;
+    if (textboxCell)
     {
       // Select its contents and set focus
-      SetTextfieldFocusById(textfieldCell.firstChild.id);
+      SetTextboxFocusById(textboxCell.firstChild.id);
     }
   }
   gSelecting = false;

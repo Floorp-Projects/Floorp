@@ -62,7 +62,7 @@
 <!--
     <box autostretch="never">
       <text class="label" for="walletServer" value="&walletServer.label;" accesskey="&walletServer.accesskey;"/>
-      <textfield id="walletServer" flex="1"
+      <textbox id="walletServer" flex="1"
                  pref="true" preftype="string" prefstring="wallet.Server"
                  prefattribute="value"/>
     </box>

@@ -9,12 +9,12 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="autocomplete" extends="chrome://global/content/xulBindings.xml#textfield">
+  <binding id="autocomplete" extends="chrome://global/content/xulBindings.xml#textbox">
     <content context="_child">
-      <xul:box class="textfield-internal-box" flex="1">
-        <html:input class="textfield-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
+      <xul:box class="textbox-internal-box" flex="1">
+        <html:input class="textbox-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
         <xul:popupset ignorekeys="true" oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);">
-          <xul:popup class="textfield-popup" oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false';"/>
+          <xul:popup class="textbox-popup" oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false';"/>
         </xul:popupset>
       </xul:box>
       <xul:popupset>

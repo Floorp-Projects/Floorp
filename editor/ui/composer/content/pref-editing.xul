@@ -48,7 +48,7 @@
 
   <titledbox orient="vertical">
     <title value="&authorName.label;"/>
-    <textfield id="editorAuthor" flex="1"
+    <textbox id="editorAuthor" flex="1"
                pref="true" preftype="string" prefstring="editor.author"
                prefattribute="value"/>
   </titledbox>
@@ -158,7 +158,7 @@
 
     <text class="label" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
     <box valign="middle" autostretch="never">
-      <textfield id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width : 16em"/>
+      <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width : 16em"/>
       <button class="dialog" value="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
               oncommand="ChooseImageFile()"/>
       <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>

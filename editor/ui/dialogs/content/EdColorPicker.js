@@ -142,7 +142,7 @@ function Startup()
     document.getElementById("DefaultColorButton").setAttribute("collapsed","true");
   }
 
-  SetTextfieldFocus(dialog.ColorInput);
+  SetTextboxFocus(dialog.ColorInput);
 
   SetWindowLocation();
 }
@@ -231,7 +231,7 @@ function ValidateData()
   if (NoDefault && !color)
   {
     ShowInputErrorMessage(GetString("NoColorError"));
-    SetTextfieldFocus(dialog.ColorInput);
+    SetTextboxFocus(dialog.ColorInput);
     return false;   
   }
   return true;

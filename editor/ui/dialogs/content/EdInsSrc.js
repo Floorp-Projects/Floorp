@@ -45,7 +45,7 @@ function Startup()
 
   // Set initial focus
   srcInput.focus();
-  // Note: We can't set the caret location in a multiline textfield
+  // Note: We can't set the caret location in a multiline textbox
   SetWindowLocation();
 }
 

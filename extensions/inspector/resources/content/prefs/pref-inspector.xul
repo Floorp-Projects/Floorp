@@ -50,7 +50,7 @@
             <row autostretch="never">
               <text value="Border Width"/>
               <box autostretch="never">
-                <textfield id="txfElBorderWidth" style="width: 4em"
+                <textbox id="txfElBorderWidth" style="width: 4em"
                   pref="true" preftype="int" prefstring="inspector.blink.border-width" prefattribute="value"/>
                 <text value="(px)"/>
               </box>
@@ -58,7 +58,7 @@
             <row autostretch="never">
               <text value="Blink Duration"/>
               <box autostretch="never">
-                <textfield id="txfElDuration" style="width: 4em"
+                <textbox id="txfElDuration" style="width: 4em"
                   pref="true" preftype="int" prefstring="inspector.blink.duration" prefattribute="value"/>
                 <text value="(s)"/>
               </box>
@@ -66,7 +66,7 @@
             <row autostretch="never">
               <text value="Blink Speed"/>
               <box autostretch="never">
-                <textfield id="txfElSpeed" style="width: 4em"
+                <textbox id="txfElSpeed" style="width: 4em"
                   pref="true" preftype="int" prefstring="inspector.blink.speed" prefattribute="value"/>
                 <text value="(ms)"/>
                </box>

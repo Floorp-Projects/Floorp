@@ -154,7 +154,7 @@ function commonDialogOnLoad()
   gCommonDialogParam.SetInt(0, 1);
 
   // set default focus
-  // preferred order is textfield1, textfield2, textfield 3, OK, cancel, button2, button3
+  // preferred order is textbox1, textbox2, textbox 3, OK, cancel, button2, button3
   var visibilityList = ["loginEditField", "password1EditField", "password2EditField", "ok",
                          "cancel", "Button2", "Button3"]
   var focusList      = ["dialog.loginname", "dialog.password1", "dialog.password2", "ok",

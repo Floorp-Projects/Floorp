@@ -55,7 +55,7 @@
   </box>
 
   <box orient="horizontal">
-    <textfield id="zoomValue" oninput="doEnabling();"/>
+    <textbox id="zoomValue" oninput="doEnabling();"/>
   </box>
 
   <box id="okCancelButtons"/>

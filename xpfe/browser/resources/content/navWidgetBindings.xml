@@ -47,7 +47,7 @@
     <content>
       <xul:box autostretch="never" valign="middle" flex="1" class="menulist-container">
         <xul:image class="menulist-icon" inherits="src" emattr="icon"/>
-        <xul:textfield class="menulist-editable-textfield plain" flex="1" emattr="field"
+        <xul:textbox class="menulist-editable-textbox plain" flex="1" emattr="field"
                        inherits="autocomplete,searchSessionType,timeout,tooltip=fieldtooltip,tooltiptext=fieldtooltiptext,value"/>
         <xul:menubutton class="menulist-editable-menubutton menubutton-icon" emattr="menubutton">
           <xul:menupopup class="menulist-editable-menupopup" emattr="menupopup"
@@ -117,7 +117,7 @@
       <xul:menubutton id="back-button" value="Back" buttontooltiptext="Go Back"
                       oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
                       class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
-     	  <xul:menupopup oncreate="BrowserBackMenu(event);"/>
+        <xul:menupopup oncreate="BrowserBackMenu(event);"/>
       </xul:menubutton>
     </content>
     <handlers>

@@ -63,7 +63,7 @@ function Startup()
   InitDialog()
 
   // SET FOCUS TO FIRST CONTROL
-  SetTextfieldFocus(dialog.widthInput);
+  SetTextboxFocus(dialog.widthInput);
 
   // Resize window
   window.sizeToContent();

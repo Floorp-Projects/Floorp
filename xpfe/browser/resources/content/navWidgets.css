@@ -17,7 +17,7 @@ menulist[editable="true"]
   }  
   
 /* XXX factor me */
-.textfield-input
+.textbox-input
   {
     -moz-user-focus       : normal;
   }

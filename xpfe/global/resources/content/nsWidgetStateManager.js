@@ -83,8 +83,8 @@ function nsWidgetStateManager ( aFrameID )
           {  get: wsm.get_Radiogroup,  set: wsm.set_Radiogroup    },
         checkbox:
           {  get: wsm.get_Checkbox,    set: wsm.set_Checkbox      },
-        textfield:
-          {  get: wsm.get_Textfield,   set: wsm.set_Textfield     },
+        textbox:
+          {  get: wsm.get_Textbox,     set: wsm.set_Textbox},
         default_handler:
           {  get: wsm.get_Default,     set: wsm.set_Default       }
       }
@@ -272,15 +272,15 @@ nsWidgetStateManager.prototype =
           return null;
         },
         
-    // <textfield>
-    set_Textfield:
+    // <textbox>
+    set_Textbox:
       function ( aElementID, aDataObject )
         {
           var element = wsm.contentArea.document.getElementById( aElementID );
           wsm.generic_Set( element, aDataObject );
         },
      
-    get_Textfield:
+    get_Textbox:
       function ( aElementID )
         {
           var element = wsm.contentArea.document.getElementById( aElementID );

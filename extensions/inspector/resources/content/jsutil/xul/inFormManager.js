@@ -2,7 +2,7 @@
 * inFormManager -------------------------------------------------
 *  Manages the reading and writing of forms via simple maps of
 *  attribute/value pairs.  A "form" is simply a XUL window which
-*  contains "form widgets" such as textfields and menulists.
+*  contains "form widgets" such as textboxes and menulists.
 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 * REQUIRED IMPORTS:
 ****************************************************************/
@@ -54,7 +54,7 @@ var inFormManager =
     }
   },
   
-  read_textfield: function(aEl)
+  read_textbox: function(aEl)
   {
     return aEl.value;
   },
@@ -79,7 +79,7 @@ var inFormManager =
     return aEl.getAttribute("color");
   },
   
-  write_textfield: function(aEl, aValue)
+  write_textbox: function(aEl, aValue)
   {
     aEl.setAttribute("value", aValue);
   },

@@ -237,7 +237,7 @@ function Startup()
     dialog.NextButton.setAttribute("disabled", "true");
   }
 
-  // User can change these via textfields  
+  // User can change these via textboxes  
   newRowCount = rowCount;
   newColCount = colCount;
 
@@ -254,7 +254,7 @@ function Startup()
   if (currentPanel == CellPanel)
     dialog.SelectionList.focus(); 
   else
-    SetTextfieldFocus(dialog.TableRowsInput);
+    SetTextboxFocus(dialog.TableRowsInput);
 
   SetWindowLocation();
 }
@@ -550,7 +550,7 @@ function ChangeSelection(newType)
   DoCellSelection();
   SetSelectionButtons();
 
-  // Enable/Disable appropriate span textfields
+  // Enable/Disable appropriate span textboxes
   SetSpanEnable();
 
   // Note: globalCellElement should still be a clone of CellElement
@@ -814,7 +814,7 @@ function ValidateNumber(inputWidgetID, listWidget, minVal, maxVal, element, attN
       SwitchPanel(validatePanel);
 
       // Error - shift to offending input widget
-      SetTextfieldFocus(inputWidget);
+      SetTextboxFocus(inputWidget);
       error = true;
     }
     else      
@@ -968,16 +968,16 @@ function ValidateData()
   return true;
 }
 
-function ChangeCellTextfield(textfieldID)
+function ChangeCellTextbox(textboxID)
 {
   // Filter input for just integers
-  forceInteger(textfieldID);
+  forceInteger(textboxID);
 
   if (currentPanel == CellPanel)
     CellDataChanged = true;
 }
 
-// Call this when a textfield or menulist is changed
+// Call this when a textbox or menulist is changed
 //   so the checkbox is automatically set
 function SetCheckbox(checkboxID)
 {
@@ -989,10 +989,10 @@ function SetCheckbox(checkboxID)
   CellDataChanged = true;
 }
 
-function ChangeIntTextfield(textfieldID, checkboxID)
+function ChangeIntTextbox(textboxID, checkboxID)
 {
   // Filter input for just integers
-  forceInteger(textfieldID);
+  forceInteger(textboxID);
 
   // Set associated checkbox
   SetCheckbox(checkboxID);

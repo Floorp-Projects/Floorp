@@ -56,7 +56,7 @@ function Startup()
     }
   }
 
-  SetTextfieldFocus(dialog.urlInput);
+  SetTextboxFocus(dialog.urlInput);
 
   SetWindowLocation();
 }
@@ -87,5 +87,5 @@ function chooseFile()
   }
 
   // Put focus into the input field
-  SetTextfieldFocus(dialog.urlInput);
+  SetTextboxFocus(dialog.urlInput);
 }

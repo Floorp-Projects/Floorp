@@ -125,7 +125,7 @@ function onEvalKeyPress(aEvent)
 
 function evaluateTypein()
 {
-  var code = document.getElementById("TextfieldEval").value;
+  var code = document.getElementById("TextboxEval").value;
   var iframe = document.getElementById("Evaluator");
   iframe.setAttribute("src", "javascript: " + code);
 }

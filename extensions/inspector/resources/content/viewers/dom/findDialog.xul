@@ -33,11 +33,11 @@
       <rows>
         <row id="rwRow1">
           <text id="txText1" value=""/>
-          <textfield id="tfText1" observes="cmdFind"/>
+          <textbox id="tfText1" observes="cmdFind"/>
         </row>
         <row id="rwRow2">
           <text id="txText2" value=""/>
-          <textfield id="tfText2" observes="cmdFind"/>
+          <textbox id="tfText2" observes="cmdFind"/>
         </row>
       </rows>
     </grid>

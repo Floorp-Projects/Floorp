@@ -41,7 +41,7 @@ function Startup()
   initDialog();
   
   // SET FOCUS TO FIRST CONTROL
-  //SetTextfieldFocus(dialog.editBox);
+  //SetTextboxFocus(dialog.editBox);
   SetWindowLocation();
 }
 

@@ -22,8 +22,8 @@
   
   <button value="Button" 
           oncommand="vxPalette.insertButtonElement();"/>
-  <button value="TextField" 
-          oncommand="vxPalette.insertTextFieldElement();"/>
+  <button value="TextBox" 
+          oncommand="vxPalette.insertTextboxElement();"/>
   <button value="RadioGroup" 
           oncommand="vxPalette.insertRadioGroup();"/>
           

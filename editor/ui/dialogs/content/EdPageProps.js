@@ -92,7 +92,7 @@ dump(", lastmod date="+lastmoddate+"\n");
   
   InitDialog();
 
-  SetTextfieldFocus(dialog.TitleInput);
+  SetTextboxFocus(dialog.TitleInput);
 
   SetWindowLocation();
 }
@@ -112,7 +112,7 @@ function InitDialog()
   dialog.DescriptionInput.value = descriptionElement.getAttribute("content");
 }
 
-function TextfieldChanged(ID)
+function TextboxChanged(ID)
 {
   switch(ID)
   {

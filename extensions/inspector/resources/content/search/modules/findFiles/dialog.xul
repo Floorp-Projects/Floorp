@@ -20,11 +20,11 @@
   <box orient="vertical">
     <box autostretch="never">
       <text id="txSearchFor" value="&txSearchFor.label;"/>
-      <textfield id="txfSearchFor" style="width: 25em;" persist="true"/>
+      <textbox id="txfSearchFor" style="width: 25em;" persist="true"/>
     </box>
     <box autostretch="never">
       <text id="txSearchPath" value="&txSearchPath.label;"/>
-      <textfield id="txfSearchPath" style="width: 25em;" persist="true"/>
+      <textbox id="txfSearchPath" style="width: 25em;" persist="true"/>
       <button id="btnSearchPathBrowser" value="Browse" onclick="dialog.browse()" persist="true"/>
     </box>
     <box autostretch="never">

@@ -50,7 +50,7 @@
         <spring/>
       </row>
       <row>
-        <textfield id="WordInput" flex="1"/>
+        <textbox id="WordInput" flex="1"/>
         <button class="dialog" flex="1" id="AddWord" oncommand="AddWord()" value="&AddButton.label;"/>
       </row>
       <row>

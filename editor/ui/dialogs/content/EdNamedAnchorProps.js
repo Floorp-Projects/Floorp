@@ -74,7 +74,7 @@ function Startup()
 
   InitDialog();
   
-  SetTextfieldFocus(nameInput);
+  SetTextboxFocus(nameInput);
   SetWindowLocation();
 }
 
@@ -114,7 +114,7 @@ function ValidateData()
   if (!name)
   {
       ShowInputErrorMessage(GetString("MissingAnchorNameError"));
-      SetTextfieldFocus(nameInput);
+      SetTextboxFocus(nameInput);
       return false;
   } else {
     // Replace spaces with "_" and strip other characters
@@ -125,7 +125,7 @@ function ValidateData()
     if (originalName != name && AnchorNameExists(name))
     {
       ShowInputErrorMessage(GetString("DuplicateAnchorNameError").replace(/%name%/,name));            
-      SetTextfieldFocus(nameInput);
+      SetTextboxFocus(nameInput);
       return false;
     }
     globalElement.setAttribute("name",name);

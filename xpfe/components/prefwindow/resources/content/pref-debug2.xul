@@ -54,11 +54,11 @@
                 prefattribute="checked"/>
     </vbox>
     <text class="label" value="&httpVersion.label;"  for="httpVersionString"/>
-    <textfield id="httpVersionString" wsm_persist="true"  maxlength="3" flex="0"
+    <textbox id="httpVersionString" wsm_persist="true"  maxlength="3" flex="0"
               pref="true" preftype="string" prefstring="network.http.version"
               prefattribute="value"/> 
     <text class="label" value="&acceptEncoding.label;" for="acceptEncodingString"/>
-    <textfield id="acceptEncodingString" flex="1" wsm_persist="true"
+    <textbox id="acceptEncodingString" flex="1" wsm_persist="true"
               pref="true" preftype="string" prefstring="network.http.accept-encoding"
               prefattribute="value"/> 
   </titledbox>

@@ -78,7 +78,7 @@ function Startup()
   // Resize window
   window.sizeToContent();
 
-  SetTextfieldFocus(dialog.rowsInput);
+  SetTextboxFocus(dialog.rowsInput);
 
   SetWindowLocation();
 }
@@ -124,7 +124,7 @@ function ValidateData()
   if (columns == "")
   {
     // Set focus to the offending control
-    SetTextfieldFocus(dialog.columnsInput);
+    SetTextboxFocus(dialog.columnsInput);
     return false;
   }
 

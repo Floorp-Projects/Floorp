@@ -64,7 +64,7 @@
     <rows>
       <row autostretch="never">
         <text class="label" value="&name.label;" accesskey="&name.accesskey;" for="name"/>
-        <textfield id="name"/>
+        <textbox id="name"/>
         <spring/>
       </row>
       <row>
@@ -74,7 +74,7 @@
       </row>
       <row autostretch="never">
         <text class="label" value="&url.label;" accesskey="&url.accesskey;" for="url"/>
-        <textfield id="url" oninput="onLocationInput();"/>
+        <textbox id="url" oninput="onLocationInput();"/>
         <spring/>
       </row>
     </rows>

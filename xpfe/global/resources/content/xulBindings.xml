@@ -256,10 +256,10 @@
     </implementation>
   </binding>
 
-  <binding id="textfield" extends="xul:box">
+  <binding id="textbox" extends="xul:box">
     <content context="_child">
-      <xul:box class="textfield-internal-box" flex="1">
-        <html:input class="textfield-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
+      <xul:box class="textbox-internal-box" flex="1">
+        <html:input class="textbox-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
       </xul:box>
       <xul:popupset>
         <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
@@ -392,10 +392,10 @@
     </handlers>    
   </binding>
 
-  <binding id="textarea" extends="chrome://global/content/xulBindings.xml#textfield">
+  <binding id="textarea" extends="chrome://global/content/xulBindings.xml#textbox">
     <content context="_child">
       <xul:box class="textarea-internal-box" flex="1">
-        <html:textarea class="textfield-textarea" flex="1" inherits="onfocus,onblur,value,disabled,rows,cols,readonly"/>
+        <html:textarea class="textbox-textarea" flex="1" inherits="onfocus,onblur,value,disabled,rows,cols,readonly"/>
       </xul:box>
       <xul:popupset>
         <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">

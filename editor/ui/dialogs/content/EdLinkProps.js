@@ -206,9 +206,9 @@ function Startup()
   // Set initial focus
   if (insertLinkAtCaret) {
     // We will be using the HREF inputbox, so text message
-    SetTextfieldFocus(dialog.linkTextInput);
+    SetTextboxFocus(dialog.linkTextInput);
   } else {
-    SetTextfieldFocus(dialog.hrefInput);
+    SetTextboxFocus(dialog.hrefInput);
 
     // We will not insert a new link at caret, so remove link text input field
     dialog.linkTextInput.setAttribute("hidden","true");
@@ -243,7 +243,7 @@ function chooseFile()
     ChangeText();
   }
   // Put focus into the input field
-  SetTextfieldFocus(dialog.hrefInput);
+  SetTextboxFocus(dialog.hrefInput);
 }
 
 function FillListboxes()
@@ -430,7 +430,7 @@ function ValidateData()
     if (newLinkText.length == 0)
     {
       ShowInputErrorMessage(GetString("EmptyLinkTextError"));
-      SetTextfieldFocus(dialog.linkTextInput);
+      SetTextboxFocus(dialog.linkTextInput);
       return false;
     }
   }

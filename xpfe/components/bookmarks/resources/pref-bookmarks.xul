@@ -97,7 +97,7 @@
     <separator/>
     <html flex="1">&defaultFolder.label;</html>
     <box autostretch="never">
-      <textfield readonly="true" id="defaultFolder" crop="right" flex="1"/>
+      <textbox readonly="true" id="defaultFolder" crop="right" flex="1"/>
       <button value="&chooseDefaultFolder.label;" accesskey="&chooseDefaultFolder.accesskey;"
               oncommand="chooseDefaultFolder();"/>
     </box>

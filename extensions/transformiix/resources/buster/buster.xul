@@ -43,13 +43,13 @@
 </box>
 <box align="horizontal">
   <text value="Xalan base directory: " class="head" />
-  <textfield id="xalan_base" persist="value"/>
+  <textbox id="xalan_base" persist="value"/>
   <button value="browse..." oncommand="browse_base_dir()" />
 </box>
 <box align="horizontal">
 <titledbox align="horizontal"><title value="search" />
   <button value="Search for " oncommand="select()"/>
-  <textfield style="width: 10em;" id="search-name" persist="value" /><text value=" in " />
+  <textbox style="width: 10em;" id="search-name" persist="value" /><text value=" in " />
   <menulist id="search-field" persist="data">
     <menupopup>
       <menuitem data="1" value="Name" />

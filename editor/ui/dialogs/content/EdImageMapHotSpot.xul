@@ -54,7 +54,7 @@
         <row>
           <text class="label" for="urlInput" value="&urlFieldset.label;" align="right"/>
 
-          <textfield id="urlInput" class="MinWidth20em" value="http://"/>
+          <textbox id="urlInput" class="MinWidth20em" value="http://"/>
 
           <button class="dialog" id="Browse" oncommand="chooseFile()" value="&browseButton.label;"/>
         </row>
@@ -62,7 +62,7 @@
         <row>
           <text class="label" for="altInput" value="&altFieldset.label;" align="right"/>
 
-          <textfield class="MinWidth20em" id="altInput"/>
+          <textbox class="MinWidth20em" id="altInput"/>
         </row>
       </rows>
     </grid>
@@ -77,7 +77,7 @@
           <text class="label" for="targetInput" value="&target.label;" align="right" />
         </row>
         <row>
-          <textfield class="MinWidth20em" id="targetInput"/>
+          <textbox class="MinWidth20em" id="targetInput"/>
 
           <text class="label" id="commonLabel" value="&commonFieldset.label;"/>
 

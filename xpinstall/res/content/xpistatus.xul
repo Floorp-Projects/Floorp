@@ -78,8 +78,8 @@
         <spring class="vertical-small-spacer"/>
 
         <box id="statusMessages" orient="vertical">
-            <textfield id="dialog.uiPackageName" readonly="" />
-            <textfield id="dialog.currentAction" readonly="" />
+            <textbox id="dialog.uiPackageName" readonly="" />
+            <textbox id="dialog.currentAction" readonly="" />
         </box>
 
         <box id="progressBox" orient="horizontal" autostretch="never">

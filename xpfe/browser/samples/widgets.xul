@@ -53,22 +53,22 @@
               
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 1:" for="nerp1"/>
-    <textfield flex="1" id="nerp1" disabled="true" value="disabled"/>
+    <textbox flex="1" id="nerp1" disabled="true" value="disabled"/>
     <button value="Test Property APIs" oncommand="testProperty('nerp1');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 2:" for="nerp2"/>
-    <textfield flex="1" id="nerp2" readonly="true" value="readonly"/>
+    <textbox flex="1" id="nerp2" readonly="true" value="readonly"/>
     <button value="Test Property APIs" oncommand="testProperty('nerp2');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 2:" for="nerp2r"/>
-    <textfield flex="1" id="nerp2r" readonly="true" disabled="true" value="readonly disabled"/>
+    <textbox flex="1" id="nerp2r" readonly="true" disabled="true" value="readonly disabled"/>
     <button value="Test Property APIs" oncommand="testProperty('nerp2r');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 3:" for="nerp3"/>
-    <textfield flex="1" id="nerp3" value="regular"/>
+    <textbox flex="1" id="nerp3" value="regular"/>
     <button value="Test Property APIs" oncommand="testProperty('nerp3');"/>
   </box>
   <box autostretch="never" valign="center">
@@ -110,7 +110,7 @@
   <box>
     <text class="label" value="Foo Label 4:"/>
     <box orient="vertical" flex="1">
-      <textfield flex="1"/>
+      <textbox flex="1"/>
       <box orient="vertical" autostretch="never">
         <box flex="1">
           <checkbox value="Checkbox 1" id="checkbox1"/>
@@ -149,7 +149,7 @@
       <text class="label" value="Foo Label 6:"/>
       <spring flex="1"/>
     </box>
-    <textfield id="textarea" rows="3" multiline="true" value="Regular multiline textfield"/>
+    <textbox id="textarea" rows="3" multiline="true" value="Regular multiline textbox"/>
     <box orient="vertical">
       <button value="Test Property APIs" oncommand="testProperty('textarea');"/>
       <spring flex="1"/>
@@ -161,7 +161,7 @@
       <text class="label" value="Foo Label 6:"/>
       <spring flex="1"/>
     </box>
-    <textfield rows="3" multiline="true" disabled="true" value="Disabled multiline textfield"/>
+    <textbox rows="3" multiline="true" disabled="true" value="Disabled multiline textbox"/>
   </box>
   
   <separator/>

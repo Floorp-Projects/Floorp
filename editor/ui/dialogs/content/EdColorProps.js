@@ -327,7 +327,7 @@ function chooseFile()
     dialog.BackgroundImageInput.value = fileName;
     ValidateAndPreviewImage(true);
   }
-  SetTextfieldFocus(dialog.BackgroundImageInput);
+  SetTextboxFocus(dialog.BackgroundImageInput);
 }
 
 function ChangeBackgroundImage()
@@ -356,7 +356,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
       backgroundImage = null;
       if (ShowErrorMessage)
       {
-        SetTextfieldFocus(dialog.BackgroundImageInput);
+        SetTextboxFocus(dialog.BackgroundImageInput);
         // Tell user about bad image
         ShowInputErrorMessage(GetString("MissingImageError"));
       }

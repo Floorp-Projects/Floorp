@@ -248,7 +248,7 @@ function SetWidgetsForMisspelledWord()
   DoEnabling();
   
   if (MisspelledWord)
-    SetTextfieldFocus(dialog.ReplaceWordInput);
+    SetTextboxFocus(dialog.ReplaceWordInput);
 }
 
 function CheckWord()

@@ -74,12 +74,10 @@ XUL_ATOM(outer, "outer") // indicates that a treechildren is the outermost rowgr
 XUL_ATOM(sizemode, "sizemode") // when set, measure strings to determine preferred width
 
 XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
-XUL_ATOM(focus, "focus")
 
 XUL_ATOM(outliner, "outliner")
 XUL_ATOM(outlinerbody, "outlinerbody")
 XUL_ATOM(outlinercol, "outlinercol")
-
 XUL_ATOM(cycler, "cycler")
 XUL_ATOM(primary, "primary")
 XUL_ATOM(current, "current")
@@ -89,7 +87,6 @@ XUL_ATOM(mozoutlinercolumn, ":-moz-outliner-column")
 XUL_ATOM(mozoutlinercelltext, ":-moz-outliner-cell-text")
 XUL_ATOM(mozoutlinertwisty, ":-moz-outliner-twisty")
 XUL_ATOM(mozoutlinerindentation, ":-moz-outliner-indentation")
-XUL_ATOM(mozoutlinerline, ":-moz-outliner-line")
 
 XUL_ATOM(menubar, "menubar") // An XP menu bar.
 XUL_ATOM(menu, "menu") // Represents an XP menu
@@ -114,11 +111,6 @@ XUL_ATOM(modifiers, "modifiers") // The modifiers attribute
 XUL_ATOM(broadcaster, "broadcaster") // A broadcaster
 XUL_ATOM(observes, "observes") // The observes element
 XUL_ATOM(templateAtom, "template") // A XUL template
-
-// Bogus atoms that people use that are just data containers
-XUL_ATOM(broadcasterset, "broadcasterset")
-XUL_ATOM(commands, "commands")
-XUL_ATOM(commandset, "commandset")
 
 XUL_ATOM(progressbar, "progressbar")
 XUL_ATOM(progresstext, "progresstext")

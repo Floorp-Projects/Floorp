@@ -55,12 +55,12 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
       </row>
       <row>
         <text id="cmdLabel" class="label" value="&cmdInput.label;" flex ="1" align="left"/>
-        <textfield id="cmdInput" flex ="1"/>
+        <textbox id="cmdInput" flex ="1"/>
       </row>
       <row valign="baseline">
         <text id="fileLabel" class="label" value="&fileInput.label;"/>
         <box>
-          <textfield id="fileInput" flex ="1" onblur="stripTrailingWhitespace(this)"/>
+          <textbox id="fileInput" flex ="1" onblur="stripTrailingWhitespace(this)"/>
           <button id="chooseFile" value = "&chooseButton.label;" oncommand = "onChooseFile()"/>
         </box>
       </row>
@@ -94,9 +94,9 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
           <box orient="horizontal" autostretch="never">
             <radio group = "printrangeGroup" id = "rangeRadio" value = "&rangeRadio.label;" onclick = "doPrintRange(!this.checked);"/>
             <text class = "label" id = "frompageLabel" for = "frompageInput" value = "&frompageInput.label;" />
-            <textfield id = "frompageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id = "frompageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
             <text class = "label" id = "topageLabel" for = "topageInput" value = "&topageInput.label;" />
-            <textfield id = "topageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id = "topageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
           <radio group = "printrangeGroup" id = "selectionRadio" value = "&selectionRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
         </radiogroup>
@@ -114,19 +114,19 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
 	      <box orient="horizontal">
 	        <box orient="horizontal" autostretch="never">
             <text class = "label" id = "topLabel" for = "topInput" value = "&topInput.label;" />
-            <textfield id = "topInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id = "topInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
           <box orient="horizontal" autostretch="never">
             <text class = "label" id = "bottomLabel" for = "bottomInput" value = "&bottomInput.label;" />
-            <textfield id = "bottomInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id = "bottomInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
           <box orient="horizontal" autostretch="never">
             <text class = "label" id = "leftLabel" for = "leftInput" value = "&leftInput.label;" />
-            <textfield id = "leftInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id = "leftInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
           <box orient="horizontal" autostretch="never">
             <text class = "label" id = "rightLabel" for = "rightInput" value = "&rightInput.label;" />
-            <textfield id = "rightInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id = "rightInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
         </box>
       </row>

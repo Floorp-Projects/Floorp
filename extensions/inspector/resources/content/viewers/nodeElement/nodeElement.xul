@@ -41,19 +41,19 @@
     <rows>
       <row>
         <text value="Node Name:"/>
-        <textfield id="tx_nodeName" readonly="true"/>
+        <textbox id="tx_nodeName" readonly="true"/>
       </row>
       <row>
         <text value="Namespace URI:"/>
-        <textfield id="tx_namespace" readonly="true"/>
+        <textbox id="tx_namespace" readonly="true"/>
       </row>
       <row>
         <text value="Node Type:"/>
-        <textfield id="tx_nodeType" readonly="true"/>
+        <textbox id="tx_nodeType" readonly="true"/>
       </row>
       <row>
         <text value="Node Value:"/>
-        <textfield id="tx_nodeValue" readonly="true" multiline="true"/>
+        <textbox id="tx_nodeValue" readonly="true" multiline="true"/>
       </row>
     </rows>
   </grid>
