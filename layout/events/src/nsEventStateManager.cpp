@@ -397,6 +397,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
+	  printf("Mouse down\n");
     BeginTrackingDragGesture ( aEvent, aTargetFrame );
     mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
@@ -478,8 +479,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     
   case NS_LOSTFOCUS:
     {
-      printf("Lost focus.\n");
-
       // Hold the blur, wait for the focus so we can query the style of the focus
       // target as to what to do with the event. If appropriate we fire the blur
       // at that time.
@@ -503,6 +502,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       nsCOMPtr<nsIDOMElement> focusedElement;
       nsCOMPtr<nsIDOMWindow> focusedWindow;
       nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(mDocument);
+
       if (xulDoc) {
         // See if we have a command dispatcher attached.
         xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
@@ -513,11 +513,36 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         }
       }
 
-      if (!focusedWindow) {
+	  if (!focusedWindow) {
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
         mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
         focusedWindow = do_QueryInterface(globalObject);
       }
+
+	  // Sill no focused XULDocument, that is bad
+	  if(!xulDoc && focusedWindow)
+	  {
+		nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(focusedWindow);
+        if(privateWindow){
+		  nsCOMPtr<nsIDOMWindow> privateRootWindow;
+		  privateWindow->GetPrivateRoot(getter_AddRefs(privateRootWindow));
+          if(privateRootWindow){
+			nsCOMPtr<nsIDOMDocument> privateParentDoc;
+			privateRootWindow->GetDocument(getter_AddRefs(privateParentDoc));
+            xulDoc = do_QueryInterface(privateParentDoc);
+		  }
+		}
+		
+		if (xulDoc) {
+          // See if we have a command dispatcher attached.
+          xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+          if (commandDispatcher) {
+            // Obtain focus info from the command dispatcher.
+            commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
+            commandDispatcher->GetFocusedElement(getter_AddRefs(focusedElement));
+		  }
+		}
+	  }
 
       // Focus the DOM window.
       focusedWindow->Focus();
@@ -536,9 +561,10 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         focusContent->SetFocus(context);
       }       
 
-      if (commandDispatcher)
-        commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
-          
+      if (commandDispatcher) {
+        commandDispatcher->SetActive(PR_TRUE);
+		commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
+	  }   
     }
     break;
     
@@ -635,8 +661,10 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         gLastFocusedPresContext = nsnull;
       }             
 
-      if (commandDispatcher)
-        commandDispatcher->SetSuppressFocus(PR_FALSE);
+      if (commandDispatcher) {
+        commandDispatcher->SetActive(PR_FALSE);
+		commandDispatcher->SetSuppressFocus(PR_FALSE);
+	  }
     } 
     break;
     

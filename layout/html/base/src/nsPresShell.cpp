@@ -1141,10 +1141,14 @@ static void CheckForFocus(nsIDocument* aDocument)
 
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(ourWindow);
       if (domWindow == focusedWindow) {
-        // We need to restore focus and make sure we null
-        // out the focused element.
-        commandDispatcher->SetFocusedElement(nsnull);
-        domWindow->Focus();
+		PRBool active;
+        commandDispatcher->GetActive(&active);
+		commandDispatcher->SetFocusedElement(nsnull);
+		if(active) {
+          // We need to restore focus and make sure we null
+          // out the focused element.
+          domWindow->Focus();
+		}
       }
       commandDispatcher->SetSuppressFocus(PR_FALSE);
     }
