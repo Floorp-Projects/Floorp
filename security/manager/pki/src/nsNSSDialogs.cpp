@@ -602,7 +602,7 @@ NS_IMETHODIMP
 nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn, const PRUnichar *organization, const PRUnichar *issuer, const PRUnichar **certNickList, PRUint32 count, PRUnichar **certNick, PRBool *canceled) 
 {
   nsresult rv;
-  int i;
+  PRUint32 i;
 
   *canceled = PR_FALSE;
 
