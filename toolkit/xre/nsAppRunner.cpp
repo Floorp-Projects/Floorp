@@ -874,9 +874,7 @@ static nsresult DoOnShutdown()
     nsCOMPtr<nsIProfile> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager, so unable to update last modified time");
     if (NS_SUCCEEDED(rv)) {
-      // 0 is undefined, we use this secret value so that we don't notify
-      profileMgr->ShutDownCurrentProfile(0);
-    }
+      profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);    }
   }
 
   // at this point, all that is on the clipboard is a proxy object, but that object
