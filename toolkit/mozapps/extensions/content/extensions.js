@@ -86,6 +86,19 @@ function Startup()
   gExtensionsView.setAttribute("ref", gDSRoot);
   gExtensionsView.focus();
   
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
+  if (!isExtensions) {
+    gExtensionsView.addEventListener("richview-select", onThemeSelect, false);
+    try {
+      gCurrentTheme = pref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+    }
+    catch (e) { gCurrentTheme = "classic/1.0"; } 
+    
+    var useThemeButton = document.getElementById("useThemeButton");
+    useThemeButton.hidden = false;
+  }
+  
   // Restore the last-selected extension
   var lastSelected = gExtensionsView.getAttribute("last-selected");
   if (lastSelected != "")
@@ -100,8 +113,6 @@ function Startup()
   
   gExtensionsViewController.onCommandUpdate(); 
   
-  var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                       .getService(Components.interfaces.nsIPrefBranch);
   gGetMoreURL = pref.getComplexValue(isExtensions ? PREF_EXTENSIONS_GETMOREEXTENSIONSURL 
                                                   : PREF_EXTENSIONS_GETMORETHEMESURL, 
                                      Components.interfaces.nsIPrefLocalizedString).data;
@@ -115,14 +126,13 @@ function Startup()
     var themePreviewArea = document.getElementById("themePreviewArea");
     themePreviewArea.hidden = false;
     gExtensionsView.removeAttribute("flex");
-    
-    var win = document.documentElement;
-    if (!win.hasAttribute("width") || !win.hasAttribute("height")) {
-      win.setAttribute("width", 500);
-      win.setAttribute("width", 380);
-      
-      gExtensionsView.addEventListener("richview-select", onThemeSelect, false);
-    }
+  }
+  
+  // Set Initial Size
+  var win = document.documentElement;
+  if (!win.hasAttribute("width") || !win.hasAttribute("height")) {
+    win.setAttribute("width", isExtensions ? 400 : 500);
+    win.setAttribute("height", isExtensions ? 300 : 380);
   }
 }
 
@@ -139,38 +149,29 @@ function onViewDoubleClick()
     gExtensionsViewController.doCommand('cmd_options');
     break;
   case "themes":
-    if (!gExtensionsView.selected)
-      return;
-    var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                       .getService(Components.interfaces.nsIXULChromeRegistry);
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var internalName = gExtensionsView.selected.getAttribute("internalName");
-    var inUse = cr.isSkinSelected(internalName, true);
-    if (inUse == Components.interfaces.nsIChromeRegistry.FULL)
-      return;
-      
-    pref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, internalName);
-    cr.selectSkin(internalName, true);
-    cr.refreshSkins();
+    gExtensionsViewController.doCommand('cmd_useTheme');
     break;
   }
 }
 
 function onThemeSelect(aEvent)
 {
+  if (gWindowState != "themes")
+    return;
+
   var previewImageDeck = document.getElementById("previewImageDeck");
   if (!gExtensionsView.selected) {
-    previewImageDeck.setAttribute("index", "0");
+    previewImageDeck.setAttribute("selectedIndex", "0");
     return;
   }
   var url = gExtensionsView.selected.getAttribute("previewImage");
   if (url) {
-    previewImageDeck.setAttribute("index", "2");
+    previewImageDeck.setAttribute("selectedIndex", "2");
+    var previewImage = document.getElementById("previewImage");
     previewImage.setAttribute("src", url);
   }
   else
-    previewImageDeck.setAttribute("index", "1");
+    previewImageDeck.setAttribute("selectedIndex", "1");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -179,8 +180,8 @@ var gExtensionContextMenus = ["menuitem_options", "menuitem_homepage", "menuitem
                               "menuseparator_1", "menuitem_uninstall", "menuitem_update",
                               "menuitem_enable", "menuitem_disable", "menuseparator_2", 
                               "menuitem_moveTop", "menuitem_moveUp", "menuitem_moveDn"];
-var gThemeContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator_1", 
-                          "menuitem_uninstall", "menuitem_update"];
+var gThemeContextMenus = ["menuitem_useTheme", "menuitem_homepage", "menuitem_about", 
+                          "menuseparator_1", "menuitem_uninstall", "menuitem_update"];
 
 function buildContextMenu(aEvent)
 {
@@ -332,6 +333,8 @@ var gExtensionsViewController = {
     switch (aCommand) {
     case "cmd_close":
       return true;
+    case "cmd_useTheme":
+      return selectedItem && gCurrentTheme != selectedItem.getAttribute("internalName");
     case "cmd_options":
       return selectedItem && !selectedItem.disabled && selectedItem.getAttribute("optionsURL") != "";
     case "cmd_about":
@@ -359,7 +362,8 @@ var gExtensionsViewController = {
 
   doCommand: function (aCommand)
   {
-    this.commands[aCommand]();
+    if (this.isCommandEnabled(aCommand))
+      this.commands[aCommand]();
   },  
   
   onCommandUpdate: function ()
@@ -379,6 +383,22 @@ var gExtensionsViewController = {
     {
       closeWindow(true);
     },  
+  
+    cmd_useTheme: function ()
+    {
+      var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                        .getService(Components.interfaces.nsIXULChromeRegistry);
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+      gCurrentTheme = gExtensionsView.selected.getAttribute("internalName");
+      var inUse = cr.isSkinSelected(gCurrentTheme , true);
+      if (inUse == Components.interfaces.nsIChromeRegistry.FULL)
+        return;
+        
+      pref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, gCurrentTheme);
+      cr.selectSkin(gCurrentTheme, true);
+      cr.refreshSkins();
+    },
       
     cmd_options: function ()
     {

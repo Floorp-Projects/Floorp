@@ -71,6 +71,12 @@
           var eventType = "richview-" + aEventType;
           e.initEvent(eventType, false, true);
           this.dispatchEvent(e);
+          
+          var handler = this.getAttribute("onrichview-" + aEventType);
+          if (handler != "") {
+            var fn = new Function("event", handler);
+            fn(e);
+          }
           document.commandDispatcher.updateCommands(eventType);
         ]]>
         </body>

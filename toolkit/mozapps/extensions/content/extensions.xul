@@ -41,6 +41,8 @@
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
 
 <!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%brandDTD;
 <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
 %extensionsDTD;
 ]>
@@ -49,7 +51,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="extensionsManager" windowtype="Extension:Manager"
         orient="vertical" title="&extensions.title;" statictitle="&extensions.title;"
-        width="400" height="300" screenX="10" screenY="10"
+        screenX="10" screenY="10"
         persist="width height screenX screenY sizeMode"
         onload="Startup();" onunload="Shutdown();"
         onclose="return closeWindow(false);">
@@ -89,9 +91,12 @@
     <command id="cmd_movetop"/>
     <command id="cmd_moveup"/>
     <command id="cmd_movedn"/>
+    <command id="cmd_useTheme"/>
   </commandset>
   
   <vbox id="contextMenuPalette" hidden="true">
+    <menuitem id="menuitem_useTheme" default="true" command="cmd_useTheme"
+              label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;"/>
     <menuitem id="menuitem_options" default="true" command="cmd_options"
               label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"/>
     <menuitem id="menuitem_homepage" command="cmd_homepage"
@@ -201,7 +206,7 @@
         </rule>
       </template>
     </view> 
-    <vbox id="themePreviewArea" class="themePreviewArea" hidden="true" flex="5">
+    <vbox flex="5" id="themePreviewArea" class="themePreviewArea" hidden="true">
       <deck id="previewImageDeck" flex="1">
         <vbox id="noThemeSelected" pack="center" align="center">
           <label class="previewText">&previewNoThemeSelected.label;</label>
@@ -209,22 +214,30 @@
         <vbox id="noPreviewImage" pack="center" align="center">
           <label class="previewText">&previewNoPreviewImage.label;</label>
         </vbox>
-        <vbox id="previewImageContainer" pack="center" align="center"
+        <vbox id="previewImageContainer" align="center" pack="center"
               style="overflow: auto;">
-          <image id="previewImage"/>
+          <description>
+            <image id="previewImage"/>
+          </description>
         </vbox>
       </deck>
     </vbox>
   </hbox>
   <hbox>
     <hbox id="commandBar" flex="1" align="center">
-      <button id="uninstallButton" 
-              label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;" tooltiptext="&cmd.uninstall.tooltip;" 
-              command="cmd_uninstall"/>
-      <separator id="commandBarSeparator"/>              
-      <button id="updateButton" 
-              label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
-              command="cmd_update"/>
+      <hbox>
+        <button id="uninstallButton" 
+                label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;" tooltiptext="&cmd.uninstall.tooltip;" 
+                command="cmd_uninstall"/>
+        <separator class="commandBarSeparator"/>              
+        <button id="updateButton" 
+                label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
+                command="cmd_update"/>
+        <separator class="commandBarSeparator"/>              
+        <button id="useThemeButton" hidden="true"
+                label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;" tooltiptext="&cmd.useTheme.tooltip;"
+                command="cmd_useTheme"/>
+      </hbox>
       <label id="getMore" onclick="openURL(gGetMoreURL);"
              valuethemes="&getMoreThemes.label;"
              valueextensions="&getMoreExtensions.label;"
