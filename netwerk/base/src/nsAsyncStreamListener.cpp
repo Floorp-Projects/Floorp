@@ -56,14 +56,17 @@ protected:
     nsAsyncStreamObserver*      mListener;
     nsIChannel*                 mChannel;
     nsISupports*                mContext;
-    PLEvent *                   mEvent;
+    PLEvent                     mEvent;
 };
+
+#define GET_STREAM_LISTENER_EVENT(_this) \
+    ((nsStreamListenerEvent*)((char*)(_this) - offsetof(nsStreamListenerEvent, mEvent)))
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsStreamListenerEvent::nsStreamListenerEvent(nsAsyncStreamObserver* listener,
                                              nsIChannel* channel, nsISupports* context)
-    : mListener(listener), mChannel(channel), mContext(context), mEvent(nsnull)
+    : mListener(listener), mChannel(channel), mContext(context)
 {
     MOZ_COUNT_CTOR(nsStreamListenerEvent);
 
@@ -79,19 +82,11 @@ nsStreamListenerEvent::~nsStreamListenerEvent()
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mChannel);
     NS_IF_RELEASE(mContext);
-
-    if (nsnull != mEvent)
-    {
-        delete mEvent;
-        mEvent = nsnull;
-    }
 }
 
 void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
 {
-    nsStreamListenerEvent * ev = 
-        (nsStreamListenerEvent *) PL_GetEventOwner(aEvent);
-
+    nsStreamListenerEvent* ev = GET_STREAM_LISTENER_EVENT(aEvent);
     NS_ASSERTION(nsnull != ev,"null event.");
 
     nsresult rv = ev->HandleEvent();
@@ -111,11 +106,8 @@ void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
 
 void PR_CALLBACK nsStreamListenerEvent::DestroyPLEvent(PLEvent* aEvent)
 {
-    nsStreamListenerEvent * ev = 
-        (nsStreamListenerEvent *) PL_GetEventOwner(aEvent);
-
-    NS_ASSERTION(nsnull != ev,"null event.");
-
+    nsStreamListenerEvent* ev = GET_STREAM_LISTENER_EVENT(aEvent);
+    NS_ASSERTION(nsnull != ev, "null event.");
     delete ev;
 }
 
@@ -124,16 +116,12 @@ nsStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
 {
     NS_PRECONDITION(nsnull != aEventQueue, "nsIEventQueue for thread is null");
 
-    NS_PRECONDITION(nsnull == mEvent, "Init plevent only once.");
-    
-    mEvent = new PLEvent;
-    
-    PL_InitEvent(mEvent, 
-                 this,
+    PL_InitEvent(&mEvent,
+                 nsnull,
                  (PLHandleEventProc)  nsStreamListenerEvent::HandlePLEvent,
                  (PLDestroyEventProc) nsStreamListenerEvent::DestroyPLEvent);
 
-    PRStatus status = aEventQueue->PostEvent(mEvent);
+    PRStatus status = aEventQueue->PostEvent(&mEvent);
     return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -167,6 +155,7 @@ NS_IMETHODIMP
 nsAsyncStreamObserver::Init(nsIStreamObserver* aObserver, nsIEventQueue* aEventQ)
 {
     nsresult rv = NS_OK;
+    NS_ASSERTION(aObserver, "null observer");
     mReceiver = aObserver;
         
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
@@ -204,6 +193,11 @@ nsOnStartRequestEvent::HandleEvent()
          ("netlibEvent: Handle Start [event=%x]", this));
 #endif
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
+  if (receiver == nsnull) {
+      // must have already called OnStopRequest (it clears the receiver)
+      return NS_ERROR_FAILURE;
+  }
+
   nsresult status;
   nsresult rv = mChannel->GetStatus(&status);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
@@ -287,6 +281,11 @@ nsOnStopRequestEvent::HandleEvent()
            ("netlibEvent: Handle Stop [event=%x]", this));
 #endif
     nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
+    if (receiver == nsnull) {
+        // must have already called OnStopRequest (it clears the receiver)
+        return NS_ERROR_FAILURE;
+    }
+
     nsresult status = NS_OK;
     nsresult rv = mChannel->GetStatus(&status);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
@@ -390,6 +389,11 @@ nsOnDataAvailableEvent::HandleEvent()
          ("netlibEvent: Handle Data [event=%x]", this));
 #endif
   nsIStreamListener* receiver = (nsIStreamListener*)mListener->GetReceiver();
+  if (receiver == nsnull) {
+      // must have already called OnStopRequest (it clears the receiver)
+      return NS_ERROR_FAILURE;
+  }
+
   nsresult status;
   nsresult rv = mChannel->GetStatus(&status);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
