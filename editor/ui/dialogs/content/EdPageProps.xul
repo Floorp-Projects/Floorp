@@ -55,6 +55,7 @@
         <text class="label" value="&lastModified.label;" align="left"/>
         <text class="label" id="PageModDate" align="left"/>
       </row>
+      <spring class="spacer"/>
       <row valign="middle">
         <text class="label" value="&titleInput.label;"/>
         <textfield class="MinWidth20em" id="TitleInput" onkeyup="TextfieldChanged(this.id)"/>

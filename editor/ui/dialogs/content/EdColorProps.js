@@ -316,9 +316,9 @@ function chooseFile()
 {
   // Get a local image file, converted into URL format
   fileName = GetLocalFileURL("img");
-  if (fileName && fileName != "")
+  if (fileName)
   {
-    dialog.BackgroundImageInput = filename;
+    dialog.BackgroundImageInput.value = fileName;
     ValidateAndPreviewImage(true);
   }
   SetTextfieldFocus(dialog.BackgroundImageInput);
@@ -389,12 +389,9 @@ function ValidateData()
   {
     // A valid image may be null for no image
     if (backgroundImage)
-    {
       globalElement.setAttribute(backgroundStr, backgroundImage);
-    } else {
+    else
       globalElement.removeAttribute(backgroundStr);
-      return false;
-    }
   }  
   return true;
 }

@@ -48,8 +48,8 @@
 <!ENTITY filesaveas.accesskey "a">
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
 <!ENTITY filesaveascharset.accesskey "h">
-<!ENTITY previewCmd.label "Preview in Navigator">
-<!ENTITY filepreview.accesskey "i">
+<!ENTITY previewCmd.label "Browse Page">
+<!ENTITY filepreview.accesskey "b">
 <!ENTITY sendPageCmd.label "Send Page">
 <!ENTITY sendPage.accesskey "g">
 <!ENTITY printSetupCmd.label "Page Setup...">
@@ -539,8 +539,8 @@
 <!ENTITY openToolbarCmd.label "Open">
 <!ENTITY openToolbarCmd.tooltip "Open a local file">
 <!ENTITY saveToolbarCmd.tooltip "Save file locally">
-<!ENTITY previewToolbarCmd.label "Preview">
-<!ENTITY previewToolbarCmd.tooltip "Preview this page in Navigator">
+<!ENTITY previewToolbarCmd.label "Browse">
+<!ENTITY previewToolbarCmd.tooltip "Load this page into Navigator">
 <!ENTITY printToolbarCmd.label "Print">
 <!ENTITY printToolbarCmd.tooltip "Print this page">
 <!ENTITY findToolbarCmd.label "Find">
@@ -604,5 +604,5 @@
 <!ENTITY HTMLSourceMode.tooltip "Edit HTML source">
 <!ENTITY PreviewMode.label "Preview">
 <!ENTITY PreviewMode.accesskey "p">
-<!ENTITY PreviewMode.tooltip "Display as WYSIWYG (browser)">
+<!ENTITY PreviewMode.tooltip "Display as WYSIWYG (as in Navigator)">
 
