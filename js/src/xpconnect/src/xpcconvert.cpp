@@ -207,7 +207,7 @@ FinalizeXPCOMUCString(JSContext *cx, JSString *str)
     NS_ASSERTION(sXPCOMUCStringFinalizerIndex != -1,
                  "XPCConvert: XPCOM Unicode string finalizer called uninitialized!");
 
-    PRUnichar* buffer = JS_GetStringChars(str);
+    jschar* buffer = JS_GetStringChars(str);
     nsMemory::Free(buffer);
 }
 
@@ -393,8 +393,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     NS_ConvertUTF8toUCS2 unicodeString(*cString);
 
                     JSString* jsString = JS_NewUCStringCopyN(cx,
-                                         NS_CONST_CAST(jschar*, 
-                                         unicodeString.get()), 
+                                         (jschar*)unicodeString.get(),
                                          unicodeString.Length());
 
                     if(!jsString)
@@ -424,7 +423,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                         return JS_FALSE;
 
                     JSString* jsString = JS_NewExternalString(cx,
-                                             unicodeString,
+                                             (jschar*)unicodeString,
                                              cString->Length(),
                                              sXPCOMUCStringFinalizerIndex);
 
@@ -881,7 +880,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(useAllocator)
             {                
-                nsAReadableCString *rs = new NS_ConvertUCS2toUTF8(chars, length);
+                nsAReadableCString *rs = new NS_ConvertUCS2toUTF8((const PRUnichar*)chars, length);
                 if(!rs)
                     return JS_FALSE;
 
@@ -894,7 +893,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 // XXX This code needs to change when Jag lands the new
                 // UTF8String implementation.  Adopt() is a method that 
                 // shouldn't be used by string consumers.
-                rs->Adopt(ToNewUTF8String(nsDependentString(chars, length)));
+                rs->Adopt(ToNewUTF8String(nsDependentString((const PRUnichar*)chars, length)));
             }
             return JS_TRUE;
         }
