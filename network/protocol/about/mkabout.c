@@ -14,6 +14,7 @@
 #include "cookies.h"
 #include "httpauth.h"
 #include "mkstream.h"
+#include "glhist.h"
 
 #include "abouturl.h"
 
