@@ -214,31 +214,30 @@ NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsISelection *aDOMSel)
+NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *aDOMSel, nsRect *outCoordinates, PRBool *outIsCollapsed)
 {
   if (!mPresShell)
     return NS_ERROR_NOT_INITIALIZED;
-
-  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
+  if (!outCoordinates || !outIsCollapsed)
+    return NS_ERROR_NULL_POINTER;
 		
 	nsCOMPtr<nsISelection> domSelection = aDOMSel;
 	nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
   nsresult err;
   if (!domSelection)
     return NS_ERROR_NOT_INITIALIZED;    // no selection
-  
+
   // fill in defaults for failure
-  outCoordinates.x = -1;
-  outCoordinates.y = -1;
-  outCoordinates.width = -1;
-  outCoordinates.height = -1;
-  outIsCollapsed = PR_FALSE;
+  outCoordinates->x = -1;
+  outCoordinates->y = -1;
+  outCoordinates->width = -1;
+  outCoordinates->height = -1;
+  *outIsCollapsed = PR_FALSE;
   
-  err = domSelection->GetIsCollapsed(&outIsCollapsed);
+  err = domSelection->GetIsCollapsed(outIsCollapsed);
   if (NS_FAILED(err)) 
     return err;
     
-  // code in progress
   nsCOMPtr<nsIDOMNode>  focusNode;
   
   err = domSelection->GetFocusNode(getter_AddRefs(focusNode));
@@ -291,7 +290,7 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
   nsPoint   viewOffset(0, 0);
   nsRect    clipRect;
   nsIView   *drawingView;     // views are not refcounted
-  GetViewForRendering(theFrame, eTopLevelWindowCoordinates, viewOffset, clipRect, drawingView);
+  GetViewForRendering(theFrame, aRelativeToType, viewOffset, clipRect, drawingView);
   if (!drawingView)
     return NS_ERROR_UNEXPECTED;
 
@@ -325,12 +324,16 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
   nsRect          frameRect;
   theFrame->GetRect(frameRect);
   
+  // we don't need drawingView anymore so reuse that; reset viewOffset values for our purposes
+  if (aRelativeToType == eClosestViewCoordinates)
+    theFrame->GetOffsetFromView(presContext, viewOffset, &drawingView);
+
   // now add the frame offset to the view offset, and we're done
   viewOffset += framePos;
-  outCoordinates.x = viewOffset.x;
-  outCoordinates.y = viewOffset.y;
-  outCoordinates.height = frameRect.height;
-  outCoordinates.width  = frameRect.width;
+  outCoordinates->x = viewOffset.x;
+  outCoordinates->y = viewOffset.y;
+  outCoordinates->height = frameRect.height;
+  outCoordinates->width  = frameRect.width;
   
   return NS_OK;
 }
@@ -554,7 +557,7 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
   nscoord   x, y;
   
   // coorinates relative to the view we are going to use for drawing
-  if (coordType == eViewCoordinates)
+  if (coordType == eRenderingViewCoordinates)
   {
     nsIView*            startingView = theView;
     nsIScrollableView*  scrollableView = nsnull;
@@ -700,7 +703,7 @@ void nsCaret::DrawCaret()
   nsPoint   viewOffset(0, 0);
   nsRect    clipRect;
   nsIView   *drawingView;
-  GetViewForRendering(mLastCaretFrame, eViewCoordinates, viewOffset, clipRect, drawingView);
+  GetViewForRendering(mLastCaretFrame, eRenderingViewCoordinates, viewOffset, clipRect, drawingView);
 
   if (drawingView == nsnull)
     return;
