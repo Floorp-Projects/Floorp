@@ -2863,201 +2863,201 @@ nsresult nsMsgDBView::GetThreadContainingIndex(nsMsgViewIndex index, nsIMsgThrea
 
 nsMsgViewIndex nsMsgDBView::GetIndexForThread(nsIMsgDBHdr *hdr)
 {
-	nsMsgViewIndex retIndex = nsMsgViewIndex_None;
-	nsMsgViewIndex prevInsertIndex = nsMsgViewIndex_None;
-	nsMsgKey insertKey;
+  nsMsgViewIndex retIndex = nsMsgViewIndex_None;
+  nsMsgViewIndex prevInsertIndex = nsMsgViewIndex_None;
+  nsMsgKey insertKey;
   hdr->GetMessageKey(&insertKey);
-
+  
   if (m_sortOrder == nsMsgViewSortOrder::ascending)
-	{
-		// loop backwards looking for top level message with id > id of header we're inserting 
-		// and put new header before found header, or at end.
-		for (PRInt32 i = GetSize() - 1; i >= 0; i--) 
-		{
-			if (m_levels[i] == 0)
-			{
-				if (insertKey < m_keys.GetAt(i))
-					prevInsertIndex = i;
-				else if (insertKey >= m_keys.GetAt(i))
-				{
-					retIndex = (prevInsertIndex == nsMsgViewIndex_None) ? nsMsgViewIndex_None : i + 1;
-					if (prevInsertIndex == nsMsgViewIndex_None)
-					{
-						retIndex = nsMsgViewIndex_None;
-					}
-					else
-					{
-						for (retIndex = i + 1; retIndex < (nsMsgViewIndex)GetSize(); retIndex++)
-						{
-							if (m_levels[retIndex] == 0)
-								break;
-						}
-					}
-					break;
-				}
-
-			}
-		}
-	}
-	else
-	{
-		// loop forwards looking for top level message with id < id of header we're inserting and put 
-		// new header before found header, or at beginning.
-		for (PRInt32 i = 0; i < GetSize(); i++) 
-		{
-			if (m_levels[i])
-			{
-				if (insertKey > m_keys.GetAt(i))
-				{
-					retIndex = i;
-					break;
-				}
-			}
-		}
-	}
-	return retIndex;
+  {
+    // loop backwards looking for top level message with id > id of header we're inserting 
+    // and put new header before found header, or at end.
+    for (PRInt32 i = GetSize() - 1; i >= 0; i--) 
+    {
+      if (m_levels[i] == 0)
+      {
+        if (insertKey < m_keys.GetAt(i))
+          prevInsertIndex = i;
+        else if (insertKey >= m_keys.GetAt(i))
+        {
+          retIndex = (prevInsertIndex == nsMsgViewIndex_None) ? nsMsgViewIndex_None : i + 1;
+          if (prevInsertIndex == nsMsgViewIndex_None)
+          {
+            retIndex = nsMsgViewIndex_None;
+          }
+          else
+          {
+            for (retIndex = i + 1; retIndex < (nsMsgViewIndex)GetSize(); retIndex++)
+            {
+              if (m_levels[retIndex] == 0)
+                break;
+            }
+          }
+          break;
+        }
+        
+      }
+    }
+  }
+  else
+  {
+    // loop forwards looking for top level message with id < id of header we're inserting and put 
+    // new header before found header, or at beginning.
+    for (PRInt32 i = 0; i < GetSize(); i++) 
+    {
+      if (!m_levels[i])
+      {
+        if (insertKey > m_keys.GetAt(i))
+        {
+          retIndex = i;
+          break;
+        }
+      }
+    }
+  }
+  return retIndex;
 }
 
 
 nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
 {
-    PRBool done = PR_FALSE;
-	PRBool withinOne = PR_FALSE;
-	nsMsgViewIndex retIndex = nsMsgViewIndex_None;
-	nsMsgViewIndex tryIndex = GetSize() / 2;
-	nsMsgViewIndex newTryIndex;
-	nsMsgViewIndex lowIndex = 0;
-	nsMsgViewIndex highIndex = GetSize() - 1;
-	IdDWord	dWordEntryInfo1, dWordEntryInfo2;
-	IdKeyPtr	keyInfo1, keyInfo2;
+  PRBool done = PR_FALSE;
+  PRBool withinOne = PR_FALSE;
+  nsMsgViewIndex retIndex = nsMsgViewIndex_None;
+  nsMsgViewIndex tryIndex = GetSize() / 2;
+  nsMsgViewIndex newTryIndex;
+  nsMsgViewIndex lowIndex = 0;
+  nsMsgViewIndex highIndex = GetSize() - 1;
+  IdDWord	dWordEntryInfo1, dWordEntryInfo2;
+  IdKeyPtr	keyInfo1, keyInfo2;
   IdPRTime timeInfo1, timeInfo2;
   void *comparisonContext = nsnull;
-
+  
   nsresult rv;
-
-	if (GetSize() == 0)
-		return 0;
-
-	PRUint16	maxLen;
-	eFieldType fieldType;
+  
+  if (GetSize() == 0)
+    return 0;
+  
+  PRUint16	maxLen;
+  eFieldType fieldType;
   rv = GetFieldTypeAndLenForSort(m_sortType, &maxLen, &fieldType);
-	const void *pValue1, *pValue2;
-
-	if ((m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) != 0)
-	{
-		retIndex = GetIndexForThread(msgHdr);
-		return retIndex;
-	}
-
-	int (* PR_CALLBACK comparisonFun) (const void *pItem1, const void *pItem2, void *privateData)=nsnull;
-	int retStatus = 0;
-	switch (fieldType)
-	{
-		case kCollationKey:
+  const void *pValue1, *pValue2;
+  
+  if ((m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) != 0)
+  {
+    retIndex = GetIndexForThread(msgHdr);
+    return retIndex;
+  }
+  
+  int (* PR_CALLBACK comparisonFun) (const void *pItem1, const void *pItem2, void *privateData)=nsnull;
+  int retStatus = 0;
+  switch (fieldType)
+  {
+    case kCollationKey:
       rv = GetCollationKey(msgHdr, m_sortType, &(keyInfo1.key), &(keyInfo1.info.len));
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create collation key");
-			msgHdr->GetMessageKey(&keyInfo1.info.id);
+      msgHdr->GetMessageKey(&keyInfo1.info.id);
       comparisonFun = FnSortIdKeyPtr;
       comparisonContext = m_db.get();
-			pValue1 = (void *) &keyInfo1;
-			break;
-		case kU32:
-            if (m_sortType == nsMsgViewSortType::byId) {
-              msgHdr->GetMessageKey(&dWordEntryInfo1.dword);
-            }
-            else {
-              GetLongField(msgHdr, m_sortType, &dWordEntryInfo1.dword);
-            }
-            msgHdr->GetMessageKey(&dWordEntryInfo1.info.id);
-            pValue1 = (void *) &dWordEntryInfo1;
-			comparisonFun = FnSortIdDWord;
-			break;
+      pValue1 = (void *) &keyInfo1;
+      break;
+    case kU32:
+      if (m_sortType == nsMsgViewSortType::byId) {
+        msgHdr->GetMessageKey(&dWordEntryInfo1.dword);
+      }
+      else {
+        GetLongField(msgHdr, m_sortType, &dWordEntryInfo1.dword);
+      }
+      msgHdr->GetMessageKey(&dWordEntryInfo1.info.id);
+      pValue1 = (void *) &dWordEntryInfo1;
+      comparisonFun = FnSortIdDWord;
+      break;
     case kPRTime:
       rv = GetPRTimeField(msgHdr, m_sortType, &timeInfo1.prtime);
-			msgHdr->GetMessageKey(&timeInfo1.info.id);
+      msgHdr->GetMessageKey(&timeInfo1.info.id);
       NS_ENSURE_SUCCESS(rv,rv);
       comparisonFun = FnSortIdPRTime;
       pValue1 = (void *) &timeInfo1;
       break;
-		default:
-			done = PR_TRUE;
-	}
-	while (!done)
-	{
-		if (highIndex == lowIndex)
-			break;
-		nsMsgKey	messageKey = GetAt(tryIndex);
-		nsCOMPtr <nsIMsgDBHdr> tryHdr;
+    default:
+      done = PR_TRUE;
+  }
+  while (!done)
+  {
+    if (highIndex == lowIndex)
+      break;
+    nsMsgKey	messageKey = GetAt(tryIndex);
+    nsCOMPtr <nsIMsgDBHdr> tryHdr;
     rv = m_db->GetMsgHdrForKey(messageKey, getter_AddRefs(tryHdr));
-		if (!tryHdr)
-			break;
-		if (fieldType == kCollationKey)
-		{
-			rv = GetCollationKey(tryHdr, m_sortType, &(keyInfo2.key), &(keyInfo2.info.len));
+    if (!tryHdr)
+      break;
+    if (fieldType == kCollationKey)
+    {
+      rv = GetCollationKey(tryHdr, m_sortType, &(keyInfo2.key), &(keyInfo2.info.len));
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create collation key");
-			keyInfo2.info.id = messageKey;
+      keyInfo2.info.id = messageKey;
       pValue2 = &keyInfo2;
-		}
-		else if (fieldType == kU32)
-		{
-            if (m_sortType == nsMsgViewSortType::byId) {
-              dWordEntryInfo2.dword = messageKey;
-            }
-            else {
-			  GetLongField(tryHdr, m_sortType, &dWordEntryInfo2.dword);
-            }
-			dWordEntryInfo2.info.id = messageKey;
-			pValue2 = &dWordEntryInfo2;
-		}
+    }
+    else if (fieldType == kU32)
+    {
+      if (m_sortType == nsMsgViewSortType::byId) {
+        dWordEntryInfo2.dword = messageKey;
+      }
+      else {
+        GetLongField(tryHdr, m_sortType, &dWordEntryInfo2.dword);
+      }
+      dWordEntryInfo2.info.id = messageKey;
+      pValue2 = &dWordEntryInfo2;
+    }
     else if (fieldType == kPRTime)
     {
-			GetPRTimeField(tryHdr, m_sortType, &timeInfo2.prtime);
-			timeInfo2.info.id = messageKey;
-			pValue2 = &timeInfo2;
+      GetPRTimeField(tryHdr, m_sortType, &timeInfo2.prtime);
+      timeInfo2.info.id = messageKey;
+      pValue2 = &timeInfo2;
     }
-		retStatus = (*comparisonFun)(&pValue1, &pValue2, comparisonContext);
-		if (retStatus == 0)
-			break;
+    retStatus = (*comparisonFun)(&pValue1, &pValue2, comparisonContext);
+    if (retStatus == 0)
+      break;
     if (m_sortOrder == nsMsgViewSortOrder::descending)	//switch retStatus based on sort order
-			retStatus = (retStatus > 0) ? -1 : 1;
-
-		if (retStatus < 0)
-		{
-			newTryIndex = tryIndex  - (tryIndex - lowIndex) / 2;
-			if (newTryIndex == tryIndex)
-			{
-				if (!withinOne && newTryIndex > lowIndex)
-				{
-					newTryIndex--;
-					withinOne = PR_TRUE;
-				}
-			}
-			highIndex = tryIndex;
-		}
-		else
-		{
-			newTryIndex = tryIndex + (highIndex - tryIndex) / 2;
-			if (newTryIndex == tryIndex)
-			{
-				if (!withinOne && newTryIndex < highIndex)
-				{
-					withinOne = PR_TRUE;
-					newTryIndex++;
-				}
-				lowIndex = tryIndex;
-			}
-		}
-		if (tryIndex == newTryIndex)
-			break;
-		else
-			tryIndex = newTryIndex;
-	}
-	if (retStatus >= 0)
-		retIndex = tryIndex + 1;
-	else if (retStatus < 0)
-		retIndex = tryIndex;
-
-	return retIndex;
+      retStatus = (retStatus > 0) ? -1 : 1;
+    
+    if (retStatus < 0)
+    {
+      newTryIndex = tryIndex  - (tryIndex - lowIndex) / 2;
+      if (newTryIndex == tryIndex)
+      {
+        if (!withinOne && newTryIndex > lowIndex)
+        {
+          newTryIndex--;
+          withinOne = PR_TRUE;
+        }
+      }
+      highIndex = tryIndex;
+    }
+    else
+    {
+      newTryIndex = tryIndex + (highIndex - tryIndex) / 2;
+      if (newTryIndex == tryIndex)
+      {
+        if (!withinOne && newTryIndex < highIndex)
+        {
+          withinOne = PR_TRUE;
+          newTryIndex++;
+        }
+        lowIndex = tryIndex;
+      }
+    }
+    if (tryIndex == newTryIndex)
+      break;
+    else
+      tryIndex = newTryIndex;
+  }
+  if (retStatus >= 0)
+    retIndex = tryIndex + 1;
+  else if (retStatus < 0)
+    retIndex = tryIndex;
+  
+  return retIndex;
 }
 
 nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
