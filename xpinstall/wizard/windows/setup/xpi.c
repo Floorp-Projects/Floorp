@@ -288,6 +288,7 @@ HRESULT SmartUpdateJars()
         {
           ++dwCurrentArchive;
           UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+          UpdateGREAppInstallerProgress((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
         }
 
         wsprintf(szBuf, szStrInstalling, siCObject->szDescriptionShort);
@@ -317,6 +318,8 @@ HRESULT SmartUpdateJars()
 
         ++dwCurrentArchive;
         UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+        UpdateGREAppInstallerProgress((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+
         ProcessWindowsMessages();
         LogISXPInstallComponentResult(hrResult);
 
@@ -337,6 +340,8 @@ HRESULT SmartUpdateJars()
       siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     } /* while(siCObject) */
 
+    //report 100% progress status for successful installs
+    UpdateGREAppInstallerProgress(100);
     LogMSXPInstallStatus(NULL, hrResult);
     pfnXpiExit();
     DeInitProgressDlg();
@@ -380,6 +385,8 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
         dlgInfo.nFileBars = 0;
         ++dwCurrentArchive;
         UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+        UpdateGREAppInstallerProgress((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+
         InvalidateBarberBarArea();
         bBarberBar = FALSE;
       }
