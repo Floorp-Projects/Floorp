@@ -5294,6 +5294,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
      rv = NS_NewMathMLmsqrtFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mroot_)
      rv = NS_NewMathMLmrootFrame(aPresShell, &newFrame);
+  else if (aTag == nsMathMLAtoms::maction_)
+     rv = NS_NewMathMLmactionFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mrow_   ||
            aTag == nsMathMLAtoms::mtext_  ||
            aTag == nsMathMLAtoms::merror_ ||
