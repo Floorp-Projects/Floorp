@@ -149,8 +149,8 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
-  virtual PRBool Equals(const nsIStyleRule* aRule) const;
-  virtual PRUint32 HashValue(void) const;
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
 
   virtual nsCSSSelector* FirstSelector(void);
   virtual void AddSelector(const nsCSSSelector& aSelector);
@@ -167,7 +167,9 @@ public:
   virtual PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
                           PRInt32 aMask, const nsStyleFont* aFont, 
                           nsIPresContext* aPresContext);
-  virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
+                          nsIContent* aContent);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -310,45 +312,48 @@ nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
 }
 
 
-PRBool CSSStyleRuleImpl::Equals(const nsIStyleRule* aRule) const
+NS_IMETHODIMP CSSStyleRuleImpl::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 {
   nsICSSStyleRule* iCSSRule;
 
   if (this == aRule) {
-    return PR_TRUE;
+    aResult = PR_TRUE;
   }
+  else {
+    aResult = PR_FALSE;
+    if ((nsnull != aRule) && 
+        (NS_OK == ((nsIStyleRule*)aRule)->QueryInterface(kICSSStyleRuleIID, (void**) &iCSSRule))) {
 
-  if ((nsnull != aRule) && 
-      (NS_OK == ((nsIStyleRule*)aRule)->QueryInterface(kICSSStyleRuleIID, (void**) &iCSSRule))) {
+      CSSStyleRuleImpl* rule = (CSSStyleRuleImpl*)iCSSRule;
+      const nsCSSSelector* local = &mSelector;
+      const nsCSSSelector* other = &(rule->mSelector);
+      aResult = PR_TRUE;
 
-    CSSStyleRuleImpl* rule = (CSSStyleRuleImpl*)iCSSRule;
-    const nsCSSSelector* local = &mSelector;
-    const nsCSSSelector* other = &(rule->mSelector);
-    PRBool  result = PR_TRUE;
-
-    while ((PR_TRUE == result) && (nsnull != local) && (nsnull != other)) {
-      if (! local->Equals(other)) {
-        result = PR_FALSE;
+      if ((rule->mDeclaration != mDeclaration) || 
+          (rule->mWeight != mWeight)) {
+        aResult = PR_FALSE;
       }
-      local = local->mNext;
-      other = other->mNext;
+      while ((PR_TRUE == aResult) && (nsnull != local) && (nsnull != other)) {
+        if (! local->Equals(other)) {
+          aResult = PR_FALSE;
+        }
+        local = local->mNext;
+        other = other->mNext;
+      }
+      if ((nsnull != local) || (nsnull != other)) { // more were left
+        aResult = PR_FALSE;
+      }
+      NS_RELEASE(iCSSRule);
     }
-    if ((nsnull != local) || (nsnull != other)) { // more were left
-      result = PR_FALSE;
-    }
-    if ((rule->mDeclaration != mDeclaration) || 
-        (rule->mWeight != mWeight)) {
-      result = PR_FALSE;
-    }
-    NS_RELEASE(iCSSRule);
-    return result;
   }
-  return PR_FALSE;
+  return NS_OK;
 }
 
-PRUint32 CSSStyleRuleImpl::HashValue(void) const
+NS_IMETHODIMP
+CSSStyleRuleImpl::HashValue(PRUint32& aValue) const
 {
-  return (PRUint32)this;
+  aValue = (PRUint32)this;
+  return NS_OK;
 }
 
 nsCSSSelector* CSSStyleRuleImpl::FirstSelector(void)
@@ -509,7 +514,9 @@ PRBool CSSStyleRuleImpl::SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord
   return result;
 }
 
-void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+NS_IMETHODIMP
+CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
+                               nsIContent* aContent)
 {
   if (nsnull != mDeclaration) {
     nsStyleFont*  font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
@@ -1024,6 +1031,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
       }
     }
   }
+  return NS_OK;
 }
 
 

@@ -37,10 +37,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual PRBool Equals(const nsIStyleRule* aRule) const;
-  virtual PRUint32 HashValue(void) const;
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
 
-  virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
+                          nsIContent* aContent);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -83,18 +84,25 @@ BodyRule::~BodyRule()
 
 NS_IMPL_ISUPPORTS(BodyRule, kIStyleRuleIID);
 
-PRBool BodyRule::Equals(const nsIStyleRule* aRule) const
+NS_IMETHODIMP
+BodyRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 {
-  return PRBool(this == aRule);
+  aResult = PRBool(this == aRule);
+  return NS_OK;
 }
 
-PRUint32 BodyRule::HashValue(void) const
+NS_IMETHODIMP
+BodyRule::HashValue(PRUint32& aValue) const
 {
-  return (PRUint32)(mPart);
+  aValue = (PRUint32)(mPart);
+  return NS_OK;
 }
 
-void BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+NS_IMETHODIMP
+BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
+                       nsIContent* aContent)
 {
+  NS_ASSERTION(aContent == mPart, "bad content mapping");
   if (nsnull != mPart) {
 
     nsStyleSpacing* styleSpacing = (nsStyleSpacing*)(aContext->GetMutableStyleData(eStyleStruct_Spacing));
@@ -153,6 +161,7 @@ void BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
       }
     }
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
