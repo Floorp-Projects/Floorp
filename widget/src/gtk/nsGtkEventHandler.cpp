@@ -86,7 +86,7 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_SUBTRACT,   GDK_KP_Subtract },
   { NS_VK_DECIMAL,    GDK_KP_Decimal },
   { NS_VK_DIVIDE,     GDK_KP_Divide },
-  { NS_VK_RETURN,      GDK_KP_Enter },
+  { NS_VK_RETURN,     GDK_KP_Enter },
 
   { NS_VK_COMMA,      GDK_comma },
   { NS_VK_PERIOD,     GDK_period },
