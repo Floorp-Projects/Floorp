@@ -87,8 +87,6 @@ public:
   // Methods used to GFX-render the checkbox
   // 
 
-  void ForceRepaint();
-
   virtual void PaintCheckBox(nsIPresContext& aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect);
@@ -165,18 +163,6 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredLayoutSize.descent = 0;
 }
 
-void
-nsCheckboxControlFrame::ForceRepaint() 
-{
-   //XXX: Hack. This hack is used to reforce a repaint
-   //by changing an attribute on the check box.
-   //We need a clean, legal way to force repaint's for
-   //GFX rendered controls.
-  PRBool state = PR_FALSE;
-  GetDefaultCheckState(&state);
-  SetDefaultCheckState(state);
-}
-
 
 void 
 nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
@@ -236,7 +222,6 @@ nsCheckboxControlFrame::MouseClicked(nsIPresContext* aPresContext)
   GetCurrentCheckState(&oldState);
   PRBool newState = oldState ? PR_FALSE : PR_TRUE;
   SetCurrentCheckState(newState); 
-  ForceRepaint();
 }
 
 PRInt32 
@@ -372,13 +357,13 @@ NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
     switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
         mMouseDownOnCheckbox = PR_TRUE;
-    //XXX: TODO render gray rectangle on mouse down    ForceRepaint();
+    //XXX: TODO render gray rectangle on mouse down  
      
       break;
 
       case NS_MOUSE_EXIT:
         mMouseDownOnCheckbox = PR_FALSE;
-    //XXX: TO DO clear gray rectangle on mouse up   ForceRepaint();
+    //XXX: TO DO clear gray rectangle on mouse up 
       break;
 
     }
@@ -432,6 +417,8 @@ void nsCheckboxControlFrame::SetCheckboxControlFrameState(const nsString& aValue
       mChecked = PR_TRUE;
     else
       mChecked = PR_FALSE;
+
+    nsFormControlHelper::ForceDrawFrame(this);
   }
 }         
 

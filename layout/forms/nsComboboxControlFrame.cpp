@@ -237,32 +237,6 @@ nsComboboxControlFrame::GetWindowTemp(nsIView *aView)
   return nsnull;
 }
 
-/**
-  *
- */
-static void ForceDrawFrame(nsIFrame * aFrame)//, PRBool)
-{
-  if (aFrame == nsnull) {
-    return;
-  }
-  nsRect    rect;
-  nsIView * view;
-  nsPoint   pnt;
-  aFrame->GetOffsetFromView(pnt, view);
-  aFrame->GetRect(rect);
-  rect.x = pnt.x;
-  rect.y = pnt.y;
-  if (view != nsnull) {
-    nsIViewManager * viewMgr;
-    view->GetViewManager(viewMgr);
-    if (viewMgr != nsnull) {
-      viewMgr->UpdateView(view, rect, 0);
-      NS_RELEASE(viewMgr);
-    }
-  }
-
-}
-
 //--------------------------------------------------------------
 void 
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
@@ -270,7 +244,7 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   //mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "SELECTED", PR_TRUE);
   mGotFocus = aOn;
   if (aRepaint) {
-    ForceDrawFrame(this);
+    nsFormControlHelper::ForceDrawFrame(this);
   }
 }
 
@@ -296,7 +270,7 @@ void nsComboboxControlFrame::MouseClicked(nsIPresContext* aPresContext)
     }
 
     mListFrame->ReResolveStyleContext(aPresContext, mCurrentStyleContext);
-    ForceDrawFrame(mListFrame);
+    nsFormControlHelper::ForceDrawFrame(mListFrame);
   }
 
 }
@@ -764,14 +738,14 @@ NS_IMETHODIMP nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
     if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
       mArrowStyle = mBtnOutStyleContext;
-      ForceDrawFrame(this);
+      nsFormControlHelper::ForceDrawFrame(this);
       //MouseClicked(&aPresContext);
 
     } else if (aEvent->message == NS_MOUSE_MOVE) {
 
     } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
       mArrowStyle = mBtnPressedStyleContext;
-      ForceDrawFrame(this);
+      nsFormControlHelper::ForceDrawFrame(this);
       MouseClicked(&aPresContext);
     }
   }
