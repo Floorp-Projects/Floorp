@@ -27,16 +27,63 @@
 */
 
 
-table { cell-spacing: 0px; }
-td, table { border: 0px;}
+table { 
+  border-collapse: separate; 
+  border-spacing:  0px; 
+  margin: 0px; 
+  border: 0px;
+}
+
+td { border: 0px;}
 
 /* Use to center vertically in a table cell */
 tr { 
   vertical-align: middle;
 }
 
-input.MinWidth200, text.MinWidth200, titledbutton.MinWidth200 {
+/* input widgets are too high! This doesn't seem to help */
+input {
+  height:         1em;
+  max-height:     1em;
+  padding-top:    5px;
+  padding-bottom: 5px;
+  margin:         0px;
+}
+
+
+/* This also doesn't work! */
+input[disabled="true"]
+{
+  background-color: #CCCCCC;
+}
+/* This strategy for hidding allows widget to keep layout space
+   while using "hidden" attribute sets to display: none, removing space
+*/
+input[visibility=hidden]
+{
+  visibility: hidden;
+}
+
+
+input.MinWidth200,select.MinWidth200,div.MinWidth200,titledbutton.MinWidth200,text.MinWidth200,spring.MinWidth100 {
   min-width: 200px;
+}
+
+input.MinWidth100,select.MinWidth100,div.MinWidth100,titledbutton.MinWidth100,text.MinWidth100,spring.MinWidth100 {
+  min-width: 100px;
+}
+
+input.MinWidth70,select.MinWidth70,label.MinWidth70,div.MinWidth70,titledbutton.MinWidth70,text.MinWidth70,spring.MinWidth70 {
+  min-width: 70px;
+}
+
+input.MinWidth50,select.MinWidth50,label.MinWidth50,div.MinWidth50,titledbutton.MinWidth50,text.MinWidth50,spring.MinWidth50 {
+  min-width: 50px;
+}
+
+input#CellAlignCharInput {
+  padding-left:  3px;
+  padding-right: 3px;
 }
 
 select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
@@ -92,6 +139,25 @@ td#ColorPreview div {
 
 /* XUL ELEMENTS */
 
+/* These reduce extra space to 
+   minimize total height in Table Dialog
+*/
+titledbox.NoBottomPad {
+  padding-bottom: 0px;
+}
+
+titledbox.NoTopMargin {
+  margin-bottom: 0px;
+}
+
+titledbox.NoTopPadding {
+  padding-top: 0px;
+}
+
+tabpanel.Padding5 {
+  padding: 5px;
+}
+
 /* SHOULD GO IN GLOBAL.CSS */
 text {
   text-align: left;
@@ -101,25 +167,12 @@ text[hidden="true"], input[hidden="true"] {
   display: none;
 }
 
-/* values = margin, padding. Padding doesn't work yet */
-
-/* Should be in XUL.css? */
-tab {
-    padding: 0px 3px;
-}
-
 select#alignTypeSelect,label#alignLabel {
   margin-left: 5px;
 }
 
 /* For right-aligned buttons */
 titledbutton#AdvancedEditButton,titledbutton#AdvancedEditExtraButton,titledbutton#SaveDefault {
-  min-width: 8em;
-}
-
-titledbutton#editImageMap,titledbutton#removeImageMap {
-  margin-left: 6px;
-  margin-right: 6px;
   min-width: 8em;
 }
 
@@ -168,7 +221,11 @@ titledbutton.color-well {
   border: 1px solid #CCCCCC;
   padding: 0px;
   margin: 0px;
-  background-color: #AA0000;
+}
+
+titledbutton.color-well[default="true"] {
+  border: 1px solid transparent;
+  background-color: inherit;
 }
 
 titledbutton.color-well:hover {
@@ -184,6 +241,13 @@ titledbutton.SizeToParent {
   width: 100%;
   /* A hack to get buttons to be the same width */
   min-width: 5em;
+}
+
+spring.smallspacer {
+  width:  3px;
+  height: 3px;
+  min-width:  3px;
+  min-height: 3px;
 }
 
 spring.spacer {

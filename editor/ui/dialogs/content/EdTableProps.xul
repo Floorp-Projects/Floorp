@@ -20,6 +20,7 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
+   -    Ben Goodger
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
@@ -34,7 +35,6 @@
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    width="450" height="430"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -51,351 +51,248 @@
 		  <tab id="CellTab" onclick="SelectCellTab()" value="&cellTab.label;"/>
 	  	<spring flex="1"/>
 	  </tabbox>
-
-    <tabpanel id="TabPanel" flex="100%">
-      <!-- table panel -->
-    	<box id="TablePanel" align="vertical" class="panel">
-        <titledbox class="holder">
-          <title>&tableSize.label;</title>
-          <html:table width="350">
-            <html:tr>
-              <html:td>
-                <html:label for="tableRows.text">&tableRows.label;</html:label>
-              </html:td>
-              <html:td>
-                <html:input type="text" id="tableRows.text" size="3"/>
-              </html:td>
-              <html:td>
-                <html:input type="checkbox" id="tableHeight.check"/>
-              </html:td>
-              <html:td>
-                <html:label for="tableHeight.check">&tableHeight.label;</html:label>
-              </html:td>
-              <html:td>
-                <html:input type="text" id="tableHeight.text" size="3"/>
-              </html:td>
-              <html:td>
-                <html:select id="heightUnits">
-                  <html:option value="px">&tablePixels.label;</html:option>
-                  <html:option value="pc">&tablePercent.label;</html:option>
-                </html:select>
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td>
-                <html:label for="tableColumns.text">&tableColumns.label;</html:label>
-              </html:td>
-              <html:td>
-                <html:input type="text" id="tableColumns.text" size="3"/>
-              </html:td>
-              <html:td>
-                <html:input type="checkbox" id="tableWidth.check"/>
-              </html:td>
-              <html:td>
-                <html:label for="tableWidth.check">&tableWidth.label;</html:label>
-              </html:td>
-              <html:td>
-                <html:input type="text" id="tableWidth.text" size="3"/>
-              </html:td>
-              <html:td>
-                <html:select id="widthUnits">
-                  <html:option value="px">&tablePixels.label;</html:option>
-                  <html:option value="pc">&tablePercent.label;</html:option>
-                </html:select>
-              </html:td>
-            </html:tr>
-          </html:table>
-        </titledbox>
-        <box align="horizontal">
-          <titledbox flex="100%">
-            <title>&tableBorderSpacing.label;</title>
-            <html:table>
-              <html:tr>
-                <html:td>
-                  <html:input type="checkbox" id="BorderWidthCheck"/> 
-                </html:td>
-                <html:td>
-                  <html:label for="BorderWidthCheck">&tableBorderWidth.label;</html:label>
-                </html:td>
-                <html:td>
-                  <html:input type="text" id="BorderWidthInput" size="3"/>
-                </html:td>
-                <html:td>
-                  <html:div>&tablePixels.label;</html:div>
-                </html:td>
-              </html:tr>
-            </html:table>
-            <html:table>
-              <html:tr>
-                <html:td>
-                  <html:label for="spacing.text">&tableSpacing.label;</html:label>
-                </html:td>
-                <html:td>
-                  <html:input type="text" id="spacing.text" size="3"/>
-                </html:td>
-                <html:td>
-                  <html:div>&tablePxBetwCells.label;</html:div>
-                </html:td>
-              </html:tr>
-              <html:tr>
-                <html:td>
-                  <html:label for="padding.text">&tablePadding.label;</html:label>
-                </html:td>
-                <html:td>
-                  <html:input type="text" id="padding.text" size="3"/>
-                </html:td>
-                <html:td>
-                  <html:div>&tablePxBetwBrdrCellContent.label;</html:div>
-                </html:td>
-              </html:tr>
-            </html:table>
-          </titledbox>
-          <box align="vertical" flex="100%">
-            <spring flex="100%"/>
-            <html:table>
-              <html:tr>
-                <html:td>
-                  <html:label for="alignment.select">&tableAlignment.label;</html:label>
-                </html:td>
-                <html:td>
-                  <html:select id="alignment.select">
-                    <html:option value="left">&tableAlignLeft.label;</html:option>
-                    <html:option value="center">&tableAlignCenter.label;</html:option>
-                    <html:option value="right">&tableAlignRight.label;</html:option>
-                  </html:select>
-                </html:td>
-              </html:tr>
-              <spring flex="100%"/>
-              <html:tr>
-                <html:td>
-                  <html:label for="caption.select">&tableCaption.label;</html:label>
-                </html:td>
-                <html:td>
-                  <html:select id="caption.select">
-                    <html:option value="none">&tableCaptionNone.label;</html:option>
-                    <html:option value="above">&tableCaptionAbove.label;</html:option>
-                    <html:option value="below">&tableCaptionBelow.label;</html:option>
-                  </html:select>
-                </html:td>
-              </html:tr>
-            </html:table>
-            <spring flex="100%"/>
+    <tabpanel class="Padding5" orient="vertical" id="TabPanel">
+      <!-- TABLE PANEL -->
+      <box id="TablePanel" orient="vertical">
+        <titledbox class="NoBottomPad NoTopMargin NoTopPadding"><title><text value="&size.label;"/></title>
+          <box orient="vertical">
+            <box valign="middle" autostretch="never">
+              <text class="MinWidth50" align="left" for="TableRowsInput" value="&tableRows.label;"/>
+              <html:div><html:input type="text" id="TableRowsInput" size="5" onkeyup="forceInteger(this.id)" disabled="true"/></html:div>
+            </box>
+            <spring class="spacer"/>
+            <box valign="middle" autostretch="never">
+              <text class="MinWidth50" align="left" for="TableColumnsInput" value="&tableColumns.label;"/>
+              <html:input type="text" id="TableColumnsInput" size="5" onkeyup="forceInteger(this.id)" disabled="true"/>
+            </box>
           </box>
-        </box>
-        <titledbox>
-          <title>&tableBackground.label;</title>
-          <html:table width="100%">
-            <html:tr>
-              <html:td>
-                <html:label for="bgcolor.select">&tableColor.label;</html:label>
-              </html:td>
-              <html:td>
-                <menu class="colorpicker">
-    	            <html:div id="tableBackgroundCW" class="color-well"/>
-    	            <titledbutton class="popup" align="right" flex="1"/>
-    	            <menupopup>
-                    <colorpicker id="tableBackgroundCP" palettename="standard" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this);"/>
-                    <titledbutton class="push" value="&defaultColor.label;" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this"/>
-    	            </menupopup>
-                </menu>
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td>
-                <html:label for="bgimage.text">&tableImage.label;</html:label>
-              </html:td>
-              <html:td>
-                  <html:input type="text" id="bgimage.text" style="width: 70%;"/>
-                  <titledbutton class="push" value="&tableChooseImage.label;" id="bgimage.button"/>
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td/>
-              <html:td>
-                <html:input type="checkbox" id="leaveLoc.check"/>
-                <html:label for="leaveLoc.check">&tableLeaveImageAtLocation.label;</html:label>
-              </html:td>
-            </html:tr>
-          </html:table>
+          <spring class="bigspacer"/>
+          <spring class="bigspacer"/>
+          <box orient="vertical">
+            <box valign="middle" autostretch="never">
+              <text class="MinWidth50" align="right" for="TableHeightInput" value="&tableHeight.label;"/>
+              <html:input type="text" id="TableHeightInput" size="5" onkeyup="forceInteger(this.id)"/>
+              <html:select id="TableHeightUnits"/>
+            </box>
+            <spring class="spacer"/>
+            <box valign="middle" autostretch="never">
+              <text class="MinWidth50" align="right" for="TableWidthInput" value="&tableWidth.label;"/>
+              <html:input type="text" id="TableWidthInput" size="5" onkeyup="forceInteger(this.id)"/>
+              <html:select id="TableWidthUnits"/>
+            </box>
+          </box>
+        <spring flex="1"/>
         </titledbox>
+        <box>
+          <titledbox class="NoBottomPad" align="vertical"><title><text align="left" value="&tableBorderSpacing.label;"/></title>
+            <box valign="middle" autostretch="never">
+              <text align="left" for="BorderWidthInput" value="&tableBorderWidth.label;"/>
+              <spring class="spacer"/>
+              <html:input type="text" id="BorderWidthInput" size="3" onkeyup="forceInteger(this.id)"/>
+              <text align="left" value="&pixels.label;"/>
+            </box>
+            <spring class="spacer"/>
+            <box valign="middle" autostretch="never">
+              <text class="MinWidth50" align="left" for="SpacingInput" value="&tableSpacing.label;"/>
+              <html:input type="text" id="SpacingInput" size="3" onkeyup="forceInteger(this.id)"/>
+              <text align="left" value="&tablePxBetwCells.label;"/>
+            </box>
+            <spring class="spacer"/>
+            <box valign="middle" autostretch="never">
+              <text class="MinWidth50" align="left" for="PaddingInput" value="&tablePadding.label;"/>
+              <html:input type="text" id="PaddingInput" size="3" onkeyup="forceInteger(this.id)"/>
+              <!-- Use DIV instead of TEXT because label has embeded <br> -->
+              <html:div>&tablePxBetwBrdrCellContent.label;</html:div>
+            </box>
+            <spring flex="1"/>
+          </titledbox>
+          <spring class="spacer"/>
+          <box orient="vertical" flex="1">
+            <spring class="bigspacer"/>
+            <box orient="vertical" flex="1">
+              <text align="left" for="TableAlignSelect" value="&tableAlignment.label;"/>
+              <spring class="smallspacer"/>
+              <html:select id="TableAlignSelect">
+                <html:option value="left">&AlignLeft.label;</html:option>
+                <html:option value="center">&AlignCenter.label;</html:option>
+                <html:option value="right">&AlignRight.label;</html:option>
+              </html:select>
+              <spring class="bigspacer"/>
+              <text align="left" for="CaptionSelect" value="&tableCaption.label;"/>
+              <spring class="smallspacer"/>
+              <html:select id="CaptionSelect" disabled="true">
+                <html:option>&tableCaptionNone.label;</html:option>
+                <html:option>&tableCaptionAbove.label;</html:option>
+                <html:option>&tableCaptionBelow.label;</html:option>
+              </html:select>
+              <spring flex="1"/>
+            </box>
+          </box>
+          <spring class="bigspacer"/>
+        </box>
+        <titledbox class="NoBottomPad" align="vertical"><title><text align="left" value="&background.label;"/></title>
+          <box valign="middle" autostretch="never">
+            <text class="MinWidth50" align="left" value="&color.label;"/>
+            <menu class="colorpicker">
+    	        <html:div id="tableBackgroundCW" class="color-well"/>
+    	        <titledbutton class="popup" align="right" flex="1"/>
+    	        <menupopup>
+                <colorpicker id="tableBackgroundCP" palettename="standard" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this);"/>
+                <titledbutton class="push" value="&defaultColor.label;" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this)"/>
+    	        </menupopup>
+            </menu>
+            <spring class="spacer"/>
+            <text id="TableInheritColor" value="&tableInheritColor.label;" hidden="true"/>
+          </box>
+          <spring class="spacer"/>
+          <box valign="middle" autostretch="never">
+            <text class="MinWidth50" align="left" for="TableImageInput" value="&image.label;"/>
+              <html:input type="text" id="TableImageInput" flex="1"/>
+              <titledbutton class="push" value="&ChooseImage.label;" id="bgimage.button"/>
+          </box>
+<!-- Not sure if we will support this
+          <box valign="middle" autostretch="never">
+            <spring class="MinWidth50"/>
+            <html:input type="checkbox" id="TableLeaveLocCheck"/>
+            <text align="left" for="TableLeaveLocCheck" value="&LeaveImageAtLocation.label;"/>
+          </box>
+-->
+        </titledbox>
+        <spring class="spacer"/>
+        <box flex="1" autostretch="never">
+          <spring flex="1"/>
+          <!-- From EdDialogOvlerlay.xul -->
+          <titledbutton id="AdvancedEditButton2"/>
+        </box>
+        <spring flex="1"/>
       </box>
 
-<!-- cell panel -->
-    	<box id="CellPanel" align="vertical" class="panel">
-        <titledbox class="holder">
-          <title>&cellSelection.label;</title>
-          <html:table width="350">
-            <html:tr>
-              <html:td>
-                <html:select id="selection.select">
-                  <html:option value="cell">&cellSelectionCell.label;</html:option>
-                  <html:option value="row">&cellSelectionRow.label;</html:option>
-                  <html:option value="column">&cellSelectionColumn.label;</html:option>
-                </html:select>
-              </html:td>
-              <html:td>
-                <titledbutton class="push" value="&cellSelectionPrevious.label;" id="previous.button"/>
-              </html:td>
-              <html:td>
-                <titledbutton class="push" value="&cellSelectionNext.label;" id="next.button"/>
-              </html:td>
-            </html:tr>
-          </html:table>
+      <!-- CELL PANEL -->
+    	<box id="CellPanel" orient="vertical">
+        <titledbox class="NoTopMargin NoTopPadding NoBottomPad" autostretch="never" valign="middle">
+          <title><text align="left" value="&cellSelection.label;"/></title>
+          <spring class="spacer"/>
+          <html:select class="MinWidth50" id="SelectionSelect" disabled="true">
+            <html:option>&cellSelectionCell.label;</html:option>
+            <html:option>&cellSelectionRow.label;</html:option>
+            <html:option>&cellSelectionColumn.label;</html:option>
+          </html:select>
+          <spring class="bigspacer"/>
+          <titledbutton class="push MinWidth50" value="&cellSelectionPrevious.label;" onclick="SelectPrevious()" disabled="true"/>
+          <spring class="bigspacer"/>
+          <titledbutton class="push MinWidth50" value="&cellSelectionNext.label;" onclick="SelectNext()" disabled="true"/>
         </titledbox>
-        <!-- cell size fieldset -->
-        <titledbox>
-          <title>&tableSize.label;</title>
-          <html:table>
-            <html:tr>
-              <html:td>
-                <html:input type="checkbox" id="cellHeight.check"/>
-              </html:td>
-              <html:td>
-                <html:label for="tableHeight.check">&tableHeight.label;</html:label>
-              </html:td>
-              <html:td>
-                <html:input type="text" id="cellHeight.text" size="3"/>
-              </html:td>
-              <html:td>
-                <html:select id="cellHeightUnits">
-                  <html:option value="px">&tablePixels.label;</html:option>
-                  <html:option value="pc">&tablePercent.label;</html:option>
-                </html:select>
-              </html:td>
-              <html:td>
-                <html:label for="rows.text">&cellSpans.label;</html:label>
-              </html:td>
-              <html:td>
-                <html:input type="text" id="rows.text" size="3"/>
-              </html:td>
-              <html:td>
-                <html:div>&cellSpanRows.label;</html:div>
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td>
-                <html:input type="checkbox" id="tableWidth.check"/>
-              </html:td>
-              <html:td>
-                <html:label for="tableWidth.check">&tableWidth.label;</html:label>
-              </html:td>
-              <html:td>
-                <html:input type="text" id="tableWidth.text" size="3"/>
-              </html:td>
-              <html:td>
-                <html:select id="cellWidthUnits">
-                  <html:option value="px">&tablePixels.label;</html:option>
-                  <html:option value="pc">&tablePercent.label;</html:option>
-                </html:select>
-              </html:td>
-              <html:td> </html:td>
-              <html:td>
-                <html:input type="text" id="cols.text" size="3"/>
-              </html:td>
-              <html:td>
-                <html:div>&cellSpanCols.label;</html:div>
-              </html:td>
-            </html:tr>
-          </html:table>
-        </titledbox>
-        <box align="horizontal">
-          <titledbox flex="100%">
-            <title>&cellContentAlignment.label;</title>
-            <html:table>
-              <html:tr>
-                <html:td>
-                  <html:label for="horzAlignment.select">&cellHorizontal.label;</html:label>
-                </html:td>
-                <html:td>
-                  <html:select id="horzAlignment.select">
-                    <html:option value="left">&tableAlignLeft.label;</html:option>
-                    <html:option value="center">&tableAlignCenter.label;</html:option>
-                    <html:option value="right">&tableAlignRight.label;</html:option>
-                  </html:select>
-                </html:td>
-              </html:tr>
-              <html:tr>
-                <html:td>
-                  <html:label for="vertAlignment.select">&cellVertical.label;</html:label>
-                </html:td>
-                <html:td>
-                  <html:select id="vertAlignment.select">
-                    <html:option value="top">&cellAlignTop.label;</html:option>
-                    <html:option value="center">&cellAlignCenter.label;</html:option>
-                    <html:option value="bottom">&cellAlignBottom.label;</html:option>
-                  </html:select>
-                </html:td>
-              </html:tr>
-            </html:table>
-          </titledbox>
-          <box align="vertical">
-            <titledbox>
-              <title>&cellTextStyle.label;</title>
-              <html:table>
-                <html:tr>
-                  <html:td>
-                    <html:input type="checkbox" id="header.check"/>
-                  </html:td>
-                  <html:td>
-                    <html:label for="header.check">&cellHeader.label;</html:label>
-                  </html:td>
-                  <html:td>
-                    <html:input type="checkbox" id="nonbreaking.check"/>
-                  </html:td>
-                  <html:td>
-                    <html:label for="nonbreaking.check">&cellNonbreaking.label;</html:label>
-                  </html:td>
-                </html:tr>
-              </html:table>
-            </titledbox>
-            <spring flex="100%"/>
+        <!-- cell size titledbox -->
+        <titledbox class="NoBottomPad"><title><text align="left" value="&size.label;"/></title>
+          <box orient="vertical">
+            <box valign="middle" autostretch="never">
+              <text class="MinWidth50" align="left" for="CellHeightInput" value="&tableHeight.label;"/>
+              <html:input type="text" id="CellHeightInput" size="5" onkeyup="forceInteger(this.id)"/>
+              <html:select id="CellHeightUnits"/>
+            </box>
+            <spring class="spacer"/>
+            <box valign="middle" autostretch="never">
+              <text class="MinWidth50" align="left" for="CellWidthInput" value="&tableWidth.label;"/>
+              <html:input type="text" id="CellWidthInput" size="5" onkeyup="forceInteger(this.id)"/>
+              <html:select id="CellWidthUnits"/>
+            </box>
           </box>
-        </box>
-
-        <titledbox>
-          <title>&tableBackground.label;</title>
-          <html:table width="100%">
-            <html:tr>
-              <html:td>
-                <html:label for="cellbgcolor.select">&tableColor.label;</html:label>
-              </html:td>
-              <html:td>
-                <menu class="colorpicker">
-    	            <html:div id="cellBackgroundCW" class="color-well"/>
-    	            <titledbutton class="popup" align="right" flex="1"/>
-    	            <menupopup>
-                    <colorpicker id="cellBackgroundCP" palettename="standard"
-                        onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
-                    <titledbutton class="push" value="&defaultColor.label;"
-                        onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
-    	            </menupopup>
-                </menu>
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td>
-                <html:label for="cellbgimage.text">&tableImage.label;</html:label>
-              </html:td>
-              <html:td>
-                  <html:input type="text" id="cellbgimage.text" style="width: 70%;"/>
-                  <titledbutton class="push" value="&tableChooseImage.label;" id="cellbgimage.button"/>
-              </html:td>
-            </html:tr>
-            <html:tr>
-              <html:td/>
-              <html:td>
-                <html:input type="checkbox" id="cellleaveLoc.check"/>
-                <html:label for="cellleaveLoc.check">&tableLeaveImageAtLocation.label;</html:label>
-              </html:td>
-            </html:tr>
-          </html:table>
+          <spring class="bigspacer"/>
+          <box orient="vertical">
+            <spring class="spacer"/>
+           <text for="RowSpanInput" value="&cellSpans.label;"/>
+          </box>
+          <box orient="vertical">
+            <box valign="middle" autostretch="never">
+              <html:input type="text" id="RowSpanInput" size="4" onkeyup="forceInteger(this.id)"/>
+              <text align="left" value="&cellSpanRows.label;"/>
+            </box>
+            <spring class="spacer"/>
+            <box valign="middle" autostretch="never">
+              <html:input type="text" id="ColSpanInput" size="4" onkeyup="forceInteger(this.id)"/>
+              <text align="left" value="&cellSpanCols.label;"/>
+            </box>
+          </box>
         </titledbox>
+        <box>
+          <titledbox class="NoBottomPad" orient="vertical" flex="1">
+            <title><text align="left" value="&cellContentAlignment.label;"/></title>
+            <box valign="top" autostretch="never">
+              <text class="MinWidth70" align="right" for="CellHAlignSelect" value="&cellHorizontal.label;"/>
+              <html:select class="MinWidth100" id="CellHAlignSelect" onchange="SelectCellHAlign()">
+                <html:option value="left">&AlignLeft.label;</html:option>
+                <html:option value="center">&AlignCenter.label;</html:option>
+                <html:option value="right">&AlignRight.label;</html:option>
+                <html:option value="justify">&cellAlignJustify.label;</html:option>
+                <html:option value="char">&cellAlignAtChar.label;</html:option>
+              </html:select>
+              <spring class="spacer"/>
+              <html:input id="CellAlignCharInput" size="2" maxlength="2" visibility="hidden"/>
+            </box>
+            <spring class="spacer"/>
+            <box valign="top" autostretch="never">
+              <text class="MinWidth70" align="right" for="CellVAlignSelect" value="&cellVertical.label;"/>
+              <html:select class="MinWidth100" id="CellVAlignSelect">
+                <html:option value="top">&cellAlignTop.label;</html:option>
+                <html:option value="middle">&cellAlignMiddle.label;</html:option>
+                <html:option value="bottom">&cellAlignBottom.label;</html:option>
+              </html:select>
+            </box>
+          </titledbox>
+          <spring class="spacer"/>
+          <titledbox class="NoBottomPad" orient="vertical">
+            <title><text align="left" value="&cellTextStyle.label;"/></title>
+            <box valign="middle" autostretch="never">
+              <html:input type="checkbox" id="HeaderCheck"/>
+              <text align="left" for="HeaderCheck" value="&cellHeader.label;"/>
+            </box>
+            <box valign="middle" autostretch="never">
+              <html:input type="checkbox" id="NoWrapCheck"/>
+              <text align="left" for="NoWrapCheck" value="&cellNoWrap.label;"/>
+            </box>
+          </titledbox>
+        </box>
+        <titledbox class="NoBottomPad" orient="vertical"><title><text align="left" value="&background.label;"/></title>
+          <box valign="middle" autostretch="never">
+            <text class="MinWidth50" align="left" value="&color.label;"/>
+            <menu class="colorpicker">
+    	        <html:div id="cellBackgroundCW" class="color-well"/>
+    	        <titledbutton class="popup" align="right" flex="1"/>
+    	        <menupopup>
+                <colorpicker id="cellBackgroundCP" palettename="standard"
+                    onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
+                <titledbutton class="push" value="&defaultColor.label;"
+                    onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
+    	        </menupopup>
+            </menu>
+            <spring class="spacer"/>
+            <text id="CellInheritColor" value="&cellInheritColor.label;" hidden="true"/>
+          </box>
+          <spring class="spacer"/>
+          <box valign="middle" autostretch="never">
+            <text class="MinWidth50" align="left" for="CellImageInput" value="&image.label;"/>
+            <html:input type="text" id="CellImageInput" flex="1"/>
+            <titledbutton class="push" value="&ChooseImage.label;" id="cellbgimage.button"/>
+          </box>
+<!-- Not sure if we will support this
+          <box valign="middle" autostretch="never">
+            <spring class="MinWidth50"/>
+            <html:input type="checkbox" id="CellLeaveLocCheck"/>
+            <text align="left" for="CellLeaveLocCheck" value="&LeaveImageAtLocation.label;"/>
+          </box>
+-->
+        </titledbox>
+        <spring class="spacer"/>
+        <box autostretch="never">
+          <spring flex="1"/>
+          <!-- From EdDialogOvlerlay.xul -->
+          <titledbutton id="AdvancedEditButton3"/>
+        </box>
       </box>
+
     </tabpanel> 
+    <spring class="spacer"/>
+    <!-- from EdDialogOverlay -->
+	  <box id="okCancelButtons"/> 
   </tabcontrol>
-  <!-- from EdDialogOverlay -->
-  <box id="AdvancedEdit"/>
-  <spring flex="100%"/>
-	<box id="okCancelButtons"/> 
-
 </window>

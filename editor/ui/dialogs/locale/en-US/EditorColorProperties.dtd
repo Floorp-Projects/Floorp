@@ -23,7 +23,7 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "Page Colors and Background">
 <!ENTITY pageColors.label "Page Colors: ">
-<!ENTITY defaultColorsRadio.label "Don't specify colors">
+<!ENTITY defaultColorsRadio.label "Reader's default colors (Don't set colors in page)">
 <!ENTITY customColorsRadio.label "Use custom colors:">
 <!ENTITY colorScheme.label "Color Schemes: ">
 <!ENTITY normalText.label "Normal text:">
@@ -32,7 +32,6 @@
 <!ENTITY visitedLinkText.label "Visited link text:">
 <!ENTITY background.label "Background:">
 <!ENTITY backgroundImage.label "Background Image  (Uncheck to edit without image): ">
-<!ENTITY colorPicker.default.label "Don't specify color">
 <!ENTITY saveImageMsg.label "Location will be saved so you can use it later.">
 
 

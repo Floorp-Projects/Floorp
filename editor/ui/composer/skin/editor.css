@@ -121,8 +121,11 @@ select.toolbar {
 }
 
 box#DisplayModeBar titledbutton.DisplayModeButton {
-  border: 1px solid transparent;
-  border-left: 1px solid darkgray;
+  -moz-border-radius: 0px 0px 8px 8px;
+  border-top: 1px solid #CCCCCC;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
   padding: 0px 4px 0px 4px;
   margin: 0px;
   color: black;
@@ -131,10 +134,6 @@ box#DisplayModeBar titledbutton.DisplayModeButton {
 
 box#DisplayModeBar titledbutton.DisplayModeButton:hover {
   border:  1px solid white;
-  /* Alternate hover style: change background
-  color: white;
-  background-color: #66AAAA;
-  */
 }
 
 box#DisplayModeBar titledbutton.DisplayModeButton:active {
@@ -142,18 +141,9 @@ box#DisplayModeBar titledbutton.DisplayModeButton:active {
 }
 
 box#DisplayModeBar titledbutton.DisplayModeButton[selected="1"] {
-  border:  1px outset white;
   padding: 0px 4px 0px 4px;
   margin: -2px 0px 0px 0px;
   font-weight: bold;
-}
-
-box#DisplayModeBar titledbutton.DisplayModeButton[selected="1"]:hover {
-  border:  1px solid white;
-  /* Alternate hover style: change background
-  background-color: #66AAAA;
-  color: white;
-  */
 }
 
 box#DisplayModeBar titledbutton.DisplayModeButton[selected="1"]:active {
@@ -334,7 +324,7 @@ titledbutton#BackColorPopupButton {
   margin:  0px;
   position: relative;
   /* Position lower right */
-  top:  9px;
+  top:  8px;
   left: 12px;
 
   /* TEMP: Set color here. TODO: Set color from page */

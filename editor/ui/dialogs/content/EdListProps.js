@@ -22,7 +22,6 @@
 
 
 //Cancel() is in EdDialogCommon.js
-var insertNew = true;
 var tagname = "TAG NAME"
 var ListTypeList;
 var BulletStyleList;
@@ -32,7 +31,9 @@ var StartingNumberLabel;
 var BulletStyleIndex = 0;
 var NumberStyleIndex = 0;
 var ListElement = 0;
+var originalListType = "";
 var ListType = "";
+var MixedListSelection = false;
 var AdvancedEditButton;
 
 // dialog initialization code
@@ -51,7 +52,20 @@ function Startup()
   AdvancedEditButton = document.getElementById("AdvancedEditButton");
   
   // Try to get an existing list
-  ListElement = editorShell.GetElementOrParentByTagName("list",null);
+
+  // This gets a single list element enclosing the entire selection
+  ListElement = editorShell.GetSelectedElement("list");
+
+  if (!ListElement)
+  {
+    // Get the list at the anchor node
+    ListElement = editorShell.GetElementOrParentByTagName("list", null);
+
+    // Remember if we have a list at anchor node, but focus node
+    //   is not in a list or is a different type of list
+    if (ListElement)
+      MixedListSelection = true;
+  }
   
   // The copy to use in AdvancedEdit
   if (ListElement)
@@ -60,6 +74,8 @@ function Startup()
   //dump("List and global elements: "+ListElement+globalElement+"\n");
 
   InitDialog();
+
+  originalListType = ListType;
 
   ListTypeList.focus();
 }
@@ -70,7 +86,7 @@ function InitDialog()
     ListType = ListElement.nodeName.toLowerCase();
   else
     ListType = "";
-
+  
   BuildBulletStyleList();
 }
 
@@ -134,17 +150,7 @@ function BuildBulletStyleList()
     AdvancedEditButton.removeAttribute("disabled");
 
   if (label)
-  {
-    BulletStyleLabel.value = label;
-    if (BulletStyleLabel.hasChildNodes())
-    {
-      //dump("BulletStyleLabel.firstChild: "+BulletStyleLabel.firstChild+"\n");
-      BulletStyleLabel.removeChild(BulletStyleLabel.firstChild);
-    }
-    
-    var textNode = document.createTextNode(label);
-    BulletStyleLabel.appendChild(textNode);
-  }
+    BulletStyleLabel.setAttribute("value",label);
 }
 
 function SelectListType()
@@ -251,16 +257,18 @@ function onOK()
     // Coalesce into one undo transaction
     editorShell.BeginBatchChanges();
 
-    // Making a list is tricky!
-    // First, make the list
-    editorShell.MakeOrChangeList(ListType);
-
-    // Now we need to get ALL of the list nodes in the current selection
-    // For now, let's get just the one at the anchor
-    listElement = editorShell.GetElementOrParentByTagName("list",null);
+    // We may need to create new list element(s)
+    //   or change to a different list type.
+    if (!ListElement || MixedListSelection || ListType != originalListType)
+    {
+      editorShell.MakeOrChangeList(ListType);
+      // Get the new list created:
+      //ListElement = editorShell.GetSelectedElement("list");
+      ListElement = editorShell.GetElementOrParentByTagName(ListType, null);
+    }
     // Set the list attributes
-    if (listElement)
-      editorShell.CloneAttributes(listElement, globalElement);
+    if (ListElement)
+      editorShell.CloneAttributes(ListElement, globalElement);
 
     editorShell.EndBatchChanges();
     return true;

@@ -58,9 +58,3 @@ table {
 table[empty-cells=show] {
   border: 1px dotted red;
 }
-
-td, tr {
-  min-height: 10px;
-  min-line-height: 10px;
-}
-

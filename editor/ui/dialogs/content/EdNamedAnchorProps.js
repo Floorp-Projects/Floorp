@@ -107,8 +107,11 @@ function ValidateData()
       nameInput.focus();
       return false;
   } else {
-    // Replace spaces with "_" else it causes trouble in URL parsing
+    // Replace spaces with "_" and strip other characters
+    // Note: we could use ConvertAndEscape, but then we'd
+    //  have to UnConverAndEscape beforehand - too messy!
     name = PrepareStringForURL(name);
+
     if (AnchorNameExists(name)) {
       ShowInputErrorMessage(GetString("DuplicateAnchorNameError").replace(/%name%/,name));            
       nameInput.focus();

@@ -29,8 +29,28 @@ var TabPanel;
 var TablePanel;
 var CellPanel;
 var dialog;
-var cellGlobalElement;
-var tableGlobalElement
+var globalCellElement;
+var globalTableElement
+var captionElement;
+var TablePanel = 0;
+var CellPanel = 1;
+var currentPanel = TablePanel;
+var validatePanel;
+var defHAlignIndex = 0; // = left, index=0
+var charIndex = 4;
+var centerStr =   "center";  //Index=1
+var rightStr =    "right";   // 2
+var justifyStr =  "justify"; // 3
+var charStr =     "char";    // 4
+var defVAlignIndex = 1; // = middle
+var topStr =      "top";
+var bottomStr =   "bottom";
+
+var bgcolor = "bgcolor";
+var CellIsHeader = false;
+var rowCount = 1;
+var colCount = 1;
+var error = 0;
 
 // dialog initialization code
 function Startup()
@@ -44,9 +64,42 @@ function Startup()
     dump("Failed to create dialog object!!!\n");
     window.close();
   }
+  // Get dialog widgets - Table Panel
+  dialog.TableRowsInput = document.getElementById("TableRowsInput");
+  dialog.TableColumnsInput = document.getElementById("TableColumnsInput");
+  dialog.TableHeightInput = document.getElementById("TableHeightInput");
+  dialog.TableHeightUnits = document.getElementById("TableHeightUnits");
+  dialog.TableWidthInput = document.getElementById("TableWidthInput");
+  dialog.TableWidthUnits = document.getElementById("TableWidthUnits");
+  dialog.BorderWidthInput = document.getElementById("BorderWidthInput");
+  dialog.SpacingInput = document.getElementById("SpacingInput");
+  dialog.PaddingInput = document.getElementById("PaddingInput");
+  dialog.TableAlignSelect = document.getElementById("TableAlignSelect");
+  dialog.CaptionSelect = document.getElementById("CaptionSelect");
+  dialog.TableInheritColor = document.getElementById("TableInheritColor");
+  dialog.TableImageInput = document.getElementById("TableImageInput");
+//  dialog.TableLeaveLocCheck = document.getElementById("TableLeaveLocCheck");
+
+  // Cell Panel
+  dialog.SelectionSelect = document.getElementById("SelectionSelect");
+  dialog.CellHeightInput = document.getElementById("CellHeightInput");
+  dialog.CellHeightUnits = document.getElementById("CellHeightUnits");
+  dialog.CellWidthInput = document.getElementById("CellWidthInput");
+  dialog.CellWidthUnits = document.getElementById("CellWidthUnits");
+  dialog.RowSpanInput = document.getElementById("RowSpanInput");
+  dialog.ColSpanInput = document.getElementById("ColSpanInput");
+  dialog.CellHAlignSelect = document.getElementById("CellHAlignSelect");
+  dialog.CellAlignCharInput = document.getElementById("CellAlignCharInput");
+  dialog.CellVAlignSelect = document.getElementById("CellVAlignSelect");
+  dialog.HeaderCheck = document.getElementById("HeaderCheck");
+  dialog.NoWrapCheck = document.getElementById("NoWrapCheck");
+  dialog.CellInheritColor = document.getElementById("CellInheritColor");
+  dialog.CellImageInput = document.getElementById("CellImageInput");
+//  dialog.CellLeaveLocCheck = document.getElementById("CellLeaveLocCheck");
 
   TableElement = editorShell.GetElementOrParentByTagName("table", null);
   CellElement = editorShell.GetElementOrParentByTagName("td", null);
+
   // We allow a missing cell -- see below
   if(!TableElement)
   {
@@ -54,28 +107,21 @@ function Startup()
     window.close();
   }
 
-  var panelName;
   TabPanel = document.getElementById("TabPanel");
-  TablePanel = document.getElementById("TablePanel");
-  CellPanel =  document.getElementById("CellPanel");
   var TableTab = document.getElementById("TableTab");
   var CellTab = document.getElementById("CellTab");
   
-  if (!TabPanel || !TablePanel || !CellPanel || !TableTab || !CellTab)
-  {
-    dump("Not all dialog controls were found!!!\n");
-    window.close;
-  }
+  
+  // Starting TabPanel name is passed in
+  if (window.arguments[1] == "CellPanel") currentPanel = CellPanel;
 
-  // Get the starting TabPanel name
-  var StartPanelName = window.arguments[1];
 
-  tableGlobalElement = TableElement.cloneNode(false);
+  globalTableElement = TableElement.cloneNode(false);
   if (CellElement)
-    cellGlobalElement = CellElement.cloneNode(false);
+    globalCellElement = CellElement.cloneNode(false);
 
   // Activate the Cell Panel if requested
-  if (StartPanelName == "CellPanel")
+  if (currentPanel == CellPanel)
   {
     // We must have a cell element to start in this panel
     if(!CellElement)
@@ -85,19 +131,21 @@ function Startup()
     }
 
     //Set index for starting panel on the <tabpanel> element
-    TabPanel.setAttribute("index", 1);
+    TabPanel.setAttribute("index", CellPanel);
     
     // Trigger setting of style for the tab widgets
     CellTab.setAttribute("selected", "true");
     TableTab.removeAttribute("selected");
 
     // Start editing on the cell element
-    globalElement = cellGlobalElement;
+    globalElement = globalCellElement;
   }
   else
   {
+    currentPanel = TablePanel;
+
     // Start editing on the table element
-    globalElement = cellGlobalElement;
+    globalElement = globalTableElement;
   }
 
   if(!CellElement)
@@ -108,54 +156,427 @@ function Startup()
   
   doSetOKCancel(onOK, null);
 
-  // Get widgets
-  dialog.BorderWidthCheck = document.getElementById("BorderWidthCheck");
-  dialog.BorderWidthInput = document.getElementById("BorderWidthInput");
-  
-    
-  // This uses values set on globalElement
+  // This uses values set on global Elements;
   InitDialog();
 
-  // SET FOCUS TO FIRST CONTROL
+  // Should be dialog.TableRowsInput, or
+  //  SelectionSelect in cel panenl,
+  // but this is disabled for Beta1disabled for Beta1
+  if (currentPanel == CellPanel)
+    dialog.CellHeightInput.focus(); 
+  else
+    dialog.TableHeightInput.focus();
 }
 
 
 function InitDialog()
 {
-  dump("Table Editing:InitDialog()\n");
+  // Get Table attributes
+  try {
+    // For some strange reason, we are failing to the "layoutObject" for the table!
+    rowCount = editorShell.GetTableRowCount(globalTableElement);
+    dialog.TableRowsInput.value = rowCount;
+    colCount = editorShell.GetTableColumnCount(tableGlobatlElement);
+    dialog.TableColumnsInput.value = colCount;
+  }
+  catch (ex) {
+    dump("Failed to get table rows and/or columns count\n");
+    dialog.TableRowsInput.value = "";
+    dialog.TableColumnsInput.value = "";
+  }
+
+  dialog.TableHeightInput.value = InitPixelOrPercentCombobox(globalTableElement, "height", "TableHeightUnits");
+  dialog.TableWidthInput.value = InitPixelOrPercentCombobox(globalTableElement, "width", "TableWidthUnits");
+  dialog.BorderWidthInput.value = globalTableElement.border;
+  dialog.SpacingInput.value = globalTableElement.cellSpacing;
+  dialog.PaddingInput.value = globalTableElement.cellPadding;
+
+  //BUG: The align strings are converted: e.g., "center" becomes "Center";
+  var halign = globalTableElement.align.toLowerCase();
+  if (halign == centerStr)
+    dialog.TableAlignSelect.selectedIndex = 1;
+  else if (halign == bottomStr)
+    dialog.TableAlignSelect.selectedIndex = 2;
+  else // Default = left
+    dialog.TableAlignSelect.selectedIndex = 0;
+  
+  captionElement = globalTableElement.caption;
+dump("Caption Element = "+captionElement+"\n");
+  var index = 0;
+  if (captionElement)
+  {
+    if(captionElement.vAlign == "top")
+      index = 1;
+    else
+      index = 2;
+  }
+  dialog.CaptionSelect.selectedIndex = index;
+  
+  if (globalTableElement.background)
+    dialog.TableImageInput.value = globalTableElement.background;
+  
+  SetColor("tableBackgroundCW", globalTableElement.bgColor); 
+
+  // Get cell attributes
+  if (globalCellElement)
+  {
+    //TODO: Test if all cells in selection are in a row or column,
+    //      and set dialog.SelectionSelect.selectedIndex appropriately
+    dialog.CellHeightInput.value = InitPixelOrPercentCombobox(globalCellElement, "height", "CellHeightUnits");
+    dialog.CellWidthInput.value = InitPixelOrPercentCombobox(globalCellElement, "width", "CellWidthUnits");
+
+//BUG: We don't suppor "rowSpan" or "colSpan" JS attributes?
+dump("RowSpan="+globalCellElement.rowSpan+" ColSpan="+globalCellElement.colSpan+"\n");
+
+    dialog.RowSpanInput.value = globalCellElement.getAttribute("rowspan");
+    dialog.ColSpanInput.value = globalCellElement.getAttribute("colspan");
+    
+    var valign = globalCellElement.vAlign.toLowerCase();
+    if (valign == topStr)
+      dialog.CellVAlignSelect.selectedIndex = 0;
+    else if (valign == bottomStr)
+      dialog.CellVAlignSelect.selectedIndex = 2;
+    else // Default = middle
+      dialog.CellVAlignSelect.selectedIndex = 1;
+    
+    var halign = globalCellElement.align.toLowerCase();
+    switch (halign)
+    {
+      case centerStr:
+        dialog.CellHAlignSelect.selectedIndex = 1;
+        break;
+      case rightStr:
+        dialog.CellHAlignSelect.selectedIndex = 2;
+        break;
+      case justifyStr:
+        dialog.CellHAlignSelect.selectedIndex = 3;
+        break;
+      case charStr:
+        var alignChar = globalCellElement.getAttribute(charStr);
+        if (alignChar && alignChar.length == 1)
+        {
+          dialog.CellAlignCharInput.value = alignChar;
+          dialog.CellHAlignSelect.selectedIndex = 4;
+        } else {
+          // "char" align set but no alignment char value
+          dialog.CellHAlignSelect.selectedIndex = 0;
+        }
+        break;
+      default:  // left
+        dialog.CellHAlignSelect.selectedIndex = 0;
+        break;
+    }
+    // Show/hide extra message to explain "default" case
+    SelectCellHAlign();
+
+    CellIsHeader = (globalCellElement.nodeName == "TH");
+    dialog.HeaderCheck.checked = CellIsHeader;
+    dialog.NoWrapCheck.checked = globalCellElement.noWrap;
+    
+    SetColor("cellBackgroundCW", globalCellElement.bgColor); 
+    
+    if (globalCellElement.background)
+      dialog.CellImageInput.value = globalCellElement.background;
+  }
 }
 
+//TODO: Should we validate the panel before leaving it? We don't now
 function SelectTableTab()
 {
-  globalElement = tableGlobalElement;
+  globalElement = globalTableElement;
+  currentPanel = TablePanel;
 }
 
 function SelectCellTab()
 {
-  globalElement = cellGlobalElement;
+  globalElement = globalCellElement;
+  currentPanel = CellPanel;
+}
+
+function SelectCellHAlign()
+{
+  dump("dialog.CellHAlignSelect.selectedIndex ="+dialog.CellHAlignSelect.selectedIndex+"\n");
+  if (dialog.CellHAlignSelect.selectedIndex == 4)
+    dialog.CellAlignCharInput.removeAttribute("visibility");
+  else
+    dialog.CellAlignCharInput.setAttribute("visibility","hidden");
 }
 
 function GetColorAndUpdate(ColorPickerID, ColorWellID, widget)
 {
   // Close the colorpicker
   widget.parentNode.closePopup();
-  SetColor(ColorWellID, getColor(ColorPickerID));
+  var color = null;
+  if (ColorPickerID)
+    color = getColor(ColorPickerID);
+
+  SetColor(ColorWellID, color);
 }
 
 function SetColor(ColorWellID, color)
 {
   // Save the color
   if (ColorWellID == "cellBackgroundCW")
-    dialog.cellBackgroundColor = color;
+  {
+    if (color)
+    {
+      globalCellElement.setAttribute(bgcolor, color);
+      dialog.CellInheritColor.setAttribute("hidden","true");
+    }
+    else
+    {
+      globalCellElement.removeAttribute(bgcolor);
+      // Reveal addition message explaining "default" color
+      dialog.CellInheritColor.removeAttribute("hidden");
+    }
+  }
   else
-    dialog.tableBackgroundColor = color;
-    
+  {
+    if (color)
+    {
+      globalTableElement.setAttribute(bgcolor, color);
+      dialog.TableInheritColor.setAttribute("hidden","true");
+    }
+    else
+    {
+      globalTableElement.removeAttribute(bgcolor);
+      dialog.TableInheritColor.removeAttribute("hidden");
+    }
+  }    
   setColorWell(ColorWellID, color); 
+}
+
+function SelectPrevious()
+{
+  //TODO:Implement me!
+}
+
+function SelectPrevious()
+{
+  //TODO:Implement me!
+}
+
+function SwitchPanel(newPanel)
+{
+  if (currentPanel != newPanel)
+  {
+    //Set index for starting panel on the <tabpanel> element
+    TabPanel.setAttribute("index", newPanel);
+    if (newPanel == CellPanel)
+    {    
+      // Trigger setting of style for the tab widgets
+      CellTab.setAttribute("selected", "true");
+      TableTab.removeAttribute("selected");
+    } else {
+      TableTab.setAttribute("selected", "true");
+      CellTab.removeAttribute("selected");
+    }
+    currentPanel = newPanel;
+  }
+}
+
+// More weirdness: Can't pass in "inputWidget" -- becomes undefined?!
+// Must pass in just ID and use getElementById
+function ValidateNumber(inputWidgetID, selectWidget, minVal, maxVal, element, attName)
+{
+  var inputWidget = document.getElementById(inputWidgetID);
+  // Global error return value
+  error = false;
+  var maxLimit = maxVal;
+  var isPercent = false;
+
+  var numString = inputWidget.value.trimString();
+  if (numString && numString != "")
+  {
+    if (selectWidget)
+      isPercent = (selectWidget.selectedIndex == 1);
+    if (isPercent)
+      maxLimit = 100;
+
+    numString = ValidateNumberString(numString, minVal, maxLimit);
+    if(numString == "")
+    {
+      dump("Error returned from ValidateNumberString\n");
+
+      // Switch to appropriate panel for error reporting
+      SwitchValidatePanel(validatePanel)
+
+      // Error - shift to offending input widget
+      inputWidget.focus();
+      error = true;
+    }
+    else      
+    {
+      if (isPercent)
+        numString += "%";
+      if (element)
+        element.setAttribute(attName, numString);
+    }
+  } else if (element) {
+    element.removeAttribute(attName);  
+  }
+  return numString;
+}
+
+function SetAlign(selectWidgetID, defaultIndex, element, attName)
+{
+  selectWidget = document.getElementById(selectWidgetID);
+  value = selectWidget.value;
+dump("SetAlign value = "+value+"\n");
+  var index = selectWidget.selectedIndex;
+  if (index == defaultIndex)
+    element.removeAttribute(attName);
+  else
+    element.setAttribute(attName, value);
+}
+
+function ValidateTableData()
+{
+  validatePanel = TablePanel;
+  var newRowCount = ValidateNumber("TableRowsInput", null, 1, rowCount, null, null);
+  if (error) return false;
+
+  var newColCount = ValidateNumber("TableColumnsInput", null, 1, colCount, null, null);
+  if (error) return false;
+
+  // TODO: ADD/DELETE ROWS/COLUMNS
+  var temp = ValidateNumber("TableHeightInput", dialog.TableHeightUnits, 
+                            1, maxPixels, globalTableElement, "height");
+  if (error) return false;
+  temp = ValidateNumber("TableWidthInput", dialog.TableWidthUnits, 
+                         1, maxPixels, globalTableElement, "width");
+  if (error) return false;
+
+  var border = ValidateNumber("BorderWidthInput", null, 0, maxPixels, globalTableElement, "border");
+  // TODO: Deal with "BORDER" without value issue
+  if (error) return false;
+
+  temp = ValidateNumber("SpacingInput", null, 0, maxPixels, globalTableElement, "cellspacing");
+  if (error) return false;
+
+  temp = ValidateNumber("PaddingInput", null, 0, maxPixels, globalTableElement, "cellpadding");
+  if (error) return false;
+
+  SetAlign("TableAlignSelect", defHAlignIndex, globalTableElement, "align");
+
+  // Color is set on globalCellElement immediately
+
+  // Background Image
+  var imageName = dialog.TableImageInput.value.trimString();
+  if (imageName && imageName != "")
+  {
+    if (IsValidImage(imageName))
+      globalTableElement.background = imageName;
+    else
+    {
+      dialog.TableImageInput.focus();
+      // Switch to appropriate panel for error reporting
+      SwitchValidatePanel(validatePanel)
+      ShowInputErrorMessage(GetString("MissingImageError"));
+      return false;
+    }
+  } else {
+    globalTableElement.removeAttribute("background");
+  }
+
+  return true;
+}
+
+function ValidateCellData()
+{
+
+  validatePanel = CellPanel;
+  var temp;
+  temp = ValidateNumber("CellHeightInput", dialog.TableHeightUnits, 
+                         1, maxPixels, globalCellElement, "height");
+  if (error) return false;
+  temp = ValidateNumber("CellWidthInput", dialog.TableWidthUnits, 
+                         1, maxPixels, globalCellElement, "width");
+  if (error) return false;
+  
+  // Vertical alignment is complicated by "char" type
+  var hAlign = dialog.CellHAlignSelect.value;
+dump("Cell hAlign = "+hAlign+"\n");
+
+  var index = dialog.CellHAlignSelect.selectedIndex;
+dump("HAlign index="+index+"\n");
+  if (index == defHAlignIndex)
+  {
+    globalCellElement.removeAttribute("hAlign");
+    globalCellElement.removeAttribute(charStr);
+  }
+  else
+  {
+    if (index == charIndex)
+    {
+      var alignChar = dialog.CellAlignCharInput.value.trimString();
+       globalCellElement.setAttribute(charStr, alignChar);
+dump("Alignment char="+alignChar+" Align Value="+dialog.CellHAlignSelect.value+"\n");
+    }
+
+    globalCellElement.setAttribute("align",dialog.CellHAlignSelect.value);
+  }
+
+  SetAlign("CellVAlignSelect", defVAlignIndex, globalCellElement, "valign");
+
+  var shouldBeHeader = dialog.HeaderCheck.checked;
+  if (shouldBeHeader != CellIsHeader)
+  {
+    //TODO: THIS IS MESSY! Convert exisisting TD to TH or vice versa
+  }
+  
+  if (dialog.NoWrapCheck.checked)
+    globalCellElement.setAttribute("nowrap","true");
+  else
+    globalCellElement.removeAttribute("nowrap");
+
+  // Background Image
+  var imageName = dialog.TableImageInput.value.trimString();
+  if (imageName && imageName != "")
+  {
+    if (IsValidImage(imageName))
+      globalCellElement.background = imageName;
+    else
+    {
+      dialog.CellImageInput.focus();
+      // Switch to appropriate panel for error reporting
+      SwitchValidatePanel(validatePanel)
+      ShowInputErrorMessage(GetString("MissingImageError"));
+    }
+  } else {
+    globalCellElement.removeAttribute("background");
+  }
+  
+  return true;
 }
 
 function ValidateData()
 {
-  dump("Table Editing:ValidateData()\n");
+  var result;
+  var savePanel = currentPanel;
+  
+  // Validate current panel first
+  if (currentPanel == TablePanel)
+  {
+    result = ValidateTableData();
+    if (result)
+      result = ValidateCellData();
+  } else {
+    result = ValidateCellData();
+    if (result)
+      result = ValidateTableData();
+  }
+  if(!result) return false;
+
+  // If we passed, restore former currentPanel
+  currentPanel = savePanel;
+
+  // Set global element for AdvancedEdit
+  if(currentPanel == TablePanel)
+    globalElement = globalTableElement;
+  else
+    globalElement = globalCellElement;
+
   return true;
 }
 
@@ -163,7 +584,12 @@ function onOK()
 {
   if (ValidateData())
   {
-    editorShell.CloneAttributes(TableElement, globalElement);
+    editorShell.CloneAttributes(TableElement, globalTableElement);
+    editorShell.CloneAttributes(CellElement, globalCellElement);
+    //TODO: DOM manipulation to add/remove table rows/columns,
+    //      Switch cell type to TH -- involves removing TD and replacing with TD
+    //      Creating and moving CAPTION element
+            
     return true;
   }
   return false;

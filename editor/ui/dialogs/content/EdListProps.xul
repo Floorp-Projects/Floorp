@@ -28,44 +28,45 @@
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorListProperties.dtd">
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script language="JavaScript" src="chrome://editor/content/EdListProps.js"/>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdListProps.js"/>
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <xul:keyset id="keyset"/>
+  <keyset id="keyset"/>
+  <broadcaster id="args" value=""/>
 
-  <label for="ListType">&ListType.label;</label>
-  <select class="ComboBox" id="ListType" onchange="SelectListType()">
-    <option>&none.value;</option>
-    <option>&bulletList.value;</option>
-    <option>&numberList.value;</option>
-    <option>&definitionList.value;</option>
-  </select>
-  <xul:spring class="spacer"/>
+  <text for="ListType" value="&ListType.label;"/>
+  <html:select class="ComboBox" id="ListType" onchange="SelectListType()">
+    <html:option>&none.value;</html:option>
+    <html:option>&bulletList.value;</html:option>
+    <html:option>&numberList.value;</html:option>
+    <html:option>&definitionList.value;</html:option>
+  </html:select>
+  <spring class="spacer"/>
 
   <!-- message text and list items are set in JS 
-       bulletStyle.label should be identical to string with id=BulletStyle in editor.properties -->
-  <div id="BulletStyleLabel">&bulletStyle.label;</div>
-  <select class="ComboBox" id="BulletStyle" style="min-width: 10em" onchange="SelectBulletStyle()"/>
-  <xul:spring class="spacer"/>
+       text value should be identical to string with id=BulletStyle in editor.properties 
+  -->
+  <text id="BulletStyleLabel" value="&bulletStyle.label;"/>
+  <html:select class="ComboBox" id="BulletStyle" style="min-width: 10em" onchange="SelectBulletStyle()"/>
+  <spring class="spacer"/>
 
-  <xul:box align="horizontal">
-    <label id="StartingNumberLabel" for="StartingNumber">&startingNumber.label;</label>
-    <xul:spring class="spacer"/>
-    <input type="text" id="StartingNumber" size="3" onkeyup="forceInteger('StartingNumber')"/>
-    <xul:spring/>
-  </xul:box>
-  <xul:broadcaster id="args" value=""/>
+  <box>
+    <text id="StartingNumberLabel" for="StartingNumber" value="&startingNumber.label;"/>
+    <spring class="spacer"/>
+    <html:input type="text" id="StartingNumber" size="3" onkeyup="forceInteger('StartingNumber')"/>
+    <spring/>
+  </box>
   <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEdit"/>
+  <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-	<xul:box id="okCancelButtons"/> 
+	<box id="okCancelButtons"/> 
 
-</xul:window>
+</window>

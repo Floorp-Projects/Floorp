@@ -28,10 +28,10 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<box id="AdvancedEdit" align="vertical"  flex="100%">
-  <box align="horizontal" flex="100%" style="margin-top: 0.2em">
+<box id="AdvancedEdit" orient="vertical"  flex="1">
+  <box flex="1" style="margin-top: 0.2em" autostretch="never">
     <!-- This will right-align the button -->
-    <spring flex="100%"/>
+    <spring flex="1"/>
     <titledbutton id="AdvancedEditButton" class="push dialog" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
   </box>
   <html:div class="separator" align="horizontal"/>
@@ -46,6 +46,7 @@
   class   = "push dialog"
   onclick = "onAdvancedEdit()"
   value   = "&AdvancedEditButton.label;"/>
+
 <titledbutton 
   id      = "AdvancedEditButton3" 
   class   = "push dialog" 

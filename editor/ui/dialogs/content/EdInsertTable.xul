@@ -44,28 +44,28 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
   
-  <box valign="middle">
+  <box valign="middle" autostretch="never">
     <text class="right" align="right" value="&numRowsEditField.label;"/>
     <html:input type="text" id="rows" maxlength="4" size="4"
         onkeyup="forceInteger('rows')" />
   </box>
   <spring class="spacer"/>
-  <box valign="middle">
+  <box valign="middle" autostretch="never">
     <text class="right" align="right" value="&numColumnsEditField.label;"/>
     <html:input type="text" id="columns" maxlength="4" size="4"
           onkeyup="forceInteger('columns')" />
   </box>
   <spring class="spacer"/>
-  <box valign="middle">
+  <box valign="middle" autostretch="never">
     <text class="right" align="right" value="&widthEditField.label;"/>
-    <html:input type="text" id="width" size="4" maxlength="4" 
-          onkeyup="forceInteger('width')" />
+    <html:div><html:input type="text" id="width" size="4" maxlength="4" 
+          onkeyup="forceInteger('width')" /></html:div>
     <spring class="spacer"/>
     <html:select id="pixelOrPercentSelect" size="1"/>
     <!-- option elements are appended by JS -->
   </box>
   <spring class="spacer"/>
-  <box valign="middle">
+  <box valign="middle" autostretch="never">
     <text class="right" align="right" value="&borderEditField.label;"/>
     <html:input type="text" id="borderInput" size="4" maxlength="4"
             onkeyup="forceInteger('borderInput')" />
