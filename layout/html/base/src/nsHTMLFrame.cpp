@@ -107,6 +107,9 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
+  NS_IMETHOD GetContentForEvent(nsIPresContext* aPresContext,
+                                nsEvent* aEvent,
+                                nsIContent** aContent);
 
 protected:
   virtual PRIntn GetSkipSides() const;
@@ -449,6 +452,27 @@ CanvasFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+CanvasFrame::GetContentForEvent(nsIPresContext* aPresContext,
+                                nsEvent* aEvent,
+                                nsIContent** aContent)
+{
+  NS_ENSURE_ARG_POINTER(aContent);
+  nsresult rv = nsFrame::GetContentForEvent(aPresContext,
+                                            aEvent,
+                                            aContent);
+  if (NS_FAILED(rv) || !*aContent) {
+    nsIFrame* kid = mFrames.FirstChild();
+    if (kid) {
+      rv = kid->GetContentForEvent(aPresContext,
+                                   aEvent,
+                                   aContent);
+    }
+  }
+
+  return rv;
 }
 
 #ifdef DEBUG
