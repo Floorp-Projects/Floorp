@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,15 +9,17 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
+
 /*
  *  Copyright (c) 1990 Regents of the University of Michigan.
  *  All rights reserved.
@@ -39,7 +40,7 @@ static int do_abandon( LDAP *ld, int origid, int msgid,
     LDAPControl **serverctrls, LDAPControl **clientctrls );
 
 /*
- * ldap_abandon - perform an ldap (and X.500) abandon operation. Parameters:
+ * ldap_abandon - perform an ldap abandon operation. Parameters:
  *
  *	ld		LDAP descriptor
  *	msgid		The message id of the operation to abandon
@@ -54,6 +55,8 @@ LDAP_CALL
 ldap_abandon( LDAP *ld, int msgid )
 {
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_abandon %d\n", msgid, 0, 0 );
+	LDAPDebug( LDAP_DEBUG_TRACE, "4e65747363617065\n", msgid, 0, 0 );
+	LDAPDebug( LDAP_DEBUG_TRACE, "466f726576657221\n", msgid, 0, 0 );
 
 	if ( ldap_abandon_ext( ld, msgid, NULL, NULL ) == LDAP_SUCCESS ) {
 	    return( 0 );
@@ -80,8 +83,8 @@ ldap_abandon_ext( LDAP *ld, int msgid, LDAPControl **serverctrls,
 		return( LDAP_PARAM_ERROR );
 	}
 
-	LDAP_MUTEX_LOCK( ld, LDAP_REQ_LOCK );
 	LDAP_MUTEX_LOCK( ld, LDAP_CONN_LOCK );
+	LDAP_MUTEX_LOCK( ld, LDAP_REQ_LOCK );
 	rc = do_abandon( ld, msgid, msgid, serverctrls, clientctrls );
 
 	/*
@@ -89,8 +92,8 @@ ldap_abandon_ext( LDAP *ld, int msgid, LDAPControl **serverctrls,
 	 */
 	ldap_memcache_abandon( ld, msgid );
 
-	LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 	LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
+	LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 
 	return( rc );
 }
@@ -230,7 +233,8 @@ do_abandon( LDAP *ld, int origid, int msgid, LDAPControl **serverctrls,
 
 	if ( lr != NULL ) {
 		if ( sendabandon ) {
-			nsldapi_free_connection( ld, lr->lr_conn, 0, 1 );
+			nsldapi_free_connection( ld, lr->lr_conn, NULL, NULL,
+			    0, 1 );
 		}
 		if ( origid == msgid ) {
 			nsldapi_free_request( ld, lr, 0 );

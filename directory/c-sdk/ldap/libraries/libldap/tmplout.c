@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,15 +9,17 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
+
 /*
  * tmplout.c:  display template library output routines for LDAP clients
  * 
@@ -31,23 +32,6 @@
 #include <time.h> /* for struct tm and ctime */
 #endif
 
-
-/* HCL 1.56 caused some wierdness, because ttypdefaults.h on SSF defines CTIME 0
- * This little bit fixes that 
- */
-#if  defined(OSF1)
-#if  defined(CTIME)
-#undef CTIME
-#define CTIME( c, b, l )		ctime( c )
-#endif
-#endif
-
-#if defined(LINUX2_0) || defined(LINUX2_1)
-#if defined(CTIME)
-#undef CTIME
-#define CTIME( c, b, l )                ctime( c )
-#endif
-#endif
 
 /* This is totally lame, since it should be coming from time.h, but isn't. */
 #if defined(SOLARIS) 
@@ -919,7 +903,7 @@ time2text( char *ldtimestr, int dateonly )
     time_t		gmttime;
 /* CTIME for this platform doesn't use this. */
 #if !defined(SUNOS4) && !defined(BSDI) && !defined(LINUX1_2) && \
-    !defined(SNI) && !defined(_WIN32) && !defined(macintosh)
+    !defined(SNI) && !defined(_WIN32) && !defined(macintosh) && !defined(LINUX)
     char		buf[26];
 #endif
 
@@ -963,7 +947,7 @@ time2text( char *ldtimestr, int dateonly )
     }
 
     gmttime = gtime( &t );
-    timestr = CTIME( &gmttime, buf, sizeof(buf) );
+    timestr = NSLDAPI_CTIME( &gmttime, buf, sizeof(buf) );
 
     timestr[ strlen( timestr ) - 1 ] = zone;	/* replace trailing newline */
     if ( dateonly ) {

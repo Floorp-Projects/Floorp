@@ -2,7 +2,11 @@
 	#error:  this file is not editable by App Studio; use an editor
 #endif //APSTUDIO_INVOKED
 
+#ifdef _WIN32
+#include "winver.h"
+#else
 #include "ver.h"
+#endif
 #include "sdkver.h"
 
 VS_VERSION_INFO	VERSIONINFO
@@ -31,13 +35,13 @@ BEGIN
 			VALUE	"FileDescription",	"Lightweight Directory Access Protocol DLL\0"
 			VALUE "FileVersion", VI_FileVersion "\0"
 #ifdef _WIN32
-			VALUE	"InternalName",		"NSLDAP32\0"
+			VALUE	"InternalName",		"LDAP3250\0"
 #else
 			VALUE	"InternalName",		"NSLDAP\0"
 #endif
-			VALUE	"LegalCopyright",	"Copyright (c) 1997 Netscape Communications Corporation\0"
+			VALUE	"LegalCopyright",	"Copyright (c) 2002 Netscape Communications Corporation\0"
 #ifdef _WIN32
-			VALUE	"OriginalFileName",	"NSLDAP32.DLL\0"
+			VALUE	"OriginalFileName",	"LDAP3250.DLL\0"
 #else
 			VALUE	"OriginalFileName",	"NSLDAP.DLL\0"
 #endif

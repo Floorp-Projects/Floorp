@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 /*
  * psearch.c - Persistent search and "Entry Change Notification" support.
@@ -85,6 +85,7 @@ ldap_parse_entrychange_control( LDAP *ld, LDAPControl **ctrls, int *chgtypep,
     BerElement		*ber;
     int			rc, i, changetype;
     unsigned long	len;
+    long		along;
     char		*previousdn;
 
     if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
@@ -125,11 +126,12 @@ ldap_parse_entrychange_control( LDAP *ld, LDAPControl **ctrls, int *chgtypep,
 	goto report_error_and_return;
     }		
 
-    if ( ber_scanf( ber, "{e", &changetype ) == LBER_ERROR ) {
+    if ( ber_scanf( ber, "{e", &along ) == LBER_ERROR ) {
 	ber_free( ber, 1 );
 	rc = LDAP_DECODING_ERROR;
 	goto report_error_and_return;
     }
+    changetype = (int)along;	/* XXX lossy cast */
 
     if ( changetype == LDAP_CHANGETYPE_MODDN ) {
 	if ( ber_scanf( ber, "a", &previousdn ) == LBER_ERROR ) {

@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1996 Regents of the University of Michigan.
@@ -27,14 +27,22 @@
 /*  LIBLDAP url.c -- LDAP URL related routines
  *
  *  LDAP URLs look like this:
- *    l d a p : / / hostport / dn [ ? attributes [ ? scope [ ? filter ] ] ]
+ *    l d a p : / / [ hostport ] [ / dn [ ? [ attributes ] [ ? [ scope ]
+ *			[ ? [ filter ] [ ? extensions ] ] ] ] ]
  *
  *  where:
+ *   hostport is a host or a host:port list that can be space-separated.
  *   attributes is a comma separated list
  *   scope is one of these three strings:  base one sub (default=base)
- *   filter is an string-represented filter as in RFC 1558
+ *   filter is a string-represented filter as in RFC 2254
+ *   extensions is a comma-separated list of name=value pairs.
  *
  *  e.g.,  ldap://ldap.itd.umich.edu/c=US?o,description?one?o=umich
+ *
+ *  To accomodate IPv6 addresses, the host portion of a host that appears
+ *  in hostport can be enclosed in square brackets, e.g
+ *
+ *  e.g.,  ldap://[fe80::a00:20ff:fee5:c0b4]:3389/dc=siroe,dc=com
  *
  *  We also tolerate URLs that look like: <ldapurl> and <URL:ldapurl>
  */
@@ -48,25 +56,27 @@ static char copyright[] = "@(#) Copyright (c) 1996 Regents of the University of 
 #include "ldap-int.h"
 
 
-static int skip_url_prefix( char **urlp, int *enclosedp, int *securep );
+static int skip_url_prefix( const char **urlp, int *enclosedp, int *securep );
 
 
 int
 LDAP_CALL
-ldap_is_ldap_url( char *url )
+ldap_is_ldap_url( const char *url )
 {
 	int	enclosed, secure;
 
-	return( url != NULL && skip_url_prefix( &url, &enclosed, &secure ));
+	return( url != NULL
+	    && skip_url_prefix( &url, &enclosed, &secure ));
 }
 
 
 static int
-skip_url_prefix( char **urlp, int *enclosedp, int *securep )
+skip_url_prefix( const char **urlp, int *enclosedp, int *securep )
 {
 /*
  * return non-zero if this looks like a LDAP URL; zero if not
  * if non-zero returned, *urlp will be moved past "ldap://" part of URL
+ * The data that *urlp points to is not changed by this function.
  */
 	if ( *urlp == NULL ) {
 		return( 0 );
@@ -108,9 +118,11 @@ skip_url_prefix( char **urlp, int *enclosedp, int *securep )
 }
 
 
+
+
 int
 LDAP_CALL
-ldap_url_parse( char *url, LDAPURLDesc **ludpp )
+ldap_url_parse( const char *url, LDAPURLDesc **ludpp )
 {
 /*
  *  Pick apart the pieces of an LDAP URL.
@@ -127,6 +139,8 @@ ldap_url_parse( char *url, LDAPURLDesc **ludpp )
 		if ( *((*ludpp)->lud_dn) == '\0' ) {
 			(*ludpp)->lud_dn = NULL;
 		}
+	} else if ( rc == LDAP_URL_UNRECOGNIZED_CRITICAL_EXTENSION ) {
+		rc = LDAP_URL_ERR_PARAM;	/* mapped for backwards compatibility */
 	}
 
 	return( rc );
@@ -140,15 +154,18 @@ ldap_url_parse( char *url, LDAPURLDesc **ludpp )
  *   2) no defaults are set for lud_scope and lud_filter (they are set to -1
  *	and NULL respectively if no SCOPE or FILTER are present in the URL).
  *   3) when there is a zero-length DN in a URL we do not set lud_dn to NULL.
- *   4) if an LDAPv3 URL extensions are included, 
+ *
+ * note that LDAPv3 URL extensions are ignored unless they are marked
+ * critical, in which case an LDAP_URL_UNRECOGNIZED_CRITICAL_EXTENSION error
+ * is returned.
  */
 int
-nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required )
+nsldapi_url_parse( const char *url, LDAPURLDesc **ludpp, int dn_required )
 {
 
 	LDAPURLDesc	*ludp;
-	char		*attrs, *p, *q;
-	int		enclosed, secure, i, nattrs;
+	char		*urlcopy, *attrs, *scope, *extensions = NULL, *p, *q;
+	int		enclosed, secure, i, nattrs, at_start;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "nsldapi_url_parse(%s)\n", url, 0, 0 );
 
@@ -173,12 +190,12 @@ nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required )
 	}
 
 	/* make working copy of the remainder of the URL */
-	if (( url = nsldapi_strdup( url )) == NULL ) {
+	if (( urlcopy = nsldapi_strdup( url )) == NULL ) {
 		ldap_free_urldesc( ludp );
 		return( LDAP_URL_ERR_MEM );
 	}
 
-	if ( enclosed && *((p = url + strlen( url ) - 1)) == '>' ) {
+	if ( enclosed && *((p = urlcopy + strlen( urlcopy ) - 1)) == '>' ) {
 		*p = '\0';
 	}
 
@@ -187,10 +204,10 @@ nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required )
 	ludp->lud_filter = NULL;
 
 	/* lud_string is the only malloc'd string space we use */
-	ludp->lud_string = url;
+	ludp->lud_string = urlcopy;
 
 	/* scan forward for '/' that marks end of hostport and begin. of dn */
-	if (( ludp->lud_dn = strchr( url, '/' )) == NULL ) {
+	if (( ludp->lud_dn = strchr( urlcopy, '/' )) == NULL ) {
 		if ( dn_required ) {
 			ldap_free_urldesc( ludp );
 			return( LDAP_URL_ERR_NODN );
@@ -201,10 +218,10 @@ nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required )
 	}
 
 
-	if ( *url == '\0' ) {
+	if ( *urlcopy == '\0' ) {
 		ludp->lud_host = NULL;
 	} else {
-		ludp->lud_host = url;
+		ludp->lud_host = urlcopy;
 		nsldapi_hex_unescape( ludp->lud_host );
 
 		/*
@@ -220,6 +237,10 @@ nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required )
 			p = ludp->lud_host;
 		} else {
 			++p;
+		}
+		if ( *p == '[' && ( q = strchr( p, ']' )) != NULL ) {
+			 /* square brackets present -- skip past them */
+			p = q++;
 		}
 		if (( p = strchr( p, ':' )) != NULL ) {
 			*p++ = '\0';
@@ -244,23 +265,38 @@ nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required )
 			 * '?' that marks end of scope and begin. of filter
 			 */
 			*p++ = '\0';
+			scope = p;
 
-			if (( q = strchr( p, '?' )) != NULL ) {
+			if (( p = strchr( scope, '?' )) != NULL ) {
 				/* terminate scope; point to start of filter */
-				*q++ = '\0';
-				if ( *q != '\0' ) {
-					ludp->lud_filter = q;
-					nsldapi_hex_unescape( ludp->lud_filter );
+				*p++ = '\0';
+				if ( *p != '\0' ) {
+					ludp->lud_filter = p;
+					/*
+					 * scan for the '?' that marks the end
+					 * of the filter and the start of any
+					 * extensions
+					 */
+					if (( p = strchr( ludp->lud_filter, '?' ))
+					    != NULL ) {
+						*p++ = '\0'; /* term. filter */
+						extensions = p;
+					}
+					if ( *ludp->lud_filter == '\0' ) {
+						ludp->lud_filter = NULL;
+					} else {
+						nsldapi_hex_unescape( ludp->lud_filter );
+					}
 				}
 			}
 
-			if ( strcasecmp( p, "one" ) == 0 ) {
+			if ( strcasecmp( scope, "one" ) == 0 ) {
 				ludp->lud_scope = LDAP_SCOPE_ONELEVEL;
-			} else if ( strcasecmp( p, "base" ) == 0 ) {
+			} else if ( strcasecmp( scope, "base" ) == 0 ) {
 				ludp->lud_scope = LDAP_SCOPE_BASE;
-			} else if ( strcasecmp( p, "sub" ) == 0 ) {
+			} else if ( strcasecmp( scope, "sub" ) == 0 ) {
 				ludp->lud_scope = LDAP_SCOPE_SUBTREE;
-			} else if ( *p != '\0' ) {
+			} else if ( *scope != '\0' ) {
 				ldap_free_urldesc( ludp );
 				return( LDAP_URL_ERR_BADSCOPE );
 			}
@@ -297,6 +333,23 @@ nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required )
 		}
 	}
 
+	/* if extensions list was included, check for critical ones */
+	if ( extensions != NULL && *extensions != '\0' ) {
+		/* Note: at present, we do not recognize ANY extensions */
+		at_start = 1;
+		for ( p = extensions; *p != '\0'; ++p ) {
+			if ( at_start ) {
+				if ( *p == '!' ) {	/* critical extension */
+					ldap_free_urldesc( ludp );
+					return( LDAP_URL_UNRECOGNIZED_CRITICAL_EXTENSION );
+				}
+				at_start = 0;
+			} else if ( *p == ',' ) {
+				at_start = 1;
+			}
+		}
+	}
+
 	*ludpp = ludp;
 
 	return( 0 );
@@ -321,7 +374,7 @@ ldap_free_urldesc( LDAPURLDesc *ludp )
 
 int
 LDAP_CALL
-ldap_url_search( LDAP *ld, char *url, int attrsonly )
+ldap_url_search( LDAP *ld, const char *url, int attrsonly )
 {
 	int		err, msgid;
 	LDAPURLDesc	*ludp;
@@ -342,9 +395,9 @@ ldap_url_search( LDAP *ld, char *url, int attrsonly )
 	msgid = ++ld->ld_msgid;
 	LDAP_MUTEX_UNLOCK( ld, LDAP_MSGID_LOCK );
 
-	if ( ldap_build_search_req( ld, ludp->lud_dn, ludp->lud_scope,
+	if ( nsldapi_build_search_req( ld, ludp->lud_dn, ludp->lud_scope,
 	    ludp->lud_filter, ludp->lud_attrs, attrsonly, NULL, NULL,
-	    NULL, -1, msgid, &ber ) != LDAP_SUCCESS ) {
+	    -1, -1, msgid, &ber ) != LDAP_SUCCESS ) {
 		return( -1 );
 	}
 
@@ -394,10 +447,24 @@ ldap_url_search( LDAP *ld, char *url, int attrsonly )
 
 int
 LDAP_CALL
-ldap_url_search_st( LDAP *ld, char *url, int attrsonly,
+ldap_url_search_st( LDAP *ld, const char *url, int attrsonly,
 	struct timeval *timeout, LDAPMessage **res )
 {
 	int	msgid;
+
+	/*
+	 * It is an error to pass in a zero'd timeval.
+	 */
+	if ( timeout != NULL && timeout->tv_sec == 0 &&
+	    timeout->tv_usec == 0 ) {
+		if ( ld != NULL ) {
+			LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		}
+		if ( res != NULL ) {
+			*res = NULL;
+		}
+                return( LDAP_PARAM_ERROR );
+        }
 
 	if (( msgid = ldap_url_search( ld, url, attrsonly )) == -1 ) {
 		return( LDAP_GET_LDERRNO( ld, NULL, NULL ) );
@@ -419,7 +486,7 @@ ldap_url_search_st( LDAP *ld, char *url, int attrsonly,
 
 int
 LDAP_CALL
-ldap_url_search_s( LDAP *ld, char *url, int attrsonly, LDAPMessage **res )
+ldap_url_search_s( LDAP *ld, const char *url, int attrsonly, LDAPMessage **res )
 {
 	int	msgid;
 

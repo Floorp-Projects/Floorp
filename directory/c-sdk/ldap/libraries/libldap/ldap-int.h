@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 #ifndef _LDAPINT_H
 #define _LDAPINT_H
@@ -26,40 +26,37 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <time.h>
+#include <fcntl.h>
 #ifdef hpux
 #include <strings.h>
-#include <time.h>
 #endif /* hpux */
 
 #ifdef _WINDOWS
 #  define FD_SETSIZE		256	/* number of connections we support */
 #  define WIN32_LEAN_AND_MEAN
 # include <windows.h>
-# include <time.h>
 #elif defined(macintosh)
 #include "ldap-macos.h"
-# include <time.h>
-#elif defined(XP_OS2)
-#include <os2sock.h>
 #else /* _WINDOWS */
 # include <sys/time.h>
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
+#if !defined(XP_OS2) && !defined(XP_BEOS)
+# include <arpa/inet.h>
+#endif
 # include <netdb.h>
-#if !defined(hpux) && !defined(SUNOS4) && !defined(LINUX)
+#if !defined(hpux) && !defined(SUNOS4) && !defined(XP_BEOS)
 # include <sys/select.h>
 #endif /* !defined(hpux) and others */
 #endif /* _WINDOWS */
-
-#if defined(BSDI) || defined(LINUX) || defined(SNI) || defined(IRIX)
-#include <arpa/inet.h>
-#endif /* BSDI */
 
 #if defined(IRIX)
 #include <bstring.h>
 #endif /* IRIX */
 
+#define NSLBERI_LBER_INT_FRIEND
 #ifdef macintosh
 #include "lber-int.h"
 #else /* macintosh */
@@ -75,9 +72,9 @@
 #ifdef NEED_FILIO
 #include <sys/filio.h>		/* to get FIONBIO for ioctl() call */
 #else /* NEED_FILIO */
-#ifndef _WINDOWS
+#if !defined( _WINDOWS) && !defined (macintosh)
 #include <sys/ioctl.h>		/* to get FIONBIO for ioctl() call */
-#endif /* _WINDOWS */
+#endif /* _WINDOWS && macintosh */
 #endif /* NEED_FILIO */
 #endif /* LDAP_ASYNC_IO */
 
@@ -85,7 +82,9 @@
 #  include <unistd.h>
 #endif /* USE_SYSCONF */
 
-#if !defined(_WINDOWS) && !defined(macintosh) && !defined(LINUX) && !defined(BSDI)
+#if !defined(_WINDOWS) && !defined(macintosh) && !defined(BSDI) && \
+    !defined(XP_OS2) && !defined(XP_BEOS) && !defined(NTO) && \
+    !defined(DARWIN)
 #define NSLDAPI_HAVE_POLL	1
 #endif
 
@@ -112,10 +111,23 @@
 #define LDAP_DX_REF_STR_LEN	5
 #endif /* LDAP_DNS */
 
-typedef enum { LDAP_CACHE_LOCK, LDAP_MEMCACHE_LOCK, LDAP_MSGID_LOCK,
-LDAP_REQ_LOCK, LDAP_RESP_LOCK, LDAP_ABANDON_LOCK, LDAP_CTRL_LOCK,
-LDAP_OPTION_LOCK, LDAP_ERR_LOCK, LDAP_CONN_LOCK, LDAP_SELECT_LOCK,
-LDAP_RESULT_LOCK, LDAP_PEND_LOCK, LDAP_THREADID_LOCK, LDAP_MAX_LOCK } LDAPLock;
+typedef enum { 
+    LDAP_CACHE_LOCK, 
+    LDAP_MEMCACHE_LOCK, 
+    LDAP_MSGID_LOCK,
+    LDAP_REQ_LOCK, 
+    LDAP_RESP_LOCK, 
+    LDAP_ABANDON_LOCK, 
+    LDAP_CTRL_LOCK,
+    LDAP_OPTION_LOCK, 
+    LDAP_ERR_LOCK, 
+    LDAP_CONN_LOCK, 
+    LDAP_IOSTATUS_LOCK,		/* serializes access to ld->ld_iostatus */
+    LDAP_RESULT_LOCK, 
+    LDAP_PEND_LOCK, 
+    LDAP_THREADID_LOCK, 
+    LDAP_MAX_LOCK 
+} LDAPLock;
 
 /*
  * This structure represents both ldap messages and ldap responses.
@@ -188,9 +200,10 @@ typedef struct ldapreq {
 	LDAPConn	*lr_conn;	/* connection used to send request */
 	char		*lr_binddn;	/* request is a bind for this DN */
 	struct ldapreq	*lr_parent;	/* request that spawned this referral */
-	struct ldapreq	*lr_refnext;	/* next referral spawned */
-	struct ldapreq	*lr_prev;	/* previous request */
-	struct ldapreq	*lr_next;	/* next request */
+	struct ldapreq	*lr_child;	/* list of requests we spawned */
+	struct ldapreq	*lr_sibling;	/* next referral spawned */
+	struct ldapreq	*lr_prev;	/* ld->ld_requests previous request */
+	struct ldapreq	*lr_next;	/* ld->ld_requests next request */
 } LDAPRequest;
 
 typedef struct ldappend {
@@ -200,6 +213,28 @@ typedef struct ldappend {
 	struct ldappend	*lp_prev;	/* previous pending */
 	struct ldappend	*lp_next;	/* next pending */
 } LDAPPend;
+
+/*
+ * forward declaration for I/O status structure (defined in os-ip.c)
+ */
+typedef struct nsldapi_iostatus_info NSLDAPIIOStatus;
+
+/*
+ * old extended IO structure (before writev callback was added)
+ */
+struct ldap_x_ext_io_fns_rev0 {
+        int                                     lextiof_size;
+        LDAP_X_EXTIOF_CONNECT_CALLBACK          *lextiof_connect;
+        LDAP_X_EXTIOF_CLOSE_CALLBACK            *lextiof_close;
+        LDAP_X_EXTIOF_READ_CALLBACK             *lextiof_read;
+        LDAP_X_EXTIOF_WRITE_CALLBACK            *lextiof_write;
+        LDAP_X_EXTIOF_POLL_CALLBACK             *lextiof_poll;
+        LDAP_X_EXTIOF_NEWHANDLE_CALLBACK        *lextiof_newhandle;
+        LDAP_X_EXTIOF_DISPOSEHANDLE_CALLBACK    *lextiof_disposehandle;
+        void                                    *lextiof_session_arg;
+};
+#define LDAP_X_EXTIO_FNS_SIZE_REV0   sizeof(struct ldap_x_ext_io_fns_rev0)
+
 
 /*
  * structure representing an ldap connection
@@ -248,22 +283,26 @@ struct ldap {
 	BERTranslateProc ld_lber_decode_translate_proc;
 	LDAPConn	*ld_defconn;	/* default connection */
 	LDAPConn	*ld_conns;	/* list of all server connections */
-	void		*ld_selectinfo;	/* platform specifics for select */
-	int		ld_selectreadcnt;  /* count of read sockets */
-	int		ld_selectwritecnt; /* count of write sockets */
+	NSLDAPIIOStatus	*ld_iostatus;	/* status info. about network sockets */
 	LDAP_REBINDPROC_CALLBACK *ld_rebind_fn;
 	void		*ld_rebind_arg;
 
-	/* function pointers, etc. for io */
-	struct ldap_io_fns	ld_io;
-#define ld_read_fn		ld_io.liof_read
-#define ld_write_fn		ld_io.liof_write
-#define ld_select_fn		ld_io.liof_select
-#define ld_socket_fn		ld_io.liof_socket
-#define ld_ioctl_fn		ld_io.liof_ioctl
-#define ld_connect_fn		ld_io.liof_connect
-#define ld_close_fn		ld_io.liof_close
-#define ld_ssl_enable_fn	ld_io.liof_ssl_enable
+	/* function pointers, etc. for extended I/O */
+	struct ldap_x_ext_io_fns ld_ext_io_fns;
+#define ld_extio_size		ld_ext_io_fns.lextiof_size
+#define ld_extclose_fn		ld_ext_io_fns.lextiof_close
+#define ld_extconnect_fn	ld_ext_io_fns.lextiof_connect
+#define ld_extread_fn		ld_ext_io_fns.lextiof_read
+#define ld_extwrite_fn		ld_ext_io_fns.lextiof_write
+#define ld_extwritev_fn         ld_ext_io_fns.lextiof_writev
+#define ld_extpoll_fn		ld_ext_io_fns.lextiof_poll
+#define ld_extnewhandle_fn	ld_ext_io_fns.lextiof_newhandle
+#define ld_extdisposehandle_fn	ld_ext_io_fns.lextiof_disposehandle
+#define ld_ext_session_arg	ld_ext_io_fns.lextiof_session_arg
+
+	/* allocated pointer for older I/O functions */
+	struct ldap_io_fns	*ld_io_fns_ptr;
+#define NSLDAPI_USING_CLASSIC_IO_FUNCTIONS( ld ) ((ld)->ld_io_fns_ptr != NULL)
 
 	/* function pointers, etc. for DNS */
 	struct ldap_dns_fns	ld_dnsfn;
@@ -321,6 +360,12 @@ struct ldap {
 
 	/* extra thread function pointers */
 	struct ldap_extra_thread_fns	ld_thread2;
+
+	/* With the 4.0 version of the LDAP SDK */
+	/* the extra thread functions except for */
+	/* the ld_threadid_fn has been disabled */
+	/* Look at the release notes for the full */
+	/* explanation */
 #define ld_mutex_trylock_fn		ld_thread2.ltf_mutex_trylock
 #define ld_sema_alloc_fn		ld_thread2.ltf_sema_alloc
 #define ld_sema_free_fn			ld_thread2.ltf_sema_free
@@ -331,6 +376,9 @@ struct ldap {
 	/* extra data for mutex handling in referrals */
 	void 			*ld_mutex_threadid[LDAP_MAX_LOCK];
 	unsigned long		ld_mutex_refcnt[LDAP_MAX_LOCK];
+
+	/* connect timeout value */
+	int				ld_connect_timeout;
 };
 
 /* allocate/free mutex */
@@ -344,57 +392,62 @@ struct ldap {
 	}
 
 /* enter/exit critical sections */
-#define LDAP_MUTEX_LOCK( ld, i ) \
-	if ( (ld)->ld_mutex_lock_fn != NULL ) { \
-		if( (ld)->ld_threadid_fn != NULL ) { \
-			while (1) { \
-			(ld)->ld_mutex_lock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
-			if( (ld)->ld_mutex_threadid[i] == (void *) -1 ) { \
-				(ld)->ld_mutex_lock_fn( (ld)->ld_mutex[i] ); \
-				(ld)->ld_mutex_threadid[i] = (ld)->ld_threadid_fn() ; \
-				(ld)->ld_mutex_refcnt[i]++ ; \
-				(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
-				break; \
-			} \
-			else if( (ld)->ld_mutex_threadid[i] == (ld)->ld_threadid_fn() ) { \
-				(ld)->ld_mutex_refcnt[i]++ ; \
-				(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
-				break; \
-			} \
-			else { \
-				(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
-				(ld)->ld_mutex_lock_fn( (ld)->ld_mutex[i] ); \
-				(ld)->ld_mutex_unlock_fn( (ld)->ld_mutex[i] ); \
-			} \
-			} \
-		} \
-		else { \
-			(ld)->ld_mutex_lock_fn( (ld)->ld_mutex[i] ); \
-		} \
-	}
+/*
+ * The locks assume that the locks are thread safe.  XXXmcs: which means???
+ *
+ * Note that we test for both ld_mutex_lock_fn != NULL AND ld_mutex != NULL.
+ * This is necessary because there is a window in ldap_init() between the
+ * time we set the ld_mutex_lock_fn pointer and the time we allocate the
+ * mutexes in which external code COULD be called which COULD make a call to
+ * something like ldap_get_option(), which uses LDAP_MUTEX_LOCK().  The
+ * libprldap code does this in its newhandle callback (prldap_newhandle).
+ */
 
-#define LDAP_MUTEX_UNLOCK( ld, i ) \
-	if ( (ld)->ld_mutex_unlock_fn != NULL ) { \
-		if( (ld)->ld_threadid_fn != NULL ) { \
-			(ld)->ld_mutex_lock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
-			(ld)->ld_mutex_refcnt[i]-- ; \
-			if( (ld)->ld_mutex_refcnt[i] == 0 ) { \
-				(ld)->ld_mutex_threadid[i] = (void *) -1; \
-				(ld)->ld_mutex_unlock_fn( (ld)->ld_mutex[i] ); \
-			} \
-			(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] ); \
-		} \
-		else { \
-			(ld)->ld_mutex_unlock_fn( (ld)->ld_mutex[i] ); \
-		} \
-	}
+#define LDAP_MUTEX_LOCK(ld, lock) \
+    if ((ld)->ld_mutex_lock_fn != NULL && ld->ld_mutex != NULL) { \
+        if ((ld)->ld_threadid_fn != NULL) { \
+            if ((ld)->ld_mutex_threadid[lock] == (ld)->ld_threadid_fn()) { \
+                (ld)->ld_mutex_refcnt[lock]++; \
+            } else { \
+                (ld)->ld_mutex_lock_fn(ld->ld_mutex[lock]); \
+                (ld)->ld_mutex_threadid[lock] = ld->ld_threadid_fn(); \
+                (ld)->ld_mutex_refcnt[lock] = 1; \
+            } \
+        } else { \
+            (ld)->ld_mutex_lock_fn(ld->ld_mutex[lock]); \
+        } \
+    } 
 
-/* Backword compatibility locks */
+#define LDAP_MUTEX_UNLOCK(ld, lock) \
+    if ((ld)->ld_mutex_lock_fn != NULL && ld->ld_mutex != NULL) { \
+        if ((ld)->ld_threadid_fn != NULL) { \
+            if ((ld)->ld_mutex_threadid[lock] == (ld)->ld_threadid_fn()) { \
+                (ld)->ld_mutex_refcnt[lock]--; \
+                if ((ld)->ld_mutex_refcnt[lock] <= 0) { \
+                    (ld)->ld_mutex_threadid[lock] = (void *) -1; \
+                    (ld)->ld_mutex_refcnt[lock] = 0; \
+                    (ld)->ld_mutex_unlock_fn(ld->ld_mutex[lock]); \
+                } \
+            } \
+        } else { \
+            ld->ld_mutex_unlock_fn(ld->ld_mutex[lock]); \
+        } \
+    }
+
+/* Backward compatibility locks */
 #define LDAP_MUTEX_BC_LOCK( ld, i ) \
+	/* the ld_mutex_trylock_fn is always set to NULL */ \
+	/* in setoption.c as the extra thread functions were */ \
+	/* turned off in the 4.0 SDK.  This check will  */ \
+	/* always be true */ \
 	if( (ld)->ld_mutex_trylock_fn == NULL ) { \
 		LDAP_MUTEX_LOCK( ld, i ) ; \
 	}
 #define LDAP_MUTEX_BC_UNLOCK( ld, i ) \
+	/* the ld_mutex_trylock_fn is always set to NULL */ \
+	/* in setoption.c as the extra thread functions were */ \
+	/* turned off in the 4.0 SDK.  This check will  */ \
+	/* always be true */ \
 	if( (ld)->ld_mutex_trylock_fn == NULL ) { \
 		LDAP_MUTEX_UNLOCK( ld, i ) ; \
 	}
@@ -417,6 +470,10 @@ struct ldap {
 		(ld)->ld_sema_post_fn( lp->lp_sema ); \
 	}
 #define POST( ld, y, z ) \
+	/* the ld_mutex_trylock_fn is always set to NULL */ \
+	/* in setoption.c as the extra thread functions were */ \
+	/* turned off in the 4.0 SDK.  This check will  */ \
+	/* always be false */ \
 	if( (ld)->ld_mutex_trylock_fn != NULL ) { \
 		nsldapi_post_result( ld, y, z ); \
 	}
@@ -456,6 +513,17 @@ struct ldap {
  * handy macro to check whether LDAP struct is set up for CLDAP or not
  */
 #define LDAP_IS_CLDAP( ld )	( ld->ld_sbp->sb_naddr > 0 )
+
+/*
+ * Some Unix error defs. Under CW 7, we can't define OTUNIXERRORS because
+ * it generates many conflicts with errno.h. Define what we need here.
+ * These need to be in sync with OpenTransport.h
+ */
+ 
+#if defined(macintosh)
+#define EWOULDBLOCK     35
+#define EHOSTUNREACH    65
+#endif
 
 /*
  * handy macro to check errno "e" for an "in progress" sort of error
@@ -516,10 +584,10 @@ extern int				nsldapi_initialized;
  * following macros. This is so we can plug-in alternative memory
  * allocators, etc. as the need arises.
  */
-#define NSLDAPI_MALLOC( size )		nsldapi_malloc( size )
-#define NSLDAPI_CALLOC( nelem, elsize )	nsldapi_calloc( nelem, elsize )
-#define NSLDAPI_REALLOC( ptr, size )	nsldapi_realloc( ptr, size )
-#define NSLDAPI_FREE( ptr )		nsldapi_free( ptr )
+#define NSLDAPI_MALLOC( size )		ldap_x_malloc( size )
+#define NSLDAPI_CALLOC( nelem, elsize )	ldap_x_calloc( nelem, elsize )
+#define NSLDAPI_REALLOC( ptr, size )	ldap_x_realloc( ptr, size )
+#define NSLDAPI_FREE( ptr )		ldap_x_free( ptr )
 
 
 /*
@@ -585,30 +653,27 @@ int nsldapi_parse_result( LDAP *ld, int msgtype, BerElement *rber,
  * in open.c
  */
 void nsldapi_initialize_defaults( void );
-int nsldapi_open_ldap_connection( LDAP *ld, Sockbuf *sb, char *host,
-	int defport, char **krbinstancep, int async, int secure );
+void nsldapi_mutex_alloc_all( LDAP *ld );
+void nsldapi_mutex_free_all( LDAP *ld );
 int nsldapi_open_ldap_defconn( LDAP *ld );
-void *nsldapi_malloc( size_t size );
-void *nsldapi_calloc( size_t nelem, size_t elsize );
-void *nsldapi_realloc( void *ptr, size_t size );
-void nsldapi_free( void *ptr );
-char *nsldapi_strdup( const char *s );
+char *nsldapi_strdup( const char *s );  /* if s is NULL, returns NULL */
 
 /*
  * in os-ip.c
  */
-int nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host,
-	unsigned long address, int port, int async, int secure );
+int nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, const char *host,
+	int port, int secure, char **krbinstancep );
 void nsldapi_close_connection( LDAP *ld, Sockbuf *sb );
 
-int nsldapi_do_ldap_select( LDAP *ld, struct timeval *timeout );
-void *nsldapi_new_select_info( void );
-void nsldapi_free_select_info( void *vsip );
-void nsldapi_mark_select_write( LDAP *ld, Sockbuf *sb );
-void nsldapi_mark_select_read( LDAP *ld, Sockbuf *sb );
-void nsldapi_mark_select_clear( LDAP *ld, Sockbuf *sb );
-int nsldapi_is_read_ready( LDAP *ld, Sockbuf *sb );
-int nsldapi_is_write_ready( LDAP *ld, Sockbuf *sb );
+int nsldapi_iostatus_poll( LDAP *ld, struct timeval *timeout );
+void nsldapi_iostatus_free( LDAP *ld );
+int nsldapi_iostatus_interest_write( LDAP *ld, Sockbuf *sb );
+int nsldapi_iostatus_interest_read( LDAP *ld, Sockbuf *sb );
+int nsldapi_iostatus_interest_clear( LDAP *ld, Sockbuf *sb );
+int nsldapi_iostatus_is_read_ready( LDAP *ld, Sockbuf *sb );
+int nsldapi_iostatus_is_write_ready( LDAP *ld, Sockbuf *sb );
+int nsldapi_install_lber_extiofns( LDAP *ld, Sockbuf *sb );
+int nsldapi_install_compat_io_fns( LDAP *ld, struct ldap_io_fns *iofns );
 
 /*
  * if referral.c
@@ -643,7 +708,9 @@ LDAPConn *nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 	int connect, int bind );
 LDAPRequest *nsldapi_find_request_by_msgid( LDAP *ld, int msgid );
 void nsldapi_free_request( LDAP *ld, LDAPRequest *lr, int free_conn );
-void nsldapi_free_connection( LDAP *ld, LDAPConn *lc, int force, int unbind );
+void nsldapi_free_connection( LDAP *ld, LDAPConn *lc,
+	LDAPControl **serverctrls, LDAPControl **clientctrls,
+	int force, int unbind );
 void nsldapi_dump_connection( LDAP *ld, LDAPConn *lconns, int all );
 void nsldapi_dump_requests_and_responses( LDAP *ld );
 int nsldapi_chase_v2_referrals( LDAP *ld, LDAPRequest *lr, char **errstrp,
@@ -656,16 +723,18 @@ void nsldapi_connection_lost_nolock( LDAP *ld, Sockbuf *sb );
 /*
  * in search.c
  */
-int ldap_build_search_req( LDAP *ld, char *base, int scope,
-	char *filter, char **attrs, int attrsonly, LDAPControl **serverctrls,
-	LDAPControl **clientctrls, struct timeval *timeoutp, int sizelimit,
-	int msgid, BerElement **berp );
+int nsldapi_build_search_req( LDAP *ld, const char *base, int scope,
+	const char *filter, char **attrs, int attrsonly,
+	LDAPControl **serverctrls, LDAPControl **clientctrls,
+	int timelimit, int sizelimit, int msgid, BerElement **berp );
 
 /*
  * in unbind.c
  */
-int ldap_ld_free( LDAP *ld, int close );
-int nsldapi_send_unbind( LDAP *ld, Sockbuf *sb );
+int ldap_ld_free( LDAP *ld, LDAPControl **serverctrls,
+	LDAPControl **clientctrls, int close );
+int nsldapi_send_unbind( LDAP *ld, Sockbuf *sb, LDAPControl **serverctrls,
+	LDAPControl **clientctrls );
 
 #ifdef LDAP_DNS
 /*
@@ -710,7 +779,8 @@ int nsldapi_build_control( char *oid, BerElement *ber, int freeber,
 /*
  * in url.c
  */
-int nsldapi_url_parse( char *url, LDAPURLDesc **ludpp, int dn_required );
+int nsldapi_url_parse( const char *inurl, LDAPURLDesc **ludpp,
+	int dn_required );
 
 
 /*

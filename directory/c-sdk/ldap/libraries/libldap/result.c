@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1990 Regents of the University of Michigan.
@@ -51,9 +51,10 @@ static void merge_error_info( LDAP *ld, LDAPRequest *parentr, LDAPRequest *lr );
 static int cldap_select1( LDAP *ld, struct timeval *timeout );
 #endif
 static void link_pend( LDAP *ld, LDAPPend *lp );
+#if 0 /* these functions are no longer used */
 static void unlink_pend( LDAP *ld, LDAPPend *lp );
 static int unlink_msg( LDAP *ld, int msgid, int all );
-static int nsldapi_mutex_trylock( LDAP *ld, LDAPLock lockno );
+#endif /* 0 */
 
 /*
  * ldap_result - wait for an ldap result response to a message from the
@@ -79,7 +80,7 @@ ldap_result(
     LDAPMessage		**result
 )
 {
-	int		rc, ret;
+	int		rc;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_result\n", 0, 0, 0 );
 
@@ -87,21 +88,11 @@ ldap_result(
 		return( -1 );	/* punt */
 	}
 
-	while( 1 ) {
-		if( (ret = nsldapi_mutex_trylock( ld, LDAP_RESULT_LOCK )) == 0 )
-		{
-			LDAP_MUTEX_BC_LOCK( ld, LDAP_RESULT_LOCK );
-			rc= nsldapi_result_nolock( ld, msgid, all, 1, timeout, result );
-			break;
-		}
-		else {
-			rc = nsldapi_wait_result( ld, msgid, all, timeout, result );
-			if( rc == -2 )
-				continue;
-			else
-				break;
-		}
-	}
+	LDAP_MUTEX_LOCK( ld, LDAP_RESULT_LOCK );
+
+	rc = nsldapi_result_nolock(ld, msgid, all, 1, timeout, result);
+
+	LDAP_MUTEX_UNLOCK( ld, LDAP_RESULT_LOCK );
 
 	return( rc );
 }
@@ -145,8 +136,6 @@ nsldapi_result_nolock( LDAP *ld, int msgid, int all, int unlock_permitted,
 		    (all || NSLDAPI_IS_SEARCH_RESULT( rc )), *result );
 	}
 
-	LDAP_MUTEX_UNLOCK( ld, LDAP_RESULT_LOCK );
-	POST( ld, LDAP_RES_ANY, NULL );
 	return( rc );
 }
 
@@ -223,8 +212,8 @@ check_response_queue( LDAP *ld, int msgid, int all, int do_abandon_check,
 	 * a request that is still pending, return failure.
 	 */
 	if ( lm == NULL 
-             || ( lr = nsldapi_find_request_by_msgid( ld, lm->lm_msgid ))
-		   != NULL && lr->lr_outrefcnt > 0 ) {
+             || (( lr = nsldapi_find_request_by_msgid( ld, lm->lm_msgid ))
+		   != NULL && lr->lr_outrefcnt > 0 )) {
 		LDAP_MUTEX_UNLOCK( ld, LDAP_RESP_LOCK );
 		LDAPDebug( LDAP_DEBUG_TRACE,
 		    "<= check_response_queue NOT FOUND\n",
@@ -310,7 +299,7 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 	 * if we are looking for a specific msgid, check to see if it is
 	 * associated with a dead connection and return an error if so.
 	 */
-	if ( msgid != LDAP_RES_ANY ) {
+	if ( msgid != LDAP_RES_ANY && msgid != LDAP_RES_UNSOLICITED ) {
 		LDAP_MUTEX_LOCK( ld, LDAP_REQ_LOCK );
 		if (( lr = nsldapi_find_request_by_msgid( ld, msgid ))
 		    == NULL ) {
@@ -326,8 +315,8 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 			LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN, NULL, NULL );
 			return( -1 );	/* connection dead */
 		}
+		LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
 	}
-	LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
 
 	if ( timeout == NULL ) {
 		tvp = NULL;
@@ -359,12 +348,12 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 		LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 
 		if ( lc == NULL ) {
-			rc = nsldapi_do_ldap_select( ld, tvp );
+			rc = nsldapi_iostatus_poll( ld, tvp );
 
 #if defined( LDAP_DEBUG ) && !defined( macintosh ) && !defined( DOS )
 			if ( rc == -1 ) {
 			    LDAPDebug( LDAP_DEBUG_TRACE,
-				    "nsldapi_do_ldap_select returned -1: errno %d\n",
+				    "nsldapi_iostatus_poll returned -1: errno %d\n",
 				    LDAP_GET_ERRNO( ld ), 0, 0 );
 			}
 #endif
@@ -399,15 +388,16 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 					nextlc = lc->lconn_next;
 					if ( lc->lconn_status ==
 					    LDAP_CONNST_CONNECTED &&
-					    nsldapi_is_read_ready( ld,
+					    nsldapi_iostatus_is_read_ready( ld,
 					    lc->lconn_sb )) {
 						rc = read1msg( ld, msgid, all,
 						    lc->lconn_sb, lc, result );
 					}
 					else if (ld->ld_options & LDAP_BITOPT_ASYNC) {
-                        if(   lr
+                        if ( lr
                               && lc->lconn_status == LDAP_CONNST_CONNECTING
-                              && nsldapi_is_write_ready( ld, lc->lconn_sb ) ) {
+                              && nsldapi_iostatus_is_write_ready( ld,
+			      lc->lconn_sb ) ) {
                             rc = nsldapi_ber_flush( ld, lc->lconn_sb, lr->lr_ber, 0, 1 );
                             if ( rc == 0 ) {
                                 rc = LDAP_RES_BIND;
@@ -415,12 +405,13 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
                                 
                                 lr->lr_ber->ber_end = lr->lr_ber->ber_ptr;
                                 lr->lr_ber->ber_ptr = lr->lr_ber->ber_buf;
-                                nsldapi_mark_select_read( ld, lc->lconn_sb );
+                                nsldapi_iostatus_interest_read( ld, lc->lconn_sb );
                             }
                             else if ( rc == -1 ) {
                                 LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN, NULL, NULL );
                                 nsldapi_free_request( ld, lr, 0 );
-                                nsldapi_free_connection( ld, lc, 0, 0 );
+                                nsldapi_free_connection( ld, lc, NULL, NULL,
+				    0, 0 );
                             }
                         }
                         
@@ -467,6 +458,9 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 }
 
 
+/*
+ * read1msg() should be called with LDAP_CONN_LOCK and LDAP_REQ_LOCK locked.
+ */
 static int
 read1msg( LDAP *ld, int msgid, int all, Sockbuf *sb, LDAPConn *lc,
     LDAPMessage **result )
@@ -477,7 +471,7 @@ read1msg( LDAP *ld, int msgid, int all, Sockbuf *sb, LDAPConn *lc,
 	unsigned long	tag, len;
 	int		terrno, lderr, foundit = 0;
 	LDAPRequest	*lr;
-	int		rc, simple_request, has_parent, message_can_be_returned;
+	int		rc, has_parent, message_can_be_returned;
 	int		manufactured_result = 0;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "read1msg\n", 0, 0, 0 );
@@ -533,7 +527,9 @@ read1msg( LDAP *ld, int msgid, int all, Sockbuf *sb, LDAPConn *lc,
 		return( -2 );	/* continue looking */
 	}
 
-	if (( lr = nsldapi_find_request_by_msgid( ld, id )) == NULL ) {
+	if ( id == LDAP_RES_UNSOLICITED ) {
+		lr = NULL;
+	} else if (( lr = nsldapi_find_request_by_msgid( ld, id )) == NULL ) {
 		LDAPDebug( LDAP_DEBUG_ANY,
 		    "no request for response with msgid %ld (tossing)\n",
 		    id, 0, 0 );
@@ -549,21 +545,22 @@ read1msg( LDAP *ld, int msgid, int all, Sockbuf *sb, LDAPConn *lc,
 	LDAPDebug( LDAP_DEBUG_TRACE, "got %s msgid %ld, original id %d\n",
 	    ( tag == LDAP_RES_SEARCH_ENTRY ) ? "ENTRY" :
 	    ( tag == LDAP_RES_SEARCH_REFERENCE ) ? "REFERENCE" : "RESULT", id,
-	    lr->lr_origid );
+	    ( lr == NULL ) ? id : lr->lr_origid );
 
-	id = lr->lr_origid;
-	simple_request = 0;
+	if ( lr != NULL ) {
+		id = lr->lr_origid;
+		lr->lr_res_msgtype = tag;
+	}
 	rc = -2;	/* default is to keep looking (no response found) */
-	lr->lr_res_msgtype = tag;
 
-	if ( tag == LDAP_RES_SEARCH_REFERENCE ||
-	    tag != LDAP_RES_SEARCH_ENTRY ) {
-		int		refchasing, reftotal;
+	if ( id != LDAP_RES_UNSOLICITED && ( tag == LDAP_RES_SEARCH_REFERENCE ||
+	    tag != LDAP_RES_SEARCH_ENTRY )) {
+		int		refchasing, reftotal, simple_request = 0;
 
 		check_for_refs( ld, lr, ber, lc->lconn_version, &reftotal,
 		    &refchasing );
 
-		if ( refchasing > 0 ) {
+		if ( refchasing > 0 || lr->lr_outrefcnt > 0 ) {
 			/*
 			 * we're chasing one or more new refs...
 			 */
@@ -584,23 +581,29 @@ read1msg( LDAP *ld, int msgid, int all, Sockbuf *sb, LDAPConn *lc,
 			}
 
 			/*
-			 * if this was a successful bind request and not a
-			 * child request, set the connection's bind DN to
-			 * match this request's.
+			 * If this is not a child request and it is a bind
+			 * request, reset the connection's bind DN and
+			 * status based on the result of the operation.
 			 */
 			if ( !has_parent &&
 			    LDAP_RES_BIND == lr->lr_res_msgtype &&
-			    lr->lr_conn != NULL && LDAP_SUCCESS ==
-			    nsldapi_parse_result( ld, lr->lr_res_msgtype, ber,
-			    &lderr, NULL, NULL, NULL, NULL ) &&
-			    LDAP_SUCCESS == lderr ) {
+			    lr->lr_conn != NULL ) {
 				if ( lr->lr_conn->lconn_binddn != NULL ) {
 					NSLDAPI_FREE(
 					    lr->lr_conn->lconn_binddn );
 				}
-				lr->lr_conn->lconn_binddn = lr->lr_binddn;
-				lr->lr_conn->lconn_bound = 1;
-				lr->lr_binddn = NULL;
+				if ( LDAP_SUCCESS == nsldapi_parse_result( ld,
+				    lr->lr_res_msgtype, ber, &lderr, NULL,
+				    NULL, NULL, NULL )
+				    && LDAP_SUCCESS == lderr ) {
+					lr->lr_conn->lconn_bound = 1;
+					lr->lr_conn->lconn_binddn =
+					    lr->lr_binddn;
+					lr->lr_binddn = NULL;
+				} else {
+					lr->lr_conn->lconn_bound = 0;
+					lr->lr_conn->lconn_binddn = NULL;
+				}
 			}
 
 			/*
@@ -1018,11 +1021,13 @@ merge_error_info( LDAP *ld, LDAPRequest *parentr, LDAPRequest *lr )
 
 #if defined( CLDAP )
 #if !defined( macintosh ) && !defined( DOS ) && !defined( _WINDOWS ) && !defined(XP_OS2)
+/* XXXmcs: was revised to support extended I/O callbacks but never compiled! */
 static int
 cldap_select1( LDAP *ld, struct timeval *timeout )
 {
-	fd_set		readfds;
+	int		rc;
 	static int	tblsize = 0;
+	NSLDAPIIOStatus	*iosp = ld->ld_iostatus;
 
 	if ( tblsize == 0 ) {
 #ifdef USE_SYSCONF
@@ -1039,15 +1044,31 @@ cldap_select1( LDAP *ld, struct timeval *timeout )
 		tblsize = FD_SETSIZE - 1;
 	}
 
-	FD_ZERO( &readfds );
-	FD_SET( ld->ld_sbp->sb_sd, &readfds );
+	if ( NSLDAPI_IOSTATUS_TYPE_OSNATIVE == iosp->ios_type ) {
+		fd_set		readfds;
 
-	if ( ld->ld_select_fn != NULL ) {
-		return( ld->ld_select_fn( tblsize, &readfds, 0, 0, timeout ) );
-	} else {
+		FD_ZERO( &readfds );
+		FD_SET( ld->ld_sbp->sb_sd, &readfds );
+
 		/* XXXmcs: UNIX platforms should use poll() */
-		return( select( tblsize, &readfds, 0, 0, timeout ) );
+		rc = select( tblsize, &readfds, 0, 0, timeout ) );
+
+	} else if ( NSLDAPI_IOSTATUS_TYPE_CALLBACK == iosp->ios_type ) {
+		LDAP_X_PollFD	pollfds[ 1 ];
+
+		pollfds[0].lpoll_fd = ld->ld_sbp->sb_sd;
+		pollfds[0].lpoll_arg = ld->ld_sbp->sb_arg;
+		pollfds[0].lpoll_events = LDAP_X_POLLIN;
+		pollfds[0].lpoll_revents = 0;
+		rc = ld->ld_extpoll_fn( pollfds, 1, nsldapi_tv2ms( timeout ),
+		    ld->ld_ext_session_arg );
+	} else {
+		LDAPDebug( LDAP_DEBUG_ANY,
+		    "nsldapi_iostatus_poll: unknown I/O type %d\n",
+		rc = 0; /* simulate a timeout (what else to do?) */
 	}
+
+	return( rc );
 }
 #endif /* !macintosh */
 
@@ -1056,12 +1077,14 @@ cldap_select1( LDAP *ld, struct timeval *timeout )
 static int
 cldap_select1( LDAP *ld, struct timeval *timeout )
 {
+	/* XXXmcs: needs to be revised to support I/O callbacks */
 	return( tcpselect( ld->ld_sbp->sb_sd, timeout ));
 }
 #endif /* macintosh */
 
 
 #if (defined( DOS ) && defined( WINSOCK )) || defined( _WINDOWS ) || defined(XP_OS2)
+/* XXXmcs: needs to be revised to support extended I/O callbacks */
 static int
 cldap_select1( LDAP *ld, struct timeval *timeout )
 {
@@ -1071,11 +1094,18 @@ cldap_select1( LDAP *ld, struct timeval *timeout )
     FD_ZERO( &readfds );
     FD_SET( ld->ld_sbp->sb_sd, &readfds );
 
-    if ( ld->ld_select_fn != NULL ) {
-		rc = ld->ld_select_fn( 1, &readfds, 0, 0, timeout );
-	} else {
-		rc = select( 1, &readfds, 0, 0, timeout );
-	}
+    if ( NSLDAPI_IO_TYPE_STANDARD == ld->ldiou_type &&
+	NULL != ld->ld_select_fn ) {
+	    rc = ld->ld_select_fn( 1, &readfds, 0, 0, timeout );
+    } else if ( NSLDAPI_IO_TYPE_EXTENDED == ld->ldiou_type &&
+	NULL != ld->ld_extselect_fn ) {
+	    rc = ld->ld_extselect_fn( ld->ld_ext_session_arg, 1, &readfds, 0,
+		0, timeout ) );
+    } else {
+	    /* XXXmcs: UNIX platforms should use poll() */
+	    rc = select( 1, &readfds, 0, 0, timeout ) );
+    }
+
     return( rc == SOCKET_ERROR ? -1 : rc );
 }
 #endif /* WINSOCK || _WINDOWS */
@@ -1234,133 +1264,74 @@ cldap_getmsg( LDAP *ld, struct timeval *timeout, BerElement **ber )
 #endif /* CLDAP */
 
 int
-nsldapi_wait_result( LDAP *ld, int msgid, int all, struct timeval *timeout,
-    LDAPMessage **result )
-{
-	LDAPPend	*lp;
-
-	LDAP_MUTEX_LOCK( ld, LDAP_PEND_LOCK );
-	for( lp = ld->ld_pend; lp != NULL; lp = lp->lp_next )
-	{
-		if( lp->lp_msgid == msgid )
-			break;
-	}
-	if( lp == NULL )
-	{
-		lp = (LDAPPend *) NSLDAPI_CALLOC( 1, sizeof( LDAPPend ) );
-		if( lp == NULL )
-		{
-			LDAP_MUTEX_UNLOCK( ld, LDAP_PEND_LOCK );
-			LDAP_SET_LDERRNO( ld, LDAP_NO_MEMORY, NULL, NULL );
-			*result = NULL;
-			return (-1);
-		}
-
-		lp->lp_sema = (void *) LDAP_SEMA_ALLOC( ld );
-		if( lp->lp_sema == NULL )
-		{
-			NSLDAPI_FREE( lp );
-			LDAP_MUTEX_UNLOCK( ld, LDAP_PEND_LOCK );
-			LDAP_SET_LDERRNO( ld, LDAP_NO_MEMORY, NULL, NULL );
-			*result = NULL;
-			return (-1);
-		}
-
-		lp->lp_msgid = msgid;
-		lp->lp_result = NULL;
-		link_pend( ld, lp );
-	}
-	else
-	{
-		int rc;
-
-		if( (rc = unlink_msg( ld, lp->lp_msgid, all )) == -2  )
-		{
-			*result = NULL;
-		}
-		else
-		{
-			*result = lp->lp_result;
-		}
-		unlink_pend( ld, lp );
-		LDAP_MUTEX_UNLOCK( ld, LDAP_PEND_LOCK );
-		NSLDAPI_FREE( lp );
-		LDAP_SET_LDERRNO( ld, LDAP_SUCCESS, NULL, NULL );
-		return ( rc );
-	}
-	LDAP_MUTEX_UNLOCK( ld, LDAP_PEND_LOCK );
-
-	LDAP_SEMA_WAIT( ld, lp );
-	LDAP_MUTEX_LOCK( ld, LDAP_PEND_LOCK );
-	*result = lp->lp_result;
-	{
-		int rc;
-
-		if( *result == NULL )
-			rc = -2;
-		else
-		{
-			if( (rc = unlink_msg( ld, lp->lp_msgid, all )) == -2 )
-			{
-				*result = NULL;
-			}
-			else
-			{
-				if ( ld->ld_memcache != NULL &&
-					NSLDAPI_SEARCH_RELATED_RESULT( rc ) &&
-					!((*result)->lm_fromcache ))
-				{
-				  ldap_memcache_append( ld, (*result)->lm_msgid,
-		    			(all || NSLDAPI_IS_SEARCH_RESULT( rc )),
-						*result );
-				}
-			}
-
-		}
-		unlink_pend( ld, lp );
-		LDAP_MUTEX_UNLOCK( ld, LDAP_PEND_LOCK );
-		LDAP_SEMA_FREE( ld, lp );
-		NSLDAPI_FREE( lp );
-		return ( rc );
-	}
-}
-
-int
 nsldapi_post_result( LDAP *ld, int msgid, LDAPMessage *result )
 {
 	LDAPPend	*lp;
 
+	LDAPDebug( LDAP_DEBUG_TRACE,
+	    "nsldapi_post_result(ld=0x%x, msgid=%d, result=0x%x)\n",
+	    ld, msgid, result );
 	LDAP_MUTEX_LOCK( ld, LDAP_PEND_LOCK );
-	if( msgid == LDAP_RES_ANY )
-		lp = ld->ld_pend;
+	if( msgid == LDAP_RES_ANY ) {
+		/*
+		 * Look for any pending request for which someone is waiting.
+		 */
+		for( lp = ld->ld_pend; lp != NULL; lp = lp->lp_next )
+		{
+			if ( lp->lp_sema != NULL ) {
+				break;
+			} 
+		}
+		/*
+		 * If we did't find a pending request, lp is NULL at this
+		 * point, and we will leave this function without doing
+		 * anything more -- which is exactly what we want to do.
+		 */
+	}
 	else
 	{
+		/*
+		 * Look for a pending request specific to this message id
+		 */
 		for( lp = ld->ld_pend; lp != NULL; lp = lp->lp_next )
 		{
 			if( lp->lp_msgid == msgid )
 				break;
 		}
-	}
 
-	if( lp == NULL && msgid != LDAP_RES_ANY )
-	{
-		lp = (LDAPPend *) NSLDAPI_CALLOC( 1, sizeof( LDAPPend ) );
 		if( lp == NULL )
 		{
-			LDAP_MUTEX_UNLOCK( ld, LDAP_PEND_LOCK );
-			LDAP_SET_LDERRNO( ld, LDAP_NO_MEMORY, NULL, NULL );
-			return (-1);
+			/*
+			 * No pending requests for this response... append to
+			 * our pending result list.
+			 */
+			LDAPPend	*newlp;
+			newlp = (LDAPPend *)NSLDAPI_CALLOC( 1,
+			    sizeof( LDAPPend ));
+			if( newlp == NULL )
+			{
+				LDAP_MUTEX_UNLOCK( ld, LDAP_PEND_LOCK );
+				LDAP_SET_LDERRNO( ld, LDAP_NO_MEMORY, NULL,
+				    NULL );
+				return (-1);
+			}
+			newlp->lp_msgid = msgid;
+			newlp->lp_result = result;
+			link_pend( ld, newlp );
 		}
-		lp->lp_msgid = msgid;
-		lp->lp_result = result;
-		link_pend( ld, lp );
 	}
-	else if( lp != NULL )
+
+
+	if( lp != NULL )
 	{
+		/*
+		 * Wake up a thread that is waiting for this result.
+		 */
 		lp->lp_msgid = msgid;
 		lp->lp_result = result;
 		LDAP_SEMA_POST( ld, lp );
 	}
+
 	LDAP_MUTEX_UNLOCK( ld, LDAP_PEND_LOCK );
 	return (0);
 }
@@ -1376,6 +1347,7 @@ link_pend( LDAP *ld, LDAPPend *lp )
 	lp->lp_prev = NULL; 
 }
 
+#if 0 /* these functions are no longer used */
 static void
 unlink_pend( LDAP *ld, LDAPPend *lp )
 {
@@ -1468,40 +1440,4 @@ unlink_msg( LDAP *ld, int msgid, int all )
 	LDAP_MUTEX_UNLOCK( ld, LDAP_RESP_LOCK );
 	return ( rc );
 }
-
-static int nsldapi_mutex_trylock( LDAP *ld, LDAPLock i )
-{
- 
-        if( (ld)->ld_mutex_trylock_fn == NULL ) {
-                return (0) ;
-        }
-        else {
-                int ret;
-
-                if( (ld)->ld_threadid_fn != NULL ) {
-                        (ld)->ld_mutex_lock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] );
-                        if( (ld)->ld_mutex_threadid[i] == (ld)->ld_threadid_fn() ) {
-                                (ld)->ld_mutex_refcnt[i]++ ;
-                        	(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] );
-                        }
-                        else if( (ld)->ld_mutex_threadid[i] == (void *) -1 ) {
-                                ret = (ld)->ld_mutex_trylock_fn( (ld)->ld_mutex[i] );
-				if( ret == 0 ) {
-                                	(ld)->ld_mutex_threadid[i] =
-						(ld)->ld_threadid_fn() ;
-                                	(ld)->ld_mutex_refcnt[i]++ ;
-                        		(ld)->ld_mutex_unlock_fn (
-					   (ld)->ld_mutex[LDAP_THREADID_LOCK] );
-				}
-                        }
-			else {
-				ret = -1;
-                        	(ld)->ld_mutex_unlock_fn ( (ld)->ld_mutex[LDAP_THREADID_LOCK] );
-			}
-                }
-                else {
-                        ret = (ld)->ld_mutex_trylock_fn( (ld)->ld_mutex[i] ) ;
-                }
-                return (ret);
-        }
-}
+#endif /* 0 */

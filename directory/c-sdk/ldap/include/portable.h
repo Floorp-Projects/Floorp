@@ -1,4 +1,26 @@
 /*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ */
+
+/*
  * Copyright (c) 1994 Regents of the University of Michigan.
  * All rights reserved.
  *
@@ -94,7 +116,7 @@
  * some systems don't have the BSD re_comp and re_exec routines
  */
 #ifndef NEED_BSDREGEX
-#if ( defined( SYSV ) || defined( VMS ) || defined( netbsd ) || defined( freebsd ) || defined( linux )) && !defined(sgi)
+#if ( defined( SYSV ) || defined( VMS ) || defined( netbsd ) || defined( freebsd ) || defined( linux ) || defined( DARWIN )) && !defined(sgi)
 #define NEED_BSDREGEX
 #endif
 #endif
@@ -120,18 +142,30 @@
 
 
 /*
+ * Is snprintf() part of the standard C runtime library?
+ */
+#if !defined(HAVE_SNPRINTF)
+#if defined(SOLARIS) || defined(LINUX) || defined(HPUX)
+#define HAVE_SNPRINTF
+#endif
+#endif
+
+
+/*
  * Async IO.  Use a non blocking implementation of connect() and 
  * dns functions
  */
 #if !defined(LDAP_ASYNC_IO)
+#if !defined(_WINDOWS) && !defined(macintosh)
 #define LDAP_ASYNC_IO
+#endif /* _WINDOWS */
 #endif
 
 /*
  * for select()
  */
 #if !defined(WINSOCK) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
-#if defined(hpux) || defined(LINUX) || defined(SUNOS4)
+#if defined(hpux) || defined(LINUX) || defined(SUNOS4) || defined(XP_BEOS)
 #include <sys/time.h>
 #else
 #include <sys/select.h>
@@ -153,7 +187,7 @@
  */
 #if !defined(LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED) && \
 	( defined(AIX) || defined(IRIX) || defined(HPUX) || defined(SUNOS4) \
-	|| defined(SOLARIS) || defined(OSF1))
+	|| defined(SOLARIS) || defined(OSF1) ||defined(freebsd)) 
 #define LDAP_CONNECT_MUST_NOT_BE_INTERRUPTED
 #endif
 
@@ -228,16 +262,23 @@ int strncasecmp(const char *, const char *, size_t);
 #endif /* LINUX1_2 */
 #endif /* SNI || LINUX1_2 */
 
-#if defined(_WINDOWS) || defined(macintosh) || defined(XP_OS2)
+#if defined(_WINDOWS) || defined(macintosh) || defined(XP_OS2) || defined(DARWIN)
 #define GETHOSTBYNAME( n, r, b, l, e )  gethostbyname( n )
-#define CTIME( c, b, l )		ctime( c )
+#define NSLDAPI_CTIME( c, b, l )	ctime( c )
 #define STRTOK( s1, s2, l )		strtok( s1, s2 )
+#elif defined(XP_BEOS)
+#define GETHOSTBYNAME( n, r, b, l, e )  gethostbyname( n )
+#define CTIME( c, b, l )                ctime_r( c, b )
+#define STRTOK( s1, s2, l )		strtok_r( s1, s2, l )
+#define HAVE_STRTOK_R
 #else /* UNIX */
 #if defined(sgi) || defined(HPUX9) || defined(LINUX1_2) || defined(SCOOS) || \
     defined(UNIXWARE) || defined(SUNOS4) || defined(SNI) || defined(BSDI) || \
-    defined(NCR) || defined(OSF1) || defined(NEC) || \
+    defined(NCR) || defined(OSF1) || defined(NEC) || defined(VMS) || \
     ( defined(HPUX10) && !defined(_REENTRANT)) || defined(HPUX11) || \
-    defined(UnixWare) || defined(LINUX) || (defined(AIX) && !defined(USE_REENTRANT_LIBC))
+    defined(UnixWare) || defined(LINUX) || defined(NETBSD) || \
+    defined(FREEBSD) || defined(OPENBSD) || \
+    (defined(AIX) && !defined(USE_REENTRANT_LIBC))
 #define GETHOSTBYNAME( n, r, b, l, e )  gethostbyname( n )
 #elif defined(AIX)
 /* Maybe this is for another version of AIX?
@@ -261,20 +302,24 @@ typedef char GETHOSTBYNAME_buf_t [BUFSIZ /* XXX might be too small */];
 #if defined(HPUX9) || defined(LINUX1_2) || defined(LINUX2_0) || \
     defined(LINUX2_1) || defined(SUNOS4) || defined(SNI) || \
     defined(SCOOS) || defined(BSDI) || defined(NCR) || \
-    defined(NEC) || ( defined(HPUX10) && !defined(_REENTRANT)) || (defined(AIX) && !defined(USE_REENTRANT_LIBC))
-#define CTIME( c, b, l )		ctime( c )
-#elif defined(HPUX10) && defined(_REENTRANT)
-#define CTIME( c, b, l )		nsldapi_compat_ctime_r( c, b, l )
+    defined(NEC) || ( defined(HPUX10) && !defined(_REENTRANT)) || \
+    (defined(AIX) && !defined(USE_REENTRANT_LIBC))
+#define NSLDAPI_CTIME( c, b, l )	ctime( c )
+#elif defined(HPUX10) && defined(_REENTRANT) && !defined(HPUX11)
+#define NSLDAPI_CTIME( c, b, l )	nsldapi_compat_ctime_r( c, b, l )
 #elif defined( IRIX6_2 ) || defined( IRIX6_3 ) || defined(UNIXWARE) \
-	|| defined(OSF1V4) || defined(AIX) || defined(UnixWare) || defined(hpux)
-#define CTIME( c, b, l )                ctime_r( c, b )
+	|| defined(OSF1V4) || defined(AIX) || defined(UnixWare) \
+        || defined(hpux) || defined(HPUX11) || defined(NETBSD) \
+        || defined(IRIX6) || defined(FREEBSD) || defined(VMS) \
+        || defined(NTO) || defined(OPENBSD)
+#define NSLDAPI_CTIME( c, b, l )        ctime_r( c, b )
 #elif defined( OSF1V3 )
-#define CTIME( c, b, l )		(ctime_r( c, b, l ) ? NULL : b)
+#define NSLDAPI_CTIME( c, b, l )	(ctime_r( c, b, l ) ? NULL : b)
 #else
-#define CTIME( c, b, l )		ctime_r( c, b, l )
+#define NSLDAPI_CTIME( c, b, l )	ctime_r( c, b, l )
 #endif
 #if defined(hpux9) || defined(LINUX1_2) || defined(SUNOS4) || defined(SNI) || \
-    defined(SCOOS) || defined(BSDI) || defined(NCR) || \
+    defined(SCOOS) || defined(BSDI) || defined(NCR) || defined(VMS) || \
     defined(NEC) || defined(LINUX) || (defined(AIX) && !defined(USE_REENTRANT_LIBC))
 #define STRTOK( s1, s2, l )		strtok( s1, s2 )
 #else
@@ -292,10 +337,22 @@ extern char *strdup();
 #define	BSD_TIME	1	/* for servers/slapd/log.h */
 #endif /* sunos4 || osf */
 
-#ifdef SOLARIS
+#if !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 #include <netinet/in.h>
+#if !defined(XP_BEOS)
 #include <arpa/inet.h>	/* for inet_addr() */
-#endif /* SOLARIS */
+#endif
+#endif
+
+/*
+ * Define a portable type for IPv4 style Internet addresses (32 bits):
+ */
+#if ( defined(sunos5) && defined(_IN_ADDR_T)) || \
+    defined(aix) || defined(HPUX11) || defined(OSF1)
+typedef in_addr_t	nsldapi_in_addr_t;
+#else
+typedef unsigned long	nsldapi_in_addr_t;
+#endif
 
 #ifdef SUNOS4
 #include <pcfs/pc_dir.h>	/* for toupper() */

@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 #include "ldap-int.h"
 
@@ -42,7 +42,7 @@ ldap_sasl_bind(
     LDAP		*ld,
     const char		*dn,
     const char		*mechanism,
-    struct berval	*cred,
+    const struct berval	*cred,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,
     int			*msgidp
@@ -119,7 +119,7 @@ ldap_sasl_bind(
 		}
 		rc = ber_printf( ber, "{it{isto}", msgid, LDAP_REQ_BIND,
 		    ldapversion, dn, LDAP_AUTH_SIMPLE, cred->bv_val,
-		    cred->bv_len );
+		    (int)cred->bv_len /* XXX lossy cast */ );
 
 	} else {		/* SASL bind; requires LDAPv3 or better */
 		if ( cred == NULL ) {
@@ -129,7 +129,8 @@ ldap_sasl_bind(
 		} else {
 			rc = ber_printf( ber, "{it{ist{so}}", msgid,
 			    LDAP_REQ_BIND, ldapversion, dn, LDAP_AUTH_SASL,
-			    mechanism, cred->bv_val, cred->bv_len );
+			    mechanism, cred->bv_val,
+			    (int)cred->bv_len /* XXX lossy cast */ );
 		}
 	}
 
@@ -170,7 +171,7 @@ ldap_sasl_bind_s(
     LDAP		*ld,
     const char		*dn,
     const char		*mechanism,
-    struct berval	*cred,
+    const struct berval	*cred,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,
     struct berval	**servercredp

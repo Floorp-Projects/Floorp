@@ -1,0 +1,28 @@
+MOD_DEPTH = .
+topsrcdir = @top_srcdir@
+srcdir	= @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+DIRS	= config ldap
+
+DIST_GARBAGE = config.cache config.log config.status
+
+all::
+	$(MAKE) export
+	$(MAKE) install
+
+install::
+	+$(LOOP_OVER_DIRS)
+
+include $(topsrcdir)/config/rules.mk
+
+# dummy target to allow platforms without a compiler-based depend (like GCC 
+# has) to call "make depend" here and not fail, at the cost of actual
+# dependencies on such builds possibly being incorrect.  A nasty hack, but 
+# this build system is going away soon.
+#
+depend:
+
+FORCE:
+

@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,15 +9,17 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
+
 /* test.c - a simple test harness. */
 #include <stdio.h>
 #include <ctype.h>
@@ -87,6 +88,7 @@ static void free_list( char **list );
 static int entry2textwrite( void *fp, char *buf, int len );
 static void bprint( char *data, int len );
 static char **string2words( char *str, char *delims );
+static const char * url_parse_err2string( int e );
 
 char *dnsuffix;
 
@@ -539,11 +541,10 @@ main(
 #ifndef _WIN32
 #ifdef LDAP_DEBUG
 			ldap_debug = atoi( optarg ) | LDAP_DEBUG_ANY;
-#if 0
 			if ( ldap_debug & LDAP_DEBUG_PACKETS ) {
-				lber_debug = ldap_debug;
+				ber_set_option( NULL, LBER_OPT_DEBUG_LEVEL,
+					&ldap_debug );
 			}
-#endif
 #else
 			printf( "Compile with -DLDAP_DEBUG for debugging\n" );
 #endif
@@ -898,11 +899,10 @@ main(
 #ifdef LDAP_DEBUG
 			getline( line, sizeof(line), stdin, "debug level? " );
 			ldap_debug = atoi( line ) | LDAP_DEBUG_ANY;
-#if 0
 			if ( ldap_debug & LDAP_DEBUG_PACKETS ) {
-				lber_debug = ldap_debug;
+				ber_set_option( NULL, LBER_OPT_DEBUG_LEVEL,
+					&ldap_debug );
 			}
-#endif
 #else
 			printf( "Compile with -DLDAP_DEBUG for debugging\n" );
 #endif
@@ -1103,7 +1103,8 @@ main(
 		case 'p':	/* parse LDAP URL */
 			getline( line, sizeof(line), stdin, "LDAP URL? " );
 			if (( i = ldap_url_parse( line, &ludp )) != 0 ) {
-			    fprintf( stderr, "ldap_url_parse: error %d\n", i );
+			    fprintf( stderr, "ldap_url_parse: error %d (%s)\n", i,
+						url_parse_err2string( i ));
 			} else {
 			    printf( "\t  host: " );
 			    if ( ludp->lud_host == NULL ) {
@@ -1276,10 +1277,8 @@ main(
 				}
 			}
 
-#ifdef LDAP_SSLIO_HOOKS
 			ldap_set_option( ld, LDAP_OPT_SSL,
 			    optval ? LDAP_OPT_ON : LDAP_OPT_OFF );
-#endif
 #endif
 
 			getline( line, sizeof(line), stdin, "Reconnect?" );
@@ -1438,8 +1437,13 @@ handle_result( LDAP *ld, LDAPMessage *lm, int onlyone )
 		print_ldap_result( ld, lm, "bind" );
 		break;
 	case LDAP_RES_EXTENDED:
-		printf( "ExtendedOp result\n" );
-		print_ldap_result( ld, lm, "extendedop" );
+		if ( ldap_msgid( lm ) == LDAP_RES_UNSOLICITED ) {
+			printf( "Unsolicited result\n" );
+			print_ldap_result( ld, lm, "unsolicited" );
+		} else {
+			printf( "ExtendedOp result\n" );
+			print_ldap_result( ld, lm, "extendedop" );
+		}
 		break;
 
 	default:
@@ -1502,11 +1506,18 @@ print_ldap_result( LDAP *ld, LDAPMessage *lm, char *s )
 	    ldap_parse_extended_result( ld, lm, &oid, &data, 0 ) ==
 	    LDAP_SUCCESS ) {
 		if ( oid != NULL ) {
-			printf( "\tExtendedOp OID: %s\n", oid );
+			if ( strcmp ( oid, LDAP_NOTICE_OF_DISCONNECTION )
+			    == 0 ) {
+				printf(
+				    "\t%s Notice of Disconnection (OID: %s)\n",
+				    s, oid );
+			} else {
+				printf( "\t%s OID: %s\n", s, oid );
+			}
 			ldap_memfree( oid );
 		}
 		if ( data != NULL ) {
-			fputs( "\tExtendedOp data:\n", stderr );
+			printf( "\t%s data:\n", s );
 			bprint( data->bv_val, data->bv_len );
 			ber_bvfree( data );
 		}
@@ -1639,6 +1650,7 @@ changetype_num2string( int chgtype )
 	s = "moddn";
 	break;
     default:
+	s = buf;
 	sprintf( s, "unknown (%d)", chgtype );
     }
 
@@ -1757,6 +1769,36 @@ string2words( char *str, char *delims )
     }
 
     return( words );
+}
+
+
+static const char *
+url_parse_err2string( int e )
+{
+    const char	*s = "unknown";
+
+    switch( e ) {
+    case LDAP_URL_ERR_NOTLDAP:
+	s = "URL doesn't begin with \"ldap://\"";
+	break;
+    case LDAP_URL_ERR_NODN:
+	s = "URL has no DN (required)";
+	break;
+    case LDAP_URL_ERR_BADSCOPE:
+	s = "URL scope string is invalid";
+	break;
+    case LDAP_URL_ERR_MEM:
+	s = "can't allocate memory space";
+	break;
+    case LDAP_URL_ERR_PARAM:
+	s = "bad parameter to an URL function";
+	break;
+    case LDAP_URL_UNRECOGNIZED_CRITICAL_EXTENSION:
+	s = "unrecognized critical URL extension";
+	break;
+    }
+
+    return( s );
 }
 
 

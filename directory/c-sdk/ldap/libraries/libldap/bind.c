@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,18 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- */
-/*
- *  Copyright (c) 1990 Regents of the University of Michigan.
- *  All rights reserved.
+ * Contributor(s):
  */
 /*
  *  bind.c
@@ -36,7 +32,7 @@ static char copyright[] = "@(#) Copyright (c) 1990 Regents of the University of 
 #include "ldap-int.h"
 
 /*
- * ldap_bind - bind to the ldap server (and X.500).  The dn and password
+ * ldap_bind - bind to the ldap server. The dn and password
  * of the entry to which to bind are supplied, along with the authentication
  * method to use.  The msgid of the bind request is returned on success,
  * -1 if there's trouble.  Note, the kerberos support assumes the user already
@@ -81,7 +77,7 @@ ldap_bind( LDAP *ld, const char *dn, const char *passwd, int authmethod )
 }
 
 /*
- * ldap_bind_s - bind to the ldap server (and X.500).  The dn and password
+ * ldap_bind_s - bind to the ldap server.  The dn and password
  * of the entry to which to bind are supplied, along with the authentication
  * method to use.  This routine just calls whichever bind routine is
  * appropriate and returns the result of the bind (e.g. LDAP_SUCCESS or

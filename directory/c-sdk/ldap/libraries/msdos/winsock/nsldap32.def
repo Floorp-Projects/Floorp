@@ -1,8 +1,6 @@
-LIBRARY         NSLDAP32V30
+LIBRARY         NSLDAP32V50
 DESCRIPTION     'Lightweight Directory Access Protocol Client API for 32-bit Windows'
-CODE            PRELOAD MOVEABLE DISCARDABLE
-DATA            PRELOAD MOVEABLE SINGLE
-VERSION		3.1
+VERSION		5.0
 HEAPSIZE        4096
 
 EXPORTS
@@ -152,6 +150,8 @@ EXPORTS
 	ber_get_next_buffer		@148
 	ber_err_print		@149
 	ber_sockbuf_free		@150
+	ber_get_next_buffer_ext		@151
+	ber_svecfree		@152
 
 	ldap_memfree		@200
 	ldap_ber_free		@201
@@ -262,6 +262,15 @@ EXPORTS
 	ldap_create_virtuallist_control		@525
 	ldap_parse_virtuallist_control		@526
 	ldap_create_proxyauth_control		@527
+	ldap_unbind_ext		@528
+	ldap_x_hostlist_first		@529
+	ldap_x_hostlist_next		@530
+	ldap_x_hostlist_statusfree		@531
+	ldap_x_malloc		@532
+	ldap_x_calloc		@533
+	ldap_x_realloc		@534
+	ldap_x_free		@535
+	ldap_create_proxiedauth_control		@536
 	ldap_memcache_init		@1000
 	ldap_memcache_set		@1001
 	ldap_memcache_get		@1002

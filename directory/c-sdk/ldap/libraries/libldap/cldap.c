@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1990, 1994 Regents of the University of Michigan.
@@ -100,7 +100,7 @@ LDAP *
 cldap_open( char *host, int port )
 {
     int 		s;
-    unsigned long	address;
+    ldap_x_in_addr_t	address;
     struct sockaddr_in 	sock;
     struct hostent	*hp;
     LDAP		*ld;
@@ -222,7 +222,7 @@ XXX
 void
 cldap_close( LDAP *ld )
 {
-	ldap_ld_free( ld, 0 );
+	ldap_ld_free( ld, NULL, NULL, 0 );
 }
 
 
@@ -319,7 +319,8 @@ cldap_result( LDAP *ld, int msgid, LDAPMessage **res,
     Sockbuf 		*sb = ld->ld_sbp;
     BerElement		ber;
     char		*logdn;
-    int			ret, id, fromaddr, i;
+    int			ret, fromaddr, i;
+    long		id;
     struct timeval	tv;
 
     fromaddr = -1;
@@ -384,7 +385,7 @@ cldap_result( LDAP *ld, int msgid, LDAPMessage **res,
 	} else if ( id != msgid ) {
 	    NSLDAPI_FREE( ber.ber_buf );	/* gack! */
 	    LDAPDebug( LDAP_DEBUG_TRACE,
-		    "cldap_result: looking for msgid %d; got %d\n",
+		    "cldap_result: looking for msgid %d; got %ld\n",
 		    msgid, id, 0 );
 	    ret = -1;	/* ignore and keep looking */
 	} else {
@@ -478,7 +479,7 @@ cldap_parsemsg( LDAP *ld, int msgid, BerElement *ber,
 	    }
 
 	    if ( ber_printf( ldm->lm_ber, "to", tag, bv->bv_val,
-		    bv->bv_len ) == -1 ) {
+		    (int)bv->bv_len /* XXX lossy cast */ ) == -1 ) {
 		break;	/* return w/error */
 	    }
 	    ber_bvfree( bv );
@@ -507,7 +508,7 @@ cldap_parsemsg( LDAP *ld, int msgid, BerElement *ber,
 	    }
 
 	    if ( ber_printf( ldm->lm_ber, "t{so}", tag, dn, bv->bv_val,
-		    bv->bv_len ) == -1 ) {
+		    (int)bv->bv_len /* XXX lossy cast */ ) == -1 ) {
 		break;	/* return w/error */
 	    }
 	    NSLDAPI_FREE( dn );

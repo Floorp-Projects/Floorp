@@ -1,0 +1,161 @@
+# 
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#  
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#  
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+# 
+# Contributor(s): 
+#
+
+MOD_DEPTH	= ../../..
+srcdir		= @srcdir@
+topsrcdir 	= @top_srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+include $(topsrcdir)/build.mk
+
+SRCS		= ldappr-dns.c \
+		  ldappr-error.c \
+		  ldappr-io.c \
+		  ldappr-public.c \
+		  ldappr-threads.c
+
+REALOBJS        = $(SRCS:.c=.$(OBJ_SUFFIX))
+OBJS		= $(addprefix $(OBJDIR_NAME)/, $(REALOBJS)) 
+
+DISTHDIR	= $(DIST)/public/ldap
+HDIR		= $(topsrcdir)/ldap/include
+
+ifeq ($(OS_ARCH), WINNT)
+LIBPRLDAP	= $(addprefix $(OBJDIR_NAME)/, \
+			nsldappr32v$(PRLDAPVERS).$(DLL_SUFFIX))
+DLLPRLDAP	= $(addprefix $(OBJDIR_NAME)/, \
+			nsldappr32v$(PRLDAPVERS).$(LIB_SUFFIX))
+else
+LIBPRLDAP	= $(addprefix $(OBJDIR_NAME)/, lib$(PRLDAP_LIBNAME).$(DLL_SUFFIX))
+endif
+INSTALLDIR      = $(DIST)/$(OBJDIR_NAME)
+
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
+INCLUDES	+= -I$(DISTHDIR) -I$(HDIR) -I$(INSTALLDIR)/include \
+                   -I$(DIST)/include/nspr
+DEFINES		+= $(DEFS)
+
+PLATFORMCFLAGS	= -DUSE_WAITPID -DNEEDPROTOS
+PLATFORMLIBS	=
+THREADS		=
+THREADSLIB	=
+
+#
+# shared library symbol export definitions
+#
+ifeq ($(USE_DLL_EXPORTS_FILE), 1)
+ifeq ($(OS_ARCH), WINNT)
+GENEXPORTS=cmd /c  $(PERL) $(topsrcdir)/ldap/build/genexports.pl
+else
+GENEXPORTS=$(PERL) $(topsrcdir)/ldap/build/genexports.pl
+endif
+
+# variable definitions for exported symbols
+ifeq ($(OS_ARCH), WINNT)
+        PRLDAP_EXPORT_DEFS= $(srcdir)/../msdos/winsock/nsldappr32.def
+else
+        PRLDAP_EXPORT_DEFS= $(OBJDIR_NAME)/libprldap.exp
+endif
+
+PRLDAP_EXPORT_FLAGS=$(addprefix $(DLLEXPORTS_PREFIX), $(PRLDAP_EXPORT_DEFS))
+
+GENEXPARGS=$(BUILD_DEBUG) $(PRLDAPVERS_SUFFIX) $(PRLDAPVERS)
+endif # USE_DLL_EXPORTS_FILE
+
+ifeq ($(OS_ARCH), SunOS)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME)
+EXTRA_LIBS += -L$(dist_libdir) $(DYNAMICNSPR)
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+EXTRA_LIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
+            comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
+            rpcrt4.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib
+EXTRA_LIBS += $(dist_libdir)/$(LDAP_LIBNAME).lib
+EXTRA_LIBS += $(dist_libdir)/$(PLC_BASENAME).lib
+EXTRA_LIBS += $(dist_libdir)/$(PLDS_BASENAME).lib
+EXTRA_LIBS += $(dist_libdir)/$(NSPR_BASENAME).lib
+endif
+
+ifeq ($(OS_ARCH), OSF1)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME)
+EXTRA_LIBS += -L$(dist_libdir) $(DYNAMICNSPR)
+EXTRA_LIBS += -lcxx -lpthread -lrt -lmach -lexc
+endif
+
+ifeq ($(OS_ARCH), AIX)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME)
+EXTRA_LIBS += -L$(dist_libdir) $(DYNAMICNSPR)
+EXTRA_LIBS += -ldl -brtl -lpthreads -lc_r -lm
+endif
+
+OBJDEST = $(OBJDIR_NAME)
+
+###########################################################################
+
+# recursive gmake rule to create exported symbols file
+$(OBJDIR_NAME)/libprldap.exp:: libprldap.ex
+ifeq ($(OS_ARCH), WINNT)
+	$(GENEXPORTS) Win32 Standard $< $(GENEXPARGS) > $@
+else
+	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) > $@
+endif
+
+versiont.c:	Makefile.client Version.c
+	@$(RM) $@
+	@(u="$${USER-root}" v="$(shell cat ../../build/version)" d="$(shell pwd)" \
+	h="$(shell hostname)" t="$(shell date)"; $(SED) -e "s|%WHEN%|$${t}|" \
+	-e "s|%WHOANDWHERE%|$${u}@$${h}:$${d}|" \
+	-e "s|%VERSION%|$${v}|" \
+	< Version.c > $@)
+
+all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBPRLDAP)
+
+$(LIBDIR):
+	$(MKDIR) $(LIBDIR)
+
+$(LIBPRLDAP): $(OBJS) $(LIBDIR) $(PRLDAP_EXPORT_DEFS)
+	@echo ======= making $(LIBPRLDAP)
+ifdef SO_FILES_TO_REMOVE
+	-$(RM) $(SO_FILES_TO_REMOVE)
+endif
+	$(LINK_DLL) $(DSO_LDOPTS) $(PRLDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
+
+veryclean:: clean
+
+$(OBJDEST):
+	$(MKDIR) $(OBJDEST)
+
+# the $(dist_bindir) line is for the mozilla client, which for reasons
+# unknown wants shared libraries in /bin also
+#
+install:: $(LIBPRLDAP)	
+ifeq ($(OS_ARCH), WINNT)
+	$(INSTALL) -m 555 $(LIBPRLDAP) $(dist_libdir)
+	$(INSTALL) -m 555 $(DLLPRLDAP) $(dist_libdir)
+endif
+ifdef MKSHLIB
+	$(INSTALL) -m 555 $(LIBPRLDAP) $(dist_libdir)
+	$(INSTALL) -m 444 $(LIBPRLDAP) $(dist_bindir)
+endif

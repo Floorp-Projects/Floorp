@@ -1,0 +1,9 @@
+LIBRARY         NSLDAPSSL32V$1
+DESCRIPTION     'Lightweight Directory Access Protocol Client API with SSL for 32-bit Windows'
+VERSION		$2
+HEAPSIZE        4096
+
+EXPORTS
+; we need to manually assign ordinal numbers so we can add new routines
+; and not disturb the ordinals and thus not require callers to relink.
+$EXPORTS

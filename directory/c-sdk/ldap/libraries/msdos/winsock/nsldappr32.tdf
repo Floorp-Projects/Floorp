@@ -1,0 +1,9 @@
+LIBRARY         NSLDAPPR32V$1
+DESCRIPTION     'LDAP to NSPR glue library for 32-bit Windows'
+VERSION		$2
+HEAPSIZE        4096
+
+EXPORTS
+; we need to manually assign ordinal numbers so we can add new routines
+; and not disturb the ordinals and thus not require callers to relink.
+$EXPORTS

@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1995 Regents of the University of Michigan.
@@ -53,11 +53,7 @@ nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host, unsigned long addres
 	void			*tcps;
 	short 			i;
 	int				err;
-#ifdef SUPPORT_OPENTRANSPORT
     InetHostInfo	hi;
-#else /* SUPPORT_OPENTRANSPORT */
-    struct hostInfo	hi;
-#endif /* SUPPORT_OPENTRANSPORT */
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "connect_to_host: %s:%d\n",
 	    ( host == NULL ) ? "(by address)" : host, ntohs( port ), 0 );
@@ -91,17 +87,10 @@ nsldapi_connect_to_host( LDAP *ld, Sockbuf *sb, char *host, unsigned long addres
 		return( -1 );
 	}
 
-#ifdef SUPPORT_OPENTRANSPORT
     for ( i = 0; host == NULL || hi.addrs[ i ] != 0; ++i ) {
     	if ( host != NULL ) {
 			SAFEMEMCPY( (char *)&address, (char *)&hi.addrs[ i ], sizeof( long ));
 		}
-#else /* SUPPORT_OPENTRANSPORT */
-    for ( i = 0; host == NULL || hi.addr[ i ] != 0; ++i ) {
-    	if ( host != NULL ) {
-			SAFEMEMCPY( (char *)&address, (char *)&hi.addr[ i ], sizeof( long ));
-		}
-#endif /* SUPPORT_OPENTRANSPORT */
 
 
 		if ( ld->ld_connect_fn == NULL ) {
@@ -161,25 +150,15 @@ host_connected_to( Sockbuf *sb )
 {
 	ip_addr addr;
 	
-#ifdef SUPPORT_OPENTRANSPORT
     InetHostInfo	hi;
-#else /* SUPPORT_OPENTRANSPORT */
-    struct hostInfo	hi;
-#endif /* SUPPORT_OPENTRANSPORT */
 
 	if ( tcpgetpeername( (tcpstream *)sb->sb_sd, &addr, NULL ) != noErr ) {
 		return( NULL );
 	}
 
-#ifdef SUPPORT_OPENTRANSPORT
 	if ( gethostinfobyaddr( addr, &hi ) == noErr ) {
 		return( strdup( hi.name ));
 	}
-#else /* SUPPORT_OPENTRANSPORT */
-	if ( gethostinfobyaddr( addr, &hi ) == noErr ) {
-		return( strdup( hi.cname ));
-	}
-#endif /* SUPPORT_OPENTRANSPORT */
 
 	return( NULL );
 }
@@ -190,8 +169,8 @@ struct tcpstreaminfo {
 	struct tcpstream	*tcpsi_stream;
 	Boolean				tcpsi_check_read;
 	Boolean				tcpsi_is_read_ready;
-/*	Boolean				tcpsi_check_write;		/* no write select support needed yet */
-/*	Boolean				tcpsi_is_write_ready;	/* ditto */
+	Boolean				tcpsi_check_write;
+	Boolean				tcpsi_is_write_ready;
 };
 
 /* for BSD-compatible I/O functions */
@@ -208,6 +187,52 @@ struct selectinfo {
 	struct stdselectinfo	si_stdinfo;
 };
 
+
+void
+nsldapi_mark_select_write( LDAP *ld, Sockbuf *sb )
+{
+	struct selectinfo	*sip;
+	struct tcpstreaminfo	*tcpsip;
+	short			i;
+
+	LDAPDebug( LDAP_DEBUG_TRACE, "mark_select_write: stream %x\n",
+	    (tcpstream *)sb->sb_sd, 0, 0 );
+
+	if (( sip = (struct selectinfo *)ld->ld_selectinfo ) == NULL ) {
+		return;
+	}
+
+	if ( ld->ld_select_fn != NULL ) {
+		if ( !FD_ISSET( (int)sb->sb_sd, &sip->si_stdinfo.ssi_writefds )) {
+		    FD_SET( (int)sb->sb_sd, &sip->si_stdinfo.ssi_writefds );
+		}
+		return;
+	}
+
+	for ( i = 0; i < sip->si_count; ++i ) {    /* make sure stream is not already in the list... */
+		if ( sip->si_streaminfo[ i ].tcpsi_stream == (tcpstream *)sb->sb_sd) {
+			sip->si_streaminfo[ i ].tcpsi_check_write = true;
+			sip->si_streaminfo[ i ].tcpsi_is_write_ready = false;
+			return;
+		}
+	}
+
+	/* add a new stream element to our array... */
+	if ( sip->si_count <= 0 ) {
+		tcpsip = (struct tcpstreaminfo *)malloc( sizeof( struct tcpstreaminfo ));
+	} else {
+		tcpsip = (struct tcpstreaminfo *)realloc( sip->si_streaminfo,
+		    ( sip->si_count + 1 ) * sizeof( struct tcpstreaminfo ));
+	}
+
+	if ( tcpsip != NULL ) {
+		tcpsip[ sip->si_count ].tcpsi_stream = (tcpstream *)sb->sb_sd;
+		tcpsip[ sip->si_count ].tcpsi_check_write = true;
+		tcpsip[ sip->si_count ].tcpsi_is_write_ready = false;
+		sip->si_streaminfo = tcpsip;
+		++sip->si_count;
+	}
+}
 
 
 void
@@ -234,6 +259,8 @@ nsldapi_mark_select_read( LDAP *ld, Sockbuf *sb )
 		if ( sip->si_streaminfo[ i ].tcpsi_stream == (tcpstream *)sb->sb_sd ) {
 			sip->si_streaminfo[ i ].tcpsi_check_read = true;
 			sip->si_streaminfo[ i ].tcpsi_is_read_ready = false;
+            sip->si_streaminfo[ i ].tcpsi_check_write = true;
+            sip->si_streaminfo[ i ].tcpsi_is_write_ready = false;
 			return;
 		}
 	}
@@ -250,6 +277,8 @@ nsldapi_mark_select_read( LDAP *ld, Sockbuf *sb )
 		tcpsip[ sip->si_count ].tcpsi_stream = (tcpstream *)sb->sb_sd;
 		tcpsip[ sip->si_count ].tcpsi_check_read = true;
 		tcpsip[ sip->si_count ].tcpsi_is_read_ready = false;
+		tcpsip[ sip->si_count ].tcpsi_check_write = true;
+		tcpsip[ sip->si_count ].tcpsi_is_write_ready = false;
 		sip->si_streaminfo = tcpsip;
 		++sip->si_count;
 	}
@@ -286,6 +315,42 @@ nsldapi_mark_select_clear( LDAP *ld, Sockbuf *sb )
 			/* we don't bother to use realloc to make the si_streaminfo array smaller */
 		}
 	}
+}
+
+
+int
+nsldapi_is_write_ready( LDAP *ld, Sockbuf *sb )
+{
+    struct selectinfo    *sip;
+    short                i;
+    
+    if (( sip = (struct selectinfo *)ld->ld_selectinfo ) == NULL ) {
+        return( 0 );    /* punt */
+    }
+
+    if ( ld->ld_select_fn != NULL ) {
+        return( FD_ISSET( (int)sb->sb_sd, &sip->si_stdinfo.ssi_use_writefds));
+    }
+
+    if ( sip->si_count > 0 && sip->si_streaminfo != NULL ) {
+        for ( i = 0; i < sip->si_count; ++i ) {
+            if ( sip->si_streaminfo[ i ].tcpsi_stream == (tcpstream *)sb->sb_sd ) {
+#ifdef LDAP_DEBUG
+                if ( sip->si_streaminfo[ i ].tcpsi_is_write_ready ) {
+                    LDAPDebug( LDAP_DEBUG_TRACE, "is_write_ready: stream %x READY\n",
+                            (tcpstream *)sb->sb_sd, 0, 0 );
+                } else {
+                    LDAPDebug( LDAP_DEBUG_TRACE, "is_write_ready: stream %x Not Ready\n",
+                            (tcpstream *)sb->sb_sd, 0, 0 );
+                }
+#endif /* LDAP_DEBUG */
+                return( sip->si_streaminfo[ i ].tcpsi_is_write_ready ? 1 : 0 );
+            }
+        }
+    }
+
+    LDAPDebug( LDAP_DEBUG_TRACE, "is_write_ready: stream %x: NOT FOUND\n", (tcpstream *)sb->sb_sd, 0, 0 );
+    return( 0 );
 }
 
 
@@ -356,6 +421,7 @@ nsldapi_do_ldap_select( LDAP *ld, struct timeval *timeout )
 	unsigned long		ticks, endticks;
 	short				i, err;
 	static int			tblsize = 0;
+	EventRecord			dummyEvent;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "do_ldap_select\n", 0, 0, 0 );
 
@@ -387,6 +453,9 @@ nsldapi_do_ldap_select( LDAP *ld, struct timeval *timeout )
 		if ( sip->si_streaminfo[ i ].tcpsi_check_read ) {
 			sip->si_streaminfo[ i ].tcpsi_is_read_ready = false;
 		}
+        if ( sip->si_streaminfo[ i ].tcpsi_check_write ) {
+            sip->si_streaminfo[ i ].tcpsi_is_write_ready = false;
+        }
 	}
 
 	ready = gotselecterr = false;
@@ -395,14 +464,22 @@ nsldapi_do_ldap_select( LDAP *ld, struct timeval *timeout )
 			if ( sip->si_streaminfo[ i ].tcpsi_check_read && !sip->si_streaminfo[ i ].tcpsi_is_read_ready ) {
 				if (( err = tcpreadready( sip->si_streaminfo[ i ].tcpsi_stream )) > 0 ) {
 					sip->si_streaminfo[ i ].tcpsi_is_read_ready = ready = true;
-				} else if ( err < 0 ) {
-					gotselecterr = true;
-				}
+                } else if ( err < 0 ) {
+                    gotselecterr = true;
+                }
+            }
+			if ( sip->si_streaminfo[ i ].tcpsi_check_write && !sip->si_streaminfo[ i ].tcpsi_is_write_ready ) {
+					if (( err = tcpwriteready( sip->si_streaminfo[ i ].tcpsi_stream )) > 0 ) {
+							sip->si_streaminfo[ i ].tcpsi_is_write_ready = ready = true;
+					} else if ( err < 0 ) {
+							gotselecterr = true;
+					}
 			}
 		}
+
 		if ( !ready && !gotselecterr ) {
-			Delay( 2L, &ticks );
-			SystemTask();
+			(void)WaitNextEvent(nullEvent, &dummyEvent, 1, NULL);
+			ticks = TickCount();
 		}
 	} while ( !ready && !gotselecterr && ( timeout == NULL || ticks < endticks ));
 

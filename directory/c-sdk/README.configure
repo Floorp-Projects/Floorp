@@ -1,0 +1,18 @@
+The autoconf files here are a minimal shim to allow the LDAP C SDK to
+build with autoconf.  These are currently just a slightly modified
+version of the existing Makefile.client-based build system, merged
+with a copy of the NSPR autoconf stuff.  As in the main browser tree,
+I've checked in the (generated) configure script so that autoconf
+isn't a prerequisite to build.
+
+My hope is that the owners of the C SDK will be interested in
+migrating to this build system, so that over time it can evolve into a
+true autoconf-style build system with all the goodies that go with
+that (ie configure-time feature tests for faster porting to new
+platforms, cross-compilation support, etc.).
+
+Comments to <news://news.mozilla.org/netscape.public.mozilla.directory>, 
+please.
+
+Dan Mosedale
+<dmose@netscape.com>

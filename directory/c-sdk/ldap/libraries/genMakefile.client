@@ -1,0 +1,153 @@
+# 
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#  
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#  
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+# 
+# Contributor(s): 
+#
+
+DEPTH	    = ../../../..
+NSPR_TREE = ../..
+MOD_DEPTH = ../..
+
+LDAP_SRC	=..
+include		../../build.mk
+
+WINDEFDIR	=msdos/winsock
+
+DEFLDAPW32	=$(WINDEFDIR)/nsldap32
+DEFNSSLDAPW32	=$(WINDEFDIR)/nssldap32
+DEFLDAPSSLW32	=$(WINDEFDIR)/nsldapssl32
+DEFLDAPW32CLIENT=$(WINDEFDIR)/ldap32
+DEFLDAPW16REV	=$(WINDEFDIR)/nsldap
+DEFLDAPW16	=$(WINDEFDIR)/libldap
+DEFLDSSLW32	=$(WINDEFDIR)/ldapssl
+DEFLDPRW32	=$(WINDEFDIR)/nsldappr32
+DEFLDPRINCL	=$(WINDEFDIR)/nsldappr-incl
+
+MACEXPDIR	=macintosh
+EXPLDAPMAC	=$(MACEXPDIR)/LDAPClient
+EXPSSLDAPMAC	=$(MACEXPDIR)/LDAPSSLClient
+EXPPRLDAPMAC	=$(MACEXPDIR)/LDAPPRClient
+
+
+WINFILES	= $(DEFLDAPW32) $(DEFNSSLDAPW32) $(DEFLDAPSSLW32) \
+	          $(DEFLDAPW32CLIENT) $(DEFLDAPW16REV) $(DEFLDAPW16) \
+	          $(DEFLDSSLW32) $(DEFLDPRW32) $(DEFLDPRINCL)
+
+WINTDFFILES	= $(addsuffix .tdf, $(WINFILES))
+WINDEFFILES	= $(addsuffix .def, $(WINFILES)) 
+
+MACFILES	= $(EXPLDAPMAC)	$(EXPSSLDAPMAC) $(EXPPRLDAPMAC)
+
+MACEXPFILES	= $(addsuffix .exp, $(MACFILES)) 
+
+ifeq ($(BUILD_OPT), 1)
+GENEXPARGS=OPTIMIZE $(LDAPVERS) $(LDAPVERS_SUFFIX)
+else
+GENEXPARGS=DEBUG $(LDAPVERS) $(LDAPVERS_SUFFIX)
+endif
+
+all:
+	@echo
+	@echo "This Makefile will generate the necessary .def and .exp files"
+	@echo "for a Windows or MacOS build."
+	@echo
+	@echo "The valid targets are:"
+	@echo "  exportfiles  - generate exportfiles"
+	@echo "  touch        - touch all of the template files"
+	@echo "  clean        - clean up generated files"
+	@echo
+	@echo "gmake exportfiles should be done after editing any of these files:"
+	@echo "  $(TEMPLATES)"
+	@echo
+
+exportfiles:	winexportfiles macexportfiles
+
+winexportfiles:	$(WINDEFFILES)
+
+macexportfiles:	$(MACEXPFILES)
+
+PRLDAPEX	=libprldap/libprldap.ex
+LDAPSSLEX	=libldap_ssl.ex
+LDAPEX		=libldap.ex
+
+TEMPLATES	=$(PRLDAPEX) $(LDAPSSLEX) $(LDAPEX)
+
+
+#
+# All the various flavors of Windows:
+#
+
+$(DEFLDAPW32).def:      $(DEFLDAPW32).tdf $(LDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win32 $< $(LDAPEX) $(GENEXPARGS) > $@
+
+$(DEFLDAPSSLW32).def:   $(DEFLDAPSSLW32).tdf $(LDAPSSLEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win32 $< $(LDAPSSLEX) $(GENEXPARGS) > $@
+
+$(DEFNSSLDAPW32).def:   $(DEFNSSLDAPW32).tdf $(LDAPSSLEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win32 $< $(LDAPSSLEX) $(GENEXPARGS) > $@
+
+$(DEFLDAPW32CLIENT).def:  $(DEFLDAPW32CLIENT).tdf $(LDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win32 $< $(LDAPEX) $(GENEXPARGS) > $@
+
+$(DEFLDAPW16).def:      $(DEFLDAPW16).tdf $(LDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win16 $< $(LDAPEX) $(GENEXPARGS) > $@
+
+$(DEFLDAPW16REV).def:   $(DEFLDAPW16REV).tdf $(LDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win16Rev $< $(LDAPEX) $(GENEXPARGS) > $@
+
+$(DEFLDSSLW32).def:     $(DEFLDSSLW32).tdf $(LDAPSSLEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win32 $< $(LDAPSSLEX) $(GENEXPARGS) > $@
+
+$(DEFLDPRW32).def:      $(DEFLDPRW32).tdf $(PRLDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win32 $< $(PRLDAPEX) $(GENEXPARGS) > $@
+
+$(DEFLDPRINCL).def:     $(DEFLDPRINCL).tdf $(PRLDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) Win32 $< $(PRLDAPEX) $(GENEXPARGS) > $@
+
+
+# MacOS files:
+$(EXPLDAPMAC).exp:		$(LDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) MacOS Standard $< $(GENEXPARGS) > $@
+
+$(EXPSSLDAPMAC).exp:	$(LDAPSSLEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) MacOS Standard $< $(GENEXPARGS) > $@
+
+$(EXPPRLDAPMAC).exp:	$(PRLDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) MacOS Standard $< $(GENEXPARGS) > $@
+
+
+ifeq ($(USE_DLL_EXPORTS_FILE), 1)
+# generic rules to create standard export/map files
+$(OBJDEST)/$(EXPLDAP).exp:      $(LDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) $(ARCH) Standard $< $(GENEXPARGS) > $@
+
+$(OBJDEST)/$(EXPLDSSL).exp:     $(LDAPSSLEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) $(ARCH) Standard $< $(GENEXPARGS) > $@
+
+$(OBJDEST)/$(EXPLDPR).exp:      $(PRLDAPEX) $(OTHERDEFDEPS)
+	$(GENEXPORTS) $(ARCH) Standard $< $(GENEXPARGS) > $@
+endif
+
+touch: FORCE
+	touch $(TEMPLATES)
+
+clean: FORCE
+	$(RM) $(WINDEFFILES) $(MACEXPFILES)
+
+FORCE:

@@ -1,22 +1,22 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *
+ *  
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *
- * The Original Code is mozilla.org code.
- *
+ *  
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- *
+ * 
  * Contributor(s): 
  */
 
@@ -36,6 +36,11 @@
 
 #include "lber-int.h"
 
+/*
+ * Note: ber_get_tag() only uses the ber_end and ber_ptr elements of ber.
+ * If that changes, the ber_peek_tag() and/or ber_skip_tag() implementations
+ * will need to be changed.
+ */
 /* return the tag - LBER_DEFAULT returned means trouble */
 unsigned long
 LDAP_CALL
@@ -72,6 +77,11 @@ ber_get_tag( BerElement *ber )
 	return( tag >> (sizeof(long) - i - 1) );
 }
 
+/*
+ * Note: ber_skip_tag() only uses the ber_end and ber_ptr elements of ber.
+ * If that changes, the implementation of ber_peek_tag() will need to
+ * be changed.
+ */
 unsigned long
 LDAP_CALL
 ber_skip_tag( BerElement *ber, unsigned long *len )
@@ -124,18 +134,22 @@ ber_skip_tag( BerElement *ber, unsigned long *len )
 	return( tag );
 }
 
+
+/*
+ * Note: Previously, we passed the "ber" parameter directly to ber_skip_tag(),
+ * saving and restoring the ber_ptr element only.  We now take advantage
+ * of the fact that the only ber structure elements touched by ber_skip_tag()
+ * are ber_end and ber_ptr.  If that changes, this code must change too.
+ */
 unsigned long
 LDAP_CALL
 ber_peek_tag( BerElement *ber, unsigned long *len )
 {
-	char		*save;
-	unsigned long	tag;
+	BerElement	bercopy;
 
-	save = ber->ber_ptr;
-	tag = ber_skip_tag( ber, len );
-	ber->ber_ptr = save;
-
-	return( tag );
+	bercopy.ber_end = ber->ber_end;
+	bercopy.ber_ptr = ber->ber_ptr;
+	return( ber_skip_tag( &bercopy, len ));
 }
 
 static int
@@ -242,12 +256,13 @@ unsigned long
 LDAP_CALL
 ber_get_stringa( BerElement *ber, char **buf )
 {
-	unsigned long	datalen, tag;
+	unsigned long	datalen, ndatalen, tag;
 
 	if ( (tag = ber_skip_tag( ber, &datalen )) == LBER_DEFAULT )
 		return( LBER_DEFAULT );
 
-	if ( (*buf = (char *)NSLBERI_MALLOC( (size_t)datalen + 1 )) == NULL )
+	if ( ((ndatalen = (size_t)datalen + 1) < (size_t) datalen) ||
+	   ( (*buf = (char *)NSLBERI_MALLOC( (size_t)ndatalen )) == NULL ))
 		return( LBER_DEFAULT );
 
 	/*
@@ -276,7 +291,7 @@ unsigned long
 LDAP_CALL
 ber_get_stringal( BerElement *ber, struct berval **bv )
 {
-	unsigned long	len, tag;
+	unsigned long	len, nlen, tag;
 
 	if ( (*bv = (struct berval *)NSLBERI_MALLOC( sizeof(struct berval) ))
 	    == NULL ) {
@@ -287,8 +302,9 @@ ber_get_stringal( BerElement *ber, struct berval **bv )
 		return( LBER_DEFAULT );
 	}
 
-	if ( ((*bv)->bv_val = (char *)NSLBERI_MALLOC( (size_t)len + 1 ))
-	    == NULL ) {
+	if ( ((nlen = (size_t) len + 1) < (size_t)len) ||
+	     (((*bv)->bv_val = (char *)NSLBERI_MALLOC( (size_t)nlen ))
+	    == NULL )) {
 		return( LBER_DEFAULT );
 	}
 
@@ -403,10 +419,10 @@ ber_next_element( BerElement *ber, unsigned long *len, char *last )
 /* VARARGS */
 unsigned long
 LDAP_C
-ber_scanf( BerElement *ber, char *fmt, ... )
+ber_scanf( BerElement *ber, const char *fmt, ... )
 {
 	va_list		ap;
-	char		*last;
+	char		*last, *p;
 	char		*s, **ss, ***sss;
 	struct berval 	***bv, **bvp, *bval;
 	int		*i, j;
@@ -425,9 +441,8 @@ ber_scanf( BerElement *ber, char *fmt, ... )
 		ber_dump( ber, 1 );
 	}
 #endif
-
-	for ( rc = 0; *fmt && rc != LBER_DEFAULT; fmt++ ) {
-		switch ( *fmt ) {
+	for ( rc = 0, p = (char *) fmt; *p && rc != LBER_DEFAULT; p++ ) {
+		switch ( *p ) {
 		case 'a':	/* octet string - allocate storage as needed */
 			ss = va_arg( ap, char ** );
 			rc = ber_get_stringa( ber, ss );
@@ -552,7 +567,7 @@ ber_scanf( BerElement *ber, char *fmt, ... )
 
 		case '{':	/* begin sequence */
 		case '[':	/* begin set */
-			if ( *(fmt + 1) != 'v' && *(fmt + 1) != 'V' )
+			if ( *(p + 1) != 'v' && *(p + 1) != 'V' )
 				rc = ber_skip_tag( ber, &len );
 			break;
 
@@ -563,7 +578,7 @@ ber_scanf( BerElement *ber, char *fmt, ... )
 		default:
 			{
 				char msg[80];
-				sprintf( msg, "unknown fmt %c\n", *fmt );
+				sprintf( msg, "unknown fmt %c\n", *p );
 				ber_err_print( msg );
 			}
 			rc = LBER_DEFAULT;
@@ -572,6 +587,94 @@ ber_scanf( BerElement *ber, char *fmt, ... )
 	}
 
 	va_end( ap );
+
+	if (rc == LBER_DEFAULT) {
+	  va_start( ap, fmt );
+	  for ( p--; fmt < p && *fmt; fmt++ ) {
+		switch ( *fmt ) {
+		case 'a':	/* octet string - allocate storage as needed */
+			ss = va_arg( ap, char ** );
+			NSLBERI_FREE(*ss);
+			*ss = NULL;
+			break;
+
+		case 'b':	/* boolean */
+			i = va_arg( ap, int * );
+			break;
+
+		case 'e':	/* enumerated */
+		case 'i':	/* int */
+			l = va_arg( ap, long * );
+			break;
+
+		case 'l':	/* length of next item */
+			l = va_arg( ap, long * );
+			break;
+
+		case 'n':	/* null */
+			break;
+
+		case 's':	/* octet string - in a buffer */
+			s = va_arg( ap, char * );
+			l = va_arg( ap, long * );
+			break;
+
+		case 'o':	/* octet string in a supplied berval */
+			bval = va_arg( ap, struct berval * );
+			if (bval->bv_val) NSLBERI_FREE(bval->bv_val);
+			memset(bval, 0, sizeof(struct berval));
+			break;
+
+		case 'O':	/* octet string - allocate & include length */
+			bvp = va_arg( ap, struct berval ** );
+			ber_bvfree(*bvp);
+			bvp = NULL;
+			break;
+
+		case 'B':	/* bit string - allocate storage as needed */
+			ss = va_arg( ap, char ** );
+			l = va_arg( ap, long * ); /* for length, in bits */
+			if (*ss) NSLBERI_FREE(*ss);
+			*ss = NULL;
+			break;
+
+		case 't':	/* tag of next item */
+			t = va_arg( ap, unsigned long * );
+			break;
+
+		case 'T':	/* skip tag of next item */
+			t = va_arg( ap, unsigned long * );
+			break;
+
+		case 'v':	/* sequence of strings */
+			sss = va_arg( ap, char *** );
+			ber_svecfree(*sss);
+			*sss = NULL;
+			break;
+
+		case 'V':	/* sequence of strings + lengths */
+			bv = va_arg( ap, struct berval *** );
+			ber_bvecfree(*bv);
+			*bv = NULL;
+			break;
+
+		case 'x':	/* skip the next element - whatever it is */
+			break;
+
+		case '{':	/* begin sequence */
+		case '[':	/* begin set */
+			break;
+
+		case '}':	/* end sequence */
+		case ']':	/* end set */
+			break;
+
+		default:
+			break;
+		}
+	  } /* for */
+	  va_end( ap );
+	} /* if */
 
 	return( rc );
 }
@@ -604,7 +707,7 @@ ber_bvecfree( struct berval **bv )
 
 struct berval *
 LDAP_CALL
-ber_bvdup( struct berval *bv )
+ber_bvdup( const struct berval *bv )
 {
 	struct berval	*new;
 
@@ -628,6 +731,18 @@ ber_bvdup( struct berval *bv )
 	return( new );
 }
 
+void
+LDAP_CALL
+ber_svecfree( char **vals )
+{
+        int     i;
+
+        if ( vals == NULL )
+                return;
+        for ( i = 0; vals[i] != NULL; i++ )
+                NSLBERI_FREE( vals[i] );
+        NSLBERI_FREE( (char *) vals );
+}
 
 #ifdef STR_TRANSLATION
 void

@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1995 Regents of the University of Michigan.
@@ -34,23 +34,6 @@ static char copyright[] = "@(#) Copyright (c) 1995 Regents of the University of 
 #endif
 
 #include "ldap-int.h"
-
-/* HCL 1.56 caused some wierdness, because ttypdefaults.h on SSF defines CTIME 0
- * This little bit fixes that 
- */
-#if defined(LDAP_DEBUG) && defined(OSF1)
-#if defined(CTIME)
-#undef CTIME
-#define CTIME( c, b, l )		ctime( c )
-#endif
-#endif
-
-#if defined(LINUX2_0) || defined(LINUX2_1)
-#if defined(CTIME)
-#undef CTIME
-#define CTIME( c, b, l )		ctime( c )
-#endif
-#endif
 
 static LDAPConn *find_connection( LDAP *ld, LDAPServer *srv, int any );
 static void use_connection( LDAP *ld, LDAPConn *lc );
@@ -138,7 +121,7 @@ nsldapi_send_initial_request( LDAP *ld, int msgid, unsigned long msgtype,
 	} else {
 #endif /* LDAP_DNS */
 		/*
-		 * use of DNS is turned off or this is an X.500 DN...
+		 * use of DNS is turned off or this is an LDAP DN...
 		 * use our default connection
 		 */
 		servers = NULL;
@@ -249,7 +232,7 @@ nsldapi_send_server_request(
 			NSLDAPI_FREE( lr );
 		}
 		LDAP_SET_LDERRNO( ld, LDAP_NO_MEMORY, NULL, NULL );
-		nsldapi_free_connection( ld, lc, 0, 0 );
+		nsldapi_free_connection( ld, lc, NULL, NULL, 0, 0 );
 		ber_free( ber, 1 );
 		if ( incparent ) {
 			/* Forget about the bind */
@@ -273,8 +256,10 @@ nsldapi_send_server_request(
 		lr->lr_origid = parentreq->lr_origid;
 		lr->lr_parentcnt = parentreq->lr_parentcnt + 1;
 		lr->lr_parent = parentreq;
-		lr->lr_refnext = parentreq->lr_refnext;
-		parentreq->lr_refnext = lr;
+		if ( parentreq->lr_child != NULL ) {
+			lr->lr_sibling = parentreq->lr_child;
+		}
+		parentreq->lr_child = lr;
 	} else {			/* original request */
 		lr->lr_origid = lr->lr_msgid;
 	}
@@ -291,12 +276,12 @@ nsldapi_send_server_request(
 		/* need to continue write later */
 		if (ld->ld_options & LDAP_BITOPT_ASYNC && err == -2 ) {	
 			lr->lr_status = LDAP_REQST_WRITING;
-			nsldapi_mark_select_write( ld, lc->lconn_sb );
+			nsldapi_iostatus_interest_write( ld, lc->lconn_sb );
 		} else {
 
 			LDAP_SET_LDERRNO( ld, LDAP_SERVER_DOWN, NULL, NULL );
 			nsldapi_free_request( ld, lr, 0 );
-			nsldapi_free_connection( ld, lc, 0, 0 );
+			nsldapi_free_connection( ld, lc, NULL, NULL, 0, 0 );
 			LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
 			LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
 			return( -1 );
@@ -309,12 +294,11 @@ nsldapi_send_server_request(
 		}
 
 		/* sent -- waiting for a response */
-        if (ld->ld_options & LDAP_BITOPT_ASYNC)
-        {
-            lc->lconn_status = LDAP_CONNST_CONNECTED;
-        }
+		if (ld->ld_options & LDAP_BITOPT_ASYNC) {
+			lc->lconn_status = LDAP_CONNST_CONNECTED;
+		}
 
-		nsldapi_mark_select_read( ld, lc->lconn_sb );
+		nsldapi_iostatus_interest_read( ld, lc->lconn_sb );
 	}
 	LDAP_MUTEX_UNLOCK( ld, LDAP_REQ_LOCK );
 	LDAP_MUTEX_UNLOCK( ld, LDAP_CONN_LOCK );
@@ -393,8 +377,16 @@ nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 		 * we have allocated a new sockbuf
 		 * set I/O routines to match those in default LDAP sockbuf
 		 */
-		IFP	sb_fn;
+		IFP				sb_fn;
+		struct lber_x_ext_io_fns	extiofns;
+		
+		extiofns.lbextiofn_size = LBER_X_EXTIO_FNS_SIZE;
 
+		if ( ber_sockbuf_get_option( ld->ld_sbp,
+		    LBER_SOCKBUF_OPT_EXT_IO_FNS, &extiofns ) == 0 ) {
+			ber_sockbuf_set_option( sb,
+			    LBER_SOCKBUF_OPT_EXT_IO_FNS, &extiofns );
+		}
 		if ( ber_sockbuf_get_option( ld->ld_sbp,
 		    LBER_SOCKBUF_OPT_READ_FN, (void *)&sb_fn ) == 0
 		    && sb_fn != NULL ) {
@@ -419,9 +411,10 @@ nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
          * save the return code for later
          */ 
 		for ( srv = *srvlistp; srv != NULL; srv = srv->lsrv_next ) {
-			rc = nsldapi_open_ldap_connection( ld, lc->lconn_sb,
-				   srv->lsrv_host, srv->lsrv_port, &lc->lconn_krbinstance, 1,
-			       (  srv->lsrv_options & LDAP_SRV_OPT_SECURE ) != 0 );
+			rc = nsldapi_connect_to_host( ld, lc->lconn_sb,
+				   srv->lsrv_host, srv->lsrv_port,
+			       (  srv->lsrv_options & LDAP_SRV_OPT_SECURE ) != 0,
+					&lc->lconn_krbinstance );
 			if (rc != -1) {
 				break;
 			}
@@ -516,7 +509,7 @@ nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 		}
 
 		if ( err != 0 ) {
-			nsldapi_free_connection( ld, lc, 1, 0 );
+			nsldapi_free_connection( ld, lc, NULL, NULL, 1, 0 );
 			lc = NULL;
 		}
 	}
@@ -568,7 +561,8 @@ use_connection( LDAP *ld, LDAPConn *lc )
 
 
 void
-nsldapi_free_connection( LDAP *ld, LDAPConn *lc, int force, int unbind )
+nsldapi_free_connection( LDAP *ld, LDAPConn *lc, LDAPControl **serverctrls,
+    LDAPControl **clientctrls, int force, int unbind )
 {
 	LDAPConn	*tmplc, *prevlc;
 
@@ -576,12 +570,13 @@ nsldapi_free_connection( LDAP *ld, LDAPConn *lc, int force, int unbind )
 
 	if ( force || --lc->lconn_refcnt <= 0 ) {
 		if ( lc->lconn_status == LDAP_CONNST_CONNECTED ) {
-			nsldapi_mark_select_clear( ld, lc->lconn_sb );
+			nsldapi_iostatus_interest_clear( ld, lc->lconn_sb );
 			if ( unbind ) {
-				nsldapi_send_unbind( ld, lc->lconn_sb );
+				nsldapi_send_unbind( ld, lc->lconn_sb,
+				    serverctrls, clientctrls );
 			}
-			nsldapi_close_connection( ld, lc->lconn_sb );
 		}
+		nsldapi_close_connection( ld, lc->lconn_sb );
 		prevlc = NULL;
 		for ( tmplc = ld->ld_conns; tmplc != NULL;
 		    tmplc = tmplc->lconn_next ) {
@@ -632,7 +627,7 @@ nsldapi_dump_connection( LDAP *ld, LDAPConn *lconns, int all )
 	LDAPConn	*lc;
 	char        msg[256];
 /* CTIME for this platform doesn't use this. */
-#if !defined(SUNOS4) && !defined(_WIN32)
+#if !defined(SUNOS4) && !defined(_WIN32) && !defined(LINUX) && !defined(macintosh)
 	char		buf[26];
 #endif
 
@@ -658,7 +653,8 @@ nsldapi_dump_connection( LDAP *ld, LDAPConn *lconns, int all )
 		    "Connected" );
 		ber_err_print( msg );
 		sprintf( msg, "  last used: %s",
-		    CTIME( (time_t *) &lc->lconn_lastused, buf, sizeof(buf) ));
+		    NSLDAPI_CTIME( (time_t *) &lc->lconn_lastused, buf,
+				sizeof(buf) ));
 		ber_err_print( msg );
 		if ( lc->lconn_ber != NULLBER ) {
 			ber_err_print( "  partial response has been received:\n" );
@@ -733,21 +729,22 @@ nsldapi_free_request( LDAP *ld, LDAPRequest *lr, int free_conn )
 {
 	LDAPRequest	*tmplr, *nextlr;
 
-	LDAPDebug( LDAP_DEBUG_TRACE, "nsldapi_free_request (origid %d, msgid %d)\n",
-		lr->lr_origid, lr->lr_msgid, 0 );
+	LDAPDebug( LDAP_DEBUG_TRACE,
+		"nsldapi_free_request 0x%x (origid %d, msgid %d)\n",
+		lr, lr->lr_origid, lr->lr_msgid );
 
 	if ( lr->lr_parent != NULL ) {
 		--lr->lr_parent->lr_outrefcnt;
-	} else {
-		/* free all referrals (child requests) */
-		for ( tmplr = lr->lr_refnext; tmplr != NULL; tmplr = nextlr ) {
-			nextlr = tmplr->lr_refnext;
-			nsldapi_free_request( ld, tmplr, free_conn );
-		}
+	}
+
+	/* free all of our spawned referrals (child requests) */
+	for ( tmplr = lr->lr_child; tmplr != NULL; tmplr = nextlr ) {
+		nextlr = tmplr->lr_sibling;
+		nsldapi_free_request( ld, tmplr, free_conn );
 	}
 
 	if ( free_conn ) {
-		nsldapi_free_connection( ld, lr->lr_conn, 0, 1 );
+		nsldapi_free_connection( ld, lr->lr_conn, NULL, NULL, 0, 1 );
 	}
 
 	if ( lr->lr_prev == NULL ) {
@@ -963,7 +960,8 @@ chase_one_referral( LDAP *ld, LDAPRequest *lr, LDAPRequest *origreq,
 
 	secure = (( ludp->lud_options & LDAP_URL_OPT_SECURE ) != 0 );
 
-	if ( secure && ld->ld_ssl_enable_fn == NULL ) {
+/* XXXmcs: can't tell if secure is supported by connect callback */
+	if ( secure && ld->ld_extconnect_fn == NULL ) {
 		LDAPDebug( LDAP_DEBUG_TRACE,
 		    "ignoring LDAPS %s <%s>\n", desc, refurl, 0 );
 		*unknownp = 1;
@@ -995,9 +993,18 @@ chase_one_referral( LDAP *ld, LDAPRequest *lr, LDAPRequest *origreq,
 		srv->lsrv_host = NULL;
 	} else {
 		if ( ludp->lud_host == NULL ) {
-			srv->lsrv_host = nsldapi_strdup( ld->ld_defhost );
+		  srv->lsrv_host =
+		    nsldapi_strdup( origreq->lr_conn->lconn_server->lsrv_host );
+		  LDAPDebug( LDAP_DEBUG_TRACE,
+		    "chase_one_referral: using hostname '%s' from original "
+		    "request on new request\n",
+		    srv->lsrv_host, 0, 0);
 		} else {
-			srv->lsrv_host = nsldapi_strdup( ludp->lud_host );
+		  srv->lsrv_host = nsldapi_strdup( ludp->lud_host );
+		  LDAPDebug( LDAP_DEBUG_TRACE,
+		    "chase_one_referral: using hostname '%s' as specified "
+		    "on new request\n",
+		    srv->lsrv_host, 0, 0);
 		}
 
 		if ( srv->lsrv_host == NULL ) {
@@ -1008,10 +1015,18 @@ chase_one_referral( LDAP *ld, LDAPRequest *lr, LDAPRequest *origreq,
 		}
 	}
 
-	if ( ludp->lud_port == 0 ) {
-		srv->lsrv_port = ( secure ) ? LDAPS_PORT : LDAP_PORT;
+	if ( ludp->lud_port == 0 && ludp->lud_host == NULL ) {
+		srv->lsrv_port = origreq->lr_conn->lconn_server->lsrv_port;
+		LDAPDebug( LDAP_DEBUG_TRACE,
+		    "chase_one_referral: using port (%d) from original "
+		    "request on new request\n",
+		    srv->lsrv_port, 0, 0);
 	} else {
 		srv->lsrv_port = ludp->lud_port;
+		LDAPDebug( LDAP_DEBUG_TRACE,
+		    "chase_one_referral: using port (%d) as specified on "
+		    "new request\n",
+		    srv->lsrv_port, 0, 0);
 	}
 
 	if ( secure ) {
@@ -1143,7 +1158,8 @@ re_encode_request( LDAP *ld, BerElement *origber, int msgid, LDAPURLDesc *ludp,
         }
 
 	if ( tag == LDAP_REQ_BIND ) {
-		rc = ber_printf( ber, "{it{is", msgid, tag, ver, dn );
+		rc = ber_printf( ber, "{it{is", msgid, tag,
+		    (int)ver /* XXX lossy cast */, dn );
 	} else if ( tag == LDAP_REQ_DELETE ) {
 		rc = ber_printf( ber, "{its}", msgid, tag, dn );
 	} else {
@@ -1221,7 +1237,7 @@ nsldapi_connection_lost_nolock( LDAP *ld, Sockbuf *sb )
 			lr->lr_status = LDAP_REQST_CONNDEAD;
 			if ( lr->lr_conn != NULL ) {
 				lr->lr_conn->lconn_status = LDAP_CONNST_DEAD;
-				nsldapi_mark_select_clear( ld,
+				nsldapi_iostatus_interest_clear( ld,
 				    lr->lr_conn->lconn_sb );
 			}
 		}

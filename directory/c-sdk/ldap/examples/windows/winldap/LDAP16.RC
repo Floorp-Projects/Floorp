@@ -1,0 +1,241 @@
+//Microsoft App Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// From TEXTINCLUDE 2
+//
+#include "afxres.h"
+
+////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+#ifdef APSTUDIO_INVOKED
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+	"resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+	"#include ""afxres.h""\r\n"
+	"\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+	"#include ""res\\winldap.rc2""  // non-App Studio edited resources\r\n"
+	"\r\n"
+	"#include ""afxres.rc""  	// Standard components\r\n"
+	"\0"
+END
+
+/////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDR_MAINFRAME           ICON    DISCARDABLE     res\winldap.ico
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+	POPUP "&File"
+	BEGIN
+        MENUITEM "&Connect...\tCtrl+N",         ID_FILE_CONNECT
+        MENUITEM "&Disconnect\tCtrl+D",         ID_FILE_DISCONNECT
+        MENUITEM "&Search...\tCtrl+S",          ID_FILE_SEARCH
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+	END
+	POPUP "&Help"
+	BEGIN
+		MENUITEM "&About Test16...",          ID_APP_ABOUT
+	END
+END
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE 
+BEGIN
+	"N",            ID_FILE_NEW,            VIRTKEY,CONTROL
+	"O",            ID_FILE_OPEN,           VIRTKEY,CONTROL
+	"S",            ID_FILE_SAVE,           VIRTKEY,CONTROL
+	"Z",            ID_EDIT_UNDO,           VIRTKEY,CONTROL
+	"X",            ID_EDIT_CUT,            VIRTKEY,CONTROL
+	"C",            ID_EDIT_COPY,           VIRTKEY,CONTROL
+	"V",            ID_EDIT_PASTE,          VIRTKEY,CONTROL
+	VK_BACK,        ID_EDIT_UNDO,           VIRTKEY,ALT
+	VK_DELETE,      ID_EDIT_CUT,            VIRTKEY,SHIFT
+	VK_INSERT,      ID_EDIT_COPY,           VIRTKEY,CONTROL
+	VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY,SHIFT
+	VK_F6,          ID_NEXT_PANE,           VIRTKEY 
+	VK_F6,          ID_PREV_PANE,           VIRTKEY,SHIFT
+END
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  34, 22, 217, 55
+CAPTION "About Test16"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif"
+BEGIN
+	ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+	LTEXT           "Test16 Application Version 1.0",IDC_STATIC,40,10,119,8
+	LTEXT           "Copyright \251 1997",IDC_STATIC,40,25,119,8
+	DEFPUSHBUTTON   "OK",IDOK,176,6,32,14,WS_GROUP
+END
+
+IDD_CONNECT_DIALOG DIALOG DISCARDABLE  0, 0, 186, 76
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connect to Directory Server"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,35,55,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,103,55,50,14
+    RTEXT           "Host name:",IDC_STATIC,21,17,52,12
+    EDITTEXT        IDC_DIR_PORT,79,33,92,14,ES_AUTOHSCROLL
+    RTEXT           "Port number:",IDC_STATIC,28,36,45,12
+    EDITTEXT        IDC_DIR_HOST,79,14,92,14,ES_AUTOHSCROLL
+END
+
+IDD_SEARCH_DIALOG DIALOG DISCARDABLE  0, 0, 186, 103
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Search parameters"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,39,82,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,105,82,50,14
+    RTEXT           "Directory base:",IDC_STATIC,7,16,54,12
+    EDITTEXT        IDC_SEARCH_BASE,65,13,106,14,ES_AUTOHSCROLL
+    RTEXT           "Search filter:",IDC_STATIC,10,34,51,12
+    EDITTEXT        IDC_SEARCH_FILTER,65,31,105,14,ES_AUTOHSCROLL
+    CONTROL         "Base",IDC_SCOPE_BASE,"Button",BS_AUTORADIOBUTTON,23,60,
+                    32,10
+    CONTROL         "One level",IDC_SCOPE_ONE,"Button",BS_AUTORADIOBUTTON,69,
+                    60,46,10
+    CONTROL         "Subtree",IDC_SCOPE_SUB,"Button",BS_AUTORADIOBUTTON,121,
+                    60,41,10
+    GROUPBOX        "Scope",IDC_STATIC,13,49,159,24
+END
+
+IDD_ENTRY_PROPERTIES DIALOG DISCARDABLE  0, 0, 273, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "winldap\n\nWinlda\n\n\nWinldap.Document\nWinlda Document"
+END
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+	AFX_IDS_APP_TITLE       "Test16 Windows Application"
+	AFX_IDS_IDLEMESSAGE     "Ready"
+END
+STRINGTABLE DISCARDABLE 
+BEGIN
+	ID_INDICATOR_EXT        "EXT"
+	ID_INDICATOR_CAPS       "CAP"
+	ID_INDICATOR_NUM        "NUM"
+	ID_INDICATOR_SCRL       "SCRL"
+	ID_INDICATOR_OVR        "OVR"
+	ID_INDICATOR_REC        "REC"
+END
+STRINGTABLE DISCARDABLE 
+BEGIN
+	ID_FILE_NEW             "Create a new document"
+	ID_FILE_OPEN            "Open an existing document"
+	ID_FILE_CLOSE           "Close the active document"
+	ID_FILE_SAVE            "Save the active document"
+	ID_FILE_SAVE_AS         "Save the active document with a new name"
+	ID_APP_ABOUT            "Display program information, version number and copyright"
+	ID_APP_EXIT             "Quit the application; prompts to save documents"
+	ID_FILE_MRU_FILE1       "Open this document"
+	ID_FILE_MRU_FILE2       "Open this document"
+	ID_FILE_MRU_FILE3       "Open this document"
+	ID_FILE_MRU_FILE4       "Open this document"
+	ID_NEXT_PANE            "Switch to the next window pane"
+	ID_PREV_PANE            "Switch back to the previous window pane"
+	ID_EDIT_CLEAR           "Erase the selection"
+	ID_EDIT_CLEAR_ALL       "Erase everything"
+	ID_EDIT_COPY            "Copy the selection and put it on the Clipboard"
+	ID_EDIT_CUT             "Cut the selection and put it on the Clipboard"
+	ID_EDIT_FIND            "Find the specified text"
+	ID_EDIT_PASTE           "Insert Clipboard contents"
+	ID_EDIT_REPEAT          "Repeat the last action"
+	ID_EDIT_REPLACE         "Replace specific text with different text"
+	ID_EDIT_SELECT_ALL      "Select the entire document"
+	ID_EDIT_UNDO            "Undo the last action"
+	ID_EDIT_REDO            "Redo the previously undone action"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+	AFX_IDS_SCSIZE          "Change the window size"
+	AFX_IDS_SCMOVE          "Change the window position"
+	AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+	AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+	AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+	AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+	AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+	AFX_IDS_SCRESTORE       "Restore the window to normal size"
+	AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_CONNECT         "Connect to Directory Server"
+    ID_FILE_DISCONNECT      "Disconnect from Directory Server"
+    ID_FILE_SEARCH          "Search in Directory"
+END
+
+
+#ifndef APSTUDIO_INVOKED
+////////////////////////////////////////////////////////////////////////////////
+//
+// From TEXTINCLUDE 3
+//
+
+#include "res\winldap.rc2"  // non-App Studio edited resources
+
+#include "afxres.rc"  	// Standard components
+
+////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

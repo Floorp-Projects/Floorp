@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 #include "ldap-int.h"
 
@@ -39,7 +39,7 @@ LDAP_CALL
 ldap_extended_operation(
     LDAP		*ld,
     const char		*exoid,
-    struct berval	*exdata,
+    const struct berval	*exdata,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,
     int			*msgidp
@@ -104,7 +104,7 @@ ldap_extended_operation(
 	/* fill it in */
 	if ( ber_printf( ber, "{it{tsto}", msgid, LDAP_REQ_EXTENDED,
 	    LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE,
-	    exdata->bv_val, exdata->bv_len ) == -1 ) {
+	    exdata->bv_val, (int)exdata->bv_len /* XXX lossy cast */ ) == -1 ) {
 		rc = LDAP_ENCODING_ERROR;
 		LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
 		ber_free( ber, 1 );
@@ -142,7 +142,7 @@ LDAP_CALL
 ldap_extended_operation_s(
     LDAP		*ld,
     const char		*requestoid,
-    struct berval	*requestdata,
+    const struct berval	*requestdata,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,
     char		**retoidp,

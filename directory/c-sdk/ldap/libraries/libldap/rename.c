@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,14 +9,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1990 Regents of the University of Michigan.
@@ -36,7 +36,7 @@ static char copyright[] = "@(#) Copyright (c) 1990 Regents of the University of 
 #include "ldap-int.h"
 
 /*
- * ldap_rename - initiate an ldap (and X.500) modifyDN operation. Parameters:
+ * ldap_rename - initiate an ldap modifyDN operation. Parameters:
  *
  *	ld		LDAP descriptor
  *	dn		DN of the object to modify
@@ -62,8 +62,8 @@ ldap_rename(
 	   const char *newrdn, 
 	   const char *newparent,
 	   int deleteoldrdn, 
-	   PLDAPControl	*serverctrls,
-	   PLDAPControl	*clientctrls,  /* not used for anything yet */
+	   LDAPControl	**serverctrls,
+	   LDAPControl	**clientctrls,  /* not used for anything yet */
 	   int *msgidp
 )
 {
@@ -206,8 +206,8 @@ ldap_rename_s(
 	   const char *newrdn, 
 	   const char *newparent,
 	   int deleteoldrdn, 
-	   PLDAPControl	*serverctrls,
-	   PLDAPControl	*clientctrls  /* not used for anything yet */
+	   LDAPControl	**serverctrls,
+	   LDAPControl	**clientctrls  /* not used for anything yet */
 )
 {
 	int		msgid;
