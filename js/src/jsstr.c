@@ -2316,7 +2316,7 @@ js_FinishRuntimeStringState(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-    js_UnlockGCThing(cx, rt->emptyString);
+    js_UnlockGCThingRT(rt, rt->emptyString);
     rt->emptyString = NULL;
 }
 

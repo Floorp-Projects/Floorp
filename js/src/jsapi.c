@@ -1609,15 +1609,27 @@ JS_LockGCThing(JSContext *cx, void *thing)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_LockGCThingRT(JSRuntime *rt, void *thing)
+{
+    return js_LockGCThingRT(rt, thing);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_UnlockGCThing(JSContext *cx, void *thing)
 {
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    ok = js_UnlockGCThing(cx, thing);
+    ok = js_UnlockGCThingRT(cx->runtime, thing);
     if (!ok)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_UNLOCK);
     return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_UnlockGCThingRT(JSRuntime *rt, void *thing)
+{
+    return js_UnlockGCThingRT(rt, thing);
 }
 
 JS_PUBLIC_API(void)

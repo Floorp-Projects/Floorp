@@ -121,7 +121,10 @@ extern JSBool
 js_LockGCThing(JSContext *cx, void *thing);
 
 extern JSBool
-js_UnlockGCThing(JSContext *cx, void *thing);
+js_LockGCThingRT(JSRuntime *rt, void *thing);
+
+extern JSBool
+js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
 extern JSBool 
 js_IsAboutToBeFinalized(JSContext *cx, void *thing);

@@ -543,7 +543,15 @@ retry:
 JSBool
 js_LockGCThing(JSContext *cx, void *thing)
 {
-    JSRuntime *rt;
+    JSBool ok = js_LockGCThingRT(cx->runtime, thing);
+    if (!ok)
+        JS_ReportOutOfMemory(cx);
+    return ok;
+}
+
+JSBool
+js_LockGCThingRT(JSRuntime *rt, void *thing)
+{
     uint8 *flagp, flags, lockbits;
     JSBool ok;
     JSGCLockHashEntry *lhe;
@@ -553,8 +561,7 @@ js_LockGCThing(JSContext *cx, void *thing)
     flagp = js_GetGCThingFlags(thing);
     flags = *flagp;
 
-    ok = JS_TRUE;
-    rt = cx->runtime;
+    ok = JS_FALSE;
     JS_LOCK_GC(rt);
     lockbits = (flags & GCF_LOCKMASK);
 
@@ -568,7 +575,7 @@ js_LockGCThing(JSContext *cx, void *thing)
                                          sizeof(JSGCLockHashEntry),
                                          GC_ROOTS_SIZE);
                     if (!rt->gcLocksHash)
-                        goto outofmem;
+                        goto error;
                 } else {
 #ifdef DEBUG
                     JSDHashEntryHdr *hdr = 
@@ -580,7 +587,7 @@ js_LockGCThing(JSContext *cx, void *thing)
                 lhe = (JSGCLockHashEntry *)
                     JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
                 if (!lhe)
-                    goto outofmem;
+                    goto error;
                 lhe->thing = thing;
                 lhe->count = 1;
                 *flagp = (uint8)(flags + GCF_LOCK);
@@ -603,20 +610,15 @@ js_LockGCThing(JSContext *cx, void *thing)
     }
 
     METER(rt->gcStats.lock++);
-out:
+    ok = JS_TRUE;
+error:
     JS_UNLOCK_GC(rt);
     return ok;
-
-outofmem:
-    JS_ReportOutOfMemory(cx);
-    ok = JS_FALSE;
-    goto out;
 }
 
 JSBool
-js_UnlockGCThing(JSContext *cx, void *thing)
+js_UnlockGCThingRT(JSRuntime *rt, void *thing)
 {
-    JSRuntime *rt;
     uint8 *flagp, flags, lockbits;
     JSGCLockHashEntry *lhe;
 
@@ -625,7 +627,6 @@ js_UnlockGCThing(JSContext *cx, void *thing)
     flagp = js_GetGCThingFlags(thing);
     flags = *flagp;
 
-    rt = cx->runtime;
     JS_LOCK_GC(rt);
     lockbits = (flags & GCF_LOCKMASK);
 
