@@ -187,16 +187,19 @@ static void
 threadid_key_destructor(void *value)
 {
     PRThread *me = (PRThread *)value;
-    PR_ASSERT((me != NULL) && (me->flags & _PR_ATTACHED));
-    /*
-     * The Solaris thread library sets the thread specific
-     * data (the current thread) to NULL before invoking
-     * the destructor.  We need to restore it to prevent the
-     * _PR_MD_CURRENT_THREAD() call in _PRI_DetachThread()
-     * from attaching the thread again.
-     */
-    _PR_MD_SET_CURRENT_THREAD(me);
-    _PRI_DetachThread();
+    PR_ASSERT(me != NULL);
+    /* the thread could be PRIMORDIAL (thus not ATTACHED) */
+    if (me->flags & _PR_ATTACHED) {
+        /*
+         * The Solaris thread library sets the thread specific
+         * data (the current thread) to NULL before invoking
+         * the destructor.  We need to restore it to prevent the
+         * _PR_MD_CURRENT_THREAD() call in _PRI_DetachThread()
+         * from attaching the thread again.
+         */
+        _PR_MD_SET_CURRENT_THREAD(me);
+        _PRI_DetachThread();
+    }
 }
 
 void _MD_EarlyInit(void)
