@@ -223,15 +223,15 @@ PRTimeParameters PR_LocalTimeParameters(const PRExplodedTime *gmt)
 PRIntervalTime _MD_GetInterval(void)
 {
     PRIntervalTime retVal;
-    PRUint64 upTime, micrototimer;	
+    PRUint64 upTime, microtomilli;	
 
     /*
      * Use the Microseconds procedure to obtain the number of
      * microseconds elapsed since system startup time.
      */
     Microseconds((UnsignedWide *)&upTime);
-    LL_I2L(micrototimer, (kMacTimerInMiliSecs * PR_MSEC_PER_SEC));
-    LL_DIV(upTime, upTime, micrototimer);
+    LL_I2L(microtomilli, PR_USEC_PER_MSEC);
+    LL_DIV(upTime, upTime, microtomilli);
     LL_L2I(retVal, upTime);
 	
     return retVal;
