@@ -27,6 +27,8 @@
 
 class nsIHTMLCSSStyleSheet : public nsIStyleSheet {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IHTML_CSS_STYLE_SHEET_IID; return iid; }
+
   NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument) = 0;
   NS_IMETHOD Reset(nsIURL* aURL) = 0;
 };

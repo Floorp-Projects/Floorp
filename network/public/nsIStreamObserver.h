@@ -33,6 +33,8 @@ class nsIURL;
 
 class nsIStreamObserver : public nsISupports {
 public:
+    static const nsIID& GetIID() { static nsIID iid = NS_ISTREAMOBSERVER_IID; return iid; }
+
     /**
      * Notify the observer that the URL has started to load.  This method is
      * called only once, at the beginning of a URL load.<BR><BR>
