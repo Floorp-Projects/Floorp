@@ -1608,7 +1608,7 @@ class BodyCodegen
 
               case Token.TARGET:
                 {
-                    int label = getTargetLabel((Node.Target)node);
+                    int label = getTargetLabel(node);
                     cfw.markLabel(label);
                 }
                 break;
@@ -2342,17 +2342,19 @@ class BodyCodegen
                             +")V");
     }
 
-    private int getTargetLabel(Node.Target target)
+    private int getTargetLabel(Node target)
     {
-        if (target.labelId == -1) {
-            target.labelId = cfw.acquireLabel();
+        int labelId = target.labelId();
+        if (labelId == -1) {
+            labelId = cfw.acquireLabel();
+            target.labelId(labelId);
         }
-        return target.labelId;
+        return labelId;
     }
 
     private void visitGOTO(Node.Jump node, int type, Node child)
     {
-        Node.Target target = node.target;
+        Node target = node.target;
         if (type == Token.IFEQ || type == Token.IFNE) {
             if (child == null) throw Codegen.badTree();
             int targetLabel = getTargetLabel(target);
@@ -2911,8 +2913,8 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             child = child.getNext();
         }
 
-        Node.Target catchTarget = node.target;
-        Node.Target finallyTarget = node.getFinally();
+        Node catchTarget = node.target;
+        Node finallyTarget = node.getFinally();
 
         // control flow skips the handlers
         int realEnd = cfw.acquireLabel();
@@ -2923,7 +2925,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         // catch area.
         if (catchTarget != null) {
             // get the label to goto
-            int catchLabel = catchTarget.labelId;
+            int catchLabel = catchTarget.labelId();
 
             generateCatchBlock(JAVASCRIPT_EXCEPTION, savedVariableObject,
                                catchLabel, startLabel, exceptionLocal);
@@ -2954,7 +2956,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             cfw.addAStore(variableObjectLocal);
 
             // get the label to JSR to
-            int finallyLabel = finallyTarget.labelId;
+            int finallyLabel = finallyTarget.labelId();
             cfw.add(ByteCode.JSR, finallyLabel);
 
             // rethrow
@@ -3853,7 +3855,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.markLabel(beyond);
     }
 
-    private void addGoto(Node.Target target, int jumpcode)
+    private void addGoto(Node target, int jumpcode)
     {
         int targetLabel = getTargetLabel(target);
         cfw.add(jumpcode, targetLabel);

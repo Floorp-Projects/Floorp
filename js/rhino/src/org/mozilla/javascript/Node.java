@@ -74,7 +74,8 @@ public class Node
         OBJECT_IDS_PROP    = 13, // array of properties for object literal
         INCRDECR_PROP      = 14, // pre or post type of increment/decerement
         CATCH_SCOPE_PROP   = 15, // Index of catch scope block in catch
-        LAST_PROP          = 15;
+        LABEL_ID_PROP      = 16, // Label id: code generation uses it
+        LAST_PROP          = 16;
 
     // values of ISNUMBER_PROP to specify
     // which of the children are Number types
@@ -149,30 +150,30 @@ public class Node
             this.jumpNode = jumpStatement;
         }
 
-        public final Target getDefault()
+        public final Node getDefault()
         {
             if (!(type == Token.SWITCH)) Kit.codeBug();
             return target2;
         }
 
-        public final void setDefault(Target defaultTarget)
+        public final void setDefault(Node defaultTarget)
         {
             if (!(type == Token.SWITCH)) Kit.codeBug();
-            if (defaultTarget == null) Kit.codeBug();
+            if (defaultTarget.type != Token.TARGET) Kit.codeBug();
             if (target2 != null) Kit.codeBug(); //only once
             target2 = defaultTarget;
         }
 
-        public final Target getFinally()
+        public final Node getFinally()
         {
             if (!(type == Token.TRY)) Kit.codeBug();
             return target2;
         }
 
-        public final void setFinally(Target finallyTarget)
+        public final void setFinally(Node finallyTarget)
         {
             if (!(type == Token.TRY)) Kit.codeBug();
-            if (finallyTarget == null) Kit.codeBug();
+            if (finallyTarget.type != Token.TARGET) Kit.codeBug();
             if (target2 != null) Kit.codeBug(); //only once
             target2 = finallyTarget;
         }
@@ -191,33 +192,23 @@ public class Node
             jumpNode = loop;
         }
 
-        public final Target getContinue()
+        public final Node getContinue()
         {
             if (type != Token.LOOP) Kit.codeBug();
             return target2;
         }
 
-        public final void setContinue(Target continueTarget)
+        public final void setContinue(Node continueTarget)
         {
             if (type != Token.LOOP) Kit.codeBug();
-            if (continueTarget == null) Kit.codeBug();
+            if (continueTarget.type != Token.TARGET) Kit.codeBug();
             if (target2 != null) Kit.codeBug(); //only once
             target2 = continueTarget;
         }
 
-        public Target target;
-        private Target target2;
+        public Node target;
+        private Node target2;
         private Jump jumpNode;
-    }
-
-    public static class Target extends Node
-    {
-        public Target()
-        {
-            super(Token.TARGET);
-        }
-
-        public int labelId = -1;
     }
 
     private static class PropListItem
@@ -453,6 +444,7 @@ public class Node
                 case OBJECT_IDS_PROP:    return "object_ids_prop";
                 case INCRDECR_PROP:      return "incrdecr_prop";
                 case CATCH_SCOPE_PROP:   return "catch_scope_prop";
+                case LABEL_ID_PROP:      return "label_id_prop";
 
                 default: Kit.codeBug();
             }
@@ -560,6 +552,23 @@ public class Node
         ((StringNode)this).str = s;
     }
 
+    public static Node newTarget()
+    {
+        return new Node(Token.TARGET);
+    }
+
+    public final int labelId()
+    {
+        if (type != Token.TARGET) Kit.codeBug();
+        return getIntProp(LABEL_ID_PROP, -1);
+    }
+
+    public void labelId(int labelId)
+    {
+        if (type != Token.TARGET) Kit.codeBug();
+        putIntProp(LABEL_ID_PROP, labelId);
+    }
+
     public String toString() {
         if (Token.printTrees) {
             StringBuffer sb = new StringBuffer(Token.name(type));
@@ -591,7 +600,7 @@ public class Node
                     sb.append(']');
                 } else if (type == Token.TRY) {
                     Node catchNode = jump.target;
-                    Node.Target finallyTarget = jump.getFinally();
+                    Node finallyTarget = jump.getFinally();
                     if (catchNode != null) {
                         sb.append(" [catch: ");
                         sb.append(catchNode);
@@ -618,13 +627,6 @@ public class Node
                     sb.append(jump.target);
                     sb.append(']');
                 }
-            } else if (this instanceof Target) {
-                Target target = (Target)this;
-                sb.append(' ');
-                sb.append(hashCode());
-                sb.append(" [labelId: ");
-                sb.append(target.labelId);
-                sb.append(']');
             } else if (type == Token.NUMBER) {
                 sb.append(' ');
                 sb.append(getDouble());

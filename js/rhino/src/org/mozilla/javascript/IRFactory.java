@@ -141,7 +141,7 @@ final class IRFactory
         Node.Jump switchNode = (Node.Jump)switchBlock.getFirstChild();
         if (switchNode.getType() != Token.SWITCH) throw Kit.codeBug();
 
-        Node.Target gotoTarget = new Node.Target();
+        Node gotoTarget = Node.newTarget();
         if (caseExpression != null) {
             Node.Jump caseNode = new Node.Jump(Token.CASE, caseExpression);
             caseNode.target = gotoTarget;
@@ -159,12 +159,12 @@ final class IRFactory
         Node.Jump switchNode = (Node.Jump)switchBlock.getFirstChild();
         if (switchNode.getType() != Token.SWITCH) throw Kit.codeBug();
 
-        Node.Target switchBreakTarget = new Node.Target();
+        Node switchBreakTarget = Node.newTarget();
         // switchNode.target is only used by NodeTransformer
         // to detect switch end
         switchNode.target = switchBreakTarget;
 
-        Node.Target defaultTarget = switchNode.getDefault();
+        Node defaultTarget = switchNode.getDefault();
         if (defaultTarget == null) {
             defaultTarget = switchBreakTarget;
         }
@@ -337,7 +337,7 @@ final class IRFactory
         // node.  And in the LABEL node, so breaks get the
         // right target.
 
-        Node.Target breakTarget = new Node.Target();
+        Node breakTarget = Node.newTarget();
         Node block = new Node(Token.BLOCK, label, statement, breakTarget);
         label.target = breakTarget;
 
@@ -499,14 +499,14 @@ final class IRFactory
     private Node createLoop(Node.Jump loop, int loopType, Node body, Node cond,
                             Node init, Node incr)
     {
-        Node.Target bodyTarget = new Node.Target();
-        Node.Target condTarget = new Node.Target();
+        Node bodyTarget = Node.newTarget();
+        Node condTarget = Node.newTarget();
         if (loopType == LOOP_FOR && cond.getType() == Token.EMPTY) {
             cond = new Node(Token.TRUE);
         }
         Node.Jump IFEQ = new Node.Jump(Token.IFEQ, cond);
         IFEQ.target = bodyTarget;
-        Node.Target breakTarget = new Node.Target();
+        Node breakTarget = Node.newTarget();
 
         loop.addChildToBack(bodyTarget);
         loop.addChildrenToBack(body);
@@ -519,7 +519,7 @@ final class IRFactory
         loop.addChildToBack(breakTarget);
 
         loop.target = breakTarget;
-        Node.Target continueTarget = condTarget;
+        Node continueTarget = condTarget;
 
         if (loopType == LOOP_WHILE || loopType == LOOP_FOR) {
             // Just add a GOTO to the condition in the do..while
@@ -532,7 +532,7 @@ final class IRFactory
                     }
                     loop.addChildToFront(init);
                 }
-                Node.Target incrTarget = new Node.Target();
+                Node incrTarget = Node.newTarget();
                 loop.addChildAfter(incrTarget, body);
                 if (incr.getType() != Token.EMPTY) {
                     incr = new Node(Token.EXPR_VOID, incr);
@@ -647,11 +647,11 @@ final class IRFactory
 
         if (hasCatch) {
             // jump around catch code
-            Node.Target endCatch = new Node.Target();
+            Node endCatch = Node.newTarget();
             pn.addChildToBack(makeJump(Token.GOTO, endCatch));
 
             // make a TARGET for the catch that the tcf node knows about
-            Node.Target catchTarget = new Node.Target();
+            Node catchTarget = Node.newTarget();
             pn.target = catchTarget;
             // mark it
             pn.addChildToBack(catchTarget);
@@ -766,14 +766,14 @@ final class IRFactory
         }
 
         if (hasFinally) {
-            Node.Target finallyTarget = new Node.Target();
+            Node finallyTarget = Node.newTarget();
             pn.setFinally(finallyTarget);
 
             // add jsr finally to the try block
             pn.addChildToBack(makeJump(Token.JSR, finallyTarget));
 
             // jump around finally code
-            Node.Target finallyEnd = new Node.Target();
+            Node finallyEnd = Node.newTarget();
             pn.addChildToBack(makeJump(Token.GOTO, finallyEnd));
 
             pn.addChildToBack(finallyTarget);
@@ -890,7 +890,7 @@ final class IRFactory
         }
 
         Node result = new Node(Token.BLOCK, lineno);
-        Node.Target ifNotTarget = new Node.Target();
+        Node ifNotTarget = Node.newTarget();
         Node.Jump IFNE = new Node.Jump(Token.IFNE, cond);
         IFNE.target = ifNotTarget;
 
@@ -898,7 +898,7 @@ final class IRFactory
         result.addChildrenToBack(ifTrue);
 
         if (ifFalse != null) {
-            Node.Target endTarget = new Node.Target();
+            Node endTarget = Node.newTarget();
             result.addChildToBack(makeJump(Token.GOTO, endTarget));
             result.addChildToBack(ifNotTarget);
             result.addChildrenToBack(ifFalse);
@@ -1327,7 +1327,7 @@ final class IRFactory
         return result;
     }
 
-    private Node.Jump makeJump(int type, Node.Target target)
+    private Node.Jump makeJump(int type, Node target)
     {
         Node.Jump n = new Node.Jump(type);
         n.target = target;

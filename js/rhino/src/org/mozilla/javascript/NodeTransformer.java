@@ -149,7 +149,7 @@ public class NodeTransformer
                         Node unwind;
                         if (elemtype == Token.TRY) {
                             Node.Jump jsrnode = new Node.Jump(Token.JSR);
-                            Node.Target jsrtarget = ((Node.Jump)n).getFinally();
+                            Node jsrtarget = ((Node.Jump)n).getFinally();
                             jsrnode.target = jsrtarget;
                             unwind = jsrnode;
                         } else {

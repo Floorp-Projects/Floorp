@@ -200,8 +200,6 @@ public class Interpreter
 // ECF_ or Expression Context Flags constants: for now only TAIL is available
     private static final int ECF_TAIL = 1 << 0;
 
-    private static final Object DBL_MRK = new Object();
-
     /**
      * Class to hold data corresponding to one interpreted call stack frame.
      */
@@ -216,7 +214,7 @@ public class Interpreter
 // stack[0 <= i < localShift]: arguments and local variables
 // stack[localShift <= i <= emptyStackTop]: used for local temporaries
 // stack[emptyStackTop < i < stack.length]: stack data
-// sDbl[i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
+// sDbl[i]: if stack[i] is UniqueTag.DOUBLE_MARK, sDbl[i] holds the number value
 
         Object[] stack;
         double[] sDbl;
@@ -632,13 +630,13 @@ public class Interpreter
             break;
 
           case Token.TARGET:
-            markTargetLabel((Node.Target)node);
+            markTargetLabel(node);
             break;
 
           case Token.IFEQ :
           case Token.IFNE :
             {
-                Node.Target target = ((Node.Jump)node).target;
+                Node target = ((Node.Jump)node).target;
                 visitExpression(child, 0);
                 addGoto(target, type);
                 stackChange(-1);
@@ -647,14 +645,14 @@ public class Interpreter
 
           case Token.GOTO:
             {
-                Node.Target target = ((Node.Jump)node).target;
+                Node target = ((Node.Jump)node).target;
                 addGoto(target, type);
             }
             break;
 
           case Token.JSR:
             {
-                Node.Target target = ((Node.Jump)node).target;
+                Node target = ((Node.Jump)node).target;
                 addGoto(target, Icode_GOSUB);
             }
             break;
@@ -696,7 +694,7 @@ public class Interpreter
                     child = child.getNext();
                 }
 
-                Node.Target catchTarget = tryNode.target;
+                Node catchTarget = tryNode.target;
                 if (catchTarget != null) {
                     int catchStartPC
                         = itsLabelTable[getTargetLabel(catchTarget)];
@@ -704,7 +702,7 @@ public class Interpreter
                         tryStart, catchStartPC, catchStartPC,
                         false, exceptionObjectLocal, scopeLocal);
                 }
-                Node.Target finallyTarget = tryNode.getFinally();
+                Node finallyTarget = tryNode.getFinally();
                 if (finallyTarget != null) {
                     int finallyStartPC
                         = itsLabelTable[getTargetLabel(finallyTarget)];
@@ -1359,9 +1357,9 @@ public class Interpreter
         return localBlock.getExistingIntProp(Node.LOCAL_PROP);
     }
 
-    private int getTargetLabel(Node.Target target)
+    private int getTargetLabel(Node target)
     {
-        int label = target.labelId;
+        int label = target.labelId();
         if (label != -1) {
             return label;
         }
@@ -1378,11 +1376,11 @@ public class Interpreter
         itsLabelTableTop = label + 1;
         itsLabelTable[label] = -1;
 
-        target.labelId = label;
+        target.labelId(label);
         return label;
     }
 
-    private void markTargetLabel(Node.Target target)
+    private void markTargetLabel(Node target)
     {
         int label = getTargetLabel(target);
         if (itsLabelTable[label] != -1) {
@@ -1392,7 +1390,7 @@ public class Interpreter
         itsLabelTable[label] = itsICodeTop;
     }
 
-    private void addGoto(Node.Target target, int gotoOp)
+    private void addGoto(Node target, int gotoOp)
     {
         int label = getTargetLabel(target);
         if (!(label < itsLabelTableTop)) Kit.codeBug();
@@ -2093,7 +2091,7 @@ public class Interpreter
 
     private static Object interpret(Context cx, CallFrame frame)
     {
-        final Object DBL_MRK = Interpreter.DBL_MRK;
+        final Object DBL_MRK = UniqueTag.DOUBLE_MARK;
         final Scriptable undefined = Undefined.instance;
 
         final boolean instructionCounting = (cx.instructionThreshold != 0);
@@ -3364,7 +3362,7 @@ switch (op) {
                 } else {
                     Object result;
                     result = frame.result;
-                    if (result == DBL_MRK) {
+                    if (result == UniqueTag.DOUBLE_MARK) {
                         result = ScriptRuntime.wrapNumber(frame.resultDbl);
                     }
                     frame.debuggerFrame.onExit(cx, false, result);
@@ -3403,7 +3401,7 @@ switch (op) {
     {
         Object x = frame.stack[i];
         double value;
-        if (x == DBL_MRK) {
+        if (x == UniqueTag.DOUBLE_MARK) {
             value = frame.sDbl[i];
         } else {
             value = ScriptRuntime.toNumber(x);
@@ -3414,7 +3412,11 @@ switch (op) {
     private static double stack_double(CallFrame frame, int i)
     {
         Object x = frame.stack[i];
-        return (x != DBL_MRK) ? ScriptRuntime.toNumber(x) : frame.sDbl[i];
+        if (x != UniqueTag.DOUBLE_MARK) {
+            return ScriptRuntime.toNumber(x);
+        } else {
+            return frame.sDbl[i];
+        }
     }
 
     private static boolean stack_boolean(CallFrame frame, int i)
@@ -3424,7 +3426,7 @@ switch (op) {
             return true;
         } else if (x == Boolean.FALSE) {
             return false;
-        } else if (x == DBL_MRK) {
+        } else if (x == UniqueTag.DOUBLE_MARK) {
             double d = frame.sDbl[i];
             return d == d && d != 0.0;
         } else if (x == null || x == Undefined.instance) {
@@ -3446,15 +3448,15 @@ switch (op) {
         Object lhs = stack[stackTop];
         double d;
         boolean leftRightOrder;
-        if (rhs == DBL_MRK) {
+        if (rhs == UniqueTag.DOUBLE_MARK) {
             d = sDbl[stackTop + 1];
-            if (lhs == DBL_MRK) {
+            if (lhs == UniqueTag.DOUBLE_MARK) {
                 sDbl[stackTop] += d;
                 return;
             }
             leftRightOrder = true;
             // fallthrough to object + number code
-        } else if (lhs == DBL_MRK) {
+        } else if (lhs == UniqueTag.DOUBLE_MARK) {
             d = sDbl[stackTop];
             lhs = rhs;
             leftRightOrder = false;
@@ -3475,7 +3477,7 @@ switch (op) {
                     ? ((Number)lhs).doubleValue() : ScriptRuntime.toNumber(lhs);
                 double rDbl = (rhs instanceof Number)
                     ? ((Number)rhs).doubleValue() : ScriptRuntime.toNumber(rhs);
-                stack[stackTop] = DBL_MRK;
+                stack[stackTop] = UniqueTag.DOUBLE_MARK;
                 sDbl[stackTop] = lDbl + rDbl;
             }
             return;
@@ -3501,7 +3503,7 @@ switch (op) {
         } else {
             double lDbl = (lhs instanceof Number)
                 ? ((Number)lhs).doubleValue() : ScriptRuntime.toNumber(lhs);
-            stack[stackTop] = DBL_MRK;
+            stack[stackTop] = UniqueTag.DOUBLE_MARK;
             sDbl[stackTop] = lDbl + d;
         }
     }
@@ -3516,10 +3518,10 @@ switch (op) {
           number_compare:
             {
                 double rDbl, lDbl;
-                if (rhs == DBL_MRK) {
+                if (rhs == UniqueTag.DOUBLE_MARK) {
                     rDbl = frame.sDbl[i + 1];
                     lDbl = stack_double(frame, i);
-                } else if (lhs == DBL_MRK) {
+                } else if (lhs == UniqueTag.DOUBLE_MARK) {
                     rDbl = ScriptRuntime.toNumber(rhs);
                     lDbl = frame.sDbl[i];
                 } else {
@@ -3567,14 +3569,14 @@ switch (op) {
         boolean result;
         Object rhs = frame.stack[i + 1];
         Object lhs = frame.stack[i];
-        if (rhs == DBL_MRK) {
-            if (lhs == DBL_MRK) {
+        if (rhs == UniqueTag.DOUBLE_MARK) {
+            if (lhs == UniqueTag.DOUBLE_MARK) {
                 result = (frame.sDbl[i] == frame.sDbl[i + 1]);
             } else {
                 result = ScriptRuntime.eqNumber(frame.sDbl[i + 1], lhs);
             }
         } else {
-            if (lhs == DBL_MRK) {
+            if (lhs == UniqueTag.DOUBLE_MARK) {
                 result = ScriptRuntime.eqNumber(frame.sDbl[i], rhs);
             } else {
                 result = ScriptRuntime.eq(lhs, rhs);
@@ -3591,9 +3593,9 @@ switch (op) {
         boolean result;
       double_compare: {
             double rdbl, ldbl;
-            if (rhs == DBL_MRK) {
+            if (rhs == UniqueTag.DOUBLE_MARK) {
                 rdbl = frame.sDbl[i + 1];
-                if (lhs == DBL_MRK) {
+                if (lhs == UniqueTag.DOUBLE_MARK) {
                     ldbl = frame.sDbl[i];
                 } else if (lhs instanceof Number) {
                     ldbl = ((Number)lhs).doubleValue();
@@ -3601,9 +3603,9 @@ switch (op) {
                     result = false;
                     break double_compare;
                 }
-            } else if (lhs == DBL_MRK) {
+            } else if (lhs == UniqueTag.DOUBLE_MARK) {
                 ldbl = frame.sDbl[i];
-                if (rhs == DBL_MRK) {
+                if (rhs == UniqueTag.DOUBLE_MARK) {
                     rdbl = frame.sDbl[i + 1];
                 } else if (rhs instanceof Number) {
                     rdbl = ((Number)rhs).doubleValue();
@@ -3624,11 +3626,12 @@ switch (op) {
     private static void do_getElem(CallFrame frame, int i, Context cx)
     {
         Object lhs = frame.stack[i];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(frame.sDbl[i]);
-
+        if (lhs == UniqueTag.DOUBLE_MARK) {
+            lhs = ScriptRuntime.wrapNumber(frame.sDbl[i]);
+        }
         Object result;
         Object id = frame.stack[i + 1];
-        if (id != DBL_MRK) {
+        if (id != UniqueTag.DOUBLE_MARK) {
             result = ScriptRuntime.getObjectElem(lhs, id, cx, frame.scope);
         } else {
             double val = frame.sDbl[i + 1];
@@ -3653,13 +3656,16 @@ switch (op) {
     private static void do_setElem(CallFrame frame, int i, Context cx)
     {
         Object rhs = frame.stack[i + 2];
-        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(frame.sDbl[i + 2]);
+        if (rhs == UniqueTag.DOUBLE_MARK) {
+            rhs = ScriptRuntime.wrapNumber(frame.sDbl[i + 2]);
+        }
         Object lhs = frame.stack[i];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(frame.sDbl[i]);
-
+        if (lhs == UniqueTag.DOUBLE_MARK) {
+            lhs = ScriptRuntime.wrapNumber(frame.sDbl[i]);
+        }
         Object result;
         Object id = frame.stack[i + 1];
-        if (id != DBL_MRK) {
+        if (id != UniqueTag.DOUBLE_MARK) {
             result = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, frame.scope);
         } else {
             double val = frame.sDbl[i + 1];
@@ -3690,7 +3696,9 @@ switch (op) {
         Object[] args = new Object[count];
         for (int i = 0; i != count; ++i, ++shift) {
             Object val = stack[shift];
-            if (val == DBL_MRK) val = ScriptRuntime.wrapNumber(sDbl[shift]);
+            if (val == UniqueTag.DOUBLE_MARK) {
+                val = ScriptRuntime.wrapNumber(sDbl[shift]);
+            }
             args[i] = val;
         }
         return args;
