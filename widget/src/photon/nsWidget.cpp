@@ -50,7 +50,6 @@ nsWidget::nsWidget()
   // XXX Shouldn't this be done in nsBaseWidget?
   NS_INIT_REFCNT();
 
-#if 1
   if (!sLookAndFeel) {
     if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
                                                     nsnull,
@@ -62,15 +61,6 @@ nsWidget::nsWidget()
   if (sLookAndFeel)
     sLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,
                            mBackground);
-
-#else
-  // get the proper color from the look and feel code
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-    lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackground);
-  }
-  NS_RELEASE(lookAndFeel);
-#endif
 
   mWidget = nsnull;
   mParent = nsnull;
@@ -128,12 +118,14 @@ NS_METHOD nsWidget::SetBackgroundColor( const nscolor &aColor )
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WidgetToScreen - Not Implemented.\n" ));
+  NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
   return NS_OK;
 }
 
 NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::ScreenToWidget - Not Implemented.\n" ));
+  NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
   return NS_OK;
 }
 
@@ -155,6 +147,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
 
   if( mWidget )
   {
+    // prevent the widget from causing additional events
     mEventCallback = nsnull;
     RemoveDamagedWidget(mWidget);
     PtDestroyWidget( mWidget );
@@ -164,7 +157,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
       OnDestroy();
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy the end  mRefCnt=<%d>\n",mRefCnt));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy the end this=<%p> mRefCnt=<%d>\n", this, mRefCnt));
 
   return NS_OK;
 }
@@ -211,6 +204,13 @@ void nsWidget::OnDestroy()
 
 nsIWidget *nsWidget::GetParent(void)
 {
+#if 1
+/* Stolen from GTK */
+  if (mParent) {
+    NS_ADDREF(mParent);
+  }
+  return mParent;
+#else
   nsIWidget *theParent = nsnull;
   
   if( mParent )
@@ -234,6 +234,7 @@ nsIWidget *nsWidget::GetParent(void)
   }
   
   return theParent;
+#endif
 }
 
 
@@ -272,7 +273,23 @@ NS_METHOD nsWidget::Show(PRBool bState)
 
   mShown = bState;
 
- PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show end mRefCnt=<%d>", mRefCnt));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show end mRefCnt=<%d>", mRefCnt));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWidget::SetModal(void)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetModal - Not Implemented\n"));
+
+  if (!mWidget)
+	return NS_ERROR_FAILURE;
+
+  PtWidget_t *toplevel = PtFindDisjoint(mWidget);
+  if (!toplevel)
+	return NS_ERROR_FAILURE;
+	
+  //gtk_window_set_modal(toplevel, PR_TRUE);
 
   return NS_OK;
 }
@@ -333,7 +350,6 @@ NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
     }
 
     EnableDamage( mWidget, PR_TRUE );
-//    Invalidate( PR_FALSE );
   }
   else
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move - mWidget is NULL!\n" ));
@@ -359,6 +375,7 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       PtSetArg( &arg, Pt_ARG_BORDER_WIDTH, &border, 0 );
       if( PtGetResources( mWidget, 1, &arg ) == 0 )
       {
+		/* Add the border to the size of the widget */
         PhDim_t dim = {aWidth - 2*(*border), aHeight - 2*(*border)};
 
         EnableDamage( mWidget, PR_FALSE );
@@ -368,6 +385,7 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
         EnableDamage( mWidget, PR_TRUE );
       }
+
       Invalidate( aRepaint );
     }
     else
@@ -394,12 +412,30 @@ PRBool nsWidget::OnResize(nsRect &aRect)
 {
   PRBool result = PR_FALSE;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnResize\n" ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnResize\n"));
 
   // call the event callback
   if (mEventCallback)
   {
     nsSizeEvent event;
+
+#if 1
+  /* Stole this from GTK */
+  InitEvent(event, NS_SIZE);
+  event.eventStructType = NS_SIZE_EVENT;
+
+  nsRect *foo = new nsRect(0, 0, aRect.width, aRect.height);
+  event.windowSize = foo;
+
+  event.point.x = 0;
+  event.point.y = 0;
+  event.mWinWidth = aRect.width;
+  event.mWinHeight = aRect.height;
+  
+  NS_ADDREF_THIS();
+  result = DispatchWindowEvent(&event);
+  NS_RELEASE_THIS();
+#else
     InitEvent(event, NS_SIZE);
     event.windowSize = &aRect;
     event.eventStructType = NS_SIZE_EVENT;
@@ -413,6 +449,7 @@ PRBool nsWidget::OnResize(nsRect &aRect)
 
     /* Not sure if this is really needed, kirkj */
     NS_IF_RELEASE(event.widget);
+#endif
   }
 
   return result;
@@ -432,7 +469,10 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
   event.point.y = aY;
   event.eventStructType = NS_GUI_EVENT;
   PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
+
+// GTK doesn't do this anymore
+//  NS_RELEASE(event.widget);
+
   return result;
 }
 
@@ -445,6 +485,8 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 {
   if (mWidget)
   {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Enable being set to %d\n", bState));
+
     PtArg_t arg;
     if( bState )
       PtSetArg( &arg, Pt_ARG_FLAGS, 0, Pt_BLOCKED );
@@ -483,7 +525,7 @@ NS_METHOD nsWidget::SetFocus(void)
 nsIFontMetrics *nsWidget::GetFont(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetFont - Not Implemented.\n" ));
-
+  NS_NOTYETIMPLEMENTED("nsWidget::GetFont");
   return nsnull;
 }
 
@@ -544,8 +586,12 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 {
   unsigned short curs;
 
-  switch( aCursor )
-  {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetCursor to <%d> was <%d>\n", aCursor, mCursor));
+
+  // Only change cursor if it's changing
+  if (aCursor != mCursor) {
+    switch( aCursor )
+    {
   case eCursor_select:
     curs = Ph_CURSOR_INSERT;
     break;
@@ -571,37 +617,24 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
     break;
 
   // REVISIT - Photon does not have the following cursor types...
-
   case eCursor_arrow_north:
-    curs = Ph_CURSOR_POINTER;
-    break;
-
   case eCursor_arrow_north_plus:
-    curs = Ph_CURSOR_POINTER;
+    curs = Ph_CURSOR_DRAG_TOP;
     break;
 
   case eCursor_arrow_south:
-    curs = Ph_CURSOR_POINTER;
-    break;
-
   case eCursor_arrow_south_plus:
-    curs = Ph_CURSOR_POINTER;
+    curs = Ph_CURSOR_DRAG_BOTTOM;
     break;
 
   case eCursor_arrow_east:
-    curs = Ph_CURSOR_POINTER;
-    break;
-
   case eCursor_arrow_east_plus:
-    curs = Ph_CURSOR_POINTER;
+    curs = Ph_CURSOR_DRAG_RIGHT;
     break;
 
   case eCursor_arrow_west:
-    curs = Ph_CURSOR_POINTER;
-    break;
-
   case eCursor_arrow_west_plus:
-    curs = Ph_CURSOR_POINTER;
+    curs = Ph_CURSOR_DRAG_LEFT;
     break;
 
   default:
@@ -621,6 +654,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 
   mCursor = aCursor;
 
+  }
   return NS_OK;
 }
 
@@ -638,6 +672,7 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 
     if( rect.width && rect.height )
     {
+	  /* Damage has to be releative Parent */
       mUpdateArea.SetRect( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
 
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  rect=(%i,%i,%i,%i)\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height  ));
@@ -832,6 +867,7 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
   {
   case NS_NATIVE_WINDOW:
   case NS_NATIVE_WIDGET:
+  case NS_NATIVE_PLUGIN_PORT:
     if( !mWidget )
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetNativeData(mWidget) - mWidget is NULL!\n" ));
     return (void *)mWidget;
@@ -895,7 +931,7 @@ NS_METHOD nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetMenuBar - Not Implemented.\n" ));
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsWidget::ShowMenuBar( PRBool aShow)
@@ -1095,7 +1131,7 @@ void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
     event.widget = this;
-    NS_IF_ADDREF(event.widget);
+//    NS_IF_ADDREF(event.widget);
 
     if (aPoint == nsnull)
     {
@@ -1108,7 +1144,7 @@ void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
       event.point.y = aPoint->y;
     }
 
-    event.time = 0; //gdk_event_get_time((GdkEvent*)ge);
+    event.time = PR_IntervalNow();
     event.message = aEventType;
 }
 
@@ -1167,12 +1203,40 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
+NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *aEvent,
                                       nsEventStatus &aStatus)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget(%p)::DispatchEvent\n", this));
 //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent 1 mRefCnt=<%d>\n", mRefCnt));
 
+#if 1
+/* Stolen from GTK */
+
+  NS_ADDREF(aEvent->widget);
+
+  if (nsnull != mMenuListener) {
+    if (NS_MENU_EVENT == aEvent->eventStructType)
+      aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *aEvent));
+  }
+
+  aStatus = nsEventStatus_eIgnore;
+  if (nsnull != mEventCallback) {
+    aStatus = (*mEventCallback)(aEvent);
+  }
+
+  // Dispatch to event listener if event was not consumed
+  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+    aStatus = mEventListener->ProcessEvent(*aEvent);
+  }
+
+// This causes the App to die in a bad way... The widget must be getting released
+//  somewhere else... This is a Memory Leak! 
+   NS_RELEASE(aEvent->widget);
+
+  return NS_OK;
+#endif
+
+#if 0
 #if 1
 
   aStatus = nsEventStatus_eIgnore;
@@ -1241,6 +1305,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
 //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent end  mRefCnt=<%d>\n", mRefCnt));
 
   return NS_OK;
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -1548,9 +1613,14 @@ int nsWidget::RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 
 PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 {
+#if 1
+  NS_ASSERTION(0, "nsWidget::HandleEvent Somebody got here by mistake");
+  return PR_FALSE;
+#else  
   PRBool  result = PR_FALSE; // call the default nsWindow proc
   PtWidget_t *parent = PtFindContainer( mWidget );
   nsWidget * parentWidget = (nsWidget *) GetInstance( parent );
+
 
   // When we get menu selections, dispatch the menu command (event) AND IF there is
   // a menu listener, call "listener->MenuSelected(event)"
@@ -1629,6 +1699,7 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 
 //  return result;
   return PR_TRUE;
+#endif
 }
 
 
@@ -1877,10 +1948,4 @@ void nsWidget::EnableDamage( PtWidget_t *widget, PRBool enable )
       PtStartFlux( top );
   }
 }
-
-
-//void nsWidget::NativePaint( PhRect_t &extent )
-//{
-//  PtDamageExtent( mWidget, &extent );
-//}
 

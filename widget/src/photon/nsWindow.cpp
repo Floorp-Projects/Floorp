@@ -39,47 +39,14 @@
 #include "nsIMenuListener.h"
 
 
-static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-static NS_DEFINE_IID(kRenderingContextPhIID, NS_IRENDERING_CONTEXT_PH_IID);
+//static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+//static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+//static NS_DEFINE_IID(kRenderingContextPhIID, NS_IRENDERING_CONTEXT_PH_IID);
 
 
-//PRBool  nsWindow::mIsResizing = PR_FALSE;
-PRBool  nsWindow::mResizeQueueInited = PR_FALSE;
-DamageQueueEntry *nsWindow::mResizeQueue = nsnull;
-PtWorkProcId_t *nsWindow::mResizeProcID = nsnull;
-
-#if 0
-// for nsISupports
-NS_IMPL_ADDREF(nsWindow)
-NS_IMPL_RELEASE(nsWindow)
-
-
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- *
-*/
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kCWindow, NS_WINDOW_CID);
-    if (aIID.Equals(kCWindow)) {
-        *aInstancePtr = (void*) ((nsWindow*)this);
-        AddRef();
-        return NS_OK;
-    }
-    return nsWidget::QueryInterface(aIID,aInstancePtr);
-}
-
-#endif
-
+PRBool            nsWindow::mResizeQueueInited = PR_FALSE;
+DamageQueueEntry  *nsWindow::mResizeQueue = nsnull;
+PtWorkProcId_t    *nsWindow::mResizeProcID = nsnull;
 
 //-------------------------------------------------------------------------
 //
@@ -131,7 +98,9 @@ nsWindow::~nsWindow()
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::~nsWindow (%p) - Not Implemented.\n", this ));
 
 #if 1
+
   mIsDestroyingWindow = PR_TRUE;
+
   if ( (mWindowType == eWindowType_dialog) ||
        (mWindowType == eWindowType_popup) ||
 	   (mWindowType == eWindowType_toplevel) )
@@ -139,6 +108,7 @@ nsWindow::~nsWindow()
     Destroy();
   }
   NS_IF_RELEASE(mMenuBar);
+
 #else
   if( mWidget )
   {
@@ -152,7 +122,7 @@ nsWindow::~nsWindow()
 
 NS_METHOD nsWindow::Destroy(void)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Destroy (%p) - Not Implemented.\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Destroy (%p) mIsDestroyingWindow=<%d> mOnDestroyCalled=<%d> mRefCnt=<%d>\n", this, mIsDestroyingWindow,mOnDestroyCalled, mRefCnt));
 
 #if 1
   NS_IF_RELEASE(mMenuBar);
@@ -232,18 +202,11 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 
   if (nsnull != aInitData)
   {
-    //mClipChildren = aInitData->clipChildren;
-    //mClipSiblings = aInitData->clipSiblings;
-
     SetWindowType( aInitData->mWindowType );
     SetBorderStyle( aInitData->mBorderStyle );
 
-    //mBorderStyle = aInitData->mBorderStyle;
-    //mWindowType = aInitData->mWindowType;
-
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n",
       mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
-
 
     return NS_OK;
   }
@@ -282,15 +245,12 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
   switch( mWindowType )
   {
   case eWindowType_toplevel :
-    mIsToplevel = PR_TRUE;
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = toplevel\n" ));
     break;
   case eWindowType_dialog :
-    mIsToplevel = PR_TRUE;
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = dialog\n" ));
     break;
   case eWindowType_popup :
-    mIsToplevel = PR_TRUE;
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = popup\n" ));
     break;
   case eWindowType_child :
@@ -387,7 +347,9 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     PtFrameSize( render_flags, 0, &mFrameLeft, &mFrameTop, &mFrameRight, &mFrameBottom );
 
     if( parentWidget )
+	{
       mWidget = PtCreateWidget( PtWindow, parentWidget, 4, arg );
+	}
     else
     {
       PtSetParentWidget( nsnull );
@@ -397,43 +359,9 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     // Must also create the client-area widget
     if( mWidget )
     {
-#if 0
       PtSetArg( &arg[0], Pt_ARG_DIM, &dim, 0 );
       PtSetArg( &arg[1], Pt_ARG_ANCHOR_FLAGS, Pt_LEFT_ANCHORED_LEFT |
         Pt_RIGHT_ANCHORED_RIGHT | Pt_TOP_ANCHORED_TOP | Pt_BOTTOM_ANCHORED_BOTTOM, 0xFFFFFFFF );
-      PtSetArg( &arg[2], Pt_ARG_BORDER_WIDTH, 0 , 0 );
-      PtSetArg( &arg[3], Pt_ARG_MARGIN_WIDTH, 0 , 0 );
-      PtSetArg( &arg[4], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED );
-      PtSetArg( &arg[5], Pt_ARG_TOP_BORDER_COLOR, Pg_BLUE, 0 );
-      PtSetArg( &arg[6], Pt_ARG_BOT_BORDER_COLOR, Pg_BLUE, 0 );
-      PtSetArg( &arg[7], Pt_ARG_FILL_COLOR, Pg_GREY, 0 );
-//      PtSetArg( &arg[7], Pt_ARG_FILL_COLOR, Pg_BLUE, 0 );
-
-      PhRect_t anch_offset = { 0, 0, 0, 0 };
-      PtSetArg( &arg[8], Pt_ARG_ANCHOR_OFFSETS, &anch_offset, 0 );
-
-      //#define REGION_FIELDS  Ph_REGION_EV_SENSE | Ph_REGION_EV_OPAQUE
-
-      //PtSetArg( &arg[9], Pt_ARG_REGION_FIELDS, Ph_REGION_EV_OPAQUE, Ph_REGION_EV_OPAQUE );
-      //PtSetArg( &arg[10], Pt_ARG_REGION_FLAGS, Ph_EV_WIN_OPAQUE, Ph_EV_WIN_OPAQUE );
-      //PtSetArg( &arg[10], Pt_ARG_REGION_SENSE, Ph_EV_WIN_OPAQUE, Ph_EV_WIN_OPAQUE );
-      //PtSetArg( &arg[10], Pt_ARG_REGION_OPAQUE, Ph_EV_DRAW, Ph_EV_DRAW );
-
-      mClientWidget = PtCreateWidget( PtContainer, mWidget, 9, arg );
-//      mClientWidget = PtCreateWidget( PtRegion, mWidget, 9, arg );
-//      mClientWidget = PtCreateWidget( PtRawDrawContainer, mWidget, 4, arg );
-#else
-      PtSetArg( &arg[0], Pt_ARG_DIM, &dim, 0 );
-      PtSetArg( &arg[1], Pt_ARG_ANCHOR_FLAGS, Pt_LEFT_ANCHORED_LEFT |
-        Pt_RIGHT_ANCHORED_RIGHT | Pt_TOP_ANCHORED_TOP | Pt_BOTTOM_ANCHORED_BOTTOM, 0xFFFFFFFF );
-#if 0
-      // Anchoring doesnt seem to work with the RawDdraw widget
-      // - cant use it as a client area...
-
-      PtSetArg( &arg[2], RDC_DRAW_FUNC, RawDrawFunc, 0 );
-
-      mClientWidget = PtCreateWidget( PtRawDrawContainer, mWidget, 3, arg );
-#else
       PtSetArg( &arg[2], Pt_ARG_BORDER_WIDTH, 0 , 0 );
       PtSetArg( &arg[3], Pt_ARG_MARGIN_WIDTH, 0 , 0 );
       PtSetArg( &arg[4], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED );
@@ -442,8 +370,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
       PtSetArg( &arg[6], Pt_ARG_ANCHOR_OFFSETS, &anch_offset, 0 );
 
       mClientWidget = PtCreateWidget( PtContainer, mWidget, 7, arg );
-#endif
-#endif
+
       // Create a region that is opaque to draw events and place behind
       // the client widget.
       if( !mClientWidget )
@@ -517,10 +444,11 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
     if( !mWidget )
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_WINDOW ) - mWidget is NULL!\n"));
     return (void *)mWidget;
+
   case NS_NATIVE_DISPLAY:
-//    return (void *)GDK_DISPLAY();
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_DISPLAY ) - Not Implemented.\n"));
     return nsnull;
+
   case NS_NATIVE_WIDGET:
     if( IsChild() )
     {
@@ -536,12 +464,11 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
     }
 
   case NS_NATIVE_GRAPHIC:
-//    return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_GRAPHIC ) - Not Implemented.\n"));
     return nsnull;
 
   default:
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData - Wierd value.\n"));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData - Unknown Request.\n"));
     break;
   }
   return nsnull;
@@ -719,13 +646,13 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
   nsresult res = NS_ERROR_FAILURE;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetTitle.\n"));
+  const char * title = nsAutoCString(aTitle);
+  
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetTitle to <%s>\n", title));
 
   if( mWidget )
   {
     PtArg_t  arg;
-    char     *title = aTitle.ToNewCString();
 
     PtSetArg( &arg, Pt_ARG_WINDOW_TITLE, title, 0 );
     if( PtSetResources( mWidget, 1, &arg ) == 0 )
@@ -752,20 +679,12 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::BeginResizingChildren.\n"));
-
-//  PtStartFlux( mWidget );
-//  mHold = PR_TRUE;
-
   return NS_OK;
 }
 
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::EndResizingChildren.\n"));
-
-//  PtEndFlux( mWidget );
-//  mHold = PR_FALSE;
-
   return NS_OK;
 }
 
@@ -1088,7 +1007,8 @@ PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo )
 void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 {
   nsWindow * pWin = (nsWindow*) GetInstance( pWidget );
-
+  nsresult   result;
+  
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for %p\n", pWin ));
 
   if( !pWin )
@@ -1153,6 +1073,25 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
     PtHold();
 
+#if 1
+  // call the event callback
+  if (pWin->mEventCallback) 
+  {
+    pev.renderingContext = nsnull;
+    pev.renderingContext = pWin->GetRenderingContext();
+    if (pev.renderingContext)
+    {
+     if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
+      {
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
+        result = pWin->DispatchWindowEvent(&pev);
+      }
+
+	  NS_RELEASE(pev.renderingContext);
+    }
+  }
+#else	
+
     if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&pev.renderingContext))
     {
       pev.renderingContext->Init( pWin->mContext, pWin );
@@ -1163,11 +1102,14 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
         pWin->DispatchWindowEvent(&pev);
       }
 
+      //Kirk took this out  look at OnDrawSignal in GTK
       NS_RELEASE(pev.renderingContext);
     }
+#endif
 
     PtRelease();
-    NS_RELEASE(pev.widget);
+   //Kirk took this out  look at OnDrawSignal in GTK
+   //NS_RELEASE(pev.widget);
   }
   else
   {
@@ -1476,7 +1418,6 @@ void nsWindow::ResizeHoldOff()
   {
     // This is to guarantee that the Invalidation work-proc is in place prior to the
     // Resize work-proc.
-
     if( !mDmgQueueInited )
     {
       Invalidate( PR_FALSE );
@@ -1484,11 +1425,8 @@ void nsWindow::ResizeHoldOff()
 
     PtWidget_t *top = PtFindDisjoint( mWidget );
 
-//    if( PtAppAddWorkProc( nsnull, ResizeWorkProc, top ))
     if(( mResizeProcID = PtAppAddWorkProc( nsnull, ResizeWorkProc, top )) != nsnull )
     {
-//      PtStartFlux( top );
-//      PtStartFlux( top );
       PtHold();
       mResizeQueueInited = PR_TRUE;
     }
@@ -1567,7 +1505,6 @@ void nsWindow::RemoveResizeWidget()
     {
       mResizeQueueInited = PR_FALSE;
       PtWidget_t *top = PtFindDisjoint( mWidget );
-//      PtEndFlux( top );
       PtRelease();
       if( mResizeProcID )
         PtAppRemoveWorkProc( nsnull, mResizeProcID );
@@ -1605,7 +1542,7 @@ int nsWindow::ResizeWorkProc( void *data )
 
 NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetClientBounds (%p).\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetClientBounds (%p) aRect=(%d,%d,%d,%d)\n", this, aRect.x, aRect.y, aRect.width, aRect.height));
 
   aRect.x = 0;
   aRect.y = 0;
@@ -1615,6 +1552,10 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
   if( !IsChild() )
   {
     int  h = GetMenuBarHeight();
+
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetClientBounds h=<%d> mFrameRight=<%d> mFrameLeft=<%d> mFrameTop=<%d> mFrameBottom=<%d>\n",
+      h, mFrameRight, mFrameLeft, mFrameTop, mFrameBottom));
+
 
     aRect.width -= (mFrameRight + mFrameLeft);
     aRect.height -= (h + mFrameTop + mFrameBottom);
@@ -1664,28 +1605,4 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   else  
     return this->nsWidget::Move(aX, aY);
 }
-
-#if 0
-void nsWindow::NativePaint( PhRect_t &extent )
-{
-//  PtDamageWidget( mWidget, &extent );
-  PtDamageExtent( mWidget, &extent );
-/*
-  if( IsChild() && mWidget )
-  {
-    PhTile_t  damage;
-    PhPoint_t offset;
-
-    PtWidgetOffset( mWidget, &offset );
-    damage.rect.ul.x = offset.x + extent.ul.x;
-    damage.rect.ul.y = offset.y + extent.ul.y;
-    damage.rect.lr.x = offset.x + extent.lr.x;
-    damage.rect.lr.y = offset.y + extent.lr.y;
-    damage.next = nsnull;
-
-    RawDrawFunc( mWidget, &damage );
-  }
-*/
-}
-#endif
 
