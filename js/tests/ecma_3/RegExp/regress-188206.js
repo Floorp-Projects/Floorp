@@ -114,10 +114,11 @@ testThis(' /??a/ ');
 
 
 /*
- * Misusing the {DecmalDigits} quantifier - according to ECMA.
+ * Misusing the {DecmalDigits} quantifier - according to ECMA,
+ * but not according to Perl.
  *
  * ECMA-262 Edition 3 prohibits the use of unescaped braces in
- * regexp patterns, unless they form part of a quantifier
+ * regexp patterns, unless they form part of a quantifier.
  *
  * Hovever, Perl does not prohibit this. If not used as part
  * of a quantifer, Perl treats braces literally.
