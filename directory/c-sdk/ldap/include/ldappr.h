@@ -69,7 +69,7 @@ int LDAP_CALL prldap_install_routines( LDAP *ld, int shared );
  * Function: prldap_set_session_option().
  *
  * Given an LDAP session handle or a session argument such is passed to
- * SOCKET, POLL, NEWHANDLE, or DISPOSEHANDLE extended I/O callbacks, set
+ * CONNECT, POLL, NEWHANDLE, or DISPOSEHANDLE extended I/O callbacks, set
  * an option that affects the prldap layer.
  *
  * If 'ld' and 'session" are both NULL, the option is set as the default
@@ -85,7 +85,7 @@ int LDAP_CALL prldap_set_session_option( LDAP *ld, void *sessionarg,
  * Function: prldap_get_session_option().
  *
  * Given an LDAP session handle or a session argument such is passed to
- * SOCKET, POLL, NEWHANDLE, or DISPOSEHANDLE extended I/O callbacks, retrieve
+ * CONNECT, POLL, NEWHANDLE, or DISPOSEHANDLE extended I/O callbacks, retrieve
  * the setting for an option that affects the prldap layer.
  *
  * If 'ld' and 'session" are both NULL, the default option value for all new
@@ -149,7 +149,7 @@ typedef struct prldap_session_info {
  * Function: prldap_set_session_info().
  *
  * Given an LDAP session handle or a session argument such is passed to
- * SOCKET, POLL, NEWHANDLE, or DISPOSEHANDLE extended I/O callbacks,
+ * CONNECT, POLL, NEWHANDLE, or DISPOSEHANDLE extended I/O callbacks,
  * set some application-specific data.  If ld is NULL, arg is used.  If
  * both ld and arg are NULL, LDAP_PARAM_ERROR is returned.
  *
@@ -163,7 +163,7 @@ int LDAP_CALL prldap_set_session_info( LDAP *ld, void *sessionarg,
  * Function: prldap_get_session_info().
  *
  * Given an LDAP session handle or a session argument such is passed to
- * SOCKET, POLL, NEWHANDLE, or DISPOSEHANDLE extended I/O callbacks,
+ * CONNECT, POLL, NEWHANDLE, or DISPOSEHANDLE extended I/O callbacks,
  * retrieve some application-specific data.  If ld is NULL, arg is used.  If
  * both ld and arg are NULL, LDAP_PARAM_ERROR is returned.
  *
@@ -195,7 +195,7 @@ typedef struct prldap_socket_info {
  *
  * Returns an LDAP API error code (LDAP_SUCCESS if all goes well).
  *
- * Note: it is only safe to change soinfo_prfd from within the SOCKET
+ * Note: it is only safe to change soinfo_prfd from within the CONNECT
  * extended I/O callback function.
  */
 int LDAP_CALL prldap_set_socket_info( int fd, void *socketarg,
