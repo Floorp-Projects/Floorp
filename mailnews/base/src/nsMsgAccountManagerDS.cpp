@@ -83,6 +83,7 @@ public:
 protected:
 
   static nsIRDFResource* kNC_Name;
+  static nsIRDFResource* kNC_NameSort;
   static nsIRDFResource* kNC_PageTag;
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_AccountRoot;
@@ -115,6 +116,7 @@ typedef struct _serverCreationParams {
 // static members
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Name=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_NameSort=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTag=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Settings=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_AccountRoot=nsnull;
@@ -180,6 +182,7 @@ nsMsgAccountManagerDataSource::Init()
     if (! kNC_Child) {
       getRDFService()->GetResource(NC_RDF_CHILD, &kNC_Child);
       getRDFService()->GetResource(NC_RDF_NAME, &kNC_Name);
+      getRDFService()->GetResource(NC_RDF_NAME_SORT, &kNC_NameSort);
       getRDFService()->GetResource(NC_RDF_PAGETAG, &kNC_PageTag);
       getRDFService()->GetResource(NC_RDF_ACCOUNT, &kNC_Account);
       getRDFService()->GetResource(NC_RDF_SERVER, &kNC_Server);
@@ -207,15 +210,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 {
   nsresult rv;
   
-#ifdef DEBUG_amds
-  nsXPIDLCString srcval;
-  rv = source->GetValue(getter_Copies(srcval));
-  nsXPIDLCString propval;
-  rv = property->GetValue(getter_Copies(propval));
-
-  printf("GetTarget(%s on arc %s, ..)\n",
-         (const char*)srcval, (const char*)propval);
-#endif
   
   rv = NS_RDF_NO_VALUE;
 
@@ -263,6 +257,42 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = "am-main.xul";
   }
 
+  // handle sorting of servers
+  else if (property == kNC_NameSort) {
+#ifdef DEBUG_alecf
+  nsXPIDLCString srcval;
+  rv = source->GetValue(getter_Copies(srcval));
+  nsXPIDLCString propval;
+  rv = property->GetValue(getter_Copies(propval));
+
+  printf("[sort]GetTarget(%s on arc %s, ..)\n",
+         (const char*)srcval, (const char*)propval);
+#endif
+    // make sure we're handling a root folder that is a server
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source,&rv);
+    if (NS_FAILED(rv))
+      return NS_RDF_NO_VALUE;
+    
+    PRBool isServer=PR_FALSE;
+    folder->GetIsServer(&isServer);
+    if (!isServer)
+      return NS_RDF_NO_VALUE;
+
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = folder->GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 accountNum;
+    rv = mAccountManager->FindServerIndex(server, &accountNum);
+    if (NS_FAILED(rv)) return rv;
+    
+    accountNum += 1000;
+    str.Append(accountNum);
+#ifdef DEBUG_alecf
+    printf("[sort] returning %s\n", str.ToNewCString());
+#endif
+  }
+  
   if (str!="")
     rv = createNode(str, target, getRDFService());
   //if we have an empty string and we don't have an error value, then 
@@ -437,6 +467,7 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
 
   arcs->AppendElement(kNC_Settings);
   arcs->AppendElement(kNC_Name);
+  arcs->AppendElement(kNC_NameSort);
   arcs->AppendElement(kNC_PageTag);
 
 #ifdef DEBUG_amds_
