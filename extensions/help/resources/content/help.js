@@ -73,6 +73,7 @@ var key = {
  "?which_cert":  "chrome://help/locale/cert_dialog_help.html#User_Identification_Request",
  "?no_cert":  "chrome://help/locale/cert_dialog_help.html#No_Acceptable_Identification",
  "?new_ca":  "chrome://help/locale/cert_dialog_help.html#New_Certificate_Authority",
+ "?exp_crl":  "chrome://help/locale/cert_dialog_help.html#old_next_update_crl",
  "?new_web_cert":  "chrome://help/locale/cert_dialog_help.html#New_Web_Site_Certificate",
  "?exp_web_cert":  "chrome://help/locale/cert_dialog_help.html#Expired_Web_Site_Certificate",
  "?not_yet_web_cert":  "chrome://help/locale/cert_dialog_help.html#Web_Site_Certificate_Not_Yet_Valid",
