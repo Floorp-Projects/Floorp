@@ -22,7 +22,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = localfile rdfsink
+#DIRS = localfile rdfsink
+DIRS = localfile
+
 
 include $(topsrcdir)/config/config.mk
 
