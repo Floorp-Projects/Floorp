@@ -63,34 +63,34 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
 
 // This macro can be used in a class declaration for classes that want
 // to ensure that their instance memory is zeroed.
-#define NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW \
+#define NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW   \
   void* operator new(size_t sz) CPP_THROW_NEW { \
-    void* rv = ::operator new(sz);            \
-    if (rv) {                                 \
-      memset(rv, 0, sz);                      \
-    }                                         \
-    return rv;                                \
-  }                                           \
-  void operator delete(void* ptr) {           \
-    ::operator delete(ptr);                   \
+    void* rv = ::operator new(sz);              \
+    if (rv) {                                   \
+      memset(rv, 0, sz);                        \
+    }                                           \
+    return rv;                                  \
+  }                                             \
+  void operator delete(void* ptr) {             \
+    ::operator delete(ptr);                     \
   }
 
 // This macro works with the next macro to declare a non-inlined
 // version of the above.
-#define NS_DECL_ZEROING_OPERATOR_NEW \
-  void* operator new(size_t sz) CPP_THROW_NEW;     \
+#define NS_DECL_ZEROING_OPERATOR_NEW           \
+  void* operator new(size_t sz) CPP_THROW_NEW; \
   void operator delete(void* ptr);
 
-#define NS_IMPL_ZEROING_OPERATOR_NEW(_class) \
+#define NS_IMPL_ZEROING_OPERATOR_NEW(_class)            \
   void* _class::operator new(size_t sz) CPP_THROW_NEW { \
-    void* rv = ::operator new(sz);           \
-    if (rv) {                                \
-      memset(rv, 0, sz);                     \
-    }                                        \
-    return rv;                               \
-  }                                          \
-  void _class::operator delete(void* ptr) {  \
-    ::operator delete(ptr);                  \
+    void* rv = ::operator new(sz);                      \
+    if (rv) {                                           \
+      memset(rv, 0, sz);                                \
+    }                                                   \
+    return rv;                                          \
+  }                                                     \
+  void _class::operator delete(void* ptr) {             \
+    ::operator delete(ptr);                             \
   }
 
 // Freeing helper
@@ -108,9 +108,10 @@ public:
     CR='\r'   /* Carriage Return */
   };
 
-  /*** 
+  /***
    ***  The following nsCRT::mem* functions are no longer
-   ***  supported. Please use lib C functions instead.  
+   ***  supported, please use the corresponding lib C
+   ***  functions instead.
    ***
    ***  nsCRT::memcpy()
    ***  nsCRT::memcmp()
@@ -118,9 +119,9 @@ public:
    ***  nsCRT::memset()
    ***  nsCRT::zero()
    ***
-   ***  In addition, the following char* string utilities
-   ***  are no longer supported either.  Please use lib C 
-   ***  also.  Avoid calling into PL_str* if possible.
+   ***  Additionally, the following char* string utilities
+   ***  are no longer supported, please use the
+   ***  corresponding lib C functions instead.
    ***
    ***  nsCRT::strlen()
    ***
@@ -152,9 +153,9 @@ public:
   /// Case-insensitive string comparison with length
   static PRInt32 strncasecmp(const char* s1, const char* s2, PRUint32 aMaxLen) {
     PRInt32 result=PRInt32(PL_strncasecmp(s1, s2, aMaxLen));
-    //Egags. PL_strncasecmp is returning *very* negative numbers.
-    //Some folks expect -1,0,1, so let's temper it's enthusiasm.
-    if(result<0) 
+    //Egads. PL_strncasecmp is returning *very* negative numbers.
+    //Some folks expect -1,0,1, so let's temper its enthusiasm.
+    if (result<0) 
       result=-1;
     return result;
   }
@@ -182,16 +183,16 @@ public:
 
     How to use this fancy (thread-safe) version of strtok: 
 
-    void main( void ) {
-      printf( "%s\n\nTokens:\n", string );
+    void main(void) {
+      printf("%s\n\nTokens:\n", string);
       // Establish string and get the first token:
       char* newStr;
-      token = nsCRT::strtok( string, seps, &newStr );   
-      while( token != NULL ) {
+      token = nsCRT::strtok(string, seps, &newStr);   
+      while (token != NULL) {
         // While there are tokens in "string"
-        printf( " %s\n", token );
+        printf(" %s\n", token);
         // Get next token:
-        token = nsCRT::strtok( newStr, seps, &newStr );
+        token = nsCRT::strtok(newStr, seps, &newStr);
       }
     }
     * WARNING - STRTOK WHACKS str THE FIRST TIME IT IS CALLED *
@@ -208,10 +209,12 @@ public:
   static PRInt32 strncmp(const PRUnichar* s1, const PRUnichar* s2,
                          PRUint32 aMaxLen);
 
-  // Note: uses new[] to allocate memory, so you must use delete[] to
-  // free the memory
+  // You must use nsCRT::free(PRUnichar*) to free memory allocated
+  // by nsCRT::strdup(PRUnichar*).
   static PRUnichar* strdup(const PRUnichar* str);
 
+  // You must use nsCRT::free(PRUnichar*) to free memory allocated
+  // by strndup(PRUnichar*, PRUint32).
   static PRUnichar* strndup(const PRUnichar* str, PRUint32 len);
 
   static void free(PRUnichar* str) {

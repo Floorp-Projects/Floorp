@@ -1272,10 +1272,12 @@ ClassIDWriter(PLDHashTable *table,
                (className  ? className  : ""), 
                (location   ? location   : "")); 
 
-
     PR_Free(cidString);
-    PR_FREEIF(contractID);
-    PR_FREEIF(className);
+    if (contractID)
+        PR_Free(contractID);
+    if (className)
+        PR_Free(className);
+
     return PL_DHASH_NEXT;
 }
 
@@ -1660,7 +1662,8 @@ nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
     {
         char *buf = aClass.ToString();
         PR_LogPrint("nsComponentManager: GetClassObject(%s)", buf);
-        delete [] buf;
+        if (buf)
+            PR_Free(buf);
     }
 
     PR_ASSERT(aResult != nsnull);
@@ -1736,8 +1739,8 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: ContractIDToClassID(%s)->%s", aContractID,
                 NS_SUCCEEDED(rv) ? buf : "[FAILED]"));
-        if (NS_SUCCEEDED(rv))
-            delete [] buf;
+        if (buf)
+            PR_Free(buf);
     }
 
     return rv;
@@ -1766,7 +1769,8 @@ nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
         PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: CLSIDToContractID(%s)->%s", buf,
                 NS_SUCCEEDED(rv) ? *aContractID : "[FAILED]"));
-        delete [] buf;
+        if (buf)
+            PR_Free(buf);
     }
 
     return rv;
@@ -1825,7 +1829,8 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: CreateInstance(%s) %s", buf,
                 NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
-        delete [] buf;
+        if (buf)
+            PR_Free(buf);
     }
 
     return rv;
@@ -2487,8 +2492,8 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: RegisterFactory(%s, %s)", buf,
                 (aContractID ? aContractID : "(null)")));
-        delete [] buf;
-
+        if (buf)
+            PR_Free(buf);
     }
 
 
@@ -2630,8 +2635,6 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                                                 PRBool aPersist,
                                                 const char *aType)
 {
-    nsresult rv = NS_OK;
-
     nsIDKey key(aClass);
     nsAutoMonitor mon(mMon);
 
@@ -2649,7 +2652,8 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                 buf,
                 contractID ? contractID : "(null)",
                 aRegistryName, aType));
-        delete [] buf;
+        if (buf)
+            PR_Free(buf);
     }
 
     if (entry && !aReplace) {
@@ -2661,7 +2665,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     int typeIndex = GetLoaderType(aType);
 
     nsCOMPtr<nsIComponentLoader> loader;
-    rv = GetLoaderForType(typeIndex, getter_AddRefs(loader));
+    nsresult rv = GetLoaderForType(typeIndex, getter_AddRefs(loader));
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("\t\tgetting loader for %s FAILED\n", aType));
@@ -2854,7 +2858,8 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
         char *buf = aClass.ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
                ("nsComponentManager: UnregisterFactory(%s)", buf));
-        delete [] buf;
+        if (buf)
+            PR_Free(buf);
     }
 
     nsFactoryEntry *old;
@@ -2889,11 +2894,11 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
         char *buf = aClass.ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
                ("nsComponentManager: UnregisterComponent(%s)", buf));
-        delete [] buf;
+        if (buf)
+            PR_Free(buf);
     }
 
     NS_ENSURE_ARG_POINTER(registryName);
-    nsresult rv=NS_OK;
     nsFactoryEntry *old;
 
     // first delete all contract id entries that are registered with this cid.      
@@ -2909,10 +2914,9 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
     }
 
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("nsComponentManager: Factory unregister(%s) %s.", registryName,
-            NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
+           ("nsComponentManager: Factory unregister(%s) succeeded.", registryName));
 
-    return rv;
+    return NS_OK;
 }
 
 nsresult
