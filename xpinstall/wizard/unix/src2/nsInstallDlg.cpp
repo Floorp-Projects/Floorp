@@ -185,12 +185,9 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     }
 
     PerformInstall();
-    if (bDLCancel) // set only when download was cancelled
-    {
-        // mode auto has no call to gtk_main()
-        if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
-            gtk_main_quit();
-    }
+    // mode auto has no call to gtk_main()
+    if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
+         gtk_main_quit();
     
     gCtx->bMoving = TRUE;
     return;
@@ -898,7 +895,6 @@ nsInstallDlg::ShowCompleteDlg()
     gtk_widget_show_all(completeDlg);
 
     gtk_main();
-    gtk_main_quit();
 }
 
 void
