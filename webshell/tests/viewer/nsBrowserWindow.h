@@ -41,7 +41,7 @@ class nsIDocumentViewer;
 class nsIPresContext;
 class nsIPresShell;
 class nsIPref;
-class nsITreeView;
+class nsIContentConnector;
 
 #define SAMPLES_BASE_URL "resource:/res/samples"
 
@@ -195,7 +195,7 @@ public:
   nsIButton* mBack;
   nsIButton* mForward;
   nsIThrobber* mThrobber;
-  nsITreeView* mTreeView;
+  nsIContentConnector* mTreeView;
   
   // "Status bar"
   nsITextWidget* mStatus;
