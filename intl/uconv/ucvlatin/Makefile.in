@@ -23,6 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ucvlatin
 LIBRARY_NAME	= ucvlatin
+IS_COMPONENT	= 1
 
 CSRCS		=  \
 		  $(NULL)

@@ -1618,9 +1618,9 @@ nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 	//XXX get default pathlist from registry
 	//XXX Temporary hack. Registering components from current directory
 #ifdef XP_UNIX
-    // XXX This will change to ./components very soon
-	const char *defaultPathList = ".";
+	const char *defaultPathList = "./components";
 #else
+    // XXX This will change to ./components very soon
 	const char *defaultPathList = ".";
 #endif
 	SyncComponentsInPathList(defaultPathList);

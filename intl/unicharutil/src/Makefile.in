@@ -23,6 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= unicharutil
 LIBRARY_NAME	= unicharutil
+IS_COMPONENT	= 1
 
 CSRCS		= \
 		  $(NULL)
