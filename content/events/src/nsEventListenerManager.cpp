@@ -208,7 +208,6 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
   PRBool found = PR_FALSE;
   nsListenerStruct* ls;
   nsIScriptEventListener* sel = nsnull;
-  nsIScriptEventListener* regSel;
 
   aListener->QueryInterface(kIScriptEventListenerIID, (void**)&sel);
 
@@ -221,14 +220,15 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       break;
     }
     else if (sel) {
-      if (NS_OK == ls->mListener->QueryInterface(kIScriptEventListenerIID, (void**)&regSel)) {
+      nsresult rv;
+      nsCOMPtr<nsIScriptEventListener> regSel = do_QueryInterface(ls->mListener, &rv);
+      if (NS_SUCCEEDED(rv) && regSel) {
         if (NS_OK == regSel->CheckIfEqual(sel)) {
           if (ls->mFlags & aFlags && ls->mSubType & aSubType) {
             found = PR_TRUE;
             break;
           }
         }
-        NS_RELEASE(regSel);
       }
     }
   }
