@@ -21,6 +21,7 @@
 #include "nsWindow.h"
 #include "nsMacWindow.h"
 #include "nsMacEventHandler.h"
+#include "nsMacMessageSink.h"
 
 // from MacHeaders.c
 #ifndef topLeft
@@ -69,6 +70,9 @@ nsMacWindow::~nsMacWindow()
 			::CloseWindow(mWindowPtr);
 		else
 			::SetWRefCon(mWindowPtr, theRefData->GetUserData());	// restore the refCon if we did not create the window
+
+		::SetWindowKind(mWindowPtr, ::GetWindowKind(mWindowPtr) & ~kRaptorWindowKindBit);
+
 		mWindowPtr = nsnull;
 
 		delete theRefData;
@@ -82,7 +86,7 @@ nsMacWindow::~nsMacWindow()
 //-------------------------------------------------------------------------
 nsresult nsMacWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    static NS_DEFINE_IID(kIWindowIID, NS_IWINDOW_IID);	//еее
+    static NS_DEFINE_IID(kIWindowIID, NS_IWINDOW_IID);
     if (aIID.Equals(kIWindowIID)) {
         *aInstancePtr = (void*) ((nsIWidget*)(nsISupports*)this);
         AddRef();
@@ -146,6 +150,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	theRefData->SetNSMacWindow(this);
 	theRefData->SetUserData(::GetWRefCon(mWindowPtr));	// save the actual refCon in case we did not create the window
 	::SetWRefCon(mWindowPtr, (long)theRefData);
+
+	::SetWindowKind(mWindowPtr, ::GetWindowKind(mWindowPtr) | kRaptorWindowKindBit);
 
 	// reset the coordinates to (0,0) because it's the top level widget
 	nsRect bounds(0, 0, aRect.width, aRect.height);
