@@ -57,6 +57,7 @@ typedef struct nsFontGTK
   char*                  mName;
 } nsFontGTK;
 
+struct nsFontStretch;
 struct nsFontCharSet;
 struct nsFontFamily;
 typedef struct nsFontSearch nsFontSearch;
@@ -100,6 +101,8 @@ public:
 			 const PRUnichar* aString, PRUint32 aLength);
   static void InitFonts(void);
 
+  friend void PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
+                               nsFontCharSet* aCharSet);
   friend void TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet);
   friend void TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily);
 

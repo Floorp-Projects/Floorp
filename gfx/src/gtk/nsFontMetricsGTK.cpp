@@ -731,23 +731,15 @@ struct nsFontSize
   int        mActualSize;
 };
 
-struct nsFontCharSet
+struct nsFontStretch
 {
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   void SortSizes(void);
 
-  nsFontCharSetInfo* mInfo;
   nsFontSize*        mSizes;
   int                mSizesAlloc;
   int                mSizesCount;
-};
-
-struct nsFontStretch
-{
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-  PLHashTable* mCharSets;
 };
 
 struct nsFontWeight
@@ -768,14 +760,22 @@ struct nsFontStyle
   nsFontWeight* mWeights[9];
 };
 
-struct nsFontFamily
+struct nsFontCharSet
 {
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   void FillStyleHoles(void);
 
-  int          mHolesFilled;
-  nsFontStyle* mStyles[3];
+  nsFontCharSetInfo* mInfo;
+  int                mHolesFilled;
+  nsFontStyle*       mStyles[3];
+};
+
+struct nsFontFamily
+{
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  PLHashTable* mCharSets;
 };
 
 typedef struct nsFontFamilyName
@@ -1151,7 +1151,11 @@ static nsFontCharSetMap gCharSetMap[] =
   { "iso8859-9",          &Ignore        },
   { "jisx0201.1976-0",    &Ignore        },
   { "jisx0201.1976-1",    &Ignore        },
-  { "jisx0208.1983-0",    &Ignore        }, // JISX02081983
+#if 0
+  { "jisx0208.1983-0",    &JISX02081983  },
+#else
+  { "jisx0208.1983-0",    &Ignore        },
+#endif
   { "jisx0208.1990-0",    &Ignore        },
   { "jisx0212.1990-0",    &Ignore        },
   { "ksc5601.1987-0",     &Ignore        },
@@ -1260,11 +1264,12 @@ nsFontSize::LoadFont(void)
 }
 
 void
-TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
+PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
+  nsFontCharSet* aCharSet)
 {
   nsFontSize* s;
-  nsFontSize* begin = aCharSet->mSizes;
-  nsFontSize* end = &aCharSet->mSizes[aCharSet->mSizesCount];
+  nsFontSize* begin = aStretch->mSizes;
+  nsFontSize* end = &aStretch->mSizes[aStretch->mSizesCount];
   nsFontMetricsGTK* m = aSearch->mMetrics;
   int desiredSize = m->mPixelSize;
 
@@ -1363,34 +1368,6 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
 #endif /* 0 */
 }
 
-static PRIntn
-SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
-{
-  nsFontCharSet* charSet = (nsFontCharSet*) he->value;
-  nsFontCharSetInfo* charSetInfo = charSet->mInfo;
-  PRUint8* map = charSetInfo->mMap;
-  nsFontSearch* search = (nsFontSearch*) arg;
-  PRUnichar c = search->mChar;
-  if (!map) {
-    map = (PRUint8*) PR_Calloc(8192, 1);
-    if (!map) {
-      return HT_ENUMERATE_NEXT;
-    }
-    charSetInfo->mMap = map;
-    charSetInfo->GenerateMap(charSetInfo);
-  }
-  if (!FONT_HAS_GLYPH(map, c)) {
-    return HT_ENUMERATE_NEXT;
-  }
-
-  TryCharSet(search, charSet);
-  if (search->mFont) {
-    return HT_ENUMERATE_STOP;
-  }
-
-  return HT_ENUMERATE_NEXT;
-}
-
 static int
 CompareSizes(const void* aArg1, const void* aArg2)
 {
@@ -1398,18 +1375,9 @@ CompareSizes(const void* aArg1, const void* aArg2)
 }
 
 void
-nsFontCharSet::SortSizes(void)
+nsFontStretch::SortSizes(void)
 {
   XP_QSORT(mSizes, mSizesCount, sizeof(*mSizes), CompareSizes);
-}
-
-static PRIntn
-SortCharSetSizes(PLHashEntry* he, PRIntn i, void* arg)
-{
-  nsFontCharSet* charSet = (nsFontCharSet*) he->value;
-  charSet->SortSizes();
-
-  return HT_ENUMERATE_NEXT;
 }
 
 void
@@ -1419,8 +1387,7 @@ nsFontWeight::FillStretchHoles(void)
 
   for (i = 0; i < 9; i++) {
     if (mStretches[i]) {
-      PL_HashTableEnumerateEntries(mStretches[i]->mCharSets, SortCharSetSizes,
-        nsnull);
+      mStretches[i]->SortSizes();
     }
   }
 
@@ -1550,7 +1517,7 @@ nsFontStyle::FillWeightHoles(void)
 }
 
 void
-nsFontFamily::FillStyleHoles(void)
+nsFontCharSet::FillStyleHoles(void)
 {
   if (mHolesFilled) {
     return;
@@ -1613,11 +1580,11 @@ nsFontFamily::FillStyleHoles(void)
   } while (0)
 
 void
-TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily)
+TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
 {
-  aFamily->FillStyleHoles();
+  aCharSet->FillStyleHoles();
   nsFontMetricsGTK* f = aSearch->mMetrics;
-  nsFontStyle* style = aFamily->mStyles[f->mStyleIndex];
+  nsFontStyle* style = aCharSet->mStyles[f->mStyleIndex];
   if (!style) {
     return; // skip dummy entries
   }
@@ -1666,14 +1633,44 @@ TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily)
     GET_WEIGHT_INDEX(weightIndex, weight);
   }
 
+  PickASizeAndLoad(aSearch, weights[weightIndex]->mStretches[f->mStretchIndex],
+    aCharSet);
+}
+
+static PRIntn
+SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
+{
+  nsFontCharSet* charSet = (nsFontCharSet*) he->value;
+  nsFontCharSetInfo* charSetInfo = charSet->mInfo;
+  PRUint8* map = charSetInfo->mMap;
+  nsFontSearch* search = (nsFontSearch*) arg;
+  PRUnichar c = search->mChar;
+  if (!map) {
+    map = (PRUint8*) PR_Calloc(8192, 1);
+    if (!map) {
+      return HT_ENUMERATE_NEXT;
+    }
+    charSetInfo->mMap = map;
+    charSetInfo->GenerateMap(charSetInfo);
+  }
+  if (!FONT_HAS_GLYPH(map, c)) {
+    return HT_ENUMERATE_NEXT;
+  }
+
+  TryCharSet(search, charSet);
+  if (search->mFont) {
+    return HT_ENUMERATE_STOP;
+  }
+
+  return HT_ENUMERATE_NEXT;
+}
+
+void
+TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily)
+{
   // XXX Should process charsets in reasonable order, instead of randomly
   // enumerating the hash table.
-  PL_HashTableEnumerateEntries
-  (
-    weights[weightIndex]->mStretches[f->mStretchIndex]->mCharSets,
-    SearchCharSet,
-    aSearch
-  );
+  PL_HashTableEnumerateEntries(aFamily->mCharSets, SearchCharSet, aSearch);
 }
 
 static PRIntn
@@ -1800,6 +1797,29 @@ GetFontNames(char* aPattern)
       PL_HashTableAdd(gFamilies, copy, family);
     }
 
+    if (!family->mCharSets) {
+      family->mCharSets = PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
+        NULL, NULL, NULL);
+      if (!family->mCharSets) {
+        continue;
+      }
+    }
+    nsFontCharSet* charSet =
+      (nsFontCharSet*) PL_HashTableLookup(family->mCharSets, charSetName);
+    if (!charSet) {
+      charSet = new nsFontCharSet;
+      if (!charSet) {
+        continue;
+      }
+      char* copy = strdup(charSetName);
+      if (!copy) {
+        delete charSet;
+        continue;
+      }
+      charSet->mInfo = charSetInfo;
+      PL_HashTableAdd(family->mCharSets, copy, charSet);
+    }
+
     int styleIndex;
     // XXX This does not cover the full XLFD spec for SLANT.
     switch (slant[0]) {
@@ -1814,13 +1834,13 @@ GetFontNames(char* aPattern)
       styleIndex = NS_FONT_STYLE_NORMAL;
       break;
     }
-    nsFontStyle* style = family->mStyles[styleIndex];
+    nsFontStyle* style = charSet->mStyles[styleIndex];
     if (!style) {
       style = new nsFontStyle;
       if (!style) {
         continue;
       }
-      family->mStyles[styleIndex] = style;
+      charSet->mStyles[styleIndex] = style;
     }
 
     int weightNumber = (int) PL_HashTableLookup(gWeights, weightName);
@@ -1857,34 +1877,11 @@ GetFontNames(char* aPattern)
       weight->mStretches[stretchIndex] = stretch;
     }
   
-    if (!stretch->mCharSets) {
-      stretch->mCharSets = PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
-        NULL, NULL, NULL);
-      if (!stretch->mCharSets) {
-        continue;
-      }
-    }
-    nsFontCharSet* charSet =
-      (nsFontCharSet*) PL_HashTableLookup(stretch->mCharSets, charSetName);
-    if (!charSet) {
-      charSet = new nsFontCharSet;
-      if (!charSet) {
-        continue;
-      }
-      char* copy = strdup(charSetName);
-      if (!copy) {
-        delete charSet;
-        continue;
-      }
-      charSet->mInfo = charSetInfo;
-      PL_HashTableAdd(stretch->mCharSets, copy, charSet);
-    }
-  
     int pixels = atoi(pixelSize);
-    if (charSet->mSizesCount) {
-      nsFontSize* end = &charSet->mSizes[charSet->mSizesCount];
+    if (stretch->mSizesCount) {
+      nsFontSize* end = &stretch->mSizes[stretch->mSizesCount];
       nsFontSize* s;
-      for (s = charSet->mSizes; s < end; s++) {
+      for (s = stretch->mSizes; s < end; s++) {
         if (s->mSize == pixels) {
           break;
         }
@@ -1893,16 +1890,16 @@ GetFontNames(char* aPattern)
         continue;
       }
     }
-    if (charSet->mSizesCount == charSet->mSizesAlloc) {
-      int newSize = 2 * (charSet->mSizesAlloc ? charSet->mSizesAlloc : 1);
+    if (stretch->mSizesCount == stretch->mSizesAlloc) {
+      int newSize = 2 * (stretch->mSizesAlloc ? stretch->mSizesAlloc : 1);
       nsFontSize* newPointer = new nsFontSize[newSize];
       if (newPointer) {
-        for (int i = charSet->mSizesAlloc - 1; i >= 0; i--) {
-          newPointer[i] = charSet->mSizes[i];
+        for (int i = stretch->mSizesAlloc - 1; i >= 0; i--) {
+          newPointer[i] = stretch->mSizes[i];
         }
-        charSet->mSizesAlloc = newSize;
-        delete [] charSet->mSizes;
-        charSet->mSizes = newPointer;
+        stretch->mSizesAlloc = newSize;
+        delete [] stretch->mSizes;
+        stretch->mSizes = newPointer;
       }
       else {
         continue;
@@ -1919,7 +1916,7 @@ GetFontNames(char* aPattern)
     if (!copy) {
       continue;
     }
-    nsFontSize* size = &charSet->mSizes[charSet->mSizesCount++];
+    nsFontSize* size = &stretch->mSizes[stretch->mSizesCount++];
     size->mName = copy;
     size->mSize = pixels;
     size->mFont = nsnull;
