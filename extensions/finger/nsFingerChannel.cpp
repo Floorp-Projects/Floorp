@@ -78,29 +78,19 @@ nsFingerChannel::Init(nsIURI* uri)
     rv = mUrl->GetPath(getter_Copies(autoBuffer)); // autoBuffer = user@host
     if (NS_FAILED(rv)) return rv;
 
-    nsCString cString(autoBuffer);
-    nsCString tempBuf;
-
-    PRUint32 i;
-
     // Now parse out the user and host
-    for (i=0; cString[i] != '\0'; i++) {
-      if (cString[i] == '@') {
-        cString.Left(tempBuf, i);
-        mUser = tempBuf;
-        cString.Right(tempBuf, cString.Length() - i - 1);
-        mHost = tempBuf;
-        break;
-       }
-    }
+    const char* buf = autoBuffer.get();
+    const char* pos = PL_strchr(buf, '@');
 
     // Catch the case of just the host being given
-
-    if (cString[i] == '\0') {
-      mHost = cString;
+    if (!pos) {
+        mHost.Assign(buf);
+    } else {
+        mUser.Assign(buf,pos-buf);
+        mHost.Assign(pos+1); // ignore '@'
     }
 
-    if (!*(const char *)mHost) return NS_ERROR_NOT_INITIALIZED;
+    if (mHost.IsEmpty()) return NS_ERROR_NOT_INITIALIZED;
 
     return NS_OK;
 }
@@ -123,7 +113,6 @@ nsFingerChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsFingerChannel::GetName(PRUnichar* *result)
 {
-    NS_NOTREACHED("nsFingerChannel::GetName");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

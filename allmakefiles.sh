@@ -403,6 +403,8 @@ netwerk/protocol/finger/src/Makefile
 netwerk/protocol/ftp/Makefile
 netwerk/protocol/ftp/public/Makefile
 netwerk/protocol/ftp/src/Makefile
+netwerk/protocol/gopher/Makefile
+netwerk/protocol/gopher/src/Makefile
 netwerk/protocol/http/Makefile
 netwerk/protocol/http/public/Makefile
 netwerk/protocol/http/src/Makefile

@@ -34,6 +34,7 @@ EXPORTS =                 \
 CPP_OBJS =                                  \
         .\$(OBJDIR)\nsMultiMixedConv.obj    \
         .\$(OBJDIR)\nsFTPDirListingConv.obj \
+        .\$(OBJDIR)\nsGopherDirListingConv.obj \
         .\$(OBJDIR)\mozTXTToHTMLConv.obj    \
         .\$(OBJDIR)\nsHTTPChunkConv.obj     \
         .\$(OBJDIR)\nsHTTPCompressConv.obj  \
