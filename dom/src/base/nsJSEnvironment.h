@@ -144,6 +144,7 @@ private:
   JSContext *mContext;
   PRUint32 mNumEvaluations;
 
+  nsCOMPtr<nsIScriptSecurityManager> mSecurityManager; // [OWNER]
   nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
   nsScriptTerminationFunc mTerminationFunc;
 
