@@ -79,7 +79,18 @@ if (!defined $::FORM{'product'}) {
         }
         push(@prodlist, $p);
     }
-    if (1 != @prodlist) {
+    if (0 == @prodlist) {
+        print "Content-type: text/html\n\n";
+        PutHeader("No Products Available");
+
+        print "Either no products have been defined to enter bugs against ";
+        print "or you have not been given access to any.  Please email ";
+        print "<A HREF=\"mailto:" . Param("maintainer") . "\">";
+        print Param("maintainer") . "</A> if you feel this is in error.<P>\n";
+
+        PutFooter();
+        exit;
+    } elsif (1 < @prodlist) {
         print "Content-type: text/html\n\n";
         PutHeader("Enter Bug");
         
@@ -87,20 +98,9 @@ if (!defined $::FORM{'product'}) {
         print "a bug.</H2>\n";
         print "<table>";
         foreach my $p (@prodlist) {
-            if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
-                # Special hack.  If we stuffed a "0" into proddesc, that means
-                # that disallownew was set for this bug, and so we don't want
-                # to allow people to specify that product here.
-                next;
-            }
-            if(Param("usebuggroupsentry")
-               && GroupExists($p)
-               && !UserInGroup($p)) {
-                # If we're using bug groups to restrict entry on products, and
-                # this product has a bug group, and the user is not in that
-                # group, we don't want to include that product in this list.
-                next;
-            }
+# removed $::proddesc{$p} eq '0' check and UserInGroup($p) check from here
+# because it's redundant.  See the foreach loop above that created @prodlist.
+# 1/13/01 - dave@intrec.com
             print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\">$p</a>:</th>\n";
             if (defined $::proddesc{$p}) {
                 print "<td valign=top>$::proddesc{$p}</td>\n";
