@@ -26,14 +26,12 @@ Rights Reserved.
 
 <window id="smtp" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="parent.currentPageTag='smtp'">
+    onload="parent.wizardPageLoaded('smtp');">
 
 <box align="vertical" style="width: 100%; height: 100%; margin: 10px">
   <html:div>Outgoing mail (SMTP) server:</html:div>
   <box align="horizontal">
-    <html:input id="smtp" type="text"/>
-    <html:div>f!</html:div>
+    <html:input id="smtpserver" type="text"/>
   </box>
-
 </box>
 </window>

@@ -26,6 +26,6 @@ Rights Reserved.
 
 <window id="intro" title="intro" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="parent.currentPageTag='intro'">
+    onload="parent.wizardPageLoaded('intro');">
 <html:div>Welcome to the account wizard</html:div>
 </window>

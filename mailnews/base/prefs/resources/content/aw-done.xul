@@ -26,6 +26,6 @@ Rights Reserved.
 
 <window id="done" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="parent.currentPageTag='done'">
+    onload="parent.wizardPageLoaded('done');">
 <html:div>That's it!</html:div>
 </window>

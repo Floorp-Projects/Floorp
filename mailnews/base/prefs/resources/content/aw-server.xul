@@ -26,7 +26,7 @@ Rights Reserved.
 
 <window id="server" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="parent.currentPageTag='server'">
+    onload="parent.wizardPageLoaded('server');">
 
 <box align="vertical" style="width: 100%; height: 100%; margin: 10px">
   <html:div>Mail Server user name:</html:div>
@@ -41,5 +41,22 @@ Rights Reserved.
     <html:div>(e.g. jsmith)</html:div>
   </box>
 
+  <html:div>Mail Server Type:</html:div>
+  <box align="vertical">
+    <html:div>
+      <html:input type="radio" name="servertype" id="pop3radio" value="pop3"/>
+      POP3
+      <html:br/>
+    </html:div>
+    <html:div>
+      <html:input type="radio" name="servertype" id="imapradio" value="imap"/>
+      IMAP
+      <html:br/>
+    </html:div>
+    <html:div>
+      <html:input type="radio" name="servertype" id="nntpradio" value="nntp"/>
+      News (NNTP)
+    </html:div>
+  </box>
 </box>
 </window>
