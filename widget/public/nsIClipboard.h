@@ -45,6 +45,16 @@ class nsIClipboard : public nsISupports {
     NS_IMETHOD SetTransferable(nsITransferable * aTransferable, nsIClipboardOwner * anOwner) = 0;
 
    /**
+    * Gets the transferable object from the clipboard, 
+    * it is used to get and set the data from the native clipboard
+    *
+    * @param  aTransferable The transferable
+    * @result NS_Ok if no errors
+    */
+  
+    NS_IMETHOD GetTransferable(nsITransferable ** aTransferable) = 0;
+
+   /**
     * Gets the data from the clipboard and put it into the transferable object
     *
     * @param  aTransferable The transferable
@@ -69,6 +79,25 @@ class nsIClipboard : public nsISupports {
     */
   
     NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor) = 0;
+
+   /**
+    * This empties the clipboard and notifies the clipboard owner
+    * This empties the "logical" clipboard it does not clear the native clipboard
+    *
+    * @result NS_OkK if successfull
+    */
+  
+    NS_IMETHOD EmptyClipboard() = 0;
+
+   /**
+    * Some platforms support deferred notification for putting data on the clipboard
+    * This method forces the data onto the clipboard in its various formats
+    * This may be used if the application going away.
+    *
+    * @result NS_OkK if successfull
+    */
+  
+    NS_IMETHOD ForceDataToClipboard() = 0;
 
 };
 

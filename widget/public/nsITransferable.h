@@ -90,6 +90,13 @@ class nsITransferable : public nsISupports {
     */
     NS_IMETHOD AddDataFlavor(const nsString & aMimeType, const nsString & aHumanPresentableName) = 0;
 
+  /**
+    * Returns whether the data is large
+    *
+    * @return NS_OK is data set is larg, NS_ERROR_FAILURE if data set is small
+    */
+    NS_IMETHOD IsLargeDataSet() = 0;
+
 };
 
 #endif
