@@ -67,6 +67,7 @@ EXTRA_LIBS	+= $(EXTRA_DSO_LIBS) $(STATIC_EXTRA_LIBS)
 
 endif
 
+EXTRA_LIBS	+= $(MOZ_JS_LIBS)
 EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk

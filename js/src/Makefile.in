@@ -41,13 +41,17 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= js
 LIBRARY_NAME	= mozjs
-EXPORT_LIBRARY = 1
 
 ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= js$(MOZ_BITS)$(VERSION_NUMBER)
 RESFILE		= js$(MOZ_BITS)40.res
-FORCE_SHARED_LIB = 1
 endif
+
+# JavaScript must be built shared, even for static builds, as it is used by
+# other modules which are always built shared. Failure to do so results in
+# the js code getting copied into xpinstall and jsd as well as mozilla-bin,
+# and then the static data cells used for locking no longer work.
+FORCE_SHARED_LIB = 1
 
 ifdef NS_TRACE_MALLOC
 REQUIRES	= xpcom

@@ -98,10 +98,6 @@ EXTRA_DSO_LIBS += jsj
 endif
 endif
 
-XP_LIBS		+= \
-		$(MOZ_JS_LIBS) \
-		$(NULL)
-
 else
 include $(topsrcdir)/config/static-config.mk
 
@@ -118,6 +114,7 @@ XP_LIBS		+= $(STATIC_EXTRA_LIBS)
 endif
 
 XP_LIBS		+= \
+		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
