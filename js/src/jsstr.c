@@ -912,7 +912,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	re = (JSRegExp *) JS_GetPrivate(cx, reobj);
     } else {
         if (JSVAL_IS_VOID(argv[0]))
-            re = js_NewRegExp(cx, cx->runtime->emptyString, 0, JS_FALSE);
+            re = js_NewRegExp(cx, NULL, cx->runtime->emptyString, 0, JS_FALSE);
         else {
 	    src = js_ValueToString(cx, argv[0]);
 	    if (!src)
@@ -925,7 +925,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    } else {
 	        opt = NULL;
 	    }
-	    re = js_NewRegExpOpt(cx, src, opt, forceFlat);
+	    re = js_NewRegExpOpt(cx, NULL, src, opt, forceFlat);
         }
 	if (!re)
 	    return JS_FALSE;

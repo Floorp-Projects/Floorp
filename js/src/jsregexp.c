@@ -54,6 +54,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsregexp.h"
+#include "jsscan.h"
 #include "jsstr.h"
 
 #ifdef XP_MAC
@@ -150,6 +151,7 @@ struct RENode {
 
 typedef struct CompilerState {
     JSContext       *context;
+    JSTokenStream   *tokenStream; /* For reporting errors */
     const jschar    *cpbegin;
     const jschar    *cpend;
     const jschar    *cp;
@@ -663,16 +665,19 @@ loop:
           case '{':
 	    c = *++cp;
 	    if (!JS7_ISDEC(c)) {
-	        JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
-				     JSMSG_BAD_QUANTIFIER, state->cp);
+                js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                            JSREPORT_ERROR,
+                                            JSMSG_BAD_QUANTIFIER, state->cp);
 	        return NULL;
 	    }
 	    min = (uint32)JS7_UNDEC(c);
 	    for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 	        min = 10 * min + (uint32)JS7_UNDEC(c);
 	        if (min >> 16) {
-		    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
-				         JSMSG_MIN_TOO_BIG, state->cp);
+                    js_ReportCompileErrorNumber(state->context,
+                                                state->tokenStream,
+                                                JSREPORT_ERROR,
+                                                JSMSG_MIN_TOO_BIG, state->cp);
 		    return NULL;
 	        }
 	    }
@@ -683,18 +688,20 @@ loop:
 		    for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 		        max = 10 * max + (uint32)JS7_UNDEC(c);
 		        if (max >> 16) {
-			    JS_ReportErrorNumber(state->context,
-					         js_GetErrorMessage, NULL,
-					         JSMSG_MAX_TOO_BIG, up);
+                            js_ReportCompileErrorNumber(state->context,
+                                                        state->tokenStream,
+                                                        JSREPORT_ERROR,
+                                                        JSMSG_MAX_TOO_BIG, up);
 			    return NULL;
 		        }
 		    }
 		    if (max == 0)
 		        goto zero_quant;
 		    if (min > max) {
-		        JS_ReportErrorNumber(state->context,
-					     js_GetErrorMessage, NULL,
-					     JSMSG_OUT_OF_ORDER, up);
+                        js_ReportCompileErrorNumber(state->context,
+                                                    state->tokenStream,
+                                                    JSREPORT_ERROR,
+                                                    JSMSG_OUT_OF_ORDER, up);
 		        return NULL;
 		    }
 	        } else {
@@ -705,15 +712,20 @@ loop:
 	        /* Exactly n times. */
 	        if (min == 0) {
           zero_quant:
-		    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
-				         JSMSG_ZERO_QUANTIFIER, state->cp);
+                    js_ReportCompileErrorNumber(state->context,
+                                                state->tokenStream,
+                                                JSREPORT_ERROR,
+                                                JSMSG_ZERO_QUANTIFIER,
+                                                state->cp);
 		    return NULL;
 	        }
 	        max = min;
 	    }
 	    if (*cp != '}') {
-	        JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
-				     JSMSG_UNTERM_QUANTIFIER, state->cp);
+                js_ReportCompileErrorNumber(state->context,
+                                            state->tokenStream,
+                                            JSREPORT_ERROR,
+                                            JSMSG_UNTERM_QUANTIFIER, state->cp);
 	        return NULL;
 	    }
 	    cp++;
@@ -811,6 +823,7 @@ ParseAtom(CompilerState *state)
     if ((cp == state->cpend) || (*cp == '|'))
         return NewRENode(state, REOP_EMPTY, NULL);
 
+    ren = NULL; /* suppress warning */
     switch (*cp) {
       case '(':
         num = -1;   /* suppress warning */
@@ -840,8 +853,9 @@ ParseAtom(CompilerState *state)
 	    return NULL;
 	cp = state->cp;
 	if (*cp != ')') {
-	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
-				 JSMSG_MISSING_PAREN, ocp);
+            js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                        JSREPORT_ERROR,
+                                        JSMSG_MISSING_PAREN, ocp);
 	    return NULL;
 	}
 	cp++;
@@ -883,8 +897,9 @@ ParseAtom(CompilerState *state)
 
         while ((c = *++cp) != ']') {
 	    if (cp == state->cpend) {
-		JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
-				     JSMSG_UNTERM_CLASS, ocp);
+                js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                            JSREPORT_ERROR,
+                                            JSMSG_UNTERM_CLASS, ocp);
 		return NULL;
 	    }
 	    if (c == '\\' && (cp+1 != state->cpend))
@@ -901,8 +916,9 @@ ParseAtom(CompilerState *state)
       case '\\':
 	c = *++cp;
         if (cp == state->cpend) {
-	    JS_ReportErrorNumber(state->context, js_GetErrorMessage, NULL,
-				 JSMSG_TRAILING_SLASH);
+            js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                        JSREPORT_ERROR,
+                                        JSMSG_TRAILING_SLASH);
 	    return NULL;
         }
 	switch (c) {
@@ -1120,7 +1136,8 @@ nothex:
 }
 
 JSRegExp *
-js_NewRegExp(JSContext *cx, JSString *str, uintN flags, JSBool flat)
+js_NewRegExp(JSContext *cx, JSTokenStream *ts,
+             JSString *str, uintN flags, JSBool flat)
 {
     JSRegExp *re;
     void *mark;
@@ -1135,6 +1152,7 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags, JSBool flat)
     mark = JS_ARENA_MARK(&cx->tempPool);
 
     state.context = cx;
+    state.tokenStream = ts;
     state.cpbegin = state.cp = str->chars;
     state.cpend = state.cp + str->length;
     state.flags = flags;
@@ -1207,7 +1225,8 @@ out:
 }
 
 JSRegExp *
-js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat)
+js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts, 
+                JSString *str, JSString *opt, JSBool flat)
 {
     uintN flags;
     jschar *cp;
@@ -1228,14 +1247,14 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat)
 	      default: {
 		char charBuf[2] = " ";
 		charBuf[0] = (char)*cp;
-		JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-				     JSMSG_BAD_FLAG, charBuf);
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+                                            JSMSG_BAD_FLAG, charBuf);
 		return NULL;
 	      }
 	    }
 	}
     }
-    return js_NewRegExp(cx, str, flags, flat);
+    return js_NewRegExp(cx, ts, str, flags, flat);
 }
 
 static void freeRENtree(JSContext *cx, RENode *ren,  RENode *stop)
@@ -2446,7 +2465,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 	*objp = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
 	if (!*objp)
 	    return JS_FALSE;
-	re = js_NewRegExp(xdr->cx, source, flags, JS_FALSE);
+	re = js_NewRegExp(xdr->cx, NULL, source, flags, JS_FALSE);
 	if (!re)
 	    return JS_FALSE;
 	if (!JS_SetPrivate(xdr->cx, *objp, re)) {
@@ -2564,7 +2583,7 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    argv[1] = STRING_TO_JSVAL(opt);
 	}
     }
-    re = js_NewRegExpOpt(cx, str, opt, JS_FALSE);
+    re = js_NewRegExpOpt(cx, NULL, str, opt, JS_FALSE);
     if (!re) {
 	ok = JS_FALSE;
 	goto out;
@@ -2697,7 +2716,8 @@ bad:
 }
 
 JSObject *
-js_NewRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
+js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
+                   jschar *chars, size_t length, uintN flags)
 {
     JSString *str;
     JSObject *obj;
@@ -2706,7 +2726,7 @@ js_NewRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
     str = js_NewStringCopyN(cx, chars, length, 0);
     if (!str)
 	return NULL;
-    re = js_NewRegExp(cx, str, flags, JS_FALSE);
+    re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
 	return NULL;
     obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
