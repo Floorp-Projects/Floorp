@@ -60,8 +60,6 @@ typedef struct _XMLParserState {
   And now for the main class -- nsExpatTokenizer...
  ************************************************************************/
 
-static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kITokenizerIID,      NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kHTMLTokenizerIID,   NS_HTMLTOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
 
@@ -100,10 +98,10 @@ nsresult nsExpatTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
 
-  if(aIID.Equals(kISupportsIID))    {  //do IUnknown...
+  if(aIID.Equals(NS_GET_IID(nsISupports)))    {  //do IUnknown...
     *aInstancePtr = (nsExpatTokenizer*)(this);                                        
   }
-  else if(aIID.Equals(kITokenizerIID)) {  //do ITokenizer base class...    
+  else if(aIID.Equals(NS_GET_IID(nsITokenizer))) {  //do ITokenizer base class...    
     *aInstancePtr = (nsITokenizer*)(this);
   }
   else if(aIID.Equals(kHTMLTokenizerIID)) {  //do nsHTMLTokenizer base class...
@@ -627,12 +625,19 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
 
 void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_comment, eHTMLTag_unknown, nsLiteralString((PRUnichar*)name));
-  if(theToken) {
-    AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
-  }
-  else{
-    //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
+  if (state->indoctype) {
+    // We do not want comments popping out of the doctype...
+    state->doctypeText.Append(NS_LITERAL_STRING("<!--"));
+    state->doctypeText.Append((PRUnichar*)name);
+    state->doctypeText.Append(NS_LITERAL_STRING("-->"));
+  } else {
+    CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_comment, eHTMLTag_unknown, nsLiteralString((PRUnichar*)name));
+    if(theToken) {
+      AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
+    }
+    else{
+      //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
+    }
   }
 }
 
