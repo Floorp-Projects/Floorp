@@ -3719,14 +3719,15 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
   nsCOMPtr<nsIDOMNode> preNode;
   nsAutoString tag("pre");
   rv = DeleteSelectionAndCreateNode(tag, getter_AddRefs(preNode));
+
   // If this succeeded, then set selection inside the pre
   // so the inserted text will end up there.
   // If it failed, we don't care what the return value was,
   // but we'll fall through and try to insert the text anyway.
+  nsCOMPtr<nsIDOMSelection> selection;
+  rv = GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(rv) && preNode)
   {
-    nsCOMPtr<nsIDOMSelection> selection;
-    rv = GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(rv) && selection)
       selection->Collapse(preNode, 0);
   }
@@ -3740,6 +3741,16 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
       NS_IF_ADDREF(*aNodeInserted);
     }
   }
+
+  // Set the selection to just after the inserted node:
+  if (NS_SUCCEEDED(rv) && preNode)
+  {
+    nsCOMPtr<nsIDOMNode> parent;
+    PRInt32 offset;
+    if (NS_SUCCEEDED(GetNodeLocation(preNode, &parent, &offset)) && parent)
+      selection->Collapse(parent, offset+1);
+  }
+
   return rv;
 }
 
@@ -3757,6 +3768,8 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
 
   // Try to set type=cite.  Ignore it if this fails.
   nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
   if (newElement)
   {
     nsAutoString type ("type");
@@ -3767,8 +3780,6 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
       newElement->SetAttribute(cite, aCitation);
 
     // Set the selection inside the blockquote so aQuotedText will go there:
-    nsCOMPtr<nsIDOMSelection> selection;
-    res = GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(res) && selection)
       selection->Collapse(newNode, 0);
   }
@@ -3782,6 +3793,16 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
       NS_IF_ADDREF(*aNodeInserted);
     }
   }
+
+  // Set the selection to just after the inserted node:
+  if (NS_SUCCEEDED(res) && newNode)
+  {
+    nsCOMPtr<nsIDOMNode> parent;
+    PRInt32 offset;
+    if (NS_SUCCEEDED(GetNodeLocation(newNode, &parent, &offset)) && parent)
+      selection->Collapse(parent, offset+1);
+  }
+
   return res;
 }
 
