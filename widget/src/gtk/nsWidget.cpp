@@ -42,7 +42,6 @@
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
 #include "nsIPref.h"
-#include "prefapi.h"
 #include "nsGtkIMEHelper.h"
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -3212,7 +3211,7 @@ static int debugWindowPrefChanged (const char *newpref, void *data)
       }
     }
   }
-  return PREF_NOERROR;
+  return 0;
 }
 
 static void      debugRegisterCallback  (void)

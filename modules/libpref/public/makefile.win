@@ -22,7 +22,7 @@
 
 MODULE=pref 
 DEPTH=..\..\.. 
-EXPORTS=prefapi.h prefldap.h
+EXPORTS=prefldap.h
 
 XPIDLSRCS = .\nsIPref.idl
 

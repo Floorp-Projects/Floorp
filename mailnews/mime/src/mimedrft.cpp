@@ -26,7 +26,6 @@
 #include "mimeobj.h"
 #include "modlmime.h"
 #include "mimei.h"
-#include "prefapi.h"
 #include "mimebuf.h"
 #include "mimemoz2.h"
 #include "mimemsg.h"

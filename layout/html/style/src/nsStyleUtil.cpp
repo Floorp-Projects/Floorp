@@ -29,7 +29,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
-#include "prefapi.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -86,7 +85,7 @@ static int NavAlgorithmPrefChangedCallback(const char * name, void * closure)
 	if (NS_SUCCEEDED(rv) && prefs) {
 		prefs->GetBoolPref(name, &gNavAlgorithmPref);
 	}
-	return PREF_NOERROR;
+	return 0;
 }
 
 

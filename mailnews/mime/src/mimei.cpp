@@ -57,7 +57,6 @@
 /* SUPPORTED VIA PLUGIN    |     |     |--------- MimeInlineTextCalendar  */
 
 #include "nsIPref.h"
-#include "prefapi.h"
 #include "mimeiimg.h"	/*   |     |--- MimeInlineImage						*/
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
 #include "mimeebod.h"	/*   |--- MimeExternalBody							*/

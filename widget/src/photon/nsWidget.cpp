@@ -41,7 +41,6 @@
 #include "nsWindow.h"
 
 #include "nsIPref.h"
-#include "prefapi.h"
 #include "nsPhWidgetLog.h"
 
 #include <errno.h>

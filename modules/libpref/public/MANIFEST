@@ -4,5 +4,4 @@
 
 #[installed by xpidl] nsIPref.h
 
-prefapi.h
 prefldap.h

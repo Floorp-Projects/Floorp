@@ -58,13 +58,13 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
-#include "prefapi.h"
 #include "nsISessionHistory.h"
 
 #include "nsXULAtoms.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIObserverService.h"
+#include "prlog.h"
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  

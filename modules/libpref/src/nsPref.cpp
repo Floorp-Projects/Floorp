@@ -69,6 +69,7 @@
 
 #include "nsQuickSort.h"
 #include "nsXPIDLString.h"
+#include "nsScriptSecurityManager.h"
 
 #ifdef _WIN32
 #include "windows.h"
@@ -79,6 +80,11 @@
 
 #define INITIAL_MAX_DEFAULT_PREF_FILES 10
 
+// Preferences that start with this string are subject to a security check
+#define PREF_SECURITY_PREFIX "security."
+// Cabability which must be enabled to access preferences starting with PREF_SECURITY_PREFIX
+#define PREF_SECURITY_ACCESS_CAPABILITY "SecurityPreferenceAccess"
+
 #include "prefapi_private_data.h"
 
 #if defined(DEBUG_mcafee)
@@ -86,6 +92,7 @@
 #endif
 
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kSecurityManagerCID,   NS_SCRIPTSECURITYMANAGER_CID);
 
 //========================================================================================
 class nsPref: public nsIPref
@@ -121,6 +128,8 @@ protected:
     
     nsresult useDefaultPrefFile();
     nsresult useUserPrefFile();
+    nsresult SecurePrefCheck(const char* aPrefName);
+
     static nsPref *gInstance;
     
     nsIFileSpec*                    mFileSpec;
@@ -261,6 +270,27 @@ nsPref* nsPref::GetInstance()
     }
     return gInstance;
 } // nsPref::GetInstance
+
+//----------------------------------------------------------------------------------------
+nsresult nsPref::SecurePrefCheck(const char* aPrefName)
+//----------------------------------------------------------------------------------------
+{
+    /* This will be uncommented very soon. For now, leave it alone. -mstoltz
+    static const char securityPrefix[] = PREF_SECURITY_PREFIX;
+    if (PL_strnstr(aPrefName, securityPrefix, sizeof(securityPrefix)) == 0)
+        return NS_OK;
+        
+    // XXX: Need error reporting somehow.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, kSecurityManagerCID, &rv);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    PRBool enabled;
+    rv = secMan->IsCapabilityEnabled(PREF_SECURITY_ACCESS_CAPABILITY, &enabled);
+    if (NS_FAILED(rv) || !enabled)
+        return NS_ERROR_FAILURE;
+    */
+    return NS_OK;
+}
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsPref, NS_GET_IID(nsIPref));
 
@@ -450,17 +480,20 @@ NS_IMETHODIMP nsPref::GetPrefType(const char *pref, PRInt32 * return_type)
 
 NS_IMETHODIMP nsPref::GetIntPref(const char *pref, PRInt32 * return_int)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetIntPref(pref, return_int));
 }
 
 NS_IMETHODIMP nsPref::GetBoolPref(const char *pref, PRBool * return_val)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetBoolPref(pref, return_val));
 }
 
 NS_IMETHODIMP nsPref::GetBinaryPref(const char *pref, 
                         void * return_val, int * buf_length)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetBinaryPref(pref, return_val, buf_length));
 }
 
@@ -468,6 +501,7 @@ NS_IMETHODIMP nsPref::GetBinaryPref(const char *pref,
 NS_IMETHODIMP nsPref::GetColorPref(const char *pref,
                      PRUint8 *red, PRUint8 *green, PRUint8 *blue)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetColorPref(pref, red, green, blue));
 }
 #endif
@@ -475,6 +509,7 @@ NS_IMETHODIMP nsPref::GetColorPref(const char *pref,
 NS_IMETHODIMP nsPref::GetColorPrefDWord(const char *pref, 
                     PRUint32 *colorref)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetColorPrefDWord(pref, colorref));
 }
 
@@ -483,6 +518,7 @@ NS_IMETHODIMP nsPref::GetRectPref(const char *pref,
                     PRInt16 *left, PRInt16 *top, 
                     PRInt16 *right, PRInt16 *bottom)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetRectPref(pref, left, top, right, bottom));
 }
 #endif
@@ -493,11 +529,13 @@ NS_IMETHODIMP nsPref::GetRectPref(const char *pref,
 
 NS_IMETHODIMP nsPref::SetCharPref(const char *pref,const char* value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetCharPref(pref, value));
 }
 
 NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     nsresult rv;
     nsAutoString str(value);
 
@@ -513,16 +551,19 @@ NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
 
 NS_IMETHODIMP nsPref::SetIntPref(const char *pref,PRInt32 value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetIntPref(pref, value));
 }
 
 NS_IMETHODIMP nsPref::SetBoolPref(const char *pref,PRBool value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetBoolPref(pref, value));
 }
 
 NS_IMETHODIMP nsPref::SetBinaryPref(const char *pref,void * value, PRUint32 size)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetBinaryPref(pref, value, size));
 }
 
@@ -530,6 +571,7 @@ NS_IMETHODIMP nsPref::SetBinaryPref(const char *pref,void * value, PRUint32 size
 NS_IMETHODIMP nsPref::SetColorPref(const char *pref, 
                      PRUint8 red, PRUint8 green, PRUint8 blue)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetColorPref(pref, red, green, blue));
 }
 #endif
@@ -538,6 +580,7 @@ NS_IMETHODIMP nsPref::SetColorPref(const char *pref,
 NS_IMETHODIMP nsPref::SetColorPrefDWord(const char *pref, 
                     PRUint32 value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetColorPrefDWord(pref, value));
 }
 #endif
@@ -547,6 +590,7 @@ NS_IMETHODIMP nsPref::SetRectPref(const char *pref,
                     PRInt16 left, PRInt16 top, 
                     PRInt16 right, PRInt16 bottom)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetRectPref(pref, left, top, right, bottom));
 }
 #endif
@@ -558,12 +602,14 @@ NS_IMETHODIMP nsPref::SetRectPref(const char *pref,
 NS_IMETHODIMP nsPref::GetDefaultIntPref(const char *pref,
                     PRInt32 * return_int)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetDefaultIntPref(pref, return_int));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultBoolPref(const char *pref,
                      PRBool * return_val)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetDefaultBoolPref(pref, return_val));
 }
 
@@ -571,6 +617,7 @@ NS_IMETHODIMP nsPref::GetDefaultBinaryPref(const char *pref,
                          void * return_val,
                          int * buf_length)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetDefaultBinaryPref(pref, return_val, buf_length));
 }
 
@@ -579,6 +626,7 @@ NS_IMETHODIMP nsPref::GetDefaultColorPref(const char *pref,
                         PRUint8 *red, PRUint8 *green, 
                         PRUint8 *blue)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetDefaultColorPref(pref, red, green, blue));
 }
 #endif
@@ -587,6 +635,7 @@ NS_IMETHODIMP nsPref::GetDefaultColorPref(const char *pref,
 NS_IMETHODIMP nsPref::GetDefaultColorPrefDWord(const char *pref, 
                                  PRUint32 *colorref)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetDefaultColorPrefDWord(pref, colorref));
 }
 #endif
@@ -596,6 +645,7 @@ NS_IMETHODIMP nsPref::GetDefaultRectPref(const char *pref,
                      PRInt16 *left, PRInt16 *top, 
                      PRInt16 *right, PRInt16 *bottom)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_GetDefaultRectPref(pref, 
                              left, top, right, bottom));
 }
@@ -607,12 +657,14 @@ NS_IMETHODIMP nsPref::GetDefaultRectPref(const char *pref,
 
 NS_IMETHODIMP nsPref::SetDefaultCharPref(const char *pref,const char* value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetDefaultCharPref(pref, value));
 }
 
 NS_IMETHODIMP nsPref::SetDefaultUnicharPref(const char *pref,
                                             const PRUnichar *value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     nsresult rv;
     nsAutoString str(value);
 
@@ -628,17 +680,20 @@ NS_IMETHODIMP nsPref::SetDefaultUnicharPref(const char *pref,
 
 NS_IMETHODIMP nsPref::SetDefaultIntPref(const char *pref,PRInt32 value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetDefaultIntPref(pref, value));
 }
 
 NS_IMETHODIMP nsPref::SetDefaultBoolPref(const char *pref, PRBool value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetDefaultBoolPref(pref, value));
 }
 
 NS_IMETHODIMP nsPref::SetDefaultBinaryPref(const char *pref,
                          void * value, PRUint32 size)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetDefaultBinaryPref(pref, value, size));
 }
 
@@ -646,6 +701,7 @@ NS_IMETHODIMP nsPref::SetDefaultBinaryPref(const char *pref,
 NS_IMETHODIMP nsPref::SetDefaultColorPref(const char *pref, 
                         PRUint8 red, PRUint8 green, PRUint8 blue)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetDefaultColorPref(pref, red, green, blue));
 }
 #endif
@@ -655,12 +711,14 @@ NS_IMETHODIMP nsPref::SetDefaultRectPref(const char *pref,
                      PRInt16 left, PRInt16 top,
                      PRInt16 right, PRInt16 bottom)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetDefaultRectPref(pref, left, top, right, bottom));
 }
 #endif
 
 NS_IMETHODIMP nsPref::ClearUserPref(const char *pref_name)
 {
+    if (NS_FAILED(SecurePrefCheck(pref_name))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_ClearUserPref(pref_name));
 }
 
@@ -670,6 +728,7 @@ NS_IMETHODIMP nsPref::ClearUserPref(const char *pref_name)
 
 NS_IMETHODIMP nsPref::CopyCharPref(const char *pref, char ** return_buf)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_CopyCharPref(pref, return_buf));
 }
 
@@ -682,6 +741,7 @@ static const PRUnichar unicodeFormatter[] = {
 
 NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar ** return_buf)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     nsresult rv;
     
     // get the UTF8 string for conversion
@@ -713,18 +773,21 @@ nsPref::convertUTF8ToUnicode(const char *utf8String, PRUnichar ** aResult)
 NS_IMETHODIMP nsPref::CopyBinaryPref(const char *pref,
                          int *size, void ** return_value)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_CopyBinaryPref(pref, return_value, size));
 }
 
 NS_IMETHODIMP nsPref::CopyDefaultCharPref( const char *pref,
                          char ** return_buffer )
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_CopyDefaultCharPref(pref, return_buffer));
 }
 
 NS_IMETHODIMP nsPref::CopyDefaultUnicharPref( const char *pref,
                                               PRUnichar ** return_buf)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     nsresult rv;
     
     nsXPIDLCString utf8String;
@@ -737,6 +800,7 @@ NS_IMETHODIMP nsPref::CopyDefaultUnicharPref( const char *pref,
 NS_IMETHODIMP nsPref::CopyDefaultBinaryPref(const char *pref, 
                             int * size, void ** return_val)
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_CopyDefaultBinaryPref(pref, return_val, size));
 }
 
@@ -749,6 +813,7 @@ NS_IMETHODIMP nsPref::CopyDefaultBinaryPref(const char *pref,
 NS_IMETHODIMP nsPref::CopyPathPref(const char *pref, char ** return_buf)
 //----------------------------------------------------------------------------------------
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_CopyPathPref(pref, return_buf));
 }
 
@@ -757,6 +822,7 @@ NS_IMETHODIMP nsPref::SetPathPref(const char *pref,
                     const char *path, PRBool set_default)
 //----------------------------------------------------------------------------------------
 {
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
     return _convertRes(PREF_SetPathPref(pref, path, set_default));
 }
 #endif
@@ -766,7 +832,8 @@ NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsIFileSpec** value)
 //----------------------------------------------------------------------------------------
 {
     if (!value)
-        return NS_ERROR_NULL_POINTER;        
+        return NS_ERROR_NULL_POINTER;   
+    if (NS_FAILED(SecurePrefCheck(pref_name))) return NS_ERROR_FAILURE;
 
         nsresult rv = nsComponentManager::CreateInstance(
         	(const char*)NS_FILESPEC_PROGID,
@@ -799,7 +866,8 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
 //----------------------------------------------------------------------------------------
 {
     if (!value)
-        return NS_ERROR_NULL_POINTER;        
+        return NS_ERROR_NULL_POINTER;    
+    if (NS_FAILED(SecurePrefCheck(pref_name))) return NS_ERROR_FAILURE;
     nsresult rv = NS_OK;
     if (!Exists(value))
     {
@@ -841,6 +909,7 @@ NS_IMETHODIMP nsPref::PrefIsLocked(const char *pref, PRBool *res)
 {
     if (res == NULL)
         return NS_ERROR_INVALID_POINTER;
+    if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
 
     *res = PREF_PrefIsLocked(pref);
     return NS_OK;

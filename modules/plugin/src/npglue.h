@@ -45,7 +45,6 @@ extern "C" {
 #include "nppriv.h"
 #include "shist.h"
 
-#include "prefapi.h"
 #include "proto.h"
 
 #include "libmocha.h"

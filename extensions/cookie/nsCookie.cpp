@@ -37,8 +37,8 @@
 #include "nsVoidArray.h"
 
 #include "nsIPref.h"
-#include "prefapi.h"
 #include "nsTextFormatter.h"
+#include "xp_core.h"
 
 extern "C" {
 #include "prmon.h"
@@ -942,7 +942,7 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
     n = COOKIE_Accept;
   }
   cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
-  return PREF_NOERROR;
+  return 0;
 }
 
 MODULE_PRIVATE int PR_CALLBACK
@@ -954,7 +954,7 @@ cookie_WarningPrefChanged(const char * newpref, void * data) {
     x = PR_FALSE;
   }
   cookie_SetWarningPref(x);
-  return PREF_NOERROR;
+  return 0;
 }
 
 /* cookie utility functions */
@@ -988,7 +988,7 @@ image_BehaviorPrefChanged(const char * newpref, void * data) {
   } else {
     image_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   }
-  return PREF_NOERROR;
+  return 0;
 }
 
 MODULE_PRIVATE int PR_CALLBACK
@@ -1000,7 +1000,7 @@ image_WarningPrefChanged(const char * newpref, void * data) {
     x = PR_FALSE;
   }
   image_SetWarningPref(x);
-  return PREF_NOERROR;
+  return 0;
 }
 
 MODULE_PRIVATE int PR_CALLBACK
@@ -1012,7 +1012,7 @@ cookie_LifetimeOptPrefChanged(const char * newpref, void * data) {
     n = COOKIE_Normal;
   }
   cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
-  return PREF_NOERROR;
+  return 0;
 }
 
 MODULE_PRIVATE int PR_CALLBACK
@@ -1023,7 +1023,7 @@ cookie_LifetimeLimitPrefChanged(const char * newpref, void * data) {
   if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
     cookie_SetLifetimeLimit(n);
   }
-  return PREF_NOERROR;
+  return 0;
 }
 
 /*

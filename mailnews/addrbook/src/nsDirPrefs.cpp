@@ -35,7 +35,6 @@
 
 #include "plstr.h"
 #include "prmem.h"
-#include "prefapi.h"
 #include "libi18n.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -44,6 +43,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 #define LDAP_PORT 389
 #define LDAPS_PORT 636
+#define PREF_NOERROR 0
 
 /* This format suffix is being defined here because it is needed by the FEs in their 
    file operation routines */
@@ -3293,7 +3293,7 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 			pPref->SetIntPref(PREF_LDAP_VERSION_NAME, kCurrentListVersion);
 
 			/* Look to see if there's an old-style "ldap_1" tree in prefs */
-			if (PREF_OK == pPref->CreateChildList("ldap_1", &oldChildren))
+			if (PREF_NOERROR == pPref->CreateChildList("ldap_1", &oldChildren))
 			{
 				if (PL_strlen(oldChildren))
 				{
