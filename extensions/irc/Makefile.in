@@ -53,6 +53,7 @@ XULLIBFILES	= \
 		$(NULL)
 
 TESTFILES	= \
+		$(srcdir)/xul/tests/index.html \
 		$(srcdir)/xul/tests/test1.html \
 		$(srcdir)/xul/tests/test1-static.js \
 		$(srcdir)/xul/tests/test1-handlers.js \

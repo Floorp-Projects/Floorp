@@ -138,24 +138,24 @@
 /* Message type indicator in output window */
 .msg-type {
 
-	display: none;
 	color: grey;
 	font-weight: bold;
 	margin-right: 10px;
 
 }
 
-.msg-type[msgtype="NOTICE"] {
+.msg-type[msgtype="PRIVMSG"], /* dont show message types indicator */
+.msg-type[msgtype="ACTION"],  /* for these kinds of messages       */
+.msg-type[msgtype="JOIN"],
+.msg-type[msgtype="PART"],
+.msg-type[msgtype="QUIT"],
+.msg-type[msgtype="KICK"],
+.msg-type[msgtype="MODE"] {
 
-	display: inline;
+	display: none;
 
 }
 
-.msg-type[network="{LOCAL}"] {
-
-	display: inline;
-
-}
 
 /* Listbox on left of UI (aka QuickList) */
 .quick-list {

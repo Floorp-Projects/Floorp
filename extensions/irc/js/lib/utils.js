@@ -31,7 +31,10 @@ var DEBUG = true;
 if (typeof document == "undefined") /* in xpcshell */
     dumpln = print;
 else
-    dumpln = function (str) {dump (str + "\n");}
+    if (typeof dump == "function")
+        dumpln = function (str) {dump (str + "\n");}
+    else
+    dumpln = function () {} /* no suitable function */
 
 if (DEBUG)
     dd = dumpln;
@@ -40,8 +43,8 @@ else
 
 var jsenv = new Object();
 
-jsenv.HAS_XPCOM = ((typeof Components == "function") && 
-                   (typeof Components.classes == "function"));
+jsenv.HAS_XPCOM = ((typeof Components == "function") &&
+                  (typeof Components.classes == "function"));
 jsenv.HAS_JAVA = (typeof java == "object");
 jsenv.HAS_RHINO = (typeof defineClass == "function");
 jsenv.HAS_DOCUMENT = (typeof document == "object");
@@ -214,6 +217,9 @@ function renameProperty (obj, oldname, newname)
 
 function newObject(progID, iface)
 {
+    if (!jsenv.HAS_XPCOM)
+        return;
+
     var obj = Components.classes[progID].createInstance();
     var rv;
 
@@ -260,6 +266,9 @@ function stringTrim (s)
 function arrayInsertAt (ary, i, o)
 {
 
+    ary.splice (i, 0, o);
+
+    /* doh, forgot about that 'splice' thing
     if (ary.length < i)
     {
         this[i] = o;
@@ -270,12 +279,15 @@ function arrayInsertAt (ary, i, o)
         ary[j] = ary[j - 1];
 
     ary[i] = o;
-    
+    */
 }
 
 function arrayRemoveAt (ary, i)
 {
 
+    ary.splice (i, 1);
+
+    /* doh, forgot about that 'splice' thing
     if (ary.length < i)
         return false;
 
@@ -283,6 +295,7 @@ function arrayRemoveAt (ary, i)
         ary[j] = ary[j + 1];
 
     ary.length--;
+    */
 
 }
 
@@ -320,6 +333,9 @@ function randomRange (min, max)
 
 function getInterfaces (cls)
 {
+    if (!jsenv.HAS_XPCOM)
+        return;
+
     var rv = new Object();
     var e;
 

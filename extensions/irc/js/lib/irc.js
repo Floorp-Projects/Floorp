@@ -32,7 +32,7 @@
  * list of potential hostnames for an IRC network.  (among other things.)
  *
  * CIRCServer
- * Server object.  Requires an initialized nsIConnection object for
+ * Server object.  Requires an initialized bsIConnection object for
  * communicating with the irc server.
  * Server.sayTo queues outgoing PRIVMSGs for sending to the server.  Using
  * sayTo takes care not to send lines faster than one every 1.5 seconds.
@@ -522,6 +522,12 @@ function serv_onRawData(e)
     e.server = this;
 
     var sep = l.indexOf(":");
+
+    if (sep != -1) /* <trailing> param, if there is one */
+        e.meat = l.substr (sep + 1, l.length);
+    else
+        e.meat = "";
+
     if (sep != -1)
         e.params = l.substr(0, sep).split(" ");
     else
@@ -529,7 +535,6 @@ function serv_onRawData(e)
     e.code = e.params[0].toUpperCase();
     if (e.params[e.params.length - 1] == "")
         e.params.length--;
-    e.meat = l.substr (sep + 1, l.length);
 
     e.type = "parseddata";
     e.destObject = this;
@@ -1021,6 +1026,9 @@ function serv_ping (e)
     this.connection.sendData ("PING :" + e.meat + "\n");
     this.lastPing = this.lastPingSent = new Date();
 
+    e.destObject = this.parent;
+    e.set = "network";
+
     return true;
     
 }
@@ -1034,6 +1042,9 @@ function serv_pong (e)
 
     delete this.lastPingSent;
     
+    e.destObject = this.parent;
+    e.set = "network";
+
     return true;
     
 }

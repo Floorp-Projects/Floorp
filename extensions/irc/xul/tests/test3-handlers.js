@@ -314,12 +314,40 @@ function cli_iattach (e)
 client.onInputMe =
 function cli_ime (e)
 {
-    if (e.channel)
+    if (!e.channel)
     {
-        e.inputData = filterOutput (e.inputData, "ACTION", "!ME");
-        e.channel.act (e.inputData);
+        client.currentObject.display ("Me can only be used from channels.",
+                                      "ERROR");
+        return false;
     }
+
+    e.inputData = filterOutput (e.inputData, "ACTION", "!ME");
+    e.channel.act (e.inputData);
+    
     return true;
+}
+
+client.onInputMsg =
+function cli_imsg (e)
+{
+
+    if (!e.network || !e.network.isConnected())
+    {
+        client.currentObject.display ("You must be connected to a network " +
+                                      "to use msg", "ERROR");
+        return false;
+    }
+
+    var ary = e.inputData.match (/(\S+)\s+(.*)/);
+    if (ary == null)
+        return false;
+
+    var usr = e.network.primServ.addUser(ary[1].toLowerCase());
+
+    usr.say (ary[2]);
+
+    return true;
+
 }
 
 client.onInputNick =
@@ -368,8 +396,14 @@ function cli_idesc (e)
 client.onInputQuote =
 function cli_iquote (e)
 {
+    if (!e.network || !e.network.isConnected())
+    {
+        client.currentObject.display ("You must be connected to a network " +
+                                      "to use quote.", "ERROR");
+        return false;
+    }
 
-    client.primNet.primServ.sendData (e.inputData + "\n");
+    client.network.primServ.sendData (e.inputData + "\n");
     
     return true;
     
@@ -435,7 +469,7 @@ function cli_ipart (e)
 {
     if (!e.channel)
     {            
-        client.currentObject.display ("Part can only be used from channels.",
+        client.currentObject.display ("Leave can only be used from channels.",
                                       "ERROR");
         return false;
     }
@@ -449,6 +483,9 @@ function cli_ipart (e)
 client.onInputZoom =
 function cli_izoom (e)
 {
+    client.currentObject.display ("**WARNING** Zoom is busted at this time :(",
+                                  "WARNING");
+
     if (!e.inputData)
         return false;
     
@@ -521,9 +558,14 @@ CIRCNetwork.prototype.on376 = /* end of MOTD */
 function my_showtonet (e)
 {
     var p = (e.params[2]) ? e.params[2] + " " : "";
+    var str = "";
 
     switch (e.code)
     {        
+        case 004:
+            str = e.params.slice(1).join (" ");
+            break;
+
         case 372:
         case 375:
         case 376:
@@ -532,9 +574,11 @@ function my_showtonet (e)
             /* no break */
 
         default:
-            this.display (p + e.meat, e.code.toUpperCase());
+            str = e.meat;
             break;
     }
+
+    this.display (p + str, e.code.toUpperCase());
     
 }
 
@@ -697,7 +741,7 @@ CIRCChannel.prototype.onChanMode =
 function my_cmode (e)
 {
 
-    this.display (e.meat + " by " +
+    this.display ("Mode " + e.params.slice(1).join(" ") + " by " +
                   e.user.nick, "MODE");
 
     for (var u in e.usersAffected)
