@@ -31,6 +31,7 @@ class nsIWebShellWindow;
 class nsString;
 class nsIStreamObserver;
 class nsIXULWindowCallbacks;
+class nsICmdLineService;
 
 // e5e5af70-8a38-11d2-9938-0080c7cb1080
 #define NS_IAPPSHELL_SERVICE_IID \
@@ -43,7 +44,7 @@ class nsIAppShellService : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IAPPSHELL_SERVICE_IID; return iid; }
 
-  NS_IMETHOD Initialize(void) = 0;
+  NS_IMETHOD Initialize(nsICmdLineService * aCmdLineService) = 0;
   NS_IMETHOD Run(void) = 0;
   NS_IMETHOD Shutdown(void) = 0;
 

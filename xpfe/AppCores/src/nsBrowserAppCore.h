@@ -125,8 +125,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD DoDialog();
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     void SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
-    void       InitializeSearch();
-    void       ResetSearchContext();
+    void       InitializeSearch(nsIFindComponent*);
 
     nsIScriptContext   *mToolbarScriptContext;
     nsIScriptContext   *mContentScriptContext;
@@ -140,7 +139,6 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     nsIGlobalHistory* mGHistory;
 
-    static nsIFindComponent *  mFindComponent;
     nsISupports *       mSearchContext;
 };
 

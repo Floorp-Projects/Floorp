@@ -107,7 +107,7 @@ public:
 
     // nsDownloadProgressDialog stuff
     nsDownloadProgressDialog( nsIURL *anInputURL, const nsFileSpec &anOutputFileName );
-    ~nsDownloadProgressDialog() { delete mOutput; delete [] mBuffer; }
+    ~nsDownloadProgressDialog();
     NS_IMETHOD Show();
 
 protected:
