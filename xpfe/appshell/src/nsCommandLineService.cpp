@@ -60,15 +60,19 @@ protected:
 
 
 nsCmdLineService::nsCmdLineService()
+	:  mArgCount(0)
 {
-  mArgCount = 0;
+  NS_INIT_REFCNT();
 }
 
+/*
+ * Implement the nsISupports methods...
+ */
+NS_IMPL_ISUPPORTS(nsCmdLineService, kICommandLineServiceIID);
 
 NS_IMETHODIMP
 nsCmdLineService::Initialize(int argc, char ** argv)
 {
-  NS_INIT_REFCNT();
   PRInt32   i=0;
   nsresult  rv = nsnull;
 
@@ -232,14 +236,6 @@ nsCmdLineService::PrintCmdArgs()
 
 }
 #endif
-
-/*
- * Implement the nsISupports methods...
- */
-NS_IMPL_ISUPPORTS(nsCmdLineService, kICommandLineServiceIID);
-
-
-
 
 NS_EXPORT nsresult NS_NewCmdLineService(nsICmdLineService** aResult)
 {
