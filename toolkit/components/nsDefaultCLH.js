@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsISupports              = Components.interfaces.nsISupporst;
+const nsISupports              = Components.interfaces.nsISupports;
 
 const nsICategoryManager       = Components.interfaces.nsICategoryManager;
 const nsIComponentRegistrar    = Components.interfaces.nsIComponentRegistrar;
