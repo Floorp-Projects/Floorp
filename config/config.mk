@@ -370,6 +370,14 @@ ifneq (all,$(BUILD_MODULES))
 DEFINES += -DXPCOM_STANDALONE
 endif
 
+ELF_DYNSTR_GC	= :
+
+ifdef USE_ELF_DYNSTR_GC
+ifdef MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS
+ELF_DYNSTR_GC 	= $(DIST)/bin/elf-gc-dynstr
+endif
+endif
+
 ifneq ($(OS_ARCH),WINNT)
 
 ifdef MOZ_NATIVE_MAKEDEPEND

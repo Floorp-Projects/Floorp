@@ -55,6 +55,7 @@ config/autoconf.mk
 config/mkdepend/Makefile
 config/mkdetect/Makefile
 include/Makefile
+tools/elf-dynstr-gc/Makefile
 "
 
 MAKEFILES_db="

@@ -32,9 +32,17 @@ ifneq ($(BUILD_MODULES),all)
 
 DIRS		= $(BUILD_MODULE_DIRS)
 
+ifdef USE_ELF_DYNSTR_GC
+DIRS		+= tools/elf-dynstr-gc
+endif
+
 else
 
 DIRS		= config build
+
+ifdef USE_ELF_DYNSTR_GC
+DIRS		+= tools/elf-dynstr-gc
+endif
 
 ifdef MOZ_L10N
 DIRS        += l10n
