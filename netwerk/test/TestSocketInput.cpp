@@ -93,7 +93,7 @@ InputTestConsumer::~InputTestConsumer()
 }
 
 
-NS_IMPL_ISUPPORTS1(InputTestConsumer, nsIStreamListener)
+NS_IMPL_ISUPPORTS2(InputTestConsumer, nsIRequestObserver, nsIStreamListener)
 
 
 NS_IMETHODIMP
@@ -177,7 +177,7 @@ main(int argc, char* argv[])
     rv = sts->CreateTransport(hostName, port, nsnull, 0, 0, &transport);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIRequest> request;
-      transport->AsyncRead(nsnull, new InputTestConsumer, 0, -1, 0, getter_AddRefs(request));
+      transport->AsyncRead(new InputTestConsumer, nsnull, 0, -1, 0, getter_AddRefs(request));
 
       NS_RELEASE(transport);
     }
@@ -211,7 +211,6 @@ main(int argc, char* argv[])
 #endif
     }
 
-    sts->Shutdown();
   } // this scopes the nsCOMPtrs
   // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
   rv = NS_ShutdownXPCOM(nsnull);
