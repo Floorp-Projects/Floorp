@@ -553,8 +553,6 @@ nsHTTPRequest::formHeaders ()
     PRInt32 port = -1;
     mURI -> GetPort (&port);
 
-    mHeaders.Clear ();
-
     // Send Host header by default
     if (HTTP_ZERO_NINE != mVersion)
     {
