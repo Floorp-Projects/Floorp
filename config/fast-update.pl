@@ -108,7 +108,7 @@ print "in the last ${hours} hours ";
 print "within the $rootdir directory..\n" if ($rootdir);
 #print "url = $url\n";
 
-# first try wget, then try lynx
+# first try wget, then try lynx, then try curl
 
 # this is my lame way of checking if a command succeeded AND getting
 # output from it. I'd love a better way. -alecf@netscape.com
@@ -193,13 +193,13 @@ if (scalar(@uniquedirs)) {
     $dirlist .= "\"$dir\" ";
     $i++;
     if ($i == 5) {
-      $status |= spawn("cvs up -l -d $dirlist\n");
+      $status |= spawn("cvs -z3 -q -f up -l -d $dirlist\n");
       $dirlist = "";
       $i=0;
     }
   }
   if ($i) {
-    $status |= spawn("cvs up -l -d $dirlist\n");
+    $status |= spawn("cvs -z3 -q -f up -l -d $dirlist\n");
   }
 }
 else {
@@ -230,7 +230,7 @@ sub cvs_up_parent {
   if (!-d $pdir) {
     cvs_up_parent($pdir);
   }
-  $status |= system "cvs up -d -l $pdir\n";
+  $status |= system "cvs -z3 -q -f up -d -l $pdir\n";
 }
 
 sub get_hours_since_last_update {
