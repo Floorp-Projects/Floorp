@@ -411,3 +411,18 @@ function openAboutDialog()
   window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
 #endif
 }
+
+function openPreferences()
+{
+  var instantApply = getBoolPref("browser.preferences.instantApply", false);
+  var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
+
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var win = wm.getMostRecentWindow("Browser:Preferences");
+  if (win)
+    win.focus();
+  else 
+    openDialog("chrome://browser/content/preferences/preferences.xul", 
+               "Preferences", features);
+}
