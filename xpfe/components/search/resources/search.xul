@@ -5,9 +5,9 @@
 
 <!DOCTYPE window
 [
-<!ENTITY window.title.label          "Super Search">
-<!ENTITY find.title.label            "Find Local Data">
-<!ENTITY internet.title.label        "Search Internet">
+<!ENTITY window.title.label          "Smart Search">
+<!ENTITY find.title.label            "Search Bookmarks/History">
+<!ENTITY internet.title.label        "Search the Internet">
 <!ENTITY mailnews.title.label        "Search Mail/News">
 <!ENTITY addressbook.title.label     "Search Addressbook">
 ]>
@@ -16,7 +16,8 @@
 <window title="&window.title.label;" style="width: 100%; height: 100%" align="vertical"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onload="loadPage(window.arguments[0])" >
 
 	<html:script src="search.js" />
 
@@ -26,7 +27,7 @@
 			<spring align="horizontal" flex="5%"/>
 			<titledbutton value="&internet.title.label;" onclick="return loadPage('internet');" />
 			<spring align="horizontal" flex="5%"/>
-			<titledbutton value="&mailnews.title.label;" onclick="return loadPage('mailnews');" />
+			<titledbutton value="&mailnews.title.label;" onclick="return loadPage('mail');" />
 			<spring align="horizontal" flex="5%"/>
 			<titledbutton value="&addressbook.title.label;" onclick="return loadPage('addressbook');" />
 			<spring align="horizontal" flex="100%" />
@@ -35,9 +36,4 @@
 		<html:iframe style="height: 50%; width: 100%;" flex="100%" id="content" src="about:blank" />
 		<html:iframe style="height: 50%; width: 100%;" flex="100%" id="results" src="about:blank" />
 	</box>
-
-	<html:script>
-		// load initial page
-		loadPage('find');
-	</html:script>
 </window>
