@@ -27,6 +27,7 @@
 #include "nsPosixLocale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
+#include "nsFileSpec.h"
 
 NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
 NS_DEFINE_IID(kPosixLocaleCID, NS_POSIXLOCALE_CID);
@@ -47,18 +48,16 @@ nsPosixLocale::~nsPosixLocale(void)
 NS_IMETHODIMP 
 nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_t length)
 {
-  char* xp_locale;
   char  country_code[3];
   char  lang_code[3];
   char  extra[65];
   char  posix_locale[128];
+  nsAutoCString xp_locale(*locale);
 
-  xp_locale = locale->ToNewCString();
-  if (xp_locale!=nsnull) {
-    if (!ParseLocaleString(xp_locale,lang_code,country_code,extra,'-')) {
+  if ((const char *)xp_locale!=nsnull) {
+    if (!ParseLocaleString((const char *)xp_locale,lang_code,country_code,extra,'-')) {
 //      strncpy(posixLocale,"C",length);
-      PL_strncpyz(posixLocale,xp_locale,length);  // use xp locale if parse failed
-      delete [] xp_locale;
+      PL_strncpyz(posixLocale,(const char *)xp_locale,length);  // use xp locale if parse failed
       return NS_OK;
     }
 
@@ -80,7 +79,6 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
     }
 
     strncpy(posixLocale,posix_locale,length);
-    delete [] xp_locale;
     return NS_OK;
   }
 

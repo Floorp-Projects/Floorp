@@ -131,10 +131,9 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   }
 
 #if defined(DEBUG_UNIX_COLLATION)
-  char* tmp = mLocale.ToNewCString();
-  if (NULL != tmp) {
-    printf("nsCollationUnix::Initialize mLocale = %s\n", tmp);
-    delete[] tmp;
+  nsAutoCString tmp(mLocale);
+  if (NULL != (const char *)tmp) {
+    printf("nsCollationUnix::Initialize mLocale = %s\n", (const char *)tmp);
   }
 #endif
 

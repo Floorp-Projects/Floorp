@@ -21,6 +21,7 @@
  */
 
 #include "nsAFMObject.h"
+#include "nsFileSpec.h" // for nsAutoCString
 #include "Helvetica.h"
 #include "Helvetica-Bold.h"
 #include "Helvetica-BoldOblique.h"
@@ -285,13 +286,11 @@ PRBool  bvalue;
 AFMKey  key;
 double  value;
 PRInt32 ivalue;
-char    *AFMFileName;     // file we will open
+nsAutoCString AFMFileName(aFontName.name); // file we will open
 
 
-  AFMFileName = aFontName.name.ToNewCString();
-  
   // Open the file
-  mAFMFile = fopen(AFMFileName,"r");
+  mAFMFile = fopen((const char *)AFMFileName,"r");
 
   if(nsnull != mAFMFile) {
     // create the structure to put the information in
@@ -430,7 +429,6 @@ char    *AFMFileName;     // file we will open
   //memcpy(mPSFontInfo->mAFMCharMetrics,AFMHelveticaChars,HelveticaAFM.mNumCharacters*sizeof(AFMscm));
   }
 
-  delete [] AFMFileName;
   return(success);
 }
 
