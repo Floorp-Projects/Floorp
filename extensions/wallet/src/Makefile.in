@@ -37,6 +37,7 @@ CPPSRCS		= \
 		nsWalletService.cpp \
 		wallet.cpp \
 		singsign.cpp \
+		nsBasicStreamGenerator.cpp \
 		$(NULL)
 
 RES_FILES	= \
