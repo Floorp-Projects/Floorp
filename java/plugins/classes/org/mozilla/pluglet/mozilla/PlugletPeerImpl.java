@@ -36,7 +36,10 @@ public class PlugletPeerImpl implements PlugletPeer {
      * Returns the value of a variable associated with the pluglet manager.
      * @param variable the pluglet manager variable to get
      */
-    public native String getValue(int variable);
+    public String getValue(int variable) {
+       throw(new UnsupportedOperationException("PlagletPeer.getValue not implemented yet"));
+    }
+   
     /**
      * This operation is called by the pluglet instance when it wishes to send a stream of data to the browser. It constructs a
      * new output stream to which the pluglet may send the data. When complete, the Close and Release methods should be
