@@ -637,7 +637,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     /* Find the nearest variable-declaring scope and use it as our parent. */
     parent = cx->fp->varobj;
-    fun = js_NewFunction(cx, NULL, NULL, 0, 0, parent, funAtom);
+    fun = js_NewFunction(cx, NULL, NULL, 0, lambda ? JSFUN_LAMBDA : 0, parent,
+                         funAtom);
     if (!fun)
         return NULL;
 
@@ -2792,7 +2793,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                             /* We have to fake a 'function' token here. */
                             CURRENT_TOKEN(ts).t_op = JSOP_NOP;
                             CURRENT_TOKEN(ts).type = TOK_FUNCTION;
-                            pn2 = FunctionDef(cx, ts, tc, JS_TRUE);
+                            pn2 = FunctionExpr(cx, ts, tc);
                             pn2 = NewBinary(cx, TOK_COLON, op, pn3, pn2, tc);
                             goto skip;
                         }

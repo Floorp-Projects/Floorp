@@ -998,6 +998,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
 
+                SHOW_FLAG(LAMBDA);
                 SHOW_FLAG(SETTER);
                 SHOW_FLAG(GETTER);
                 SHOW_FLAG(BOUND_METHOD);

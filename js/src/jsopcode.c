@@ -2268,6 +2268,8 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
         js_puts(jp, "\n");
 	js_printf(jp, "\t");
     }
+    if (fun->flags & JSFUN_LAMBDA)
+        js_puts(jp, "(");
     if (fun->flags & JSFUN_GETTER)
         js_printf(jp, "%s ", js_getter_str);
     else if (fun->flags & JSFUN_SETTER)
@@ -2326,6 +2328,8 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     }
     jp->indent -= 4;
     js_printf(jp, "\t}");
+    if (fun->flags & JSFUN_LAMBDA)
+        js_puts(jp, ")");
     if (jp->pretty)
 	js_puts(jp, "\n");
     return JS_TRUE;

@@ -121,11 +121,12 @@ JS_BEGIN_EXTERN_C
 #define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
+#define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
 #define JSFUN_GETTER            JSPROP_GETTER
 #define JSFUN_SETTER            JSPROP_SETTER
 #define JSFUN_BOUND_METHOD      0x40    /* bind this to fun->object's parent */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
-#define JSFUN_FLAGS_MASK        0xf0    /* overlay JSFUN_* attributes */
+#define JSFUN_FLAGS_MASK        0xf8    /* overlay JSFUN_* attributes */
 
 /*
  * Well-known JS values.  The extern'd variables are initialized when the
