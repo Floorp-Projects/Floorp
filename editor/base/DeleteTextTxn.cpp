@@ -29,7 +29,7 @@ nsresult DeleteTextTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              PRUint32 aNumCharsToDelete)
 {
-  mElement = aElement;
+  mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;
   mDeletedText = "";

@@ -45,7 +45,7 @@ nsresult InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                              const nsString& aStringToInsert,
                              nsIPresShell* aPresShell)
 {
-  mElement = aElement;
+  mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mStringToInsert = aStringToInsert;
   mPresShell = aPresShell;

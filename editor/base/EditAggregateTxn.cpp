@@ -152,7 +152,7 @@ nsresult EditAggregateTxn::AppendChild(EditTxn *aTxn)
 
 nsresult EditAggregateTxn::SetName(nsIAtom *aName)
 {
-  mName = aName;
+  mName = do_QueryInterface(aName);
   return NS_OK;
 }
 

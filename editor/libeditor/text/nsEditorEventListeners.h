@@ -41,7 +41,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -79,7 +79,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS

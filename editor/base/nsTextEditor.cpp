@@ -90,7 +90,7 @@ nsresult nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc,
     if (NS_FAILED(result) || !editor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mEditor = editor; // CreateInstance did our addRef
+    mEditor = do_QueryInterface(editor); // CreateInstance did our addRef
 
     mEditor->Init(aDoc, aPresShell);
     mEditor->EnableUndo(PR_TRUE);
@@ -101,15 +101,16 @@ nsresult nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc,
     }
     result = NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
     if (NS_OK != result) {
-      mKeyListenerP = 0; // drop the key listener if we couldn't get a mouse listener
+      // drop the key listener if we couldn't get a mouse listener.
+      mKeyListenerP = do_QueryInterface(0); 
       return result;
     }
     nsCOMPtr<nsIDOMEventReceiver> erP;
     result = aDoc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
     if (NS_OK != result) 
     {
-      mKeyListenerP = 0;
-      mMouseListenerP = 0; //dont need these if we cant register them
+      mKeyListenerP = do_QueryInterface(0);
+      mMouseListenerP = do_QueryInterface(0); //dont need these if we cant register them
       return result;
     }
     erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
