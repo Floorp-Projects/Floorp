@@ -782,12 +782,14 @@ public:
     nsCAutoString(PRUnichar aChar);
     virtual ~nsCAutoString();
 
+#ifndef NEW_STRING_APIS
     nsCAutoString& operator=(const nsCAutoString& aString) {nsCString::Assign(aString); return *this;}
     nsCAutoString& operator=(const nsCString& aString) {nsCString::Assign(aString); return *this;}
     nsCAutoString& operator=(const char* aCString) {nsCString::Assign(aCString); return *this;}
     nsCAutoString& operator=(const PRUnichar* aString) {nsCString::Assign(aString); return *this;}
     nsCAutoString& operator=(PRUnichar aChar) {nsCString::Assign(aChar); return *this;}
     nsCAutoString& operator=(char aChar) {nsCString::Assign(aChar); return *this;}
+#endif
 
     /**
      * Retrieve the size of this string
