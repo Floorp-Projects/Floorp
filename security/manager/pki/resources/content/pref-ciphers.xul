@@ -65,7 +65,7 @@
      // Save the prefs
      try {
       // Enumerate each checkbox on this page and save the value
-      var prefElements = document.getElementsByAttribute("prefstring", "true");
+      var prefElements = document.getElementsByAttribute("prefstring", "*");
       for (var i = 0; i < prefElements.length; i++) {
         var element = prefElements[i];
         var prefString = element.getAttribute("prefstring");
