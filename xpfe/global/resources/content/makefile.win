@@ -44,6 +44,7 @@ install::
 	$(MAKE_INSTALL) strres.js $(DISTBROWSER)
 	$(MAKE_INSTALL) about.html $(DISTBROWSER)
 	$(MAKE_INSTALL) about.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) mozilla.html $(DISTBROWSER)
 	$(MAKE_INSTALL) credits.html $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetOverlay.js $(DISTBROWSER)
