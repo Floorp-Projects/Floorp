@@ -100,4 +100,13 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 };
 
+class nsHTMLGroupboxAccessible : public nsAccessible
+{
+public:
+  nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+};
+
 #endif  

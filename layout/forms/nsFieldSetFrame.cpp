@@ -59,6 +59,10 @@
 #include "nsStyleUtil.h"
 #include "nsFont.h"
 #include "nsCOMPtr.h"
+#ifdef ACCESSIBILITY
+#include "nsIAccessibilityService.h"
+#endif
+#include "nsIServiceManager.h"
 
 class nsLegendFrame;
 
@@ -105,6 +109,8 @@ public:
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**        aFrame);
   
+  NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
     return MakeFrameName(NS_LITERAL_STRING("FieldSet"), aResult);
@@ -684,3 +690,16 @@ nsFieldSetFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
   // this should act like a block, so we need to override
   return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
 }
+
+#ifdef ACCESSIBILITY
+NS_IMETHODIMP nsFieldSetFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    return accService->CreateHTMLGroupboxAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+#endif

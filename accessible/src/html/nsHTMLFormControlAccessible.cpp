@@ -374,3 +374,46 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
+
+// --- groupbox  -----
+
+/*
+ * The HTML for this is <fieldset> <legend>box-title</legend> form elements </fieldset> 
+ */
+
+nsHTMLGroupboxAccessible::nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsAccessible(aNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_GROUPING;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccState(PRUint32 *_retval)
+{
+  // Groupbox doesn't support any states!
+  *_retval = 0;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccName(nsAWritableString& _retval)
+{
+  _retval.Assign(NS_LITERAL_STRING(""));  // Default name is blank 
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  if (element) {
+    nsCOMPtr<nsIDOMNodeList> legends;
+    element->GetElementsByTagName(NS_LITERAL_STRING("legend"), getter_AddRefs(legends));
+    if (legends) {
+      nsCOMPtr<nsIDOMNode> legendNode;
+      legends->Item(0, getter_AddRefs(legendNode));
+      nsCOMPtr<nsIContent> legendContent(do_QueryInterface(legendNode));
+      return AppendFlatStringFromSubtree(legendContent, &_retval);
+    }
+  }
+  return NS_OK;
+}
