@@ -169,10 +169,13 @@ nsFirstLetterFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRang
     return NS_OK;
   nsIFrame *child;
   nsresult result = FirstChild(aPresContext, nsnull, &child);
-  while (NS_SUCCEEDED(result) && child)
+  if (NS_FAILED(result))
+    return NS_OK;
+  while (child)
   {
-    child->SetSelected(aPresContext,aRange, aSelected,aSpread);//dont worry about result. there are more frames to come
-    result = child->GetNextSibling(&child);
+    child->SetSelected(aPresContext, aRange, aSelected, aSpread);
+    // don't worry about result. there are more frames to come
+    child = child->GetNextSibling();
   }
   return NS_OK;
 }
@@ -252,8 +255,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // Place and size the child and update the output metrics
-  kid->MoveTo(aPresContext, bp.left, bp.top);
-  kid->SizeTo(aPresContext, aMetrics.width, aMetrics.height);
+  kid->SetRect(nsRect(bp.left, bp.top, aMetrics.width, aMetrics.height));
   kid->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
   aMetrics.width += lr;
   aMetrics.height += tb;
@@ -268,11 +270,10 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
     nsIFrame* kidNextInFlow;
     kid->GetNextInFlow(&kidNextInFlow);
-    if (nsnull != kidNextInFlow) {
+    if (kidNextInFlow) {
       // Remove all of the childs next-in-flows
-      nsContainerFrame* parent;
-      kidNextInFlow->GetParent((nsIFrame**)&parent);
-      parent->DeleteNextInFlowChild(aPresContext, kidNextInFlow);
+      NS_STATIC_CAST(nsContainerFrame*, kidNextInFlow->GetParent())
+        ->DeleteNextInFlowChild(aPresContext, kidNextInFlow);
     }
   }
   else {
@@ -290,8 +291,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
       SetOverflowFrames(aPresContext, nextInFlow);
     }
     else {
-      nsIFrame* nextSib;
-      kid->GetNextSibling(&nextSib);
+      nsIFrame* nextSib = kid->GetNextSibling();
       if (nextSib) {
         kid->SetNextSibling(nsnull);
         SetOverflowFrames(aPresContext, nextSib);
@@ -328,7 +328,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
       nsIFrame* f = overflowFrames;
       while (f) {
         nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, prevInFlow, this);
-        f->GetNextSibling(&f);
+        f = f->GetNextSibling();
       }
       mFrames.InsertFrames(this, nsnull, overflowFrames);
     }
@@ -347,8 +347,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
   nsIFrame* kid = mFrames.FirstChild();
   if (kid) {
     nsRefPtr<nsStyleContext> sc;
-    nsCOMPtr<nsIContent> kidContent;
-    kid->GetContent(getter_AddRefs(kidContent));
+    nsIContent* kidContent = kid->GetContent();
     if (kidContent) {
       NS_ASSERTION(kidContent->IsContentOfType(nsIContent::eTEXT),
                    "should contain only text nodes");

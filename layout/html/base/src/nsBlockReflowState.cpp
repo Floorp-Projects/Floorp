@@ -493,9 +493,8 @@ nsBlockReflowState::RecoverFloaters(nsLineList::iterator aLine,
       if (aDeltaY != 0) {
         fc->mRegion.y += aDeltaY;
         fc->mCombinedArea.y += aDeltaY;
-        nsPoint p;
-        floater->GetOrigin(p);
-        floater->MoveTo(mPresContext, p.x, p.y + aDeltaY);
+        nsPoint p = floater->GetPosition();
+        floater->SetPosition(nsPoint(p.x, p.y + aDeltaY));
       }
 #ifdef DEBUG
       if (nsBlockFrame::gNoisyReflow || nsBlockFrame::gNoisySpaceManager) {
@@ -855,8 +854,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   nsRect region;
 
   // The floater's old region, so we can propagate damage.
-  nsRect oldRegion;
-  floater->GetRect(oldRegion);
+  nsRect oldRegion = floater->GetRect();
   oldRegion.Inflate(aFloaterCache->mMargins);
 
   // Enforce CSS2 9.5.1 rule [2], i.e., make sure that a float isn't
@@ -877,7 +875,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   mBlock->ReflowFloater(*this, placeholder, aFloaterCache, aReflowStatus);
 
   // Get the floaters bounding box and margin information
-  floater->GetRect(region);
+  region = floater->GetRect();
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
@@ -934,8 +932,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
         if(nsLayoutAtoms::tableOuterFrame == atom) {
           //see if it has "align="
           // IE makes a difference between align and he float property
-          nsCOMPtr<nsIContent> content;
-          prevFrame->GetContent(getter_AddRefs(content));
+          nsIContent* content = prevFrame->GetContent();
           if (content) {
             nsAutoString value;
             if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
@@ -959,7 +956,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
       // reflow the floater again now since we have more space
       mBlock->ReflowFloater(*this, placeholder, aFloaterCache, aReflowStatus);
       // Get the floaters bounding box and margin information
-      floater->GetRect(region);
+      region = floater->GetRect();
       // Adjust the floater size by its margin. That's the area that will
       // impact the space manager.
       region.width += aFloaterCache->mMargins.left + aFloaterCache->mMargins.right;
@@ -972,27 +969,25 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   nsIFrame* prevInFlow;
   floater->GetPrevInFlow(&prevInFlow);
   if (prevInFlow) {
-    prevInFlow->GetRect(prevRect);
+    prevRect = prevInFlow->GetRect();
 
     nsCOMPtr<nsIPresShell> presShell;
     mPresContext->GetShell(getter_AddRefs(presShell));
     nsCOMPtr<nsIFrameManager> frameManager;
     presShell->GetFrameManager(getter_AddRefs(frameManager));
 
-    nsIFrame *placeParent, *placeParentPrev, *prevPlace, *prevPlaceParent;
+    nsIFrame *placeParentPrev, *prevPlace;
     // If prevInFlow's placeholder is in a block that wasn't continued, we need to adjust 
     // prevRect.x to account for the missing frame offsets.
-    placeholder->GetParent(&placeParent);
+    nsIFrame* placeParent = placeholder->GetParent();
     placeParent->GetPrevInFlow(&placeParentPrev);
     frameManager->GetPlaceholderFrameFor(prevInFlow, &prevPlace);
-    prevPlace->GetParent(&prevPlaceParent);
+    nsIFrame* prevPlaceParent = prevPlace->GetParent();
 
     for (nsIFrame* ancestor = prevPlaceParent; 
          ancestor && (ancestor != placeParentPrev); 
-         ancestor->GetParent(&ancestor)) {
-      nsRect rect;
-      ancestor->GetRect(rect);
-      prevRect.x += rect.x;
+         ancestor = ancestor->GetParent()) {
+      prevRect.x += ancestor->GetRect().x;
     }        
   }
   // Assign an x and y coordinate to the floater. Note that the x,y
@@ -1099,7 +1094,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   // Position the floater and make sure and views are properly
   // positioned. We need to explicitly position its child views as
   // well, since we're moving the floater after flowing it.
-  floater->MoveTo(mPresContext, x, y);
+  floater->SetPosition(nsPoint(x, y));
   nsContainerFrame::PositionFrameView(mPresContext, floater);
   nsContainerFrame::PositionChildViews(mPresContext, floater);
 
@@ -1129,8 +1124,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
-    nsRect r;
-    floater->GetRect(r);
+    nsRect r = floater->GetRect();
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("placed floater: ");
     nsFrame::ListTag(stdout, floater);

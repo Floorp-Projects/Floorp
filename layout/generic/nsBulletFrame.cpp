@@ -1723,10 +1723,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
         mParent->FirstChild(mPresContext, nsnull, &frame);
         NS_ASSERTION(frame, "No frame to mark dirty for bullet frame.");
         if (frame) {
-          nsFrameState state;
-          frame->GetFrameState(&state);
-          state |= NS_FRAME_IS_DIRTY;
-          frame->SetFrameState(state);
+          frame->AddStateBits(NS_FRAME_IS_DIRTY);
           mParent->ReflowDirtyChild(shell, frame);
         }
       }

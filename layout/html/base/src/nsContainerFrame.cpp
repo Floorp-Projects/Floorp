@@ -409,12 +409,8 @@ static PRBool
 TranslatePointTo(nsPoint& aPoint, nsIView* aChildView, nsIView* aParentView)
 {
   do {
-    nscoord x, y;
-
-    aChildView->GetPosition(&x, &y);
-    aPoint.x += x;
-    aPoint.y += y;
-    aChildView->GetParent(aChildView);
+    aPoint += aChildView->GetPosition();
+    aChildView = aChildView->GetParent();
   } while (aChildView && (aChildView != aParentView));
 
   return aChildView == aParentView;
@@ -433,15 +429,13 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
     nsIView* view = aKidFrame->GetView();
     // Position view relative to its parent, not relative to aKidFrame's
     // frame which may not have a view
-    nsIView*        parentView;
-    view->GetParent(parentView);
+    nsIView*        parentView = view->GetParent();
 
     nsIView*        containingView;
     nsPoint         origin;
     aKidFrame->GetOffsetFromView(aPresContext, origin, &containingView);
 
-    nsCOMPtr<nsIViewManager> vm;
-    view->GetViewManager(*getter_AddRefs(vm));
+    nsIViewManager* vm = view->GetViewManager();
 
     // it's possible for the parentView to be nonnull but containingView to be
     // null, when the parent view doesn't belong to this frame tree but to
@@ -450,7 +444,7 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
     if (nsnull != containingView && containingView != parentView) {
       NS_ERROR("This hack should not be needed now!!! See bug 126263.");
 
-      // XXX roc this is no longer needed; remove it!!
+      // XXX roc this should be no longer needed, but it still is for printing/print preview
 
       // it is possible for parent view not to have a frame attached to it
       // kind of an anonymous view. This happens with native scrollbars and
@@ -459,17 +453,13 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
       // the HACK below. COMBO box code should NOT be in the container code!!!
       // And the case it looks from does not just happen for combo boxes. Native
       // scrollframes get in this situation too!! 
-      while(parentView) {
-        void *data = 0;
-        parentView->GetClientData(data);
+      while (parentView) {
+        void *data = parentView->GetClientData();
         if (data)
           break;
       
-        nscoord x, y;
-        parentView->GetPosition(&x, &y);
-        origin.x -= x;
-        origin.y -= y;
-        parentView->GetParent(parentView);
+        origin -= parentView->GetPosition();
+        parentView = parentView->GetParent();
       }
      
       if (containingView != parentView) 
@@ -545,8 +535,7 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
                                          nsIView*         aView,
                                          PRUint32         aFlags)
 {
-  nsCOMPtr<nsIViewManager> vm;
-  aView->GetViewManager(*getter_AddRefs(vm));
+  nsIViewManager* vm = aView->GetViewManager();
 
   PRBool isCanvas;
   const nsStyleBackground* bg;
@@ -570,8 +559,7 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
   if (isCanvas) {
     nsIView* rootView;
     vm->GetRootView(rootView);
-    nsIView* rootParent;
-    rootView->GetParent(rootParent);
+    nsIView* rootParent = rootView->GetParent();
     if (!rootParent) {
       // We're the root of a view manager hierarchy. We will have to
       // paint something. NOTE: this can be overridden below.
@@ -590,13 +578,11 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
       if (!parentDoc && rootElem && rootElem->IsContentOfType(nsIContent::eXUL)) {
         // we're XUL at the root of the document hierarchy. Try to make our
         // window translucent.
-        nsCOMPtr<nsIWidget> widget;
-        aView->GetWidget(*getter_AddRefs(widget));
         // don't proceed unless this is the root view
         // (sometimes the non-root-view is a canvas)
-        if (widget && aView == rootView) {
+        if (aView->HasWidget() && aView == rootView) {
           viewHasTransparentContent = hasBG && (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-          widget->SetWindowTranslucency(viewHasTransparentContent);
+          aView->GetWidget()->SetWindowTranslucency(viewHasTransparentContent);
         }
       }
     }
@@ -608,10 +594,8 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
   
   if (!viewHasTransparentContent) {
     // If we're showing the view but the frame is hidden, then the view is transparent
-    nsViewVisibility visibility;
-    aView->GetVisibility(visibility);
     const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
-    if ((nsViewVisibility_kShow == visibility
+    if ((nsViewVisibility_kShow == aView->GetVisibility()
          && NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible)
         || (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow
             && (kidState & NS_FRAME_OUTSIDE_CHILDREN) != 0)) {
@@ -683,12 +667,8 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
       }
     }
   
-    nsRect newSize;
-    aView->GetBounds(newSize);
-    nscoord x, y;
-    aView->GetPosition(&x, &y);
-    newSize.x -= x;
-    newSize.y -= y;
+    nsRect newSize = aView->GetBounds();
+    newSize -= aView->GetPosition();
 
     // If part of the view is being clipped out, then mark it transparent
     if (clipRect.y > newSize.y
@@ -727,10 +707,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
   }
 
   if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
-    nsCOMPtr<nsIViewManager> vm;
-    aView->GetViewManager(*getter_AddRefs(vm));
-    nsRect oldBounds;
-    aView->GetBounds(oldBounds);
+    nsIViewManager* vm = aView->GetViewManager();
 
     // If the frame has child frames that stick outside the content
     // area, then size the view large enough to include those child
@@ -783,8 +760,7 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
     return;
   }
 
-  nsCOMPtr<nsIViewManager> vm;
-  aView->GetViewManager(*getter_AddRefs(vm));
+  nsIViewManager* vm = aView->GetViewManager();
 
   if (nsnull == aStyleContext) {
     aStyleContext = aFrame->GetStyleContext();
@@ -812,8 +788,7 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
       viewIsVisible = PR_FALSE;
     } else {
       // if the view is for a popup, don't show the view if the popup is closed
-      nsCOMPtr<nsIWidget> widget;
-      aView->GetWidget(*getter_AddRefs(widget));
+      nsIWidget* widget = aView->GetWidget();
       if (widget) {
         nsWindowType windowType;
         widget->GetWindowType(windowType);
