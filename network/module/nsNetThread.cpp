@@ -75,7 +75,11 @@ extern "C" void NET_ClientProtocolInitialize()
 {
     NET_InitFileProtocol();
     NET_InitHTTPProtocol();
+#ifdef NU_CACHE
+    NET_InitNuCacheProtocol();
+#else
     NET_InitMemCacProtocol();
+#endif
     NET_InitFTPProtocol();
     NET_InitAboutProtocol();
     NET_InitGopherProtocol();
