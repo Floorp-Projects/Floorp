@@ -1128,7 +1128,7 @@ class Parser {
         case Token.INC:
         case Token.DEC:
             decompiler.addToken(tt);
-            return nf.createUnary(tt, Token.PRE, memberExpr(ts, true));
+            return nf.createIncDec(tt, false, memberExpr(ts, true));
 
         case Token.DELPROP:
             decompiler.addToken(Token.DELPROP);
@@ -1158,7 +1158,7 @@ class Parser {
             {
                 int pf = ts.getToken();
                 decompiler.addToken(pf);
-                return nf.createUnary(pf, Token.POST, pn);
+                return nf.createIncDec(pf, true, pn);
             }
             return pn;
         }

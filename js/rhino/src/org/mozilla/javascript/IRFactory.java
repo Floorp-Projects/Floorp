@@ -732,44 +732,37 @@ public class IRFactory {
         return new Node(nodeType, childNode);
     }
 
-    public Object createUnary(int nodeType, int nodeOp, Object child) {
-        Node childNode = (Node) child;
+    public Object createIncDec(int nodeType, boolean post, Object child) 
+    {
+        Node childNode = (Node)child;
+        int childType = childNode.getType();
 
-        if (nodeType == Token.INC || nodeType == Token.DEC) {
-            int childType = childNode.getType();
-
-            if (!hasSideEffects(childNode)
-                && (nodeOp == Token.POST)
-                && (childType == Token.NAME
-                    || childType == Token.GETPROP
-                    || childType == Token.GETELEM))
-            {
-                // if it's not a LHS type, createAssignment (below) will throw
-                // an exception.
-                return new Node(nodeType, childNode);
-            }
-
-            /*
-             * Transform INC/DEC ops to +=1, -=1,
-             * expecting later optimization of all +/-=1 cases to INC, DEC.
-             */
-            // we have to use Double for now, because
-            // 0.0 and 1.0 are stored as dconst_[01],
-            // and using a Float creates a stack mismatch.
-            Node rhs = (Node) createNumber(1.0);
-
-            return createAssignment(nodeType == Token.INC
-                                        ? Token.ADD
-                                        : Token.SUB,
-                                    childNode,
-                                    rhs,
-                                    true,
-                                    nodeOp == Token.POST);
+        if (post && !hasSideEffects(childNode) 
+            && (childType == Token.NAME
+                || childType == Token.GETPROP
+                || childType == Token.GETELEM))
+        {
+            // if it's not a LHS type, createAssignment (below) will throw
+            // an exception.
+            return new Node(nodeType, childNode);
         }
 
-        Node result = new Node(nodeType, nodeOp);
-        result.addChildToBack(childNode);
-        return result;
+        /*
+         * Transform INC/DEC ops to +=1, -=1,
+         * expecting later optimization of all +/-=1 cases to INC, DEC.
+         */
+        // we have to use Double for now, because
+        // 0.0 and 1.0 are stored as dconst_[01],
+        // and using a Float creates a stack mismatch.
+        Node rhs = (Node) createNumber(1.0);
+
+        return createAssignment(nodeType == Token.INC
+                                    ? Token.ADD
+                                    : Token.SUB,
+                                childNode,
+                                rhs,
+                                true,
+                                post);
     }
 
     /**

@@ -188,39 +188,37 @@ public class Token
          * more general token types, eg. 'DIV' as the op of 'ASSIGN'.
          */
         NOP         = 103, // NOP
-        PRE         = 104, // for INC, DEC nodes.
-        POST        = 105,
 
         /**
          * For JSOPs associated with keywords...
          * eg. op = ADD; token = ASSIGN
          */
 
-        EMPTY       = 106,
+        EMPTY       = 104,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        EQOP        = 107, // equality ops (== !=)
-        RELOP       = 108, // relational ops (< <= > >= in instanceof)
+        EQOP        = 105, // equality ops (== !=)
+        RELOP       = 106, // relational ops (< <= > >= in instanceof)
 
-        BLOCK       = 109, // statement block
-        ARRAYLIT    = 110, // array literal
-        OBJLIT      = 111, // object literal
-        LABEL       = 112, // label
-        TARGET      = 113,
-        LOOP        = 114,
-        ENUMDONE    = 115,
-        EXPRSTMT    = 116,
-        PARENT      = 117,
-        JSR         = 118,
-        NEWLOCAL    = 119,
-        USELOCAL    = 120,
-        SCRIPT      = 121,   // top-level node for entire script
-        TYPEOFNAME  = 122,  // for typeof(simple-name)
+        BLOCK       = 107, // statement block
+        ARRAYLIT    = 108, // array literal
+        OBJLIT      = 109, // object literal
+        LABEL       = 110, // label
+        TARGET      = 111,
+        LOOP        = 112,
+        ENUMDONE    = 113,
+        EXPRSTMT    = 114,
+        PARENT      = 115,
+        JSR         = 116,
+        NEWLOCAL    = 117,
+        USELOCAL    = 118,
+        SCRIPT      = 119,   // top-level node for entire script
+        TYPEOFNAME  = 120,  // for typeof(simple-name)
 
-        LAST_TOKEN  = 122;
+        LAST_TOKEN  = 120;
 
     public static String name(int token)
     {
@@ -332,8 +330,6 @@ public class Token
                 case FINALLY:         return "finally";
                 case RESERVED:        return "reserved";
                 case NOP:             return "nop";
-                case PRE:             return "pre";
-                case POST:            return "post";
                 case EMPTY:           return "empty";
                 case BLOCK:           return "block";
                 case ARRAYLIT:        return "arraylit";
