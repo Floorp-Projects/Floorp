@@ -402,8 +402,26 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     // No response yet...  Try to determine the content-type based
     // on the file extension of the URI...
     //
+
+    // We had to do this same hack in 4.x. Sometimes, we run an http url that ends in special 
+    // extensions like .dll, .exe, etc and the server doesn't provide a specific content type
+    // for the document. In actuality the document is really text/html (sometimes). For these cases, 
+    // we don't want to ask the mime service for the content type
+    // because it will make incorrect conclusions based on the file extension. Instead, set the content type
+    // to unknown and allow our unknown content type decoder a chance to sniff the data stream and conclude
+    // a content type. 
+    // 
+    nsCOMPtr<nsIURL> url (do_QueryInterface(mURI));
+    PRBool performMimeServiceLookup = PR_TRUE;
+    if (url) {
+      nsXPIDLCString fileExt;
+      url->GetFileExtension(getter_Copies(fileExt));
+      if (fileExt && !nsCRT::strcasecmp(fileExt, "dll"))
+        performMimeServiceLookup = PR_FALSE;
+    }
+
     nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && performMimeServiceLookup) {
         rv = MIMEService->GetTypeFromURI(mURI, aContentType);
         if (NS_SUCCEEDED(rv)) return rv;
         // XXX we should probably set the content-type for this http response 
