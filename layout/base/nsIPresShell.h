@@ -58,6 +58,7 @@ class nsIArena;
 #define NS_PRESSHELL_SCROLL_RIGHT    100
 #define NS_PRESSHELL_SCROLL_CENTER   50
 #define NS_PRESSHELL_SCROLL_ANYWHERE -1
+#define NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE -2
 
 typedef enum SelectionType{SELECTION_NORMAL = 0, 
                            SELECTION_SPELLCHECK, 
