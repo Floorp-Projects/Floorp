@@ -183,7 +183,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   menuInfo.fType      = MFT_STRING;
   menuInfo.dwTypeData = nameStr;
 
-  BOOL status = InsertMenuItem(mWnd, mNumMenus++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenus++, TRUE, &menuInfo);
 
   delete[] nameStr;
 

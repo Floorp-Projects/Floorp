@@ -214,11 +214,11 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 
   menuInfo.cbSize     = sizeof(menuInfo);
   menuInfo.fMask      = MIIM_SUBMENU | MIIM_TYPE;
-  menuInfo.hSubMenu   = hwnd;
+  menuInfo.hSubMenu   = (HMENU)hwnd;
   menuInfo.fType      = MFT_STRING;
   menuInfo.dwTypeData = nameStr;
 
-  BOOL status = InsertMenuItem(mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -235,7 +235,7 @@ NS_METHOD nsPopUpMenu::AddSeparator()
   menuInfo.fMask  = MIIM_TYPE;
   menuInfo.fType  = MFT_SEPARATOR;
 
-  BOOL status = InsertMenuItem(mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
 
   return NS_OK;
 }

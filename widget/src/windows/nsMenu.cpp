@@ -199,7 +199,7 @@ NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
   menuInfo.wID        = (DWORD)command;
   menuInfo.cch        = strlen(nameStr);
 
-  BOOL status = InsertMenuItem(mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -228,7 +228,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   menuInfo.fType      = MFT_STRING;
   menuInfo.dwTypeData = nameStr;
 
-  BOOL status = InsertMenuItem(mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -245,7 +245,7 @@ NS_METHOD nsMenu::AddSeparator()
   menuInfo.fMask  = MIIM_TYPE;
   menuInfo.fType  = MFT_SEPARATOR;
 
-  BOOL status = InsertMenuItem(mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
 
   return NS_OK;
 }
