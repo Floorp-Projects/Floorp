@@ -887,6 +887,18 @@ nsGenericDOMDataNode::RemoveFocus(nsIPresContext* aPresContext)
 }
 
 nsresult
+nsGenericDOMDataNode::GetBindingParent(nsIContent** aContent) 
+{
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::SetBindingParent(nsIContent* aParent)
+{
+  return NS_OK;
+}  
+
+nsresult
 nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                              size_t aInstanceSize) const
 {

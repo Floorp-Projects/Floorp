@@ -45,15 +45,108 @@
 #include "nsSupportsArray.h"
 #include "nsITextContent.h"
 #include "nsIStreamListener.h"
+#include "nsIStyleRuleSupplier.h"
 
 #include "nsIXBLBinding.h"
+#include "nsIXBLDocumentInfo.h"
+
+#include "nsIStyleSheet.h"
+#include "nsIHTMLStyleSheet.h"
+#include "nsIHTMLCSSStyleSheet.h"
+#include "nsIHTMLContentContainer.h"
+
+#include "nsIStyleRuleProcessor.h"
+#include "nsIStyleSet.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kParserCID,                  NS_PARSER_IID); // XXX What's up with this???
 
-class nsBindingManager : public nsIBindingManager
+class nsXBLDocumentInfo : public nsIXBLDocumentInfo
+{
+public:
+  NS_DECL_ISUPPORTS
+  
+  nsXBLDocumentInfo(nsIDocument* aDocument);
+  virtual ~nsXBLDocumentInfo();
+  
+  NS_IMETHOD GetDocument(nsIDocument** aResult) { *aResult = mDocument; NS_IF_ADDREF(*aResult); return NS_OK; };
+  NS_IMETHOD GetRuleProcessors(nsISupportsArray** aResult);
+  
+  NS_IMETHOD GetScriptAccess(PRBool* aResult) { *aResult = mScriptAccess; return NS_OK; };
+  NS_IMETHOD SetScriptAccess(PRBool aAccess) { mScriptAccess = aAccess; return NS_OK; };
+
+private:
+  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsISupportsArray> mRuleProcessors;
+  PRBool mScriptAccess;
+};
+
+/* Implementation file */
+NS_IMPL_ISUPPORTS1(nsXBLDocumentInfo, nsIXBLDocumentInfo)
+
+nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
+{
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+  mDocument = aDocument;
+  mScriptAccess = PR_TRUE;
+}
+
+nsXBLDocumentInfo::~nsXBLDocumentInfo()
+{
+  /* destructor code */
+
+}
+
+NS_IMETHODIMP
+nsXBLDocumentInfo::GetRuleProcessors(nsISupportsArray** aResult)
+{
+  if (!mRuleProcessors) {
+    // Gather the rule processors.
+    PRInt32 count = mDocument->GetNumberOfStyleSheets();
+    if (count > 2) {
+      nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(mDocument));
+      nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
+      container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
+      nsCOMPtr<nsIHTMLStyleSheet> attrSheet;
+      container->GetAttributeStyleSheet(getter_AddRefs(attrSheet));
+      nsCOMPtr<nsIStyleSheet> inlineCSS(do_QueryInterface(inlineSheet));
+      nsCOMPtr<nsIStyleSheet> attrCSS(do_QueryInterface(attrSheet));
+      NS_NewISupportsArray(getter_AddRefs(mRuleProcessors));
+      nsCOMPtr<nsIStyleRuleProcessor> prevProcessor;
+      for (PRInt32 i = 0; i < count; i++) {
+        nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(mDocument->GetStyleSheetAt(i));
+        if (sheet == inlineCSS || sheet == attrCSS)
+          continue;
+
+        nsCOMPtr<nsIStyleRuleProcessor> processor;
+        sheet->GetStyleRuleProcessor(*getter_AddRefs(processor), prevProcessor);
+        if (processor != prevProcessor) {
+          mRuleProcessors->AppendElement(processor);
+          prevProcessor = processor;
+        }
+      }
+    }
+  }
+  
+  *aResult = mRuleProcessors;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+  
+nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult)
+{
+  *aResult = new nsXBLDocumentInfo(aDocument);
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+
+class nsBindingManager : public nsIBindingManager, public nsIStyleRuleSupplier
 {
   NS_DECL_ISUPPORTS
 
@@ -77,12 +170,27 @@ public:
   NS_IMETHOD ClearAttachedQueue();
   NS_IMETHOD ProcessAttachedQueue();
 
-  NS_IMETHOD PutXBLDocument(nsIDocument* aDocument);
-  NS_IMETHOD GetXBLDocument(const nsCString& aURL, nsIDocument** aResult);
+  NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
+  NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult);
 
   NS_IMETHOD PutLoadingDocListener(const nsCString& aURL, nsIStreamListener* aListener);
   NS_IMETHOD GetLoadingDocListener(const nsCString& aURL, nsIStreamListener** aResult);
   NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL);
+
+  NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
+  
+  // nsIStyleRuleSupplier
+  NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult);
+  NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
+                       nsISupportsArrayEnumFunc aFunc, void* aData,
+                       nsIContent* aContent);
+
+protected:
+  void GetEnclosingScope(nsIContent* aContent, nsIContent** aParent);
+  void GetOutermostStyleScope(nsIContent* aContent, nsIContent** aParent);
+
+  void WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData,
+                 nsIContent* aParent, nsIContent* aCurrContent);
 
 // MEMBER VARIABLES
 protected: 
@@ -98,7 +206,7 @@ protected:
 // Static member variable initialization
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS1(nsBindingManager, nsIBindingManager)
+NS_IMPL_ISUPPORTS2(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier)
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
@@ -294,30 +402,33 @@ nsBindingManager::ProcessAttachedQueue()
 }
 
 NS_IMETHODIMP
-nsBindingManager::PutXBLDocument(nsIDocument* aDocument)
+nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 {
   if (!mDocumentTable)
     mDocumentTable = new nsSupportsHashtable();
 
-  nsCOMPtr<nsIURI> uri(aDocument->GetDocumentURL());
-  char* aString;
-  uri->GetSpec(&aString);
+  nsCOMPtr<nsIDocument> doc;
+  aDocumentInfo->GetDocument(getter_AddRefs(doc));
 
-  nsCStringKey key(aString);
-  mDocumentTable->Put(&key, aDocument);
-
+  nsCOMPtr<nsIURI> uri(doc->GetDocumentURL());
+  nsXPIDLCString str;
+  uri->GetSpec(getter_Copies(str));
+  
+  nsCStringKey key((const char*)str);
+  mDocumentTable->Put(&key, aDocumentInfo);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBindingManager::GetXBLDocument(const nsCString& aURL, nsIDocument** aResult)
+nsBindingManager::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)
 {
   *aResult = nsnull;
   if (!mDocumentTable)
     return NS_OK;
 
   nsCStringKey key(aURL);
-  *aResult = NS_STATIC_CAST(nsIDocument*, mDocumentTable->Get(&key)); // Addref happens here.
+  *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, mDocumentTable->Get(&key)); // Addref happens here.
+
   return NS_OK;
 }
 
@@ -356,6 +467,107 @@ nsBindingManager::RemoveLoadingDocListener(const nsCString& aURL)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsBindingManager::InheritsStyle(nsIContent* aContent, PRBool* aResult)
+{
+  // Get our enclosing parent.
+  *aResult = PR_TRUE;
+  nsCOMPtr<nsIContent> parent;
+  GetEnclosingScope(aContent, getter_AddRefs(parent));
+  if (parent) {
+    // See if the parent is our parent.
+    nsCOMPtr<nsIContent> ourParent;
+    aContent->GetParent(*getter_AddRefs(ourParent));
+    if (ourParent == parent) {
+      // Yes. Check the binding and see if it wants to allow us
+      // to inherit styles.
+      nsCOMPtr<nsIXBLBinding> binding;
+      GetBinding(parent, getter_AddRefs(binding));
+      if (binding)
+        binding->InheritsStyle(aResult);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::UseDocumentRules(nsIContent* aContent, PRBool* aResult)
+{
+  if (!aContent)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  GetOutermostStyleScope(aContent, getter_AddRefs(parent));
+  *aResult = !parent;
+  return NS_OK;
+}
+
+void
+nsBindingManager::GetEnclosingScope(nsIContent* aContent,
+                                    nsIContent** aParent)
+{
+  // Look up the enclosing parent.
+  aContent->GetBindingParent(aParent);
+}
+
+void
+nsBindingManager::GetOutermostStyleScope(nsIContent* aContent,
+                                         nsIContent** aParent)
+{
+  nsCOMPtr<nsIContent> parent;
+  GetEnclosingScope(aContent, getter_AddRefs(parent));
+  while (parent) {
+    PRBool inheritsStyle = PR_TRUE;
+    nsCOMPtr<nsIXBLBinding> binding;
+    GetBinding(parent, getter_AddRefs(binding));
+    if (binding) {
+      binding->InheritsStyle(&inheritsStyle);
+    }
+    if (!inheritsStyle)
+      break;
+    nsCOMPtr<nsIContent> child = parent;
+    GetEnclosingScope(child, getter_AddRefs(parent));
+    if (parent == child)
+      break; // The scrollbar case only is deliberately hacked to return itself
+             // (see GetBindingParent in nsXULElement.cpp).
+  }
+  *aParent = parent;
+  NS_IF_ADDREF(*aParent);
+}
+
+void
+nsBindingManager::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData,
+                            nsIContent* aParent, nsIContent* aCurrContent)
+{
+  nsCOMPtr<nsIXBLBinding> binding;
+  GetBinding(aCurrContent, getter_AddRefs(binding));
+  if (binding) {
+    binding->WalkRules(aFunc, aData);
+  }
+  if (aParent != aCurrContent) {
+    nsCOMPtr<nsIContent> par;
+    GetEnclosingScope(aCurrContent, getter_AddRefs(par));
+    if (par)
+      WalkRules(aFunc, aData, aParent, par);
+  }
+}
+
+NS_IMETHODIMP
+nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
+                            nsISupportsArrayEnumFunc aFunc, void* aData,
+                            nsIContent* aContent)
+{
+  if (!aContent)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  GetOutermostStyleScope(aContent, getter_AddRefs(parent));
+
+  WalkRules(aFunc, aData, parent, aContent);
+  return NS_OK;
+}
+
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

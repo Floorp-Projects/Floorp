@@ -72,6 +72,7 @@ NS_XULATOM(property);
 NS_XULATOM(ref);
 NS_XULATOM(resource);
 NS_XULATOM(rule);
+NS_XULATOM(scrollbar);
 NS_XULATOM(selected);
 NS_XULATOM(style);
 NS_XULATOM(subject);

@@ -60,6 +60,7 @@ EXPORTS =				\
 	nsIMutableStyleContext.h		\
 	nsIStyleFrameConstruction.h	\
 	nsIStyleRule.h			\
+  nsIStyleRuleSupplier.h \
 	nsIStyleSet.h			\
 	nsIStyleSheet.h			\
 	nsIStyleSheetLinkingElement.h	\

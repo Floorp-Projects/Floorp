@@ -31,6 +31,7 @@ class nsIDocument;
 class nsIScriptContext;
 class nsISupportsArray;
 class nsSupportsHashtable;
+class nsIXBLService;
 
 // *********************************************************************/
 // The XBLBinding class
@@ -66,8 +67,10 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD UnhookEventHandlers();
   NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
 
-  NS_IMETHOD GetBindingURI(nsString& aResult);
-  
+  NS_IMETHOD GetBindingURI(nsCString& aResult);
+  NS_IMETHOD GetDocURI(nsCString& aResult);
+  NS_IMETHOD GetID(nsCString& aResult);
+
   NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult);
   NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints);
 
@@ -77,14 +80,19 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GetRootBinding(nsIXBLBinding** aResult);
   NS_IMETHOD GetFirstStyleBinding(nsIXBLBinding** aResult);
 
+  NS_IMETHOD InheritsStyle(PRBool* aResult);
+  NS_IMETHOD WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData);
+
+  NS_IMETHOD SetAllowScripts(PRBool aFlag) { mAllowScripts = aFlag; return NS_OK; };
+
 public:
-  nsXBLBinding();
+  nsXBLBinding(const nsCString& aDocURI, const nsCString& aRef);
   virtual ~nsXBLBinding();
 
   NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
 
   PRBool AllowScripts();
-
+  
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
   
 // Static members
@@ -112,10 +120,12 @@ public:
   static nsIAtom* kValueAtom;
   static nsIAtom* kNameAtom;
   static nsIAtom* kReadOnlyAtom;
-  static nsIAtom* kURIAtom;
   static nsIAtom* kAttachToAtom;
   static nsIAtom* kBindingAttachedAtom;
+  static nsIAtom* kInheritStyleAtom;
 
+  static nsIXBLService* gXBLService;
+  
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
     const char*  mAttributeName;
@@ -150,6 +160,9 @@ protected:
 
 // MEMBER VARIABLES
 protected:
+  nsCString mDocURI;
+  nsCString mID;
+
   nsCOMPtr<nsIContent> mBinding; // Strong. As long as we're around, the binding can't go away.
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
@@ -160,6 +173,8 @@ protected:
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
   PRBool mIsStyleBinding;
+  PRBool mAllowScripts;
+  PRBool mInheritStyle;
 
   nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
   nsSupportsHashtable* mInsertionPointTable; // A table of insertion points.

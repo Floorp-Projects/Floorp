@@ -33,10 +33,10 @@
 
 #include "nsString.h"
 #include "nsISupports.h"
+#include "nsISupportsArray.h"
 
 class nsIContent;
 class nsIDocument;
-class nsISupportsArray;
 class nsIScriptContext;
 
 // {DDDBAD20-C8DF-11d3-97FB-00400553EEF0}
@@ -74,7 +74,9 @@ public:
   NS_IMETHOD UnhookEventHandlers() = 0;
   NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument) = 0;
 
-  NS_IMETHOD GetBindingURI(nsString& aResult) = 0;
+  NS_IMETHOD GetBindingURI(nsCString& aResult) = 0;
+  NS_IMETHOD GetDocURI(nsCString& aResult) = 0;
+  NS_IMETHOD GetID(nsCString& aResult) = 0;
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult) = 0;
   NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints) = 0;
@@ -84,9 +86,14 @@ public:
 
   NS_IMETHOD GetRootBinding(nsIXBLBinding** aResult) = 0;
   NS_IMETHOD GetFirstStyleBinding(nsIXBLBinding** aResult) = 0;
+
+  NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
+  NS_IMETHOD WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)=0;
+
+  NS_IMETHOD SetAllowScripts(PRBool aFlag)=0;
 };
 
 extern nsresult
-NS_NewXBLBinding(nsIXBLBinding** aResult);
+NS_NewXBLBinding(const nsCString& aDocURI, const nsCString& aID, nsIXBLBinding** aResult);
 
 #endif // nsIXBLBinding_h__

@@ -326,7 +326,7 @@ nsXULElement::nsXULElement()
       mParent(nsnull),
       mScriptObject(nsnull),
       mLazyState(0),
-      mIsAnonymous(PR_FALSE),
+      mBindingParent(nsnull),
       mSlots(nsnull)
 {
     NS_INIT_REFCNT();
@@ -1675,20 +1675,6 @@ nsXULElement::PeekChildCount(PRInt32& aCount) const
 }
 
 NS_IMETHODIMP
-nsXULElement::GetAnonymousState(PRBool& aState)
-{
-  aState = mIsAnonymous;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::SetAnonymousState(PRBool aState)
-{
-  mIsAnonymous = aState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULElement::SetLazyState(PRInt32 aFlags)
 {
     mLazyState |= aFlags;
@@ -2317,10 +2303,31 @@ nsXULElement::GetParent(nsIContent*& aResult) const
     return NS_OK;
 }
 
+static void UpdateBindingParent(nsIContent* aContent, nsIContent* aBindingParent)
+{
+  aContent->SetBindingParent(aBindingParent);
+  PRInt32 count;
+  aContent->ChildCount(count);
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> child;
+    aContent->ChildAt(i, *getter_AddRefs(child));
+    UpdateBindingParent(child, aBindingParent);
+  }
+}
+
 NS_IMETHODIMP
 nsXULElement::SetParent(nsIContent* aParent)
 {
     mParent = aParent; // no refcount
+
+    if (mParent) {
+      // Get the binding parent.
+      nsCOMPtr<nsIContent> bindingParent;
+      mParent->GetBindingParent(getter_AddRefs(bindingParent));
+      if (bindingParent && (bindingParent != mBindingParent))
+        UpdateBindingParent((nsIStyledContent*)this, bindingParent);
+    }
+
     return NS_OK;
 }
 
@@ -3274,22 +3281,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     // Node capturing stage
     if (NS_EVENT_FLAG_BUBBLE != aFlags) {
         if (mParent) {
-            PRBool proceed = PR_TRUE;
-            if (mIsAnonymous) {
-              PRBool parentState;
-              nsCOMPtr<nsIXULContent> parent = do_QueryInterface(mParent);
-              if (parent) {
-                parent->GetAnonymousState(parentState);
-                if (!parentState)
-                  proceed = PR_FALSE;
-              }
-              else proceed = PR_FALSE; // Assume that the HTML Content is not anonymous
-                                       // XXX Will need to do better for XBL.
-            }
-
-            // Pass off to our parent.
-            if (proceed)
-              mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+            mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                       NS_EVENT_FLAG_CAPTURE, aEventStatus);
         }
         else if (mDocument != nsnull) {
@@ -3309,21 +3301,6 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     //Bubbling stage
     if (NS_EVENT_FLAG_CAPTURE != aFlags) {
         if (mParent != nsnull) {
-          PRBool proceed = PR_TRUE;
-          if (mIsAnonymous) {
-            PRBool parentState;
-            nsCOMPtr<nsIXULContent> parent = do_QueryInterface(mParent);
-            if (parent) {
-              parent->GetAnonymousState(parentState);
-              if (!parentState)
-                proceed = PR_FALSE;
-            }
-            else proceed = PR_FALSE; // Assume that the HTML Content is not anonymous
-                                     // XXX Will need to do better for XBL.
-          }
-
-          // Pass off to our parent.
-          if (proceed)
             // We have a parent. Let them field the event.
             ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                           NS_EVENT_FLAG_BUBBLE, aEventStatus);
@@ -4184,6 +4161,30 @@ nsXULElement::SetFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::GetBindingParent(nsIContent** aContent)
+{
+  nsCOMPtr<nsIAtom> tag;
+  GetTag(*getter_AddRefs(tag));
+  if (tag == nsXULAtoms::scrollbar) {
+    if (!mParent) {
+      *aContent = (nsIStyledContent*)this;
+    }
+  }
+  else
+    *aContent = mBindingParent;
+  
+  NS_IF_ADDREF(*aContent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::SetBindingParent(nsIContent* aParent) 
+{
+  mBindingParent = aParent; // [Weak] no addref
   return NS_OK;
 }
 

@@ -389,8 +389,8 @@ nsGenericElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
 }
 
 nsGenericElement::nsGenericElement() : mContent(nsnull), mDocument(nsnull),
-                                       mParent(nsnull), mNodeInfo(nsnull),
-                                       mDOMSlots(nsnull), mContentID(0)
+                                       mParent(nsnull),
+                                       mNodeInfo(nsnull), mDOMSlots(nsnull), mContentID(0)
 {
   static PRInt32 been_here = 0;
 
@@ -448,6 +448,7 @@ nsGenericElement::GetDOMSlots()
     mDOMSlots->mRangeList = nsnull;
     mDOMSlots->mCapturer = nsnull;
     mDOMSlots->mListenerManager = nsnull;
+    mDOMSlots->mBindingParent = nsnull;
   }
   
   return mDOMSlots;
@@ -463,7 +464,8 @@ nsGenericElement::MaybeClearDOMSlots()
       (nsnull == mDOMSlots->mAttributeMap) &&
       (nsnull == mDOMSlots->mRangeList) &&
       (nsnull == mDOMSlots->mCapturer) &&
-      (nsnull == mDOMSlots->mListenerManager)) {
+      (nsnull == mDOMSlots->mListenerManager) &&
+      (nsnull == mDOMSlots->mBindingParent)) {
     PR_DELETE(mDOMSlots);
   }
 }
@@ -1335,10 +1337,32 @@ nsGenericElement::GetParent(nsIContent*& aResult) const
   return NS_OK;
 }
 
+static void UpdateBindingParent(nsIContent* aContent, nsIContent* aBindingParent)
+{
+  aContent->SetBindingParent(aBindingParent);
+  PRInt32 count;
+  aContent->ChildCount(count);
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> child;
+    aContent->ChildAt(i, *getter_AddRefs(child));
+    UpdateBindingParent(child, aBindingParent);
+  }
+}
+
 nsresult
 nsGenericElement::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
+
+  if (mParent) {
+    // Get the binding parent.
+    nsCOMPtr<nsIContent> bindingParent;
+    mParent->GetBindingParent(getter_AddRefs(bindingParent));
+    nsIContent* par = mDOMSlots ? mDOMSlots->mBindingParent : nsnull;
+    if (bindingParent && (bindingParent != par))
+      UpdateBindingParent(mContent, bindingParent);
+  }
+
   return NS_OK;
 }
 
@@ -1522,6 +1546,24 @@ nsGenericElement::SetFocus(nsIPresContext* aPresContext)
 nsresult 
 nsGenericElement::RemoveFocus(nsIPresContext* aPresContext)
 {
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetBindingParent(nsIContent** aContent) 
+{
+  *aContent = mDOMSlots ? mDOMSlots->mBindingParent : nsnull;
+  NS_IF_ADDREF(*aContent);
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::SetBindingParent(nsIContent* aParent)
+{
+  if (!mDOMSlots)
+    GetDOMSlots();
+
+  mDOMSlots->mBindingParent = aParent; // Weak, so no addref happens.
   return NS_OK;
 }
 

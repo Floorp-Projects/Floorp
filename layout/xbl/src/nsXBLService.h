@@ -30,6 +30,7 @@
 #include "jsclist.h"            // nsXBLJSClass derives from JSCList
 
 class nsIXBLBinding;
+class nsIXBLDocumentInfo;
 class nsINameSpaceManager;
 class nsIContent;
 class nsIDocument;
@@ -64,7 +65,7 @@ class nsXBLService : public nsIXBLService, public nsIMemoryPressureObserver
   // Gets the object's base class type.
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
-  NS_IMETHOD AllowScripts(nsIContent* aContent, PRBool* aAllowScripts);
+  NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult);
 
   NS_DECL_NSIMEMORYPRESSUREOBSERVER
 
@@ -73,15 +74,15 @@ public:
   virtual ~nsXBLService();
 
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
-  NS_IMETHOD GetBindingDocument(nsIContent* aBoundElement, const nsCString& aURI, const nsCString& aRef,
-                                nsIDocument** aResult);
+  NS_IMETHOD GetBindingDocumentInfo(nsIContent* aBoundElement, const nsCString& aURI, const nsCString& aRef,
+                                    nsIXBLDocumentInfo** aResult);
 
   // This method synchronously loads and parses an XBL file.
   NS_IMETHOD FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, nsIDocument** aResult);
 
   // This method walks a binding document and removes any text nodes
   // that contain only whitespace.
-  NS_IMETHOD StripWhitespaceNodes(nsIContent* aContent);
+  static nsresult StripWhitespaceNodes(nsIContent* aContent);
 
 // MEMBER VARIABLES
 public:
@@ -104,7 +105,6 @@ public:
   // XBL Atoms
   static nsIAtom* kExtendsAtom;
   static nsIAtom* kHasChildrenAtom;
-  static nsIAtom* kURIAtom;
 };
 
 class nsXBLJSClass : public JSCList, public JSClass

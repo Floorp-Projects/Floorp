@@ -74,16 +74,6 @@ public:
     };
 
     /**
-     * Get the element's anonymous state
-     */
-    NS_IMETHOD GetAnonymousState(PRBool& aState) = 0;
-
-    /**
-     * Mark an element as being anonymous or not.
-     */
-    NS_IMETHOD SetAnonymousState(PRBool aState) = 0;
-
-    /**
      * Set one or more ``lazy state'' flags.
      * @aFlags a mask of flags to set
      */

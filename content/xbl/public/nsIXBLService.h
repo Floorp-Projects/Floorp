@@ -37,6 +37,7 @@
 class nsIContent;
 class nsISupportsArray;
 class nsIXBLBinding;
+class nsIXBLDocumentInfo;
 
 // {0E7903E1-C7BB-11d3-97FB-00400553EEF0}
 #define NS_IXBLSERVICE_IID \
@@ -66,7 +67,8 @@ public:
   // Retrieves our base class (e.g., tells us what type of frame and content node to build)
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
-  NS_IMETHOD AllowScripts(nsIContent* aContent, PRBool* aAllowScripts) = 0;
+  NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult)=0;
+
 };
 
 #endif // nsIXBLService_h__

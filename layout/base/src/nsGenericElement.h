@@ -119,6 +119,8 @@ typedef struct {
   nsVoidArray *mRangeList;
   nsIContent* mCapturer;
   nsIEventListenerManager* mListenerManager;
+  nsIContent* mBindingParent; // The nearest enclosing content node with a binding
+                              // that created us. [Weak]
 } nsDOMSlots;
 
 class nsGenericElement {
@@ -209,6 +211,9 @@ public:
   nsresult GetRangeList(nsVoidArray*& aResult) const;
   nsresult SetFocus(nsIPresContext* aContext);
   nsresult RemoveFocus(nsIPresContext* aContext);
+  nsresult GetBindingParent(nsIContent** aContent);
+  nsresult SetBindingParent(nsIContent* aParent);
+
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                   size_t aInstanceSize) const;
   
@@ -282,6 +287,7 @@ public:
 
   nsIDocument* mDocument;                   // WEAK
   nsIContent* mParent;                      // WEAK
+  
   nsINodeInfo* mNodeInfo;                   // OWNER
   nsDOMSlots *mDOMSlots;                    // OWNER
   PRUint32 mContentID;
@@ -686,7 +692,14 @@ public:
   }                                                                        \
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {                   \
     return _g.RemoveFocus(aPresContext);                                   \
-  }    
+  } \
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) { \
+    return _g.GetBindingParent(aContent); \
+  } \
+  \
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) { \
+    return _g.SetBindingParent(aParent); \
+  }  
 
 #define NS_IMPL_ICONTENT_NO_SETPARENT_USING_GENERIC(_g)                    \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -818,7 +831,14 @@ public:
   }                                                                        \
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {                   \
     return _g.RemoveFocus(aPresContext);                                   \
-  }    
+  } \
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) { \
+    return _g.GetBindingParent(aContent); \
+  } \
+  \
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) { \
+    return _g.SetBindingParent(aParent); \
+  }  
 
 #define NS_IMPL_ICONTENT_NO_SETDOCUMENT_USING_GENERIC(_g)                  \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -950,6 +970,13 @@ public:
   }                                                                        \
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {                   \
     return _g.RemoveFocus(aPresContext);                                   \
+  }  \
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) { \
+    return _g.GetBindingParent(aContent); \
+  } \
+  \
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) { \
+    return _g.SetBindingParent(aParent); \
   }    
 
 #define NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(_g)     \
@@ -1080,7 +1107,14 @@ public:
   }                                                                        \
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {                   \
     return _g.RemoveFocus(aPresContext);                                   \
-  }    
+  }    \
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) { \
+    return _g.GetBindingParent(aContent); \
+  } \
+  \
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) { \
+    return _g.SetBindingParent(aParent); \
+  }  
   
 #define NS_IMPL_ICONTENT_NO_FOCUS_USING_GENERIC(_g)                        \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -1210,7 +1244,14 @@ public:
   }                                                                        \
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;    \
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);                       \
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);   
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);  \
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) { \
+    return _g.GetBindingParent(aContent); \
+  } \
+  \
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) { \
+    return _g.SetBindingParent(aParent); \
+  }   
 
 #define NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(_g)                        \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -1336,7 +1377,14 @@ public:
   }                                                                        \
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;    \
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);                       \
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);   
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);   \
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) { \
+    return _g.GetBindingParent(aContent); \
+  } \
+  \
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) { \
+    return _g.SetBindingParent(aParent); \
+  }  
 
 /**
  * Implement the nsIScriptObjectOwner API by forwarding the methods to a

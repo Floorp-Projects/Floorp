@@ -30,6 +30,7 @@ class nsIAtom;
 class nsIStyleRule;
 class nsIStyleSheet;
 class nsIStyleContext;
+class nsIStyleRuleSupplier;
 class nsIPresContext;
 class nsIContent;
 class nsIFrame;
@@ -194,6 +195,11 @@ public:
                                  nsIFrameManager* aFrameManager,
                                  nsIContent*      aContent,
                                  nsIFrame**       aFrame) = 0;
+
+  // APIs for registering objects that can supply additional
+  // rules during processing.
+  NS_IMETHOD SetStyleRuleSupplier(nsIStyleRuleSupplier* aSupplier)=0;
+  NS_IMETHOD GetStyleRuleSupplier(nsIStyleRuleSupplier** aSupplier)=0;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;

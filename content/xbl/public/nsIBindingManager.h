@@ -33,9 +33,11 @@
 
 #include "nsString.h"
 #include "nsISupports.h"
+#include "nsISupportsArray.h"
 
 class nsIContent;
 class nsIXBLBinding;
+class nsIXBLDocumentInfo;
 class nsIAtom;
 class nsIStreamListener;
 
@@ -64,12 +66,14 @@ public:
   NS_IMETHOD ClearAttachedQueue()=0;
   NS_IMETHOD ProcessAttachedQueue()=0;
 
-  NS_IMETHOD PutXBLDocument(nsIDocument* aDocument) = 0;
-  NS_IMETHOD GetXBLDocument(const nsCString& aURL, nsIDocument** aResult) = 0;
+  NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)=0;
+  NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)=0;
 
   NS_IMETHOD PutLoadingDocListener(const nsCString& aURL, nsIStreamListener* aListener) = 0;
   NS_IMETHOD GetLoadingDocListener(const nsCString& aURL, nsIStreamListener** aResult) = 0;
   NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL)=0;
+
+  NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult) = 0;
 };
 
 #endif // nsIBinding_Manager_h__

@@ -35,6 +35,7 @@ class nsIURI;
 class nsIXULPrototypeDocument;
 class nsCString;
 class nsIDocument;
+class nsIXBLDocumentInfo;
 
 // {3A0A0FC0-8349-11d3-BE47-00104BDE6048}
 #define NS_IXULPROTOTYPECACHE_IID \
@@ -54,11 +55,8 @@ public:
     NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
     NS_IMETHOD FlushStyleSheets() = 0;
 
-    NS_IMETHOD GetXBLDocument(const nsCString& aString, nsIDocument** _result) = 0;
-    NS_IMETHOD PutXBLDocument(nsIDocument* aDocument) = 0;
-
-    NS_IMETHOD GetXBLDocScriptAccess(const nsCString& aString, nsIDocument** _result) = 0;
-    NS_IMETHOD PutXBLDocScriptAccess(nsIDocument* aDocument) = 0;
+    NS_IMETHOD GetXBLDocumentInfo(const nsCString& aString, nsIXBLDocumentInfo** aResult) = 0;
+    NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocument) = 0;
 
     NS_IMETHOD FlushXBLInformation() = 0;
 

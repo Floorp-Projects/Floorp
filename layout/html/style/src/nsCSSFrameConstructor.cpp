@@ -101,6 +101,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
+#include "nsIStyleRuleSupplier.h"
 
 #undef NOISY_FIRST_LETTER
 
@@ -3530,7 +3531,20 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
           
 */    
 
-
+  // Set up our style rule observer.
+  nsCOMPtr<nsIDocument> doc;
+  aDocElement->GetDocument(*getter_AddRefs(doc));
+  if (doc) {
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    doc->GetBindingManager(getter_AddRefs(bindingManager));
+    if (bindingManager) {
+      nsCOMPtr<nsIStyleRuleSupplier> ruleSupplier(do_QueryInterface(bindingManager));
+      nsCOMPtr<nsIStyleSet> set;
+      aPresShell->GetStyleSet(getter_AddRefs(set));
+      set->SetStyleRuleSupplier(ruleSupplier);
+    }
+  }
+  
   // --------- BUILD VIEWPORT -----------
   nsIFrame*                 viewportFrame = nsnull;
   nsCOMPtr<nsIStyleContext> viewportPseudoStyle;

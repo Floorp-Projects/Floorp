@@ -212,6 +212,9 @@ struct nsGenericDOMDataNode {
   nsresult SetFocus(nsIPresContext *aPresContext);
   nsresult RemoveFocus(nsIPresContext *aPresContext);
 
+  nsresult GetBindingParent(nsIContent** aContent);
+  nsresult SetBindingParent(nsIContent* aParent);
+
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                   size_t aInstanceSize) const;
 
@@ -558,6 +561,12 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {                   \
     return _g.RemoveFocus(aPresContext);                                   \
+  }                                                                        \
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) {                     \
+    return _g.GetBindingParent(aContent);                              \
+  }                                                                        \
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) { \
+    return _g.SetBindingParent(aParent); \
   }        
 
 /**
