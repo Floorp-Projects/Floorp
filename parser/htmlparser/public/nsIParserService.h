@@ -47,6 +47,7 @@
 #include "nsIElementObserver.h"
 
 #define NS_PARSER_CONTRACTID_PREFIX                    "@mozilla.org/parser"
+#define NS_PARSERSERVICE_CONTRACTID NS_PARSER_CONTRACTID_PREFIX "/parser-service;1"
 
 // {90a92e37-abd6-441b-9b39-4064d98e1ede}
 #define NS_IPARSERSERVICE_IID \

@@ -56,7 +56,6 @@
 #include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
  
 static const eHTMLTags gWatchTags[] = 
 { eHTMLTag_meta,
@@ -403,7 +402,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
   if (bMetaCharsetObserverStarted == PR_FALSE)  {
     bMetaCharsetObserverStarted = PR_TRUE;
 
-    nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID, &rv));
+    nsCOMPtr<nsIParserService> parserService(do_GetService(NS_PARSERSERVICE_CONTRACTID, &rv));
 
     if (NS_FAILED(rv))
       return rv;
@@ -422,7 +421,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
   if (bMetaCharsetObserverStarted == PR_TRUE)  {
     bMetaCharsetObserverStarted = PR_FALSE;
 
-    nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID, &rv));
+    nsCOMPtr<nsIParserService> parserService(do_GetService(NS_PARSERSERVICE_CONTRACTID, &rv));
 
     if (NS_FAILED(rv))
       return rv;

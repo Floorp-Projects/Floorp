@@ -93,7 +93,7 @@ static const nsModuleComponentInfo gComponents[] = {
 #endif
   { "ParserService",
     NS_PARSERSERVICE_CID,
-    NS_PARSER_CONTRACTID_PREFIX "/parser-service;1",
+    NS_PARSERSERVICE_CONTRACTID,
     nsParserServiceConstructor
   }
 };
