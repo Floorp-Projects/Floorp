@@ -253,6 +253,18 @@
           document.getAnonymousNodes(this)[0].firstChild.select();
         </body>
       </method>
+      
+      <method name="focusTextField">
+        <body>
+          document.getAnonymousNodes(this)[0].firstChild.focus();
+        </body>
+      </method>
+
+      <method name="blur">
+        <body>
+          document.getAnonymousNodes(this)[0].firstChild.blur();
+        </body>
+      </method>
 
       <property name="controllers"    onget="return document.getAnonymousNodes(this)[0].firstChild.controllers;"/>
       <property name="textLength"     onget="return document.getAnonymousNodes(this)[0].firstChild.textLength;"/>
@@ -270,8 +282,8 @@
       </method>
     </interface>
     <handlers>
-      <handler type="focus" value="this.setAttribute('focused','true'); document.getAnonymousNodes(this)[0].firstChild.focus(); "/>
-      <handler type="blur" value="this.removeAttribute('focused'); document.getAnonymousNodes(this)[0].firstChild.blur();"/>
+      <handler type="focus" capturer="true" value="this.setAttribute('focused','true');"/>
+      <handler type="blur" capturer="true" value="this.removeAttribute('focused');"/>
     </handlers>    
   </binding>
 
