@@ -42,6 +42,7 @@ select[size] {
   -moz-binding: url("chrome://forms/content/select.xml#select-size");
   -moz-box-orient: vertical;
   -moz-user-focus: normal;
+  -moz-user-select: none;
 }
 
 select, select[size="1"] {
