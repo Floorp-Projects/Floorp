@@ -98,7 +98,7 @@ var gCollapsedHeaderList = [ {name:"subject", outputFunction:updateHeaderValueIn
 // We also have an expanded header view. This shows many of your more common (and useful) headers.
 var gExpandedHeaderList = [ {name:"subject"}, 
                             {name:"from", outputFunction:OutputEmailAddresses},
-                            {name:"reply-to", isEmailAddress:true, outputFunction:OutputEmailAddresses},
+                            {name:"reply-to", outputFunction:OutputEmailAddresses},
                             {name:"date"},
                             {name:"to", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"cc", useToggle:true, outputFunction:OutputEmailAddresses},
@@ -109,8 +109,8 @@ var gExpandedHeaderList = [ {name:"subject"},
 // Now, for each view the message pane can generate, we need a global table of headerEntries. These
 // header entry objects are generated dynamically based on the static date in the header lists (see above)
 // and elements we find in the DOM based on properties in the header lists. 
-var gCollapsedHeaderView = new Array;
-var gExpandedHeaderView = new Array;
+var gCollapsedHeaderView = {};
+var gExpandedHeaderView  = {};
 
 // currentHeaderData --> this is an array of header name and value pairs for the currently displayed message.
 //                       it's purely a data object and has no view information. View information is contained in the view objects.
@@ -172,16 +172,13 @@ function initializeHeaderViewTables()
 {
   // iterate over each header in our header list arrays and create header entries 
   // for each one. These header entries are then stored in the appropriate header table
-
-  if (!gCollapsedHeaderView.length) // if we haven't already initialized the collapsed view...
-    for (var index = 0; index < gCollapsedHeaderList.length; index++)
+  var index;
+  for (index = 0; index < gCollapsedHeaderList.length; index++)
     {
       gCollapsedHeaderView[gCollapsedHeaderList[index].name] = 
         new createHeaderEntry('collapsed', gCollapsedHeaderList[index]);
     }
 
-  if (!gExpandedHeaderView.length)
-  {
     for (index = 0; index < gExpandedHeaderList.length; index++)
     {
       var headerName = gExpandedHeaderList[index].name;
@@ -199,7 +196,6 @@ function initializeHeaderViewTables()
       var userAgentEntry = {name:"user-agent", outputFunction:updateHeaderValue};
       gExpandedHeaderView[userAgentEntry.name] = new createHeaderEntry('expanded', userAgentEntry);
     }
-  } // if we need to initialize the expanded header view...
 }
 
 function OnLoadMsgHeaderPane()
@@ -419,7 +415,7 @@ function EnsureSubjectValue()
 
 function CheckNotify()
 {
-  if (this.NotifyClearAddresses != undefined)
+  if ("NotifyClearAddresses" in this)
     NotifyClearAddresses();
 }
 
@@ -559,7 +555,7 @@ function UpdateMessageHeaders()
   for (headerName in currentHeaderData)
   {
     var headerField = currentHeaderData[headerName];
-    var headerEntry;
+    var headerEntry = null;
 
     if (headerName == "subject")
     {
@@ -576,30 +572,28 @@ function UpdateMessageHeaders()
     
     if (gCollapsedHeaderViewMode && !gBuiltCollapsedView)
     { 
+      if (headerName in gCollapsedHeaderView)
       headerEntry = gCollapsedHeaderView[headerName];
-      if (headerEntry != undefined && headerEntry)
-      {  
-        headerEntry.outputFunction(headerEntry, headerField.headerValue);
-        headerEntry.valid = true;    
-      }
     }
     else if (!gCollapsedHeaderViewMode && !gBuiltExpandedView)
     {
+      if (headerName in gExpandedHeaderView)
       headerEntry = gExpandedHeaderView[headerName];
-      if (headerEntry == undefined && gViewAllHeaders)
+
+      if (!headerEntry && gViewAllHeaders)
       {
         // for view all headers, if we don't have a header field for this value....cheat and create one....then
         // fill in a headerEntry
         gExpandedHeaderView[headerName] = new createNewHeaderView(headerName);
         headerEntry = gExpandedHeaderView[headerName];
       }
+    } // if we are in expanded view....
 
-      if (headerEntry != undefined && headerEntry)
+    if (headerEntry)
       {
         headerEntry.outputFunction(headerEntry, headerField.headerValue);
         headerEntry.valid = true;
       }
-    } // if we are in expanded view....
   }
 
   if (gCollapsedHeaderViewMode)
@@ -610,7 +604,7 @@ function UpdateMessageHeaders()
   // now update the view to make sure the right elements are visible
   updateHeaderViews();
   
-  if (this.FinishEmailProcessing != undefined)
+  if ("FinishEmailProcessing" in this)
     FinishEmailProcessing();
 }
 
@@ -774,7 +768,7 @@ function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, dis
   emailAddressNode.setTextAttribute("fullAddress", fullAddress);  
   emailAddressNode.setTextAttribute("displayName", displayName);  
   
-  if (this.AddExtraAddressProcessing != undefined)
+  if ("AddExtraAddressProcessing" in this)
     AddExtraAddressProcessing(emailAddress, emailAddressNode);
 }
 

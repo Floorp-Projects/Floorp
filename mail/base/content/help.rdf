@@ -10,6 +10,6 @@
         chrome:displayName="Mozilla Help Viewer"
         chrome:author="netscape.com"
         chrome:name="help"
-        chrome:localeVersion="@MOZILLA_LOCALE_VERSION@">
+#expand chrome:localeVersion="__MOZILLA_LOCALE_VERSION__">
   </RDF:Description> 
 </RDF:RDF>

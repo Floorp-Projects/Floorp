@@ -704,8 +704,8 @@
   </popup> 
 
   <popup id="messagePaneContext"   
-     onpopupshowing="gContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu();"
-     onpopuphiding="gContextMenu.onDestroy(); gContextMenu = null;">
+     onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu();"
+     onpopuphiding="if (event.target == this) gContextMenu = null;">
         <menuseparator id="messagePaneContext-sep-link"/>
         <menuitem id="context-selectall"
                   label="&selectAllCmd.label;"
