@@ -63,6 +63,10 @@ button {
   padding: 1px 4px 2px 3px;
 }
 
+.button-icon {
+  margin-right: 2px;
+}
+
 .button-text {
   margin: 0 !important;
   text-align: center;
@@ -178,3 +182,86 @@ button[type="disclosure"][open="true"] {
   list-style-image: url("chrome://global/skin/tree/twisty-open.png"); 
 }
 
+/*
+ * GNOME Stock Icon Styles
+ */
+
+button[icon="accept"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-ok?size=button");
+}
+
+button[icon="cancel"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-cancel?size=button");
+}
+
+button[icon="help"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-help?size=button");
+}
+
+button[icon="open"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-open?size=button");
+}
+
+button[icon="save"] .button-icon {
+  list-style-image: url(moz-icon://stock/gtk-save?size=button);
+}
+
+button[icon="find"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-find?size=button");
+}
+
+button[icon="clear"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-clear?size=button");
+}
+
+button[icon="yes"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-yes?size=button");
+}
+
+button[icon="no"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-no?size=button");
+}
+
+button[icon="apply"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-apply?size=button");
+}
+
+button[icon="close"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-close?size=button");
+}
+
+button[icon="print"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-print?size=button");
+}
+
+button[icon="add"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-add?size=button");
+}
+
+button[icon="remove"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-remove?size=button");
+}
+
+button[icon="refresh"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=button");
+}
+
+button[icon="go-forward"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=button");
+}
+
+button[icon="go-back"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=button");
+}
+
+button[icon="properties"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-properties?size=button");
+}
+
+button[icon="select-font"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-select-font?size=button");
+}
+
+button[icon="network"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-network?size=button");
+}

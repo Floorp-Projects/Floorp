@@ -64,9 +64,19 @@
           if (this.onFirstPage) {
             this.canRewind = false;
             this.setAttribute("firstpage", "true");
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+            this._backButton.setAttribute('hidden', 'true');
+#endif
+#endif
           } else {
             this.canRewind = true;
             this.setAttribute("firstpage", "false");
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+            this._backButton.setAttribute('hidden', 'false');
+#endif
+#endif
           }
                     
           if (this.onLastPage) {
@@ -328,7 +338,11 @@
          var btn = document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aName);
          if (btn) {
            btn.addEventListener("command", this["_"+aName+"Func"], false);
+#ifdef XP_UNIX
+           btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-unix"));
+#else
            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
+#endif
            this["_"+aName+"Button"] = btn;
          }
          return btn;
@@ -478,16 +492,22 @@
         <xul:separator class="wizard-buttons-separator groove"/>
         <xul:hbox class="wizard-buttons-box-2">
           <xul:spacer flex="1"/>
-          <xul:button class="wizard-button" dlgtype="back"/>
+#ifdef XP_UNIX
+          <xul:button class="wizard-button" dlgtype="cancel" icon="cancel"/>
+          <xul:spacer style="width: 24px"/>
+#endif
+          <xul:button class="wizard-button" dlgtype="back" icon="go-back"/>
           <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
             <xul:hbox>
               <xul:button class="wizard-button" dlgtype="finish" default="true" flex="1"/> 
             </xul:hbox>
             <xul:hbox>
-              <xul:button class="wizard-button" dlgtype="next" default="true" flex="1"/> 
+              <xul:button class="wizard-button" dlgtype="next" icon="go-forward" default="true" flex="1"/> 
             </xul:hbox>
           </xul:deck>
-          <xul:button class="wizard-button" dlgtype="cancel"/> 
+#ifndef XP_UNIX
+          <xul:button class="wizard-button" dlgtype="cancel" icon="cancel"/> 
+#endif
         </xul:hbox>
       </xul:vbox>
     </content>

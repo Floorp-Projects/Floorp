@@ -84,6 +84,7 @@ function filepickerLoad() {
     if (o.displayDirectory) {
       const directory = o.displayDirectory.path;
     }
+
     const initialText = o.defaultString;
     const filterTitles = o.filters.titles;
     const filterTypes = o.filters.types;
@@ -138,13 +139,18 @@ function filepickerLoad() {
     treeView.showOnlyDirectories = true;
   }
 
+  // set up the right icon
+  if (filePickerMode == nsIFilePicker.modeSave)
+    okButton.setAttribute("icon","save");
+  else
+    okButton.setAttribute("icon","open");
+
   // start out with a filename sort
   handleColumnClick("FilenameColumn");
 
   document.documentElement.setAttribute("ondialogcancel", "return onCancel();");
   try {
-    var buttonLabel = getOKAction();
-    okButton.setAttribute("label", buttonLabel);
+    setOKAction();
   } catch (exception) {
     // keep it set to "OK"
   }
@@ -513,8 +519,9 @@ function onTreeFocus(event) {
   onFileSelected(treeView.selectedFiles);
 }
 
-function getOKAction(file) {
+function setOKAction(file) {
   var buttonLabel;
+  var buttonIcon = "open"; // used in all but one case
 
   if (file && file.isDirectory() && filePickerMode != nsIFilePicker.modeGetFolder) {
     document.documentElement.setAttribute("ondialogaccept", "return openOnOK();");
@@ -532,11 +539,12 @@ function getOKAction(file) {
       break;
     case nsIFilePicker.modeSave:
       buttonLabel = gFilePickerBundle.getString("saveButtonLabel");
+      buttonIcon = "save";
       break;
     }
   }
-
-  return buttonLabel;
+  okButton.setAttribute("label", buttonLabel);
+  okButton.setAttribute("icon", buttonIcon);
 }
 
 function onSelect(event) {
@@ -575,8 +583,7 @@ function onFileSelected(/* nsIArray */ selectedFileList) {
   }
 
   if (validFileSelected) {
-    var buttonLabel = getOKAction(file);
-    okButton.setAttribute("label", buttonLabel);
+    setOKAction(file);
     okButton.disabled = invalidSelection;
   } else
     okButton.disabled = (textInput.value == "");
@@ -603,8 +610,7 @@ function addToTextFieldValue(path)
 }
 
 function onTextFieldFocus() {
-  var buttonLabel = getOKAction(null);
-  okButton.setAttribute("label", buttonLabel);
+  setOKAction(null);
   doEnabling();
 }
 

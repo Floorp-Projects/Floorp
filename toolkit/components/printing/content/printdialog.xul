@@ -48,6 +48,7 @@
   onload="onLoad();"
   ondialogaccept="return onAccept();"
   oncancel="return onCancel();"
+  buttoniconaccept="print"
   title="&printDialog.title;"
   persist="screenX screenY"
   screenX="24" screenY="24">
@@ -77,14 +78,16 @@
             <label id="printerLabel" value="&printerInput.label;"/>
           </hbox>
           <menulist id="printerList" flex="1" type="description" oncommand="setPrinterDefaultsForSelectedPrinter();"/>
-          <button id="properties" label="&propertiesButton.label;" oncommand="displayPropertiesDialog();"/>
+          <button id="properties" label="&propertiesButton.label;"
+                  icon="properties" oncommand="displayPropertiesDialog();"/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
             <label id="fileLabel" control="fileInput" value="&fileInput.label;"/>
           </hbox>
           <textbox id="fileInput" flex="1" onblur="stripTrailingWhitespace(this)"/>
-          <button id="chooseFile" label="&chooseButton.label;" oncommand="onChooseFile()"/>
+          <button id="chooseFile" label="&chooseButton.label;"
+                  icon="open" oncommand="onChooseFile()"/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">

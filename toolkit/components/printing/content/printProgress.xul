@@ -94,7 +94,7 @@
     </grid>
     <separator/>
     <hbox id="CancelButton" pack="end">
-      <button id="cancel" label="&dialogCancel.label;" 
+      <button id="cancel" label="&dialogCancel.label;" icon="cancel"
         oncommand="doCancelButton()"/>
     </hbox>
 </window>
