@@ -561,13 +561,13 @@ printCertCB(CERTCertificate *cert, void *arg)
 }
 
 static SECStatus
-ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
-          PRBool raw, PRBool ascii, PRFileDesc *outfile)
+listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
+          PRBool raw, PRBool ascii, PRFileDesc *outfile, void *pwarg)
 {
-    SECStatus rv;
     CERTCertificate *cert;
     SECItem data;
     PRInt32 numBytes;
+    SECStatus rv;
 
     /* For now, split handling of slot to internal vs. other.  slot should
      * probably be allowed to be NULL so that all slots can be listed.
@@ -611,7 +611,7 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
     } else {
 	/* List certs on a non-internal slot. */
 	if (PK11_NeedLogin(slot))
-	    PK11_Authenticate(slot, PR_TRUE, NULL);
+	    PK11_Authenticate(slot, PR_TRUE, pwarg);
 	rv = PK11_TraverseCertsInSlot(slot, SECU_PrintCertNickname, stdout);
 	if (rv) {
 	    SECU_PrintError(progName, "problem printing certificate nicknames");
@@ -621,6 +621,34 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 
     return SECSuccess;	/* not rv ?? */
 }
+
+static SECStatus
+ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
+          PRBool raw, PRBool ascii, PRFileDesc *outfile, char *passFile)
+{
+    SECStatus rv;
+    secuPWData pwdata = { PW_NONE, 0 };
+
+    if (passFile) {
+        pwdata.source = PW_FROMFILE;
+        pwdata.data = passFile;
+    }
+
+    if (slot == NULL) {
+	PK11SlotList *list;
+	PK11SlotListElement *le;
+
+	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,
+						PR_FALSE,PR_FALSE,&pwdata);
+	if (list) for (le = list->head; le; le = le->next) {
+	    rv = listCerts(handle,name,le->slot,raw,ascii,outfile,&pwdata);
+	}
+    } else {
+	rv = listCerts(handle,name,slot,raw,ascii,outfile,&pwdata);
+    }
+    return rv;
+}
+
 
 static SECStatus 
 DeleteCert(CERTCertDBHandle *handle, char *name)
@@ -862,22 +890,10 @@ secu_PrintKeyFromCert(CERTCertificate *cert, void *data)
 }
 
 static SECStatus
-ListKeys(PK11SlotInfo *slot, char *keyname, int index, 
-         KeyType keyType, PRBool dopriv)
+listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
 {
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
 
-    if (keyname) {
-	if (dopriv) {
-	    return DumpPrivateKey(index, keyname, stdout);
-	} else {
-	    return DumpPublicKey(index, keyname, stdout);
-	}
-    }
-    /* For now, split handling of slot to internal vs. other.  slot should
-     * probably be allowed to be NULL so that all slots can be listed.
-     * In that case, need to add a call to PK11_TraverseSlotCerts().
-     */
     if (PK11_IsInternal(slot)) {
 	/* Print all certs in internal slot db. */
 	rv = SECU_PrintKeyNames(SECKEY_GetDefaultKeyDB(), stdout);
@@ -891,13 +907,50 @@ ListKeys(PK11SlotInfo *slot, char *keyname, int index,
 	/* this would miss stranded keys */
     /*rv = PK11_TraverseSlotKeys(slotname, keyType, printKeyCB, NULL, NULL);*/
 	if (PK11_NeedLogin(slot))
-	    PK11_Authenticate(slot, PR_TRUE, NULL);
+	    PK11_Authenticate(slot, PR_TRUE, pwarg);
 	rv = PK11_TraverseCertsInSlot(slot, secu_PrintKeyFromCert, stdout);
 	if (rv) {
 	    SECU_PrintError(progName, "problem listing keys");
 	    return SECFailure;
 	}
 	return SECFailure;
+    }
+    return rv;
+}
+
+static SECStatus
+ListKeys(PK11SlotInfo *slot, char *keyname, int index, 
+         KeyType keyType, PRBool dopriv, char *passFile)
+{
+    SECStatus rv = SECSuccess;
+    secuPWData pwdata = { PW_NONE, 0 };
+
+    if (passFile) {
+        pwdata.source = PW_FROMFILE;
+        pwdata.data = passFile;
+    }
+
+    if (keyname) {
+	if (dopriv) {
+	    return DumpPrivateKey(index, keyname, stdout);
+	} else {
+	    return DumpPublicKey(index, keyname, stdout);
+	}
+    }
+    /* For now, split handling of slot to internal vs. other.  slot should
+     * probably be allowed to be NULL so that all slots can be listed.
+     * In that case, need to add a call to PK11_TraverseSlotCerts().
+     */
+    if (slot == NULL) {
+	PK11SlotList *list;
+	PK11SlotListElement *le;
+
+	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,PR_FALSE,PR_FALSE,&pwdata);
+	if (list) for (le = list->head; le; le = le->next) {
+	    rv = listKeys(le->slot,keyType,&pwdata);
+	}
+    } else {
+	rv = listKeys(slot,keyType,&pwdata);
     }
     return rv;
 }
@@ -2342,8 +2395,10 @@ main(int argc, char **argv)
 	return -1;
     }
 
-    /*  Using slotname == NULL for listing keys on all slots, but only that. */
-    if (!certutil.commands[cmd_ListKeys].activated && slotname == NULL) {
+    /*  Using slotname == NULL for listing keys and certs on all slots, 
+     *  but only that. */
+    if (!(certutil.commands[cmd_ListKeys].activated ||
+    	  certutil.commands[cmd_ListCerts].activated) && slotname == NULL) {
 	PR_fprintf(PR_STDERR,
 	           "%s -%c: cannot use \"-h all\" for this command.\n",
 	           progName, commandToRun);
@@ -2397,18 +2452,19 @@ main(int argc, char **argv)
 
     /*  Initialize NSPR and NSS.  */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SECU_PKCS11Init(PR_FALSE);
     SEC_Init();
     certHandle = SECU_OpenCertDB(PR_FALSE);
     if (certHandle == NULL) {
 	SECU_PrintError(progName, "unable to open cert database");
 	return -1;
     }
+    CERT_SetDefaultCertDB(certHandle);
     keyHandle = SECKEY_GetDefaultKeyDB();
+    SECU_PKCS11Init(PR_FALSE);
 
-    if (slotname == NULL || PL_strcmp(slotname, "internal") == 0)
+    if (PL_strcmp(slotname, "internal") == 0)
 	slot = PK11_GetInternalKeySlot();
-    else
+    else if (slotname != NULL)
 	slot = PK11_FindSlotByName(slotname);
 
     /*  If creating new database, initialize the password.  */
@@ -2423,13 +2479,15 @@ main(int argc, char **argv)
 	rv = ListCerts(certHandle, name, slot,
 	               certutil.options[opt_BinaryDER].activated,
 	               certutil.options[opt_ASCIIForIO].activated, 
-                       (outFile) ? outFile : PR_STDOUT);
+                       (outFile) ? outFile : PR_STDOUT,
+		       certutil.options[opt_PasswordFile].arg);
 	return !rv - 1;
     }
     /*  XXX needs work  */
     /*  List keys (-K)  */
     if (certutil.commands[cmd_ListKeys].activated) {
-	rv = ListKeys(slot, name, 0 /*keyindex*/, keytype, PR_FALSE /*dopriv*/);
+	rv = ListKeys(slot, name, 0 /*keyindex*/, keytype, PR_FALSE /*dopriv*/,
+		       certutil.options[opt_PasswordFile].arg);
 	return !rv - 1;
     }
     /*  List modules (-U)  */
