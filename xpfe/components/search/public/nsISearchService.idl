@@ -48,7 +48,7 @@ interface nsIInternetSearchService : nsISupports
 	nsIRDFDataSource	GetCategoryDataSource();
 };
 
-[scriptable, uuid(ac0c0781-ab71-11d3-a652-b09b68feee44)]
+[noscript, uuid(ac0c0781-ab71-11d3-a652-b09b68feee44)]
 interface nsIInternetSearchContext : nsISupports
 {
 	nsIUnicodeDecoder	GetUnicodeDecoder();
@@ -56,7 +56,7 @@ interface nsIInternetSearchContext : nsISupports
 	nsIRDFResource		GetEngine();
 	void			AppendBytes(in string buffer, in long numBytes);
 	void			AppendUnicodeBytes(in wstring buffer, in long numUniBytes);
-	void			GetBuffer(out wstring buffer);
+	void			GetBufferConst([shared] out wstring buffer);
 	void			Truncate();
 };
 

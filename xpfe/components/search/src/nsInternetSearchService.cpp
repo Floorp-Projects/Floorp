@@ -116,7 +116,7 @@ private:
 	nsCOMPtr<nsIRDFResource>	mParent;
 	nsCOMPtr<nsIRDFResource>	mEngine;
 	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
-	nsAutoString			mBuffer;
+	nsString			mBuffer;
 
 public:
 			InternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine, nsIUnicodeDecoder *aUnicodeDecoder);
@@ -201,9 +201,9 @@ InternetSearchContext::AppendUnicodeBytes(const PRUnichar *buffer, PRInt32 numUn
 
 
 NS_IMETHODIMP
-InternetSearchContext::GetBuffer(PRUnichar **buffer)
+InternetSearchContext::GetBufferConst(const PRUnichar **buffer)
 {
-	*buffer = NS_CONST_CAST(PRUnichar *, mBuffer.GetUnicode());
+	*buffer = mBuffer.GetUnicode();
 	return(NS_OK);
 }
 
@@ -322,7 +322,7 @@ friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID a
 	nsresult	GetNumInterpretSections(const nsString &data, PRUint32 &numInterpretSections);
 	nsresult	GetInputs(const nsString &data, nsString &userVar, const nsString &text, nsString &input);
 	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
-	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const nsString &htmlPage);
+	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const PRUnichar *htmlPage);
 	nsresult	SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
 	nsresult	ConvertEntities(nsString &str, PRBool removeHTMLFlag = PR_TRUE, PRBool removeCRLFsFlag = PR_TRUE, PRBool trimWhiteSpaceFlag = PR_TRUE);
 
@@ -3355,56 +3355,48 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		rv = mInner->Assert(mEngine, kNC_StatusIcon, engineIconStatusNode, PR_TRUE);
 	}
 
-	PRUnichar	*uniBuf = nsnull;
-	if (NS_SUCCEEDED(rv = context->GetBuffer(&uniBuf)) && (uniBuf))
+	const PRUnichar	*uniBuf = nsnull;
+	if (NS_SUCCEEDED(rv = context->GetBufferConst(&uniBuf)) && (uniBuf))
 	{
-		// Note: don't free uniBuf, its really a const *
-
-		nsAutoString	htmlResults(uniBuf);
-		context->Truncate();
-		if (htmlResults.Length() > 0)
+		if (mParent)
 		{
-			if (mParent)
+			// save HTML result page for this engine
+			nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(uniBuf, getter_AddRefs(htmlLiteral))))
 			{
-				// save HTML result page for this engine
-				const PRUnichar	*htmlUni = htmlResults.GetUnicode();
-				if (htmlUni)
-				{
-					nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlUni, getter_AddRefs(htmlLiteral))))
-					{
-						rv = mInner->Assert(mEngine, kNC_HTML, htmlLiteral, PR_TRUE);
-					}
-				}
+				rv = mInner->Assert(mEngine, kNC_HTML, htmlLiteral, PR_TRUE);
 			}
+		}
 
-			// parse up HTML results
-			rv = ParseHTML(aURL, mParent, mEngine, htmlResults);
-		}
-		else
-		{
-#ifdef	DEBUG_SEARCH_OUTPUT
-			printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
-#endif
-		}
+		// parse up HTML results
+		rv = ParseHTML(aURL, mParent, mEngine, uniBuf);
 	}
+	else
+	{
+#ifdef	DEBUG_SEARCH_OUTPUT
+		printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
+#endif
+	}
+
+	// after we're all done with the html buffer, get rid of it
+	context->Truncate();
 
 	// (do this last) potentially remove the loading attribute
 	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(trueLiteral))))
 	{
 		mInner->Unassert(mEngine, kNC_loading, trueLiteral);
+	}
 
-		if (mLoadGroup)
+	if (mLoadGroup)
+	{
+		PRUint32	count = 0;
+		if (NS_SUCCEEDED(rv = mLoadGroup->GetActiveCount(&count)))
 		{
-			PRUint32	count = 0;
-			if (NS_SUCCEEDED(rv = mLoadGroup->GetActiveCount(&count)))
+			// is this the last connection in the loadgroup?
+			if (count <= 1)
 			{
-				// is this the last connection in the loadgroup?
-				if (count <= 1)
-				{
-					Stop();
-				}
+				Stop();
 			}
 		}
 	}
@@ -3416,7 +3408,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 
 nsresult
 InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *mEngine,
-				const nsString &htmlPage)
+				const PRUnichar *htmlPage)
 {
 	// get data out of graph
 	nsresult	rv;
