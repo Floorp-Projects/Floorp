@@ -241,7 +241,7 @@ Exactly one of IEEE_8087 or IEEE_MC68k should be defined.
  * differently: the 32 bit words are in little endian byte order, the two words
  * are stored in big endian`s way.
  */
-#if defined (IEEE_8087) && !defined(__arm)
+#if defined (IEEE_8087) && !defined(__arm) && !defined(__arm32__) && !defined(__arm26__)
 #define word0(x) ((ULong *)&x)[1]
 #define word1(x) ((ULong *)&x)[0]
 #else
