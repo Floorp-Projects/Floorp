@@ -13,7 +13,7 @@ vixen.jar:
        content/vixen/vfd/scratch.xul                 (content/vfd/scratch.xul)
        content/vixen/vfd/vfd.js                      (content/vfd/vfd.js)
        content/vixen/vfd/vfd.xul                     (content/vfd/vfd.xul)
-       content/vixen/vfd/vxChangeAttributeTxn.js     (content/vfd/vxChangeAttributeTxn.js)
++      content/vixen/vfd/vxChangeAttributeTxn.js     (content/vfd/vxChangeAttributeTxn.js)
        content/vixen/vfd/vxCreateElementTxn.js       (content/vfd/vxCreateElementTxn.js)
        content/vixen/vfd/vxVFDSelectionManager.js    (content/vfd/vxVFDSelectionManager.js)
        content/vixen/vfd/vxVFDTransactionManager.js  (content/vfd/vxVFDTransactionManager.js)

@@ -44,3 +44,23 @@ var vxUtils = {
   
 };
 
+/** 
+ * Generate a unique identifier for a transaction
+ */
+function generateID()
+{
+  var val = ((new Date()).getUTCMilliseconds())*Math.random()*100000;
+  _ddf("value", val);
+  return val;
+}
+
+/** 
+ * dumps the DOM tree under a given node.
+ */
+function dumpDOM(aNode)
+{
+  _dd("<" + aNode.localName + " id=" + aNode.id + ">");
+  for (var i = 0; i < aNode.childNodes.length; i++)
+    dumpDOM(aNode.childNodes[i]);
+}
+

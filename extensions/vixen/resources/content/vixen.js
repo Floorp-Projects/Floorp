@@ -137,7 +137,7 @@ var vxShell =
     this.mFocusedWindow.vxVFD.mTxMgrShell.redoTransaction();
   },
 
-  
+
   appAbout: function ()
   {
     // XXX TEMP
@@ -145,3 +145,9 @@ var vxShell =
   }  
 };
 
+function XXX_dumpDOM()
+{
+  var focusedWindow = vxShell.mFocusedWindow;
+  var insertionPoint = focusedWindow.vxVFD.getInsertionPoint();
+  dumpDOM(insertionPoint.parent);
+}

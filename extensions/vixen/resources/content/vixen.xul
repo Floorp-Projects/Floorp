@@ -71,7 +71,7 @@
       </menu>
     </menubar>
     <toolbar id="xuledit-toolbar" flex="1">
-      <button class="button-toolbar" value="Button" oncommand="goDoCommand('cmd_insert_button');"/>
+      <button class="button-toolbar" value="Dump DOM" oncommand="XXX_dumpDOM();"/>
     </toolbar>
   </toolbox>
           

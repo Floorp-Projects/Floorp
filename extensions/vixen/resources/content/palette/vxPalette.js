@@ -27,26 +27,99 @@
 var vxPalette = 
 {
   // we want to use controllers, but this will do to test our txns.
-  nButtons: 0, // XXX hack
+  mElementCount: { },
+  
   insertButtonElement: function (aType) 
   {
-    _dd("insertButtonElement");
+    var nElements = this.incrementElementCount("button");
+    var attributes = ["value", "id"];
+    var values = ["Button " + nElements, "button_" + nElements];
+    this.insertSingleElement("button", attributes, values);    
+  },
+
+  insertTextFieldElement: function (aType)
+  {
+    var nElements = this.incrementElementCount("textfield");
+    var attributes = ["value", "id"];
+    var values = ["Textfield " + nElements, "textfield_" + nElements];
+    this.insertSingleElement("textfield", attributes, values);
+  },
+
+  insertRadioGroup: function ()
+  {
+    var nRadios = this.incrementElementCount("radio");
+    var nRadiogroups = this.incrementElementCount("radiogroup");
+
     var vixenMain = vxUtils.getWindow("vixen:main");
     var focusedWindow = vixenMain.vxShell.mFocusedWindow;
+    
+    // need to check to see if the focused window is a vfd
+
     var insertionPoint = focusedWindow.vxVFD.getInsertionPoint();
     
     var vfdDocument = focusedWindow.vxVFD.getContent(true).document;
-    _dd(vfdDocument);
-    
-    // create a button
-    this.nButtons++;
-    var buttontxn = new vxCreateElementTxn(vfdDocument, "button", insertionPoint.parent, insertionPoint.index);
-    var attributes = ["value", "id"];
-    var values = ["Button " + this.nButtons, "button_" + this.nButtons];
-    var buttonattrtxn = new vxChangeAttributeTxn(buttontxn.mElement, attributes, values, false);
+   
+    var radiogroupTxn = new vxCreateElementTxn(vfdDocument, "radiogroup", insertionPoint.parent, insertionPoint.index);
+    radiogroupTxn.init();
+    var radiogroupAttributes = ["id"];
+    var radiogroupValues = ["radiogroup_" + nRadiogroups];
+    var radiogroupAttrTxn = new vxChangeAttributeTxn(radiogroupTxn.mID, 
+                                                     radiogroupAttributes, 
+                                                     radiogroupValues, false);
+    radiogroupAttrTxn.init();
 
-    var aggregateTxn = new vxAggregateTxn([buttontxn, buttonattrtxn]);
-    focusedWindow.vxVFD.mTxMgrShell.doTransaction(aggregateTxn);
+    var radioTxn = new vxCreateElementTxn(vfdDocument, "radio", radiogroupTxn.mID, insertionPoint.index);
+    radioTxn.init();
+    var radioAttributes = ["value", "group", "id"];
+    var radioValues = ["Radio " + nRadios, "radiogroup_" + nRadiogroups, "radio_" + nRadios];
+    var radioAttrTxn = new vxChangeAttributeTxn(radioTxn.mID, 
+                                                radioAttributes, 
+                                                radioValues, false);
+    radioAttrTxn.init();
+
+    // batch the transactions
+    var txns = [radiogroupTxn, radiogroupAttrTxn, radioTxn, radioAttrTxn];
+    var aggregateTxn = new vxAggregateTxn(txns);
+    aggregateTxn.init();
+
+    var txmgr = focusedWindow.vxVFD.mTxMgrShell;
+    txmgr.addListener([radioAttrTxn, radioTxn, radioAttrTxn]);
+    txmgr.doTransaction(aggregateTxn);
+    txmgr.removeListener([radioAttrTxn, radioTxn, radioAttrTxn]);
+  },
+  
+  incrementElementCount: function (aNodeName)
+  {
+    // create an node count entry for the specified node name
+    if (!(aNodeName in this.mElementCount))
+      this.mElementCount[aNodeName] = 0;
+    return ++this.mElementCount[aNodeName];
+  },
+  
+  insertSingleElement: function (aNodeName, aAttributes, aValues)
+  {
+    var vixenMain = vxUtils.getWindow("vixen:main");
+    var focusedWindow = vixenMain.vxShell.mFocusedWindow;
+    
+    // need to check to see if the focused window is a vfd
+
+    var insertionPoint = focusedWindow.vxVFD.getInsertionPoint();
+    
+    var vfdDocument = focusedWindow.vxVFD.getContent(true).document;
+   
+    var elementTxn = new vxCreateElementTxn(vfdDocument, aNodeName, insertionPoint.parent, insertionPoint.index);
+    elementTxn.init();
+    var elementAttrTxn = new vxChangeAttributeTxn(elementTxn.mID, aAttributes, aValues, false);
+    elementAttrTxn.init();
+
+    // batch the transactions
+    var aggregateTxn = new vxAggregateTxn([elementTxn, elementAttrTxn]);
+    aggregateTxn.init();
+
+    var txmgr = focusedWindow.vxVFD.mTxMgrShell;
+    txmgr.addListener(elementAttrTxn);
+    txmgr.doTransaction(aggregateTxn);
+    txmgr.removeListener(elementAttrTxn);
   }
 };
 

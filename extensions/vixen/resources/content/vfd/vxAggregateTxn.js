@@ -31,28 +31,37 @@
 
 function vxAggregateTxn (aTransactionList)
 {
-  this.mTransactionList = aTransactionList;
+  this.mTransactionList = { };
+  for (var i = 0; i < aTransactionList.length; i++)
+    this.mTransactionList[aTransactionList[i].mID] = aTransactionList[i];
+  
+  this.mID = "aggregate-txn::";
 } 
  
 vxAggregateTxn.prototype = {
+  init: function ()
+  {
+    this.mID += generateID();
+  },
+  
   doTransaction: function ()
   {
     _dd("vxAggregateTxn::doTransaction");
-    for (var i = 0; i < this.mTransactionList.length; i++)
+    for (var i in this.mTransactionList)
       this.mTransactionList[i].doTransaction();
   },
 
   undoTransaction: function ()
   {
     _dd("vxAggregateTxn::undoTransaction");
-    for (var i = 0; i < this.mTransactionList.length; i++)
+    for (var i in this.mTransactionList)
       this.mTransactionList[i].undoTransaction();
   },
   
   redoTransaction: function ()
   {
     _dd("vxAggregateTxn::redoTransaction");
-    for (var i = 0; i < this.mTransactionList.length; i++)
+    for (var i in this.mTransactionList)
       this.mTransactionList[i].redoTransaction();
   },
 
