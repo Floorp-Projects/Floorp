@@ -623,7 +623,9 @@ nsInstall::DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName
 PRInt32    
 nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt32* aReturn)
 {
-    //fix
+    nsFileSpec fsFolder(aFolder);
+
+    *aReturn = fsFolder.GetDiskSpaceAvailable();
     return NS_OK;
 }
 
