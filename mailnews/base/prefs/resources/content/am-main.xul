@@ -8,16 +8,18 @@
      flex="100%"
      class="dialog"
      align="vertical"> 
-    
+
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+   
     <html:div class="pageTitle">&accountTitle.label;</html:div>
     <box align="vertical">
-    <html:div class="secDesc">&accountSettingsDesc.label;</html:div>
-    <html:div>&accountNameDesc.label;</html:div>
-    <box align="horizontal">
-      <html:div>&accountName.label;</html:div>
-      <html:spacer/>
-      <html:input type="text" name="server.prettyName" flex="100%"/>
-    </box>
+	    <html:div class="secDesc">&accountSettingsDesc.label;</html:div>
+	    <html:div>&accountNameDesc.label;</html:div>
+	    <box align="horizontal">
+	      <html:div>&accountName.label;</html:div>
+	      <html:spacer/>
+	      <html:input type="text" name="server.prettyName" flex="100%"/>
+	    </box>
     </box>
 
     <html:div class="secTitle">&identityTitle.label;</html:div>
@@ -51,10 +53,11 @@
       </html:tr>    
 -->
       <html:tr class="checkboxrow">
-      <html:td colspan="2">
+      <html:td colspan="3">
         <html:input name="identity.attachSignature" type="checkbox"/>
         &signature.label;
-        <html:input type="text" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
+        <html:input type="text" id="identity.signature" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
+	<titledbutton class="dialog push" name="browse" type="button" value="&choose.label;" onclick="PrefNavSelectFile('identity.signature')"/>
       </html:td>
       </html:tr>
 <!--
@@ -63,7 +66,7 @@
          <html:option value="sig2">&sampleSig2.label;</html:option>
          <html:option value="sig3">&sampleSig3.label;</html:option>
       </html:select>
-      <titledbutton value="&editSignature.label;"/>
+      <titledbutton value="&edit.label;"/>
 
 -->
     
