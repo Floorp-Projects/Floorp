@@ -111,6 +111,7 @@ private:
     // helpers
     //
     nsresult Connect();
+    nsresult OnConnectFailure();
     nsresult SendMsg_Internal(ipcMessage *msg);
     nsresult SpawnDaemon();
 
@@ -127,7 +128,6 @@ private:
     PRUint8                mConnectionAttemptCount;
 
 #ifdef XP_UNIX
-
     ipcSendQueue           mSendQ;
     ipcReceiver            mReceiver;
     nsCOMPtr<nsITransport> mTransport;
@@ -151,7 +151,6 @@ public:
     void OnStartRequest(nsIRequest *req);
     void OnStopRequest(nsIRequest *req, nsresult status);
     PRFileDesc *FD() { return mFD; }
-
 #endif
 };
 

@@ -154,40 +154,8 @@ ipcTransport::OnStopRequest(nsIRequest *req, nsresult status)
     if (status == NS_BINDING_ABORTED)
         return;
 
-    if (NS_FAILED(status) && !mTimer) {
-        nsresult rv;
-        //
-        // connection failure
-        //
-        rv = SpawnDaemon();
-        if (NS_FAILED(rv)) {
-            LOG(("  failed to spawn daemon [rv=%x]\n", rv));
-            return;
-        }
-        mSpawnedDaemon = PR_TRUE;
-
-        //
-        // re-initialize connection after timeout
-        //
-        mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) {
-            LOG(("  failed to create timer [rv=%x]\n", rv));
-            return;
-        }
-
-        // use a simple exponential growth algorithm 2^(n-1)
-        PRUint32 ms = 500 * (1 << (mConnectionAttemptCount - 1));
-        if (ms > 10000)
-            ms = 10000;
-
-        LOG(("  waiting %u milliseconds\n", ms));
-
-        rv = mTimer->Init(this, ms, nsITimer::TYPE_ONE_SHOT);
-        if (NS_FAILED(rv)) {
-            LOG(("  failed to initialize timer [rv=%x]\n", rv));
-            return;
-        }
-    }
+    if (NS_FAILED(status) && NS_FAILED(OnConnectFailure())
+        return;
 
     if (req == mReadRequest)
         mReadRequest = nsnull;

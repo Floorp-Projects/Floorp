@@ -178,10 +178,6 @@ static void ShutdownDaemonDir()
 // poll list
 //-----------------------------------------------------------------------------
 
-// upper limit on the number of active connections
-// XXX may want to make this more dynamic
-#define MAX_CLIENTS 100
-
 //
 // declared in ipcdPrivate.h
 //
@@ -193,18 +189,18 @@ int        ipcClientCount;
 // n'th element of ipcClientArray corresponds to the n'th element of
 // ipcPollList.
 //
-static ipcClient ipcClientArray[MAX_CLIENTS + 1];
+static ipcClient ipcClientArray[IPC_MAX_CLIENTS + 1];
 
 //
 // element 0 contains the "server socket"
 //
-static PRPollDesc ipcPollList[MAX_CLIENTS + 1];
+static PRPollDesc ipcPollList[IPC_MAX_CLIENTS + 1];
 
 //-----------------------------------------------------------------------------
 
 static int AddClient(PRFileDesc *fd)
 {
-    if (ipcClientCount == MAX_CLIENTS) {
+    if (ipcClientCount == IPC_MAX_CLIENTS) {
         LOG(("reached maximum client limit\n"));
         return -1;
     }
@@ -369,6 +365,7 @@ int main(int argc, char **argv)
 #ifdef DEBUG
     IPC_InitLog("###");
 #endif
+    LOG(("daemon started...\n"));
 
     //XXX uncomment these lines to test slow starting daemon
     //LOG(("sleeping for 2 seconds...\n"));
