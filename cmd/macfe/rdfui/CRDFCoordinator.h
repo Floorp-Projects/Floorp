@@ -34,7 +34,7 @@
 
 #include "CRDFNotificationHandler.h"
 #include "CShelfMixin.h"
-#include "CNavCenterSelectorPane.h"
+
 
 class CHyperTreeFlexTable;
 
@@ -45,6 +45,7 @@ class CHyperTreeFlexTable;
 // Contains all the FE-specific data stuffed into an HT_View. This holds stuff about the icon on
 // the selector bar for the view, columns associated with the view, etc...
 //
+#if 0
 struct ViewFEData {
 	ViewFEData ( );
 	ViewFEData ( SelectorData* inSelector ); 
@@ -53,48 +54,41 @@ struct ViewFEData {
 	SelectorData* mSelector;
 	// ColumnData* mColumnInfo;		// to come later...
 };
+#endif
 
+
+#pragma mark class CRDFCoordinator
 
 class CRDFCoordinator :	public LView,
 						public LListener, public LCommander, LBroadcaster,
-						public CRDFNotificationHandler,
-						public LDragAndDrop
+						public CRDFNotificationHandler
 {
 public:
 	enum { class_ID = 'RCoo', pane_ID = 'RCoo' };
-	
-	static const char* Pref_EditWorkspace;
-	static const char* Pref_ShowNavCenterSelector;
-	static const char* Pref_ShowNavCenterShelf;
+
+//	static const char* Pref_EditWorkspace;
+//	static const char* Pref_ShowNavCenterSelector;
+//	static const char* Pref_ShowNavCenterShelf;
 		
 					CRDFCoordinator(LStream* inStream);
 	virtual			~CRDFCoordinator();
 
-		// save/restore user preferences
-	virtual void	SavePlace ( LStream* outStreamData ) ;
-	virtual void	RestorePlace ( LStream* outStreamData ) ;
-	
 		// Set the current workspace to a particular kind of workspace
 	virtual void SelectView ( HT_ViewType inPane ) ;
 		
-		// access to the two shelves that comprise the NavCenter. These wrapper classes
-		// allow you to easily slide in/out the shelves or check if they are open.
-	CShelf& NavCenterShelf() const { return *mNavCenter; } ;		// tree view
-	CShelf& NavCenterSelector() const { return *mSelector; } ;		// selector widget
-
 		// register/unregister this NavCenter for SiteMap updates, etc
 	void RegisterNavCenter ( MWContext* inContext ) ;
 	void UnregisterNavCenter ( ) ;
 	
 		// because sometimes you just need to get to the top-level HT pane....
 	HT_Pane HTPane ( ) const { return mHTPane; } ;
+	void HTPane ( HT_Pane inPane ) { mHTPane = inPane; } ;		// an imp for now...
 
 protected:
 
 		// PowerPlant overrides
 	virtual	void	FinishCreateSelf();
 	virtual Boolean	ObeyCommand ( CommandT inCommand, void* ioParam );
-	virtual Boolean HandleKeyPress ( const EventRecord &inKeyEvent ) ;
 		
 		// change the currently selected workspace
 	virtual void	SelectView(HT_View view);
@@ -106,16 +100,42 @@ protected:
 	virtual	void	HandleNotification( HT_Notification	notifyStruct, HT_Resource node, HT_Event event, void *token, uint32 tokenType);
 	virtual void	ListenToMessage( MessageT inMessage, void *ioParam);
 
-	PaneIDT					mSelectorPaneID;	// for the selector shelf
-	CNavCenterSelectorPane*	mSelectorPane;
-	CShelf*					mSelector;
-
 	PaneIDT					mTreePaneID;		// for the tree view shelf
 	CHyperTreeFlexTable*	mTreePane;
-	CShelf* 				mNavCenter;
 	
 	HT_Pane			mHTPane;					// the HT pane containing all the workspaces
 	
-	bool			mIsInChrome;				// are we embedded in chrome?
-	
 }; // CRDFCoordinator
+
+
+#pragma mark class CDockedRDFCoordinator
+
+class CDockedRDFCoordinator : public CRDFCoordinator
+{
+public:
+	enum { class_ID = 'RCoE', pane_ID = 'RCoE' };
+	enum {
+		msg_ShelfStateShouldChange	= 'shlf'		// broadcast when shelf should open/close
+	};
+
+					CDockedRDFCoordinator(LStream* inStream);
+	virtual			~CDockedRDFCoordinator();
+
+		// save/restore user preferences
+	virtual void	SavePlace ( LStream* outStreamData ) ;
+	virtual void	RestorePlace ( LStream* outStreamData ) ;
+
+		// access to the shelf that comprised the NavCenter. This wrapper class
+		// allows you to easily slide in/out the shelf or check if it is open.
+	CShelf& NavCenterShelf() const { return *mNavCenter; } ;
+
+protected:
+
+	virtual void	FinishCreateSelf ( ) ;
+	virtual void	ListenToMessage( MessageT inMessage, void *ioParam);
+	
+
+private:
+	CShelf* 		mNavCenter;
+
+}; // CDockedRDFCoordinator

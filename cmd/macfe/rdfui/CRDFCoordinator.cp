@@ -91,11 +91,11 @@
 #include "LGAIconSuiteControl.h"
 
 
-const char* CRDFCoordinator::Pref_EditWorkspace = "browser.editWorkspace";
-const char* CRDFCoordinator::Pref_ShowNavCenterSelector = "browser.chrome.show_navcenter_selector";
-const char* CRDFCoordinator::Pref_ShowNavCenterShelf = "browser.chrome.show_navcenter_shelf";
+//const char* CRDFCoordinator::Pref_EditWorkspace = "browser.editWorkspace";
+//const char* CRDFCoordinator::Pref_ShowNavCenterSelector = "browser.chrome.show_navcenter_selector";
+//const char* CRDFCoordinator::Pref_ShowNavCenterShelf = "browser.chrome.show_navcenter_shelf";
 
-
+#if 0
 ViewFEData :: ViewFEData ( )
 	: mSelector(NULL)
 {
@@ -112,21 +112,16 @@ ViewFEData :: ~ViewFEData ( )
 {
 	delete mSelector;
 }
-
+#endif
 
 #pragma mark -
 
 CRDFCoordinator::CRDFCoordinator(LStream* inStream)
 :	LView(inStream),
-	LDragAndDrop ( GetMacPort(), this ),
-	mSelectorPane(NULL),
+//	LDragAndDrop ( GetMacPort(), this ),
 	mTreePane(NULL),
-	mHTPane(NULL),
-	mIsInChrome(false),
-	mNavCenter(NULL),
-	mSelector(NULL)
+	mHTPane(NULL)
 {
-	*inStream >> mSelectorPaneID;
 	*inStream >> mTreePaneID;
 	
 } // constructor
@@ -137,9 +132,6 @@ CRDFCoordinator::~CRDFCoordinator()
 	// if we don't do this, the LCommander destructor will try to clear the selection and
 	// of course, the HTPane won't be around anymore to update the selection....boom....
 	SwitchTarget(nil);
-	
-	delete mNavCenter;
-	delete mSelector;
 	
 	UnregisterNavCenter();
 	HT_DeletePane ( mHTPane );
@@ -154,104 +146,30 @@ CRDFCoordinator::~CRDFCoordinator()
 void
 CRDFCoordinator::FinishCreateSelf()
 {
-	mSelectorPane = dynamic_cast<CNavCenterSelectorPane*>(FindPaneByID(mSelectorPaneID));
 	mTreePane = dynamic_cast<CHyperTreeFlexTable*>(FindPaneByID(mTreePaneID));
 
-	Assert_((mSelectorPane != NULL) && (mTreePane != NULL));
+	Assert_( mTreePane != NULL );
 
-	// initialize the navCenter shelf. If we are a standalone window, we won't have
-	// a LDividedView so no expando-collapso stuff happens.
-	LDividedView* navCenter = dynamic_cast<LDividedView*>(FindPaneByID('ExCt'));
-	if ( navCenter ) {
-		mIsInChrome = true;
-		mSelectorPane->SetEmbedded(true);
-		mNavCenter = new CShelf ( navCenter, Pref_ShowNavCenterShelf );
-	}
-	
-	// initialize the navCenter selector shelf. Again, if we're standalone, there won't
-	// be a LDividedView.
-	LDividedView* navCenterSelector = dynamic_cast<LDividedView*>(FindPaneByID('ExSe'));
-	if ( navCenterSelector )
-		mSelector = new CShelf ( navCenterSelector, Pref_ShowNavCenterSelector );
-	
-	// Register the title bar as a listener to both this class and the selector bar. It will
-	// receive messages from the selector when the _user_ changes the current workspace and 
-	// will receive messages from this class when _HT_ changes the current workspace. Either
-	// way it needs to know so it can update the title string.
+	// Register the title bar as a listener so we can update it when the view
+	// changes.
 	CNavCenterTitle* titleBar =
 			dynamic_cast<CNavCenterTitle*>(FindPaneByID(CNavCenterTitle::pane_ID));
-	if ( titleBar ) {
+	if ( titleBar )
 		AddListener(titleBar);
-		if ( mSelectorPane )
-			mSelectorPane->AddListener(titleBar);	
-	}
-		
-	// If the close box is there, register this class as a listener so we get the
-	// close message. It won't be there in the standalone window version		
-	LGAIconSuiteControl* closeBox = 
-			dynamic_cast<LGAIconSuiteControl*>(FindPaneByID(CNavCenterTitle::kCloseBoxPaneID));
-	if ( closeBox )
-		closeBox->AddListener(this);
-			
-	// setting view selection comes via CRDFNotificationHandler, so don't do it here.
+
+//¥¥¥ we probably want to defer this until the pane is actually needed....
 	mHTPane = CreateHTPane();
 	if (mHTPane)
 	{
-		if (mSelectorPane)
-		{
-			mSelectorPane->SetHTPane ( mHTPane );
-			mSelectorPane->AddListener(this);
-			// fill selector pane with list of RDF "views"
-			Uint32 numViews = HT_GetViewListCount(mHTPane);
-			for (Uint32 i = 0; i < numViews; i++)
-			{
-				HT_View view = HT_GetNthView(mHTPane, i);
-				ViewFEData* feData = new ViewFEData ( new SelectorData(view, mSelectorPane) );
-				HT_SetViewFEData ( view, feData );
-			}			
-		}
-			
 		// receive notifications from the tree view
 		if (mTreePane)
 			mTreePane->AddListener(this);
 
 	} // if HT pane is valid
-	
+
 } // FinishCreateSelf
 
 
-//
-// SavePlace
-//
-// Pass through to the tree view so it can save the shelf width
-//
-void
-CRDFCoordinator :: SavePlace ( LStream* outStreamData )
-{
-	if ( !outStreamData )
-		return;
-		
-	if ( mIsInChrome )
-		mNavCenter->GetShelf()->SavePlace(outStreamData);
-	
-} // SavePlace
-
-
-//
-// RestorePlace
-//
-// Pass through to the tree view so it can restore the shelf width
-//
-void
-CRDFCoordinator :: RestorePlace ( LStream* inStreamData )
-{
-	if ( !inStreamData )	// if reading from new/empty prefs, the stream will be null
-		return;
-		
-	if ( mIsInChrome )
-		mNavCenter->GetShelf()->RestorePlace(inStreamData);
-	
-} // RestorePlace
 
 
 //
@@ -348,28 +266,10 @@ void CRDFCoordinator::HandleNotification(
 					
 		case HT_EVENT_NODE_VPROP_CHANGED:
 		{
-			// if the node we get is the topLevel node of a view, redraw the selector bar. Otherwise
-			// redraw the tree view (but only if it is the current view!).
-			if ( HT_TopNode(view) == node ) {
-				// make sure the view has the most up to date icon
-				//¥¥¥ this doesn't work yet because of the icon name weirdness in HT
-				#if 0
-				char* iconURL = HT_GetWorkspaceLargeIconURL(view);
-				if ( iconURL ) {
-					ViewFEData* viewData = static_cast<ViewFEData*>(HT_GetViewFEData(view));
-					Assert_(viewData != NULL);
-					if ( viewData )
-						viewData->mSelector->workspaceImage->SetImageURL ( iconURL );
-				}
-				#endif
-				mSelectorPane->Refresh();
-			}
-			else {
-				//¥¥¥make sure the node has the most up to date icon
-				//¥¥¥optimization? only redraw the cell that changed
-				if ( view == mTreePane->GetHTView() )
-					mTreePane->Refresh();
-			}
+			//¥¥¥make sure the node has the most up to date icon
+			//¥¥¥optimization? only redraw the cell that changed
+			if ( view == mTreePane->GetHTView() )
+				mTreePane->Refresh();
 			break;
 		}
 		
@@ -377,18 +277,13 @@ void CRDFCoordinator::HandleNotification(
 			mTreePane->SyncSelectionWithHT();
 			break;
 
-
-#if 0
 		// scroll the given node into view. Currently uses (more or less) the LTableView
 		// implementation which tries to scroll as little as possible and isn't very smart
 		// about centering the node. We should change that at some point (pinkerton).
-		//
-		// Waiting on RDF branch to land for this event to be available
 		case HT_EVENT_NODE_SCROLLTO:
 			TableIndexT index = HT_GetNodeIndex(view, node);
-			mTreePane->ScrollRowIntoFrame(index);
+//			mTreePane->ScrollRowIntoFrame(index);
 			break;
-#endif
 		
 		case HT_EVENT_VIEW_REFRESH:
 		{
@@ -412,28 +307,11 @@ void CRDFCoordinator::HandleNotification(
 			} // if refresh for current view
 			break;
 		}
-		
-		
-		case HT_EVENT_VIEW_WORKSPACE_REFRESH:
-			mSelectorPane->Refresh();
-			break;
 			
+		case HT_EVENT_VIEW_WORKSPACE_REFRESH:			
 		case HT_EVENT_VIEW_ADDED:
-		{
-			//¥¥¥ adds new view at end because we don't have enough data from HT to
-			//¥¥¥ do it right
-			ViewFEData* feData = new ViewFEData ( new SelectorData(view, mSelectorPane) );
-			HT_SetViewFEData ( view, feData );
-			mSelectorPane->Refresh();
-			break;
-		}
-					
 		case HT_EVENT_VIEW_DELETED:
-		{
-			ViewFEData* feData = static_cast<ViewFEData*>(HT_GetViewFEData(view));
-			delete feData;
 			break;
-		}
 		
 	} // case of which HT event
 
@@ -443,24 +321,12 @@ void CRDFCoordinator::HandleNotification(
 //
 // SelectView
 //
-// Make the given view the current view and ensure that the selector widget 
-// is up to date.
+// Make the given view the current view.
 //
 void CRDFCoordinator::SelectView(HT_View view)
 {
 	if ( view )
 		mTreePane->OpenView(view);
-	
-	// find the appropriate workspace and make it active if it has not yet been set
-	// (such as when HT sets it explicitly). We have to turn off listening to the selector 
-	// pane to avoid infinite loops (changing the selector will send us a message that the 
-	// active selector changed). This code should not be executed when the view change
-	// is made by the FE.
-	if ( !mSelectorPane->GetActiveWorkspace() || mSelectorPane->GetActiveWorkspace() != view ) {
-		StopListening();
-		mSelectorPane->SetActiveWorkspace(view);
-		StartListening();
-	} // if no selection or current selection outdated
 	
 } // SelectView
 
@@ -497,12 +363,13 @@ void CRDFCoordinator::CollapseNode(HT_Resource node)
 //
 // Process the various messages we get from the FE, such as requests to open/close the tree shelf
 // or change which workspace is currently selected.
-void CRDFCoordinator::ListenToMessage(
-	MessageT		inMessage,
-	void			*ioParam)
+void
+CRDFCoordinator::ListenToMessage ( MessageT inMessage, void *ioParam )
 {
 	switch (inMessage) {
 	
+#if 0
+//¥¥¥ This might be useful, depending on how the command pane works out...
 		// the user clicked in the selector pane to change the selected workspace. Tell
 		// the backend about it, but before we do that, turn off HT events so we don't actually
 		// get the notification back -- we don't need it because the view change was caused
@@ -515,34 +382,8 @@ void CRDFCoordinator::ListenToMessage(
 			SelectView(newView);
 			break;
 		}
-		
-		// expand/collapse the shelf to the state pointed to by |ioParam|. If we don't
-		// switch the target, we run into the problem where we are still the active
-		// commander and get called on to handle the menus. Since there will be no
-		// view, HT will barf.
-		case CNavCenterSelectorPane::msg_ShelfStateShouldChange:
-			if ( mIsInChrome ) {
-				bool nowOpen = *(reinterpret_cast<bool*>(ioParam));
-				mNavCenter->SetShelfState ( nowOpen );
-				if ( nowOpen ) {
-					mTreePane->SetRightmostVisibleColumn(1);	//¥¥Êavoid annoying columns
-					SwitchTarget(this);
-				}
-				else
-					SwitchTarget(GetSuperCommander());
-			}
-			break;
-		
-		// similar to above, but can cut out the crap because we are closing things
-		// down explicitly. Also make sure to tell the selector pane that nothing is 
-		// active, which the above message cannot do because it is responding to the
-		// code that just changed the workspace.
-		case CNavCenterTitle::msg_CloseShelfNow:
-			mNavCenter->SetShelfState ( false );
-			mSelectorPane->SetActiveWorkspace ( NULL );
-			SwitchTarget(GetSuperCommander());
-			break;
-			
+#endif
+					
 	} // case of which message
 	
 } // ListenToMessage
@@ -610,25 +451,6 @@ CRDFCoordinator :: ObeyCommand ( CommandT inCommand, void* ioParam )
 
 
 //
-// HandleKeyPress
-//
-// Handle changing the nav center view on cmd-tab
-// 
-Boolean
-CRDFCoordinator :: HandleKeyPress(const EventRecord &inKeyEvent)
-{
-	char key = inKeyEvent.message & charCodeMask;
-	if ( inKeyEvent.modifiers & cmdKey && key == kTabCharCode )
-		mSelectorPane->CycleCurrentWorkspace();
-	else
-		return LCommander::HandleKeyPress(inKeyEvent);
-
-	return true;
-	
-} // HandleKeyPress
-
-
-//
 // RegisterNavCenter
 //
 // Tell XP about this navCenter & context for site map stuff
@@ -652,3 +474,115 @@ CRDFCoordinator :: UnregisterNavCenter ( )
 	XP_UnregisterNavCenter ( mHTPane );	
 
 } // UnregisterNavCenter
+
+
+#pragma mark -
+
+CDockedRDFCoordinator :: CDockedRDFCoordinator(LStream* inStream)
+	: CRDFCoordinator(inStream), mNavCenter(NULL)
+{
+
+
+}
+
+
+CDockedRDFCoordinator :: ~CDockedRDFCoordinator()
+{
+	delete mNavCenter;
+
+}
+
+
+//
+// FinishCreateSelf
+//
+// Setup stuff related to when this thing is embedded in a browser window
+//
+void
+CDockedRDFCoordinator :: FinishCreateSelf ( )
+{
+	CRDFCoordinator::FinishCreateSelf();
+
+	// initialize the navCenter shelf. If we are a standalone window, we won't have
+	// a LDividedView so no expando-collapso stuff happens.
+	LDividedView* navCenter = dynamic_cast<LDividedView*>(FindPaneByID('ExCt'));
+	if ( navCenter )
+		mNavCenter = new CShelf ( navCenter, NULL );
+
+	// If the close box is there, register this class as a listener so we get the
+	// close message
+	LGAIconSuiteControl* closeBox = 
+			dynamic_cast<LGAIconSuiteControl*>(FindPaneByID(CNavCenterTitle::kCloseBoxPaneID));
+	if ( closeBox )
+		closeBox->AddListener(this);
+	
+} // FinishCreateSelf
+
+
+//
+// SavePlace
+//
+// Pass through to the tree view so it can save the shelf width
+//
+void
+CDockedRDFCoordinator :: SavePlace ( LStream* outStreamData )
+{
+	if ( !outStreamData )
+		return;
+		
+	mNavCenter->GetShelf()->SavePlace(outStreamData);
+	
+} // SavePlace
+
+
+//
+// RestorePlace
+//
+// Pass through to the tree view so it can restore the shelf width
+//
+void
+CDockedRDFCoordinator :: RestorePlace ( LStream* inStreamData )
+{
+	if ( !inStreamData )	// if reading from new/empty prefs, the stream will be null
+		return;
+		
+	mNavCenter->GetShelf()->RestorePlace(inStreamData);
+	
+} // RestorePlace
+
+
+void
+CDockedRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
+{
+	switch (inMessage) {
+
+		// expand/collapse the shelf to the state pointed to by |ioParam|. If we don't
+		// switch the target, we run into the problem where we are still the active
+		// commander and get called on to handle the menus. Since there will be no
+		// view, HT will barf.
+		case CDockedRDFCoordinator::msg_ShelfStateShouldChange:
+			bool nowOpen = *(reinterpret_cast<bool*>(ioParam));
+			mNavCenter->SetShelfState ( nowOpen );
+			if ( nowOpen ) {
+				mTreePane->SetRightmostVisibleColumn(1);	//¥¥Êavoid annoying columns
+				SwitchTarget(this);
+			}
+			else
+				SwitchTarget(GetSuperCommander());
+			break;
+		
+		// similar to above, but can cut out the crap because we are closing things
+		// down explicitly. Also make sure to tell the selector pane that nothing is 
+		// active, which the above message cannot do because it is responding to the
+		// code that just changed the workspace.
+		case CNavCenterTitle::msg_CloseShelfNow:
+			mNavCenter->SetShelfState ( false );
+			SwitchTarget(GetSuperCommander());
+			break;
+
+		default:
+			CRDFCoordinator::ListenToMessage ( inMessage, ioParam );
+
+	} // case of which message
+
+} // ListenToMessage
