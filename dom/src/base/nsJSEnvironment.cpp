@@ -46,7 +46,6 @@
 #include "nsILiveConnectManager.h"
 #endif
 
-const uint32 gGCSize = 4L * 1024L * 1024L;
 const size_t gStackSize = 8192;
 
 static NS_DEFINE_IID(kIScriptContextIID, NS_ISCRIPTCONTEXT_IID);
@@ -426,18 +425,12 @@ nsJSEnvironment::nsJSEnvironment()
   nsresult result;
 
   NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &result);
-
   // get the JSRuntime from the runtime svc, if possible
-  if (NS_SUCCEEDED(result)) {
-    result = rtsvc->GetRuntime(&mRuntime);
-    if (NS_FAILED(result) || !mRuntime) {
-      mRuntime = JS_NewRuntime(gGCSize);
-      if (NS_SUCCEEDED(result)) // got service, so set it back
-        rtsvc->SetRuntime(mRuntime);
-    }
-  } else {
-    mRuntime = JS_NewRuntime(gGCSize);
-  }
+  if (NS_FAILED(result))
+    return;                     // XXX swallow error! need Init()?
+  result = rtsvc->GetRuntime(&mRuntime);
+  if (NS_FAILED(result))
+    return;                     // XXX swallow error! need Init()?
   	
 #if defined(OJI)
 	// Initialize LiveConnect.
@@ -458,12 +451,6 @@ nsJSEnvironment::nsJSEnvironment()
 
 nsJSEnvironment::~nsJSEnvironment()
 {
-  nsresult result;
-  NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &result);
-  if (NS_SUCCEEDED(result)) {
-    rtsvc->SetRuntime(0);
-  }
-	JS_DestroyRuntime(mRuntime);
 }
 
 nsIScriptContext* nsJSEnvironment::GetNewContext()
