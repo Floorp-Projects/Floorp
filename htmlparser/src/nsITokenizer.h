@@ -37,19 +37,10 @@
 class CToken;
 class nsScanner;
 class nsDeque;
+class nsTokenAllocator;
 
 #define NS_ITOKENIZER_IID      \
   {0xe4238ddc, 0x9eb6,  0x11d2, {0xba, 0xa5, 0x0,     0x10, 0x4b, 0x98, 0x3f, 0xd4 }}
-
-
-/***************************************************************
-  Notes: 
- ***************************************************************/
-
-class  nsITokenRecycler {
-public:
-    virtual void RecycleToken(CToken* aToken)=0;
-};
 
 /**
  * This interface is used as a callback to objects interested
@@ -67,10 +58,10 @@ public:
 class nsITokenizer : public nsISupports {
 public:
 
-  virtual nsresult          WillTokenize(PRBool aIsFinalChunk)=0;
+  virtual nsresult          WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)=0;
   virtual nsresult          ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)=0;
   virtual nsresult          DidTokenize(PRBool aIsFinalChunk)=0;
-  virtual nsITokenRecycler* GetTokenRecycler(void)=0;
+  virtual nsTokenAllocator* GetTokenAllocator(void)=0;
 
   virtual CToken*           PushTokenFront(CToken* aToken)=0;
   virtual CToken*           PushToken(CToken* aToken)=0;

@@ -139,8 +139,8 @@ COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
   mHasOpenHead=0;
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
-  mBodyContext=new nsDTDContext();
   mTokenizer=0;
+  mTokenAllocator=0;
   mComputedCRC32=0;
   mExpectedCRC32=0;
   mDTDState=NS_OK;
@@ -149,6 +149,7 @@ COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
   mHadBody=PR_FALSE;
   mHasOpenScript=PR_FALSE;
   mParserCommand=eViewNormal;
+  mBodyContext=new nsDTDContext();
 
 #if 1 //set this to 1 if you want strictDTD to be based on the environment setting.
   char* theEnvString = PR_GetEnv("MOZ_DISABLE_STRICT"); 
@@ -416,7 +417,6 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
 
     mDocType=aParserContext.mDocType;
     mBodyContext->mTransitional=PRBool(aParserContext.mDTDMode==eDTDMode_transitional);
-    mBodyContext->GetTokenRecycler();
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
@@ -459,11 +459,15 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
 
     if(mTokenizer) {
 
+      mTokenAllocator=mTokenizer->GetTokenAllocator();
+      
+      mBodyContext->SetTokenAllocator(mTokenAllocator);
+
       if(mSink) {
 
         if(!mBodyContext->GetCount()) {
             //if the content model is empty, then begin by opening <html>...
-          CStartToken *theToken=(CStartToken*)mBodyContext->gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
+          CStartToken *theToken=(CStartToken*)mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
         }
 
@@ -567,7 +571,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
     eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
 
-    theToken->mUseCount=0;  //assume every token coming into this system needs recycling.
+//    theToken->mUseCount=0;  //assume every token coming into this system needs recycling.
 
     mParser=(nsParser*)aParser;
 
@@ -591,8 +595,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
 
     if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-      if(0>=theToken->mUseCount)
-        mBodyContext->gTokenRecycler->RecycleToken(theToken);
+      IF_FREE(theToken);
     }
     else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
       mDTDState=result; 
@@ -749,7 +752,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
   nsresult  result=NS_OK;
   nsCParserNode* theNode=CreateNode();
   if(theNode) {
-    theNode->Init(aToken,mLineNumber,mBodyContext->gTokenRecycler);
+    theNode->Init(aToken,mLineNumber,mTokenAllocator);
    
     eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
     PRInt16       attrCount=aToken->GetAttributeCount();
@@ -835,8 +838,12 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
       }
       CElement* theElement=gElementTable->mElements[theParent];
       if(theElement) { 
-        nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber); 
-        result=theElement->HandleEndToken(&theNode,theChildTag,mBodyContext,mSink);  
+        nsCParserNode* theNode=CreateNode();
+        if(theNode) {
+          theNode->Init(aToken,mLineNumber,mTokenAllocator);
+          result=theElement->HandleEndToken(theNode,theChildTag,mBodyContext,mSink);
+          mBodyContext->RecycleNode((nsCParserNode*)theNode);
+        }
       }   
       break; 
   }     
@@ -904,14 +911,13 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
     //before we just toss this away as a bogus entity, let's check...
     CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
     if(theEntity) {
-      theToken=new CTextToken(theEntity->mValue);
+      theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theEntity->mValue);
     }
     else {
       //if you're here we have a bogus entity.
       //convert it into a text token.
-      nsAutoString temp; temp.AssignWithConversion("&");
-      temp.Append(theStr);
-      theToken=new CTextToken(temp);
+      theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,NS_ConvertToString("&"));
+
     }
     result=HandleStartToken(theToken);
   }

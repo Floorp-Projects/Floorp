@@ -815,8 +815,8 @@ public:
     
         if(aContext->mTableStates) {
           if(aContext->mTableStates->CanOpenTBody()) {
-            nsCParserNode* theNode=new nsCParserNode();
-            CToken* theToken=new CStartToken(eHTMLTag_tbody);
+            nsCParserNode* theNode=aContext->gNodeRecycler->CreateNode();
+            CToken* theToken=(CStartToken*)aContext->mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_tbody);
             theNode->Init(theToken,0,0);  //this will likely leak...
 
             result=HandleStartToken(theNode,eHTMLTag_tbody,aContext,aSink);
@@ -1859,8 +1859,9 @@ public:
           if(theBody->CanContain(theChildElement,aContext)) {
             //let's auto open the body            
             
-            CToken* theToken=new CStartToken(eHTMLTag_body);
-            nsCParserNode* theNode=new nsCParserNode(theToken,0,0);
+            CToken* theToken=(CStartToken*)aContext->mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body);
+            nsCParserNode* theNode=aContext->gNodeRecycler->CreateNode();
+            theNode->Init(theToken,0,0);
 
             result=theBody->HandleStartToken(theNode,eHTMLTag_body,aContext,aSink);
 

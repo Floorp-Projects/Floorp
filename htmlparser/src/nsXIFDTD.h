@@ -51,7 +51,7 @@ class nsITokenizer;
 class nsDTDContext;
 class nsEntryStack;
 class nsCParserNode;
-class CTokenRecycler;
+class nsTokenAllocator;
 class CNodeRecycler;
 
 //*** This enum is used to define the known universe of XIF tags.
@@ -395,7 +395,7 @@ private:
      * @update	gess8/4/98
      * @return  ptr to recycler (or null)
      */
-    virtual nsITokenRecycler* GetTokenRecycler(void);
+    virtual nsTokenAllocator* GetTokenAllocator(void);
 
 private:
 
@@ -443,7 +443,7 @@ protected:
     nsString              mCharset;
 
     nsDTDContext*         mXIFContext;
-    CTokenRecycler*       mTokenRecycler;
+    nsTokenAllocator*      mTokenAllocator;
     CNodeRecycler*        mNodeRecycler;
     nsresult              mDTDState;
     

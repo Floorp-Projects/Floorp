@@ -104,7 +104,7 @@ class nsDTDContext;
 class nsEntryStack;
 class nsITokenizer;
 class nsCParserNode;
-class CTokenRecycler;
+class nsTokenAllocator;
 
 /***************************************************************
   Now the main event: COtherDTD.
@@ -231,7 +231,7 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
      * @update	rickg 16June2000
      * @return  always 0
      */
-    virtual  nsITokenRecycler* GetTokenRecycler(void) {return 0;}
+    virtual  nsTokenAllocator* GetTokenAllocator(void) {return 0;}
 
     /**
      * If the parse process gets interrupted, this method gets called
@@ -334,6 +334,7 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
+    nsTokenAllocator*    mTokenAllocator;
     PRBool              mHasOpenScript;
     eHTMLTags           mSkipTarget;
     nsDeque             mSharedNodes;

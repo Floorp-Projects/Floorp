@@ -60,9 +60,7 @@ public:
             NS_DECL_ISUPPORTS
 
   virtual nsresult          ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);
-  virtual nsITokenRecycler* GetTokenRecycler(void);
-  
-  static  void FreeTokenRecycler(void);
+  virtual nsTokenAllocator*  GetTokenAllocator(void);
 
 protected:
 

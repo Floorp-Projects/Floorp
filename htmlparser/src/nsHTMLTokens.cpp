@@ -134,7 +134,7 @@ CStartToken::CStartToken(const nsString& aName,eHTMLTags aTag) : CHTMLToken(aNam
 void CStartToken::Reinitialize(PRInt32 aTag, const nsString& aString){
   CToken::Reinitialize(aTag,aString);
   mAttributed=PR_FALSE;
-  mUseCount=0; //assume recycling is needed by default.
+  mUseCount=1; 
   mEmpty=PR_FALSE;
   mOrigin=-1;
   mTrailingContent.Truncate();
@@ -1134,6 +1134,7 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
  *  @return  
  */
 CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
+  mLastAttribute=PR_FALSE;
   mHasEqualWithoutValue=PR_FALSE;
 }
 
@@ -1401,8 +1402,14 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                       if(result==kBadStringLiteral) {
                         result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
                       }
-                      if(!aRetainWhitespace)
+                      // According to spec. we ( who? ) should ignore linefeeds. But look,
+                      // even the carriage return was getting stripped ( wonder why! ) -
+                      // Ref. to bug 15204.  Okay, so the spec. told us to ignore linefeeds,
+                      // bug then what about bug 47535 ? Should we preserve everything then?
+                      // Well, let's make it so! Commenting out the next two lines..
+                      /*if(!aRetainWhitespace)
                         mTextValue.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
+                      */
                     }
                     else if(kGreaterThan==aChar){      
                       mHasEqualWithoutValue=PR_TRUE;

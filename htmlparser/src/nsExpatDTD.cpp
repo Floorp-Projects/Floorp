@@ -227,14 +227,14 @@ NS_IMETHODIMP nsExpatDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer
   if(aTokenizer) {
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
-    nsITokenRecycler* theRecycler=aTokenizer->GetTokenRecycler();
+    nsTokenAllocator* theAllocator=aTokenizer->GetTokenAllocator();
 
     while(NS_OK==result){
       CToken* theToken=mTokenizer->PopToken();
       if(theToken) {
         result=HandleToken(theToken,aParser);
         if(NS_SUCCEEDED(result)) {
-          theRecycler->RecycleToken(theToken);
+          IF_FREE(theToken);
         }
         else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
           mTokenizer->PushTokenFront(theToken);
@@ -277,12 +277,12 @@ NS_IMETHODIMP nsExpatDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,
  * @param 
  * @return
  */
-nsITokenRecycler* nsExpatDTD::GetTokenRecycler(void){
+nsTokenAllocator* nsExpatDTD::GetTokenAllocator(void){
   nsITokenizer* theTokenizer=0;  
   nsresult result=GetTokenizer(theTokenizer);
 
   if (NS_SUCCEEDED(result)) {
-    return theTokenizer->GetTokenRecycler();
+    return theTokenizer->GetTokenAllocator();
   }
   return 0;
 }

@@ -74,13 +74,12 @@ public:
 
           NS_DECL_ISUPPORTS
 
-  /* nsITokenizer methods */  
+  /* nsITokenizer methods */
+  virtual nsresult WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator);
   virtual nsresult ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);  
   virtual nsresult DidTokenize(PRBool aIsFinalChunk);
 
   virtual void    FrontloadMisplacedContent(nsDeque& aDeque);
-  static  void    FreeTokenRecycler(void);
-
 
 protected:
 

@@ -155,6 +155,12 @@ class nsIParserNode : public nsISupports {
      */
     virtual void GetSource(nsString& aString)=0;
 
+    /** Release all the objects you're holding
+     * @update	harishd 08/02/00
+     * @return  void
+     */
+    virtual nsresult ReleaseAll()=0;
+
     /*
      * Get and set the ID attribute atom for this node.
      * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types

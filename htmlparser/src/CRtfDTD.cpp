@@ -38,6 +38,7 @@
 #include "nsITokenizer.h"
 #include "nsIHTMLContentSink.h" 
 #include "nsHTMLEntities.h"
+#include "nsDTDUtils.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -65,10 +66,10 @@ public:
 
           NS_DECL_ISUPPORTS
 
-  virtual nsresult          WillTokenize(PRBool aIsFinalChunk);
+  virtual nsresult          WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator);
   virtual nsresult          ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult          DidTokenize(PRBool aIsFinalChunk);
-  virtual nsITokenRecycler* GetTokenRecycler(void);
+  virtual nsTokenAllocator* GetTokenAllocator(void);
 
   virtual CToken*           PushTokenFront(CToken* theToken);
   virtual CToken*           PushToken(CToken* theToken);
@@ -78,10 +79,10 @@ public:
 	virtual PRInt32           GetCount(void);
 
   virtual void              PrependTokens(nsDeque& aDeque);
-  static  void              FreeTokenRecycler(void);
 protected:
 
-  nsDeque mTokenDeque;
+  nsDeque             mTokenDeque;
+  nsTokenAllocator*   mTokenAllocator;
 };
 
 
@@ -442,6 +443,8 @@ NS_IMETHODIMP CRtfDTD::DidBuildModel(nsresult anErrorCode,PRInt32 aLevel,nsIPars
   CloseContainer(eHTMLTag_pre);
   CloseContainer(eHTMLTag_body);
   CloseContainer(eHTMLTag_html);
+
+  if(mSink) mSink->DidBuildModel(0);
 
   return result;
 }
@@ -814,6 +817,7 @@ nsresult CRtfDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
       case eRTFToken_controlword:
         result=HandleControlWord(aToken); break;
 
+      case eRTFToken_content:
       case eToken_newline:
       case eHTMLTag_text:
         result=HandleContent(aToken); break;
@@ -835,7 +839,7 @@ nsresult CRtfDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
  * @param 
  * @return
  */
-nsITokenRecycler* CRtfDTD::GetTokenRecycler(void){
+nsTokenAllocator* CRtfDTD::GetTokenAllocator(void){
   return 0;
 }
 
@@ -946,7 +950,7 @@ CRTFContent::CRTFContent(PRUnichar* aKey) : CToken(nsAutoString(aKey)) {
  * @return  nsresult
  */
 PRInt32 CRTFContent::GetTokenType() {
-  return eHTMLTag_text;
+  return eRTFToken_content;
 }
 
 
@@ -1026,38 +1030,22 @@ nsRTFTokenizer::~nsRTFTokenizer() {
  * @param   
  * @return  nsresult
  */
-nsresult nsRTFTokenizer::WillTokenize(PRBool aIsFinalChunk) {
+nsresult nsRTFTokenizer::WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator) {
   nsresult result=NS_OK;
+  mTokenAllocator=aTokenAllocator;
   return result;
 }
 
 
-static CTokenRecycler* gTokenRecycler=0;
-
 /**
  *  
  * @update  gess 1/31/00
  * @param   
  * @return  nsresult
  */
-nsITokenRecycler* nsRTFTokenizer::GetTokenRecycler(void) {
+nsTokenAllocator* nsRTFTokenizer::GetTokenAllocator(void) {
     //let's move to this once we eliminate the leaking of tokens...
-  if(!gTokenRecycler)
-    gTokenRecycler=new CTokenRecycler();
-  return gTokenRecycler;
-}
-
-/**
- *  
- * @update  gess 1/31/00
- * @param   
- * @return  nsresult
- */
-void nsRTFTokenizer::FreeTokenRecycler(void) {
-  if(gTokenRecycler) {
-    delete gTokenRecycler;
-    gTokenRecycler=0;
-  }
+  return mTokenAllocator;
 }
 
 /**
@@ -1077,7 +1065,8 @@ nsresult nsRTFTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) 
       case '{':
         {
           eRTFTags theTag= ('{'==theChar) ? eRTFCtrl_startgroup : eRTFCtrl_endgroup;
-          CRTFControlWord* theToken=new CRTFControlWord(theTag);
+          CRTFControlWord* theToken=(CRTFControlWord*)mTokenAllocator->CreateRTFTokenOfType(eRTFToken_controlword,theTag);
+
           if(theToken) {
             mTokenDeque.Push(theToken);
           }
@@ -1086,7 +1075,7 @@ nsresult nsRTFTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) 
         break;
       case '\\':
         {
-          CRTFControlWord* theWord = new CRTFControlWord(eRTFCtrl_unknown);
+          CRTFControlWord* theWord =(CRTFControlWord*)mTokenAllocator->CreateRTFTokenOfType(eRTFToken_controlword,eRTFCtrl_unknown);
           if(theWord) {
             result=theWord->Consume(theChar,aScanner,0);
             if(NS_SUCCEEDED(result)) {
@@ -1098,7 +1087,7 @@ nsresult nsRTFTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) 
       case '\n':
       case '\r':
         {
-          CNewlineToken* theContent= new CNewlineToken();
+          CNewlineToken* theContent=(CNewlineToken*)mTokenAllocator->CreateTokenOfType(eToken_newline,eHTMLTag_newline);
           if(theContent) {
             result=theContent->Consume(theChar,aScanner,0);
             if(NS_SUCCEEDED(result)) {
@@ -1108,7 +1097,7 @@ nsresult nsRTFTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) 
         }
         break;
       default:
-        CRTFContent* theContent= new CRTFContent();
+        CRTFContent* theContent=(CRTFContent*)mTokenAllocator->CreateRTFTokenOfType(eRTFToken_content,(eRTFTags)0);
         if(theContent) {
           result=theContent->Consume(theChar,aScanner,0);
          if(NS_SUCCEEDED(result)) {
@@ -1154,7 +1143,6 @@ CToken* nsRTFTokenizer::PeekToken() {
 CToken* nsRTFTokenizer::PopToken() {
   CToken* result=nsnull;
   result=(CToken*)mTokenDeque.PopFront();
-  if(result) result->mUseCount=0;
   return result;
 }
 
@@ -1167,7 +1155,6 @@ CToken* nsRTFTokenizer::PopToken() {
  */
 CToken* nsRTFTokenizer::PushTokenFront(CToken* theToken) {
   mTokenDeque.PushFront(theToken);
-  theToken->mUseCount=1;
 	return theToken;
 }
 
@@ -1179,7 +1166,6 @@ CToken* nsRTFTokenizer::PushTokenFront(CToken* theToken) {
  */
 CToken* nsRTFTokenizer::PushToken(CToken* theToken) {
   mTokenDeque.Push(theToken);
-  theToken->mUseCount=1;
 	return theToken;
 }
 

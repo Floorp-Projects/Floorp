@@ -398,7 +398,7 @@ nsresult nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITok
 
     if(mTokenizer) {
 
-      mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+      mTokenAllocator=mTokenizer->GetTokenAllocator();
       result=mXIFContext->GetNodeRecycler(mNodeRecycler);
 
       if(NS_FAILED(result)) return result;
@@ -490,8 +490,6 @@ nsresult nsXIFDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     result=WillHandleToken(aToken,theType);
     
     if(result==NS_OK) {
-      
-      aToken->mUseCount=0;  //assume every token coming into this system needs recycling.
 
       switch(theType) {
         case eToken_text:
@@ -520,13 +518,10 @@ nsresult nsXIFDTD::HandleToken(CToken* aToken,nsIParser* aParser){
  */
 
 nsresult nsXIFDTD::DidHandleToken(CToken* aToken, nsresult aResult) {
-  NS_ASSERTION(mTokenRecycler!=nsnull,"We need a recycler");
+  NS_ASSERTION(mTokenAllocator!=nsnull,"We need a allocator");
   nsresult result=aResult;
   if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-    if(aToken) {
-      if(0>=aToken->mUseCount)
-        if(mTokenRecycler) mTokenRecycler->RecycleToken(aToken);
-    }
+     IF_FREE(aToken);
   }
   else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
     mDTDState=result;
@@ -614,7 +609,7 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
 
   //Begin by gathering up attributes...
   nsCParserNode* node=mNodeRecycler->CreateNode();
-  node->Init(aToken,mLineNumber,mTokenRecycler);
+  node->Init(aToken,mLineNumber,mTokenAllocator);
   
   PRInt16         attrCount=aToken->GetAttributeCount();
   nsresult        result=(0==attrCount) ? NS_OK : CollectAttributes(*node,attrCount);
@@ -655,7 +650,7 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
     }
   }
 
-  mNodeRecycler->RecycleNode(node,mTokenRecycler);
+  mNodeRecycler->RecycleNode(node);
   return result;
 }
 
@@ -720,7 +715,7 @@ nsresult nsXIFDTD::HandleContainer(nsIParserNode& aNode) {
       theTagID=nsHTMLTags::LookupTag(theTagName);
 
       theNode->mToken->Reinitialize(theTagID,theTagName);
-      theNode->Init(theNode->mToken,0,mTokenRecycler);
+      theNode->Init(theNode->mToken,0,mTokenAllocator);
     }
     mXIFContext->Push(&aNode);
   }
@@ -810,8 +805,8 @@ nsresult nsXIFDTD::HandleCommentToken(CToken* aToken, nsIParserNode& aNode) {
   eHTMLTokenTypes   type=(eHTMLTokenTypes)aToken->GetTokenType();
 
   if(type==eToken_start) {
-    nsITokenRecycler* recycler=(mTokenizer)? mTokenizer->GetTokenRecycler():nsnull;
-    if(recycler) {
+    nsTokenAllocator* allocator=(mTokenizer)? mTokenizer->GetTokenAllocator():nsnull;
+    if(allocator) {
       nsAutoString fragment;
       PRBool       done=PR_FALSE;
       PRBool       inContent=PR_FALSE;
@@ -838,7 +833,7 @@ nsresult nsXIFDTD::HandleCommentToken(CToken* aToken, nsIParserNode& aNode) {
         else {
           if(inContent) comment.Append(fragment);
         }
-        recycler->RecycleToken(token);
+        IF_FREE(token);
       }
     }
   }
@@ -866,7 +861,7 @@ nsresult nsXIFDTD::HandleAttributeToken(CToken* aToken,nsIParserNode& aNode) {
     PRBool hasValue=GetAttributePair(aNode,theKey,theValue);
 
     if(hasValue) {
-      CToken* attribute = mTokenRecycler->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,theValue);
+      CToken* attribute = mTokenAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,theValue);
       nsString& key=((CAttributeToken*)attribute)->GetKey();
       key=theKey; // set the new key on the attribute..
       thePeekNode->AddAttribute(attribute);
@@ -1067,7 +1062,7 @@ nsresult nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
     if(IsHTMLContainer(theTag) && theTag!=eHTMLTag_unknown) {
       result=mSink->CloseContainer(aNode); 
     }
-    mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
+    mNodeRecycler->RecycleNode(theNode);
   }
   return result;
 }
@@ -1140,13 +1135,13 @@ nsresult nsXIFDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
  * @param 
  * @return
  */
-nsITokenRecycler* nsXIFDTD::GetTokenRecycler(void){
+nsTokenAllocator* nsXIFDTD::GetTokenAllocator(void){
   nsITokenizer* theTokenizer=0;
   
   nsresult result=GetTokenizer(theTokenizer);
 
   if (NS_SUCCEEDED(result)) {
-    return theTokenizer->GetTokenRecycler();
+    return theTokenizer->GetTokenAllocator();
   }
   return 0;
 }
@@ -1349,7 +1344,7 @@ nsresult nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
           entity->Reinitialize(eHTMLTag_text,scratch); // Covert type to text and set the translated value.
         }
       }
-      ((nsCParserNode&)aNode).Init(entity,mLineNumber,mTokenRecycler);
+      ((nsCParserNode&)aNode).Init(entity,mLineNumber,mTokenAllocator);
     }
     result=mSink->AddLeaf(aNode);
   }

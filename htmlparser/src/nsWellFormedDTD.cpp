@@ -249,7 +249,7 @@ NS_IMETHODIMP CWellFormedDTD::BuildModel(nsIParser* aParser,nsITokenizer* aToken
   if(aTokenizer) {
     nsHTMLTokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=(nsHTMLTokenizer*)aTokenizer;
-    nsITokenRecycler* theRecycler=aTokenizer->GetTokenRecycler();
+    nsTokenAllocator* theAllocator=aTokenizer->GetTokenAllocator();
 
     while(NS_SUCCEEDED(result)){
       if(mDTDState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
@@ -257,7 +257,7 @@ NS_IMETHODIMP CWellFormedDTD::BuildModel(nsIParser* aParser,nsITokenizer* aToken
         if(theToken) {
           result=HandleToken(theToken,aParser);
           if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-            theRecycler->RecycleToken(theToken);
+            IF_FREE(theToken);
           }
           else {
             // if(NS_ERROR_HTMLPARSER_BLOCK!=result){
@@ -321,13 +321,13 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifyS
  * @param 
  * @return
  */
-nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
+nsTokenAllocator* CWellFormedDTD::GetTokenAllocator(void){
   nsITokenizer* theTokenizer=0;
   
   nsresult result=GetTokenizer(theTokenizer);
 
   if (NS_SUCCEEDED(result)) {
-    return theTokenizer->GetTokenRecycler();
+    return theTokenizer->GetTokenAllocator();
   }
   return 0;
 }
@@ -348,8 +348,8 @@ nsresult  CWellFormedDTD::Terminate(nsIParser* aParser)
   nsresult result=NS_OK;
    
   if(mTokenizer) {
-    nsITokenRecycler* theRecycler=mTokenizer->GetTokenRecycler();
-    if(theRecycler) {
+    nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
+    if(theAllocator) {
       eHTMLTokenTypes   theType=eToken_unknown;
   
       mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING;
@@ -361,7 +361,7 @@ nsresult  CWellFormedDTD::Terminate(nsIParser* aParser)
           if(theType==eToken_error) {
             result=HandleToken(theToken,aParser);
           }
-          theRecycler->RecycleToken(theToken);
+          IF_FREE(theToken);
         }
         else break;
       }//while
@@ -552,7 +552,7 @@ nsresult CWellFormedDTD::HandleLeafToken(CToken* aToken) {
 
   nsresult result=NS_OK;
   
-  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenAllocator());
   result= (mSink)? mSink->AddLeaf(theNode):NS_OK;
   return result;
 }
@@ -575,7 +575,7 @@ nsresult CWellFormedDTD::HandleCommentToken(CToken* aToken) {
   
   mLineNumber += (aToken->GetStringValueXXX()).CountChar(kNewLine);
   
-  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenAllocator());
   result=(mSink)? mSink->AddComment(theNode):NS_OK; 
 
   return result;
@@ -596,7 +596,7 @@ nsresult CWellFormedDTD::HandleProcessingInstructionToken(CToken* aToken) {
 
   nsresult result=NS_OK;
   
-  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenAllocator());
   result=(mSink)? mSink->AddProcessingInstruction(theNode):NS_OK; 
   return result;
 }
@@ -616,7 +616,7 @@ nsresult CWellFormedDTD::HandleStartToken(CToken* aToken) {
 
   nsresult result=NS_OK;
   
-  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenAllocator());
   PRInt16 attrCount=aToken->GetAttributeCount();
       
   if(0<attrCount){ //go collect the attributes...
@@ -667,7 +667,7 @@ nsresult CWellFormedDTD::HandleEndToken(CToken* aToken) {
 
   nsresult result=NS_OK;
   
-  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenAllocator());
   result=(mSink)? mSink->CloseContainer(theNode):NS_OK;    
   return result;
 }
@@ -689,7 +689,7 @@ nsresult CWellFormedDTD::HandleErrorToken(CToken* aToken) {
   nsresult result=NS_OK;
   
   if(mTokenizer) {
-    nsITokenRecycler* theRecycler=mTokenizer->GetTokenRecycler();
+    nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
 
     // Cycle through the remaining tokens in the token stream and handle them
     // These tokens were added so that content objects for the error message
@@ -715,7 +715,7 @@ nsresult CWellFormedDTD::HandleErrorToken(CToken* aToken) {
             // Do nothing
             break;
         }
-        if(theRecycler) theRecycler->RecycleToken(token);
+        IF_FREE(token);
       }
       else 
         break;
@@ -758,7 +758,7 @@ nsresult CWellFormedDTD::HandleDocTypeDeclToken(CToken* aToken) {
 
   nsresult result=NS_OK;
   
-  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenAllocator());
   result = (mSink)? mSink->AddDocTypeDecl(theNode, 0):NS_OK;
   return result;
 }

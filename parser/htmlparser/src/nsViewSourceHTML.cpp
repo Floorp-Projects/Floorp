@@ -75,8 +75,6 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID); 
 static int gErrorThreshold = 10;
 
-static CTokenRecycler* gTokenRecycler=0;
-
 //#define rickgdebug
 #ifdef rickgdebug
 #include <fstream.h>
@@ -228,6 +226,7 @@ CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   mTokenizer=0;
   mDocType=eHTML3Text;
   mValidator=0;
+  mHasOpenRoot=PR_FALSE;
 
   //set this to 1 if you want to see errors in your HTML markup.
   char* theEnvString = PR_GetEnv("MOZ_VALIDATE_HTML"); 
@@ -348,14 +347,6 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
     (*gDumpFile) << "<viewsource xmlns=\"viewsource\">" << endl;
   #endif
 
-    //now let's automatically open the root container...
-    CToken theToken("viewsource");
-    nsCParserNode theNode(&theToken,0);
-
-    CAttributeToken *theAttr=new CAttributeToken(NS_ConvertToString("xmlns"), NS_ConvertToString("http://www.mozilla.org/viewsource"));
-    if(theAttr)
-      theNode.AddAttribute(theAttr);
-    mSink->OpenContainer(theNode);
   }
 
 
@@ -385,25 +376,40 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
 
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
-    gTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
 
-    if(gTokenRecycler) {
-
-      while(NS_SUCCEEDED(result)){
-        CToken* theToken=mTokenizer->PopToken();
-        if(theToken) {
-          result=HandleToken(theToken,aParser);
-          if(NS_SUCCEEDED(result)) {
-            gTokenRecycler->RecycleToken(theToken);
-          }
-          else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
-            mTokenizer->PushTokenFront(theToken);
-          }
-          // theRootDTD->Verify(kEmptyString,aParser);
-        }
-        else break;
-      }//while
+    if(!mHasOpenRoot) {
+      //now let's automatically open the root container...
+      CToken theToken("viewsource");
+      nsCParserNode theNode(&theToken,0);
+     
+      CAttributeToken *theAttr=nsnull;
+      nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
+      if(theAllocator) {
+        theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString("http://www.mozilla.org/viewsource"));
+        nsString& theKey=theAttr->GetKey();
+        theKey=NS_ConvertToString("xmlns");
+      }
+      if(theAttr)
+        theNode.AddAttribute(theAttr);
+      result=mSink->OpenContainer(theNode);
+      if(NS_SUCCEEDED(result)) mHasOpenRoot=PR_TRUE;
     }
+
+    while(NS_SUCCEEDED(result)){
+      CToken* theToken=mTokenizer->PopToken();
+      if(theToken) {
+        result=HandleToken(theToken,aParser);
+        if(NS_SUCCEEDED(result)) {
+          IF_FREE(theToken);
+        }
+        else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
+          mTokenizer->PushTokenFront(theToken);
+        }
+        // theRootDTD->Verify(kEmptyString,aParser);
+      }
+      else break;
+    }//while
+   
     mTokenizer=oldTokenizer;
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
@@ -493,12 +499,12 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
  * @param 
  * @return
  */
-nsITokenRecycler* CViewSourceHTML::GetTokenRecycler(void){
+nsTokenAllocator* CViewSourceHTML::GetTokenAllocator(void){
   nsITokenizer* theTokenizer=0;
   nsresult result=GetTokenizer(theTokenizer);
 
   if (NS_SUCCEEDED(result)) {
-    return theTokenizer->GetTokenRecycler();
+    return theTokenizer->GetTokenAllocator();
   }
   return 0;
 }
@@ -989,7 +995,6 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
             result=theService->Notify(theTag,theContext.mTokenNode,theDocID, NS_ConvertToString(kViewSourceCommand), mParser);
           }
         }
-        theContext.mTokenNode.Init(0,0,gTokenRecycler);  //now recycle.
       }
       break;
 
@@ -1067,9 +1072,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       result=NS_OK;
   }//switch
 
-  while(theContext.mTokenNode.PopAttributeToken()){
-    //dump the attributes since they're on the stack...
-  }
+  theContext.mTokenNode.ReleaseAll(); 
 
   return result;
 }

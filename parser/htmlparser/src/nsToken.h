@@ -44,10 +44,10 @@
 #include <iostream.h>
 #include "nsError.h"
 #include "nsFileSpec.h"
+#include "nsFixedSizeAllocator.h"
 
 
 class nsScanner;
-
 
 /**
  *  Token objects represent sequences of characters as they
@@ -63,6 +63,35 @@ class CToken {
 
     enum  eTokenOrigin {eSource,eResidualStyle};
 
+    /**
+     * Use the arena to allocate memory
+     * @update	harishd 08/02/00
+     * @param   aSize   - Allocation size.
+     * @param   anArena - Used for allocating memory.
+     */
+    void* operator new(size_t aSize,nsFixedSizeAllocator& anArena);
+    
+    /**
+     * Free up the memory in the arena.
+     * @update	harishd 08/02/00
+     * @param   aPtr - Memory that's to be freed.
+     */
+    void  operator delete(void* aPtr,size_t aSize);
+
+    /**
+     * Make a note on number of times you have been referenced
+     * @update	harishd 08/02/00
+     */
+    void AddRef() { mUseCount++; }
+    
+    /**
+     * Free yourself if no one is holding you.
+     * @update	harishd 08/02/00
+     */
+    void Release() {
+      if(--mUseCount==0) 
+        delete this;
+    }
     /**
      * Default constructor
      * @update	gess7/21/98
@@ -214,13 +243,14 @@ class CToken {
     static int GetTokenCount();
 
     eTokenOrigin  mOrigin;
-    PRInt32       mUseCount;
     PRInt32       mNewlineCount;
 
 protected:
+
     PRInt32				mTypeID;
     PRInt16				mAttrCount;
     nsString      mTextValue;
+    PRInt32       mUseCount;
 };
 
 

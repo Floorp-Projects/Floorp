@@ -46,7 +46,7 @@
 #include "nsParserCIID.h"
 #include "nsDeque.h"
 
-class nsITokenRecycler;
+class nsTokenAllocator;
 
 class nsCParserNode :  public nsIParserNode {
   
@@ -59,7 +59,7 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess5/11/98
      * @param   aToken is the token this node "refers" to
      */
-    nsCParserNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsITokenRecycler* aRecycler=0);
+    nsCParserNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
 
     /**
      * Destructor
@@ -71,7 +71,7 @@ class nsCParserNode :  public nsIParserNode {
      * Init
      * @update	gess5/11/98
      */
-    virtual nsresult Init(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsITokenRecycler* aRecycler=0);
+    virtual nsresult Init(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
 
     /**
      * Retrieve the name of the node
@@ -196,6 +196,12 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual PRBool  GetGenericState(void) const {return mGenericState;}
     virtual void    SetGenericState(PRBool aState) {mGenericState=aState;}
+
+    /** Release all the objects you're holding
+     * @update	harishd 08/02/00
+     * @return  void
+     */
+    virtual nsresult ReleaseAll();
     
     PRInt32   mLineNumber;
     CToken*   mToken;
@@ -205,7 +211,7 @@ class nsCParserNode :  public nsIParserNode {
     PRBool    mGenericState;
     nsCOMPtr<nsIAtom> mIDAttributeAtom;
     
-    nsITokenRecycler* mRecycler;
+   nsTokenAllocator* mTokenAllocator;
 };
 
 #endif
