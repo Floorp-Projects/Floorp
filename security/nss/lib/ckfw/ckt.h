@@ -35,7 +35,7 @@
 #define CKT_H
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: ckt.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:13 $ $Name:  $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: ckt.h,v $ $Revision: 1.2 $ $Date: 2000/09/06 22:23:55 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -72,6 +72,7 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: ckt.h,v $ $Revision: 1.1 $ $Dat
 #define CKO_NETSCAPE_CRL                (CKO_NETSCAPE + 1)
 #define CKO_NETSCAPE_SMIME              (CKO_NETSCAPE + 2)
 #define CKO_NETSCAPE_TRUST              (CKO_NETSCAPE + 3)
+#define CKO_NETSCAPE_BUILTIN_ROOT_LIST  (CKO_NETSCAPE + 4)
 
 /*
  * Netscape-defined key types
@@ -127,6 +128,8 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: ckt.h,v $ $Revision: 1.1 $ $Dat
 #define CKA_TRUST_IPSEC_TUNNEL          (CKA_TRUST + 13)
 #define CKA_TRUST_IPSEC_USER            (CKA_TRUST + 14)
 #define CKA_TRUST_TIME_STAMPING         (CKA_TRUST + 15)
+#define CKA_CERT_SHA1_HASH	        (CKA_TRUST + 100)
+#define CKA_CERT_MD5_HASH		(CKA_TRUST + 101)
 
 /* Netscape trust stuff */
 /* XXX fgmr new ones here-- step-up, etc. */

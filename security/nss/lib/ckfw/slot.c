@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.2 $ $Date: 2000/04/20 03:14:29 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.3 $ $Date: 2000/09/06 22:23:57 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -387,11 +387,11 @@ nssCKFWSlot_GetSlotDescription
         goto done;
       }
     } else {
-      fwSlot->slotDescription = "";
+      fwSlot->slotDescription = (NSSUTF8 *) "";
     }
   }
 
-  (void)nssUTF8_CopyIntoFixedBuffer(fwSlot->slotDescription, slotDescription, 64, ' ');
+  (void)nssUTF8_CopyIntoFixedBuffer(fwSlot->slotDescription, (char *)slotDescription, 64, ' ');
   error = CKR_OK;
 
  done:
@@ -437,11 +437,11 @@ nssCKFWSlot_GetManufacturerID
         goto done;
       }
     } else {
-      fwSlot->manufacturerID = "";
+      fwSlot->manufacturerID = (NSSUTF8 *) "";
     }
   }
 
-  (void)nssUTF8_CopyIntoFixedBuffer(fwSlot->manufacturerID, manufacturerID, 32, ' ');
+  (void)nssUTF8_CopyIntoFixedBuffer(fwSlot->manufacturerID, (char *)manufacturerID, 32, ' ');
   error = CKR_OK;
 
  done:
