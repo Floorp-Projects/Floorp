@@ -130,7 +130,9 @@ CTagList  gLegendParents(1,0,eHTMLTag_fieldset);
 CTagList  gAreaParent(1,0,eHTMLTag_map);
 CTagList  gParamParents(2,0,eHTMLTag_applet,eHTMLTag_object);
 CTagList  gTRParents(4,0,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table);
-CTagList  gTREndParents(5,0,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_td);
+
+static eHTMLTags gTREndParentList[]={eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_td,eHTMLTag_th};
+CTagList  gTREndParents(sizeof(gTREndParentList)/sizeof(eHTMLTag_unknown),gTREndParentList);
 
 
 //*********************************************************************************************
@@ -1070,7 +1072,7 @@ nsHTMLElement gHTMLElements[] = {
     /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,
     /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
     /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       &gTDRootTags,0,eHTMLTag_unknown},
+    /*special parents,kids,skip*/       &gTDRootTags,&gBodyKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_thead,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
