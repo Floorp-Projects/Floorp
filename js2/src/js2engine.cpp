@@ -754,7 +754,7 @@ namespace MetaData {
         activationStackTop->retval = returnVal;
         activationStackTop++;
         bCon = new_bCon;
-        ASSERT(bCon->getMaxStack() <= (execStackLimit - sp));       // XXX realloc if insufficient
+        ASSERT((int32)bCon->getMaxStack() <= (execStackLimit - sp));       // XXX realloc if insufficient
         pc = new_bCon->getCodeStart();
         phase = execPhase;
 
