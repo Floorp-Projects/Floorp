@@ -45,12 +45,10 @@ Rights Reserved.
     <titledbutton value="Load Page" onclick="onLoadPage(event);"/>
 -->
     <spring flex="100%"/>
-    <titledbutton value="&lt; &backButton.label;" onclick="onBack(event);"/>
-    <titledbutton value="&nextButton.label; &gt;" onclick="onNext(event);"/>
+    <titledbutton class="dialog push" value="&lt; &backButton.label;" onclick="onBack(event);"/>
+    <titledbutton class="dialog push" value="&nextButton.label; &gt;" onclick="onNext(event);"/>
     <spring style="width: 10px"/>
-    <titledbutton value="&finishButton.label;" onclick="onFinish(event);"/>
-    <spring style="width: 10px"/>
-    <titledbutton value="&cancelButton.label;" onclick="onCancel(event);"/>
+    <titledbutton class="dialog push" value="&cancelButton.label;" onclick="onCancel(event);"/>
   </box>
 </box>
 </window>

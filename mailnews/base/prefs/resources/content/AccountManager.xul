@@ -64,11 +64,11 @@
 
 	</tree>
 </html:div>
-            <titledbutton value="&newAccountButton.label;" onclick="onNewAccount();" id="newAccountButton"/>
-            <titledbutton value="&setDefaultButton.label;" disabled="true" id="setDefaultButton"/>
+            <titledbutton class="dialog push" value="&newAccountButton.label;" onclick="onNewAccount();" id="newAccountButton"/>
+            <titledbutton class="dialog push" value="&setDefaultButton.label;" disabled="true" id="setDefaultButton"/>
             <box align="horizontal">
-              <titledbutton disabled="true" value="&duplicateButton.label;" id="duplicateButton" flex="50%"/>
-              <titledbutton disabled="true" value="&deleteButton.label;" id="deleteButton" flex="50%"/>
+              <titledbutton class="dialog push" disabled="true" value="&duplicateButton.label;" id="duplicateButton" flex="50%"/>
+              <titledbutton class="dialog push" disabled="true" value="&deleteButton.label;" id="deleteButton" flex="50%"/>
             </box>
 		</box>
         <box flex="75%">
