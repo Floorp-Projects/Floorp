@@ -73,7 +73,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 psm_RelEng_srvr_bld:
-	cd ../nss;
-	gmake nss_RelEng_bld
-	cd ../psm
+	cd ../nss; gmake nss_RelEng_bld
+	gmake
+
 
