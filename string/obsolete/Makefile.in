@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
+MODULE		= string
 LIBRARY_NAME	= string_obsolete_s
 
 REQUIRES	= unicharutil
