@@ -155,7 +155,7 @@ sub gcc_parser {
       };
     }
     $warnings{"$file:$line"}->{count}++;
-    push @{$warnings_per_file{$file}}, $line;
+    $warnings_per_file{$file}{$line}=1;
   }
 }
 
@@ -187,7 +187,7 @@ sub build_blame {
 
     my $revision = &parse_cvs_file($rcs_filename);
     @text = &extract_revision($revision);
-    for $line (@{$lines}) {
+    for $line (keys %{$lines}) {
       my $line_rev = $revision_map[$line-1];
       my $who = $revision_author{$line_rev};
       my $source_text = join '', @text[$line-4..$line+2];
