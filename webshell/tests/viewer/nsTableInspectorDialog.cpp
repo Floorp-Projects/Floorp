@@ -36,8 +36,8 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 //-----------------------------------------------------------------
 nsTableInspectorDialog::nsTableInspectorDialog(nsBrowserWindow * aBrowserWindow, nsIDOMDocument * aDoc) :
   nsBaseDialog(aBrowserWindow),
-  mDOMDoc(aDoc),
-  mOKBtn(nsnull)
+  mOKBtn(nsnull),
+  mDOMDoc(aDoc)
 {
 }
 

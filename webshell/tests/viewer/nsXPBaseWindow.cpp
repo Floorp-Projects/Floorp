@@ -790,7 +790,7 @@ class nsXPBaseWindowFactory : public nsIFactory
 {
 public:
   nsXPBaseWindowFactory();
-  ~nsXPBaseWindowFactory();
+  virtual ~nsXPBaseWindowFactory();
 
   // nsISupports methods
   NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);
