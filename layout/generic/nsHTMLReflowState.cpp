@@ -110,7 +110,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*      aPresContext,
   mLineLayout = nsnull;
   mFlags.mSpecialHeightReflow = PR_FALSE;
   mFlags.mIsTopOfPage = PR_FALSE;
-  mFlags.mUnused = 0;
+  mFlags.mNextInFlowUntouched = PR_FALSE;
   mPercentHeightObserver = nsnull;
   mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
@@ -142,7 +142,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*      aPresContext,
   mLineLayout = nsnull;
   mFlags.mSpecialHeightReflow = PR_FALSE;
   mFlags.mIsTopOfPage = PR_FALSE;
-  mFlags.mUnused = 0;
+  mFlags.mNextInFlowUntouched = PR_FALSE;
   mPercentHeightObserver = nsnull;
   mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
@@ -150,6 +150,13 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*      aPresContext,
   mFlags.mVisualBidiFormControl = IsBidiFormControl(aPresContext);
   mRightEdge = NS_UNCONSTRAINEDSIZE;
 #endif // IBMBIDI
+}
+
+static PRBool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent)
+{
+  nsIFrame* frameNext = aFrame->GetNextInFlow();
+  nsIFrame* parentNext = aParent->GetNextInFlow();
+  return frameNext && parentNext && frameNext->GetParent() == parentNext;
 }
 
 // Initialize a reflow state for a child frames reflow. Some state
@@ -184,6 +191,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
+  mFlags.mNextInFlowUntouched = aParentReflowState.mFlags.mNextInFlowUntouched &&
+    CheckNextInFlowParenthood(aFrame, aParentReflowState.frame);
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
                             aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
                            ? aParentReflowState.mPercentHeightObserver : nsnull;
@@ -229,6 +238,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
+  mFlags.mNextInFlowUntouched = aParentReflowState.mFlags.mNextInFlowUntouched &&
+    CheckNextInFlowParenthood(aFrame, aParentReflowState.frame);
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
                             aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
                            ? aParentReflowState.mPercentHeightObserver : nsnull;
@@ -274,6 +285,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
+  mFlags.mNextInFlowUntouched = aParentReflowState.mFlags.mNextInFlowUntouched &&
+    CheckNextInFlowParenthood(aFrame, aParentReflowState.frame);
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
                             aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
                            ? aParentReflowState.mPercentHeightObserver : nsnull;

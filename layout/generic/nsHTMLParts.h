@@ -177,6 +177,10 @@ inline nsresult
 NS_NewWBRFrame(nsIPresShell* aPresShell, nsIFrame** aResult) {
   return NS_NewEmptyFrame(aPresShell, aResult);
 }
+
+nsresult
+NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags );
+
 nsresult
 NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 nsresult
