@@ -286,6 +286,7 @@ NewBinary(JSContext *cx, JSTokenType tt,
         left->pn_type == TOK_NUMBER &&
         right->pn_type == TOK_NUMBER) {
         left->pn_dval += right->pn_dval;
+        left->pn_pos.end = right->pn_pos.end;
         RecycleTree(right, tc);
         return left;
     }
