@@ -235,7 +235,9 @@ sub print_table_body {
 
 sub print_bloat_delta {
   my ($value, $compare) = @_;
-  my $units = 'b';
+  my $units = ' ';
+  $value = $value || 0;
+  $compare = $compare || 0;
 
   if ($value >= 1000000) {
     $value = int($value / 1000000);
