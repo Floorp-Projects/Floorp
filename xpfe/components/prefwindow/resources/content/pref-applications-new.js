@@ -65,6 +65,11 @@ function chooseApp()
 var gDS = null;
 function onOK()
 {
+  // Make sure all fields are filled in OK.
+  if ( !checkInput() ) {
+    return false;
+  }
+
   const mimeTypes = "UMimTyp";
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService();
   if (fileLocator)
