@@ -3371,7 +3371,7 @@ nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
       variants = plugins->mVariants;
 
       for (cnt = 0; cnt < variants; cnt++)
-        if (plugins->mMimeTypeArray[cnt] && (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType)))
+        if (plugins->mMimeTypeArray[cnt] && (0 == PL_strcasecmp(plugins->mMimeTypeArray[cnt], aMimeType)))
           return NS_OK;
 
       if (cnt < variants)
@@ -3394,12 +3394,12 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
   const char *pComma = strchr(pExt, ',');
 
   if(pComma == nsnull)
-    return strcmp(pExt, aExtension);
+    return PL_strcasecmp(pExt, aExtension);
 
   while(pComma != nsnull)
   {
     int length = pComma - pExt;
-    if(0 == strncmp(pExt, aExtension, length))
+    if(0 == PL_strncasecmp(pExt, aExtension, length))
       return 0;
 
     pComma++;
@@ -3408,7 +3408,7 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
   }
 
   // the last one
-  return strcmp(pExt, aExtension);
+  return PL_strcasecmp(pExt, aExtension);
 }
 
 NS_IMETHODIMP
@@ -3614,7 +3614,7 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
       variants = plugins->mVariants;
       
       for (cnt = 0; cnt < variants; cnt++) {
-        if (plugins->mMimeTypeArray[cnt] && (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))) {
+        if (plugins->mMimeTypeArray[cnt] && (0 == PL_strcasecmp(plugins->mMimeTypeArray[cnt], aMimeType))) {
           aPlugin = plugins;
           return NS_OK;
         }
