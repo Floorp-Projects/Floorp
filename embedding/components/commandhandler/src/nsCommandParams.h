@@ -76,20 +76,17 @@ protected:
       PRBool                  mBoolean;
       PRInt32                 mLong;
       double                  mDouble;
+      nsString*               mString;
+      nsCString*              mCString;
     } mData;
-
-    // put these outside the union to avoid clobbering other fields
-    nsString*               mString;
-    nsCString*              mCString;
 
     nsCOMPtr<nsISupports>   mISupports;    
     
     HashEntry(PRUint8 inType, const char * inEntryName)
     : mEntryType(inType)
     , mEntryName(inEntryName)
-    , mString(nsnull)
     {
-      mData.mDouble = 0.0;
+      memset(&mData, 0, sizeof(mData));
       Reset(mEntryType);
     }
 
@@ -103,12 +100,12 @@ protected:
         case eLongType:         mData.mLong    = inRHS.mData.mLong;     break;
         case eDoubleType:       mData.mDouble  = inRHS.mData.mDouble;   break;
         case eWStringType:
-          NS_ASSERTION(inRHS.mString, "Source entry has no string");
-          mString = new nsString(*inRHS.mString);
+          NS_ASSERTION(inRHS.mData.mString, "Source entry has no string");
+          mData.mString = new nsString(*inRHS.mData.mString);
           break;      
         case eStringType:
-          NS_ASSERTION(inRHS.mCString, "Source entry has no string");
-          mCString = new nsCString(*inRHS.mCString);
+          NS_ASSERTION(inRHS.mData.mCString, "Source entry has no string");
+          mData.mCString = new nsCString(*inRHS.mData.mCString);
           break;      
         case eISupportsType:
           mISupports = inRHS.mISupports.get();    // additional addref
@@ -121,9 +118,9 @@ protected:
     ~HashEntry()
     {
       if (mEntryType == eWStringType)
-        delete mString;
+        delete mData.mString;
       else if (mEntryType == eStringType)
-        delete mCString;
+        delete mData.mCString;
     }
     
     void Reset(PRUint8 inNewType)
@@ -134,9 +131,9 @@ protected:
         case eBooleanType:      mData.mBoolean = PR_FALSE;  break;
         case eLongType:         mData.mLong = 0;            break;
         case eDoubleType:       mData.mDouble = 0.0;        break;
-        case eWStringType:      delete mString; mString = nsnull;     break;
+        case eWStringType:      delete mData.mString; mData.mString = nsnull;     break;
         case eISupportsType:    mISupports = nsnull;        break;    // clear the nsCOMPtr
-        case eStringType:       delete mCString; mCString = nsnull;   break;
+        case eStringType:       delete mData.mCString; mData.mCString = nsnull;   break;
         default:
           NS_ASSERTION(0, "Unknown type");
       }
