@@ -214,7 +214,7 @@ public:
     nsString      m_outputFormat;
     nsString      m_msgBuffer;
 
-    nsString      m_contentType;    // used only when saving attachment
+    nsCString     m_contentType;    // used only when saving attachment
 };
 
 class nsSaveAllAttachmentsState
@@ -559,7 +559,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   }
   NS_ADDREF(aListener);
 
-  aListener->m_contentType.AssignWithConversion(contentType);
+  aListener->m_contentType = contentType;
   if (saveState)
       aListener->m_saveAllAttachmentsState = saveState;
 
@@ -589,13 +589,29 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
         messageUri = fullMessageUri.get();
       }
 
-      nsCOMPtr<nsISupports> consumer;
-      aListener->QueryInterface(NS_GET_IID(nsISupports),
-                                 getter_AddRefs(consumer));
+      nsCOMPtr<nsIStreamListener> convertedListener;
+      aListener->QueryInterface(NS_GET_IID(nsIStreamListener),
+                                 getter_AddRefs(convertedListener));
+#ifndef XP_MAC
+      // if the content type is bin hex we are going to do a hokey hack and make sure we decode the bin hex 
+      // when saving an attachment to disk..
+      if (contentType && !nsCRT::strcasecmp(APPLICATION_BINHEX, contentType))
+      {
+        nsCOMPtr<nsIStreamListener> listener (do_QueryInterface(convertedListener));
+        nsCOMPtr<nsIStreamConverterService> streamConverterService = do_GetService(kIStreamConverterServiceCID, &rv);
+        nsCOMPtr<nsISupports> channelSupport = do_QueryInterface(aListener->m_channel);
+          
+        rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(APPLICATION_BINHEX).GetUnicode(),
+                                                      NS_LITERAL_STRING("*/*").get(), 
+                                                      listener,
+                                                      channelSupport,
+                                                      getter_AddRefs(convertedListener));
+      }
+#endif
       if (fetchService)
-        rv = fetchService->FetchMimePart(aURL, messageUri, consumer, mMsgWindow, nsnull,nsnull);
+        rv = fetchService->FetchMimePart(aURL, messageUri, convertedListener, mMsgWindow, nsnull,nsnull);
       else
-        rv = messageService->DisplayMessage(messageUri, consumer, mMsgWindow,nsnull, nsnull, nsnull); 
+        rv = messageService->DisplayMessage(messageUri, convertedListener, mMsgWindow,nsnull, nsnull, nsnull); 
 
       if (messageService)
        ReleaseMessageServiceFromURI(unescapedUrl, messageService);
@@ -1583,10 +1599,9 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
     
 #ifdef XP_MAC
   /* On Mac, if we are saving an appledouble or applesingle attachment, we need to use an Apple File Decoder */
-  char * contentType = m_contentType.ToNewCString();
-  if (contentType && *contentType)
-    if ((nsCRT::strcasecmp(contentType, APPLICATION_APPLEFILE) == 0) ||
-        (nsCRT::strcasecmp(contentType, MULTIPART_APPLEDOUBLE) == 0))
+  if (!m_contentType.IsEmpty())
+    if ((nsCRT::strcasecmp(m_contentType.get(), APPLICATION_APPLEFILE) == 0) ||
+        (nsCRT::strcasecmp(m_contentType.get(), MULTIPART_APPLEDOUBLE) == 0))
     {        
       /* ggrrrrr, I have a nsFileSpec but I need a nsILocalFile... */
       nsCOMPtr<nsILocalFile> outputFile;
@@ -1602,7 +1617,6 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
           m_outputStream = do_QueryInterface(appleFileDecoder, &rv);
       }
     }
-  CRTFREEIF(contentType);
 #endif
 
     return rv;
