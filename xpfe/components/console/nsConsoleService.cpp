@@ -24,7 +24,11 @@
  * listeners when new messages are logged.
  */
 
+/* Threadsafe. */
+
 #include "nsIAllocator.h"
+#include "nsIServiceManager.h"
+#include "nsProxyObjectManager.h"
 
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
@@ -32,28 +36,29 @@
 NS_IMPL_THREADSAFE_ISUPPORTS(nsConsoleService, NS_GET_IID(nsIConsoleService));
 
 nsConsoleService::nsConsoleService()
+    : mCurrent(0), mFull(PR_FALSE), mListening(PR_FALSE), mLock(nsnull)
 {
-    mCurrent = 0;
-    mFull = PR_FALSE;
+    NS_INIT_REFCNT();
  
     // XXX grab this from a pref!
     // hm, but worry about circularity, bc we want to be able to report
     // prefs errs...
     mBufferSize = 250;
 
-    // Any reasonable way to deal with failure of the below two?
+    // XXX deal with below three by detecting null mLock in factory?
     nsresult rv;
     rv = nsSupportsArray::Create(NULL, NS_GET_IID(nsISupportsArray),
                                  (void**)&mListeners);
     mMessages = (nsIConsoleMessage **)
         nsAllocator::Alloc(mBufferSize * sizeof(nsIConsoleMessage *));
 
+    mLock = PR_NewLock();
+
     // Array elements should be 0 initially for circular buffer algorithm.
     for (PRUint32 i = 0; i < mBufferSize; i++) {
         mMessages[i] = nsnull;
     }
 
-    NS_INIT_REFCNT();
 }
 
 nsConsoleService::~nsConsoleService()
@@ -63,7 +68,24 @@ nsConsoleService::~nsConsoleService()
         NS_RELEASE(mMessages[i]);
         i++;
     }
+
+#ifdef DEBUG_mccabe
+    {
+        PRUint32 listenerCount;
+        nsresult rv;
+        rv = mListeners->Count(&listenerCount);
+        if (listenerCount != 0) {
+            fprintf(stderr, 
+                "WARNING - %d console error listeners still registered!\n"
+                "More calls to nsIConsoleService::UnregisterListener needed.\n",
+                listenerCount);
+        }
+    }
+#endif
+
     nsAllocator::Free(mMessages);
+    if (mLock)
+        PR_DestroyLock(mLock);
 }
 
 // nsIConsoleService methods
@@ -71,43 +93,81 @@ NS_IMETHODIMP
 nsConsoleService::LogMessage(nsIConsoleMessage *message)
 {
     if (message == nsnull)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_INVALID_ARG;
 
-    // If there's already a message in the slot we're about to replace,
-    // we've wrapped around, and we need to release the old message before
-    // overwriting it.
-    if (mMessages[mCurrent] != nsnull)
-        NS_RELEASE(mMessages[mCurrent]);
+    nsSupportsArray listenersSnapshot;
+    nsIConsoleMessage *retiredMessage;
 
-    NS_ADDREF(message);
-    mMessages[mCurrent++] = message;
-    if (mCurrent == mBufferSize) {
-        mCurrent = 0;
-        mFull = PR_TRUE;
+    NS_ADDREF(message); // early, in case it's same as replaced below.
+
+    /*
+     * Lock while updating buffer, and while taking snapshot of
+     * listeners array.
+     */
+    {
+        nsAutoLock lock(mLock);
+
+        /*
+         * If there's already a message in the slot we're about to replace,
+         * we've wrapped around, and we need to release the old message.  We
+         * save a pointer to it, so we can release below outside the lock.
+         */
+        retiredMessage = mMessages[mCurrent];
+        
+        mMessages[mCurrent++] = message;
+        if (mCurrent == mBufferSize) {
+            mCurrent = 0; // wrap around.
+            mFull = PR_TRUE;
+        }
+
+        listenersSnapshot.AppendElements(mListeners);
     }
-    
-    // Iterate through any registered listeners and tell them about the message.
-    nsIConsoleListener *listener;
+    if (retiredMessage != nsnull)
+        NS_RELEASE(retiredMessage);
+
+    /*
+     * Iterate through any registered listeners and tell them about
+     * the message.  We use the mListening flag to guard against
+     * recursive message logs.  This could sometimes result in
+     * listeners being skipped because of activity on other threads,
+     * when we only care about the recursive case.
+     */
+    nsCOMPtr<nsIConsoleListener> listener;
     nsresult rv;
-    PRUint32 listenerCount;
-    rv = mListeners->Count(&listenerCount);
+    nsresult returned_rv;
+    PRUint32 snapshotCount;
+    rv = listenersSnapshot.Count(&snapshotCount);
     if (NS_FAILED(rv))
         return rv;
 
-    for (PRUint32 i = 0; i < listenerCount; i++) {
-        rv = mListeners->GetElementAt(i, (nsISupports **)&listener);
-        if (NS_FAILED(rv))
-            return rv;
-        listener->Observe(message);
-        NS_RELEASE(listener);
+    {
+        nsAutoLock lock(mLock);
+        if (mListening)
+            return NS_OK;
+        mListening = PR_TRUE;
     }
-    return NS_OK;
+
+    returned_rv = NS_OK;
+    for (PRUint32 i = 0; i < snapshotCount; i++) {
+        rv = listenersSnapshot.GetElementAt(i, getter_AddRefs(listener));
+        if (NS_FAILED(rv)) {
+            returned_rv = rv;
+            break; // fall thru to mListening restore code below.
+        }
+        listener->Observe(message);
+    }
+    
+    {
+        nsAutoLock lock(mLock);
+        mListening = PR_FALSE;
+    }
+
+    return returned_rv;
 }
 
 NS_IMETHODIMP
 nsConsoleService::LogStringMessage(const PRUnichar *message)
 {
-    // LogMessage adds a ref to this, and eventual release does delete.
     nsConsoleMessage *msg = new nsConsoleMessage(message);
     return this->LogMessage(msg);
 }
@@ -117,13 +177,18 @@ nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, PRUint32 *count
 {
     nsIConsoleMessage **messageArray;
 
+    /*
+     * Lock the whole method, as we don't want anyone mucking with mCurrent or
+     * mFull while we're copying out the buffer.
+     */
+    nsAutoLock lock(mLock);
+
     if (mCurrent == 0 && !mFull) {
-        // Make a 1-length output array so that nobody gets confused,
-        // and return 0 count.
-        // Hopefully this will (XXX test me) result in a 0-length
-        // array object on the script end.
-        
-        // XXX if it works, remove the try/catch in console.js.
+        /*
+         * Make a 1-length output array so that nobody gets confused,
+         * and return a count of 0.  This should result in a 0-length
+         * array object when called from script.
+         */
         messageArray = (nsIConsoleMessage **)
             nsAllocator::Alloc(sizeof (nsIConsoleMessage *));
         *messageArray = nsnull;
@@ -138,14 +203,6 @@ nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, PRUint32 *count
         (nsIConsoleMessage **)nsAllocator::Alloc((sizeof (nsIConsoleMessage *))
                                                  * resultSize);
 
-    
-    // XXX jband sez malloc array with 1 member and return 0 count;
-    // might not work; if not, bug jband.
-    // could also return null if I want to do such.
-    // open question about interface contract here.
-    //
-    // jband sez: should guard against both b/c the interface doesn't specify
-    // which.  And add my convention to /** */ in the interface.
     if (messageArray == nsnull) {
         *messages = nsnull;
         *count = 0;
@@ -174,16 +231,51 @@ nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, PRUint32 *count
 
 NS_IMETHODIMP
 nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
-    // ignore rv for now, as a comment says it returns prbool instead of
-    // nsresult.
+    nsresult rv;
 
-    // Any need to check for multiply registered listeners?
-    mListeners->AppendElement(listener);
+    /*
+     * Store a threadsafe proxy to the listener rather than the
+     * listener itself; we want the console service to be callable
+     * from any thread, but listeners can be implemented in
+     * thread-specific ways, and we always want to call them on their
+     * originating thread.  JavaScript is the motivating example.
+     */
+    nsCOMPtr<nsIProxyObjectManager> proxyManager =
+        (do_GetService(NS_XPCOMPROXY_PROGID));
+
+    if (proxyManager == nsnull)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<nsIConsoleListener> proxiedListener;
+
+    /*
+     * NOTE this will fail if the calling thread doesn't have an eventQ.
+     *
+     * Would it be better to catch that case and leave the listener unproxied?
+     */
+    rv = proxyManager->GetProxyObject(NS_CURRENT_EVENTQ,
+                                      NS_GET_IID(nsIConsoleListener),
+                                      listener,
+                                      PROXY_ASYNC | PROXY_ALWAYS,
+                                      getter_AddRefs(proxiedListener));
+    if (NS_FAILED(rv))
+        return rv;
+
+    {
+        nsAutoLock lock(mLock);
+        
+        // ignore rv for now, as a comment says it returns prbool instead of
+        // nsresult.
+        // Any need to check for multiply registered listeners?
+        mListeners->AppendElement(proxiedListener);
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsConsoleService::UnregisterListener(nsIConsoleListener *listener) {
+    nsAutoLock lock(mLock);
+
     // ignore rv for now, as a comment says it returns prbool instead of
     // nsresult.
 
