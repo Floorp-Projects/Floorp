@@ -38,27 +38,6 @@
   <p>
   Wrapper class for various parsing routines, that convert plain text to HTML.
   They try to recognize cites, URLs, plain text formattting like *bold* etc.
-  <p>
-  Use the nsString versions of these functions in the mozTXTToHTMLConv
-  implementation when calling from C++.
-  <p>
-  There're a lot of protected virtual functions in the mozTXTToHTMLConv
-  implementation, that might be helpful, too. Add wrappers for them to this or
-  any other interface, if you need them. It's easier to add a function than to
-  remove it, so I don't add them now. Here's the list:
-
-  nsAutoString EscapeChar(const PRUnichar ch)
-  nsAutoString EscapeStr(const nsAutoString& aString)
-  nsAutoString UnescapeStr(const nsAutoString& aString)
-  nsAutoString CompleteAbbreviatedURL(const nsAutoString& text, PRUint32 pos)
-  PRBool FindURL(const nsAutoString& text, PRUint32 pos,
-       PRUint32 whathasbeendone, nsAutoString& outputHTML,
-       PRInt32& replaceBefore, PRInt32& replaceAfter)
-  nsAutoString Right(const nsAutoString& text, PRUint32 start)
-  PRBool ItMatchesDelimited(const nsAutoString& text, const nsAutoString& rep,
-       LIMTYPE before, LIMTYPE after)
-  PRUint32 NumberOfMatches(const nsAutoString& text, const nsAutoString& rep,
-       LIMTYPE before, LIMTYPE after)
  */
 
 #include "nsIStreamConverter.idl"
@@ -89,7 +68,7 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
 
 /*
   Adds additional formatting to user edited text, that the user was too lazy
-  "unknowledged" (DELETEME: is that a word?) to make.
+  or "unknowledged" (DELETEME: is that a word?) to make.
   <p>
   <em>Note:</em> Don't use kGlyphSubstitution with this function. This option
   generates tags, that are unuseable for UAs other than Mozilla. This would

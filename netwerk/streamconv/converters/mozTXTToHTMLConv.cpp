@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * 
  * The "License" shall be the Mozilla Public License Version 1.1, except
  * Sections 6.2 and 11, but with the addition of the below defined Section 14.
@@ -36,6 +36,18 @@
 #include "mozTXTToHTMLConv.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
+
+static nsAutoString
+Right(const nsAutoString& text, PRUint32 start)
+{
+  MOZ_TIMER_START(mRightTimer);
+
+  nsAutoString result;
+  text.Right(result, text.Length() - start);
+
+  MOZ_TIMER_STOP(mRightTimer);
+  return result;
+}
 
 nsAutoString
 mozTXTToHTMLConv::EscapeChar(const PRUnichar ch)
@@ -186,16 +198,21 @@ mozTXTToHTMLConv::FindURLStart(const nsAutoString& text, const PRUint32 pos,
     PRInt32 i = pos + 1;
     for (; i >= 0
              && text[PRUint32(i)] != '>' && text[PRUint32(i)] != '<'
-             && text[PRUint32(i)] != '"' && text[PRUint32(i)] != '\\'
-             && text[PRUint32(i)] != '`' && text[PRUint32(i)] != '}'
-             && text[PRUint32(i)] != ']' && text[PRUint32(i)] != ')'
-             && text[PRUint32(i)] != '|'
+             && text[PRUint32(i)] != '"' && text[PRUint32(i)] != '\''
+             && text[PRUint32(i)] != '`' && text[PRUint32(i)] != ','
+             && text[PRUint32(i)] != '{' && text[PRUint32(i)] != '['
+             && text[PRUint32(i)] != '(' && text[PRUint32(i)] != '|'
+             && text[PRUint32(i)] != '\\'
              && !nsString::IsSpace(text[PRUint32(i)])
          ; i--)
       ;
-    if (PRUint32(++i) != pos)
+    if
+      (
+        nsString::IsAlpha(text[PRUint32(++i)]) ||
+        nsString::IsDigit(text[PRUint32(i)])
+      )
     {
-      start = i;
+      start = PRUint32(i);
       return PR_TRUE;
     }
     else
@@ -238,9 +255,9 @@ mozTXTToHTMLConv::FindURLEnd(const nsAutoString& text, const PRUint32 pos,
     for (; PRInt32(i) < text.Length()
              && text[i] != '>' && text[i] != '<'
              && text[i] != '"' && text[i] != '\''
-             && text[i] != '`' && text[i] != '}'
-             && text[i] != ']' && text[i] != ')'
-             && text[i] != '|'
+             && text[i] != '`' && text[i] != ','
+             && text[i] != '}' && text[i] != ']'
+             && text[i] != ')' && text[i] != '|'
              && !nsString::IsSpace(text[i])
          ; i++)
       ;
@@ -303,7 +320,7 @@ mozTXTToHTMLConv::CalculateURLBoundaries(const nsAutoString& text,
   nsAutoString temp;
   text.Mid(temp, descstart, pos - descstart);
   replaceBefore = ScanTXT(temp, ~kURLs /*prevents loop*/
-    & whathasbeendone).Length();
+       & whathasbeendone).Length();
 
   return;
 }
@@ -425,18 +442,6 @@ mozTXTToHTMLConv::FindURL(const nsAutoString& text, const PRUint32 pos,
   return state[check] == success;
 }
 
-nsAutoString
-mozTXTToHTMLConv::Right(const nsAutoString& text, PRUint32 start)
-{
-  MOZ_TIMER_START(mRightTimer);
-
-  nsAutoString result;
-  text.Right(result, text.Length() - start);
-
-  MOZ_TIMER_STOP(mRightTimer);
-  return result;
-}
-
 PRBool
 mozTXTToHTMLConv::ItMatchesDelimited(const nsAutoString& text,
     const char* rep, LIMTYPE before, LIMTYPE after)
@@ -481,9 +486,7 @@ mozTXTToHTMLConv::ItMatchesDelimited(const nsAutoString& text,
           text[afterPos] == *rep
         ) ||
       !(before == LT_IGNORE ? text : Right(text, 1)).Equals(rep,
-           PR_TRUE, repLen) //  XXX bug #21071 
-/*      !Equals((before == LT_IGNORE ? text : Right(text, 1)), rep,
-           PR_TRUE, rep.Length())*/
+           PR_TRUE, repLen)
     )
     return PR_FALSE;
 
@@ -606,75 +609,80 @@ mozTXTToHTMLConv::GlyphHit(const nsAutoString& text, PRBool col0,
 
   if
     (
-      ((col0 ? text.First() : text[1]) == ':' ||  // Performance increase
-       (col0 ? text.First() : text[1]) == ';' )
+      (  // Performance increase
+        (col0 ? text.First() : text[1]) == ':' ||
+        (col0 ? text.First() : text[1]) == ';'
+      )
 	&&
         (
-          SmilyHit(text, col0, ":-)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, col0, ":)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, col0, ":-(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, col0, ":(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, col0, ";-)", "<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, col0, ";-P", "<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(text, col0, ":-)", "<img SRC=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ":)", "<img SRC=\"chrome://messenger/skin/smile.gif\" alt=\":)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ":-(", "<img SRC=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ":(", "<img SRC=\"chrome://messenger/skin/frown.gif\" alt=\":(\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ";-)", "<img SRC=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ";-P", "<img SRC=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
         )
     )
   {
     MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
-  else if   // XXX Hotfix
+  if   // XXX Hotfix
+    (
+      col0    // Performance increase
+        &&
         (
-          !col0    // Performance increase
-            &&
-            (
-	            text[1] == ':' ||
-	            text[1] == ';'
-            )
-	    &&
-    	(
-          SmilyHit(text, PR_FALSE, ":-)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, PR_FALSE, ":)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, PR_FALSE, ":-(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, PR_FALSE, ":(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, PR_FALSE, ";-)", "<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(text, PR_FALSE, ";-P", "<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
-	    )
+          text[1] == ':' ||
+	  text[1] == ';'
+        )
+        &&
+        (
+          SmilyHit(text, PR_FALSE, ":-)", "<img SRC=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ":)", "<img SRC=\"chrome://messenger/skin/smile.gif\" alt=\":)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ":-(", "<img SRC=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ":(", "<img SRC=\"chrome://messenger/skin/frown.gif\" alt=\":(\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ";-)", "<img SRC=\"chrome://messenger/skin/wink.gif\" alt=\";-P\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ";-P", "<img SRC=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+        )
     )
   {
     MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
-  else if (ItMatchesDelimited(text, "(c)", LT_IGNORE, LT_DELIMITER))
-       // Note: ItMatchesDelimited compares case-insensitive
+  if (text.First() == '(')
   {
-    outputHTML = "&copy;";
-    glyphTextLen = 3;
-    MOZ_TIMER_STOP(mGlyphHitTimer);
-    return PR_TRUE;
+    if (ItMatchesDelimited(text, "(c)", LT_IGNORE, LT_DELIMITER))
+         // Note: ItMatchesDelimited compares case-insensitive
+    {
+      outputHTML = "&copy;";
+      glyphTextLen = 3;
+      MOZ_TIMER_STOP(mGlyphHitTimer);
+      return PR_TRUE;
+    }
+    if (ItMatchesDelimited(text, "(r)", LT_IGNORE, LT_DELIMITER))
+         // see above
+    {
+      outputHTML = "&reg;";
+      glyphTextLen = 3;
+      MOZ_TIMER_STOP(mGlyphHitTimer);
+      return PR_TRUE;
+    }
   }
-  else if (ItMatchesDelimited(text, "(r)", LT_IGNORE, LT_DELIMITER))
-       // see above
-  {
-    outputHTML = "&reg;";
-    glyphTextLen = 3;
-    MOZ_TIMER_STOP(mGlyphHitTimer);
-    return PR_TRUE;
-  }
-  else if (ItMatchesDelimited(text, " +/-", LT_IGNORE, LT_IGNORE))
+  if (ItMatchesDelimited(text, " +/-", LT_IGNORE, LT_IGNORE))
   {
     outputHTML = " &plusmn;";
     glyphTextLen = 4;
     MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
-  else if (col0 && ItMatchesDelimited(text, "+/-", LT_IGNORE, LT_IGNORE))
+  if (col0 && ItMatchesDelimited(text, "+/-", LT_IGNORE, LT_IGNORE))
   {
     outputHTML = "&plusmn;";
     glyphTextLen = 3;
     MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
-  else if    // x^2 -> sup
+  if    // x^2 -> sup
     (
       text[1] == '^' // Performance increase
         &&
@@ -849,24 +857,36 @@ printf(text.ToNewCString());
       switch (text[i]) // Performance increase
       {
       case '*':
-      case '_':
-      case '/':
-      case '|':
-        if
-	  (
-            StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
+        if (StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
                  "*", "strong", "class=txt_star",
-                 HTMLnsStr, structPhrase_strong) ||
-            StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
+                 HTMLnsStr, structPhrase_strong))
+        {
+          result += HTMLnsStr;
+          i++;
+          continue;
+        }
+      case '_':
+        if (StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
                  "_", "em" /* <u> is deprecated */, "class=txt_underscore",
-                 HTMLnsStr, structPhrase_underline) ||
-            StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
+                 HTMLnsStr, structPhrase_underline))
+        {
+          result += HTMLnsStr;
+          i++;
+          continue;
+        }
+      case '/':
+        if (StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
                  "/", "em", "class=txt_slash",
-                 HTMLnsStr, structPhrase_italic) ||
-            StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
+                 HTMLnsStr, structPhrase_italic))
+        {
+          result += HTMLnsStr;
+          i++;
+          continue;
+        }
+      case '|':
+        if (StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
                  "|", "code", "class=txt_verticalline",
-                 HTMLnsStr, structPhrase_code)
-	  )
+                 HTMLnsStr, structPhrase_code))
         {
           result += HTMLnsStr;
           i++;
@@ -1047,7 +1067,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar *text, PRUint32 whattodo,
   if (!_retval || !text)
     return NS_ERROR_NULL_POINTER;
   *_retval = ScanTXT(text, whattodo).ToNewUnicode();
-  return _retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -1057,7 +1077,7 @@ mozTXTToHTMLConv::ScanHTML(const PRUnichar *text, PRUint32 whattodo,
   if (!_retval || !text)
     return NS_ERROR_NULL_POINTER;
   *_retval = ScanHTML(text, whattodo).ToNewUnicode();
-  return _retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 

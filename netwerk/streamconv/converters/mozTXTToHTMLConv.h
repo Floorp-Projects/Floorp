@@ -49,7 +49,10 @@ static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 class mozTXTToHTMLConv : public mozITXTToHTMLConv
 {
 
+
+//////////////////////////////////////////////////////////
 public:
+//////////////////////////////////////////////////////////
 
   mozTXTToHTMLConv();
   virtual ~mozTXTToHTMLConv();
@@ -84,16 +87,29 @@ public:
   MOZ_TIMER_DECLARE(mRightTimer)
   MOZ_TIMER_DECLARE(mTotalMimeTime)
 
-///////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////
 protected:
-///////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 /**
-  @param text (in): the source string
-  @param start (in): offset of text specifying the start of the new object
-  @return a new (local) object containing the substring
-*/
-  nsAutoString Right(const nsAutoString& text, PRUint32 start);
+  Completes<ul>
+  <li>Case 1: mailto: "mozilla@bucksch.org" -> "mailto:mozilla@bucksch.org"
+  <li>Case 2: http:   "www.mozilla.org"     -> "http://www.mozilla.org"
+  <li>Case 3: ftp:    "ftp.mozilla.org"     -> "ftp://www.mozilla.org"
+  </ul>
+  It does no check, if the resulting URL is valid.
+  @param text (in): abbreviated URL
+  @param pos (in): position of "@" (case 1) or first "." (case 2 and 3)
+  @return Completed URL at success and empty string at failure
+ */
+  nsAutoString CompleteAbbreviatedURL(const nsAutoString& text,
+       const PRUint32 pos);
+
+
+//////////////////////////////////////////////////////////
+private:
+//////////////////////////////////////////////////////////
 
   enum LIMTYPE
   {
@@ -146,20 +162,6 @@ protected:
   nsAutoString UnescapeStr(const nsAutoString& aString);
 
 /**
-  Completes<ul>
-  <li>Case 1: "mozilla@bucksch.org" to "mailto:mozilla@bucksch.org"
-  <li>Case 2: "www.mozilla.org" to "http://www.mozilla.org"
-  <li>Case 3: "ftp.mozilla.org" to "ftp://www.mozilla.org"
-  </ul>
-  It does no check, if the resulting URL is valid.
-  @param text (in): abbreviated URL
-  @param pos (in): position of "@" (case 1) or first "." (case 2 and 3)
-  @return Completed URL at success and empty string at failure
- */
-  nsAutoString CompleteAbbreviatedURL(const nsAutoString& text,
-       const PRUint32 pos);
-
-/**
   <em>Note</em>: I use different strategies to pass context between the
   functions (full text and pos vs. cutted text and col0, glphyTextLen vs.
   replaceBefore/-After). It makes some sense, but is hard to understand
@@ -185,60 +187,6 @@ protected:
        const PRUint32 whathasbeendone, nsAutoString& outputHTML,
        PRInt32& replaceBefore, PRInt32& replaceAfter);
 
-/**
-  @param text (in): line of text possibly with tagTXT.<p>
-              if col0 is true,
-                starting with tagTXT<br>
-              else
-                starting one char before tagTXT
-  @param col0 (in): tagTXT is on the beginning of the line (or paragraph).
-              open must be 0 then.
-  @param tagTXT (in): Tag in plaintext to search for, e.g. "*"
-  @param tagHTML (in): HTML-Tag to replace tagTXT with,
-              without "<" and ">", e.g. "strong"
-  @param attributeHTML (in): HTML-attribute to add to opening tagHTML,
-              e.g. "class=txt_star"
-  @param outputHTML (out): string to insert in output stream
-  @param open (in/out): Number of currently open tags of type tagHTML
-  @return Conversion succeeded
-*/
-  PRBool StructPhraseHit(const nsAutoString& text, PRBool col0,
-       const char* tagTXT,
-       const char* tagHTML, const char* attributeHTML,
-       nsAutoString& outputHTML, PRUint32& openTags);
-
-/**
-  @param text (in), col0 (in): see GlyphHit
-  @param tagTXT (in): Smily, see also StructPhraseHit
-  @param tagHTML (in): see StructPhraseHit
-  @param outputHTML (out), glyphTextLen (out): see GlyphHit
-*/
-  PRBool SmilyHit(const nsAutoString& text, PRBool col0,
-                  const char* tagTXT, const char* tagHTML,
-                  nsAutoString& outputHTML, PRInt32& glyphTextLen);
-
-/**
-  Checks, if we can replace some chars at the start of line with prettier HTML
-  code.<p>
-  If success is reported, replace the first glyphTextLen chars with outputHTML
-
-  @param text (in): line of text possibly with Glyph.<p>
-              If col0 is true,
-                starting with Glyph <br><!-- (br not part of text) -->
-              else
-                starting one char before Glyph
-  @param col0 (in): text starts at the beginning of the line (or paragraph)
-  @param outputHTML (out): see StructPhraseHit
-  @param glyphTextLen (out): Length of original text to replace
-  @return see StructPhraseHit
-*/
-  PRBool GlyphHit(const nsAutoString& text, PRBool col0,
-       nsAutoString& outputHTML, PRInt32& glyphTextLen);
-
-//////////////////////////////////////////////////////////
-private:
-//////////////////////////////////////////////////////////
-
   enum modetype {
          unknown,
          RFC1738,          /* Check, if RFC1738, APPENDIX compliant,
@@ -249,7 +197,7 @@ private:
                               Also allow email addresses without scheme,
                               e.g. "<mozilla@bucksch.org>" */
          freetext,         /* assume heading scheme
-                              with "[a-zA-Z][a-zA-Z0-9+\-.]*:" like "news:"
+                              with "[a-zA-Z][a-zA-Z0-9+\-\.]*:" like "news:"
                               (see RFC2396, Section 3.1).
                               Certain characters (see code) or any whitespace
                               (including linebreaks) end the URL.
@@ -306,6 +254,57 @@ private:
   PRBool CheckURLAndCreateHTML(
        const nsAutoString& txtURL, const nsAutoString& desc,
        nsAutoString& outputHTML);
+
+/**
+  @param text (in): line of text possibly with tagTXT.<p>
+              if col0 is true,
+                starting with tagTXT<br>
+              else
+                starting one char before tagTXT
+  @param col0 (in): tagTXT is on the beginning of the line (or paragraph).
+              open must be 0 then.
+  @param tagTXT (in): Tag in plaintext to search for, e.g. "*"
+  @param tagHTML (in): HTML-Tag to replace tagTXT with,
+              without "<" and ">", e.g. "strong"
+  @param attributeHTML (in): HTML-attribute to add to opening tagHTML,
+              e.g. "class=txt_star"
+  @param outputHTML (out): string to insert in output stream
+  @param open (in/out): Number of currently open tags of type tagHTML
+  @return Conversion succeeded
+*/
+  PRBool StructPhraseHit(const nsAutoString& text, PRBool col0,
+       const char* tagTXT,
+       const char* tagHTML, const char* attributeHTML,
+       nsAutoString& outputHTML, PRUint32& openTags);
+
+/**
+  @param text (in), col0 (in): see GlyphHit
+  @param tagTXT (in): Smily, see also StructPhraseHit
+  @param tagHTML (in): see StructPhraseHit
+  @param outputHTML (out), glyphTextLen (out): see GlyphHit
+*/
+  PRBool SmilyHit(const nsAutoString& text, PRBool col0,
+                  const char* tagTXT, const char* tagHTML,
+                  nsAutoString& outputHTML, PRInt32& glyphTextLen);
+
+/**
+  Checks, if we can replace some chars at the start of line with prettier HTML
+  code.<p>
+  If success is reported, replace the first glyphTextLen chars with outputHTML
+
+  @param text (in): line of text possibly with Glyph.<p>
+              If col0 is true,
+                starting with Glyph <br><!-- (br not part of text) -->
+              else
+                starting one char before Glyph
+  @param col0 (in): text starts at the beginning of the line (or paragraph)
+  @param outputHTML (out): see StructPhraseHit
+  @param glyphTextLen (out): Length of original text to replace
+  @return see StructPhraseHit
+*/
+  PRBool GlyphHit(const nsAutoString& text, PRBool col0,
+       nsAutoString& outputHTML, PRInt32& glyphTextLen);
+
 };
 
 // It's said, that Win32 and Mac don't like static const members
