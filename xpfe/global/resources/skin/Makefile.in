@@ -151,6 +151,7 @@ CHROME_SKIN = \
 		check-check-disabled.gif \
 		check-radio.gif \
 		check-radio-disabled.gif \
+		loading.gif \
 		$(NULL)
 
 EXPORT_CHROME	= xul.css \
