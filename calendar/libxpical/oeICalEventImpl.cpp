@@ -718,7 +718,7 @@ NS_IMETHODIMP oeICalEventImpl::GetAlarmEmailAddress(char * *aRetVal)
 NS_IMETHODIMP oeICalEventImpl::SetAlarmEmailAddress(const char * aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetAlarmEmailAddres()\n" );
+    printf( "SetAlarmEmailAddres( %s )\n", aNewVal );
 #endif
     if( m_alarmemail )
         nsMemory::Free( m_alarmemail );
@@ -813,7 +813,7 @@ NS_IMETHODIMP oeICalEventImpl::GetRecurUnits(char **aRetVal)
 NS_IMETHODIMP oeICalEventImpl::SetRecurUnits(const char * aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetRecurUnits()\n" );
+    printf( "SetRecurUnits( %s )\n", aNewVal );
 #endif
     if( m_recurunits )
         nsMemory::Free( m_recurunits );
@@ -1982,9 +1982,14 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     const char *propvalue;
     const char *x_name;
 
-    prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-    while ( prop ) {
+    for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
+        prop != 0;
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+
         x_name = icalproperty_get_x_name ( prop );
+        if( !x_name )
+            continue;
+
         propvalue = icalproperty_get_value_as_string( prop );
         //lastalarmack
         if ( strcmp( x_name, XPROP_LASTALARMACK ) == 0) {
@@ -2010,10 +2015,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         else if ( strcmp( x_name, XPROP_RECURINTERVAL ) == 0) {
             m_recurinterval= atol( propvalue );
         }
-
-        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY );
     }
-
 
     //recurend & recurforever & recur & recurweekday & recurweeknumber
     m_recur = false;
