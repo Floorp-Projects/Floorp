@@ -453,7 +453,8 @@ protected:
                                 nsFrameItems&    aFrameItems,
                                 nsAbsoluteItems& aFixedItems,
                                 nsAbsoluteItems& aFloatingItems,
-                                PRBool           aCanHaveGeneratedContent);
+                                PRBool           aCanHaveGeneratedContent,
+                                PRBool           aForBlock);
 
   nsresult WrapTextFrame(nsIPresContext* aPresContext,
                          nsIFrame* aTextFrame,
@@ -461,7 +462,8 @@ protected:
                          nsIContent* aChildContent,
                          nsIFrame* aParentFrame,
                          nsFrameItems& aFrameItems,
-                         nsFrameItems& aFloatingItems);
+                         nsAbsoluteItems& aFloatingItems,
+                         PRBool aForBlock);
 
   void CreateFloatingFirstLetterFrame(nsIPresContext* aPresContext,
                                       nsIFrame* aTextFrame,

@@ -3156,12 +3156,12 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
           if (haveFirstLetterStyle) {
             rv = ProcessBlockChildren(aPresContext, aContent, newFrame,
                                       aAbsoluteItems, childItems, aFixedItems,
-                                      aFloatingItems, PR_TRUE);
+                                      floaterList, PR_TRUE, PR_TRUE);
           }
           else {
             rv = ProcessChildren(aPresContext, aContent, newFrame,
                                  aAbsoluteItems, childItems, aFixedItems,
-                                 aFloatingItems, PR_TRUE);
+                                 floaterList, PR_TRUE);
           }
 
           // Set the frame's initial child list
@@ -3177,7 +3177,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
           if (haveFirstLetterStyle) {
             rv = ProcessBlockChildren(aPresContext, aContent, newFrame,
                                       aAbsoluteItems, childItems, aFixedItems,
-                                      aFloatingItems, PR_TRUE);
+                                      aFloatingItems, PR_TRUE, PR_FALSE);
           }
           else {
             rv = ProcessChildren(aPresContext, aContent, newFrame,
@@ -5527,7 +5527,8 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*  aPresContext,
                                             nsFrameItems&    aFrameItems,
                                             nsAbsoluteItems& aFixedItems,
                                             nsAbsoluteItems& aFloatingItems,
-                                            PRBool           aCanHaveGeneratedContent)
+                                            PRBool           aCanHaveGeneratedContent,
+                                            PRBool           aForBlock)
 {
   nsresult rv = NS_OK;
   nsIStyleContext*  styleContext = nsnull;
@@ -5563,7 +5564,8 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*  aPresContext,
           ShouldCreateFirstLetterFrame(aPresContext, childContent,
                                        aFrameItems.childList)) {
         rv = WrapTextFrame(aPresContext, aFrameItems.childList, aContent,
-                           childContent, aFrame, aFrameItems, aFloatingItems);
+                           childContent, aFrame, aFrameItems, aFloatingItems,
+                           aForBlock);
       }
     }
   }
@@ -5709,12 +5711,24 @@ nsCSSFrameConstructor::WrapTextFrame(nsIPresContext* aPresContext,
                                      nsIContent* aChildContent,
                                      nsIFrame* aParentFrame,
                                      nsFrameItems& aFrameItems,
-                                     nsFrameItems& aFloatingItems)
+                                     nsAbsoluteItems& aFloatingItems,
+                                     PRBool aForBlock)
 {
   // Get style context for the first-letter-frame
-  nsIStyleContext* psc;
-  if (NS_SUCCEEDED(aParentFrame->GetStyleContext(&psc)) && psc) {
-    nsIStyleContext* sc = GetFirstLetterStyle(aPresContext, aContent, psc);
+  nsIStyleContext* parentStyleContext;
+  if (NS_SUCCEEDED(aParentFrame->GetStyleContext(&parentStyleContext)) &&
+      parentStyleContext) {
+    nsIContent* correctContent = aContent;
+    if (!aForBlock) {
+      // Use content from containing block so that we can actually
+      // find a matching style rule.
+      aFloatingItems.containingBlock->GetContent(&correctContent);
+    }
+    nsIStyleContext* sc = GetFirstLetterStyle(aPresContext, correctContent,
+                                              parentStyleContext);
+    if (correctContent != aContent) {
+      NS_RELEASE(correctContent);
+    }
     if (sc) {
       const nsStyleDisplay* display = (const nsStyleDisplay*)
         sc->GetStyleData(eStyleStruct_Display);
@@ -5741,7 +5755,7 @@ nsCSSFrameConstructor::WrapTextFrame(nsIPresContext* aPresContext,
       }
       NS_RELEASE(sc);
     }
-    NS_RELEASE(psc);
+    NS_RELEASE(parentStyleContext);
   }
   return NS_OK;
 }
