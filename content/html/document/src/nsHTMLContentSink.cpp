@@ -22,7 +22,7 @@
 #include "nsIHTMLContent.h"
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
-#include "nsIHttpUrl.h"
+#include "nsIHttpURL.h"
 #include "nsHTMLDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
