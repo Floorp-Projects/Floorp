@@ -568,8 +568,8 @@ DrawBarberBar(HWND hWnd, int nBars)
 	PAINTSTRUCT	ps;
 	HDC         hDC;
 	RECT        rect;
-	HBRUSH      hBrush;
-	HBRUSH      hBrushClear;
+	HBRUSH      hBrush      = NULL;
+	HBRUSH      hBrushClear = NULL;
 
   hDC = BeginPaint(hWnd, &ps);
 	GetClientRect(hWnd, &rect);
@@ -604,8 +604,12 @@ DrawBarberBar(HWND hWnd, int nBars)
 	  }
   }
 
-	DeleteObject(hBrushClear);
-	DeleteObject(hBrush);
+  if(hBrushClear)
+    DeleteObject(hBrushClear);
+
+  if(hBrush)
+    DeleteObject(hBrush);
+
 	EndPaint(hWnd, &ps);
 }
 
