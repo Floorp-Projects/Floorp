@@ -563,6 +563,14 @@ nsHTTPHandler::GetPlatform(PRUnichar* *aPlatform)
 }
 
 NS_IMETHODIMP
+nsHTTPHandler::GetOscpu(PRUnichar* *aOSCPU)
+{
+    *aOSCPU = mAppOSCPU.ToNewUnicode();
+    if (!*aOSCPU) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTTPHandler::GetUserAgent(PRUnichar* *aUserAgent)
 {
     if (mAppUserAgent.IsEmpty()) return NS_ERROR_NOT_INITIALIZED;

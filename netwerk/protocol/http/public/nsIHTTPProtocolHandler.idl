@@ -120,6 +120,13 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
     readonly attribute wstring platform;
 
     /**
+     * Get the current oscpu.
+     *
+     * @return The oscpu this application is running on
+     */
+    readonly attribute wstring oscpu;
+
+    /**
      * Get the translation of the application. The value for language
      * is usually a 2-letter code such as "en" and occasionally a 
      * five-character code to indicate a language subtype, such as "zh_CN". 
