@@ -86,6 +86,7 @@ interface nsIFontCatalogService : nsISupports
                                          in unsigned short spacing);
 
   // Definition for weight
+  const unsigned short kFCWeightAny      =   0;
   const unsigned short kFCWeightLight    = 300;
   const unsigned short kFCWeightBook     = 400;
   const unsigned short kFCWeightMedium   = 400;
@@ -96,6 +97,7 @@ interface nsIFontCatalogService : nsISupports
   const unsigned short kFCWeighBlack     = 900;
 
   // Definition for width
+  const unsigned short kFCWidthAny           = 0;
   const unsigned short kFCWidthNarrow        = 3;
   const unsigned short kFCWidthSemicondensed = 4;
   const unsigned short kFCWidthBlock         = 5;
@@ -106,13 +108,15 @@ interface nsIFontCatalogService : nsISupports
   const unsigned short kFCWidthDoubleWide    = 9;
 
   // Definition for slant
-  const unsigned short kFCSlantRoman          = 0;
-  const unsigned short kFCSlantItalic         = 1;
-  const unsigned short kFCSlantOblique        = 2;
-  const unsigned short kFCSlantReverseItalic  = 3;
-  const unsigned short kFCSlantReverseOblique = 4;
+  const unsigned short kFCSlantAny            = 0;
+  const unsigned short kFCSlantRoman          = 1;
+  const unsigned short kFCSlantItalic         = 2;
+  const unsigned short kFCSlantOblique        = 3;
+  const unsigned short kFCSlantReverseItalic  = 4;
+  const unsigned short kFCSlantReverseOblique = 5;
 
   // Definition for spacing
+  const unsigned short kFCSpacingAny          = 0;
   const unsigned short kFCSpacingMonospace    = 1;
   const unsigned short kFCSpacingProportional = 2;
 };

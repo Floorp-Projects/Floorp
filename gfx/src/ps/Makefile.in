@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  pref \
 		  caps \
+		  locale \
 		  uconv \
 		  view \
 		  necko \
