@@ -83,15 +83,17 @@ function Startup()
     key = "Win";
   else if (navigator.platform.indexOf("Mac") != -1)
     key = "Mac";
-  else
+  else {
     key = "Unix";
+    document.getElementById("btn_openfile").hidden = true;
+  }
 
   var bundle = document.getElementById("dlMgrBundle")
   var label = bundle.getString("showInShellLabel" + key);
   var accesskey = bundle.getString("showInShellAccesskey" + key);
-  var btn = document.getElementById("btn_showinshell");
-  btn.setAttribute("label", label);
-  btn.setAttribute("accesskey", accesskey);
+  var showBtn = document.getElementById("btn_showinshell");
+  showBtn.setAttribute("label", label);
+  showBtn.setAttribute("accesskey", accesskey);
 }
 
 function openPropertiesDialog()
