@@ -1784,27 +1784,28 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
   nsXPIDLCString file2;
   PRBool rv = PR_FALSE;
   
-  // XXX We need to make these strcmps case insensitive.
+  if (url1 && url2) {
+    // XXX We need to make these strcmps case insensitive.
 #ifdef NECKO
-  url1->GetHost(getter_Copies(host1));
-  url2->GetHost(getter_Copies(host2));
+    url1->GetHost(getter_Copies(host1));
+    url2->GetHost(getter_Copies(host2));
 #else
-  url1->GetHost(getter_Shares(host1));
-  url2->GetHost(getter_Shares(host2));  
+    url1->GetHost(getter_Shares(host1));
+    url2->GetHost(getter_Shares(host2));  
 #endif
-  if (0 == PL_strcmp(host1, host2)) {
+    if (0 == PL_strcmp(host1, host2)) {
 #ifdef NECKO
-    url1->GetPath(getter_Copies(file1));
-    url2->GetPath(getter_Copies(file2));
+      url1->GetPath(getter_Copies(file1));
+      url2->GetPath(getter_Copies(file2));
 #else
-    url1->GetFile(getter_Shares(file1));
-    url2->GetFile(getter_Shares(file2));
+      url1->GetFile(getter_Shares(file1));
+      url2->GetFile(getter_Shares(file2));
 #endif
-    if (0 == PL_strcmp(file1, file2)) {
-      rv = PR_TRUE;
+      if (0 == PL_strcmp(file1, file2)) {
+        rv = PR_TRUE;
+      }
     }
   }
-
   return rv;
 }
 
@@ -1844,7 +1845,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       // See if they're the same
       nsCOMPtr<nsIURI>  url;
 #ifndef NECKO
-      NS_NewURL(getter_AddRefs(url), aUrlSpec);
+      rv = NS_NewURL(getter_AddRefs(url), aUrlSpec);
 #else      
       NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
       if (NS_FAILED(rv)) return rv;
@@ -1856,11 +1857,10 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       if (NS_FAILED(rv)) return rv;
 
       rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-      NS_RELEASE(uri);
-      if (NS_FAILED(rv)) return rv;
+      NS_RELEASE(uri);      
 #endif // NECKO
-
-      if (EqualBaseURLs(docURL, url)) {
+      if (NS_FAILED(rv)) return rv;      
+      if (url && docURL && EqualBaseURLs(docURL, url)) {
         // See if there's a destination anchor
 #ifdef NECKO
         char* ref = nsnull;
