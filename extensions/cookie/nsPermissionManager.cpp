@@ -663,7 +663,7 @@ nsPermissionManager::Read()
         PRUint32 permission = lineArray[2]->ToInteger(&error);
         if (error)
           continue;
-        PRUint32 type = GetTypeIndex(lineArray[1]->get(), PR_TRUE);
+        PRInt32 type = GetTypeIndex(lineArray[1]->get(), PR_TRUE);
         if (type < 0)
           continue;
 
