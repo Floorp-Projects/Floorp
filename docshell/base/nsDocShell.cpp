@@ -2661,9 +2661,12 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
       //
       // Retarget the document to this loadgroup...
       //
-      if(currentLoadGroup)
-         currentLoadGroup->RemoveChannel(aOpenedChannel, nsnull, nsnull, nsnull);
-      
+      /* First attach the channel to the right loadgroup
+       * and then remove from the old loadgroup. This 
+       * puts the notifications in the right order and
+       * we don't null-out LSHE in OnStateChange() for 
+       * all redirected urls
+       */
       aOpenedChannel->SetLoadGroup(loadGroup);
 
       // Mark the channel as being a document URI...
@@ -2673,6 +2676,9 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
       aOpenedChannel->SetLoadAttributes(loadAttribs);
 
       loadGroup->AddChannel(aOpenedChannel, nsnull);
+      if(currentLoadGroup)
+         currentLoadGroup->RemoveChannel(aOpenedChannel, nsnull, nsnull, nsnull);
+      
       }
 #ifdef SH_IN_FRAMES
    NS_ENSURE_SUCCESS(Embed(viewer, "", (nsISupports *) nsnull), NS_ERROR_FAILURE);
