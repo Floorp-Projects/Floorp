@@ -99,6 +99,8 @@
 <!ENTITY historyCmd.accesskey       "i">
 <!ENTITY history.commandKey       "h">
 
+<!ENTITY webPanels.commandKey     "y">
+
 <!ENTITY tasksMenu.label "Tools">
 <!ENTITY tasksMenu.accesskey "T"> 
 

@@ -302,6 +302,18 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(64px 224px 96px 192px);
 }
 
+/* FIXME: Bogus placeholder (using bookmarks image) until we have an icon in this theme for web panels */
+#webpanels-button {
+  -moz-image-region: rect(0px 256px 32px 224px);
+}
+#webpanels-button:hover,
+#webpanels-button[checked="true"] {
+  -moz-image-region: rect(32px 256px 64px 224px);
+}
+#webpanels-button[disabled="true"] {
+  -moz-image-region: rect(64px 256px 96px 224px);
+}
+
 #cut-button {
   -moz-image-region: rect(0px 384px 32px 352px);
 }
@@ -441,6 +453,20 @@ toolbar[iconsize="small"] #bookmarks-button[checked="true"] {
 toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
   -moz-image-region: rect(40px 160px 60px 140px) !important;
 }
+
+/* FIXME: Bogus placeholder for Web Panels.  Using the small Bookmarks button image
+  until we get an image. */
+toolbar[iconsize="small"] #webpanels-button {
+  -moz-image-region: rect(0px 160px 20px 140px);
+}
+toolbar[iconsize="small"] #webpanels-button:hover,
+toolbar[iconsize="small"] #webpanels-button[checked="true"] {
+  -moz-image-region: rect(20px 160px 40px 140px);
+}
+toolbar[iconsize="small"] #webpanels-button[disabled="true"] {
+  -moz-image-region: rect(40px 160px 60px 140px) !important;
+}
+
 
 toolbar[iconsize="small"] #history-button {
   -moz-image-region: rect(0px 140px 20px 120px);
