@@ -24,8 +24,6 @@
 [scriptable, uuid(a6cf9099-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLUListElement : nsIDOMHTMLElement
 {
-
-            attribute  boolean              compact;
-            attribute  DOMString            type;
+           attribute boolean          compact;
+           attribute DOMString        type;
 };
-

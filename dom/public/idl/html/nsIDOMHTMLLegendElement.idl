@@ -24,9 +24,7 @@
 [scriptable, uuid(a6cf9098-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLLegendElement : nsIDOMHTMLElement
 {
-
-   readonly attribute  nsIDOMHTMLFormElement      form;
-            attribute  DOMString            accessKey;
-            attribute  DOMString            align;
+  readonly attribute nsIDOMHTMLFormElement form;
+           attribute DOMString             accessKey;
+           attribute DOMString             align;
 };
-

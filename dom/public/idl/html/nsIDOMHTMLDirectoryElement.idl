@@ -24,7 +24,5 @@
 [scriptable, uuid(a6cf909c-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLDirectoryElement : nsIDOMHTMLElement
 {
-
-            attribute  boolean              compact;
+           attribute boolean          compact;
 };
-

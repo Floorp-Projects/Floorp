@@ -24,9 +24,7 @@
 [scriptable, uuid(a6cf90a7-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLFontElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            color;
-            attribute  DOMString            face;
-            attribute  DOMString            size;
+           attribute DOMString        color;
+           attribute DOMString        face;
+           attribute DOMString        size;
 };
-

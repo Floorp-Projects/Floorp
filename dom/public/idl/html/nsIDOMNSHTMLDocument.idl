@@ -24,28 +24,26 @@
 [scriptable, uuid(a6cf90c5-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNSHTMLDocument : nsISupports
 {
+  readonly attribute long                 width;
+  readonly attribute long                 height;
+           attribute DOMString            alinkColor;
+           attribute DOMString            linkColor;
+           attribute DOMString            vlinkColor;
+           attribute DOMString            bgColor;
+           attribute DOMString            fgColor;
+  readonly attribute DOMString            lastModified;
 
-     readonly attribute long width;
-     readonly attribute long height;
-     attribute DOMString alinkColor;
-     attribute DOMString linkColor;
-     attribute DOMString vlinkColor;
-     attribute DOMString bgColor;
-     attribute DOMString fgColor;
-     readonly attribute DOMString lastModified;
+  readonly attribute nsIDOMHTMLCollection embeds;
 
-     readonly attribute nsIDOMHTMLCollection embeds;
+  DOMString                 getSelection();
+  nsISupports               namedItem(in DOMString name);
 
-     DOMString getSelection();
-     jsval namedItem(/* ... */);
+  void                      open(/* ... */);
+  void                      write(in DOMString data /*, ... */);
+  void                      writeln(in DOMString data /*, ... */);
+  void                      clear();
 
-     void                      open(/* ... */);
-     void                      write(/* ... */);
-     void                      writeln(/* ... */);
-     void                      clear(/* ... */);
-
-     void captureEvents(in long eventFlags);
-     void releaseEvents(in long eventFlags);
-     void routeEvent(in nsIDOMEvent evt);
+  void                      captureEvents(in long eventFlags);
+  void                      releaseEvents(in long eventFlags);
+  void                      routeEvent(in nsIDOMEvent evt);
 };
-

@@ -24,8 +24,6 @@
 [scriptable, uuid(a6cf909e-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLLIElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            type;
-            attribute  long                 value;
+           attribute DOMString           type;
+           attribute long                value;
 };
-

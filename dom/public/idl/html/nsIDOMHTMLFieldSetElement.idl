@@ -24,7 +24,5 @@
 [scriptable, uuid(a6cf9097-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLFieldSetElement : nsIDOMHTMLElement
 {
-
-   readonly attribute  nsIDOMHTMLFormElement      form;
+  readonly attribute nsIDOMHTMLFormElement  form;
 };
-

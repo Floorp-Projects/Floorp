@@ -24,14 +24,10 @@
 [scriptable, uuid(123f90ab-15b3-11d2-456e-00805f8add32)]
 interface nsIDOMHTMLEmbedElement : nsIDOMHTMLElement
 {
-
-            void nsIDOMHTMLEmbedElement();
-
-            attribute  DOMString            align;
-            attribute  DOMString            height;
-            attribute  DOMString            name;
-            attribute  DOMString            src;
-            attribute  DOMString            type;
-            attribute  DOMString            width;
+           attribute DOMString        align;
+           attribute DOMString        height;
+           attribute DOMString        name;
+           attribute DOMString        src;
+           attribute DOMString        type;
+           attribute DOMString        width;
 };
-

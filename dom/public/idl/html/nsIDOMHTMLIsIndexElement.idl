@@ -24,8 +24,6 @@
 [scriptable, uuid(a6cf908c-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLIsIndexElement : nsIDOMHTMLElement
 {
-
-   readonly attribute  nsIDOMHTMLFormElement      form;
-            attribute  DOMString            prompt;
+  readonly attribute nsIDOMHTMLFormElement form;
+           attribute DOMString             prompt;
 };
-

@@ -24,22 +24,21 @@
 [scriptable, uuid(a6cf9090-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
 {
-
-   readonly attribute  DOMString            type;
-            attribute  long                 selectedIndex;
-            attribute  DOMString            value;
-            attribute  unsigned long        length;
-   readonly attribute  nsIDOMHTMLFormElement      form;
-   readonly attribute  nsIDOMNSHTMLOptionCollection       options;
-            attribute  boolean              disabled;
-            attribute  boolean              multiple;
-            attribute  DOMString            name;
-            attribute  long                 size;
-            attribute  long                 tabIndex;
-   void                      add(in nsIDOMHTMLElement element, 
-                                 in nsIDOMHTMLElement before);
-   void                      remove(in long index);
-   void                      blur();
-   void                      focus();
+  readonly attribute DOMString             type;
+           attribute long                  selectedIndex;
+           attribute DOMString             value;
+           attribute unsigned long         length;
+  readonly attribute nsIDOMHTMLFormElement form;
+  readonly attribute nsIDOMHTMLCollection  options;
+           attribute boolean               disabled;
+           attribute boolean               multiple;
+           attribute DOMString             name;
+           attribute long                  size;
+           attribute long                  tabIndex;
+  void                      add(in nsIDOMHTMLElement element, 
+                                in nsIDOMHTMLElement before);
+  void                      remove(in long index);
+  void                      blur();
+  void                      focus();
 };
 

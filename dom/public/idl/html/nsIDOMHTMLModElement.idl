@@ -24,8 +24,6 @@
 [scriptable, uuid(a6cf90a9-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLModElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            cite;
-            attribute  DOMString            dateTime;
+           attribute DOMString        cite;
+           attribute DOMString        dateTime;
 };
-

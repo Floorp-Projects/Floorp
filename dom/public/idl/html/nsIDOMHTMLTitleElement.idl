@@ -24,7 +24,5 @@
 [scriptable, uuid(a6cf9089-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLTitleElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            text;
+           attribute DOMString        text;
 };
-

@@ -24,8 +24,6 @@
 [scriptable, uuid(a6cf9091-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLOptGroupElement : nsIDOMHTMLElement
 {
-
-            attribute  boolean              disabled;
-            attribute  DOMString            label;
+           attribute boolean          disabled;
+           attribute DOMString        label;
 };
-

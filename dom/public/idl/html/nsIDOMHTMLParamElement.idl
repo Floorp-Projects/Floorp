@@ -24,10 +24,8 @@
 [scriptable, uuid(a6cf90ad-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLParamElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            name;
-            attribute  DOMString            type;
-            attribute  DOMString            value;
-            attribute  DOMString            valueType;
+           attribute DOMString        name;
+           attribute DOMString        type;
+           attribute DOMString        value;
+           attribute DOMString        valueType;
 };
-

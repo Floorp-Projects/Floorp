@@ -24,8 +24,6 @@
 [scriptable, uuid(a6cf9105-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNSHTMLSelectElement : nsISupports
 {
-
-   nsIDOMNode                      item(in unsigned long index);
-   nsIDOMNode                      namedItem(in DOMString name);
+  nsIDOMNode                item(in unsigned long index);
+  nsIDOMNode                namedItem(in DOMString name);
 };
-

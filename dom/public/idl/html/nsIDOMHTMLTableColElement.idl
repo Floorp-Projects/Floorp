@@ -24,12 +24,10 @@
 [scriptable, uuid(a6cf90b4-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLTableColElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            align;
-            attribute  DOMString            ch;
-            attribute  DOMString            chOff;
-            attribute  long                 span;
-            attribute  DOMString            vAlign;
-            attribute  DOMString            width;
+           attribute DOMString        align;
+           attribute DOMString        ch;
+           attribute DOMString        chOff;
+           attribute long             span;
+           attribute DOMString        vAlign;
+           attribute DOMString        width;
 };
-

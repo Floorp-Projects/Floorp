@@ -22,21 +22,11 @@
 #include "domstubs.idl"
 
 [scriptable, uuid(a6cf90c7-15b3-11d2-932e-00805f8add32)]
-interface Image : nsISupports
+interface nsIDOMNSHTMLImageElement : nsISupports
 {
+           attribute DOMString        lowsrc;
+  readonly attribute boolean          complete;
 
-            void Image();
-            attribute DOMString lowsrc;
-            readonly attribute boolean complete;
-
-            /* Needed for backwards compatibility */
-            attribute  long                 border;
-            attribute  long                 height;
-            attribute  long                 hspace;
-            attribute  long                 vspace;
-            attribute  long                 width;
-
-            readonly attribute long         naturalHeight;
-            readonly attribute long         naturalWidth;
+  readonly attribute long             naturalHeight;
+  readonly attribute long             naturalWidth;
 };
-

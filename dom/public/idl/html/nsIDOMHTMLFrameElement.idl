@@ -24,16 +24,14 @@
 [scriptable, uuid(a6cf90b9-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLFrameElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            frameBorder;
-            attribute  DOMString            longDesc;
-            attribute  DOMString            marginHeight;
-            attribute  DOMString            marginWidth;
-            attribute  DOMString            name;
-            attribute  boolean              noResize;
-            attribute  DOMString            scrolling;
-            attribute  DOMString            src;
+           attribute DOMString        frameBorder;
+           attribute DOMString        longDesc;
+           attribute DOMString        marginHeight;
+           attribute DOMString        marginWidth;
+           attribute DOMString        name;
+           attribute boolean          noResize;
+           attribute DOMString        scrolling;
+           attribute DOMString        src;
   // Introduced in DOM Level 2:
-            attribute  nsIDOMDocument             contentDocument;
+           attribute nsIDOMDocument   contentDocument;
 };
-

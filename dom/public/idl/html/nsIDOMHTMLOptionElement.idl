@@ -24,16 +24,12 @@
 [scriptable, uuid(a6cf9092-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLOptionElement : nsIDOMHTMLElement
 {
-
-   void nsIDOMHTMLOptionElement();
-
-   readonly attribute  nsIDOMHTMLFormElement      form;
-            attribute  boolean              defaultSelected;
-            attribute  DOMString            text;
-   readonly attribute  long                 index;
-            attribute  boolean              disabled;
-            attribute  DOMString            label;
-            attribute  boolean              selected;
-            attribute  DOMString            value;
+  readonly attribute nsIDOMHTMLFormElement form;
+           attribute boolean               defaultSelected;
+           attribute DOMString             text;
+  readonly attribute long                  index;
+           attribute boolean               disabled;
+           attribute DOMString             label;
+           attribute boolean               selected;
+           attribute DOMString             value;
 };
-

@@ -24,20 +24,9 @@
 [scriptable, uuid(a6cf9085-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLElement : nsIDOMElement
 {
-
-            attribute  DOMString            id;
-            attribute  DOMString            title;
-            attribute  DOMString            lang;
-            attribute  DOMString            dir;
-            attribute  DOMString            className;
-	    readonly attribute nsIDOMCSSStyleDeclaration style;
-
-	    /* Temporary till we find a place for them */
-	    readonly attribute long offsetTop;
-            readonly attribute long offsetLeft;
-            readonly attribute long offsetWidth;
-            readonly attribute long offsetHeight;
-            readonly attribute nsIDOMElement offsetParent;
-                     attribute DOMString innerHTML;
+           attribute DOMString        id;
+           attribute DOMString        title;
+           attribute DOMString        lang;
+           attribute DOMString        dir;
+           attribute DOMString        className;
 };
-

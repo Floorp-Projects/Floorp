@@ -24,9 +24,7 @@
 [scriptable, uuid(a6cf9096-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLLabelElement : nsIDOMHTMLElement
 {
-
-   readonly attribute  nsIDOMHTMLFormElement      form;
-            attribute  DOMString            accessKey;
-            attribute  DOMString            htmlFor;
+  readonly attribute nsIDOMHTMLFormElement form;
+           attribute DOMString             accessKey;
+           attribute DOMString             htmlFor;
 };
-

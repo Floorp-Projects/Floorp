@@ -24,8 +24,6 @@
 [scriptable, uuid(6fd344d0-7e5f-11d2-bd91-00805f8ae3f4)]
 interface nsIDOMNSHTMLButtonElement : nsISupports
 {
-   void                      blur();
-   void                      focus();
-
+  void                      blur();
+  void                      focus();
 };
-

@@ -24,20 +24,18 @@
 [scriptable, uuid(a6cf9094-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLTextAreaElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            defaultValue;
-   readonly attribute  nsIDOMHTMLFormElement      form;
-            attribute  DOMString            accessKey;
-            attribute  long                 cols;
-            attribute  boolean              disabled;
-            attribute  DOMString            name;
-            attribute  boolean              readOnly;
-            attribute  long                 rows;
-            attribute  long                 tabIndex;
-   readonly attribute  DOMString            type;
-            attribute  DOMString            value;
-   void                      blur();
-   void                      focus();
-   void                      select();
+           attribute DOMString             defaultValue;
+  readonly attribute nsIDOMHTMLFormElement form;
+           attribute DOMString             accessKey;
+           attribute long                  cols;
+           attribute boolean               disabled;
+           attribute DOMString             name;
+           attribute boolean               readOnly;
+           attribute long                  rows;
+           attribute long                  tabIndex;
+  readonly attribute DOMString             type;
+           attribute DOMString             value;
+  void                      blur();
+  void                      focus();
+  void                      select();
 };
-

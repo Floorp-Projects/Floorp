@@ -24,8 +24,6 @@
 [scriptable, uuid(a6cf90b8-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLFrameSetElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            cols;
-            attribute  DOMString            rows;
+           attribute DOMString        cols;
+           attribute DOMString        rows;
 };
-

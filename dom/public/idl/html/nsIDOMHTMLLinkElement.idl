@@ -24,15 +24,13 @@
 [scriptable, uuid(a6cf9088-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLLinkElement : nsIDOMHTMLElement
 {
-
-            attribute  boolean              disabled;
-            attribute  DOMString            charset;
-            attribute  DOMString            href;
-            attribute  DOMString            hreflang;
-            attribute  DOMString            media;
-            attribute  DOMString            rel;
-            attribute  DOMString            rev;
-            attribute  DOMString            target;
-            attribute  DOMString            type;
+           attribute boolean          disabled;
+           attribute DOMString        charset;
+           attribute DOMString        href;
+           attribute DOMString        hreflang;
+           attribute DOMString        media;
+           attribute DOMString        rel;
+           attribute DOMString        rev;
+           attribute DOMString        target;
+           attribute DOMString        type;
 };
-
