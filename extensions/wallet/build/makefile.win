@@ -1,4 +1,5 @@
-#!gmake
+#!nmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -14,29 +15,34 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+IGNORE_MANIFEST=1
 
-include $(DEPTH)/config/autoconf.mk
-
+DEPTH=..\..\..
 MODULE = walletviewers
-LIBRARY_NAME = cookieviewer_s
-IS_COMPONENT = 1
 
-XPIDLSRCS = \
-	nsICookieViewer.idl		\
+LIBNAME = .\$(OBJDIR)\walletviewers
+DLL = $(LIBNAME).dll
+
+LINCS =                          \
 	$(NULL)
 
-CPPSRCS = \
-	nsCookieViewerFactory.cpp	\
-	nsCookieViewer.cpp		\
+CPP_OBJS =                             \
+        .\$(OBJDIR)\dlldeps.obj        \
+       $(NULL)
+
+OURLIBS =                               \
+	$(DIST)\lib\cookieviewer_s.lib  \
+        $(DIST)\lib\signonviewer_s.lib  \
+        $(DIST)\lib\walletpreview_s.lib \
+        $(DIST)\lib\walleteditor_s.lib  \
 	$(NULL)
 
-REQUIRES = walleteditor raptor xpcom
+LLIBS =                                \
+        $(OURLIBS)                     \
+        shell32.lib                    \
+	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+include <$(DEPTH)\config\rules.mak>
 
-install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/CookieViewer.html $(DIST)/bin/res/samples
+libs:: $(DLL)
+	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin

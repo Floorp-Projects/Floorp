@@ -17,6 +17,8 @@
 
 DEPTH=..\..
 
-DIRS=public src editor signonviewer cookieviewer walletpreview
+IGNORE_MANIFEST=1
+
+DIRS=public src editor signonviewer cookieviewer walletpreview build
 
 include <$(DEPTH)\config\rules.mak>

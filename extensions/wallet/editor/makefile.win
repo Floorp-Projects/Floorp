@@ -16,18 +16,20 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=walleteditor
+MODULE=walletviewers
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=$(MODULE)
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+#MAKE_OBJ_TYPE=DLL
+#DLLNAME=$(MODULE)
+#DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LIBRARY_NAME=walleteditor_s
 
 XPIDLSRCS=      .\nsIWalletEditor.idl                  \
                 $(NULL)
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsWalletEditor.obj         \
         .\$(OBJDIR)\nsWalletEditorFactory.obj  \
+        .\$(OBJDIR)\nsWalletEditor.obj         \
         $(NULL)
 
 LLIBS=\
@@ -43,7 +45,11 @@ LINCS=\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-        $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-        $(MAKE_INSTALL) xpconnect-walleteditor.html $(DIST)\bin\res\samples
+libs:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
+install:: $(DLL)
+        $(MAKE_INSTALL) WalletEditor.html $(DIST)\bin\res\samples

@@ -16,11 +16,13 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=walletpreview
+MODULE=walletviewers
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=$(MODULE)
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+#MAKE_OBJ_TYPE=DLL
+#DLLNAME=$(MODULE)
+#DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LIBRARY_NAME=walletpreview_s
 
 XPIDLSRCS=      .\nsIWalletPreview.idl                  \
                 $(NULL)
@@ -43,6 +45,11 @@ LINCS=\
 
 include <$(DEPTH)\config\rules.mak>
 
+libs:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
 install:: $(DLL)
-        $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-        $(MAKE_INSTALL) xpconnect-walletpreview.html $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) WalletPreview.html $(DIST)\bin\res\samples

@@ -21,8 +21,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = walletpreview
-LIBRARY_NAME = walletpreview
+MODULE = walletviewers
+LIBRARY_NAME = walletpreview_s
 IS_COMPONENT = 1
 
 XPIDLSRCS = \
@@ -39,4 +39,4 @@ REQUIRES = walleteditor raptor xpcom
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/xpconnect-walletpreview.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/WalletPreview.html $(DIST)/bin/res/samples
