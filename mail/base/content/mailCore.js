@@ -140,8 +140,8 @@ function CheckOnline()
 
 function openOptionsDialog(containerID, paneURL, itemID)
 {
-  // var instantApply = gPrefService.getBoolPref("browser.preferences.instantApply");
-  var instantApply = false;
+  var prefsService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null)
+  var instantApply = prefsService.getBoolPref("browser.preferences.instantApply");
   var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
 
   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
