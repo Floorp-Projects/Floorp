@@ -655,8 +655,10 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
         dragSession->IsDataFlavorSupported(kFileMime, &flavorSupported);
       if ( !flavorSupported ) 
         dragSession->IsDataFlavorSupported(kJPEGImageMime, &flavorSupported);
-      if ( flavorSupported ) 
+      if ( flavorSupported ) {
         dragSession->SetCanDrop(PR_TRUE);
+        aDragEvent->PreventBubble();
+      }
     } 
   }
 
