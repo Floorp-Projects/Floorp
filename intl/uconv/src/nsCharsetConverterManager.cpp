@@ -311,10 +311,81 @@ nsresult nsCharsetConverterManager::GetCharsetConverter(
 //----------------------------------------------------------------------
 // Interface nsICharsetConverterManager [implementation]
 
+//***************************************************
+// XXX begin of hack
+
+class nsHackyAsciiEncoder : public nsIUnicodeEncoder
+{
+  NS_DECL_ISUPPORTS
+
+public:
+
+  nsHackyAsciiEncoder();
+  ~nsHackyAsciiEncoder();
+
+  NS_IMETHOD Convert(const PRUnichar * aSrc, PRInt32 aSrcOffset, PRInt32 * aSrcLength, char * aDest, PRInt32 aDestOffset, PRInt32 * aDestLength);
+  NS_IMETHOD Finish(char * aDest, PRInt32 aDestOffset, PRInt32 * aDestLength);
+  NS_IMETHOD Length(const PRUnichar * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
+};
+
+NS_IMPL_ISUPPORTS(nsHackyAsciiEncoder, kIUnicodeEncoderIID);
+
+nsHackyAsciiEncoder::nsHackyAsciiEncoder() 
+{
+  NS_INIT_REFCNT();
+  PR_AtomicIncrement(&g_InstanceCount);
+}
+
+nsHackyAsciiEncoder::~nsHackyAsciiEncoder() 
+{
+  PR_AtomicDecrement(&g_InstanceCount);
+}
+
+NS_IMETHODIMP nsHackyAsciiEncoder::Convert(const PRUnichar * aSrc, PRInt32 aSrcOffset, PRInt32 * aSrcLength, char * aDest, PRInt32 aDestOffset, PRInt32 * aDestLength)
+{
+  if (aDest == NULL) return NS_ERROR_NULL_POINTER;
+
+  PRInt32 len = PR_MIN(*aSrcLength, *aDestLength);
+  for (PRInt32 i=0; i<len; i++) *aDest++ = ((char)*aSrc++);
+
+  nsresult res = (*aSrcLength > len)? NS_PARTIAL_MORE_OUTPUT : NS_OK;
+  *aSrcLength = *aDestLength = len;
+
+  return res;
+}
+
+NS_IMETHODIMP nsHackyAsciiEncoder::Finish(char * aDest, PRInt32 aDestOffset, PRInt32 * aDestLength)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHackyAsciiEncoder::Length(const PRUnichar * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, PRInt32 * aDestLength)
+{
+  *aDestLength = aSrcLength;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHackyAsciiEncoder::Reset()
+{
+  return NS_OK;
+}
+
+// XXX end of hack
+//***************************************************
+
 NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
                                          const nsString * aDest, 
                                          nsIUnicodeEncoder ** aResult)
 {
+  nsIUnicodeEncoder * enc = new nsHackyAsciiEncoder();
+  NS_ADDREF(enc);
+  *aResult = enc;
+
+  return NS_OK;
+
+/*
   nsresult res;
   if (!mMappingDone) {
     res = CreateMapping();
@@ -323,6 +394,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
 
   return GetCharsetConverter(aDest, (void **) aResult, &kIUnicodeEncoderIID, 
       mEncArray, mEncSize);
+*/
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
