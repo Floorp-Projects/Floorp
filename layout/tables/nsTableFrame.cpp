@@ -1703,6 +1703,9 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
       nsSize maxKidElementSize(0,0);
       nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
                                        availSize, aReason);
+      // Note: we don't bother checking here for whether we should clear the
+      // isTopOfPage reflow state flag, because we're dealing with an unconstrained
+      // height and it isn't an issue...
       PRInt32 yCoord = y;
       if (NS_UNCONSTRAINEDSIZE!=yCoord)
         yCoord+= topInset;
@@ -2440,7 +2443,8 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     reason = eReflowReason_Resize;
 
   // this never passes reflows down to colgroups
-  for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) 
+  nsIFrame*  firstRowGroupFrame = nsnull;
+  for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) 
   {
     nsSize              kidAvailSize(aReflowState.availSize);
     nsHTMLReflowMetrics desiredSize(pKidMaxElementSize);
@@ -2449,7 +2453,15 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     const nsStyleDisplay *childDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
-    { // for all colgroups and rowgroups...
+    {
+      // Keep track of the first row group frame: we need this to correctly clear
+      // the isTopOfPage flag and when pushing frames
+      if (nsnull == firstRowGroupFrame) {
+        if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
+          firstRowGroupFrame = kidFrame;
+        }
+      }
+
       const nsStyleSpacing* kidSpacing;
       kidFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)kidSpacing));
       nsMargin kidMargin;
@@ -2472,20 +2484,25 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       nsHTMLReflowState  kidReflowState(aPresContext, kidFrame,
                                         aReflowState.reflowState, kidAvailSize,
                                         reason);
+      if ((nsnull != firstRowGroupFrame) && (kidFrame != firstRowGroupFrame)) {
+        // If this isn't the first row group frame or the header or footer, then
+        // we can't be at the top of the page anymore...
+        kidReflowState.isTopOfPage = PR_FALSE;
+      }
 
       nscoord x = aReflowState.leftInset + kidMargin.left;
       nscoord y = aReflowState.topInset + aReflowState.y + topMargin;
       if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 2 of frame %p with reason=%d\n", kidFrame, reason);
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
       // Did the child fit?
-      if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
-      {
-        // The child is too tall to fit in the available space, and it's
-        // not our first child
-        // XXX TROY: checking mFirstChild here is probably wrong.  Should check to see if its the first row group?
-        PushChildren(kidFrame, prevKidFrame);
-        //XXX TROY: set aStatus?
-        break;
+      if (desiredSize.height > kidAvailSize.height) {
+        if ((nsnull != firstRowGroupFrame) && (kidFrame != firstRowGroupFrame)) {
+          // The child is too tall to fit in the available space, and it's
+          // not our first row grpup frame
+          PushChildren(kidFrame, prevKidFrame);
+          aStatus = NS_FRAME_NOT_COMPLETE;
+          break;
+        }
       }
 
       // Place the child after taking into account it's margin

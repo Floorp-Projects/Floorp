@@ -33,8 +33,6 @@ struct RowGroupReflowState;
  * 
  * @see nsTableFrame
  * @see nsTableRowFrame
- *
- * @author  sclark
  */
 class nsTableRowGroupFrame : public nsHTMLContainerFrame
 {
@@ -109,12 +107,12 @@ protected:
                           RowGroupReflowState& aReflowState,
                           const nsMargin&      aKidMargin);
 
-  void          PlaceChild( nsIPresContext&      aPresContext,
-                            RowGroupReflowState& aReflowState,
-                            nsIFrame*            aKidFrame,
-                            const nsRect&        aKidRect,
-                            nsSize*              aMaxElementSize,
-                            nsSize&              aKidMaxElementSize);
+  void PlaceChild(nsIPresContext&      aPresContext,
+                  RowGroupReflowState& aReflowState,
+                  nsIFrame*            aKidFrame,
+                  const nsRect&        aKidRect,
+                  nsSize*              aMaxElementSize,
+                  nsSize&              aKidMaxElementSize);
 
   void CalculateRowHeights(nsIPresContext& aPresContext, 
                            nsHTMLReflowMetrics& aDesiredSize,
@@ -211,6 +209,11 @@ protected:
                                nsHTMLReflowMetrics& aDesiredSize,
                                RowGroupReflowState& aReflowState,
                                nsReflowStatus&      aStatus);
+
+  nsresult SplitRowGroup(nsIPresContext&          aPresContext,
+                         nsHTMLReflowMetrics&     aDesiredSize,
+                         const nsHTMLReflowState& aReflowState,
+                         nsReflowStatus&          aStatus);
 
 private:
   nsIAtom *mType;
