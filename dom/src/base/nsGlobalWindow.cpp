@@ -268,7 +268,8 @@ GlobalWindowImpl::ShutDown()
 #endif
 }
 
-void GlobalWindowImpl::CleanUp()
+void
+GlobalWindowImpl::CleanUp()
 {
   NS_IF_RELEASE(mNavigator);
   NS_IF_RELEASE(mScreen);
@@ -281,10 +282,36 @@ void GlobalWindowImpl::CleanUp()
   NS_IF_RELEASE(mScrollbars);
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mFrames);
+
+  ClearControllers();
+
   mOpener = nsnull;             // Forces Release
-  mControllers = nsnull;        // Forces Release
   mContext = nsnull;            // Forces Release
   mChromeEventHandler = nsnull; // Forces Release
+}
+
+void
+GlobalWindowImpl::ClearControllers()
+{
+  if (!mControllers) {
+    return;
+  }
+
+  PRUint32 count;
+  mControllers->GetControllerCount(&count);
+
+  while (count--) {
+    nsCOMPtr<nsIController> controller;
+    mControllers->GetControllerAt(count, getter_AddRefs(controller));
+
+    nsCOMPtr<nsPIDOMController> dom_controller(do_QueryInterface(controller));
+
+    if (dom_controller) {
+      dom_controller->WindowDestroyed();
+    }
+  }
+
+  mControllers = nsnull;
 }
 
 //*****************************************************************************
@@ -582,10 +609,11 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
       }
     }
 
+    ClearControllers();
+
     mContext->GC();
 
     mContext = nsnull;          // force release now
-    mControllers = nsnull;      // force release now
     mChromeEventHandler = nsnull; // force release now
   }
 
@@ -1303,8 +1331,9 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetControllers(nsIControllers** aResult)
 {
   if (!mControllers) {
-    mControllers = do_CreateInstance(kXULControllersCID);
-    NS_ENSURE_TRUE(mControllers, NS_ERROR_FAILURE);
+    nsresult rv;
+    mControllers = do_CreateInstance(kXULControllersCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 #ifdef DOM_CONTROLLER
     // Add in the default controller
     nsDOMWindowController *domController = new nsDOMWindowController(this);
@@ -6036,6 +6065,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMWindowController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIController)
   NS_INTERFACE_MAP_ENTRY(nsIController)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsPIDOMController)
 NS_INTERFACE_MAP_END
 
 
@@ -6439,5 +6469,11 @@ NS_IMETHODIMP
 nsDOMWindowController::OnEvent(const char * aEventName)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsDOMWindowController::WindowDestroyed()
+{
+  mWindow = nsnull;
 }
 #endif
