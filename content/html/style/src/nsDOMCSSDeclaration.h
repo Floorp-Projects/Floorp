@@ -66,7 +66,9 @@ class nsDOMCSSDeclaration : public nsIDOMCSSStyleDeclaration
 public:
   nsDOMCSSDeclaration();
 
-  NS_DECL_ISUPPORTS
+  // Only implement QueryInterface; subclasses have the responsibility
+  // of implementing AddRef/Release.
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
