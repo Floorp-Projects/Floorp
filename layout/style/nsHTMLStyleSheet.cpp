@@ -1649,11 +1649,33 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
                                                 nsIStyleContext*      aStyleContext,
                                                 nsIFrame*&            aNewFrame)
 {
-  PRBool                processChildren = PR_FALSE;  // whether we should process child content
-  nsresult              rv = NS_OK;
+  PRBool    processChildren = PR_FALSE;  // whether we should process child content
+  nsIFrame* wrapperFrame = nsnull;
+  nsresult  rv = NS_OK;
 
   // Initialize OUT parameter
   aNewFrame = nsnull;
+
+  // If the element is floated and it's a block or inline, then we need to
+  // wrap it in a BODY frame
+  if (((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
+       (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay)) &&
+      (NS_STYLE_FLOAT_NONE != aDisplay->mFloats)) {
+
+    // The body wrapper frame gets the original style context
+    NS_NewBodyFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
+    wrapperFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // The wrapped frame gets a pseudo style context that inherits the
+    // display property
+    nsIStyleContext*  wrappedPseudoStyle;
+    wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent, 
+                          nsHTMLAtoms::wrappedFramePseudo, aStyleContext);
+    aParentFrame = wrapperFrame;
+    aStyleContext = wrappedPseudoStyle;
+  }
 
   switch (aDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
@@ -1755,6 +1777,13 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
 
     // Set the frame's initial child list
     aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+  }
+
+  // If there's a wrapper frame then set its initial child list, and return the
+  // wrapper frame as the new frame
+  if (nsnull != wrapperFrame) {
+    wrapperFrame->SetInitialChildList(*aPresContext, nsnull, aNewFrame);
+    aNewFrame = wrapperFrame;
   }
 
   return rv;
@@ -1981,15 +2010,14 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
           }
         }
 
-        // See if the element is floated or absolutely positioned
+        // See if the element is absolutely positioned
         const nsStylePosition* position = (const nsStylePosition*)
           styleContext->GetStyleData(eStyleStruct_Position);
 
-        if ((NS_STYLE_FLOAT_NONE != display->mFloats) ||
-            (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)) {
-
+        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
           // If it can contain children then wrap it in a BODY frame.
-          // XxX Don't wrap tables...
+          // XxX Don't wrap tables, because that causes all sort of problems.
+          // We need to figure out how to wrap tables...
           PRBool  isContainer;
           aContent->CanContainChildren(isContainer);
 
