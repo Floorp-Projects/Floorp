@@ -88,6 +88,7 @@ PRLogModuleInfo* nsComponentManagerLog = nsnull;
 
 #if defined(DEBUG)
 // #define SHOW_DENIED_ON_SHUTDOWN
+// #define SHOW_CI_ON_EXISTING_SERVICE
 #endif
 
 // Loader Types
@@ -1591,7 +1592,6 @@ nsComponentManagerImpl::GetFactoryEntry(const char *aContractID)
 {
     nsFactoryEntry *fe = nsnull;
     {
-
         nsAutoMonitor mon(mMon);
 
         nsContractIDTableEntry* contractIDTableEntry =
@@ -1816,6 +1816,32 @@ nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
     return rv;
 }
 
+#ifdef XPCOM_CHECK_PENDING_CIDS
+nsresult
+nsComponentManagerImpl::AddPendingCID(const nsCID &aClass)
+{
+    nsAutoMonitor mon(mMon);
+    int max = mPendingCIDs.Count();
+    for (int index = 0; index < max; index++)
+    {
+        nsCID *cidp = (nsCID*) mPendingCIDs.ElementAt(index);
+        NS_ASSERTION(cidp, "Bad CID in pending list");
+        if (cidp->Equals(aClass)) {
+            NS_WARNING("Creation in progress (Reentrant CI - see bug 194568)");
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+    }
+    mPendingCIDs.AppendElement((void*)&aClass);
+    return NS_OK;
+}
+
+void 
+nsComponentManagerImpl::RemovePendingCID(const nsCID &aClass)
+{
+    nsAutoMonitor mon(mMon);
+    mPendingCIDs.RemoveElement((void*)&aClass);
+}
+#endif
 /**
  * CreateInstance()
  *
@@ -1850,12 +1876,32 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
     }
     *aResult = nsnull;
 
+    nsFactoryEntry *entry = GetFactoryEntry(aClass);
+
+    if (!entry || entry == kNonExistentContractID)
+        return NS_ERROR_FACTORY_NOT_REGISTERED;
+
+#ifdef SHOW_CI_ON_EXISTING_SERVICE
+    NS_ASSERTION(!entry->mServiceObject, 
+                 "You are calling CreateInstance when a service for this CID already exists!");
+#endif
+
     nsIFactory *factory = nsnull;
-    nsresult rv = FindFactory(aClass, &factory);
+    nsresult rv = entry->GetFactory(&factory, this);
+
     if (NS_SUCCEEDED(rv))
     {
+#ifdef XPCOM_CHECK_PENDING_CIDS
+        rv = AddPendingCID(aClass);
+        if (NS_FAILED(rv))
+            return rv;
+#endif
         rv = factory->CreateInstance(aDelegate, aIID, aResult);
         NS_RELEASE(factory);
+
+#ifdef XPCOM_CHECK_PENDING_CIDS
+        RemovePendingCID(aClass);
+#endif
     }
     else
     {
@@ -1912,12 +1958,32 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
     }
     *aResult = nsnull;
 
+    nsFactoryEntry *entry = GetFactoryEntry(aContractID);
+
+    if (!entry || entry == kNonExistentContractID)
+        return NS_ERROR_FACTORY_NOT_REGISTERED;
+
+#ifdef SHOW_CI_ON_EXISTING_SERVICE
+    NS_ASSERTION(!entry->mServiceObject, 
+                 "You are calling CreateInstance when a service for this CID already exist!");
+#endif
+
     nsIFactory *factory = nsnull;
-    nsresult rv = FindFactory(aContractID, &factory);
+    nsresult rv = entry->GetFactory(&factory, this);
+
     if (NS_SUCCEEDED(rv))
     {
+#ifdef XPCOM_CHECK_PENDING_CIDS  
+        rv = AddPendingCID(entry->cid);
+        if (NS_FAILED(rv))
+            return rv;
+#endif
         rv = factory->CreateInstance(aDelegate, aIID, aResult);
         NS_RELEASE(factory);
+
+#ifdef XPCOM_CHECK_PENDING_CIDS 
+        RemovePendingCID(entry->cid);
+#endif
     }
     else
     {
