@@ -30,8 +30,7 @@ CPPSRCS = \
 
 include $(topsrcdir)/config/config.mk
 
-CFLAGS += -DJS_THREADSAFE -DJSFILE
-
+DEFINES	+= -DJS_THREADSAFE -DJSFILE
 
 LDFLAGS		= 		\
 	-L$(DIST)/bin \
