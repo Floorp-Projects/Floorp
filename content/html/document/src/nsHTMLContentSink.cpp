@@ -101,9 +101,7 @@
 #include "nsICharsetAlias.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
-#ifndef XP_MAC
 #include "nsCPrefetchService.h"
-#endif
 
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
@@ -4433,7 +4431,6 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 void
 HTMLContentSink::ProcessNextLink(const nsAString &aHref)
 {
-#ifndef XP_MAC
   nsCOMPtr<nsIPrefetchService> prefetchService(
           do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (prefetchService) {
@@ -4448,7 +4445,6 @@ HTMLContentSink::ProcessNextLink(const nsAString &aHref)
     if (uri)
       prefetchService->PrefetchURI(uri);
   }
-#endif
 }
 
 nsresult
