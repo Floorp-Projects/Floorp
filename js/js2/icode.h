@@ -9,7 +9,7 @@
         BRANCH, /* target label */
         BRANCH_FALSE, /* target label, condition */
         BRANCH_TRUE, /* target label, condition */
-        CALL, /* result, target, name, args */
+        CALL, /* result, base, target, args */
         CAST, /* dest, rvalue, toType */
         COMPARE_EQ, /* dest, source1, source2 */
         COMPARE_GE, /* dest, source1, source2 */
@@ -18,13 +18,13 @@
         COMPARE_LE, /* dest, source1, source2 */
         COMPARE_LT, /* dest, source1, source2 */
         COMPARE_NE, /* dest, source1, source2 */
-        CONSTRUCTOR_CALL, /* target class, index, this, args */
         DEBUGGER, /* drop to the debugger */
         DELETE_PROP, /* dest, object, prop name */
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
         GENERIC_BINARY_OP, /* dest, op, source1, source2 */
         GET_ELEMENT, /* dest, base, index */
+        GET_METHOD, /* result, target base, index */
         GET_PROP, /* dest, object, prop name */
         GET_SLOT, /* dest, object, slot number */
         GET_STATIC, /* dest, class, index */
@@ -34,7 +34,6 @@
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
         LOAD_STRING, /* dest, immediate value (string) */
-        METHOD_CALL, /* result, target base, target value, args */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NAME_XCR, /* dest, name, value */
@@ -60,7 +59,6 @@
         SHIFTLEFT, /* dest, source1, source2 */
         SHIFTRIGHT, /* dest, source1, source2 */
         SLOT_XCR, /* dest, source, slot number, value */
-        STATIC_CALL, /* result, target class, index, args */
         STATIC_XCR, /* dest, class, index, value */
         STRICT_EQ, /* dest, source1, source2 */
         STRICT_NE, /* dest, source1, source2 */
@@ -106,7 +104,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -144,18 +142,18 @@
         /* print() and printOperands() inherited from GenericBranch */
     };
 
-    class Call : public Instruction_4<TypedRegister, TypedRegister, const StringAtom*, RegisterList> {
+    class Call : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList> {
     public:
-        /* result, target, name, args */
-        Call (TypedRegister aOp1, TypedRegister aOp2, const StringAtom* aOp3, RegisterList aOp4) :
-            Instruction_4<TypedRegister, TypedRegister, const StringAtom*, RegisterList>
+        /* result, base, target, args */
+        Call (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, RegisterList aOp4) :
+            Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList>
             (CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
+            f << opcodeNames[CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << ArgList(mOp4, registers);
+            f << mOp1.first << ", " << mOp2.first << ", " << mOp3.first << ", " << ArgList(mOp4, registers);
             return f;
         }
     };
@@ -171,7 +169,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -239,22 +237,6 @@
         /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
-    class ConstructorCall : public Instruction_4<JSClass*, uint32, TypedRegister, RegisterList> {
-    public:
-        /* target class, index, this, args */
-        ConstructorCall (JSClass* aOp1, uint32 aOp2, TypedRegister aOp3, RegisterList aOp4) :
-            Instruction_4<JSClass*, uint32, TypedRegister, RegisterList>
-            (CONSTRUCTOR_CALL, aOp1, aOp2, aOp3, aOp4) {};
-        virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CONSTRUCTOR_CALL] << "\t" << mOp1->getName() << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
-            return f;
-        }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp3.first << '=' << registers[mOp3.first] << ", " << ArgList(mOp4, registers);
-            return f;
-        }
-    };
-
     class Debugger : public Instruction {
     public:
         /* drop to the debugger */
@@ -281,7 +263,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -306,7 +288,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
+            f << mOp1.first << ", " << mOp2.first << ", " << mOp3.first;
             return f;
         }
     };
@@ -322,7 +304,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first] << ", " << "R" << mOp4.first << '=' << registers[mOp4.first];
+            f << mOp1.first << ", " << mOp3.first << ", " << mOp4.first;
             return f;
         }
     };
@@ -338,7 +320,23 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
+            f << mOp1.first << ", " << mOp2.first << ", " << mOp3.first;
+            return f;
+        }
+    };
+
+    class GetMethod : public Instruction_3<TypedRegister, TypedRegister, uint32> {
+    public:
+        /* result, target base, index */
+        GetMethod (TypedRegister aOp1, TypedRegister aOp2, uint32 aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, uint32>
+            (GET_METHOD, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[GET_METHOD] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -354,7 +352,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -370,7 +368,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -386,7 +384,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -426,7 +424,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -442,7 +440,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -458,7 +456,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -474,23 +472,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
-            return f;
-        }
-    };
-
-    class MethodCall : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList> {
-    public:
-        /* result, target base, target value, args */
-        MethodCall (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, RegisterList aOp4) :
-            Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList>
-            (METHOD_CALL, aOp1, aOp2, aOp3, aOp4) {};
-        virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[METHOD_CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
-            return f;
-        }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first] << ", " << ArgList(mOp4, registers);
+            f << mOp1.first;
             return f;
         }
     };
@@ -506,7 +488,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -531,7 +513,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -547,7 +529,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -563,7 +545,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -579,7 +561,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -595,7 +577,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -611,7 +593,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -642,7 +624,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -667,7 +649,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -683,7 +665,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -708,7 +690,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -754,7 +736,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp2.first;
             return f;
         }
     };
@@ -770,7 +752,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
+            f << mOp1.first << ", " << mOp2.first << ", " << mOp3.first;
             return f;
         }
     };
@@ -786,7 +768,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
+            f << mOp1.first << ", " << mOp3.first;
             return f;
         }
     };
@@ -802,7 +784,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
+            f << mOp1.first << ", " << mOp3.first;
             return f;
         }
     };
@@ -818,7 +800,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp3.first << '=' << registers[mOp3.first];
+            f << mOp3.first;
             return f;
         }
     };
@@ -852,23 +834,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
-            return f;
-        }
-    };
-
-    class StaticCall : public Instruction_4<TypedRegister, JSClass*, uint32, RegisterList> {
-    public:
-        /* result, target class, index, args */
-        StaticCall (TypedRegister aOp1, JSClass* aOp2, uint32 aOp3, RegisterList aOp4) :
-            Instruction_4<TypedRegister, JSClass*, uint32, RegisterList>
-            (STATIC_CALL, aOp1, aOp2, aOp3, aOp4) {};
-        virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[STATIC_CALL] << "\t" << mOp1 << ", " << mOp2->getName() << ", " << mOp3 << ", " << mOp4;
-            return f;
-        }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << ArgList(mOp4, registers);
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -884,7 +850,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -927,7 +893,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -943,7 +909,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -959,7 +925,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -1014,7 +980,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            f << mOp1.first << ", " << mOp2.first;
             return f;
         }
     };
@@ -1030,7 +996,7 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            f << mOp1.first;
             return f;
         }
     };
@@ -1077,13 +1043,13 @@
         "COMPARE_LE       ",
         "COMPARE_LT       ",
         "COMPARE_NE       ",
-        "CONSTRUCTOR_CALL ",
         "DEBUGGER         ",
         "DELETE_PROP      ",
         "DIVIDE           ",
         "ELEM_XCR         ",
         "GENERIC_BINARY_OP",
         "GET_ELEMENT      ",
+        "GET_METHOD       ",
         "GET_PROP         ",
         "GET_SLOT         ",
         "GET_STATIC       ",
@@ -1093,7 +1059,6 @@
         "LOAD_IMMEDIATE   ",
         "LOAD_NAME        ",
         "LOAD_STRING      ",
-        "METHOD_CALL      ",
         "MOVE             ",
         "MULTIPLY         ",
         "NAME_XCR         ",
@@ -1119,7 +1084,6 @@
         "SHIFTLEFT        ",
         "SHIFTRIGHT       ",
         "SLOT_XCR         ",
-        "STATIC_CALL      ",
         "STATIC_XCR       ",
         "STRICT_EQ        ",
         "STRICT_NE        ",

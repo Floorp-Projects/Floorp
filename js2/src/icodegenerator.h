@@ -190,7 +190,7 @@ namespace ICG {
         void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
 
 
-        typedef enum {Var, Property, Slot, Static, Constructor, Name} LValueKind;
+        typedef enum {Var, Property, Slot, Static, Constructor, Name, Method} LValueKind;
 
         LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex);
         TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args);
@@ -242,11 +242,8 @@ namespace ICG {
         TypedRegister op(ICodeOp op, TypedRegister source);
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
         TypedRegister binaryOp(ICodeOp op, TypedRegister source1, TypedRegister source2);
-        TypedRegister call(TypedRegister target, const StringAtom &name, RegisterList *args);
-        TypedRegister methodCall(TypedRegister targetBase, TypedRegister targetValue, RegisterList *args);
-        TypedRegister staticCall(JSClass *c, const StringAtom &name, RegisterList *args);
-        void constructorCall(JSClass *c, const StringAtom &name, TypedRegister thisArg, RegisterList *args);
-        void constructorCall(JSClass *c, const String &name, TypedRegister thisArg, RegisterList *args);
+        TypedRegister call(TypedRegister base, TypedRegister target, RegisterList *args);
+        TypedRegister getMethod(TypedRegister thisArg, uint32 slotIndex);
 
         void move(TypedRegister destination, TypedRegister source);
         TypedRegister logicalNot(TypedRegister source);
@@ -274,7 +271,7 @@ namespace ICG {
         void setProperty(TypedRegister base, const StringAtom &name, TypedRegister value);
         TypedRegister propertyXcr(TypedRegister base, const StringAtom &name, ICodeOp op);
         
-        TypedRegister getStatic(JSClass *base, const StringAtom &name);
+        TypedRegister getStatic(JSClass *base, const String &name);
         void setStatic(JSClass *base, const StringAtom &name, TypedRegister value);
         TypedRegister staticXcr(JSClass *base, const StringAtom &name, ICodeOp op);
         

@@ -288,26 +288,14 @@ $ops{"RETURN_VOID"} =
 $ops{"CALL"} =
   {
    super  => "Instruction_4",
-   rem    => "result, target, name, args",
-   params => [ ("TypedRegister", "TypedRegister", "const StringAtom*", "RegisterList") ]
-  };
-$ops{"STATIC_CALL"} =
-  {
-   super  => "Instruction_4",
-   rem    => "result, target class, index, args",
-   params => [ ("TypedRegister", "JSClass*", "uint32", "RegisterList") ]
-  };
-$ops{"METHOD_CALL"} =
-  {
-   super  => "Instruction_4",
-   rem    => "result, target base, target value, args",
+   rem    => "result, base, target, args",
    params => [ ("TypedRegister", "TypedRegister", "TypedRegister", "RegisterList") ]
   };
-$ops{"CONSTRUCTOR_CALL"} =
+$ops{"GET_METHOD"} =
   {
-   super  => "Instruction_4",
-   rem    => "target class, index, this, args",
-   params => [ ("JSClass*", "uint32", "TypedRegister", "RegisterList") ]
+   super  => "Instruction_3",
+   rem    => "result, target base, index",
+   params => [ ("TypedRegister", "TypedRegister", "uint32") ]
   };
 $ops{"THROW"} =
   {
@@ -589,7 +577,8 @@ sub get_printops_body {
     for $type (@types) {
 
         if ($type eq "TypedRegister") {
-            push (@oplist, "\"R\" << mOp$op.first << '=' << registers[mOp$op.first]");
+            push (@oplist, "mOp$op.first");
+#            push (@oplist, "\"R\" << mOp$op.first << '=' << registers[mOp$op.first]");
         } elsif ($type eq "RegisterList") {
             push (@oplist, "ArgList(mOp$op, registers)");
         }

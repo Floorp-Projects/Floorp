@@ -583,138 +583,32 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(su).first] = s;
                 }
                 break;
-            case METHOD_CALL:
-                {
-                    MethodCall* call = static_cast<MethodCall*>(instruction);
-                    ASSERT((*registers)[op3(call).first].isString());
 
-                    JSValue base;
-                    JSValue prop;
-                    if (op2(call).first == NotARegister) {
-                        base = mGlobal;
-                        prop = mGlobal->getProperty(*((*registers)[op3(call).first].string));
-                    }
-                    else {
-                        base = (*registers)[op2(call).first];
-                        ASSERT(base.isObject());        // XXX runtime error
-                        prop = base.object->getProperty(*((*registers)[op3(call).first].string));
-                    }
-                    ASSERT(prop.isFunction()); // XXX runtime error
-                    JSFunction *target = prop.function;
+            case GET_METHOD:
+                {
+                    GetMethod* gm = static_cast<GetMethod*>(instruction);
+                    JSValue base = (*registers)[src1(gm).first];
+                    ASSERT(base.isObject());        // XXX runtime error
+                    JSClass *theClass = dynamic_cast<JSClass*>(base.object->getType());
+                    ASSERT(theClass);
+                    (*registers)[dst(gm).first] = theClass->getMethod(src2(gm));
+                }
+                break;
+
+            case CALL:
+                {
+                    Call* call = static_cast<Call*>(instruction);
+                    ASSERT((*registers)[op2(call).first].isFunction()); // XXX runtime error
+                    JSFunction *target = (*registers)[op2(call).first].function;
                     if (target->isNative()) {
                         RegisterList &params = op4(call);
                         JSValues argv(params.size() + 1);
-                        argv[0] = base;
-                        JSValues::size_type i = 1;
-                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
-                                        src != end; ++src, ++i) {
-                            argv[i] = (*registers)[src->first];
-                        }
-                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
-                        if (op1(call).first != NotARegister)
-                            (*registers)[op1(call).first] = result;
-                        break;
-                    }
-                    else {
-                        mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, op1(call));
-                        mActivation = new Activation(target->getICode(), mActivation, base, op4(call));
-                        JSClass *thisClass = dynamic_cast<JSClass*>(base.object->getType());
-                        if (thisClass)
-                            mGlobal = thisClass->getScope();
-                        registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
-                        continue;
-                    }
-                }
-
-            case STATIC_CALL:
-                {
-                    StaticCall* call = static_cast<StaticCall*>(instruction);
-                    JSClass* thisClass = op2(call);
-                    const JSValue& value = (*thisClass)[op3(call)];
-                    // FIXME: throw runtime error if not a function value.
-                    ASSERT(value.isFunction());
-                    JSFunction *target = value.function;
-                    if (target->isNative()) {
-                        RegisterList &params = op4(call);
-                        JSValues argv(params.size() + 1, kNullValue);
-                        JSValues::size_type i = 1;
-                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
-                                        src != end; ++src, ++i) {
-                            argv[i] = (*registers)[src->first];
-                        }
-                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
-                        if (op1(call).first != NotARegister)
-                            (*registers)[op1(call).first] = result;
-                        break;
-                    }
-                    else {
-                        mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, op1(call));
-                        mActivation = new Activation(target->getICode(), mActivation, kNullValue, op4(call));
-                        mGlobal = op2(call)->getScope();
-                        registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
-                        continue;
-                    }
-                }
-
-            case CONSTRUCTOR_CALL:
-                {
-                    ConstructorCall* call = static_cast<ConstructorCall*>(instruction);
-                    JSClass* thisClass = op1(call);
-                    const JSValue& value = (*thisClass)[op2(call)];
-                    // FIXME: throw runtime error if not a function value.
-                    ASSERT(value.isFunction());
-                    JSFunction *target = value.function;
-                    if (target->isNative()) {
-                        RegisterList &params = op4(call);
-                        JSValues argv(params.size() + 1, kNullValue);
                         argv[0] = (*registers)[op3(call).first];
                         JSValues::size_type i = 1;
                         for (RegisterList::const_iterator src = params.begin(), end = params.end();
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first];
                         }
-                        /*JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);*/
-                        break;
-                    }
-                    else {
-                        mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, TypedRegister(NotARegister, &Any_Type));
-                        mActivation = new Activation(target->getICode(), mActivation, (*registers)[op3(call).first], op4(call));
-                        mGlobal = op1(call)->getScope();
-                        registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
-                        continue;
-                    }
-                }
-
-            case CALL:
-                {
-                    Call* call = static_cast<Call*>(instruction);
-                    JSFunction *target;
-                    if (op2(call).first == NotARegister) {
-                        ASSERT(mGlobal->getVariable(*op3(call)).isFunction());
-                        target = mGlobal->getVariable(*op3(call)).function;
-                    }
-                    else {
-                        ASSERT((*registers)[op2(call).first].isFunction()); // XXX runtime error
-                        target = (*registers)[op2(call).first].function;
-                    }
-                    if (target->isNative()) {
-                        RegisterList &params = op4(call);
-                        JSValues argv(params.size() + 1);
-                        argv[0] = kNullValue;
-                        JSValues::size_type i = 1;
-                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
-                                        src != end; ++src, ++i) {
-                            argv[i] = (*registers)[src->first];
-                        }
                         JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
                         if (op1(call).first != NotARegister)
                             (*registers)[op1(call).first] = result;
@@ -723,7 +617,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
                                                mActivation, mGlobal, op1(call));
-                        mActivation = new Activation(target->getICode(), mActivation, kNullValue, op4(call));
+                        mActivation = new Activation(target->getICode(), mActivation, (*registers)[op3(call).first], op4(call));
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
@@ -833,6 +727,10 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue& value = (*registers)[src1(gp).first];
                     if (value.isObject()) {
                         if (value.isType()) {
+                            // I don't think this is necessary anymore - any get property
+                            // on a class name should have been turned into a GET_STATIC
+                            // by the codegen.
+                            ASSERT(false);      
                             // REVISIT: should signal error if slot doesn't exist.
                             JSClass* thisClass = dynamic_cast<JSClass*>(value.type);
                             if (thisClass && thisClass->hasStatic(*src2(gp))) {
@@ -852,6 +750,10 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue& value = (*registers)[dst(sp).first];
                     if (value.isObject()) {
                         if (value.isType()) {
+                            // I don't think this is necessary anymore - any set property
+                            // on a class name should have been turned into a SET_STATIC
+                            // by the codegen.
+                            ASSERT(false);      
                             // REVISIT: should signal error if slot doesn't exist.
                             JSClass* thisClass = dynamic_cast<JSClass*>(value.object);
                             if (thisClass && thisClass->hasStatic(*src1(sp))) {
