@@ -355,8 +355,10 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
     nsIRenderingContext* drawCtx = window->GetRenderingContext();
     drawCtx->Scale(mDeviceContext->GetAppUnitsToDevUnits(),
                    mDeviceContext->GetAppUnitsToDevUnits());
-    rv = mImageGroup->Init(drawCtx);
     NS_RELEASE(drawCtx);
+    nsIDeviceContext* deviceCtx = window->GetDeviceContext();
+    rv = mImageGroup->Init(deviceCtx);
+    NS_RELEASE(deviceCtx);
     NS_RELEASE(window);
     if (NS_OK != rv) {
       return rv;

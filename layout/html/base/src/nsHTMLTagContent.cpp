@@ -891,6 +891,7 @@ nsHTMLTagContent::SetAttributeNode(nsIDOMAttribute* aAttribute)
   nsresult res = NS_ERROR_FAILURE;
 
   if (nsnull != aAttribute) {
+    // XXX Very suspicious code. Why aren't these nsAutoString?
     nsString name, value;
     res = aAttribute->GetName(name);
     if (NS_OK == res) {
