@@ -26,14 +26,10 @@ MODULE=rdf
 
 IDLSRCS =  \
         XULDocument.idl         \
-        XULBrowserElement.idl          \
-        XULIFrameElement.idl          \
         XULElement.idl          \
         XULCommandDispatcher.idl   \
-        XULTreeElement.idl      \
-        XULEditorElement.idl      \
-		XULPopupElement.idl \
-		XULMenuListElement.idl \
+        XULTreeElement.idl     \
+        XULMenuListElement.idl \
        $(NULL)
 
 XPCOM_DESTDIR=$(DEPTH)\rdf\content\public

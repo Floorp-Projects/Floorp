@@ -1,10 +1,6 @@
 nsIDOMXULCommandDispatcher.h
 nsIDOMXULDocument.h
-nsIDOMXULIFrameElement.h
-nsIDOMXULBrowserElement.h
-nsIDOMXULEditorElement.h
 nsIDOMXULElement.h
-nsIDOMXULPopupElement.h
 nsIDOMXULTreeElement.h
 nsIStreamLoadableDocument.h
 nsIXULContentSink.h

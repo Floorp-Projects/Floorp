@@ -37,12 +37,8 @@ CPPSRCS		= \
 		nsJSXULDocument.cpp \
 		nsJSXULElement.cpp \
 		nsJSXULCommandDispatcher.cpp \
-		nsJSXULPopupElement.cpp \
 		nsJSXULTreeElement.cpp \
-		nsJSXULIFrameElement.cpp \
-		nsJSXULBrowserElement.cpp \
-		nsJSXULEditorElement.cpp \
-    nsJSXULMenuListElement.cpp \
+		nsJSXULMenuListElement.cpp \
 		nsRDFDOMNodeList.cpp \
 		nsRuleNetwork.cpp \
 		nsXULAtoms.cpp \
@@ -56,12 +52,8 @@ CPPSRCS		= \
 		nsXULCommandDispatcher.cpp \
 		nsXULControllers.cpp \
 		nsXULKeyListener.cpp \
-		nsXULPopupElement.cpp \
 		nsXULTemplateBuilder.cpp \
 		nsXULTreeElement.cpp \
-		nsXULIFrameElement.cpp \
-		nsXULBrowserElement.cpp \
-		nsXULEditorElement.cpp \
 		nsXULPrototypeDocument.cpp \
 		nsXULPrototypeCache.cpp \
 		nsXULMenuListElement.cpp \
