@@ -1269,33 +1269,24 @@ nsFontPSFreeType::DrawString(nsRenderingContextPS* aContext,
 int
 nsFontPSFreeType::ascent()
 {
-  int ascent;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   NS_ENSURE_TRUE(face, 0);
-  ascent = FT_16_16_TO_REG(face->ascender * face->size->metrics.y_scale);
-  ascent = FT_CEIL(ascent);
-  ascent = FT_TRUNC(ascent);
-  return ascent;
+  return FT_DESIGN_UNITS_TO_PIXELS(face->ascender, face->size->metrics.y_scale);
 }
 
 int
 nsFontPSFreeType::descent()
 {
-  int descent;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   NS_ENSURE_TRUE(face, 0);
-  descent = FT_16_16_TO_REG(-face->descender * face->size->metrics.y_scale);
-  descent = FT_CEIL(descent);
-  descent = FT_TRUNC(descent);
-  return descent;
+  return FT_DESIGN_UNITS_TO_PIXELS(face->descender, face->size->metrics.y_scale);
 }
 
 int
 nsFontPSFreeType::max_ascent()
 {
-  int max_ascent;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   NS_ENSURE_TRUE(face, 0);
@@ -1304,19 +1295,16 @@ nsFontPSFreeType::max_ascent()
   TT_OS2 * tt_os2 = (TT_OS2 *)p;
   NS_ASSERTION(tt_os2, "unable to get OS2 table");
   if (tt_os2)
-    max_ascent = FT_16_16_TO_REG(tt_os2->sTypoAscender
-                                 * face->size->metrics.y_scale);
+     return FT_DESIGN_UNITS_TO_PIXELS(tt_os2->sTypoAscender,
+                                      face->size->metrics.y_scale);
   else
-    max_ascent = FT_16_16_TO_REG(face->bbox.yMax * face->size->metrics.y_scale);
-  max_ascent = FT_CEIL(max_ascent);
-  max_ascent = FT_TRUNC(max_ascent);
-  return max_ascent;
+     return FT_DESIGN_UNITS_TO_PIXELS(face->bbox.yMax,
+                                      face->size->metrics.y_scale);
 }
 
 int
 nsFontPSFreeType::max_descent()
 {
-  int max_descent;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   NS_ENSURE_TRUE(face, 0);
@@ -1325,75 +1313,56 @@ nsFontPSFreeType::max_descent()
   TT_OS2 *tt_os2 = (TT_OS2 *) p;
   NS_ASSERTION(tt_os2, "unable to get OS2 table");
   if (tt_os2)
-    max_descent = FT_16_16_TO_REG(-tt_os2->sTypoDescender *
-                                  face->size->metrics.y_scale);
+     return FT_DESIGN_UNITS_TO_PIXELS(tt_os2->sTypoDescender,
+                                      face->size->metrics.y_scale);
   else
-    max_descent = FT_16_16_TO_REG(-face->bbox.yMin *
-                                  face->size->metrics.y_scale);
-  max_descent = FT_CEIL(max_descent);
-  max_descent = FT_TRUNC(max_descent);
-  return max_descent;
+     return FT_DESIGN_UNITS_TO_PIXELS(face->bbox.yMin,
+                                      face->size->metrics.y_scale);
 }
 
 int
 nsFontPSFreeType::max_width()
 {
-  int max_advance_width;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   NS_ENSURE_TRUE(face, 0);
-  max_advance_width = FT_16_16_TO_REG(face->max_advance_width *
-                                      face->size->metrics.x_scale);
-  max_advance_width = FT_CEIL(max_advance_width);
-  max_advance_width = FT_TRUNC(max_advance_width);
-  return max_advance_width;
+  return FT_DESIGN_UNITS_TO_PIXELS(face->max_advance_width,
+                                   face->size->metrics.x_scale);
 }
 
 PRBool
 nsFontPSFreeType::getXHeight(unsigned long &aVal)
 {
-  int height;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face || !aVal)
     return PR_FALSE;
-  height = FT_16_16_TO_REG(face->height * face->size->metrics.x_scale);
-  height = FT_CEIL(height);
-  height = FT_TRUNC(height);
+  aVal = FT_DESIGN_UNITS_TO_PIXELS(face->height, face->size->metrics.y_scale);
 
-  aVal = height;
   return PR_TRUE;
 }
 
 PRBool
 nsFontPSFreeType::underlinePosition(long &aVal)
 {
-  long underline_position;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return PR_FALSE;
-  underline_position = FT_16_16_TO_REG(-face->underline_position *
-                        face->size->metrics.x_scale);
-  underline_position = FT_CEIL(underline_position);
-  underline_position = FT_TRUNC(underline_position);
-  aVal = underline_position;
+  aVal = FT_DESIGN_UNITS_TO_PIXELS(-face->underline_position,
+                                   face->size->metrics.y_scale);
   return PR_TRUE;
 }
 
 PRBool
 nsFontPSFreeType::underline_thickness(unsigned long &aVal)
 {
-  unsigned long underline_thickness;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return PR_FALSE;
-  underline_thickness = FT_16_16_TO_REG(face->underline_thickness *
-                         face->size->metrics.x_scale);
-  underline_thickness = FT_CEIL(underline_thickness);
-  underline_thickness = FT_TRUNC(underline_thickness);
-  aVal = underline_thickness;
+  aVal = FT_DESIGN_UNITS_TO_PIXELS(face->underline_thickness,
+                                   face->size->metrics.x_scale);
   return PR_TRUE;
 }
 
@@ -1401,14 +1370,43 @@ PRBool
 nsFontPSFreeType::superscript_y(long &aVal)
 {
   aVal = 0;
-  return PR_FALSE;
+  FT_Face face = getFTFace();
+  NS_ASSERTION(face, "failed to get face/size");
+  if (!face)
+    return PR_FALSE;
+
+  TT_OS2 *tt_os2;
+  mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
+  NS_ASSERTION(tt_os2, "unable to get OS2 table");
+  if (!tt_os2)
+    return PR_FALSE;
+
+  aVal = FT_DESIGN_UNITS_TO_PIXELS(tt_os2->ySuperscriptYOffset,
+                                  face->size->metrics.y_scale);
+  return PR_TRUE;
 }
 
 PRBool
 nsFontPSFreeType::subscript_y(long &aVal)
 {
   aVal = 0;
-  return PR_FALSE;
+  FT_Face face = getFTFace();
+  NS_ASSERTION(face, "failed to get face/size");
+  if (!face)
+    return PR_FALSE;
+
+  TT_OS2 *tt_os2;
+  mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
+  NS_ASSERTION(tt_os2, "unable to get OS2 table");
+  if (!tt_os2)
+    return PR_FALSE;
+
+  aVal = FT_DESIGN_UNITS_TO_PIXELS(tt_os2->ySubscriptYOffset,
+                                  face->size->metrics.y_scale);
+
+  // some fonts have the sign wrong. it should be always positive.
+  aVal = (aVal < 0) ? -aVal : aVal;
+  return PR_TRUE;
 }
 
 nsresult
