@@ -26,6 +26,7 @@ MODULE = raptor
 
 EXPORTS =               \
         nsICSSParser.h	\
+        nsICSSStyleSheet.h \
         nsStyleUtil.h	\
         $(NULL)
 

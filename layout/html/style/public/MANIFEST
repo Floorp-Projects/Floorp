@@ -3,4 +3,5 @@
 #
 
 nsICSSParser.h
+nsICSSStyleSheet.h
 nsStyleUtil.h
