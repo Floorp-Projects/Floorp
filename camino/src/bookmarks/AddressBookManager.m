@@ -82,7 +82,21 @@
   while ((person = [peopleEnumerator nextObject])) {
     homepage = [person valueForProperty:kABHomePageProperty];
     if ([homepage length] > 0) {
-      name = [NSString stringWithFormat:@"%@ %@",[person valueForProperty:kABFirstNameProperty],[person valueForProperty:kABLastNameProperty]];
+      NSString* firstName = [person valueForProperty:kABFirstNameProperty];
+      NSString* lastName = [person valueForProperty:kABLastNameProperty];
+      if (firstName || lastName) {
+        if (!firstName)
+          name = lastName;
+        else if (!lastName)
+          name = firstName;
+        else
+          name = [NSString stringWithFormat:@"%@ %@", firstName, lastName];
+      }
+      else {
+        name = [person valueForProperty:kABOrganizationProperty];
+        if (!name)
+          name = NSLocalizedString(@"<No Name>",nil);
+      }
       id bookmark = [mAddressBookFolder addBookmark];
       [bookmark setTitle:name];
       [bookmark setUrl:homepage];
