@@ -384,7 +384,6 @@ nsCStringKey::nsCStringKey(const nsCString& str)
     : mStr((char*)str.GetBuffer()), mStrLen(str.Length()), mOwnership(OWN_CLONE)
 {
     NS_ASSERTION(mStr, "null string key");
-    NS_ASSERTION(mStrLen == nsCRT::strlen(mStr), "bad string length");
 #ifdef DEBUG
     mKeyType = CStringKey;
 #endif
@@ -395,8 +394,6 @@ nsCStringKey::nsCStringKey(const char* str, PRInt32 strLen, Ownership own)
     : mStr((char*)str), mStrLen(strLen), mOwnership(own)
 {
     NS_ASSERTION(mStr, "null string key");
-//    if (mStrLen == -1)
-//        mStrLen = nsCRT::strlen(str);
 #ifdef DEBUG
     mKeyType = CStringKey;
 #endif
@@ -453,7 +450,6 @@ nsStringKey::nsStringKey(const nsString& str)
     : mStr((PRUnichar*)str.GetUnicode()), mStrLen(str.Length()),  mOwnership(OWN_CLONE)
 {
     NS_ASSERTION(mStr, "null string key");
-    NS_ASSERTION(mStrLen == nsCRT::strlen(mStr), "bad string length");
 #ifdef DEBUG
     mKeyType = StringKey;
 #endif
@@ -509,6 +505,60 @@ nsStringKey::Clone() const
         return NULL;
     nsCRT::memcpy(str, mStr, len);
     return new nsStringKey(str, mStrLen, OWN);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsOpaqueKey::nsOpaqueKey(const char* str, PRUint32 strLen, Ownership own)
+    : mBuf((char*)str), mBufLen(strLen), mOwnership(own)
+{
+    NS_ASSERTION(mBuf, "null buffer");
+#ifdef DEBUG
+    mKeyType = OpaqueKey;
+#endif
+    MOZ_COUNT_CTOR(nsOpaqueKey);
+}
+
+nsOpaqueKey::~nsOpaqueKey(void)
+{
+    if (mOwnership == OWN)
+        nsMemory::Free(mBuf);
+    MOZ_COUNT_DTOR(nsOpaqueKey);
+}
+
+PRUint32
+nsOpaqueKey::HashCode(void) const
+{
+    return nsCRT::BufferHashCode(mBuf, mBufLen);
+}
+
+PRBool
+nsOpaqueKey::Equals(const nsHashKey* aKey) const
+{
+    NS_ASSERTION(aKey->GetKeyType() == OpaqueKey, "mismatched key types");
+    nsOpaqueKey* other = (nsOpaqueKey*)aKey;
+    if (mBufLen != other->mBufLen)
+        return PR_FALSE;
+    return nsCRT::memcmp(mBuf, other->mBuf, mBufLen) == 0;
+}
+
+nsHashKey*
+nsOpaqueKey::Clone() const
+{
+    if (mOwnership == NEVER_OWN)
+        return new nsOpaqueKey(mBuf, mBufLen, NEVER_OWN);
+
+    // Since this might hold binary data OR a string, we ensure that the
+    // clone string is zero terminated, but don't assume that the source 
+    // string was so terminated.
+
+    PRUint32 len = mBufLen * sizeof(char);
+    char* str = (char*)nsMemory::Alloc(len + sizeof(char));
+    if (str == NULL)
+        return NULL;
+    nsCRT::memcpy(str, mBuf, len);
+    str[len] = 0;
+    return new nsOpaqueKey(str, mBufLen, OWN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

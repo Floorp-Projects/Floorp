@@ -60,7 +60,8 @@ public:
     VoidKey,
     IDKey,
     CStringKey,
-    StringKey
+    StringKey,
+    OpaqueKey
   };
   nsHashKeyType GetKeyType() const { return mKeyType; }
 protected:
@@ -260,11 +261,10 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsStringKey: Where keys are PRUnichar* or char*
-// Some uses: hashing ProgIDs, filenames, URIs
 
 #include "nsString.h"
 
+// for null-terminated c-strings
 class NS_COM nsCStringKey : public nsHashKey {
 public:
 
@@ -274,9 +274,6 @@ public:
     OWN         // 'str' to be free'd in key dtor. Clones make their own copy.
   };
 
-  // If strLen is not passed, and defaults to -1, the assumption here is that str
-  // does not contain embedded nulls, i.e. nsCRT::strlen will be used to determine the
-  // length.
   nsCStringKey(const char* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
   nsCStringKey(const nsCString& str);
   ~nsCStringKey(void);
@@ -296,6 +293,7 @@ protected:
   Ownership     mOwnership;
 };
 
+// for null-terminated unicode strings
 class NS_COM nsStringKey : public nsHashKey {
 public:
 
@@ -305,10 +303,7 @@ public:
     OWN         // 'str' to be free'd in key dtor. Clones make their own copy.
   };
 
-  // If strLen is not passed, and defaults to -1, the assumption here is that str
-  // does not contain embedded nulls, i.e. nsCRT::strlen will be used to determine the
-  // length.
-  nsStringKey(const PRUnichar* str, PRInt32 strLen = -1,  Ownership own = OWN_CLONE);
+  nsStringKey(const PRUnichar* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
   nsStringKey(const nsString& str);
   ~nsStringKey(void);
 
@@ -324,6 +319,34 @@ public:
 protected:
   PRUnichar*    mStr;
   PRUint32      mStrLen;
+  Ownership     mOwnership;
+};
+
+// for opaque buffers of data which may contain nulls
+class NS_COM nsOpaqueKey : public nsHashKey {
+public:
+
+  enum Ownership {
+    NEVER_OWN,  // 'buf' is very long lived, even clones don't need to copy it.
+    OWN_CLONE,  // 'buf' is as long lived as this key. But clones make a copy.
+    OWN         // 'buf' to be free'd in key dtor. Clones make their own copy.
+  };
+
+  nsOpaqueKey(const char* buf, PRUint32 bufLen, Ownership own = OWN_CLONE);
+  ~nsOpaqueKey(void);
+
+  PRUint32 HashCode(void) const;
+  PRBool Equals(const nsHashKey* aKey) const;
+  nsHashKey* Clone() const;
+
+  // For when the owner of the hashtable wants to peek at the actual
+  // string in the key. No copy is made, so be careful.
+  const char* GetBuffer() const { return mBuf; }
+  PRUint32 GetBufferLength() const { return mBufLen; }
+
+protected:
+  char*         mBuf;
+  PRUint32      mBufLen;
   Ownership     mOwnership;
 };
 
