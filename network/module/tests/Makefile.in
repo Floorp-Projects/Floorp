@@ -46,7 +46,6 @@ LIBS = \
 	-lnetwork \
 	-lnetlib \
 	-lnetutil \
-        -lsockstuburl \
 	-lreg	\
 	-lxpcom	\
 	-lpwcac \
