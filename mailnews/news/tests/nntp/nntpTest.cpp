@@ -226,7 +226,6 @@ nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
 
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
-	m_url = nsnull;
 	m_protocolInitialized = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
 	m_runningURL = PR_FALSE;
@@ -237,7 +236,6 @@ nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
 	
 	// create a transport socket...
 	pNetService->CreateSocketTransport(getter_AddRefs(m_transport), m_port, m_host);
-	m_nntpProtocol = nsnull; // we can't create it until we have a url...
 }
 
 nsresult 
@@ -479,7 +477,7 @@ nsresult nsNntpTestDriver::OnListAllGroups()
 
 	if (m_protocolInitialized == PR_FALSE){
         rv = InitializeProtocol(m_urlString);
-        if (NS_FAILED(rv) || (m_url == nsnull)) {
+        if (NS_FAILED(rv) || !m_url) {
             return rv;
         }
     }
@@ -659,7 +657,7 @@ nsresult nsNntpTestDriver::OnGetGroup()
 
 	if (m_protocolInitialized == PR_FALSE) {
 		rv = InitializeProtocol(m_urlString);
-        if (NS_FAILED(rv) || (m_url == nsnull)) {
+        if (NS_FAILED(rv) || !m_url) {
             return rv;
         }
     }
@@ -698,7 +696,7 @@ nsresult nsNntpTestDriver::OnReadNewsRC()
 
 	if (m_protocolInitialized == PR_FALSE) {
 		rv = InitializeProtocol(m_urlString);
-        if (NS_FAILED(rv) || (m_url == nsnull)) {
+        if (NS_FAILED(rv) || !m_url) {
             return rv;
         }
     }
@@ -719,7 +717,7 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
     
 	if (m_protocolInitialized == PR_FALSE) {
 		rv = InitializeProtocol(m_urlString);
-        if (NS_FAILED(rv) || (m_url == nsnull)) {
+        if (NS_FAILED(rv) || !m_url) {
             return rv;
         }
     }
