@@ -53,7 +53,7 @@
 [scriptable, uuid(383F6C16-2797-11d4-BA1C-001083344DE7)]
 interface nsIAcceptLang : nsISupports
 {
-  wstring getAcceptLangFromLocale([const] in wstring aLocale);
-  wstring getLocaleFromAcceptLang([const] in wstring aName);
-  wstring acceptLang2List([const] in wstring aName, [const] in wstring aList);
+  wstring getAcceptLangFromLocale(in wstring aLocale);
+  wstring getLocaleFromAcceptLang(in wstring aName);
+  wstring acceptLang2List(in wstring aName, in wstring aList);
 };

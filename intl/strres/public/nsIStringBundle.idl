@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
 #include "nsISimpleEnumerator.idl"
 
 %{C++
@@ -77,18 +76,9 @@ interface nsIStringBundle : nsISupports
                                [array, size_is(length)] in wstring params,
                                in unsigned long length);
   /*
-  Don't use - nsIEnumerator and its subinterfaces have been deprecated	
-  */
-  [noscript] nsIBidirectionalEnumerator GetEnumeration();
-
-  /*
   Implements nsISimpleEnumerator, replaces nsIEnumerator 
   */
   nsISimpleEnumerator getSimpleEnumeration();
-
-  /* stream loaded
-   */
-  attribute boolean loaded;
 
 };
 
