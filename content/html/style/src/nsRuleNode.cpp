@@ -413,6 +413,12 @@ nsRuleNode::GetRule(nsIStyleRule** aResult)
 }
 
 NS_IMETHODIMP
+nsRuleNode::ClearPath()
+{
+  return ClearCachedData(mRule);
+}
+
+NS_IMETHODIMP
 nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
 {
   nsRuleNode* ruleDest = this;
