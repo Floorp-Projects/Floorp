@@ -291,12 +291,20 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     }
   }
   else if (aData->mTextData && aData->mSID == eStyleStruct_TextReset) {
+    // Make <a><font color="red">text</font></a> give the text a red underline
+    // in quirks mode.  The NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL flag only
+    // affects quirks mode rendering.
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_NOT_THERE !=
-        aAttributes->GetAttribute(nsHTMLAtoms::color, value)) {
-      if (((eHTMLUnit_Color == value.GetUnit())) ||
-          (eHTMLUnit_ColorName == value.GetUnit()))
-        aData->mTextData->mDecoration.SetIntValue(NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL, eCSSUnit_Enumerated);
+        aAttributes->GetAttribute(nsHTMLAtoms::color, value) &&
+        (eHTMLUnit_Color == value.GetUnit() ||
+         eHTMLUnit_ColorName == value.GetUnit())) {
+      nsCSSValue& decoration = aData->mTextData->mDecoration;
+      PRInt32 newValue = NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL;
+      if (decoration.GetUnit() == eCSSUnit_Enumerated) {
+        newValue |= decoration.GetIntValue();
+      }
+      decoration.SetIntValue(newValue, eCSSUnit_Enumerated);
     }
   }
 
