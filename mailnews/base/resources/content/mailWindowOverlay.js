@@ -19,6 +19,7 @@
  *
  * Contributors: timeless
  *               slucy@objectivesw.co.uk
+ *               Håkan Waara <hwaara@chello.se>
  */
 
 var gMessengerBundle;
@@ -430,9 +431,9 @@ function MsgCopyMessage(destFolder)
 {
   try {
     // get the msg folder we're copying messages into
-    destUri = destFolder.getAttribute('id');
-    destResource = RDF.GetResource(destUri);
-    destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var destUri = destFolder.getAttribute('id');
+    var destResource = RDF.GetResource(destUri);
+    var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
     gDBView.doCommandWithFolder(nsMsgViewCommandType.copyMessages, destMsgFolder);
   }
   catch (ex) {
@@ -444,9 +445,9 @@ function MsgMoveMessage(destFolder)
 {
   try {
     // get the msg folder we're moving messages into
-    destUri = destFolder.getAttribute('id');
-    destResource = RDF.GetResource(destUri);
-    destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var destUri = destFolder.getAttribute('id');
+    var destResource = RDF.GetResource(destUri);
+    var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
     // we don't move news messages, we copy them
     if (isNewsURI(gDBView.msgFolder.URI)) {
@@ -566,7 +567,7 @@ function MsgEditMessageAsNew()
 
 function MsgHome(url)
 {
-  window.open( url, "_blank", "chrome,dependent=yes,all" );
+  window.open(url, "_blank", "chrome,dependent=yes,all");
 }
 
 function MsgNewFolder(callBackFunctionName)
@@ -862,7 +863,7 @@ function MsgSendUnsentMsg()
 function PrintEnginePrint()
 {
     var messageList = GetSelectedMessages();
-    numMessages = messageList.length;
+    var numMessages = messageList.length;
 
     if (numMessages == 0) {
         dump("PrintEnginePrint(): No messages selected.\n");
