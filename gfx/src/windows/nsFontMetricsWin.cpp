@@ -533,10 +533,21 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
 #undef NAME
 #define NAME (('n') | ('a' << 8) | ('m' << 16) | ('e' << 24))
 
-#undef GET_SHORT
-#define GET_SHORT(p) (((p)[0] << 8) | (p)[1])
-#undef GET_LONG
-#define GET_LONG(p) (((p)[0] << 24) | ((p)[1] << 16) | ((p)[2] << 8) | (p)[3])
+#ifdef IS_BIG_ENDIAN 
+# undef GET_SHORT
+# define GET_SHORT(p) (*((PRUint16*)p))
+# undef GET_LONG
+# define GET_LONG(p)  (*((PRUint32*)p))
+#else
+# ifdef IS_LITTLE_ENDIAN 
+#  undef GET_SHORT
+#  define GET_SHORT(p) (((p)[0] << 8) | (p)[1])
+#  undef GET_LONG
+#  define GET_LONG(p) (((p)[0] << 24) | ((p)[1] << 16) | ((p)[2] << 8) | (p)[3])
+# endif
+#endif
+
+
 
 static PRUint16
 GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
@@ -585,13 +596,13 @@ GetNAME(HDC aDC, nsString* aName)
   if (!len) {
     return eGetName_OtherError;
   }
-  PRUint8* buf = (PRUint8*) PR_Malloc(len);
+  PRUint8* buf = (PRUint8*) nsMemory::Alloc(len);
   if (!buf) {
     return eGetName_OtherError;
   }
   DWORD newLen = GetFontData(aDC, NAME, 0, buf, len);
   if (newLen != len) {
-    PR_Free(buf);
+    nsMemory::Free(buf);
     return eGetName_OtherError;
   }
   PRUint8* p = buf + 2;
@@ -619,7 +630,7 @@ GetNAME(HDC aDC, nsString* aName)
     }
   }
   if (i == n) {
-    PR_Free(buf);
+    nsMemory::Free(buf);
     return eGetName_OtherError;
   }
   p = buf + offset + idOffset;
@@ -630,7 +641,7 @@ GetNAME(HDC aDC, nsString* aName)
     aName->Append(c);
   }
 
-  PR_Free(buf);
+  nsMemory::Free(buf);
 
   return eGetName_OK;
 }
@@ -674,13 +685,13 @@ GetSpaces(HDC aDC, PRUint32* aMaxGlyph)
   if ((len == GDI_ERROR) || (!len)) {
     return nsnull;
   }
-  PRUint8* buf = (PRUint8*) PR_Malloc(len);
+  PRUint8* buf = (PRUint8*) nsMemory::Alloc(len);
   if (!buf) {
     return nsnull;
   }
   DWORD newLen = GetFontData(aDC, LOCA, 0, buf, len);
   if (newLen != len) {
-    PR_Free(buf);
+    nsMemory::Free(buf);
     return nsnull;
   }
   if (isLong) {
@@ -1163,12 +1174,12 @@ public:
 //-- Font Metrics
 PR_STATIC_CALLBACK(void*) fontmap_AllocTable(void *pool, size_t size)
 {
-  return PR_Malloc(size);
+  return nsMemory::Alloc(size);
 }
 
 PR_STATIC_CALLBACK(void) fontmap_FreeTable(void *pool, void *item)
 {
-  PR_Free(item);
+  nsMemory::Free(item);
 }
 
 PR_STATIC_CALLBACK(PLHashEntry*) fontmap_AllocEntry(void *pool, const void *key)
@@ -1184,7 +1195,7 @@ PR_STATIC_CALLBACK(void) fontmap_FreeEntry(void *pool, PLHashEntry *he, PRUint32
       FreeCCMap(fontInfo->mCCMap); 
 #ifdef MOZ_MATHML
     if (fontInfo->mCMAP.mData)
-      PR_Free(fontInfo->mCMAP.mData);
+      nsMemory::Free(fontInfo->mCMAP.mData);
 #endif
     delete (nsString *) (he->key);
     delete fontInfo;
@@ -1198,6 +1209,28 @@ PLHashAllocOps fontmap_HashAllocOps = {
 
 #define SHOULD_BE_SPACE_CHAR(ch)  ((ch)==0x0020 || (ch)==0x00A0 || ((ch)>=0x2000 && ((ch)<=0x200B || (ch)==0x3000)))
 
+enum {
+  eTTPlatformIDUnicode = 0,
+  eTTPlatformIDMacintosh = 1,
+  eTTPlatformIDMicrosoft = 3
+};
+enum {
+  eTTMicrosoftEncodingSymbol = 0,
+  eTTMicrosoftEncodingUnicode = 1,
+  eTTMicrosoftEncodingUCS4 = 10
+};
+// the name of the following enum is from 
+// http://www.microsoft.com/typography/otspec/cmap.htm
+enum {
+  eTTFormat0ByteEncodingTable = 0,
+  eTTFormat2HighbyteMappingThroughTable = 2,
+  eTTFormat4SegmentMappingToDeltaValues = 4,
+  eTTFormat6TrimmedTableMapping = 6,
+  eTTFormat8Mixed16bitAnd32bitCoverage = 8,
+  eTTFormat10TrimmedArray = 10,
+  eTTFormat12SegmentedCoverage = 12,
+};
+
 PRUint16*
 nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset)
 {
@@ -1208,31 +1241,31 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFont
     return nsnull;
   }
 
-  PRUint8* buf = (PRUint8*) PR_Malloc(len);
+  PRUint8* buf = (PRUint8*) nsMemory::Alloc(len);
   if (!buf) {
     return nsnull;
   }
   DWORD newLen = GetFontData(aDC, CMAP, 0, buf, len);
   if (newLen != len) {
-    PR_Free(buf);
+    nsMemory::Free(buf);
     return nsnull;
   }
 
   nsCRT::memset(map, 0, sizeof(map));
-  PRUint8* p = buf + 2;
-  PRUint16 n = GET_SHORT(p);
-  p += 2;
+  PRUint8* p = buf + sizeof(PRUint16); // skip version, move to numberSubtables
+  PRUint16 n = GET_SHORT(p); // get numberSubtables
+  p += sizeof(PRUint16); // skip numberSubtables, move to the encoding subtables
   PRUint16 i;
   PRUint32 offset;
   for (i = 0; i < n; ++i) {
-    PRUint16 platformID = GET_SHORT(p);
-    p += 2;
-    PRUint16 encodingID = GET_SHORT(p);
-    p += 2;
-    offset = GET_LONG(p);
-    p += 4;
-    if (platformID == 3) {
-      if (encodingID == 1) { // Unicode
+    PRUint16 platformID = GET_SHORT(p); // get platformID
+    p += sizeof(PRUint16); // move to platformSpecificID
+    PRUint16 encodingID = GET_SHORT(p); // get platformSpecificID
+    p += sizeof(PRUint16); // move to offset
+    offset = GET_LONG(p);  // get offset
+    p += sizeof(PRUint32); // move to next entry
+    if (platformID == eTTPlatformIDMicrosoft) { 
+      if (encodingID == eTTMicrosoftEncodingUnicode) { // Unicode
 
         // Some fonts claim to be unicode when they are actually
         // 'pseudo-unicode' fonts that require a converter...
@@ -1248,32 +1281,32 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFont
             *aFontType = eFontType_NonUnicode;
           }
 
-          PR_Free(buf);
+          nsMemory::Free(buf);
           return GetCCMapThroughConverter(aShortName);
         } // if GetEncoding();
         break;  // break out from for(;;) loop
-      } //if (encodingID == 1)
-      else if (encodingID == 0) { // symbol
+      } // if (encodingID == eTTMicrosoftEncodingUnicode) 
+      else if (encodingID == eTTMicrosoftEncodingSymbol) { // symbol
         if (aCharset) {
           *aCharset = SYMBOL_CHARSET;
         }
         if (aFontType) {
           *aFontType = eFontType_NonUnicode;
         }
-        PR_Free(buf);
+        nsMemory::Free(buf);
         return GetCCMapThroughConverter(aShortName);
       }
-    } // if (platformID == 3) 
+    } // if (platformID == eTTPlatformIDMicrosoft) 
   } // for loop
 
   if (i == n) {
-    PR_Free(buf);
+    nsMemory::Free(buf);
     return nsnull;
   }
   p = buf + offset;
   PRUint16 format = GET_SHORT(p);
-  if (format != 4) {
-    PR_Free(buf);
+  if (format != eTTFormat4SegmentMappingToDeltaValues) {
+    nsMemory::Free(buf);
     return nsnull;
   }
   PRUint8* end = buf + len;
@@ -1283,7 +1316,7 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFont
     PRUint8 tmp = p[0];
     p[0] = p[1];
     p[1] = tmp;
-    p += 2;
+    p += 2; // every two bytes
   }
 
   PRUint16* s = (PRUint16*) (buf + offset);
@@ -1297,7 +1330,7 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFont
   PRUint32 maxGlyph;
   PRUint8* isSpace = GetSpaces(aDC, &maxGlyph);
   if (!isSpace) {
-    PR_Free(buf);
+    nsMemory::Free(buf);
     return nsnull;
   }
 
@@ -1349,8 +1382,8 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFont
   }
   //printf("\n");
 
-  PR_Free(buf);
-  PR_Free(isSpace);
+  nsMemory::Free(buf);
+  nsMemory::Free(isSpace);
 
   if (aCharset) {
     *aCharset = DEFAULT_CHARSET;
@@ -1502,39 +1535,40 @@ GetGlyphIndices(HDC              aDC,
     if ((len == GDI_ERROR) || (!len)) {
       return nsnull;
     }
-    buf = (PRUint8*) PR_Malloc(len);
+    buf = (PRUint8*) nsMemory::Alloc(len);
     if (!buf) {
       return nsnull;
     }
     DWORD newLen = GetFontData(aDC, CMAP, 0, buf, len);
     if (newLen != len) {
-      PR_Free(buf);
+      nsMemory::Free(buf);
       return nsnull;
     }
-    PRUint8* p = buf + 2;
+    PRUint8* p = buf + sizeof(PRUint16); // skip version, move to numberOfSubtables
     PRUint16 n = GET_SHORT(p);
-    p += 2;
+    p += sizeof(PRUint16); // skip numberSubtables, move to the encoding subtables
     PRUint16 i;
     PRUint32 offset;
     for (i = 0; i < n; ++i) {
-      PRUint16 platformID = GET_SHORT(p);
-      p += 2;
-      PRUint16 encodingID = GET_SHORT(p);
-      p += 2;
-      offset = GET_LONG(p);
-      p += 4;
-      if (platformID == 3 && encodingID == 1) // Unicode
+      PRUint16 platformID = GET_SHORT(p); // get platformID
+      p += sizeof(PRUint16); // move to platformSpecificID
+      PRUint16 encodingID = GET_SHORT(p); // get platformSpecificID
+      p += sizeof(PRUint16); // move to offset
+      offset = GET_LONG(p);  // get offset
+      p += sizeof(PRUint32); // move to next entry
+      if (platformID == eTTPlatformIDMicrosoft && 
+          encodingID == eTTMicrosoftEncodingUnicode) // Unicode
         break;
     }
     if (i == n) {
       NS_WARNING("nsFontMetricsWin::GetGlyphIndices() called for a non-unicode font!");
-      PR_Free(buf);
+      nsMemory::Free(buf);
       return nsnull;
     }
     p = buf + offset;
     PRUint16 format = GET_SHORT(p);
-    if (format != 4) {
-      PR_Free(buf);
+    if (format != eTTFormat4SegmentMappingToDeltaValues) {
+      nsMemory::Free(buf);
       return nsnull;
     }
     PRUint8* end = buf + len;
@@ -1544,7 +1578,7 @@ GetGlyphIndices(HDC              aDC,
       PRUint8 tmp = p[0];
       p[0] = p[1];
       p[1] = tmp;
-      p += 2;
+      p += 2; // swap every two bytes
     }
 #ifdef MOZ_MATHML
     // cache these for later re-use
@@ -1572,19 +1606,20 @@ GetGlyphIndices(HDC              aDC,
   }
   if (buf && len > 0) {
     // get the offset   
-    PRUint8* p = buf + 2;
+    PRUint8* p = buf + sizeof(PRUint16); // skip version, move to numberOfSubtables
     PRUint16 n = GET_SHORT(p);
-    p += 2;
+    p += sizeof(PRUint16); // skip numberSubtables, move to the encoding subtables
     PRUint16 i;
     PRUint32 offset;
     for (i = 0; i < n; ++i) {
-      PRUint16 platformID = GET_SHORT(p);
-      p += 2;
-      PRUint16 encodingID = GET_SHORT(p);
-      p += 2;
-      offset = GET_LONG(p);
-      p += 4;
-      if (platformID == 3 && encodingID == 1) // Unicode
+      PRUint16 platformID = GET_SHORT(p); // get platformID
+      p += sizeof(PRUint16); // move to platformSpecificID
+      PRUint16 encodingID = GET_SHORT(p); // get platformSpecificID
+      p += sizeof(PRUint16); // move to offset
+      offset = GET_LONG(p);  // get offset
+      p += sizeof(PRUint32); // move to next entry
+      if (platformID == eTTPlatformIDMicrosoft && 
+          encodingID == eTTMicrosoftEncodingUnicode) // Unicode
         break;
     }
     PRUint8* end = buf + len;
@@ -1609,7 +1644,7 @@ GetGlyphIndices(HDC              aDC,
     }
 
     if (!aCMAP) { // free work-space if the CMAP is not to be cached
-      PR_Free(buf);
+      nsMemory::Free(buf);
     }
 
     return result;
@@ -2290,12 +2325,12 @@ CompareKeysFontWeight(const void* aFontWeightEntry1, const void* aFontWeightEntr
 //-- Font weight
 PR_STATIC_CALLBACK(void*) fontweight_AllocTable(void *pool, size_t size)
 {
-  return PR_Malloc(size);
+  return nsMemory::Alloc(size);
 }
 
 PR_STATIC_CALLBACK(void) fontweight_FreeTable(void *pool, void *item)
 {
-  PR_Free(item);
+  nsMemory::Free(item);
 }
 
 PR_STATIC_CALLBACK(PLHashEntry*) fontweight_AllocEntry(void *pool, const void *key)
@@ -2649,12 +2684,12 @@ static nsFontFamilyName gFamilyNameTable[] =
 //-- Font FamilyNames
 PR_STATIC_CALLBACK(void*) familyname_AllocTable(void *pool, size_t size)
 {
-  return PR_Malloc(size);
+  return nsMemory::Alloc(size);
 }
 
 PR_STATIC_CALLBACK(void) familyname_FreeTable(void *pool, void *item)
 {
-  PR_Free(item);
+  nsMemory::Free(item);
 }
 
 PR_STATIC_CALLBACK(PLHashEntry*) familyname_AllocEntry(void *pool, const void *key)
@@ -2668,7 +2703,7 @@ PR_STATIC_CALLBACK(void) familyname_FreeEntry(void *pool, PLHashEntry *he, PRUin
 
   if (flag == HT_FREE_ENTRY)  {
     delete (nsString *) (he->key);
-    PR_Free(he);
+    nsMemory::Free(he);
   }
 }
 
@@ -4000,11 +4035,12 @@ nsFontWinA::GetSubsets(HDC aDC)
   if (!mSubsetsCount) {
     return 0;
   }
-  mSubsets = (nsFontSubset**) PR_Calloc(mSubsetsCount, sizeof(nsFontSubset*));
+  mSubsets = (nsFontSubset**) nsMemory::Alloc(mSubsetsCount* sizeof(nsFontSubset*));
   if (!mSubsets) {
     mSubsetsCount = 0;
     return 0;
   }
+  memset(mSubsets, 0, mSubsetsCount * sizeof(nsFontSubset*)); 
 
   int j;
   for (j = 0; j < mSubsetsCount; ++j) {
@@ -4013,7 +4049,7 @@ nsFontWinA::GetSubsets(HDC aDC)
       for (j = j - 1; j >= 0; --j) {
         delete mSubsets[j];
       }
-      PR_Free(mSubsets);
+      nsMemory::Free(mSubsets);
       mSubsets = nsnull;
       mSubsetsCount = 0;
       return 0;
@@ -4242,7 +4278,7 @@ nsFontWinA::~nsFontWinA()
       delete *subset;
       ++subset;
     }
-    PR_Free(mSubsets);
+    nsMemory::Free(mSubsets);
     mSubsets = nsnull;
   }
 }
@@ -4633,8 +4669,9 @@ nsFontMetricsWinA::LoadSubstituteFont(HDC aDC, nsString* aName)
         !strcmpi(name, logFont.lfFaceName)) {
       nsFontWinSubstituteA* font = new nsFontWinSubstituteA(&logFont, hfont, nsnull);
       if (font) {
-        font->mSubsets = (nsFontSubset**)PR_Calloc(1, sizeof(nsFontSubset*));
+        font->mSubsets = (nsFontSubset**)nsMemory::Alloc(sizeof(nsFontSubset*));
         if (font->mSubsets) {
+          font->mSubsets[0] = nsnull;
           nsFontSubsetSubstitute* subset = new nsFontSubsetSubstitute();
           if (subset) {
             font->mSubsetsCount = 1;
