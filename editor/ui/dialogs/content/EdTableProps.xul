@@ -43,6 +43,7 @@
   <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
+  <keyset id="keyset"/>
 
       <tabcontrol align="vertical">
 	      <tabbox align="horizontal" flex="100%">

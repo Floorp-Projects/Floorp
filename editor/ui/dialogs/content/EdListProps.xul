@@ -40,6 +40,8 @@
   <script language="JavaScript" src="chrome://editor/content/EdListProps.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
+  <keyset id="keyset"/>
+
   <label for="ListStyle">&listStyle.label;</label>
   <select class="ComboBox" id="ListStyle" onchange="SelectListStyle()">
     <option>&none.value;</option>
