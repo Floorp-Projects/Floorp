@@ -613,11 +613,9 @@ NS_IMETHODIMP
         if (NS_FAILED(rc)) return rc;\
         value.Append(nsSOAPUtils::kQualifiedSeparator);\
         value.Append(k##SOAPType##SchemaType);\
-        if (count) { \
-          value.Append(NS_LITERAL_STRING("[") + \
-                       NS_ConvertUTF8toUCS2(nsPrintfCString("%d", count)) + \
-                       NS_LITERAL_STRING("]")); \
-        } \
+        value.Append(NS_LITERAL_STRING("[") + \
+                     NS_ConvertUTF8toUCS2(nsPrintfCString("%d", count)) + \
+                     NS_LITERAL_STRING("]")); \
         rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion], kSOAPArrayTypeAttribute, value);\
         if (NS_FAILED(rc)) return rc;\
 	XPType* values = NS_STATIC_CAST(XPType*, array);\
@@ -670,14 +668,39 @@ NS_IMETHODIMP
   case nsIDataType::VTYPE_ASTRING:
     ENCODE_SIMPLE_ARRAY(nsAString, String, "%s",
       NS_ConvertUCS2toUTF8(values[i]).get())
-  case nsIDataType::VTYPE_ARRAY:
+  case nsIDataType::VTYPE_INTERFACE_IS:
+    if (iid.Equals(NS_GET_IID(nsIVariant))) {  //  Only do variants for now.
+      nsAutoString value;
+      rc = nsSOAPUtils::MakeNamespacePrefix(*aReturnValue, *nsSOAPUtils::kXSURI[mSchemaVersion], value);
+      if (NS_FAILED(rc)) return rc;
+      value.Append(nsSOAPUtils::kQualifiedSeparator);
+      value.Append(kAnyTypeSchemaType);
+      value.Append(NS_LITERAL_STRING("[") + 
+                   NS_ConvertUTF8toUCS2(nsPrintfCString("%d", count)) + 
+                   NS_LITERAL_STRING("]")); 
+      rc = (*aReturnValue)->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion], kSOAPArrayTypeAttribute, value);
+      if (NS_FAILED(rc)) return rc;
+      nsIVariant** values = NS_STATIC_CAST(nsIVariant**, array);
+      nsCOMPtr<nsIDOMElement> dummy;
+      for (PRUint32 i = 0; i < count; i++) {
+        rc = aEncoding->Encode(values[i],
+		       kEmpty,
+		       kEmpty,
+		       nsnull,
+		       aAttachments,
+		       *aReturnValue,
+		       getter_AddRefs(dummy));
+        if (NS_FAILED(rc)) return rc;
+      }
+      return rc;
+    }
 //  Don't support these array types just now (needs more work).
   case nsIDataType::VTYPE_WCHAR:
   case nsIDataType::VTYPE_ID:
   case nsIDataType::VTYPE_VOID:
   case nsIDataType::VTYPE_EMPTY:
-  case nsIDataType::VTYPE_INTERFACE_IS:
   case nsIDataType::VTYPE_INTERFACE:
+  case nsIDataType::VTYPE_ARRAY:
     break;
   }
   return NS_ERROR_ILLEGAL_VALUE;
