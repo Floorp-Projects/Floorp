@@ -214,15 +214,31 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
         printf("Can call createPopup!\n");
+ 
+        // Find out if we're anchored.
+        nsString anchorAlignment;
+        element->GetAttribute("popupanchor", anchorAlignment);
 
-        // Retrieve our x and y position.
-        PRInt32 xPos, yPos;
-        anEvent->GetScreenX(&xPos); // XXX I need to figure out frames for alignment purposes
-        anEvent->GetScreenY(&yPos); 
-        
-        domWindow->CreatePopup(element, popupContent, 
+        nsString popupAlignment("topleft");
+        element->GetAttribute("popupalign", popupAlignment);
+
+        if (anchorAlignment == "") {
+          // We aren't anchored. Create on the point.
+          // Retrieve our x and y position.
+          PRInt32 xPos, yPos;
+          anEvent->GetScreenX(&xPos); 
+          anEvent->GetScreenY(&yPos); 
+                 
+          domWindow->CreatePopup(element, popupContent, 
                                xPos, yPos, 
-                               type, "point");
+                               type, popupAlignment);
+        }
+        else {
+          // We're anchored. Pass off to the window, and let it figure out
+          // from the frame where it wants to put us.
+          domWindow->CreateAnchoredPopup(element, popupContent,
+                                         anchorAlignment, type, popupAlignment);
+        }
       }
       NS_RELEASE(global);
     }
