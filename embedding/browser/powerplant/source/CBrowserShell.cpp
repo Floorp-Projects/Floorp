@@ -888,7 +888,7 @@ NS_METHOD CBrowserShell::GetPrintSettings(nsIPrintSettings** aSettings)
         // If we don't have print settings yet, make new ones.
         nsCOMPtr<nsIWebBrowserPrint> wbPrint(do_GetInterface(mWebBrowser));
         NS_ENSURE_TRUE(wbPrint, NS_ERROR_NO_INTERFACE);
-        wbPrint->GetNewPrintSettings(getter_AddRefs(mPrintSettings));
+        wbPrint->GetGlobalPrintSettings(getter_AddRefs(mPrintSettings));
     }
     if (mPrintSettings) {
         *aSettings = mPrintSettings;

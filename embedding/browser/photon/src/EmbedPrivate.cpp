@@ -241,7 +241,7 @@ EmbedPrivate::Setup()
 
 	nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
 	if (print)
-		print->GetNewPrintSettings(getter_AddRefs(m_PrintSettings));
+		print->GetGlobalPrintSettings(getter_AddRefs(m_PrintSettings));
 
 	return NS_OK;
 }
