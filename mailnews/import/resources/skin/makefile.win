@@ -25,9 +25,12 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) fieldMapImport.css              $(DIST)\bin\chrome\messenger\skin
+	$(MAKE_INSTALL) importDialog.css				$(DIST)\bin\chrome\messenger\skin
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\skin\fieldMapImport.css
+	rm -f $(DIST)\bin\chrome\messenger\skin\importDialog.css
+	
 
 
 
