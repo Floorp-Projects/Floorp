@@ -317,6 +317,7 @@ sub GenerateSQL {
 
     my $chartid;
     my $f;
+    my $ff;
     my $t;
     my $q;
     my $v;
@@ -435,31 +436,31 @@ sub GenerateSQL {
 
 
          ",equals" => sub {
-             $term = "$f = $q";
+             $term = "$ff = $q";
          },
          ",notequals" => sub {
-             $term = "$f != $q";
+             $term = "$ff != $q";
          },
          ",casesubstring" => sub {
-             $term = "INSTR($f, $q)";
+             $term = "INSTR($ff, $q)";
          },
          ",(substring|substr)" => sub {
-             $term = "INSTR(LOWER($f), " . lc($q) . ")";
+             $term = "INSTR(LOWER($ff), " . lc($q) . ")";
          },
          ",notsubstring" => sub {
-             $term = "INSTR(LOWER($f), " . lc($q) . ") = 0";
+             $term = "INSTR(LOWER($ff), " . lc($q) . ") = 0";
          },
          ",regexp" => sub {
-             $term = "LOWER($f) REGEXP $q";
+             $term = "LOWER($ff) REGEXP $q";
          },
          ",notregexp" => sub {
-             $term = "LOWER($f) NOT REGEXP $q";
+             $term = "LOWER($ff) NOT REGEXP $q";
          },
          ",lessthan" => sub {
-             $term = "$f < $q";
+             $term = "$ff < $q";
          },
          ",greaterthan" => sub {
-             $term = "$f > $q";
+             $term = "$ff > $q";
          },
          ",anyexact" => sub {
              my @list;
@@ -467,18 +468,18 @@ sub GenerateSQL {
                  if ($w eq "---" && $f !~ /milestone/) {
                      $w = "";
                  }
-                 push(@list, "$f = " . SqlQuote($w));
+                 push(@list, "$ff = " . SqlQuote($w));
              }
              $term = join(" OR ", @list);
          },
          ",anywords" => sub {
-             $term = join(" OR ", @{GetByWordList($f, $v)});
+             $term = join(" OR ", @{GetByWordList($ff, $v)});
          },
          ",allwords" => sub {
-             $term = join(" AND ", @{GetByWordList($f, $v)});
+             $term = join(" AND ", @{GetByWordList($ff, $v)});
          },
          ",nowords" => sub {
-             my @list = @{GetByWordList($f, $v)};
+             my @list = @{GetByWordList($ff, $v)};
              if (@list) {
                  $term = "NOT (" . join(" OR ", @list) . ")";
              }
@@ -581,6 +582,10 @@ sub GenerateSQL {
                         my $ref = $funcsbykey{$key};
                         if ($debug) {
                             print "<P>$key ($f , $t ) => ";
+                        }
+                        $ff = $f;
+                        if ($f !~ /\./) {
+                            $ff = "bugs.$f";
                         }
                         &$ref;
                         if ($debug) {
