@@ -273,10 +273,24 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
 	
 	if (m_compFields && identity) 
 	{
+		// Pref values are supposed to be stored as UTF-8, so no conversion
+		nsXPIDLCString email;
+		nsXPIDLCString replyTo;
+		nsXPIDLCString organization;
+
+		identity->GetEmail(getter_Copies(email));
+		identity->GetReplyTo(getter_Copies(replyTo));
+		identity->GetOrganization(getter_Copies(organization));
+    
+		m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email));
+		m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo));
+		m_compFields->SetOrganization(NS_CONST_CAST(char*, (const char *)organization));
+
 #ifdef DEBUG
 		printf("----------------------------\n");
 		printf("--  Sending Mail Message  --\n");
 		printf("----------------------------\n");
+		printf("from: %s\n", m_compFields->GetFrom());
 		printf("To: %s  Cc: %s  Bcc: %s\n", m_compFields->GetTo(), m_compFields->GetCc(), m_compFields->GetBcc());
 		printf("Newsgroups: %s\n", m_compFields->GetNewsgroups());
 		printf("Subject: %s  \nMsg: %s\n", m_compFields->GetSubject(), m_compFields->GetBody());
@@ -384,19 +398,6 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 		nsString aString;
 		nsString aCharset(msgCompHeaderInternalCharset());
 		char *outCString;
-
-		// Pref values are supposed to be stored as UTF-8, so no conversion
-		nsXPIDLCString email;
-		nsXPIDLCString replyTo;
-		nsXPIDLCString organization;
-
-		identity->GetEmail(getter_Copies(email));
-		identity->GetReplyTo(getter_Copies(replyTo));
-		identity->GetOrganization(getter_Copies(organization));
-    
-		m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email));
-		m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo));
-		m_compFields->SetOrganization(NS_CONST_CAST(char*, (const char *)organization));
 
 		// Convert fields to UTF-8
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrTo, &outCString))) 
