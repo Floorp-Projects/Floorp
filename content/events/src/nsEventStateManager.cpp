@@ -1458,14 +1458,11 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
 #endif
 
       // get the widget from the target frame
-      nsCOMPtr<nsIWidget> targetWidget;
-      mGestureDownFrame->GetWindow(aPresContext, getter_AddRefs(targetWidget));
-      
       nsEventStatus status = nsEventStatus_eIgnore;
       nsMouseEvent event;
       event.eventStructType = NS_DRAGDROP_EVENT;
       event.message = NS_DRAGDROP_GESTURE;
-      event.widget = targetWidget;
+      event.widget = mGestureDownFrame->GetWindow();
       event.clickCount = 0;
       event.point = mGestureDownPoint;
       event.refPoint = mGestureDownRefPoint;
@@ -2380,9 +2377,7 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext,
   }
  
   if (aTargetFrame) {
-    nsCOMPtr<nsIWidget> window;
-    aTargetFrame->GetWindow(aPresContext, getter_AddRefs(window));
-    SetCursor(cursor, window, PR_FALSE);
+    SetCursor(cursor, aTargetFrame->GetWindow(), PR_FALSE);
   }
 
   if (mLockCursor || NS_STYLE_CURSOR_AUTO != cursor) {
