@@ -18,18 +18,22 @@
 #ifndef nsFrameImageLoader_h___
 #define nsFrameImageLoader_h___
 
-#include "nsIFrameImageLoader.h"
 #include "nsSize.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
+#include "nsIFrameImageLoader.h"
+#include "nsIPresContext.h"
+#include "nsIImageObserver.h"
 
 struct nsRect;
 
 /**
  * An image loader for frame's.
  */
-class nsFrameImageLoader : public nsIFrameImageLoader {
+class nsFrameImageLoader : public nsIFrameImageLoader,
+                           public nsIImageRequestObserver
+{
 public:
-
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -42,40 +46,76 @@ public:
   virtual void NotifyError(nsIImageRequest *aImageRequest,
                            nsImageError aErrorType);
 
-  // nsIFrameImageLoader
+  // nsFrameImageLoader API
   NS_IMETHOD Init(nsIPresContext* aPresContext,
                   nsIImageGroup* aGroup,
                   const nsString& aURL,
                   const nscolor* aBackgroundColor,
+                  const nsSize* aDesiredSize,
                   nsIFrame* aTargetFrame,
-                  const nsSize& aDesiredSize,
-                  nsFrameImageLoaderCB aCallBack,
-                  PRBool aNeedSizeUpdate,
-                  PRBool aNeedErrorNotification);
+                  nsIFrameImageLoaderCB aCallBack,
+                  void* aClosure);
+
   NS_IMETHOD StopImageLoad();
+
   NS_IMETHOD AbortImageLoad();
-  NS_IMETHOD GetTargetFrame(nsIFrame*& aFrameResult) const;
-  NS_IMETHOD GetURL(nsString& aResult) const;
-  NS_IMETHOD GetImage(nsIImage*& aResult) const;
-  NS_IMETHOD GetSize(nsSize& aResult) const;
-  NS_IMETHOD GetImageLoadStatus(PRIntn& aLoadStatus) const;
+
+  NS_IMETHOD IsSameImageRequest(const nsString& aURL,
+                                const nscolor* aBackgroundColor,
+                                const nsSize* aDesiredSize,
+                                PRBool* aResult);
+
+  NS_IMETHOD AddFrame(nsIFrame* aFrame, nsIFrameImageLoaderCB aCallBack,
+                      void* aClosure);
+
+  NS_IMETHOD RemoveFrame(nsIFrame* aFrame);
+
+  // See if its safe to destroy this image loader. Its safe if there
+  // are no more frames using the loader and we aren't in the middle
+  // of processing a callback.
+  NS_IMETHOD SafeToDestroy(PRBool* aResult);
+
+  NS_IMETHOD GetURL(nsString& aResult);
+
+  NS_IMETHOD GetImage(nsIImage** aResult);
+
+  // Return the size of the image, in twips
+  NS_IMETHOD GetSize(nsSize& aResult);
+
+  NS_IMETHOD GetImageLoadStatus(PRUint32* aLoadStatus);
 
 protected:
   nsFrameImageLoader();
   virtual ~nsFrameImageLoader();
 
-  void DamageRepairFrame(const nsRect* aDamageRect);
+  void DamageRepairFrames(const nsRect* aDamageRect);
 
-  nsString mURL;
-  nsIImage* mImage;
-  nsSize mSize;
-  nsImageError mError;
-  nsIFrame* mTargetFrame;
-  nsSize mDesiredSize;
-  nsFrameImageLoaderCB mCallBack;
+  void NotifyFrames();
+
   nsIPresContext* mPresContext;
   nsIImageRequest* mImageRequest;
-  PRUint8 mImageLoadStatus;
+  nsIImage* mImage;
+
+  PRPackedBool mHaveBackgroundColor;
+  PRPackedBool mHaveDesiredSize;
+  nsString mURL;
+  nscolor mBackgroundColor;
+  nsSize mDesiredSize;
+
+  nsSize mImageSize;
+
+  PRUint32 mImageLoadStatus;
+  nsImageError mImageLoadError;
+
+  PRInt32 mNotifyLockCount;
+
+  struct PerFrameData {
+    PerFrameData* mNext;
+    nsIFrame* mFrame;
+    nsIFrameImageLoaderCB mCallBack;
+    void* mClosure;
+  };
+  PerFrameData* mFrames;
 
   friend NS_LAYOUT nsresult NS_NewFrameImageLoader(nsIFrameImageLoader**);
 };
