@@ -69,6 +69,13 @@ public:
 
    NS_IMETHOD HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32  aNumFlag);
    NS_IMETHOD HandleNumbers(const nsString aSrc, nsString & aDst );
+
+   NS_IMETHOD Conv_FE_06(const nsString aSrc, nsString & aDst );
+
+   NS_IMETHOD Conv_FE_06_WithReverse(const nsString aSrc, nsString & aDst );
+   NS_IMETHOD Conv_06_FE_WithReverse(const nsString aSrc, nsString & aDst,PRUint32 aDir);
+private:
+   PRUint32 mNumflag;
 };
 
 #endif  /* nsBidiUtilsImp_h__ */

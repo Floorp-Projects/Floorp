@@ -140,6 +140,33 @@ class nsIUBidiUtils : public nsISupports {
    */
     NS_IMETHOD HandleNumbers(const nsString aSrc, nsString & aDst) = 0;
 
+  /**
+   * Scan an nsString, converting characters in the FExx range (Arabic presentation forms) to the equivalent characters in the 06xx
+   * range
+   * @param aSrc is the input string
+   * @param aDst is the output string
+   */
+    NS_IMETHOD Conv_FE_06(const nsString aSrc, nsString & aDst) = 0;
+
+  /**
+   * Scan an nsString, converting characters in the FExx range (Arabic presentation forms) to the equivalent characters in the 06xx
+   * range, and also reverse the string
+   * @param aSrc is the input string
+   * @param aDst is the output string
+   */
+    NS_IMETHOD Conv_FE_06_WithReverse(const nsString aSrc, nsString & aDst) = 0;
+
+  /**
+   * Scan an nsString, converting characters in the 06xx range to the equivalent characters in the 0Fxx range (Arabic presentation
+   * forms), with the option to reverse the string
+   * @param aSrc is the input string
+   * @param aDst is the output string
+   * @param aDir indicates whether the string should be reversed
+   *        IBMBIDI_TEXTDIRECTION_LTR: do not reverse the string
+   *        IBMBIDI_TEXTDIRECTION_RTL: reverse the string
+   */
+    NS_IMETHOD Conv_06_FE_WithReverse(const nsString aSrc, nsString & aDst, PRUint32 aDir) = 0;
+
 };
 // --------------------------------------------------
 // IBMBIDI 
