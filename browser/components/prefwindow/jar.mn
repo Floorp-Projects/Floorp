@@ -1,12 +1,6 @@
 browser.jar:
     content/browser/pref/pref-advanced.xul                 (content/pref-advanced.xul)
-    content/browser/pref/pref-applications.xul             (content/pref-applications.xul)
-    content/browser/pref/pref-applications.js              (content/pref-applications.js)
-    content/browser/pref/pref-applications-edit.xul        (content/pref-applications-edit.xul)
-    content/browser/pref/pref-applications-new.xul         (content/pref-applications-new.xul)
-    content/browser/pref/pref-applications-new.js          (content/pref-applications-new.js)
     content/browser/pref/overrideHandler.js                (content/overrideHandler.js)
-    content/browser/pref/pref-download.xul                 (content/pref-download.xul)
     content/browser/pref/pref-help.js                      (content/pref-help.js)
     content/browser/pref/pref-themes.xul                   (content/pref-themes.xul)
     content/browser/pref/pref-themes.js                    (content/pref-themes.js)
@@ -29,7 +23,6 @@ browser.jar:
     content/browser/pref/pref-smart_browsing.xul           (content/pref-smart_browsing.xul)
     content/browser/pref/pref-smart_browsing.js            (content/pref-smart_browsing.js)
     content/browser/pref/pref-smart_browsing-ac.xul        (content/pref-smart_browsing-ac.xul)
-    content/browser/pref/pref-smartupdate.xul              (content/pref-smartupdate.xul)
     content/browser/pref/pref.xul                          (content/pref.xul)
     content/browser/pref/nsPrefWindow.js                   (content/nsPrefWindow.js)
     content/browser/pref/preftree.xul                      (content/preftree.xul)
@@ -43,12 +36,8 @@ browser.jar:
 
 en-US.jar:
     locale/en-US/browser/pref/pref-advanced.dtd            (locale/pref-advanced.dtd)
-    locale/en-US/browser/pref/pref-applications.dtd        (locale/pref-applications.dtd)
-    locale/en-US/browser/pref/pref-applications.properties (locale/pref-applications.properties)
-    locale/en-US/browser/pref/pref-applications-edit.dtd   (locale/pref-applications-edit.dtd)
     locale/en-US/browser/pref/pref-charset.dtd             (locale/pref-charset.dtd)
     locale/en-US/browser/pref/pref-themes.dtd              (locale/pref-themes.dtd)
-    locale/en-US/browser/pref/pref-download.dtd            (locale/pref-download.dtd)
     locale/en-US/browser/pref/pref-fonts.dtd               (locale/pref-fonts.dtd)
     locale/en-US/browser/pref/pref-languages.dtd           (locale/pref-languages.dtd)
     locale/en-US/browser/pref/pref-tabs.dtd                (locale/pref-tabs.dtd)
