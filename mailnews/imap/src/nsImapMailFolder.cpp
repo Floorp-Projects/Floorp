@@ -460,21 +460,18 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsISimpleEnumerator* *result)
 {
 	if (result)
 		*result = nsnull;
-	nsresult rv = UpdateFolder();
-    if(NS_SUCCEEDED(rv))
-    {
-        nsCOMPtr<nsISimpleEnumerator> msgHdrEnumerator;
-        nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-        rv = NS_ERROR_UNEXPECTED;
-        if (mDatabase)
-            rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
-        if(NS_SUCCEEDED(rv))
-            rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
-                                                   this,
-                                                   &messageEnumerator);
-        *result = messageEnumerator;
-    }
-    return rv;
+	nsresult rv;
+  nsCOMPtr<nsISimpleEnumerator> msgHdrEnumerator;
+  nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
+  rv = NS_ERROR_UNEXPECTED;
+  if (mDatabase)
+      rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
+  if(NS_SUCCEEDED(rv))
+      rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
+                                             this,
+                                             &messageEnumerator);
+  *result = messageEnumerator;
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char* folderName)
