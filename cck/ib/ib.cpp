@@ -469,18 +469,35 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CString networkDir = GetGlobal("Network");
 	CString ftpLocation = GetGlobal("FTPLocation");
 
-	if (cdDir.Compare("1") ==0)
+	for (int i=0; i<numComponents; i++)
 	{
-		for (int i=0; i<numComponents; i++)
-		{
-			if (Components[i].selected)
-				CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
-						 cdPath + "\\" + Components[i].archive, TRUE);
-		}
+		if (Components[i].selected)
+			CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
+					 cdPath + "\\" + Components[i].archive, TRUE);
 	}
 
+	if (cdDir.Compare("1") ==0)
+	{
+		
+		CreateRshell ();
+		CString shellPath = workspacePath + "\\Autorun\\Shell\\";
+		CopyDir(shellPath, cdshellPath, NULL, FALSE);
+
+	}
+	else
+	{
+		FILE *infout;
+		CString infFile = cdPath + "\\autorun.inf";
+		infout = fopen(infFile, "w");
+		if (!infout)
+			exit( 3 );
+
+		fprintf(infout,"Seamonkey32e.exe");
+	}
 	CString component;
-	if (networkDir.Compare("1") ==0)
+	CString configiniPath = cdPath +"\\config.ini";
+
+	if (ftpLocation.Compare("ftp://") !=0)
 	{
 		for (int i=0; i<numComponents; i++)
 		{
@@ -488,15 +505,12 @@ int StartIB(CString parms, WIDGET *curWidget)
 				CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
 						 networkPath + "\\" + Components[i].archive, TRUE);
 			
-			WritePrivateProfileString(Components[i].compname, "url0", ftpLocation, iniSrcPath);
+			WritePrivateProfileString(Components[i].compname, "url0", ftpLocation, configiniPath);
 		}
 		
 	}
 
 	// Didn't work...
-	CreateRshell ();
-	CString shellPath = workspacePath + "\\Autorun\\Shell\\";
-	CopyDir(shellPath, cdshellPath, NULL, FALSE);
 
 	invisible();
 
