@@ -1441,11 +1441,11 @@ nsRenderingContextXlib::GetBoundingMetrics(const char*        aString,
                     &direction, &font_ascent, &font_descent,
                     &overall);
 
-    aBoundingMetrics.leftBearing  = overall.lbearing;
-    aBoundingMetrics.rightBearing = overall.rbearing;
-    aBoundingMetrics.width        = overall.width;
-    aBoundingMetrics.ascent       = overall.ascent;
-    aBoundingMetrics.descent      = overall.descent;
+    aBoundingMetrics.leftBearing  =  overall.lbearing;
+    aBoundingMetrics.rightBearing =  overall.rbearing;
+    aBoundingMetrics.width        =  overall.width;
+    aBoundingMetrics.ascent       =  overall.ascent;
+    aBoundingMetrics.descent      = -overall.descent;
 
     aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
     aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
