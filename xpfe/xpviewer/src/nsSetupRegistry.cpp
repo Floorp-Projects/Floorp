@@ -41,6 +41,7 @@
 #include "nsINetService.h"
 
 #ifdef XP_PC
+
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
 #define VIEW_DLL   "raptorview.dll"
@@ -51,12 +52,22 @@
 #define DOM_DLL    "jsdom.dll"
 #define LAYOUT_DLL "raptorhtml.dll"
 #define NETLIB_DLL "netlib.dll"
+
 #else
+
 #ifdef XP_MAC
+
 #include "nsMacRepository.h"
+
 #else
-#define WIDGET_DLL "libwidgetunix.so"
-#define GFXWIN_DLL "libgfxunix.so"
+
+// XP_UNIX
+#ifndef WIDGET_DLL
+#define WIDGET_DLL "libwidgetmotif.so"
+#endif
+#ifndef GFXWIN_DLL
+#define GFXWIN_DLL "libgfxmotif.so"
+#endif
 #define VIEW_DLL   "libraptorview.so"
 #define WEB_DLL    "libraptorwebwidget.so"
 #define PLUGIN_DLL "raptorplugin.so"
@@ -64,9 +75,11 @@
 #define PARSER_DLL "libraptorhtmlpars.so"
 #define DOM_DLL    "libjsdom.so"
 #define LAYOUT_DLL "libraptorhtml.so"
-#define NETLIB_DLL "netlib.so"
-#endif
-#endif
+#define NETLIB_DLL "libnetlib.so"
+
+#endif // XP_MAC
+
+#endif // XP_PC
 
 // Class ID's
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
