@@ -45,4 +45,5 @@ nsDragAndDrop.js
 nsJSSupportsUtils.js
 nsTransferable.js
 nsJSComponentManager.js
+nsUserSettings.js
 

@@ -80,6 +80,7 @@ CHROME_CONTENT= \
 	.\nsJSSupportsUtils.js \
 	.\nsTransferable.js \
 	.\nsJSComponentManager.js \
+	.\nsUserSettings.js \
 	.\xul.css \
 	$(NULL)
 
