@@ -157,7 +157,8 @@ nsJARURI::SetSpec(const char * aSpec)
 
     nsCAutoString jarPath(aSpec);
     PRInt32 pos = jarPath.RFind(NS_JAR_DELIMITER);
-    if (pos == -1 || endPos + 1 > (PRUint32)pos)
+    startPos = (PRUint32) pos;
+    if (pos == -1 || endPos + 1 > startPos)
         return NS_ERROR_MALFORMED_URI;
 
     jarPath.Cut(pos, jarPath.Length());
@@ -166,12 +167,10 @@ nsJARURI::SetSpec(const char * aSpec)
     rv = serv->NewURI(jarPath.get(), nsnull, getter_AddRefs(mJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString entry(aSpec);
-    entry.Cut(0, pos + 2);      // 2 == strlen(NS_JAR_DELIMITER)
-    while (entry.Length() && entry.CharAt(0) == '/')
-        entry.Cut(0,1); // Strip any additional leading slashes from entry path
+    PRUint32 slashChar=pos + 1;
+    while (aSpec[++slashChar]=='/');
 
-    rv = serv->ResolveRelativePath(entry.get(), nsnull, &mJAREntry);
+    rv = serv->ResolveRelativePath(&aSpec[slashChar], nsnull, &mJAREntry);
     return rv;
 }
 
