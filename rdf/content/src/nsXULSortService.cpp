@@ -58,6 +58,9 @@
 #include "plstr.h"
 #include "prlog.h"
 
+#include "nsICollation.h"
+#include "nsCollationCID.h"
+
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsINameSpaceManager.h"
@@ -105,6 +108,9 @@ static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIDomXulTreeElementIID,  NS_IDOMXULTREEELEMENT_IID);
 static NS_DEFINE_IID(kIDomXulElementIID,      NS_IDOMXULELEMENT_IID);
 
+static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
+static NS_DEFINE_IID(kICollationFactoryIID,   NS_ICOLLATIONFACTORY_IID);
+
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -114,7 +120,6 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
 
 typedef	struct	_sortStruct	{
-    class XULSortServiceImpl	*xulSortClass;
     nsIRDFService		*rdfService;
     nsIRDFCompositeDataSource	*db;
     nsIRDFResource		*sortProperty;
@@ -144,7 +149,8 @@ protected:
     XULSortServiceImpl(void);
     virtual ~XULSortServiceImpl(void);
 
-    static nsIXULSortService* gXULSortService; // The one-and-only sort service
+    static nsIXULSortService	*gXULSortService;
+    static nsICollation		*collationService;
 
 private:
     static nsrefcnt	gRefCnt;
@@ -201,7 +207,8 @@ public:
     NS_IMETHOD InsertContainerNode(nsIContent *container, nsIContent *node);
 };
 
-nsIXULSortService* XULSortServiceImpl::gXULSortService = nsnull;
+nsIXULSortService	*XULSortServiceImpl::gXULSortService = nsnull;
+nsICollation		*XULSortServiceImpl::collationService = nsnull;
 nsrefcnt XULSortServiceImpl::gRefCnt = 0;
 
 nsIRDFService *XULSortServiceImpl::gRDFService = nsnull;
@@ -256,6 +263,21 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 						  kIRDFServiceIID, (nsISupports**) &gRDFService)))
 		{
 			NS_ERROR("couldn't create rdf service");
+		}
+
+		nsICollationFactory	*colFactory;
+		if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
+				kICollationFactoryIID, (void**) &colFactory)))
+		{
+			// Temporary: pass null until bug#3867 is fixed
+			if (NS_FAILED(rv = colFactory->CreateCollation(nsnull/*locale*/, &collationService)))
+			{
+				NS_ERROR("couldn't create collation instance");
+			}
+		}
+		else
+		{
+			NS_ERROR("couldn't create instance of collation factory");
 		}
 
 		gRDFService->GetResource(kURINC_Name, &kNC_Name);
@@ -316,10 +338,21 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 
 	        NS_RELEASE(kNC_Name);
 
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-		gRDFService = nsnull;
-		nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
-		gXULSortService = nsnull;
+		if (collationService)
+		{
+			NS_RELEASE(collationService);
+			collationService = nsnull;
+		}
+		if (gRDFService)
+		{
+			nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+			gRDFService = nsnull;
+		}
+		if (gXULSortService)
+		{
+			nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
+			gXULSortService = nsnull;
+		}
 	}
 }
 
@@ -687,10 +720,7 @@ openSortCallback(const void *data1, const void *data2, void *privateData)
 
 	if (nsnull != sortInfo)
 	{
-		if (nsnull != sortInfo->xulSortClass)
-		{
-			rv = XULSortServiceImpl::OpenSort(node1, node2, sortInfo, &sortOrder);
-		}
+		rv = XULSortServiceImpl::OpenSort(node1, node2, sortInfo, &sortOrder);
 	}
 	return(sortOrder);
 }
@@ -852,8 +882,11 @@ XULSortServiceImpl::ImplaceSort(nsIContent *node1, nsIContent *node2, sortPtr so
 		sortOrder = 1;
 	else if (isCollationKey1 == PR_TRUE && isCollationKey2 == PR_TRUE)
 	{
-		// XXX to do: sort collation keys
-		// sortOrder = ... ?
+		// sort collation keys
+		if (collationService)
+		{
+			collationService->CompareSortKey(cellVal1, cellVal2, &sortOrder);
+		}
 	}
 	else
 	{
@@ -886,10 +919,7 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 
 	if (nsnull != sortInfo)
 	{
-		if (nsnull != sortInfo->xulSortClass)
-		{
-			rv = XULSortServiceImpl::ImplaceSort(node1, node2, sortInfo, &sortOrder);
-		}
+		rv = XULSortServiceImpl::ImplaceSort(node1, node2, sortInfo, &sortOrder);
 	}
 	return(sortOrder);
 }
@@ -1067,8 +1097,6 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 		delete [] uri;
 		if (NS_FAILED(rv))	return(rv);
 	}
-
-	sortInfo.xulSortClass = this;
 
 	if (sortDirection.EqualsIgnoreCase("natural"))
 	{
@@ -1308,8 +1336,6 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 		if (sortDirection.EqualsIgnoreCase("ascending"))	sortInfo.descendingSort = PR_FALSE;
 		else if (sortDirection.EqualsIgnoreCase("descending"))	sortInfo.descendingSort = PR_TRUE;
 	}
-
-	sortInfo.xulSortClass = this;
 
 	// get index of sort column, find tree body, and sort. The sort
 	// _won't_ send any notifications, so we won't trigger any reflows...
