@@ -88,7 +88,7 @@ public:
   // xxx style rules enumeration
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
-  virtual void ListContexts(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
+  virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
 };
 
 extern NS_LAYOUT nsresult

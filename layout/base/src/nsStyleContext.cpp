@@ -968,6 +968,13 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
     fputs("{}\n", out);
   }
 
+  if (nsnull != mChild) {
+    StyleContextImpl* child = mChild;
+    do {
+      child->List(out, aIndent + 1);
+      child = child->mNext;
+    } while (mChild != child);
+  }
 }
 
 NS_LAYOUT nsresult
