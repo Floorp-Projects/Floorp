@@ -74,20 +74,35 @@
   
     <skin> 
       <RDF:Description ID="chrome://editor/skin/">
-	    <base>resource:/res/editor/skin/</base>
-        <main>editordialogs.css</main> 
+	    <base>resource:/chrome/editor/composer/skin/</base>
+        <main>Editor.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
       <RDF:Description ID="chrome://editor/content/">
-	    <base>resource:/res/editor/content/</base>
+	    <base>resource:/chrome/editor/composer/content/</base>
         <main>EditorAppShell.xul</main> 
       </RDF:Description> 
     </content> 
   
   </chrome>
   
+  <chrome r:ID="chrome://editordialogs/">
+    <skin> 
+      <RDF:Description ID="chrome://editordialogs/skin/">
+	    <base>resource:/chrome/editor/dialogs/skin/</base>
+        <main>EditorDialog.css</main> 
+      </r:Description> 
+    </skin> 
+
+    <content> 
+      <RDF:Description ID="chrome://editordlgs/content/">
+	    <base>resource:/chrome/editor/dialogs/skin/</base>
+        <main>EditorDialog.css</main> 
+      </RDF:Description> 
+    </content> 
+  </chrome>
 </RDF:RDF> 
 
 
