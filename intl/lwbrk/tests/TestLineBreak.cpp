@@ -84,15 +84,18 @@ PRBool TestASCIILB(nsILineBreaker *lb,
                  const PRUint32* out, PRUint32 outlen)
 {
          nsAutoString eng1(in);
-         nsBreakState bk(eng1.GetUnicode(), eng1.Length());
          PRUint32 i,j;
          PRUint32 res[256];
          PRBool ok = PR_TRUE;
-         for(i = 0, lb->FirstForwardBreak(&bk);
-                    (! bk.IsDone()) && (i < 256);
-                    lb->NextForwardBreak(&bk), i++)
+         PRUint32 curr;
+         PRBool finishThisFrag = PR_FALSE;
+         for(i = 0, curr = 0; ((! finishThisFrag) && (i < 256)); i++)
          {
-            res [i] = bk.Current();
+            lb->Next(eng1.GetUnicode(), eng1.Length(), curr, 
+                    &curr,
+                    &finishThisFrag);
+            res [i] = curr;
+    
          }
          if (i != outlen)
          {

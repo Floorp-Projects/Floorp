@@ -226,62 +226,6 @@ NS_DEFINE_IID(kILineBreakerIID, NS_ILINEBREAKER_IID);
 
 NS_IMPL_ISUPPORTS(nsJISx4501LineBreaker, kILineBreakerIID);
 
-
-
-nsresult nsJISx4501LineBreaker::FirstForwardBreak   (nsIBreakState* state) 
-{
-  NS_PRECONDITION( nsnull != state, "null ptr");
-  if(nsnull == state )
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult res;
-
-  PRUint32 len;
-  res = state->Length(&len);
-
-  if(len < 2)
-  {
-    res = state->Set(len, PR_TRUE);
-    return NS_OK;
-  }
-
-  const PRUnichar* text;
-  res = state->GetText(&text);
-
-  PRUint32 next = Next(text, len, 0);
-  res = state->Set(next , (next == len) );
-
-  return NS_OK;
-}
-nsresult nsJISx4501LineBreaker::NextForwardBreak    (nsIBreakState* state)
-{
-  NS_PRECONDITION( nsnull != state, "null ptr");
-  if(nsnull == state )
-    return NS_ERROR_NULL_POINTER;
-
-  PRBool done;
-  nsresult res;
-  res = state->IsDone(&done);
-  if(done) 
-    return NS_OK;
-
-  const PRUnichar* text;
-  res = state->GetText(&text);
-
-  PRUint32 len;
-  res = state->Length(&len);
-
-  PRUint32 cur;
-  res = state->Current(&cur);
-
-
-  PRUint32 next = Next(text, len, cur);
-  res = state->Set(next , (next == len) );
-
-  return NS_OK;
-}
-  
-
 #define U_PERIOD ((PRUnichar) '.')
 #define U_COMMA ((PRUnichar) ',')
 #define NEED_CONTEXTUAL_ANALYSIS(c) (((c)==U_PERIOD)||((c)==U_COMMA))
@@ -306,50 +250,24 @@ PRInt8  nsJISx4501LineBreaker::ContextualAnalysis(
    }
    return this->GetClass(cur);
 }
-PRUint32 nsJISx4501LineBreaker::Next(
-  const PRUnichar* aText,
-  PRUint32 aLen,
-  PRUint32 aPos
-)
-{
-  PRInt8 c1, c2;
-  PRUint32 cur = aPos;
-  if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
-    c1 = this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
-                                  aText[cur],
-                                  (cur<(aLen-1)) ?aText[cur+1]:0);
-  else 
-    c1 = this->GetClass(aText[cur]);
 
-  for(cur++; cur <aLen; cur++)
-  {
-     if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
-       c2= this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
-                                  aText[cur],
-                                  (cur<(aLen-1)) ?aText[cur+1]:0);
-     else 
-       c2 = this->GetClass(aText[cur]);
-
-     if(GetPair(c1, c2))
-       break;
-     c1 = c2;
-  }
-  return cur;
-}
-
-nsresult nsJISx4501LineBreaker::BreakInBetween(
+NS_IMETHODIMP nsJISx4501LineBreaker::BreakInBetween(
   const PRUnichar* aText1 , PRUint32 aTextLen1,
   const PRUnichar* aText2 , PRUint32 aTextLen2,
   PRBool *oCanBreak)
 {
-  PRInt8 c1, c2;
+  NS_PRECONDITION( nsnull != aText1, "null ptr");
+  NS_PRECONDITION( nsnull != aText2, "null ptr");
+  if((nsnull == aText1) || (nsnull == aText2 ))
+     return NS_ERROR_NULL_POINTER;
+
   if((0 == aTextLen1) || (0==aTextLen2))
   {
      *oCanBreak = PR_FALSE;
-     // XXX maybe we shuld return error code instead here
      return NS_OK;
   }
 
+  PRInt8 c1, c2;
   if(NEED_CONTEXTUAL_ANALYSIS(aText1[aTextLen1-1]))
     c1 = this->ContextualAnalysis((aTextLen1>1)?aText1[aTextLen1-2]:0,
                                   aText1[aTextLen1-1],
@@ -368,4 +286,105 @@ nsresult nsJISx4501LineBreaker::BreakInBetween(
   return NS_OK;
 }
 
+
+NS_IMETHODIMP nsJISx4501LineBreaker::Next( 
+  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+  PRUint32* oNext, PRBool *oNeedMoreText) 
+{
+  NS_PRECONDITION( nsnull != aText, "null ptr");
+  if(nsnull == aText)
+     return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION( aPos < aLen, "aPos >= aLen");
+  if( aPos > aLen )
+     return NS_ERROR_ILLEGAL_VALUE;
+
+  if((aPos + 1) < aLen)
+  {
+     *oNext = aLen;
+     *oNeedMoreText = PR_TRUE;
+     return NS_OK;
+  }
+
+  PRInt8 c1, c2;
+  PRUint32 cur = aPos;
+  if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
+  {
+    c1 = this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
+                                  aText[cur],
+                                  (cur<(aLen-1)) ?aText[cur+1]:0);
+  } else  {
+    c1 = this->GetClass(aText[cur]);
+  }
+
+  for(cur++; cur <aLen; cur++)
+  {
+     if(NEED_CONTEXTUAL_ANALYSIS(aText[cur]))
+     {
+       c2= this->ContextualAnalysis((cur>0)?aText[cur-1]:0,
+                                  aText[cur],
+                                  (cur<(aLen-1)) ?aText[cur+1]:0);
+     } else {
+       c2 = this->GetClass(aText[cur]);
+     }
+
+     if(GetPair(c1, c2)) {
+       *oNext = cur + 1;
+       *oNeedMoreText = PR_FALSE;
+       return NS_OK;
+     }
+     c1 = c2;
+  }
+  *oNext = aLen;
+  *oNeedMoreText = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsJISx4501LineBreaker::Prev( 
+  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+  PRUint32* oPrev, PRBool *oNeedMoreText) 
+{
+  NS_PRECONDITION( nsnull != aText, "null ptr");
+  if(nsnull == aText)
+     return NS_ERROR_NULL_POINTER;
+
+  if(aPos < 2)
+  {
+     *oPrev = 0;
+     *oNeedMoreText = PR_TRUE;
+     return NS_OK;
+  }
+
+  PRInt8 c1, c2;
+  PRUint32 cur = aPos;
+  if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
+  {
+    c1 = this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
+                                  aText[cur-1],
+                                  (cur<aLen) ?aText[cur]:0);
+  } else  {
+    c1 = this->GetClass(aText[cur-1]);
+  }
+  for(cur--; cur > 0; cur--)
+  {
+     if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
+     {
+       c2= this->ContextualAnalysis(((cur-1)>0)?aText[cur-2]:0,
+                                  aText[cur-1],
+                                  (cur<aLen) ?aText[cur]:0);
+     } else {
+       c2 = this->GetClass(aText[cur-1]);
+     }
+
+     if(GetPair(c1, c2)) {
+       *oPrev = cur - 1;
+       *oNeedMoreText = PR_FALSE;
+       return NS_OK;
+     }
+     c1 = c2;
+  }
+  *oPrev = 0;
+  *oNeedMoreText = PR_TRUE;
+  return NS_OK;
+}
 
