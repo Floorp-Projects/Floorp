@@ -262,7 +262,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   nsCOMPtr<nsICaret>  caret;
   if (NS_SUCCEEDED(ps->GetCaret(getter_AddRefs(caret))) && caret)
   {
-    caret->SetCaretVisible(PR_TRUE);
+    // caret->SetCaretVisible(PR_TRUE); // let's assume we'll get a focus message that does this
     caret->SetCaretReadOnly(PR_FALSE);
   }
 
