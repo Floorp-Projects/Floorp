@@ -523,9 +523,8 @@ nsPop3IncomingServer::GetCanBeDefaultServer(PRBool *canBeDefaultServer)
 NS_IMETHODIMP
 nsPop3IncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
 {
-    NS_ENSURE_ARG_POINTER(canSearchMessages);
-    *canSearchMessages = PR_TRUE;
-    return NS_OK;
+  // this will return false if this server is deferred, which is what we want.
+  return GetCanFileMessagesOnServer(canSearchMessages);
 }
 
 NS_IMETHODIMP
