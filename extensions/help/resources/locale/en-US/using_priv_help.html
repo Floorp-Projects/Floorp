@@ -75,12 +75,12 @@ Using the Cookie Manager</h1>
 
 <p>If you want to change a remembered response later, use Cookie Manager to edit your list of automatically stored cookies.</p>
 
-<p>To stop automatically accepting cookies from a site:
+<p>To stop automatically accepting or rejecting cookies from a site:
 <ol>
 <li>Open the Tools menu and choose Cookie Manager.</li>
 <li>Choose Manage Stored Cookies from the submenu. The Cookie Manager window opens with a list of all the cookies stored on your computer.</li>
 <li>Click the Cookie Sites tab. The web sites for which you have allowed or denied cookies are listed.</li>
-<li>Click to select the site from which you no longer want to accept cookies, and then click Remove Cookie. The next time you visit that site, you will be warned if the site attempts to set a cookie.</li>
+<li>Click to select the site from which you no longer want to automatically accept cookies, and then click Remove Cookie.</li>
 </ol>
 
 
@@ -113,7 +113,10 @@ Using the Cookie Manager</h1>
 <li>Select one or more cookies and click Remove Cookie, or click Remove All Cookies.
 </ol>
 
-<p>To prevent the removed cookies from being reaccepted later, click the checkbox labeled &quot;Don't allow removed cookies to be reaccepted later.&quot; Click OK when you're through.
+
+<p>Even though you've removed the cookies now, you will reacquire those same cookies the next time you return to the web site. To prevent that from happening, select the checkbox labelled "Don't allow removed cookies to be reaccepted later". That will cause the web sites for the cookies that you are removing to be added to the list of sites whose cookies will automatically be rejected.
+  
+<p>You must click OK for your changes to take effect.
 
 <p>
 [&nbsp;<A HREF="#using_cookies">Return to beginning of section</A>&nbsp;]
@@ -130,11 +133,11 @@ Using the Cookie Manager</h1>
 
 <p>Many web sites publish their privacy policies according to the Platform for Privacy Preferences (P3P) standard. A web site's privacy policy describes what kind of information the site collects, to whom it gives that information, and how it uses the information. For information about viewing a web site's privacy policy, see <a href="#form_forms">Viewing Privacy Policies</a>.
 
-<p>You can choose to enable cookies based on web site's published privacy policies, the browser's privacy settings, and the P3P standard. When cookies are enabled in this manner, the browser checks your current privacy settings against the web site's published privacy policy (if present) and takes appropriate action. 
+<p>You can choose to have your browser make the decision to accept cookies based on the web site's published privacy policy and the level of privacy or lack thereof that you are willing to accept. To indicate your desired level of privacy, you adjust your privacy settings. When cookies are enabled in this manner, the browser checks your current privacy settings against the web site's published privacy policy (if present) and takes appropriate action. 
 
 <p>For example, your privacy settings may require the browser to reject cookies that collect personal information without informing you. Alternatively, you can adjust your privacy settings so that the browser simply warns you when a cookie is used in this way, while allowing the action to take place.
 
-<p>The browser defines three levels of privacy: low, medium, and high. You can select one of these predefined privacy levels, or you can create your own custom privacy policy.
+<p>The browser defines three levels of privacy: low, medium, and high. You can select one of these predefined privacy levels, or you can specify your own custom privacy settings in detail.
 
 <p>To control the privacy settings you want your browser to enforce for all web sites:
 
@@ -143,15 +146,15 @@ Using the Cookie Manager</h1>
 <li>Under the Privacy &amp; Security category, choose Cookies. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
 <li>Select the option labeled &quot;Enable cookies based on privacy settings.&quot;
 <li>Click View.
-<li>In the Privacy Settings dialog box, select the level of privacy you want, or select &quot;custom&quot; and define your own privacy policy as discussed below.
+<li>In the Privacy Settings dialog box, select the level of privacy you want, or select &quot;custom&quot; and specify your own privacy settings as discussed below.
 <li>Click OK to confirm your settings.
 </ol>
 
-<p>Your browser handles cookies according to the settings you select. For the low, medium, and high options, these settings are standardized. 
+<p>Your browser handles cookies according to the settings you select. For the low, medium, and high options, these settings are predefined by Netscape. 
 
-<p>When the &quot;custom&quot; option is selected, you can define your own privacy policy. For each type of site listed under Cookie Acceptance Policy, and for each type of cookie, you can select whether you want the Cookie Manager to accept the cookie permanently, reject it permanently, accept it just for the current session (that is, until you exit the browser), or flag it.
+<p>When the &quot;custom&quot; option is selected, you can specify your own privacy settings in detail. Depending on the privacy policy of the site and whether or not the site is the one you are viewing, you can select whether you want the Cookie Manager to accept the cookie, reject it, accept it just for the current session (that is, until you exit the browser), or flag it.
 
-<p>If you choose Flag or Session for a given category, the Cookie Manager displays the cookie notification icon (<img src="chrome://cookie/content/taskbar-cookie.gif">) near the lower-right corner of the browser window whenever a web site that fits the category sets a cookie. When this icon is displayed, you can click it to get information about the affected cookies.
+<p>If you choose Reject, Flag, or Session for a given category, the Cookie Manager displays the cookie notification icon (<img src="chrome://cookie/content/taskbar-cookie.gif">) near the lower-right corner of the browser window whenever a web site that fits the category sets a cookie. When this icon is displayed, you can click it to get information about the affected cookies.
 
 <p>"First party cookies" are cookies set by the site you are visiting. &quot;Third party cookies,&quot; also known as <a href="privacy_help.html#privacy_foreign">foreign cookies</a>, are set by a sites other than the one you are viewing, and are therefore considered more dangerous.
 
@@ -203,11 +206,11 @@ Using the Cookie Manager</h1>
 <ul>
 <li><p><b>Disable cookies:</b> Select this option to refuse all cookies.
 
-<li><b>Enable cookies for the originating web site only:</b> Select this option if you don't want to accept or return <a href="privacy_help.html#privacy_foreign">foreign cookies</a>. Cookies received through email (when the message contains a web page) are treated as foreign cookies.
+<li><b>Enable cookies for the originating web site only:</b> Select this option if you don't want to accept or return <a href="privacy_help.html#privacy_foreign">foreign cookies</a>.
 
 <li><b>Enable cookies based on privacy settings:</b> Select this option if you handle cookies based on your privacy settings. If you select this option, click the View button to confirm or modify your privacy settings.
 
-<li><b>Enable all cookies:</b> Select this option to permit all web sites to set cookies on your computer and receive them back during subsequent visits. 
+<li><b>Enable all cookies:</b> Select this option to permit all web sites not explicitly blocked to set cookies on your computer. 
 
 	<p><b>Note:</b> If you select this option and later choose to disable all cookies, you may still have old cookies stored on your computer (though no new ones will be set).
 
@@ -217,7 +220,8 @@ Using the Cookie Manager</h1>
 <p>If you enable cookies, you can also select the following preferences:
 
 <ul>
-	<li><b>Ask  me before storing a cookie:</b> Select this if you want Cookie Manager to warn you each time a web site asks to store a cookie on your computer.
+	<li><b>Disable cookies in Mail &amp; Newsgroups:</b> Select this if you want Cookie Manager to disable cookies received through email (when the message contains a web page).	
+	<li><b>Ask  me before storing a cookie:</b> Select this if you want Cookie Manager to warn you each time a web site is about to store a cookie on your computer.
 	<li><b>Limit maximum lifetime of cookies to:</b> Select this if you want to limit the length of time any cookie can remain on your computer. Then choose one of these options:
 	<ul>
 		<li><b>current session:</b> Choose this to delete the cookie the next time you exit your browser. 
@@ -251,7 +255,7 @@ Using the Cookie Manager</h1>
 
 <p>The Stored Cookies tab lists all the cookies stored on your computer, the sites they belong to, and their current status. 
 
-<p>If you can't see the Status column, click the icon in the upper-right corner of the table and select Status. This column indicates which cookies have been flagged, accepted, or rejected according to your <a href="#privacy_levels_window">Privacy Settings</a>. 
+<p>If you can't see the Status column, click the icon in the upper-right corner of the table and select Status. This column indicates which cookies have been flagged or accepted according to your <a href="#privacy_levels_window">Privacy Settings</a>. 
 
 <p>When you select a cookie in this list, the following information about that cookie appears in the bottom portion of the tab:
 <br>&nbsp;
@@ -274,9 +278,9 @@ Using the Cookie Manager</h1>
 
 <tr>
 <td valign="top">Host or domain</td>
-<td valign="top">Indicates whether the cookie is a host cookie or a domain cookie and provides information about the host or domain.
+<td valign="top">Provides the name of the cookie's host or domain.
 
-<p>A <b>host</b> cookie is sent back, during subsequent visits, only to the server that set it. A server is a computer on the Internet. A web site resides on one or more servers.
+<p>A <b>host</b> cookie is sent back, during subsequent visits, only to the <a href="glossary.html#server">server</a> that set it. 
 
 <p>A <b>domain</b> cookie is sent back to any site that's in the same domain as the site that set it. A site's domain is the part of its URL that contains the name of an organization, business, or school&mdash;such as netscape.com or washington.org.</td>
 </tr>
@@ -288,7 +292,7 @@ Using the Cookie Manager</h1>
 
 <tr>
 <td valign="top">Server Secure</td>
-<td valign="top">This indicates whether the server that originally sent the cookie uses a &quot;secure&quot; (HTTPS) connection. When this field is &quot;Yes&quot; it means that the browser checks the connection whenever the server asks for a cookie and will not send it unless the connection is encrypted.</td>
+<td valign="top">When this field is &quot;Yes&quot; it means that the browser checks the connection whenever the server asks for a cookie and will not send it unless the connection is encrypted (HTTPS).</td>
 </tr>
 
 <tr>
@@ -305,7 +309,10 @@ Using the Cookie Manager</h1>
 
 <p>Select this checkbox to prevent the cookies you remove from being added back into the list later:
 <ul>
-	<li><b>Don't allow removed cookies to be reaccepted later</b></ul>
+	<li><b>Don't allow removed cookies to be reaccepted later</b></ul> Even if you remove cookies now, you will reacquire those same cookies the next time you return to the web site. To prevent that from happening, select this checkbox. That will cause the web sites for the cookies that you are removing to be added to the list of sites whose cookies will automatically be rejected.
+  
+<p>You must click OK for your changes to take effect.
+
 
 <p>&nbsp;</p>
 
@@ -320,7 +327,7 @@ Using the Cookie Manager</h1>
 	<li>Click the Cookie Sites tab.
 </ol>
 
-<p>When the &quot;Warn me before storing a cookie&quot; option is selected in <a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a>, you will be warned (while browsing) each time a web site requests permission to set a cookie. The warning allows you to accept or deny the cookie. The warning also allows you to select an option for your browser to &quot;Remember this decision.&quot;
+<p>If the &quot;Warn me before storing a cookie&quot; option is selected in <a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a>, you will be warned (while browsing) each time a web site requests permission to set a cookie. The warning allows you to accept or deny the cookie. The warning also allows you to select an option for your browser to &quot;Remember this decision.&quot;
 
 <p>The Cookie Sites tab of the Cookie Manager lists the sites for which your decisions have been remembered, and what your decisions were. It also allows you to remove sites from the list, so that the Cookie Manager no longer remembers your decisions about them:
 
@@ -329,7 +336,7 @@ Using the Cookie Manager</h1>
 	<li><b>Remove All Cookies:</b> Removes all sites from the list.
 </ul>
 
-<p>Once you've removed a site from this list, Cookie Manager remembers nothing about it. When the &quot;Warn me before storing a cookie&quot; option is selected in the Cookies preferences panel, you will be again be warned when the web site you removed from this list requests permission to set a cookie.
+<p>Once you've removed a site from this list, Cookie Manager remembers nothing about it. If the &quot;Warn me before storing a cookie&quot; option is selected in the Cookies preferences panel, you will be again be warned when the web site you removed from this list requests permission to set a cookie.
 
 <p>&nbsp;</p>
 
@@ -367,16 +374,21 @@ Using the Cookie Manager</h1>
 
 <p>You can select one of the following privacy levels:
 <ul>
-	<li><b>low:</b> Select this if you're not too concerned about cookies. When this setting is selected, the Cookie Manager accepts all first party cookies permanently, without regard for a site's privacy policy. 
+	<li><b>low:</b> Select this if you're not too concerned about cookies. When this setting is selected, the Cookie Manager accepts all first-party cookies, without regard for a site's privacy policy. 
 
-	<p>It also accepts all third-party cookies. However, in the case of sites that may be collecting information without your consent, the Cookie Manager also <b>flags</b> the third-party cookie&mdash;that is, displays the cookie notification icon (<img src="chrome://cookie/content/taskbar-cookie.gif">) near the lower-right corner of the browser window. You can click the cookie notification icon to see more detailed information about the flagged cookies.
+	<p>It also accepts all third-party cookies. However, in the case of sites that may be collecting information without your consent that can be used to identify you , the Cookie Manager also <b>flags</b> the third-party cookie&mdash;that is, lists the cookie's status as "flagged" in the status column of the Cookie Manager's <a href="cookies_stored">Stored Cookies</a> tab. 
+
+	<p>When a cookie is first flagged, the Cookie Manager displays  the cookie notification icon (<img src="chrome://cookie/content/taskbar-cookie.gif">) near the lower-right corner of the browser window (if it's not already present). You can click the cookie notification icon to see more detailed information about the flagged cookies.
+
 	<li><b>medium:</b> Select this if you want to accept and flag both first-party and third-party cookies set by sites that may be collecting personally identifiable information without your consent.
+
 	<li><b>high:</b> Select this if you want the same settings as medium, with the following differences:</li>
 	<ul>
-		<li>Accept and flag, for the current session only, third-party cookies that don't ask for your consent at all.
-		<li>Accept and flag third-party cookies from web sites that provide a web page where you can withhold your consent, but don't ask explicitly for it each time.
+		<li>Reject third-party cookies set by sites that may be collecting information without your consent that can be used to identify you.
+
+		<li>Accept, for the current session only, third-party cookies that may be collecting information without your consent that can be used to identify you, but also provide a web page or some other mechanism that allows you to withhold your consent.
 	</ul>
-	<li><b>custom:</b> Select this only if you want to set your own custom Cookie Acceptance Policy. The default settings for &quot;custom&quot; are the same as for &quot;high.&quot; You can modify them by selecting from the drop-down menus in the Cookie Acceptance Policy portion of the dialog box.
+	<li><b>custom:</b> Select this only if you want to set your own custom Cookie Acceptance Policy. The default settings for &quot;custom&quot; are whatever they happened to be just before you select this option. You can modify them by selecting from the drop-down menus in the Cookie Acceptance Policy portion of the dialog box.
 </ul>
 <p>To see the exact effect of each privacy level setting, select it and then examine the Cookie Acceptance Policy settings.
 
@@ -390,22 +402,22 @@ Using the Cookie Manager</h1>
 <p>If you select the <b>custom</b> option in the top portion of the Privacy Settings dialog box, you can choose one of four settings from the drop-down list in each of the eight categories shown in the bottom portion. These settings cause Cookie Manager to perform the following actions: 
 
 <ul>
-	<li><b>Accept:</b> Permanently accept all cookies in the category.
+	<li><b>Accept:</b> Accept all cookies in the category.
 	<li><b>Session:</b> Accept all cookies in the category for the current session only&mdash;that is, until you exit the browser.
-	<li><b>Reject:</b> Permanently reject all cookies in the category.
-	<li><b>Flag:</b> Accept all cookies in the category, but display the cookie notifiation icon each time it does so.
+	<li><b>Reject:</b> Reject all cookies in the category.
+	<li><b>Flag:</b> Lists the cookie's status as "flagged" in the status column of the Cookie Manager's <a href="cookies_stored">Stored Cookies</a> tab and display the cookie notifiation icon.
 </ul>
 
 <p>The cookie notification icon (<img src="chrome://cookie/content/taskbar-cookie.gif">) appears near the lower-right corner of the browser window. You can click it to get information about the affected cookies or modify your privacy settings.
  
 
-<p>There are four categories for each of the two types of cookies:
+<p>Web sites are classified in four categories for each of the two types of cookies:
 
 <ul>
 	<li><b>Site has no privacy policy:</b> Site does not publish any kind of privacy policy. There is  no way of knowing what kinds of information such sites collect or what they do with it. In general, it's safest to reject cookies set by such sites, especially third-party cookies.
-	<li><b>Site collects personally identifiable information without your consent:</b> Site publishes a privacy policy, but does not ask your permission when it collects information about your online activities. If you are concerned about such information being collected without your knowledge, you should reject cookies from such sites, especially third-party cookies.
-	<li><b>Site collects personally identifiable information with only your implicit consent:</b> Site collects information about you unless you go to a web page and explicitly withhold your consent.
-	<li><b>Site does not collect personally identifiable information without your explicit consent:</b> This kind of site is relatively less dangerous, since you are warned, and given a chance to reject the request, each time such a site attempts to collect information about you. As for the other types of sites, third-party cookies are considered more dangerous than first party cookies.
+	<li><b>Site collects personally identifiable information without your consent:</b> Site publishes a privacy policy, but does not ask your permission when it collects personally identifiable information. If you are concerned about such information being collected without your knowledge, you should reject cookies from such sites, especially third-party cookies.
+	<li><b>Site collects personally identifiable information with only your implicit consent:</b> Site collects information about you unless you go to a web page (or use some other mechanism) to explicitly withhold your consent.
+	<li><b>Site does not collect personally identifiable information without your explicit consent:</b> This kind of site is relatively innocuous, since you are explicitly given a chance to reject requests for personally identifiable information at some point during your interaction with the site. As for the other types of sites, third-party cookies are considered more dangerous than first party cookies.
 </ul>
 
 <p>&nbsp;</p>
@@ -417,11 +429,10 @@ Using the Cookie Manager</h1>
 <p>This section describes how to use the Cookie Notification dialog box, which appears when you click the Cookie Notification icon. You can take the following actions from this dialog box:
 
 <ul>	
-	<li><b>Turn Off Privacy Settings.</b> Click this button to disable your Privacy Settings. This has the same effect as selecting &quot;Enable all cookies&quot; in <a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a>. After you take this action, your browser will accept all cookies without warning you.
-	<li><b>View Cookie Manager.</b> Click this button to open the Cookie Manager, where you can view the current status of all your cookies and identify the cookies that caused the notification icon to appear. Clicking this button also removes the cookie notification icon from the status bar.
+	<li><b>Turn Off Privacy Settings.</b> Click this button to disable your Privacy Settings. This has the same effect as selecting &quot;Enable all cookies&quot; in <a href="#cookie_prefs">Privacy &amp; Security Preferences - Cookies</a>. After you take this action, your browser will accept all cookies.
+	<li><b>View Cookie Manager.</b> Click this button to open the Cookie Manager, where you can view the current status of all your cookies and identify the cookies that caused the notification icon to appear.
 	<li><b>View Privacy Settings.</b> Click this button to open the Privacy Settings dialog box. The settings in this dialog box determine how web sites can use cookies on your computer and what actions cause the cookie notification icon to be displayed.
-	<li><b>Close.</b> Click this button to exit the Cookie Notification dialog box without taking any action. The cookie notification icon remains visible until you open the Cookie Manager to view your cookie status.
-</ul>
+	<li><b>Close.</b> Click this button to exit the Cookie Notification dialog box without taking any action.</ul>
 
 <p>For more information about using privacy settings, see <a href="#privacy_levels">Setting Privacy Levels</a>.
 
@@ -434,9 +445,9 @@ Using the Cookie Manager</h1>
 
 <p>Many web sites require you to type a user name and password before you can enter the site. For instance, personalized pages and web sites containing your financial information require you to log in.</p>
 
-<p>The user name and password you use at a particular site can be read by the site's administrator. If this concerns you, you may wish to use a different password at every site with which you register. Unfortunately, it is very difficult to remember every single password you've ever used.
+<p>The user name and password you use at a particular site can be read by the site's administrator. Potentially, that person could then attempt to log into other sites where you may have used the same user name and password. If this concerns you, you may wish to use a different password at every site with which you register. Unfortunately, it is very difficult to remember every single password you've ever used.
 
-<p>Password Manager can help you by storing your user names and passwords on your computer's hard disk, and entering them for you automatically when you visit such sites.</p>
+<p>Password Manager can help you remember some or all of your names and passwords by storing them on your computer's hard disk, and entering them for you automatically when you visit such sites.</p>
 
 
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
@@ -458,9 +469,9 @@ Using the Cookie Manager</h1>
 <a NAME="passwords_manage"></a>
 <h2>Using Password Manager to Remember User Names and Passwords</h2>
 
-<p>When Password Manager is turned on, it gives you an opportunity to save user names and passwords that you enter while using the Internet. 
+<p>When Password Manager is active, it gives you an opportunity to save user names and passwords that you enter while using the Internet. 
 
-<p>For example, when you log onto your email account or a web site that requries a password, a dialog box appears asking, &quot;Do you want Password Manager to remember this logon?&quot; When you see this dialog box, you can click one of the following buttons:</p>
+<p>For example, after you log onto a web site that requires a password, a dialog box appears asking, &quot;Do you want Password Manager to remember this logon?&quot; When you see this dialog box, you can click one of the following buttons:</p>
 
 <ul>
 <li><b>Yes:</b> The next time you return to the web site you'll see that your user name and password are already filled in.</li>
@@ -470,9 +481,16 @@ Using the Cookie Manager</h1>
 <li><b>No:</b> Password Manager won't remember the user name and password, but will ask again the next time you visit the site.</li>
 </ul>
 
+<p>Similarly, when you log onto an email account or perform any other action that requires the browser itself to request your user name and password, you can select this option in the same dialog box:
+<ul>
+	<li><b>Use Password Manager to remember these values</b>
+</ul>
+
 <p>Password Manager saves your user names and passwords on your own computer in a file that's difficult, but not impossible, for an intruder to read. See <a href="#using_encrypt">Encrypting Stored Sensitive Information</a> for information on protecting your stored user names and passwords with encryption technology.
 
-<p>If the Password Manager dialog box described above does not appear when you click Submit after typing your user name and password, Password Manager may be turned off. To turn it on, follow the instructions at <a href="#passwords_onoff">Turning Password Manager On and Off</a>. 
+<p>If the Password Manager dialog box described above does not appear when you click Submit after typing your user name and password, Password Manager may be turned off or the web site may disallow its use. 
+
+<p>To check whether Password Manager is currently active, follow the instructions at <a href="#passwords_onoff">Turning Password Manager On and Off</a>. 
 
 <p>&nbsp;</p>
 <a NAME="passwords_auto"></a>
@@ -506,11 +524,12 @@ Using the Cookie Manager</h1>
 <li>Select Manage Stored Passwords from the submenu. You see the Password Manager window.</li>
 <li>Click the Passwords Saved tab. You see a list of all the stored sites and user names. (Passwords are not listed.)</li> 
 <ul>
-	<li>To remove a user name, click it and then click Remove. The next time you visit the web site, you will be asked to enter your password.</li>
-	<li>Click the Passwords Never Saved tab to see a list of the web sites for which you instructed Password Manager never to store user names. To remove a web site from this list, click it and then click Remove. The next time you visit the web site, you will be asked if you want Password Manager to save the user name and password for that site.</li>
+	<li>To remove a user name, click it and then click Remove. The next time you visit the web site, you will need to enter your user name and password again, since Password Manager will no longer have the information.</li>
+	<li>Click the Passwords Never Saved tab to see a list of the web sites for which you instructed Password Manager never to store user names. To remove a web site from this list, click it and then click Remove. The next time you log into the web site, you can use the stored user name and password (if available) or indicate that you want Password Manager to save the information for that site.</li>
 </ul>
 </ol>
 
+<p>You must click OK for your changes to take effect.
 <p>
 [&nbsp;<A HREF="#using_password">Return to beginning of section</A>&nbsp;]
 </p>
@@ -551,7 +570,7 @@ Using the Cookie Manager</h1>
 <p>There are two ways to save personal data:</p>
 
 <ul>
-<li>Each time you submit an online form that you've filled out, Form Manager asks if you want the information saved. Click Yes. 
+<li>Each time you submit an online form that includes certain kinds of information, such as your name and address, Form Manager asks if you want the information saved. Click Yes. 
 
 <p>Note that Form Manager prompts you only if its automatic notification feature is turned on. For details, see <a href="#form_notify">Turning Off Form Manager Notification</a>.
 
@@ -566,7 +585,7 @@ Using the Cookie Manager</h1>
 
 	<li><b>Never for this site.</b> Click this button to ensure that Form Manager will not ask in the future if you want to save information that you enter in forms at this site. 
 
-<p>You may want to do this if you want to ensure that you'll always have to enter sensitive information manually at a particular sit. You can change your mind later if you like; for details, see <a href="#form_sites_view_edit">Editing Stored Site Information</a>.
+<p>You may want to do this if you want to ensure that you'll always have to enter sensitive information manually at a particular site. You can change your mind later if you like; for details, see <a href="#form_sites_view_edit">Editing Stored Site Information</a>.
 
 	<li><b>No.</b> Form Manager won't save the information you entered, but will ask again the next time you enter form information at this site.
 </ul>
@@ -582,7 +601,11 @@ Using the Cookie Manager</h1>
 <a NAME="form_auto"></a>
 <h2>Filling Out Forms Automatically</h2>
 
-<p>To fill out an online form automatically:</p>
+<p>You can use the Form Manager to fill out forms automatically in two ways: either one field at a time, or multiple fields at once.
+
+<p>To fill out a single field automatically in an online form, double-click in the field. If Form Manager has stored the data for that field, it will fill it in. You can edit the filled-in data if necessary.
+
+<p>To fill out multiple fields in an online form all at once:</p>
 
 <ol>
 <li>Go to the online form you want to fill out.
@@ -591,19 +614,18 @@ Using the Cookie Manager</h1>
 <p>Note that the Prefill Form menu item won't be accessible if the Form Manager hasn't yet stored any relevant information.
 
 
-<li>A dialog box called Prefill Form Data appears. This shows exactly what information Form Manager is about to fill in. You can use this dialog box as follows:</li>
+<li>A dialog box called Prefill Form Data appears (unless you have previously chosen to bypass it for this site). This shows exactly what information Form Manager is about to fill in. You can use this dialog box as follows:</li>
 <ul>
 <li>To prevent a field from being filled in automatically, deselect the checkbox beside it. 
 
 <li>To prevent any fields from being filled in automatically, click Cancel.</li>
 
 </ul>
-
+<p>You can also choose to bypass this dialog box in the future. For more details, see <a href="#forms_prefill">Prefill Form Data</a>.
+  
 <li>Click OK to confirm your choices. Form Manager then fills in the form as you specified.
 
 </ol>
-
-<p>For more details on using the Prefill Form Data dialog box, see <a href="#forms_prefill">Prefill Form Data</a>.
 
 <p>
 [&nbsp;<A HREF="#using_forms">Return to beginning of section</A>&nbsp;]
@@ -615,7 +637,7 @@ Using the Cookie Manager</h1>
 <a NAME="form_notify"></a>
 <h2>Turning Off Form Manager Notification</h2>
 
-<p>Form Manager is set to prompt you to save information whenever it detects that you have filled out an online form. To stop these messages from appearing on your screen:</p>
+<p>Form Manager is set to prompt you to save information whenever you submit an online form that includes certain kinds of information, such as your name and address. To stop these messages from appearing on your screen:</p>
 
 <ol>
 <li>Open the Edit menu and choose Preferences.
@@ -625,7 +647,7 @@ Using the Cookie Manager</h1>
 
 <p>Note that deselecting this option turns off the notification feature, but not Form Manager. The form data it may have already collected is still available. 
 
-<p>You can still pull down the Edit menu and choose Save Form Info any time you want to save information from a form you've just filled in, or choose Prefill Form to fill in a form automatically.
+<p>You can still pull down the Edit menu and choose Save Form Info any time you want to save information from a form you've just filled in, or choose Prefill Form (or double-click each field) to fill in a form automatically.
 <p>
 [&nbsp;<A HREF="#using_forms">Return to beginning of section</A>&nbsp;]
 </p>
@@ -643,7 +665,19 @@ Using the Cookie Manager</h1>
 	<li>Click Manage Stored Form Data. 
 </ol>	
 
-	<p>The Form Manager dialog box for editing data appears. Click the subcategories on the left to view or edit the corresponding data. To view subcategories that aren't visible, double-click a category to expand the list.
+	<p>The Form Manager dialog box for editing data appears. Click the subcategories on the left to view or edit the corresponding data in the panel on the right. To view subcategories that aren't visible, double-click a category to expand the list.
+
+<p>To add information not currently included in one  of the drop down lists on the right, select the blank item and start typing. Similarly, select existing text to edit or (if you remove every character) erase it.
+
+<p>The last category on the left side, Other Saved Information, includes panels for two special kinds of data: 
+
+<ul>
+	<li><b>Concatenations</b> lists data stored as a single element that would normally be stored as two or more elements. For example, data stored from a single Full Name field that includes both your first and last names would be stored here together rather than separately in those individual categories.
+
+		<li><b>URL-Specific</b> lists fields and the values to use for each of them that are applicable only for the web site where you entered them.
+
+</ul>
+
 <p>
 [&nbsp;<A HREF="#using_forms">Return to beginning of section</A>&nbsp;]
 </p>
@@ -669,7 +703,7 @@ Using the Cookie Manager</h1>
 <ul>
 	<li>The Forms Never Previewed tab lists the sites for which you've decided not to display the Prefill Form Data dialog box.
 
-	<li>The Forms Never Saved dialog box lists the sites for which you've decided never to save form data.
+	<li>The Forms Never Saved tab lists the sites for which you've asked not to be prompted to save form data.
 </ul>
 
 <p>To remove a site from either list and thus restore the default behavior, select the site and click Remove. For more details, see <a href="#forms_sites">Form Manager - Sites</a>.
@@ -773,12 +807,12 @@ Using the Cookie Manager</h1>
 
 <p>If you choose encryption, but don't already have a master password, you'll be prompted to create one the first time you try to save or retrieve your sensitive information.</p>
 
-<p>If your master password has not previously been set, you can set it yourself:
+<p>If your master password has not previously been set, you can set at this time:
 
 <ol>
 <li>Open the Tools menu, choose Privacy &amp; Security, and then choose Password Manager.</li>
-<li>Select Change Master Password from the submenu. You see the Set Master Password dialog box.
-<li>Enter your new master password, and retype it to confirm the spelling.</li>
+<li>Select Change Master Password from the submenu (even though you are setting it for the first time, not changing it). You see the Set Master Password dialog box.
+<li>Enter your desired master password, and retype it to confirm the spelling.</li>
 <li>Click OK.
 </ol>
 
@@ -807,7 +841,12 @@ Using the Cookie Manager</h1>
 <a NAME="encrypt_logout"></a>
 <h2>Logging Out of Your Master Password</h2>
 
-<p>Normally, you are asked for your master password once during each browser session during which you access any of your stored sensitive information. However, you can log out of your master password so that it must be entered again before any sensitive information can be stored or retrieved. This is useful if you are going to leave your computer unattended for a period of time.</p>
+<p>Normally, you are asked for your master password once during each browser session during which you access any of your stored sensitive information. 
+
+<p>It's also possible to require that your master password be requested each time it is needed, or after a certain amount of time has passed. For details, see <a href="passwords_help.html#Master_Password_Timeout">Master_Password_Timeout</a>.
+
+<p>You can log out of your master password so that it must be entered again before any sensitive information can be stored or retrieved. This is useful if you are going to leave your computer unattended for a period of time.</p>
+
 
 <p>To log out of your master password:</p>
 
@@ -822,7 +861,7 @@ Using the Cookie Manager</h1>
 <a NAME="master_password:forgettingIDX"></a>
 <h2>What to Do If You Forget Your Master Password</h2>
 
-<p>If you forget your master password, you won't be able to access any of the stored password and form data that it protects. Your master password is your most important password. Make sure you remember it or record it in a safe place.
+<p>If you forget your master password and you have chosen to encrypt sensitive data (see <a href="#using_encrypt">Encrypting Stored Sensitive Information</a>), you won't be able to access any of the stored password and form data that it protects (assuming you have turned on encryption. Your master password is your most important password. Make sure you remember it or record it in a safe place.
 
 <p>As a last resort, it's possible to reset your master password if you are sure you can't remember it. However, resetting your master password permanently erases all the web passwords, email passwords, and form data saved on your behalf by Password Manager and Form Manager. You will also lose all your personal certificates associated with the <a href="glossary.html#software_security_device">software security device</a>.
 
@@ -938,7 +977,7 @@ Privacy &amp; Security Preferences - Images</h2>
 <a NAME="forms_mgr"></a>
 <h3>Form Manager</h3>
 
-<p>When you fill out an online form and click Submit, Form Manager normally displays a dialog box that asks if you want it to save the form data you just entered. 
+<p>When you fill out an online form and click Submit, Form Manager displays a dialog box that asks if you want it to save the form data you just entered (but only some of the filled-in fields include standard ones such as name and address).
 
 <p>If you click Yes at least some of the time, Form Manager will soon have enough data to begin filling out forms automatically.
 
@@ -946,7 +985,7 @@ Privacy &amp; Security Preferences - Images</h2>
 
 <ul>
 
-	<li><b>Save form data from web pages when completing forms:</b> Select this checkbox if you want to be asked whether to save form data every time you fill in a new form. If this option is not selected, Form Manager never asks if you want to save form data.
+	<li><b>Save form data from web pages when completing forms:</b> Select this checkbox if you want to be asked whether to save form data every time you submit a new form. If this option is not selected, Form Manager never asks if you want to save form data.
 
 	<p>Note that deselecting this option turns off the notification feature, but not Form Manager. The form data it may have already collected is still available. You can still pull down the Edit menu and choose Save Form Data any time you want to save information from a form you've just filled in, or choose Prefill Form to fill in a form automatically.
 
@@ -958,6 +997,8 @@ Privacy &amp; Security Preferences - Images</h2>
 
 <p>&nbsp;</p>
 <a NAME="forms_data"></a>
+<a NAME="Form_Manager_concatenationsSDX"></a>
+<a NAME="concatenations,_Form_ManagerIDX"></a>
 <hr><h2>Form Manager - Data</h2>
 
 <p>This section describes how to use the window that allows you to edit data saved on your behalf by the Form Manager. If you are not already viewing this window, follow these steps:
@@ -971,8 +1012,25 @@ Privacy &amp; Security Preferences - Images</h2>
 
 <ul>
 	<li><b>Category:</b> Double-click a category in the Category column to view its subcategories, and click a subcategory to view its data on the right side of the window. To edit or add to the displayed data, click in a field and type.
+
+	<p>To add information not currently included in one of the drop down lists on the right, select the blank item and start typing. Similarly, select existing text to edit or (if you remove every character) erase it. 
 	<li><b>Remove All Saved Data:</b> Click this button to remove all the saved data at once.
 </ul>
+
+
+<p>The last category on the left side, Other Saved Information, includes panels for two special kinds of data:
+
+<ul>
+	<li><b>Concatenations:</b> The Form Manager typically captures and prefills individual elements, such as first and last name, and combines them when necessary. If it encounters a page that asks for a full name, for example, it prefills it with the first and last name it has stored previously. 
+
+<p>However, if the Form Manager hasn't yet stored your first and last name, it saves the full name (if you ask it to) as a single element in the Concatenations panel.
+
+		<li><b>URL-Specific:</b> This panel lists URL-specific fields and the values to use for each of them at each URL for which you have entered such information.
+
+</ul>
+
+
+
 <p>For step-by-step instructions on using the Form Manager, see <a href="#using_forms">Using the Form Manager</a>.
 
 
@@ -980,7 +1038,7 @@ Privacy &amp; Security Preferences - Images</h2>
 <a NAME="forms_sites"></a>
 <hr><h2>Form Manager - Sites</h2>
 
-<p>This section describes how to use the dialog box that allows you to edit data saved on your behalf by Form Manager. If you are not already viewing it, follow these steps:
+<p>This section describes how to use the dialog box that allows you to edit site information saved on your behalf by Form Manager. If you are not already viewing it, follow these steps:
 <ol>
 	<li>Open the Edit menu and choose Preferences.
    	<li>Under the Privacy &amp; Security category, click Forms. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
@@ -996,7 +1054,7 @@ Privacy &amp; Security Preferences - Images</h2>
 	<li><b>Forms Never Saved:</b> Click this tab to view the list of sites for which you selected &quot;Never for this  
 site&quot; in response to the Form Manager's request to store form data. 
 
-	<p>If you remove an entry from this list, Form Manager will again ask whether to store form data when you fill in forms at that site (assuming that the main Form Manager notification option has been selected in <a href="#forms_prefs">Privacy &amp; Security Preferences - Forms</a>).
+	<p>If you remove an entry from this list, Form Manager will again ask whether to store form data when you submit forms at that site (assuming that the main Form Manager notification option has been selected in <a href="#forms_prefs">Privacy &amp; Security Preferences - Forms</a>).
 
 </ul>
 
@@ -1039,7 +1097,7 @@ site&quot; in response to the Form Manager's request to store form data.
 
 <hr>
 
-<p><i>16 May 2002</i></p>
+<p><i>22 May 2002</i></p>
 
 <hr>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
