@@ -71,6 +71,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Unread = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageChild = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_IsUnread = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_IsUnreadSort = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_IsOffline = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_HasAttachment = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_IsImapDeleted = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageType = nsnull;
@@ -126,6 +127,7 @@ nsMsgMessageDataSource::nsMsgMessageDataSource()
 		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
 		rdf->GetResource(NC_RDF_ISUNREAD, &kNC_IsUnread);
 		rdf->GetResource(NC_RDF_ISUNREAD_SORT, &kNC_IsUnreadSort);
+		rdf->GetResource(NC_RDF_ISOFFLINE, &kNC_IsOffline);
 		rdf->GetResource(NC_RDF_HASATTACHMENT, &kNC_HasAttachment);
 		rdf->GetResource(NC_RDF_ISIMAPDELETED, &kNC_IsImapDeleted);
 		rdf->GetResource(NC_RDF_MESSAGETYPE, &kNC_MessageType);
@@ -178,6 +180,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_MessageChild, refcnt);
 		NS_RELEASE2(kNC_IsUnread, refcnt);
 		NS_RELEASE2(kNC_IsUnreadSort, refcnt);
+		NS_RELEASE2(kNC_IsOffline, refcnt);
 		NS_RELEASE2(kNC_HasAttachment, refcnt);
 		NS_RELEASE2(kNC_IsImapDeleted, refcnt);
 		NS_RELEASE2(kNC_MessageType, refcnt);
@@ -463,6 +466,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 				(kNC_PriorityString == property) || (kNC_StatusString) ||
 				(kNC_Priority == property) || (kNC_Size == property) || 
 				(kNC_Lines == property ) || (kNC_IsUnread == property) || 
+        (kNC_IsOffline == property) ||
 				(kNC_IsImapDeleted == property) || (kNC_OrderReceived == property) || 
 				(kNC_HasAttachment == property) || (kNC_MessageType == property) || 
 				(kNC_ThreadState == property))
@@ -544,6 +548,7 @@ nsMsgMessageDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, 
                aArc == kNC_Size ||
                aArc == kNC_Lines ||
                aArc == kNC_IsUnread ||
+               aArc == kNC_IsOffline ||
                aArc == kNC_HasAttachment ||
                aArc == kNC_IsImapDeleted ||
                aArc == kNC_MessageType ||
@@ -638,6 +643,7 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(PRBool showThreads,
 	(*arcs)->AppendElement(kNC_Size);
 	(*arcs)->AppendElement(kNC_Lines);
 	(*arcs)->AppendElement(kNC_IsUnread);
+	(*arcs)->AppendElement(kNC_IsOffline);
 	(*arcs)->AppendElement(kNC_HasAttachment);
 	(*arcs)->AppendElement(kNC_IsImapDeleted);
 	(*arcs)->AppendElement(kNC_MessageType);
@@ -951,6 +957,10 @@ nsresult nsMsgMessageDataSource::OnChangeStatus(nsIRDFResource *resource, PRUint
 	{
 		OnChangeIsImapDeleted(resource, oldFlag, newFlag);
   }
+  else if (changedFlag & MSG_FLAG_OFFLINE)
+  {
+		OnChangeIsOffline(resource, oldFlag, newFlag);
+  }
 	return NS_OK;
 }
 
@@ -986,6 +996,19 @@ nsresult nsMsgMessageDataSource::OnChangeIsUnread(nsIRDFResource *resource, PRUi
 
 	return rv;
 }
+
+nsresult nsMsgMessageDataSource::OnChangeIsOffline(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag)
+{
+	nsresult rv;
+	nsCOMPtr<nsIRDFNode> newIsOfflineNode;
+	
+	newIsOfflineNode = (newFlag & MSG_FLAG_OFFLINE) ? kTrueLiteral : kFalseLiteral;
+
+	rv = NotifyPropertyChanged(resource, kNC_IsOffline, newIsOfflineNode);
+
+	return rv;
+}
+
 
 nsresult nsMsgMessageDataSource::OnChangeIsImapDeleted(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag)
 {
@@ -1148,6 +1171,8 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		rv = createMessageUnreadNode(message, target);
 	else if((kNC_IsUnread == property))
 		rv = createMessageIsUnreadNode(message, target, PR_FALSE);
+	else if((kNC_IsOffline == property))
+		rv = createMessageIsOfflineNode(message, target);
 	else if((kNC_IsUnreadSort == property))
 		rv = createMessageIsUnreadNode(message, target, PR_TRUE);
 	else if((kNC_HasAttachment == property))
@@ -1337,6 +1362,24 @@ nsMsgMessageDataSource::createMessageIsUnreadNode(nsIMessage *message, nsIRDFNod
 	NS_IF_ADDREF(*target);
 	return NS_OK;
 }
+
+nsresult
+nsMsgMessageDataSource::createMessageIsOfflineNode(nsIMessage *message, nsIRDFNode **target)
+{
+	nsresult rv;
+	PRUint32 flags;
+	rv = message->GetFlags(&flags);
+	if(NS_FAILED(rv))
+		return rv;
+	if(flags & MSG_FLAG_OFFLINE)
+		*target = kTrueLiteral;
+	else
+		*target =  kFalseLiteral;
+
+	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
+
 
 nsresult
 nsMsgMessageDataSource::createMessageHasAttachmentNode(nsIMessage *message, nsIRDFNode **target)
@@ -1959,19 +2002,26 @@ nsMsgMessageDataSource::DoDownloadSelectedMessages(nsISupportsArray *messages)
 		return rv;
 	while(count > 0)
 	{
-		nsCOMPtr<nsISupportsArray> messageArray;
-		nsCOMPtr<nsIMsgFolder> folder;
-	
-		rv = GetMessagesAndFirstFolder(messages, getter_AddRefs(folder), getter_AddRefs(messageArray));
-		if(NS_FAILED(rv))
-			return rv;
+    // remove messages that we already have offline
+	  nsCOMPtr<nsISupports> messageSupports = getter_AddRefs(messages->ElementAt(count - 1));
+	  nsCOMPtr<nsIMessage> message = do_QueryInterface(messageSupports);
+    if (message)
+    {
+      PRUint32 flags;
+      rv = message->GetFlags(&flags);
+      if (NS_SUCCEEDED(rv) && (flags & MSG_FLAG_OFFLINE))
+        messages->RemoveElementAt(count - 1);
+    }
+    count--;
+  }
+	nsCOMPtr<nsISupportsArray> messageArray;
+	nsCOMPtr<nsIMsgFolder> folder;
 
-		folder->DownloadMessagesForOffline(messageArray);
-		rv = messages->Count(&count);
-		if(NS_FAILED(rv))
-			return rv;
-	}
-	return rv;
+	rv = GetMessagesAndFirstFolder(messages, getter_AddRefs(folder), getter_AddRefs(messageArray));
+	if(NS_FAILED(rv))
+		return rv;
+
+	return folder->DownloadMessagesForOffline(messageArray);
 }
 
 nsresult nsMsgMessageDataSource::DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,

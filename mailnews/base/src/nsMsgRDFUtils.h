@@ -52,6 +52,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_LINES					NC_NAMESPACE_URI "Lines"
 #define NC_RDF_ISUNREAD				NC_NAMESPACE_URI "IsUnread"
 #define NC_RDF_ISIMAPDELETED				NC_NAMESPACE_URI "IsImapDeleted"
+#define NC_RDF_ISOFFLINE				NC_NAMESPACE_URI "IsOffline"
 #define NC_RDF_ORDERRECEIVED		NC_NAMESPACE_URI "OrderReceived"
 #define NC_RDF_HASATTACHMENT		NC_NAMESPACE_URI "HasAttachment"
 #define NC_RDF_MESSAGETYPE			NC_NAMESPACE_URI "MessageType"
