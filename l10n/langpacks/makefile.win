@@ -19,7 +19,7 @@
 DEPTH = ..\..
 
 DIRS= \
-	en-GB \
+	en-DE \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

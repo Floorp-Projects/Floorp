@@ -8,11 +8,11 @@
 ; ; file comment
 ;
 
-[langengb]
+[langende]
 ;
-; en-GB 
-bin/defaults/profile/en-GB/*
-bin/chrome/locales/en-GB/*
+; en-DE 
+bin/defaults/profile/en-DE/*
+bin/chrome/locales/en-DE/*
 
 [deflenus]
 ;

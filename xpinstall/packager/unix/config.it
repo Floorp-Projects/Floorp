@@ -125,10 +125,10 @@ Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
 [Component6]
-Description Short=English GB Language Pack
-Description Long=English GB Language Pack
-Archive=langengb.xpi
-$InstallSize$:langengb
+Description Short=English German Language Pack
+Description Long=English German Language Pack
+Archive=langende.xpi
+$InstallSize$:langende
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 

@@ -8,6 +8,12 @@
 ; ; file comment 
 ; 
 
+[langende]
+;
+; en-DE 
+viewer:defaults:profile:en-DE:*
+viewer:chrome:locales:en-DE:*
+
 [xpcom]
 viewer:Component Registry
 viewer:Components:libjar.shlb 
