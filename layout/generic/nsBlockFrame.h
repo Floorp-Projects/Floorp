@@ -178,6 +178,8 @@ protected:
 
   void FindFloaters(nsLineBox* aLine);
 
+  void DeleteLine(nsBlockReflowState& aState, nsLineBox* aLine);
+
   //----------------------------------------
   // Methods for individual frame reflow
 
