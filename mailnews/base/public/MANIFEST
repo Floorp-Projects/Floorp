@@ -17,6 +17,7 @@
 #
 
 msgCore.h
+nsIMsgHdr.h
 nsMsgFolderFlags.h
 nsMsgHeaderMasks.h
 nsMsgLocalFolderHdrs.h
