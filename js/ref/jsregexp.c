@@ -19,6 +19,7 @@
 /*
  * JS regular expressions, after Perl.
  */
+#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include "prtypes.h"
@@ -1410,13 +1411,13 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 		   (REOP(next) == REOP_FLAT || REOP(next) == REOP_FLAT1)) {
 		if (REOP(next) == REOP_FLAT) {
 		    cp2 = next->kid;
-		    len2 = (jschar *)next->u.kid2 - cp2;
+		    len2 = PTRDIFF((jschar *)next->u.kid2, cp2, jschar);
 		} else {
 		    cp2 = &next->u.chr;
 		    len2 = 1;
 		}
 		cp = ren->kid;
-		len = (jschar *)ren->u.kid2 - cp;
+		len = PTRDIFF((jschar *)ren->u.kid2, cp, jschar);
 		if (len + len2 > REOP_FLATLEN_MAX)
 		    break;
 		cx = state->context;
@@ -1464,7 +1465,7 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 		(REOP(next) == REOP_FLAT || REOP(next) == REOP_FLAT1)) {
 		if (REOP(next) == REOP_FLAT) {
 		    cp2 = next->kid;
-		    len = (jschar *)next->u.kid2 - cp2;
+		    len = PTRDIFF((jschar *)next->u.kid2, cp2, jschar);
 		} else {
 		    cp2 = &next->u.chr;
 		    len = 1;
@@ -1514,7 +1515,7 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 	     */
 	    cp  = ren->kid;
 	    cp2 = ren->u.kid2;
-	    len = cp2 - cp;
+	    len = PTRDIFF(cp2, cp, jschar);
 	    maxc = 0;
 	    while (cp < cp2) {
 		c = *cp++;
@@ -1568,7 +1569,7 @@ OptimizeRegExp(CompilerState *state, RENode *ren)
 	     */
 	    cp  = ren->kid;
 	    cp2 = ren->u.kid2;
-	    len = cp2 - cp;
+	    len = PTRDIFF(cp2, cp, jschar);
 	    while (cp < cp2) {
 		c = *cp++;
 		if (c >> 8) {
@@ -2613,7 +2614,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 	*rval = JSVAL_NULL;
 	goto out;
     }
-    i = cp - state.cpbegin;
+    i = PTRDIFF(cp, state.cpbegin, jschar);
     *indexp = i;
     matchlen = i - (start + state.skipped);
     ep = cp;

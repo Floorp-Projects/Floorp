@@ -26,6 +26,7 @@
  *
  * XXX swizzle page to freelist for better locality of reference
  */
+#include "jsstddef.h"
 #include <stdlib.h>     /* for free, called by PR_ARENA_DESTROY */
 #include <string.h>	/* for memset, called by prarena.h macros if DEBUG */
 #include "prtypes.h"

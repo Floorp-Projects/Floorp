@@ -19,6 +19,7 @@
 /*
  * JS array class.
  */
+#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include "prtypes.h"
@@ -69,6 +70,7 @@ static JSBool
 ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
 {
     jsint i;
+    JSBool res = JS_FALSE;
     
     /* It's only an array length if it's an int or a double.  Some relevant
      * ECMA language is 15.4.2.2 - 'If the argument len is a number, then the
@@ -79,18 +81,18 @@ ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
     if (JSVAL_IS_INT(v)) {
         i = JSVAL_TO_INT(v);
         /* jsuint cast does ToUint32 */
-        *lengthp = (jsuint)i;
-        return JS_TRUE;
+	if (lengthp)
+            *lengthp = (jsuint) i;
+        res = JS_TRUE;
     } else if (JSVAL_IS_DOUBLE(v)) {
         /* XXXmccabe I'd love to add another check here, against
          * js_DoubleToInteger(d) != d), so that ValueIsLength matches
          * IdIsIndex, but it doesn't seem to follow from ECMA.
          * (seems to be appropriate for IdIsIndex, though).
-         */
-        return js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
-    } else {
-        return JS_FALSE;
+	 */
+	res = js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
     }
+    return res;	
 }
 
 
@@ -102,7 +104,8 @@ ValueToIndex(JSContext *cx, jsval v, jsuint *lengthp)
     if (JSVAL_IS_INT(v)) {
 	i = JSVAL_TO_INT(v);
         /* jsuint cast does ToUint32. */
-        *lengthp = (jsuint)i;
+	if (lengthp)
+            *lengthp = (jsuint)i;
         return JS_TRUE;
     }
     return js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);

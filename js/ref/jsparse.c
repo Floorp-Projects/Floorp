@@ -31,6 +31,7 @@
  * was designed with error recovery built on 64-bit first and follow bitsets
  * in mind, however.
  */
+#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -61,6 +62,7 @@
  * Each parser takes a context and a token stream, and emits bytecode using
  * a code generator.
  */
+
 typedef JSParseNode *
 JSParser(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc);
 
@@ -569,9 +571,11 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * XXX not ECMA, but documented in several books -- need a compile option
      */
     if (pn->pn_type == TOK_ASSIGN && pn->pn_op == JSOP_NOP) {
+#ifdef CHECK_EQUALITY_ASSIGNMENT
 	js_ReportCompileError(cx, ts,
 	    "test for equality (==) mistyped as assignment (=)?\n"
 	    "Assuming equality test");
+#endif
     	pn->pn_type = TOK_EQOP;
     	pn->pn_op = cx->jsop_eq;
 	pn2 = pn->pn_left;

@@ -19,6 +19,7 @@
 /*
  * JS boolean implementation.
  */
+#include "jsstddef.h"
 #include "prtypes.h"
 #include "prassert.h"
 #include "jsapi.h"

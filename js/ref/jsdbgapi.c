@@ -19,6 +19,7 @@
 /*
  * JS debugging API.
  */
+#include "jsstddef.h"
 #include <string.h>
 #include "prtypes.h"
 #include "prassert.h"

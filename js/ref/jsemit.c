@@ -19,8 +19,10 @@
 /*
  * JS bytecode generation.
  */
+#include "jsstddef.h"
 #include <memory.h>
-#include <stddef.h>
+
+
 #include <string.h>
 #include "prtypes.h"
 #include "prarena.h"
@@ -78,7 +80,7 @@ EmitCheck(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t delta)
     if (op != JSOP_NOP)
 	cg->lastCodeOffset = offset;
     if ((pruword)cg->next + delta >= (pruword)cg->limit) {
-        length = cg->limit - cg->base;
+        length = PTRDIFF(cg->limit, cg->base, jsbytecode);
 	cgsize = length * sizeof(jsbytecode);
         PR_ARENA_GROW(cg->base, &cx->codePool, cgsize, CGINCR);
 	if (!cg->base) {
@@ -280,7 +282,7 @@ PatchGotos(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
     while (pc > top) {
 	PR_ASSERT(*pc == JSOP_GOTO);
         delta = GET_JUMP_OFFSET(pc);
-        jumpOffset = target - pc;
+        jumpOffset = PTRDIFF(target, pc, jsbytecode);
         CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, jumpOffset);
         pc -= delta;
     }

@@ -19,6 +19,7 @@
 /*
  * Portable double to alphanumeric string and back converters.
  */
+#include "jsstddef.h"
 #include "prtypes.h"
 #include "prdtoa.h"
 #include "prprintf.h"

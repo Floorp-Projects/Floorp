@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "jsstddef.h"
 
 #include <string.h>
 #include "prtypes.h"
@@ -191,7 +192,7 @@ static JSXDROps xdrmem_ops = {
     mem_raw,        mem_seek,       mem_tell,       mem_finalize
 };
 
-void
+JS_PUBLIC_API(void)
 JS_XDRNewBase(JSContext *cx, JSXDRState *xdr, JSXDRMode mode)
 {
     xdr->cx = cx;
@@ -200,7 +201,7 @@ JS_XDRNewBase(JSContext *cx, JSXDRState *xdr, JSXDRMode mode)
     xdr->nclasses = 0;
 }
 
-JSXDRState *
+JS_PUBLIC_API(JSXDRState *)
 JS_XDRNewMem(JSContext *cx, JSXDRMode mode)
 {
     JSXDRState *xdr = JS_malloc(cx, sizeof(JSXDRMemState));
@@ -222,7 +223,7 @@ JS_XDRNewMem(JSContext *cx, JSXDRMode mode)
     return xdr;
 }
 
-void *
+JS_PUBLIC_API(void *)
 JS_XDRMemGetData(JSXDRState *xdr, uint32 *lp)
 {
     if (xdr->ops != &xdrmem_ops)
@@ -231,7 +232,7 @@ JS_XDRMemGetData(JSXDRState *xdr, uint32 *lp)
     return xdr->data;
 }
 
-void
+JS_PUBLIC_API(void)
 JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32 len)
 {
     if (xdr->ops != &xdrmem_ops)
@@ -241,7 +242,7 @@ JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32 len)
     MEM_PRIV(xdr)->count = 0;
 }
 
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRUint8(JSXDRState *xdr, uint8 *b)
 {
     uint32 l = *b;
@@ -251,7 +252,7 @@ JS_XDRUint8(JSXDRState *xdr, uint8 *b)
     return JS_TRUE;
 }
 
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRUint16(JSXDRState *xdr, uint16 *s)
 {
     uint32 l = *s;
@@ -261,7 +262,7 @@ JS_XDRUint16(JSXDRState *xdr, uint16 *s)
     return JS_TRUE;
 }
 
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRUint32(JSXDRState *xdr, uint32 *lp)
 {
     JSBool ok;
@@ -275,7 +276,7 @@ JS_XDRUint32(JSXDRState *xdr, uint32 *lp)
     return ok;
 }
 
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRBytes(JSXDRState *xdr, char **bytesp, uint32 len)
 {
     if (xdr->mode == JSXDR_ENCODE) {
@@ -300,7 +301,7 @@ JS_XDRBytes(JSXDRState *xdr, char **bytesp, uint32 len)
  * leading 32-bit count, then counted vector of chars,
  * then possibly \0 padding to multiple of 4.
  */
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRCString(JSXDRState *xdr, char **sp)
 {
     uint32 len;
@@ -326,7 +327,7 @@ JS_XDRCString(JSXDRState *xdr, char **sp)
     return JS_TRUE;
 }
 
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRCStringOrNull(JSXDRState *xdr, char **sp)
 {
     uint32 null = (*sp == NULL);
@@ -342,7 +343,7 @@ JS_XDRCStringOrNull(JSXDRState *xdr, char **sp)
 /*
  * Convert between a JS (Unicode) string and the XDR representation.
  */
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRString(JSXDRState *xdr, JSString **strp)
 {
     uint32 i, len, nbytes;
@@ -382,7 +383,7 @@ bad:
     return JS_FALSE;
 }
 
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRStringOrNull(JSXDRState *xdr, JSString **strp)
 {
     uint32 null = (*strp == NULL);
@@ -395,7 +396,7 @@ JS_XDRStringOrNull(JSXDRState *xdr, JSString **strp)
     return JS_XDRString(xdr, strp);
 }
 
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRDouble(JSXDRState *xdr, jsdouble **dp)
 {
     jsdouble d;
@@ -417,7 +418,7 @@ JS_XDRDouble(JSXDRState *xdr, jsdouble **dp)
     return JS_TRUE;
 }
     
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp)
 {
     uint32 type = JSVAL_TAG(*vp);
@@ -475,7 +476,7 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 }
 
 
-void
+JS_PUBLIC_API(void)
 JS_XDRDestroy(JSXDRState *xdr)
 {
     JSContext *cx = xdr->cx;
@@ -487,7 +488,7 @@ JS_XDRDestroy(JSXDRState *xdr)
 
 #define REGISTRY_CHUNK 4
 
-JSBool
+JS_PUBLIC_API(JSBool)
 JS_RegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *idp)
 {
     uintN nclasses;
@@ -510,7 +511,7 @@ JS_RegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *idp)
     return JS_TRUE;
 }
 
-uint32
+JS_PUBLIC_API(uint32)
 JS_FindClassIdByName(JSXDRState *xdr, const char *name)
 {
     uintN i;
@@ -522,7 +523,7 @@ JS_FindClassIdByName(JSXDRState *xdr, const char *name)
     return 0;
 }
 
-JSClass *
+JS_PUBLIC_API(JSClass *)
 JS_FindClassById(JSXDRState *xdr, uint32 id)
 {
     if (id > xdr->nclasses)

@@ -21,7 +21,8 @@
 /*
  * JS bytecode generation.
  */
-#include <stddef.h>
+
+#include "jsstddef.h"
 #include "prtypes.h"
 #include "jsatom.h"
 #include "jsopcode.h"
@@ -100,7 +101,7 @@ struct JSCodeGenerator {
 };
 
 #define CG_CODE(cg,offset)      ((cg)->base + (offset))
-#define CG_OFFSET(cg)           ((cg)->next - (cg)->base)
+#define CG_OFFSET(cg)           PTRDIFF((cg)->next, (cg)->base, jsbytecode)
 #define CG_RESET(cg)            ((cg)->next = (cg)->base,                     \
 				 ATOM_LIST_INIT(&(cg)->atomList),             \
                                  (cg)->lastCodeOffset = 0,                    \

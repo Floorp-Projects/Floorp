@@ -19,6 +19,7 @@
 /*
  * JS script operations.
  */
+#include "jsstddef.h"
 #include <string.h>
 #include "prtypes.h"
 #include "prassert.h"
@@ -695,7 +696,7 @@ js_GetSrcNote(JSScript *script, jsbytecode *pc)
     sn = script->notes;
     if (!sn)
         return NULL;
-    target = pc - script->code;
+    target = PTRDIFF(pc, script->code, jsbytecode);
     if ((uintN)target >= script->length)
         return NULL;
     for (offset = 0; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
@@ -717,7 +718,7 @@ js_PCToLineNumber(JSScript *script, jsbytecode *pc)
     sn = script->notes;
     if (!sn)
         return 0;
-    target = pc - script->code;
+    target = PTRDIFF(pc, script->code, jsbytecode);
     lineno = script->lineno;
     for (offset = 0; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         offset += SN_DELTA(sn);

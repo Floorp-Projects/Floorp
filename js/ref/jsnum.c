@@ -19,6 +19,7 @@
 /*
  * JS number type and wrapper class.
  */
+#include "jsstddef.h"
 #include <errno.h>
 #ifdef XP_PC
 #include <float.h>

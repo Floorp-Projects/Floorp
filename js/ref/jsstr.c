@@ -26,6 +26,7 @@
  * of rooting things that might lose their newborn root due to subsequent GC
  * allocations in the same native method.
  */
+#include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
 #include "prtypes.h"
@@ -2257,7 +2258,7 @@ js_InflateString(JSContext *cx, const char *bytes, size_t length)
     if (!chars)
 	return NULL;
     for (i = 0; i < length; i++)
-	chars[i] = (jschar) bytes[i];
+	chars[i] = (jschar) (unsigned char) bytes[i];
     chars[i] = 0;
     return chars;
 }

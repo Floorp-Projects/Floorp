@@ -19,6 +19,7 @@
 /*
  * JavaScript API.
  */
+#include "jsstddef.h"
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -935,7 +936,10 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
 	/* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
 	if (OBJ_GET_CLASS(cx, ctor) == clasp) {
-	    PR_ASSERT(!OBJ_GET_PROTO(cx, ctor));
+	    /* XXXMLM - this fails in framesets that are writing over
+	     *           themselves! 
+	     * PR_ASSERT(!OBJ_GET_PROTO(cx, ctor));
+	     */
 	    OBJ_SET_PROTO(cx, ctor, proto);
 	}
     }
@@ -1720,7 +1724,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 		goto error;
 
 	    /* No more jsid's to enumerate ? */
-	    if (!iter_state)
+	    if (iter_state == JSVAL_NULL)
 		break;
 	    vector[i++] = id;
 	}

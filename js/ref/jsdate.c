@@ -19,6 +19,7 @@
 /*
  * JS date methods.
  */
+#include "jsstddef.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
