@@ -66,7 +66,7 @@ static void SwapSlashColon(char * s)
 } 
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include <windows.h>
 #endif
 
@@ -77,7 +77,7 @@ hack_nsIFile2URL(nsIFile* file, char * *aURL)
     nsCAutoString ePath;
     rv = file->GetNativePath(ePath);
     if (NS_FAILED(rv)) return rv;
-#if defined (XP_PC)
+#if defined(XP_WIN) || defined(XP_OS2)
     // Replace \ with / to convert to an url
     char* s = (char *) ePath.get();
     while (*s) {

@@ -314,7 +314,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
             }
             break;
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
         case 200: ///////////////////////////////////////////////////////////  Win System
           {  
               nsCOMPtr<nsIProperties> directoryService = 
