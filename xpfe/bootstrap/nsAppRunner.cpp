@@ -46,6 +46,10 @@
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
 
+#ifdef XP_OS2
+#include "private/pprthred.h"
+#endif
+
 #include "nsIPref.h"
 #include "nsILocaleService.h"
 #include "plevent.h"
@@ -1545,7 +1549,6 @@ int main(int argc, char* argv[])
 
   ULONG    ulMaxFH = 0;
   LONG     ulReqCount = 0;
-  APIRET   rc = NO_ERROR;
 
   DosSetRelMaxFH(&ulReqCount,
                  &ulMaxFH);
@@ -1553,6 +1556,9 @@ int main(int argc, char* argv[])
   if (ulMaxFH < 256) {
     DosSetMaxFH(256);
   }
+
+  EXCEPTIONREGISTRATIONRECORD excpreg;
+  PR_OS2_SetFloatExcpHandler(&excpreg);
 #endif /* XP_OS2 */
 
 #if defined(XP_BEOS)
@@ -1720,6 +1726,10 @@ int main(int argc, char* argv[])
 #else
   rv = NS_ShutdownXPCOM(nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+#endif
+
+#ifdef XP_OS2
+  PR_OS2_UnsetFloatExcpHandler(&excpreg);
 #endif
 
   return TranslateReturnValue(mainResult);
