@@ -43,6 +43,8 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
+	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
 
 	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
 
@@ -103,6 +105,7 @@ protected:
 	PRBool		m_runningUrl;
 
 	nsImapAction m_imapAction;
+	nsIImapLog  * m_imapLog;
 };
 
 #endif /* nsImapUrl_h___ */

@@ -53,7 +53,8 @@ nsImapUrl::nsImapUrl()
     m_port = IMAP_PORT;
     m_spec = nsnull;
     m_search = nsnull;
-
+	
+	m_imapLog = nsnull;
 	m_runningUrl = PR_FALSE;
 
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
@@ -62,6 +63,7 @@ nsImapUrl::nsImapUrl()
  
 nsImapUrl::~nsImapUrl()
 {
+	NS_IF_RELEASE(m_imapLog);
 	NS_IF_RELEASE(m_urlListeners);
 	PR_FREEIF(m_errorMessage);
 
@@ -122,32 +124,29 @@ NS_IMETHODIMP nsImapUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 // Begin nsIImapUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsImapUrl::SetErrorMessage (char * errorMessage)
+NS_IMETHODIMP nsImapUrl::GetImapLog(nsIImapLog ** aImapLog)
 {
-	NS_LOCK_INSTANCE();
-	if (errorMessage)
+	if (aImapLog)
 	{
-		PR_FREEIF(m_errorMessage);
-		m_errorMessage = errorMessage;
+		*aImapLog = m_imapLog;
+		NS_IF_ADDREF(m_imapLog);
 	}
-	NS_UNLOCK_INSTANCE();
+
 	return NS_OK;
 }
 
-// caller must free using PR_FREE
-NS_IMETHODIMP nsImapUrl::GetErrorMessage (char ** errorMessage) const
+NS_IMETHODIMP nsImapUrl::SetImapLog(nsIImapLog  * aImapLog)
 {
-	NS_LOCK_INSTANCE();
-	if (errorMessage)
+	if (aImapLog)
 	{
-		if (m_errorMessage)
-			*errorMessage = nsCRT::strdup(m_errorMessage);
-		else
-			*errorMessage = nsnull;
+		NS_IF_RELEASE(m_imapLog);
+		m_imapLog = aImapLog;
+		NS_ADDREF(m_imapLog);
 	}
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
+
+	return NS_OK;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIImapUrl specific support
@@ -198,6 +197,33 @@ NS_IMETHODIMP nsImapUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 	}
 	NS_UNLOCK_INSTANCE();
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetErrorMessage (char * errorMessage)
+{
+	NS_LOCK_INSTANCE();
+	if (errorMessage)
+	{
+		PR_FREEIF(m_errorMessage);
+		m_errorMessage = errorMessage;
+	}
+	NS_UNLOCK_INSTANCE();
+	return NS_OK;
+}
+
+// caller must free using PR_FREE
+NS_IMETHODIMP nsImapUrl::GetErrorMessage (char ** errorMessage) const
+{
+	NS_LOCK_INSTANCE();
+	if (errorMessage)
+	{
+		if (m_errorMessage)
+			*errorMessage = nsCRT::strdup(m_errorMessage);
+		else
+			*errorMessage = nsnull;
+	}
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
