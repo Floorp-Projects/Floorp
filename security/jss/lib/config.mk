@@ -37,7 +37,6 @@
 # We don't need static, import, or purify libraries
 LIBRARY=
 IMPORT_LIBRARY=
-PURE_LIBRARY=
 
 # Get rid of embedded "32" in library names on Windows
 ifeq ($(OS_ARCH),WINNT)
@@ -56,7 +55,6 @@ endif
 # Only used for "sanitizing" the release
 STATIC_LIB_EXTENSION=
 DYNAMIC_LIB_EXTENSION=
-PURE_LIB_EXTENSION=
 
 # Include "funky" link path to pick up ALL native libraries for OSF/1.
 ifeq ($(OS_ARCH), OSF1)

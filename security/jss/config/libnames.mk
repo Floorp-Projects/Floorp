@@ -223,11 +223,6 @@ ifndef BUILD_OPT
 			else
 				SHARED_LIBRARY_G = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)_g.$(DLL_SUFFIX)
 			endif
-			ifdef HAVE_PURIFY
-				ifdef DSO_BACKEND
-					PURE_LIBRARY_G = $(OBJDIR)/purelib$(LIBRARY_NAME)$(LIBRARY_VERSION)_g.$(DLL_SUFFIX)
-				endif
-			endif
 		endif
 	endif
 endif
