@@ -533,16 +533,16 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
                            NS_LossyConvertUCS2toASCII(*aSrc));
 
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  if (!strncmp(contractid+kUnicodeDecoderContractIDBase.Length(),
+  if (!strncmp(contractid.get()+kUnicodeDecoderContractIDBase.Length(),
                NS_1BYTE_CODER_PATTERN,
                NS_1BYTE_CODER_PATTERN_LEN))
   {
     // Single byte decoders dont hold state. Optimize by using a service.
-    decoder = do_GetService(contractid, &res);
+    decoder = do_GetService(contractid.get(), &res);
   }
   else
   {
-    decoder = do_CreateInstance(contractid, &res);
+    decoder = do_CreateInstance(contractid.get(), &res);
   }
   if(NS_FAILED(res))
     res = NS_ERROR_UCONV_NOCONV;

@@ -229,12 +229,11 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
     if (bXMLEncodingObserverStarted == PR_FALSE) 
       return res;
 
-    nsCAutoString xmlTopic; xmlTopic.Assign("xmlparser");
     nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->RemoveObserver(this, xmlTopic);
+    res = anObserverService->RemoveObserver(this, "xmlparser");
 
     bXMLEncodingObserverStarted = PR_FALSE;
 done:
