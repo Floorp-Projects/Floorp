@@ -89,13 +89,13 @@ CVSCO_NETWORK = $(CVSCO)
 ## The master target
 ############################################################
 
-pull_and_build_all: pull_all build_all
+pull_and_build_all: pull_all depend build_all
 
 
 ## Rules for pulling the source from the cvs repository
 ############################################################
 
-pull_and_build_all: pull_all build_all
+pull_clobber_and_build_all: pull_all clobber_all build_all
 
 pull_all: pull_seamonkey
 
@@ -115,7 +115,9 @@ pull_seamonkey:
 
 clobber_all:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
+!if exist(dist)
 	rd /s /q dist
+!endif
 	set DIST_DIRS=1
 	set LAYOUT_DIRS=1
 	set CLIENT_DIRS=1
