@@ -2002,7 +2002,7 @@ public class Context {
         errorCount = 0;
         IRFactory irf = compiler.createIRFactory(this, ts);
         Parser p = createParser(irf);
-        Node tree = (Node) p.parse(ts);
+        ScriptOrFnNode tree = p.parse(ts);
         if (tree == null)
             return null;
 
@@ -2014,14 +2014,14 @@ public class Context {
             Node first = tree.getFirstChild();
             if (first == null)
                 return null;
-            tree = (Node) first.getProp(Node.FUNCTION_PROP);
+            tree = (ScriptOrFnNode)first.getProp(Node.FUNCTION_PROP);
             if (tree == null)
                 return null;
         }
 
         if (debugger != null) {
             if (sourceString == null) Context.codeBug();
-            ((ScriptOrFnNode)tree).originalSource = sourceString;
+            tree.originalSource = sourceString;
         }
 
         Object result = compiler.compile(this, scope, tree,

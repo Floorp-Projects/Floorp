@@ -70,14 +70,15 @@ public class Interpreter {
         return new FunctionNode(name);
     }
 
-    public Node transform(Context cx, IRFactory irFactory, Node tree)
+    public ScriptOrFnNode
+    transform(Context cx, IRFactory irFactory, ScriptOrFnNode tree)
     {
-        tree = (new NodeTransformer(irFactory)).transform(tree, null);
+        tree = (new NodeTransformer(irFactory)).transform(tree);
         return tree;
     }
 
     public Object
-    compile(Context cx, Scriptable scope, Node tree,
+    compile(Context cx, Scriptable scope, ScriptOrFnNode tree,
             SecurityController securityController, Object securityDomain)
     {
         version = cx.getLanguageVersion();
@@ -88,7 +89,7 @@ public class Interpreter {
             generateFunctionICode(cx, scope, f);
             return createFunction(cx, scope, itsData, false);
         } else {
-            generateScriptICode(cx, scope, (ScriptOrFnNode)tree);
+            generateScriptICode(cx, scope, tree);
             return new InterpretedScript(cx, itsData);
         }
     }

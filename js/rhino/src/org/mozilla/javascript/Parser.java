@@ -95,7 +95,7 @@ class Parser {
      * parse failure will result in a call to the current Context's
      * ErrorReporter.)
      */
-    public Object parse(TokenStream ts)
+    public ScriptOrFnNode parse(TokenStream ts)
         throws IOException
     {
         this.ok = true;
@@ -145,9 +145,8 @@ class Parser {
 
         String source = sourceToString(0);
         sourceBuffer = null; // To help GC
-        pn = nf.createScript(pn, fn_vars, ts.getSourceName(),
-                             baseLineno, ts.getLineno(), source);
-        return pn;
+        return nf.createScript(pn, fn_vars, ts.getSourceName(),
+                               baseLineno, ts.getLineno(), source);
     }
 
     /*

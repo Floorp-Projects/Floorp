@@ -52,7 +52,7 @@ public class IRFactory {
     /**
      * Script (for associating file/url names with toplevel scripts.)
      */
-    public Object
+    public ScriptOrFnNode
     createScript(Object body, VariableTable vars, String sourceName,
                  int baseLineno, int endLineno, String source)
     {

@@ -59,17 +59,19 @@ class OptTransformer extends NodeTransformer {
         return new OptTransformer(irFactory, listCopy);
     }
 
-    public Node transform(Node tree, Node enclosing) {
+    public ScriptOrFnNode transform(ScriptOrFnNode tree) {
 
-        // Collect all of the contained functions into a hashtable
+        // Collect all of the script contained functions into a hashtable
         // so that the call optimizer can access the class name & parameter
         // count for any call it encounters
-        collectContainedFunctions(tree.getFirstChild());
+        if (tree.getType() == TokenStream.SCRIPT) {
+            collectContainedFunctions(tree.getFirstChild());
+        }
 
-        return super.transform(tree, enclosing);
+        return super.transform(tree);
     }
 
-    private int detectDirectCall(Node node, Node tree)
+    private int detectDirectCall(Node node, ScriptOrFnNode tree)
     {
         Context cx = Context.getCurrentContext();
         int optLevel = cx.getOptimizationLevel();
@@ -97,12 +99,12 @@ class OptTransformer extends NodeTransformer {
         return argCount;
     }
 
-    protected void visitNew(Node node, Node tree) {
+    protected void visitNew(Node node, ScriptOrFnNode tree) {
         detectDirectCall(node, tree);
         super.visitNew(node, tree);
     }
 
-    protected void visitCall(Node node, Node tree) {
+    protected void visitCall(Node node, ScriptOrFnNode tree) {
         int argCount = detectDirectCall(node, tree);
         if (inFunction && (argCount == 0))
             ((OptFunctionNode)tree).setContainsCalls(argCount);
@@ -149,28 +151,21 @@ class OptTransformer extends NodeTransformer {
      * so that the call optimizer can access the class name & parameter
      * count for any call it encounters
      */
-    void collectContainedFunctions(Node node) {
+    private void collectContainedFunctions(Node node) {
         for (Node tNode=node; tNode != null; tNode = tNode.getNext()) {
             if (tNode.getType() == TokenStream.FUNCTION) {
                 FunctionNode fnNode = (FunctionNode)
                                       tNode.getProp(Node.FUNCTION_PROP);
-                if (fnNode.getFunctionName().length() != 0) {
+                if (fnNode.getType() == FunctionNode.FUNCTION_STATEMENT) {
                     String name = fnNode.getFunctionName();
-                    Object oldFn = theFnClassNameList.get(name);
-                    if (oldFn == fnNode) {
-                        // already processed this list of functions
-                        return;
+                    if (name.length() != 0) {
+                        Object oldFn = theFnClassNameList.get(name);
+                        if (oldFn == fnNode) {
+                            // already processed this list of functions
+                            return;
+                        }
+                        theFnClassNameList.put(name, fnNode);
                     }
-                    /*
-                    if (oldFn != null) {
-                        Object[] errArgs = { name };
-                        Context.reportWarning(
-                            Context.getMessage("msg.fn.redecl", errArgs),
-                            fnNode.getSourceName(),
-                            fnNode.getBaseLineno(), null, 0);
-                    }
-                    */
-                    theFnClassNameList.put(name, fnNode);
                 }
             }
         }

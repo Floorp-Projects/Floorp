@@ -76,11 +76,12 @@ public class Codegen extends Interpreter {
         return new OptFunctionNode(name, className);
     }
 
-    public Node transform(Context cx, IRFactory irFactory, Node tree)
+    public ScriptOrFnNode
+    transform(Context cx, IRFactory irFactory, ScriptOrFnNode tree)
     {
         int optimizationLevel = cx.getOptimizationLevel();
         OptTransformer opt = new OptTransformer(irFactory, new Hashtable(11));
-        tree = opt.transform(tree, null);
+        tree = opt.transform(tree);
         if (optimizationLevel > 0) {
             (new Optimizer(irFactory)).optimize(tree, optimizationLevel);
         }
@@ -88,7 +89,7 @@ public class Codegen extends Interpreter {
     }
 
     public Object
-    compile(Context cx, Scriptable scope, Node tree,
+    compile(Context cx, Scriptable scope, ScriptOrFnNode tree,
             SecurityController securityController, Object securityDomain)
     {
         ObjArray classFiles = new ObjArray();
@@ -381,7 +382,8 @@ public class Codegen extends Interpreter {
 
     }
 
-    public String generateCode(Node tree, ObjArray names, ObjArray classFiles)
+    private String
+    generateCode(ScriptOrFnNode tree, ObjArray names, ObjArray classFiles)
     {
         ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
         if (fns != null) {
@@ -398,7 +400,7 @@ public class Codegen extends Interpreter {
         itsSourceFile = null;
         // default is to generate debug info
         if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug()) {
-            itsSourceFile = ((ScriptOrFnNode)tree).getSourceName();
+            itsSourceFile = tree.getSourceName();
         }
         version = cx.getLanguageVersion();
         optLevel = cx.getOptimizationLevel();
@@ -497,7 +499,7 @@ public class Codegen extends Interpreter {
             // better be a script
             if (tree.getType() != TokenStream.SCRIPT)
                 badTree();
-            vars = ((ScriptOrFnNode)tree).getVariableTable();
+            vars = tree.getVariableTable();
             boolean isPrimary = nameHelper.getTargetExtends() == null &&
                                 nameHelper.getTargetImplements() == null;
             this.name = getScriptClassName(null, isPrimary);
@@ -514,7 +516,7 @@ public class Codegen extends Interpreter {
                             "[Ljava/lang/Object;)Ljava/lang/Object;",
                            1, false, true);
             generatePrologue(cx, tree, false, -1);
-            int linenum = ((ScriptOrFnNode)tree).getEndLineno();
+            int linenum = tree.getEndLineno();
             if (linenum != -1)
               classFile.addLineNumberEntry((short)linenum);
             tree.addChildToBack(new Node(TokenStream.RETURN));
@@ -1113,11 +1115,11 @@ public class Codegen extends Interpreter {
     }
 
     private void generateInit(Context cx, String methodName,
-                              Node tree, String name)
+                              ScriptOrFnNode tree, String name)
     {
         trivialInit = true;
         boolean inCtor = false;
-        VariableTable vars = ((ScriptOrFnNode)tree).getVariableTable();
+        VariableTable vars = tree.getVariableTable();
         if (methodName.equals("<init>")) {
             inCtor = true;
             setNonTrivialInit(methodName);
@@ -1188,10 +1190,10 @@ public class Codegen extends Interpreter {
         }
 
         // precompile all regexp literals
-        int regexpCount = ((ScriptOrFnNode)tree).getRegexpCount();
+        int regexpCount = tree.getRegexpCount();
         if (regexpCount != 0) {
             setNonTrivialInit(methodName);
-            generateRegExpLiterals((ScriptOrFnNode)tree, inCtor);
+            generateRegExpLiterals(tree, inCtor);
         }
 
         if (tree instanceof OptFunctionNode) {
@@ -1225,7 +1227,7 @@ public class Codegen extends Interpreter {
         // Change Parser if changing ordering.
 
         if (cx.isGeneratingSource()) {
-            String source = ((ScriptOrFnNode)tree).getEncodedSource();
+            String source = tree.getEncodedSource();
             if (source != null && source.length() < 65536) {
                 short flags = ClassFileWriter.ACC_PUBLIC
                             | ClassFileWriter.ACC_STATIC;

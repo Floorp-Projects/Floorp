@@ -58,7 +58,7 @@ public class NodeTransformer {
         return new NodeTransformer(irFactory);
     }
 
-    public Node transform(Node tree, Node enclosing)
+    public ScriptOrFnNode transform(ScriptOrFnNode tree)
     {
         loops = new ObjArray();
         loopEnds = new ObjArray();
@@ -125,7 +125,7 @@ public class NodeTransformer {
                         fnNode.setCheckThis(true);
                     }
                     NodeTransformer inner = newInstance();
-                    fnNode = (FunctionNode)inner.transform(fnNode, tree);
+                    fnNode = (FunctionNode)inner.transform(fnNode);
                     node.putProp(Node.FUNCTION_PROP, fnNode);
                     ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
                     if (fns == null) {
@@ -494,10 +494,10 @@ public class NodeTransformer {
         return tree;
     }
 
-    protected void visitNew(Node node, Node tree) {
+    protected void visitNew(Node node, ScriptOrFnNode tree) {
     }
 
-    protected void visitCall(Node node, Node tree) {
+    protected void visitCall(Node node, ScriptOrFnNode tree) {
         /*
          * For
          *      Call(GetProp(a, b), c, d)   // or GetElem...
@@ -616,10 +616,11 @@ public class NodeTransformer {
     }
 
     private void
-    reportError(String messageId, Object[] messageArgs, Node stmt, Node tree)
+    reportError(String messageId, Object[] messageArgs, Node stmt,
+                ScriptOrFnNode tree)
     {
         int lineno = stmt.getLineno();
-        String sourceName = ((ScriptOrFnNode)tree).getSourceName();
+        String sourceName = tree.getSourceName();
         irFactory.ts.reportSyntaxError(true, messageId, messageArgs,
                                        sourceName, lineno, null, 0);
     }
