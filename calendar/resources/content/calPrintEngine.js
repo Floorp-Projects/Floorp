@@ -91,6 +91,21 @@ function getWebNavigation()
   }
 }
 
+var gPrintPreviewObs = {
+    observe: function(aSubject, aTopic, aData)
+    {
+      setTimeout(FinishPrintPreview, 0);
+    },
+
+    QueryInterface : function(iid)
+    {
+     if (iid.equals(Components.interfaces.nsIObserver) || iid.equals(Components.interfaces.nsISupportsWeakReference))
+      return this;
+     
+     throw Components.results.NS_NOINTERFACE;
+    }
+};
+
 function BrowserPrintPreview()
 {
   var ifreq;
@@ -113,7 +128,25 @@ function BrowserPrintPreview()
   var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                   .getService(Components.interfaces.nsIPrintingPromptService);
   if (printingPromptService) {
-    FinishPrintPreview();
+    // just in case we are already printing,
+    // an error code could be returned if the Prgress Dialog is already displayed
+    try {
+      printingPromptService.showProgress(this, webBrowserPrint, gPrintSettings, gPrintPreviewObs, false, gWebProgress,
+                                         printPreviewParams, notifyOnOpen);
+      if (printPreviewParams.value) {
+        var webNav = getWebNavigation();
+        printPreviewParams.value.docTitle = webNav.document.title;
+        printPreviewParams.value.docURL   = webNav.currentURI.spec;
+      }
+
+      // this tells us whether we should continue on with PP or
+      // wait for the callback via the observer
+      if (!notifyOnOpen.value.valueOf() || gWebProgress.value == null) {
+        FinishPrintPreview();
+      }
+    } catch (e) {
+      FinishPrintPreview();
+    }
   }
 }
 
