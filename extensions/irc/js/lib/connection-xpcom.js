@@ -35,6 +35,7 @@
 
 function toScriptableInputStream (i)
 {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var si = Components.classes["component://netscape/scriptableinputstream"];
     
     si = si.createInstance();
@@ -47,7 +48,7 @@ function toScriptableInputStream (i)
 
 function CBSConnection ()
 {
-
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var sockServiceClass =
         Components.classesByID["{c07e81e0-ef12-11d2-92b6-00105a1b0d64}"];
     
@@ -65,6 +66,7 @@ function CBSConnection ()
 
 CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
 {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     if (typeof tcp_flag == "undefined")
 		tcp_flag = false;
     

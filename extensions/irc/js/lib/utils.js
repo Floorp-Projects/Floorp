@@ -46,6 +46,9 @@ else
 
 var jsenv = new Object();
 
+if (netscape && netscape.security) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+}
 jsenv.HAS_XPCOM = ((typeof Components == "function") &&
                    (typeof Components.classes == "function"));
 jsenv.HAS_JAVA = (typeof java == "object");
@@ -240,6 +243,7 @@ function newObject(progID, iface)
     if (!jsenv.HAS_XPCOM)
         return null;
 
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var obj = Components.classes[progID].createInstance();
     var rv;
 

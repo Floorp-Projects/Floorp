@@ -56,6 +56,7 @@
 	    </td>	
 	    <td>
 	      <script language="javascript">
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 		if (Components.classes["component://misc/bs/connection"])
 		  document.write ("OK");
 		else
@@ -69,6 +70,7 @@
 	    </td>
 	    <td>
 	      <script language="javascript">
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 		if (Components.interfaces.bsIConnection)
 	          document.write ("OK");
 		else

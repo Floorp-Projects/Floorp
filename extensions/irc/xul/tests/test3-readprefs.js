@@ -1,5 +1,6 @@
 function readIRCPrefs (rootNode)
 {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var pref =
         Components.classes["component://netscape/preferences"].createInstance();
     if(!pref)
