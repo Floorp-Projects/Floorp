@@ -83,7 +83,6 @@ public:
 	
 protected:
 	nsrefcnt								mRefCnt;
-	nsIEventQueue* 							mEventQ;
 };
 
 
