@@ -160,6 +160,11 @@
    </toolbar>
 </toolbox>
 
+<popupset>
+   <popup id="savetip" style="background-color: #FFFFC0;">
+      <label id="popuptooltiptext" value=" "/>
+   </popup>
+</popupset>
 
 <!-- V I S I B L E  C O N T E N T  -->
 
@@ -182,34 +187,27 @@
 
 
    
-		<popupset>
-		   <popup id="savetip" style="background-color: #FFFFC0;">
-			   <label id="popuptooltiptext" value=" "/>
-		   </popup>
-		</popupset>
-
-
 		<!-- Begin Day/Month/Week Deck -->
 		<box flex="1" pack="center" align="center">
-         <deck id="calendar-deck" selectedIndex="0" flex="1">
+         <deck id="calendar-deck" selectedIndex="0">
    				 
    			 <!-- Calendar Month View -->
    			    
-   			 <vbox id="month-view-box" flex="1"/>
+   			 <vbox id="month-view-box"/>
    			 
              <!-- End: Calendar Month View -->
    		
    			 
              <!-- Calendar Week View -->
    				 
-   			 <vbox id="week-view-box" flex="1"/>
+   			 <vbox id="week-view-box"/>
    			
    			 <!-- End: Calendar Week View -->
    			
    			 
              <!-- Calendar Day View -->
    			 
-   			 <vbox id="day-view-box" flex="1"/>
+   			 <vbox id="day-view-box"/>
    			
    			 <!-- End: Calendar Day View -->
    						 
