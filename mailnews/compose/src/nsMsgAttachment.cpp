@@ -81,6 +81,18 @@ NS_IMETHODIMP nsMsgAttachment::SetUrl(const char * aUrl)
   return NS_OK;
 }
 
+/* attribute string urlCharset; */
+NS_IMETHODIMP nsMsgAttachment::GetUrlCharset(nsACString & aUrlCharset)
+{
+  aUrlCharset = mUrlCharset;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgAttachment::SetUrlCharset(const nsACString & aUrlCharset)
+{
+  mUrlCharset = aUrlCharset;
+  return NS_OK;
+}
+
 /* attribute boolean temporary; */
 NS_IMETHODIMP nsMsgAttachment::GetTemporary(PRBool *aTemporary)
 {

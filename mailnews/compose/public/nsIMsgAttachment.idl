@@ -56,6 +56,15 @@ interface nsIMsgAttachment : nsISupports {
 	attribute string    url;
 
   /**
+   * urlCharset attribute
+   *
+   * @specify the Charset of url  (used to convert url to Unicode after 
+   *  unescaping)
+   */
+	attribute ACString    urlCharset;
+
+
+  /**
    * temporary attribute
    *
    * @If set to true, the file pointed by the url will be destroyed when this object is destroyed.

@@ -22,7 +22,7 @@
  * Contributor(s):
  *     Jean-Francois Ducarroz <ducarroz@netscape.com>
  *     Ben Bucksch <mozilla@bucksch.org>
- *     Håkan Waara <hwaara@chello.se>
+ *     HÃ¥kan Waara <hwaara@chello.se>
  *     Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -116,6 +116,8 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIMsgMdnGenerator.h"
 #include "plbase64.h"
+#include "nsIUTF8ConverterService.h"
+#include "nsUConvCID.h"
 
 // Defines....
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -3601,45 +3603,49 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
   return NS_OK;
 }
 
-nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval)
+nsresult nsMsgCompose::AttachmentPrettyName(const char* url, const char* charset, nsAString& _retval)
 {
-  nsCAutoString unescapeURL(url);
-  nsUnescape(NS_CONST_CAST(char*, unescapeURL.get()));
-  if (unescapeURL.IsEmpty())
-  {
-    nsAutoString unicodeUrl;
-    unicodeUrl.AssignWithConversion(url);
+  nsresult rv;
+  nsCAutoString unescapedURL;
 
-    *_retval = ToNewUnicode(unicodeUrl);
+  nsCOMPtr<nsIUTF8ConverterService> utf8Cvt (do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
+
+  NS_ENSURE_TRUE(utf8Cvt, NS_ERROR_UNEXPECTED);
+ 
+  if (PL_strncasestr(url, "file:", 5)) 
+  {
+    rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(url), 
+         nsMsgI18NFileSystemCharset(), unescapedURL);
+    if (NS_FAILED(rv))
+    {
+      rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(url), 
+           (!charset || !*charset) ? "UTF-8" : charset, unescapedURL);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("URL unescaping/charset conversion failed.");
+        unescapedURL = url;
+      }
+    }
+    nsFileURL fileUrl(unescapedURL.get());
+    nsFileSpec fileSpec(fileUrl);
+    char* leafName = fileSpec.GetLeafName();
+    NS_ENSURE_TRUE(leafName && *leafName, NS_ERROR_UNEXPECTED);
+    CopyUTF8toUTF16(nsDependentCString(leafName), _retval);
+    nsCRT::free(leafName);
     return NS_OK;
   }
-  
-  if (PL_strncasestr(unescapeURL.get(), "file:", 5))
+
+  rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(url), 
+    (!charset || !*charset) ? "UTF-8" : charset, unescapedURL);
+  if (NS_FAILED(rv))
   {
-    nsFileURL fileUrl(url);
-    nsFileSpec fileSpec(fileUrl);
-    char * leafName = fileSpec.GetLeafName();
-    if (leafName && *leafName)
-    {
-#ifdef MOZ_UNICODE
-        /* file URL is now in UTF-8 */
-        *_retval = ToNewUnicode(NS_ConvertUTF8toUCS2(leafName));
-#else
-        nsAutoString tempStr;
-        nsresult rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), leafName, tempStr);
-        if (NS_FAILED(rv))
-          tempStr.AssignWithConversion(leafName);
-      *_retval = ToNewUnicode(tempStr);
-#endif /* MOZ_UNICODE */
-      nsCRT::free(leafName);
-      return NS_OK;
-    }
+    NS_WARNING("URL unescaping/charset conversion failed.");
+    unescapedURL = url;
   }
+  
+  if (PL_strncasestr(unescapedURL.get(), "http:", 5))
+    unescapedURL.Cut(0, 7);
 
-  if (PL_strncasestr(unescapeURL.get(), "http:", 5))
-    unescapeURL.Cut(0, 7);
-
-  *_retval = ToNewUnicode(unescapeURL);
+  CopyUTF8toUTF16(unescapedURL, _retval);
   return NS_OK;
 }
 

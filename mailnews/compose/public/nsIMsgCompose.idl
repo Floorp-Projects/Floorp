@@ -154,10 +154,11 @@ interface nsIMsgCompose : nsISupports {
 
   /*
     AttachmentPrettyName will return only the leafName if the it's a file URL.
-    It will also convert the filename to the right character set.
+    It will also convert the filename to Unicode assuming it's in  the file system 
+    charset. In case of URL, |charset| parameter will be used in the conversion.
     This UI utility function should probably go into it's own class
   */
-  wstring AttachmentPrettyName(in string url);
+  AString AttachmentPrettyName(in string url, in string charset);
     
 	/*
 		CheckAndPopulateRecipients will perform several task:
