@@ -201,6 +201,9 @@ pref("nglayout.debug.enable_xbl_forms", false);
 // size of scrollbar snapping region
 pref("slider.snapMultiplier", 6);
 
+// option to choose plug-in finder
+pref("application.use_ns_plugin_finder", false);
+
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
 pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
