@@ -253,6 +253,7 @@ nsresult nsOutlookCompose::CreateComponents( void)
 	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &m_pMsgFields); 
 		if (NS_SUCCEEDED(rv) && m_pMsgFields) {
 			// IMPORT_LOG0( "nsOutlookCompose - CreateComponents succeeded\n");
+			m_pMsgFields->SetTheForcePlainText( PR_FALSE);
 			return( NS_OK);
 		}
 	}

@@ -50,6 +50,7 @@ static NS_DEFINE_CID( kMsgMailSessionCID,	NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID( kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID( kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_IID( kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID( kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 
 // We need to do some calculations to set these numbers to something reasonable!
@@ -252,6 +253,7 @@ nsresult nsEudoraCompose::CreateComponents( void)
 	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &m_pMsgFields); 
 		if (NS_SUCCEEDED(rv) && m_pMsgFields) {
 			// IMPORT_LOG0( "nsOutlookCompose - CreateComponents succeeded\n");
+			m_pMsgFields->SetTheForcePlainText( PR_FALSE);
 			return( NS_OK);
 		}
 	}
@@ -549,6 +551,18 @@ nsMsgAttachedFile * nsEudoraCompose::GetLocalAttachments( void)
 	}
 
 	return( a);
+}
+
+void nsEudoraCompose::ConvertSysToUnicode( const char *pStr, nsString& uniStr)
+{
+	if (!m_pImportService) {
+		m_pImportService = do_GetService( kImportServiceCID);
+	}
+	if (m_pImportService) {
+		m_pImportService->SystemStringToUnicode( pStr, uniStr);
+	}
+	else
+		uniStr.AssignWithConversion( pStr);
 }
 
 

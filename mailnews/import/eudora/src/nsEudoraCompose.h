@@ -20,10 +20,13 @@
 #define nsEudoraCompose_h__
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIFileSpec.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
+#include "nsIImportService.h"
+
 
 class nsIMsgSend;
 class nsIMsgCompFields;
@@ -126,7 +129,7 @@ private:
 		val.Truncate();
 		nsCString	hVal;
 		GetHeaderValue( pData, dataLen, pHeader, hVal, PR_TRUE);
-		val.AssignWithConversion(hVal);
+		ConvertSysToUnicode( hVal, val);
 	}
 	void		ExtractCharset( nsString& str);
 	void		ExtractType( nsString& str);
@@ -140,7 +143,7 @@ private:
 	PRInt32		IsSpecialHeader( const char *pHeader);
 	nsresult	WriteHeaders( nsIFileSpec *pDst, SimpleBuffer& newHeaders);
 	PRBool		IsReplaceHeader( const char *pHeader);
-
+	void		ConvertSysToUnicode( const char *pSysStr, nsString& uniStr);
 
 private:
 	nsVoidArray *			m_pAttachments;
@@ -155,6 +158,7 @@ private:
 	PRInt32					m_bodyLen;
 	const char *			m_pBody;
 	SimpleBuffer			m_readHeaders;
+	nsCOMPtr<nsIImportService>	m_pImportService;
 };
 
 
