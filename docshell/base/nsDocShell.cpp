@@ -3982,14 +3982,12 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   // If the entry is being replaced in SH, then just use the
   // current entry...
   //
-  if(mSessionHistory && LOAD_NORMAL_REPLACE == mLoadType) {
-    PRInt32 index = 0;
-    nsCOMPtr<nsIHistoryEntry> hEntry;
-    mSessionHistory->GetIndex(&index);
-    mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(hEntry));
-    if(hEntry)
-      entry = do_QueryInterface(hEntry);
-    // see if the entry has any children and remove if any.
+  if(LOAD_NORMAL_REPLACE == mLoadType) {
+    // There is no need to go to mSessionHistory and get the entry at
+    // current index. OSHE works for subframes and top level docshells.
+    entry = OSHE;
+    // If there are children for this entry destroy them, as they are
+    // going out of scope. 
     if (entry) {
       nsCOMPtr<nsISHContainer> shContainer(do_QueryInterface(entry));
       if (shContainer) {
@@ -4518,6 +4516,7 @@ NS_IMETHODIMP_(void) nsRefreshTimer::Notify(nsITimer *aTimer)
          * its refreshData instance to be released...
          */
         mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+        return;
 
       }
       else
