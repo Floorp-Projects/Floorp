@@ -174,10 +174,12 @@ printIncomingServer(nsIMsgIncomingServer *server)
   char *value;
   nsresult rv;
 
+#if 0
   value=nsnull;
   rv = server->GetPrettyName(&value);
   if (NS_SUCCEEDED(rv) && value) printf("\tPrettyName: %s\n", value);
-
+#endif
+  
   value=nsnull;
   rv = server->GetHostName(&value);
   if (NS_SUCCEEDED(rv) && value) printf("\tHostName: %s\n", value);
