@@ -161,11 +161,11 @@ void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
     fprintf(stderr, "Setting Max Range to %d 0x%x\n", aEndRange, mWidget);
     int max = aEndRange;
-    XtVaGetValues(mWidget, XmNmaximum, &max);
+    XtVaGetValues(mWidget, XmNmaximum, &max, nsnull);
     fprintf(stderr, "Max is %d\n", max);
 
     max = aEndRange;
-    XtVaSetValues(mWidget, XmNmaximum, max);
+    XtVaSetValues(mWidget, XmNmaximum, max, nsnull);
 }
 
 
@@ -177,7 +177,7 @@ void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 PRUint32 nsScrollbar::GetMaxRange()
 {
     int maxRange = 0;
-    XtVaGetValues(mWidget, XmNmaximum, &maxRange);
+    XtVaGetValues(mWidget, XmNmaximum, &maxRange, nsnull);
 
     return (PRUint32)maxRange;
 }
@@ -196,7 +196,7 @@ void nsScrollbar::SetPosition(PRUint32 aPos)
     fprintf(stderr, "pos is %d\n", pos);
 
     pos = aPos;
-    XtVaSetValues(mWidget, XmNvalue, pos);
+    XtVaSetValues(mWidget, XmNvalue, pos, nsnull);
 }
 
 
@@ -208,7 +208,7 @@ void nsScrollbar::SetPosition(PRUint32 aPos)
 PRUint32 nsScrollbar::GetPosition()
 {
     int pagePos = 0;
-    XtVaGetValues(mWidget, XmNvalue, &pagePos);
+    XtVaGetValues(mWidget, XmNvalue, &pagePos, nsnull);
 
     return (PRUint32)pagePos;
 }
@@ -221,7 +221,7 @@ PRUint32 nsScrollbar::GetPosition()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-    XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize);
+    XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize, nsnull);
 }
 
 
@@ -274,7 +274,8 @@ void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                            XmNmaximum,   aMaxRange,
                            XmNminimum,   0,
                            XmNpageIncrement, aThumbSize,
-                           XmNvalue,     aPosition);
+                           XmNvalue,     aPosition, 
+                           nsnull);
 
     mLineIncrement = aLineIncrement;
 }

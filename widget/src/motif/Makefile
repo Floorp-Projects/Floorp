@@ -18,6 +18,7 @@
 
 DEPTH = ../../..
 
+include $(DEPTH)/config/config.mk
 
 LIBRARY_NAME = widgetunix
 
@@ -27,8 +28,21 @@ REQUIRES=util img xpcom raptor netlib
 
 DEFINES = -D_IMPL_NS_WIDGET 
 
-EXTRA_DSO_LDOPTS+= -lnspr21 -lplds21 -lplc21 -lreg -lraptorbase -lgfxunix -L$(DIST)/lib $(DIST)/lib/libnspr21.a $(DIST)/lib/libxpcom.a $(DIST)/lib/libreg.a $(DIST)/lib/libraptorbase.a -L/usr/X11R6/lib $(DIST)/lib/libgfxunix.a -lXm -lXt -lX11
+EXTRA_DSO_LDOPTS+=\
+	$(DIST)/bin/libxpcom.so \
+	$(DIST)/bin/libraptorgfx.so \
+	$(DIST)/bin/libraptorbase.so \
+	$(DIST)/bin/libreg.so \
+	$(LIBNSPR)\
+	$(DIST)/lib/libplc21.a
 
+# This should really be done properly in 'config'
+ifeq ($(OS_ARCH),Linux)
+EXTRA_DSO_LDOPTS+=\
+	-L/usr/X11R6/lib -lX11 -lm
+else
+EXTRA_DSO_LDOPTS+= -lX11 -lm 
+endif
 
 CPPSRCS= \
 	nsScrollbar.cpp \
