@@ -109,7 +109,7 @@ sub ProcessOneFile {
                              ($line =~ /^={75,80}$/)) {
                               # OK, we're done.  Write it out.
                               if ($author && $datestr && $revision) {
-                                   $datestr =~ s!^(\d+)/(\d+/\d+)!$2/$1!;
+                                   $datestr =~ s!^(\d{4})/(\d+/\d+)!$2/$1!;
                                    $date = str2time($datestr, "GMT");
                                    if ($date >= $::StartFrom) {
                                         AddToDatabase("C|$date|$author|$::Repository|$filehead|$filetail|$revision||$branch|+$pluscount|-$minuscount", $desc);
