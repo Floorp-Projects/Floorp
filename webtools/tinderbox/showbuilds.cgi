@@ -232,6 +232,8 @@ sub print_table_body {
 sub print_delta {
   my ($value, $min) = @_;
   # this function rounds off, and prints bad (> min) values in red
+
+  my $worse = ($value - $min) > 1000;    # heuristic -- allow 1k of noise
   my $units = "b";
   if ($value >= 1000000) {
       $value = int($value / 1000000);
@@ -239,14 +241,14 @@ sub print_delta {
       $units = "Mb";
   }
   else {
-    if ($value >= 1000) {
-      $value = int($value / 1000);
-      $min = int($min / 1000);
-      $units = "Kb";
-    }
+      if ($value >= 1000) {
+          $value = int($value / 1000);
+          $min = int($min / 1000);
+          $units = "Kb";
+      }
   }
 
-  if ($value > $min) {
+  if ($worse) {
       return sprintf("<b><font color=\"#FF0000\">%d%s</font></b>",
                      $value, $units);
   }
