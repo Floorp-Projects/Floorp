@@ -43,15 +43,12 @@ EXPORTS = \
 	rsrcids.h \
 	messages.h \
 	newproto.h \
-	obscure.h \
 	$(NULL)
 
 MODULE = security
 CSRCS  = newproto.c \
 	 protocolshr.c \
 	 templates.c \
-	 obscure.c \
-	 obspriv.c \
 	 $(NULL)
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)

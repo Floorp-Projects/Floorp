@@ -82,8 +82,6 @@ LCFLAGS = -DEXPORT_VERSION -DLIB_BUILD
 OBJS=                         \
     .\$(OBJDIR)\newproto.obj  \
     .\$(OBJDIR)\templates.obj \
-    .\$(OBJDIR)\obscure.obj \
-    .\$(OBJDIR)\obspriv.obj \
     .\$(OBJDIR)\protocolshr.obj \
     $(NULL)
 
@@ -110,7 +108,6 @@ INSTALL_FILE_LIST= protocol.h \
    rsrcids.h \
    messages.h \
    newproto.h \
-   obscure.h \
    $(NULL)
 
 #//------------------------------------------------------------------------
