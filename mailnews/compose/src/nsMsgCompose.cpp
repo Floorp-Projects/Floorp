@@ -964,25 +964,29 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
   if (!prompt && m_window)
      m_window->GetPrompter(getter_AddRefs(prompt));
 
-  if (m_editor && m_compFields && !m_composeHTML)
+  if (m_compFields && !m_composeHTML)
   {
-    // Reset message body previously stored in the compose fields
-    // There is 2 nsIMsgCompFields::SetBody() functions using a pointer as argument,
-    // therefore a casting is required.
-    m_compFields->SetBody((const char *)nsnull);
-
     // The plain text compose window was used
     const char contentType[] = "text/plain";
-    nsAutoString msgBody;
-    nsAutoString format; format.AssignWithConversion(contentType);
+    nsString msgBody;
     PRUint32 flags = nsIDocumentEncoder::OutputFormatted;
+    if (m_editor)
+    {
+      // Reset message body previously stored in the compose fields
+      // There is 2 nsIMsgCompFields::SetBody() functions using a pointer as argument,
+      // therefore a casting is required.
+      m_compFields->SetBody((const char *)nsnull);
 
-    const char *charset = m_compFields->GetCharacterSet();
-    if(UseFormatFlowed(charset))
-        flags |= nsIDocumentEncoder::OutputFormatFlowed;
+      const char *charset = m_compFields->GetCharacterSet();
+      if(UseFormatFlowed(charset))
+          flags |= nsIDocumentEncoder::OutputFormatFlowed;
     
-    rv = m_editor->OutputToString(format, flags, msgBody);
-    
+      rv = m_editor->OutputToString(NS_LITERAL_STRING("text/plain"), flags, msgBody);
+    }
+    else
+    {
+      m_compFields->GetBody(msgBody);
+    }
     if (NS_SUCCEEDED(rv) && !msgBody.IsEmpty())
     {
       // Convert body to mail charset
@@ -998,8 +1002,8 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
       {
         // body contains characters outside the repertoire of the current 
         // charset. ask whether to convert to UTF-8 or go back to reset
-        // charset with a wider repertoire. (bug 233361)
-        if (NS_ERROR_UENC_NOMAPPING == rv) {
+        // charset with a wider repertoire. (bug 233361) (if not mapi blind send)
+        if (NS_ERROR_UENC_NOMAPPING == rv && m_editor) {
           PRBool sendInUTF8;
           rv = nsMsgAskBooleanQuestionByID(prompt,
                NS_ERROR_MSG_MULTILINGUAL_SEND, &sendInUTF8);
