@@ -27,46 +27,6 @@
 #include "nsEscape.h"
 #include "nsSyncDecoderRing.h"
 
-// Address book fields!
-char *kFirstNameColumn = "FirstName";
-char *kLastNameColumn = "LastName";
-char *kDisplayNameColumn = "DisplayName";
-char *kNicknameColumn = "NickName";
-char *kPriEmailColumn = "PrimaryEmail";
-char *k2ndEmailColumn = "SecondEmail";
-char *kPreferMailFormatColumn = "PreferMailFormat";
-char *kWorkPhoneColumn = "WorkPhone";
-char *kHomePhoneColumn = "HomePhone";
-char *kFaxColumn = "FaxNumber";
-char *kPagerColumn = "PagerNumber";
-char *kCellularColumn = "CellularNumber";
-char *kHomeAddressColumn = "HomeAddress";
-char *kHomeAddress2Column = "HomeAddress2";
-char *kHomeCityColumn = "HomeCity";
-char *kHomeStateColumn = "HomeState";
-char *kHomeZipCodeColumn = "HomeZipCode";
-char *kHomeCountryColumn = "HomeCountry";
-char *kWorkAddressColumn = "WorkAddress";
-char *kWorkAddress2Column = "WorkAddress2";
-char *kWorkCityColumn = "WorkCity";
-char *kWorkStateColumn = "WorkState";
-char *kWorkZipCodeColumn = "WorkZipCode";
-char *kWorkCountryColumn = "WorkCountry";
-char *kJobTitleColumn = "JobTitle";
-char *kDepartmentColumn = "Department";
-char *kCompanyColumn = "Company";
-char *kWebPage1Column = "WebPage1";
-char *kWebPage2Column = "WebPage2";
-char *kBirthYearColumn = "BirthYear";
-char *kBirthMonthColumn = "BirthMonth";
-char *kBirthDayColumn = "BirthDay";
-char *kCustom1Column = "Custom1";
-char *kCustom2Column = "Custom2";
-char *kCustom3Column = "Custom3";
-char *kCustom4Column = "Custom4";
-char *kNotesColumn = "Notes";
-char *kLastModifiedDateColumn = "LastModifiedDate";
-
 // Server record fields!
 char *kServerFirstNameColumn = "fname";
 char *kServerLastNameColumn = "lname";
@@ -106,14 +66,6 @@ char *kServerCustom3Column = "Custom_3";
 char *kServerCustom4Column = "Custom_4";
 char *kServerNotesColumn = "addl_info";
 char *kServerLastModifiedDateColumn = "OMIT:LastModifiedDate";
-
-// So far, we aren't really doing anything with these!
-char *kAddressCharSetColumn = "AddrCharSet";
-char *kMailListName = "ListName";
-char *kMailListNickName = "ListNickName";
-char *kMailListDescription = "ListDescription";
-char *kMailListTotalAddresses = "ListTotalAddresses";
-// So far, we aren't really doing anything with these!
 
 nsSyncDecoderRing::nsSyncDecoderRing()
 {

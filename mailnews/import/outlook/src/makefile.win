@@ -21,12 +21,10 @@
 
 DEPTH=..\..\..\..
 
-MODULE=impOutlk
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=$(MODULE)
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
+MODULE          = impOutlk
+LIBRARY_NAME    = $(MODULE)
+META_COMPONENT  = mail
+MODULE_NAME  = nsOutlookImport
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsOutlookFactory.obj  		\
@@ -47,7 +45,3 @@ LLIBS=\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-        $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-

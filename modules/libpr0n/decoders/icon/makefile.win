@@ -24,13 +24,12 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-DIR=win
+DIRS=win
 
-MODULE			= imgicon
+MODULE		= imgicon
 LIBRARY_NAME	= imgicon
 XPIDL_MODULE	= imgicon
-DLL			= $(OBJDIR)\$(LIBRARY_NAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE_NAME	= nsIconDecoderModule
 
 XPIDLSRCS	= \
 		.\nsIIconURI.idl \
@@ -38,17 +37,20 @@ XPIDLSRCS	= \
 
 
 OBJS	= \
-    .\$(OBJDIR)\nsIconURI.obj \
-		.\$(OBJDIR)\nsIconDecoder.obj \
-		.\$(OBJDIR)\nsIconModule.obj  \
-    .\$(OBJDIR)\nsIconProtocolHandler.obj \
-		$(NULL)
+        .\$(OBJDIR)\nsIconURI.obj \
+        .\$(OBJDIR)\nsIconDecoder.obj \
+        .\$(OBJDIR)\nsIconModule.obj  \
+        .\$(OBJDIR)\nsIconProtocolHandler.obj \
+        $(NULL)
+
+SUB_LIBRARIES=                       \
+        $(DIST)\lib\imgiconwin_s.lib \
+        $(NULL)
 
 LLIBS=\
 	$(LIBNSPR)               \
 	$(DIST)\lib\xpcom.lib    \
-	$(DIST)\lib\gkgfxwin.lib \
-  $(DIST)\lib\imgiconwin_s.lib \
+	$(DIST)\lib\gkgfx.lib \
 	$(NULL)
 
 WIN_LIBS= shell32.lib
@@ -59,11 +61,3 @@ INCS = $(INCS)                                         \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

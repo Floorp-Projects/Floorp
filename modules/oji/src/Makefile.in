@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= oji
 XPIDL_MODULE	= ojiimpl
 IS_COMPONENT	= 1
+MODULE_NAME	= nsCJVMManagerModule
 REQUIRES	= xpcom string java js plugin caps pref js jar layout necko dom widget xpconnect
 
 ifdef MOZ_OJI

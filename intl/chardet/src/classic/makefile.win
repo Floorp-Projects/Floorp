@@ -43,12 +43,8 @@ CPP_OBJS= \
 	$(NULL)
 
 MODULE=chardetc
-
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=chardetc
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
+LIBRARY_NAME=chardetc
+MODULE_NAME=nsCharDetModuleClassic
 
 WIN_LIBS= ole32.lib
 
@@ -57,11 +53,3 @@ LLIBS= \
 	$(LIBNSPR)	
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\bin\$(DLLNAME).lib

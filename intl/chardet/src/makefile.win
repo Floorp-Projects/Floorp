@@ -60,26 +60,14 @@ CPP_OBJS= \
 	$(NULL)
 
 MODULE=chardet
-
+LIBARARY_NAME=chardet
+MODULE_NAME=nsCharDetModule
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\chardet -I$(PUBLIC)\raptor \
      -I$(PUBLIC)\netlib -I$(PUBLIC)\uconv -I$(PUBLIC)\webshell
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=chardet
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib	\
 	$(LIBNSPR)	
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\bin\$(DLLNAME).lib

@@ -53,10 +53,9 @@ DEPTH= ..\..\..\..
 #//
 #//------------------------------------------------------------------------
 
-MAKE_OBJ_TYPE=DLL
-
-DLLNAME=jsloader
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE=jsloader
+LIBRARY_NAME=jsloader
+MODULE_NAME=JS_component_loader
 
 #//------------------------------------------------------------------------
 #// 
@@ -107,12 +106,3 @@ LLIBS = \
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
-
-install::  $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(DLLNAME).lib
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-

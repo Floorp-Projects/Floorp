@@ -19,6 +19,10 @@
 
 DEPTH=..\..\..
 MODULE=absyncsv 
+LIBRARY_NAME=absyncsv
+IS_COMPONENT=1
+META_COMPONENT=mail
+MODULE_NAME=nsAbSyncModule
 
 ################################################################################
 ## exports
@@ -30,25 +34,20 @@ EXPORTS =               		\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\absyncsv
-DLL = $(LIBNAME).dll
-
 OBJS=\
 			.\$(OBJDIR)\nsAbSyncFactory.obj \
+			$(NULL)
+
+SUB_LIBRARIES=							\
+			$(DIST)\lib\absync_s.lib		\
 			$(NULL)
 
 LLIBS=											\
 			$(LLIBS)							\
 			$(DIST)\lib\xpcom.lib				\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
-			$(DIST)\lib\absync_s.lib		\
 			$(DIST)\lib\msgbsutl.lib			\
 			$(LIBNSPR)							\
 			$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-

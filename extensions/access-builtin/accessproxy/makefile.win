@@ -26,15 +26,10 @@
 # Contributor(s):
 
 DEPTH=..\..\..
-MODULE=accessproxy
+MODULE         = accessproxy
 XPIDL_MODULE   = accessproxy
 LIBRARY_NAME   = accessproxy
-IS_COMPONENT   = 1
-
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=$(MODULE)
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE_NAME = nsAccessProxy
 
 XPIDLSRCS= .\nsIAccessProxy.idl \
   $(NULL)
@@ -56,9 +51,6 @@ LINCS=\
   -I$(PUBLIC)\xpcom \
   $(NULL)
 
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-  $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-
 

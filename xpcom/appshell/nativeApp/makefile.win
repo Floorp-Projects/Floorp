@@ -20,11 +20,12 @@
 #   Travis Bogard <travis@netscape.com>
 
 DEPTH=..\..\..
-MODULE=xpcom_nativeapp
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=nativapp
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+include <$(DEPTH)\config\config.mak>
+
+MODULE=xpcom_nativeapp
+LIBRARY_NAME=nativapp
+MODULE_NAME=nsCNativeAppModule
 
 XPIDLSRCS=						\
 		.\nsCNativeApp.idl	\
@@ -41,8 +42,4 @@ LLIBS=                              \
         $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
-include <$(DEPTH)\config\config.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib

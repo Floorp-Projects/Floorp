@@ -23,7 +23,8 @@ DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
 MODULE=transformiix
-IS_COMPONENT = 1
+LIBRARY_NAME=transformiix
+MODULE_NAME=TransformiixModule
 
 CPPSRCS=						\
 	XSLTProcessorModule.cpp		\
@@ -121,10 +122,6 @@ CPP_OBJS=							\
 	.\$(OBJDIR)\XSLTProcessorModule.obj \
 	$(NULL)
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = transformiix
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
@@ -150,10 +147,3 @@ WIN_LIBS =                            \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib

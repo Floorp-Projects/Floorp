@@ -91,7 +91,7 @@ LINCS=  \
   $(NULL)
 
 LLIBS=                         \
- $(DIST)\lib\gkgfxwin.lib   \
+ $(DIST)\lib\gkgfx.lib   \
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\util.lib \
  $(DIST)\lib\raptornativewidgets_s.lib     \
@@ -102,7 +102,6 @@ LLIBS=                         \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib \
  $(LIBNSPR)                     \
- $(DIST)\lib\jsdom.lib          \
 !ifdef MOZ_FULLCIRCLE
  $(MOZ_TOOLS)\lib\fulls32.lib \
 !endif

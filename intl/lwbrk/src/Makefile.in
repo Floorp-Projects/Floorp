@@ -30,6 +30,8 @@ MODULE		= lwbrk
 LIBRARY_NAME	= lwbrk
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsLWBrkModule
+
 REQUIRES	= xpcom string
 
 CSRCS		= rulebrk.c

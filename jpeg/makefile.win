@@ -41,18 +41,17 @@ EXPORTS = jconfig.h jerror.h jinclude.h jmorecfg.h jpeglib.h jpegint.h jwinfig.h
 #//------------------------------------------------------------------------
 DEPTH= ..\
 
-MAKE_OBJ_TYPE=DLL
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=jpeg$(MOZ_BITS)$(VERSION_NUMBER)
-DLL1NAME=jpg$(MOZ_BITS)$(VERSION_NUMBER)
-PDBFILE=$(DLLNAME).pdb
-MAPFILE=$(DLLNAME).map
+EXPORT_LIBRARY=1
+LIBRARY_NAME=jpeg$(MOZ_BITS)$(VERSION_NUMBER)
+PDBFILE=$(LIBRARY_NAME).pdb
+MAPFILE=$(LIBRARY_NAME).map
 !if "$(MOZ_BITS)" == "16"
-DEFFILE=$(DLL1NAME).def
+DEFFILE=jpg$(MOZ_BIGS)$(VERSION_NUMBER).def
 !endif
 
 #//------------------------------------------------------------------------
@@ -126,7 +125,6 @@ OBJS=                         \
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 MAPFILE= $(DLLNAME).map
 
 
@@ -137,11 +135,3 @@ MAPFILE= $(DLLNAME).map
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	$(RM) $(JPEG_OBJS)
-

@@ -20,7 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-MODULE=msgimap 
+MODULE          = msgimap 
+LIBRARY_NAME    = msgimap
+META_COMPONENT  = mail
+MODULE_NAME  = IMAP_factory
 
 ################################################################################
 ## exports
@@ -32,17 +35,17 @@ EXPORTS=							\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\msgimap
-DLL = $(LIBNAME).dll
-
 CPP_OBJS=									\
 			.\$(OBJDIR)\nsImapFactory.obj	\
 			$(NULL)
 
+SUB_LIBRARIES=					\
+	$(DIST)\lib\msgimap_s.lib		\
+	$(NULL)
+
 LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
 	$(DIST)\lib\msgbsutl.lib		\
-	$(DIST)\lib\msgimap_s.lib		\
     $(DIST)\lib\rdfutil_s.lib		\
     $(LIBNSPR)						\
 	$(NULL)
@@ -51,9 +54,4 @@ LINCS=  -I$(DEPTH)\mailnews\imap\src         \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-
 

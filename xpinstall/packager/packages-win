@@ -54,8 +54,9 @@ install\ren8dot3.exe,bin\ren8dot3.exe
 
 [browser]
 ; files listed in xpcom (missing in this section) will be installed as part of the browser
-bin\gkgfxwin.dll
-bin\gkwidget.dll
+bin\gkgfx.dll
+bin\components\gkgfxwin.dll
+bin\components\gkwidget.dll
 bin\img3250.dll
 bin\jpeg3250.dll
 bin\jsj3250.dll
@@ -320,7 +321,7 @@ bin\components\msgnews.dll
 bin\components\msgnews.xpt
 bin\components\msgsearch.xpt
 bin\components\vcard.dll
-bin\components\signed.dll
+;bin\components\signed.dll
 bin\components\smime.dll
 bin\components\import.dll
 bin\components\import.xpt

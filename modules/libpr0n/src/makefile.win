@@ -24,10 +24,9 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-MODULE			= imglib2
+MODULE		= imglib2
 LIBRARY_NAME	= imglib2
-DLL			= $(OBJDIR)\$(LIBRARY_NAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE_NAME	= nsImageLib2Module
 
 OBJS	= \
 		.\$(OBJDIR)\ImageFactory.obj \
@@ -41,15 +40,7 @@ OBJS	= \
 LLIBS=\
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\gkgfxwin.lib \
+	$(DIST)\lib\gkgfx.lib \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

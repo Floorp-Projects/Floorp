@@ -22,10 +22,11 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-IS_COMPONENT=1
+MODULE=appshell
+LIBRARY_NAME=appshell
+MODULE_NAME=appshell
 
 DEFINES=-D_IMPL_NS_APPSHELL -DWIN32_LEAN_AND_MEAN
-MODULE=raptor 
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsChromeTreeOwner.obj      \
@@ -47,10 +48,6 @@ LINCS= \
 !endif
      $(NULL)
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = appshell
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
@@ -60,7 +57,7 @@ LCFLAGS = \
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\timer_s.lib    \
- $(DIST)\lib\gkgfxwin.lib   \
+ $(DIST)\lib\gkgfx.lib   \
  $(DIST)\lib\js3250.lib        \
  $(LIBNSPR)                     \
 !ifdef MOZ_FULLCIRCLE
@@ -69,9 +66,3 @@ LLIBS=                          \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll

@@ -53,6 +53,8 @@
 // XXX
 #include "nsIServiceManager.h"
 
+#include "nsIGenericFactory.h"
+
 #include "nsRange.h"
 #include "nsGenericElement.h"
 #include "nsContentHTTPStartup.h"
@@ -73,7 +75,8 @@
 
 static nsContentModule *gModule = NULL;
 
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+extern "C" NS_EXPORT nsresult
+NSGETMODULE_ENTRY_POINT(nsContentModule) (nsIComponentManager *servMgr,
                                           nsIFile* location,
                                           nsIModule** return_cobj)
 {
@@ -342,9 +345,9 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsContentModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFile* aPath,
-                             const char* registryLocation,
-                             const char* componentType)
+                              nsIFile* aPath,
+                              const char* registryLocation,
+                              const char* componentType)
 {
   nsresult rv = NS_OK;
 
@@ -355,8 +358,10 @@ nsContentModule::RegisterSelf(nsIComponentManager *aCompMgr,
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
-    rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
-                                         cp->mContractID, aPath, PR_TRUE, PR_TRUE);
+    rv = aCompMgr->RegisterComponentWithType(cp->mCID, cp->mDescription,
+                                             cp->mContractID, aPath, 
+                                             registryLocation, PR_TRUE,
+                                             PR_TRUE, componentType);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       printf("nsContentModule: unable to register %s component => %x\n",

@@ -24,8 +24,9 @@ include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_HTML 
 
-MODULE=raptor 
-IS_COMPONENT = 1
+MODULE=layout
+LIBRARY_NAME=gklayout
+MODULE_NAME=nsLayoutModule
 
 CPPSRCS=dlldeps.cpp nsLayoutDLF.cpp nsLayoutFactory.cpp
 
@@ -37,10 +38,6 @@ CPP_OBJS=				\
 	$(NULL)
 
 EXPORTS=nsLayoutCID.h
-
-MAKE_OBJ_TYPE = DLL
-DLLNAME = gklayout
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -59,27 +56,30 @@ LINCS=  -I..\html\base\src -I..\base\src \
 !endif
 	$(NULL)
 
-# These are the libraries we need to link with to create the dll
-LLIBS=					\
+SUB_LIBRARIES=                          \
  $(DIST)\lib\layoutbase_s.lib		\
  $(DIST)\lib\layouthtmlbase_s.lib	\
  $(DIST)\lib\layouthtmldoc_s.lib	\
  $(DIST)\lib\layouthtmlforms_s.lib	\
  $(DIST)\lib\layouthtmlstyle_s.lib	\
  $(DIST)\lib\layouthtmltable_s.lib	\
- $(DIST)\lib\layoutxulbase_s.lib \
+ $(DIST)\lib\layoutxulbase_s.lib        \
  $(DIST)\lib\contentshared_s.lib	\
  $(DIST)\lib\raptorxuloutliner_s.lib	\
 !ifdef MOZ_MATHML
- $(DIST)\lib\layoutmathmlbase_s.lib \
+ $(DIST)\lib\layoutmathmlbase_s.lib     \
  $(DIST)\lib\layoutmathmlcontent_s.lib	\
 !endif
 !ifdef MOZ_SVG
- $(DIST)\lib\layoutsvgbase_s.lib \
+ $(DIST)\lib\layoutsvgbase_s.lib        \
  $(DIST)\lib\layoutsvgcontent_s.lib	\
 !endif
+ $(NULL)
+
+# These are the libraries we need to link with to create the dll
+LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
- $(DIST)\lib\gkgfxwin.lib		\
+ $(DIST)\lib\gkgfx.lib		\
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 !if defined(MOZ_PERF)
@@ -88,11 +88,3 @@ LLIBS=					\
  $(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib

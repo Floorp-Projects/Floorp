@@ -22,10 +22,10 @@
 DEPTH=..\..\..
 #
 
-MODULE=raptor 
-MAKE_OBJ_TYPE   = DLL
-DLLNAME = gkwidget
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE         = gkwidget
+LIBRARY_NAME   = gkwidget
+MODULE_NAME = nsWidgetModule
+
 RESFILE = widget.res
 
 CPPSRCS  = nsWinWidgetFactory.cpp
@@ -59,20 +59,15 @@ WIN_LIBS=                               \
 # oleacc.lib \
  oleaut32.lib
 
+SUB_LIBRARIES=                          \
+ $(DIST)\lib\raptorbasewidget_s.lib     \
+ $(DIST)\lib\raptorwidget_s.lib	        \
+ $(DIST)\lib\timer_s.lib                \
+ $(NULL)
+
 LLIBS= \
  $(DIST)\lib\xpcom.lib                \
- $(DIST)\lib\gkgfxwin.lib           \
- $(DIST)\lib\raptorbasewidget_s.lib		  \
- $(DIST)\lib\raptorwidget_s.lib	        \
- $(DIST)\lib\timer_s.lib				\
+ $(DIST)\lib\gkgfx.lib           \
  $(LIBNSPR) 
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib

@@ -38,7 +38,7 @@ typedef enum
 //----------------------------------------------------------------------
 
 // Blender interface
-class nsBlender : public nsIBlender
+class NS_GFX nsBlender : public nsIBlender
 {
 public:
  /** --------------------------------------------------------------------------

@@ -28,9 +28,8 @@ PROGRAMS = $(PROG1)
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\src
 LLIBS=				\
  $(DIST)\lib\layoutbase_s.lib	\
- $(DIST)\lib\gkgfxwin.lib	\
+ $(DIST)\lib\gkgfx.lib	\
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\jsdom.lib	        \
  $(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>

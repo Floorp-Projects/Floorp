@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= vcard
 LIBRARY_NAME	= vcard
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsVCardModule
 HAS_EXTRAEXPORTS	= 1
 REQUIRES	= xpcom string mime msgbase msgbaseutil uconv necko intl locale pref mailnews msgdb
 

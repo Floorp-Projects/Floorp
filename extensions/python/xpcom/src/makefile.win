@@ -25,13 +25,12 @@ DIRS =             \
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-LIBRARY_NAME=_xpcom
 DLLNAME=_xpcom
 !ifdef MOZ_DEBUG
 DLL=.\$(OBJDIR)\$(DLLNAME)_d.pyd
 !else
 DLL=.\$(OBJDIR)\$(DLLNAME).pyd
-!endif
+!endif 
 
 CPP_OBJS= \
 	.\$(OBJDIR)\ErrorUtils.obj \

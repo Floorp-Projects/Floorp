@@ -43,47 +43,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
-/* The definition is nsAddrDatabase.cpp */
 extern const char *kWorkAddressBook;
-extern const char *kFirstNameColumn;
-extern const char *kLastNameColumn;
-extern const char *kDisplayNameColumn;
-extern const char *kNicknameColumn;
-extern const char *kPriEmailColumn;
-extern const char *k2ndEmailColumn;
-extern const char *kPreferMailFormatColumn;
-extern const char *kWorkPhoneColumn;
-extern const char *kHomePhoneColumn;
-extern const char *kFaxColumn;
-extern const char *kPagerColumn;
-extern const char *kCellularColumn;
-extern const char *kHomeAddressColumn;
-extern const char *kHomeAddress2Column;
-extern const char *kHomeCityColumn;
-extern const char *kHomeStateColumn;
-extern const char *kHomeZipCodeColumn;
-extern const char *kHomeCountryColumn;
-extern const char *kWorkAddressColumn;
-extern const char *kWorkAddress2Column;
-extern const char *kWorkCityColumn;
-extern const char *kWorkStateColumn;
-extern const char *kWorkZipCodeColumn;
-extern const char *kWorkCountryColumn;
-extern const char *kJobTitleColumn;
-extern const char *kDepartmentColumn;
-extern const char *kCompanyColumn;
-extern const char *kWebPage1Column;
-extern const char *kWebPage2Column;
-extern const char *kBirthYearColumn;
-extern const char *kBirthMonthColumn;
-extern const char *kBirthDayColumn;
-extern const char *kCustom1Column;
-extern const char *kCustom2Column;
-extern const char *kCustom3Column;
-extern const char *kCustom4Column;
-extern const char *kNotesColumn;
-extern const char *kLastModifiedDateColumn;
-/* end */
 
 static NS_DEFINE_CID(kCAddbookUrlCID, NS_ADDBOOKURL_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID); 

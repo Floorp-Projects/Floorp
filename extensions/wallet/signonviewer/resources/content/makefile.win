@@ -27,7 +27,7 @@ clobber::
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\SignonViewer.xul
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\SignonViewer.js
        
-install:: $(DLL)
+install::
         $(MAKE_INSTALL) SignonViewer.xul $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         $(MAKE_INSTALL) SignonViewer.js $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         

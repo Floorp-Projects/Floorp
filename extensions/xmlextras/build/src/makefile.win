@@ -19,9 +19,8 @@
 
 DEPTH=..\..\..\..
 MODULE=xmlextras
-
-LIBNAME = .\$(OBJDIR)\xmlextras
-DLL = $(LIBNAME).dll
+LIBRARY_NAME=xmlextras
+MODULE_NAME=nsXMLExtrasModule
 
 ################################################################################
 ## library
@@ -32,13 +31,16 @@ CPP_OBJS=					    \
 		.\$(OBJDIR)\nsXMLExtrasModule.obj   \
 		$(NULL)
 
-LLIBS=						      \
-		$(DIST)\lib\xpcom.lib		      \
-		$(DIST)\lib\js3250.lib		      \
+SUB_LIBRARIES=                                        \
                 $(DIST)\lib\xmlextrasbase_s.lib       \
 !if defined(MOZ_SOAP)
                 $(DIST)\lib\xmlextrassoap_s.lib       \
 !endif
+                $(NULL)
+
+LLIBS=						      \
+		$(DIST)\lib\xpcom.lib		      \
+		$(DIST)\lib\js3250.lib		      \
 		$(LIBNSPR)	 	              \
 		$(NULL)
 
@@ -53,6 +55,3 @@ LCFLAGS = \
 
 include <$(DEPTH)/config/rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib

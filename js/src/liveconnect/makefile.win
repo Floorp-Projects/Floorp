@@ -58,14 +58,13 @@ DIRS = classes
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=jsj$(MOZ_BITS)$(VERSION_NUMBER)
-PDBFILE=$(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
+EXPORT_LIBRARY=1
+LIBRARY_NAME=jsj$(MOZ_BITS)$(VERSION_NUMBER)
+PDBFILE=$(LIBRARY_NAME).pdb
+MAPFILE=$(LIBRARY_NAME).map
 
 !if "$(MOZ_BITS)" == "16"
-DEFFILE		= $(DLLNAME).def
+DEFFILE		= $(LIBRARY_NAME).def
 !endif
 
 LLIBS=$(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
@@ -166,11 +165,6 @@ LINCS=$(LINCS) -I$(JNI_GEN_DIR) \
 include <$(DEPTH)/config/rules.mak>
 
 export::  INSTALL_FILES
-
-install::  $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
 
 ####
 # this bit of extreme scariness came from the js/src makefile

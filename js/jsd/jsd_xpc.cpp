@@ -1244,7 +1244,7 @@ static nsModuleComponentInfo components[] = {
      jsdASObserverConstructor, RegisterASObserver, UnRegisterASObserver }
 };
 
-NS_IMPL_NSGETMODULE("JavaScript Debugger", components);
+NS_IMPL_NSGETMODULE(JavaScript_Debugger, components);
 
 /********************************************************************************
  ********************************************************************************

@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgbase
 LIBRARY_NAME	= mailnews
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsMsgBaseModule
 REQUIRES	= xpcom string necko intl locale timer rdf dom js docshell widget layout webshell mime uriloader mailnews mork txmgr pref msgcompose msgbaseutil appcomps msgdb editor appshell xuldoc caps msgnews gfx2 mozcomps msgimap
 
 ifeq ($(USE_SHORT_LIBNAME),1)

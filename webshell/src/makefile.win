@@ -58,9 +58,15 @@ LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\caps \
 		-I..\..\docshell\base
 
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+MAKE_OBJ_TYPE = LIB
+LIBRARY_NAME = gkweb
+LIB=.\$(OBJDIR)\$(LIBRARY_NAME).lib
+!else
 MAKE_OBJ_TYPE = DLL
 DLLNAME = gkweb
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
+!endif
 
 DEFFILE=webshell.def
 
@@ -73,7 +79,7 @@ LCFLAGS = \
 LLIBS=				\
  $(DIST)\lib\basedocshell_s.lib      \
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\gkgfxwin.lib	\
+ $(DIST)\lib\gkgfx.lib	\
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\img32$(VERSION_NUMBER).lib     \
  $(DIST)\lib\util.lib        \
@@ -84,10 +90,20 @@ WIN_LIBS= OLE32.LIB
 
 include <$(DEPTH)\config\rules.mak>
 
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+install:: $(LIB)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\bin\$(LIBRARY_NAME).lib
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+!else
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
+ 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
+!endif

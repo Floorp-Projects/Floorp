@@ -38,25 +38,13 @@ CPP_OBJS= \
 	$(NULL)
 
 MODULE=intlcmpt
-
+LIBRARY_NAME=intlcmpt
+MODULE_NAME=I18nCompatibility
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=intlcmpt
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib	\
 	$(LIBNSPR)	
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\bin\$(DLLNAME).lib

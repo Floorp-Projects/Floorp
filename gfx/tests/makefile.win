@@ -33,7 +33,7 @@ PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
 LINCS=-I$(XPDIST)\public\raptor -I$(XPDIST)\public\xpcom -I..\src
 
 LLIBS=				\
- $(DIST)\lib\gkgfxwin.lib	\
+ $(DIST)\lib\gkgfx.lib	\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)
 

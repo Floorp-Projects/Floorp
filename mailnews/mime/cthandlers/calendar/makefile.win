@@ -38,7 +38,11 @@ DEPTH=..\..\..\..
 # New build system where zip dll is build indepenant of java stubs.
 #//
 #//------------------------------------------------------------------------
-MODULE  = calendar
+MODULE          = calendar
+LIBRARY_NAME    = calendar
+META_COMPONENT  = mail
+MODULE_NAME  = nsCalendarModule
+
 #EXPORTS =
 # Exported headers here!!!               	
 #	          $(NULL)
@@ -64,7 +68,7 @@ OBJS=						\
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=$(MODULE)
+
 MAPFILE=$(MODULE).map
 DEFFILE=$(MODULE).def
 
@@ -75,7 +79,11 @@ DEFFILE=$(MODULE).def
 #//
 #//------------------------------------------------------------------------
 #
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+LIB=.\$(OBJDIR)\$(LIBRARY_NAME).lib
+!else
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
+!endif
 
 #//------------------------------------------------------------------------
 #//
@@ -101,9 +109,3 @@ LLIBS=										\
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll

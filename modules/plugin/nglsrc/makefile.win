@@ -28,12 +28,9 @@ EXPORTS =	\
 	nsIPluginHost.h         \
 	nsIPluginInstanceOwner.h
 
-MAKE_OBJ_TYPE	= DLL
-DLLNAME = gkplugin
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-MODULE=raptor 
-IS_COMPONENT=1
+MODULE		= gkplugin
+LIBRARY_NAME	= gkplugin
+MODULE_NAME	= nsPluginModule
 
 DEFINES =-D_IMPL_NS_PLUGIN -DWIN32_LEAN_AND_MEAN
 
@@ -79,9 +76,8 @@ CACHELIBNAME=netcache.lib
 !endif
 
 LLIBS = \
- $(DIST)\lib\gkgfxwin.lib \
+ $(DIST)\lib\gkgfx.lib \
  $(DIST)\lib\xpcom.lib \
- $(DIST)\lib\xppref32.lib \
  $(LIBNSPR)  
 
 WIN_LIBS = \
@@ -91,9 +87,3 @@ include <$(DEPTH)\config\rules.mak>
 
 it:
 	echo $(LLIBS)
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll

@@ -17,12 +17,10 @@
 
 DEPTH=..\..\..\..
 
-MODULE=impText
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=$(MODULE)
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
+MODULE          = impText
+LIBRARY_NAME    = $(MODULE)
+META_COMPONENT  = mail
+MODULE_NAME  = nsTextImportModule
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsTextFactory.obj			\
@@ -37,7 +35,3 @@ LLIBS=\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-        $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-

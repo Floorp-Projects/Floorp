@@ -291,9 +291,10 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
     nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
-        rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
-                                             cp->mContractID, aPath, PR_TRUE,
-                                             PR_TRUE);
+        rv = aCompMgr->RegisterComponentWithType(cp->mCID, cp->mDescription,
+                                                 cp->mContractID, aPath,
+                                                 registryLocation, PR_TRUE,
+                                                 PR_TRUE, componentType);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
             printf("nsGenericModule %s: unable to register %s component => %x\n",

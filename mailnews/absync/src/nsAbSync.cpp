@@ -3022,10 +3022,4 @@ char *kServerBirthDayColumn = "OMIT:BirthDay";
 
 /************* FOR MAILING LISTS
 aCard->SetIsMailList(aTagValue->GetUnicode());
-
-char *kAddressCharSetColumn = "AddrCharSet";
-char *kMailListName = "ListName";
-char *kMailListNickName = "ListNickName";
-char *kMailListDescription = "ListDescription";
-char *kMailListTotalAddresses = "ListTotalAddresses";
 ************* FOR MAILING LISTS ***************/

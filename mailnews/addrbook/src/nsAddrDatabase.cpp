@@ -79,54 +79,11 @@ const char *kDataRowScope = "ns:addrbk:db:row:scope:data:all";
 
 #define DATAROW_ROWID 1
 
-const char *kFirstNameColumn = "FirstName";
-const char *kLastNameColumn = "LastName";
-const char *kDisplayNameColumn = "DisplayName";
-const char *kNicknameColumn = "NickName";
-const char *kPriEmailColumn = "PrimaryEmail";
-const char *k2ndEmailColumn = "SecondEmail";
-const char *kPreferMailFormatColumn = "PreferMailFormat"; // nsIAbPreferMailFormat
-const char *kWorkPhoneColumn = "WorkPhone";
-const char *kHomePhoneColumn = "HomePhone";
-const char *kFaxColumn = "FaxNumber";
-const char *kPagerColumn = "PagerNumber";
-const char *kCellularColumn = "CellularNumber";
-const char *kHomeAddressColumn = "HomeAddress";
-const char *kHomeAddress2Column = "HomeAddress2";
-const char *kHomeCityColumn = "HomeCity";
-const char *kHomeStateColumn = "HomeState";
-const char *kHomeZipCodeColumn = "HomeZipCode";
-const char *kHomeCountryColumn = "HomeCountry";
-const char *kWorkAddressColumn = "WorkAddress";
-const char *kWorkAddress2Column = "WorkAddress2";
-const char *kWorkCityColumn = "WorkCity";
-const char *kWorkStateColumn = "WorkState";
-const char *kWorkZipCodeColumn = "WorkZipCode";
-const char *kWorkCountryColumn = "WorkCountry";
-const char *kJobTitleColumn = "JobTitle";
-const char *kDepartmentColumn = "Department";
-const char *kCompanyColumn = "Company";
-const char *kWebPage1Column = "WebPage1";
-const char *kWebPage2Column = "WebPage2";
-const char *kBirthYearColumn = "BirthYear";
-const char *kBirthMonthColumn = "BirthMonth";
-const char *kBirthDayColumn = "BirthDay";
-const char *kCustom1Column = "Custom1";
-const char *kCustom2Column = "Custom2";
-const char *kCustom3Column = "Custom3";
-const char *kCustom4Column = "Custom4";
-const char *kNotesColumn = "Notes";
-const char *kLastModifiedDateColumn = "LastModifiedDate";
 const char *kRecordKeyColumn = "RecordKey";
 const char *kLowerPriEmailColumn = "LowercasePrimaryEmail";
 
-const char *kAddressCharSetColumn = "AddrCharSet";
 const char *kLastRecordKeyColumn = "LastRecordKey";
 
-const char *kMailListName = "ListName";
-const char *kMailListNickName = "ListNickName";
-const char *kMailListDescription = "ListDescription";
-const char *kMailListTotalAddresses = "ListTotalAddresses"; // total number of email addresses in a mailing list
 const char *kMailListTotalLists = "ListTotalLists";	// total number of mail list in a mailing list
 const char *kLowerListNameColumn = "LowercaseListName";
 

@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 MODULE		= webbrwsr
 
 IS_COMPONENT	= 1
+MODULE_NAME	= Browser_Embedding_Module
 
 include $(DEPTH)/config/autoconf.mk
 

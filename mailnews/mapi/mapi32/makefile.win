@@ -31,9 +31,14 @@ MODULE=mapi32
 ## library
 
 LIBNAME = .\$(OBJDIR)\mapi32
-DLL = $(LIBNAME).dll
 DEFINES= -NS_DEBUG
 DEFFILE=MAPI32.def
+
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+LIB = $(LIBNAME).lib
+!else
+DLL = $(LIBNAME).dll
+!endif
 
 OBJS=										\
     .\$(OBJDIR)\maindll.obj  \
@@ -56,5 +61,10 @@ LLIBS=										\
 
 include <$(DEPTH)\config\rules.mak>
 
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+install:: $(LIB)
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\bin\components
+!else
 install:: $(DLL)
 	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+!endif

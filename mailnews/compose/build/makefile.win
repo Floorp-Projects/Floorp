@@ -18,7 +18,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-MODULE=msgcompo 
+MODULE          = msgcompo 
+LIBRARY_NAME    = msgcompo
+META_COMPONENT  = mail
+MODULE_NAME  = nsMsgComposeModule
 
 ################################################################################
 ## exports
@@ -30,25 +33,20 @@ EXPORTS =               		\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\msgcompo
-DLL = $(LIBNAME).dll
-
 OBJS=										 \
 			.\$(OBJDIR)\nsMsgCompFactory.obj \
+			$(NULL)
+
+SUB_LIBRARIES=							\
+			$(DIST)\lib\msgcompose_s.lib		\
 			$(NULL)
 
 LLIBS=											\
 			$(LLIBS)							\
 			$(DIST)\lib\xpcom.lib				\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
-			$(DIST)\lib\msgcompose_s.lib		\
 			$(DIST)\lib\msgbsutl.lib			\
 			$(LIBNSPR)							\
 			$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-

@@ -19,9 +19,9 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\config.mak>
 
-MODULE = mozldap
-LIBNAME = .\$(OBJDIR)\mozldap
-DLL = $(LIBNAME).dll
+MODULE=mozldap
+LIBRARY_NAME=mozldap
+MODULE_NAME=nsLDAPProtocolModule
 
 LLIBS = $(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
@@ -55,7 +55,3 @@ C_OBJS = .\$(OBJDIR)\nsLDAPConnectionCallbacks.obj \
 	 $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib

@@ -27,14 +27,10 @@
 DIRS=standalone
 
 MODULE=jar 
+LIBRARY_NAME=jar$(VERSION_NUMBER)
+MODULE_NAME=nsJarModule
+
 DEPTH=..\..
-
-MAKE_OBJ_TYPE=DLL
-
-DLLNAME=jar$(VERSION_NUMBER)
-
-DLL=$(OBJDIR)\$(DLLNAME).dll
-MAPFILE=$(DLLNAME).map
 
 XPIDLSRCS=.\nsIZipReader.idl \
           .\nsIJAR.idl \
@@ -66,13 +62,3 @@ LLIBS=                        \
       $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-  $(RM) $(OBJS)
-  $(RM) $(DIST)\bin\components\$(DLLNAME).dll
-  $(RM) $(DIST)\lib\$(DLLNAME).lib
-

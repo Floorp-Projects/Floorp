@@ -18,7 +18,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-MODULE=mime
+MODULE          = mime
+LIBRARY_NAME    = mime
+META_COMPONENT  = mail
+MODULE_NAME  = mime_services
 
 EXPORTS=								\
 			nsMsgMimeCID.h				\
@@ -27,26 +30,20 @@ EXPORTS=								\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\mime
-DLL = $(LIBNAME).dll
-
 CPP_OBJS=\
 	.\$(OBJDIR)\nsMimeModule.obj	\
 	$(NULL)
+
+SUB_LIBRARIES=						\
+			$(DIST)\lib\mime_s.lib		\
+			$(NULL)
 
 LLIBS=										\
 			$(LLIBS)						\
 			$(LIBNSPR)						\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\xpcom.lib       	\
-            $(DIST)\lib\mime_s.lib		\
 			$(DIST)\lib\msgbsutl.lib       	\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-
-

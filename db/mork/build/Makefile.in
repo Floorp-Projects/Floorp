@@ -30,6 +30,7 @@ MODULE		= mork
 LIBRARY_NAME	= mork
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsMorkModule
 REQUIRES	= xpcom
 
 CPPSRCS		= nsMorkFactory.cpp

@@ -22,22 +22,21 @@
 
 
 MAKE_OBJ_TYPE	= DLL
+LIBRARY_NAME = DebugRobot
+LIBNAME = .\$(OBJDIR)\DebugRobot
+DLL = $(LIBNAME).dll
 
 DEPTH=..\..
 
 include <$(DEPTH)\config\config.mak>
 
 LLIBS=				\
- $(DIST)\lib\gkparser.lib	\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
 !ifndef NECKO
  $(DIST)\lib\netlib.lib \
 !endif
  $(NULL)
-
-LIBNAME = .\$(OBJDIR)\DebugRobot
-DLL = $(LIBNAME).dll
 
 CPPSRCS=			\
  nsRobotSink.cpp		\
@@ -55,6 +54,12 @@ LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor  -I$(XPDIST)\public\net
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
-	$(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
+install:: $(DLL) $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY)
+        rm -f $(DIST)\bin\$(DLL)
+
+

@@ -19,9 +19,8 @@
 
 DEPTH=..\..\..\..
 MODULE=vixen
-
-LIBNAME = .\$(OBJDIR)\vixen
-DLL = $(LIBNAME).dll
+LIBRARY_NAME=vixen
+MODULE_NAME=nsVixenModule
 
 ################################################################################
 ## library
@@ -39,8 +38,3 @@ LLIBS=						      \
 		$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-

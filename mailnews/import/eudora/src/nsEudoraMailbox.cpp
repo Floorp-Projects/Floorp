@@ -208,10 +208,10 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 	rv = pSrc->GetFileSize( &m_mailSize);
 
 	nsCOMPtr<nsIFileSpec>	compositionFile;
-	SimpleBuffer			readBuffer;
-	SimpleBuffer			headers;
-	SimpleBuffer			body;
-	SimpleBuffer			copy;
+	SimpleBufferTonyRCopiedOnce			readBuffer;
+	SimpleBufferTonyRCopiedOnce			headers;
+	SimpleBufferTonyRCopiedOnce			body;
+	SimpleBufferTonyRCopiedOnce			copy;
 	PRInt32					written;
 	nsCString				fromLine(eudoraFromLine);
 	
@@ -330,7 +330,7 @@ nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIF
 	if (!mailSize || !tocSize)
 		return( NS_ERROR_FAILURE);
 
-	SimpleBuffer	copy;
+	SimpleBufferTonyRCopiedOnce	copy;
 	PRBool			done = PR_FALSE;
 	PRInt32			tocOffset = kMsgFirstOffset;
 	PRInt32			data[2];
@@ -401,7 +401,7 @@ nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIF
 
 
 
-nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header, SimpleBuffer& body)
+nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body)
 {
 	header.m_writeOffset = 0;
 	body.m_writeOffset = 0;
@@ -566,7 +566,7 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBuffer& 
 
 
 
-PRInt32	nsEudoraMailbox::FindStartLine( SimpleBuffer& data)
+PRInt32	nsEudoraMailbox::FindStartLine( SimpleBufferTonyRCopiedOnce& data)
 {
 	PRInt32 len = data.m_bytesInBuf - data.m_writeOffset;
 	if (!len)
@@ -591,7 +591,7 @@ PRInt32	nsEudoraMailbox::FindStartLine( SimpleBuffer& data)
 	return( -1);
 }
 
-PRInt32 nsEudoraMailbox::FindNextEndLine( SimpleBuffer& data)
+PRInt32 nsEudoraMailbox::FindNextEndLine( SimpleBufferTonyRCopiedOnce& data)
 {
 	PRInt32 len = data.m_bytesInBuf - data.m_writeOffset;
 	if (!len)
@@ -614,7 +614,7 @@ PRInt32 nsEudoraMailbox::FindNextEndLine( SimpleBuffer& data)
 }
 
 
-PRInt32 nsEudoraMailbox::IsEndHeaders( SimpleBuffer& data)
+PRInt32 nsEudoraMailbox::IsEndHeaders( SimpleBufferTonyRCopiedOnce& data)
 {
 	PRInt32 len = data.m_bytesInBuf - data.m_writeOffset;
 	if (len < 2)
@@ -957,7 +957,7 @@ static PRInt32 eudoraAttachLen[] = {
 	0
 };
 
-nsresult nsEudoraMailbox::ExamineAttachment( SimpleBuffer& data)
+nsresult nsEudoraMailbox::ExamineAttachment( SimpleBufferTonyRCopiedOnce& data)
 {
 	// get the file, then get the mime type, and add it to the array
 	// of attachments.
@@ -1037,7 +1037,7 @@ PRBool nsEudoraMailbox::AddAttachment( nsCString& fileName)
 	return( PR_TRUE);
 }
 
-nsresult nsEudoraMailbox::FillMailBuffer( ReadFileState *pState, SimpleBuffer& read)
+nsresult nsEudoraMailbox::FillMailBuffer( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& read)
 {
 	if (read.m_writeOffset >= read.m_bytesInBuf) {
 		read.m_writeOffset = 0;

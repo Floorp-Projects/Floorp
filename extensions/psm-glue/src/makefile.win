@@ -27,11 +27,9 @@ MODULE = psmglue
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DLLNAME       = psmglue
-PDBFILE       = $(DLLNAME).pdb
-MAPFILE       = $(DLLNAME).map
-DLL           = .\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE = DLL
+MODULE         = psmglue
+LIBRARY_NAME   = psmglue
+MODULE_NAME = PSMComponent
 
 include <$(DEPTH)/config/config.mak>
 
@@ -71,6 +69,3 @@ OBJS = \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components

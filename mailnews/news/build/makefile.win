@@ -18,7 +18,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-MODULE=msgnews 
+MODULE          = msgnews 
+LIBRARY_NAME    = msgnews
+META_COMPONENT  = mail
+MODULE_NAME  = nsMsgNewsModule
 
 ################################################################################
 ## exports
@@ -30,11 +33,12 @@ EXPORTS =			   \
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\msgnews
-DLL = $(LIBNAME).dll
-
 OBJS=											\
 			.\$(OBJDIR)\nsMsgNewsFactory.obj	\
+			$(NULL)
+
+SUB_LIBRARIES=								\
+			$(DIST)\lib\msgnews_s.lib			\
 			$(NULL)
 
 LLIBS=											\
@@ -43,15 +47,8 @@ LLIBS=											\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib   \
 			$(DIST)\lib\msgbsutl.lib			\
 			$(DIST)\lib\rdfutil_s.lib			\
-			$(DIST)\lib\msgnews_s.lib			\
 			$(LIBNSPR)							\
 			$(DIST)\lib\timer_s.lib				\
 			$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-
-

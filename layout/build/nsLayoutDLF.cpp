@@ -534,6 +534,8 @@ RegisterTypes(nsIComponentManager* aCompMgr,
               nsICategoryManager* aCatMgr,
               const char* aCommand,
               nsIFile* aPath,
+              const char *aLocation,
+              const char *aType,
               char** aTypes)
 {
   nsresult rv = NS_OK;
@@ -546,8 +548,9 @@ RegisterTypes(nsIComponentManager* aCompMgr,
 #ifdef NOISY_REGISTRY
     printf("Register %s => %s\n", contractid, aPath);
 #endif
-    rv = aCompMgr->RegisterComponentSpec(kDocumentFactoryImplCID, "Layout",
-                                         contractid, aPath, PR_TRUE, PR_TRUE);
+    rv = aCompMgr->RegisterComponentWithType(kDocumentFactoryImplCID, "Layout",
+                                         contractid, aPath, aLocation,
+                                         PR_TRUE, PR_TRUE, aType);
     if (NS_FAILED(rv)) break;
 
     // add the MIME types layotu can handle to the handlers category.
@@ -564,7 +567,9 @@ RegisterTypes(nsIComponentManager* aCompMgr,
 
 nsresult
 nsLayoutModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                          nsIFile* aPath)
+                                          nsIFile* aPath,
+                                          const char *aLocation,
+                                          const char *aType)
 {
   nsresult rv;
 
@@ -572,25 +577,25 @@ nsLayoutModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
   if (NS_FAILED(rv)) return rv;
 
   do {
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, gHTMLTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, gHTMLTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, gXMLTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, gXMLTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, gImageTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gImageTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, gRDFTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gRDFTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, gRDFTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gRDFTypes);
     if (NS_FAILED(rv))
       break;
   } while (PR_FALSE);

@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgdb
 LIBRARY_NAME	= msgdb
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsMsgDBModule
 REQUIRES	= xpcom string mailnews locale mork mime msgbase msgbaseutil necko
 
 ifeq ($(USE_SHORT_LIBNAME),1)

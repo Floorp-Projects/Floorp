@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = import
 LIBRARY_NAME = import
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsImportServiceModule
 REQUIRES	= xpcom string mailnews addrbook uconv mork msgbase msgbaseutil intl locale necko rdf msgdb
 
 ifeq ($(USE_SHORT_LIBNAME),1)

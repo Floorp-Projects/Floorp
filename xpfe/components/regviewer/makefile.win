@@ -37,6 +37,8 @@ CHROME_L10N = \
 		$(NULL)
 
 MODULE=regviewer
+LIBRARY_NAME=regviewr
+MODULE_NAME=nsRegistryViewerModule
 
 XPIDLSRCS =                             \
         .\nsIRegistryDataSource.idl     \
@@ -50,10 +52,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsRegistryDataSource.obj   \
  $(NULL)
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME = regviewr
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
@@ -66,7 +64,3 @@ LLIBS=                          \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-

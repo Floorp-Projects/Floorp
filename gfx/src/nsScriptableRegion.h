@@ -27,7 +27,7 @@ class nsIRegion;
 /**
  * An adapter class for the unscriptable nsIRegion interface.
  */
-class nsScriptableRegion : public nsIScriptableRegion {
+class NS_GFX nsScriptableRegion : public nsIScriptableRegion {
 public:
 	nsScriptableRegion(nsIRegion* region);
 	virtual ~nsScriptableRegion();

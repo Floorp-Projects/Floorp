@@ -32,7 +32,6 @@ LIBRARY_NAME	= eventloop
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 
-
 CPPSRCS		= \
 		nsCPhEvent.cpp \
 		nsCEvent.cpp \

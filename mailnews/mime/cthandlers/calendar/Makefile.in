@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= calendar
 LIBRARY_NAME	= calendar
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsCalendarModule
 
 CPPSRCS		= \
 		mimexpcom.cpp \

@@ -39,7 +39,7 @@ LLIBS=\
 	$(DIST)\lib\mng.lib \
 	$(DIST)\lib\jpeg3250.lib \
 	$(DIST)\lib\zlib.lib \
-	$(DIST)\lib\gkgfxwin.lib \
+	$(DIST)\lib\gkgfx.lib \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

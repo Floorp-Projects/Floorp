@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mime
 LIBRARY_NAME	= mime
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= mime_services
 REQUIRES	= xpcom string necko msgbase pref necko uconv
 
 ifeq ($(USE_SHORT_LIBNAME),1)

@@ -28,9 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mimeemitter
 LIBRARY_NAME	= mimeemitter
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= emitter
 IS_COMPONENT	= 1
+MODULE_NAME	= nsMimeEmitterModule
 REQUIRES	= xpcom string mime necko pref intl locale msgbase
 
 ifeq ($(USE_SHORT_LIBNAME),1)

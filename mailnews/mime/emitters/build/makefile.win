@@ -26,7 +26,10 @@
 #
 
 DEPTH=..\..\..\..
-MODULE=emitter
+MODULE          = emitter
+LIBRARY_NAME    = emitter
+META_COMPONENT  = mail
+MODULE_NAME  = nsMimeEmitterModule
 
 ################################################################################
 ## exports
@@ -38,24 +41,20 @@ EXPORTS =              			\
 
 ################################################################################
 ## library
-
-LIBNAME = .\$(OBJDIR)\emitter
-DLL = $(LIBNAME).dll
 DEFINES= -NS_DEBUG
 
 OBJS=										\
 		.\$(OBJDIR)\nsEmitterFactory.obj	\
 		$(NULL)
 
+SUB_LIBRARIES=						\
+			$(DIST)\lib\emitterutils_s.lib  \
+			$(NULL)
+
 LLIBS=										\
 			$(LLIBS)						\
 			$(LIBNSPR)						\
 			$(DIST)\lib\xpcom.lib       	\
-			$(DIST)\lib\emitterutils_s.lib  \
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib

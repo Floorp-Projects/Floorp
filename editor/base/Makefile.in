@@ -30,6 +30,7 @@ MODULE		= editor
 LIBRARY_NAME	= editor
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsEditorModule
 REQUIRES	= xpcom string dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc gfx2 mozcomps windowwatcher exthandler mimetype
 
 CPPSRCS		=                           \

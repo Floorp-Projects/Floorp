@@ -23,12 +23,10 @@ DEPTH=..\..\..
 
 DIRS=resources
 
-MODULE=importOE
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=$(MODULE)
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
+MODULE          = importOE
+LIBRARY_NAME    = $(MODULE)
+META_COMPONENT  = mail
+MODULE_NAME  = nsOEImport
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsOEImport.obj         	\
@@ -49,7 +47,3 @@ LLIBS=\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-        $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-

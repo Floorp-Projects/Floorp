@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= addrbook
 LIBRARY_NAME	= addrbook
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsAbModule
 REQUIRES	= xpcom string addrbook necko msgcompose mime msgbase rdf rdfutil docshell appshell dom widget uriloader layout locale mork xuldoc gfx2 appcomps js
 
 CPPSRCS		= nsAbFactory.cpp

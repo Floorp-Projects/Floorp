@@ -847,11 +847,3 @@ nsresult nsFontCache :: Flush()
   return NS_OK;
 }
 
-#if defined(XP_PC) && !defined(XP_OS2)
-// XXX I had to add this because I changed the link order on Windows
-void notCalled()
-{
-  nsCID cid;
-  (void)NSGetFactory(nsnull, cid, nsnull, nsnull, nsnull);
-}
-#endif

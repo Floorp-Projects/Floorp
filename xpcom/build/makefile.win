@@ -26,6 +26,7 @@ MODULE = xpcom
 
 include <$(DEPTH)\config\config.mak>
 
+MAKE_OBJ_TYPE=DLL
 LIBNAME = .\$(OBJDIR)\xpcom
 DLL = $(LIBNAME).dll
 
@@ -60,21 +61,24 @@ CPP_OBJS =                             \
         .\$(OBJDIR)\dlldeps.obj        \
         $(NULL)
 
-LLIBS =                                \
+SUB_LIBRARIES =                           \
+        $(DIST)\lib\xpcombase_s.lib       \
+        $(DIST)\lib\xpcomds_s.lib         \
+        $(DIST)\lib\xpcomio_s.lib         \
+        $(DIST)\lib\xpcomcomp_s.lib       \
+        $(DIST)\lib\xpcomthreads_s.lib    \
+        $(DIST)\lib\xpcomxpt_s.lib        \
+        $(DIST)\lib\xpcomxptcall_s.lib    \
+        $(DIST)\lib\xpcomxptcmd_s.lib     \
+        $(DIST)\lib\xpcomxptinfo_s.lib    \
+        $(DIST)\lib\xpcomproxy_s.lib      \
+        $(DIST)\lib\string_s.lib          \
+        $(DIST)\lib\string_obsolete_s.lib \
+        $(DIST)\lib\mozreg.lib            \
+        $(NULL)
+
+LLIBS = $(SUB_LIBRARIES)               \
         $(LIBNSPR)                     \
-        $(DIST)\lib\xpcombase_s.lib    \
-        $(DIST)\lib\xpcomds_s.lib      \
-        $(DIST)\lib\xpcomio_s.lib      \
-        $(DIST)\lib\xpcomcomp_s.lib    \
-        $(DIST)\lib\xpcomthreads_s.lib \
-        $(DIST)\lib\xpcomxpt_s.lib     \
-        $(DIST)\lib\xpcomxptcall_s.lib \
-        $(DIST)\lib\xpcomxptcmd_s.lib  \
-        $(DIST)\lib\xpcomxptinfo_s.lib \
-        $(DIST)\lib\xpcomproxy_s.lib   \
-        $(DIST)\lib\string_s.lib       \
-        $(DIST)\lib\string_obsolete_s.lib   \
-        $(DIST)\lib\mozreg.lib         \
         $(NULL)
 
 WIN_LIBS =                             \

@@ -20,7 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=msgdb 
+MODULE          = msgdb 
+LIBRARY_NAME    = msgdb
+META_COMPONENT  = mail
+MODULE_NAME  = nsMsgDBModule
 
 ################################################################################
 ## exports
@@ -32,23 +35,18 @@ EXPORTS=					\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\msgdb
-DLL = $(LIBNAME).dll
-
 CPP_OBJS=									\
 			.\$(OBJDIR)\nsMsgDBFactory.obj	\
 			$(NULL)
 
+SUB_LIBRARIES=					\
+	$(DIST)\lib\msgdb_s.lib			\
+	$(NULL)
+
 LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
 	$(DIST)\lib\msgbsutl.lib		\
-	$(DIST)\lib\msgdb_s.lib			\
     $(LIBNSPR)						\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-

@@ -24,11 +24,9 @@ DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>
 
 
-MODULE       = p3p
-LIBRARY_NAME = p3p
-DLLNAME      = p3p
-DLL          = .\$(OBJDIR)\$(DLLNAME).dll
-IS_COMPONENT = 1
+MODULE         = p3p
+LIBRARY_NAME   = p3p
+MODULE_NAME = nsP3PModule
 
 REQUIRES     = p3p xpcom
 
@@ -97,14 +95,3 @@ LCFLAGS      =     \
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-clobber::
-		rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-		rm -f $(DIST)\lib\$(DLLNAME).lib
-		rm -f $(DIST)\bin\components\$(DLLNAME).dll
-
-install:: $(LIBRARY)
-		$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-install:: $(DLL)
-		$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components

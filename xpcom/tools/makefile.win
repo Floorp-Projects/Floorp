@@ -21,10 +21,13 @@
 
 DEPTH=..\..
 
-
+# XXXwaterson this is just because we can't figure out how to make
+# this link right now.
 
 DIRS = windows \
+!if !defined(MOZ_STATIC_COMPONENT_LIBS)
        registry \
+!endif
        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

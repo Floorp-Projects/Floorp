@@ -52,6 +52,7 @@ MouseTrailer *MouseTrailer::theMouseTrailer = NULL;
 PRBool        MouseTrailer::gIgnoreNextCycle(PR_FALSE);
 PRBool        MouseTrailer::mIsInCaptureMode(PR_FALSE);
 
+#ifndef MOZ_STATIC_COMPONENT_LIBS
 //
 // Dll entry point. Keep the dll instance
 //
@@ -61,36 +62,7 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
 {
     switch( reason ) {
         case DLL_PROCESS_ATTACH:
-            nsToolkit::mDllInstance = hModule;
-
-            //
-            // register the internal window class
-            //
-            WNDCLASS wc;
-
-            wc.style            = CS_GLOBALCLASS;
-            wc.lpfnWndProc      = nsToolkit::WindowProc;
-            wc.cbClsExtra       = 0;
-            wc.cbWndExtra       = 0;
-            wc.hInstance        = nsToolkit::mDllInstance;
-            wc.hIcon            = NULL;
-            wc.hCursor          = NULL;
-            wc.hbrBackground    = NULL;
-            wc.lpszMenuName     = NULL;
-            wc.lpszClassName    = "nsToolkitClass";
-
-            VERIFY(::RegisterClass(&wc));
-
-            //
-            // Set flag of nsToolkit::mIsNT due to using Unicode API.
-            //
-
-            OSVERSIONINFO osversion;
-            ::ZeroMemory(&osversion, sizeof(OSVERSIONINFO));
-            osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-            ::GetVersionEx(&osversion);
-            nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT) ? PR_TRUE : PR_FALSE;
-
+            nsToolkit::Startup(hModule);
             break;
 
         case DLL_THREAD_ATTACH:
@@ -100,15 +72,14 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
             break;
     
         case DLL_PROCESS_DETACH:
-            //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
-            ::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
+            nsToolkit::Shutdown();
             break;
 
     }
 
     return TRUE;
 }
-
+#endif
 
 //
 // main for the message pump thread
@@ -172,6 +143,10 @@ nsToolkit::nsToolkit()
 
     nsToolkit::gAIMMCount++;
 #endif
+
+#ifdef MOZ_STATIC_COMPONENT_LIBS
+    nsToolkit::Startup(nsnull);
+#endif
 }
 
 
@@ -203,6 +178,53 @@ nsToolkit::~nsToolkit()
 
     // Remove the TLS reference to the toolkit...
     PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
+
+#ifdef MOZ_STATIC_COMPONENT_LIBS
+    nsToolkit::Shutdown();
+#endif
+}
+
+
+void
+nsToolkit::Startup(HMODULE hModule)
+{
+    nsToolkit::mDllInstance = hModule;
+
+    //
+    // register the internal window class
+    //
+    WNDCLASS wc;
+
+    wc.style            = CS_GLOBALCLASS;
+    wc.lpfnWndProc      = nsToolkit::WindowProc;
+    wc.cbClsExtra       = 0;
+    wc.cbWndExtra       = 0;
+    wc.hInstance        = nsToolkit::mDllInstance;
+    wc.hIcon            = NULL;
+    wc.hCursor          = NULL;
+    wc.hbrBackground    = NULL;
+    wc.lpszMenuName     = NULL;
+    wc.lpszClassName    = "nsToolkitClass";
+
+    VERIFY(::RegisterClass(&wc));
+
+    //
+    // Set flag of nsToolkit::mIsNT due to using Unicode API.
+    //
+
+    OSVERSIONINFO osversion;
+    ::ZeroMemory(&osversion, sizeof(OSVERSIONINFO));
+    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    ::GetVersionEx(&osversion);
+    nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT) ? PR_TRUE : PR_FALSE;
+}
+
+
+void
+nsToolkit::Shutdown()
+{
+    //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
+    ::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
 }
 
 

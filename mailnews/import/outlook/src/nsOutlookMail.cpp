@@ -66,7 +66,7 @@ typedef struct {
 #define kIsMultiLine	-2
 #define	kNoMultiLine	-1
 
-MAPIFields	gMapiFields[] = {
+static MAPIFields	gMapiFields[] = {
 	{ 35, kIsMultiLine, PR_COMMENT},
 	{ 6, kNoMultiLine, PR_BUSINESS_TELEPHONE_NUMBER},
 	{ 7, kNoMultiLine, PR_HOME_TELEPHONE_NUMBER},
@@ -351,7 +351,7 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 	}
 	
 	nsOutlookCompose		compose;
-	SimpleBuffer			copy;
+	SimpleBufferTonyRCopiedTwice			copy;
 
 	copy.Allocate( kCopyBufferSize);
 

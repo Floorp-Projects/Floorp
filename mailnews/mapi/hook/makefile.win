@@ -31,7 +31,13 @@ MODULE=mapiguts
 ## library
 
 LIBNAME = .\$(OBJDIR)\mapiguts
+
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+LIB = $(LIBNAME).lib
+!else
 DLL = $(LIBNAME).dll
+!endif
+
 DEFINES= -NS_DEBUG
 
 OBJS=										\
@@ -49,5 +55,10 @@ LLIBS=										\
 
 include <$(DEPTH)\config\rules.mak>
 
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+install:: $(LIb)
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\bin\components
+!else
 install:: $(DLL)
 	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+!endif

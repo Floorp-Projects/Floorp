@@ -33,8 +33,6 @@ LOCAL_JMC_SUBDIR = .
 !endif
 
 
-#LIBRARY_NAME = img$(MOZ_BITS)
-
 #
 # Make sure we have MOZILLA_CLIENT defined so we get the
 #   proper JS includes
@@ -57,24 +55,20 @@ LLIBS= $(LIBNSPR)  \
 
 
 
-#LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
-LIBRARY_SUFFIX = $(MOZ_BITS)$(VERSION_NUMBER)
-
-MAKE_OBJ_TYPE=DLL
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=img$(MOZ_BITS)$(VERSION_NUMBER)
-DLL1NAME=img$(MOZ_BITS)$(VERSION_NUMBER)
-PDBFILE=$(DLLNAME).pdb
-MAPFILE=$(DLLNAME).map
+LIBRARY_NAME=img$(MOZ_BITS)$(VERSION_NUMBER)
+LIBRARY_1NAME=img$(MOZ_BITS)$(VERSION_NUMBER)
+PDBFILE=$(LIBRARY_NAME).pdb
+MAPFILE=$(LIBRARY_NAME).map
 !if "$(MOZ_BITS)" == "16"
-DEFFILE=$(DLL1NAME).def
+DEFFILE=$(LIBRARY_1NAME).def
 !endif
 
-
+EXPORT_LIBRARY=1
 
 
 #//------------------------------------------------------------------------
@@ -83,15 +77,10 @@ DEFFILE=$(DLL1NAME).def
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-MAPFILE= $(DLLNAME).map
-
-
 
 MODULE=img 
 DEPTH=..\..\.. 
 LOCAL_INCLUDES=-I../public_com -I.   
-LIBRARY_NAME=img 
 
 ### 
 CPPSRCS=color.cpp colormap.cpp dither.cpp if.cpp ilclient.cpp il_util.cpp \
@@ -120,8 +109,3 @@ LINCS= -I$(XPDIST)\public\nspr  -I$(XPDIST)\public\jpeg \
 
 
 include <$(DEPTH)\config\rules.mak> 
-
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-

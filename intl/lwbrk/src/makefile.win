@@ -49,25 +49,13 @@ CPP_OBJS= \
 	$(NULL)
 
 MODULE=lwbrk
-
+LIBRARY_NAME=lwbrk
+MODULE_NAME=nsLWBrkModule
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\lwbrk -I$(PUBLIC)\raptor
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=lwbrk
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib	\
 	$(LIBNSPR)	
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\bin\$(DLLNAME).lib

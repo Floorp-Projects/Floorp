@@ -114,6 +114,10 @@ DIRS =                         \
   mailnews                     \
 !endif
 !endif
+  xpfe\bootstrap               \
+!if defined(MOZ_STATIC_COMPONENT_LIBS)
+  modules\staticmod            \
+!endif
   $(NULL)
 
 #//------------------------------------------------------------------------

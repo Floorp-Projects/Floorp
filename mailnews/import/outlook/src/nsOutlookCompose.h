@@ -46,11 +46,11 @@ typedef struct {
 	nsIFileSpec *	pFile;
 } ReadFileState;
 
-class SimpleBuffer {
+class SimpleBufferTonyRCopiedTwice {
 public:
-	SimpleBuffer() {m_pBuffer = nsnull; m_size = 0; m_growBy = 4096; m_writeOffset = 0;
+	SimpleBufferTonyRCopiedTwice() {m_pBuffer = nsnull; m_size = 0; m_growBy = 4096; m_writeOffset = 0;
 					m_bytesInBuf = 0; m_convertCRs = PR_FALSE;}
-	~SimpleBuffer() { if (m_pBuffer) delete [] m_pBuffer;}
+	~SimpleBufferTonyRCopiedTwice() { if (m_pBuffer) delete [] m_pBuffer;}
 	
 	PRBool Allocate( PRInt32 sz) { 
 		if (m_pBuffer) delete [] m_pBuffer; 
@@ -112,9 +112,9 @@ public:
 	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len;}
 	void		SetAttachments( nsVoidArray *pAttachments) { m_pAttachments = pAttachments;}
 
-	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy);
+	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBufferTonyRCopiedTwice& copy);
 
-	static nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
+	static nsresult	FillMailBuffer( ReadFileState *pState, SimpleBufferTonyRCopiedTwice& read);
 
 private:
 	nsresult	CreateComponents( void);
@@ -134,11 +134,11 @@ private:
 	nsMsgAttachedFile * GetLocalAttachments( void);
 	void				CleanUpAttach( nsMsgAttachedFile *a, PRInt32 count);
 
-	nsresult	ReadHeaders( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header);
-	PRInt32		FindNextEndLine( SimpleBuffer& data);
-	PRInt32		IsEndHeaders( SimpleBuffer& data);
+	nsresult	ReadHeaders( ReadFileState *pState, SimpleBufferTonyRCopiedTwice& copy, SimpleBufferTonyRCopiedTwice& header);
+	PRInt32		FindNextEndLine( SimpleBufferTonyRCopiedTwice& data);
+	PRInt32		IsEndHeaders( SimpleBufferTonyRCopiedTwice& data);
 	PRInt32		IsSpecialHeader( const char *pHeader);
-	nsresult	WriteHeaders( nsIFileSpec *pDst, SimpleBuffer& newHeaders);
+	nsresult	WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopiedTwice& newHeaders);
 	PRBool		IsReplaceHeader( const char *pHeader);
 
 
@@ -154,7 +154,7 @@ private:
 	const char *			m_pHeaders;
 	PRInt32					m_bodyLen;
 	const char *			m_pBody;
-	SimpleBuffer			m_readHeaders;
+	SimpleBufferTonyRCopiedTwice			m_readHeaders;
 };
 
 

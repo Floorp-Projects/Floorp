@@ -20,11 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..
-MODULE=necko
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=necko2
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE		= necko
+LIBRARY_NAME	= necko2
+MODULE_NAME	= necko_secondary_protocols
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
@@ -32,13 +31,16 @@ CPP_OBJS=                            \
         .\$(OBJDIR)\nsNetModule2.obj \
 	$(NULL)
 
-LLIBS=                          \
-        $(DIST)\lib\xpcom.lib   \
+SUB_LIBRARIES= \
         $(DIST)\lib\nkgopher_s.lib \
         $(DIST)\lib\nkftp_s.lib \
         $(DIST)\lib\nkfinger_s.lib \
         $(DIST)\lib\nkdatetm_s.lib \
 	$(DIST)\lib\nkviewsource_s.lib \
+        $(NULL)
+
+LLIBS=                          \
+        $(DIST)\lib\xpcom.lib   \
         $(LIBNSPR)  
 
 INCS = $(INCS)                               \
@@ -51,8 +53,3 @@ INCS = $(INCS)                               \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-

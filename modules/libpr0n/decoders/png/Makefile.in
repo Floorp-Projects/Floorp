@@ -30,6 +30,7 @@ MODULE		= imgpng
 LIBRARY_NAME	= imgpng
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsPNGDecoderModule
 
 REQUIRES	= xpcom necko layout png gfx2 imglib2
 

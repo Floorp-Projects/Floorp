@@ -31,31 +31,26 @@ CPPSRCS = nsDOMFactory.cpp      	\
 CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
 	   .\$(OBJDIR)\nsScriptNameSpaceManager.obj 
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = jsdom
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-DLL_CFLAGS = \
+MODULE=dom
+LIBRARY_NAME=jsdom
+MODULE_NAME=DOM_components
+
+LCFLAGS = \
         $(DEFINES) \
         $(INCLUDES) \
         $(NULL)
 
 # These are the libraries we need to link with to create the dll
-LLIBS=							\
+SUB_LIBRARIES=                                          \
 	$(DIST)\lib\jsdombase_s.lib			\
 	$(DIST)\lib\jsdomevents_s.lib			\
-	$(DIST)\lib\gkgfxwin.lib			\
+        $(NULL)
+
+LLIBS=							\
+	$(DIST)\lib\gkgfx.lib				\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom.lib				\
-	$(DIST)\lib\caps.lib				\
 	$(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib

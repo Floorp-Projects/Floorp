@@ -59,15 +59,15 @@ protected:
 
 private:
 	nsresult	CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIFileSpec *pMail, nsIFileSpec *pToc, nsIFileSpec *pDst);
-	nsresult	ReadNextMessage( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header, SimpleBuffer& body);
-	PRInt32		FindStartLine( SimpleBuffer& data);
-	PRInt32		FindNextEndLine( SimpleBuffer& data);
-	PRInt32		IsEndHeaders( SimpleBuffer& data);
+	nsresult	ReadNextMessage( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header, SimpleBufferTonyRCopiedOnce& body);
+	PRInt32		FindStartLine( SimpleBufferTonyRCopiedOnce& data);
+	PRInt32		FindNextEndLine( SimpleBufferTonyRCopiedOnce& data);
+	PRInt32		IsEndHeaders( SimpleBufferTonyRCopiedOnce& data);
 	nsresult	WriteFromSep( nsIFileSpec *pDst);
-	nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
+	nsresult	FillMailBuffer( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& read);
 	
 	void		EmptyAttachments( void);
-	nsresult	ExamineAttachment( SimpleBuffer& data);
+	nsresult	ExamineAttachment( SimpleBufferTonyRCopiedOnce& data);
 	PRBool		AddAttachment( nsCString& fileName);
 
 	static PRInt32		AsciiToLong( const char *pChar, PRInt32 len);

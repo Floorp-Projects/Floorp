@@ -569,7 +569,7 @@ PRBool nsEudoraWin32::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **loc
 	nsCRT::free( pIniPath);
 	
 	UINT			valInt;
-	SimpleBuffer	section;
+	SimpleBufferTonyRCopiedOnce	section;
 	DWORD			sSize;
 	DWORD			sOffset = 0;
 	DWORD			start;

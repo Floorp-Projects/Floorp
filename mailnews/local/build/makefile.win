@@ -20,7 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-MODULE=msglocal 
+MODULE          = msglocal 
+LIBRARY_NAME    = msglocal
+META_COMPONENT  = mail
+MODULE_NAME  = local_mail_services
 
 ################################################################################
 ## exports
@@ -32,11 +35,12 @@ EXPORTS=								\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\msglocal
-DLL = $(LIBNAME).dll
-
 CPP_OBJS=\
 	.\$(OBJDIR)\nsMsgLocalFactory.obj	\
+	$(NULL)
+
+SUB_LIBRARIES=					\
+	$(DIST)\lib\msglocal_s.lib		\
 	$(NULL)
 
 LLIBS=\
@@ -44,12 +48,6 @@ LLIBS=\
     $(LIBNSPR)						\
     $(DIST)\lib\rdfutil_s.lib		\
 	$(DIST)\lib\msgbsutl.lib		\
-	$(DIST)\lib\msglocal_s.lib		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-

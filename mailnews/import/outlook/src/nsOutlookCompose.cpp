@@ -88,16 +88,16 @@ char *p_test_body =
 
 
 // First off, a listener
-class SendListener : public nsIMsgSendListener
+class OutlookSendListener : public nsIMsgSendListener
 {
 public:
-	SendListener() {
+	OutlookSendListener() {
 		NS_INIT_REFCNT(); 
 		m_done = PR_FALSE;
 		m_location = nsnull;
 	}
 
-	virtual ~SendListener() { NS_IF_RELEASE( m_location); }
+	virtual ~OutlookSendListener() { NS_IF_RELEASE( m_location); }
 
 	// nsISupports interface
 	NS_DECL_ISUPPORTS
@@ -133,15 +133,15 @@ public:
 };
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1( SendListener, nsIMsgSendListener)
+NS_IMPL_THREADSAFE_ISUPPORTS1( OutlookSendListener, nsIMsgSendListener)
 
-nsresult SendListener::CreateSendListener( nsIMsgSendListener **ppListener)
+nsresult OutlookSendListener::CreateSendListener( nsIMsgSendListener **ppListener)
 {
     NS_PRECONDITION(ppListener != nsnull, "null ptr");
     if (! ppListener)
         return NS_ERROR_NULL_POINTER;
 
-    *ppListener = new SendListener();
+    *ppListener = new OutlookSendListener();
     if (! *ppListener)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -258,7 +258,7 @@ nsresult nsOutlookCompose::CreateComponents( void)
 		}
 	}
 	if (!m_pListener && NS_SUCCEEDED( rv)) {
-		rv = SendListener::CreateSendListener( &m_pListener);
+		rv = OutlookSendListener::CreateSendListener( &m_pListener);
 	}
 
 	if (NS_SUCCEEDED(rv) && m_pMsgSend) { 
@@ -643,7 +643,7 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
 	if (pAttach)
 		delete [] pAttach;
 
-	SendListener *pListen = (SendListener *)m_pListener;
+	OutlookSendListener *pListen = (OutlookSendListener *)m_pListener;
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG1( "*** Error, CreateAndSendMessage FAILED: 0x%lx\n", rv);
 		// IMPORT_LOG1( "Headers: %80s\n", m_pHeaders);
@@ -690,7 +690,7 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
 }
 
 
-PRBool SimpleBuffer::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten)
+PRBool SimpleBufferTonyRCopiedTwice::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten)
 {
 	// Arg!!!!!  Mozilla can't handle plain CRs in any mail messages.  Particularly a 
 	// problem with Eudora since it doesn't give a rats a**
@@ -725,7 +725,7 @@ PRBool SimpleBuffer::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 l
 	return( PR_TRUE);
 }
 
-nsresult nsOutlookCompose::ReadHeaders( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header)
+nsresult nsOutlookCompose::ReadHeaders( ReadFileState *pState, SimpleBufferTonyRCopiedTwice& copy, SimpleBufferTonyRCopiedTwice& header)
 {
 	// This should be the headers...
 	header.m_writeOffset = 0;
@@ -778,7 +778,7 @@ nsresult nsOutlookCompose::ReadHeaders( ReadFileState *pState, SimpleBuffer& cop
 	return( NS_OK);
 }
 
-PRInt32 nsOutlookCompose::FindNextEndLine( SimpleBuffer& data)
+PRInt32 nsOutlookCompose::FindNextEndLine( SimpleBufferTonyRCopiedTwice& data)
 {
 	PRInt32 len = data.m_bytesInBuf - data.m_writeOffset;
 	if (!len)
@@ -800,7 +800,7 @@ PRInt32 nsOutlookCompose::FindNextEndLine( SimpleBuffer& data)
 	return( -1);
 }
 
-PRInt32 nsOutlookCompose::IsEndHeaders( SimpleBuffer& data)
+PRInt32 nsOutlookCompose::IsEndHeaders( SimpleBufferTonyRCopiedTwice& data)
 {
 	PRInt32 len = data.m_bytesInBuf - data.m_writeOffset;
 	if (len < 2)
@@ -819,7 +819,7 @@ PRInt32 nsOutlookCompose::IsEndHeaders( SimpleBuffer& data)
 }
 
 
-nsresult nsOutlookCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy)
+nsresult nsOutlookCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBufferTonyRCopiedTwice& copy)
 {
 	copy.m_bytesInBuf = 0;
 	copy.m_writeOffset = 0;
@@ -894,7 +894,7 @@ nsresult nsOutlookCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec
 	return( rv);
 }
 
-nsresult nsOutlookCompose::FillMailBuffer( ReadFileState *pState, SimpleBuffer& read)
+nsresult nsOutlookCompose::FillMailBuffer( ReadFileState *pState, SimpleBufferTonyRCopiedTwice& read)
 {
 	if (read.m_writeOffset >= read.m_bytesInBuf) {
 		read.m_writeOffset = 0;
@@ -961,7 +961,7 @@ PRInt32 nsOutlookCompose::IsSpecialHeader( const char *pHeader)
 }
 
 
-nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBuffer& newHeaders)
+nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopiedTwice& newHeaders)
 {
 	// Well, ain't this a peach?
 	// This is rather disgusting but there really isn't much to be done about it....

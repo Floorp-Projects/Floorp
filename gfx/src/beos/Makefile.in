@@ -30,6 +30,7 @@ MODULE		= layout
 LIBRARY_NAME	= gfx_beos
 EXPORT_LIBRARY = 1
 IS_COMPONENT   = 1 
+MODULE_NAME	= nsGfxBeOSModule
 
 CPPSRCS		= \
 		nsDeviceContextBeOS.cpp \

@@ -21,6 +21,9 @@
 
 DEPTH=..\..\..
 MODULE=addrbook 
+LIBRARY_NAME=addrbook
+META_COMPONENT=mail
+MODULE_NAME=nsAbModule
 
 ################################################################################
 ## exports
@@ -32,22 +35,18 @@ EXPORTS=								\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\addrbook
-DLL = $(LIBNAME).dll
-
 CPP_OBJS=								\
 			.\$(OBJDIR)\nsAbFactory.obj	\
 			$(NULL)
 
+SUB_LIBRARIES=\
+	$(DIST)\lib\addrbook_s.lib		\
+        $(NULL)
+
 LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
-	$(DIST)\lib\addrbook_s.lib		\
     $(LIBNSPR)						\
     $(DIST)\lib\rdfutil_s.lib		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib

@@ -20,7 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-MODULE= msgbsutl
+MODULE          = msgbsutl
+LIBRARY_NAME    = msgbsutl
+META_COMPONENT  = mail
+EXPORT_LIBRARY  = 1
 
 include <$(DEPTH)\config\config.mak>
 
@@ -50,9 +53,6 @@ EXPORTS=                \
 
 ################################################################################
 ## library
-
-LIBNAME = .\$(OBJDIR)\msgbsutl
-DLL = $(LIBNAME).dll
 
 DEFINES=-D_IMPL_NS_MSG_BASE
 
@@ -89,7 +89,3 @@ LLIBS=								\
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib

@@ -26,6 +26,7 @@
 #include "nsIModule.h"
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
+#include "nsIGenericFactory.h"
 
 #include "nsILocaleService.h"
 #include "nsILocaleFactory.h"
@@ -254,9 +255,10 @@ nsLocaleModule::RegisterSelf(nsIComponentManager *aCompMgr,
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
-    rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                         cp->mContractID, aPath, PR_TRUE,
-                                         PR_TRUE);
+    rv = aCompMgr->RegisterComponentWithType(*cp->mCID, cp->mDescription,
+                                             cp->mContractID, aPath, 
+                                             registryLocation, PR_TRUE,
+                                             PR_TRUE, componentType);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       printf("nsLocaleModule: unable to register %s component => %x\n",
@@ -308,9 +310,10 @@ nsLocaleModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 
 static nsLocaleModule *gModule = NULL;
 
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFile* location,
-                                          nsIModule** return_cobj)
+extern "C" NS_EXPORT 
+nsresult NSGETMODULE_ENTRY_POINT(nsLocaleModule)(nsIComponentManager *servMgr,
+                                                 nsIFile* location,
+                                                 nsIModule** return_cobj)
 {
   nsresult rv = NS_OK;
 

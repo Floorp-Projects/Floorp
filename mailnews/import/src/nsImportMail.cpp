@@ -63,7 +63,7 @@ static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 PR_STATIC_CALLBACK( void) ImportMailThread( void *stuff);
 
-nsCOMPtr<nsIImportService>	gService;
+static nsCOMPtr<nsIImportService>	gService;
 
 static void ConvertToUnicode(const char *pStr, nsString &dist)
 {

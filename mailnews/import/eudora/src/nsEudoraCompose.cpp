@@ -90,16 +90,16 @@ char *p_test_body =
 
 
 // First off, a listener
-class SendListener : public nsIMsgSendListener
+class EudoraSendListener : public nsIMsgSendListener
 {
 public:
-	SendListener() {
+	EudoraSendListener() {
 		NS_INIT_REFCNT(); 
 		m_done = PR_FALSE;
 		m_location = nsnull;
 	}
 
-	virtual ~SendListener() { NS_IF_RELEASE( m_location); }
+	virtual ~EudoraSendListener() { NS_IF_RELEASE( m_location); }
 
 	// nsISupports interface
 	NS_DECL_ISUPPORTS
@@ -135,15 +135,15 @@ public:
 };
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(SendListener, nsIMsgSendListener)
+NS_IMPL_THREADSAFE_ISUPPORTS1(EudoraSendListener, nsIMsgSendListener)
 
-nsresult SendListener::CreateSendListener( nsIMsgSendListener **ppListener)
+nsresult EudoraSendListener::CreateSendListener( nsIMsgSendListener **ppListener)
 {
     NS_PRECONDITION(ppListener != nsnull, "null ptr");
     if (! ppListener)
         return NS_ERROR_NULL_POINTER;
 
-    *ppListener = new SendListener();
+    *ppListener = new EudoraSendListener();
     if (! *ppListener)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -261,7 +261,7 @@ nsresult nsEudoraCompose::CreateComponents( void)
 		}
 	}
 	if (!m_pListener && NS_SUCCEEDED( rv)) {
-		rv = SendListener::CreateSendListener( &m_pListener);
+		rv = EudoraSendListener::CreateSendListener( &m_pListener);
 	}
 
 	if (NS_SUCCEEDED(rv) && m_pMsgSend) { 
@@ -711,7 +711,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	if (pAttach)
 		delete [] pAttach;
 
-	SendListener *pListen = (SendListener *)m_pListener;
+	EudoraSendListener *pListen = (EudoraSendListener *)m_pListener;
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG1( "*** Error, CreateAndSendMessage FAILED: 0x%lx\n", rv);
 		// IMPORT_LOG1( "Headers: %80s\n", m_pHeaders);
@@ -758,7 +758,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 }
 
 
-PRBool SimpleBuffer::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten)
+PRBool SimpleBufferTonyRCopiedOnce::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten)
 {
 	// Arg!!!!!  Mozilla can't handle plain CRs in any mail messages.  Particularly a 
 	// problem with Eudora since it doesn't give a rats a**
@@ -793,7 +793,7 @@ PRBool SimpleBuffer::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 l
 	return( PR_TRUE);
 }
 
-nsresult nsEudoraCompose::ReadHeaders( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header)
+nsresult nsEudoraCompose::ReadHeaders( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header)
 {
 	// This should be the headers...
 	header.m_writeOffset = 0;
@@ -846,7 +846,7 @@ nsresult nsEudoraCompose::ReadHeaders( ReadFileState *pState, SimpleBuffer& copy
 	return( NS_OK);
 }
 
-PRInt32 nsEudoraCompose::FindNextEndLine( SimpleBuffer& data)
+PRInt32 nsEudoraCompose::FindNextEndLine( SimpleBufferTonyRCopiedOnce& data)
 {
 	PRInt32 len = data.m_bytesInBuf - data.m_writeOffset;
 	if (!len)
@@ -868,7 +868,7 @@ PRInt32 nsEudoraCompose::FindNextEndLine( SimpleBuffer& data)
 	return( -1);
 }
 
-PRInt32 nsEudoraCompose::IsEndHeaders( SimpleBuffer& data)
+PRInt32 nsEudoraCompose::IsEndHeaders( SimpleBufferTonyRCopiedOnce& data)
 {
 	PRInt32 len = data.m_bytesInBuf - data.m_writeOffset;
 	if (len < 2)
@@ -887,7 +887,7 @@ PRInt32 nsEudoraCompose::IsEndHeaders( SimpleBuffer& data)
 }
 
 
-nsresult nsEudoraCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy)
+nsresult nsEudoraCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBufferTonyRCopiedOnce& copy)
 {
 	copy.m_bytesInBuf = 0;
 	copy.m_writeOffset = 0;
@@ -962,7 +962,7 @@ nsresult nsEudoraCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec 
 	return( rv);
 }
 
-nsresult nsEudoraCompose::FillMailBuffer( ReadFileState *pState, SimpleBuffer& read)
+nsresult nsEudoraCompose::FillMailBuffer( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& read)
 {
 	if (read.m_writeOffset >= read.m_bytesInBuf) {
 		read.m_writeOffset = 0;
@@ -1029,7 +1029,7 @@ PRInt32 nsEudoraCompose::IsSpecialHeader( const char *pHeader)
 }
 
 
-nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBuffer& newHeaders)
+nsresult nsEudoraCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopiedOnce& newHeaders)
 {
 	// Well, ain't this a peach?
 	// This is rather disgusting but there really isn't much to be done about it....

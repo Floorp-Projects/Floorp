@@ -49,11 +49,11 @@ typedef struct {
 	nsIFileSpec *	pFile;
 } ReadFileState;
 
-class SimpleBuffer {
+class SimpleBufferTonyRCopiedOnce {
 public:
-	SimpleBuffer() {m_pBuffer = nsnull; m_size = 0; m_growBy = 4096; m_writeOffset = 0;
+	SimpleBufferTonyRCopiedOnce() {m_pBuffer = nsnull; m_size = 0; m_growBy = 4096; m_writeOffset = 0;
 					m_bytesInBuf = 0; m_convertCRs = PR_FALSE;}
-	~SimpleBuffer() { if (m_pBuffer) delete [] m_pBuffer;}
+	~SimpleBufferTonyRCopiedOnce() { if (m_pBuffer) delete [] m_pBuffer;}
 	
 	PRBool Allocate( PRInt32 sz) { 
 		if (m_pBuffer) delete [] m_pBuffer; 
@@ -115,9 +115,9 @@ public:
 	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len;}
 	void		SetAttachments( nsVoidArray *pAttachments) { m_pAttachments = pAttachments;}
 
-	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy);
+	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBufferTonyRCopiedOnce& copy);
 
-	static nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
+	static nsresult	FillMailBuffer( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& read);
 
 private:
 	nsresult	CreateComponents( void);
@@ -137,11 +137,11 @@ private:
 	nsMsgAttachedFile * GetLocalAttachments( void);
 	void				CleanUpAttach( nsMsgAttachedFile *a, PRInt32 count);
 
-	nsresult	ReadHeaders( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header);
-	PRInt32		FindNextEndLine( SimpleBuffer& data);
-	PRInt32		IsEndHeaders( SimpleBuffer& data);
+	nsresult	ReadHeaders( ReadFileState *pState, SimpleBufferTonyRCopiedOnce& copy, SimpleBufferTonyRCopiedOnce& header);
+	PRInt32		FindNextEndLine( SimpleBufferTonyRCopiedOnce& data);
+	PRInt32		IsEndHeaders( SimpleBufferTonyRCopiedOnce& data);
 	PRInt32		IsSpecialHeader( const char *pHeader);
-	nsresult	WriteHeaders( nsIFileSpec *pDst, SimpleBuffer& newHeaders);
+	nsresult	WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopiedOnce& newHeaders);
 	PRBool		IsReplaceHeader( const char *pHeader);
 	void		ConvertSysToUnicode( const char *pSysStr, nsString& uniStr);
 
@@ -158,7 +158,7 @@ private:
 	PRInt32					m_bodyLen;
 	const char *			m_pBody;
 	nsString				m_defCharset;
-	SimpleBuffer			m_readHeaders;
+	SimpleBufferTonyRCopiedOnce			m_readHeaders;
 	nsCOMPtr<nsIImportService>	m_pImportService;
 };
 

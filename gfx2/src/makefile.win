@@ -26,10 +26,8 @@ DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
 
 MODULE=gfx2
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=gfx2
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=gfx2
+MODULE_NAME=nsGfx2Module
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
@@ -39,15 +37,8 @@ CPP_OBJS = \
 	$(NULL)
 
 LLIBS	= \
-	$(DIST)\lib\gkgfxwin.lib \
+	$(DIST)\lib\gkgfx.lib \
  	$(DIST)\lib\xpcom.lib
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin\components
-
-clobber::
-        $(RM) $(DIST)\lib\$(MODULE).lib
-        $(RM) $(DIST)\bin\components\$(MODULE).dll

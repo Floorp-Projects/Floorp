@@ -30,6 +30,7 @@ MODULE		= imglib2
 LIBRARY_NAME	= imglib2
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsImageLib2Module
 
 REQUIRES	= xpcom string necko nkcache layout timer gfx2 mimetype
 

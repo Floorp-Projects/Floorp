@@ -23,9 +23,6 @@ MODULE = necko
 
 DEPTH=..\..\..
 
-
-MAKE_OBJ_TYPE	= DLL
-
 include <$(DEPTH)/config/config.mak>
 
 LINCS = \

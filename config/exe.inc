@@ -69,23 +69,23 @@ $(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP) makefil
 #// Rule to build a 32-bit executable using the PROGRAM target
 #//
 #//------------------------------------------------------------------------
-$(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP) makefile.win  $(DEPTH)\config\exe.inc
-	echo +++ make: Creating EXE: $@
-    $(LD) @<<$(CFGFILE)
-        /NOLOGO /OUT:$@ 
-		/PDB:$(PDBFILE)
+$(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(EXTRA_LIBS_LIST_FILE) $(MISCDEP) makefile.win  $(DEPTH)\config\exe.inc
+        echo +++ make: Creating EXE: $@
+        cat << $(EXTRA_LIBS_LIST_FILE) << >$(CFGFILE)
+                /NOLOGO /OUT:$@ /PDB:$(PDBFILE)
 !ifdef DEFFILE
-        /DEF:$(DEFFILE)
+                /DEF:$(DEFFILE)      
 !endif
 !ifdef MAPFILE
-		/MAP:$(MAPFILE)
+                /MAP:$(MAPFILE)
 !endif
-
-        $(LFLAGS)
-        $(OBJS) 
-        $(RESFILE)
-        $(LLIBS) $(WIN_LIBS) $(OS_LIBS)
-<<KEEP
+                $(LFLAGS)
+                $(OBJS)
+                $(RESFILE)
+<<NOKEEP
+                $(LLIBS) $(WIN_LIBS) $(OS_LIBS)
+<<NOKEEP
+        $(LD) @$(CFGFILE)
 !endif
 
 !endif # PROGRAM && ! CONFIG_EXE_INC

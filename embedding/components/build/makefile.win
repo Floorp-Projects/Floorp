@@ -19,11 +19,12 @@
 # Contributor(s):
 
 DEPTH=..\..\..
-MODULE=embedcomponents
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=embedcomponents
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+include <$(DEPTH)\config\config.mak>
+
+MODULE=embedcomponents
+LIBRARY_NAME=embedcomponents
+MODULE_NAME=embedcomponents
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
@@ -31,14 +32,17 @@ CPP_OBJS = \
 	.\$(OBJDIR)\nsModule.obj \
 	$(NULL)
 
-LLIBS = \
-	$(LIBNSPR) \
-        $(DIST)\lib\js3250.lib \
-	$(DIST)\lib\xpcom.lib \
+SUB_LIBRARIES = \
 	$(DIST)\lib\windowwatcher_s.lib \
 	$(DIST)\lib\jsconsole_s.lib \
 	$(DIST)\lib\appstartupnotifier_s.lib \
 	$(DIST)\lib\find_s.lib \
+	$(NULL)
+
+LLIBS = \
+	$(LIBNSPR) \
+        $(DIST)\lib\js3250.lib \
+	$(DIST)\lib\xpcom.lib \
 	$(NULL)
 
 INCS = $(INCS) \
@@ -49,11 +53,3 @@ INCS = $(INCS) \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	$(RM) $(DIST)\bin\components\$(DLLNAME).dll
-	$(RM) $(DIST)\lib\$(DLLNAME).lib 

@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgimap
 LIBRARY_NAME	= msgimap
+META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= IMAP_factory
 REQUIRES	= xpcom string mailnews msgimap msgbase msgbaseutil rdf rdfutil necko msgdb txmgr mime pref intl locale msglocal nkcache
 
 ifeq ($(USE_SHORT_LIBNAME),1)

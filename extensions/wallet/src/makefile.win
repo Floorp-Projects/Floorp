@@ -22,9 +22,10 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
+MODULE=wallet
 LIBRARY_NAME=wallet
-DLLNAME=wallet
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE_NAME=nsWalletModule
+
 CPP_OBJS= .\$(OBJDIR)\wallet.obj		\
 	.\$(OBJDIR)\singsign.obj		\
 	.\$(OBJDIR)\nsPassword.obj		\
@@ -72,13 +73,7 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f $(DIST)\bin\defaults\wallet\DistinguishedSchema.tbl
 	rm -f $(DIST)\bin\defaults\wallet\FieldSchema.tbl
 	rm -f $(DIST)\bin\defaults\wallet\VcardSchema.tbl
@@ -87,12 +82,11 @@ clobber::
 	rm -f $(DIST)\bin\defaults\wallet\PositionalSchema.tbl
 	rm -f $(DIST)\bin\defaults\wallet\StateSchema.tbl
 
-install:: $(DLL)
-		$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-		$(MAKE_INSTALL) DistinguishedSchema.tbl $(DIST)\bin\defaults\wallet
-		$(MAKE_INSTALL) FieldSchema.tbl $(DIST)\bin\defaults\wallet
-		$(MAKE_INSTALL) VcardSchema.tbl $(DIST)\bin\defaults\wallet
-		$(MAKE_INSTALL) SchemaConcat.tbl $(DIST)\bin\defaults\wallet
-		$(MAKE_INSTALL) SchemaStrings.tbl $(DIST)\bin\defaults\wallet
-		$(MAKE_INSTALL) PositionalSchema.tbl $(DIST)\bin\defaults\wallet
-		$(MAKE_INSTALL) StateSchema.tbl $(DIST)\bin\defaults\wallet
+install::
+	$(MAKE_INSTALL) DistinguishedSchema.tbl $(DIST)\bin\defaults\wallet
+	$(MAKE_INSTALL) FieldSchema.tbl $(DIST)\bin\defaults\wallet
+	$(MAKE_INSTALL) VcardSchema.tbl $(DIST)\bin\defaults\wallet
+	$(MAKE_INSTALL) SchemaConcat.tbl $(DIST)\bin\defaults\wallet
+	$(MAKE_INSTALL) SchemaStrings.tbl $(DIST)\bin\defaults\wallet
+	$(MAKE_INSTALL) PositionalSchema.tbl $(DIST)\bin\defaults\wallet
+	$(MAKE_INSTALL) StateSchema.tbl $(DIST)\bin\defaults\wallet

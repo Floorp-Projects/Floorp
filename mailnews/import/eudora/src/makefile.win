@@ -17,12 +17,10 @@
 
 DEPTH=..\..\..\..
 
-MODULE=impEudra
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=$(MODULE)
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
+MODULE          = impEudra
+LIBRARY_NAME    = $(MODULE)
+META_COMPONENT  = mail
+MODULE_NAME  = nsEudoraImportModule
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsEudoraFactory.obj			\
@@ -42,7 +40,3 @@ LLIBS=\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-        $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-

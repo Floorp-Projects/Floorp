@@ -23,9 +23,8 @@
 
 DEPTH=..\..\..
 MODULE = walletviewers
-
-LIBNAME = .\$(OBJDIR)\wlltvwrs
-DLL = $(LIBNAME).dll
+LIBRARY_NAME = wlltvwrs
+MODULE_NAME = nsWalletViewerModule
 
 LINCS = \
         -I..\editor             \
@@ -37,10 +36,13 @@ CPP_OBJS =                             \
         .\$(OBJDIR)\nsWalletViewerFactory.obj        \
        $(NULL)
 
-LLIBS =                               \
+SUB_LIBRARIES =                         \
         $(DIST)\lib\signonviewer_s.lib  \
         $(DIST)\lib\walletpreview_s.lib \
         $(DIST)\lib\walleteditor_s.lib  \
+        $(NULL)
+
+LLIBS =                        \
         $(DIST)\lib\xpcom.lib  \
         $(NULL)
 
@@ -49,6 +51,3 @@ WIN_LIBS =                            \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components

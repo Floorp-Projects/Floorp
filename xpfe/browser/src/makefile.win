@@ -23,16 +23,11 @@ DEPTH=..\..\..
 
 IGNORE_MANIFEST=1
 
-MODULE=mozbrwsr
+MODULE		= mozbrwsr
+LIBRARY_NAME	= mozbrwsr
+MODULE_NAME	= nsBrowserModule
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
-
-DLLNAME	      = mozbrwsr
-DLL1NAME      = mozbrwsr
-PDBFILE	      = $(DLLNAME).pdb
-MAPFILE	      = $(DLLNAME).map
-DLL	          =.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE = DLL
 
 LINCS = \
 	-I$(PUBLIC)/xpcom \
@@ -51,9 +46,3 @@ OBJS =	\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-    rm -f $(DIST)\bin\components\$(DLLNAME).dll

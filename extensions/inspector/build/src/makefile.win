@@ -19,9 +19,8 @@
 
 DEPTH=..\..\..\..
 MODULE=inspector
-
-LIBNAME = .\$(OBJDIR)\inspector
-DLL = $(LIBNAME).dll
+LIBRARY_NAME=inspector
+MODULE_NAME=nsInspectorModule
 
 ################################################################################
 ## library
@@ -36,15 +35,10 @@ LLIBS=						      \
 		$(DIST)\lib\xpcom.lib		      \
     $(DIST)\lib\rdfutil_s.lib            \
     $(DIST)\lib\inspector_s.lib               \
-    $(DIST)\lib\gkgfxwin.lib \
+    $(DIST)\lib\gkgfx.lib \
     $(DIST)\lib\contenthtmlstyle_s.lib \
     $(DIST)\lib\contentshared_s.lib \
 		$(LIBNSPR)	 	              \
 		$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-

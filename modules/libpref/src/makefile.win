@@ -37,10 +37,10 @@ DEPTH = ..\..\..
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= xppref$(MOZ_BITS)
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
-IS_COMPONENT=1
+MODULE		= pref
+LIBRARY_NAME	= xppref$(MOZ_BITS)
+MODULE_NAME	= nsPrefModule
+
 LINCS = -I$(PUBLIC)/js \
 	-I$(PUBLIC)/pref \
 	-I$(PUBLIC)/java \
@@ -93,9 +93,7 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)	
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install::
     $(MAKE_INSTALL) .\initpref.js $(DIST)\bin\defaults\pref
     $(MAKE_INSTALL) .\init\all.js $(DIST)\bin\defaults\pref
     $(MAKE_INSTALL) .\init\mailnews.js $(DIST)\bin\defaults\pref

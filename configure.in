@@ -3263,6 +3263,22 @@ fi
 
 dnl ========================================================
 dnl =
+dnl = --enable-reorder
+dnl = 
+dnl = Enable function reordering.
+dnl = 
+dnl = Function reordering is off by default.
+dnl = 
+dnl ========================================================
+MOZ_REORDER=0
+MOZ_ARG_ENABLE_STRING(reorder,
+[  --enable-reorder Enable function reordering ],
+    [ if test "$enableval" != "no"; then
+	    MOZ_REORDER=1
+      fi ])
+
+dnl ========================================================
+dnl =
 dnl = --disable-debug
 dnl = 
 dnl = Disable building with debug info.
@@ -4034,6 +4050,19 @@ MOZ_ARG_ENABLE_STRING(static-components,
   [ MOZ_STATIC_COMPONENTS=`echo $enableval | sed 's/,/ /g'` ] )
 
 dnl ========================================================
+dnl Enable the use of predefined meta components
+dnl ========================================================
+
+MOZ_ARG_ENABLE_STRING(meta-components,
+[  --enable-meta-components
+                          Build predefined meta-components],
+  [ MOZ_META_COMPONENTS=`echo $enableval | sed 's/,/ /g'` ] )
+
+if test -n "$MOZ_STATIC_COMPONENTS" && test -n "$MOZ_META_COMPONENTS"; then
+    AC_MSG_ERROR([Simultaneous use of static-components & meta-components is not supported.])
+fi
+
+dnl ========================================================
 
 case "$target" in
     *-*-aix*)
@@ -4127,6 +4156,7 @@ AC_SUBST(BUILD_SHARED_LIBS)
 AC_SUBST(BUILD_STATIC_LIBS)
 AC_SUBST(MOZ_STATIC_COMPONENT_LIBS)
 AC_SUBST(MOZ_STATIC_COMPONENTS)
+AC_SUBST(MOZ_META_COMPONENTS)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_USER_DIR)
@@ -4145,6 +4175,7 @@ AC_SUBST(MOZ_OS2_EMX_OBJECTFORMAT)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
+AC_SUBST(MOZ_REORDER)
 
 dnl system JPEG support
 dnl ========================================================

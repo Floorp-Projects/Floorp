@@ -43,6 +43,8 @@ MODULE		= xpctools
 LIBRARY_NAME	= xpctools
 SHORT_LIBNAME	= xpctools
 REQUIRES	= xpcom xpconnect js string
+MODULE_NAME	= xpctools
+IS_COMPONENT	= 1
 
 CPPSRCS		= \
         	nsXPCToolsCompiler.o \
@@ -51,8 +53,6 @@ CPPSRCS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
-
-IS_COMPONENT	= 1
 
 # this is automatically discovered under BeOS
 ifneq ($(OS_ARCH),BeOS)

@@ -37,7 +37,7 @@ LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
- $(DIST)\lib\gkgfxwin.lib \
+ $(DIST)\lib\gkgfx.lib \
  $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\gkwidget.lib \
 !ifdef NECKO

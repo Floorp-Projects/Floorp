@@ -21,12 +21,9 @@
 
 DEPTH=..\..
 
-
-MAKE_OBJ_TYPE	= DLL
-DLLNAME = gkview
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-MODULE=raptor 
+MODULE		= view
+LIBRARY_NAME	= gkview
+MODULE_NAME	= nsViewModule
 
 DEFINES =-D_IMPL_NS_VIEW -DWIN32_LEAN_AND_MEAN
 
@@ -52,15 +49,9 @@ LCFLAGS = \
 
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\gkgfxwin.lib	\
+ $(DIST)\lib\gkgfx.lib	\
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\util.lib \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll

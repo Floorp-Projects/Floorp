@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(topsrcdir)/config/config.mk
+
 MODULE		= apprunner
 REQUIRES	= xpcom string webbrwsr widget dom js necko pref appshell wallet layout chrome rdf profile xpinstall uriloader editor view windowwatcher embed_base embedcomponents mpfilelocprovider browser mozcomps txmgr docshell gfx2 locale
 
@@ -42,6 +44,8 @@ else
 EXTRA_DSO_LIBS = gkgfx mpfilelocprovider_s
 endif
 
+_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
+
 CPPSRCS		= \
 		nsAppRunner.cpp \
 		nsSetupRegistry.cpp \
@@ -57,12 +61,41 @@ XP_LIBS		= \
 
 ifndef BUILD_STATIC_LIBS
 XP_LIBS		+= \
-		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(NULL)
+else
+CPPSRCS		+= nsStaticComponents.cpp
+
+XP_LIBS		+= \
+		$(PNG_LIBS) \
+		$(MNG_LIBS) \
+		$(JPEG_LIBS) \
+		$(ZLIB_LIBS) \
+		$(MOZ_GDK_PIXBUF_LIBS) \
+		$(MOZ_XIE_LIBS) \
+		$(MOZ_XPRINT_LDFLAGS) \
+		$(NULL)
+
+ifdef MOZ_PSM
+XP_LIBS		+= \
+		$(NSS_LIBS) \
 		$(NULL)
 endif
 
+ifdef MOZ_LDAP_XPCOM
 XP_LIBS		+= \
+		-lldap40 -llber40 \
+		$(NULL)
+endif
+
+ifdef MOZ_ENABLE_GTK
+XP_LIBS		+= $(XLDFLAGS) -lXt
+endif
+
+endif
+
+XP_LIBS		+= \
+		$(XPCOM_LIBS) \
 		$(OJI_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
@@ -121,6 +154,18 @@ endif
 LIBS += $(MOZ_GTK_LDFLAGS)
 #endif
 
+XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
+
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXTRA_DEPS	= \
+		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
+		$(NULL)
+endif
+
+ifdef BUILD_STATIC_LIBS
+EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/lib,$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/lib,$(shell cat $(FINAL_LINK_LIBS))))
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # This code removes the console from release builds
@@ -147,15 +192,9 @@ BIN_FLAGS	:= -Zlinker /PM:PM -Zlinker /Stack:0x30000
 endif
 endif
 
-XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
-
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DEPS	= \
-		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
-		$(NULL)
+ifdef BUILD_STATIC_LIBS
+DEFINES		+= -D_BUILD_STATIC_BIN=1
 endif
-
-EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS)
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
@@ -173,3 +212,25 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 install:: $(srcdir)/splash.xpm
 	$(INSTALL) $< $(DIST)/bin
 endif
+
+ifeq ($(MOZ_REORDER),1)
+
+LDSCRIPT = ldscript
+LDFLAGS += -Wl,-T,$(LDSCRIPT)
+GARBAGE += $(LDSCRIPT)
+ORDERFILE = mozilla-bin.order
+
+$(PROGRAM) : $(LDSCRIPT) $(ORDERFILE)
+
+$(LDSCRIPT): $(ORDERFILE)
+	$(PERL) $(topsrcdir)/config/mklinkscript.pl -o $@ $(ORDERFILE)
+
+endif
+
+nsStaticComponents.cpp: nsStaticComponents.cpp.in Makefile Makefile.in $(FINAL_LINK_COMP_NAMES)
+	rm -f $@
+	cat $< | \
+	sed -e "s|@DECLARE_COMPONENTS@|$(foreach m,$(_COMPONENT_LIST),DECL_MODULE($(m));)|" | \
+	sed -e "s|@COMPONENT_LIST@|$(foreach m, $(_COMPONENT_LIST),MODULE($(m)),)|" \
+	> $@
+

@@ -19,9 +19,9 @@
 
 DEPTH=..\..\..
 MODULE=msgbase 
-
-LIBNAME = .\$(OBJDIR)\msgbase
-DLL = $(LIBNAME).dll
+LIBRARY_NAME=msgbase
+META_COMPONENT=mail
+MODULE_NAME=nsMsgBaseModule
 
 ################################################################################
 ## exports
@@ -40,20 +40,18 @@ CPP_OBJS=									\
 LINCS=  -I$(DEPTH)\mailnews\base\src         \
         $(NULL)
 
+SUB_LIBRARIES=							\
+			$(DIST)\lib\msgbase_s.lib		\
+			$(DIST)\lib\msgsearch_s.lib		\
+			$(NULL)
+
 LLIBS=										\
 			$(DIST)\lib\xpcom.lib			\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib \
 			$(DIST)\lib\msgbsutl.lib		\
-			$(DIST)\lib\msgbase_s.lib		\
-			$(DIST)\lib\msgsearch_s.lib		\
 			$(DIST)\lib\timer_s.lib 		\
 			$(DIST)\lib\rdfutil_s.lib		\
 			$(LIBNSPR)						\
 			$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-
