@@ -833,47 +833,8 @@ NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
   
   // this bit of code is to load mathml.css on demand
   nsIDocument* doc = nsContentUtils::GetDocument(aNodeInfo);
-  if (doc) {
-    nsICSSLoader* cssLoader = doc->GetCSSLoader();
-    PRBool enabled;
-    if (cssLoader && NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
-      PRBool alreadyLoaded = PR_FALSE;
-      PRInt32 sheetCount = doc->GetNumberOfCatalogStyleSheets();
-      for (PRInt32 i = 0; i < sheetCount; i++) {
-        nsIStyleSheet* sheet = doc->GetCatalogStyleSheetAt(i);
-        NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
-        if (sheet) {
-          nsCOMPtr<nsIURI> uri;
-          sheet->GetSheetURI(getter_AddRefs(uri));
-          nsCAutoString uriStr;
-          uri->GetSpec(uriStr);
-          if (uriStr.Equals(kMathMLStyleSheetURI)) {
-            alreadyLoaded = PR_TRUE;
-            break;
-          }
-        }
-      }
-      if (!alreadyLoaded) {
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), kMathMLStyleSheetURI);
-        if (uri) {
-          nsCOMPtr<nsICSSStyleSheet> sheet;
-          cssLoader->LoadAgentSheet(uri, getter_AddRefs(sheet));
-#ifdef NS_DEBUG
-          nsCAutoString uriStr;
-          uri->GetSpec(uriStr);
-          printf("MathML Factory: loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
-          NS_ASSERTION(uriStr.Equals(kMathMLStyleSheetURI), "resolved URI unexpected");
-#endif
-          if (sheet) {
-            doc->BeginUpdate(UPDATE_STYLE);
-            doc->AddCatalogStyleSheet(sheet);
-            doc->EndUpdate(UPDATE_STYLE);
-          }
-        }
-      }
-    }
-  }
+  if (doc)
+    doc->EnsureCatalogStyleSheet(kMathMLStyleSheetURI);
 
   return NS_NewXMLElement(aResult, aNodeInfo);
 }

@@ -421,6 +421,7 @@ public:
   virtual PRInt32 GetNumberOfCatalogStyleSheets() const = 0;
   virtual nsIStyleSheet* GetCatalogStyleSheetAt(PRInt32 aIndex) const = 0;
   virtual void AddCatalogStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI) = 0;
 
   /**
    * Get this document's CSSLoader.  May return null in error
