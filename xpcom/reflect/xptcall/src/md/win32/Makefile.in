@@ -75,10 +75,10 @@ ASFLAGS		+= /I../../..public
 endif
 
 ifeq ($(OS_ARCH),WINCE)
-ifeq ($(CPU),ARM)
-CPPSRCS 	:= xptcinvokece.cpp xptcstubsce.cpp
-ASFILES		:= 
-AS		    := 
+ifeq ($(TARGET_CPU),arm)
+CPPSRCS 	= xptcinvokece.cpp xptcstubsce.cpp
+ASFILES		= 
+AS		    = 
 ASFLAGS		+= /I../../..public
 endif
 endif
