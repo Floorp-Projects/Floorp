@@ -26,6 +26,8 @@
 #
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
+$outfile = shift @ARGV;
+
 @alldeps=();
 # Parse dependency files
 while ($line = <>) {
@@ -69,10 +71,27 @@ foreach $deps (@alldeps) {
       $modtimes{$dep_file} = $dep_mtime;
     }
     if ($dep_mtime eq '' or $dep_mtime > $mtime) {
-      print "$obj ";
-      $haveObjects = 1;
+      push @objs, $obj;
       last;
     }
   }
 }
-print ": FORCE\n" if $haveObjects;
+
+# Output objects to rebuild (if needed).
+if ($#objs > 0) {
+  $new_output = "@objs: FORCE\n";
+
+  # Read in the current dependencies file.
+  open(OLD, "<$outfile") and $old_output = <OLD>;
+  close(OLD);
+
+  # Only write out the dependencies if they are different.
+  if ($new_output ne $old_output) {
+    open(OUT, ">$outfile") and print OUT $new_output;
+    print "Updating dependencies ($outfile).\n";
+  }
+} elsif (-s $outfile) {
+  # Remove the old dependencies because all objects are up to date.
+  unlink $outfile;
+  print "Removing old dependencies ($outfile).\n";
+}
