@@ -1,12 +1,11 @@
 /*
-punycode.c from draft-ietf-idn-punycode-03
+punycode.c from RFC 3492
 http://www.nicemice.net/idn/
 Adam M. Costello
 http://www.nicemice.net/amc/
 
-This is ANSI C code (C89) implementing
-Punycode (draft-ietf-idn-punycode-03).
-http://www.ietf.org/internet-drafts/draft-ietf-idn-punycode-03.txt
+This is ANSI C code (C89) implementing Punycode (RFC 3492).
+
 
 
 C. Disclaimer and license

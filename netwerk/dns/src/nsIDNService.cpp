@@ -65,10 +65,8 @@ nsIDNService::nsIDNService()
 
   nsresult rv;
 
-  // initialize to the official prefix
-  // http://www.ietf.org/internet-drafts/draft-ietf-idn-idna-14.txt
-  // "IESG--" is a place holder until the offical prefix is assigned by IANA
-  const char kIDNSPrefix[] = "IESG--";
+  // initialize to the official prefix (RFC 3490 "5. ACE prefix")
+  const char kIDNSPrefix[] = "xn--";
   strcpy(mACEPrefix, kIDNSPrefix);
 
   mMultilingualTestBed = PR_FALSE;
@@ -277,7 +275,7 @@ static nsresult encodeToRACE(const char* prefix, const nsAString& in, nsACString
   return NS_OK;
 }
 
-// http://www.ietf.org/internet-drafts/draft-hoffman-stringprep-06.txt
+// RFC 3454
 //
 // 1) Map -- For each character in the input, check if it has a mapping
 // and, if so, replace it with its mapping. This is described in section 3.
@@ -375,7 +373,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out)
   return rv;
 }
 
-// http://www.ietf.org/internet-drafts/draft-ietf-idn-idna-12.txt
+// RFC 3490
 // 1) Whenever dots are used as label separators, the following characters
 //    MUST be recognized as dots: U+002E (full stop), U+3002 (ideographic full
 //    stop), U+FF0E (fullwidth full stop), U+FF61 (halfwidth ideographic full
