@@ -53,6 +53,7 @@ XPIDLSRCS = \
 JAVA_SRCS = \
 	TestArray.java \
 	TestProps.java \
+	TestQI.java \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
