@@ -73,6 +73,10 @@ extern "C" {
 #include "certdb.h"
 #include "secmod.h"
 
+#include "nsNSSCleaner.h"
+NSSCleanupAutoPtrClass(SECKEYPrivateKey, SECKEY_DestroyPrivateKey)
+NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
+
 /*
  * These are the most common error strings that are returned
  * by the JavaScript methods in case of error.
@@ -645,7 +649,10 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
   //       user's key3.db file.  Which the slot returned by
   //       PK11_GetInternalKeySlot has access to and PK11_GetInternalSlot
   //       does not.
-  PK11SlotInfo *intSlot = nsnull, *origSlot = nsnull;
+  PK11SlotInfo *intSlot = nsnull;
+  PK11SlotInfoCleaner siCleaner(intSlot);
+  
+  PK11SlotInfo *origSlot = nsnull;
   PRBool isPerm;
 
   if (willEscrow && !PK11_IsInternal(slot)) {
@@ -699,9 +706,6 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
   }
 
   if (!keyPairInfo->privKey || !keyPairInfo->pubKey) {
-    if (intSlot)
-      PK11_FreeSlot(intSlot);
-
     return NS_ERROR_FAILURE;
   }
  
@@ -713,6 +717,8 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
                                                     keyPairInfo->privKey,
                                                     keyPairInfo->pubKey,
                                                     PR_TRUE, PR_TRUE);
+    SECKEYPrivateKeyCleaner pkCleaner(newPrivKey);
+
     if (!newPrivKey)
       return NS_ERROR_FAILURE;
 
@@ -722,9 +728,8 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
     // after the requests are made.  This call only gives up
     // our reference to the key object and does not actually 
     // physically remove it from the card itself.
-    SECKEY_DestroyPrivateKey(newPrivKey);
-    PK11_FreeSlot(intSlot);
-    intSlot = nsnull;
+    // The actual delete calls are being made in the destructors
+    // of the cleaner helper instances.
   }  
 
   return NS_OK;
