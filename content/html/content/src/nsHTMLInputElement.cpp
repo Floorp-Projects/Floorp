@@ -2297,28 +2297,30 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
     nsIImageControlFrame* imageControlFrame = nsnull;
-    CallQueryInterface(formControlFrame, &imageControlFrame);
-    if (imageControlFrame) {
-      imageControlFrame->GetClickedX(&clickedX);
-      imageControlFrame->GetClickedY(&clickedY);
+    if (formControlFrame) {
+      CallQueryInterface(formControlFrame, &imageControlFrame);
+      if (imageControlFrame) {
+        imageControlFrame->GetClickedX(&clickedX);
+        imageControlFrame->GetClickedY(&clickedY);
 
-      // Convert the values to strings for submission
-      char buf[20];
-      sprintf(&buf[0], "%d", clickedX);
-      nsAutoString xVal = NS_ConvertASCIItoUCS2(buf);
-      sprintf(&buf[0], "%d", clickedY);
-      nsAutoString yVal = NS_ConvertASCIItoUCS2(buf);
+        // Convert the values to strings for submission
+        char buf[20];
+        sprintf(&buf[0], "%d", clickedX);
+        nsAutoString xVal = NS_ConvertASCIItoUCS2(buf);
+        sprintf(&buf[0], "%d", clickedY);
+        nsAutoString yVal = NS_ConvertASCIItoUCS2(buf);
 
-      if (!name.IsEmpty()) {
-        aFormSubmission->AddNameValuePair(this,
-                                          name + NS_LITERAL_STRING(".x"), xVal);
-        aFormSubmission->AddNameValuePair(this,
-                                          name + NS_LITERAL_STRING(".y"), yVal);
-      } else {
-        // If the Image Element has no name, simply return x and y
-        // to Nav and IE compatability.
-        aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("x"), xVal);
-        aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("y"), yVal);
+        if (!name.IsEmpty()) {
+          aFormSubmission->AddNameValuePair(this,
+                                            name + NS_LITERAL_STRING(".x"), xVal);
+          aFormSubmission->AddNameValuePair(this,
+                                            name + NS_LITERAL_STRING(".y"), yVal);
+        } else {
+          // If the Image Element has no name, simply return x and y
+          // to Nav and IE compatability.
+          aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("x"), xVal);
+          aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("y"), yVal);
+        }
       }
     }
   }
