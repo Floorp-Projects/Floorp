@@ -3536,19 +3536,27 @@ nsEditorShell::DeleteElement(nsIDOMElement *element)
 }
 
 NS_IMETHODIMP
-nsEditorShell::InsertElement(nsIDOMElement *element, nsIDOMElement *parent, PRInt32 position)
+nsEditorShell::InsertElement(nsIDOMElement *element, nsIDOMElement *parent, PRInt32 position, PRBool dontChangeSelection)
 {
   if (!element || !parent)
     return NS_ERROR_NULL_POINTER;
 
   nsresult  result = NS_NOINTERFACE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (editor) {
+  if (editor) 
+  {
+    // Set flag so InsertElementTxn doesn't change the selection
+    if (dontChangeSelection)
+      editor->SetShouldTxnSetSelection(PR_FALSE);
+
     // The nsIEditor::InsertNode() wants nodes as params,
     //   but it actually requires that they are elements!
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
     nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(parent);
     result = editor->InsertNode(node, parentNode, position);
+
+    if (dontChangeSelection)
+      editor->SetShouldTxnSetSelection(PR_TRUE);
   }
   return result;
 }

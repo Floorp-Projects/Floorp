@@ -1049,7 +1049,8 @@ function AppendHeadElement(element)
       position = head.childNodes.length;
 
     // Use editor's undoable transaction
-    editorShell.InsertElement(element, head, position);
+    // Last param "true" says "don't change the selection"
+    editorShell.InsertElement(element, head, position, true);
   }
 }
 
