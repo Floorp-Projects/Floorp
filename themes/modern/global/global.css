@@ -79,25 +79,25 @@ window.dialog {
 /* ::::: alert icons :::::*/
 
 .message-icon {
-  width: 39px;
+  width: 46px;
   height: 39px;
   list-style-image: url("chrome://global/skin/icons/alert-message.gif");
 }
 
 .alert-icon {
-  width: 44px;
+  width: 46px;
   height: 39px;
   list-style-image: url("chrome://global/skin/icons/alert-exclam.gif");
 }
 
 .error-icon {
-  width: 41px;
+  width: 46px;
   height: 36px;
   list-style-image: url("chrome://global/skin/icons/alert-error.gif");
 }
 
 .question-icon {
-  width: 41px;
+  width: 46px;
   height: 36px;
   list-style-image: url("chrome://global/skin/icons/alert-question.gif");
 }
