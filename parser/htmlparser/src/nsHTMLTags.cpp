@@ -31,10 +31,10 @@ static char* tagTable[] = {
   "kbd", "keygen", "label", "layer", "legend", "li", "link", "listing", 
   "map", "menu", "meta", "multicol", "nobr", "noembed", "noframes", 
   "nolayer", "noscript", "object", "ol", "optgroup", "option", "p", "param", 
-  "plaintext", "pre", "q", "s", "samp", "script", "select", "server", 
-  "small", "sound", "spacer", "span", "strike", "strong", "style", "sub", 
-  "sup", "table", "tbody", "td", "textarea", "tfoot", "th", "thead", "title", 
-  "tr", "tt", "u", "ul", "var", "wbr", "xmp"
+  "parsererror", "plaintext", "pre", "q", "s", "samp", "script", "select", 
+  "server", "small", "sound", "sourcetext", "spacer", "span", "strike", 
+  "strong", "style", "sub", "sup", "table", "tbody", "td", "textarea", 
+  "tfoot", "th", "thead", "title", "tr", "tt", "u", "ul", "var", "wbr", "xmp"
 };
 
 nsHTMLTag NS_TagToEnum(const char* aTagName) {

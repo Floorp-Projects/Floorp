@@ -70,7 +70,7 @@ protected:
      */
     void SetupExpatCallbacks(void);
 
-    void PushXMLErrorToken(void);
+    void PushXMLErrorToken(const char *aBuffer, PRUint32 aLength);
 
     /* The callback handlers that get called from the expat parser */
     static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
