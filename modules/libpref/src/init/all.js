@@ -97,6 +97,8 @@ pref("browser.PICS.reenable_for_this_session", false);
 pref("browser.PICS.service.http___home_netscape_com_default_rating.service_enabled", true);
 pref("browser.PICS.service.http___home_netscape_com_default_rating.s", 0);
 
+pref("browser.target_new_blocked", false);
+
 // gfx widgets
 pref("nglayout.widget.mode", 2);
 pref("nglayout.widget.gfxscrollbars", true);
