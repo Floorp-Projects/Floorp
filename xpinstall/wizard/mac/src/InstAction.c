@@ -488,7 +488,7 @@ LaunchApps(short vRefNum, long dirID)
 						if (err == noErr) /* AppleSingle decoded successfully */
 						{	
 							// launch the decoded app
-							launchPB.launchAppSpec = & fsCurrApp;
+							launchPB.launchAppSpec = &fsCurrApp;
 							launchPB.launchAppParameters = NULL;
 							launchPB.launchBlockID = extendedBlock;
 							launchPB.launchEPBLength = extendedBlockLen;

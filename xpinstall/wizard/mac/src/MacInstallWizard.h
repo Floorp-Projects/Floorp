@@ -141,6 +141,8 @@ if (err) 								\
 #define	rLicBox			131
 #define rLicScrollBar	132
 
+#define rReadmeBtn		133
+
 #define rInstType		140
 #define rInstDescBox	141
 #define rDestLocBox		142
@@ -198,6 +200,7 @@ if (err) 								\
 #define	sFileSp			25
 #define sSpOfSp			26	
 #define sProcessing		27		
+#define sReadme			28
 
 #define rTitleStrList	170
 #define sNSInstTitle	1		/* end i18n strings */
@@ -234,6 +237,8 @@ if (err) 								\
 #define	sNSInstall		12		/* used when generating IDI */
 
 #define sWelcDlg		12
+#define sReadmeFilename 32
+#define sReadmeApp		33
 
 #define sLicDlg			14
 #define sLicFile		15
@@ -306,6 +311,9 @@ typedef struct Config {
 	
 	/* WelcomeWin */
 	Handle	welcMsg[ kNumWelcMsgs ];
+	Handle	readmeFile;
+	Handle	readmeApp;
+	Boolean bReadme;
 	
 	/* SetupTypeWin */
 	SetupType	st[kMaxSetupTypes];
@@ -354,6 +362,7 @@ typedef struct WelcWin {
 	ControlHandle	welcBox;
 	ControlHandle	scrollBar;
 	TEHandle		welcTxt;
+	ControlHandle	readmeButton;
 } WelcWin;
 
 typedef struct SetupTypeWin {
@@ -495,8 +504,20 @@ void		DisableNavButtons(void);
 void		ShowWelcomeWin(void);
 void		InitWelcTxt(void);
 void 		InWelcomeContent(EventRecord*, WindowPtr);
+void		ShowReadmeButton(void);
+void		ShowReadme(void);
 void		EnableWelcomeWin(void);
 void 		DisableWelcomeWin(void);
+OSErr 		LaunchAppOpeningDoc (Boolean, FSSpec *, ProcessSerialNumber *, 
+			FSSpec *, unsigned short, unsigned short);
+OSErr 		FindAppUsingSig (OSType, FSSpec *, Boolean *, ProcessSerialNumber *);
+OSErr 		FindRunningAppBySignature (OSType, FSSpec *, ProcessSerialNumber *);
+static OSErr VolHasDesktopDB (short, Boolean *);
+static OSErr FindAppOnVolume (OSType, short, FSSpec *);
+OSErr 		GetSysVolume (short *);
+OSErr 		GetIndVolume (short, short *);
+OSErr 		GetLastModDateTime(const FSSpec *, unsigned long *);
+
 
 /*-----------------------------------------------------------*
  *   SetupTypeWin
