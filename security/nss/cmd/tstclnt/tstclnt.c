@@ -91,6 +91,7 @@ int ssl3CipherSuites[] = {
     SSL_RSA_FIPS_WITH_DES_CBC_SHA,		/* k */
     TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,	/* l */
     TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,	        /* m */
+    SSL_RSA_WITH_RC4_128_SHA,			/* n */
     0
 };
 
@@ -188,6 +189,7 @@ static void Usage(const char *progName)
 "k    SSL3 RSA FIPS WITH DES CBC SHA\n"
 "l    SSL3 RSA EXPORT WITH DES CBC SHA\t(new)\n"
 "m    SSL3 RSA EXPORT WITH RC4 56 SHA\t(new)\n"
+"n    SSL3 RSA WITH RC4 128 SHA\n"
 	);
     exit(-1);
 }
