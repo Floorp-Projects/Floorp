@@ -20,16 +20,30 @@
  * Contributor(s): 
  */
 
+#include <math.h>
 #include "nsStyleUtil.h"
 #include "nsCRT.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 
-#include <math.h>
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+#include "prefapi.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define POSITIVE_SCALE_FACTOR 1.10 /* 10% */
 #define NEGATIVE_SCALE_FACTOR .90  /* 10% */
+
+#if DEBUG
+#define DUMP_FONT_SIZES 0
+#endif
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
 
 /*
  * Return the scaling percentage given a font scaler
@@ -58,10 +72,55 @@ float nsStyleUtil::GetScalingFactor(PRInt32 aScaler)
   return (float)scale;
 }
 
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
+static PRBool gNavAlgorithmPref = PR_FALSE;
+
+static int NavAlgorithmPrefChangedCallback(const char * name, void * closure)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	if (NS_SUCCEEDED(rv) && prefs) {
+		prefs->GetBoolPref(name, &gNavAlgorithmPref);
+	}
+	return PREF_NOERROR;
+}
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
+static PRBool UseNewFontAlgorithm()
+{
+	static PRBool once = PR_TRUE;
+
+	if (once)
+	{
+		once = PR_FALSE;
+
+		nsresult rv;
+		NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+		if (NS_SUCCEEDED(rv) && prefs) {
+			prefs->GetBoolPref("font.size.nav4algorithm", &gNavAlgorithmPref);
+			prefs->RegisterCallback("font.size.nav4algorithm", NavAlgorithmPrefChangedCallback, NULL);
+		}
+	}
+	return (gNavAlgorithmPref ? PR_FALSE : PR_TRUE);
+}
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
 /*
  * Lifted from winfe/cxdc.cpp
  */
-nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
+static nscoord OldCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
                                        float aScalingFactor)
 { // lifted directly from Nav 5.0 code to replicate rounding errors
   double dFontSize;
@@ -105,62 +164,176 @@ nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize
   return (nscoord)1;
 }
 
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
+static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
+                                       float aScalingFactor, nsIPresContext* aPresContext,
+                                       nsFontSizeType aFontSizeType)
+{
+#define sFontSizeTableMin		9 
+#define sFontSizeTableMax		16 
+
+		static PRInt32 sFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] = {
+											{ 9,    9,     9,     9,    11,    14,    18,    27},
+											{ 9,    9,     9,    10,    12,    15,    20,    30},
+											{ 9,    9,    10,    11,    13,    17,    22,    33},
+                   		{ 9,    9,    10,    12,    14,    18,    24,    36},
+                   		{ 9,   10,    12,    13,    16,    20,    26,    39},
+                  		{ 9,   10,    12,    14,    17,    21,    28,    42},
+                   		{ 9,   10,    13,    15,    18,    23,    30,    45},
+                  		{ 9,   10,    13,    16,    18,    24,    32,    48} };
+// HTML                       1      2      3      4      5      6      7
+// CSS                  xxs   xs     s      m      l     xl     xxl
+//                                          |
+//                                      user pref
+
+		static PRInt32 sFontSizeFactors[8] = {
+											60,		75,			89,		100,   120,   150,   200,   300 };
+
+		static PRInt32 sCSSColumns[7]  = {0, 1, 2, 3, 4, 5, 6};		// xxs...xxl
+		static PRInt32 sHTMLColumns[7] = {1, 2, 3, 4, 5, 6, 7};		// 1...7
+
+	double dFontSize;
+
+	if (aFontSizeType == eFontSize_HTML) {
+		aHTMLSize--;    // input as 1-7
+	}
+
+	if (aHTMLSize < 0)
+		aHTMLSize = 0;
+	else if (aHTMLSize > 6)
+		aHTMLSize = 6;
+
+	PRInt32* column;
+	switch (aFontSizeType)
+	{
+		case eFontSize_HTML: 	column = sHTMLColumns;		break;
+		case eFontSize_CSS:		column = sCSSColumns;			break;
+	}
+
+	float t2p;
+	aPresContext->GetTwipsToPixels(&t2p);
+  PRInt32 fontSize = NSTwipsToIntPixels(aBasePointSize, t2p);
+
+	if ((fontSize >= sFontSizeTableMin) && (fontSize <= sFontSizeTableMax))
+	{
+		float p2t;
+		aPresContext->GetPixelsToTwips(&p2t);
+
+		PRInt32 row = fontSize - sFontSizeTableMin;
+		dFontSize = NSFloatPixelsToTwips(sFontSizeTable[row][column[aHTMLSize]], p2t);
+	}
+	else
+	{
+		PRInt32 factor = sFontSizeFactors[column[aHTMLSize]];
+		dFontSize = (factor * aBasePointSize) / 100;
+	}
+
+  dFontSize *= aScalingFactor;
+
+  if (1.0 < dFontSize) {
+    return (nscoord)dFontSize;
+  }
+  return (nscoord)1;
+}
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
+nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
+                                       float aScalingFactor, nsIPresContext* aPresContext,
+                                       nsFontSizeType aFontSizeType)
+{
+#if DUMP_FONT_SIZES
+	extern void DumpFontSizes(nsIPresContext* aPresContext);
+	DumpFontSizes(aPresContext);
+#endif
+	if (UseNewFontAlgorithm())
+		return NewCalcFontPointSize(aHTMLSize, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType);
+	else
+		return OldCalcFontPointSize(aHTMLSize, aBasePointSize, aScalingFactor);
+}
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
 PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                             float aScalingFactor)
+                                             float aScalingFactor, nsIPresContext* aPresContext)
 {
   PRInt32 index;
   PRInt32 fontSize = NSTwipsToFloorIntPoints(aFontSize);
 
-  if (NSTwipsToFloorIntPoints(CalcFontPointSize(1, aBasePointSize, aScalingFactor)) < fontSize) {
-    if (fontSize <= NSTwipsToFloorIntPoints(CalcFontPointSize(7, aBasePointSize, aScalingFactor))) { // in HTML table
+  if (NSTwipsToFloorIntPoints(CalcFontPointSize(1, aBasePointSize, aScalingFactor, aPresContext)) < fontSize) {
+    if (fontSize <= NSTwipsToFloorIntPoints(CalcFontPointSize(7, aBasePointSize, aScalingFactor, aPresContext))) { // in HTML table
       for (index = 7; index > 1; index--)
-        if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor)))
+        if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext)))
           break;
     }
     else {  // larger than HTML table
-      for (index = 8; ; index++)
-        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor))) {
-          index--;
-          break;
-        }
+      return 7;
+//    for (index = 8; ; index++)
+//      if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext))) {
+//        index--;
+//        break;
+//      }
     }
   }
   else { // smaller than HTML table
-    for (index = 0; -25<index ; index--) //prevent infinite loop (bug 17045)
-      if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor))) {
-        break;
-      }
+    return 1;
+//  for (index = 0; -25<index ; index--) //prevent infinite loop (bug 17045)
+//    if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext))) {
+//      break;
+//    }
   }
   return index;
 }
 
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
 PRInt32 nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                            float aScalingFactor)
+                                            float aScalingFactor, nsIPresContext* aPresContext)
 {
   PRInt32 index;
   PRInt32 fontSize = NSTwipsToFloorIntPoints(aFontSize);
 
-  if (NSTwipsToFloorIntPoints(CalcFontPointSize(1, aBasePointSize, aScalingFactor)) <= fontSize) {
-    if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(7, aBasePointSize, aScalingFactor))) { // in HTML table
+  if (NSTwipsToFloorIntPoints(CalcFontPointSize(1, aBasePointSize, aScalingFactor, aPresContext)) <= fontSize) {
+    if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(7, aBasePointSize, aScalingFactor, aPresContext))) { // in HTML table
       for (index = 1; index < 7; index++)
-        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor)))
+        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext)))
           break;
     }
     else {  // larger than HTML table
-      for (index = 8; ; index++)
-        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor)))
-          break;
+			return 7;
+//    for (index = 8; ; index++)
+//      if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext)))
+//        break;
     }
   }
   else {  // smaller than HTML table
-    for (index = 0; -25<index ; index--) //prevent infinite loop (bug 17045)
-      if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor))) {
-        index++;
-        break;
-      }
+    return 1;
+//  for (index = 0; -25<index ; index--) //prevent infinite loop (bug 17045)
+//    if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext))) {
+//      index++;
+//      break;
+//    }
   }
   return index;
 }
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
 
 PRInt32 
 nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
@@ -184,6 +357,10 @@ nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
   return (base + ((negativeStep) ? -step : step));
 }
 
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
 
 const nsStyleColor* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* aContext,
                                                               PRBool aStartAtParent /*= PR_FALSE*/)
@@ -214,3 +391,174 @@ const nsStyleColor* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* a
   return result;
 }
 
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+#if DUMP_FONT_SIZES
+#include "nsIDeviceContext.h"
+PRInt32 RoundSize(nscoord aVal, nsIPresContext* aPresContext, bool aWinRounding)
+{
+
+	PRInt32 lfHeight;
+	nsIDeviceContext* dc;
+	aPresContext->GetDeviceContext(&dc);
+
+  float app2dev, app2twip, scale;
+  dc->GetAppUnitsToDevUnits(app2dev);
+
+	if (aWinRounding)
+	{
+	  dc->GetDevUnitsToTwips(app2twip);
+	  dc->GetCanonicalPixelScale(scale);
+	  app2twip *= app2dev * scale;
+
+	  // This interesting bit of code rounds the font size off to the floor point
+	  // value. This is necessary for proper font scaling under windows.
+	  PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(aVal*app2twip));
+	  float rounded = ((float)NSIntPointsToTwips(sizePoints)) / app2twip;
+
+	  // round font size off to floor point size to be windows compatible
+	  // this is proper (windows) rounding
+	//   lfHeight = NSToIntRound(rounded * app2dev);
+
+	  // this floor rounding is to make ours compatible with Nav 4.0
+	  lfHeight = long(rounded * app2dev);
+		return lfHeight;
+	}
+	else
+		return NSToIntRound(aVal*app2dev);
+}
+#endif
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+#if DUMP_FONT_SIZES
+void DumpFontSizes(nsIPresContext* aPresContext)
+{
+	static gOnce = true;
+	if (gOnce)
+	{
+		gOnce = false;
+
+			PRInt32 baseSize;
+			PRInt32 htmlSize;
+			PRInt32 cssSize;
+			nscoord val;
+			nscoord oldVal;
+
+		nsIDeviceContext* dc;
+		aPresContext->GetDeviceContext(&dc);
+		float dev2app;
+  	dc->GetDevUnitsToAppUnits(dev2app);
+
+		bool doWinRounding = true;
+		for (short i=0; i<2; i ++)
+		{
+			doWinRounding ^= true;
+			printf("\n\n\n");
+			printf("---------------------------------------------------------------\n");
+			printf("                          CSS                                  \n");
+			printf("                     Rounding %s\n", (doWinRounding ? "ON" : "OFF"));
+			printf("---------------------------------------------------------------\n");
+			printf("\n");
+			printf("NEW SIZES:\n");
+			printf("----------\n");
+			printf("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
+			for (baseSize = 9; baseSize <= 20; baseSize++) {
+				printf("%2d:     ", baseSize);
+				for (cssSize = 0; cssSize <= 6; cssSize++) {
+					val = NewCalcFontPointSize(cssSize, baseSize*dev2app, 1.0f, aPresContext, eFontSize_CSS);
+					printf("%2d        ", RoundSize(val, aPresContext, false));
+				}
+				printf("\n");
+			}
+
+			printf("\n");
+			printf("OLD SIZES:\n");
+			printf("----------\n");
+			printf("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
+			for (baseSize = 9; baseSize <= 20; baseSize++) {
+				printf("%2d:     ", baseSize);
+				for (cssSize = 0; cssSize <= 6; cssSize++) {
+					val = OldCalcFontPointSize(cssSize, baseSize*dev2app, 1.0f);
+					printf("%2d        ", RoundSize(val, aPresContext, doWinRounding));
+				}
+				printf("\n");
+			}
+
+			printf("\n");
+			printf("DIFFS:\n");
+			printf("------\n");
+			printf("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
+			for (baseSize = 9; baseSize <= 20; baseSize++) {
+				printf("%2d:     ", baseSize);
+				for (cssSize = 0; cssSize <= 6; cssSize++) {
+					oldVal = OldCalcFontPointSize(cssSize, baseSize*dev2app, 1.0f);
+					val = NewCalcFontPointSize(cssSize, baseSize*dev2app, 1.0f, aPresContext, eFontSize_CSS);
+					if (RoundSize(oldVal, aPresContext, doWinRounding) <= 8)
+						printf(" .");
+					else
+					  printf("%2d", (RoundSize(val, aPresContext, false)-RoundSize(oldVal, aPresContext, doWinRounding)));
+					printf("        ");
+				}
+				printf("\n");
+			}
+
+
+
+			printf("\n\n\n");
+			printf("---------------------------------------------------------------\n");
+			printf("                          HTML                                 \n");
+			printf("                     Rounding %s\n", (doWinRounding ? "ON" : "OFF"));
+			printf("---------------------------------------------------------------\n");
+			printf("\n");
+			printf("NEW SIZES:\n");
+			printf("----------\n");
+			printf("        #1        #2        #3        #4        #5        #6        #7\n");
+			for (baseSize = 9; baseSize <= 20; baseSize++) {
+				printf("%2d:     ", baseSize);
+				for (htmlSize = 1; htmlSize <= 7; htmlSize++) {
+					val = NewCalcFontPointSize(htmlSize, baseSize*dev2app, 1.0f, aPresContext, eFontSize_HTML);
+					printf("%2d        ", RoundSize(val, aPresContext, false));
+				}
+				printf("\n");
+			}
+
+			printf("\n");
+			printf("OLD SIZES:\n");
+			printf("----------\n");
+			printf("        #1        #2        #3        #4        #5        #6        #7\n");
+			for (baseSize = 9; baseSize <= 20; baseSize++) {
+				printf("%2d:     ", baseSize);
+				for (htmlSize = 1; htmlSize <= 7; htmlSize++) {
+					val = OldCalcFontPointSize(htmlSize, baseSize*dev2app, 1.0f);
+					printf("%2d        ", RoundSize(val, aPresContext, doWinRounding));
+				}
+				printf("\n");
+			}
+
+			printf("\n");
+			printf("DIFFS:\n");
+			printf("------\n");
+			printf("        #1        #2        #3        #4        #5        #6        #7\n");
+			for (baseSize = 9; baseSize <= 20; baseSize++) {
+				printf("%2d:     ", baseSize);
+				for (htmlSize = 1; htmlSize <= 7; htmlSize++) {
+					oldVal = OldCalcFontPointSize(htmlSize, baseSize*dev2app, 1.0f);
+					val = NewCalcFontPointSize(htmlSize, baseSize*dev2app, 1.0f, aPresContext, eFontSize_HTML);
+					if (RoundSize(oldVal, aPresContext, doWinRounding) <= 8)
+						printf(" .");
+					else
+					  printf("%2d", (RoundSize(val, aPresContext, false)-RoundSize(oldVal, aPresContext, doWinRounding)));
+					printf("        ");
+				}
+				printf("\n");
+			}
+			printf("\n\n\n");
+		}
+	}
+}
+#endif

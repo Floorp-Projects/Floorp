@@ -32,7 +32,7 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-PRBool nsDeviceContextWin::gRound = PR_TRUE;
+PRBool nsDeviceContextWin::gRound = PR_FALSE;
 
 static char* nav4rounding = "font.size.nav4rounding";
 

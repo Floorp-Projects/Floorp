@@ -645,8 +645,8 @@ nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
         PRInt32 scaler;
         aPresContext->GetFontScaler(&scaler);
         float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor);
-        aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
+        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor, aPresContext);
+        aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor, aPresContext);
       }
 #endif
       break;

@@ -2423,7 +2423,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     aPresContext->GetFontScaler(&scaler);
     float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
     PRInt32 fontSize = nsStyleUtil::FindNextSmallerFontSize(font.size, (PRInt32)normal.size, 
-                                                            scaleFactor)+1;
+                                                            scaleFactor, aPresContext)+1;
     PRBool doMeasure = PR_FALSE;
     nsILookAndFeel::nsMetricNavFontID fontId;
 

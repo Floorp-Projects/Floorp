@@ -284,11 +284,11 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
           font->mFont.size =
             nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFont.size,
-                                           scaleFactor);
+                                           scaleFactor, aPresContext);
           font->mFixedFont.size =
             nsStyleUtil::CalcFontPointSize(size,
                                            (PRInt32)defaultFixedFont.size,
-                                           scaleFactor);
+                                           scaleFactor, aPresContext);
         }
       }
     }
