@@ -80,7 +80,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/pref/nsPrefWindow.js"/>
 
   <hbox flex="1">
-    <vbox id="prefsCategories" class="buttonBox listBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0" persist="lastpanel">
+    <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0" persist="lastpanel">
       <button id="catGeneralButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&general.label;"   url="pref-navigator.xul"/>
       <button id="catPrivacyButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&privacy.label;"   url="pref-privacy.xul"/>
       <button id="catFeaturesbutton"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&features.label;"  url="pref-features.xul"/>

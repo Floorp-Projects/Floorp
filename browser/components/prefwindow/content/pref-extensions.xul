@@ -69,7 +69,7 @@
     </listbox>
 
     <separator class="thin"/>
-    <vbox flex="1" class="inset extensionInfoArea" style="overflow:auto;">
+    <vbox flex="1" class="extensionInfoArea listBox" style="overflow:auto;">
       <label class="header" id="extDisplayName" value=""/>
       <hbox pack="start">
         <label id="extAuthor" tooltip="&author.tooltip;" onclick="parent.visitLink(event);"/>
