@@ -8,8 +8,6 @@
 <!ENTITY grayRadio.label "GrayScale">
 <!ENTITY colorRadio.label "Color">
 
-<!ENTITY paperInput.label "Paper Size:">
-
 <!ENTITY orientationGroup.label "Orientation:">
 <!ENTITY portraitItem.label "Portrait">
 <!ENTITY landscapeItem.label "Landscape">

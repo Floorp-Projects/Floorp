@@ -38,6 +38,7 @@ Contributor(s):
   screenX="24" screenY="24">
 
   <script type="application/x-javascript" src="chrome://global/content/printjoboptions.js"/>
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
   <grid>
     <columns>
@@ -46,6 +47,15 @@ Contributor(s):
     </columns>
 
     <rows>
+      <row>
+        <hbox align="center" pack="end">
+          <label id="paperLabel" value="&paperInput.label;"/>
+        </hbox>
+        <menulist id="paperList" flex ="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
       <row>
         <label id="cmdLabel" value="&cmdInput.label;"/>
         <textbox id="cmdInput" flex ="1"/>

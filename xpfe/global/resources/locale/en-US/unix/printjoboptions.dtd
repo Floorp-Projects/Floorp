@@ -2,6 +2,8 @@
 
 <!ENTITY printJobOptions.title "Printer Properties">
 
+<!ENTITY paperInput.label "Paper Size:">
+
 <!ENTITY cmdInput.label "Print Command:">
 
 <!ENTITY colorGroup.label "Color:">
