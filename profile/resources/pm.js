@@ -36,7 +36,8 @@ function MigrateProfile(override)
 
 	profileCore.MigrateProfile(name);
 	//this.location.replace(this.location);
-	this.location.href = this.location;
+	//this.location.href = this.location;
+	this.location.href = "resource:/res/profile/pm.xul";
 }
 
 function MigrateAllProfiles()
@@ -76,7 +77,7 @@ function RenameProfile(w)
 	//dump("RenameProfile : " + oldName + " to " + newName + "\n");
 	profileCore.RenameProfile(oldName, newName);
 	//this.location.replace(this.location);
-	this.location.href = this.location;
+	this.location.href = "resource:/res/profile/pm.xul";
 }
 
 function DeleteProfile()
@@ -93,7 +94,8 @@ function DeleteProfile()
 	//dump("Delete '" + name + "'\n");
 	profileCore.DeleteProfile(name);
 	//this.location.replace(this.location);
-	this.location.href = this.location;
+	//this.location.href = this.location;
+	this.location.href = "resource:/res/profile/pm.xul";
 }
 
 function StartCommunicator()
