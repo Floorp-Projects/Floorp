@@ -28,7 +28,7 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE = DLL
-MODULE=xpinstall
+MODULE=nsxpi
 
 DLL=.\$(OBJDIR)\$(MODULE).dll
 
@@ -41,8 +41,7 @@ LCFLAGS =          \
 
 
 LLIBS =                                \
-        $(DIST)\lib\jar50.lib          \
-        $(DIST)\lib\libreg32.lib       \
+        $(DIST)\lib\mozreg.lib       \
 !ifdef NECKO
         $(DIST)\lib\neckoutil_s.lib    \
 !else
@@ -97,6 +96,6 @@ install:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin\components
 
 clobber::
-        rm -f $(DIST)\lib\$(MODULE).lib
-        rm -f $(DIST)\bin\components\$(MODULE).dll
+        $(RM) $(DIST)\lib\$(MODULE).lib
+        $(RM) $(DIST)\bin\components\$(MODULE).dll
 

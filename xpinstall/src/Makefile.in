@@ -29,8 +29,8 @@ srcdir          = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpinstall
-LIBRARY_NAME	= xpinstall
+MODULE		= nsxpi
+LIBRARY_NAME	= nsxpi
 IS_COMPONENT	= 1
 REQUIRES        = dom js netlib raptor xpcom
 
