@@ -60,12 +60,12 @@ static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 nsPresContext::nsPresContext()
-  : mDefaultFont("Times", NS_FONT_STYLE_NORMAL,
+  : mDefaultFont("serif", NS_FONT_STYLE_NORMAL,
                  NS_FONT_VARIANT_NORMAL,
                  NS_FONT_WEIGHT_NORMAL,
                  0,
                  NSIntPointsToTwips(12)),
-    mDefaultFixedFont("Courier", NS_FONT_STYLE_NORMAL,
+    mDefaultFixedFont("monospace", NS_FONT_STYLE_NORMAL,
                       NS_FONT_VARIANT_NORMAL,
                       NS_FONT_WEIGHT_NORMAL,
                       0,
@@ -122,58 +122,9 @@ void
 nsPresContext::GetUserPreferences()
 {
   PRInt32 prefInt;
-  char  *prefChar;
 
   if (NS_OK == mPrefs->GetIntPref("browser.base_font_scaler", &prefInt)) {
     mFontScaler = prefInt;
-  }
-
-  
-  if (NS_OK == mPrefs->GetIntPref("intl.character_set", &prefInt)) {
-    prefInt &= 0x07ff;
-  } else {
-	prefInt = 2;
-  }
-
-  nsAutoString startKey("intl.font");
-  startKey.Append((PRInt32)prefInt, 10);
-
-  char keychar[256];
-
-  // XXX these font prefs strings don't take font encoding into account
-  // with the following change, it will depend on the intl.character_set to load the font face name and size
-  // It still need to be improve, but now QA can have change the intl.character_set value to switch different default font face
-
-  nsAutoString key(startKey);
-  key.Append(".win.prop_font");  
-
-  key.ToCString(keychar, 256); 
-  if (NS_OK == mPrefs->CopyCharPref(keychar, &prefChar)) {
-    mDefaultFont.name = prefChar;
-    PL_strfree(prefChar);
-  }
-  
-  key = startKey;
-  key.Append(".win.prop_size"); 
-  key.ToCString(keychar, 256);
-  if (NS_OK == mPrefs->GetIntPref(keychar, &prefInt)) {
-    mDefaultFont.size = NSIntPointsToTwips(prefInt);
-  }
-
-  key = startKey;
-  key.Append(".win.fixed_font");  
-  key.ToCString(keychar, 256);
-
-  if (NS_OK == mPrefs->CopyCharPref(keychar, &prefChar)) {
-    mDefaultFixedFont.name = prefChar;
-    PL_strfree(prefChar);
-  }
-  
-  key = startKey;
-  key.Append(".win.fixed_size");  
-  key.ToCString(keychar, 256);
-  if (NS_OK == mPrefs->GetIntPref(keychar, &prefInt)) {
-    mDefaultFixedFont.size = NSIntPointsToTwips(prefInt);
   }
 
   if (NS_OK == mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt)) {
@@ -284,6 +235,12 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
         doc->GetBaseURL(*getter_AddRefs(mBaseURL));
+        NS_ASSERTION(mDeviceContext, "expect device context here");
+        if (mDeviceContext) {
+          nsAutoString charset;
+          doc->GetDocumentCharacterSet(charset);
+          mDeviceContext->GetLangGroup(charset, getter_AddRefs(mLangGroup));
+        }
       }
     }
   }
@@ -498,7 +455,7 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 
   nsIFontMetrics* metrics = nsnull;
   if (mDeviceContext) {
-    mDeviceContext->GetMetricsFor(aFont, metrics);
+    mDeviceContext->GetMetricsFor(aFont, mLangGroup, metrics);
   }
   *aResult = metrics;
   return NS_OK;
