@@ -30,6 +30,10 @@ How To Build and Run :
 
    - Comment /uncomment the appropriate FSEP variable
 
+  - Modify TEST_TOP_DIR. Set it to The root directory of this pluglet 
+     API test suite
+     eg: <top>/mozilla/java/plugins/test
+
   - Modify HTML_ROOT .Set it to
      The URL of directory where the htmls of tests are placed
      eg: http://machine:port/<some-test-dir>
@@ -55,7 +59,7 @@ How To Build and Run :
 
    run this using the perl script
 
-   perl autorun.pl -f BWTest.lst.ORIG
+   perl autorun.pl -f BWTest.lst
 
 *  Results of the tests are recorded  under <TEST_TOP_DIR>/log/
 
@@ -88,10 +92,18 @@ How To Build and Run :
 
    - Comment /uncomment the appropriate FSEP variable
 
+  - Modify TEST_TOP_DIR. Set it to The root directory of this pluglet 
+     API test suite
+     eg: <top>/mozilla/java/plugins/test
+
   - Modify HTML_ROOT .Set it to
      The URL of directory where the htmls of tests are placed
      eg: http://machine:port/<some-test-dir>
 
+*  Edit <TEST_TOP_DIR>/config/SecurityTests.keys
+   
+    - Replace every occurance of Host sirius with your Host name
+      and port with your active port number.
 
 * cd <TEST_TOP_DIR>/src/org/mozilla/pluglet/test/basic
 
@@ -107,5 +119,5 @@ How To Build and Run :
 
 NOTE
 =====
- Plugelts must be successfully built before these tests can be run.
+ Pluglets must be successfully built before these tests can be run.
  To build Pluglets follow instructions under /mozilla/java/plugins/README
