@@ -642,8 +642,13 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
  ******************************************************************************/
 
 CObserverDictionary::CObserverDictionary() {
+  static nsString theTopicList[2] = {"htmlparser","xmlparser"};
+  PRInt32 theIndex=0;
   nsCRT::zero(mObservers,sizeof(mObservers));
-  RegisterObservers();
+  while(theTopicList[theIndex].Length() > 0) {
+    RegisterObservers(theTopicList[theIndex]);
+    theIndex++;
+  }
 }
 
 CObserverDictionary::~CObserverDictionary() {
@@ -667,21 +672,21 @@ void CObserverDictionary::UnregisterObservers() {
   nsObserverReleaser theReleaser;
   for(theIndex=0;theIndex<NS_HTML_TAG_MAX;theIndex++){
     if(mObservers[theIndex]){
+      nsIElementObserver* theElementObserver=0;
       mObservers[theIndex]->ForEach(theReleaser);
       delete mObservers[theIndex];
     }
   }
 }
 
-void CObserverDictionary::RegisterObservers() {
+void CObserverDictionary::RegisterObservers(nsString& aTopic) {
   nsresult result = NS_OK;
   nsIObserverService* theObserverService = nsnull;
   result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, nsIObserverService::GetIID(),
                                       (nsISupports**) &theObserverService, nsnull);
   if(result == NS_OK){
-    nsString  theTopic("htmlparser");
     nsIEnumerator* theEnum;
-    result = theObserverService->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
+    result = theObserverService->EnumerateObserverList(aTopic.GetUnicode(), &theEnum);
     if(result == NS_OK){
       nsIElementObserver* theElementObserver;
       nsISupports *inst;
@@ -695,8 +700,11 @@ void CObserverDictionary::RegisterObservers() {
           PRUint32 theTagIndex = 0;
           theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
           while (theTagStr != nsnull) {
-            eHTMLTags theTag = NS_TagToEnum(theTagStr);
-            if(eHTMLTag_userdefined!=theTag){
+            // XXX - HACK - Hardcoding PI for simplification.  PI handling should not
+            // happen along with ** tags **. For now the specific PI, ?xml, is treated
+            // as an unknown tag in the dictionary!!!!
+            eHTMLTags theTag = (nsCRT::strcasecmp(theTagStr,"?xml") == 0)? eHTMLTag_unknown:NS_TagToEnum(theTagStr);
+            if(eHTMLTag_userdefined!=theTag && theTag < NS_HTML_TAG_MAX){
               if(mObservers[theTag] == nsnull) {
                  mObservers[theTag] = new nsDeque(0);
               }
@@ -713,5 +721,7 @@ void CObserverDictionary::RegisterObservers() {
 }
 
 nsDeque* CObserverDictionary::GetObserversForTag(eHTMLTags aTag) {
-  return mObservers[aTag];
+  if(aTag < NS_HTML_TAG_MAX)
+      return mObservers[aTag];
+  return nsnull;
 }

@@ -1034,39 +1034,7 @@ void WriteTokenToLog(CToken* aToken) {
   aToken->DebugDumpSource(outputStream); //write token without close bracket...
 }
 #endif
-
-/************************************************************** 
-  Define the a functor used to notify observers... 
- **************************************************************/ 
-class nsObserverNotifier: public nsDequeFunctor{ 
-public: 
-  nsObserverNotifier(eHTMLTags aTag,PRUint32 aCount,const PRUnichar** aKeys,
-                     const PRUnichar** aValues,PRUint32 aUniqueKey){ 
-    mCount=aCount; 
-    mKeys=aKeys; 
-    mValues=aValues; 
-    mUniqueKey=aUniqueKey; 
-    mTag=aTag; 
-  } 
-
-  virtual void* operator()(void* anObject) { 
-    nsIElementObserver* theObserver= (nsIElementObserver*)anObject; 
-    if(theObserver) { 
-      mResult = theObserver->Notify(mUniqueKey,mTag,mCount,mKeys,mValues); 
-    } 
-    if(NS_OK==mResult) 
-      return 0; 
-    return anObject; 
-  } 
-
-  const PRUnichar** mKeys; 
-  const PRUnichar** mValues; 
-  PRUint32          mCount; 
-  PRUint32          mUniqueKey; 
-  nsresult          mResult; 
-  eHTMLTags         mTag; 
-}; 
-
+ 
 /**
  * This gets called before we've handled a given start tag.
  * It's a generic hook to let us do pre processing.
@@ -1084,53 +1052,45 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     result=CollectSkippedContent(aNode,theAttrCount); 
   } 
 
-  /********************************************************** 
+ /********************************************************** 
      THIS WILL ULTIMATELY BECOME THE REAL OBSERVER API... 
    **********************************************************/ 
-  static CObserverDictionary gObserverDictionary; 
-  if(aTag < NS_HTML_TAG_MAX){ 
-    nsDeque*  theDeque=gObserverDictionary.GetObserversForTag(aTag); 
-    if(theDeque){ 
-      PRUint32 theDequeSize=theDeque->GetSize(); 
-      if(0<theDequeSize){
-        PRInt32 index = 0; 
-        const PRUnichar* theKeys[50]  = {0,0,0,0,0}; // XXX -  should be dynamic
-        const PRUnichar* theValues[50]= {0,0,0,0,0}; // XXX -  should be dynamic
-        for(index=0; index<theAttrCount && index < 50; index++) {
-          theKeys[index]   = aNode.GetKeyAt(index).GetUnicode(); 
-          theValues[index] = aNode.GetValueAt(index).GetUnicode(); 
-        } 
-
-        nsAutoString charsetValue;
-        nsCharsetSource charsetSource;
-        nsAutoString theCharsetKey("charset"); 
-        nsAutoString theSourceKey("charsetSource"); 
-        nsAutoString intValue;
-
-        mParser->GetDocumentCharset(charsetValue, charsetSource);
-        // Add pseudo attribute in the end
-        if(index < 50) {
-          theKeys[index]=theCharsetKey.GetUnicode(); 
-          theValues[index] = charsetValue.GetUnicode();
-          index++;
-        }
-
-        if(index < 50) {
-          theKeys[index]=theSourceKey.GetUnicode(); 
-          PRInt32 sourceInt = charsetSource;
-          intValue.Append(sourceInt,10);
-          theValues[index] = intValue.GetUnicode();
-		  index++;
-        }
-
-        CParserContext* pc=mParser->PeekContext(); 
-        void* theDocID=(pc) ? pc-> mKey : 0; 
-        nsObserverNotifier theNotifier(aTag,index,theKeys,theValues,(PRUint32)theDocID); 
-        theDeque->FirstThat(theNotifier); 
-        result=theNotifier.mResult; 
-
-      }//if 
-    } 
+  nsDeque*  theDeque= (mParser && aTag != eHTMLTag_unknown)?  (mParser->GetObserverDictionary()).GetObserversForTag(aTag):nsnull;
+  if(theDeque){ 
+    PRUint32 theDequeSize=theDeque->GetSize(); 
+    if(0<theDequeSize){
+      PRInt32 index = 0; 
+      const PRUnichar* theKeys[50]  = {0,0,0,0,0}; // XXX -  should be dynamic
+      const PRUnichar* theValues[50]= {0,0,0,0,0}; // XXX -  should be dynamic
+      for(index=0; index<theAttrCount && index < 50; index++) {
+        theKeys[index]   = aNode.GetKeyAt(index).GetUnicode(); 
+        theValues[index] = aNode.GetValueAt(index).GetUnicode(); 
+      } 
+      nsAutoString charsetValue;
+      nsCharsetSource charsetSource;
+      nsAutoString theCharsetKey("charset"); 
+      nsAutoString theSourceKey("charsetSource"); 
+      nsAutoString intValue;
+      mParser->GetDocumentCharset(charsetValue, charsetSource);
+      // Add pseudo attribute in the end
+      if(index < 50) {
+        theKeys[index]=theCharsetKey.GetUnicode(); 
+        theValues[index] = charsetValue.GetUnicode();
+        index++;
+      }
+      if(index < 50) {
+        theKeys[index]=theSourceKey.GetUnicode(); 
+        PRInt32 sourceInt = charsetSource;
+        intValue.Append(sourceInt,10);
+        theValues[index] = intValue.GetUnicode();
+	  	  index++;
+      }
+      CParserContext* pc=mParser->PeekContext(); 
+      void* theDocID=(pc) ? pc-> mKey : 0; 
+      nsObserverNotifier theNotifier((PRUnichar*)NS_EnumToTag(aTag),(PRUint32)theDocID,index,theKeys,theValues);
+      theDeque->FirstThat(theNotifier); 
+      result=theNotifier.mResult; 
+     }//if 
   } 
 
 
@@ -1564,7 +1524,7 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
           if(theTag != eHTMLTag_unknown) {
             attrCount    = theToken->GetAttributeCount();
             // Put back attributes, which once got popped out, into the tokenizer
-            for(i=0;i<attrCount; i++){
+            for(PRInt32 j=0;j<attrCount; j++){
               CToken* theAttrToken = mBodyContext->RestoreTokenFrom(theBadContentIndex);
               if(theAttrToken) {
                 mTokenizer->PushTokenFront(theAttrToken);
@@ -1582,7 +1542,7 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
      
       // Bad-contents were successfully processed. Now, itz time to get
       // back to the original body context state.
-      for(PRInt32 j=0; j<(theTagCount - theTopIndex); j++)
+      for(PRInt32 k=0; k<(theTagCount - theTopIndex); k++)
         mBodyContext->Push(temp.Pop());
       
       // Terminate the new context and switch back to the main context

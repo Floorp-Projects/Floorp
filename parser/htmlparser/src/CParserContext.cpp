@@ -44,7 +44,6 @@ CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver*
   mDTD=0;
   mTransferBufferSize=eTransferBufferSize;
   mParserEnabled=PR_TRUE;
-  mParserTerminated=PR_FALSE;
   mStreamListenerState=eNone;
   mMultipart=PR_TRUE;
   mContextType=eCTNone;

@@ -63,6 +63,7 @@
 #include "nsParserCIID.h"
 #include "nsITokenizer.h"
 #include "nsHTMLTags.h"
+#include "nsDTDUtils.h"
 
 class IContentSink;
 class nsIDTD;
@@ -278,6 +279,14 @@ friend class CTokenHandler;
      */
     virtual nsresult  CreateTagStack(nsITagStack** aTagStack);
 
+    /**
+     * Call this to access observer dictionary ( internal to parser )
+     * @update	harishd 06/27/99
+     * @param   
+     * @return  
+     */
+    CObserverDictionary& GetObserverDictionary(void) { return mObserverDictionary; }
+
 protected:
 
     /**
@@ -361,6 +370,7 @@ protected:
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;
+    PRBool              mParserTerminated;
     nsString            mCommand;
     PRInt32             mStreamStatus;
     nsITokenObserver*   mTokenObserver;
@@ -368,6 +378,7 @@ protected:
     nsString            mCharset;
     nsCharsetSource     mCharsetSource;
     nsresult            mInternalState;
+    CObserverDictionary mObserverDictionary;
 };
 
 
