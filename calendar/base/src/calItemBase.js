@@ -107,6 +107,7 @@ calItemBase.prototype = {
 
 
     get propertyEnumerator() { return this.mProperties.enumerator; },
+
     getProperty: function (aName) {
         try {
             return this.mProperties.getProperty(aName);
@@ -114,11 +115,13 @@ calItemBase.prototype = {
             return null;
         }
     },
+
     setProperty: function (aName, aValue) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
         this.mProperties.setProperty(aName, aValue);
     },
+
     deleteProperty: function (aName) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
@@ -132,12 +135,14 @@ calItemBase.prototype = {
         countObj.value = this.mAttendees.length;
         return this.mAttendees.concat([]);
     },
+
     getAttendeeById: function (id) {
         for (var i = 0; i < this.mAttendees.length; i++)
             if (this.mAttendees[i].id == id)
                 return this.mAttendees[i];
         return null;
     },
+
     removeAttendee: function (attendee) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
@@ -153,6 +158,13 @@ calItemBase.prototype = {
         else
             throw Component.results.NS_ERROR_INVALID_ARG;
     },
+
+    removeAllAttendees: function() {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        this.mAttendees = [];
+    },
+
     addAttendee: function (attendee) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;

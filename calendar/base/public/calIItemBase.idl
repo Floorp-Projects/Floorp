@@ -168,6 +168,7 @@ interface calIItemBase : nsISupports
   calIAttendee getAttendeeById(in AUTF8String id);
   void removeAttendee(in calIAttendee attendee);
   void addAttendee(in calIAttendee attendee);
+  void removeAllAttendees();
 };
 
 //
