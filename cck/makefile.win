@@ -33,7 +33,6 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\Configs
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Output
-	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Network
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\AnimLogo
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun
@@ -75,6 +74,31 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup\NCIFiles
 
-	-mkdir $(CCKDIST)\CCKTool\Shell
 	-mkdir $(CCKDIST)\CCKTool\NSCPXPI
-	
+
+#  We populate empty folders so zip will pick them up.
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Output
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Workspace\AnimLogo
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Workspace\Bkmarks
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Workspace\CustInst
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Workspace\Installer
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\Default\Workspace\ISetup\NCIFiles
+
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Output
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\AnimLogo
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\bmps
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\NSetup32
+
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Bkmarks
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\CustInst
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Installer
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\ISetup\NCIFiles
+
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\CD
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Network
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\AnimLogo
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\Bkmarks
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\CustInst
+     	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\Installer
+	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup\NCIFiles
+
