@@ -10,7 +10,7 @@ TemplateToolkit
    [%- indent = '' -%]
 [%- END %]
 
-  <form action="?" method="GET">
+  <form action="./" method="GET">
 [%- "\n   <ol>" IF manyUsers -%]
 [%- FOREACH userID = userIDs -%]
   [%- user = userData.$userID -%]

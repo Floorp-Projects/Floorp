@@ -6,7 +6,7 @@ TemplateToolkit
   <p>Your password has been sent.</p>
 
   [% IF pendingCommands.ref %]
-  <form action="" method="GET"> <!-- XXX POST -->
+  <form action="./" method="POST" enctype="multipart/form-data">
    <p>
     <input type="submit" value="Continue...">
     [%- FOREACH key = pendingCommands.keys -%] [%- FOREACH value = pendingCommands.$key %]

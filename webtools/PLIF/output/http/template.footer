@@ -3,7 +3,7 @@ TemplateToolkit
 
   <div class="footer">
    <p>
-    <a href="?">Index</a> -
+    <a href="./">Index</a> -
 [%- IF session.ref %]
     <a href="?command=userPrefs">Preferences</a> -
   [%- IF session.right.cosesEditor %]

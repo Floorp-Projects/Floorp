@@ -3,7 +3,7 @@ TemplateToolkit
 
 [% INCLUDE template.header title = 'Create Account' -%]
 
-  <form action="" method="GET"> <!-- XXX POST -->
+  <form action="./" method="POST" enctype="multipart/form-data">
    <p>To create a new account fill in your e-mail address or other
    means of contact in the form below and hit the submit button:</p>
 

@@ -7,7 +7,7 @@ TemplateToolkit
     headers = "WWW-Authenticate: Basic realm=\"$app.name\"\n"
 -%]
 
-  <form action="" method="GET"> <!-- XXX POST -->
+  <form action="./" method="POST" enctype="multipart/form-data">
  
    [% IF tried == 1 -%] <p> The password or username you used is incorrect. </p> [%- END %]
 
