@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.25 2001/03/23 19:33:59 relyea%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.26 2001/12/06 03:19:22 jpierre%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -1287,7 +1287,7 @@ main(int argc, char **argv)
 	Usage(progName);
 	exitstatus = 1;
     }
-    if (mode == SIGN || mode == ENVELOPE || mode == CERTSONLY) {
+    if ( (mode == SIGN || mode == ENVELOPE || mode == CERTSONLY) && (!exitstatus) ) {
 	PLArenaPool *arena = PORT_NewArena(1024);
 	NSSCMSEncoderContext *ecx;
 	SECItem output = { 0, 0, 0 };
@@ -1332,7 +1332,7 @@ main(int argc, char **argv)
 	}
 	rv = NSS_CMSEncoder_Finish(ecx);
 	if (rv) {
-	    fprintf(stderr, "%s: failed to encode data.\n", progName);
+            SECU_PrintError(progName, "failed to encode data");
 	    exit(1);
 	}
 
