@@ -750,12 +750,16 @@ HRESULT LaunchApps()
   DWORD     dwIndex0;
   siC       *siCObject = NULL;
   char      szArchiveName[MAX_BUF];
+  char      szMsg[MAX_BUF];
+
+  if(NS_LoadString(hSetupRscInst, IDS_MSG_CONFIGURING, szMsg, MAX_BUF) != WIZ_OK)
+    return(1);
 
   dwIndex0 = 0;
   siCObject = SiCNodeGetObject(dwIndex0, TRUE);
   while(siCObject)
   {
-    /* launch smartupdate engine for earch jar to be installed */
+    /* launch 3rd party executable */
     if((siCObject->dwAttributes & SIC_SELECTED) && (siCObject->dwAttributes & SIC_LAUNCHAPP))
     {
       lstrcpy(szArchiveName, szTempDir);
@@ -764,7 +768,9 @@ HRESULT LaunchApps()
 
       if(FileExists(szArchiveName))
       {
+        ShowMessage(szMsg, TRUE);
         WinSpawn(szArchiveName, siCObject->szParameter, szTempDir, SW_SHOWNORMAL, TRUE);
+        ShowMessage(szMsg, FALSE);
       }
     }
     ++dwIndex0;
