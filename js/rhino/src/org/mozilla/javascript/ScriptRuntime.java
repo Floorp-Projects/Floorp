@@ -718,6 +718,35 @@ public class ScriptRuntime {
         throw we;
     }
 
+    /**
+     * Converts Java exceptions that JS can catch into an object the script
+     * will see as the catch argument.
+     */
+    public static Object getCatchObject(Context cx, Scriptable scope,
+                                        Throwable exception)
+    {
+        Object catchObj;
+        for (;;) {
+            if (exception instanceof JavaScriptException) {
+                catchObj = ScriptRuntime.unwrapJavaScriptException(
+                               (JavaScriptException)exception);
+            } else if (exception instanceof EcmaError) {
+                // an offical ECMA error object,
+                catchObj = ((EcmaError)exception).getErrorObject();
+            } else if (exception instanceof WrappedException) {
+                WrappedException wex = (WrappedException)exception;
+                exception = wex.getWrappedException();
+                continue;
+            } else {
+                // catch can not be called with any other exceptions
+                Context.codeBug();
+                catchObj = null;
+            }
+            break;
+        }
+        return catchObj;
+    }
+
     public static Object getProp(Object obj, String id, Scriptable scope) {
         if (obj == null || obj == Undefined.instance) {
             throw NativeGlobal.undefReadError(obj, id, scope);
