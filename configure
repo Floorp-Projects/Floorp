@@ -8072,7 +8072,7 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  NSPR_LIBS="-lplc21 $NSPR_LIBS"
+  NSPR_LIBS="-lplc3 $NSPR_LIBS"
 else
   echo "$ac_t""no" 1>&6
 MISSING_NSPR="$MISSING_NSPR -lplc3"
@@ -8113,7 +8113,7 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  NSPR_LIBS="-lplds21 $NSPR_LIBS"
+  NSPR_LIBS="-lplds3 $NSPR_LIBS"
 else
   echo "$ac_t""no" 1>&6
 MISSING_NSPR="$MISSING_NSPR -lplds3"
