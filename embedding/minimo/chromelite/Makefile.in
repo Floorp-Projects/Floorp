@@ -42,7 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-
 MODULE_NAME     = chromelite
 MODULE		= chrmlite
 LIBRARY_NAME	= chrmlite
@@ -64,7 +63,7 @@ CPPSRCS		=			 \
 		nsSimpleChromeRegistry.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) -L$(DIST)/bin/components -lnecko 
 
 LOCAL_INCLUDES =                        \
         -I$(topsrcdir)/netwerk/base/src \
