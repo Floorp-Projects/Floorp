@@ -163,3 +163,7 @@ Ben Bucksch reports that installing the Red Hat 6.1 glibc rpms on a Red Hat
 6.0 system allows jprof to work, and does not seem to break anything except
 gdm (the Gnome login program), and that can be fixed by installing the RH 6.1
 gdb rpm.
+<h3>Update</h3>
+David Baron reports that jprof works under RedHat 6.0 if one uncomments
+the <code>#define JPROF_PTHREAD_HACK</code> near the beginning of
+<code>libmalloc.cpp</code>.
