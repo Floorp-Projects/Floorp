@@ -604,9 +604,6 @@ static NSArray* sToolbarDefaults = nil;
         [menuFormRep setTitle:[toolbarItem label]];
         
         [toolbarItem setMenuFormRepresentation:menuFormRep];
-
-        mLocationToolbarItem = toolbarItem;
-
     } else if ( [itemIdent isEqual:PrintToolbarItemIdentifier] ) {
         [toolbarItem setLabel:@"Print"];
         [toolbarItem setPaletteLabel:@"Print"];
