@@ -159,25 +159,26 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
 #ifdef NS_DEBUG
     nsCOMPtr<nsIAtom> type;
     firstFrame->GetFrameType(getter_AddRefs(type));
-    NS_ASSERTION(type.get() == nsLayoutAtoms::pageContentFrame, "This frame isn't a pageContentFrame");
+    NS_ASSERTION(nsLayoutAtoms::pageContentFrame == type, "This frame isn't a pageContentFrame");
 #endif
 
-    if (contentPage && contentPage->mFrames.IsEmpty() && nsnull != mPrevInFlow) {
+    if (contentPage && mPrevInFlow) {
       nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, mPrevInFlow);
       nsPageContentFrame* prevContentPage = NS_STATIC_CAST(nsPageContentFrame*, prevPage->mFrames.FirstChild());
       nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
 
       // Create a continuing child of the previous page's last child
-      nsIPresShell* presShell;
-      nsIStyleSet*  styleSet;
+      nsCOMPtr<nsIPresShell> presShell;
+      nsCOMPtr<nsIStyleSet>  styleSet;
       nsIFrame*     newFrame;
 
-      aPresContext->GetShell(&presShell);
-      presShell->GetStyleSet(&styleSet);
-      NS_RELEASE(presShell);
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      presShell->GetStyleSet(getter_AddRefs(styleSet));
       styleSet->CreateContinuingFrame(aPresContext, prevLastChild, contentPage, &newFrame);
-      NS_RELEASE(styleSet);
-      contentPage->mFrames.SetFrames(newFrame);
+      // Make the new area frame the 1st child of the page content frame. There may already be
+      // children placeholders which don't get reflowed but must not be destroyed until the 
+      // page content frame is destroyed.
+      contentPage->mFrames.InsertFrame(contentPage, nsnull, newFrame);
     }
 
     // Resize our frame allowing it only to be as big as we are

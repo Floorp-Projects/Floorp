@@ -395,7 +395,7 @@ NS_NewBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags
   return NS_OK;
 }
 
-nsBlockFrame::nsBlockFrame()
+nsBlockFrame::nsBlockFrame() 
 {
 #ifdef DEBUG
   InitDebugFlags();
@@ -584,7 +584,7 @@ nsBlockFrame::FirstChild(nsIPresContext* aPresContext,
                          nsIFrame**      aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
-  if (aListName == nsLayoutAtoms::absoluteList) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
   }
   else if (nsnull == aListName) {
@@ -634,7 +634,7 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
     NS_ADDREF(*aListName);
     break;
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
-    *aListName = nsLayoutAtoms::absoluteList;
+    *aListName = mAbsoluteContainer.GetChildListName();
     NS_ADDREF(*aListName);
     break;
   }
@@ -1087,7 +1087,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
                                      containingBlockWidth,
                                      containingBlockHeight,
-                                     childBounds);
+                                     &childBounds);
     } else {
       mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
     }
@@ -4785,7 +4785,7 @@ nsBlockFrame::AppendFrames(nsIPresContext* aPresContext,
   if (nsnull == aFrameList) {
     return NS_OK;
   }
-  if (nsLayoutAtoms::absoluteList == aListName) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     return mAbsoluteContainer.AppendFrames(this, aPresContext, aPresShell, aListName,
                                            aFrameList);
   }
@@ -4832,7 +4832,7 @@ nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList)
 {
-  if (nsLayoutAtoms::absoluteList == aListName) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     return mAbsoluteContainer.InsertFrames(this, aPresContext, aPresShell, aListName,
                                            aPrevFrame, aFrameList);
   }
@@ -4992,7 +4992,7 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
   if (nsnull == aListName) {
     rv = DoRemoveFrame(aPresContext, aOldFrame);
   }
-  else if (nsLayoutAtoms::absoluteList == aListName) {
+  else if (mAbsoluteContainer.GetChildListName() == aListName) {
     return mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell,
                                           aListName, aOldFrame);
   }
@@ -5066,7 +5066,7 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
     block->mAbsoluteContainer.RemoveFrame(block, aPresContext, *presShell,
-                                          nsLayoutAtoms::absoluteList, aFrame);
+                                          block->mAbsoluteContainer.GetChildListName(), aFrame);
   }
   else {
     block->mFloaters.RemoveFrame(aFrame);
@@ -6149,7 +6149,7 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
         nsresult          rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
                                                        eReflowType_ReflowDirty);
         if (NS_SUCCEEDED(rv)) {
-          reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
+          reflowCmd->SetChildListName(mAbsoluteContainer.GetChildListName());
           aPresShell->AppendReflowCommand(reflowCmd);
         }
 
@@ -6350,7 +6350,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   nsresult rv = NS_OK;
 
-  if (nsLayoutAtoms::absoluteList == aListName) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     mAbsoluteContainer.SetInitialChildList(this, aPresContext, aListName, aChildList);
   }
   else if (nsLayoutAtoms::floaterList == aListName) {

@@ -92,6 +92,13 @@ public:
                                 nsIContent*     aDocElement,
                                 nsIFrame*&      aNewFrame);
 
+  NS_IMETHOD ConstructPageFrame(nsIPresShell*   aPresShell, 
+                                nsIPresContext* aPresContext,
+                                nsIFrame*       aParentFrame,
+                                nsIFrame*       aPrevPageFrame,
+                                nsIFrame*&      aPageFrame,
+                                nsIFrame*&      aPageContentFrame);
+
   NS_IMETHOD ReconstructDocElementHierarchy(nsIPresContext* aPresContext);
 
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,

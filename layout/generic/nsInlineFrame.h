@@ -40,6 +40,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLineLayout.h"
+#include "nsLayoutAtoms.h"
 
 class nsAnonymousBlockFrame;
 
@@ -208,6 +209,10 @@ protected:
 class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
+  nsPositionedInlineFrame() { }          // useful for debugging
+
+  virtual ~nsPositionedInlineFrame() { } // useful for debugging
+
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
