@@ -788,7 +788,7 @@ public:
    * Get the current frame-state value for this frame. aResult is
    * filled in with the state bits. 
    */
-  nsFrameState GetStateBits() { return mState; }
+  nsFrameState GetStateBits() const { return mState; }
 
   /**
    * Update the current frame-state value for this frame. 
