@@ -144,6 +144,9 @@ typedef struct _MDThread _MDThread;
 typedef struct _MDThreadStack _MDThreadStack;
 typedef struct _MDSemaphore _MDSemaphore;
 typedef struct _MDDir _MDDir;
+#ifdef MOZ_UNICODE
+typedef struct _MDDirUTF16 _MDDirUTF16;
+#endif /* MOZ_UNICODE */
 typedef struct _MDFileDesc _MDFileDesc;
 typedef struct _MDProcess _MDProcess;
 typedef struct _MDFileMap _MDFileMap;
@@ -1144,6 +1147,24 @@ extern PRInt32 _PR_MD_MAKE_DIR(const char *name, PRIntn mode);
 extern PRInt32 _PR_MD_RMDIR(const char *name);
 #define _PR_MD_RMDIR _MD_RMDIR
 
+#ifdef MOZ_UNICODE
+/* UTF16 File I/O related */
+extern PRStatus _PR_MD_OPEN_DIR_UTF16(_MDDirUTF16 *md, const PRUnichar *name);
+#define    _PR_MD_OPEN_DIR_UTF16 _MD_OPEN_DIR_UTF16
+
+extern PRInt32 _PR_MD_OPEN_FILE_UTF16(const PRUnichar *name, PRIntn osflags, PRIntn mode);
+#define    _PR_MD_OPEN_FILE_UTF16 _MD_OPEN_FILE_UTF16
+
+extern PRUnichar * _PR_MD_READ_DIR_UTF16(_MDDirUTF16 *md, PRIntn flags);
+#define    _PR_MD_READ_DIR_UTF16 _MD_READ_DIR_UTF16
+
+extern PRInt32 _PR_MD_CLOSE_DIR_UTF16(_MDDirUTF16 *md);
+#define    _PR_MD_CLOSE_DIR_UTF16 _MD_CLOSE_DIR_UTF16
+
+extern PRInt32 _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info);
+#define _PR_MD_GETFILEINFO64_UTF16 _MD_GETFILEINFO64_UTF16
+#endif /* MOZ_UNICODE */
+
 /* Socket I/O related */
 extern void _PR_MD_INIT_IO(void);
 #define    _PR_MD_INIT_IO _MD_INIT_IO
@@ -1735,6 +1756,13 @@ struct PRDir {
     PRDirEntry d;
     _MDDir md;
 };
+
+#ifdef MOZ_UNICODE
+struct PRDirUTF16 { 
+    PRDirEntry d; 
+    _MDDirUTF16 md; 
+}; 
+#endif /* MOZ_UNICODE */
 
 extern void _PR_InitSegs(void);
 extern void _PR_InitStacks(void);
