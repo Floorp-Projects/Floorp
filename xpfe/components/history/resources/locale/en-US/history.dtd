@@ -15,11 +15,11 @@
 <!ENTITY findHisCmd.accesskey   "f">
 <!ENTITY historyWindowTitle.label   "History">
 <!ENTITY tree.header.name.label     "Title">
-<!ENTITY tree.header.name.accesskey "t">
 <!ENTITY tree.header.url.label      "URL">
-<!ENTITY tree.header.url.label "u">
 <!ENTITY tree.header.date.label     "Last Visited">
-<!ENTITY tree.header.date.label "l">
+<!ENTITY tree.header.firstvisitdate.label     "First Visited">
+<!ENTITY tree.header.referrer.label "Referrer">
+<!ENTITY tree.header.visitcount.label "Visit Count">
 <!ENTITY menuitem.view.unsorted.label "Unsorted">
 <!ENTITY menuitem.view.unsorted.accesskey "u">
 <!ENTITY menuitem.view.ascending.label "A > Z Sort Order">
