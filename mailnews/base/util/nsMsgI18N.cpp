@@ -297,23 +297,19 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
   nsresult res;
 
   outString->SetString("");
-
-  NS_WITH_SERVICE(nsIEntityConverter, entityConv, kEntityConverterCID, &res); 
+  nsCOMPtr <nsIEntityConverter> entityConv;
+  res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, 
+                                           nsIEntityConverter::GetIID(), getter_AddRefs(entityConv));
   if(NS_SUCCEEDED(res) && (NULL != entityConv)) {
-    for (PRInt32 i = 0; i < inString.Length(); i++) {
-      PRUnichar *entity = NULL;
-      res = entityConv->ConvertToEntity(inString[i], &entity);
-      if (NS_SUCCEEDED(res) && NULL != entity) {
-        outString->Append(entity);
-        nsAllocator::Free(entity);
-      }
-      else {
-        outString->Append(inString[i]);
-      }
-    }
-  }
-
-  return NS_OK; // ignore error since the converter returns error for non entities
+    PRUnichar *entities = NULL;
+    res = entityConv->ConvertToEntities(inString.GetUnicode(), nsIEntityConverter::html40Latin1, &entities);
+    if (NS_SUCCEEDED(res) && (NULL != entities)) {
+      outString->SetString(entities);
+      nsAllocator::Free(entities);
+     }
+   }
+ 
+  return res;
 }
 
 // RICHIE - not sure about this one?? need to see what it did in the old

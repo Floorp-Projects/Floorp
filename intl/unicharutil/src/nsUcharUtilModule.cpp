@@ -24,6 +24,7 @@
 #include "nsTextTransformFactory.h"
 #include "nsICaseConversion.h"
 #include "nsEntityConverter.h"
+#include "nsSaveAsCharset.h"
 #include "nsUUDll.h"
 
 PRInt32 g_InstanceCount = 0;
@@ -32,6 +33,7 @@ PRInt32 g_LockCount = 0;
 static NS_DEFINE_CID(kUnicharUtilCID,      NS_UNICHARUTIL_CID);
 static NS_DEFINE_CID(kHankakuToZenkakuCID, NS_HANKAKUTOZENKAKU_CID);
 static NS_DEFINE_CID(kEntityConverterCID,  NS_ENTITYCONVERTER_CID);
+static NS_DEFINE_CID(kSaveAsCharsetCID,    NS_SAVEASCHARSET_CID);
 
 // Module implementation
 class nsUcharUtilModule : public nsIModule
@@ -53,6 +55,7 @@ protected:
     nsCOMPtr<nsIGenericFactory> mHankakuToZenkakuFactory;
     nsCOMPtr<nsIGenericFactory> mUnicharUtilFactory;
     nsCOMPtr<nsIGenericFactory> mEntityConverterFactory;
+    nsCOMPtr<nsIGenericFactory> mSaveAsCharsetFactory;
 };
 
 
@@ -90,6 +93,7 @@ CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 MAKE_CTOR(CaseConversion)
 MAKE_CTOR(HankakuToZenkaku)
 MAKE_CTOR(EntityConverter)
+MAKE_CTOR(SaveAsCharset)
 
 //----------------------------------------------------------------------
 
@@ -127,6 +131,7 @@ nsUcharUtilModule::Shutdown()
     mHankakuToZenkakuFactory = nsnull;
     mUnicharUtilFactory = nsnull;
     mEntityConverterFactory = nsnull;
+    mSaveAsCharsetFactory = nsnull;
 }
 
 // Create a factory object for creating instances of aClass.
@@ -172,6 +177,14 @@ nsUcharUtilModule::GetClassObject(nsIComponentManager *aCompMgr,
         fact = mEntityConverterFactory;
     }
     else
+    if (aClass.Equals(kSaveAsCharsetCID)) {
+        if (!mSaveAsCharsetFactory) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mSaveAsCharsetFactory),
+                                      CreateNewSaveAsCharset);
+        }
+        fact = mSaveAsCharsetFactory;
+    }
+    else
     if (aClass.Equals(kHankakuToZenkakuCID)) {
         if(!mHankakuToZenkakuFactory) {
             rv = NS_NewGenericFactory(getter_AddRefs(mHankakuToZenkakuFactory),
@@ -209,6 +222,8 @@ static Components gComponents[] = {
       NS_UNICHARUTIL_PROGID, },
     { "Unicode To Entity Converter", &kEntityConverterCID,
       NS_ENTITYCONVERTER_PROGID, },
+    { "Unicode To Charset Converter", &kSaveAsCharsetCID,
+      NS_SAVEASCHARSET_PROGID, },
     { "Japanese Hankaku To Zenkaku", &kHankakuToZenkakuCID,
       NS_HANKAKUTOZENKAKU_PROGID, },
 };

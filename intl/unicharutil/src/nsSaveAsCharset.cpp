@@ -104,8 +104,9 @@ nsSaveAsCharset::Convert(const PRUnichar *inString, char **_retval)
     if (NULL == mEntityConverter) return NS_ERROR_FAILURE;
     PRUnichar *entity = NULL;
     // do the entity conversion first
-    rv = DoEntityConversion(inString, &entity);
-    if(NS_SUCCEEDED(rv) && NULL != entity) {
+    rv = mEntityConverter->ConvertToEntities(inString, mEntityVersion, &entity);
+    if(NS_SUCCEEDED(rv)) {
+      if (NULL == entity) return NS_ERROR_OUT_OF_MEMORY;
       rv = DoCharsetConversion(entity, _retval);
       nsAllocator::Free(entity);
     }
@@ -229,61 +230,6 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
 }
 
 NS_IMETHODIMP
-nsSaveAsCharset::DoEntityConversion(const PRUnichar *inString, PRUnichar **outString)
-{
-  NS_ASSERTION(outString, "invalid input");
-  if(nsnull == outString)
-    return NS_ERROR_NULL_POINTER;
-
-  *outString = NULL;
-
-  nsresult rv;
-  
-  nsString aString(inString), tempString("");
-
-  for (PRInt32 i = 0; i < aString.Length(); i++) {
-    PRUnichar *entity = NULL;
-    rv = mEntityConverter->ConvertToEntity(inString[i], &entity);
-    if (NS_SUCCEEDED(rv) && NULL != entity) {
-      tempString.Append(entity);
-      nsAllocator::Free(entity);
-    }
-    else {
-      tempString.Append(inString[i]);
-     }
-  }
-  *outString = tempString.ToNewUnicode();
-  if(nsnull == outString)
-    return NS_ERROR_OUT_OF_MEMORY;
-  else
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSaveAsCharset::DoEntityConversion(PRUnichar inCharacter, char *outString, PRInt32 bufferLength)
-{
-  NS_ASSERTION(outString, "invalid input");
-  if(nsnull == outString)
-    return NS_ERROR_NULL_POINTER;
-
-  *outString = NULL;
-
-  PRUnichar *entity = NULL;
-  nsresult rv;
-  
-  rv = mEntityConverter->ConvertToEntity(inCharacter, &entity);
-  if (NS_SUCCEEDED(rv) && NULL != entity) {
-    nsString temp(entity);
-    nsAllocator::Free(entity);
-
-    if (NULL == temp.ToCString(outString, bufferLength))
-       return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PRInt32 bufferLength)
 {
   NS_ASSERTION(outString, "invalid input");
@@ -298,8 +244,16 @@ nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PR
     return NS_OK;
   }
   if (attr_EntityAfterCharsetConv == MASK_ENTITY(mAttribute)) {
-    rv = DoEntityConversion(inCharacter, outString, bufferLength);
-    if (NS_SUCCEEDED(rv)) return rv;
+    char *entity = NULL;
+    rv = mEntityConverter->ConvertToEntity(inCharacter, mEntityVersion, &entity);
+    if (NS_SUCCEEDED(rv)) {
+      if (NULL == entity || (PRInt32)nsCRT::strlen(entity) > bufferLength) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      PL_strcpy(outString, entity);
+      nsAllocator::Free(entity);
+      return rv;
+    }
   }
 
   switch (MASK_FALLBACK(mAttribute)) {
@@ -341,6 +295,7 @@ NS_NewSaveAsCharset(nsISupports **inst)
   if(nsnull == inst )
     return NS_ERROR_NULL_POINTER;
   *inst = (nsISupports *) new nsSaveAsCharset;
-  if (NULL == *inst) return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
+   if(*inst)
+      NS_ADDREF(*inst);
+   return (*inst) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
