@@ -60,6 +60,7 @@ interface nsISocketTransportService : nsISupports
     boolean reuseTransport(in nsIChannel i_Transport);
 
     void init	 ();
+	void lateInit();
     void shutdown();
     void wakeup  (in nsIChannel i_Transport);
 
