@@ -2,6 +2,22 @@
 #define nsNetCID_h__
 
 //
+// nsCacheService
+//
+#define NS_CACHESERVICE_CLASSNAME \
+    "Cache Service"
+#define NS_CACHESERVICE_CONTRACTID \
+    "@mozilla.org/network/cache-service;1"
+#define NS_CACHESERVICE_CID                          \
+{ /* 6c84aec9-29a5-4264-8fbc-bee8f922ea67 */         \
+    0x6c84aec9,                                      \
+    0x29a5,                                          \
+    0x4264,                                          \
+    {0x8f, 0xbc, 0xbe, 0xe8, 0xf9, 0x22, 0xea, 0x67} \
+}
+
+
+//
 // nsStreamObserverProxy
 //
 #define NS_STREAMOBSERVERPROXY_CLASSNAME \
