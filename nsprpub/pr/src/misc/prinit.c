@@ -220,6 +220,10 @@ static void _PR_InitStuff(void)
 	_PR_InitCPUs();
 #endif
 
+#ifdef _PR_ZONE_ALLOCATOR
+    _PR_InitZones();
+#endif
+
 /*
  * XXX: call _PR_InitMem only on those platforms for which nspr implements
  *	malloc, for now.
