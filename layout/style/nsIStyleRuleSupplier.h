@@ -16,10 +16,10 @@ class nsIStyleRuleSupplier : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLERULESUPPLIER_IID)
 
-  NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult)=0;
   NS_IMETHOD WalkRules(nsStyleSet* aStyleSet, 
                        nsIStyleRuleProcessor::EnumFunc aFunc,
-                       RuleProcessorData* aData)=0;
+                       RuleProcessorData* aData,
+                       PRBool* aCutOffInheritance)=0;
 };
 
 #endif /* _nsIStyleRuleSupplier_h */

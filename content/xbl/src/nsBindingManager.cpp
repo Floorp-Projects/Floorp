@@ -357,10 +357,10 @@ public:
   NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
 
   // nsIStyleRuleSupplier
-  NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD WalkRules(nsStyleSet* aStyleSet, 
                        nsIStyleRuleProcessor::EnumFunc aFunc,
-                       RuleProcessorData* aData);
+                       RuleProcessorData* aData,
+                       PRBool* aCutOffInheritance);
 
   // nsIDocumentObserver
   virtual void ContentAppended(nsIDocument* aDocument,
@@ -386,11 +386,6 @@ protected:
   nsIContent* GetEnclosingScope(nsIContent* aContent) {
     return aContent->GetBindingParent();
   }
-  nsIContent* GetOutermostStyleScope(nsIContent* aContent);
-
-  void WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
-                 RuleProcessorData* aData,
-                 nsIContent* aParent, nsIContent* aCurrContent);
 
   nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
 
@@ -839,15 +834,11 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
   if (style) {
     return NS_OK;
   }
-  
-  // Get to the document, this way is safer then using nsIContent::GetDocument
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContent);
-  NS_ASSERTION(node, "uh? RemoveLayeredBinding called on non-node");
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  node->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_UNEXPECTED);
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ASSERTION(doc, "document doesn't implement nsIDocument");
+
+  // Hold strong ref in case removing the binding tries to close the
+  // window or something.
+  nsCOMPtr<nsIDocument> doc = aContent->GetOwnerDoc();
+  NS_ASSERTION(doc, "No owner document?");
   
   // Finally remove the binding...
   binding->UnhookEventHandlers();
@@ -1205,69 +1196,53 @@ nsBindingManager::InheritsStyle(nsIContent* aContent, PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsBindingManager::UseDocumentRules(nsIContent* aContent, PRBool* aResult)
-{
-  if (!aContent)
-    return NS_OK;
-
-  *aResult = !GetOutermostStyleScope(aContent);
-  return NS_OK;
-}
-
-nsIContent*
-nsBindingManager::GetOutermostStyleScope(nsIContent* aContent)
-{
-  nsIContent* parent = GetEnclosingScope(aContent);
-  while (parent) {
-    PRBool inheritsStyle = PR_TRUE;
-    nsCOMPtr<nsIXBLBinding> binding;
-    GetBinding(parent, getter_AddRefs(binding));
-    if (binding) {
-      binding->InheritsStyle(&inheritsStyle);
-    }
-    if (!inheritsStyle)
-      break;
-    nsIContent* child = parent;
-    parent = GetEnclosingScope(child);
-    if (parent == child)
-      break; // The scrollbar case only is deliberately hacked to return itself
-             // (see GetBindingParent in nsXULElement.cpp).
-  }
-  return parent;
-}
-
-void
-nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
-                            RuleProcessorData* aData,
-                            nsIContent* aParent, nsIContent* aCurrContent)
-{
-  nsCOMPtr<nsIXBLBinding> binding;
-  GetBinding(aCurrContent, getter_AddRefs(binding));
-  if (binding) {
-    aData->mScopedRoot = aCurrContent;
-    binding->WalkRules(aFunc, aData);
-  }
-  if (aParent != aCurrContent) {
-    nsCOMPtr<nsIContent> par = GetEnclosingScope(aCurrContent);
-    if (par)
-      WalkRules(aFunc, aData, aParent, par);
-  }
-}
-
-NS_IMETHODIMP
 nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
                             nsIStyleRuleProcessor::EnumFunc aFunc,
-                            RuleProcessorData* aData)
+                            RuleProcessorData* aData,
+                            PRBool* aCutOffInheritance)
 {
-  nsIContent *content = aData->mContent;
-  if (!content)
+  *aCutOffInheritance = PR_FALSE;
+  
+  if (!aData->mContent)
     return NS_OK;
 
-  nsCOMPtr<nsIContent> parent = GetOutermostStyleScope(content);
+  // Walk the binding scope chain, starting with the binding attached to our
+  // content, up till we run out of scopes or we get cut off.
+  nsIContent *content = aData->mContent;
+  
+  do {
+    nsCOMPtr<nsIXBLBinding> binding;
+    GetBinding(content, getter_AddRefs(binding));
+    if (binding) {
+      aData->mScopedRoot = content;
+      binding->WalkRules(aFunc, aData);
+      // If we're not looking at our original content, allow the binding to cut
+      // off style inheritance
+      if (content != aData->mContent) {
+        PRBool inheritsStyle = PR_TRUE;
+        binding->InheritsStyle(&inheritsStyle);
+        if (!inheritsStyle) {
+          // Go no further; we're not inheriting style from anything above here
+          break;
+        }
+      }
+    }
 
-  WalkRules(aFunc, aData, parent, content);
+    nsIContent* parent = GetEnclosingScope(content);
+    if (parent == content)
+      break; // The scrollbar case only is deliberately hacked to return itself
+             // (see GetBindingParent in nsXULElement.cpp).  Actually, all
+             // native anonymous content is thus hacked.  Cut off inheritance
+             // here.
 
-  // Null out the scoped root that we set repeatedly in the other |WalkRules|.
+    content = parent;
+  } while (content);
+
+  // If "content" is non-null that means we cut off inheritance at some point
+  // in the loop.
+  *aCutOffInheritance = (content != nsnull);
+
+  // Null out the scoped root that we set repeatedly
   aData->mScopedRoot = nsnull;
 
   return NS_OK;

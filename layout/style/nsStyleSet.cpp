@@ -463,13 +463,13 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
     (*aCollectorFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
   nsRuleNode* lastHTMLPresHintRN = mRuleWalker->GetCurrentNode();
   
-  PRBool useRuleProcessors = PR_TRUE;
+  PRBool cutOffInheritance = PR_FALSE;
   if (mStyleRuleSupplier) {
     // We can supply additional document-level sheets that should be walked.
-    mStyleRuleSupplier->WalkRules(this, aCollectorFunc, aData);
-    mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
+    mStyleRuleSupplier->WalkRules(this, aCollectorFunc, aData,
+                                  &cutOffInheritance);
   }
-  if (useRuleProcessors && mRuleProcessors[eDocSheet]) // NOTE: different
+  if (!cutOffInheritance && mRuleProcessors[eDocSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eDocSheet], aData);
   if (mRuleProcessors[eStyleAttrSheet])
     (*aCollectorFunc)(mRuleProcessors[eStyleAttrSheet], aData);
@@ -511,13 +511,12 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   if (mRuleProcessors[eHTMLPresHintSheet])
     (*aFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
   
-  PRBool useRuleProcessors = PR_TRUE;
+  PRBool cutOffInheritance = PR_FALSE;
   if (mStyleRuleSupplier) {
     // We can supply additional document-level sheets that should be walked.
-    mStyleRuleSupplier->WalkRules(this, aFunc, aData);
-    mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
+    mStyleRuleSupplier->WalkRules(this, aFunc, aData, &cutOffInheritance);
   }
-  if (useRuleProcessors && mRuleProcessors[eDocSheet]) // NOTE: different
+  if (!cutOffInheritance && mRuleProcessors[eDocSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eDocSheet], aData);
   if (mRuleProcessors[eStyleAttrSheet])
     (*aFunc)(mRuleProcessors[eStyleAttrSheet], aData);
