@@ -147,6 +147,8 @@ public:
 
 	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
 
+  NS_IMETHOD  GetManyHeadersToDownload(PRBool *retval);
+
 	NS_IMETHOD GetDeletable (PRBool *deletable); 
   NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
 	NS_IMETHOD GetSizeOnDisk(PRUint32* size);

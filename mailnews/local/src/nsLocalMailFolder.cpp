@@ -362,7 +362,23 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::GetManyHeadersToDownload(PRBool *retval)
+{
+  PRBool isLocked;
+  // if the folder is locked, we're probably reparsing - let's build the
+  // view when we've finished reparsing.
+  GetLocked(&isLocked);
+  if (isLocked)
+  {
+    *retval = PR_TRUE;
+    return NS_OK;
+  }
+  else
+  {
+    return nsMsgDBFolder::GetManyHeadersToDownload(retval);
+  }
 
+}
 //run the url to parse the mailbox
 NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrlListener *listener)
 {

@@ -631,18 +631,11 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 	nsresult rv = NS_OK;
   mCurrentProgress += length;
 
-	if (m_mailboxParser)
+  if (m_mailboxParser)
 	{
 		nsCOMPtr <nsIURI> url = do_QueryInterface(m_runningUrl);
 		rv = m_mailboxParser->OnDataAvailable(nsnull, url, inputStream, sourceOffset, length); // let the parser deal with it...
-    if (mProgressEventSink)
-    {
-      PRInt32 contentLength = 0;
-      GetContentLength(&contentLength);
-      mProgressEventSink->OnProgress(this, url, mCurrentProgress, contentLength);
-    }
 	}
-
 	if (NS_FAILED(rv))
 	{
 		m_nextState = MAILBOX_ERROR_DONE; // drop out of the loop....
