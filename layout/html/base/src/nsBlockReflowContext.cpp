@@ -113,12 +113,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // reflow auto left/right margins will have a zero value.
   mMargin = reflowState.computedMargin;
   mStyleSpacing = reflowState.mStyleSpacing;
-#ifdef DEBUG_kipp
-  NS_ASSERTION((mMargin.left > -200000) &&
-               (mMargin.left < 200000), "oy");
-  NS_ASSERTION((mMargin.right > -200000) &&
-               (mMargin.right < 200000), "oy");
-#endif
   nscoord x = aSpace.x + mMargin.left;
   nscoord y = aSpace.y + mSpeculativeTopMargin;
   mX = x;
@@ -157,11 +151,12 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                           aFrameReflowStatus);
   mOuterReflowState.spaceManager->Translate(-tx, -ty);
 
-#ifdef DEBUG_kipp
-  NS_ASSERTION((mMetrics.width > -200000) && (mMetrics.width < 200000), "oy");
-  NS_ASSERTION((mMetrics.height > -200000) && (mMetrics.height < 200000), "oy");
-#endif
 #ifdef DEBUG
+  if (CRAZY_WIDTH(mMetrics.width) || CRAZY_HEIGHT(mMetrics.height)) {
+    printf("nsBlockReflowContext: ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" metrics=%d,%d!\n", mMetrics.width, mMetrics.height);
+  }
   if ((nsnull != mMetrics.maxElementSize) &&
       ((nscoord(0xdeadbeef) == mMetrics.maxElementSize->width) ||
        (nscoord(0xdeadbeef) == mMetrics.maxElementSize->height))) {
@@ -439,12 +434,6 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
                             mMetrics.width + mMargin.right,
                             mMetrics.height);
 
-#ifdef DEBUG_kipp
-      NS_ASSERTION((aInFlowBounds.width > -200000) &&
-                   (aInFlowBounds.width < 200000), "oy");
-      NS_ASSERTION((aInFlowBounds.height > -200000) &&
-                   (aInFlowBounds.height < 200000), "oy");
-#endif
 
       // Apply CSS relative positioning to update x,y coordinates
       const nsStylePosition* stylePos;
