@@ -21,6 +21,14 @@
  */
 
 #include "nspr.h"
+
+#if defined (WIN32)
+// XXX/ruslan:  we don't have CancelIo facility on 95/98 via NSPR.
+//              This needs to get fixed within NSPR eventually
+#include "private/pprio.h"
+#include "windows.h"
+#endif
+
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
 #include "nscore.h"
@@ -406,7 +414,25 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         //
         // A connection has been established with the server
         //
+        
         mSelectFlags = PR_POLL_EXCEPT;
+
+        // XXX/ruslan: in case of keel-alive we need to check whether the connection is still alive;
+        //  this is ugly, but so as this state machine. It's too late in doWrite to do anything; let
+        //  me know if someone sees a better solution
+        if (!mCloseConnectionOnceDone)
+        {
+            PRNetAddr peerAddr;
+            if (PR_GetPeerName (mSocketFD, &peerAddr) != PR_SUCCESS)
+            {
+                CloseConnection ();
+                mCloseConnectionOnceDone = PR_FALSE;
+
+                mCurrentState = eSocketState_WaitConnect;
+                continue;
+            }
+        }
+
         if (GetReadType() != eSocketRead_None) {
           // Set the select flags for non-blocking reads...
           mSelectFlags |= PR_POLL_READ;
@@ -535,6 +561,15 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             {
                 mStatus = NS_OK;
                 mSelectFlags &= (~PR_POLL_READ);
+
+#if defined (WIN32)
+                // XXX/ruslan: we must cancel on Win32 due to winsock implementation details 
+                // on some of Microsoft target OSes (98, NT4, Win2K, but not 95); This may 
+                // need to be moved into NSPR eventually
+
+                PRInt32 handle = PR_FileDesc2NativeHandle (mSocketFD);
+                CancelIo ((HANDLE)handle);
+#endif
             }
             else
                 mStatus = doRead (aSelectFlags);
@@ -861,15 +896,18 @@ nsReadFromSocket(void* closure,
     //
     // Error...
     //
-    else {
-      PRErrorCode code = PR_GetError();
+    else
+    {
+        PRErrorCode code = PR_GetError   ();
 
-    if (PR_WOULD_BLOCK_ERROR == code) {
+    if (PR_WOULD_BLOCK_ERROR == code)
+    {
         rv = NS_BASE_STREAM_WOULD_BLOCK;
-    } 
-    else {
-        PR_LOG(gSocketLog, PR_LOG_ERROR, 
-               ("PR_Read() failed. PRErrorCode = %x\n", code));
+    }
+    else
+    {
+        PRInt32 osCode = PR_GetOSError ();
+        PR_LOG (gSocketLog, PR_LOG_ERROR, ("PR_Read() failed. PRErrorCode = %x, os_error=%d\n", code, osCode));
 
         info -> bEOF = PR_TRUE;
 
@@ -1216,6 +1254,15 @@ nsresult nsSocketTransport::CloseConnection(PRBool bNow)
     mCurrentState = eSocketState_Closed;
     return NS_OK;
   }
+
+#if defined (WIN32)
+    // XXX/ruslan: we must cancel on Win32 due to winsock implementation details on some 
+    // of Microsoft target OSes (98, NT4, Win2K, but not 95)
+    // This may need to be moved into NSPR eventually; this has to be
+    // done even before PR_Close due to possible layered I/O (SSL for example) conflicts
+    PRInt32 handle = PR_FileDesc2NativeHandle (mSocketFD);
+    CancelIo ((HANDLE)handle);
+#endif
 
   status = PR_Close(mSocketFD);
   if (PR_SUCCESS != status) {
