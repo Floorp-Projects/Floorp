@@ -272,6 +272,23 @@ nsWalletlibService::UnregisterProc(nsIComponentManager *aCompMgr,
   return NS_OK;
 }
 
+PRBool expireMasterPassword = PR_FALSE;
+#define expireMasterPasswordPref "signon.expireMasterPassword"
+
+MODULE_PRIVATE int PR_CALLBACK
+ExpireMasterPasswordPrefChanged(const char * newpref, void * data) {
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (NS_FAILED(prefs->GetBoolPref(expireMasterPasswordPref, &expireMasterPassword))) {
+    expireMasterPassword = PR_FALSE;
+  }
+  if (expireMasterPassword) {
+      PRBool status;
+      WLLT_ExpirePassword(&status);
+  }
+  return 0;
+}
+
 nsresult nsWalletlibService::Init() 
 {
   nsresult rv;
@@ -299,6 +316,13 @@ nsresult nsWalletlibService::Init()
   else
     NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
   
+  /* initialize the expire-master-password feature */
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    prefs->RegisterCallback(expireMasterPasswordPref, ExpireMasterPasswordPrefChanged, NULL);
+    prefs->GetBoolPref(expireMasterPasswordPref, &expireMasterPassword);
+  }
+
   return NS_OK;
 }
 
@@ -447,6 +471,10 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
             }
           }
         }
+    }
+    if (expireMasterPassword) {
+      PRBool status;
+      WLLT_ExpirePassword(&status);
     }
     return rv;
 }
