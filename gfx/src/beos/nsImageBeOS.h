@@ -71,9 +71,6 @@ public:
 
 	NS_IMETHOD DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord aDY,
 		nscoord aDWidth, nscoord aDHeight);
- 
-	NS_IMETHOD DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, 
-		nsRect &aSrcRect, nsRect &aTileRect); 
 	
 	NS_IMETHOD DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, 
 		PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect); 
