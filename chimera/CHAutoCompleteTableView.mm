@@ -30,8 +30,8 @@
 {
   if ((self = [super initWithFrame: aRect])) {
     // Create our data source.
-    CHAutoCompleteDataSource* ds = [[[CHAutoCompleteDataSource alloc] init] autorelease];
-    [self setDataSource: ds];
+    mDataSource = [[CHAutoCompleteDataSource alloc] init];
+    [self setDataSource: mDataSource];
 
     // Create the URL column.
     NSTableColumn* urlColumn = [[[NSTableColumn alloc] initWithIdentifier:@"URL"] autorelease];
@@ -42,8 +42,15 @@
   return self;
 }
 
+-(void)dealloc
+{
+  [mDataSource release];
+  [super dealloc];
+}
+
 -(void)controlTextDidChange:(NSNotification*)aNotification
 {
+//  [[[[mWindowController window] contentView] superview] addSubview: self];
 }
 
 -(void)controlTextDidEndEditing:(NSNotification*)aNotification
