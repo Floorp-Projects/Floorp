@@ -5020,11 +5020,11 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   nsCOMPtr<nsIDeviceContext> ppDC;
   nsCOMPtr<nsIDeviceContextSpecFactory> factory = do_CreateInstance(kDeviceContextSpecFactoryCID);
   if (factory) {
-    nsIDeviceContextSpec *devspec = nsnull;
+    nsCOMPtr<nsIDeviceContextSpec> devspec;
     nsCOMPtr<nsIDeviceContext> dx;
-    factory->CreateDeviceContextSpec(mWindow, aPrintSettings, devspec, doSilent);
-    if (nsnull != devspec) {
-      nsresult rv = mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(ppDC)); 
+    nsresult rv = factory->CreateDeviceContextSpec(mWindow, aPrintSettings, *getter_AddRefs(devspec), doSilent);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(ppDC)); 
       if (NS_SUCCEEDED(rv)) {
         mDeviceContext->SetAltDevice(ppDC);
         if (mPrt->mPrintSettings != nsnull) {
@@ -5035,7 +5035,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
           }
         }
         ppDC->GetDeviceSurfaceDimensions(width, height);
-        NS_RELEASE(devspec);
       }
     }
   }
@@ -5338,7 +5337,7 @@ DocumentViewerImpl::Print(PRBool            aSilent,
     printf("PRINT JOB STARTING\n");
 #endif
 
-    nsIDeviceContextSpec *devspec = nsnull;
+    nsCOMPtr<nsIDeviceContextSpec> devspec;
     nsCOMPtr<nsIDeviceContext> dx;
     mPrt->mPrintDC = nsnull; // XXX why?
 
@@ -5348,161 +5347,160 @@ DocumentViewerImpl::Print(PRBool            aSilent,
 
     PRBool printSilently;
     mPrt->mPrintSettings->GetPrintSilent(&printSilently);
-    rv = factory->CreateDeviceContextSpec(mWindow, mPrt->mPrintSettings, devspec, printSilently);
+    rv = factory->CreateDeviceContextSpec(mWindow, mPrt->mPrintSettings, *getter_AddRefs(devspec), printSilently);
     if (NS_SUCCEEDED(rv)) {
       rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
-      if (NS_SUCCEEDED(rv))
-        rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
-        double scaling;
-        mPrt->mPrintSettings->GetScaling(&scaling);
-        if (scaling <= 1.0) {
-          float oldScale = 1.0f;
-          mPrt->mPrintDC->GetCanonicalPixelScale(oldScale);
-          mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*oldScale);
-        }
-        
       if (NS_SUCCEEDED(rv)) {
-        NS_RELEASE(devspec);
+        rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
+        if (NS_SUCCEEDED(rv)) {
+          double scaling;
+          mPrt->mPrintSettings->GetScaling(&scaling);
+          if (scaling <= 1.0) {
+            float oldScale = 1.0f;
+            mPrt->mPrintDC->GetCanonicalPixelScale(oldScale);
+            mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*oldScale);
+          }
 
-        if(webContainer) {
+          if(webContainer) {
 #ifdef DEBUG_dcone
-          float   a1,a2;
-          PRInt32 i1,i2;
+            float   a1,a2;
+            PRInt32 i1,i2;
 
-          printf("CRITICAL PRINTING INFORMATION\n");
+            printf("CRITICAL PRINTING INFORMATION\n");
 
-          // DEVICE CONTEXT INFORMATION from PresContext
-          printf("DeviceContext of Presentation Context(%x)\n",dx);
-          dx->GetDevUnitsToTwips(a1);
-          dx->GetTwipsToDevUnits(a2);
-          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
-          dx->GetAppUnitsToDevUnits(a1);
-          dx->GetDevUnitsToAppUnits(a2);
-          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
-          dx->GetCanonicalPixelScale(a1);
-          printf("    GetCanonicalPixelScale = %f\n",a1);
-          dx->GetScrollBarDimensions(a1, a2);
-          printf("    ScrollBar x = %f y = %f\n",a1,a2);
-          dx->GetZoom(a1);
-          printf("    Zoom = %f\n",a1);
-          dx->GetDepth((PRUint32&)i1);
-          printf("    Depth = %d\n",i1);
-          dx->GetDeviceSurfaceDimensions(i1,i2);
-          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
+            // DEVICE CONTEXT INFORMATION from PresContext
+            printf("DeviceContext of Presentation Context(%x)\n",dx);
+            dx->GetDevUnitsToTwips(a1);
+            dx->GetTwipsToDevUnits(a2);
+            printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
+            dx->GetAppUnitsToDevUnits(a1);
+            dx->GetDevUnitsToAppUnits(a2);
+            printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
+            dx->GetCanonicalPixelScale(a1);
+            printf("    GetCanonicalPixelScale = %f\n",a1);
+            dx->GetScrollBarDimensions(a1, a2);
+            printf("    ScrollBar x = %f y = %f\n",a1,a2);
+            dx->GetZoom(a1);
+            printf("    Zoom = %f\n",a1);
+            dx->GetDepth((PRUint32&)i1);
+            printf("    Depth = %d\n",i1);
+            dx->GetDeviceSurfaceDimensions(i1,i2);
+            printf("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 
-          // DEVICE CONTEXT INFORMATION
-          printf("DeviceContext created for print(%x)\n",mPrt->mPrintDC);
-          mPrt->mPrintDC->GetDevUnitsToTwips(a1);
-          mPrt->mPrintDC->GetTwipsToDevUnits(a2);
-          printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
-          mPrt->mPrintDC->GetAppUnitsToDevUnits(a1);
-          mPrt->mPrintDC->GetDevUnitsToAppUnits(a2);
-          printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
-          mPrt->mPrintDC->GetCanonicalPixelScale(a1);
-          printf("    GetCanonicalPixelScale = %f\n",a1);
-          mPrt->mPrintDC->GetScrollBarDimensions(a1, a2);
-          printf("    ScrollBar x = %f y = %f\n",a1,a2);
-          mPrt->mPrintDC->GetZoom(a1);
-          printf("    Zoom = %f\n",a1);
-          mPrt->mPrintDC->GetDepth((PRUint32&)i1);
-          printf("    Depth = %d\n",i1);
-          mPrt->mPrintDC->GetDeviceSurfaceDimensions(i1,i2);
-          printf("    DeviceDimension w = %d h = %d\n",i1,i2);
+            // DEVICE CONTEXT INFORMATION
+            printf("DeviceContext created for print(%x)\n",mPrt->mPrintDC);
+            mPrt->mPrintDC->GetDevUnitsToTwips(a1);
+            mPrt->mPrintDC->GetTwipsToDevUnits(a2);
+            printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
+            mPrt->mPrintDC->GetAppUnitsToDevUnits(a1);
+            mPrt->mPrintDC->GetDevUnitsToAppUnits(a2);
+            printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
+            mPrt->mPrintDC->GetCanonicalPixelScale(a1);
+            printf("    GetCanonicalPixelScale = %f\n",a1);
+            mPrt->mPrintDC->GetScrollBarDimensions(a1, a2);
+            printf("    ScrollBar x = %f y = %f\n",a1,a2);
+            mPrt->mPrintDC->GetZoom(a1);
+            printf("    Zoom = %f\n",a1);
+            mPrt->mPrintDC->GetDepth((PRUint32&)i1);
+            printf("    Depth = %d\n",i1);
+            mPrt->mPrintDC->GetDeviceSurfaceDimensions(i1,i2);
+            printf("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 #endif /* DEBUG_dcone */
 
-          // Always check and set the print settings first and then fall back
-          // onto the PrintService if there isn't a PrintSettings
-          //
-          // Posiible Usage values:
-          //   nsIPrintSettings::kUseInternalDefault
-          //   nsIPrintSettings::kUseSettingWhenPossible
-          //
-          // NOTE: The consts are the same for PrintSettings and PrintSettings
-          PRInt16 printFrameTypeUsage = nsIPrintSettings::kUseSettingWhenPossible;
-          mPrt->mPrintSettings->GetPrintFrameTypeUsage(&printFrameTypeUsage);
+            // Always check and set the print settings first and then fall back
+            // onto the PrintService if there isn't a PrintSettings
+            //
+            // Posiible Usage values:
+            //   nsIPrintSettings::kUseInternalDefault
+            //   nsIPrintSettings::kUseSettingWhenPossible
+            //
+            // NOTE: The consts are the same for PrintSettings and PrintSettings
+            PRInt16 printFrameTypeUsage = nsIPrintSettings::kUseSettingWhenPossible;
+            mPrt->mPrintSettings->GetPrintFrameTypeUsage(&printFrameTypeUsage);
 
-          // Ok, see if we are going to use our value and override the default
-          if (printFrameTypeUsage == nsIPrintSettings::kUseSettingWhenPossible) {
-            // Get the Print Options/Settings PrintFrameType to see what is preferred
-            PRInt16 printFrameType = nsIPrintSettings::kEachFrameSep;
-            mPrt->mPrintSettings->GetPrintFrameType(&printFrameType);
+            // Ok, see if we are going to use our value and override the default
+            if (printFrameTypeUsage == nsIPrintSettings::kUseSettingWhenPossible) {
+              // Get the Print Options/Settings PrintFrameType to see what is preferred
+              PRInt16 printFrameType = nsIPrintSettings::kEachFrameSep;
+              mPrt->mPrintSettings->GetPrintFrameType(&printFrameType);
 
-            // Don't let anybody do something stupid like try to set it to
-            // kNoFrames when we are printing a FrameSet
-            if (printFrameType == nsIPrintSettings::kNoFrames) {
-              mPrt->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
-              mPrt->mPrintSettings->SetPrintFrameType(mPrt->mPrintFrameType);
-            } else {
-              // First find out from the PrinService what options are available 
-              // to us for Printing FrameSets
-              PRInt16 howToEnableFrameUI;
-              mPrt->mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
-              if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-                switch (howToEnableFrameUI) {
-                  case nsIPrintSettings::kFrameEnableAll:
-                    mPrt->mPrintFrameType = printFrameType;
-                    break;
-
-                  case nsIPrintSettings::kFrameEnableAsIsAndEach:
-                    if (printFrameType != nsIPrintSettings::kSelectedFrame) {
-                      mPrt->mPrintFrameType = printFrameType;
-                    } else { // revert back to a good value
-                      mPrt->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
-                    }
-                    break;
-                } // switch
+              // Don't let anybody do something stupid like try to set it to
+              // kNoFrames when we are printing a FrameSet
+              if (printFrameType == nsIPrintSettings::kNoFrames) {
+                mPrt->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
                 mPrt->mPrintSettings->SetPrintFrameType(mPrt->mPrintFrameType);
+              } else {
+                // First find out from the PrinService what options are available 
+                // to us for Printing FrameSets
+                PRInt16 howToEnableFrameUI;
+                mPrt->mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
+                if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
+                  switch (howToEnableFrameUI) {
+                    case nsIPrintSettings::kFrameEnableAll:
+                      mPrt->mPrintFrameType = printFrameType;
+                      break;
+
+                    case nsIPrintSettings::kFrameEnableAsIsAndEach:
+                      if (printFrameType != nsIPrintSettings::kSelectedFrame) {
+                        mPrt->mPrintFrameType = printFrameType;
+                      } else { // revert back to a good value
+                        mPrt->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
+                      }
+                      break;
+                  } // switch
+                  mPrt->mPrintSettings->SetPrintFrameType(mPrt->mPrintFrameType);
+                }
               }
             }
-          }
 
-          if (mPrt->mPrintOptions) {
-            // check to see if we are printing to a file
-            PRBool isPrintToFile = PR_FALSE;
-            mPrt->mPrintSettings->GetPrintToFile(&isPrintToFile);
-            if (isPrintToFile) {
-            // On some platforms The BeginDocument needs to know the name of the file
-            // and it uses the PrintService to get it, so we need to set it into the PrintService here
-              PRUnichar* fileName;
-              mPrt->mPrintSettings->GetToFileName(&fileName);
-              if (fileName != nsnull) {
-                mPrt->mPrintOptions->SetPrintToFile(PR_TRUE);
-                mPrt->mPrintOptions->SetToFileName(fileName);
-                nsMemory::Free(fileName);
+            if (mPrt->mPrintOptions) {
+              // check to see if we are printing to a file
+              PRBool isPrintToFile = PR_FALSE;
+              mPrt->mPrintSettings->GetPrintToFile(&isPrintToFile);
+              if (isPrintToFile) {
+              // On some platforms The BeginDocument needs to know the name of the file
+              // and it uses the PrintService to get it, so we need to set it into the PrintService here
+                PRUnichar* fileName;
+                mPrt->mPrintSettings->GetToFileName(&fileName);
+                if (fileName != nsnull) {
+                  mPrt->mPrintOptions->SetPrintToFile(PR_TRUE);
+                  mPrt->mPrintOptions->SetToFileName(fileName);
+                  nsMemory::Free(fileName);
+                }
+              } else {
+                mPrt->mPrintOptions->SetPrintToFile(PR_FALSE);
+                mPrt->mPrintOptions->SetToFileName(nsnull);
               }
-            } else {
-              mPrt->mPrintOptions->SetPrintToFile(PR_FALSE);
-              mPrt->mPrintOptions->SetToFileName(nsnull);
             }
-          }
 
-          DoPrintProgress(PR_TRUE);
+            DoPrintProgress(PR_TRUE);
 
-          // Print listener setup...
-          if (mPrt != nsnull) {
-            mPrt->OnStartPrinting();    
-          }
+            // Print listener setup...
+            if (mPrt != nsnull) {
+              mPrt->OnStartPrinting();    
+            }
 
-          //
-          // The mIsPrinting flag is set when the ImageGroup observer is
-          // notified that images must be loaded as a result of the 
-          // InitialReflow...
-          //
-          if(!mIsPrinting  || (mPrt->mDebugFilePtr != nsnull)) {
-            rv = DocumentReadyForPrinting();
+            //
+            // The mIsPrinting flag is set when the ImageGroup observer is
+            // notified that images must be loaded as a result of the 
+            // InitialReflow...
+            //
+            if(!mIsPrinting  || (mPrt->mDebugFilePtr != nsnull)) {
+              rv = DocumentReadyForPrinting();
 #ifdef DEBUG_dcone
             printf("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
 #endif
-          } else {
-            // use the observer mechanism to finish the printing
+            } else {
+              // use the observer mechanism to finish the printing
 #ifdef DEBUG_dcone
-            printf("PRINTING OBSERVER STARTED\n");
+              printf("PRINTING OBSERVER STARTED\n");
 #endif
+            }
           }
         }
-      }      
+      }    
     } else {
       mPrt->mPrintSettings->SetIsCancelled(PR_TRUE);
       mPrt->mPrintOptions->SetIsCancelled(PR_TRUE);
