@@ -130,6 +130,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
 
         while (NS_SUCCEEDED(rv) && i_Length && !m_bHeadersDone) {
             rv = ParseHTTPHeader(pBuffer, i_Length, &actualBytesRead);
+			NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
             i_Length -= actualBytesRead;
         }
 
