@@ -52,7 +52,9 @@
 #include "nsDeviceContextMac.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
-#include "nsIStringBundle.h"
+#include "nsIPersistentProperties2.h"
+#include "nsNetUtil.h"
+#include "nsIURI.h"
 #include "nsHashtable.h"
 #include <ATSTypes.h>
 #include <SFNTTypes.h>
@@ -86,7 +88,7 @@ NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-static nsIStringBundle* gFontEncodingProperties = nsnull;
+static nsIPersistentProperties2* gFontEncodingProperties = nsnull;
 static nsICharsetConverterManager2* gCharsetManager = nsnull;
 static nsObjectHashtable* gFontMaps = nsnull;
 static nsFontCleanupObserver *gFontCleanupObserver = nsnull;
@@ -479,20 +481,30 @@ static PRUint16* InitGlobalCCMap()
 static nsresult
 InitFontEncodingProperties(void)
 {
-  nsresult rv;
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = bundleService->CreateBundle("resource:/res/fonts/fontEncoding.properties",
-                                   &gFontEncodingProperties);
+  // load the special encoding resolver
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), 
+                          "resource:/res/fonts/fontEncoding.properties");
+  if (NS_SUCCEEDED(rv))
+  {
+      nsCOMPtr<nsIInputStream> in;
+      rv = NS_OpenURI(getter_AddRefs(in), uri);
+      if (NS_SUCCEEDED(rv))
+      {
+          rv = nsComponentManager::
+              CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
+                        NS_GET_IID(nsIPersistentProperties),
+                        (void**)&gFontEncodingProperties);
+          if (NS_SUCCEEDED(rv))
+              rv = gFontEncodingProperties->Load(in);
+      }
+  }
   return rv;
 }
 
 // Helper to determine if a font has a private encoding that we know something about
 static nsresult
-GetEncoding(const nsString& aFontName, PRUnichar** aValue)
+GetEncoding(const nsString& aFontName, nsString& aValue)
 {
   // see if we should init the property
   if (! gFontEncodingProperties) {
@@ -522,7 +534,7 @@ GetEncoding(const nsString& aFontName, PRUnichar** aValue)
   name.StripWhitespace();
   ToLowerCase(name);
 
-  return gFontEncodingProperties->GetStringFromName(name.get(), aValue);
+  return gFontEncodingProperties->GetStringProperty(name, aValue);
 }
 
 // This function uses the charset converter manager (CCM) to get a pointer on 
@@ -533,8 +545,8 @@ GetConverter(const nsString& aFontName, nsIUnicodeEncoder** aConverter)
 {
   *aConverter = nsnull;
 
-  nsXPIDLString value;
-  nsresult rv = GetEncoding(aFontName, getter_Copies(value));
+  nsAutoString value;
+  nsresult rv = GetEncoding(aFontName, value);
   if (NS_FAILED(rv)) return rv;
   
   if (!gCharsetManager)
