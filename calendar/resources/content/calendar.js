@@ -422,7 +422,8 @@ function deselectEventInUnifinder( )
       
       var TreeItem = document.getElementById( "unifinder-treeitem-"+gUnifinderSelection );
       
-      Tree.removeItemFromSelection( TreeItem );
+      if( TreeItem )
+         Tree.removeItemFromSelection( TreeItem );
       
       gUnifinderSelection = null;
    }
@@ -488,7 +489,7 @@ function newEvent( startDate )
 
    // open the dialog non modally
             
-   openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome,modal", args );
+   openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome", args );
 }
 
 
@@ -521,7 +522,7 @@ function editEvent( calendarEvent )
 
    // open the dialog modally
    
-   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
+   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome", args );
 }
    
 
