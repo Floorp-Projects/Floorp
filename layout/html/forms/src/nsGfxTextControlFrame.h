@@ -374,7 +374,7 @@ protected:
 class nsGfxTextControlFrame : public nsTextControlFrame
 {
 private:
-  typedef nsTextControlFrame Inherited;
+	typedef nsFormControlFrame Inherited;
 
 public:
   nsGfxTextControlFrame();
