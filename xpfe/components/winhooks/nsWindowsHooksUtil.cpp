@@ -482,11 +482,7 @@ static void setWindowsXP() {
             RegistryEntry tmp_entry5( HKEY_LOCAL_MACHINE,
                            nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\properties\\command" ) ).get(),
                            "", nsCAutoString( thisApplication() + 
-#ifndef MOZ_PHOENIX
                                                NS_LITERAL_CSTRING(" -chrome \"chrome://communicator/content/pref/pref.xul\"") ).get()
-#else
-                                               NS_LITERAL_CSTRING(" -chrome \"chrome://browser/content/pref/pref.xul\"") ).get()
-#endif
                           );
             tmp_entry5.set();
 
