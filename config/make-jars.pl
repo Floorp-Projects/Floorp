@@ -67,13 +67,45 @@ sub JarIt
 	my $cwd = getcwd;
 	my $err = 0; 
         #print "zip -u ../$jarfile.jar $args\n";
+
+	# Handle posix cmdline limits (4096)
+	while (length($args) > 4000) {
+	    #print "Exceeding POSIX cmdline limit: " . length($args) . "\n";
+	    my $subargs = substr($args, 0, 3999);
+	    my $pos = rindex($subargs, " ");
+	    $subargs = substr($args, 0, $pos);
+	    $args = substr($args, $pos);
+	    
+	    #print "zip -u ../$jarfile.jar $subargs\n";	    
+	    #print "Length of subargs: " . length($subargs) . "\n";
+	    system("zip -u ../$jarfile.jar $subargs") == 0 or
+		$err = $? >> 8;
+	    zipErrorCheck($err);
+	}
+	#print "Length of args: " . length($args) . "\n";
+        #print "zip -u ../$jarfile.jar $args\n";
         system("zip -u ../$jarfile.jar $args") == 0 or
 	    $err = $? >> 8;
 	zipErrorCheck($err);
     }
+
     if (!($overrides eq "")) {
 	my $err = 0; 
         print "+++ overriding $overrides\n";
+
+	while (length($args) > 4000) {
+	    #print "Exceeding POSIX cmdline limit: " . length($args) . "\n";
+	    my $subargs = substr($args, 0, 3999);
+	    my $pos = rindex($subargs, " ");
+	    $subargs = substr($args, 0, $pos);
+	    $args = substr($args, $pos);
+	    
+	    #print "zip ../$jarfile.jar $subargs\n";	    
+	    #print "Length of subargs: " . length($subargs) . "\n";
+	    system("zip ../$jarfile.jar $subargs") == 0 or
+		$err = $? >> 8;
+	    zipErrorCheck($err);
+	}
         #print "zip ../$jarfile.jar $overrides\n";
         system("zip ../$jarfile.jar $overrides\n") == 0 or 
 	    $err = $? >> 8;
