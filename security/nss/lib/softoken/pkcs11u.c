@@ -2386,6 +2386,7 @@ pk11_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify, CK_VOID_PTR pApplication,
     session->appData = pApplication;
     session->info.flags = flags;
     session->info.slotID = slotID;
+    session->info.ulDeviceError = 0;
     pk11_update_state(slot,session);
     return session;
 }
