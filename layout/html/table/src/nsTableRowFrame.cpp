@@ -327,7 +327,8 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
                                        RowReflowState&  aState,
                                        nsReflowMetrics& aDesiredSize)
 {
-  NS_PRECONDITION(nsnull != mFirstChild, "no children");
+  if (nsnull == mFirstChild)
+    return NS_OK;
 
   nsSize      kidMaxElementSize;
   PRInt32     prevColIndex = -1;       // remember the col index of the previous cell to handle rowspans into this row
