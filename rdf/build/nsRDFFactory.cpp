@@ -23,7 +23,6 @@
  */
 
 #include "nsIFactory.h"
-#include "nsIHistoryDataSource.h"
 #include "nsILocalStore.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
@@ -64,7 +63,6 @@ static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,         NS_RDFFILESYSTEMDATASO
 static NS_DEFINE_CID(kRDFFindDataSourceCID,               NS_RDFFINDDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFFTPDataSourceCID,                NS_RDFFTPDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFHTMLBuilderCID,                  NS_RDFHTMLBUILDER_CID);
-static NS_DEFINE_CID(kRDFHistoryDataSourceCID,            NS_RDFHISTORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,           NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFMenuBuilderCID,                  NS_RDFMENUBUILDER_CID);
 static NS_DEFINE_CID(kRDFRelatedLinksDataSourceCID,       NS_RDFRELATEDLINKSDATASOURCE_CID);
@@ -211,10 +209,6 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewRDFContainerUtils((nsIRDFContainerUtils**) &inst)))
             return rv;
     }
-    else if (mClassID.Equals(kRDFHistoryDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewHistoryDataSource((nsIHistoryDataSource**) &inst)))
-            return rv;
-    }
     else if (mClassID.Equals(kRDFRelatedLinksDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFRelatedLinksDataSource((nsIRDFDataSource**) &inst)))
             return rv;
@@ -358,11 +352,6 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "ftp",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->RegisterComponent(kRDFHistoryDataSourceCID,  
-                                         "RDF History Data Source",
-                                         NS_RDF_DATASOURCE_PROGID_PREFIX "history",
-                                         aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFRelatedLinksDataSourceCID,  
                                          "RDF Related Links Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "relatedlinks",
@@ -495,8 +484,6 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kRDFFindDataSourceCID,      aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFFTPDataSourceCID,       aPath);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kRDFHistoryDataSourceCID,   aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFRelatedLinksDataSourceCID,   aPath);
     if (NS_FAILED(rv)) goto done;
