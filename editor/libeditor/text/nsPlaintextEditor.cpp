@@ -483,8 +483,8 @@ NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
 }
 
 /* This routine is needed to provide a bottleneck for typing for logging
-   purposes.  Can't use EditorKeyPress() (above) for that since it takes
-   a nsIDOMUIEvent* parameter.  So instead we pass enough info through
+   purposes.  Can't use HandleKeyPress() (above) for that since it takes
+   a nsIDOMKeyEvent* parameter.  So instead we pass enough info through
    to TypedText() to determine what action to take, but without passing
    an event.
    */

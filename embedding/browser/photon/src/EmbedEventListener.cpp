@@ -24,6 +24,7 @@
 #include <nsIDOMMouseEvent.h>
 
 #include "nsIDOMKeyEvent.h"
+#include "nsIDOMUIEvent.h"
 
 #include "EmbedEventListener.h"
 #include "EmbedPrivate.h"
@@ -45,6 +46,7 @@ NS_INTERFACE_MAP_BEGIN(EmbedEventListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMUIListener)
 NS_INTERFACE_MAP_END
 
 nsresult
@@ -113,6 +115,24 @@ EmbedEventListener::MouseOver(nsIDOMEvent* aDOMEvent)
 
 NS_IMETHODIMP
 EmbedEventListener::MouseOut(nsIDOMEvent* aDOMEvent)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+EmbedEventListener::Activate(nsIDOMEvent* aDOMEvent)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+EmbedEventListener::FocusIn(nsIDOMEvent* aDOMEvent)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+EmbedEventListener::FocusOut(nsIDOMEvent* aDOMEvent)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }

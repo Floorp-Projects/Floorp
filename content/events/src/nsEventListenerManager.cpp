@@ -55,6 +55,7 @@
 #include "nsIDOMXULListener.h"
 #include "nsIDOMScrollListener.h"
 #include "nsIDOMMutationListener.h"
+#include "nsIDOMUIListener.h"
 #include "nsIEventStateManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPrivateDOMEvent.h"
@@ -299,6 +300,15 @@ static const EventDispatchData sMutationEvents[] = {
     NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED }
 };
 
+static const EventDispatchData sUIEvents[] = {
+  { NS_DOMUI_ACTIVATE, HANDLER(&nsIDOMUIListener::Activate),
+    NS_EVENT_BITS_DOMUI_ACTIVATE },
+  { NS_DOMUI_FOCUSIN, HANDLER(&nsIDOMUIListener::FocusIn),
+    NS_EVENT_BITS_DOMUI_FOCUSIN },
+  { NS_DOMUI_FOCUSOUT, HANDLER(&nsIDOMUIListener::FocusOut),
+    NS_EVENT_BITS_DOMUI_FOCUSOUT }
+};
+
 #define IMPL_EVENTTYPEDATA(type) \
 { \
   s##type##Events, \
@@ -322,7 +332,8 @@ static const EventTypeData sEventTypes[] = {
   IMPL_EVENTTYPEDATA(Composition),
   IMPL_EVENTTYPEDATA(XUL),
   IMPL_EVENTTYPEDATA(Scroll),
-  IMPL_EVENTTYPEDATA(Mutation)
+  IMPL_EVENTTYPEDATA(Mutation),
+  IMPL_EVENTTYPEDATA(UI)
 };
 
 // Strong references to event groups
@@ -591,6 +602,9 @@ EventArrayType nsEventListenerManager::GetTypeForIID(const nsIID& aIID)
 
   if (aIID.Equals(NS_GET_IID(nsIDOMMutationListener)))
     return eEventArrayType_Mutation;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMUIListener)))
+    return eEventArrayType_DOMUI;
 
   return eEventArrayType_None;
 }
@@ -962,6 +976,18 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
   else if (aType == nsLayoutAtoms::onDOMCharacterDataModified) {
     *aArrayType = eEventArrayType_Mutation;
     *aFlags = NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
+  }
+  else if (aType == nsLayoutAtoms::onDOMActivate) {
+    *aArrayType = eEventArrayType_DOMUI;
+    *aFlags = NS_EVENT_BITS_DOMUI_ACTIVATE;
+  }
+  else if (aType == nsLayoutAtoms::onDOMFocusIn) {
+    *aArrayType = eEventArrayType_DOMUI;
+    *aFlags = NS_EVENT_BITS_DOMUI_FOCUSIN;
+  }
+  else if (aType == nsLayoutAtoms::onDOMFocusOut) {
+    *aArrayType = eEventArrayType_DOMUI;
+    *aFlags = NS_EVENT_BITS_DOMUI_FOCUSOUT;
   }
   else {
     return NS_ERROR_FAILURE;
@@ -1556,6 +1582,7 @@ nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
                  !str.EqualsIgnoreCase("MutationEvents") &&
                  !str.EqualsIgnoreCase("MouseScrollEvents") &&
                  !str.EqualsIgnoreCase("PopupBlockedEvents") &&
+                 !str.EqualsIgnoreCase("UIEvents") &&
                  !str.EqualsIgnoreCase("Events")) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
@@ -1592,6 +1619,9 @@ nsresult
 nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes,
                                        PRBool aInitCapture)
 {
+  // This method exists for Netscape 4.x event handling compatibility.
+  // New events do not need to be added here.
+
   EventArrayType arrayType = eEventArrayType_None;
   PRUint8 bits = 0;
 

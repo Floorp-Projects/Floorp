@@ -40,11 +40,13 @@
 
 #include <nsIDOMKeyListener.h>
 #include <nsIDOMMouseListener.h>
+#include <nsIDOMUIListener.h>
 
 class EmbedPrivate;
 
 class EmbedEventListener : public nsIDOMKeyListener,
-                           public nsIDOMMouseListener
+                           public nsIDOMMouseListener,
+                           public nsIDOMUIListener
 {
  public:
 
@@ -73,6 +75,12 @@ class EmbedEventListener : public nsIDOMKeyListener,
   NS_IMETHOD MouseDblClick(nsIDOMEvent* aDOMEvent);
   NS_IMETHOD MouseOver(nsIDOMEvent* aDOMEvent);
   NS_IMETHOD MouseOut(nsIDOMEvent* aDOMEvent);
+
+  // nsIDOMUIListener
+
+  NS_IMETHOD Activate(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD FocusIn(nsIDOMEvent* aDOMEvent);
+  NS_IMETHOD FocusOut(nsIDOMEvent* aDOMEvent);
 
  private:
 

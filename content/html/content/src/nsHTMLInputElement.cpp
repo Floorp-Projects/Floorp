@@ -123,6 +123,8 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 #define BF_HANDLING_SELECT_EVENT 5
 #define BF_SHOULD_INIT_CHECKED 6
 #define BF_PARSER_CREATING 7
+#define BF_IN_INTERNAL_ACTIVATE 8
+#define BF_CHECKED_IS_TOGGLED 9
 
 #define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
                                         ? PR_TRUE : PR_FALSE)
@@ -328,7 +330,7 @@ protected:
    * A bitfield containing our booleans
    * @see GET_BOOLBIT / SET_BOOLBIT macros and BF_* field identifiers
    */
-  PRInt8                   mBitField;
+  PRInt16                  mBitField;
   /**
    * The current value of the input if it has been changed from the deafault
    */
@@ -1295,49 +1297,60 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
   
-  {
-    // For some reason or another we also need to check if the style shows us
-    // as disabled.
-    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-    if (formControlFrame) {
-      nsIFrame* formFrame = nsnull;
-      CallQueryInterface(formControlFrame, &formFrame);
-      if (formFrame) {
-        const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
+  // For some reason or another we also need to check if the style shows us
+  // as disabled.
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+  if (formControlFrame) {
+    nsIFrame* formFrame = nsnull;
+    CallQueryInterface(formControlFrame, &formFrame);
+    if (formFrame) {
+      const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
 
-        if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-            uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
-          return NS_OK;
-        }
+      if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+          uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
+        return NS_OK;
       }
     }
   }
 
   //
   // Web pages expect the value of a radio button or checkbox to be set
-  // *before* onclick fires, and they expect that if they set the value
-  // explicitly during onclick it will not be toggled or any such nonsense.
+  // *before* onclick and DOMActivate fire, and they expect that if they set
+  // the value explicitly during onclick or DOMActivate it will not be toggled
+  // or any such nonsense.
   // In order to support that (bug 57137 and 58460 are examples) we toggle
-  // the checked attribute *first*, and then do nothing *after* the onclick
-  // handler unless the user returns false (in which case we reset it back
-  // to its original value).
+  // the checked attribute *first*, and then fire onclick.  If the user
+  // returns false, we reset the control to the old checked value.  Otherwise,
+  // we dispatch DOMActivate.  If DOMActivate is cancelled, we also reset
+  // the control to the old checked value.  We need to keep track of whether
+  // we've already toggled the state from onclick since the user could
+  // explicitly dispatch DOMActivate on the element.
   //
   // This is a compatibility hack.
   //
+
+  // Track whether we're in the "outer" HandleDOMEvent invocation
+  PRBool clickOrExtActivate =
+    (aEvent->message == NS_MOUSE_LEFT_CLICK ||
+     (aEvent->message == NS_DOMUI_ACTIVATE &&
+      !GET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE)));
+
   PRBool originalCheckedValue = PR_FALSE;
-  PRBool checkWasSet         = PR_FALSE;
 
   nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
 
   if (!(aFlags & NS_EVENT_FLAG_CAPTURE) &&
       !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-      aEvent->message == NS_MOUSE_LEFT_CLICK) {
+      clickOrExtActivate) {
+
+    SET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED, PR_FALSE);
+
     switch(mType) {
       case NS_FORM_INPUT_CHECKBOX:
         {
           GetChecked(&originalCheckedValue);
           DoSetChecked(!originalCheckedValue);
-          checkWasSet = PR_TRUE;
+          SET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED, PR_TRUE);
         }
         break;
 
@@ -1355,7 +1368,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           GetChecked(&originalCheckedValue);
           if (!originalCheckedValue) {
             DoSetChecked(PR_TRUE);
-            checkWasSet = PR_TRUE;
+            SET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED, PR_TRUE);
           }
         }
         break;
@@ -1394,8 +1407,35 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                 aDOMEvent, aFlags,
                                                 aEventStatus);
 
-  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-      aEvent->message == NS_MOUSE_LEFT_CLICK) {
+  // Ideally we would make the default action for click and space just dispatch
+  // DOMActivate, and the default action for DOMActivate flip the checkbox/
+  // radio state and fire onchange.  However, for backwards compatibility, we
+  // need to flip the state before firing click, and we need to fire click
+  // when space is pressed.  So, we just nest the firing of DOMActivate inside
+  // the click event handling, and allow cancellation of DOMActivate to cancel
+  // the click.
+  if (*aEventStatus != nsEventStatus_eConsumeNoDefault &&
+      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
+      aEvent->message == NS_MOUSE_LEFT_CLICK && mType != NS_FORM_INPUT_TEXT) {
+    nsDOMUIEvent actEvent(NS_DOMUI_ACTIVATE, 1);
+
+    nsIPresShell *shell = aPresContext->GetPresShell();
+    if (shell) {
+      nsEventStatus status = nsEventStatus_eIgnore;
+      SET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE, PR_TRUE);
+      rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
+      SET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE, PR_FALSE);
+
+      // If activate is cancelled, we must do the same as when click is
+      // cancelled (revert the checkbox to its original value).
+      if (status == nsEventStatus_eConsumeNoDefault)
+        *aEventStatus = status;
+    }
+  }
+
+  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) &&
+      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
+      clickOrExtActivate) {
     switch(oldType) {
       case NS_FORM_INPUT_SUBMIT:
       case NS_FORM_INPUT_IMAGE:
@@ -1414,7 +1454,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
 
   // now check to see if the event was "cancelled"
-  if (checkWasSet) {
+  if (GET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED) && clickOrExtActivate) {
     if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
       // if it was cancelled and a radio button, then set the old
       // selected btn to TRUE. if it is a checkbox then set it to its
@@ -1560,7 +1600,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
           break;
         }
-        case NS_MOUSE_LEFT_CLICK:
+        case NS_DOMUI_ACTIVATE:
         {
           if (mForm && (oldType == NS_FORM_INPUT_SUBMIT ||
                         oldType == NS_FORM_INPUT_IMAGE)) {
@@ -1599,10 +1639,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             default:
               break;
           } //switch 
-        } break;// NS_MOUSE_LEFT_CLICK
+        } break;// NS_DOMUI_ACTIVATE
       } //switch
     } else {
-      if (aEvent->message == NS_MOUSE_LEFT_CLICK &&
+      if (aEvent->message == NS_DOMUI_ACTIVATE &&
           (oldType == NS_FORM_INPUT_SUBMIT || oldType == NS_FORM_INPUT_IMAGE) &&
           mForm) {
         // tell the form to flush a possible pending submission.

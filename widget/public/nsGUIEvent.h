@@ -89,7 +89,7 @@ class nsIURI;
 #define NS_APPCOMMAND_EVENT               24
 #define NS_POPUPBLOCKED_EVENT             25
 #define NS_BEFORE_PAGE_UNLOAD_EVENT       26
-
+#define NS_DOMUI_EVENT                    27
 
 #define NS_EVENT_FLAG_NONE                0x0000
 #define NS_EVENT_FLAG_INIT                0x0001
@@ -300,6 +300,13 @@ class nsIURI;
 // text events
 #define NS_TEXT_START                 2400
 #define NS_TEXT_TEXT                  (NS_TEXT_START)
+
+// DOM UI events
+#define NS_DOMUI_EVENT_START          2500
+// this is not to be confused with NS_ACTIVATE!
+#define NS_DOMUI_ACTIVATE             (NS_DOMUI_EVENT_START)
+#define NS_DOMUI_FOCUSIN              (NS_DOMUI_EVENT_START + 1)
+#define NS_DOMUI_FOCUSOUT             (NS_DOMUI_EVENT_START + 2)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -797,6 +804,21 @@ struct nsPopupBlockedEvent : public nsEvent
   nsIURI* mRequestingWindowURI; // owning reference
   nsIURI* mPopupWindowURI;      // owning reference
   nsString mPopupWindowFeatures;
+};
+
+/**
+ * DOM UIEvent
+ */
+struct nsDOMUIEvent : public nsEvent {
+  nsDOMUIEvent(PRUint32 msg = 0,
+               PRInt32 d = 0,
+               PRUint8 structType = NS_DOMUI_EVENT)
+    : nsEvent(msg, structType),
+      detail(d)
+  {
+  }
+
+  PRInt32 detail;
 };
 
 /**
