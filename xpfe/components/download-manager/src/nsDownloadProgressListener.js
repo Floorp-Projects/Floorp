@@ -237,11 +237,11 @@ var nsDownloadProgressListenerModule = {
 
   registerSelf: function (compMgr, fileSpec, location, type)
   { 
-    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-    compMgr.registerComponentWithType(Components.ID("{09cddbea-1dd2-11b2-aa15-c41ffea19d79}"),
-                                      "Download Progress Listener",
-                                      "@mozilla.org/download-manager/listener;1", fileSpec,
-                                      location, true, true, type);
+    var compReg = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    compReg.registerFactoryLocation(Components.ID("{09cddbea-1dd2-11b2-aa15-c41ffea19d79}"),
+                                    "Download Progress Listener",
+                                    "@mozilla.org/download-manager/listener;1",
+                                    fileSpec, location, type);
   },
   canUnload: function(compMgr)
   {
