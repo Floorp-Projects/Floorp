@@ -779,36 +779,33 @@ function playSound (file)
 
 function fillInTooltip(tipElement, id)
 {
-    const XULNS =
-        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    const XLinkNS = "http://www.w3.org/1999/xlink";
-    const Node = { ELEMENT_NODE : 1 }; // XXX Components.interfaces.Node;
-    
-    var retVal = false;
-    var tipNode = document.getElementById(id);
-    while (tipNode.hasChildNodes())
-        tipNode.removeChild(tipNode.firstChild);
-    var titleText = "";
-    var XLinkTitleText = "";
-    while (!titleText && !XLinkTitleText && tipElement) {
-        if (tipElement.nodeType == Node.ELEMENT_NODE) {
-            titleText = tipElement.getAttribute("title");
-            XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
-        }
-        tipElement = tipElement.parentNode;
+  const XLinkNS = "http://www.w3.org/1999/xlink";
+
+  var retVal = false;
+
+  var titleText = null;
+  var XLinkTitleText = null;
+  
+  while (!titleText && !XLinkTitleText && tipElement) {
+    if (tipElement.nodeType == Node.ELEMENT_NODE) {
+      titleText = tipElement.getAttribute("title");
+      XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
     }
-    var texts = [titleText, XLinkTitleText];
-    for (var i = 0; i < texts.length; ++i) {
-        var t = texts[i];
-        if (t && t.search(/\S/) >= 0) {
-            var tipLineElem =
-                tipNode.ownerDocument.createElementNS(XULNS, "text");
-            tipLineElem.setAttribute("value", t);
-            tipNode.appendChild(tipLineElem);
-            retVal = true;
-        }
+    tipElement = tipElement.parentNode;
+  }
+
+  var texts = [titleText, XLinkTitleText];
+  var tipNode = document.getElementById(id);
+
+  for (var i = 0; i < texts.length; ++i) {
+    var t = texts[i];
+    if (t && t.search(/\S/) >= 0) {
+      tipNode.setAttribute("label", t);
+      retVal = true;
     }
-    return retVal;
+  }
+
+  return retVal;
 }
 
 /* timer-based mainloop */

@@ -292,42 +292,6 @@ function evalInTargetScope (script)
     }
 }
 
-    
-function fillInTooltip(tipElement)
-{
-    const XULNS =
-        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    const XLinkNS = "http://www.w3.org/1999/xlink";
-    const Node = { ELEMENT_NODE : 1 }; // XXX Components.interfaces.Node;
-    
-    var retVal = false;
-    var tipNode = document.getElementById("tooltipBox");
-    while (tipNode.hasChildNodes())
-        tipNode.removeChild(tipNode.firstChild);
-    var titleText = "";
-    var XLinkTitleText = "";
-    while (!titleText && !XLinkTitleText && tipElement) {
-        if (tipElement.nodeType == Node.ELEMENT_NODE) {
-            titleText = tipElement.getAttribute("title");
-            XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
-        }
-        tipElement = tipElement.parentNode;
-    }
-    var texts = [titleText, XLinkTitleText];
-    for (var i = 0; i < texts.length; ++i) {
-        var t = texts[i];
-        if (t.search(/\S/) >= 0) {
-            var tipLineElem =
-                tipNode.ownerDocument.createElementNS(XULNS, "text");
-            tipLineElem.setAttribute("value", t);
-            tipNode.appendChild(tipLineElem);
-            retVal = true;
-        }
-    }
-    
-    return retVal;
-}
-
 function formatException (ex)
 {
     if (ex instanceof BadMojo)

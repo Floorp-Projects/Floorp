@@ -112,36 +112,34 @@ Rights Reserved.
   <keyset id="tasksKeys"/>
 </keyset>
 
-<popupset id="aTooltipSet">
-  <popup id="threadPaneContext"/>
-  <popup id="folderPaneContext"/>
-  <popup id="attachmentTreeContext"/>
+<popup id="threadPaneContext"/>
+<popup id="folderPaneContext"/>
+<popup id="attachmentTreeContext"/>
+<tooltip id="attachmentTreeTooltip"/>
 
-  <popup id="emailAddressPopup" popupanchor="bottomleft" onpopupshowing="goUpdateCommand('cmd_createFilterFromPopup')">
-      <menuitem label="&AddToAddressBook.label;"
-                accesskey="&AddToAddressBook.accesskey;"
-                oncommand="AddNodeToAddressBook(document.popupNode)"/>
-      <menuitem label="&SendMailTo.label;"
-                accesskey="&SendMailTo.accesskey;"
-                oncommand="SendMailToNode(document.popupNode)"/>
-      <menuitem label="&CopyEmailAddress.label;"
-                accesskey="&CopyEmailAddress.accesskey;"
-                oncommand="CopyEmailAddress(document.popupNode)"/>
-      <menuitem label="&CreateFilter.label;"
-                accesskey="&CreateFilter.accesskey;"
-                oncommand="CreateFilter(document.popupNode)"
-                observes="cmd_createFilterFromPopup"/>  
-  </popup>
+<popup id="emailAddressPopup" popupanchor="bottomleft" onpopupshowing="goUpdateCommand('cmd_createFilterFromPopup')">
+    <menuitem label="&AddToAddressBook.label;"
+              accesskey="&AddToAddressBook.accesskey;"
+              oncommand="AddNodeToAddressBook(document.popupNode)"/>
+    <menuitem label="&SendMailTo.label;"
+              accesskey="&SendMailTo.accesskey;"
+              oncommand="SendMailToNode(document.popupNode)"/>
+    <menuitem label="&CopyEmailAddress.label;"
+              accesskey="&CopyEmailAddress.accesskey;"
+              oncommand="CopyEmailAddress(document.popupNode)"/>
+    <menuitem label="&CreateFilter.label;"
+              accesskey="&CreateFilter.accesskey;"
+              oncommand="CreateFilter(document.popupNode)"
+              observes="cmd_createFilterFromPopup"/>  
+</popup>
 
-  <popup id="allHeadersPopup"  onpopupshowing="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
-    <hbox id="allHeadersPopupContainer">
-    </hbox>
-  </popup>
+<popup id="allHeadersPopup"  onpopupshowing="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
+  <hbox id="allHeadersPopupContainer">
+  </hbox>
+</popup>
 
-  <popup id="messagePaneContext"/>
-  <popup id="sidebarPopup"/>
-  <popup id="folderTooltip"/>
-</popupset>
+<popup id="messagePaneContext"/>
+<popup id="sidebarPopup"/>
 
   <toolbox id="mailToolbarToolbox" class="toolbox-top">
     <menubar id="mailMenubar"/>

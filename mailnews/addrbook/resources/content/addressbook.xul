@@ -108,12 +108,10 @@ Rights Reserved.
   <key id="key_properties" key="&propertiesCmd.key;" command="cmd_properties" modifiers="accel"/>
 </keyset>
 
-<popupset id="aTooltipSet">
-  <popup id="sidebarPopup"/>
-</popupset>
+<popup id="sidebarPopup"/>
 
 <toolbox class="toolbox-top">
-	<menubar id="ab-menubar" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
+	<menubar id="ab-menubar" grippytooltiptext="&menuBar.tooltip;">
 		<menu id="menu_File">
 			<menupopup id="menu_FilePopup">
         <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard('dirTree')"/>
@@ -216,14 +214,14 @@ Rights Reserved.
 	</menubar>
 	
 	<!-- toolbar -->
-		<toolbar class="chromeclass-toolbar toolbar-primary" id="abToolbar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&addressbookToolbar.tooltip;">
+		<toolbar class="chromeclass-toolbar toolbar-primary" id="abToolbar" persist="collapsed" grippytooltiptext="&addressbookToolbar.tooltip;">
 			<hbox id="toolbar_button_box">
-        <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard('dirTree');"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList('dirTree');"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard('dirTree');"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList('dirTree');"/>
             	<toolbarseparator class="toolbarseparator-primary"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
         <vbox flex="100%">
           <spacer flex="1"/> 
@@ -232,12 +230,12 @@ Rights Reserved.
           <spacer flex="1"/--> 
         </vbox>
 
-        <!--button id="button_stop" class="other28" align="top" label="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>
-        <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
+        <!--button id="button_stop" class="other28" align="top" label="&stopButton.label;" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>
+        <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
      </hbox>
 
      <hbox id="throbber-box" align="center">
-      <button id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
+      <button id="navigator-throbber" oncommand="goClickThrobber('addressbook.throbber.url')" tooltiptext="&throbber.tooltip;">
         <observes element="broadcaster_throbber" attribute="busy"/>
       </button>
      </hbox>

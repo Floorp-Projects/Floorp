@@ -139,21 +139,18 @@
               id="formPrefill"
               oncommand="formPrefill();"
               label="  &formPrefill.label;  "
-              tooltip="aTooltip"
               tooltiptext="&formPrefill.tooltip;"/>
       <toolbarseparator/>
       <button class="button-toolbar-4"
               id="formCapture"
               oncommand="formCapture();"
               label="  &formCapture.label;  "
-              tooltip="aTooltip"
               tooltiptext="&formCapture.tooltip;"/>
       <toolbarseparator/>
       <button class="button-toolbar-4"
               id="formShow"
               oncommand="formShow(); initToolbarItems();"
               label="  &formView.label;  "
-              tooltip="aTooltip"
               tooltiptext="&formView.tooltip;"/>
       <toolbarseparator/>
     </toolbar>

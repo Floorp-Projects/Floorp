@@ -38,10 +38,9 @@
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
 
-  <popupset id="aTooltipSet">
-    <popup id="backMenu" position="after_start" onpopupshowing="return createBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-    <popup id="forwardMenu" position="after_start" onpopupshowing="return createForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  </popupset>
+  <popup id="backMenu" position="after_start" onpopupshowing="return createBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  <popup id="forwardMenu" position="after_start" onpopupshowing="return createForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+
   <popupset id="contentAreaContextSet"/>
   <broadcasterset id="helpBroadcasters">
     <broadcaster id="canGoBack"    disabled="true"/>
@@ -84,32 +83,32 @@
     <!-- button bar -->
     <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
       <toolbar id="helpToolbar" class="toolbar-primary" 
-            	grippytooltip="aTooltip" grippytooltiptext="&toolbar.tooltip;"
+            	grippytooltiptext="&toolbar.tooltip;"
               tbalign="stretch" persist="collapsed">
 
         <toolbarbutton id="helpBackButton" type="menu-button" class="toolbarbutton-1"
                        label="&backBtn.label;" crop="right"
                        oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
                        observes="canGoBack" context="backMenu" 
-                       tooltip="aTooltip" tooltiptext="&backButton.tooltip;">
+                       tooltiptext="&backButton.tooltip;">
           <menupopup context="" onpopupshowing="createBackMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="helpForwardButton" type="menu-button" class="toolbarbutton-1"
                        label="&fwdBtn.label;" crop="right"
-                       tooltip="aTooltip" tooltiptext="&forwardButton.tooltip;"
+                       tooltiptext="&forwardButton.tooltip;"
                        oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
                        observes="canGoForward" context="forwardMenu">
           <menupopup context="" onpopupshowing="createForwardMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="helpHomeButton" class="toolbarbutton-1"
                 label="&homeBtn.label;" oncommand="goHome();"
-                tooltip="aTooltip" tooltiptext="&homeBtn.tooltip;"/>
+                tooltiptext="&homeBtn.tooltip;"/>
 
         <spacer flex="1"/>
 
         <toolbarbutton id="print" class="toolbarbutton-1"
                        label="&printButton.label;" oncommand="print();"
-                       tooltip="aTooltip" tooltiptext="&printButton.tooltip;"/>
+                       tooltiptext="&printButton.tooltip;"/>
       </toolbar>
     </toolbox>
 

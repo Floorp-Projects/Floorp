@@ -2047,7 +2047,6 @@ function AddAttachment(attachment)
       attachment.name = gMsgCompose.AttachmentPrettyName(attachment.url);
     cell.setAttribute("label", attachment.name);    //use for display only
     cell.attachment = attachment;   //full attachment object stored here
-    cell.setAttribute("tooltip", "aTooltip");
     try {
       cell.setAttribute("tooltiptext", unescape(attachment.url));
     }

@@ -857,8 +857,8 @@ function displayAttachmentsForCollapsedView()
 function FillInAttachmentTooltip(cellNode)
 {
   var attachmentName = cellNode.getAttribute("label");
-  var textNode = document.getElementById("attachmentTreeTooltipText");
-  textNode.setAttribute('value', attachmentName);
+  var tooltipNode = document.getElementById("attachmentTreeTooltip");
+  tooltipNode.setAttribute("label", attachmentName);
   return true;
 }
 

@@ -31,6 +31,6 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/privacyUI.js" />
 
-  <statusbarpanel id="privacy-button" onclick="displayPrivacyInfo()" tooltip="aTooltip"/>
+  <statusbarpanel id="privacy-button" onclick="displayPrivacyInfo()"/>
 
 </overlay>

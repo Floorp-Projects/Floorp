@@ -140,7 +140,6 @@
   <popup id="TextColorPopup"/>
   <popup id="BackColorPopup"/>
 </popupset>
-<popupset id="aTooltipSet"/>
 
 <keyset id="tasksKeys">
   <!-- File Menu -->
@@ -178,7 +177,7 @@
 </popupset>
 
   <toolbox class="toolbox-top">
-    <menubar id="compose-menubar" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
+    <menubar id="compose-menubar" grippytooltiptext="&menuBar.tooltip;">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
           <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
@@ -353,11 +352,11 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&mailToolbar.tooltip;">
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed" grippytooltiptext="&mailToolbar.tooltip;">
       <hbox id="toolbar_button_box">
        <toolbarbutton class="toolbarbutton-1"
                id="button-send" label="&sendButton.label;"
-               tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
+               tooltiptext="&sendButton.tooltip;" 
                command="cmd_sendButton"
                now_label="&sendButton.label;"
                now_tooltiptext="&sendButton.tooltip;"
@@ -368,11 +367,11 @@
        <toolbarseparator class="toolbarseparator-primary"/>
        <toolbarbutton class="toolbarbutton-1"
                id="button-address" label="&addressButton.label;" 
-               tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" 
+               tooltiptext="&addressButton.tooltip;" 
                command="cmd_selectAddress"/>
        <toolbarbutton class="toolbarbutton-1"
                id="button-attach" label="&attachButton.label;" 
-               tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" 
+               tooltiptext="&attachButton.tooltip;" 
                command="cmd_attachFile"/>
        <toolbarbutton class="toolbarbutton-1"
                id="spellingButton" label="&spellingButton.label;" 
@@ -380,19 +379,19 @@
        <toolbarseparator class="toolbarseparator-primary"/>
        <toolbarbutton class="toolbarbutton-1"
                id="button-save" label="&saveButton.label;" 
-               tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
+               tooltiptext="&saveButton.tooltip;" 
                command="cmd_saveDefault"/>
        <spacer flex="1"/>
        <hbox id="throbber-box" align="center">
          <button id="navigator-throbber" 
-               oncommand="goClickThrobber('compose.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
+               oncommand="goClickThrobber('compose.throbber.url')" tooltiptext="&throbber.tooltip;">
            <observes element="broadcaster_throbber" attribute="busy"/>
          </button>
        </hbox>
        </hbox>
     </toolbar>
   
-    <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbalign="stretch" flex="1" grippytooltip="aTooltip" grippytooltiptext="&addressBar.tooltip;">
+    <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbalign="stretch" flex="1" grippytooltiptext="&addressBar.tooltip;">
       <hbox id="msgheaderstoolbar-box" flex="1">
         <vbox flex="75">
           <hbox align="center">
@@ -431,7 +430,7 @@
     </toolbar>
   
     <!-- These toolbar items get filled out from the editorOverlay -->
-    <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbautostretch="never" grippytooltip="aTooltip" grippytooltiptext="&formatToolbar.tooltip;">
+    <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbautostretch="never" grippytooltiptext="&formatToolbar.tooltip;">
       <menulist id="ParagraphSelect"/>
       <menulist id="FontFaceSelect"/>
       <stack id="ColorButtons"/>

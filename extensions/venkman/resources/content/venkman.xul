@@ -151,7 +151,7 @@
         <!-- console view -->
 
         <vbox id="console-box" flex="50" persist="width">
-          <iframe id="output-iframe" flex="1" tooltip="aTooltip"
+          <iframe id="output-iframe" flex="1"
             ondraggesture=
               "nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
             src="chrome://venkman/content/venkman-output-window.html"

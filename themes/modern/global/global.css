@@ -215,10 +215,6 @@ caption {
 
 /* ::::: miscellaneous ::::: */
 
-.tooltip-label {
-  margin: 0px;
-}
-
 .toolbar-focustarget {
   -moz-user-focus: ignore !important;
 }

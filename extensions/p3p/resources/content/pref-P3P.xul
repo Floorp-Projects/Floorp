@@ -459,7 +459,7 @@
               <description>&physical.tip;</description>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption value="&purpose.label;" tooltip="purposetip"/>
+                <caption value="&purpose.label;" tooltiptext="&purpose.tip;"/>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -468,25 +468,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox>
-                        <caption value="&superadmin.label;" tooltip="superadmintip"/>
-                        <checkbox id="P3PPhysicalAdmin" label="admin" tooltip="admintip"
+                        <caption value="&superadmin.label;" tooltiptext="&superadmin.tip;"/>
+                        <checkbox id="P3PPhysicalAdmin" label="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.physical.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPhysicalHistorical" label="historical" tooltip="historicaltip"
+                        <checkbox id="P3PPhysicalHistorical" label="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.physical.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox>
-                        <caption value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PPhysicalDevelop" value="develop" tooltip="developtip"
+                        <caption value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PPhysicalDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.physical.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPhysicalPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PPhysicalPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.physical.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPhysicalIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PPhysicalIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.physical.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -495,31 +495,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PPhysicalCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PPhysicalCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.physical.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPhysicalTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PPhysicalTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.physical.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPhysicalPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PPhysicalPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.physical.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPhysicalIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PPhysicalIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.physical.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PPhysicalCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PPhysicalCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.physical.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPhysicalContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PPhysicalContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.physical.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPhysicalTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PPhysicalTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.physical.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -528,7 +528,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PPhysicalOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PPhysicalOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.physical.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -538,8 +538,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PPhysicalSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PPhysicalSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.physical.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -551,7 +551,7 @@
               <html>&location.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -560,25 +560,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PLocationAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PLocationAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.location.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PLocationHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PLocationHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.location.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PLocationDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PLocationDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.location.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PLocationPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PLocationPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.location.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PLocationIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PLocationIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.location.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -587,31 +587,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PLocationCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PLocationCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.location.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PLocationTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PLocationTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.location.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PLocationPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PLocationPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.location.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PLocationIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PLocationIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.location.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PLocationCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PLocationCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.location.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PLocationContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PLocationContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.location.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PLocationTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PLocationTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.location.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -620,7 +620,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PLocationOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PLocationOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.location.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -630,8 +630,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PLocationSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PLocationSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.location.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -649,7 +649,7 @@
               <html>&online.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -658,25 +658,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3POnlineAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3POnlineAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.online.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3POnlineHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3POnlineHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.online.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3POnlineDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3POnlineDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.online.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3POnlinePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3POnlinePseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.online.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3POnlineIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3POnlineIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.online.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -685,31 +685,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3POnlineCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3POnlineCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.online.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3POnlineTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3POnlineTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.online.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3POnlinePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3POnlinePseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.online.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3POnlineIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3POnlineIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.online.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3POnlineCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3POnlineCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.online.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3POnlineContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3POnlineContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.online.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3POnlineTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3POnlineTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.online.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -718,7 +718,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3POnlineOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3POnlineOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.online.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -728,8 +728,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3POnlineSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3POnlineSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.online.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -747,7 +747,7 @@
               <html>&computer.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -756,25 +756,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PComputerAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PComputerAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.computer.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PComputerHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PComputerHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.computer.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PComputerDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PComputerDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.computer.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PComputerPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PComputerPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.computer.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PComputerIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PComputerIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.computer.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -783,31 +783,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PComputerCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PComputerCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.computer.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PComputerTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PComputerTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.computer.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PComputerPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PComputerPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.computer.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PComputerIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PComputerIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.computer.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PComputerCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PComputerCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.computer.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PComputerContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PComputerContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.computer.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PComputerTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PComputerTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.computer.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -816,7 +816,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PComputerOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PComputerOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.computer.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -826,8 +826,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PComputerSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PComputerSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.computer.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -839,7 +839,7 @@
               <html>&state.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -848,25 +848,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PStateAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PStateAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.state.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PStateHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PStateHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.state.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PStateDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PStateDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.state.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PStatePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PStatePseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.state.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PStateIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PStateIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.state.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -875,31 +875,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PStateCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PStateCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.state.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PStateTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PStateTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.state.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PStatePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PStatePseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.state.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PStateIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PStateIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.state.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PStateCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PStateCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.state.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PStateContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PStateContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.state.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PStateTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PStateTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.state.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -908,7 +908,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PStateOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PStateOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.state.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -918,8 +918,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PStateSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PStateSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.state.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -931,7 +931,7 @@
               <html>&uniqueid.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -940,25 +940,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PUniqueIDAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PUniqueIDAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PUniqueIDHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PUniqueIDHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PUniqueIDDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PUniqueIDDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PUniqueIDPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PUniqueIDPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PUniqueIDIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PUniqueIDIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -967,31 +967,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PUniqueIDCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PUniqueIDCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PUniqueIDTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PUniqueIDTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PUniqueIDPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PUniqueIDPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PUniqueIDIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PUniqueIDIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PUniqueIDCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PUniqueIDCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PUniqueIDContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PUniqueIDContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PUniqueIDTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PUniqueIDTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1000,7 +1000,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PUniqueIDOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PUniqueIDOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.uniqueid.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1010,8 +1010,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PUniqueIDSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PUniqueIDSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.uniqueid.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1023,7 +1023,7 @@
               <html>&government.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1032,25 +1032,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PGovernmentAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PGovernmentAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.government.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PGovernmentHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PGovernmentHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.government.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PGovernmentDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PGovernmentDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.government.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PGovernmentPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PGovernmentPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.government.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PGovernmentIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PGovernmentIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.government.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1059,31 +1059,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PGovernmentCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PGovernmentCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.government.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PGovernmentTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PGovernmentTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.government.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PGovernmentPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PGovernmentPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.government.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PGovernmentIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PGovernmentIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.government.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PGovernmentCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PGovernmentCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.government.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PGovernmentContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PGovernmentContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.government.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PGovernmentTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PGovernmentTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.government.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1092,7 +1092,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PGovernmentOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PGovernmentOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.government.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1102,8 +1102,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PGovernmentSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PGovernmentSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.government.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1121,7 +1121,7 @@
               <html>&purchase.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1130,25 +1130,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PPurchaseAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PPurchaseAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.purchase.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPurchaseHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PPurchaseHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.purchase.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PPurchaseDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PPurchaseDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.purchase.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPurchasePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PPurchasePseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.purchase.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPurchaseIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PPurchaseIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.purchase.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1157,31 +1157,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PPurchaseCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PPurchaseCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.purchase.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPurchaseTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PPurchaseTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.purchase.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPurchasePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PPurchasePseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.purchase.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPurchaseIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PPurchaseIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.purchase.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PPurchaseCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PPurchaseCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.purchase.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPurchaseContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PPurchaseContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.purchase.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPurchaseTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PPurchaseTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.purchase.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1190,7 +1190,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PPurchaseOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PPurchaseOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.purchase.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1200,8 +1200,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PPurchaseSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PPurchaseSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.purchase.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1219,7 +1219,7 @@
               <html>&financial.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1228,25 +1228,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PFinancialAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PFinancialAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.financial.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PFinancialHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PFinancialHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.financial.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PFinancialDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PFinancialDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.financial.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PFinancialPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PFinancialPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.financial.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PFinancialIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PFinancialIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.financial.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1255,31 +1255,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PFinancialCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PFinancialCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.financial.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PFinancialTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PFinancialTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.financial.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PFinancialPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PFinancialPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.financial.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PFinancialIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PFinancialIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.financial.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PFinancialCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PFinancialCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.financial.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PFinancialContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PFinancialContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.financial.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PFinancialTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PFinancialTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.financial.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1288,7 +1288,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PFinancialOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PFinancialOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.financial.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1298,8 +1298,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PFinancialSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PFinancialSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.financial.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1311,7 +1311,7 @@
               <html>&health.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1320,25 +1320,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PHealthAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PHealthAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.health.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PHealthHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PHealthHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.health.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PHealthDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PHealthDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.health.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PHealthPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PHealthPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.health.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PHealthIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PHealthIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.health.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1347,31 +1347,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PHealthCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PHealthCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.health.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PHealthTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PHealthTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.health.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PHealthPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PHealthPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.health.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PHealthIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PHealthIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.health.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PHealthCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PHealthCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.health.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PHealthContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PHealthContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.health.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PHealthTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PHealthTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.health.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1380,7 +1380,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PHealthOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PHealthOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.health.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1390,8 +1390,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PHealthSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PHealthSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.health.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1403,7 +1403,7 @@
               <html>&political.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1412,25 +1412,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PPoliticalAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PPoliticalAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.political.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPoliticalHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PPoliticalHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.political.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PPoliticalDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PPoliticalDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.political.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPoliticalPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PPoliticalPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.political.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPoliticalIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PPoliticalIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.political.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1439,31 +1439,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PPoliticalCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PPoliticalCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.political.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPoliticalTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PPoliticalTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.political.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPoliticalPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PPoliticalPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.political.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPoliticalIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PPoliticalIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.political.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PPoliticalCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PPoliticalCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.political.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPoliticalContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PPoliticalContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.political.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPoliticalTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PPoliticalTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.political.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1472,7 +1472,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PPoliticalOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PPoliticalOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.political.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1482,8 +1482,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PPoliticalSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PPoliticalSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.political.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1501,7 +1501,7 @@
               <html>&navigation.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1510,25 +1510,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PNavigationAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PNavigationAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.navigation.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PNavigationHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PNavigationHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.navigation.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PNavigationDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PNavigationDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.navigation.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PNavigationPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PNavigationPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.navigation.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PNavigationIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PNavigationIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.navigation.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1537,31 +1537,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PNavigationCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PNavigationCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.navigation.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PNavigationTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PNavigationTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.navigation.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PNavigationPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PNavigationPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.navigation.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PNavigationIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PNavigationIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.navigation.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PNavigationCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PNavigationCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.navigation.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PNavigationContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PNavigationContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.navigation.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PNavigationTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PNavigationTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.navigation.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1570,7 +1570,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PNavigationOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PNavigationOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.navigation.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1580,8 +1580,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PNavigationSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PNavigationSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.navigation.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1593,7 +1593,7 @@
               <html>&interactive.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1602,25 +1602,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PInteractiveAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PInteractiveAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.interactive.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PInteractiveHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PInteractiveHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.interactive.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PInteractiveDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PInteractiveDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.interactive.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PInteractivePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PInteractivePseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.interactive.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PInteractiveIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PInteractiveIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.interactive.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1629,31 +1629,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PInteractiveCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PInteractiveCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.interactive.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PInteractiveTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PInteractiveTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.interactive.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PInteractivePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PInteractivePseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.interactive.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PInteractiveIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PInteractiveIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.interactive.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PInteractiveCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PInteractiveCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.interactive.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PInteractiveContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PInteractiveContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.interactive.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PInteractiveTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PInteractiveTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.interactive.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1662,7 +1662,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PInteractiveOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PInteractiveOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.interactive.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1672,8 +1672,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PInteractiveSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PInteractiveSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.interactive.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1691,7 +1691,7 @@
               <html>&demographic.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1700,25 +1700,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PDemographicAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PDemographicAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.demographic.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PDemographicHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PDemographicHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.demographic.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PDemographicDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PDemographicDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.demographic.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PDemographicPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PDemographicPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.demographic.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PDemographicIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PDemographicIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.demographic.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1727,31 +1727,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PDemographicCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PDemographicCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.demographic.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PDemographicTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PDemographicTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.demographic.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PDemographicPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PDemographicPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.demographic.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PDemographicIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PDemographicIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.demographic.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PDemographicCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PDemographicCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.demographic.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PDemographicContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PDemographicContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.demographic.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PDemographicTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PDemographicTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.demographic.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1760,7 +1760,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PDemographicOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PDemographicOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.demographic.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1770,8 +1770,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PDemographicSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PDemographicSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.demographic.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1783,7 +1783,7 @@
               <html>&preference.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1792,25 +1792,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PPreferenceAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PPreferenceAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.preference.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPreferenceHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PPreferenceHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.preference.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PPreferenceDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PPreferenceDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.preference.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPreferencePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PPreferencePseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.preference.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPreferenceIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PPreferenceIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.preference.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1819,31 +1819,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PPreferenceCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PPreferenceCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.preference.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPreferenceTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PPreferenceTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.preference.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPreferencePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PPreferencePseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.preference.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPreferenceIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PPreferenceIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.preference.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PPreferenceCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PPreferenceCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.preference.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPreferenceContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PPreferenceContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.preference.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PPreferenceTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PPreferenceTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.preference.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1852,7 +1852,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PPreferenceOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PPreferenceOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.preference.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1862,8 +1862,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PPreferenceSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PPreferenceSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.preference.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1881,7 +1881,7 @@
               <html>&content.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1890,25 +1890,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3PContentAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3PContentAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.content.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3PContentHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3PContentHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.content.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3PContentDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3PContentDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.content.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3PContentPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3PContentPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.content.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3PContentIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3PContentIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.content.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1917,31 +1917,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3PContentCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3PContentCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.content.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3PContentTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3PContentTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.content.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3PContentPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3PContentPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.content.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3PContentIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3PContentIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.content.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3PContentCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3PContentCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.content.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3PContentContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3PContentContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.content.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3PContentTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3PContentTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.content.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -1950,7 +1950,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3PContentOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3PContentOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.content.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -1960,8 +1960,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3PContentSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3PContentSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.content.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -1979,7 +1979,7 @@
               <html>&other.tip;</html>
               <spacer flex="1"/>
               <groupbox orient="horizontal">
-                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
+                <caption><text value="&purpose.label;" tooltiptext="&purpose.tip;"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1988,25 +1988,25 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
-                        <checkbox id="P3POtherAdmin" value="admin" tooltip="admintip"
+                        <caption><text value="&superadmin.label;" tooltiptext="&superadmin.tip;"/></caption>
+                        <checkbox id="P3POtherAdmin" value="admin" tooltiptext="&admin.tip;"
                                   preftype="bool" prefstring="P3P.other.admin" prefattribute="checked"
                                   />
-                        <checkbox id="P3POtherHistorical" value="historical" tooltip="historicaltip"
+                        <checkbox id="P3POtherHistorical" value="historical" tooltiptext="&historical.tip;"
                                   preftype="bool" prefstring="P3P.other.historical" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
-                        <checkbox id="P3POtherDevelop" value="develop" tooltip="developtip"
+                        <caption><text value="&superdevelopment.label;" tooltiptext="&superdevelopment.tip;"/></caption>
+                        <checkbox id="P3POtherDevelop" value="develop" tooltiptext="&develop.tip;"
                                   preftype="bool" prefstring="P3P.other.develop" prefattribute="checked"
                                   />
-                        <checkbox id="P3POtherPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                        <checkbox id="P3POtherPseudo-analysis" value="pseudo-analysis" tooltiptext="&pseudo-analysis.tip;"
                                   preftype="bool" prefstring="P3P.other.pseudo-analysis" prefattribute="checked"
                                   />
-                        <checkbox id="P3POtherIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                        <checkbox id="P3POtherIndividual-analysis" value="individual-analysis" tooltiptext="&individual-analysis.tip;"
                                   preftype="bool" prefstring="P3P.other.individual-analysis" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -2015,31 +2015,31 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
-                        <checkbox id="P3POtherCustomization" value="customization" tooltip="customizationtip"
+                        <caption><text value="&supercustomize.label;" tooltiptext="&supercustomize.tip;"/></caption>
+                        <checkbox id="P3POtherCustomization" value="customization" tooltiptext="&customization.tip;"
                                   preftype="bool" prefstring="P3P.other.customization" prefattribute="checked"
                                   />
-                        <checkbox id="P3POtherTailoring" value="tailoring" tooltip="tailoringtip"
+                        <checkbox id="P3POtherTailoring" value="tailoring" tooltiptext="&tailoring.tip;"
                                   preftype="bool" prefstring="P3P.other.tailoring" prefattribute="checked"
                                   />
-                        <checkbox id="P3POtherPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                        <checkbox id="P3POtherPseudo-decision" value="pseudo-decision" tooltiptext="&pseudo-decision.tip;"
                                   preftype="bool" prefstring="P3P.other.pseudo-decision" prefattribute="checked"
                                   />
-                        <checkbox id="P3POtherIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                        <checkbox id="P3POtherIndividual-decision" value="individual-decision" tooltiptext="&individual-decision.tip;"
                                   preftype="bool" prefstring="P3P.other.individual-decision" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
-                        <checkbox id="P3POtherCurrent" value="current" tooltip="currenttip"
+                        <caption><text value="&supercontact.label;" tooltiptext="&supercontact.tip;"/></caption>
+                        <checkbox id="P3POtherCurrent" value="current" tooltiptext="&current.tip;"
                                   preftype="bool" prefstring="P3P.other.current" prefattribute="checked"
                                   />
-                        <checkbox id="P3POtherContact" value="contact" tooltip="contacttip"
+                        <checkbox id="P3POtherContact" value="contact" tooltiptext="&contact.tip;"
                                   preftype="bool" prefstring="P3P.other.contact" prefattribute="checked"
                                   />
-                        <checkbox id="P3POtherTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                        <checkbox id="P3POtherTelemarketing" value="telemarketing" tooltiptext="&telemarketing.tip;"
                                   preftype="bool" prefstring="P3P.other.telemarketing" prefattribute="checked"
                                   />
                         <spacer flex="1"/>
@@ -2048,7 +2048,7 @@
 
                     <row flex="1">
                       <vbox>
-                        <checkbox id="P3POtherOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                        <checkbox id="P3POtherOther-purpose" value="other-purpose" tooltiptext="&other-purpose.tip;"
                                   preftype="bool" prefstring="P3P.other.other-purpose" prefattribute="checked"
                                   />
                       </vbox>
@@ -2058,8 +2058,8 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
-                <checkbox id="P3POtherSharing" value="&sharing.label;" tooltip="sharingtip"
+                <caption><text value="&sharingtitle.label;" tooltiptext="&sharingtitle.tip;"/></caption>
+                <checkbox id="P3POtherSharing" value="&sharing.label;" tooltiptext="&sharing.tip;"
                           preftype="bool" prefstring="P3P.other.sharing" prefattribute="checked"
                           />
               </groupbox>
@@ -2070,210 +2070,6 @@
 
       <separator/>
       <checkbox id="showhelp" value="&showhelp.label;"/>
-
-      <popupset>
-        <popup id="purposetip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&purpose.tip;</html>
-          </window>
-        </popup>
-        <popup id="sharingtitletip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&sharingtitle.tip;</html>
-          </window>
-        </popup>
-
-        <popup id="superadmintip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&superadmin.tip;</html>
-          </window>
-        </popup>
-        <popup id="superdevelopmenttip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&superdevelopment.tip;</html>
-          </window>
-        </popup>
-        <popup id="supercustomizetip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&supercustomize.tip;</html>
-          </window>
-        </popup>
-        <popup id="supercontacttip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&supercontact.tip;</html>
-          </window>
-        </popup>
-        <popup id="currenttip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&current.tip;</html>
-          </window>
-        </popup>
-        <popup id="admintip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&admin.tip;</html>
-          </window>
-        </popup>
-        <popup id="developtip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&develop.tip;</html>
-          </window>
-        </popup>
-        <popup id="customizationtip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&customization.tip;</html>
-          </window>
-        </popup>
-        <popup id="tailoringtip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&tailoring.tip;</html>
-          </window>
-        </popup>
-        <popup id="pseudo-analysistip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&pseudo-analysis.tip;</html>
-          </window>
-        </popup>
-        <popup id="pseudo-decisiontip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&pseudo-decision.tip;</html>
-          </window>
-        </popup>
-        <popup id="individual-analysistip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&individual-analysis.tip;</html>
-          </window>
-        </popup>
-        <popup id="individual-decisiontip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&individual-decision.tip;</html>
-          </window>
-        </popup>
-        <popup id="contacttip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&contact.tip;</html>
-          </window>
-        </popup>
-        <popup id="historicaltip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&historical.tip;</html>
-          </window>
-        </popup>
-        <popup id="telemarketingtip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&telemarketing.tip;</html>
-          </window>
-        </popup>
-        <popup id="other-purposetip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&other-purpose.tip;</html>
-          </window>
-        </popup>
-        <popup id="sharingtip"
-               onpopupshowing="return parent.document.getElementById( 'showhelp' ).checked"
-               >
-          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  width="300px"
-                  height="100px"
-                  style="border: thin solid black">
-            <html>&sharing.tip;</html>
-          </window>
-        </popup>
-      </popupset>
 
     </vbox>
   </vbox>

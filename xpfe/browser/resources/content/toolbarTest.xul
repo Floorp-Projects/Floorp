@@ -11,8 +11,6 @@
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         orient="vertical" onload="resetToolbars();">
 
-  <popupset id="aTooltipSet"/>
-        
   <script>
   <![CDATA[
   var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
@@ -135,7 +133,7 @@
         </bindings>
         <action>
           <toolbar uri="?item" class="?item-class" 
-                   grippytooltip="aTooltip" grippytooltiptext="?item-name"/>
+                   grippytooltiptext="?item-name"/>
         </action>
       </rule>
 
@@ -181,7 +179,7 @@
         </bindings>
         <action>
           <button uri="?items" class="?item-class button-toolbar bookmarkitem" label="?uri"
-                  tooltip="aTooltip" tooltiptext="?item-name" 
+                  tooltiptext="?item-name" 
                   src="?item-icon" type="?item-icon" crop="right"/>
         </action>
       </rule>

@@ -61,9 +61,9 @@
 
   <hbox id="component-bar">
     <toolbarbutton class="taskbutton" id="mini-mail" oncommand="toMessengerWindow()" 
-            position="2" tooltip="aTooltip" tooltiptext="&taskMessenger.tooltip;"/>
+            position="2" tooltiptext="&taskMessenger.tooltip;"/>
     <toolbarbutton class="taskbutton" id="mini-addr" oncommand="toAddressBook();"
-            position="4" tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
+            position="4" tooltiptext="&taskAddressBook.tooltip;"/>
   </hbox>
   
   <menupopup id="taskPopup">

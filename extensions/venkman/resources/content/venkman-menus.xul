@@ -126,12 +126,9 @@
       <keyset id="tasksKeys"/>
     </keyset>
 
-    <!-- Tooltips -->
-    <popupset id="aTooltipSet"/>
-  
     <!-- Main menu bar -->
     <toolbox flex="1">
-      <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip"
+      <menubar id="main-menubar" persist="collapsed"
         grippytooltiptext="&MenuBar.tooltip;">
 
         <!-- File menu -->
@@ -214,24 +211,24 @@
 
       <!-- Debug toolbar -->
       <toolbar class="toolbar-primary chromeclass-toolbar" id="main-toolbar"
-        grippytooltip="aTooltip" grippytooltiptext="&DebugBar.tooltip;">
+        grippytooltiptext="&DebugBar.tooltip;">
         <hbox id="main-toolbar-buttons">
           <toolbarbutton class="toolbarbutton-1" id="stop-button"
             label="&Stop.label;" observes="cmd_stop"
-            tooltip="aTooltip" tooltiptext="&Stop.tooltip;"/>
+            tooltiptext="&Stop.tooltip;"/>
           <toolbarseparator class="toolbarseparator-primary"/>
           <toolbarbutton class="toolbarbutton-1" id="cont-button"
             label="&Cont.label;" observes="cmd_cont"
-            tooltip="aTooltip" tooltiptext="&Cont.tooltip;"/>
+            tooltiptext="&Cont.tooltip;"/>
           <toolbarbutton class="toolbarbutton-1" id="step-over-button"
             label="&StepOver.label;" observes="cmd_step_over"
-            tooltip="aTooltip" tooltiptext="&StepOver.tooltip;"/>
+            tooltiptext="&StepOver.tooltip;"/>
           <toolbarbutton class="toolbarbutton-1" id="step-in-button"
             label="&StepIn.label;" observes="cmd_step_in"
-            tooltip="aTooltip" tooltiptext="&StepIn.tooltip;"/>
+            tooltiptext="&StepIn.tooltip;"/>
           <toolbarbutton class="toolbarbutton-1" id="step-out-button"
             label="&StepOut.label;" observes="cmd_step_out"
-            tooltip="aTooltip" tooltiptext="&StepOut.tooltip;"/>
+            tooltiptext="&StepOut.tooltip;"/>
         </hbox>
       </toolbar>
         

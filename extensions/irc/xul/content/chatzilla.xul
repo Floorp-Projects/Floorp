@@ -117,7 +117,6 @@
         <vbox flex="1">
           <toolbox id="header-bar-tbox" crop="right" persist="collapsed">
             <toolbar class="chromeclass-toolbar" id="header-bar-tbar"
-              grippytooltip="aTooltip"
               grippytooltiptext="&header.tooltip;" crop="right">
               <hbox flex="1" class="header-box">
                 <vbox flex="1%">

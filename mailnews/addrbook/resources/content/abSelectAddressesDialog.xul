@@ -45,7 +45,6 @@ Rights Reserved.
 
 
   <keyset id="dialogKeys"/>
-  <popupset id="aTooltipSet"/>
 
   <!-- Main box, 3 pane and majority of buttons -->
   <hbox flex="100%">
@@ -99,9 +98,9 @@ Rights Reserved.
     <vbox id="rightColumnButtonBox">
       <vbox flex="50%">
         <spacer class="third-column-spacer"/>
-        <button id="new" label="&newButton.label;" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
+        <button id="new" label="&newButton.label;" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
         <spacer class="third-column-spacer"/>
-        <button id="edit" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/> 
+        <button id="edit" label="&editButton.label;" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/> 
         <spacer flex="100%"/>
       </vbox>
       <vbox flex="50%">

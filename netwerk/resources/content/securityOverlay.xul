@@ -9,6 +9,6 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/securityUI.js" />
 
-  <statusbarpanel id="security-button" onclick="displayPageInfo()" tooltip="aTooltip" tooltiptext="&lockIcon.label;"/>    
+  <statusbarpanel id="security-button" onclick="displayPageInfo()" tooltiptext="&lockIcon.label;"/>    
       
 </overlay>
