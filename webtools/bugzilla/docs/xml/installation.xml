@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.72 2004/07/06 23:30:03 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.73 2004/07/22 17:33:26 kiko%async.com.br Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1780,7 +1780,7 @@ pid-file=/home/foo/mymysql/the.pid
       this page.</para>
     </section>
 
-    <section>
+    <section id="install-perlmodules-nonroot">
       <title>Perl Modules</title>
 
       <para>Installing the Perl modules as a non-root user is probably the
@@ -1951,28 +1951,10 @@ pid-file=/home/foo/mymysql/the.pid
     <section>
       <title>Bugzilla</title>
 
-      <para>Since you probably can't set up a symbolic link to
-      <filename>/usr/bonsaitools/bin/perl</filename> as a non-root user,
-      you will need to hack the scripts to point to the right Perl:</para>
-
-      <para>
-        <programlisting>perl -pi -e
-        's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm
-        processmail syncshadowdb</programlisting>
-
-        Change <filename>/usr/bin/perl</filename> to match the location
-        of Perl on your machine. If you had to install Perl as non-root,
-        this would be the location in your home directory.
-      </para>
-
-      <note>
-        <para>Version 2.17+ of Bugzilla now already has the scripts
-        pointing to <filename>/usr/bin/perl</filename>.</para>
-      </note>
-
-      <para>Of course, the scripts will not work if they don't know the
-      location of your newly install Perl modules, so you will have to hack
-      the scripts to look for those, too:</para>
+      <para>If you had to install Perl modules as a non-root user
+      (<xref linkend="install-perlmodules-nonroot" />) or to non-standard
+      directories, you will need to change the scripts, setting the correct
+      location of the Perl modules:</para>
 
       <para>
         <programlisting>perl -pi -e
