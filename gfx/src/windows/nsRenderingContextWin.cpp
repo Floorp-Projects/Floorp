@@ -600,13 +600,13 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   if (nsnull != aOldDC)
   {
     if (nsnull != mOrigSolidBrush)
-      prevbrush = ::SelectObject(aOldDC, mOrigSolidBrush);
+      prevbrush = (HBRUSH)::SelectObject(aOldDC, mOrigSolidBrush);
 
     if (nsnull != mOrigFont)
-      prevfont = ::SelectObject(aOldDC, mOrigFont);
+      prevfont = (HFONT)::SelectObject(aOldDC, mOrigFont);
 
     if (nsnull != mOrigSolidPen)
-      prevpen = ::SelectObject(aOldDC, mOrigSolidPen);
+      prevpen = (HPEN)::SelectObject(aOldDC, mOrigSolidPen);
 
     if (nsnull != mOrigPalette)
       ::SelectPalette(aOldDC, mOrigPalette, TRUE);
