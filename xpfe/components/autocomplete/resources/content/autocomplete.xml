@@ -562,9 +562,6 @@
           --this.mSessionReturns;
 
           var firstReturn = this.mSessionReturns == (this.sessionCount-1) - this.mFailureCount;
-          
-          if (firstReturn)
-            this.clearResults(false); // clear results, but don't repaint yet
 
           this.mLastStatus[aSessionName] = aStatus;
 
@@ -577,6 +574,8 @@
               aResults.searchString != this.currentSearchString)
           {
             this.mLastResults[aSessionName] = null;
+            if (firstReturn)
+              this.clearResults(false);
             this.searchFailed();
             return;
           } else if (aStatus == 
@@ -584,6 +583,10 @@
             ++this.mFailureItems;
           }
           
+          if (firstReturn) {
+            this.view.mTree.beginUpdateBatch();
+            this.clearResults(false); // clear results, but don't repaint yet
+          }
           this.mLastResults[aSessionName] = aResults;
 
           this.autoFillInput(aSessionName, aResults, false);
@@ -594,6 +597,8 @@
           // be sure to add our result elements before calling openResultPopuup as we need
           // to know the total # of results found so far.
           this.addResultElements(aSessionName, aResults);      
+          if (firstReturn)
+            this.view.mTree.endUpdateBatch();
           this.openResultPopup();
          
           // if this is the last session to return... 
@@ -1060,7 +1065,7 @@
       <method name="clearResultElements">
         <parameter name="aInvalidate"/>
         <body><![CDATA[
-          this.view.clearResults(aInvalidate);
+          this.view.clearResults();
           if (aInvalidate)
             this.resultsPopup.adjustHeight();
 
@@ -1172,13 +1177,14 @@
             return this.mSelectedIndex;
           },
           
-          clearResults: function(aInvalidate)
+          clearResults: function()
           {
+            var oldCount = this.mRowCount;
             this.mRowCount = 0;  
             this.mResults = [];
             
-            if (aInvalidate && this.mTree)
-              this.mTree.invalidate();
+            if (this.mTree)
+              this.mTree.rowCountChanged(0, -oldCount);
           },
           
           addResults: function(aResults)
@@ -1188,7 +1194,7 @@
             this.mRowCount += aResults.items.Count();
             
             if (this.mTree)
-              this.mTree.rowCountChanged(oldCount, this.mRowCount);
+              this.mTree.rowCountChanged(oldCount, this.mRowCount - oldCount);
           },
           
           createAtom: function(aVal)
