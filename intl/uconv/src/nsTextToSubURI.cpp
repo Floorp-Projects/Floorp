@@ -229,9 +229,9 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
                                                 nsAString &_retval)
 {
   nsCAutoString unescapedSpec;
-  // exclude control octets (0x00 - 0x1f and 0x7f) from unescaping
+  // skip control octets (0x00 - 0x1f and 0x7f) when unescaping
   NS_UnescapeURL(PromiseFlatCString(aURIFragment), 
-                 esc_ExcludeControl | esc_AlwaysCopy, unescapedSpec);
+                 esc_SkipControl | esc_AlwaysCopy, unescapedSpec);
 
   return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval);
 }
