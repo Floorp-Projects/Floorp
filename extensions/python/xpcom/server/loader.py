@@ -110,6 +110,7 @@ class PythonComponentLoader:
 
     def autoRegisterComponents (self, when, directory):
         directory_path = directory.path
+        self.num_modules_this_register = 0
         if xpcom.verbose:
             print "Auto-registering all Python components in", directory_path
 
@@ -148,6 +149,24 @@ class PythonComponentLoader:
         loader_mgr = components.manager.queryInterface(components.interfaces.nsIComponentLoaderManager)
         if not loader_mgr.hasFileChanged(componentFile, None, modtime):
             return 1
+
+        if self.num_modules_this_register == 0:
+            # New conponents may have just installed new Python
+            # modules into the main python directory (including new .pth files)
+            # So we ask Python to re-process our site directory.
+            # Note that the pyloader does the equivalent when loading.
+            try:
+                from xpcom import _xpcom
+                import site
+                NS_XPCOM_CURRENT_PROCESS_DIR="XCurProcD"
+                dirname = _xpcom.GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR)
+                dirname.append("python")
+                site.addsitedir(dirname.path)
+            except:
+                print "PyXPCOM loader failed to process site directory before component registration"
+                traceback.print_exc()
+
+        self.num_modules_this_register += 1
 
         # auto-register via the module.
         m = self._getCOMModuleForLocation(componentFile)
