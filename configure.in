@@ -2880,6 +2880,16 @@ if test "$NS_TRACE_MALLOC"; then
 fi
 AC_SUBST(NS_TRACE_MALLOC)
 
+dnl Turn on reflow counting
+MOZ_REFLOW_PERF=
+MOZ_ARG_ENABLE_BOOL(reflow-perf,
+[  --enable-reflow-perf    Enable reflow performance tracing],
+  MOZ_REFLOW_PERF=1 )
+if test "$MOZ_REFLOW_PERF"; then
+  AC_DEFINE(MOZ_REFLOW_PERF)
+fi
+AC_SUBST(MOZ_REFLOW_PERF)
+
 dnl make sure that we compile in multi-processor support
 NS_MT_SUPPORTED=1
 AC_DEFINE(NS_MT_SUPPORTED)
