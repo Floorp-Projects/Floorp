@@ -2381,7 +2381,8 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // Setup text transformer to transform this frames text content
   PRUnichar wordBuf[WORD_BUF_SIZE];
   nsCOMPtr<nsILineBreaker> lb;
-  doc->GetLineBreaker(getter_AddRefs(lb));
+  if (doc)
+    doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(wordBuf, WORD_BUF_SIZE,lb,nsnull);
   nsresult rv = tx.Init(this, mContent, startingOffset);
   if (NS_OK != rv) {
