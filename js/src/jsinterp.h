@@ -249,6 +249,8 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags);
  */
 #define JSINVOKE_CONSTRUCT      0x1     /* construct object rather than call */
 #define JSINVOKE_INTERNAL       0x2     /* internal call, not from a script */
+#define JSINVOKE_GETTER         0x4     /* internal call to getter function */
+#define JSINVOKE_SETTER         0x8     /* internal call to setter function */
 
 /*
  * "Internal" calls may come from C or C++ code using a JSContext on which no
@@ -263,6 +265,10 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags);
 extern JSBool
 js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval);
+
+extern JSBool
+js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
+                    uintN flags, uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
