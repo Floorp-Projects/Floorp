@@ -559,6 +559,9 @@ class Parser {
             int peek = ts.peekToken();
             if (peek == ts.CATCH) {
                 while (ts.matchToken(ts.CATCH)) {
+                    if (sawDefaultCatch) {
+                        reportError(ts, "msg.catch.unreachable");
+                    }
                     source.append((char)ts.CATCH);
                     mustMatchToken(ts, ts.LP, "msg.no.paren.catch");
                     source.append((char)ts.LP);
@@ -572,9 +575,6 @@ class Parser {
                         source.append((char)ts.IF);
                         catchCond = expr(ts, source, false);
                     } else {
-                        if (sawDefaultCatch) {
-                            reportError(ts, "msg.dup.catch");
-                        }
                         sawDefaultCatch = true;
                     }
 
