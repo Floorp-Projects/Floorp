@@ -68,6 +68,9 @@ pref("clipboard.autocopy", true);
 
 pref("browser.urlbar.clickSelectsAll", false);
 
+// override double-click word selection behavior.
+pref("layout.word_select.stop_at_punctuation", false);
+
 // autocomplete keyboard grab workaround
 pref("autocomplete.grab_during_popup", true);
 pref("autocomplete.ungrab_during_mode_switch", true);
