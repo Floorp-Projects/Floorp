@@ -120,7 +120,12 @@ NS_IMETHODIMP CActiveXPluginInstance::SetWindow(nsPluginWindow* window)
 	return NS_OK;
 }
 
-#ifndef NEW_PLUGIN_STREAM_API
+#ifdef NEW_PLUGIN_STREAM_API
+NS_IMETHODIMP CActiveXPluginInstance::NewStream(nsIPluginStreamListener** listener)
+{
+	return NS_OK;
+}
+#else
 NS_IMETHODIMP CActiveXPluginInstance::NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result)
 {
 	return NS_OK;
