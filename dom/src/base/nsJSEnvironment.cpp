@@ -139,7 +139,20 @@ nsJSContext::EvaluateString(const nsString& aScript,
   }
   if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal)))) 
     return NS_ERROR_FAILURE;
-	
+
+  return EvaluateString(aScript, principal, aURL, aLineNo, aRetValue, aIsUndefined);
+}
+
+  
+NS_IMETHODIMP
+nsJSContext::EvaluateString(const nsString& aScript, 
+                            nsIPrincipal *principal,
+                            const char *aURL,
+                            PRUint32 aLineNo,
+                            nsString& aRetValue,
+                            PRBool* aIsUndefined)
+{
+
   nsresult rv;
   NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
   if (NS_FAILED(rv)) 

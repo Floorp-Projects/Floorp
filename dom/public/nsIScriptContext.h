@@ -27,6 +27,7 @@ class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
 class nsIScriptNameSpaceManager;
 class nsIScriptContextOwner;
+class nsIPrincipal;
 
 #define NS_ISCRIPTCONTEXT_IID \
 { /* 8f6bca7d-ce42-11d1-b724-00600891d8c9 */ \
@@ -55,6 +56,13 @@ public:
    *
    **/
   NS_IMETHOD EvaluateString(const nsString& aScript, 
+                            const char *aURL,
+                            PRUint32 aLineNo,
+                            nsString& aRetValue,
+                            PRBool* aIsUndefined) = 0;
+
+  NS_IMETHOD EvaluateString(const nsString& aScript, 
+                            nsIPrincipal *principal,
                             const char *aURL,
                             PRUint32 aLineNo,
                             nsString& aRetValue,
