@@ -291,6 +291,8 @@ void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout)
 		thread->md.osErrCode = kETIMEDOUTErr;
 		PR_SetError(PR_IO_TIMEOUT_ERROR, kETIMEDOUTErr);
 	}
+
+	thread->io_pending = PR_FALSE;
 	PR_Unlock(thread->md.asyncIOLock);
 	_PR_FAST_INTSON(is);
 }
