@@ -16,34 +16,25 @@
  * Reserved.
  */
 
-/*
- * jsIErrorReporter.h -- the XPCOM interface to JS error and warning reporters.
- */
+#ifndef JS_RUNTIME_H
+#define JS_RUNTIME_H
 
-#ifndef JS_IERRORREPORTER_H
-#define JS_IERRORREPORTER_H
-
-#include "nsISupports.h"
+#include "jsIRuntime.h"
+#include "jsIContext.h"
 extern "C" {
 #include <jsapi.h>
 }
 
-class jsIErrorReporter: public nsISupports {
- public:
-    jsIErrorReporter();
-    virtual ~jsIErrorReporter() = 0;
-    /**
-     * Report a warning.
-     */
-    NS_IMETHOD reportWarning(JSString *message,
-			     JSErrorReport *report) = 0;
+#include "jsContext.h"
+class jsRuntime: public jsIRuntime {
+    JSRuntime *rt;
+    static int runtimeCount;
 
-    /**
-     * Report an error.
-     */
-    NS_IMETHOD reportError(JSString *message,
-			   JSErrorReport *report) = 0;
-
+public:
+    jsRuntime(uint32 maxbytes);
+    ~jsRuntime();
+    jsIContext *newContext(size_t stacksize);
+    NS_DECL_ISUPPORTS
 };
 
-#endif /* JS_IERRORREPORTER_H */
+#endif /* JS_RUNTIME_H */

@@ -17,33 +17,27 @@
  */
 
 /*
- * jsIErrorReporter.h -- the XPCOM interface to JS error and warning reporters.
+ * jsIRuntime.h --- the XPCOM interface to the core JS engine functionality.
  */
 
-#ifndef JS_IERRORREPORTER_H
-#define JS_IERRORREPORTER_H
+#ifndef JS_IRUNTIME_H
+#define JS_IRUNTIME_H
 
 #include "nsISupports.h"
-extern "C" {
 #include <jsapi.h>
-}
+#include "jsIContext.h"
 
-class jsIErrorReporter: public nsISupports {
+#define JS_IRUNTIME_IID \
+    { 0, 0, 0, \
+	{0, 0, 0, 0, 0, 0, 0, 0}}
+
+/**
+ * jsIRuntime interface declaration.
+ */
+
+class jsIRuntime: public nsISupports {
  public:
-    jsIErrorReporter();
-    virtual ~jsIErrorReporter() = 0;
-    /**
-     * Report a warning.
-     */
-    NS_IMETHOD reportWarning(JSString *message,
-			     JSErrorReport *report) = 0;
-
-    /**
-     * Report an error.
-     */
-    NS_IMETHOD reportError(JSString *message,
-			   JSErrorReport *report) = 0;
-
+    virtual jsIContext *newContext(size_t stacksize) = 0;
 };
 
-#endif /* JS_IERRORREPORTER_H */
+#endif /* JS_IRUNTIME_IID */

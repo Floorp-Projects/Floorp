@@ -20,11 +20,14 @@
  * jsIContext.h --- the XPCOM interface to the core JS engine functionality.
  */
 
+class jsIContext;
+
 #ifndef JS_ICONTEXT_H
 #define JS_ICONTEXT_H
 
-#include "nsISupports.h"
+#include <nsISupports.h>
 #include <jsapi.h>
+#include "jsIScript.h"
 #include "jsIScriptable.h"
 #include "jsIFunction.h"
 #include "jsIErrorReporter.h"
@@ -32,34 +35,6 @@
 #define JS_ICONTEXT_IID \
     { 0, 0, 0, \
 	{0, 0, 0, 0, 0, 0, 0, 0}}
-
-#define JS_IRUNTIME_IID \
-    { 0, 0, 0, \
-	{0, 0, 0, 0, 0, 0, 0, 0}}
-
-#define JS_ISCRIPT_IID \
-    { 0, 0, 0, \
-	{0, 0, 0, 0, 0, 0, 0, 0}}
-
-/**
- * jsIScript interface declaration
- */
-
-class jsIScript: public nsISupports {
- public:
-    virtual jsIScript() = 0;
-    virtual ~jsIScript() = 0;
-};
-
-/**
- * jsIRuntime interface declaration.
- */
-
-class jsIRuntime: public nsISupports {
- public:
-    virtual jsIRuntime() = 0;
-    virtual ~jsIRuntime() = 0;
-};
 
 /**
  * jsIContext interface declaration
@@ -144,7 +119,7 @@ class jsIContext: public nsISupports {
     NS_IMETHOD toBoolean(jsval v, JSBool *bp) = 0;
 
     /**
-     * Convert a jsval to a JavaScript number value.
+     * Convert a jsval to a (newly-allocated) JavaScript number value.
      */
     virtual jsdouble *toNumber(jsval v) = 0;
 
@@ -157,7 +132,7 @@ class jsIContext: public nsISupports {
      * Convert a jsval to a JavaScript object.  The provided scope is
      * used to look up constructors Number, String and Boolean as required.
      */
-    virtual jsIScriptable *toObject(jsval v, jsIScriptable *scope) = 0;
+    virtual jsIScriptable *toScriptable(jsval v, jsIScriptable *scope) = 0;
     
     /**
      * Evaluate a JavaScript source string.
@@ -165,7 +140,8 @@ class jsIContext: public nsISupports {
     NS_IMETHOD evaluateString(jsIScriptable *scope,
 			      JSString *source,
 			      JSString *sourceName,
-			      uintN lineno) = 0;
+			      uintN lineno,
+			      jsval *rval) = 0;
 
     /**
      * Initialize the standard (ECMA-plus) objects in the given scope.
@@ -176,12 +152,12 @@ class jsIContext: public nsISupports {
     /**
      * Report a (usually fatal) runtime error.
      */
-    NS_IMETHOD reportError(JSString *message) = 0;
+    virtual void reportError(JSString *message) = 0;
 
     /**
      * Report a warning.
      */
-    NS_IMETHOD reportWarning(JSString *message) = 0;
+    virtual void reportWarning(JSString *message) = 0;
     
     /**
      * Change the error reporter for this context.
@@ -191,7 +167,7 @@ class jsIContext: public nsISupports {
     /**
      * Set the current language version.
      */
-    NS_IMETHOD setLanguageVersion(uintN version) = 0;
+    virtual uintN setLanguageVersion(uintN version) = 0;
 
     /**
      * Get the current language version.
@@ -203,18 +179,13 @@ class jsIContext: public nsISupports {
      * This should be called whenever a Context is operated upon by a
      * new thread.
      */
-    NS_IMETHOD enter(void);
+    virtual void enter(void) = 0;
     
     /**
      * Break the Context-thread association.
      */
-    NS_IMETHOD exit(void);
+    virtual void exit(void) = 0;
     
-    /**
-     * Create a new Context.
-     */
-    virtual Context(jsIRuntime *runtime, uintN stacksize) = 0;
-    virtual ~Context() = 0;
-};    
+};
 			    
 #endif /* JS_ICONTEXT_H */
