@@ -207,7 +207,7 @@ printf("ne tak zdes\n");
     object->AddRef();
     urpITest *proxy = NULL;
 //    xpcomStubsAndProxies->GetStub((nsISupports*)object, &stub);
-    stub = new urpStub();
+    stub = new urpStub("socket,host=shiva,port=2009");
 printf("yatatatata\n");
     bcOID oid = orb->RegisterStub(stub);
     printf("---urpTestImpl iid=%s\n",NS_GET_IID(urpITest).ToString());
