@@ -565,75 +565,6 @@ function MsgDeleteFolder()
 }
 
  //3pane related commands.  Need to go in own file.  Putting here for the moment.
-function MsgSortByDate()
-{
-	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date', null, true, null);
-}
-
-function MsgSortBySender()
-{
-	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortByRecipient()
-{
-	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Recipient', 'http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortByStatus()
-{
-	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status', 'http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortBySubject()
-{
-	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject', 'http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortByFlagged() 
-{
-	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged', 'http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortByPriority()
-{
-	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority', 'http://home.netscape.com/NC-rdf#Date',true, null);
-}
-
-function MsgSortBySize() 
-{
-	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortByUnread()
-{
-	SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages','http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortByOrderReceived()
-{
-	SortThreadPane('OrderReceivedColumn', 'http://home.netscape.com/NC-rdf#OrderReceived','http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortByRead()
-{
-	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#HasUnreadMessages','http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortByTotal()
-{
-	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages', 'http://home.netscape.com/NC-rdf#Date', true, null);
-}
-
-function MsgSortAscending() 
-{
-	dump("not implemented yet.\n");
-}
-function MsgSortDescending()
-
-{
-	dump("not implemented yet.\n");
-}
 
 function MsgNextMessage()
 {
@@ -701,10 +632,6 @@ function MsgViewUnreadMsg()
 	RefreshThreadTreeView();
 }
 
-function MsgSortByThread()
-{
-	ChangeThreadView()
-}
 
 function FillInFolderTooltip(cellNode)
 {

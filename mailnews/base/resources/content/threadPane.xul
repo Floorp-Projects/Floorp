@@ -30,7 +30,7 @@ Rights Reserved.
 >
 
 <script src="chrome://global/content/treePopups.js"/>
-
+<script src="chrome://messenger/content/threadPane.js"/>
 
 
 <tree datasources="rdf:null" id="threadTree"

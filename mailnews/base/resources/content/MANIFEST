@@ -23,6 +23,7 @@
 messenger.xul
 folderPane.xul
 threadPane.xul
+threadPane.js
 mailWindowOverlay.xul
 mail3PaneWindowVertLayout.xul
 mailWindowOverlay.js

@@ -47,6 +47,7 @@ CHROME_CONTENT = \
 		messageWindow.js \
 		folderPane.xul \
 		threadPane.xul \
+		threadPane.js \
 		msgHdrViewOverlay.xul \
 		msgHdrViewOverlay.js \
 		msgHdrViewAddresses.js \
