@@ -7,11 +7,13 @@ AC_DEFUN(AM_PATH_LIBIDL,
 [dnl 
 dnl Get the cflags and libraries from the libIDL-config script
 dnl
-AC_ARG_WITH(libIDL-prefix,[  --with-libIDL-prefix=PFX   Prefix where libIDL is installed (optional)],
+AC_ARG_WITH(libIDL-prefix,[  --with-libIDL-prefix=PFX
+                          Prefix where libIDL is installed (optional)],
             libIDL_config_prefix="$withval", libIDL_config_prefix="")
-AC_ARG_WITH(libIDL-exec-prefix,[  --with-libIDL-exec-prefix=PFX Exec prefix where libIDL is installed (optional)],
+AC_ARG_WITH(libIDL-exec-prefix,[  --with-libIDL-exec-prefix=PFX
+                          Exec prefix where libIDL is installed (optional)],
             libIDL_config_exec_prefix="$withval", libIDL_config_exec_prefix="")
-AC_ARG_ENABLE(libIDLtest, [  --disable-libIDLtest       Do not try to compile and run a test libIDL program],
+AC_ARG_ENABLE(libIDLtest, [  --disable-libIDLtest    Do not try to compile and run a test libIDL program],
 		    , enable_libIDLtest=yes)
 
   if test x$libIDL_config_exec_prefix != x ; then
