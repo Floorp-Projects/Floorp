@@ -34,9 +34,9 @@
 #ifndef _NET_PROTO_H_
 #define _NET_PROTO_H_
 
-#include "ntypes.h"
-#if 0
 #include "xp_core.h"
+#include "ntypes.h"
+#ifdef XP_MAC
 #include "prio.h"
 #include "shistele.h"
 #include "xp_list.h"
@@ -228,7 +228,7 @@ typedef struct _NET_AllHeaders {
     uint32 max_index;           /* maximum no of free slots allocated */
 } NET_AllHeaders;
 
-#if 0
+#ifdef XP_MAC
 /* Forward declaration to make compiler happy on OSF1 */
 #if defined (OSF1)
 #ifdef XP_CPLUSPLUS
@@ -309,7 +309,7 @@ struct URL_Struct_ {
                                  * proxying
                                  */
     char  * window_target;      /* named window support */
-#if 0
+#idef XP_MAC
     Chrome * window_chrome;     /* pointer to a Chrome structure that
                                  * if non-null specifies the characteristics
                                  * of the target window named in 
@@ -355,7 +355,7 @@ struct URL_Struct_ {
                                            * the filename of its local cache 
                                            * file containing it's data
                                            */
-#if 0
+#ifdef XP_MAC
 #ifdef NU_CACHE
     void*    cache_object;
 #else
@@ -396,7 +396,7 @@ struct URL_Struct_ {
 
     int32   position_tag;                 /* tag number of last position */
 
-#if 0
+#ifdef XP_MAC
     SHIST_SavedData savedData;            /* layout data */
 
     Net_GetUrlExitFunc *pre_exit_fn;      /* If set, called just before the
@@ -518,7 +518,7 @@ struct URL_Struct_ {
 #endif
 };
 
-#if 0
+#ifdef XP_MAC
 #ifndef NU_CACHE /* Not on my branch you don't */
 /*  silly macro's (methods) to access the URL Struct that nobody uses
  */
