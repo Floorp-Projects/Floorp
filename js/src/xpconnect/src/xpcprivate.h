@@ -1379,14 +1379,26 @@ private:
 
 /***************************************************************************/
 
-JSObject*
+extern JSObject*
 xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID);
 
-nsID*
+extern nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj);
 
 /***************************************************************************/
+// in xpcdebug.cpp
 
+extern JSBool 
+xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals, 
+                JSBool showThisProps);
+
+extern JSBool
+xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text);
+
+extern JSBool 
+xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt);
+
+/***************************************************************************/
 // the include of declarations of the maps comes last because they have
 // inlines which call methods on classes above.
 

@@ -725,6 +725,28 @@ nsXPConnect::SyncJSContexts(void)
     return NS_OK;
 }        
 
+/* void debugDump (in short depth); */
+NS_IMETHODIMP
+nsXPConnect::DebugDump(PRInt16 depth)
+{
+#ifdef DEBUG
+    depth-- ;
+    XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_INDENT();
+        XPC_LOG_ALWAYS(("mArbitraryScriptable @ %x", mArbitraryScriptable));
+        XPC_LOG_ALWAYS(("mInterfaceInfoManager @ %x", mInterfaceInfoManager));
+        XPC_LOG_ALWAYS(("mContextStack @ %x", mContextStack));
+        XPC_LOG_ALWAYS(("mThrower @ %x", mThrower));
+        if(mRuntime)
+            mRuntime->DebugDump(depth);
+        else
+            XPC_LOG_ALWAYS(("mRuntime is null"));
+        nsXPCWrappedNativeScope::DebugDumpAllScopes(depth);
+    XPC_LOG_OUTDENT();
+#endif
+    return NS_OK;
+}        
+
 /* void debugDumpObject (in nsISupports aCOMObj, in short depth); */
 NS_IMETHODIMP
 nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
@@ -785,76 +807,66 @@ nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
     return NS_OK;
 }        
 
-/* void debugDumpJSStack (); */
-NS_IMETHODIMP
-nsXPConnect::DebugDumpJSStack(void)
+/* void debugDumpJSStack (in PRBool showArgs, in PRBool showLocals, in PRBool showThisProps); */
+NS_IMETHODIMP 
+nsXPConnect::DebugDumpJSStack(PRBool showArgs, PRBool showLocals, PRBool showThisProps)
 {
 #ifdef DEBUG
+    JSContext* cx;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+    if(NS_FAILED(rv))
+        printf("failed to get nsIJSContextStack service!\n");
+    else if(NS_FAILED(stack->Peek(&cx)))
+        printf("failed to peek into nsIJSContextStack service!\n");
+    else if(!cx)
+        printf("there is no JSContext on the nsIJSContextStack!\n");
+    else
+        xpc_DumpJSStack(cx, showArgs, showLocals, showThisProps);
+#endif
+    return NS_OK;
+}
 
-    nsIJSStackFrameLocation* stack;
-    if(NS_FAILED(GetCurrentJSStack(&stack)) || !stack)
-    {
-        printf("call to GetCurrentJSStack failed\n");
-        return NS_OK;
-    }
-
-    nsIJSStackFrameLocation* current = stack;
-    NS_ADDREF(current);
-
-    while(1)
-    {
-        char* text;
-        if(NS_FAILED(current->ToString(&text)))
-        {
-            printf("nsIJSStackFrameLocation::ToString failed!\n");
-            NS_RELEASE(current);
-            break;
-        }
-        printf("%s\n", text);
-        nsAllocator::Free(text);
-        nsIJSStackFrameLocation* prev = current;
-        nsresult rv = prev->GetCaller(&current);
-        NS_RELEASE(prev);
-        if(NS_FAILED(rv) || !current)
-            break;
-    }
-    NS_RELEASE(stack);
+/* void debugDumpEvalInJSStackFrame (in PRUint32 aFrameNumber, in string aSourceText); */
+NS_IMETHODIMP
+nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSourceText)
+{
+#ifdef DEBUG
+    JSContext* cx;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+    if(NS_FAILED(rv))
+        printf("failed to get nsIJSContextStack service!\n");
+    else if(NS_FAILED(stack->Peek(&cx)))
+        printf("failed to peek into nsIJSContextStack service!\n");
+    else if(!cx)
+        printf("there is no JSContext on the nsIJSContextStack!\n");
+    else
+        xpc_DumpEvalInJSStackFrame(cx, aFrameNumber, aSourceText);
 #endif
     return NS_OK;
 }        
-
-
-/* void debugDump (in short depth); */
-NS_IMETHODIMP
-nsXPConnect::DebugDump(PRInt16 depth)
-{
-#ifdef DEBUG
-    depth-- ;
-    XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt));
-    XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mArbitraryScriptable @ %x", mArbitraryScriptable));
-        XPC_LOG_ALWAYS(("mInterfaceInfoManager @ %x", mInterfaceInfoManager));
-        XPC_LOG_ALWAYS(("mContextStack @ %x", mContextStack));
-        XPC_LOG_ALWAYS(("mThrower @ %x", mThrower));
-        if(mRuntime)
-            mRuntime->DebugDump(depth);
-        else
-            XPC_LOG_ALWAYS(("mRuntime is null"));
-        nsXPCWrappedNativeScope::DebugDumpAllScopes(depth);
-    XPC_LOG_OUTDENT();
-#endif
-    return NS_OK;
-}        
+        
 
 #ifdef DEBUG
-/* This is here to be callable from a debugger */
+/* These are here to be callable from a debugger */
 JS_BEGIN_EXTERN_C
 void DumpJSStack()
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
     if(NS_SUCCEEDED(rv))
-        xpc->DebugDumpJSStack();
+        xpc->DebugDumpJSStack(PR_TRUE, PR_TRUE, PR_FALSE);
+    else    
+        printf("failed to get XPConnect service!\n");
+}
+
+void DumpJSEval(PRUint32 frameno, const char* text)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv))
+        xpc->DebugDumpEvalInJSStackFrame(frameno, text);
     else    
         printf("failed to get XPConnect service!\n");
 }

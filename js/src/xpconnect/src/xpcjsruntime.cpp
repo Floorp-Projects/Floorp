@@ -53,6 +53,18 @@ const char* XPCJSRuntime::mStrings[] = {
 
 XPCJSRuntime::~XPCJSRuntime()
 {
+#ifdef DEBUG_jband
+    {
+    // count the total JSContexts in use
+    JSContext* iter = nsnull;
+    int count = 0;
+    while(JS_ContextIterator(mJSRuntime, &iter))
+        count ++;
+    if(count)
+        printf("deleting XPCJSRuntime with %d total live JSContexts\n", count);        
+    }
+#endif
+    
     // clean up and destroy maps...
 
     if(mContextMap)
@@ -61,7 +73,7 @@ XPCJSRuntime::~XPCJSRuntime()
 #ifdef DEBUG_jband
         uint32 count = mContextMap->Count();
         if(count)
-            printf("deleting XPCJSRuntime with %d live JSContexts\n", (int)count);        
+            printf("deleting XPCJSRuntime with %d live JSContexts known by xpconnect\n", (int)count);        
 #endif
         delete mContextMap;
     }
@@ -119,7 +131,13 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
     {
         NS_ADDREF(mJSRuntimeService);
         mJSRuntimeService->GetRuntime(&mJSRuntime);
-    } 
+    }
+
+    // Install a JavaScript 'debugger' keyword handler in debug builds only
+#ifdef DEBUG
+    if(mJSRuntime)
+        xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
+#endif     
 } 
 
 // static

@@ -52,6 +52,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpccomponents.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
+	.\$(OBJDIR)\xpcdebug.obj	\
 	.\$(OBJDIR)\xpcexception.obj	\
 	.\$(OBJDIR)\xpcjsid.obj	\
 	.\$(OBJDIR)\xpcjsruntime.obj	\
