@@ -1000,6 +1000,7 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   if (crop == "")
     crop = "right";
   content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
+  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
 
   // append now, after we've set all the attributes
   aAnonymousChildren.AppendElement(content);
@@ -1014,7 +1015,7 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
     content = do_QueryInterface(node);
     content->SetAttribute(kNameSpaceID_None, classAtom, "menu-spring",
                           PR_FALSE);
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100",
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100000",
                           PR_FALSE);
     aAnonymousChildren.AppendElement(content);
   
