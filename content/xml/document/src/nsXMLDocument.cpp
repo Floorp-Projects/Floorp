@@ -91,7 +91,7 @@
 #include "nsContentCID.h"
 #include "nsDOMAttribute.h"
 #include "nsGUIEvent.h"
-
+#include "nsFIXptr.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
@@ -308,6 +308,12 @@ nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
   rv = agg->SetCodebase(newCodebase);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsXMLDocument::EvaluateFIXptr(const nsAReadableString& aExpression, nsIDOMRange **aRange)
+{
+  return nsFIXptr::Evaluate(this, aExpression, aRange);
 }
 
 NS_IMETHODIMP

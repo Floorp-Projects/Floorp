@@ -84,6 +84,7 @@
 #include "nsICaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXMLDocument.h"
+#include "nsIDOMXMLDocument.h"
 #include "nsIScrollableView.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
@@ -1157,7 +1158,7 @@ protected:
   nsresult SetPrefLinkRules(void);
   nsresult SetPrefFocusRules(void);
 
-  nsresult SelectContent(nsIContent *aContent);
+  nsresult SelectRange(nsIDOMRange *aRange);
 
   // IMPORTANT: The ownership implicit in the following member variables has been 
   // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
@@ -3931,7 +3932,22 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
     }
   }
 
-
+  // Finally try FIXptr
+  nsCOMPtr<nsIDOMRange> fixPtrRange;
+  if (!content) {
+    nsCOMPtr<nsIDOMXMLDocument> xmldoc = do_QueryInterface(mDocument);
+    if (xmldoc) {
+      xmldoc->EvaluateFIXptr(aAnchorName,getter_AddRefs(fixPtrRange));
+      if (fixPtrRange) {
+        nsCOMPtr<nsIDOMNode> node;
+        fixPtrRange->GetStartContainer(getter_AddRefs(node));
+        if (node) {
+          node->QueryInterface(NS_GET_IID(nsIContent),getter_AddRefs(content));
+        }
+      }
+    }
+  }
+ 
   if (content) {
     nsIFrame* frame;
 
@@ -3946,10 +3962,18 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
         nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID,&rv));
         if (NS_SUCCEEDED(rv) && prefs) {
           PRBool selectAnchor;
-          nsresult rvPref;
-          rvPref = prefs->GetBoolPref("layout.selectanchor",&selectAnchor);
+          nsresult rvPref = prefs->GetBoolPref("layout.selectanchor",&selectAnchor);
           if (NS_SUCCEEDED(rvPref) && selectAnchor) {
-            rv = SelectContent(content);
+            if (!fixPtrRange) {
+              nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID));
+              nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+              if (range && node) {
+                range->SelectNode(node);
+                SelectRange(range);
+              }
+            } else {
+              SelectRange(fixPtrRange);
+            }
           }
         }
       }
@@ -3980,21 +4004,13 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
 }
 
 nsresult
-PresShell::SelectContent(nsIContent *aContent)
+PresShell::SelectRange(nsIDOMRange *aRange)
 {
-  nsresult rv;
   nsCOMPtr<nsISelection> sel;
-  rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
+  nsresult rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
   if (NS_SUCCEEDED(rv) && sel) {
-    nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID,&rv));
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
-    if (NS_SUCCEEDED(rv) && node) {
-      rv = range->SelectNode(node);
-      if (NS_SUCCEEDED(rv)) {
-        sel->RemoveAllRanges();
-        rv = sel->AddRange(range);
-      }
-    }
+    sel->RemoveAllRanges();
+    sel->AddRange(aRange);
   }
 
   return rv;

@@ -52,6 +52,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsXMLContentSink.obj	\
 	.\$(OBJDIR)\nsXMLDocument.obj		\
+	.\$(OBJDIR)\nsFIXptr.obj		\
 	$(NULL)
 
 EXPORTS = 					\
