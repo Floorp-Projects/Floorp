@@ -1866,7 +1866,7 @@ mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
   GenerateGlobalRandomBytes(rand_buf2, randLen);
 
   // Find the @domain.com string...
-  if ((!aEmailAddress) || (!*aEmailAddress))
+  if (aEmailAddress && *aEmailAddress)
     domain = PL_strchr(aEmailAddress, '@');
 
   if (!domain)

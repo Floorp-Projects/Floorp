@@ -1794,16 +1794,9 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     //
     // Next, generate a content id for use with this part
     //    
-    PRUnichar   *myEmail = nsnull;
-    
-    if (NS_FAILED(mCompFields->GetFrom(&myEmail)))
-      m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, nsnull);  
-    else
-    {
-      nsCAutoString tEmail; tEmail.AssignWithConversion(myEmail);
-      m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, tEmail);  
-      
-    }
+    nsXPIDLCString email;
+    mUserIdentity->GetEmail(getter_Copies(email));
+    m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, email.get());  
     
     if (!m_attachments[i].m_content_id)
       return NS_ERROR_OUT_OF_MEMORY;
