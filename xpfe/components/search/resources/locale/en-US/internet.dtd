@@ -28,6 +28,7 @@
 <!ENTITY engine.column.label         "Search Engines">
 
 <!ENTITY search.button.label         "Search">
+<!ENTITY stop.button.label           "Stop">
 <!ENTITY checkall.button.label       "Check All">
 <!ENTITY uncheckall.button.label     "Uncheck All">
 <!ENTITY savesearch.button.label     "Save Search in Bookmarks">
