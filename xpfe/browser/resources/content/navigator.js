@@ -916,6 +916,24 @@ function BrowserEditBookmarks()
     }
   }
 
+  function BrowserSetForcedCharacterSet(aCharset)
+  {
+    if (appCore != null) {
+      appCore.SetForcedCharset(aCharset);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserSetForcedDetector()
+  {
+    if (appCore != null) {
+      appCore.SetForcedDetector();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
   function BrowserClose()
   {
     // This code replicates stuff in Shutdown().  It is here because

@@ -62,6 +62,8 @@ interface nsIBrowserInstance : nsISupports {
     void setTextZoom( in float aTextZoom );
     void SetDocumentCharset(in wstring charset);
     wstring GetDocumentCharset();
+    void SetForcedCharset(in wstring charset);
+    void SetForcedDetector();
       attribute nsIUrlbarHistory urlbarHistory;
     
     // File.
