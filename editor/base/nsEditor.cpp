@@ -2670,7 +2670,7 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
   {
     nsAutoString tag;
     element->GetTagName(tag);
-    PRUnichar *unicodeString;
+    const PRUnichar *unicodeString;
     aTag->GetUnicode(&unicodeString);
     if (tag.EqualsIgnoreCase(unicodeString))
     {

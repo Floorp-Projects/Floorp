@@ -346,7 +346,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
                 nsAutoString prefix;
                 if (prefixAtom)
                 {
-                    PRUnichar *unicodeString;
+                    const PRUnichar *unicodeString;
                     prefixAtom->GetUnicode(&unicodeString);
                     prefix = unicodeString;
                 }
@@ -401,7 +401,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
                             nsCOMPtr<nsIAtom> tagAtom;
                             rv = rdfDoc->SplitProperty(type, &nameSpaceID, getter_AddRefs(tagAtom));
                             if (NS_SUCCEEDED(rv)) {
-                                PRUnichar *unicodeString;
+                                const PRUnichar *unicodeString;
                                 tagAtom->GetUnicode(&unicodeString);
                                 tag = unicodeString;
                                 mNameSpaceManager->GetNameSpaceURI(nameSpaceID, nameSpaceURI);

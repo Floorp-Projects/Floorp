@@ -43,7 +43,7 @@ interface nsIAtom : nsISupports
   /**
    * Return a pointer to a zero terminated unicode string.
    */
-  wstring GetUnicode();
+   void GetUnicode([shared, retval] out wstring aResult);
 
   /**
    * Get the size, in bytes, of the atom.

@@ -893,7 +893,7 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
 
     if (aNameSpaceID == kNameSpaceID_HTML) {
         nsCOMPtr<nsIHTMLContent> element;
-        /*const*/ PRUnichar *tagName;
+        const PRUnichar *tagName;
         aTag->GetUnicode(&tagName);
 
         rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(element));
@@ -1579,7 +1579,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
         rv = aChild->GetValue(getter_Copies(resourceCStr));
         if (NS_FAILED(rv)) return rv;
         
-        PRUnichar *unicodeString;
+        const PRUnichar *unicodeString;
         tag->GetUnicode(&unicodeString);
         nsAutoString tagStr(unicodeString);
         char* tagCStr = tagStr.ToNewCString();
