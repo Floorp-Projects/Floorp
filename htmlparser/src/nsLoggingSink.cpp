@@ -81,7 +81,6 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
 
   // nsIHTMLContentSink
-  NS_IMETHOD PushMark();
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
@@ -238,12 +237,6 @@ NS_IMETHODIMP
 nsLoggingSink::AddLeaf(const nsIParserNode& aNode)
 {
   return LeafNode(aNode);
-}
-
-NS_IMETHODIMP
-nsLoggingSink::PushMark()
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP

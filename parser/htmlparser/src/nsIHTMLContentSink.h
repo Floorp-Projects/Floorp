@@ -72,12 +72,6 @@
 class nsIHTMLContentSink : public nsIContentSink {
 public:
   /**
-   * This method is called to inform the content sink to push a
-   * new mark.
-   */
-  NS_IMETHOD PushMark(void) = 0;
-
-  /**
    * This method gets called by the parser when it encounters
    * a title tag and wants to set the document title in the sink.
    *

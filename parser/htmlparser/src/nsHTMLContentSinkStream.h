@@ -97,7 +97,6 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
    * The following methods are inherited from nsIHTMLContentSink.
    * Please see that file for details.
    *******************************************************************/
-  NS_IMETHOD PushMark();
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML(const nsIParserNode& aNode);

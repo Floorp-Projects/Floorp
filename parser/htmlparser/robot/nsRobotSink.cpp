@@ -52,7 +52,6 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIHTMLContentSink
-  NS_IMETHOD PushMark();
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
@@ -132,11 +131,6 @@ NS_IMETHODIMP RobotSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP RobotSink::PushMark()
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP RobotSink::SetTitle(const nsString& aValue)

@@ -284,13 +284,6 @@ void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStrea
   CloseTag(titleStr,0,aStream);
 }
 
-NS_IMETHODIMP
-nsHTMLContentSinkStream::PushMark()
-{
-  // XXX We need to defer our output when this occurs
-  return NS_OK;
-}
-
 /**
   * This method gets called by the parser when it encounters
   * a title tag and wants to set the document title in the sink.
