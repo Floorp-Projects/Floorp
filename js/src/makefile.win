@@ -26,7 +26,7 @@ include <$(DEPTH)\config\config.mak>
 DIRS = liveconnect
 !endif
 
-DIRS = $(DIRS) fdlibm
+DIRS = $(DIRS) fdlibm xpconnect
 
 #//------------------------------------------------------------------------
 #//
@@ -59,7 +59,7 @@ DEFFILE		= $(DLLNAME).def
 FDLIBM_LIBRARY	=	fdlibm\$(OBJDIR)\fdlibm.lib
 
 LLIBS=$(LIBNSPR) $(FDLIBM_LIBRARY)
-LCFLAGS= $(LCFLAGS) -DEXPORT_JS_API
+LCFLAGS= $(LCFLAGS) -DEXPORT_JS_API -DJSFILE
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 !endif
