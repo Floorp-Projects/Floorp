@@ -57,6 +57,7 @@ private:
 	void 			DoKey(EventRecord &anEvent);
 	void 			DoMenu(EventRecord &anEvent, long menuResult);
 	void			DoActivate(EventRecord &anEvent);
+	void			DoIdle(EventRecord &anEvent);
 
 	void			DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
 	void			DispatchMenuCommandToRaptor(EventRecord &anEvent, long menuResult);
