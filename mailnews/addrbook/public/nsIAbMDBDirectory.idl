@@ -1,0 +1,75 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Paul Sandoz
+ */
+ 
+#include "nsISupports.idl"
+
+#include "nsIAbCard.idl"
+#include "nsIAbDirectory.idl"
+
+[scriptable, uuid(C6BCF232-1DD1-11B2-A108-B41BFECED134)]
+interface nsIAbMDBDirectory : nsISupports {
+
+	// Creates an RDF card component given
+	// the uriName
+	nsIAbCard addChildCards(in string uriName);
+
+	// Creates an RDF directory component from the
+	// uriName, adds it to its children and returns
+	// the component
+	nsIAbDirectory addDirectory(in string uriName);
+
+	// This just returns the uri on the RDF resource
+	string getDirUri();
+
+
+	// Mail list specific
+	//
+
+	// Removes all elements from the addressLists
+	// property
+	[noscript] void removeElementsFromAddressList();
+
+	// Specific to a directory which stores mail lists
+	//
+
+	// Adds a directory to the addressLists attribute
+	void addMailListToDirectory(in nsIAbDirectory mailList);
+
+	// Specific to a directory which is a mail list
+	//
+
+	// Copies mail list properties from the srcList
+	void copyDBMailList(in nsIAbMDBDirectory srcListDB);
+
+	// Adds a card to the addressList attribute
+	void addAddressToList(in nsIAbCard card);
+
+	// Removes items from the addressLists member
+	void removeEmailAddressAt(in unsigned long aIndex);
+
+    attribute unsigned long dbRowID;
+
+	// Empty implementation, called by the data base
+	[noscript] void notifyDirItemAdded(in nsISupports item);
+	
+	[noscript] void clearDatabase();
+};

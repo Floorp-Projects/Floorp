@@ -1,0 +1,87 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Paul Sandoz
+ */
+
+
+#include "nsISupports.idl"
+
+interface nsIAddrDatabase;
+
+[ptr] native nsVoidArray(nsVoidArray);
+
+%{C++
+#include "nsVoidArray.h"
+%}
+
+[scriptable, uuid(5F414A80-1DD2-11B2-AAD0-AA4A15D5A1E8)]
+interface nsIAbMDBCard : nsISupports {
+	// Possible DB specific methods
+	
+	// In current impl these methods set and get
+	// on the same member variable
+	// Used the absync code
+	readonly attribute unsigned long key;
+	void setRecordKey(in unsigned long key);
+
+
+	// DB specific methods
+	
+    attribute unsigned long dbTableID;
+    attribute unsigned long dbRowID;
+
+	void setAbDatabase(in nsIAddrDatabase database);
+
+	// Copies attributes from the srcCard
+	// Only used when the address database notifies
+	// a directory listener of an inserted event
+	void copyCard(in nsIAbMDBCard srcCardDB);
+
+	// Used in conjunction with copyCard when
+	// inserting a new card into a directory
+	readonly attribute string cardURI;
+
+
+	// Anonymous card properties
+	// Not really sure what these are for
+	// They do not seem to be used.
+	// May have to move back to nsAbCard interface
+	[noscript] readonly attribute nsVoidArray anonymousStrAttrubutesList;
+	[noscript] readonly attribute nsVoidArray anonymousStrValuesList;
+	[noscript] readonly attribute nsVoidArray anonymousIntAttrubutesList;
+	[noscript] readonly attribute nsVoidArray anonymousIntValuesList;
+	[noscript] readonly attribute nsVoidArray anonymousBoolAttrubutesList;
+	[noscript] readonly attribute nsVoidArray anonymousBoolValuesList;
+	void setAnonymousStringAttribute(in string attrname, in string value);
+	void setAnonymousIntAttribute(in string attrname, in unsigned long value);
+	void setAnonymousBoolAttribute(in string attrname, in boolean value);
+	/*
+		In the current implementation these methods
+		operate on the personal address book.
+		i.e. they are hardcoded to abdirectory://abook.mab
+		Potentialy disasterous if called since they
+		can overwrite the database member variable to point to
+		the personal database.
+	*/
+	void addAnonymousAttributesToDB();
+	void editAnonymousAttributesInDB();
+
+};
+
