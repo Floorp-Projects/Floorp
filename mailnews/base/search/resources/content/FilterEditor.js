@@ -173,6 +173,7 @@ function saveFilter() {
         isNewFilter = false;
     }
 
+    gFilter.enabled=true;
     gFilter.action = action;
     if (action == nsMsgFilterAction.MoveToFolder)
         gFilter.actionTargetFolderUri = targetUri;
