@@ -546,25 +546,29 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	{
 		if ((!searchStr) || (searchStr == ""))	return;
 
+		var searchDS = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+		if (searchDS)	searchDS = searchDS.QueryInterface(Components.interfaces.nsIInternetSearchService);
+
 		var	escapedSearchStr = escape(searchStr);
 		defaultSearchURL += escapedSearchStr;
 
-		if ((searchEngineURI != null) && (searchEngineURI != ""))
+		if (searchDS)
 		{
-			try
+			searchDS.RememberLastSearchText(escapedSearchStr);
+
+			if ((searchEngineURI != null) && (searchEngineURI != ""))
 			{
-				var	searchURL = null;	
-				var searchDS = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-				if (searchDS)	searchDS = searchDS.QueryInterface(Components.interfaces.nsIInternetSearchService);
-				if (searchDS)	searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
-				
-				if ((searchURL != null) && (searchURL != ""))
+				try
 				{
-					defaultSearchURL = searchURL;
+					var	searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+					if ((searchURL != null) && (searchURL != ""))
+					{
+						defaultSearchURL = searchURL;
+					}
 				}
-			}
-			catch(ex)
-			{
+				catch(ex)
+				{
+				}
 			}
 		}
 		window.content.location.href = defaultSearchURL;
