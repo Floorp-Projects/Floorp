@@ -98,9 +98,9 @@ function SelectAndScrollToKey(aMsgKey)
 
 // the folderListener object
 var folderListener = {
-    OnItemAdded: function(parentItem, item, view) { },
+    OnItemAdded: function(parentItem, item) { },
 
-    OnItemRemoved: function(parentItem, item, view) { },
+    OnItemRemoved: function(parentItem, item) { },
 
     OnItemPropertyChanged: function(item, property, oldValue, newValue) { },
 

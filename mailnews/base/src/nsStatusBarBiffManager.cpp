@@ -224,13 +224,13 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 
 // nsIFolderListener methods....
 NS_IMETHODIMP 
-nsStatusBarBiffManager::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char *viewString)
+nsStatusBarBiffManager::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsStatusBarBiffManager::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString)
+nsStatusBarBiffManager::OnItemRemoved(nsIRDFResource *parentItem, nsISupports *item)
 {
   return NS_OK;
 }

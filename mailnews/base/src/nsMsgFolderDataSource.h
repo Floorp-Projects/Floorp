@@ -196,8 +196,7 @@ protected:
 	nsresult CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString);
 	nsresult CreateArcsOutEnumerator();
 
-	nsresult OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item,
-		const char* viewString, PRBool added);
+  nsresult OnItemAddedOrRemoved(nsIRDFResource *parentItem, nsISupports *item, PRBool added);
 
 	nsresult OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
 	nsresult OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);

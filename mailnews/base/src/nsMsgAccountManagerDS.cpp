@@ -1326,7 +1326,7 @@ nsMsgAccountManagerDataSource::OnItemUnicharPropertyChanged(nsISupports *, nsIAt
 }
 
 nsresult
-nsMsgAccountManagerDataSource::OnItemRemoved(nsISupports *, nsISupports *, const char *)
+nsMsgAccountManagerDataSource::OnItemRemoved(nsIRDFResource *, nsISupports *)
 {
     return NS_OK;
 }
@@ -1338,7 +1338,7 @@ nsMsgAccountManagerDataSource::OnItemPropertyFlagChanged(nsISupports *, nsIAtom 
 }
 
 nsresult
-nsMsgAccountManagerDataSource::OnItemAdded(nsISupports *, nsISupports *, const char *)
+nsMsgAccountManagerDataSource::OnItemAdded(nsIRDFResource *, nsISupports *)
 {
     return NS_OK;
 }

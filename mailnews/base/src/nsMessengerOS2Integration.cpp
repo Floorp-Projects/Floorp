@@ -119,7 +119,7 @@ nsMessengerOS2Integration::OnItemUnicharPropertyChanged(nsISupports *, nsIAtom *
 }
 
 NS_IMETHODIMP
-nsMessengerOS2Integration::OnItemRemoved(nsISupports *, nsISupports *, const char *)
+nsMessengerOS2Integration::OnItemRemoved(nsIRDFResource *, nsISupports *)
 {
   return NS_OK;
 }
@@ -148,7 +148,7 @@ nsMessengerOS2Integration::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom 
 }
 
 NS_IMETHODIMP
-nsMessengerOS2Integration::OnItemAdded(nsISupports *, nsISupports *, const char *)
+nsMessengerOS2Integration::OnItemAdded(nsIRDFResource *, nsISupports *)
 {
   return NS_OK;
 }

@@ -478,7 +478,7 @@ nsMessengerWinIntegration::OnItemUnicharPropertyChanged(nsISupports *, nsIAtom *
 }
 
 NS_IMETHODIMP
-nsMessengerWinIntegration::OnItemRemoved(nsISupports *, nsISupports *, const char *)
+nsMessengerWinIntegration::OnItemRemoved(nsIRDFResource *, nsISupports *)
 {
   return NS_OK;
 }
@@ -837,7 +837,7 @@ nsMessengerWinIntegration::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom 
 }
 
 NS_IMETHODIMP
-nsMessengerWinIntegration::OnItemAdded(nsISupports *, nsISupports *, const char *)
+nsMessengerWinIntegration::OnItemAdded(nsIRDFResource *, nsISupports *)
 {
   return NS_OK;
 }

@@ -816,47 +816,25 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
   //return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
+NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
 {
-	return OnItemAddedOrRemoved(parentItem, item, viewString, PR_TRUE);
+	return OnItemAddedOrRemoved(parentItem, item, PR_TRUE);
 }
 
-NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char* viewString)
+NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsIRDFResource *parentItem, nsISupports *item)
 {
-	return OnItemAddedOrRemoved(parentItem, item, viewString, PR_FALSE);
+	return OnItemAddedOrRemoved(parentItem, item, PR_FALSE);
 }
 
 
-nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char* viewString, PRBool added)
+nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsIRDFResource *parentItem, nsISupports *item, PRBool added)
 {
-	nsresult rv;
-	nsCOMPtr<nsIRDFResource> parentResource;
-	nsCOMPtr<nsIMsgFolder> parentFolder;
-	nsCOMPtr<nsIMsgFolder> folder;
-
-	parentFolder = do_QueryInterface(parentItem);
-	//If the parent isn't a folder then we don't handle it.
-	if(!parentFolder)
-		return NS_OK;
-
-	parentResource = do_QueryInterface(parentItem);
-	//If it's not a resource, we don't handle it either
-	if(!parentResource)
-		return NS_OK;
-
-	//If we are doing this to a folder
-	if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIMsgFolder), getter_AddRefs(folder))))
-	{
-		nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
-		if(NS_SUCCEEDED(rv))
-		{
-			//Notify folders that a folder was added or deleted.
-			NotifyObservers(parentResource, kNC_Child, itemNode, added, PR_FALSE);
-		}
-	}
-
-	return NS_OK;
-
+  nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item));
+  if (itemNode)
+  {
+    NotifyObservers(parentItem, kNC_Child, itemNode, added, PR_FALSE);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

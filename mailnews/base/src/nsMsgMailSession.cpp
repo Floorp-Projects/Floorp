@@ -213,7 +213,7 @@ nsMsgMailSession::OnItemPropertyFlagChanged(nsISupports *item,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMailSession::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
+NS_IMETHODIMP nsMsgMailSession::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
 {
   PRInt32 count = mListeners.Count();
   for(PRInt32 i = 0; i < count; i++)
@@ -222,7 +222,7 @@ NS_IMETHODIMP nsMsgMailSession::OnItemAdded(nsISupports *parentItem, nsISupports
       nsCOMPtr<nsIFolderListener> listener = mListeners[i];
       NS_ASSERTION(listener, "listener is null");
       if (!listener) return NS_ERROR_FAILURE;
-      listener->OnItemAdded(parentItem, item, viewString);
+      listener->OnItemAdded(parentItem, item);
     }
   }
   
@@ -230,7 +230,7 @@ NS_IMETHODIMP nsMsgMailSession::OnItemAdded(nsISupports *parentItem, nsISupports
   
 }
 
-NS_IMETHODIMP nsMsgMailSession::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char* viewString)
+NS_IMETHODIMP nsMsgMailSession::OnItemRemoved(nsIRDFResource *parentItem, nsISupports *item)
 {
   PRInt32 count = mListeners.Count();
   
@@ -240,7 +240,7 @@ NS_IMETHODIMP nsMsgMailSession::OnItemRemoved(nsISupports *parentItem, nsISuppor
       nsCOMPtr<nsIFolderListener> listener = mListeners[i];
       NS_ASSERTION(listener, "listener is null");
       if (!listener) return NS_ERROR_FAILURE;
-      listener->OnItemRemoved(parentItem, item, viewString);
+      listener->OnItemRemoved(parentItem, item);
     }
   }
   return NS_OK;

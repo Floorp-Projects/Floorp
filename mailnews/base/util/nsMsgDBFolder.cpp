@@ -4034,7 +4034,7 @@ nsresult nsMsgDBFolder::NotifyItemAdded(nsISupports *item, const char* viewStrin
   {
     //Folderlistener's aren't refcounted.
     nsIFolderListener *listener = (nsIFolderListener*)mListeners.ElementAt(i);
-    listener->OnItemAdded((nsIRDFResource *)this, item, viewString);
+    listener->OnItemAdded(this, item);
   }
 
   //Notify listeners who listen to every folder
@@ -4042,7 +4042,7 @@ nsresult nsMsgDBFolder::NotifyItemAdded(nsISupports *item, const char* viewStrin
   nsCOMPtr<nsIFolderListener> folderListenerManager =
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-    folderListenerManager->OnItemAdded((nsIRDFResource *)this, item, viewString);
+    folderListenerManager->OnItemAdded(this, item);
 
   return NS_OK;
 
@@ -4056,14 +4056,14 @@ nsresult nsMsgDBFolder::NotifyItemDeleted(nsISupports *item, const char* viewStr
   {
     //Folderlistener's aren't refcounted.
     nsIFolderListener *listener = (nsIFolderListener*)mListeners.ElementAt(i);
-    listener->OnItemRemoved((nsIRDFResource *)this, item, viewString);
+    listener->OnItemRemoved(this, item);
   }
   //Notify listeners who listen to every folder
   nsresult rv;
   nsCOMPtr<nsIFolderListener> folderListenerManager =
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-    folderListenerManager->OnItemRemoved((nsIRDFResource *)this, item, viewString);
+    folderListenerManager->OnItemRemoved(this, item);
 
   return NS_OK;
 

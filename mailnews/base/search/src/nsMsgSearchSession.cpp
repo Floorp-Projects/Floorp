@@ -752,17 +752,15 @@ nsMsgSearchSession::OnItemEvent(nsIMsgFolder *aFolder,
 }
 
 NS_IMETHODIMP 
-nsMsgSearchSession::OnItemAdded(nsISupports *parentItem, 
-                                nsISupports *item, 
-                                const char* viewString)
+nsMsgSearchSession::OnItemAdded(nsIRDFResource *parentItem, 
+                                nsISupports *item)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsMsgSearchSession::OnItemRemoved(nsISupports *parentItem, 
-                                nsISupports *item, 
-                                const char* viewString)
+nsMsgSearchSession::OnItemRemoved(nsIRDFResource *parentItem, 
+                                  nsISupports *item)
 {
     return NS_OK;
 }

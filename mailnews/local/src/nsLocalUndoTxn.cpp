@@ -453,12 +453,12 @@ nsLocalUndoFolderListener::~nsLocalUndoFolderListener()
 {
 }
 
-NS_IMETHODIMP nsLocalUndoFolderListener::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char *viewString)
+NS_IMETHODIMP nsLocalUndoFolderListener::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
 {
     return NS_OK;
 }
 
-NS_IMETHODIMP nsLocalUndoFolderListener::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString)
+NS_IMETHODIMP nsLocalUndoFolderListener::OnItemRemoved(nsIRDFResource *parentItem, nsISupports *item)
 {
     return NS_OK;
 }
