@@ -89,6 +89,12 @@
 // The tab panel
 #define NS_THEME_TAB_PANEL                                 62
 
+// The tab just before the selection
+#define NS_THEME_TAB_LEFT_EDGE                             63
+
+// The tab just after the selection
+#define NS_THEME_TAB_RIGHT_EDGE                            64
+
 // A tooltip
 #define NS_THEME_TOOLTIP                                   71
 
