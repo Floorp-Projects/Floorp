@@ -191,21 +191,18 @@ NS_IMETHODIMP nsICODecoder::Flush()
   return NS_OK;
 }
 
+
+NS_METHOD nsICODecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
+                             const char* aFromRawSegment, PRUint32 aToOffset,
+                             PRUint32 aCount, PRUint32 *aWriteCount) {
+    nsICODecoder *decoder = NS_REINTERPRET_CAST(nsICODecoder*, aClosure);
+    *aWriteCount = aCount;
+    return decoder->ProcessData(aFromRawSegment, aCount);
+}
+
 NS_IMETHODIMP nsICODecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, PRUint32 *aRetval)
 {
-  char* buffer = new char[aCount];
-  if (!buffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  unsigned int realCount = aCount;
-  nsresult rv = aInStr->Read(buffer, aCount, &realCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  *aRetval = realCount;
-
-  rv = ProcessData(buffer, realCount);
-  delete []buffer;
-  return rv;
+    return aInStr->ReadSegments(ReadSegCb, this, aCount, aRetval);
 }
 
 nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
