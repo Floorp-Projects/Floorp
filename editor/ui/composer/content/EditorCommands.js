@@ -680,15 +680,18 @@ function EditorDecreaseFontSize()
   editorShell.DecreaseFontSize();
 }
 
-function EditorSelectTextColor()
+function EditorSelectTextColor(ColorPickerID, ColorWellID)
 {
-  
-  dump("EditorSelectTextColor\n");
+  var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
+  dump("EditorSelectTextColor: "+color+"\n");
+  EditorSetFontColor(color);
 }
 
-function EditorSelectBackColor()
+function EditorSelectBackColor(ColorPickerID, ColorWellID)
 {
-  dump("EditorSelectBackColor\n");
+  var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
+  dump("EditorSelectBackColor: "+color+"\n");
+  EditorSetBackgroundColor(color);
 }
 
 function EditorSetFontColor(color)

@@ -573,17 +573,17 @@
   </menupopup>
   </menu>
 
-    <popup id="TextColorPicker"  popupanchor="bottomleft">
+    <popup id="TextColorPopup"  popupanchor="bottomleft">
       <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
   		<!-- TODO: Add "Last color picked" button and text -->
-      <colorpicker palettename="standard" onclick="EditorSelectTextColor();"/>
+      <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton')"/>
     </popup>
 
-    <popup id="BackColorPicker"  popupanchor="bottomleft">
+    <popup id="BackColorPopup"  popupanchor="bottomleft">
       <!-- Text Caption is filled in at runtime -->
   		<!-- TODO: Add "Last color picked" button and text -->
       <html:div id="BackColorCaption" class="color-caption" align="center">Background Color</html:div>
-  		<colorpicker palettename="standard" onclick="EditorSelectBackColor()"/>
+  		<colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton')"/>
     </popup>
 
     <menupopup id="AlignmentPopup">
@@ -676,8 +676,8 @@
 
     <!-- The new Color Picker UI -->
     <html:div id="ColorButtons">
-      <titledbutton id="TextColorPopupButton" popup="TextColorPicker"/>
-      <titledbutton id="BackColorPopupButton" popup="BackColorPicker"/>
+      <titledbutton id="TextColorPopupButton" popup="TextColorPopup"/>
+      <titledbutton id="BackColorPopupButton" popup="BackColorPopup"/>
     </html:div>
 
     <titledbutton id="DecreaseFontSizeButton" onclick="EditorDecreaseFontSize()"/>
