@@ -373,9 +373,10 @@ fi
 %{prefix}/share/pixmaps/mozilla-icon.png
 %{prefix}/share/pixmaps/migrate-icon.gif
 
-%{prefix}/lib/mozilla/component.reg
-%{prefix}/lib/mozilla/components/xptitemp.dat
-%{prefix}/lib/mozilla/components/xpti.dat
+%verify (not md5 mtime size) %{prefix}/lib/mozilla/component.reg
+%verify (not md5 mtime size) %{prefix}/lib/mozilla/components/xptitemp.dat
+%verify (not md5 mtime size) %{prefix}/lib/mozilla/components/xpti.dat
+
 %dir %{prefix}/lib/mozilla/defaults/pref
 %dir %{prefix}/lib/mozilla/defaults/profile
 %dir %{prefix}/lib/mozilla/defaults/wallet
@@ -423,6 +424,7 @@ fi
   end up in /usr/lib/defaults
 - We now require perl so that we can figure out what java version is
   installed on the machine.
+- Add verify options to three files that change when you install.
 
 * Mon Jun 04 2001 Christopher Blizzard <blizzard@redhat.com>
 - Fix problems with the default SSL CA list not being loaded.  This
