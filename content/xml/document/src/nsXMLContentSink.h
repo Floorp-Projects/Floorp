@@ -108,7 +108,7 @@ public:
 #endif
 
   NS_IMETHOD ResumeParsing();
-  NS_IMETHOD EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char* aVersion);
+  NS_IMETHOD EvaluateScript(nsString& aScript, nsIURI *aScriptURI, PRUint32 aLineNo, const char* aVersion);
   const char* mScriptLanguageVersion;
 
 protected:
