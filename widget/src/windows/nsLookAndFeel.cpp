@@ -275,6 +275,11 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = sSubmenuDelay;
         }
         break;
+    case eMetric_MenusCanOverlapOSBar:
+        // we want XUL popups to be able to overlap the task bar.
+        aMetric = 1;
+        break;
+
     default:
         aMetric = -1;
         res = NS_ERROR_FAILURE;

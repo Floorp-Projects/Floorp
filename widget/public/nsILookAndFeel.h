@@ -110,7 +110,8 @@ public:
 
     eMetric_CaretBlinkTime,                               // default, may be overriden by OS
     eMetric_CaretWidthTwips,
-    eMetric_SubmenuDelay
+    eMetric_SubmenuDelay,
+    eMetric_MenusCanOverlapOSBar                          // can popups overlap menu/task bar?
   } nsMetricID;
 
   typedef enum {

@@ -250,6 +250,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_SubmenuDelay:
         aMetric = 200;
         break;
+    case eMetric_MenusCanOverlapOSBar:
+        // xul popups are not allowed to overlap the menubar.
+        aMetric = 0;
+        break;
     default:
         aMetric = 0;
         res = NS_ERROR_FAILURE;
