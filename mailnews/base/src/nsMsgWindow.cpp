@@ -351,23 +351,7 @@ nsMsgWindow::IsPreferred(const char * aContentType,
                          char ** aDesiredContentType,
                          PRBool * aCanHandleContent)
 {
-  // the mail window is the primary content handler for the following types:
-  // If we are asked to handle any of these types, we will always say Yes!
-  // regardlesss of the uri load command.
-  //    Incoming Type                     Preferred type
-  //     message/rfc822                     text/html
-  //
-
-  if (aContentType && nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
-  {
-    // we can handle this content type...but we would prefer it to be 
-    // as text/xul so we can display it...
-    *aCanHandleContent = PR_TRUE;
-    *aDesiredContentType = nsCRT::strdup("text/html");
-  }
-  else
-    *aCanHandleContent = PR_FALSE;
-
+  *aCanHandleContent = PR_FALSE;
   return NS_OK;
 }
 

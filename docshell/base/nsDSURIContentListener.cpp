@@ -164,12 +164,6 @@ NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
        || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
        || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
        *aCanHandleContent = PR_TRUE;
-     
-    if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
-    {
-      *aCanHandleContent = PR_TRUE;
-      *aDesiredContentType = nsCRT::strdup("text/html");      
-    }
   }
   else
     *aCanHandleContent = PR_FALSE;
