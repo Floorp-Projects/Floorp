@@ -39,6 +39,7 @@ toolbarbutton {
   -moz-border-right-colors: transparent;
   -moz-border-bottom-colors: transparent;
   -moz-border-left-colors: transparent;
+  padding: 2px;
   background-color: transparent;
   color: -moz-DialogText;
 }
