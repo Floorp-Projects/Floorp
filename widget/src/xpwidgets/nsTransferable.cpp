@@ -55,6 +55,7 @@ Notes to self:
 #include "nsVoidArray.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsMemory.h"
 #include "nsPrimitiveHelpers.h"

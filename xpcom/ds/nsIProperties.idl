@@ -77,8 +77,3 @@ interface nsIProperties : nsISupports
      */
     void getKeys(out PRUint32 count, [array, size_is(count), retval] out string keys);
 };
-
-%{C++
-#define NS_PROPERTIES_CONTRACTID "@mozilla.org/properties;1"
-#define NS_PROPERTIES_CLASSNAME  "Properties"
-%}

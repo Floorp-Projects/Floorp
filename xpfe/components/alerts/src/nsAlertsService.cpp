@@ -38,6 +38,7 @@
 
 #include "nsAlertsService.h"
 #include "nsISupportsArray.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"

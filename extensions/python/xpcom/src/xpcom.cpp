@@ -31,6 +31,7 @@
 #include "nsIFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIThread.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIModule.h"
 

@@ -135,9 +135,4 @@ interface nsIDirectoryService: nsISupports
   void unregisterProvider(in nsIDirectoryServiceProvider prov);
 };
 
-%{C++
-#define NS_DIRECTORY_SERVICE_CONTRACTID "@mozilla.org/file/directory_service;1"
-#define NS_DIRECTORY_SERVICE_CLASSNAME  "nsIFile Directory Service"
-%}
-
 

@@ -43,6 +43,7 @@
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsITransferable.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "IENUMFE.h"
 #include "nsCOMPtr.h"

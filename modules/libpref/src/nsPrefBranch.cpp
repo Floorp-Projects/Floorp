@@ -40,6 +40,7 @@
 #include "nsPrefBranch.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDirectoryService.h"
 #include "nsString.h"

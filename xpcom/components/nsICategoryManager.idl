@@ -96,7 +96,3 @@ interface nsICategoryManager : nsISupports
     nsISimpleEnumerator enumerateCategories();
 };
 
-
-%{C++
-#define NS_CATEGORYMANAGER_CONTRACTID     "@mozilla.org/categorymanager;1"
-%}

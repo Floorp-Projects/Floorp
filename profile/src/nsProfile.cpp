@@ -70,6 +70,7 @@
 #include "nsIGenericFactory.h"
 #include "nsICookieService.h"
 #include "nsICategoryManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"

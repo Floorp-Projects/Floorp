@@ -31,6 +31,7 @@
 #include "nsIHttpAuthenticator.h"
 #include "nsIAuthPrompt.h"
 #include "nsIStringBundle.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURL.h"
 #include "nsIMIMEService.h"

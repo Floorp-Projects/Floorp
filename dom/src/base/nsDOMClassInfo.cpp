@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentRegistrar.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIXPConnect.h"
 #include "nsIJSContextStack.h"

@@ -47,6 +47,7 @@
 #include "nsIDOMEventListener.h"
 
 #include "nsIServiceManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 #include "nsWidgetsCID.h"

@@ -28,6 +28,7 @@
 #include "nsHttpDigestAuth.h"
 #include "nsIHttpChannel.h"
 #include "nsIServiceManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURI.h"
 #include "nsString.h"

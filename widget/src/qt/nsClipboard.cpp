@@ -48,6 +48,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsISupportsArray.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"

@@ -55,6 +55,7 @@
 #include "nsMimeMapper.h"
 
 #include "nsIComponentManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"

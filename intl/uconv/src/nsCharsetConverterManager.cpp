@@ -52,6 +52,7 @@
 #include "prmem.h"
 #include "nsCRT.h"
 
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICharsetDetector.h"
 

@@ -88,6 +88,7 @@
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsIImage.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 // netwerk

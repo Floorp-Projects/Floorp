@@ -55,6 +55,7 @@
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDOMWindow.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "jsapi.h"

@@ -38,6 +38,7 @@
 
 #include "nsPrimitiveHelpers.h"
 #include "nsCOMPtr.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
 #include "nsIComponentManager.h"

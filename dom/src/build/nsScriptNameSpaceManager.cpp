@@ -41,6 +41,7 @@
 #include "nsIComponentManager.h"
 #include "nsICategoryManager.h"
 #include "nsIServiceManager.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsIScriptNameSpaceManager.h"

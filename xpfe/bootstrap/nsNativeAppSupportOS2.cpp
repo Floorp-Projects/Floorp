@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsICmdLineHandler.h"
 #include "nsIDOMWindow.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsArray.h"
 #include "nsIWindowWatcher.h"

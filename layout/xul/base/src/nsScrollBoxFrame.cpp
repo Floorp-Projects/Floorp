@@ -56,6 +56,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIBoxToBlockAdaptor.h"
 #include "nsIScrollbarMediator.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
 #include "nsButtonBoxFrame.h"

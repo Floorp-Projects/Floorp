@@ -34,6 +34,7 @@
 #include "nsIProcess.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsHashtable.h"
 #include "nsCRT.h"

@@ -49,6 +49,7 @@
 #include "nsFileSpec.h"
 #include "nsCRT.h"
 #include "nsISupportsArray.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 #include "nsIComponentManager.h"

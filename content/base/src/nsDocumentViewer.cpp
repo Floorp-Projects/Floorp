@@ -141,6 +141,7 @@
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
 #include "nsISimpleEnumerator.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 

@@ -70,6 +70,7 @@
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsComponentManagerUtils.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsPromiseFlatString.h"

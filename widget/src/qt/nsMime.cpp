@@ -39,6 +39,7 @@
 #include "nsDragService.h"
 #include "nsIServiceManager.h"
 #include "nsWidget.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
