@@ -20,8 +20,6 @@
 comm.jar:
 	content/communicator/bookmarks/addBookmark.xul
 	content/communicator/bookmarks/addBookmark.js
-	content/communicator/bookmarks/bm-find.js
-	content/communicator/bookmarks/bm-find.xul
 	content/communicator/bookmarks/bm-props.js
 	content/communicator/bookmarks/bm-props.xul
 	content/communicator/bookmarks/bookmarksDD.js
@@ -39,7 +37,6 @@ comm.jar:
 
 en-US.jar:
 	locale/en-US/communicator/bookmarks/addBookmark.dtd         (locale/en-US/addBookmark.dtd)
-	locale/en-US/communicator/bookmarks/bm-find.dtd             (locale/en-US/bm-find.dtd)
 	locale/en-US/communicator/bookmarks/bm-props.dtd            (locale/en-US/bm-props.dtd)
 	locale/en-US/communicator/bookmarks/bookmarks.dtd           (locale/en-US/bookmarks.dtd)
 	locale/en-US/communicator/bookmarks/bookmark.properties     (locale/en-US/bookmark.properties)
