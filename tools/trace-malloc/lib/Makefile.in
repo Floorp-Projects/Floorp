@@ -33,21 +33,18 @@ DEFFILE		= $(srcdir)/tm.def
 
 REQUIRES	= xpcom
 
-CSRCS            = \
+CSRCS		= \
 		nsTraceMalloc.c \
 		$(NULL)
 
 CPPSRCS		= \
+		nsDemangle.cpp \
 		nsTypeInfo.cpp \
 		$(NULL)
 
 EXPORTS         = nsTraceMalloc.h
 
 EXTRA_DSO_LDOPTS = $(NSPR_LIBS)
-
-ifdef MOZ_DEMANGLE_SYMBOLS
-EXTRA_DSO_LDOPTS += -liberty
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS		+= nsDebugHelpWin32.cpp nsWinTraceMalloc.cpp nsStackFrameWin.cpp
