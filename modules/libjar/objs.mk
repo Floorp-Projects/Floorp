@@ -25,6 +25,7 @@ MODULES_LIBJAR_LCPPSRCS = \
 		nsJAR.cpp \
 		nsJARFactory.cpp \
 		nsWildCard.cpp \
+		nsXPTZipLoader.cpp \
 		$(NULL)
 
 MODULES_LIBJAR_LEXPORTS = \
