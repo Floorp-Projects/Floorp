@@ -421,6 +421,32 @@ nsTableFrame::RePositionViews(nsIPresContext* aPresContext,
   nsContainerFrame::PositionChildViews(aPresContext, aFrame);
 }
 
+PRBool
+nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
+                             nsIFrame* aNextFrame)
+{
+  nsCOMPtr<nsIStyleContext> sourceContext;
+  aSourceFrame.GetStyleContext(getter_AddRefs(sourceContext)); NS_ENSURE_TRUE(sourceContext, PR_FALSE);
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    sourceContext->GetStyleData(eStyleStruct_Display);         NS_ENSURE_TRUE(display, PR_FALSE); 
+  // don't allow a page break after a repeated header
+  if (display->mBreakAfter && (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP != display->mDisplay)) {
+    return PR_TRUE;
+  }
+
+  if (aNextFrame) {
+    nsCOMPtr<nsIStyleContext> nextContext;
+    aNextFrame->GetStyleContext(getter_AddRefs(nextContext));  NS_ENSURE_TRUE(nextContext, PR_FALSE);
+    display = (const nsStyleDisplay*)
+      nextContext->GetStyleData(eStyleStruct_Display);         NS_ENSURE_TRUE(display, PR_FALSE); 
+    // don't allow a page break before a repeated footer
+    if (display->mBreakBefore && (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP != display->mDisplay)) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 nsIPresShell*
 nsTableFrame::GetPresShellNoAddref(nsIPresContext* aPresContext)
 {
@@ -1894,6 +1920,9 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsReflowReason nextReason = aReflowState.reason;
 
+  // Check for an overflow list, and append any row group frames being pushed
+  MoveOverflowToChildList(aPresContext);
+
   // Processes an initial (except when there is mPrevInFlow), incremental, or style 
   // change reflow 1st. resize reflows are processed in the next phase.
   switch (aReflowState.reason) {
@@ -1904,9 +1933,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
         // NS_ASSERTION(PR_FALSE, "intial reflow called twice");
       }
       else {
-        // Check for an overflow list, and append any row group frames being pushed
-        MoveOverflowToChildList(aPresContext);
-
         if (!mPrevInFlow) { // only do pass1 on a first in flow
           if (IsAutoLayout()) {     
             // only do pass1 reflow on an auto layout table
@@ -3203,7 +3229,7 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
   nsTableRowGroupFrame *thead, *tfoot;
   OrderRowGroups(rowGroups, numRowGroups, &aReflowState.firstBodySection, &thead, &tfoot);
   PRBool haveReflowedRowGroup = PR_FALSE;
-
+  PRBool pageBreak = PR_FALSE;
   for (PRUint32 childX = 0; ((PRInt32)childX) < rowGroups.Count(); childX++) {
     nsIFrame* kidFrame = (nsIFrame*)rowGroups.ElementAt(childX);
     // Get the frame state bits
@@ -3217,6 +3243,12 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
     }
 
     if (doReflowChild) {
+      if (pageBreak) {
+        PushChildren(aPresContext, kidFrame, prevKidFrame);
+        aStatus = NS_FRAME_NOT_COMPLETE;
+        break;
+      }
+
       nsSize kidAvailSize(aReflowState.availSize);
       // if the child is a tbody in paginated mode reduce the height by a repeated footer
       nsIFrame* repeatedFooter = nsnull;
@@ -3264,12 +3296,19 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
         haveReflowedRowGroup = PR_TRUE;
         aLastChildReflowed   = kidFrame;
 
+        pageBreak = PR_FALSE;
+        // see if there is a page break after this row group or before the next one
+        if (NS_FRAME_IS_COMPLETE(aStatus) && isPaginated && 
+            (NS_UNCONSTRAINEDSIZE != kidReflowState.availableHeight)) {
+          nsIFrame* nextKid = (childX + 1 < numRowGroups) ? (nsIFrame*)rowGroups.ElementAt(childX + 1) : nsnull;
+          pageBreak = PageBreakAfter(*kidFrame, nextKid);
+        }
         // Place the child
         PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize);
   
         // Remember where we just were in case we end up pushing children
         prevKidFrame = kidFrame;
-  
+ 
         // Special handling for incomplete children
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {         
           kidFrame->GetNextInFlow(&kidNextInFlow);

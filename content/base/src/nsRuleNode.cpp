@@ -783,7 +783,9 @@ static const PropertyCheckData DisplayCheckProperties[] = {
   CHECKDATA_PROP(nsCSSDisplay, mPosition, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSDisplay, mFloat, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSDisplay, mClear, CHECKDATA_VALUE, PR_FALSE),
-  CHECKDATA_PROP(nsCSSDisplay, mOverflow, CHECKDATA_VALUE, PR_FALSE)
+  CHECKDATA_PROP(nsCSSDisplay, mOverflow, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mBreakBefore, CHECKDATA_VALUE, PR_FALSE), // temp fix for bug 2400
+  CHECKDATA_PROP(nsCSSDisplay, mBreakAfter, CHECKDATA_VALUE, PR_FALSE)   // temp fix for bug 2400
 };
 
 static const PropertyCheckData VisibilityCheckProperties[] = {
@@ -2823,6 +2825,15 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     inherited = PR_TRUE;
     display->mBreakType = parentDisplay->mBreakType;
   }
+
+  // temp fix for bug 24000
+  if (eCSSUnit_Enumerated == displayData.mBreakBefore.GetUnit()) {
+    display->mBreakBefore = (NS_STYLE_PAGE_BREAK_ALWAYS == displayData.mBreakBefore.GetIntValue());
+  }
+  if (eCSSUnit_Enumerated == displayData.mBreakAfter.GetUnit()) {
+    display->mBreakAfter = (NS_STYLE_PAGE_BREAK_ALWAYS == displayData.mBreakAfter.GetIntValue());
+  }
+  // end temp fix
 
   // float: enum, none, inherit
   if (eCSSUnit_Enumerated == displayData.mFloat.GetUnit()) {

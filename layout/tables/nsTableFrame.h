@@ -229,6 +229,9 @@ public:
   static void RePositionViews(nsIPresContext* aPresContext,
                               nsIFrame*       aFrame);
 
+  static PRBool PageBreakAfter(nsIFrame& aSourceFrame,
+                               nsIFrame* aNextFrame);
+
   nsPoint GetFirstSectionOrigin(const nsHTMLReflowState& aReflowState) const;
   /*
    * Notification that aAttribute has changed for content inside a table (cell, row, etc)

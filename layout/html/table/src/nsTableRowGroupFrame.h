@@ -325,7 +325,8 @@ protected:
                            nsReflowStatus&        aStatus,
                            nsTableRowFrame*       aStartFrame,
                            PRBool                 aDirtyOnly,
-                           nsTableRowFrame**      aFirstRowReflowed = nsnull);
+                           nsTableRowFrame**      aFirstRowReflowed   = nsnull,
+                           PRBool*                aPageBreakBeforeEnd = nsnull);
 
   nsresult SplitRowGroup(nsIPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,

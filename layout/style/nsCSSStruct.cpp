@@ -379,6 +379,10 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
     mPosition(aCopy.mPosition),
     mFloat(aCopy.mFloat),
     mClear(aCopy.mClear),
+    // temp fix for bug 24000
+    mBreakBefore(aCopy.mBreakBefore),
+    mBreakAfter(aCopy.mBreakAfter),
+    // end temp
     mClip(nsnull),
     mOverflow(aCopy.mOverflow),
     mVisibility(aCopy.mVisibility),
@@ -1794,18 +1798,26 @@ nsCSSDeclaration::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue)
       // nsCSSBreaks
     case eCSSProperty_orphans:
     case eCSSProperty_widows:
-    case eCSSProperty_page:
-    case eCSSProperty_page_break_after:
-    case eCSSProperty_page_break_before:
-    case eCSSProperty_page_break_inside: {
+    case eCSSProperty_page: {
       CSS_ENSURE(Breaks) {
         switch (aProperty) {
           case eCSSProperty_orphans:            theBreaks->mOrphans = aValue;         break;
           case eCSSProperty_widows:             theBreaks->mWidows = aValue;          break;
           case eCSSProperty_page:               theBreaks->mPage = aValue;            break;
-          case eCSSProperty_page_break_after:   theBreaks->mPageBreakAfter = aValue;  break;
-          case eCSSProperty_page_break_before:  theBreaks->mPageBreakBefore = aValue; break;
-          case eCSSProperty_page_break_inside:  theBreaks->mPageBreakInside = aValue; break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+    }
+    case eCSSProperty_page_break_after:
+    case eCSSProperty_page_break_before:
+    case eCSSProperty_page_break_inside: {
+      // temp fix for bug 24000
+      CSS_ENSURE(Display) {
+        switch (aProperty) {
+          case eCSSProperty_page_break_after:   theDisplay->mBreakAfter  = aValue; break;
+          case eCSSProperty_page_break_before:  theDisplay->mBreakBefore = aValue; break;
+          case eCSSProperty_page_break_inside:                                     break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
@@ -2739,10 +2751,7 @@ nsCSSDeclaration::SetValueImportant(nsCSSProperty aProperty)
         // nsCSSBreaks
       case eCSSProperty_orphans:
       case eCSSProperty_widows:
-      case eCSSProperty_page:
-      case eCSSProperty_page_break_after:
-      case eCSSProperty_page_break_before:
-      case eCSSProperty_page_break_inside: {
+      case eCSSProperty_page: {
         CSS_VARONSTACK_GET(Breaks);
         if (nsnull != theBreaks) {
           CSS_ENSURE_IMPORTANT(Breaks) {
@@ -2750,9 +2759,22 @@ nsCSSDeclaration::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_orphans,            Breaks, mOrphans);
               CSS_CASE_IMPORTANT(eCSSProperty_widows,             Breaks, mWidows);
               CSS_CASE_IMPORTANT(eCSSProperty_page,               Breaks, mPage);
-              CSS_CASE_IMPORTANT(eCSSProperty_page_break_after,   Breaks, mPageBreakAfter);
-              CSS_CASE_IMPORTANT(eCSSProperty_page_break_before,  Breaks, mPageBreakBefore);
-              CSS_CASE_IMPORTANT(eCSSProperty_page_break_inside,  Breaks, mPageBreakInside);
+              CSS_BOGUS_DEFAULT; // make compiler happy
+            }
+          }
+        }
+        break;
+      }
+      case eCSSProperty_page_break_after:
+      case eCSSProperty_page_break_before:
+      case eCSSProperty_page_break_inside: {
+        // temp fix for bug 24000
+        CSS_VARONSTACK_GET(Display);
+        if (theDisplay) {
+          CSS_ENSURE_IMPORTANT(Display) {
+            switch (aProperty) {
+              CSS_CASE_IMPORTANT(eCSSProperty_page_break_after,   Display, mBreakAfter);
+              CSS_CASE_IMPORTANT(eCSSProperty_page_break_before,  Display, mBreakBefore);
               CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
@@ -3593,24 +3615,30 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
       // nsCSSBreaks
     case eCSSProperty_orphans:
     case eCSSProperty_widows:
-    case eCSSProperty_page:
-    case eCSSProperty_page_break_after:
-    case eCSSProperty_page_break_before:
-    case eCSSProperty_page_break_inside: {
+    case eCSSProperty_page: {
       CSS_CHECK(Breaks) {
         switch (aProperty) {
           case eCSSProperty_orphans:            theBreaks->mOrphans.Reset();         break;
           case eCSSProperty_widows:             theBreaks->mWidows.Reset();          break;
           case eCSSProperty_page:               theBreaks->mPage.Reset();            break;
-          case eCSSProperty_page_break_after:   theBreaks->mPageBreakAfter.Reset();  break;
-          case eCSSProperty_page_break_before:  theBreaks->mPageBreakBefore.Reset(); break;
-          case eCSSProperty_page_break_inside:  theBreaks->mPageBreakInside.Reset(); break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
     }
-
+    case eCSSProperty_page_break_after:
+    case eCSSProperty_page_break_before:
+    case eCSSProperty_page_break_inside: {
+      // temp fix for bug 24000
+      CSS_CHECK(Display) {
+        switch (aProperty) {
+          case eCSSProperty_page_break_after:   theDisplay->mBreakAfter.Reset();  break;
+          case eCSSProperty_page_break_before:  theDisplay->mBreakBefore.Reset(); break;
+          case eCSSProperty_page_break_inside:                                    break;
+        }
+      }
+      break;
+    }
       // nsCSSPage
     case eCSSProperty_marks:
     case eCSSProperty_size_width:
@@ -4432,19 +4460,31 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
       // nsCSSBreaks
     case eCSSProperty_orphans:
     case eCSSProperty_widows:
-    case eCSSProperty_page:
-    case eCSSProperty_page_break_after:
-    case eCSSProperty_page_break_before:
-    case eCSSProperty_page_break_inside: {
+    case eCSSProperty_page: {
       CSS_VARONSTACK_GET(Breaks);
       if (nsnull != theBreaks) {
         switch (aProperty) {
           case eCSSProperty_orphans:            aValue = theBreaks->mOrphans;         break;
           case eCSSProperty_widows:             aValue = theBreaks->mWidows;          break;
           case eCSSProperty_page:               aValue = theBreaks->mPage;            break;
-          case eCSSProperty_page_break_after:   aValue = theBreaks->mPageBreakAfter;  break;
-          case eCSSProperty_page_break_before:  aValue = theBreaks->mPageBreakBefore; break;
-          case eCSSProperty_page_break_inside:  aValue = theBreaks->mPageBreakInside; break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      else {
+        aValue.Reset();
+      }
+      break;
+    }
+    case eCSSProperty_page_break_after:
+    case eCSSProperty_page_break_before:
+    case eCSSProperty_page_break_inside: {
+      // temp fix for bug 24000
+      CSS_VARONSTACK_GET(Display);
+      if (theDisplay) {
+        switch (aProperty) {
+          case eCSSProperty_page_break_inside:  aValue.Reset();                    break;
+          case eCSSProperty_page_break_after:   aValue = theDisplay->mBreakAfter;  break;
+          case eCSSProperty_page_break_before:  aValue = theDisplay->mBreakBefore; break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }

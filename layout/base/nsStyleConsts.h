@@ -336,6 +336,7 @@
 #define NS_STYLE_DISPLAY_BULLETINBOARD          27
 #define NS_STYLE_DISPLAY_POPUP                  28
 #define NS_STYLE_DISPLAY_GROUPBOX               29
+#define NS_STYLE_DISPLAY_PAGE_BREAK             30
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0

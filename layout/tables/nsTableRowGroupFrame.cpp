@@ -359,8 +359,12 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
                                      nsReflowStatus&        aStatus,
                                      nsTableRowFrame*       aStartFrame,
                                      PRBool                 aDirtyOnly,
-                                     nsTableRowFrame**      aFirstRowReflowed)
+                                     nsTableRowFrame**      aFirstRowReflowed,
+                                     PRBool*                aPageBreakBeforeEnd)
 {
+  if (aPageBreakBeforeEnd) 
+    *aPageBreakBeforeEnd = PR_FALSE;
+
   nsTableFrame* tableFrame = nsnull;
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame); if (!tableFrame) ABORT1(rv);
 
@@ -452,6 +456,14 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
           *aFirstRowReflowed = (nsTableRowFrame*)kidFrame;
         }
       }
+      if (isPaginated && aPageBreakBeforeEnd && !*aPageBreakBeforeEnd && 
+          (nsLayoutAtoms::tableRowFrame == kidType.get())) {
+        nsTableRowFrame* nextRow = ((nsTableRowFrame*)kidFrame)->GetNextRow();
+        if (nextRow) {
+          *aPageBreakBeforeEnd = nsTableFrame::PageBreakAfter(*kidFrame, nextRow);
+        }
+      }
+
     } else {
       // were done reflowing, so see if we need to reposition the rows that follow
       if (lastReflowedRow) { 
@@ -1015,7 +1027,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
       // row or there is at least 5% of the current page available 
       if (!prevRowFrame || (availHeight - aDesiredSize.height > pageHeight / 20)) { 
         // Reflow the row in the available space and have it split
-        nsSize availSize(availWidth, availHeight - bounds.y);
+        nsSize availSize(availWidth, PR_MAX(availHeight - bounds.y, 0));
         nsHTMLReflowState rowReflowState(aPresContext, aReflowState, rowFrame, availSize, 
                                          eReflowReason_Resize);
         InitChildReflowState(*aPresContext, borderCollapse, p2t, rowReflowState);
@@ -1085,6 +1097,13 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
       aDesiredSize.height = bounds.YMost();
       lastDesiredHeight   = aDesiredSize.height;
       prevRowFrame = rowFrame;
+      // see if there is a page break after the row
+      nsTableRowFrame* nextRow = rowFrame->GetNextRow();
+      if (nextRow && nsTableFrame::PageBreakAfter(*rowFrame, nextRow)) {
+        PushChildren(aPresContext, nextRow, rowFrame);
+        aStatus = NS_FRAME_NOT_COMPLETE;
+        break;
+      }
     }
   }
   return NS_OK;
@@ -1143,8 +1162,9 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
       CacheRowHeightsForPrinting(aPresContext, GetFirstRow());
     }
     // Reflow the existing frames. 
+    PRBool splitDueToPageBreak = PR_FALSE;
     rv = ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
-                        nsnull, PR_FALSE);
+                        nsnull, PR_FALSE, nsnull, &splitDueToPageBreak);
   
     // Return our desired rect
     aDesiredSize.width = aReflowState.availableWidth;
@@ -1170,7 +1190,8 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     }
 
     // See if all the frames fit
-    if ((NS_FRAME_NOT_COMPLETE == aStatus) || (aDesiredSize.height > aReflowState.availableHeight)) {
+    if ((NS_FRAME_NOT_COMPLETE == aStatus) || splitDueToPageBreak || 
+        (aDesiredSize.height > aReflowState.availableHeight)) {
       // Nope, find a place to split the row group 
       PRBool specialReflow = (PRBool)aReflowState.mFlags.mSpecialHeightReflow;
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_FALSE;

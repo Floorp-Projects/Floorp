@@ -759,3 +759,90 @@ nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
   }
 }
 
+nsresult
+NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+{
+  NS_PRECONDITION(aPresShell && aNewFrame, "null PresShell or OUT ptr");
+#ifdef DEBUG
+  //check that we are only creating page break frames when printing
+  nsCOMPtr<nsIPresContext> presContext;    
+  aPresShell->GetPresContext(getter_AddRefs(presContext));
+  PRBool isPaginated;
+  presContext->IsPaginated(&isPaginated);
+  NS_ASSERTION(isPaginated, "created a page break frame while not printing");
+#endif
+
+  nsPageBreakFrame* it = new (aPresShell) nsPageBreakFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;
+  return NS_OK;
+}
+
+nsPageBreakFrame::nsPageBreakFrame()
+: mHaveReflowed(PR_FALSE)
+{
+}
+
+nsPageBreakFrame::~nsPageBreakFrame()
+{
+}
+
+void 
+nsPageBreakFrame::GetDesiredSize(nsIPresContext*          aPresContext,
+                                 const nsHTMLReflowState& aReflowState,
+                                 nsHTMLReflowMetrics&     aDesiredSize)
+{
+  NS_PRECONDITION(aPresContext, "null pres context");
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSToCoordRound(p2t);
+
+  aDesiredSize.width  = onePixel;
+  if (mHaveReflowed) {
+    // If blocks reflow us a 2nd time trying to put us on a new page, then return
+    // a desired height of 0 to avoid an extra page break. 
+    aDesiredSize.height = 0;
+  }
+  else {
+    aDesiredSize.height = aReflowState.availableHeight;
+    // round the height down to the nearest pixel
+    aDesiredSize.height -= aDesiredSize.height % onePixel;
+  }
+
+  if (aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width  = onePixel;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+  aDesiredSize.ascent  = 0;
+  aDesiredSize.descent = 0;
+}
+
+nsresult 
+nsPageBreakFrame::Reflow(nsIPresContext*          aPresContext,
+                         nsHTMLReflowMetrics&     aDesiredSize,
+                         const nsHTMLReflowState& aReflowState,
+                         nsReflowStatus&          aStatus)
+{
+  NS_PRECONDITION(aPresContext, "null pres context");
+  DO_GLOBAL_REFLOW_COUNT("nsTableFrame", aReflowState.reason);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+
+  aStatus = NS_FRAME_COMPLETE; 
+  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+  mHaveReflowed = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPageBreakFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::pageBreakFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+
