@@ -27,7 +27,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef MOZ_XUL_APP
 DIRS		= src
+endif
 
 include $(topsrcdir)/config/rules.mk
 
