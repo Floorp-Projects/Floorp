@@ -404,7 +404,7 @@ BEGIN {
         my ($startup_time)
             = @{ $td->{startup}{$logfile} };
         # ex: Tp:5.45s
-        print sprintf "<br>Ts:%3.1fs", $startup_time/1000;
+        print sprintf "<br>Ts:%4.2fs", $startup_time/1000;
       }
 
       # Warnings
