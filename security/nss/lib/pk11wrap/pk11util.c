@@ -329,6 +329,7 @@ SECMOD_DeleteInternalModule(char *name) {
 SECStatus
 SECMOD_AddModule(SECMODModule *newModule) {
     SECStatus rv;
+    int i;
 
     /* Test if a module w/ the same name already exists */
     /* and return SECWouldBlock if so. */
@@ -351,6 +352,11 @@ SECMOD_AddModule(SECMODModule *newModule) {
 
     SECMOD_AddPermDB(newModule);
     SECMOD_AddModuleToList(newModule);
+
+    for (i=0; i < newModule->slotCount; i++) {
+	PK11SlotInfo *slot = newModule->slots[i];
+	STAN_AddNewSlotToDefaultTD(slot);
+    }
 
     return SECSuccess;
 }

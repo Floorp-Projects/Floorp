@@ -38,6 +38,11 @@
 #include "prmon.h"
 #include "prtypes.h"
 
+#ifndef NSS_3_4_CODE
+#define NSS_3_4_CODE
+#endif /* NSS_3_4_CODE */
+#include "nssdevt.h"
+
 /* internal data structures */
 
 /* structure to allow us to implement the read/write locks for our
@@ -120,6 +125,8 @@ struct PK11SlotInfoStr {
     PRBool hasRootTrust;
     PRBool hasRSAInfo;
     CK_FLAGS RSAInfoFlags;
+    /* for Stan */
+    NSSToken *nssToken;
 };
 
 /* hold slot default flags until we initialize a slot. This structure is only
