@@ -166,6 +166,7 @@ nsresult nsEudoraMailbox::DeleteFile( nsIFileSpec *pSpec)
 
 
 #define kComposeErrorStr	"X-Eudora-Compose-Error: *****" "\x0D\x0A"
+#define kHTMLTag "<html>"
 
 nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount)
 {
@@ -296,6 +297,12 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 			if (pBytes) {
 				*pBytes += (((body.m_writeOffset - 1 + headers.m_writeOffset - 1) / div) * mul);
 			}
+
+      // Unfortunately Eudora stores HTML messages in the sent folder
+      // without any content type header at all. If the first line of the message body is <html>
+      // then mark the message as html internally...See Bug #258489
+      if (body.m_pBuffer && body.m_writeOffset > sizeof(kHTMLTag) && (strncmp(body.m_pBuffer, kHTMLTag, sizeof(kHTMLTag)) == 0))
+        bodyType = "text/html"; // ignore whatever body type we were given...force html
 
       compose.SetBody( body.m_pBuffer, body.m_writeOffset - 1, bodyType);
 			compose.SetHeaders( headers.m_pBuffer, headers.m_writeOffset - 1);
