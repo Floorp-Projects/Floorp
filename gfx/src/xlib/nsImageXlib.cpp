@@ -472,7 +472,7 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
     if (scaledAlpha) {
       memset(scaledAlpha, 0, aDHeight*scaledRowBytes);
       RectStretch(mWidth, mHeight, origDWidth, origDHeight,
-                  aDX + aDWidth - 1, aDY + aDHeight - 1,
+                  aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1,
                   mAlphaBits, mAlphaRowBytes, scaledAlpha, scaledRowBytes, 1);
 
       pixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
@@ -534,7 +534,7 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
   PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
   if (scaledRGB && gc) {
     RectStretch(mWidth, mHeight, origDWidth, origDHeight,
-                aDX + aDWidth - 1, aDY + aDHeight - 1,
+                aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1,
                 mImageBits, mRowBytes, scaledRGB, 3*aDWidth, 24);
 
     Drawable drawable; drawing->GetDrawable(drawable);
@@ -1536,7 +1536,8 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
     if (!scaledImage)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    RectStretch(mWidth, mHeight, aDWidth, aDHeight, aDWidth-1, aDHeight-1,
+    RectStretch(mWidth, mHeight, aDWidth, aDHeight,
+                0, 0, aDWidth-1, aDHeight-1,
                 mImageBits, mRowBytes, scaledImage, 3*aDWidth, 24);
 
     if (mAlphaDepth) {
@@ -1551,7 +1552,8 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      RectStretch(mWidth, mHeight, aDWidth, aDHeight, aDWidth-1, aDHeight-1,
+      RectStretch(mWidth, mHeight, aDWidth, aDHeight,
+                  0, 0, aDWidth-1, aDHeight-1,
                   mAlphaBits, mAlphaRowBytes, scaledAlpha, alphaStride,
                   mAlphaDepth);
     }
