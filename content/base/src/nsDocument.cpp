@@ -48,13 +48,6 @@
 #include "nsIObserver.h"
 
 #include "nsIDOMEventListener.h"
-#include "nsIDOMFormListener.h"
-#include "nsIDOMPaintListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMLoadListener.h"
 
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
@@ -568,6 +561,7 @@ nsDocument::nsDocument()
   mNextContentID = NS_CONTENT_ID_COUNTER_BASE;
   mDTD = 0;
   mBoxObjectTable = nsnull;
+  mNumCapturers = 0;
 
   // Force initialization.
   mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1");
@@ -2822,6 +2816,14 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   return mRet;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsDocument::EventCaptureRegistration(PRInt32 aCapturerIncrement)
+{
+  mNumCapturers += aCapturerIncrement;
+  NS_WARN_IF_FALSE(mNumCapturers >= 0, "Number of capturers has become negative");
+  return (mNumCapturers > 0 ? PR_TRUE : PR_FALSE);
+}
+
 nsresult nsDocument::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
@@ -2934,63 +2936,7 @@ PRBool    nsDocument::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID
 
 PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  PRBool result = PR_TRUE;
-
-  if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
-    const PRUnichar* str = NS_REINTERPRET_CAST(const PRUnichar *, JS_GetStringChars(JS_ValueToString(aContext, aID)));
-
-    if (str && str[0] == 'o' && str[1] == 'n' && str[2]) {
-      PRBool iidFound = PR_TRUE;
-      nsIID theIID;
-      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(str)));
-
-      if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || atom.get() ==  nsLayoutAtoms::onclick ||
-         atom.get() == nsLayoutAtoms::onmouseover || atom.get() == nsLayoutAtoms::onmouseout) {
-        theIID = NS_GET_IID(nsIDOMMouseListener);
-      }
-      else if (atom.get() == nsLayoutAtoms::onkeydown || atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress) {
-        theIID = NS_GET_IID(nsIDOMKeyListener);
-      }
-      else if (atom.get() == nsLayoutAtoms::onmousemove) {
-        theIID = NS_GET_IID(nsIDOMMouseMotionListener);
-      }
-      else if (atom.get() == nsLayoutAtoms::onfocus || atom.get() == nsLayoutAtoms::onblur) {
-        theIID = NS_GET_IID(nsIDOMFocusListener);
-      }
-      else if (atom.get() == nsLayoutAtoms::onsubmit || atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
-               atom.get() == nsLayoutAtoms::onselect) {
-        theIID = NS_GET_IID(nsIDOMFormListener);
-      }
-      else if (atom.get() == nsLayoutAtoms::onload || atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
-               atom.get() == nsLayoutAtoms::onerror) {
-        theIID = NS_GET_IID(nsIDOMLoadListener);
-      }
-      else if (atom.get() == nsLayoutAtoms::onpaint) {
-        theIID = NS_GET_IID(nsIDOMPaintListener);
-      }
-      else {
-        iidFound = PR_FALSE;
-      }
-
-      if (iidFound) {
-        nsCOMPtr<nsIEventListenerManager> manager;
-        GetListenerManager(getter_AddRefs(manager));
-
-        if (manager) {
-          nsCOMPtr<nsIScriptContext> scriptContext;
-          nsresult rv = nsContentUtils::GetStaticScriptContext(aContext, NS_REINTERPRET_CAST(JSObject*, mScriptObject),
-                                                              getter_AddRefs(scriptContext));
-          if (NS_SUCCEEDED(rv) && scriptContext) {
-            rv = manager->RegisterScriptEventListener(scriptContext, this, atom, theIID);
-          }
-          if (NS_FAILED(rv))
-            result = PR_FALSE;
-        }
-      }
-    }
-  }
-
-  return result;
+  return InternalRegisterCompileEventHandler(aContext, aID, aVp, PR_FALSE);
 }
 
 PRBool    nsDocument::EnumerateProperty(JSContext *aContext, JSObject *aObj)
@@ -3003,7 +2949,7 @@ PRBool    nsDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
 {
   *aDidDefineProperty = PR_FALSE;
 
-  return PR_TRUE;
+  return InternalRegisterCompileEventHandler(aContext, aID, nsnull, PR_TRUE);
 }
 
 PRBool    nsDocument::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
@@ -3013,6 +2959,53 @@ PRBool    nsDocument::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 
 void      nsDocument::Finalize(JSContext *aContext, JSObject *aObj)
 {
+}
+
+PRBool  nsDocument::InternalRegisterCompileEventHandler(JSContext* aContext, jsval aPropName, 
+                                                        jsval *aVp, PRBool aCompile)
+{
+  //If called from resolve there is no aVp arg to check against.  Else check for function value.
+  //In both cases check for string type starting with 'on' before continuing with handler checking.
+  if ((!aVp || JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION) && JSVAL_IS_STRING(aPropName)) {
+    const PRUnichar* str = NS_REINTERPRET_CAST(const PRUnichar *, JS_GetStringChars(JS_ValueToString(aContext, aPropName)));
+
+    if (str && str[0] == 'o' && str[1] == 'n' && str[2]) {
+      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(str)));
+
+      if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || 
+          atom.get() == nsLayoutAtoms::onclick || atom.get() == nsLayoutAtoms::onmouseover || 
+          atom.get() == nsLayoutAtoms::onmouseout ||atom.get() == nsLayoutAtoms::onkeydown || 
+          atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress ||
+          atom.get() == nsLayoutAtoms::onmousemove || atom.get() == nsLayoutAtoms::onfocus || 
+          atom.get() == nsLayoutAtoms::onblur || atom.get() == nsLayoutAtoms::onsubmit || 
+          atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
+          atom.get() == nsLayoutAtoms::onselect || atom.get() == nsLayoutAtoms::onload || 
+          atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
+          atom.get() == nsLayoutAtoms::onerror || atom.get() == nsLayoutAtoms::onpaint || 
+          atom.get() == nsLayoutAtoms::onresize || atom.get() == nsLayoutAtoms::onscroll) {
+
+        nsCOMPtr<nsIEventListenerManager> manager;
+        GetListenerManager(getter_AddRefs(manager));
+
+        if (manager) {
+          nsCOMPtr<nsIScriptContext> scriptContext;
+          nsresult rv = nsContentUtils::GetStaticScriptContext(aContext, NS_REINTERPRET_CAST(JSObject*, mScriptObject),
+                                                              getter_AddRefs(scriptContext));
+          if (NS_SUCCEEDED(rv) && scriptContext) {
+            if (aCompile) {
+              rv = manager->CompileScriptEventListener(scriptContext, this, atom);
+            }
+            else {
+              rv = manager->RegisterScriptEventListener(scriptContext, this, atom);
+            }
+          }
+          if (NS_FAILED(rv))
+            return PR_FALSE;
+        }
+      }
+    }
+  }
+  return PR_TRUE;
 }
 
 /**

@@ -84,7 +84,6 @@ public:
                                           nsIScriptObjectOwner *aScriptObjectOwner,
                                           nsIAtom *aName,
                                           const nsAReadableString& aFunc,
-                                          REFNSIID aIID,
                                           PRBool aDeferCompilation) = 0;
 
   /**
@@ -94,8 +93,16 @@ public:
   */
   virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext,
                                                nsIScriptObjectOwner *aScriptObjectOwner,
-                                               nsIAtom* aName,
-                                               REFNSIID aIID) = 0;
+                                               nsIAtom* aName) = 0;
+
+  /**
+  * Compiles any event listeners that already exists on the given script object for a given
+  * event type.
+  * @param an event listener
+  */
+  virtual nsresult CompileScriptEventListener(nsIScriptContext *aContext,
+                                               nsIScriptObjectOwner *aScriptObjectOwner,
+                                               nsIAtom* aName) = 0;
 
   /**
   * Causes a check for event listeners and processing by them if they exist.

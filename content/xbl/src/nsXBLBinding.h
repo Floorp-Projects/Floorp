@@ -109,7 +109,7 @@ public:
   nsXBLBinding(nsIXBLPrototypeBinding* aProtoBinding);
   virtual ~nsXBLBinding();
 
-  NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
+  NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue);
 
   PRBool AllowScripts();
   void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);

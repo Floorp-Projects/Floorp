@@ -636,7 +636,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                     nsAutoString   valueStr;
                     attr->mValue.GetValue( valueStr );
                     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumEventHandlers);
-                    rv = element->AddScriptEventListener(name, valueStr, iid);
+                    rv = element->AddScriptEventListener(name, valueStr);
                     if (NS_FAILED(rv)) return rv;
                 }
 
@@ -1824,7 +1824,7 @@ nsXULElement::GetLazyState(PRInt32 aFlag, PRBool& aResult)
 
 
 NS_IMETHODIMP
-nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue, REFNSIID aIID)
+nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue)
 {
     if (! mDocument)
         return NS_OK; // XXX
@@ -1855,7 +1855,7 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aV
         nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(global);
             
         rv = manager->AddScriptEventListener(context, owner, aName,
-                                             aValue, aIID, PR_FALSE);
+                                             aValue, PR_FALSE);
     }
     else {
         nsCOMPtr<nsIEventListenerManager> manager;
@@ -1863,7 +1863,7 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aV
         if (NS_FAILED(rv)) return rv;
 
         rv = manager->AddScriptEventListener(context, this, aName,
-                                             aValue, aIID, PR_TRUE);
+                                             aValue, PR_TRUE);
     }
 
     return rv;
@@ -3009,7 +3009,7 @@ nsXULElement::SetAttribute(nsINodeInfo* aNodeInfo,
         if (NS_FAILED(rv)) return rv;
 
         if (found) {
-            rv = AddScriptEventListener(attrName, aValue, iid);
+            rv = AddScriptEventListener(attrName, aValue);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -3603,18 +3603,35 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
       privateEvent->SetTarget(target);
     }
   
-    // Node capturing stage
+    PRBool intermediateCapture = PR_TRUE;
+    //Capturing stage evaluation
     if (NS_EVENT_FLAG_BUBBLE != aFlags) {
+      //Initiate capturing phase.  Special case first call to document
+      if (NS_EVENT_FLAG_INIT & aFlags) {
+        //Set flag to PR_TRUE here so capture will still work even with no document.  If 
+        //the document is there and correctly has no capturers it will reset back to false.
+        intermediateCapture = PR_TRUE;
+        if (mDocument) {
+          mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+
+          //Now check for the presence of intermediate capturers registered at document;
+          intermediateCapture = mDocument->EventCaptureRegistration(0);
+        }
+
+        //If intermediate capturers exist, pass capturing up the tree before local evaulation
+        if (intermediateCapture && mParent) {
+          // Pass off to our parent.
+          mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+        }
+      }
+      else {
+        //If we've been called during the event capture phase when the event didn't initiate on this element 
+        //then intermediate capturers must exist. Pass capturing up the tree before local evaulation.
         if (mParent) {
-            mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                      NS_EVENT_FLAG_CAPTURE, aEventStatus);
+          mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
         }
-        else if (mDocument != nsnull) {
-            ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                            NS_EVENT_FLAG_CAPTURE, aEventStatus);
-        }
-    }
-    
+      }
+    }  
 
     if (retarget) {
       // The event originated beneath us, and we performed a retargeting.

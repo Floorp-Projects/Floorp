@@ -317,8 +317,7 @@ public:
   nsresult RenderFrame(nsIPresContext*);
 
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
-                                  const nsAReadableString& aValue,
-                                  REFNSIID aIID);
+                                  const nsAReadableString& aValue);
 
   nsresult TriggerLink(nsIPresContext* aPresContext,
                        nsLinkVerb aVerb,
@@ -346,6 +345,8 @@ public:
 
 protected:
   virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
+  virtual PRBool InternalRegisterCompileEventHandler(JSContext* aContext, jsval aPropName,
+                                                     jsval *aVp, PRBool aCompile);
 
   nsDOMSlots *GetDOMSlots();
   void MaybeClearDOMSlots();

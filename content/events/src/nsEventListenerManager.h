@@ -80,12 +80,13 @@ public:
                                           nsIScriptObjectOwner *aScriptObjectOwner, 
                                           nsIAtom *aName, 
                                           const nsAReadableString& aFunc, 
-                                          REFNSIID aIID,
                                           PRBool aDeferCompilation); 
   virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, 
                                                nsIScriptObjectOwner *aScriptObjectOwner, 
-                                               nsIAtom* aName,
-                                               const nsIID& aIID);
+                                               nsIAtom* aName);
+  virtual nsresult CompileScriptEventListener(nsIScriptContext *aContext, 
+                                               nsIScriptObjectOwner *aScriptObjectOwner, 
+                                               nsIAtom* aName);
 
 
   virtual nsresult CaptureEvent(PRInt32 aEventTypes);
@@ -133,8 +134,13 @@ protected:
                               nsIDOMEventTarget* aCurrentTarget,
                               PRUint32 aSubType,
                               PRUint32 aPhaseFlags);
+  nsresult CompileEventHandlerInternal(nsIScriptContext *aContext,
+                                       nsIScriptObjectOwner *aScriptObjectOwner,
+                                       nsIAtom *aName,
+                                       nsListenerStruct *aListenerStruct,
+                                       PRUint32 aSubType);
   nsListenerStruct* FindJSEventListener(REFNSIID aIID);
-  nsresult SetJSEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aOwner, nsIAtom* aName, REFNSIID aIID, PRBool aIsString);
+  nsresult SetJSEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aOwner, nsIAtom* aName, PRBool aIsString);
   nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
   nsresult RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
   void ReleaseListeners(nsVoidArray** aListeners, PRBool aScriptOnly);

@@ -189,40 +189,33 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
   }
 
   // Check for event handlers
-  if ((nsLayoutAtoms::onclick == aAttribute) || 
-      (nsLayoutAtoms::ondblclick == aAttribute) ||
-      (nsLayoutAtoms::onmousedown == aAttribute) ||
-      (nsLayoutAtoms::onmouseup == aAttribute) ||
-      (nsLayoutAtoms::onmouseover == aAttribute) ||
-      (nsLayoutAtoms::onmouseout == aAttribute)) {
-    AddScriptEventListener(aAttribute, aValue, kIDOMMouseListenerIID); 
-  } else if ((nsLayoutAtoms::onkeydown == aAttribute) ||
-             (nsLayoutAtoms::onkeyup == aAttribute) ||
-             (nsLayoutAtoms::onkeypress == aAttribute)) {
-    AddScriptEventListener(aAttribute, aValue, kIDOMKeyListenerIID); 
-  } else if (nsLayoutAtoms::onmousemove == aAttribute) {
-    AddScriptEventListener(aAttribute, aValue, kIDOMMouseMotionListenerIID); 
-  } else if (nsLayoutAtoms::onload == aAttribute) {
-    AddScriptEventListener(nsLayoutAtoms::onload, aValue,
-                           kIDOMLoadListenerIID);
-  } else if ((nsLayoutAtoms::onunload == aAttribute) ||
-             (nsLayoutAtoms::onabort == aAttribute) ||
-             (nsLayoutAtoms::onerror == aAttribute)) {
-    AddScriptEventListener(aAttribute, aValue, kIDOMLoadListenerIID); 
-  } else if ((nsLayoutAtoms::onfocus == aAttribute) ||
-             (nsLayoutAtoms::onblur == aAttribute)) {
-    AddScriptEventListener(aAttribute, aValue, kIDOMFocusListenerIID); 
-  } else if ((nsLayoutAtoms::onsubmit == aAttribute) ||
-             (nsLayoutAtoms::onreset == aAttribute) ||
-             (nsLayoutAtoms::onchange == aAttribute) ||
-             (nsLayoutAtoms::onselect == aAttribute)) {
-    AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID); 
-  } else if (nsLayoutAtoms::onpaint == aAttribute) {
-    AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
-  } else if (nsLayoutAtoms::oninput == aAttribute) {
-    AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID);
+  if (nsLayoutAtoms::onclick == aAttribute ||
+      nsLayoutAtoms::ondblclick == aAttribute ||
+      nsLayoutAtoms::onmousedown == aAttribute ||
+      nsLayoutAtoms::onmouseup == aAttribute ||
+      nsLayoutAtoms::onmouseover == aAttribute ||
+      nsLayoutAtoms::onmouseout == aAttribute ||
+      nsLayoutAtoms::onkeydown == aAttribute ||
+      nsLayoutAtoms::onkeyup == aAttribute ||
+      nsLayoutAtoms::onkeypress == aAttribute ||
+      nsLayoutAtoms::onmousemove == aAttribute ||
+      nsLayoutAtoms::onload == aAttribute ||
+      nsLayoutAtoms::onunload == aAttribute ||
+      nsLayoutAtoms::onabort == aAttribute ||
+      nsLayoutAtoms::onerror == aAttribute ||
+      nsLayoutAtoms::onfocus == aAttribute ||
+      nsLayoutAtoms::onblur == aAttribute ||
+      nsLayoutAtoms::onsubmit == aAttribute ||
+      nsLayoutAtoms::onreset == aAttribute ||
+      nsLayoutAtoms::onchange == aAttribute ||
+      nsLayoutAtoms::onselect == aAttribute || 
+      nsLayoutAtoms::onpaint == aAttribute ||
+      nsLayoutAtoms::onresize == aAttribute ||
+      nsLayoutAtoms::onscroll == aAttribute ||
+      nsLayoutAtoms::oninput == aAttribute) {
+    AddScriptEventListener(aAttribute, aValue);
   }
- 
+  
   nsHTMLValue val;
   
   if (NS_CONTENT_ATTR_NOT_THERE !=

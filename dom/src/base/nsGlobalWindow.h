@@ -218,8 +218,7 @@ protected:
   NS_IMETHOD GetWebBrowserChrome(nsIWebBrowserChrome** aBrowserChrome);
   NS_IMETHOD GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
                            float* aT2P);
-  nsresult RegisterEventListener(const char* aEventName,
-                                 REFNSIID aIID);
+  nsresult RegisterCompileEventListener(const char* aEventName, PRBool aCompile);
   void FlushPendingNotifications();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
