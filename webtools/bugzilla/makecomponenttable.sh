@@ -79,7 +79,7 @@ insert into components (value, program, initialowner, initialqacontact, descript
 
 
 
-insert into components (value, program, initialowner, initialqacontact) values ("Apprunner", "Mozilla", "don@netscape.com", "leger@netscape.com");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Apprunner", "Mozilla", "don@netscape.com", "leger@netscape.com", "For bugs against the apprunner application which include: launch/exit crashes, features missing, and apprunner parity across platforms.");
 insert into components (value, program, initialowner, initialqacontact) values ("Macintosh FE", "Mozilla", "sdagley@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Windows FE", "Mozilla", "blythe@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("XFE", "Mozilla", "ramiro@netscape.com", "");
