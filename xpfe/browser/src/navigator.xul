@@ -126,6 +126,23 @@
    RefreshUrlbar();
   }
 
+  function OpenBookmarkURL(node)
+  {
+    if (node.getAttribute('type') !=
+        "http://home.netscape.com/NC-rdf#Bookmark") {
+      return false;
+    }
+    url = node.getAttribute('id');
+
+    // Ignore "NC:" urls.
+    if (url.substring(0, 3) == "NC:") {
+      return false;
+    }
+
+    window.frames[0].location.href = url;
+	RefreshUrlbar();
+  }
+
   function BrowserNewWindow()
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
@@ -314,7 +331,8 @@
       <menuitem name="Previous Site 2" onclick="BrowserBack();"/>
       <menuitem name="Previous Site n" onclick="BrowserBack();"/>
     </menu>
-    <menu name="Bookmarks" datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
+    <menu name="Bookmarks" onclick="OpenBookmarkURL(event.target)" 
+						   datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
 		<menuitem name="Add Current Page"/>
 		<menuitem name="Add To Personal Toolbar"/>
 		<menuitem name="Manage Bookmarks..." onclick="BrowserEditBookmarks();"/>
