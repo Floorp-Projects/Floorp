@@ -30,7 +30,7 @@ CPPSRCS=nsArena.cpp nsAtomTable.cpp nsBTree.cpp nsByteBuffer.cpp nsCRT.cpp \
 CPP_OBJS=.\$(OBJDIR)\nsArena.obj .\$(OBJDIR)\nsAtomTable.obj \
     .\$(OBJDIR)\nsBTree.obj .\$(OBJDIR)\nsByteBuffer.obj \
     .\$(OBJDIR)\nsCRT.obj        .\$(OBJDIR)\nsDeque.obj \
-    .\$(OBJDIR)\nsInputStream.obj .\$(OBJDIR)\nsRBTree.obj \
+    .\$(OBJDIR)\nsRBTree.obj \
     .\$(OBJDIR)\nsString.obj \
     .\$(OBJDIR)\nsUnicharBuffer.obj .\$(OBJDIR)\nsUnicharInputStream.obj \
     .\$(OBJDIR)\nsVoidArray.obj 
