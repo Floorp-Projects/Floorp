@@ -434,6 +434,10 @@ ifeq ($(OS_ARCH),HP-UX)
 ifdef IS_COMPONENT
 ifeq ($(GNU_CC)$(GNU_CXX),)
 EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
+ifneq ($(HAS_EXTRAEXPORTS),1)
+MKSHLIB  += -Wl,+eNSGetModule -Wl,+eerrno -Wl,+e_shlInit
+MKCSHLIB += -Wl,+eNSGetModule -Wl,+eerrno -Wl,+e_shlInit
+endif # !HAS_EXTRAEXPORTS
 endif # non-gnu compilers
 endif # IS_COMPONENT
 endif # HP-UX
