@@ -16,12 +16,14 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#define NS_IMPL_IDS
 #include "prmem.h"
 #include "plstr.h"
 #include "nsString.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
+#include "nsINetSupport.h"
 #include "nsIPostToServer.h"
 #include "nsIFactory.h"
 #include "nsIDocumentLoader.h"
@@ -44,7 +46,7 @@ class nsDocLoaderImpl;
  * The Document Loader maintains a list of nsDocumentBindInfo instances which 
  * represents the set of documents actively being loaded...
  */
-class nsDocumentBindInfo : public nsIStreamListener
+class nsDocumentBindInfo : public nsIStreamListener, public nsINetSupport
 {
 public:
     nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
@@ -65,6 +67,18 @@ public:
     NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aStream, PRInt32 aLength);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString& aMsg);
 
+	/* nsINetSupport interface methods */
+    NS_IMETHOD_(void) Alert(const nsString &aText);
+    NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+    NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
+                               const nsString &aDefault,
+                               nsString &aResult);
+    NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
+                                              nsString &aUser,
+                                              nsString &aPassword);
+    NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
+                                       nsString &aPassword);
+
 protected:
     virtual ~nsDocumentBindInfo();
 
@@ -74,6 +88,7 @@ protected:
     nsIContentViewerContainer* m_Container;
     nsISupports*        m_ExtraInfo;
     nsIStreamObserver*  m_Observer;
+    nsINetSupport*      m_NetSupport;
     nsIStreamListener*  m_NextStream;
     nsDocLoaderImpl*    m_DocLoader;
 };
@@ -312,7 +327,7 @@ nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
         goto done;
     }
     /* The DocumentBindInfo reference is only held by the Array... */
-    m_LoadingDocsList->AppendElement(loader);
+    m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
 
     rv = loader->Bind(aURLSpec, aPostData);
 
@@ -354,6 +369,10 @@ nsDocumentBindInfo::nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
 
     m_Observer = anObserver;
     NS_IF_ADDREF(m_Observer);
+	m_NetSupport = NULL;
+    if (m_Observer) {
+        m_Observer->QueryInterface(kINetSupportIID, (void **) &m_NetSupport);
+    }
 
     m_ExtraInfo = aExtraInfo;
     NS_IF_ADDREF(m_ExtraInfo);
@@ -371,6 +390,7 @@ nsDocumentBindInfo::~nsDocumentBindInfo()
     NS_IF_RELEASE(m_NextStream);
     NS_IF_RELEASE(m_Container);
     NS_IF_RELEASE(m_Observer);
+    NS_IF_RELEASE(m_NetSupport);
     NS_IF_RELEASE(m_ExtraInfo);
 }
 
@@ -378,9 +398,39 @@ nsDocumentBindInfo::~nsDocumentBindInfo()
 /*
  * Implementation of ISupports methods...
  */
-NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-NS_IMPL_ISUPPORTS(nsDocumentBindInfo,kIStreamListenerIID);
+NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 
+NS_IMPL_ADDREF(nsDocumentBindInfo);
+NS_IMPL_RELEASE(nsDocumentBindInfo);
+
+nsresult
+nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
+                                   void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtrResult = NULL;
+
+  if (aIID.Equals(kIStreamObserverIID)) {
+    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIStreamListenerIID)) {
+    *aInstancePtrResult = (void*) ((nsIStreamListener*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kINetSupportIID)) {
+    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
 nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec, 
                                   nsIPostData* aPostData)
@@ -545,11 +595,59 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
      * This should cause the nsDocumentBindInfo instance to be deleted, so
      * DO NOT assume this is valid after the call!!
      */
-    m_DocLoader->LoadURLComplete(this);
+    m_DocLoader->LoadURLComplete((nsIStreamListener *)this);
 
     return rv;
 }
 
+NS_IMETHODIMP_(void)
+nsDocumentBindInfo::Alert(const nsString &aText)
+{
+    if (nsnull != m_NetSupport) {
+        m_NetSupport->Alert(aText);
+    }
+}
+
+NS_IMETHODIMP_(PRBool)
+nsDocumentBindInfo::Confirm(const nsString &aText)
+{
+    if (nsnull != m_NetSupport) {
+        return m_NetSupport->Confirm(aText);
+    }
+    return PR_FALSE;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsDocumentBindInfo::Prompt(const nsString &aText,
+                           const nsString &aDefault,
+                           nsString &aResult)
+{
+    if (nsnull != m_NetSupport) {
+        return m_NetSupport->Prompt(aText, aDefault, aResult);
+    }
+    return PR_FALSE;
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsDocumentBindInfo::PromptUserAndPassword(const nsString &aText,
+                                          nsString &aUser,
+                                          nsString &aPassword)
+{
+    if (nsnull != m_NetSupport) {
+        return m_NetSupport->PromptUserAndPassword(aText, aUser, aPassword);
+    }
+    return PR_FALSE;
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsDocumentBindInfo::PromptPassword(const nsString &aText,
+                                   nsString &aPassword)
+{
+    if (nsnull != m_NetSupport) {
+        return m_NetSupport->PromptPassword(aText, aPassword);
+    }
+    return PR_FALSE;
+}
 
 
 /*******************************************

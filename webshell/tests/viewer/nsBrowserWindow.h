@@ -21,6 +21,7 @@
 
 #include "nsIBrowserWindow.h"
 #include "nsIStreamListener.h"
+#include "nsINetSupport.h"
 #include "nsIWebShell.h"
 #include "nsIScriptContextOwner.h"
 #include "nsString.h"
@@ -43,6 +44,7 @@ class nsIPresShell;
  */
 class nsBrowserWindow : public nsIBrowserWindow,
                         public nsIStreamObserver,
+                        public nsINetSupport,
                         public nsIWebShellContainer
 {
 public:
@@ -81,6 +83,18 @@ public:
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const nsString& aURL);
+
+  // nsINetSupport
+  NS_IMETHOD_(void) Alert(const nsString &aText);
+  NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+  NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
+                             const nsString &aDefault,
+                             nsString &aResult);
+  NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
+                                            nsString &aUser,
+                                            nsString &aPassword);
+  NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
+                                     nsString &aPassword);
 
   // nsBrowserWindow
   virtual nsresult CreateMenuBar(PRInt32 aWidth) = 0;
