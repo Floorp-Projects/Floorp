@@ -124,6 +124,7 @@ NPP_New(NPMIMEType pluginType,
     This->type = dupMimeType(pluginType);
     This->instance = instance;
     This->pluginsPageUrl = NULL;
+    This->exists = FALSE;
 
     /* Parse argument list passed to plugin instance */
     /* We are interested in these arguments
