@@ -143,7 +143,7 @@
   <hbox id="appcontent">
     <toolbar id="formToolbar"
              class="chromeclass-directories"
-             tbautostretch="always"
+             tbalign="stretch"
              insertafter="browser"
              persist="collapsed"
              style="display:none;">

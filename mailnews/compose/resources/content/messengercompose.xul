@@ -498,7 +498,7 @@
     </toolbar>
   
     <!-- These toolbar items get filled out from the editorOverlay -->
-    <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbautostretch="never" grippytooltiptext="&formatToolbar.tooltip;">
+    <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" grippytooltiptext="&formatToolbar.tooltip;">
       <menulist id="ParagraphSelect"/>
       <menulist id="FontFaceSelect"/>
       <stack id="ColorButtons"/>
