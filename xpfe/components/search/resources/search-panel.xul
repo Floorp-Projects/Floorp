@@ -36,16 +36,18 @@
 
   <html:script src="chrome://search/content/search-panel.js" />
 
-  <tabcontrol align="vertical" flex="100%">
+  <tabcontrol align="vertical">
     <box align="horizontal">
       <spring style="width: 5px;"/>
       <tabbox flex="100%">
-        <tab flex="1">&search.results.tab;</tab>
-        <tab flex="1">&search.advanced.tab;</tab>
+        <tab flex="1" onclick="switchTab(0);">&search.results.tab;</tab>
+        <tab flex="1" onclick="switchTab(1);">&search.advanced.tab;</tab>
       </tabbox>
       <spring style="width: 5px;"/>
     </box>
-    <tabpanel flex="100%">
+    <tabpanel style="display:none;"/>
+  </tabcontrol>
+  <deck id="advancedDeck" flex="100%">
       <!-- results panel -->
       <box align="vertical" flex="100%">
         <box align="horizontal" class="spaced">
@@ -114,10 +116,10 @@
       <!-- advanced tab -->
       <box align="vertical">
         <box align="horizontal">
-          <html:label>&whenSearching.label;</html:label>
+          <html:label>&whenSearching.label; &within.label;</html:label>
         </box>
         <box align="horizontal">
-          <html:label for="">&within.label;</html:label>
+          <text id="categoryNameText"/>
         </box>
         <box align="horizontal">
           <html:label>&useTheseProviders.label;</html:label>
@@ -147,6 +149,5 @@
           </treehead>
         </tree>
       </box>
-    </tabpanel>
-  </tabcontrol>
+  </deck>
 </window>
