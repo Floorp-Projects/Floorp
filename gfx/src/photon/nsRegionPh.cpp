@@ -92,6 +92,7 @@ nsRegionPh :: nsRegionPh()
   SetRegionEmpty();
 }
 
+
 nsRegionPh :: ~nsRegionPh()
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::~nsRegion Destructor called\n"));
@@ -99,6 +100,7 @@ nsRegionPh :: ~nsRegionPh()
   if (mRegion)
     PhFreeTiles(mRegion);
 }
+
 
 NS_IMPL_QUERY_INTERFACE(nsRegionPh, kRegionIID)
 NS_IMPL_ADDREF(nsRegionPh)
@@ -120,33 +122,32 @@ void nsRegionPh :: SetTo(const nsIRegion &aRegion)
   mRegion = PhCopyTiles(tiles);
 }
 
+
 void nsRegionPh :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::SetTo2 aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", aX, aY, aWidth, aHeight));
 
- /* Create a temporary tile to  assign to mRegion */
-  PhTile_t *tile = PhGetTile();
-  tile->rect.ul.x = aX;
-  tile->rect.ul.y = aY;
-  tile->rect.lr.x = (aX+aWidth-1);
-  tile->rect.lr.y = (aY+aHeight-1);
-if (tile->rect.lr.x == -1)
-{
-//  printf ("problem 1: %d %d %d %d\n",aX,aY,aWidth,aHeight);
-  tile->rect.lr.x = 0;
-  tile->rect.lr.y = 0;
-}
-  tile->next = NULL;
-  
   SetRegionEmpty();
-  mRegion = tile;
+
+  if(( aWidth > 0 ) && ( aHeight > 0 ))
+  {
+    /* Create a temporary tile to  assign to mRegion */
+
+    PhTile_t *tile = PhGetTile();
+    tile->rect.ul.x = aX;
+    tile->rect.ul.y = aY;
+    tile->rect.lr.x = (aX+aWidth-1);
+    tile->rect.lr.y = (aY+aHeight-1);
+    tile->next = NULL;
+    mRegion = tile;
+  }
 }
+
 
 void nsRegionPh :: Intersect(const nsIRegion &aRegion)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect with nsIRegion - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect with nsIRegion\n"));
 
-  unsigned short intersected_tiles=0;
   PhTile_t *orig_Tiles = mRegion;
   PhTile_t *tiles;
 
@@ -158,27 +159,30 @@ void nsRegionPh :: Intersect(const nsIRegion &aRegion)
   }
 }
 
+
 void nsRegionPh :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect2 aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", aX, aY, aWidth, aHeight));
 
- /* Create a temporary tile to  assign to mRegion */
-  PhTile_t *tile = PhGetTile();
-  tile->rect.ul.x = aX;
-  tile->rect.ul.y = aY;
-  tile->rect.lr.x = (aX+aWidth-1);
-  tile->rect.lr.y = (aY+aHeight-1);
-if (tile->rect.lr.x == -1) printf ("problem 2\n");
-  tile->next = NULL;
+  if(( aWidth > 0 ) && ( aHeight > 0 ))
+  {
+    /* Create a temporary tile to  assign to mRegion */
+    PhTile_t *tile = PhGetTile();
+    tile->rect.ul.x = aX;
+    tile->rect.ul.y = aY;
+    tile->rect.lr.x = (aX+aWidth-1);
+    tile->rect.lr.y = (aY+aHeight-1);
+    tile->next = NULL;
     
-  unsigned short intersected_tiles;
-  PhTile_t *orig_Tiles = mRegion;
-
-  mRegion = myIntersectTilings(mRegion, tile, NULL);
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect with rect intersected_tiles=<%d>\n", intersected_tiles));
-// ::DumpTiles(mRegion);
+    PhTile_t *orig_Tiles = mRegion;
+    mRegion = myIntersectTilings(mRegion, tile, NULL);
+  }
+  else
+  {
+    SetRegionEmpty();
+  }
 }
+
 
 void nsRegionPh :: Union(const nsIRegion &aRegion)
 {
@@ -191,23 +195,27 @@ void nsRegionPh :: Union(const nsIRegion &aRegion)
   mRegion = PhAddMergeTiles(mRegion, tiles, &added);
 }
 
+
 void nsRegionPh :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Union2 aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", aX, aY, aWidth, aHeight));
 
- /* Create a temporary tile to  assign to mRegion */
-  PhTile_t *tile = PhGetTile();
-  tile->rect.ul.x = aX;
-  tile->rect.ul.y = aY;
-  tile->rect.lr.x = (aX+aWidth-1);
-  tile->rect.lr.y = (aY+aHeight-1);
-if (tile->rect.lr.x == -1) printf ("problem 3\n");
-  tile->next = NULL;
+  if(( aWidth > 0 ) && ( aHeight > 0 ))
+  {
+    /* Create a temporary tile to  assign to mRegion */
+    PhTile_t *tile = PhGetTile();
+    tile->rect.ul.x = aX;
+    tile->rect.ul.y = aY;
+    tile->rect.lr.x = (aX+aWidth-1);
+    tile->rect.lr.y = (aY+aHeight-1);
+    tile->next = NULL;
     
-  int added;
+    int added;
 
-  mRegion = PhAddMergeTiles(mRegion, tile, &added);
+    mRegion = PhAddMergeTiles(mRegion, tile, &added);
+  }
 }
+
 
 void nsRegionPh :: Subtract(const nsIRegion &aRegion)
 {
@@ -219,43 +227,44 @@ void nsRegionPh :: Subtract(const nsIRegion &aRegion)
   mRegion = PhClipTilings(mRegion, tiles, NULL);
 }
 
+
 void nsRegionPh :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Subtract aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", aX, aY, aWidth, aHeight));
 
- /* Create a temporary tile to  assign to mRegion */
-  PhTile_t *tile = PhGetTile();
-  tile->rect.ul.x = aX;
-  tile->rect.ul.y = aY;
-  tile->rect.lr.x = (aX+aWidth-1);
-  tile->rect.lr.y = (aY+aHeight-1);
-  tile->next = NULL;
+  if(( aWidth > 0 ) && ( aHeight > 0 ))
+  {
+    /* Create a temporary tile to  assign to mRegion */
+    PhTile_t *tile = PhGetTile();
+    tile->rect.ul.x = aX;
+    tile->rect.ul.y = aY;
+    tile->rect.lr.x = (aX+aWidth-1);
+    tile->rect.lr.y = (aY+aHeight-1);
+    tile->next = NULL;
 
-/*
-printf ("subtract: %d %d %d %d\n",
-tile->rect.ul.x,
-tile->rect.ul.y,
-tile->rect.lr.x,
-tile->rect.lr.y
-);
-*/
-if (tile->rect.lr.x == -1)
-{
-//  printf ("problem 4\n");
-tile->rect.lr.x=0;
-tile->rect.lr.y=0;
+    /*
+    printf ("subtract: %d %d %d %d\n",
+    tile->rect.ul.x,
+    tile->rect.ul.y,
+    tile->rect.lr.x,
+    tile->rect.lr.y
+    );
+    */
+    mRegion = PhClipTilings(mRegion, tile, NULL);
+  }
 }
-  mRegion = PhClipTilings(mRegion, tile, NULL);
-}
+
 
 PRBool nsRegionPh :: IsEmpty(void)
 {
-  PRBool result = PR_TRUE;
+  PRBool result = PR_FALSE;
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::IsEmpty mRegion=<%p>\n", mRegion));
 
   if (!mRegion)
     return PR_TRUE;
+
+#if 0
 
   MangleTiles(mRegion);
   mRegion = PhCoalesceTiles( PhMergeTiles( PhSortTiles( mRegion )));  
@@ -278,9 +287,12 @@ PRBool nsRegionPh :: IsEmpty(void)
     t = t->next;
   }
 
+#endif
+
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::IsEmpty Result=<%d>\n", result));
   return result;
 }
+
 
 PRBool nsRegionPh :: IsEqual(const nsIRegion &aRegion)
 {
@@ -319,6 +331,7 @@ PRBool nsRegionPh :: IsEqual(const nsIRegion &aRegion)
   return result;
 }
 
+
 void nsRegionPh :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetBoundingBox mRegion=<%p>\n", mRegion));
@@ -345,6 +358,7 @@ void nsRegionPh :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRI
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetBoundingBox aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", *aX, *aY, *aWidth, *aHeight));
 }
 
+
 void nsRegionPh :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Offset aXOffset=<%d> aYOffset=<%d>\n", aXOffset, aYOffset));
@@ -357,6 +371,7 @@ void nsRegionPh :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
     PhTranslateTiles(mRegion, &p);
   }
 }
+
 
 PRBool nsRegionPh :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -417,6 +432,7 @@ else return PR_FALSE;
   return ret;
 #endif
 }
+
 
 NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
 {
@@ -484,6 +500,7 @@ NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP nsRegionPh :: FreeRects(nsRegionRectSet *aRects)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::FreeRects aRects=<%p>\n", aRects));
@@ -494,6 +511,7 @@ NS_IMETHODIMP nsRegionPh :: FreeRects(nsRegionRectSet *aRects)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP nsRegionPh :: GetNativeRegion(void *&aRegion) const
 {
 //  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetNativeRegion mRegion=<%p>\n", mRegion));
@@ -501,12 +519,14 @@ NS_IMETHODIMP nsRegionPh :: GetNativeRegion(void *&aRegion) const
   return NS_OK;
 }
 
+
 NS_IMETHODIMP nsRegionPh :: GetRegionComplexity(nsRegionComplexity &aComplexity) const
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetRegionComplexity - Not Implemented\n"));
   aComplexity = mRegionType;
   return NS_OK;
 }
+
 
 void nsRegionPh :: SetRegionEmpty(void)
 {
