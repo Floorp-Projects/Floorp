@@ -80,24 +80,6 @@
 .down[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
-  
-.up {
-  list-style-image:url("chrome://global/skin/scroll-up.gif");
-  min-width: 0px;
-}
-
-.up[disabled="true"] {
-  list-style-image:url("chrome://global/skin/scroll-up-disabled.gif");
-}
-
-.down {
-  min-width: 0px;
-  list-style-image:url("chrome://global/skin/scroll-down.gif");
-}
-
-.down[disabled="true"] {
-  list-style-image:url("chrome://global/skin/scroll-down-disabled.gif");
-}
 
 .sidebarTree {
   border: none;
