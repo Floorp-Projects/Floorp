@@ -291,6 +291,7 @@ function UpdateSettings() {
 
 // Alter style in stylesheet of specified document doc, or current document
 // if doc is omitted.
+// ****CSS DOM IS BROKEN****; selectorText seems to be null for all rules
 function AlterStyle(ruleName, propertyName, propertyValue, doc) {
 
   dump("AlterStyle("+ruleName+"{"+propertyName+":"+propertyValue+"})\n");
@@ -300,7 +301,8 @@ function AlterStyle(ruleName, propertyName, propertyValue, doc) {
   var sheet = doc.styleSheets[0];
   var r;
   for (r = 0; r < sheet.cssRules.length; r++) {
-    //dump(sheet.cssRules[r].selectorText+"\n");
+    //dump("selectorText["+r+"]="+sheet.cssRules[r].selectorText+"\n");
+    //dump("cssText["+r+"]="+sheet.cssRules[r].cssText+"\n");
 
     if (sheet.cssRules[r].selectorText == ruleName) {
       var style = sheet.cssRules[r].style;

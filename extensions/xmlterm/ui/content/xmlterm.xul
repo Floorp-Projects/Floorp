@@ -31,9 +31,9 @@
         onload="StartupXMLTerm();"
         title="xmlterm" align="vertical" width="586" height="412">
   
-  <html:script src="chrome://xmlterm/content/XMLTermChrome.js"></html:script>
+  <script src="chrome://xmlterm/content/XMLTermChrome.js"></script>
 
-  <html:iframe id="content-frame" type="content" html:name="content"
-               html:src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>
+  <iframe id="content-frame" type="content" name="content"
+          src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>
 
 </window>
