@@ -28,11 +28,10 @@ interface nsIInterfaceInfo;
 [uuid(31431440-f1ce-11d2-985a-006008962422)]
 interface nsIXPCSecurityManager : nsISupports
 {
-%{C++
-    /*
+    /**
     * These flags are used when calling nsIXPConnect::SetSecurityManager
     */
-%}
+
     const short HOOK_CREATE_WRAPPER  = 1 << 0;
     const short HOOK_CREATE_INSTANCE = 1 << 1;
     const short HOOK_GET_SERVICE     = 1 << 2;
@@ -47,41 +46,40 @@ interface nsIXPCSecurityManager : nsISupports
                                        HOOK_GET_PROPERTY    |
                                        HOOK_SET_PROPERTY    ;
 
-%{C++
-    /*
+    /**
     * For each of these hooks returning NS_OK means 'let the action continue'.
-    * returning *anything* else means 'veto the action'. XPConnect will do its 
-    * best to fail silently if the action is vetoed. The implementor of this 
-    * interface is responsible for setting a JS exception into the JSContext 
+    * returning *anything* else means 'veto the action'. XPConnect will do its
+    * best to fail silently if the action is vetoed. The implementor of this
+    * interface is responsible for setting a JS exception into the JSContext
     * if that is appropriate.
     */
-%}
-    void CanCreateWrapper(in JSContext aJSContext, 
-                          in nsIIDRef aIID, 
+
+    void CanCreateWrapper(in JSContext aJSContext,
+                          in nsIIDRef aIID,
                           in nsISupports aObj);
 
-    void CanCreateInstance(in JSContext aJSContext, 
+    void CanCreateInstance(in JSContext aJSContext,
                            in nsCIDRef aCID);
 
-    void CanGetService(in JSContext aJSContext, 
+    void CanGetService(in JSContext aJSContext,
                        in nsCIDRef aCID);
 
-    void CanCallMethod(in JSContext aJSContext, 
-                       in nsIIDRef aIID, 
+    void CanCallMethod(in JSContext aJSContext,
+                       in nsIIDRef aIID,
                        in nsISupports aObj,
                        in nsIInterfaceInfo aInterfaceInfo,
                        in PRUint16 aMethodIndex,
                        [const] in jsid aName);
 
-    void CanGetProperty(in JSContext aJSContext, 
-                        in nsIIDRef aIID, 
+    void CanGetProperty(in JSContext aJSContext,
+                        in nsIIDRef aIID,
                         in nsISupports aObj,
                         in nsIInterfaceInfo aInterfaceInfo,
                         in PRUint16 aMethodIndex,
                         [const] in jsid aName);
 
-    void CanSetProperty(in JSContext aJSContext, 
-                        in nsIIDRef aIID, 
+    void CanSetProperty(in JSContext aJSContext,
+                        in nsIIDRef aIID,
                         in nsISupports aObj,
                         in nsIInterfaceInfo aInterfaceInfo,
                         in PRUint16 aMethodIndex,

@@ -257,11 +257,11 @@ nsXPCArbitraryScriptable::Construct(JSContext *cx, JSObject *obj,
 }
 
 NS_IMETHODIMP
-nsXPCArbitraryScriptable::HasInstance(JSContext *cx, JSObject *obj,         
-                           jsval v, JSBool *bp,                             
-                           nsIXPConnectWrappedNative* wrapper,              
-                           nsIXPCScriptable* arbitrary,                     
-                           JSBool* retval)                                  
+nsXPCArbitraryScriptable::HasInstance(JSContext *cx, JSObject *obj,
+                           jsval v, JSBool *bp,
+                           nsIXPConnectWrappedNative* wrapper,
+                           nsIXPCScriptable* arbitrary,
+                           JSBool* retval)
 {
     NS_PRECONDITION(wrapper, "bad param");
     NS_PRECONDITION(bp, "bad param");

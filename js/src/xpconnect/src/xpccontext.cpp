@@ -20,10 +20,10 @@
 
 #include "xpcprivate.h"
 
-const char* XPCContext::mStrings[] = { 
-    "constructor",    // IDX_CONSTRUCTOR     
-    "toString",       // IDX_TO_STRING       
-    "lastResult"      // IDX_LAST_RESULT     
+const char* XPCContext::mStrings[] = {
+    "constructor",    // IDX_CONSTRUCTOR
+    "toString",       // IDX_TO_STRING
+    "lastResult"      // IDX_LAST_RESULT
 };
 
 // static
@@ -80,8 +80,8 @@ XPCContext::XPCContext(JSContext* aJSContext,
     mWrappedNativeClassMap = IID2WrappedNativeClassMap::newMap(WrappedNativeClassMapSize);
     for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
     {
-        JS_ValueToId(aJSContext, 
-                     STRING_TO_JSVAL(JS_InternString(aJSContext, mStrings[i])), 
+        JS_ValueToId(aJSContext,
+                     STRING_TO_JSVAL(JS_InternString(aJSContext, mStrings[i])),
                      &mStrIDs[i]);
         if(!mStrIDs[i])
         {
@@ -92,6 +92,7 @@ XPCContext::XPCContext(JSContext* aJSContext,
     mLastResult = NS_OK;
     mSecurityManager = NULL;
     mSecurityManagerFlags = 0;
+    mException = nsnull;
 }
 
 JS_STATIC_DLL_CALLBACK(intN)
@@ -146,8 +147,9 @@ XPCContext::~XPCContext()
         delete mWrappedJSClassMap;
     }
     JS_RemoveArgumentFormatter(mJSContext, XPC_ARG_FORMATTER_FORMAT_STR);
-    if(mXPConnect)
-        NS_RELEASE(mXPConnect);
+
+    NS_IF_RELEASE(mException);
+    NS_IF_RELEASE(mXPConnect);
 }
 
 JSBool
@@ -157,7 +159,7 @@ XPCContext::Init(JSObject* aGlobalObj /*= NULL*/)
         mGlobalObj = aGlobalObj;
     return nsXPCWrappedJSClass::InitForContext(this) &&
            nsXPCWrappedNativeClass::InitForContext(this) &&
-           JS_AddArgumentFormatter(mJSContext, XPC_ARG_FORMATTER_FORMAT_STR, 
+           JS_AddArgumentFormatter(mJSContext, XPC_ARG_FORMATTER_FORMAT_STR,
                                    XPC_JSArgumentFormatter);
 }
 

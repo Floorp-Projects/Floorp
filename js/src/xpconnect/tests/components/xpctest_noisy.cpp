@@ -24,9 +24,7 @@ class xpctestNoisy : public nsIXPCTestNoisy
 {
 public:
     NS_DECL_ISUPPORTS
-
-    /* void squawk (); */
-    NS_IMETHOD squawk();
+    NS_DECL_NSIXPCTESTNOISY
 
     xpctestNoisy();
     virtual ~xpctestNoisy();

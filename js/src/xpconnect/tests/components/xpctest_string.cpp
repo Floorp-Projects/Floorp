@@ -24,15 +24,7 @@ class xpcstringtest : public nsIXPCTestString
 {
 public:
     NS_DECL_ISUPPORTS
-
-    /* string GetStringA (); */
-    NS_IMETHOD GetStringA(char **_retval);
-
-    /* void GetStringB (out string s); */
-    NS_IMETHOD GetStringB(char **s);
-
-    /* void GetStringC ([shared, retval] out string s); */
-    NS_IMETHOD GetStringC(const char **s);
+    NS_DECL_NSIXPCTESTSTRING
 
     xpcstringtest();
     virtual ~xpcstringtest();

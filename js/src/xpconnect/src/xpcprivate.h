@@ -64,6 +64,20 @@ extern const char XPC_COMPONENTS_STR[]; // 'Components' property name
 extern const char XPC_ARG_FORMATTER_FORMAT_STR[]; // format string
 
 /***************************************************************************/
+// useful macros...
+
+#define XPC_STRING_GETTER_BODY(dest, src) \
+    NS_ENSURE_ARG_POINTER(dest); \
+    char* result; \
+    if(src) \
+        result = (char*) nsAllocator::Clone(src, \
+                                sizeof(char)*(strlen(src)+1)); \
+    else \
+        result = nsnull; \
+    *dest = result; \
+    return (result || !src) ? NS_OK : NS_ERROR_OUT_OF_MEMORY
+
+/***************************************************************************/
 
 class nsXPConnect : public nsIXPConnect
 {
@@ -200,6 +214,18 @@ public:
         return mStrings[index];
     }
 
+    nsIXPCException* GetException()
+        {
+            NS_IF_ADDREF(mException);
+            return mException;
+        }
+    void SetException(nsIXPCException* e)
+        {
+            NS_IF_ADDREF(e);
+            NS_IF_RELEASE(mException);
+            mException = e;
+        }
+
     nsresult GetLastResult() {return mLastResult;}
     void SetLastResult(nsresult rc) {mLastResult = rc;}
 
@@ -238,44 +264,28 @@ private:
     nsresult mLastResult;
     nsIXPCSecurityManager* mSecurityManager;
     PRUint16 mSecurityManagerFlags;
+    nsIXPCException* mException;
 };
 
 /***************************************************************************/
 // code for throwing exceptions into JS
 
-struct XPCJSErrorFormatString
-{
-    const char *format;
-/*    uintN argCount; */
-};
-
-struct XPCJSError
-{
-    enum {
-#define MSG_DEF(name, number, count, exception, format) \
-        name = number,
-#include "xpc.msg"
-#undef MSG_DEF
-        LIMIT
-    };
-};
-
 class XPCJSThrower
 {
 public:
-    void ThrowBadResultException(uintN errNum,
+    void ThrowBadResultException(nsresult rv,
                                  JSContext* cx,
                                  nsXPCWrappedNativeClass* clazz,
                                  const XPCNativeMemberDescriptor* desc,
                                  nsresult result);
 
-    void ThrowBadParamException(uintN errNum,
+    void ThrowBadParamException(nsresult rv,
                                 JSContext* cx,
                                 nsXPCWrappedNativeClass* clazz,
                                 const XPCNativeMemberDescriptor* desc,
                                 uintN paramNum);
 
-    void ThrowException(uintN errNum,
+    void ThrowException(nsresult rv,
                         JSContext* cx,
                         nsXPCWrappedNativeClass* clazz = nsnull,
                         const XPCNativeMemberDescriptor* desc = nsnull);
@@ -284,17 +294,16 @@ public:
     ~XPCJSThrower();
 
 private:
-
     void Verbosify(JSContext* cx,
                    nsXPCWrappedNativeClass* clazz,
                    const XPCNativeMemberDescriptor* desc,
                    char** psz, PRBool own);
 
     char* BuildCallerString(JSContext* cx);
+    void BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz);
+    JSBool ThrowExceptionObject(JSContext* cx, nsIXPCException* e);
 
 private:
-    static XPCJSErrorFormatString default_formats[XPCJSError::LIMIT+1];
-    XPCJSErrorFormatString* mFormats;
     JSBool mVerbose;
 };
 
@@ -327,6 +336,7 @@ public:
     REFNSIID GetIID() const {return mIID;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
+    const char* GetInterfaceName();
 
     static JSBool InitForContext(XPCContext* xpcc);
     static JSBool IsWrappedJS(nsISupports* aPtr);
@@ -364,6 +374,7 @@ private:
 private:
     XPCContext* mXPCContext;
     nsIInterfaceInfo* mInfo;
+    char* mName;
     nsIID mIID;
     uint32* mDescriptors;
 };
@@ -577,7 +588,7 @@ private:
                                  const XPCNativeMemberDescriptor* desc,
                                  nsresult result)
         {nsXPConnect::GetJSThrower()->
-                ThrowBadResultException(XPCJSError::NATIVE_RETURNED_FAILURE,
+                ThrowBadResultException(NS_ERROR_XPC_NATIVE_RETURNED_FAILURE,
                                         cx, this, desc, result);}
 
     void ThrowBadParamException(uintN errNum,
@@ -694,6 +705,16 @@ public:
                                 const nsXPTType& type,
                                 JSBool useAllocator, const nsID* iid,
                                 uintN* pErr);
+
+    static nsIXPCException* JSValToXPCException(JSContext* cx,
+                                                jsval s,
+                                                const char* ifaceName,
+                                                const char* methodName);
+
+    static nsIXPCException* JSErrorToXPCException(JSContext* cx,
+                                                  const char* message,
+                                                  const JSErrorReport* report);
+
 private:
     XPCConvert(); // not implemented
 };
@@ -704,7 +725,7 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
 
 /***************************************************************************/
 /*
-* nsJSID implements nsIJSID. It is also used by nsJSIID and nsJSCID as a 
+* nsJSID implements nsIJSID. It is also used by nsJSIID and nsJSCID as a
 * member (as a hidden implementaion detail) to which they delegate many calls.
 */
 
@@ -712,33 +733,13 @@ class nsJSID : public nsIJSID
 {
 public:
     NS_DECL_ISUPPORTS
-
-    /* readonly attribute string name; */
-    NS_IMETHOD GetName(char * *aName);
-
-    /* readonly attribute string number; */
-    NS_IMETHOD GetNumber(char * *aNumber);
-
-    /* readonly attribute nsID id; */
-    NS_IMETHOD GetId(nsID* *aId);
-
-    /* readonly attribute boolean valid; */
-    NS_IMETHOD GetValid(PRBool *aValid);
-
-    /* boolean equals (in nsIJSID other); */
-    NS_IMETHOD equals(nsIJSID *other, PRBool *_retval);
-
-    /* void initialize (in string idString); */
-    NS_IMETHOD initialize(const char *idString);
-
-    /* string toString (); */
-    NS_IMETHOD toString(char **_retval);
+    NS_DECL_NSIJSID
 
     PRBool initWithName(const nsID& id, const char *nameString);
     PRBool setName(const char* name);
     void   setNameToNoString()
-        {NS_ASSERTION(!mName, "name already set"); mName = gNoString;}        
-    PRBool nameIsSet() const {return nsnull != mName;}        
+        {NS_ASSERTION(!mName, "name already set"); mName = gNoString;}
+    PRBool nameIsSet() const {return nsnull != mName;}
     const nsID* getID() const {return &mID;}
 
     static nsJSID* NewID(const char* str);
@@ -763,11 +764,11 @@ class nsJSIID : public nsIJSIID
 {
 public:
     NS_DECL_ISUPPORTS
-
     // we manually delagate these to nsJSID
     NS_DECL_NSIJSID
 
     // we implement the rest...
+    NS_DECL_NSIJSIID
 
     static nsJSIID* NewID(const char* str);
 
@@ -787,7 +788,6 @@ class nsJSCID : public nsIJSCID
 {
 public:
     NS_DECL_ISUPPORTS
-
     // we manually delagate these to nsJSID
     NS_DECL_NSIJSID
 
@@ -819,13 +819,13 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj);
 class nsXPCInterfaces;
 class nsXPCClasses;
 class nsXPCClassesByID;
+class nsXPCResults;
 
 class nsXPCComponents : public nsIXPCComponents, public nsIXPCScriptable
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
-
     XPC_DECLARE_IXPCSCRIPTABLE
 
     nsXPCComponents();
@@ -834,6 +834,7 @@ private:
     nsXPCInterfaces*      mInterfaces;
     nsXPCClasses*         mClasses;
     nsXPCClassesByID*     mClassesByID;
+    nsXPCResults*         mResults;
     PRBool                mCreating;
 };
 
@@ -870,9 +871,9 @@ private:
 };
 
 /***************************************************************************/
-// a class to put on the stack when we are entering xpconnect from an entry 
+// a class to put on the stack when we are entering xpconnect from an entry
 // point where the JSContext is known. This pushes and pops the given context
-// with the nsThreadJSContextStack service as this object goes into and out 
+// with the nsThreadJSContextStack service as this object goes into and out
 // of scope.
 
 class AutoPushJSContext
@@ -908,7 +909,7 @@ public:
                                         PRInt32 aLineNumber,
                                         nsIJSStackFrameLocation* aCaller);
 friend class XPCJSStackFrame;
-private:    
+private:
     XPCJSStack();
     ~XPCJSStack();
 
@@ -926,45 +927,55 @@ class nsXPCException : public nsIXPCException
 public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCEXCEPTION
 
-    /* readonly attribute string message; */
-    NS_IMETHOD GetMessage(char * *aMessage);
+    static nsXPCException* NewException(const char *aMessage,
+                                        nsresult aCode,
+                                        nsIJSStackFrameLocation *aLocation,
+                                        nsISupports *aData,
+                                        PRInt32 aLeadingFramesToTrim);
 
-    /* readonly attribute PRInt32 code; */
-    NS_IMETHOD GetCode(PRInt32 *aCode);
-
-    /* readonly attribute nsIJSStackFrameLocation location; */
-    NS_IMETHOD GetLocation(nsIJSStackFrameLocation * *aLocation);
-
-    /* readonly attribute nsISupports data; */
-    NS_IMETHOD GetData(nsISupports * *aData);
-
-    /* void initialize (in string aMessage, in PRInt32 aCode, in nsIJSStackFrameLocation aLocation, in nsISupports aData); */
-    NS_IMETHOD initialize(const char *aMessage, PRInt32 aCode, nsIJSStackFrameLocation *aLocation, nsISupports *aData);
-
-    /* string toString (); */
-    NS_IMETHOD toString(char **_retval);
-
+    static JSBool NameAndFormatForNSResult(nsresult rv,
+                                           const char** name,
+                                           const char** format);
+    static void* IterateNSResults(nsresult* rv,
+                                  const char** name,
+                                  const char** format,
+                                  void** iterp);
     nsXPCException();
     virtual ~nsXPCException();
 
-    static nsIXPCException* NewException(const char *aMessage, 
-                                         PRInt32 aCode, 
-                                         nsIJSStackFrameLocation *aLocation,
-                                         nsISupports *aData,
-                                         PRInt32 aLeadingFramesToTrim);
-
-    static const char* NameForNSResult(nsresult rv);
-
 protected:
     void reset();
-
 private:
     char*                       mMessage;
-    PRInt32                     mCode;
+    nsresult                    mCode;
+    char*                       mName;
     nsIJSStackFrameLocation*    mLocation;
     nsISupports*                mData;
     PRBool                      mInitialized;
+};
+
+class xpcJSErrorReport : public nsIJSErrorReport
+{
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIJSERRORREPORT
+
+    static xpcJSErrorReport* NewReport(const char* aMessage,
+                                       const JSErrorReport* aReport);
+
+protected:
+    xpcJSErrorReport();
+    virtual ~xpcJSErrorReport();
+
+private:
+    char*       mMessage;
+    char*       mFilename;
+    PRUint32    mLineno;
+    char*       mLinebuf;
+    PRUint32    mTokenIndex;
+    PRUint32    mFlags;
+    PRUint32    mErrorNumber;
 };
 
 /***************************************************************************/

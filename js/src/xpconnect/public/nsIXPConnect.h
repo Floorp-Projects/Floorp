@@ -52,6 +52,46 @@
 // XXX declare them in XPIDL :)
 
 /***************************************************************************/
+
+#define GENERATE_XPC_FAILURE(x) \
+            (NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCONNECT,x))
+
+#define NS_ERROR_XPC_NOT_ENOUGH_ARGS                GENERATE_XPC_FAILURE( 1)
+#define NS_ERROR_XPC_NEED_OUT_OBJECT                GENERATE_XPC_FAILURE( 2)
+#define NS_ERROR_XPC_CANT_SET_OUT_VAL               GENERATE_XPC_FAILURE( 3)
+#define NS_ERROR_XPC_NATIVE_RETURNED_FAILURE        GENERATE_XPC_FAILURE( 4)
+#define NS_ERROR_XPC_CANT_GET_INTERFACE_INFO        GENERATE_XPC_FAILURE( 5)
+#define NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO      GENERATE_XPC_FAILURE( 6)
+#define NS_ERROR_XPC_CANT_GET_METHOD_INFO           GENERATE_XPC_FAILURE( 7)
+#define NS_ERROR_XPC_UNEXPECTED                     GENERATE_XPC_FAILURE( 8)
+#define NS_ERROR_XPC_BAD_CONVERT_JS                 GENERATE_XPC_FAILURE( 9)
+#define NS_ERROR_XPC_BAD_CONVERT_NATIVE             GENERATE_XPC_FAILURE(10)
+#define NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF        GENERATE_XPC_FAILURE(11)
+#define NS_ERROR_XPC_BAD_OP_ON_WN_PROTO             GENERATE_XPC_FAILURE(12)
+#define NS_ERROR_XPC_CANT_CONVERT_WN_TO_FUN         GENERATE_XPC_FAILURE(13)
+#define NS_ERROR_XPC_CANT_DEFINE_PROP_ON_WN         GENERATE_XPC_FAILURE(14)
+#define NS_ERROR_XPC_CANT_WATCH_WN_STATIC           GENERATE_XPC_FAILURE(15)
+#define NS_ERROR_XPC_CANT_EXPORT_WN_STATIC          GENERATE_XPC_FAILURE(16)
+#define NS_ERROR_XPC_SCRIPTABLE_CALL_FAILED         GENERATE_XPC_FAILURE(17)
+#define NS_ERROR_XPC_SCRIPTABLE_CTOR_FAILED         GENERATE_XPC_FAILURE(18)
+#define NS_ERROR_XPC_CANT_CALL_WO_SCRIPTABLE        GENERATE_XPC_FAILURE(19)
+#define NS_ERROR_XPC_CANT_CTOR_WO_SCRIPTABLE        GENERATE_XPC_FAILURE(20)
+#define NS_ERROR_XPC_CI_RETURNED_FAILURE            GENERATE_XPC_FAILURE(21)
+#define NS_ERROR_XPC_GS_RETURNED_FAILURE            GENERATE_XPC_FAILURE(22)
+#define NS_ERROR_XPC_BAD_CID                        GENERATE_XPC_FAILURE(23)
+#define NS_ERROR_XPC_BAD_IID                        GENERATE_XPC_FAILURE(24)
+#define NS_ERROR_XPC_CANT_CREATE_WN                 GENERATE_XPC_FAILURE(25)
+#define NS_ERROR_XPC_JS_THREW_EXCEPTION             GENERATE_XPC_FAILURE(26)
+#define NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT         GENERATE_XPC_FAILURE(27)
+#define NS_ERROR_XPC_JS_THREW_JS_OBJECT             GENERATE_XPC_FAILURE(28)
+#define NS_ERROR_XPC_JS_THREW_NULL                  GENERATE_XPC_FAILURE(29)
+#define NS_ERROR_XPC_JS_THREW_STRING                GENERATE_XPC_FAILURE(30)
+#define NS_ERROR_XPC_JAVASCRIPT_ERROR               GENERATE_XPC_FAILURE(31)
+#define NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS  GENERATE_XPC_FAILURE(32)
+
+// any new errors here should have an associated entry added in xpc.msg
+
+/***************************************************************************/
 // forward declarations...
 class nsIXPCScriptable;
 class nsIInterfaceInfo;
@@ -105,7 +145,7 @@ public:
 // wrappers around JSObject are passed around as plain nsISupports pointers.
 // To manipulate such a wrapper (as opposed to manipulating the wrapped
 // JSObject via the wrapper) do a QueryInterface for the
-// nsIXPConnectWrappedJSMethods interface 
+// nsIXPConnectWrappedJSMethods interface
 // i.e. 'nsIXPConnectWrappedJSMethods::GetIID()'
 // and use the methods on that interface. (see below)
 

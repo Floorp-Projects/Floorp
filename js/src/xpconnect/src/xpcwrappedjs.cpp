@@ -196,7 +196,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSObject* aJSObj,
                     "nsXPCWrappedJS::mJSObj");
 }
 
-void 
+void
 nsXPCWrappedJS::XPCContextBeingDestroyed()
 {
     if(mJSObj)
@@ -206,7 +206,7 @@ nsXPCWrappedJS::XPCContextBeingDestroyed()
             JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
         mJSObj = NULL;
     }
-}        
+}
 
 nsXPCWrappedJS::~nsXPCWrappedJS()
 {

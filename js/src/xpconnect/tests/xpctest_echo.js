@@ -221,19 +221,25 @@ catch(e) {
 var all_ok = true;
 
 echo.ReturnCode_NS_OK()
-if(Components.RESULT_NS_OK != Components.lastResult) {
+var lastResult = Components.lastResult;
+if(Components.results.NS_OK != lastResult) {
     all_ok = false;
-    print("expected: RESULT_NS_OK = "+Components.RESULT_NS_OK+"  got: "+Components.lastResult);
-    print(Components.lastResult);
+    print("expected: NS_OK = "+Components.results.NS_OK+"  got: "+lastResult);
 }
 
 try {
     echo.ReturnCode_NS_ERROR_NULL_POINTER()
     all_ok = false;
 } catch(e) {
-    if(Components.RESULT_NS_ERROR_NULL_POINTER != Components.lastResult) {
+    var lastResult = Components.lastResult;
+    if(e.code != lastResult) {
         all_ok = false;
-        print("expected: RESULT_NS_ERROR_NULL_POINTER = "+Components.RESULT_NS_ERROR_NULL_POINTER+"  got: "+Components.lastResult);
+        print("expected: NS_ERROR_NULL_POINTER = "+Components.results.NS_ERROR_NULL_POINTER+"  e.code was: "+e.code+"  Components.lastResult: "+lastResult);
+        
+    }
+    if(Components.results.NS_ERROR_NULL_POINTER != lastResult) {
+        all_ok = false;
+        print("expected: NS_ERROR_NULL_POINTER = "+Components.results.NS_ERROR_NULL_POINTER+"  got: "+lastResult);
     }
 }
 
@@ -241,9 +247,15 @@ try {
     echo.ReturnCode_NS_ERROR_UNEXPECTED()
     all_ok = false;
 } catch(e) {
-    if(Components.RESULT_NS_ERROR_UNEXPECTED != Components.lastResult) {
+    var lastResult = Components.lastResult;
+    if(e.code != lastResult) {
         all_ok = false;
-        print("expected: RESULT_NS_ERROR_UNEXPECTED = "+Components.RESULT_NS_ERROR_UNEXPECTED+"  got: "+Components.lastResult);
+        print("expected: NS_ERROR_UNEXPECTED = "+Components.results.NS_ERROR_UNEXPECTED+"  e.code was: "+e.code+"  Components.lastResult: "+lastResult);
+        
+    }
+    if(Components.results.NS_ERROR_UNEXPECTED != lastResult) {
+        all_ok = false;
+        print("expected: NS_ERROR_UNEXPECTED = "+Components.results.NS_ERROR_UNEXPECTED+"  got: "+lastResult);
     }
 }
 
@@ -251,9 +263,15 @@ try {
     echo.ReturnCode_NS_ERROR_OUT_OF_MEMORY()
     all_ok = false;
 } catch(e) {
-    if(Components.RESULT_NS_ERROR_OUT_OF_MEMORY != Components.lastResult) {
+    var lastResult = Components.lastResult;
+    if(e.code != lastResult) {
         all_ok = false;
-        print("expected: RESULT_NS_ERROR_OUT_OF_MEMORY = "+Components.RESULT_NS_ERROR_OUT_OF_MEMORY+"  got: "+Components.lastResult);
+        print("expected: NS_ERROR_OUT_OF_MEMORY = "+Components.results.NS_ERROR_OUT_OF_MEMORY+"  e.code was: "+e.code+"  Components.lastResult: "+lastResult);
+        
+    }
+    if(Components.results.NS_ERROR_OUT_OF_MEMORY != lastResult) {
+        all_ok = false;
+        print("expected: NS_ERROR_OUT_OF_MEMORY = "+Components.results.NS_ERROR_OUT_OF_MEMORY+"  got: "+lastResult);
     }
 }
 
