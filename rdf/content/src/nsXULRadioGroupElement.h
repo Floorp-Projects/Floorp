@@ -53,7 +53,7 @@ public:
     NS_FORWARD_IDOMXULELEMENT(mOuter->);
 
     // nsIDOMXULRadioGroupElement interface
-    NS_DECL_IDOMXULRADIOGROUPELEMENT;
+    NS_DECL_IDOMXULRADIOGROUPELEMENT
 
 protected:
     nsCOMPtr<nsIDOMXULRadioElement> mSelectedItem;
