@@ -272,12 +272,25 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute our desired size. Take into account any floaters when computing the
   // height
-  if (mSpaceManager->YMost() > aDesiredSize.height) {
-    aDesiredSize.height = mSpaceManager->YMost();
+  nscoord floaterYMost = mSpaceManager->YMost();
+  if (floaterYMost > 0) {
+    // What we need to check for is if the bottom most floater extends below
+    // the content area of the desired size
+    nsMargin  borderPadding;
+    nscoord   contentYMost;
+
+    nsHTMLReflowState::ComputeBorderPaddingFor(this, aReflowState.parentReflowState,
+                                               borderPadding);
+    contentYMost = aDesiredSize.height - borderPadding.bottom;
+
+    if (floaterYMost > contentYMost) {
+      aDesiredSize.height += floaterYMost - contentYMost;
+    }
   }
 
-  // Also take into account absolutely positioned elements
-  const nsStyleDisplay* display= (const nsStyleDisplay*)
+  // Also take into account absolutely positioned elements depending on
+  // the overflow policy
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (NS_STYLE_OVERFLOW_HIDDEN != display->mOverflow) {
