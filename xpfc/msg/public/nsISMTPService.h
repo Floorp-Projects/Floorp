@@ -22,7 +22,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIMessage.h"
-#include "nsIMIMEMessage.h"
+#include "nsIMimeMessage.h"
 #include "nsISMTPObserver.h"
 
 //b64f8b50-6f77-11d2-8dbc-00805f8a7ab6

@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include "nsCRT.h"
 #include "nsSMTPServerCallback.h"
-#include "nsIMIMEMessage.h"
+#include "nsIMimeMessage.h"
 
 static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kSMTPServiceIID,   NS_ISMTP_SERVICE_IID);
