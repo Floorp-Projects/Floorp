@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.12 2000/10/11 06:52:06 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.13 2000/10/11 07:04:30 mcgreer%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -1050,11 +1050,14 @@ main(int argc, char **argv)
 	    break;
 
 	case 'o':
+#if 0
 	    if (mode == DECODE) {
 		outFile = fopen(optstate->value, "w");
 	    } else {
 		outFile = fopen(optstate->value, "wb");
 	    }
+#endif
+	    outFile = fopen(optstate->value, "wb");
 	    if (outFile == NULL) {
 		fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
 			progName, optstate->value);
