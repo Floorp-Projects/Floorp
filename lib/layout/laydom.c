@@ -21,6 +21,7 @@
  *
  */
 
+#ifdef DOM /* For the Mac Build */
 
 #include "xp.h"
 #include "layout.h"
@@ -304,3 +305,5 @@ lo_DeleteFontSize(DOM_AttributeEntry *entry)
   XP_FREEIF((double *)entry->data);
   return JS_TRUE;
 }
+
+#endif /* DOM: For the Mac build */

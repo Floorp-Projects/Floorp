@@ -20,6 +20,8 @@
  * Perignon: parse style information to store in the DOM.
  */
 
+#ifdef DOM /* For the Mac build */
+
 #ifndef LAY_DOM_H
 #define LAY_DOM_H
 
@@ -80,3 +82,5 @@ extern JSBool
 lo_DeleteFontSize(DOM_AttributeEntry *entry);
 
 #endif /* LAY_DOM_H */
+
+#endif /* DOM: For the Mac Build */
