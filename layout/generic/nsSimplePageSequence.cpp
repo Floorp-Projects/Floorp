@@ -391,6 +391,9 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     // in fact, all we want is the initial reflow
     y = mRect.height;
   } else {
+    // XXX Part of Temporary fix for Bug 127263
+    nsPageFrame::SetCreateWidget(PR_TRUE);
+
     nsReflowReason  reflowReason = aReflowState.reason;
 
     SetPageSizes(pageSize, margin);
@@ -434,6 +437,17 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
 
       FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, x, y, 0);
       y += kidSize.height;
+
+      // XXX Temporary fix for Bug 127263
+      // This tells the nsPageFrame class to stop creating clipping widgets
+      // once we reach the 32k boundary for positioning
+      if (nsPageFrame::GetCreateWidget()) {
+        float t2p;
+        aPresContext->GetTwipsToPixels(&t2p);
+        nscoord xp = NSTwipsToIntPixels(x, t2p);
+        nscoord yp = NSTwipsToIntPixels(y, t2p);
+        nsPageFrame::SetCreateWidget(xp < 0x8000 && yp < 0x8000);
+      }
 
       // Leave a slight gap between the pages
       y += deadSpaceGap;

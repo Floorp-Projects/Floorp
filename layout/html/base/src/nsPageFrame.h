@@ -92,6 +92,10 @@ public:
 
   virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
+// XXX Part of Temporary fix for Bug 127263
+  static  void   SetCreateWidget(PRBool aDoCreateWidget)  { mDoCreateWidget = aDoCreateWidget; }
+  static  PRBool GetCreateWidget()                        { return mDoCreateWidget; }
+
 protected:
   nsPageFrame();
   virtual ~nsPageFrame();
@@ -138,6 +142,9 @@ protected:
   nsRect       mClipRect;
 
   nsSharedPageData* mPD;
+
+// XXX Part of Temporary fix for Bug 127263
+  static PRBool mDoCreateWidget;
 
 private:
   void DrawBackground(nsIPresContext* aPresContext,
