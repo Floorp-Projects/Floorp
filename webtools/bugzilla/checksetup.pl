@@ -2431,7 +2431,8 @@ if (!($sth->fetchrow_arrayref()->[0])) {
         "SELECT longdescs.bug_id, thetext " .
           "FROM longdescs " .
      "LEFT JOIN bugs using(bug_id) " .
-         "WHERE (thetext regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') " .
+         "WHERE (thetext " . $dbh->sql_regexp .
+                 " '[.*.]{3} This bug has been marked as a duplicate of [[:digit:]]+ [.*.]{3}') " .
            "AND (resolution = 'DUPLICATE') " .
       "ORDER BY longdescs.bug_when");
     $sth->execute();
