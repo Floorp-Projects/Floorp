@@ -24,6 +24,7 @@
 
 class nsIPresContext;
 class nsIStyleContext;
+struct nsReflowState;
 
 class nsITableLayoutStrategy
 {
@@ -38,6 +39,7 @@ public:
     */
   virtual PRBool BalanceColumnWidths(nsIPresContext* aPresContext,
                                      nsIStyleContext *aTableStyle,
+                                     const nsReflowState& aReflowState,
                                      PRInt32 maxWidth, 
                                      PRInt32 aNumCols,
                                      PRInt32 &aTotalFixedWidth,

@@ -529,7 +529,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     mPass = kPASS_SECOND;
 
     // assign column widths, and assign aMaxElementSize->width
-    BalanceColumnWidths(aPresContext, aReflowState.maxSize, aDesiredSize.maxElementSize);
+    BalanceColumnWidths(aPresContext, aReflowState, aReflowState.maxSize,
+                        aDesiredSize.maxElementSize);
 
     // assign table width
     SetTableWidth(aPresContext);
@@ -1550,6 +1551,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   */
 // use the cell map to determine which cell is in which column.
 void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext, 
+                                       const nsReflowState& aReflowState,
                                        const nsSize& aMaxSize, 
                                        nsSize* aMaxElementSize)
 {
@@ -1615,6 +1617,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
     mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
   }
   mTableLayoutStrategy->BalanceColumnWidths(aPresContext, mStyleContext,
+                                            aReflowState,
                                             maxWidth, numCols,
                                             totalFixedWidth, minTableWidth, maxTableWidth,
                                             aMaxElementSize);

@@ -259,9 +259,10 @@ protected:
     * @param aMaxSize         the height and width constraints
     * @param aMaxElementSize  the min size of the largest indivisible object
     */
-  virtual void BalanceColumnWidths(nsIPresContext*  aPresContext, 
-                                   const nsSize&    aMaxSize, 
-                                   nsSize*          aMaxElementSize);
+  virtual void BalanceColumnWidths(nsIPresContext*      aPresContext, 
+                                   const nsReflowState& aReflowState,
+                                   const nsSize&        aMaxSize, 
+                                   nsSize*              aMaxElementSize);
 
   /** sets the width of the table according to the computed widths of each column. */
   virtual void SetTableWidth(nsIPresContext*  aPresContext);

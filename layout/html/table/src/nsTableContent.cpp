@@ -166,8 +166,7 @@ void nsTableContent::List(FILE* out, PRInt32 aIndent) const
 
   ListAttributes(out);
 
-  if (gsNoisyRefs == PR_TRUE)
-    fprintf(out, " RefCount=%d<%s\n", mRefCnt, isImplicitString);
+  fprintf(out, " RefCount=%d<%s\n", mRefCnt, isImplicitString);
 
   if (CanContainChildren()) {
     PRInt32 kids = ChildCount();
