@@ -21,6 +21,12 @@
  *   Ben Goodger <ben@netscape.com> (Original Author)
  */
  
+.transaction-row  
+  {
+    border                  : none;
+    height                  : 20px;
+  } 
+ 
 .transaction-row[state="undo"]
   {
     background-color        : window;
@@ -45,6 +51,101 @@
   
 #historyKids  
   {
-    background-color         : appworkspace;
+    background-color        : appworkspace;
   }
- 
+
+.cell-grabber
+  {
+    background-color        : threedface;
+    border-right            : 1px solid threedface;
+  }
+
+.cell-grabber[state="redo"]
+  {
+    border-right            : 1px solid threedhighlight;
+  }  
+  
+.grabber-right
+  {
+    border-right            : 1px solid threedhighlight;
+  }  
+  
+.grabber-right[state="redo"]
+  {
+    border-right            : 1px solid threedshadow;
+  }  
+   
+.grabber-box-1
+  {
+    background-color        : threedface;
+    border-left             : 1px solid threedface;
+    border-top              : 1px solid threedface;
+    border-right            : 1px solid threeddarkshadow;
+    border-bottom           : 1px solid threeddarkshadow;
+  }
+
+.grabber-box-2
+  {
+    border-left             : 1px solid threedhighlight;
+    border-top              : 1px solid threedhighlight;
+    border-bottom           : 1px solid threedshadow;
+    border-right            : 1px solid threedshadow;
+  }  
+  
+.grabber-container
+  {
+    padding                 : 2px 2px 2px 1px;
+  }
+
+.track-left
+  {
+    border-right            : 1px solid threedshadow;
+  }
+
+.track-right
+  {
+    border-left             : 1px solid threedhighlight;
+  }
+
+.track-center
+  {
+    background-color        : appworkspace;
+    width                   : 1px;
+  }  
+
+.track-center[state="redo"]
+  {
+    background-color        : threedface;
+  }
+  
+.treecell-history-cell
+  {
+    border                  : 1px solid transparent;
+  }  
+  
+tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
+  {
+    border                  : none;   
+  }
+
+tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > .treecell-history-cell
+  {
+    border                  : 1px dotted captiontext;   
+  }
+
+.treecell-history-cell[state="redo"]
+  {
+    -moz-binding           : url("chrome://vixen/content/history/historyTreeBindings.xml#cell-redo");
+  }  
+
+.cell-redo-upper
+  {
+    margin                : 0px 1px 1px 0px;
+    color                 : threedshadow;
+  }
+
+.cell-redo-lower
+  {
+    margin                : 1px 0px 0px 1px;
+    color                 : threedhighlight;
+  }

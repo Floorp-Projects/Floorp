@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://vixen/content/vfd/editBindings.css"?>
+
+<window id="editBindingsTest"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical">
+  
+  <box moz-vixen="true" orient="vertical" flex="1">
+    <box><text value="Foopy" style="border: 1px solid green"/><spring flex="1"/></box>
+    <box><text value="Noopy" style="border: 1px solid green"/><spring flex="1"/></box>
+  </box>
+  <box moz-vixen="true" orient="vertical">
+    <box><text value="Foopy 2" style="border: 1px solid green"/><spring flex="1"/></box>
+    <box><text value="Noopy 2" style="border: 1px solid green"/><spring flex="1"/></box>
+  </box>
+ 
+</window>        

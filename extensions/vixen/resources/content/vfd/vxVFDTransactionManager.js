@@ -195,6 +195,7 @@ vxVFDTransactionManager.prototype =
       }
     }
   }
+
 };
 
 /** 
