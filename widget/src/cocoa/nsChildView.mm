@@ -2648,12 +2648,17 @@ nsChildView::Idle()
 {
   // checks to see if we should change to the hand cursor
   [self flagsChanged:theEvent];
+  // we need to forward mouse move events to gecko when the mouse
+  // is over a gecko view
+  [[self window] setAcceptsMouseMovedEvents: YES];
 }
 
 - (void)mouseExited:(NSEvent*)theEvent
 {
   // checks to see if we should change from the hand cursor
   [self flagsChanged:theEvent];
+  // no need to monitor mouse movements outside of the gecko view
+  [[self window] setAcceptsMouseMovedEvents: NO];
 }
 
 - (void)rightMouseDown:(NSEvent *)theEvent
