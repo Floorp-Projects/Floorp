@@ -3353,14 +3353,9 @@ HTMLContentSink::CloseForm()
                   this);
 
   if (mCurrentForm) {
-    // If there is a <p> tag on the container stack, close it
-    if (mCurrentContext->IsCurrentContainer(eHTMLTag_p)) {
-      result = mCurrentContext->CloseContainer(eHTMLTag_p);
-    }
-    
     // if this is a well-formed form, close it too
-    if (NS_SUCCEEDED(result) &&
-        mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
+    if (mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
+      mCurrentContext->FlushTextAndRelease();
       result = mCurrentContext->CloseContainer(eHTMLTag_form);
       mFlags &= ~NS_SINK_FLAG_FORM_ON_STACK;
     }
