@@ -40,7 +40,8 @@ CPPSRCS		=		   \
 
 XPIDLSRCS	= nsISample.idl
 
-TESTCPPSRCS = nsTestSample.cpp
+TESTCPPSRCS	= nsTestSample.cpp
+CPPSRCS		+= $(TESTCPPSRCS)
 SIMPLE_PROGRAMS	= $(TESTCPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
