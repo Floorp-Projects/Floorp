@@ -1339,7 +1339,10 @@ PresShell::~PresShell()
   }
 
   // Destroy the frame manager. This will destroy the frame hierarchy
-  NS_IF_RELEASE(mFrameManager);
+  if (mFrameManager) {
+    mFrameManager->Destroy();
+    NS_RELEASE(mFrameManager);
+  }
 
   if (mDocument) {
     mDocument->DeleteShell(this);

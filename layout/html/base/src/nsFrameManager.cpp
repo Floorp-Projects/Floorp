@@ -176,6 +176,10 @@ protected:
 
 class FrameManager;
 
+  // A CantRenderReplacedElementEvent has a weak pointer to the frame
+  // manager, and the frame manager has a weak pointer to the event.
+  // The event queue owns the event and the FrameManager will delete
+  // the event if it's going to go away.
 struct CantRenderReplacedElementEvent : public PLEvent {
   CantRenderReplacedElementEvent(FrameManager* aFrameManager, nsIFrame* aFrame);
 
@@ -196,6 +200,7 @@ public:
 
   // nsIFrameManager
   NS_IMETHOD Init(nsIPresShell* aPresShell, nsIStyleSet* aStyleSet);
+  NS_IMETHOD Destroy();
 
   // Gets and sets the root frame
   NS_IMETHOD GetRootFrame(nsIFrame** aRootFrame) const;
@@ -251,11 +256,6 @@ public:
   
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
-
-  /** return PR_TRUE if this instance is prepared to process events 
-    * (specifically, CantRenderReplacedElement events.)
-    */
-  NS_IMETHOD CanProcessEvents() { return mCanProcessEvents; }
 
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
 
@@ -335,9 +335,6 @@ private:
   FrameHashTable*                 mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
   CantRenderReplacedElementEvent* mPostedEvents;
-  // keep around a flag that we use to prevent processing on event callbacks after 
-  // we've started the shutdown procedure
-  PRBool                          mCanProcessEvents;
   PropertyList*                   mPropertyList;
 
   void ReResolveStyleContext(nsIPresContext* aPresContext,
@@ -350,7 +347,7 @@ private:
                              PRInt32 aMinChange,
                              PRInt32& aResultChange);
 
-  void RevokePostedEvents();
+  nsresult RevokePostedEvents();
   CantRenderReplacedElementEvent** FindPostedEventFor(nsIFrame* aFrame);
   void DequeuePostedEventFor(nsIFrame* aFrame);
   void DestroyPropertyList(nsIPresContext* aPresContext);
@@ -381,58 +378,22 @@ NS_NewFrameManager(nsIFrameManager** aInstancePtrResult)
 FrameManager::FrameManager()
 {
   NS_INIT_REFCNT();
-  mCanProcessEvents = PR_TRUE;
 }
-
-NS_IMPL_ADDREF(FrameManager)
-NS_IMPL_RELEASE(FrameManager)
 
 FrameManager::~FrameManager()
 {
-#ifdef NOISY_EVENTS
-  printf("%p ~FrameManager() start\n", this);
-#endif
-  nsCOMPtr<nsIPresContext> presContext;
-  mPresShell->GetPresContext(getter_AddRefs(presContext));
-  
-  // first, mark this FM so it no longer can accept events
-  mCanProcessEvents = PR_FALSE;
-
-  // Revoke any events posted to the event queue that we haven't processed yet
-  RevokePostedEvents();
-
-  // Destroy the frame hierarchy. Don't destroy the property lists until after
-  // we've destroyed the frame hierarchy because some frames may expect to be
-  // able to retrieve their properties during destruction
-  if (mRootFrame) {
-    mRootFrame->Destroy(presContext);
-    mRootFrame = nsnull;
-  }
-  
-  delete mPrimaryFrameMap;
-  delete mPlaceholderMap;
-  delete mUndisplayedMap;
-  DestroyPropertyList(presContext);
-#ifdef NOISY_EVENTS
-  printf("%p ~FrameManager() end\n", this);
-#endif
+  NS_ASSERTION(!mPresShell, "FrameManager::Destroy never called");
 }
 
-nsresult
-FrameManager::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (aIID.Equals(GetIID())) {
-    *aInstancePtr = (void*)(nsIFrameManager*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS1(FrameManager, nsIFrameManager)
 
 NS_IMETHODIMP
 FrameManager::Init(nsIPresShell* aPresShell,
                    nsIStyleSet*  aStyleSet)
 {
+  NS_ASSERTION(aPresShell, "null aPresShell");
+  NS_ASSERTION(aStyleSet, "null aStyleSet");
+
   mPresShell = aPresShell;
   mStyleSet = aStyleSet;
 
@@ -446,8 +407,43 @@ FrameManager::Init(nsIPresShell* aPresShell,
 }
 
 NS_IMETHODIMP
+FrameManager::Destroy()
+{
+  NS_ASSERTION(mPresShell, "Frame manager already shut down.");
+
+  nsCOMPtr<nsIPresContext> presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+  
+  // Destroy the frame hierarchy. Don't destroy the property lists until after
+  // we've destroyed the frame hierarchy because some frames may expect to be
+  // able to retrieve their properties during destruction
+  if (mRootFrame) {
+    mRootFrame->Destroy(presContext);
+    mRootFrame = nsnull;
+  }
+  
+  delete mPrimaryFrameMap;
+  delete mPlaceholderMap;
+  delete mUndisplayedMap;
+  DestroyPropertyList(presContext);
+
+  // If we're not going to be used anymore, we should revoke the
+  // pending |CantRenderReplacedElementEvent|s being sent to us.
+  nsresult rv = RevokePostedEvents();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "RevokePostedEvents failed:  might crash");
+
+  mPresShell = nsnull; // mPresShell isn't valid anymore.  We
+                       // won't use it, either, but we check it
+                       // at the start of every function so that we'll
+                       // be OK when nsIPresShell is converted to IDL.
+
+  return rv;
+}
+
+NS_IMETHODIMP
 FrameManager::GetRootFrame(nsIFrame** aRootFrame) const
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aRootFrame);
   *aRootFrame = mRootFrame;
   return NS_OK;
@@ -456,6 +452,7 @@ FrameManager::GetRootFrame(nsIFrame** aRootFrame) const
 NS_IMETHODIMP
 FrameManager::SetRootFrame(nsIFrame* aRootFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(!mRootFrame, "already have a root frame");
   if (mRootFrame) {
     return NS_ERROR_UNEXPECTED;
@@ -468,6 +465,7 @@ FrameManager::SetRootFrame(nsIFrame* aRootFrame)
 NS_IMETHODIMP
 FrameManager::GetCanvasFrame(nsIPresContext* aPresContext, nsIFrame** aCanvasFrame) const
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(aCanvasFrame, "aCanvasFrame argument cannot be null");
   NS_PRECONDITION(aPresContext, "aPresContext argument cannot be null");
 
@@ -503,6 +501,7 @@ FrameManager::GetCanvasFrame(nsIPresContext* aPresContext, nsIFrame** aCanvasFra
 NS_IMETHODIMP
 FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG_POINTER(aContent);
   if (!aContent || !aResult) {
@@ -571,6 +570,7 @@ NS_IMETHODIMP
 FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
                                  nsIFrame*   aPrimaryFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aContent);
   // it's ok if aPrimaryFrame is null
 
@@ -598,6 +598,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
 NS_IMETHODIMP
 FrameManager::ClearPrimaryFrameMap()
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (mPrimaryFrameMap) {
     mPrimaryFrameMap->Clear();
   }
@@ -609,6 +610,7 @@ NS_IMETHODIMP
 FrameManager::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                      nsIFrame** aResult) const
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG_POINTER(aFrame);
   if (!aResult || !aFrame) {
@@ -628,6 +630,7 @@ NS_IMETHODIMP
 FrameManager::SetPlaceholderFrameFor(nsIFrame* aFrame,
                                      nsIFrame* aPlaceholderFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aFrame);
 #ifdef NS_DEBUG
   // Verify that the placeholder frame is of the correct type
@@ -663,6 +666,7 @@ FrameManager::SetPlaceholderFrameFor(nsIFrame* aFrame,
 NS_IMETHODIMP
 FrameManager::ClearPlaceholderFrameMap()
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (mPlaceholderMap) {
     mPlaceholderMap->Clear();
   }
@@ -675,6 +679,7 @@ NS_IMETHODIMP
 FrameManager::SetUndisplayedContent(nsIContent* aContent, 
                                     nsIStyleContext* aStyleContext)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (! mUndisplayedMap) {
     mUndisplayedMap = new UndisplayedMap;
   }
@@ -695,6 +700,7 @@ NS_IMETHODIMP
 FrameManager::SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
                                      nsIContent* aParentContent)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (! mUndisplayedMap) {
     mUndisplayedMap = new UndisplayedMap;
   }
@@ -707,6 +713,7 @@ FrameManager::SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext,
 NS_IMETHODIMP
 FrameManager::ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (mUndisplayedMap) {
     UndisplayedNode* node = mUndisplayedMap->GetFirstNode(aParentContent);
     while (node) {
@@ -722,6 +729,7 @@ FrameManager::ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParen
 NS_IMETHODIMP
 FrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (mUndisplayedMap) {
     return mUndisplayedMap->RemoveNodesFor(aParentContent);
   }
@@ -731,6 +739,7 @@ FrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
 NS_IMETHODIMP
 FrameManager::ClearUndisplayedContentMap()
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (mUndisplayedMap) {
     mUndisplayedMap->Clear();
   }
@@ -746,6 +755,7 @@ FrameManager::AppendFrames(nsIPresContext* aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   nsIFrame* insertionPoint = nsnull;
   GetInsertionPoint(&aPresShell, aParentFrame, aFrameList, &insertionPoint);
   if (insertionPoint) {
@@ -776,6 +786,7 @@ FrameManager::InsertFrames(nsIPresContext* aPresContext,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   nsIFrame* insertionPoint = nsnull;
   GetInsertionPoint(&aPresShell, aParentFrame, aFrameList, &insertionPoint);
   if (insertionPoint) {
@@ -805,6 +816,7 @@ FrameManager::RemoveFrame(nsIPresContext* aPresContext,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   nsIFrame* insertionPoint = nsnull;
   GetInsertionPoint(&aPresShell, aParentFrame, aOldFrame, &insertionPoint);
   if (insertionPoint)
@@ -822,6 +834,7 @@ FrameManager::ReplaceFrame(nsIPresContext* aPresContext,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   return aParentFrame->ReplaceFrame(aPresContext, aPresShell, aListName,
                                     aOldFrame, aNewFrame);
 }
@@ -831,6 +844,7 @@ FrameManager::ReplaceFrame(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 FrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   // Dequeue and destroy and posted events for this frame
   DequeuePostedEventFor(aFrame);
 
@@ -842,9 +856,10 @@ FrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
   return NS_OK;
 }
 
-void
+nsresult
 FrameManager::RevokePostedEvents()
 {
+  nsresult rv = NS_OK;
 #ifdef NOISY_EVENTS
   printf("%p ~RevokePostedEvents() start\n", this);
 #endif
@@ -853,7 +868,6 @@ FrameManager::RevokePostedEvents()
 
     // Revoke any events in the event queue that are owned by us
     nsIEventQueueService* eventService;
-    nsresult              rv;
 
     rv = nsServiceManager::GetService(kEventQueueServiceCID,
                                       NS_GET_IID(nsIEventQueueService),
@@ -865,13 +879,14 @@ FrameManager::RevokePostedEvents()
       nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
 
       if (NS_SUCCEEDED(rv) && eventQueue) {
-        eventQueue->RevokeEvents(this);
+        rv = eventQueue->RevokeEvents(this);
       }
     }
   }
 #ifdef NOISY_EVENTS
   printf("%p ~RevokePostedEvents() end\n", this);
 #endif
+  return rv;
 }
 
 CantRenderReplacedElementEvent**
@@ -907,16 +922,22 @@ FrameManager::DequeuePostedEventFor(nsIFrame* aFrame)
     rv = nsServiceManager::GetService(kEventQueueServiceCID,
                                       NS_GET_IID(nsIEventQueueService),
                                       (nsISupports **)&eventService);
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+            "will crash soon due to event holding dangling pointer to frame");
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIEventQueue> eventQueue;
       rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, 
                                              getter_AddRefs(eventQueue));
       nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
 
+      NS_ASSERTION(NS_SUCCEEDED(rv) && eventQueue,
+            "will crash soon due to event holding dangling pointer to frame");
       if (NS_SUCCEEDED(rv) && eventQueue) {
         PLEventQueue* plqueue;
 
         eventQueue->GetPLEventQueue(&plqueue);
+        NS_ASSERTION(plqueue,
+            "will crash soon due to event holding dangling pointer to frame");
         if (plqueue) {
           // Removes the event and destroys it
           PL_DequeueEvent(tmp, plqueue);
@@ -927,34 +948,37 @@ FrameManager::DequeuePostedEventFor(nsIFrame* aFrame)
 }
 
 void
-FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent) {
+FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
+{
 #ifdef NOISY_EVENTS
   printf("FrameManager::HandlePLEvent() start for FM %p\n", aEvent->owner);
 #endif
   FrameManager* frameManager = (FrameManager*)aEvent->owner;
+  NS_ASSERTION(frameManager, "null frame manager");
 
-    //adding a ptr check since talkback is complaining about a crash here.
-    //I suspect that if the event->owner is really null, bad things will happen
-    //elsewhere.
-  if(frameManager  &&  frameManager->CanProcessEvents()) { 
-  
-    // Remove the posted event from the linked list
-    CantRenderReplacedElementEvent** events = &frameManager->mPostedEvents;
-    while (*events) {
-      if (*events == aEvent) {
-        *events = (*events)->mNext;
-        break;
-      } else {
-        events = &(*events)->mNext;
-      }
-    }
-
-    // Notify the style system and then process any reflow commands that
-    // are generated
-    nsCOMPtr<nsIPresContext>  presContext;    
-    frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
-    frameManager->mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);        
+  if (!frameManager->mPresShell) {
+    NS_ASSERTION(frameManager->mPresShell,
+                 "event not removed from queue on shutdown");
+    return;
   }
+
+  // Remove the posted event from the linked list
+  CantRenderReplacedElementEvent** events = &frameManager->mPostedEvents;
+  while (*events) {
+    if (*events == aEvent) {
+      *events = (*events)->mNext;
+      break;
+    }
+    events = &(*events)->mNext;
+    NS_ASSERTION(*events, "event not in queue");
+  }
+
+  // Notify the style system and then process any reflow commands that
+  // are generated
+  nsCOMPtr<nsIPresContext> presContext;    
+  frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
+  frameManager->mStyleSet->CantRenderReplacedElement(presContext,
+                                                     aEvent->mFrame);        
 #ifdef NOISY_EVENTS
   printf("FrameManager::HandlePLEvent() end for FM %p\n", aEvent->owner);
 #endif
@@ -969,9 +993,8 @@ FrameManager::DestroyPLEvent(CantRenderReplacedElementEvent* aEvent)
 CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(FrameManager* aFrameManager,
                                                                nsIFrame*     aFrame)
 {
-  // Note: because the frame manager owns us we don't hold a reference to the
-  // frame manager
-  PL_InitEvent(this, aFrameManager, (PLHandleEventProc)&FrameManager::HandlePLEvent,
+  PL_InitEvent(this, aFrameManager,
+               (PLHandleEventProc)&FrameManager::HandlePLEvent,
                (PLDestroyEventProc)&FrameManager::DestroyPLEvent);
   mFrame = aFrame;
 }
@@ -980,6 +1003,7 @@ NS_IMETHODIMP
 FrameManager::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                         nsIFrame*       aFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
 #ifdef NOISY_EVENTS
   printf("%p FrameManager::CantRenderReplacedElement called\n", this);
 #endif
@@ -1033,10 +1057,10 @@ DumpContext(nsIFrame* aFrame, nsIStyleContext* aContext)
       frameDebug->GetFrameName(name);
       fputs(name, stdout);
     }
-    fprintf(stdout, " (%p)", aFrame);
+    fprintf(stdout, " (%p)", NS_STATIC_CAST(void*, aFrame));
   }
   if (aContext) {
-    fprintf(stdout, " style: %p ", aContext);
+    fprintf(stdout, " style: %p ", NS_STATIC_CAST(void*, aContext));
 
     nsIAtom* pseudoTag;
     aContext->GetPseudoType(pseudoTag);
@@ -1209,6 +1233,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIStyleContext*
 NS_IMETHODIMP
 FrameManager::DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (aFrame) {
     nsIStyleContext* context;
     aFrame->GetStyleContext(&context);
@@ -1328,6 +1353,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIStyleContext*
 NS_IMETHODIMP
 FrameManager::DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (aFrame) {
     nsIStyleContext* context;
     aFrame->GetStyleContext(&context);
@@ -1346,6 +1372,7 @@ FrameManager::ReParentStyleContext(nsIPresContext* aPresContext,
                                    nsIFrame* aFrame, 
                                    nsIStyleContext* aNewParentContext)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   nsresult result = NS_ERROR_NULL_POINTER;
   if (aFrame) {
 #ifdef NS_DEBUG
@@ -1955,6 +1982,7 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
                                     PRInt32 aMinChange,
                                     PRInt32& aTopLevelChange)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   aTopLevelChange = NS_STYLE_HINT_NONE;
   nsIFrame* frame = aFrame;
 
@@ -1986,6 +2014,7 @@ FrameManager::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
                                     PRBool &aAffects)
 {
   nsresult rv = NS_OK;
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
   if (xml) {
@@ -2007,6 +2036,7 @@ NS_IMETHODIMP
 FrameManager::CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState, nsIStatefulFrame::SpecialStateID aID)
 {
   nsresult rv = NS_OK;
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
 
   // See if the frame is stateful.
@@ -2051,6 +2081,7 @@ NS_IMETHODIMP
 FrameManager::CaptureFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
 
   rv = CaptureFrameStateFor(aPresContext, aFrame, aState);
@@ -2079,6 +2110,7 @@ NS_IMETHODIMP
 FrameManager::RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState, nsIStatefulFrame::SpecialStateID aID)
 {
   nsresult rv = NS_OK;
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
 
   // See if the frame is stateful.
@@ -2122,6 +2154,7 @@ NS_IMETHODIMP
 FrameManager::RestoreFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
   
   rv = RestoreFrameStateFor(aPresContext, aFrame, aState);
@@ -2287,6 +2320,7 @@ FrameManager::GetFrameProperty(nsIFrame* aFrame,
                                PRUint32  aOptions,
                                void**    aPropertyValue)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aPropertyName);
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
   nsresult      result;
@@ -2308,6 +2342,7 @@ FrameManager::SetFrameProperty(nsIFrame*            aFrame,
                                void*                aPropertyValue,
                                NSFMPropertyDtorFunc aPropDtorFunc)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aPropertyName);
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
   nsresult      result = NS_OK;
@@ -2348,6 +2383,7 @@ NS_IMETHODIMP
 FrameManager::RemoveFrameProperty(nsIFrame* aFrame,
                                   nsIAtom*  aPropertyName)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_ARG_POINTER(aPropertyName);
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
   nsresult      result = NS_IFRAME_MGR_PROP_NOT_THERE;
@@ -2367,6 +2403,7 @@ FrameManager::RemoveFrameProperty(nsIFrame* aFrame,
 NS_IMETHODIMP
 FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame* aChild, nsIFrame** aResult)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   *aResult = nsnull;
 
   nsCOMPtr<nsIContent> content;
