@@ -956,8 +956,7 @@ void EDT_SetParagraphProperties( ED_ParagraphProperties *pProps );
 char *EDT_TagString(int32 tagType);
 
 #ifdef DEBUG
-void EDT_VerifyLayoutElement( MWContext *pContext, LO_Element *pLoElement,
-        XP_Bool bPrint );
+void EDT_VerifyLayoutElement( LO_Element *pLoElement );
 #endif
 
 /* Cross platform macros */
