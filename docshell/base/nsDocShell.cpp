@@ -6119,7 +6119,8 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     }
     else {  
         // This is a subframe.
-        if (mLoadType != LOAD_NORMAL_REPLACE)
+        if ((mLoadType != LOAD_NORMAL_REPLACE) ||
+            (mLoadType == LOAD_NORMAL_REPLACE && !mOSHE))
             rv = AddChildSHEntry(nsnull, entry, mChildOffset);
     }
 
