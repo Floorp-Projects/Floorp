@@ -52,7 +52,7 @@
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(EF7E14F3-64D2-4389-8F8B-DD899C544374)]
+[scriptable, uuid(E2F395E9-3795-4494-9D0E-C5D50CD196C0)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -280,7 +280,6 @@ interface nsIAccessible : nsISupports
   const unsigned long  STATE_MODAL              = 0x01000000;  // Must do something with control before leaving it    
   const unsigned long  STATE_MULTI_LINE         = 0x02000000;  // Edit control that can take multiple lines    
   const unsigned long  STATE_SENSITIVE          = 0x04000000;  // No explanation given    
-  const unsigned long  STATE_RESIZABLE          = 0x08000000;  // Object can be resized    
   const unsigned long  STATE_SHOWING            = 0x10000000;  // This object and all of it's ancestors are visible    
   const unsigned long  STATE_SINGLE_LINE        = 0x20000000;  // This text object can only contain 1 line of text    
   const unsigned long  STATE_TRANSIENT          = 0x40000000;  // Tells accessibility aid "Don't add event listener - this object doesn't generate any". For example, could be used with higher level containers.    
