@@ -26,6 +26,7 @@ MODULE=mozbrwsr
 
 XPIDLSRCS=\
     .\nsIBrowserInstance.idl \
+	 .\nsIXULBrowserWindow.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
