@@ -686,17 +686,19 @@ void CObserverDictionary::RegisterObservers(nsString& aTopic) {
   result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, nsIObserverService::GetIID(),
                                       (nsISupports**) &theObserverService, nsnull);
   if(result == NS_OK){
-    nsIEnumerator* theEnum;
+    nsIEnumerator* theEnum = nsnull;
     result = theObserverService->EnumerateObserverList(aTopic.GetUnicode(), &theEnum);
-    if(result == NS_OK){
-      nsIElementObserver* theElementObserver;
-      nsISupports *inst;
+    if(result == NS_OK) {
+      nsIElementObserver *theElementObserver = nsnull;
+      nsISupports *inst = nsnull;
       
       for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
         result = theEnum->CurrentItem(&inst);
-        if (NS_SUCCEEDED(result))
+        if (NS_SUCCEEDED(result)) {
           result = inst->QueryInterface(nsIElementObserver::GetIID(), (void**)&theElementObserver);
-        if(result == NS_OK) {
+          NS_RELEASE(inst);
+        }
+        if (result == NS_OK) {
           const char* theTagStr = nsnull;
           PRUint32 theTagIndex = 0;
           theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
@@ -716,9 +718,11 @@ void CObserverDictionary::RegisterObservers(nsString& aTopic) {
             theTagIndex++;
             theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
           }
+          NS_RELEASE(theElementObserver);
         }
       }
     }
+    NS_IF_RELEASE(theEnum);
   }
 }
 
