@@ -71,8 +71,13 @@ sub is_http_alive() {
 {
   my $alive_time = 0;  # Hours http has been up.
   my $alive = 0;
-  my $timefile = "$script_dir/http_alive_timefile.$ARGV[0]";
+  my $timefile = "$script_dir/http_alive_timefiles/$ARGV[0]";
 
+
+  # make sure directory exists
+  unless (-d $timefile) {
+    mkdir "$script_dir/http_alive_timefiles";
+  }
 
   PrintUsage() if $#ARGV == -1;
 
