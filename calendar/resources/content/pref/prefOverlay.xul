@@ -61,7 +61,7 @@
               prefattribute="checked"/>         
    </groupbox>
    
-   <treechildren id="advancedChildren">
+   <treechildren id="panelChildren">
     <treeitem id="calendarPanel" container="false">
       <treerow>
         <treecell class="treecell-indent" url="chrome://calendar/content/pref/calendarPref.xul" label="&calendar.label;" id="calendar"/>
