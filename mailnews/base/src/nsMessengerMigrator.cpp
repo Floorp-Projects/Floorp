@@ -183,6 +183,26 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define DEFAULT_DRAFT_FOLDER_PREF_NAME  "mail.identity.default.draft_folder"
 #define DEFAULT_STATIONERY_FOLDER_PREF_NAME "mail.identity.default.stationery_folder"
 
+// this is for the hidden preference setting in mozilla/modules/libpref/src/init/mailnews.js
+// pref("mail.migration.copyMailFiles", true);
+//
+// see bugzilla bug 80035 (http://bugzilla.mozilla.org/show_bug.cgi?id=80035)
+//
+// the default value for this setting is true which means when migrating from
+// Netscape 4.x, mozilla will copy all the contents of Local Folders and Imap
+// Folder to the newly created subfolders of migrated mozilla profile
+// when this value is set to false, mozilla will not copy these contents and
+// still share them with Netscape 4.x
+//
+// Advantages of forbidding copy operation:
+//     reduce the disk usage
+//     quick migration
+// Disadvantage of forbidding copy operation:
+//     without perfect lock mechamism, there is possibility of data corruption
+//     when Netscape 4.x and mozilla run at the same time and access the same
+//     mail file at the same time
+#define PREF_MIGRATION_MODE_FOR_MAIL "mail.migration.copyMailFiles"
+
 #define ESCAPE_USER_NAME(outName,inName) \
     *((char **)getter_Copies(outName)) = nsEscape((const char *)inName, url_XAlphas);
 
@@ -1188,13 +1208,21 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   if (NS_FAILED(rv)) return rv;
 
   // set the local path for this "none" server
-  //
-  // we need to set this to <profile>/Mail/Local Folders, because that's where
-  // the 4.x "Local Mail" (when using imap) got copied.
-  // it would be great to use the server key, but we don't know it
-  // when we are copying of the mail.
-  rv = mailDirSpec->AppendRelativeUnixPath(mLocalFoldersHostname.get());
-  if (NS_FAILED(rv)) return rv; 
+
+  // get the migration mode for mail
+  PRBool copyMailFileInMigration = PR_TRUE;
+  rv = m_prefs->GetBoolPref(PREF_MIGRATION_MODE_FOR_MAIL, &copyMailFileInMigration);
+  if (NS_FAILED(rv))
+    return rv;
+  if (copyMailFileInMigration)
+  {
+    // we need to set this to <profile>/Mail/Local Folders, because that's where
+    // the 4.x "Local Mail" (when using imap) got copied.
+    // it would be great to use the server key, but we don't know it
+    // when we are copying of the mail.
+    rv = mailDirSpec->AppendRelativeUnixPath(mLocalFoldersHostname.get());
+    if (NS_FAILED(rv)) return rv; 
+  }
   rv = server->SetLocalPath(mailDirSpec);
   if (NS_FAILED(rv)) return rv;
     

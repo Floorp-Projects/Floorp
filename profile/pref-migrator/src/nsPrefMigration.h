@@ -141,6 +141,10 @@ class nsPrefMigration: public nsIPrefMigration
                               PRBool needToRenameFiles,
                               const char *oldName,
                               const char *newName); 
+      nsresult DoTheCopyAndRename(nsIFileSpec *aPath, 
+                              PRBool aReadSubdirs,
+                              const char *aOldName,
+                              const char *aNewName);
 
 #ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
       nsresult CopyAndRenameNewsrcFiles(nsIFileSpec *newPath);
