@@ -864,13 +864,28 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
 
     nsresult rv;
 
-    // Remove any generated children from this node
+    // Next, see if it's a XUL element whose contents have never even
+    // been generated. If so, short-circuit and bail; there's nothing
+    // for us to "rebuild" yet. They'll get built correctly the next
+    // time somebody asks for them. 
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+
+    if (xulcontent) {
+        PRBool containerContentsBuilt;
+        rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, containerContentsBuilt);
+        if (NS_FAILED(rv)) return rv;
+
+        if (! containerContentsBuilt)
+            return NS_OK;
+    }
+
+    // If we get here, then we've tried to generate content for this
+    // element. Remove it.
     rv = RemoveGeneratedContent(aElement);
     if (NS_FAILED(rv)) return rv;
 
     // Forces the XUL element to remember that it needs to
     // re-generate its children next time around.
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     if (xulcontent) {
         rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
         if (NS_FAILED(rv)) return rv;
@@ -882,8 +897,8 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // Now, regenerate both the template-generated contents for the
-    // current node...
+    // Now, regenerate both the template- and container-generated
+    // contents for the current element...
     nsCOMPtr<nsIContent> container;
     PRInt32 newIndex;
     rv = CreateTemplateAndContainerContents(aElement, getter_AddRefs(container), &newIndex);
