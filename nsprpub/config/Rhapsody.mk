@@ -22,7 +22,11 @@
 include $(MOD_DEPTH)/config/UNIX.mk
 
 CC			= cc
+ifeq ($(OS_RELEASE),5.0)
 CCC			= cc++
+else
+CCC			= c++
+endif
 RANLIB			= ranlib
 
 OS_REL_CFLAGS		= -Dppc
