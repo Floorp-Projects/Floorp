@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  shistory \
 		  windowwatcher \
 		  webbrowserpersist \
+		  embed_base \
 		  $(NULL)
 
 ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))

@@ -43,6 +43,8 @@
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
 
+#include "nsEmbedCID.h"
+
 #include "nsWebBrowser.h"
 #include "nsCommandHandler.h"
 #include "nsWebBrowserContentPolicy.h"
