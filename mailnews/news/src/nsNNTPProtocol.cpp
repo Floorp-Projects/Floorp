@@ -53,7 +53,6 @@
 #include "nsEscape.h"
 
 #include "prprf.h"
-#include "merrors.h"
 
 /* include event sink interfaces for news */
 

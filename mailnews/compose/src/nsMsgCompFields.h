@@ -29,7 +29,19 @@
 #include "nsIMsgCompFields.h"
 #include "nsMsgZapIt.h"
 #include "xp_core.h"
-#include "msgcom.h"
+
+typedef uint32 MSG_HEADER_SET;
+typedef enum {
+        MSG_RETURN_RECEIPT_BOOL_HEADER_MASK = 0,
+        MSG_ENCRYPTED_BOOL_HEADER_MASK,
+        MSG_SIGNED_BOOL_HEADER_MASK,
+        MSG_UUENCODE_BINARY_BOOL_HEADER_MASK,
+        MSG_ATTACH_VCARD_BOOL_HEADER_MASK,
+        MSG_LAST_BOOL_HEADER_MASK            /* last boolean header mask; must be the last one
+                                              * DON'T remove.
+                                              */
+} MSG_BOOL_HEADER_SET;
+
 
 /* Note that all the "Get" methods never return NULL (except in case of serious
    error, like an illegal parameter); rather, they return "" if things were set

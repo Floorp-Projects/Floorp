@@ -139,6 +139,9 @@
 // the following used to be defined in allxpstr.h. Until we find a new values for these, 
 // I'm defining them here because I don't want to link against xplib.lib...(mscott)
 
+#define MK_DATA_LOADED		1
+#define MK_EMPTY_NEWS_LIST	-227
+#define MK_INTERRUPTED		-201
 #define MK_MALFORMED_URL_ERROR	-209
 #define MK_NEWS_ERROR_FMT		-430
 #define MK_NNTP_CANCEL_CONFIRM	-426
