@@ -63,7 +63,7 @@ EXEC			= exec
 endif
 
 # ELOG prints out failed command when building silently (gmake -s).
-ifneq (,$(findstring s,$(MAKEFLAGS)))
+ifneq (,$(findstring -s,$(MAKEFLAGS)))
   ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
   ELOG :=
