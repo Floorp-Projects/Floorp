@@ -25,6 +25,8 @@
 #define WDISK_SPACE 27577549
 // Required disk space for Linux build
 #define LDISK_SPACE 84934656
+// Required disk space for MacintoshOSX build
+#define MDISK_SPACE 5976884
 
 int interpret(char *cmd);
 
@@ -44,6 +46,8 @@ CString outputPath;
 CString xpiDstPath;
 
 // variables for CCK Linux build
+CString curPlatform;
+CString platformPath;
 CString templinuxPath;
 CString nsinstPath;
 CString nsinstallerDir;
@@ -124,7 +128,8 @@ int ReplaceXPIFiles()
 		xpiArcDest = xpiDstPath + "\\" + xpiList[i].xpiname; //xpiDstPath=CCKTool\Configs\ configName\Output\Core
 		if (!CopyFile(xpiArchive, xpiArcDest, TRUE))
 			DWORD e = GetLastError();
-		if ((strcmp(xpiList[i].filename,"bin/defaults/isp/US") == 0) || (strcmp(xpiList[i].filename,"bin/defaults/isp") == 0))
+//		if ((strcmp(xpiList[i].filename,"bin/defaults/isp/US") == 0) || (strcmp(xpiList[i].filename,"bin/defaults/isp") == 0))
+		if (((xpiList[i].filename).Find("isp")) != -1)
 			command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + "/*.*" + quotes;
 		else
 			command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + quotes;
@@ -178,14 +183,25 @@ int ExtractJARFile(CString xpiname, CString jarname, CString xpifile)
 	ExtractXPIFile(xpiname, jarname);
 
 	CString command;
-//We have to get rid of the bin/chrome/ and hence the delete.
-	jarname.Delete(0,11);
+	CString jarArchive;
+	
+	if (curPlatform == "MacintoshOSX")
+	{
+		jarname.Replace("/","\\");
+		jarname.Insert(0,"\\");
+		jarArchive = tempPath + jarname;
+	}
+	else
+	{
+		//We have to get rid of the bin/chrome/ and hence the delete.
+		jarname.Delete(0,11);
+		jarArchive = tempPath + "\\bin\\chrome\\" + jarname;
+	}
 
 	if (findJAR(jarname, xpifile))
 		return TRUE;
 	
 	// Can use -d instead of change CWD???
-	CString jarArchive = tempPath + "\\bin\\chrome\\" + jarname;
 	command = quotes +rootPath + "unzip.exe"+ quotes + "-o" + spaces + quotes + jarArchive + quotes + spaces + quotes + xpifile + quotes;
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 
@@ -202,7 +218,10 @@ int ReplaceJARFiles()
 	{
 		// This copy preserves the existing archive if it exists - do we
 		// need to delete it the first time through?
-		jarArchive = tempPath + "\\bin\\chrome\\" + jarList[i].jarname;
+		if (curPlatform == "MacintoshOSX")
+			jarArchive = tempPath + jarList[i].jarname;
+		else
+			jarArchive = tempPath + "\\bin\\chrome\\" + jarList[i].jarname;
 
 		command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +jarArchive + quotes + spaces + quotes + jarList[i].filename + quotes;
 		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
@@ -375,7 +394,6 @@ void AddPref(CString xpifile, CString entity, CString newvalue, BOOL bUseQuotes,
 	return;
 }
 
-
 int ModifyJS(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 {
 
@@ -395,21 +413,16 @@ int ModifyJS(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 	else
 	{
 		prefDoesntExist = TRUE;
-		int done = FALSE;
-		while (!done)
+		while (!feof(srcf))
 		{
 			fgetsrv = fgets(buffer, sizeof(buffer), srcf);
-			done = feof(srcf);
-			if (!done)
+			if (!fgetsrv || ferror(srcf))
 			{
-				if (!fgetsrv || ferror(srcf))
-				{
-					rv = FALSE;
-					break;
-				}
-				ModifyPref(buffer, entity, newvalue, bLockPref);
-				fputs(buffer, dstf);
+				rv = FALSE;
+				break;
 			}
+			ModifyPref(buffer, entity, newvalue, bLockPref);
+			fputs(buffer, dstf);
 		}
 
 		fclose(srcf);
@@ -422,6 +435,7 @@ int ModifyJS(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 
 	return TRUE;
 }
+
 void ModifyEntity(char *buffer, CString entity, CString newvalue)
 {
 	CString buf(buffer);
@@ -457,21 +471,16 @@ int ModifyDTD(CString xpifile, CString entity, CString newvalue)
 		rv = FALSE;
 	else
 	{
-		int done = FALSE;
-		while (!done)
+		while (!feof(srcf))
 		{
 			fgetsrv = fgets(buffer, sizeof(buffer), srcf);
-			done = feof(srcf);
-			if (!done)
+			if (!fgetsrv || ferror(srcf))
 			{
-				if (!fgetsrv || ferror(srcf))
-				{
-					rv = FALSE;
-					break;
-				}
-				ModifyEntity(buffer, entity, newvalue);
-				fputs(buffer, dstf);
+				rv = FALSE;
+				break;
 			}
+			ModifyEntity(buffer, entity, newvalue);
+			fputs(buffer, dstf);
 		}
 
 		fclose(srcf);
@@ -526,21 +535,16 @@ int ModifyJS1(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 		rv = FALSE;
 	else
 	{
-		int done = FALSE;
-		while (!done)
+		while (!feof(srcf))
 		{
 			fgetsrv = fgets(buffer, sizeof(buffer), srcf);
-			done = feof(srcf);
-			if (!done)
+			if (!fgetsrv || ferror(srcf))
 			{
-				if (!fgetsrv || ferror(srcf))
-				{
-					rv = FALSE;
-					break;
-				}
-				ModifyEntity1(buffer, entity, newvalue, bLockPref);
-				fputs(buffer, dstf);
+				rv = FALSE;
+				break;
 			}
+			ModifyEntity1(buffer, entity, newvalue, bLockPref);
+			fputs(buffer, dstf);
 		}
 
 		fclose(srcf);
@@ -597,21 +601,16 @@ int ModifyJS2(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 	else
 	{
 		prefDoesntExist = TRUE;
-		int done = FALSE;
-		while (!done)
+		while (!feof(srcf))
 		{
 			fgetsrv = fgets(buffer, sizeof(buffer), srcf);
-			done = feof(srcf);
-			if (!done)
+			if (!fgetsrv || ferror(srcf))
 			{
-				if (!fgetsrv || ferror(srcf))
-				{
-					rv = FALSE;
-					break;
-				}
-				ModifyEntity2(buffer, entity, newvalue, bLockPref);
-				fputs(buffer, dstf);
+				rv = FALSE;
+				break;
 			}
+			ModifyEntity2(buffer, entity, newvalue, bLockPref);
+			fputs(buffer, dstf);
 		}
 
 		fclose(srcf);
@@ -1293,7 +1292,7 @@ int interpret(char *cmd)
   else if (strcmp(cmdname, "processPrefsTree") == 0)
   {
 
-  	char *prefsTreeFile	= strtok(NULL, ",)");
+	char *prefsTreeFile	= strtok(NULL, ",)");
     char *installFile = strtok(NULL, ",)");
     char *prefFile = strtok(NULL, ",)");
     CString fileWithPath = configPath + "\\" + prefsTreeFile;
@@ -1799,6 +1798,26 @@ void CreateLinuxInstaller()
 	_chdir(currentdir);
 }
 
+void CreateMacZipFile()
+// Creating a single customized Mac zip file which contains mac scripts
+// and customized mac files
+{
+	CString customizedZipFile = "CustomizedMacFiles.zip";
+	if (FileExists(customizedZipFile))
+		DeleteFile(customizedZipFile);
+	// Adding Mac scripts shipped with the tool to the final Mac zip file
+	CString command = quotes + rootPath + "zip.exe" + quotes + spaces + "-j" + 
+		spaces + quotes + xpiDstPath + "\\" + customizedZipFile + quotes + 
+		spaces + quotes + platformPath + "\\*.*" + quotes;
+	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+	// Adding customized mac files created in output directory to the 
+	// final Mac zip file
+	command = quotes + rootPath + "zip.exe" + quotes + spaces + "-jm" + 
+		spaces + quotes + xpiDstPath + "\\" + customizedZipFile + quotes + 
+		spaces + quotes + xpiDstPath + "\\*.*" + quotes;
+	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+}
+
 void InsertComma(CString& requiredSpace)
 {
 	int len = requiredSpace.GetLength();
@@ -1883,7 +1902,8 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	configName	= GetGlobal("_NewConfigName");
 	SetGlobal("CustomizationList", configName); 
 	CString curVersion  = GetGlobal("Version");
-	CString curPlatform = GetGlobal("lPlatform");
+	curPlatform         = GetGlobal("lPlatform");
+	platformPath        = rootPath+"Version\\"+curVersion+"\\"+curPlatform;
 	CString curLanguage = GetGlobal("Language");
 	CString localePath  = rootPath+"Version\\"+curVersion+"\\"+curPlatform+"\\"+curLanguage;
 	configPath    = rootPath + "Configs\\" + configName;
@@ -1940,7 +1960,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	ULARGE_INTEGER nTotalBytes, nTotalFreeBytes, nTotalAvailable;
 	GetDiskFreeSpaceEx(NULL,&nTotalAvailable, &nTotalBytes, &nTotalFreeBytes);
 	// Checking for 26.3MB disk space
-	if (curPlatform != "Linux")
+	if (curPlatform == "Windows")
 	{
 		if ((nTotalAvailable.QuadPart) < WDISK_SPACE)
 		{
@@ -1948,11 +1968,19 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 			return FALSE;
 		}
 	}
-	else
+	else if (curPlatform == "Linux")
 	{
 		if ((nTotalAvailable.QuadPart) < LDISK_SPACE)
 		{
 			DiskSpaceAlert(LDISK_SPACE,(nTotalAvailable.QuadPart));
+			return FALSE;
+		}
+	}
+	else if (curPlatform == "MacintoshOSX")
+	{
+		if ((nTotalAvailable.QuadPart) < MDISK_SPACE)
+		{
+			DiskSpaceAlert(MDISK_SPACE,(nTotalAvailable.QuadPart));
 			return FALSE;
 		}
 	}
@@ -2047,7 +2075,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	else
 		SetGlobal("SocksVersion","5");
 
-	if (cdDir.Compare("1") ==0)
+	if ((cdDir.Compare("1")==0) && (curPlatform.Compare("Windows")==0))
 	{
 		_mkdir((char *)(LPCTSTR) cdPath);
 	}
@@ -2128,7 +2156,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 					 xpiDstPath + "\\" + Components[i].archive, TRUE);
 	}
 
-	if (curPlatform != "Linux")
+	if (curPlatform == "Windows")
 	{
 		if (cdDir.Compare("1") ==0)
 		{
@@ -2146,19 +2174,19 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 				exit( 3 );
 			fprintf(infout,"[autorun]\nopen = setup.exe");
 		}
-	}
-	CString component;
-	CString configiniPath = xpiDstPath +"\\config.ini";
 
-	if (ftpLocation.Compare("ftp://") !=0)
-	{
-//****************	Change the ftp section to accomodate changes from PR3 to RTM
-//		for (int i=0; i<numComponents; i++)
-//		{
-//			if (Components[i].selected)
-//				CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
-//						 networkPath + "\\" + Components[i].archive, TRUE);
-//			
+		CString component;
+		CString configiniPath = xpiDstPath +"\\config.ini";
+
+		if (ftpLocation.Compare("ftp://") !=0)
+		{
+//			Change the ftp section to accomodate changes from PR3 to RTM
+//			for (int i=0; i<numComponents; i++)
+//			{
+//				if (Components[i].selected)
+//					CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
+//						networkPath + "\\" + Components[i].archive, TRUE);
+
 			WritePrivateProfileString("General", "url", ftpLocation, configiniPath);
 			WritePrivateProfileString("Redirect", "Status", "Disabled", configiniPath);
 			WritePrivateProfileString("Site Selector", NULL, "", configiniPath);
@@ -2173,29 +2201,26 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 			else
 				WritePrivateProfileString("Dialog Advanced Settings",
 				"Use Protocol", "FTP", configiniPath);
-//		}
+//			}
+		}
 		
+		invisible();
+		AddThirdParty();
+		ReplaceINIFile();
 	}
 
-	// Didn't work...
-
-	if (curPlatform == "Linux")
+	else if (curPlatform == "Linux")
 	{
 		LinuxInvisible();
 		AddThirdParty();
 		CreateLinuxInstaller();
 	}
-	else
+
+	else if (curPlatform == "MacintoshOSX")
 	{
-		invisible();
-
-
-		AddThirdParty();
-		
-		
-		ReplaceINIFile();
-		
+		CreateMacZipFile();
 	}
+
 	SetCurrentDirectory(olddir);
 	CString TargetDir = GetGlobal("Root");
 	CString TargetFile = TargetDir + "wizardmachine.ini";
