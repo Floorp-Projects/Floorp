@@ -2294,7 +2294,8 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                               PRBool aTestState)
 {
   PRBool  result = PR_FALSE;
-  nsIAtom*  contentTag;
+  PRBool  tagset = PR_FALSE;
+  nsIAtom*  contentTag = NULL;  // Make sure this is NULL for NS_IF_RELEASE
 
   // Bail out early if we can
   if(kNameSpaceID_Unknown != aSelector->mNameSpace) {
@@ -2305,9 +2306,11 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
     }
   }
 
-  aContent->GetTag(contentTag);
+  if (((nsnull == aSelector->mTag) || (
+      aContent->GetTag(contentTag),
+      tagset=PR_TRUE,
+      aSelector->mTag == contentTag))) {
 
-  if (((nsnull == aSelector->mTag) || (aSelector->mTag == contentTag))) {
     result = PR_TRUE;
     // namespace/tag match
     if (nsnull != aSelector->mAttrList) { // test for attribute match
@@ -2482,6 +2485,10 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {
           // XXX xml link too
+	  if(!tagset) {
+	    tagset=PR_TRUE;
+	    aContent->GetTag(contentTag);
+	  }
           if (nsHTMLAtoms::a == contentTag) {
             if (aTestState) {
               if (! linkHandler) {
