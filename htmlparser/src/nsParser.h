@@ -93,7 +93,7 @@ class nsIDTD;
 class nsScanner;
 class nsIProgressEventSink;
 
-#ifdef XP_WIN
+#ifdef _MSC_VER
 #pragma warning( disable : 4275 )
 #endif
 
