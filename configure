@@ -8023,7 +8023,7 @@ int main() {
 
         Display *dpy = 0;
         if ((dpy = XOpenDisplay(NULL)) == NULL) {
-            fprintf(stderr, ": can't open %s\en", XDisplayName(NULL));
+            fprintf(stderr, ": can't open %s\n", XDisplayName(NULL));
             exit(1);
         }
     
@@ -11004,7 +11004,7 @@ test -n "$HOST_MOC" || HOST_MOC=""""
 
     QT_CFLAGS="-I${QTDIR}${QTINCDIR} -DQT_GENUINE_STR -DQT_NO_STL"
     if test -z "$MOZ_DEBUG"; then
-      QT_CFLAGS="$QT_CFLAGS -DQT_NO_DEBUG"
+      QT_CFLAGS="$QT_CFLAGS -DQT_NO_DEBUG -DNO_DEBUG"
     fi
     _SAVE_LDFLAGS=$LDFLAGS
     QT_LDFLAGS=-L${QTDIR}/lib
