@@ -40,9 +40,6 @@ $tree= $form{'tree'};
 if( $command eq 'create_tree' ){
     &create_tree;
 }
-elsif( $command eq 'remove_build' ){
-    &remove_build;
-}
 elsif( $command eq 'trim_logs' ){
     &trim_logs;
 }
@@ -151,34 +148,6 @@ sub create_tree {
     print "<h2><a href=showbuilds.cgi?tree=$treename>Tree created or modified</a></h2>\n";
 }
 
-sub remove_build {
-    $build_name = $form{'build'};
-
-    #
-    # Trim build.dat
-    #
-    $builds_removed = 0;
-    open(BD, "<$tree/build.dat");
-    open(NBD, ">$tree/build.dat.new");
-    while( <BD> ){
-        ($mailtime,$buildtime,$bname) = split( /\|/ );
-        if( $bname ne $build_name ){
-            print NBD $_;
-        }
-        else {
-            $builds_removed++;
-        }
-    }
-    close( BD );
-    close( NBD );
-    chmod( 0777, "$tree/build.dat.new");
-
-    rename( "$tree/build.dat", "$tree/build.dat.old" );
-    rename( "$tree/build.dat.new", "$tree/build.dat" );
-
-    print "<h2><a href=showbuilds.cgi?tree=$tree>
-            $builds_removed Builds removed from build.dat</a></h2>\n";
-}
 
 sub disable_builds {
     my $i,%buildnames;
