@@ -170,6 +170,9 @@ public:
   // Checks if two nodes live in document coming from the same origin
   static nsresult CheckSameOrigin(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
 
+  // Check if the (JS) caller can access aNode.
+  static PRBool CanCallerAccess(nsIDOMNode *aNode);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,

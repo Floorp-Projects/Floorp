@@ -356,7 +356,7 @@ nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
 
 // static
 nsresult
-nsContentUtils::CheckSameOrigin(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
+nsContentUtils::CheckSameOrigin(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
 {
   nsCOMPtr<nsIDocument> doc1 = do_QueryInterface(aNode1);
   if (!doc1) {
@@ -368,10 +368,12 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
 
     nsCOMPtr<nsIDOMDocument> domDoc1;
     aNode1->GetOwnerDocument(getter_AddRefs(domDoc1));
-    doc1 = do_QueryInterface(domDoc1);
-    if (!doc1) {
-      return NS_ERROR_FAILURE;
+    if (!domDoc1) {
+      // aNode1 is not part of a document, let any caller access it.
+      return NS_OK;
     }
+    doc1 = do_QueryInterface(domDoc1);
+    NS_ASSERTION(doc1, "QI to nsIDocument failed");
   }
   
   nsCOMPtr<nsIDocument> doc2 = do_QueryInterface(aNode2);
@@ -384,10 +386,12 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
 
     nsCOMPtr<nsIDOMDocument> domDoc2;
     aNode2->GetOwnerDocument(getter_AddRefs(domDoc2));
-    doc2 = do_QueryInterface(domDoc2);
-    if (!doc2) {
-      return NS_ERROR_FAILURE;
+    if (!domDoc2) {
+      // aNode2 is not part of a document, let any caller access it.
+      return NS_OK;
     }
+    doc2 = do_QueryInterface(domDoc2);
+    NS_ASSERTION(doc2, "QI to nsIDocument failed");
   }
   
   if (doc1 == doc2)
@@ -400,10 +404,50 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
   return securityManager->CheckSameOriginURI(uri1, uri2);
+}
+
+// static
+PRBool
+nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
+
+  if (!doc) {
+    // Make sure that this is a real node.
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+    if (!content) {
+      return PR_FALSE;
+    }
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (!domDoc) {
+      // aNode is not part of a document, let any caller access it.
+      return PR_TRUE;
+    }
+    doc = do_QueryInterface(domDoc);
+    NS_ASSERTION(doc, "QI to nsIDocument failed");
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  doc->GetDocumentURL(getter_AddRefs(uri));
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+
+  // If we can't get the security manager service we'll assume that's
+  // because it's not installed, if that's the case then the installer
+  // didn't care about security in the first place.
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  rv = securityManager->CheckSameOrigin(nsnull, uri);
+
+  return NS_SUCCEEDED(rv);
 }
 
 // static
@@ -583,34 +627,18 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
 PRBool
 nsContentUtils::IsCallerChrome()
 {
-  nsCOMPtr<nsIDocShell> docShell;
-  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (stack) {
-    JSContext *cx = nsnull;
-    stack->Peek(&cx);
-
-    if (cx) {
-      nsCOMPtr<nsIScriptGlobalObject> sgo;
-      nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(sgo));
-
-      if (sgo) {
-        sgo->GetDocShell(getter_AddRefs(docShell));
-      }
-    }
+  PRBool is_caller_chrome = PR_FALSE;
+  rv = securityManager->SubjectPrincipalIsSystem(&is_caller_chrome);
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
-  if (item) {
-    PRInt32 callerType = nsIDocShellTreeItem::typeChrome;
-    item->GetItemType(&callerType);
-
-    if (callerType != nsIDocShellTreeItem::typeChrome) {
-      return PR_FALSE;
-    }
-  }
-
-  return PR_TRUE;
+  return is_caller_chrome;
 }
 
 // static

@@ -171,6 +171,8 @@ nsXMLNamedNodeMap::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
     return NS_ERROR_NULL_POINTER;
 
   *aReturn = 0;
+  
+  // XXX, do same-origin check here once we know what to do with this class
 
   nsAutoString argName;
   aArg->GetNodeName(argName);

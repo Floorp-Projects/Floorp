@@ -34,6 +34,10 @@
 
 #ifndef TX_EXE
 #include "nsNetUtil.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIContent.h"
 #endif
 
 /**
@@ -311,4 +315,46 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
     return uriTokens;
 } //-- parseURI
 
-#endif
+#else /* TX_EXE */
+
+// static
+MBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
+
+  if (!doc) {
+    // Make sure that this is a real node.
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+    if (!content) {
+      return MB_FALSE;
+    }
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (!domDoc) {
+      // aNode is not part of a document, let any caller access it.
+      return PR_TRUE;
+    }
+    doc = do_QueryInterface(domDoc);
+    NS_ASSERTION(doc, "QI to nsIDocument failed");
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  doc->GetDocumentURL(getter_AddRefs(uri));
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+
+  // If we can't get the security manager service we'll assume that's
+  // because it's not installed, if that's the case then the installer
+  // didn't care about security in the first place.
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  rv = securityManager->CheckSameOrigin(nsnull, uri);
+
+  return NS_SUCCEEDED(rv);
+}
+
+
+#endif /* TX_EXE */

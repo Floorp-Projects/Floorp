@@ -125,6 +125,12 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
   *aReturn = nsnull;
 
   if (mContent) {
+    nsCOMPtr<nsIDOMNode> contNode = do_QueryInterface(mContent);
+    rv = nsContentUtils::CheckSameOrigin(contNode, aNode);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
     nsCOMPtr<nsIDOMAttr> attribute(do_QueryInterface(aNode));
 
     if (!attribute) {
@@ -335,6 +341,12 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
   *aReturn = nsnull;
 
   if (mContent) {
+    nsCOMPtr<nsIDOMNode> contNode = do_QueryInterface(mContent);
+    rv = nsContentUtils::CheckSameOrigin(contNode, aArg);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     nsCOMPtr<nsIDOMAttr> attribute(do_QueryInterface(aArg));
 
     if (!attribute) {
