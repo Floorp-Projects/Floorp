@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= nkcache
 LIBRARY_NAME	= nkcacheservice
+SHORT_LIBNAME	= nkcaches
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string necko pref js
 
@@ -50,7 +51,7 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/config.mk
 
-LIBS           += \
+EXTRA_LIBS	+= \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
