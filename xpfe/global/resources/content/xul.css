@@ -29,7 +29,6 @@ checkbox,radio,tree,menulist {
   -moz-user-focus: normal;
 }
 
-  
 menupopup, popup, splitter {
   -moz-user-focus: ignore;
 }
