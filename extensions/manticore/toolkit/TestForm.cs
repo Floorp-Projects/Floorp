@@ -24,15 +24,20 @@ namespace Silverstone.Manticore.Toolkit
 			InitializeComponent();
 
       StripBar bar = new StripBar();
+//      bar.BackImage = Image.FromFile("resources\\manticore.png");
       this.Controls.Add(bar);
       bar.Location = new Point(0, 0);
-      bar.Size = new Size(200, 75);
+      bar.Size = new Size(500, 75);
+      
 
       Band bnd = new Band();
-      bnd.Bounds = new Rectangle(0, 0, 200, 75);
-      bnd.BackColor = SystemColors.ControlDarkDark;
+//      bnd.BackColor = SystemColors.ControlDarkDark;
       bar.Bands.Add(bnd);
-      
+
+      bnd = new Band();
+//      bnd.BackColor = SystemColors.ControlLight;
+      bnd.NewRow = true;
+      bar.Bands.Add(bnd);
 
 
 			//

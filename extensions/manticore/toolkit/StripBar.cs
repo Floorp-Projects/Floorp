@@ -5,6 +5,7 @@ namespace Silverstone.Manticore.Toolkit
   using System.Collections;
   using System.ComponentModel;
   using System.Drawing;
+  using System.Drawing.Drawing2D;
   using System.Windows.Forms;
 
   /// <summary>
@@ -18,6 +19,7 @@ namespace Silverstone.Manticore.Toolkit
 
     protected override void OnPaint(PaintEventArgs e)
     {
+      // Paint Bands
       uint count = Bands.Count;
       for (int i = 0; i < count; ++i) 
       {
@@ -26,6 +28,20 @@ namespace Silverstone.Manticore.Toolkit
           Bands[i].PaintBand(e);
         }
       }
+    }
+
+    protected override void OnPaintBackground(PaintEventArgs e)
+    {
+      // Paint Background
+      if (BackImage != null) 
+      {
+        // Tile the Image
+        TextureBrush tbrush = new TextureBrush(BackImage, WrapMode.Tile);
+        e.Graphics.FillRectangle(tbrush, Bounds);
+      }
+
+      SolidBrush sbr = new SolidBrush(BackColor);
+      e.Graphics.FillRectangle(sbr, Bounds);
     }
 
     protected Color mBackColor = SystemColors.Control;
@@ -161,13 +177,50 @@ namespace Silverstone.Manticore.Toolkit
       public void Add (Band aBand) 
       {
         aBand.Owner = mOwner;
+
+        Band lastBand = null;
+        if (mBandsList.Count > 0)
+          lastBand = mBandsList[mBandsList.Count-1] as Band;
+
+        int x, y, w, h;
+
+        if (aBand.NewRow) 
+        {
+          // We're the first band on a new row
+          x = mOwner.ClientRectangle.Left;
+          if (lastBand != null) 
+            y = lastBand.Bounds.Top + lastBand.Bounds.Height + 1;
+          else
+            y = mOwner.ClientRectangle.Top;
+        }
+        else 
+        {
+          // We're (possibly) on the same row as another band
+          if (lastBand != null)
+            x = lastBand.Bounds.Left + lastBand.Bounds.Width + 1;
+          else
+            x = mOwner.ClientRectangle.Left;
+          if (lastBand != null) 
+            y = lastBand.Bounds.Top;
+          else
+            y = mOwner.ClientRectangle.Top;
+        }
+
+        w = mOwner.ClientRectangle.Width - x - 1;
+        h = 24; // XXX (2)
+
+        aBand.Bounds = new Rectangle(x, y, w, h);
+          
         mBandsList.Add(aBand);
+
+        mOwner.Invalidate(); // XXX (1)
       }
 
       public void Remove (Band aBand)
       {
         mBandsList.Remove(aBand);
         aBand.Owner = null;
+        mOwner.Invalidate(); // XXX (1)
       }
 
       public void Clear ()
@@ -355,6 +408,15 @@ namespace Silverstone.Manticore.Toolkit
       Graphics g = e.Graphics;
       SolidBrush br = new SolidBrush(mBackColor);
       g.FillRectangle(br, Bounds);
+
+      g.DrawLine(SystemPens.ControlLight, Bounds.Left, Bounds.Top, 
+        Bounds.Left + Bounds.Width, Bounds.Top);
+      g.DrawLine(SystemPens.ControlLight, Bounds.Left, Bounds.Top, 
+        Bounds.Left, Bounds.Top + Bounds.Height);
+      g.DrawLine(SystemPens.ControlDark, Bounds.Left + Bounds.Width, 
+        Bounds.Top, Bounds.Left + Bounds.Width, Bounds.Top + Bounds.Height);
+      g.DrawLine(SystemPens.ControlDark, Bounds.Left, Bounds.Top + Bounds.Height,
+        Bounds.Left + Bounds.Width, Bounds.Top + Bounds.Height);
     }
   }
 }
