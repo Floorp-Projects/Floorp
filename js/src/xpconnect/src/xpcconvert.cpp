@@ -827,35 +827,42 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
 
     nsISupports* iface;
 
-    // is this really a native xpcom object with a wrapper?
-    XPCWrappedNative* wrappedNative =
-                XPCWrappedNative::GetWrappedNativeOfJSObject(cx, src);
-    if(wrappedNative)
+
+    if(!aOuter)
     {
-        iface = wrappedNative->GetIdentityObject();
-        // is the underlying object the right interface?
-        if(wrappedNative->GetIID().Equals(*iid))
+        // Note that if we have a non-null aOuter then it means that we are
+        // forcing the creation of a wrapper even if the object *is* a 
+        // wrappedNative or other wise has 'nsISupportness'. 
+        // This allows wrapJSAggregatedToNative to work.
+
+        // Is this really a native xpcom object with a wrapper?
+        XPCWrappedNative* wrappedNative =
+                    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, src);
+        if(wrappedNative)
         {
-            NS_ADDREF(iface);
-            *dest = iface;
-            return JS_TRUE;
+            iface = wrappedNative->GetIdentityObject();
+            // is the underlying object the right interface?
+            if(wrappedNative->GetIID().Equals(*iid))
+            {
+                NS_ADDREF(iface);
+                *dest = iface;
+                return JS_TRUE;
+            }
+            else
+                return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
         }
-        else
-            return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
-    }
-    // else...
-
-    // Does the JSObject have 'nsISupportness'? (as do DOM objects.)
-    // Note that if we have a non-null aOuter then it means that we are
-    // forcing the creation of a wrapper even if the object *does* have
-    // 'nsISupportness'. This allows wrapJSAggregatedToNative to work
-    // with JSObjects that happen to have 'nsISupportness'.
-    if(!aOuter && GetISupportsFromJSObject(cx, src, &iface))
-    {
-        if(iface)
-            return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
-        return JS_FALSE;
-
+        // else...
+        
+        // Does the JSObject have 'nsISupportness'?
+        // XXX hmm, I wonder if this matters anymore with no 
+        // oldstyle DOM objects around.
+        if(GetISupportsFromJSObject(cx, src, &iface))
+        {
+            if(iface)
+                return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
+            return JS_FALSE;
+        
+        }
     }
 
     // else...
