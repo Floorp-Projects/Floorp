@@ -55,8 +55,8 @@
                 src="chrome://browser/locale/pref/prefutilities.properties"/>
   <stringbundle id="bundle_brand"
                 src="chrome://global/locale/brand.properties"/>
-  <stringbundle id="bundle_browser"
-                src="chrome://browser/locale/browser.properties"/>
+  <stringbundle id="bundle_navigator"
+                src="chrome://navigator/locale/navigator.properties"/>
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-themes.js"/>
 
