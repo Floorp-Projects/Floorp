@@ -3168,7 +3168,9 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
                                         0, //irrelavent since we set outsidelimit 
                                         outsideLimit
                                         );
-            if (NS_OK != result || !pos.mResultFrame ) //NS_COMFALSE should ALSO break
+            if (NS_COMFALSE == result) //NS_COMFALSE should ALSO break
+              break;
+            if (NS_OK != result || !pos.mResultFrame ) 
               return result?result:NS_ERROR_FAILURE;
             nsCOMPtr<nsILineIteratorNavigator> newIt; 
             //check to see if this is ANOTHER blockframe inside the other one if so then call into its lines
