@@ -350,3 +350,24 @@
 sidebarheader[type="box"] {
   -moz-binding: url(chrome://communicator/content/sidebar/sidebarBindings.xml#sidebar-header-box);
 }
+
+/* ::::: sidebar header ::::: */
+
+.sidebarheader-main {
+  border: 1px outset InactiveCaption;
+  background-color: InactiveCaption;
+  color: InactiveCaptionText;
+  padding: 1px 2px 1px 6px;
+}
+
+.sidebar-header-text {
+  font-weight: bold;
+}
+
+/* ..... close button ..... */
+
+#sidebar-close-button {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
+  padding: 1px 3px 1px 4px;
+  list-style-image: url("chrome://global/skin/icons/close-button.gif");
+}
