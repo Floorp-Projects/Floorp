@@ -115,6 +115,8 @@ protected:
   nsView   *mReparentedView;
 };
 
+struct PLArenaPool;
+
 class nsViewManager : public nsIViewManager {
 public:
   nsViewManager();
@@ -252,7 +254,7 @@ private:
    */
   void DefaultRefresh(nsView* aView, const nsRect* aRect);
   PRBool BuildRenderingDisplayList(nsIView* aRootView,
-    const nsRegion& aRegion, nsVoidArray* aDisplayList);
+    const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
                    const nsRegion& aRegion, nsDrawingSurface aRCSurface,
                    const nsVoidArray& aDisplayList);
@@ -273,19 +275,19 @@ private:
 
   void ReparentViews(DisplayZTreeNode* aNode);
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
-                        PRBool aCaptured, nsVoidArray* aDisplayList);
-  void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
+                        PRBool aCaptured, nsVoidArray* aDisplayList, PLArenaPool &aPool);
+  void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured, PLArenaPool &aPool);
 
   PRBool CreateDisplayList(nsView *aView,
-                           PRBool aReparentedViewsPresent, DisplayZTreeNode* &aResult,
+                           DisplayZTreeNode* &aResult,
                            nscoord aOriginX, nscoord aOriginY,
                            nsView *aRealView, const nsRect *aDamageRect,
                            nsView *aTopView, nscoord aX, nscoord aY,
-                           PRBool aPaintFloats, PRBool aEventProcessing);
+                           PRBool aPaintFloats, PRBool aEventProcessing, PLArenaPool &aPool);
   PRBool AddToDisplayList(nsView *aView,
                           DisplayZTreeNode* &aParent, nsRect &aClipRect,
                           nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY,
-                          PRBool aAssumeIntersection);
+                          PRBool aAssumeIntersection, PLArenaPool &aPool);
   void OptimizeDisplayList(const nsVoidArray* aDisplayList, const nsRegion& aDirtyRegion,
                            nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn,
                            PRBool aTreatUniformAsOpaque);
