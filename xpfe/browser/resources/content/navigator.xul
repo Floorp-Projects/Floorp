@@ -91,7 +91,7 @@ Contributor(s): ______________________________________. -->
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
-    <commandset id="clipboardEditMenuItems"/>  
+    <commandset id="clipboardEditMenuItems"/>
     <!-- <command id="cmd_pageSetup"/> -->
     <command id="toggleSidebar"/>
   </commandset>
@@ -104,24 +104,20 @@ Contributor(s): ______________________________________. -->
     <key id="showHideSidebar"/>
   </keyset>
   
-  <!-- XXX-TEMP this needs to move into an XBL binding for browser!!! -->
-  
   <popupset id="aHTMLTooltipSet">
     <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
       <box id="HTML_TOOLTIP_tooltipBox" orient="vertical"/>
     </popup>
-  </popupset>
-  
-  <popupset id="popupset">
     <popup id="backMenu" oncreate="BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  </popupset>
+    <popup id="sidebarPopup"/>
  
-  <!-- context menu -->
-  <popupset id="contentAreaContextSet"/>
+    <!-- context menu -->
+    <popupset id="contentAreaContextSet"/>
     
-  <!-- tooltips -->
-  <popupset id="aTooltipSet"/>
+    <!-- tooltips -->
+    <popupset id="aTooltipSet"/>
+  </popupset>
   
   <script type="application/x-javascript">
     var gBookmarkPopup = null;

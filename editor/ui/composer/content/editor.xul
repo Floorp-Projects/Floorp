@@ -63,13 +63,16 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
-  <popupset id="aTooltipSet" />
-  <popupset id="editorContentContextSet"/>
+  <popupset id="aTooltipSet">
+    <popupset id="editorContentContextSet"/>
+    <popup id="sidebarPopup"/>
+  </popupset>
 
   <commandset id="tasksCommands">
     <commandset id="globalEditMenuItems"/>

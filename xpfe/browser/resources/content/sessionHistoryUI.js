@@ -98,9 +98,10 @@ function createUBHistoryMenu( aParent )
       // '(Nothing Available)' item.
       deleteHistoryItems(aParent);
       if (!entries.hasMoreElements()) {
-        //Create the "Nothing Available" Menu item
+        //Create the "Nothing Available" Menu item and disable it.
         var na = gNavigatorBundle.getString("nothingAvailable");
         createMenuItem(aParent, "nothing_available", na);
+        aParent.firstChild.setAttribute("disabled", "true");
       }
 
       while (entries.hasMoreElements() && (i-- > 0)) {
