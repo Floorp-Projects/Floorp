@@ -4275,6 +4275,7 @@ gdk_wmspec_change_state (gboolean   add,
 }
 
 #ifndef MOZ_XUL
+void nsWindow::ApplyTransparencyBitmap() {}
 void nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight) {
 }
 #else
