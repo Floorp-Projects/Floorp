@@ -1195,6 +1195,9 @@ nsLineLayout::SplitLine(PRInt32 aChildReflowStatus)
 #endif
   }
 
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+               ("nsLineLayout::SplitLine: returning %d",
+                aChildReflowStatus));
   return aChildReflowStatus;
 }
 
