@@ -121,6 +121,7 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mCanBreakBeforeFrame = PR_FALSE;
   mUpdatedBand = PR_FALSE;
   mPlacedFloaters = 0;
+  mImpactedByFloaters = PR_FALSE;
   mTotalPlacedFrames = 0;
   mTopEdge = mBottomEdge = 0;
   mReflowTextRuns = nsnull;
@@ -204,6 +205,7 @@ nsLineLayout::~nsLineLayout()
 void
 nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
                               nscoord aWidth, nscoord aHeight,
+                              PRBool aImpactedByFloaters,
                               PRBool aIsTopOfPage)
 {
   NS_ASSERTION(nsnull == mRootSpan, "bad linelayout user");
@@ -237,6 +239,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mCanBreakBeforeFrame = PR_FALSE;
   mUpdatedBand = PR_FALSE;
   mPlacedFloaters = 0;
+  mImpactedByFloaters = aImpactedByFloaters;
   mTotalPlacedFrames = 0;
   mSpanDepth = 0;
   mMaxTopBoxHeight = mMaxBottomBoxHeight = 0;
@@ -338,6 +341,7 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   }
   mUpdatedBand = PR_TRUE;
   mPlacedFloaters |= (aPlacedLeftFloater ? PLACED_LEFT : PLACED_RIGHT);
+  mImpactedByFloaters = PR_TRUE;
 }
 
 void
@@ -949,56 +953,69 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   nscoord rightMargin = 0;
   if (0 != pfd->mBounds.width) {
     switch (aReflowState.mStyleDisplay->mFloats) {
-    default:
-      NS_NOTYETIMPLEMENTED("Unsupported floater type");
-      // FALL THROUGH
+      default:
+        NS_NOTYETIMPLEMENTED("Unsupported floater type");
+        // FALL THROUGH
 
-    case NS_STYLE_FLOAT_LEFT:
-    case NS_STYLE_FLOAT_RIGHT:
-      // When something is floated, its margins are applied there
-      // not here.
-      break;
+      case NS_STYLE_FLOAT_LEFT:
+      case NS_STYLE_FLOAT_RIGHT:
+        // When something is floated, its margins are applied there
+        // not here.
+        break;
 
-    case NS_STYLE_FLOAT_NONE:
-      // Only apply right margin for the last-in-flow
-      if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-        // Zero this out so that when we compute the
-        // max-element-size of the frame we will properly avoid
-        // adding in the right margin.
-        pfd->mMargin.right = 0;
-      }
-      rightMargin = pfd->mMargin.right;
-      break;
+      case NS_STYLE_FLOAT_NONE:
+        // Only apply right margin for the last-in-flow
+        if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+          // Zero this out so that when we compute the
+          // max-element-size of the frame we will properly avoid
+          // adding in the right margin.
+          pfd->mMargin.right = 0;
+        }
+        rightMargin = pfd->mMargin.right;
+        break;
     }
   }
   pfd->mMargin.right = rightMargin;
+
+  if (mNoWrap) {
+    // When wrapping is off, everything fits
+    return PR_TRUE;
+  }
 
   // Set outside to PR_TRUE if the result of the reflow leads to the
   // frame sticking outside of our available area.
   PerSpanData* psd = mCurrentSpan;
   PRBool outside = pfd->mBounds.XMost() + rightMargin > psd->mRightEdge;
-
-  // There are several special conditions that exist which allow us to
-  // ignore outside. If they are true then we can place frame and
-  // return PR_TRUE.
-  if (!mCanBreakBeforeFrame || mWasInWord || mNoWrap) {
+  if (!outside) {
+    // If it fits, it fits
     return PR_TRUE;
   }
 
+  // When it doesn't fit, check for a few special conditions where we
+  // allow it to fit anyway.
   if (0 == pfd->mMargin.left + pfd->mBounds.width + rightMargin) {
     // Empty frames always fit right where they are
     return PR_TRUE;
   }
 
-  if (pfd == mCurrentSpan->mFirstFrame) {
-    return PR_TRUE;
+  // We want to guarantee that we always make progress when
+  // formatting. Therefore, if the object being placed on the line is
+  // too big for the line, but it is the only thing on the line
+  // (including counting floaters) then we go ahead and place it
+  // anyway. Its also true that if the object is a part of a larger
+  // object (a multiple frame word) then we will place it on the line
+  // too.
+  if (!mCanBreakBeforeFrame || mWasInWord) {
+    // There are no words on the line or we are in the first word on
+    // the line. If the line isn't impacted by a floater then this
+    // object fits.
+    if (!mImpactedByFloaters) {
+      return PR_TRUE;
+    }
   }
 
-  if (outside) {
-    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-    return PR_FALSE;
-  }
-  return PR_TRUE;
+  aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+  return PR_FALSE;
 }
 
 /**
