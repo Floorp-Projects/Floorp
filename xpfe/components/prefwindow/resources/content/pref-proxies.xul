@@ -162,8 +162,8 @@
       </grid>
       <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
       <hbox class="indent" flex="1" align="center">
-        <textbox id="networkProxyAutoconfigURL" flex="1" 
-                 preftype="string" prefstring="network.proxy.autoconfig_url" class="uri-element"/>
+        <textbox id="networkProxyAutoconfigURL" flex="1" preftype="string" class="uri-element"
+                 prefstring="network.proxy.autoconfig_url" onchange="FixProxyURL();"/>
         <button id="autoReload" label="&reload.label;" accesskey="&reload.accesskey;"
                 oncommand="ReloadPAC();"
                 prefstring="pref.advanced.proxies.disable_button.reload"/>
