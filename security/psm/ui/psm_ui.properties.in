@@ -1157,7 +1157,7 @@ function makeBoolPrefHTML(d, nm, vrbl)
     if (vrbl == true) {
         d.write('checked ');
     }
-    d.write('onClick="top.togglePrefBool(' + nm + ');"></td>');
+    d.write('onClick="togglePrefBool(' + nm + ');"></td>');
 }
 
 function togglePrefBool(nm, newVal)
@@ -1410,6 +1410,13 @@ info_about_content:
 </html>
 :info_about_content
 
+toggle_pref_js:
+function togglePrefBool(nm, newVal)
+{
+  top[nm.name] = !top[nm.name];
+}
+:toggle_pref_js
+
 ;
 ; Applications content panes
 ;
@@ -1433,6 +1440,8 @@ apps_navigator_content:
 
 <tr>
 <script language=javascript>
+{toggle_pref_js}
+
 top.makeBoolPrefHTML(document, 'warn_entering_secure', top.warn_entering_secure);
 </script>
 <td><p>{apps_warn_enter_secure}</p></td>
@@ -1493,6 +1502,8 @@ apps_messenger_content:
 
 <tr>
 <script language=javascript>
+{toggle_pref_js}
+
 top.makeBoolPrefHTML(document, 'mail_encrypt_outgoing_mail', top.mail_encrypt_outgoing_mail);
 </script>
 <td><p>{apps_msg_encrypt}</p></td>
@@ -1722,6 +1733,7 @@ sa_noinfo:
 </head>
 <body onLoad="parent.SetHelpURL('help.htm#1044151')">
 </body>
+</html>
 :sa_noinfo
 
 ;
