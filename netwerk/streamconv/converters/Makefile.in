@@ -32,6 +32,7 @@ REQUIRES	= xpcom \
 		  string \
 		  mimetype \
 		  locale \
+		  intl \
 		  unicharutil \
 		  util \
 		  pref \
