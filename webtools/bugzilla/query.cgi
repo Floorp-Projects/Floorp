@@ -197,6 +197,9 @@ my $jscript = << 'ENDSCRIPT';
 <!--
 var cpts = new Array();
 var vers = new Array();
+// Apparently, IE4 chokes on the below, so do nothing if running that.
+var agt=navigator.userAgent.toLowerCase();
+if ((agt.indexOf("msie") == -1)) {
 ENDSCRIPT
 
 
@@ -227,6 +230,7 @@ for $p (@::legal_product) {
 $i = 0;
 $jscript .= q{
 
+\} // end IE4 choke around
 // Only display versions/components valid for selected product(s)
 
 function selectProduct(f) {
