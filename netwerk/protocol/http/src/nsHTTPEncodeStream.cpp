@@ -94,7 +94,7 @@ nsHTTPEncodeStream::GetData(char* buf, PRUint32 bufLen, PRUint32 *readCount)
     PRInt32 len = mPushBackBuffer.Length();
     PRUint32 amt = PR_MIN((PRUint32)len, bufLen);
     if (amt > 0) {
-        nsCRT::memcpy(buf, mPushBackBuffer.GetBuffer(), amt);
+        mPushBackBuffer.ToCString(buf,amt,0);
         buf += amt;
         bufLen -= amt;
         *readCount += amt;
