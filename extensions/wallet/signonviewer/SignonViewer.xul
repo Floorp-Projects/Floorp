@@ -40,6 +40,8 @@
   <html:script src="chrome://communicator/content/wallet/SignonViewer.js"/>
 	<html:script src="chrome://global/content/strres.js" />
 
+  <keyset id="keyset"/>
+           
   <tabcontrol flex="100%" align="vertical">
     <tabbox>
       <tab selected="true" value="&tab.signonsstored.label;"/>

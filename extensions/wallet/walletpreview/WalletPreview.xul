@@ -36,6 +36,8 @@
   <html:script src="chrome://global/content/strres.js" />
   <html:script src="chrome://communicator/content/wallet/WalletPreview.js"/>
 
+  <keyset id="keyset"/>
+           
   <spring style="height: 10px;"/>
   <box align="vertical" flex="100%">
     <div>
