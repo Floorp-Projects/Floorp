@@ -627,15 +627,14 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     GetTarget(&target);
 
     if (!isPost) {
-      if (href.Last() == '?') {
-        // Already specifies a '?' in the href so don't add another one
-        href.Append(data);
-      }
-      else {
-         // Doesn't have a ? in the href so add one
+      if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
         href.Append('?');
-        href.Append(data);
+      } else {                              // Adding to existing query string
+        if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
+          href.Append('&');
+        }
       }
+      href.Append(data);
     }
     nsAutoString absURLSpec;
     result = NS_MakeAbsoluteURI(href, docURL, absURLSpec);
