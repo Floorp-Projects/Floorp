@@ -12,7 +12,7 @@ interface EditorAppCore : BaseAppCore
 	void setTextProperty(in wstring attr);
 	void removeTextProperty(in wstring attr);
 	
-	void getTextProperty(in wstring attr, out boolean anyHas, out boolean allHas);
+	void getTextProperty(in wstring attr, out boolean firstHas, out boolean anyHas, out boolean allHas);
 	
 	void undo();
 	void redo();

@@ -63,7 +63,7 @@ class nsEditorAppCore : public nsBaseAppCore,
 	  NS_IMETHOD    SetEditorType(const nsString& aEditorType);
 		NS_IMETHOD    SetTextProperty(const nsString& aAttr);
 		NS_IMETHOD    RemoveTextProperty(const nsString& aAttr);
-		NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas);
+		NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas);
     NS_IMETHOD    Undo();
     NS_IMETHOD    Redo();
     NS_IMETHOD    Back();
