@@ -544,21 +544,21 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 	nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
 	nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
 	CBrowserImpl *aBrowserImpl = new CBrowserImpl();
-	CnsIChannelTests  *obj = new CnsIChannelTests(mWebBrowser, aBrowserImpl);
-	CnsIHttpChannelTests *httpObj = new CnsIHttpChannelTests(mWebBrowser, aBrowserImpl);
-	if (obj && ctxt && channel) {
-		QAOutput("  nsIChannel tests:");
-		obj->PostAsyncTests(channel, 1);
+	CnsIChannelTests  *channelTests = new CnsIChannelTests(mWebBrowser, aBrowserImpl);
+	CnsIHttpChannelTests *httpChannelTests = new CnsIHttpChannelTests(mWebBrowser, aBrowserImpl);
+	if (channelTests && ctxt && channel) {
+		QAOutput("\n  Start nsIChannel PostAsyncOpenTests tests:");
+		channelTests->PostAsyncOpenTests(channel, 1);
 	}
-	else if (!obj && ctxt)
-		QAOutput("No object to run PostAsyncTests() for nsIChannel.", 1);
+	else if (!channelTests)
+		QAOutput("No object to run PostAsyncOpenTests() for nsIChannel.", 1);
 
-	if (!httpObj)
+	if (!httpChannelTests)
 		QAOutput("No object to run CallResponseTests() for nsIHttpChannel.", 1);
 	else
 	{
-		QAOutput("  nsIHttpChannel response tests:");
-		httpObj->CallResponseTests(httpChannel, 1);
+		QAOutput("\n  Start nsIHttpChannel response tests:");
+		httpChannelTests->CallResponseTests(httpChannel, 1);
 	}
 
 	if (!ctxt)

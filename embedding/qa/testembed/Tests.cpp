@@ -622,7 +622,7 @@ void CTests::OnTestsNSNewChannelAndAsyncOpen()
 		   return;
 		}
 
-		QAOutput("AynchOpen() test.", 2);
+		QAOutput("AynchOpen() test:", 2);
 		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
 		nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
 		qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
