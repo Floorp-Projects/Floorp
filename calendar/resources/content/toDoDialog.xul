@@ -156,6 +156,18 @@
                     </row>
                     
             
+                    <!-- URI/URL -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label for="uri-field" value="&newevent.uri.label;"/>
+                        </hbox>
+                        <hbox>
+                          <textbox id="uri-field" flex="1"/>
+                          <button label="&newevent.uri.visit.label;" oncommand="launchBrowser()"/>
+                        </hbox>
+                    </row>
+                    
+            
                     <!-- Private -->    
                     <row collapsed="true" align="center">
                         <spacer />

@@ -151,7 +151,8 @@ function loadCalendarToDoDialog()
 
    setFieldValue( "title-field", gToDo.title  );
    setFieldValue( "description-field", gToDo.description );
-   
+   setFieldValue( "uri-field", gToDo.url );
+
    setFieldValue( "private-checkbox", gToDo.privateEvent, "checked" );
    
    if( gToDo.alarm === false && gToDo.alarmLength == 0 )
@@ -241,6 +242,8 @@ function onOKCommand()
    gToDo.start.hour = 0;
    gToDo.start.minute = 0;
    
+   gToDo.url = getFieldValue( "uri-field" );
+
    gToDo.privateEvent = getFieldValue( "private-checkbox", "checked" );
    
    gToDo.alarm       = getFieldValue( "alarm-checkbox", "checked" );
@@ -518,6 +521,18 @@ function alarmLengthKeyDown( repeatField )
 {
     updateAlarmPlural();
 }
+
+
+/* URL */
+function launchBrowser()
+{
+   //get the URL from the text box
+   var UrlToGoTo = document.getElementById( "uri-field" ).value;
+   
+   //launch the browser to that URL
+   opener.open( UrlToGoTo, "calendar-opened-window" );
+}
+
 
 
 /**
