@@ -1039,7 +1039,7 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
       Dl_info info;
       int ok = dladdr((void*) pc, &info);
       if (!ok) {
-        fprintf(aStream, "UNKNOWN 0x%08X\n", (char*)pc);
+        fprintf(aStream, "UNKNOWN 0x%8p\n", (char*)pc);
         bp = nextbp;
         continue;
       }

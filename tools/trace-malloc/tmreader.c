@@ -169,9 +169,11 @@ static int get_tmevent(FILE *fp, tmevent *event)
         break;
 
       case TM_EVENT_REALLOC:
-        if (!get_uint32(fp, &event->u.alloc.oldsize))
-            return 0;
         if (!get_uint32(fp, &event->u.alloc.size))
+            return 0;
+        if (!get_uint32(fp, &event->u.alloc.oldserial))
+            return 0;
+        if (!get_uint32(fp, &event->u.alloc.oldsize))
             return 0;
         break;
 

@@ -65,8 +65,9 @@ struct tmevent {
             uint32  offset;
         } site;
         struct {
-            uint32  oldsize;
             uint32  size;
+            uint32  oldserial;
+            uint32  oldsize;
         } alloc;
         struct {
             nsTMStats tmstats;
