@@ -16,6 +16,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Ville Skyttä <ville.skytta@iki.fi>
   #%]
 
 [% INCLUDE global/header 
@@ -61,7 +62,7 @@
       <select name="version" size="5">
         [%- FOREACH v = version %]
           <option value="[% v FILTER html %]"
-            [% " selected" IF v == default.version %]>[% v FILTER html -%]
+            [% " selected=\"selected\"" IF v == default.version %]>[% v FILTER html -%]
           </option>
         [%- END %]
       </select>
@@ -77,7 +78,7 @@
       <select name="component" size="5">
         [%- FOREACH c = component_ %]
           <option value="[% c FILTER html %]"
-            [% " selected" IF c == default.component_ %]>[% c FILTER html -%]
+            [% " selected=\"selected\"" IF c == default.component_ %]>[% c FILTER html -%]
           </option>
         [%- END %]
       </select>
@@ -192,7 +193,7 @@
       [% FOREACH g = group %]
         &nbsp;&nbsp;&nbsp;&nbsp;
         <input type="checkbox" name="bit-[% g.bit %]" value="1"
-          [% " checked" IF g.checked %] />[% g.description %]<br />
+          [% " checked=\"checked\"" IF g.checked %] />[% g.description %]<br />
       [% END %]
       <br />
     [% END %]
@@ -247,7 +248,7 @@
     <select name="[% sel.name %]">
     [%- FOREACH x = ${sel.name} %]
       <option value="[% x FILTER html %]"
-        [% " selected" IF x == default.${sel.name} %]>[% x FILTER html -%]
+        [% " selected=\"selected\"" IF x == default.${sel.name} %]>[% x FILTER html -%]
       </option>
     [%- END %]
     </select>
