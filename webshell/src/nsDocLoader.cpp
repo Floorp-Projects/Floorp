@@ -212,6 +212,8 @@ public:
     NS_IMETHOD GetContainer(nsIContentViewerContainer** aResult);
     NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, 
                                          nsIContentViewerContainer** aResult);
+	NS_IMETHOD GetLoadGroup(nsILoadGroup** aResult);
+
     NS_IMETHOD Destroy();
 
     // nsILoadGroupListenerFactory methods...
@@ -623,6 +625,20 @@ nsDocLoaderImpl::GetContainer(nsIContentViewerContainer** aResult)
     rv = NS_ERROR_NULL_POINTER;
   } else {
     *aResult = mContainer;
+    NS_IF_ADDREF(*aResult);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDocLoaderImpl::GetLoadGroup(nsILoadGroup** aResult)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    *aResult = mLoadGroup;
     NS_IF_ADDREF(*aResult);
   }
   return rv;
