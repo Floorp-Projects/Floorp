@@ -231,22 +231,6 @@ public:
              const nsRect&        aDirtyRect,
              nsFramePaintLayer    aWhichLayer);
 
-  // helper function to reflow token elements
-  static nsresult
-  ReflowTokenFor(nsIFrame*                aFrame,
-                 nsIPresContext*          aPresContext,
-                 nsHTMLReflowMetrics&     aDesiredSize,
-                 const nsHTMLReflowState& aReflowState,
-                 nsReflowStatus&          aStatus);
-
-  // helper function to place token elements
-  static nsresult
-  PlaceTokenFor(nsIFrame*            aFrame,
-                nsIPresContext*      aPresContext,
-                nsIRenderingContext& aRenderingContext,
-                PRBool               aPlaceOrigin,  
-                nsHTMLReflowMetrics& aDesiredSize);
-
   // helper method to reflow a child frame. We are inline frames, and we don't
   // know our positions until reflow is finished. That's why we ask the
   // base method not to worry about our position.
