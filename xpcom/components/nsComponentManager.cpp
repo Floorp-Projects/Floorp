@@ -1573,14 +1573,7 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when,
     }
   }
 #else
-  //XXX get default pathlist from registry
-  //XXX Temporary hack. Registering components from current directory
-#ifdef XP_UNIX
   const char *defaultPathList = "./components";
-#else
-  // XXX This will change to ./components very soon
-  const char *defaultPathList = ".";
-#endif
   SyncComponentsInPathList(defaultPathList);
 #endif
   return NS_OK;
@@ -1627,11 +1620,7 @@ nsComponentManagerImpl::SyncComponentsInDir(const char *dir)
   unsigned int n = strlen(fullname);
   if (n+1 < sizeof(fullname))
   {
-#ifdef	XP_WIN
-    fullname[n] = PR_GetDirectorySeparator();
-#else
     fullname[n] = '/';
-#endif
     n++;
   }
   char *filepart = fullname + n;
