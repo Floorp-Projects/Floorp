@@ -2325,12 +2325,16 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
 #if defined(DEBUG_ducarroz)
           printf("Adding REMOTE attachment %d: %s\n", newLoc, url.get());
 #endif
+          PRBool isAMessageAttachment = !PL_strncasecmp(url.get(), "mailbox-message://", 18) ||
+              !PL_strncasecmp(url.get(), "imap-message://", 15) ||
+              !PL_strncasecmp(url.get(), "news-message://", 15);
 
           m_attachments[newLoc].mDeleteFile = PR_TRUE;
           m_attachments[newLoc].m_done = PR_FALSE;
           m_attachments[newLoc].SetMimeDeliveryState(this);
 
-          nsMsgNewURL(getter_AddRefs(m_attachments[newLoc].mURL), url.get());
+          if (!isAMessageAttachment)
+            nsMsgNewURL(getter_AddRefs(m_attachments[newLoc].mURL), url.get());
 
           PR_FREEIF(m_attachments[newLoc].m_encoding);
           m_attachments[newLoc].m_encoding = PL_strdup ("7bit");
@@ -2342,24 +2346,21 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
 
           /* Count up attachments which are going to come from mail folders
              and from NNTP servers. */
-          nsCAutoString strUrl;
-          strUrl.Assign(url.get());
           PRBool do_add_attachment = PR_FALSE;
-          if (m_attachments[newLoc].mURL)
+          if (isAMessageAttachment)
           {
             do_add_attachment = PR_TRUE;
-          }
-          else if (strUrl.Find("-message:") != -1)
-          {
-            do_add_attachment = PR_TRUE;
-            if (strUrl.Find("mailbox-message:") != -1 ||
-                strUrl.Find("imap-message:") != -1)
-              (*aMailboxCount)++;
-            else if (strUrl.Find("news-message:") != -1)
+            if (!PL_strncasecmp(url.get(), "news-message://", 15))
               (*aNewsCount)++;
+            else
+              (*aMailboxCount)++;              
 
-            m_attachments[newLoc].m_uri = ToNewCString(strUrl);
+            m_attachments[newLoc].m_uri = strdup(url.get());
+            m_attachments[newLoc].mURL = nsnull;
           }
+          else
+            do_add_attachment = (nsnull != m_attachments[newLoc].mURL);
+
           if (do_add_attachment)
           {
             nsXPIDLString proposedName;
