@@ -571,7 +571,8 @@ NS_IMETHODIMP nsDeviceContextWin :: GetSystemFont(nsSystemFontID anID, nsFont *a
 NS_IMETHODIMP nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   if (NULL == mSurface) {
-    aContext.CreateDrawingSurface(nsnull, 0, mSurface);
+    nsRect empty(0,0,0,0); // CreateDrawingSurface(null,...) used width=0,height=0
+    aContext.CreateDrawingSurface(empty, 0, mSurface);
   }
 
   aSurface = mSurface;
