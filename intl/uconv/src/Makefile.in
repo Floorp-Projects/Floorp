@@ -50,7 +50,6 @@ CPPSRCS		= \
 		nsMappingCache.cpp \
 		nsCharsetMenu.cpp \
 		nsUConvModule.cpp \
-		nsObjectArray.cpp \
 		$(NULL)
 
 EXPORT_RESOURCE	= \

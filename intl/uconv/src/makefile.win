@@ -42,7 +42,6 @@ CPPSRCS =				\
 	nsMappingCache.cpp		\
 	nsURLProperties.cpp		\
 	nsCharsetMenu.cpp		\
-	nsObjectArray.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -56,7 +55,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsMappingCache.obj 			\
 	.\$(OBJDIR)\nsURLProperties.obj 		\
 	.\$(OBJDIR)\nsCharsetMenu.obj 			\
-	.\$(OBJDIR)\nsObjectArray.obj 			\
 	$(NULL)
 
 CSRCS =		\
