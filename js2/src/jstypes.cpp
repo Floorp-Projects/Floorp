@@ -61,8 +61,7 @@ static JSValue object_toString(Context *, const JSValues& argv)
 static JSValue object_constructor(Context *cx, const JSValues& argv)
 {
     // argv[0] will be NULL
-    
-    return new JSObject();
+    return JSValue(new JSObject());
 }
 
 struct ObjectFunctionEntry {
