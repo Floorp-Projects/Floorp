@@ -1362,7 +1362,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       case NS_MOUSE_LEFT_CLICK:
       {
         switch(type) {
-          case NS_FORM_INPUT_BUTTON:
           case NS_FORM_INPUT_RESET:
           case NS_FORM_INPUT_SUBMIT:
           case NS_FORM_INPUT_IMAGE:
