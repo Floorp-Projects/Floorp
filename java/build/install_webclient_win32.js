@@ -50,17 +50,11 @@ logComment("Starting Install Process");
 
    var fComponents     = getFolder("Components");
    var fJavadev        = getFolder("Program","javadev");
+   src = getFolder(fJavadev, "lib/javadomjni.dll");
+   err = File.copy(src, fProgram);
    src = getFolder(fJavadev, "lib/javadom.dll");
    err = File.copy(src, fComponents);
-   src = getFolder(fJavadev, "lib/bcorb.dll");
-   err = File.copy(src, fComponents);
-   src = getFolder(fJavadev, "lib/bcjavastubs.dll");
-   err = File.copy(src, fComponents);
-   src = getFolder(fJavadev, "lib/javaloader.dll");
-   err = File.copy(src, fComponents);
-   src = getFolder(fJavadev, "lib/bcxpcomstubs.dll");
-   err = File.copy(src, fComponents);
-   src = getFolder(fJavadev, "regxpcom.exe");
+   src = getFolder(fJavadev, "lib/webclient.dll");
    err = File.copy(src, fProgram);
 
    // check return value

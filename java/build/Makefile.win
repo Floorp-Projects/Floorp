@@ -30,7 +30,7 @@ PACKAGE_LIB = $(PACKAGE_DIR)\lib
 PACKAGE_EXAMPLE = $(PACKAGE_DIR)\example
 
 !ifndef PACKAGE_VER
-PACKAGE_VER = 1.0
+PACKAGE_VER = 1.2
 !endif
 
 
@@ -95,40 +95,33 @@ buildRunems:
 	-mkdir $(PACKAGE_LIB)
 	-mkdir $(PACKAGE_EXAMPLE)
 	-mkdir $(DIST)\..\java\build\org
+	-mkdir $(DIST)\..\java\build\org\w3c
 	-mkdir $(DIST)\..\java\build\org\mozilla
-	xcopy /E /Y $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
-	xcopy /E /Y $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\java\build\org\mozilla
-	xcopy /E /Y $(DIST)\..\classes\org\mozilla\webclient $(DIST)\..\java\build\org\mozilla
-	xcopy /E /Y $(DIST)\..\classes\org\mozilla\xpcom $(DIST)\..\java\build\org\mozilla
-	xcopy /E /Y $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
+	-mkdir $(DIST)\..\java\build\org\mozilla\util
+	-mkdir $(DIST)\..\java\build\org\mozilla\dom
+	-mkdir $(DIST)\..\java\build\org\mozilla\webclient
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla\util
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\java\build\org\mozilla\dom
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\webclient $(DIST)\..\java\build\org\mozilla\webclient
+	xcopy /E /Y $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org\w3c
 	cd $(DIST)\..\java\build
-	jar -cvfM0 Webclient_$(PACKAGE_VER)_win32.jar org 
-	copy Webclient_$(PACKAGE_VER)_win32.jar ..\..\javadev\lib\Webclient_$(PACKAGE_VER)_win32.jar
+	jar -cvfM0 webclient_$(PACKAGE_VER)_win32.jar org 
+	copy webclient_$(PACKAGE_VER)_win32.jar ..\..\javadev\lib\webclient_$(PACKAGE_VER)_win32.jar
 	cd ..\..\..\java\build
 	rmdir /S/Q $(DIST)\..\java\build\org
-	del /Q $(DIST)\..\java\build\Webclient_$(PACKAGE_VER)_win32.jar
-	copy $(DIST)\bin\javadomjni.dll $(PACKAGE_LIB)\javadomjni.dll
+	del /Q $(DIST)\..\java\build\webclient_$(PACKAGE_VER)_win32.jar
+	copy $(DIST)\bin\components\javadomjni.dll $(PACKAGE_LIB)\javadomjni.dll
 	copy $(DIST)\bin\components\javadom.dll $(PACKAGE_LIB)\javadom.dll
 	copy $(DIST)\bin\webclient.dll $(PACKAGE_LIB)\webclient.dll
 	copy $(DIST)\lib\wc_share.lib $(PACKAGE_LIB)\wc_share.lib
-	copy $(DIST)\bin\components\bcorb.dll $(PACKAGE_LIB)\bcorb.dll
-	copy $(DIST)\bin\components\bcjavastubs.dll $(PACKAGE_LIB)\bcjavastubs.dll
-	copy $(DIST)\bin\components\bcjavaloader.dll $(PACKAGE_LIB)\bcjavaloader.dll
-	copy $(DIST)\bin\components\bcxpcomstubs.dll $(PACKAGE_LIB)\bcxpcomstubs.dll
-	copy $(DIST)\bin\regxpcom.exe $(PACKAGE_LIB)\regxpcom.exe
-	chmod 775 $(PACKAGE_LIB)\bcorb.dll
-	chmod 775 $(PACKAGE_LIB)\bcjavastubs.dll
-	chmod 775 $(PACKAGE_LIB)\bcjavaloader.dll
-	chmod 775 $(PACKAGE_LIB)\bcxpcomstubs.dll
-	chmod 775 $(PACKAGE_LIB)\regxpcom.exe
 	chmod 775 $(PACKAGE_LIB)\javadomjni.dll
 	chmod 775 $(PACKAGE_LIB)\javadom.dll
 	chmod 775 $(PACKAGE_LIB)\webclient.dll
 	chmod 775 $(PACKAGE_LIB)\wc_share.lib
 	@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
 	rm -f runem_win_commercial.bat
-	@echo set CLASSPATH=..\lib\Webclient_$(PACKAGE_VER)_win32.jar > runem_win_commercial.bat
-	@echo $(PERL) .\runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem_win_commercial.bat
+	@echo set CLASSPATH=..\lib\webclient_$(PACKAGE_VER)_win32.jar> runem_win_commercial.bat
+	@echo $(PERL) .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) %1% >> runem_win_commercial.bat
 	copy runem_win_commercial.bat $(PACKAGE_EXAMPLE)\runem.bat
 	copy $(DIST)\..\..\java\webclient\src_share\runem.pl $(PACKAGE_EXAMPLE)\runem.pl
 	chmod 775 $(PACKAGE_EXAMPLE)\runem.bat
@@ -136,7 +129,8 @@ buildRunems:
 	copy install_webclient_win32.js $(DIST)\..\install.js
 	copy README.WEBCLIENT $(PACKAGE_DIR)\README.WEBCLIENT
 	cd $(DIST)\..
-	zip -r Webclient_$(PACKAGE_VER)_win32.xpi install.js javadev
+	jar -cvM0f webclient_$(PACKAGE_VER)_win32.xpi install.js javadev
+	rm -rf install.js javadev
 	cd ..\java\build
 !else
 !ifdef BUILD_BLACKCONNECT_ONLY
@@ -226,6 +220,8 @@ buildRunems:
 
 
 install::buildRunems 
+
+#export::buildRunems
 
 
 clobber::
