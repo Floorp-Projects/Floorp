@@ -23,7 +23,6 @@
 
 <!DOCTYPE RDF 
 [
-<!ENTITY search.category.mozilla	"Mozilla">
 <!ENTITY search.category.web		"Web">
 ]
 >
@@ -38,10 +37,6 @@
 
   <RDF:Seq about="NC:SearchCategoryRoot">
   	<RDF:li>
-  		<RDF:Description about="urn:search:category:2">
-			<NC:title>&search.category.mozilla;</NC:title>
-  		</RDF:Description>
-
   		<RDF:Description about="urn:search:category:1">
 			<NC:title>&search.category.web;</NC:title>
   		</RDF:Description>
@@ -56,12 +51,6 @@
     <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:google.src" />
     <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:dmoz.src" />
     <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:jeeves.src" />
-  </RDF:Seq>
-
-  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:2">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:mozilla.src" />
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:bugzilla.src" />
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:lxrmozilla.src" />
   </RDF:Seq>
 
 </RDF:RDF>

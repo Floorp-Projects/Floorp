@@ -36,18 +36,12 @@ FILES		= \
 	$(NULL)
 else
 FILES		= \
-	bugzilla.gif        \
-	bugzilla.src        \
 	dmoz.gif            \
 	dmoz.src            \
 	google.gif          \
 	google.src          \
 	jeeves.gif          \
 	jeeves.src          \
-	lxrmozilla.gif      \
-	lxrmozilla.src      \
-	mozilla.gif         \
-	mozilla.src         \
 	$(NULL)
 endif
 
