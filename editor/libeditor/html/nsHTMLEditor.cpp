@@ -1779,7 +1779,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
       }
 #endif
 
-      res = InsertNodeAtPoint(node, parentSelectedNode, offsetForInsert, PR_FALSE);
+      res = InsertNodeAtPoint(node, address_of(parentSelectedNode), &offsetForInsert, PR_FALSE);
       NS_ENSURE_SUCCESS(res, res);
       // Set caret after element, but check for special case 
       //  of inserting table-related elements: set in first cell instead
@@ -1792,23 +1792,39 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
   return res;
 }
 
+
+/* 
+  InsertNodeAtPoint: attempts to insert aNode into the document, at a point specified by 
+      {*ioParent,*ioOffset}.  Checks with strict dtd to see if containment is allowed.  If not
+      allowed, will attempt to find a parent in the parent heirarchy of *ioParent that will
+      accept aNode as a child.  If such a parent is found, will split the document tree from
+      {*ioParent,*ioOffset} up to parent, and then insert aNode.  ioParent & ioOffset are then
+      adjusted to point to the actual location that aNode was inserted at.  aNoEmptyNodes
+      specifies if the splitting process is allowed to reslt in empty nodes.
+              nsIDOMNode            *aNode           node to insert
+              nsCOMPtr<nsIDOMNode>  *ioParent        insertion parent
+              PRInt32               *ioOffset        insertion offset
+              PRBool                aNoEmptyNodes    splitting can result in empty nodes?
+*/
 nsresult
 nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode, 
-                                nsIDOMNode *aParent, 
-                                PRInt32 aOffset, 
+                                nsCOMPtr<nsIDOMNode> *ioParent, 
+                                PRInt32 *ioOffset, 
                                 PRBool aNoEmptyNodes)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(aParent, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(ioParent, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(*ioParent, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(ioOffset, NS_ERROR_NULL_POINTER);
   
   nsresult res = NS_OK;
   nsAutoString tagName;
   aNode->GetNodeName(tagName);
   tagName.ToLowerCase();
-  nsCOMPtr<nsIDOMNode> parent = aParent;
-  nsCOMPtr<nsIDOMNode> topChild = aParent;
+  nsCOMPtr<nsIDOMNode> parent = *ioParent;
+  nsCOMPtr<nsIDOMNode> topChild = *ioParent;
   nsCOMPtr<nsIDOMNode> tmp;
-  PRInt32 offsetOfInsert = aOffset;
+  PRInt32 offsetOfInsert = *ioOffset;
    
   // Search up the parent chain to find a suitable container      
   while (!CanContainTag(parent, tagName))
@@ -1826,9 +1842,11 @@ nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode,
   if (parent != topChild)
   {
     // we need to split some levels above the original selection parent
-    res = SplitNodeDeep(topChild, aParent, aOffset, &offsetOfInsert, aNoEmptyNodes);
+    res = SplitNodeDeep(topChild, *ioParent, *ioOffset, &offsetOfInsert, aNoEmptyNodes);
     if (NS_FAILED(res))
       return res;
+    *ioParent = parent;
+    *ioOffset = offsetOfInsert;
   }
   // Now we can insert the new node
   res = InsertNode(aNode, parent, offsetOfInsert);
