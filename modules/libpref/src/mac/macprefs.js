@@ -134,6 +134,16 @@ pref("font.name.monospace.zh-TW", "Apple LiGothic Medium");
 pref("font.name.cursive.zh-TW", "XXX.cursive");
 pref("font.name.fantasy.zh-TW", "XXX.fantasy");
 
+// ming_uni.ttf (HKSCS-2001) 
+// http://www.info.gov.hk/digital21/eng/hkscs/download/uime.exe
+// use Stuffit Expander to unzip it and install ming_uni.ttf
+pref("font.name.serif.zh-HK", "Ming(for ISO10646)");
+pref("font.name.sans-serif.zh-HK", "Apple LiGothic Medium");  
+pref("font.name.monospace.zh-HK", "Apple LiGothic Medium");  
+pref("font.name.cursive.zh-HK", "XXX.cursive");
+pref("font.name.fantasy.zh-HK", "XXX.fantasy");
+
+pref("font.default", "serif");
 pref("font.default", "serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
@@ -176,6 +186,9 @@ pref("font.size.fixed.zh-CN", 16);
 
 pref("font.size.variable.zh-TW", 15);
 pref("font.size.fixed.zh-TW", 16);
+
+pref("font.size.variable.zh-HK", 15);
+pref("font.size.fixed.zh-HK", 16);
 
 pref("browser.urlbar.clickAtEndSelects", false);
 

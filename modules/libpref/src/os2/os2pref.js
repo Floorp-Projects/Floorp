@@ -109,6 +109,12 @@ pref("font.name-list.serif.zh-TW", "Times New Roman WT TC, Times New Roman MT 30
 pref("font.name.sans-serif.zh-TW", "Helv");
 pref("font.name.monospace.zh-TW", "Courier");
 
+// XXX : just copied values for zh-TW. TO CHANGE if necessary
+pref("font.name.serif.zh-HK", "Times New Roman WT TC");
+pref("font.name-list.serif.zh-HK", "Times New Roman WT TC, Times New Roman MT 30, Tms Rmn");
+pref("font.name.sans-serif.zh-HK", "Helv");
+pref("font.name.monospace.zh-HK", "Courier");
+
 pref("font.default", "serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
@@ -151,6 +157,9 @@ pref("font.size.fixed.zh-CN", 16);
 
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
+
+pref("font.size.variable.zh-HK", 16);
+pref("font.size.fixed.zh-HK", 16);
 
 pref("font.size.nav4rounding", false);
 

@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Jungshik Shin  <jshin@mailaps.org>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -154,6 +155,7 @@ static nsIAtom* gJA = nsnull;
 static nsIAtom* gKO = nsnull;
 static nsIAtom* gZHTW = nsnull;
 static nsIAtom* gZHCN = nsnull;
+static nsIAtom* gZHHK = nsnull;
 
 static int gInitialized = 0;
 static PRBool gDoingLineheightFixup = PR_FALSE;
@@ -197,6 +199,7 @@ FreeGlobals(void)
   NS_IF_RELEASE(gKO);
   NS_IF_RELEASE(gZHTW);
   NS_IF_RELEASE(gZHCN);
+  NS_IF_RELEASE(gZHHK);
 
   // free CMap
   if (nsFontMetricsWin::gFontMaps) {
@@ -336,6 +339,11 @@ InitGlobals(void)
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  gZHHK = NS_NewAtom("zh-HK");
+  if (!gZHHK) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   //register an observer to take care of cleanup
   gFontCleanupObserver = new nsFontCleanupObserver();
@@ -443,6 +451,7 @@ nsFontMetricsWin::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     CheckFontLangGroup(mLangGroup, gKO,   "ko");
     CheckFontLangGroup(mLangGroup, gZHTW, "zh-TW");
     CheckFontLangGroup(mLangGroup, gZHCN, "zh-CN");
+    CheckFontLangGroup(mLangGroup, gZHHK, "zh-HK");
   }
 
   //don't addref this to avoid circular refs
@@ -3348,7 +3357,8 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUint32 aChar)
   return nsnull;
 }
 
-#define IsCJKLangGroupAtom(a)  ((a)==gJA || (a)==gKO || (a)==gZHCN || (a)==gZHTW)
+#define IsCJKLangGroupAtom(a)  ((a)==gJA || (a)==gKO || (a)==gZHCN || \
+                                (a)==gZHTW || (a) == gZHHK)
 
 nsFontWin*
 nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
@@ -3411,6 +3421,9 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
                                 NS_ConvertUCS2toUTF8(mGeneric).get());
     if (mLangGroup != gZHTW && gUsersLocale != gZHTW && gSystemLocale != gZHTW)
       AppendGenericFontFromPref(font.name, "zh-TW",
+                                NS_ConvertUCS2toUTF8(mGeneric).get());
+    if (mLangGroup != gZHHK && gUsersLocale != gZHHK && gSystemLocale != gZHHK)
+      AppendGenericFontFromPref(font.name, "zh-HK",
                                 NS_ConvertUCS2toUTF8(mGeneric).get());
     if (mLangGroup != gKO && gUsersLocale != gKO && gSystemLocale != gKO)
       AppendGenericFontFromPref(font.name, "ko",
@@ -5321,6 +5334,10 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
 {
   int dword;
 
+  // hack : FONTSIGNATURE in Win32 doesn't have a separate signature field
+  // for zh-HK.  We have to treat it as zh-TW.
+  const char *langGroup = strcmp(aLangGroup, "zh-HK") ? aLangGroup : "zh-TW";
+
   // For scripts that have been supported by 'ANSI' codepage in Win9x/ME,
   // we can rely on fsCsb. 
   DWORD* array = aSignature->fsCsb;
@@ -5329,7 +5346,7 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
     for (int bit = 0; bit < sizeof(DWORD) * 8; ++bit) {
       if ((array[dword] >> bit) & 1) {
         if (!strcmp(gCharsetInfo[gCharsetToIndex[gBitToCharset[i]]].mLangGroup,
-                    aLangGroup)) {
+                    langGroup)) {
           return 1;
         }
       }
@@ -5345,7 +5362,7 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
   // x-western .. zh-TW. (exclude JOHAB)
   for (i = eCharset_ANSI; i <= eCharset_CHINESEBIG5; ++i) 
   {
-    if (!strcmp(gCharsetInfo[i].mLangGroup, aLangGroup))
+    if (!strcmp(gCharsetInfo[i].mLangGroup, langGroup))
       return 0;
   }
 
@@ -5359,7 +5376,7 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
       if ((array[dword] >> bit) & 1) {
         PRUint8 range = gBitToUnicodeRange[i];
         if (kRangeSpecificItemNum > range &&
-            !strcmp(gUnicodeRangeToLangGroupTable[range], aLangGroup)) {
+            !strcmp(gUnicodeRangeToLangGroupTable[range], langGroup)) {
           return 1;
         }
       }

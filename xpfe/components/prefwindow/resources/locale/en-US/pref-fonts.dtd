@@ -29,8 +29,9 @@
 <!ENTITY  font.langGroup.latin1                   "Western">
 <!ENTITY  font.langGroup.latin2                   "Central European">
 <!ENTITY  font.langGroup.japanese                 "Japanese">
-<!ENTITY  font.langGroup.trad-chinese             "Traditional Chinese">
+<!ENTITY  font.langGroup.trad-chinese             "Traditional Chinese(Taiwan)">
 <!ENTITY  font.langGroup.simpl-chinese            "Simplified Chinese">
+<!ENTITY  font.langGroup.trad-chinese-hk          "Traditional Chinese(Hong Kong)">
 <!ENTITY  font.langGroup.korean                   "Korean">
 <!ENTITY  font.langGroup.cyrillic                 "Cyrillic">
 <!ENTITY  font.langGroup.baltic                   "Baltic">

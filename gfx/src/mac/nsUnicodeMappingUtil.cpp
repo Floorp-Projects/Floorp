@@ -275,6 +275,10 @@ ScriptCode nsUnicodeMappingUtil::MapLangGroupToScriptCode(const char* aLangGroup
 	if(0==nsCRT::strcmp(aLangGroup,  "zh-TW")) {
 		return smTradChinese;
 	} else 
+        // No separate script code for zh-HK. Use smTradChinese.
+	if(0==nsCRT::strcmp(aLangGroup,  "zh-HK")) {
+		return smTradChinese;
+	} else 
 	if(0==nsCRT::strcmp(aLangGroup,  "x-unicode")) {
 		return (smPseudoUnicode);
 	} else 
