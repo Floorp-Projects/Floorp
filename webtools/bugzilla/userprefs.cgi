@@ -370,6 +370,9 @@ $vars->{'changes_saved'} = $::FORM{'dosave'};
 
 my $current_tab_name = $::FORM{'tab'} || "account";
 
+# The SWITCH below makes sure that this is valid
+trick_taint($current_tab_name);
+
 $vars->{'current_tab_name'} = $current_tab_name;
 
 # Do any saving, and then display the current tab.
@@ -393,6 +396,8 @@ SWITCH: for ($current_tab_name) {
         DoPermissions();
         last SWITCH;
     };
+    ThrowUserError("Unknown tab <code>" . html_quote($current_tab_name)
+                   . "</code>");
 }
 
 # Generate and return the UI (HTML page) from the appropriate template.

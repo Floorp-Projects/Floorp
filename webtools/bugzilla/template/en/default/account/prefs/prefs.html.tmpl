@@ -100,7 +100,16 @@
 <form method="post" action="userprefs.cgi">
   <input type="hidden" name="tab" value="[% current_tab.name %]">
 
-  [% PROCESS "account/prefs/${current_tab.name}.html.tmpl" IF current_tab.name.defined %]
+  [%# See bug 160710 for why this is done this way %]
+  [% IF current_tab.name == "account" %]
+    [% PROCESS "account/prefs/account.html.tmpl" %]
+  [% ELSIF current_tab.name == "email" %]
+    [% PROCESS "account/prefs/email.html.tmpl" %]
+  [% ELSIF current_tab.name == "footer" %]
+    [% PROCESS "account/prefs/footer.html.tmpl" %]
+  [% ELSIF current_tab.name == "permissions" %]
+    [% PROCESS "account/prefs/permissions.html.tmpl" %]
+  [% END %]
 
   [% IF current_tab.saveable %]
     <input type="hidden" name="dosave" value="1">
