@@ -24,7 +24,7 @@
  * License for the specific language governing rights and limitations
  * under the License.
  * 
- * The Original Code is the Text to HTML converter code.
+ * The Original Code is the Mozilla Text to HTML converter code.
  * 
  * The Initial Developer of the Original Code is Ben Bucksch
  * <http://www.bucksch.org>. Portions created by Ben Bucksch are Copyright
@@ -1024,7 +1024,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   // Look for simple entities not included in a tags and scan them.
   /* Skip all tags ("<[...]>") and content in an a tag ("<a[...]</a>").
      Unescape the rest (text between tags) and pass it to ScanTXT. */
-  for (PRInt32 i = 0; PRUint32(i) < aInString.Length();)
+  for (PRInt32 i = 0; PRUint32(i) < lengthOfInString;)
   {
     if (aInString[i] == '<')  // html tag
     {
@@ -1042,7 +1042,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
       {
         i = aInString.FindChar('>', PR_FALSE, i);
         if (i == kNotFound)
-          i =lengthOfInString;
+          i = lengthOfInString;
         else
           i++;
       }
@@ -1057,9 +1057,8 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   
       nsString tempString;     
       tempString.SetCapacity(PRUint32((PRUint32(i) - start) * growthRate));
-      UnescapeStr(aInString.GetUnicode(), start, PRUint32(i) - start, tempString);
+      UnescapeStr(uniBuffer, start, PRUint32(i) - start, tempString);
       ScanTXT(tempString.GetUnicode(), tempString.Length(), whattodo, aOutString);
-
     }
   }
 
