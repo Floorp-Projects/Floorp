@@ -70,7 +70,6 @@
 #include "nsIDTD.h"
 #include "nsIRDFPurgeableDataSource.h"
 #include "nsIInputStream.h"
-#include "nsINameSpaceManager.h"
 #include "nsIOutputStream.h"
 #include "nsIParser.h"
 #include "nsIRDFContainerUtils.h"
@@ -102,12 +101,10 @@
 
 static NS_DEFINE_IID(kIDTDIID,               NS_IDTD_IID);
 static NS_DEFINE_IID(kIInputStreamIID,       NS_IINPUTSTREAM_IID);
-static NS_DEFINE_IID(kINameSpaceManagerIID,  NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kIParserIID,            NS_IPARSER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,    NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 
-static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
@@ -881,14 +878,6 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 
     nsresult rv;
 
-    nsCOMPtr<nsINameSpaceManager> nsmgr;
-    rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
-                                            nsnull,
-                                            kINameSpaceManagerIID,
-                                            getter_AddRefs(nsmgr));
-
-    if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsIRDFContentSink> sink;
     rv = nsComponentManager::CreateInstance(kRDFContentSinkCID,
                                             nsnull,
@@ -896,7 +885,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
                                             getter_AddRefs(sink));
     if (NS_FAILED(rv)) return rv;
 
-    rv = sink->Init(mURL, nsmgr);
+    rv = sink->Init(mURL);
     if (NS_FAILED(rv)) return rv;
 
     // We set the content sink's data source directly to our in-memory

@@ -70,6 +70,7 @@ nsFixedSizeAllocator::Init(const char* aName,
     PRInt32 bucketspace = aNumBuckets * sizeof(Bucket);
     PL_InitArenaPool(&mPool, aName, bucketspace + aInitialSize, aAlign);
 
+    mBuckets = nsnull;
     for (PRInt32 i = 0; i < aNumBuckets; ++i)
         AddBucket(aBucketSizes[i]);
 
