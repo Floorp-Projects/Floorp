@@ -33,6 +33,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-applications.dtd \
 		$(srcdir)/pref-cache.dtd \
 		$(srcdir)/pref-colors.dtd \
+		$(srcdir)/pref-themes.dtd \
 		$(srcdir)/pref-composer.dtd \
 		$(srcdir)/pref-debug.dtd \
 		$(srcdir)/pref-download.dtd \
