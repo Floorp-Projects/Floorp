@@ -579,9 +579,6 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
     XPCNativeSet* set = wrapper->GetSet();
     XPCNativeSet* protoSet = wrapper->HasProto() ?
                                 wrapper->GetProto()->GetSet() : nsnull;
-    JSProperty* prop;
-    JSObject* obj2;
-    jsid id;
 
     PRUint16 interface_count = set->GetInterfaceCount();
     XPCNativeInterface** interfaceArray = set->GetInterfaceArray();
@@ -599,13 +596,8 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
             if(protoSet &&
                protoSet->FindMember(name, nsnull, &index) && index == i)
                 continue;
-
-            // The Lookup will force a Resolve and eager Define of the property
-            if(!JS_ValueToId(cx, name, &id) ||
-               !OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-            {
+            if(!xpc_ForcePropertyResolve(cx, obj, name))
                 return JS_FALSE;
-            }
         }
     }
     return JS_TRUE;
@@ -1319,24 +1311,16 @@ XPC_WN_Shared_Proto_Enumerate(JSContext *cx, JSObject *obj)
     if(!ccx.IsValid())
         return JS_FALSE;
 
-    JSProperty* prop;
-    JSObject* obj2;
-    jsid id;
-
     PRUint16 interface_count = set->GetInterfaceCount();
     XPCNativeInterface** interfaceArray = set->GetInterfaceArray();
     for(PRUint16 i = 0; i < interface_count; i++)
     {
-        XPCNativeInterface* interface = interfaceArray[i];
-        PRUint16 member_count = interface->GetMemberCount();
+        XPCNativeInterface* iface = interfaceArray[i];
+        PRUint16 member_count = iface->GetMemberCount();
 
         for(PRUint16 k = 0; k < member_count; k++)
         {
-            XPCNativeMember* member = interface->GetMemberAt(k);
-
-            // The Lookup will force a Resolve and eager Define of the property
-            if(!JS_ValueToId(cx, member->GetName(), &id) ||
-               !OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+            if(!xpc_ForcePropertyResolve(cx, obj, iface->GetMemberAt(k)->GetName()))
                 return JS_FALSE;
         }
     }
@@ -1529,21 +1513,11 @@ XPC_WN_TearOff_Enumerate(JSContext *cx, JSObject *obj)
     if(!to || nsnull == (iface = to->GetInterface()))
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
-    JSProperty* prop;
-    JSObject* obj2;
-    jsid id;
-
     PRUint16 member_count = iface->GetMemberCount();
     for(PRUint16 k = 0; k < member_count; k++)
     {
-        XPCNativeMember* member = iface->GetMemberAt(k);
-
-        // The Lookup will force a Resolve and eager Define of the property
-        if(!JS_ValueToId(cx, member->GetName(), &id) ||
-           !OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-        {
+        if(!xpc_ForcePropertyResolve(cx, obj, iface->GetMemberAt(k)->GetName()))
             return JS_FALSE;
-        }
     }
 
     return JS_TRUE;

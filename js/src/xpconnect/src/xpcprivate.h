@@ -2961,6 +2961,12 @@ DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativeProtoPtr, XPCWrappedNativeP
 // needed.
 
 /***************************************************************************/
+// Inlined utilities.
+
+inline JSBool
+xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval);
+
+/***************************************************************************/
 // Inlines use the above - include last.
 
 #include "xpcinlines.h"

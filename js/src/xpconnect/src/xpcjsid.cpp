@@ -545,15 +545,10 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
     for(PRUint16 i = 0; i < count; i++)
     {
         XPCNativeMember* member = iface->GetMemberAt(i);
-        if(member && member->IsConstant())
+        if(member && member->IsConstant() &&
+           !xpc_ForcePropertyResolve(cx, obj, member->GetName()))
         {
-            JSObject* obj2;
-            JSProperty* prop;
-            jsid id;
-
-            if(!JS_ValueToId(cx, member->GetName(), &id) ||
-               !OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-                return NS_ERROR_UNEXPECTED;
+            return NS_ERROR_UNEXPECTED;
         }
     }
     return NS_OK;
