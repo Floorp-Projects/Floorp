@@ -2374,9 +2374,15 @@ SINGSIGN_PromptUsernameAndPassword
   si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, PR_FALSE, username, password);
 
   /* get new username/password from user */
-  *user = username.ToNewUnicode();
-  *pwd = password.ToNewUnicode();
-  PRBool checked = PR_FALSE;
+  if (!(*user = username.ToNewUnicode())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (!(*pwd = password.ToNewUnicode())) {
+    PR_Free(*user);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PRBool checked = (nsCRT::strlen(*user) != 0);
   res = si_CheckGetUsernamePassword(user, pwd, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
