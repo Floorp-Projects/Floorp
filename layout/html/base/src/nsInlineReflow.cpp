@@ -616,7 +616,7 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
 
   // If frame is zero width then do not apply its left and right margins.
   PRBool emptyFrame = PR_FALSE;
-  if ((0 == pfd->mBounds.width) || (0 == pfd->mBounds.height)) {
+  if ((0 == pfd->mBounds.width) && (0 == pfd->mBounds.height)) {
     pfd->mBounds.x = mX;
     pfd->mBounds.y = mTopEdge;
     emptyFrame = PR_TRUE;
