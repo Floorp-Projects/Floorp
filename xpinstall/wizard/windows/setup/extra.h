@@ -174,6 +174,7 @@ void              SetSetupRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
 siCD              *InitWinInitNodes(char *szInFile);
 void              UpdateWininit(LPSTR szUninstallFilename);
+char              *GetSaveInstallerPath(char *szBuf, DWORD dwBufSize);
 void              SaveInstallerFiles(void);
 void              ResetComponentAttributes(char *szFileIni);
 BOOL              IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected);

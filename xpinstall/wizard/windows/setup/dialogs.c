@@ -1700,9 +1700,73 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
   return(0);
 }
 
-LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   RECT  rDlg;
+
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      SetWindowText(hDlg, diAdvancedSettings.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
+      SetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
+      SetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort);
+
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        case IDWIZNEXT:
+          dwWizardState = DLG_ADVANCED_SETTINGS;
+
+          /* get the proxy server and port information */
+          GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer, MAX_BUF);
+          GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort,   MAX_BUF);
+
+          DestroyWindow(hDlg);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          break;
+
+        case IDWIZBACK:
+          DestroyWindow(hDlg);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          break;
+
+        case IDCANCEL:
+          AskCancelDlg(hDlg);
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
+  return(0);
+}
+
+void SaveDownloadOptions(HWND hDlg, HWND hwndCBSiteSelector)
+{
+  int iIndex;
+
+  /* get selected item from the site selector's pull down list */
+  iIndex = SendMessage(hwndCBSiteSelector, CB_GETCURSEL, 0, 0);
+  SendMessage(hwndCBSiteSelector, CB_GETLBTEXT, (WPARAM)iIndex, (LPARAM)szSiteSelectorDescription);
+
+  /* get the state of the Save Installer Files checkbox */
+  if(IsDlgButtonChecked(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES) == BST_CHECKED)
+    diDownloadOptions.bSaveInstaller = TRUE;
+  else
+    diDownloadOptions.bSaveInstaller = FALSE;
+}
+
+LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  RECT  rDlg;
+  char  szBuf[MAX_BUF];
   HWND  hwndCBSiteSelector;
   int   iIndex;
   ssi   *ssiTemp;
@@ -1713,11 +1777,13 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
   switch(msg)
   {
     case WM_INITDIALOG:
-      SetWindowText(hDlg, diAdvancedSettings.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
-      SetDlgItemText(hDlg, IDC_MESSAGE1,          diAdvancedSettings.szMessage1);
-      SetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
-      SetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort);
+      SetWindowText(hDlg, diDownloadOptions.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloadOptions.szMessage0);
+      SetDlgItemText(hDlg, IDC_MESSAGE1, diDownloadOptions.szMessage1);
+      SetDlgItemText(hDlg, IDC_MESSAGE2, diDownloadOptions.szMessage2);
+
+      GetSaveInstallerPath(szBuf, sizeof(szBuf));
+      SetDlgItemText(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, szBuf);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -1745,7 +1811,7 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       else
         SendMessage(hwndCBSiteSelector, CB_SETCURSEL, 0, 0);
 
-      if(diAdvancedSettings.bSaveInstaller)
+      if(diDownloadOptions.bSaveInstaller)
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_CHECKED);
       else
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_UNCHECKED);
@@ -1755,30 +1821,22 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          /* get selected item from the site selector's pull down list */
-          iIndex = SendMessage(hwndCBSiteSelector, CB_GETCURSEL, 0, 0);
-          SendMessage(hwndCBSiteSelector, CB_GETLBTEXT, (WPARAM)iIndex, (LPARAM)szSiteSelectorDescription);
-          dwWizardState = DLG_ADVANCED_SETTINGS;
-
-          /* get the state of the Save Installer Files checkbox */
-          if(IsDlgButtonChecked(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES) == BST_CHECKED)
-            diAdvancedSettings.bSaveInstaller = TRUE;
-          else
-            diAdvancedSettings.bSaveInstaller = FALSE;
-
-          /* get the proxy server and port information */
-          GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer, MAX_BUF);
-          GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort,   MAX_BUF);
-
+          SaveDownloadOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
         case IDWIZBACK:
-          iIndex = SendMessage(hwndCBSiteSelector, CB_GETCURSEL, 0, 0);
-          SendMessage(hwndCBSiteSelector, CB_GETLBTEXT, (WPARAM)iIndex, (LPARAM)szSiteSelectorDescription);
+          SaveDownloadOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          break;
+
+        case IDC_BUTTON_ADDITIONAL_SETTINGS:
+          SaveDownloadOptions(hDlg, hwndCBSiteSelector);
+          dwWizardState = DLG_PROGRAM_FOLDER;
+          DestroyWindow(hDlg);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
         case IDCANCEL:
@@ -1883,8 +1941,39 @@ LPSTR GetStartInstallMessage()
     dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
 
   dwBufSize += 4; // take into account 4 indentation spaces
-  dwBufSize += lstrlen(sgProduct.szProgramFolderName) + 2; // the extra 2 bytes is for the \r\n characters
+  dwBufSize += lstrlen(sgProduct.szProgramFolderName) + 2; // the extra 2 bytes is for the \r\n\r\n characters
+
+  if(GetTotalArchivesToDownload() > 0)
+  {
+    dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
+
+    /* site selector info */
+    if(NS_LoadString(hSetupRscInst, IDS_STR_DOWNLOAD_SITE, szBuf, MAX_BUF) == WIZ_OK)
+      dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
+
+    dwBufSize += 4; // take into account 4 indentation spaces
+    dwBufSize += lstrlen(szSiteSelectorDescription) + 2; // the extra 2 bytes is for the \r\n characters
+
+    if(diDownloadOptions.bSaveInstaller)
+    {
+      dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
+
+      /* site selector info */
+      if(NS_LoadString(hSetupRscInst, IDS_STR_SAVE_INSTALLER_FILES, szBuf, MAX_BUF) == WIZ_OK)
+        dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
+
+      GetSaveInstallerPath(szBuf, sizeof(szBuf));
+      dwBufSize += 4; // take into account 4 indentation spaces
+      dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
+    }
+  }
+
   dwBufSize += 1; // take into account the null character
+
+
+  /* From here down, the buffer is created given the above calculated buffer size.  If the 
+   * string concatenation (addition) is changed below, then the buffer size calculation above
+   * needs to be changed accordingly! */
 
   /* allocate the memory */
   if((szMessageBuf = NS_GlobalAlloc(dwBufSize)) != NULL)
@@ -1961,6 +2050,39 @@ LPSTR GetStartInstallMessage()
     lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
     lstrcat(szMessageBuf, sgProduct.szProgramFolderName);
     lstrcat(szMessageBuf, "\r\n");
+
+    if(GetTotalArchivesToDownload() > 0)
+    {
+      lstrcat(szMessageBuf, "\r\n");
+
+      /* site selector info */
+      if(NS_LoadString(hSetupRscInst, IDS_STR_DOWNLOAD_SITE, szBuf, MAX_BUF) == WIZ_OK)
+      {
+        lstrcat(szMessageBuf, szBuf);
+        lstrcat(szMessageBuf, "\r\n");
+      }
+
+      lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
+      lstrcat(szMessageBuf, szSiteSelectorDescription); // site selector description
+      lstrcat(szMessageBuf, "\r\n");
+
+      if(diDownloadOptions.bSaveInstaller)
+      {
+        lstrcat(szMessageBuf, "\r\n");
+
+        /* site selector info */
+        if(NS_LoadString(hSetupRscInst, IDS_STR_SAVE_INSTALLER_FILES, szBuf, MAX_BUF) == WIZ_OK)
+        {
+          lstrcat(szMessageBuf, szBuf);
+          lstrcat(szMessageBuf, "\r\n");
+        }
+
+        GetSaveInstallerPath(szBuf, sizeof(szBuf));
+        lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
+        lstrcat(szMessageBuf, szBuf);
+        lstrcat(szMessageBuf, "\r\n");
+      }
+    }
   }
 
   return(szMessageBuf);
@@ -2295,7 +2417,7 @@ void DlgSequenceNext()
       dwWizardState = DLG_ADVANCED_SETTINGS;
       gbProcessingXpnstallFiles = FALSE;
       if(diAdvancedSettings.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgAdvancedSettings);
+        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgProcAdvancedSettings);
       else
       {
         dwWizardState = DLG_ADVANCED_SETTINGS;
@@ -2304,8 +2426,9 @@ void DlgSequenceNext()
       break;
 
     case DLG_ADVANCED_SETTINGS:
-      dwWizardState = DLG_START_INSTALL;
+      dwWizardState = DLG_DOWNLOAD_OPTIONS;
       gbProcessingXpnstallFiles = FALSE;
+
       do
       {
         hrValue = VerifyDiskSpace();
@@ -2329,6 +2452,18 @@ void DlgSequenceNext()
         break;
       }
 
+      if((diDownloadOptions.bShowDialog == TRUE) && (GetTotalArchivesToDownload() > 0))
+        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diDownloadOptions.szTitle, DlgProcDownloadOptions);
+      else
+      {
+        dwWizardState = DLG_DOWNLOAD_OPTIONS;
+        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+      }
+      break;
+
+    case DLG_DOWNLOAD_OPTIONS:
+      dwWizardState = DLG_START_INSTALL;
+      gbProcessingXpnstallFiles = FALSE;
       if(diStartInstall.bShowDialog)
         hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diStartInstall.szTitle, DlgProcStartInstall);
       else
@@ -2359,7 +2494,7 @@ void DlgSequenceNext()
         if(CheckInstances())
         {
           /* save the installer files in the local machine */
-          if(diAdvancedSettings.bSaveInstaller)
+          if(diDownloadOptions.bSaveInstaller)
             SaveInstallerFiles();
 
           CleanupXpcomFile();
@@ -2392,7 +2527,7 @@ void DlgSequenceNext()
         CreateDirectoriesAll(szBuf, TRUE);
 
         /* save the installer files in the local machine */
-        if(diAdvancedSettings.bSaveInstaller)
+        if(diDownloadOptions.bSaveInstaller)
           SaveInstallerFiles();
 
         hrErr = SmartUpdateJars();
@@ -2452,12 +2587,21 @@ void DlgSequencePrev()
       dwWizardState = DLG_ADVANCED_SETTINGS;
       gbProcessingXpnstallFiles = FALSE;
       if(diAdvancedSettings.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgAdvancedSettings);
+        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgProcAdvancedSettings);
       else
         PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
 
     case DLG_ADVANCED_SETTINGS:
+      dwWizardState = DLG_DOWNLOAD_OPTIONS;
+      gbProcessingXpnstallFiles = FALSE;
+      if((diDownloadOptions.bShowDialog == TRUE) && (GetTotalArchivesToDownload() > 0))
+        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diDownloadOptions.szTitle, DlgProcDownloadOptions);
+      else
+        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+      break;
+
+    case DLG_DOWNLOAD_OPTIONS:
       dwWizardState = DLG_PROGRAM_FOLDER;
       gbProcessingXpnstallFiles = FALSE;
       if(CheckWizardStateCustom(DLG_SELECT_COMPONENTS))
