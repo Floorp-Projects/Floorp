@@ -151,7 +151,8 @@ struct UploadData
 
 // Default flags for persistence
 const PRUint32 kDefaultPersistFlags = 
-    nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION;
+    nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION |
+    nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES;
 
 // String bundle where error messages come from
 const char *kWebBrowserPersistStringBundle =
