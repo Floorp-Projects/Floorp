@@ -1050,7 +1050,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                 httpChannel->GetReferrer(getter_AddRefs(referrer));
                 nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
                 if (uploadChannel) {
-                  httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+                  uploadChannel->GetUploadStream(getter_AddRefs(inputStream));
                 }
               }
             }

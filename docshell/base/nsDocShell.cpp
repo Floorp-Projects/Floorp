@@ -5644,9 +5644,10 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
 
         if (httpChannel) {
-            nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
+            nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
             if (uploadChannel) {
-                httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+                uploadChannel->GetUploadStream(getter_AddRefs(inputStream));
+            }
         }
     }
     /* Create SH Entry (mLSHE) only if there is a  SessionHistory object (mSessionHistory) in
@@ -5870,7 +5871,10 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
             GetHttpChannel(aChannel, getter_AddRefs(httpChannel));
         }
         if (httpChannel) {
-            httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+            nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+            if (uploadChannel) {
+                uploadChannel->GetUploadStream(getter_AddRefs(inputStream));
+            }
             httpChannel->GetReferrer(getter_AddRefs(referrerURI));
 
             discardLayoutState = ShouldDiscardLayoutState(httpChannel);
