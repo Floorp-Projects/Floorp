@@ -204,9 +204,8 @@ sub Checkout()
 	{
 		$session->checkout("SeaMonkeyEditor")						|| die "checkout failure";
   
-		#// beard:  additional libraries needed to make shared libraries link.
-		#//$session->checkout("mozilla/lib/mac/PowerPlant")	|| die "checkout failure";
-		#//$session->checkout("mozilla/lib/xlate")				|| die "checkout failure";
+  		#// Check out the MRJ OJI plugin. Needs to be added to the "SeaMonkeyEditor" module.
+  		$session->checkout("mozilla/plugin/oji/MRJ")				|| die "checkout failure";
 	} elsif ($main::pull{runtime}) {
 		$session->checkout("mozilla/build")							|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/InterfaceLib")	        || die "checkout failure";
