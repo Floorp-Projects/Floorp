@@ -38,6 +38,7 @@ class nsIDOMWindow;
 class nsIURL;
 class nsIWebShellWindow;
 class nsIGlobalHistory;
+struct nsIFindComponent;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +83,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Copy();
     NS_IMETHOD    Close();
     NS_IMETHOD    Exit();
+    NS_IMETHOD    Find();
+    NS_IMETHOD    FindNext();
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset); 
     NS_IMETHOD    LoadInitialPage();
 
@@ -128,6 +131,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD DoDialog();
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     void SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
+    void       InitializeSearch();
+    void       ResetSearchContext();
 
     nsIScriptContext   *mToolbarScriptContext;
     nsIScriptContext   *mContentScriptContext;
@@ -140,6 +145,9 @@ class nsBrowserAppCore : public nsBaseAppCore,
     nsIWebShell *       mContentAreaWebShell;
 
     nsIGlobalHistory* mGHistory;
+
+    static nsIFindComponent *  mFindComponent;
+    nsISupports *       mSearchContext;
 };
 
 #endif // nsBrowserAppCore_h___

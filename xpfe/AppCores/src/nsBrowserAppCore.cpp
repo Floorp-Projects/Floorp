@@ -58,7 +58,6 @@
 #include "nsICmdLineService.h"
 #include "nsIGlobalHistory.h"
 
-
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsFileSpec.h"  // needed for nsAutoCString
@@ -82,6 +81,9 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsINetService.h"
 NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
 NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
+
+// Stuff to implement find/findnext
+#include "nsIFindComponent.h"
 
 
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -117,6 +119,8 @@ FindNamedXULElement(nsIWebShell * aShell, const char *aId, nsCOMPtr<nsIDOMElemen
 // nsBrowserAppCore
 /////////////////////////////////////////////////////////////////////////
 
+nsIFindComponent *nsBrowserAppCore::mFindComponent = 0;
+
 nsBrowserAppCore::nsBrowserAppCore()
 {
   if (APP_DEBUG) printf("Created nsBrowserAppCore\n");
@@ -130,6 +134,7 @@ nsBrowserAppCore::nsBrowserAppCore()
   mWebShell             = nsnull;
   mContentAreaWebShell  = nsnull;
   mGHistory             = nsnull;
+  mSearchContext        = nsnull;
 
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -146,6 +151,7 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mContentAreaWebShell);
   NS_IF_RELEASE(mGHistory);
+  NS_IF_RELEASE(mSearchContext);
   DecInstanceCount();  
 }
 
@@ -686,53 +692,66 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 
 
 
+// Utility to extract document from a webshell object.
+static nsCOMPtr<nsIDocument> getDocument( nsIWebShell *aWebShell ) {
+    nsCOMPtr<nsIDocument> result;
+
+    // Get content viewer from the web shell.
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    nsresult rv = aWebShell ? aWebShell->GetContentViewer(getter_AddRefs(contentViewer))
+                            : NS_ERROR_NULL_POINTER;
+
+    if ( contentViewer ) {
+        // Up-cast to a document viewer.
+        nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
+        if ( docViewer ) {
+            // Get the document from the doc viewer.
+            docViewer->GetDocument(*getter_AddRefs(result));
+        } else {
+            if (APP_DEBUG) printf( "%s %d: Upcast to nsIDocumentViewer failed\n",
+                                   __FILE__, (int)__LINE__ );
+        }
+    } else {
+        if (APP_DEBUG) printf( "%s %d: GetContentViewer failed, rv=0x%X\n",
+                               __FILE__, (int)__LINE__, (int)rv );
+    }
+    return result;
+}
+
+// Utility to set element attribute.
 static nsresult setAttribute( nsIWebShell *shell,
                               const char *id,
                               const char *name,
                               const nsString &value ) {
     nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIContentViewer> cv;
-    rv = shell ? shell->GetContentViewer(getter_AddRefs(cv))
-               : NS_ERROR_NULL_POINTER;
-    if ( cv ) {
+    nsCOMPtr<nsIDocument> doc = getDocument( shell );
+
+    if ( doc ) {
         // Up-cast.
-        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-        if ( docv ) {
-            // Get the document from the doc viewer.
-            nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(*getter_AddRefs(doc));
-            if ( doc ) {
-                // Up-cast.
-                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
-                if ( xulDoc ) {
-                    // Find specified element.
-                    nsCOMPtr<nsIDOMElement> elem;
-                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
-                    if ( elem ) {
-                        // Set the text attribute.
-                        rv = elem->SetAttribute( name, value );
-                        if ( APP_DEBUG ) {
-                            char *p = value.ToNewCString();
-                            delete [] p;
-                        }
-                        if ( rv != NS_OK ) {
-                             if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
-                        }
-                    } else {
-                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
-                    }
-                } else {
-                  if (APP_DEBUG)   printf("Upcast to nsIDOMXULDocument failed\n");
+        nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
+        if ( xulDoc ) {
+            // Find specified element.
+            nsCOMPtr<nsIDOMElement> elem;
+            rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
+            if ( elem ) {
+                // Set the text attribute.
+                rv = elem->SetAttribute( name, value );
+                if ( APP_DEBUG ) {
+                    char *p = value.ToNewCString();
+                    delete [] p;
+                }
+                if ( rv != NS_OK ) {
+                     if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
                 }
             } else {
-                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
+                if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
             }
         } else {
-             if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
+          if (APP_DEBUG)   printf("Upcast to nsIDOMXULDocument failed\n");
         }
     } else {
-        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+        if (APP_DEBUG) printf("getDocument failed, rv=0x%X\n",(int)rv);
     }
     return rv;
 }
@@ -1506,6 +1525,100 @@ nsBrowserAppCore::Exit()
   return NS_OK;
 }
 
+void
+nsBrowserAppCore::InitializeSearch() {
+    nsresult rv = NS_OK;
+
+    // First, get find component (if we haven't done so already).
+    if ( !mFindComponent ) {
+        // Ultimately, should be something like appShell->GetComponent().
+        rv = nsComponentManager::CreateInstance( NS_IFINDCOMPONENT_PROGID,
+                                                 0,
+                                                 nsIFindComponent::GetIID(),
+                                                 (void**)&mFindComponent );
+        if ( NS_SUCCEEDED( rv ) ) {
+            // Initialize the find component.
+            nsIAppShellService *appShell = 0;
+            rv = nsServiceManager::GetService( kAppShellServiceCID,
+                                               nsIAppShellService::GetIID(),
+                                               (nsISupports**)&appShell );
+            if ( NS_SUCCEEDED( rv ) ) {
+                // Initialize the find component.
+                mFindComponent->Initialize( appShell, 0 );
+                // Release the app shell.
+                nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
+            } else {
+                #ifdef NS_DEBUG
+                printf( "nsBrowserAppCore::InitializeSearch failed, GetService rv=0x%X\n", (int)rv );
+                #endif
+                // Couldn't initialize it, so release it.
+                mFindComponent->Release();
+            }
+        } else {
+            #ifdef NS_DEBUG
+            printf( "nsBrowserAppCore::InitializeSearch failed, CreateInstace rv=0x%X\n", (int)rv );
+            #endif
+        }
+    }
+
+    if ( NS_SUCCEEDED( rv ) && !mSearchContext ) {
+        // Create the search context for this browser window.
+        nsCOMPtr<nsIDocument> document = getDocument( mContentAreaWebShell );
+        nsresult rv = mFindComponent->CreateContext( document, &mSearchContext );
+        if ( NS_FAILED( rv ) ) {
+            #ifdef NS_DEBUG
+            printf( "%s %d CreateContext failed, rv=0x%X\n",
+                    __FILE__, (int)__LINE__, (int)rv );
+            #endif
+        }
+    }
+}
+
+void
+nsBrowserAppCore::ResetSearchContext() {
+    // Test if we've created the search context yet.
+    if ( mFindComponent && mSearchContext ) {
+        // OK, reset it.
+        nsCOMPtr<nsIDocument> document = getDocument( mContentAreaWebShell );
+        nsresult rv = mFindComponent->ResetContext( mSearchContext, document );
+        if ( NS_FAILED( rv ) ) {
+            #ifdef NS_DEBUG
+            printf( "%s %d ResetContext failed, rv=0x%X\n",
+                    __FILE__, (int)__LINE__, (int)rv );
+            #endif
+        }
+    }
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::Find() {
+    nsresult rv = NS_OK;
+
+    // Make sure we've initialized searching for this document.
+    InitializeSearch();
+
+    // Perform find via find component.
+    if ( mFindComponent && mSearchContext ) {
+        rv = mFindComponent->Find( mSearchContext );
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::FindNext() {
+    nsresult rv = NS_OK;
+
+    // Make sure we've initialized searching for this document.
+    InitializeSearch();
+
+    // Perform find next via find component.
+    if ( mFindComponent && mSearchContext ) {
+        rv = mFindComponent->FindNext( mSearchContext );
+    }
+
+    return rv;
+}
 
 NS_IMETHODIMP    
 nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScript)

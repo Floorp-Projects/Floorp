@@ -195,6 +195,7 @@ BrowserAppCoreForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   return JS_TRUE;
 }
 
+
 //
 // Native method LoadUrl
 //
@@ -224,39 +225,6 @@ BrowserAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   else {
     JS_ReportError(cx, "Function loadUrl requires 1 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-
-
-//
-// Native method LoadInitialPage
-//
-PR_STATIC_CALLBACK(JSBool)
-BrowserAppCoreLoadInitialPage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->LoadInitialPage()) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function loadInitialPage requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -460,6 +428,7 @@ BrowserAppCoreCookieViewer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   return JS_TRUE;
 }
+
 
 //
 // Native method SetToolbarWindow
@@ -818,6 +787,72 @@ BrowserAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 }
 
 
+//
+// Native method Find
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Find()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function find requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method FindNext
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreFindNext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->FindNext()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function findNext requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for BrowserAppCore
@@ -853,7 +888,6 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"back",          BrowserAppCoreBack,     0},
   {"forward",          BrowserAppCoreForward,     0},
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
-  {"loadInitialPage",          BrowserAppCoreLoadInitialPage,     0},
   {"walletEditor",          BrowserAppCoreWalletEditor,     0},
   {"walletSafeFillin",          BrowserAppCoreWalletSafeFillin,     0},
   {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     0},
@@ -870,6 +904,8 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"print",          BrowserAppCorePrint,     0},
   {"close",          BrowserAppCoreClose,     0},
   {"exit",          BrowserAppCoreExit,     0},
+  {"find",          BrowserAppCoreFind,     0},
+  {"findNext",          BrowserAppCoreFindNext,     0},
   {0}
 };
 
