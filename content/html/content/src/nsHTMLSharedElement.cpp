@@ -182,7 +182,7 @@ nsHTMLSharedElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
 
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip =
-    NS_STATIC_CAST(nsIDOMHTMLParamElement *, this);
+    NS_STATIC_CAST(nsIDOMHTMLEmbedElement *, it);
 
   CopyInnerTo(it, aDeep);
 
