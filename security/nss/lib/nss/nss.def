@@ -694,7 +694,6 @@ CERT_EncodeOCSPRequest;
 CERT_GetOCSPResponseStatus;
 CERT_GetOCSPStatusForCertID;
 CERT_VerifyCACertForUsage;
-CERT_VerifyCertChain;	/* no longer needed remove before 3.6 RTM!! */
 CERT_VerifyCertificate;
 CERT_VerifyCertificateNow;
 CERT_VerifyOCSPResponseSignature;
