@@ -59,12 +59,26 @@ SHARED_LIBRARY_LIBS =			    \
 	$(DIST)/lib/libraptorxulbase_s.a    \
 	$(NULL)
 
+ifeq ($(OS_ARCH),HP-UX)
+EXTRA_DSO_LDOPTS = -c objs/objslist
+else
 EXTRA_DSO_LDOPTS =	       \
 	$(MKSHLIB_FORCE_ALL)   \
 	$(SHARED_LIBRARY_LIBS) \
 	$(MKSHLIB_UNFORCE_ALL) \
 	$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),HP-UX)
+shared_library_objs: $(SHARED_LIBRARY_LIBS)
+	rm -rf objs
+	mkdir objs
+	(cd objs; for lib in $(SHARED_LIBRARY_LIBS); do ar xv ../$$lib; done) \
+	 | awk '{ print "objs/"$$3 }' > objs/objslist
+
+$(SHARED_LIBRARY): shared_library_objs Makefile
+else
 $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+endif
