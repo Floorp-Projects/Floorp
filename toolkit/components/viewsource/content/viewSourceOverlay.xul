@@ -39,7 +39,7 @@
 <!DOCTYPE overlay [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % sourceDTD SYSTEM "chrome://global/locale/viewsource/viewSource.dtd" >
+<!ENTITY % sourceDTD SYSTEM "chrome://global/locale/viewSource.dtd" >
 %sourceDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
 %navigatorDTD;
@@ -65,9 +65,8 @@
     <commandset id="viewSourceMenuItems">
       <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
       <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
-      <command id="cmd_close" oncommand="ViewSourceClose()"/>
       <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
-      <command id="cmd_editPage" oncommand="ViewSourceEditPage();"/>
+      <command id="cmd_close" oncommand="window.close()"/>
     </commandset>
   </commandset>
 
@@ -78,9 +77,9 @@
   <!-- keys are appended from the overlay -->
   <keyset id="viewSourceKeys">
     <!-- File Menu -->
-    <key id="key_savePage"     key="&savePageCmd.commandkey;" command="cmd_savePage" modifiers="accel"/>
-    <key id="printKb"          key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
-    <key id="key_close"/>
+    <key id="key_savePage" key="&savePageCmd.commandkey;" modifiers="accel"/>
+    <key id="key_print" key="&printCmd.commandkey;"  modifiers="accel"/>
+    <key id="key_close" key="&closeCmd.commandkey;" modifiers="accel"/>
 
     <!-- Edit Menu -->
     <key id="key_undo"/>
@@ -115,10 +114,11 @@
         <menupopup id="filemenu-popup">
           <menuitem key="key_savePage" command="cmd_savePage"
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
-          <menuitem key="printKb" command="Browser:Print"
+          <menuitem key="key_print" command="Browser:Print"
                     label="&printCmd.label;" accesskey="&printCmd.accesskey;"/>
           <menuseparator/>
-          <menuitem id="menu_close"/>
+          <menuitem key="key_close" command="cmd_close"
+                    label="&closeCmd.label;" accesskey="&closeCmd.accesskey;"/>
         </menupopup>
       </menu>
 
