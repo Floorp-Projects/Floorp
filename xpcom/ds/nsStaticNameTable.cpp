@@ -34,6 +34,8 @@
 
 /* Class to manage lookup of static names in a table. */
 
+#include "nsCRT.h"
+
 #include "nscore.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -49,15 +51,33 @@ struct nameTableEntry : public PLDHashEntryHdr
 };
 
 PR_STATIC_CALLBACK(PRBool)
-matchNameKeys(PLDHashTable*, const PLDHashEntryHdr* aHdr,
-              const void* key)
+matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
+                             const void* key)
 {
   const nameTableEntry* entry =
     NS_STATIC_CAST(const nameTableEntry *, aHdr);
   const char *keyValue = NS_STATIC_CAST(const char*, key);
 
-  return (strcmp(entry->mKey, keyValue)==0);
+  return (nsCRT::strcasecmp(entry->mKey, keyValue)==0);
 
+}
+
+/*
+ * caseInsensitiveHashKey is just like PL_DHashStringKey except it
+ * uses (*s & ~0x20) instead of simply *s.  This means that "aFOO" and
+ * "afoo" and "aFoo" will all hash to the same thing.  It also means
+ * that some strings that aren't case-insensensitively equal will hash
+ * to the same value, but it's just a hash function so it doesn't
+ * matter.
+ */
+PR_STATIC_CALLBACK(PLDHashNumber)
+caseInsensitiveStringHashKey(PLDHashTable *table, const void *key)
+{
+  PLDHashNumber h = 0;
+  for (const unsigned char* s =
+         NS_STATIC_CAST(const unsigned char*, key); *s != '\0'; s++)
+    h = (h >> (PL_DHASH_BITS - 4)) ^ (h << 4) ^ (*s & ~0x20);
+  return h;
 }
 
 PR_STATIC_CALLBACK(const void*)
@@ -69,12 +89,12 @@ getNameKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
   return entry->mKey;
 }
 
-struct PLDHashTableOps nametable_HashTableOps = {
+struct PLDHashTableOps nametable_CaseInsensitiveHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     getNameKey,
-    PL_DHashStringKey,
-    matchNameKeys,
+    caseInsensitiveStringHashKey,
+    matchNameKeysCaseInsensitive,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
     PL_DHashFinalizeStub,
@@ -92,7 +112,7 @@ nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable()
 nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
 {
     // manually call the destructor on placement-new'ed objects
-    for (PRInt32 index = 0; index < mNameTable.entryCount; index++) {
+    for (PRUint32 index = 0; index < mNameTable.entryCount; index++) {
       mNameArray[index].~nsDependentCString();
     }
     nsMemory::Free((void*)mNameArray);
@@ -109,22 +129,24 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
     NS_ASSERTION(Count, "0 count");
 
     mNameArray = (nsDependentCString*)nsMemory::Alloc(Count * sizeof(nsDependentCString));
-    PL_DHashTableInit(&mNameTable, &nametable_HashTableOps, nsnull,
-                      sizeof(nameTableEntry), Count);
+    PL_DHashTableInit(&mNameTable, &nametable_CaseInsensitiveHashTableOps,
+                      nsnull, sizeof(nameTableEntry), Count);
     if (!mNameArray || !mNameTable.ops) {
         return PR_FALSE;
     }
 
     for (PRInt32 index = 0; index < Count; ++index) {
         char*    raw = (char*) Names[index];
-        PRUint32 len = strlen(raw);
 #ifdef DEBUG
        {
-       // verify invarients of contents
-       nsCAutoString temp1(raw);
-       nsDependentCString temp2(raw);
-       ToLowerCase(temp1);
-       NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
+         // verify invariants of contents
+         nsCAutoString temp1(raw);
+         nsDependentCString temp2(raw);
+         ToLowerCase(temp1);
+         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
+         NS_ASSERTION(nsCRT::IsAscii(raw),
+                      "non-ascii string in table -- "
+                      "case-insensitive matching won't work right");
        }
 #endif
         // use placement-new to initialize the string object
@@ -145,13 +167,12 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
 }  
 
 inline PRInt32
-LookupLowercasedKeyword(const nsACString& aLowercasedKeyword, 
-                        PLDHashTable& aTable)
+LookupFlatKeyword(const nsAFlatCString& aKeyword, 
+                  PLDHashTable& aTable)
 {
-    const nsPromiseFlatCString& flatString = PromiseFlatCString(aLowercasedKeyword);   
     nameTableEntry *entry =
       NS_STATIC_CAST(nameTableEntry*,
-                     PL_DHashTableOperate(&aTable, flatString.get(), PL_DHASH_LOOKUP));
+                     PL_DHashTableOperate(&aTable, aKeyword.get(), PL_DHASH_LOOKUP));
     
     if (!entry || PL_DHASH_ENTRY_IS_FREE(entry))
       return nsStaticCaseInsensitiveNameTable::NOT_FOUND;
@@ -165,9 +186,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
     NS_ASSERTION(mNameArray, "not inited");  
     NS_ASSERTION(mNameTable.ops, "not inited");  
 
-    nsCAutoString strLower(aName);
-    ToLowerCase(strLower);
-    return LookupLowercasedKeyword(strLower, mNameTable);
+    return LookupFlatKeyword(PromiseFlatCString(aName), mNameTable);
 }  
 
 PRInt32
@@ -176,10 +195,9 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
     NS_ASSERTION(mNameArray, "not inited");  
     NS_ASSERTION(mNameTable.ops, "not inited");  
    
-    nsCAutoString strLower;
-    strLower.AssignWithConversion(aName);
-    ToLowerCase(strLower);
-    return LookupLowercasedKeyword(strLower, mNameTable);
+    nsCAutoString cstring;
+    cstring.AssignWithConversion(aName);
+    return LookupFlatKeyword(cstring, mNameTable);
 }  
 
 const nsAFlatCString& 
@@ -188,7 +206,7 @@ nsStaticCaseInsensitiveNameTable::GetStringValue(PRInt32 index)
     NS_ASSERTION(mNameArray, "not inited");  
     NS_ASSERTION(mNameTable.ops, "not inited");  
     
-    if ((NOT_FOUND < index) && (index < mNameTable.entryCount)) {
+    if ((NOT_FOUND < index) && ((PRUint32)index < mNameTable.entryCount)) {
         return mNameArray[index];
     } else {
         return mNullStr;
