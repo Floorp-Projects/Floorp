@@ -45,7 +45,7 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize& aMaxSize,
                           nsSize* aMaxElementSize,
-                          ReflowStatus& aStatus);
+                          nsReflowStatus& aStatus);
   NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
                               nsReflowMetrics& aMetrics);
 
@@ -102,7 +102,7 @@ NS_METHOD BRFrame::ResizeReflow(nsIPresContext* aPresContext,
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize& aMaxSize,
                                 nsSize* aMaxElementSize,
-                                ReflowStatus& aStatus)
+                                nsReflowStatus& aStatus)
 {
   // Get cached state for containing block frame
   nsLineLayout* lineLayoutState = nsnull;
@@ -117,7 +117,7 @@ NS_METHOD BRFrame::ResizeReflow(nsIPresContext* aPresContext,
   }
 
   GetReflowMetrics(aPresContext, aDesiredSize);
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 

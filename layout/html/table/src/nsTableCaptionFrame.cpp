@@ -185,7 +185,7 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
                                             nsReflowMetrics& aDesiredSize,
                                             const nsSize&   aMaxSize,
                                             nsSize*         aMaxElementSize,
-                                            ReflowStatus&   aStatus)
+                                            nsReflowStatus& aStatus)
 {
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
 
@@ -193,7 +193,7 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
   PreReflowCheck();
 #endif
 
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   if (gsDebug==PR_TRUE)
     printf("nsTableCaptionFrame::ResizeReflow %p: maxSize=%d,%d\n",
            this, aMaxSize.width, aMaxSize.height);
@@ -244,13 +244,13 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
     if (nsnull!=pMaxElementSize)
       printf("  nsTableCaptionFrame::ResizeReflow: child returned %s with desiredSize=%d,%d,\
              and maxElementSize=%d,%d\n",
-             aStatus==frComplete?"Complete":"Not Complete",
+             NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
              kidSize.width, kidSize.height,
              pMaxElementSize->width, pMaxElementSize->height);
     else
       printf("  nsTableCaptionFrame::ResizeReflow: child returned %s with desiredSize=%d,%d,\
              and maxElementSize=nsnull\n",
-             aStatus==frComplete?"Complete":"Not Complete",
+             NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
              kidSize.width, kidSize.height);
   }
 
@@ -264,7 +264,7 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
                               kidSize.width, kidSize.height));
   
   
-  if (frNotComplete == aStatus) {
+  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     // If the child didn't finish layout then it means that it used
     // up all of our available space (or needs us to split).
     mLastContentIsComplete = PR_FALSE;
@@ -300,12 +300,12 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
   {
     if (nsnull!=aMaxElementSize)
       printf("nsTableCaptionFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
-              aStatus==frComplete?"Complete":"Not Complete",
+              NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
               aDesiredSize.width, aDesiredSize.height,
               aMaxElementSize->width, aMaxElementSize->height);
     else
       printf("nsTableCaptionFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
-             aStatus==frComplete?"Complete":"Not Complete",
+             NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
              aDesiredSize.width, aDesiredSize.height);
   }
 
@@ -320,7 +320,7 @@ NS_METHOD nsTableCaptionFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                                  nsReflowMetrics& aDesiredSize,
                                                  const nsSize&    aMaxSize,
                                                  nsReflowCommand& aReflowCommand,
-                                                 ReflowStatus&    aStatus)
+                                                 nsReflowStatus&  aStatus)
 {
   if (gsDebug == PR_TRUE) printf("nsTableCaptionFrame::IncrementalReflow\n");
   // total hack for now, just some hard-coded values

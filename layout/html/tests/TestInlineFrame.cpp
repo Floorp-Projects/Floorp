@@ -67,10 +67,10 @@ public:
   FixedSizeFrame(nsIContent* aContent,
                  nsIFrame* aParentFrame);
 
-  ReflowStatus ResizeReflow(nsIPresContext* aPresContext,
-                            nsReflowMetrics& aDesiredSize,
-                            const nsSize& aMaxSize,
-                            nsSize* aMaxElementSize);
+  nsReflowStatus ResizeReflow(nsIPresContext* aPresContext,
+                              nsReflowMetrics& aDesiredSize,
+                              const nsSize& aMaxSize,
+                              nsSize* aMaxElementSize);
 
   PRBool       IsSplittable() const;
 };
@@ -108,7 +108,7 @@ FixedSizeFrame::FixedSizeFrame(nsIContent* aContent,
 {
 }
 
-nsIFrame::ReflowStatus
+nsReflowStatus
 FixedSizeFrame::ResizeReflow(nsIPresContext* aPresContext,
                              nsReflowMetrics& aDesiredSize,
                              const nsSize& aMaxSize,
@@ -116,7 +116,7 @@ FixedSizeFrame::ResizeReflow(nsIPresContext* aPresContext,
 {
   NS_PRECONDITION((aMaxSize.width > 0) && (aMaxSize.height > 0), "bad max size");
   FixedSizeContent* content = (FixedSizeContent*)mContent;
-  ReflowStatus      status = frComplete;
+  nsReflowStatus    status = NS_FRAME_COMPLETE;
   FixedSizeFrame*   prevInFlow = (FixedSizeFrame*)mPrevInFlow;
 
   aDesiredSize.width = content->GetWidth();
@@ -127,7 +127,7 @@ FixedSizeFrame::ResizeReflow(nsIPresContext* aPresContext,
     aDesiredSize.width -= prevInFlow->mRect.width;
   } else if ((aDesiredSize.width > aMaxSize.width) && content->IsSplittable()) {
     aDesiredSize.width = aMaxSize.width;
-    status = frNotComplete;
+    status = NS_FRAME_NOT_COMPLETE;
   }
 
   aDesiredSize.ascent = aDesiredSize.height;
@@ -283,14 +283,14 @@ TestReflowUnmapped(nsIPresContext* presContext)
   f->SetStyleContext(presContext,styleContext);
 
   // Reflow the HTML container
-  nsReflowMetrics         reflowMetrics;
-  nsSize                  maxSize(1000, 1000);
-  nsIFrame::ReflowStatus  status;
+  nsReflowMetrics   reflowMetrics;
+  nsSize            maxSize(1000, 1000);
+  nsReflowStatus    status;
 
   status = f->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
 
   // Make sure the frame is complete
-  if (status != nsIFrame::frComplete) {
+  if (NS_FRAME_IS_NOT_COMPLETE(status)) {
     printf("ReflowUnmapped: initial reflow not complete: %d\n", status);
     return PR_FALSE;
   }
@@ -380,14 +380,14 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
 
   // Reflow the frame with a width narrower than the first child frame. This
   // tests how we handle one child that doesn't fit when reflowing unmapped
-  nsReflowMetrics         reflowMetrics;
-  nsSize                  maxSize(10, 1000);
-  nsIFrame::ReflowStatus  status;
+  nsReflowMetrics   reflowMetrics;
+  nsSize            maxSize(10, 1000);
+  nsReflowStatus    status;
 
   status = f->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
 
   // Verify that the inline frame is complete
-  if (status != nsIFrame::frComplete) {
+  if (NS_FRAME_IS_NOT_COMPLETE(status)) {
     printf("ChildrenThatDontFIt: reflow unmapped isn't complete (#1a): %d\n", status);
     return PR_FALSE;
   }
@@ -415,7 +415,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
   status = f1->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
 
   // Verify that the frame is not complete
-  if (status != nsIFrame::frNotComplete) {
+  if (NS_FRAME_IS_NOT_COMPLETE(status)) {
     printf("ChildrenThatDontFIt: reflow unmapped isn't not complete (#1b): %d\n", status);
     return PR_FALSE;
   }
@@ -452,7 +452,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
   status = f1->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
 
   // Verify the frame is complete
-  if (status != nsIFrame::frComplete) {
+  if (NS_FRAME_IS_NOT_COMPLETE(status)) {
     printf("ChildrenThatDontFit: resize isn't complete (#2): %d\n", status);
     return PR_FALSE;
   }
@@ -479,7 +479,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
   status = f1->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
 
   // Verify the frame is complete and we still have all the child frames
-  if ((status != nsIFrame::frComplete) || (f1->ChildCount() != b->ChildCount())) {
+  if (NS_FRAME_IS_NOT_COMPLETE(status) || (f1->ChildCount() != b->ChildCount())) {
     printf("ChildrenThatDontFit: reflow mapped failed (#3)\n");
     return PR_FALSE;
   }
@@ -500,7 +500,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
   status = f1->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
 
   // Verify the frame is not complete
-  if (status != nsIFrame::frNotComplete) {
+  if (NS_FRAME_IS_NOT_COMPLETE(status)) {
     printf("ChildrenThatDontFIt: reflow mapped isn't not complete (#4): %d\n", status);
     return PR_FALSE;
   }
@@ -551,9 +551,9 @@ TestOverflow(nsIPresContext* presContext)
   // Test #1
 
   // Reflow the frame so only half the second frame fits
-  nsReflowMetrics         reflowMetrics;
-  nsSize                  maxSize(150, 1000);
-  nsIFrame::ReflowStatus  status;
+  nsReflowMetrics   reflowMetrics;
+  nsSize            maxSize(150, 1000);
+  nsReflowStatus    status;
 
   status = f->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
   NS_ASSERTION(nsIFrame::frNotComplete == status, "bad status");
@@ -601,7 +601,7 @@ TestOverflow(nsIPresContext* presContext)
   // Reflow the continuing frame. It should get its children from the overflow list
   maxSize.width = 1000;
   status = f1->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
-  NS_ASSERTION(nsIFrame::frComplete == status, "bad continuing frame");
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad continuing frame");
 
   // Verify that the overflow list is now empty
   if (nsnull != f->OverflowList()) {
@@ -660,12 +660,12 @@ TestPushingPulling(nsIPresContext* presContext)
   f->SetStyleContext(presContext,styleContext);
 
   // Reflow the inline frame so only the first frame fits
-  nsReflowMetrics         reflowMetrics;
-  nsSize                  maxSize(100, 1000);
-  nsIFrame::ReflowStatus  status;
+  nsReflowMetrics   reflowMetrics;
+  nsSize            maxSize(100, 1000);
+  nsReflowStatus    status;
 
   status = f->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
-  NS_ASSERTION(nsIFrame::frNotComplete == status, "bad status");
+  NS_ASSERTION(NS_FRAME_IS_NOT_COMPLETE(status), "bad status");
   NS_ASSERTION(f->ChildCount() == 1, "bad child count");
 
   ///////////////////////////////////////////////////////////////////////////
@@ -687,7 +687,7 @@ TestPushingPulling(nsIPresContext* presContext)
   // children
   maxSize.width = 1000;
   status = f1->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
-  NS_ASSERTION(nsIFrame::frComplete == status, "bad continuing frame");
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad continuing frame");
 
   // Verify that the continuing inline frame has the remaining children
   if (f1->ChildCount() != (b->ChildCount() - f->ChildCount())) {
@@ -733,7 +733,7 @@ TestPushingPulling(nsIPresContext* presContext)
   // child frames
   maxSize.width = f->FirstChild()->GetWidth();
   status = f->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
-  NS_ASSERTION(nsIFrame::frNotComplete == status, "bad status");
+  NS_ASSERTION(NS_FRAME_IS_NOT_COMPLETE(status), "bad status");
   NS_ASSERTION(f->ChildCount() == 1, "bad child count");
 
   // Verify the last content offset of the first inline frame
@@ -883,7 +883,7 @@ TestPushingPulling(nsIPresContext* presContext)
   status = f->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
 
   // Verify that the inline frame is complete
-  if (nsIFrame::frComplete != status) {
+  if (NS_FRAME_NOT_IS_COMPLETE(status)) {
     printf("PushPull: failed to pull-up across empty frame (#6)\n");
     return PR_FALSE;
   }
@@ -941,7 +941,7 @@ TestPushingPulling(nsIPresContext* presContext)
   status = f->ResizeReflow(presContext, reflowMetrics, maxSize, nsnull);
 
   // Verify that the first inline frame is not complete
-  if (nsIFrame::frNotComplete != status) {
+  if (NS_FRAME_IS_COMPLETE(status)) {
     printf("PushPull: bad status (#7)\n");
     return PR_FALSE;
   }

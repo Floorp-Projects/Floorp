@@ -49,7 +49,7 @@ nsTableColGroupFrame::ResizeReflow(nsIPresContext* aPresContext,
                         nsReflowMetrics& aDesiredSize,
                         const nsSize&   aMaxSize,
                         nsSize*         aMaxElementSize,
-                        ReflowStatus& aStatus)
+                        nsReflowStatus& aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::ResizeReflow\n");
@@ -60,7 +60,7 @@ nsTableColGroupFrame::ResizeReflow(nsIPresContext* aPresContext,
     aMaxElementSize->width=0;
     aMaxElementSize->height=0;
   }
-  aStatus = nsIFrame::frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
@@ -69,7 +69,7 @@ nsTableColGroupFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                         nsReflowMetrics& aDesiredSize,
                                         const nsSize&    aMaxSize,
                                         nsReflowCommand& aReflowCommand,
-                                        ReflowStatus&    aStatus)
+                                        nsReflowStatus&  aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::IncrementalReflow\n");

@@ -49,13 +49,13 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize&   aMaxSize,
                           nsSize*         aMaxElementSize,
-                          ReflowStatus&   aStatus);
+                          nsReflowStatus& aStatus);
 
   NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aDesiredSize,
                                const nsSize&    aMaxSize,
                                nsReflowCommand& aReflowCommand,
-                               ReflowStatus&    aStatus);
+                               nsReflowStatus&  aStatus);
 
 protected:
 
@@ -90,7 +90,7 @@ NS_METHOD nsTableColFrame::ResizeReflow(nsIPresContext* aPresContext,
                                         nsReflowMetrics& aDesiredSize,
                                         const nsSize&   aMaxSize,
                                         nsSize*         aMaxElementSize,
-                                        ReflowStatus&   aStatus)
+                                        nsReflowStatus& aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   if (gsDebug==PR_TRUE) printf("nsTableoupFrame::ResizeReflow\n");
@@ -101,7 +101,7 @@ NS_METHOD nsTableColFrame::ResizeReflow(nsIPresContext* aPresContext,
     aMaxElementSize->width=0;
     aMaxElementSize->height=0;
   }
-  aStatus = nsIFrame::frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
@@ -109,13 +109,13 @@ NS_METHOD nsTableColFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                              nsReflowMetrics& aDesiredSize,
                                              const nsSize&    aMaxSize,
                                              nsReflowCommand& aReflowCommand,
-                                             ReflowStatus&    aStatus)
+                                             nsReflowStatus&  aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   if (gsDebug==PR_TRUE) printf("nsTableColFrame::IncrementalReflow\n");
   aDesiredSize.width=0;
   aDesiredSize.height=0;
-  aStatus = nsIFrame::frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 

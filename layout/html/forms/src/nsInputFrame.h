@@ -119,7 +119,7 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize&    aMaxSize,
                           nsSize*          aMaxElementSize,
-                          ReflowStatus&    aStatus);
+                          nsReflowStatus&  aStatus);
 
   // new behavior
 

@@ -213,7 +213,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
                           nsReflowMetrics& aDesiredSize,
                           const nsSize& aMaxSize,
                           nsSize* aMaxElementSize,
-                          ReflowStatus& aStatus)
+                          nsReflowStatus& aStatus)
 {
   nsIView* view = nsnull;
   GetView(view);
@@ -230,7 +230,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
                                    (void **)&view);
 	  if (NS_OK != result) {
 	    NS_ASSERTION(0, "Could not create view for button"); 
-      aStatus = frNotComplete;
+      aStatus = NS_FRAME_NOT_COMPLETE;
       return result;
 	  }
 	  nsIPresShell   *presShell = aPresContext->GetShell();     // need to release
@@ -258,7 +258,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
     }
     if (NS_OK != result) {
 	    NS_ASSERTION(0, "widget initialization failed"); 
-      aStatus = frNotComplete;
+      aStatus = NS_FRAME_NOT_COMPLETE;
       return NS_OK;
 	  }
 
@@ -300,7 +300,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  aMaxElementSize->height = aDesiredSize.height;
   }
     
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 

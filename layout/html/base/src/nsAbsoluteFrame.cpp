@@ -228,7 +228,7 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                       nsReflowMetrics& aDesiredSize,
                                       const nsSize&    aMaxSize,
                                       nsSize*          aMaxElementSize,
-                                      ReflowStatus&    aStatus)
+                                      nsReflowStatus&  aStatus)
 {
   // Have we created the absolutely positioned item yet?
   if (nsnull == mFrame) {

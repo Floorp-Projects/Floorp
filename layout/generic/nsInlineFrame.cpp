@@ -226,7 +226,7 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
 
   for (nsIFrame* kidFrame = aChildFrame; nsnull != kidFrame; ) {
     nsReflowMetrics kidSize;
-    ReflowStatus    status;
+    nsReflowStatus  status;
 
     // Reflow the child into the available space
     status = ReflowChild(kidFrame, aPresContext, kidSize, aState.availSize,
@@ -256,8 +256,8 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
     prevKidFrame = kidFrame;
 
     // Is the child complete?
-    mLastContentIsComplete = PRBool(status == frComplete);
-    if (frNotComplete == status) {
+    mLastContentIsComplete = NS_FRAME_IS_COMPLETE(status);
+    if (NS_FRAME_IS_NOT_COMPLETE(status)) {
       // No, the child isn't complete
       nsIFrame* kidNextInFlow;
        
@@ -358,7 +358,7 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
 
   while (nsnull != nextInFlow) {
     nsReflowMetrics kidSize;
-    ReflowStatus    status;
+    nsReflowStatus  status;
 
     // Get the next child
     nsIFrame* kidFrame = nextInFlow->mFirstChild;
@@ -443,8 +443,8 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     prevLastContentIsComplete = mLastContentIsComplete;
 
     // Is the child we just pulled up complete?
-    mLastContentIsComplete = PRBool(status == frComplete);
-    if (frNotComplete == status) {
+    mLastContentIsComplete = NS_FRAME_IS_COMPLETE(status);
+    if (NS_FRAME_IS_NOT_COMPLETE(status)) {
       // No the child isn't complete
       nsIFrame* kidNextInFlow;
        
@@ -523,18 +523,17 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
  *
  * @param   aPresContext presentation context to use
  * @param   aState current inline state
- * @return  frComplete if all content has been mapped and frNotComplete
- *            if we should be continued
+ * @return  NS_FRAME_COMPLETE if all content has been mapped and 0 if we
+ *            should be continued
  */
-nsIFrame::ReflowStatus
-nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
-                                      nsInlineState&  aState)
+nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
+                                                     nsInlineState&  aState)
 {
 #ifdef NS_DEBUG
   VerifyLastIsComplete();
 #endif
-  nsIFrame*    kidPrevInFlow = nsnull;
-  ReflowStatus result = frNotComplete;
+  nsIFrame*      kidPrevInFlow = nsnull;
+  nsReflowStatus result = 0;
 
   // If we have no children and we have a prev-in-flow then we need to pick
   // up where it left off. If we have children, e.g. we're being resized, then
@@ -563,13 +562,13 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
     // Get the next content object
     nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (nsnull == kid) {
-      result = frComplete;
+      result = NS_FRAME_COMPLETE;
       break;
     }
 
     // Make sure we still have room left
     if (aState.availSize.width <= 0) {
-      // Note: return status was set to frNotComplete above...
+      // Note: return status was set to 0 above...
       break;
     }
 
@@ -629,8 +628,8 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics kidSize;
-    ReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
-                                      aState.availSize, pKidMaxElementSize);
+    nsReflowStatus  status = ReflowChild(kidFrame,aPresContext, kidSize,
+                                         aState.availSize, pKidMaxElementSize);
 
     // Did the child fit?
     if ((kidSize.width > aState.availSize.width) && (nsnull != mFirstChild)) {
@@ -658,7 +657,7 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
     kidIndex++;
 
     // Did the child complete?
-    if (frNotComplete == status) {
+    if (NS_FRAME_IS_NOT_COMPLETE(status)) {
       // If the child isn't complete then it means that we've used up
       // all of our available space
       mLastContentIsComplete = PR_FALSE;
@@ -704,7 +703,7 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                       nsReflowMetrics& aDesiredSize,
                                       const nsSize&    aMaxSize,
                                       nsSize*          aMaxElementSize,
-                                      ReflowStatus&    aStatus)
+                                      nsReflowStatus&  aStatus)
 {
 #ifdef NS_DEBUG
   PreReflowCheck();
@@ -713,7 +712,7 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
   PRBool        reflowMappedOK = PR_TRUE;
 
-  aStatus = frComplete;  // initialize out parameter
+  aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Get the style molecule
   nsStyleFont* styleFont = (nsStyleFont*)
@@ -735,7 +734,8 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
     reflowMappedOK = ReflowMappedChildrenFrom(aPresContext, state, mFirstChild, 0);
 
     if (PR_FALSE == reflowMappedOK) {
-      aStatus = frNotComplete;
+      // We didn't successfully reflow our mapped frames; therefore, we're not complete
+      aStatus = NS_FRAME_NOT_COMPLETE;
     }
   }
 
@@ -745,7 +745,8 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
     if (state.availSize.width <= 0) {
       // No space left. Don't try to pull-up children or reflow unmapped
       if (NextChildOffset() < mContent->ChildCount()) {
-        aStatus = frNotComplete;
+        // No room left to map the remaining content; therefore, we're not complete
+        aStatus = NS_FRAME_NOT_COMPLETE;
       }
     } else if (NextChildOffset() < mContent->ChildCount()) {
       // Try and pull-up some children from a next-in-flow
@@ -755,8 +756,9 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
           aStatus = ReflowUnmappedChildren(aPresContext, state);
         }
       } else {
-        // We were unable to pull-up all the existing frames from the next in flow
-        aStatus = frNotComplete;
+        // We were unable to pull-up all the existing frames from the next in flow;
+        // therefore, we're not complete
+        aStatus = NS_FRAME_NOT_COMPLETE;
       }
     }
   }
@@ -887,13 +889,13 @@ PRInt32 nsInlineFrame::RecoverState(nsIPresContext* aPresContext,
 
 // XXX We need to return information about whether our next-in-flow is
 // dirty...
-nsIFrame::ReflowStatus
+nsReflowStatus
 nsInlineFrame::IncrementalReflowFrom(nsIPresContext* aPresContext,
                                      nsInlineState&  aState,
                                      nsIFrame*       aChildFrame,
                                      PRInt32         aChildIndex)
 {
-  ReflowStatus  status = frComplete;
+  nsReflowStatus  status = NS_FRAME_COMPLETE;
 
   // Just reflow all the mapped children starting with childFrame.
   // XXX This isn't the optimal thing to do...
@@ -902,32 +904,32 @@ nsInlineFrame::IncrementalReflowFrom(nsIPresContext* aPresContext,
       // Any space left?
       if (aState.availSize.width <= 0) {
         // No space left. Don't try to pull-up children
-        status = frNotComplete;
+        status = 0;
       } else {
         // Try and pull-up some children from a next-in-flow
         if (!PullUpChildren(aPresContext, aState)) {
           // We were not able to pull-up all the child frames from our
           // next-in-flow
-          status = frNotComplete;
+          status = 0;
         }
       }
     }
   } else {
     // We were unable to reflow all our mapped frames
-    status = frNotComplete;
+    status = 0;
   }
 
   return status;
 }
 
-nsIFrame::ReflowStatus
+nsReflowStatus
 nsInlineFrame::IncrementalReflowAfter(nsIPresContext* aPresContext,
                                       nsInlineState&  aState,
                                       nsIFrame*       aChildFrame,
                                       PRInt32         aChildIndex)
 {
-  ReflowStatus  status = frComplete;
-  nsIFrame*     nextFrame;
+  nsReflowStatus  status = NS_FRAME_COMPLETE;
+  nsIFrame*       nextFrame;
 
   aChildFrame->GetNextSibling(nextFrame);
 
@@ -939,19 +941,19 @@ nsInlineFrame::IncrementalReflowAfter(nsIPresContext* aPresContext,
       // Any space left?
       if (aState.availSize.width <= 0) {
         // No space left. Don't try to pull-up children
-        status = frNotComplete;
+        status = 0;
       } else {
         // Try and pull-up some children from a next-in-flow
         if (!PullUpChildren(aPresContext, aState)) {
           // We were not able to pull-up all the child frames from our
           // next-in-flow
-          status = frNotComplete;
+          status = 0;
         }
       }
     }
   } else {
     // We were unable to reflow all our mapped frames
-    status = frNotComplete;
+    status = 0;
   }
 
   return status;
@@ -961,9 +963,9 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                            nsReflowMetrics& aDesiredSize,
                                            const nsSize&    aMaxSize,
                                            nsReflowCommand& aReflowCommand,
-                                           ReflowStatus&    aStatus)
+                                           nsReflowStatus&  aStatus)
 {
-  aStatus = frComplete;  // initialize out parameter
+  aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Get the style molecule
   nsStyleFont* styleFont =
@@ -1036,7 +1038,7 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       PushChildren(kidFrame, prevFrame, mLastContentIsComplete);
       SetLastContentOffset(prevFrame);
       mChildCount = kidIndex - 1;
-      aStatus = frNotComplete;
+      aStatus = NS_FRAME_NOT_COMPLETE;
 
     } else {
       // Place and size the child
@@ -1046,7 +1048,7 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       kidFrame->GetNextInFlow(kidNextInFlow);
 
       // Is the child complete?
-      if (frComplete == aStatus) {
+      if (NS_FRAME_IS_COMPLETE(aStatus)) {
         // Check whether the frame has next-in-flow(s) that are no longer needed
         if (nsnull != kidNextInFlow) {
           // Remove the next-in-flow(s)
@@ -1117,7 +1119,8 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
  * If one of our children spills over the end then push it to the
  * next-in-flow or to our overflow list.
  */
-nsIFrame::ReflowStatus
+#if 0
+nsReflowStatus
 nsInlineFrame::AdjustChildren(nsIPresContext* aPresContext,
                               nsReflowMetrics& aDesiredSize,
                               nsInlineState& aState,
@@ -1154,5 +1157,6 @@ nsInlineFrame::AdjustChildren(nsIPresContext* aPresContext,
   // XXX adjust mLastContentOffset if we push
   // XXX if we push, generate a reflow command
 
-  return frComplete;
+  return NS_FRAME_COMPLETE;
 }
+#endif

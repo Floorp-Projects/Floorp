@@ -128,7 +128,7 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize& aMaxSize,
                           nsSize* aMaxElementSize,
-                          ReflowStatus& aStatus);
+                          nsReflowStatus& aStatus);
 
   NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
                               nsReflowMetrics& aMetrics);
@@ -175,22 +175,22 @@ protected:
                           const nsRect& aDirtyRect,
                           nscoord dx, nscoord dy);
 
-  ReflowStatus ReflowPre(nsIPresContext* aCX,
-                         nsReflowMetrics& aDesiredSize,
-                         const nsSize& aMaxSize,
-                         nsSize* aMaxElementSize,
-                         nsStyleFont& aFont,
-                         PRInt32 aStartingOffset,
-                         nsLineLayout* aLineState);
+  nsReflowStatus ReflowPre(nsIPresContext* aCX,
+                           nsReflowMetrics& aDesiredSize,
+                           const nsSize& aMaxSize,
+                           nsSize* aMaxElementSize,
+                           nsStyleFont& aFont,
+                           PRInt32 aStartingOffset,
+                           nsLineLayout* aLineState);
 
-  ReflowStatus ReflowNormal(nsIPresContext* aCX,
-                            nsReflowMetrics& aDesiredSize,
-                            const nsSize& aMaxSize,
-                            nsSize* aMaxElementSize,
-                            nsStyleFont& aFont,
-                            nsStyleText& aTextStyle,
-                            PRInt32 aStartingOffset,
-                            nsLineLayout* aLineState);
+  nsReflowStatus ReflowNormal(nsIPresContext* aCX,
+                              nsReflowMetrics& aDesiredSize,
+                              const nsSize& aMaxSize,
+                              nsSize* aMaxElementSize,
+                              nsStyleFont& aFont,
+                              nsStyleText& aTextStyle,
+                              PRInt32 aStartingOffset,
+                              nsLineLayout* aLineState);
 
 public:
   PRInt32 mContentOffset;
@@ -733,7 +733,7 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
                                   nsReflowMetrics& aDesiredSize,
                                   const nsSize& aMaxSize,
                                   nsSize* aMaxElementSize,
-                                  ReflowStatus& aStatus)
+                                  nsReflowStatus& aStatus)
 {
 #ifdef NOISY
   ListTag(stdout);
@@ -800,7 +800,7 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
 #ifdef NOISY
   ListTag(stdout);
   printf(": reflow %scomplete [flags=%x]\n",
-         ((aStatus == frComplete) ? "" : "not "), mFlags);
+         (NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not "), mFlags);
 #endif
   return NS_OK;
 }
@@ -808,7 +808,7 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
 // Reflow normal text (stuff that doesn't have to deal with horizontal
 // tabs). Normal text reflow may or may not wrap depending on the
 // "whiteSpace" style property.
-nsIFrame::ReflowStatus
+nsReflowStatus
 TextFrame::ReflowNormal(nsIPresContext* aCX,
                         nsReflowMetrics& aDesiredSize,
                         const nsSize& aMaxSize,
@@ -953,7 +953,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
         aMaxElementSize->height = 0;
       }
       NS_RELEASE(fm);
-      return frComplete;
+      return NS_FRAME_COMPLETE;
     }
   }
 
@@ -967,10 +967,10 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
     aMaxElementSize->height = fm->GetHeight();
   }
   NS_RELEASE(fm);
-  return (cp == end) ? frComplete : frNotComplete;
+  return (cp == end) ? NS_FRAME_COMPLETE : 0;
 }
 
-nsIFrame::ReflowStatus
+nsReflowStatus
 TextFrame::ReflowPre(nsIPresContext* aCX,
                      nsReflowMetrics& aDesiredSize,
                      const nsSize& aMaxSize,
@@ -1044,7 +1044,7 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
     aMaxElementSize->height = aDesiredSize.height;
   }
   NS_RELEASE(fm);
-  return (cp == end) ? frComplete : frNotComplete;
+  return (cp == end) ? NS_FRAME_COMPLETE : 0;
 }
 
 #define NUM_WORDS 20

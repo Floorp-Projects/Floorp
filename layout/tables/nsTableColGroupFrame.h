@@ -43,13 +43,13 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize&   aMaxSize,
                           nsSize*         aMaxElementSize,
-                          ReflowStatus&   aStatus);
+                          nsReflowStatus& aStatus);
 
   NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aDesiredSize,
                                const nsSize&    aMaxSize,
                                nsReflowCommand& aReflowCommand,
-                               ReflowStatus&    aStatus);
+                               nsReflowStatus&  aStatus);
 
 protected:
 

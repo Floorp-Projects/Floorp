@@ -486,7 +486,7 @@ NS_METHOD nsTableFrame::ResizeReflow(nsIPresContext* aPresContext,
                                      nsReflowMetrics& aDesiredSize,
                                      const nsSize& aMaxSize,
                                      nsSize* aMaxElementSize,
-                                     ReflowStatus& aStatus)
+                                     nsReflowStatus& aStatus)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   if (gsDebug==PR_TRUE) 
@@ -500,7 +500,7 @@ NS_METHOD nsTableFrame::ResizeReflow(nsIPresContext* aPresContext,
   PreReflowCheck();
 #endif
 
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
 
   PRIntervalTime startTime;
   if (gsTiming) {
@@ -558,10 +558,10 @@ NS_METHOD nsTableFrame::ResizeReflow(nsIPresContext* aPresContext,
   * NOTE: should never get called on a continuing frame!  All cached pass1 state
   *       is stored in the inner table first-in-flow.
   */
-nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
-                                                       nsReflowMetrics& aDesiredSize,
-                                                       const nsSize& aMaxSize,
-                                                       nsSize* aMaxElementSize)
+nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
+                                               nsReflowMetrics& aDesiredSize,
+                                               const nsSize& aMaxSize,
+                                               nsSize* aMaxElementSize)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad pres context param");
   NS_ASSERTION(nsnull==mPrevInFlow, "illegal call, cannot call pass 1 on a continuing frame.");
@@ -569,7 +569,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
   if (gsDebug==PR_TRUE) printf("nsTableFrame::ResizeReflow Pass1: maxSize=%d,%d\n",
                                aMaxSize.width, aMaxSize.height);
   if (PR_TRUE==gsDebug) printf ("*** tableframe reflow pass1\t\t%d\n", this); 
-  ReflowStatus result = frComplete;
+  nsReflowStatus result = NS_FRAME_COMPLETE;
 
   mChildCount = 0;
   mFirstContentOffset = mLastContentOffset = 0;
@@ -609,7 +609,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
   for (;;) {
     nsIContentPtr kid = c->ChildAt(kidIndex);   // kid: REFCNT++
     if (kid.IsNull()) {
-      result = frComplete;
+      result = NS_FRAME_COMPLETE;
       break;
     }
 
@@ -684,7 +684,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
       prevKidFrame = kidFrame;
       mChildCount++;
 
-      if (frNotComplete == result) {
+      if (NS_FRAME_IS_NOT_COMPLETE(result)) {
         // If the child didn't finish layout then it means that it used
         // up all of our available space (or needs us to split).
         mLastContentIsComplete = PR_FALSE;
@@ -693,7 +693,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
     }
     contentOffset++;
     kidIndex++;
-    if (frNotComplete == result) {
+    if (NS_FRAME_IS_NOT_COMPLETE(result)) {
       // If the child didn't finish layout then it means that it used
       // up all of our available space (or needs us to split).
       mLastContentIsComplete = PR_FALSE;
@@ -715,19 +715,19 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
 
 /** the second of 2 reflow passes
   */
-nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
-                                                       nsReflowMetrics& aDesiredSize,
-                                                       const nsSize& aMaxSize,
-                                                       nsSize* aMaxElementSize,
-                                                       PRInt32 aMinCaptionWidth,
-                                                       PRInt32 mMaxCaptionWidth)
+nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
+                                               nsReflowMetrics& aDesiredSize,
+                                               const nsSize& aMaxSize,
+                                               nsSize* aMaxElementSize,
+                                               PRInt32 aMinCaptionWidth,
+                                               PRInt32 mMaxCaptionWidth)
 {
   if (PR_TRUE==gsDebug) printf ("***tableframe reflow pass2\t\t%d\n", this);
   if (gsDebug==PR_TRUE)
     printf("nsTableFrame::ResizeReflow Pass2: maxSize=%d,%d\n",
            aMaxSize.width, aMaxSize.height);
 
-  ReflowStatus result = frComplete;
+  nsReflowStatus result = NS_FRAME_COMPLETE;
 
   // now that we've computed the column  width information, reflow all children
   nsIContent* c = mContent;
@@ -749,7 +749,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
   }
 
   PRBool        reflowMappedOK = PR_TRUE;
-  ReflowStatus  status = frComplete;
+  nsReflowStatus  status = NS_FRAME_COMPLETE;
 
   // Check for an overflow list
   MoveOverflowToChildList();
@@ -762,7 +762,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
   if (nsnull != mFirstChild) {
     reflowMappedOK = ReflowMappedChildren(aPresContext, state, aMaxElementSize);
     if (PR_FALSE == reflowMappedOK) {
-      status = frNotComplete;
+      status = 0;  // not complete
     }
   }
 
@@ -772,7 +772,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
     if (state.availSize.height <= 0) {
       // No space left. Don't try to pull-up children or reflow unmapped
       if (NextChildOffset() < mContent->ChildCount()) {
-        status = frNotComplete;
+        status = 0;  // not complete
       }
     } else if (NextChildOffset() < mContent->ChildCount()) {
       // Try and pull-up some children from a next-in-flow
@@ -784,14 +784,14 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
       } else {
         // We were unable to pull-up all the existing frames from the
         // next in flow
-        status = frNotComplete;
+        status = 0;  // not complete
       }
     }
   }
 
   // Return our size and our status
 
-  if (frComplete == status) {
+  if (NS_FRAME_IS_NOT_COMPLETE(status)) {
     // Don't forget to add in the bottom margin from our last child.
     // Only add it in if there's room for it.
     nscoord margin = state.prevMaxPosBottomMargin -
@@ -978,9 +978,9 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
   PRBool    result = PR_TRUE;
 
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) {
-    nsSize                  kidAvailSize(aState.availSize);
-    nsReflowMetrics         desiredSize;
-    nsIFrame::ReflowStatus  status;
+    nsSize            kidAvailSize(aState.availSize);
+    nsReflowMetrics   desiredSize;
+    nsReflowStatus    status;
 
     // Get top margin for this kid
     nsIContentPtr kid;
@@ -1045,10 +1045,10 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       prevKidFrame = kidFrame;
 
       // Update mLastContentIsComplete now that this kid fits
-      mLastContentIsComplete = PRBool(status == frComplete);
+      mLastContentIsComplete = PRBool(NS_FRAME_IS_COMPLETE(status));
 
       // Special handling for incomplete children
-      if (frNotComplete == status) {
+      if (NS_FRAME_IS_NOT_COMPLETE(status)) {
         nsIFrame* kidNextInFlow;
          
         kidFrame->GetNextInFlow(kidNextInFlow);
@@ -1189,7 +1189,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
 
   while (nsnull != nextInFlow) {
     nsReflowMetrics kidSize;
-    ReflowStatus    status;
+    nsReflowStatus  status;
 
     // Get the next child
     nsIFrame* kidFrame = nextInFlow->mFirstChild;
@@ -1277,8 +1277,8 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
     prevLastContentIsComplete = mLastContentIsComplete;
 
     // Is the child we just pulled up complete?
-    mLastContentIsComplete = PRBool(status == frComplete);
-    if (frNotComplete == status) {
+    mLastContentIsComplete = PRBool(NS_FRAME_IS_COMPLETE(status));
+    if (NS_FRAME_IS_NOT_COMPLETE(status)) {
       // No the child isn't complete
       nsIFrame* kidNextInFlow;
        
@@ -1360,7 +1360,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
  * @return  frComplete if all content has been mapped and frNotComplete
  *            if we should be continued
  */
-nsIFrame::ReflowStatus
+nsReflowStatus
 nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
                                      InnerTableReflowState& aState,
                                      nsSize*              aMaxElementSize)
@@ -1369,7 +1369,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   VerifyLastIsComplete();
 #endif
   nsIFrame*    kidPrevInFlow = nsnull;
-  ReflowStatus result = frNotComplete;
+  nsReflowStatus result = 0;  // not complete
 
   // If we have no children and we have a prev-in-flow then we need to pick
   // up where it left off. If we have children, e.g. we're being resized, then
@@ -1397,7 +1397,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // Get the next content object
     nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (kid.IsNull()) {
-      result = frComplete;
+      result = NS_FRAME_COMPLETE;
       break;
     }
 
@@ -1429,7 +1429,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics kidSize;
-    ReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
+    nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
                                       aState.availSize, pKidMaxElementSize);
 
     // Did the child fit?
@@ -1465,7 +1465,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     kidIndex++;
 
     // Did the child complete?
-    if (frNotComplete == status) {
+    if (NS_FRAME_IS_NOT_COMPLETE(status)) {
       // If the child isn't complete then it means that we've used up
       // all of our available space
       mLastContentIsComplete = PR_FALSE;
@@ -1860,7 +1860,7 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext*  aCX,
                                           nsReflowMetrics& aDesiredSize,
                                           const nsSize&    aMaxSize,
                                           nsReflowCommand& aReflowCommand,
-                                          ReflowStatus&    aStatus)
+                                          nsReflowStatus&  aStatus)
 {
   NS_ASSERTION(nsnull != aCX, "bad arg");
   if (gsDebug==PR_TRUE) printf ("nsTableFrame::IncrementalReflow: maxSize=%d,%d\n",
@@ -1870,7 +1870,7 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext*  aCX,
 
   aDesiredSize.width = mRect.width;
   aDesiredSize.height = mRect.height;
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 

@@ -402,7 +402,7 @@ PRBool nsContainerFrame::ChildIsPseudoFrame(const nsIFrame* aChild) const
   PRBool      result;
    
   aChild->GetContent(childContent);
-  result = PRBool(childContent == mContent);
+  result = childContent == mContent;
   NS_RELEASE(childContent);
   return result;
 }
@@ -415,18 +415,17 @@ PRBool nsContainerFrame::ChildIsPseudoFrame(const nsIFrame* aChild) const
  * child is complete and it has next-in-flows (it was a splittable child)
  * then delete the next-in-flows.
  */
-nsIFrame::ReflowStatus
-nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
-                              nsIPresContext*  aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize&    aMaxSize,
-                              nsSize*          aMaxElementSize)
+nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
+                                             nsIPresContext*  aPresContext,
+                                             nsReflowMetrics& aDesiredSize,
+                                             const nsSize&    aMaxSize,
+                                             nsSize*          aMaxElementSize)
 {
-  ReflowStatus status;
+  nsReflowStatus status;
                                                   
   aKidFrame->ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, status);
 
-  if (frComplete == status) {
+  if (NS_FRAME_IS_COMPLETE(status)) {
     nsIFrame* kidNextInFlow;
      
     aKidFrame->GetNextInFlow(kidNextInFlow);
@@ -452,16 +451,15 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
  * used to reflow the child; otherwise interface nsIFrame is used. If the
  * child is splittable then  runaround is done using continuing frames.
  */
-nsIFrame::ReflowStatus
-nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
-                              nsIPresContext*  aPresContext,
-                              nsISpaceManager* aSpaceManager,
-                              const nsSize&    aMaxSize,
-                              nsRect&          aDesiredRect,
-                              nsSize*          aMaxElementSize)
+nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
+                                             nsIPresContext*  aPresContext,
+                                             nsISpaceManager* aSpaceManager,
+                                             const nsSize&    aMaxSize,
+                                             nsRect&          aDesiredRect,
+                                             nsSize*          aMaxElementSize)
 {
-  nsIRunaround* reflowRunaround;
-  ReflowStatus  status;
+  nsIRunaround*   reflowRunaround;
+  nsReflowStatus  status;
 
   // Get the band for this y-offset and see whether there are any floaters
   // that have changed the left/right edges.
@@ -556,7 +554,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     aDesiredRect.height = desiredSize.height;
   }
 
-  if (frComplete == status) {
+  if (NS_FRAME_IS_COMPLETE(status)) {
     nsIFrame* kidNextInFlow;
      
     aKidFrame->GetNextInFlow(kidNextInFlow);
@@ -802,7 +800,7 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
         nsIFrame* lastChildNextInFlow;
 
         lastChild->GetNextInFlow(lastChildNextInFlow);
-        nextInFlow->mLastContentIsComplete = PRBool(nsnull == lastChildNextInFlow);
+        nextInFlow->mLastContentIsComplete = (nsnull == lastChildNextInFlow);
       }
     }
     nextInFlow->mChildCount += numChildren;
@@ -994,7 +992,7 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
     nsIFrame* nextInFlow;
 
     lastChild->GetNextInFlow(nextInFlow);
-    mLastContentIsComplete = PRBool(nsnull == nextInFlow);
+    mLastContentIsComplete = (nsnull == nextInFlow);
   }
 
 #ifdef NS_DEBUG
@@ -1333,7 +1331,7 @@ void nsContainerFrame::PreReflowCheck()
   VerifyLastIsComplete();
 }
 
-void nsContainerFrame::PostReflowCheck(ReflowStatus aStatus)
+void nsContainerFrame::PostReflowCheck(nsReflowStatus aStatus)
 {
   PRInt32 len = LengthOf(mFirstChild) ;
   NS_ASSERTION(len == mChildCount, "bad child count");

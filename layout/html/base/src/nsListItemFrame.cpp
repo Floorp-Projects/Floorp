@@ -60,13 +60,13 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize& aMaxSize,
                           nsSize* aMaxElementSize,
-                          ReflowStatus& aStatus);
+                          nsReflowStatus& aStatus);
 
   NS_IMETHOD IncrementalReflow(nsIPresContext* aCX,
                                nsReflowMetrics& aDesiredSize,
                                const nsSize& aMaxSize,
                                nsReflowCommand& aReflowCommand,
-                               ReflowStatus& aStatus);
+                               nsReflowStatus& aStatus);
 
   void GetBulletSize(nsIPresContext* aCX,
                      nsReflowMetrics& aDesiredSize,
@@ -140,7 +140,7 @@ NS_METHOD BulletFrame::ResizeReflow(nsIPresContext* aCX,
                                     nsReflowMetrics& aDesiredSize,
                                     const nsSize& aMaxSize,
                                     nsSize* aMaxElementSize,
-                                    ReflowStatus& aStatus)
+                                    nsReflowStatus& aStatus)
 {
   GetBulletSize(aCX, aDesiredSize, aMaxSize);
   if (nsnull != aMaxElementSize) {
@@ -153,7 +153,7 @@ NS_METHOD BulletFrame::ResizeReflow(nsIPresContext* aCX,
   // the bullet must be mapping the second content object instead of
   // mapping the first content object.
   mLastContentIsComplete = PR_FALSE;
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
@@ -161,14 +161,14 @@ NS_METHOD BulletFrame::IncrementalReflow(nsIPresContext* aCX,
                                          nsReflowMetrics& aDesiredSize,
                                          const nsSize& aMaxSize,
                                          nsReflowCommand& aReflowCommand,
-                                         ReflowStatus& aStatus)
+                                         nsReflowStatus& aStatus)
 {
   // XXX Unless the reflow command is a style change, we should
   // just return the current size, otherwise we should invoke
   // GetBulletSize
   GetBulletSize(aCX, aDesiredSize, aMaxSize);
 
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
@@ -574,7 +574,7 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
                                         const nsSize& aMaxSize,
                                         nsRect& aDesiredRect,
                                         nsSize* aMaxElementSize,
-                                        ReflowStatus& aStatus)
+                                        nsReflowStatus& aStatus)
 {
   PRBool insideBullet = PR_FALSE;
 
@@ -639,9 +639,9 @@ NS_METHOD nsListItemFrame::IncrementalReflow(nsIPresContext* aCX,
                                              const nsSize& aMaxSize,
                                              nsRect& aDesiredRect,
                                              nsReflowCommand& aReflowCommand,
-                                             ReflowStatus& aStatus)
+                                             nsReflowStatus& aStatus)
 {
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   // XXX
   return NS_OK;
 }

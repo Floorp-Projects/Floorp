@@ -37,13 +37,13 @@ public:
                           nsReflowMetrics& aDesiredSize,
                           const nsSize&    aMaxSize,
                           nsSize*          aMaxElementSize,
-                          ReflowStatus&    aStatus);
+                          nsReflowStatus&  aStatus);
 
   NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aDesiredSize,
                                const nsSize&    aMaxSize,
                                nsReflowCommand& aReflowCommand,
-                               ReflowStatus&    aStatus);
+                               nsReflowStatus&  aStatus);
 
   NS_IMETHOD ContentAppended(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
@@ -60,6 +60,7 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
 
+  // nsIAnchoredItems
   virtual void AddAnchoredItem(nsIFrame*         aAnchoredItem,
                                AnchoringPosition aPosition,
                                nsIFrame*         aContainer);

@@ -34,13 +34,13 @@ public:
                            nsReflowMetrics& aDesiredSize,
                            const nsSize&    aMaxSize,
                            nsSize*          aMaxElementSize,
-                           ReflowStatus&    aStatus);
+                           nsReflowStatus&  aStatus);
 
   NS_IMETHOD  IncrementalReflow(nsIPresContext*  aPresContext,
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize&    aMaxSize,
                                 nsReflowCommand& aReflowCommand,
-                                ReflowStatus&    aStatus);
+                                nsReflowStatus&  aStatus);
 
   NS_IMETHOD  GetReflowMetrics(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aMetrics);
@@ -67,8 +67,8 @@ protected:
   PRBool PullUpChildren(nsIPresContext* aPresContext,
                         nsInlineState&  aState);
 
-  ReflowStatus ReflowUnmappedChildren(nsIPresContext* aPresContext,
-                                      nsInlineState&  aState);
+  nsReflowStatus ReflowUnmappedChildren(nsIPresContext* aPresContext,
+                                        nsInlineState&  aState);
 
   void PlaceChild(nsIFrame*              aChild,
                   PRInt32                aIndex,  // in the child frame list
@@ -80,22 +80,24 @@ protected:
                        nsInlineState& aState,
                        nsIFrame* aSkipChild);
 
-  ReflowStatus IncrementalReflowFrom(nsIPresContext* aPresContext,
-                                     nsInlineState&  aState,
-                                     nsIFrame*       aChildFrame,
-                                     PRInt32         aChildIndex);
+  nsReflowStatus IncrementalReflowFrom(nsIPresContext* aPresContext,
+                                       nsInlineState&  aState,
+                                       nsIFrame*       aChildFrame,
+                                       PRInt32         aChildIndex);
 
-  ReflowStatus IncrementalReflowAfter(nsIPresContext* aPresContext,
-                                      nsInlineState&  aState,
-                                      nsIFrame*       aChildFrame,
-                                      PRInt32         aChildIndex);
+  nsReflowStatus IncrementalReflowAfter(nsIPresContext* aPresContext,
+                                        nsInlineState&  aState,
+                                        nsIFrame*       aChildFrame,
+                                        PRInt32         aChildIndex);
 
-  ReflowStatus AdjustChildren(nsIPresContext* aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              nsInlineState& aState,
-                              nsIFrame* aKid,
-                              nsReflowMetrics& aKidMetrics,
-                              ReflowStatus aKidReflowStatus);
+#if 0
+  nsReflowStatus AdjustChildren(nsIPresContext* aPresContext,
+                                nsReflowMetrics& aDesiredSize,
+                                nsInlineState& aState,
+                                nsIFrame* aKid,
+                                nsReflowMetrics& aKidMetrics,
+                                ReflowStatus aKidReflowStatus);
+#endif
 };
 
 #endif /* nsInlineFrame_h___ */

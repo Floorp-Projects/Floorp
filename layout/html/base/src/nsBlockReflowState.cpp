@@ -428,7 +428,7 @@ nsBlockFrame::ReflowInlineChild(nsIFrame*        aKidFrame,
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize&    aMaxSize,
                                 nsSize*          aMaxElementSize,
-                                ReflowStatus&    aStatus)
+                                nsReflowStatus&  aStatus)
 {
   aStatus = ReflowChild(aKidFrame, aPresContext, aDesiredSize, aMaxSize,
                         aMaxElementSize);
@@ -442,7 +442,7 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*        aKidFrame,
                                const nsSize&    aMaxSize,
                                nsRect&          aDesiredRect,
                                nsSize*          aMaxElementSize,
-                               ReflowStatus&    aStatus)
+                               nsReflowStatus&  aStatus)
 {
   aStatus = ReflowChild(aKidFrame, aPresContext, aSpaceManager,
                         aMaxSize, aDesiredRect, aMaxElementSize);
@@ -1072,10 +1072,10 @@ nsBlockFrame::ResizeReflow(nsIPresContext*  aPresContext,
                            nsReflowMetrics& aDesiredSize,
                            const nsSize&    aMaxSize,
                            nsSize*          aMaxElementSize,
-                           ReflowStatus&    aStatus)
+                           nsReflowStatus&  aStatus)
 {
   nsresult rv = NS_OK;
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   nsBlockReflowState state;
   rv = InitializeState(aPresContext, aMaxSize, aMaxElementSize, state);
   if (NS_OK == rv) {
@@ -1127,7 +1127,7 @@ nsresult
 nsBlockFrame::DoResizeReflow(nsBlockReflowState& aState,
                              const nsSize&       aMaxSize,
                              nsRect&             aDesiredRect,
-                             ReflowStatus&       aStatus)
+                             nsReflowStatus&     aStatus)
 {
 #ifdef NS_DEBUG
   VerifyLines(PR_TRUE);
@@ -1164,15 +1164,15 @@ nsBlockFrame::DoResizeReflow(nsBlockReflowState& aState,
   ComputeDesiredRect(aState, aMaxSize, aDesiredRect);
 
   // Set return status
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   if (NS_LINE_LAYOUT_NOT_COMPLETE == rv) {
     rv = NS_OK;
-    aStatus = frNotComplete;
+    aStatus = NS_FRAME_NOT_COMPLETE;
   }
 #ifdef NS_DEBUG
   // Verify that the line layout code pulled everything up when it
   // indicates a complete reflow.
-  if (frComplete == aStatus) {
+  if (NS_FRAME_IS_COMPLETE(aStatus)) {
     nsBlockFrame* nextBlock = (nsBlockFrame*) mNextInFlow;
     while (nsnull != nextBlock) {
       NS_ASSERTION((nsnull == nextBlock->mLines) &&
@@ -1266,15 +1266,15 @@ nsBlockFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
 //----------------------------------------------------------------------
 
 NS_METHOD
-nsBlockFrame::ResizeReflow(nsIPresContext*         aPresContext,
-                           nsISpaceManager*        aSpaceManager,
-                           const nsSize&           aMaxSize,
-                           nsRect&                 aDesiredRect,
-                           nsSize*                 aMaxElementSize,
-                           nsIFrame::ReflowStatus& aStatus)
+nsBlockFrame::ResizeReflow(nsIPresContext*  aPresContext,
+                           nsISpaceManager* aSpaceManager,
+                           const nsSize&    aMaxSize,
+                           nsRect&          aDesiredRect,
+                           nsSize*          aMaxElementSize,
+                           nsReflowStatus&  aStatus)
 {
   nsresult rv = NS_OK;
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   nsBlockReflowState state;
   rv = InitializeState(aPresContext, aSpaceManager, aMaxSize,
                        aMaxElementSize, state);
@@ -1331,12 +1331,12 @@ nsresult nsBlockFrame::IncrementalReflowAfter(nsBlockReflowState& aState,
 }
 
 NS_METHOD
-nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
-                                nsISpaceManager*        aSpaceManager,
-                                const nsSize&           aMaxSize,
-                                nsRect&                 aDesiredRect,
-                                nsReflowCommand&        aReflowCommand,
-                                nsIFrame::ReflowStatus& aStatus)
+nsBlockFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+                                nsISpaceManager* aSpaceManager,
+                                const nsSize&    aMaxSize,
+                                nsRect&          aDesiredRect,
+                                nsReflowCommand& aReflowCommand,
+                                nsReflowStatus&  aStatus)
 {
 #ifdef NS_DEBUG
   VerifyLines(PR_TRUE);
@@ -1344,7 +1344,7 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
 #endif
   
   nsresult rv = NS_OK;
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   nsBlockReflowState state;
   rv = InitializeState(aPresContext, aSpaceManager, aMaxSize,
                        nsnull, state);
@@ -1428,10 +1428,10 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
   ComputeDesiredRect(state, aMaxSize, aDesiredRect);
 
   // Set return status
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   if (NS_LINE_LAYOUT_NOT_COMPLETE == rv) {
     rv = NS_OK;
-    aStatus = frNotComplete;
+    aStatus = NS_FRAME_NOT_COMPLETE;
   }
 
   // Now that reflow has finished, remove the cached pointer

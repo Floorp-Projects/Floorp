@@ -52,7 +52,7 @@ NS_METHOD nsLeafFrame::ResizeReflow(nsIPresContext* aPresContext,
                                     nsReflowMetrics& aDesiredSize,
                                     const nsSize& aMaxSize,
                                     nsSize* aMaxElementSize,
-                                    ReflowStatus& aStatus)
+                                    nsReflowStatus& aStatus)
 {
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
@@ -63,7 +63,7 @@ NS_METHOD nsLeafFrame::ResizeReflow(nsIPresContext* aPresContext,
     aMaxElementSize->width = aDesiredSize.width;
     aMaxElementSize->height = aDesiredSize.height;
   }
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
@@ -71,7 +71,7 @@ NS_METHOD nsLeafFrame::IncrementalReflow(nsIPresContext* aPresContext,
                                          nsReflowMetrics& aDesiredSize,
                                          const nsSize& aMaxSize,
                                          nsReflowCommand& aReflowCommand,
-                                         ReflowStatus& aStatus)
+                                         nsReflowStatus& aStatus)
 {
   // XXX Unless the reflow command is a style change, we should
   // just return the current size, otherwise we should invoke
@@ -82,7 +82,7 @@ NS_METHOD nsLeafFrame::IncrementalReflow(nsIPresContext* aPresContext,
   GetDesiredSize(aPresContext, aDesiredSize, aMaxSize);
   AddBordersAndPadding(aPresContext, aDesiredSize);
 
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 

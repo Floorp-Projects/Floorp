@@ -65,12 +65,12 @@ public:
    *
    * @see nsISpaceManager#Translate()
    */
-  NS_IMETHOD  ResizeReflow(nsIPresContext*         aPresContext,
-                           nsISpaceManager*        aSpaceManager,
-                           const nsSize&           aMaxSize,
-                           nsRect&                 aDesiredRect,
-                           nsSize*                 aMaxElementSize,
-                           nsIFrame::ReflowStatus& aStatus) = 0;
+  NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
+                           nsISpaceManager* aSpaceManager,
+                           const nsSize&    aMaxSize,
+                           nsRect&          aDesiredRect,
+                           nsSize*          aMaxElementSize,
+                           nsReflowStatus&  aStatus) = 0;
 
   /**
    * Incremental reflow. The reflow command contains information about the
@@ -101,12 +101,12 @@ public:
    * @param aReflowCommand the reflow command contains information about the
    *          type of change.
    */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*         aPresContext,
-                               nsISpaceManager*        aSpaceManager,
-                               const nsSize&           aMaxSize,
-                               nsRect&                 aDesiredRect,
-                               nsReflowCommand&        aReflowCommand,
-                               nsIFrame::ReflowStatus& aStatus) = 0;
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsISpaceManager* aSpaceManager,
+                               const nsSize&    aMaxSize,
+                               nsRect&          aDesiredRect,
+                               nsReflowCommand& aReflowCommand,
+                               nsReflowStatus&  aStatus) = 0;
 };
 
 #endif /* nsIRunaround_h___ */

@@ -95,7 +95,7 @@ public:
                            nsReflowMetrics& aDesiredSize,
                            const nsSize&    aMaxSize,
                            nsSize*          aMaxElementSize,
-                           ReflowStatus&    aStatus);
+                           nsReflowStatus&  aStatus);
 
   NS_IMETHOD  JustifyReflow(nsIPresContext* aPresContext,
                             nscoord         aAvailableSpace);
@@ -105,7 +105,8 @@ public:
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize&    aMaxSize,
                                 nsReflowCommand& aReflowCommand,
-                                ReflowStatus&    aStatus);
+                                nsReflowStatus&  aStatus);
+
   NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer);

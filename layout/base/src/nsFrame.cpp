@@ -932,7 +932,7 @@ NS_METHOD nsFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize&    aMaxSize,
                                 nsSize*          aMaxElementSize,
-                                ReflowStatus&    aStatus)
+                                nsReflowStatus&  aStatus)
 {
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
@@ -942,7 +942,7 @@ NS_METHOD nsFrame::ResizeReflow(nsIPresContext*  aPresContext,
     aMaxElementSize->width = 0;
     aMaxElementSize->height = 0;
   }
-  aStatus = frComplete;
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
@@ -956,7 +956,7 @@ NS_METHOD nsFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                      nsReflowMetrics& aDesiredSize,
                                      const nsSize&    aMaxSize,
                                      nsReflowCommand& aReflowCommand,
-                                     ReflowStatus&    aStatus)
+                                     nsReflowStatus&  aStatus)
 {
   NS_PRECONDITION(aReflowCommand.GetTarget() == this, "bad target");
 
@@ -972,7 +972,7 @@ NS_METHOD nsFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     aDesiredSize.height = 0;
     aDesiredSize.ascent = 0;
     aDesiredSize.descent = 0;
-    aStatus = frComplete;
+    aStatus = NS_FRAME_COMPLETE;
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1330,7 +1330,7 @@ PRBool IsInRange(nsIContent * aStartContent,
                  nsIContent * aContent) {
   // Start and End Content is the same, so check against the start
   if (aStartContent == aEndContent) {
-    return PRBool(aContent == aStartContent);
+    return aContent == aStartContent;
   }
 
   // Check to see if it is equal to the start or the end

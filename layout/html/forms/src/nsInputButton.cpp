@@ -109,7 +109,7 @@ public:
                          nsReflowMetrics& aDesiredSize,
                          const nsSize& aMaxSize,
                          nsSize* aMaxElementSize,
-                         ReflowStatus& aStatus);
+                         nsReflowStatus& aStatus);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView* aView);
 
@@ -389,7 +389,7 @@ nsInputButtonFrame::ResizeReflow(nsIPresContext* aPresContext,
                                  nsReflowMetrics& aDesiredSize,
                                  const nsSize& aMaxSize,
                                  nsSize* aMaxElementSize,
-                                 ReflowStatus& aStatus)
+                                 nsReflowStatus& aStatus)
 {
   if ((kButtonTag_Input == GetButtonTagType()) &&
       (kButton_Image == GetButtonType())) {
@@ -400,7 +400,7 @@ nsInputButtonFrame::ResizeReflow(nsIPresContext* aPresContext,
       aMaxElementSize->width = aDesiredSize.width;
       aMaxElementSize->height = aDesiredSize.height;
     }
-    aStatus = frComplete;
+    aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
   else {

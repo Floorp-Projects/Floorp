@@ -58,12 +58,12 @@ NS_METHOD PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                   nsReflowMetrics& aDesiredSize,
                                   const nsSize&    aMaxSize,
                                   nsSize*          aMaxElementSize,
-                                  ReflowStatus&    aStatus)
+                                  nsReflowStatus&  aStatus)
 {
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
-  aStatus = frComplete;  // initialize out parameter
+  aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Do we have any children?
   if (nsnull == mFirstChild) {
@@ -95,7 +95,7 @@ NS_METHOD PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
     // Get the child's desired size
     aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, aMaxSize,
                           aMaxElementSize);
-    mLastContentIsComplete = PRBool(aStatus == frComplete);
+    mLastContentIsComplete = NS_FRAME_IS_COMPLETE(aStatus);
 
     // Make sure the child is at least as tall as our max size (the containing window)
     if (aDesiredSize.height < aMaxSize.height) {
@@ -107,7 +107,7 @@ NS_METHOD PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
     mFirstChild->SetRect(rect);
 
     // Is the frame complete?
-    if (frComplete == aStatus) {
+    if (NS_FRAME_IS_COMPLETE(aStatus)) {
       nsIFrame* childNextInFlow;
 
       mFirstChild->GetNextInFlow(childNextInFlow);
@@ -130,7 +130,7 @@ NS_METHOD PageFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                        nsReflowMetrics& aDesiredSize,
                                        const nsSize&    aMaxSize,
                                        nsReflowCommand& aReflowCommand,
-                                       ReflowStatus&    aStatus)
+                                       nsReflowStatus&  aStatus)
 {
   // We don't expect the target of the reflow command to be page frame
   NS_ASSERTION(aReflowCommand.GetTarget() != this, "page frame is reflow command target");

@@ -66,6 +66,34 @@ struct nsReflowMetrics {
 #define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
 
 /**
+ * Reflow status returned by the reflow methods.
+ *
+ * NS_FRAME_COMPLETE bit flag means the frame maps all its content. If this bit
+ * isn't set it means the frame doesn't map all its content, and that the parent
+ * frame should create a continuing frame.
+ *
+ * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is dirty, and
+ * also needs to be reflowed. This status only makes sense for a frame that is
+ * not complete, i.e. you wouldn't set both NS_FRAME_COMPLETE and
+ * NS_FRAME_REFLOW_NEXTINFLOW
+ *
+ * @see #ResizeReflow()
+ * @see #IncrementalReflow()
+ * @see #CreateContinuingFrame()
+ */
+typedef PRUint32  nsReflowStatus;
+
+#define NS_FRAME_COMPLETE           0x01
+#define NS_FRAME_REFLOW_NEXTINFLOW  0x02
+
+#define NS_FRAME_IS_COMPLETE(status)\
+  (((status) & NS_FRAME_COMPLETE) == NS_FRAME_COMPLETE)
+#define NS_FRAME_IS_NOT_COMPLETE(status)\
+  (((status) & NS_FRAME_COMPLETE) == 0)
+
+#define NS_FRAME_NOT_COMPLETE       0
+
+/**
  * A frame in the layout model. This interface is supported by all frame
  * objects.
  *
@@ -173,17 +201,6 @@ public:
                           PRInt32&        aCursor) = 0;
 
   /**
-   * Reflow status returned by the reflow methods. frNotComplete means you didn't
-   * map all your content, and so your parent should create a continuing frame
-   * for you.
-   *
-   * @see #ResizeReflow()
-   * @see #IncrementalReflow()
-   * @see #CreateContinuingFrame()
-   */
-  enum ReflowStatus {frComplete, frNotComplete};
-
-  /**
    * Resize reflow. The frame is given a maximum size and asked for its desired
    * size. This is the frame's opportunity to reflow its children.
    *
@@ -208,7 +225,7 @@ public:
                            nsReflowMetrics& aDesiredSize,
                            const nsSize&    aMaxSize,
                            nsSize*          aMaxElementSize,
-                           ReflowStatus&    aStatus) = 0;
+                           nsReflowStatus&  aStatus) = 0;
 
   /**
    * Post-processing reflow method invoked when justification is enabled.
@@ -246,7 +263,7 @@ public:
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize&    aMaxSize,
                                 nsReflowCommand& aReflowCommand,
-                                ReflowStatus&    aStatus) = 0;
+                                nsReflowStatus&  aStatus) = 0;
 
   /**
    * This call is invoked when content is appended to the content tree.

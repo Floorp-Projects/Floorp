@@ -76,19 +76,18 @@ void nsReflowCommand::Dispatch(nsReflowMetrics& aDesiredSize,
   if (nsnull != root) {
     mPath.RemoveElementAt(mPath.Count() - 1);
 
-    nsIFrame::ReflowStatus  status;
-
+    nsReflowStatus  status;
     root->IncrementalReflow(mPresContext, aDesiredSize, aMaxSize, *this, status);
   }
 }
 
 // Pass the reflow command to the next frame in the hierarchy
-nsIFrame::ReflowStatus nsReflowCommand::Next(nsReflowMetrics& aDesiredSize,
-                                             const nsSize&    aMaxSize,
-                                             nsIFrame*&       aNextFrame)
+nsReflowStatus nsReflowCommand::Next(nsReflowMetrics& aDesiredSize,
+                                     const nsSize&    aMaxSize,
+                                     nsIFrame*&       aNextFrame)
 {
-  PRInt32                 count = mPath.Count();
-  nsIFrame::ReflowStatus  result = nsIFrame::frComplete;
+  PRInt32         count = mPath.Count();
+  nsReflowStatus  result = NS_FRAME_COMPLETE;
 
   NS_ASSERTION(count > 0, "empty path vector");
   if (count > 0) {
@@ -107,13 +106,13 @@ nsIFrame::ReflowStatus nsReflowCommand::Next(nsReflowMetrics& aDesiredSize,
 
 // Pass the reflow command to the next frame in the hierarchy. Check
 // whether it wants to use nsIRunaround or nsIFrame
-nsIFrame::ReflowStatus nsReflowCommand::Next(nsISpaceManager* aSpaceManager,
-                                             nsRect&          aDesiredRect,
-                                             const nsSize&    aMaxSize,
-                                             nsIFrame*&       aNextFrame)
+nsReflowStatus nsReflowCommand::Next(nsISpaceManager* aSpaceManager,
+                                     nsRect&          aDesiredRect,
+                                     const nsSize&    aMaxSize,
+                                     nsIFrame*&       aNextFrame)
 {
-  PRInt32                 count = mPath.Count();
-  nsIFrame::ReflowStatus  result = nsIFrame::frComplete;
+  PRInt32         count = mPath.Count();
+  nsReflowStatus  result = NS_FRAME_COMPLETE;
 
   NS_ASSERTION(count > 0, "empty path vector");
   if (count > 0) {
