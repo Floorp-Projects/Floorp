@@ -6299,7 +6299,9 @@ NS_IMETHODIMP nsImapMockChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 
 NS_IMETHODIMP nsImapMockChannel::GetOriginalURI(nsIURI * *aURI)
 {
-    *aURI = m_originalUrl;
+// IMap does not seem to have the notion of an original URI :-(
+//  *aURI = m_originalUrl;
+    *aURI = m_url;
     NS_IF_ADDREF(*aURI);
     return NS_OK; 
 }
