@@ -1,0 +1,111 @@
+#ifndef nsCppSharedAllocator_h__
+#define nsCppSharedAllocator_h__
+
+#include "nsIAllocator.h" // for |nsAllocator|
+#include "nscore.h"       // for |NS_XXX_CAST|
+// #include <limits>
+#include <limits.h>
+
+
+
+  // under Metrowerks (Mac), we don't have autoconf yet
+#ifdef __MWERKS__
+  #define HAVE_CPP_MEMBER_TEMPLATES
+#endif
+
+template <class T>
+class nsCppSharedAllocator
+    /*
+      ...allows Standard Library containers, et al, to use our global shared
+      (XP)COM-aware allocator.
+    */
+  {
+    public:
+      typedef T          value_type;
+      typedef size_t     size_type;
+      typedef ptrdiff_t  difference_type;
+
+      typedef T*         pointer;
+      typedef const T*   const_pointer;
+
+      typedef T&         reference;
+      typedef const T&   const_reference;
+
+
+
+      nsCppSharedAllocator() { }
+
+      template <class U>
+      nsCppSharedAllocator( const nsCppSharedAllocator<U>& ) { }
+
+     ~nsCppSharedAllocator() { }
+
+
+      pointer
+      address( reference r ) const
+        {
+          return &r;
+        }
+
+      const_pointer
+      address( const_reference r ) const
+        {
+          return &r;
+        }
+
+      pointer
+      allocate( size_type n, const void* /*hint*/=0 )
+        {
+          return NS_REINTERPRET_CAST(pointer, nsAllocator::Alloc(NS_STATIC_CAST(PRUint32, n*sizeof(T))));
+        }
+
+      void
+      deallocate( pointer p, size_type /*n*/ )
+        {
+          nsAllocator::Free(p);
+        }
+
+      void
+      construct( pointer p, const T& val )
+        {
+          new (p) T(val);
+        }
+      
+      void
+      destroy( pointer p )
+        {
+          p->~T();
+        }
+
+      size_type
+      max_size() const
+        {
+          // return numeric_limits<size_type>::max() / sizeof(T);
+          return ULONG_MAX / sizeof(T);
+        }
+
+#ifdef HAVE_CPP_MEMBER_TEMPLATES
+      template <class U>
+      struct rebind
+        {
+          typedef nsCppSharedAllocator<U> other;
+        };
+#endif
+  };
+
+
+template <class T>
+PRBool
+operator==( const nsCppSharedAllocator<T>&, const nsCppSharedAllocator<T>& )
+  {
+    return PR_TRUE;
+  }
+
+template <class T>
+PRBool
+operator!=( const nsCppSharedAllocator<T>&, const nsCppSharedAllocator<T>& )
+  {
+    return PR_FALSE;
+  }
+
+#endif /* !defined(nsCppSharedAllocator_h__) */
