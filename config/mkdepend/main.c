@@ -238,7 +238,9 @@ main(int argc, char *argv[])
 				argc--;
 				offset = 0;
 			}
-			//offset +1 here since first def letter cannot be `=`
+			/* offset +1 here since first def letter
+			 * cannot be `=`
+			 */
 			for (p = argv[0] + offset + 1; *p; p++)
 				if (*p == '=') {
 					*p = ' ';
