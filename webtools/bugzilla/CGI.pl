@@ -32,6 +32,14 @@ use lib ".";
 
 # use Carp;                       # for confess
 
+BEGIN {
+    if ($^O =~ /MSWin32/i) {
+        # Help CGI find the correct temp directory as the default list
+        # isn't Windows friendly (Bug 248988)
+        $ENV{'TMPDIR'} = $ENV{'TEMP'} || $ENV{'TMP'} || "$ENV{'WINDIR'}\\TEMP";
+    }
+}
+
 use Bugzilla::Util;
 use Bugzilla::Config;
 use Bugzilla::Constants;
