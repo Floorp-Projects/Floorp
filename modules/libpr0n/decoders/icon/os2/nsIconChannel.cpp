@@ -423,33 +423,39 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   // (1) get an hIcon for the file
   PSZ pszFileName = (PSZ)filePath.get();
   HPOINTER hIcon = WinLoadFileIcon(pszFileName, FALSE);
-  if (hIcon != NULL)
+  if (hIcon == NULL)
+    return NS_ERROR_FAILURE;
+  // we got a handle to an icon. Now we want to get a bitmap for the icon using GetIconInfo....
+  POINTERINFO IconInfo;
+  BOOL fRC = WinQueryPointerInfo(hIcon, &IconInfo);
+  if (fRC == 0) {
+    WinFreeFileIcon(hIcon);
+    return NS_ERROR_FAILURE;
+  }
+  nsCString iconBuffer;
+  BITMAPINFOHEADER2  BMHeader;
+  HBITMAP            hBitmap;
+  HBITMAP            hBitmapMask;
+
+  // Decide which icon to use
+  if ( infoFlags & SHGFI_LARGEICON )
   {
-    // we got a handle to an icon. Now we want to get a bitmap for the icon using GetIconInfo....
-    POINTERINFO IconInfo;
-    BOOL fRC = WinQueryPointerInfo(hIcon, &IconInfo);
-    if (fRC != 0)
-    {
-      nsCString iconBuffer;
-      BITMAPINFOHEADER2  BMHeader;
-      HBITMAP            hBitmap;
-      HBITMAP            hBitmapMask;
+    hBitmap = IconInfo.hbmColor;
+    hBitmapMask = IconInfo.hbmPointer;
+  }
+  else
+  {
+    hBitmap = IconInfo.hbmMiniColor;
+    hBitmapMask = IconInfo.hbmMiniPointer;
+  }
 
-      // Decide which icon to use
-      if ( infoFlags & SHGFI_LARGEICON )
-      {
-        hBitmap = IconInfo.hbmColor;
-        hBitmapMask = IconInfo.hbmPointer;
-      }
-      else
-      {
-        hBitmap = IconInfo.hbmMiniColor;
-        hBitmapMask = IconInfo.hbmMiniPointer;
-      }
-
-      // Get the basic info
-      BMHeader.cbFix = sizeof(BMHeader);
-      fRC =  GpiQueryBitmapInfoHeader(hBitmap, &BMHeader);
+  // Get the basic info
+  BMHeader.cbFix = sizeof(BMHeader);
+  fRC =  GpiQueryBitmapInfoHeader(hBitmap, &BMHeader);
+  if (fRC == 0) {
+    WinFreeFileIcon(hIcon);
+    return NS_ERROR_FAILURE;
+  }
 
 ///// // Calulate size of color table
 ///// LONG cbColorTable;
@@ -461,94 +467,95 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
 ///// {
 /////   cbColorTable = 1 << BMHeader.cBitCount;
 ///// }
-      LONG cbBitMapInfo = sizeof(BITMAPINFO2) + (sizeof(RGB2) * 255); // Max possible
-      LONG iScanLineSize =  ((BMHeader.cBitCount * BMHeader.cx + 31) / 32) * 4;
-      LONG cbBuffer = iScanLineSize * BMHeader.cy;
-      // Allocate buffers, fill w/ 0
-      PBITMAPINFO2 pBitMapInfo = (PBITMAPINFO2)nsMemory::Alloc(cbBitMapInfo);
-      memset(pBitMapInfo, 0, cbBitMapInfo);
-      PBYTE buffer = (PBYTE)nsMemory::Alloc(cbBuffer);
-      memset(buffer, 0, cbBuffer);
-      // Copy over the header info
-      *((PBITMAPINFOHEADER2)pBitMapInfo ) = BMHeader;
+  LONG cbBitMapInfo = sizeof(BITMAPINFO2) + (sizeof(RGB2) * 255); // Max possible
+  LONG iScanLineSize =  ((BMHeader.cBitCount * BMHeader.cx + 31) / 32) * 4;
+  printf("iScanLineSize = %d\n", iScanLineSize);
+  printf("BMHeader.cy = %d\n", BMHeader.cy);
+  LONG cbBuffer = iScanLineSize * BMHeader.cy;
+  // Allocate buffers, fill w/ 0
+  PBITMAPINFO2 pBitMapInfo = (PBITMAPINFO2)nsMemory::Alloc(cbBitMapInfo);
+  memset(pBitMapInfo, 0, cbBitMapInfo);
+  PBYTE buffer = (PBYTE)nsMemory::Alloc(cbBuffer);
+  memset(buffer, 0, cbBuffer);
+  // Copy over the header info
+  *((PBITMAPINFOHEADER2)pBitMapInfo ) = BMHeader;
 
-      // Create DC
-      DEVOPENSTRUC  dop = {NULL, "DISPLAY", NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-      HDC hdc = DevOpenDC( (HAB)0, OD_MEMORY, "*", 5L, (PDEVOPENDATA)&dop, NULLHANDLE);
-      SIZEL sizel = {0,0};
-      HPS hps = GpiCreatePS((HAB)0, hdc, &sizel, GPIA_ASSOC | PU_PELS | GPIT_MICRO);
+  // Create DC
+  DEVOPENSTRUC  dop = {NULL, "DISPLAY", NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+  HDC hdc = DevOpenDC( (HAB)0, OD_MEMORY, "*", 5L, (PDEVOPENDATA)&dop, NULLHANDLE);
+  SIZEL sizel = {0,0};
+  HPS hps = GpiCreatePS((HAB)0, hdc, &sizel, GPIA_ASSOC | PU_PELS | GPIT_MICRO);
 
-      // Not sure if you need this but it is good form
-      HBITMAP hOldBM = GpiSetBitmap(hps, hBitmap);
+  // Not sure if you need this but it is good form
+  HBITMAP hOldBM = GpiSetBitmap(hps, hBitmap);
 
-      // Get those bits
-      LONG lScanLines = GpiQueryBitmapBits(hps, 0L, (LONG)BMHeader.cy, buffer, pBitMapInfo);
-      if (lScanLines > 0)
-      {
-        // Set this since it is used all over
-        pBitMapInfo->cbImage =  cbBuffer;
-        pBitMapInfo->cSize1  =  iScanLineSize;
+  // Get those bits
+  LONG lScanLines = GpiQueryBitmapBits(hps, 0L, (LONG)BMHeader.cy, buffer, pBitMapInfo);
+  if (lScanLines > 0)
+  {
+    // Set this since it is used all over
+    pBitMapInfo->cbImage =  cbBuffer;
+    pBitMapInfo->cSize1  =  iScanLineSize;
 
-        // temporary hack alert...currently moz-icon urls only support 16, 24 and 32 bit color. we don't support
-        // 8, 4 or 1 bit color yet. So convert OS/2 4 BPP to RGB
+    // temporary hack alert...currently moz-icon urls only support 16, 24 and 32 bit color. we don't support
+    // 8, 4 or 1 bit color yet. So convert OS/2 4 BPP to RGB
 
-        // The first 2 bytes into our output buffer needs to be the width and the height (in pixels) of the icon
-        // as specified by our data format.
-        iconBuffer.Assign((char) pBitMapInfo->cx);
-        iconBuffer.Append((char) pBitMapInfo->cy);
+    // The first 2 bytes into our output buffer needs to be the width and the height (in pixels) of the icon
+    // as specified by our data format.
+    iconBuffer.Assign((char) pBitMapInfo->cx);
+    iconBuffer.Append((char) pBitMapInfo->cy);
 
-        ConvertColorBitMap(buffer, pBitMapInfo, iconBuffer);
+    ConvertColorBitMap(buffer, pBitMapInfo, iconBuffer);
 
-        // now we need to tack on the alpha data...which is hbmMask
+    // now we need to tack on the alpha data...which is hbmMask
 
-        memset(pBitMapInfo, 0, cbBitMapInfo);
-        BMHeader.cbFix = sizeof(BMHeader);
-        fRC =  GpiQueryBitmapInfoHeader(hBitmapMask, &BMHeader);
-        iScanLineSize =  ((BMHeader.cBitCount * BMHeader.cx + 31) / 32) * 4;
-        LONG cbBufferMask = iScanLineSize * BMHeader.cy;
-        if (cbBufferMask > cbBuffer)  // Need more for mask
-        {
-          nsMemory::Free(buffer);
-          buffer = (PBYTE)nsMemory::Alloc(cbBufferMask);
-          memset(buffer, 0, cbBufferMask);
-        }
-
-        *((PBITMAPINFOHEADER2)pBitMapInfo ) = BMHeader;
-        hOldBM = GpiSetBitmap(hps, hBitmapMask);
-
-        lScanLines = GpiQueryBitmapBits(hps, 0L, (LONG)BMHeader.cy, buffer, pBitMapInfo);
-        if (lScanLines > 0)
-        {
-          pBitMapInfo->cbImage =  cbBufferMask;
-          pBitMapInfo->cSize1  =  iScanLineSize;
-          ConvertMaskBitMap(buffer, pBitMapInfo, iconBuffer);
-
-          // turn our nsString into a stream looking object...
-          aListener->OnStartRequest(this, ctxt);
-
-          // turn our string into a stream...and make the appropriate calls on our consumer
-          nsCOMPtr<nsISupports> streamSupports;
-          NS_NewByteInputStream(getter_AddRefs(streamSupports), iconBuffer.get(), iconBuffer.Length());
-          nsCOMPtr<nsIInputStream> inputStr (do_QueryInterface(streamSupports));
-          aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconBuffer.Length());
-          aListener->OnStopRequest(this, ctxt, NS_OK);
-        } // if we have a mask buffer to apply
-
-      } // if we got color info
+    memset(pBitMapInfo, 0, cbBitMapInfo);
+    BMHeader.cbFix = sizeof(BMHeader);
+    fRC =  GpiQueryBitmapInfoHeader(hBitmapMask, &BMHeader);
+    iScanLineSize =  ((BMHeader.cBitCount * BMHeader.cx + 31) / 32) * 4;
+    LONG cbBufferMask = iScanLineSize * BMHeader.cy;
+    if (cbBufferMask > cbBuffer)  // Need more for mask
+    {
       nsMemory::Free(buffer);
-      nsMemory::Free(pBitMapInfo);
-      if (hps)
-      {
-        GpiAssociate(hps, NULLHANDLE);
-        GpiDestroyPS(hps);
-      }
-      if (hdc)
-      {
-        DevCloseDC(hdc);
-      }
-    } // if we got pointer info
+      buffer = (PBYTE)nsMemory::Alloc(cbBufferMask);
+      memset(buffer, 0, cbBufferMask);
+    }
+
+    *((PBITMAPINFOHEADER2)pBitMapInfo ) = BMHeader;
+    hOldBM = GpiSetBitmap(hps, hBitmapMask);
+
+    lScanLines = GpiQueryBitmapBits(hps, 0L, (LONG)BMHeader.cy, buffer, pBitMapInfo);
+    if (lScanLines > 0)
+    {
+      pBitMapInfo->cbImage =  cbBufferMask;
+      pBitMapInfo->cSize1  =  iScanLineSize;
+      ConvertMaskBitMap(buffer, pBitMapInfo, iconBuffer);
+
+      // turn our nsString into a stream looking object...
+      aListener->OnStartRequest(this, ctxt);
+
+      // turn our string into a stream...and make the appropriate calls on our consumer
+      nsCOMPtr<nsISupports> streamSupports;
+      NS_NewByteInputStream(getter_AddRefs(streamSupports), iconBuffer.get(), iconBuffer.Length());
+      nsCOMPtr<nsIInputStream> inputStr (do_QueryInterface(streamSupports));
+      aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconBuffer.Length());
+      aListener->OnStopRequest(this, ctxt, NS_OK);
+    } // if we have a mask buffer to apply
+
+  } // if we got color info
+  nsMemory::Free(buffer);
+  nsMemory::Free(pBitMapInfo);
+  if (hps)
+  {
+    GpiAssociate(hps, NULLHANDLE);
+    GpiDestroyPS(hps);
+  }
+  if (hdc)
+  {
+    DevCloseDC(hdc);
+  }
+  if (hIcon)
     WinFreeFileIcon(hIcon);
-  } // if we got FileIcon
 
   return rv;
 }
