@@ -112,7 +112,6 @@ function OpenURL(event, node, root)
 	}
 
     window.open(url,'bookmarks');
-    dump("OpenURL(" + url + ")\n");
 
     return(true);
 }
