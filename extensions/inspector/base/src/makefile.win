@@ -23,6 +23,27 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=inspector_s 
 MODULE=inspector
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  rdf \
+		  rdfutil \
+		  gfx \
+		  layout \
+		  content \
+		  widget \
+		  locale \
+		  gfx2 \
+		  necko \
+		  docshell \
+		  view \
+		  timer \
+		  imglib2 \
+		  mimetype \
+		  exthandler \
+		  png \
+		  zlib \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
