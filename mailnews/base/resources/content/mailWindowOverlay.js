@@ -1121,3 +1121,53 @@ function IsOfflineSettingsEnabled()
     return false;
 }
 
+function CommandUpdate_UndoRedo()
+{
+    ShowMenuItem("menu_undo", true);
+    EnableMenuItem("menu_undo", SetupUndoRedoCommand("cmd_undo"));
+    ShowMenuItem("menu_redo", true);
+    EnableMenuItem("menu_redo", SetupUndoRedoCommand("cmd_redo"));
+}
+
+function SetupUndoRedoCommand(command)
+{
+    var canUndoOrRedo = false;
+    var txnType = 0;
+
+    if (command == "cmd_undo")
+    {
+        canUndoOrRedo = messenger.CanUndo();
+        txnType = messenger.GetUndoTransactionType();
+    }
+    else
+    {
+        canUndoOrRedo = messenger.CanRedo();
+        txnType = messenger.GetRedoTransactionType();
+    }
+
+    if (canUndoOrRedo)
+    {
+        switch (txnType)
+        {
+        default:
+        case 0:
+            goSetMenuValue(command, 'valueDefault');
+            break;
+        case 1:
+            goSetMenuValue(command, 'valueDeleteMsg');
+            break;
+        case 2:
+            goSetMenuValue(command, 'valueMoveMsg');
+            break;
+        case 3:
+            goSetMenuValue(command, 'valueCopyMsg');
+            break;
+        }
+    }
+    else
+    {
+        goSetMenuValue(command, 'valueDefault');
+    }
+    return canUndoOrRedo;
+}
+

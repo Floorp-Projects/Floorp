@@ -424,6 +424,8 @@ var MessageWindowController =
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
 			case "cmd_delete":
+      case "cmd_undo":
+      case "cmd_redo":
       case "cmd_killThread":
       case "cmd_watchThread":
 			case "button_delete":
@@ -499,7 +501,6 @@ var MessageWindowController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
-
 			case "button_delete":
 			case "cmd_shiftDelete":
 			case "cmd_print":
@@ -539,6 +540,9 @@ var MessageWindowController =
 				return true;
 			case "cmd_findAgain":
 				return MsgCanFindAgain();
+      case "cmd_undo":
+      case "cmd_redo":
+                return SetupUndoRedoCommand(command);
 			default:
 				return false;
 		}
@@ -560,6 +564,12 @@ var MessageWindowController =
 			case "cmd_getNewMessages":
 				MsgGetMessage();
 				break;
+            case "cmd_undo":
+                messenger.Undo(msgWindow);
+                break;
+            case "cmd_redo":
+                messenger.Redo(msgWindow);
+                break;
       case "cmd_getMsgsForAuthAccounts":
         MsgGetMessagesForAllAuthenticatedAccounts();
         break;
@@ -699,12 +709,8 @@ function SetupCommandUpdateHandlers()
 	top.controllers.insertControllerAt(0, MessageWindowController);
 }
 
-function CommandUpdate_UndoRedo()
-{
-
-}
-
 function GetDBView()
 {
   return gDBView;
 }
+
