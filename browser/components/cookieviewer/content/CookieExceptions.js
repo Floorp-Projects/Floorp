@@ -78,9 +78,12 @@ var gPermissionManager = {
     } catch(ex) {
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                     .getService(Components.interfaces.nsIPromptService);
-      var message = stringBundle.getString("invalidURI");
-      var title = stringBundle.getString("invalidURITitle");
-      promptservice.alert(window,title,message);
+      var message = this._bundle.getString("invalidURI");
+      var title = this._bundle.getString("invalidURITitle");
+      promptService.alert(window, title, message);
+      textbox.value = "";
+      textbox.focus();
+      return;
     }
 
     // we need this whether the perm exists or not
