@@ -1,0 +1,133 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<title> Installed Plugins </title>
+<!-- Descrpt: This test case is part of Component List Test
+     Author: dsirnapalli@netscape.com
+     Revs: 10.12.01 - Created
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+<head>
+
+<!-- script below is ngdriverspecific  -->
+<script TYPE="text/javascript" SRC="testlib.js">
+</script>
+
+<script TYPE="text/javascript">
+function getPlugins()
+{
+  var res="";
+
+  //Enumerate all plug-ins
+  //First, refresh plugins in case anything has been changed recently in prefs:                        -->
+  //(The "false" argument tells refresh not to reload or activate any plugins that would       -->
+  //be active otherwise.In contrast,one would use "true" in the case of ASD instead of      -->
+  //restarting)                                                                                                                                                        -->
+  navigator.plugins.refresh(false);
+  numPlugins = navigator.plugins.length;
+
+  res = res + '<b><h3><font color="#CC6600"> Plugins </font></h3></b>' + '\n';
+  res = res + 'To Go Back to Components Page ';
+  res = res + '<a href="ComponentListTest.html">Click here</a>';
+  res = res + '<br>';
+
+  if(numPlugins > 0)
+    res = res + "<b><h3> Installed plug-ins </h3></b><br>";
+  else
+    res = res + "<b><font size=+2>No plug-ins are installed.</font></b><br>";
+
+  for (i = 0;i < numPlugins;i++)
+  {
+    plugin = navigator.plugins[i];
+    res = res + "<center><font size=+1><b>" + plugin.name + "</b></font></center><br>";
+    res = res + "<dl><dd>File name:" + plugin.filename;
+    res = res + "    <dd><br>" + plugin.description;
+    res = res + "</dl><p>";
+
+    res = res + "<table width=100% border=2 cellpadding=5>";
+    res = res + "<tr><th width=20%><font size=-1>Mime Type</font></th>";
+    res = res + "<th width=50%><font size=-1>Description</font></th>";
+    res = res + "<th width=20%><font size=-1>Suffixes</font></th>";
+    res = res + "<th><font size=-1>Enabled</th></tr>"
+
+    numTypes = plugin.length;
+
+    for (j = 0;j < numTypes;j++)
+    {
+      mimetype = plugin[j];
+      if (mimetype)
+      {
+        enabled = "No";
+        enabledPlugin = mimetype.enabledPlugin;
+        if (enabledPlugin && (enabledPlugin.name == plugin.name))
+          enabled = "Yes";
+
+        res = res + "<tr align=center>";
+        res = res + " <td>" + mimetype.type + "</td>";
+        res = res + " <td>" + mimetype.description + "</td>";
+        res = res + " <td>" + mimetype.suffixes + "</td>";
+        res = res + " <td>" + enabled + "</td>";
+        res = res + "</tr>";
+      }
+    }
+    res = res + "</table><p><hr><p>";
+  }
+  res = res + 'To Go Back to Components Page ';
+  res = res + '<a href="ComponentListTest.html">Click here</a>';
+  res = res + '<br>';
+  return res;
+}
+</script>
+
+<script TYPE="text/javascript">
+function displayResults(results)
+{
+  document.results.textarea.value = results;
+  if (top.name == "testWindow")
+  {
+ 	fixSubmit();
+  }
+  else
+  {
+  	document.write(document.results.textarea.value);
+  }
+}
+</script>
+
+</head>
+<body>
+
+<!-- form below is ngdriverspecific  -->
+<form name="results" action="/ngdriver/cgi-bin/writeresults.cgi" method="post">
+<script TYPE="text/javascript">
+document.write('<input name="resultsfile" type="hidden" value="' + window.opener.document.resultsform.resultsfile.value + '">');
+</script>
+<input type="hidden" name="textarea">
+</form>
+
+<script TYPE="text/javascript">
+var result = "";
+pluginres = getPlugins();
+result = result + pluginres;
+displayResults(result);
+</script>
+
+</body>
+</html>
