@@ -115,6 +115,9 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
                                            GdkEventWindowState *event);
 static gboolean property_notify_event_cb  (GtkWidget *widget,
                                            GdkEventProperty *event);
+static GdkFilterReturn plugin_window_filter_func (GdkXEvent *gdk_xevent, 
+                                                  GdkEvent *event, 
+                                                  gpointer data);
 static gboolean drag_motion_event_cb      (GtkWidget *aWidget,
                                            GdkDragContext *aDragContext,
                                            gint aX,
@@ -180,9 +183,11 @@ nsWindow::nsWindow()
     mIsVisible           = PR_FALSE;
     mRetryPointerGrab    = PR_FALSE;
     mRetryKeyboardGrab   = PR_FALSE;
+    mHasNonXembedPlugin  = PR_FALSE;
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
+    mOldFocusWindow      = 0;
 
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = PR_TRUE;
@@ -760,8 +765,7 @@ nsWindow::GetNativeData(PRUint32 aDataType)
         break;
 
     case NS_NATIVE_PLUGIN_PORT:
-        NS_WARNING("nsWindow::GetNativeData plugin port not supported yet");
-        return nsnull;
+        return SetupPluginPort();
         break;
 
     case NS_NATIVE_DISPLAY:
@@ -1115,6 +1119,24 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 
     LOG(("OnEnterNotify: %p\n", (void *)this));
 
+    // if we have a non-xembed plugin (java, basically) dispatch focus
+    // to it because it's too dumb not to know how to do it itself.
+    if( mHasNonXembedPlugin ) {
+        Window curFocusWindow;
+        int    focusState;
+        XGetInputFocus(GDK_WINDOW_XDISPLAY (aEvent->window), 
+                       &curFocusWindow, 
+                       &focusState);
+        if(curFocusWindow != GDK_WINDOW_XWINDOW(aEvent->window)) {
+            mOldFocusWindow = curFocusWindow;
+            XSetInputFocus(GDK_WINDOW_XDISPLAY (aEvent->window),
+                           GDK_WINDOW_XWINDOW(aEvent->window),
+                           RevertToParent,
+                           gtk_get_current_event_time ());
+        }
+        gdk_flush();
+    }
+
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -1129,6 +1151,16 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     event.point.y = nscoord(aEvent->y);
 
     LOG(("OnLeaveNotify: %p\n", (void *)this));
+
+    // if we have a non-xembed plugin (java, basically) take focus
+    // back since it's not going to give it up by itself.
+    if( mHasNonXembedPlugin ) {
+        XSetInputFocus(GDK_WINDOW_XDISPLAY (aEvent->window),
+                       mOldFocusWindow,
+                       RevertToParent,
+                       gtk_get_current_event_time ());
+        gdk_flush();
+    }
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1184,6 +1216,8 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     nsEventStatus status;
 
     // check to see if we should rollup
+    gJustGotActivate = PR_TRUE;
+    SetFocus(PR_FALSE);
     if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
                          PR_FALSE))
         return;
@@ -2186,6 +2220,42 @@ nsWindow::GetToplevelWidget(GtkWidget **aWidget)
     *aWidget = gtk_widget_get_toplevel(widget);
 }
 
+void *
+nsWindow::SetupPluginPort(void)
+{
+    if (!mDrawingarea)
+        return nsnull;
+
+    if (GDK_WINDOW_OBJECT(mDrawingarea->inner_window)->destroyed == TRUE)
+        return nsnull;
+
+    // we have to flush the X queue here so that any plugins that
+    // might be running on seperate X connections will be able to use
+    // this window in case it was just created
+    XWindowAttributes xattrs;
+    XGetWindowAttributes(GDK_DISPLAY (),
+                         GDK_WINDOW_XWINDOW(mDrawingarea->inner_window),
+                         &xattrs);
+    XSelectInput (GDK_DISPLAY (),
+                  GDK_WINDOW_XWINDOW(mDrawingarea->inner_window),
+                  xattrs.your_event_mask |
+                  SubstructureNotifyMask );
+
+    gdk_window_add_filter(mDrawingarea->inner_window, 
+                          plugin_window_filter_func,
+                          this);
+
+    XSync(GDK_DISPLAY(), False);
+
+    return (void *)GDK_WINDOW_XWINDOW(mDrawingarea->inner_window);
+}
+
+void
+nsWindow::SetPluginType(PRBool aIsXembed)
+{
+    mHasNonXembedPlugin = !aIsXembed;
+}
+
 PRBool
 check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
                  PRBool aIsWheel)
@@ -2628,6 +2698,50 @@ focus_out_event_cb (GtkWidget *widget, GdkEventFocus *event)
     window->OnContainerFocusOutEvent(widget, event);
 
     return FALSE;
+}
+
+/* static */
+GdkFilterReturn
+plugin_window_filter_func (GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
+{
+    GtkWidget *widget;
+    GdkWindow *plugin_window;
+    gpointer  user_data;
+    XEvent    *xevent;
+
+    nsWindow  *nswindow = (nsWindow*)data;
+    GdkFilterReturn return_val;
+      
+    xevent = (XEvent *)gdk_xevent;
+    return_val = GDK_FILTER_CONTINUE;
+
+    switch (xevent->type)
+    {
+        case CreateNotify:
+        case ReparentNotify:
+            if(xevent->type==CreateNotify) {
+                plugin_window = gdk_window_lookup(xevent->xcreatewindow.window);
+            }
+            else {
+                if(xevent->xreparent.event != xevent->xreparent.parent)
+                    break;
+                plugin_window = gdk_window_lookup (xevent->xreparent.window);
+            }
+            if(plugin_window) {
+                user_data = nsnull;
+                gdk_window_get_user_data(plugin_window, &user_data);
+                widget = GTK_WIDGET(user_data);
+                if(GTK_IS_SOCKET(widget)){
+                    break;
+                }
+            }
+            nswindow->SetPluginType(PR_FALSE);
+            return_val = GDK_FILTER_REMOVE;
+            break;
+        default:
+            break;
+    }
+    return return_val;
 }
 
 /* static */

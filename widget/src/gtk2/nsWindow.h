@@ -53,6 +53,7 @@
 #include "nsMaiHook.h"
 #endif
 
+#include <gdk/gdkx.h>
 #include <gtk/gtkwindow.h>
 
 class nsWindow : public nsCommonWidget, public nsSupportsWeakReference {
@@ -223,11 +224,13 @@ public:
     void               GrabPointer  (void);
     void               GrabKeyboard (void);
     void               ReleaseGrabs (void);
+    void               SetPluginType(PRBool aIsXembed);
 
     nsWindow           *mFocusChild;
-
+    Window              mOldFocusWindow;
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
+    void              *SetupPluginPort(void);
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
@@ -242,6 +245,7 @@ private:
                         mInKeyRepeat : 1,
                         mIsVisible : 1,
                         mRetryPointerGrab : 1,
+                        mHasNonXembedPlugin : 1,
                         mRetryKeyboardGrab : 1;
     GtkWindow          *mTransientParent;
     PRInt32             mSizeState;

@@ -54,6 +54,7 @@ endif
 
 ifdef MOZ_ENABLE_GTK2
 DIRS		+= gtk2
+DIRS		+= gtkxtbin
 endif
 
 ifdef MOZ_ENABLE_XLIB

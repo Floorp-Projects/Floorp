@@ -58,6 +58,8 @@ static void moz_container_forall      (GtkContainer      *container,
                                        gboolean           include_internals,
                                        GtkCallback        callback,
                                        gpointer           callback_data);
+static void moz_container_add         (GtkContainer      *container,
+                                        GtkWidget        *widget);
 
 typedef struct _MozContainerChild MozContainerChild;
 
@@ -209,6 +211,7 @@ moz_container_class_init (MozContainerClass *klass)
 
     container_class->remove = moz_container_remove;
     container_class->forall = moz_container_forall;
+    container_class->add = moz_container_add;
 }
 
 void
@@ -320,14 +323,14 @@ moz_container_size_allocate (GtkWidget     *widget,
         allocation->height); */
 
     /* short circuit if you can */
-    if (widget->allocation.x == allocation->x &&
+    container = MOZ_CONTAINER (widget);
+    if (!container->children &&
+        widget->allocation.x == allocation->x &&
         widget->allocation.y == allocation->y &&
         widget->allocation.width == allocation->width &&
         widget->allocation.height == allocation->height) {
         return;
     }
-
-    container = MOZ_CONTAINER (widget);
 
     widget->allocation = *allocation;
 
@@ -364,6 +367,10 @@ moz_container_remove (GtkContainer *container, GtkWidget *child_widget)
 
     child = moz_container_get_child (moz_container, child_widget);
     g_return_if_fail (child);
+
+    if(child->widget == child_widget) {
+        gtk_widget_unparent(child_widget);
+    }
 
     moz_container->children = g_list_remove(moz_container->children, child);
     g_free(child);
@@ -425,3 +432,10 @@ moz_container_get_child (MozContainer *container, GtkWidget *child_widget)
 
     return NULL;
 }
+
+static void 
+moz_container_add(GtkContainer *container, GtkWidget *widget)
+{
+    moz_container_put(MOZ_CONTAINER(container), widget, 0, 0);
+}
+
