@@ -187,6 +187,55 @@ si_CheckGetPassword
 }
 
 nsresult
+si_CheckGetData
+  (PRUnichar ** data,
+  const PRUnichar * szMessage,
+  PRBool* checkValue)
+{
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * prompt_string = Wallet_Localize("PromptForData");
+  PRUnichar * check_string = Wallet_Localize("SaveThisValue");
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    prompt_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    check_string, /* This is the checkbox message */
+    NULL, /* first button text, becomes OK by default */
+    NULL, /* second button text, becomes CANCEL by default */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    NULL, /* first edit field label */
+    NULL, /* second edit field label */
+    data, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    checkValue, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    1, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(prompt_string);
+  Recycle(check_string);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+  if (buttonPressed == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE; /* user pressed cancel */
+  }
+}
+
+nsresult
 si_CheckGetUsernamePassword
   (PRUnichar ** username,
   PRUnichar ** password,
@@ -2496,7 +2545,8 @@ SINGSIGN_PromptUsernameAndPassword
 PUBLIC nsresult
 SINGSIGN_PromptPassword
     (const PRUnichar *text, PRUnichar **pwd, const char *urlname,
-    nsIPrompt* dialog, PRBool *returnValue, PRBool strip) {
+    nsIPrompt* dialog, PRBool *returnValue, PRBool strip) 
+{
 
   nsresult res;
   nsAutoString password, username;
@@ -2574,7 +2624,59 @@ SINGSIGN_PromptPassword
 PUBLIC nsresult
 SINGSIGN_Prompt
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-    const char *urlname, nsIPrompt* dialog, PRBool *returnValue, PRBool strip) {
+    const char *urlname, nsIPrompt* dialog, PRBool *returnValue, PRBool strip) 
+{
+  nsresult res;
+  nsAutoString data, emptyUsername("");
+
+  /* do only the dialog if signon preference is not enabled */
+  if (!si_GetSignonRememberingPref()){
+    return dialog->Prompt(text, nsnull /* window title */, resultText, returnValue);
+  }
+
+  /* convert to a uri so we can parse out the hostname */
+  nsCOMPtr<nsIURL> uri;
+  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
+  uri->SetSpec((char *)urlname);
+
+  /* get host part of the uri */
+  char* host;
+  if (strip) {
+    res = uri->GetHost(&host);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  } else {
+    host = (nsAutoString(":") + urlname).ToNewCString();
+  }
+
+  /* get previous data used with this hostname */
+  si_RestoreOldSignonDataFromBrowser(host, PR_TRUE, emptyUsername, data);
+
+  /* return if data was found */
+  if (data.Length() != 0) {
+    *resultText = data.ToNewUnicode();
+    *returnValue = PR_TRUE;
+    PR_FREEIF(host);
+    return NS_OK;
+  }
+
+  /* no data found, get new data from user */
+  *resultText = data.ToNewUnicode();
+  PRBool checked = PR_TRUE;
+  res = si_CheckGetData(resultText, text, &checked);
+  if (NS_FAILED(res)) {
+    /* user pressed Cancel */
+    PR_FREEIF(*resultText);
+    PR_FREEIF(host);
+    return res;
+  }
+  if (checked) {
+    si_RememberSignonDataFromBrowser (host, emptyUsername, nsAutoString(*resultText));
+  }
+
+  /* cleanup and return */
+  PR_FREEIF(host);
   return NS_OK;
 }
 
