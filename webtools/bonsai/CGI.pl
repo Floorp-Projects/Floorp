@@ -457,14 +457,15 @@ if (defined $::FORM{'treeid'} && $::FORM{'treeid'} ne "") {
 }
 
 if (defined $::FORM{'batchid'}) {
-     LoadBatchID();
-     if ($::BatchID != $::FORM{'batchid'}) {
-          $::BatchID = $::FORM{'batchid'};
+    my $bid = &ExpectDigit("batchid", $::FORM{'batchid'});
+    LoadBatchID();
+    if ($::BatchID != $bid) {
+        $::BatchID = $bid;
 
-          # load parameters first to prevent overwriting
-          Param('readonly'); 
-          $::param{'readonly'} = 1;
-     }
+        # load parameters first to prevent overwriting
+        Param('readonly'); 
+        $::param{'readonly'} = 1;
+    }
 }
 
 # Layers are supported only by Netscape 4.
