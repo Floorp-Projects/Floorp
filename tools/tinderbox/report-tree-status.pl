@@ -169,6 +169,13 @@ sub is_tree_open {
       # Report time in hours.
       $time_since_open = ($now - $time_tree_opened)/3600;
       print "time_since_open (hours) = $time_since_open\n";
+
+      # Clamp time to 8 hours so we don't get huge spikes for
+      # extended open times (weekends)
+      if($time_since_open > 28800) {
+        $time_since_open = 28800;
+      }
+      
     }
     
   } else {
