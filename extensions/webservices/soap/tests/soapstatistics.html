@@ -2,8 +2,9 @@
 <HEAD>
 </HEAD>
 <BODY>
-<H1>SOAP Test: Headline News</H1>
-The entered domain name will be searched, and the result displayed.  This service found on
+<H1>SOAP Test: Statistics</H1>
+This passes an array to request the average and standard deviation.
+<p>This works by calling a SOAP service listed on 
 <A href="http://www.xmethods.com">X Methods Website</A>.  View the source of this 
 page for details on how it was called.  If you compile mozilla DEBUG (you also need  
 MOZ_SOAP), the message sent and received will  be logged to the console.
@@ -16,7 +17,7 @@ user interfaces such as the one in this test.
 // Passed in as the response handler in the asynchronous case
 // and called directly (see below) in the synchronous case
 function oncompletion(resp, call, status) { 
-  document.getElementById('BUTTON').value = "Call";
+  document.getElementById("BUTTON").value = "Call";
   if (status != 0) {
     alert("Error completion: " + status);
     return true;
@@ -32,49 +33,33 @@ function oncompletion(resp, call, status) {
       + "\nFault actor: "  + f.faultActor + "\nDetail: " + elementStr);
   }
   else {
-    var ret = resp.getParameters(false, {});
-    nw = window.open(null,null,"status=no,toolbar=no,menubar=no,location=no");
-    nw.document.open();
-    nw.document.write(ret[0].value);
-    nw.document.close();
+	  var ret = resp.getParameters(false, {})[0];
+	  alert("Average:" + ret.average + " SD:" + ret.standardDeviation);
   }
   return true;
 }
 
-function makeCall(value) {
+function makeCall(values) {
   var s = new SOAPCall();
   // The targetObjectURI, methodName and destinatioName are mandatory.
   // The actionURI is optional.
 
-  s.transportURI = "http://www.SoapClient.com/xml/SQLDataSoap.WSDL";
-  s.actionURI = "/SQLDataSRL";
+  s.transportURI = "http://213.23.125.181:8080/RPC";
 
   // Set the parameters on the call object. Note that in this case,
   // the last parameter is an object that will be serialized into
   // a struct parameter. It does not have a parameter wrapper because 
   // we don't need it to be named
-  s.encode(0, "ProcessSRL", "http://www.SoapClient.com/xml/SQLDataSoap.xsd", 0, null,
-    2, new Array(new SOAPParameter("/xml/news.sri","SRLFile"),
-       new SOAPParameter(value,"RequestName"))); 
-    if (currentCall != null) { currentCall.abort(); }
-  document.getElementById('BUTTON').value = "Wait...";
+  s.encode(0, "getStatistics", "urn:SpheonJSOAPStatistics", 0, null, 1, new Array(new SOAPParameter(new Array(1.1,2.2,3.3,4.4,5.5),"values")));
+
+  if (currentCall != null) { currentCall.abort(); }
+  document.getElementById("BUTTON").value = "Wait";
   currentCall = s.asyncInvoke(oncompletion);
   
 }
 </SCRIPT>
 <P>
 <FORM>
-
-<SELECT ID=SERVICE SIZE="1" name="RequestName">
-	<OPTION VALUE="7am">7am</OPTION>
-	<OPTION VALUE="news">News.com</OPTION>
-	<OPTION VALUE="newslinx">Newslinx</OPTION>
-	<OPTION VALUE="reuters" SELECTED>Reuters</OPTION>
-	<OPTION VALUE="sv">SilliconValley</OPTION>
-	<OPTION VALUE="techweb">Techweb</OPTION>
-	<OPTION VALUE="yahoo">Yahoo</OPTION>
-</SELECT>
-
-<INPUT ID=BUTTON TYPE="button" VALUE="Call" ONCLICK="makeCall(document.getElementById('SERVICE').value);">
+<INPUT ID=BUTTON TYPE="button" VALUE="Call" ONCLICK="makeCall(new Array(1.1,2.2,3.3,4.4,5.5));">
 </BODY>
 </HTML>

@@ -33,7 +33,7 @@ function oncompletion(resp, call, status) {
   }
   else {
     var ret = resp.getParameters(false, {});
-    nw = window.open();
+    nw = window.open(null,null,"status=no,toolbar=no,menubar=no,location=no");
     nw.document.open();
     nw.document.write(ret[0].value);
     nw.document.close();

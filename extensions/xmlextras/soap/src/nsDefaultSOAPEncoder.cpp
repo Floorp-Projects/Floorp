@@ -351,7 +351,9 @@ NS_IMETHODIMP
   }
   PRUint16 typevalue;
   nativeSchemaURI.Assign(*nsSOAPUtils::kXSURI[mSchemaVersion]);
-  aSource->GetDataType(&typevalue);
+  nsresult rc = aSource->GetDataType(&typevalue);
+  if (NS_FAILED(rc))
+    return rc;
   switch (typevalue) {
   case nsIDataType::VTYPE_INT8:
     if (mustBeComplex)
@@ -488,7 +490,7 @@ NS_IMETHODIMP
 
   nsIID* iid;
   nsCOMPtr<nsISupports> ptr;
-  nsresult rc = aSource->GetAsInterface(&iid, getter_AddRefs(ptr));
+  rc = aSource->GetAsInterface(&iid, getter_AddRefs(ptr));
   if (NS_FAILED(rc))
     return rc;
   if (iid->Equals(NS_GET_IID(nsIPropertyBag))) {  //  Only do explicit property bags for now.
