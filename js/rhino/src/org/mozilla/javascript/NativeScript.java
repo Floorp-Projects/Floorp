@@ -55,7 +55,7 @@ import java.io.IOException;
  * @author Norris Boyd
  */
 
-public class NativeScript extends NativeFunction implements Script
+class NativeScript extends NativeFunction implements Script
 {
 
     static void init(Context cx, Scriptable scope, boolean sealed)
@@ -69,15 +69,6 @@ public class NativeScript extends NativeFunction implements Script
     private NativeScript(Script script)
     {
         this.script = script;
-    }
-
-    /**
-     * @deprecated NativeScript is internal class for Rhino and should not
-     * be used explicitly.
-     */
-    public NativeScript()
-    {
-        this(null);
     }
 
     /**
