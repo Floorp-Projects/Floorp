@@ -16,7 +16,7 @@
 	<box align="horizontal" style="width: 100%;" >
 		<spring align="horizontal" flex="100%" />
 
-	<titledbutton value="&search.label;" />
+	<html:div>&search.label;</html:div>
 
 	<template id="categoryTemplate">
 		<rule iscontainer="true">
@@ -38,7 +38,7 @@
 
 	</html:select>
 
-		<titledbutton value="&for.label;" />
+		<html:div>&for.label;</html:div>
 		<html:input id="searchtext" size="20" onkeyup="if (event.which == 13) { doSearch(); }" />
 		<html:button id="searchbutton" onclick="return doSearch();">&search.button.label;</html:button>
 		<html:button id="stopbutton" onclick="return doStop();" style="display: none;" >&stop.button.label;</html:button>
