@@ -18,7 +18,7 @@
 #ifndef nsTableCell_h__
 #define nsTableCell_h__
 
-#include "nscoord.h"
+#include "nsCoord.h"
 #include "nscore.h"
 #include "nsTableContent.h"
 #include "nsTableRow.h"
