@@ -1209,7 +1209,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     nsCAutoString type;
     channel->GetContentType(type);
 
-    if (type.Find("xml") == -1) {
+    if (type.Find("xml") == kNotFound) {
       mState &= ~XML_HTTP_REQUEST_PARSEBODY;
     }
   } else {
@@ -1217,6 +1217,9 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     request->GetStatus(&status);
     if (NS_SUCCEEDED(status)) {
       channel->SetContentType(mOverrideMimeType);
+    } else {
+      // The request failed, so we shouldn't be parsing anyway
+      mState &= ~XML_HTTP_REQUEST_PARSEBODY;
     }
   }
 
