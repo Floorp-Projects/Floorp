@@ -233,7 +233,7 @@ JavaArray_setPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return result;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                          JSObject **objp, JSProperty **propp
 #if defined JS_THREADSAFE && defined DEBUG
@@ -259,7 +259,7 @@ JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     return result;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
@@ -273,7 +273,7 @@ JavaArray_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     return JavaArray_setPropertyById(cx, obj, id, vp);
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_getAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -282,7 +282,7 @@ JavaArray_getAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_FALSE;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_setAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -296,7 +296,7 @@ JavaArray_setAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSVersion version = JS_GetVersion(cx);
@@ -314,14 +314,14 @@ JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     /* printf("In JavaArray_defaultValue()\n"); */
     return JavaObject_convert(cx, obj, JSTYPE_STRING, vp);
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                        jsval *statep, jsid *idp)
 {
@@ -382,7 +382,7 @@ JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     }
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_checkAccess(JSContext *cx, JSObject *obj, jsid id,
                       JSAccessMode mode, jsval *vp, uintN *attrsp)
 {
@@ -431,7 +431,7 @@ JSObjectOps JavaArray_ops = {
     0,0                         /* spare */
 };
 
-static JSObjectOps *
+JS_STATIC_DLL_CALLBACK(JSObjectOps *)
 JavaArray_getObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &JavaArray_ops;

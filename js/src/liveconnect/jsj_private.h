@@ -497,13 +497,13 @@ extern void
 jsj_DestroyFieldSpec(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field);
 
 /************************* Java method reflection ***************************/
-extern JSBool
+JS_EXTERN_API(JSBool)
 jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
                               uintN argc, jsval *argv, jsval *vp);
-extern JSBool
+JS_EXTERN_API(JSBool)
 jsj_JavaStaticMethodWrapper(JSContext *cx, JSObject *obj,
                             uintN argc, jsval *argv, jsval *vp);
-extern JSBool
+JS_EXTERN_API(JSBool)
 jsj_JavaConstructorWrapper(JSContext *cx, JSObject *obj,
                            uintN argc, jsval *argv, jsval *vp);
 extern JSBool 
@@ -543,10 +543,10 @@ jsj_WrapJavaObject(JSContext *cx, JNIEnv *jEnv, jobject java_obj, jclass java_cl
 extern void
 jsj_DiscardJavaObjReflections(JNIEnv *jEnv);
 
-extern JSBool
+extern JSBool JS_DLL_CALLBACK
 JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
-extern void
+JS_EXTERN_API(void)
 JavaObject_finalize(JSContext *cx, JSObject *obj);
 
 extern JSBool
@@ -555,7 +555,7 @@ JavaObject_resolve(JSContext *cx, JSObject *obj, jsval id);
 extern JSBool
 JavaObject_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-extern JSBool
+JS_EXTERN_API(JSBool)
 JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 /************************* Java array reflection ***************************/
@@ -598,7 +598,7 @@ jsj_GetJavaErrorMessage(JNIEnv *env);
 extern void
 jsj_LogError(const char *error_msg);
 
-extern const JSErrorFormatString * 
+extern const JSErrorFormatString * JS_DLL_CALLBACK
 jsj_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
 JSJHashNumber JS_DLL_CALLBACK
@@ -631,7 +631,7 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp);
 extern void
 jsj_ExitJava(JSJavaThreadState *jsj_env);
 
-extern JSObjectMap *
+JS_EXTERN_API(JSObjectMap *)
 jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
                          JSClass *clasp, JSObject *obj);
 

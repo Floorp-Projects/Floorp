@@ -56,9 +56,9 @@ typedef struct JSJHashEntry  JSJHashEntry;
 typedef struct JSJHashTable  JSJHashTable;
 typedef JSUint32 JSJHashNumber;
 #define JSJ_HASH_BITS 32
-typedef JSJHashNumber (*JSJHashFunction)(const void *key, void *arg);
-typedef JSIntn (*JSJHashComparator)(const void *v1, const void *v2, void *arg);
-typedef JSIntn (*JSJHashEnumerator)(JSJHashEntry *he, JSIntn i, void *arg);
+typedef JSJHashNumber (* JS_DLL_CALLBACK JSJHashFunction)(const void *key, void *arg);
+typedef JSIntn (* JS_DLL_CALLBACK JSJHashComparator)(const void *v1, const void *v2, void *arg);
+typedef JSIntn (* JS_DLL_CALLBACK JSJHashEnumerator)(JSJHashEntry *he, JSIntn i, void *arg);
 
 /* Flag bits in JSJHashEnumerator's return value */
 #define HT_ENUMERATE_NEXT       0       /* continue enumerating entries */

@@ -252,7 +252,7 @@ remove_java_obj_reflection_from_hashtable(jobject java_obj, JNIEnv *jEnv)
 #endif
 }
 
-void
+JS_EXPORT_API(void)
 JavaObject_finalize(JSContext *cx, JSObject *obj)
 {
     JavaObjectWrapper *java_wrapper;
@@ -315,7 +315,7 @@ jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
 #endif
 }
 
-JSBool JS_DLL_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JavaObjectWrapper *java_wrapper;
@@ -535,7 +535,7 @@ done:
     return JS_TRUE;
 }
 
-JSBool JS_DLL_CALLBACK
+JS_EXPORT_API(JSBool)
 JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     jobject java_obj;
@@ -701,7 +701,7 @@ no_such_field:
         return JS_FALSE;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                          JSObject **objp, JSProperty **propp
 #if defined JS_THREADSAFE && defined DEBUG
@@ -739,7 +739,7 @@ JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
@@ -749,7 +749,7 @@ JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     return JS_FALSE;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_getAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -758,7 +758,7 @@ JavaObject_getAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_FALSE;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_setAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -772,7 +772,7 @@ JavaObject_setAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSVersion version = JS_GetVersion(cx);
@@ -790,14 +790,14 @@ JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     /* printf("In JavaObject_defaultValue()\n"); */
     return JavaObject_convert(cx, obj, type, vp);
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                         jsval *statep, jsid *idp)
 {
@@ -864,7 +864,7 @@ JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     }
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
                       JSAccessMode mode, jsval *vp, uintN *attrsp)
 {
@@ -913,7 +913,7 @@ JSObjectOps JavaObject_ops = {
     0,0                         /* spare */
 };
 
-static JSObjectOps *
+JS_STATIC_DLL_CALLBACK(JSObjectOps *)
 JavaObject_getObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &JavaObject_ops;

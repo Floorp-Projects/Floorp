@@ -390,7 +390,7 @@ error:
 }
 
 /* Trivial helper for jsj_DiscardJavaClassReflections(), below */
-static JSIntn
+JS_STATIC_DLL_CALLBACK(JSIntn)
 enumerate_remove_java_class(JSJHashEntry *he, JSIntn i, void *arg)
 {
     JSJavaThreadState *jsj_env = (JSJavaThreadState *)arg;
