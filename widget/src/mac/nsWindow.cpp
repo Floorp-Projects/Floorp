@@ -1420,7 +1420,7 @@ else
 	StRegionFromPool damagedRgn;
 	if (!damagedRgn)
 		return NS_ERROR_OUT_OF_MEMORY;
-	::GetPortVisibleRegion(GetWindowPort(mWindowPtr), damagedRgn);
+	::GetPortVisibleRegion(::GetWindowPort(mWindowPtr), damagedRgn);
 
 /*
 #ifdef PAINT_DEBUGGING	
@@ -1450,6 +1450,14 @@ else
 
 	if (!::EmptyRgn(updateRgn))
 	{
+
+#if TARGET_CARBON
+    // Ref: http://developer.apple.com/technotes/tn/tn2051.html
+    //      short-circuit QD's implicit LockPortBits()
+    //      Note: MUST unlock before exiting this scope (see below)
+    ::LockPortBits(::GetWindowPort(mWindowPtr));
+#endif
+
 #if DEBUG
 		// measure the time it takes to refresh the window, if the control key is down.
     unsigned long long start, finish;
@@ -1542,6 +1550,14 @@ else
     // Copy updateRgn to regionToValidate
     if (regionToValidate)
       ::CopyRgn(updateRgn, regionToValidate);
+
+#if TARGET_CARBON
+    // Ref: http://developer.apple.com/technotes/tn/tn2051.html
+    //      short-circuit QD's implicit LockPortBits()
+    //      Note: unlock before exiting (locked above)
+    ::UnlockPortBits(::GetWindowPort(mWindowPtr));
+#endif
+
 	}
 
 #if PINK_PROFILING
