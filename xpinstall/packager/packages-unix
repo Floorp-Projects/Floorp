@@ -157,7 +157,8 @@ bin/components/libjsloader.so
 bin/components/libnecko_cache.so
 bin/components/libnecko_jar.so
 bin/components/libnecko_res.so
-bin/components/libnkkeyword.so
+bin/components/libnkkyword.so
+bin/components/libnecko_datetime.so
 bin/components/libnsprefm.so
 bin/components/libregviewer.so
 bin/components/libsample.so
