@@ -817,6 +817,7 @@ sub BuildIDLProjects()
 
 		# protocols
 		BuildIDLProject(":mozilla:netwerk:protocol:about:macbuild:aboutIDL.mcp","about");
+		BuildIDLProject(":mozilla:netwerk:protocol:data:macbuild:dataIDL.mcp","data");
 		BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
 		BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","ftp");
 		BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","http");
@@ -1022,6 +1023,7 @@ sub BuildCommonProjects()
 
 		# protocols
 		BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:data:macbuild:data.mcp",			"data$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
