@@ -33,6 +33,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsWalletPreview.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIBaseWindow.h"
 
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
@@ -67,9 +70,9 @@ WalletPreviewImpl::GetPrefillValue(PRUnichar** aValue)
   return res;
 }
 
-static void DOMWindowToWebShellWindow(
+static void DOMWindowToTreeOwner(
               nsIDOMWindow *DOMWindow,
-              nsCOMPtr<nsIWebShellWindow> *webWindow)
+              nsIDocShellTreeOwner** aTreeOwner)
 {
   if (!DOMWindow) {
     return; // with webWindow unchanged -- its constructor gives it a null ptr
@@ -79,13 +82,11 @@ static void DOMWindowToWebShellWindow(
   if (globalScript) {
     globalScript->GetDocShell(getter_AddRefs(docShell));
   }
-  nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-  nsCOMPtr<nsIWebShell> rootWebshell;
-  if(!webshell)
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  if(!docShellAsItem)
    return;
-  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-  webshell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-  *webWindow = do_QueryInterface(topLevelWindow);
+
+  docShellAsItem->GetTreeOwner(aTreeOwner);
 }
 
 NS_IMETHODIMP
@@ -100,12 +101,15 @@ WalletPreviewImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)
   if (!top) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIWebShellWindow> parent;
-  DOMWindowToWebShellWindow(top, &parent);
-  if (parent) {
-    parent->Close();
+
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  DOMWindowToTreeOwner(top, getter_AddRefs(treeOwner));
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(treeOwner));
+  if (treeOwnerAsWin) {
+    treeOwnerAsWin->Destroy();
   }
-  NS_IF_RELEASE(win);
+  NS_RELEASE(top);
 
   /* process the value */
   NS_PRECONDITION(aValue != nsnull, "null ptr");
