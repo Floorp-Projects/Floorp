@@ -661,6 +661,8 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID); 
     else if (nsHTMLAtoms::onpaint == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
+    else if (nsHTMLAtoms::oninput == aAttribute)
+      AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID);
   }
  
   nsHTMLValue val;
