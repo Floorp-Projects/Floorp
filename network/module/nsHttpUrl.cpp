@@ -198,12 +198,13 @@ NS_METHOD  nsHttpUrlImpl::SendData(const char *aBuffer, PRInt32 aLength)
     }
 
     /* Copy the post data... */
-    m_PostBuffer = (char *)PR_Malloc(aLength);
+    m_PostBuffer = (char *)PR_Malloc(aLength+1);
     if (nsnull == m_PostBuffer) {
         result = NS_ERROR_OUT_OF_MEMORY;
         goto done;
     }
     memcpy(m_PostBuffer, aBuffer, aLength);
+    m_PostBuffer[aLength] = '\0';
     m_PostBufferLength = aLength;
     m_PostType = Send_Data;
 
