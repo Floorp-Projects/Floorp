@@ -472,8 +472,8 @@ void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc,
 
 void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
-  nsString unicode;
-  UnicodeToHTMLString(aSrc, unicode);
+  nsString htmlstr;
+  UnicodeToHTMLString(aSrc, htmlstr);
 
   NS_VERIFY(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
   if (mUnicodeEncoder == nsnull)
@@ -481,7 +481,7 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 
 #define CH_NBSP 160
 
-  PRInt32       length = aSrc.Length();
+  PRInt32       length = htmlstr.Length();
   nsresult      result;
 
   if (mUnicodeEncoder != nsnull && length > 0)
@@ -490,7 +490,8 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
     mBufferLength = mBufferSize;
     
     mUnicodeEncoder->Reset();
-    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, mBuffer, &mBufferLength);
+    result = mUnicodeEncoder->Convert(htmlstr.GetUnicode(), &length,
+                                      mBuffer, &mBufferLength);
     mBuffer[mBufferLength] = 0;
     PRInt32 temp = mBufferLength;
     if (NS_SUCCEEDED(result))
