@@ -7003,7 +7003,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   // do it now, when constructing frames.  See bug 115291.
   {
     const nsStyleVisibility *vis;
-    GetStyleData(styleContext, &vis);
+    GetStyleData(styleContext.get(), &vis);
   }
 
   nsIFrame* lastChild = aFrameItems.lastChild;
