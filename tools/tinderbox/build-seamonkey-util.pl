@@ -18,10 +18,11 @@ use strict;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
+use File::Path; # for rmtree();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.144 $ ';
+$::UtilsVersion = '$Revision: 1.145 $ ';
 
 package TinderUtils;
 
@@ -176,6 +177,11 @@ sub GetSystemInfo {
     $host = $1 if $host =~ /(.*?)\./;
     chomp($Settings::OS, $os_ver, $Settings::CPU, $host);
     
+    # Redirecting stderr to stdout works on *nix, winnt, but not on win98. 
+    $Settings::TieStderr = '2>&1';
+    # Wrap in eval to guard against missing 'Win32' module on non-win32 systems.
+    eval 'use Win32; $Settings::TieStderr = "" if Win32::IsWin95();';
+
     if ($Settings::OS eq 'AIX') {
         my $osAltVer = `uname -v`;
         chomp($osAltVer);
@@ -189,16 +195,24 @@ sub GetSystemInfo {
         $Settings::OS = 'SCOOS';
         $os_ver = '5.0';
     }
-    $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
     if ($Settings::OS eq 'QNX') {
         $os_ver = `uname -v`;
         chomp($os_ver);
         $os_ver =~ s/^([0-9])([0-9]*)$/$1.$2/;
     }
-    if ($Settings::OS eq 'WINNT') {
+
+    if ($Settings::OS =~ /^CYGWIN_(.*?)-(.*)$/) {
+        # the newer cygwin apparently has different output for 'uname'
+        # e.g., CYGWIN_98-4.10 == win98SE, and CYGWIN_NT-5.0 == win2k
+        $Settings::OS = 'WIN' . $1;
+        $os_ver = $2;
+        $host =~ tr/A-Z/a-z/;
+    }
+    if ($Settings::OS =~ /^WIN/) {
         $host =~ tr/A-Z/a-z/;
     }
     
+    $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
     $Settings::BuildName = "$host $Settings::OS ${os_ver} $build_type";
     
     # Make the build names reflect architecture/OS
@@ -432,7 +446,7 @@ sub SetupPath {
             }
         }
     }
-    if ($Settings::OS eq 'WINNT') {
+    if ($Settings::OS =~ /^WIN/) {
         $Settings::use_blat = 1;
         $Settings::Compiler = 'cl';
 
@@ -461,7 +475,7 @@ sub run_shell_command {
     my $status = 0;
     chomp($shell_command);
     print_log "$shell_command\n";
-    open CMD, "$shell_command 2>&1|" or die "open: $!";
+    open CMD, "$shell_command $Settings::TieStderr |" or die "open: $!";
     print_log $_ while <CMD>;
     close CMD or $status = 1;
     return $status;
@@ -487,13 +501,15 @@ sub mail_build_started_message {
     
     PrintUsage() if $Settings::BuildTree =~ /^\s+$/i;
 
+    my $platform = $Settings::OS =~ /^WIN/ ? 'windows' : 'unix';
+
     print_log "\n";
     print_log "tinderbox: tree: $Settings::BuildTree\n";
     print_log "tinderbox: builddate: $start_time\n";
     print_log "tinderbox: status: building\n";
     print_log "tinderbox: build: $Settings::BuildName\n";
-    print_log "tinderbox: errorparser: unix\n";
-    print_log "tinderbox: buildfamily: unix\n";
+    print_log "tinderbox: errorparser: $platform\n";
+    print_log "tinderbox: buildfamily: $platform\n";
     print_log "tinderbox: version: $::Version\n";
     print_log "tinderbox: END\n";
     print_log "\n";
@@ -514,7 +530,9 @@ sub mail_build_finished_message {
 
     # Rewrite LOG to OUTLOG, shortening lines.
     open OUTLOG, ">$logfile.last" or die "Unable to open logfile, $logfile: $!";
-        
+
+    my $platform = $Settings::OS =~ /^WIN/ ? 'windows' : 'unix';
+
     # Put the status at the top of the log, so the server will not
     # have to search through the entire log to find it.
     print OUTLOG "\n";
@@ -522,8 +540,8 @@ sub mail_build_finished_message {
     print OUTLOG "tinderbox: builddate: $start_time\n";
     print OUTLOG "tinderbox: status: $build_status\n";
     print OUTLOG "tinderbox: build: $Settings::BuildName\n";
-    print OUTLOG "tinderbox: errorparser: unix\n";
-    print OUTLOG "tinderbox: buildfamily: unix\n";
+    print OUTLOG "tinderbox: errorparser: $platform\n";
+    print OUTLOG "tinderbox: buildfamily: $platform\n";
     print OUTLOG "tinderbox: version: $::Version\n";
     print OUTLOG "tinderbox: utilsversion: $::UtilsVersion\n";
     print OUTLOG "tinderbox: END\n";
@@ -569,6 +587,11 @@ sub BuildIt {
     
     my $build_dir = get_system_cwd();
 
+    if ($Settings::OS =~ /^WIN/ && $build_dir =~ m/^\/cygdrive\//) {
+        $build_dir =~ s/^\/cygdrive\///;
+        substr($build_dir,1,1,":/");
+    }
+
     my $binary_basename = "$Settings::BinaryName";
     my $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist/bin";
     my $dist_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist";
@@ -587,6 +610,9 @@ sub BuildIt {
 
     # Bypass profile manager at startup.
     $ENV{MOZ_BYPASS_PROFILE_AT_STARTUP} = 1;
+    
+    # Avoid debug assertion dialogs (win32)
+    $ENV{XPCOM_DEBUG_BREAK} = "warn";
     
     # Set up tag stuff.
     # Only one tag per file, so -r will override any -D settings.
@@ -619,9 +645,14 @@ sub BuildIt {
             my $timezone = POSIX::strftime("%Z", localtime($start_time));
             # assume PST if no timezone is found
             $timezone = "PST" if ($timezone eq "");
+            #XXXjrgm win32 returns the long form, which chokes win32 cvs
+            # so allow the use of value from tinder-config.pl
+            $timezone = $Settings::Timezone   
+                if $Settings::Timezone && $Settings::OS =~ /^WIN/;
             $time_str .= " $timezone";
             $ENV{MOZ_CO_DATE} = "$time_str";
-            $cvsco = "$Settings::CVSCO -D '$time_str'";
+            # command.com/win9x loathes single quotes in command line
+            $cvsco = "$Settings::CVSCO -D \"$time_str\"";
         } else {
             $cvsco = "$Settings::CVSCO -A";
         }
@@ -673,7 +704,9 @@ sub BuildIt {
         # Build it
         my $build_status = 'none';
         unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
-
+            if ($Settings::OS =~ /^WIN/) {
+                DeleteBinaryDir($binary_dir);
+            } else {
           # Delete binary so we can test for it to determine success after building.
           DeleteBinary($full_binary_name);          
           if($Settings::EmbedTest or $Settings::BuildEmbed) {
@@ -689,7 +722,7 @@ sub BuildIt {
               print_log "Error: \\rm -rf $dist_dir failed.\n";
             }
           }
-          
+      }
           # Build up initial make command.
           my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
           if ($Settings::FastUpdate) {
@@ -787,6 +820,12 @@ sub run_all_tests {
 
     my $test_result = 'success';
 
+    my $win32_build_dir = $build_dir;
+    if ($Settings::OS =~ /^WIN/ && $win32_build_dir =~ m/^\/cygdrive\//) {
+        $win32_build_dir =~ s/^\/cygdrive\///;
+        substr($win32_build_dir,1,1,'|/');
+    }
+
     #
     # Before running tests, run regxpcom so that we don't crash when 
     # people change contractids on us (since we don't autoreg opt builds)
@@ -797,6 +836,10 @@ sub run_all_tests {
 				$Settings::RegxpcomTestTimeout);
 	}
 
+
+    # no special profiledir on win32	
+    if ($Settings::OS !~ /^WIN/) {
+        
 	#
 	# Make sure we have a profile to run tests.  This is assumed to be called
 	# $Settings::MozProfileName and will live in $build_dir/.mozilla.
@@ -826,6 +869,8 @@ sub run_all_tests {
 	  }
 	}
 
+    }
+
 
 	#
 	# Find the prefs file, remember we have that random string now
@@ -836,7 +881,13 @@ sub run_all_tests {
 	# with an uninitialized variable error, this needs fixing. -mcafee
 	#
 	my $pref_file = "prefs.js";
-	open PREFS, "find $build_dir/.mozilla -name prefs.js|"
+    my $moz_profile_dir = "$build_dir/.mozilla";
+    if ($Settings::OS =~ /^WIN/) {
+        $moz_profile_dir = "$ENV{APPDATA}" . "\\Mozilla\\Profiles\\$Settings::MozProfileName";
+        $moz_profile_dir =~ s|\\|/|g;
+        print "moz_profile_dir: $moz_profile_dir\n";
+    }
+    open PREFS, "find '$moz_profile_dir' -name prefs.js|"
 	  or die "couldn't find prefs file\n";
 	$pref_file = $_ while <PREFS>;
 	chomp $pref_file;
@@ -1122,7 +1173,11 @@ sub run_all_tests {
 		
 		$cwd = get_system_cwd();
 		print "cwd = $cwd\n";
+                if ($Settings::OS =~ /^WIN/) {
+                    $url  = "\"file:$win32_build_dir/../startup-test.html?begin=$time\"";
+                } else {
 		$url  = "\"file:$build_dir/../startup-test.html?begin=$time\"";
+                }
 		print "url = $url\n";
 		
 		# Then load startup-test.html, which will pull off the begin argument
@@ -1136,7 +1191,7 @@ sub run_all_tests {
 		  $startuptime = 
 			AliveTestReturnToken("StartupPerformanceTest-$i", 
 								 $build_dir,
-								 $binary,
+								 "$binary -P $Settings::MozProfileName",
 								 $url,
 								 $Settings::StartupPerformanceTestTimeout,
 								 "__startuptime",
@@ -1233,6 +1288,17 @@ sub DeleteBinary {
       unlink $binary or print_log "Error: Unlinking $binary failed\n";
     } else {
         print_log "No binary detected; none deleted.\n";
+    }
+}
+
+sub DeleteBinaryDir {
+    my ($binarydir) = @_;
+
+    if ( -e "$binarydir") {
+        File::Path::rmtree([$binarydir], 0, 0);
+        print_log "Binarydir $binarydir removed.\n";
+    } else {
+        print_log "No binarydir detected; none deleted.\n";
     }
 }
 
@@ -1370,7 +1436,7 @@ sub fork_and_log {
     
     unless ($pid) { # child
         $ENV{HOME} = $home;
-        chdir $dir;
+        chdir $dir or die "chdir($dir): $!\n";
         open STDOUT, ">$logfile";
         open STDERR, ">&STDOUT";
         select STDOUT; $| = 1;  # make STDOUT unbuffered
@@ -1410,6 +1476,8 @@ sub wait_for_pid {
         $loop_count = 0;
         while (++$loop_count < $timeout_secs) {
             my $wait_pid = waitpid($pid, POSIX::WNOHANG());
+            #XXXjrgm POSIX::WIFEXITED is not implemented on Win32,
+            # so this needs an alternate implementation.
             last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or $wait_pid == -1;
             sleep 1;
         }
@@ -1704,6 +1772,7 @@ sub BloatTest {
     
     my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
 						 $timeout_secs);
+    $ENV{XPCOM_MEM_BLOAT_LOG} = 0;
     delete $ENV{XPCOM_MEM_BLOAT_LOG};
 
     print_logfile($binary_log, "$bloatdiff_label bloat test");
@@ -1876,6 +1945,12 @@ sub BloatTest2 {
     my ($binary, $build_dir, $timeout_secs) = @_;
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
+    my $PERL = "";
+    if ($Settings::OS =~ /^WIN/ && $build_dir =~ m/^\/cygdrive\//) {
+        $build_dir =~ s/^\/cygdrive\///;
+        substr($build_dir,1,1,':/');
+        $PERL = "perl";
+    }        
     my $binary_log = "$build_dir/bloattest2.log";
     my $malloc_log = "$build_dir/malloc.log";
     my $sdleak_log = "$build_dir/sdleak.log";
@@ -1892,7 +1967,9 @@ sub BloatTest2 {
 
     rename($sdleak_log, $old_sdleak_log);
 
-    my $cmd = "$binary_basename -f bloaturls.txt --trace-malloc $malloc_log --shutdown-leaks $sdleak_log";
+    my $cmd = "$binary_basename -P $Settings::MozProfileName -f bloaturls.txt --trace-malloc $malloc_log";
+    # win32 builds crash on multiple runs when --shutdown-leaks is used
+    $cmd .= " --shutdown-leaks $sdleak_log" unless $Settings::OS =~ /^WIN/;
     my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
 						 $timeout_secs);
 
@@ -1909,7 +1986,11 @@ sub BloatTest2 {
 
     rename($leakstats_log, $old_leakstats_log);
 
+    if ($Settings::OS =~ /^WIN/) {
+        $cmd = "leakstats $malloc_log";
+    } else {
     $cmd = "run-mozilla.sh ./leakstats $malloc_log";
+    }
     $result = run_cmd($build_dir, $binary_dir, $cmd, $leakstats_log,
                       $timeout_secs);
     print_logfile($leakstats_log, "trace-malloc bloat test: leakstats");
@@ -1955,7 +2036,7 @@ sub BloatTest2 {
 
     if (-e $old_sdleak_log && -e $sdleak_log) {
       print_logfile($old_leakstats_log, "previous run of trace-malloc bloat test leakstats");
-      $cmd = "$build_dir/mozilla/tools/trace-malloc/diffbloatdump.pl --depth=15 $old_sdleak_log $sdleak_log";
+      $cmd = "$PERL $build_dir/mozilla/tools/trace-malloc/diffbloatdump.pl --depth=15 $old_sdleak_log $sdleak_log";
       $result = run_cmd($build_dir, $binary_dir, $cmd, $sdleak_diff_log,
                         $timeout_secs);
       print_logfile($sdleak_diff_log, "trace-malloc leak stats differences");
