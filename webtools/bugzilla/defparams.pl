@@ -389,6 +389,14 @@ sub check_loginmethod {
   },
 
   {
+   name => 'LDAPfilter',
+   desc => 'LDAP filter to AND with the <tt>LDAPuidattribute</tt> for ' .
+           'filtering the list of valid users.',
+   type => 't',
+   default => '',
+  },
+
+  {
    name => 'loginmethod',
    desc => 'The type of login authentication to use:
             <dl>

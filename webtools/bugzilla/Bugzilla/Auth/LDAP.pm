@@ -84,7 +84,7 @@ sub authenticate {
     # We've got our anonymous bind;  let's look up this user.
     $mesg = $LDAPconn->search( base   => Param("LDAPBaseDN"),
                                scope  => "sub",
-                               filter => Param("LDAPuidattribute") . "=$username",
+                               filter => '(&(' . Param("LDAPuidattribute") . "=$username)" . Param("LDAPfilter") . ')',
                                attrs  => ['dn'],
                              );
     return (AUTH_LOGINFAILED, undef, "lookup_failure")
@@ -102,7 +102,7 @@ sub authenticate {
     # mail attribute for this user.
     $mesg = $LDAPconn->search( base   => Param("LDAPBaseDN"),
                                scope  => "sub",
-                               filter => Param("LDAPuidattribute") . "=$username",
+                               filter => '(&(' . Param("LDAPuidattribute") . "=$username)" . Param("LDAPfilter") . ')',
                              );
     my $user_entry = $mesg->shift_entry if !$mesg->code && $mesg->count;
     if(!$user_entry || !$user_entry->exists(Param("LDAPmailattribute"))) {
