@@ -542,12 +542,13 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 	RequestName(request, stringMsg, 1);
 
 	// these are for nsIChannel tests found in nsichanneltests.cpp (post AsyncOpen() tests)
+	// they will only be run if a nsISupports context was passed to AsyncOpen()
 	nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
 	CBrowserImpl *aBrowserImpl = new CBrowserImpl();
 	CnsIChannelTests  *obj = new CnsIChannelTests(mWebBrowser, aBrowserImpl);
-	if (obj)
+	if (obj && ctxt)
 		obj->PostAsyncTests(channel, 1);
-	else 
+	else if (!obj && ctxt)
 		QAOutput("No object to run PostAsyncTests().", 1);
 
 	if (!ctxt)
