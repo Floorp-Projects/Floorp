@@ -573,15 +573,7 @@ PRBool
 nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_POPUP_EVENT;
-  event.message = NS_XUL_POPUP_SHOWING;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_POPUP_SHOWING);
   event.point.x = aX;
   event.point.y = aY;
 
@@ -658,15 +650,7 @@ PRBool
 nsPopupSetFrame::OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_POPUP_EVENT;
-  event.message = NS_XUL_POPUP_SHOWN;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_POPUP_SHOWN);
   event.point.x = aX;
   event.point.y = aY;
 
@@ -688,15 +672,7 @@ PRBool
 nsPopupSetFrame::OnDestroy(nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_POPUP_EVENT;
-  event.message = NS_XUL_POPUP_HIDING;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_POPUP_HIDING);
  
   if (aPopupContent) {
     nsIPresShell *shell = mPresContext->GetPresShell();
@@ -715,15 +691,7 @@ PRBool
 nsPopupSetFrame::OnDestroyed(nsIContent* aPopupContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_POPUP_EVENT;
-  event.message = NS_XUL_POPUP_HIDDEN;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_POPUP_HIDDEN);
 
   if (aPopupContent) {
     nsIPresShell *shell = mPresContext->GetPresShell();

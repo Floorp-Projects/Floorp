@@ -3234,9 +3234,7 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
     nsEvent * theEvent;
     privateEvent->GetInternalNSEvent(&theEvent);
     if (theEvent) {
-      nsGUIEvent focusEvent;
-      memset(&focusEvent, 0, sizeof(focusEvent));
-      focusEvent.message = theEvent->message; // we only care about the message in ProcessEvent
+      nsGUIEvent focusEvent(theEvent->message); // we only care about the message in ProcessEvent
       nsEventStatus rv = ProcessEvent(focusEvent);
       if (nsEventStatus_eConsumeNoDefault == rv) {
         aFocusEvent->PreventDefault();

@@ -1082,9 +1082,7 @@ nsXMLHttpRequest::RequestCompleted()
     return NS_ERROR_FAILURE;
   }
 
-  nsEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_PAGE_LOAD;
+  nsEvent event(NS_PAGE_LOAD);
   rv = manager->CreateEvent(nsnull, &event,
                             NS_LITERAL_STRING("HTMLEvents"), 
                             getter_AddRefs(domevent));

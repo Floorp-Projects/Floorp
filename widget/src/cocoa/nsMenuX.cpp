@@ -747,12 +747,7 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
     if (listener) {
       MenuRef menuRef;
       ::GetEventParameter(event, kEventParamDirectObject, typeMenuRef, NULL, sizeof(menuRef), NULL, &menuRef);
-      nsMenuEvent menuEvent;
-      menuEvent.message = NS_MENU_SELECTED;
-      menuEvent.eventStructType = NS_MENU_EVENT;
-      menuEvent.point.x = 0;
-      menuEvent.point.y = 0;
-      menuEvent.widget = nsnull;
+      nsMenuEvent menuEvent(NS_MENU_SELECTED);
       menuEvent.time = PR_IntervalNow();
       menuEvent.mCommand = (PRUint32) menuRef;
       if (kind == kEventMenuOpening) {
@@ -978,15 +973,7 @@ PRBool
 nsMenuX::OnCreate()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_XUL_POPUP_SHOWING;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_POPUP_SHOWING);
   
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
@@ -1069,15 +1056,7 @@ PRBool
 nsMenuX::OnCreated()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_XUL_POPUP_SHOWN;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_POPUP_SHOWN);
   
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
@@ -1113,15 +1092,7 @@ nsMenuX::OnDestroy()
     return PR_TRUE;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_XUL_POPUP_HIDING;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_POPUP_HIDING);
   
   nsCOMPtr<nsIWebShell>  webShell = do_QueryReferent(mWebShellWeakRef);
   if (!webShell) {
@@ -1151,15 +1122,7 @@ PRBool
 nsMenuX::OnDestroyed()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_XUL_POPUP_HIDDEN;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_POPUP_HIDDEN);
   
   nsCOMPtr<nsIWebShell>  webShell = do_QueryReferent(mWebShellWeakRef);
   if (!webShell) {

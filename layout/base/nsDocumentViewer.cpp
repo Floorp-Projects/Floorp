@@ -906,10 +906,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // Now, fire either an OnLoad or OnError event to the document...
   if(NS_SUCCEEDED(aStatus)) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
+    nsEvent event(NS_PAGE_LOAD);
 
-    event.eventStructType = NS_EVENT;
-    event.message = NS_PAGE_LOAD;
     rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &status);
 #ifdef MOZ_TIMELINE
@@ -985,10 +983,8 @@ DocumentViewerImpl::Unload()
 
   // Now, fire an Unload event to the document...
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event;
+  nsEvent event(NS_PAGE_UNLOAD);
 
-  event.eventStructType = NS_EVENT;
-  event.message = NS_PAGE_UNLOAD;
   return global->HandleDOMEvent(mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &status);
 }

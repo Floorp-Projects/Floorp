@@ -1050,12 +1050,9 @@ nsresult nsTreeBodyFrame::CheckVerticalOverflow()
   }
  
   if (verticalOverflowChanged) {
-    nsScrollPortEvent event;
-    event.eventStructType = NS_SCROLLPORT_EVENT;  
-    event.widget = nsnull;
+    nsScrollPortEvent event(mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW
+                            : NS_SCROLLPORT_UNDERFLOW);
     event.orient = nsScrollPortEvent::vertical;
-    event.nativeMsg = nsnull;
-    event.message = mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW;
 
     nsEventStatus status = nsEventStatus_eIgnore;
     mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);

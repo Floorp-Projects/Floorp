@@ -162,22 +162,13 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent
 
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_XUL_COMMAND;
+  nsMouseEvent event(NS_XUL_COMMAND);
   if(aEvent) {
     event.isShift = ((nsInputEvent*)(aEvent))->isShift;
     event.isControl = ((nsInputEvent*)(aEvent))->isControl;
     event.isAlt = ((nsInputEvent*)(aEvent))->isAlt;
     event.isMeta = ((nsInputEvent*)(aEvent))->isMeta;
-  } else {
-    event.isShift = PR_FALSE;
-    event.isControl = PR_FALSE;
-    event.isAlt = PR_FALSE;
-    event.isMeta = PR_FALSE;
   }
-  event.clickCount = 0;
-  event.widget = nsnull;
 
   // Have the content handle the event, propagating it according to normal DOM rules.
   nsIPresShell *shell = aPresContext->GetPresShell();

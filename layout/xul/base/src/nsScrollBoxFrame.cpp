@@ -504,13 +504,10 @@ nsScrollBoxFrame::PostScrollPortEvent(nsIPresShell* aShell, PRBool aOverflow, ns
   if (!mContent)
     return;
 
-  nsScrollPortEvent* event = new nsScrollPortEvent();
-  event->eventStructType = NS_SCROLLPORT_EVENT;  
-  event->widget = nsnull;
+  nsScrollPortEvent* event = new nsScrollPortEvent(aOverflow ?
+                                                   NS_SCROLLPORT_OVERFLOW :
+                                                   NS_SCROLLPORT_UNDERFLOW);
   event->orient = aType;
-  event->nativeMsg = nsnull;
-  event->message = aOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW;
-
   aShell->PostDOMEvent(mContent, event);
 }
 

@@ -1178,9 +1178,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     // XXX figure out the region/rect stuff!
     nsRect rect(aEvent->area.x, aEvent->area.y,
                 aEvent->area.width, aEvent->area.height);
-    nsPaintEvent event;
-
-    InitPaintEvent(event);
+    nsPaintEvent event(NS_PAINT, this);
 
     event.point.x = aEvent->area.x;
     event.point.y = aEvent->area.y;
@@ -1210,8 +1208,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         mBounds.y == aEvent->y)
         return FALSE;
 
-    nsGUIEvent event;
-    InitGUIEvent(event, NS_MOVE);
+    nsGUIEvent event(NS_MOVE, this);
 
     event.point.x = aEvent->x;
     event.point.y = aEvent->y;
@@ -1249,9 +1246,7 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
 void
 nsWindow::OnDeleteEvent(GtkWidget *aWidget, GdkEventAny *aEvent)
 {
-    nsGUIEvent event;
-
-    InitGUIEvent(event, NS_XUL_CLOSE);
+    nsGUIEvent event(NS_XUL_CLOSE, this);
 
     event.point.x = 0;
     event.point.y = 0;
@@ -1263,8 +1258,7 @@ nsWindow::OnDeleteEvent(GtkWidget *aWidget, GdkEventAny *aEvent)
 void
 nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 {
-    nsMouseEvent event;
-    InitMouseEvent(event, NS_MOUSE_ENTER);
+    nsMouseEvent event(NS_MOUSE_ENTER, this);
 
     event.point.x = nscoord(aEvent->x);
     event.point.y = nscoord(aEvent->y);
@@ -1278,8 +1272,7 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 void
 nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 {
-    nsMouseEvent event;
-    InitMouseEvent(event, NS_MOUSE_EXIT);
+    nsMouseEvent event(NS_MOUSE_EXIT, this);
 
     event.point.x = nscoord(aEvent->x);
     event.point.y = nscoord(aEvent->y);
@@ -1311,8 +1304,7 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
 
-    nsMouseEvent event;
-    InitMouseEvent(event, NS_MOUSE_MOVE);
+    nsMouseEvent event(NS_MOUSE_MOVE, this);
 
     if (synthEvent) {
         event.point.x = nscoord(xevent.xmotion.x);
@@ -1344,7 +1336,6 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 void
 nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
-    nsMouseEvent  event;
     PRUint32      eventType;
     nsEventStatus status;
 
@@ -1389,14 +1380,15 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         break;
     }
 
-    InitButtonEvent(event, eventType, aEvent);
+    nsMouseEvent event(eventType, this);
+    InitButtonEvent(event, aEvent);
 
     DispatchEvent(&event, status);
 
     // right menu click on linux should also pop up a context menu
     if (eventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
-        nsMouseEvent contextMenuEvent;
-        InitButtonEvent(contextMenuEvent, NS_CONTEXTMENU, aEvent);
+        nsMouseEvent contextMenuEvent(NS_CONTEXTMENU, this);
+        InitButtonEvent(contextMenuEvent, aEvent);
         DispatchEvent(&contextMenuEvent, status);
     }
 }
@@ -1404,7 +1396,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 void
 nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
-    nsMouseEvent  event;
     PRUint32      eventType;
 
     switch (aEvent->button) {
@@ -1425,7 +1416,8 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         break;
     }
 
-    InitButtonEvent(event, eventType, aEvent);
+    nsMouseEvent  event(eventType, this);
+    InitButtonEvent(event, aEvent);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1531,7 +1523,6 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
    LOGIM(("sending as regular key press event\n"));
 #endif
 
-    nsKeyEvent event;
     nsEventStatus status;
 
     // work around for annoying things.
@@ -1560,11 +1551,13 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         mInKeyRepeat = PR_TRUE;
 
         // send the key down event
-        InitKeyEvent(event, aEvent, NS_KEY_DOWN);
-        DispatchEvent(&event, status);
+        nsKeyEvent downEvent(NS_KEY_DOWN, this);
+        InitKeyEvent(downEvent, aEvent);
+        DispatchEvent(&downEvent, status);
     }
 
-    InitKeyEvent(event, aEvent, NS_KEY_PRESS);
+    nsKeyEvent event(NS_KEY_PRESS, this);
+    InitKeyEvent(event, aEvent);
     event.charCode = nsConvertCharCodeToUnicode(aEvent);
     if (event.charCode) {
         event.keyCode = 0;
@@ -1620,7 +1613,6 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         return TRUE;
 #endif
 
-    nsKeyEvent event;
     nsEventStatus status;
     
     // unset the repeat flag
@@ -1637,7 +1629,8 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         return TRUE;
     }
 
-    InitKeyEvent(event, aEvent, NS_KEY_UP);
+    nsKeyEvent event(NS_KEY_UP, this);
+    InitKeyEvent(event, aEvent);
 
     DispatchEvent(&event, status);
 
@@ -1653,8 +1646,8 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 void
 nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
-    nsMouseScrollEvent event;
-    InitMouseScrollEvent(event, aEvent, NS_MOUSE_SCROLL);
+    nsMouseScrollEvent event(NS_MOUSE_SCROLL, this);
+    InitMouseScrollEvent(event, aEvent);
 
     // check to see if we should rollup
     if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
@@ -1689,8 +1682,7 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
     LOG(("nsWindow::OnWindowStateEvent [%p] changed %d new_window_state %d\n",
          (void *)this, aEvent->changed_mask, aEvent->new_window_state));
 
-    nsSizeModeEvent event;
-    InitSizeModeEvent(event);
+    nsSizeModeEvent event(NS_SIZEMODE, this);
 
     // We don't care about anything but changes in the maximized/icon
     // states
@@ -1780,17 +1772,12 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     // notify the drag service that we are starting a drag motion.
     dragSessionGTK->TargetStartDragMotion();
 
-    nsMouseEvent event;
+    nsMouseEvent event(NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
 
     // now that we have initialized the event update our drag status
     UpdateDragStatus(event, aDragContext, dragService);
-
-    event.message = NS_DRAGDROP_OVER;
-    event.eventStructType = NS_DRAGDROP_EVENT;
-
-    event.widget = innerMostWidget;
 
     event.point.x = retx;
     event.point.y = rety;
@@ -1900,27 +1887,20 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     innerMostWidget->AddRef();
 
-    nsMouseEvent event;
+    nsMouseEvent event(NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
 
     // now that we have initialized the event update our drag status
     UpdateDragStatus(event, aDragContext, dragService);
 
-    event.message = NS_DRAGDROP_OVER;
-    event.eventStructType = NS_DRAGDROP_EVENT;
-    event.widget = innerMostWidget;
     event.point.x = retx;
     event.point.y = rety;
 
     nsEventStatus status;
     innerMostWidget->DispatchEvent(&event, status);
 
-    InitDragEvent(event);
-
     event.message = NS_DRAGDROP_DROP;
-    event.eventStructType = NS_DRAGDROP_EVENT;
-    event.widget = innerMostWidget;
     event.point.x = retx;
     event.point.y = rety;
 
@@ -1975,15 +1955,7 @@ nsWindow::OnDragLeave(void)
 {
     LOG(("nsWindow::OnDragLeave(%p)\n", this));
 
-    nsMouseEvent event;
-
-    event.message = NS_DRAGDROP_EXIT;
-    event.eventStructType = NS_DRAGDROP_EVENT;
-
-    event.widget = this;
-
-    event.point.x = 0;
-    event.point.y = 0;
+    nsMouseEvent event(NS_DRAGDROP_EXIT, this);
 
     AddRef();
 
@@ -1998,12 +1970,7 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
 {
     LOG(("nsWindow::OnDragEnter(%p)\n", this));
     
-    nsMouseEvent event;
-
-    event.message = NS_DRAGDROP_ENTER;
-    event.eventStructType = NS_DRAGDROP_EVENT;
-
-    event.widget = this;
+    nsMouseEvent event(NS_DRAGDROP_ENTER, this);
 
     event.point.x = aX;
     event.point.y = aY;
@@ -3488,8 +3455,6 @@ property_notify_event_cb  (GtkWidget *widget, GdkEventProperty *event)
 void
 nsWindow::InitDragEvent(nsMouseEvent &aEvent)
 {
-    // set everything to zero
-    memset(&aEvent, 0, sizeof(nsMouseEvent));
     // set the keyboard modifiers
     gint x, y;
     GdkModifierType state = (GdkModifierType)0;
@@ -3757,7 +3722,6 @@ key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
                                 nsMouseEvent* aCMEvent)
 {
     memcpy(aCMEvent, aKeyEvent, sizeof(nsInputEvent));
-    aCMEvent->eventStructType = NS_MOUSE_EVENT;
     aCMEvent->message = NS_CONTEXTMENU_KEY;
     aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
     aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
@@ -3816,11 +3780,10 @@ PRBool
 nsWindow::DispatchAccessibleEvent(nsIAccessible** aAccessible)
 {
     PRBool result = PR_FALSE;
-    nsAccessibleEvent event;
+    nsAccessibleEvent event(NS_GETACCESSIBLE, this);
 
     *aAccessible = nsnull;
 
-    InitAccessibleEvent(event);
     nsEventStatus status;
     DispatchEvent(&event, status);
     result = (nsEventStatus_eConsumeNoDefault == status) ? PR_TRUE : PR_FALSE;
@@ -3900,13 +3863,7 @@ nsWindow::IMEComposeStart(void)
 
     mComposingText = PR_TRUE;
 
-    nsCompositionEvent compEvent;
-
-    compEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-    compEvent.point.x = compEvent.point.y = 0;
-    compEvent.time = 0;    // Potential problem ?
-    compEvent.message = compEvent.eventStructType
-        = compEvent.compositionMessage = NS_COMPOSITION_START;
+    nsCompositionEvent compEvent(NS_COMPOSITION_START, this);
 
     nsEventStatus status;
     DispatchEvent(&compEvent, status);
@@ -3923,24 +3880,10 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
         IMEComposeStart();
 
     LOGIM(("IMEComposeText\n"));
-    nsTextEvent textEvent;
+    nsTextEvent textEvent(NS_TEXT_TEXT, this);
 
-    textEvent.time = 0;
-    textEvent.isShift = textEvent.isControl =
-    textEvent.isAlt = textEvent.isMeta = PR_FALSE;
-  
-    textEvent.message = textEvent.eventStructType = NS_TEXT_EVENT;
-    textEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-    textEvent.point.x = textEvent.point.y = 0;
-
-    if (aLen == 0) {
-        textEvent.theText = nsnull;
-        textEvent.rangeCount = 0;
-        textEvent.rangeArray = nsnull;
-    } else {
+    if (aLen != 0) {
         textEvent.theText = (PRUnichar*)aText;
-        textEvent.rangeCount = 0;
-        textEvent.rangeArray = nsnull;
 
         if (aPreeditString && aFeedback && (aLen > 0)) {
             IM_set_text_range(aLen, aPreeditString, aFeedback,
@@ -3969,12 +3912,7 @@ nsWindow::IMEComposeEnd(void)
 
     mComposingText = PR_FALSE;
 
-    nsCompositionEvent compEvent;
-    compEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-    compEvent.point.x = compEvent.point.y = 0;
-    compEvent.time = 0;
-    compEvent.message = compEvent.eventStructType
-        = compEvent.compositionMessage = NS_COMPOSITION_END;
+    nsCompositionEvent compEvent(NS_COMPOSITION_END, this);
 
     nsEventStatus status;
     DispatchEvent(&compEvent, status);

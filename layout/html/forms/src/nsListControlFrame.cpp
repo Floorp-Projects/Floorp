@@ -2483,9 +2483,7 @@ nsListControlFrame::FireOnChange()
 
   // Dispatch the NS_FORM_CHANGE event
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_FORM_CHANGE;
+  nsEvent event(NS_FORM_CHANGE);
 
   nsIPresShell *presShell = mPresContext->GetPresShell();
   if (presShell) {

@@ -261,9 +261,7 @@ NS_METHOD nsMenuItemX::DoCommand()
   MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_MOUSE_EVENT;
-  event.message = NS_XUL_COMMAND;
+  nsMouseEvent event(NS_XUL_COMMAND);
 
   // See if we have a command element.  If so, we execute on the command instead
   // of on our content element.

@@ -2424,10 +2424,7 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
     }
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_NODEINSERTED;
-      mutation.mTarget = do_QueryInterface(aKid);
+      nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);
       mutation.mRelatedNode = do_QueryInterface(this);
 
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -2460,10 +2457,7 @@ nsGenericElement::ReplaceChildAt(nsIContent* aKid,
       mDocument->ContentReplaced(this, oldKid, aKid, aIndex);
     }
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_SUBTREEMODIFIED;
-      mutation.mTarget = do_QueryInterface(this);
+      nsMutationEvent mutation(NS_MUTATION_SUBTREEMODIFIED, this);
       mutation.mRelatedNode = do_QueryInterface(oldKid);
     
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -2502,10 +2496,7 @@ nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
     }
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_NODEINSERTED;
-      mutation.mTarget = do_QueryInterface(aKid);
+      nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);
       mutation.mRelatedNode = do_QueryInterface(this);
 
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -2523,11 +2514,7 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_NODEREMOVED;
-      mutation.mTarget = do_QueryInterface(oldKid);
-
+      nsMutationEvent mutation(NS_MUTATION_NODEREMOVED, oldKid);
       mutation.mRelatedNode = do_QueryInterface(this);
 
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -3485,10 +3472,7 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_ATTRMODIFIED;
-      mutation.mTarget = node;
+      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       name->ToString(attrName);
@@ -3638,10 +3622,7 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_ATTRMODIFIED;
-      mutation.mTarget = node;
+      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       aName->ToString(attrName);

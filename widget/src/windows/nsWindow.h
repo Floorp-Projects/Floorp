@@ -401,7 +401,7 @@ public:
 
     PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId;}
 
-    void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
+    void InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
 
     void                    SuppressBlurEvents(PRBool aSuppress);
     PRBool                  BlurEventsSuppressed();

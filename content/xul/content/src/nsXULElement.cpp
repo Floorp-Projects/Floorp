@@ -1862,11 +1862,7 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
 
     if (mDocument && HasMutationListeners(this,
                                           NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_NODEINSERTED;
-      mutation.mTarget = do_QueryInterface(aKid);
-
+      nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);
       mutation.mRelatedNode =
           do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
@@ -1917,10 +1913,7 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
             }
             if (HasMutationListeners(this,
                                      NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
-                nsMutationEvent mutation;
-                mutation.eventStructType = NS_MUTATION_EVENT;
-                mutation.message = NS_MUTATION_SUBTREEMODIFIED;
-                mutation.mTarget = do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
+                nsMutationEvent mutation(NS_MUTATION_SUBTREEMODIFIED, this);
                 mutation.mRelatedNode = do_QueryInterface(oldKid);
                 
                 nsEventStatus status = nsEventStatus_eIgnore;
@@ -1967,11 +1960,7 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
         
             if (HasMutationListeners(this,
                                      NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-                nsMutationEvent mutation;
-                mutation.eventStructType = NS_MUTATION_EVENT;
-                mutation.message = NS_MUTATION_NODEINSERTED;
-                mutation.mTarget = do_QueryInterface(aKid);
-
+                nsMutationEvent mutation(NS_MUTATION_NODEINSERTED, aKid);
                 mutation.mRelatedNode =
                     do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
@@ -1998,11 +1987,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_NODEREMOVED;
-      mutation.mTarget = do_QueryInterface(oldKid);
-
+      nsMutationEvent mutation(NS_MUTATION_NODEREMOVED, oldKid);
       mutation.mRelatedNode =
           do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
 
@@ -2314,10 +2299,7 @@ nsXULElement::FinishSetAttr(PRInt32 aAttrNS, nsIAtom* aAttrName,
         binding->AttributeChanged(aAttrName, aAttrNS, PR_FALSE, aNotify);
 
       if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*, this), NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-        nsMutationEvent mutation;
-        mutation.eventStructType = NS_MUTATION_EVENT;
-        mutation.message = NS_MUTATION_ATTRMODIFIED;
-        mutation.mTarget = do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
+        nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, this);
 
         nsAutoString attrName2;
         aAttrName->ToString(attrName2);
@@ -2543,11 +2525,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     // Fire mutation listeners
     if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*, this),
                              NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-        nsMutationEvent mutation;
-        mutation.eventStructType = NS_MUTATION_EVENT;
-        mutation.message = NS_MUTATION_ATTRMODIFIED;
-        mutation.mTarget =
-            do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
+        nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, this);
 
         nsAutoString attrName2;
         aName->ToString(attrName2);
@@ -4126,20 +4104,9 @@ nsXULElement::Click()
             nsIPresShell *shell = doc->GetShellAt(i);
             shell->GetPresContext(getter_AddRefs(context));
 
-            nsMouseEvent eventDown;
-            eventDown.eventStructType = NS_MOUSE_EVENT;
-            eventDown.message = NS_MOUSE_LEFT_BUTTON_DOWN;
-            eventDown.isShift = PR_FALSE;
-            eventDown.isControl = PR_FALSE;
-            eventDown.isAlt = PR_FALSE;
-            eventDown.isMeta = PR_FALSE;
-            eventDown.clickCount = 0;
-            eventDown.widget = nsnull;
-
-            // use copy constructor for bit-wise copy
-            nsMouseEvent eventUp(eventDown), eventClick(eventDown);
-            eventUp.message = NS_MOUSE_LEFT_BUTTON_UP;
-            eventClick.message = NS_XUL_CLICK;
+            nsMouseEvent eventDown(NS_MOUSE_LEFT_BUTTON_DOWN),
+                eventUp(NS_MOUSE_LEFT_BUTTON_UP),
+                eventClick(NS_XUL_CLICK);
 
             // send mouse down
             nsEventStatus status = nsEventStatus_eIgnore;
@@ -4175,9 +4142,7 @@ nsXULElement::DoCommand()
             shell->GetPresContext(getter_AddRefs(context));
 
             nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event;
-            event.eventStructType = NS_EVENT;
-            event.message = NS_XUL_COMMAND;
+            nsMouseEvent event(NS_XUL_COMMAND);
             HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT,
                            &status);
         }

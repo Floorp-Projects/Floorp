@@ -889,10 +889,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
       // onload event for the frame element.
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-
-      event.eventStructType = NS_EVENT;
-      event.message = NS_PAGE_LOAD;
+      nsEvent event(NS_PAGE_LOAD);
 
       // Most of the time we could get a pres context to pass in here,
       // but not always (i.e. if this window is not shown there won't
@@ -4275,15 +4272,9 @@ GlobalWindowImpl::Activate()
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   nsEventStatus status;
-  nsGUIEvent guiEvent;
 
-  guiEvent.eventStructType = NS_GUI_EVENT;
-  guiEvent.point.x = 0;
-  guiEvent.point.y = 0;
+  nsGUIEvent guiEvent(NS_ACTIVATE, widget);
   guiEvent.time = PR_IntervalNow();
-  guiEvent.nativeMsg = nsnull;
-  guiEvent.message = NS_ACTIVATE;
-  guiEvent.widget = widget;
 
   vm->DispatchEvent(&guiEvent, &status);
 
@@ -4309,15 +4300,9 @@ GlobalWindowImpl::Deactivate()
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   nsEventStatus status;
-  nsGUIEvent guiEvent;
 
-  guiEvent.eventStructType = NS_GUI_EVENT;
-  guiEvent.point.x = 0;
-  guiEvent.point.y = 0;
+  nsGUIEvent guiEvent(NS_DEACTIVATE, widget);
   guiEvent.time = PR_IntervalNow();
-  guiEvent.nativeMsg = nsnull;
-  guiEvent.message = NS_DEACTIVATE;
-  guiEvent.widget = widget;
 
   vm->DispatchEvent(&guiEvent, &status);
 

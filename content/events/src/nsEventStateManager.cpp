@@ -459,9 +459,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             // Fire the blur event on the previously focused document.
 
             nsEventStatus blurstatus = nsEventStatus_eIgnore;
-            nsEvent blurevent;
-            blurevent.eventStructType = NS_EVENT;
-            blurevent.message = NS_BLUR_CONTENT;
+            nsEvent blurevent(NS_BLUR_CONTENT);
 
             gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext,
                                                  &blurevent,
@@ -514,9 +512,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         // then the content node, then the window.
 
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsEvent focusevent;
-        focusevent.eventStructType = NS_EVENT;
-        focusevent.message = NS_FOCUS_CONTENT;
+        nsEvent focusevent(NS_FOCUS_CONTENT);
 
         nsCOMPtr<nsIScriptGlobalObject> globalObject = mDocument->GetScriptGlobalObject();
         if (globalObject) {
@@ -614,9 +610,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         // and window.
 
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_BLUR_CONTENT;
+        nsEvent event(NS_BLUR_CONTENT);
 
         if (gLastFocusedDocument && gLastFocusedPresContext) {
           if (gLastFocusedContent) {
@@ -775,10 +769,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
 
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_BLUR_CONTENT;
-        event.flags = 0;
+        nsEvent event(NS_BLUR_CONTENT);
 
         if (gLastFocusedContent) {
           nsIPresShell *shell = gLastFocusedDocument->GetShellAt(0);
@@ -949,15 +940,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
         if (activate) {
           // B) Click on it if the users prefs indicate to do so.
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event;
-          event.eventStructType = NS_MOUSE_EVENT;
-          event.message = NS_MOUSE_LEFT_CLICK;
-          event.isShift = PR_FALSE;
-          event.isControl = PR_FALSE;
-          event.isAlt = PR_FALSE;
-          event.isMeta = PR_FALSE;
-          event.clickCount = 0;
-          event.widget = nsnull;
+          nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
           content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
 
@@ -1170,17 +1153,10 @@ nsEventStateManager::FireContextClick()
 #endif
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_MOUSE_EVENT;
-  event.message = NS_CONTEXTMENU;
-  event.widget = mEventDownWidget;
+  nsMouseEvent event(NS_CONTEXTMENU, mEventDownWidget);
   event.clickCount = 1;
   event.point = mEventPoint;
   event.refPoint = mEventRefPoint;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
 
   // Dispatch to the DOM. We have to fake out the ESM and tell it that the
   // current target frame is actually where the mouseDown occurred, otherwise it
@@ -1424,11 +1400,7 @@ nsEventStateManager::GenerateDragGesture(nsIPresContext* aPresContext,
 
       // get the widget from the target frame
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsMouseEvent event;
-      event.eventStructType = NS_DRAGDROP_EVENT;
-      event.message = NS_DRAGDROP_GESTURE;
-      event.widget = mGestureDownFrame->GetWindow();
-      event.clickCount = 0;
+      nsMouseEvent event(NS_DRAGDROP_GESTURE, mGestureDownFrame->GetWindow());
       event.point = mGestureDownPoint;
       event.refPoint = mGestureDownRefPoint;
       // ideally, we should get the modifiers from the original event too, 
@@ -1586,20 +1558,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   // Create a mouseout event that we fire to the content before
   // scrolling, to allow tooltips to disappear, etc.
 
-  nsMouseEvent mouseOutEvent;
-  mouseOutEvent.eventStructType = NS_MOUSE_EVENT;
-  mouseOutEvent.message = NS_MOUSE_EXIT;
-  mouseOutEvent.widget = aMSEvent->widget;
-  mouseOutEvent.clickCount = 0;
-  mouseOutEvent.point = nsPoint(0,0);
-  mouseOutEvent.refPoint = nsPoint(0,0);
-  mouseOutEvent.isShift = PR_FALSE;
-  mouseOutEvent.isControl = PR_FALSE;
-  mouseOutEvent.isAlt = PR_FALSE;
-  mouseOutEvent.isMeta = PR_FALSE;
-
-  // initialize nativeMsg field otherwise plugin code will crash when trying to access it
-  mouseOutEvent.nativeMsg = nsnull;
+  nsMouseEvent mouseOutEvent(NS_MOUSE_EXIT, aMSEvent->widget);
 
   nsIPresShell *presShell = aPresContext->PresShell();
 
@@ -2454,11 +2413,7 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
                                         nsIContent* aRelatedContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event;
-  event.eventStructType = NS_MOUSE_EVENT;
-  event.message = aMessage;
-  event.widget = aEvent->widget;
-  event.clickCount = 0;
+  nsMouseEvent event(aMessage, aEvent->widget);
   event.point = aEvent->point;
   event.refPoint = aEvent->refPoint;
   event.isShift = ((nsMouseEvent*)aEvent)->isShift;
@@ -2513,11 +2468,7 @@ nsEventStateManager::MaybeDispatchMouseEventToIframe(
         nsIPresShell *parentShell = parentDoc->GetShellAt(0);
         if (parentShell) {
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event;
-          event.eventStructType = NS_MOUSE_EVENT;
-          event.message = aMessage;
-          event.widget = aEvent->widget;
-          event.clickCount = 0;
+          nsMouseEvent event(aMessage, aEvent->widget);
           event.point = aEvent->point;
           event.refPoint = aEvent->refPoint;
           event.isShift = ((nsMouseEvent*)aEvent)->isShift;
@@ -2670,11 +2621,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext,
         if ( mLastDragOverFrame ) {
           //fire drag exit
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event;
-          event.eventStructType = NS_DRAGDROP_EVENT;
-          event.message = NS_DRAGDROP_EXIT_SYNTH;
-          event.widget = aEvent->widget;
-          event.clickCount = 0;
+          nsMouseEvent event(NS_DRAGDROP_EXIT_SYNTH, aEvent->widget);
           event.point = aEvent->point;
           event.refPoint = aEvent->refPoint;
           event.isShift = ((nsMouseEvent*)aEvent)->isShift;
@@ -2707,11 +2654,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext,
 
         //fire drag enter
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_DRAGDROP_EVENT;
-        event.message = NS_DRAGDROP_ENTER;
-        event.widget = aEvent->widget;
-        event.clickCount = 0;
+        nsMouseEvent event(NS_DRAGDROP_ENTER, aEvent->widget);
         event.point = aEvent->point;
         event.refPoint = aEvent->refPoint;
         event.isShift = ((nsMouseEvent*)aEvent)->isShift;
@@ -2752,11 +2695,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext,
 
         // fire mouseout
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_DRAGDROP_EVENT;
-        event.message = NS_DRAGDROP_EXIT_SYNTH;
-        event.widget = aEvent->widget;
-        event.clickCount = 0;
+        nsMouseEvent event(NS_DRAGDROP_EXIT_SYNTH, aEvent->widget);
         event.point = aEvent->point;
         event.refPoint = aEvent->refPoint;
         event.isShift = ((nsMouseEvent*)aEvent)->isShift;
@@ -2859,7 +2798,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
                                               nsEventStatus* aStatus)
 {
   nsresult ret = NS_OK;
-  nsMouseEvent event;
+  PRUint32 eventMsg = 0;
   PRInt32 flags = NS_EVENT_FLAG_INIT;
 
   //If mouse is still over same element, clickcount will be > 1.
@@ -2868,21 +2807,19 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     //fire click
     switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_UP:
-      event.message = NS_MOUSE_LEFT_CLICK;
+      eventMsg = NS_MOUSE_LEFT_CLICK;
       break;
     case NS_MOUSE_MIDDLE_BUTTON_UP:
-      event.message = NS_MOUSE_MIDDLE_CLICK;
+      eventMsg = NS_MOUSE_MIDDLE_CLICK;
       flags |= mLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
       break;
     case NS_MOUSE_RIGHT_BUTTON_UP:
-      event.message = NS_MOUSE_RIGHT_CLICK;
+      eventMsg = NS_MOUSE_RIGHT_CLICK;
       flags |= mLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
       break;
     }
 
-    event.eventStructType = NS_MOUSE_EVENT;
-    event.widget = aEvent->widget;
-    event.nativeMsg = nsnull;
+    nsMouseEvent event(eventMsg, aEvent->widget);
     event.point = aEvent->point;
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
@@ -2898,23 +2835,21 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
 
       ret = presShell->HandleEventWithTarget(&event, mCurrentTarget, mouseContent, flags, aStatus);
       if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
-        nsMouseEvent event2;
+        eventMsg = 0;
         //fire double click
         switch (aEvent->message) {
         case NS_MOUSE_LEFT_BUTTON_UP:
-          event2.message = NS_MOUSE_LEFT_DOUBLECLICK;
+          eventMsg = NS_MOUSE_LEFT_DOUBLECLICK;
           break;
         case NS_MOUSE_MIDDLE_BUTTON_UP:
-          event2.message = NS_MOUSE_MIDDLE_DOUBLECLICK;
+          eventMsg = NS_MOUSE_MIDDLE_DOUBLECLICK;
           break;
         case NS_MOUSE_RIGHT_BUTTON_UP:
-          event2.message = NS_MOUSE_RIGHT_DOUBLECLICK;
+          eventMsg = NS_MOUSE_RIGHT_DOUBLECLICK;
           break;
         }
         
-        event2.eventStructType = NS_MOUSE_EVENT;
-        event2.widget = aEvent->widget;
-        event2.nativeMsg = nsnull;
+        nsMouseEvent event2(eventMsg, aEvent->widget);
         event2.point = aEvent->point;
         event2.refPoint = aEvent->refPoint;
         event2.clickCount = aEvent->clickCount;
@@ -4110,9 +4045,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
 
           //fire blur
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsEvent event;
-          event.eventStructType = NS_EVENT;
-          event.message = NS_BLUR_CONTENT;
+          nsEvent event(NS_BLUR_CONTENT);
           
           EnsureDocument(presShell);
           
@@ -4168,9 +4101,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
 
     if (gLastFocusedDocument && (gLastFocusedDocument != mDocument) && globalObject) {  
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_BLUR_CONTENT;
+      nsEvent event(NS_BLUR_CONTENT);
 
       // Make sure we're not switching command dispatchers, if so, surpress the blurred one
       if (mDocument) {
@@ -4256,9 +4187,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
 
     //fire focus
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_FOCUS_CONTENT;
+    nsEvent event(NS_FOCUS_CONTENT);
 
     if (nsnull != mPresContext) {
       nsCxPusher pusher(aContent);
@@ -4279,9 +4208,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
     //fire focus on document even if the content isn't focusable (ie. text)
     //see bugzilla bug 93521
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_FOCUS_CONTENT;
+    nsEvent event(NS_FOCUS_CONTENT);
     if (nsnull != mPresContext && mDocument) {
       nsCxPusher pusher(mDocument);
       mDocument->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);

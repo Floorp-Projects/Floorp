@@ -683,9 +683,7 @@ nsXMLDocument::EndLoad()
     // Generate a document load event for the case when an XML document was loaded
     // as pure data without any presentation attached to it.
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_PAGE_LOAD;
+    nsEvent event(NS_PAGE_LOAD);
 
     nsCOMPtr<nsIScriptGlobalObject> sgo;
     nsCOMPtr<nsIScriptGlobalObjectOwner> container =

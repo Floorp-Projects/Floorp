@@ -359,7 +359,6 @@ PRBool nsWidget::OnResize( nsRect &aRect ) {
 		nsSizeEvent event;
 
 	  InitEvent(event, NS_SIZE);
-		event.eventStructType = NS_SIZE_EVENT;
 
 		nsRect *foo = new nsRect(0, 0, aRect.width, aRect.height);
 		event.windowSize = foo;
@@ -386,7 +385,6 @@ PRBool nsWidget::OnMove( PRInt32 aX, PRInt32 aY ) {
   InitEvent(event, NS_MOVE);
   event.point.x = aX;
   event.point.y = aY;
-  event.eventStructType = NS_GUI_EVENT;
   return DispatchWindowEvent(&event);
 	}
 
@@ -676,7 +674,6 @@ void nsWidget::InitMouseEvent(PhPointerEvent_t *aPhButtonEvent,
 {
   anEvent.message = aEventType;
   anEvent.widget  = aWidget;
-  anEvent.eventStructType = NS_MOUSE_EVENT;
 
   if (aPhButtonEvent != nsnull) {
     anEvent.time =      PR_IntervalNow();
@@ -748,7 +745,6 @@ PRBool nsWidget::DispatchMouseEvent( PhPoint_t &aPos, PRUint32 aEvent ) {
   nsMouseEvent event;
 
   InitEvent( event, aEvent );
-  event.eventStructType = NS_MOUSE_EVENT;
   event.point.x = aPos.x;
   event.point.y = aPos.y;
   event.isShift = PR_FALSE;
@@ -892,7 +888,6 @@ inline void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
   
     anEvent.message = aEventType;
     anEvent.widget  = aWidget;
-    anEvent.eventStructType = NS_KEY_EVENT;
     anEvent.nativeMsg = (void *)aPhKeyEvent;
     anEvent.time =      PR_IntervalNow();
     anEvent.point.x = 0; 
@@ -1183,7 +1178,6 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
 			sJustGotActivated = PR_TRUE;
 		
 			nsMouseEvent event;
-			event.eventStructType = NS_GUI_EVENT;
 			pWidget->InitEvent(event, NS_MOUSE_ACTIVATE);
 			event.acceptActivation = PR_TRUE;
 

@@ -570,10 +570,7 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
     GetPresContext(this, getter_AddRefs(presContext));
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsScriptErrorEvent event;
-    event.eventStructType = NS_EVENT;
-
-    event.message = NS_SCRIPT_ERROR;
+    nsScriptErrorEvent event(NS_SCRIPT_ERROR);
 
     event.lineNr = aLineNo;
 
@@ -606,10 +603,7 @@ nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
     GetPresContext(this, getter_AddRefs(presContext));
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-
-    event.message = NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR;
+    nsEvent event(NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR);
     rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
                         &status);
   }

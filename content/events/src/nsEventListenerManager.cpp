@@ -202,7 +202,7 @@ static const EventDispatchData sCompositionEvents[] = {
 };
 
 static const EventDispatchData sTextEvents[] = {
-  {NS_TEXT_EVENT,HANDLER(&nsIDOMTextListener::HandleText),NS_EVENT_BITS_TEXT_TEXT},
+  {NS_TEXT_TEXT,HANDLER(&nsIDOMTextListener::HandleText),NS_EVENT_BITS_TEXT_TEXT},
 };
 
 static const EventDispatchData sKeyEvents[] = {

@@ -430,14 +430,11 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       if (aEvent->eventStructType == NS_KEY_EVENT) {
         nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aEvent);
         if (keyEvent->keyCode == NS_VK_RETURN) {
-          nsMouseEvent event;
           nsEventStatus status = nsEventStatus_eIgnore;
 
           //fire click
-          event.message = NS_MOUSE_LEFT_CLICK;
-          event.eventStructType = NS_MOUSE_EVENT;
           nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
-          event.widget = guiEvent->widget;
+          nsMouseEvent event(NS_MOUSE_LEFT_CLICK, guiEvent->widget);
           event.point = aEvent->point;
           event.refPoint = aEvent->refPoint;
           event.clickCount = 1;

@@ -75,14 +75,12 @@ class nsIURI;
 #define NS_KEY_EVENT           9
 #define NS_MOUSE_EVENT        10
 #define NS_MENU_EVENT         11
-#define NS_DRAGDROP_EVENT     12
+#define NS_SCRIPT_ERROR_EVENT 12
 #define NS_TEXT_EVENT         13
-#define NS_COMPOSITION_START  14
-#define NS_COMPOSITION_END    15
+#define NS_COMPOSITION_EVENT  14
+#define NS_RECONVERSION_EVENT 15
 #define NS_MOUSE_SCROLL_EVENT 16
-#define NS_COMPOSITION_QUERY  17
 #define NS_SCROLLPORT_EVENT   18
-#define NS_RECONVERSION_QUERY 19
 #define NS_ACCESSIBLE_EVENT   20
 #define NS_FORM_EVENT         21
 #define NS_FOCUS_EVENT        22
@@ -139,15 +137,15 @@ enum nsWindowZ {
  */
 
 struct nsEvent {
-  nsEvent()
-    : eventStructType(NS_EVENT),
-      message(NS_EVENT_TYPE_NULL),
+  nsEvent(PRUint32 msg = 0, PRUint8 structType = NS_EVENT)
+    : eventStructType(structType),
+      message(msg),
       point(0, 0),
       refPoint(0, 0),
       time(0),
-      flags(NS_EVENT_FLAG_NONE),
-      internalAppFlags(NS_APP_EVENT_FLAG_NONE),
-      userType(nsnull)
+      flags(0), 
+      internalAppFlags(0),
+      userType(0)
   {
   }
 
@@ -173,10 +171,19 @@ struct nsEvent {
  * General graphic user interface event
  */
 
-struct nsGUIEvent : public nsEvent {
-                /// Originator of the event
+struct nsGUIEvent : public nsEvent
+{
+  nsGUIEvent(PRUint32 msg = 0,
+             nsIWidget *w = nsnull,
+             PRUint8 structType = NS_GUI_EVENT)
+    : nsEvent(msg, structType),
+      widget(w), nativeMsg(nsnull)
+  {
+  }
+
+  /// Originator of the event
   nsIWidget*  widget;           
-                /// Internal platform specific message.
+  /// Internal platform specific message.
   void*     nativeMsg;        
 };
 
@@ -184,7 +191,15 @@ struct nsGUIEvent : public nsEvent {
  * Script error event
  */
 
-struct nsScriptErrorEvent : public nsEvent {
+struct nsScriptErrorEvent : public nsEvent
+{
+  nsScriptErrorEvent(PRUint32 msg = 0,
+                     PRUint8 structType = NS_SCRIPT_ERROR_EVENT)
+    : nsEvent(msg, structType),
+      lineNr(0), errorMsg(nsnull), fileName(nsnull)
+  {
+  }
+
   PRInt32           lineNr;
   const PRUnichar*  errorMsg;
   const PRUnichar*  fileName;
@@ -194,29 +209,55 @@ struct nsScriptErrorEvent : public nsEvent {
  * Window resize event
  */
 
-struct nsSizeEvent : public nsGUIEvent {
-                /// x,y width, height in pixels (client area)
-    nsRect          *windowSize;    
-                /// width of entire window (in pixels)
-    PRInt32         mWinWidth;    
-                /// height of entire window (in pixels)
-    PRInt32         mWinHeight;    
+struct nsSizeEvent : public nsGUIEvent
+{
+  nsSizeEvent(PRUint32 msg = 0,
+              nsIWidget *w = nsnull,
+              PRUint8 structType = NS_SIZE_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      windowSize(nsnull), mWinWidth(0), mWinHeight(0)
+  {
+  }
+
+  /// x,y width, height in pixels (client area)
+  nsRect          *windowSize;    
+  /// width of entire window (in pixels)
+  PRInt32         mWinWidth;    
+  /// height of entire window (in pixels)
+  PRInt32         mWinHeight;    
 };
 
 /**
  * Window size mode event
  */
 
-struct nsSizeModeEvent : public nsGUIEvent {
+struct nsSizeModeEvent : public nsGUIEvent
+{
+  nsSizeModeEvent(PRUint32 msg = 0,
+                  nsIWidget *w = nsnull,
+                  PRUint8 structType = NS_SIZEMODE_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      mSizeMode(nsSizeMode_Normal)
+  {
+  }
 
-    nsSizeMode      mSizeMode;
+  nsSizeMode      mSizeMode;
 };
 
 /**
  * Window z-level event
  */
 
-struct nsZLevelEvent : public nsGUIEvent {
+struct nsZLevelEvent : public nsGUIEvent
+{
+  nsZLevelEvent(PRUint32 msg = 0,
+                nsIWidget *w = nsnull,
+                PRUint8 structType = NS_ZLEVEL_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      mPlacement(nsWindowZTop), mReqBelow(nsnull), mActualBelow(nsnull),
+      mImmediate(PR_FALSE), mAdjusted(PR_FALSE)
+  {
+  }
 
   nsWindowZ  mPlacement;
   nsIWidget *mReqBelow,    // widget we request being below, if any
@@ -229,132 +270,239 @@ struct nsZLevelEvent : public nsGUIEvent {
  * Window repaint event
  */
 
-struct nsPaintEvent : public nsGUIEvent {
-                /// Context to paint in.
-    nsIRenderingContext *renderingContext;
-                /// area to paint  (should be used instead of rect)
-    nsIRegion           *region;
-                /// x,y, width, height in pixels of area to paint
-    nsRect              *rect;      
+struct nsPaintEvent : public nsGUIEvent
+{
+  nsPaintEvent(PRUint32 msg = 0,
+               nsIWidget *w = nsnull,
+               PRUint8 structType = NS_PAINT_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      renderingContext(nsnull), region(nsnull), rect(nsnull)
+  {
+  }
+
+  /// Context to paint in.
+  nsIRenderingContext *renderingContext;
+  /// area to paint  (should be used instead of rect)
+  nsIRegion           *region;
+  /// x,y, width, height in pixels of area to paint
+  nsRect              *rect;      
 };
 
 /**
  * Scrollbar event
  */
 
-struct nsScrollbarEvent : public nsGUIEvent {
-                /// ranges between scrollbar 0 and (maxRange - thumbSize). See nsIScrollbar
-    PRUint32        position; 
+struct nsScrollbarEvent : public nsGUIEvent
+{
+  nsScrollbarEvent(PRUint32 msg = 0,
+                   nsIWidget *w = nsnull,
+                   PRUint8 structType = NS_SCROLLBAR_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      position(0)
+  {
+  }
+
+  /// ranges between scrollbar 0 and (maxRange - thumbSize). See nsIScrollbar
+  PRUint32        position; 
 };
 
-struct nsScrollPortEvent : public nsGUIEvent {
+struct nsScrollPortEvent : public nsGUIEvent
+{
   enum orientType {
     vertical   = 0,
     horizontal = 1,
     both       = 2
   };
 
+  nsScrollPortEvent(PRUint32 msg = 0,
+                    nsIWidget *w = nsnull,
+                    PRUint8 structType = NS_SCROLLPORT_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      orient(vertical)
+  {
+  }
+
   orientType orient;
 };
 
-struct nsInputEvent : public nsGUIEvent {
-                /// PR_TRUE indicates the shift key is down
-    PRBool          isShift;        
-                /// PR_TRUE indicates the control key is down
-    PRBool          isControl;      
-                /// PR_TRUE indicates the alt key is down
-    PRBool          isAlt;          
-                /// PR_TRUE indicates the meta key is down
-                /// (or, on Mac, the Command key)
-    PRBool          isMeta;
+struct nsInputEvent : public nsGUIEvent
+{
+  nsInputEvent(PRUint32 msg = 0,
+               nsIWidget *w = nsnull,
+               PRUint8 structType = NS_INPUT_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      isShift(PR_FALSE), isControl(PR_FALSE), isAlt(PR_FALSE), isMeta(PR_FALSE)
+  {
+  }
+
+  /// PR_TRUE indicates the shift key is down
+  PRBool          isShift;        
+  /// PR_TRUE indicates the control key is down
+  PRBool          isControl;      
+  /// PR_TRUE indicates the alt key is down
+  PRBool          isAlt;          
+  /// PR_TRUE indicates the meta key is down (or, on Mac, the Command key)
+  PRBool          isMeta;
 };
 
 /**
  * Mouse event
  */
 
-struct nsMouseEvent : public nsInputEvent {
-                /// The number of mouse clicks
-    PRUint32        clickCount;          
-                /// Special return code for MOUSE_ACTIVATE to signal
-                /// if the target accepts activation (1), or denies it (0)
-    PRBool          acceptActivation;           
+struct nsMouseEvent : public nsInputEvent
+{
+  nsMouseEvent(PRUint32 msg = 0,
+               nsIWidget *w = nsnull,
+               PRUint8 structType = NS_MOUSE_EVENT)
+    : nsInputEvent(msg, w, structType),
+      clickCount(0), acceptActivation(PR_FALSE)
+  {
+  }
+
+  /// The number of mouse clicks
+  PRUint32        clickCount;          
+  /// Special return code for MOUSE_ACTIVATE to signal
+  /// if the target accepts activation (1), or denies it (0)
+  PRBool          acceptActivation;           
 };
 
 /**
  * Accessible event
  */
 
-struct nsAccessibleEvent : public nsInputEvent {
-    nsIAccessible*     accessible;           
+struct nsAccessibleEvent : public nsInputEvent
+{
+  nsAccessibleEvent(PRUint32 msg = 0,
+                    nsIWidget *w = nsnull,
+                    PRUint8 structType = NS_ACCESSIBLE_EVENT)
+    : nsInputEvent(msg, w, structType),
+      accessible(nsnull)
+  {
+  }
+
+  nsIAccessible*     accessible;           
 };
 
 /**
  * Keyboard event
  */
 
-struct nsKeyEvent : public nsInputEvent {
-                /// see NS_VK codes
-    PRUint32        keyCode;   
-                /// OS translated Unicode char
-    PRUint32        charCode;
-                // indicates whether the event signifies a printable character
-    PRBool          isChar;
+struct nsKeyEvent : public nsInputEvent
+{
+  nsKeyEvent(PRUint32 msg = 0,
+             nsIWidget *w = nsnull,
+             PRUint8 structType = NS_KEY_EVENT)
+    : nsInputEvent(msg, w, structType),
+      keyCode(0), charCode(0), isChar(0)
+  {
+  }
+
+  /// see NS_VK codes
+  PRUint32        keyCode;   
+  /// OS translated Unicode char
+  PRUint32        charCode;
+  // indicates whether the event signifies a printable character
+  PRBool          isChar;
 };
 
 /**
  * IME Related Events
  */
 struct nsTextRange {
-	PRUint32	mStartOffset;
-	PRUint32	mEndOffset;
-	PRUint32	mRangeType;
+  nsTextRange()
+    : mStartOffset(0), mEndOffset(0), mRangeType(0)
+  {
+  }
+
+  PRUint32 mStartOffset;
+  PRUint32 mEndOffset;
+  PRUint32 mRangeType;
 };
 
 typedef struct nsTextRange nsTextRange;
 typedef nsTextRange* nsTextRangeArray;
 
 struct nsTextEventReply {
-	nsRect		mCursorPosition;
-	PRBool		mCursorIsCollapsed;
+  nsTextEventReply()
+    : mCursorIsCollapsed(PR_FALSE)
+  {
+  }
+
+  nsRect mCursorPosition;
+  PRBool mCursorIsCollapsed;
 };
 
 typedef struct nsTextEventReply nsTextEventReply;
 
-struct nsTextEvent : public nsInputEvent {
-	PRUnichar*			theText;
-	nsTextEventReply	theReply;
-	PRUint32			rangeCount;
-	nsTextRangeArray	rangeArray;
-  PRBool          isChar;
+struct nsTextEvent : public nsInputEvent
+{
+  nsTextEvent(PRUint32 msg = 0,
+              nsIWidget *w = nsnull,
+              PRUint8 structType = NS_TEXT_EVENT)
+    : nsInputEvent(msg, w, structType),
+      theText(nsnull), rangeCount(0), isChar(PR_FALSE)
+  {
+  }
+
+  PRUnichar*        theText;
+  nsTextEventReply  theReply;
+  PRUint32          rangeCount;
+  nsTextRangeArray  rangeArray;
+  PRBool            isChar;
 };
 
-struct nsCompositionEvent : public nsInputEvent {
-	PRUint32			compositionMessage;
-	nsTextEventReply	theReply;
+struct nsCompositionEvent : public nsInputEvent
+{
+  nsCompositionEvent(PRUint32 msg = 0,
+                     nsIWidget *w = nsnull,
+                     PRUint8 structType = NS_COMPOSITION_EVENT)
+    : nsInputEvent(msg, w, structType)
+  {
+  }
+
+  nsTextEventReply theReply;
 };
 
-struct nsMouseScrollEvent : public nsInputEvent {
-
+struct nsMouseScrollEvent : public nsInputEvent
+{
   enum nsMouseScrollFlags {
     kIsFullPage =   1 << 0,
     kIsVertical =   1 << 1,
     kIsHorizontal = 1 << 2
   };
 
+  nsMouseScrollEvent(PRUint32 msg = 0,
+                     nsIWidget *w = nsnull,
+                     PRUint8 structType = NS_MOUSE_SCROLL_EVENT)
+    : nsInputEvent(msg, w, structType),
+      scrollFlags(0), delta(0)
+  {
+  }
+
   PRInt32 scrollFlags;
   PRInt32 delta;
 };
 
 struct nsReconversionEventReply {
+  nsReconversionEventReply()
+    : mReconversionString(nsnull)
+  {
+  }
+
   PRUnichar *mReconversionString;
 };
 
-struct nsReconversionEvent : public nsInputEvent {
+struct nsReconversionEvent : public nsInputEvent
+{
+  nsReconversionEvent(PRUint32 msg = 0,
+                      nsIWidget *w = nsnull,
+                      PRUint8 structType = NS_RECONVERSION_EVENT)
+    : nsInputEvent(msg, w, structType)
+  {
+  }
+
   nsReconversionEventReply  theReply;
 };
-
-
 
 /**
  * MenuItem event
@@ -363,9 +511,18 @@ struct nsReconversionEvent : public nsInputEvent {
  * for the event
  */
 
-struct nsMenuEvent : public nsGUIEvent {
+struct nsMenuEvent : public nsGUIEvent
+{
+  nsMenuEvent(PRUint32 msg = 0,
+              nsIWidget *w = nsnull,
+              PRUint8 structType = NS_MENU_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      mMenuItem(nsnull), mCommand(0)
+  {
+  }
+
   nsIMenuItem * mMenuItem;
-  PRUint32      mCommand;           
+  PRUint32      mCommand;
 };
 
 /**
@@ -375,14 +532,30 @@ struct nsMenuEvent : public nsGUIEvent {
  * originator is a weak pointer (does not hold a strong reference).
  */
 
-struct nsFormEvent : public nsEvent {
+struct nsFormEvent : public nsEvent
+{
+  nsFormEvent(PRUint32 msg = 0, PRUint8 structType = NS_FORM_EVENT)
+    : nsEvent(msg, structType),
+      originator(nsnull)
+  {
+  }
+
   nsIContent *originator;
 };
 
 /**
 * Focus event
 */
-struct nsFocusEvent : public nsGUIEvent {
+struct nsFocusEvent : public nsGUIEvent
+{
+  nsFocusEvent(PRUint32 msg = 0,
+               nsIWidget *w = nsnull,
+               PRUint8 structType = NS_FOCUS_EVENT)
+    : nsGUIEvent(msg, w, structType),
+      isMozWindowTakingFocus(PR_FALSE)
+  {
+  }
+
   PRBool isMozWindowTakingFocus;
 };
 
@@ -392,14 +565,31 @@ struct nsFocusEvent : public nsGUIEvent {
  * Custom commands from the operating system.  eg. WM_APPCOMMAND on Windows
  */
 
-struct nsAppCommandEvent : public nsInputEvent {
-    PRUint32     appCommand;
+struct nsAppCommandEvent : public nsInputEvent
+{
+  nsAppCommandEvent(PRUint32 msg = 0,
+                    nsIWidget *w = nsnull,
+                    PRUint8 structType = NS_APPCOMMAND_EVENT)
+    : nsInputEvent(msg, w, structType),
+      appCommand(0)
+  {
+  }
+
+  PRUint32     appCommand;
 };
 
 /**
  * blocked popup window event
  */
-struct nsPopupBlockedEvent : public nsEvent {
+struct nsPopupBlockedEvent : public nsEvent
+{
+  nsPopupBlockedEvent(PRUint32 msg = 0,
+                      PRUint8 structType = NS_POPUPBLOCKED_EVENT)
+    : nsEvent(msg, structType),
+      mRequestingWindowURI(nsnull), mPopupWindowURI(nsnull)
+  {
+  }
+
   nsIURI* mRequestingWindowURI; // owning reference
   nsIURI* mPopupWindowURI;      // owning reference
 };
@@ -408,11 +598,11 @@ struct nsPopupBlockedEvent : public nsEvent {
  * Event status for D&D Event
  */
 enum nsDragDropEventStatus {  
-    /// The event is a enter
+  /// The event is a enter
   nsDragDropEventStatus_eDragEntered,            
-    /// The event is exit
+  /// The event is exit
   nsDragDropEventStatus_eDragExited, 
-    /// The event is drop
+  /// The event is drop
   nsDragDropEventStatus_eDrop  
 };
 
@@ -592,6 +782,20 @@ enum nsDragDropEventStatus {
 #define NS_APPCOMMAND_FAVORITES       (NS_APPCOMMAND_START + 6)
 #define NS_APPCOMMAND_HOME            (NS_APPCOMMAND_START + 7)
  
+// composition events
+#define NS_COMPOSITION_EVENT_START    2200
+#define NS_COMPOSITION_START          (NS_COMPOSITION_EVENT_START)
+#define NS_COMPOSITION_END            (NS_COMPOSITION_EVENT_START + 1)
+#define NS_COMPOSITION_QUERY          (NS_COMPOSITION_EVENT_START + 2)
+
+// reconversion events
+#define NS_RECONVERSION_START         2300
+#define NS_RECONVERSION_QUERY         (NS_RECONVERSION_START)
+
+// text events
+#define NS_TEXT_START                 2400
+#define NS_TEXT_TEXT                  (NS_TEXT_START)
+
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \
         ((evnt)->message == NS_MOUSE_LEFT_BUTTON_UP) || \
@@ -628,7 +832,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_KEY_UP))
 
 #define NS_IS_IME_EVENT(evnt) \
-       (((evnt)->message == NS_TEXT_EVENT) ||  \
+       (((evnt)->message == NS_TEXT_TEXT) ||  \
         ((evnt)->message == NS_COMPOSITION_START) ||  \
         ((evnt)->message == NS_COMPOSITION_END) || \
         ((evnt)->message == NS_RECONVERSION_QUERY) || \
@@ -779,4 +983,3 @@ enum nsDragDropEventStatus {
 #define NS_TEXTRANGE_SELECTEDCONVERTEDTEXT		0x05
 
 #endif // nsGUIEvent_h__
-

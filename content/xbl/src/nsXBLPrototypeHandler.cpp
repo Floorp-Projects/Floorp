@@ -474,15 +474,7 @@ nsresult
 nsXBLPrototypeHandler::BindingAttached(nsIDOMEventReceiver* aReceiver)
 {
   nsresult ret;
-  nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_XUL_COMMAND;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_COMMAND);
 
   nsCOMPtr<nsIEventListenerManager> listenerManager;
   if (NS_FAILED(ret = aReceiver->GetListenerManager(getter_AddRefs(listenerManager)))) {
@@ -514,15 +506,7 @@ nsresult
 nsXBLPrototypeHandler::BindingDetached(nsIDOMEventReceiver* aReceiver)
 {
   nsresult ret;
-  nsMouseEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_XUL_COMMAND;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
-  event.clickCount = 0;
-  event.widget = nsnull;
+  nsMouseEvent event(NS_XUL_COMMAND);
 
   nsCOMPtr<nsIEventListenerManager> listenerManager;
   if (NS_FAILED(ret = aReceiver->GetListenerManager(getter_AddRefs(listenerManager)))) {

@@ -76,51 +76,9 @@ nsCommonWidget::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
 }
 
 void
-nsCommonWidget::InitPaintEvent(nsPaintEvent &aEvent)
-{
-    memset(&aEvent, 0, sizeof(nsPaintEvent));
-    aEvent.eventStructType = NS_PAINT_EVENT;
-    aEvent.message = NS_PAINT;
-    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-    aEvent.region = nsnull;
-}
-
-void
-nsCommonWidget::InitSizeEvent(nsSizeEvent &aEvent)
-{
-    memset(&aEvent, 0, sizeof(nsSizeEvent));
-    aEvent.eventStructType = NS_SIZE_EVENT;
-    aEvent.message = NS_SIZE;
-    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-}
-
-void
-nsCommonWidget::InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg)
-{
-    memset(&aEvent, 0, sizeof(nsGUIEvent));
-    aEvent.eventStructType = NS_GUI_EVENT;
-    aEvent.message = aMsg;
-    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-}
-
-void
-nsCommonWidget::InitMouseEvent(nsMouseEvent &aEvent, PRUint32 aMsg)
-{
-    memset(&aEvent, 0, sizeof(nsMouseEvent));
-    aEvent.eventStructType = NS_MOUSE_EVENT;
-    aEvent.message = aMsg;
-    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-}
-
-void
-nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
+nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent,
                                 GdkEventButton *aGdkEvent)
 {
-    memset(&aEvent, 0, sizeof(nsMouseEvent));
-    aEvent.eventStructType = NS_MOUSE_EVENT;
-    aEvent.message = aMsg;
-    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-
     aEvent.point.x = nscoord(aGdkEvent->x);
     aEvent.point.y = nscoord(aGdkEvent->y);
 
@@ -148,13 +106,8 @@ nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
 
 void
 nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
-                                     GdkEventScroll *aGdkEvent, PRUint32 aMsg)
+                                     GdkEventScroll *aGdkEvent)
 {
-    memset(&aEvent, 0, sizeof(nsMouseScrollEvent));
-    aEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
-    aEvent.message = aMsg;
-    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-
     switch (aGdkEvent->direction) {
     case GDK_SCROLL_UP:
         aEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
@@ -186,15 +139,9 @@ nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
 }
 
 void
-nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent,
-                             PRUint32 aMsg)
+nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
 {
-    memset(&aEvent, 0, sizeof(nsKeyEvent));
-    aEvent.eventStructType = NS_KEY_EVENT;
-    aEvent.message   = aMsg;
-    aEvent.widget    = NS_STATIC_CAST(nsIWidget *, this);
     aEvent.keyCode   = GdkKeyCodeToDOMKeyCode(aGdkEvent->keyval);
-    aEvent.charCode  = 0;
     aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
         ? PR_TRUE : PR_FALSE;
     aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK)
@@ -206,34 +153,10 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent,
     aEvent.time      = aGdkEvent->time;
 }
 
-#ifdef ACCESSIBILITY
-
-void
-nsCommonWidget::InitAccessibleEvent(nsAccessibleEvent &aEvent)
-{
-    memset(&aEvent, 0, sizeof(nsAccessibleEvent));
-    aEvent.message = NS_GETACCESSIBLE;
-    aEvent.eventStructType = NS_ACCESSIBLE_EVENT;
-    aEvent.accessible = nsnull;
-    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-}
-
-#endif
-
-void
-nsCommonWidget::InitSizeModeEvent(nsSizeModeEvent &aEvent)
-{
-    memset(&aEvent, 0, sizeof(nsSizeModeEvent));
-    aEvent.eventStructType = NS_SIZEMODE_EVENT;
-    aEvent.message = NS_SIZEMODE;
-    aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
-}
-
 void
 nsCommonWidget::DispatchGotFocusEvent(void)
 {
-    nsGUIEvent event;
-    InitGUIEvent(event, NS_GOTFOCUS);
+    nsGUIEvent event(NS_GOTFOCUS, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -241,8 +164,7 @@ nsCommonWidget::DispatchGotFocusEvent(void)
 void
 nsCommonWidget::DispatchLostFocusEvent(void)
 {
-    nsGUIEvent event;
-    InitGUIEvent(event, NS_LOSTFOCUS);
+    nsGUIEvent event(NS_LOSTFOCUS, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -250,8 +172,7 @@ nsCommonWidget::DispatchLostFocusEvent(void)
 void
 nsCommonWidget::DispatchActivateEvent(void)
 {
-    nsGUIEvent event;
-    InitGUIEvent(event, NS_ACTIVATE);
+    nsGUIEvent event(NS_ACTIVATE, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -259,8 +180,7 @@ nsCommonWidget::DispatchActivateEvent(void)
 void
 nsCommonWidget::DispatchDeactivateEvent(void)
 {
-    nsGUIEvent event;
-    InitGUIEvent(event, NS_DEACTIVATE);
+    nsGUIEvent event(NS_DEACTIVATE, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
@@ -268,8 +188,7 @@ nsCommonWidget::DispatchDeactivateEvent(void)
 void
 nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
 {
-    nsSizeEvent event;
-    InitSizeEvent(event);
+    nsSizeEvent event(NS_SIZE, this);
 
     event.windowSize = &aRect;
     event.point.x = aRect.x;
@@ -516,9 +435,7 @@ nsCommonWidget::OnDestroy(void)
 
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
 
-    nsGUIEvent event;
-    InitGUIEvent(event, NS_DESTROY);
-
+    nsGUIEvent event(NS_DESTROY, this);
     nsEventStatus status;
     DispatchEvent(&event, status);
 }

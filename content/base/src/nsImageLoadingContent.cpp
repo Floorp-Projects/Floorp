@@ -625,15 +625,15 @@ HandleImagePLEvent(PLEvent* aEvent)
 {
   ImageEvent* evt = NS_STATIC_CAST(ImageEvent*, aEvent);
   nsEventStatus estatus = nsEventStatus_eIgnore;
-  nsEvent event;
-  event.eventStructType = NS_EVENT;
+  PRUint32 eventMsg;
 
   if (evt->mMessage == NS_LITERAL_STRING("load")) {
-    event.message = NS_IMAGE_LOAD;
+    eventMsg = NS_IMAGE_LOAD;
   } else {
-    event.message = NS_IMAGE_ERROR;
+    eventMsg = NS_IMAGE_ERROR;
   }
 
+  nsEvent event(eventMsg);
   evt->mContent->HandleDOMEvent(evt->mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &estatus);
 

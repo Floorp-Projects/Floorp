@@ -1466,15 +1466,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
         if (aEvent->eventStructType == NS_KEY_EVENT) {
           nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aEvent);
           if (keyEvent->keyCode == NS_VK_RETURN) {
-            nsMouseEvent event;
             nsEventStatus status = nsEventStatus_eIgnore;
             nsCOMPtr<nsIContent> mouseContent;
 
             //fire click
-            event.message = NS_MOUSE_LEFT_CLICK;
-            event.eventStructType = NS_MOUSE_EVENT;
             nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
-            event.widget = guiEvent->widget;
+            nsMouseEvent event(NS_MOUSE_LEFT_CLICK, guiEvent->widget);
             event.point = aEvent->point;
             event.refPoint = aEvent->refPoint;
             event.clickCount = 1;
@@ -1733,10 +1730,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node =
         do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_ATTRMODIFIED;
-      mutation.mTarget = node;
+      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       aAttribute->ToString(attrName);
@@ -1823,10 +1817,7 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
       nsCOMPtr<nsIDOMEventTarget> node =
         do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
 
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_ATTRMODIFIED;
-      mutation.mTarget = node;
+      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrLocalName, attrNamespace;
       localName->ToString(attrLocalName);
@@ -1977,10 +1968,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
 
     if (haveListeners) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_ATTRMODIFIED;
-      mutation.mTarget = node;
+      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       aAttribute->ToString(attrName);
@@ -2050,10 +2038,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 
     if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-      nsMutationEvent mutation;
-      mutation.eventStructType = NS_MUTATION_EVENT;
-      mutation.message = NS_MUTATION_ATTRMODIFIED;
-      mutation.mTarget = node;
+      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
 
       nsAutoString attrName;
       aAttribute->ToString(attrName);
