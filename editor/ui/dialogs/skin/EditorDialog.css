@@ -111,6 +111,11 @@ titledbutton#MoreFewerButton[more="1"] {
   width: 10em;
 }
 
+/* We use a borderless button to show misspelled word in dialog */
+titledbutton#MisspelledWord {
+  font-weight: bold;
+}
+
 titledbutton.color-well {
 	list-style-image:url("chrome://editor/skin/images/color.gif");
   border: 1px solid #CCCCCC;
