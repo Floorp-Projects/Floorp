@@ -699,3 +699,13 @@ nsFindComponent::ResetContext( nsISupports *aContext,
 NS_IMPL_ISUPPORTS1( nsFindComponent::Context, nsISearchContext)
 
 NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_CONTRACTID, 0 )
+
+#ifdef XP_WIN32
+  //in addition to returning a version number for this module,
+  //this also provides a convenient hook for the preloader
+  //to keep (some if not all) of the module resident.
+extern "C" __declspec(dllexport) float GetVersionNumber(void) {
+  return 1.0;
+}
+#endif
+
