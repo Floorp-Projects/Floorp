@@ -3152,157 +3152,161 @@ static void ComputeRate(PRInt32 bytes, PRTime startTime, float *rate)
  */
 PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 length)
 {
-	nsresult rv;
-    PRInt32 i=0;
-	PRUint32 status = 1;
-	
-	PRBool pauseForMoreData = PR_FALSE;
-	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-	char *orig_line = line;
- 
-	if (pauseForMoreData)
-	{
-		SetFlag(NNTP_PAUSE_FOR_READ);
-		PR_FREEIF(orig_line);
-		return 0;
-	}
-
-    if(!line) return(status);  /* no line yet */
-
-            /* End of list? */
-    if (line[0]=='.' && line[1]=='\0')
+  nsresult rv;
+  PRInt32 i=0;
+  PRUint32 status = 1;
+  
+  PRBool pauseForMoreData = PR_FALSE;
+  char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+  char *orig_line = line;
+  
+  if (pauseForMoreData)
+  {
+    SetFlag(NNTP_PAUSE_FOR_READ);
+    PR_FREEIF(orig_line);
+    return 0;
+  }
+  
+  if (!line) 
+    return(status);  /* no line yet */
+    
+  /* End of list? */
+  if (line[0]=='.' && line[1]=='\0')
+  {
+    PRBool listpnames=PR_FALSE;
+    rv = m_nntpServer->QueryExtension("LISTPNAMES",&listpnames);
+    if (NS_SUCCEEDED(rv) && listpnames)
+      m_nextState = NNTP_LIST_PRETTY_NAMES;
+    else
+      m_nextState = DISPLAY_NEWSGROUPS;
+    ClearFlag(NNTP_PAUSE_FOR_READ);
+    PR_FREEIF(orig_line);
+    return 0;  
+  }
+  else if (line[0] == '.')
+  {
+    if ((line[1] == ' ') || (line[1] == '.' && line [2] == '.' && line[3] == ' '))
     {
-		PRBool listpnames=PR_FALSE;
-		rv = m_nntpServer->QueryExtension("LISTPNAMES",&listpnames);
-		if (NS_SUCCEEDED(rv) && listpnames)
-			m_nextState = NNTP_LIST_PRETTY_NAMES;
-		else
-			m_nextState = DISPLAY_NEWSGROUPS;
-        ClearFlag(NNTP_PAUSE_FOR_READ);
-		PR_FREEIF(orig_line);
-        return 0;  
+      // some servers send "... 0000000001 0000000002 y"
+      // and some servers send ". 0000000001 0000000002 y"
+      // just skip that those lines
+      // see bug #69231 and #123560
+      PR_FREEIF(orig_line);
+      return status;
     }
-	else if (line [0] == '.' && line [1] == '.') 
-	{
-	  if (line [2] == '.')
-	  {
-		  // some servers send "... 0000000001 0000000002 y".  
-		  // just skip that that.
-		  // see bug #69231
-		  PR_FREEIF(orig_line);
-		  return status;
-	  }
-	  /* The NNTP server quotes all lines beginning with "." by doubling it. */
-	  line++;
-	}
-
-    /* almost correct
-     */
-    if(status > 1)
-    {
-		mBytesReceived += status;
-        mBytesReceivedSinceLastStatusUpdate += status;
-        
-        if ((mBytesReceivedSinceLastStatusUpdate > UPDATE_THRESHHOLD) && m_msgWindow) {
-                mBytesReceivedSinceLastStatusUpdate = 0;
-
-        	    nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
-
-        	    rv = m_msgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                nsXPIDLString statusString;
-		
-                nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-               	nsCOMPtr<nsIStringBundle> bundle;
-                rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                nsAutoString bytesStr; 
-                bytesStr.AppendInt(mBytesReceived / 1024);
-
-                // compute the rate, and then convert it have one 
-                // decimal precision.
-                float rate = 0.0;
-                ComputeRate(mBytesReceived, m_startTime, &rate);
-                char rate_buf[RATE_STR_BUF_LEN];
-                PR_snprintf(rate_buf,RATE_STR_BUF_LEN,"%.1f", rate);
-
-                nsAutoString rateStr;
-                rateStr.AppendWithConversion(rate_buf);
-
-                nsAutoString numGroupsStr;
-                numGroupsStr.AppendInt(mNumGroupsListed);
-
-                const PRUnichar *formatStrings[3] = { numGroupsStr.get(), bytesStr.get(), rateStr.get() };
-                rv = bundle->FormatStringFromName(NS_LITERAL_STRING("bytesReceived").get(),
-                                                  formatStrings, 3,
-                                                  getter_Copies(statusString));
-
-        	    rv = msgStatusFeedback->ShowStatusString(statusString);
-				if (NS_FAILED(rv)) {
-					PR_FREEIF(orig_line);
-					return rv;
-				}
-		}
+    // The NNTP server quotes all lines beginning with "." by doubling it, so unquote
+    line++;
+  }
+  
+  /* almost correct
+  */
+  if(status > 1)
+  {
+    mBytesReceived += status;
+    mBytesReceivedSinceLastStatusUpdate += status;
+    
+    if ((mBytesReceivedSinceLastStatusUpdate > UPDATE_THRESHHOLD) && m_msgWindow) {
+      mBytesReceivedSinceLastStatusUpdate = 0;
+      
+      nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
+      
+      rv = m_msgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsXPIDLString statusString;
+      
+      nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsCOMPtr<nsIStringBundle> bundle;
+      rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsAutoString bytesStr; 
+      bytesStr.AppendInt(mBytesReceived / 1024);
+      
+      // compute the rate, and then convert it have one 
+      // decimal precision.
+      float rate = 0.0;
+      ComputeRate(mBytesReceived, m_startTime, &rate);
+      char rate_buf[RATE_STR_BUF_LEN];
+      PR_snprintf(rate_buf,RATE_STR_BUF_LEN,"%.1f", rate);
+      
+      nsAutoString rateStr;
+      rateStr.AppendWithConversion(rate_buf);
+      
+      nsAutoString numGroupsStr;
+      numGroupsStr.AppendInt(mNumGroupsListed);
+      
+      const PRUnichar *formatStrings[3] = { numGroupsStr.get(), bytesStr.get(), rateStr.get() };
+      rv = bundle->FormatStringFromName(NS_LITERAL_STRING("bytesReceived").get(),
+        formatStrings, 3,
+        getter_Copies(statusString));
+      
+      rv = msgStatusFeedback->ShowStatusString(statusString);
+      if (NS_FAILED(rv)) {
+        PR_FREEIF(orig_line);
+        return rv;
+      }
+    }
+  }
+  
+	 /* find whitespace separator if it exits */
+  for(i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
+    ;  /* null body */
+  
+  char *description;
+  if(line[i] == '\0')
+    description = &line[i];
+  else
+    description = &line[i+1];
+  
+  line[i] = 0; /* terminate group name */
+  
+  /* store all the group names */
+  NS_ASSERTION(m_nntpServer, "no nntp incoming server");
+  if (m_nntpServer) {
+    m_readNewsListCount++;
+    mNumGroupsListed++;
+    rv = m_nntpServer->AddNewsgroupToList(line);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
+    // since it's not fatal, don't let this error stop the LIST command.
+    rv = NS_OK;
+  }
+  else {
+    rv = NS_ERROR_FAILURE;
+  }
+  
+  if (m_readNewsListCount == READ_NEWS_LIST_COUNT_MAX) {
+    m_readNewsListCount = 0;
+    if (mUpdateTimer) {
+      mUpdateTimer->Cancel();
+      mUpdateTimer = nsnull;
+    }
+    mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
+    if (NS_FAILED(rv)) {
+      PR_FREEIF(orig_line);
+      return -1;
     }
     
-	 /* find whitespace separator if it exits */
-    for(i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
-        ;  /* null body */
-
-	char *description;
-    if(line[i] == '\0')
-        description = &line[i];
-    else
-        description = &line[i+1];
-
-    line[i] = 0; /* terminate group name */
-
-	/* store all the group names */
-	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
-	if (m_nntpServer) {
-		m_readNewsListCount++;
-        mNumGroupsListed++;
-		rv = m_nntpServer->AddNewsgroupToList(line);
-		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
-	}
-	else {
-		rv = NS_ERROR_FAILURE;
-	}
-
-	if (m_readNewsListCount == READ_NEWS_LIST_COUNT_MAX) {
-		m_readNewsListCount = 0;
- 	    if (mUpdateTimer) {
-			mUpdateTimer->Cancel();
-			mUpdateTimer = nsnull;
-	    }
-        mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
-		if (NS_FAILED(rv)) {
-			PR_FREEIF(orig_line);
-			return -1;
-		}
-
-		mInputStream = inputStream;
-
-		const PRUint32 kUpdateTimerDelay = READ_NEWS_LIST_TIMEOUT;
-		rv = mUpdateTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*,this), kUpdateTimerDelay,
-                                            nsITimer::TYPE_ONE_SHOT);
-		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to init timer");
-		if (NS_FAILED(rv)) {
-			PR_FREEIF(orig_line);
-			return -1;
-		}
-
-		m_nextState = NEWS_FINISHED;
+    mInputStream = inputStream;
+    
+    const PRUint32 kUpdateTimerDelay = READ_NEWS_LIST_TIMEOUT;
+    rv = mUpdateTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*,this), kUpdateTimerDelay,
+      nsITimer::TYPE_ONE_SHOT);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to init timer");
+    if (NS_FAILED(rv)) {
+      PR_FREEIF(orig_line);
+      return -1;
     }
-
-	PR_FREEIF(orig_line);
-	if (NS_FAILED(rv)) return -1;
-    return(status);
+    
+    m_nextState = NEWS_FINISHED;
+  }
+  
+  PR_FREEIF(orig_line);
+  if (NS_FAILED(rv)) return -1;
+  return(status);
 }
 
 NS_IMETHODIMP
