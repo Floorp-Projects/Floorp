@@ -29,6 +29,7 @@ XPIDL_MODULE=mozucth
 
 XPIDLSRCS=\
     .\nsIUnkContentTypeHandler.idl \
+    .\nsIHelperAppLauncherDialog.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
