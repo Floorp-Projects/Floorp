@@ -52,6 +52,16 @@ interface nsIWindowMediator: nsIRDFDataSource
 
 	nsISimpleEnumerator getXULWindowEnumerator( in wstring inType); 
 
+	/* These iterate over the windows of type inType in z-order.
+	   If inType is null, it iterates over all windows.
+	   This iterator returns domWindows. Note this interface makes
+	   no requirement that if windows are re-ordered while z-order
+	   enumerator(s) are active, a window couldn't be revisited
+	   (if you don't fail to get my double-negative meaning.)
+	*/
+	nsISimpleEnumerator getZOrderDOMWindowEnumerator(in wstring aWindowType, in boolean aFrontToBack);
+	nsISimpleEnumerator getZOrderXULWindowEnumerator(in wstring aWindowType, in boolean aFrontToBack);
+
 	/*
 		Returns the window of type inType ( if null return any window type ) which has the most recent
 		time stamp
