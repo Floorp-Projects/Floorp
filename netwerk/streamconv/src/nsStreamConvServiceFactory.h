@@ -18,6 +18,7 @@
 
 #include "nsIFactory.h"
 
+#if 0
 class nsStreamConvServiceFactory : public nsIFactory
 {
 public:
@@ -42,3 +43,4 @@ protected:
     const char* mProgID;
 };
 
+#endif

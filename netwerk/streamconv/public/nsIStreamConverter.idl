@@ -44,7 +44,8 @@ interface nsIStreamConverter : nsIStreamListener {
 	// Use this when you have a stream as input.
     nsIInputStream Convert(in nsIInputStream aFromStream,
 						   in wstring aFromType,
-						   in wstring aToType);
+						   in wstring aToType,
+                           in nsISupports aCtxt);
 
 	// ASYNCRONOUS VERSION
 
@@ -53,7 +54,8 @@ interface nsIStreamConverter : nsIStreamListener {
 	// aListener::OnDataAvailable().
 	void AsyncConvertData(in wstring aFromType,
 				 in wstring aToType,
-				 in nsIStreamListener aListener);
+				 in nsIStreamListener aListener,
+                 in nsISupports aCtxt);
 };
 
 %{C++

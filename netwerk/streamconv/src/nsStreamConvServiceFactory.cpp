@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsIGenericFactory.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsIStreamConverterService.h"
@@ -29,88 +30,6 @@ static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kStreamConvServiceCID,      NS_STREAMCONVERTERSERVICE_CID);
 
-////////////////////////////////////////////////////////////////////////
-
-nsStreamConvServiceFactory::nsStreamConvServiceFactory(const nsCID &aClass, 
-                                   const char* className,
-                                   const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
-{
-    NS_INIT_REFCNT();
-}
-
-nsStreamConvServiceFactory::~nsStreamConvServiceFactory()
-{
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-}
-
-NS_IMETHODIMP
-nsStreamConvServiceFactory::QueryInterface(const nsIID &aIID, void **aResult)
-{
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    // Always NULL result, in case of failure
-    *aResult = nsnull;
-
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsISupports*, this);
-        AddRef();
-        return NS_OK;
-    } else if (aIID.Equals(kIFactoryIID)) {
-        *aResult = NS_STATIC_CAST(nsIFactory*, this);
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsStreamConvServiceFactory);
-NS_IMPL_RELEASE(nsStreamConvServiceFactory);
-
-NS_IMETHODIMP
-nsStreamConvServiceFactory::CreateInstance(nsISupports *aOuter,
-                                 const nsIID &aIID,
-                                 void **aResult)
-{
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
-    nsresult rv = NS_OK;
-
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kStreamConvServiceCID)) {
-        nsStreamConverterService *service = new nsStreamConverterService();
-        if (!service) return NS_ERROR_OUT_OF_MEMORY;
-        rv = service->Init();
-        if (NS_FAILED(rv)) {
-            delete service;
-            return rv;
-        }
-        service->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&inst);
-    }
-    else {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(inst);
-    *aResult = inst;
-    NS_RELEASE(inst);
-    return rv;
-}
-
-nsresult nsStreamConvServiceFactory::LockFactory(PRBool aLock)
-{
-    // Not implemented in simplest case.
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -124,6 +43,23 @@ NSGetFactory(nsISupports* aServMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
+    nsresult rv;
+    if (aFactory == nsnull)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIGenericFactory* fact;
+    if (aClass.Equals(kStreamConvServiceCID)) {
+        rv = NS_NewGenericFactory(&fact, nsStreamConverterService::Create);
+    }
+    else {
+        rv = NS_ERROR_FAILURE;
+    }
+
+    if (NS_SUCCEEDED(rv))
+        *aFactory = fact;
+    return rv;
+
+#if 0
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
@@ -134,6 +70,7 @@ NSGetFactory(nsISupports* aServMgr,
     NS_ADDREF(factory);
     *aFactory = factory;
     return NS_OK;
+#endif
 }
 
 
