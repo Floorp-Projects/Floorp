@@ -119,8 +119,9 @@ public:
   {
   }
 
-  // Defined in nsDocument.cpp (it needs to clean up mNodeInfoManager).
-  virtual ~nsIDocument();
+  virtual ~nsIDocument()
+  {
+  }
 
   virtual nsresult StartDocumentLoad(const char* aCommand,
                                      nsIChannel* aChannel,
