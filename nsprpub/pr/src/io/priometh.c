@@ -307,7 +307,7 @@ PR_IMPLEMENT(PRInt32) PR_EmulateAcceptRead(
     if (rv >= 0)
     {
         /* copy the new info out where caller can see it */
-        enum { AMASK = 7 };  /* mask for alignment of PRNetAddr */
+#define AMASK ((PRPtrdiff)7)  /* mask for alignment of PRNetAddr */
         PRPtrdiff aligned = (PRPtrdiff)buf + amount + AMASK;
         *raddr = (PRNetAddr*)(aligned & ~AMASK);
         memcpy(*raddr, &remote, PR_NETADDR_SIZE(&remote));
