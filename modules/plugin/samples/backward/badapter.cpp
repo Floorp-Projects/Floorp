@@ -1055,7 +1055,7 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPReason reason)
     if (inStr == NULL)
         return NPERR_GENERIC_ERROR;
     inStr->GetListener()->OnStopBinding(stream->url, (nsPluginReason)reason, inStr->GetPluginStreamInfo());
-    inStr->Release();
+    // inStr->Release();
     stream->pdata = NULL;
     
 #else // !NEW_PLUGIN_STREAM_API
@@ -1138,6 +1138,7 @@ NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 
         CPluginInputStream* inStr = (CPluginInputStream*)notifyData;
         (void)inStr->GetListener()->OnStopBinding(url, (nsPluginReason)reason, inStr->GetPluginStreamInfo());
+        inStr->Release();
     
 #else // !NEW_PLUGIN_STREAM_API
 
@@ -1560,7 +1561,7 @@ CPluginInstancePeer::CPluginInstancePeer(nsIPluginInstance* pluginInstance,
     // Set the reference count to 0.
     NS_INIT_REFCNT();
     
-    mInstance->AddRef();
+    NS_IF_ADDREF(mInstance);
 
     attribute_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
     values_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
@@ -1589,7 +1590,9 @@ CPluginInstancePeer::~CPluginInstancePeer(void)
         NPN_MemFree(attribute_list);
         NPN_MemFree(values_list);
     }
-}   
+    
+    NS_IF_RELEASE(mInstance);
+}
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
