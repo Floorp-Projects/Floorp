@@ -147,7 +147,7 @@
 //    var toolkitCore = GetToolkitCore();
 //    if (toolkitCore)
 //      toolkitCore.CloseWindow(window);
-//    window.close();
+      window.close();
     }
 
     function GetToolkitCore() {
