@@ -39,19 +39,19 @@ public:
 	nsIMAPGenericParser();
 	virtual ~nsIMAPGenericParser();
 
-    // Connected() && !SyntaxError()
+  // Connected() && !SyntaxError()
 	// Add any specific stuff in the derived class
-    virtual PRBool     LastCommandSuccessful();
+  virtual PRBool     LastCommandSuccessful();
     
-    PRBool     SyntaxError();
-    virtual PRBool     ContinueParse();
+  PRBool     SyntaxError();
+  virtual PRBool     ContinueParse();
     
-    // if we get disconnected, end the current url processing and report to the
-    // the user.
-    PRBool			    Connected();
-    virtual void        SetConnected(PRBool error);
+  // if we get disconnected, end the current url processing and report to the
+  // the user.
+  PRBool			    Connected();
+  virtual void        SetConnected(PRBool error);
     
-    char        *CreateSyntaxErrorLine();
+  char        *CreateSyntaxErrorLine();
 
 	// used to be XP_STRTOK_R, but that's not defined anymore.
 	static char *	Imapstrtok_r(char *s1, const char *s2, char **lasts);
@@ -65,38 +65,38 @@ protected:
 	// Returns PR_FALSE if there was some error encountered.  In that case, we reset the parser.
 	virtual PRBool	GetNextLineForParser(char **nextLine) = 0;	
 
-    virtual void	HandleMemoryFailure();
-    virtual void    skip_to_CRLF();
-    virtual void    skip_to_close_paren();
+  virtual void	HandleMemoryFailure();
+  virtual void    skip_to_CRLF();
+  virtual void    skip_to_close_paren();
 	virtual char	*CreateString();
 	virtual char	*CreateAstring();
 	virtual char	*CreateNilString();
-    virtual char    *CreateLiteral();
+  virtual char    *CreateLiteral();
 	virtual char	*CreateAtom();
-    virtual char    *CreateQuoted(PRBool skipToEnd = PR_TRUE);
+  virtual char    *CreateQuoted(PRBool skipToEnd = PR_TRUE);
 	virtual char	*CreateParenGroup();
-    virtual void        SetSyntaxError(PRBool error);
-    virtual PRBool     at_end_of_line();
+  virtual void        SetSyntaxError(PRBool error);
+  virtual PRBool     at_end_of_line();
 
-    char *GetNextToken();
-    void AdvanceToNextLine();
+  char *GetNextToken();
+  void AdvanceToNextLine();
 	void AdvanceTokenizerStartingPoint (int32 bytesToAdvance);
-    void ResetLexAnalyzer();
+  void ResetLexAnalyzer();
 
 protected:
 	// use with care
-    char                     *fNextToken;
-    char                     *fCurrentLine;
+  char           *fNextToken;
+  char           *fCurrentLine;
 	char					 *fLineOfTokens;
-    char                     *fStartOfLineOfTokens;
-    char                     *fCurrentTokenPlaceHolder;
-    PRBool                   fAtEndOfLine;
-	PRBool					  fTokenizerAdvanced;
+  char           *fStartOfLineOfTokens;
+  char           *fCurrentTokenPlaceHolder;
+  PRBool          fAtEndOfLine;
+	PRBool				  fTokenizerAdvanced;
 
-    char                     *fSyntaxErrorLine;
-    PRBool                   fSyntaxError;
+  char           *fSyntaxErrorLine;
+  PRBool          fSyntaxError;
 private:
-    PRBool                   fDisconnected;
+  PRBool          fDisconnected;
 
 
 };

@@ -111,11 +111,11 @@ nsIMAPGenericParser::nsIMAPGenericParser() :
 	fNextToken(nsnull),
 	fCurrentLine(nsnull),
 	fLineOfTokens(nsnull),
-    fStartOfLineOfTokens(nsnull),
+  fStartOfLineOfTokens(nsnull),
 	fCurrentTokenPlaceHolder(nsnull),
 	fAtEndOfLine(PR_FALSE),
-    fTokenizerAdvanced(PR_FALSE),
-    fSyntaxErrorLine(nsnull),
+  fTokenizerAdvanced(PR_FALSE),
+  fSyntaxErrorLine(nsnull),
 	fSyntaxError(PR_FALSE),
 	fDisconnected(PR_FALSE)
 {
