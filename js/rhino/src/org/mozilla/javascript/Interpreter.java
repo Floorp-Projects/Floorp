@@ -2533,7 +2533,7 @@ public class Interpreter
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrement(lhs, name, scope);
+        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, name, scope, true);
         break;
     }
     case Icode_PROPDEC : {
@@ -2541,7 +2541,7 @@ public class Interpreter
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postDecrement(lhs, name, scope);
+        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, name, scope, false);
         break;
     }
     case Icode_ELEMINC : {
@@ -2550,7 +2550,7 @@ public class Interpreter
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrementElem(lhs, rhs, scope);
+        stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope, true);
         break;
     }
     case Icode_ELEMDEC : {
@@ -2559,7 +2559,7 @@ public class Interpreter
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postDecrementElem(lhs, rhs, scope);
+        stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope, false);
         break;
     }
     case Token.LOCAL_SAVE : {
@@ -2753,13 +2753,13 @@ public class Interpreter
     }
     case Icode_NAMEINC : {
         String name = strings[getIndex(iCode, pc + 1)];
-        stack[++stackTop] = ScriptRuntime.postIncrement(scope, name);
+        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, name, true);
         pc += 2;
         break;
     }
     case Icode_NAMEDEC : {
         String name = strings[getIndex(iCode, pc + 1)];
-        stack[++stackTop] = ScriptRuntime.postDecrement(scope, name);
+        stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, name, false);
         pc += 2;
         break;
     }

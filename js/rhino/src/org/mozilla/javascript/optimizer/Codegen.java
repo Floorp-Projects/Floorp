@@ -1424,8 +1424,11 @@ class BodyCodegen
                 break;
 
               case Token.NUMBER:
+                visitNumber(node);
+                break;
+
               case Token.STRING:
-                visitLiteral(node);
+                cfw.addPush(node.getString());
                 break;
 
               case Token.THIS:
@@ -1447,7 +1450,7 @@ class BodyCodegen
 
               case Token.FALSE:
                 cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                        "FALSE", "Ljava/lang/Boolean;");
+                        "FALSE", "Ljava/lang/Boolean;");
                 break;
 
               case Token.UNDEFINED:
@@ -2771,47 +2774,52 @@ class BodyCodegen
         } else {
             OptLocalVariable lVar
                     = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
-            String routine = (isInc) ? "postIncrement" : "postDecrement";
             int childType = child.getType();
             if (hasVarsInRegs && childType == Token.GETVAR) {
                 if (lVar == null)
                     lVar = fnCurrent.getVar(child.getString());
-                if (lVar.getJRegister() == -1)
+                int reg = lVar.getJRegister();
+                if (reg == -1) {
                     lVar.assignJRegister(getNewWordLocal());
-                cfw.addALoad(lVar.getJRegister());
+                    reg = lVar.getJRegister();
+                }
+                cfw.addALoad(reg);
                 cfw.add(ByteCode.DUP);
-                addScriptRuntimeInvoke(routine,
-                                       "(Ljava/lang/Object;"
-                                       +")Ljava/lang/Object;");
-                cfw.addAStore(lVar.getJRegister());
+                addObjectToDouble();
+                cfw.addPush(1.0);
+                cfw.add((isInc) ? ByteCode.DADD : ByteCode.DSUB);
+                addDoubleWrap();
+                cfw.addAStore(reg);
             } else if (childType == Token.GETPROP) {
                 Node getPropChild = child.getFirstChild();
                 generateCodeFromNode(getPropChild, node);
                 generateCodeFromNode(getPropChild.getNext(), node);
                 cfw.addALoad(variableObjectLocal);
-                addScriptRuntimeInvoke(routine,
+                cfw.addPush(isInc);
+                addScriptRuntimeInvoke("postIncrDecr",
                                        "(Ljava/lang/Object;"
                                        +"Ljava/lang/String;"
                                        +"Lorg/mozilla/javascript/Scriptable;"
-                                       +")Ljava/lang/Object;");
+                                       +"Z)Ljava/lang/Object;");
             } else if (childType == Token.GETELEM) {
-                routine += "Elem";
                 Node getPropChild = child.getFirstChild();
                 generateCodeFromNode(getPropChild, node);
                 generateCodeFromNode(getPropChild.getNext(), node);
                 cfw.addALoad(variableObjectLocal);
-                addScriptRuntimeInvoke(routine,
+                cfw.addPush(isInc);
+                addScriptRuntimeInvoke("postIncrDecrElem",
                                        "(Ljava/lang/Object;"
                                        +"Ljava/lang/Object;"
                                        +"Lorg/mozilla/javascript/Scriptable;"
-                                       +")Ljava/lang/Object;");
+                                       +"Z)Ljava/lang/Object;");
             } else {
                 cfw.addALoad(variableObjectLocal);
                 cfw.addPush(child.getString());          // push name
-                addScriptRuntimeInvoke(routine,
+                cfw.addPush(isInc);
+                addScriptRuntimeInvoke("postIncrDecr",
                                        "(Lorg/mozilla/javascript/Scriptable;"
                                        +"Ljava/lang/String;"
-                                       +")Ljava/lang/Object;");
+                                       +"Z)Ljava/lang/Object;");
             }
         }
     }
@@ -3152,18 +3160,13 @@ class BodyCodegen
         if (stackInitial != cfw.getStackTop()) throw Codegen.badTree();
     }
 
-    private void visitLiteral(Node node)
+    private void visitNumber(Node node)
     {
-        if (node.getType() == Token.STRING) {
-            // just load the string constant
-            cfw.addPush(node.getString());
+        double num = node.getDouble();
+        if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+            cfw.addPush(num);
         } else {
-            double num = node.getDouble();
-            if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-                cfw.addPush(num);
-            } else {
-                codegen.pushNumberAsObject(cfw, num);
-            }
+            codegen.pushNumberAsObject(cfw, num);
         }
     }
 

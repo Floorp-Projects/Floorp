@@ -1612,34 +1612,26 @@ public class ScriptRuntime {
         return toString(val1).concat(toString(val2));
     }
 
-    public static Object postIncrement(Object value) {
-        if (value instanceof Number)
-            value = new Double(((Number)value).doubleValue() + 1.0);
-        else
-            value = new Double(toNumber(value) + 1.0);
-        return value;
-    }
-
-    public static Object postIncrement(Scriptable scopeChain, String id) {
+    public static Object postIncrDecr(Scriptable scopeChain, String id, boolean increment)
+    {
         Scriptable obj = scopeChain;
-        Object prop;
         while (obj != null) {
             Scriptable m = obj;
             do {
-                Object result = m.get(id, obj);
-                if (result != Scriptable.NOT_FOUND) {
-                    Object newValue = result;
-                    if (newValue instanceof Number) {
-                        newValue = new Double(
-                                    ((Number)newValue).doubleValue() + 1.0);
-                        m.put(id, obj, newValue);
-                        return result;
+                Object value = m.get(id, obj);
+                if (value != Scriptable.NOT_FOUND) {
+                    double number;
+                    if (value instanceof Number) {
+                        number = ((Number)value).doubleValue();
+                    } else {
+                        number = toNumber(value);
+                        // convert result to number
+                        value = new Double(number);
                     }
-                    else {
-                        newValue = new Double(toNumber(newValue) + 1.0);
-                        m.put(id, obj, newValue);
-                        return new Double(toNumber(result));
-                    }
+                    if (increment) { ++number; }
+                    else { --number; }
+                    m.put(id, obj, new Double(number));
+                    return value;
                 }
                 m = m.getPrototype();
             } while (m != null);
@@ -1649,112 +1641,48 @@ public class ScriptRuntime {
         throw constructError("ReferenceError", msg);
     }
 
-    public static Object postIncrement(Object obj, String id, Scriptable scope)
+    public static Object postIncrDecr(Object obj, String id, Scriptable scope, boolean increment)
     {
         Scriptable start = toObject(scope, obj);
         Scriptable m = start;
         do {
-            Object result = m.get(id, start);
-            if (result != Scriptable.NOT_FOUND) {
-                Object newValue = result;
-                if (newValue instanceof Number) {
-                    newValue = new Double(
-                                ((Number)newValue).doubleValue() + 1.0);
-                    m.put(id, start, newValue);
-                    return result;
+            Object value = m.get(id, start);
+            if (value != Scriptable.NOT_FOUND) {
+                double number;
+                if (value instanceof Number) {
+                    number = ((Number)value).doubleValue();
+                } else {
+                    number = toNumber(value);
+                    // convert result to number
+                    value = new Double(number);
                 }
-                else {
-                    newValue = new Double(toNumber(newValue) + 1.0);
-                    m.put(id, start, newValue);
-                    return new Double(toNumber(result));
-                }
+                if (increment) { ++number; }
+                else { --number; }
+                m.put(id, start, new Double(number));
+                return value;
             }
             m = m.getPrototype();
         } while (m != null);
         return Undefined.instance;
     }
 
-    public static Object postIncrementElem(Object obj,
-                                            Object index, Scriptable scope) {
-        Object oldValue = getElem(obj, index, scope);
-        if (oldValue == Undefined.instance)
-            return Undefined.instance;
-        double resultValue = toNumber(oldValue);
-        Double newValue = new Double(resultValue + 1.0);
-        setElem(obj, index, newValue, scope);
-        return new Double(resultValue);
-    }
-
-    public static Object postDecrementElem(Object obj,
-                                            Object index, Scriptable scope) {
-        Object oldValue = getElem(obj, index, scope);
-        if (oldValue == Undefined.instance)
-            return Undefined.instance;
-        double resultValue = toNumber(oldValue);
-        Double newValue = new Double(resultValue - 1.0);
-        setElem(obj, index, newValue, scope);
-        return new Double(resultValue);
-    }
-
-    public static Object postDecrement(Object value) {
-        if (value instanceof Number)
-            value = new Double(((Number)value).doubleValue() - 1.0);
-        else
-            value = new Double(toNumber(value) - 1.0);
-        return value;
-    }
-
-    public static Object postDecrement(Scriptable scopeChain, String id) {
-        Scriptable obj = scopeChain;
-        Object prop;
-        while (obj != null) {
-            Scriptable m = obj;
-            do {
-                Object result = m.get(id, obj);
-                if (result != Scriptable.NOT_FOUND) {
-                    Object newValue = result;
-                    if (newValue instanceof Number) {
-                        newValue = new Double(
-                                    ((Number)newValue).doubleValue() - 1.0);
-                        m.put(id, obj, newValue);
-                        return result;
-                    }
-                    else {
-                        newValue = new Double(toNumber(newValue) - 1.0);
-                        m.put(id, obj, newValue);
-                        return new Double(toNumber(result));
-                    }
-                }
-                m = m.getPrototype();
-            } while (m != null);
-            obj = obj.getParentScope();
+    public static Object postIncrDecrElem(Object obj, Object index, Scriptable scope, boolean increment)
+    {
+        Object value = getElem(obj, index, scope);
+        if (value == Undefined.instance)
+            return value;
+        double number;
+        if (value instanceof Number) {
+            number = ((Number)value).doubleValue();
+        } else {
+            number = toNumber(value);
+            // convert result to number
+            value = new Double(number);
         }
-        String msg = getMessage1("msg.is.not.defined", id);
-        throw constructError("ReferenceError", msg);
-    }
-
-    public static Object postDecrement(Object obj, String id, Scriptable scope) {
-        Scriptable start = toObject(scope, obj);
-        Scriptable m = start;
-        do {
-            Object result = m.get(id, start);
-            if (result != Scriptable.NOT_FOUND) {
-                Object newValue = result;
-                if (newValue instanceof Number) {
-                    newValue = new Double(
-                                ((Number)newValue).doubleValue() - 1.0);
-                    m.put(id, start, newValue);
-                    return result;
-                }
-                else {
-                    newValue = new Double(toNumber(newValue) - 1.0);
-                    m.put(id, start, newValue);
-                    return new Double(toNumber(result));
-                }
-            }
-            m = m.getPrototype();
-        } while (m != null);
-        return Undefined.instance;
+        if (increment) { ++number; }
+        else { --number; }
+        setElem(obj, index, new Double(number), scope);
+        return value;
     }
 
     public static Object toPrimitive(Object val) {
