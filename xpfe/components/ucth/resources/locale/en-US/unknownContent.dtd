@@ -7,7 +7,7 @@
   -->
 <!ENTITY startDownload  "You are about to download a file of type #1.">
 
-<!ENTITY helpText "This file is unrecognized by Mozilla. You can save it or open it with another application.">
+<!ENTITY helpText "This file is unrecognized by &brandShortName;. You can save it or open it with another application.">
 <!ENTITY dialogMore.label "More Info...">
 <!ENTITY dialogPick.label "Open With...">
 <!ENTITY dialogSave.label "Save File...">
