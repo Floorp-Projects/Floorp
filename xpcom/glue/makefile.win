@@ -55,6 +55,7 @@ LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 CPP_OBJS =                            \
         .\$(OBJDIR)\nsCOMPtr.obj      \
         .\$(OBJDIR)\nsDebug.obj       \
+        .\$(OBJDIR)\nsGenericFactory.obj \
         .\$(OBJDIR)\nsMemory.obj      \
         .\$(OBJDIR)\nsWeakReference.obj \
         $(NULL)
