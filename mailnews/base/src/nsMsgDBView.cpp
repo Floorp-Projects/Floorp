@@ -110,7 +110,8 @@ nsMsgDBView::nsMsgDBView()
   m_cachedMsgKey = nsMsgKey_None;
   m_currentlyDisplayedMsgKey = nsMsgKey_None;
   mNumSelectedRows = 0;
-  mSupressMsgDisplay = PR_FALSE;
+  mSuppressMsgDisplay = PR_FALSE;
+  mSuppressCommandUpdating = PR_FALSE;
   mOfflineMsgSelected = PR_FALSE;
   mIsSpecialFolder = PR_FALSE;
   mIsNews = PR_FALSE;
@@ -568,7 +569,7 @@ NS_IMETHODIMP nsMsgDBView::SetSelection(nsIOutlinerSelection * aSelection)
 
 NS_IMETHODIMP nsMsgDBView::ReloadMessage()
 {
-  if (!mSupressMsgDisplay && m_currentlyDisplayedMsgKey != nsMsgKey_None)
+  if (!mSuppressMsgDisplay && m_currentlyDisplayedMsgKey != nsMsgKey_None)
   {
     nsMsgKey currentMsgToReload = m_currentlyDisplayedMsgKey;
     m_currentlyDisplayedMsgKey = nsMsgKey_None;
@@ -605,7 +606,7 @@ NS_IMETHODIMP nsMsgDBView::LoadMessageByMsgKey(nsMsgKey aMsgKey)
   NS_ASSERTION(aMsgKey != nsMsgKey_None,"trying to load nsMsgKey_None");
   if (aMsgKey == nsMsgKey_None) return NS_ERROR_UNEXPECTED;
 
-  if (!mSupressMsgDisplay && (m_currentlyDisplayedMsgKey != aMsgKey))
+  if (!mSuppressMsgDisplay && (m_currentlyDisplayedMsgKey != aMsgKey))
   {
     nsXPIDLCString uri;
     nsresult rv = GenerateURIForMsgKey(aMsgKey, m_folder, getter_Copies(uri));
@@ -644,7 +645,7 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
       nsMsgKey msgkey = m_keys.GetAt(startRange);
       if (!mRemovingRow)
       {
-        if (!mSupressMsgDisplay)
+        if (!mSuppressMsgDisplay)
           LoadMessageByMsgKey(msgkey);
         else
           UpdateDisplayMessage(msgkey);
@@ -666,9 +667,9 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   if ((numSelected == mNumSelectedRows || 
       (numSelected > 1 && mNumSelectedRows > 1)) && mOfflineMsgSelected == offlineMsgSelected)
   {
-
-  } // don't update commands if we're removing rows, unless it was the last row.
-  else if (mCommandUpdater && (!mRemovingRow || GetSize() == 0)) // o.t. push an updated
+  } 
+  // don't update commands if we're suppressing them, or if we're removing rows, unless it was the last row.
+  else if (!mSuppressCommandUpdating && mCommandUpdater && (!mRemovingRow || GetSize() == 0)) // o.t. push an updated
   {
     mCommandUpdater->UpdateCommandStatus();
   }
@@ -1216,13 +1217,25 @@ NS_IMETHODIMP nsMsgDBView::Init(nsIMessenger * aMessengerInstance, nsIMsgWindow 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::SetSupressMsgDisplay(PRBool aSupressDisplay)
+NS_IMETHODIMP nsMsgDBView::SetSuppressCommandUpdating(PRBool aSuppressCommandUpdating)
+{
+  mSuppressCommandUpdating = aSuppressCommandUpdating;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::GetSuppressCommandUpdating(PRBool * aSuppressCommandUpdating)
+{
+  *aSuppressCommandUpdating = mSuppressCommandUpdating;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::SetSuppressMsgDisplay(PRBool aSuppressDisplay)
 {
   PRBool forceDisplay = PR_FALSE;
-  if (mSupressMsgDisplay && (mSupressMsgDisplay != aSupressDisplay))
+  if (mSuppressMsgDisplay && (mSuppressMsgDisplay != aSuppressDisplay))
     forceDisplay = PR_TRUE;
 
-  mSupressMsgDisplay = aSupressDisplay;
+  mSuppressMsgDisplay = aSuppressDisplay;
   if (forceDisplay)
   {
     // get the messae key for the currently selected message
@@ -1240,9 +1253,9 @@ NS_IMETHODIMP nsMsgDBView::SetSupressMsgDisplay(PRBool aSupressDisplay)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetSupressMsgDisplay(PRBool * aSupressDisplay)
+NS_IMETHODIMP nsMsgDBView::GetSuppressMsgDisplay(PRBool * aSuppressDisplay)
 {
-  *aSupressDisplay = mSupressMsgDisplay;
+  *aSuppressDisplay = mSuppressMsgDisplay;
   return NS_OK;
 }
 

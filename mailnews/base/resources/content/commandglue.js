@@ -150,6 +150,12 @@ function setTitleFromFolder(msgfolder, subject)
     window.title = title;
 }
 
+function UpdateMailToolbar(caller)
+{
+  //dump("XXX update mail-toolbar " + caller + "\n");
+  document.commandDispatcher.updateCommands('mail-toolbar');
+}
+
 function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
 {
   //dump("In ChangeFolderByURI uri = " + uri + " sortType = " + sortType + "\n");
@@ -228,8 +234,6 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
     //notification before folder has actually changed.
     msgfolder.updateFolder(msgWindow);
   }
-
-  document.commandDispatcher.updateCommands('mail-toolbar');
 }
 
 function isNewsURI(uri)
@@ -574,8 +578,8 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   // now do outliner specific work
 
   // based on the collapsed state of the thread pane/message pane splitter,
-  // supress message display if appropriate.
-  gDBView.supressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
+  // suppress message display if appropriate.
+  gDBView.suppressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
 
   UpdateSortIndicators(gCurSortType, sortOrder);
 }
@@ -638,7 +642,7 @@ function OnMouseUpThreadAndMessagePaneSplitter()
   if (gDBView) {
     // the collapsed state is the state after we released the mouse 
     // so we take it as it is
-    gDBView.supressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
+    gDBView.suppressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
   }
   }
 
@@ -647,7 +651,7 @@ function OnClickThreadAndMessagePaneSplitterGrippy()
   if (gDBView) {
     // the collapsed state is the state when we clicked on the grippy
     // not when afterwards, so we need to reverse this value
-    gDBView.supressMsgDisplay = !IsThreadAndMessagePaneSplitterCollapsed();
+    gDBView.suppressMsgDisplay = !IsThreadAndMessagePaneSplitterCollapsed();
    }
 }
 
@@ -708,14 +712,15 @@ function FolderPaneSelectionChange()
         ClearThreadPane();
     }
 
-    if (! gAccountCentralLoaded)
+    if (!gAccountCentralLoaded) 
         ClearMessagePane();
 
     if (gDisplayStartupPage)
     {
         loadStartPage();
         gDisplayStartupPage = false;
-    }
+        UpdateMailToolbar("gDisplayStartupPage");
+    }    
 }
 
 function ClearThreadPane()

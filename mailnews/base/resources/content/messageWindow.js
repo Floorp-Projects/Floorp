@@ -74,7 +74,7 @@ nsMsgDBViewCommandUpdater.prototype =
     {
       // the back end is smart and is only telling us to update command status
       // when the # of items in the selection has actually changed.
-		  document.commandDispatcher.updateCommands('mail-toolbar');
+      UpdateMailToolbar("dbview, std alone window");
     },
 
   displayMessageChanged : function(aFolder, aSubject)
@@ -93,6 +93,9 @@ nsMsgDBViewCommandUpdater.prototype =
   }
 }
 
+// from MailNewsTypes.h
+const nsMsgKey_None = 0xFFFFFFFF;
+
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
 	dump("In HandleDeleteOrMoveMsgCompleted\n");
@@ -104,10 +107,10 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 	if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
 	{
     gCurrentMessageIsDeleted = false;
-    if (gNextMessageViewIndexAfterDelete != -1) 
+    if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
     {
       var nextMstKey = gDBView.getKeyAt(gNextMessageViewIndexAfterDelete);
-      if (nextMstKey != -1) {
+      if (nextMstKey != nsMsgKey_None) {
         gDBView.loadMessageByMsgKey(nextMstKey);
       }
       else {
@@ -355,7 +358,7 @@ function ClearMessageSelection()
 {
 	gCurrentMessageUri = null;
 	gCurrentFolderUri = null;
-  document.commandDispatcher.updateCommands('mail-toolbar');	
+  UpdateMailToolbar("clear msg, std alone window");
 }
 
 function GetCompositeDataSource(command)
@@ -705,7 +708,7 @@ function performNavigation(type)
   gDBView.viewNavigate(type, resultId, resultIndex, threadIndex, true /* wrap */);
   
   // if we found something....display it.
-  if ((resultId.value != nsMsgViewIndex_None) && (resultIndex.value != nsMsgViewIndex_None)) 
+  if ((resultId.value != nsMsgKey_None) && (resultIndex.value != nsMsgViewIndex_None)) 
   {
     // load the message key
     gDBView.loadMessageByMsgKey(resultId.value);

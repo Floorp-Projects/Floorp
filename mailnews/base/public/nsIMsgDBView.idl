@@ -285,7 +285,10 @@ interface nsIMsgDBView : nsISupports
     void selectMsgByKey(in nsMsgKey key);
 
     // we'll suppress displaying messages if the message pane is collapsed
-    attribute boolean supressMsgDisplay;
+    attribute boolean suppressMsgDisplay;
+
+	// we'll suppress command updating during folder loading
+	attribute boolean suppressCommandUpdating;
 
 	//to tell us if we are in the search view
 	attribute boolean isSearchView;

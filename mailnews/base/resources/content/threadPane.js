@@ -72,7 +72,7 @@ nsMsgDBViewCommandUpdater.prototype =
     {
       // the back end is smart and is only telling us to update command status
       // when the # of items in the selection has actually changed.
-		  document.commandDispatcher.updateCommands('mail-toolbar');
+      UpdateMailToolbar("dbview driven, thread pane");
     },
 
   displayMessageChanged : function(aFolder, aSubject)

@@ -53,7 +53,7 @@ nsMsgSearchDBView::nsMsgSearchDBView()
 {
   /* member initializers and constructor code */
   // don't try to display messages for the search pane.
-  mSupressMsgDisplay = PR_TRUE;
+  mSuppressMsgDisplay = PR_TRUE;
 }
 
 nsMsgSearchDBView::~nsMsgSearchDBView()

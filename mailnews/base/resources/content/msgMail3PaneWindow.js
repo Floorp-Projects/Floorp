@@ -103,7 +103,20 @@ var folderListener = {
                var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
                if(msgFolder) {
                  msgFolder.endFolderLoading();
+                 
+                 // suppress command updating when rerooting the folder
+                 // when rerooting, we'll be clearing the selection
+                 // which will cause us to update commands.
+                 if (gDBView) {
+                   gDBView.suppressCommandUpdating = true;
+                 }
+
                  RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
+                 
+                 if (gDBView) {
+                   gDBView.suppressCommandUpdating = false;
+                 }
+
                  gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS);
 
                  gCurrentLoadingFolderSortType = 0;

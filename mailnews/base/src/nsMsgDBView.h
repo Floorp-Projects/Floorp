@@ -123,9 +123,10 @@ protected:
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
   PRUint32 mNumSelectedRows; // we cache this to determine when to push command status notifications.
-  PRBool   mSupressMsgDisplay; // set when the message pane is collapsed
+  PRBool   mSuppressMsgDisplay; // set when the message pane is collapsed
+  PRBool   mSuppressCommandUpdating;
   PRBool   mIsSearchView; // tells if the search view is loaded.
-  PRBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to supress msg loading.
+  PRBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to suppress msg loading.
                         // during delete/move operations.
   PRBool  mOfflineMsgSelected;
   virtual const char * GetViewName(void) {return "MsgDBView"; }

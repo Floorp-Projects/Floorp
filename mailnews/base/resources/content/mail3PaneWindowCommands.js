@@ -731,7 +731,7 @@ function FocusRingUpdate_Mail()
         gLastFocusedElement = currentFocusedElement;
 
         // since we just changed the pane with focus we need to update the toolbar to reflect this
-        document.commandDispatcher.updateCommands('mail-toolbar');
+        UpdateMailToolbar("focus");
     }
 }
 
