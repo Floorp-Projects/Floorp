@@ -401,6 +401,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
 
   } else {
     if (eReflowReason_Initial == aReflowState.reason) {
+      NS_ASSERTION(nsnull == mFirstChild, "unexpected reflow reason");
+
       // Set up our kids.  They're already present, on an overflow list, 
       // or there are none so we'll create them now
       MoveOverflowToChildList();
