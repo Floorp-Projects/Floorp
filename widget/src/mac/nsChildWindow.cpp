@@ -75,75 +75,38 @@ void nsChildWindow::CalcWindowRegions()
 {
 	Inherited::CalcWindowRegions();
 
-#if 0	//¥REVISIT: this code can probably be removed: the children 
-		// are already clipped out in nsWindow::CalcWindowRegions()
-	// clip the children out of the visRgn
-	if (mClipChildren)
-	{
-		RgnHandle childRgn = ::NewRgn();
-		if (!childRgn) return;
-
-		nsCOMPtr<nsIEnumerator> children(dont_AddRef(GetChildren()));
-		if (children)
-		{
-			children->First();
-			do
-			{
-				nsISupports* child;
-				if (NS_SUCCEEDED(children->CurrentItem(&child)))
-				{
-					nsWindow* childWindow = static_cast<nsWindow*>(child);
-					NS_RELEASE(child);
-
-					nsRect childRect;
-					childWindow->GetBounds(childRect);
+	// clip the siblings out of the window region and visRegion 
+	if (mClipSiblings && mParent) {
+		// need to walk the siblings backwards, to get clipping right.
+		nsCOMPtr<nsIBidirectionalEnumerator> siblings = getter_AddRefs((nsIBidirectionalEnumerator*)mParent->GetChildren());
+		if (siblings && NS_SUCCEEDED(siblings->Last())) {
+			StRegionFromPool siblingRgn;
+			if (siblingRgn == nsnull)
+				return;
+			do {
+				// when we reach ourself, stop clipping.
+				nsCOMPtr<nsISupports> item;
+				if (NS_FAILED(siblings->CurrentItem(getter_AddRefs(item))) || item == this)
+					break;
+				
+				nsCOMPtr<nsIWidget> sibling(do_QueryInterface(item));
+				PRBool visible;
+				sibling->IsVisible(visible);
+				if (visible) {	// don't clip if not visible.
+					// get sibling's bounds in parent's coordinate system.
+					nsRect siblingRect;
+					sibling->GetBounds(siblingRect);
+					
+					// transform from parent's coordinate system to widget coordinates.
+					siblingRect.MoveBy(-mBounds.x, -mBounds.y);
 
 					Rect macRect;
-					::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
-					::RectRgn(childRgn, &macRect);
-					::DiffRgn(mVisRegion, childRgn, mVisRegion);
+					::SetRect(&macRect, siblingRect.x, siblingRect.y, siblingRect.XMost(), siblingRect.YMost());
+					::RectRgn(siblingRgn, &macRect);
+					::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
+					::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
 				}
-			} while (NS_SUCCEEDED(children->Next()));
-		}
-		::DisposeRgn(childRgn);
-	}
-#endif
-
-	// clip the siblings out of the window region and visRegion 
-	if (mClipSiblings && mParent)
-	{
-		nsCOMPtr<nsIEnumerator> children(dont_AddRef(mParent->GetChildren()));
-		if (children)
-		{
-			StRegionFromPool siblingRgn;
-			if (siblingRgn != nsnull) {
-				children->First();
-				do
-				{
-					nsISupports* child;
-					if (NS_SUCCEEDED(children->CurrentItem(&child)))
-					{
-						nsWindow* childWindow = static_cast<nsWindow*>(child);
-						NS_RELEASE(child);
-						
-						PRBool visible;
-						childWindow->IsVisible(visible);
-
-						if (visible && childWindow != this)	// don't clip myself
-						{
-							nsRect childRect;
-							childWindow->GetBounds(childRect);
-
-							Rect macRect;
-							::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
-							::RectRgn(siblingRgn, &macRect);
-							::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
-							::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
-						}
-					}
-				} while (NS_SUCCEEDED(children->Next()));
-			}
+			} while (NS_SUCCEEDED(siblings->Prev()));
 		}
 	}
 }
-
