@@ -56,7 +56,7 @@ EXPORTS =                          \
         plvector.h                 \
         $(NULL)			
 
-XPILD_MODULE = xpcom_ds
+XPIDL_MODULE = xpcom_ds
 
 XPIDLSRCS =                 \
         .\nsICollection.idl \
