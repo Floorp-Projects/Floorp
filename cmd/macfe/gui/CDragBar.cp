@@ -208,6 +208,8 @@ void CDragBar::Click(SMouseDownEvent& inMouseDown)
 		theClickedPane = FindSubPaneHitBy(inMouseDown.wherePort.h, inMouseDown.wherePort.v);
 		if (theClickedPane != NULL)
 			theClickedPane->Click(inMouseDown);
+		else
+			ClickSelf(inMouseDown);
 		}
 }
 
