@@ -481,6 +481,8 @@ nsresult	nsMsgDatabase::Commit(msgDBCommitType commitType)
 		}
 		commitThumb->Release();
 	}
+	// ### do something with error, but clear it now because mork errors out on commits.
+	GetEnv()->ClearErrors();
 	return err;
 }
 
@@ -1244,7 +1246,7 @@ nsresult nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 	nsresult	err = NS_OK;
 	nsIMdbTableRowCursor *rowCursor;
 	err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-	while (err == NS_OK)
+	while (err == NS_OK && rowCursor)
 	{
 		mdbOid outOid;
 		mdb_pos	outPos;
@@ -1304,11 +1306,11 @@ nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 		return NS_ERROR_NULL_POINTER;
 
 	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
-	allMsgHdrsTableOID.mOid_Id = key;
+	allMsgHdrsTableOID.mOid_Id = key;	// presumes 0 is valid key value
 
 	err  = GetStore()->NewRowWithOid(GetEnv(),
 		&allMsgHdrsTableOID, &hdrRow);
-	if (err == NS_OK)
+	if (err == NS_OK && hdrRow)
 	{
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
 		(*pnewHdr)->SetMessageKey(key);
@@ -1356,7 +1358,7 @@ nsresult nsMsgDatabase::CreateNewHdrAndAddToDB(PRBool *newThread, MessageHdrStru
 		&allMsgHdrsTableOID, &hdrRow);
 
 	// add the row to the singleton table.
-	if (NS_SUCCEEDED(err))
+	if (NS_SUCCEEDED(err) && hdrRow)
 	{
 		struct mdbYarn yarn;
 		char	int32StrBuf[20];
