@@ -128,12 +128,14 @@ if (!defined($module))
 }
 
 my $productversion = "0,0,0,0";
+my $fileversion = $productversion;
 my $fileos = "VOS__WINDOWS32";
 if ($bits eq "16") { $fileos="VOS__WINDOWS16"; }
 
 my $bufferstr="    ";
 
 my $MILESTONE_FILE = "$topsrcdir/config/milestone.txt";
+my $BUILDID_FILE = "$depth/config/build_number";
 
 #Read module.ver file
 #Version file overrides for WIN32:
@@ -224,25 +226,24 @@ if ($official eq "1") {
 		$mpversion = $milestone;
 
 		$fileflags = "0";
+	      
+		my @mstone = split(/\./,$milestone);
+		$productversion="$mstone[0],$mstone[1]";
+		$productversion=~s/\D*$//g;
 
-		$productversion=$milestone;
-		$productversion=~s/\./,/g;
+	}
 
-	} else {
+	my ($buildid, $buildid_hi, $buildid_lo);
+	open(NUMBER, "<$BUILDID_FILE") || die "No build number file\n";
+	while ( <NUMBER> ) { $buildid = $_ }
+	close (NUMBER);
+	$buildid =~ s/^\s*(.*)\s*$/$1/;
+	$buildid_hi = substr($buildid, 0, 5);
+	$buildid_lo = substr($buildid, 5);
 
-		if (defined $depth) {
-			open(NUMBER, "<${depth}/config/build_number") || die "No build number file\n";
-
-			while ( <NUMBER> ) { $mpversion = $_ }
-			close (NUMBER);
-
-			$mpversion =~ s/^\s*(.*)\s*$/$1/;
-		}
-	} 
-	$mfversion = $mpversion;
+	$mfversion = $mpversion = "$milestone: $buildid";
+	$fileversion = "$productversion,$buildid_hi,$buildid_lo";
 }
-my $fileversion = $productversion;
-
 
 my $copyright = "License: MPL 1.1/GPL 2.0/LGPL 2.1";
 my $company = "Mozilla, Netscape";
