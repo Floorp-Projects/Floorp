@@ -1820,7 +1820,11 @@ var attachmentBucketObserver = {
         }
         break;
       case "application/x-moz-file":
-        rawData = rawData.path;
+    	  const FileContractID = "@mozilla.org/network/standard-url;1";
+    	  const FileURLIID = Components.interfaces.nsIFileURL;
+    	  var fileURL = Components.classes[FileContractID].createInstance(FileURLIID);
+    	  fileURL.file = aData.data;
+    	  rawData = fileURL.spec;
         break;
       }
       if (!(DuplicateFileCheck(rawData)))
