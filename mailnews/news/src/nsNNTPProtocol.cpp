@@ -824,29 +824,30 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	        news:?newsgroups (default host)
 	     */
 	    m_typeWanted = NEW_GROUPS;
-      else
+    else
 	  {
-		if (PL_strstr(commandSpecificData, "?list-pretty"))
-		{
-			m_typeWanted = PRETTY_NAMES_WANTED;
-			m_commandSpecificData = nsCRT::strdup(commandSpecificData);
-		}
-		else if (PL_strstr(commandSpecificData, "?profile"))
-		{
-			m_typeWanted = PROFILE_WANTED;
-			m_commandSpecificData = nsCRT::strdup(commandSpecificData);
-		}
-		else if (PL_strstr(commandSpecificData, "?list-ids"))
-		{
-			m_typeWanted= IDS_WANTED;
-			m_commandSpecificData = nsCRT::strdup(commandSpecificData);
-		}
-		else
-		{
-			m_typeWanted = SEARCH_WANTED;
-			m_commandSpecificData = nsCRT::strdup(commandSpecificData);
-			m_searchData = m_commandSpecificData;
-		}
+		  if (PL_strstr(commandSpecificData, "?list-pretty"))
+		  {
+			  m_typeWanted = PRETTY_NAMES_WANTED;
+			  m_commandSpecificData = nsCRT::strdup(commandSpecificData);
+		  }
+		  else if (PL_strstr(commandSpecificData, "?profile"))
+		  {
+			  m_typeWanted = PROFILE_WANTED;
+			  m_commandSpecificData = nsCRT::strdup(commandSpecificData);
+		  }
+		  else if (PL_strstr(commandSpecificData, "?list-ids"))
+		  {
+			  m_typeWanted= IDS_WANTED;
+			  m_commandSpecificData = nsCRT::strdup(commandSpecificData);
+		  }
+		  else
+		  {
+			  m_typeWanted = SEARCH_WANTED;
+			  m_commandSpecificData = nsCRT::strdup(commandSpecificData);
+			  m_searchData = m_commandSpecificData;
+        nsUnescape(m_searchData);
+      }
 	  }
 	}
   else if (group)
