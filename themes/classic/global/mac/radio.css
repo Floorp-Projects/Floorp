@@ -29,10 +29,6 @@
 
 /* ::::: radio ::::: */
 
-radiogroup {
-  -moz-user-focus: ignore;
-}
-
 radio {
   -moz-appearance: radio-container;
   -moz-box-align: center;
