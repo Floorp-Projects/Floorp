@@ -625,6 +625,9 @@ namespace JavaScript {
         GoStmtNode(size_t pos, Kind kind, const StringAtom *name): StmtNode(pos, kind), name(name) {}
 
         void print(PrettyPrinter &f, bool noSemi) const;
+#ifdef EPIMETHEUS
+        MetaData::LabelID *tgtID;
+#endif    
     };
 
     struct CatchClause: ParseNode {

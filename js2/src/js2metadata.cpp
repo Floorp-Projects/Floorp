@@ -148,28 +148,71 @@ namespace MetaData {
             }
             break;
         case StmtNode::Break:
-        case StmtNode::Continue:
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                 bool found = false;
-                if (g->name) {
-                    // Make sure the name is on the targetList as a viable break/continue target...
-                    for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
+                for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
+                    if (g->name) {
+                        // Make sure the name is on the targetList as a viable break target...
                         if ((*si)->getKind() == StmtNode::label) {
-                            if (checked_cast<LabelStmtNode *>(*si)->name == *g->name) {
+                            LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                            if (l->name == *g->name) {
+                                g->tgtID = &l->labelID;
                                 found = true;
                                 break;
                             }
                         }
                     }
+                    else {
+                        // any non-label statement will do
+                        if ((*si)->getKind() != StmtNode::label) {
+                            if (((*si)->getKind() == StmtNode::While) || ((*si)->getKind() == StmtNode::DoWhile)) {
+                                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                g->tgtID = &w->breakLabelID;
+                            }
+                            else
+                                ASSERT(false);  // XXX for, forin && switch
+                            found = true;
+                            break;
+                        }
+                    }
                 }
-                else  // so long as the targetList isn't empty we're fine...
-                    found = !targetList.empty();
                 if (!found) 
-                    reportError(Exception::syntaxError, 
-                                (p->getKind() == StmtNode::Break) ? "No such break target available" 
-                                                             : "No such continue target available",
-                                p->pos);
+                    reportError(Exception::syntaxError, "No such break target available", p->pos);
+            }
+            break;
+        case StmtNode::Continue:
+            {
+                GoStmtNode *g = checked_cast<GoStmtNode *>(p);
+                bool found = false;
+                for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
+                    if (g->name) {
+                        // Make sure the name is on the targetList as a viable continue target...
+                        if ((*si)->getKind() == StmtNode::label) {
+                            LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                            if (l->name == *g->name) {
+                                g->tgtID = &l->labelID;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        // any non-label statement will do
+                        if ((*si)->getKind() != StmtNode::label) {
+                            if (((*si)->getKind() == StmtNode::While) || ((*si)->getKind() == StmtNode::DoWhile)) {
+                                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                g->tgtID = &w->continueLabelID;
+                            }
+                            else
+                                ASSERT(false);  // XXX for, forin && switch
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) 
+                    reportError(Exception::syntaxError, "No such break target available", p->pos);
             }
             break;
         case StmtNode::Return:
@@ -511,6 +554,12 @@ namespace MetaData {
                 bCon->setLabel(falseStmt);
                 EvalStmt(env, phase, i->stmt2);
                 bCon->setLabel(skipOverFalseStmt);
+            }
+            break;
+        case StmtNode::Break:
+            {
+                GoStmtNode *g = checked_cast<GoStmtNode *>(p);
+                bCon->emitBranch(eBranch, *g->tgtID, p->pos);
             }
             break;
         case StmtNode::While:

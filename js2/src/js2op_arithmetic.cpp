@@ -64,6 +64,7 @@
         }
         break;
 
+    case eNotEqual:
     case eEqual:
         {
             bool rval;
@@ -76,12 +77,11 @@
                 if (JS2VAL_IS_BOOLEAN(b))
                     rval = (JS2VAL_TO_BOOLEAN(a) == JS2VAL_TO_BOOLEAN(b));
                 else {
-                    js2val ap = toNumber(a);
                     js2val bp = toPrimitive(b);
                     if (JS2VAL_IS_NULL(bp) || JS2VAL_IS_UNDEFINED(bp))
                         rval = false;
                     else
-                        rval = float64Compare(a, toNumber(bp));
+                        rval = (toNumber(a) == toNumber(bp));
                 }
             }
             else
@@ -90,7 +90,7 @@
                 if (JS2VAL_IS_NULL(bp) || JS2VAL_IS_UNDEFINED(bp))
                     rval = false;
                 else
-                    rval = float64Compare(a, toNumber(bp));
+                    rval = (toNumber(a) == toNumber(bp));
             }
             else 
             if (JS2VAL_IS_STRING(a)) {
@@ -99,7 +99,7 @@
                     rval = false;
                 else
                 if (JS2VAL_IS_BOOLEAN(bp) || JS2VAL_IS_NUMBER(bp))
-                    rval = float64Compare();
+                    rval = (toNumber(a) == toNumber(bp));
                 else
                     rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(bp));
             }
@@ -114,11 +114,8 @@
                 else
                 if (JS2VAL_IS_BOOLEAN(ap))
                     rval = (JS2VAL_TO_BOOLEAN(ap) == JS2VAL_TO_BOOLEAN(b));
-                else {
-                    ap = toNumber(ap);
-                    js2val bp = toNumber(b);
-                    rval = float64Compare(ap, bp);
-                }
+                else
+                    rval = (toNumber(ap) == toNumber(b));
             }
             else
             if (JS2VAL_IS_NUMBER(b)) {
@@ -126,7 +123,7 @@
                 if (JS2VAL_IS_NULL(ap) || JS2VAL_IS_UNDEFINED(ap))
                     rval = false;
                 else
-                    rval = float64Compare(toNumber(ap), JS2VAL_TO_NUMBER(b));
+                    rval = (toNumber(ap) == toNumber(b));
             }
             else
             if (JS2VAL_IS_STRING(b)) {
@@ -135,16 +132,17 @@
                     rval = false;
                 else
                 if (JS2VAL_IS_BOOLEAN(ap) || JS2VAL_IS_NUMBER(ap))
-                    rval = float64Compare(toNumber(ap), toNumber(b));
+                    rval = (toNumber(ap) == toNumber(b));
                 else
                     rval = (*JS2VAL_TO_STRING(ap) == *JS2VAL_TO_STRING(b));
             }
             else
                 rval = (JS2VAL_TO_OBJECT(a) == JS2VAL_TO_OBJECT(b));
                
-
-            push(BOOL_TO_JS2VAL(rval));
-
+            if (op == eEqual)
+                push(BOOLEAN_TO_JS2VAL(rval));
+            else
+                push(BOOLEAN_TO_JS2VAL(!rval));
         }
         break;
 
