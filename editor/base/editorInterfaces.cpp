@@ -16,14 +16,18 @@
  * Reserved.
  */
 #include "editorInterfaces.h"
-#include "nsString.h"
 #include "editor.h"
+
 #include "ChangeAttributeTxn.h"
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
+#include "CreateElementTxn.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCharacterData.h"
+
+#include "nsString.h"
 
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
@@ -275,6 +279,45 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
                 txn = new ChangeAttributeTxn(mEditor, element, attribute, value, PR_TRUE);
               else                    // change the attribute
                txn = new ChangeAttributeTxn(mEditor, element, attribute, value, PR_FALSE);
+              mEditor->ExecuteTransaction(txn);        
+            }
+          }
+        }
+        aProcessed=PR_TRUE;
+        break;
+
+      case nsIDOMEvent::VK_INSERT:
+        {
+          nsresult result;
+          //XXX: should be from a factory
+          //XXX: should manage the refcount of txn
+          nsString attribute("src");
+          nsString value("resource:/res/samples/raptor.jpg");
+
+          nsString imgTag("IMG");
+          nsString bodyTag("BODY");
+          nsCOMPtr<nsIDOMNode> currentNode;
+          result = mEditor->GetFirstNodeOfType(nsnull, bodyTag, getter_AddRefs(currentNode));
+          if (NS_SUCCEEDED(result))
+          {
+            nsIDOMDocument *doc=nsnull;
+            result = mEditor->GetDomInterface(&doc);
+            if (NS_SUCCEEDED(result))
+            {
+              CreateElementTxn *txn;
+              txn = new CreateElementTxn(mEditor, doc, imgTag, currentNode, 0);
+              mEditor->ExecuteTransaction(txn);
+            }
+          }
+
+          /* for building a composite transaction */
+          nsCOMPtr<nsIDOMElement> element;
+          if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, imgTag, getter_AddRefs(currentNode))))
+          {
+            if (NS_SUCCEEDED(currentNode->QueryInterface(kIDOMElementIID, getter_AddRefs(element)))) 
+            {
+              ChangeAttributeTxn *txn;
+              txn = new ChangeAttributeTxn(mEditor, element, attribute, value, PR_FALSE);
               mEditor->ExecuteTransaction(txn);        
             }
           }
