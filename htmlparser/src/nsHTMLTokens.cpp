@@ -313,20 +313,12 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_FALSE);
 
   if(NS_OK==result){
-    char buffer[300];
-    mTextValue.ToCString(buffer,sizeof(buffer)-1);
 
-    //This code was added to fix Bug#1125.
-    //The problem occurs in bad tags like this: </font size>.
-    //"font size" was being viewed as the tag, which of course doesn't exist.
-    //Instead, we only look at the first word.
-    int theBufPos=-1;
-    while(buffer[++theBufPos]){
-      if(' '==buffer[theBufPos]){ 
-        buffer[theBufPos]=0;
-        break;
-      }
-    }
+    char buffer[20];
+    PRInt32 theIndex=mTextValue.FindCharInSet(" \r\n\t\b",0);
+    PRInt32 theMaxLen=(kNotFound==theIndex) ? sizeof(buffer)-1 : theIndex;
+    mTextValue.ToCString(buffer,theMaxLen+1);
+    buffer[theMaxLen]=0;
     mTypeID= NS_TagToEnum(buffer);
     result=aScanner.GetChar(aChar); //eat the closing '>;
   }
@@ -766,6 +758,15 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
 nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   PRBool theStrictForm=PR_FALSE;
   nsresult result=(theStrictForm) ? ConsumeStrictComment(aChar,aScanner,mTextValue) : ConsumeComment(aChar,aScanner,mTextValue);
+
+  //this change is here to make the editor teams' life easier.
+  //I'm removing the leading and trailing markup...
+
+  if(0==mTextValue.Find("<!"))
+    mTextValue.Cut(0,2);  //trim off 1st 2 chars...
+  if(kGreaterThan==mTextValue.Last())
+    mTextValue.Truncate(mTextValue.Length()-1); //trim off last char
+
   return result;
 }
 
