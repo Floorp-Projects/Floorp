@@ -62,75 +62,8 @@ extern XtAppContext gAppContext;
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-//NS_IMPL_QUERY_INTERFACE(nsWindow, kIWidgetIID)
-//NS_IMPL_ADDREF(nsWindow)
-//NS_IMPL_RELEASE(nsWindow)
-
-/**
- *
- */
-nsrefcnt nsWindow::AddRefObject(void) { 
-  return ++mRefCnt; 
-}
-
-/**
- *
- */
-nsrefcnt nsWindow::ReleaseObject(void) { 
-  return (--mRefCnt) ? mRefCnt : (delete this, 0); 
-}
-
-
-/**
- *
- */
-nsresult nsWindow::QueryObject(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    if (aIID.Equals(kIWidgetIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)&mInner);
-        AddRef();
-        return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
-}
-
-/**
- * nsISupports methods
- */
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    return mOuter->QueryInterface(aIID, aInstancePtr);
-}
-
-/**
- *
- */
-nsrefcnt nsWindow::AddRef(void)
-{
-    return mOuter->AddRef();
-}
-
-/**
- *
- */
-nsrefcnt nsWindow::Release(void)
-{
-    return mOuter->Release();
-}
-
+NS_IMPL_ADDREF(nsWindow)
+NS_IMPL_RELEASE(nsWindow)
 
 void nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
@@ -175,7 +108,7 @@ void nsWindow::RemoveTooltips()
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow(nsISupports *aOuter):
+nsWindow::nsWindow():
   mEventListener(nsnull),
   mMouseListener(nsnull),
   mToolkit(nsnull),
@@ -185,23 +118,13 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mEventCallback(nsnull),
   mIgnoreResize(PR_FALSE)
 {
+  NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsWindow");
-  // XXX Til can deal with ColorMaps!
-  //SetForegroundColor(NS_RGB(0,0,0));
-  //SetBackgroundColor(NS_RGB(255,255,255));
   mBounds.x = 0;
   mBounds.y = 0;
   mBounds.width = 0;
   mBounds.height = 0;
   mResized = PR_FALSE;
-
-   // Setup for possible aggregation
-  if (aOuter)
-    mOuter = aOuter;
-  else
-    mOuter = &mInner;
-  mRefCnt = 1; // FIXTHIS 
-
   mGC = nsnull ;
   mShown = PR_FALSE;
   mVisible = PR_FALSE;
@@ -211,7 +134,6 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mClientData = nsnull;
 }
 
-
 //-------------------------------------------------------------------------
 //
 // nsWindow destructor
@@ -219,6 +141,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+  OnDestroy();
   XtDestroyWidget(mWidget);
   if (nsnull != mGC) {
     ::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
@@ -460,6 +383,23 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+      // keep a reference to the device context
+    if (aContext) {
+        mContext = aContext;
+        NS_ADDREF(mContext);
+    }
+    else {
+      nsresult  res;
+
+      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+      static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+      res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
+
+      if (NS_OK == res)
+        mContext->Init(nsnull);
+    }
+
   if (nsnull==aNativeParent)
     CreateMainWindow(aNativeParent, aWidgetParent, aRect, 
         aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
@@ -534,6 +474,24 @@ void nsWindow::InitCallbacks(char * aName)
 
 }
 
+//-------------------------------------------------------------------------
+//
+// Query interface implementation
+//
+//-------------------------------------------------------------------------
+nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    nsresult result = nsObject::QueryInterface(aIID, aInstancePtr);
+
+    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+    if (result == NS_NOINTERFACE && aIID.Equals(kIWidgetIID)) {
+        *aInstancePtr = (void*) ((nsIWidget*)this);
+        AddRef();
+        result = NS_OK;
+    }
+
+    return result;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1076,6 +1034,7 @@ void nsWindow::SetColorMap(nsColorMap *aColorMap)
 //-------------------------------------------------------------------------
 nsIDeviceContext* nsWindow::GetDeviceContext() 
 { 
+  NS_IF_ADDREF(mContext);
   return mContext;
 }
 
@@ -1086,6 +1045,7 @@ nsIDeviceContext* nsWindow::GetDeviceContext()
 //-------------------------------------------------------------------------
 nsIAppShell* nsWindow::GetAppShell()
 { 
+  NS_IF_ADDREF(mAppShell);
   return mAppShell;
 }
 
@@ -1156,10 +1116,6 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   XFlush(display);
 }
 
-
-
-
-
 void nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle) 
 {
 } 
@@ -1210,7 +1166,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 {
   PRBool result = PR_FALSE;
-  event->widgetSupports = mOuter;
+  event->widgetSupports = this;
 
   if (nsnull != mEventCallback) {
     result = ConvertStatus((*mEventCallback)(event));
@@ -1336,6 +1292,11 @@ void nsWindow::EndResizingChildren(void)
 
 void nsWindow::OnDestroy()
 {
+    // release references to children, device context, toolkit, and app shell
+  // NS_IF_RELEASE(mChildren);
+    NS_IF_RELEASE(mContext);
+ //   NS_IF_RELEASE(mToolkit);
+    NS_IF_RELEASE(mAppShell);
 }
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
