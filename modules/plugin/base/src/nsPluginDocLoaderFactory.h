@@ -65,21 +65,7 @@ public:
   Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
   NS_DECL_ISUPPORTS
-
-  // nsIDocumentLoaderFactory
-  NS_IMETHOD CreateInstance(const char* aCommand,
-                            nsIChannel* aChannel,
-                            nsILoadGroup* aLoadGroup,
-                            const char* aContentType, 
-                            nsISupports* aContainer,
-                            nsISupports* aExtraInfo,
-                            nsIStreamListener** aDocListener,
-                            nsIContentViewer** aDocViewer);
-
-  NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
-                                       nsIDocument* aDocument,
-                                       const char *aCommand,
-                                       nsIContentViewer** aDocViewerResult);
+  NS_DECL_NSIDOCUMENTLOADERFACTORY
 };
 
 /* dd1b8d10-1dd1-11b2-9852-e162b2c46000 */

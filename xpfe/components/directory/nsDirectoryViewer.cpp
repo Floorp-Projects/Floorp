@@ -1496,3 +1496,11 @@ nsDirectoryViewerFactory::CreateInstanceForDocument(nsISupports* aContainer,
   NS_NOTYETIMPLEMENTED("didn't expect to get here");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsDirectoryViewerFactory::CreateBlankDocument(nsIDocument **_retval) {
+
+  NS_NOTYETIMPLEMENTED("didn't expect to get here");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+

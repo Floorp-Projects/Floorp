@@ -42,21 +42,7 @@ public:
   virtual ~nsContentDLF();
 
   NS_DECL_ISUPPORTS
-
-  // for nsIDocumentLoaderFactory
-  NS_IMETHOD CreateInstance(const char* aCommand,
-                            nsIChannel* aChannel,
-                            nsILoadGroup* aLoadGroup,
-                            const char* aContentType, 
-                            nsISupports* aContainer,
-                            nsISupports* aExtraInfo,
-                            nsIStreamListener** aDocListener,
-                            nsIContentViewer** aDocViewer);
-
-  NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
-                                       nsIDocument* aDocument,
-                                       const char *aCommand,
-                                       nsIContentViewer** aDocViewerResult);
+  NS_DECL_NSIDOCUMENTLOADERFACTORY
 
   // for nsIDocStreamLoaderFactory
   NS_METHOD CreateInstance(nsIInputStream& aInputStream,

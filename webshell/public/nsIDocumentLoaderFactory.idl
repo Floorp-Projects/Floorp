@@ -56,4 +56,6 @@ interface nsIDocumentLoaderFactory : nsISupports {
     nsIContentViewer createInstanceForDocument(in nsISupports aContainer,
                                          in nsIDocument aDocument,
                                          in string aCommand);
+
+    nsIDocument createBlankDocument();
 };
