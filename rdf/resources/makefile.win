@@ -21,6 +21,11 @@ MODULE=rdf
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
+        article.gif \
+        document.gif \
+        folder-closed.gif \
+        folder-open.gif \
+        loading.gif \
         dom-test-1.xul                  \
         dom-test-2.xul                  \
         dom-test-3.xul                  \
