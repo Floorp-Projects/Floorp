@@ -155,6 +155,13 @@ sub getFieldByName {
     # return [type, fieldID, category, name, typeData]
 }
 
+sub getFieldNamesByCategory {
+    my $self = shift;
+    my($app, $category) = @_;
+    $self->notImplemented();
+    # return [name, name, name, name ...]
+}
+
 sub setField {
     my $self = shift;
     my($app, $fieldID, $category, $name, $type, $data) = @_;

@@ -171,6 +171,17 @@ sub getFieldByName {
     # return [type, fieldID, category, name, typeData]
 }
 
+sub getFieldNamesByCategory {
+    my $self = shift;
+    my($app, $category) = @_;
+    my $rows = $self->database($app)->execute('SELECT name FROM userDataTypes WHERE category = ?', $category)->rows;
+    foreach my $row (@$rows) {
+        $row = $row->[0];
+    }
+    return @$rows;
+    # return [name, name, name, name ...]
+}
+
 sub setField {
     my $self = shift;
     my($app, $fieldID, $category, $name, $type, $data, $mode) = @_;

@@ -161,7 +161,7 @@ sub outputLoginFailed {
     my($app, $output, $tried) = @_;
     $output->output('login.failed', {
         'tried' => $tried, # 0 = no username; 1 = unknown username; 2 = invalid username
-        'contacts' => 0, # XXX should fill this in
+        'contacts' => [$app->getService('dataSource.user')->getFieldNamesByCategory($app, 'contact')],
     });   
 }
 
