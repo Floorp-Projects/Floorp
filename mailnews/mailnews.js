@@ -116,6 +116,9 @@ pref("mailnews.wraplength",                 72);
 
 pref("mailnews.reply_on_top",               0); // 0=bottom 1=top 2=select+bottom 3=select+top
 
+pref("mail.purge_threshhold",                100);
+pref("mail.prompt_purge_threshhold",             false);   
+
 pref("mailnews.force_ascii_search",         false);
 pref("mailnews.autolookup_unknown_mime_types",  true);
 
