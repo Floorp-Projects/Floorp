@@ -180,8 +180,10 @@ public:
   //nsIRollupListener
   // NS_DECL_NSIROLLUPLISTENER
   NS_IMETHOD Rollup();
-  NS_IMETHOD ShouldRollupOnMouseWheelEvent(nsIWidget *aWidget, PRBool *aShouldRollup) 
-  { *aShouldRollup = PR_FALSE; return NS_OK;}
+  NS_IMETHOD ShouldRollupOnMouseWheelEvent(PRBool *aShouldRollup) { *aShouldRollup = PR_FALSE; return NS_OK;}
+
+  //NS_IMETHOD ShouldRollupOnMouseWheelEvent(nsIWidget *aWidget, PRBool *aShouldRollup) 
+  //{ *aShouldRollup = PR_FALSE; return NS_OK;}
 
   NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
     { mFrameConstructor = aConstructor; return NS_OK;} // not owner - do not addref!

@@ -710,9 +710,25 @@ nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
      // which make it difficult to find a message which will
      // reliably be generated when the mouse wheel changes position
     if ((inMsg == WM_MOUSEWHEEL) || (inMsg == uMSH_MOUSEWHEEL)) {
+
+      // XXX Turn on ifdef or remove the "else" part of this ifdef when
+      // Bug 33733 is fixed
+#if 0 
+      PRBool doRollup;
+      gRollupListener->ShouldRollupOnMouseWheelEvent(&doRollup);
+      if (!doRollup) {
+        *outResult = FALSE;
+        return FALSE;
+      } else {
+        gRollupListener->Rollup();
+        *outResult = TRUE;
+        return TRUE;
+      }
+#else
       gRollupListener->Rollup();
       *outResult = TRUE;
       return TRUE;
+#endif
     }
     
     if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||

@@ -24,6 +24,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIWidget;
+
 [uuid(23C2BA03-6C76-11d3-96ED-0060B0FB9956)]
 interface nsIRollupListener : nsISupports
 {
@@ -32,4 +34,11 @@ interface nsIRollupListener : nsISupports
    * @result NS_Ok if no errors
    */
   void Rollup();
+
+  /**
+   * Asks the RoolupListener if it should rollup on mousevents
+   * @result NS_Ok if no errors
+   */
+  void ShouldRollupOnMouseWheelEvent(out PRBool aShould);
+
 };
