@@ -1129,7 +1129,11 @@ sub BuildIDLProjects()
 			# in this situation, we need to quit and restart the IDE to pick up the new plugin
 			CodeWarriorLib::quit();
 			WaitNextEvent();
+			WaitNextEvent();
+			WaitNextEvent();
 			CodeWarriorLib::activate();
+			WaitNextEvent();
+			WaitNextEvent();
 			WaitNextEvent();
 		}
 	}
