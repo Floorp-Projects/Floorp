@@ -35,7 +35,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsIAllocator.h"
-#include "nsIBuffer.h"
+#include "nsIPipe.h"
 #include "nsMimeStringResources.h"
 #include "nsIPref.h"
 
@@ -328,10 +328,6 @@ NS_IMETHODIMP nsStreamConverter::QueryInterface(REFNSIID aIID, void** aInstanceP
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMimeStreamConverter*, this);
 	}
-	else if (aIID.Equals(nsCOMTypeInfo<nsIBufferObserver>::GetIID()))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIBufferObserver*, this);
-	}
 
 	if(*aInstancePtr)
 	{
@@ -441,8 +437,9 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	SetStreamURI(aURI);
 	// now we want to create a pipe which we'll use for converting the data...
 	rv = NS_NewPipe(getter_AddRefs(mInputStream), getter_AddRefs(mOutputStream),
-                    NS_STREAM_CONVERTER_SEGMENT_SIZE,
-                    NS_STREAM_CONVERTER_BUFFER_SIZE, PR_TRUE, this);
+                  nsnull,
+                  NS_STREAM_CONVERTER_SEGMENT_SIZE,
+                  NS_STREAM_CONVERTER_BUFFER_SIZE);
 
 	// initialize our emitter
 	if (NS_SUCCEEDED(rv) && mEmitter)
@@ -641,20 +638,3 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsStreamConverter::OnFull(nsIBuffer* buffer)
-{
-    return NS_OK;;
-}
-
-NS_IMETHODIMP
-nsStreamConverter::OnWrite(nsIBuffer* aBuffer, PRUint32 aCount)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStreamConverter::OnEmpty(nsIBuffer* buffer)
-{
-    return NS_OK;
-}

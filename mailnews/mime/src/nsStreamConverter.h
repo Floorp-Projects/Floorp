@@ -24,7 +24,6 @@
 #include "nsIOutputStream.h"
 #include "nsIMimeEmitter.h" 
 #include "nsIURI.h"
-#include "nsIBuffer.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIChannel.h"
@@ -32,7 +31,7 @@
 #define NS_STREAM_CONVERTER_SEGMENT_SIZE   (4*1024)
 #define NS_STREAM_CONVERTER_BUFFER_SIZE    (1024*1024)//(32*1024)
 
-class nsStreamConverter : public nsIStreamConverter2, public nsIMimeStreamConverter, public nsIBufferObserver { 
+class nsStreamConverter : public nsIStreamConverter2, public nsIMimeStreamConverter { 
 public: 
   nsStreamConverter();
   virtual ~nsStreamConverter();
@@ -46,12 +45,6 @@ public:
   NS_IMETHOD SetMimeOutputType(nsMimeOutputType aType);
   NS_IMETHOD GetMimeOutputType(nsMimeOutputType *aOutFormat);
   NS_IMETHOD SetStreamURI(nsIURI *aURI);
-
-  ////////////////////////////////////////////////////////////////////////////
-  // nsIBufferObserver:
-  NS_IMETHOD OnFull(nsIBuffer* buffer);
-  NS_IMETHOD OnWrite(nsIBuffer* aBuffer, PRUint32 aCount);
-  NS_IMETHOD OnEmpty(nsIBuffer* buffer);
 
   /////////////////////////////////////////////////////////////////////////////
   // Methods for nsIStreamListener...
