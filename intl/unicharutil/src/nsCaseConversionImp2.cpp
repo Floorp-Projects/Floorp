@@ -41,14 +41,13 @@ enum {
 #define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
 #define IS_ASCII_SPACE(u) ( 0x0020 == (u) )
 
-#define IS_NOCASE_CHAR(u) (PR_FALSE)
-// consider the following range need double check
-//  0x0600 0x0FFF
-//  0x1100 0x1DFF
-//  0x2000 0x20FF
-//  0x2200 0x23FF
-//  0x2500 0xFEFF
-
+#define IS_NOCASE_CHAR(u)  \
+                     (((0x2500 <= (u)) && ( (u) <= 0xFEFF)) || \
+                      ((0x0600 <= (u)) && ( (u) <= 0x0FFF)) || \
+                      ((0x1100 <= (u)) && ( (u) <= 0x1DFF)) || \
+                      ((0x2000 <= (u)) && ( (u) <= 0x20FF)) || \
+                      ((0x2200 <= (u)) && ( (u) <= 0x23FF)))
+  
 // Size of Tables
 
 
