@@ -51,8 +51,4 @@ public:
     NS_IMETHOD    ParseURL(const char *url, PRInt32 parts_requested, char **returnVal);
 }; 
 
-
-/* this function will be used by the factory to generate an RFC-822 Parser....*/
-extern nsresult NS_NewMimeURLUtils(nsIMimeURLUtils ** aInstancePtrResult);
-
 #endif /* _nsMimeURLUtils_h__ */

@@ -25,6 +25,7 @@
 #ifndef nsMimeConverter_h_
 #define nsMimeConverter_h_
 
+#include "nsISupports.h"
 #include "prtypes.h"
 #include "nsIMimeConverter.h"
 
@@ -76,8 +77,5 @@ public:
   NS_IMETHOD EncoderWrite (MimeEncoderData *data, const char *buffer, PRInt32 size, PRInt32 *written);
 
 }; 
-
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewMimeConverter(nsIMimeConverter **aInstancePtrResult);
 
 #endif /* nsMimeConverter_h_ */

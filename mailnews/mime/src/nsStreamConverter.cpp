@@ -20,8 +20,6 @@
 #include "mimecom.h"
 #include "modmimee.h"
 #include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
 #include "nsStreamConverter.h"
 #include "comi18n.h"
 #include "prmem.h"
@@ -343,30 +341,8 @@ nsStreamConverter::~nsStreamConverter()
   InternalCleanup();
 }
 
-/* 
- * This function will be used by the factory to generate an 
- * mime object class object....
- */
-nsresult 
-NS_NewStreamConverter(const nsIID &aIID, void ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take 
-     a string describing the assertion */
-	//nsresult result = NS_OK;
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsStreamConverter *obj = new nsStreamConverter();
-		if (obj)
-			return obj->QueryInterface(aIID, (void**) aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
 
-NS_IMPL_ISUPPORTS3(nsStreamConverter, nsIStreamListener, nsIStreamConverter, nsIMimeStreamConverter)
+NS_IMPL_ISUPPORTS4(nsStreamConverter, nsIStreamListener, nsIStreamObserver, nsIStreamConverter, nsIMimeStreamConverter)
 
 ///////////////////////////////////////////////////////////////
 // nsStreamConverter definitions....

@@ -31,32 +31,12 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-/* this function will be used by the factory to generate an RFC-822 Parser....*/
-nsresult NS_NewMimeURLUtils(nsIMimeURLUtils ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take a string describing the assertion */
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsMimeURLUtils* utils = new nsMimeURLUtils();
-		if (utils)
-			return utils->QueryInterface(nsIMimeURLUtils::GetIID(), (void **)aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
-
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsMimeURLUtils)
-NS_IMPL_RELEASE(nsMimeURLUtils)
-NS_IMPL_QUERY_INTERFACE(nsMimeURLUtils, nsIMimeURLUtils::GetIID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ISUPPORTS(nsMimeURLUtils, NS_GET_IID(nsIMimeURLUtils));
 
 nsMimeURLUtils::nsMimeURLUtils()
 {
   /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMimeURLUtils::~nsMimeURLUtils()

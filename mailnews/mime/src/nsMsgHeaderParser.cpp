@@ -17,9 +17,6 @@
  */
 
 #include "msgCore.h"    // precompiled header...
-#include "xp_core.h"            // for FALSE
-#include "nsISupports.h"
-#include "nsIMsgHeaderParser.h"
 #include "nsMsgHeaderParser.h"	 
 #include "comi18n.h"
 #include "prmem.h"
@@ -81,10 +78,7 @@ nsMsgHeaderParser::~nsMsgHeaderParser()
 	delete m_USAsciiToUtf8CharsetConverter;
 }
 
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsMsgHeaderParser)
-NS_IMPL_RELEASE(nsMsgHeaderParser)
-NS_IMPL_QUERY_INTERFACE(nsMsgHeaderParser, nsIMsgHeaderParser::GetIID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ISUPPORTS(nsMsgHeaderParser, NS_GET_IID(nsIMsgHeaderParser));
 
 MimeCharsetConverterClass *nsMsgHeaderParser::GetUSAsciiToUtf8CharsetConverter()
 {

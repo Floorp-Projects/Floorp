@@ -121,10 +121,6 @@
 	MimeCharsetConverterClass *GetUSAsciiToUtf8CharsetConverter();
 	protected:
 		MimeCharsetConverterClass *m_USAsciiToUtf8CharsetConverter;
-	private:
  }; 
-
- /* this function will be used by the factory to generate an RFC-822 Parser....*/
- extern nsresult NS_NewHeaderParser(nsIMsgHeaderParser ** aInstancePtrResult);
 
 #endif /* nsMSGRFCPARSER_h__ */

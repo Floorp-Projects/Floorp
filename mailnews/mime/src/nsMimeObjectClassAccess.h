@@ -25,13 +25,9 @@
 #ifndef nsMimeObjectClassAccess_h_
 #define nsMimeObjectClassAccess_h_
 
+#include "nsISupports.h"
 #include "prtypes.h"
 #include "nsIMimeObjectClassAccess.h"
-
-// {403B0540-B7C3-11d2-B35E-525400E2D63A}
-#define NS_MIME_OBJECT_CLASS_ACCESS_CID   \
-        { 0x403b0540, 0xb7c3, 0x11d2,         \
-        { 0xb3, 0x5e, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } }
 
 class nsMimeObjectClassAccess : public nsIMimeObjectClassAccess {
 public: 
@@ -59,8 +55,5 @@ public:
   NS_IMETHOD    GetmimeMultipartClass(void **ptr);
   NS_IMETHOD    GetmimeMultipartSignedClass(void **ptr);
 }; 
-
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewMimeObjectClassAccess(nsIMimeObjectClassAccess **aInstancePtrResult);
 
 #endif /* nsMimeObjectClassAccess_h_ */

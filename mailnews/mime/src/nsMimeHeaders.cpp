@@ -17,30 +17,13 @@
  */
 
 #include "msgCore.h"    // precompiled header...
-#include "mimehdrs.h"
-#include "nsIMimeHeaders.h"
-
-class nsMimeHeaders : public nsIMimeHeaders
-{
- public: 
- 	nsMimeHeaders();
- 	virtual ~nsMimeHeaders();
- 
-	 /* this macro defines QueryInterface, AddRef and Release for this class */
-	 NS_DECL_ISUPPORTS
-	 
-	 NS_DECL_NSIMIMEHEADERS
-
-private:
-	MimeHeaders	*	mHeaders;
-};
-
+#include "nsMimeHeaders.h"
 
 nsMimeHeaders::nsMimeHeaders() :
 	mHeaders(nsnull)
 {
   /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMimeHeaders::~nsMimeHeaders()
@@ -70,26 +53,4 @@ nsresult nsMimeHeaders::ExtractHeader(const char *headerName, PRBool getAllOfThe
 	
 	*_retval = MimeHeaders_get(mHeaders, headerName, PR_FALSE, getAllOfThem);
 	return NS_OK;
-}
-
-/* 
- * This function will be used by the factory to generate an 
- * mime headers class object....
- */
-nsresult NS_NewMimeHeaders(const nsIID &aIID, void ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take 
-     a string describing the assertion */
-	//nsresult result = NS_OK;
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsMimeHeaders *obj = new nsMimeHeaders();
-		if (obj)
-			return obj->QueryInterface(aIID, (void**) aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }

@@ -84,7 +84,4 @@ private:
   PRBool mForwardInline;
 }; 
 
-// factory method
-extern nsresult NS_NewStreamConverter(const nsIID &aIID, void ** aInstancePtrResult);
-
 #endif /* nsStreamConverter_h_ */

@@ -19,42 +19,12 @@
 #include "mimecom.h"
 #include "modmimee.h"
 #include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
 #include "nsMimeConverter.h"
 #include "comi18n.h"
 #include "prmem.h"
 #include "plstr.h"
 
-/* 
- * This function will be used by the factory to generate an 
- * mime object class object....
- */
-nsresult NS_NewMimeConverter(nsIMimeConverter ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take 
-     a string describing the assertion */
-	//nsresult result = NS_OK;
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsMimeConverter *obj = new nsMimeConverter();
-		if (obj)
-			return obj->QueryInterface(nsIMimeConverter::GetIID(), (void**) aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
-
-/* 
- * The following macros actually implement addref, release and 
- * query interface for our component. 
- */
-NS_IMPL_ADDREF(nsMimeConverter)
-NS_IMPL_RELEASE(nsMimeConverter)
-NS_IMPL_QUERY_INTERFACE(nsMimeConverter, nsIMimeConverter::GetIID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ISUPPORTS(nsMimeConverter, NS_GET_IID(nsIMimeConverter));
 
 /*
  * nsMimeConverter definitions....
@@ -66,7 +36,7 @@ NS_IMPL_QUERY_INTERFACE(nsMimeConverter, nsIMimeConverter::GetIID()); /* we need
 nsMimeConverter::nsMimeConverter()
 {
   /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMimeConverter::~nsMimeConverter()

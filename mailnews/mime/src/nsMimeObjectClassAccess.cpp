@@ -18,39 +18,13 @@
 #include "stdio.h"
 #include "mimecom.h"
 #include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
 #include "nsMimeObjectClassAccess.h"
-
-/* 
- * This function will be used by the factory to generate an 
- * mime object class object....
- */
-nsresult NS_NewMimeObjectClassAccess(nsIMimeObjectClassAccess ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take 
-     a string describing the assertion */
-	//nsresult result = NS_OK;
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsMimeObjectClassAccess *obj = new nsMimeObjectClassAccess();
-		if (obj)
-			return obj->QueryInterface(nsIMimeObjectClassAccess::GetIID(), (void**) aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
 
 /* 
  * The following macros actually implement addref, release and 
  * query interface for our component. 
  */
-NS_IMPL_ADDREF(nsMimeObjectClassAccess)
-NS_IMPL_RELEASE(nsMimeObjectClassAccess)
-NS_IMPL_QUERY_INTERFACE(nsMimeObjectClassAccess, nsIMimeObjectClassAccess::GetIID()); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ISUPPORTS(nsMimeObjectClassAccess, NS_GET_IID(nsIMimeObjectClassAccess));
 
 /*
  * nsMimeObjectClassAccess definitions....
