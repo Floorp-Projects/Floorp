@@ -52,7 +52,7 @@ nsToolkit::nsToolkit()
 		InitMenus();
 		TEInit();
 		InitDialogs(0);
-		InitCursor();
+		InitCursor();	
 		}
 }
 
