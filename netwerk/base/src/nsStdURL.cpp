@@ -1323,8 +1323,10 @@ nsStdURL::GetFile(nsIFile * *aFile)
 #endif
 
     // we need to make sure that the filepath is unescaped! 
-	
-	char* escapedPath = (char*) nsAllocator::Clone((void*)(const char*)path,strlen(path));
+	PRUint32 size;
+
+	path.SizeOf(nsnull, &size);
+	char* escapedPath = (char*) nsAllocator::Clone((void*)(const char*)path,size);
 	nsUnescape(escapedPath);
 
     nsCOMPtr<nsILocalFile> localFile;
