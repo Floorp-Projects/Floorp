@@ -57,13 +57,26 @@ XfeBiggestWidget				(Boolean		horizontal,
 								 Cardinal		n);
 /*----------------------------------------------------------------------*/
 extern Dimension
-XfeVaGetWidestWidget			(Widget			widget,
+XfeVaGetWidestWidget			(Widget			w,
 								 ...);
 /*----------------------------------------------------------------------*/
 extern Dimension
-XfeVaGetTallestWidget			(Widget			widget,
+XfeVaGetTallestWidget			(Widget			w,
 								 ...);
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeMoveChildrenByOffset	Move all children of a manager by an 		*/
+/*							(x,y) offset.								*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+XfeMoveChildrenByOffset			(Widget			w,
+								 int			x_offset,
+								 int			y_offset);
+/*----------------------------------------------------------------------*/
+
 
 XFE_END_CPLUSPLUS_PROTECTION
 

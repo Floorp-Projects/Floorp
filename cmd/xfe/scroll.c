@@ -320,7 +320,7 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 			    (w + shift + scroll_slop_hack), h);
 	      XMoveWindow(XtDisplay(da), XtWindow(da), (x - shift), y);
 	      XMoveResizeWindow(XtDisplay(da), XtWindow(da), x, y, w, h);
-	      fe_GravityCorrectForms (context, -shift, 0);
+		  XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,-shift, 0);
 	    }
 	  else if (fe_globalData.fe_guffaw_scroll == 2)
 	    {
@@ -337,7 +337,7 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 	      fe_SetFormsGravity(context, EastGravity);
 	      XMoveResizeWindow(XtDisplay(da), XtWindow(da), x, y, w, h);
 	      fe_SetFormsGravity(context, NorthWestGravity);
-	      fe_GravityCorrectForms (context, -shift, 0);
+		  XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,-shift, 0);
 	    }
 	  else
 	    {
@@ -345,7 +345,11 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 			 shift, 0,
 			 w - shift, h,
 			 0, 0);
-	      fe_ScrollForms (context, old_x - new_x, old_y - new_y);
+
+          XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,
+									  old_x - new_x,
+									  old_y - new_y);
+
 	      fe_RefreshArea (context,
                               new_x + w - (shift+lh+lh),
                               new_y, shift+lh, h);
@@ -382,7 +386,7 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 				(x - shift), y, (w + shift), h);
 	      XResizeWindow(XtDisplay(da), XtWindow(da), w, h);
 	      XMoveWindow(XtDisplay(da), XtWindow(da), x, y);
-	      fe_GravityCorrectForms (context, shift, 0);
+		  XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,shift, 0);
 	    }
 	  else if (fe_globalData.fe_guffaw_scroll == 2)
 	    {
@@ -399,7 +403,7 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 	      XResizeWindow(XtDisplay(da), XtWindow(da), w, h);
 	      XMoveWindow(XtDisplay(da), XtWindow(da), x, y);
 	      fe_SetFormsGravity(context, NorthWestGravity);
-	      fe_GravityCorrectForms (context, shift, 0);
+		  XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,shift, 0);
 	    }
 	  else
 	    {
@@ -407,7 +411,10 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 			 0, 0,
 			 w - (old_x - new_x), h,
 			 (old_x - new_x), 0);
-	      fe_ScrollForms (context, old_x - new_x, old_y - new_y);
+
+          XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,
+									  old_x - new_x,
+									  old_y - new_y);
 	    }
 	  if (shift > w)
 	    {
@@ -438,7 +445,7 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 			    (h + shift + scroll_slop_hack));
 	      XMoveWindow(XtDisplay(da), XtWindow(da), x, (y - shift));
 	      XMoveResizeWindow(XtDisplay(da), XtWindow(da), x, y, w, h);
-	      fe_GravityCorrectForms (context, 0, -shift);
+		  XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,0,-shift);
 	    }
 	  else if (fe_globalData.fe_guffaw_scroll == 2)
 	    {
@@ -455,7 +462,7 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 	      fe_SetFormsGravity(context, SouthGravity);
 	      XMoveResizeWindow(XtDisplay(da), XtWindow(da), x, y, w, h);
 	      fe_SetFormsGravity(context, NorthWestGravity);
-	      fe_GravityCorrectForms (context, 0, -shift);
+		  XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,0,-shift);
 	    }
 	  else
 	    {
@@ -463,7 +470,9 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 			 0, shift,
 			 w, h - shift,
 			 0, 0);
-	      fe_ScrollForms (context, old_x - new_x, old_y - new_y);
+          XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,
+									  old_x - new_x,
+									  old_y - new_y);
 	    }
 	  if (shift > h)
 	    {
@@ -491,7 +500,7 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 				x, (y - shift), w, (h + shift));
 	      XResizeWindow(XtDisplay(da), XtWindow(da), w, h);
 	      XMoveWindow(XtDisplay(da), XtWindow(da), x, y);
-	      fe_GravityCorrectForms (context, 0, shift);
+		  XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,0,shift);
 	    }
 	  else if (fe_globalData.fe_guffaw_scroll == 2)
 	    {
@@ -508,7 +517,7 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 	      XResizeWindow(XtDisplay(da), XtWindow(da), w, h);
 	      XMoveWindow(XtDisplay(da), XtWindow(da), x, y);
 	      fe_SetFormsGravity(context, NorthWestGravity);
-	      fe_GravityCorrectForms (context, 0, shift);
+		  XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,0,shift);
 	    }
 	  else
 	    {
@@ -516,7 +525,9 @@ fe_scroll_cb (Widget widget, XtPointer closure, XtPointer call_data)
 			 0, 0,
 			 w, h - (old_y - new_y),
 			 0, (old_y - new_y));
-	      fe_ScrollForms (context, old_x - new_x, old_y - new_y);
+          XfeMoveChildrenByOffset(CONTEXT_DATA(context)->drawing_area,
+									  old_x - new_x,
+									  old_y - new_y);
 	    }
 	  if (shift > h)
 	    {

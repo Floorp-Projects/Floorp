@@ -221,7 +221,7 @@ XfeBiggestWidget(Boolean horizontal,WidgetList widgets,Cardinal n)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Dimension
-XfeVaGetWidestWidget(Widget widget, ...)
+XfeVaGetWidestWidget(Widget w, ...)
 {
 	va_list		vargs;
 	Widget		current;
@@ -233,12 +233,12 @@ XfeVaGetWidestWidget(Widget widget, ...)
 	 * (because of the way var args works
 	 *  we have to start the loop at the second widget)
 	 */
-	widest_width = _XfeWidth(widget);
+	widest_width = _XfeWidth(w);
 
 	/*
 	 * Get the widest width
 	 */
-	va_start (vargs, widget);
+	va_start (vargs, w);
 
 	while ((current = va_arg (vargs, Widget))) 
 	{
@@ -256,7 +256,7 @@ XfeVaGetWidestWidget(Widget widget, ...)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Dimension
-XfeVaGetTallestWidget(Widget widget, ...)
+XfeVaGetTallestWidget(Widget w, ...)
 {
 	va_list		vargs;
 	Widget		current;
@@ -268,12 +268,12 @@ XfeVaGetTallestWidget(Widget widget, ...)
 	 * (because of the way var args works
 	 *  we have to start the loop at the second widget)
 	 */
-	widest_height = _XfeHeight(widget);
+	widest_height = _XfeHeight(w);
 
 	/*
 	 * Get the widest height
 	 */
-	va_start (vargs, widget);
+	va_start (vargs, w);
 
 	while ((current = va_arg (vargs, Widget))) 
 	{
@@ -687,5 +687,48 @@ _XfeLiberalGeometryManager(Widget				child,
 	}
 
 	return XtGeometryYes;
+}
+/*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeMoveChildrenByOffset	Move all children of a manager by an 		*/
+/*							(x,y) offset.								*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeMoveChildrenByOffset(Widget w,int x_offset,int y_offset)
+{
+	Cardinal i;
+
+	assert( XmIsManager(w) );
+
+	/* Make sure the widget is alive */
+	if (!_XfeIsAlive(w))
+	{
+		return;
+	}
+
+	/* Makre sure the offset is something */
+    if ((x_offset == 0) && (y_offset == 0))
+    {
+      return;
+    }
+	
+	i = _XfemNumChildren(w);
+
+/* 	for (i = _XfemNumChildren(w) - 1; i >= 0; i--) */
+	while (i--)
+	{
+		Widget child = _XfeChildrenIndex(w,i);
+
+		if (_XfeIsAlive(child))
+		{
+			_XfeMoveWidget(child,
+						   _XfeX(child) + x_offset,
+						   _XfeY(child) + y_offset);
+		}
+	}
 }
 /*----------------------------------------------------------------------*/

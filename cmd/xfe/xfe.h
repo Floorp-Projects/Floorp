@@ -288,9 +288,6 @@ extern void fe_EventLOCoords (MWContext *context, XEvent *event,
 			      unsigned long *x, unsigned long *y);
 extern void fe_SyncExposures(MWContext* context);
 extern void fe_RefreshArea(MWContext*, int32 x, int32 y, uint32 w, uint32 h);
-
-extern void fe_ScrollForms (MWContext *context, int x_off, int y_off);
-extern void fe_GravityCorrectForms (MWContext *context, int x_off, int y_off);
 extern void fe_SetFormsGravity (MWContext *context, int gravity);
 extern void fe_NukeBackingStore (Widget widget);
 
