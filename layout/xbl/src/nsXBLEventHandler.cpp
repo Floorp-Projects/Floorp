@@ -265,7 +265,7 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
   aKeyEvent->GetKeyCode(&keyCode);
   aKeyEvent->GetCharCode(&charCode);
 
-  PRBool keyMatched = PR_FALSE;
+  PRBool keyMatched = PR_TRUE;
 
   nsAutoString key;
   mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyAtom, key);
