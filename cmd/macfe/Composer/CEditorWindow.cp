@@ -159,7 +159,11 @@ CEditorWindow* CEditorWindow::MakeEditWindow( MWContext* old_context, URL_Struct
 		{
 			url = SHIST_CreateURLStructFromHistoryEntry( old_context, entry );
 			if ( url )
+			{
 				url->force_reload = NET_NORMAL_RELOAD;
+
+				XP_MEMSET( &url->savedData, 0, sizeof( SHIST_SavedData ) );
+			}
 		}
 		// if we don't have a history entry, we're kind of screwed-->just load a blank page
 	}
