@@ -174,10 +174,12 @@ static NS_DEFINE_IID(kIUrlDispatcherIID,     NS_IURLDISPATCHER_IID);
 #ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
 #endif
-
+#ifndef NECKO
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 #include "nsINetSupportDialogService.h"
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+#endif
+
 #include "nsIWebShell.h"
 
 const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
@@ -2850,6 +2852,8 @@ nsWebShellWindow::IsIntrinsicallySized(PRBool& aResult)
 
 
 // nsINetSupport
+#ifdef NECKO
+#else
 void nsWebShellWindow::Alert(const nsString &aText)
 {
 	nsresult rv;
@@ -2912,3 +2916,4 @@ PRBool nsWebShellWindow::PromptPassword(const nsString &aText,
 	}
 	 return result ? PR_TRUE : PR_FALSE;
  }
+#endif 
