@@ -6,17 +6,17 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
   <binding id="radio" extends="chrome://global/content/xulBindings.xml#checkbox">
-    <interface>
+    <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
       <property name="group" onset="this.setAttribute('group',val); return val;"
                             onget="return this.getAttribute('group');"/>
-    </interface>
+    </implementation>
   </binding>
   
   <binding id="radiogroup" extends="xul:box">
 
-    <interface>
+    <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
       <property name="selectedItem">
@@ -52,9 +52,9 @@
         ]]>
         </setter>        
       </property>
-    </interface>
+    </implementation>
     <handlers>
-      <handler type="click">
+      <handler event="click">
        <![CDATA[
         try
           {
@@ -68,7 +68,7 @@
           }
        ]]>
       </handler>
-      <handler type="keypress" key=" ">
+      <handler event="keypress" key=" ">
        <![CDATA[
         try
           {

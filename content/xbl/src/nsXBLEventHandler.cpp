@@ -59,7 +59,7 @@ nsIAtom* nsXBLEventHandler::kShiftAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kControlAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kMetaAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kAltAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kValueAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kActionAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kCommandAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kClickCountAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kButtonAtom = nsnull;
@@ -85,7 +85,7 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
     kControlAtom = NS_NewAtom("control");
     kAltAtom = NS_NewAtom("alt");
     kMetaAtom = NS_NewAtom("meta");
-    kValueAtom = NS_NewAtom("value");
+    kActionAtom = NS_NewAtom("action");
     kCommandAtom = NS_NewAtom("command");
     kClickCountAtom = NS_NewAtom("clickcount");
     kButtonAtom = NS_NewAtom("button");
@@ -106,7 +106,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
     NS_RELEASE(kControlAtom);
     NS_RELEASE(kAltAtom);
     NS_RELEASE(kMetaAtom);
-    NS_RELEASE(kValueAtom);
+    NS_RELEASE(kActionAtom);
     NS_RELEASE(kCommandAtom);
     NS_RELEASE(kButtonAtom);
     NS_RELEASE(kClickCountAtom);
@@ -690,7 +690,7 @@ nsXBLEventHandler::ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEv
   
   // Compile the event handler.
   nsAutoString handlerText;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kValueAtom, handlerText);
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kActionAtom, handlerText);
   if (handlerText.IsEmpty()) {
     // look to see if action content is contained by the handler element
     GetTextData(mHandlerElement, handlerText);
@@ -785,13 +785,13 @@ nsXBLEventHandler::RemoveEventHandlers()
     // Figure out if we're using capturing or not.
     PRBool useCapture = PR_FALSE;
     nsAutoString capturer;
-    mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kCapturerAtom, capturer);
-    if (capturer == NS_LITERAL_STRING("true"))
+    mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kPhaseAtom, capturer);
+    if (capturer == NS_LITERAL_STRING("capturing"))
       useCapture = PR_TRUE;
 
     // XXX Will potentially be comma-separated
     nsAutoString type;
-    mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kTypeAtom, type);
+    mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kEventAtom, type);
    
     // Figure out our type.
     PRBool mouse = nsXBLBinding::IsMouseHandler(type);

@@ -62,10 +62,10 @@
         <xul:image/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
-    </interface>  
+    </implementation>  
   </binding>
 
   <binding id="menuitem">
@@ -73,10 +73,10 @@
       <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="acceltext:value"/>
     </content>
-    <interface>
+    <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
-    </interface>  
+    </implementation>  
   </binding>
 
   <binding id="menuitem-iconic">
@@ -87,10 +87,10 @@
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="acceltext:value"/>
     </content>
-    <interface>
+    <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
-    </interface>  
+    </implementation>  
   </binding>
 
   <binding id="menu-iconic">
@@ -104,15 +104,15 @@
         <xul:image/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
                             onget="return this.getAttribute('data');"/>
-    </interface>  
+    </implementation>  
   </binding>
   
   <binding id="basetext">
-    <interface>
-      <!-- public interface -->
+    <implementation>
+      <!-- public implementation -->
       <property name="value"      onset="return this.setAttribute('value',val);"
                                   onget="return this.getAttribute('value');"/>
       <property name="crop"       onset="return this.setAttribute('crop',val);"
@@ -128,7 +128,7 @@
                                   onget="return this.getAttribute('accesskey');"/>
       <property name="imgalign"   onset="return this.setAttribute('imgalign',val);"
                                   onget="return this.getAttribute('imgalign');"/>
-    </interface>      
+    </implementation>      
   </binding>
   
   <binding id="checkbox" extends="chrome://global/content/xulBindings.xml#basetext">
@@ -143,21 +143,21 @@
         </xul:html>
       </xul:box>
     </content>
-    <interface>
-      <!-- public interface -->
+    <implementation>
+      <!-- public implementation -->
       <property name="checked"    onset="if (val) this.setAttribute('checked', 'true');
                                          else this.removeAttribute('checked');
                                          return val;"
                                   onget="var v = this.getAttribute('checked');
                                          if (v == 'true') return true; return false;"/>
-    </interface>
+    </implementation>
     <handlers>
-      <handler type="click">
+      <handler event="click">
       <![CDATA[
         if (!this.disabled) this.checked = !this.checked; 
       ]]>
       </handler>
-      <handler type="keypress" key=" " value="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="keypress" key=" " action="if (!this.disabled) this.checked = !this.checked;"/>
     </handlers>
   </binding>
 
@@ -225,14 +225,14 @@
         </xul:stack>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <property name="progresstext"   onset="this.setAttribute('progresstext',val); return val;"
                                       onget="return this.getAttribute('progresstext');"/>
       <property name="value"          onset="this.setAttribute('value',val); return val;"
                                       onget="return this.getAttribute('value');"/>
       <property name="mode"           onset="this.setAttribute('mode', val); return val;"
                                       onget="return this.getAttribute('mode');"/>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="textfield" extends="xul:box">
@@ -241,7 +241,7 @@
         <html:input class="textfield-input" flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <property name="value"      onset="document.getAnonymousNodes(this)[0].firstChild.value = val; return val;"
                                   onget="return document.getAnonymousNodes(this)[0].firstChild.value;"/>
       <property name="type"       onset="document.getAnonymousNodes(this)[0].firstChild.type = val; return val;"
@@ -287,10 +287,10 @@
           document.getAnonymousNodes(this)[0].firstChild.setSelectionRange( aSelectionStart, aSelectionEnd );
         </body>
       </method>
-    </interface>
+    </implementation>
     <handlers>
-      <handler type="focus" capturer="true" value="this.setAttribute('focused','true');"/>
-      <handler type="blur" capturer="true" value="this.removeAttribute('focused');"/>
+      <handler event="focus" phase="capturing" action="this.setAttribute('focused','true');"/>
+      <handler event="blur" phase="capturing" action="this.removeAttribute('focused');"/>
     </handlers>    
   </binding>
 
@@ -304,7 +304,7 @@
 
   <binding id="text">
     <handlers>
-      <handler type="click" value="var forElementID = this.getAttribute('for'); if(forElementID) var forElement = document.getElementById(forElementID); if(forElement) forElement.focus();"/>
+      <handler event="click" action="var forElementID = this.getAttribute('for'); if(forElementID) var forElement = document.getElementById(forElementID); if(forElement) forElement.focus();"/>
     </handlers>
   </binding>
   
@@ -317,7 +317,7 @@
       </xul:box>
     </content>
     <handlers>
-      <handler type="blur" value="this.setAttribute('mode','display');"/>
+      <handler event="blur" action="this.setAttribute('mode','display');"/>
     </handlers>
   </binding>
 
@@ -342,7 +342,7 @@
       </xul:arrowscrollbox>
 
     </content>
-    <interface>
+    <implementation>
       <method name="openPopup">
         <argument name="element"/>
         <argument name="xpos"/>
@@ -403,20 +403,15 @@
           ]]>
         </setter>
       </property>
-    </interface>     
+    </implementation>     
   </binding>
   
   <binding id="colorpicker" extends="xul:box">
-    <interface>
+    <implementation>
       <property name="color" onset="return this.setAttribute('color', val);"
                              onget="return this.getAttribute('color');"/>
       <property name="selectedItem"/>
-    </interface>
-
-    <handlers>
-      <handler type="click" value="dump('handler fired\n');"/>
-    </handlers>
-
+    </implementation>
     <content>
 
       <xul:box flex="1" orient="vertical" onclick="parentNode.color = event.target.getAttribute('color');
@@ -521,38 +516,38 @@
       <xul:image class="statusbar-panel-icon" inherits="src"/>
       <xul:text class="statusbar-panel-text" inherits="value,crop" crop="right" flex="1"/>
     </content>
-    <interface>
+    <implementation>
       <property name="value"
                 onget="return this.getAttribute('value');"
                 onset="this.setAttribute('value',val); return val;"/>
       <property name="src"
                 onget="return this.getAttribute('src');"
                 onset="this.setAttribute('src',val); return val;"/>
-    </interface>
+    </implementation>
   </binding>
   
   <binding id="browser">
-    <interface>
+    <implementation>
       <property name="webBrowser"
                 readonly="true"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).webBrowser"/>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="editor">
-    <interface>
+    <implementation>
       <property name="editorShell"
                 readonly="true"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).editorShell"/>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="iframe">
-    <interface>
+    <implementation>
       <property name="docShell"
                 readonly="true"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIIFrameBoxObject).docShell"/>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="titledbox">

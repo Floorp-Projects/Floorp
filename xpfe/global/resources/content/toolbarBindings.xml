@@ -33,7 +33,7 @@ Contributor(s):
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="toolbargrippy" extends="xul:button">
-    <interface>
+    <implementation>
       <property name="collapsed">
         <getter>
           return this.getAttribute("moz_grippy_collapsed");
@@ -69,7 +69,7 @@ Contributor(s):
         ]]>
         </body>
       </method>
-    </interface>  
+    </implementation>  
   </binding>  
 
   <binding id="toolbox" extends="xul:box">
@@ -82,7 +82,7 @@ Contributor(s):
         <xul:spring flex="1" class="collapsed-tray-spring"/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <method name="collapseToolbar">
         <argument name="toolbar"/>
         <body>
@@ -186,9 +186,9 @@ Contributor(s):
           return val;
         </setter>
       </property>
-    </interface>
+    </implementation>
     <handlers>
-      <handler type="bindingattached">
+      <handler event="bindingattached">
         this.init(event);
       </handler>
     </handlers>
@@ -203,7 +203,7 @@ Contributor(s):
         <children/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <method name="findNodeByAttribute">
         <argument name="aAttribute"/>
         <argument name="aValue"/>
@@ -221,7 +221,7 @@ Contributor(s):
         ]]>
         </body>
       </method>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="menubar" extends="xul:menubar">
@@ -233,7 +233,7 @@ Contributor(s):
         <children/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <method name="findNodeByAttribute">
         <argument name="aAttribute"/>
         <argument name="aValue"/>
@@ -251,7 +251,7 @@ Contributor(s):
         ]]>
         </body>
       </method>
-    </interface>
+    </implementation>
   </binding>
           
 </bindings>          

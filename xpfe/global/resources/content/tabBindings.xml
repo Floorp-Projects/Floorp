@@ -6,8 +6,8 @@
 
   <binding id="tabcontrol" extends="xul:box">
     <content orient="vertical" excludes="*"/>
-    <!-- pass-through interface -->
-    <interface>
+    <!-- pass-through implementation -->
+    <implementation>
       <property name="selectedTab">
         <setter>
         <![CDATA[
@@ -25,11 +25,11 @@
         ]]>
         </getter>
       </property>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="tabbox" extends="xul:box">
-    <interface>
+    <implementation>
       <property name="selectedTab">
         <getter>
         <![CDATA[
@@ -65,9 +65,9 @@
         ]]>
         </setter>
       </property>
-    </interface>
+    </implementation>
     <handlers>
-      <handler name="bindingattached">
+      <handler event="bindingattached">
       <![CDATA[
         // first and last tabs need to be able to have unique styles
         // and also need to select first tab on startup. 
@@ -87,12 +87,12 @@
   </binding>
   
   <binding id="tabpanel" extends="xul:deck">
-    <interface>
+    <implementation>
       <!-- should be defined on deck! -->
       <property name="index"
                 onget="return this.getAttribute('index');"
                 onset="this.setAttribute('index',val); return val;"/>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="tab" extends="xul:button">
@@ -102,7 +102,7 @@
         <xul:text class="tab-text" inherits="value,accesskey,crop"/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <property name="value">
         <getter>
           return this.getAttribute("value");
@@ -129,9 +129,9 @@
           return val;
         </setter>
       </property>
-    </interface>
+    </implementation>
     <handlers>
-      <handler type="click">
+      <handler event="click">
       <![CDATA[
         var tabbox = this.parentNode;
         while (tabbox.localName != "tabcontrol") {

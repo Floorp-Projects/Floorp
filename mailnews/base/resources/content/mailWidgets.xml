@@ -15,7 +15,7 @@
         </xul:box>
     </content>
     
-    <interface>  
+    <implementation>  
       <property name="value"      onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('value',val);"
                                   onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('value');"/>
       <property name="crop"       onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('crop',val);"
@@ -47,7 +47,7 @@
           ]]>
         </body>
       </method>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="search-menulist-abstract" name="searchMenulistAbstract" extends="xul:box">
@@ -57,7 +57,7 @@
       </xul:menulist>
     </content>
 
-    <interface>
+    <implementation>
       <property readonly="true" name="validityManager">
         <![CDATA[
            Components.classes['mozilla.mail.search.validityManager.1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
@@ -192,13 +192,13 @@
           ]]>
         </body>
       </method>
-    </interface>
+    </implementation>
   </binding>
 
   <!-- searchattribute - Subject, Sender, To, CC, etc. -->
   <binding id="searchattribute" name="searchAttribute"
            extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
-    <interface>
+    <implementation>
       <property name="stringBundle">
           <![CDATA[
            srGetStrBundle("chrome://messenger/locale/search-attributes.properties");
@@ -212,13 +212,13 @@
           ]]>
         </getter>
       </property>
-    </interface>
+    </implementation>
   </binding>
 
   <!-- searchoperator - Contains, Is Less than, etc -->
   <binding id="searchoperator" name="searchOperator"
            extends="chrome://messenger/content/mailWidgets.xml#search-menulist-abstract">
-    <interface>
+    <implementation>
       <property name="stringBundle">
           <![CDATA[
             srGetStrBundle("chrome://messenger/locale/search-operators.properties");
@@ -248,7 +248,7 @@
           ]]>
         </getter>
       </property>
-    </interface>
+    </implementation>
   </binding>
 
   <!-- searchvalue - a widget which dynamically changes it's user interface
@@ -276,7 +276,7 @@
         </xul:menupopup>
       </xul:menulist>
     </content>
-    <interface>
+    <implementation>
       <!-- parentValue forwards to the attribute -->
       <property name="parentValue" onset="return this.searchAttribute=val;"
                                    onget="return this.searchAttribute;"/>
@@ -361,6 +361,122 @@
           ]]>
         </body>
       </method>
-    </interface>
+    </implementation>
+  </binding>
+  <binding id="searchterm" name="searchTerm" extends="xul:box">
+    <implementation>
+      <!-- the actual nsIMsgSearchTerm object -->
+      <property name="searchTerm" onget="return this.internalSearchTerm">
+        <setter>
+          <![CDATA[
+            this.internalSearchTerm = val;
+
+            var term = val;
+            // val is a nsIMsgSearchTerm
+            var searchAttribute=this.searchattribute;
+            var searchOperator=this.searchoperator;
+            var searchValue=this.searchvalue;
+
+            // now reflect all attributes of the searchterm into the widgets
+            if (searchAttribute) searchAttribute.value = term.attrib;
+            if (searchOperator) searchOperator.value = val.op;
+            if (searchValue) searchValue.value = term.value;
+
+            this.booleanAnd = val.booleanAnd;
+          ]]>
+        </setter>
+      </property>
+ 
+      <property name="searchScope">
+        <getter>
+          <![CDATA[
+             var searchAttribute = this.searchattribute;
+             if (searchAttribute)
+               return searchAttribute.searchScope;
+             return undefined;
+           ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            var searchAttribute = this.searchattribute;
+            if (searchAttribute) searchAttribute.searchScope=val;
+           ]]>
+        </setter>
+      </property>
+      <!-- the three tags that make up a term - to use, set the
+           attribute in the XUL to the ID of the term.
+        -->
+      <property name="searchattribute" 
+                onget="return document.getElementById(this.getAttribute('searchattribute'));"
+                onset="this.setAttribute('searchattribute',val.id)"/>
+
+      <property name="searchoperator" 
+                onget="return document.getElementById(this.getAttribute('searchoperator'));"
+                onset="this.setAttribute('searchoperator',val.id)"/>
+
+      <property name="searchvalue" 
+                onget="return document.getElementById(this.getAttribute('searchvalue'));"
+                onset="this.setAttribute('searchvalue',val.id)"/>
+      <property name="booleanNodes">
+        <![CDATA[
+          null;
+        ]]>
+      </property>
+      <property name="stringBundle">
+          <![CDATA[
+             srGetStrBundle("chrome://messenger/locale/search.properties");
+          ]]>
+      </property>
+      <property name="booleanAnd" onget="return this.internalBooleanAnd">
+        <setter>
+          <![CDATA[
+            // whenever you set this, all nodes in booleanNodes
+            // are updated to reflect the string
+
+            if (this.internalBooleanAnd == val) return;
+            this.internalBooleanAnd = val;
+
+            var booleanNodes = this.booleanNodes;
+            if (!booleanNodes) return;
+
+            var stringBundle = this.stringBundle;
+            var andString = val ? "And" : "Or";
+            for (var i=0; i<booleanNodes.length; i++) {
+              try {              
+                var staticString =
+                    stringBundle.GetStringFromName("search" + andString + i);
+                if (staticString && staticString.length>0)
+                    booleanNodes[i].setAttribute("value", staticString);
+              } catch (ex) { /* no error, means string not found */}
+            }
+          ]]>
+        </setter>
+      </property>
+      <method name="save">
+        <body>
+          <![CDATA[
+            var searchTerm = this.searchTerm;
+            searchTerm.attrib = this.searchattribute.value;
+            searchTerm.op = this.searchoperator.value;
+            if (this.searchvalue.value)
+              this.searchvalue.save();
+            else
+              this.searchvalue.saveTo(searchTerm.value);
+            searchTerm.value = this.searchvalue.value;
+            searchTerm.booleanAnd = this.booleanAnd;
+          ]]>
+        </body>
+      </method>
+      <!-- if you have a search term element with no search term -->
+      <method name="saveTo">
+        <argument name="searchTerm"/>
+        <body>
+          <![CDATA[
+            this.internalSearchTerm = searchTerm;
+            this.save();
+          ]]>
+        </body>
+      </method>
+    </implementation>
   </binding>
 </bindings>

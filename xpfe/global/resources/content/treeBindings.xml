@@ -6,7 +6,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <binding id="treeitem">
-    <interface>
+    <implementation>
       <method name="toggleOpenState">
         <body>
           <![CDATA[
@@ -41,7 +41,7 @@
           ]]>
         </body>
      </method>    
-   </interface>
+   </implementation>
   </binding>     
 
   <binding id="treecell-indented-folder">
@@ -106,7 +106,7 @@
         <children includes="treehead,treechildren"/>
       </xul:treerows> 
     </content>
-    <interface>
+    <implementation>
       <property name="selectedIndex"
                 onget="return (this.selectedItems.length > 0 ? this.getIndexOfItem(this.selectedItems[0]) : -1)"
                 onset="if(val>=0){var item=this.getItemAtIndex(val); if(item) this.selectItem(item);} else this.clearItemSelection();"
@@ -173,23 +173,23 @@
           return this.treeBoxObject.getRowCount();
         </body>
       </method>
-    </interface>
+    </implementation>
     <handlers>
-      <handler type="keypress" keycode="vk_enter">
+      <handler event="keypress" keycode="vk_enter">
         <![CDATA[
          if (event.target != this || selectedItems.length != 1)
            return;
          this.selectedItems[0].toggleOpenState();
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_return">
+      <handler event="keypress" keycode="vk_return">
         <![CDATA[
          if (event.target != this || selectedItems.length != 1)
            return;
          this.selectedItems[0].toggleOpenState();
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_left">
+      <handler event="keypress" keycode="vk_left">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
@@ -203,14 +203,14 @@
          }
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_right">
+      <handler event="keypress" keycode="vk_right">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
          this.selectedItems[0].open();
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_up">
+      <handler event="keypress" keycode="vk_up">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
@@ -221,7 +221,7 @@
          }
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_down">
+      <handler event="keypress" keycode="vk_down">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
@@ -232,7 +232,7 @@
          }
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_page_up">
+      <handler event="keypress" keycode="vk_page_up">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
@@ -257,7 +257,7 @@
          }
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_page_down">
+      <handler event="keypress" keycode="vk_page_down">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
@@ -283,7 +283,7 @@
          }
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_home">
+      <handler event="keypress" keycode="vk_home">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
@@ -291,7 +291,7 @@
          this.selectItem(this.getItemAtIndex(0));
         ]]>
       </handler>
-      <handler type="keypress" keycode="vk_end">
+      <handler event="keypress" keycode="vk_end">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
@@ -308,7 +308,7 @@
     <handlers>
       <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
-      <handler type="mousedown" shift="false" control="false"
+      <handler event="mousedown" shift="false" control="false"
            meta="false" alt="false">
       <![CDATA[
          if (event.target.localName == 'treecell') {
@@ -323,7 +323,7 @@
 
       <!-- On a click (up+down on the same item), deselect everything
            except this item. -->
-      <handler type="click" shift="false" control="false" meta="false"
+      <handler event="click" shift="false" control="false" meta="false"
            alt="false">
       <![CDATA[
          if (event.target.localName == 'treecell') {
@@ -340,7 +340,7 @@
       </handler>
 
       <!-- For discontinuous selection of items -->
-      <handler type="click" shift="false" control="true" alt="false">
+      <handler event="click" shift="false" control="true" alt="false">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            parentNode.toggleItemSelection(event.target.parentNode.parentNode);
@@ -350,7 +350,7 @@
       </handler>
 
       <!-- Same as above, but this one is for the Mac Command key -->
-      <handler type="click" shift="false" meta="true">
+      <handler event="click" shift="false" meta="true">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            parentNode.toggleItemSelection(event.target.parentNode.parentNode);
@@ -360,7 +360,7 @@
       </handler>
 
       <!-- For continuous selection of items -->
-      <handler type="click" shift="true" control="false" meta="false">
+      <handler event="click" shift="true" control="false" meta="false">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            parentNode.selectItemRange(null, event.target.parentNode.parentNode);
@@ -370,7 +370,7 @@
       </handler>
 
       <!-- double-click -->
-      <handler type="click" shift="false" control="false" meta="false" clickcount="2">
+      <handler event="click" shift="false" control="false" meta="false" clickcount="2">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            var n = event.target.parentNode.parentNode;
@@ -380,7 +380,7 @@
       </handler>
 
       <!-- normal, single click -->
-      <handler type="click" shift="false" control="false" meta="false">
+      <handler event="click" shift="false" control="false" meta="false">
       <![CDATA[
          if (event.target.getAttribute('twisty') == 'true') {
            var n = event.target.parentNode.parentNode.parentNode;
