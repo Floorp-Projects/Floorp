@@ -24,6 +24,7 @@
 
 class nsIMAPBodyShellCache;
 class nsIMAPBodyShell;
+class nsIImapIncomingServer;
 
 // 2a8e21fe-e3c4-11d2-a504-0060b0fc04b7
 
@@ -105,7 +106,7 @@ public:
 	 NS_IMETHOD		GetNumberOfNamespacesForHost(const char *hostname, const char *userName, PRUint32 &result) = 0;
 	 NS_IMETHOD		GetNamespaceNumberForHost(const char *hostname, const char *userName, PRInt32 n, nsIMAPNamespace * &result) = 0;
 	 // ### dmb hoo boy, how are we going to do this?
-	 NS_IMETHOD		CommitNamespacesForHost(const char *hostname, const char *userName) = 0;
+	 NS_IMETHOD		CommitNamespacesForHost(nsIImapIncomingServer *server) = 0;
 	 NS_IMETHOD		FlushUncommittedNamespacesForHost(const char *hostName, const char *userName, PRBool &result) = 0;
 
 

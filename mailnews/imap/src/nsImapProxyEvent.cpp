@@ -1467,28 +1467,6 @@ nsImapMiscellaneousSinkProxy::PercentProgress(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::PastPasswordCheck(nsIImapProtocol* aProtocol)
-{
-    nsresult res = NS_OK;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        PastPasswordCheckProxyEvent *ev =
-            new PastPasswordCheckProxyEvent(this);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->PastPasswordCheck(aProtocol);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::TunnelOutStream(nsIImapProtocol* aProtocol,
                                           msg_line_info* aInfo)
 {
@@ -3029,26 +3007,6 @@ PercentProgressProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->PercentProgress(
         m_proxy->m_protocol, &m_progressInfo);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-PastPasswordCheckProxyEvent::PastPasswordCheckProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-}
-
-PastPasswordCheckProxyEvent::~PastPasswordCheckProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-PastPasswordCheckProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->PastPasswordCheck(
-        m_proxy->m_protocol);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

@@ -91,7 +91,6 @@ private:
     nsCOMPtr<nsISupportsArray> m_urlQueue;
     nsVoidArray					m_urlConsumers;
 	PRUint32					m_capability;
-	PRBool						m_gotNamespaces;
 };
 
 
@@ -128,7 +127,6 @@ nsImapIncomingServer::nsImapIncomingServer() : m_rootFolderPath(nsnull)
 	rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
     rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));
 	m_capability = kCapabilityUndefined;
-	m_gotNamespaces = PR_FALSE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -1150,18 +1148,96 @@ NS_IMETHODIMP  nsImapIncomingServer::SetCapability(PRUint32 capability)
 
 NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 {
-	char * hostName = nsnull;
-	char * userName = nsnull;
-	
-	nsresult rv = GetHostName(&hostName);
-	rv = GetUsername(&userName);
-	
 
+	nsresult rv;
 	NS_WITH_SERVICE(nsIImapHostSessionList, hostSession, kCImapHostSessionList, &rv);
     if (NS_FAILED(rv)) 
 		return rv;
-	m_gotNamespaces = PR_TRUE;	// so we only issue NAMESPACE once per host per session.
 
-	return hostSession->CommitNamespacesForHost(hostName, userName);
+	return hostSession->CommitNamespacesForHost(this);
 
 }
+
+NS_IMETHODIMP nsImapIncomingServer::ResetNamespaceReferences()
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+#if FINISHED_PORTED_NAMESPACE_STUFF
+		int numberOfChildren = GetNumSubFolders();
+	for (int childIndex = 0; childIndex < numberOfChildren; childIndex++)
+	{
+		MSG_IMAPFolderInfoMail *currentChild = (MSG_IMAPFolderInfoMail *) GetSubFolder(childIndex);
+		currentChild->ResetNamespaceReferences();
+	}
+
+	void MSG_IMAPFolderInfoMail::SetFolderIsNamespace(XP_Bool isNamespace)
+{
+	m_folderIsNamespace = isNamespace;
+}
+
+void MSG_IMAPFolderInfoMail::InitializeFolderCreatedOffline()
+{
+	TIMAPNamespace *ns = IMAPNS_GetNamespaceForFolder(m_host->GetHostName(), GetOnlineName(), '/');
+	SetOnlineHierarchySeparator(IMAPNS_GetDelimiterForNamespace(ns));
+}
+
+TIMAPNamespace *MSG_IMAPFolderInfoMail::GetNamespaceForFolder()
+{
+	if (!m_namespace)
+	{
+#ifdef DEBUG_bienvenu
+		// Make sure this isn't causing us to open the database
+		XP_ASSERT(m_OnlineHierSeparator != kOnlineHierarchySeparatorUnknown);
+#endif
+		m_namespace = IMAPNS_GetNamespaceForFolder(m_host->GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator());
+		XP_ASSERT(m_namespace);
+		if (m_namespace)
+		{
+			IMAPNS_SuggestHierarchySeparatorForNamespace(m_namespace, GetOnlineHierarchySeparator());
+			m_folderIsNamespace = IMAPNS_GetFolderIsNamespace(m_host->GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator(), m_namespace);
+		}
+	}
+	return m_namespace;
+}
+
+void MSG_IMAPFolderInfoMail::SetNamespaceForFolder(TIMAPNamespace *ns)
+{
+#ifdef DEBUG_bienvenu
+	NS_ASSERTION(ns, "null namespace");
+#endif
+	m_namespace = ns;
+}
+
+void MSG_IMAPFolderInfoMail::ResetNamespaceReferences()
+{
+	// this
+	m_namespace = IMAPNS_GetNamespaceForFolder(GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator());
+	NS_ASSERTION(m_namespace, "resetting null namespace");
+	if (m_namespace)
+		m_folderIsNamespace = IMAPNS_GetFolderIsNamespace(GetHostName(), GetOnlineName(), GetOnlineHierarchySeparator(), m_namespace);
+	else
+		m_folderIsNamespace = FALSE;
+
+	// children
+	int numberOfChildren = GetNumSubFolders();
+	for (int childIndex = 0; childIndex < numberOfChildren; childIndex++)
+	{
+		MSG_IMAPFolderInfoMail *currentChild = (MSG_IMAPFolderInfoMail *) GetSubFolder(childIndex);
+		currentChild->ResetNamespaceReferences();
+	}
+}
+
+#endif  //FINISHED_PORTED_NAMESPACE_STUFF
+
+NS_IMETHODIMP  nsImapIncomingServer::SetUserAuthenticated(PRBool authenticated)
+{
+	return NS_OK;
+}
+
+/* void SetMailServerUrls (in string manageMailAccount, in string manageLists, in string manageFilters); */
+NS_IMETHODIMP  nsImapIncomingServer::SetMailServerUrls(const char *manageMailAccount, const char *manageLists, const char *manageFilters)
+{
+	return NS_OK;
+}
+

@@ -30,5 +30,7 @@ interface nsIImapServerSink : nsISupports {
 	void FEAlertFromServer(in string aString);
 	void CommitNamespaces();
 	void PromptForPassword(out string aString);
+	void SetUserAuthenticated(in boolean authenticated);
+	void SetMailServerUrls(in string manageMailAccount, in string manageLists, in string manageFilters);
 };
 

@@ -62,7 +62,6 @@ public:
 	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol, PRUint32 aMsgId, const char *extraInfo) = 0;
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
 														 ProgressInfo* aInfo) = 0;
-	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol) = 0;
 	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
 														 msg_line_info* aInfo) = 0;
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,

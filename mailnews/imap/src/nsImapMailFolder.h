@@ -279,7 +279,6 @@ public:
                               PRUint32 aMsgId, const char *extraInfo);
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
-	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);
 	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
                                msg_line_info* aInfo);
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,

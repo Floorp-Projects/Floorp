@@ -87,10 +87,10 @@ nsImapMailFolder::nsImapMailFolder() :
 
     // Get current thread envent queue
 
-	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
-    if (NS_SUCCEEDED(rv) && pEventQService)
-        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
-                                            getter_AddRefs(m_eventQueue));
+//	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+//    if (NS_SUCCEEDED(rv) && pEventQService)
+//        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+//                                            getter_AddRefs(m_eventQueue));
 	m_moveCoalescer = nsnull;
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
 	m_tempMsgFileSpec += "tempMessage.eml";
@@ -447,7 +447,12 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsISimpleEnumerator* *result)
 	// don't run select if we're already running a url/select...
 	if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
 	{
-		rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull, nsnull);
+		nsCOMPtr <nsIEventQueue> eventQ;
+		NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+		if (NS_SUCCEEDED(rv) && pEventQService)
+			pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+												getter_AddRefs(eventQ));
+		rv = imapService->SelectFolder(eventQ, this, this, nsnull, nsnull);
 		m_urlRunning = PR_TRUE;
 	}
 
@@ -1198,7 +1203,12 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages()
 		PRUint32 numFolders;
 		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
 	}
-    rv = imapService->SelectFolder(m_eventQueue, inbox, this, nsnull, nsnull);
+		nsCOMPtr <nsIEventQueue> eventQ;
+		NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+		if (NS_SUCCEEDED(rv) && pEventQService)
+			pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+												getter_AddRefs(eventQ));
+    rv = imapService->SelectFolder(eventQ, inbox, this, nsnull, nsnull);
     return rv;
 }
 
@@ -2865,11 +2875,17 @@ nsImapMailFolder::GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
 NS_IMETHODIMP
 nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
+	nsresult rv;
 	if (mDatabase)
 		mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
 	if (m_moveCoalescer)
 	{
-		m_moveCoalescer->PlaybackMoves (m_eventQueue);
+		nsCOMPtr <nsIEventQueue> eventQ;
+		NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+		if (NS_SUCCEEDED(rv) && pEventQService)
+			pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+												getter_AddRefs(eventQ));
+		m_moveCoalescer->PlaybackMoves (eventQ);
 		delete m_moveCoalescer;
 		m_moveCoalescer = nsnull;
 	}
@@ -2975,12 +2991,6 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
 	}
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::PastPasswordCheck(nsIImapProtocol* aProtocol)
-{
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

@@ -140,6 +140,13 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
   static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID); 
 
+  if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID()))
+  {
+	  *aInstancePtr = (nsIRunnable *) this;
+	  NS_ADDREF_THIS();
+	  return NS_OK;
+  }
+
   if (aIID.Equals(nsIStreamListener::GetIID())) 
   {
 	  *aInstancePtr = (nsIStreamListener *) this;                                                   
@@ -154,7 +161,7 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
   }
   if (aIID.Equals(kISupportsIID)) 
   {
-	  *aInstancePtr = (void*) ((nsISupports*)this);
+	  *aInstancePtr = (void*) ((nsISupports*) (nsIImapProtocol *) this);
 	  NS_ADDREF_THIS();
     return NS_OK;                                                        
   }                                                                      
@@ -268,10 +275,20 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 		m_fetchBodyListMonitor = PR_NewMonitor();
 
 		SetFlag(IMAP_FIRST_PASS_IN_THREAD);
-        m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
-                                   this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
-                                   PR_UNJOINABLE_THREAD, 0);
-        NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
+//        m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
+  //                                 this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+    //                               PR_UNJOINABLE_THREAD, 0);
+      nsIThread* workerThread = nsnull;
+ 
+		nsresult rv = NS_NewThread(&workerThread, this, 0, PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+             PR_UNJOINABLE_THREAD);
+		if (NS_FAILED(rv)) 
+		{
+			NS_ASSERTION(workerThread, "Unable to create imap thread.\n");
+			return rv;
+		}
+		workerThread->GetPRThread(&m_thread);
+
     }
 	return NS_OK;
 }
@@ -518,19 +535,19 @@ void nsImapProtocol::ReleaseUrlState()
 
 }
 
-void nsImapProtocol::ImapThreadMain(void *aParm)
+NS_IMETHODIMP nsImapProtocol::Run()
 {
-    nsImapProtocol *me = (nsImapProtocol *) aParm;
+    nsImapProtocol *me = this;
 	nsresult result = NS_OK;
     NS_ASSERTION(me, "Yuk, me is null.\n");
     
-    PR_CEnterMonitor(aParm);
+    PR_CEnterMonitor(this);
     NS_ASSERTION(me->m_imapThreadIsRunning == PR_FALSE, 
                  "Oh. oh. thread is already running. What's wrong here?");
     if (me->m_imapThreadIsRunning)
     {
         PR_CExitMonitor(me);
-        return;
+        return NS_OK;
     }
 
 
@@ -545,7 +562,7 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
     if (NS_FAILED(result) || !me->m_eventQueue)
     {
         PR_CExitMonitor(me);
-        return;
+        return result;
     }
     me->m_imapThreadIsRunning = PR_TRUE;
     PR_CExitMonitor(me);
@@ -578,6 +595,7 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
     me->m_imapMiscellaneousSink = null_nsCOMPtr();
 
     NS_RELEASE(me);
+	return NS_OK;
 }
 
 PRBool
@@ -702,17 +720,20 @@ nsImapProtocol::ImapThreadMainLoop()
 
         err = PR_Wait(m_urlReadyToRunMonitor, sleepTime);
 
+        PR_ExitMonitor(m_urlReadyToRunMonitor);
         if (err == PR_FAILURE && PR_PENDING_INTERRUPT_ERROR == PR_GetError()) 
+		{
 			break;
+		}
 
 //		m_eventQueue->ProcessPendingEvents();
+//		m_sinkEventQueue->ProcessPendingEvents();
 
 		if (m_nextUrlReadyToRun && m_runningUrl)
 			ProcessCurrentURL();
 
 		m_nextUrlReadyToRun = PR_FALSE;
 
-        PR_ExitMonitor(m_urlReadyToRunMonitor);
     }
     m_imapThreadIsRunning = PR_FALSE;
 }
@@ -899,7 +920,6 @@ void nsImapProtocol::ProcessCurrentURL()
         HandleCurrentUrlError(); 
 
 	nsresult rv = NS_OK;
-
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
     if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
     {
@@ -913,7 +933,7 @@ void nsImapProtocol::ProcessCurrentURL()
 
 	if (m_runningUrl)
 		rv = m_runningUrl->GetCopyState(getter_AddRefs(copyState));
-    if (NS_SUCCEEDED(rv) && m_imapMiscellaneousSink && copyState)
+    if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && m_imapMiscellaneousSink && copyState)
     {
         m_imapMiscellaneousSink->CopyNextStreamMessage(this, copyState);
         WaitForFEEventCompletion();
@@ -924,7 +944,7 @@ void nsImapProtocol::ProcessCurrentURL()
 	m_runningUrl = null_nsCOMPtr();
 
 	// now try queued urls, now that we've released this connection.
-	if (m_server && m_imapMiscellaneousSink)
+	if (m_server && m_imapMiscellaneousSink && GetConnectionStatus() >= 0)
 	{
 		nsCOMPtr<nsIImapIncomingServer>	aImapServer  = do_QueryInterface(m_server, &rv);
 		if (NS_SUCCEEDED(rv))
@@ -934,6 +954,15 @@ void nsImapProtocol::ProcessCurrentURL()
 	}
 	// release the url as we are done with it...
 	ReleaseUrlState();
+	if (GetConnectionStatus() < 0)
+	{
+		nsCOMPtr<nsIImapIncomingServer>	aImapServer  = do_QueryInterface(m_server, &rv);
+		if (NS_SUCCEEDED(rv))
+			aImapServer->RemoveConnection(this);
+        TellThreadToDie(PR_TRUE);
+
+	}
+
 }
 
 void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString)
@@ -2845,7 +2874,6 @@ NS_IMETHODIMP nsImapProtocol::GetSupportedUserFlags(PRUint16 *supportedFlags)
 }
 void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)
 {
-//   	PastPasswordCheckEvent();
 
 	PRInt32 msgCountLeft = msgCount;
 	PRUint32 msgsDownloaded = 0;
@@ -4471,6 +4499,22 @@ void nsImapProtocol::XServerInfo()
         ParseIMAPandCheckForNewMail();
 }
 
+void nsImapProtocol::Netscape()
+{
+    ProgressEventFunctionUsingId (IMAP_GETTING_SERVER_INFO);
+    IncrementCommandTagNumber();
+    
+  	nsCString command(GetServerCommandTag());
+  
+	command.Append(" netscape" CRLF);
+          
+    nsresult rv = SendData(command.GetBuffer());
+    if (NS_SUCCEEDED(rv))
+        ParseIMAPandCheckForNewMail();
+}
+
+
+
 void nsImapProtocol::XMailboxInfo(const char *mailboxName)
 {
 
@@ -5670,50 +5714,31 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
 void nsImapProtocol::ProcessAfterAuthenticated()
 {
 	// mscott: ignore admin url stuff for now...
-#ifdef UNREADY_CODE
 	// if we're a netscape server, and we haven't got the admin url, get it
-	if (!TIMAPHostInfo::GetHostHasAdminURL(fCurrentUrl->GetUrlHost()))
+	PRBool hasAdminUrl = PR_TRUE;
+
+	if (NS_SUCCEEDED(m_hostSessionList->GetHostHasAdminURL(GetImapHostName(), GetImapUserName(), hasAdminUrl)) 
+		&& !hasAdminUrl)
 	{
-		if (GetServerStateParser().GetCapabilityFlag() & kXServerInfoCapability)
+		if (GetServerStateParser().ServerHasServerInfo())
 		{
 			XServerInfo();
-			if (GetServerStateParser().LastCommandSuccessful()) 
+			if (GetServerStateParser().LastCommandSuccessful() && m_imapServerSink) 
 			{
-				TImapFEEvent *alertEvent = 
-					new TImapFEEvent(msgSetMailServerURLs,  // function to call
-									 this,                // access to current entry
-									 (void *) fCurrentUrl->GetUrlHost(),
-									 PR_TRUE);            
-				if (alertEvent)
-				{
-					fFEEventQueue->AdoptEventToEnd(alertEvent);
-					// WaitForFEEventCompletion();
-				}
-				else
-					HandleMemoryFailure();
+				m_imapServerSink->SetMailServerUrls(GetServerStateParser().GetMailAccountUrl(),
+					GetServerStateParser().GetManageListsUrl(),
+					GetServerStateParser().GetManageFiltersUrl());
 			}
 		}
-		else if (GetServerStateParser().GetCapabilityFlag() & kHasXNetscapeCapability)
+		else if (GetServerStateParser().ServerIsNetscape3xServer())
 		{
 			Netscape();
-			if (GetServerStateParser().LastCommandSuccessful()) 
+			if (GetServerStateParser().LastCommandSuccessful() && m_imapServerSink) 
 			{
-				TImapFEEvent *alertEvent = 
-					new TImapFEEvent(msgSetMailAccountURL,  // function to call
-									 this,                // access to current entry
-									 (void *) fCurrentUrl->GetUrlHost(),
-									 PR_TRUE);
-				if (alertEvent)
-				{
-					fFEEventQueue->AdoptEventToEnd(alertEvent);
-					// WaitForFEEventCompletion();
-				}
-				else
-					HandleMemoryFailure();
+				m_imapServerSink->SetMailServerUrls(GetServerStateParser().GetMailAccountUrl(), nsnull, nsnull);
 			}
 		}
 	}
-#endif
 
 	if (GetServerStateParser().ServerHasNamespaceCapability())
 	{

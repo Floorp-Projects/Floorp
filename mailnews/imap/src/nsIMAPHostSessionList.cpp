@@ -21,6 +21,9 @@
 #include "nsIMAPBodyShell.h"
 #include "nsIMAPNamespace.h"
 #include "nsISupportsUtils.h"
+#include "nsIImapIncomingServer.h"
+#include "nsCOMPtr.h"
+#include "nsIMsgIncomingServer.h"
 
 nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 {
@@ -42,6 +45,7 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
     fDeleteIsMoveToTrash = PR_TRUE;
 	fShowDeletedMessages = PR_FALSE;
     fGotNamespaces = PR_FALSE;
+	fHaveAdminURL = PR_FALSE;
 	fNamespacesOverridable = PR_TRUE;
 	fTempNamespaceList = nsIMAPNamespaceList::CreatensIMAPNamespaceList();
 }
@@ -112,7 +116,7 @@ nsIMAPHostInfo *nsIMAPHostSessionList::FindHost(const char *hostName, const char
 	// ### should also check userName here, if NON NULL
 	for (host = fHostInfoList; host; host = host->fNextHost)
 	{
-		if (!PL_strcasecmp(hostName, host->fHostName))
+		if (!PL_strcasecmp(hostName, host->fHostName) && !PL_strcasecmp(userName, host->fUserName)) 
 			return host;
 	}
 	return host;
@@ -566,14 +570,41 @@ NS_IMETHODIMP	nsIMAPHostSessionList::GetNamespaceNumberForHost(const char *hostN
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
+nsresult nsIMAPHostSessionList::SetNamespacesPrefForHost(nsIImapIncomingServer *aHost, EIMAPNamespaceType type, char *pref)
+{
+	if (type == kPersonalNamespace)
+		aHost->SetPersonalNamespace(pref);
+	else if (type == kPublicNamespace)
+		aHost->SetPublicNamespace(pref);
+	else if (type == kOtherUsersNamespace)
+		aHost->SetOtherUsersNamespace(pref);
+	else
+		NS_ASSERTION(PR_FALSE, "bogus namespace type");
+	return NS_OK;
+
+}
 // do we need this? What should we do about the master thing?
 // Make sure this is running in the Mozilla thread when called
-NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(const char *hostName, const char *userName)
+NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(nsIImapIncomingServer *aHost)
 {
+	char * hostName = nsnull;
+	char * userName = nsnull;
+	
+	if (!aHost)
+		return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr <nsIMsgIncomingServer> incomingServer = do_QueryInterface(aHost);
+	if (!incomingServer)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = incomingServer->GetHostName(&hostName);
+	rv = incomingServer->GetUsername(&userName);
+	
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
 	{
+		host->fGotNamespaces = PR_TRUE;	// so we only issue NAMESPACE once per host per session.
 		EIMAPNamespaceType type = kPersonalNamespace;
 		for (int i = 1; i <= 3; i++)
 		{
@@ -596,7 +627,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(const char *hostNam
 			int32 numInNS = host->fNamespaceList->GetNumberOfNamespaces(type);
 			if (numInNS == 0)
 			{
-//				MSG_SetNamespacePrefixes(master, host->fHostName, type, NULL);
+				SetNamespacesPrefForHost(aHost, type, NULL);
 			}
 			else if (numInNS >= 1)
 			{
@@ -620,7 +651,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(const char *hostNam
 				}
 				if (pref)
 				{
-//					MSG_SetNamespacePrefixes(master, host->fHostName, type, pref);
+					SetNamespacesPrefForHost(aHost, type, pref);
 					PR_Free(pref);
 				}
 			}
@@ -630,7 +661,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::CommitNamespacesForHost(const char *hostNam
 		
 		// Now reset all of libmsg's namespace references.
 		// Did I mention this needs to be running in the mozilla thread?
-//		MSG_ResetNamespaceReferences(master, host->fHostName);
+		aHost->ResetNamespaceReferences();
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;

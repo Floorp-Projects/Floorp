@@ -38,6 +38,7 @@
 #include "nsIWebShell.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsISupportsArray.h"
+#include "nsIThread.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -54,7 +55,7 @@ class nsIWebShell;
 #define	IMAP_CONNECTION_IS_OPEN		0x00000004  /* is the connection currently open? */
 #define IMAP_WAITING_FOR_DATA		0x00000008
 
-class nsImapProtocol : public nsIImapProtocol
+class nsImapProtocol : public nsIImapProtocol, public nsIRunnable
 {
 public:
 
@@ -63,6 +64,9 @@ public:
 	nsImapProtocol();
 	
 	virtual ~nsImapProtocol();
+
+    // nsIRunnable method
+    NS_IMETHOD Run();
 
 	//////////////////////////////////////////////////////////////////////////////////
 	// we support the nsIImapProtocol interface
@@ -221,6 +225,7 @@ public:
 	void Logout();
 	void Noop();
 	void XServerInfo();
+	void Netscape();
 	void XMailboxInfo(const char *mailboxName);
 	void MailboxData();
 	void GetMyRightsForFolder(const char *mailboxName);
@@ -307,7 +312,7 @@ private:
 	PRMonitor	 *m_fetchBodyListMonitor;
 
     PRBool       m_imapThreadIsRunning;
-    static void ImapThreadMain(void *aParm);
+//    static void ImapThreadMain(void *aParm);
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
     PRInt32				 m_connectionStatus;

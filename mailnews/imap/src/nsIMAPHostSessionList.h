@@ -24,6 +24,7 @@
 #include "nspr.h"
 
 class nsIMAPNamespaceList;
+class nsIImapIncomingServer;
 
 class nsIMAPHostInfo
 {
@@ -130,7 +131,7 @@ public:
 	 NS_IMETHOD		GetNumberOfNamespacesForHost(const char *hostName, const char *userName, PRUint32 &result);
 	 NS_IMETHOD		GetNamespaceNumberForHost(const char *hostName, const char *userName, PRInt32 n, nsIMAPNamespace * &result);
 	 // ### dmb hoo boy, how are we going to do this?
-	 NS_IMETHOD		CommitNamespacesForHost(const char *hostName, const char *userName);
+	 NS_IMETHOD		CommitNamespacesForHost(nsIImapIncomingServer *host);
 	 NS_IMETHOD		FlushUncommittedNamespacesForHost(const char *hostName, const char *userName, PRBool &result);
 
 	// Hierarchy Delimiters
@@ -145,6 +146,8 @@ public:
 	PRMonitor		*gCachedHostInfoMonitor;
 	nsIMAPHostInfo	*fHostInfoList;
 protected:
+	nsresult SetNamespacesPrefForHost(nsIImapIncomingServer *aHost, EIMAPNamespaceType type, char *pref);
+
 	nsIMAPHostInfo *FindHost(const char *hostName, const char *userName);
 };
 

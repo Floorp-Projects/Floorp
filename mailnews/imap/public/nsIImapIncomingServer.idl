@@ -43,7 +43,7 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean offlineDownload;
   attribute boolean overrideNamespaces;
   attribute boolean usingSubscription;
-    
+  
   nsIURI GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
                                            in nsIImapUrl aImapUrl,
                                            in nsIUrlListener aUrlListener,
@@ -52,4 +52,5 @@ interface nsIImapIncomingServer : nsISupports {
   void LoadNextQueuedUrl();
 
   void RemoveConnection(in nsIImapProtocol aImapConnection);
+  void ResetNamespaceReferences();
 };
