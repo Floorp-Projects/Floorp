@@ -2106,6 +2106,7 @@ os2*)
 esac
 AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
 AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h sys/filio.h)
+AC_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
 
 dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
@@ -2350,7 +2351,6 @@ dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs memmove usleep rint)
-AC_CHECK_HEADERS(gnu/libc-version.h)
 AC_CHECK_FUNCS(nl_langinfo)
 
 AC_CACHE_CHECK(

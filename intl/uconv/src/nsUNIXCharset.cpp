@@ -37,6 +37,9 @@
 #if HAVE_GNU_LIBC_VERSION_H
 #include <gnu/libc-version.h>
 #endif
+#ifdef HAVE_NL_TYPES_H
+#include <nl_types.h>
+#endif
 #if HAVE_NL_LANGINFO
 #include <langinfo.h>
 #endif
