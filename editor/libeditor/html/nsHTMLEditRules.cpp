@@ -2240,6 +2240,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
         if (NS_FAILED(res)) return res;
         curList = newBlock;
       }
+      prevListItem = 0;
       continue;
     }
 
@@ -2614,21 +2615,52 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
   *aHandled = PR_TRUE;
 
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
-  
-  // convert the selection ranges into "promoted" selection ranges:
-  // this basically just expands the range to include the immediate
-  // block parent, and then further expands to include any ancestors
-  // whose children are all in the range
-  
   nsCOMPtr<nsISupportsArray> arrayOfRanges;
-  res = GetPromotedRanges(aSelection, address_of(arrayOfRanges), kIndent);
-  if (NS_FAILED(res)) return res;
-  
-  // use these ranges to contruct a list of nodes to act on.
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kIndent);
-  if (NS_FAILED(res)) return res;                                 
-                                     
+  
+  // short circuit: detect case of collapsed selection inside an <li>.
+  // just sublist that <li>.  This prevents bug 97797.
+  
+  PRBool bCollapsed;
+  nsCOMPtr<nsIDOMNode> liNode;
+  res = aSelection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (bCollapsed) 
+  {
+    nsCOMPtr<nsIDOMNode> node, block;
+    PRInt32 offset;
+    nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(node), &offset);
+    if (NS_FAILED(res)) return res;
+    if (IsBlockNode(node)) 
+      block = node;
+    else
+      block = mHTMLEditor->GetBlockNodeParent(node);
+    if (block && nsHTMLEditUtils::IsListItem(block))
+      liNode = block;
+  }
+  
+  if (liNode)
+  {
+    res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
+    if (NS_FAILED(res)) return res;
+    nsCOMPtr<nsISupports> isupports = do_QueryInterface(liNode);
+    arrayOfNodes->AppendElement(isupports);
+  }
+  else
+  {
+    // convert the selection ranges into "promoted" selection ranges:
+    // this basically just expands the range to include the immediate
+    // block parent, and then further expands to include any ancestors
+    // whose children are all in the range
+    
+    res = GetPromotedRanges(aSelection, address_of(arrayOfRanges), kIndent);
+    if (NS_FAILED(res)) return res;
+    
+    // use these ranges to contruct a list of nodes to act on.
+    res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kIndent);
+    if (NS_FAILED(res)) return res;                                 
+  }
+  
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
