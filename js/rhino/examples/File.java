@@ -15,10 +15,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -46,7 +47,6 @@ import java.util.Vector;
  * Example of use of the File object:
  * <pre>
  * js> defineClass("File")
- * js> var file = new File("myfile.txt");
  * js> file = new File("myfile.txt");
  * [object File]
  * js> file.writeLine("one");                       <i>only now is file actually opened</i>
@@ -87,8 +87,9 @@ public class File extends ScriptableObject {
      * Otherwise System.in or System.out is assumed as appropriate
      * to the use.
      */
-    public static Scriptable js_File(Context cx, Object[] args,
-                                     Function ctorObj, boolean inNewExpr)
+    public static Scriptable jsConstructor(Context cx, Object[] args,
+                                           Function ctorObj, 
+                                           boolean inNewExpr)
     {
         File result = new File();
         if (args.length == 0 || args[0] == Context.getUndefinedValue()) {
@@ -113,7 +114,7 @@ public class File extends ScriptableObject {
      *
      * Used to define the "name" property.
      */
-    public String js_getName() {
+    public String jsGet_name() {
         return name;
     }
 
@@ -130,12 +131,12 @@ public class File extends ScriptableObject {
      * @exception JavaScriptException if a JavaScript exception occurred
      *            while creating the result array
      */
-    public Object js_readLines()
+    public Object jsFunction_readLines()
         throws IOException, JavaScriptException
     {
         Vector v = new Vector();
         String s;
-        while ((s = js_readLine()) != null) {
+        while ((s = jsFunction_readLine()) != null) {
             v.addElement(s);
         }
         Object[] lines = new Object[v.size()];
@@ -163,7 +164,7 @@ public class File extends ScriptableObject {
      *            associated with this object, or EOFException if the object
      *            reached the end of the file
      */
-    public String js_readLine() throws IOException {
+    public String jsFunction_readLine() throws IOException {
         return getReader().readLine();
     }
 
@@ -174,22 +175,7 @@ public class File extends ScriptableObject {
      *            associated with this object, or EOFException if the object
      *            reached the end of the file
      */
-    public String js_readChar() throws IOException {
-        int i = getReader().read();
-        if (i == -1)
-            return null;
-        char[] charArray = { (char) i };
-        return new String(charArray);
-    }
-
-    /**
-     * Read a block.
-     *
-     * @exception IOException if an error occurred while accessing the file
-     *            associated with this object, or EOFException if the object
-     *            reached the end of the file
-     */
-    public String js_readBlock() throws IOException {
+    public String jsFunction_readChar() throws IOException {
         int i = getReader().read();
         if (i == -1)
             return null;
@@ -207,8 +193,8 @@ public class File extends ScriptableObject {
      * @exception IOException if an error occurred while accessing the file
      *            associated with this object
      */
-    public static void js_write(Context cx, Scriptable thisObj,
-                                Object[] args, Function funObj)
+    public static void jsFunction_write(Context cx, Scriptable thisObj,
+                                        Object[] args, Function funObj)
         throws IOException
     {
         write0(thisObj, args, false);
@@ -222,14 +208,14 @@ public class File extends ScriptableObject {
      *            associated with this object
      *
      */
-    public static void js_writeLine(Context cx, Scriptable thisObj,
-                                    Object[] args, Function funObj)
+    public static void jsFunction_writeLine(Context cx, Scriptable thisObj,
+                                            Object[] args, Function funObj)
         throws IOException
     {
         write0(thisObj, args, true);
     }
 
-    public int js_getLineNumber()
+    public int jsGet_lineNumber()
         throws FileNotFoundException
     {
         return getReader().getLineNumber();
@@ -242,7 +228,7 @@ public class File extends ScriptableObject {
      * @exception IOException if an error occurred while accessing the file
      *            associated with this object
      */
-    public void js_close() throws IOException {
+    public void jsFunction_close() throws IOException {
         if (reader != null) {
             reader.close();
             reader = null;
@@ -259,7 +245,7 @@ public class File extends ScriptableObject {
      */
     public void finalize() {
         try {
-            js_close();
+            jsFunction_close();
         }
         catch (IOException e) {
         }
@@ -267,11 +253,6 @@ public class File extends ScriptableObject {
 
     /**
      * Get the Java reader.
-     *
-     * Note that we use the name "jsFunction_getReader" because if we
-     * used just "js_getReader" we'd be defining a readonly property
-     * named "reader".
-     *
      */
     public Object jsFunction_getReader() {
         if (reader == null)
