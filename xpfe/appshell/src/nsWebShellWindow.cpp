@@ -2176,7 +2176,7 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
         nsCOMPtr<nsIDocumentViewer> docViewer;
         nsCOMPtr<nsIPresContext> presContext;
         docViewer = do_QueryInterface(contentViewer);
-        if (NS_SUCCEEDED(docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+        if (docViewer && NS_SUCCEEDED(docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
           event.eventStructType = NS_EVENT;
