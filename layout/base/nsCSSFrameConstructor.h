@@ -70,7 +70,8 @@ struct nsFindFrameHint
 };
 
 class nsFrameConstructorState;
-
+class nsFrameConstructorSaveState;
+  
 class nsCSSFrameConstructor
 {
 public:
@@ -456,6 +457,34 @@ private:
                           nsIFrame*&               aParentFrame,
                           PRBool&                  aIsPseudoParent);
 
+  /**
+   * Function to adjust aParentFrame and aFrameItems to deal with table
+   * pseudo-frames that may have to be inserted.
+   * @param aChildContent the content node we want to construct a frame for
+   * @param aChildDisplay the display struct for aChildContent
+   * @param aParentFrame the frame we think should be the parent.  This will be
+   *        adjusted to point to a pseudo-frame if needed.
+   * @param aFrameItems the framelist we think we need to put the child frame
+   *        into.  If we have to construct pseudo-frames, we'll modify the
+   *        pointer to point to the list the child frame should go into.
+   * @param aState the nsFrameConstructorState we're using.
+   * @param aSaveState the nsFrameConstructorSaveState we can use for pushing a
+   *        float containing block if we have to do it.
+   * @param aCreatedPseudo whether we had to create a pseudo-parent
+   * @return NS_OK on success, NS_ERROR_OUT_OF_MEMORY and such as needed.
+   */
+  // XXXbz this function should really go away once we rework pseudo-frame
+  // handling to be better. This should simply be part of the job of
+  // GetGeometricParent, and stuff like the frameitems and parent frame should
+  // be kept track of in the state...
+  nsresult AdjustParentFrame(nsIContent* aChildContent,
+                             const nsStyleDisplay* aChildDisplay,
+                             nsIFrame* & aParentFrame,
+                             nsFrameItems* & aFrameItems,
+                             nsFrameConstructorState& aState,
+                             nsFrameConstructorSaveState& aSaveState,
+                             PRBool& aCreatedPseudo);
+  
   nsresult TableProcessChildren(nsIPresShell*            aPresShell, 
                                 nsPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
@@ -546,7 +575,8 @@ private:
                               nsIContent*              aContent,
                               nsIFrame*                aParentFrame,
                               nsStyleContext*          aStyleContext,
-                              nsFrameItems&            aFrameItems);
+                              nsFrameItems&            aFrameItems,
+                              PRBool                   aPseudoParent);
 
   nsresult ConstructPageBreakFrame(nsIPresShell*            aPresShell, 
                                    nsPresContext*          aPresContext,
@@ -575,7 +605,8 @@ private:
                               nsIAtom*                 aTag,
                               PRInt32                  aNameSpaceID,
                               nsStyleContext*          aStyleContext,
-                              nsFrameItems&            aFrameItems);
+                              nsFrameItems&            aFrameItems,
+                              PRBool                   aHasPseudoParent);
 
   nsresult ConstructFrameInternal( nsIPresShell*            aPresShell, 
                                    nsPresContext*          aPresContext,
@@ -621,7 +652,8 @@ private:
                                 nsIAtom*                 aTag,
                                 PRInt32                  aNameSpaceID,
                                 nsStyleContext*          aStyleContext,
-                                nsFrameItems&            aFrameItems);
+                                nsFrameItems&            aFrameItems,
+                                PRBool                   aHasPseudoParent);
 #endif
 
   nsresult ConstructXULFrame(nsIPresShell*            aPresShell, 
@@ -634,6 +666,7 @@ private:
                              nsStyleContext*          aStyleContext,
                              nsFrameItems&            aFrameItems,
                              PRBool                   aXBLBaseTag,
+                             PRBool                   aHasPseudoParent,
                              PRBool&                  aHaltProcessing);
 
 
@@ -647,7 +680,8 @@ private:
                              nsIAtom*                 aTag,
                              PRInt32                  aNameSpaceID,
                              nsStyleContext*          aStyleContext,
-                             nsFrameItems&            aFrameItems);
+                             nsFrameItems&            aFrameItems,
+                             PRBool                   aHasPseudoParent);
 #endif
 
 // SVG - rods
@@ -665,14 +699,15 @@ private:
                                     nsFrameItems&            aFrameItems);
 
   nsresult ConstructSVGFrame(nsIPresShell*               aPresShell,
-                                nsPresContext*          aPresContext,
-                                nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
-                                nsIFrame*                aParentFrame,
-                                nsIAtom*                 aTag,
-                                PRInt32                  aNameSpaceID,
-                                nsStyleContext*          aStyleContext,
-                                nsFrameItems&            aFrameItems);
+                             nsPresContext*          aPresContext,
+                             nsFrameConstructorState& aState,
+                             nsIContent*              aContent,
+                             nsIFrame*                aParentFrame,
+                             nsIAtom*                 aTag,
+                             PRInt32                  aNameSpaceID,
+                             nsStyleContext*          aStyleContext,
+                             nsFrameItems&            aFrameItems,
+                             PRBool                   aHasPseudoParent);
 #endif
 
   nsresult ConstructFrameByDisplayType(nsIPresShell*            aPresShell, 
@@ -684,7 +719,8 @@ private:
                                        nsIAtom*                 aTag,
                                        nsIFrame*                aParentFrame,
                                        nsStyleContext*          aStyleContext,
-                                       nsFrameItems&            aFrameItems);
+                                       nsFrameItems&            aFrameItems,
+                                       PRBool                   aHasPseudoParent);
 
   nsresult ProcessChildren(nsIPresShell*            aPresShell, 
                            nsPresContext*          aPresContext,
