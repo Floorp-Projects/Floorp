@@ -40,6 +40,7 @@
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
 #include "nsBidiUtils.h"
+#include "nsUnicharUtils.h"
 
 // Static buffer used for newline fragments
 static unsigned char sNewLineCharacter = '\n';
@@ -350,8 +351,15 @@ nsTextFragment::SetBidiFlag()
     const PRUnichar* cp = m2b;
     const PRUnichar* end = cp + mState.mLength;
     while (cp < end) {
-      PRUnichar ch = *cp++;
-      if (CHAR_IS_BIDI(ch) ) {
+      PRUnichar ch1 = *cp++;
+      PRUint32 utf32Char = ch1;
+      if (IS_HIGH_SURROGATE(ch1) &&
+          cp < end &&
+          IS_LOW_SURROGATE(*cp)) {
+        PRUnichar ch2 = *cp++;
+        utf32Char = SURROGATE_TO_UCS4(ch1, ch2);
+      }
+      if (CHAR_IS_BIDI(utf32Char) ) {
         mState.mIsBidi = PR_TRUE;
         break;
       }

@@ -932,7 +932,9 @@ nsBidiPresUtils::StripBidiControlCharacters(PRUnichar* aText,
   PRInt32 stripLen = 0;
 
   for (PRInt32 i = 0; i < aTextLength; i++) {
-    if (mBidiEngine->IsBidiControl(aText[i])) {
+    // XXX: This silently ignores surrogate characters.
+    //      As of Unicode 4.0, all Bidi control characters are within the BMP.
+    if (mBidiEngine->IsBidiControl((PRUint32)aText[i])) {
       ++stripLen;
     }
     else {

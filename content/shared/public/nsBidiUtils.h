@@ -233,7 +233,9 @@
 #define IS_ARABIC_CHAR(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
 #define IS_ARABIC_ALPHABETIC(c) (IS_ARABIC_CHAR(c) && \
                                 !(IS_HINDI_DIGIT(c) || IS_FARSI_DIGIT(c) || IS_ARABIC_SEPARATOR(c)))
+#define IS_CYPRIOT_CHAR(c) ((0x10800 <= (c)) && ((c) <=0x1083F))
 
 #define CHAR_IS_BIDI(c) ( (IS_HINDI_DIGIT(c) ) || (IS_HEBREW_CHAR(c) ) \
-                        || (IS_06_CHAR(c) ) || (IS_FE_CHAR(c) ) )
+                        || (IS_06_CHAR(c) ) || (IS_FE_CHAR(c) ) \
+                        || (IS_CYPRIOT_CHAR(c) ) )
 #endif  /* nsBidiUtils_h__ */
