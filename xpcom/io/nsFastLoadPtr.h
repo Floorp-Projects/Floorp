@@ -41,6 +41,15 @@
 #include "nsIFastLoadService.h"
 #endif
 
+/**
+ * nsFastLoadPtr is a template class, so we don't want a class static service
+ * pointer member declared in nsFastLoadPtr, above.  Plus, we need special
+ * declaration magic to export data across DLL/DSO boundaries.  So we use an
+ * old-fashioned global variable that refers weakly to the one true FastLoad
+ * service.  This pointer is maintained by that singleton's ctor and dtor.
+ */
+PR_EXPORT_DATA(nsIFastLoadService*) gFastLoadService_;
+
 template <class T>
 class nsFastLoadPtr : public nsCOMPtr<T> {
   public:
@@ -79,14 +88,5 @@ class nsFastLoadPtr : public nsCOMPtr<T> {
                                                               this->mRawPtr));
     }
 };
-
-/**
- * nsFastLoadPtr is a template class, so we don't want a class static service
- * pointer member declared in nsFastLoadPtr, above.  Plus, we need special
- * declaration magic to export data across DLL/DSO boundaries.  So we use an
- * old-fashioned global variable that refers weakly to the one true FastLoad
- * service.  This pointer is maintained by that singleton's ctor and dtor.
- */
-PR_EXPORT_DATA(nsIFastLoadService*) gFastLoadService_;
 
 #endif // nsFastLoadPtr_h___
