@@ -83,8 +83,8 @@ public:
 
 // Input/Output
   NS_IMETHOD Insert(nsIInputStream *aInputStream);
-  NS_IMETHOD OutputText(nsIOutputStream *aOutputStream);
-  NS_IMETHOD OutputHTML(nsIOutputStream *aOutputStream);
+  NS_IMETHOD OutputText(nsString& aOutputString);
+  NS_IMETHOD OutputHTML(nsString& aOutputString);
 
 //=====================================
 // HTML Editing methods
