@@ -50,6 +50,9 @@ var gBooleanOrText;
 var gBooleanAndText;
 var gBooleanInitialText;
 
+var gSearchDateFormat = 0;
+var gSearchDateSeparator;
+
 //
 function searchTermContainer() {}
 
@@ -490,6 +493,32 @@ function onReset(event)
     onMore(event);
 }
 
+function initializeSearchDateFormat()
+{
+  if (gSearchDateFormat)
+    return;
+
+  // get a search date format option and a seprator
+  try {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch);
+    gSearchDateFormat =
+               pref.getComplexValue("mailnews.search_date_format", 
+                                    Components.interfaces.nsIPrefLocalizedString);
+    gSearchDateFormat = parseInt(gSearchDateFormat);
+    if (gSearchDateFormat < 1 || gSearchDateFormat > 6)
+      gSearchDateFormat = 3;
+
+    gSearchDateSeparator =
+               pref.getComplexValue("mailnews.search_date_separator", 
+                                    Components.interfaces.nsIPrefLocalizedString);
+  } catch (ex) {
+    // set to mm/dd/yyyy in case of error
+    gSearchDateFormat = 3;
+    gSearchDateSeparator = "/";
+  }
+}
+
 function convertPRTimeToString(tm)
 {
   var time = new Date();
@@ -502,18 +531,97 @@ function convertPRTimeToString(tm)
 
 function convertDateToString(time)
 {
-  var dateStr = time.getMonth() + 1;
-  dateStr += "/";
-  dateStr += time.getDate();
-  dateStr += "/";
-  dateStr += 1900 + time.getYear();
+  var year, month, date;
+  initializeSearchDateFormat();
+
+  year = 1900 + time.getYear();
+  month = time.getMonth() + 1;  // since js month is 0-11
+  date = time.getDate();
+
+  var dateStr;
+  var sep = gSearchDateSeparator;
+
+  switch (gSearchDateFormat)
+  {
+    case 1:
+      dateStr = year + sep + month + sep + date;
+      break;
+    case 2:
+      dateStr = year + sep + date + sep + month;
+      break;
+    case 3:
+     dateStr = month + sep + date + sep + year;
+      break;
+    case 4:
+      dateStr = month + sep + year + sep + date;
+      break;
+    case 5:
+      dateStr = date + sep + month + sep + year;
+      break;
+    case 6:
+      dateStr = date + sep + year + sep + month;
+      break;
+    default:
+      dump("valid search date format option is 1-6\n");
+  }
+
   return dateStr;
 }
 
 function convertStringToPRTime(str)
 {
+  initializeSearchDateFormat();
+
+  var arrayOfStrings = str.split(gSearchDateSeparator);
+  var year, month, date;
+
+  // set year, month, date based on the format option
+  switch (gSearchDateFormat)
+  {
+    case 1:
+      year = arrayOfStrings[0];
+      month = arrayOfStrings[1];
+      date = arrayOfStrings[2];
+      break;
+    case 2:
+      year = arrayOfStrings[0];
+      month = arrayOfStrings[2];
+      date = arrayOfStrings[1];
+      break;
+    case 3:
+      year = arrayOfStrings[2];
+      month = arrayOfStrings[0];
+      date = arrayOfStrings[1];
+      break;
+    case 4:
+      year = arrayOfStrings[1];
+      month = arrayOfStrings[0];
+      date = arrayOfStrings[2];
+      break;
+    case 5:
+      year = arrayOfStrings[2];
+      month = arrayOfStrings[1];
+      date = arrayOfStrings[0];
+      break;
+    case 6:
+      year = arrayOfStrings[1];
+      month = arrayOfStrings[2];
+      date = arrayOfStrings[0];
+      break;
+    default:
+      dump("valid search date format option is 1-6\n");
+  }
+
+  month -= 1; // since js month is 0-11
+
   var time = new Date();
-  time.setTime(Date.parse(str));
+  time.setSeconds(0);
+  time.setMinutes(0);
+  time.setHours(0);
+  time.setDate(date);
+  time.setMonth(month);
+  time.setYear(year);
+
   // Javascript time is in seconds, PRTime is in microseconds
   // so multiply by 1000 when converting
   return (time.getTime() * 1000);
