@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: troubleshooting.xml,v 1.1 2004/12/07 11:41:59 jake%bugzilla.org Exp $ -->
+<!-- $Id: troubleshooting.xml,v 1.2 2004/12/07 12:29:04 jake%bugzilla.org Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>
@@ -31,7 +31,7 @@
     </para>
   </section>
         
-  <section>
+  <section id="trbl-testserver">
   <title>The Apache webserver is not serving Bugzilla pages</title>
     <para>After you have run <command>checksetup.pl</command> twice,
     run <command>testserver.pl http://yoursite.yourdomain/yoururl</command>
@@ -47,7 +47,7 @@ TEST-OK Webserver is preventing fetch of http://landfill.bugzilla.org/bugzilla-t
 </programlisting>
   </section>
 
-  <section>
+  <section id="trbl-perlmodule">
   <title>I installed a Perl module, but 
       <filename>checksetup.pl</filename> claims it's not installed!</title>
       
@@ -70,7 +70,7 @@ TEST-OK Webserver is preventing fetch of http://landfill.bugzilla.org/bugzilla-t
     </orderedlist>
   </section>
     
-  <section>
+  <section id="trbl-bundleBugzilla">
   <title>Bundle::Bugzilla makes me upgrade to Perl 5.6.1</title>
 
     <para>Try executing <command>perl -MCPAN -e 'install CPAN'</command>
@@ -88,7 +88,7 @@ TEST-OK Webserver is preventing fetch of http://landfill.bugzilla.org/bugzilla-t
   </section>
 
 
-  <section>
+  <section id="trbl-dbdSponge">
   <title>DBD::Sponge::db prepare failed</title>
       
     <para>The following error message may appear due to a bug in DBD::mysql
