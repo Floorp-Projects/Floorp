@@ -39,6 +39,7 @@
 #include "nsCURILoader.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
+#include "nsReadableUtils.h"
 
 // used to manage our in memory data source of helper applications
 #include "nsRDFCID.h"
@@ -1127,6 +1128,12 @@ NS_IMETHODIMP nsExternalAppHandler::GetSource(nsIURI ** aSourceURI)
   NS_ENSURE_ARG(aSourceURI);
   *aSourceURI = mSourceUrl;
   NS_IF_ADDREF(*aSourceURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::GetSuggestedFileName(PRUnichar ** aSuggestedFileName)
+{
+  *aSuggestedFileName = ToNewUnicode(mSuggestedFileName);
   return NS_OK;
 }
 
