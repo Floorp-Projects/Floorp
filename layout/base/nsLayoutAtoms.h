@@ -58,8 +58,9 @@ public:
   static nsIAtom* floaterList;
 
   // Alphabetical list of pseudo tag names for non-element content
-  static nsIAtom* textTagName;
   static nsIAtom* commentTagName;
+  static nsIAtom* textTagName;
+  static nsIAtom* viewportPseudo;
 };
 
 #endif /* nsLayoutAtoms_h___ */
