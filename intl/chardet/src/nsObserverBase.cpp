@@ -39,12 +39,9 @@
 
 #include "nsIServiceManager.h"
 #include "nsIWebShellServices.h"
-#include "nsIContentViewerContainer.h"
 #include "nsObserverBase.h"
 #include "nsString.h"
-#include "nsIDocShell.h"
 #include "nsIHttpChannel.h"
-#include "nsXPIDLString.h"
 
 
 
@@ -54,48 +51,42 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(nsISupports* aWebShell,
                                              const char* charset, 
                                              PRInt32 source)
 {
-   
+
    nsresult rv  = NS_OK;
    nsresult res = NS_OK;
 
-   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aChannel,&res));
+   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel,&res));
    if (NS_SUCCEEDED(res)) {
-     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel,&res));
-     if (NS_SUCCEEDED(res)) {
-       nsCAutoString method;
-       httpChannel->GetRequestMethod(method);
-       if (method.Equals(NS_LITERAL_CSTRING("POST"), nsCaseInsensitiveCStringComparator())) {
-         return NS_OK;
-       }
+     nsCAutoString method;
+     httpChannel->GetRequestMethod(method);
+     if (method.EqualsLiteral("POST")) { // XXX What about PUT, etc?
+       return NS_OK;
      }
    }
-     
-   nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(aWebShell,&res));
+
+   nsCOMPtr<nsIWebShellServices> wss;
+   wss = do_QueryInterface(aWebShell,&res);
    if (NS_SUCCEEDED(res)) {
-     nsCOMPtr<nsIWebShellServices> wss;
-     wss = do_QueryInterface(docshell,&res);  // Query webshell service through docshell.
-     if (NS_SUCCEEDED(res)) {
 
 #ifndef DONT_INFORM_WEBSHELL
-       // ask the webshellservice to load the URL
-       if (NS_FAILED( res = wss->SetRendering(PR_FALSE) ))
-         rv = res;
-      
-       // XXX nisheeth, uncomment the following two line to see the reent problem
+     // ask the webshellservice to load the URL
+     if (NS_FAILED( res = wss->SetRendering(PR_FALSE) ))
+       rv = res;
 
-       else if (NS_FAILED(res = wss->StopDocumentLoad())){
-	       rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
-       }
-       else if (NS_FAILED(res = wss->ReloadDocument(charset, source))) {
-	       rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
-       }
-       else {
-         rv = NS_ERROR_HTMLPARSER_STOPPARSING; // We're reloading a new document...stop loading the current.
-       }
-#endif
+     // XXX nisheeth, uncomment the following two line to see the reent problem
+
+     else if (NS_FAILED(res = wss->StopDocumentLoad())){
+             rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
      }
+     else if (NS_FAILED(res = wss->ReloadDocument(charset, source))) {
+             rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+     }
+     else {
+       rv = NS_ERROR_HTMLPARSER_STOPPARSING; // We're reloading a new document...stop loading the current.
+     }
+#endif
    }
-  
+
    //if our reload request is not accepted, we should tell parser to go on
   if (rv != NS_ERROR_HTMLPARSER_STOPPARSING) 
     rv = NS_ERROR_HTMLPARSER_CONTINUE;

@@ -51,13 +51,10 @@ REQUIRES	= xpcom \
 		  uconv \
 		  unicharutil \
 		  webshell \
-		  docshell \
 		  htmlparser \
 		  necko \
 		  widget \
 		  content \
-		  dom \
-		  embedcomponents \
 		  $(NULL)
 
 CPPSRCS		= \
