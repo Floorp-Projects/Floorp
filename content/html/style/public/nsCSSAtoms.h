@@ -34,6 +34,9 @@ public:
 
   // Alphabetical list of css atoms
   static nsIAtom* activePseudo;
+  static nsIAtom* afterPseudo;
+  
+  static nsIAtom* beforePseudo;
 
   static nsIAtom* disabledPseudo;
 
