@@ -763,20 +763,27 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
     // 4) Use the caller-provided name, if any
     return validateFileName(aDefaultFileName);
 
+  // 5) If this is a directory, use the last directory name
+  var re = /\/([^\/]+)\/$/;
+  var path = aDocumentURI.path.match(re);
+  if (path && path.length > 1) {
+      return validateFileName(path[1]);
+  }
+  
   try {
     if (aDocumentURI.host)
-      // 5) Use the host.
+      // 6) Use the host.
       return aDocumentURI.host;
   } catch (e) {
     // Some files have no information at all, like Javascript generated pages
   }
   try {
-    // 6) Use the default file name
+    // 7) Use the default file name
     return getStringBundle().GetStringFromName("DefaultSaveFileName");
   } catch (e) {
     //in case localized string cannot be found
   }
-  // 7) If all else fails, use "index"
+  // 8) If all else fails, use "index"
   return "index";
 }
 
