@@ -986,6 +986,7 @@ PluginListener::PluginListener(PluginViewerImpl* aViewer)
   NS_INIT_ISUPPORTS();
   mViewer = aViewer;
   NS_ADDREF(aViewer);
+  mNextStream = nsnull;                                                         
 }
 
 PluginListener::~PluginListener()
