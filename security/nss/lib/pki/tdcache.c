@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.36 $ $Date: 2003/07/10 01:24:17 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.37 $ $Date: 2003/12/18 18:23:17 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -715,6 +715,50 @@ add_email_entry (
 
 extern const NSSError NSS_ERROR_CERTIFICATE_IN_CACHE;
 
+static void
+remove_object_instances (
+  nssPKIObject *object,
+  nssCryptokiObject **instances,
+  int numInstances
+)
+{
+    int i;
+
+    for (i = 0; i < numInstances; i++) {
+	nssPKIObject_RemoveInstanceForToken(object, instances[i]->token);
+    }
+}
+
+static SECStatus
+merge_object_instances (
+  nssPKIObject *to,
+  nssPKIObject *from
+)
+{
+    nssCryptokiObject **instances, **ci;
+    int i;
+    SECStatus rv = SECSuccess;
+
+    instances = nssPKIObject_GetInstances(from);
+    if (instances == NULL) {
+	return SECFailure;
+    }
+    for (ci = instances, i = 0; *ci; ci++, i++) {
+	nssCryptokiObject *instance = nssCryptokiObject_Clone(*ci);
+	if (instance) {
+	    if (nssPKIObject_AddInstance(to, instance) == SECSuccess) {
+		continue;
+	    }
+	    nssCryptokiObject_Destroy(instance);
+	}
+	remove_object_instances(to, instances, i);
+	rv = SECFailure;
+	break;
+    }
+    nssCryptokiObjectArray_Destroy(instances);
+    return rv;
+}
+
 static NSSCertificate *
 add_cert_to_cache (
   NSSTrustDomain *td, 
@@ -743,6 +787,12 @@ add_cert_to_cache (
 	/* collision - somebody else already added the cert
 	 * to the cache before this thread got around to it.
 	 */
+	/* merge the instances of the cert */
+	if (merge_object_instances(&rvCert->object, &cert->object)
+							!= SECSuccess) {
+	    nssCertificate_Destroy(rvCert);
+	    return NULL;
+	}
 	nssCertificate_Destroy(cert);
 	return rvCert;
     }
