@@ -279,7 +279,6 @@ var paletteDNDObserver = {
     var target = aEvent.target;
     
     if (target == palette) {
-      alert("Target and palette are the same.");
       target = palette.lastChild.lastChild;
       if (target.localName != "spacer") {
         // Create a new row, insert, create the spring and bail.
