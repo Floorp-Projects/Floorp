@@ -48,7 +48,7 @@ NS_IMPL_ISUPPORTS3(nsLDAPAutoCompleteSession, nsIAutoCompleteSession,
                    nsILDAPMessageListener, nsILDAPAutoCompleteSession)
 
 nsLDAPAutoCompleteSession::nsLDAPAutoCompleteSession() :
-    mState(UNBOUND), mMinStringLength(0)
+    mState(UNBOUND), mMaxHits(100), mMinStringLength(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -918,7 +918,7 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     //
     rv = mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
                                NS_ConvertUTF8toUCS2(searchFilter).get(),
-                               0, nsILDAPOperation::NO_LIMIT);
+                               0, mMaxHits);
     if (NS_FAILED(rv)) {
         switch(rv) {
 
@@ -1196,21 +1196,25 @@ nsLDAPAutoCompleteSession::SetOutputFormat(const PRUnichar * aOutputFormat)
     return NS_OK;
 }
 
-// attribute long sizeLimit;
+// attribute long maxHits;
 NS_IMETHODIMP 
-nsLDAPAutoCompleteSession::GetSizeLimit(PRInt32 *aSizeLimit)
+nsLDAPAutoCompleteSession::GetMaxHits(PRInt32 *aMaxHits)
 {
-    if (!aSizeLimit) {
+    if (!aMaxHits) {
         return NS_ERROR_NULL_POINTER;
     }
 
-    *aSizeLimit = mSizeLimit;
+    *aMaxHits = mMaxHits;
     return NS_OK;
 }
 NS_IMETHODIMP 
-nsLDAPAutoCompleteSession::SetSizeLimit(PRInt32 aSizeLimit)
+nsLDAPAutoCompleteSession::SetMaxHits(PRInt32 aMaxHits)
 {
-    mSizeLimit = aSizeLimit;
+    if ( aMaxHits < -1 || aMaxHits > 65535) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    mMaxHits = aMaxHits;
     return NS_OK;
 }
 
