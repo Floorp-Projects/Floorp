@@ -59,60 +59,11 @@ static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kFTPHandlerCID, NS_FTPPROTOCOLHANDLER_CID);
-static NS_DEFINE_IID(kIFTPContextIID, NS_IFTPCONTEXT_IID);
-
 #define FTP_CRLF "\r\n" 
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
-
-class nsFTPContext : nsIFTPContext {
-public:
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
-
-    // nsIFTPContext methods
-    NS_IMETHOD IsCmdResponse(PRBool *_retval) {
-        *_retval = mCmdResponse;
-        return NS_OK;
-    };
-
-    NS_IMETHOD SetContentType(const char *aContentType) {
-        mContentType = aContentType;
-        return NS_OK;
-    };
-
-    NS_IMETHOD GetContentType(char * *aContentType) {
-        *aContentType = mContentType.ToNewCString();
-        return NS_OK;
-    };
-
-    NS_IMETHOD SetContentLength(PRInt32 aLength) {
-        mLength = aLength;
-        return NS_OK;
-    };
-
-    NS_IMETHOD GetContentLength(PRInt32 *aLength) {
-        *aLength = mLength;
-        return NS_OK;
-    }
-
-    // nsFTPContext methods
-    nsFTPContext() {
-        NS_INIT_REFCNT();
-        mCmdResponse = PR_TRUE;
-        mLength = -1;
-    };
-
-    virtual ~nsFTPContext() {};
-
-    PRBool          mCmdResponse;
-    nsAutoString    mContentType;
-    PRInt32         mLength;
-};
-NS_IMPL_ISUPPORTS(nsFTPContext, kIFTPContextIID);
-
 
 // BEGIN: nsFtpConnectionThread implementation
 NS_IMETHODIMP_(nsrefcnt) nsFtpConnectionThread::AddRef(void)
@@ -140,12 +91,13 @@ NS_IMPL_QUERY_INTERFACE2(nsFtpConnectionThread, nsIRunnable, nsIRequest);
 
 nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
+    mSTS = nsnull;
     mAction = GET;
     mUsePasv = PR_TRUE;
     mState = FTP_S_USER;
     mNextState = FTP_S_USER;
     mBin = PR_TRUE;
-    mLength = 0;
+    mLength = -1;
     mConnected = PR_FALSE;
     mResetMode = PR_FALSE;
     mList      = PR_FALSE;
@@ -157,13 +109,11 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mInternalError = NS_OK; // start out on the up 'n up.
     mSentStart = PR_FALSE;
     mConn = nsnull;
-    mFTPContext = nsnull;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
     // lose the socket transport
-    NS_RELEASE(mSTS);
-    NS_RELEASE(mFTPContext);
+    NS_IF_RELEASE(mSTS);
 }
 
 nsresult
@@ -1180,11 +1130,13 @@ nsFtpConnectionThread::S_size() {
 
 FTP_STATE
 nsFtpConnectionThread::R_size() {
+    nsresult rv;
     if (mResponseCode == 2) {
         PRInt32 conversionError;
         mLength = mResponseMsg.ToInteger(&conversionError);
 
-        mFTPContext->SetContentLength(mLength);
+        rv = mFTPChannel->SetContentLength(mLength);
+        if (NS_FAILED(rv)) return FTP_ERROR;
     } if (mResponseCode == 5) {
         // couldn't get the size of what we asked for, must be a dir.
         mBin = PR_FALSE;
@@ -1338,7 +1290,7 @@ nsFtpConnectionThread::R_list() {
 
         nsCOMPtr<nsIInputStream> listStream = do_QueryInterface(stringStreamSup, &rv);
 
-        rv = converterListener->OnDataAvailable(mChannel, mFTPContext, listStream, 0, read);
+        rv = converterListener->OnDataAvailable(mChannel, mContext, listStream, 0, read);
         if (NS_FAILED(rv)) return FTP_ERROR;
     }
 
@@ -1388,19 +1340,6 @@ nsFtpConnectionThread::R_retr() {
 
         mSentStart = PR_TRUE;
 
-        // build up context info for the nsFTPChannel
-        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-        if (NS_FAILED(rv)) return FTP_ERROR;
-
-        nsXPIDLCString contentType;
-        rv = MIMEService->GetTypeFromURI(mURL, getter_Copies(contentType));
-
-        // if we fail, we want to push the data on up anyway. let the app figure
-        // out what to do.
-        if (NS_SUCCEEDED(rv)) {
-            mFTPContext->SetContentType(contentType);
-        }
-
         nsIBufferInputStream *bufInStrm = nsnull;
         nsIBufferOutputStream *bufOutStrm = nsnull;
         rv = NS_NewPipe(&bufInStrm, &bufOutStrm);
@@ -1422,7 +1361,7 @@ nsFtpConnectionThread::R_retr() {
             readSoFar += read;
             if (read == 0) {
                 // we've exhausted the stream, send any data we have left and get out of dodge.
-                rv = mListener->OnDataAvailable(mChannel, mFTPContext, inStream, avail, readSoFar);
+                rv = mListener->OnDataAvailable(mChannel, mContext, inStream, avail, readSoFar);
                 if (NS_FAILED(rv)) return FTP_ERROR;
 
                 break; // this terminates the loop
@@ -1546,7 +1485,7 @@ nsFtpConnectionThread::R_pasv() {
 
     // we're connected figure out what type of transfer we're doing (ascii or binary)
     nsXPIDLCString type;
-    rv = mChannel->GetContentType(getter_Copies(type));
+    rv = mFTPChannel->GetContentType(getter_Copies(type));
     nsCAutoString typeStr;
     if (NS_FAILED(rv) || !type) 
         typeStr = "bin";
@@ -1903,11 +1842,16 @@ nsFtpConnectionThread::Init(nsIURI* aUrl,
                                               getter_AddRefs(mSyncListener));
     if (NS_FAILED(rv)) return rv;
 
+    // a straight com ptr to the channel
+    mChannel = aChannel;
+
+    // This proxied channel is used to set channel related
+    // state on the *real* channel back in the main thread.
     rv = pIProxyObjectManager->GetProxyObject(mOutsideEventQueue, 
-                                              NS_GET_IID(nsIChannel), 
+                                              NS_GET_IID(nsIFTPChannel), 
                                               aChannel,
                                               PROXY_SYNC | PROXY_ALWAYS,
-                                              getter_AddRefs(mChannel));
+                                              getter_AddRefs(mFTPChannel));
     if (NS_FAILED(rv)) return rv;
 
     // get a proxied ptr to the FTP protocol handler service so we can control
@@ -1947,22 +1891,6 @@ nsFtpConnectionThread::Init(nsIURI* aUrl,
 
     mCacheKey.SetString(host);
     mCacheKey.Append(port);
-
-    // this context is used to get channel specific info back into the FTP channel
-    nsFTPContext *dataCtxt = new nsFTPContext();
-    if (!dataCtxt) return NS_ERROR_OUT_OF_MEMORY;
-    rv = dataCtxt->QueryInterface(NS_GET_IID(nsIFTPContext), (void**)&mFTPContext);
-    //mFTPContext = NS_STATIC_CAST(nsIFTPContext*, dataCtxt);
-    if (NS_FAILED(rv)) return rv;
-
-    // get a proxied ptr to the FTP protocol handler service so we can control
-    // the connection cache from here.
-    rv = pIProxyObjectManager->GetProxyObject(nsnull, 
-                                              NS_GET_IID(nsIConnectionCache), 
-                                              aHandler,
-                                              PROXY_SYNC | PROXY_ALWAYS,
-                                              getter_AddRefs(mConnCache));
-    if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }

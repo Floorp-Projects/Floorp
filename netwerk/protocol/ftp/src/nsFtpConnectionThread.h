@@ -37,7 +37,7 @@
 #include "nsIEventQueue.h"
 #include "nsHashtable.h"
 #include "nsIChannel.h"
-#include "nsIFTPContext.h"
+#include "nsIFTPChannel.h"
 #include "nsIConnectionCache.h"
 #include "nsConnectionCacheObj.h"
 #include "nsIProtocolHandler.h"
@@ -214,7 +214,7 @@ private:
     nsString2           mUsername;
     nsString2           mPassword;
     nsString2           mFilename;          // url filename (if any)
-    PRUint32            mLength;            // length of the file
+    PRInt32             mLength;            // length of the file
     PRTime              mLastModified;      // last modified time for file
 
 // these members should be hung off of a specific transport connection
@@ -245,7 +245,6 @@ private:
 
     nsCOMPtr<nsIChannel>            mChannel;
     nsCOMPtr<nsISupports>           mContext;
-    nsIFTPContext*                  mFTPContext;        // FTP channel specific context.
     nsCOMPtr<nsIConnectionCache>    mConnCache;         // the nsISupports proxy ptr to the FTP proto handler
     nsConnectionCacheObj* mConn;            // The cached connection.
     PRBool              mKeepRunning;       // thread event loop boolean
@@ -253,6 +252,7 @@ private:
     nsString2           mContentType;       // the content type of the data we're dealing w/.
     nsXPIDLCString      mURLSpec;
     nsCOMPtr<nsIEventSinkGetter>    mEventSinkGetter;
+    nsCOMPtr<nsIFTPChannel>            mFTPChannel;
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)
