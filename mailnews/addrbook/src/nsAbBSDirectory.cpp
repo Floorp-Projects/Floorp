@@ -325,7 +325,7 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(PRUint32 propCount, const char
 	nsCStringKey migratingKey (kMigratingPropertyName, -1, nsCStringKey::NEVER_OWN);
 	const PRUnichar* migrating = (PRUnichar* )propertySet.Get (&migratingKey);
 	PRBool is_migrating = PR_FALSE;
-	if (migrating && nsCRT::strcmp (migrating, "true"))
+	if (migrating && nsCRT::strcmp (migrating, NS_LITERAL_STRING("true").get()))
 		is_migrating = PR_TRUE;
 
 	/*
