@@ -157,3 +157,28 @@ function localeTo(baseDirectory, localeName)
   
   dump("\n ** Leave localeTo() ** \n");
 }
+
+function selectLocale(event)
+{
+  try {
+    var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
+    if ( chromeRegistry ) {
+      chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
+    }
+    var node = event.target;
+    var langcode = node.getAttribute('data');
+    //var old_lang = chromeRegistry.getSelectedLocale("navigator");
+	//dump("\n-->old_lang=" + old_lang + "--");
+    chromeRegistry.selectLocale(langcode, true);
+	dump("\n-->set new lang, langcode=" + langcode + "--");
+    var sbundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
+	var alertstr = sbundle.GetStringFromName("langAlert");
+	alert(alertstr);
+  }
+  catch(e) {
+    dump("\n--> strres.js: selectLocale() failed!\n");
+    return false;
+  }
+  return true;	
+}
+
