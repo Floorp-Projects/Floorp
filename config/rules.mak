@@ -481,7 +481,7 @@ unmangle:: $(DIRS)
 
 alltags::
         echo Making emacs tags
-	c:\\mksnt\\find . -name dist -prune -o ( -name '*.[hc]' -o -name '*.cpp' ) -print | c:\\mksnt\\xargs etags -a
+	c:\\mksnt\\find . -name dist -prune -o ( -name '*.[hc]' -o -name '*.cpp' -o -name '*.idl' ) -print | c:\\mksnt\\xargs etags -a
 
 
 #//------------------------------------------------------------------------

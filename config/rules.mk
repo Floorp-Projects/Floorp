@@ -419,7 +419,7 @@ distclean::
 
 alltags:
 	rm -f TAGS
-	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs etags -a
+	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' -o -name '*.idl' \) -print | xargs etags -a
 
 #
 # Turn on C++ linking if we have any .cpp files
