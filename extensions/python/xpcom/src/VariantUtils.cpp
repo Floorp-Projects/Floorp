@@ -1166,7 +1166,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 		  case nsXPTType::T_ASTRING:
 		  case nsXPTType::T_DOMSTRING: {
 			if (val==Py_None) {
-				ns_v.val.p = new nsString(nsnull);
+				ns_v.val.p = new nsString();
 			} else {
 				if (!PyString_Check(val) && !PyUnicode_Check(val)) {
 					PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
