@@ -77,6 +77,12 @@ public:
    * Destroy a Mapping Cache
    */
   NS_IMETHOD DestroyCache(nsIMappingCache aCache) = 0;
+  
+  /**
+   * Create Char Representable Info
+   */
+  NS_IMETHOD FillInfo(PRUint32* aInfo, uMappingTable  * aMappingTable) = 0;
+  NS_IMETHOD FillInfo(PRUint32* aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable) = 0;
 };
 
 
