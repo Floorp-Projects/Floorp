@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com> (Original Author)
  *   Blake Ross <blakeross@telocity.com>
- *   Jan Varga <varga@utcru.sk>
+ *   Jan Varga <varga@nixcorp.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
