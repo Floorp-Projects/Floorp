@@ -129,18 +129,28 @@
                         <textbox id="location-field"/>
                     </row>
             
-                    <!-- Date -->    
+                    <!-- Start Date -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
-                            <label value="&newevent.date.label;"/>
+                            <label value="&newevent.startdate.label;"/>
                         </hbox>
                         <hbox  id="start-date-box" align="center">
-                            <textbox id="start-date-text" readonly="true"                 onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <image class="four-state-image-button" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                            <textbox class="date-text-class" id="start-date-text" readonly="true"                 onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                            <image class="four-state-image-button event-date-button-class" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
                         </hbox>
                     </row>
                     
-            
+                    <!-- End Date -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="&newevent.enddate.label;"/>
+                        </hbox>
+                        <hbox  id="end-date-box" align="center">
+                            <textbox class="date-text-class" id="end-date-text" readonly="true"                 onmousedown="prepareDatePicker('end-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                            <image class="four-state-image-button event-date-button-class" id="end-date-button" onmousedown="prepareDatePicker('end-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                        </hbox>
+                    </row>
+                    
                     <!-- All Day -->    
                     <row align="center">
                         <spacer />
