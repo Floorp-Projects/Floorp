@@ -43,12 +43,12 @@ public:
   // nsIClipboard  
   NS_IMETHOD ForceDataToClipboard();
 
-  static void SetTopLevelWidget(GtkWidget* w);
-
-
 protected:
-  NS_IMETHOD SetNativeClipboardData();
-  NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
+  NS_IMETHOD        SetNativeClipboardData();
+  NS_IMETHOD        GetNativeClipboardData(nsITransferable * aTransferable);
+
+
+  void              CreateInvisibleWidget(void);
 
   PRBool            mIgnoreEmptyNotification;
 
@@ -56,8 +56,8 @@ protected:
 
   // Used for communicating pasted data
   // from the asynchronous X routines back to a blocking paste:
-  GtkSelectionData mSelectionData;
-  PRBool mBlocking;
+  GtkSelectionData  mSelectionData;
+  PRBool            mBlocking;
 
   void SelectionReceiver(GtkWidget *aWidget,
                          GtkSelectionData *aSelectionData);

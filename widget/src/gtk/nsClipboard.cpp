@@ -27,15 +27,18 @@
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 
+
+#include <gtk/gtkinvisible.h>
+
 // The class statics:
-GtkWidget* nsClipboard::sWidget = 0;
+GtkWidget* nsClipboard::sWidget = nsnull;
 
 NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
 NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 
 static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 
-#if defined(DEBUG_akkana) || defined(DEBUG_mcafee)
+#if defined(DEBUG_akkana) || defined(DEBUG_mcafee) || defined(DEBUG_pavlov)
 #define DEBUG_CLIPBOARD
 #endif
  
@@ -57,6 +60,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
   mTransferable   = nsnull;
   mSelectionData.data = nsnull;
   mSelectionData.length = 0;
+  CreateInvisibleWidget();
 }
 
 //-------------------------------------------------------------------------
@@ -127,70 +131,44 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //};
 //
 
-void nsClipboard::SetTopLevelWidget(GtkWidget* w)
+void nsClipboard::CreateInvisibleWidget(void)
 {
-  // Don't set up any more event handlers if we're being called twice
-  // for the same toplevel widget
-  if (sWidget == w)
+  sWidget = gtk_invisible_new();
+  gtk_widget_show(sWidget);
+
+  if (!sWidget)
     return;
 
-  if (sWidget != 0 && sWidget->window != 0)
-    return;
-
-  if (w == 0 || w->window == 0)
-  {
-#ifdef DEBUG_CLIPBOARD
-    printf("  nsClipboard::SetTopLevelWidget: widget passed in is null or has no window!\n");
-#endif /* DEBUG_CLIPBOARD */
-    return;
-  }
-
-#ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::SetTopLevelWidget\n");
-#endif /* DEBUG_CLIPBOARD */
-  
   // If we're changing from one widget to another
   // (shouldn't generally happen), clear the old event handlers:
-  if (sWidget &&
-      gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
+  if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
     gtk_selection_remove_all(sWidget);
-
-  sWidget = w;
-
-  // Get the clipboard from the service manager.
-  nsresult rv;
-  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
-
-  if (!NS_SUCCEEDED(rv)) {
-    printf("Couldn't get clipboard service!\n");
-    return;
-  }
 
   // Handle selection requests if we called gtk_selection_add_target:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_get",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionGetCB),
-                     clipboard);
+                     this);
 
   // When someone else takes the selection away:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_clear_event",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionClearCB),
-                     clipboard);
+                     this);
 
   // Set up the paste handler:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_received",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionReceivedCB),
-                     clipboard);
+                     this);
 
 #if 0
   // Handle selection requests if we called gtk_selection_add_targets:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_request_event",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionRequestCB),
-                     clipboard);
+                     this);
   
   // Watch this, experimenting with Gtk :-)
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_notify_event",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionNotifyCB),
-                     clipboard);
+                     this);
 #endif
 
   // Hmm, sometimes we need this, sometimes not.  I'm not clear why.

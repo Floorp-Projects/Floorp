@@ -112,10 +112,24 @@ nsWidget::~nsWidget()
 
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
-    g_print("nsWidget::WidgetToScreen\n");
-    // FIXME gdk_window_get_origin()   might do what we want.... ???
-    NS_NOTYETIMPLEMENTED("nsWidget::WidgetToScreen");
-    return NS_OK;
+  gint x;
+  gint y;
+
+  g_print("nsWidget::WidgetToScreen\n");
+  if (mWidget)
+  {
+    if (mWidget->window)
+    {
+      gdk_window_get_origin(mWidget->window, &x, &y);
+      aNewRect.x = x - aOldRect.x;
+      aNewRect.y = y - aOldRect.y;
+      g_print("  x = %i, y = %i\n", x, y);
+    }
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
