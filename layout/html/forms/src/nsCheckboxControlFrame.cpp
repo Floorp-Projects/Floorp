@@ -58,8 +58,7 @@ nsCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 nsIAtom*
 nsCheckboxControlFrame :: GetTristateAtom ( )
 {
-  static nsCOMPtr<nsIAtom> depressAtom ( getter_AddRefs(NS_NewAtom("moz-tristate")) );
-  return depressAtom;
+  return nsHTMLAtoms::moz_tristate;
 }
 
 
@@ -75,8 +74,7 @@ nsCheckboxControlFrame :: GetTristateAtom ( )
 nsIAtom*
 nsCheckboxControlFrame :: GetTristateValueAtom ( )
 {
-  static nsCOMPtr<nsIAtom> depressAtom ( getter_AddRefs(NS_NewAtom("moz-tristatevalue")) );
-  return depressAtom;
+  return nsHTMLAtoms::moz_tristatevalue;
 }
 
 

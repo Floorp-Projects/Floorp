@@ -67,6 +67,7 @@ static PRInt32        gTableRefCount;
 static PropertyNode*  gPropertyArray;
 static nsAVLTree*     gPropertyTree;
 static PropertyComparitor*  gComparitor;
+static const nsCString* kNullStr;
 
 void
 nsCSSProps::AddRefTable(void) 
@@ -88,6 +89,7 @@ nsCSSProps::AddRefTable(void)
         }
       }
     }
+    kNullStr = new nsCString();
   }
 }
 
@@ -107,6 +109,7 @@ nsCSSProps::ReleaseTable(void)
       delete gComparitor;
       gComparitor = nsnull;
     }
+    delete kNullStr;
   }
 }
 
@@ -136,8 +139,7 @@ nsCSSProps::GetStringValue(nsCSSProperty aProperty)
     return gPropertyArray[aProperty].mStr;
   }
   else {
-    static const nsCString kNullStr;
-    return kNullStr;
+    return *kNullStr;
   }
 }
 
@@ -656,8 +658,7 @@ SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
     }
     i += 2;
   }
-  static const nsCString kNullStr;
-  return kNullStr;
+  return *kNullStr;
 }
 
 
@@ -1010,8 +1011,7 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     NS_ERROR("invalid property");
     break;
   }
-  static const nsCString kNullStr;
-  return kNullStr;
+  return *kNullStr;
 }
 
 
