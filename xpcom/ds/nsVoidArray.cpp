@@ -128,11 +128,26 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 
 PRBool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 {
-  if (PRUint32(aIndex) >= PRUint32(mCount)) {
-    // An invalid index causes the replace to fail
-    return PR_FALSE;
+  if (PRUint32(aIndex) >= PRUint32(mArraySize)) {
+
+    PRInt32 requestedCount = aIndex + 1;
+    PRInt32 growDelta = requestedCount - mCount;
+    PRInt32 newCount = mCount + (growDelta > kGrowArrayBy ? growDelta : kGrowArrayBy);
+    void** newArray = new void*[newCount];
+    nsCRT::memset(newArray, 0, newCount * sizeof(void*));
+    if (newArray==nsnull)
+       return PR_FALSE;
+    if (mArray != nsnull && aIndex != 0) {
+      nsCRT::memcpy(newArray, mArray, mCount * sizeof(void*));
+      if (mArray != nsnull)
+         delete [] mArray;
+    }
+    mArray = newArray;
+    mArraySize = newCount;
   }
   mArray[aIndex] = aElement;
+  if (aIndex >= mCount)
+     mCount = aIndex+1;
   return PR_TRUE;
 }
 
