@@ -4441,8 +4441,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                 rootFrame,
                                 rootPseudoStyle);
 
-      // set the primary frame to the root frame
-      state.mFrameManager->SetPrimaryFrameFor(aDocElement, rootFrame);
+      // Don't set the root as the primary frame for aDocElement.  Its 
+      // primary frame will be set in ConstructDocElementFrame.
     } else { // if not scrollable
       if (!isXUL) { // if not XUL
         parentFrame->SetInitialChildList(aPresContext, nsnull, rootFrame);
@@ -9110,10 +9110,23 @@ nsCSSFrameConstructor::ContentInserted(nsPresContext*        aPresContext,
                                mDocElementContainingBlock,
                                docElementFrame);
     
-      // Set the initial child list for the parent
-      mDocElementContainingBlock->SetInitialChildList(aPresContext, 
-                                                      nsnull, 
-                                                      docElementFrame);
+      if (mDocElementContainingBlock->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+        // Set the initial child list for the parent and wait on the initial
+        // reflow.
+        mDocElementContainingBlock->SetInitialChildList(aPresContext, 
+                                                        nsnull, 
+                                                        docElementFrame);
+      } else {
+        // Whoops, we've already received our initial reflow! Insert the doc.
+        // element as a child so it reflows (note that containing block is
+        // empty, so we can simply append).
+        NS_ASSERTION(mDocElementContainingBlock->GetFirstChild(nsnull) == nsnull,
+                     "Unexpected child of document element containing block");
+        mDocElementContainingBlock->AppendFrames(aPresContext,
+                                                 *shell,
+                                                 nsnull,
+                                                 docElementFrame);
+      }
 
 #ifdef DEBUG
       if (gReallyNoisyContentUpdates && docElementFrame) {

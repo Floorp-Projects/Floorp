@@ -156,7 +156,6 @@ protected:
   // Data members
   PRPackedBool             mDoPaintFocus;
   nsCOMPtr<nsIViewManager> mViewManager;
-  nscoord                  mSavedChildWidth, mSavedChildHeight;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -516,8 +515,6 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
   } else {
     nsIFrame* kidFrame = mFrames.FirstChild();
 
-    // We must specify an unconstrained available height, because constrained
-    // is only for when we're paginated...
     nsReflowReason reason;
     if (isDirtyChildReflow) {
       // Note: the only reason the frame would be dirty would be if it had
@@ -529,29 +526,17 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
       reason = aReflowState.reason;
     }
 
+    // We must specify an unconstrained available height, because constrained
+    // is only for when we're paginated...
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                      nsSize(aReflowState.availableWidth,
                                             NS_UNCONSTRAINEDSIZE),
                                      reason);
 
-    if (eReflowReason_Incremental == aReflowState.reason) {
-      // Restore original kid desired dimensions in case it decides to
-      // reuse them during incremental reflow.
-      kidFrame->SetSize(nsSize(mSavedChildWidth, mSavedChildHeight));
-    }
-
     // Reflow the frame
     ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                 kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                 0, aStatus);
-
-    mSavedChildWidth = kidDesiredSize.width;
-    mSavedChildHeight = kidDesiredSize.height;
-
-    // The document element's background should cover the entire canvas, so
-    // take into account the combined area and any space taken up by
-    // absolutely positioned elements
-    nsMargin      border;
 
     // Complete the reflow and position and size the child frame
     FinishReflowChild(kidFrame, aPresContext, &kidReflowState, kidDesiredSize,
@@ -561,7 +546,15 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
     // If the child frame was just inserted, then we're responsible for making sure
     // it repaints
     if (isDirtyChildReflow) {
-      Invalidate(kidFrame->GetOverflowRect() + kidFrame->GetPosition(), PR_FALSE);
+      // But we have a new child, which will affect our background, so
+      // invalidate our whole rect.
+      // Note: Even though we request to be sized to our child's size, our
+      // scroll frame ensures that we are always the size of the viewport.
+      // Also note: GetPosition() on a CanvasFrame is always going to return
+      // (0, 0). We only want to invalidate GetRect() since GetOverflowRect()
+      // could also include overflow to our top and left (out of the viewport)
+      // which doesn't need to be painted.
+      Invalidate(GetRect(), PR_FALSE);
     }
 
     // Return our desired size
