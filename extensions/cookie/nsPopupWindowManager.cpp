@@ -56,12 +56,12 @@
 #define POLICYSTRING "policy"
 #define CUSTOMSTRING "usecustom"
 
-static const char *sPopupPrefRoot = "privacy.popups.";
-static const char *sPopupPrefPolicyLeaf = POLICYSTRING;
-static const char *sPopupPrefCustomLeaf = CUSTOMSTRING;
-static const char *sPermissionChangeNotification = PPM_CHANGE_NOTIFICATION;
-static const char *sXPCOMShutdownTopic = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
-static const char *sPrefChangedTopic = NS_PREFBRANCH_PREFCHANGE_TOPIC_ID;
+static const char sPopupPrefRoot[] = "privacy.popups.";
+static const char sPopupPrefPolicyLeaf[] = POLICYSTRING;
+static const char sPopupPrefCustomLeaf[] = CUSTOMSTRING;
+static const char sPermissionChangeNotification[] = PPM_CHANGE_NOTIFICATION;
+static const char sXPCOMShutdownTopic[] = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
+static const char sPrefChangedTopic[] = NS_PREFBRANCH_PREFCHANGE_TOPIC_ID;
 
 //*****************************************************************************
 //*** nsPopupWindowManager object management and nsISupports
@@ -133,7 +133,7 @@ nsPopupWindowManager::Add(nsIURI *aURI, PRBool aPermit)
   nsCAutoString uri;
   aURI->GetPrePath(uri);
   if (NS_SUCCEEDED(mPermManager->Add(uri, aPermit, WINDOWPERMISSION)))
-    return NotifyObservers();
+    return NotifyObservers(aURI);
   return NS_ERROR_FAILURE;
 }
 
@@ -147,7 +147,7 @@ nsPopupWindowManager::Remove(nsIURI *aURI)
   nsCAutoString uri;
   aURI->GetPrePath(uri);
   if (NS_SUCCEEDED(mPermManager->Add(uri, PR_TRUE, WINDOWPERMISSION)))
-    return NotifyObservers();
+    return NotifyObservers(aURI);
   return NS_ERROR_FAILURE;
 }
 
@@ -296,11 +296,14 @@ nsPopupWindowManager::StopObservingThings()
 
 // broadcast a notification that a popup pref has changed
 nsresult
-nsPopupWindowManager::NotifyObservers()
+nsPopupWindowManager::NotifyObservers(nsIURI *aURI)
 {
-  if (mOS)
+  if (mOS) {
+    nsCAutoString uri;
+    aURI->GetSpec(uri);
     return mOS->NotifyObservers(NS_STATIC_CAST(nsIPopupWindowManager *, this),
-                  sPermissionChangeNotification, 0);
+                sPermissionChangeNotification, NS_ConvertUTF8toUCS2(uri).get());
+  }
   return NS_ERROR_FAILURE;
 }
 

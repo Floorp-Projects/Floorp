@@ -46,6 +46,8 @@
 #include "nsIPopupWindowManager.h"
 #include "nsIPrefBranch.h"
 
+class nsIURI;
+
 class nsPopupWindowManager : public nsIPopupWindowManager,
                              public nsIObserver {
 
@@ -61,7 +63,7 @@ public:
 private:
   nsresult ObserveThings();
   nsresult StopObservingThings();
-  nsresult NotifyObservers();
+  nsresult NotifyObservers(nsIURI *aURI);
   void     DeInitialize();
 
   PRUint32                       mPolicy;
