@@ -47,6 +47,7 @@ class DocumentViewerImpl : public nsIDocumentViewer
 {
 public:
     DocumentViewerImpl();
+    DocumentViewerImpl(nsIPresContext* aPresContext);
     
     void* operator new(size_t sz) {
         void* rv = new char[sz];
@@ -76,12 +77,6 @@ public:
 
 
     // nsIDocumentViewer interface...
-    NS_IMETHOD Init(nsNativeWidget aParent,
-                    const nsRect& aBounds,
-                    nsIDocument* aDocument,
-                    nsIPresContext* aPresContext,
-                    nsScrollPreference aScrolling = nsScrollPreference_kAuto);
-
     NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
   
     NS_IMETHOD GetDocument(nsIDocument*& aResult);
@@ -89,6 +84,9 @@ public:
     NS_IMETHOD GetPresShell(nsIPresShell*& aResult);
   
     NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
+
+    NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
+                                         nsIDocumentViewer*& aResult);
 
 protected:
     virtual ~DocumentViewerImpl();
@@ -136,6 +134,13 @@ static NS_DEFINE_IID(kILinkHandlerIID,      NS_ILINKHANDLER_IID);
 DocumentViewerImpl::DocumentViewerImpl()
 {
     NS_INIT_REFCNT();
+}
+
+DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
+{
+    NS_INIT_REFCNT();
+    mPresContext = aPresContext;
+    NS_IF_ADDREF(aPresContext);
 }
 
 // ISupports implementation...
@@ -267,44 +272,17 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         return NS_ERROR_NULL_POINTER;
     }
 
-    // Create presentation context
-    rv = NS_NewGalleyContext(&mPresContext);
-    if (NS_OK != rv) {
-        return rv;
+    PRBool makeCX = PR_FALSE;
+    if (nsnull == mPresContext) {
+        // Create presentation context
+        rv = NS_NewGalleyContext(&mPresContext);
+        if (NS_OK != rv) {
+            return rv;
+        }
+
+        mPresContext->Init(aDeviceContext, aPrefs); 
+        makeCX = PR_TRUE;
     }
-
-    mPresContext->Init(aDeviceContext, aPrefs); 
-    rv = Init(aNativeParent, aBounds, mDocument, mPresContext, aScrolling);
-
-    // Init(...) will addref the Presentation Context...
-    if (NS_OK == rv) {
-        // XXX FIX ME...
-        mPresContext->Release();
-    }
-    return rv;
-}
-
-
-NS_IMETHODIMP
-DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
-                         const nsRect& aBounds,
-                         nsIDocument* aDocument,
-                         nsIPresContext* aPresContext,
-                         nsScrollPreference aScrolling)
-{
-    nsresult rv;
-    nsRect bounds;
-    nscoord width, height;
-
-    NS_PRECONDITION(nsnull != aPresContext, "null ptr");
-    NS_PRECONDITION(nsnull != aDocument,    "null ptr");
-    if ((nsnull == aPresContext) || (nsnull == aDocument)) {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
-    }
-
-    mPresContext = aPresContext;
-    NS_ADDREF(mPresContext);
 
     if (nsnull != mContainer) {
         nsILinkHandler* linkHandler = nsnull;
@@ -317,12 +295,12 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         nsIScriptContextOwner* owner = nsnull;
         mContainer->QueryCapability(kIScriptContextOwnerIID, (void**)&owner);
         if (nsnull != owner) {
-            aDocument->SetScriptContextOwner(owner);
+            mDocument->SetScriptContextOwner(owner);
             nsIScriptGlobalObject* global;
             owner->GetScriptGlobalObject(&global);
             if (nsnull != global) {
                 nsIDOMDocument *domdoc = nsnull;
-                aDocument->QueryInterface(kIDOMDocumentIID,
+                mDocument->QueryInterface(kIDOMDocumentIID,
                                           (void**) &domdoc);
                 if (nsnull != domdoc) {
                     global->SetNewDocument(domdoc);
@@ -339,29 +317,37 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 
     // Create the style set...
     nsIStyleSet* styleSet;
-    rv = CreateStyleSet(aDocument, &styleSet);
-    if (NS_OK != rv) {
-        goto done;
+    rv = CreateStyleSet(mDocument, &styleSet);
+    if (NS_OK == rv) {
+        // Now make the shell for the document
+        rv = mDocument->CreateShell(mPresContext, mViewManager, styleSet,
+                                    &mPresShell);
+        NS_RELEASE(styleSet);
+        if (NS_OK == rv) {
+            // Initialize our view manager
+            nsRect bounds;
+            mWindow->GetBounds(bounds);
+            nscoord width = bounds.width;
+            nscoord height = bounds.height;
+            width = NSIntPixelsToTwips(width, mPresContext->GetPixelsToTwips());
+            height = NSIntPixelsToTwips(height, mPresContext->GetPixelsToTwips());
+            mViewManager->DisableRefresh();
+            mViewManager->SetWindowDimensions(width, height);
+
+            if (!makeCX) {
+                // Make shell an observer for next time
+                mPresShell->BeginObservingDocument();
+
+                // Resize-reflow this time
+                nsRect r;
+                mPresShell->InitialReflow(width, height);
+
+                // Now trigger a refresh
+                mViewManager->EnableRefresh();
+            }
+        }
     }
 
-    // Now make the shell for the document
-    rv = aDocument->CreateShell(mPresContext, mViewManager, styleSet,
-                                &mPresShell);
-    NS_RELEASE(styleSet);
-    if (NS_OK != rv) {
-        goto done;
-    }
-
-    // Initialize our view manager
-    mWindow->GetBounds(bounds);
-    width = bounds.width;
-    height = bounds.height;
-    width = NSIntPixelsToTwips(width, mPresContext->GetPixelsToTwips());
-    height = NSIntPixelsToTwips(height, mPresContext->GetPixelsToTwips());
-    mViewManager->DisableRefresh();
-    mViewManager->SetWindowDimensions(width, height);
-
-done:
     return rv;
 }
 
@@ -453,8 +439,12 @@ void DocumentViewerImpl::ForceRefresh()
     mWindow->Invalidate(PR_TRUE);
 }
 
-nsresult DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet)
-{ // this should eventually get expanded to allow for creating different sets for different media
+nsresult
+DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
+                                   nsIStyleSet** aStyleSet)
+{
+    // this should eventually get expanded to allow for creating
+    // different sets for different media
     nsresult rv;
 
     if (nsnull == mUAStyleSheet) {
@@ -537,6 +527,37 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
     // go to the scrolled view as soon as the Window is created instead of going to
     // the browser window (this enables keyboard scrolling of the document)
     mWindow->SetFocus();
+
+    return rv;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::CreateDocumentViewerUsing(nsIPresContext* aPresContext,
+                                              nsIDocumentViewer*& aResult)
+{
+    if (nsnull == mDocument) {
+        // XXX better error
+        return NS_ERROR_NULL_POINTER;
+    }
+    if (nsnull == aPresContext) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    // Create new viewer
+    DocumentViewerImpl* viewer = new DocumentViewerImpl(aPresContext);
+    if (nsnull == viewer) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(viewer);
+
+    // XXX make sure the ua style sheet is used (for now; need to be
+    // able to specify an alternate)
+    viewer->SetUAStyleSheet(mUAStyleSheet);
+
+    // Bind the new viewer to the old document
+    nsresult rv = viewer->BindToDocument(mDocument, "create");/* XXX verb? */
+
+    aResult = viewer;
 
     return rv;
 }
