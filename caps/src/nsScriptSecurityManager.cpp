@@ -477,7 +477,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
     if (aDisallowFromMail && 
         (nsCRT::strcmp(fromScheme, "mailbox")  == 0 ||
          nsCRT::strcmp(fromScheme, "imap")     == 0 ||
-         nsCRT::strcmp(fromScheme, "news")))
+         nsCRT::strcmp(fromScheme, "news")     == 0))
     {
         return NS_ERROR_DOM_BAD_URI;
     }
