@@ -63,6 +63,8 @@ REQUIRES = \
 
 CPPSRCS = nsCalendarApp.cpp
 
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+
 ifdef BUILD_STATIC_LIBS
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
 endif
