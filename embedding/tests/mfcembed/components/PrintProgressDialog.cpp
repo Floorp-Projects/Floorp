@@ -155,7 +155,7 @@ BOOL CPrintProgressDialog::OnInitDialog()
       cancelBtn->EnableWindow(FALSE);
     } else {
       cancelBtn->ShowWindow(SW_HIDE);
-      SetWindowText("Print Preview");
+      SetWindowText(_T("Print Preview"));
     }
   }
 	

@@ -64,13 +64,8 @@
 void CBrowserFrame::BrowserFrameGlueObj::UpdateStatusBarText(const PRUnichar *aMessage)
 {
     METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
-
-    nsCString strStatus; 
-
-    if(aMessage)
-        strStatus.AssignWithConversion(aMessage);
-
-    pThis->m_wndStatusBar.SetPaneText(0, strStatus.get());
+    USES_CONVERSION;
+    pThis->m_wndStatusBar.SetPaneText(0, aMessage ? W2CT(aMessage) : _T(""));
 }
 
 void CBrowserFrame::BrowserFrameGlueObj::UpdateProgress(PRInt32 aCurrent, PRInt32 aMax)
@@ -103,10 +98,10 @@ void CBrowserFrame::BrowserFrameGlueObj::UpdateCurrentURI(nsIURI *aLocation)
 
     if(aLocation)
     {
+        USES_CONVERSION;
         nsCAutoString uriString;
         aLocation->GetSpec(uriString);
-
-        pThis->m_wndUrlBar.SetCurrentURL(uriString.get());
+        pThis->m_wndUrlBar.SetCurrentURL(A2CT(uriString.get()));
     }
 }
 
@@ -119,9 +114,9 @@ void CBrowserFrame::BrowserFrameGlueObj::GetBrowserFrameTitle(PRUnichar **aTitle
 
     if(!title.IsEmpty())
     {
+        USES_CONVERSION;
         nsString nsTitle;
-        nsTitle.AssignWithConversion(title.GetBuffer(0));
-
+        nsTitle.Assign(T2CW(title.GetBuffer(0)));
         *aTitle = ToNewUnicode(nsTitle);
     }
 }
@@ -130,21 +125,20 @@ void CBrowserFrame::BrowserFrameGlueObj::SetBrowserFrameTitle(const PRUnichar *a
 {
     METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
 
-    USES_CONVERSION;
-
-    if(W2T(aTitle))
+    CString title;
+    if (aTitle)
     {
-        pThis->SetWindowText(W2T(aTitle));
+        USES_CONVERSION;
+        title = W2CT(aTitle);
     }
     else
     {
         // Use the AppName i.e. mfcembed as the title if we
         // do not get one from GetBrowserWindowTitle()
         //
-        CString cs;
-        cs.LoadString(AFX_IDS_APP_TITLE);
-        pThis->SetWindowText(cs);
+        title.LoadString(AFX_IDS_APP_TITLE);
     }
+    pThis->SetWindowText(title);
 }
 
 void CBrowserFrame::BrowserFrameGlueObj::SetBrowserFrameSize(PRInt32 aCX, PRInt32 aCY)

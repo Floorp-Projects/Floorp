@@ -495,7 +495,11 @@ void CEditorFrame::InsertLink(CString& linkText, CString& linkLocation)
 void CEditorFrame::InsertHTML(CString& str)
 {
     nsString htmlToInsert;
+#ifdef _UNICODE
+    htmlToInsert.Assign(str.GetBuffer(0));
+#else
     htmlToInsert.AssignWithConversion(str.GetBuffer(0));
+#endif
 
     nsCOMPtr<nsIHTMLEditor> htmlEditor;
     GetHTMLEditor(getter_AddRefs(htmlEditor)); 
@@ -560,8 +564,8 @@ BOOL CEditorFrame::GetCurrentLinkInfo(CString& strLinkText, CString& strLinkLoca
     if (NS_FAILED(rv))
         return FALSE;
 
-    strLinkText = W2T(linkText.get());
-    strLinkLocation = W2T(linkLocation.get());
+    strLinkText = W2CT(linkText.get());
+    strLinkLocation = W2CT(linkLocation.get());
 
     *anchorElement = linkElement;
     NS_ADDREF(*anchorElement);

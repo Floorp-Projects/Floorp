@@ -148,7 +148,7 @@ void CLinkPropertiesDlg::OnOK()
 
 	if (m_LinkLocation.IsEmpty() || (m_LinkText.IsEmpty() && m_LinkLocation.IsEmpty()))
 	{
-		MessageBox("Please enter a Link Location");
+		MessageBox(_T("Please enter a Link Location"));
 		return;
 	}
 

@@ -118,6 +118,18 @@ SOURCE=.\BrowserView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CFormatOptionTab.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\CMarginHeaderFooter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\CPageSetupPropSheet.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Dialogs.cpp
 # End Source File
 # Begin Source File
@@ -139,14 +151,6 @@ SOURCE=.\MostRecentUrls.cpp
 # Begin Source File
 
 SOURCE=.\Preferences.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\PrintProgressDialog.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\PrintSetupDialog.cpp
 # End Source File
 # Begin Source File
 
@@ -186,6 +190,10 @@ SOURCE=.\BrowserView.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\CMarginHeaderFooter.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Dialogs.h
 # End Source File
 # Begin Source File
@@ -207,14 +215,6 @@ SOURCE=.\MostRecentUrls.h
 # Begin Source File
 
 SOURCE=.\Preferences.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\PrintProgressDialog.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\PrintSetupDialog.h
 # End Source File
 # Begin Source File
 
@@ -307,6 +307,82 @@ SOURCE=..\..\..\editor\composer\src\nsComposerCommands.cpp
 # Begin Source File
 
 SOURCE=..\..\components\commandhandler\src\nsControllerCommandManager.cpp
+# End Source File
+# End Group
+# Begin Group "Component Source Files"
+
+# PROP Default_Filter "*.cpp"
+# Begin Source File
+
+SOURCE=.\components\Dialogs.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\HelperAppDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\nsPrintDialogUtil.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\nsPrintProgressParams.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\PrintingPromptService.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\PrintProgressDialog.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\PromptService.cpp
+# End Source File
+# End Group
+# Begin Group "Component Header Files"
+
+# PROP Default_Filter "*.h"
+# Begin Source File
+
+SOURCE=.\components\Dialogs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\HelperAppDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\HelperAppService.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\nsPrintDialogUtil.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\nsPrintProgressParams.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\PrintingPromptService.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\PrintProgressDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\PromptService.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\components\stdafx.h
 # End Source File
 # End Group
 # End Target

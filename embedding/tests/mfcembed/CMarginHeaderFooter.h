@@ -76,8 +76,8 @@ public:
 // Implementation
 protected:
   void SetCombobox(int aId, CString& aText);
-  void SetComboboxValue(int aId, const char* aValue);
-  void AddCBXItem(int aId, const char* aItem);
+  void SetComboboxValue(int aId, const TCHAR * aValue);
+  void AddCBXItem(int aId, const TCHAR * aItem);
 
 	// Generated message map functions
 	//{{AFX_MSG(CMarginHeaderFooter)
