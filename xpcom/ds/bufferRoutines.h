@@ -804,7 +804,7 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
 /**
  * This method compresses duplicate runs of a given char from the given buffer 
  *
- * @update	gess 01/04/99
+ * @update	rickg 03.23.2000
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -815,38 +815,40 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
 PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){ 
 
   char*  from = aString;
-  char*  end =  aString + aLength-1;
+  char*  end =  aString + aLength;
   char*  to = from;
 
     //this code converts /n, /t, /r into normal space ' ';
     //it also compresses runs of whitespace down to a single char...
   if(aSet && aString && (0 < aLength)){
     PRUint32 aSetLen=strlen(aSet);
-    while (from <= end) {
+
+    while (from < end) {
       char theChar = *from++;
-      if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
-        *to++=theChar;
-        while (from <= end) {
+      
+      *to++=theChar; //always copy this char...
+
+      if((kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen))){
+        while (from < end) {
           theChar = *from++;
           if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
             *to++ = theChar;
             break;
           }
-        }
-      } else {
-        *to++ = theChar;
-      }
-    }
+        } //while
+      } //if
+    } //if
     *to = 0;
   }
-  return to - (char*)aString;
+  return to - aString;
 }
+
 
 
 /**
  * This method compresses duplicate runs of a given char from the given buffer 
  *
- * @update	gess 01/04/99
+ * @update	rickg 03.23.2000
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -854,32 +856,32 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-
 PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){ 
 
   PRUnichar*  from = (PRUnichar*)aString;
-  PRUnichar*  end =  from + aLength-1;
+  PRUnichar*  end =  from + aLength;
   PRUnichar*  to = from;
 
     //this code converts /n, /t, /r into normal space ' ';
     //it also compresses runs of whitespace down to a single char...
   if(aSet && aString && (0 < aLength)){
     PRUint32 aSetLen=strlen(aSet);
-    while (from <= end) {
+
+    while (from < end) {
       PRUnichar theChar = *from++;
-      if((255<theChar) || (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen))){
-        *to++=theChar;
-        while (from <= end) {
+      
+      *to++=theChar; //always copy this char...
+
+      if((theChar<256) && (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen))){
+        while (from < end) {
           theChar = *from++;
           if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
             *to++ = theChar;
             break;
           }
-        }
-      } else {
-        *to++ = theChar;
-      }
-    }
+        } //while
+      } //if
+    } //if
     *to = 0;
   }
   return to - (PRUnichar*)aString;
