@@ -58,18 +58,6 @@ int main(int argc, char** argv) {
 
     XSLTProcessor xsltProcessor;
 
-    String copyright("(C) 1999 The MITRE Corporation, Keith Visco, and contributors");
-    cerr << xsltProcessor.getAppName() << " ";
-    cerr << xsltProcessor.getAppVersion() << endl;
-    cerr << copyright <<endl;
-
-    //-- print banner line
-    PRInt32 fillSize = 1;
-    fillSize += copyright.length();
-    String fill;
-    fill.setLength(fillSize, '-');
-    cerr << fill <<endl<<endl;
-
     //-- add ErrorObserver
     SimpleErrorObserver seo;
     xsltProcessor.addErrorObserver(seo);
@@ -79,13 +67,26 @@ int main(int argc, char** argv) {
     flags.add(new String("i"));          // XML input
     flags.add(new String("s"));          // XSL input
     flags.add(new String("o"));          // Output filename
-    flags.add(new String("h"));		// help
+    flags.add(new String("h"));          // help
+    flags.add(new String("q"));          // quiet
 
     NamedMap options;
     options.setObjectDeletion(MB_TRUE);
     CommandLineUtils::getOptions(options, argc, argv, flags);
 
-    if ( options.get("h") ) {
+    if (!options.get("q")) {
+        String copyright("(C) 1999 The MITRE Corporation, Keith Visco, and contributors");
+        cerr << xsltProcessor.getAppName() << " ";
+        cerr << xsltProcessor.getAppVersion() << endl;
+        cerr << copyright << endl;
+        //-- print banner line
+        PRInt32 fillSize = copyright.length() + 1;
+        String fill;
+        fill.setLength(fillSize, '-');
+        cerr << fill << endl << endl;
+    }
+
+    if (options.get("h")) {
         printHelp();
         return 0;
     }
