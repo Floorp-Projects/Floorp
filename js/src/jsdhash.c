@@ -286,7 +286,7 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash)
 }
 
 static JSBool
-ChangeTable(JSDHashTable *table, int deltaLog2, JSDHashEntryHdr **findEntry)
+ChangeTable(JSDHashTable *table, int deltaLog2)
 {
     int oldLog2, newLog2;
     uint32 oldCapacity, newCapacity;
@@ -330,8 +330,6 @@ ChangeTable(JSDHashTable *table, int deltaLog2, JSDHashEntryHdr **findEntry)
             JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(newEntry));
             moveEntry(table, oldEntry, newEntry);
             newEntry->keyHash = oldEntry->keyHash;
-            if (findEntry && *findEntry == oldEntry)
-                *findEntry = newEntry;
         }
         oldEntryAddr += entrySize;
     }
@@ -343,32 +341,54 @@ ChangeTable(JSDHashTable *table, int deltaLog2, JSDHashEntryHdr **findEntry)
 JS_PUBLIC_API(JSDHashEntryHdr *)
 JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
 {
-    int biasedDeltaLog2;
     JSDHashNumber keyHash;
     JSDHashEntryHdr *entry;
     uint32 size;
-
-/*
- * Usually we don't grow or shrink the table, so optimize for test-not-zero
- * by biasing the deltaLog2 of -1 (shrink), 0 (compress), or 1 (grow) so that
- * the biased no-change value is 0.
- */
-#define DELTA_LOG2_BIAS 2
-
-    biasedDeltaLog2 = 0;
+    int deltaLog2;
 
     /* Avoid 0 and 1 hash codes, they indicate free and removed entries. */
     keyHash = table->ops->hashKey(table, key);
     ENSURE_LIVE_KEYHASH(keyHash);
     keyHash *= JS_DHASH_GOLDEN_RATIO;
-    entry = SearchTable(table, key, keyHash);
 
     switch (op) {
       case JS_DHASH_LOOKUP:
         METER(table->stats.lookups++);
+        entry = SearchTable(table, key, keyHash);
         break;
 
       case JS_DHASH_ADD:
+        /*
+         * If alpha is >= .75, grow or compress the table.  If key is already
+         * in the table, we may grow once more than necessary, but only if we
+         * are on the edge of being overloaded.
+         */
+        size = JS_BIT(table->sizeLog2);
+        if (table->entryCount + table->removedCount >= size - (size >> 2)) {
+            if (table->removedCount >= size >> 2) {
+                METER(table->stats.compresses++);
+                deltaLog2 = 0;
+            } else {
+                METER(table->stats.grows++);
+                deltaLog2 = 1;
+            }
+
+            /*
+             * Grow or compress table, returning null if ChangeTable fails and
+             * falling through might claim the last free entry.
+             */
+            if (!ChangeTable(table, deltaLog2) &&
+                table->entryCount + table->removedCount == size - 1) {
+                METER(table->stats.addFailures++);
+                return NULL;
+            }
+        }
+
+        /*
+         * Look for entry after possibly growing, so we don't have to add it,
+         * then skip it while growing the table and re-add it after.
+         */
+        entry = SearchTable(table, key, keyHash);
         if (JS_DHASH_ENTRY_IS_FREE(entry)) {
             /* Initialize the entry, indicating that it's no longer free. */
             METER(table->stats.addMisses++);
@@ -376,23 +396,12 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
                 table->ops->initEntry(table, entry, key);
             entry->keyHash = keyHash;
             table->entryCount++;
-
-            /* If alpha is >= .75, set biasedDeltaLog2 to trigger growth. */
-            size = JS_BIT(table->sizeLog2);
-            if (table->entryCount + table->removedCount >= size - (size >> 2)) {
-                if (table->removedCount >= size >> 2) {
-                    METER(table->stats.compresses++);
-                    biasedDeltaLog2 = 0 + DELTA_LOG2_BIAS;
-                } else {
-                    METER(table->stats.grows++);
-                    biasedDeltaLog2 = 1 + DELTA_LOG2_BIAS;
-                }
-            }
         }
         METER(else table->stats.addHits++);
         break;
 
       case JS_DHASH_REMOVE:
+        entry = SearchTable(table, key, keyHash);
         if (JS_DHASH_ENTRY_IS_BUSY(entry)) {
             /* Clear this entry and mark it as "removed". */
             METER(table->stats.removeHits++);
@@ -402,7 +411,7 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
             size = JS_BIT(table->sizeLog2);
             if (size > JS_DHASH_MIN_SIZE && table->entryCount <= size >> 2) {
                 METER(table->stats.shrinks++);
-                biasedDeltaLog2 = -1 + DELTA_LOG2_BIAS;
+                (void) ChangeTable(table, -1);
             }
         }
         METER(else table->stats.removeMisses++);
@@ -411,24 +420,8 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
 
       default:
         JS_ASSERT(0);
+        entry = NULL;
     }
-
-    if (biasedDeltaLog2) {
-        /* Grow, compress, or shrink table, keeping entry valid if non-null. */
-        if (!ChangeTable(table, biasedDeltaLog2 - DELTA_LOG2_BIAS, &entry)) {
-            /* If we just grabbed the last free entry, undo and fail hard. */
-            if (op == JS_DHASH_ADD &&
-                table->entryCount + table->removedCount == size) {
-                METER(table->stats.addFailures++);
-                table->ops->clearEntry(table, entry);
-                MARK_ENTRY_FREE(entry);
-                table->entryCount--;
-                entry = NULL;
-            }
-        }
-    }
-
-#undef DELTA_LOG2_BIAS
 
     return entry;
 }
@@ -476,9 +469,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
         capacity += capacity >> 1;
         if (capacity < JS_DHASH_MIN_SIZE)
             capacity = JS_DHASH_MIN_SIZE;
-        (void) ChangeTable(table,
-                           JS_CeilingLog2(capacity) - table->sizeLog2,
-                           NULL);
+        (void) ChangeTable(table, JS_CeilingLog2(capacity) - table->sizeLog2);
     }
     return i;
 }
