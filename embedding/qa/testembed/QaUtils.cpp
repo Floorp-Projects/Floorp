@@ -309,7 +309,7 @@ nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *webBrowser)
 	return (theDOMWindow);
 }
 
-void GetTheUri(nsIURI *theUri, int displayMethod)
+nsCAutoString GetTheUri(nsIURI *theUri, int displayMethod)
 {
 	nsresult rv;
 	nsCAutoString uriString;
@@ -317,6 +317,8 @@ void GetTheUri(nsIURI *theUri, int displayMethod)
 	rv = theUri->GetSpec(uriString);
     RvTestResult(rv, "nsIURI::GetSpec() test", displayMethod);
     FormatAndPrintOutput("the uri = ", uriString, displayMethod);
+
+	return uriString;
 }
 
 // used for web progress listener in BrowserImplWebPrgrsLstnr.cpp
