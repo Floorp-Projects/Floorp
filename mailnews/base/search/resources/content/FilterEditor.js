@@ -73,7 +73,7 @@ function onOk()
 
         if (promptService)
         {
-            promptService.Alert(window,
+            promptService.alert(window,
                 gFilterBundle.getString("cannotHaveDuplicateFilterTitle"),
                 gFilterBundle.getString("cannotHaveDuplicateFilterMessage")
             );

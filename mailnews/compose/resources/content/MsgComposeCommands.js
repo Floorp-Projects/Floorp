@@ -851,7 +851,7 @@ function ComposeLoad()
     var errorMsg = gComposeMsgsBundle.getString("initErrorDlogMessage");
     errorMsg = errorMsg.replace(/%1\$s/, ex);
     if (promptService)
-      promptService.Alert(window, errorTitle, errorMsg);
+      promptService.alert(window, errorTitle, errorMsg);
     else
       window.alert(errorMsg);
 
@@ -1045,7 +1045,7 @@ function GenericSendMessage( msgType )
     				if (promptService)
     				{
 						var result = {value:0};
-        				if (promptService.Prompt(
+        				if (promptService.prompt(
         					window,
         					gComposeMsgsBundle.getString("subjectDlogTitle"),
         					gComposeMsgsBundle.getString("subjectDlogMessage"),
@@ -1405,7 +1405,7 @@ function ComposeCanClose()
 		if (promptService)
 		{
             var result = {value:0};
-			promptService.UniversalDialog(
+			promptService.universalDialog(
 				window,
 				null,
 				gComposeMsgsBundle.getString("saveDlogTitle"),
@@ -1482,7 +1482,7 @@ function AttachFile()
     var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
 
     if (promptService)
-      promptService.Alert(window, errorTitle, errorMsg);
+      promptService.alert(window, errorTitle, errorMsg);
     else
       window.alert(errorMsg);
   }
@@ -1518,7 +1518,7 @@ function AttachPage()
     if (promptService)
     {
         var result = {value:0};
-        if (promptService.Prompt(
+        if (promptService.prompt(
         	window,
         	gComposeMsgsBundle.getString("attachPageDlogTitle"),
         	gComposeMsgsBundle.getString("attachPageDlogMessage"),
@@ -1840,7 +1840,7 @@ var attachmentBucketObserver = {
         var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
 
         if (promptService)
-          promptService.Alert(window, errorTitle, errorMsg);
+          promptService.alert(window, errorTitle, errorMsg);
         else
           window.alert(errorMsg);
       }
@@ -1903,7 +1903,7 @@ function DisplaySaveFolderDlg(folderURI)
     var SaveDlgMsg = newMessage.replace(/@HostName@/, msgfolder.hostname);
 
     if (promptService)
-      promptService.AlertCheck(window, SaveDlgTitle, SaveDlgMsg, CheckMsg, checkbox);
+      promptService.alertCheck(window, SaveDlgTitle, SaveDlgMsg, CheckMsg, checkbox);
     else
       window.alert(SaveDlgMsg);
     try {

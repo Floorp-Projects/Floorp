@@ -172,7 +172,7 @@ function onCancel()
     if (!(accountCount > 0)) {
         var confirmTitle = gPrefsBundle.getString("accountWizard");
         var confirmMsg = gPrefsBundle.getString("cancelWizard");
-        if (promptService.Confirm(window,confirmTitle,confirmMsg))
+        if (promptService.confirm(window,confirmTitle,confirmMsg))
           window.close();
         else 
           return;

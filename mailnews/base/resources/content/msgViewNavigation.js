@@ -150,7 +150,7 @@ function CrossFolderNavigation(type, supportsFolderPane )
         case 1:
         default:
             var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt", [ nextFolder.name ], 1); 
-            if (promptService.Confirm(window, promptText, promptText)) {
+            if (promptService.confirm(window, promptText, promptText)) {
                 gNextMessageAfterLoad = type;
                 if (supportsFolderPane)
                   SelectFolder(nextFolderURI);

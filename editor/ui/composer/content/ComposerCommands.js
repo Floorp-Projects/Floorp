@@ -386,7 +386,7 @@ var nsRevertCommand =
 
       var msg = window.editorShell.GetString("AbandonChanges").replace(/%title%/,title);
 
-      promptService.UniversalDialog(
+      promptService.universalDialog(
         window,
         null,
         window.editorShell.GetString("RevertCaption"),

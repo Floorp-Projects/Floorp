@@ -65,7 +65,7 @@ function onOK()
     var dialogMsg = gPrefApplicationsBundle.getString("handlerExists");
     dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-    var replace = promptService.Confirm(window, titleMsg, dialogMsg);
+    var replace = promptService.confirm(window, titleMsg, dialogMsg);
     if (!replace)
       window.close();
   }

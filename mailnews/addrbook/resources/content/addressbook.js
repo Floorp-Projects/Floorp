@@ -288,7 +288,7 @@ function AbDeleteDirectory()
         {
             if (promptService)
             {
-                promptService.Alert(window,
+                promptService.alert(window,
                     gAddressBookBundle.getString("cannotDeleteTitle"), 
                     gAddressBookBundle.getString("cannotDeleteMessage"));
             }

@@ -595,7 +595,7 @@ function myPrompt(message, oldValue, title) {
   }
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-  promptService.Prompt(window, title, message, "", 0, oldValue, newValue)
+  promptService.prompt(window, title, message, "", 0, oldValue, newValue)
   return newValue.value;
 }
 

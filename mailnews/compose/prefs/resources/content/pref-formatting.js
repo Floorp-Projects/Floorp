@@ -73,7 +73,7 @@ function AddDomain(obj)
   if (promptService)
   {
     var result = {value:0};
-    if (promptService.Prompt(
+    if (promptService.prompt(
       window,
       obj.DlgTitle,
       obj.DlgMsg,
@@ -145,7 +145,7 @@ function DomainAlreadyPresent(obj, domain_name, dup)
           errorMsg = document.getElementById("domainerrdlg").getAttribute("dualerr");
           var errorMessage = errorMsg.replace(/@string@/, domain_name);
           if (promptService)
-            promptService.Alert(window, errorTitle, errorMessage);
+            promptService.alert(window, errorTitle, errorMessage);
           else
             window.alert(errorMessage);
           found = true;

@@ -298,7 +298,7 @@ function onOK()
                                                               [oldParent.unicodePath, file.unicodePath]);
         }
         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-        promptService.Alert(window, errorTitle, errorMessage);
+        promptService.alert(window, errorTitle, errorMessage);
         ret = nsIFilePicker.returnCancel;
       }
     }
