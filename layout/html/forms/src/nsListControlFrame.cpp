@@ -18,6 +18,7 @@
  */
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
+#include "nsFormControlFrame.h" // for COMPARE macro
 #include "nsFormControlHelper.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
@@ -45,6 +46,7 @@
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
+#include "nsILookAndFeel.h"
 
 static NS_DEFINE_IID(kIDOMMouseListenerIID,       NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
@@ -180,7 +182,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
 {
-#ifdef DEBUG_rodsXXX
+#ifdef DEBUG_rods
   printf("nsListControlFrame::Reflow    Reason: ");
   switch (aReflowState.reason) {
     case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
@@ -202,13 +204,6 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
    // should be honored if there isn't a size specified.
 
     // Determine the desired width + height for the listbox + 
-  /*printf("nsListControlFrame::Reflow   Reason: ");
-  switch (aReflowState.reason) {
-    case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
-    case eReflowReason_Incremental:printf("eReflowReason_Incremental\n");break;
-    case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
-    case eReflowReason_StyleChange:printf("eReflowReason_StyleChange\n");break;
-  }*/
   aDesiredSize.width  = 0;
   aDesiredSize.height = 0;
 
@@ -252,25 +247,29 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
                         firstPassState, 
                         aStatus);
 
-    // Compute the bounding box of the contents of the list using the area 
-    // calculated by the first reflow as a starting point.
-
-  nscoord scrolledAreaWidth = scrolledAreaDesiredSize.maxElementSize->width;
+  // Compute the bounding box of the contents of the list using the area 
+  // calculated by the first reflow as a starting point.
+  //
+   // The nsScrollFrame::REflow adds in the scrollbar width and border dimensions
+  // to the maxElementSize, so these need to be subtracted
+  nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.maxElementSize->width;
   nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height;
-  mMaxWidth = scrolledAreaWidth;
+
+  // Keep the oringal values
+  mMaxWidth  = scrolledAreaWidth;
   mMaxHeight = scrolledAreaDesiredSize.maxElementSize->height;
 
-    // The first reflow produces a box with the scrollbar width and borders
-    // added in so we need to subtract them out.
+  // The first reflow produces a box with the scrollbar width and borders
+  // added in so we need to subtract them out.
 
-    // Retrieve the scrollbar's width and height
+  // Retrieve the scrollbar's width and height
   float sbWidth  = 0.0;
   float sbHeight = 0.0;;
   nsCOMPtr<nsIDeviceContext> dc;
   aPresContext.GetDeviceContext(getter_AddRefs(dc));
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
   // Convert to nscoord's by rounding
-  nscoord scrollbarWidth = NSToCoordRound(sbWidth);
+  nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
   nscoord scrollbarHeight = NSToCoordRound(sbHeight);
 
     // Subtract out the scrollbar width
@@ -291,7 +290,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
 
   mBorderOffsetY = border.top;
 
-  scrolledAreaWidth -= (border.left + border.right);
+  scrolledAreaWidth  -= (border.left + border.right + padding.top + padding.bottom);
   scrolledAreaHeight -= (border.top + border.bottom);
 
   // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
@@ -327,7 +326,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
    // of option elements. The reason is that their may be option groups in addition to
    //  option elements. Either of which may be visible or invisible.
   PRInt32 heightOfARow = scrolledAreaDesiredSize.maxElementSize->height;
-  heightOfARow -= (border.top + border.bottom);
+  heightOfARow -= (border.top + border.bottom + padding.top + padding.bottom);
 
   // Check to see if we have zero item and
   // whether we have no width and height
@@ -335,25 +334,6 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   // of a bogus string so the list actually displays
   PRInt32 length = 0;
   GetNumberOfOptions(&length);
-  /*if (!isInDropDownMode && (0 == length || (0 == visibleWidth && 0 == heightOfARow))) {
-    nsCOMPtr<nsIPresShell> presShell;
-    nsresult rv = aPresContext.GetShell(getter_AddRefs(presShell));
-    if (NS_SUCCEEDED(rv) && presShell) {
-      nsCOMPtr<nsIRenderingContext> renderContext;
-      rv = presShell->CreateRenderingContext(this, getter_AddRefs(renderContext));
-      if (NS_SUCCEEDED(rv) && renderContext) {
-
-
-        nsSize size;
-        rv = presShell->CreateRenderingContext(this, getter_AddRefs(renderContext));
-	      const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-        renderContext->SetFont(fontStyle->mFont);
-        nsFormControlHelper::GetTextSize(aPresContext, this, nsAutoString("XX"), size, renderContext);
-        visibleWidth  = size.width;
-        heightOfARow = size.height;
-      }
-    }
-  }*/
 
   nscoord visibleHeight = 0;
   if (isInDropDownMode) {
@@ -375,8 +355,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
       GetSizeAttribute(&numRows);
       if (numRows == kNoSizeSpecified) {
         visibleHeight = aReflowState.mComputedHeight;
-      }
-      else {
+      } else {
         visibleHeight = numRows * heightOfARow;
       }
     }
@@ -399,6 +378,9 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     visibleWidth += scrollbarWidth;
     mIsScrollbarVisible = PR_TRUE; // XXX temp code
   } else {
+    if (!isInDropDownMode) {
+      visibleWidth += scrollbarWidth;
+    }
     mIsScrollbarVisible = PR_FALSE; // XXX temp code
   }
 
@@ -422,9 +404,10 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
 
    // Do a second reflow with the adjusted width and height settings
    // This sets up all of the frames with the correct width and height.
-  secondPassState.mComputedWidth = visibleWidth;
+  secondPassState.mComputedWidth  = visibleWidth;
   secondPassState.mComputedHeight = visibleHeight;
   secondPassState.reason = eReflowReason_Resize;
+  //printf("List: visible      %d %d\n", visibleWidth, visibleHeight);
   nsScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
 
     // Set the max element size to be the same as the desired element size.
@@ -432,10 +415,26 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
 	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
+  //printf("List: aDesiredSize %d %d\n", aDesiredSize.width, aDesiredSize.height);
 
   aStatus = NS_FRAME_COMPLETE;
   mDisplayed = PR_TRUE;
-  
+
+#ifdef DEBUG_rods
+  if (!isInDropDownMode) {
+    PRInt32 numRows = 1;
+    GetSizeAttribute(&numRows);
+    printf("%d ", numRows);
+    if (numRows == 2) {
+      COMPARE_QUIRK_SIZE("nsListControlFrame", 56, 38) 
+    } if (numRows == 3) {
+      COMPARE_QUIRK_SIZE("nsListControlFrame", 56, 54) 
+    } if (numRows == 4) {
+      COMPARE_QUIRK_SIZE("nsListControlFrame", 56, 70) 
+    }
+  }
+#endif
+
   return NS_OK;
 }
 
