@@ -146,7 +146,7 @@ class nsMsgCompose : public nsIMsgCompose
 class QuotingOutputStreamListener : public nsIStreamListener
 {
 public:
-    QuotingOutputStreamListener(void);
+    QuotingOutputStreamListener(const PRUnichar *originalMsgURI, PRBool quoteHeaders);
     virtual ~QuotingOutputStreamListener(void);
 
     // nsISupports interface
@@ -162,7 +162,6 @@ public:
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 	NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
-	NS_IMETHOD  SetQuoteHeaders(PRBool quoteHeaders);
 	NS_IMETHOD  ConvertToPlainText();
 
 private:

@@ -55,4 +55,7 @@ public:
 // Will be used by factory to generate a nsMsgQuote class...
 nsresult      NS_NewMsgDraft(const nsIID &aIID, void ** aInstancePtrResult);
 
+nsIMessage * GetIMessageFromURI(const PRUnichar *msgURI);
+
+
 #endif /* _nsMsgCreate_H_ */

@@ -38,6 +38,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsMsgSend.h"
+#include "nsMsgCreate.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -707,11 +708,40 @@ QuotingOutputStreamListener::~QuotingOutputStreamListener()
     NS_RELEASE(mComposeObj);
 }
 
-QuotingOutputStreamListener::QuotingOutputStreamListener(void) 
+QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * originalMsgURI, PRBool quoteHeaders) 
 { 
   mComposeObj = nsnull;
-//  mMsgBody = "<br><BLOCKQUOTE TYPE=CITE><html><br>--- Original Message ---<br><br>";
-  mMsgBody = "<br><br>--- Original Message ---<br><BLOCKQUOTE TYPE=CITE><html><br>";
+  mQuoteHeaders = quoteHeaders;
+
+  nsCOMPtr<nsIMessage> originalMsg = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
+  if (originalMsg && !quoteHeaders)
+  {
+    nsresult rv;
+	nsString author;
+	rv = originalMsg->GetMime2DecodedAuthor(&author);
+	if (NS_SUCCEEDED(rv))
+	{
+	  char * authorName = nsnull;
+	  nsCOMPtr<nsIMsgHeaderParser> parser;
+      nsComponentManager::CreateInstance(kHeaderParserCID,
+                                            nsnull,
+                                            nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
+                                            getter_AddRefs(parser));
+	  if (parser)
+	    if (NS_SUCCEEDED(parser->ExtractHeaderAddressName(nsnull, nsAutoCString(author), &authorName)))
+		{
+          mMsgBody = "<br><br>";
+	      mMsgBody += authorName;
+	      mMsgBody += " wrote:<br><BLOCKQUOTE TYPE=CITE><html>";
+		}
+	  if (authorName)
+		PL_strfree(authorName);
+	}
+  }
+  
+  if (mMsgBody.IsEmpty())
+    mMsgBody = "<br><br>--- Original Message ---<br><BLOCKQUOTE TYPE=CITE><html>";
+
   NS_INIT_REFCNT(); 
 }
 
@@ -858,13 +888,6 @@ QuotingOutputStreamListener::SetComposeObj(nsMsgCompose *obj)
   return NS_OK;
 }
 
-nsresult
-QuotingOutputStreamListener::SetQuoteHeaders(PRBool quoteHeaders)
-{
-  mQuoteHeaders = quoteHeaders;
-  return NS_OK;
-}
-
 NS_IMPL_ISUPPORTS(QuotingOutputStreamListener, nsCOMTypeInfo<nsIStreamListener>::GetIID());
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF QUOTING LISTENER
@@ -899,7 +922,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
     return NS_ERROR_FAILURE;
 
   // Create the consumer output stream.. this will receive all the HTML from libmime
-  mQuoteStreamListener = new QuotingOutputStreamListener();
+  mQuoteStreamListener = new QuotingOutputStreamListener(originalMsgURI, what != 1);
   
   if (!mQuoteStreamListener)
   {
@@ -910,7 +933,6 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 
   NS_ADDREF(this);
   mQuoteStreamListener->SetComposeObj(this);
-  mQuoteStreamListener->SetQuoteHeaders(what != 1);
 
   return mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener);
 }
