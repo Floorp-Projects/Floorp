@@ -205,7 +205,7 @@ pref("browser.tabs.opentabfor.bookmarks", false);
 //  1 - loads home page
 //  2 - loads last page visited
 pref("browser.tabs.loadOnNewTab", 0);
-pref("browser.windows.loadOnNewWindow", -1);
+pref("browser.windows.loadOnNewWindow", 1);
 
 // view source
 pref("view_source.syntax_highlight", true);
