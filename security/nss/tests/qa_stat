@@ -62,7 +62,7 @@ echo >$RSH_FILE
 TMPFILES="$TMPFILES $WARNINGLIST $RSH_FILE "
 RSH_WAIT_TIME=80 #maximum time allowed for the 2 rsh to finish...
 #TOTAL_TESTS=106
-TOTAL_TESTS=123
+TOTAL_TESTS=129
 
 Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
@@ -278,6 +278,7 @@ setQAsysvars()
 {
     if [ "$MACHINE" != "0" ]
     then
+        MACHINE=`echo $MACHINE | sed -e 's/^bct.//g'`
         TESTDATE=`ls -ld $MACHINE | awk '{ print $6, $7, $8 }'`
         TESTNUMBER=`echo $MACHINE | sed -e 's/.*\.//'`
         SYSNAME=`echo $MACHINE | sed -e 's/\..*//'`
@@ -642,7 +643,25 @@ qa_stat_cleanup()
 # local shell function, evaluates the results of the backward u
 # compatibility tests
 ########################################################################
-bc_test()
+bc_header()
+{
+CURRENT_TABLE="BC"   #so html_line can determine which fields to write
+  
+  qa_stat_table "Backward Compatibility Test"
+  echo '<td NOSAVE><b><font size=+1>Build-OS and version</font></b></td>'
+  echo '<td><b><font size=+1>QA-OS</font></b></td>'
+  echo '<td><b><font size=+1>Systemname</font></b></td>'
+  echo '<td><b><font size=+1>P/F</font></b></td>'
+  #echo '<td><b><font size=+1>All Current</font></b></td>'
+  #echo '<td><b><font size=+1>backward comp. test</font></b></td>'
+  echo '<td><b><font size=+1>result</font></b></td>'
+  echo '<td><b><font size=+1>output</font></b></td>'
+  echo '<td><b><font size=+1>QA time / #</font></b></td>'
+  echo '</tr>'
+
+}
+
+old_bc_test()
 {
 CURRENT_TABLE="BC"   #so html_line can determine which fields to write
   
@@ -712,6 +731,67 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
            #)  2>&1 >>$BCERRORLIST
       rm $TMP_RESULT $TMP_BC_RESULT 2>/dev/null
   done
+  rm $ERRORLIST
+  cat $BCMISSINGLIST | sed -e "s/^diff: bc_...s.//" \
+                    -e "s/.results.html.*/\/results.html/" | 
+                sort -u > $ERRORLIST
+
+  platformlist  
+  echo '</table>' >>$TMP_HTML_FILE
+
+  head -200 $BCERRORLIST | sed -e 's/<[^>]*>//g' -e "s/^/<br>/" 
+}
+
+bc_test()
+{
+CURRENT_TABLE="BC"   #so html_line can determine which fields to write
+  
+  qa_stat_table "Backward Compatibility Test"
+  echo '<td NOSAVE><b><font size=+1>Build-OS and version</font></b></td>'
+  echo '<td><b><font size=+1>QA-OS</font></b></td>'
+  echo '<td><b><font size=+1>Systemname</font></b></td>'
+  echo '<td><b><font size=+1>P/F</font></b></td>'
+  #echo '<td><b><font size=+1>All Current</font></b></td>'
+  #echo '<td><b><font size=+1>backward comp. test</font></b></td>'
+  echo '<td><b><font size=+1>result</font></b></td>'
+  echo '<td><b><font size=+1>output</font></b></td>'
+  echo '<td><b><font size=+1>QA time / #</font></b></td>'
+  echo '</tr>'
+
+set -x
+  for w in `ls */results.html`
+  do
+      BCT_DIR=`dirname "bct/$w"`
+      BCT_RESULT="bct/$w"
+      BCT_LOG="$BCT_DIR/output.log"
+      grep "bgcolor=red" $BCT_RESULT | 
+           sed -e 's/.results.html:<TR><TD>/ /' -e 's/<[^>]*>/ /g'
+      grep 'cache hits; .* cache misses, .* cache not reusable' \
+        $BCT_LOG |
+        grep -v selfserv |
+        grep -v '0 cache hits; 1 cache misses, 0 cache not reusable' |
+        grep -v '0 cache hits; 0 cache misses, 0 cache not reusable' |
+        grep -v ' cache hits; 1 cache misses, 0 cache not reusable'
+      grep -vi "write to SSL socket" $BCT_LOG |
+        grep -vi "HDX PR_Read returned error" |
+        grep -vi "no error" |
+        grep -vi "12285" |
+        grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP error
+      grep  -vi "write to SSL socket" $BCT_LOG |
+        grep -vi "peer cannot verify" |
+        grep -vi "error" |
+        grep -vi "fatal" |
+        grep -vi "TCP connection reset" |
+        grep  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP  -i failed $BCT_LOG
+      grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "segmentation violation"  $BCT_LOG
+      grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "memory fault" $BCT_LOG
+      grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "bus error" $BCT_LOG
+      grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "core dumped" $BCT_LOG
+      grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP fatal  $BCT_LOG
+      grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP -i "PKCS12 decode not verified"   $BCT_LOG
+      find ${BTC_DIR} -name core -print
+
+  done 2>&1 >>$BCERRORLIST
   rm $ERRORLIST
   cat $BCMISSINGLIST | sed -e "s/^diff: bc_...s.//" \
                     -e "s/.results.html.*/\/results.html/" | 
@@ -822,7 +902,17 @@ qa_stat_main()
     cat $ERRORLIST  | sed -e "s/^/<br>/" >>$TMP_HTML_FILE
     cat $WARNINGLIST 2>/dev/null | sed -e "s/^/<br>/" >>$TMP_HTML_FILE 2>/dev/null
     rsaperf >>$TMP_HTML_FILE
-    bc_test >>$TMP_HTML_FILE
+    bc_header >>$TMP_HTML_FILE
+    MACHINES_TO_CHECK="bct/"
+    qa_errorlist > $ERRORLIST
+    platformlist 
+    missing_platforms 
+    incomplete_results 
+    echo '</table>' >>$TMP_HTML_FILE
+    echo '<a NAME="errorlist"></a>' >> $TMP_HTML_FILE
+    cat $ERRORLIST  | sed -e "s/^/<br>/" >>$TMP_HTML_FILE
+    cat $WARNINGLIST 2>/dev/null | sed -e "s/^/<br>/" >>$TMP_HTML_FILE 2>/dev/null
+    #bc_test >>$TMP_HTML_FILE
 }
 
 CURRENT_TABLE="Standard"
