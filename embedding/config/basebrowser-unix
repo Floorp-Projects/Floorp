@@ -134,7 +134,6 @@ components/libuconv.so
 components/libi18n.so
 components/uconv.xpt
 components/unicharutil.xpt
-components/intl.xpt
 
 ; 
 ; DOM:

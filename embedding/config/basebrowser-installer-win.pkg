@@ -126,6 +126,13 @@ components\xppref32.dll
 components\profile.dll                  
 components\profile.xpt
 
+; profile sharing - optional
+mozipcd.exe
+ipc\modules\lockmodule.dll
+ipc\modules\transmngr.dll
+components\ipcdc.dll
+components\transmngr_client.dll
+
 ; session history
 components\shistory.xpt
 
