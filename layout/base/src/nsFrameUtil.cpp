@@ -580,18 +580,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
     if (0 == PL_strncmp(tree1->type, kScrollbarFrame, sizeof(kScrollbarFrame) - 1))
       continue;
 
-    // We'll ignore these flags for the purposes of comparing frame state:
-    //
-    //   NS_FRAME_EXTERNAL_REFERENCE
-    //     because this is set by the event state manager or the
-    //     caret code when a frame is focused. Depending on whether
-    //     or not the regression tests are run as the focused window
-    //     will make this value vary randomly.
-#define IRRELEVANT_FRAME_STATE_FLAGS NS_FRAME_EXTERNAL_REFERENCE
-
-#define FRAME_STATE_MASK (~(IRRELEVANT_FRAME_STATE_FLAGS))
-
-    if ((tree1->state & FRAME_STATE_MASK) != (tree2->state & FRAME_STATE_MASK)) {
+    if (tree1->state != tree2->state) {
       printf("frame state mismatch: 0x%x vs. 0x%x\n",
              tree1->state, tree2->state);
       printf("Node 1:\n");

@@ -133,6 +133,7 @@ public:
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG
   NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD VerifyTree() const;
 #endif
