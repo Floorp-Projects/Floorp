@@ -1694,6 +1694,7 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
           }
         }
       }
+      break;
     
     default:
       NS_NOTREACHED("Unknown notification");
