@@ -4340,6 +4340,11 @@ nsGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
       item2visits += AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST;
   }
 
+  if (HasCell(closure->history->mEnv, row1, closure->history->kToken_TypedColumn))
+    item1visits += AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST;
+  if (HasCell(closure->history->mEnv, row2, closure->history->kToken_TypedColumn))
+    item2visits += AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST;
+  
   // primary sort by visit count
   if (item1visits != item2visits)
   {
