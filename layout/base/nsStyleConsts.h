@@ -67,13 +67,6 @@
 // key-equivalent
 #define NS_STYLE_KEY_EQUIVALENT_NONE      0
 
-// resizer
-#define NS_STYLE_RESIZER_NONE         0x00
-#define NS_STYLE_RESIZER_HORIZONTAL   0x01  // bits
-#define NS_STYLE_RESIZER_VERTICAL     0x02  // bits
-#define NS_STYLE_RESIZER_BOTH         0x03  // bits
-#define NS_STYLE_RESIZER_AUTO         0x04  // bits
-
 // user-focus
 #define NS_STYLE_USER_FOCUS_NONE            0
 #define NS_STYLE_USER_FOCUS_IGNORE          1

@@ -446,7 +446,6 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSValue      mUserSelect;
   nsCSSValueList* mKeyEquivalent;
   nsCSSValue      mUserFocus;
-  nsCSSValue      mResizer;
   
   nsCSSValueList* mCursor;
   nsCSSValue      mForceBrokenImageIcon;

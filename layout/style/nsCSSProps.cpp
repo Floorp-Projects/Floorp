@@ -731,13 +731,6 @@ const PRInt32 nsCSSProps::kPositionKTable[] = {
   -1,-1
 };
 
-const PRInt32 nsCSSProps::kResizerKTable[] = {
-  eCSSKeyword_both,       NS_STYLE_RESIZER_BOTH,
-  eCSSKeyword_horizontal, NS_STYLE_RESIZER_HORIZONTAL,
-  eCSSKeyword_vertical,   NS_STYLE_RESIZER_VERTICAL,
-  -1,-1
-};
-
 const PRInt32 nsCSSProps::kSpeakKTable[] = {
   eCSSKeyword_spell_out, NS_STYLE_SPEAK_SPELL_OUT,
   -1,-1

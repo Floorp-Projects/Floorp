@@ -802,10 +802,9 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
   // UIReset
   IndentBy(out,aIndent);
   const nsStyleUIReset* uiReset = GetStyleUIReset();
-  fprintf(out, "<uireset data=\"%d %d %d\" />\n",
+  fprintf(out, "<uireset data=\"%d %d\" />\n",
     (int)uiReset->mUserSelect,
-    (int)uiReset->mKeyEquivalent,
-    (int)uiReset->mResizer);
+    (int)uiReset->mKeyEquivalent);
 
   // XUL
   IndentBy(out,aIndent);

@@ -438,7 +438,6 @@ CSS_PROP_BACKENDONLY(-x-play-during-uri, play_during_uri, PlayDuringURI, Aural, 
 #endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
 CSS_PROP_DISPLAY(position, position, Position, Display, mPosition, eCSSType_Value, PR_FALSE, kPositionKTable)
 CSS_PROP_QUOTES(quotes, quotes, Quotes, Content, mQuotes, eCSSType_Quotes, PR_FALSE, nsnull)
-CSS_PROP_UIRESET(-moz-resizer, resizer, MozResizer, UserInterface, mResizer, eCSSType_Value, PR_FALSE, kResizerKTable) // XXX bug 3935
 CSS_PROP_BACKENDONLY(richness, richness, Richness, Aural, mRichness, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_POSITION(right, right, Right, Position, mOffset.mRight, eCSSType_Value, PR_TRUE, nsnull)
 CSS_PROP_SHORTHAND(size, size, Size)
