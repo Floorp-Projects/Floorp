@@ -700,7 +700,7 @@ lo_recolor_form_element_bg(lo_DocState *state, LO_FormElementStruct *form_ele,
         /* removed by Lou 4-3-97.  Allow text to
 		 * overlap correctly in tables
 	 	 */
-		/* tmp_attr.no_background = FALSE; */
+		tmp_attr.no_background = FALSE;
 
 		attr = lo_FetchTextAttr(state, &tmp_attr);
 	}

@@ -459,7 +459,7 @@ lo_recolor_backgrounds(lo_DocState *state, LO_CellStruct *cell,
 		 * never before payed attention to this attr
 		 * so I'm guessing that it won't break anything :)
 		 */
-		/* tmp_attr.no_background = FALSE; */
+		tmp_attr.no_background = FALSE;
 
 		attr = lo_FetchTextAttr(state, &tmp_attr);
 	}
