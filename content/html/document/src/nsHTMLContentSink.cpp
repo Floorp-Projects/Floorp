@@ -287,7 +287,7 @@ protected:
                          PRBool aCheckIfPresent = PR_FALSE);
   already_AddRefed<nsGenericHTMLElement>
   CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType,
-                      nsIDOMHTMLFormElement* aForm,
+                      nsGenericHTMLElement* aForm,
                       nsIDocShell* aDocShell);
 
   inline PRInt32 GetNotificationInterval()
@@ -347,7 +347,7 @@ protected:
   PRPackedBool mScrolledToRefAlready;
 
   PRInt32 mInNotification;
-  nsCOMPtr<nsIDOMHTMLFormElement> mCurrentForm;
+  nsRefPtr<nsGenericHTMLElement> mCurrentForm;
   nsCOMPtr<nsIContent> mCurrentMap;
 
   nsAutoVoidArray mContextStack;
@@ -849,17 +849,19 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 }
 
 static void
-SetForm(nsGenericHTMLElement* aContent, nsIDOMHTMLFormElement* aForm)
+SetForm(nsGenericHTMLElement* aContent, nsGenericHTMLElement* aForm)
 {
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
-  NS_ASSERTION(formControl, "nsIDOMHTMLFormElement doesn't implement nsIFormControl?");
+  NS_ASSERTION(formControl, "nsGenericHTMLElement didn't implement nsIFormControl");
+  nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(aForm));
+  NS_ASSERTION(!aForm || formElement, "nsGenericHTMLElement didn't implement nsIDOMHTMLFormElement");
 
-  formControl->SetForm(aForm);
+  formControl->SetForm(formElement);
 }
 
 static already_AddRefed<nsGenericHTMLElement>
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  nsIDOMHTMLFormElement* aForm,
+                  nsGenericHTMLElement* aForm,
                   PRBool aInsideNoXXXTag, PRBool aFromParser);
 
 /**
@@ -868,7 +870,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 already_AddRefed<nsGenericHTMLElement>
 HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
                                      nsHTMLTag aNodeType,
-                                     nsIDOMHTMLFormElement* aForm,
+                                     nsGenericHTMLElement* aForm,
                                      nsIDocShell* aDocShell)
 {
   nsresult rv = NS_OK;
@@ -1009,7 +1011,7 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 
 already_AddRefed<nsGenericHTMLElement>
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  nsIDOMHTMLFormElement* aForm,
+                  nsGenericHTMLElement* aForm,
                   PRBool aInsideNoXXXTag, PRBool aFromParser)
 {
 
@@ -1037,7 +1039,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 
   NS_ADDREF(result);
 
-  if (!aInsideNoXXXTag) {
+  if (aForm && !aInsideNoXXXTag) {
     switch (aNodeType) {
     case eHTMLTag_button:
     case eHTMLTag_fieldset:
@@ -2828,12 +2830,10 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
                                            getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(result, result);
 
-    nsRefPtr<nsGenericHTMLElement> content = NS_NewHTMLFormElement(nodeInfo);
-    if (!content) {
+    mCurrentForm = NS_NewHTMLFormElement(nodeInfo);
+    if (!mCurrentForm) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    mCurrentForm = do_QueryInterface(content);
 
     result = AddLeaf(aNode);
   } else {
@@ -2841,10 +2841,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     // Otherwise the form can be a content parent.
     result = mCurrentContext->OpenContainer(aNode);
     if (NS_SUCCEEDED(result)) {
-      nsRefPtr<nsGenericHTMLElement> content =
-        dont_AddRef(mCurrentContext->GetCurrentContainer());
-
-      mCurrentForm = do_QueryInterface(content);
+      mCurrentForm = dont_AddRef(mCurrentContext->GetCurrentContainer());
     }
   }
 

@@ -231,10 +231,6 @@ NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 static nsICSSOMFactory* gCSSOMFactory = nsnull;
 static NS_DEFINE_CID(kCSSOMFactoryCID, NS_CSSOMFACTORY_CID);
 
-NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsGenericHTMLElement)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
-
 NS_IMPL_INT_ATTR(nsGenericHTMLElement, TabIndex, tabindex)
 
 nsresult
