@@ -167,14 +167,24 @@ dump("intl.charset.detector = "+ prefvalue + "\n");
 
 function UpdateMenus(event)
 {
+    // use setTimeout workaround to delay checkmark the menu
+    // when onmenucomplete is ready then use it instead of oncreate
+    // see bug 78290 for the detail
     UpdateCurrentCharset();
+    setTimeout("UpdateCurrentCharset()", 0);
     UpdateCharsetDetector();
+    setTimeout("UpdateCharsetDetector()", 0);
 }
 
 function UpdateMailMenus(event)
 {
+    // use setTimeout workaround to delay checkmark the menu
+    // when onmenucomplete is ready then use it instead of oncreate
+    // see bug 78290 for the detail
     UpdateCurrentMailCharset();
+    setTimeout("UpdateCurrentMailCharset()", 0);
     UpdateCharsetDetector();
+    setTimeout("UpdateCharsetDetector()", 0);
 }
 
 function charsetLoadListener (event)
