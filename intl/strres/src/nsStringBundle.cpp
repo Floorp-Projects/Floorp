@@ -67,6 +67,7 @@
 #include "nsAutoLock.h"
 #include "nsTextFormatter.h"
 #include "nsIErrorService.h"
+#include "nsITimelineService.h"
 
 // for async loading
 #ifdef ASYNC_LOADING
@@ -200,11 +201,13 @@ nsStringBundle::LoadProperties()
  nsCOMPtr<nsIURI> uri;
  rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL.get());
  if (NS_FAILED(rv)) return rv;
-    
+
  nsCOMPtr<nsIInputStream> in;
  rv = NS_OpenURI(getter_AddRefs(in), uri);
  if (NS_FAILED(rv)) return rv;
     
+ NS_TIMELINE_MARK_FUNCTION("loading properties");
+
  NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");
  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && in, NS_ERROR_FAILURE);
     
