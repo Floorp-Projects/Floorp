@@ -1012,6 +1012,7 @@ nsNSSComponent::PrefChanged(const char* prefName)
 
 #define PROFILE_BEFORE_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-before-change").get()
 #define PROFILE_AFTER_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-after-change").get()
+#define SESSION_LOGOUT_TOPIC NS_LITERAL_CSTRING("session-logout").get()
 
 
 NS_IMETHODIMP
@@ -1091,6 +1092,10 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       }
     }
   }
+  else if ((nsCRT::strcmp(aTopic, SESSION_LOGOUT_TOPIC) == 0) && mNSSInitialized) {
+    PK11_LogoutAll();
+  }
+
 
 #ifdef DEBUG
   else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_TEARDOWN_TOPIC) == 0) {
@@ -1126,6 +1131,7 @@ nsNSSComponent::RegisterObservers()
 
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_FALSE);
+    observerService->AddObserver(this, SESSION_LOGOUT_TOPIC, PR_FALSE);
 #ifdef DEBUG
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC, PR_FALSE);
