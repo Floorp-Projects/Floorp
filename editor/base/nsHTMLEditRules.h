@@ -143,7 +143,7 @@ protected:
   nsresult PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList);
 
   nsresult AdjustSpecialBreaks();
-  nsresult AdjustWhitespace();
+  nsresult AdjustWhitespace(nsIDOMSelection *aSelection);
   nsresult AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction);
   nsresult RemoveEmptyNodes();
   nsresult DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd);
