@@ -1,4 +1,50 @@
 #!/bin/sh
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+#
+
+# The way this thing works:
+#
+# + A packages file is parsed.  This file contains something 
+#   that looks like this:
+#
+#   XXX
+#
+# + For each package, a list of modules corresponding to that
+#   package is parsed.  Each modules corresponds to a 
+#   directory somewhere in a mozilla build tree - usually
+#   the toplevel ones (ie, layout, nsprpub, xpcom) but not
+#   always (ie, extensions/wallet)
+#
+# + For each module, print-module-filelist.sh is invoked.
+#   The output of that is parsed and converted from the 
+#   crazy mozilla install hierarchy to something that
+#   makes sense on a linux box.
+#
+#   For example:  
+#
+#     bin/components/libraptorhtml.so
+#   
+#   becomes
+#
+#     %{prefix}/lib/mozilla/components/libraptorhtml.so
+#
+# + Also, this script determines which files belong in 
+#   a devel package.  For example, "include/*" and "idl/*"
 
 name=generate-package-info.sh
 
@@ -61,8 +107,12 @@ do
 	file_list_devel=$outdir/mozilla-$p-devel-file-list.txt
 
 	tmp_raw=/tmp/raw-list.$$.tmp
+
 	tmp_file_list=/tmp/file-list.$$.tmp
 	tmp_file_list_devel=/tmp/file-list-devel.$$.tmp
+
+	tmp_dir_list=/tmp/dir-list.$$.tmp
+	tmp_dir_list_devel=/tmp/dir-list-devel.$$.tmp
 
 #	echo "package=$p"
 #	echo "modules=$modules"
@@ -70,9 +120,13 @@ do
 #	echo "file_list_devel=$file_list_devel"
 #	echo "#################"
 
-	rm -f $tmp_raw $file_list $file_list_devel $tmp_file_list $tmp_file_list_devel
+	rm -f $tmp_raw $file_list $file_list_devel
+	rm -f $tmp_file_list $tmp_file_list_devel 
+	rm -f $tmp_dir_list $tmp_dir_list_devel
 
-	touch $tmp_raw $file_list $file_list_devel $tmp_file_list $tmp_file_list_devel
+	touch $tmp_raw $file_list $file_list_devel
+	touch $tmp_file_list $tmp_file_list_devel
+	touch $tmp_dir_list $tmp_dir_list_devel
 
 	print_cmd=$mozdir/build/package/rpm/print-module-filelist.sh
 
@@ -94,6 +148,37 @@ do
 
 		case "$prefix"
 		in
+			# dirs
+			DIR:*)
+				dir=`echo $i | cut -b5-`
+
+				case "$dir" 
+				in
+					include*)
+						echo $dir >> $tmp_dir_list_devel
+					;;
+
+					*)
+						prefix2=`echo $dir | awk -F"/" '{ print $2; }'`
+
+						case "$prefix2"
+						in
+							# Cut out the "bin/" from these
+								res|chrome|defaults)
+									echo $dir | cut -b5- >> $tmp_dir_list
+								;;
+						esac
+					;;
+				esac
+			;;
+
+			##
+			## XXX: This one needs to be smarter and catch more devel only
+			## stuff.  For example, the gecko viewer and all its resources
+			## should go in the devel package.  This would in turn make the
+			## regular package smaller.
+			##
+
 			# include, idl, lib
 			include|idl|lib)
 				echo $i >> $tmp_file_list_devel
@@ -139,9 +224,14 @@ do
 	done
 
 	# Spit out sorted file lists
-	cat $tmp_file_list | sort | awk '{ printf("%%{prefix}/lib/mozilla/%s\n" , $0); }' >> $file_list
-	cat $tmp_file_list_devel | sort | awk '{ printf("%%{prefix}/lib/mozilla/%s\n" , $0); }' >> $file_list_devel
+	cat $tmp_dir_list | sort | uniq | awk '{ printf("%%dir %%{prefix}/lib/mozilla/%s\n" , $0); }' >> $file_list
+
+	cat $tmp_file_list | sort | uniq | awk '{ printf("%%{prefix}/lib/mozilla/%s\n" , $0); }' >> $file_list
+
+	cat $tmp_dir_list_devel | sort | uniq | awk '{ printf("%%dir %%{prefix}/lib/mozilla/%s\n" , $0); }' >> $file_list_devel
+
+	cat $tmp_file_list_devel | sort | uniq | awk '{ printf("%%{prefix}/lib/mozilla/%s\n" , $0); }' >> $file_list_devel
 
 	# Cleanup
-	rm -f $tmp_raw $tmp_file_list $tmp_file_list_devel
+	rm -f $tmp_raw $tmp_file_list $tmp_file_list_devel $tmp_dir_list $tmp_dir_list_devel
 done
