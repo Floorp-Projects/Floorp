@@ -26,18 +26,13 @@
 
 /*
  * The following is a fallback implementation that emulates
- * emulates atomic operations for platforms without atomic
- * operations.  If a platform has atomic operations,
- * it should define the macro _PR_HAVE_ATOMIC_OPS, and
- * the following will not be compiled in.
+ * atomic operations for platforms without atomic operations.
+ * If a platform has atomic operations, it should define the
+ * macro _PR_HAVE_ATOMIC_OPS, and the following will not be
+ * compiled in.
  */
 
 #ifndef _PR_HAVE_ATOMIC_OPS
-
-/*
- * We use a single lock for all the emulated atomic operations.
- * The lock contention should be acceptable.
- */
 
 #if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
 /*
@@ -46,7 +41,24 @@
  * invoked after a PR_Cleanup() call, we need an implementation
  * of the atomic routines that doesn't need NSPR to be initialized.
  */
-static pthread_mutex_t atomic_lock = PTHREAD_MUTEX_INITIALIZER;
+
+/*
+ * We use a set of locks for all the emulated atomic operations.
+ * By hashing on the address of the integer to be locked the
+ * contention between multiple threads should be lessened.
+ */
+static pthread_mutex_t atomic_lock[16] = {
+        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER };
+
+#define _PR_HASH_FOR_LOCK(ptr) (((long)ptr>>4)&15)
+
 void _PR_MD_INIT_ATOMIC()
 {
 }
@@ -55,10 +67,11 @@ PRInt32
 _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
 {
     PRInt32 rv;
+    PRInt32 idx = _PR_HASH_FOR_LOCK(val);
 
-    pthread_mutex_lock(&atomic_lock);
+    pthread_mutex_lock(&atomic_lock[idx]);
     rv = ++(*val);
-    pthread_mutex_unlock(&atomic_lock);
+    pthread_mutex_unlock(&atomic_lock[idx]);
     return rv;
 }
 
@@ -66,10 +79,11 @@ PRInt32
 _PR_MD_ATOMIC_ADD(PRInt32 *ptr, PRInt32 val)
 {
     PRInt32 rv;
+    PRInt32 idx = _PR_HASH_FOR_LOCK(ptr);
 
-    pthread_mutex_lock(&atomic_lock);
+    pthread_mutex_lock(&atomic_lock[idx]);
     rv = ((*ptr) += val);
-    pthread_mutex_unlock(&atomic_lock);
+    pthread_mutex_unlock(&atomic_lock[idx]);
     return rv;
 }
 
@@ -77,10 +91,11 @@ PRInt32
 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
 {
     PRInt32 rv;
+    PRInt32 idx = _PR_HASH_FOR_LOCK(val);
 
-    pthread_mutex_lock(&atomic_lock);
+    pthread_mutex_lock(&atomic_lock[idx]);
     rv = --(*val);
-    pthread_mutex_unlock(&atomic_lock);
+    pthread_mutex_unlock(&atomic_lock[idx]);
     return rv;
 }
 
@@ -88,14 +103,19 @@ PRInt32
 _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
 {
     PRInt32 rv;
+    PRInt32 idx = _PR_HASH_FOR_LOCK(val);
 
-    pthread_mutex_lock(&atomic_lock);
+    pthread_mutex_lock(&atomic_lock[idx]);
     rv = *val;
     *val = newval;
-    pthread_mutex_unlock(&atomic_lock);
+    pthread_mutex_unlock(&atomic_lock[idx]);
     return rv;
 }
 #else  /* _PR_PTHREADS && !_PR_DCETHREADS */
+/*
+ * We use a single lock for all the emulated atomic operations.
+ * The lock contention should be acceptable.
+ */
 static PRLock *atomic_lock = NULL;
 void _PR_MD_INIT_ATOMIC()
 {
