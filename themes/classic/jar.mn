@@ -357,6 +357,7 @@ classic.jar:
   skin/classic/messenger/threadPaneLabels.css                           (messenger/threadPaneLabels.css)
   skin/classic/messenger/filterDialog.css                               (messenger/filterDialog.css)
   skin/classic/messenger/messageBody.css                                (messenger/messageBody.css)
+  skin/classic/messenger/virtualFolderListDialog.css                    (messenger/virtualFolderListDialog.css)
   skin/classic/messenger/icons/attach.gif                               (messenger/icons/attach.gif)
   skin/classic/messenger/icons/check.gif                                (messenger/icons/check.gif)
   skin/classic/messenger/icons/dot.gif                                  (messenger/icons/dot.gif)

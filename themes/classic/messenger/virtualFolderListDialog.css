@@ -1,0 +1,16 @@
+/* ===== subscribe.css ==================================================
+  == Styles for the virtual folder list dialog.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/mailWindow1.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+treechildren::-moz-tree-image(selectedColumn) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/dot.gif");
+}
+
+treechildren::-moz-tree-image(selectedColumn, inVFEditSearchScope-true) {
+  list-style-image: url("chrome://messenger/skin/icons/check.gif");
+}
