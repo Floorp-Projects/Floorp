@@ -8761,7 +8761,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = image.tiff;
 			name = tab_close_pressed.tif;
-			path = resources/images/tab_close_pressed.tif;
+			path = resources/images/chrome/tab_close_pressed.tif;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -8769,7 +8769,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = image.tiff;
 			name = tab_close.tif;
-			path = resources/images/tab_close.tif;
+			path = resources/images/chrome/tab_close.tif;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
