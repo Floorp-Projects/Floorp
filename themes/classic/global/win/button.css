@@ -55,10 +55,10 @@ button {
 /* .......... focused state .......... */
 
 button:focus {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight transparent;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight transparent;
+  -moz-border-top-colors: -moz-ButtonDefault ThreeDHighlight transparent;
+  -moz-border-right-colors: -moz-ButtonDefault ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: -moz-ButtonDefault ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: -moz-ButtonDefault ThreeDHighlight transparent;
 }
 
 button:focus > .button-box {
@@ -68,10 +68,10 @@ button:focus > .button-box {
 /* .......... default state .......... */
 
 button[default="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
+  -moz-border-top-colors: -moz-ButtonDefault ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: -moz-ButtonDefault ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: -moz-ButtonDefault ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: -moz-ButtonDefault ThreeDHighlight ThreeDLightShadow;
 }
 
 /* .......... active/open/checked state .......... */
@@ -79,10 +79,10 @@ button[default="true"] {
 button:hover:active,
 button[open="true"],
 button[checked="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow transparent;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow transparent;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow transparent;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-top-colors: -moz-ButtonDefault ThreeDShadow transparent;
+  -moz-border-right-colors: -moz-ButtonDefault ThreeDShadow transparent;
+  -moz-border-bottom-colors: -moz-ButtonDefault ThreeDShadow transparent;
+  -moz-border-left-colors: -moz-ButtonDefault ThreeDShadow transparent;
 }
 
 button:hover:active > .button-box,
