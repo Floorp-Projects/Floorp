@@ -82,7 +82,7 @@ Rights Reserved.
         </hbox>
         <hbox align="center">
            <spacer flex="2"/>
-           <button label="&resetButton.label;" oncommand="onReset(event);" accesskey="&resetButton.accesskey;"/>
+           <button label="&resetButton.label;" oncommand="onResetSearch(event);" accesskey="&resetButton.accesskey;"/>
          </hbox>
          <hbox align="center">
            <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true" accesskey="&searchSubfolders.accesskey;"/>

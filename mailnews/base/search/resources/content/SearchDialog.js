@@ -269,7 +269,12 @@ function onSearchStop() {
     gSearchSession.interruptSearch();
 }
 
-function onReset() {
+function onResetSearch(event) {
+    onReset();
+    
+    var tree = GetThreadTree();
+    tree.treeBoxObject.view = null;
+    gStatusFeedback.showStatusString("");
 }
 
 function getFirstItemByTag(root, tag)
