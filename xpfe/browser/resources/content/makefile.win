@@ -35,7 +35,21 @@ install::
 	$(MAKE_INSTALL) NetSupportConfirmCheck.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportPassword.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportUserPassword.xul $(DISTBROWSWER)
+	$(MAKE_INSTALL) tooltip.js $(DISTBROWSWER)
 
 
 clobber::
-  rm -f $(DIST)\bin\chrome\navigator\content\default\*.*
+  rm -f $(DISTBROWSER)\contentframe.js
+  rm -f $(DISTBROWSER)\openLocation.js
+  rm -f $(DISTBROWSER)\openLocation.xul
+  rm -f $(DISTBROWSER)\viewsource.js
+  rm -f $(DISTBROWSER)\viewSource.xul
+  rm -f $(DISTBROWSER)\contentframe.xul
+  rm -f $(DISTBROWSER)\navigator.xul
+  rm -f $(DISTBROWSER)\navigator.js
+  rm -f $(DISTBROWSER)\NetSupportConfirm.xul
+  rm -f $(DISTBROWSER)\NetSupportAlert.xul
+  rm -f $(DISTBROWSER)\NetSupportConfirmCheck.xul
+  rm -f $(DISTBROWSER)\NetSupportPassword.xul
+  rm -f $(DISTBROWSER)\NetSupportUserPassword.xul
+  rm -f $(DISTBROWSER)\tooltip.js

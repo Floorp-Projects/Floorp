@@ -1,10 +1,13 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome:/global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
 <!DOCTYPE window
 [
 <!ENTITY mainWindow.title "Mozilla"> 
+<!ENTITY mainWindow.titlemodifier "Mozilla"> 
+<!ENTITY mainWindow.titlemodifierseperator " - ">
+<!ENTITY mainWindow.preface "Source for"> 
 <!ENTITY fileMenu.label "File">
 <!ENTITY browserCmd.label "New Browser Window">
 <!ENTITY newMenu.label "New">
@@ -105,11 +108,13 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onunload="if (appCore) appCore.close()"
-        title="Mozilla"> 
+        onunload="Shutdown()"
+        title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
+        titleseperator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:viewsource"
+		align="vertical" width="640" height="480"> 
   
-  <html:script src="navigator.js"></html:script>
-  <html:script src="viewsource.js"></html:script>
+  <html:script src="chrome://navigator/content/navigator.js"></html:script>
+  <html:script src="chrome://navigator/content/viewsource.js"></html:script>
 
   <broadcaster id="args" value="http://www.mozilla.org/"/>
   <broadcaster id="canPrint"/>
@@ -254,10 +259,7 @@
     </menu>
   </menubar>
   
-  <box id="outer-box" align="vertical">
-
   <html:iframe id="content-frame" type="content" html:name="content" html:src="about:blank" flex="100%"/>
- 
 
   <box align="horizontal" id="status-bar">
  
@@ -281,5 +283,4 @@
      </box>
   </box>
  
-  </box>
 </window>
