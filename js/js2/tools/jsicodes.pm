@@ -324,7 +324,7 @@ $ops{"DIRECT_CALL"} =
   {
    super  => "Instruction_3",
    rem    => "result, target, args",
-   params => [ ("TypedRegister", "JSFunction *", "ArgumentList") ]
+   params => [ ("TypedRegister", "JSFunction*", "ArgumentList") ]
   };
 $ops{"GET_METHOD"} =
   {
