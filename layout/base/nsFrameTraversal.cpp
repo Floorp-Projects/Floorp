@@ -231,7 +231,7 @@ nsLeafIterator::Next()
   }
   else {
     nsCOMPtr<nsIAtom>atom;
-    while(parent && NS_SUCCEEDED(parent->GetFrameType(getter_AddRefs(atom))) && atom != nsLayoutAtoms::rootFrame){
+    while(parent && NS_SUCCEEDED(parent->GetFrameType(getter_AddRefs(atom))) && atom.get() != nsLayoutAtoms::rootFrame){
       if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
         parent = result;
         while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
