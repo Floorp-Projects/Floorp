@@ -1228,6 +1228,38 @@ int interpret(char *cmd)
 		WritePrivateProfileString(section, key, ConvertUTF8toANSI(encodedValue), 
 			iniDstPath);
 	}
+  else if (strcmp(cmdname, "configureAddText") == 0)
+  {
+ 		char *fileToAdd	= strtok(NULL, ",)");
+
+    // copy config.ini to destination if it hasn't already been done
+		if (!CopyFile(iniSrcPath, iniDstPath, TRUE))
+			DWORD e = GetLastError();
+
+    CStdioFile sfConfig, sfAddText;
+    CString strAddTextFile = rootPath + fileToAdd;
+
+    if (sfConfig.Open(iniDstPath, CFile::modeReadWrite | CFile::typeText) == 0)
+      return TRUE;
+    
+    if (sfAddText.Open(strAddTextFile, CFile::modeRead | CFile::typeText) == 0)
+    {
+      sfConfig.Close();
+      return TRUE;
+    }
+
+    sfConfig.SeekToEnd();
+    CString strLine;
+
+    while(sfAddText.ReadString(strLine))
+    {
+      sfConfig.WriteString(strLine + '\n');
+    }
+
+    sfAddText.Close();
+    sfConfig.Flush();
+    sfConfig.Close();
+  }
 	else if (strcmp(cmdname, "replaceXPI") == 0)
 	{
 		char *xpiname	= strtok(NULL, ",)");
