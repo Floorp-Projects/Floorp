@@ -1008,6 +1008,32 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 	volumes->AppendElement(vol);
 #endif
 
+#ifdef XP_OS2
+	ULONG ulDriveNo = 0;
+	ULONG ulDriveMap = 0;
+	char *url;
+
+	rv = DosQueryCurrentDisk(&ulDriveNo, &ulDriveMap);
+	if (NS_FAILED(rv))
+	    return rv;
+
+	for (int volNum = 0; volNum < 26; volNum++)
+	{
+	    if (((ulDriveMap << (31 - volNum)) >> 31))
+	    {
+		if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
+		{
+		    rv = gRDFService->GetResource(url, getter_AddRefs(vol));
+		    PR_Free(url);
+
+		    if (NS_FAILED(rv)) return rv;
+		    volumes->AppendElement(vol);
+		}
+	    }
+
+	}
+#endif
+
 	nsISimpleEnumerator* result = new nsArrayEnumerator(volumes);
 	if (! result)
 		return NS_ERROR_OUT_OF_MEMORY;
