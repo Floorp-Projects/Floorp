@@ -355,7 +355,10 @@ void TextTimer::Start()
 
 void TextTimer::Stop()
 {
-  NS_IF_RELEASE(mTimer);
+  if (nsnull != mTimer) {
+    mTimer->Cancel();
+    NS_RELEASE(mTimer);
+  }
 }
 
 static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
