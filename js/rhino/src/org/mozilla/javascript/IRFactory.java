@@ -164,15 +164,13 @@ final class IRFactory
         // to detect switch end
         switchNode.target = switchBreakTarget;
 
-        Node.Jump defaultGoto = new Node.Jump(Token.GOTO);
         Node.Target defaultTarget = switchNode.getDefault();
-        if (defaultTarget != null) {
-            defaultGoto.target = defaultTarget;
-        } else {
-            defaultGoto.target = switchBreakTarget;
+        if (defaultTarget == null) {
+            defaultTarget = switchBreakTarget;
         }
 
-        switchBlock.addChildAfter(defaultGoto, switchNode);
+        switchBlock.addChildAfter(makeJump(Token.GOTO, defaultTarget),
+                                  switchNode);
         switchBlock.addChildToBack(switchBreakTarget);
     }
 
@@ -525,9 +523,7 @@ final class IRFactory
 
         if (loopType == LOOP_WHILE || loopType == LOOP_FOR) {
             // Just add a GOTO to the condition in the do..while
-            Node.Jump GOTO = new Node.Jump(Token.GOTO);
-            GOTO.target = condTarget;
-            loop.addChildToFront(GOTO);
+            loop.addChildToFront(makeJump(Token.GOTO, condTarget));
 
             if (loopType == LOOP_FOR) {
                 if (init.getType() != Token.EMPTY) {
@@ -645,132 +641,150 @@ final class IRFactory
         }
 
 
-        Node localBlock  = new Node(Token.LOCAL_BLOCK);
+        Node handlerBlock  = new Node(Token.LOCAL_BLOCK);
         Node.Jump pn = new Node.Jump(Token.TRY, tryBlock, lineno);
-        pn.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
-
-        Node.Target finallyTarget = null;
-        if (hasFinally) {
-            // make a TARGET for the finally that the tcf node knows about
-            finallyTarget = new Node.Target();
-            pn.setFinally(finallyTarget);
-
-            // add jsr finally to the try block
-            Node.Jump jsrFinally = new Node.Jump(Token.JSR);
-            jsrFinally.target = finallyTarget;
-            pn.addChildToBack(jsrFinally);
-        }
-
-        Node.Target endTarget = new Node.Target();
-        Node.Jump GOTOToEnd = new Node.Jump(Token.GOTO);
-        GOTOToEnd.target = endTarget;
-        pn.addChildToBack(GOTOToEnd);
+        pn.putProp(Node.LOCAL_BLOCK_PROP, handlerBlock);
 
         if (hasCatch) {
-            /*
-             *
-               Given
+            // jump around catch code
+            Node.Target endCatch = new Node.Target();
+            pn.addChildToBack(makeJump(Token.GOTO, endCatch));
 
-                try {
-                        throw 3;
-                } catch (e if e instanceof Object) {
-                        print("object");
-                } catch (e2) {
-                        print(e2);
-                }
-
-               rewrite as
-
-                try {
-                        throw 3;
-                } catch (x) {
-                        with (newCatchScope(e, x)) {
-                                if (e instanceof Object) {
-                                        print("object");
-                                }
-                        }
-                        with (newCatchScope(e2, x)) {
-                                if (true) {
-                                        print(e2);
-                                }
-                        }
-                }
-            */
             // make a TARGET for the catch that the tcf node knows about
             Node.Target catchTarget = new Node.Target();
             pn.target = catchTarget;
             // mark it
             pn.addChildToBack(catchTarget);
 
-            Node.Target endCatch = new Node.Target();
+            //
+            //  Given
+            //
+            //   try {
+            //       tryBlock;
+            //   } catch (e if condition1) {
+            //       something1;
+            //   ...
+            //
+            //   } catch (e if conditionN) {
+            //       somethingN;
+            //   } catch (e) {
+            //       somethingDefault;
+            //   }
+            //
+            //  rewrite as
+            //
+            //   try {
+            //       tryBlock;
+            //       goto after_catch:
+            //   } catch (x) {
+            //       with (newCatchScope(e, x)) {
+            //           if (condition1) {
+            //               something1;
+            //               goto after_catch;
+            //           }
+            //       }
+            //   ...
+            //       with (newCatchScope(e, x)) {
+            //           if (conditionN) {
+            //               somethingN;
+            //               goto after_catch;
+            //           }
+            //       }
+            //       with (newCatchScope(e, x)) {
+            //           somethingDefault;
+            //           goto after_catch;
+            //       }
+            //   }
+            // after_catch:
+            //
+            // If there is no default catch, then the last with block
+            // arround  "somethingDefault;" is replaced by "rethrow;"
 
-            // add [jsr finally?] goto end to each catch block
+            // It is assumed that catch handler generation will store
+            // exeception object in handlerBlock register
+
+            // Block with local for exception scope objects
+            Node catchScopeBlock = new Node(Token.LOCAL_BLOCK);
+
             // expects catchblocks children to be (cond block) pairs.
             Node cb = catchBlocks.getFirstChild();
             boolean hasDefault = false;
+            int scopeIndex = 0;
             while (cb != null) {
                 int catchLineNo = cb.getLineno();
 
                 Node name = cb.getFirstChild();
                 Node cond = name.getNext();
-                Node catchBlock = cond.getNext();
+                Node catchStatement = cond.getNext();
                 cb.removeChild(name);
                 cb.removeChild(cond);
-                cb.removeChild(catchBlock);
+                cb.removeChild(catchStatement);
 
-                catchBlock.addChildToBack(new Node(Token.LEAVEWITH));
-                Node.Jump GOTOToEndCatch = new Node.Jump(Token.GOTO);
-                GOTOToEndCatch.target = endCatch;
-                catchBlock.addChildToBack(GOTOToEndCatch);
+                // Add goto to the catch statement to jump out of catch
+                // but prefix it with LEAVEWITH since try..catch produces
+                // "with"code in order to limit the scope of the exception
+                // object.
+                catchStatement.addChildToBack(new Node(Token.LEAVEWITH));
+                catchStatement.addChildToBack(makeJump(Token.GOTO, endCatch));
+
+                // Create condition "if" when present
                 Node condStmt;
                 if (cond.getType() == Token.EMPTY) {
-                    condStmt = catchBlock;
+                    condStmt = catchStatement;
                     hasDefault = true;
                 } else {
-                    condStmt = createIf(cond, catchBlock, null, catchLineNo);
+                    condStmt = createIf(cond, catchStatement, null,
+                                        catchLineNo);
                 }
-                // Try..catch produces "with" code in order to limit
-                // the scope of the exception object.
-                // OPT: We should be able to figure out the correct
-                //      scoping at compile-time and avoid the
-                //      runtime overhead.
-                Node catchScope = Node.newString(Token.CATCH_SCOPE,
-                                                 name.getString());
-                catchScope.addChildToBack(createUseLocal(localBlock));
-                Node withStmt = createWith(catchScope, condStmt, catchLineNo);
-                pn.addChildToBack(withStmt);
+
+                // Generate code to create the scope object and store
+                // it in catchScopeBlock register
+                Node catchScope = new Node(Token.CATCH_SCOPE, name,
+                                           createUseLocal(handlerBlock));
+                catchScope.putProp(Node.LOCAL_BLOCK_PROP, catchScopeBlock);
+                catchScope.putIntProp(Node.CATCH_SCOPE_PROP, scopeIndex);
+                catchScopeBlock.addChildToBack(catchScope);
+
+                // Add with statement based on catch scope object
+                catchScopeBlock.addChildToBack(
+                    createWith(createUseLocal(catchScopeBlock), condStmt,
+                               catchLineNo));
 
                 // move to next cb
                 cb = cb.getNext();
+                ++scopeIndex;
             }
+            pn.addChildToBack(catchScopeBlock);
             if (!hasDefault) {
                 // Generate code to rethrow if no catch clause was executed
-                Node rethrow = new Node(Token.THROW,
-                                        createUseLocal(localBlock));
+                Node rethrow = new Node(Token.RETHROW);
+                rethrow.putProp(Node.LOCAL_BLOCK_PROP, handlerBlock);
                 pn.addChildToBack(rethrow);
             }
 
             pn.addChildToBack(endCatch);
-            // add a JSR finally if needed
-            if (hasFinally) {
-                Node.Jump jsrFinally = new Node.Jump(Token.JSR);
-                jsrFinally.target = finallyTarget;
-                pn.addChildToBack(jsrFinally);
-                Node.Jump GOTO = new Node.Jump(Token.GOTO);
-                GOTO.target = endTarget;
-                pn.addChildToBack(GOTO);
-            }
         }
 
         if (hasFinally) {
+            Node.Target finallyTarget = new Node.Target();
+            pn.setFinally(finallyTarget);
+
+            // add jsr finally to the try block
+            pn.addChildToBack(makeJump(Token.JSR, finallyTarget));
+
+            // jump around finally code
+            Node.Target finallyEnd = new Node.Target();
+            pn.addChildToBack(makeJump(Token.GOTO, finallyEnd));
+
             pn.addChildToBack(finallyTarget);
             Node fBlock = new Node(Token.FINALLY, finallyBlock);
-            fBlock.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
+            fBlock.putProp(Node.LOCAL_BLOCK_PROP, handlerBlock);
             pn.addChildToBack(fBlock);
+
+            pn.addChildToBack(finallyEnd);
         }
-        pn.addChildToBack(endTarget);
-        localBlock.addChildToBack(pn);
-        return localBlock;
+        handlerBlock.addChildToBack(pn);
+        return handlerBlock;
     }
 
     /**
@@ -884,10 +898,8 @@ final class IRFactory
         result.addChildrenToBack(ifTrue);
 
         if (ifFalse != null) {
-            Node.Jump GOTOToEnd = new Node.Jump(Token.GOTO);
             Node.Target endTarget = new Node.Target();
-            GOTOToEnd.target = endTarget;
-            result.addChildToBack(GOTOToEnd);
+            result.addChildToBack(makeJump(Token.GOTO, endTarget));
             result.addChildToBack(ifNotTarget);
             result.addChildrenToBack(ifFalse);
             result.addChildToBack(endTarget);
@@ -1313,6 +1325,13 @@ final class IRFactory
         Node result = new Node(Token.LOCAL_LOAD);
         result.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
         return result;
+    }
+
+    private Node.Jump makeJump(int type, Node.Target target)
+    {
+        Node.Jump n = new Node.Jump(type);
+        n.target = target;
+        return n;
     }
 
     private Node makeReference(Node node)

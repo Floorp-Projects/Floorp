@@ -99,59 +99,60 @@ public class Interpreter
 
     // Exception handling implementation
         Icode_GOSUB                     = -22,
-        Icode_RETSUB                    = -23,
+        Icode_STARTSUB                  = -23,
+        Icode_RETSUB                    = -24,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -24,
+        Icode_LINE                      = -25,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -25,
-        Icode_INTNUMBER                 = -26,
+        Icode_SHORTNUMBER               = -26,
+        Icode_INTNUMBER                 = -27,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -27,
-        Icode_LITERAL_SET               = -28,
+        Icode_LITERAL_NEW               = -28,
+        Icode_LITERAL_SET               = -29,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -29,
+        Icode_SPARE_ARRAYLIT            = -30,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -30,
-        Icode_REG_IND_C1                = -31,
-        Icode_REG_IND_C2                = -32,
-        Icode_REG_IND_C3                = -33,
-        Icode_REG_IND_C4                = -34,
-        Icode_REG_IND_C5                = -35,
-        Icode_REG_IND1                  = -36,
-        Icode_REG_IND2                  = -37,
-        Icode_REG_IND4                  = -38,
+        Icode_REG_IND_C0                = -31,
+        Icode_REG_IND_C1                = -32,
+        Icode_REG_IND_C2                = -33,
+        Icode_REG_IND_C3                = -34,
+        Icode_REG_IND_C4                = -35,
+        Icode_REG_IND_C5                = -36,
+        Icode_REG_IND1                  = -37,
+        Icode_REG_IND2                  = -38,
+        Icode_REG_IND4                  = -39,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -39,
-        Icode_REG_STR_C1                = -40,
-        Icode_REG_STR_C2                = -41,
-        Icode_REG_STR_C3                = -42,
-        Icode_REG_STR1                  = -43,
-        Icode_REG_STR2                  = -44,
-        Icode_REG_STR4                  = -45,
+        Icode_REG_STR_C0                = -40,
+        Icode_REG_STR_C1                = -41,
+        Icode_REG_STR_C2                = -42,
+        Icode_REG_STR_C3                = -43,
+        Icode_REG_STR1                  = -44,
+        Icode_REG_STR2                  = -45,
+        Icode_REG_STR4                  = -46,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -46,
-        Icode_SETVAR1                   = -47,
+        Icode_GETVAR1                   = -47,
+        Icode_SETVAR1                   = -48,
 
     // Load unefined
-        Icode_UNDEF                     = -48,
-        Icode_ZERO                      = -49,
-        Icode_ONE                       = -50,
+        Icode_UNDEF                     = -49,
+        Icode_ZERO                      = -50,
+        Icode_ONE                       = -51,
 
     // entrance and exit from .()
-       Icode_ENTERDQ                    = -51,
-       Icode_LEAVEDQ                    = -52,
+       Icode_ENTERDQ                    = -52,
+       Icode_LEAVEDQ                    = -53,
 
-       Icode_TAIL_CALL                  = -53,
+       Icode_TAIL_CALL                  = -54,
 
     // Last icode
-        MIN_ICODE                       = -53;
+        MIN_ICODE                       = -54;
 
     // data for parsing
 
@@ -179,14 +180,15 @@ public class Interpreter
     private ObjArray itsLiteralIds = new ObjArray();
 
     private int itsExceptionTableTop;
-    // 5 = space for try start/end, catch begin, finally begin and with depth
-    private static final int EXCEPTION_SLOT_SIZE       = 6;
     private static final int EXCEPTION_TRY_START_SLOT  = 0;
     private static final int EXCEPTION_TRY_END_SLOT    = 1;
-    private static final int EXCEPTION_CATCH_SLOT      = 2;
-    private static final int EXCEPTION_FINALLY_SLOT    = 3;
+    private static final int EXCEPTION_HANDLER_SLOT    = 2;
+    private static final int EXCEPTION_TYPE_SLOT       = 3;
     private static final int EXCEPTION_WITH_DEPTH_SLOT = 4;
     private static final int EXCEPTION_LOCAL_SLOT      = 5;
+    // 6 = space for try start/end, handler, start, handler type, with depth,
+    //                exception local
+    private static final int EXCEPTION_SLOT_SIZE       = 6;
 
 // ECF_ or Expression Context Flags constants: for now only TAIL is available
     private static final int ECF_TAIL = 1 << 0;
@@ -286,6 +288,7 @@ public class Interpreter
           case Icode_CALLSPECIAL:      return "CALLSPECIAL";
           case Icode_RETUNDEF:         return "RETUNDEF";
           case Icode_GOSUB:            return "GOSUB";
+          case Icode_STARTSUB:         return "STARTSUB";
           case Icode_RETSUB:           return "RETSUB";
           case Icode_LINE:             return "LINE";
           case Icode_SHORTNUMBER:      return "SHORTNUMBER";
@@ -517,7 +520,7 @@ public class Interpreter
             }
             itsLineNumber = lineno;
             addIcode(Icode_LINE);
-            addUint16(lineno);
+            addUint16(lineno & 0xFFFF);
         }
     }
 
@@ -584,17 +587,16 @@ public class Interpreter
             break;
 
           case Token.LOCAL_BLOCK:
-            node.putIntProp(Node.LOCAL_PROP, itsLocalTop);
-            ++itsLocalTop;
-            if (itsLocalTop > itsData.itsMaxLocals) {
-                itsData.itsMaxLocals = itsLocalTop;
+            {
+                int local = allocLocal();
+                node.putIntProp(Node.LOCAL_PROP, local);
+                updateLineNumber(node);
+                while (child != null) {
+                    visitStatement(child);
+                    child = child.getNext();
+                }
+                releaseLocal(local);
             }
-            updateLineNumber(node);
-            while (child != null) {
-                visitStatement(child);
-                child = child.getNext();
-            }
-            --itsLocalTop;
             break;
 
           case Token.SWITCH:
@@ -626,19 +628,20 @@ public class Interpreter
             break;
           }
 
-          case Token.FINALLY: {
-            // Account for incomming exception or GOTOSUB address
-            stackChange(1);
-            int finallyRegister = getLocalBlockRef(node);
-            addIndexOp(Token.LOCAL_SAVE, finallyRegister);
-            stackChange(-1);
-            while (child != null) {
-                visitStatement(child);
-                child = child.getNext();
+          case Token.FINALLY:
+            {
+                // Account for incomming GOTOSUB address
+                stackChange(1);
+                int finallyRegister = getLocalBlockRef(node);
+                addIndexOp(Icode_STARTSUB, finallyRegister);
+                stackChange(-1);
+                while (child != null) {
+                    visitStatement(child);
+                    child = child.getNext();
+                }
+                addIndexOp(Icode_RETSUB, finallyRegister);
             }
-            addIndexOp(Icode_RETSUB, finallyRegister);
             break;
-          }
 
           case Token.EXPR_VOID:
           case Token.EXPR_RESULT:
@@ -648,59 +651,36 @@ public class Interpreter
             stackChange(-1);
             break;
 
-          case Token.TRY: {
-            Node.Jump tryNode = (Node.Jump)node;
-            int exceptionObjectLocal = getLocalBlockRef(tryNode);
-            Node catchTarget = tryNode.target;
-            Node finallyTarget = tryNode.getFinally();
-
-            int tryStart = itsICodeTop;
-            int tryEnd = -1;
-            int catchStart = -1;
-            int finallyStart = -1;
-
-            while (child != null) {
-                boolean generated = false;
-
-                if (child != catchTarget && child != finallyTarget) {
-                    visitStatement(child);
-                } else {
-                    if (child == catchTarget) {
-                        if (tryEnd >= 0) Kit.codeBug();
-                        tryEnd = itsICodeTop;
-                        catchStart = itsICodeTop;
-                    } else {
-                        if (tryEnd < 0) {
-                            tryEnd = itsICodeTop;
-                        }
-                        finallyStart = itsICodeTop;
-                    }
-                    markTargetLabel((Node.Target)child);
-                }
-
-                child = child.getNext();
-            }
-            // [tryStart, tryEnd) contains GOSUB to call finally when it
-            // presents at the end of try code and before return, break and
-            // continue that transfer control outside try.
-            // After finally is executed the control will be
-            // transfered back into [tryStart, tryEnd) and exception
-            // handling assumes that the only code executed after
-            // finally returns will be a jump outside try which could not
-            // trigger exceptions.
-            // It does not hold if instruction observer throws during
-            // goto. Currently it may lead to double execution of finally.
-            addExceptionHandler(tryStart, tryEnd, catchStart, finallyStart,
-                                itsWithDepth, exceptionObjectLocal);
+          case Token.TRY:
+            visitTry((Node.Jump)node, child);
             break;
-          }
+
+          case Token.CATCH_SCOPE:
+            {
+                int localIndex = getLocalBlockRef(node);
+                int scopeIndex = node.getExistingIntProp(Node.CATCH_SCOPE_PROP);
+                String name = child.getString();
+                child = child.getNext();
+                visitExpression(child, 0); // load expression object
+                addStringPrefix(name);
+                addIndexPrefix(localIndex);
+                addToken(Token.CATCH_SCOPE);
+                addUint8(scopeIndex != 0 ? 1 : 0);
+                stackChange(-1);
+            }
+            break;
 
           case Token.THROW:
             updateLineNumber(node);
             visitExpression(child, 0);
             addToken(Token.THROW);
-            addUint16(itsLineNumber);
+            addUint16(itsLineNumber & 0xFFFF);
             stackChange(-1);
+            break;
+
+          case Token.RETHROW:
+            updateLineNumber(node);
+            addIndexOp(Token.RETHROW, getLocalBlockRef(node));
             break;
 
           case Token.RETURN:
@@ -978,11 +958,6 @@ public class Interpreter
             visitNumber(node);
             break;
 
-          case Token.CATCH_SCOPE:
-            visitExpression(child, 0);
-            addStringOp(Token.CATCH_SCOPE, node.getString());
-            break;
-
           case Token.GETVAR: {
             String name = node.getString();
             if (itsData.itsNeedsActivation) {
@@ -1117,6 +1092,30 @@ public class Interpreter
         stackChange(-1);
     }
 
+    private void visitTry(Node.Jump tryNode, Node child)
+    {
+        int tryStart = itsICodeTop;
+        while (child != null) {
+            visitStatement(child);
+            child = child.getNext();
+        }
+
+        int exceptionObjectLocal = getLocalBlockRef(tryNode);
+
+        Node.Target catchTarget = tryNode.target;
+        if (catchTarget != null) {
+            int catchStartPC = itsLabelTable[getTargetLabel(catchTarget)];
+            addExceptionHandler(tryStart, catchStartPC, catchStartPC,
+                                false, itsWithDepth, exceptionObjectLocal);
+        }
+        Node.Target finallyTarget = tryNode.getFinally();
+        if (finallyTarget != null) {
+            int finallyStartPC = itsLabelTable[getTargetLabel(finallyTarget)];
+            addExceptionHandler(tryStart, finallyStartPC, finallyStartPC,
+                                true, itsWithDepth, exceptionObjectLocal);
+        }
+    }
+
     private void visitCall(Node node, int contextFlags)
     {
         int type = node.getType();
@@ -1138,7 +1137,7 @@ public class Interpreter
             addIndexOp(Icode_CALLSPECIAL, argCount);
             addUint8(callType);
             addUint8(type == Token.NEW ? 1 : 0);
-            addUint16(itsLineNumber);
+            addUint16(itsLineNumber & 0xFFFF);
         } else {
             if (type == Token.CALL) {
                 if ((contextFlags & ECF_TAIL) != 0) {
@@ -1571,6 +1570,26 @@ public class Interpreter
 
     private void addStringOp(int op, String str)
     {
+        addStringPrefix(str);
+        if (validIcode(op)) {
+            addIcode(op);
+        } else {
+            addToken(op);
+        }
+    }
+
+    private void addIndexOp(int op, int index)
+    {
+        addIndexPrefix(index);
+        if (validIcode(op)) {
+            addIcode(op);
+        } else {
+            addToken(op);
+        }
+    }
+
+    private void addStringPrefix(String str)
+    {
         int index = itsStrings.get(str, -1);
         if (index == -1) {
             index = itsStrings.size();
@@ -1588,14 +1607,9 @@ public class Interpreter
             addIcode(Icode_REG_STR4);
             addInt(index);
         }
-        if (validIcode(op)) {
-            addIcode(op);
-        } else {
-            addToken(op);
-        }
     }
 
-    private void addIndexOp(int op, int index)
+    private void addIndexPrefix(int index)
     {
         if (index < 0) Kit.codeBug();
         if (index < 6) {
@@ -1610,15 +1624,10 @@ public class Interpreter
             addIcode(Icode_REG_IND4);
             addInt(index);
         }
-        if (validIcode(op)) {
-            addIcode(op);
-        } else {
-            addToken(op);
-        }
     }
 
     private void addExceptionHandler(int icodeStart, int icodeEnd,
-                                     int catchStart, int finallyStart,
+                                     int handlerStart, boolean isFinally,
                                      int withDepth, int exceptionObjectLocal)
     {
         int top = itsExceptionTableTop;
@@ -1634,8 +1643,8 @@ public class Interpreter
         }
         table[top + EXCEPTION_TRY_START_SLOT]  = icodeStart;
         table[top + EXCEPTION_TRY_END_SLOT]    = icodeEnd;
-        table[top + EXCEPTION_CATCH_SLOT]      = catchStart;
-        table[top + EXCEPTION_FINALLY_SLOT]    = finallyStart;
+        table[top + EXCEPTION_HANDLER_SLOT]    = handlerStart;
+        table[top + EXCEPTION_TYPE_SLOT]       = isFinally ? 1 : 0;
         table[top + EXCEPTION_WITH_DEPTH_SLOT] = withDepth;
         table[top + EXCEPTION_LOCAL_SLOT]      = exceptionObjectLocal;
 
@@ -1670,6 +1679,22 @@ public class Interpreter
         }
     }
 
+    private int allocLocal()
+    {
+        int localSlot = itsLocalTop;
+        ++itsLocalTop;
+        if (itsLocalTop > itsData.itsMaxLocals) {
+            itsData.itsMaxLocals = itsLocalTop;
+        }
+        return localSlot;
+    }
+
+    private void releaseLocal(int localSlot)
+    {
+        --itsLocalTop;
+        if (localSlot != itsLocalTop) Kit.codeBug();
+    }
+
     private static int getShort(byte[] iCode, int pc) {
         return (iCode[pc] << 8) | (iCode[pc + 1] & 0xFF);
     }
@@ -1683,7 +1708,8 @@ public class Interpreter
                | ((iCode[pc + 2] & 0xFF) << 8) | (iCode[pc + 3] & 0xFF);
     }
 
-    private static int getExceptionHandler(int[] exceptionTable, int pc)
+    private static int getExceptionHandler(int[] exceptionTable, int pc,
+                                           boolean onlyFinally)
     {
         // OPT: use binary search
         if (exceptionTable == null) { return -1; }
@@ -1691,15 +1717,26 @@ public class Interpreter
         for (int i = 0; i != exceptionTable.length; i += EXCEPTION_SLOT_SIZE) {
             int start = exceptionTable[i + EXCEPTION_TRY_START_SLOT];
             int end = exceptionTable[i + EXCEPTION_TRY_END_SLOT];
-            if (start <= pc && pc < end) {
-                if (best < 0 || bestStart <= start) {
-                    // Check handlers are nested
-                    if (best >= 0 && bestEnd < end) Kit.codeBug();
-                    best = i;
-                    bestStart = start;
-                    bestEnd = end;
-                }
+            if (!(start <= pc && pc < end)) {
+                continue;
             }
+            if (onlyFinally && exceptionTable[i + EXCEPTION_TYPE_SLOT] == 1) {
+                continue;
+            }
+            if (best >= 0) {
+                // Since handlers always nest and they never have shared end
+                // although they can share start  it is sufficient to compare
+                // handlers ends
+                if (bestEnd < end) {
+                    continue;
+                }
+                // Check the above assumption
+                if (bestStart > start) Kit.codeBug(); // should be nested
+                if (bestEnd == end) Kit.codeBug();  // no ens sharing
+            }
+            best = i;
+            bestStart = start;
+            bestEnd = end;
         }
         return best;
     }
@@ -1758,11 +1795,19 @@ public class Interpreter
               case Icode_CALLSPECIAL : {
                 int callType = iCode[pc] & 0xFF;
                 boolean isNew =  (iCode[pc + 1] != 0);
-                int line = getShort(iCode, pc+2);
+                int line = getIndex(iCode, pc+2);
                 out.println(tname+" "+callType+" "+isNew+" "+indexReg+" "+line);
                 pc += 4;
                 break;
               }
+
+              case Token.CATCH_SCOPE:
+                {
+                    boolean afterFisrtFlag =  (iCode[pc] != 0);
+                    out.println(tname+" "+afterFisrtFlag);
+                    ++pc;
+                }
+                break;
               case Token.REGEXP :
                 out.println(tname+" "+idata.itsRegExpLiterals[indexReg]);
                 break;
@@ -1781,7 +1826,7 @@ public class Interpreter
                 out.println(tname+' '+indexReg);
                 break;
               case Token.THROW : {
-                int line = getShort(iCode, pc);
+                int line = getIndex(iCode, pc);
                 out.println(tname + " : " + line);
                 pc += 2;
                 break;
@@ -1805,7 +1850,7 @@ public class Interpreter
                 break;
               }
               case Icode_LINE : {
-                int line = getShort(iCode, pc);
+                int line = getIndex(iCode, pc);
                 out.println(tname + " : " + line);
                 pc += 2;
                 break;
@@ -1865,14 +1910,14 @@ public class Interpreter
             {
                 int tryStart       = table[i + EXCEPTION_TRY_START_SLOT];
                 int tryEnd         = table[i + EXCEPTION_TRY_END_SLOT];
-                int catchStart     = table[i + EXCEPTION_CATCH_SLOT];
-                int finallyStart   = table[i + EXCEPTION_FINALLY_SLOT];
+                int handlerStart   = table[i + EXCEPTION_HANDLER_SLOT];
+                int type           = table[i + EXCEPTION_TYPE_SLOT];
                 int withDepth      = table[i + EXCEPTION_WITH_DEPTH_SLOT];
                 int exceptionLocal = table[i + EXCEPTION_LOCAL_SLOT];
 
                 out.println(" tryStart="+tryStart+" tryEnd="+tryEnd
-                            +" catchStart="+catchStart
-                            +" finallyStart="+finallyStart
+                            +" handlerStart="+handlerStart
+                            +" type="+(type == 0 ? "catch" : "finally")
                             +" withDepth="+withDepth
                             +" exceptionLocal="+exceptionLocal);
             }
@@ -1901,6 +1946,10 @@ public class Interpreter
                 // is new
                 // line number
                 return 1 + 1 + 1 + 2;
+
+            case Token.CATCH_SCOPE:
+                // scope flag
+                return 1 + 1;
 
             case Icode_VAR_INC_DEC:
             case Icode_NAME_INC_DEC:
@@ -1966,7 +2015,7 @@ public class Interpreter
             int span = bytecodeSpan(bytecode);
             if (bytecode == Icode_LINE) {
                 if (span != 3) Kit.codeBug();
-                int line = getShort(iCode, pc + 1);
+                int line = getIndex(iCode, pc + 1);
                 presentLines.put(line, 0);
             }
             pc += span;
@@ -1980,7 +2029,7 @@ public class Interpreter
         CallFrame frame = (CallFrame)cx.interpreterLineCounting;
         InterpreterData idata = frame.idata;
         if (frame.pcSourceLineStart >= 0) {
-            linep[0] = getShort(idata.itsICode, frame.pcSourceLineStart);
+            linep[0] = getIndex(idata.itsICode, frame.pcSourceLineStart);
         } else {
             linep[0] = 0;
         }
@@ -2088,10 +2137,15 @@ switch (op) {
         if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
         --stackTop;
 
-        int sourceLine = getShort(iCode, frame.pc);
+        int sourceLine = getIndex(iCode, frame.pc);
         throwable = new JavaScriptException(value,
                                             frame.idata.itsSourceFile,
                                             sourceLine);
+        break withoutExceptions;
+    }
+    case Token.RETHROW: {
+        indexReg += frame.localShift;
+        throwable = (Throwable)stack[indexReg];
         break withoutExceptions;
     }
     case Token.GE :
@@ -2157,6 +2211,19 @@ switch (op) {
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = frame.pc + 2;
         break jumplessRun;
+    case Icode_STARTSUB :
+        if (stackTop == frame.emptyStackTop + 1) {
+            // Call from Icode_GOSUB: store return PC address in the local
+            indexReg += frame.localShift;
+            stack[indexReg] = stack[stackTop];
+            sDbl[indexReg] = sDbl[stackTop];
+            --stackTop;
+        } else {
+            // Call from exception handler: exception object is already stored
+            // in the local
+            if (stackTop != frame.emptyStackTop) Kit.codeBug();
+        }
+        continue Loop;
     case Icode_RETSUB : {
         // indexReg: local to store return address
         if (instructionCounting) {
@@ -2417,12 +2484,6 @@ switch (op) {
         ++frame.pc;
         continue Loop;
     }
-    case Token.LOCAL_SAVE :
-        indexReg += frame.localShift;
-        stack[indexReg] = stack[stackTop];
-        sDbl[indexReg] = sDbl[stackTop];
-        --stackTop;
-        continue Loop;
     case Token.LOCAL_LOAD :
         ++stackTop;
         indexReg += frame.localShift;
@@ -2472,7 +2533,7 @@ switch (op) {
         }
         int callType = iCode[frame.pc] & 0xFF;
         boolean isNew =  (iCode[frame.pc + 1] != 0);
-        int sourceLine = getShort(iCode, frame.pc + 2);
+        int sourceLine = getIndex(iCode, frame.pc + 2);
 
         // indexReg: number of arguments
         if (isNew) {
@@ -2504,87 +2565,19 @@ switch (op) {
         continue Loop;
     }
     case Token.CALL :
-    case Icode_TAIL_CALL : {
+    case Icode_TAIL_CALL :
+    case Token.REF_CALL : {
         if (instructionCounting) {
             cx.instructionCount += INVOCATION_COST;
         }
         // stack change: function thisObj arg0 .. argN -> result
         // indexReg: number of arguments
         stackTop -= 1 + indexReg;
-
-        // CALL generation ensures that funThisObj and fun
-        // are already Scriptable and Function objects respectively
-        Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
-        Function fun = (Function)stack[stackTop];
-
-        Scriptable funScope = frame.scope;
-        if (useActivation) {
-            funScope = ScriptableObject.getTopLevelScope(frame.scope);
+        CallFrame switchFrame = do_call(cx, frame, stackTop, indexReg, op);
+        if (switchFrame != null) {
+            frame = switchFrame;
+            continue StateLoop;
         }
-
-        if (fun instanceof InterpretedFunction) {
-            // Inlining of InterpretedFunction.call not to create
-            // argument array
-            InterpretedFunction ifun = (InterpretedFunction)fun;
-            if (frame.fnOrScript.securityDomain == ifun.securityDomain) {
-                CallFrame callParentFrame = frame;
-                CallFrame calleeFrame = new CallFrame();
-                if (op == Icode_TAIL_CALL) {
-                    // In principle tail call can re-use the current
-                    // frame and its stack arrays but it is hard to
-                    // do properly. Any exceptions that can legally
-                    // happen during frame re-initialization including
-                    // StackOverflowException during innocent looking
-                    // System.arraycopy may leave the current frame
-                    // data corrupted leading to undefined behaviour
-                    // in the catch code bellow that unwinds JS stack
-                    // on exceptions. Then there is issue about frame release
-                    // end exceptions there.
-                    // To avoid frame allocation a released frame
-                    // can be cached for re-use which would also benefit
-                    // non-tail calls but it is not clear that this caching
-                    // would gain in performance due to potentially
-                    // bad iteraction with GC.
-                    callParentFrame = frame.parentFrame;
-                }
-                initFrame(cx, funScope, funThisObj, stack, sDbl,
-                          stackTop + 2, indexReg, ifun, callParentFrame,
-                          calleeFrame);
-                if (op == Icode_TAIL_CALL) {
-                    // Release the parent
-                    releaseFrame(cx, frame, null);
-                } else {
-                    frame.savedStackTop = stackTop;
-                    frame.savedCallOp = op;
-                }
-                frame = calleeFrame;
-                continue StateLoop;
-            }
-        }
-        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2, indexReg);
-        stack[stackTop] = fun.call(cx, funScope, funThisObj, outArgs);
-        continue Loop;
-    }
-    case Token.REF_CALL : {
-        if (instructionCounting) {
-            cx.instructionCount += INVOCATION_COST;
-        }
-        // stack change: function thisObj arg0 .. argN -> reference
-        // indexReg: number of arguments
-        stackTop -= indexReg + 1;
-
-        // REF_CALL generation ensures that funThisObj and fun
-        // are already Scriptable and Function objects respectively
-        Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
-        Function fun = (Function)stack[stackTop];
-
-        Scriptable funScope = frame.scope;
-        if (useActivation) {
-            funScope = ScriptableObject.getTopLevelScope(frame.scope);
-        }
-        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2, indexReg);
-        stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj, outArgs,
-                                                      cx, funScope);
         continue Loop;
     }
     case Token.NEW : {
@@ -2594,33 +2587,11 @@ switch (op) {
         // stack change: function arg0 .. argN -> newResult
         // indexReg: number of arguments
         stackTop -= indexReg;
-        Object lhs = stack[stackTop];
-
-        if (lhs instanceof InterpretedFunction) {
-            // Inlining of InterpretedFunction.construct not to create
-            // argument array
-            InterpretedFunction f = (InterpretedFunction)lhs;
-            if (frame.fnOrScript.securityDomain == f.securityDomain) {
-                Scriptable newInstance = f.createObject(cx, frame.scope);
-                CallFrame calleeFrame = new CallFrame();
-                initFrame(cx, frame.scope, newInstance, stack, sDbl,
-                          stackTop + 1, indexReg, f, frame,
-                          calleeFrame);
-
-                stack[stackTop] = newInstance;
-                frame.savedStackTop = stackTop;
-                frame.savedCallOp = op;
-                frame = calleeFrame;
-                continue StateLoop;
-            }
+        CallFrame switchFrame = do_new(cx, frame, stackTop, indexReg, op);
+        if (switchFrame != null) {
+            frame = switchFrame;
+            continue StateLoop;
         }
-        if (!(lhs instanceof Function)) {
-            if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-            throw ScriptRuntime.notFunctionError(lhs);
-        }
-        Function f = (Function)lhs;
-        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, indexReg);
-        stack[stackTop] = f.construct(cx, frame.scope, outArgs);
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -2752,8 +2723,12 @@ switch (op) {
         --frame.withDepth;
         continue Loop;
     case Token.CATCH_SCOPE :
-        stack[stackTop] = ScriptRuntime.newCatchScope(stringReg,
-                                                      stack[stackTop]);
+        // stack top: exception object
+        // stringReg: name of exception variable
+        // indexReg: local for exception scope
+        --stackTop;
+        indexReg += frame.localShift;
+        do_catchScope(cx, frame, stackTop + 1, indexReg, stringReg);
         continue Loop;
     case Token.ENUM_INIT_KEYS : {
         Object lhs = stack[stackTop];
@@ -2908,7 +2883,7 @@ switch (op) {
     case Icode_LINE :
         frame.pcSourceLineStart = frame.pc;
         if (frame.debuggerFrame != null) {
-            int line = getShort(iCode, frame.pc);
+            int line = getIndex(iCode, frame.pc);
             frame.debuggerFrame.onLineChange(cx, line);
         }
         frame.pc += 2;
@@ -3056,163 +3031,142 @@ switch (op) {
             }
         }
 
-        boolean activationFunctionIsEntered = false;
-        // If any exception happens then ScriptRuntime.exitActivationFunction
-        // and debugger.onExit should be called to restore frame properly
-        try {
-            if (useActivation) {
-                // Copy args to new array to pass to enterActivationFunction
-                // or debuggerFrame.onEnter
-                if (argsDbl != null) {
-                    args = getArgsArray(args, argsDbl, argShift, argCount);
-                }
-                argShift = 0;
-                argsDbl = null;
+        if (useActivation) {
+            // Copy args to new array to pass to enterActivationFunction
+            // or debuggerFrame.onEnter
+            if (argsDbl != null) {
+                args = getArgsArray(args, argsDbl, argShift, argCount);
             }
+            argShift = 0;
+            argsDbl = null;
+        }
 
-            Scriptable scope;
-            if (idata.itsFunctionType != 0) {
-                if (!idata.useDynamicScope) {
-                    scope = fnOrScript.getParentScope();
-                } else {
-                    scope = callerScope;
-                }
-
-                if (useActivation) {
-                    scope = ScriptRuntime.enterActivationFunction(cx, scope,
-                                                                  fnOrScript,
-                                                                  thisObj,
-                                                                  args);
-                    activationFunctionIsEntered = true;
-                }
+        Scriptable scope;
+        if (idata.itsFunctionType != 0) {
+            if (!idata.useDynamicScope) {
+                scope = fnOrScript.getParentScope();
             } else {
                 scope = callerScope;
-                ScriptRuntime.initScript(fnOrScript, thisObj, cx, scope,
-                                         fnOrScript.evalScriptFlag);
             }
 
-            if (idata.itsNestedFunctions != null) {
-                if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation)
-                    Kit.codeBug();
-                for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
-                    InterpreterData fdata = idata.itsNestedFunctions[i];
-                    if (fdata.itsFunctionType
-                        == FunctionNode.FUNCTION_STATEMENT)
-                    {
-                        initFunction(cx, scope, fnOrScript, i);
-                    }
-                }
+            if (useActivation) {
+                scope = ScriptRuntime.createFunctionActivation(
+                            fnOrScript, scope, thisObj, args);
             }
+        } else {
+            scope = callerScope;
+            ScriptRuntime.initScript(fnOrScript, thisObj, cx, scope,
+                                     fnOrScript.evalScriptFlag);
+        }
 
-            Scriptable[] scriptRegExps = null;
-            if (idata.itsRegExpLiterals != null) {
-                // Wrapped regexps for functions are stored in
-                // InterpretedFunction
-                // but for script which should not contain references to scope
-                // the regexps re-wrapped during each script execution
-                if (idata.itsFunctionType != 0) {
-                    scriptRegExps = fnOrScript.functionRegExps;
-                } else {
-                    scriptRegExps = fnOrScript.createRegExpWraps(cx, scope);
-                }
-            }
-
-            if (debuggerFrame != null) {
-                debuggerFrame.onEnter(cx, scope, thisObj, args);
-            }
-
-            // Initialize args, vars, locals and stack
-
-            int emptyStackTop = idata.itsMaxVars + idata.itsMaxLocals - 1;
-            int maxFrameArray = idata.itsMaxFrameArray;
-            if (maxFrameArray != emptyStackTop + idata.itsMaxStack + 1)
+        if (idata.itsNestedFunctions != null) {
+            if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation)
                 Kit.codeBug();
-
-            Object[] stack;
-            double[] sDbl;
-            boolean stackReuse;
-            if (frame.stack != null && maxFrameArray <= frame.stack.length) {
-                // Reuse stacks from old frame
-                stackReuse = true;
-                stack = frame.stack;
-                sDbl = frame.sDbl;
-            } else {
-                stackReuse = false;
-                stack = new Object[maxFrameArray];
-                sDbl = new double[maxFrameArray];
-            }
-
-            int definedArgs = idata.argCount;
-            if (definedArgs > argCount) { definedArgs = argCount; }
-
-            // Fill the frame structure
-
-            frame.parentFrame = parentFrame;
-            frame.fnOrScript = fnOrScript;
-            frame.idata = idata;
-
-            frame.stack = stack;
-            frame.sDbl = sDbl;
-            frame.localShift = idata.itsMaxVars;
-            frame.emptyStackTop = emptyStackTop;
-
-            frame.debuggerFrame = debuggerFrame;
-            frame.useActivation = useActivation;
-
-            frame.thisObj = thisObj;
-            frame.scriptRegExps = scriptRegExps;
-
-            // Initialize initial values of variables that change during
-            // interpretation.
-            frame.result = Undefined.instance;
-            frame.pc = 0;
-            frame.pcPrevBranch = 0;
-            frame.pcSourceLineStart = idata.firstLinePC;
-            frame.withDepth = 0;
-            frame.scope = scope;
-
-            frame.savedStackTop = emptyStackTop;
-            frame.savedCallOp = 0;
-
-            System.arraycopy(args, argShift, stack, 0, definedArgs);
-            if (argsDbl != null) {
-                System.arraycopy(argsDbl, argShift, sDbl, 0, definedArgs);
-            }
-            for (int i = definedArgs; i != idata.itsMaxVars; ++i) {
-                stack[i] = Undefined.instance;
-            }
-            if (stackReuse) {
-                // Clean the stack part and space beyond stack if any
-                // of the old array to allow to GC objects there
-                for (int i = emptyStackTop + 1; i != stack.length; ++i) {
-                    stack[i] = null;
+            for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
+                InterpreterData fdata = idata.itsNestedFunctions[i];
+                if (fdata.itsFunctionType == FunctionNode.FUNCTION_STATEMENT) {
+                    initFunction(cx, scope, fnOrScript, i);
                 }
             }
-        } catch (Throwable ex) {
-            // Restore activation records and debugger
-            if (activationFunctionIsEntered) {
-                ScriptRuntime.exitActivationFunction(cx);
-                frame.useActivation = false;
-            }
-            if (debuggerFrame != null) {
-                debuggerFrame.onExit(cx, true, ex);
-            }
-            if (ex instanceof RuntimeException) {
-                throw (RuntimeException)ex;
+        }
+
+        Scriptable[] scriptRegExps = null;
+        if (idata.itsRegExpLiterals != null) {
+            // Wrapped regexps for functions are stored in
+            // InterpretedFunction
+            // but for script which should not contain references to scope
+            // the regexps re-wrapped during each script execution
+            if (idata.itsFunctionType != 0) {
+                scriptRegExps = fnOrScript.functionRegExps;
             } else {
-                // Must be instance of Error or code bug
-                throw (Error)ex;
+                scriptRegExps = fnOrScript.createRegExpWraps(cx, scope);
             }
+        }
+
+        // Initialize args, vars, locals and stack
+
+        int emptyStackTop = idata.itsMaxVars + idata.itsMaxLocals - 1;
+        int maxFrameArray = idata.itsMaxFrameArray;
+        if (maxFrameArray != emptyStackTop + idata.itsMaxStack + 1)
+            Kit.codeBug();
+
+        Object[] stack;
+        double[] sDbl;
+        boolean stackReuse;
+        if (frame.stack != null && maxFrameArray <= frame.stack.length) {
+            // Reuse stacks from old frame
+            stackReuse = true;
+            stack = frame.stack;
+            sDbl = frame.sDbl;
+        } else {
+            stackReuse = false;
+            stack = new Object[maxFrameArray];
+            sDbl = new double[maxFrameArray];
+        }
+
+        int definedArgs = idata.argCount;
+        if (definedArgs > argCount) { definedArgs = argCount; }
+
+        // Fill the frame structure
+
+        frame.parentFrame = parentFrame;
+        frame.fnOrScript = fnOrScript;
+        frame.idata = idata;
+
+        frame.stack = stack;
+        frame.sDbl = sDbl;
+        frame.localShift = idata.itsMaxVars;
+        frame.emptyStackTop = emptyStackTop;
+
+        frame.debuggerFrame = debuggerFrame;
+        frame.useActivation = useActivation;
+
+        frame.thisObj = thisObj;
+        frame.scriptRegExps = scriptRegExps;
+
+        // Initialize initial values of variables that change during
+        // interpretation.
+        frame.result = Undefined.instance;
+        frame.pc = 0;
+        frame.pcPrevBranch = 0;
+        frame.pcSourceLineStart = idata.firstLinePC;
+        frame.withDepth = 0;
+        frame.scope = scope;
+
+        frame.savedStackTop = emptyStackTop;
+        frame.savedCallOp = 0;
+
+        System.arraycopy(args, argShift, stack, 0, definedArgs);
+        if (argsDbl != null) {
+            System.arraycopy(argsDbl, argShift, sDbl, 0, definedArgs);
+        }
+        for (int i = definedArgs; i != idata.itsMaxVars; ++i) {
+            stack[i] = Undefined.instance;
+        }
+        if (stackReuse) {
+            // Clean the stack part and space beyond stack if any
+            // of the old array to allow to GC objects there
+            for (int i = emptyStackTop + 1; i != stack.length; ++i) {
+                stack[i] = null;
+            }
+        }
+
+        if (debuggerFrame != null) {
+            debuggerFrame.onEnter(cx, scope, thisObj, args);
+        }
+        if (idata.itsNeedsActivation) {
+            // Enter activation only when itsNeedsActivation true, not when
+            // useActivation holds since debugger should not interfere
+            // with activation chaining
+            ScriptRuntime.enterActivationFunction(cx, scope);
         }
     }
 
     private static void releaseFrame(Context cx, CallFrame frame,
                                      Throwable throwable)
     {
-        if (frame.idata.itsFunctionType != 0) {
-            if (frame.useActivation) {
-                ScriptRuntime.exitActivationFunction(cx);
-            }
+        if (frame.idata.itsNeedsActivation) {
+            ScriptRuntime.exitActivationFunction(cx);
         }
 
         if (frame.debuggerFrame != null) {
@@ -3271,12 +3225,9 @@ switch (op) {
                 exState = EX_NO_JS_STATE;
             }
         }
-        if (frame.debuggerFrame != null
-            && !(throwable instanceof Error))
-        {
+        if (frame.debuggerFrame != null && !(throwable instanceof Error)) {
             try {
-                frame.debuggerFrame.onExceptionThrown(
-                    cx, throwable);
+                frame.debuggerFrame.onExceptionThrown(cx, throwable);
             } catch (Throwable ex) {
                 // Any exception from debugger
                 //     => unconditionally terminate JS
@@ -3287,28 +3238,16 @@ switch (op) {
 
         int[] table;
         int handler;
-        int handlerPC;
-        boolean catchHandler = false;
         for (;;) {
             if (exState != EX_NO_JS_STATE) {
                 table = frame.idata.itsExceptionTable;
                 // Icode switch in the interpreter increments PC immediately
                 // and it is necessary to subtract 1 from the saved PC
                 // to point it before the start of the next instruction.
-                handler = getExceptionHandler(table, frame.pc - 1);
+                boolean onlyFinally = (exState != EX_CATCH_STATE);
+                handler = getExceptionHandler(table, frame.pc - 1, onlyFinally);
                 if (handler >= 0) {
-                    if (exState == EX_CATCH_STATE) {
-                        // Check for catch but only if it is allowed
-                        handlerPC = table[handler + EXCEPTION_CATCH_SLOT];
-                        if (handlerPC >= 0) {
-                            catchHandler = true;
-                            break;
-                        }
-                    }
-                    handlerPC = table[handler + EXCEPTION_FINALLY_SLOT];
-                    if (handlerPC >= 0) {
-                        break;
-                    }
+                    break;
                 }
             }
             // No allowed execption handlers in this frame, unwind
@@ -3338,39 +3277,117 @@ switch (op) {
             --frame.withDepth;
         }
 
-        frame.pc = handlerPC;
+        frame.pc = table[handler + EXCEPTION_HANDLER_SLOT];
         if (instructionCounting) {
-            frame.pcPrevBranch = handlerPC;
+            frame.pcPrevBranch = frame.pc;
         }
-
-        // The frame is almost restored and only stack initialization is left.
 
         frame.savedStackTop = frame.emptyStackTop;
-        if (catchHandler) {
-            int exLocal = table[handler + EXCEPTION_LOCAL_SLOT];
-            try {
-                frame.stack[frame.localShift + exLocal]
-                    = ScriptRuntime.getCatchObject(cx, frame.scope,
-                                                   throwable);
-            } catch (Throwable ex) {
-                // getCatchObject can even theoretically execute script code so
-                // it is allowed to throw exceptions: call handleException
-                // recusrsively but before that make the execption like
-                // it was executed during first icode of the catch block
-                // which is simulated by increasing PC by one
-                ++frame.pc;
-                return handleException(cx, frame, ex);
-
-            }
-        } else {
-            ++frame.savedStackTop;
-            // Call finally handler with throwable on stack top to
-            // distinguish from normal invocation through GOSUB
-            // which would contain DBL_MRK on the stack
-            frame.stack[frame.savedStackTop] = throwable;
-        }
+        int exLocal = table[handler + EXCEPTION_LOCAL_SLOT];
+        frame.stack[frame.localShift + exLocal] = throwable;
 
         return frame;
+    }
+
+    /**
+     * Return null to indicate no frame change or reference to the new frame.
+     */
+    private static CallFrame do_call(Context cx, CallFrame frame, int stackTop,
+                                     int argCount, int op)
+    {
+        Object[] stack = frame.stack;
+
+        // CALL generation ensures that fun and funThisObj
+        // are already Scriptable and Function objects respectively
+        Function fun = (Function)stack[stackTop];
+        Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
+
+        Scriptable calleeScope = frame.scope;
+        if (frame.useActivation) {
+            calleeScope = ScriptableObject.getTopLevelScope(frame.scope);
+        }
+
+        if (fun instanceof InterpretedFunction && op != Token.REF_CALL) {
+            InterpretedFunction ifun = (InterpretedFunction)fun;
+            if (frame.fnOrScript.securityDomain == ifun.securityDomain) {
+                CallFrame callParentFrame = frame;
+                CallFrame calleeFrame = new CallFrame();
+                if (op == Icode_TAIL_CALL) {
+                    // In principle tail call can re-use the current
+                    // frame and its stack arrays but it is hard to
+                    // do properly. Any exceptions that can legally
+                    // happen during frame re-initialization including
+                    // StackOverflowException during innocent looking
+                    // System.arraycopy may leave the current frame
+                    // data corrupted leading to undefined behaviour
+                    // in the catch code bellow that unwinds JS stack
+                    // on exceptions. Then there is issue about frame release
+                    // end exceptions there.
+                    // To avoid frame allocation a released frame
+                    // can be cached for re-use which would also benefit
+                    // non-tail calls but it is not clear that this caching
+                    // would gain in performance due to potentially
+                    // bad iteraction with GC.
+                    callParentFrame = frame.parentFrame;
+                }
+                initFrame(cx, calleeScope, funThisObj, stack, frame.sDbl,
+                          stackTop + 2, argCount, ifun, callParentFrame,
+                          calleeFrame);
+                if (op == Icode_TAIL_CALL) {
+                    // Release the parent
+                    releaseFrame(cx, frame, null);
+                } else {
+                    frame.savedStackTop = stackTop;
+                    frame.savedCallOp = op;
+                }
+                return calleeFrame;
+            }
+        }
+        Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 2,
+                                        argCount);
+        if (op != Token.REF_CALL) {
+            stack[stackTop] = fun.call(cx, calleeScope, funThisObj, outArgs);
+        } else {
+            stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj,
+                                                          outArgs, cx,
+                                                          calleeScope);
+        }
+        return null;
+    }
+
+    /**
+     * Return null to indicate no frame change or reference to the new frame.
+     */
+    private static CallFrame do_new(Context cx, CallFrame frame, int stackTop,
+                                    int argCount, int op)
+    {
+        Object[] stack = frame.stack;
+        Object lhs = stack[stackTop];
+
+        if (lhs instanceof InterpretedFunction) {
+            InterpretedFunction f = (InterpretedFunction)lhs;
+            if (frame.fnOrScript.securityDomain == f.securityDomain) {
+                Scriptable newInstance = f.createObject(cx, frame.scope);
+                CallFrame calleeFrame = new CallFrame();
+                initFrame(cx, frame.scope, newInstance, stack, frame.sDbl,
+                          stackTop + 1, argCount, f, frame,
+                          calleeFrame);
+
+                stack[stackTop] = newInstance;
+                frame.savedStackTop = stackTop;
+                frame.savedCallOp = op;
+                return calleeFrame;
+            }
+        }
+        if (!(lhs instanceof Function)) {
+            if (lhs == DBL_MRK) lhs = doubleWrap(frame.sDbl[stackTop]);
+            throw ScriptRuntime.notFunctionError(lhs);
+        }
+        Function f = (Function)lhs;
+        Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 1,
+                                        argCount);
+        stack[stackTop] = f.construct(cx, frame.scope, outArgs);
+        return null;
     }
 
     private static Object doubleWrap(double x)
@@ -3663,6 +3680,25 @@ switch (op) {
             }
         }
         frame.stack[i] = result;
+    }
+
+    private static void do_catchScope(Context cx, CallFrame frame,
+                                      int exceptionOffset,
+                                      int local, String name)
+    {
+        Object[] stack = frame.stack;
+        boolean afterFirstScope =  (frame.idata.itsICode[frame.pc] != 0);
+        Throwable caughtException = (Throwable)stack[exceptionOffset];
+        Scriptable lastCatchScope;
+        if (!afterFirstScope) {
+            lastCatchScope = null;
+        } else {
+            lastCatchScope = (Scriptable)stack[local];
+        }
+        stack[local] = ScriptRuntime.newCatchScope(caughtException,
+                                                   lastCatchScope, name,
+                                                   cx, frame.scope);
+        ++frame.pc;
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,

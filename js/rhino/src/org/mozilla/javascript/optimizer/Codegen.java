@@ -1275,19 +1275,23 @@ class BodyCodegen
         String debugVariableName;
         if (fnCurrent != null) {
             debugVariableName = "activation";
-            cfw.addALoad(contextLocal);
-            cfw.addALoad(variableObjectLocal);
             cfw.addALoad(funObjLocal);
+            cfw.addALoad(variableObjectLocal);
             cfw.addALoad(thisObjLocal);
             cfw.addALoad(argsLocal);
-            addScriptRuntimeInvoke("enterActivationFunction",
-                                   "(Lorg/mozilla/javascript/Context;"
+            addScriptRuntimeInvoke("createFunctionActivation",
+                                   "(Lorg/mozilla/javascript/NativeFunction;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
-                                   +"Lorg/mozilla/javascript/NativeFunction;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
                                    +"[Ljava/lang/Object;"
                                    +")Lorg/mozilla/javascript/Scriptable;");
             cfw.addAStore(variableObjectLocal);
+            cfw.addALoad(contextLocal);
+            cfw.addALoad(variableObjectLocal);
+            addScriptRuntimeInvoke("enterActivationFunction",
+                                   "(Lorg/mozilla/javascript/Context;"
+                                   +"Lorg/mozilla/javascript/Scriptable;"
+                                   +")V");
         } else {
             debugVariableName = "global";
             cfw.addALoad(funObjLocal);
@@ -1465,8 +1469,17 @@ class BodyCodegen
                 visitTryCatchFinally((Node.Jump)node, child);
                 break;
 
+              case Token.CATCH_SCOPE:
+                visitCatchScope(node, child);
+                break;
+
               case Token.THROW:
                 visitThrow(node, child);
+                break;
+
+              case Token.RETHROW:
+                cfw.addALoad(getLocalBlockRegister(node));
+                cfw.add(ByteCode.ATHROW);
                 break;
 
               case Token.RETURN_RESULT:
@@ -1640,14 +1653,6 @@ class BodyCodegen
                 generateExpression(child, node);
                 break;
               }
-
-              case Token.CATCH_SCOPE:
-                cfw.addPush(node.getString());
-                generateExpression(child, node);
-                addScriptRuntimeInvoke("newCatchScope",
-                                       "(Ljava/lang/String;Ljava/lang/Object;"
-                                       +")Lorg/mozilla/javascript/Scriptable;");
-                break;
 
               case Token.ENUM_NEXT:
               case Token.ENUM_ID: {
@@ -2751,9 +2756,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         // XXX OPT Maybe instead do syntactic transforms to associate
         // each 'with' with a try/finally block that does the exitwith.
 
-        // For that matter:  Why do we have leavewith?
-
-        // XXX does Java have any kind of MOV(reg, reg)?
         short savedVariableObject = getNewWordLocal();
         cfw.addALoad(variableObjectLocal);
         cfw.addAStore(savedVariableObject);
@@ -2842,30 +2844,13 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.markHandler(handler);
 
         // MS JVM gets cranky if the exception object is left on the stack
-        // XXX: is it possible to use on MS JVM exceptionLocal to store it?
-        short exceptionObject = getNewWordLocal();
-        cfw.addAStore(exceptionObject);
+        cfw.addAStore(exceptionLocal);
 
         // reset the variable object local
         cfw.addALoad(savedVariableObject);
         cfw.addAStore(variableObjectLocal);
 
-        cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
-        cfw.addALoad(exceptionObject);
-        releaseWordLocal(exceptionObject);
-
-        // unwrap the exception...
-        addScriptRuntimeInvoke(
-            "getCatchObject",
-            "(Lorg/mozilla/javascript/Context;"
-            +"Lorg/mozilla/javascript/Scriptable;"
-            +"Ljava/lang/Throwable;"
-            +")Ljava/lang/Object;");
-
-        cfw.addAStore(exceptionLocal);
         String exceptionName;
-
         if (exceptionType == JAVASCRIPT_EXCEPTION) {
             exceptionName = "org/mozilla/javascript/JavaScriptException";
         } else if (exceptionType == EVALUATOR_EXCEPTION) {
@@ -3440,6 +3425,34 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         }
         cfw.addPush(i);
         cfw.add(ByteCode.AALOAD);
+    }
+
+    private void visitCatchScope(Node node, Node child)
+    {
+        int local = getLocalBlockRegister(node);
+        int scopeIndex = node.getExistingIntProp(Node.CATCH_SCOPE_PROP);
+
+        String name = child.getString(); // name of exception variable
+        child = child.getNext();
+        generateExpression(child, node); // load expression object
+        if (scopeIndex == 0) {
+            cfw.add(ByteCode.ACONST_NULL);
+        } else {
+            // Load previous catch scope object
+            cfw.addALoad(local);
+        }
+        cfw.addPush(name);
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
+
+        addScriptRuntimeInvoke("newCatchScope",
+                               "(Ljava/lang/Throwable;"
+                               +"Lorg/mozilla/javascript/Scriptable;"
+                               +"Ljava/lang/String;"
+                               +"Lorg/mozilla/javascript/Context;"
+                               +"Lorg/mozilla/javascript/Scriptable;"
+                               +")Lorg/mozilla/javascript/Scriptable;");
+        cfw.addAStore(local);
     }
 
     private void visitName(Node node)

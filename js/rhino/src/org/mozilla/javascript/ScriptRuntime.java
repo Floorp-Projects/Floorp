@@ -1026,8 +1026,8 @@ public class ScriptRuntime {
      * Converts Java exceptions that JS can catch into an object the script
      * will see as the catch argument.
      */
-    public static Object getCatchObject(Context cx, Scriptable scope,
-                                        Throwable t)
+    private static Object getCatchObject(Context cx, Scriptable scope,
+                                         Throwable t)
         throws JavaScriptException
     {
         EvaluatorException evaluator = null;
@@ -2944,20 +2944,24 @@ public class ScriptRuntime {
         }
     }
 
-    public static Scriptable enterActivationFunction(Context cx,
-                                                     Scriptable scope,
-                                                     NativeFunction funObj,
-                                                     Scriptable thisObj,
-                                                     Object[] args)
+    public static Scriptable createFunctionActivation(NativeFunction funObj,
+                                                      Scriptable scope,
+                                                      Scriptable thisObj,
+                                                      Object[] args)
+    {
+        return new NativeCall(scope, funObj, thisObj, args);
+    }
+
+
+    public static void enterActivationFunction(Context cx,
+                                               Scriptable activation)
     {
         if (cx.topCallScope == null)
             throw new IllegalStateException();
 
-        NativeCall call = new NativeCall(scope, funObj, thisObj, args);
+        NativeCall call = (NativeCall)activation;
         call.parentActivationCall = cx.currentActivationCall;
         cx.currentActivationCall = call;
-
-        return call;
     }
 
     public static void exitActivationFunction(Context cx)
@@ -2978,15 +2982,30 @@ public class ScriptRuntime {
         return null;
     }
 
-    public static Scriptable newCatchScope(String exceptionName,
-                                           Object exceptionObject)
+    public static Scriptable newCatchScope(Throwable exception,
+                                           Scriptable lastCatchScope,
+                                           String exceptionName,
+                                           Context cx, Scriptable scope)
     {
-        Scriptable scope = new NativeObject();
-        ScriptableObject.putProperty(scope, exceptionName, exceptionObject);
-        return scope;
+        Object obj;
+        if (lastCatchScope == null) {
+            obj = getCatchObject(cx, scope, exception);
+        } else {
+            NativeObject last = (NativeObject)lastCatchScope;
+            obj = last.getAssociatedValue(exception);
+            if (obj == null) Kit.codeBug();
+        }
+
+        NativeObject catchScope = new NativeObject();
+        // See ECMA 12.4
+        catchScope.defineProperty(
+            exceptionName, obj, ScriptableObject.PERMANENT);
+        catchScope.associateValue(exception, obj);
+        return catchScope;
     }
 
-    public static Scriptable enterWith(Object value, Scriptable scope) {
+    public static Scriptable enterWith(Object value, Scriptable scope)
+    {
         if (value instanceof XMLObject) {
             XMLObject object = (XMLObject)value;
             return object.enterWith(scope);

@@ -122,9 +122,9 @@ public class Token
         REGEXP         = 47,
         BINDNAME       = 48,
         THROW          = 49,
-        IN             = 50,
-        INSTANCEOF     = 51,
-        LOCAL_SAVE     = 52,
+        RETHROW        = 50, // rethrow caught execetion: catch (e if ) use it
+        IN             = 51,
+        INSTANCEOF     = 52,
         LOCAL_LOAD     = 53,
         GETVAR         = 54,
         SETVAR         = 55,
@@ -171,10 +171,10 @@ public class Token
         ASSIGN_BITXOR  = 88,  // ^=
         ASSIGN_BITAND  = 89,  // |=
         ASSIGN_LSH     = 90,  // <<=
-        ASSIGN_RSH     = 94,  // >>=
-        ASSIGN_URSH    = 91,  // >>>=
-        ASSIGN_ADD     = 92,  // +=
-        ASSIGN_SUB     = 93,  // -=
+        ASSIGN_RSH     = 91,  // >>=
+        ASSIGN_URSH    = 92,  // >>>=
+        ASSIGN_ADD     = 93,  // +=
+        ASSIGN_SUB     = 94,  // -=
         ASSIGN_MUL     = 95,  // *=
         ASSIGN_DIV     = 96,  // /=
         ASSIGN_MOD     = 97;  // %=
@@ -242,13 +242,14 @@ public class Token
 
     public static String name(int token)
     {
-        if (!(-1 <= token && token <= LAST_TOKEN)) {
-            throw new IllegalArgumentException(String.valueOf(token));
-        }
-
         if (!printNames) {
             return String.valueOf(token);
         }
+        if (!(-1 <= token && token <= LAST_TOKEN)) {
+            // Optimizer-only token
+            return String.valueOf(token);
+        }
+
 
         switch (token) {
           case ERROR:           return "ERROR";
@@ -302,9 +303,9 @@ public class Token
           case REGEXP:          return "OBJECT";
           case BINDNAME:        return "BINDNAME";
           case THROW:           return "THROW";
+          case RETHROW:         return "RETHROW";
           case IN:              return "IN";
           case INSTANCEOF:      return "INSTANCEOF";
-          case LOCAL_SAVE:      return "LOCAL_SAVE";
           case LOCAL_LOAD:      return "LOCAL_LOAD";
           case GETVAR:          return "GETVAR";
           case SETVAR:          return "SETVAR";

@@ -73,7 +73,8 @@ public class Node
         SKIP_INDEXES_PROP  = 12, // array of skipped indexes of array literal
         OBJECT_IDS_PROP    = 13, // array of properties for object literal
         INCRDECR_PROP      = 14, // pre or post type of increment/decerement
-        LAST_PROP          = 14;
+        CATCH_SCOPE_PROP   = 15, // Index of catch scope block in catch
+        LAST_PROP          = 15;
 
     // values of ISNUMBER_PROP to specify
     // which of the children are Number types
@@ -450,6 +451,8 @@ public class Node
                 case SPECIALCALL_PROP:   return "specialcall";
                 case SKIP_INDEXES_PROP:  return "skip_indexes";
                 case OBJECT_IDS_PROP:    return "object_ids_prop";
+                case INCRDECR_PROP:      return "incrdecr_prop";
+                case CATCH_SCOPE_PROP:   return "catch_scope_prop";
 
                 default: Kit.codeBug();
             }
@@ -686,7 +689,7 @@ public class Node
             }
             return sb.toString();
         }
-        return null;
+        return String.valueOf(type);
     }
 
     public String toStringTree(ScriptOrFnNode treeTop) {
