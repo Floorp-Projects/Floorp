@@ -297,6 +297,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
     for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
     {
       const nsXPTParamInfo &paramInfo = aMethodInfo->GetParam(i);
+      NS_ASSERTION(!paramInfo.IsDipper(), "Dipper!");
       if (!paramInfo.IsRetval()) {
         rv = SetupJavaParams(paramInfo, aMethodInfo, aMethodIndex, aParams,
                              aParams[i], java_params[i], methodSig);
@@ -582,16 +583,25 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_CHAR_STR:
     case nsXPTType::T_WCHAR_STR:
     {
-      jobject str;
-      if (aVariant.val.p) {
+      void* ptr = nsnull;
+      if (!aParamInfo.IsOut()) {
+        ptr = aVariant.val.p;
+      } else if (aVariant.val.p) {
+        void** variant = NS_REINTERPRET_CAST(void**, aVariant.val.p);
+        ptr = *variant;
+      }
+
+      jobject str = nsnull;
+      if (ptr) {
         if (tag == nsXPTType::T_CHAR_STR) {
-          str = mJavaEnv->NewStringUTF((const char*) aVariant.val.p);
+          str = mJavaEnv->NewStringUTF((const char*) ptr);
         } else {
-          const PRUnichar* buf = (const PRUnichar*) aVariant.val.p;
+          const PRUnichar* buf = (const PRUnichar*) ptr;
           str = mJavaEnv->NewString(buf, nsCRT::strlen(buf));
         }
-      } else {
-        str = nsnull;
+      }
+      if (str == nsnull) {
+        str = mJavaEnv->NewStringUTF((const char*)"");
       }
 
       if (!aParamInfo.IsOut()) {
@@ -1012,7 +1022,6 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_CHAR_STR:
     {
-      // XXX not sure how this should be handled
       if (aParamInfo.IsOut()) {
         jstring str = nsnull;
         if (aParamInfo.IsRetval()) {
@@ -1025,7 +1034,6 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         if (str) {
           jboolean isCopy;
           const char* char_ptr = mJavaEnv->GetStringUTFChars(str, &isCopy);
-          // XXX is this strdup right?
           *((char **) aVariant.val.p) = strdup(char_ptr);
           if (isCopy) {
             mJavaEnv->ReleaseStringUTFChars(str, char_ptr);
@@ -1039,7 +1047,6 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_WCHAR_STR:
     {
-      // XXX not sure how this should be handled
       if (aParamInfo.IsOut()) {
         jstring str = nsnull;
         if (aParamInfo.IsRetval()) {
@@ -1054,7 +1061,8 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
           const jchar* wchar_ptr = mJavaEnv->GetStringChars(str, &isCopy);
 
           PRUint32 length = nsCRT::strlen(wchar_ptr);
-          PRUnichar* string = (PRUnichar*) malloc(length + 1); // add one for null
+          PRUnichar* string = (PRUnichar*)
+                              nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
           memcpy(string, wchar_ptr, length * sizeof(PRUnichar));
           string[length] = 0;
           *((PRUnichar **) aVariant.val.p) = string;
