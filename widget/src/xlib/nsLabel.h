@@ -48,7 +48,6 @@ public:
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
 
-  NS_IMETHOD   GetBounds(nsRect &aRect);
   NS_IMETHOD   PreCreateWidget(nsWidgetInitData *aInitData);
 
   NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);

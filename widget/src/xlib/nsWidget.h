@@ -71,8 +71,6 @@ public:
 
   NS_IMETHOD Enable(PRBool bState);
   NS_IMETHOD              SetFocus(void);
-  NS_IMETHOD              GetBounds(nsRect &aRect);
-  NS_IMETHOD              GetClientBounds(nsRect &aRect);
   NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
   virtual nsIFontMetrics* GetFont(void);
   NS_IMETHOD              SetFont(const nsFont &aFont);
@@ -100,6 +98,9 @@ protected:
   PRUint32 mPreferredWidth;
   PRUint32 mPreferredHeight;
   Window mWindow;
+  PRUint32      bg_rgb;
+  unsigned long bg_pixel;
+  GC            mGC; // until we get gc pooling working...
 };
 
 extern Display         *gDisplay;
@@ -125,7 +126,6 @@ extern PRUint8   gRedShift;        //number to shift value into red position
 extern PRUint8   gGreenShift;      //number to shift value into green position
 extern PRUint8   gBlueShift;       //number to shift value into blue position
 extern PRUint8   gAlphaShift;      //number to shift value into alpha position
-
 
 #endif
 

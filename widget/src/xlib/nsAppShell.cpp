@@ -31,11 +31,59 @@ static PRUint8 getShiftForMask(unsigned long val);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
+extern "C"
+void
+xlib_rgb_init (Display *display, Screen *screen);
+
+extern "C"
+Visual *
+xlib_rgb_get_visual (void);
+
 // this is so that we can get the timers in the base.  most widget
 // toolkits do this through some set of globals.  not here though.  we
 // don't have that luxury
 extern "C" int NS_TimeToNextTimeout(struct timeval *);
 extern "C" void NS_ProcessTimeouts(void);
+
+
+// For debugging.
+static char *event_names[] = {
+  "",
+  "",
+  "KeyPress",
+  "KeyRelease",
+  "ButtonPress",
+  "ButtonRelease",
+  "MotionNotify",
+  "EnterNotify",
+  "LeaveNotify",
+  "FocusIn",
+  "FocusOut",
+  "KeymapNotify",
+  "Expose",
+  "GraphicsExpose",
+  "NoExpose",
+  "VisibilityNotify",
+  "CreateNotify",
+  "DestroyNotify",
+  "UnmapNotify",
+  "MapNotify",
+  "MapRequest",
+  "ReparentNotify",
+  "ConfigureNotify",
+  "ConfigureRequest",
+  "GravityNotify",
+  "ResizeRequest",
+  "CirculateNotify",
+  "CirculateRequest",
+  "PropertyNotify",
+  "SelectionClear",
+  "SelectionRequest",
+  "SelectionNotify",
+  "ColormapNotify",
+  "ClientMessage",
+  "MappingNotify"
+};
 
 NS_IMPL_ADDREF(nsAppShell)
 NS_IMPL_RELEASE(nsAppShell)
@@ -70,11 +118,14 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
             argv[0], XDisplayName(NULL));
     exit(1);
   }
-  // set the static vars for this class so we can find our
-  // way around...
   gScreenNum = DefaultScreen(gDisplay);
   gScreen = DefaultScreenOfDisplay(gDisplay);
-  gVisual = DefaultVisual(gDisplay, gScreenNum);
+  // init the rgb layer.  this will provide
+  // the visual information for us.
+  xlib_rgb_init(gDisplay, gScreen);
+  gVisual = xlib_rgb_get_visual();
+  // set the static vars for this class so we can find our
+  // way around...
   vis_template.visualid = XVisualIDFromVisual(gVisual);
   gVisualInfo = XGetVisualInfo(gDisplay, VisualIDMask,
                                &vis_template, &num_visuals);
@@ -85,7 +136,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
     printf("nsAppShell:Create(): Warning: %d XVisualInfo structs were returned.\n", num_visuals);
   }
   // get the depth for this display
-  gDepth = DefaultDepth(gDisplay, gScreenNum);
+  gDepth = gVisualInfo->depth;
   // set up the color info for this display
   // set up the masks
   gRedMask = gVisualInfo->red_mask;
@@ -108,6 +159,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
 NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener) 
 {
+  mDispatchListener = aDispatchListener;
   return NS_OK;
 }
 
@@ -199,6 +251,7 @@ nsresult nsAppShell::Run()
     if (FD_ISSET(xlib_fd, &select_set)) {
       //printf("xlib data available.\n");
       XNextEvent(gDisplay, &event);
+      DispatchEvent(&event);
     }
     if (please_run_timer_queue) {
       //printf("Running timer queue...\n");
@@ -240,6 +293,13 @@ nsAppShell::~nsAppShell()
 void* nsAppShell::GetNativeData(PRUint32 aDataType)
 {
   return nsnull;
+}
+
+void
+nsAppShell::DispatchEvent(XEvent *event)
+{
+  printf("Window %ld Got a %s event\n",
+         event->xany.window, event_names[event->type]);
 }
 
 static PRUint8 convertMaskToCount(unsigned long val)

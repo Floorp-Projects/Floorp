@@ -42,7 +42,6 @@ public:
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
   virtual PRBool AutoErase();
-  NS_IMETHOD     GetBounds(nsRect &aRect);
 
 
 };

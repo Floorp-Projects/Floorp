@@ -45,8 +45,8 @@ nsFontMetricsXlib::nsFontMetricsXlib()
 {
   NS_INIT_REFCNT();
   mDeviceContext = nsnull;
-  mFont = 0;
-  mFontHandle = 0;
+  mFont = nsnull;
+  mFontHandle = nsnull;
 
   mHeight = 0;
   mAscent = 0;
@@ -88,7 +88,7 @@ nsFontMetricsXlib::~nsFontMetricsXlib()
 #else
 
   if (0 != mFontHandle) {
-    XUnloadFont(gDisplay, mFontHandle);
+    XFreeFont(gDisplay, mFontHandle);
   }
 
 #endif
@@ -183,6 +183,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
   mFont = new nsFont(aFont);
   mDeviceContext = aContext;
   mFontHandle = 0;
+  mFontStruct = nsnull;
 
   firstFace.ToCString(wildstring, namelen);
 
@@ -309,7 +310,8 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
   {
     char *nametouse = PickAppropriateSize(fnames, fonts, numnames, aFont.size);
 
-    mFontHandle = XLoadFont(gDisplay, nametouse);
+    mFontStruct = XLoadQueryFont(gDisplay, nametouse);
+    mFontHandle = mFontStruct->fid;
 
 #ifdef NOISY_FONTS
     printf(" is: %s\n", nametouse);
@@ -325,7 +327,8 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
     printf(" is: %s\n", "fixed (final fallback)");
 #endif
 
-    mFontHandle = XLoadFont(gDisplay, "fixed");
+    mFontStruct = XLoadQueryFont(gDisplay, "fixed");
+    mFontHandle = mFontStruct->fid;
   }
 
   RealizeFont();
@@ -401,27 +404,24 @@ nsFontMetricsXlib::PickAppropriateSize(char **names, XFontStruct *fonts,
 
 void nsFontMetricsXlib::RealizeFont()
 {
-  XFontStruct *fontInfo;
-  
-  fontInfo = XQueryFont(gDisplay, mFontHandle);
 
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
-  mAscent = nscoord(fontInfo->ascent * f);
-  mDescent = nscoord(fontInfo->descent * f);
-  mMaxAscent = nscoord(fontInfo->ascent * f) ;
-  mMaxDescent = nscoord(fontInfo->descent * f);
+  mAscent = nscoord(mFontHandle->ascent * f);
+  mDescent = nscoord(mFontHandle->descent * f);
+  mMaxAscent = nscoord(mFontHandle->ascent * f) ;
+  mMaxDescent = nscoord(mFontHandle->descent * f);
 
-  mHeight = nscoord((fontInfo->ascent + fontInfo->descent) * f);
-  mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
+  mHeight = nscoord((mFontHandle->ascent + mFontHandle->descent) * f);
+  mMaxAdvance = nscoord(mFontHandle->max_bounds.width * f);
 
   // 56% of ascent, best guess for non-true type
-  mXHeight = NSToCoordRound((float) fontInfo->ascent* f * 0.56f);
+  mXHeight = NSToCoordRound((float) mFontHandle->ascent* f * 0.56f);
 
   unsigned long pr = 0;
 
-  if (::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr))
+  if (::XGetFontProperty(mFontHandle, XA_X_HEIGHT, &pr))
   {
     mXHeight = nscoord(pr * f);
 #ifdef REALLY_NOISY_FONTS
@@ -429,7 +429,7 @@ void nsFontMetricsXlib::RealizeFont()
 #endif
   }
 
-  if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))
+  if (::XGetFontProperty(mFontHandle, XA_UNDERLINE_POSITION, &pr))
   {
     /* this will only be provided from adobe .afm fonts */
     mUnderlineOffset = NSToIntRound(pr * f);
@@ -442,11 +442,11 @@ void nsFontMetricsXlib::RealizeFont()
     /* this may need to be different than one for those weird asian fonts */
     /* mHeight is already multipled by f */
     float height;
-    height = fontInfo->ascent + fontInfo->descent;
+    height = mFontHandle->ascent + mFontHandle->descent;
     mUnderlineOffset = -NSToIntRound(MAX (1, floor (0.1 * height + 0.5)) * f);
   }
 
-  if (::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr))
+  if (::XGetFontProperty(mFontHandle, XA_UNDERLINE_THICKNESS, &pr))
   {
     /* this will only be provided from adobe .afm fonts */
     mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
@@ -458,11 +458,11 @@ void nsFontMetricsXlib::RealizeFont()
   {
     /* mHeight is already multipled by f */
     float height;
-    height = fontInfo->ascent + fontInfo->descent;
+    height = mFontHandle->ascent + mFontHandle->descent;
     mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * height + 0.5)) * f);
   }
 
-  if (::XGetFontProperty(fontInfo, XA_SUPERSCRIPT_Y, &pr))
+  if (::XGetFontProperty(mFontHandle, XA_SUPERSCRIPT_Y, &pr))
   {
     mSuperscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
@@ -474,7 +474,7 @@ void nsFontMetricsXlib::RealizeFont()
     mSuperscriptOffset = mXHeight;
   }
 
-  if (::XGetFontProperty(fontInfo, XA_SUBSCRIPT_Y, &pr))
+  if (::XGetFontProperty(mFontHandle, XA_SUBSCRIPT_Y, &pr))
   {
     mSubscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
@@ -491,7 +491,6 @@ void nsFontMetricsXlib::RealizeFont()
   mStrikeoutSize = mUnderlineSize;
 
   mLeading = 0;
-  XFreeFontInfo(NULL, fontInfo, 1);
 }
 
 NS_IMETHODIMP  nsFontMetricsXlib::GetXHeight(nscoord& aResult)
@@ -1304,23 +1303,19 @@ GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
 void
 nsFontXlib::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXlib* aMetrics)
 {
-  Font xlibFont = XLoadFont(gDisplay, mName);
+  XFontStruct *xlibFont = XLoadQueryFont(gDisplay, mName);
   if (xlibFont) {
     mFont = xlibFont;
     mMap = aCharSet->mInfo->mMap;
-    XFontStruct* xFont = XQueryFont(gDisplay, xlibFont);
-    mActualSize = xFont->max_bounds.ascent + xFont->max_bounds.descent;
+    mActualSize = xlibFont->max_bounds.ascent + xlibFont->max_bounds.descent;
     if (aCharSet->mInfo->mSpecialUnderline) {
-      XFontStruct* asciiXFont =
-        XQueryFont(gDisplay, aMetrics->mFontHandle);
+      XFontStruct* asciiXFont = aMetrics->mFontHandle;
       unsigned long positionX2;
       unsigned long thickness;
       GetUnderlineInfo(asciiXFont, &positionX2, &thickness);
       mActualSize += (positionX2 + thickness);
-      mBaselineAdjust = (-xFont->max_bounds.descent);
-      XFreeFontInfo(NULL, asciiXFont, 1);
+      mBaselineAdjust = (-xlibFont->max_bounds.descent);
     }
-    XFreeFontInfo(NULL, xFont, 1);
   }
 }
 
@@ -2167,9 +2162,13 @@ nsFontMetricsXlib::GetWidth(nsFontXlib* aFont, const PRUnichar* aString,
   PRUint32 aLength)
 {
   XChar2b buf[512];
+  int ret;
   int len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
     (PRUint8*) buf, sizeof(buf));
-  return XTextWidth16(aFont->mFont, buf, len);
+  // XXX this is slow as dirt.
+  XFontStruct *font_struct = aFont->mFont;
+  ret = XTextWidth16(font_struct, buf, len / 2);
+  return ret;
 }
 
 void

@@ -92,6 +92,14 @@ NS_IMPL_QUERY_INTERFACE(nsDrawingSurfaceXlib, kIDrawingSurfaceIID)
 NS_IMPL_ADDREF(nsDrawingSurfaceXlib)
 NS_IMPL_RELEASE(nsDrawingSurfaceXlib)
 
+NS_IMETHODIMP
+nsDrawingSurfaceXlib::Init(Drawable aDrawable, GC aGC) {
+  printf("nsDrawingSurfaceXlib::Init()\n");
+  mGC = aGC;
+  mPixmap = aDrawable;
+  mIsOffscreen = PR_FALSE;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
@@ -122,7 +130,7 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
   *aBits = mImage->data;
   
   *aWidthBytes = mImage->bytes_per_line;
-  *aStride = mImage->bytes_per_line;
+  *aStride = mImage->bitmap_pad;
 
   return NS_OK;
 }

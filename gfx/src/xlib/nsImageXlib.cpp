@@ -18,6 +18,7 @@
 
 #include "nsImageXlib.h"
 #include "nsDrawingSurfaceXlib.h"
+#include "xlibrgb.h"
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
@@ -150,9 +151,11 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
                                  aWidth, aHeight, gDepth);
     XSetClipOrigin(gDisplay, drawing->GetGC(), 0, 0);
     XSetClipMask(gDisplay, drawing->GetGC(), None);
-#if 0
-    // XXX render the image here...
-#endif
+    xlib_draw_rgb_image (mImagePixmap,
+                         drawing->GetGC(),
+                         0, 0, aWidth, aHeight,
+                         XLIB_RGB_DITHER_MAX,
+                         mImageBits, mRowBytes);
   }
 
   if (nsnull != mAlphaPixmap) {
@@ -161,8 +164,14 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
     XSetClipMask(gDisplay, drawing->GetGC(), mAlphaPixmap);
   }
 
-  // XXX do the drawing here.
-
+  XCopyArea(gDisplay,                  // display
+            mImagePixmap,              // source
+            drawing->GetDrawable(),    // dest
+            drawing->GetGC(),          // GC
+            aX, aY,                    // xsrc, ysrc
+            aWidth, aHeight,           // width, height
+            0, 0);                     // xdest, ydest
+            
   if (mAlphaPixmap != nsnull) {
     XSetClipOrigin(gDisplay, drawing->GetGC(), 0, 0);
     XSetClipMask(gDisplay, drawing->GetGC(), None);
@@ -180,6 +189,14 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
                   PRInt32 aDWidth, PRInt32 aDHeight)
 {
   printf("nsImageXlib::Draw()\n");
+  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib *)aSurface;
+  xlib_draw_rgb_image (drawing->GetDrawable(),
+                       drawing->GetGC(),
+                       aDX, aDY, aDWidth, aDHeight,
+                       XLIB_RGB_DITHER_MAX,
+                       mImageBits + mRowBytes * aSY + 3 * aDX,
+                       mRowBytes);
+
   return NS_OK;
 }
 

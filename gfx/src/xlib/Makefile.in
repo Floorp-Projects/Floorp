@@ -30,7 +30,7 @@ MODULE=raptor
 
 REQUIRES=util img xpcom raptor netlib ps
 
-DEFINES += -D_IMPL_NS_GFXONXP 
+DEFINES += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS)
 
@@ -45,7 +45,7 @@ CPPSRCS = nsFontMetricsXlib.cpp \
 	nsTimer.cpp \
 	nsGfxFactoryXlib.cpp
 
-CSRCS =
+CSRCS = xlibrgb.c
 
 include $(topsrcdir)/config/rules.mk
 

@@ -89,7 +89,4 @@ NS_METHOD nsLabel::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
-NS_METHOD nsLabel::GetBounds(nsRect &aRect)
-{
-  return NS_OK;
-}
+

@@ -60,11 +60,6 @@ PRBool nsTextWidget::OnResize(nsRect &aWindowRect)
   return PR_FALSE;
 }
 
-NS_METHOD nsTextWidget::GetBounds(nsRect &aRect)
-{
-  return NS_OK;
-}
-
 NS_METHOD nsTextWidget::Paint(nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect)
 {

@@ -42,7 +42,6 @@ public:
   // nsIWidget overrides
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
-  NS_IMETHOD     GetBounds(nsRect &aRect);
 
 };
 

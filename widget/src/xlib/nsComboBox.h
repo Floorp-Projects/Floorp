@@ -41,9 +41,6 @@ public:
     virtual PRBool OnPaint();
     virtual PRBool OnResize(nsRect &aWindowRect);
 
-    // nsIWidget
-    NS_IMETHOD     GetBounds(nsRect &aRect);
-
     // nsIComboBox interface
     NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
     virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);

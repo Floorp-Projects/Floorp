@@ -38,7 +38,6 @@ public:
   virtual PRBool  OnPaint();
   virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool  OnResize(nsRect &aWindowRect);
-  NS_IMETHOD      GetBounds(nsRect &aRect);
   
   NS_IMETHOD      Paint(nsIRenderingContext& aRenderingContext,
 			const nsRect& aDirtyRect);

@@ -40,6 +40,7 @@ public:
   NS_IMETHOD IsOffscreen(PRBool *aOffScreen);
   NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
+  NS_IMETHOD Init (Drawable aDrawable, GC aGC);
   GC         GetGC(void) { return mGC; }
   Drawable   GetDrawable(void) { return mPixmap; }  
 

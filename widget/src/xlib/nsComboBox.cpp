@@ -119,11 +119,6 @@ PRInt32 nsComboBox::GetHeight(PRInt32 aProposedHeight)
   return 0;
 }
 
-NS_METHOD nsComboBox::GetBounds(nsRect &aRect)
-{
-  return NS_OK;
-}
-
 NS_METHOD nsComboBox::Paint(nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect)
 {

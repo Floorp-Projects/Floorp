@@ -50,7 +50,6 @@ public:
   virtual PRBool    OnPaint();
   virtual PRBool    OnScroll(PRUint32 scrollCode, int cPos);
   virtual PRBool    OnResize(nsRect &aWindowRect);
-  NS_IMETHOD        GetBounds(nsRect &aRect);
 
 };
 
