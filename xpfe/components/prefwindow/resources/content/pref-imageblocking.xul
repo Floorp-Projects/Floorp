@@ -26,7 +26,7 @@
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % prefImageBlockingDTD SYSTEM "chrome://communicator/locale/pref/pref-advanced-imageblocking.dtd" >
+<!ENTITY % prefImageBlockingDTD SYSTEM "chrome://communicator/locale/pref/pref-imageblocking.dtd" >
 %prefImageBlockingDTD;
 ]>
 
