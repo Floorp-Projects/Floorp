@@ -941,7 +941,8 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:content:xbl:public:MANIFEST",                    "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xml:content:public:MANIFEST",            "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xml:document:public:MANIFEST",           "$distdirectory:content:");
-    InstallFromManifest(":mozilla:content:xsl:document:src:MANIFEST_IDL",          "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:content:xsl:document:public:MANIFEST",           "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:xsl:document:public:MANIFEST_IDL",       "$distdirectory:idl:");
     InstallFromManifest(":mozilla:content:xul:content:public:MANIFEST",            "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xul:document:public:MANIFEST",           "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xul:document:public:MANIFEST_IDL",       "$distdirectory:idl:");

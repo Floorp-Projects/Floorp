@@ -93,7 +93,7 @@ bin/components/jar.xpt
 bin/components/jsconsole-clhandler.js
 bin/components/content_base.xpt
 bin/components/content_html.xpt
-bin/components/content_xsl.xpt
+bin/components/content_xslt.xpt
 bin/components/webBrowser_core.xpt
 bin/components/locale.xpt
 bin/components/mozbrwsr.xpt

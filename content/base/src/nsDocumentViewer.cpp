@@ -184,8 +184,6 @@ const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprompt-serv
 #include "nsIDOMFocusListener.h"
 #include "nsISelectionController.h"
 
-#include "nsITransformMediator.h"
-
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
@@ -511,7 +509,6 @@ public:
   NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
   NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
                                        nsIDocumentViewer*& aResult);
-  NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
@@ -698,9 +695,8 @@ protected:
   nsISupports* mContainer; // [WEAK] it owns me!
   nsCOMPtr<nsIDeviceContext> mDeviceContext;   // ??? can't hurt, but...
 
-  // the following seven items are explicitly in this order
+  // the following six items are explicitly in this order
   // so they will be destroyed in the reverse order (pinkerton, scc)
-  nsCOMPtr<nsITransformMediator> mTransformMediator;
   nsCOMPtr<nsIDocument>    mDocument;
   nsCOMPtr<nsIWidget>      mWindow;      // ??? should we really own it?
   nsCOMPtr<nsIViewManager> mViewManager;
@@ -1389,8 +1385,6 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                                  const nsRect& aBounds,
                                  PRBool aDoCreation)
 {
-  mTransformMediator = nsnull;
-   
 #ifdef NS_PRINT_PREVIEW
   mParentWidget = aParentWidget; // not ref counted
 #endif
@@ -5341,16 +5335,6 @@ nsresult DocumentViewerImpl::DocumentReadyForPrinting()
     }
   }
   return rv;
-}
-
-NS_IMETHODIMP
-DocumentViewerImpl::SetTransformMediator(nsITransformMediator* aMediator)
-{
-  NS_ASSERTION(!mTransformMediator || !aMediator, 
-               "nsXMLDocument::SetTransformMediator(): \
-                Cannot set a second transform mediator\n");
-  mTransformMediator = aMediator;
-  return NS_OK;
 }
 
 #ifdef XP_MAC

@@ -38,11 +38,6 @@
 
 #include "nsTransformMediator.h"
 #include "nsIComponentManager.h"
-#include "nsIContent.h"
-#include "nsIDocument.h"
-#include "nsIDOMElement.h"
-#include "nsIServiceManagerUtils.h"
-#include "nsObserverService.h"
 #include "nsString.h"
 
 nsresult
@@ -102,37 +97,24 @@ NS_IMPL_ISUPPORTS1(nsTransformMediator, nsITransformMediator)
 void
 nsTransformMediator::TryToTransform()
 {
-  if (mSourceDOM && mStyleDOM && mResultDoc && mObserver) 
+  nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
+  if (mSourceDOM && mStyleDOM && mResultDoc && observer) 
   {
     if (mEnabled && mTransformer) {
       mTransformer->TransformDocument(mSourceDOM, 
                                       mStyleDOM,
                                       mResultDoc,
-                                      mObserver);
+                                      observer);
     }
     else if (mStyleInvalid) {
-      // Copy the error message from the stylesheet document to the result
-      // result document and notify the observer.
-      nsCOMPtr<nsIDOMElement> docElement;
-      mResultDoc->GetDocumentElement(getter_AddRefs(docElement));
-      nsCOMPtr<nsIDOMNode> newRoot, root;
-      mResultDoc->ImportNode(mStyleDOM, PR_TRUE, getter_AddRefs(newRoot));
-      if (docElement) {
-        nsCOMPtr<nsIDOMNode> origRoot;
-        root = newRoot;
-        mResultDoc->ReplaceChild(docElement, root, getter_AddRefs(origRoot));
-      }
-      else {
-        mResultDoc->AppendChild(newRoot, getter_AddRefs(root));
-      }
+      // Avoid recursion.
+      mStyleInvalid = PR_FALSE;
 
-      nsresult rv;
-      nsCOMPtr<nsIObserverService> anObserverService =
-          do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        anObserverService->AddObserver(mObserver, "xslt-done", PR_TRUE);
-        anObserverService->NotifyObservers(root, "xslt-done", nsnull);
-      }
+      // Notify the observer with the stylesheet which contains
+      // the error message.
+      nsCOMPtr<nsIDOMDocument> errorDoc;
+      mStyleDOM->GetOwnerDocument(getter_AddRefs(errorDoc));
+      observer->OnTransformDone(NS_ERROR_FAILURE, errorDoc);
     }
   }
 }
@@ -179,9 +161,9 @@ nsTransformMediator::GetResultDocument(nsIDOMDocument** aDoc)
 }
 
 NS_IMETHODIMP
-nsTransformMediator::SetTransformObserver(nsIObserver* aObserver)
+nsTransformMediator::SetTransformObserver(nsITransformObserver* aObserver)
 {
-  mObserver = aObserver;
+  mObserver = do_GetWeakReference(aObserver);
   TryToTransform();
   return NS_OK;
 }

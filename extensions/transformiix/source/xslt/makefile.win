@@ -26,7 +26,6 @@ REQUIRES	= string \
 		  dom \
 		  widget \
 		  necko \
-		  content_xsl \
 		  content \
 		  unicharutil \
 		  xpconnect \

@@ -140,7 +140,7 @@ bin/components/libprofile.so
 bin/components/libgkcontent.so
 bin/components/content_base.xpt
 bin/components/content_html.xpt
-bin/components/content_xsl.xpt
+bin/components/content_xslt.xpt
 bin/components/libgklayout.so
 bin/components/libgkplugin.so
 bin/components/libhtmlpars.so

@@ -21,9 +21,10 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=contentxsldoc_s 
-MODULE=content_xsl
-REQUIRES	= xpcom \
+LIBRARY_NAME = contentxsldoc_s 
+MODULE       = content
+
+REQUIRES = xpcom \
 		  string \
 		  htmlparser \
 		  view \
@@ -37,16 +38,9 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-XPIDLSRCS=	.\nsIDocumentTransformer.idl \
-            $(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsXSLContentSink.obj	\
 	.\$(OBJDIR)\nsTransformMediator.obj     \
-	$(NULL)
-
-EXPORTS = 					\
-	nsITransformMediator.h			\
 	$(NULL)
 
 LINCS=  -I..\..\..\html\style\src -I..\..\..\html\base\src \

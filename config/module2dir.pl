@@ -40,7 +40,6 @@ my %map = (
   'commandhandler',     'embedding/components/commandhandler',
   'composer',           'editor/composer',
   'content',            'content',
-  'content_xsl',        'content/xsl/document',
   'cookie',             'extensions/cookie',
   'ctl',                'extensions/ctl',
   'dbm',                'dbm',
