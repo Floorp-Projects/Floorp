@@ -206,6 +206,8 @@ static nsFontCharSetInfo ISO88598 =
 // untill we fix the layout and ensure we only call this with pure RTL text
 static nsFontCharSetInfo ISO88599 =
   { "ISO-8859-9", SingleByteConvert, 0 };
+static nsFontCharSetInfo ISO885913 =
+  { "ISO-8859-13", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO885915 =
   { "ISO-8859-15", SingleByteConvert, 0 };
 static nsFontCharSetInfo JISX0201 =
@@ -373,6 +375,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "ibm-udctw",          &Unknown       },
   { "iso646.1991-irv",    &Unknown       },
   { "iso8859-1",          &ISO88591      },
+  { "iso8859-13",         &ISO885913     },
   { "iso8859-15",         &ISO885915     },
   { "iso8859-1@cn",       &Unknown       },
   { "iso8859-1@kr",       &Unknown       },
