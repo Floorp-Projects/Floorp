@@ -187,9 +187,9 @@ function DropOnDirectoryTree(event)
 	for ( var i = 0; i < dragSession.numDropItems; ++i )
 	{
 		dragSession.getData ( trans, i );
-		dataObj = new Object();
-		bestFlavor = new Object();
-		len = new Object();
+		var dataObj = new Object();
+		var bestFlavor = new Object();
+		var len = new Object();
 		trans.getAnyTransferData ( bestFlavor, dataObj, len );
 		if ( dataObj )	dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
 		if ( !dataObj )	continue;
@@ -201,7 +201,7 @@ function DropOnDirectoryTree(event)
 		debugDump("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'");
 		debugDump("\n");
 
-		sourceNode = RDF.GetResource(sourceID, true);
+		var sourceNode = RDF.GetResource(sourceID, true);
 		if (!sourceNode)
 			continue;
 		

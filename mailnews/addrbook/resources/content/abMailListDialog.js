@@ -63,7 +63,7 @@ function GetListValue(mailList, doAdd)
 	}
 	else 
 	{
-		listname = mailList.listName;
+		var listname = mailList.listName;
 		listname = listname.toLowerCase();
 		oldListName = oldListName.toLowerCase();
 		if (doAdd == true)
@@ -84,13 +84,14 @@ function GetListValue(mailList, doAdd)
 	var oldTotal = mailList.addressLists.Count();
 	var i = 1;
 	var pos = 0;
+	var inputField, fieldValue, cardproperty;
 	while ((inputField = awGetInputElement(i)))
 	{
-	    fieldValue = inputField.value;
+	        fieldValue = inputField.value;
 		if (doAdd || (doAdd == false && pos >= oldTotal))
-			var cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance();
+			cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance();
 		else
-			var cardproperty = mailList.addressLists.GetElementAt(pos);
+			cardproperty = mailList.addressLists.GetElementAt(pos);
 
 		if (fieldValue == "")
 		{
@@ -121,7 +122,7 @@ function GetListValue(mailList, doAdd)
 	}
 	if (doAdd == false && i < oldTotal)
 	{
-		for (j = i; j < oldTotal; j++)
+		for (var j = i; j < oldTotal; j++)
 			mailList.addressLists.RemoveElementAt(j);
 	}
 	return true;
@@ -160,7 +161,8 @@ function MailListOKButton()
 function OnLoadMailList()
 {
 	doSetOKCancel(MailListOKButton, 0);
-	
+
+	var selectedAB;
 	if (window.arguments && window.arguments[0])
 	{
 		if ( window.arguments[0].selectedAB )
@@ -587,9 +589,9 @@ function DropOnAddressListTree(event)
 	for ( var i = 0; i < dragSession.numDropItems; ++i )
 	{
 		dragSession.getData ( trans, i );
-		dataObj = new Object();
-		bestFlavor = new Object();
-		len = new Object();
+		var dataObj = new Object();
+		var bestFlavor = new Object();
+		var len = new Object();
 		trans.getAnyTransferData ( bestFlavor, dataObj, len );
 		if ( dataObj )	dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
 		if ( !dataObj )	continue;
