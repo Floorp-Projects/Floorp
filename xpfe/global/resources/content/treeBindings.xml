@@ -92,10 +92,20 @@
   </binding>
  
   <binding id="treecell-header">
-    <content autostretch="never">
-      <xul:image class="tree-header-image" inherits="src"/>
-      <xul:text class="tree-header-text" inherits="crop,value" flex="1" crop="right"/>
-      <xul:image class="tree-header-sortdirection"/>
+    <content>
+      <xul:box class="treecell-header-box" flex="1" autostretch="never">
+        <xul:image class="tree-header-image" inherits="src"/>
+        <xul:text class="tree-header-text" inherits="crop,value" flex="1" crop="right"/>
+        <xul:image class="tree-header-sortdirection"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="treecell-header-image">
+    <content>
+      <xul:box class="treecell-header-image-box" flex="1" autostretch="never">
+        <xul:image class="tree-header-image" inherits="src"/>
+      </xul:box>
     </content>
   </binding>
   

@@ -317,4 +317,39 @@
       border: 1px inset #B2BFBF;
     }
 
+/* :::::::::: compact menulists :::::::::: */
+
+.menulist-compact {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#menulist-compact");
+  margin: 0px;
+  border: 1px solid #000000;
+  min-width: 0px;
+  min-height: 0px;
+  background-color: #D6DFDF;
+  -moz-user-focus: ignore;
+}
+
+.menulist-compact-text {
+  margin-right: 3px;
+}  
+
+.menulist-compact-internal-box {
+  border-left: 1px solid #F7F7F7;
+  border-top: 1px solid #F7F7F7;
+  border-right: 1px solid #8CA2A5;
+  border-bottom: 1px solid #8CA2A5;
+  padding: 1px;
+}
+    
+.menulist-compact-dropmarker {
+  list-style-image: url("chrome://global/skin/menulist-compact-arrow.gif");
+  margin-left: 2px;
+}
+      
+.menulist-compact:hover:active > .menulist-compact-internal-box,
+.menulist-compact[open="true"] > .menulist-compact-internal-box {
+  background-color: #949EA5;
+  border: 1px solid #808080;
+}
+
 

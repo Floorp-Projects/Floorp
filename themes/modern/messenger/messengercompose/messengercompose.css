@@ -52,37 +52,51 @@ box.padded {
 /* addressing widget */
 
 #addressingWidgetTree {
-  height : 80px;
   width : 0px;
-  -moz-user-focus: ignore !important;
+  border: 1px inset #5B7693;
+  -moz-user-focus: none;
 }  
+
+#listcol-addressingWidget {
+  width: 9em;
+  border-right: 1px solid #D3D3E5;
+}
 
 #addressingWidgetTree > treechildren > treeitem > treerow,
 #addressingWidgetTree > treechildren > treeitem[selected="true"] > treerow {
   border: none;
-  background-color: transparent;
-  color: buttontext;
+  background-color: inherit;
+  color: inherit;
 }
 
 .treecell-addressingWidget {
 	vertical-align: middle;
+  padding: 0px;
+  border-bottom: 1px solid #D3D3E5;
 }
 
-tree.addressingWidget > treechildren > treeitem > treerow  > treecell > image {
-  margin : 0px 3px 0px 0px;
+.treecell-addressingWidget:first-child {
+  border-top: none;
+  border-bottom: none;
+}
+
+.dummy-row-cell:first-child {
+  border-top: none;
+  border-bottom: 1px solid #D3D3E5;
+}
+
+.aw-menulist {
+  margin: 0px;
+  border-top: none;
+  border-left: none;
+  border-color: #314152;
+}
+
+.person-icon {
+  margin : 2px 4px 2px 4px;
 	border: none;
 	list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
 	-moz-user-focus: ignore;
-}
-
-#listcol-addressingWidget {
-  width: 110px;
-}
-
-.menulist-compact {
-  -moz-user-focus: ignore;
-  margin: 3px;
-  border: none;
 }
 
 /*

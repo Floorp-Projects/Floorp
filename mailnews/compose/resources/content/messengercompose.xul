@@ -515,7 +515,7 @@
     </toolbar>
   </toolbox>
 
-  <splitter id="compose-toolbar-sizer" collapse="after"/>
+  <splitter id="compose-toolbar-sizer" onmousedown="awSizerListen()" collapse="after"/>
 
   <!-- The mail message body frame -->
   <box id="appcontent" orient="vertical" flex="1">

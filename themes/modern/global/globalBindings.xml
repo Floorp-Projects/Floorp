@@ -208,6 +208,16 @@
     </content>
   </binding>
 
+  <binding id="menulist-compact" extends="chrome://global/content/menulistBindings.xml#menulist">
+    <content includes="menupopup" flex="1">
+      <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
+        <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
+        <xul:spring flex="1"/>
+        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right"/>
+      </xul:box>
+    </content>
+  </binding>
+    
   <binding id="scrollbar" extends="chrome://global/content/scrollbarBindings.xml#scrollbar">
     <content>
       <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" inherits="sborient=align">

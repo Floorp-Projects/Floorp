@@ -274,6 +274,7 @@ modern.jar:
     skin/modern/global/check-radio-check-pressed.gif				   (global/check-radio-check-pressed.gif)
     skin/modern/global/check-radio-check.gif						   (global/check-radio-check.gif)
     skin/modern/global/menulist-arrow.gif                  (global/menulist-arrow.gif)
+    skin/modern/global/menulist-compact-arrow.gif          (global/menulist-compact-arrow.gif)
     skin/modern/global/menulist-dis-arrow.gif              (global/menulist-dis-arrow.gif)
     skin/modern/global/menulist-left-top.gif               (global/menulist-left-top.gif)
     skin/modern/global/menulist-left-mid.gif               (global/menulist-left-mid.gif)

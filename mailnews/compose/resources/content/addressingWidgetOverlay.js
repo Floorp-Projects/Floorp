@@ -141,6 +141,7 @@ function CompFields2Recipients(msgCompFields, msgType)
 		dump("replacing child in comp fields 2 recips \n");
 	    var parent = treeChildren.parentNode;
 	    parent.replaceChild(newTreeChildrenNode, treeChildren);
+      awFitDummyRows();
         setTimeout("awFinishCopyNodes();", 0);
 	}
 }
@@ -414,7 +415,10 @@ function awAppendNewRow(setFocus)
 	{
 	    var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("data");
 
-		var newNode = awCopyNode(treeitem1, body, 0);
+    var nextDummy = awGetNextDummyRow();
+		var newNode = awCopyNode(treeitem1, body, nextDummy);
+    if (nextDummy) body.removeChild(nextDummy);
+    
 		top.MAX_RECIPIENTS++;
 
         var input = newNode.getElementsByTagName(awInputElementName());
@@ -529,7 +533,8 @@ function awRemoveRow(row)
 	var body = document.getElementById('addressWidgetBody');
 	
 	awRemoveNodeAndChildren(body, awGetTreeItem(row));
-
+  awFitDummyRows();
+  
 	top.MAX_RECIPIENTS --;
 }
 
@@ -546,7 +551,6 @@ function awRemoveNodeAndChildren(parent, nodeToRemove)
 	}
 	
 	parent.removeChild(nodeToRemove);
-
 }
 
 function awSetFocus(row, inputElement)
@@ -762,3 +766,121 @@ function awKeyDown(event, treeElement)
     break;   
   }
 }
+
+/* ::::::::::: addressing widget dummy rows ::::::::::::::::: */
+
+var gAWContentHeight = 0;
+var gAWRowHeight = 0;
+
+function awFitDummyRows()
+{
+  awCalcContentHeight();
+  awCreateOrRemoveDummyRows();  
+}
+
+function awCreateOrRemoveDummyRows()
+{
+  var body = document.getElementById("addressWidgetBody");
+  var bodyHeight = body.boxObject.height;
+  
+  // remove rows to remove scrollbar
+  var kids = body.childNodes;
+  for (var i = kids.length-1; gAWContentHeight > bodyHeight && i >= 0; --i) {
+    if (kids[i].hasAttribute("_isDummyRow")) {
+      gAWContentHeight -= gAWRowHeight;
+      body.removeChild(kids[i]);
+    }
+  }
+
+  // add rows to fill space
+  if (gAWRowHeight) {
+    while (gAWContentHeight+gAWRowHeight < bodyHeight) {
+      awCreateDummyItem(body);
+      gAWContentHeight += gAWRowHeight;
+    }
+  }
+}
+
+function awCalcContentHeight()
+{
+  var body = document.getElementById("addressWidgetBody");
+  var kids = body.getElementsByTagName("treerow");
+
+  gAWContentHeight = 0;
+  if (kids.length > 0) {
+    // all rows are forced to a uniform height in xul trees, so
+    // find the first tree row with a boxObject and use it as precedent
+    var i = 0;
+    do {
+      gAWRowHeight = kids[i].boxObject.height;
+      ++i;
+    } while (i < kids.length && !gAWRowHeight);
+    gAWContentHeight = gAWRowHeight*kids.length;
+  }
+}
+
+function awCreateDummyItem(aParent)
+{
+  var titem = document.createElement("treeitem");
+  titem.setAttribute("_isDummyRow", "true");
+
+  var trow = document.createElement("treerow");
+  trow.setAttribute("class", "dummy-row");
+  trow.setAttribute("onclick", "awDummyRow_onclick()");
+  titem.appendChild(trow);
+
+  awCreateDummyCell(trow);
+  awCreateDummyCell(trow);
+  
+  if (aParent)
+    aParent.appendChild(titem);
+  
+  return titem;
+}
+
+function awCreateDummyCell(aParent)
+{
+  var cell = document.createElement("treecell");
+  cell.setAttribute("class", "treecell-addressingWidget dummy-row-cell");
+  if (aParent)
+    aParent.appendChild(cell);
+  
+  return cell;
+}
+
+function awDummyRow_onclick() {
+  // pass click event back to handler
+  awClickEmptySpace(document.getElementById("addressWidgetBody"), true); 
+}
+
+function awGetNextDummyRow()
+{
+  // gets the next row from the top down
+  var body = document.getElementById("addressWidgetBody");
+  var kids = body.childNodes;
+  for (var i = 0; i < kids.length; ++i) {
+    if (kids[i].hasAttribute("_isDummyRow"))
+      return kids[i];
+  }
+  return null;
+}
+
+function awSizerListen()
+{
+  // when splitter is clicked, fill in necessary dummy rows each time the mouse is moved
+  awCalcContentHeight(); // precalculate
+  document.addEventListener("mousemove", awSizerMouseMove, true);  
+  document.addEventListener("mouseup", awSizerMouseUp, false);  
+}
+
+function awSizerMouseMove()
+{
+  awCreateOrRemoveDummyRows();
+}
+
+function awSizerMouseUp()
+{
+  document.removeEventListener("mousemove", awSizerMouseUp, false);  
+  document.removeEventListener("mouseup", awSizerMouseUp, false);  
+}
+
