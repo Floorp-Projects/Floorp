@@ -504,6 +504,33 @@ RDFXULBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
 
     doc->SetRootContent(mRoot);
 
+    // Always insert a hidden form as the very first child of the window.
+    // Create a new form element.
+    nsCOMPtr<nsIHTMLContent> newElement;
+    if (!mHTMLElementFactory) {
+        rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
+                                                nsnull,
+                                                nsIHTMLElementFactory::GetIID(),
+                                                (void**) &mHTMLElementFactory);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+    rv = mHTMLElementFactory->CreateInstanceByTag(nsAutoString("form"),
+                                                  getter_AddRefs(newElement));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create HTML element");
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDOMHTMLFormElement> htmlFormElement = do_QueryInterface(newElement);
+    if (htmlFormElement) {
+        nsCOMPtr<nsIContent> content = do_QueryInterface(htmlFormElement);
+        if (content) {
+            // XXX Would like to make this anonymous, but still need
+            // the form's frame to get built. For now make it explicit.
+            mRoot->InsertChildAt(content, 0, PR_FALSE); 
+        }
+        mDocument->SetForm(htmlFormElement);
+    }
 
     // Now build up all of the document's children.
 	nsCOMPtr<nsINameSpace> nameSpace;
