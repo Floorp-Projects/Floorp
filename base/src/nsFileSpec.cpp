@@ -48,7 +48,7 @@ nsSimpleCharString::nsSimpleCharString(const char* inString)
 :   mData(nsnull)
 {
     if (inString)
-        CopyFrom(inString, strlen(inString));
+        CopyFrom(inString, nsCRT::strlen(inString));
 } // nsSimpleCharString::nsSimpleCharString
 
 //----------------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ void nsSimpleCharString::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
     if (inString)
-        CopyFrom(inString, strlen(inString));
+        CopyFrom(inString, nsCRT::strlen(inString));
     else
         SetToEmpty();
 } // nsSimpleCharString::operator =
@@ -120,7 +120,7 @@ void nsSimpleCharString::operator += (const char* inOther)
 {
     if (!inOther)
         return;
-    int newLength = Length() + PL_strlen(inOther);
+    int newLength = Length() + nsCRT::strlen(inOther);
     ReallocData(newLength);
     strcat(mData->mString, inOther);
 } // nsSimpleCharString::operator =
@@ -143,7 +143,7 @@ void nsSimpleCharString::Catenate(const char* inString1, const char* inString2)
         *this += inString1;
         return;
     }
-    int newLength = Length() + PL_strlen(inString1) + PL_strlen(inString2);
+    int newLength = Length() + nsCRT::strlen(inString1) + nsCRT::strlen(inString2);
     ReallocData(newLength);
     strcat(mData->mString, inString1);
     strcat(mData->mString, inString2);
@@ -158,7 +158,7 @@ void nsSimpleCharString::CopyFrom(const char* inData, PRUint32 inLength)
     ReallocData(inLength);
     if (!mData)
         return;
-    memcpy(mData->mString, inData, inLength);
+    nsCRT::memcpy(mData->mString, inData, inLength);
     mData->mString[inLength] = '\0';
 } // nsSimpleCharString::CopyFrom
 
@@ -179,7 +179,7 @@ void nsSimpleCharString::Unescape()
     if (!mData)
         return;
     nsUnescape(mData->mString);
-    mData->mLength = strlen(mData->mString);       
+    mData->mLength = nsCRT::strlen(mData->mString);       
 } // nsSimpleCharString::Unescape
 
 
@@ -222,26 +222,26 @@ void nsSimpleCharString::ReallocData(PRUint32 inLength)
     PRUint32 oldAllocLength = CalculateAllocLength(Length());
     if (mData)
     {
-	    NS_ASSERTION(mData->mRefCount > 0, "String deleted too many times!");
-	    if (mData->mRefCount == 1)
-	    {
-	        // We are the sole owner, so just change its length, if necessary.
-	        if (newAllocLength > oldAllocLength)
-		        mData = (Data*)PR_Realloc(mData, newAllocLength + sizeof(Data));
-	        mData->mLength = inLength;
-	        mData->mString[inLength] = '\0'; // we may be truncating
-	        return;
-	    }
+        NS_ASSERTION(mData->mRefCount > 0, "String deleted too many times!");
+        if (mData->mRefCount == 1)
+        {
+            // We are the sole owner, so just change its length, if necessary.
+            if (newAllocLength > oldAllocLength)
+                mData = (Data*)PR_Realloc(mData, newAllocLength + sizeof(Data));
+            mData->mLength = inLength;
+            mData->mString[inLength] = '\0'; // we may be truncating
+            return;
+        }
     }
-	PRUint32 copyLength = Length();
-	if (inLength < copyLength)
-	    copyLength = inLength;
+    PRUint32 copyLength = Length();
+    if (inLength < copyLength)
+        copyLength = inLength;
     Data* newData = (Data*)PR_Malloc(newAllocLength + sizeof(Data));
     // If data was already allocated when we get to here, then we are cloning the data
     // from a shared pointer.
     if (mData)
     {
-        memcpy(newData, mData, sizeof(Data) + copyLength);
+        nsCRT::memcpy(newData, mData, sizeof(Data) + copyLength);
         mData->mRefCount--; // Say goodbye
     }
     else
@@ -298,19 +298,20 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
     PRBool trailingSeparator = (lastSeparator + 1 == chars + oldLength);
     if (trailingSeparator)
     {
-		char savedCh = *lastSeparator;
-		char *savedLastSeparator = lastSeparator;
+        char savedCh = *lastSeparator;
+        char *savedLastSeparator = lastSeparator;
         *lastSeparator = '\0';
         lastSeparator = strrchr(chars, inSeparator);
-		*savedLastSeparator = savedCh;
+        *savedLastSeparator = savedCh;
     }
     if (lastSeparator)
         lastSeparator++; // point at the trailing string
     else
         lastSeparator = chars; // the full monty
 
-	PRUint32 savedLastSeparatorOffset = (lastSeparator - chars);
-    int newLength = (lastSeparator - chars) + strlen(inLeafName) + (trailingSeparator != 0);
+    PRUint32 savedLastSeparatorOffset = (lastSeparator - chars);
+    int newLength =
+        (lastSeparator - chars) + nsCRT::strlen(inLeafName) + (trailingSeparator != 0);
     ReallocData(newLength);
 
     chars = mData->mString; // it might have moved.
@@ -339,24 +340,24 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
     
     // If there was no separator, then return a copy of our path.
     if (!lastSeparator)
-        return PL_strdup(*this);
+        return nsCRT::strdup(*this);
 
     // So there's at least one separator.  What's just after it?
     // If the separator was not the last character, return the trailing string.
     const char* leafPointer = lastSeparator + 1;
     if (*leafPointer)
-        return PL_strdup(leafPointer);
+        return nsCRT::strdup(leafPointer);
 
     // So now, separator was the last character. Poke in a null instead.
     *(char*)lastSeparator = '\0'; // Should use const_cast, but Unix has old compiler.
     leafPointer = strrchr(chars, inSeparator);
-    char* result = leafPointer ? PL_strdup(++leafPointer) : PL_strdup(chars);
+    char* result = leafPointer ? nsCRT::strdup(++leafPointer) : nsCRT::strdup(chars);
     // Restore the poked null before returning.
     *(char*)lastSeparator = inSeparator;
 #ifdef XP_PC
-	// If it's a drive letter use the colon notation.
-	if (!leafPointer && result[2] == 0 && result[1] == '|')
-	    result[1] = ':';
+    // If it's a drive letter use the colon notation.
+    if (!leafPointer && result[2] == 0 && result[1] == '|')
+        result[1] = ':';
 #endif
     return result;
 } // nsSimpleCharString::GetLeaf
@@ -369,14 +370,14 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 // make the leaf into a directory.  This should be a unix path.
 //----------------------------------------------------------------------------------------
 {
-	if (!inPath)
-		return;
-		
-    char* pathCopy = PL_strdup( inPath );
+    if (!inPath)
+        return;
+        
+    char* pathCopy = nsCRT::strdup( inPath );
     if (!pathCopy)
-    	return;
+        return;
 
-	const char kSeparator = '/'; // I repeat: this should be a unix-style path.
+    const char kSeparator = '/'; // I repeat: this should be a unix-style path.
     const int kSkipFirst = 1;
 
 #ifdef XP_PC
@@ -389,7 +390,7 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
     if (currentEnd)
     {
         nsFileSpec spec;
-		*currentEnd = '\0';
+        *currentEnd = '\0';
         
 #ifdef XP_PC
         /* 
@@ -398,12 +399,12 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
         */
         if (pathCopy[0] == '/' && pathCopy[2] == '|')
         {
-            char* startDir = (char*)PR_Malloc(strlen(pathCopy) + 2);
+            char* startDir = (char*)PR_Malloc(nsCRT::strlen(pathCopy) + 2);
             strcpy(startDir, pathCopy);
             strcat(startDir, "/");
 
             spec = nsFilePath(startDir, PR_FALSE);
-		    
+            
             PR_Free(startDir);
         }
         else
@@ -415,23 +416,23 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
         spec = nsFilePath(pathCopy, PR_FALSE);
 #endif        
         do
-		{
-			// If the node doesn't exist, and it is not the initial node in a full path,
-			// then make a directory (We cannot make the initial (volume) node).
-			if (!spec.Exists() && *currentStart != kSeparator)
-				spec.CreateDirectory(mode);
-			
+        {
+            // If the node doesn't exist, and it is not the initial node in a full path,
+            // then make a directory (We cannot make the initial (volume) node).
+            if (!spec.Exists() && *currentStart != kSeparator)
+                spec.CreateDirectory(mode);
+            
             currentStart = ++currentEnd;
-			currentEnd = strchr(currentStart, kSeparator);
-			if (!currentEnd)
-				break;
+            currentEnd = strchr(currentStart, kSeparator);
+            if (!currentEnd)
+                break;
             
             *currentEnd = '\0';
 
-			spec += currentStart; // "lengthen" the path, adding the next node.
-		} while (currentEnd);
+            spec += currentStart; // "lengthen" the path, adding the next node.
+        } while (currentEnd);
     }
-	delete [] pathCopy;
+    nsCRT::free(pathCopy);
 } // nsFileSpecHelpers::MakeAllDirectories
 
 #endif // XP_PC || XP_UNIX
@@ -454,11 +455,11 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 {
     if (!inString)
-    	return;
+        return;
     NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
     // Make canonical and absolute.
-	nsFilePath path(inString + kFileURLPrefixLength, inCreateDirs);
-	*this = path;
+    nsFilePath path(inString + kFileURLPrefixLength, inCreateDirs);
+    *this = path;
 } // nsFileURL::nsFileURL
 #endif
 
@@ -470,11 +471,11 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
     const nsAutoCString aString(inString);
     const char* aCString = (const char*) aString;
     if (!inString.Length())
-    	return;
+        return;
     NS_ASSERTION(strstr(aCString, kFileURLPrefix) == aCString, "Not a URL!");
     // Make canonical and absolute.
-	nsFilePath path(aCString + kFileURLPrefixLength, inCreateDirs);
-	*this = path;
+    nsFilePath path(aCString + kFileURLPrefixLength, inCreateDirs);
+    *this = path;
 } // nsFileURL::nsFileURL
 #endif
 
@@ -559,9 +560,9 @@ void nsFileURL::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
     mURL = kFileURLPrefix;
-	char* original = (char*)(const char*)inOther; // we shall modify, but restore.
+    char* original = (char*)(const char*)inOther; // we shall modify, but restore.
 #ifdef XP_PC
-	// because we don't want to escape the '|' character, change it to a letter.
+    // because we don't want to escape the '|' character, change it to a letter.
     NS_ASSERTION(original[2] == '|', "No drive letter part!");
     original[2] = 'x';
     char* escapedPath = nsEscape(original, url_Path);
@@ -571,7 +572,7 @@ void nsFileURL::operator = (const nsFilePath& inOther)
     char* escapedPath = nsEscape(original, url_Path);
 #endif
     if (escapedPath)
-	    mURL += escapedPath;
+        mURL += escapedPath;
     delete [] escapedPath;
 } // nsFileURL::operator =
 #endif
@@ -582,8 +583,8 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
     *this = nsFilePath(inOther);
-	if (mURL[mURL.Length() - 1] != '/' && inOther.IsDirectory())
-	    mURL += "/";
+    if (mURL[mURL.Length() - 1] != '/' && inOther.IsDirectory())
+        mURL += "/";
 } // nsFileURL::operator =
 #endif
 
@@ -689,16 +690,16 @@ void nsFilePath::operator = (const char* inString)
     NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
 #ifdef XP_MAC
     mFileSpec = inString;
-	mPath = (const char*)nsFilePath(mFileSpec);
+    mPath = (const char*)nsFilePath(mFileSpec);
 #else
-	mPath = inString;
+    mPath = inString;
 #ifdef XP_PC
-	nsFileSpecHelpers::UnixToNative(mPath);
+    nsFileSpecHelpers::UnixToNative(mPath);
 #endif
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, PR_FALSE /* XXX? */);
 #ifdef XP_PC
-	nsFileSpecHelpers::NativeToUnix(mPath);
+    nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 #endif // XP_MAC
 }
@@ -760,7 +761,7 @@ nsFileSpec::nsFileSpec()
 nsFileSpec::nsFileSpec(const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
 {
-	*this = inDescriptor;
+    *this = inDescriptor;
 }
 
 //----------------------------------------------------------------------------------------
@@ -795,12 +796,12 @@ void nsFileSpec::MakeUnique()
     char* suffix = "";
     if (lastDot)
     {
-        suffix = PL_strdup(lastDot); // include '.'
+        suffix = nsCRT::strdup(lastDot); // include '.'
         *lastDot = '\0'; // strip suffix and dot.
     }
     const int kMaxRootLength
-        = nsFileSpecHelpers::kMaxCoreLeafNameLength - strlen(suffix) - 1;
-    if ((int)strlen(leafName) > (int)kMaxRootLength)
+        = nsFileSpecHelpers::kMaxCoreLeafNameLength - nsCRT::strlen(suffix) - 1;
+    if ((int)nsCRT::strlen(leafName) > (int)kMaxRootLength)
         leafName[kMaxRootLength] = '\0';
     for (short index = 1; index < 1000 && Exists(); index++)
     {
@@ -810,7 +811,7 @@ void nsFileSpec::MakeUnique()
         SetLeafName(newName);
     }
     if (*suffix)
-        delete [] suffix;
+        nsCRT::free(suffix);
     delete [] leafName;
 } // nsFileSpec::MakeUnique
 
@@ -826,23 +827,23 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
 {
 
-	nsSimpleCharString data;
-	PRInt32 dataSize;
+    nsSimpleCharString data;
+    PRInt32 dataSize;
     inDescriptor.GetData(data, dataSize);
     
 #ifdef XP_MAC
     char* decodedData = PL_Base64Decode((const char*)data, (int)dataSize, nsnull);
     // Cast to an alias record and resolve.
-	AliasHandle aliasH = nsnull;
-	mError = NS_FILE_RESULT(PtrToHand(decodedData, &(Handle)aliasH, (dataSize * 3) / 4));
-	PR_Free(decodedData);
-	if (NS_FAILED(mError))
-		return; // not enough memory?
+    AliasHandle aliasH = nsnull;
+    mError = NS_FILE_RESULT(PtrToHand(decodedData, &(Handle)aliasH, (dataSize * 3) / 4));
+    PR_Free(decodedData);
+    if (NS_FAILED(mError))
+        return; // not enough memory?
 
-	Boolean changed;
-	mError = NS_FILE_RESULT(::ResolveAlias(nsnull, aliasH, &mSpec, &changed));
-	DisposeHandle((Handle) aliasH);
-	mPath.SetToEmpty();
+    Boolean changed;
+    mError = NS_FILE_RESULT(::ResolveAlias(nsnull, aliasH, &mSpec, &changed));
+    DisposeHandle((Handle) aliasH);
+    mPath.SetToEmpty();
 #else
     mPath = data;
     mError = NS_OK;
@@ -979,14 +980,14 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
         return heEmpty;
     if (heEmpty) // ('cuz I'm not...)
         return PR_FALSE;
-	#if defined(XP_PC)
-	   // windows does not care about case.
-	   if (_stricmp(mPath, inOther.mPath ) == 0)
-	       return PR_TRUE;
-	#else
-	   if (strcmp(mPath, inOther.mPath ) == 0)
-	       return PR_TRUE;
-	#endif
+    #if defined(XP_PC)
+       // windows does not care about case.
+       if (_stricmp(mPath, inOther.mPath ) == 0)
+           return PR_TRUE;
+    #else
+       if (strcmp(mPath, inOther.mPath ) == 0)
+           return PR_TRUE;
+    #endif
 #endif
    return PR_FALSE;
 }
@@ -1014,7 +1015,7 @@ const char* nsFileSpec::GetCString() const
 #endif
 
 //========================================================================================
-//	class nsPersistentFileDescriptor
+//    class nsPersistentFileDescriptor
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
@@ -1035,7 +1036,7 @@ void nsPersistentFileDescriptor::operator = (const nsPersistentFileDescriptor& i
 nsPersistentFileDescriptor::nsPersistentFileDescriptor(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
-	*this = inSpec;
+    *this = inSpec;
 } // nsPersistentFileDescriptor::nsPersistentFileDescriptor
 
 //----------------------------------------------------------------------------------------
@@ -1044,16 +1045,16 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
 {
 #ifdef XP_MAC
     if (inSpec.Error())
-    	return;
-	AliasHandle	aliasH;
-	OSErr err = NewAlias(nil, inSpec.GetFSSpecPtr(), &aliasH);
-	if (err != noErr)
-		return;
+        return;
+    AliasHandle    aliasH;
+    OSErr err = NewAlias(nil, inSpec.GetFSSpecPtr(), &aliasH);
+    if (err != noErr)
+        return;
 
-	PRUint32 bytes = GetHandleSize((Handle) aliasH);
-	HLock((Handle) aliasH);
-	char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
-	DisposeHandle((Handle) aliasH);
+    PRUint32 bytes = GetHandleSize((Handle) aliasH);
+    HLock((Handle) aliasH);
+    char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
+    DisposeHandle((Handle) aliasH);
 
     mDescriptorString = buf;
     PR_Free(buf);
@@ -1080,7 +1081,7 @@ void nsPersistentFileDescriptor::GetData(nsSimpleCharString& outData, PRInt32& o
 void nsPersistentFileDescriptor::SetData(const nsSimpleCharString& inData, PRInt32 inSize)
 //----------------------------------------------------------------------------------------
 {
-	mDescriptorString.CopyFrom((const char*)inData, inSize);
+    mDescriptorString.CopyFrom((const char*)inData, inSize);
 }
 
 #define MAX_PERSISTENT_DATA_SIZE 1000
@@ -1108,26 +1109,26 @@ nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
 // reads the data from a file
 //----------------------------------------------------------------------------------------
 {
-	char bigBuffer[MAX_PERSISTENT_DATA_SIZE + 1];
-	// The first 8 bytes of the data should be a hex version of the data size to follow.
-	PRInt32 bytesRead = 8;
-	bytesRead = s.read(bigBuffer, bytesRead);
-	if (bytesRead != 8)
-		return s;
-	bigBuffer[8] = '\0';
-	sscanf(bigBuffer, "%x", (PRUint32*)&bytesRead);
-	if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
-	{
-	    // Try to tolerate encoded values with no length header
+    char bigBuffer[MAX_PERSISTENT_DATA_SIZE + 1];
+    // The first 8 bytes of the data should be a hex version of the data size to follow.
+    PRInt32 bytesRead = 8;
+    bytesRead = s.read(bigBuffer, bytesRead);
+    if (bytesRead != 8)
+        return s;
+    bigBuffer[8] = '\0';
+    sscanf(bigBuffer, "%x", (PRUint32*)&bytesRead);
+    if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
+    {
+        // Try to tolerate encoded values with no length header
         bytesRead = 8 + s.read(bigBuffer + 8, MAX_PERSISTENT_DATA_SIZE - 8);
-	}
-	else
-	{
-		// Now we know how many bytes to read, do it.
-		bytesRead = s.read(bigBuffer, bytesRead);
-	}
-	d.SetData(bigBuffer, bytesRead);
-	return s;
+    }
+    else
+    {
+        // Now we know how many bytes to read, do it.
+        bytesRead = s.read(bigBuffer, bytesRead);
+    }
+    d.SetData(bigBuffer, bytesRead);
+    return s;
 }
 
 //----------------------------------------------------------------------------------------
@@ -1135,64 +1136,63 @@ nsOutputStream& operator << (nsOutputStream& s, const nsPersistentFileDescriptor
 // writes the data to a file
 //----------------------------------------------------------------------------------------
 {
-	char littleBuf[9];
-	PRInt32 dataSize;
-	nsSimpleCharString data;
-	d.GetData(data, dataSize);
-	// First write (in hex) the length of the data to follow.  Exactly 8 bytes
-	sprintf(littleBuf, "%0.8x", dataSize);
-	s << littleBuf;
-	// Now write the data itself
-	s << (const char*)data;
-	return s;
+    char littleBuf[9];
+    PRInt32 dataSize;
+    nsSimpleCharString data;
+    d.GetData(data, dataSize);
+    // First write (in hex) the length of the data to follow.  Exactly 8 bytes
+    sprintf(littleBuf, "%0.8x", dataSize);
+    s << littleBuf;
+    // Now write the data itself
+    s << (const char*)data;
+    return s;
 }
 
 //========================================================================================
-//	class nsAutoCString
+//    class nsAutoCString
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
 nsAutoCString::~nsAutoCString()
 //----------------------------------------------------------------------------------------
 {
-	delete [] (char*)mCString;
+    delete [] (char*)mCString;
 }
 
 //========================================================================================
-//	class nsprPath
+//    class nsprPath
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsprPath::operator const char*()
+nsprPath::operator const char*() const
+// NSPR expects a UNIX path on unix and Macintosh, but a native path on windows. NSPR
+// cannot be changed, so we have to do the dirty work.
 //----------------------------------------------------------------------------------------
 {
-
 #ifdef XP_PC
+    if (!modifiedNSPRPath)
+    {
+        // If this is the first call, initialize modifiedNSPRPath. Start by cloning
+        // mFilePath, but strip the leading separator, if present
+        const char* unixPath = (const char*)mFilePath;
+        if (!unixPath)
+            return nsnull;
 
-	if (modifiedNSPRPath != nsnull)
-		delete [] modifiedNSPRPath;
-	
-	modifiedNSPRPath = PL_strdup( mFilePath );
-	char* resultPath = modifiedNSPRPath;
-	
-	/* strip the leading separator */
-	if(resultPath[0] == '/')
-		resultPath = resultPath + 1;
-    
-    /* Replace the bar */
-    if(resultPath[1] == '|')
-		 resultPath[1] = ':';
-	
-	/* Remove the ending separator only if it is not the last separator*/
-    int len = PL_strlen(resultPath);
-    if(resultPath[len - 1 ] == '/')
-        if(resultPath[len - 2 ] != ':')
-		    resultPath[len - 1 ] = '\0';	 
-		
-    return resultPath;
-	
+        ((nsprPath*)this)->modifiedNSPRPath
+                = nsCRT::strdup(*unixPath == '/' ? unixPath + 1: unixPath);
+        
+        // Replace the bar
+        if (modifiedNSPRPath[1] == '|')
+             modifiedNSPRPath[1] = ':';
+        
+        // Remove the ending separator only if it is not the last separator
+        int len = nsCRT::strlen(modifiedNSPRPath);
+        if (modifiedNSPRPath[len - 1 ] == '/' && modifiedNSPRPath[len - 2 ] != ':')
+            modifiedNSPRPath[len - 1 ] = '\0';     
+    }
+    return modifiedNSPRPath;    
 #else
-	return mFilePath;
+    return (const char*)mFilePath;
 #endif
 }
 
@@ -1201,7 +1201,7 @@ nsprPath::~nsprPath()
 //----------------------------------------------------------------------------------------
 {
 #ifdef XP_PC
-	if (modifiedNSPRPath != nsnull)
-			delete [] modifiedNSPRPath;
+    if (modifiedNSPRPath)
+        nsCRT::free(modifiedNSPRPath);
 #endif
 }

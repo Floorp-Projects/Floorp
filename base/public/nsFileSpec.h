@@ -697,25 +697,27 @@ class NS_BASE nsDirectoryIterator
 
 //========================================================================================
 class NS_BASE nsprPath
-//  This class will allow you to pass anyone of the nsFile* classes directly into NSPR
+//  This class will allow you to pass any one of the nsFile* classes directly into NSPR
 //  without the need to worry about whether you have the right kind of filepath or not.
 //  It will also take care of cleaning up any allocated memory. 
 //========================================================================================
 {
 public:
-    NS_EXPLICIT                  nsprPath(const nsFileSpec& other)  : mFilePath(other) { modifiedNSPRPath = nsnull; }
-    NS_EXPLICIT                  nsprPath(const nsFileURL&  other)  : mFilePath(other) { modifiedNSPRPath = nsnull; }
-    NS_EXPLICIT                  nsprPath(const nsFilePath& other)  : mFilePath(other) { modifiedNSPRPath = nsnull; }
+    NS_EXPLICIT                  nsprPath(const nsFileSpec& other)
+                                     : mFilePath(other), modifiedNSPRPath(nsnull) {}
+    NS_EXPLICIT                  nsprPath(const nsFileURL&  other)
+                                     : mFilePath(other), modifiedNSPRPath(nsnull) {}
+    NS_EXPLICIT                  nsprPath(const nsFilePath& other)
+                                     : mFilePath(other), modifiedNSPRPath(nsnull) {}
     
     virtual                      ~nsprPath();    
  
-                                 operator const char*();
-
+                                 operator const char*() const;
+                                    // actually, can modify modifiedNSPRPath, but
+                                    // that's really just "mutable".
 private:
                                  nsFilePath mFilePath;
-                                 char* modifiedNSPRPath;
-                             
-                                 
+                                 char* modifiedNSPRPath; // Currently used only on XP_PC                           
 }; // class nsprPath
 
 #endif //  _FILESPEC_H_

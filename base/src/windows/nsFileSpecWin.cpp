@@ -286,7 +286,7 @@ nsresult nsFileSpec::Rename(const char* inNewName)
     if (strchr(inNewName, '/')) 
         return NS_FILE_FAILURE;
 
-    char* oldPath = PL_strdup(mPath);
+    char* oldPath = nsCRT::strdup(mPath);
     
     SetLeafName(inNewName);        
 
@@ -297,7 +297,7 @@ nsresult nsFileSpec::Rename(const char* inNewName)
         return NS_FILE_FAILURE;
     }
     
-    delete [] oldPath;
+    nsCRT::free(oldPath);
     
     return NS_OK;
 } // nsFileSpec::Rename
@@ -313,7 +313,7 @@ nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
         nsSimpleCharString destPath(inParentDirectory.GetCString());
         destPath += "\\";
         destPath += leafname;
-        delete [] leafname;
+        nsCRT::free(leafname);
         
         // CopyFile returns non-zero if succeeds
         int copyOK = CopyFile(GetCString(), destPath, true);
@@ -334,7 +334,7 @@ nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory)
         nsSimpleCharString destPath(inNewParentDirectory.GetCString());
         destPath += "\\";
         destPath += leafname;
-        delete [] leafname;
+        nsCRT::free(leafname);
 
         // MoveFile returns non-zero if succeeds
         int copyOK = MoveFile(GetCString(), destPath);
