@@ -20,6 +20,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsCollationMac.h"
+#include "nsIScriptableDateFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsDateTimeFormatMac.h"
 #include "nsLocaleFactoryMac.h"
@@ -30,6 +31,7 @@ NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);                                                         
 NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);                                                         
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
 
 
 nsLocaleMacFactory::nsLocaleMacFactory(const nsCID &aClass)   
@@ -103,6 +105,9 @@ nsresult nsLocaleMacFactory::CreateInstance(nsISupports *aOuter,
      NS_NEWXPCOM(inst, nsDateTimeFormatMac);
   }
   else if (aIID.Equals(nsIScriptableDateFormat::GetIID())) {
+     inst = NEW_SCRIPTABLE_DATEFORMAT();
+  }
+  else if (mClassID.Equals(kScriptableDateFormatCID)) {
      inst = NEW_SCRIPTABLE_DATEFORMAT();
   }
   else 
