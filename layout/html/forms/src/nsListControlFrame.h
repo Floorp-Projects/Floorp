@@ -118,6 +118,7 @@ public:
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
   NS_IMETHOD SyncViewWithFrame();
   NS_IMETHOD AboutToDropDown();
+  NS_IMETHOD AboutToRollup();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
@@ -198,6 +199,7 @@ protected:
   void     ToggleSelected(PRInt32 aIndex);
   void     ClearSelection();
   void     ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue);
+  void     ResetSelectedItem();
 
   PRBool   HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
   void     HandleListSelection(nsIDOMEvent * aDOMEvent);
