@@ -83,6 +83,11 @@ PRLogModuleInfo* nsComponentManagerLog = NULL;
 // Loader Types
 #define NS_LOADER_DATA_ALLOC_STEP 6
 
+// Bloated registry buffer size to improve startup performance -- needs to
+// be big enough to fit the entire file into memory or it'll thrash.
+// 512K is big enough to allow for some future growth in the registry.
+#define BIG_REGISTRY_BUFLEN   (512*1024)
+
 // Common Key Names 
 const char xpcomKeyName[]="software/mozilla/XPCOM";
 const char classesKeyName[]="contractID";
@@ -672,7 +677,7 @@ nsComponentManagerImpl::PlatformInit(void)
 
     // Set larger-than-standard buffer size to speed startup.
     // This will be re-set at the end of PrePopulateRegistry()
-    ((nsRegistry *)mRegistry)->SetBufferSize(500*1024);
+    ((nsRegistry *)mRegistry)->SetBufferSize( BIG_REGISTRY_BUFLEN );
 
     // Check the version of registry. Nuke old versions.
     nsRegistryKey xpcomRoot;
@@ -689,24 +694,24 @@ nsComponentManagerImpl::PlatformInit(void)
 
     rv = mRegistry->AddSubtree(xpcomRoot, classIDKeyName, &mCLSIDKey);
     if (NS_FAILED(rv)) return rv;
-    
+
     nsCOMPtr<nsIProperties> directoryService;
     rv = nsDirectoryService::Create(nsnull, 
                                     NS_GET_IID(nsIProperties), 
                                     getter_AddRefs(directoryService));  
-    
+
     directoryService->Get(NS_XPCOM_COMPONENT_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mComponentsDir));
 
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
     char* componentDescriptor;
     mComponentsDir->GetPath(&componentDescriptor);
     if (!componentDescriptor)
         return NS_ERROR_NULL_POINTER;
 
     mComponentsOffset = strlen(componentDescriptor);
-        
+
     if (componentDescriptor)
         nsMemory::Free(componentDescriptor);
 
@@ -743,7 +748,7 @@ nsComponentManagerImpl::PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey)
     nsresult rv;
     rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
     if (NS_FAILED(rv)) return rv;
-    
+
     nsXPIDLCString buf;
     nsresult err = mRegistry->GetStringUTF8(xpcomKey, versionValueName, 
                                         getter_Copies(buf));
@@ -1060,7 +1065,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     if (mPrePopulationDone)
         return NS_OK;
 
-    (void)((nsRegistry *)mRegistry)->SetBufferSize( 500*1024 );
+    (void)((nsRegistry *)mRegistry)->SetBufferSize( BIG_REGISTRY_BUFLEN );
 
     nsCOMPtr<nsIRegistryGetter> regGetter = do_QueryInterface(mRegistry);
     if (!regGetter.get())
@@ -1118,12 +1123,12 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
             return NS_ERROR_OUT_OF_MEMORY;
 
         nsAutoMonitor mon(mMon);
-        
+
         nsFactoryTableEntry* factoryTableEntry =
             NS_STATIC_CAST(nsFactoryTableEntry*,
                            PL_DHashTableOperate(&mFactories, &aClass,
                                                 PL_DHASH_ADD));
-        
+
         if (!factoryTableEntry)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1169,8 +1174,12 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         HashContractID(contractidString, aClass);
     }
 
-    //(void)mRegistry->SetBufferSize( 10*1024 );
-  
+    // Create the category manage to ensure prepopulation of categories
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+
+    // reset registry buffer to standard size
+    (void)((nsRegistry *)mRegistry)->SetBufferSize( -1 );
+
     mPrePopulationDone = PR_TRUE;
     return NS_OK;
 }
@@ -2683,10 +2692,10 @@ nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
     nsresult rv;
-    ((nsRegistry *)mRegistry)->SetBufferSize( 500*1024 );
+    ((nsRegistry *)mRegistry)->SetBufferSize( BIG_REGISTRY_BUFLEN );
     rv = AutoRegisterImpl(when, inDirSpec);
     mRegistry->Flush();
-    //mRegistry->SetBufferSize( 10*1024 );
+    ((nsRegistry *)mRegistry)->SetBufferSize( -1 );
     return rv;
 }
 
