@@ -318,8 +318,8 @@ NS_IMETHODIMP nsConverterModule::GetClassObject(nsIComponentManager *aCompMgr,
     mInitialized = PR_TRUE;
   }
 
-  nsCOMPtr<nsIFactory> fact;
   FactoryData * data;
+  nsConverterFactory * fact;
 
   // XXX cache these factories
   for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
@@ -330,6 +330,7 @@ NS_IMETHODIMP nsConverterModule::GetClassObject(nsIComponentManager *aCompMgr,
         return NS_ERROR_OUT_OF_MEMORY;
       }
       rv = fact->QueryInterface(aIID, (void **) r_classObj);
+      if (NS_FAILED(rv)) delete fact;
 
       return rv;
     }
