@@ -207,7 +207,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  nsIWebShell* webShell;
+  nsIWebShell* webShell = nsnull;
   nsAutoString charset("UTF-8");
   nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
 
@@ -263,7 +263,8 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   if (NS_OK == rv) {
     nsIXMLContentSink* sink;
     
-    rv = aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
+    if (aContainer)
+      rv = aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
    
     if(NS_SUCCEEDED(rv) && (nsnull != webShell)) {
       nsCOMPtr<nsIContentViewer> cv;
