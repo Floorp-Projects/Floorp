@@ -32,9 +32,11 @@ function GetFields()
   var profDir  = document.getElementById("ProfileDir");
   var profDirContent = profDir.hasChildNodes() ? profDir.firstChild.nodeValue : "";
   var profDirRootFolder = profDir.getAttribute("rootFolder");
+  var profLocale = document.getElementById("ProfileLocale").getAttribute("data");
   var rv = { 
     ProfileName: { id: "ProfileName", value: profName },
-    ProfileDir:  { id: "ProfileDir",  value: profDirRootFolder }
+    ProfileDir:  { id: "ProfileDir",  value: profDirRootFolder },
+    ProfileLocale: { id: "ProfileLocale", value: profLocale }
   }
   return rv; 
 }
@@ -43,12 +45,20 @@ function GetFields()
 // must provide its own SetFields function
 function SetFields( aElement, aValue, aDataObject )
 {
+  dump("*** aElement = " + aElement + "\n");
   element = document.getElementById( aElement );
-  if(element.id == "ProfileDir" && aValue != "") {
-    chooseProfileFolder( aValue );
+  switch (element.id) {
+    case "ProfileDir":
+      if (aValue)
+        chooseProfileFolder(aValue);
+      break;
+    case "ProfileName":
+      element.value = aValue;
+      break;
+    case "ProfileLocale":
+      document.getElementById("ProfileLocale").setAttribute("data", aValue);
+      break;
   }
-  else if(element.id == "ProfileName")
-    element.value = aValue;
 }  
 
 // check to see if some user specified profile folder exists, otherwise use
@@ -147,11 +157,8 @@ function setDisplayToDefaultFolder()
   updateProfileName();
 }
 
-function selectionChanged()
+function showLangDialog()
 {
-    var selected = document.getElementById("langList").selectedItem;
-    dump("\n --> selectionChanged, val=" + selected.getAttribute("value") + 
-	", id=" + selected.getAttribute("id") +
-	", data=" + selected.getAttribute("data") +
-	"\n");	
+  var selectedLanguage = document.getElementById("ProfileLocale").getAttribute("data");
+  var selectLang = window.openDialog("chrome://communicator/content/profile/selectLang.xul","","modal=yes,resizable=no",selectedLanguage);
 }

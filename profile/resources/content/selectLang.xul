@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/selectLang.dtd">
+
+<window id="selectLangWindow"
+        title="&langSelBox.title.label;"
+        orient="vertical" class="dialog"
+        style="width: 30em; user-focus: ignore;"
+        onload="Startup();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="JavaScript" src="chrome://communicator/content/profile/selectLang.js"></script>
+
+    <keyset id="keyset"/>
+        
+    <text class="label" value="&langList.txt.label;" for="langList"/>
+
+    <separator class="thin" />
+    
+    <tree class="inset" id="langList" flex="1" 
+          ref="urn:mozilla:locale:root" datasources="rdf:chrome"
+          sortResource="http://www.mozilla.org/rdf/chrome#name"
+          sortDirection="ascending">
+      <treecolgroup>
+        <treecol flex="1"/>
+      </treecolgroup>
+      
+      <template>
+        <treechildren>
+          <treeitem id="treechildren">
+            <treerow>
+              <treecell uri="..."
+                        value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                        data="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </template>
+
+    </tree>
+  
+  <box id="okCancelButtons"/>
+        
+</window>        
