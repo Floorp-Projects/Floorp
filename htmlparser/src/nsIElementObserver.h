@@ -54,8 +54,9 @@ public:
    *   @param nameArray - array of name. 
    *   @param valueArray - array of value
    */
-  NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
-                 const nsString* nameArray, const nsString* valueArray) = 0;
+  NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, 
+                    PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
+                    const PRUnichar* valueArray[]) = 0;
 
 
 };
