@@ -2256,7 +2256,7 @@ nsPrefConverter::GetPlatformCharset(nsAutoString& aCharset)
   // we may cache it since the platform charset will not change through application life
   nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && platformCharset) {
-   rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
+   rv = platformCharset->GetCharset(kPlatformCharsetSel_4xPrefsJS, aCharset);
   }
   if (NS_FAILED(rv)) {
    aCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));  // use ISO-8859-1 in case of any error
