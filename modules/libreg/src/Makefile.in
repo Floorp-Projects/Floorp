@@ -34,17 +34,19 @@ BIN_OBJS	= $(addprefix R_,$(BIN_SRCS:.c=.o))
 
 MKSHLIB :=
 
-# We don't want a shared lib.  Static lib only.
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
-
-include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
 
 # Memory mapped files are not supported under QNX and Neutrino
 ifneq ($(OS_ARCH),QNX)
 DEFINES += -DUSE_MMAP_REGISTRY_IO
 CSRCS += mmapio.c
 endif
+
+# We don't want a shared lib.  Static lib only.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
+
+include $(topsrcdir)/config/rules.mk
 
 # Override gtscc when building vreg on IRIX 5.3.
 ifeq ($(OS_ARCH)$(OS_RELEASE),IRIX5)
