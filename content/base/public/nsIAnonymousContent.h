@@ -30,6 +30,7 @@
 
 class nsISupportsArray;
 class nsIAtom;
+class nsINodeInfo;
 
 #define NS_IANONYMOUS_CONTENT_IID { 0x41a69e00, 0x2d6d, 0x12d3, { 0xb0, 0x33, 0xa1, 0x38, 0x71, 0x39, 0x78, 0x7c } }
 
@@ -40,7 +41,10 @@ class nsIAtom;
 class nsIAnonymousContent : public nsISupports {
 public:
      static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUS_CONTENT_IID; return iid; }
+
+     NS_IMETHOD Init(nsINodeInfo *aInfo) = 0;
 };
 
+nsresult NS_NewAnonymousContent2(nsIContent **aNewNode);
 #endif
 

@@ -73,7 +73,7 @@
 
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsIJSContextStack.h"
 
 #include "nsIServiceManager.h"
@@ -1949,7 +1949,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
          atom.get() == nsLayoutAtoms::onmouseover || atom.get() == nsLayoutAtoms::onmouseout) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
               NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
@@ -1959,7 +1959,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
       else if (atom.get() == nsLayoutAtoms::onkeydown || atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
               NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
@@ -1969,7 +1969,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
       else if (atom.get() == nsLayoutAtoms::onmousemove) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
               NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
@@ -1979,7 +1979,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
       else if (atom.get() == nsLayoutAtoms::onfocus || atom.get() == nsLayoutAtoms::onblur) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
               NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
@@ -1990,7 +1990,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
                atom.get() == nsLayoutAtoms::onselect) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
               NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
@@ -2001,7 +2001,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
                atom.get() == nsLayoutAtoms::onerror) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
               NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
@@ -2012,7 +2012,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
                atom.get() == nsLayoutAtoms::onscroll) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
+          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
               NS_OK != manager->RegisterScriptEventListener(mScriptCX, this,
                                                             atom, kIDOMPaintListenerIID)) {
             NS_RELEASE(manager);
@@ -2634,7 +2634,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
       NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
     }
 
-    nsLayoutUtils::GetDynamicScriptContext(cx, getter_AddRefs(context));
+    nsContentUtils::GetDynamicScriptContext(cx, getter_AddRefs(context));
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
   }
 
@@ -2642,7 +2642,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
   if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
       mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
     if (!global && cx) {
-      nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
+      nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
 
       NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
     }

@@ -56,9 +56,9 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsLayoutAtoms.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsIScriptContext.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -994,17 +994,6 @@ nsresult
 nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIParser> parser;
-
-  static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);
-
-  // Create the XML parser
-  rv = nsComponentManager::CreateInstance(kCParserCID,
-                                    nsnull,
-                                    NS_GET_IID(nsIParser),
-                                    getter_AddRefs(parser));
-
-  if (NS_FAILED(rv)) return rv;
 
   // Create a transform mediator
   rv = NS_NewTransformMediator(getter_AddRefs(mXSLTransformMediator), aType);
@@ -1012,6 +1001,12 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
     // No XSLT processor available, continue normal document loading
     return NS_OK;
   }
+
+  static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);
+
+  // Create the XML parser
+  nsCOMPtr<nsIParser> parser(do_CreateInstance(kCParserCID, &rv));
+  if (NS_FAILED(rv)) return rv;
 
   // Enable the transform mediator. It will start the transform
   // as soon as it has enough state to do so.  The state needed is
@@ -1366,10 +1361,10 @@ nsXMLContentSink::AddText(const nsAReadableString& aString)
         }
       }
     }
-    mTextLength += nsLayoutUtils::CopyNewlineNormalizedUnicodeTo(aString, 
-                                                                 offset, 
-                                                                 &mText[mTextLength], 
-                                                                 amount);
+    mTextLength +=
+      nsContentUtils::CopyNewlineNormalizedUnicodeTo(aString, offset, 
+                                                     &mText[mTextLength], 
+                                                     amount);
     offset += amount;
     addLen -= amount;
   }

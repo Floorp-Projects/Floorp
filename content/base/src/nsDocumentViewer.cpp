@@ -50,6 +50,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMRange.h"
+#include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsHTMLParts.h"
 
@@ -114,6 +115,10 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 #include "nsITransformMediator.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
+static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
+static NS_DEFINE_CID(kPrintContextCID,  NS_PRINTCONTEXT_CID);
+static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
 
 #ifdef NS_DEBUG
 #undef NOISY_VIEWER
@@ -541,7 +546,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
   if (!mPresContext) {
     // Create presentation context
 #if 1 
-    rv = NS_NewGalleyContext(getter_AddRefs(mPresContext));
+    mPresContext = do_CreateInstance(kGalleyContextCID,&rv);
 #else // turn on print preview for debugging until print preview is fixed
     rv = NS_NewPrintPreviewContext(getter_AddRefs(mPresContext));
 #endif
@@ -1397,8 +1402,6 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   PRBool doesContainFrameSet;
   PRBool isIFrameSelection = IsThereAnIFrameSelected(aParent, domWinIntl, doesContainFrameSet);
 
-  PRBool isSelection = IsThereASelection(domWinIntl);
-
   // the root webshell is responsible for 
   // starting and ending the printing
 #if SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
@@ -1529,8 +1532,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
     }
 
     nsCOMPtr<nsIPresContext> cx;
-    nsCOMPtr<nsIPrintContext> printcon;
-    rv = NS_NewPrintContext(getter_AddRefs(printcon));
+    nsCOMPtr<nsIPrintContext> printcon(do_CreateInstance(kPrintContextCID,&rv));
     if (NS_FAILED(rv)) {
       return rv;
     } else {
@@ -1544,8 +1546,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
 
     CreateStyleSet(mDocument, getter_AddRefs(ss));
 
-    nsCOMPtr<nsIPresShell> ps;
-    rv = NS_NewPresShell(getter_AddRefs(ps));
+    nsCOMPtr<nsIPresShell> ps(do_CreateInstance(kPresShellCID,&rv));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1856,7 +1857,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     NS_WARNING("unable to load UA style sheet");
   }
 
-  rv = NS_NewStyleSet(aStyleSet);
+  rv = nsComponentManager::CreateInstance(kStyleSetCID,nsnull,NS_GET_IID(nsIStyleSet),(void**)aStyleSet);
   if (NS_OK == rv) {
     PRInt32 index = aDocument->GetNumberOfStyleSheets();
 
@@ -2436,8 +2437,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
 
         if(webContainer) {
           // load the document and do the initial reflow on the entire document
-          nsCOMPtr<nsIPrintContext> printcon;
-          rv = NS_NewPrintContext(getter_AddRefs(printcon));
+          nsCOMPtr<nsIPrintContext> printcon(do_CreateInstance(kPrintContextCID,&rv));
           if (NS_FAILED(rv)) {
             return rv;
           } else {
@@ -2462,7 +2462,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
           mPrintPC->SetContainer(webContainer);
           CreateStyleSet(mDocument,&mPrintSS);
 
-          rv = NS_NewPresShell(&mPrintPS);
+          rv = nsComponentManager::CreateInstance(kPresShellCID, nsnull, NS_GET_IID(nsIPresShell),(void**)&mPrintPS);
           if(NS_FAILED(rv)){
             return rv;
           }

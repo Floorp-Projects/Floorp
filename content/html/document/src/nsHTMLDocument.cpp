@@ -100,7 +100,7 @@
 #include "nsCharsetDetectionAdaptorCID.h"
 #include "nsICharsetAlias.h"
 #include "nsIPref.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsIBookmarksService.h"
@@ -108,7 +108,9 @@
 #include "nsICachedNetData.h"
 #include "nsIXMLContent.h" //for createelementNS
 #include "nsHTMLParts.h" //for createelementNS
-
+#include "nsLayoutCID.h"
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
@@ -396,7 +398,16 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   NS_IF_RELEASE(mForms);
 
   if (nsnull == mAttrStyleSheet) {
-    result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
+    //result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
+    result = nsComponentManager::CreateInstance(kHTMLStyleSheetCID, nsnull,
+                                                NS_GET_IID(nsIHTMLStyleSheet),
+                                                (void**)&mAttrStyleSheet);
+    if (NS_SUCCEEDED(result)) {
+      result = mAttrStyleSheet->Init(aURL,this);
+      if (NS_FAILED(result)) {
+        NS_RELEASE(mAttrStyleSheet);
+      }
+    }
   }
   else {
     result = mAttrStyleSheet->Reset(aURL);
@@ -617,8 +628,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
   if (needsParser) {
-    rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                            nsnull, 
+    rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
                                             NS_GET_IID(nsIParser), 
                                             (void **)&mParser);
     if (NS_FAILED(rv)) { return rv; }
@@ -2033,7 +2043,7 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
   // XXX This will fail on non-DOM contexts :(
 
   nsCOMPtr<nsIScriptGlobalObject> global;
-  nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
+  nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
   if (global) {
     nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global, &result));
 
@@ -2095,8 +2105,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   if (NS_OK == result) {
     static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
     
-    result = nsComponentManager::CreateInstance(kCParserCID, 
-                                                nsnull, 
+    result = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
                                                 NS_GET_IID(nsIParser), 
                                                 (void **)&mParser);
     mIsWriting = 1;
@@ -2121,9 +2130,8 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
       result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL, webShell);
       
       if (NS_OK == result) {
-        nsCOMPtr<nsIDTD> theDTD;
         static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-        result=nsComponentManager::CreateInstance(kNavDTDCID,nsnull,NS_GET_IID(nsIDTD),getter_AddRefs(theDTD));
+        nsCOMPtr<nsIDTD> theDTD(do_CreateInstance(kNavDTDCID, &result));
         if(NS_SUCCEEDED(result)) {
           mParser->RegisterDTD(theDTD);
         }

@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\.. 
 
-LIBRARY_NAME=raptorxmlcontent_s 
+LIBRARY_NAME=contentxmlcontent_s 
 MODULE=raptor 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

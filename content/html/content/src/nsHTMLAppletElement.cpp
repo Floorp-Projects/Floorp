@@ -34,7 +34,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
-
+#include "nsIObjectFrame.h"
 #include "nsIServiceManager.h"
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
@@ -252,10 +252,6 @@ nsHTMLAppletElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
 
 
 
-extern nsresult
-NS_GetObjectFramePluginInstance(nsIFrame* aFrame,
-                                nsIPluginInstance*& aPluginInstance);
-
 /**
  * For backwards compatibility an applet element's JavaScript object
  * should expose both the public fields of the applet, and the
@@ -314,7 +310,7 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
       JSObject* wrappedAppletObject = nsnull;
       nsCOMPtr<nsIPluginInstance> pluginInstance;
 
-      NS_GetObjectFramePluginInstance(frame, *getter_AddRefs(pluginInstance));
+      GetPluginInstance(getter_AddRefs(pluginInstance));
 
       if (pluginInstance) {
         nsCOMPtr<nsIJVMPluginInstance> javaPluginInstance;

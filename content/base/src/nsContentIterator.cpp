@@ -37,6 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresContext.h"
 #include "nsIComponentManager.h"
+#include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsVoidArray.h"
 

@@ -24,7 +24,6 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
-#include "nsFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
@@ -370,20 +369,6 @@ nsCommentNode::HandleDOMEvent(nsIPresContext* aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
-
-nsresult NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame*& aResult);
-nsresult
-NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame*& aResult)
-{
-  nsIFrame* frame;
-  NS_NewEmptyFrame(aPresShell, &frame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aResult = frame;
-  return NS_OK;
-}
-
 
 // This would ideally be done by the parser, but for the sake
 // of "genericity" it's being done in the comment content code

@@ -24,7 +24,7 @@ DEPTH=..\..\..
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=raptorevents_s 
+LIBRARY_NAME=contentevents_s 
 MODULE=raptor 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

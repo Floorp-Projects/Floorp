@@ -43,7 +43,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsDOMError.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsHashtable.h"
 #include "nsContentList.h"
 
@@ -595,8 +595,8 @@ nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
   nsCOMPtr<nsIScriptContext> scriptContext;
   nsresult rv = NS_OK;
 
-  rv = nsLayoutUtils::GetStaticScriptContext(aContext, aObj,
-                                             getter_AddRefs(scriptContext));
+  rv = nsContentUtils::GetStaticScriptContext(aContext, aObj,
+                                              getter_AddRefs(scriptContext));
 
   // If we can't get a script context, there's nothing we can do
   if (!scriptContext || NS_FAILED(rv)) {

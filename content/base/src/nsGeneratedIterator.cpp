@@ -36,7 +36,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresContext.h"
 #include "nsIComponentManager.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsIPresShell.h"
 
 #define DO_AFTER 1

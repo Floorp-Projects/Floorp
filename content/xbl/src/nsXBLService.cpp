@@ -48,7 +48,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsXMLDocument.h"
 #include "nsHTMLAtoms.h"
 #include "nsSupportsArray.h"

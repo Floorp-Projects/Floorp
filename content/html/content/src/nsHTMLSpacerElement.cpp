@@ -44,7 +44,7 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsIWebShell.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"

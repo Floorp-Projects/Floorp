@@ -46,11 +46,10 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsIWebShell.h"
 #include "nsIFrame.h"
-#include "nsImageFrame.h"
-#include "nsFrameImageLoader.h"
+#include "nsIImageFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsNodeInfoManager.h"
 #include "nsIFrameImageLoader.h"
@@ -118,7 +117,7 @@ protected:
   nsresult SetSrcInner(nsIURI* aBaseURL, const nsAReadableString& aSrc);
   static nsresult GetCallerSourceURL(JSContext* cx, nsIURI** sourceURL);
 
-  nsresult GetImageFrame(nsImageFrame** aImageFrame);
+  nsresult GetImageFrame(nsIImageFrame** aImageFrame);
 
   // Only used if this is a script constructed image
   nsIDocument* mOwnerDocument;
@@ -244,12 +243,12 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace)
 NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
 nsresult
-nsHTMLImageElement::GetImageFrame(nsImageFrame** aImageFrame)
+nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
 {
   nsresult result;
   nsCOMPtr<nsIPresContext> context;
   nsCOMPtr<nsIPresShell> shell;
-  
+
   if (mDocument) {
     // Make sure the presentation is up-to-date
     result = mDocument->FlushPendingNotifications();
@@ -257,40 +256,44 @@ nsHTMLImageElement::GetImageFrame(nsImageFrame** aImageFrame)
       return result;
     }
   }
-  
+
   result = GetPresContext(this, getter_AddRefs(context));
   if (NS_FAILED(result)) {
     return result;
   }
-  
+
   result = context->GetShell(getter_AddRefs(shell));
   if (NS_FAILED(result)) {
     return result;
   }
-  
+
   nsIFrame* frame;
   result = shell->GetPrimaryFrameFor(this, &frame);
   if (NS_FAILED(result)) {
     return result;
   }
-  
+
   if (frame) {
     nsCOMPtr<nsIAtom> type;
-    
+
     frame->GetFrameType(getter_AddRefs(type));
-    
+
     if (type.get() == nsLayoutAtoms::imageFrame) {
-      // XXX We could have created an interface for this, but Troy
-      // preferred the ugliness of a static cast to the weight of
-      // a new interface.
-      nsImageFrame* imageFrame = NS_STATIC_CAST(nsImageFrame*, frame);
+      nsIImageFrame* imageFrame;
+      result = frame->QueryInterface(NS_GET_IID(nsIImageFrame),
+                                     (void**)&imageFrame);
+      if (NS_FAILED(result)) {
+        NS_WARNING("Should not happen - frame is not image frame even though "
+                   "type is nsLayoutAtoms::imageFrame");
+        return result;
+      }
       *aImageFrame = imageFrame;
-      
+
       return NS_OK;
     }
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -300,10 +303,10 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
   *aComplete = PR_FALSE;
 
   nsresult result;
-  nsImageFrame* imageFrame;
+  nsIImageFrame* imageFrame;
 
-  result = GetImageFrame(&imageFrame);
-  if (NS_SUCCEEDED(result) && imageFrame) {
+  GetImageFrame(&imageFrame);
+  if (imageFrame) {
     result = imageFrame->IsImageComplete(aComplete);
   } else {
     result = NS_OK;
@@ -352,13 +355,19 @@ nsHTMLImageElement::GetHeight(PRInt32* aHeight)
   NS_ENSURE_ARG_POINTER(aHeight);
   *aHeight = 0;
 
-  nsImageFrame* imageFrame;
+  nsIImageFrame* imageFrame = nsnull;
 
   nsresult rv = GetImageFrame(&imageFrame);
 
-  if (NS_SUCCEEDED(rv) && imageFrame) {
+  nsIFrame* frame = nsnull;
+  if (imageFrame) {
+    imageFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame);
+    NS_WARN_IF_FALSE(frame,"Should not happen - image frame is not frame");
+  }
+
+  if (frame) {
     nsSize size;
-    imageFrame->GetSize(size);
+    frame->GetSize(size);
 
     nsCOMPtr<nsIPresContext> context;
     rv = GetPresContext(this, getter_AddRefs(context));
@@ -431,13 +440,19 @@ nsHTMLImageElement::GetWidth(PRInt32* aWidth)
   NS_ENSURE_ARG_POINTER(aWidth);
   *aWidth = 0;
 
-  nsImageFrame* imageFrame;
+  nsIImageFrame* imageFrame;
 
   nsresult rv = GetImageFrame(&imageFrame);
 
-  if (NS_SUCCEEDED(rv) && imageFrame) {
+  nsIFrame* frame = nsnull;
+  if (imageFrame) {
+    imageFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame);
+    NS_WARN_IF_FALSE(frame,"Should not happen - image frame is not frame");
+  }
+
+  if (NS_SUCCEEDED(rv) && frame) {
     nsSize size;
-    imageFrame->GetSize(size);
+    frame->GetSize(size);
 
     nsCOMPtr<nsIPresContext> context;
     rv = GetPresContext(this, getter_AddRefs(context));
@@ -649,7 +664,7 @@ nsHTMLImageElement::GetCallerSourceURL(JSContext* cx,
   // XXX This will fail on non-DOM contexts :(
 
   nsCOMPtr<nsIScriptGlobalObject> global;
-  nsLayoutUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
+  nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
   if (global) {
     nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
 
@@ -774,8 +789,8 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
   // from the static scope chain rather than through the JSCOntext.
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  nsLayoutUtils::GetStaticScriptGlobal(aContext, aObj,
-                                       getter_AddRefs(globalObject));;
+  nsContentUtils::GetStaticScriptGlobal(aContext, aObj,
+                                        getter_AddRefs(globalObject));;
   if (globalObject) {
     nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(globalObject));
 
@@ -1034,7 +1049,7 @@ nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)
   
   *aNaturalHeight = 0;
   
-  nsImageFrame* imageFrame;
+  nsIImageFrame* imageFrame = nsnull;
   nsresult rv = GetImageFrame(&imageFrame);
 
   if (NS_FAILED(rv) || !imageFrame)
@@ -1059,7 +1074,7 @@ nsHTMLImageElement::GetNaturalWidth(PRInt32* aNaturalWidth)
   
   *aNaturalWidth = 0;
     
-  nsImageFrame* imageFrame;
+  nsIImageFrame* imageFrame;
   nsresult rv = GetImageFrame(&imageFrame);
 
   if (NS_FAILED(rv) || !imageFrame)
