@@ -28,17 +28,17 @@
         command="cmd_selectCharPrevious"/>
     <handler event="keypress" id="key_rightshift" keycode="VK_RIGHT" modifiers="shift"
         command="cmd_selectCharNext"/>
-    <handler event="keypress" id="key_undo" key="z" modifiers="primary"
+    <handler event="keypress" id="key_undo" key="z" modifiers="accel"
         command="cmd_undo"/>
 
     <!-- Cut/copy/paste/undo -->
-    <handler event="keypress" id="key_copy" key="c" modifiers="primary"
+    <handler event="keypress" id="key_copy" key="c" modifiers="accel"
         command="cmd_copy"/>
-    <handler event="keypress" id="key_cut" key="x" modifiers="primary"
+    <handler event="keypress" id="key_cut" key="x" modifiers="accel"
         command="cmd_cut"/>
-    <handler event="keypress" id="key_paste" key="v" modifiers="primary"
+    <handler event="keypress" id="key_paste" key="v" modifiers="accel"
         command="cmd_paste"/>
-    <handler event="keypress" id="key_undo" key="z" modifiers="primary" 
+    <handler event="keypress" id="key_undo" key="z" modifiers="accel" 
         command="cmd_undo"/>
 
     </handlers>
@@ -67,17 +67,17 @@
         command="cmd_scrollPageUp"/>
     <handler event="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN"
         command="cmd_scrollPageDown"/>
-    <handler event="keypress" id="key_undo" key="z" modifiers="primary"
+    <handler event="keypress" id="key_undo" key="z" modifiers="accel"
         command="cmd_undo"/>
 
     <!-- Cut/copy/paste/undo -->
-    <handler event="keypress" id="key_copy" key="c" modifiers="primary"
+    <handler event="keypress" id="key_copy" key="c" modifiers="accel"
         command="cmd_copy"/>
-    <handler event="keypress" id="key_cut" key="x" modifiers="primary"
+    <handler event="keypress" id="key_cut" key="x" modifiers="accel"
         command="cmd_cut"/>
-    <handler event="keypress" id="key_paste" key="v" modifiers="primary"
+    <handler event="keypress" id="key_paste" key="v" modifiers="accel"
         command="cmd_paste"/>
-    <handler event="keypress" id="key_undo" key="z" modifiers="primary" 
+    <handler event="keypress" id="key_undo" key="z" modifiers="accel" 
         command="cmd_undo"/>
 
     </handlers>
