@@ -153,19 +153,29 @@ function ConfirmDelete()
     return;
   }
   else {
-    var path = profile.getProfilePath(name);
-    dialogText = gProfileManagerBundle.getFormattedString("deleteprofile", [path]);
-    dialogText = dialogText.replace(/\s*<html:br\/>/g,"\n");
-    var buttonPressed = {value:0}
-    promptService.confirmEx(window, dialogTitle, dialogText,
-                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
-                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1) +
-                            (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2),
-                            gProfileManagerBundle.getString("dontDeleteFiles"),
-                            gProfileManagerBundle.getString("deleteFiles"),
-                            null, null, {value:0}, buttonPressed);
-    if (buttonPressed.value != 2)
-        DeleteProfile(buttonPressed.value == 1);
+    var pathExists = true;
+    try {
+      var path = profile.getProfilePath(name);
+    }
+    catch (ex) {
+      pathExists = false;
+    }
+    if (pathExists) {
+      dialogText = gProfileManagerBundle.getFormattedString("deleteprofile", [path]);
+      dialogText = dialogText.replace(/\s*<html:br\/>/g,"\n");
+      var buttonPressed = {value:0}
+      promptService.confirmEx(window, dialogTitle, dialogText,
+                              (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
+                              (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1) +
+                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2),
+                              gProfileManagerBundle.getString("dontDeleteFiles"),
+                              gProfileManagerBundle.getString("deleteFiles"),
+                              null, null, {value:0}, buttonPressed);
+      if (buttonPressed.value != 2)
+          DeleteProfile(buttonPressed.value == 1);
+    }
+    else
+      DeleteProfile(false);
   }
 }
 
