@@ -37,7 +37,6 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsCollationCID.h"
 #include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -228,7 +227,7 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsLocaleModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFileSpec* aPath,
+                             nsIFile* aPath,
                              const char* registryLocation,
                              const char* componentType)
 {
@@ -259,7 +258,7 @@ nsLocaleModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 nsLocaleModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFileSpec* aPath,
+                               nsIFile* aPath,
                                const char* registryLocation)
 {
 #ifdef DEBUG
@@ -296,7 +295,7 @@ nsLocaleModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 static nsLocaleModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* location,
                                           nsIModule** return_cobj)
 {
   nsresult rv = NS_OK;
@@ -304,7 +303,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
   NS_ASSERTION(return_cobj, "Null argument");
   NS_ASSERTION(gModule == NULL, "nsLocaleModule: Module already created.");
 
-  // Create an initialize the layout module instance
+  // Create and initialize the layout module instance
   nsLocaleModule *m = new nsLocaleModule();
   if (!m) {
     return NS_ERROR_OUT_OF_MEMORY;

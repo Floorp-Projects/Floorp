@@ -60,7 +60,7 @@ nsFontMetricsOS2::~nsFontMetricsOS2()
 
 NS_IMPL_ISUPPORTS( nsFontMetricsOS2, nsIFontMetrics::GetIID())
 
-nsresult nsFontMetricsOS2::Init( const nsFont &aFont, nsIDeviceContext *aContext)
+nsresult nsFontMetricsOS2::Init( const nsFont &aFont,  nsIAtom* aLangGroup, nsIDeviceContext *aContext)
 {
    mFont = new nsFont( aFont);
    mContext = (nsDeviceContextOS2 *) aContext;
@@ -432,3 +432,14 @@ NS_IMETHODIMP nsFontMetricsOS2::GetFontHandle( nsFontHandle &aHandle)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsFontMetricsOS2::GetLangGroup(nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
+  return NS_OK;
+}

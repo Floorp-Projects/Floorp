@@ -26,6 +26,8 @@
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 
+static PRUintn gToolkitTLSIndex = 0;
+
 // Bits to deal with the case where a new toolkit is initted with a null ----
 // thread.  In this case it has to create a new thread to be the PM thread.
 // Hopefully this will never happen!
@@ -130,6 +132,10 @@ void nsToolkit::CreateInternalWindow( PRThread *aThread)
                                    0, 0, 0);
 
    NS_ASSERTION( mDispatchWnd, "Couldn't create toolkit internal window");
+
+#if DEBUG_sobotka
+   printf("\n+++++++++++nsToolkit created dispatch window 0x%lx\n", mDispatchWnd);
+#endif
 }
 
 // Set up the toolkit - create window, check for thread.
@@ -244,4 +250,53 @@ MRESULT EXPENTRY fnwpDispatch( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
       mRC = WinDefWindowProc( hwnd, msg, mp1, mp2);
 
    return mRC;
+}
+
+//-------------------------------------------------------------------------
+//
+// Return the nsIToolkit for the current thread.  If a toolkit does not
+// yet exist, then one will be created...
+//
+//-------------------------------------------------------------------------
+NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
+{
+  nsIToolkit* toolkit = nsnull;
+  nsresult rv = NS_OK;
+  PRStatus status;
+
+  // Create the TLS index the first time through...
+  if (0 == gToolkitTLSIndex) {
+    status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL);
+    if (PR_FAILURE == status) {
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex);
+
+    //
+    // Create a new toolkit for this thread...
+    //
+    if (!toolkit) {
+      toolkit = new nsToolkit();
+
+      if (!toolkit) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        NS_ADDREF(toolkit);
+        toolkit->Init(PR_GetCurrentThread());
+        //
+        // The reference stored in the TLS is weak.  It is removed in the
+        // nsToolkit destructor...
+        //
+        PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit);
+      }
+    } else {
+      NS_ADDREF(toolkit);
+    }
+    *aResult = toolkit;
+  }
+
+  return rv;
 }
