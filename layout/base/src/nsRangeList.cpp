@@ -1023,11 +1023,11 @@ nsDOMSelection::ToString(nsString& aReturn)
   }
 
   aReturn += "Anchor is ";
-  aReturn += (unsigned long)(nsIDOMNode*)FetchAnchorNode();
+  aReturn += (long)(nsIDOMNode*)FetchAnchorNode();
   aReturn += ", ";
   aReturn += FetchAnchorOffset();
   aReturn += "Focus is";
-  aReturn.Append((unsigned long)(nsIDOMNode*)FetchFocusNode(), 16);
+  aReturn.Append((long)(nsIDOMNode*)FetchFocusNode(), 16);
   aReturn += ", ";
   aReturn += FetchFocusOffset();
   aReturn += "\n ... end of selection\n";
