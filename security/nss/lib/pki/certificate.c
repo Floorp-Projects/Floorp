@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.31 $ $Date: 2002/02/08 02:51:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.32 $ $Date: 2002/03/07 20:42:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -860,5 +860,53 @@ nssCertificateList_AddReferences
 )
 {
     (void)nssCertificateList_DoCallback(certList, add_ref_callback, NULL);
+}
+
+NSS_IMPLEMENT NSSTrust *
+nssTrust_AddRef
+(
+  NSSTrust *trust
+)
+{
+    if (trust) {
+	nssPKIObject_AddRef(&trust->object);
+    }
+    return trust;
+}
+
+NSS_IMPLEMENT PRStatus
+nssTrust_Destroy
+(
+  NSSTrust *trust
+)
+{
+    if (trust) {
+	(void)nssPKIObject_Destroy(&trust->object);
+    }
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT nssSMIMEProfile *
+nssSMIMEProfile_AddRef
+(
+  nssSMIMEProfile *profile
+)
+{
+    if (profile) {
+	nssPKIObject_AddRef(&profile->object);
+    }
+    return profile;
+}
+
+NSS_IMPLEMENT PRStatus
+nssSMIMEProfile_Destroy
+(
+  nssSMIMEProfile *profile
+)
+{
+    if (profile) {
+	(void)nssPKIObject_Destroy(&profile->object);
+    }
+    return PR_SUCCESS;
 }
 

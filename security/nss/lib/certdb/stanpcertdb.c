@@ -695,13 +695,14 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
     SECStatus rv = SECFailure;
     PRBool saveit;
     char *emailAddr;
-    SECItem oldprof;
+    SECItem oldprof, oldproftime;
     SECItem *oldProfile = NULL;
     SECItem *oldProfileTime = NULL;
     PK11SlotInfo *slot = NULL;
     NSSCertificate *c;
     NSSCryptoContext *cc;
     nssSMIMEProfile *stanProfile = NULL;
+    PRBool freeOldProfile = PR_FALSE;
     
     emailAddr = cert->emailAddr;
     
@@ -718,10 +719,13 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
 	    PORT_Assert(stanProfile->profileData);
 	    SECITEM_FROM_NSSITEM(&oldprof, stanProfile->profileData);
 	    oldProfile = &oldprof;
+	    SECITEM_FROM_NSSITEM(&oldproftime, stanProfile->profileTime);
+	    oldProfileTime = &oldproftime;
 	}
     } else {
 	oldProfile = PK11_FindSMimeProfile(&slot, emailAddr, &cert->derSubject, 
 							&oldProfileTime); 
+	freeOldProfile = PR_TRUE;
     }
 
     saveit = PR_FALSE;
@@ -767,11 +771,18 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
     if (saveit) {
 	if (cc) {
 	    if (stanProfile) {
-		/* well, it's hashed and in an arena, might as well just
-		 * overwrite the buffer
+		/* stanProfile is already stored in the crypto context,
+		 * overwrite the data
 		 */
-		NSSITEM_FROM_SECITEM(stanProfile->profileTime, profileTime);
-		NSSITEM_FROM_SECITEM(stanProfile->profileData, emailProfile);
+		NSSArena *arena = stanProfile->object.arena;
+		stanProfile->profileTime = nssItem_Create(arena, 
+		                                          NULL,
+		                                          profileTime->len,
+		                                          profileTime->data);
+		stanProfile->profileData = nssItem_Create(arena, 
+		                                          NULL,
+		                                          emailProfile->len,
+		                                          emailProfile->data);
 	    } else if (profileTime && emailProfile) {
 		PRStatus nssrv;
 		NSSDER subject;
@@ -804,11 +815,14 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
     }
 
 loser:
-    if (oldProfile) {
+    if (oldProfile && freeOldProfile) {
     	SECITEM_FreeItem(oldProfile,PR_TRUE);
     }
-    if (oldProfileTime) {
+    if (oldProfileTime && freeOldProfile) {
     	SECITEM_FreeItem(oldProfileTime,PR_TRUE);
+    }
+    if (stanProfile) {
+	nssSMIMEProfile_Destroy(stanProfile);
     }
     
     return(rv);
@@ -833,7 +847,7 @@ CERT_FindSMimeProfile(CERTCertificate *cert)
 	    if (rvItem) {
 		rvItem->data = stanProfile->profileData->data;
 	    }
-	    nssPKIObject_Destroy(&stanProfile->object);
+	    nssSMIMEProfile_Destroy(stanProfile);
 	}
 	return rvItem;
     }
