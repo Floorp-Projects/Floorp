@@ -39,11 +39,11 @@
 
 /* components defined in this file */
 const MDN_EXTENSION_SERVICE_CONTRACTID =
-    "@mozilla.org/accounmanager/extension;1?name=mdn";
+    "@mozilla.org/accountmanager/extension;1?name=mdn";
 const MDN_EXTENSION_SERVICE_CID =
     Components.ID("{e007d92e-1dd1-11b2-a61e-dc962c9b8571}");
 
-/* interafces used in this file */
+/* interfaces used in this file */
 const nsIMsgAccountManagerExtension  = Components.interfaces.nsIMsgAccountManagerExtension;
 const nsICategoryManager = Components.interfaces.nsICategoryManager;
 const nsISupports        = Components.interfaces.nsISupports;
