@@ -87,7 +87,7 @@ interface nsIXMLHttpRequest : nsISupports {
    * for the request.  NULL if the channel has not yet been
    * created.
    *
-   * Mozilla only.
+   * Mozilla only. Requires elevated privileges to access.
    */
   readonly attribute nsIChannel channel;
 
@@ -149,6 +149,11 @@ interface nsIXMLHttpRequest : nsISupports {
    * the request is not sent until the <code>send</code> method 
    * is invoked.
    *
+   * Will abort currently active loads.
+   *
+   * After the initial response, all event listeners will be cleared.
+   * Call open() before setting new event listeners.
+   *
    * @param method The HTTP method, for example "POST" or "GET". Ignored
    *               if the URL is not a HTTP(S) URL.
    * @param url The URL to which to send the request.
@@ -172,6 +177,11 @@ interface nsIXMLHttpRequest : nsISupports {
    * description of <code>openRequest</code>, but the last
    * 3 are optional.
    *
+   * Will abort currently active loads.
+   *
+   * After the initial response, all event listeners will be cleared.
+   * Call open() before setting new event listeners.
+   *
    * @param method The HTTP method - either "POST" or "GET". Ignored
    *               if the URL is not a HTTP URL.
    * @param url The URL to which to send the request.
@@ -192,6 +202,9 @@ interface nsIXMLHttpRequest : nsISupports {
    * Sends the request. If the request is asynchronous, returns
    * immediately after sending the request. If it is synchronous
    * returns only after the response has been received.
+   *
+   * After the initial response, all event listeners will be cleared.
+   * Call open() before setting new event listeners.
    *
    * @param body Either an instance of nsIDOMDocument, nsIInputStream
    *             or a string (nsISupportsString in the native calling
@@ -255,6 +268,9 @@ interface nsIJSXMLHttpRequest : nsISupports {
    * the load event occurs, the function is invoked. 
    * This attribute should not be used from native code!!
    *
+   * After the initial response, all event listeners will be cleared.
+   * Call open() before setting new event listeners.
+   *
    * Mozilla only.
    */
   attribute nsIDOMEventListener onload;
@@ -265,6 +281,9 @@ interface nsIJSXMLHttpRequest : nsISupports {
    * the error event occurs, the function is invoked. 
    * This attribute should not be used from native code!!
    *
+   * After the initial response, all event listeners will be cleared.
+   * Call open() before setting new event listeners.
+   *
    * Mozilla only.
    */
   attribute nsIDOMEventListener onerror;
@@ -274,6 +293,9 @@ interface nsIJSXMLHttpRequest : nsISupports {
    * The attribute is expected to be JavaScript function object. When the
    * readyState changes, the callback function will be called.
    * This attribute should not be used from native code!!
+   *
+   * After the initial response, all event listeners will be cleared.
+   * Call open() before setting new event listeners.
    */
   attribute nsIOnReadystatechangeHandler onreadystatechange;
 };

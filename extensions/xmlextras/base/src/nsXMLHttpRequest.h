@@ -60,16 +60,6 @@
 #include "nsIHttpHeaderVisitor.h"
 class nsILoadGroup;
 
-enum nsXMLHttpRequestState {
-  XML_HTTP_REQUEST_UNINITIALIZED = 0,
-  XML_HTTP_REQUEST_OPENED, // aka LOADING
-  XML_HTTP_REQUEST_LOADED,
-  XML_HTTP_REQUEST_INTERACTIVE,
-  XML_HTTP_REQUEST_COMPLETED,
-  XML_HTTP_REQUEST_SENT, // This is Mozilla-internal only, LOADING in IE and external view
-  XML_HTTP_REQUEST_STOPPED // This is Mozilla-internal only, INTERACTIVE in IE and external view
-};
-
 class nsXMLHttpRequest : public nsIXMLHttpRequest,
                          public nsIJSXMLHttpRequest,
                          public nsIDOMLoadListener,
@@ -128,10 +118,11 @@ protected:
                 PRUint32 *writeCount);
   // Change the state of the object with this. The broadcast member determines
   // if the onreadystatechange listener should be called.
-  nsresult ChangeState(nsXMLHttpRequestState aState, PRBool aBroadcast = PR_TRUE);
+  nsresult ChangeState(PRUint32 aState, PRBool aBroadcast = PR_TRUE);
   nsresult RequestCompleted();
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
   nsresult GetBaseURI(nsIURI **aBaseURI);
+  void ClearEventListeners();
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIChannel> mChannel;
@@ -167,11 +158,7 @@ protected:
 
   nsCString mOverrideMimeType;
   
-  PRInt32 mStatus;
-  PRPackedBool mAsync;
-  PRPackedBool mParseResponseBody;
-  PRPackedBool mCrossSiteAccessEnabled;
-  PRPackedBool mLoopingForSyncLoad;
+  PRUint32 mState;
 };
 
 #endif
