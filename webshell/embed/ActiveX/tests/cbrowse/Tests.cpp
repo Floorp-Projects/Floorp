@@ -18,18 +18,109 @@
 
 #include "stdafx.h"
 
+#include "resource.h"
+#include "CBrowseDlg.h"
+
+///////////////////////////////////////////////////////////////////////////////
+
+void BrowserInfo::OutputString(const TCHAR *szMessage, ...)
+{
+	TCHAR szBuffer[256];
+
+	va_list cArgs;
+	va_start(cArgs, szMessage);
+	_vstprintf(szBuffer, szMessage, cArgs);
+	va_end(cArgs);
+
+	CString szOutput;
+	szOutput.Format(_T("  Test: %s"), szBuffer);
+
+	pBrowseDlg->OutputString(szOutput);
+}
+
+HRESULT BrowserInfo::GetWebBrowser(IWebBrowserApp **pWebBrowser)
+{
+	if (pIUnknown == NULL)
+	{
+		return E_FAIL;
+	}
+	return pIUnknown->QueryInterface(IID_IWebBrowserApp, (void **) pWebBrowser);
+}
+
+HRESULT BrowserInfo::GetDocument(IHTMLDocument2 **pDocument)
+{
+	CIPtr(IWebBrowserApp) cpWebBrowser;
+	if (FAILED(GetWebBrowser(&cpWebBrowser)))
+	{
+		return E_FAIL;
+	}
+
+	CIPtr(IDispatch) cpDispDocument;
+	cpWebBrowser->get_Document(&cpDispDocument);
+	if (cpDispDocument == NULL)
+	{
+		return E_FAIL;
+	}
+
+	return cpDispDocument->QueryInterface(IID_IHTMLDocument2, (void **) pDocument);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 TestResult __cdecl tstDocument(BrowserInfo &cInfo)
 {
 	CIPtr(IHTMLDocument2) cpDocElement;
 	cInfo.GetDocument(&cpDocElement);
 	if (cpDocElement == NULL)
 	{
+		cInfo.OutputString(_T("Error: No document"));
 		return trFailed;
 	}
 
 	return trPassed;
 }
 
+TestResult __cdecl tstCollectionEnum(BrowserInfo &cInfo)
+{
+	CIPtr(IHTMLDocument2) cpDocElement;
+	cInfo.GetDocument(&cpDocElement);
+	if (cpDocElement == NULL)
+	{
+		cInfo.OutputString(_T("Error: No document"));
+		return trFailed;
+	}
+	
+	CIPtr(IHTMLElementCollection) cpColl;
+	HRESULT hr = cpDocElement->get_all( &cpColl );
+	if (hr == S_OK)
+	{
+		CComPtr<IUnknown> cpUnkEnum;
+		cpColl->get__newEnum(&cpUnkEnum);
+		if (cpUnkEnum == NULL)
+		{
+			cInfo.OutputString(_T("Error: No collection"));
+			return trFailed;
+		}
+
+		CIPtr(IEnumVARIANT) cpEnumVARIANT = cpUnkEnum;
+		if (cpEnumVARIANT)
+		{
+			cInfo.OutputString(_T("Collection has IEnumVARIANT"));
+		}
+		CIPtr(IEnumUnknown) cpEnumUnknown = cpUnkEnum;
+		if (cpEnumUnknown)
+		{
+			cInfo.OutputString(_T("Collection has IEnumUnknown"));
+		}
+	}
+	else
+	{
+		cInfo.OutputString(_T("Error: No collection from document"));
+		return trFailed;
+	}
+
+	return trPassed;
+}
 
 void tstDrillerLevel(BrowserInfo &cInfo, IHTMLElementCollection *pCollection, int nLevel)
 {
@@ -38,13 +129,29 @@ void tstDrillerLevel(BrowserInfo &cInfo, IHTMLElementCollection *pCollection, in
 		return;
 	}
 
-	LONG celem = 0;;
-	HRESULT hr = pCollection->get_length( &celem );
-	for ( int i=0; i< celem; i++ )
+	LONG nElements = 0;;
+	HRESULT hr = pCollection->get_length( &nElements );
+	if (FAILED(hr))
+	{
+		cInfo.OutputString(_T("Error: Collection failed to return number of elements!"));
+		return;
+	}
+
+	USES_CONVERSION;
+	char szLevel[256];
+	memset(szLevel, 0, sizeof(szLevel));
+	memset(szLevel, ' ', nLevel);
+	TCHAR *szIndent = A2T(szLevel);
+
+	cInfo.OutputString(_T("%sParsing collection..."), szIndent);
+	cInfo.OutputString(_T("%sCollection with %d elements"), szIndent, (int) nElements);
+
+	for ( int i=0; i< nElements; i++ )
 	{
 		VARIANT varIndex;
 		varIndex.vt = VT_UINT;
 		varIndex.lVal = i;
+		
 		VARIANT var2;
 		VariantInit( &var2 );
 		CIPtr(IDispatch) cpDisp; 
@@ -76,14 +183,9 @@ void tstDrillerLevel(BrowserInfo &cInfo, IHTMLElementCollection *pCollection, in
 			CString szClassName = bstrClassName;
 			SysFreeString(bstrClassName);
 			
-			USES_CONVERSION;
-			char szLevel[256];
-			memset(szLevel, 0, sizeof(szLevel));
-			memset(szLevel, ' ', nLevel);
-
-			cInfo.pfnOutputString(_T("%sElement %s"), A2T(szLevel), szTagName);
-			cInfo.pfnOutputString(_T("%s  id=%s"), A2T(szLevel), szID);
-			cInfo.pfnOutputString(_T("%s  classname=%s"), A2T(szLevel), szClassName);
+			cInfo.OutputString(_T("%sElement at %d is %s"), szIndent, i, szTagName);
+			cInfo.OutputString(_T("%s  id=%s"), szIndent, szID);
+			cInfo.OutputString(_T("%s  classname=%s"), szIndent, szClassName);
 
 			CIPtr(IHTMLImgElement) cpImgElem;
 			hr = cpDisp->QueryInterface( IID_IHTMLImgElement, (void **)&cpImgElem );
@@ -110,6 +212,8 @@ void tstDrillerLevel(BrowserInfo &cInfo, IHTMLElementCollection *pCollection, in
 			}
 		}
 	}
+
+	cInfo.OutputString(_T("%sEnd collection"), szIndent);
 }
 
 TestResult __cdecl tstDriller(BrowserInfo &cInfo)
@@ -118,6 +222,7 @@ TestResult __cdecl tstDriller(BrowserInfo &cInfo)
 	cInfo.GetDocument(&cpDocElement);
 	if (cpDocElement == NULL)
 	{
+		cInfo.OutputString(_T("Error: No document"));
 		return trFailed;
 	}
 	
@@ -133,17 +238,25 @@ TestResult __cdecl tstDriller(BrowserInfo &cInfo)
 
 TestResult __cdecl tstTesters(BrowserInfo &cInfo)
 {
-	cInfo.pfnOutputString("Test architecture is reasonably sane!");
+	cInfo.OutputString("Test architecture is reasonably sane!");
 	return trPassed;
 }
 
 TestResult __cdecl tstControlActive(BrowserInfo &cInfo)
 {
 	CControlSiteInstance *pControlSite = cInfo.pControlSite;
-	if (pControlSite == NULL || !pControlSite->IsInPlaceActive())
+	if (pControlSite == NULL)
 	{
+		cInfo.OutputString(_T("Error: No control site"));
 		return trFailed;
 	}
+
+	if (!pControlSite->IsInPlaceActive())
+	{
+		cInfo.OutputString(_T("Error: Control is not in-place active"));
+		return trFailed;
+	}
+
 	return trPassed;
 }
 
@@ -151,6 +264,7 @@ TestResult __cdecl tstIWebBrowser(BrowserInfo &cInfo)
 {
 	if (cInfo.pIUnknown == NULL)
 	{
+		cInfo.OutputString(_T("Error: No control"));
 		return trFailed;
 	}
 
@@ -160,6 +274,7 @@ TestResult __cdecl tstIWebBrowser(BrowserInfo &cInfo)
 		return trPassed;
 	}
 
+	cInfo.OutputString(_T("Error: No IWebBrowser"));
 	return trFailed;
 }
 
@@ -167,6 +282,7 @@ TestResult __cdecl tstIWebBrowser2(BrowserInfo &cInfo)
 {
 	if (cInfo.pIUnknown == NULL)
 	{
+		cInfo.OutputString(_T("Error: No control"));
 		return trFailed;
 	}
 	CIPtr(IWebBrowser2) cpIWebBrowser = cInfo.pIUnknown;
@@ -175,6 +291,7 @@ TestResult __cdecl tstIWebBrowser2(BrowserInfo &cInfo)
 		return trPassed;
 	}
 
+	cInfo.OutputString(_T("Error: No IWebBrowser2"));
 	return trFailed;
 }
 
@@ -183,6 +300,7 @@ TestResult __cdecl tstIWebBrowserApp(BrowserInfo &cInfo)
 {
 	if (cInfo.pIUnknown == NULL)
 	{
+		cInfo.OutputString(_T("Error: No control"));
 		return trFailed;
 	}
 
@@ -192,6 +310,7 @@ TestResult __cdecl tstIWebBrowserApp(BrowserInfo &cInfo)
 		return trPassed;
 	}
 
+	cInfo.OutputString(_T("Error: No IWebBrowserApp"));
 	return trFailed;
 }
 
@@ -213,7 +332,14 @@ Test aBasic[] =
 
 Test aBrowsing[] =
 {
-	{ _T("Navigate2"), _T("Test if browser can navigate to the test URL"), NULL }
+	{ _T("IWebBrowser2::Navigate2"), _T("Test if browser can navigate to the test URL"), NULL }
+};
+
+Test aDHTML[] =
+{
+	{ _T("IWebBrowser::get_Document"), _T("Test if browser has a top level element"), tstDocument },
+	{ _T("IHTMLElementCollection::get__newEnum"), _T("Test if element collections return enumerations"), tstCollectionEnum },
+	{ _T("Parse DOM"), _T("Parse the document DOM"), tstDriller }
 };
 
 Test aOther[] =
@@ -221,18 +347,12 @@ Test aOther[] =
 	{ _T("Print Page"), _T("Print the test URL page"), NULL }
 };
 
-Test aDHTML[] =
-{
-	{ _T("get_Document"), _T("Test if browser has a top level element"), tstDocument },
-	{ _T("parse DOM"), _T("Parse the document DOM"), tstDriller }
-};
-
 TestSet aTestSets[] =
 {
 	{ _T("Basic"), _T("Basic sanity tests"), 5, aBasic },
 	{ _T("Browsing"), _T("Browsing and navigation tests"), 1, aBrowsing },
-	{ _T("Other"), _T("Other tests"), 1, aOther },
-	{ _T("DHTML"), _T("Test the DOM"), 2, aDHTML }
+	{ _T("DHTML"), _T("Test the DOM"), 3, aDHTML },
+	{ _T("Other"), _T("Other tests"), 1, aOther }
 };
 
 int nTestSets = sizeof(aTestSets) / sizeof(aTestSets[0]);
