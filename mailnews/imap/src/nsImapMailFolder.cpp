@@ -110,6 +110,7 @@
 #include "nsInt64.h"
 #include <time.h>
 #include "nsIMsgMailNewsUrl.h"
+#include "nsEmbedCID.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -1376,7 +1377,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
             if (confirmDeletion)
             {
               IMAPGetStringByID(IMAP_EMPTY_TRASH_CONFIRM, getter_Copies(confirmationStr));
-              promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+              promptService = do_GetService(NS_PROMPTSERVICE_CONTRACTID);
               nsCOMPtr<nsIDocShell> docShell;
               if (aMsgWindow)
               {

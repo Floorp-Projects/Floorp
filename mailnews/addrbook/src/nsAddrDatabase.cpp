@@ -70,6 +70,8 @@
 
 #include "nsAddressBook.h" // for the map
 
+#include "nsEmbedCID.h"
+
 #define ID_PAB_TABLE            1
 #define ID_DELETEDCARDS_TABLE           2
 
@@ -642,7 +644,8 @@ nsresult nsAddrDatabase::AlertAboutCorruptMabFile(const PRUnichar *aOldFileName,
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("corruptMabFileTitle").get(), getter_Copies(alertTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPromptService> prompter = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  nsCOMPtr<nsIPromptService> prompter =
+      do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = prompter->Alert(nsnull /* we don't know the parent window */, alertTitle.get(), alertMessage.get());

@@ -48,6 +48,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
+#include "nsEmbedCID.h"
+
 /** Implementation of the nsIMapiRegistry interface.
  *  Use standard implementation of nsISupports stuff.
  */
@@ -160,7 +162,7 @@ nsMapiRegistry::ShowMailIntegrationDialog(nsIDOMWindow *aParentWindow) {
 
     nsresult rv;
     nsCOMPtr<nsIPromptService> promptService(do_GetService(
-                  "@mozilla.org/embedcomp/prompt-service;1", &rv));
+                  NS_PROMPTSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && promptService)
     {
         nsCOMPtr<nsIStringBundle> bundle;

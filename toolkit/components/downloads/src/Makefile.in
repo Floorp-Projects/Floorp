@@ -61,6 +61,7 @@ REQUIRES  = xpcom \
             appshell \
             dom \
             xpinstall \
+            embed_base \
             $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

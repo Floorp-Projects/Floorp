@@ -80,6 +80,7 @@
 #endif
 
 #include "nsXPFEComponentsCID.h"
+#include "nsEmbedCID.h"
 
 #define RUNKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 
@@ -419,7 +420,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
                 //   o We need the string bundle service to fetch the appropriate
                 //     dialog text.
                 nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
-                nsCOMPtr<nsIPromptService> promptService( do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+                nsCOMPtr<nsIPromptService> promptService( do_GetService(NS_PROMPTSERVICE_CONTRACTID));
                 nsCOMPtr<nsIStringBundleService> bundleService( do_GetService( bundleCID, &rv ) );
 
                 if ( promptService && bundleService ) {

@@ -69,6 +69,7 @@ REQUIRES	= xpcom \
 		  import \
 		  windowwatcher \
 		  uriloader \
+		  embed_base \
 		  $(NULL)
 
 CPPSRCS		= \

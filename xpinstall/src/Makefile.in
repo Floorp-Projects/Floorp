@@ -85,6 +85,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  chrome \
 		  extensions \
+		  embed_base \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 

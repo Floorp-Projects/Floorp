@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  msgimap \
 		  nkcache \
 		  windowwatcher \
+		  embed_base \
 		  $(NULL)
 
 CPPSRCS		= \

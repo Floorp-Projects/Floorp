@@ -65,6 +65,7 @@ REQUIRES	= \
 		  gfx \
 		  locale \
 		  xulapp \
+		  embed_base \
 		  $(NULL)
 
 FORCE_STATIC_LIB = 1

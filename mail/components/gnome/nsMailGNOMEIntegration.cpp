@@ -49,6 +49,7 @@
 #include "nsIPrefBranch.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsEmbedCID.h"
 
 #include <glib.h>
 #include <limits.h>
@@ -265,7 +266,7 @@ nsMailGNOMEIntegration::ShowMailIntegrationDialog(nsIDOMWindow* aParentWindow)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPromptService> promptService =
-    do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+    do_GetService(NS_PROMPTSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(promptService, NS_ERROR_FAILURE);
 
   if (mShowMailDialog && showMailDialog) {

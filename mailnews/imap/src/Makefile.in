@@ -71,6 +71,7 @@ REQUIRES	= xpcom \
 		  mimetype \
       uriloader \
 		  windowwatcher \
+		  embed_base \
 		  $(NULL)
 
 EXPORTS		= \

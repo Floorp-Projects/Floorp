@@ -45,7 +45,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
-
+#include "nsEmbedCID.h"
 
 nsresult
 NS_NewPrompter(nsIPrompt **result, nsIDOMWindow *aParent)
@@ -113,7 +113,7 @@ nsPrompt::nsPrompt(nsIDOMWindow *aParent)
 nsresult
 nsPrompt::Init()
 {
-  mPromptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+  mPromptService = do_GetService(NS_PROMPTSERVICE_CONTRACTID);
   return mPromptService ? NS_OK : NS_ERROR_FAILURE;
 }
 

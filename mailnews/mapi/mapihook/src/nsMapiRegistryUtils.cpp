@@ -53,6 +53,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsEmbedCID.h"
 #include <mbstring.h>
 
 #define EXE_EXTENSION ".exe" 
@@ -1240,7 +1241,7 @@ nsresult nsMapiRegistryUtils::ShowMapiErrorDialog(PRBool aForMail)
 {
     nsresult rv;
     nsCOMPtr<nsIPromptService> promptService(do_GetService(
-                  "@mozilla.org/embedcomp/prompt-service;1", &rv));
+                  NS_PROMPTSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && promptService)
     {
         nsCOMPtr<nsIStringBundle> bundle;

@@ -67,6 +67,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsEmbedCID.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPop3Sink, nsIPop3Sink)
 
@@ -727,7 +728,8 @@ nsresult nsPop3Sink::HandleTempDownloadFailed(nsIMsgWindow *msgWindow)
   if (NS_SUCCEEDED(rv))
     bundle->FormatStringFromID(POP3_TMP_DOWNLOAD_FAILED, params, 2, getter_Copies(confirmString));
   nsCOMPtr<nsIDOMWindowInternal> parentWindow;
-  nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+  nsCOMPtr<nsIPromptService> promptService =
+      do_GetService(NS_PROMPTSERVICE_CONTRACTID);
   nsCOMPtr<nsIDocShell> docShell;
   if (msgWindow)
   {

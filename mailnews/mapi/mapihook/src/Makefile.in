@@ -73,6 +73,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  embedcomponents \
       xulapp \
+		  embed_base \
 		  $(NULL)
 
 EXPORTS		= \

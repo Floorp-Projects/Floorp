@@ -87,6 +87,8 @@
 #include "msgMapiMain.h"
 #include "nsNetUtil.h"
 
+#include "nsEmbedCID.h"
+
 #ifndef MOZ_XUL_APP
 #include "nsICmdLineService.h"
 #endif
@@ -191,7 +193,7 @@ PRBool nsMapiHook::DisplayLoginDialog(PRBool aLogin, PRUnichar **aUsername,
     nsresult rv;
     PRBool btnResult = PR_FALSE;
    
-    nsCOMPtr<nsIPromptService> dlgService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
+    nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && dlgService)
     {
         nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
@@ -328,7 +330,7 @@ nsMapiHook::IsBlindSendAllowed()
                                         getter_Copies(dontShowAgainMessage));
     if (NS_FAILED(rv)) return PR_FALSE;
 
-    nsCOMPtr<nsIPromptService> dlgService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
+    nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv) || !dlgService) return PR_FALSE;
     
     PRBool continueToWarn = PR_TRUE;

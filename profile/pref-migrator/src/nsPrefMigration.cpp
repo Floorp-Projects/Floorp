@@ -74,6 +74,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWindowWatcher.h"
+#include "nsEmbedCID.h"
 
 #if defined(XP_MAC) && !defined(DEBUG)
 //lower silly optimization level which takes an age for this file.
@@ -482,7 +483,7 @@ nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("createNew.label").get(), getter_Copies(createNewLabel));
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  nsCOMPtr<nsIPromptService> promptService = do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   const PRUint32 buttons =

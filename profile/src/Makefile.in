@@ -64,6 +64,7 @@ REQUIRES	= xpcom \
 		  chrome \
 		  windowwatcher \
 		  profdirserviceprovider \
+		  embed_base \
 		  $(NULL)
 
 CPPSRCS		= 	nsProfile.cpp	\
