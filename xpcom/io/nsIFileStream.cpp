@@ -167,7 +167,7 @@ class FileImpl
 								               return NS_ERROR_FAILURE;
 
                                             PRUint32 bufOffset = 0;
-                                            
+                                            PRUint32 currentWrite = 0;
                                             while (aCount > 0) 
                                             {
                                                 if (mWriteCursor == nsnull || mWriteCursor == mWriteLimit)
@@ -187,17 +187,19 @@ class FileImpl
                                                 
                                                 // move
                                                 
-                                                *aWriteCount = mWriteLimit - mWriteCursor;
+                                                currentWrite = mWriteLimit - mWriteCursor;
                                                 
-                                                if (aCount < *aWriteCount)
-                                                    *aWriteCount = aCount;
+                                                if (aCount < currentWrite)
+                                                    currentWrite = aCount;
 
-                                                memcpy(mWriteCursor, (aBuf + bufOffset), *aWriteCount);
+                                                memcpy(mWriteCursor, (aBuf + bufOffset), currentWrite);
                                                 
-                                                aCount    -= *aWriteCount;
-                                                bufOffset += *aWriteCount;
-                                                mWriteCursor += *aWriteCount;                                          
-                                            }								            
+                                                mWriteCursor += currentWrite;  
+                                                
+                                                aCount    -= currentWrite;
+                                                bufOffset += currentWrite;
+                                                *aWriteCount += currentWrite;
+                                            }	
 								            return NS_OK;
 								        }
         NS_IMETHOD                      Flush();
