@@ -34,20 +34,20 @@ CHROME_L10N_DIR=locale
 CHROME_TYPE=locale
 
 CHROME_L10N = \
-		$(srcdir)/globalOverlay.dtd \
-		$(srcdir)/dialogOverlay.dtd \
-		$(srcdir)/tasksOverlay.dtd \
-		$(srcdir)/taskbarOverlay.dtd \
-		$(srcdir)/taskbar.rdf \
-		$(srcdir)/builtinURLs.rdf \
-		$(srcdir)/commonDialog.dtd \
-		$(srcdir)/charsetOverlay.dtd \
-		$(srcdir)/charsetDetectorsOverlay.dtd \
-		$(srcdir)/brand.properties \
-		$(srcdir)/brand.dtd \
-		$(srcdir)/wizardManager.properties \
-		$(srcdir)/wizardOverlay.dtd \
-		$(srcdir)/about.dtd \
+		globalOverlay.dtd \
+		dialogOverlay.dtd \
+		tasksOverlay.dtd \
+		taskbarOverlay.dtd \
+		taskbar.rdf \
+		builtinURLs.rdf \
+		commonDialog.dtd \
+		charsetOverlay.dtd \
+		charsetDetectorsOverlay.dtd \
+		brand.properties \
+		brand.dtd \
+		wizardManager.properties \
+		wizardOverlay.dtd \
+		about.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
