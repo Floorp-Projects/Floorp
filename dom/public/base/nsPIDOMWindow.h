@@ -28,6 +28,9 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMLocation.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIDocument.h"
 
 class nsIDocShell;
 class nsIDOMWindow;
@@ -51,6 +54,10 @@ public:
   // This is private because activate/deactivate events are not part of the DOM spec.
   NS_IMETHOD Activate() = 0;
   NS_IMETHOD Deactivate() = 0;
+
+  NS_IMETHOD GetRootCommandDispatcher (
+    nsIDocument * aDoc,
+    nsIDOMXULCommandDispatcher ** aDispatcher)=0;
 };
 
 #endif // nsPIDOMWindow_h__

@@ -2603,6 +2603,38 @@ NS_IMETHODIMP GlobalWindowImpl::Deactivate()
    return NS_OK;
 }
 
+NS_IMETHODIMP GlobalWindowImpl::GetRootCommandDispatcher (
+  nsIDocument * aDoc,
+  nsIDOMXULCommandDispatcher ** aDispatcher)
+{
+	if(!aDispatcher)
+		return NS_ERROR_FAILURE;
+
+	*aDispatcher = nsnull;
+
+	if(!aDoc)
+		return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+	nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+	aDoc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+	nsCOMPtr<nsIDOMWindow> rootWindow;
+	nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+	if(ourWindow) {
+	  ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+	  if(rootWindow) {
+		nsCOMPtr<nsIDOMDocument> rootDocument;
+		rootWindow->GetDocument(getter_AddRefs(rootDocument));
+
+		nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+		if(xulDoc) {
+		  xulDoc->GetCommandDispatcher(aDispatcher);
+		}
+	  }
+	}
+	return NS_OK;
+}
+
 //*****************************************************************************
 // GlobalWindowImpl::nsIDOMViewCSS
 //*****************************************************************************   

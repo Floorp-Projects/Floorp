@@ -151,6 +151,11 @@ public:
    NS_IMETHOD Activate();
    NS_IMETHOD Deactivate();
 
+   NS_IMETHOD GetRootCommandDispatcher (
+     nsIDocument * aDoc,
+     nsIDOMXULCommandDispatcher ** aDispatcher);
+
+
    // nsIDOMViewCSS
    NS_DECL_IDOMVIEWCSS
 
