@@ -26,7 +26,7 @@
                 <html:input id="dialog.input"/>
             </box>
             <box align="horizontal">
-                <html:button onclick="choose()">Choose File...</html:button>
+                <html:button onclick="choose()">Select File...</html:button>
             </box>
         </box>
         <box align="horizontal" flex="100">
@@ -34,13 +34,13 @@
                 <html:input id="dialog.newWindow" type="checkbox"/>Open in new window
             </box>
             <box>
-                <html:button onclick="open()">Open</html:button>
+                <html:button id="dialog.ok"  onclick="open()">Open</html:button>
             </box>
             <box>
-                <html:button onclick="cancel()">Cancel</html:button>
+                <html:button id="dialog.cancel" onclick="cancel()">Cancel</html:button>
             </box>
             <box>
-                <html:button onclick="help()" disabled="">Help</html:button>
+                <html:button id="dialog.help" onclick="help()" disabled="">Help</html:button>
             </box>
         </box>
     </box>
@@ -62,7 +62,7 @@
 							<html:input id="dialog.input" style="width:275;" onkeyup="onTyping(event.which)"/>
 						</html:td>
 						<html:td width="100">
-							<html:button onclick="choose()">Choose File...</html:button>
+							<html:button onclick="choose()">Select File...</html:button>
 						</html:td>
 					</html:tr>
 				</html:table>
