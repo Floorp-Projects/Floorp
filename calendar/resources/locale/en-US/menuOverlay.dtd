@@ -61,40 +61,44 @@
 <!ENTITY event.edit.event.key                   "E">
 <!ENTITY event.edit.event.accesskey             "E">
 
-<!ENTITY event.delete.event                     "Delete Selected Event(s)">
+<!ENTITY event.delete.event                     "Delete Selected Events">
 <!ENTITY event.delete.event.accesskey           "D">
 
-<!ENTITY event.delete.tasks                     "Delete Selected Task(s)">
+<!ENTITY event.delete.tasks                     "Delete Selected Tasks">
 <!ENTITY event.delete.tasks.accesskey           "T">
 
-<!ENTITY event.mail.event                       "Mail Selected Event(s)…">
+<!ENTITY event.mail.event                       "Mail Selected Events…">
 <!ENTITY event.mail.event.key                   "M">
 <!ENTITY event.mail.event.accesskey             "M">
 
-<!ENTITY calendar.print.label                   "Print Active Calendars...">
+<!ENTITY calendar.print.label                   "Print Active Calendars…">
 <!ENTITY calendar.print.key                     "P">
 <!ENTITY calendar.print.accesskey               "P">
 
 <!ENTITY calendar.printpreview.label            "Print Preview">
 <!ENTITY calendar.printpreview.accesskey        "v">
 
-<!ENTITY calendar.pagesetup.label               "Page Setup...">
+<!ENTITY calendar.pagesetup.label               "Page Setup…">
 <!ENTITY calendar.pagesetup.accesskey           "u">
 
-<!ENTITY calendar.import.label                  "Import From File...">
+<!ENTITY calendar.import.label                  "Import…">
 <!ENTITY calendar.import.key                    "I">
 <!ENTITY calendar.import.accesskey              "I">
 
-<!ENTITY calendar.wizard.label                  "Launch Wizard">
+<!ENTITY calendar.wizard.label                  "Launch Wizard…">
 <!ENTITY calendar.wizard.accesskey              "W">
 
-<!ENTITY calendar.export.label                  "Export Selected Events...">
+<!ENTITY calendar.export.label                  "Export Selected Events…">
 <!ENTITY calendar.export.accesskey              "E">
 
-<!ENTITY calendar.subscribe.label               "Subscribe to Remote Calendar...">
+<!ENTITY calendar.subscribe.label               "Subscribe to Remote Calendar…">
 <!ENTITY calendar.subscribe.accesskey           "R">
 
-<!ENTITY calendar.publish.label                 "Publish Selected Events...">
+<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.key              "R">
+<!ENTITY calendar.reloadserver.accesskey        "R">
+
+<!ENTITY calendar.publish.label                 "Publish Selected Events…">
 <!ENTITY calendar.publish.accesskey             "b">
 
 <!ENTITY calendar.about.label                   "About Calendar">
@@ -116,7 +120,7 @@
 <!ENTITY calendar.selectall.key                 "A">
 <!ENTITY calendar.selectall.accesskey           "A">
 
-<!ENTITY calendar.preferences.label             "Preferences...">
+<!ENTITY calendar.preferences.label             "Preferences…">
 <!ENTITY calendar.preferences.accesskey         "e">
 
 <!ENTITY goMenu.label                           "Go">
@@ -164,7 +168,7 @@
 
 <!ENTITY editMenu.label                         "Edit">
 <!ENTITY editMenu.accesskey                     "E">
-<!ENTITY preferencesCmd.label                   "Options...">
+<!ENTITY preferencesCmd.label                   "Options…">
 <!ENTITY preferencesCmd.accesskey               "O">
 
 <!ENTITY viewMenu.label                         "View">

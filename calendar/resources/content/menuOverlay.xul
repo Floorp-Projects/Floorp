@@ -129,8 +129,9 @@
                    accesskey="&calendar.subscribe.accesskey;"
                    observes="new_server_command"/>
          <menuitem id="calendar-reloadserver-menu"
-                   label="&calendar.context.reloadserver.label;"
-                   accesskey="&calendar.context.reloadserver.accesskey;"
+                   key="reload_server_key"
+                   label="&calendar.reloadserver.label;"
+                   accesskey="&calendar.reloadserver.accesskey;"
                    observes="reload_remote_calendars"/>
          <menuseparator/>
 

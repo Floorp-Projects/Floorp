@@ -130,6 +130,7 @@
   <key id="go_forward_key"       keycode="VK_PAGE_DOWN"                  observes="next_command"/>
 
   <key id="import_key"           key="&calendar.import.key;"             observes="import_command"              modifiers="accel"/>
+  <key id="reload_server_key"    key="&calendar.reloadserver.key;"       observes="reload_remote_calendars"     modifiers="accel"/>
 
 #ifdef XP_MACOSX
   <key id="key_minimizeWindow"   key="&minimizeWindow.key;"              command="minimizeWindow"               modifiers="accel"/>
