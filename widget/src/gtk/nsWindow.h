@@ -30,8 +30,10 @@
 
 #include "nsString.h"
 
+#ifdef USE_SUPERWIN
 #include "gtkmozarea.h"
 #include "gdksuperwin.h"
+#endif // USE_SUPERWIN 
 
 class nsFont;
 class nsIAppShell;
