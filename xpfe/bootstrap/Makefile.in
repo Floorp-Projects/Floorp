@@ -35,21 +35,24 @@ PROGRAM		= mozilla-bin
 endif
 EXTRA_DSO_LIBS	= gkgfx
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+SHARED_LIBRARY_LIBS = -llibxpfelocation_s
+else
+SHARED_LIBRARY_LIBS = -lxpfelocation_s
+endif
+
 CPPSRCS		= \
 		nsAppRunner.cpp \
 		nsSetupRegistry.cpp \
 		nsSigHandlers.cpp \
 		$(NULL)
 
-XP_DIST_LIBS	= \
+XP_LIBS		= \
+		$(EXTRA_DSO_LDOPTS) \
 		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(OJI_LIBS) \
-		$(NULL)
-
-XP_LIBS		= \
-		$(XP_DIST_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
@@ -77,11 +80,7 @@ ifdef MOZ_OJI
 OJI_LIBS	= -ljsj
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-LIBS		= $(XP_LIBS) -llibxpfelocation_s
-else
-LIBS		= $(XP_LIBS) -lxpfelocation_s
-endif
+LIBS		= $(XP_LIBS)
 
 ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
