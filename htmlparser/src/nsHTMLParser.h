@@ -73,6 +73,8 @@ class nsIHTMLContentSink;
 class nsIURL;
 class nsIDTD;
 class CScanner;
+class nsIParserFilter;
+class nsIParserDebug;
 
 
 class nsHTMLParser : public nsIParser, public nsIStreamListener {
@@ -103,8 +105,12 @@ friend class CTokenHandler;
      * @return  old sink, or NULL
      */
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
+
+    virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter);
     
     virtual void SetDTD(nsIDTD* aDTD);
+
+    virtual nsIDTD * GetDTD(void);
     
     /**
      *  
@@ -124,7 +130,8 @@ friend class CTokenHandler;
      */
     virtual PRInt32 Parse(nsIURL* aURL,
                           nsIStreamListener* aListener,
-                          PRBool aIncremental=PR_TRUE);
+                          PRBool aIncremental=PR_TRUE,
+                          nsIParserDebug * aDebug = 0);
 
     /**
      * Cause parser to parse input from given file in given mode
@@ -133,7 +140,7 @@ friend class CTokenHandler;
      * @param   aMode is the desired parser mode (Nav, other, etc.)
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(const char* aFilename,PRBool aIncremental);
+    virtual PRInt32 Parse(const char* aFilename,PRBool aIncremental, nsIParserDebug * aDebug = 0);
 
     /**
      * @update	gess5/11/98
@@ -290,7 +297,8 @@ protected:
     //*********************************************
 
     nsIStreamListener*  mListener;
-    nsIContentSink*     mSink;
+    nsIContentSink*     mSink; 
+    nsIParserFilter*    mParserFilter;
 
     nsDequeIterator*    mCurrentPos;
     nsDequeIterator*    mMarkPos;

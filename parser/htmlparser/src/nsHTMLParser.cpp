@@ -30,6 +30,7 @@
 #include "prstrm.h"
 #include <fstream.h>
 #include "nsIInputStream.h"
+#include "nsIParserFilter.h"
 
 /* UNCOMMENT THIS IF STUFF STOPS WORKING...
 #ifdef XP_PC
@@ -47,27 +48,13 @@ static const char* kNullURL = "Error: Null URL given";
 static const char* kNullFilename= "Error: Null filename given";
 static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 
-static char*      gVerificationOutputDir=0;
-static PRBool     gRecordingStatistics=PR_TRUE;
 static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
-static char*      gURLRef=0;
 
 //#define DEBUG_SAVE_SOURCE_DOC 1
 #ifdef DEBUG_SAVE_SOURCE_DOC
 fstream* gTempStream=0;
 #endif
 
-
-extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir)
-{
-	gVerificationOutputDir = verify_dir;
-}
-
-
-extern "C" NS_EXPORT void SetRecordStatistics(PRBool bval)
-{
-	gRecordingStatistics = bval;
-}
 
 /**
  *  This method is defined in nsIParser. It is used to 
@@ -107,6 +94,7 @@ CTokenDeallocator gTokenKiller;
  */
 nsHTMLParser::nsHTMLParser() : mTokenDeque(gTokenKiller) {
   NS_INIT_REFCNT();
+  mParserFilter = nsnull;
   mListener = nsnull;
   mTransferBuffer=0;
   mSink=0;
@@ -125,11 +113,6 @@ nsHTMLParser::nsHTMLParser() : mTokenDeque(gTokenKiller) {
  *  @return  
  */
 nsHTMLParser::~nsHTMLParser() {
-  if (gURLRef)
-  {
-    PL_strfree(gURLRef);
-    gURLRef = 0;
-  }
   NS_IF_RELEASE(mListener);
   if(mTransferBuffer)
     delete [] mTransferBuffer;
@@ -139,7 +122,7 @@ nsHTMLParser::~nsHTMLParser() {
     delete mCurrentPos;
   mCurrentPos=0;
   if(mDTD)
-    delete mDTD;    
+     NS_RELEASE(mDTD);
   mDTD=0;
   if(mScanner)
     delete mScanner;
@@ -185,6 +168,18 @@ nsresult nsHTMLParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
+nsIParserFilter * nsHTMLParser::SetParserFilter(nsIParserFilter * aFilter)
+{
+  nsIParserFilter* old=mParserFilter;
+  if(old)
+    NS_RELEASE(old);
+  if(aFilter) {
+    mParserFilter=aFilter;
+    NS_ADDREF(aFilter);
+  }
+  return old;
+}
+
 /**
  *  This method gets called in order to set the content
  *  sink for this parser to dump nodes to.
@@ -215,6 +210,10 @@ nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
  */
 void nsHTMLParser::SetDTD(nsIDTD* aDTD) {
   mDTD=aDTD;
+}
+
+nsIDTD * nsHTMLParser::GetDTD(void) {
+   return mDTD;
 }
 
 /**
@@ -287,7 +286,7 @@ eParseMode DetermineParseMode() {
  *  @param   
  *  @return  
  */
-nsIDTD* GetDTD(eParseMode aMode) {
+nsIDTD* NewDTD(eParseMode aMode) {
   nsIDTD* aDTD=0;
   switch(aMode) {
     case eParseMode_navigator:
@@ -297,6 +296,8 @@ nsIDTD* GetDTD(eParseMode aMode) {
     default:
       break;
   }
+  if (aDTD)
+     aDTD->AddRef();
   return aDTD;
 }
 
@@ -364,11 +365,6 @@ PRInt32 nsHTMLParser::ParseFileIncrementally(const char* aFilename){
   nsString  theBuffer;
   const int kLocalBufSize=10;
 
-  if (gURLRef)
-     PL_strfree(gURLRef);
-  if (aFilename)
-     gURLRef = PL_strdup(aFilename);
-
   mMajorIteration=-1;
   mMinorIteration=-1;
 
@@ -417,22 +413,20 @@ PRInt32 nsHTMLParser::ParseFileIncrementally(const char* aFilename){
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental){
+PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental, nsIParserDebug * aDebug){
   NS_PRECONDITION(0!=aFilename,kNullFilename);
   PRInt32 status=kBadFilename;
   mIncremental=aIncremental;
 
   if(aFilename) {
 
-    if (gURLRef)
-       PL_strfree(gURLRef);
-    gURLRef = PL_strdup(aFilename);
-
     mParseMode=DetermineParseMode();  
-    mDTD=(0==mDTD) ? GetDTD(mParseMode) : mDTD;
+    mDTD=(0==mDTD) ? NewDTD(mParseMode) : mDTD;
     if(mDTD) {
       mDTD->SetParser(this);
       mDTD->SetContentSink(mSink);
+      mDTD->SetURLRef((char *)aFilename);
+      mDTD->SetParserDebug(aDebug);
     }
 
     WillBuildModel();
@@ -466,7 +460,8 @@ PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental){
  */
 PRInt32 nsHTMLParser::Parse(nsIURL* aURL,
                             nsIStreamListener* aListener,
-                            PRBool aIncremental) {
+                            PRBool aIncremental,
+                            nsIParserDebug * aDebug) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   PRInt32 status=kBadURL;
@@ -485,19 +480,13 @@ PRInt32 nsHTMLParser::Parse(nsIURL* aURL,
 
   if(aURL) {
 
-     if (gURLRef)
-     {
-        PL_strfree(gURLRef);
-        gURLRef = 0;
-     }
-     if (aURL->GetSpec())
-        gURLRef = PL_strdup(aURL->GetSpec());
-
     mParseMode=DetermineParseMode();  
-    mDTD=(0==mDTD) ? GetDTD(mParseMode) : mDTD;
+    mDTD=(0==mDTD) ? NewDTD(mParseMode) : mDTD;
     if(mDTD) {
       mDTD->SetParser(this);
       mDTD->SetContentSink(mSink);
+      mDTD->SetURLRef((char *)aURL->GetSpec());
+      mDTD->SetParserDebug(aDebug);
     }
 
     WillBuildModel();
@@ -688,6 +677,9 @@ nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
             gTempStream->write(mTransferBuffer,len);
           }
         #endif
+
+        if (mParserFilter)
+           mParserFilter->RawBuffer(mTransferBuffer, &len);
 
         mScanner->Append(&mTransferBuffer[offset],len);
 
