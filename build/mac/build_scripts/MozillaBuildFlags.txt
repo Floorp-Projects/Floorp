@@ -68,7 +68,7 @@ xml_rpc         1
 cview           1
 help            1
 timeline        0      MOZ_TIMELINE
-
+static_build    0      MOZ_STATIC_COMPONENT_LIBS
 string_debug    0      DEBUG_STRING
 string_stats    0      DEBUG_STRING_STATS
 
