@@ -438,12 +438,14 @@ xpcom_param(TreeState *state)
     if (IDL_PARAM_DCL(param).attr == IDL_PARAM_IN &&
         (IDL_NODE_TYPE(state->tree) == IDLN_TYPE_STRING ||
          IDL_NODE_TYPE(state->tree) == IDLN_TYPE_WIDE_STRING ||
-         IDL_tree_property_get(IDL_OP_DCL(param).ident, "const") ||
+         IDL_tree_property_get(IDL_PARAM_DCL(param).simple_declarator,
+                               "const") ||
          IDL_tree_property_get(state->tree, "nsid"))) {
         fputs("const ", state->file);
     }
     else if (IDL_PARAM_DCL(param).attr == IDL_PARAM_OUT &&
-             IDL_tree_property_get(IDL_OP_DCL(param).ident, "shared")) {
+             IDL_tree_property_get(IDL_PARAM_DCL(param).simple_declarator, 
+                                   "shared")) {
         fputs("const ", state->file);
     }
 

@@ -620,7 +620,11 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
 handle_iid_is:
                 ides = HEADER(state)->interface_directory;
                 num_ifaces = HEADER(state)->num_interfaces;
-                className = IDL_IDENT(IDL_INTERFACE(up).ident).str;
+                /* might get here via the goto, so re-check type */
+                if (IDL_NODE_TYPE(up) == IDLN_INTERFACE)
+                    className = IDL_IDENT(IDL_INTERFACE(up).ident).str;
+                else
+                    className = IDL_IDENT(IDL_NATIVE(up).ident).str;
                 iid_is = NULL;
 
                 if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL) {
