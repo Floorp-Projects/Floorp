@@ -59,9 +59,9 @@
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;"/>
       </xul:vbox>
-      <xul:toolbarbutton class="toolbarbutton-icon home-arrow"
+      <xul:toolbarbutton class="home-arrow"
         oncommand="parentNode.navigate(0, 0, 'home');"/>
-      <xul:toolbarbutton class="toolbarbutton-icon last-arrow" 
+      <xul:toolbarbutton class="left-arrow" 
         oncommand="parentNode.navigate(-1, 0, 0);"/>
       <xul:hbox align="center" pack="center">
         <xul:textbox size="3" value="1" lastvalid="1"
@@ -70,9 +70,9 @@
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>
       </xul:hbox>
-      <xul:toolbarbutton class="toolbarbutton-icon next-arrow" 
+      <xul:toolbarbutton class="right-arrow" 
         oncommand="parentNode.navigate(1, 0, 0);"/>
-      <xul:toolbarbutton class="toolbarbutton-icon end-arrow"
+      <xul:toolbarbutton class="end-arrow"
         oncommand="parentNode.navigate(0, 0, 'end');"/>
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>
@@ -243,6 +243,7 @@
           
           var print = this._getWebBrowserPrint();
           var validInput = false;
+          var total;
 
           // we use only one of aHomeOrEnd, aDirection, or aPageNum
           if (aHomeOrEnd)
@@ -266,7 +267,7 @@
           {
             var textBoxStr  = this.mPageTextBox.value;
             var newPageNum  = parseInt(textBoxStr) + aDirection;
-            var total = print.printPreviewNumPages;
+            total = print.printPreviewNumPages;
 
             // bounds check potentially user-entered number
             if (newPageNum > 0 && newPageNum <= total) 
@@ -279,7 +280,7 @@
           }
           else 
           {
-            var total = print.printPreviewNumPages;
+            total = print.printPreviewNumPages;
 
             // bounds check potentially user-entered number
             if (aPageNum > 0 && aPageNum <= total) 
@@ -388,7 +389,7 @@
           var webBrowserPrint;  
           var domWin;  
           try {
-            var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+            ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
             domWin = ifreq.QueryInterface(Components.interfaces.nsIDOMWindow);
           } catch (e) {
             // Pressing cancel is expressed as an NS_ERROR_ABORT return value,

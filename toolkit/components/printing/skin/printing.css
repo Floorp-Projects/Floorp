@@ -46,11 +46,11 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp-end.gif");
 }
 
-.last-arrow {
+.left-arrow {
   list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp.gif");
 }
 
-.next-arrow {
+.right-arrow {
   list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
 }
 
