@@ -663,17 +663,16 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
 
   mX = 0;
   mY = 0;
-  mUnconstrainedWidth = aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE;
-  mUnconstrainedHeight = aReflowState.maxSize.height == NS_UNCONSTRAINEDSIZE;
+  mUnconstrainedWidth = maxSize.width == NS_UNCONSTRAINEDSIZE;
+  mUnconstrainedHeight = maxSize.height == NS_UNCONSTRAINEDSIZE;
 #ifdef NS_DEBUG
-  if (!mUnconstrainedWidth) {
-    NS_ASSERTION(aReflowState.maxSize.width < 1000000, "bad parent");
+  if (!mUnconstrainedWidth && (maxSize.width > 1000000)) {
+    mBlock->ListTag(stdout);
+    printf(": bad parent: maxSize WAS %d,%d\n",
+           maxSize.width, maxSize.height);
+    maxSize.width = NS_UNCONSTRAINEDSIZE;
+    mUnconstrainedWidth = PR_TRUE;
   }
-#if XXX_not_yet
-  if (!mUnconstrainedHeight) {
-    NS_ASSERTION(aReflowState.maxSize.height < 1000000, "bad parent");
-  }
-#endif
 #endif
   mComputeMaxElementSize = aComputeMaxElementSize;
   if (mComputeMaxElementSize) {
@@ -2077,12 +2076,17 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   nsSize availSize;
   if (aState.mUnconstrainedWidth) {
     // Never give a block an unconstrained width
+#if 1
+    nsRect r;
+    aState.mPresContext->GetVisibleArea(r);
+    float p2t = aState.mPresContext->GetPixelsToTwips();
+    availSize.width = nscoord(p2t * r.width);
+#else
     if (!aState.mHaveBlockMaxWidth) {
       const nsReflowState* rsp = aState.parentReflowState;
       aState.mBlockMaxWidth = 0;
       while (nsnull != rsp) {
         if (NS_UNCONSTRAINEDSIZE != rsp->maxSize.width) {
-NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
           aState.mBlockMaxWidth = rsp->maxSize.width;
           const nsStyleSpacing* spacing = nsnull;
           rsp->frame->GetStyleData(eStyleStruct_Spacing,
@@ -2096,10 +2100,10 @@ NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
         }
         rsp = rsp->parentReflowState;
       }
-      NS_ASSERTION(0 != aState.mBlockMaxWidth, "no width for block found");
       aState.mHaveBlockMaxWidth = PR_TRUE;
     }
     availSize.width = aState.mBlockMaxWidth;
+#endif
   }
   else {
     availSize.width = aState.mInnerSize.width -
