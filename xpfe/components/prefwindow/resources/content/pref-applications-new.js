@@ -45,14 +45,15 @@ function chooseApp()
 var gDS = null;
 function onOK()
 {
-  const mimeTypes = 66638;
-  var fileLocator = Components.classes["component://netscape/filelocator"].getService();
+  const mimeTypes = "UMimTyp";
+  var fileLocator = Components.classes["component://netscape/file/directory_service"].getService();
   if (fileLocator)
-    fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIFileLocator);
-  var file = fileLocator.GetFileLocation(mimeTypes);
-  if (file)
-    file = file.QueryInterface(Components.interfaces.nsIFileSpec);
-  gDS = gRDF.GetDataSource(file.URLString);
+    fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIProperties);
+  var file = fileLocator.get(mimeTypes, Components.interfaces.nsIFile);
+  var file_url = Components.classes["component://netscape/network/standard-url"].createInstance(Components.interfaces.nsIFileURL);
+  if (file_url)
+    file_url.file = file;
+  gDS = gRDF.GetDataSource(file_url.spec);
   if (gDS)
     gDS = gDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
 
