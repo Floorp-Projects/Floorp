@@ -1290,6 +1290,24 @@ function my_401 (e)
     }
 }
 
+/* 464; "invalid or missing password", occurs as a reply to both OPER and
+ * sometimes initially during user registration. */
+CIRCNetwork.prototype.on464 =
+function my_464(e)
+{
+    if (this.state == NET_CONNECTING)
+    {
+        // If we are in the process of connecting we are needing a login
+        // password, subtly different from after user registration.
+        this.display(MSG_ERR_IRC_464_LOGIN);
+    }
+    else
+    {
+        e.destMethod = "onUnknown";
+        e.destObject = this;
+    }
+}
+
 /* end of WHO */
 CIRCNetwork.prototype.on315 =
 function my_315 (e)
