@@ -45,7 +45,7 @@ $building++ if ($tbx{'status'} =~ m/building/);
 &write_build_data;
 &unlock;
 
-close(LOG);
+close LOG;
 
 &compress_log_file;
 unlink $ARGV[0];
@@ -59,6 +59,7 @@ system './showbuilds.cgi';
 # Generate build warnings (only for a successful shrike clobber build)
 if ($tbx{build} =~ /shrike.*\b(Clobber|Clbr)\b/ and
     $tbx{status} eq 'success') {
+  sleep 3;
   system './warnings.pl';
 }
 
@@ -188,54 +189,50 @@ sub write_build_data {
     $t = time;
     open( BUILDDATA, ">>$tbx{'tree'}/build.dat" )|| die "can't open $! for writing";
     print BUILDDATA "$t|$builddate|$tbx{'build'}|$tbx{'errorparser'}|$tbx{'status'}|$logfile|$tbx{binaryname}\n";
-    close( BUILDDATA );
+    close BUILDDATA;
 }
 
 sub compress_log_file {
-    local( $done, $line);
+  return if $building;
 
-    return if ( $building );
+  open(LOG2, "<$ARGV[0]") || die "cant open $!";
 
-    open( LOG2, "<$ARGV[0]") || die "cant open $!";
+  #
+  # Skip past the the RFC822.HEADER
+  #
+  while (<LOG2>) {
+    chomp;
+    last if /^$/;
+  }
 
-    #
-    # Skip past the the RFC822.HEADER
-    #
-    $done = 0;
-    while( !$done && ($line = <LOG2>) ){
-        chomp($line);
-        $done = ($line eq '');
+  open( ZIPLOG, "| $gzip -c > ${tree}/$logfile" )
+    || die "can't open $! for writing";
+  $inBinary = 0;
+  $hasBinary = ($tbx{binaryname} ne '');
+  while (<LOG2>) {
+    unless ($inBinary) {
+      print ZIPLOG $_;
+      if ($hasBinary) {
+        $inBinary = (/^begin [0-7][0-7][0-7] /);
+      }
     }
-
-    open( ZIPLOG, "| $gzip -c > ${tree}/$logfile" ) || die "can't open $! for writing";
-    $inBinary = 0;
-    $hasBinary = ($tbx{'binaryname'} ne '');
-    while( $line = <LOG2> ){
-        if( !$inBinary ){
-            print ZIPLOG $line;
-            if( $hasBinary ){
-                $inBinary = ($line =~ /^begin [0-7][0-7][0-7] /);
-            }
-        }
-        else {
-            if( $line =~ /^end\n/ ){
-                $inBinary = 0;
-            }
-        }
+    elsif (/^end\n/) {
+      $inBinary = 0;
     }
-    close( ZIPLOG );
-    close( LOG2 );
+  }
+  close ZIPLOG;
+  close LOG2;
 
-    #
-    # If a uuencoded binary is part of the build, unpack it.
-    #
-    if( $hasBinary ){
-        $bin_dir = "$tbx{'tree'}/bin/$builddate/$tbx{'build'}";
-        $bin_dir =~ s/ //g;
+  #
+  # If a uuencoded binary is part of the build, unpack it.
+  #
+  if ($hasBinary) {
+    $bin_dir = "$tbx{'tree'}/bin/$builddate/$tbx{'build'}";
+    $bin_dir =~ s/ //g;
 
-        system("mkdir -m 0777 -p $bin_dir");
+    system("mkdir -m 0777 -p $bin_dir");
 
-        # LTNOTE: I'm not sure this is cross platform.
-        system("/tools/ns/bin/uudecode --output-file=$bin_dir/$tbx{binaryname} < $ARGV[0]");
-    }
+    # LTNOTE: I'm not sure this is cross platform.
+    system("/tools/ns/bin/uudecode --output-file=$bin_dir/$tbx{binaryname} < $ARGV[0]");
+  }
 }
