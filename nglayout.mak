@@ -66,6 +66,7 @@ CVSCO_NETWORK = $(CVSCO)
 # DIST_DIRS need to be built before the RAPTOR_DIRS.
 
 DIST_DIRS =			\
+  dbm				\
   nsprpub			\
   include			\
   jpeg				\
@@ -81,6 +82,7 @@ DIST_DIRS =			\
   modules\libimg		\
   base                          \
   lib\xp			\
+  lib\libpwcac			\
   network
 
 # The list of directories to build the nglayout layout engine and
@@ -140,6 +142,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/LICENSE
 	$(CVSCO_LIZARD) $(MOZ_TOP)/LEGAL
 	$(CVSCO_LIZARD) $(MOZ_TOP)/config
+	$(CVSCO_LIZARD) $(MOZ_TOP)/dbm
 	$(CVSCO_LIZARD) $(MOZ_TOP)/lib/liblayer
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/zlib
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libutil
@@ -164,6 +167,7 @@ pull_imglib:
 pull_netlib:
 	@cd $(MOZ_SRC)\.
 	$(CVSCO_NETWORK) $(MOZ_TOP)/lib/xp
+	$(CVSCO_NETWORK) $(MOZ_TOP)/lib/libpwcac
 	$(CVSCO_NETWORK) $(MOZ_TOP)/network
 	$(CVSCO_NETWORK) $(MOZ_TOP)/include
 
