@@ -307,7 +307,7 @@ nsLeafIterator::Prev()
       nsIFrame * grandFchild;
       if (NS_SUCCEEDED(grandParent->FirstChild(nsnull,&grandFchild)) && grandFchild){
         nsFrameList list(grandFchild);
-        if (result = list.GetPrevSiblingFor(parent) ){
+        if (nsnull != (result = list.GetPrevSiblingFor(parent)) ){
           parent = result;
           while(NS_SUCCEEDED(parent->FirstChild(nsnull,&result)) && result){
             parent = result;
