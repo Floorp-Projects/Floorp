@@ -615,8 +615,6 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener)
 {
-    nsresult rv;
-
 #if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
     mLoadStart = PR_Now();
 
@@ -627,22 +625,50 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     }
 #endif
 
-    nsCOMPtr<nsIURI> url;
-    rv = aChannel->GetURI(getter_AddRefs(url));
+    nsresult rv;
+    mCommand = aCommand;
+
+    mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
+
+    mDocumentTitle.Truncate();
+
+    rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURL));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIParser> parser;
-    rv = PrepareToLoad(aContainer, aCommand, aChannel, aLoadGroup, getter_AddRefs(parser));
+    rv = PrepareStyleSheets(mDocumentURL);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "parser doesn't support nsIStreamListener");
+    // Look in the chrome cache: see if we've got this puppy loaded
+    // already.
+    nsCOMPtr<nsIXULPrototypeDocument> proto;
+    rv = gXULCache->GetPrototype(mDocumentURL, getter_AddRefs(proto));
     if (NS_FAILED(rv)) return rv;
 
-    *aDocListener = listener;
+    if (proto) {
+        mMasterPrototype = mCurrentPrototype = proto;
+
+        rv = AddPrototypeSheets();
+        if (NS_FAILED(rv)) return rv;
+
+        *aDocListener = new CachedChromeStreamListener(this);
+        if (! *aDocListener)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+        nsCOMPtr<nsIParser> parser;
+        rv = PrepareToLoad(aContainer, aCommand, aChannel, aLoadGroup, getter_AddRefs(parser));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "parser doesn't support nsIStreamListener");
+        if (NS_FAILED(rv)) return rv;
+
+        *aDocListener = listener;
+
+        parser->Parse(mDocumentURL);
+    }
+
     NS_IF_ADDREF(*aDocListener);
-
-    parser->Parse(url);
     return NS_OK;
 }
 
@@ -1229,8 +1255,7 @@ nsXULDocument::EndLoad()
     rv = PrepareToWalk();
     if (NS_FAILED(rv)) return rv;
 
-    rv = ResumeWalk();
-    return rv;
+    return ResumeWalk();
 }
 
 
@@ -1996,77 +2021,6 @@ nsXULDocument::ResolveForwardReferences()
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsXULDocument::CreateFromPrototype(const char* aCommand,
-                                   nsIXULPrototypeDocument* aPrototype)
-{
-    nsresult rv;
-
-    mMasterPrototype = mCurrentPrototype = aPrototype;
-
-    rv = mCurrentPrototype->GetURI(getter_AddRefs(mDocumentURL));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = PrepareStyleSheets(mDocumentURL);
-    if (NS_FAILED(rv)) return rv;
-
-    mCommand = aCommand;
-
-    rv = AddPrototypeSheets();
-    if (NS_FAILED(rv)) return rv;
-
-    {
-        // This scope restricts the lifetime of our reference to the
-        // loadgroup. Specifically, we don't want to have a reference
-        // to the load group on the stack when we call
-        // ResumeWalk().
-        nsCOMPtr<nsILoadGroup> loadgroup;
-        rv = nsComponentManager::CreateInstance(kLoadGroupCID,
-                                                nsnull,
-                                                NS_GET_IID(nsILoadGroup),
-                                                getter_AddRefs(loadgroup));
-        if (NS_FAILED(rv)) return rv;
-
-        // Create our own "document loader" that will fire the onload
-        // handlers when everything is finished. When this scope is
-        // closed, the loadgroup will be the only object with a
-        // reference to the loader.
-        nsCOMPtr<nsIStreamObserver> loader;
-
-        {
-            CachedChromeLoader* l = new CachedChromeLoader(this);
-            if (! l)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            NS_ADDREF(l);
-            loader = do_QueryInterface(l, &rv);
-            NS_RELEASE(l);
-
-            if (NS_FAILED(rv)) return rv;
-        }
-
-        rv = loadgroup->Init(loader);
-        if (NS_FAILED(rv)) return rv;
-
-        // Even though we are only holding a weak reference to the
-        // load group, any channels that get added to the load group
-        // will acquire strong refs, keeping the load group alive
-        // until the last channel is complete.
-        mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(loadgroup));
-
-        // Now create the delegates from the prototype
-        rv = PrepareToWalk();
-        if (NS_FAILED(rv)) return rv;
-
-        // Closing this scope will result in the placeholder channel
-        // created in PrepareToWalk() being the only reference to the
-        // load group.
-    }
-
-    rv = ResumeWalk();
-    return rv;
-}
 
 //----------------------------------------------------------------------
 //
@@ -3030,8 +2984,8 @@ nsXULDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
                 nsCOMPtr<nsIBaseWindow> webShellWin = do_QueryInterface(container);
                 if(!webShellWin) continue;
 
-                NS_ENSURE_SUCCESS(webShellWin->SetTitle(title.GetUnicode()),
-                  PR_FALSE);
+                rv = webShellWin->SetTitle(title.GetUnicode());
+                if (NS_FAILED(rv)) return PR_FALSE;
             }
         }
         else if (PL_strcmp("location", s) == 0) {
@@ -3089,7 +3043,9 @@ nsXULDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
         // Make sure that we've got our script context owner; this
         // assertion will fire if we've tried to get the script object
         // before our scope has been set up.
-        NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
+        NS_ASSERTION(mScriptGlobalObject != nsnull, "no script object");
+        if (! mScriptGlobalObject)
+            return NS_ERROR_NOT_INITIALIZED;
 
         nsresult rv;
 
@@ -3967,30 +3923,12 @@ nsXULDocument::PrepareToLoad(nsISupports* aContainer,
 {
     nsresult rv;
 
-    // Make sure we're not called from dead code (LoadFromStream)
-    NS_ENSURE_ARG_POINTER(aChannel);
-
-    // Get the document's URL
-    rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURL));
-    if (NS_FAILED(rv)) return rv;
-
-    mDocumentTitle.Truncate();
-
     // Get the document's principal
     nsCOMPtr<nsISupports> owner;
     rv = aChannel->GetOwner(getter_AddRefs(owner));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
-
-    // Set the document's load group
-    mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
-
-    // Prepare the document's style sheets
-    rv = PrepareStyleSheets(mDocumentURL);
-    if (NS_FAILED(rv)) return rv;
-
-    mCommand = aCommand;
 
     return PrepareToLoadPrototype(mDocumentURL, aCommand, principal, aResult);
 }
@@ -4718,6 +4656,9 @@ nsXULDocument::ResumeWalk()
     rv = ApplyPersistentAttributes();
     if (NS_FAILED(rv)) return rv;
 
+    // Everything after this point we only want to do once we're
+    // certain that we've been embedded in a presentation shell.
+
 #if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
     {
         nsTime finish = PR_Now();
@@ -4893,7 +4834,9 @@ nsXULDocument::ExecuteScript(JSObject* aScriptObject)
     // Execute the precompiled script with the given version
     nsresult rv;
 
-    NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_UNEXPECTED);
+    NS_ASSERTION(mScriptGlobalObject != nsnull, "no script global object");
+    if (! mScriptGlobalObject)
+        return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIScriptContext> context;
     rv = mScriptGlobalObject->GetContext(getter_AddRefs(context));
@@ -5594,121 +5537,56 @@ nsXULDocument::IsChromeURI(nsIURI* aURI)
     return PR_FALSE;
 }
 
-
 //----------------------------------------------------------------------
 //
-// CachedChromeLoader
+// CachedChromeStreamListener
 //
 
-nsXULDocument::CachedChromeLoader::CachedChromeLoader(nsXULDocument* aDocument)
-    : mDocument(aDocument),
-      mLoading(PR_TRUE)
+nsXULDocument::CachedChromeStreamListener::CachedChromeStreamListener(nsXULDocument* aDocument)
+    : mDocument(aDocument)
 {
     NS_INIT_REFCNT();
-    NS_ADDREF(aDocument);
+    NS_ADDREF(mDocument);
 }
 
-nsXULDocument::CachedChromeLoader::~CachedChromeLoader()
+
+nsXULDocument::CachedChromeStreamListener::~CachedChromeStreamListener()
 {
     NS_RELEASE(mDocument);
 }
 
-NS_IMPL_ADDREF(nsXULDocument::CachedChromeLoader);
-NS_IMPL_RELEASE(nsXULDocument::CachedChromeLoader);
+
+NS_IMPL_ISUPPORTS2(nsXULDocument::CachedChromeStreamListener, nsIStreamObserver, nsIStreamListener);
 
 NS_IMETHODIMP
-nsXULDocument::CachedChromeLoader::QueryInterface(REFNSIID aIID, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aIID.Equals(NS_GET_IID(nsIStreamObserver)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aResult = this;
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else {
-        *aResult = nsnull;
-        return NS_NOINTERFACE;
-    }
-}
-
-NS_IMETHODIMP
-nsXULDocument::CachedChromeLoader::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
+nsXULDocument::CachedChromeStreamListener::OnStartRequest(nsIChannel* aChannel, nsISupports* acontext)
 {
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXULDocument::CachedChromeLoader::OnStopRequest(nsIChannel* aChannel,
-                                                 nsISupports* aContext,
-                                                 nsresult aStatus,
-                                                 const PRUnichar* aErrorMsg)
+nsXULDocument::CachedChromeStreamListener::OnStopRequest(nsIChannel* aChannel,
+                                                         nsISupports* aContext,
+                                                         nsresult aStatus,
+                                                         const PRUnichar* aErrorMsg)
 {
-    // Not loading. Bail!
-    if (! mLoading)
-        return NS_OK;
-
-    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocument->mDocumentLoadGroup);
-
-    // No more load group. Bail!
-    if (! group)
-        return NS_OK;
-
     nsresult rv;
-    PRUint32 count;
-    rv = group->GetActiveCount(&count);
+    rv = mDocument->PrepareToWalk();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to prepare for walk");
     if (NS_FAILED(rv)) return rv;
 
-    // Still loading. Bail!
-    if (count != 0)
-        return NS_OK;
-
-    mLoading = PR_FALSE;
-
-    for (PRInt32 i = mDocument->GetNumberOfShells() - 1; i >= 0; --i) {
-        // Walk from the pres shell down to the script context
-        // owner. We'll consider any failure along the way
-        // non-terminal, and will continue on to the other pres
-        // shells.
-        nsIPresShell* shell = mDocument->GetShellAt(i);
-        NS_ASSERTION(shell != nsnull, "null shell");
-        if (! shell)
-            continue;
-
-        // the pres shell has a pres context...
-        nsCOMPtr<nsIPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
-        NS_ASSERTION(presContext != nsnull, "shell has no pres context");
-        if (! presContext)
-            continue;
-
-        // the pres context should have a content container (really the webshell)...
-        nsCOMPtr<nsISupports> container;
-        presContext->GetContainer(getter_AddRefs(container));
-        NS_ASSERTION(container != nsnull, "pres context has no container");
-        if (! container)
-            continue;
-
-        // the container should support GI to globalObject...
-        nsCOMPtr<nsIScriptGlobalObject> global(do_GetInterface(container, &rv));
-        if (NS_FAILED(rv))
-            continue;
-
-        // dispatch the 'load' event to the script global object
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_PAGE_LOAD;
-
-        rv = global->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-        if (NS_FAILED(rv))
-            continue;
-    }
-
-    return NS_OK;
+    return mDocument->ResumeWalk();
 }
 
+
+NS_IMETHODIMP
+nsXULDocument::CachedChromeStreamListener::OnDataAvailable(nsIChannel* aChannel,
+                                                           nsISupports* aContext,
+                                                           nsIInputStream* aInStr,
+                                                           PRUint32 aSourceOffset,
+                                                           PRUint32 aCount)
+{
+    NS_NOTREACHED("CachedChromeStream doesn't receive data");
+    return NS_ERROR_UNEXPECTED;
+}
