@@ -95,12 +95,18 @@ TR.icons     {display: none}
 
   <form name="xmltform1">
 
-    <input type="button" value="New XMLTerm"
+    <span class="helplink" id="aboutxmlterm" onclick="return AboutXMLTerm();">
+      About XMLTerm
+    </span>
+
+    &nbsp;
+    <input type="button" size=4 value="New"
            onClick="return NewXMLTerm('');">
 
+    &nbsp;
     <span class="helplink" onclick="return ExplainTip('level');">
      Level:</span>
-    <select name="level" size=1 onchange="return UpdateSettings('level');">
+    <select name="userLevel" size=1 onchange="return UpdateSettings('userLevel');">
       <option value="beginner">beginner</option>
       <option value="intermediate" selected>intermediate</option>
       <option value="advanced">advanced</option>
@@ -109,27 +115,23 @@ TR.icons     {display: none}
     &nbsp;
     <span class="helplink" onclick="return ExplainTip('icons');">
     Icons:</span>
-    <select name="icons" size=1 onchange="return UpdateSettings('icons');">
-      <option value="off" selected>off</option>
-      <option value="on">on</option>
-    </select>
-
-    &nbsp;
-    <span class="helplink" onclick="return ExplainTip('windows');">
-    Windows:</span>
-    <select name="windows" size=1 onchange="return UpdateSettings('windows');">
+    <select name="showIcons" size=1 onchange="return UpdateSettings('showIcons');">
       <option value="off" selected>off</option>
       <option value="on">on</option>
     </select>
 
 <!--
+    <span class="helplink" onclick="return ExplainTip('windows');">
+    Windows:</span>
+    <select name="windowsMode" size=1 onchange="return UpdateSettings('windowsMode');">
+      <option value="off" selected>off</option>
+      <option value="on">on</option>
+    </select>
+
     <input type="button" value="Save Settings"
            onClick="return SaveSettings();">
  -->
 
-    <span class="helplink" id="aboutxmlterm" onclick="return AboutXMLTerm();">
-      About XMLTerm
-    </span>
   <hr>
   </form>
 

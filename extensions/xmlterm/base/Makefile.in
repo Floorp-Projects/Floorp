@@ -110,10 +110,6 @@ XPIDLSRCS = \
 	$(NULL)
 endif
 
-# Also create static library libxmlterm.a
-FORCE_STATIC_LIB = 1
-
-
 include $(topsrcdir)/config/config.mk
 
 include $(srcdir)/../config/xmlterm_config.mk

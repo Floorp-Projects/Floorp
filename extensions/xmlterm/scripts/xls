@@ -5,12 +5,12 @@
 use Cwd;
 use Getopt::Long;
 
-Getopt::Long::config('bundling');
+Getopt::Long::Configure('bundling');
 
-&GetOptions("cols|c=i", "help|h!", "text|t!");
+&GetOptions("cols|c=i", "help|h", "text|t");
 
 if ($opt_help) {
-    print "Usage: xls [-c|--cols] [-t||--text] [<files>]\n";
+    print "Usage: xls [-c|--cols] [-t|--text] [<files>]\n";
     exit;
 }
 
