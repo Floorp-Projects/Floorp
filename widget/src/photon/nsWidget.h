@@ -75,10 +75,10 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD Show(PRBool state);
     NS_IMETHOD IsVisible(PRBool &aState);
 
-    NS_IMETHOD Move(PRUint32 aX, PRUint32 aY);
-    NS_IMETHOD Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint);
-    NS_IMETHOD Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
-		              PRUint32 aHeight, PRBool aRepaint);
+    NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
+    NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+    NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+		              PRInt32 aHeight, PRBool aRepaint);
 
     NS_IMETHOD Enable(PRBool aState);
     NS_IMETHOD SetFocus(void);

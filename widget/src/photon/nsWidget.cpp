@@ -126,15 +126,19 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   if( !mIsDestroying )
   {
     nsBaseWidget::Destroy();
-    NS_IF_RELEASE( mParent );
+	NS_IF_RELEASE( mParent );
   }
 
   if( mWidget )
   {
     mEventCallback = nsnull;
 	RemoveDamagedWidget(mWidget);
+
     PtDestroyWidget( mWidget );
+	
     mWidget = nsnull;
+
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy mOnDestroyCalled=<%d> \n",mOnDestroyCalled));
 
     if( PR_FALSE == mOnDestroyCalled )
       OnDestroy();
@@ -262,7 +266,7 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 // Move this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
+NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move (%p) to (%ld,%ld)\n", this, aX, aY ));
 
@@ -297,7 +301,7 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 }
 
 
-NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Resize (%p)\n", this ));
 
@@ -347,8 +351,8 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 }
 
 
-NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
-                           PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+                           PRInt32 aHeight, PRBool aRepaint)
 {
   Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);
@@ -1000,11 +1004,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - No parent specified!\n" ));
   }
-//  else if(aAppShell) {
-//    nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
-//    if (shellWidget)
-//      parentWidget = GTK_WIDGET(shellWidget);
-//  }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget before GetInstance mRefCnt=<%d>\n", mRefCnt));
 
@@ -1750,6 +1749,9 @@ void nsWidget::RemoveDamagedWidget(PtWidget_t *aWidget)
         dqe = dqe->next;
       }
     }
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::RemoveDamagedWidget the end\n"));
+
 }
 
 
