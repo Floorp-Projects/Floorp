@@ -152,7 +152,6 @@ protected:
   void     SelectIndex(PRInt32 aIndex); 
   void     ToggleSelected(PRInt32 aIndex);
   void     ClearSelection();
-  void     InitializeFromContent();
   void     ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue);
 
   nsresult HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
