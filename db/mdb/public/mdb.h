@@ -393,7 +393,7 @@ class mdbCompare { // caller-supplied yarn comparison
 /*| mdbThumb: 
 |*/
 class mdbThumb : public mdbObject { // closure for repeating incremental method
-
+public:
 // { ===== begin mdbThumb methods =====
   virtual mdb_err GetProgress(mdbEnv* ev,
     mdb_count* outTotal,    // total somethings to do in operation
@@ -510,7 +510,7 @@ class mdbEnv : public mdbObject { // db specific context parameter
 **| destroying any existing files before calling this method). 
 |*/
 class mdbFactory : public mdbObject { // suite entry points
-
+public:
 // { ===== begin mdbFactory methods =====
 
   // { ----- begin env methods -----
