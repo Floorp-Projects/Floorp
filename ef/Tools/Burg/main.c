@@ -1,4 +1,4 @@
-char rcsid_main[] = "$Id: main.c,v 1.1 1998/12/17 06:36:48 fur%netscape.com Exp $";
+char rcsid_main[] = "$Id: main.c,v 1.2 1999/02/09 00:07:20 fur%netscape.com Exp $";
 
 #include <math.h>
 #include <stdio.h>
@@ -15,9 +15,7 @@ static char *outFileName;
 
 static char version[] = "BURG, Version 1.0";
 
-extern void main ARGS((int argc, char **argv));
-
-void
+int
 main(argc, argv) int argc; char **argv;
 {
 	int i;
@@ -169,4 +167,5 @@ main(argc, argv) int argc; char **argv;
 
 	yypurge();
 	exit(0);
+	return 0;
 }
