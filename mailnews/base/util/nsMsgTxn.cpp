@@ -26,6 +26,7 @@ static NS_DEFINE_IID(kITransactionIID, NS_ITRANSACTION_IID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgTxn)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgTxn)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsMsgTxn, nsITransaction)
 
 // note that aEditor is not refcounted
 nsMsgTxn::nsMsgTxn() 
@@ -64,25 +65,6 @@ NS_IMETHODIMP nsMsgTxn::Write(nsIOutputStream *aOutputStream)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kITransactionIID)) {
-    *aInstancePtr = (void*)(nsITransaction*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  *aInstancePtr = 0;
-  return NS_NOINTERFACE;
-}
 
 NS_IMETHODIMP nsMsgTxn::GetMsgWindow(nsIMsgWindow **msgWindow)
 {
