@@ -129,7 +129,7 @@ nsGroupsEnumerator::GetNext(nsISupports **_retval)
 	nsCOMPtr<nsISupportsCString> supportsString = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
-	supportsString->SetData(thisGroupName);
+	supportsString->SetData(nsDependentCString(thisGroupName));
 	return CallQueryInterface(supportsString, _retval);
 }
 
@@ -225,7 +225,7 @@ nsNamedGroupEnumerator::GetNext(nsISupports **_retval)
 	nsCOMPtr<nsISupportsString> supportsString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
-	supportsString->SetData(thisGroupName);
+	supportsString->SetData(nsDependentString(thisGroupName));
 	return CallQueryInterface(supportsString, _retval);
 }
 

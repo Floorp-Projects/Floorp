@@ -651,8 +651,8 @@ XRemoteService::OpenURL(nsCString &aArgument,
     if (!arg)
       return NS_ERROR_FAILURE;
     
-    // save the url into the wstring
-    arg->SetData(url.get());
+    // save the url into the string object
+    arg->SetData(url);
     
     nsCOMPtr<nsIDOMWindow> window;
     rv = OpenChromeWindow(finalWindow, urlString, "chrome,all,dialog=no",

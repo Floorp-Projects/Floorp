@@ -168,13 +168,12 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *tra
       nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
-        PRUnichar* text = nsnull;
-        textDataObj->ToString ( &text );
-        stuffToPaste.Assign ( text, len / 2 );
+        nsAutoString text;
+        textDataObj->GetData ( text );
+        NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
+        stuffToPaste.Assign ( text.get(), len / 2 );
         nsAutoEditBatch beginBatching(this);
         rv = InsertText(stuffToPaste);
-        if (text)
-          nsMemory::Free(text);
       }
     }
   }
@@ -496,7 +495,7 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
       nsCOMPtr<nsISupportsString> dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
       NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
 
-      rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.get()) );
+      rv = dataWrapper->SetData( buffer );
       if (NS_FAILED(rv)) return rv;
 
       if (bIsPlainTextControl)
@@ -606,7 +605,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
          NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorString));
     if (flavorString)
     {
-      flavorString->SetData(*flavor);
+      flavorString->SetData(nsDependentCString(*flavor));
       flavorsList->AppendElement(flavorString);
     }
   }

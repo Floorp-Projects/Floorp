@@ -326,7 +326,7 @@ nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
 	if (!wwatch || !urlWrapper)
 		return NS_ERROR_FAILURE;
 
-	urlWrapper->SetData(url);
+	urlWrapper->SetData(nsDependentString(url));
 
 	nsCOMPtr<nsIDOMWindow> newWindow;
 	nsresult rv;

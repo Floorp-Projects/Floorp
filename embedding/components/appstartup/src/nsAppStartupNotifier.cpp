@@ -75,12 +75,12 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
         nsCOMPtr<nsISupportsCString> category = do_QueryInterface(entry, &rv);
 
         if (NS_SUCCEEDED(rv)) {
-            nsXPIDLCString categoryEntry;
-            rv = category->GetData(getter_Copies(categoryEntry));
+            nsCAutoString categoryEntry;
+            rv = category->GetData(categoryEntry);
 
             nsXPIDLCString contractId;
             categoryManager->GetCategoryEntry(aTopic, 
-                                              categoryEntry,
+                                              categoryEntry.get(),
                                               getter_Copies(contractId));
 
             if (NS_SUCCEEDED(rv)) {

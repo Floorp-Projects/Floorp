@@ -116,7 +116,7 @@ TestMemoryObjectCache()
     nsCOMPtr<nsISupportsCString> foo =
         do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
 
-    foo->SetData("hello world");
+    foo->SetData(NS_LITERAL_CSTRING("hello world"));
 
     rv = descriptor->SetCacheElement(foo);
     rv = descriptor->SetDataSize(11);

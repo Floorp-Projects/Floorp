@@ -507,13 +507,13 @@ nsExtensibleStringBundle::Init(const char * aCategory,
     if (NS_FAILED(rv))
       continue;
 
-    nsXPIDLCString name;
-    rv = supStr->GetData(getter_Copies(name));
+    nsCAutoString name;
+    rv = supStr->GetData(name);
     if (NS_FAILED(rv))
       continue;
 
     nsCOMPtr<nsIStringBundle> bundle;
-    rv = aBundleService->CreateBundle(name, getter_AddRefs(bundle));
+    rv = aBundleService->CreateBundle(name.get(), getter_AddRefs(bundle));
     if (NS_FAILED(rv))
       continue;
 

@@ -74,8 +74,8 @@ nsPresState::GetStateProperty(const nsAString& aName,
                                        mPropertyTable->Get(&key)));
 
     if (supportsStr) {
-      nsXPIDLCString data;
-      supportsStr->GetData(getter_Copies(data));
+      nsCAutoString data;
+      supportsStr->GetData(data);
 
       aResult.Append(NS_ConvertUTF8toUCS2(data));
     }
@@ -99,7 +99,7 @@ nsPresState::SetStateProperty(const nsAString& aName, const nsAString& aValue)
   nsCOMPtr<nsISupportsCString> supportsStr(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
   NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
 
-  supportsStr->SetData(NS_ConvertUCS2toUTF8(aValue).get());
+  supportsStr->SetData(NS_ConvertUCS2toUTF8(aValue));
 
   mPropertyTable->Put(&key, supportsStr);
   return NS_OK;

@@ -303,8 +303,8 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
 
     nsCAutoString fullName(aPrefix);
     
-    nsXPIDLCString name;
-    if (NS_FAILED(supStr->GetData(getter_Copies(name))))
+    nsCAutoString name;
+    if (NS_FAILED(supStr->GetData(name)))
       continue;
 
     fullName += name;

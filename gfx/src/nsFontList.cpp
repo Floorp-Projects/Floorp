@@ -134,7 +134,7 @@ nsFontListEnumerator::GetNext(nsISupports **aFont)
                     NS_GET_IID(nsISupportsString), getter_AddRefs(fontNameWrapper));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(fontNameWrapper, NS_ERROR_OUT_OF_MEMORY);
-  fontNameWrapper->SetData(NS_CONST_CAST(PRUnichar*, fontName));
+  fontNameWrapper->SetData(nsDependentString(fontName));
   *aFont = NS_STATIC_CAST(nsISupports*, fontNameWrapper);
   NS_ADDREF(*aFont);
   return NS_OK;

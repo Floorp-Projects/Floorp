@@ -102,6 +102,10 @@ public:
   nsresult Init();
 
 private:
+  NS_IMETHOD GetData(PRUnichar**);
+  NS_IMETHOD SetData(const PRUnichar* aData);
+  NS_IMETHOD SetDataWithLength(PRUint32 aLength, const PRUnichar *aData);
+                               
   nsCOMPtr<nsISupportsString> mUnicodeString;
 };
 

@@ -393,9 +393,10 @@ NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar **_retval)
     nsCOMPtr<nsISupportsString> theString;
     rv = prefBranch->GetComplexValue(pref, NS_GET_IID(nsISupportsString),
                                      getter_AddRefs(theString));
-    if (NS_SUCCEEDED(rv)) {
-      rv = theString->GetData(_retval);
-    }
+    if (NS_FAILED(rv))
+      return rv;
+
+    return theString->ToString(_retval);
   }
   return rv;
 }
@@ -407,10 +408,10 @@ NS_IMETHODIMP nsPref::CopyDefaultUnicharPref(const char *pref, PRUnichar **_retv
 
   rv = mDefaultBranch->GetComplexValue(pref, NS_GET_IID(nsISupportsString),
                                        getter_AddRefs(theString));
-  if (NS_SUCCEEDED(rv)) {
-    rv = theString->GetData(_retval);
-  }
-  return rv;
+  if (NS_FAILED(rv))
+    return rv;
+
+  return theString->ToString(_retval);
 }
 
 NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
@@ -421,7 +422,7 @@ NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsISupportsString> theString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      theString->SetData(value);
+      theString->SetData(nsDependentString(value));
       rv = prefBranch->SetComplexValue(pref, NS_GET_IID(nsISupportsString), theString);
     }
   }
@@ -434,7 +435,7 @@ NS_IMETHODIMP nsPref::SetDefaultUnicharPref(const char *pref, const PRUnichar *v
 
   nsCOMPtr<nsISupportsString> theString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    theString->SetData(value);
+    theString->SetData(nsDependentString(value));
     rv = mDefaultBranch->SetComplexValue(pref, NS_GET_IID(nsISupportsString), theString);
   }
   return rv;
@@ -450,7 +451,7 @@ NS_IMETHODIMP nsPref::GetLocalizedUnicharPref(const char *pref, PRUnichar **_ret
     rv = prefBranch->GetComplexValue(pref, NS_GET_IID(nsIPrefLocalizedString),
                                        getter_AddRefs(theString));
     if (NS_SUCCEEDED(rv)) {
-      rv = theString->GetData(_retval);
+      rv = theString->ToString(_retval);
     }
   }
   return rv;
@@ -464,8 +465,9 @@ NS_IMETHODIMP nsPref::GetDefaultLocalizedUnicharPref(const char *pref, PRUnichar
   rv = mDefaultBranch->GetComplexValue(pref, NS_GET_IID(nsIPrefLocalizedString),
                                        getter_AddRefs(theString));
   if (NS_SUCCEEDED(rv)) {
-    rv = theString->GetData(_retval);
+    rv = theString->ToString(_retval);
   }
+  
   return rv;
 }
 

@@ -82,12 +82,12 @@ nsContentPolicy::nsContentPolicy()
 	if (NS_FAILED(rv))
 	    continue;
 	
-	nsXPIDLCString contractid;
-	if (NS_FAILED(string->GetData(getter_Copies(contractid))))
+	nsCAutoString contractid;
+	if (NS_FAILED(string->GetData(contractid)))
 	    continue;
 
 #ifdef DEBUG_shaver
-	fprintf(stderr, "POLICY: loading %s\n", (const char *)contractid);
+	fprintf(stderr, "POLICY: loading %s\n", contractid.get());
 #endif
 	/*
 	 * Create this policy service and add to mPolicies.
@@ -95,7 +95,7 @@ nsContentPolicy::nsContentPolicy()
 	 * Should we try to parse as a CID, in case the component prefers to be
 	 * registered that way?
 	 */
-	nsCOMPtr<nsISupports> policy = do_GetService(contractid, &rv);
+	nsCOMPtr<nsISupports> policy = do_GetService(contractid.get(), &rv);
 	if (NS_SUCCEEDED(rv))
 	    mPolicies->AppendElement(policy);
     }

@@ -171,7 +171,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
                                                     getter_AddRefs(e));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString categoryEntry;
+  nsCAutoString categoryEntry;
   nsXPIDLCString contractId;
   nsCOMPtr<nsISupports> entry;
 
@@ -184,9 +184,9 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
       continue;
     }
 
-    rv = category->GetData(getter_Copies(categoryEntry));
+    rv = category->GetData(categoryEntry);
 
-    aCategoryManager->GetCategoryEntry(aCategory, categoryEntry,
+    aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
                                        getter_Copies(contractId));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -295,7 +295,8 @@ nsScriptNameSpaceManager::RegisterExternalInterfaces(PRBool aAsProto)
                              getter_AddRefs(enumerator));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString IID_string, category_entry;
+  nsXPIDLCString IID_string;
+  nsCAutoString category_entry;
   const char* if_name;
   nsCOMPtr<nsISupports> entry;
   nsCOMPtr<nsIInterfaceInfo> if_info;
@@ -310,10 +311,10 @@ nsScriptNameSpaceManager::RegisterExternalInterfaces(PRBool aAsProto)
       continue;
     }
 
-    rv = category->GetData(getter_Copies(category_entry));
+    rv = category->GetData(category_entry);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = cm->GetCategoryEntry(JAVASCRIPT_DOM_INTERFACE, category_entry,
+    rv = cm->GetCategoryEntry(JAVASCRIPT_DOM_INTERFACE, category_entry.get(),
                               getter_Copies(IID_string));
     NS_ENSURE_SUCCESS(rv, rv);
 

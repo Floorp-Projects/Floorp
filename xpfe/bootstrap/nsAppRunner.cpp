@@ -484,7 +484,7 @@ static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
     }
   }
 
-  sarg->SetData(aAppArgs.get());
+  sarg->SetData(aAppArgs);
 
   nsCAutoString features("chrome,dialog=no,all");
   if (aHeight != nsIAppShellService::SIZE_TO_CONTENT) {
@@ -519,12 +519,14 @@ static void DumpArbitraryHelp()
         rv = e->GetNext(getter_AddRefs(catEntry));
         if (NS_FAILED(rv) || !catEntry) break;
 
-        nsXPIDLCString entryString;
-        rv = catEntry->GetData(getter_Copies(entryString));
-        if (NS_FAILED(rv) || !((const char *)entryString)) break;
+        nsCAutoString entryString;
+        rv = catEntry->GetData(entryString);
+        if (NS_FAILED(rv) || !entryString.IsEmpty()) break;
 
         nsXPIDLCString contractidString;
-        rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,(const char *)entryString, getter_Copies(contractidString));
+        rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,
+                                      entryString.get(),
+                                      getter_Copies(contractidString));
         if (NS_FAILED(rv) || !((const char *)contractidString)) break;
 
 #ifdef DEBUG_CMD_LINE

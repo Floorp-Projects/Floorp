@@ -42,6 +42,7 @@
 #include "nsITransferable.h"
 #include "nsIComponentManager.h"
 #include "nsLinebreakConverter.h"
+#include "nsReadableUtils.h"
 
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
@@ -70,7 +71,8 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
                                        NS_GET_IID(nsISupportsCString), getter_AddRefs(primitive));
     if ( primitive ) {
-      primitive->SetDataWithLength ( aDataLen, NS_STATIC_CAST(char*, aDataBuff) );
+      const char * start = NS_STATIC_CAST(const char*, aDataBuff);
+      primitive->SetData(Substring(start, start + aDataLen));
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
       *aPrimitive = genericPrimitive;
       NS_ADDREF(*aPrimitive);
@@ -81,8 +83,9 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
                                                       NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
     if (NS_SUCCEEDED(rv) && primitive ) {
-      // recall that SetDataWithLength() takes length as characters, not bytes
-      primitive->SetDataWithLength ( aDataLen / 2, NS_STATIC_CAST(PRUnichar*, aDataBuff) );
+      // recall that length takes length as characters, not bytes
+      const PRUnichar* start = NS_STATIC_CAST(const PRUnichar*, aDataBuff);
+      primitive->SetData(Substring(start, start + (aDataLen / 2)));
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
       *aPrimitive = genericPrimitive;
       NS_ADDREF(*aPrimitive);
@@ -108,13 +111,19 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
 
   if ( strcmp(aFlavor,kTextMime) == 0 ) {
     nsCOMPtr<nsISupportsCString> plainText ( do_QueryInterface(aPrimitive) );
-    if ( plainText )
-      plainText->GetData ( NS_REINTERPRET_CAST(char**, aDataBuff) );
+    if ( plainText ) {
+      nsCAutoString data;
+      plainText->GetData ( data );
+      *aDataBuff = ToNewCString(data);
+    }
   }
   else {
     nsCOMPtr<nsISupportsString> doubleByteText ( do_QueryInterface(aPrimitive) );
-    if ( doubleByteText )
-      doubleByteText->GetData ( NS_REINTERPRET_CAST(PRUnichar**, aDataBuff) );
+    if ( doubleByteText ) {
+      nsAutoString data;
+      doubleByteText->GetData ( data );
+      *aDataBuff = ToNewCString(data);
+    }
   }
 
 }

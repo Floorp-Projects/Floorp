@@ -2108,7 +2108,7 @@ nsNativeAppSupportOS2::OpenWindow( const char*urlstr, const char *args ) {
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsISupportsCString> sarg(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
   if (sarg)
-    sarg->SetData(args);
+    sarg->SetData(nsDependentCString(args));
 
   if (wwatch && sarg) {
     nsCOMPtr<nsIDOMWindow> newWindow;

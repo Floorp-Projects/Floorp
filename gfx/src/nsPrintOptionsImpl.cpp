@@ -213,7 +213,7 @@ NS_IMETHODIMP nsPrinterListEnumerator::GetNext(nsISupports **aPrinter)
                                            NS_GET_IID(nsISupportsString), getter_AddRefs(printerNameWrapper));
    NS_ENSURE_SUCCESS(rv, rv);
    NS_ENSURE_TRUE(printerNameWrapper, NS_ERROR_OUT_OF_MEMORY);
-   printerNameWrapper->SetData(NS_CONST_CAST(PRUnichar*, printerName));
+   printerNameWrapper->SetData(nsDependentString(printerName));
    *aPrinter = NS_STATIC_CAST(nsISupports*, printerNameWrapper);
    NS_ADDREF(*aPrinter);
    return NS_OK;

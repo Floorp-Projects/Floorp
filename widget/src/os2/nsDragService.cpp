@@ -124,9 +124,9 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
       nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
       if( urlObject )
       {
-        nsXPIDLString urlInfo;
+        nsAutoString urlInfo;
         nsAutoString linkName, url, holder;
-        urlObject->GetData ( getter_Copies(urlInfo) );
+        urlObject->GetData ( urlInfo );
         holder = urlInfo;
         PRInt32 lineIndex = holder.FindChar ('\n');
         if ( lineIndex != -1 )
@@ -204,8 +204,8 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 aI
     nsCOMPtr<nsISupportsCString> currentFlavor;
     currentFlavor = do_QueryInterface(genericWrapper);
     if (currentFlavor) {
-      nsXPIDLCString flavorStr;
-      currentFlavor->ToString(getter_Copies(flavorStr));
+      nsCAutoString flavorStr;
+      currentFlavor->GetData(flavorStr);
   
       nsCOMPtr<nsISupports> genericItem;
   
@@ -255,9 +255,9 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
           nsCOMPtr<nsISupportsCString> currentFlavor;
           currentFlavor = do_QueryInterface(genericWrapper);
           if (currentFlavor) {
-            nsXPIDLCString flavorStr;
-            currentFlavor->ToString ( getter_Copies(flavorStr) );
-            if (strcmp(flavorStr, aDataFlavor) == 0) {
+            nsCAutoString flavorStr;
+            currentFlavor->GetData ( flavorStr );
+            if (flavorStr.Equals(aDataFlavor)) {
               *_retval = PR_TRUE;
             }
           }

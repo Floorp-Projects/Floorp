@@ -209,16 +209,13 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       // populate the strings
       nsresult data_rv = NS_OK, context_rv = NS_OK, info_rv = NS_OK;
       data_rv =
-        dataWrapper->SetDataWithLength(buffer.Length(),
-                                       NS_CONST_CAST(PRUnichar*, buffer.get()));
+        dataWrapper->SetData(buffer);
       if (bIsHTMLCopy)
       {
         context_rv =
-          contextWrapper->SetDataWithLength(parents.Length(),
-                                            NS_CONST_CAST(PRUnichar*, parents.get()));
+          contextWrapper->SetData(parents);
         info_rv =
-          infoWrapper->SetDataWithLength(info.Length(),
-                                         NS_CONST_CAST(PRUnichar*, info.get()));
+          infoWrapper->SetData(info);
       }
       
       // QI the data object an |nsISupports| so that when the transferable holds

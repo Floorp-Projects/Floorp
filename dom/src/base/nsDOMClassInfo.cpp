@@ -1146,7 +1146,8 @@ nsDOMClassInfo::RegisterExternalClasses()
   rv = cm->EnumerateCategory(JAVASCRIPT_DOM_CLASS, getter_AddRefs(e));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString categoryEntry, contractId;
+  nsXPIDLCString contractId;
+  nsCAutoString categoryEntry;
   nsCOMPtr<nsISupports> entry;
 
   while (NS_SUCCEEDED(e->GetNext(getter_AddRefs(entry)))) {
@@ -1157,9 +1158,9 @@ nsDOMClassInfo::RegisterExternalClasses()
       continue;
     }
 
-    rv = category->GetData(getter_Copies(categoryEntry));
+    rv = category->GetData(categoryEntry);
 
-    cm->GetCategoryEntry(JAVASCRIPT_DOM_CLASS, categoryEntry,
+    cm->GetCategoryEntry(JAVASCRIPT_DOM_CLASS, categoryEntry.get(),
                          getter_Copies(contractId));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1171,7 +1172,7 @@ nsDOMClassInfo::RegisterExternalClasses()
       continue;
     }
 
-    rv = gNameSpaceManager->RegisterExternalClassName(categoryEntry, cid);
+    rv = gNameSpaceManager->RegisterExternalClassName(categoryEntry.get(), cid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

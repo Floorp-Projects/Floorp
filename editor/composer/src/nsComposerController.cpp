@@ -49,7 +49,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsISelection.h"
 #include "nsIHTMLEditor.h"
-#include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 
 #include "nsISelectionController.h"
