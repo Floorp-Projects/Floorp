@@ -95,3 +95,81 @@ updateitem {
   margin-right: 3px;
   padding: 5px;
 }
+
+/* Updates View */
+
+radio[type="update-type"] {
+  margin: 2px;  
+  -moz-appearance: none;
+}
+
+.updateCategoryBox {
+  background-color: #DFDFDF; 
+  padding: 3px;
+  -moz-appearance: radio-container; 
+}
+
+.updateCategoryContent {
+  padding: 5px; 
+}
+
+.updateCategoryLabel[selected="true"] {
+  font-weight: bold;
+}
+  
+.updateCategoryIcon {
+  
+}
+
+radiogroup[type="update-types"] {
+  -moz-appearance: listbox;
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+radio[type="update-type"][selected="true"] .updateCategoryBox {
+  background-color: #C0C0C0;
+}
+
+.foundSource {
+  border-bottom: 1px dotted #000000;
+  color: #000000;
+  cursor: pointer;
+}
+
+link {
+  text-decoration: underline !important;
+  color: #0000FF;
+  cursor: pointer;
+}
+
+link:active {
+  color: #FF0000;
+}
+
+.linkLabel {
+  cursor: pointer; 
+}
+
+.updateCategoryContent {
+  margin-left: 12px;
+}
+
+#optionalItemsList {
+  -moz-appearance: listbox;
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+

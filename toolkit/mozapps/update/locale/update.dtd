@@ -18,8 +18,19 @@
 
 <!ENTITY  found.title                     "Updates Found">
 <!ENTITY  found.intro.label               "&brandShortName; found the following available updates:">
-<!ENTITY  found.instructions.label        "Choose the ones you want to install and click Install Now to install them.">
 <!ENTITY  from.label                      "from: ">
+
+<!ENTITY  found.updatetype.patches.accesskey    "C">
+<!ENTITY  found.updatetype.components.accesskey "O">
+<!ENTITY  found.updatetype.addons.accesskey     "E">
+<!ENTITY  found.updatetype.languages.accesskey  "L">
+<!ENTITY  found.criticalUpdates.label           "The following Critical Updates are available for Firefox:">
+<!ENTITY  found.criticalUpdates.info            "You should install these updates immediately to protect your computer from attack.">
+<!ENTITY  found.app.infoLink                    "More Information...">
+<!ENTITY  found.components.label                "The following components and plugins are available to install:">
+<!ENTITY  found.components.info                 "Installing these components may improve your browsing experience.">
+<!ENTITY  found.addons.label                    "The following updates are available to Extensions and Themes that you already have installed">
+<!ENTITY  found.languages.label                 "The following language packs are available: ">
 
 <!ENTITY  installing.title                "Installing Updates">
 <!ENTITY  installing.intro.label          "Now downloading and installing updates...">
@@ -51,13 +62,9 @@
 <!ENTITY  finished.enableChecking.label   "Allow &brandShortName; to check for updates.">
 <!ENTITY  finished.mismatch.label         "Click Finish to continue starting &brandShortName;.">
 
-<!ENTITY  appInfo.label                   "This update must be installed separately from any others.">
+<!ENTITY  optional.title                  "Optional Components">
+<!ENTITY  optional.intro.label            "Choose additional components you want to install, then click Install Now.">
 
-<!ENTITY  appupdate.title                 "&brandShortName; Update">
-<!ENTITY  appupdate.intro.label           "&brandShortName; Update will now close and take you to the
-                                           web site where you can download the latest version of 
-                                           &brandShortName;.">
-                                           
 <!ENTITY  errors.title                    "Problems During Update">
 <!ENTITY  errors.intro.label              "&brandShortName; encountered problems when updating your
                                            software, and as a result not all components could be updated.">
@@ -71,4 +78,7 @@
 
 <!ENTITY  resolveMaxVersion.title         "Checking for Compatible Extensions and Themes...">
 <!ENTITY  resolveMaxVersion.intro1.label  "&brandShortName; is checking for compatibility updates to your Extensions and Themes...">
-    
+
+<!ENTITY  restart.title                   "Upgrade Complete">
+<!ENTITY  restart.updated.label           "&brandShortName; successfully downloaded and installed updates. You will have to restart &brandShortName; to complete the update.">
+

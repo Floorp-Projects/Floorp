@@ -18,7 +18,7 @@ var chromeName = chromeNode + ".jar";
 var platformName = langcode + "-" + platformNode + ".jar";
 var localeName = "locale/" + chromeNode + "/";
 
-err = initInstall(prettyName, regName, "$Version$"); 
+err = initInstall(prettyName, "en-US", "$Version$"); 
 logComment("initInstall: " + err);
 
 fProgram = getFolder("Program");

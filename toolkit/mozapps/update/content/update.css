@@ -1,5 +1,41 @@
-updateitem {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateItem");
-  display: -moz-box;
+radiogroup[type="update-types"] {
+  overflow: auto;
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateCategorySet");
 }
+
+radio[type="update-type"] {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateCategory");
+  -moz-box-orient: vertical;
+  -moz-box-align: stretch;
+}
+
+radio[type="update-type"] .updateCategoryContent {
+  visibility: collapse;
+}
+
+radiogroup[_uninitialized] radio[type="update-type"] .updateCategoryContent {
+  visibility: visible !important;
+}
+
+.updateCategoryContent {
+  overflow: hidden;
+}
+
+radio[type="update-type"][selected="true"] .updateCategoryContent {
+  visibility: visible;
+}
+
+.wizard-header-description {
+  display: none;
+}
+
+checkbox[type="update"] {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateItem"); 
+}
+
+link {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#link"); 
+  -moz-user-focus: normal;
+}
+
 

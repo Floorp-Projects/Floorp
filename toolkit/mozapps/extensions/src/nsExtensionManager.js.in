@@ -1623,7 +1623,7 @@ nsExtensionManager.prototype = {
                           .getService(Components.interfaces.nsIXULChromeRegistry);
         if (!pref.prefHasUserValue(PREF_EM_LAST_SELECTED_SKIN)) {
           pref.setCharPref(PREF_EM_LAST_SELECTED_SKIN,  
-                          cr.getSelectedSkin("global"));
+                           cr.getSelectedSkin("global"));
           cr.selectSkin(KEY_DEFAULT_THEME, true);
         }
 

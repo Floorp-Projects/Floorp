@@ -20,7 +20,7 @@ var platformName = langcode + "-" + platformNode + ".jar";
 var localeName = "locale/" + chromeNode + "/";
 
 srDest = $SpaceRequired$:bin;
-err    = initInstall(prettyName, regName, "$Version$"); 
+err    = initInstall(prettyName, "en-US", "$Version$"); 
 logComment("initInstall: " + err);
 
 fProgram = getFolder("Program");
