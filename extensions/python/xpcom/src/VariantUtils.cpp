@@ -1886,7 +1886,7 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 		break;
 		}
 	  case nsXPTType::T_WCHAR: {
-		wchar_t temp = (wchar_t)DEREF_IN_OR_OUT(ns_v.val.wc, PRUint16);
+		PRUnichar temp = (PRUnichar)DEREF_IN_OR_OUT(ns_v.val.wc, PRUnichar);
 		ret = PyUnicodeUCS2_FromUnicode(&temp, 1);
 		break;
 		}
