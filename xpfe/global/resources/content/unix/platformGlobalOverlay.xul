@@ -3,7 +3,6 @@
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/platformGlobalOverlay.dtd">
 
-
 <overlay id="platformGlobalOverlay"
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -18,16 +17,15 @@
     <key id="emacsdeletewordbackwardkb" key="w" control="true" onkeypress="EditorDeleteWordBackward()" />
     <key id="emacskilltoendkb" key="k" control="true" onkeypress="EditorDeleteToEndOfLine()" />
 
-    <!-- emacs motion keys -->
-    <!-- These are still waiting on the selection controller API -->
-    <key id="emacsbolkb" key="a" control="true" onkeypress="_EditorNotImplemented()" />
-    <key id="emacseolkb" key="e" control="true" onkeypress="_EditorNotImplemented()" />
-    <key id="emacsbackkb" key="b" control="true" onkeypress="_EditorNotImplemented()" />
-    <key id="emacsforwardkb" key="f" control="true" onkeypress="_EditorNotImplemented()" />
-    <key id="emacsupkb" key="p" control="true" onkeypress="_EditorNotImplemented()" />
-    <key id="emacsdownkb" key="n" control="true" onkeypress="_EditorNotImplemented()" />
-    <key id="emacspagedownkb" key="v" control="true" onkeypress="_EditorNotImplemented()" />
-    <key id="emacspageupkb" key="v" meta="true" onkeypress="_EditorNotImplemented()" />
+    <!-- emacs motion keys: these use the selection controller API -->
+    <key id="emacsbolkb" key="a" control="true" onkeypress="SelectionBeginningOfLine()" />
+    <key id="emacseolkb" key="e" control="true" onkeypress="SelectionEndOfLine()" />
+    <key id="emacsbackkb" key="b" control="true" onkeypress="SelectionBackwardChar()" />
+    <key id="emacsforwardkb" key="f" control="true" onkeypress="SelectionForwardChar()" />
+    <key id="emacsupkb" key="p" control="true" onkeypress="SelectionPreviousLine()" />
+    <key id="emacsdownkb" key="n" control="true" onkeypress="SelectionNextLine()" />
+    <key id="emacspagedownkb" key="v" control="true" onkeypress="SelectionPageDown()" />
+    <key id="emacspageupkb" key="v" meta="true" onkeypress="SelectionPageUp()" />
 
     </keyset>
 
