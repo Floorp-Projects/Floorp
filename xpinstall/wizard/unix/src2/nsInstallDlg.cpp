@@ -256,7 +256,7 @@ int
 nsInstallDlg::AppendRunApp(nsRunApp *aNewRunApp)
 {
     int err = OK;
-    nsRunApp *currRunApp = NULL;
+    nsRunApp *currRunApp = NULL, *nextRunApp = NULL;
 
     /* param check */
     if (!aNewRunApp)
@@ -273,11 +273,12 @@ nsInstallDlg::AppendRunApp(nsRunApp *aNewRunApp)
     currRunApp = sRunAppList;
     while (currRunApp)
     {
-        if (!currRunApp->GetNext())
+        if (!(nextRunApp = currRunApp->GetNext()))
         {
             currRunApp->SetNext(aNewRunApp);
             break;
         }
+        currRunApp = nextRunApp;
     }
     return err;
 }
