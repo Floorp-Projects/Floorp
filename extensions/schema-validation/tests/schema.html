@@ -29,7 +29,7 @@
     function validateDOMNode(aNodeValue, aType, aIsValid) {
       var rv = false;
 
-      var x = dp.parseFromString('<test xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema" xsi:type="' + aType + '">' + aNodeValue + '</test>', "text/xml");
+      var x = dp.parseFromString('<test xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema" xsi:type="' + aType + '">' + aNodeValue + '</test>', "application/xml");
       rv = getValidator().validate(x.documentElement);
 
       counter++;
@@ -50,7 +50,7 @@
     function validateComplexType(aNodeValue, aType, aIsValid){
       var rv = false;
 
-      var x = dp.parseFromString(aNodeValue, "text/xml")
+      var x = dp.parseFromString(aNodeValue, "application/xml")
       rv = getValidator().validate(x.documentElement);
 
       counter++;

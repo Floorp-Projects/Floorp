@@ -824,7 +824,7 @@ function con_respondsourcetext (response, sourceText)
     
     if ("markup" in sourceText)
     {
-        response.channel.contentType = "text/xml";
+        response.channel.contentType = "application/xml";
         response.start();
         response.append(sourceText.markup);
         response.end();
@@ -833,7 +833,7 @@ function con_respondsourcetext (response, sourceText)
     {
         maxDigits = Math.floor(Math.log(sourceLines.length) / Math.LN10) + 1;
         dd ("OFF building response {");
-        response.channel.contentType = "text/xml";
+        response.channel.contentType = "application/xml";
         resultSource = "<?xml version='1.0'";
         //        if ("charset" in sourceText)
         //    resultSource += " encoding=\"" + sourceText.charset + "\"";

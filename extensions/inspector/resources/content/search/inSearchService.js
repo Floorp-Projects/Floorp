@@ -177,7 +177,7 @@ inSearchService.prototype =
     // This method of loading the xml doesn't work, but it should.  See bug 54237... 
     var doc = document.implementation.createDocument("", "", null);
     doc.addEventListener("load", SearchFileLoadListener, false);
-    doc.load(aURL, "text/xml");
+    doc.load(aURL, "application/xml");
     */ 
   },
   

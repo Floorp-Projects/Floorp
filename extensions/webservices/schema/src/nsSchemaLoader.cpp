@@ -689,7 +689,7 @@ nsSchemaLoader::Load(const nsAString& schemaURI,
   }
 
   // Force the mimetype of the returned stream to be xml.
-  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
+  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("application/xml"));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -746,7 +746,7 @@ nsSchemaLoader::LoadAsync(const nsAString& schemaURI,
   }
 
   // Force the mimetype of the returned stream to be xml.
-  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
+  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("application/xml"));
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -1569,7 +1569,7 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
       break;
 
     case XML_DOCUMENT:
-      contentType = "text/xml";
+      contentType = "application/xml";
       break;
 
     default:

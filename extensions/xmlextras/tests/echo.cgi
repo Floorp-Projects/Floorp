@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-print "Content-type: text/xml\n\n";
+print "Content-type: application/xml\n\n";
 print "<?xml version=\"1.0\"?>\n";
 
 if ($ENV{'REQUEST_METHOD'} eq 'POST') 

@@ -48,8 +48,8 @@ function Test(aTitle, aSourceURL, aStyleURL, aNumber, aObserver)
     this.mDone = 0;
     var xmlcontent = loadFile(aSourceURL);
     var xslcontent = loadFile(aStyleURL);
-    this.mSource = gParser.parseFromString(xmlcontent, 'text/xml');
-    this.mStyle = gParser.parseFromString(xslcontent, 'text/xml');
+    this.mSource = gParser.parseFromString(xmlcontent, 'application/xml');
+    this.mStyle = gParser.parseFromString(xslcontent, 'application/xml');
 }
 
 function runTest(aTitle, aSourceURL, aStyleURL, aNumber, aObserver)

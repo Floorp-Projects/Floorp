@@ -263,7 +263,7 @@ nsPolicyViewer.prototype =
       this.mXMLHttpRequest.onload = this;
       // Override the mime type because without it XMLHttpRequest hangs
       // on certain sites that serve HTML instead ofXML.
-      this.mXMLHttpRequest.overrideMimeType("text/xml");
+      this.mXMLHttpRequest.overrideMimeType("application/xml");
       this.mXMLHttpRequest.open("GET", aLocation);
       this.mXMLHttpRequest.send(null);
     }

@@ -214,7 +214,7 @@ nsWebScriptsAccess::GetDocument(const nsACString& aDeclFilePath,
                              PR_FALSE, empty, empty);
   NS_ENSURE_SUCCESS(rv, rv);
     
-  rv = mRequest->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
+  rv = mRequest->OverrideMimeType(NS_LITERAL_CSTRING("application/xml"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mRequest->Send(0);
