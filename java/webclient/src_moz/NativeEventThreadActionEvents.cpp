@@ -37,6 +37,7 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kISHistoryIID, NS_ISHISTORY_IID);
 static NS_DEFINE_CID(kSHistoryCID, NS_SHISTORY_CID);
 
+extern WebShellInitContext* gNewWindowInitContext;
 
 /*
  * wsRealizeBrowserEvent
@@ -151,6 +152,8 @@ wsRealizeBrowserEvent::handleEvent ()
     
     mInitContext->initComplete = TRUE;  
 
+    // we will check this value in WindowCreator::CreateChromeWindow
+    gNewWindowInitContext = mInitContext;
     return (void *) nsnull;
 
 } // handleEvent()

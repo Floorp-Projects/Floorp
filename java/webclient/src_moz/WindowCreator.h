@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -17,38 +17,30 @@
  * Copyright (C) 1999 Kirk Baker and Ian Wilkinson. All
  * Rights Reserved.
  *
- * Contributor(s): Kirk Baker <kbaker@eb.com>
- *               Ian Wilkinson <iw@ennoble.com>
- *               Mark Goddard
- *               Ed Burns <edburns@acm.org>
+ * Contributor(s): Kyle Yuan <kyle.yuan@sun.com>
  */
 
-package org.mozilla.webclient.test;
+#ifndef __WindowCreator_h_
+#define __WindowCreator_h_
 
-/*
- * EmbeddedMozilla.java
- */
+#include "nsIWindowCreator.h"
+#include "ns_util.h"
 
-import org.mozilla.webclient.*;
-import org.mozilla.util.Assert;
-
-/**
- *
-
- * This is a test application for using the BrowserControl.
-
- *
- * @version $Id: EmbeddedMozilla.java,v 1.7 2003/04/24 05:55:08 kyle.yuan%sun.com Exp $
- *
- * @see	org.mozilla.webclient.BrowserControlFactory
-
- */
-
-public interface EmbeddedMozilla
+class WindowCreator : public nsIWindowCreator
 {
-public void CreateEMWindow(String newurl, long chromeFlags);
-public void DestroyEMWindow(int winNumber);
+private:
+    WebShellInitContext *mInitContext;
+    jobject mTarget;
 
-}
+public:
+    WindowCreator(WebShellInitContext *yourInitContext);
+    virtual ~WindowCreator();
 
-// EOF
+    NS_IMETHOD AddNewWindowListener(jobject target);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWINDOWCREATOR
+};
+
+#endif
+

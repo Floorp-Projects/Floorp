@@ -94,18 +94,18 @@ NS_IMPL_RELEASE(CBrowserContainer)
 
 NS_INTERFACE_MAP_BEGIN(CBrowserContainer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
-	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
-	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
-	NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-	NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
+    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
+    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPrompt)
-	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
-	NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-	NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
-	NS_INTERFACE_MAP_ENTRY(wcIBrowserContainer)
+    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+    NS_INTERFACE_MAP_ENTRY(wcIBrowserContainer)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -115,6 +115,13 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP CBrowserContainer::GetInterface(const nsIID & uuid, void * *result)
 {
+    if (uuid.Equals(NS_GET_IID(nsIDOMWindow)))
+    {
+        if (m_pOwner)
+            return m_pOwner->GetContentDOMWindow((nsIDOMWindow **) result);
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
     return QueryInterface(uuid, result);
 }
 

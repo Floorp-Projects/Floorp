@@ -17,38 +17,22 @@
  * Copyright (C) 1999 Kirk Baker and Ian Wilkinson. All
  * Rights Reserved.
  *
- * Contributor(s): Kirk Baker <kbaker@eb.com>
- *               Ian Wilkinson <iw@ennoble.com>
- *               Mark Goddard
- *               Ed Burns <edburns@acm.org>
+ * Contributor(s):  Kyle Yuan <kyle.yuan@sun.com>
  */
 
-package org.mozilla.webclient.test;
+package org.mozilla.webclient;
 
-/*
- * EmbeddedMozilla.java
- */
-
-import org.mozilla.webclient.*;
-import org.mozilla.util.Assert;
-
-/**
- *
-
- * This is a test application for using the BrowserControl.
-
- *
- * @version $Id: EmbeddedMozilla.java,v 1.7 2003/04/24 05:55:08 kyle.yuan%sun.com Exp $
- *
- * @see	org.mozilla.webclient.BrowserControlFactory
-
- */
-
-public interface EmbeddedMozilla
+public class NewWindowEvent extends WebclientEvent
 {
-public void CreateEMWindow(String newurl, long chromeFlags);
-public void DestroyEMWindow(int winNumber);
 
+//
+// Constructors
+//
+
+public NewWindowEvent(Object source, long newType,
+                         Object newEventData)
+{
+    super(source, newType, newEventData);
 }
 
-// EOF
+} // end of class NewWindowEvent

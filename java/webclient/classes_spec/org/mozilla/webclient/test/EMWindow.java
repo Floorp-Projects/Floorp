@@ -59,13 +59,13 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.39 2003/04/18 01:07:51 kyle.yuan%sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.40 2003/04/24 05:55:07 kyle.yuan%sun.com Exp $
  *
  * @see org.mozilla.webclient.BrowserControlFactory
 
  */
 
-public class EMWindow extends Frame implements DialogClient, ActionListener, DocumentLoadListener, MouseListener, Prompt, PrefChangedCallback {
+public class EMWindow extends Frame implements DialogClient, ActionListener, DocumentLoadListener, MouseListener, NewWindowListener, Prompt, PrefChangedCallback {
     static final int defaultWidth = 640;
     static final int defaultHeight = 480;
 
@@ -91,6 +91,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
     private UniversalDialog           uniDialog = null;
     private MenuBar             menuBar;
     private Menu                historyMenu;
+    private MenuItem newItem;
     private MenuItem backMenuItem;
     private MenuItem forwardMenuItem;
     private HistoryActionListener historyActionListener = null;
@@ -115,173 +116,177 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
     private String myBinDir;
 
     private boolean mInPrintPreview;
+    private long chromeFlag;
 
-    public static void main(String [] arg)
-    {
-    }
+public static void main(String [] arg)
+{
+}
 
 
-    public EMWindow (String title, String binDir, String url, int winnum, EmbeddedMozilla Creator)
-    {
-        super(title);
-        popup = new PopupMenu();
-        creator = Creator;
-        currentURL = url;
-        winNum = winnum;
-        myBinDir = binDir;
-        mInPrintPreview = false;
-        System.out.println("constructed with binDir: " + binDir + " url: " + url);
-            setSize(defaultWidth, defaultHeight);
-    
+public EMWindow (String title, String binDir, String url, int winnum, EmbeddedMozilla Creator, long chromeFlags)
+{
+    super(title);
+    popup = new PopupMenu();
+    creator = Creator;
+    currentURL = url;
+    winNum = winnum;
+    myBinDir = binDir;
+    mInPrintPreview = false;
+    System.out.println("constructed with binDir: " + binDir + " url: " + url);
+    setSize(defaultWidth, defaultHeight);
+
+    if (0 != (chromeFlags & NewWindowListener.CHROME_MENUBAR))
         createMenubar();
+    if (0 != (chromeFlags & NewWindowListener.CHROME_TOOLBAR))
         createToolbar(url);
 
-        // Create the browser
-        try {
-            BrowserControlFactory.setAppData(binDir);
-            browserControl = BrowserControlFactory.newBrowserControl();
-            browserCanvas =
-                (BrowserControlCanvas)
-                browserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+    // Create the browser
+    try {
+        BrowserControlFactory.setAppData(binDir);
+        browserControl = BrowserControlFactory.newBrowserControl();
+        browserCanvas =
+            (BrowserControlCanvas)
+            browserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+    }
+    catch(Exception e) {
+        System.out.println("Can't create BrowserControl: " +
+                           e.getMessage());
+    }
+    Assert.assert_it(null != browserCanvas);
+    browserCanvas.setSize(defaultWidth, defaultHeight);
 
-        }
-        catch(Exception e) {
-            System.out.println("Can't create BrowserControl: " +
-                               e.getMessage());
-        }
-        Assert.assert_it(null != browserCanvas);
-        browserCanvas.setSize(defaultWidth, defaultHeight);
+    // Add the control panel and the browserCanvas
+    add(browserCanvas, BorderLayout.CENTER);
 
-        // Add the control panel and the browserCanvas
-        add(browserCanvas, BorderLayout.CENTER);
-
-        // Create the status panel
+    // Create the status panel
+    if (0 != (chromeFlags & NewWindowListener.CHROME_STATUSBAR))
         createStatusbar();
 
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                System.out.println("Got windowClosing");
-                System.out.println("destroying the BrowserControl");
-                EMWindow.this.delete();
-                // should close the BrowserControlCanvas
-                creator.DestroyEMWindow(winNum);
-            }
+    addWindowListener(new WindowAdapter() {
+        public void windowClosing(WindowEvent e) {
+            System.out.println("Got windowClosing");
+            System.out.println("destroying the BrowserControl");
+            EMWindow.this.delete();
+            // should close the BrowserControlCanvas
+            creator.DestroyEMWindow(winNum);
+        }
 
-            public void windowClosed(WindowEvent e) {
-                System.out.println("Got windowClosed");
-            }
-        });
+        public void windowClosed(WindowEvent e) {
+            System.out.println("Got windowClosed");
+        }
+    });
 
-        // Create the Context Menus
-        add(popup);
+    // Create the Context Menus
+    add(popup);
 
-        popup.add(popup_ViewSource = new MenuItem("View Source as ByteArray"));
-        popup.add(popup_SelectAll = new MenuItem("Select All"));
+    popup.add(popup_ViewSource = new MenuItem("View Source as ByteArray"));
+    popup.add(popup_SelectAll = new MenuItem("Select All"));
         popup.add(popup_ViewSelection = new MenuItem("View Selection"));
 
-        contextListener = new PopupActionListener();
+    contextListener = new PopupActionListener();
 
-        popup_ViewSource.addActionListener (contextListener);
-        popup_SelectAll.addActionListener (contextListener);
+    popup_ViewSource.addActionListener (contextListener);
+    popup_SelectAll.addActionListener (contextListener);
         popup_ViewSelection.addActionListener (contextListener);
 
-        show();
-        toFront();
+    show();
+    toFront();
 
-        try {
-            navigation = (Navigation2)
-                browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
-            navigation.setPrompt(this);
-            currentPage = (CurrentPage2)
-                browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
-            history = (History)
-                browserControl.queryInterface(BrowserControl.HISTORY_NAME);
-            prefs = (Preferences)
-                browserControl.queryInterface(BrowserControl.PREFERENCES_NAME);
-            prefs.registerPrefChangedCallback(this,
-                                              "network.cookie.warnAboutCookies",
-                                              "This IS the Closure!");
-            prefs.setPref("network.cookie.warnAboutCookies", "true");
-            prefs.setPref("browser.cache.disk_cache_size", "0");
+    try {
+        navigation = (Navigation2)
+            browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+        navigation.setPrompt(this);
+        currentPage = (CurrentPage2)
+            browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+        history = (History)
+            browserControl.queryInterface(BrowserControl.HISTORY_NAME);
+        prefs = (Preferences)
+            browserControl.queryInterface(BrowserControl.PREFERENCES_NAME);
+        prefs.registerPrefChangedCallback(this,
+                                          "network.cookie.warnAboutCookies",
+                                          "This IS the Closure!");
+        prefs.setPref("network.cookie.warnAboutCookies", "true");
+        prefs.setPref("browser.cache.disk_cache_size", "0");
 
-            // pull out the proxies, and make java aware of them
-            Properties prefsProps = prefs.getPrefs();
-            String proxyHost = (String) prefsProps.get("network.proxy.http");
-            String proxyPort = (String) prefsProps.get("network.proxy.http_port");
-            if (null != proxyHost && null != proxyPort) {
-                System.setProperty("http.proxyHost", proxyHost);
-                System.setProperty("http.proxyPort", proxyPort);
-            }
-
-            //prefsProps = prefs.getPrefs();
-            //prefsProps.list(System.out);  // This works, try it!
-        }
-        catch (Exception e) {
-            System.out.println(e.toString());
+        // pull out the proxies, and make java aware of them
+        Properties prefsProps = prefs.getPrefs();
+        String proxyHost = (String) prefsProps.get("network.proxy.http");
+        String proxyPort = (String) prefsProps.get("network.proxy.http_port");
+        if (null != proxyHost && null != proxyPort) {
+            System.setProperty("http.proxyHost", proxyHost);
+            System.setProperty("http.proxyPort", proxyPort);
         }
 
-        try {
-            EventRegistration eventRegistration =
-                (EventRegistration)
-                browserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
-            eventRegistration.addDocumentLoadListener(this);
-            eventRegistration.addMouseListener(this);
+        //prefsProps = prefs.getPrefs();
+        //prefsProps.list(System.out);  // This works, try it!
+    }
+    catch (Exception e) {
+        System.out.println(e.toString());
+    }
 
-            // PENDING(edburns): test code, replace with production code
-            bookmarks =
-                (Bookmarks)
-                browserControl.queryInterface(BrowserControl.BOOKMARKS_NAME);
-            System.out.println("debug: edburns: got Bookmarks instance");
+    try {
+        EventRegistration2 eventRegistration =
+            (EventRegistration2)
+            browserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+        eventRegistration.addDocumentLoadListener(this);
+        eventRegistration.addMouseListener(this);
+        eventRegistration.addNewWindowListener(this);
 
-            bookmarksTree = bookmarks.getBookmarks();
+        // PENDING(edburns): test code, replace with production code
+        bookmarks =
+            (Bookmarks)
+            browserControl.queryInterface(BrowserControl.BOOKMARKS_NAME);
+        System.out.println("debug: edburns: got Bookmarks instance");
 
-            /*********
+        bookmarksTree = bookmarks.getBookmarks();
 
-            TreeNode bookmarksRoot = (TreeNode) bookmarksTree.getRoot();
+        /*********
 
-            System.out.println("debug: edburns: testing the Enumeration");
-            int childCount = bookmarksRoot.getChildCount();
-            System.out.println("debug: edburns: root has " + childCount +
-                               " children.");
+        TreeNode bookmarksRoot = (TreeNode) bookmarksTree.getRoot();
 
-            Enumeration rootChildren = bookmarksRoot.children();
-            TreeNode currentChild;
+        System.out.println("debug: edburns: testing the Enumeration");
+        int childCount = bookmarksRoot.getChildCount();
+        System.out.println("debug: edburns: root has " + childCount +
+                           " children.");
 
-            int i = 0, childIndex;
-            while (rootChildren.hasMoreElements()) {
-                currentChild = (TreeNode) rootChildren.nextElement();
-                System.out.println("debug: edburns: bookmarks root has children! child: " + i + " name: " + currentChild.toString());
-                i++;
-            }
+        Enumeration rootChildren = bookmarksRoot.children();
+        TreeNode currentChild;
 
-            System.out.println("debug: edburns: testing getChildAt(" + --i + "): ");
-            currentChild = bookmarksRoot.getChildAt(i);
-            System.out.println("debug: edburns: testing getIndex(Child " +
-                               i + "): index should be " + i + ".");
-            childIndex = bookmarksRoot.getIndex(currentChild);
-            System.out.println("debug: edburns: index is: " + childIndex);
-            *****/
-
-            /**********
-
-
-            System.out.println("debug: edburns: got new entry");
-
-            Properties entryProps = entry.getProperties();
-
-            System.out.println("debug: edburns: entry url: " +
-                               entryProps.getProperty(BookmarkEntry.URL));
-            bookmarks.addBookmark(folder, entry);
-            **********/
-        }
-        catch (Exception e) {
-            System.out.println(e.toString());
+        int i = 0, childIndex;
+        while (rootChildren.hasMoreElements()) {
+            currentChild = (TreeNode) rootChildren.nextElement();
+            System.out.println("debug: edburns: bookmarks root has children! child: " + i + " name: " + currentChild.toString());
+            i++;
         }
 
-        if (null != navigation) {
-            navigation.loadURL(url);
-        }
-    } // EMWindow() ctor
+        System.out.println("debug: edburns: testing getChildAt(" + --i + "): ");
+        currentChild = bookmarksRoot.getChildAt(i);
+        System.out.println("debug: edburns: testing getIndex(Child " +
+                           i + "): index should be " + i + ".");
+        childIndex = bookmarksRoot.getIndex(currentChild);
+        System.out.println("debug: edburns: index is: " + childIndex);
+        *****/
+
+        /**********
+
+
+        System.out.println("debug: edburns: got new entry");
+
+        Properties entryProps = entry.getProperties();
+
+        System.out.println("debug: edburns: entry url: " +
+                           entryProps.getProperty(BookmarkEntry.URL));
+        bookmarks.addBookmark(folder, entry);
+        **********/
+    }
+    catch (Exception e) {
+        System.out.println(e.toString());
+    }
+
+    if (null != navigation && url.length() > 0) {
+        navigation.loadURL(url);
+    }
+} // EMWindow() ctor
 
 private void createMenubar()
 {
@@ -289,7 +294,7 @@ private void createMenubar()
     this.setMenuBar(menuBar);
 
     Menu fileMenu = new Menu("File");
-        MenuItem newItem = new MenuItem("New Window");
+        newItem = new MenuItem("New Window");
         fileMenu.add(newItem);
         newItem.addActionListener(this);
         MenuItem printItem = new MenuItem("Print");
@@ -424,14 +429,14 @@ public void delete()
 {
     browserCanvas.setVisible(false);
     if (null != bookmarksFrame) {
-    bookmarksFrame.setVisible(false);
-    bookmarksFrame.dispose();
-    bookmarksFrame = null;
+        bookmarksFrame.setVisible(false);
+        bookmarksFrame.dispose();
+        bookmarksFrame = null;
     }
     if (null != domViewer) {
-    domViewer.setVisible(false);
-    domViewer.dispose();
-    domViewer = null;
+        domViewer.setVisible(false);
+        domViewer.dispose();
+        domViewer = null;
     }
     BrowserControlFactory.deleteBrowserControl(browserControl);
     browserControl = null;
@@ -455,7 +460,10 @@ public void actionPerformed (ActionEvent evt)
     try {
 
         if (command.equals("New Window")) {
-            creator.CreateEMWindow();
+            creator.CreateEMWindow("", NewWindowListener.CHROME_ALL);
+        }
+        else if (command.equals("New Window2")) {
+            creator.CreateEMWindow("", chromeFlag);
         }
         else if (command.equals("Close")) {
             System.out.println("Got windowClosing");
@@ -739,6 +747,15 @@ public void eventDispatched(WebclientEvent event)
             urlStatusLabel.setText(" endURL: " + status);
             break;
         }
+    }
+    else if (event instanceof NewWindowEvent) {
+        chromeFlag = (long) event.getType();
+        // send a "new window" event to the window
+        Toolkit.getDefaultToolkit().
+                getSystemEventQueue().
+                postEvent(new ActionEvent(newItem,
+                                          ActionEvent.ACTION_PERFORMED,
+                                          "New Window2"));
     }
 }
 

@@ -18,9 +18,9 @@
 # Contributor(s): 
 
 DEPTH		= ../../..
-topsrcdir	= $(DEPTH)
-srcdir		= $(topsrcdir)/java/webclient/src_moz
-VPATH		= $(topsrcdir)/java/webclient/src_moz
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 
 # IMPORTANT: on Linux, if building webclient with a non-debug mozilla
@@ -113,6 +113,7 @@ CPPSRCS = \
 	PreferencesImpl.cpp \
 	PreferencesActionEvents.cpp \
 	WrapperFactoryImpl.cpp \
+	WindowCreator.cpp \
 	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
@@ -189,21 +190,6 @@ INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/solaris $(INCLUDES
 	-I$(DEPTH)/widget/src/gtk -I../src_share
 endif
 endif
-
-
-buildRunems:
-ifeq ($(BAL_INTERFACE),)
-ifeq ($(PACKAGE_BUILD),)
-	@echo +++ Creating runem.  Use this to run the test browser.
-	rm -f runem
-	@echo #!/bin/sh > runem
-	@echo $(PERL) ../src_share/runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
-	chmod 755 runem
-else
-endif # PACKAGE_BUILD
-endif # BAL_INTERFACE
-
-install:: buildRunems
 
 
 clobber_all:: clobber

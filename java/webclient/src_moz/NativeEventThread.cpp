@@ -24,6 +24,7 @@
  *               Ed Burns <edburns@acm.org>
  *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
+ *               Kyle Yuan <kyle.yuan@sun.com>
  */
 
 #include "NativeEventThread.h"
@@ -58,11 +59,12 @@
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsCWebBrowser.h"
 #include "nsIEventQueueService.h"
-#include "nsIThread.h"
 //nsIWebShell is included in ns_util.h
 #include "NativeEventThreadActionEvents.h"
+#include "nsIWindowWatcher.h"
+#include "nsIComponentRegistrar.h"
+#include "WindowCreator.h"
 
 #include "prlog.h" // for PR_ASSERT
 
@@ -170,6 +172,7 @@ static PRBool	gFirstTime = PR_TRUE;
 PLEventQueue	*	gActionQueue = nsnull;
 PRThread		*	gEmbeddedThread = nsnull;
 nsISHistory *gHistory = nsnull;
+WindowCreator   *   gCreatorCallback = nsnull;
 
 char * errorMessages[] = {
 	"No Error",
@@ -312,6 +315,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
         break;
     case MOUSE_LISTENER:
         initContext->browserContainer->AddMouseListener(globalRef); 
+        break;
+    case NEW_WINDOW_LISTENER:
+        if (gCreatorCallback)
+            gCreatorCallback->AddNewWindowListener(globalRef); 
         break;
     }
 
@@ -463,6 +470,29 @@ static void event_processor_callback(gpointer data,
 //
 
 
+/* InitializeWindowCreator creates and hands off an object with a callback
+   to a window creation function. This is how all new windows are opened,
+   except any created directly by the embedding app. */
+nsresult InitializeWindowCreator(WebShellInitContext * initContext)
+{
+    // create an nsWindowCreator and give it to the WindowWatcher service
+    gCreatorCallback = new WindowCreator(initContext);
+    if (gCreatorCallback)
+    {
+        nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, gCreatorCallback)));
+        if (windowCreator)
+        {
+            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+            if (wwatch)
+            {
+                wwatch->SetWindowCreator(windowCreator);
+                return NS_OK;
+            }
+        }
+    }
+    return NS_ERROR_FAILURE;
+}
+
 void DoMozInitialization(WebShellInitContext * initContext)
 {    
     if (gFirstTime) {
@@ -495,6 +525,8 @@ void DoMozInitialization(WebShellInitContext * initContext)
             // If this fails, it just goes to stdout/stderr
         }
         
+        InitializeWindowCreator(initContext);
+
         // handle the profile manager nonsense
         nsCOMPtr<nsICmdLineService> cmdLine =do_GetService(kCmdLineServiceCID);
         nsCOMPtr<nsIProfile> profile = do_GetService(NS_PROFILE_CONTRACTID);
@@ -630,6 +662,14 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
             initContext->initFailCode = kCreateWebShellError;
             return NS_ERROR_UNEXPECTED;
         }
+
+#ifdef XP_UNIX
+
+        // The gdk_x_error function exits in some cases, we don't 
+        // want that.
+        XSetErrorHandler(wc_x_error);
+#endif
+
     }
 
     if (gFirstTime) {
@@ -738,15 +778,11 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     }
 #endif
 
-#ifdef XP_UNIX
-
-    // The gdk_x_error function exits in some cases, we don't 
-    // want that.
-    XSetErrorHandler(wc_x_error);
-#endif
-
-    // Just need to loop once to clear out events before returning
-    processEventLoop(initContext);
+    // PENDING(kyle): not sure if we need to check this, but it does prevent some crash from happening
+    void* threadId = PR_GetCurrentThread();
+    if (threadId == (void *) gEmbeddedThread)
+        // Just need to loop once to clear out events before returning
+        processEventLoop(initContext);
     
     return rv;
 }

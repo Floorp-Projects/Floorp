@@ -124,6 +124,7 @@ extern jobject BM_IS_FOLDER_VALUE;
  */
 extern jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
 extern jstring MOUSE_LISTENER_CLASSNAME;
+extern jstring NEW_WINDOW_LISTENER_CLASSNAME;
 
 
 // 
@@ -135,6 +136,7 @@ extern jstring MOUSE_LISTENER_CLASSNAME;
 typedef enum {
     DOCUMENT_LOAD_LISTENER = 0,
     MOUSE_LISTENER,
+    NEW_WINDOW_LISTENER,
     LISTENER_NOT_FOUND
 } LISTENER_CLASSES;
 
@@ -142,6 +144,7 @@ typedef enum {
 
 #define DOCUMENT_LOAD_LISTENER_CLASSNAME_VALUE "org.mozilla.webclient.DocumentLoadListener"
 #define MOUSE_LISTENER_CLASSNAME_VALUE "java.awt.event.MouseListener"
+#define NEW_WINDOW_LISTENER_CLASSNAME_VALUE "org.mozilla.webclient.NewWindowListener"
 
 
 #define START_DOCUMENT_LOAD_EVENT_MASK_VALUE "START_DOCUMENT_LOAD_EVENT_MASK"

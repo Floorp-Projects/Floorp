@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -38,9 +38,9 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozillaImpl.java,v 1.2 2001/12/23 23:22:21 timeless%mac.com Exp $
- * 
- * @see	org.mozilla.webclient.BrowserControlFactory
+ * @version $Id: EmbeddedMozillaImpl.java,v 1.3 2003/04/24 05:55:09 kyle.yuan%sun.com Exp $
+ *
+ * @see org.mozilla.webclient.BrowserControlFactory
 
  */
 
@@ -58,33 +58,34 @@ public static void printUsage()
     System.out.println("       <path> is the absolute path to the native browser bin directory, ");
     System.out.println("       including the bin.");
 }
-	
-public EmbeddedMozillaImpl() 
+
+public EmbeddedMozillaImpl()
 {
-  CreateEMWindow();
-}
- 
-public void CreateEMWindow()
-{
-  System.out.println("Creating new EmbeddedMozillaImpl window");
-  EMWindow aEMWindow ;
-  aEMWindow = new EMWindow("EmbeddedMozilla#" + (int)(count+1),
-                                 binDir, url, count, this);
-  count++;
+    CreateEMWindow(url, NewWindowListener.CHROME_ALL);
 }
 
-public void DestroyEMWindow(int winNumber) {
-  count--;
-  if (count == 0) {
-    System.out.println("closing application");
-    try {
-        BrowserControlFactory.appTerminate();
+public void CreateEMWindow(String newurl, long chromeFlags)
+{
+    System.out.println("Creating new EmbeddedMozillaImpl window");
+    EMWindow aEMWindow ;
+    aEMWindow = new EMWindow("EmbeddedMozilla#" + (int)(count+1),
+                                 binDir, newurl, count, this, chromeFlags);
+    count++;
+}
+
+public void DestroyEMWindow(int winNumber) 
+{
+    count--;
+    if (count == 0) {
+        System.out.println("closing application");
+        try {
+            BrowserControlFactory.appTerminate();
+        }
+        catch(Exception e) {
+            System.out.println("got Exception on exit: " + e.getMessage());
+        }
+        System.exit(0);
     }
-    catch(Exception e) {
-        System.out.println("got Exception on exit: " + e.getMessage());
-     }
-    System.exit(0);
-  }
 }
 
 public static void main(String [] arg)
@@ -95,7 +96,7 @@ public static void main(String [] arg)
     }
     String urlArg =(2 == arg.length) ? arg[1] : "http://www.mozilla.org/projects/blackwood/webclient/";
 
-    // set class vars used in EmbeddedMozillaImpl ctor 
+    // set class vars used in EmbeddedMozillaImpl ctor
     binDir = arg[0];
     url = urlArg;
 

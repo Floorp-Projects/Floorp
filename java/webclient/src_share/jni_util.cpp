@@ -82,6 +82,7 @@ jobject BM_IS_FOLDER_VALUE;
 
 jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
 jstring MOUSE_LISTENER_CLASSNAME;
+jstring NEW_WINDOW_LISTENER_CLASSNAME;
 
 jlong DocumentLoader_maskValues[] = { -1L };
 char * DocumentLoader_maskNames[] = {
@@ -282,6 +283,12 @@ jboolean util_InitStringConstants()
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, 
                                                            MOUSE_LISTENER_CLASSNAME_VALUE)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (NEW_WINDOW_LISTENER_CLASSNAME = (jstring)
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           NEW_WINDOW_LISTENER_CLASSNAME_VALUE)))) {
         return JNI_FALSE;
     }
 

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -37,12 +37,14 @@ import org.mozilla.webclient.BrowserControlCanvas;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.DocumentLoadEvent;
 import org.mozilla.webclient.DocumentLoadListener;
+import org.mozilla.webclient.NewWindowEvent;
+import org.mozilla.webclient.NewWindowListener;
 import java.awt.event.MouseListener;
 import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WebclientEventListener;
 import org.mozilla.webclient.UnimplementedException;
 
-public class NativeEventThread extends Thread 
+public class NativeEventThread extends Thread
 {
 
 //
@@ -62,7 +64,7 @@ private static Object firstThread = null;
 
 /**
 
- * Vector of listener objects to add.  
+ * Vector of listener objects to add.
 
  */
 
@@ -70,26 +72,26 @@ private Vector listenersToAdd;
 
 /**
 
- * Vector of listener objects to remove.  
+ * Vector of listener objects to remove.
 
  */
 
 private Vector listenersToRemove;
 
-/** 
-      
+/**
+
  * a handle to the actual mozilla webShell, obtained in constructor
-   
+
  */
-  
+
 private int nativeWebShell = -1;
 
 /**
 
  * a reference to the WindowControl that created us.
- 
+
  */
-    
+
 private WindowControl windowControl;
 
 private BrowserControl browserControl;
@@ -125,7 +127,7 @@ public NativeEventThread(String threadName, BrowserControl yourBrowserControl)
     browserControl = yourBrowserControl;
 
     try {
-        windowControl = (WindowControl) 
+        windowControl = (WindowControl)
             browserControl.queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
         nativeWebShell = windowControl.getNativeWebShell();
 
@@ -133,7 +135,7 @@ public NativeEventThread(String threadName, BrowserControl yourBrowserControl)
             browserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
     }
     catch (Exception e) {
-        System.out.println("NativeEventThread constructor: Exception: " + e + 
+        System.out.println("NativeEventThread constructor: Exception: " + e +
                            " " + e.getMessage());
     }
 }
@@ -160,7 +162,7 @@ public void delete()
                 wait();
             }
             catch (Exception e) {
-                System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notify() after destruction of initContext: " + e + 
+                System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notify() after destruction of initContext: " + e +
                                    " " + e.getMessage());
             }
         }
@@ -190,14 +192,14 @@ public void delete()
  * necessary.
 
  * @see nativeInitialize
- 
+
  * @see nativeProcessEvents
 
  * @see nativeAddListener
 
  */
 
-public void run() 
+public void run()
 {
     //   this.setPriority(Thread.MIN_PRIORITY);
     Assert.assert_it(-1 != nativeWebShell);
@@ -221,7 +223,7 @@ public void run()
             Thread.sleep(1);
         }
         catch (Exception e) {
-            System.out.println("NativeEventThread.run(): Exception: " + e + 
+            System.out.println("NativeEventThread.run(): Exception: " + e +
                                " while sleeping: " + e.getMessage());
         }
         synchronized (this) {
@@ -243,14 +245,14 @@ public void run()
             if (this == firstThread) {
                 nativeProcessEvents(nativeWebShell);
             }
-            
+
             if (null != listenersToAdd && !listenersToAdd.isEmpty()) {
                 tempEnum = listenersToAdd.elements();
 
                 while (tempEnum.hasMoreElements()) {
-                    WCEventListenerWrapper tempListener = 
+                    WCEventListenerWrapper tempListener =
                         (WCEventListenerWrapper) tempEnum.nextElement();
-                    nativeAddListener(nativeWebShell,tempListener.listener, 
+                    nativeAddListener(nativeWebShell,tempListener.listener,
                                       tempListener.listenerClassName);
                 }
                 // use removeAllElements instead of clear for jdk1.1.x
@@ -258,7 +260,7 @@ public void run()
                 listenersToAdd.removeAllElements();
             }
             doRemoveListeners();
-            
+
         }
     }
 }
@@ -292,12 +294,12 @@ private void doRemoveListeners()
                 }
             }
             else {
-                WCEventListenerWrapper tempListener = 
+                WCEventListenerWrapper tempListener =
                     (WCEventListenerWrapper) listenerObj;
-                nativeRemoveListener(nativeWebShell, 
+                nativeRemoveListener(nativeWebShell,
                                      tempListener.listener,
                                      tempListener.listenerClassName);
-                
+
             }
         }
         // use removeAllElements instead of clear for jdk1.1.x
@@ -318,7 +320,7 @@ private void doRemoveListeners()
 
  * The vector is a vector of WCEventListenerWrapper instances.  In run()
  * these are unpacked and sent to nativeAddListener like this:
- * nativeAddListener(nativeWebShell,tempListener.listener, 
+ * nativeAddListener(nativeWebShell,tempListener.listener,
  * tempListener.listenerClassName); <P>
 
  * @see run
@@ -369,7 +371,7 @@ void removeListener(WCEventListenerWrapper newListener)
             listenersToRemove.addElement(newListener);
         }
     }
-    
+
 }
 
 /**
@@ -381,8 +383,8 @@ void removeListener(WCEventListenerWrapper newListener)
 
  */
 
-void nativeEventOccurred(WebclientEventListener target, 
-                         String targetClassName, long eventType, 
+void nativeEventOccurred(WebclientEventListener target,
+                         String targetClassName, long eventType,
                          Object eventData)
 {
     ParameterCheck.nonNull(target);
@@ -390,26 +392,29 @@ void nativeEventOccurred(WebclientEventListener target,
 
     Assert.assert_it(-1 != nativeWebShell);
     Assert.assert_it(null != windowControl);
-    
+
     WebclientEvent event = null;
-    
+
     if (DocumentLoadListener.class.getName().equals(targetClassName)) {
         event = new DocumentLoadEvent(this, eventType, eventData);
     }
     else if (MouseListener.class.getName().equals(targetClassName)) {
         Assert.assert_it(target instanceof WCMouseListenerImpl);
-        
+
         // We create a plain vanilla WebclientEvent, which the
         // WCMouseListenerImpl target knows how to deal with.
-        
+
         // Also, the source happens to be the browserControlCanvas
         // to satisfy the java.awt.event.MouseEvent's requirement
         // that the source be a java.awt.Component subclass.
-        
+
         event = new WebclientEvent(browserControlCanvas, eventType, eventData);
     }
+    else if (NewWindowListener.class.getName().equals(targetClassName)) {
+        event = new NewWindowEvent(this, eventType, eventData);
+    }
     // else...
-    
+
     // PENDING(edburns): maybe we need to put this in some sort of
     // event queue?
     target.eventDispatched(event);
@@ -471,9 +476,9 @@ public native void nativeAddListener(int webShellPtr,
 
  * Called from Java to allow the native code to remove a listener.
 
- */ 
+ */
 
-public native void nativeRemoveListener(int webShellPtr, 
+public native void nativeRemoveListener(int webShellPtr,
                                         WebclientEventListener typedListener,
                                         String listenerName);
 
@@ -481,7 +486,7 @@ public native void nativeRemoveListener(int webShellPtr,
 
  * Called from Java to allow the native code to remove all listeners.
 
- */ 
+ */
 
 public native void nativeRemoveAllListeners(int webShellPrt);
 
