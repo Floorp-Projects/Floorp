@@ -39,7 +39,12 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 
-<!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-advanced.dtd" >
+<!DOCTYPE page [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+  <!ENTITY % advancedDTD SYSTEM "chrome://messenger/locale/pref-advanced.dtd">
+  %brandDTD;
+  %advancedDTD;
+]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:nc="http://home.netscape.com/NC-rdf#"
@@ -63,6 +68,9 @@
                                               
                        // general settings
                        "showCondensedAddresses", "markAsRead", "markAsReadDelay", "showFolderPaneColumns",
+                                              
+                       // smart update
+                       "enableSmartUpdate", "enableExtensionUpdate",
                                               
                        // connection
                        "networkProxyType",
@@ -93,6 +101,37 @@
       </vbox>      
     </expander>  
 
+    <!-- Message Display Extras  -->
+    <expander id="generalSettings" label="&generalSettings.label;" open="true" persist="open" clearhidden="true">
+      <hbox align="center" pack="start">
+        <checkbox id="showCondensedAddresses" label="&showCondensedAddresses.label;" prefstring="mail.showCondensedAddresses"/>
+      </hbox> 
+      <hbox align="center" pack="start">
+        <checkbox id="markAsRead" label="&markAsRead.label;" prefstring="mailnews.mark_message_read.delay"/>
+        <textbox  id="markAsReadDelay" size="2" preftype="int" prefstring="mailnews.mark_message_read.delay.interval"/>
+        <label value="&markAsReadEnd.label;"/>
+      </hbox>
+      <hbox align="center" pack="start">
+        <checkbox id="showFolderPaneColumns" label="&showFolderColumns.label;" prefstring="mail.showFolderPaneColumns"/>
+      </hbox> 
+    </expander>
+
+    <expander id="softwareupdate" label="&softwareupdate.label;" 
+              open="true" persist="open" clearhidden="true" align="left">
+      <label>&softwareupdateinfo.label;</label>
+      <vbox class="indent" align="left">
+        <checkbox id="enableSmartUpdate"
+                  label="&enableSmartUpdate.label;" accesskey="&enableSmartUpdate.accesskey;"
+                  prefstring="update.app.enabled"/>
+        <checkbox id="enableExtensionUpdate"
+                  label="&enableExtensionUpdate.label;" accesskey="&enableExtensionUpdate.accesskey;"
+                  prefstring="update.extensions.enabled"/>      
+        <separator class="thin"/>
+        <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                oncommand="checkForUpdates();"/>
+      </vbox>
+    </expander>
+
     <!-- Password management -->
     <expander id="passwordManagement" label="&signonHeader.label;" open="true" persist="open" clearhidden="true">
       <hbox id="passwordManager" align="center" pack="end">
@@ -121,21 +160,6 @@
           </menupopup>
         </menulist>
       </hbox>
-    </expander>
-
-    <!-- Message Display Extras  -->
-    <expander id="generalSettings" label="&generalSettings.label;" open="true" persist="open" clearhidden="true">
-      <hbox align="center" pack="start">
-        <checkbox id="showCondensedAddresses" label="&showCondensedAddresses.label;" prefstring="mail.showCondensedAddresses"/>
-      </hbox> 
-      <hbox align="center" pack="start">
-        <checkbox id="markAsRead" label="&markAsRead.label;" prefstring="mailnews.mark_message_read.delay"/>
-        <textbox  id="markAsReadDelay" size="2" preftype="int" prefstring="mailnews.mark_message_read.delay.interval"/>
-        <label value="&markAsReadEnd.label;"/>
-      </hbox>
-      <hbox align="center" pack="start">
-        <checkbox id="showFolderPaneColumns" label="&showFolderColumns.label;" prefstring="mail.showFolderPaneColumns"/>
-      </hbox> 
     </expander>
 
     <!-- Return Receipts -->

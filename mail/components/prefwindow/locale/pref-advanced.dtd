@@ -75,3 +75,16 @@
 <!ENTITY autoTypeRadio.accesskey       "a">
 <!ENTITY reload.label                  "Reload">
 <!ENTITY reload.accesskey              "l">
+
+<!-- Software Update -->
+<!ENTITY softwareupdate.label             "Software Update">
+<!ENTITY softwareupdateinfo.label         "Periodically check for updates to:">
+<!ENTITY enableSmartUpdate.label          "&brandShortName;">
+<!ENTITY enableSmartUpdate.accesskey      "F">
+<!ENTITY enableExtensionUpdate.label      "My Extensions">
+<!ENTITY enableExtensionUpdate.accesskey  "y">
+<!ENTITY enableAutoInstall.label          "Automatically download and install updates to Extensions.">
+<!ENTITY enableAutoInstall.accesskey      "d">
+<!ENTITY checkNow.label                   "Check Now">
+<!ENTITY checkNow.accesskey               "N">
+

@@ -148,3 +148,12 @@ function editPasswords()
 {
   window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","_blank","chrome,centerscreen,resizable=yes", "S");
 }
+
+function checkForUpdates()
+{
+  var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                          .getService(Components.interfaces.nsIUpdateService);
+  updates.checkForUpdates([], 0, Components.interfaces.nsIUpdateItem.TYPE_ANY, 
+                          Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
+                          window);
+}

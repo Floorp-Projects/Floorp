@@ -773,6 +773,9 @@ function delayedOnLoadMessenger()
 
   var toolbarset = document.getElementById('customToolbars');
   toolbox.toolbarset = toolbarset;
+
+  var updatePanel = document.getElementById("statusbar-updates");
+  updatePanel.init();
 }
 
 function OnUnloadMessenger()

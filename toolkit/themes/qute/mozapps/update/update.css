@@ -56,7 +56,7 @@ updateitem {
 
 /* Update Wizard */
 #alert {
-  list-style-image: url("chrome://mozapps/skin/update/warning.gif"); 
+  list-style-image: url("chrome://mozapps/skin/update/update.png"); 
 }
 
 /* Inline Update Notifications */
@@ -65,15 +65,26 @@ updateitem {
 }
 
 .updateIcon {
+  list-style-image: url("chrome://mozapps/skin/update/extensionalert.png"); 
+  -moz-image-region: rect(0px 16px 16px 0px);
   width: 16px;
   height: 16px;
 }
 .updateIcon[severity="0"] {
-  background-color: #00FF00;
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
 .updateIcon[severity="1"] {
-  background-color: #0000FF;
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 .updateIcon[severity="2"] {
-  background-color: #FF0000;
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+#incompatibleAlert {
+  background-color: InfoBackground;
+  color: InfoText;
+  border: 1px outset InfoBackground;
+  margin-left: 3px;
+  margin-right: 3px;
+  padding: 5px;
 }

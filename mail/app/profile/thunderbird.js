@@ -66,21 +66,36 @@ pref("update.extensions.enabled", true);
 pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
-// Automatically download and install updates to themes and extensions.
-pref("update.extensions.autoUpdate", false);
 
-pref("update.interval", 604800000); // every 7 days
-pref("update.lastUpdateDate", 0); // UTC offset when last update was performed. 
+pref("update.extensions.autoUpdate", false);    // Automatically download and install 
+                                                // updates to themes and extensions. 
+                                                // Does nothing at present. 
+pref("update.extensions.interval", 604800000);  // Check for updates to Extensions and 
+                                                // Themes every week
+pref("update.extensions.lastUpdateDate", 0);    // UTC offset when last Extension/Theme 
+                                                // update was performed. 
+pref("update.extensions.severity.threshold", 5);// The number of pending Extension/Theme
+                                                // updates you can have before the update
+                                                // notifier goes from low->medium severity.
+pref("update.app.interval", 86400000);          // Check for updates to Firefox every day
+pref("update.app.lastUpdateDate", 0);           // UTC offset when last App update was 
+                                                // performed. 
+pref("update.interval", 3600000);               // Check each of the above intervals 
+                                                // every 60 mins
+pref("update.showSlidingNotification", false);   // Windows-only slide-up taskbar 
+                                                // notification.
 
 // These prefs relate to the number and severity of updates available. This is a 
 // cache that the browser notification mechanism uses to determine if it should show
 // status bar UI if updates are detected and the app is shut down before installing
 // them.
-// 0 = low (extension/theme updates), 1 = medium (app minor version), 2 = high (major version)
+// 0 = low    (extension/theme updates), 
+// 1 = medium (numerous extension/theme updates), 
+// 2 = high   (new version of Firefox/Security patch)
 pref("update.severity", 0); 
 // The number of extension/theme/etc updates available
 pref("update.extensions.count", 0);
-
+pref("xpinstall.whitelist.add", "update.mozilla.org");
 
 /////////////////////////////////////////////////////////////////
 // Overrides of the seamonkey suite mailnews.js prefs

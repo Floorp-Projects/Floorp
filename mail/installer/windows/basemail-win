@@ -254,6 +254,7 @@ bin\components\nsExtensionManager.js
 bin\components\nsBackgroundUpdateService.js
 bin\components\extensions.xpt
 bin\components\update.xpt
+bin\components\websrvcs.xpt
             
 ; psm2
 ; Optional - only if you need HTTPS support

@@ -382,5 +382,6 @@
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="unreadMessageCount"/>
     <statusbarpanel id="totalMessageCount"/>
+    <statusbarpanel id="statusbar-updates"/>
   </statusbar>
 </window>

@@ -1027,3 +1027,9 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 #messagepanebox[focusring="true"] > #messagepane {
   border-color: #000000;
 }
+
+/* ..... smart update statusbar panel ..... */
+
+#statusbar-updates[updateCount="0"]{
+  visibility: collapse; 
+}
