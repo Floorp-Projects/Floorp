@@ -4,3 +4,4 @@ resource:///res/samples/test2.html
 resource:///res/samples/test8.html
 resource:///res/samples/test6.html
 resource:///res/samples/test8.html
+mailto:foo@bar.com?subject=foo&body=bar
