@@ -97,6 +97,8 @@ LLIBS=										\
 			$(LIBNSPR)						\
 			$(NULL)
 
+MISCDEP=$(LLIBS)
+
 LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\xpcom			\
 			   -I$(PUBLIC)\js				\
