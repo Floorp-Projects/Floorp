@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.285 $ ';
+$::UtilsVersion = '$Revision: 1.286 $ ';
 
 package TinderUtils;
 
@@ -1785,15 +1785,15 @@ sub run_all_tests {
 
     # Bloat test (based on nsTraceRefcnt)
     if ($Settings::BloatTest and $test_result eq 'success') {
-      my @app_args;
+      my $app_args;
       if($Settings::BinaryName eq "TestGtkEmbed" ||
          $Settings::BinaryName =~ /^firefox/) {
-        @app_args = ["resource:///res/bloatcycle.html"];
+        $app_args = ["resource:///res/bloatcycle.html"];
       } else {
-        @app_args = ["-f", "bloaturls.txt"];
+        $app_args = ["-f", "bloaturls.txt"];
       }      
       $test_result = BloatTest($binary, $build_dir,
-                               @app_args, "",
+                               $app_args, "",
                                $Settings::BloatTestTimeout);
     }
 
@@ -1880,17 +1880,15 @@ sub run_all_tests {
 
     # Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
-      my @app_args;
-      if($Settings::BinaryName eq "TestGtkEmbed" ||
-         $Settings::BinaryName =~ /^firefox/) {
-        @app_args = [$binary];        
-      } else {
-        @app_args = [$binary, "-P", $Settings::MozProfileName];
+      my $app_args = [$binary];
+      unless ($Settings::BinaryName eq "TestGtkEmbed" ||
+              $Settings::BinaryName =~ /^firefox/) {
+        push(@$app_args, "-P", $Settings::MozProfileName);
       }
 
       $test_result = LayoutPerformanceTest("LayoutPerformanceTest",
                                            $build_dir,
-                                           @app_args);
+                                           $app_args);
     }
 
     # DHTML performance test.
@@ -1968,17 +1966,17 @@ sub run_all_tests {
         $startup_build_dir = $win32_build_dir;
       }
 
-      my @app_args;
+      my $app_args;
       if($Settings::BinaryName eq "TestGtkEmbed") {
-        @app_args = [];        
+        $app_args = [];        
       } else {
-        @app_args = ["-P", $Settings::MozProfileName];
+        $app_args = ["-P", $Settings::MozProfileName];
       }
 
       $test_result = StartupPerformanceTest("StartupPerformanceTest",
                                             $binary,
                                             $startup_build_dir,
-                                            @app_args,
+                                            $app_args,
                                             "file:$startup_build_dir/../startup-test.html");
     }
     return $test_result;
