@@ -46,6 +46,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIDNSService.h"
+#include "nsIDNSRecord.h"
 #include "nsISOCKSSocketInfo.h"
 #include "nsISocketProvider.h"
 #include "nsSOCKSIOLayer.h"

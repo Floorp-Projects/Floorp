@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by IBM Corporation are Copyright (C) 2003
- * IBM Corporation. All Rights Reserved.
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   IBM Corp.
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,29 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-
-interface nsICancelable;
-interface nsIDNSRecord;
+#include "nsIDNSService.idl"
 
 /**
- * nsIDNSListener
+ * This is a private interface used by the internals of the networking library.
+ * It will never be frozen.  Do not use it in external code.
  */
-[scriptable, uuid(41466a9f-f027-487d-a96c-af39e629b8d2)]
-interface nsIDNSListener : nsISupports
+[scriptable, uuid(a26c5b45-7707-4412-bbc1-2462b890848d)]
+interface nsPIDNSService : nsIDNSService
 {
     /**
-     * called when an asynchronous host lookup completes.
-     *
-     * @param aRequest
-     *        the value returned from asyncResolve.
-     * @param aRecord
-     *        the DNS record corresponding to the hostname that was resolved.
-     *        this parameter is null if there was an error.
-     * @param aStatus
-     *        if the lookup failed, this parameter gives the reason.
+     * called to initialize the DNS service.
      */
-    void onLookupComplete(in nsICancelable aRequest,
-                          in nsIDNSRecord  aRecord,
-                          in nsresult      aStatus);
+    void init();
+
+    /**
+     * called to shutdown the DNS service.  any pending asynchronous
+     * requests will be canceled, and the local cache of DNS records
+     * will be cleared.  NOTE: the operating system may still have
+     * its own cache of DNS records, which would be unaffected by
+     * this method.
+     */
+    void shutdown();
 };

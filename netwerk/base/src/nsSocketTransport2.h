@@ -51,7 +51,9 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
-#include "nsIDNSService.h"
+#include "nsIDNSListener.h"
+#include "nsIDNSRecord.h"
+#include "nsICancelable.h"
 
 class nsSocketTransport;
 
@@ -216,7 +218,7 @@ private:
     // recursively or not.  this flag is not protected by any lock.
     PRPackedBool mResolving;
 
-    nsCOMPtr<nsIDNSRequest> mDNSRequest;
+    nsCOMPtr<nsICancelable> mDNSRequest;
     nsCOMPtr<nsIDNSRecord>  mDNSRecord;
     PRNetAddr               mNetAddr;
 

@@ -47,7 +47,6 @@
 #include "nsIWidget.h"
 #include <nsString.h>
 #include <nsError.h>
-#include <nsIDNSService.h>
 #include "nsReadableUtils.h"
 #include <nsILocalFile.h>
 #include <nsIRequestObserver.h>

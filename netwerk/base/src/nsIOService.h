@@ -44,7 +44,7 @@
 #include "nsIIOService.h"
 #include "nsVoidArray.h"
 #include "nsISocketTransportService.h" 
-#include "nsIDNSService.h" 
+#include "nsPIDNSService.h" 
 #include "nsIProtocolProxyService.h"
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
@@ -103,7 +103,7 @@ protected:
     PRPackedBool                        mOffline;
     PRPackedBool                        mOfflineForProfileChange;
     nsCOMPtr<nsISocketTransportService> mSocketTransportService;
-    nsCOMPtr<nsIDNSService>             mDNSService;
+    nsCOMPtr<nsPIDNSService>            mDNSService;
     nsCOMPtr<nsIProtocolProxyService>   mProxyService;
     nsCOMPtr<nsIEventQueueService>      mEventQueueService;
     

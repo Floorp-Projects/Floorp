@@ -39,6 +39,7 @@
 #include "nsPACMan.h"
 #include "nsIDNSService.h"
 #include "nsIDNSListener.h"
+#include "nsICancelable.h"
 #include "nsEventQueueUtils.h"
 #include "nsNetUtil.h"
 #include "nsAutoLock.h"
@@ -72,7 +73,7 @@ private:
   nsPACMan                  *mPACMan;  // weak reference
   nsCOMPtr<nsIURI>           mURI;
   nsRefPtr<nsPACManCallback> mCallback;
-  nsCOMPtr<nsIDNSRequest>    mDNSRequest;
+  nsCOMPtr<nsICancelable>    mDNSRequest;
 };
 
 // This is threadsafe because we implement nsIDNSListener
@@ -119,13 +120,13 @@ PendingPACQuery::Complete(nsresult status, const nsCString &pacString)
   mCallback = nsnull;
 
   if (mDNSRequest) {
-    mDNSRequest->Cancel();
+    mDNSRequest->Cancel(NS_ERROR_ABORT);
     mDNSRequest = nsnull;
   }
 }
 
 NS_IMETHODIMP
-PendingPACQuery::OnLookupComplete(nsIDNSRequest *request,
+PendingPACQuery::OnLookupComplete(nsICancelable *request,
                                   nsIDNSRecord *record,
                                   nsresult status)
 {

@@ -48,9 +48,9 @@ XPIDL_MODULE	= necko_dns
 GRE_MODULE	= 1
 
 XPIDLSRCS	= \
+		nsPIDNSService.idl \
 		nsIDNSService.idl \
 		nsIDNSListener.idl \
-		nsIDNSRequest.idl \
 		nsIDNSRecord.idl \
 		nsIIDNService.idl \
 		$(NULL)
