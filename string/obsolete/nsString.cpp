@@ -1518,6 +1518,13 @@ PRInt32 nsString::Compare(const char *anISOLatin1,PRBool aIgnoreCase,PRInt32 aLe
     //In some cases, this can speed up the string comparison.
 
     int maxlen=(aLength<mLength) ? aLength : mLength;
+    if (maxlen == 0) {
+      if ((mLength == 0) && (aLength == 0))
+        return 0;
+      if (mLength == 0)
+        return -1;
+      return 1;
+    }
     if (aIgnoreCase) {
       return nsCRT::strncasecmp(mStr,anISOLatin1,maxlen);
     }
@@ -1538,6 +1545,13 @@ PRInt32 nsString::Compare(const char *anISOLatin1,PRBool aIgnoreCase,PRInt32 aLe
  */
 PRInt32 nsString::Compare(const nsString &S,PRBool aIgnoreCase) const {
   int maxlen=(S.mLength<mLength) ? S.mLength : mLength;
+  if (maxlen == 0) {
+    if ((mLength == 0) && (S.mLength == 0))
+      return 0;
+    if (mLength == 0)
+      return -1;
+    return 1;
+  }
   if (aIgnoreCase) {
     return nsCRT::strncasecmp(mStr,S.mStr,maxlen);
   }
@@ -1558,6 +1572,13 @@ PRInt32 nsString::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aL
     //In some cases, this can speed up the string comparison.
 
     int maxlen=(aLength<mLength) ? aLength : mLength;
+    if (maxlen == 0) {
+      if ((mLength == 0) && (aLength == 0))
+        return 0;
+      if (mLength == 0)
+        return -1;
+      return 1;
+    }
     if (aIgnoreCase) {
       return nsCRT::strncasecmp(mStr,aString,maxlen);
     }
