@@ -28,14 +28,11 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsIChromeRegistry.h"
 
 
 #include <windows.h>
 #include <shlobj.h>
 
-static nsresult GetChromeLocale(PRUnichar** localeName);
-static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
  
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
@@ -112,25 +109,8 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
                 rv = localFile->AppendRelativePath(DEFAULTS_PREF_DIR_NAME);
         }
     }
-    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv)) {
-            rv = localFile->AppendRelativePath(DEFAULTS_DIR_NAME);
-            if (NS_SUCCEEDED(rv)) {
-                rv = localFile->AppendRelativePath(DEFAULTS_PROFILE_DIR_NAME);
-#ifndef XPCOM_STANDALONE
-                if (NS_SUCCEEDED(rv)) {
-                    nsXPIDLString localeName;
-                    rv = GetChromeLocale(getter_Copies(localeName));
-                    if (NS_SUCCEEDED(rv))
-                        rv = localFile->AppendRelativeUnicodePath(localeName);
-                }
-#endif
-            }
-        }
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0 ||
+             nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -283,25 +263,3 @@ NS_METHOD winEmbedFileLocProvider::GetDefaultUserProfileRoot(nsILocalFile **aLoc
    return rv; 
 }
 
-//****************************************************************************************
-// Static Routines
-//****************************************************************************************
-
-#ifndef XPCOM_STANDALONE
-
-static nsresult GetChromeLocale(PRUnichar** localeName)
-{
-    NS_ENSURE_ARG_POINTER(localeName);
-
-    nsresult rv;    
-    *localeName = nsnull;
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-
-    if (NS_SUCCEEDED(rv)) {
-        nsString tmpstr; tmpstr.AssignWithConversion("navigator");
-        rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), localeName);
-    }
-    return rv;
-}
-
-#endif
