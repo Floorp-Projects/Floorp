@@ -35,8 +35,8 @@ INCLUDES += \
 CPPSRCS =				\
 	nsHTMLContentSink.cpp		\
 	nsHTMLDocument.cpp		\
-	nsHTMLFrame.cpp			\
-	nsHTMLFrameset.cpp		\
+	nsFrameFrame.cpp			\
+	nsFrameSetFrame.cpp		\
 	nsImageDocument.cpp		\
 	nsMarkupDocument.cpp		\
 	$(NULL)

@@ -26,8 +26,8 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=					\
 	nsHTMLContentSink.cpp			\
 	nsHTMLDocument.cpp			\
-	nsHTMLFrame.cpp				\
-	nsHTMLFrameset.cpp			\
+	nsFrameFrame.cpp				\
+	nsFrameSetFrame.cpp			\
 	nsImageDocument.cpp			\
 	nsMarkupDocument.cpp			\
 	$(NULL)
@@ -35,8 +35,8 @@ CPPSRCS=					\
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLContentSink.obj	\
 	.\$(OBJDIR)\nsHTMLDocument.obj		\
-	.\$(OBJDIR)\nsHTMLFrame.obj		\
-	.\$(OBJDIR)\nsHTMLFrameset.obj		\
+	.\$(OBJDIR)\nsFrameFrame.obj		\
+	.\$(OBJDIR)\nsFrameSetFrame.obj		\
 	.\$(OBJDIR)\nsImageDocument.obj		\
 	.\$(OBJDIR)\nsMarkupDocument.obj	\
 	$(NULL)

@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsHTMLFrameset.h"
+#include "nsFrameSetFrame.h"
 #include "nsHTMLContainer.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
