@@ -56,6 +56,13 @@ my $cbranch_op =
    params => [ ("Label*", "Register") ]
   };
 
+my $unary_op =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, source",
+   params => [ ("Register", "Register") ]
+  };
+
 
 #
 # op defititions
@@ -126,22 +133,31 @@ $ops{"SET_ELEMENT"} =
    rem    => "base, source1, source2",
    params => [ ("Register", "Register", "Register") ]
   };
-$ops{"ADD"}      = $math_op;
-$ops{"SUBTRACT"} = $math_op;
-$ops{"MULTIPLY"} = $math_op;
-$ops{"DIVIDE"}   = $math_op;
+$ops{"ADD"}        = $math_op;
+$ops{"SUBTRACT"}   = $math_op;
+$ops{"MULTIPLY"}   = $math_op;
+$ops{"DIVIDE"}     = $math_op;
+$ops{"REMAINDER"}  = $math_op;
+$ops{"SHIFTLEFT"}  = $math_op;
+$ops{"SHIFTRIGHT"} = $math_op;
+$ops{"USHIFTRIGHT"}= $math_op;
+$ops{"AND"}        = $math_op;
+$ops{"OR"}         = $math_op;
+$ops{"XOR"}        = $math_op;
 $ops{"COMPARE_LT"} = $compare_op;
 $ops{"COMPARE_LE"} = $compare_op;
 $ops{"COMPARE_EQ"} = $compare_op;
 $ops{"COMPARE_NE"} = $compare_op;
 $ops{"COMPARE_GE"} = $compare_op;
 $ops{"COMPARE_GT"} = $compare_op;
-$ops{"NOT"} =
-  {
-   super  => "Instruction_2",
-   rem    => "dest, source",
-   params => [ ("Register", "Register") ]
-  };
+$ops{"COMPARE_IN"} = $compare_op;
+$ops{"STRICT_EQ"}  = $compare_op;
+$ops{"STRICT_NE"}  = $compare_op;
+$ops{"INSTANCEOF"} = $compare_op;
+$ops{"BITNOT"}     = $unary_op;
+$ops{"NOT"}        = $unary_op;
+$ops{"NEGATE"}     = $unary_op;
+$ops{"POSATE"}     = $unary_op;
 $ops{"BRANCH"} =
   {
    super  => "GenericBranch",
@@ -177,13 +193,13 @@ $ops{"THROW"} =
    rem      => "exception value",
    params   => [ ("Register") ]
   };
-$ops{"TRY"} =
+$ops{"TRYIN"} =
   {
    super  => "Instruction_2",
    rem    => "catch target, finally target",
    params => [ ("Label*", "Label*") ]
   };
-$ops{"ENDTRY"} = 
+$ops{"TRYOUT"} = 
   {
    super  => "Instruction",
    rem    => "mmm, there is no try, only do",
@@ -330,15 +346,16 @@ sub get_classname {
     my ($enum_name) = @_;
     my @words = split ("_", $enum_name);
     my $cname = "";
-    my $i;
+    my $i = 0;
     my $word;
 
     for $word (@words) {
-        if (length($word) == 2) {
+        if ((length($word) == 2) && ($i != 0)) {
             $cname .= uc($word);
         } else {
             $cname .= uc(substr($word, 0, 1)) . lc(substr($word, 1));
         }
+        $i++;
     }
     
     return $cname;
