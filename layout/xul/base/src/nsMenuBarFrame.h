@@ -29,6 +29,7 @@
 #include "nsToolbarFrame.h"
 #include "nsMenuBarListener.h"
 #include "nsIMenuParent.h"
+#include "nsIWidget.h"
 
 class nsIContent;
 class nsIMenuFrame;
@@ -59,6 +60,7 @@ public:
   // Hides the chain of cascaded menus without closing them up.
   NS_IMETHOD HideChain();
 
+  NS_IMETHOD GetWidget(nsIWidget **aWidget);
   // The dismissal listener gets created and attached to the window.
   NS_IMETHOD CreateDismissalListener();
 

@@ -437,6 +437,10 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     if (!OnCreate())
       return;
 
+    // Set the focus back to our view's widget.
+    if (nsMenuFrame::mDismissalListener)
+      nsMenuFrame::mDismissalListener->EnableListener(PR_FALSE);
+    
     // XXX Only have this here because of RDF-generated content.
     MarkAsGenerated();
 
@@ -461,6 +465,11 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     }
 
     mMenuOpen = PR_TRUE;
+
+    // Set the focus back to our view's widget.
+    if (nsMenuFrame::mDismissalListener)
+      nsMenuFrame::mDismissalListener->EnableListener(PR_TRUE);
+    
   }
   else {
     // Close the menu. 
@@ -468,7 +477,11 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     if (!OnDestroy())
       return;
 
-    UpdateDismissalListener(mMenuParent);
+    // Set the focus back to our view's widget.
+    if (nsMenuFrame::mDismissalListener) {
+      nsMenuFrame::mDismissalListener->EnableListener(PR_FALSE);
+      nsMenuFrame::mDismissalListener->SetCurrentMenuParent(mMenuParent);
+    }
 
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
@@ -480,8 +493,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     ActivateMenu(PR_FALSE);
 
     mMenuOpen = PR_FALSE;
-
-    // Set the focus back to our view's widget.
+/*
     nsIView*  view;
     GetView(&view);
     if (!view) {
@@ -491,6 +503,9 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     nsCOMPtr<nsIWidget> widget;
     view->GetWidget(*getter_AddRefs(widget));
     widget->SetFocus();
+*/
+    if (nsMenuFrame::mDismissalListener)
+      nsMenuFrame::mDismissalListener->EnableListener(PR_TRUE);
   }
 }
 
@@ -1104,8 +1119,9 @@ nsMenuFrame::AppendFrames(nsIPresContext& aPresContext,
 void
 nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
 {
-#if 0
   if (!nsMenuFrame::mDismissalListener) {
+    if (!aMenuParent)
+       return;
     // Create the listener and attach it to the outermost window.
     aMenuParent->CreateDismissalListener();
   }
@@ -1113,5 +1129,4 @@ nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   // Make sure the menu dismissal listener knows what the current
   // innermost menu popup frame is.
   nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
-#endif
 }

@@ -181,6 +181,7 @@ protected:
   nsCOMPtr<nsITimer> mOpenTimer;
   nsIPresContext* mPresContext; // Our pres context.
 
+public:
   static nsMenuDismissalListener* mDismissalListener; // The listener that dismisses menus.
 }; // class nsMenuFrame
 

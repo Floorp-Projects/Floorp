@@ -108,7 +108,8 @@ public:
 
 protected:
   void MarkAsGenerated(nsIContent* aPopupContent);
-  
+  void UpdateDismissalListener(nsIMenuParent* aMenuParent);
+
 protected:
   nsFrameList mPopupFrames;
   nsIPresContext* mPresContext; // Our pres context.
