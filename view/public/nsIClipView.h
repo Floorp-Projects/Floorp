@@ -72,6 +72,8 @@
  */
 class nsIClipView : public nsISupports
 {
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ICLIPVIEW_IID; return iid; }
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
