@@ -455,7 +455,6 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
                                     nsIContentViewer** aDocViewer)
 {
     static NS_DEFINE_IID(kIRDFDocumentIID, NS_IRDFDOCUMENT_IID);
-    static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
 
     nsresult rv = NS_ERROR_FAILURE;
     nsIDocument* doc = nsnull;
@@ -1760,7 +1759,7 @@ nsDocumentBindInfo::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
         rv = m_Container->QueryInterface(kRefreshURLIID, (void**)&refresher);
 
         if (rv != NS_OK) {
-            PR_FALSE;
+            return PR_FALSE;
         }
         rv = refresher->RefreshURL(aURL, millis, repeat);
         NS_RELEASE(refresher);
@@ -1780,7 +1779,7 @@ nsDocumentBindInfo::CancelRefreshURLTimers(void)
         rv = m_Container->QueryInterface(kRefreshURLIID, (void**)&refresher);
 
         if (rv != NS_OK) {
-            PR_FALSE;
+            return PR_FALSE;
         }
         rv = refresher->CancelRefreshURLTimers();
         NS_RELEASE(refresher);
