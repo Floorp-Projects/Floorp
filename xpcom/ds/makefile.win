@@ -45,6 +45,7 @@ EXPORTS =                          \
 	nsInt64.h                  \
 	nsObserverService.h        \
 	nsQuickSort.h              \
+	nsRecyclingAllocator.h       \
 	nsStaticNameTable.h        \
 	nsStatistics.h             \
 	nsSupportsArray.h          \
@@ -109,6 +110,7 @@ CPP_OBJS =                                        \
 	.\$(OBJDIR)\nsProperties.obj              \
 	.\$(OBJDIR)\nsPersistentProperties.obj    \
 	.\$(OBJDIR)\nsQuickSort.obj               \
+	.\$(OBJDIR)\nsRecyclingAllocator.obj        \
 	.\$(OBJDIR)\nsSizeOfHandler.obj           \
 	.\$(OBJDIR)\nsStaticNameTable.obj         \
 	.\$(OBJDIR)\nsStatistics.obj              \

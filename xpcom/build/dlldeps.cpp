@@ -48,6 +48,7 @@
 #include "nsFileStream.h"
 #include "nsFileSpecStreaming.h"
 #include "nsFixedSizeAllocator.h"
+#include "nsRecyclingAllocator.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIThread.h"
 #include "nsDeque.h"
@@ -124,6 +125,7 @@ void XXXNeverCalled()
     NS_NewPipe(NULL, NULL, 0, 0, PR_FALSE, PR_FALSE, NULL);
     nsFileSpec s;
     nsFixedSizeAllocator a;
+    nsRecyclingAllocator recyclingAllocator(2);
     a.Init(0, 0, 0, 0, 0);
     a.Alloc(0);
     a.Free(0, 0);
