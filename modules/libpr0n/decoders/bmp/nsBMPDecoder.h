@@ -45,8 +45,6 @@
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
 
-#include <prinrval.h>
-
 #define NS_BMPDECODER_CID \
 { /* {78c61626-4d1f-4843-9364-4652d98ff6e1} */ \
   0x78c61626, \
