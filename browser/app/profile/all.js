@@ -126,6 +126,8 @@ pref("accessibility.typeaheadfind.enablesound", true);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
+pref("browser.download.manager.showAlertOnComplete", true);
+pref("browser.download.manager.showAlertInterval", 2000);
 pref("browser.download.manager.retention", 2);
 pref("browser.download.manager.showWhenStarting", true);
 pref("browser.download.manager.useWindow", true);
