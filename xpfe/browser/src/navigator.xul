@@ -696,7 +696,7 @@
   			<titledbutton align="left" class="popup" value="&openWinButton.label;" />
   	 		<titledbutton align="left" id="mini-nav" value="" />
   	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
-  	 		<titledbutton align="left" id="mini-addr" value="" />
+  	 		<titledbutton align="left" id="mini-addr" value="" onclick="OpenAddressbook()"/>
   	 		<titledbutton align="left" id="mini-comp" value="" />
 	      </box>
 	  </toolbar>

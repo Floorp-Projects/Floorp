@@ -594,6 +594,43 @@
     }
   }
 
+  function OpenAddressbook()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("chrome://addressbook/content/",
+                             window);
+    }
+  }
+
+  function MsgNewMessage()
+  {
+	// Generate a unique number, do we have a better way?
+	var date = new Date();
+	var composeAppCoreName = "ComposeAppCore:" + date.getTime() + Math.random();
+	var composeAppCore = XPAppCoresManager.Find(composeAppCoreName);
+	if (! composeAppCore)
+	{
+		composeAppCore = new ComposeAppCore();
+		if (composeAppCore)
+		{
+			composeAppCore.Init(composeAppCoreName);
+			//argument:
+			//	name=<name of the appcore>
+			//	editorType=[default | html | text]			; default means use the prefs value send_html
+			var args = "name=" + composeAppCoreName + ",editorType=default";
+			composeAppCore.NewMessage("chrome://messengercompose/content/", args, null, null, null, 0);
+			dump("Created a compose appcore from Navigator.xul, " + args);
+		}
+	}
+  }
+
   function DoPreferences()
   {
     var prefsCore = XPAppCoresManager.Find("PrefsCore");
