@@ -3,6 +3,7 @@
 // Used by winEmbed.rc
 //
 #define IDC_MYICON                      2
+#define IDD_HEADSUP_DISPLAY             101
 #define IDD_WINEMBED_DIALOG             102
 #define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
@@ -30,10 +31,16 @@
 #define IDD_BROWSER                     130
 #define IDD_BROWSER_NC                  131
 #define IDD_CHOOSEPROFILE               132
+#define IDD_STATUS_DISPLAY              132
 #define IDR_MENUBAR1                    133
+#define IDD_SPLASH_SCREEN               134
 #define IDR_MENUBAR2                    135
+#define IDD_PAGE_INFO                   135
 #define IDI_ICON1                       136
+#define IDD_NAVIGATION                  136
+#define IDD_UTILITIES                   137
 #define IDM_POPUPMENU                   138
+#define IDB_SPLASH                      140
 #define MOZ_EDIT_URI                    1001
 #define IDC_GO                          1003
 #define IDC_BROWSER                     1004
@@ -47,6 +54,17 @@
 #define IDC_RELOAD                      1011
 #define IDC_PROFILELIST                 1011
 #define IDC_FUNCTIONS                   1012
+#define IDC_Hide                        1013
+#define IDC_SLASH_IMAGE                 1015
+#define IDC_BUTTON1                     1019
+#define IDC_TitleString                 1023
+#define IDC_URLString                   1024
+#define IDC_SecurityString              1025
+#define IDC_SizeString                  1026
+#define IDC_EncodingString              1027
+#define IDC_INCREASE_FONT               1028
+#define IDC_SPIN1                       1030
+#define IDC_TAB2                        1032
 #define MOZ_Open                        32771
 #define MOZ_Print                       32772
 #define MOZ_NewBrowser                  32773
@@ -88,9 +106,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_RESOURCE_VALUE        144
 #define _APS_NEXT_COMMAND_VALUE         32823
-#define _APS_NEXT_CONTROL_VALUE         1013
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
