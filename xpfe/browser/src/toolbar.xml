@@ -21,6 +21,8 @@
 	    appCore.setWebShellWindow(window.parent);
         appCore.setDisableCallback("DoDisableButtons();");
         appCore.setEnableCallback("DoEnableButtons();");
+        dump("Adding BrowserAppCore to AppCoreManager...\n");
+        XPAppCoresManager.Add(appCore);  
       }
     } else {
       dump("BrowserAppCore has already been created! Why?\n");
@@ -46,7 +48,7 @@
 	  dump("Going Back\n");
       appCore.back();
     } else {
-      dump("BrowserAppCore has not ben created!\n");
+      dump("BrowserAppCore has not been created!\n");
     }
   }
 
@@ -57,9 +59,42 @@
 	  dump("Going Forward\n");
       appCore.forward();
     } else {
-      dump("BrowserAppCore has not ben created!\n");
+      dump("BrowserAppCore has not been created!\n");
     }
   }
+
+  function BrowserNewWindow()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	  dump("Opening New Window\n");
+      appCore.newWindow();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserPrintPreview()
+  {
+    dump("BrowserPrintPreview\n");
+  }
+
+  function BrowserClose()
+  {
+    dump("BrowserClose\n");
+  }
+
+  function BrowserExit()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	  dump("Exiting\n");
+      appCore.exit();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
 
   </html:script>
 
@@ -72,12 +107,21 @@
     <xul:command name="nsCmd:BrowserStop" onCommand="window.stop();"/>
     <xul:command name="nsCmd:BrowserHome" onCommand="window.home();"/>
     <xul:command name="nsCmd:BrowserPrint" onCommand="window.print();"/>
+    <xul:command name="nsCmd:BrowserNewWindow" onCommand="BrowserNewWindow();"/>
+    <xul:command name="nsCmd:BrowserExit" onCommand="BrowserExit();"/>
     <!-- other parameters of command are assumed to have
       some useful initial value -->
   </xul:commands>
   <xul:menubar>
     <xul:menu name="File">
+      <xul:menuitem name="New Window" cmd="nsCmd:BrowserNewWindow"/>
+      <xul:separator />
+      <xul:menuitem name="Print Setup" cmd="nsCmd:BrowserPrintSetup"/>
+      <xul:menuitem name="Print Preview" cmd="nsCmd:BrowserPrintPreview"/>
       <xul:menuitem name="Print" cmd="nsCmd:BrowserPrint"/>
+      <xul:separator />
+      <xul:menuitem name="Close" cmd="nsCmd:BrowserClose"/>
+      <xul:menuitem name="Exit" cmd="nsCmd:BrowserExit"/>
     </xul:menu>
     <xul:menu name="View">
       <xul:menuitem name="Reload" cmd="nsCmd:BrowserReload"/>
@@ -111,11 +155,18 @@
           <html:button cmd="nsCmd:BrowserPrint" style="background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
           </html:button>
-          
-		      <html:input style="width:325px;"/>   
-    	    <html:button cmd="nsCmd:BrowserHome">
+    	   <html:button cmd="nsCmd:BrowserHome">
              <html:img src="resource:/res/throbber/anims00.gif"/>
           </html:button>	      
+    </xul:toolbar>
+    <xul:toolbar style="background-color:rgb(192,192,192);">
+          <html:button cmd="nsCmd:BrowserBookmarks" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/TB_Bookmarks.gif"/>Bookmarks
+          </html:button>
+		      <html:input style="width:325px;"/>   
+          <html:button cmd="nsCmd:BrowserWhatsRelated" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/TB_WhatsRelated.gif"/>What's Related
+          </html:button>
     </xul:toolbar>
     
     <xul:toolbar>
