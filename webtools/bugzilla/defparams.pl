@@ -812,7 +812,7 @@ it if you like!):
  %urlbase%buglist.cgi?bug_status=NEW&bug_status=REOPENED&assigned_to=%userid%
 
 Or, you can use the general query page, at
-%urlbase%query.cgi.
+%urlbase%query.cgi
 
 Appended below are the individual URLs to get to all of your NEW bugs that
 haven\'t been touched for a week or more.
