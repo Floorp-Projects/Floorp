@@ -77,6 +77,8 @@
         oncommand="BrowserViewSource();" modifiers="accel"/>
     <key id="key_viewInfo" key="&pageInfoCmd.commandkey;"
         oncommand="BrowserPageInfo();"   modifiers="accel"/>
+    <key id="key_viewNextHelpPanel" keycode="VK_TAB" oncommand="showRelativePanel(true);" modifiers="control"/>
+    <key id="key_viewPrevHelpPanel" keycode="VK_TAB" oncommand="showRelativePanel(false);" modifiers="control,shift"/>
   </keyset>
   <stringbundle id="bundle_viewZoom"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
@@ -124,8 +126,9 @@
       <vbox id="helpsidebar-box" persist="width">
 
          <!-- glossary panel -->
-         <button id="help-glossary-btn" class="box-texttab texttab-sidebar"
-            label="&glossarytab.label;" oncommand="showPanel('help-glossary')"/>
+         <button id="help-glossary-btn" class="box-texttab"
+            label="&glossarytab.label;" oncommand="showPanel('help-glossary')"
+            accesskey="&glossarytab.accesskey;"/>
          <tree id="help-glossary-panel" flex="1" hidecolumnpicker="true" hidden="true"
                datasources="rdf:null"
                containment="http://home.netscape.com/NC-rdf#subheadings"
@@ -171,8 +174,9 @@
          </tree>
 
 	 <!-- index panel -->
-         <button id="help-index-btn" class="box-texttab texttab-sidebar"
-            label="&indextab.label;"  oncommand="showPanel('help-index');displayIndex();"/>
+         <button id="help-index-btn" class="box-texttab"
+            label="&indextab.label;"  oncommand="showPanel('help-index');displayIndex();"
+            accesskey="&indextab.accesskey;"/>
 
          <tree id="help-index-panel" flex="1"
                datasources="rdf:null" hidecolumnpicker="true" hidden="true"
@@ -222,8 +226,9 @@
          </tree>
 
      <!-- search panel -->
-     <button id="help-search-btn" class="box-texttab texttab-sidebar"
-             label="&searchtab.label;" oncommand="showPanel('help-search')"/>
+     <button id="help-search-btn" class="box-texttab"
+             label="&searchtab.label;" oncommand="showPanel('help-search')"
+             accesskey="&searchtab.accesskey;"/>
 
              <vbox id="help-search-panel" hidden="true" flex="1">
                 <hbox align="center">
@@ -281,8 +286,9 @@
        </vbox>
 
        <!-- table of contents panel -->
-       <button id="help-toc-btn" class="box-texttab texttab-sidebar"
-          label="&toctab.label;" oncommand="showPanel('help-toc')"/>
+       <button id="help-toc-btn" class="box-texttab"
+          label="&toctab.label;" oncommand="showPanel('help-toc')"
+          accesskey="&toctab.accesskey;"/>
           <tree id="help-toc-panel" flex="1"  hidecolumnpicker="true"
                 datasources="rdf:null"
                 containment="http://home.netscape.com/NC-rdf#subheadings"

@@ -12,16 +12,20 @@
 <!ENTITY tab1.label         "Contents">
 <!ENTITY tab2.label         "Index">
 <!-- added bt PW 1/29/02- please check for correctness-->
-<!ENTITY searchtab.label    "Search">
-<!ENTITY searchbtn.label    "Find">
-<!ENTITY toctab.label       "Contents">
-<!ENTITY indextab.label     "Index">
-<!ENTITY ixname.label       "Name">
-<!ENTITY glossarytab.label  "Glossary">
-<!ENTITY glossname.label    "Name">
+<!ENTITY searchtab.label       "Search">
+<!ENTITY searchtab.accesskey   "S">
+<!ENTITY searchbtn.label       "Find">
+<!ENTITY toctab.label          "Contents">
+<!ENTITY toctab.accesskey      "C">
+<!ENTITY indextab.label        "Index">
+<!ENTITY indextab.accesskey    "I">
+<!ENTITY ixname.label          "Name">
+<!ENTITY glossarytab.label     "Glossary">
+<!ENTITY glossarytab.accesskey "G">
+<!ENTITY glossname.label       "Name">
 <!-- added IO 2/7/01 -->
-<!ENTITY gobtn.label        "Search">
-<!ENTITY name.label	    "Item">
+<!ENTITY gobtn.label           "Search">
+<!ENTITY name.label            "Item">
 
 <!ENTITY helpThrobber.tooltip "Go to the Help Home Page">
 

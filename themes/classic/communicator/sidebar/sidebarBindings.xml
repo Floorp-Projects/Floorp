@@ -8,7 +8,7 @@
   <binding id="sbtab" extends="xul:button">
     <content>
       <xul:image class="sbtab-twisty" xbl:inherits="selected"/>
-      <xul:label class="sbtab-label" xbl:inherits="value=label" crop="right"/>
+      <xul:label class="sbtab-label" xbl:inherits="value=label,accesskey" crop="right"/>
       <xul:spacer flex="1"/>
       <xul:image class="sbtab-texture"/>
     </content>

@@ -673,3 +673,27 @@ function displayIndex() {
       treeview.toggleOpenState(i);
 }
 
+// Shows the panel relative to the currently selected panel.
+// Takes a boolean parameter - if true it will show the next panel, 
+// otherwise it will show the previous panel.
+function showRelativePanel(goForward) {
+  var selectedIndex = -1;
+  var sidebarBox = document.getElementById("helpsidebar-box");
+  var sidebarButtons = new Array();
+  for (var i = 0; i < sidebarBox.childNodes.length; i++) {
+    var btn = sidebarBox.childNodes[i];
+    if (btn.nodeName == "button") {
+      if (btn.getAttribute("selected") == "true")
+        selectedIndex = sidebarButtons.length;
+      sidebarButtons.push(btn);
+    }
+  }
+  if (selectedIndex == -1)
+    return;
+  selectedIndex += goForward ? 1 : -1;
+  if (selectedIndex >= sidebarButtons.length)
+    selectedIndex = 0;
+  else if (selectedIndex < 0)
+    selectedIndex = sidebarButtons.length - 1;
+  sidebarButtons[selectedIndex].doCommand();
+}

@@ -9,7 +9,7 @@
     <content>
       <xul:hbox class="sidebar-tab-left-box">
         <xul:spacer class="sidebar-tab-left"/>
-        <xul:label class="sidebar-tab-text" xbl:inherits="value=label" crop="right" flex="1"/>
+        <xul:label class="sidebar-tab-text" xbl:inherits="value=label,accesskey" crop="right" flex="1"/>
       </xul:hbox>
       <xul:vbox class="sidebar-tab-right-box" flex="1">
         <xul:hbox class="sidebar-tab-right-top-box">
