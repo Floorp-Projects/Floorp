@@ -43,7 +43,7 @@
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-class nsStaticAtom;
+struct nsStaticAtom;
 
 class nsIAtom;
 
