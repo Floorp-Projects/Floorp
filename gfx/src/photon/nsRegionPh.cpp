@@ -19,6 +19,10 @@
 #include "nsRegionPh.h"
 #include "prmem.h"
 
+/* Turn debug off to limit all the output to PhGfxLog */
+#undef DEBUG
+#undef FORCE_PR_LOG
+
 #include "nsPhGfxLog.h"
 
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
@@ -35,7 +39,6 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 /* Local debug flag, this create lots and lots of output */
 #undef DEBUG_REGION
-
 
 static void DumpTiles(PhTile_t *t)
 {
