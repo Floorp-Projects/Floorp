@@ -67,6 +67,7 @@ REQUIRES	= \
 		jar \
 		layout_xul \
 		gfx \
+		unicharutil \
 		$(NULL)
 
 include <$(DEPTH)/config/config.mak>
@@ -97,6 +98,7 @@ SUB_LIBRARIES   = \
 
 LLIBS   = \
     $(LIBNSPR) \
+    $(DIST)\lib\unicharutil_s.lib \
     $(DIST)\lib\xpcom.lib \
     $(DIST)\lib\js3250.lib \
     $(NULL)

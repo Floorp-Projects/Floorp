@@ -94,6 +94,7 @@ REQUIRES	= nspr \
 		  pippki \
 		  xpconnect \
 		  jar \
+		  unicharutil \
 		  $(NULL)
 
 EXTRA_LIBS = $(NSS_LIBS)
@@ -115,6 +116,7 @@ EXTRA_DSO_LDOPTS += $(sort $(EXTRA_LIBS))
 endif
 
 EXTRA_DSO_LDOPTS += \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
