@@ -1140,7 +1140,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
         nsCOMPtr<nsIDOMXULSelectControlItemElement> curItem;
         controlElement->GetCurrentItem(getter_AddRefs(curItem));
         nsCOMPtr<nsIContent> curNode = do_QueryInterface(curItem);
-        if (isSelfOrAncestor(curNode, oldKid)) {
+        if (curNode && isSelfOrAncestor(curNode, oldKid)) {
             // Current item going away
             nsCOMPtr<nsIBoxObject> box;
             controlElement->GetBoxObject(getter_AddRefs(box));
