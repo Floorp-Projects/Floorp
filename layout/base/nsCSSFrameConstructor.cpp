@@ -8093,6 +8093,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
             innerGroup->MarkDirtyChildren(state);
           }
           treeRowGroup->ClearRowGroupInfo();
+          shell->FlushPendingNotifications();
 #else
           // See if there's a previous sibling.
           nsIFrame* prevSibling = FindPreviousSibling(shell,
@@ -8377,6 +8378,10 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   }
 #endif
 
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsresult rv = NS_OK;
+
 #ifdef INCLUDE_XUL
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
@@ -8403,29 +8408,22 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         nsIFrame*     outerFrame = GetFrameFor(shell, aPresContext, child);
 
         // Convert to a tree row group frame.
-#ifdef XULTREE
         nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)outerFrame;
-#else
-        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)outerFrame;
-#endif
+
         if (treeRowGroup) {
 
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
   
-          
-#ifdef XULTREE
           nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
           treeRowGroup->ClearRowGroupInfo();
-          nsIFrame* prevSibling = nsnull;
-#else
-          nsTreeRowGroupFrame* innerGroup = (nsTreeRowGroupFrame*) innerFrame;
-          
+          nsBoxLayoutState state(aPresContext);
+          treeRowGroup->MarkDirtyChildren(state);
+   
           // See if there's a previous sibling.
           nsIFrame* prevSibling = FindPreviousSibling(shell,
                                                        aContainer,
                                                        aIndexInContainer);
-#endif
           if (prevSibling || innerFrame) {
             // We're onscreen, but because of the fact that we can be called to
             // "kill" a displayed frame (e.g., when you close a tree node), we
@@ -8453,27 +8451,18 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
               return NS_OK;
             }
             
-            // Good call.  Make sure a full reflow happens.
-            nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
-#ifdef XULTREE
-            if (nextSibling) {
-#else
-            if(!nextSibling)
-              treeRowGroup->OnContentAdded(aPresContext);
-            else {
-#endif
-              if(innerGroup)
+            if (innerGroup) {
+              //nsBoxLayoutState state(aPresContext);
+              //innerGroup->MarkDirtyChildren(state);
+
+              // Good call.  Make sure a full reflow happens.
+              nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
+              if (nextSibling)
                 innerGroup->OnContentInserted(aPresContext, nextSibling, aIndexInContainer);
             }
           }
-#ifndef XULTREE
-          else {
-            // We're going to be offscreen.
-            treeRowGroup->ClearRowGroupInfo();
-            treeRowGroup->ReflowScrollbar(aPresContext);
-          }
-#endif
 
+          shell->FlushPendingNotifications();
           return NS_OK;
         }
       }
@@ -8481,10 +8470,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   }
 #endif // INCLUDE_XUL
   
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  nsresult rv = NS_OK;
-
   // If we have a null parent, then this must be the document element
   // being inserted
   if (nsnull == aContainer) {
@@ -9124,6 +9109,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
             nsBoxLayoutState state(aPresContext);
             treeRowGroup->MarkDirtyChildren(state);
             treeRowGroup->ClearRowGroupInfo();
+            shell->FlushPendingNotifications();
           }
           return NS_OK;
 #else
