@@ -84,7 +84,7 @@ static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 
-PRBool OnMacOSX();
+static PRBool OnMacOSX();
 
 #define kWindowPositionSlop 20
 
@@ -1539,7 +1539,7 @@ void nsCocoaWindow::IsActive(PRBool* aActive)
 //
 // Return true if we are on Mac OS X, caching the result after the first call
 //
-PRBool
+static PRBool
 OnMacOSX()
 {
 
