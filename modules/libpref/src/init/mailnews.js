@@ -401,6 +401,9 @@ pref("mail.server.default.notify.on", true);
 pref("mail.server.default.mark_old_read", false);
 pref("mail.server.default.empty_trash_on_exit", false);
 
+pref("mail.server.default.using_subscription", true);
+pref("mail.server.default.dual_use_folders", true);
+
 pref("mail.smtpserver.default.auth_method", 2); // auth login
 
 pref("mail.display_glyph",true);   // see <http://www.bucksch.org/1/projects/mozilla/16507/>

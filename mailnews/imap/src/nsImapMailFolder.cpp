@@ -4121,8 +4121,23 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsAdded(PRBool bVal)
 
 NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
-#ifdef DEBUG_jefft
-	printf("jefft, finish me\n");
-#endif
-	return NS_OK;
+    nsresult rv;
+    PRBool usingSubscription = PR_FALSE;
+    nsCOMPtr<nsIImapIncomingServer> imapServer;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv) || !server) return NS_ERROR_FAILURE;
+    imapServer = do_QueryInterface(server, &rv);
+    if (NS_FAILED(rv) || !imapServer) return NS_ERROR_FAILURE;
+    rv = imapServer->GetUsingSubscription(&usingSubscription);
+    if (NS_SUCCEEDED(rv) && !usingSubscription)
+    {
+        NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+        if (NS_SUCCEEDED(rv))
+            rv = imapService->DiscoverChildren(m_eventQueue, this, this,
+                                               m_onlineFolderName,
+                                               nsnull);
+    }
+    return rv;
 }
