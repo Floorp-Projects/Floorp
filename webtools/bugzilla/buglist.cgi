@@ -1146,7 +1146,7 @@ if ($serverpush) {
     print "\n";
     print "--thisrandomstring\n";
     print "Content-type: text/html\n";
-    print "Content-disposition: attachment; filename=bugzilla_bug_list.html\n";
+    print "Content-disposition: inline; filename=bugzilla_bug_list.html\n";
     # Note! HTML header not yet closed
 }
 my $toolong = 0;
