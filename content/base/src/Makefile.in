@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  xsl_doc \
 		  intl \
+		  windowwatcher \
 		  $(NULL)
 
 CPPSRCS		= \
