@@ -287,7 +287,7 @@ sub hash {
     foreach my $field (values(%{$self->fieldsByID})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
         $result->{'fields'}->{$field->fieldID} = $field->hash; # (not an array btw: could have holes)
-        $result->{'fields'}->{$field->category.':'.$field->name} = $field->hash;
+        $result->{'fields'}->{$field->category.'.'.$field->name} = $field->hash;
     }
     return $result;
 }
