@@ -223,11 +223,15 @@ nsPopupSetFrame::Layout(nsBoxLayoutState& aState)
 
     BoundsCheck(minSize, prefSize, maxSize);
 
+    AddMargin(ibox, prefSize);
+
     // lay it out
     LayoutChildAt(aState, ibox, nsRect(0,0,prefSize.width, prefSize.height));
   }
 
   SyncLayout(aState);
+
+  LayoutFinished(aState);
 
   return rv;
 }
@@ -357,9 +361,8 @@ nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDeb
 
 
 
-NS_IMETHODIMP
-nsPopupSetFrame::DidReflow(nsIPresContext* aPresContext,
-                            nsDidReflowStatus aStatus)
+void
+nsPopupSetFrame::LayoutFinished(nsBoxLayoutState& aState)
 {
   // Sync up the view.
   nsIFrame* activeChild = GetActiveChild();
@@ -377,10 +380,9 @@ nsPopupSetFrame::DidReflow(nsIPresContext* aPresContext,
     if (popupAlign.IsEmpty())
       popupAlign = "topleft";
    
-    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(aPresContext, popupAnchor, popupAlign, mElementFrame, mXPos, mYPos);
+    nsIPresContext* presContext = aState.GetPresContext();
+    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(presContext, popupAnchor, popupAlign, mElementFrame, mXPos, mYPos);
   }
-
-  return nsBoxFrame::DidReflow(aPresContext, aStatus);
 }
 
 NS_IMETHODIMP

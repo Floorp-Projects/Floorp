@@ -55,6 +55,9 @@ public:
            PRBool aIsHorizontal);
 
   void Add(const nsMargin& aMargin, PRBool aIsHorizontal);
+  void* operator new(size_t sz, nsBoxLayoutState& aState);
+  void operator delete(void* aPtr, size_t sz);
+
 };
 
 class nsComputedBoxSize
@@ -68,8 +71,10 @@ public:
   nsComputedBoxSize* next;
 
   void Clear();
-};
+  void* operator new(size_t sz, nsBoxLayoutState& aState);
+  void operator delete(void* aPtr, size_t sz);
 
+};
 
 #define GET_WIDTH(size, isHorizontal) (isHorizontal ? size.width : size.height)
 #define GET_HEIGHT(size, isHorizontal) (isHorizontal ? size.height : size.width)

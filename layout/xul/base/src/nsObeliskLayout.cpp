@@ -80,11 +80,12 @@ nsObeliskLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
 
   PRBool isHorizontal = PR_FALSE;
   aBox->GetOrientation(isHorizontal);
-  nscoord totalWidth = 0;
+  //nscoord totalWidth = 0;
 
+  if (node) {
   // for each info
-  while(node)
-  {
+  //while(node)
+  //{
     // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
@@ -96,14 +97,14 @@ nsObeliskLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
     if (s > s2)
       s2 = s;
 
-    totalWidth += size.pref;
+    //totalWidth += size.pref;
 
-    node = node->GetNext();
+    //node = node->GetNext();
   }
 
-  nscoord& width = GET_WIDTH(aSize, isHorizontal);
-  if (totalWidth > width)
-    width = totalWidth;
+  //nscoord& width = GET_WIDTH(aSize, isHorizontal);
+  //if (totalWidth > width)
+//    width = totalWidth;
 
   return NS_OK;
 }
@@ -120,9 +121,10 @@ nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
   PRBool isHorizontal = PR_FALSE;
   aBox->GetOrientation(isHorizontal);
 
+  if (node) {
   // for each info
-  while(node)
-  {
+  //while(node)
+  //{
     // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
@@ -134,7 +136,7 @@ nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
     if (s > s2)
       s2 = s;
 
-    node = node->GetNext();
+  //  node = node->GetNext();
   }
 
   return NS_OK;
@@ -152,9 +154,10 @@ nsObeliskLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
   PRBool isHorizontal = PR_FALSE;
   aBox->GetOrientation(isHorizontal);
 
+  if (node) {
   // for each info
-  while(node)
-  {
+ // while(node)
+  //{
     // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
@@ -166,7 +169,7 @@ nsObeliskLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
     if (s > s2)
       s2 = s;
 
-    node = node->GetNext();
+  //  node = node->GetNext();
   }
 
   return NS_OK;
@@ -201,6 +204,7 @@ nsObeliskLayout::ChildNeedsLayout(nsIBox* aBox, nsIBoxLayout* aChild)
   }
 }
 
+/*
 void
 nsObeliskLayout::ComputeChildSizes(nsIBox* aBox, 
                                    nsBoxLayoutState& aState, 
@@ -225,6 +229,78 @@ nsObeliskLayout::ComputeChildSizes(nsIBox* aBox,
      }
   } else {
     nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes); 
+  }
+}
+*/
+
+void
+nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes)
+{
+  nsTempleLayout* temple = nsnull;
+  nsIBox* aTempleBox = nsnull;
+  GetOtherTemple(aBox, &temple, &aTempleBox);
+  if (temple) {
+     // substitute our sizes for the other temples obelisk sizes.
+     nsBoxSize* first = nsnull;
+     nsBoxSize* last = nsnull;
+     temple->BuildBoxSizeList(aTempleBox, aState, first, last);
+     aBoxSizes = first;
+  } else {
+    nsSprocketLayout::PopulateBoxSizes(aBox, aState, aBoxSizes, aComputedBoxSizes, aMinSize, aMaxSize, aFlexes);
+    return;
+  }
+
+  aMinSize = 0;
+  aMaxSize = NS_INTRINSICSIZE;
+
+  PRBool isHorizontal = PR_FALSE;
+  aBox->GetOrientation(isHorizontal);
+  aFlexes = 0;
+
+  nsIBox* child = nsnull;
+  aBox->GetChildBox(&child);
+  while(child)
+  {
+    nscoord flex = 0;
+    child->GetFlex(aState, flex);
+    
+    if (flex > 0) 
+       aFlexes++;
+
+    nsSize pref(0,0);
+    nsSize min(0,0);
+    nsSize max(0,0);
+
+    nscoord ascent = 0;
+    child->GetPrefSize(aState, pref);
+    child->GetAscent(aState, ascent);
+    nsMargin margin;
+    child->GetMargin(margin);
+    child->GetMinSize(aState, min);
+    child->GetMaxSize(aState, max);
+    nsBox::BoundsCheck(min, pref, max);
+
+    AddMargin(child, pref);
+    AddMargin(child, min);
+    AddMargin(child, max);
+
+      if (!isHorizontal) {
+        if (min.width > aMinSize)
+          aMinSize = min.width;
+
+        if (max.width < aMaxSize)
+          aMaxSize = max.width;
+
+      } else {
+        if (min.height > aMinSize)
+          aMinSize = min.height;
+
+        if (max.height < aMaxSize)
+          aMaxSize = max.height;
+      }
+
+
+    child->GetNextBox(&child);
   }
 }
 

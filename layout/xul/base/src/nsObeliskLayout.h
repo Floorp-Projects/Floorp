@@ -49,11 +49,15 @@ protected:
   void ChildNeedsLayout(nsIBox* aBox, nsIBoxLayout* aChild);
   virtual void UpdateMonuments(nsIBox* aBox, nsBoxLayoutState& aState);
 
+  /*
   virtual void ComputeChildSizes(nsIBox* aBox,
                          nsBoxLayoutState& aState, 
                          nscoord& aGivenSize, 
                          nsBoxSize* aBoxSizes, 
                          nsComputedBoxSize*& aComputedBoxSizes);
+  */
+
+  virtual void PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsBoxSize*& aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes);
 
 nsObeliskLayout(nsIPresShell* aShell);
 
