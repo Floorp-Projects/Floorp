@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.19 $ 
-# $Date: 2001/07/20 19:05:00 $ 
+# $Revision: 1.20 $ 
+# $Date: 2001/08/02 20:11:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -446,7 +446,7 @@ sub atomic_rename_file {
   my ($oldfile, $outfile) = @_;
 
   # This may be the output of a glob, make it taint safe.
-  $outfile = main::extract_filename_chars($outfile);
+  $outfile = main::extract_safe_filename($outfile);
 
   (-f $outfile) && 
     (!(unlink($outfile))) &&
@@ -463,7 +463,7 @@ sub overwrite_file {
   my ($outfile, @outdata) = @_;
 
   # This may be the output of a glob, make it taint safe.
-  $outfile = main::extract_filename_chars($outfile);
+  $outfile = main::extract_safe_filename($outfile);
 
   my ($dirname) = File::Basename::dirname($outfile);
   my ($basename) = File::Basename::basename($outfile);
@@ -605,10 +605,13 @@ sub extract_printable_chars {
 
   $str =~ s![^a-zA-Z0-9\ \t\n\`\"\'\;\:\,\?\.\-\_\+\=\\\|\/\~\!\@\#\$\%\^\&\*\(\)\{\}\[\]\<\>]+!!g;
 
-  $str =~ m!(.*)!s;
-  $str = $1;
+  if ( $str =~ m!(.*)!s ) {
+      $out = $1;
+  } else {
+      $out = '';
+  }
 
-  return $str;
+  return $out;
 }
 
 
@@ -616,29 +619,56 @@ sub extract_printable_chars {
 sub extract_digits {
   my ($str) = @_;
 
-  $str =~ m/([0-9]+)/;
-  $str = $1;
+  if ( $str =~ m/([0-9]+)/ ) {
+      $out = $1;
+  } else {
+      $out = '';
+  }
 
-  return $str;
+  return $out;
 }
 
 
-# remove characters which do not belong in a filename/static URL from a string
+# remove characters which do not belong in a filename/static URL from
+# a string
+
 sub extract_filename_chars {
   my ($str) = @_;
 
+  my $out;
+
   # This may be the output of a glob, make it taint safe.
-  $str =~ m/([0-9a-zA-Z\.\-\_\/\:]+)/;
-  $str = $1;
+  if ( $str =~ m/([0-9a-zA-Z\.\-\_\/\:]+)/ ) {
+      $out = $1;
+  } else {
+      $out = '';
+  }
+
+  return $out;
+}
+
+
+
+# ensure that filenames are only coming from directories we are
+# allowed to write to or read data from.
+
+sub extract_safe_filename {
+  my ($str) = @_;
+
+  $str = extract_filename_chars($str);
 
   # Restrict possible directories for added security
   my ($prefix1) = $FileStructure::TINDERBOX_DATA_DIR;
   my ($prefix2) = $FileStructure::TINDERBOX_HTML_DIR;
 
-  $str =~ m/^((($prefix1)|($prefix2)).*)/;
-  $str = $1;
+  my $out;
+  if ( $str =~ m/^((($prefix1)|($prefix2)).*)/ ) {
+      $out = $1;
+  } else {
+      $out = '';
+  }
 
-  return $str;
+  return $out;
 }
 
 
@@ -703,10 +733,14 @@ sub extract_user {
   # At mozilla.org authors are email addresses with the "\@"
   # replaced by "\%" they have one user with a + in his name
 
-  $user =~ m/([a-zA-Z0-9\_\-\.\%\+\@]+)/;
-  $user = $1;
+  my $out;
+  if ( $user =~ m/([a-zA-Z0-9\_\-\.\%\+\@]+)/ ) {
+      $out = $1;
+  } else {
+      $out = '';
+  }
 
-  return $user;
+  return $out;
 }
 
 
