@@ -100,7 +100,6 @@ GECKO_LIBS		= \
 			-lwidgetsupport_s \
 			-lraptorgfx \
 			$(TIMER_LIBS) \
-			-ljsdom \
 			$(NULL)
 
 IMGLIB_LIBS		= \
@@ -125,11 +124,6 @@ NETLIB_LIBS		= \
 			-ljsurl \
 			-lmozdbm \
 			-lpwcac \
-			$(NULL)
-else
-NETLIB_LIBS		= \
-			-lneckoutil_s \
-			-ljsurl \
 			$(NULL)
 endif
 

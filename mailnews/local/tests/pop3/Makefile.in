@@ -32,8 +32,6 @@ LIBS = \
 	-lmozdbm	\
 	-lxp	\
 	-lmozjs	\
-	-ljsdom	\
-	-ljsurl	\
 	$(TIMER_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \

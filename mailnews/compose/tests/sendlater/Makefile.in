@@ -45,8 +45,6 @@ LIBS		= \
 		-lmozdbm \
 		-lxp \
 		-lmozjs \
-		-ljsdom \
-		-ljsurl \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		-lraptorgfx \

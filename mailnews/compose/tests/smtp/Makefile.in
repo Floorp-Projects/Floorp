@@ -31,8 +31,6 @@ LIBS = \
 	-lmozdbm	\
 	-lxp	\
 	-lmozjs	\
-	-ljsdom	\
-	-ljsurl	\
 	-limg	\
 	-lxp	\
 	-lmozutil \

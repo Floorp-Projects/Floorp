@@ -36,7 +36,6 @@ BASE_LIBS	= \
 		$(NULL)
 
 GECKO_LIBS	= \
-		-ljsdom \
 		-lraptorplugin \
 		$(NULL)
 
@@ -54,7 +53,6 @@ NETLIB_LIBS	= \
 		-lnetlib \
 		-lnetwork \
 		-lxp \
-		-ljsurl \
 		-lmozdbm \
 		-lpwcac \
 		$(NULL)

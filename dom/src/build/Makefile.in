@@ -47,6 +47,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
+		-L$(DIST)/bin -ljsurl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

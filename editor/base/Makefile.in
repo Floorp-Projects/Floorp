@@ -75,9 +75,12 @@ endif
 
 MODULE = editor
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib \
-                   -lneckoutil_s \
-                   $(NULL)
+EXTRA_DSO_LDOPTS =\
+				-L$(DIST)/lib \
+				-lneckoutil_s \
+				-L$(DIST)/bin \
+				-lraptorhtmlpars \
+				$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
