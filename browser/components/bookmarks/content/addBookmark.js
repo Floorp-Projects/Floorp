@@ -274,9 +274,11 @@ function getNormalizedURL(url)
     kLF.initWithPath(url);
     if (kLF.exists()) {
       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.classes.nsIIOService);
+                                .getService(Components.interfaces.nsIIOService);
+      var fileHandler = ioService.getProtocolHandler("file")
+                                 .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
 
-      url = ioService.getURLSpecFromFile(kLF);
+      url = fileHandler.getURLSpecFromFile(kLF);
     }
   }
   catch (e) {
