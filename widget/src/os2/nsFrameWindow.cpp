@@ -17,6 +17,16 @@
  *
  * Contributor(s): 
  *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/23/2000       IBM Corp.      Fix missing title bars on profile wizard windows.
  */
 
 // Frame window - produced when NS_WINDOW_CID is required.
@@ -57,7 +67,11 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    FRAMECDATA fcd = { sizeof( FRAMECDATA), 0, 0, 0 };
 
    // Set flags only if not first hidden window created by nsAppShellService
-   if (haveHiddenWindow)
+
+   // This line is being commented out to address the problem of the profile manager's windows
+   // being created w/out title-bars
+   // OS2TODO -- insure this does not affect any other portion of the application 
+   // if (haveHiddenWindow)
      fcd.flCreateFlags = GetFCFlags();
 
    // Assume frames are toplevel.  Breaks if anyone tries to do MDI, which

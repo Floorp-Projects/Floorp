@@ -16,6 +16,16 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/23/2000       IBM Corp.      Added InvalidateRegion method.
  *
  */
 
@@ -75,14 +85,14 @@ class nsWindow : public nsBaseWidget,
 
    // Physical properties
    NS_IMETHOD Show( PRBool bState);
-   NS_IMETHOD Move( PRUint32 aX, PRUint32 aY);
-   NS_IMETHOD Resize( PRUint32 aWidth,
-                      PRUint32 aHeight,
+   NS_IMETHOD Move( PRInt32 aX, PRInt32 aY);
+   NS_IMETHOD Resize( PRInt32 aWidth,
+                      PRInt32 aHeight,
                       PRBool   aRepaint);
-   NS_IMETHOD Resize( PRUint32 aX,
-                      PRUint32 aY,
-                      PRUint32 aWidth,
-                      PRUint32 aHeight,
+   NS_IMETHOD Resize( PRInt32 aX,
+                      PRInt32 aY,
+                      PRInt32 aWidth,
+                      PRInt32 aHeight,
                       PRBool   aRepaint);
    NS_IMETHOD GetClientBounds( nsRect &aRect);
    NS_IMETHOD GetBorderSize( PRInt32 &aWidth, PRInt32 &aHeight);
@@ -101,6 +111,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD WidgetToScreen( const nsRect &aOldRect, nsRect &aNewRect);
    NS_IMETHOD ScreenToWidget( const nsRect &aOldRect, nsRect &aNewRect);
    NS_IMETHOD DispatchEvent( struct nsGUIEvent *event, nsEventStatus &aStatus);
+   NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
    // Widget appearance
    virtual nscolor         GetForegroundColor();
@@ -114,6 +125,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              SetTitle( const nsString& aTitle); 
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
    NS_IMETHOD              Invalidate( const nsRect & aRect, PRBool aIsSynchronous);
+   NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
    NS_IMETHOD              Update();
    NS_IMETHOD              Scroll( PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
    NS_IMETHOD              Paint( nsIRenderingContext& aRenderingContext,
@@ -199,6 +211,7 @@ class nsWindow : public nsBaseWidget,
    VDKEY     mDeadKey;        // dead key from previous keyevent
    BOOL      mHaveDeadKey;    // is mDeadKey valid [0 may be a valid dead key, for all I know]
    HWND      mHackDestroyWnd; // access GetMainWindow() window from destructor
+   QMSG      mQmsg;
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }

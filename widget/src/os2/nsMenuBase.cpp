@@ -131,7 +131,7 @@ nsresult nsMenuBase::InsertItemAt( nsISupports *aThing, PRUint32 aPos)
    nsIMenu     *pMenu = nsnull;
    nsIMenuItem *pItem = nsnull;
    MENUITEM     mI    = { aPos, 0, 0, 0, 0, (ULONG) aThing };
-   char        *pStr  = nsnull;
+   nsString     pStr;
 
    // XXX needs to use unicode converter to get right text
    //     This is very much an issue now that menus are constructed
@@ -193,7 +193,7 @@ nsresult nsMenuBase::InsertItemAt( nsISupports *aThing, PRUint32 aPos)
    }
 
    // add menu item to gui
-   SendMsg( MM_INSERTITEM, MPFROMP(&mI), MPFROMP(pStr));
+   SendMsg( MM_INSERTITEM, MPFROMP(&mI), MPFROMP(&pStr));
    // ..and take ownership of it (separators don't have it)
    if( aThing)
       mElements->InsertElementAt( aThing, 0);

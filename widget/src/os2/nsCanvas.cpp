@@ -17,6 +17,18 @@
  *
  * Contributor(s): Henry Sobotka <sobotka@axess.com> 01/2000 review and update
  *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/31/2000   IBM Corp.       @JSK32365 - Set WS_CLIPSIBLINGS on
+ *                              nsCanvas objects to fix bleed-through
+ *
  */
 
 // nscanvas - basic window class that dispatches paint events.
@@ -259,5 +271,5 @@ PCSZ nsCanvas::WindowClass()
 
 ULONG nsCanvas::WindowStyle()
 {
-   return BASE_CONTROL_STYLE | WS_CLIPCHILDREN;
+   return BASE_CONTROL_STYLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 }

@@ -17,6 +17,19 @@
  *
  * Contributor(s): 
  *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
+ *
  */
 
 #include "nsTooltipManager.h"
@@ -340,7 +353,7 @@ void nsTooltipManager::RemoveTooltips( nsWindow *window)
 nsTooltipManager::nsTooltipManager() : mElements(0), mTTMode( PR_FALSE)
 {}
 
-PRBool emptyHashtableFunc( nsHashKey *aKey, void *aData, void *pClosure)
+PRBool PR_CALLBACK emptyHashtableFunc( nsHashKey *aKey, void *aData, void *pClosure)
 {
    delete (TTData*) aData;
    return PR_TRUE; // keep going

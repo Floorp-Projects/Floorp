@@ -17,6 +17,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
  */
 
 #include "nsAppShell.h"
