@@ -202,10 +202,19 @@ void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByte
   }
   else {
     PR_ASSERT(endIndex - startIndex >= 2);
-    
-    /* At this point, the substring starting at (startIndex + 1) and ending at (endIndex - 1),
+    /* At this point, there are two cases.  Either the error is on the first line or
+       on subsequent lines.  If the error is on the first line, startIndex will decrement
+       all the way to zero.  If not, startIndex will decrement to the position of the
+       newline character on the previous line.  So, in the first case, the start position
+       of the error line = startIndex (== 0).  In the second case, the start position of the
+       error line = startIndex + 1.  In both cases, the end position of the error line will be 
+       (endIndex - 1).  */
+    PRUint32 startPosn = (startIndex <= 0) ? startIndex : startIndex + 1;
+        
+    /* At this point, the substring starting at startPosn and ending at (endIndex - 1),
        is the line on which the error occurred. Copy that substring into the error structure. */
-    aError->sourceLine.Append((const PRUnichar* )&aSourceBuffer[(startIndex + 1) * sizeof(XML_Char)], (endIndex - 1) - startIndex);
+    const PRUnichar* unicodeBuffer = (const PRUnichar*) aSourceBuffer;
+    aError->sourceLine.Append(&unicodeBuffer[startPosn], endIndex - startPosn);
   }
 }
 
@@ -223,7 +232,7 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
   error->code = XML_GetErrorCode(mExpatParser);
   error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
   error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
-  error->description = (PRUnichar*) XML_ErrorString(error->code);
+  error->description = XML_ErrorString(error->code);
   byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);  
   SetErrorContextInfo(error, (byteIndexRelativeToFile - mBytesParsed), aBuffer, aLength);  
   token->SetError(error);
