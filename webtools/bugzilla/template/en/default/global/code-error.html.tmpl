@@ -61,6 +61,10 @@
     The ID <code>[% page_id FILTER html %]</code> is not a
     valid page identifier.
 
+  [% ELSIF error == "bad_arg" %]
+    Bad argument <code>[% argument FILTER html %]</code> sent to
+    <code>[% function FILTER html %]</code> function.
+
   [% ELSIF error == "bug_error" %]
     Trying to retrieve [% terms.bug %] [%+ bug.bug_id FILTER html %] returned 
     the error [% bug.error FILTER html %].
@@ -104,10 +108,6 @@
     Attempted to add [% terms.bug %] to an inactive group, identified by the bit
     '[% bit FILTER html %]'.
 
-  [% ELSIF error == "bad_arg" %]
-    Bad argument <code>[% argument FILTER html %]</code> sent to
-    <code>[% function FILTER html %]</code> function.
-
   [% ELSIF error == "invalid_attach_id_to_obsolete" %]
      The attachment number of one of the attachments you wanted to obsolete,
      [% attach_id FILTER html %], is invalid.
@@ -131,7 +131,12 @@
   [% ELSIF error == "invalid_dimensions" %]
     [% title = "Invalid Dimensions" %]
     The width or height specified is not a positive integer.
-    
+
+  [% ELSIF error == "invalid_isactive_flag" %]
+    [% title = "Invalid isactive flag" %]        
+    The active flag was improperly set.  There may be
+    a problem with [% terms.Bugzilla %] or [% terms.abug %] in your browser.
+
   [% ELSIF error == "invalid_series_id" %]
     [% title = "Invalid Series" %]
     The series_id [% series_id FILTER html %] is not valid. It may be that

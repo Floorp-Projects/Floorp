@@ -96,6 +96,11 @@
     account creation. Please contact an administrator to get a new account
     created.
 
+  [% ELSIF error == "auth_cant_edit_groups" %]
+    [% title = "Not authorized to edit groups" %]
+    Sorry, you aren't a member of the 'creategroups' group. And so,
+    you aren't allowed to edit the groups.
+
   [% ELSIF error == "authorization_failure" %]
     [% title = "Authorization Failed" %]
     You are not allowed to [% action FILTER html %].
@@ -169,6 +174,14 @@
     [% title = "Email Address Confirmation Failed" %]
     Email address confirmation failed.
 
+  [% ELSIF error == "empty_group_description" %]
+    [% title = "The group description can not be empty" %]
+    You must enter a description for the new group.
+
+  [% ELSIF error == "empty_group_name" %]
+    [% title = "The group name can not be empty" %]
+    You must enter a name for the new group.
+  
   [% ELSIF error == "entry_access_denied" %]
     [% title = "Permission Denied" %]
     Sorry; you do not have the permissions necessary to enter [% terms.abug %]
@@ -235,7 +248,15 @@
     [% title = "Flag Type Sort Key Invalid" %]
     The sort key must be an integer between 0 and 32767 inclusive.
     It cannot be <em>[% sortkey FILTER html %]</em>.
-  
+
+  [% ELSIF error == "group_exists" %]
+    [% title = "The group already exists" %]
+    The group [% name FILTER html %] already exists.
+
+  [% ELSIF error == "group_not_specified" %]
+    [% title = "Group not specified" %]
+    No group was specified.
+
   [% ELSIF error == "illegal_at_least_x_votes" %]
     [% title = "Your Search Makes No Sense" %]
     The <em>At least ___ votes</em> field must be a simple number. 
@@ -370,6 +391,10 @@
     [% END %]
     ).
 
+  [% ELSIF error == "invalid_group_ID" %]
+    [% title = "Invalid group ID" %]
+    The group you specified doesn't exist.
+
   [% ELSIF error == "invalid_maxrows" %]
     [% title = "Invalid Max Rows" %]
     The maximum number of rows, '[% maxrows FILTER html %]', must be
@@ -378,7 +403,11 @@
   [% ELSIF error == "invalid_product_name" %]
     [% title = "Invalid Product Name" %]
     The product name '[% product FILTER html %]' is invalid or does not exist.
-    
+
+  [% ELSIF error == "invalid_regexp" %]
+    [% title = "Invalid regular expression" %]
+    The regular expression you entered is invalid.
+
   [% ELSIF error == "invalid_username" %]
     [% title = "Invalid Username" %]
     The name <tt>[% name FILTER html %]</tt> is not a valid username.  

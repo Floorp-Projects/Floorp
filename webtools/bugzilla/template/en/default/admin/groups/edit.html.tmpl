@@ -1,0 +1,159 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@syndicomm.com>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #%]
+
+[%# INTERFACE:
+  # group_id: number. The group ID.
+  # name: string. The name of the group.
+  # description: string. The description of the group.
+  # rexp: string. The regular expression for the users of the group.
+  # isactive: boolean int. Shows if the group is still active.
+  # isbuggroup: boolean int. Is 1 if this is a bug group.
+  # groups: array with group objects having the properties:
+  #   - grpid: number. The ID of the group.
+  #   - grpname: string. The name of the group.
+  #   - grpdesc: string. The description of the group.
+  #   - grpmember: boolean int. Is 1 if the current user is a group member.
+  #   - blessmember: boolean int. Is 1 if the current user can bless members
+  #                  in the current group.
+  #%]
+
+
+[% PROCESS global/header.html.tmpl
+  title = "Change Group"
+%]
+
+<form method="post" action="editgroups.cgi">
+  <table border="1" cellpadding="4">
+    <tr>
+      <th>Group:</th>
+      <td>
+        [% IF isbuggroup %]
+          <input type="hidden" name="oldname" value="[% name FILTER html %]">
+          <input type="text" name="name" size="60" value="[% name FILTER html %]">
+        [% ELSE %]
+          [% name FILTER html %]
+        [% END %]
+      </td>
+    </tr>
+
+    <tr>
+      <th>Description:</th>
+      <td>
+        [% IF isbuggroup %]
+          <input type="hidden" name="olddesc" value="[% description FILTER html %]">
+          <input type="text" name="desc" size="70" value="[% description FILTER html %]">
+        [% ELSE %]
+          [% description FILTER html %]
+        [% END %]
+      </td>
+    </tr>
+
+    <tr>
+      <th>User Regexp:</th>
+      <td>
+        <input type="hidden" name="oldrexp" value="[% rexp FILTER html %]">
+        <input type="text" name="rexp" size="40" value="[% rexp FILTER html %]">
+      </td>
+    </tr>
+
+    [% IF isbuggroup %]
+      <tr>
+        <th>Use For [% terms.Bugs %]:</th>
+        <td>
+          <input type="checkbox" name="isactive" value="1" [% (isactive == 1) ? "checked" : "" %]>
+          <input type="hidden" name="oldisactive" value="[% isactive FILTER html %]">
+        </td>
+      </tr>
+    [% END %]
+  </table>
+
+  <p>
+    Users become members of this group in one of three ways:
+    <ul>
+      <li> by being explicity included when the user is edited.
+      <li> by matching the user regexp above.
+      <li> by being a member of one of the groups included in this group
+           by checking the boxes below.
+    </ul>
+  </p>
+
+  <table>
+    <tr>
+      <td colspan="4">Members of these groups can grant membership to this group</td>
+    </tr>
+    <tr>
+      <td align="center">|</td>
+      <td colspan="3">Members of these groups are included in this group</td>
+    </tr>
+    <tr>
+      <td align="center">|</td>
+      <td align="center">|</td>
+      <td colspan="2"></td>
+    </tr>
+    [% FOREACH group = groups %]
+      <tr>
+        <td>
+          <input type="checkbox" name="bless-[% group.grpid FILTER html %]" [% group.blessmember ? "checked " : "" %]value="1">
+          <input type="hidden" name="oldbless-[% group.grpid FILTER html %]" value="[% group.blessmember FILTER html %]">
+        </td>
+        <td>
+          <input type="checkbox" name="grp-[% group.grpid FILTER html %]" [% group.grpmember ? "checked " : "" %]value="1">
+          <input type="hidden" name="oldgrp-[% group.grpid FILTER html %]" value="[% group.grpmember FILTER html %]">
+        </td>
+        <td><b>[% group.grpnam FILTER html %]</b></td>
+        <td>[% group.grpdesc FILTER html %]</td>
+      </tr>
+    [% END %]
+  </table>
+  
+  <input type="submit" value="Submit">
+
+  <p>
+  <table width="76%" border="1">
+    <tr>
+      <td>
+        <p><strong>Conversion of groups created with [% terms.Bugzilla %]
+        versions 2.16 and prior:</strong></p>
+        
+        <ul>
+          <li>Remove all explicit memberships from this group: 
+            <input name="remove_explicit_members" type="submit" id="remove_explicit_members" value="Remove Memberships">
+          </li>
+
+          <li>Remove all explicit memberships that are included in the above
+            regular expression: 
+            <input name="remove_explicit_members_regexp" type="submit" id="remove_explicit_members_regexp" value="Remove memberships included in regular expression"> 
+          </li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+
+  <input type="hidden" name="action" value="postchanges">
+  <input type="hidden" name="group" value="[% group_id FILTER html %]">
+</form>
+
+Back to the <a href="editgroups.cgi">group list</a>.
+
+[% PROCESS global/footer.html.tmpl %] 
