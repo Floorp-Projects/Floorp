@@ -5336,6 +5336,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
       
       // only consider certain nodes to be empty for purposes of removal
       if (!(
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("a"))      || 
             nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("b"))      || 
             nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("i"))      || 
             nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("u"))      || 
