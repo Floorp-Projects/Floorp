@@ -104,6 +104,7 @@ public:
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
+  NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
@@ -303,6 +304,9 @@ nsWebShell::ReleaseChildren()
   for (i = 0; i < n; i++) {
     nsIWebShell* shell = (nsIWebShell*) mChildren.ElementAt(i);
     shell->SetParent(nsnull);
+
+    //Break circular reference of webshell to contentviewer
+    shell->SetContentViewer(nsnull);
     NS_RELEASE(shell);
   }
   mChildren.Clear();
@@ -576,6 +580,15 @@ nsWebShell::Hide()
 }
 
 NS_IMETHODIMP
+nsWebShell::SetContentViewer(nsIContentViewer* aViewer)
+{
+  NS_IF_RELEASE(mContentViewer);
+  mContentViewer = aViewer;
+  NS_IF_ADDREF(aViewer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::GetContentViewer(nsIContentViewer*& aResult)
 {
   aResult = mContentViewer;
@@ -654,16 +667,17 @@ nsresult
 nsWebShell::GetRootWebShell(nsIWebShell*& aResult)
 {
   nsIWebShell* top = this;
+  NS_ADDREF(this);
   for (;;) {
     nsIWebShell* parent;
     top->GetParent(parent);
     if (nsnull == parent) {
       break;
     }
+    NS_RELEASE(top);
     top = parent;
   }
   aResult = top;
-  NS_ADDREF(top);
   return NS_OK;
 }
 

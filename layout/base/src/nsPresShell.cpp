@@ -313,8 +313,9 @@ PresShell::~PresShell()
   if (nsnull != mRootFrame) {
     mRootFrame->DeleteFrame();
   }
-  NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mViewManager);
+  //Release mPresContext after mViewManager
+  NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mStyleSet);
   mRefCnt = 0;
 }

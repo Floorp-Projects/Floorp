@@ -100,8 +100,8 @@ public:
 
   NS_IMETHOD Hide() = 0;
 
+  NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer) = 0;
   NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult) = 0;
-  // XXX SetContentViewer?
 
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer) = 0;
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
