@@ -584,17 +584,39 @@ nsInstallFileOpItem::RegisterPackageNode()
 PRInt32
 nsInstallFileOpItem::NativeFileOpDirCreatePrepare()
 {
-  PRInt32 ret = nsInstall::ALREADY_EXISTS;
-  PRBool  flagExists;
+  PRInt32  ret = nsInstall::UNEXPECTED_ERROR;
+  PRBool   flagExists;
+  PRBool   flagIsFile;
+  nsresult rv;
 
   mAction = nsInstallFileOpItem::ACTION_FAILED;
 
-  mTarget->Exists(&flagExists);
-  if (!flagExists)
+  rv = mTarget->Exists(&flagExists);
+  if (NS_SUCCEEDED(rv))
   {
-      mTarget->Create(1, 0755);
-      mAction = nsInstallFileOpItem::ACTION_SUCCESS;
-      ret     = nsInstall::SUCCESS;
+    if (!flagExists)
+    {
+      rv = mTarget->Create(1, 0755);
+      if (NS_SUCCEEDED(rv))
+      {
+        mAction = nsInstallFileOpItem::ACTION_SUCCESS;
+        ret = nsInstall::SUCCESS;
+      }
+    }
+    else
+    {
+      rv = mTarget->IsFile(&flagIsFile);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (flagIsFile)
+          ret = nsInstall::IS_FILE;
+        else
+        {
+          mAction = nsInstallFileOpItem::ACTION_SUCCESS;
+          ret = nsInstall::SUCCESS;
+        }
+      }
+    }
   }
 
   return ret;
