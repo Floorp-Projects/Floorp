@@ -28,6 +28,7 @@
  *   sspitzer@netscape.com
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Howard Chu <hyc@highlandsun.com>
+ *   William Bonnet <wbonnet@on-x.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1894,7 +1895,8 @@ nsMsgLocalMailFolder::CopyFolder( nsIMsgFolder* srcFolder, PRBool isMoveFolder,
 }
 
 NS_IMETHODIMP
-nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFolder,
+nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, 
+                                      PRBool isMoveFolder,
                                       nsIMsgWindow *msgWindow,
                                       nsIMsgCopyServiceListener *listener )
 {
@@ -1969,10 +1971,22 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   nsFileSpec path = oldPath;
   
   rv = path.CopyToDir(newPath);   //copying necessary for aborting.... if failure return
-  NS_ENSURE_SUCCESS(rv, rv);     //would fail if a file by that name exists
+  NS_ENSURE_SUCCESS(rv, rv);      //would fail if a file by that name exists
 
-  rv = summarySpec.CopyToDir(newPath);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Copy to dir can fail if filespec does not exist. If copy fails, we test
+  // if the filespec exist or not, if it does not that's ok, we continue 
+  // without copying it. If it fails and filespec exist and is not zero sized
+  // there is real problem
+  rv = summarySpec.CopyToDir(newPath);      // Copy the filespec to the new dir
+  if (! NS_SUCCEEDED(rv))                   // Test if the copy is successfull
+  {                                       
+    // Test if the filespec has data
+    if (summarySpec.Exists() && (summarySpec.GetFileSize() > 0))
+      NS_ENSURE_SUCCESS(rv, rv);          // Yes, it should have worked !
+    // else case is filespec is zero sized, no need to copy it, 
+    // not an error
+    // else case is filespec does not exist - not an error
+  }
   
   // linux and mac are not good about maintaining the file stamp when copying folders
   // around. So if the source folder db is good, set the dest db as good too.
@@ -2018,9 +2032,24 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
     rv = aEnumerator->Next();
     if (folder)
     {
-      nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(newMsgFolder);
+      nsCOMPtr <nsIMsgLocalMailFolder> localFolder =
+        do_QueryInterface(newMsgFolder);
       if (localFolder)
-        copyStatus = localFolder->CopyFolderLocal(folder, PR_FALSE, msgWindow, listener);  // PR_FALSE needed to avoid un-necessary deletions
+      {
+        // PR_FALSE needed to avoid un-necessary deletions
+        copyStatus = localFolder->CopyFolderLocal(folder, PR_FALSE, msgWindow, listener);
+        // Test if the call succeeded, if not we have to stop recursive call
+        if (NS_FAILED(copyStatus))
+        {
+          // Copy failed we have to notify caller to handle the error and stop
+          // moving the folders. In case this happens to the topmost level of
+          // recursive call, then we just need to break from the while loop and
+          // go to error handling code.
+          if (!isMoveFolder)
+            return copyStatus;
+          break;
+        }
+      }
     }
   }  
   
@@ -2055,6 +2084,30 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
         parentPath.Delete(PR_TRUE);
     }
   }
+  else
+  {
+    // This is the case where the copy of a subfolder failed.
+    // We have to delete the newDirectory tree to make a "rollback".
+    // Someone should add a popup to warn the user that the move was not
+    // possible.
+    if (isMoveFolder && NS_FAILED(copyStatus))
+    {
+      nsCOMPtr<nsIMsgFolder> msgParent;
+      newMsgFolder->ForceDBClosed();
+      newMsgFolder->GetParentMsgFolder(getter_AddRefs(msgParent));
+      newMsgFolder->SetParent(nsnull);
+      if (msgParent)
+      {
+        msgParent->PropagateDelete(newMsgFolder, PR_FALSE, msgWindow);
+        newMsgFolder->Delete();
+        newMsgFolder->ForceDBClosed();
+        AddDirectorySeparator(newPath);
+        newPath.Delete(PR_TRUE);  //berkeley mailbox
+      }
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -3038,7 +3091,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::SelectDownloadMsg()
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::DownloadMessagesForOffline(
-	nsISupportsArray *aMessages, nsIMsgWindow *aWindow)
+  nsISupportsArray *aMessages, nsIMsgWindow *aWindow)
 {
   if (mDownloadState != DOWNLOAD_STATE_NONE) 
     return NS_ERROR_FAILURE; // already has a download in progress
@@ -3626,10 +3679,10 @@ nsMsgLocalMailFolder::GetUidlFromFolder(nsLocalFolderScanState *aState,
       {
         accountKey = strstr(aState->m_header.get(), HEADER_X_MOZILLA_ACCOUNT_KEY);
         if (accountKey)
-	{
+        {
           accountKey += strlen(HEADER_X_MOZILLA_ACCOUNT_KEY) + 2;
-	  aState->m_accountKey = accountKey;
-	}
+          aState->m_accountKey = accountKey;
+        }
       } else
       {
         aState->m_uidl = strstr(aState->m_header.get(), X_UIDL);
