@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Diego Biurrun   <diego@biurrun.de>
+ *   Ian Neal        <bugzilla@arlen.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -59,7 +60,11 @@ function showACAdvanced()
                     document.getElementById("browserUrlbarAutoFill").getAttribute("value"),
                     document.getElementById("browserUrlbarShowPopup").getAttribute("value"),
                     document.getElementById("browserUrlbarShowSearch").getAttribute("value"),
-                    document.getElementById("browserUrlbarMatchOnlyTyped").getAttribute("value"));
+                    document.getElementById("browserUrlbarMatchOnlyTyped").getAttribute("value"),
+                    document.getElementById("browserUrlbarAutoFill").getAttribute("disabled"),
+                    document.getElementById("browserUrlbarShowPopup").getAttribute("disabled"),
+                    document.getElementById("browserUrlbarShowSearch").getAttribute("disabled"),
+                    document.getElementById("browserUrlbarMatchOnlyTyped").getAttribute("disabled"));
 }
 
 function receiveACPrefs(aAutoFill, aShowPopup, aShowSearch, aAutoType)
