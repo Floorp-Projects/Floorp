@@ -64,8 +64,13 @@ LOCAL_INCLUDES	= -I$(srcdir)/../build
 
 CPPSRCS		= nsXPComStub.cpp nsStringAPI.cpp
 
+# If we have an import library, then copy that to the SDK.  Otherwise,
+# copy the shared library.
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
-SDK_BINARY = $(SHARED_LIBRARY)
+else
+SDK_LIBRARY = $(SHARED_LIBRARY)
+endif
 
 # Force use of PIC
 FORCE_USE_PIC	= 1 
