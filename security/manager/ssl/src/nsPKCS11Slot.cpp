@@ -375,6 +375,13 @@ nsPKCS11ModuleDB::ListModules(nsIEnumerator **_retval)
   return rv;
 }
 
+NS_IMETHODIMP nsPKCS11ModuleDB::GetCanToggleFIPS(PRBool *aCanToggleFIPS)
+{
+  *aCanToggleFIPS = SECMOD_CanDeleteInternalModule();
+  return NS_OK;
+}
+
+
 /* void toggleFIPSMode (); */
 NS_IMETHODIMP nsPKCS11ModuleDB::ToggleFIPSMode()
 {
