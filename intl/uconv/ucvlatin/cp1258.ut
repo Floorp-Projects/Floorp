@@ -38,7 +38,8 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
   If you have any problem of this file. Please contact 
   Netscape Client International Team or 
   ftang@netscape <Frank Tang> 
@@ -105,11 +106,11 @@ Begin of Item 0007
   mappingOffset = 0020
  Mapping  = 
   0102 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  FFFD 0340 00CD 00CE 00CF 0110 00D1 0309 
+  FFFD 0300 00CD 00CE 00CF 0110 00D1 0309 
   00D3 00D4 01A0 FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 01AF 0303 00DF 00E0 00E1 00E2 
   0103 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
-  FFFD 0341 00ED 00EE 00EF 0111 00F1 0323 
+  FFFD 0301 00ED 00EE 00EF 0111 00F1 0323 
   00F3 00F4 01A1 FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 01B0 20AB 00FF 
 End of Item 0007 
@@ -152,11 +153,11 @@ End of Item 0007
 /* 0010 */    0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 
 /* 0018 */    0x02DC, 0x2122, 0xFFFD, 0x203A, 0x0153, 0xFFFD, 0xFFFD, 0x0178, 
 /* 0020 */    0x0102, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0028 */    0xFFFD, 0x0340, 0x00CD, 0x00CE, 0x00CF, 0x0110, 0x00D1, 0x0309, 
+/* 0028 */    0xFFFD, 0x0300, 0x00CD, 0x00CE, 0x00CF, 0x0110, 0x00D1, 0x0309, 
 /* 0030 */    0x00D3, 0x00D4, 0x01A0, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0038 */    0xFFFD, 0xFFFD, 0x01AF, 0x0303, 0x00DF, 0x00E0, 0x00E1, 0x00E2, 
 /* 0040 */    0x0103, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0048 */    0xFFFD, 0x0341, 0x00ED, 0x00EE, 0x00EF, 0x0111, 0x00F1, 0x0323, 
+/* 0048 */    0xFFFD, 0x0301, 0x00ED, 0x00EE, 0x00EF, 0x0111, 0x00F1, 0x0323, 
 /* 0050 */    0x00F3, 0x00F4, 0x01A1, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0058 */    0xFFFD, 0xFFFD, 0x01B0, 0x20AB, 0x00FF, 
 /*	End of table Total Length = 0x007C * 2 */

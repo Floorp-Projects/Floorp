@@ -22,7 +22,8 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
   If you have any problem of this file. Please contact 
   Netscape Client International Team or 
   ftang@netscape <Frank Tang> 
@@ -147,11 +148,12 @@ End of Item 000E
 
 Begin of Item 000F
  Format 1
-  srcBegin = 0303
+  srcBegin = 0300
   srcEnd = 0309
   mappingOffset = 003F
  Mapping  = 
-  00DE FFFD FFFD FFFD FFFD FFFD 00D2 
+  00CC 00EC FFFD 00DE FFFD FFFD FFFD FFFD 
+  FFFD 00D2 
 End of Item 000F 
 
 Begin of Item 0010
@@ -162,44 +164,35 @@ End of Item 0010
 
 Begin of Item 0011
  Format 1
-  srcBegin = 0340
-  srcEnd = 0341
-  mappingOffset = 0046
- Mapping  = 
-  00CC 00EC 
-End of Item 0011 
-
-Begin of Item 0012
- Format 1
   srcBegin = 2013
   srcEnd = 203A
-  mappingOffset = 0048
+  mappingOffset = 0049
  Mapping  = 
   0096 0097 FFFD FFFD FFFD 0091 0092 0082 
   FFFD 0093 0094 0084 FFFD 0086 0087 0095 
   FFFD FFFD FFFD 0085 FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD 0089 FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD 008B 009B 
-End of Item 0012 
+End of Item 0011 
 
-Begin of Item 0013
+Begin of Item 0012
  Format 1
   srcBegin = 20AB
   srcEnd = 20AC
-  mappingOffset = 0070
+  mappingOffset = 0071
  Mapping  = 
   00FE 0080 
-End of Item 0013 
+End of Item 0012 
 
-Begin of Item 0014
+Begin of Item 0013
  Format 2
   srcBegin = 2122
   destBegin = 0099
-End of Item 0014 
+End of Item 0013 
 
 ========================================================*/
 /* Offset=0x0000  ItemOfList */
-  0x0015,
+  0x0014,
 /*-------------------------------------------------------*/
 /* Offset=0x0001  offsetToFormatArray */
   0x0004,
@@ -208,15 +201,15 @@ End of Item 0014
   0x000A,
 /*-------------------------------------------------------*/
 /* Offset=0x0003  offsetToMappingTable */ 
-  0x0049,
+  0x0046,
 /*-------------------------------------------------------*/
 /*       Offset=0x0004   Start of Format Array */ 
 /*	Total of Format 0 : 0x0006			 */
-/*	Total of Format 1 : 0x0009			 */
+/*	Total of Format 1 : 0x0008			 */
 /*	Total of Format 2 : 0x0006			 */
 /*	Total of Format 3 : 0x0000			 */
 
-0x0000, 0x1100, 0x1221, 0x1221, 0x1112, 0x0002, 
+0x0000, 0x1100, 0x1221, 0x1221, 0x2112, 0x0000, 
 /*-------------------------------------------------------*/
 /*       Offset=0x000A   Start of MapCell Array */ 
 /* 0000 */    0x0000, 0x007F, 0x0000, 
@@ -234,14 +227,13 @@ End of Item 0014
 /* 000C */    0x01AF, 0x01B0, 0x003D, 
 /* 000D */    0x02C6, 0x0000, 0x0088, 
 /* 000E */    0x02DC, 0x0000, 0x0098, 
-/* 000F */    0x0303, 0x0309, 0x003F, 
+/* 000F */    0x0300, 0x0309, 0x003F, 
 /* 0010 */    0x0323, 0x0000, 0x00F2, 
-/* 0011 */    0x0340, 0x0341, 0x0046, 
-/* 0012 */    0x2013, 0x203A, 0x0048, 
-/* 0013 */    0x20AB, 0x20AC, 0x0070, 
-/* 0014 */    0x2122, 0x0000, 0x0099, 
+/* 0011 */    0x2013, 0x203A, 0x0049, 
+/* 0012 */    0x20AB, 0x20AC, 0x0071, 
+/* 0013 */    0x2122, 0x0000, 0x0099, 
 /*-------------------------------------------------------*/
-/*       Offset=0x0049   Start of MappingTable */ 
+/*       Offset=0x0046   Start of MappingTable */ 
 
 /* 0000 */    0x00CD, 0x00CE, 0x00CF, 0xFFFD, 0x00D1, 0xFFFD, 0x00D3, 0x00D4, 
 /* 0008 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
@@ -250,12 +242,12 @@ End of Item 0014
 /* 0020 */    0x00ED, 0x00EE, 0x00EF, 0xFFFD, 0x00F1, 0xFFFD, 0x00F3, 0x00F4, 
 /* 0028 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0030 */    0xFFFD, 0xFFFD, 0x00FF, 0xFFFD, 0xFFFD, 0x00C3, 0x00E3, 0x00D0, 
-/* 0038 */    0x00F0, 0x008C, 0x009C, 0x00D5, 0x00F5, 0x00DD, 0x00FD, 0x00DE, 
-/* 0040 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x00D2, 0x00CC, 0x00EC, 
-/* 0048 */    0x0096, 0x0097, 0xFFFD, 0xFFFD, 0xFFFD, 0x0091, 0x0092, 0x0082, 
-/* 0050 */    0xFFFD, 0x0093, 0x0094, 0x0084, 0xFFFD, 0x0086, 0x0087, 0x0095, 
-/* 0058 */    0xFFFD, 0xFFFD, 0xFFFD, 0x0085, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0060 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x0089, 0xFFFD, 0xFFFD, 
-/* 0068 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x008B, 0x009B, 
-/* 0070 */    0x00FE, 0x0080, 
-/*	End of table Total Length = 0x00BB * 2 */
+/* 0038 */    0x00F0, 0x008C, 0x009C, 0x00D5, 0x00F5, 0x00DD, 0x00FD, 0x00CC, 
+/* 0040 */    0x00EC, 0xFFFD, 0x00DE, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0048 */    0x00D2, 0x0096, 0x0097, 0xFFFD, 0xFFFD, 0xFFFD, 0x0091, 0x0092, 
+/* 0050 */    0x0082, 0xFFFD, 0x0093, 0x0094, 0x0084, 0xFFFD, 0x0086, 0x0087, 
+/* 0058 */    0x0095, 0xFFFD, 0xFFFD, 0xFFFD, 0x0085, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0060 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x0089, 0xFFFD, 
+/* 0068 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x008B, 
+/* 0070 */    0x009B, 0x00FE, 0x0080, 
+/*	End of table Total Length = 0x00B9 * 2 */

@@ -22,7 +22,8 @@
 /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
   If you have any problem of this file. Please contact 
   Netscape Client International Team or 
   ftang@netscape <Frank Tang> 
@@ -112,7 +113,7 @@ End of Item 0007
 
 Begin of Item 0008
  Format 2
-  srcBegin = 2014
+  srcBegin = 2015
   destBegin = 00BD
 End of Item 0008 
 
@@ -146,7 +147,7 @@ End of Item 0008
 /* 0005 */    0x00C9, 0x00D8, 0x0011, 
 /* 0006 */    0x00E9, 0x014D, 0x0021, 
 /* 0007 */    0x0160, 0x017E, 0x0086, 
-/* 0008 */    0x2014, 0x0000, 0x00BD, 
+/* 0008 */    0x2015, 0x0000, 0x00BD, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0022   Start of MappingTable */ 
 
