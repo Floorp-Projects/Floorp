@@ -704,6 +704,7 @@ PK11_ImportDERCert;
 PK11_PubUnwrapSymKeyWithFlags;
 PK11_SaveContextAlloc;
 SEC_QuickDERDecodeItem;
+SECKEY_CopyPublicKey;
 ;+    local:
 ;+       *;
 ;+};

@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.12 2002/08/27 13:14:38 kaie%netscape.com Exp $
+ * $Id: cms.h,v 1.13 2002/09/20 04:41:45 jpierre%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -598,6 +598,8 @@ NSS_CMSSignedData_CreateCertsOnly(NSSCMSMessage *cmsg, CERTCertificate *cert, PR
 
 extern NSSCMSSignerInfo *
 NSS_CMSSignerInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert, SECOidTag digestalgtag);
+extern NSSCMSSignerInfo *
+NSS_CMSSignerInfo_CreateWithSubjKeyID(NSSCMSMessage *cmsg, SECItem *subjKeyID, SECKEYPublicKey *pubKey, SECKEYPrivateKey *signingKey, SECOidTag digestalgtag);
 
 /*
  * NSS_CMSSignerInfo_Destroy - destroy a SignerInfo data structure
