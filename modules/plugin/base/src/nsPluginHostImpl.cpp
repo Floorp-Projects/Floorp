@@ -1046,7 +1046,6 @@ PRBool nsPluginTag::Equals(nsPluginTag *aPluginTag)
   return PR_TRUE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 class nsPluginStreamListenerPeer;
 
@@ -4452,6 +4451,37 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
   return PR_TRUE;
 }
 
+nsPluginTag * nsPluginHostImpl::HaveSamePlugin(nsPluginTag * aPluginTag)
+{
+  for(nsPluginTag* tag = mPlugins; tag; tag = tag->mNext) {
+    if(tag->Equals(aPluginTag))
+      return tag;
+  }
+  return nsnull;
+}
+
+PRBool nsPluginHostImpl::IsDuplicatePlugin(nsPluginTag * aPluginTag)
+{
+  nsPluginTag * tag = HaveSamePlugin(aPluginTag);
+  if (tag) {
+    // if we got the same plugin, check the full path to see if this is a dup;
+
+    // mFileName contains full path on Windows and Unix and leaf name on Mac
+    // if those are not equal, we have the same plugin with  different path,
+    // i.e. duplicate, return true
+    if (PL_strcmp(tag->mFileName, aPluginTag->mFileName))
+      return PR_TRUE;
+
+    // if they are equal, compare mFullPath fields just in case 
+    // mFileName contained leaf name only, and if not equal, return true
+    if (tag->mFullPath && aPluginTag->mFullPath && PL_strcmp(tag->mFullPath, aPluginTag->mFullPath))
+      return PR_TRUE;
+  }
+
+  // we do not have it at all, return false
+  return PR_FALSE;
+}
+
 // Structure for collecting plugin files found during directory scanning
 struct pluginFileinDirectory
 {
@@ -4568,7 +4598,8 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       }
       else {
         // if it is unwanted plugin we are checking for, get it back to the cache info list
-        if(checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) {
+        // if this is a duplicate plugin, too place it back in the cache info list marking unwantedness
+        if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) || IsDuplicatePlugin(pluginTag)) {
           pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
           pluginTag->mNext = mCachedPlugins;
           mCachedPlugins = pluginTag;
@@ -4621,9 +4652,10 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       pluginTag->mLibrary = pluginLibrary;
       pluginTag->mLastModifiedTime = fileModTime;
 
-      // if this is unwanted plugin we are checkin for, add it to our cache info list so we 
-      // can cache the unwantedness of this plugin when we sync cached plugins to registry
-      if(checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) {
+      // if this is unwanted plugin we are checkin for, or this is a duplicate plugin, 
+      // add it to our cache info list so we can cache the unwantedness of this plugin 
+      // when we sync cached plugins to registry
+      if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) || IsDuplicatePlugin(pluginTag)) {
         pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
         pluginTag->mNext = mCachedPlugins;
         mCachedPlugins = pluginTag;
@@ -4641,15 +4673,12 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     // check if we already have this plugin in the list which
     // is possible if we do refresh
     if(bAddIt) {
-      for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext) {
-        if(tag->Equals(pluginTag)) {
-          bAddIt = PR_FALSE;
-          // we cannot get here if the plugin has just been added
-          // and thus |pluginTag| is not from cache, because otherwise
-          // it would not be present in the list;
-          // so there is no need to delete |pluginTag| -- it _is_ from the cache info list.
-          break;
-        }
+      if (HaveSamePlugin(pluginTag)) {
+        // we cannot get here if the plugin has just been added
+        // and thus |pluginTag| is not from cache, because otherwise
+        // it would not be present in the list;
+        // so there is no need to delete |pluginTag| -- it _is_ from the cache info list.
+        bAddIt = PR_FALSE;
       }
     }
 
@@ -5221,19 +5250,13 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
     if (NS_FAILED(rv))
       continue;
 
-    // skip it if we already have it
     PRBool bAddIt = PR_TRUE;
-    for(nsPluginTag* existingtag = mPlugins; existingtag != nsnull; existingtag = existingtag->mNext)
-    {
-      if(tag->Equals(existingtag))
-      {
-        bAddIt = PR_FALSE;
-        break;
-      }
-    }
 
-    if(!bAddIt)
-    {
+    // skip it if we already have it
+    if (HaveSamePlugin(tag))
+      bAddIt = PR_FALSE;
+
+    if(!bAddIt) {
       if(tag)
         delete tag;
       continue;
@@ -5330,7 +5353,7 @@ nsPluginHostImpl::CachePluginsInfo(nsIRegistry* registry)
   if (! registry)
     return NS_ERROR_FAILURE;
 
-  // We dont want any old plugins that dont exist anymore hanging around
+  // We don't want any old plugins that don't exist anymore hanging around
   // So remove and re-add the root of the plugins info
   nsresult rv = registry->RemoveSubtree(nsIRegistry::Common, kPluginsRootKey);
   
