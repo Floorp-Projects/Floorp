@@ -20,8 +20,19 @@
 #include "nsMotifMenu.h"
 #include "nsIImageManager.h"
 #include <stdlib.h>
+#include "plevent.h"
 
+extern XtAppContext gAppContext; // XXX This should be changed
 static nsNativeViewerApp* gTheApp;
+PLEventQueue*  gUnixMainEventQueue = nsnull;
+
+extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
+
+static void nsUnixEventProcessorCallback(XtPointer aClosure, int* aFd, XtIntervalId *aId) 
+{
+  NS_ASSERTION(*aFd==PR_GetEventQueueSelectFD(gUnixMainEventQueue), "Error in nsUnixMain.cpp:nsUnixEventProcessCallback");
+  PR_ProcessPendingEvents(gUnixMainEventQueue);
+}
 
 nsNativeViewerApp::nsNativeViewerApp()
 {
@@ -34,6 +45,22 @@ nsNativeViewerApp::~nsNativeViewerApp()
 int
 nsNativeViewerApp::Run()
 {
+   // Setup event queue for dispatching 
+   // asynchronous posts of form data + clicking on links.
+   // Lifted from cmd/xfe/mozilla.c
+
+  gUnixMainEventQueue = PR_CreateEventQueue("viewer-event-queue", PR_GetCurrentThread());
+  if (nsnull == gUnixMainEventQueue) {
+     // Force an assertion
+    NS_ASSERTION("Can not create an event loop", PR_FALSE); 
+  }
+
+   // XXX Setup webshell's event queue. This should be changed
+  nsWebShell_SetUnixEventQueue(gUnixMainEventQueue);
+
+  XtAppAddInput(gAppContext, PR_GetEventQueueSelectFD(gUnixMainEventQueue), 
+   (XtPointer)(XtInputReadMask), nsUnixEventProcessorCallback, 0);
+
   OpenWindow();
   mAppShell->Run();
   return 0;
@@ -77,7 +104,6 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
-
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
   nsIImageManager *manager;
   NS_NewImageManager(&manager);
