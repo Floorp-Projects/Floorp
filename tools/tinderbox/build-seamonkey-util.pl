@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.203 $ ';
+$::UtilsVersion = '$Revision: 1.204 $ ';
 
 package TinderUtils;
 
@@ -1606,11 +1606,19 @@ sub run_all_tests {
       unlink("$build_dir/$diff_log");
       unlink("$build_dir/$test_log");
 
+      my $bash_cmd;
+      if ($Settings::OS =~ /^WIN/) {
+        $bash_cmd = $Settings::CodesizeTestType . "summary.win.bash";
+      } else {
+        # Assume Linux for non-windows for now.
+        $bash_cmd = $Settings::CodesizeTestType . "summary.win.bash";
+      }
+
       my $test_result =
         FileBasedTest($test_name, 
                       "$build_dir", 
                       "$build_dir",  # run top of tree, not in dist.
-                      ["autosummary.linux.bash $args"],
+                      ["basesummary.linux.bash $args"], # auto|base
                       $Settings::CodesizeTestTimeout,
                       "FAILED", # Fake out failure mode, test file instead.
                       0, 0);    # Timeout means failure.
