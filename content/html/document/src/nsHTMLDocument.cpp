@@ -2652,7 +2652,6 @@ nsHTMLDocument::Write()
   return ScriptWriteCommon(PR_FALSE);
 }
 
-
 NS_IMETHODIMP
 nsHTMLDocument::Writeln()
 {
@@ -3253,6 +3252,15 @@ nsHTMLDocument::GetCompatMode(nsAWritableString& aCompatMode)
   }
 
   return NS_OK;
+}
+
+// Mapped to document.embeds for NS4 compatibility
+NS_IMETHODIMP
+nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
+{
+  *aPlugins = nsnull;
+
+  return GetEmbeds(aPlugins);
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
