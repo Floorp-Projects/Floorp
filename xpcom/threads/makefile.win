@@ -45,7 +45,6 @@ XPIDLSRCS =                        \
         .\nsIEventQueueService.idl \
         .\nsIThread.idl            \
         .\nsIThreadPool.idl        \
-        .\nsITimerManager.idl      \
         .\nsIRunnable.idl          \
         .\nsIProcess.idl           \
         .\nsIScriptableTimer.idl   \
