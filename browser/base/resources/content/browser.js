@@ -2050,27 +2050,36 @@ function FillInHTMLTooltip(tipElement)
 
 function openPanel(aURI, aTitle)
 {
-  SidebarShowHide();
   var sidebarPane = document.getElementById("browserSidebar");
+  var isHidden = sidebar_is_hidden();
+  if (!isHidden && sidebarPane.getAttribute("src") == aURI)
+    SidebarHide();
+  else if (isHidden)
+    SidebarShow();
+
   sidebarPane.setAttribute("src", aURI);
   var sidebarHeader = document.getElementById("sidebarhdrSidebar");
   sidebarHeader.setAttribute("label", aTitle);
 }
 
-function SidebarShowHide() {
+function SidebarShow() {
   var sidebar_box = document.getElementById('boxSidebar');
   var sidebar_splitter = document.getElementById('splitterSidebar');
 
-  if (sidebar_is_hidden()) {
-    // for older profiles: 
-    sidebar_box.setAttribute('hidden', 'false'); 
-    if (sidebar_splitter.getAttribute('state') == 'collapsed')
-      sidebar_splitter.removeAttribute('state');
-    sidebar_splitter.removeAttribute('hidden');
-  } else {
-      sidebar_box.setAttribute('hidden', 'true');
-      sidebar_splitter.setAttribute('hidden', 'true');
-  }
+  // for older profiles: 
+  sidebar_box.setAttribute('hidden', 'false'); 
+  if (sidebar_splitter.getAttribute('state') == 'collapsed')
+    sidebar_splitter.removeAttribute('state');
+  sidebar_splitter.removeAttribute('hidden');
+  persist_width();
+  window._content.focus();
+}
+
+function SidebarHide() {
+  var sidebar_box = document.getElementById('boxSidebar');
+  var sidebar_splitter = document.getElementById('splitterSidebar');
+  sidebar_box.setAttribute('hidden', 'true');
+  sidebar_splitter.setAttribute('hidden', 'true');
   persist_width();
   window._content.focus();
 }

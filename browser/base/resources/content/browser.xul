@@ -711,6 +711,10 @@ Contributor(s): ______________________________________. -->
                      label="&searchButton.label;" persist="hidden"
                      oncommand="openPanel('chrome://browser/content/search/search-panel.xul',
                                           this.getAttribute('label'));"/>
+      <toolbarbutton id="bookmarks-button" class="toolbarbutton-1"
+                     label="&bookmarksButton.label;" persist="hidden"
+                     oncommand="openPanel('chrome://browser/content/bookmarks/bm-panel.xul',
+                                          this.getAttribute('label'));"/>
       <toolbarseparator/>
       <toolbarbutton id="print-button" class="toolbarbutton-1"
                      label="&printButton.label;" persist="hidden"
@@ -917,7 +921,7 @@ Contributor(s): ______________________________________. -->
        <sidebarheader id="sidebarhdrSidebar" class="sidebarheader-main"
                       type="box" persist="label"
                       collapse="after">
-         <toolbarbutton id="sidebar-close-button" oncommand="SidebarShowHide();"
+         <toolbarbutton id="sidebar-close-button" oncommand="SidebarHide();"
                         tooltiptext="close"/>
        </sidebarheader>
        <browser id="browserSidebar" flex="1" persist="src"/>
