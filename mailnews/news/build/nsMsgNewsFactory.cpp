@@ -32,14 +32,13 @@
 /* Include all of the interfaces our factory can generate components for */
 #include "nsNntpUrl.h"
 #include "nsNntpService.h"
+#include "nsNntpIncomingServer.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kNewsFolderResourceCID, NS_NEWSFOLDERRESOURCE_CID);
-#if 0
 static NS_DEFINE_CID(kNntpIncomingServerCID, NS_NNTPINCOMINGSERVER_CID);
-#endif
 
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
@@ -169,10 +168,9 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports *aOuter,
 		if (NS_FAILED(rv) && newsFolder)
 			delete newsFolder;
   } 
-#if 0
-  else if (mClassID.Equals(kNntpIncomingServerCID))
+  else if (mClassID.Equals(kNntpIncomingServerCID)) {
     rv = NS_NewNntpIncomingServer(nsISupports::GetIID(), aResult);
-#endif
+  }
   else
     rv = NS_NOINTERFACE;
 
@@ -244,14 +242,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 	printf("news registering from %s\n",path);
 #endif
 
-#if 0
   rv = compMgr->RegisterComponent(kNntpIncomingServerCID,
                                   "Nntp Incoming Server",
                                   "component://netscape/messenger/server&type=nntp",
                                   path, PR_TRUE, PR_TRUE);
                                   
   if (NS_FAILED(rv)) goto done;
-#endif
 
 	done:
 	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
@@ -279,11 +275,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->UnregisterComponent(kNewsFolderResourceCID, path);
   if (NS_FAILED(rv)) goto done;
 
-#if 0
   rv = compMgr->UnregisterComponent(kNntpIncomingServerCID, path);
   if (NS_FAILED(rv)) goto done;
-#endif
-
 
 done:
 	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
