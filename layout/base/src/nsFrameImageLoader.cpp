@@ -273,8 +273,7 @@ nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
 
   mError = aErrorType;
   mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_ERROR;
-  if (0 != (mImageLoadStatus & (NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED |
-                                NS_IMAGE_LOAD_STATUS_ERROR_REQUESTED))) {
+  if (0 != (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_ERROR_REQUESTED)) {
     if (nsnull != mCallBack) {
       (*mCallBack)(*mPresContext, mTargetFrame, mImageLoadStatus);
     }
