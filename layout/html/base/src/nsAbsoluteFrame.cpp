@@ -85,14 +85,16 @@ nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
     // See if the containing view is a scroll view
     nsIScrollableView*  scrollView = nsnull;
     nsresult            result;
-    nsRect              clip;
-    nsRect*             pClip = NS_STYLE_CLIP_RECT == aPosition->mClipFlags ?
+    nsViewClip          clip;
+    nsViewClip*         pClip = NS_STYLE_CLIP_RECT == aPosition->mClipFlags ?
                                 &clip : nsnull;
 
     // Is there a clip rect specified?
     if (NS_STYLE_CLIP_RECT == aPosition->mClipFlags) {
-      clip.SetRect(aPosition->mClip.left, aPosition->mClip.top,
-                   aPosition->mClip.right, aPosition->mClip.bottom);
+      clip.mLeft = aPosition->mClip.left;
+      clip.mRight = aPosition->mClip.right;
+      clip.mTop = aPosition->mClip.top;
+      clip.mBottom = aPosition->mClip.bottom;
     }
      
     result = aContainingView->QueryInterface(kIScrollableViewIID, (void**)&scrollView);

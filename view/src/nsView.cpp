@@ -256,7 +256,7 @@ nsresult nsView :: Init(nsIViewManager* aManager,
                         void *aWidgetInitData,
                         nsNativeWindow aNative,
                         PRInt32 aZIndex,
-                        const nsRect *aClipRect,
+                        const nsViewClip *aClip,
                         float aOpacity,
                         nsViewVisibility aVisibilityFlag)
 {
@@ -274,10 +274,15 @@ nsresult nsView :: Init(nsIViewManager* aManager,
 
   mBounds = aBounds;
 
-  if (aClipRect != nsnull)
-    mClipRect = *aClipRect;
+  if (aClip != nsnull)
+    mClip = *aClip;
   else
-    mClipRect.Empty();
+  {
+    mClip.mLeft = 0;
+    mClip.mRight = 0;
+    mClip.mTop = 0;
+    mClip.mBottom = 0;
+  }
 
   mOpacity = aOpacity;
   mZindex = aZIndex;
@@ -337,10 +342,18 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPain
 {
   rc.PushState();
 
-  if (mClipRect.IsEmpty() == PR_FALSE)
+  if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
   {
     rc.Translate(mBounds.x, mBounds.y);
-    rc.SetClipRect(mClipRect, PR_TRUE);
+
+    nsRect  crect;
+
+    crect.x = mClip.mLeft;
+    crect.y = mClip.mTop;
+    crect.width = mClip.mRight - mClip.mLeft;
+    crect.height = mClip.mBottom - mClip.mTop;
+
+    rc.SetClipRect(crect, PR_TRUE);
   }
   else
   {
@@ -601,22 +614,22 @@ void nsView :: GetBounds(nsRect &aBounds)
 
 void nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
 {
-  mClipRect.x = aLeft;
-  mClipRect.y = aTop;
-  mClipRect.width = aRight - aLeft;
-  mClipRect.height = aBottom - aTop;
+  mClip.mLeft = aLeft;
+  mClip.mTop = aTop;
+  mClip.mRight = aRight;
+  mClip.mBottom = aBottom;
 }
 
 PRBool nsView :: GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom)
 {
-  if (mClipRect.IsEmpty() == PR_TRUE)
+  if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom))
     return PR_FALSE;
   else
   {
-    *aLeft = mClipRect.x;
-    *aTop = mClipRect.y;
-    *aRight = mClipRect.width + mClipRect.x;
-    *aBottom = mClipRect.height + mClipRect.y;
+    *aLeft = mClip.mLeft;
+    *aTop = mClip.mTop;
+    *aRight = mClip.mRight;
+    *aBottom = mClip.mBottom;
 
     return PR_TRUE;
   }

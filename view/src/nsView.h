@@ -49,7 +49,7 @@ public:
             void *aWidgetInitData = nsnull,
 						nsNativeWindow aNative = nsnull,
 						PRInt32 aZIndex = 0,
-						const nsRect *aClipRect = nsnull,
+						const nsViewClip *aClip = nsnull,
 						float aOpacity = 1.0f,
 						nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
@@ -116,7 +116,7 @@ protected:
   nsViewVisibility  mVis;
   PRInt32           mNumKids;
   nsRect            mBounds;
-  nsRect            mClipRect;
+  nsViewClip        mClip;
   nsTransform2D     *mXForm;
   float             mOpacity;
 };

@@ -32,6 +32,17 @@ class nsTransform2D;
 class nsIFrame;
 struct nsRect;
 
+//this is used by the view clipping APIs since the description of
+//a clip rect is different than a rect
+
+typedef struct
+{
+  nscoord mLeft;
+  nscoord mRight;
+  nscoord mTop;
+  nscoord mBottom;
+} nsViewClip;
+
 // Enumerated type to indicate the visibility of a layer.
 // hide - the layer is not shown.
 // show - the layer is shown irrespective of the visibility of 
@@ -84,7 +95,7 @@ public:
             void *aWidgetInitData = nsnull,
 						nsNativeWindow aNative = nsnull,
 						PRInt32 aZIndex = 0,
-						const nsRect *aClipRect = nsnull,
+						const nsViewClip *aClip = nsnull,
 						float aOpacity = 1.0f,
 						nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
 
