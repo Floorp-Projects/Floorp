@@ -49,6 +49,9 @@ EXPORTS=    \
 	nsIDOMHTMLInsElement.h \
 	nsIDOMHTMLIsIndexElement.h \
 	nsIDOMHTMLLIElement.h \
+	$(NULL)
+
+EXPORTS2= \
 	nsIDOMHTMLLabelElement.h \
 	nsIDOMHTMLLegendElement.h \
 	nsIDOMHTMLLinkElement.h \
@@ -80,7 +83,10 @@ EXPORTS=    \
 	nsIDOMHTMLTitleElement.h \
 	nsIDOMHTMLUListElement.h
 
-
 MODULE=dom 
 
 include <$(DEPTH)\config\rules.mak>
+
+export:: $(XPDIST)\public\$(MODULE)
+    for %f in ($(EXPORTS2)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\public\$(MODULE:/=\)
+
