@@ -44,7 +44,7 @@ function toHistory()
   var iwindowManager = Components.interfaces.nsIWindowMediator;
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);
 
-  var historyWindow = windowManager.GetMostRecentWindow('history:manager');
+  var historyWindow = windowManager.getMostRecentWindow('history:manager');
 
   if (historyWindow) {
     //debug("Reuse existing history window");
@@ -83,7 +83,7 @@ function toOpenWindowByType( inType, uri )
 
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 
-	var topWindow = windowManagerInterface.GetMostRecentWindow( inType );
+	var topWindow = windowManagerInterface.getMostRecentWindow( inType );
 	
 	if ( topWindow )
 		topWindow.focus();
@@ -160,8 +160,8 @@ function CycleWindow( inType, inChromeURL )
     
     var desiredWindow = null;
     
-	var topWindowOfType = windowManagerInterface.GetMostRecentWindow( inType );
-	var topWindow = windowManagerInterface.GetMostRecentWindow( null );
+	var topWindowOfType = windowManagerInterface.getMostRecentWindow( inType );
+	var topWindow = windowManagerInterface.getMostRecentWindow( null );
 	dump( "got windows \n");
 	
 	dump( "topWindowOfType = " + topWindowOfType + "\n");
@@ -186,8 +186,8 @@ function CycleWindow( inType, inChromeURL )
 		return;
 	}
 	
-	var enumerator = windowManagerInterface.GetEnumerator( inType );
-	firstWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );
+	var enumerator = windowManagerInterface.getEnumerator( inType );
+	firstWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );
 	if ( firstWindow == topWindowOfType )
 	{
 		dump( "top most window is first window \n");
@@ -198,7 +198,7 @@ function CycleWindow( inType, inChromeURL )
 		dump("find topmost window \n");
 		while ( enumerator.HasMoreElements() )
 		{
-			var nextWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );
+			var nextWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );
 			if ( nextWindow == topWindowOfType )
 				break;
 		}	
@@ -207,7 +207,7 @@ function CycleWindow( inType, inChromeURL )
 	if ( enumerator.HasMoreElements() )
 	{
 		dump( "Give focus to next window in the list \n");
-		desiredWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );		
+		desiredWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );		
 	}
 	
 	if ( desiredWindow )
@@ -244,7 +244,7 @@ function ShowWindowFromResource( node )
     var desiredWindow = null;
     var url = node.getAttribute('id');
     dump( url +" finding \n" );
-	desiredWindow = windowManagerInterface.GetWindowForResource( url );
+	desiredWindow = windowManagerInterface.getWindowForResource( url );
 	dump( "got window \n");
 	if ( desiredWindow )
 	{
