@@ -508,6 +508,7 @@ xfeCmdFrameReload                                                  frameReload
 xfeCmdViewFrameSource                                              framePageSource
 xfeCmdViewFrameInfo                                                framePageInfo
 xfeCmdPageServices                                                 pageServices
+xfeCmdPrivacyPolicy                                                privacyPolicy
 xfeCmdAddLinkBookmark                                              addLinkBookmark
 xfeCmdAddFrameBookmark                                             addFrameBookmark
 xfeCmdShowImage                                                    showImage

@@ -223,8 +223,8 @@ END
 //   animation only shows up when the animation is resting.  The second through
 //   last frame loop while the application is busy.
 //
-IDB_ANIMSMALL_0			BITMAP	DISCARDABLE		"res\\16wina~1.bmp"
-IDB_ANIM_0				BITMAP	DISCARDABLE		"res\\32wina~1.bmp"
+IDB_ANIMSMALL_0			BITMAP	DISCARDABLE		"res\\16winanim.bmp"
+IDB_ANIM_0				BITMAP	DISCARDABLE		"res\\32winanim.bmp"
 
 #ifndef MOZ_COMMUNICATOR_NAME
 IDB_PREVIEWSPLASH       BITMAP  DISCARDABLE     "res\\annoy.bmp"
@@ -626,6 +626,7 @@ BEGIN
 //	MENUITEM SEPARATOR
 //leave#endif
     END
+    
 #ifndef MOZ_COMMUNICATOR_NAME
     POPUP "&Window"
 #else
@@ -675,6 +676,19 @@ BEGIN
 #ifdef MOZ_MAIL_NEWS
 		MENUITEM "Migration Tools",					ID_MIGRATION_TOOLS
 #endif //MOZ_MAIL_NEWS
+		POPUP "&Privacy Tools"
+		BEGIN
+			MENUITEM "&Anonymous Mode",             ID_PRIVACY_ANONYMOUS
+			MENUITEM "&Make Receipt",               ID_PRIVACY_RECEIPT
+			MENUITEM SEPARATOR
+			MENUITEM "Display Privacy &Policy",     ID_PRIVACY_DISPLAY_POLICY
+			MENUITEM "Display &Cookies",            ID_PRIVACY_DISPLAY_COOKIES
+			MENUITEM "Display &Signons",            ID_PRIVACY_DISPLAY_SIGNONS
+			MENUITEM "Display &Receipts",           ID_PRIVACY_DISPLAY_RECEIPTS
+			MENUITEM SEPARATOR
+			MENUITEM "&Tutorial",                   ID_PRIVACY_DISPLAY_TUTORIAL
+		END
+
 	    MENUITEM SEPARATOR
 #ifdef XP_WIN16
 	    MENUITEM "New Window"                       ID_WINDOW_WINDOW_0

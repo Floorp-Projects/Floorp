@@ -561,17 +561,41 @@ net_smtp_auth_login_response(ActiveEntry *cur_entry)
   default:
 	  {
 		char* pop_username = (char *) NET_GetPopUsername();
+#if defined(SingleSignon)
+		char *username = 0;
+		char host[256];
+		int len = 256;
+#endif;
 		/* NET_GetPopUsername () returns pointer to the cached
 		 * username. It did *NOT* alloc a new string
 		 */
 		XP_FREEIF(net_smtp_password);
-        if (FE_PromptUsernameAndPassword(cur_entry->window_id,
-                        NULL, &pop_username, &net_smtp_password)) {
+#if defined(SingleSignon)
+		/*
+		 * need to alloc a new string for username because call to
+		 * SI_PromptUsernameAndPassword below will attempt to free
+		 * it if it is not null
+		 */
+		StrAllocCopy(username, pop_username); /* alloc a new string */
+                PREF_GetCharPref("network.hosts.smtp_server", host, &len);
+		SI_RemoveUser(host, pop_username, TRUE);
+		/* prefill prompt with previous username/passwords if any */
+		if (SI_PromptUsernameAndPassword
+			(cur_entry->window_id, " ",
+			&username, &net_smtp_password, host)) {
+#else
+		if (FE_PromptUsernameAndPassword(cur_entry->window_id,
+			NULL, &pop_username, &net_smtp_password)) {
+#endif
             CD_NEXT_STATE = SMTP_SEND_AUTH_LOGIN_USERNAME;
+#if defined(SingleSignon)
+			XP_FREEIF(username);
+#else
 			/* FE_PromptUsernameAndPassword() always alloc a new string
 			 * for pop_username. The caller has to free it.
 			 */
 			XP_FREEIF(pop_username);
+#endif
         }
         else {
 			/* User hit cancel, but since the client and server both say 
@@ -639,6 +663,9 @@ net_smtp_auth_login_password(ActiveEntry *cur_entry)
 	char *fmt = XP_GetString (XP_PASSWORD_FOR_POP3_USER);
 	char host[256];
 	int len = 256;
+#if defined(SingleSignon)
+	char *usernameAndHost=0;
+#endif
 	
 	XP_MEMSET(host, 0, 256);
 	PREF_GetCharPref("network.hosts.smtp_server", host, &len);
@@ -646,7 +673,17 @@ net_smtp_auth_login_password(ActiveEntry *cur_entry)
 	PR_snprintf(buffer, sizeof (buffer), 
 				fmt, NET_GetPopUsername(), host);
 	XP_FREEIF(net_smtp_password);
+#if defined(SingleSignon)
+	StrAllocCopy(usernameAndHost, NET_GetPopUsername());
+        StrAllocCat(usernameAndHost, "@");
+	StrAllocCat(usernameAndHost, host);
+
+	net_smtp_password = SI_PromptPassword(cur_entry->window_id, buffer,
+					     usernameAndHost, FALSE);
+	XP_FREE(usernameAndHost);
+#else
 	net_smtp_password = FE_PromptPassword(cur_entry->window_id, buffer);
+#endif
 	if (!net_smtp_password)
 	  return MK_POP3_PASSWORD_UNDEFINED;
   }

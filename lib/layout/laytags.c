@@ -41,6 +41,11 @@
 #include "libmocha.h"
 #include "libevent.h"
 
+#ifdef PRIVACY_POLICIES
+#include "shist.h"
+#include "privacy.h"
+#endif
+
 #include "intl_csi.h"
 /* WEBFONTS are defined only in laytags.c and layout.c */
 #define WEBFONTS
@@ -6714,7 +6719,37 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 							PRE_AddToList(context, prefetchURL, 1.0);
 						}
 					}						
-						
+
+#ifdef PRIVACY_POLICIES
+					else if (!strcasecomp((char *)buff, "privacypolicy"))
+					{
+						char *policyURL;
+						char *str;
+						PA_Block buff2 = lo_FetchParamValue(context, tag, PARAM_SRC);
+						History_entry *hist;
+
+
+						if (buff2)
+						{
+							PA_LOCK(str, char *, buff2);
+							if (str)
+							{
+								(void) lo_StripTextWhitespace(str, XP_STRLEN(str));
+							}
+							policyURL = NET_MakeAbsoluteURL(
+								      state->top_state->base_url, str);
+							PA_UNLOCK(buff2);
+							PA_FREE(buff2);
+						}
+						if (policyURL)
+						{
+							hist = SHIST_GetCurrent(&context->hist);
+							if (hist)
+								hist->privacy_policy_url = policyURL;
+						}	
+					}				
+#endif /* PRIVACY_POLICIES */		
+
 					PA_FREE(buff);
 				}
 			}

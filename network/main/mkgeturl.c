@@ -4256,6 +4256,9 @@ NET_FreeURLStruct (URL_Struct * URL_s)
   PR_FREEIF(URL_s->add_crlf);
 
 	 PR_FREEIF(URL_s->page_services_url);
+#ifdef PRIVACY_POLICIES
+    PR_FREEIF(URL_s->privacy_policy_url);
+#endif /* PRIVACY_POLICIES */
 
     PR_Free(URL_s);
 

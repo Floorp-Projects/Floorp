@@ -2736,6 +2736,14 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    IDS_PRIVACY_ENTER_ANONYMOUS "&Enter Anonymous Mode"
+    IDS_PRIVACY_LEAVE_ANONYMOUS "&Leave Anonymous Mode"
+    IDS_PRIVACY_MAKERECEIPT     "&Make Receipt"
+    IDS_PRIVACY_DONTMAKERECEIPT "&Don't Make Receipt"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     ID_MESSENGER            "Messenger"
     ID_BROWSER              "Browser"
     ID_MESSAGES             "Messages"
@@ -3018,6 +3026,17 @@ BEGIN
     IDS_POPUP_COPYEMBEDDATA "&Copy "
     ID_OPTIONS_SHOWJAVACONSOLE "Open the Java Console"
     ID_FILE_MAILNEW         "Create a new mail or newsgroup message\nCompose (Ctrl+M)\nCompose"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_PRIVACY_ANONYMOUS        "Enter anonymous mode"
+    ID_PRIVACY_RECEIPT          "Make receipt of current form"
+    ID_PRIVACY_DISPLAY_POLICY   "Display privacy policy of current site"
+    ID_PRIVACY_DISPLAY_COOKIES  "Display list of cookies"
+    ID_PRIVACY_DISPLAY_SIGNONS  "Display list of remembered signons"
+    ID_PRIVACY_DISPLAY_RECEIPTS "Display list of saved receipts"
+    ID_PRIVACY_DISPLAY_TUTORIAL "Show tutorial on privacy"
 END
 
 STRINGTABLE DISCARDABLE 

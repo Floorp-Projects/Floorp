@@ -476,6 +476,9 @@ struct URL_Struct_ {
 										   */
 	void	*owner_data;				  /* private data owned by whomever created the URL_Struct */			
 	char    *page_services_url;
+#ifdef PRIVACY_POLICIES
+	char	*privacy_policy_url;
+#endif
 	char	*etag;						  /* HTTP/1.1 Etag */
 	char    *origin_url;                  /* original referrer of javascript: URL */
 };
@@ -1022,6 +1025,23 @@ extern void NET_RegisterCookiePrefCallbacks(void);
 /* Save the cookies. libnet ignores whatever filename is specified, for now.
  */
 extern int NET_SaveCookies(char *filename);
+
+/* Start an anonymous list of cookies */
+extern void NET_AnonymizeCookies();
+
+/* Restore original list of cookies */
+extern void NET_UnanonymizeCookies();
+
+/* Should referer by supressed for anonymity sake */
+extern Bool NET_SupressRefererForAnonymity();
+
+#if defined(CookieManagement)
+extern void NET_DisplayCookieInfoAsHTML(MWContext *context);
+#endif
+
+#if defined(SingleSignon)
+extern void SI_DisplaySignonInfoAsHTML(MWContext *context);
+#endif
 
 /* returns a malloc'd string containing a unique id 
  * generated from the sec random stuff.
@@ -2185,5 +2205,3 @@ extern XP_Bool NET_IsOffline();
 XP_END_PROTOS
 
 #endif /* _NET_PROTO_H_ */
-
-

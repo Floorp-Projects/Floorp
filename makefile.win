@@ -80,6 +80,9 @@ DIRS = $(CORECONF) $(XTRADIRS) lib network include jpeg modules\zlib \
 !ifdef MOZ_JAVA
     $(DIRS_JSD) \
 !endif
+!ifdef MOZ_PRIVACY 
+    privacy \
+!endif
     lib modules cmd
 
 !if "$(STAND_ALONE_JAVA)" == "1"

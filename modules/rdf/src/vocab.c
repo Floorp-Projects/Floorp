@@ -169,6 +169,9 @@ createNavCenterVocab () {
   gNavCenter->RDF_HTMLType = RDF_GetResource (gCoreDB, "HTMLPage", true);
   gNavCenter->RDF_URLShortcut = RDF_GetResource(gCoreDB, "URLShortcut", true);
   gNavCenter->RDF_Cookies = createContainer("NC:Cookies");
+#ifdef TRANSACTION_RECEIPTS
+  gNavCenter->RDF_Receipts = createContainer("NC:Receipts");
+#endif
   gNavCenter->RDF_Toolbar = createContainer("NC:Toolbar");
 
   /* Commands */

@@ -209,6 +209,7 @@ extern Bool NDLLFE_SecurityDialog(MWContext * context, int message);
 #define SD_INSECURE_DOCS_WITHIN_SECURE_DOCS_NOT_SHOWN 5
 #define SD_REDIRECTION_TO_INSECURE_DOC                6
 #define SD_REDIRECTION_TO_SECURE_SITE                 7
+#define SD_NO_PRIVACY_POLICY                          8
 
 /*
 ** Pass the password related preferences from the security library to the FE.

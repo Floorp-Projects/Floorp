@@ -177,6 +177,9 @@ _MSC_VER=1020
 !if "$(MOZ_BITS)"=="32"
 #CFLAGS_RELEASE=/DNDEBUG \
 CFLAGS_RELEASE=/DNDEBUG /DCookieManagement /DSingleSignon \
+!ifdef MOZ_PRIVACY
+/DTRANSACTION_RECEIPTS /DPRIVACY_POLICIES \
+!endif
 !else
 CFLAGS_RELEASE=/DNDEBUG \
 !endif
@@ -215,7 +218,10 @@ MOZ_STACK=33679
 !if defined(MOZ_DEBUG)
 VERSTR=Dbg
 !if "$(MOZ_BITS)"=="32"
-CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon\
+CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon \
+!ifdef MOZ_PRIVACY
+/DTRANSACTION_RECEIPTS /DPRIVACY_POLICIES\
+!endif
 !else
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
 !endif
@@ -301,6 +307,7 @@ CFLAGS_LIBPARSE_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/pa_parse.pch" /YX"pa_par
 CFLAGS_XP_C=            $(CFLAGS_DEFAULT)
 CFLAGS_LIBPICS_C=       $(CFLAGS_DEFAULT)
 CFLAGS_LIBPWCAC_C=       $(CFLAGS_DEFAULT)
+CFLAGS_PRIVACY_C=	$(CFLAGS_DEFAULT)
 CFLAGS_XLATE_C=         $(CFLAGS_DEFAULT)
 CFLAGS_LIBDBM_C=        $(CFLAGS_DEFAULT)
 CFLAGS_PLUGIN_C=        $(CFLAGS_DEFAULT)
@@ -426,6 +433,9 @@ LINK_LIBS= \
     $(OUTDIR)\appicon.res \
 !ifndef MOZ_NGLAYOUT
     $(DIST)\lib\winfont.lib \
+!endif
+!ifdef MOZ_PRIVACY
+    $(DIST)\lib\privacy.lib \
 !endif
     $(DIST)\lib\abouturl.lib \
     $(DIST)\lib\dataurl.lib \
@@ -693,7 +703,10 @@ CDISTINCLUDES2= \
 !if defined(MOZ_NGLAYOUT)
 	/I$(XPDIST)\public\raptor \
 !endif
-    /I$(XPDIST)\public\util
+!if defined(MOZ_PRIVACY)
+    /I$(XPDIST)\public\privacy \
+!endif
+    /I$(XPDIST)\public\util 
 
 CDISTINCLUDES = $(CDISTINCLUDES1) $(CDISTINCLUDES2) $(CDISTINCLUDES3)
 
@@ -2489,6 +2502,9 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\xpcom16.lib +
     $(DIST)\lib\rdf16.lib +
     $(DIST)\lib\xpstrdll.lib +
+!ifdef MOZ_PRIVACY
+    $(DIST)\lib\privacy.lib +
+!endif
     $(DIST)\lib\abouturl.lib +
     $(DIST)\lib\dataurl.lib +
     $(DIST)\lib\fileurl.lib +

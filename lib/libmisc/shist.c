@@ -95,6 +95,10 @@ SHIST_FreeHistoryEntry (MWContext * ctxt, History_entry * entry)
     	    XP_FREE(entry->wysiwyg_url);
     	if(entry->page_services_url)
     	    XP_FREE(entry->page_services_url);
+#ifdef PRIVACY_POLICIES
+    	if(entry->privacy_policy_url)
+    	    XP_FREE(entry->privacy_policy_url);
+#endif /* PRIVACY_POLICIES */
 
 #ifdef MOZ_NGLAYOUT
   XP_ASSERT(0);
@@ -184,7 +188,9 @@ SHIST_CreateHistoryEntry (URL_Struct * URL_s, char * title)
 	StrAllocCopy(new_entry->content_name, URL_s->content_name);
 	StrAllocCopy(new_entry->post_data,    URL_s->post_data);
 	StrAllocCopy(new_entry->post_headers, URL_s->post_headers);
-
+#ifdef PRIVACY_POLICIES
+	StrAllocCopy(new_entry->privacy_policy_url, URL_s->privacy_policy_url);
+#endif
 	StrAllocCopy(new_entry->page_services_url, URL_s->page_services_url);
 	StrAllocCopy(new_entry->etag, URL_s->etag);
 
@@ -453,6 +459,9 @@ SHIST_CloneEntry(History_entry * old_entry)
     StrAllocCopy(new_entry->title, old_entry->title);
     StrAllocCopy(new_entry->address, old_entry->address);
     StrAllocCopy(new_entry->content_name, old_entry->content_name);
+#ifdef PRIVACY_POLICIES
+    StrAllocCopy(new_entry->privacy_policy_url, old_entry->privacy_policy_url);
+#endif /* PRIVACY_POLICIES */
     StrAllocCopy(new_entry->referer, old_entry->referer);
     StrAllocCopy(new_entry->post_data, old_entry->post_data);
     StrAllocCopy(new_entry->post_headers, old_entry->post_headers);

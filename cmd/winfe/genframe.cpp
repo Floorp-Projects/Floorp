@@ -50,6 +50,9 @@
 #elif defined(JAVA)
 #include "java.h"
 #endif
+#ifdef PRIVACY_POLICIES
+#include "privacy.h"
+#endif
 
 // for whitebox testing
 //#define DEBUG_WHITEBOX
@@ -796,6 +799,16 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
     ON_COMMAND(ID_MIGRATION_TOOLS, OnMigrationTools)
     ON_UPDATE_COMMAND_UI(ID_MIGRATION_TOOLS, OnUpdateMigrationTools)
 #endif //MOZ_MAIL_NEWS
+    ON_COMMAND(ID_PRIVACY_ANONYMOUS, OnTogglePrivacyAnonymous)
+    ON_UPDATE_COMMAND_UI(ID_PRIVACY_ANONYMOUS, OnUpdatePrivacyAnonymous)
+    ON_COMMAND(ID_PRIVACY_RECEIPT, OnTogglePrivacyReceipt)
+    ON_UPDATE_COMMAND_UI(ID_PRIVACY_RECEIPT, OnUpdatePrivacyReceipt)
+    ON_COMMAND(ID_PRIVACY_DISPLAY_POLICY, OnDisplayPrivacyPolicy)
+    ON_UPDATE_COMMAND_UI(ID_PRIVACY_DISPLAY_POLICY, OnUpdatePrivacyPolicy)
+    ON_COMMAND(ID_PRIVACY_DISPLAY_COOKIES, OnDisplayPrivacyCookies)
+    ON_COMMAND(ID_PRIVACY_DISPLAY_SIGNONS, OnDisplayPrivacySignons)
+    ON_COMMAND(ID_PRIVACY_DISPLAY_RECEIPTS, OnDisplayPrivacyReceipts)
+    ON_COMMAND(ID_PRIVACY_DISPLAY_TUTORIAL, OnDisplayPrivacyTutorial)
 #if defined(OJI) || defined(JAVA)
     ON_COMMAND(ID_OPTIONS_SHOWJAVACONSOLE, OnToggleJavaConsole)
     ON_UPDATE_COMMAND_UI(ID_OPTIONS_SHOWJAVACONSOLE, OnUpdateJavaConsole)
@@ -2243,6 +2256,129 @@ void CGenericFrame::OnShowBookmarkWindow()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+void CGenericFrame::OnTogglePrivacyAnonymous()
+{
+    if (theApp.m_bAnon) {
+	NET_UnanonymizeCookies();
+	theApp.m_bAnon = FALSE;
+    } else {
+	NET_AnonymizeCookies();
+	theApp.m_bAnon = TRUE;
+    }
+}
+
+void CGenericFrame::OnUpdatePrivacyAnonymous(CCmdUI* pCmdUI)
+{
+//  if( pCmdUI->m_pMenu ){
+//      pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_PRIVACY_ANONYMOUS),
+//          CASTUINT(MF_BYCOMMAND | MF_STRING),
+//          CASTUINT(ID_PRIVACY_ANONYMOUS),
+//          szLoadString(CASTUINT(theApp.m_bAnon ?
+//              IDS_PRIVACY_LEAVE_ANONYMOUS : IDS_PRIVACY_ENTER_ANONYMOUS)) );
+//  } else {
+	pCmdUI->SetCheck(theApp.m_bAnon);
+//  }
+}
+
+void CGenericFrame::OnTogglePrivacyReceipt()
+{
+    if (theApp.m_bReceipt) {
+	theApp.m_bReceipt = FALSE;
+    } else {
+	theApp.m_bReceipt = TRUE;
+    }
+}
+
+void CGenericFrame::OnUpdatePrivacyReceipt(CCmdUI* pCmdUI)
+{
+    if( pCmdUI->m_pMenu ){
+	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_PRIVACY_RECEIPT),
+	    CASTUINT(MF_BYCOMMAND | MF_STRING),
+	    CASTUINT(ID_PRIVACY_RECEIPT),
+	    szLoadString(CASTUINT(theApp.m_bReceipt ?
+		IDS_PRIVACY_DONTMAKERECEIPT : IDS_PRIVACY_MAKERECEIPT)) );
+    } else {
+	pCmdUI->SetCheck(theApp.m_bReceipt);
+    }
+}
+
+void CGenericFrame::OnDisplayPrivacyPolicy()
+{
+   
+#ifdef PRIVACY_POLICIES
+
+    MWContext * context = GetMainContext()->GetContext();
+    History_entry *he = SHIST_GetCurrent(&context->hist);
+    char * policy_url = PRVCY_GetCurrentPrivacyPolicyURL(context);
+
+        if (!policy_url) return;
+        //      Create the URL to load, assign a referrer field.
+        URL_Struct *pUrl = NET_CreateURLStruct(policy_url, NET_DONT_RELOAD);
+        if(he->address != NULL) {
+                pUrl->referer = XP_STRDUP(he->address);
+        }
+
+        //      Always set the window_target for a new window.
+        pUrl->window_target = XP_STRDUP("");
+
+#ifdef EDITOR
+    // Question: Does it matter if referer and window_target are set
+    //           if we are creating a new context?
+    // This code is probably not needed, but it can't hurt in this
+    // context.
+    if ( EDT_IS_EDITOR(context) ) {
+        if ( pUrl ) {
+            // Must clear this to correctly load URL into new context
+            pUrl->fe_data = NULL;
+            // Create new Context
+            CFE_CreateNewDocWindow(NULL, pUrl);
+        }
+    } else
+#endif
+        CFE_CreateNewDocWindow(GetMainContext()->GetContext(), pUrl);
+#endif
+}
+
+void CGenericFrame::OnUpdatePrivacyPolicy(CCmdUI* pCmdUI)
+{
+
+#ifdef PRIVACY_POLICIES
+
+    if (PRVCY_CurrentHasPrivacyPolicy(GetMainContext()->GetContext())) {
+	pCmdUI->Enable(TRUE);
+    } else {
+	pCmdUI->Enable(FALSE);
+    }
+
+#else
+
+    pCmdUI->Enable(FALSE);
+
+#endif
+
+}
+
+void CGenericFrame::OnDisplayPrivacyCookies()
+{
+    NET_DisplayCookieInfoAsHTML(GetMainContext()->GetContext());
+}
+
+void CGenericFrame::OnDisplayPrivacySignons()
+{
+    SI_DisplaySignonInfoAsHTML(GetMainContext()->GetContext());
+}
+
+void CGenericFrame::OnDisplayPrivacyReceipts()
+{
+}
+
+void CGenericFrame::OnDisplayPrivacyTutorial()
+{
+    // GetMainContext()->NormalGetUrl("file:///c|/My Documents");
+    GetMainContext()->NormalGetUrl(PRVCY_TutorialURL());
+}
+//////////////////////////////////////////////////////////////////////////////
 
 #if defined(OJI) || defined(JAVA)
 void CGenericFrame::OnToggleJavaConsole()

@@ -15,16 +15,15 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ..\..
-LIBRARY_NAME = lay
-MODULE = lay
+DEPTH = ../..
 
-!ifdef MOZ_PRIVACY
-REQUIRES = privacy
-EXPORTS = layout.h laylayer.h
-!else
-EXPORTS = layout.h 
-!endif
+MODULE = privacy
 
-!include $(DEPTH)\config\rules.mak
-# 
+EXPORTS =			\
+	privacy.h		\
+	receipt.h		\
+        $(NULL)
+
+include $(DEPTH)/config/config.mk
+
+include $(DEPTH)/config/rules.mk

@@ -341,16 +341,17 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
             uses_fe_data = FALSE;
         } 
 	  }
+#if defined(CookieManagement)
 	else if(!PL_strcasecmp(which, "cookies"))
 	{
-		NET_DisplayCookieInfoAsHTML(cur_entry);
+		NET_DisplayCookieInfoAsHTML(cur_entry->window_id);
 		return(-1);
 	}
+#endif
 #if defined(SingleSignon)
         else if(!PL_strcasecmp(which, "signons"))
 	{
-		extern void SI_DisplaySignonInfoAsHTML(ActiveEntry * cur_entry);
-		SI_DisplaySignonInfoAsHTML(cur_entry);
+		SI_DisplaySignonInfoAsHTML(cur_entry->window_id);
 		return(-1);
 	}
 #endif
@@ -666,6 +667,7 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	 !PL_strcmp((char*)user, "\173\170\205\204") ||				/* danm */
 	 !PL_strcmp((char*)user, "\173\170\215\200\173\204") ||			/* davidm */
 	 !PL_strcmp((char*)user, "\173\174\172\170\212\213\211\200") || /* decastri */
+	 !PL_strcmp((char*)user, "\173\175\204") ||                             /* dfm */
 	 !PL_strcmp((char*)user, "\173\201\216") ||				/* djw */
 	 !PL_strcmp((char*)user, "\173\202\170\211\203\213\206\205") ||		/* dkarlton */
 	 !PL_strcmp((char*)user, "\173\204\206\212\174") ||			/* dmose */

@@ -1126,15 +1126,11 @@ NET_DeleteCookie(char* cookieURL)
 /* blows away all cookies currently in the list, then blows away the list itself
  * nulling it after it's free'd
  */
-PUBLIC void
-NET_RemoveAllCookies()
+PRIVATE void
+net_RemoveAllCookies()
 {
 	net_CookieStruct * victim;
 	XP_List * cookieList;
-
-#if defined(CookieManagement)
-	net_RemoveAllCookiePermissions();
-#endif
 
 	/* check for NULL or empty list */
 	net_lock_cookie_list();
@@ -1151,6 +1147,16 @@ NET_RemoveAllCookies()
 	XP_ListDestroy(net_cookie_list);
 	net_cookie_list = NULL;
 	net_unlock_cookie_list();
+}
+
+PUBLIC void
+NET_RemoveAllCookies()
+{
+
+#if defined(CookieManagement)
+	net_RemoveAllCookiePermissions();
+#endif
+	net_RemoveAllCookies();
 }
 
 PRIVATE void
@@ -1212,6 +1218,44 @@ net_remove_expired_cookies(void)
 			list_ptr = net_cookie_list;
 		}
 	  }
+}
+
+PRIVATE XP_List * net_dormant_cookie_list=0;
+Bool net_anonymous = FALSE;
+Bool net_supressNextReferer = FALSE;
+
+PUBLIC void
+NET_AnonymizeCookies()
+{
+    if (!net_anonymous) {
+	net_lock_cookie_list();
+	net_dormant_cookie_list = net_cookie_list;
+	net_cookie_list = XP_ListNew();
+	net_unlock_cookie_list();
+	net_anonymous = TRUE;
+	net_supressNextReferer = TRUE;
+    }
+}
+
+PUBLIC void
+NET_UnanonymizeCookies()
+{
+    if (net_anonymous) {
+	net_RemoveAllCookies();
+	net_lock_cookie_list();
+	net_cookie_list = net_dormant_cookie_list;
+	net_unlock_cookie_list();
+	net_dormant_cookie_list = 0;
+	net_anonymous = FALSE;
+	net_supressNextReferer = TRUE;
+    }
+}
+
+PUBLIC Bool
+NET_SupressRefererForAnonymity() {
+   Bool result = net_supressNextReferer;
+   net_supressNextReferer = FALSE;
+   return result;
 }
 
 /* checks to see if the maximum number of cookies per host
@@ -1285,19 +1329,17 @@ NET_SetCookieBehaviorPref(NET_CookieBehaviorEnum x)
 	net_CookieBehavior = x;
 
 	HG83330
-	if(net_CookieBehavior == NET_DontUse)
+	if(net_CookieBehavior == NET_DontUse) {
 		XP_FileRemove("", xpHTTPCookie);
 #if defined(CookieManagement)
-            XP_FileRemove("", xpHTTPCookiePermission);
+		XP_FileRemove("", xpHTTPCookiePermission);
 #endif
+	}
 }
 
 PRIVATE void
 NET_SetCookieWarningPref(Bool x)
 {
-/* morse start -- temporary until preference bug is fixed */
-   /* x = TRUE; */
-/* morse end */
 	net_WarnAboutCookies = x;
 }
 
@@ -1610,8 +1652,8 @@ net_AddCookiePermission
 	    net_SaveCookiePermissions(NULL);
 	}
 
-    //	RDF_AddCookiePermissionResource (
-    //	    cookie_permission->host, cookie_permission->permission);
+   /* 	RDF_AddCookiePermissionResource (
+   	    cookie_permission->host, cookie_permission->permission); */
     }
 }
 #endif
@@ -1635,7 +1677,10 @@ XP_Bool FE_CheckConfirm (
 /* Java script is calling NET_SetCookieString, netlib is calling 
 ** this via NET_SetCookieStringFromHttp.
 */
-PR_PUBLIC_API(void) RDF_AddCookieResource(char* name, char* path, char* host, char* expires) ;
+
+PR_PUBLIC_API(void) RDF_AddCookieResource(char* name, char* path, char* host,
+					  char* expires, char* value,
+					  PRBool isDomain, PRBool secure) ;
 
 PRIVATE void
 net_IntSetCookieString(MWContext * context, 
@@ -2159,7 +2204,10 @@ net_IntSetCookieString(MWContext * context,
 				    (prev_cookie->name,
 				    prev_cookie->path,
 				    prev_cookie->host,
-				    ctime(&(prev_cookie->expires)));
+				    ctime(&(prev_cookie->expires)),
+				    prev_cookie->cookie,
+				    prev_cookie->is_domain,
+				    FALSE); /* @@@prev_cookie->secure); */
 				XP_ListInsertObject(net_cookie_list, tmp_cookie_ptr, prev_cookie);
 				cookies_changed = TRUE;
 				NET_SaveCookies(NULL);
@@ -2172,7 +2220,10 @@ net_IntSetCookieString(MWContext * context,
 		    (prev_cookie->name,
 		     prev_cookie->path,
 		     prev_cookie->host,
-		     ctime(&(prev_cookie->expires)));
+		     ctime(&(prev_cookie->expires)),
+		     prev_cookie->cookie,
+		     prev_cookie->is_domain,
+		     FALSE); /* @@@prev_cookie->secure); */
 		XP_ListAddObjectToEnd(net_cookie_list, prev_cookie);
 	  }
 
@@ -2410,6 +2461,7 @@ net_SaveCookiePermissions(char * filename)
     } else {
         XP_FileWrite("FALSE", -1, fp);
     }
+    XP_FileWrite(LINEBREAK, -1, fp);
 
     cookie_permissions_changed = FALSE;
     XP_FileClose(fp);
@@ -2498,6 +2550,10 @@ NET_SaveCookies(char * filename)
 
 	if(!cookies_changed)
 	  return(-1);
+
+	if(net_anonymous) {
+	    return(-1);
+	}
 
 	net_lock_cookie_list();
 	list_ptr = net_cookie_list;
@@ -2595,7 +2651,10 @@ NET_InitRDFCookieResources (void) {
       (item->name,
       item->path,
       item->host,
-      "" /* item->expires */) ;
+      ctime(&(item->expires)),
+      item->cookie,
+      item->is_domain,
+      FALSE); /* @@@item->secure); */
   }
   net_unlock_cookie_list();
 }
@@ -3202,8 +3261,14 @@ NET_AskForProxyAuth(MWContext * context,
 		PR_snprintf(buf, len*sizeof(char), XP_GetString( XP_PROXY_AUTH_REQUIRED_FOR ), prev->realm, proxy_addr);
 
 		NET_Progress(context, XP_GetString( XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_PROXY ) );
-		len = FE_PromptUsernameAndPassword(context, buf, 
-									       &username, &password);
+#if defined(SingleSignon)
+		/* prefill prompt with previous username/passwords if any */
+		len = SI_PromptUsernameAndPassword
+		    (context, buf, &username, &password, proxy_addr);
+#else
+		len = FE_PromptUsernameAndPassword
+		    (context, buf, &username, &password);
+#endif
 		PR_Free(buf);
 	  }
 	else
@@ -3437,26 +3502,30 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 	/* view button was pressed */
 
         /* get "selname" value in argv list */
-        if (cookieNumberAsString = XP_FindValueInArgs("selname", argv, argc)) {
+	if ((cookieNumberAsString = XP_FindValueInArgs("selname", argv, argc))) {
 
             /* convert "selname" value from string to an integer */
 	    cookieNumber = atoi(cookieNumberAsString);
 
 	    /* get the cookie corresponding to that integer */
 	    list=net_cookie_list;
+
 	    while (cookieNumber-- >= 0) {
-		cookie=(net_CookieStruct *) XP_ListNextObject(list);
+		if (!(cookie=(net_CookieStruct *) XP_ListNextObject(list))) {
+		    break;
+            }
 	    }
 
 	    /* display the details for that cookie */
-	    net_DisplayCookieDetailsAsHTML
-		((MWContext *)(state->arg),
-		cookie->path, cookie->host,
-		cookie->name, cookie->cookie,
-		cookie->expires, HG78111, cookie->is_domain);
-
-	}
-	return(PR_TRUE);
+	    if (cookie) {
+	        net_DisplayCookieDetailsAsHTML
+                ((MWContext *)(state->arg),
+                cookie->path, cookie->host,
+                cookie->name, cookie->cookie,
+                cookie->expires, HG78111, cookie->is_domain);
+            }
+        }
+    return(PR_TRUE);
     }
 
     if (button != XP_DIALOG_OK_BUTTON) {
@@ -3533,8 +3602,8 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
     return PR_FALSE;
 }
 
-MODULE_PRIVATE void
-NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
+PUBLIC void
+NET_DisplayCookieInfoAsHTML(MWContext *context)
 {
     char *buffer = (char*)PR_Malloc(BUFLEN);
     char *buffer2 = 0;
@@ -3543,7 +3612,6 @@ NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
     XP_List *cookie_permission_list=net_cookie_permission_list;
     net_CookieStruct *cookie;
     net_CookiePermissionStruct *cookperm;
-    MWContext *context = cur_entry->window_id;
 
     static XPDialogInfo dialogInfo = {
 	XP_DIALOG_OK_BUTTON | XP_DIALOG_CANCEL_BUTTON,
@@ -3558,18 +3626,23 @@ NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
     /* Write out the javascript */
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "<script>\n"
+
 "function DeleteCookieSelected() {\n"
 "  selname = document.theform.selname;\n"
 "  goneC = document.theform.goneC;\n"
 "  var p;\n"
 "  var i;\n"
-"  for (i=selname.options.length-1 ; i>=0 ; i--) {\n"
-"    if (selname.options[i].selected) {\n"
-"      selname.options[i].selected = 0;\n"
-"      goneC.value = goneC.value + \",\" + selname.options[i].value;\n"
+"  for (i=selname.options.length; i>0; i--) {\n"
+"    if (selname.options[i-1].selected) {\n"
+"      selname.options[i-1].selected = 0;\n"
+"      goneC.value = goneC.value + \",\" + selname.options[i-1].value;\n"
+/* "    temp = selname.options[i-1];\n" */
 "      for (j=i ; j<selname.options.length ; j++) {\n"
-"        selname.options[j] = selname.options[j+1];\n"
+"        selname.options[j-1] = selname.options[j];\n"
 "      }\n"
+"      selname.options[selname.options.length-1] = null;\n"
+/* "    selname.options[selname.options.length-1] = temp;\n" */
+/* "    selname.options.length = selname.options.length-1;\n" */
 "    }\n"
 "  }\n"
 "}\n"
@@ -3578,13 +3651,14 @@ NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
 "  goneP = document.theform.goneP;\n"
 "  var p;\n"
 "  var i;\n"
-"  for (i=selname2.options.length-1 ; i>=0 ; i--) {\n"
-"    if (selname2.options[i].selected) {\n"
-"      selname2.options[i].selected = 0;\n"
-"      goneP.value = goneP.value + \",\" + selname2.options[i].value;\n"
+"  for (i=selname2.options.length; i>0; i--) {\n"
+"    if (selname2.options[i-1].selected) {\n"
+"      selname2.options[i-1].selected = 0;\n"
+"      goneP.value = goneP.value + \",\" + selname2.options[i-1].value;\n"
 "      for (j=i ; j<selname2.options.length ; j++) {\n"
-"        selname2.options[j] = selname2.options[j+1];\n"
+"        selname2.options[j-1] = selname2.options[j];\n"
 "      }\n"
+"      selname2.options[selname2.options.length-1] = null;\n"
 "    }\n"
 "  }\n"
 "}\n"
@@ -3656,6 +3730,7 @@ after_stats:
 	FLUSH_BUFFER
 	cookieNum++;
     }
+
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "</SELECT></CENTER>\n"
 	);
@@ -3688,6 +3763,7 @@ after_stats:
 	FLUSH_BUFFER
 	cookieNum++;
     }
+
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "</SELECT></CENTER>\n"
 	);
@@ -3728,7 +3804,7 @@ after_stats:
 }
 
 #else
-MODULE_PRIVATE void
+PUBLIC void
 NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
 {
 }

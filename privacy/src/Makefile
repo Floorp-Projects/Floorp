@@ -15,16 +15,29 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ..\..
-LIBRARY_NAME = lay
-MODULE = lay
+DEPTH=../..
 
-!ifdef MOZ_PRIVACY
-REQUIRES = privacy
-EXPORTS = layout.h laylayer.h
-!else
-EXPORTS = layout.h 
-!endif
+LIBRARY_NAME = privacy
 
-!include $(DEPTH)\config\rules.mak
-# 
+DEFINES = -DPRIVACY_POLICIES -DTRANSACTION_RECEIPTS
+
+CPPSRCS =				\
+	$(NULL)
+
+CSRCS = 				\
+	privacy.c \
+	receipt.c \
+	$(NULL)
+
+MODULE = privacy
+
+EXPORTS = \
+	$(NULL)
+
+REQUIRES = privacy network layer pref style lay rdf nspr util img js
+
+include $(DEPTH)/config/config.mk
+
+TARGETS = $(LIBRARY)
+
+include $(DEPTH)/config/rules.mk

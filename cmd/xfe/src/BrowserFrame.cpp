@@ -122,6 +122,9 @@ MenuSpec XFE_BrowserFrame::view_menu_spec[] = {
   { xfeCmdViewPageSource,	PUSHBUTTON },
   { xfeCmdViewPageInfo,		PUSHBUTTON },
   { xfeCmdPageServices,     PUSHBUTTON },
+#ifdef PRIVACY_POLICIES
+  { xfeCmdPrivacyPolicy,	PUSHBUTTON },
+#endif
   MENU_SEPARATOR,
   { "encodingSubmenu",		CASCADEBUTTON,
 	(MenuSpec*)&XFE_Frame::encoding_menu_spec },

@@ -1,4 +1,4 @@
-#!gmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,16 +15,14 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ..\..
-LIBRARY_NAME = lay
-MODULE = lay
+DEPTH=..\..
 
-!ifdef MOZ_PRIVACY
-REQUIRES = privacy
-EXPORTS = layout.h laylayer.h
-!else
-EXPORTS = layout.h 
-!endif
+EXPORTS =			\
+	privacy.h		\
+	receipt.h		\
+	$(NULL)
 
-!include $(DEPTH)\config\rules.mak
-# 
+MODULE=privacy
+
+include <$(DEPTH)\config\rules.mak>
+

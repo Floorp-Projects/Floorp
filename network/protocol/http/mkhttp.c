@@ -1240,7 +1240,13 @@ net_build_http_request (URL_Struct * URL_s,
 			/* sendRefererHeader is set in NET_SetSendRefererHeaderPref in mkhttp.c. 
 			   This condition is set via a javascript pref and was implemented to 
 			   settle some privacy/security issue */
-			if(sendRefererHeader)
+			/* NET_SupressRefererForAnonymity is true on the first call after entering
+			   or leaving anonymous mode and false all other times.  Note that this
+			   function has a side effect of changing its own state (so that future
+			   calls to it return false until another mode change occurs).  For this
+			   reason it must appear first in the if-statement below to make sure it
+			   gets called even if sendReferHeader is false */
+			if(!NET_SupressRefererForAnonymity() && sendRefererHeader)
 			{
 				int url_type = NET_URL_Type(URL_s->referer);
 				if(URL_s->referer 

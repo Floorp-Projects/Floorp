@@ -171,6 +171,12 @@ CPPSRCS		+= \
 		  $(NULL)
 endif
 
+ifdef MOZ_PRIVACY 
+REQUIRES	+= \
+		  privacy \
+		  $(NULL)
+endif
+
 ifdef EDITOR
 CPPSRCS		+= \
 		  EditorDrop.cpp \

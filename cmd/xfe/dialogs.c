@@ -6538,6 +6538,10 @@ FE_SecurityDialog (MWContext *context, int state, XP_Bool *prefs_toggle)
       name = "redirectionToSecureDialog";
       cancel_p = True;
       break;
+    case SD_NO_PRIVACY_POLICY:
+      name = "noPrivacyPolicyDialog";
+      cancel_p = True;
+      break;
     default:
       abort ();
     }

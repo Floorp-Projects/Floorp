@@ -51,10 +51,6 @@ extern int NET_SaveCookies(char * filename);
  */
 extern int NET_ReadCookies(char * filename);
 
-/* create an HTML stream and push a bunch of HTML about cookies */
-extern void
-NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry);
-
 /* wrapper of NET_SetCookieString for netlib use. We need outformat and url_struct to determine
  * whether we're dealing with inline cookies 
  */

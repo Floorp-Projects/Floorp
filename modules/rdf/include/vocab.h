@@ -96,6 +96,9 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_HTMLType;
   RDF_Resource RDF_URLShortcut;
   RDF_Resource RDF_Cookies;
+#ifdef TRANSACTION_RECEIPTS
+  RDF_Resource RDF_Receipts;
+#endif
   RDF_Resource RDF_Toolbar;
 
   /* Commands */

@@ -265,6 +265,11 @@ BASIC_LIBS	= \
 		  $(DIST)/lib/libimg.a \
 		  $(NULL)
 
+ifdef MOZ_PRIVACY
+BASIC_LIBS	+= $(DIST)/lib/libprivacy.a 
+REQUIRES	+= privacy
+endif
+
 ifdef MOZ_LOC_INDEP
 BASIC_LIBS	+= $(DIST)/lib/libli.a
 endif

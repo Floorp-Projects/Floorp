@@ -272,6 +272,18 @@ protected:
 	afx_msg void OnToggleJavaConsole();
 	afx_msg void OnUpdateJavaConsole(CCmdUI* pCmdUI);
 #endif
+
+	afx_msg void OnTogglePrivacyAnonymous();
+	afx_msg void OnUpdatePrivacyAnonymous(CCmdUI* pCmdUI);
+	afx_msg void OnTogglePrivacyReceipt();
+	afx_msg void OnUpdatePrivacyReceipt(CCmdUI* pCmdUI);
+	afx_msg void OnDisplayPrivacyPolicy();
+	afx_msg void OnUpdatePrivacyPolicy(CCmdUI* pCmdUI);
+	afx_msg void OnDisplayPrivacyCookies();
+	afx_msg void OnDisplayPrivacySignons();
+	afx_msg void OnDisplayPrivacyReceipts();
+	afx_msg void OnDisplayPrivacyTutorial();
+
 	afx_msg void OnSecurity();
 	afx_msg void OnUpdateSecurity(CCmdUI *pCmdUI);
 #ifdef MOZ_OFFLINE

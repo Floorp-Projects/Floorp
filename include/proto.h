@@ -276,8 +276,7 @@ extern int SI_PromptUsernameAndPassword
     (MWContext *context, char *buf,
     char **username, char **password, char *URLName);
 extern char *SI_PromptPassword
-    (MWContext *context, char *prompt, char *URLName,
-    Bool pickFirstUser, Bool useLastPassword);
+    (MWContext *context, char *prompt, char *URLName, Bool pickFirstUser);
 extern char * SI_Prompt
     (MWContext *context, char *prompt, char* defaultUsername, char *URLName);
 extern void SI_StartOfForm();

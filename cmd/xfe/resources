@@ -2142,6 +2142,9 @@ Decrease the font size for viewing this page
 *pageServices.mnemonic:				v
 !*pageServices.documentationString:
 
+*privacyPolicy.labelString:			Privacy Policy
+*privacyPolicy.mnemonic:			y
+
 *menuBar*encodingSubmenu.labelString:	Encoding
 *menuBar*encodingSubmenu.mnemonic:		E
 *encodingSubmenu.documentationString:	\
@@ -4779,6 +4782,19 @@ submit is insecure and could be observed by a third party while\n\
 in transit. If you are submitting passwords, credit card numbers,\n\
 or other information you would like to keep private, it would be\n\
 safer for you to cancel the submission.
+
+*noPrivacyPolicyDialog_popup.title:        @NAME@: Privacy Warning
+*noPrivacyPolicyDialog*toggle.labelString: Show this Alert Next Time
+*noPrivacyPolicyDialog*toggle.alignment:   ALIGNMENT_BEGINNING
+*noPrivacyPolicyDialog.OkLabelString:      Continue Submission
+*noPrivacyPolicyDialog.CancelLabelString:  Cancel Submission
+*noPrivacyPolicyDialog*toggle.leftOffset:  100
+*noPrivacyPolicyDialog.selectionLabelString:\
+There is no privacy policy in effect for this form submission.\n\
+This site has not disclosed how the information you are providing\n\
+will be used. If you are concerned by this, you may want to cancel\n\
+this submission.
+
 
 *insecurePostFromInsecureDocDialog_popup.title:	      @NAME@: Security Warning
 *insecurePostFromInsecureDocDialog.OkLabelString:     Continue Submission
