@@ -103,6 +103,11 @@ pref("browser.history.last_page_visited", "");
 pref("browser.history_expire_days", 9);
 pref("browser.sessionhistory.max_entries", 50);
 
+// Translation service
+pref("browser.translation.service", "http://cgi.netscape.com/cgi-bin/translate.cgi?AlisUI=simple_frames/ns_home&AlisTargetURI=");
+pref("browser.translation.serviceDomain", "teletranslator.com");
+  
+// Platform for Internet Content Selection
 pref("browser.PICS.ratings_enabled", false);
 pref("browser.PICS.pages_must_be_rated", false);
 pref("browser.PICS.disable_for_this_session", false);
