@@ -719,7 +719,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       gInitDetector = PR_TRUE;
     }
 
-    if (kCharsetFromBookmarks > charsetSource)
+    // don't try to access bookmarks if we are loading about:blank...it's not going
+    // to give us anything useful and it causes Bug #44397. At the same time, I'm loath to do something
+    // like this because I think it's really bogus that layout is depending on bookmarks. This is very evil.
+    nsXPIDLCString scheme;
+    aURL->GetScheme(getter_Copies(scheme));
+    if (scheme && nsCRT::strcasecmp("about", scheme) && (kCharsetFromBookmarks > charsetSource))
     {
       nsCOMPtr<nsIRDFDataSource>  datasource;
       if (NS_SUCCEEDED(rv_detect = gRDF->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
