@@ -913,6 +913,15 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 		
 		if (m_transport && m_runningUrl)
 		{
+			nsIImapUrl::nsImapAction imapAction;
+			m_runningUrl->GetImapAction(&imapAction);
+
+			// if we're running a select or delete all, do a noop first.
+			// this should really be in the connection cache code when we know
+			// we're pulling out a selected state connection, but maybe we
+			// can get away with this.
+			m_needNoop = (imapAction == nsIImapUrl::nsImapSelectFolder || imapAction == nsIImapUrl::nsImapDeleteAllMsgs);
+
 			PRBool transportOpen = PR_FALSE;
 			m_transport->IsTransportOpen(&transportOpen);
 			if (transportOpen == PR_FALSE)
@@ -3956,7 +3965,7 @@ void nsImapProtocol::Logout()
 
 	nsString2 command(GetServerCommandTag(), eOneByte);
 
-	command.Append("logout" CRLF);
+	command.Append(" logout" CRLF);
 
 	SendData(command.GetBuffer());
 
@@ -3970,7 +3979,7 @@ void nsImapProtocol::Noop()
     IncrementCommandTagNumber();
 	nsString2 command(GetServerCommandTag(), eOneByte);
     
-	command.Append("noop" CRLF);
+	command.Append(" noop" CRLF);
             
     SendData(command.GetBuffer());
     
