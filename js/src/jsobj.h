@@ -339,6 +339,9 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp);
 extern JSIdArray *
 js_NewIdArray(JSContext *cx, jsint length);
 
+extern JSIdArray *
+js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length);
+
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */

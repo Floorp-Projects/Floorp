@@ -224,4 +224,5 @@ MSG_DEF(JSMSG_INVALID_BACKREF,        148, 0, JSEXN_SYNTAXERR, "non-octal digit 
 MSG_DEF(JSMSG_BAD_BACKREF,            149, 0, JSEXN_SYNTAXERR, "back-reference exceeds number of capturing parentheses")
 MSG_DEF(JSMSG_PRECISION_RANGE,        150, 1, JSEXN_RANGEERR, "precision {0} out of range")
 MSG_DEF(JSMSG_BAD_GETTER_OR_SETTER,   151, 1, JSEXN_SYNTAXERR, "invalid {0} usage")
-MSG_DEF(JSMSG_BAD_ARRAY_LENGTH,       152, 0, JSEXN_RANGEERR, "Inappropriate array length")
+MSG_DEF(JSMSG_BAD_ARRAY_LENGTH,       152, 0, JSEXN_RANGEERR, "invalid array length")
+MSG_DEF(JSMSG_CANT_DESCRIBE_PROPS,    153, 1, JSEXN_NONE, "can't describe non-native properties of class {0}")
