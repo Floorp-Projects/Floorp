@@ -106,6 +106,18 @@ net_pop3_check_for_hash_messages_marked_delete(PLHashEntry* he,
 	return HT_ENUMERATE_NEXT;		/* XP_Maphash will continue traversing the hash */
 }
 
+static PRIntn PR_CALLBACK
+net_pop3_remove_messages_marked_delete(PLHashEntry* he,
+			  						   PRIntn msgindex, 
+			   						   void *arg)
+{
+	char valueChar = (char) he->value;
+	if (valueChar == DELETE_CHAR)
+	  return HT_ENUMERATE_REMOVE;
+    else
+      return HT_ENUMERATE_NEXT;     /* XP_Maphash will continue traversing the hash */
+}
+
 static void
 put_hash(Pop3UidlHost* host, PLHashTable* table, const char* key, char value)
 {
@@ -219,7 +231,7 @@ net_pop3_load_state(const char* searchhost,
   }
   if (fileStream.is_open())
    fileStream.close();
-  
+
   return result;
 }
 
@@ -603,13 +615,12 @@ NS_IMETHODIMP nsPop3Protocol::Cancel(nsresult status)  // handle stop button
 {
   if(m_pop3ConData->msg_closure)
   {
-      m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->msg_closure,
-                                      POP3_MESSAGE_WRITE_ERROR);
+      m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->only_uidl != nsnull);
       m_pop3ConData->msg_closure = NULL;
   }
   // need this to close the stream on the inbox.
   m_nsIPop3Sink->AbortMailDelivery();
-	return nsMsgProtocol::Cancel(NS_BINDING_ABORTED);
+  return nsMsgProtocol::Cancel(NS_BINDING_ABORTED);
 }
 
 
@@ -831,8 +842,8 @@ nsPop3Protocol::Error(PRInt32 err_code)
             }
         }
     }
-	m_pop3ConData->next_state = POP3_ERROR_DONE;
-	m_pop3ConData->pause_for_read = PR_FALSE;
+    m_pop3ConData->next_state = POP3_ERROR_DONE;
+    m_pop3ConData->pause_for_read = PR_FALSE;
 
 	return -1;
 }
@@ -1947,8 +1958,7 @@ nsPop3Protocol::GetMsg()
                 }
             }
         }
-        if ((m_pop3ConData->leave_on_server && m_pop3ConData->next_state !=
-             POP3_SEND_DELE) || 
+        if ((m_pop3ConData->next_state != POP3_SEND_DELE) || 
             m_pop3ConData->next_state == POP3_GET_MSG ||
             m_pop3ConData->next_state == POP3_SEND_TOP) { 
 
@@ -2121,6 +2131,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     PRInt32 flags = 0;
     char *uidl = NULL;
     char *newStr;
+    nsresult rv;
 #if 0
     PRInt32 old_bytes_received = m_totalBytesReceived;
 #endif
@@ -2177,12 +2188,12 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
          */
         m_pop3ConData->real_new_counter++;		
         /* (rb) count only real messages being downloaded */
-        m_nsIPop3Sink->IncorporateBegin(uidl, m_url, flags,
-                                        &m_pop3ConData->msg_closure);  
+        rv = m_nsIPop3Sink->IncorporateBegin(uidl, m_url, flags,
+                                        &m_pop3ConData->msg_closure); 
 
         PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, ("Done opening message stream!"));
 													
-        if(!m_pop3ConData->msg_closure)
+        if(!m_pop3ConData->msg_closure || NS_FAILED(rv))
             return(Error(POP3_MESSAGE_WRITE_ERROR));
     }
     
@@ -2196,15 +2207,15 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     {
         if (m_pop3ConData->dot_fix && m_pop3ConData->assumed_end && m_pop3ConData->msg_closure)
         {
-            status =
-                m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+            rv =
+                m_nsIPop3Sink->IncorporateComplete();
             // The following was added to prevent the loss of Data when we try
             // and write to somewhere we dont have write access error to (See 
             // bug 62480)
             // (Note: This is only a temp hack until the underlying XPCOM is
             // fixed to return errors)
             
-            if(NS_FAILED(status))
+            if(NS_FAILED(rv))
                 return(Error(POP3_MESSAGE_WRITE_ERROR));
 
             m_pop3ConData->msg_closure = 0;
@@ -2224,9 +2235,11 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 		do
 		{
             PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
-			BufferInput(line, buffer_size);
+			PRInt32 res = BufferInput(line, buffer_size);
+            if (res < 0) return res;
 			// BufferInput(CRLF, 2);
-            BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+            res = BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+            if (res < 0) return res;
 
             m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
     
@@ -2254,8 +2267,8 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     if (pauseForMoreData && m_pop3ConData->dot_fix &&
         m_pop3ConData->assumed_end && m_pop3ConData->msg_closure)
     {
-        status = 
-            m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+        rv = 
+            m_nsIPop3Sink->IncorporateComplete();
 
         // The following was added to prevent the loss of Data when we try
         // and write to somewhere we dont have write access error to (See
@@ -2263,7 +2276,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         // (Note: This is only a temp hack until the underlying XPCOM is
         // fixed to return errors)
 
-        if(NS_FAILED(status))
+        if(NS_FAILED(rv))
             return(Error(POP3_MESSAGE_WRITE_ERROR));
 
         m_pop3ConData->msg_closure = 0;
@@ -2363,7 +2376,7 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
 PRInt32
 nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
 {
-    int status;
+    nsresult rv;
     
     NS_ASSERTION(m_pop3ConData->msg_closure, "m_pop3ConData->msg_closure is null in nsPop3Protocol::HandleLine()");
     if (!m_pop3ConData->msg_closure)
@@ -2389,12 +2402,11 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
         }
     }
     
-    status =
-        m_nsIPop3Sink->IncorporateWrite(m_pop3ConData->msg_closure, 
-                                             line, line_length);
+    rv = m_nsIPop3Sink->IncorporateWrite(line, line_length);
+    if(NS_FAILED(rv))
+      return(Error(POP3_MESSAGE_WRITE_ERROR));
 
-    if ((status >= 0) &&
-        (line[0] == '.') &&
+    if ((line[0] == '.') &&
         ((line[1] == CR) || (line[1] == LF)))
     {
         m_pop3ConData->assumed_end = PR_TRUE;	/* in case byte count from server is */
@@ -2402,8 +2414,7 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
         if (!m_pop3ConData->dot_fix || m_pop3ConData->truncating_cur_msg ||
             (m_pop3ConData->parsed_bytes >= (m_pop3ConData->pop3_size -3))) 
         {
-            status = 
-                m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+            rv = m_nsIPop3Sink->IncorporateComplete();
 
             // The following was added to prevent the loss of Data when we try
             // and write to somewhere we dont have write access error to (See
@@ -2411,14 +2422,14 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
             // (Note: This is only a temp hack until the underlying XPCOM is
             // fixed to return errors)
 
-            if(NS_FAILED(status))
+            if(NS_FAILED(rv))
                 return(Error(POP3_MESSAGE_WRITE_ERROR));
 
             m_pop3ConData->msg_closure = 0;
         }
     }
     
-    return status;
+    return 0;
 }
 
 PRInt32 nsPop3Protocol::SendDele()
@@ -2465,8 +2476,12 @@ PRInt32 nsPop3Protocol::DeleResponse()
             m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg-1].uidl)
         { 
             if (m_pop3ConData->newuidl)
+              if (m_pop3ConData->leave_on_server)
                 PL_HashTableRemove(m_pop3ConData->newuidl, (void*)
                   m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg-1].uidl); 
+              else
+                PL_HashTableAdd(m_pop3ConData->newuidl, (void*)
+                  m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg-1].uidl, (void*)DELETE_CHAR);   
                 /* kill message in new hash table */
             else
                 PL_HashTableRemove(host->hash, 
@@ -2494,7 +2509,7 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
             Pop3MsgInfo* info = m_pop3ConData->msg_info +
                 m_pop3ConData->last_accessed_msg; 
             if (info && info->uidl && (m_pop3ConData->only_uidl == NULL) &&
-                m_pop3ConData->newuidl) { 
+                m_pop3ConData->newuidl && m_pop3ConData->newuidl->nentries > 0) { 
                 PRBool val = PL_HashTableRemove (m_pop3ConData->newuidl, info->uidl);
                 PR_ASSERT(val);
             }
@@ -2864,14 +2879,9 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 			
 			status = SendData(mailnewsurl, "QUIT" CRLF);
             m_pop3ConData->next_state = POP3_WAIT_FOR_RESPONSE;
-#ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
             m_pop3ConData->next_state_after_response = POP3_QUIT_RESPONSE;
-#else
-            m_pop3ConData->next_state_after_response = POP3_DONE;
-#endif
             break;
 
-#ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
         case POP3_QUIT_RESPONSE:
             if(m_pop3ConData->command_succeeded)
             {
@@ -2884,6 +2894,13 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                   if (m_pop3ConData->uidlinfo &&
                       m_pop3ConData->uidlinfo->uncommitted_deletes) 
                       XP_Clrhash (m_pop3ConData->uidlinfo->uncommitted_deletes);*/
+              //delete the uidl because deletes are committed
+              if (!m_pop3ConData->leave_on_server && m_pop3ConData->newuidl){  
+                PL_HashTableEnumerateEntries(m_pop3ConData->newuidl, 
+    								net_pop3_remove_messages_marked_delete,
+    								(void *)m_pop3ConData);   
+              }
+
 
                 m_pop3ConData->next_state = POP3_DONE;
 
@@ -2893,7 +2910,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 m_pop3ConData->next_state = POP3_ERROR_DONE;
             }
             break;
-#endif
             
         case POP3_DONE:
             CommitState(PR_FALSE);
@@ -2920,8 +2936,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 				
             if(m_pop3ConData->msg_closure)
             {
-                m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->msg_closure,
-                                                POP3_MESSAGE_WRITE_ERROR);
+                m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->only_uidl != nsnull);
                 m_pop3ConData->msg_closure = NULL;
                 m_nsIPop3Sink->AbortMailDelivery();
             }
