@@ -41,6 +41,8 @@
 #include "prtypes.h"
 #include "nsQuickSort.h"
 
+NS_BEGIN_EXTERN_C
+
 #if !defined(DEBUG) && (defined(__cplusplus) || defined(__gcc))
 # ifndef INLINE
 #  define INLINE inline
@@ -180,3 +182,5 @@ loop:	SWAPINIT(a, es);
 	}
 /*		NS_QuickSort(pn - r, r / es, es, cmp, data);*/
 }
+
+NS_END_EXTERN_C
