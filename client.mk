@@ -191,7 +191,7 @@ CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSPR_CO
 ####################################
 # CVS defines for the C LDAP SDK
 #
-LDAPCSDK_CO_MODULE = DirectorySDKSourceC
+LDAPCSDK_CO_MODULE = mozilla/directory/c-sdk
 LDAPCSDK_CO_FLAGS := -P
 ifdef LDAPCSDK_CO_TAG
   LDAPCSDK_CO_FLAGS := $(LDAPCSDK_CO_FLAGS) -r $(LDAPCSDK_CO_TAG)
