@@ -28,11 +28,6 @@
 
 @import url(chrome://global/skin/);
 
-treecol[hidden="true"]
-{
-  display: none;
-}
-
 treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
