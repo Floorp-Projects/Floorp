@@ -1574,7 +1574,10 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   PRInt32 textWidth;
   PRUnichar* text = paintBuf;
   nsPoint origin;
-  GetOrigin(origin);
+  //GetOrigin(origin);
+  nsIView * view;
+  GetView(view);
+  GetOffsetFromView(origin,view);
   PRBool found = BinarySearchForPosition(aRendContext, text, origin.x, 0, 0,
                                          PRInt32(textLength),
                                          PRInt32(aEvent->point.x) , //go to local coordinates

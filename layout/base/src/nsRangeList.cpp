@@ -20,9 +20,9 @@ static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 //PROTOTYPES
-void selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect, PRBool aForwards);
-PRInt32 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd);
-nsIFrame * getNextFrame(nsIFrame *aStart);
+static void selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect, PRBool aForwards);
+static PRInt32 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd);
+static nsIFrame * getNextFrame(nsIFrame *aStart);
 
 
 class nsRangeListIterator;
@@ -415,10 +415,9 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
 nsIFrame *
 getNextFrame(nsIFrame *aStart)
 {
-  PRBool found(PR_FALSE);
   nsIFrame *result;
   nsIFrame *parent = aStart;
-  while(!found){
+  while(1){
     if (NS_SUCCEEDED(parent->GetNextSibling(result)) && result){
       parent = result;
       while (NS_SUCCEEDED(parent->FirstChild(nsnull, parent)) && parent)
