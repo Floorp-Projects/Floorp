@@ -38,6 +38,7 @@
 #include "plhash.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #ifdef MOZ_MATHML
   #include <math.h>
