@@ -219,7 +219,11 @@ treecell {
 } 
 
 .treecell-indent {
-  behavior: url("resource:/chrome/xulBindings.xml#treecell-indented");
+  behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-leaf");
+}
+
+treeitem[container="true"] > treerow > .treecell-indent {
+  behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-folder");
 }
 
 .treecell-iconic {
