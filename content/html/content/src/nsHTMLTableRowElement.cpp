@@ -603,6 +603,8 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
       aAttributes->GetAttribute(nsHTMLAtoms::height, value);
       if (value.GetUnit() == eHTMLUnit_Pixel)
         aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+      else if (value.GetUnit() == eHTMLUnit_Percent) 
+        aData->mPositionData->mHeight.SetPercentValue(value.GetPercentValue());
     }
   }
   else if (aData->mTextData) {
