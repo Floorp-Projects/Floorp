@@ -108,6 +108,28 @@
     list-style-image      : url("chrome://messenger/skin/messengercompose/send-hover-active.gif");
   } 
 
+#button-send[offline="true"]
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/sendlater.gif");
+  }
+
+#button-send[offline="true"][disabled="true"],
+#button-send[offline="true"][disabled="true"]:hover,
+#button-send[offline="true"][disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/sendlater-disabled.gif");
+  }
+
+#button-send[offline="true"]:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/sendlater-hover.gif");
+  }
+
+#button-send[offline="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/messengercompose/sendlater-hover-active.gif");
+  }
+
 #button-address 
   {
           list-style-image      : url("chrome://messenger/skin/messengercompose/address.gif");

@@ -419,7 +419,9 @@
                now_tooltiptext="&sendButton.tooltip;"
                later_label="&sendLaterCmd.label;"
                later_tooltiptext=""
-               />
+               >
+               <observes element="Communicator:WorkMode" attribute="offline"/>
+       </button>
        <toolbarseparator class="toolbarseparator-primary"/>
        <button class="button-toolbar-2 top" 
                id="button-address" label="&addressButton.label;" 
