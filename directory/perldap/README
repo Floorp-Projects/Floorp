@@ -71,6 +71,16 @@ The source to PerLDAP is available on the Mozilla site at:
 
   http://www.mozilla.org/directory/
 
+You can either retrieve the .tar file with the source distribution, or use
+CVS to checkout the module directly. The name of the CVS module is
+PerLDAP, and it checks out the directory
+
+  mozilla/directory/perldap
+
+Further instructions for using CVS and Mozilla is available at
+
+  http://www.mozilla.org/cvs.html
+
 Instructions for building the source can be found in the INSTALL file
 in the source distribution.
 
