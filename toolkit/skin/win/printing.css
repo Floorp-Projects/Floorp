@@ -66,26 +66,6 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
 }
 
-/* ..... orientation ..... */
-/*
-.toolbar-portrait-page {
-  list-style-image: url("chrome://communicator/skin/icons/Portrait-small.png");
-}
-
-.toolbar-landscape-page {
-  list-style-image: url("chrome://communicator/skin/icons/Landscape-small.png");
-}
-*/
-/* ::::: page setup dialog ::::: */
-/*
-.portrait-page {
-  list-style-image: url("chrome://communicator/skin/icons/Portrait.png");
-}
-
-.landscape-page {
-  list-style-image: url("chrome://communicator/skin/icons/Landscape.png");
-}
-*/
 
 /* ..... orientation ..... */
 
