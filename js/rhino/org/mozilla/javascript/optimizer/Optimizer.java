@@ -302,6 +302,8 @@ public class Optimizer {
         for (int i = 0; i < theBlocks.length; i++) {
             theBlocks[i].markVolatileVariables(theVariables);
         }
+        
+        theBlocks[0].markAnyTypeVariables(theVariables);
     }
 
 /*

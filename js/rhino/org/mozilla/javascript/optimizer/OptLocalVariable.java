@@ -42,6 +42,11 @@ public class OptLocalVariable extends LocalVariable {
     
     public OptLocalVariable(String name, boolean isParameter) {
         super(name, isParameter);
+        // If the variable is a parameter, it could have any type.
+        // If it is from a "var" statement, its typeEvent will be set
+        // when we see the setVar node. 
+        int typeEvent = isParameter ? TypeEvent.AnyType : TypeEvent.NoType;
+        itsTypeUnion = new TypeEvent(typeEvent);
     }
     
     public String toString() {
@@ -87,7 +92,7 @@ public class OptLocalVariable extends LocalVariable {
     private boolean itsLiveAcrossCall;
     private boolean itsIsNumber;
     
-    private TypeEvent itsTypeUnion = new TypeEvent();        // the union of all assigned types
+    private TypeEvent itsTypeUnion;        // the union of all assigned types
     
     private int initPC;
 }

@@ -241,6 +241,14 @@ public class Block {
                 break;
         }
     }
+    
+    void markAnyTypeVariables(VariableTable theVariables)
+    {
+        for (int i = 0; i < theVariables.size(); i++)
+            if (itsLiveOnEntrySet.test(i))
+                ((OptLocalVariable)theVariables.get(i)).assignType(TypeEvent.AnyType);
+        
+    }
 
     void markVolatileVariables(VariableTable theVariables)
     {
