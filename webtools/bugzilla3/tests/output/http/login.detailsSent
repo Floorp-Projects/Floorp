@@ -3,7 +3,7 @@ COSES
 
 <set variable="title" value="Details Sent">
   <include href="template.html.header"/>
-</set></set></set>
+</set>
 
 <text><![CDATA[
   <p>
