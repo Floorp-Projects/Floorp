@@ -24,9 +24,11 @@
  */
 
 var insertNew     = true;
+var insertNewIMap = true;
 var wasEnableAll  = false;
 var oldSourceInt  = 0;
 var imageElement;
+var imageMap;
 var canRemoveImageMap = false;
 var imageMapDisabled = false;
 
@@ -91,6 +93,44 @@ function Startup()
   // Make a copy to use for AdvancedEdit
   globalElement = imageElement.cloneNode(false);
   
+
+  // Get image map for image
+  var usemap = globalElement.getAttribute("usemap");
+  if (usemap)
+  {
+    mapname = usemap.substring(1, usemap.length);
+    mapCollection = editorShell.editorDocument.getElementsByName(mapname);
+    if (mapCollection[0] != null)
+    {
+      imageMap = mapCollection[0];
+      canRemoveImageMap = true;
+      insertNewIMap = false;
+      dump(imageMap.childNodes.length+"\n");
+    }
+    else
+    {
+      imageMap = editorShell.CreateElementWithDefaults("map");
+      insertNewIMap = true;
+    }
+  }
+  else
+  {
+    imageMap = editorShell.CreateElementWithDefaults("map");
+    insertNewIMap = true;
+  }
+
+  if( !imageMap )
+  {
+    dump("Failed to get map element or create a new one!\n");
+    window.close();
+  }
+
+  // Make a copy to use for image map editor
+  if (insertNewIMap)
+    globalMap = imageMap.cloneNode(true);
+  else
+    globalMap = imageMap;
+  
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"' 
   //   attribute on the MoreFewerButton button
@@ -119,6 +159,8 @@ function InitDialog()
   str = globalElement.getAttribute("alt");
   if (str)
     dialog.altTextInput.value = str;
+  
+  // Check for image map
   
   if ( SeeMore )
   {
@@ -403,21 +445,17 @@ function constrainProportions( srcID, destID )
 
 function editImageMap()
 {
-//  if (editorShell){
-//    var tagName = "img";
-//    image = editorShell.GetSelectedElement(tagName);
-
-    //Test selected element to see if it's an image
-//    if (image){
-      //If it is, launch image map dialog
-      window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close", "");
-//    }
-//  }
+  window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close,titlebar,modal", globalElement, globalMap);
 }
 
 function removeImageMap()
 {
-  dump("removeImageMap -- WRITE ME!\n");
+  globalElement.removeAttribute("usemap");
+  if (imageMap){
+    canRemoveImageMap = false;
+    SetElementEnabledByID( "removeImageMap", false);
+    editorShell.DeleteElement(imageMap);
+  }
 }
 
 // Get data from widgets, validate, and set for the global element
@@ -574,6 +612,15 @@ function ValidateData()
 	    globalElement.setAttribute( "align", align );
   }
 
+  // Assign 
+  mapName = globalMap.getAttribute("name");
+  dump("mapName = "+mapName+"\n");
+  if (mapName != ""){
+    globalElement.setAttribute("usemap", ("#"+mapName));
+    if (globalElement.getAttribute("border") == "")
+      globalElement.setAttribute("border", 0);
+  }
+
   return true;
 }
 
@@ -594,6 +641,29 @@ function onOK()
         dump("Exception occured in InsertElementAtSelection\n");
       }
     }
+
+    // Copy or insert image map
+    imageMap = globalMap.cloneNode(true);
+    if (insertNewIMap){
+      try {
+        editorShell.editorDocument.body.appendChild(imageMap);
+        //editorShell.InsertElementAtSelection(imageMap, false);
+      }
+      catch (e) {
+        dump("Exception occured in InsertElementAtSelection\n");
+      }
+    }
+
+    // un-comment to see that inserting image maps does not work!
+    /*test = editorShell.CreateElementWithDefaults("map");
+    test.setAttribute("name", "testing");
+    testArea = editorShell.CreateElementWithDefaults("area");
+    testArea.setAttribute("shape", "circle");
+    testArea.setAttribute("coords", "86,102,52");
+    testArea.setAttribute("href", "test");
+    test.appendChild(testArea);
+    editorShell.InsertElementAtSelection(test, false);*/
+
     return true;
   }
   return false;
