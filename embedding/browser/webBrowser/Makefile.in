@@ -64,17 +64,17 @@ SDK_XPIDLSRCS   = \
 		nsITooltipTextProvider.idl  \
 		nsIWebBrowser.idl	    \
 		nsIWebBrowserChrome.idl	    \
-		nsIWebBrowserSetup.idl	    \
+		nsIWebBrowserChromeFocus.idl \
+		nsIWebBrowserFocus.idl	    \
 		nsIWebBrowserPrint.idl      \
+		nsIWebBrowserSetup.idl	    \
                 $(NULL)
 
 XPIDLSRCS	= \
 		nsCWebBrowser.idl			\
-		nsIWebBrowserChromeFocus.idl		\
 		nsICommandHandler.idl			\
 		nsIEmbeddingSiteWindow2.idl \
 		nsIContextMenuListener2.idl \
-		nsIWebBrowserFocus.idl		\
 		nsIPrintingPrompt.idl       \
 		nsIPrintingPromptService.idl       \
 		$(NULL)

@@ -35,18 +35,18 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMEvent.idl				\
 	nsIDOMEventTarget.idl			\
 	nsIDOMEventListener.idl			\
-	nsIDOM3DocumentEvent.idl			\
+	nsIDOM3DocumentEvent.idl		\
 	nsIDOM3EventTarget.idl			\
 	nsIDOMEventGroup.idl			\
 	nsIDOMCustomEvent.idl			\
+	nsIDOMMouseEvent.idl			\
+	nsIDOMUIEvent.idl			\
 	$(NULL)
 
 XPIDLSRCS =					\
 	nsIDOMNSEvent.idl			\
 	nsIDOMKeyEvent.idl			\
-	nsIDOMMouseEvent.idl			\
 	nsIDOMMutationEvent.idl			\
-	nsIDOMUIEvent.idl			\
 	nsIDOMNSUIEvent.idl			\
 	nsIDOMPopupBlockedEvent.idl		\
 	$(NULL)

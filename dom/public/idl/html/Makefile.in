@@ -30,7 +30,7 @@ MODULE		= dom
 XPIDL_MODULE	= dom_html
 GRE_MODULE	= 1
 
-XPIDLSRCS =					\
+SDK_XPIDLSRCS =					\
 	nsIDOMHTMLAnchorElement.idl		\
 	nsIDOMHTMLAppletElement.idl		\
 	nsIDOMHTMLAreaElement.idl		\
@@ -88,6 +88,9 @@ XPIDLSRCS =					\
 	nsIDOMHTMLTextAreaElement.idl		\
 	nsIDOMHTMLTitleElement.idl		\
 	nsIDOMHTMLUListElement.idl		\
+	$(NULL)
+
+XPIDLSRCS = 					\
 	nsIDOMNSHTMLAnchorElement.idl		\
 	nsIDOMNSHTMLAreaElement.idl		\
 	nsIDOMNSHTMLButtonElement.idl		\
