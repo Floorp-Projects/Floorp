@@ -75,6 +75,7 @@
 #include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
+#include "nsIAggregatePrincipal.h"
 
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -4129,29 +4130,43 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // Otherwise, if the caller has allowed inheriting from the current document,
         // or if we're being called from chrome (which has the system principal),
         // then use the current document principal
-        if (!aInheritOwner) {
-            // See if there's system or chrome JS code running
-            nsCOMPtr<nsIScriptSecurityManager> secMan;
- 
-            secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-            if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIPrincipal> sysPrin;
+
+        nsCOMPtr<nsIScriptSecurityManager> secMan;
+        secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        nsCOMPtr<nsIPrincipal> sysPrin;
+        if (NS_SUCCEEDED(rv))
+            // Just to compare, not to use!
+            rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
+
+        if (NS_SUCCEEDED(rv)) {
+            if (!aInheritOwner) {
+                // See if there's system or chrome JS code running
                 nsCOMPtr<nsIPrincipal> subjectPrin;
-    
-                // Just to compare, not to use!
-                rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
+
                 if (NS_SUCCEEDED(rv)) {
                     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
                 }
-                // XXX: Why can the subject principal be nsnull??
+                // Null subject principal means there's no script running == system code
                 if (NS_SUCCEEDED(rv) &&
                     (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
                     aInheritOwner = PR_TRUE;
                 }
             }
-        }
-        if (aInheritOwner) {
-            GetCurrentDocumentOwner(getter_AddRefs(owner));
+            if (aInheritOwner) {
+                GetCurrentDocumentOwner(getter_AddRefs(owner));
+                nsCOMPtr<nsIPrincipal> ownerPrin(do_QueryInterface(owner));
+                if (ownerPrin.get() == sysPrin.get())
+                    owner = null_nsCOMPtr();
+                else {
+                    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(ownerPrin, &rv));
+                    if (NS_SUCCEEDED(rv)) {
+                        nsCOMPtr<nsIPrincipal> certificate;
+                        rv = agg->GetCertificate(getter_AddRefs(certificate));
+                        if (NS_SUCCEEDED(rv) && certificate)
+                            owner = null_nsCOMPtr();
+                    }
+                }
+            }
         }
     }
 
