@@ -207,9 +207,8 @@ NS_METHOD nsMenu::SetLabel(nsString &aText)
    mLabel = aText;
    
   mMacMenuHandle = nsnull;
-  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, c2pstr(mLabel.ToNewCString()) );
-  mMacMenuID = mMacMenuIDCount;
-  mMacMenuIDCount++;
+  mMacMenuID = GetUniqueMenuID();
+  mMacMenuHandle = ::NewMenu(mMacMenuID, c2pstr(mLabel.ToNewCString()) );
   
   ::InsertMenu(mMacMenuHandle, 0);
   /*
