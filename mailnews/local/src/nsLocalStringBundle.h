@@ -24,8 +24,6 @@ PRUnichar     *LocalGetStringByID(PRInt32 stringID);
 
 NS_END_EXTERN_C
 
-
-
 #define	IMAP_OUT_OF_MEMORY                                 -1000
 #define	LOCAL_STATUS_SELECTING_MAILBOX                      4000
 #define	LOCAL_STATUS_DOCUMENT_DONE							4001
@@ -44,5 +42,8 @@ NS_END_EXTERN_C
 #define POP3_USERNAME_UNDEFINED								4014
 #define POP3_LIST_FAILURE									4015
 #define POP3_DELE_FAILURE									4016
+#define POP3_ENTER_PASSWORD_PROMPT                          4017
+#define POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC     4018
+#define POP3_NO_ANSWER                                      4019
 
 #endif /* _nsImapStringBundle_H__ */
