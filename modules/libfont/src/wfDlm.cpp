@@ -27,12 +27,10 @@
 #include "wfDlm.h"
 #include "libfont.h"
 
-#ifdef NSPR20
 #ifdef XP_MAC
 #include "probslet.h"
 #else
 #include "obsolete/probslet.h"
-#endif
 #endif
 
 wfDlm::wfDlm(const char *fname, const char *str)
@@ -248,11 +246,7 @@ FARPROC wfDlm::findSymbol(const char *symbol)
 		return (NULL);
 	}
 
-#ifndef NSPR20
-	return PR_FindSymbol(symbol, m_lib);
-#else
 	return (FARPROC)PR_FindSymbol(m_lib, symbol);
-#endif /* NSPR20 */
 }
 
 int wfDlm::unload(int force)

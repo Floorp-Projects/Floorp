@@ -47,11 +47,7 @@
 #include "Mnfdoer.h"
 
 #include "net.h"		// libnet
-#ifndef NSPR20
-#include "prfile.h"		// for reading directories
-#else
 #include "prio.h"		// for reading directories
-#endif /* NSPR20 */
 
 FontBrokerObject::
 FontBrokerObject() : fpPeers(NULL), fpPeersFromCatalog(NULL)
@@ -533,11 +529,7 @@ int FontBrokerObject::scanDisplayersFromDir(const char *directoryName)
 		{
 			*nameptr++ = '/';  
 		}
-#ifndef NSPR20
-		while ((dp = PR_ReadDir(dir, PR_SKIP_DOT | PR_SKIP_DOT_DOT)) != NULL)
-#else
 		while ((dp = PR_ReadDir(dir, PR_SKIP_BOTH)) != NULL)
-#endif
 		{
 			strcpy(nameptr, PR_DirName(dp));
 			if (wf_isFileDirectory(filename))

@@ -28,12 +28,10 @@
 #include "wfMisc.h"
 #include "Mnffmi.h"
 
-#ifdef NSPR20
 #ifdef XP_MAC
 #include "probslet.h"
 #else
 #include "obsolete/probslet.h"
-#endif
 #endif
 
 
