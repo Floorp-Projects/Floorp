@@ -45,13 +45,13 @@
 #include "nsUnitConversion.h"
 #include "nsIWidget.h"
 #include "nsIView.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContextXlib.h"
 #include "nsVoidArray.h"
 #include "nsIDeviceContextXPrint.h"
 #include "nsXPrintContext.h"
 #include "nsISupportsArray.h"
 
-class nsDeviceContextXp : public DeviceContextImpl,
+class nsDeviceContextXp : public nsDeviceContextX,
                           public nsIDeviceContextXp
 {
 public:
@@ -92,8 +92,9 @@ public:
   NS_IMETHOD         EndPage(void);
 
   NS_IMETHOD         SetSpec(nsIDeviceContextSpec *aSpec);
-
-  XlibRgbHandle     *GetXlibRgbHandle() { XlibRgbHandle *h; mPrintContext->GetXlibRgbHandle(h); return h; }  
+  NS_IMETHOD         GetXlibRgbHandle(XlibRgbHandle *&aHandle)
+                     { return mPrintContext->GetXlibRgbHandle(aHandle); }
+  XlibRgbHandle *GetXlibRgbHandle() { XlibRgbHandle *h; mPrintContext->GetXlibRgbHandle(h); return h; } 
   NS_IMETHOD         GetDepth(PRUint32 &depth) 
                      { depth = xxlib_rgb_get_depth(GetXlibRgbHandle()); return NS_OK; }
   NS_IMETHOD         GetPrintContext(nsXPrintContext*& aContext);

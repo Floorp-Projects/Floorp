@@ -41,7 +41,6 @@
 
 #include "nsImageXlib.h"
 #include "nsDrawingSurfaceXlib.h"
-#include "nsDeviceContextXlib.h"
 #include "nsRenderingContextXlib.h"
 #include "xlibrgb.h"
 #include "prlog.h"

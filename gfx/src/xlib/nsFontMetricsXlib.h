@@ -50,7 +50,6 @@
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
-#include "nsDeviceContextXlib.h"
 #include "nsDrawingSurfaceXlib.h"
 #ifdef USE_XPRINT
 #include "nsDeviceContextXP.h"

@@ -46,6 +46,7 @@
 #include "nscore.h"
 #include "nsQuickSort.h"
 #include "nsFontMetricsXlib.h"
+#include "nsRenderingContextXlib.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
@@ -777,12 +778,7 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
   nsresult rv = NS_OK;
 
   NS_ASSERTION(aDevice!=nsnull, "calling InitGlobals() without a device"); 
-#ifdef USE_XPRINT 
-  if (mPrinterMode)
-    gXlibRgbHandle =  NS_STATIC_CAST(nsDeviceContextXp   *,aDevice)->GetXlibRgbHandle();
-  else  
-#endif /* USE_XPRINT */  
-    gXlibRgbHandle =  NS_STATIC_CAST(nsDeviceContextXlib *,aDevice)->GetXlibRgbHandle();
+  NS_STATIC_CAST(nsDeviceContextX *, aDevice)->GetXlibRgbHandle(gXlibRgbHandle);
 
   nsServiceManager::GetService(kCharSetManagerCID,
                                NS_GET_IID(nsICharsetConverterManager2),
