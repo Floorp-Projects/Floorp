@@ -706,7 +706,7 @@ nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
   *aLeftBearing  = bbox.xMin;
   *aRightBearing = bbox.xMax;
   *aAscent       = bbox.yMax;
-  *aDescent      = bbox.yMin;
+  *aDescent      = -bbox.yMin;
   *aWidth        = pos;
   return NS_OK;
 }
@@ -996,7 +996,7 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
   PRInt32 x_pos = x_origin;
 
   int image_width  = x_origin + rightBearing;
-  int image_height = y_origin - MIN(descent, 0);
+  int image_height = y_origin + MAX(descent, 0);
   if ((image_width<=0) || (image_height<=0)) {
     // if we do not have any pixels then no point in trying to draw
     // eg: the space char has 0 height
