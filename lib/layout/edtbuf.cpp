@@ -2160,22 +2160,9 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
         //
         // Position the tag cursor at this position
         //
-        // **** TESTING NEW REFLOW WITHIN TABLE CELL
-        
-        //pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
-        //pEdStart = pLoStartLine->lo_any.edit_element;
-        //iOffset = pLoStartLine->lo_any.edit_offset;
-        if( bInTableCell )
-        {
-            // Trust the given element if inside a cell
-            pEdStart = pStartElement;
-            iOffset = iEditOffset;
-        }
-        else
-        {
-            pEdStart = pLoStartLine->lo_any.edit_element;
-            iOffset = pLoStartLine->lo_any.edit_offset;
-        }
+        pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
+        pEdStart = pLoStartLine->lo_any.edit_element;
+        iOffset = pLoStartLine->lo_any.edit_offset;
     }
 
 
