@@ -55,7 +55,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsGenericFactory,
 NS_IMETHODIMP nsGenericFactory::CreateInstance(nsISupports *aOuter,
                                                REFNSIID aIID, void **aResult)
 {
-    return mInfo->mConstructor(aOuter, aIID, aResult);
+    if (mInfo->mConstructor) {
+        return mInfo->mConstructor(aOuter, aIID, aResult);
+    }
+
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
 
 NS_IMETHODIMP nsGenericFactory::LockFactory(PRBool aLock)
@@ -210,6 +214,23 @@ nsGenericModule::Initialize()
     if (mInitialized) {
         return NS_OK;
     }
+
+    // Eagerly populate factory/class object hash for entries
+    // without constructors. If we didn't, the class object would
+    // never get created.
+    nsModuleComponentInfo* desc = mComponents;
+    for (PRUint32 i = 0; i < mComponentCount; i++) {
+        if (!desc->mConstructor) {
+            nsCOMPtr<nsIGenericFactory> fact;
+            nsresult rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
+            if (NS_FAILED(rv)) return rv;
+            
+            nsIDKey key(desc->mCID);
+            (void)mFactories.Put(&key, fact);
+        }
+        desc++;
+    }
+
     mInitialized = PR_TRUE;
     return NS_OK;
 }
@@ -292,16 +313,20 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
     nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
-        rv = aCompMgr->RegisterComponentWithType(cp->mCID, cp->mDescription,
-                                                 cp->mContractID, aPath,
-                                                 registryLocation, PR_TRUE,
-                                                 PR_TRUE, componentType);
-        if (NS_FAILED(rv)) {
+        // Register the component only if it has a constructor
+        if (cp->mConstructor) {
+            rv = aCompMgr->RegisterComponentWithType(cp->mCID, 
+                                                     cp->mDescription,
+                                                     cp->mContractID, aPath,
+                                                     registryLocation, PR_TRUE,
+                                                     PR_TRUE, componentType);
+            if (NS_FAILED(rv)) {
 #ifdef DEBUG
-            printf("nsGenericModule %s: unable to register %s component => %x\n",
-                   mModuleName?mModuleName:"(null)", cp->mDescription?cp->mDescription:"(null)", rv);
+                printf("nsGenericModule %s: unable to register %s component => %x\n",
+                       mModuleName?mModuleName:"(null)", cp->mDescription?cp->mDescription:"(null)", rv);
 #endif
-            break;
+                break;
+            }
         }
         // Call the registration hook of the component, if any
         if (cp->mRegisterSelfProc)
