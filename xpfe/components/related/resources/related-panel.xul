@@ -55,7 +55,9 @@
       </rule>
 
       <rule rootcontainment="treechildren" subcontainment="treechildren">
-        <treeitem uri="...">
+        <treeitem uri="..."
+                  loading="rdf:http://home.netscape.com/NC-rdf#loading"
+                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
           <treerow>
             <treecell>
               <treeindentation />
