@@ -1432,23 +1432,38 @@ ConstraintSetValuesPostHook(Widget oc,Widget rc,Widget nc)
 		_XfeManagerPrepareComponents(w,_XfemPrepareFlags(w));
 	}
 	
-	/* Obtain the preferred dimensions if needed */
+	/* Change in geometry */
 	if (_XfemConfigFlags(w) & XfeConfigGeometry)
 	{
+		Dimension width	= _XfeWidth(w);
+		Dimension height = _XfeHeight(w);
+
+		/* Obtain the preferred dimensions */
 		_XfeManagerPreferredGeometry(w,
 									 &_XfemPreferredWidth(w),
 									 &_XfemPreferredHeight(w));
-		
-		/* Set the preferred dimensions if resize flags are True */
+
+		/* Assign the preferred width if needed */
 		if (_XfemUsePreferredWidth(w))
 		{
-			_XfeWidth(w) = _XfemPreferredWidth(w);
+			width = _XfemPreferredWidth(w);
 		}
 		
+		/* Assign the preferred height if needed */
 		if (_XfemUsePreferredHeight(w))
 		{
-			_XfeHeight(w) = _XfemPreferredHeight(w);
+			height = _XfemPreferredHeight(w);
 		}
+
+		/*
+		 * Request that we be resized to the new geometry.
+		 *
+		 * The _XfeMakeGeometryRequest() call becomes a NOOP
+		 * if both width and height match the current dimensions.
+		 *
+		 * It should also handle any needed children re layout.
+		 */
+		_XfeMakeGeometryRequest(w,width,height);
 	}
 	
 	/* Update the widget rect */
