@@ -1662,9 +1662,6 @@ nsBookmarksService::Init()
 	rv = bm_AddRefGlobals();
 	if (NS_FAILED(rv))	return(rv);
 
-	rv = ReadBookmarks();
-	if (NS_FAILED(rv))	return(rv);
-
 	// register this as a named data source with the RDF service
 	rv = gRDF->RegisterDataSource(this, PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
@@ -1697,6 +1694,10 @@ nsBookmarksService::Init()
 			}
 		}
 	}
+
+	// read in bookmarks AFTER trying to get string bundle
+	rv = ReadBookmarks();
+	if (NS_FAILED(rv))	return(rv);
 
 	/* timer initialization */
 	busyResource = nsnull;
