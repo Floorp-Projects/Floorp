@@ -24,10 +24,12 @@
 */
 
 #include "nsISupports.idl"
+#include "domstubs.idl"
 interface nsIPrincipal;
 
 %{C++
 #include "cmtcmn.h"
+#include "nsIDOMWindow.h"
 %}
 
 [ptr] native nsCMTControlStar(CMT_CONTROL);
@@ -43,7 +45,7 @@ interface nsIPSMComponent : nsISupports
    *  If they are, the "Selected Info" dialog will be empty.
    */
 
-  void displaySecurityAdvisor(in string pickledStatus, in string hostName);
+  void displaySecurityAdvisor(in string pickledStatus, in string hostName, in nsIDOMWindow window);
 
   /**
    *  This will send PSM all preferences that we know about.
