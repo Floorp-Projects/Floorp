@@ -33,7 +33,7 @@
 // Instance state information about the plugin.
 //
 // *Developers*: Use this struct to hold per-instance
-//				 information that you’ll need in the
+//				 information that youπll need in the
 //				 various functions in this file.
 //
 
