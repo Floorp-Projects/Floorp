@@ -214,7 +214,7 @@ nsresult nsParseLocalMessageURI(const char* uri,
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
 
-	nsCAutoString uriStr = uri;
+	nsCAutoString uriStr(uri);
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{

@@ -243,7 +243,7 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
     WriteLineToMailbox(dummyEnvelope);
     if (uidlString)
     {
-        nsCAutoString uidlCString = "X-UIDL: ";
+        nsCAutoString uidlCString("X-UIDL: ");
         uidlCString += uidlString;
         uidlCString += MSG_LINEBREAK;
         WriteLineToMailbox(uidlCString);

@@ -513,7 +513,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 
   const nsString fileCharset = nsMsgI18NFileSystemCharset();
   char *convertedName;
-  rv = ConvertFromUnicode(fileCharset, name->GetUnicode(), &convertedName);
+  rv = ConvertFromUnicode(fileCharset, *name, &convertedName);
   if (NS_FAILED(rv))
     return rv;
 
@@ -541,14 +541,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 	//Only set these is these are top level children.
 	if(NS_SUCCEEDED(rv) && isServer)
 	{
-		if(name->EqualsIgnoreCase(kInboxName))
+		if(name->EqualsIgnoreCase(nsAutoString(kInboxName)))
 		{
 			flags |= MSG_FOLDER_FLAG_INBOX;
 			mBiffState = nsMsgBiffState_Unknown;
 		}
-		else if (name->EqualsIgnoreCase(kTrashName))
+		else if (name->EqualsIgnoreCase(nsAutoString(kTrashName)))
 			flags |= MSG_FOLDER_FLAG_TRASH;
-		else if (name->EqualsIgnoreCase(kUnsentName)
+		else if (name->EqualsIgnoreCase(nsAutoString(kUnsentName))
              || name->CompareWithConversion("Outbox", PR_TRUE) == 0)
 			flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
@@ -931,7 +931,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* urlLi
   // and not by folder discovery. So, we have to compute the parent.
   if (!msgParent)
   {
-    nsCAutoString folderName = mURI;
+    nsCAutoString folderName(mURI);
       
     nsCAutoString uri;
 
@@ -980,7 +980,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
-	path += folderName;
+	path += nsAutoString(folderName);
 	path.MakeUnique();
 
 	nsOutputFileStream outputStream(path);	
@@ -1384,7 +1384,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
 
 	const nsString fileCharset = nsMsgI18NFileSystemCharset();
 	char *convertedNewName;
-	if (NS_FAILED(ConvertFromUnicode(fileCharset, aNewName, &convertedNewName)))
+	if (NS_FAILED(ConvertFromUnicode(fileCharset, nsAutoString(aNewName), &convertedNewName)))
 		return NS_ERROR_FAILURE;
 
 	nsCAutoString newNameStr(convertedNewName);

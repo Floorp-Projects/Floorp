@@ -328,7 +328,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     *((char **)getter_Copies(escapedUsername)) =
       nsEscape(username, url_XAlphas);
     
-    nsCAutoString popSpec = "pop://";
+    nsCAutoString popSpec("pop://");
     popSpec += escapedUsername;
     popSpec += "@";
     popSpec += hostname;

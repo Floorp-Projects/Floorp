@@ -197,7 +197,7 @@ NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType,
                                                nsIMsgWindow *aMsgWindow, 
                                                nsIUrlListener *aUrlListener)
 {
-  nsCAutoString partMsgUrl = aMessageUri;
+  nsCAutoString partMsgUrl(aMessageUri);
   
   // try to extract the specific part number out from the url string
   partMsgUrl += "?";
