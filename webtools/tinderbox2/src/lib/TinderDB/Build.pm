@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.51 $ 
-# $Date: 2002/05/07 20:34:45 $ 
+# $Revision: 1.52 $ 
+# $Date: 2002/05/07 22:50:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -814,9 +814,10 @@ sub status_table_header {
     my $title = "Build Status Buildname: $buildname";
 
     my ($bg) = BuildStatus::status2html_colors($latest_status);
-    my ($background) = BuildStatus::status2header_background($latest_status);
-    if ($background) {
-        $background = "background='$background'";
+    my ($background) = BuildStatus::status2header_background_gif(
+                                     $latest_status);
+    if ( ($FileStructure::GIF_URL) && ($background) ) {
+        $background = "background='$FileStructure::GIF_URL/$background'";
         $buildname = (
                       "<font color=white>".
                       $buildname.
@@ -840,18 +841,7 @@ sub status_table_header {
                     "<font face='Arial,Helvetica' size=-1>".
                     $link.
                     "</font></th>\n");
-    
-    if (
-        ($latest_status ne 'success') &&
-        ($form{crap})
-       ) {
-      # I do not wish to support this flames format going forward
-      $bg = $FileStucture::IMAGES{flames};
-      $header = ("\t<th rowspan=1 bgcolor=000000 background='$bg'>".
-                 $font_face.
-                 "<font color=white>$link</font></font></th>\n");
-    }
-    
+
     push @outrow, ($header);
 
   } # foreach $i
