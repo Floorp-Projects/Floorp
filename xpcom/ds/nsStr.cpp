@@ -600,6 +600,7 @@ CBufDescriptor::CBufDescriptor(char* aString,PRBool aStackBased,PRUint32 aCapaci
   mBuffer=aString;
   mCharSize=eOneByte;
   mStackBased=aStackBased;
+  mIsConst=PR_FALSE;
   mLength=mCapacity=0;
   if(aString && aCapacity>1) {
     mCapacity=aCapacity-1;
@@ -609,11 +610,27 @@ CBufDescriptor::CBufDescriptor(char* aString,PRBool aStackBased,PRUint32 aCapaci
   }
 }
 
+CBufDescriptor::CBufDescriptor(const char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength) { 
+  mBuffer=(char*)aString;
+  mCharSize=eOneByte;
+  mStackBased=aStackBased;
+  mIsConst=PR_TRUE;
+  mLength=mCapacity=0;
+  if(aString && aCapacity>1) {
+    mCapacity=aCapacity-1;
+    mLength=(-1==aLength) ? strlen(aString) : aLength;
+    if(mLength>PRInt32(mCapacity))
+      mLength=mCapacity;
+  }
+}
+
+
 CBufDescriptor::CBufDescriptor(PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength) { 
   mBuffer=(char*)aString;
   mCharSize=eTwoByte;
   mStackBased=aStackBased;
   mLength=mCapacity=0;
+  mIsConst=PR_FALSE;
   if(aString && aCapacity>1) {
     mCapacity=aCapacity-1;
     mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
@@ -622,5 +639,18 @@ CBufDescriptor::CBufDescriptor(PRUnichar* aString,PRBool aStackBased,PRUint32 aC
   }
 }
 
+CBufDescriptor::CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength) { 
+  mBuffer=(char*)aString;
+  mCharSize=eTwoByte;
+  mStackBased=aStackBased;
+  mLength=mCapacity=0;
+  mIsConst=PR_TRUE;
+  if(aString && aCapacity>1) {
+    mCapacity=aCapacity-1;
+    mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
+    if(mLength>PRInt32(mCapacity))
+      mLength=mCapacity;
+  }
+}
 
 //----------------------------------------------------------------------------------------
