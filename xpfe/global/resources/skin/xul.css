@@ -203,8 +203,17 @@ treechildren {
 } 
 
 treecell { 
- display: table-cell; 
+ display: table-cell;
+ behavior: url("resource:/chrome/xulBindings.xml#treecell");
 } 
+
+treecell[indent="true"] {
+ behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-leaf");
+}
+
+treeitem[container="true"] > treerow > treecell[indent="true"] {
+ behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-folder");
+}
 
 treeitem > treechildren {
   display: none;

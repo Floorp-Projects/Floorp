@@ -1174,7 +1174,7 @@ treecell.propertylist {
   border-bottom: 1px solid #CCCCCC;
 }
 
-treeitem > treerow > treecell > .tree-icon > .twisty {
+treeitem > treerow > treecell > .twisty {
  border: none;
  padding: 0px;
  margin: 0px;
@@ -1191,15 +1191,15 @@ treeitem > treerow > treecell > .tree-icon > .twisty {
  text-decoration: none;
 }
 
-treeitem[empty="true"] > treerow > treecell > .tree-icon > titledbutton.twisty {
+treeitem[empty="true"] > treerow > treecell > titledbutton.twisty {
  list-style-image: none;
 }
 
-treeitem > treerow > treecell > .tree-icon > .twisty[disabled="true"] {
+treeitem > treerow > treecell > .twisty[disabled="true"] {
  list-style-image: none;
 }
 
-treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon > .twisty {
+treeitem[container="true"][open="true"] > treerow > treecell > .twisty {
  list-style-image: url("chrome://global/skin/opentwisty.gif");
 }
 
