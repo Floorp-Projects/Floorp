@@ -136,7 +136,7 @@ file:///s:/mozilla/layout/html/tests/block/bugs/50480.html
 file:///s:/mozilla/layout/html/tests/block/bugs/50758.html
 file:///s:/mozilla/layout/html/tests/block/bugs/52265.html
 file:///s:/mozilla/layout/html/tests/block/bugs/52307.html
-file:///s:/mozilla/layout/html/tests/block/bugs/52733.html
+file:///s:/mozilla/layout/html/tests/block/bugs/52773.html
 file:///s:/mozilla/layout/html/tests/block/bugs/53259.html
 file:///s:/mozilla/layout/html/tests/block/bugs/53690.html
 file:///s:/mozilla/layout/html/tests/block/bugs/53960.html
