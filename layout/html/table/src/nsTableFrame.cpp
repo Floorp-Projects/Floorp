@@ -2758,10 +2758,10 @@ NS_METHOD nsTableFrame::IR_StyleChanged(nsIPresContext*      aPresContext,
                                         nsTableReflowState&  aReflowState,
                                         nsReflowStatus&      aStatus)
 {
-  // we presume that all the easy optimizations were done in the nsHTMLStyleSheet 
-  // before we were called here
-  SetNeedStrategyInit(PR_TRUE);
-  return NS_OK;
+  nsTableReflowState reflowState(*aPresContext, aReflowState.reflowState, *this, eReflowReason_StyleChange,
+                                 aReflowState.availSize.width, aReflowState.availSize.height); 
+  nsIFrame* lastReflowed;
+  return ReflowChildren(aPresContext, reflowState, PR_FALSE, PR_FALSE, aStatus, lastReflowed);
 }
 
 static void
