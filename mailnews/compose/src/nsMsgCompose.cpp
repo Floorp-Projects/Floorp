@@ -921,7 +921,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       //
       nsCOMPtr<nsIMsgSendListener> sendListener = do_QueryInterface(composeSendListener);
       rv = mMsgSend->CreateAndSendMessage(
-                    m_composeHTML ? m_editor : nsnull,
+                    m_composeHTML ? m_editor.get() : nsnull,
                     identity,
                     m_compFields, 
                     PR_FALSE,                           // PRBool                            digest_p,
