@@ -1,0 +1,103 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (X11; I; Linux 2.0.36 i686) [Netscape]">
+</head>
+<body>
+&nbsp;
+<table CELLSPACING=0 CELLPADDING=0 COLS=1 WIDTH="100%" BGCOLOR="#33CCFF" NOSAVE >
+<tr>
+<td><font size=+4>Line Layout</font></td>
+</tr>
+</table>
+
+<p>Line layout is the process of placing inline frames horizontally (left
+to right or right to left depending on the CSS direction property value).
+An attempt is made to describe how it works.
+<p>nsLineLayout is the class that provides <b>support</b> for line layout.
+The container frames nsBlockFrame and nsInlineFrame use nsLineLayout to
+perform line layout and span layout. Span layout is a subset of line layout
+used for inline container classes - for example, the HTML "B" element).
+Because of spans, nsLineLayout handles the nested nature of line layout.
+<p>Line layout as a process contains the following steps:
+<ol>
+<li>
+Initialize the nsLineLayout object (done in nsBlockFrame). This prepares
+the line layout engine for reflow by initializing its internal data structures.<br>
+<BR></li>
+
+<li>
+Reflowing of inline frames. The block code uses nsLineLayout's <b>ReflowFrame</b>
+method to reflow each inline frame in a line. This continues until the
+line runs out of room or the block runs out of frames. The block may be
+reflowing a span (an instance of nsInlineFrame) which will recursively
+use nsLineLayout for reflow and placement of the frames in the span.<br>
+<br>
+Note that the container frames (nsBlockFrame/nsInlineFrame)&nbsp;call nsLineLayout's
+ReflowFrame method instead of having the line layout code process a list
+of children. This is done so that the container frames can handle the issues
+of "pushing" and "pulling"&nbsp;of frames across continuations. Because
+block and inline maintain different data structures for their child lists,
+and because we don't want to mandate a common base class, the line layout
+code doesn't control the "outer loop"&nbsp;of frame reflow.<br>
+<BR></li>
+
+<li>
+Finish line layout by vertically aligning the frames, horizontally aligning
+the frames and relatively positioning the frames on the line.</li>
+</ol>
+nsLineLayout is also used by nsBlockFrame to construct text-run information;
+this process is independent of normal line layout is pretty much a hack.
+<p>When frames are reflowed they return a reflow status. During line layout,
+there are several additions to the basic reflow status used by most frames:
+<ul>
+<li>
+NS_FRAME_COMPLETE - this is a normal reflow status and indicates that the
+frame is complete and doesn't need to be continued.</li>
+
+<li>
+NS_FRAME_NOT_COMPLETE - this is another normal reflow status and indicates
+that the frame is not complete and will need a continuation frame created
+for it (if it doesn't already have one).</li>
+
+<li>
+NS_INLINE_BREAK - some kind of break has been requested. Breaks types include
+simple line breaks (like the BR tag in html sometime does) and more complex
+breaks like page breaks, floater breaks, etc. Currently, we only support
+line breaks, and floater clearing breaks. Breaks can occur before the frame
+(NS_INLINE_IS_BREAK_BEFORE) or after the frame (NS_INLINE_IS_BREAK_AFTER)</li>
+</ul>
+The handling of the reflow status is done by the container frame <b>using</b>
+nsLineLayout.
+<br>&nbsp;
+<table CELLSPACING=0 CELLPADDING=0 COLS=1 WIDTH="100%" BGCOLOR="#33CCFF" NOSAVE >
+<tr>
+<td><font size=+3>Line Breaking</font></td>
+</tr>
+</table>
+
+<p>Another aspect of nsLineLayout is that it supports line breaking. At
+the highest level, line breaking consists of identifying where it is appropriate
+to break a line that doesn't fit in the available horizontal space. At
+a lower level, some frames are breakable (e.g. text) and some frames are
+not (e.g. images).
+<p>In order to break text properly, some out-of-band information is needed
+by the text frame code (nsTextFrame). In particular, because a "word"&nbsp;(a
+non-breakable unit of text) may span several frames (for example:&nbsp;<b>"&lt;B>H&lt;/B>ello
+there"</b> is breakable after the <b>"o"</b>&nbsp;in ello but not after
+the <b>"H"</b>), text-run information is used to allow the text frame to
+find adjacent text and look at them to determine where the next breakable
+point is. nsLineLayout supports this by keeping track of the text-runs
+as well as both storing and interrogating "word" state.
+<p>In addition, nsLineLayout assists in the compression/expansion of whitespace
+for the CSS&nbsp;white-space property. Compression occurs when neighboring
+whitespace either inside a single piece of text is compressed or when spaces
+between abutting elements is collapsed. Expansion occurs in preformatted
+text when tabs are found. nsLineLayout keeps track of a "column"&nbsp;which
+is used to determine where the next tab "moves"&nbsp;to.
+<br>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+</body>
+</html>
