@@ -83,11 +83,11 @@ interface nsIDownloadItem : nsIWebProgressListener {
     readonly attribute PRInt32 percentComplete;
 
     /**
-     * timeStarted
+     * startTime
      * The time a download was started; necessary for more accurate
      * measurements 
      */
-    readonly attribute long long timeStarted;
+    readonly attribute long long startTime;
 
     /**
      * listener
