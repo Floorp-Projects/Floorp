@@ -215,6 +215,7 @@ foreach key [array names group] {
                 close $fid
                 set profile [GenerateProfileHTML $name]
                 set nextclose {[We don't remember close times any more...]}
+                set name [EmailFromUsername $name]
                 foreach k {name dir files log profile nextclose} {
                     regsub -all -- "%$k%" $text [set $k] text
                 }
