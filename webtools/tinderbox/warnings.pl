@@ -250,25 +250,21 @@ __END_HEADER
   # Summary Table (name, count)
   #
   print "<table border=0 cellpadding=1 cellspacing=0>";
-  for (my $ii=0; $ii <= $#who_list / 2; $ii++) {
-    my $who1 = $who_list[$ii];
-    my $who2 = $who_list[$ii + $#who_list/2 + 1];
-    my $count1 = $who_count{$who1};
-    my $count2 = $who_count{$who2};
-    my $name1 = $who1;
-    my $name2 = $who2;
-    $name1 =~ s/%.*//;
-    $name2 =~ s/%.*//;
-
-    print "<tr><td>";
-    print "<a href='#$name1'>$name1</a>";
-    print "</td><td>";
-    print "$count1";
-    print "</td><td>&nbsp;</td><td>";
-    print "<a href='#$name2'>$name2</a>" unless $name2 eq '';
-    print "</td><td>";
-    print "$count2" if $count2;
-    print "</td></tr>";
+  my $num_columns = 5;
+  my $num_per_column = $#who_list / $num_columns;
+  for (my $ii=0; $ii <= $num_per_column; $ii++) {
+    print "<tr>";
+    for (my $jj=0; $jj < $num_columns; $jj++) {
+      my $who = $who_list[$ii+$jj*$num_per_column + 1];
+      my $count = $who_count{$who};
+      my $name = $who;
+      $name =~ s/%.*//;
+      print "<td><a href='#$name'>$name</a>";
+      print "</td><td>";
+      print "$count";
+      print "</td><td>&nbsp;</td>";
+    }
+    print "<tr>";
   }
   print "</table><p>";
 
