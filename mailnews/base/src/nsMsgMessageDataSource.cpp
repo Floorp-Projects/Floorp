@@ -1450,7 +1450,7 @@ nsresult nsMsgMessageDataSource::GetThreadsFirstMessage(nsIMsgThread *thread, ns
 	if(NS_FAILED(rv))
 		return rv;
 
-	NS_ASSERTION(firstHdr,"firstHdr is null");
+	NS_ASSERTION(firstHdr,"firstHdr is null. can you reproduce this?  add info to bug #35567");
 	if (!firstHdr) return NS_ERROR_FAILURE;
 
 	rv = folder->CreateMessageFromMsgDBHdr(firstHdr, message);

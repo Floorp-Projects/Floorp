@@ -1966,7 +1966,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
   nsMsgKey key;
     nsCOMPtr<nsIRDFResource> res;
 
-	NS_ASSERTION(msgDBHdr,"msgDBHdr is null");
+	NS_ASSERTION(msgDBHdr,"msgDBHdr is null.  can you reproduce this?  add info to bug #35567");
   if (!msgDBHdr) return NS_ERROR_NULL_POINTER;
   rv = msgDBHdr->GetMessageKey(&key);
 
