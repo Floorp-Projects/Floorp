@@ -3740,7 +3740,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
         rv = NS_NewObjectFrame(aPresShell, &newFrame);
       }
       else if (nsHTMLAtoms::form == aTag) {
-        rv = NS_NewFormFrame(aPresShell, &newFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
+        rv = NS_NewFormFrame(aPresShell, &newFrame, 0);
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::frameset == aTag) {
