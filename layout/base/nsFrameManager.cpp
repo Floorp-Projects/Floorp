@@ -74,6 +74,55 @@ protected:
   PLHashTable* mTable;
 };
 
+struct UndisplayedNode {
+  UndisplayedNode(nsIContent* aContent, nsIStyleContext* aStyle)
+  {
+    mContent = aContent;
+    mStyle = aStyle;
+    NS_ADDREF(mStyle);
+    mNext = nsnull;
+  }
+  UndisplayedNode(nsIStyleContext* aPseudoStyle) 
+  {
+    mContent = nsnull;
+    mStyle = aPseudoStyle;
+    NS_ADDREF(mStyle);
+    mNext = nsnull;
+  }
+  ~UndisplayedNode(void)
+  {
+    NS_RELEASE(mStyle);
+  }
+
+  nsIContent*       mContent;
+  nsIStyleContext*  mStyle;
+  UndisplayedNode*  mNext;
+};
+
+class UndisplayedMap {
+public:
+  UndisplayedMap(PRUint32 aNumBuckets = 16);
+  ~UndisplayedMap(void);
+
+  UndisplayedNode* GetFirstNode(nsIContent* aParentContent);
+
+  nsresult AddNodeFor(nsIContent* aParentContent, nsIContent* aChild, nsIStyleContext* aStyle);
+  nsresult AddNodeFor(nsIContent* aParentContent, nsIStyleContext* aPseudoStyle);
+
+  nsresult RemoveNodeFor(nsIContent* aParentContent, UndisplayedNode* aNode);
+  nsresult RemoveNodesFor(nsIContent* aParentContent);
+
+  // Removes all entries from the hash table
+  void  Clear(void);
+
+protected:
+  PLHashEntry** GetEntryFor(nsIContent* aParentContent);
+  nsresult      AppendNodeFor(UndisplayedNode* aNode, nsIContent* aParentContent);
+
+  PLHashTable*  mTable;
+  PLHashEntry** mLastLookup;
+};
+
 //----------------------------------------------------------------------
 
 class FrameManager;
@@ -111,6 +160,14 @@ public:
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
                                     nsIFrame* aPlaceholderFrame);
   NS_IMETHOD ClearPlaceholderFrameMap();
+
+  // Undisplayed content functions
+  NS_IMETHOD SetUndisplayedContent(nsIContent* aContent, nsIStyleContext* aStyleContext);
+  NS_IMETHOD SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
+                                    nsIContent* aParentContent);
+  NS_IMETHOD ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent);
+  NS_IMETHOD ClearAllUndisplayedContentIn(nsIContent* aParentContent);
+  NS_IMETHOD ClearUndisplayedContentMap();
 
   // Functions for manipulating the frame model
   NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
@@ -162,7 +219,9 @@ private:
   nsIStyleSet*                    mStyleSet;   // weak link. pres shell holds a reference
   nsDST*                          mPrimaryFrameMap;
   FrameHashTable*                 mPlaceholderMap;
+  UndisplayedMap*                 mUndisplayedMap;
   CantRenderReplacedElementEvent* mPostedEvents;
+
 
   void ReResolveStyleContext(nsIPresContext& aPresContext,
                              nsIFrame* aFrame,
@@ -211,6 +270,7 @@ FrameManager::~FrameManager()
   
   delete mPrimaryFrameMap;
   delete mPlaceholderMap;
+  delete mUndisplayedMap;
 }
 
 nsresult
@@ -360,6 +420,74 @@ FrameManager::ClearPlaceholderFrameMap()
 {
   if (mPlaceholderMap) {
     mPlaceholderMap->Clear();
+  }
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+NS_IMETHODIMP
+FrameManager::SetUndisplayedContent(nsIContent* aContent, 
+                                    nsIStyleContext* aStyleContext)
+{
+  if (! mUndisplayedMap) {
+    mUndisplayedMap = new UndisplayedMap;
+  }
+  if (mUndisplayedMap) {
+    nsresult result = NS_OK;
+    nsIContent* parent = nsnull;
+    aContent->GetParent(parent);
+    if (parent) {
+      result = mUndisplayedMap->AddNodeFor(parent, aContent, aStyleContext);
+      NS_RELEASE(parent);
+    }
+    return result;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+FrameManager::SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
+                                     nsIContent* aParentContent)
+{
+  if (! mUndisplayedMap) {
+    mUndisplayedMap = new UndisplayedMap;
+  }
+  if (mUndisplayedMap) {
+    return mUndisplayedMap->AddNodeFor(aParentContent, aPseudoContext);
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+                                     
+NS_IMETHODIMP
+FrameManager::ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent)
+{
+  if (mUndisplayedMap) {
+    UndisplayedNode* node = mUndisplayedMap->GetFirstNode(aParentContent);
+    while (node) {
+      if (node->mContent == aContent) {
+        return mUndisplayedMap->RemoveNodeFor(aParentContent, node);
+      }
+      node = node->mNext;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
+{
+  if (mUndisplayedMap) {
+    return mUndisplayedMap->RemoveNodesFor(aParentContent);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FrameManager::ClearUndisplayedContentMap()
+{
+  if (mUndisplayedMap) {
+    mUndisplayedMap->Clear();
   }
   return NS_OK;
 }
@@ -842,13 +970,13 @@ FrameManager::ReParentStyleContext(nsIPresContext& aPresContext,
 
 static PRInt32
 CaptureChange(nsIStyleContext* aOldContext, nsIStyleContext* aNewContext,
-              nsIFrame* aFrame, nsStyleChangeList& aChangeList,
-              PRInt32 aMinChange)
+              nsIFrame* aFrame, nsIContent* aContent,
+              nsStyleChangeList& aChangeList, PRInt32 aMinChange)
 {
   PRInt32 ourChange = NS_STYLE_HINT_NONE;
   aNewContext->CalcStyleDifference(aOldContext, ourChange);
   if (aMinChange < ourChange) {
-    aChangeList.AppendChange(aFrame, ourChange);
+    aChangeList.AppendChange(aFrame, aContent, ourChange);
     aMinChange = ourChange;
   }
   return aMinChange;
@@ -892,7 +1020,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
       if (newContext != oldContext) {
-        aMinChange = CaptureChange(oldContext, newContext, aFrame, aChangeList, aMinChange);
+        aMinChange = CaptureChange(oldContext, newContext, aFrame, content, aChangeList, aMinChange);
         if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) { // if frame gets regenerated, let it keep old context
           aFrame->SetStyleContext(&aPresContext, newContext);
         }
@@ -923,10 +1051,13 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
           if (NS_SUCCEEDED(result) && newExtraContext) {
             if (oldExtraContext != newExtraContext) {
               aMinChange = CaptureChange(oldExtraContext, newExtraContext, aFrame, 
-                                         aChangeList, aMinChange);
+                                         content, aChangeList, aMinChange);
               if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) {
                 aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
               }
+            }
+            else {
+              oldExtraContext->RemapStyle(&aPresContext, PR_FALSE);
             }
             NS_RELEASE(newExtraContext);
           }
@@ -935,6 +1066,38 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
       }
       else {
         break;
+      }
+    }
+
+    // now look for undisplayed child content and pseudos
+    if (localContent) {
+      UndisplayedNode* undisplayed = mUndisplayedMap->GetFirstNode(localContent);
+      while (undisplayed) {
+        nsIStyleContext* undisplayedContext = nsnull;
+        if (undisplayed->mContent) {  // child content
+          aPresContext.ResolveStyleContextFor(undisplayed->mContent, newContext, 
+                                              PR_FALSE, &undisplayedContext);
+        }
+        else {  // pseudo element
+          undisplayed->mStyle->GetPseudoType(pseudoTag);
+          NS_ASSERTION(pseudoTag, "pseudo element without tag");
+          aPresContext.ResolvePseudoStyleContextFor(localContent, pseudoTag, newContext, PR_FALSE,
+                                                    &undisplayedContext);
+          NS_RELEASE(pseudoTag);
+        }
+        if (undisplayedContext) {
+          if (undisplayedContext == undisplayed->mStyle) {
+            undisplayedContext->RemapStyle(&aPresContext);
+          }
+          const nsStyleDisplay* display = 
+                (const nsStyleDisplay*)undisplayedContext->GetStyleData(eStyleStruct_Display);
+          if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
+            aChangeList.AppendChange(nsnull, ((undisplayed->mContent) ? undisplayed->mContent : localContent), 
+                                     NS_STYLE_HINT_FRAMECHANGE);
+          }
+          NS_RELEASE(undisplayedContext);
+        }
+        undisplayed = undisplayed->mNext;
       }
     }
 
@@ -1229,3 +1392,148 @@ FrameHashTable::Dump(FILE* fp)
 }
 #endif
 
+UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
+{
+  mTable = PL_NewHashTable(aNumBuckets, (PLHashFunction)HashKey,
+                           (PLHashComparator)CompareKeys,
+                           (PLHashComparator)nsnull,
+                           nsnull, nsnull);
+  mLastLookup = nsnull;
+}
+
+UndisplayedMap::~UndisplayedMap(void)
+{
+  Clear();
+  PL_HashTableDestroy(mTable);
+}
+
+PLHashEntry**  
+UndisplayedMap::GetEntryFor(nsIContent* aParentContent)
+{
+  if (mLastLookup && (aParentContent == (*mLastLookup)->key)) {
+    return mLastLookup;
+  }
+  PLHashNumber hashCode = (PLHashNumber)(void*)aParentContent;
+  PLHashEntry** entry = PL_HashTableRawLookup(mTable, hashCode, aParentContent);
+  if (*entry) {
+    mLastLookup = entry;
+  }
+  return entry;
+}
+
+UndisplayedNode* 
+UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
+{
+  PLHashEntry** entry = GetEntryFor(aParentContent);
+  if (*entry) {
+    return (UndisplayedNode*)((*entry)->value);
+  }
+  return nsnull;
+}
+
+nsresult      
+UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode, nsIContent* aParentContent)
+{
+  PLHashEntry** entry = GetEntryFor(aParentContent);
+  if (*entry) {
+    UndisplayedNode*  node = (UndisplayedNode*)((*entry)->value);
+    while (node->mNext) {
+      NS_ASSERTION((node->mContent != aNode->mContent) ||
+                   ((node->mContent == nsnull) && 
+                    (node->mStyle != aNode->mStyle)), "node in map twice");
+      node = node->mNext;
+    }
+    node->mNext = aNode;
+  }
+  else {
+    PLHashNumber hashCode = (PLHashNumber)(void*)aParentContent;
+    PL_HashTableRawAdd(mTable, entry, hashCode, aParentContent, aNode);
+    mLastLookup = nsnull; // hashtable may have shifted bucket out from under us
+  }
+  return NS_OK;
+}
+
+nsresult 
+UndisplayedMap::AddNodeFor(nsIContent* aParentContent, nsIContent* aChild, 
+                           nsIStyleContext* aStyle)
+{
+  UndisplayedNode*  node = new UndisplayedNode(aChild, aStyle);
+  if (! node) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return AppendNodeFor(node, aParentContent);
+}
+
+nsresult
+UndisplayedMap::AddNodeFor(nsIContent* aParentContent, nsIStyleContext* aPseudoStyle)
+{
+  UndisplayedNode*  node = new UndisplayedNode(aPseudoStyle);
+  if (! node) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return AppendNodeFor(node, aParentContent);
+}
+
+nsresult 
+UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent, UndisplayedNode* aNode)
+{
+  PLHashEntry** entry = GetEntryFor(aParentContent);
+  NS_ASSERTION(*entry, "content not in map");
+  if (*entry) {
+    if ((UndisplayedNode*)((*entry)->value) == aNode) {  // first node
+      if (aNode->mNext) {
+        (*entry)->value = aNode->mNext;
+        aNode->mNext = nsnull;
+      }
+      else {
+        PL_HashTableRawRemove(mTable, entry, *entry);
+        mLastLookup = nsnull; // hashtable may have shifted bucket out from under us
+      }
+    }
+    else {
+      UndisplayedNode*  node = (UndisplayedNode*)((*entry)->value);
+      while (node->mNext) {
+        if (node->mNext == aNode) {
+          node->mNext = aNode->mNext;
+          aNode->mNext = nsnull;
+          break;
+        }
+        node = node->mNext;
+      }
+    }
+  }
+  delete aNode;
+  return NS_OK;
+}
+
+nsresult
+UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
+{
+  PLHashEntry** entry = GetEntryFor(aParentContent);
+  NS_ASSERTION(entry, "content not in map");
+  if (*entry) {
+    UndisplayedNode*  node = (UndisplayedNode*)((*entry)->value);
+    delete node;
+    if (entry == mLastLookup) {
+      mLastLookup = nsnull;
+    }
+    PL_HashTableRawRemove(mTable, entry, *entry);
+  }
+  return NS_OK;
+}
+
+static PRIntn
+RemoveUndisplayedEntry(PLHashEntry* he, PRIntn i, void* arg)
+{
+  UndisplayedNode*  node = (UndisplayedNode*)(he->value);
+  delete node;
+  // Remove and free this entry and continue enumerating
+  return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
+}
+
+void
+UndisplayedMap::Clear(void)
+{
+  mLastLookup = nsnull;
+  PL_HashTableEnumerateEntries(mTable, RemoveUndisplayedEntry, 0);
+}
