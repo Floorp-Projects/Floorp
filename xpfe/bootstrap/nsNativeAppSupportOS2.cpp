@@ -2336,14 +2336,6 @@ nsNativeAppSupportOS2::OnLastWindowClosing() {
         return NS_OK;
     }
 
-    // If the last window closed is our confirmation dialog,
-    // don't do anything.
-    if ( mLastWindowIsConfirmation ) {
-        mLastWindowIsConfirmation = PR_FALSE;
-        return NS_OK;
-    }
-
-
     nsresult rv;
 
     // If activated by the browser.turbo.singleProfileOnly pref,
@@ -2372,52 +2364,10 @@ nsNativeAppSupportOS2::OnLastWindowClosing() {
         }
     }
 
-    nsCOMPtr<nsIAppShellService> appShell =
-        do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
-    if ( NS_SUCCEEDED( rv ) ) {
-        // Instead of staying alive, launch a new instance of the application and then
-        // terminate for real.  We take steps to ensure that the new instance will run
-        // as a "server process" and not try to pawn off its request back on this
-        // instance.
+    nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    rv = profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
+    if (NS_FAILED(rv)) return rv;
 
-        // Grab mutex.  Process termination will release it.
-        Mutex mutexLock = Mutex(mMutexName);
-        NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE );
-
-        // Turn off MessageWindow so the other process can't see us.
-        MessageWindow mw;
-        mw.Destroy();
-    
-        // Launch another instance.
-        char buffer[ CCHMAXPATH ];
-        // Same application as this one.
-        PPIB ppib;
-        PTIB ptib;
-        DosGetInfoBlocks( &ptib, &ppib );
-        DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer );
-    
-        // Now do the OS/2 stuff...
-        STARTDATA startData = {0};
-        ULONG idSession;
-        PID pid;
-        char pszObjectBuffer[CCHMAXPATH];
-
-        startData.PgmName = buffer;
-        startData.Length = sizeof(startData);
-        startData.Related = SSF_RELATED_INDEPENDENT;
-        startData.ObjectBuffer = pszObjectBuffer;
-        startData.ObjectBuffLen = CCHMAXPATH;
-        startData.InheritOpt = SSF_INHERTOPT_PARENT;
-        // The new process must run in turbo mode (no splash screen, no window, etc.).
-        startData.PgmInputs = " -turbo";
-
-        DosStartSession(&startData, &idSession, &pid);
-    
-        // Turn off turbo mode and quit the application.
-        SetIsServerMode( PR_FALSE );
-        appShell->Quit(nsIAppShellService::eAttemptQuit);
-
-        // Done.  This app will now commence shutdown.
-    }
     return NS_OK;
 }
