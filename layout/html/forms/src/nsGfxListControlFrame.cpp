@@ -350,7 +350,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Add the list frame as a child of the form
   if (IsInDropDownMode() == PR_FALSE && !mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
   //--Calculate a width just big enough for the scrollframe to shrink around the
@@ -2092,9 +2092,9 @@ nsGfxListControlFrame::SelectionChanged(nsIContent* aContent)
       res = DOMEvent->QueryInterface(kIPrivateDOMEventIID, (void**)&pDOMEvent);
       if (NS_SUCCEEDED(res) && pDOMEvent) {
         res = pDOMEvent->SetTarget(node);
-	if (NS_SUCCEEDED(res)) {
+	      if (NS_SUCCEEDED(res)) {
           // Have the content handle the event.
-          res = mContent->HandleDOMEvent(mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, status);
+          res = mContent->HandleDOMEvent(mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, &status);
         }
         NS_RELEASE(pDOMEvent);
       }
@@ -2109,7 +2109,7 @@ nsGfxListControlFrame::SelectionChanged(nsIContent* aContent)
       nsIFrame* frame = nsnull;
       res = this->QueryInterface(kIFrameIID, (void**)&frame);
       if ((NS_SUCCEEDED(res)) && (nsnull != frame)) {
-        res = frame->HandleEvent(mPresContext, &event, status);
+        res = frame->HandleEvent(mPresContext, &event, &status);
         // NS_RELEASE(frame);
       }
     }
