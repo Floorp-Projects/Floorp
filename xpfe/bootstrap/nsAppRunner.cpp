@@ -323,6 +323,10 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
           }  
           
           rv = cmdLineArgs->GetCmdLineValue((const char *)commandLineArg, &cmdResult);
+#ifdef DEBUG_CMD_LINE
+          printf("%s, cmdResult = %s\n",(const char *)commandLineArg,cmdResult);
+#endif /* DEBUG_CMD_LINE */
+
           PRBool handlesArgs = PR_FALSE;
           rv = handler->GetHandlesArgs(&handlesArgs);
           if (handlesArgs) {
