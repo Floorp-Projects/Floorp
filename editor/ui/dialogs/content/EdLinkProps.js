@@ -33,6 +33,7 @@ var gHaveNamedAnchors = false;
 var gHaveHeadings = false;
 var gCanChangeHeadingSelected = true;
 var gCanChangeAnchorSelected = true;
+var gHaveDocumentUrl = false;
 var dialog;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
@@ -150,9 +151,10 @@ function Startup()
   if (insertLinkAtCaret)
   {
     // Groupbox caption:
-    dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
+    dialog.linkTextCaption.setAttribute("label", GetString("LinkText"));
+
     // Message above input field:
-    dialog.linkTextMessage.setAttribute("value", GetString("EnterLinkText"));
+    dialog.linkTextMessage.setAttribute("label", GetString("EnterLinkText"));
   }
   else
   {
@@ -182,16 +184,16 @@ function Startup()
     // Set "caption" for link source and the source text or image URL
     if (imageElement)
     {
-      dialog.linkTextCaption.setAttribute("value",GetString("LinkImage"));
+      dialog.linkTextCaption.setAttribute("label",GetString("LinkImage"));
       // Link source string is the source URL of image
       // TODO: THIS DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
       dialog.linkTextMessage.setAttribute("value",imageElement.src);
     } else {
-      dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
+      dialog.linkTextCaption.setAttribute("label",GetString("LinkText"));
       if (selectedText) 
       {
-        // Use just the first 40 characters and add "..."
-        dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(ReplaceWhitespace(selectedText, " "), 40, true));
+        // Use just the first 60 characters and add "..."
+        dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(ReplaceWhitespace(selectedText, " "), 60, true));
       } else {
         dialog.linkTextMessage.setAttribute("value",GetString("MixedSelection"));
       }
@@ -203,6 +205,9 @@ function Startup()
 
   // Get the list of existing named anchors and headings
   FillListboxes();
+
+  // We only need to test for this once per dialog load
+  gHaveDocumentUrl = GetDocumentBaseUrl();
 
   // Set data for the dialog controls
   InitDialog();
@@ -228,7 +233,7 @@ function Startup()
   InitMoreFewer();
     
   // This sets enable state on OK button
-  ChangeText();
+  doEnabling();
 
   SetWindowLocation();
 }
@@ -241,16 +246,25 @@ function InitDialog()
   // Must use getAttribute, not "globalElement.href", 
   //  or foreign chars aren't coverted correctly!
   dialog.hrefInput.value = globalElement.getAttribute("href");
+
+  // Set "Relativize" checkbox according to current URL state
+  SetRelativeCheckbox();
 }
 
 function chooseFile()
 {
   // Get a local file, converted into URL format
   var fileName = GetLocalFileURL("html");
-  if (fileName) {
+  if (fileName) 
+  {
+    // Always try to relativize local file URLs
+    if (gHaveDocumentUrl)
+      fileName = MakeRelativeUrl(fileName);
+
     dialog.hrefInput.value = fileName;
-    // Call this to do OK button enabling
-    ChangeText();
+
+    SetRelativeCheckbox();
+    doEnabling();
   }
   // Put focus into the input field
   SetTextboxFocus(dialog.hrefInput);
@@ -322,10 +336,11 @@ function FillListboxes()
   }
 }
 
-function ChangeText()
+function doEnabling()
 {
   // We disable Ok button when there's no href text only if inserting a new link
   var enable = insertNew ? (dialog.hrefInput.value.trimString().length > 0) : true;
+
   SetElementEnabledById( "ok", enable);
 }
 
@@ -339,8 +354,11 @@ function ChangeLocation()
     UnselectNamedAnchor();
     UnselectHeadings();
   }  
+
+  SetRelativeCheckbox();
+
   // Set OK button enable state
-  ChangeText();
+  doEnabling();
 }
 
 function GetExistingHeadingIndex(text)
@@ -365,8 +383,10 @@ function SelectNamedAnchor()
       dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.NamedAnchorList);
       gClearListSelections = true;
 
+      SetRelativeCheckbox();
+
       // ChangeLocation isn't always called, so be sure Ok is enabled
-      ChangeText();
+      doEnabling();
     }
     else
       UnselectNamedAnchor();
@@ -385,7 +405,8 @@ function SelectHeading()
       dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.HeadingsList);
       gClearListSelections = true;
 
-      ChangeText();
+      SetRelativeCheckbox();
+      doEnabling();
     }
     else
       UnselectHeadings();

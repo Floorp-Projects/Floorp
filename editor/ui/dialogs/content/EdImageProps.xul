@@ -57,35 +57,37 @@
   <groupbox orient="vertical">
     <caption label="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
-    <grid>
-      <columns><column/><column/><column flex="1"/></columns>
-      <rows>
-        <row align="center">
-          <text class = "label" 
-            for   = "srcInput"
-            value = "&locationEditField.label;"
-            tooltip="aTooltip" tooltiptext="&locationEditField.tooltip;"
-            />
-          <textbox
-            id         = "srcInput" 
-            oninput    = "ChangeImageSrc()"
-            style      = "min-width : 20em"/>
-          <!-- from EdDialogOverlay.xul -->
-          <button id="ChooseFile"/>
-        </row>
-        <row align="center">
-          <text class = "label"
-            id      = "altTextLabel" 
-            for     = "altTextInput"
-            tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
-            value   = "&altTextEditField.label;" />
-          <textbox
-            id     ="altTextInput"
-            style  = "min-width : 20em"/>
-          <spring/> <!-- placeholder for 3rd column -->
-        </row>
-      </rows>
-    </grid>
+    <text class = "label" 
+      for   = "srcInput"
+      value = "&locationEditField.label;"
+      tooltip="aTooltip" tooltiptext="&locationEditField.tooltip;"
+      />
+    <textbox
+      id         = "srcInput" 
+      oninput    = "ChangeImageSrc()"
+      style      = "min-width : 20em"
+      flex       = "1"/>
+    <hbox>
+      <checkbox 
+        id  = "MakeRelativeCheckbox"
+        for = "srcInput"/>
+      <spring flex="1"/>
+      <!-- from EdDialogOverlay.xul -->
+      <button id="ChooseFile"/>
+    </hbox>
+    <spring class="spacer"/>
+    <hbox>
+      <text class = "label"
+        id      = "altTextLabel" 
+        for     = "altTextInput"
+        tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
+        value   = "&altTextEditField.label;"/>
+      <textbox
+        id     ="altTextInput"
+        style  = "min-width : 20em"
+        tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
+        flex       = "1"/>
+    </hbox>
     <spring class="spacer"/>
   </groupbox>
   <spring class="spacer"/>
@@ -96,8 +98,9 @@
       oncommand = "onMoreFewer()" 
       tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
-    <spring class="spacer"/>
-    <groupbox style="padding: 4px">
+    <spring class="bigspacer"/>
+    <groupbox style="padding-left: 8px; padding-right: 8px">
+      <caption label="&previewBox.label;"/>
       <hbox id="preview-image-box" align="center">
         <spring flex="1"/>
         <html id="preview-image-holder"/>
@@ -119,9 +122,6 @@
         <spring flex="1"/>
       </vbox>
     </groupbox>
-    <spring flex="1"/>
-    <!-- From EdDialogOverlay.xul -->
-    <button id="AdvancedEditButton"/>
   </hbox>
   <spring class="spacer"/>
   <!-- Area that shows and hides via MoreFewerButton --> 
@@ -288,16 +288,9 @@
         </groupbox>
       </vbox> <!-- Bottom Right region -->
     </hbox> <!-- The horizontal box -->
-  
-    <!-- buttons along bottom -->
-    <spring class="spacer"/>
-    <hbox>
-      <spring flex="1"/>
-      <!-- From EdDialogOverlay -->
-      <button id="AdvancedEditButton2"/>
-    </hbox>
   </vbox> <!-- END OF MORE/FEWER SECTION -->
-  <separator class="groove"/>
+  <!-- from EdDialogOverlay -->
+  <vbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
   <hbox id="okCancelHelpButtonsRight"/> 
 </window>
