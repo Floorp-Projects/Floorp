@@ -48,7 +48,6 @@ CPPSRCS		= \
 		nsPrintPreviewContext.cpp \
 		nsSpaceManager.cpp \
 		nsStyleChangeList.cpp \
-		nsStyleCoord.cpp \
 		nsLayoutHistoryState.cpp \
 		$(NULL)
 
