@@ -1248,8 +1248,6 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_wbr:
     rv = NS_NewHTMLWBRElement(aResult, aNodeInfo);
     break;
-  case eHTMLTag_layer:
-  case eHTMLTag_ilayer:
   case eHTMLTag_unknown:
   case eHTMLTag_userdefined:
     rv = NS_NewHTMLUnknownElement(aResult, aNodeInfo);
