@@ -21,7 +21,7 @@
 # 
 
 #
-# $Id: genstats.cgi,v 1.10 1999/10/14 20:10:30 dmose%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.11 2000/07/19 05:57:40 dmose%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -45,13 +45,24 @@ use Date::Format;
 		"people.id=checkins.whoid"
 	],
 
-	["New checkers-in (source or docs)",
+	["New checkers-in (source)",
 						# statistic title
 	 "mozusers",				# database
 	 "changes.when",			# timestamp field
 	 "changes.email",			# email addr field
-	 "select distinct id from changes,users where changes.field in " .
-		"('cvs_group','gila_group') and changes.email=users.email"
+	 "select distinct id from changes,users where changes.field=" .
+		"'cvs_group' and changes.email=users.email ".
+	        "and changes.oldvalue='None'"
+	],
+
+	["New checkers-in (docs)",
+						# statistic title
+	 "mozusers",				# database
+	 "changes.when",			# timestamp field
+	 "changes.email",			# email addr field
+	 "select distinct id from changes,users where changes.field=" .
+		"'gila_group' and changes.email=users.email ".
+	        "and changes.oldvalue='None'"
 	],
 
 	["Useful browser 5.0 bugs (includes NEW; excludes WORKSFORME)",
