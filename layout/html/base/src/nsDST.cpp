@@ -22,22 +22,21 @@
 /////////////////////////////////////////////////////////////////////////////
 // Structure that represents a node in the DST
 
-struct nsDST::Node {
-  void* mKey;
-  void* mValue;
-  Node* mLeft;   // left subtree
-  Node* mRight;  // right subtree
+inline nsDST::Node::Node(void* aKey, void* aValue)
+  : mKey(aKey), mValue(aValue), mLeft(0), mRight(0)
+{
+}
 
-  Node(void* aKey, void* aValue)
-    : mKey(aKey), mValue(aValue), mLeft(0), mRight(0) {}
+inline int nsDST::Node::IsLeaf() const
+{
+  return !mLeft && !mRight;
+}
 
-  int IsLeaf() {return !mLeft && !mRight;}
-
-  // Overloaded placement operator for allocating from an arena
-  void* operator new(size_t aSize, nsDST::NodeArena& aArena) {
-    return aArena.AllocNode(aSize);
-  }
-};
+// Overloaded placement operator for allocating from an arena
+inline void* nsDST::Node::operator new(size_t aSize, NodeArena& aArena)
+{
+  return aArena.AllocNode(aSize);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Arena used for fast allocation and deallocation of Node structures.
