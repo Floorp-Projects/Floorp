@@ -505,7 +505,8 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",				"$distdirectory:layout:");
 
 	#GFX
-    _InstallFromManifest(":mozilla:gfx:public:MANIFEST",								"$distdirectory:gfx:");
+    _InstallFromManifest(":mozilla:gfx:public:MANIFEST",							"$distdirectory:gfx:");
+    _InstallFromManifest(":mozilla:gfx:idl:MANIFEST_IDL",						    "$distdirectory:idl:");
 
 	#VIEW
     _InstallFromManifest(":mozilla:view:public:MANIFEST",							"$distdirectory:view:");
@@ -831,6 +832,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:modules:oji:macbuild:ojiIDL.mcp",						"oji");
 	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
 	BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 							"dom");
+	BuildIDLProject(":mozilla:gfx:macbuild:gfxIDL.mcp", 							"gfx");
 	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
 	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
 	BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.mcp",				"profileservices");
