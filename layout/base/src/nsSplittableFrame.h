@@ -26,7 +26,7 @@ class nsSplittableFrame : public nsFrame
 public:
   // CreateContinuingFrame() does the default behavior of using the
   // content delegate to create a new frame
-  NS_IMETHOD  IsSplittable(SplittableType& aIsSplittable) const;
+  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  CreateContinuingFrame(nsIPresContext*  aPresContext,
                                     nsIFrame*        aParent,
                                     nsIStyleContext* aStyleContext,
