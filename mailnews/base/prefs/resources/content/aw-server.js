@@ -107,7 +107,8 @@ function serverPageInit() {
     
 
   // Server type selection (pop3 or imap) is for mail accounts only
-  var isMailAccount = parent.GetPageData().accounttype.mailaccount;
+  var pageData = parent.GetPageData();
+  var isMailAccount = pageData.accounttype.mailaccount;
   if (isMailAccount && isMailAccount.value){
     var serverTypeRadioGroup = document.getElementById("servertype");
     /* 
@@ -130,6 +131,7 @@ function serverPageInit() {
   var smtpServer = null;
   try {
     smtpServer = parent.smtpService.defaultServer;
+    setPageData(pageData, "identity", "smtpServerKey", smtpServer.key);
   }
   catch(ex){}
 

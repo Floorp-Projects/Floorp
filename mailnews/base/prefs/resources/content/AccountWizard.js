@@ -337,6 +337,8 @@ function PageDataToAccountData(pageData, accountData)
                 pageData.server.smtphostname.value)
                 smtp.hostname = pageData.server.smtphostname.value;
         }
+        if (pageData.identity.smtpServerKey)
+            identity.smtpServerKey = pageData.identity.smtpServerKey.value;
     }
 
     if (pageData.accname) {
