@@ -66,7 +66,7 @@
             cAName : issuerName,
             encryptionAlgorithm : status.cipherName,
             encryptionStrength : status.secretKeyLength,
-            cert : cert,
+            cert : cert
           };
         } else {
           return {
@@ -96,7 +96,7 @@
         return name;
       },
 
-      _cert : null,
+      _cert : null
     };
 
     function securityOnLoad() {
@@ -129,39 +129,43 @@
         document.getElementById("security-view-cert").setAttribute("hidden", "true");
       }
 
+      var hdr;
+      var msg1;
+      var msg2;
+      
       /* Set the encryption messages */
       if (info.encryptionStrength >= 90) {
-        var hdr = bundle.formatStringFromName("pageInfo_StrongEncryption",
+        hdr = bundle.formatStringFromName("pageInfo_StrongEncryption",
                              [ info.encryptionAlgorithm, info.encryptionStrength+"" ], 2);
         document.getElementById("security-privacy").setAttribute("value", hdr);
 
-        var msg1 = bundle.GetStringFromName("pageInfo_Privacy_Strong1");
+        msg1 = bundle.GetStringFromName("pageInfo_Privacy_Strong1");
         setText("security-privacy-msg1", msg1);
 
-        var msg2 = bundle.GetStringFromName("pageInfo_Privacy_Strong2");
+        msg2 = bundle.GetStringFromName("pageInfo_Privacy_Strong2");
         setText("security-privacy-msg2", msg2);
 
         security._cert = info.cert;
       } else if (info.encryptionStrength > 0) {
-        var hdr = bundle.formatStringFromName("pageInfo_WeakEncryption",
+        hdr = bundle.formatStringFromName("pageInfo_WeakEncryption",
                              [ info.encryptionAlgorithm, info.encryptionStrength+"" ], 2);
         document.getElementById("security-privacy").setAttribute("value", hdr);
 
-        var msg1 = bundle.formatStringFromName("pageInfo_Privacy_Weak1",
+        msg1 = bundle.formatStringFromName("pageInfo_Privacy_Weak1",
                                                [ info.hostName ], 1);
         setText("security-privacy-msg1", msg1);
 
-        var msg2 = bundle.GetStringFromName("pageInfo_Privacy_Weak2");
+        msg2 = bundle.GetStringFromName("pageInfo_Privacy_Weak2");
         setText("security-privacy-msg2", msg2);
       } else {
-        var hdr = bundle.GetStringFromName("pageInfo_NoEncryption");
+        hdr = bundle.GetStringFromName("pageInfo_NoEncryption");
         document.getElementById("security-privacy").setAttribute("value", hdr);
 
-        var msg1 = bundle.formatStringFromName("pageInfo_Privacy_None1",
+        msg1 = bundle.formatStringFromName("pageInfo_Privacy_None1",
                                                [ info.hostName ], 1);
         setText("security-privacy-msg1", msg1);
 
-        var msg2 = bundle.GetStringFromName("pageInfo_Privacy_None2");
+        msg2 = bundle.GetStringFromName("pageInfo_Privacy_None2");
         setText("security-privacy-msg2", msg2);
       }
     }
