@@ -182,9 +182,9 @@ nsViewSourceChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
-    // "View source" always wants VALIDATE_NEVER.
+    // "View source" always wants the currently cached content. 
  
-    return mChannel->SetLoadFlags(aLoadFlags | nsIRequest::VALIDATE_NEVER);
+    return mChannel->SetLoadFlags(aLoadFlags | nsIRequest::LOAD_FROM_CACHE);
 }
 
 #define X_VIEW_SOURCE_PARAM "; x-view-type=view-source"
