@@ -28,6 +28,7 @@ var gFilter;
 var gFilterNameElement;
 var gActionElement;
 var gActionTargetElement;
+var gActionValueDeck;
 var gActionPriority;
 var Bundle;
 
@@ -75,7 +76,7 @@ function onOk()
 
 function getScopeFromFilterList(filterList)
 {
-    if (!filterList) return;
+    if (!filterList) return false;
     var type = filterList.folder.server.type;
     if (type == "nntp") return nsIMsgSearchValidityManager.news;
 	if (type == "pop3") return nsIMsgSearchValidityManager.offlineMail;
@@ -97,6 +98,7 @@ function initializeFilterWidgets()
 
 function initializeDialog(filter)
 {
+		var selectedPriority;
     gFilterNameElement.value = filter.filterName;
 
     gActionElement.selectedItem=gActionElement.getElementsByAttribute("data", filter.action)[0];
@@ -109,15 +111,17 @@ function initializeDialog(filter)
 
         if (targets && targets.length > 0) {
             var target = targets[0];
-            if (target.localName == "menuitem")
+            if (target.localName == "menuitem"){
                 gActionTargetElement.selectedItem = target;
+                PickedMsgFolder(gActionTargetElement.selectedItem, gActionTargetElement.id)
+						}
         }
     } else if (filter.action == nsMsgFilterAction.ChangePriority) {
         dump("initializing priority..\n");
-        var selectedPriority = gActionPriority.getElementsByAttribute("data", filter.actionPriority);
+        selectedPriority = gActionPriority.getElementsByAttribute("data", filter.actionPriority);
 
         if (selectedPriority && selectedPriority.length > 0) {
-            var selectedPriority = selectedPriority[0];
+            selectedPriority = selectedPriority[0];
             gActionPriority.selectedItem = selectedPriority;
         }
     }
@@ -128,6 +132,7 @@ function initializeDialog(filter)
     initializeSearchRows(scope, filter.searchTerms);
 	if (filter.searchTerms.Count() > 1)
 		gSearchLessButton.removeAttribute("disabled", "false");
+
 }
 
 
@@ -136,10 +141,11 @@ function initializeDialog(filter)
 function saveFilter() {
 
     var isNewFilter;
+		var str;
 
     var filterName= gFilterNameElement.value;
     if (!filterName || filterName == "") {
-        var str = Bundle.GetStringFromName("mustEnterName");
+        str = Bundle.GetStringFromName("mustEnterName");
         window.alert(str);
         gFilterNameElement.focus();
         return false;
@@ -155,7 +161,7 @@ function saveFilter() {
             targetUri = gActionTargetElement.selectedItem.getAttribute("data");
         //dump("folder target = " + gActionTargetElement.selectedItem + "\n");
         if (!targetUri || targetUri == "") {
-            var str = Bundle.GetStringFromName("mustSelectFolder");
+            str = Bundle.GetStringFromName("mustSelectFolder");
             window.alert(str);
             return false;
         }
