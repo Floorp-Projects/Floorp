@@ -76,6 +76,7 @@ class ATL_NO_VTABLE CMozillaBrowser :
 	public IOleInPlaceObjectWindowlessImpl<CMozillaBrowser>,
 	public IDataObjectImpl<CMozillaBrowser>,
 	public ISupportErrorInfo,
+	public IOleCommandTarget,
 	public IConnectionPointContainerImpl<CMozillaBrowser>,
 	public ISpecifyPropertyPagesImpl<CMozillaBrowser>
 {
@@ -106,6 +107,7 @@ BEGIN_COM_MAP(CMozillaBrowser)
 	COM_INTERFACE_ENTRY_IMPL(IPersistStreamInit)
 	COM_INTERFACE_ENTRY_IMPL(ISpecifyPropertyPages)
 	COM_INTERFACE_ENTRY_IMPL(IDataObject)
+	COM_INTERFACE_ENTRY(IOleCommandTarget)
 	COM_INTERFACE_ENTRY(IProvideClassInfo)
 	COM_INTERFACE_ENTRY(IProvideClassInfo2)
 	COM_INTERFACE_ENTRY(ISupportErrorInfo)
@@ -242,6 +244,9 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE get_Resizable(VARIANT_BOOL __RPC_FAR *Value);
 	virtual HRESULT STDMETHODCALLTYPE put_Resizable(VARIANT_BOOL Value);
 
+// IOleCommandTarget implementation
+	virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText);
+	virtual HRESULT STDMETHODCALLTYPE Exec(const GUID __RPC_FAR *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut);
 
 public:
 	HRESULT OnDraw(ATL_DRAWINFO& di);
