@@ -261,7 +261,7 @@ NS_METHOD nsTextAreaWidget::Paint(nsIRenderingContext& aRenderingContext,
   nscoord x = (twoPixels * 2)  + rect.x;
   nscoord y = ((rect.height - textHeight) / 2) + rect.y;
   aRenderingContext.SetColor(txtFGColor);
-  aRenderingContext.DrawString(mText, x, y, 0);
+  aRenderingContext.DrawString(mText, x, y);
 
   NS_RELEASE(context);
 

@@ -272,14 +272,14 @@ NS_METHOD nsTextWidget::Paint(nsIRenderingContext& aRenderingContext,
   nscoord y = ((rect.height - textHeight) / 2) + rect.y;
   aRenderingContext.SetColor(txtFGColor);
   if (!mIsPassword) {
-    aRenderingContext.DrawString(mText, x, y, 0);
+    aRenderingContext.DrawString(mText, x, y);
   } else {
     nsString astricks;
     PRInt32 i;
     for (i=0;i<mText.Length();i++) {
       astricks.Append("*");
     }
-    aRenderingContext.DrawString(astricks, x, y, 0);
+    aRenderingContext.DrawString(astricks, x, y);
 
   }
 
