@@ -667,7 +667,6 @@ NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, con
     persist->AddRef();
     persist->SetProgressListener(mProgressListener);
     nsresult rv = persist->SaveURI(aURI, aPostData, aFileName);
-    persist->Release();
     return rv;
 }
 
@@ -970,6 +969,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
    NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);
 
    mDocShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)
+   mDocShellTreeOwner->AddChromeListeners();
 
    delete mInitInfo;
    mInitInfo = nsnull;
