@@ -167,7 +167,7 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
+NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
   // XXX add aMenuItem to internal data structor list
   return NS_OK;
