@@ -114,7 +114,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
 
     nsSpecialSystemDirectory appDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    VR_SetRegDirectory( nsNSPRPath(appDir) );
+    VR_SetRegDirectory( appDir.GetNativePathCString() );
     
     /***************************************/
     /* Stupid Hack to test js env*/
