@@ -127,6 +127,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* do a biff */
   void PerformBiff();
 
+  /* this gets called when the server is expanded in the folder pane */
+  void PerformExpand();
+
   /* Write out all known folder data to panacea.dat */
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 

@@ -139,6 +139,16 @@ nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
     }
 	return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgIncomingServer::PerformExpand()
+{
+#ifdef DEBUG_sspitzer
+	printf("PerformExpand()\n");
+#endif
+	return NS_OK;
+}
+
   
 NS_IMETHODIMP
 nsMsgIncomingServer::PerformBiff()

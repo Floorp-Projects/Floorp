@@ -712,6 +712,7 @@ function FolderPaneDoubleClick(treeitem)
 		var folder = GetMsgFolderFromUri(uri);
 		if (folder.isServer) {
 			//dump(uri + " is a server, don't open a new window.\n");
+			folder.server.PerformExpand();
 			return;
 		}
 	    }

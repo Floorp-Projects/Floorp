@@ -425,3 +425,13 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName, const char *aState, con
 
 	return NS_OK;
 }
+
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::PerformExpand()
+{
+#ifdef DEBUG_sspitzer
+	printf("PerformExpand for nntp\n");
+#endif
+	return NS_OK;
+}

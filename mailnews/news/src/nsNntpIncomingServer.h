@@ -48,6 +48,7 @@ public:
     
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD CloseCachedConnections();
+    NS_IMETHOD PerformExpand();
 	
 
 private:
