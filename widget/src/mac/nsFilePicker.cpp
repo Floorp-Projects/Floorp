@@ -171,8 +171,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //
 static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
 {
-  nsWatchTask::GetTask().EventLoopReached();
-  
 	switch ( msg ) {
 	case kNavCBEvent:
 		switch ( cbRec->eventData.eventDataParms.event->what ) {
@@ -302,6 +300,7 @@ nsFilePicker::GetLocalFile(Str255 & inTitle, /* filter list here later */ FSSpec
 		
 		// Display the get file dialog. Only use a filter proc if there are any
 		// filters registered.
+    nsWatchTask::GetTask().Suspend();  
 		anErr = ::NavGetFile(
 					NULL,
 					&reply,
@@ -311,6 +310,7 @@ nsFilePicker::GetLocalFile(Str255 & inTitle, /* filter list here later */ FSSpec
 					mFilters.Count() ? filterProc : NULL,
 					NULL, //typeList,
 					this); // callbackUD - used by the filterProc
+    nsWatchTask::GetTask().Resume();  
 	
 		// See if the user has selected save
 		if (anErr == noErr && reply.validRecord) {
@@ -369,6 +369,7 @@ nsFilePicker::GetLocalFolder(Str255 & inTitle, FSSpec* outSpec)
 		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
 		
 		// Display the get file dialog
+    nsWatchTask::GetTask().Suspend();  
 		anErr = ::NavChooseFolder(
 					NULL,
 					&reply,
@@ -376,6 +377,7 @@ nsFilePicker::GetLocalFolder(Str255 & inTitle, FSSpec* outSpec)
 					eventProc,
 					NULL, // filter proc
 					NULL); // callbackUD	
+    nsWatchTask::GetTask().Resume();  
 	
 		// See if the user has selected save
 		if (anErr == noErr && reply.validRecord) {
@@ -426,6 +428,7 @@ nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* out
 		::BlockMoveData(inDefaultName, dialogOptions.savedFileName, *inDefaultName + 1);
 		
 		// Display the get file dialog
+    nsWatchTask::GetTask().Suspend();  
 		anErr = ::NavPutFile(
 					NULL,
 					&reply,
@@ -434,6 +437,7 @@ nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* out
 					typeToSave,
 					creatorToSave,
 					NULL); // callbackUD	
+    nsWatchTask::GetTask().Resume();  
 	
 		// See if the user has selected save
 		if (anErr == noErr && reply.validRecord)

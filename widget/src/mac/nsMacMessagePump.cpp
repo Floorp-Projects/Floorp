@@ -192,6 +192,9 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
 	//
 	mTSMMessagePump = nsMacTSMMessagePump::GetSingleton();
 	NS_ASSERTION(mTSMMessagePump!=NULL,"nsMacMessagePump::nsMacMessagePump: Unable to create TSM Message Pump.");
+
+  // startup the watch cursor idle time vbl task
+  nsWatchTask::GetTask().Start();
 }
 
 //=================================================================

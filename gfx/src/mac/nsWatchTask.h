@@ -44,6 +44,11 @@ public:
   nsWatchTask ( ) ;
   ~nsWatchTask ( ) ;
 
+    // Registers the VBL task and does other various init tasks to begin
+    // watching for time away from the event loop. It is ok to call other
+    // methods on this object w/out calling Start().
+  NS_GFX void Start ( ) ;
+  
     // call from the main event loop
   NS_GFX void EventLoopReached ( ) ;
   
