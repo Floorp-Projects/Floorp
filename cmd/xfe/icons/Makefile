@@ -32,6 +32,8 @@ LOCAL_INCLUDES	= -I. -I$(OBJDIR)
 ICONS_GEN_HDR	= $(OBJDIR)/icon_extern.h
 ICONS_GEN_SRC	= $(OBJDIR)/icondata.c
 
+ANIM_PRIV = $(DEPTH)/../ns_priv/xfe/icons/anim
+
 include $(DEPTH)/config/rules.mk
 
 #### NEXT FEW LINES ARE ONLY FOR TESTING -- full build!
@@ -111,12 +113,14 @@ ifdef MOZ_NETCAST
 ICONS += images/Desk_Netcaster.gif
 endif
 
-ifdef NETSCAPE_BUILD
-ANIM		= $(wildcard $(XFEPRIVDIR)/icons/anim/main/*.gif)
+# Alphabetical order seems to matter here.
+ifdef NETSCAPE_PRIV
+ANIM		+= $(wildcard $(ANIM_PRIV)/main/*.gif \
+			$(ANIM_PRIV)/compass/*.gif \
+			$(ANIM_PRIV)/mozilla/*.gif)
 else
 ANIM		= $(wildcard anim/main/*.gif)
 endif
-
 
 ICONLIST	 = $(OBJDIR)/icon.list
 ICONANIMLIST = $(OBJDIR)/iconanim.list
