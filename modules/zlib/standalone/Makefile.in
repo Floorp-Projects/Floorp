@@ -43,6 +43,10 @@ endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
 
+MDDEPDIR := $(MDDEPDIR)_S
+
+GARBAGE_DIRS += .deps
+
 include $(topsrcdir)/config/rules.mk
 
 # Make sure that these custom rules stay in sync with rules.mk
