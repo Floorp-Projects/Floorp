@@ -40,12 +40,6 @@ AC_DEFINE(USE_AUTOCONF)
 dnl Always set this for mozilla.
 AC_DEFINE(MOZILLA_CLIENT)
 
-dnl d=`pwd`
-dnl if [ test "${srcdir}" = "${d}" || test "${srcdir}" = "." ]; then
-dnl     AC_ERROR(Building in the srcdir is not supported! Please build from a separate objdir.)
-dnl fi
-dnl unset d
-
 dnl ========================================================
 dnl =
 dnl = Dont change the following two lines.  Doing so breaks:
@@ -1000,7 +994,6 @@ then
   CFLAGS="$CFLAGS $MOZ_OPTIMIZE_FLAGS"
   CXXFLAGS="$CXXFLAGS $MOZ_OPTIMIZE_FLAGS"
 fi
-dnl ========================================================
 
 dnl ========================================================
 dnl =
@@ -1028,7 +1021,6 @@ then
   CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
   CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
 fi
-dnl ========================================================
 
 dnl ========================================================
 dnl =
@@ -1758,7 +1750,6 @@ AC_SUBST(MOZ_RPM_RELEASE)
 AC_SUBST(MOZ_RPM_SEAMONKEY_OPTIMIZE)
 AC_SUBST(MOZ_RPM_TMP)
 AC_SUBST(MOZ_RPM_VERSION)
-dnl ========================================================
 
 dnl ========================================================
 dnl =
@@ -1917,6 +1908,17 @@ done
 #   To add new Makefiles, edit allmakefiles.sh.
 #   allmakefiles.sh sets the variable, MAKEFILES.
 . ${srcdir}/allmakefiles.sh
+
+# Run a perl script to quickly create the makefiles.
+# If it succeeds, it outputs a shell command to set CONFIG_FILES
+#   for the files it cannot handle correctly. This way, config.status
+#   will handle these files.
+# If it fails, nothing is set and config.status will run as usual.
+#
+# This does not change the $MAKEFILES variable.
+#
+eval `echo $MAKEFILES | \
+      $PERL $srcdir/build/autoconf/acoutput-fast.pl` 2>/dev/null
 
 AC_OUTPUT($MAKEFILES)
 
