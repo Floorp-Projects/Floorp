@@ -599,18 +599,20 @@ _JAR_FLAT_FILES_ONLY=
 _JAR_REGCHROME_JAR=0
 !endif
 
-REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt $(_JAR_REGCHROME_JAR)
+!if "$(OS_TARGET)" == "WIN95"
+_NO_FLOCK=-l
+!else
+_NO_FLOCK=
+!endif
+
+REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(_NO_FLOCK) $(DIST)\bin\chrome\installed-chrome.txt $(_JAR_REGCHROME_JAR)
 
 !ifndef MOZ_OLD_JAR_PACKAGING
 
 !if exist($(JAR_MANIFEST))
 
 chrome:: $(CHROME_DEPS)
-!if "$(OS_TARGET)"=="WIN95"
-        $(PERL) $(DEPTH)\config\make-jars.pl $(_JAR_FLAT_FILES_ONLY) -l -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
-!else
-        $(PERL) $(DEPTH)\config\make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
-!endif
+        $(PERL) $(DEPTH)\config\make-jars.pl $(_JAR_FLAT_FILES_ONLY) $(_NO_FLOCK) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 !endif
 
 regchrome:
