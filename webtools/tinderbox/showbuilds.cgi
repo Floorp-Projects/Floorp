@@ -25,7 +25,6 @@ require 'tbglobals.pl';
 require 'lloydcgi.pl';
 require 'imagelog.pl';
 require 'header.pl';
-$|=1;
 
 # Hack this until I can figure out how to do get default root. -slamm
 $default_root = '/cvsroot';
@@ -64,11 +63,6 @@ $tree = $form{tree};
 # It changes to "../" if the page is generated statically, because then
 # it is placed in tinderbox/$tree.
 $rel_path = ''; 
-
-if (exists $form{rebuildguilty} or exists $form{showall}) {
-  system ("./buildwho.pl -days 7 $tree > /dev/null");
-  undef $form{rebuildguilty};
-}
 
 &show_tree_selector,  exit if $form{tree} eq '';
 &do_quickparse,       exit if $form{quickparse};
@@ -387,10 +381,7 @@ sub print_table_header {
   print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>",
         "since time</font></td>";
   print "<td><font size=-1>",
-        "Click name to see what they did</font>";
-  print "<br><font size=-2>", 
-        &open_showbuilds_href(rebuildguilty=>'1'),
-        "Rebuild guilty list</a></td>";
+        "Click name to see what they did</font></td>";
 
   for (my $ii=0; $ii < $name_count; $ii++) {
 
