@@ -19,6 +19,32 @@
 #include "nsILayoutHistoryState.h"
 #include "nsHashtable.h"
 
+class HistoryKey: public nsHashKey {
+ private:
+   PRUint32 itsHash;
+   
+ public:
+   HistoryKey(PRUint32 aContentID, PRInt32 aStateType) {
+     itsHash = aContentID + aStateType;
+   }
+
+   HistoryKey(PRUint32 aKey) {
+     itsHash = aKey;
+   }
+
+   PRUint32 HashValue(void) const {
+     return itsHash;
+   }
+ 
+   PRBool Equals(const nsHashKey *aKey) const {
+     return (itsHash == (((const HistoryKey *) aKey)->HashValue())) ? PR_TRUE : PR_FALSE;
+   }
+ 
+   nsHashKey *Clone(void) const {
+     return new HistoryKey(itsHash);
+   }
+};
+
 class nsLayoutHistoryState : public nsILayoutHistoryState
 {
 public:
@@ -38,6 +64,7 @@ public:
 private:
   nsSupportsHashtable mStates;
 };
+
 
 nsresult
 NS_NewLayoutHistoryState(nsILayoutHistoryState** aState)
@@ -59,7 +86,7 @@ nsLayoutHistoryState::nsLayoutHistoryState()
 {
   NS_INIT_REFCNT();
   
-
+  
 }
 
 nsLayoutHistoryState::~nsLayoutHistoryState()
@@ -75,6 +102,19 @@ nsLayoutHistoryState::AddState(PRUint32 aContentID,
                                nsISupports* aState, 
                                PRInt32 aStateType)
 {
+	HistoryKey key(aContentID, aStateType);
+	void * res = mStates.Put(&key, (void *) aState);
+	/* nsHashTable seems to return null when it actually added
+	 * the element in to the table. If another element was already
+	 * present in the table for the key, it seems to return the 
+	 * element that was already present. Not sure if that was
+	 * the intended behavior
+	 */
+	if (!res) 
+		printf("nsLayoutHistoryState::AddState State successfully added to the hash table\n");
+	else
+		printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+
   return NS_OK;
 }
 
@@ -83,5 +123,19 @@ nsLayoutHistoryState::GetState(PRUint32 aContentID,
                                nsISupports** aState,
                                PRInt32 aStateType)
 {
-  return NS_OK;
+    nsresult rv = NS_OK;
+    HistoryKey key(aContentID, aStateType);
+    void * state = nsnull;
+    state = mStates.Get(&key);
+	if (state) {
+		printf("nsLayoutHistoryState::GetState, Got the History state for the key\n");
+       *aState = (nsISupports *)state;
+	}
+	else {
+        printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
+		*aState = nsnull;
+		rv = NS_ERROR_NULL_POINTER;
+	}
+  return rv;
 }
+
