@@ -681,7 +681,7 @@ RDFTreeBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
 
     nsCOMPtr<nsIContent> treechildren; // put it here so it stays in scope
 
-    if ((nameSpaceID == kNameSpaceID_XUL) && (tag == kTreeItemAtom)) {
+    if ((nameSpaceID == kNameSpaceID_XUL) && (tag.get() == kTreeItemAtom)) {
         if (NS_FAILED(rv = FindChildByTag(aElement,
                                           kNameSpaceID_XUL,
                                           kTreeChildrenAtom,
@@ -703,9 +703,9 @@ RDFTreeBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
             return NS_ERROR_UNEXPECTED;
 
         aElement->GetTag(*getter_AddRefs(tag));
-        NS_ASSERTION((kTreeBodyAtom == tag) || (kTreeChildrenAtom == tag),
+        NS_ASSERTION((kTreeBodyAtom == tag.get()) || (kTreeChildrenAtom == tag.get()),
                      "not a xul:treebody or xul:treechildren");
-        if ((kTreeBodyAtom != tag) && (kTreeChildrenAtom != tag))
+        if ((kTreeBodyAtom != tag.get()) && (kTreeChildrenAtom != tag.get()))
             return NS_ERROR_UNEXPECTED;
     }
 
