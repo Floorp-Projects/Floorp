@@ -43,6 +43,7 @@
 struct IDropSource;
 struct IDataObject;
 class  nsNativeDragTarget;
+class  nsDataObjCollection;
 
 /**
  * Native Win32 DragService wrapper
@@ -69,6 +70,7 @@ public:
   NS_IMETHOD StartInvokingDragSession(IDataObject * aDataObj, PRUint32 aActionType);
 
 protected:
+  nsDataObjCollection* GetDataObjCollection(IDataObject* aDataObj);
 
     // determine if we have a single data object or one of our private collections
   PRBool IsCollectionObject ( IDataObject* inDataObj ) ;
