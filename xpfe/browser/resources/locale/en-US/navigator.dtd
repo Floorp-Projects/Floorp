@@ -130,11 +130,14 @@
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
+<!ENTITY searchOptions.label "Search options">
+<!ENTITY simpleMode.label "Simple">
+<!ENTITY advancedMode.label "Advanced">
 <!ENTITY searchBookmarksHistoryCmd.label "Search Bookmarks/History">
 <!ENTITY searchBookmarksHistoryCmd.accesskey "b">
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "w">
-<!ENTITY searchAllMailCmd.label "Search all Mail">
+<!ENTITY searchAllMailCmd.label "Search Mail">
 <!ENTITY searchAllMailCmd.accesskey "m">
 <!ENTITY searchAddressbookCmd.label "Search Addressbook">
 <!ENTITY searchAddressbookCmd.accesskey "a">
