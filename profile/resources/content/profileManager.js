@@ -237,7 +237,7 @@ function SwitchProfileManagerMode()
 
   // swap deck  
   var deck = document.getElementById( "prattle" );
-  deck.setAttribute( "index", prattleIndex )
+  deck.setAttribute( "selectedIndex", prattleIndex )
     
   // swap caption
   ChangeCaption( captionLine );
