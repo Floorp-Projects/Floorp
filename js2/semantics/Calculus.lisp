@@ -88,21 +88,21 @@
 ;;; DOUBLE-PRECISION FLOATING-POINT NUMBERS
 
 (deftype float64 ()
-         '(or (and float (not (eql 0.0)) (not (eql -0.0))) (member :+zero :-zero :+inf :-inf :nan)))
+         '(or (and float (not (eql 0.0)) (not (eql -0.0))) (member :+zero :-zero :+infinity :-infinity :nan)))
 
 (defun float64? (n)
   (or (and (floatp n) (not (zerop n)))
-      (member n '(:+zero :-zero :+inf :-inf :nan))))
+      (member n '(:+zero :-zero :+infinity :-infinity :nan))))
 
 ; Evaluate expr.  If it evaluates successfully, return its value except if it evaluates to
 ; +0.0 or -0.0, in which case return :+zero (but not :-zero).
-; If evaluating expr overflows, evaluate sign; if it returns a positive value, return :+inf;
-; otherwise return :-inf.  sign should not return zero.
+; If evaluating expr overflows, evaluate sign; if it returns a positive value, return :+infinity;
+; otherwise return :-infinity.  sign should not return zero.
 (defmacro handle-overflow (expr &body sign)
   (let ((x (gensym)))
     `(handler-case (let ((,x ,expr))
                      (if (zerop ,x) :+zero ,x))
-       (floating-point-overflow () (if (minusp (progn ,@sign)) :-inf :+inf)))))
+       (floating-point-overflow () (if (minusp (progn ,@sign)) :-infinity :+infinity)))))
 
 
 (defun rational-to-float64 (r)
@@ -125,54 +125,47 @@
   (eq n :nan))
 
 
-; Return true if n is :+inf or :-inf and false otherwise.
+; Return true if n is :+infinity or :-infinity and false otherwise.
 (declaim (inline float64-is-infinite))
 (defun float64-is-infinite (n)
-  (or (eq n :+inf) (eq n :-inf)))
-
-
-; Convert n to a rational number.  Signal an error if n isn't finite.
-(defun float64-to-rational (n)
-  (if (float64-is-zero n)
-    0
-    (rational n)))
+  (or (eq n :+infinity) (eq n :-infinity)))
 
 
 ; Truncate n to the next lower integer.  Signal an error if n isn't finite.
-(defun truncate-float64 (n)
+(defun truncate-finite-float64 (n)
   (if (float64-is-zero n)
     0
     (truncate n)))
 
 
 ; Return:
-;   less if n<m;
-;   equal if n=m;
-;   greater if n>m;
-;   unordered if either n or m is :nan.
-(defun float64-compare (n m less equal greater unordered)
+;   :less if n<m;
+;   :equal if n=m;
+;   :greater if n>m;
+;   :unordered if either n or m is :nan.
+(defun float64-compare (n m)
   (when (float64-is-zero n)
     (setq n 0.0))
   (when (float64-is-zero m)
     (setq m 0.0))
   (cond
-   ((or (float64-is-nan n) (float64-is-nan m)) unordered)
-   ((eql n m) equal)
-   ((or (eq n :+inf) (eq m :-inf)) greater)
-   ((or (eq m :+inf) (eq n :-inf)) less)
-   ((< n m) less)
-   ((> n m) greater)
-   (t equal)))
+   ((or (float64-is-nan n) (float64-is-nan m)) :unordered)
+   ((eql n m) :equal)
+   ((or (eq n :+infinity) (eq m :-infinity)) :greater)
+   ((or (eq m :+infinity) (eq n :-infinity)) :less)
+   ((< n m) :less)
+   ((> n m) :greater)
+   (t :equal)))
 
 
 ; Return
-;    1 if n is +0.0, :+inf, or any positive floating-point number;
-;   -1 if n is -0.0, :-inf, or any positive floating-point number;
+;    1 if n is +0.0, :+infinity, or any positive floating-point number;
+;   -1 if n is -0.0, :-infinity, or any positive floating-point number;
 ;    0 if n is :nan.
 (defun float64-sign (n)
   (case n
-    ((:+zero :+inf) 1)
-    ((:-zero :-inf) -1)
+    ((:+zero :+infinity) 1)
+    ((:-zero :-infinity) -1)
     (:nan 0)
     (t (round (float-sign n)))))
 
@@ -188,7 +181,7 @@
 ; Return d truncated towards zero into a 32-bit integer.  Overflows wrap around.
 (defun float64-to-uint32 (d)
   (case d
-    ((:+zero :-zero :+inf :-inf :nan) 0)
+    ((:+zero :-zero :+infinity :-infinity :nan) 0)
     (t (mod (truncate d) #x100000000))))
 
 
@@ -196,7 +189,7 @@
 (defun float64-abs (n)
   (case n
     ((:+zero :-zero) :+zero)
-    ((:+inf :-inf) :+inf)
+    ((:+infinity :-infinity) :+infinity)
     (:nan :nan)
     (t (abs n))))
 
@@ -206,8 +199,8 @@
   (case n
     (:+zero :-zero)
     (:-zero :+zero)
-    (:+inf :-inf)
-    (:-inf :+inf)
+    (:+infinity :-infinity)
+    (:-infinity :+infinity)
     (:nan :nan)
     (t (- n))))
 
@@ -217,17 +210,17 @@
   (case n
     (:+zero (if (eq m :-zero) :+zero m))
     (:-zero m)
-    (:+inf (case m
-             ((:-inf :nan) :nan)
-             (t :+inf)))
-    (:-inf (case m
-             ((:+inf :nan) :nan)
-             (t :-inf)))
+    (:+infinity (case m
+                  ((:-infinity :nan) :nan)
+                  (t :+infinity)))
+    (:-infinity (case m
+                  ((:+infinity :nan) :nan)
+                  (t :-infinity)))
     (:nan :nan)
     (t (case m
          ((:+zero :-zero) n)
-         (:+inf :+inf)
-         (:-inf :-inf)
+         (:+infinity :+infinity)
+         (:-infinity :-infinity)
          (:nan :nan)
          (t (handle-overflow (+ n m)
               (let ((n-sign (float-sign n))
@@ -248,8 +241,8 @@
         (m (float64-abs m)))
     (let ((result (cond
                    ((zerop sign) :nan)
-                   ((eq n :+inf) (if (eq m :+zero) :nan :+inf))
-                   ((eq m :+inf) (if (eq n :+zero) :nan :+inf))
+                   ((eq n :+infinity) (if (eq m :+zero) :nan :+infinity))
+                   ((eq m :+infinity) (if (eq n :+zero) :nan :+infinity))
                    ((or (eq n :+zero) (eq m :+zero)) :+zero)
                    (t (handle-overflow (* n m) 1)))))
       (if (minusp sign)
@@ -264,9 +257,9 @@
         (m (float64-abs m)))
     (let ((result (cond
                    ((zerop sign) :nan)
-                   ((eq n :+inf) (if (eq m :+inf) :nan :+inf))
-                   ((eq m :+inf) :+zero)
-                   ((eq m :+zero) (if (eq n :+zero) :nan :+inf))
+                   ((eq n :+infinity) (if (eq m :+infinity) :nan :+infinity))
+                   ((eq m :+infinity) :+zero)
+                   ((eq m :+zero) (if (eq n :+zero) :nan :+infinity))
                    ((eq n :+zero) :+zero)
                    (t (handle-overflow (/ n m) 1)))))
       (if (minusp sign)
@@ -2095,7 +2088,7 @@
 ;;;   A boolean (nil for false; non-nil for true)
 ;;;   An integer
 ;;;   A rational number
-;;;   A double-precision floating-point number (or :+inf, :-inf, or :nan)
+;;;   A double-precision floating-point number (or :+infinity, :-infinity, or :nan)
 ;;;   A character
 ;;;   A function (represented by a lisp function)
 ;;;   A string
@@ -3840,10 +3833,9 @@
     (bitwise-shift (-> (integer integer) integer) #'ash)
     
     (real-to-float64 (-> (rational) finite-float64) #'rational-to-float64)
-    (float64-to-rational (-> (finite-float64) rational) #'float64-to-rational)
-    (truncate-float64 (-> (finite-float64) integer) #'truncate-float64)
+    (truncate-finite-float64 (-> (finite-float64) integer) #'truncate-finite-float64)
     
-    (float64-compare (-> (float64 float64 boolean boolean boolean boolean) boolean) #'float64-compare)
+    (float64-compare (-> (float64 float64) order) #'float64-compare)
     (float64-abs (-> (float64 float64) float64) #'float64-abs)
     (float64-negate (-> (float64) float64) #'float64-neg)
     (float64-add (-> (float64 float64) float64) #'float64-add)
@@ -3949,11 +3941,11 @@
     ;Define simple types
     (add-type-name world
                    (setf (world-false-type world) (make-tag-type world (setf (world-false-tag world) (add-tag world 'false nil nil nil))))
-                   (world-intern world 'false)
+                   (world-intern world 'false-type)
                    nil)
     (add-type-name world
                    (setf (world-true-type world) (make-tag-type world (setf (world-true-tag world) (add-tag world 'true nil nil nil))))
-                   (world-intern world 'true)
+                   (world-intern world 'true-type)
                    nil)
     (setf (world-denormalized-false-type world) (make-denormalized-tag-type world (world-false-tag world)))
     (setf (world-denormalized-true-type world) (make-denormalized-tag-type world (world-true-tag world)))
@@ -3977,11 +3969,16 @@
     (add-type-name world (make-set-type world (world-integer-type world)) (world-intern world 'integer-set) nil)
     (add-type-name world (make-set-type world (world-character-type world)) (world-intern world 'character-set) nil)
     
-    ;Define floating-point types
-    (let ((float64-tag-types (mapcar
+    ;Define order and floating-point types
+    (let ((order-types (mapcar
+                        #'(lambda (tag-name)
+                            (make-tag-type world (add-tag world tag-name nil nil nil)))
+                        '(less equal greater unordered)))
+          (float64-tag-types (mapcar
                               #'(lambda (tag-name)
                                   (make-tag-type world (add-tag world tag-name nil nil nil)))
                               '(+zero -zero +infinity -infinity nan))))
+      (add-type-name world (apply #'make-union-type world order-types) (world-intern world 'order) nil)
       (add-type-name world (apply #'make-union-type world (world-finite64-type world) float64-tag-types)
                      (world-intern world 'float64) nil)
       (add-type-name world (make-union-type world (world-finite64-type world) (first float64-tag-types) (second float64-tag-types))
