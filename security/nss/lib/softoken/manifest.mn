@@ -61,6 +61,7 @@ PRIVATE_EXPORTS = \
 CSRCS = \
 	alghmac.c \
 	dbinit.c \
+	dbmshim.c \
 	fipstest.c \
 	fipstokn.c \
 	keydb.c    \
