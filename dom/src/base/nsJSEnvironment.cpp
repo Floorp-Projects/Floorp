@@ -1044,27 +1044,25 @@ nsJSContext::ExecuteScript(void* aScriptObject,
 
 const char *gEventArgv[] = {"event"};
 
-void
-AtomToEventHandlerName(nsIAtom *aName, char *charName, PRUint32 charNameSize)
+static inline const char *
+AtomToEventHandlerName(nsIAtom *aName)
 {
-  // optimized to avoid ns*Str*.h explicit/implicit copying and malloc'ing
-  // even nsCAutoString may call an Append that copy-constructs an nsStr from
-  // a const PRUnichar*
   const char *name;
+
   aName->GetUTF8String(&name);
+
+#ifdef DEBUG
+  const char *cp;
   char c;
-  PRUint32 i = 0;
+  for (cp = name; *cp != '\0'; ++cp)
+  {
+    c = *cp;
+    NS_ASSERTION (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z'),
+                  "non-ASCII non-alphabetic event handler name");
+  }
+#endif
 
-  do {
-    NS_ASSERTION(name[i] < 128, "non-ASCII event handler name");
-    c = name[i];
-
-    // The HTML content sink must have folded to lowercase already.
-    NS_ASSERTION(c == '\0' || isalpha(c), "non-alphabetic event handler name");
-
-    NS_ASSERTION(i < charNameSize, "overlong event handler name");
-    charName[i++] = c;
-  } while (c != '\0');
+  return name;
 }
 
 NS_IMETHODIMP
@@ -1098,8 +1096,7 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
     NS_ENSURE_TRUE(jsprin, NS_ERROR_NOT_AVAILABLE);
   }
 
-  char charName[64];
-  AtomToEventHandlerName(aName, charName, sizeof charName);
+  const char *charName = AtomToEventHandlerName(aName);
 
   JSFunction* fun =
       ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
@@ -1234,8 +1231,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
 NS_IMETHODIMP
 nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName, void *aHandler)
 {
-  char charName[64];
-  AtomToEventHandlerName(aName, charName, sizeof charName);
+  const char *charName = AtomToEventHandlerName(aName);
 
   JSObject *funobj = (JSObject*) aHandler;
   JSObject *target = (JSObject*) aTarget;
