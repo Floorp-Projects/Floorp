@@ -191,6 +191,22 @@ NS_IMETHODIMP nsWebBrowserChrome::ShowAsModal()
    return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsWebBrowserChrome::SetPersistence(PRBool aPersistX, PRBool aPersistY,
+                                   PRBool aPersistCX, PRBool aPersistCY,
+                                   PRBool aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWebBrowserChrome::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
+                                   PRBool* aPersistCX, PRBool* aPersistCY,
+                                   PRBool* aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //*****************************************************************************
 // nsWebBrowserChrome::nsIBaseWindow
 //*****************************************************************************   

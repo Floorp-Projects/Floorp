@@ -1391,8 +1391,8 @@ void nsWebShellWindow::KillPersistentSize()
 {
    PRBool persistX, persistY;
 
-   GetPersistence(&persistX, &persistY, nsnull, nsnull, nsnull);
-   SetPersistence(persistX, persistY, PR_FALSE, PR_FALSE, PR_FALSE);
+   mContentTreeOwner->GetPersistence(&persistX, &persistY, nsnull, nsnull, nsnull);
+   mContentTreeOwner->SetPersistence(persistX, persistY, PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 

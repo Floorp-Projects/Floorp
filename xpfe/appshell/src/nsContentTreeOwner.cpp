@@ -300,6 +300,101 @@ NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
    return ShowModal();
 }
 
+NS_IMETHODIMP
+nsContentTreeOwner::SetPersistence(PRBool aPersistX, PRBool aPersistY,
+                                   PRBool aPersistCX, PRBool aPersistCY,
+                                   PRBool aPersistSizeMode)
+{
+   nsCOMPtr<nsIDOMElement> docShellElement;
+   mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
+   if(!docShellElement)
+      return NS_ERROR_FAILURE;
+
+   nsAutoString persistString;
+   docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
+
+   PRBool saveString = PR_FALSE;
+   PRInt32 index;
+
+   // Set X
+   index = persistString.Find("screenX");
+   if(!aPersistX && (index >= 0)) {
+      persistString.Cut(index, 7);
+      saveString = PR_TRUE;
+   } else if(aPersistX && (index < 0 )) {
+     persistString.AppendWithConversion(" screenX");
+     saveString = PR_TRUE;
+   }
+   // Set Y
+   index = persistString.Find("screenY");
+   if(!aPersistY && (index >= 0)) {
+     persistString.Cut(index, 7);
+     saveString = PR_TRUE;
+   } else if(aPersistY && (index < 0 )) {
+     persistString.AppendWithConversion(" screenY");
+     saveString = PR_TRUE;
+   }
+   // Set CX
+   index = persistString.Find("width");
+   if(!aPersistCX && (index >= 0)) {
+     persistString.Cut(index, 5);
+     saveString = PR_TRUE;
+   } else if(aPersistCX && (index < 0 )) {
+     persistString.AppendWithConversion(" width");
+     saveString = PR_TRUE;
+   }
+   // Set CY
+   index = persistString.Find("height");
+   if(!aPersistCY && (index >= 0)) {
+     persistString.Cut(index, 6);
+     saveString = PR_TRUE;
+   } else if(aPersistCY && (index < 0 )) {
+     persistString.AppendWithConversion(" height");
+     saveString = PR_TRUE;
+   }
+   // Set SizeMode
+   index = persistString.Find("sizemode");
+   if (!aPersistSizeMode && (index >= 0)) {
+     persistString.Cut(index, 8);
+     saveString = PR_TRUE;
+   } else if (aPersistSizeMode && (index < 0)) {
+     persistString.AppendWithConversion(" sizemode");
+     saveString = PR_TRUE;
+   }
+
+   if(saveString) 
+      docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
+                                   PRBool* aPersistCX, PRBool* aPersistCY,
+                                   PRBool* aPersistSizeMode)
+{
+   nsCOMPtr<nsIDOMElement> docShellElement;
+   mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
+   if(!docShellElement) 
+      return NS_ERROR_FAILURE;
+
+   nsAutoString persistString;
+   docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
+
+   if(aPersistX)
+      *aPersistX = persistString.Find("screenX") >= 0 ? PR_TRUE : PR_FALSE;
+   if(aPersistY)
+      *aPersistY = persistString.Find("screenY") >= 0 ? PR_TRUE : PR_FALSE;
+   if(aPersistCX)
+      *aPersistCX = persistString.Find("width") >= 0 ? PR_TRUE : PR_FALSE;
+   if(aPersistCY)
+      *aPersistCY = persistString.Find("height") >= 0 ? PR_TRUE : PR_FALSE;
+   if(aPersistSizeMode)
+      *aPersistSizeMode = persistString.Find("sizemode") >= 0 ? PR_TRUE : PR_FALSE;
+
+   return NS_OK;
+}
+
 //*****************************************************************************
 // nsContentTreeOwner::nsIBaseWindow
 //*****************************************************************************   

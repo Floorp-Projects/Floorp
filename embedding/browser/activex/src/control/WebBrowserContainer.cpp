@@ -697,6 +697,22 @@ CWebBrowserContainer::ShowAsModal(void)
 }
 
 
+NS_IMETHODIMP
+CWebBrowserContainer::SetPersistence(PRBool aPersistX, PRBool aPersistY,
+                                     PRBool aPersistCX, PRBool aPersistCY,
+                                     PRBool aPersistSizeMode)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CWebBrowserContainer::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
+                                     PRBool* aPersistCX, PRBool* aPersistCY,
+                                     PRBool* aPersistSizeMode)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver implementation
 
