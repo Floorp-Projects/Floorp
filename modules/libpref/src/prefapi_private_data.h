@@ -40,6 +40,7 @@
 extern JSContext *			gMochaContext;
 extern PRBool				gErrorOpeningUserPrefs;
 extern PLDHashTable			gHashTable;
+extern PRBool               gDirty;
 PLDHashOperator PR_CALLBACK pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUint32, void *arg);
 
 int PR_CALLBACK pref_CompareStrings(const void *v1, const void *v2, void* unused);
