@@ -318,7 +318,20 @@ nsLocalFile::CreateAllAncestors(PRUint32 permissions)
 #ifdef DEBUG_NSIFILE
         fprintf(stderr, "nsIFile: mkdir(\"%s\")\n", buffer);
 #endif
-        int result = mkdir(buffer, permissions);
+        int mkdir_result = mkdir(buffer, permissions);
+        int mkdir_errno  = errno;
+        if (mkdir_result == -1) {
+            /*
+             * Always set |errno| to EEXIST if the dir already exists
+             * (we have to do this here since the errno value is not consistent
+             * in all cases - various reasons like different platform,
+             * automounter-controlled dir, etc. can affect it (see bug 125489
+             * for details)).
+             */
+            if (access(buffer, F_OK) == 0) {
+                mkdir_errno = EEXIST;
+            }
+        }
 
         /* Put the / back before we (maybe) return */
         *slashp = '/';
@@ -329,8 +342,8 @@ nsLocalFile::CreateAllAncestors(PRUint32 permissions)
          * ENOTDIR when we try to make the next component in the path,
          * either here on back in Create, and error out appropriately.
          */
-        if (result == -1 && errno != EEXIST)
-            return NSRESULT_FOR_ERRNO();
+        if (mkdir_result == -1 && mkdir_errno != EEXIST)
+            return nsresultForErrno(mkdir_errno);
     }
 
 #ifdef DEBUG_NSIFILE
