@@ -29,6 +29,7 @@ REQUIRES= xpcom \
 		  rdf \
 		  dom \
 		  content \
+		  docshell \
 		  $(NULL)
 
 
