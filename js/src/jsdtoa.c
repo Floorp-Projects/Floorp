@@ -307,7 +307,12 @@ extern double rnd_prod(double, double), rnd_quot(double, double);
 #ifdef JS_THREADSAFE
 #define MULTIPLE_THREADS
 static PRLock *freelist_lock;
-#define ACQUIRE_DTOA_LOCK() PR_Lock(freelist_lock)
+#define ACQUIRE_DTOA_LOCK()                                                   \
+    JS_BEGIN_MACRO                                                            \
+        if (!initialized)                                                     \
+            InitDtoa();                                                       \
+        PR_Lock(freelist_lock);                                               \
+    JS_END_MACRO
 #define RELEASE_DTOA_LOCK() PR_Unlock(freelist_lock)
 #else
 #undef MULTIPLE_THREADS
@@ -1226,9 +1231,6 @@ JS_strtod(CONST char *s00, char **se, int *err)
     ULong y, z;
     Bigint *bb, *bb1, *bd, *bd0, *bs, *delta;
 
-#ifdef JS_THREADSAFE
-    if (!initialized) InitDtoa();
-#endif
     *err = 0;
 
 	bb = bd = bs = delta = NULL;
@@ -2076,10 +2078,6 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     Bigint *b, *b1, *delta, *mlo, *mhi, *S;
     double d2, ds, eps;
     char *s;
-
-#ifdef JS_THREADSAFE
-    if (!initialized) InitDtoa();
-#endif
 
     if (word0(d) & Sign_bit) {
         /* set sign for everything, including 0's and NaNs */
