@@ -1,4 +1,4 @@
 cd Core
-cck.exe
+setup.exe
 echo off
 cls
