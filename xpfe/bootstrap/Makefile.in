@@ -160,6 +160,8 @@ RESFILE = splashos2.res
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CPPSRCS += nsNativeAppSupportMac.cpp
+CPPSRCS += nsNativeAppSupportBase.cpp
 LIBS	+= $(TK_LIBS)
 endif
 
@@ -343,6 +345,8 @@ $(LDSCRIPT): $(ORDERFILE)
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+
+INCLUDES += -I$(srcdir)/../appshell/src -I$(srcdir)/appleevents
 
 ifdef MOZ_DEBUG
 APP_NAME = MozillaDebug

@@ -51,6 +51,10 @@ XPIDLSRCS	= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 XPIDLSRCS	+= nsINativeAppSupportWin.idl
 endif
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXPORTS 	+= nsAppleEvents.h
+XPIDLSRCS	+= nsICloseAllWindows.idl
+endif
 
 include $(topsrcdir)/config/rules.mk
 

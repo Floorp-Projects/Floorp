@@ -43,6 +43,9 @@
 #include "nsString.h"
 #include "plstr.h"
 #include "nsNetUtil.h"
+#ifdef XP_MACOSX
+#include "nsCommandLineServiceMac.h"
+#endif
 
 nsCmdLineService::nsCmdLineService()
 	:  mArgCount(0), mArgc(0), mArgv(0)
@@ -94,6 +97,11 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 
   PRInt32   i=0;
   nsresult  rv = nsnull;
+
+#ifdef XP_MACOSX
+  rv = InitializeMacCommandLine(aArgc, aArgv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Initializing AppleEvents failed");
+#endif
 
   // Save aArgc and argv
   mArgc = aArgc;

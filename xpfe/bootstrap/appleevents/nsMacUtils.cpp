@@ -181,7 +181,7 @@ OSErr GetShortVersionString(short rID, StringPtr version)
 		error = noErr;
 	}
 	else
-		CopyPascalString(version, "\p<unknown>");
+ 		CopyPascalString(version, (StringPtr)"\p<unknown>");
 
 	return error;
 }

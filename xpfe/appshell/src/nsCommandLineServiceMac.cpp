@@ -42,6 +42,8 @@
 #include "nsCommandLineServiceMac.h"
 
 // Mozilla
+#include "nsDebug.h"
+#include "nsILocalFileMac.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsDebug.h"
@@ -69,7 +71,9 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prenv.h"
+#ifdef XP_MAC
 #include "pprio.h"	// PR_Init_Log
+#endif
 
 #include "nsAppShellCIDs.h"
 static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
@@ -77,6 +81,33 @@ static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 // the static instance
 nsMacCommandLine nsMacCommandLine::sMacCommandLine;
 
+/*
+ * ReadLine --
+ *
+ * Read in a line of text, terminated by CR or LF, from inStream into buf.
+ * The terminating CR or LF is not included.  The text in buf is terminated
+ * by a null byte.
+ * Returns the number of bytes in buf.  If EOF and zero bytes were read, returns -1.
+ */
+
+static PRInt32 ReadLine(FILE* inStream, char* buf, PRInt32 bufSize)
+{
+  PRInt32 charsRead = 0;
+  int c;
+  
+  if (bufSize < 2)
+    return -1;
+
+  while (charsRead < (bufSize-1)) {
+    c = getc(inStream);
+    if (c == EOF || c == '\n' || c == '\r')
+      break;
+    buf[charsRead++] = c;
+  }
+  buf[charsRead] = '\0';
+  
+  return (c == EOF && !charsRead) ? -1 : charsRead; 
+}
 
 //----------------------------------------------------------------------------------------
 nsMacCommandLine::nsMacCommandLine()
@@ -105,11 +136,19 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
   typedef char* charP;
   mArgs = new charP[kMaxTokens];
   mArgs[0] = nsnull;
-  argc = 0;
-  argv = mArgs;
-
+  
+#if defined(XP_MACOSX)
+  // Here, we may actually get useful args.
+  // Copy them before we reset argc & argv.
+  for (int arg = 0; arg < argc; arg++)
+    AddToCommandLine(argv[arg]);
+#else
   // init the args buffer with the program name
   mTempArgsString.Assign("mozilla");
+#endif
+
+  argc = 0;
+  argv = mArgs;
 
   // Set up AppleEvent handling.
   OSErr err = CreateAEHandlerClasses(false);
@@ -223,23 +262,28 @@ nsresult nsMacCommandLine::AddToEnvironmentVars(const char* inArgText)
 OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFileType)
 //----------------------------------------------------------------------------------------
 {
+  nsCOMPtr<nsILocalFileMac> inFile;
+  nsresult rv = NS_NewLocalFileWithFSSpec(&inFileSpec, PR_TRUE, getter_AddRefs(inFile));
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+
   if (!mStartedUp)
   {
     // Is it the right type to be a command-line file?
     if (inFileType == 'TEXT' || inFileType == 'CMDL')
     {
       // Can we open the file?
-      nsInputFileStream s(inFileSpec);
-      if (s.is_open())
+      FILE *fp = 0;
+      rv = inFile->OpenANSIFileDesc("r", &fp);
+      if (NS_SUCCEEDED(rv))
       {
         Boolean foundArgs = false;
         Boolean foundEnv = false;
         char chars[1024];
         static const char kCommandLinePrefix[] = "ARGS:";
         static const char kEnvVarLinePrefix[] = "ENV:";
-        s.readline(chars, sizeof(chars));
 
-        do
+        while (ReadLine(fp, chars, sizeof(chars)) != -1)
         {       // See if there are any command line or environment var settings
           if (PL_strstr(chars, kCommandLinePrefix) == chars)
           {
@@ -251,17 +295,15 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
             (void)AddToEnvironmentVars(chars + sizeof(kEnvVarLinePrefix) - 1);
             foundEnv = true;
           }
+        }
 
-          // Clear the buffer and get the next line from the command line file
-          chars[0] = '\0';
-          s.readline(chars, sizeof(chars));
-        } while (chars && (chars[0] != '\0'));
-
+        fclose(fp);
+#ifndef XP_MACOSX
         // If we found any environment vars we need to re-init NSPR's logging
         // so that it knows what the new vars are
         if (foundEnv)
           PR_Init_Log();
-
+#endif
         // If we found a command line or environment vars we want to return now
         // raather than trying to open the file as a URL
         if (foundArgs || foundEnv)
@@ -274,13 +316,8 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
     // way as if they had been typed on the command line in Unix or DOS.
     return AddToCommandLine("-url", inFileSpec);
   }
+
   // Final case: we're not just starting up. How do we handle this?
-  nsresult rv;
-  FSSpec nonConstSpec = inFileSpec;
-  nsCOMPtr<nsILocalFileMac> inFile;
-  rv = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_TRUE, getter_AddRefs(inFile));
-  if (NS_FAILED(rv))
-    return errAEEventNotHandled;
   nsCAutoString specBuf;
   rv = NS_GetURLSpecFromFile(inFile, specBuf);
   if (NS_FAILED(rv))
@@ -337,13 +374,13 @@ nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
 OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
 //----------------------------------------------------------------------------------------
 {
-	OSErr err;
+	OSErr err = errAEEventNotHandled;
 	if (mStartedUp)
 	{
 		nsresult rv;
 		rv = OpenWindow("chrome://navigator/content", NS_ConvertASCIItoUCS2(url).get());
 		if (NS_FAILED(rv))
-			return errAEEventNotHandled;
+			return err;
 	}
 	else
 		err = AddToCommandLine(url);
