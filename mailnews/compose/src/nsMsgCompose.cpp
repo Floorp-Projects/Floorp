@@ -1086,53 +1086,6 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
               PR_Free(aCString);
             }
           
-            if (type == nsIMsgCompType::ReplyAll)
-            {
-              nsXPIDLCString recipients;
-              rv = message->GetRecipients(getter_Copies(recipients));
-              if (NS_FAILED(rv)) return rv;
-              nsAutoString recipStr; recipStr.AssignWithConversion(recipients);
-              CleanUpRecipients(recipStr);
-              
-              nsXPIDLCString ccList;
-              rv = message->GetCcList(getter_Copies(ccList));
-              if (NS_FAILED(rv)) return rv;
-              
-              nsAutoString ccListStr; ccListStr.AssignWithConversion(ccList);
-              CleanUpRecipients(ccListStr);
-              if (recipStr.Length() > 0 && ccListStr.Length() > 0)
-                recipStr.AppendWithConversion(", ");
-              recipStr += ccListStr;
-              {
-                nsCAutoString recipStrCStr; recipStrCStr.AssignWithConversion(recipStr);
-                m_compFields->SetCc(recipStrCStr);
-              }
-              
-              if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(recipStr, encodedCharset, decodedString)))
-                if (NS_SUCCEEDED(rv = ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), decodedString, &aCString)))
-                {
-					        char * resultStr = nsnull;
-					        nsCString addressToBeRemoved(m_compFields->GetTo());
-					  	
-		            if (m_identity)
-		            {
-		                nsXPIDLCString email;
-		                m_identity->GetEmail(getter_Copies(email));
-		                addressToBeRemoved += ", ";
-		                addressToBeRemoved += NS_CONST_CAST(char*, (const char *)email);
-					}
-		      		rv= RemoveDuplicateAddresses(aCString, (char *)addressToBeRemoved, PR_TRUE, &resultStr);
-		      		if (NS_SUCCEEDED(rv))
-					{
-		                PR_Free(aCString);
-		                aCString = resultStr;
-		            }
-
-                  	m_compFields->SetCc(aCString);
-                    PR_Free(aCString);
-                }
-            }
-          
             // Setup quoting callbacks for later...
             mWhatHolder = 1;
             mQuoteURI = originalMsgURI;
@@ -1308,6 +1261,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
       if (compFields)
       {
         aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
+        nsAutoString recipient;
+        nsAutoString cc;
         nsAutoString replyTo;
         nsAutoString newgroups;
         nsAutoString followUpTo;
@@ -1315,8 +1270,34 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
         nsAutoString references;
         char *outCString = nsnull;
         PRUnichar emptyUnichar = 0;
-        PRBool toChanged = PR_FALSE;
+        PRBool needToRemoveDup = PR_FALSE;
         
+        if (type == nsIMsgCompType::ReplyAll)
+        {
+          mHeaders->ExtractHeader(HEADER_TO, PR_TRUE, &outCString);
+          if (outCString)
+          {
+            // Convert fields from UTF-8
+            ConvertToUnicode(aCharset, outCString, recipient);
+            PR_FREEIF(outCString);
+          }
+              
+          mHeaders->ExtractHeader(HEADER_CC, PR_TRUE, &outCString);
+          if (outCString)
+          {
+            // Convert fields from UTF-8
+            ConvertToUnicode(aCharset, outCString, cc);
+            PR_FREEIF(outCString);
+          }
+              
+          if (recipient.Length() > 0 && cc.Length() > 0)
+            recipient.AppendWithConversion(", ");
+          recipient += cc;
+          compFields->SetCc(recipient.GetUnicode());
+
+          needToRemoveDup = PR_TRUE;
+        }
+              
         mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
         if (outCString)
         {
@@ -1360,7 +1341,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
         if (! replyTo.IsEmpty())
         {
           compFields->SetTo(replyTo.GetUnicode());
-          toChanged = PR_TRUE;
+          needToRemoveDup = PR_TRUE;
         }
         
         if (! newgroups.IsEmpty())
@@ -1383,19 +1364,28 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
         references += messageId;
         compFields->SetReferences(references.GetUnicode());
         
-        if (toChanged)
+        if (needToRemoveDup)
         {
           //Remove duplicate addresses between TO && CC
           char * resultStr;
           nsMsgCompFields* _compFields = (nsMsgCompFields*)compFields;
           if (NS_SUCCEEDED(rv))
           {
-            rv= RemoveDuplicateAddresses(_compFields->GetCc(), _compFields->GetTo(), PR_FALSE, &resultStr);
-	          	if (NS_SUCCEEDED(rv))
-              {
-                _compFields->SetCc(resultStr);
-                PR_Free(resultStr);
-              }
+            nsCString addressToBeRemoved(_compFields->GetTo());
+            if (mIdentity)
+		        {
+		          nsXPIDLCString email;
+		          mIdentity->GetEmail(getter_Copies(email));
+		          addressToBeRemoved += ", ";
+		          addressToBeRemoved += NS_CONST_CAST(char*, (const char *)email);
+					  }
+
+            rv= RemoveDuplicateAddresses(_compFields->GetCc(), (char *)addressToBeRemoved, PR_TRUE, &resultStr);
+	          if (NS_SUCCEEDED(rv))
+            {
+              _compFields->SetCc(resultStr);
+              PR_Free(resultStr);
+            }
           }
         }    
 
