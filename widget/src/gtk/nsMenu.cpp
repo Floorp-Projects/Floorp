@@ -35,30 +35,30 @@ static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(nsIMenu::GetIID())) {                                         
-    *aInstancePtr = (void*)(nsIMenu*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenu*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
+nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsIMenuListener::GetIID())) {                                      
-    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  return NS_NOINTERFACE;                                                 
+
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(nsIMenu::GetIID())) {
+    *aInstancePtr = (void*)(nsIMenu*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenu*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIMenuListener::GetIID())) {
+    *aInstancePtr = (void*)(nsIMenuListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
 }
 
 NS_IMPL_ADDREF(nsMenu)
@@ -360,12 +360,12 @@ NS_METHOD nsMenu::RemoveAll()
       if (NS_OK == item->QueryInterface(nsIMenuItem::GetIID(), (void**)&menuitem)) {
         // we do this twice because we have to do it once for QueryInterface,
         // then we want to get rid of it.
-	//g_print("remove nsMenuItem\n");
+        // g_print("remove nsMenuItem\n");
         NS_RELEASE(menuitem);
         NS_RELEASE(item);
         menuitem = nsnull;
       } else if (NS_OK == item->QueryInterface(nsIMenu::GetIID(), (void**)&menu)) {
-        //g_print("remove nsMenu\n");
+        // g_print("remove nsMenu\n");
         NS_RELEASE(menu);
         NS_RELEASE(item);
         menu = nsnull;
