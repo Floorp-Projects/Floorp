@@ -23,6 +23,7 @@
   nsIAccountServices.
 
 */
+#include "windows.h"
 #include "nscore.h"
 #include "nsIAccountServices.h"
 #include "nsIAllocator.h"
@@ -46,6 +47,12 @@ public:
 
     // nsIAccount interface
 	NS_IMETHOD SetDialerConfig(const char* aValue);
+	NS_IMETHOD GetAcctConfig(char **_retval);
+	NS_IMETHOD GetModemConfig(char **_retval);
+	NS_IMETHOD GetSiteName(char **_retval);
+	NS_IMETHOD GetPhone(char **_retval);
+	NS_IMETHOD LoadValues(void);
+	NS_IMETHOD CheckForDun(char **_retval);
 
 private:
 	nsIAccount *mAccount;
@@ -103,3 +110,58 @@ AccountServicesImpl::SetDialerConfig(const char* aPrefix)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+AccountServicesImpl::GetAcctConfig(char** AccountList)
+{
+	nsString localVar;
+	mAccount->GetAcctConfig(localVar);
+	*AccountList = PL_strdup(localVar.ToNewCString());
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+AccountServicesImpl::GetModemConfig(char** ModemList)
+{
+	nsString localVar;
+	mAccount->GetModemConfig(localVar);
+	*ModemList = PL_strdup(localVar.ToNewCString());
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+AccountServicesImpl::GetSiteName(char** SiteList)
+{
+	nsString localVar;
+	mAccount->GetSiteName(localVar);
+	*SiteList = PL_strdup(localVar.ToNewCString());
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+AccountServicesImpl::GetPhone(char** PhoneList)
+{
+	nsString localVar;
+	mAccount->GetPhone(localVar);
+	*PhoneList = PL_strdup(localVar.ToNewCString());
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+AccountServicesImpl::LoadValues(void)
+{
+	mAccount->LoadValues();
+
+	return NS_OK;
+}
+NS_IMETHODIMP
+AccountServicesImpl::CheckForDun(char** dunlist)
+{
+	nsString localVar;
+	mAccount->CheckForDun(localVar);
+	*dunlist =PL_strdup(localVar.ToNewCString());
+	return NS_OK;
+}
