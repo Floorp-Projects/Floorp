@@ -26,7 +26,6 @@
 #include "nsParserUtils.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsICharsetAlias.h"
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsNetUtil.h"
@@ -45,7 +44,6 @@
 #include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
 
-static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //////////////////////////////////////////////////////////////
@@ -772,49 +770,21 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 
   if (stringLen) {
-    nsCAutoString characterSet, preferred;
-    nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-
+    nsCAutoString characterSet;
     nsCOMPtr<nsIChannel> channel;
 
     channel = do_QueryInterface(req);
-    nsAutoString charset;
     if (channel) {
-      nsCAutoString charsetVal;
-      rv = channel->GetContentCharset(charsetVal);
-    
-      if (NS_SUCCEEDED(rv)) {
-        charset = NS_ConvertASCIItoUCS2(charsetVal);      
-        nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
-
-        if(NS_SUCCEEDED(rv) && calias) {
-          NS_LossyConvertUCS2toASCII asciiCharset(charset);
-
-          rv = calias->GetPreferred(asciiCharset, preferred);
-
-          if(NS_SUCCEEDED(rv)) {
-            characterSet = preferred;
-          }
-        }
-      }
+      rv = channel->GetContentCharset(characterSet);
     }
 
     if (NS_FAILED(rv) || characterSet.IsEmpty()) {
       // Check the charset attribute to determine script charset.
-      request->mElement->GetCharset(charset);
-      if (!charset.IsEmpty()) {
-        // Get the preferred charset from charset alias service if there
-        // is one.
-        nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
-        if (NS_SUCCEEDED(rv)) {
-          NS_LossyConvertUCS2toASCII asciiCharset(charset);
-
-          rv = calias->GetPreferred(asciiCharset, preferred);
-          
-          if(NS_SUCCEEDED(rv)) {
-            characterSet = preferred;
-          }
-        }
+      nsAutoString charset;
+      rv = request->mElement->GetCharset(charset);
+      if (NS_SUCCEEDED(rv)) {  
+        // charset name is always ASCII.
+        LossyCopyUTF16toASCII(charset, characterSet);
       }
     }
 
@@ -828,16 +798,18 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
 
     if (characterSet.IsEmpty()) {
-      // fall back to ISO-8851-1, see bug 118404
+      // fall back to ISO-8859-1, see bug 118404
       characterSet = NS_LITERAL_CSTRING("ISO-8859-1");
     }
     
     nsCOMPtr<nsICharsetConverterManager> charsetConv =
       do_GetService(kCharsetConverterManagerCID, &rv);
 
+    nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
+
     if (NS_SUCCEEDED(rv) && charsetConv) {
-      rv = charsetConv->GetUnicodeDecoderRaw(characterSet.get(),
-                                             getter_AddRefs(unicodeDecoder));
+      rv = charsetConv->GetUnicodeDecoder(characterSet.get(),
+                                          getter_AddRefs(unicodeDecoder));
     }
 
     // converts from the charset to unicode
