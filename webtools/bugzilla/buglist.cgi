@@ -395,8 +395,24 @@ if ($::FORM{'keywords'}) {
     }
     if (@list) {
         $query =~ s/where/, keywords where/;
-        $query .= "and keywords.bug_id = bugs.bug_id and (" .
-            join(" $::FORM{'keywords_type'} ", @list) . ")\n";
+        my $type = $::FORM{'keywords_type'};
+        my $notopt = "";
+        if ($type eq "nowords") {
+            # Ought to take advantage of keyword table somehow! ###
+            my $extra = GetByWordList("bugs.keywords", $::FORM{'keywords'},
+                                      "or");
+            $extra =~ s/AND/AND NOT/i;
+            $query .= $extra;
+        } else {
+            $query .= "and keywords.bug_id = bugs.bug_id and $notopt (" .
+                join(" or ", @list) . ")\n";
+            if ($type eq "allwords") {
+                # This needs to be tuned to take better advantage of the
+                # keyword table!
+                $query .= GetByWordList("bugs.keywords", $::FORM{'keywords'},
+                                        "and");
+            }
+        }
     }
 }
 

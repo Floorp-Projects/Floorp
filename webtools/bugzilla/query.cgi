@@ -136,8 +136,8 @@ sub ProcessFormStuff {
                       "changedin", "votes", "short_desc", "short_desc_type",
                       "long_desc", "long_desc_type", "bug_file_loc",
                       "bug_file_loc_type", "status_whiteboard",
-                      "status_whiteboard_type", "keywords", "bug_id",
-                      "bugidtype") {
+                      "status_whiteboard_type", "bug_id",
+                      "bugidtype", "keywords", "keywords_type") {
         $default{$name} = "";
         $type{$name} = 0;
     }
@@ -643,18 +643,19 @@ if (@::legal_keywords) {
     print qq{
 <TR>
 <TD ALIGN="right"><A HREF="describekeywords.cgi">Keywords</A>:</TD>
-<TD><INPUT NAME="keywords" SIZE=30 VALUE=$def></TD>
-<TD><SELECT NAME=keywords_type>
+<TD><INPUT NAME="keywords" SIZE=30 VALUE="$def"></TD>
+<TD>
 };
-    foreach my $i (["or", "Any of the listed keywords set"]) {
-                my ($n, $d) = (@$i);
-        my $sel = "";
-        if ($default{"keywords"} eq $n) {
-            $sel = " SELECTED";
-        }
-        print qq{<OPTION VALUE="$n"$sel>$d\n};
+    my $type = $default{"keywords_type"};
+    if ($type eq "or") {        # Backward compatability hack.
+        $type = "anywords";
     }
-    print qq{</SELECT></TD></TR>};
+    print BuildPulldown("keywords_type",
+                        [["anywords", "Any of the listed keywords set"],
+                         ["allwords", "All of the listed keywords set"],
+                         ["nowords", "None of the listed keywords set"]],
+                        $type);
+    print qq{</TD></TR>};
 }
 
 print "
