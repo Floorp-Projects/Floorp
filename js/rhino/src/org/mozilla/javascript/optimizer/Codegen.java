@@ -1888,12 +1888,13 @@ public class Codegen extends Interpreter {
         if (firstArgDone && (type == TokenStream.NEW))
             constructArgArray(childCount - argSkipCount);
 
-        boolean isSpecialCall = node.getIntProp(Node.SPECIALCALL_PROP, 0) != 0;
+        int callType = node.getIntProp(Node.SPECIALCALL_PROP,
+                                       Node.NON_SPECIALCALL);
         boolean isSimpleCall = false;
         String simpleCallName = null;
         if (!firstArgDone && type != TokenStream.NEW) {
             simpleCallName = getSimpleCallName(node);
-            if (simpleCallName != null && !isSpecialCall) {
+            if (simpleCallName != null && callType == Node.NON_SPECIALCALL) {
                 isSimpleCall = true;
                 push(simpleCallName);
                 aload(variableObjectLocal);
@@ -1955,7 +1956,7 @@ public class Codegen extends Interpreter {
         String methodName;
         String callSignature;
 
-        if (isSpecialCall) {
+        if (callType != Node.NON_SPECIALCALL) {
             className = "org/mozilla/javascript/ScriptRuntime";
             if (type == TokenStream.NEW) {
                 methodName = "newObjectSpecial";

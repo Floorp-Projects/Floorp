@@ -415,7 +415,9 @@ public class Interpreter {
                     child = child.getNext();
                     childCount++;
                 }
-                if (node.getIntProp(Node.SPECIALCALL_PROP, 0) != 0) {
+                int callType = node.getIntProp(Node.SPECIALCALL_PROP,
+                                               Node.NON_SPECIALCALL);
+                if (callType != Node.NON_SPECIALCALL) {
                     // embed line number and source filename
                     iCodeTop = addByte(TokenStream.CALLSPECIAL, iCodeTop);
                     iCodeTop = addShort(itsLineNumber, iCodeTop);

@@ -313,6 +313,11 @@ public class Node implements Cloneable {
         LEFT = 1,
         RIGHT = 2;
 
+    public static final int    // this value of the SPECIALCALL_PROP specifies
+        NON_SPECIALCALL  = 0,
+        SPECIALCALL_EVAL = 1,
+        SPECIALCALL_WITH = 2;
+
     private static final String propToString(int propType) {
         if (Context.printTrees) {
             // If Context.printTrees is false, the compiler

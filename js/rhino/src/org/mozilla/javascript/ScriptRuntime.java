@@ -92,7 +92,6 @@ public class ScriptRuntime {
         ContextClass      = classOrNull("org.mozilla.javascript.Context"),
         FunctionClass     = classOrNull("org.mozilla.javascript.Function"),
         NativeGlobalClass = classOrNull("org.mozilla.javascript.NativeGlobal"),
-        NativeScriptClass = classOrNull("org.mozilla.javascript.NativeScript"),
         NativeWithClass   = classOrNull("org.mozilla.javascript.NativeWith"),
         ScriptableClass   = classOrNull("org.mozilla.javascript.Scriptable"),
         ScriptableObjectClass = classOrNull(

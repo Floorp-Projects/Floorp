@@ -316,17 +316,23 @@ public class NodeTransformer {
                 break;
               }
 
-              case TokenStream.CALL:
-                if (isSpecialCallName(tree, node))
-                    node.putIntProp(Node.SPECIALCALL_PROP, 1);
+              case TokenStream.CALL: {
+                int callType = getSpecialCallType(tree, node);
+                if (callType != Node.NON_SPECIALCALL) {
+                    node.putIntProp(Node.SPECIALCALL_PROP, callType);
+                }
                 visitCall(node, tree);
                 break;
+              }
 
-              case TokenStream.NEW:
-                if (isSpecialCallName(tree, node))
-                    node.putIntProp(Node.SPECIALCALL_PROP, 1);
+              case TokenStream.NEW: {
+                int callType = getSpecialCallType(tree, node);
+                if (callType != Node.NON_SPECIALCALL) {
+                    node.putIntProp(Node.SPECIALCALL_PROP, callType);
+                }
                 visitNew(node, tree);
                 break;
+              }
 
               case TokenStream.DOT:
               {
@@ -521,25 +527,30 @@ public class NodeTransformer {
      * Return true if the node is a call to a function that requires
      * access to the enclosing activation object.
      */
-    private boolean isSpecialCallName(Node tree, Node node) {
+    private int getSpecialCallType(Node tree, Node node) {
         Node left = node.getFirstChild();
-        boolean isSpecial = false;
+        int type = Node.NON_SPECIALCALL;
         if (left.getType() == TokenStream.NAME) {
             String name = left.getString();
-            isSpecial = name.equals("eval") || name.equals("With");
+            if (name.equals("eval")) {
+                type = Node.SPECIALCALL_EVAL;
+            } else if (name.equals("With")) {
+                type = Node.SPECIALCALL_WITH;
+            }
         } else {
             if (left.getType() == TokenStream.GETPROP) {
                 String name = left.getLastChild().getString();
-                isSpecial = name.equals("exec");
+                if (name.equals("eval")) {
+                    type = Node.SPECIALCALL_EVAL;
+                }
             }
         }
-        if (isSpecial) {
+        if (type != Node.NON_SPECIALCALL) {
             // Calls to these functions require activation objects.
             if (inFunction)
                 ((FunctionNode) tree).setRequiresActivation(true);
-            return true;
         }
-        return false;
+        return type;
     }
 
     private void
