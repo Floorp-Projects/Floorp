@@ -68,7 +68,7 @@
 #include "nsIProfile.h"
 #include "nsIMsgFolder.h"
 #include "nsImportStringBundle.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 
 #include "ImportDebug.h"
 
@@ -600,9 +600,9 @@ void nsImportGenericMail::ReportError( PRInt32 id, const PRUnichar *pName, nsStr
 		return;
 	// load the error string
 	PRUnichar *pFmt = nsImportStringBundle::GetStringByID( id);
-	PRUnichar *pText = nsTextFormater::smprintf( pFmt, pName);
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, pName);
 	pStream->Append( pText);
-	nsTextFormater::smprintf_free( pText);
+	nsTextFormatter::smprintf_free( pText);
 	nsImportStringBundle::FreeString( pFmt);
 	pStream->Append( NS_LINEBREAK);
 }

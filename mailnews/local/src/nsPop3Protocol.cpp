@@ -38,7 +38,7 @@
 #include "nsIPrompt.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsLocalStringBundle.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h" 
 
@@ -533,18 +533,18 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         {
             PRUnichar *passwordTemplate = LocalGetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC);
             if (m_commandResponse.Length())
-                passwordPromptString = nsTextFormater::smprintf(passwordTemplate, m_commandResponse.GetBuffer(), (const char *) userName, (const char *) hostName);
+                passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, m_commandResponse.GetBuffer(), (const char *) userName, (const char *) hostName);
             else
             {
                 PRUnichar * noAnswerText = LocalGetStringByID(POP3_NO_ANSWER);
-                passwordPromptString = nsTextFormater::smprintf(passwordTemplate, noAnswerText, (const char *) userName, (const char *) hostName);
+                passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, noAnswerText, (const char *) userName, (const char *) hostName);
                 nsCRT::free(noAnswerText);
             } 
         } // otherwise this is the first time we've asked about the server's password so show a first time prompt
         else
         {
             PRUnichar * passwordTemplate = LocalGetStringByID(POP3_ENTER_PASSWORD_PROMPT);
-            passwordPromptString = nsTextFormater::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
+            passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
             nsCRT::free(passwordTemplate);
         }
 
@@ -552,7 +552,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         PRUnichar * passwordTitle = LocalGetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE);
         rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle, aPassword);
         nsCRT::free(passwordTitle);
-        nsTextFormater::smprintf_free(passwordPromptString);
+        nsTextFormatter::smprintf_free(passwordPromptString);
 
         ClearFlag(POP3_PASSWORD_FAILED);
     } // if we have a server
@@ -1290,11 +1290,11 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
 			m_url->GetHost(getter_Copies(hostName));
 
 			if (hostName)
-				statusString = nsTextFormater::smprintf(statusTemplate, (const char *) hostName);  
+				statusString = nsTextFormatter::smprintf(statusTemplate, (const char *) hostName);  
 			else
-				statusString = nsTextFormater::smprintf(statusTemplate, "(null)"); 
+				statusString = nsTextFormatter::smprintf(statusTemplate, "(null)"); 
 			UpdateStatusWithString(statusString);
-			nsTextFormater::smprintf_free(statusString);
+			nsTextFormatter::smprintf_free(statusString);
 			nsCRT::free(statusTemplate);
 		}
 
@@ -2182,11 +2182,11 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
 			m_url->GetHost(getter_Copies(hostName));
 
 			if (hostName)
-				statusString = nsTextFormater::smprintf(statusTemplate, (const char *) hostName);  
+				statusString = nsTextFormatter::smprintf(statusTemplate, (const char *) hostName);  
 			else
-				statusString = nsTextFormater::smprintf(statusTemplate, "(null)"); 
+				statusString = nsTextFormatter::smprintf(statusTemplate, "(null)"); 
 			UpdateStatusWithString(statusString);
-			nsTextFormater::smprintf_free(statusString);
+			nsTextFormatter::smprintf_free(statusString);
 			nsCRT::free(statusTemplate);
 		}
 
@@ -2683,11 +2683,11 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 						PRUnichar * statusTemplate = LocalGetStringByID(POP3_DOWNLOAD_COUNT);
 						if (statusTemplate)
 						{
-							PRUnichar * statusString = nsTextFormater::smprintf(statusTemplate, 
+							PRUnichar * statusString = nsTextFormatter::smprintf(statusTemplate, 
                               m_pop3ConData->real_new_counter - 1,
                               m_pop3ConData->really_new_messages);  
 							UpdateStatusWithString(statusString);
-							nsTextFormater::smprintf_free(statusString);
+							nsTextFormatter::smprintf_free(statusString);
 							nsCRT::free(statusTemplate);
 
 						}
@@ -2767,11 +2767,11 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 				PRUnichar * statusTemplate = LocalGetStringByID(POP3_DOWNLOAD_COUNT);
 				if (statusTemplate)
 				{
-					PRUnichar * statusString = nsTextFormater::smprintf(statusTemplate, 
+					PRUnichar * statusString = nsTextFormatter::smprintf(statusTemplate, 
                              m_pop3ConData->real_new_counter - 1,
                               m_pop3ConData->really_new_messages);  
 					UpdateStatusWithString(statusString);
-					nsTextFormater::smprintf_free(statusString);
+					nsTextFormatter::smprintf_free(statusString);
 					nsCRT::free(statusTemplate);
 
 				}

@@ -64,7 +64,7 @@ CPPSRCS		= \
 		nsUnicharBuffer.cpp \
 		nsVoidArray.cpp \
 		nsXPIDLString.cpp \
-		nsTextFormater.cpp \
+		nsTextFormatter.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -95,7 +95,7 @@ EXPORTS		= \
 		nsVoidArray.h \
 		nsXPIDLString.h \
 		plvector.h \
-		nsTextFormater.h \
+		nsTextFormatter.h \
 		$(NULL)			
 
 XPIDLSRCS	= \

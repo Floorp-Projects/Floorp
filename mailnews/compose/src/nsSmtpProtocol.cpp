@@ -33,7 +33,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsString.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "nsIMsgIdentity.h"
 
 #include "prtime.h"
@@ -97,19 +97,19 @@ nsresult nsExplainErrorDetails(int code, ...)
 		case NS_ERROR_SENDING_DATA_COMMAND:
 		case NS_ERROR_SENDING_MESSAGE:   
 			eMsg = ComposeGetStringByID(code);
-			msg = nsTextFormater::vsmprintf(eMsg, args);
+			msg = nsTextFormatter::vsmprintf(eMsg, args);
 			nsCRT::free(eMsg);
 			break;
 		default:
 			eMsg = ComposeGetStringByID(NS_ERROR_COMMUNICATIONS_ERROR);
-			msg = nsTextFormater::smprintf(eMsg, code);
+			msg = nsTextFormatter::smprintf(eMsg, code);
 			nsCRT::free(eMsg);
 			break;
 	}
 
 	if (msg) {
 		rv = dialog->Alert(msg);
-		nsTextFormater::smprintf_free(msg);
+		nsTextFormatter::smprintf_free(msg);
 	}
 
 	va_end (args);

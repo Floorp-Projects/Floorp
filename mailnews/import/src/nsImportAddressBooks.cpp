@@ -46,7 +46,7 @@
 #include "nsAbBaseCID.h"
 #include "nsIAbDirectory.h"
 #include "nsImportStringBundle.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "ImportDebug.h"
 
 static NS_DEFINE_CID(kImportServiceCID, NS_IMPORTSERVICE_CID);
@@ -879,9 +879,9 @@ void nsImportGenericAddressBooks::ReportError( PRUnichar *pName, nsString *pStre
 		return;
 	// load the error string
 	PRUnichar *pFmt = nsImportStringBundle::GetStringByID( IMPORT_ERROR_GETABOOK);
-	PRUnichar *pText = nsTextFormater::smprintf( pFmt, pName);
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, pName);
 	pStream->Append( pText);
-	nsTextFormater::smprintf_free( pText);
+	nsTextFormatter::smprintf_free( pText);
 	nsImportStringBundle::FreeString( pFmt);
 	pStream->Append( NS_LINEBREAK);
 }

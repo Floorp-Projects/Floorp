@@ -25,7 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsFontMetricsWin.h"
 #include "nsQuickSort.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "prmem.h"
 #include "plhash.h"
 
@@ -1512,7 +1512,7 @@ nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
     }
     PRUnichar name[LF_FACESIZE] = { 0 };
     PRUnichar format[] = { '%', 's', 0 };
-    PRUint32 n = nsTextFormater::snprintf(name, LF_FACESIZE, format, *aName);
+    PRUint32 n = nsTextFormatter::snprintf(name, LF_FACESIZE, format, *aName);
     nsAllocator::Free(*aName);
     *aName = nsnull;
     if (n && (n != (PRUint32) -1)) {
@@ -3065,7 +3065,7 @@ nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
     }
     PRUnichar name[LF_FACESIZE] = { 0 };
     PRUnichar format[] = { '%', 's', 0 };
-    PRUint32 n = nsTextFormater::snprintf(name, LF_FACESIZE, format, *aName);
+    PRUint32 n = nsTextFormatter::snprintf(name, LF_FACESIZE, format, *aName);
     nsAllocator::Free(*aName);
     *aName = nsnull;
     if (n && (n != (PRUint32) -1)) {

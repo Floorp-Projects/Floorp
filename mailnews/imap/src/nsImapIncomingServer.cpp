@@ -37,7 +37,7 @@
 #include "nsImapStringBundle.h"
 #include "nsIPref.h"
 #include "nsMsgFolderFlags.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
@@ -1322,9 +1322,9 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
     GetHostName(getter_Copies(hostName));
     GetUsername(getter_Copies(userName));
 
-    passwordText = nsTextFormater::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
+    passwordText = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
     nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aPassword);
-    nsTextFormater::smprintf_free(passwordText);
+    nsTextFormatter::smprintf_free(passwordText);
     nsCRT::free(passwordTemplate);
     nsCRT::free(passwordTitle);
     return rv;

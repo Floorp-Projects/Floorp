@@ -41,7 +41,7 @@
 #include "nsIStringCharsetDetector.h"
 #include "nsIPref.h"
 #include "mimebuf.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "nsMsgI18N.h"
 #include "nsMimeTypes.h"
 
@@ -767,7 +767,7 @@ convert_and_encode:
         nsAutoString fmt("%s");
         char aChar = begin[len];
         begin[len] = '\0';
-        u = nsTextFormater::smprintf(fmt.GetUnicode(), begin);
+        u = nsTextFormatter::smprintf(fmt.GetUnicode(), begin);
         begin[len] = aChar;
         if (NULL == u) {
             PR_FREEIF(srcbuf);
@@ -777,7 +777,7 @@ convert_and_encode:
         nsresult rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, 
                                              !nsCRT::strcasecmp(charset, "us-ascii") ? "ISO-8859-1" : charset, 
                                              u, &buf1);
-        nsTextFormater::smprintf_free(u);
+        nsTextFormatter::smprintf_free(u);
         if (NS_FAILED(rv) || NULL == buf1) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);

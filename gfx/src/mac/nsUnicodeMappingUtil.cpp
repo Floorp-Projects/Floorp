@@ -21,7 +21,7 @@
  */
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "nsUnicodeMappingUtil.h"
 #include "nsUnicodeFontMappingCache.h"
 #include "nsDeviceContextMac.h"
@@ -264,7 +264,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
   }
   PRUnichar valueInUCS2[FACESIZE]= { 0 };
   PRUnichar format[] = { '%', 's', 0 };
-  PRUint32 n = nsTextFormater::snprintf(valueInUCS2, FACESIZE, format, valueInUTF8);
+  PRUint32 n = nsTextFormatter::snprintf(valueInUCS2, FACESIZE, format, valueInUTF8);
   Recycle(valueInUTF8);
   if(n == 0)
   	return;     

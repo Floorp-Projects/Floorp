@@ -36,7 +36,7 @@
 #include "nsIImportFieldMap.h"
 #include "nsIOutputStream.h"
 #include "nsIAddrDatabase.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "nsTextStringBundle.h"
 #include "nsTextAddress.h"
 
@@ -400,9 +400,9 @@ void ImportAddressImpl::ReportError( PRInt32 errorNum, nsString& name, nsString 
 		return;
 	// load the error string
 	PRUnichar *pFmt = nsTextStringBundle::GetStringByID( errorNum);
-	PRUnichar *pText = nsTextFormater::smprintf( pFmt, name.GetUnicode());
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
 	pStream->Append( pText);
-	nsTextFormater::smprintf_free( pText);
+	nsTextFormatter::smprintf_free( pText);
 	nsTextStringBundle::FreeString( pFmt);
 	pStream->Append( NS_LINEBREAK);
 }

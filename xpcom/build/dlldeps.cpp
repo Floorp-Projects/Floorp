@@ -53,7 +53,7 @@
 #include "nsCWeakReference.h"
 #include "nsWeakReference.h"
 #include "nsISizeOfHandler.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "nsStorageStream.h"
 #include "nsLinebreakConverter.h"
 #include "nsIBinaryInputStream.h"
@@ -77,7 +77,7 @@ TestSegmentedBuffer();
 
 void XXXNeverCalled()
 {
-    nsTextFormater::snprintf(nsnull,0,nsnull);
+    nsTextFormatter::snprintf(nsnull,0,nsnull);
     dummyComparitor dummy;
     nsVoidArray();
     nsAVLTree(dummy, nsnull);

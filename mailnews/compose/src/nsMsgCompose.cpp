@@ -45,7 +45,7 @@
 #include "nsMsgPrompts.h"
 #include "nsMimeTypes.h"
 #include "nsICharsetConverterManager.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIDOMSelection.h"
@@ -1247,7 +1247,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
     PRUnichar       *u = nsnull; 
     nsAutoString    fmt("%s");
 
-    u = nsTextFormater::smprintf(fmt.GetUnicode(), newBuf); // this converts UTF-8 to UCS-2 
+    u = nsTextFormatter::smprintf(fmt.GetUnicode(), newBuf); // this converts UTF-8 to UCS-2 
     if (u)
     {
       mMsgBody.Append(u);
