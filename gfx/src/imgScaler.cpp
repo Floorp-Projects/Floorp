@@ -102,9 +102,9 @@ RectStretch(long xs1,long ys1,long xs2,long ys2,
   dy = abs((int)(ys2-ys1));
   sx = sign(yd2-yd1);
   sy = sign(ys2-ys1);
-  e = (dy<<1)-dx;
-  dx2 = dx<<1;
-  dy <<= 1;
+  e = dy-dx;
+  dx2 = dx;
+  dy += 1;
   if (!dx2) dx2=1;
   for (d=0; d<=dx; d++) {
     Stretch(xd1,xd2,xs1,xs2,ys1,yd1,aSrcImage,aSrcStride,aDstImage,aDstStride);
@@ -139,9 +139,9 @@ Stretch24(long x1,long x2,long y1,long y2,long yr,long yw,
   dy = abs((int)(y2-y1));
   sx = 3*sign(x2-x1);
   sy = 3*sign(y2-y1);
-  e = (dy<<1)-dx;
-  dx2 = dx<<1;
-  dy <<= 1;
+  e = dy-dx;
+  dx2 = dx;
+  dy += 1;
   src=aSrcImage+yr*aSrcStride+3*y1;
   dst=aDstImage+yw*aDstStride+3*x1;
   if (!dx2) dx2=1;
@@ -170,9 +170,9 @@ Stretch8(long x1,long x2,long y1,long y2,long yr,long yw,
   dy = abs((int)(y2-y1));
   sx = sign(x2-x1);
   sy = sign(y2-y1);
-  e = (dy<<1)-dx;
-  dx2 = dx<<1;
-  dy <<= 1;
+  e = dy-dx;
+  dx2 = dx;
+  dy += 1;
   src=aSrcImage+yr*aSrcStride+y1;
   dst=aDstImage+yw*aDstStride+x1;
   if (!dx2) dx2=1;
@@ -198,9 +198,9 @@ Stretch1(long x1,long x2,long y1,long y2,long yr,long yw,
   dy = abs((int)(y2-y1));
   sx = sign(x2-x1);
   sy = sign(y2-y1);
-  e = (dy<<1)-dx;
-  dx2 = dx<<1;
-  dy <<= 1;
+  e = dy-dx;
+  dx2 = dx;
+  dy += 1;
   if (!dx2) dx2=1;
   for (d=0; d<=dx; d++) {
     if (*(aSrcImage+yr*aSrcStride+(y1>>3)) & 1<<(7-y1&0x7))
