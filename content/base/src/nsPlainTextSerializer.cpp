@@ -1578,8 +1578,8 @@ nsPlainTextSerializer::IsCurrentNodeConverted()
   nsAutoString value;
   nsresult rv = GetAttributeValue(nsHTMLAtoms::kClass, value);
   return (NS_SUCCEEDED(rv) &&
-          (value.EqualsIgnoreCase("txt", 3) ||
-           value.EqualsIgnoreCase("\"txt", 4)));
+          (value.EqualsIgnoreCase("moz-txt", 7) ||
+           value.EqualsIgnoreCase("\"moz-txt", 8)));
 }
 
 
