@@ -34,8 +34,13 @@ class nsContentList : public nsIDOMNodeList, public nsIDOMHTMLCollection, public
 protected:
   nsContentList(nsIDocument *aDocument);
 public:
-  nsContentList(nsIDocument *aDocument, const nsString& aMatchTag);
-  nsContentList(nsIDocument *aDocument, nsContentListMatchFunc aFunc);
+  nsContentList(nsIDocument *aDocument, 
+                nsIAtom* aMatchAtom, 
+                PRInt32 aMatchNameSpaceId,
+                nsIContent* aRootContent=nsnull);
+  nsContentList(nsIDocument *aDocument, 
+                nsContentListMatchFunc aFunc,
+                nsIContent* aRootContent=nsnull);
   virtual ~nsContentList();
 
   NS_DECL_ISUPPORTS
@@ -110,11 +115,16 @@ protected:
   void PopulateSelf(nsIContent *aContent);
   PRBool MatchSelf(nsIContent *aContent);
 
-  nsString *mMatchTag;
+  static nsIAtom* gWildCardAtom;
+
+  nsIAtom* mMatchAtom;
+  PRInt32 mMatchNameSpaceId;
   nsContentListMatchFunc mFunc;
   nsVoidArray mContent;
   void *mScriptObject;
   nsIDocument *mDocument;
+  nsIContent* mRootContent;
+  PRBool mMatchAll;
 };
 
 #endif // nsContentList_h___

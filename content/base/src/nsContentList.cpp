@@ -25,28 +25,48 @@
 
 #include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
 
+nsIAtom* nsContentList::gWildCardAtom = nsnull;
+
 nsContentList::nsContentList(nsIDocument *aDocument)
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
   mFunc = nsnull;
-  mMatchTag = nsnull;
+  mMatchAtom = nsnull;
   mDocument = aDocument;
+  mMatchAll = PR_FALSE;
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument,
-                             const nsString& aMatchTag) 
+                             nsIAtom* aMatchAtom,
+                             PRInt32 aMatchNameSpaceId,
+                             nsIContent* aRootContent)
 {
-  mMatchTag = new nsString(aMatchTag);
+  mMatchAtom = aMatchAtom;
+  NS_IF_ADDREF(mMatchAtom);
+  if (nsnull == gWildCardAtom) {
+    gWildCardAtom = NS_NewAtom("*");
+  }
+  if (gWildCardAtom == mMatchAtom) {
+    mMatchAll = PR_TRUE;
+  }
+  else {
+    mMatchAll = PR_FALSE;
+  }
+  mMatchNameSpaceId = aMatchNameSpaceId;
   mFunc = nsnull;
+  mRootContent = aRootContent;
   Init(aDocument);
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument, 
-                             nsContentListMatchFunc aFunc)
+                             nsContentListMatchFunc aFunc,
+                             nsIContent* aRootContent)
 {
   mFunc = aFunc;
-  mMatchTag = nsnull;
+  mMatchAtom = nsnull;
+  mRootContent = aRootContent;
+  mMatchAll = PR_FALSE;
   Init(aDocument);
 }
 
@@ -61,9 +81,17 @@ void nsContentList::Init(nsIDocument *aDocument)
   // document's observer list.
   mDocument = aDocument;
   mDocument->AddObserver(this);
-  nsIContent *root = mDocument->GetRootContent();
+  nsIContent *root;
+  if (nsnull != mRootContent) {
+    root = mRootContent;
+  }
+  else {
+    root = mDocument->GetRootContent();
+  }
   PopulateSelf(root);
-  NS_RELEASE(root);
+  if (nsnull == mRootContent) {
+    NS_RELEASE(root);
+  }
 }
  
 nsContentList::~nsContentList()
@@ -72,9 +100,7 @@ nsContentList::~nsContentList()
     mDocument->RemoveObserver(this);
   }
   
-  if (nsnull != mMatchTag) {
-    delete mMatchTag;
-  }
+  NS_IF_RELEASE(mMatchAtom);
 }
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -117,11 +143,15 @@ NS_IMPL_RELEASE(nsContentList)
 NS_IMETHODIMP 
 nsContentList::Match(nsIContent *aContent, PRBool *aMatch)
 {
-  if (nsnull != mMatchTag) {
+  if (nsnull != mMatchAtom) {
     nsIAtom *name = nsnull;
     aContent->GetTag(name);
-    
-    if ((nsnull !=name) && mMatchTag->EqualsIgnoreCase(name)) {
+
+    if (mMatchAll && (nsnull != name)) {
+      *aMatch = PR_TRUE;
+    }
+    // XXX We don't yet match on namespace. Maybe we should??
+    else if (name == mMatchAtom) {
       *aMatch = PR_TRUE;
     }
     else {
@@ -143,7 +173,9 @@ nsContentList::Match(nsIContent *aContent, PRBool *aMatch)
 NS_IMETHODIMP 
 nsContentList::Add(nsIContent *aContent)
 {
-  // XXX Should hold a reference ??
+  // Shouldn't hold a reference since we'll be
+  // told when the content leaves the document or
+  // the document will be destroyed.
   mContent.AppendElement(aContent);
   
   return NS_OK;
@@ -152,7 +184,6 @@ nsContentList::Add(nsIContent *aContent)
 NS_IMETHODIMP 
 nsContentList::Remove(nsIContent *aContent)
 {
-  // XXX Should drop a reference ??
   mContent.RemoveElement(aContent);
   
   return NS_OK;
@@ -161,7 +192,6 @@ nsContentList::Remove(nsIContent *aContent)
 NS_IMETHODIMP 
 nsContentList::Reset()
 {
-  // XXX Should drop references ??
   mContent.Clear();
   
   return NS_OK;

@@ -730,7 +730,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
 {
   if (nsnull == mImages) {
-    mImages = new nsContentList(this, "IMG");
+    mImages = new nsContentList(this, nsHTMLAtoms::img, kNameSpaceID_HTML);
     if (nsnull == mImages) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -747,7 +747,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 {
   if (nsnull == mApplets) {
-    mApplets = new nsContentList(this, "APPLET");
+    mApplets = new nsContentList(this, nsHTMLAtoms::applet, kNameSpaceID_HTML);
     if (nsnull == mApplets) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -765,12 +765,11 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent)
 {
   nsIAtom *name;
   aContent->GetTag(name);
-  static nsAutoString area("AREA"), anchor("A");
   nsAutoString attr;
   PRBool result = PR_FALSE;
   
   if ((nsnull != name) && 
-      (area.EqualsIgnoreCase(name) || anchor.EqualsIgnoreCase(name)) &&
+      ((nsHTMLAtoms::area == name) || (nsHTMLAtoms::a == name)) &&
       (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, attr))) {
       result = PR_TRUE;
   }
@@ -801,12 +800,11 @@ nsHTMLDocument::MatchAnchors(nsIContent *aContent)
 {
   nsIAtom *name;
   aContent->GetTag(name);
-  static nsAutoString anchor("A");
   nsAutoString attr;
   PRBool result = PR_FALSE;
   
   if ((nsnull != name) && 
-      anchor.EqualsIgnoreCase(name) &&
+      (nsHTMLAtoms::a == name) &&
       (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, attr))) {
       result = PR_TRUE;
   }
@@ -1116,7 +1114,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
 {
   if (nsnull == mEmbeds) {
-    mEmbeds = new nsContentList(this, "EMBED");
+    mEmbeds = new nsContentList(this, nsHTMLAtoms::embed, kNameSpaceID_HTML);
     if (nsnull == mEmbeds) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2298,8 +2296,7 @@ nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
     
     // Initialize mForms if necessary...
     if (nsnull == mForms) {
-      nsAutoString tag("form");
-      mForms = new nsContentList(this, tag);
+      mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_HTML);
       NS_ADDREF(mForms);
     }
 
@@ -2313,8 +2310,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
 {
   if (nsnull == mForms) {
-    nsAutoString tag("form");
-    mForms = new nsContentList(this, tag);
+    mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_HTML);
     if (nsnull == mForms) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

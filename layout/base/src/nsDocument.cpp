@@ -70,6 +70,7 @@ static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNSDocumentIID, NS_IDOMNSDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
@@ -1153,14 +1154,29 @@ NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsString& aTagname, 
                                  nsIDOMNodeList** aReturn)
 {
-  nsContentList* list = new nsContentList(this, aTagname);
+  nsIAtom* nameAtom;
+  PRInt32 nameSpaceId;
+  nsresult result = NS_OK;
+
+  if (nsnull != mRootContent) {
+    result = mRootContent->ParseAttributeString(aTagname, nameAtom,
+                                                nameSpaceId);
+    if (NS_OK != result) {
+      return result;
+    }
+  }
+  else {
+    nameAtom = NS_NewAtom(aTagname);
+    nameSpaceId = kNameSpaceID_None;
+  }
+
+  nsContentList* list = new nsContentList(this, nameAtom, nameSpaceId);
+  NS_IF_RELEASE(nameAtom);
   if (nsnull == list) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aReturn = (nsIDOMNodeList *)list;
-  NS_ADDREF(list);
 
-  return NS_OK;
+  return list->QueryInterface(kIDOMNodeListIID, (void **)aReturn);
 }
 
 NS_IMETHODIMP    
