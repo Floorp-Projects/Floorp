@@ -104,7 +104,7 @@
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator/>
-      <menuitem value="&findHisCmd.label;" accesskey="&findHisCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable');"/>
+      <menuitem value="&findHisCmd.label;" accesskey="&findHisCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'history');"/>
     </menupopup>
   </menu>
   <menu id="menu_View">
