@@ -62,15 +62,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),SunOS4.1)
 INCLUDES	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
-ifeq ($(OS_ARCH)$(OS_RELEASE),IRIX5)
-TARGETS		+= gtscc$(BIN_SUFFIX)
-endif
-
 export:: $(TARGETS)
-
-gtscc$(BIN_SUFFIX):	gtscc.o
-	$(CC) $(LDFLAGS) -o $@ $< -lelf
-	$(INSTALL) -m 444 $@ $(DIST)/bin
 
 #update build number from within make script
 $(DEPTH)/build/build_number: FORCE
@@ -81,10 +73,6 @@ $(DEPTH)/build/build_number: FORCE
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
 	$(PERL) $(srcdir)/set-timebomb.pl 0 30
-
-bdate$(BIN_SUFFIX): bdate.o
-	$(CC) $(LDFLAGS) -o $@ $<
-	$(INSTALL) -m 444 $@ $(DIST)/bin
 
 FORCE:
 
