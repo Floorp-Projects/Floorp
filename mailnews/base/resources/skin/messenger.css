@@ -27,14 +27,14 @@ tree:focus {
 	border-left: 1px solid #336699;
 }
 
-treeitem[selected="true"] { 
-  color: black;
-  background-color: #CCCCCC;
+treeitem[selected="true"] > treerow { 
+	color: black;
+	background-color: #CCCCCC;
 }
 
-tree:focus treeitem[selected="true"] { 
-  color: white;
-  background-color: #336699;
+tree:focus treeitem[selected="true"] > treerow { 
+	color: white;
+	background-color: #336699;
 }
 
 spring.spacer {

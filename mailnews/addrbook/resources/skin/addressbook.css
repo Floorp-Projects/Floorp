@@ -18,52 +18,65 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 */
  
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
  
+/* CardView styles - used in the Card View Pane*/
+
+box#CardViewBox {
+	overflow: auto;
+	margin-top: 2px;
+	margin-bottom: 2px;
+	padding-left: 8px;
+	padding-right: 8px;
+	background-color: #EEEEEE;
+	min-width: 1px;
+	user-focus: ignore;
+}
+
+html|div#CardTitle {
+	font-size: 150%;
+	font-weight: bold;
+	border-bottom: 2px solid black;
+}
+ 
+box.cardviewgroup {
+	margin-top: 8px;
+	padding-bottom: 5px;
+	min-width: 1px;
+}
+
+html|div[class="CardViewHeading"] {
+	padding: 1px;
+	padding-left: 5px;
+	background-color: #99CCCC;
+	color: black;
+	font-weight: bold;
+	min-width: 1px;
+}
+
+html|div[class="CardViewText"] {
+	padding-left: 20px;
+	padding-right: 2px;
+	min-width: 1px;
+}
+
+
 /* CardEdit styles - used in the Card Edit Dialog */
 
 box[class="CardEditWidth"] {
-	width        : 24.4em;
+	width        : 24em;
 	margin-left  : 0px;
 	margin-right : 8px;
 }
 
-input[class="CardEdit"] {
+html|input[class="CardEdit"] {
 	width         : 25em;
 	height        : 1.5em;
 	margin        : 0px;
 	padding       : 0px;
 	padding-right : 0px;
 	min-height    : 1.5em;
-}
-
-
-/* CardView styles - used in the Card View Pane*/
-
-box#CardViewBox {
-	margin-top: 2px;
-	margin-bottom: 2px;
-	padding-left: 8px;
-	padding-right: 8px;
-	background-color: #EEEEEE;
-	user-focus: ignore;
-}
-
-box.cardviewgroup {
-	margin-top: 8px;
-	padding-bottom: 5px;
-}
-
-div[class="CardViewHeading"] {
-	padding: 1px;
-	padding-left: 5px;
-	background-color: #99CCCC;
-	color: black;
-	font-weight: bold;
-}
-
-div[class="CardViewText"] {
-	padding-left: 20px;
-	padding-right: 2px;
 }
 
 
@@ -77,12 +90,12 @@ tree:focus {
 	border-left: 1px solid #336699;
 }
 
-treeitem[selected="true"] { 
+treeitem[selected="true"] > treerow { 
 	color: black;
 	background-color: #CCCCCC;
 }
 
-tree:focus treeitem[selected="true"] { 
+tree:focus treeitem[selected="true"] > treerow { 
 	color: white;
 	background-color: #336699;
 }
@@ -140,10 +153,11 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 	padding-bottom:2px;
 	white-space: nowrap;
 	font-size: smaller;
+	min-width: 20px;
 }
 
 #searchtext {
-	min-width: 40px;
+	min-width: 20px;
 	padding: 0px;
 }
 
