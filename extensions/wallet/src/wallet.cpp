@@ -2903,7 +2903,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
   }
 #endif
 
-  const char* valueCString = NS_ConvertUCS2toUTF8(value).get();
+  nsCAutoString valueCString = NS_ConvertUCS2toUTF8(value);
   nsCAutoString oldValue;
 
   /* is there a mapping from this field name to a schema name */
@@ -2922,7 +2922,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
     PRInt32 index = 0;
     PRInt32 lastIndex = index;
     while(wallet_ReadFromList(localSchema, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
-      PRBool isNewValue = !oldValue.Equals(valueCString);
+      PRBool isNewValue = !oldValue.Equals(valueCString.get());
       if (!isNewValue) {
         /*
          * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
@@ -2947,7 +2947,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
 
     /* this is a new value so store it */
     dummy = nsnull;
-    if (wallet_WriteToList(localSchema.get(), valueCString, dummy, wallet_SchemaToValue_list, PR_TRUE)) {
+    if (wallet_WriteToList(localSchema.get(), valueCString.get(), dummy, wallet_SchemaToValue_list, PR_TRUE)) {
       wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
     }
 
@@ -2966,7 +2966,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
     nsCAutoString concatParamUTF8 = NS_ConvertUCS2toUTF8(concatParamUCS2);
     while(wallet_ReadFromList
         (concatParamUTF8, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
-      PRBool isNewValue = !oldValue.Equals(valueCString);
+      PRBool isNewValue = !oldValue.Equals(valueCString.get());
       if (!isNewValue) {
         /*
          * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
@@ -3003,7 +3003,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
     hostFileFieldUCS2.Append(field);
 
     if (wallet_WriteToList
-        (NS_ConvertUCS2toUTF8(hostFileFieldUCS2).get(), valueCString, dummy,
+        (NS_ConvertUCS2toUTF8(hostFileFieldUCS2).get(), valueCString.get(), dummy,
          wallet_SchemaToValue_list, PR_TRUE)) {
       wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
     }
