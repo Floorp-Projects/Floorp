@@ -65,7 +65,9 @@ nsMsgDisplayMessageByString(char *msg)
 #ifdef BUG_7770_IS_FIXED
     rv = dialog->Alert(alertText);
 #else
+#ifdef DEBUG
     printf("%s",msg);
+#endif
 #endif    
   }
 
