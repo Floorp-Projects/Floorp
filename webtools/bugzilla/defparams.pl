@@ -679,4 +679,28 @@ DefParam("useattachmenttracker",
          "b",
          0);
 
+# The maximum size (in bytes) for patches and non-patch attachments.
+# The default limit is 1000KB, which is 24KB less than mysql's default
+# maximum packet size (which determines how much data can be sent in a
+# single mysql packet and thus how much data can be inserted into the
+# database) to provide breathing space for the data in other fields of
+# the attachment record as well as any mysql packet overhead (I don't
+# know of any, but I suspect there may be some.)
+
+DefParam("maxpatchsize",
+         "The maximum size (in kilobytes) of patches.  Bugzilla will not 
+          accept patches greater than this number of kilobytes in size.
+          To accept patches of any size (subject to the limitations of 
+          your server software), set this value to zero." ,
+         "t",
+         '1000');
+
+DefParam("maxattachmentsize" , 
+         "The maximum size (in kilobytes) of non-patch attachments.  Bugzilla 
+          will not accept attachments greater than this number of kilobytes 
+          in size.  To accept attachments of any size (subject to the
+          limitations of your server software), set this value to zero." , 
+         "t" , 
+         '1000');
+
 1;

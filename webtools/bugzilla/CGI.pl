@@ -42,7 +42,6 @@ use strict;
 
 sub CGI_pl_sillyness {
     my $zz;
-    $zz = %::FILENAME;
     $zz = %::MFORM;
     $zz = %::dontchange;
 }
@@ -148,46 +147,63 @@ sub ProcessFormFields {
 
 
 sub ProcessMultipartFormFields {
-    my ($boundary) = (@_);
-    $boundary =~ s/^-*//;
-    my $remaining = $ENV{"CONTENT_LENGTH"};
+    my ($boundary) = @_;
+
+    # Initialize variables that store whether or not we are parsing a header,
+    # the name of the part we are parsing, and its value (which is incomplete
+    # until we finish parsing the part).
     my $inheader = 1;
-    my $itemname = "";
-#    open(DEBUG, ">debug") || die "Can't open debugging thing";
-#    print DEBUG "Boundary is '$boundary'\n";
+    my $fieldname = "";
+    my $fieldvalue = "";
+
+    # Read the input stream line by line and parse it into a series of parts,
+    # each one containing a single form field and its value and each one
+    # separated from the next by the value of $boundary.
+    my $remaining = $ENV{"CONTENT_LENGTH"};
     while ($remaining > 0 && ($_ = <STDIN>)) {
         $remaining -= length($_);
-#        print DEBUG "< $_";
-        if ($_ =~ m/^-*$boundary/) {
-#            print DEBUG "Entered header\n";
-            $inheader = 1;
-            $itemname = "";
-            next;
-        }
 
-        if ($inheader) {
-            if (m/^\s*$/) {
-                $inheader = 0;
-#                print DEBUG "left header\n";
-                $::FORM{$itemname} = "";
-            }
-            if (m/^Content-Disposition:\s*form-data\s*;\s*name\s*=\s*"([^\"]+)"/i) {
-                $itemname = $1;
-#                print DEBUG "Found itemname $itemname\n";
-                if (m/;\s*filename\s*=\s*"([^\"]+)"/i) {
-                    $::FILENAME{$itemname} = $1;
+        # If the current input line is a boundary line, save the previous
+        # form value and reset the storage variables.
+        if ($_ =~ m/^-*$boundary/) {
+            if ( $fieldname ) {
+                chomp($fieldvalue);
+                $fieldvalue =~ s/\r$//;
+                if ( defined $::FORM{$fieldname} ) {
+                    $::FORM{$fieldname} .= $fieldvalue;
+		                push @{$::MFORM{$fieldname}}, $fieldvalue;
+                } else {
+                    $::FORM{$fieldname} = $fieldvalue;
+                    $::MFORM{$fieldname} = [$fieldvalue];
                 }
             }
-            
-            next;
+
+            $inheader = 1;
+            $fieldname = "";
+            $fieldvalue = "";
+
+        # If the current input line is a header line, look for a blank line
+        # (meaning the end of the headers), a Content-Disposition header
+        # (containing the field name and, for uploaded file parts, the file 
+        # name), or a Content-Type header (containing the content type for 
+        # file parts).
+        } elsif ( $inheader ) {
+            if (m/^\s*$/) {
+                $inheader = 0;
+            } elsif (m/^Content-Disposition:\s*form-data\s*;\s*name\s*=\s*"([^\"]+)"/i) {
+                $fieldname = $1;
+                if (m/;\s*filename\s*=\s*"([^\"]+)"/i) {
+                    $::FILE{$fieldname}->{'filename'} = $1;
+                }
+            } elsif ( m|^Content-Type:\s*([^/]+/[^\s;]+)|i ) {
+                $::FILE{$fieldname}->{'contenttype'} = $1;
+            }
+
+        # If the current input line is neither a boundary line nor a header,
+        # it must be part of the field value, so append it to the value.
+        } else {
+          $fieldvalue .= $_;
         }
-        $::FORM{$itemname} .= $_;
-    }
-    delete $::FORM{""};
-    # Get rid of trailing newlines.
-    foreach my $i (keys %::FORM) {
-        chomp($::FORM{$i});
-        $::FORM{$i} =~ s/\r$//;
     }
 }
 

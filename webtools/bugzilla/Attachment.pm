@@ -72,15 +72,12 @@ sub list
   my @attachments = ();
   while (&::MoreSQLData()) {
     my %a;
-    ($a{'attachid'}, $a{'date'}, $a{'mimetype'}, $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = &::FetchSQLData();
+    ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = &::FetchSQLData();
 
     # Format the attachment's creation/modification date into something readable.
     if ($a{'date'} =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
         $a{'date'} = "$3/$4/$2&nbsp;$5:$6";
     }
-
-    # Quote HTML characters (&<>) in the description so they display correctly.
-    $a{'description'} = &::value_quote($a{'description'});
 
     # Retrieve a list of status flags that have been set on the attachment.
     &::PushGlobalSQLState();

@@ -89,6 +89,22 @@ elsif ($action eq "viewall")
   ValidateBugID($::FORM{'bugid'});
   viewall(); 
 }
+elsif ($action eq "enter") 
+{ 
+  ValidateBugID($::FORM{'bugid'});
+  enter(); 
+}
+elsif ($action eq "insert")
+{
+  ValidateBugID($::FORM{'bugid'});
+  validateFilename();
+  validateData();
+  validateDescription();
+  validateIsPatch();
+  validateContentType() unless $::FORM{'ispatch'};
+  validateObsolete() if $::FORM{'obsolete'};
+  insert();
+}
 elsif ($action eq "edit") 
 { 
   validateID();
@@ -102,8 +118,8 @@ elsif ($action eq "update")
     && exit;
   validateID();
   validateDescription();
-  validateMIMEType();
   validateIsPatch();
+  validateContentType() unless $::FORM{'ispatch'};
   validateIsObsolete();
   validateStatuses();
   update();
@@ -146,21 +162,68 @@ sub validateDescription
       && exit;
 }
 
-sub validateMIMEType
-{
-  $::FORM{'mimetype'} =~ /^(application|audio|image|message|model|multipart|text|video)\/.+$/
-    || DisplayError("You must enter a valid MIME type of the form <em>foo/bar</em>
-                     where <em>foo</em> is either <em>application, audio, image, message, 
-                     model, multipart, text,</em> or <em>video</em>.")
-      && exit;
-}
-
 sub validateIsPatch
 {
   # Set the ispatch flag to zero if it is undefined, since the UI uses
   # an HTML checkbox to represent this flag, and unchecked HTML checkboxes
   # do not get sent in HTML requests.
   $::FORM{'ispatch'} = $::FORM{'ispatch'} ? 1 : 0;
+
+  # Set the content type to text/plain if the attachment is a patch.
+  $::FORM{'contenttype'} = "text/plain" if $::FORM{'ispatch'};
+}
+
+sub validateContentType
+{
+  if (!$::FORM{'contenttypemethod'})
+  {
+    DisplayError("You must choose a method for determining the content type,
+      either <em>auto-detect</em>, <em>select from list</em>, or <em>enter 
+      manually</em>.");
+    exit;
+  }
+  elsif ($::FORM{'contenttypemethod'} eq 'autodetect')
+  {
+    # The user asked us to auto-detect the content type, so use the type
+    # specified in the HTTP request headers.
+    if ( !$::FILE{'data'}->{'contenttype'} )
+    {
+      DisplayError("You asked Bugzilla to auto-detect the content type, but
+        your browser did not specify a content type when uploading the file, 
+        so you must enter a content type manually.");
+      exit;
+    }
+    $::FORM{'contenttype'} = $::FILE{'data'}->{'contenttype'};
+  }
+  elsif ($::FORM{'contenttypemethod'} eq 'list')
+  {
+    # The user selected a content type from the list, so use their selection.
+    $::FORM{'contenttype'} = $::FORM{'contenttypeselection'};
+  }
+  elsif ($::FORM{'contenttypemethod'} eq 'manual')
+  {
+    # The user entered a content type manually, so use their entry.
+    $::FORM{'contenttype'} = $::FORM{'contenttypeentry'};
+  }
+  else
+  {
+    my $htmlcontenttypemethod = html_quote($::FORM{'contenttypemethod'});
+    DisplayError("Your form submission got corrupted somehow.  The <em>content
+      method</em> field, which specifies how the content type gets determined,
+      should have been either <em>autodetect</em>, <em>list</em>, 
+      or <em>manual</em>, but was instead <em>$htmlcontenttypemethod</em>.");
+    exit;
+  }
+
+  if ( $::FORM{'contenttype'} !~ /^(application|audio|image|message|model|multipart|text|video)\/.+$/ )
+  {
+    my $htmlcontenttype = html_quote($::FORM{'contenttype'});
+    DisplayError("The content type <em>$htmlcontenttype</em> is invalid.
+      Valid types must be of the form <em>foo/bar</em> where <em>foo</em> 
+      is either <em>application, audio, image, message, model, multipart, 
+      text,</em> or <em>video</em>.");
+    exit;
+  }
 }
 
 sub validateIsObsolete
@@ -193,6 +256,95 @@ sub validateStatuses
   }
 }
 
+sub validateData
+{
+  $::FORM{'data'}
+    || DisplayError("The file you are trying to attach is empty!")
+      && exit;
+
+  my $len = length($::FORM{'data'});
+
+  my $maxpatchsize = Param('maxpatchsize');
+  my $maxattachmentsize = Param('maxattachmentsize');
+  
+  # Makes sure the attachment does not exceed either the "maxpatchsize" or 
+  # the "maxattachmentsize" parameter.
+  if ( $::FORM{'ispatch'} && $maxpatchsize && $len > $maxpatchsize*1024 )
+  {
+    my $lenkb = sprintf("%.0f", $len/1024);
+    DisplayError("The file you are trying to attach is ${lenkb} kilobytes (KB) in size.  
+                  Patches cannot be more than ${maxpatchsize}KB in size.
+                  Try breaking your patch into several pieces.");
+    exit;
+  } elsif ( !$::FORM{'ispatch'} && $maxattachmentsize && $len > $maxattachmentsize*1024 ) {
+    my $lenkb = sprintf("%.0f", $len/1024);
+    DisplayError("The file you are trying to attach is ${lenkb} kilobytes (KB) in size.  
+                  Non-patch attachments cannot be more than ${maxattachmentsize}KB.
+                  If your attachment is an image, try converting it to a compressable
+                  format like JPG or PNG, or put it elsewhere on the web and
+                  link to it from the bug's URL field or in a comment on the bug.");
+    exit;
+  }
+}
+
+sub validateFilename
+{
+  defined $::FILE{'data'}
+    || DisplayError("You did not specify a file to attach.")
+      && exit;
+}
+
+sub validateObsolete
+{
+  # When a user creates an attachment, they can request that one or more
+  # existing attachments be made obsolete.  This function makes sure they
+  # are authorized to make changes to attachments and that the IDs of the
+  # attachments they selected for obsoletion are all valid.
+  UserInGroup("editbugs")
+    || DisplayError("You must be authorized to make changes to attachments 
+         to make attachments obsolete when creating a new attachment.")
+      && exit;
+
+  # Make sure the attachment id is valid and the user has permissions to view
+  # the bug to which it is attached.
+  foreach my $attachid (@{$::MFORM{'obsolete'}}) {
+    $attachid =~ /^[1-9][0-9]*$/
+      || DisplayError("The attachment number of one of the attachments 
+           you wanted to obsolete is invalid.") 
+        && exit;
+  
+    SendSQL("SELECT bug_id, isobsolete, description 
+             FROM attachments WHERE attach_id = $attachid");
+
+    # Make sure the attachment exists in the database.
+    MoreSQLData()
+      || DisplayError("Attachment #$attachid does not exist.") 
+        && exit;
+
+    my ($bugid, $isobsolete, $description) = FetchSQLData();
+
+    # Make sure the user is authorized to access this attachment's bug.
+    ValidateBugID($bugid);
+
+    if ($bugid != $::FORM{'bugid'})
+    {
+      $description = html_quote($description);
+      DisplayError("Attachment #$attachid ($description) is attached 
+        to bug #$bugid, but you tried to flag it as obsolete while
+        creating a new attachment to bug #$::FORM{'bugid'}.");
+      exit;
+    }
+
+    if ( $isobsolete )
+    {
+      $description = html_quote($description);
+      DisplayError("Attachment #$attachid ($description) is already obsolete.");
+      exit;
+    }
+  }
+
+}
+
 ################################################################################
 # Functions
 ################################################################################
@@ -201,12 +353,12 @@ sub view
 {
   # Display an attachment.
 
-  # Retrieve the attachment content and its MIME type from the database.
+  # Retrieve the attachment content and its content type from the database.
   SendSQL("SELECT mimetype, thedata FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($mimetype, $thedata) = FetchSQLData();
+  my ($contenttype, $thedata) = FetchSQLData();
     
   # Return the appropriate HTTP response headers.
-  print "Content-Type: $mimetype\n\n";
+  print "Content-Type: $contenttype\n\n";
 
   print $thedata;
 }
@@ -221,9 +373,10 @@ sub viewall
   SendSQL("SELECT attach_id, creation_ts, mimetype, description, ispatch, isobsolete 
            FROM attachments WHERE bug_id = $::FORM{'bugid'} ORDER BY attach_id");
   my @attachments; # the attachments array
-  while ( MoreSQLData() ) {
+  while (MoreSQLData())
+  {
     my %a; # the attachment hash
-    ($a{'attachid'}, $a{'date'}, $a{'mimetype'}, 
+    ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, 
      $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = FetchSQLData();
 
     # Format the attachment's creation/modification date into something readable.
@@ -231,15 +384,11 @@ sub viewall
         $a{'date'} = "$3/$4/$2&nbsp;$5:$6";
     }
 
-    # Quote HTML characters (&<>) in the description and MIME Type.
-    $a{'description'} = value_quote($a{'description'});
-    $a{'mimetype'} = value_quote($a{'mimetype'});
-
     # Flag attachments as to whether or not they can be viewed (as opposed to
     # being downloaded).  Currently I decide they are viewable if their MIME type 
     # is either text/*, image/*, or application/vnd.mozilla.*.
     # !!! Yuck, what an ugly hack.  Fix it!
-    $a{'isviewable'} = ( $a{'mimetype'} =~ /^(text|image|application\/vnd\.mozilla\.)/ );
+    $a{'isviewable'} = ( $a{'contenttype'} =~ /^(text|image|application\/vnd\.mozilla\.)/ );
 
     # Retrieve a list of status flags that have been set on the attachment.
     PushGlobalSQLState();
@@ -276,23 +425,131 @@ sub viewall
 }
 
 
+sub enter
+{
+  # Display a form for entering a new attachment.
+
+  # Retrieve the attachments from the database and write them into an array
+  # of hashes where each hash represents one attachment.
+  SendSQL("SELECT attach_id, description 
+           FROM attachments
+           WHERE bug_id = $::FORM{'bugid'}
+           AND isobsolete = 0
+           ORDER BY attach_id");
+  my @attachments; # the attachments array
+  while ( MoreSQLData() ) {
+    my %a; # the attachment hash
+    ($a{'id'}, $a{'description'}) = FetchSQLData();
+
+    # Add the hash representing the attachment to the array of attachments.
+    push @attachments, \%a;
+  }
+
+  # Retrieve the bug summary for displaying on screen.
+  SendSQL("SELECT short_desc FROM bugs WHERE bug_id = $::FORM{'bugid'}");
+  my ($bugsummary) = FetchSQLData();
+
+  # Define the variables and functions that will be passed to the UI template.
+  $vars->{'bugid'} = $::FORM{'bugid'};
+  $vars->{'bugsummary'} = $bugsummary;
+  $vars->{'attachments'} = \@attachments;
+
+  # Return the appropriate HTTP response headers.
+  print "Content-Type: text/html\n\n";
+
+  # Generate and return the UI (HTML page) from the appropriate template.
+  $template->process("attachment/enter.atml", $vars)
+    || DisplayError("Template process failed: " . $template->error())
+    && exit;
+}
+
+
+sub insert
+{
+  # Insert a new attachment into the database.
+
+  # Escape characters in strings that will be used in SQL statements.
+  my $filename = SqlQuote($::FILE{'data'}->{'filename'});
+  my $description = SqlQuote($::FORM{'description'});
+  my $contenttype = SqlQuote($::FORM{'contenttype'});
+  my $submitterid = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
+  my $thedata = SqlQuote($::FORM{'data'});
+
+  # Insert the attachment into the database.
+  SendSQL("INSERT INTO attachments (bug_id, filename, description, mimetype, ispatch, submitter_id, thedata) 
+           VALUES ($::FORM{'bugid'}, $filename, $description, $contenttype, $::FORM{'ispatch'}, $submitterid, $thedata)");
+
+  # Retrieve the ID of the newly created attachment record.
+  SendSQL("SELECT LAST_INSERT_ID()");
+  my $attachid = FetchOneColumn();
+
+  # Insert a comment about the new attachment into the database.
+  my $comment = "Created an attachment (id=$attachid): $::FORM{'description'}\n";
+  $comment .= ("\n" . $::FORM{'comment'}) if $::FORM{'comment'};
+
+  use Text::Wrap;
+  $Text::Wrap::columns = 80;
+  $Text::Wrap::huge = 'overflow';
+  $comment = Text::Wrap::wrap('', '', $comment);
+
+  AppendComment($::FORM{'bugid'}, 
+                $::COOKIE{"Bugzilla_login"},
+                $comment);
+
+  # Make existing attachments obsolete.
+  my $fieldid = GetFieldID('attachments.isobsolete');
+  foreach my $attachid (@{$::MFORM{'obsolete'}}) {
+    SendSQL("UPDATE attachments SET isobsolete = 1 WHERE attach_id = $attachid");
+    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
+             VALUES ($::FORM{'bugid'}, $attachid, $submitterid, NOW(), $fieldid, '0', '1')");
+  }
+
+  # Send mail to let people know the attachment has been created.  Uses a 
+  # special syntax of the "open" and "exec" commands to capture the output of 
+  # "processmail", which "system" doesn't allow, without running the command 
+  # through a shell, which backticks (``) do.
+  #system ("./processmail", $bugid , $::userid);
+  #my $mailresults = `./processmail $bugid $::userid`;
+  my $mailresults = '';
+  open(PMAIL, "-|") or exec('./processmail', $::FORM{'bugid'}, $::COOKIE{'Bugzilla_login'});
+  $mailresults .= $_ while <PMAIL>;
+  close(PMAIL);
+ 
+  # Define the variables and functions that will be passed to the UI template.
+  $vars->{'bugid'} = $::FORM{'bugid'};
+  $vars->{'attachid'} = $attachid;
+  $vars->{'description'} = $description;
+  $vars->{'mailresults'} = $mailresults;
+  $vars->{'contenttypemethod'} = $::FORM{'contenttypemethod'};
+  $vars->{'contenttype'} = $::FORM{'contenttype'};
+
+  # Return the appropriate HTTP response headers.
+  print "Content-Type: text/html\n\n";
+
+  # Generate and return the UI (HTML page) from the appropriate template.
+  $template->process("attachment/created.atml", $vars)
+    || DisplayError("Template process failed: " . $template->error())
+    && exit;
+}
+
+
 sub edit
 {
   # Edit an attachment record.  Users with "editbugs" privileges can edit the 
-  # attachment's description, MIME type, ispatch and isobsolete flags, and 
+  # attachment's description, content type, ispatch and isobsolete flags, and 
   # statuses, and they can also submit a comment that appears in the bug.  
   # Users cannot edit the content of the attachment itself.
 
   # Retrieve the attachment from the database.
   SendSQL("SELECT description, mimetype, bug_id, ispatch, isobsolete 
            FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($description, $mimetype, $bugid, $ispatch, $isobsolete) = FetchSQLData();
+  my ($description, $contenttype, $bugid, $ispatch, $isobsolete) = FetchSQLData();
 
   # Flag attachment as to whether or not it can be viewed (as opposed to
-  # being downloaded).  Currently I decide it is viewable if its MIME type 
-  # is either text/.* or application/vnd.mozilla.*.
+  # being downloaded).  Currently I decide it is viewable if its content
+  # type is either text/.* or application/vnd.mozilla.*.
   # !!! Yuck, what an ugly hack.  Fix it!
-  my $isviewable = ( $mimetype =~ /^(text|image|application\/vnd\.mozilla\.)/ );
+  my $isviewable = ( $contenttype =~ /^(text|image|application\/vnd\.mozilla\.)/ );
 
   # Retrieve a list of status flags that have been set on the attachment.
   my %statuses;
@@ -331,7 +588,7 @@ sub edit
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'attachid'} = $::FORM{'id'}; 
   $vars->{'description'} = $description; 
-  $vars->{'mimetype'} = $mimetype; 
+  $vars->{'contenttype'} = $contenttype; 
   $vars->{'bugid'} = $bugid; 
   $vars->{'bugsummary'} = $bugsummary; 
   $vars->{'ispatch'} = $ispatch; 
@@ -369,7 +626,7 @@ sub update
   # so we can record those changes in the activity table.
   SendSQL("SELECT description, mimetype, ispatch, isobsolete 
            FROM attachments WHERE attach_id = $::FORM{'id'}");
-  my ($olddescription, $oldmimetype, $oldispatch, $oldisobsolete) = FetchSQLData();
+  my ($olddescription, $oldcontenttype, $oldispatch, $oldisobsolete) = FetchSQLData();
 
   # Get the list of old status flags.
   SendSQL("SELECT    attachstatusdefs.name 
@@ -406,15 +663,15 @@ sub update
   }
   my $newstatuslist = join(', ', @newstatuses);
 
-  # Quote "description" and "mimetype" for use in the SQL UPDATE statement.
+  # Quote the description and content type for use in the SQL UPDATE statement.
   my $quoteddescription = SqlQuote($::FORM{'description'});
-  my $quotedmimetype = SqlQuote($::FORM{'mimetype'});
+  my $quotedcontenttype = SqlQuote($::FORM{'contenttype'});
 
   # Update the attachment record in the database.
   # Sets the creation timestamp to itself to avoid it being updated automatically.
   SendSQL("UPDATE  attachments 
            SET     description = $quoteddescription , 
-                   mimetype = $quotedmimetype , 
+                   mimetype = $quotedcontenttype , 
                    ispatch = $::FORM{'ispatch'} , 
                    isobsolete = $::FORM{'isobsolete'} , 
                    creation_ts = creation_ts
@@ -428,11 +685,11 @@ sub update
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
              VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedolddescription, $quoteddescription)");
   }
-  if ($oldmimetype ne $::FORM{'mimetype'}) {
-    my $quotedoldmimetype = SqlQuote($oldmimetype);
+  if ($oldcontenttype ne $::FORM{'contenttype'}) {
+    my $quotedoldcontenttype = SqlQuote($oldcontenttype);
     my $fieldid = GetFieldID('attachments.mimetype');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedoldmimetype, $quotedmimetype)");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
   }
   if ($oldispatch ne $::FORM{'ispatch'}) {
     my $fieldid = GetFieldID('attachments.ispatch');
