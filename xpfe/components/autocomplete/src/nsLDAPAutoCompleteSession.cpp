@@ -53,7 +53,8 @@ nsLDAPAutoCompleteSession::nsLDAPAutoCompleteSession() :
     mState(UNBOUND), 
     mFilterTemplate(NS_LITERAL_STRING(
                       "(|(cn=%v1*%v2-*)(mail=%v1*%v2-*)(sn=%v1*%v2-*))")),
-    mMaxHits(100), mMinStringLength(2), mSearchAttrs(0), mSearchAttrsSize(0)
+    mMaxHits(100), mMinStringLength(2), mCjkMinStringLength(0), 
+    mSearchAttrs(0), mSearchAttrsSize(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -64,6 +65,8 @@ nsLDAPAutoCompleteSession::~nsLDAPAutoCompleteSession()
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSearchAttrsSize, mSearchAttrs);
     }
 }
+
+#define IS_CJK_CHAR_FOR_LDAP(u)  (0x2e80 <= (u) && (u) <= 0xd7ff)
 
 /* void onStartLookup (in wstring searchString, in nsIAutoCompleteResults previousSearchResult, in nsIAutoCompleteListener listener); */
 NS_IMETHODIMP 
@@ -101,7 +104,10 @@ nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString,
     if (searchString[0] == 0 ||
         nsDependentString(searchString).FindChar(PRUnichar('@'), 0) != 
         kNotFound || 
-        mMinStringLength && nsCRT::strlen(searchString) < mMinStringLength)  {
+        ( !IS_CJK_CHAR_FOR_LDAP(searchString[0]) ?
+          mMinStringLength && nsCRT::strlen(searchString) < mMinStringLength :
+          mCjkMinStringLength && nsCRT::strlen(searchString) < 
+          mCjkMinStringLength ) ) {
 
         FinishAutoCompleteLookup(nsIAutoCompleteStatus::ignored, 0, mState);
         return NS_OK;
@@ -1257,6 +1263,25 @@ NS_IMETHODIMP
 nsLDAPAutoCompleteSession::SetMinStringLength(PRUint32 aMinStringLength)
 {
     mMinStringLength = aMinStringLength;
+
+    return NS_OK;
+}
+
+// attribute unsigned long cjkMinStringLength
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::GetCjkMinStringLength(PRUint32 *aCjkMinStringLength)
+{
+    if (!aCjkMinStringLength) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    *aCjkMinStringLength = mCjkMinStringLength;
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::SetCjkMinStringLength(PRUint32 aCjkMinStringLength)
+{
+    mCjkMinStringLength = aCjkMinStringLength;
 
     return NS_OK;
 }

@@ -716,11 +716,21 @@ function setupLdapAutocompleteSession()
             }
             LDAPSession.serverURL = serverURL;
 
-            // don't search on strings shorter than this
+            // don't search on non-CJK strings shorter than this
             //
             try { 
                 LDAPSession.minStringLength = prefs.GetIntPref(
                     autocompleteDirectory + ".autoComplete.minStringLength");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsLDAPAutoCompleteSession use its default.
+            }
+
+            // don't search on CJK strings shorter than this
+            //
+            try { 
+                LDAPSession.cjkMinStringLength = prefs.GetIntPref(
+                  autocompleteDirectory + ".autoComplete.cjkMinStringLength");
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsLDAPAutoCompleteSession use its default.
