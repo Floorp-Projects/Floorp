@@ -59,5 +59,9 @@ mp_err  mpp_divis_primes(mp_int *a, mp_digit *np);
 mp_err  mpp_fermat(mp_int *a, mp_digit w);
 mp_err mpp_fermat_list(mp_int *a, const mp_digit *primes, unsigned int nPrimes);
 mp_err  mpp_pprime(mp_int *a, int nt);
+mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, unsigned int nPrimes, 
+		 unsigned char *sieve, unsigned int nSieve);
+mp_err mpp_make_prime(mp_int *start, unsigned int nBits, unsigned int strong,
+		      unsigned long * nTries);
 
 #endif /* end _H_MP_PRIME_ */
