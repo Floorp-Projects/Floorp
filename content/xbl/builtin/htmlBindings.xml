@@ -30,43 +30,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
 -->
       </handler>
 
-      <handler event="keypress" key=" ">
-      <![CDATA[
-        var v = document.commandDispatcher.focusedElement;
-
-        if (v) {
-          switch (v.localName) {
-            case 'TEXTAREA':
-              return true;
-    	      case 'INPUT':
-              switch (v.getAttribute('type').toLowerCase()) {
-		            case 'button':
-		            case 'image':
-		            case 'submit':
-		            case 'reset':
-		            case 'checkbox':
-		            case 'radio':
-		            case 'file':
-            	    return true;
-              }
-	            break;
-            case 'BUTTON':
-              switch (v.getAttribute('type').toLowerCase()) {
-                case 'submit':
-		            case 'button':
-		            case 'reset':
-                  return true;
-              }
-	            break;
-          }
-        }
-        var controller =
-          document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
-          controller.doCommand('cmd_scrollPageDown');
-
-        return true;
-      ]]>
-      </handler>
+      <handler event="keypress" key=" " command="cmd_scrollPageDown" />
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_scrollPageUp" />
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown" />
 

@@ -194,7 +194,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
   nsCOMPtr<nsIAtom> tag;
   mHandlerElement->GetTag(*getter_AddRefs(tag));
   PRBool isXULKey = (tag.get() == nsXULAtoms::key);
-    
+
   PRBool isReceiverCommandElement = PR_FALSE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aReceiver));
   if (isXULKey && content && content.get() != mHandlerElement)
@@ -860,6 +860,20 @@ PRInt32 nsXBLPrototypeHandler::KeyToMask(PRInt32 key)
       return cControl;
   }
   return cControl;  // for warning avoidance
+}
+
+void
+nsXBLPrototypeHandler::GetEventType(nsAWritableString &type)
+{
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
+  
+  if (type.IsEmpty()) {
+    // If we're a XUL key element, let's assume that we're "keypress".
+    nsCOMPtr<nsIAtom> tag;
+    mHandlerElement->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == kKeyAtom)
+      type = NS_LITERAL_STRING("keypress");
+  }
 }
 
 void
