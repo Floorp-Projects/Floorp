@@ -42,6 +42,7 @@ function calendarPrefObserver( CalendarPreferences )
    try {
      var pbi = rootPrefNode.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
      pbi.addObserver("calendar", this, false);
+     window.addEventListener("unload", this, false);
   } catch(ex) {
     dump("Calendar: Failed to observe prefs: " + ex + "\n");
   }
@@ -95,6 +96,12 @@ calendarPrefObserver.prototype =
      
         //this causes Mozilla to freeze
         //firePendingEvents(); 
+    },
+
+    handleEvent: function handleEvent(event)
+    {
+      var pbi = rootPrefNode.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      pbi.removeObserver(this.domain, this);
     }
 }
 
