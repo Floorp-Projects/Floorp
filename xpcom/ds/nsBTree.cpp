@@ -190,7 +190,7 @@ nsNode* nsBTree::Remove(nsNode& aNode){
     if(node2!=node3)
       (*node3)==(*node2);
 
-    if(node2->mColor=nsNode::eBlack)
+    if(node2->mColor == nsNode::eBlack)
       ReBalance(*node1);
 
     delete node2;

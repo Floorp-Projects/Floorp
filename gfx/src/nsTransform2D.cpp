@@ -214,7 +214,7 @@ void nsTransform2D :: Concatenate(nsTransform2D *newxform)
 void nsTransform2D :: PreConcatenate(nsTransform2D *newxform)
 {
   float temp00, temp01, temp10, temp11, temp20, temp21;
-  float new00, new01, new10, new11, new20, new21;
+  float new00, new01, new10, new11;
 
   //this is totally unoptimized MMP
 
@@ -229,8 +229,6 @@ void nsTransform2D :: PreConcatenate(nsTransform2D *newxform)
   new01 = newxform->m01;
   new10 = newxform->m10;
   new11 = newxform->m11;
-  new20 = newxform->m20;
-  new21 = newxform->m21;
 
   m00 = temp00 * new00 + temp01 * new10; // + temp02 * new20 == 0
   m01 = temp00 * new01 + temp01 * new11; // + temp02 * new21 == 0
