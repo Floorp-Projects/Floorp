@@ -18,7 +18,7 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-LIBRARY_NAME=ender
+LIBRARY_NAME=txmgr
 
 CPPSRCS =				\
 	nsTransactionManager.cpp	\
@@ -32,9 +32,12 @@ CPP_OBJS =					\
 
 MODULE=txmgr 
 
-REQUIRES=xpcom
+REQUIRES=xpcom base raptor
 
-LINCS=-I$(PUBLIC)\xpcom
+LINCS=-I$(PUBLIC)\xpcom \
+      -I$(PUBLIC)\txmgr \
+      -I$(PUBLIC)\base \
+      -I$(PUBLIC)\raptor
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = txmgr
@@ -48,7 +51,7 @@ LCFLAGS = \
 DEFINES = $(DEFINES) -DNOT_PRODUCTION_CODE -DUSE_EXPERIMENTAL_SMART_POINTERS 
 
 # These are the libraries we need to link with to create the dll
-LLIBS=$(DIST)\lib\xpcom32.lib
+LLIBS=$(DIST)\lib\xpcom32.lib $(DIST)\lib\raptorbase.lib
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
