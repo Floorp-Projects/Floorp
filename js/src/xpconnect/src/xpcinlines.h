@@ -582,7 +582,7 @@ void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
     if(IsIDispatch())
     {
         XPCDispInterface* iface = GetIDispatchInfo();
-        if (iface)
+        if(iface)
             iface->SetJSObject(JSObj);
     }
     else
