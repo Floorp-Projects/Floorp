@@ -59,4 +59,5 @@ class nsAutoConfig : public nsIAutoConfig,
   nsCString mBuf, mCurrProfile;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   PRBool mLoaded;
+  nsCOMPtr<nsITimer> mTimer;
 };

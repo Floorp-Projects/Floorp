@@ -326,11 +326,10 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
 
             // Create a new timer and pass this nsAutoConfig 
             // object as a timer callback. 
-            nsCOMPtr<nsITimer> timer;
-            timer = do_CreateInstance("@mozilla.org/timer;1",&rv);
+            mTimer = do_CreateInstance("@mozilla.org/timer;1",&rv);
             if (NS_FAILED(rv)) 
                 return rv;
-            rv = timer->Init(this, minutes*60*1000, NS_PRIORITY_NORMAL, 
+            rv = mTimer->Init(this, minutes*60*1000, NS_PRIORITY_NORMAL, 
                              NS_TYPE_REPEATING_SLACK);
             if (NS_FAILED(rv)) 
                 return rv;
