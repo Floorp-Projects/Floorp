@@ -775,7 +775,7 @@ nsMimeXULEmitter::DumpBody()
   //
   char  *url = nsnull;
   if (mBodyFileSpec)
-    url = nsMimePlatformFileToURL(mBodyFileSpec->GetNativePathCString());
+    url = nsMimePlatformFileToURL(*mBodyFileSpec);
 
   UtilityWrite("<html:iframe id=\"mail-body-frame\" src=\"");
   UtilityWrite(url);
@@ -1183,9 +1183,12 @@ char      *workAddr = nsnull;
 
   // Misc here
   char    *xul;
-  rv = mMiscStatus->GetIndividualXUL(curHeader, workAddr, &xul);
-  if (NS_SUCCEEDED(rv) && xul)
-    UtilityWrite(xul);
+  if (mMiscStatus)
+  {
+    rv = mMiscStatus->GetIndividualXUL(curHeader, workAddr, &xul);
+    if (NS_SUCCEEDED(rv) && xul)
+      UtilityWrite(xul);
+  }
 
   PR_FREEIF(workName);
   PR_FREEIF(workAddr);

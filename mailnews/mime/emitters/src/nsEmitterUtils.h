@@ -31,7 +31,7 @@ extern "C" char     *LocalizeHeaderName(const char *aHeaderName, const char *aDe
 nsFileSpec  *nsMsgCreateTempFileSpec(char *tFileName);
 char        *nsMsgCreateTempFileName(char *tFileName);
 
-char        *nsMimePlatformFileToURL (const char *name);
+char        *nsMimePlatformFileToURL (nsFileSpec  aFileSpec);
 
 char        *GetTheTempDirectoryOnTheSystem(void);
 

@@ -536,7 +536,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 			goto FAILMEM;
 		m_plaintext->m_mime_delivery_state = this;
 
-    char *tempURL = nsMsgPlatformFileToURL (mHTMLFileSpec->GetCString());
+    char *tempURL = nsMsgPlatformFileToURL (*mHTMLFileSpec);
     if (!tempURL || NS_FAILED(nsMsgNewURL(&(m_plaintext->mURL), tempURL)))
     {
       delete m_plaintext;

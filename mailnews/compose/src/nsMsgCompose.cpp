@@ -806,7 +806,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
     tempFile.close();
 
     // Now load the URL...
-    nsString          urlStr = nsMsgPlatformFileToURL(mComposeObj->mTempComposeFileSpec->GetNativePathCString());
+    nsString          urlStr = nsMsgPlatformFileToURL(*(mComposeObj->mTempComposeFileSpec));
     nsIEditorShell    *editor;
 
     mComposeObj->GetEditor(&editor);
@@ -1472,7 +1472,7 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
       else // We have a match...
       {
         if (!aAppendFileStream)   // Just load this URL
-          urlStr = nsMsgPlatformFileToURL(sigFilePath);
+          urlStr = nsMsgPlatformFileToURL(testSpec);
         else
           LoadDataFromFile(sigFilePath, sigData);  // Get the data!
       }
@@ -1582,7 +1582,7 @@ nsMsgCompose::BuildBodyMessage()
   //
   // Now load the URL...
   //  
-  nsString urlStr = nsMsgPlatformFileToURL(mTempComposeFileSpec->GetNativePathCString());
+  nsString urlStr = nsMsgPlatformFileToURL(*mTempComposeFileSpec);
   m_editor->LoadUrl(urlStr.GetUnicode());
   return NS_OK;
 }

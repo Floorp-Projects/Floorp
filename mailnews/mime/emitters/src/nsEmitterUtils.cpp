@@ -280,25 +280,15 @@ nsMsgCreateTempFileName(char *tFileName)
     return tString;
 }
 
-char * 
-nsMimePlatformFileToURL (const char *name)
+char *
+nsMimePlatformFileToURL (nsFileSpec  aFileSpec)
 {
-	char *prefix = "file:///";
-	char *retVal = (char *)PR_Malloc(PL_strlen(name) + PL_strlen(prefix) + 1);
-	if (retVal)
-	{
-		PL_strcpy(retVal, prefix);
-		PL_strcat(retVal, name);
-	}
+  nsFileURL   tURL(aFileSpec);
+  const char  *tPtr = nsnull;
 
-  char *ptr = retVal;
-  while (*ptr)
-  {
-    if (*ptr == '\\') *ptr = '/';
-    if ( (*ptr == ':') && (ptr > (retVal+4)) )
-      *ptr = '|';
-
-    ++ptr;
-  }
-	return retVal;
+  tPtr = tURL.GetURLString();
+  if (tPtr)
+    return PL_strdup(tPtr);
+  else
+    return nsnull;
 }
