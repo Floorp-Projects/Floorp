@@ -248,16 +248,13 @@ nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 
 	// now create a protocol instance using the imap service! 
 
-	nsIImapService * imapService = nsnull;
-	rv = nsServiceManager::GetService(kCImapService, nsIImapService::GetIID(), (nsISupports **) &imapService);
+	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
 
 	if (NS_SUCCEEDED(rv) && imapService)
 	{
-		imapService->CreateImapConnection(m_eventQueue, &m_IMAP4Protocol);
-		nsServiceManager::ReleaseService(kCImapService, imapService);
+		imapService->CreateImapConnection(m_eventQueue, nsnull, &m_IMAP4Protocol);
         if (m_IMAP4Protocol)
             m_protocolInitialized = PR_TRUE;
-            
 	}
 
 	return rv;
@@ -416,10 +413,9 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsresult nsIMAP4TestDriver::OnIdentityCheck()
 {
-	nsIMsgMailSession * mailSession = nsnull;
-	nsresult result = nsServiceManager::GetService(kCMsgMailSessionCID,
-												   nsIMsgMailSession::GetIID(),
-                                                   (nsISupports **) &mailSession);
+	nsresult result = NS_OK;
+
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &result); 
 	if (NS_SUCCEEDED(result) && mailSession)
 	{
 		nsIMsgIncomingServer * server = nsnull;
@@ -438,7 +434,6 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
 		else
 			printf("Unable to retrieve the msgIdentity....\n");
 
-		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
 	}
 	else
 		printf("Unable to retrieve the mail session service....\n");
@@ -469,16 +464,13 @@ nsresult nsIMAP4TestDriver::OnSelectFolder()
 	// go get the imap service and ask it to select a folder
 	// mscott - i may want to cache this in the test harness class
 	// since we'll be using it for pretty much all the commands
-
-	nsIImapService * imapService = nsnull;
-	nsresult rv = nsServiceManager::GetService(kCImapService, nsIImapService::GetIID(), (nsISupports **) &imapService);
-
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
 	if (NS_SUCCEEDED(rv) && imapService)
 	{
 		SetupInbox();
         if (NS_SUCCEEDED(rv) && m_inbox)
             rv = imapService->SelectFolder(m_eventQueue, m_inbox /* imap folder sink */, this /* url listener */, nsnull);
-		nsServiceManager::ReleaseService(kCImapService, imapService);
 		m_runningURL = PR_TRUE; // we are now running a url...
 	}
 
@@ -497,17 +489,13 @@ nsresult nsIMAP4TestDriver::OnFetchMessage()
 	printf("Enter UID(s) of message(s) to fetch [%s]: ", uidString);
 	scanf("%[^\n]", uidString);
 
-
-	nsIImapService * imapService = nsnull;
-	rv = nsServiceManager::GetService(kCImapService, nsIImapService::GetIID(), (nsISupports **) &imapService);
-
+	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
 	if (NS_SUCCEEDED(rv) && imapService)
 	{
 		SetupInbox();
         if (NS_SUCCEEDED(rv) && m_inbox)
             rv = imapService->FetchMessage(m_eventQueue, m_inbox /* imap folder sink */, nsnull, /* imap message sink */ this /* url listener */, nsnull,
 			nsnull, uidString, PR_TRUE);
-		nsServiceManager::ReleaseService(kCImapService, imapService);
 		m_runningURL = PR_TRUE; // we are now running a url...
 	}
 
@@ -711,10 +699,8 @@ int main()
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
 
 	// Create the Event Queue for the test app thread...a standin for the ui thread
-    nsIEventQueueService* pEventQService;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pEventQService);
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 
+
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();
@@ -727,8 +713,6 @@ int main()
         printf("unable to get event queue.\n");
         return 1;
     }
-
-	nsServiceManager::ReleaseService(kEventQueueServiceCID, pEventQService);
 
 	// okay, everything is set up, now we just need to create a test driver and run it...
 	nsIMAP4TestDriver * driver = new nsIMAP4TestDriver(queue);
