@@ -385,6 +385,14 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 				          default:         event.message = NS_KEY_UP; break;
 				        }
 				        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+
+                // Also execute the oncommand handler on a key down.
+                // Execute the oncommand event handler.
+                nsEventStatus stat = nsEventStatus_eIgnore;
+                nsMouseEvent evt;
+                evt.eventStructType = NS_EVENT;
+                evt.message = NS_MENU_ACTION;
+                content->HandleDOMEvent(*aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, stat);
 				    }
     
 		          } while (PR_FALSE);
