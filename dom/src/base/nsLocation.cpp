@@ -611,7 +611,13 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
           nsJSUtils::GetDynamicScriptContext(cx);
 
         if (scriptContext) {
-          inScriptTag = scriptContext->GetProcessingScriptTag();
+          if (scriptContext->GetProcessingScriptTag()) {
+            // Now check to make sure that the script is running in our window,
+            // since we only want to replace if the location is set by a
+            // <script> tag in the same window.  See bug 178729.
+            nsCOMPtr<nsIScriptGlobalObject> ourGlobal(do_GetInterface(mDocShell));
+            inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
+          }
         }  
       } //cx
     }  // stack
