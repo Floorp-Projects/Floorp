@@ -22,6 +22,11 @@
 // JS2 shell.
 //
 
+#ifdef _WIN32
+ // Turn off warnings about identifiers too long in browser information
+ #pragma warning(disable: 4786)
+#endif
+
 #if 1
 #define DEBUGGER_FOO
 #define INTERPRET_INPUT
