@@ -816,6 +816,26 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
   if ( htmlEditor )
   {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
+	if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+    if (dragSession)
+	{
+       PRBool flavorSupported = PR_FALSE;
+      dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kHTMLMime, &flavorSupported);
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kFileMime, &flavorSupported);
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kJPEGImageMime, &flavorSupported);
+      if (! flavorSupported ) 
+		return NS_OK;     
+	}
+
+
     //some day we want to use another way to stop this from bubbling.
     aMouseEvent->PreventBubble();
     aMouseEvent->PreventDefault();
