@@ -67,7 +67,7 @@ if (!$function) {
 
 <h2><a href="?function=addentry">New FAQ Entry</A></h2>
 <form name="addapplication" method="post" action="?function=addentry">
-
+<?writeFormKey();?>
   Title: <input name="title" type="text" size="30" maxlength="150" value="">
 <input name="submit" type="submit" value="Next &#187;&#187;"></SPAN>
 </form>
@@ -85,23 +85,27 @@ if (!$function) {
     $text = $_POST["text"];
     $active = $_POST["active"];
     $id = $_POST["id"];
-    $sql = "UPDATE `t_faq` SET `title`='$title', `index`='$index', `alias`='$alias', `text`='$text', `active`='$active' WHERE `id`='$id'";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
-    if ($sql_result) {
-        echo"Your update to '$title', has been successful.<br>";
+    if (checkFormKey()) {
+      $sql = "UPDATE `t_faq` SET `title`='$title', `index`='$index', `alias`='$alias', `text`='$text', `active`='$active' WHERE `id`='$id'";
+      $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
+      if ($sql_result) {
+          echo"Your update to '$title', has been successful.<br>";
+      }
     }
 
   } else if ($_POST["submit"] == "Delete Entry") {
     echo"<h2>Processing, please wait...</h2>\n";
     $id = $_POST["id"];
     $title = $_POST["title"];
-    $sql = "DELETE FROM `t_faq` WHERE `id`='$id'";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
-    if ($sql_result) {
-        echo"You've successfully deleted the FAQ Entry '$title'.";
-        include"$page_footer";
-        echo"</body>\n</html>\n"; 
-        exit;
+    if (checkFormKey()) {
+      $sql = "DELETE FROM `t_faq` WHERE `id`='$id'";
+      $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
+      if ($sql_result) {
+          echo"You've successfully deleted the FAQ Entry '$title'.";
+          include"$page_footer";
+          echo"</body>\n</html>\n"; 
+          exit;
+      }
     }
 }
 
@@ -113,6 +117,7 @@ if (!$function) {
 
 <h3>Edit FAQ Entry:</h3>
 <form name="editfaq" method="post" action="?function=edit">
+<?writeFormKey();?>
 <?php
   echo"<input name=\"id\" type=\"hidden\" value=\"".$row["id"]."\" />\n";
   echo"Title: <input name=\"title\" type=\"text\" size=\"40\" maxlength=\"150\" value=\"".$row["title"]."\"> ";
@@ -164,16 +169,19 @@ if ($active=="YES") {
     $text = $_POST["text"];
     $active = $_POST["active"];
     $id = $_POST["id"];
-     $sql = "INSERT INTO `t_faq` (`title`,`index`,`alias`, `text`, `active`) VALUES ('$title','$index','$alias', '$text', '$active')";
-     $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
-     if ($sql_result) {
+    if (checkFormKey()) {
+      $sql = "INSERT INTO `t_faq` (`title`,`index`,`alias`, `text`, `active`) VALUES ('$title','$index','$alias', '$text', '$active')";
+      $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
+      if ($sql_result) {
         echo"The entry '$title' has been successfully added.<br>\n";
-     }
+      }
+    }
   }
 ?>
 
 <h2>Add FAQ Entry:</h2>
 <form name="addfaq" method="post" action="?function=addentry">
+<?writeFormKey();?>
 <?php
 $title = $_POST["title"];
 

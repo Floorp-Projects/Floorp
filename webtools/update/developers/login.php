@@ -3,7 +3,8 @@ require"../core/config.php";
 require"core/sessionconfig.php";
 
 $password = md5($_POST[password]);
-$sql = "SELECT DISTINCT `UserID`, `UserEmail`,`UserName`,`UserMode`,`UserTrusted` FROM `t_userprofiles` WHERE `UserEmail` = '$_POST[email]' && `UserPass` = '$password' LIMIT 1";
+$email = $_POST["email"];
+$sql = "SELECT DISTINCT `UserID`, `UserEmail`,`UserName`,`UserMode`,`UserTrusted` FROM `t_userprofiles` WHERE `UserEmail` = '$email' && `UserPass` = '$password' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
   $num = mysql_num_rows($sql_result);
 

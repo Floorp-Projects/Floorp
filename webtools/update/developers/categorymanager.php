@@ -27,13 +27,15 @@ if (!$function) {
 ?>
 <?php
 if ($_POST["submit"]=="Create Category") {
-  if ($_POST[cattype]=="other") {$_POST["cattype"]=$_POST["othertype"];}
-    $catname = $_POST["catname"];
-    $catdesc = $_POST["catdesc"];
-    $cattype = $_POST["cattype"];
-    $catapp = $_POST["catapp"];
-   	$sql = "INSERT INTO `t_categories` (`CatName`, `CatDesc`, `CatType`, `CatApp`) VALUES ('$catname', '$catdesc', '$cattype', '$catapp');";
+  if ($_POST[cattype]=="other") $_POST["cattype"]=$_POST["othertype"];
+  $catname = $_POST["catname"];
+  $catdesc = $_POST["catdesc"];
+  $cattype = $_POST["cattype"];
+  $catapp = $_POST["catapp"];
+  if (checkFormKey()) {
+    $sql = "INSERT INTO `t_categories` (`CatName`, `CatDesc`, `CatType`, `CatApp`) VALUES ('$catname', '$catdesc', '$cattype', '$catapp');";
     $result = mysql_query($sql) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
+  }
 }
 ?>
 <h1>Manage Category List</h1>
@@ -70,7 +72,7 @@ $typenames = array("E"=>"Extensions", "T"=>"Themes","P"=>"Plugins");
 
 <?php
  $i=0;
- $sql = "SELECT * FROM `t_categories` WHERE `CatType` LIKE '$type' ORDER BY `CatType`,`CatName`";
+ $sql = "SELECT * FROM `t_categories` WHERE `CatType` LIKE '$type' AND `CatApp`='$application' ORDER BY `CatType`,`CatName`";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result)) {
     $categoryid = $row["CategoryID"];
@@ -86,13 +88,13 @@ $typenames = array("E"=>"Extensions", "T"=>"Themes","P"=>"Plugins");
     echo"</tr>\n";
 }
 
-
 }
 ?>
 </table>
 <h2>New Category for <?php echo ucwords($application); ?><BR></h2>
 <div style="font-size: 10pt; font-weight: bold">
 <form name="addapplication" method="post" action="?function=&action=addnewcategory">
+<?writeFormKey();?>
 <input name="catapp" type="hidden" value="<?php echo strtolower($application); ?>">
 Name: <input name="catname" type="text" value="" size="30" maxlength="100"><BR>
 Description: <input name="catdesc" type="text" value="" size="50" maxlength="100"><BR>
@@ -124,17 +126,20 @@ if ($_POST["submit"] == "Update") {
   $catname = $_POST["catname"];
   $catdesc = $_POST["catdesc"];
   $cattype = $_POST["cattype"];
+  if (checkFormKey()) {
     $sql = "UPDATE `t_categories` SET `CatName`='$catname', `CatDesc`='$catdesc', `CatType`='$cattype' WHERE `CategoryID`='$categoryid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
 
-  echo"Your update to $catname, has been submitted successfully...<br>";
+    echo"Your update to $catname, has been submitted successfully...<br>";
+  }
 
 } else if ($_POST["submit"] == "Delete Category") {
   echo"<h2>Processing Delete Request, please wait...</h2>\n";
   $categoryid = $_POST["categoryid"];
-  $sql = "DELETE FROM `t_categories` WHERE `CategoryID`='$categoryid'";
-  $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
-
+  if (checkFormKey()) {
+    $sql = "DELETE FROM `t_categories` WHERE `CategoryID`='$categoryid'";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
+  }
   echo"You've successfully deleted the category '$catname'...<br>";
 }
 
@@ -153,6 +158,7 @@ if (!$categoryid) { $categoryid = $_POST["categoryid"]; }
 <div class="editbox">
     <h3>Edit Category <?php echo"$catname for ".ucwords($catapp); ?>:</h3>
 <form name="editcategory" method="post" action="?function=editcategory">
+<?writeFormKey();?>
 <?php
   echo"Name:  <input name=\"catname\" type=\"text\" value=\"$catname\" size=\"30\" maxlength=\"100\"><br>\n";
   echo"Description:  <input name=\"catdesc\" type=\"text\" value=\"$catdesc\" size=\"50\" maxlength=\"100\"><br>\n";
@@ -166,6 +172,7 @@ if (!$categoryid) { $categoryid = $_POST["categoryid"]; }
 <A HREF="?function=">&#171;&#171; Return to Category Manager</A>
 </div>
 <?php
+
 } else {}
 ?>
 

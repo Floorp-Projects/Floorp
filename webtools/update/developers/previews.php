@@ -191,6 +191,11 @@ if ($type=="2" or $type=="3") {
 
 //Destination Properties for the Display Image
 //Output Image Dimensions
+
+//Limit Max.
+if ($width > "690") {$width="690";}
+if ($width > "520") {$width="520";}
+
 $dest_width="$width"; // Destination Width /$tn_size_width
 $dest_height_fixed="$height"; // Destination Height / $tn_size_height (Fixed)
 $dest_height= ($src_height * $dest_width) / $src_width; // (Aspect Ratio Variable Height
