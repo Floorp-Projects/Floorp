@@ -869,32 +869,49 @@ function SetEditMode(mode)
     if (!SetDisplayMode(mode))
       return;
 
+    var source;
+
     if (mode == DisplayModeSource)
     {
       // Get the entire document's source string
-      var source = editorShell.GetContentsAs("text/html", 0);
-      if (source.length > 0)
-      {
-        // Don't include anything before "<head", such as "<DOCTYPE..."
-        headStart = source.indexOf("<head");
-        if (headStart > 0)
-          gSourceContentWindow.value = source.slice(headStart);
-        else
-          headStart = source;
 
-        gSourceContentWindow.focus();
-      }
-      else
-        SetDisplayMode(PreviousNonSourceDisplayMode);
+      var flags = gOutputNoDoctype | gOutputEncodeEntities;
+      // 
+      var prettyPrint = gPrefs.GetBoolPref("editor.prettyprint");
+      if (prettyPrint)
+        flags |= gOutputFormatted;
+
+      source = editorShell.GetContentsAs("text/html", flags);
+      var start = source.search(/<html/i);
+      if (start == -1) start = 0;
+      gSourceContentWindow.value = source.slice(start);
+      gSourceContentWindow.focus();
     }
     else if (previousMode == DisplayModeSource) 
     {
       // We are comming from edit source mode,
       //   so transfer that back into the document
-      editorShell.RebuildDocumentFromSource(gSourceContentWindow.value);
+      source = gSourceContentWindow.value;
+      editorShell.RebuildDocumentFromSource(source);
 
-      // Clear out the source editor buffer
-      gSourceContentWindow.value = "";
+      // Must handle <title> here to make sure new value is updated
+      //  everwhere (also covers bug in RebuildDocumentFromSource that strips it out!)
+      var titleStart = source.search(/<title>/i);
+      if (titleStart != -1)
+      {
+        // Skip over tag name
+        titleStart += 7;
+        var titleEnd = source.indexOf("<",titleStart);
+        if (titleEnd > titleStart)
+        {
+          var title = source.slice(titleStart, titleEnd);
+          dump("Title="+title+"|\n");
+          editorShell.SetDocumentTitle(title);
+        }
+      }
+      // Clear out the string buffers
+      source = null;
+      gSourceContentWindow.value = null;
 
       // reset selection to top of doc (wish we could preserve it!)
       if (bodyNode)
