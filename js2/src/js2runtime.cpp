@@ -219,7 +219,7 @@ void JSObject::defineTempVariable(Context *cx, Reference *&readRef, Reference *&
     char buf[32];
     sprintf(buf, "%%tempvar%%_%d", tempVarCount++);
     const String &name = cx->mWorld.identifiers[buf];
-    /* Property *prop = */defineVariable(cx, name, (NamespaceList *)NULL, Object_Type);
+    /* Property *prop = */defineVariable(cx, name, (NamespaceList *)NULL, type);
     readRef = new NameReference(name, Read, Object_Type, 0);
     writeRef = new NameReference(name, Write, Object_Type, 0);
 }
@@ -1669,7 +1669,7 @@ static JSValue Object_forin(Context *cx, const JSValue& thisValue, JSValue * /*a
     return JSValue(iteratorObject);
 }
 
-static JSValue Object_next(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
+static JSValue Object_next(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
     JSValue iteratorValue = argv[0];
     ASSERT(iteratorValue.isObject());
@@ -1688,7 +1688,7 @@ static JSValue Object_next(Context *cx, const JSValue& thisValue, JSValue *argv,
 
 }
 
-static JSValue Object_done(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue Object_done(Context *, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
 {
     return kUndefinedValue;
 }

@@ -144,7 +144,7 @@ static const double two31 = 2147483648.0;
             type_tag,
             boolean_tag,
             string_tag,
-            null_tag,
+            null_tag
         } Tag;
         Tag tag;
         
@@ -740,10 +740,9 @@ XXX ...couldn't get this to work...
             return mUnaryOperators[which];      // XXX Umm, aren't these also getting inherited? 
         }
 
-        void setDefaultConstructor(Context *cx, JSFunction *f)
+        void setDefaultConstructor(Context * /*cx*/, JSFunction *f)
         {
             mDefaultConstructor = f;
-//            defineConstructor(cx, *mClassName, NULL, f);    // XXX attr?
         }
 
         void addMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);

@@ -39,6 +39,7 @@
 #endif
 
 #include <algorithm>
+#include <ctype.h>
 
 #include "parser.h"
 #include "numerics.h"
@@ -434,11 +435,11 @@ static float64 date_parseString(const String &s)
     int min = -1;
     int sec = -1;
     int c = -1;
-    int i = 0;
+    uint32 i = 0;
     int n = -1;
     float64 tzoffset = -1;  /* was an int, overflowed on win16!!! */
     int prevc = 0;
-    int limit = 0;
+    uint32 limit = 0;
     bool seenplusminus = false;
 
     limit = s.length();
@@ -536,7 +537,7 @@ static float64 date_parseString(const String &s)
 	} else if (c == '/' || c == ':' || c == '+' || c == '-') {
 	    prevc = c;
 	} else {
-	    int st = i - 1;
+	    uint32 st = i - 1;
 	    int k;
 	    while (i < limit) {
 		c = s[i];
@@ -709,7 +710,7 @@ static const char* months[] =
    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-static JSValue Date_toGMTString(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_toGMTString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     StringFormatter buf;
     float64 *date = Date_getProlog(cx, thisValue);
@@ -763,15 +764,15 @@ static void new_explode(float64 timeval, PRMJTime *split, bool findEquivalent)
 	adjustedYear = (int16)year;
     }
 
-    split->tm_usec = (int32) msFromTime(timeval) * 1000;
-    split->tm_sec = (int8) SecFromTime(timeval);
-    split->tm_min = (int8) MinFromTime(timeval);
-    split->tm_hour = (int8) HourFromTime(timeval);
-    split->tm_mday = (int8) DateFromTime(timeval);
-    split->tm_mon = (int8) MonthFromTime(timeval);
-    split->tm_wday = (int8) WeekDay(timeval);
-    split->tm_year = (int16) adjustedYear;
-    split->tm_yday = (int16) DayWithinYear(timeval, year);
+    split->tm_usec = (uint32) msFromTime(timeval) * 1000;
+    split->tm_sec = (uint8) SecFromTime(timeval);
+    split->tm_min = (uint8) MinFromTime(timeval);
+    split->tm_hour = (uint8) HourFromTime(timeval);
+    split->tm_mday = (uint8) DateFromTime(timeval);
+    split->tm_mon = (uint8) MonthFromTime(timeval);
+    split->tm_wday = (uint8) WeekDay(timeval);
+    split->tm_year = (uint16) adjustedYear;
+    split->tm_yday = (uint16) DayWithinYear(timeval, year);
 
     /* not sure how this affects things, but it doesn't seem
        to matter. */
@@ -784,7 +785,7 @@ typedef enum formatspec {
 
 
 /* helper function */
-static JSValue Date_format(Context *cx, float64 date, formatspec format)
+static JSValue Date_format(Context * /*cx*/, float64 date, formatspec format)
 {
     StringFormatter outf;
     char tzbuf[100];
@@ -886,7 +887,7 @@ static JSValue Date_format(Context *cx, float64 date, formatspec format)
     return JSValue(new String(outf.getString()));
 }
 
-static JSValue Date_toLocaleHelper(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc, char *format)
+static JSValue Date_toLocaleHelper(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/, char *format)
 {
     StringFormatter outf;
     char buf[100];
@@ -897,7 +898,7 @@ static JSValue Date_toLocaleHelper(Context *cx, const JSValue& thisValue, JSValu
     if (!JSDOUBLE_IS_FINITE(*date)) {
 	outf << js_NaN_date_str;
     } else {
-	int32 result_len;
+	uint32 result_len;
 	float64 local = LocalTime(*date);
 	new_explode(local, &split, false);
 
@@ -1169,7 +1170,7 @@ static JSValue Date_getUTCMilliseconds(Context *cx, const JSValue& thisValue, JS
 }
 
 
-static JSValue Date_setTime(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setTime(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(cx, thisValue);
     float64 result = argv[0].toNumber(cx).f64;
@@ -1177,7 +1178,7 @@ static JSValue Date_setTime(Context *cx, const JSValue& thisValue, JSValue *argv
     return JSValue(*date);
 }
 
-static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
 {
     float64 t;
     float64 year;
@@ -1211,79 +1212,79 @@ static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv
     return JSValue(*date);
 }
 
-JSValue Date_setFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 3, true);
 }
 
-JSValue Date_setUTCFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setUTCFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 3, false);
 }
 
-JSValue Date_setMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 2, true);
 }
 
-JSValue Date_setUTCMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setUTCMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 2, false);
 }
 
-JSValue Date_setDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 1, true);
 }
 
-JSValue Date_setUTCDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setUTCDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 1, false);
 }
 
-JSValue Date_setHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 4, true);
 }
 
-JSValue Date_setUTCHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setUTCHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 4, false);
 }
 
-JSValue Date_setMinutes(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setMinutes(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 3, true);
 }
 
-JSValue Date_setUTCMinutes(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setUTCMinutes(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 3, false);
 }
 
-JSValue Date_setSeconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setSeconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 2, true);
 }
 
-JSValue Date_setUTCSeconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setUTCSeconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 2, true);
 }
 
-JSValue Date_setMilliseconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setMilliseconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 1, true);
 }
 
-JSValue Date_setUTCMilliseconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_setUTCMilliseconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 1, true);
 }
 
 // SpiderMonkey has a 'hinted' version:
 #if JS_HAS_VALUEOF_HINT
-JSValue Date_valueOf(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue Date_valueOf(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     /* If called directly with no arguments, convert to a time number. */
     if (argc == 0)
