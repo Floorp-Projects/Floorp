@@ -606,6 +606,10 @@ nsHTMLFormElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 PRBool    
 nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
+  if (!JSVAL_IS_STRING(aID)) {
+    return PR_TRUE;
+  }
+
   PRBool ret;
   JSObject* obj;
   char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
