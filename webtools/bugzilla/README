@@ -11,6 +11,13 @@ things, and you're off and using it.  Work has to be done to get there.
 We'd like to get there, but it wasn't clear when that would be, and so we
 decided to let people see it first.
 
+   Bugzilla has been successfully installed under Solaris and Linux. Windows NT
+is not officially supported. There have been a few successful installations
+of Bugzilla under Windows NT. Please see this article for a discussion of what
+one person hacked together to get it to work.
+
+news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
+
         ============
         INSTALLATION
         ============
