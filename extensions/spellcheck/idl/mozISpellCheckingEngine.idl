@@ -50,9 +50,6 @@ interface mozISpellCheckingEngine : nsISupports {
   /* The name of the current dictionary */
   attribute wstring dictionary;
 
-  /* The charset that we are using, somone may want to know. */
-  readonly attribute wstring charset;
-
   /* The language we think that we're checking */
   readonly attribute wstring language;
 

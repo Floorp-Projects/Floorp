@@ -70,7 +70,7 @@ myspSuggestMgr::~myspSuggestMgr()
 }
 
 void 
-myspSuggestMgr::setup(const nsAFlatCString &tryme, int maxn, myspAffixMgr *aptr)
+myspSuggestMgr::setup(const nsAFlatString &tryme, int maxn, myspAffixMgr *aptr)
 {
   // register affix manager and check in string of chars to 
   // try when building candidate suggestions
@@ -83,21 +83,21 @@ myspSuggestMgr::setup(const nsAFlatCString &tryme, int maxn, myspAffixMgr *aptr)
 // generate suggestions for a mispelled word
 //    pass in address of array of char * pointers
 
-nsresult myspSuggestMgr::suggest(char ***slst,const nsAFlatCString &word, PRUint32 *num)
+nsresult myspSuggestMgr::suggest(PRUnichar ***slst,const nsAFlatString &word, PRUint32 *num)
 {
-  if(!num || !slst)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(num);
+  NS_ENSURE_ARG_POINTER(slst);
+
   nsresult res;
   PRUint32 nsug;
   PRUint32 i;
-  char **wlst;
+  PRUnichar **wlst;
   if(!(*slst)){
     nsug=0;
-    wlst=(char **)nsMemory::Alloc(sizeof(char *)*maxSug);
+    wlst=(PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * maxSug);
     if(!wlst)
       return NS_ERROR_OUT_OF_MEMORY;
-    for(i=0;i<maxSug;i++)
-      wlst[i]=nsnull;
+    memset(wlst, nsnull, sizeof(PRUnichar*) * maxSug); 
   }
   else{
     wlst=*slst;
@@ -143,15 +143,15 @@ nsresult myspSuggestMgr::suggest(char ***slst,const nsAFlatCString &word, PRUint
 
 
 // error is wrong char in place of correct one
-nsresult myspSuggestMgr::badchar(char ** wlst,const nsAFlatCString &word, PRUint32 *ns)
+nsresult myspSuggestMgr::badchar(PRUnichar ** wlst,const nsAFlatString &word, PRUint32 *ns)
 {
-  char	tmpc;
-  nsSharableCString candidate;
+  PRUnichar tmpc;
+  nsAutoString candidate;
   PRBool cwrd;
   PRUint32 i,j,k;
   PRUint32 wl = word.Length();
   candidate.Assign(word);
-  nsACString::iterator candIt;
+  nsASingleFragmentString::char_iterator candIt;
   for (i=0,candidate.BeginWriting(candIt); i < wl; i++,candIt++) {
     tmpc = *candIt;
     for (j=0; j < ctry.Length(); j++) {
@@ -166,7 +166,7 @@ nsresult myspSuggestMgr::badchar(char ** wlst,const nsAFlatCString &word, PRUint
       }
       if (cwrd && pAMgr->check(candidate)) {
         if (*ns < maxSug) {
-          wlst[*ns] = ToNewCString(candidate);
+          wlst[*ns] = ToNewUnicode(candidate);
           if(!wlst[*ns])
             return NS_ERROR_OUT_OF_MEMORY;
           (*ns)++;
@@ -180,19 +180,19 @@ nsresult myspSuggestMgr::badchar(char ** wlst,const nsAFlatCString &word, PRUint
 
 
 // error is word has an extra letter it does not need 
-nsresult myspSuggestMgr::extrachar(char ** wlst,const nsAFlatCString &word, PRUint32 *ns)
+nsresult myspSuggestMgr::extrachar(PRUnichar ** wlst,const nsAFlatString &word, PRUint32 *ns)
 {
   PRBool cwrd;
   nsString stCand;
-  nsSharableCString candidate;
+  nsAutoString candidate;
   PRUint32 k;
   PRUint32 wl = word.Length();
   if (wl < 2) return 0;
   
   // try omitting one char of word at a time
   candidate.Assign(Substring(word,1,wl-1));
-  nsACString::iterator r;
-  nsACString::const_iterator p,end;
+  nsASingleFragmentString::char_iterator r;
+  nsASingleFragmentString::const_char_iterator p,end;
   word.EndReading(end);
   
   for (word.BeginReading(p),candidate.BeginWriting(r);  p != end;  ) {
@@ -205,7 +205,7 @@ nsresult myspSuggestMgr::extrachar(char ** wlst,const nsAFlatCString &word, PRUi
     }
     if (cwrd && pAMgr->check(candidate)) {
       if (*ns < maxSug) {
-        wlst[*ns] = ToNewCString(candidate);
+        wlst[*ns] = ToNewUnicode(candidate);
         if(!wlst[*ns])
           return NS_ERROR_OUT_OF_MEMORY;
         (*ns)++;
@@ -218,16 +218,15 @@ nsresult myspSuggestMgr::extrachar(char ** wlst,const nsAFlatCString &word, PRUi
 
 
 // error is mising a letter it needs
-nsresult myspSuggestMgr::forgotchar(char **wlst,const nsAFlatCString &word, PRUint32 *ns)
+nsresult myspSuggestMgr::forgotchar(PRUnichar **wlst,const nsAFlatString &word, PRUint32 *ns)
 {
   PRBool cwrd;
   nsString stCand;
-  nsSharableCString candidate;
+  nsAutoString candidate;
   PRUint32 i,k;
-  candidate.Assign(" ");
-  candidate.Append(word);
-  nsACString::iterator q;
-  nsACString::const_iterator p,end;
+  candidate = NS_LITERAL_STRING(" ") + word;
+  nsASingleFragmentString::char_iterator q;
+  nsASingleFragmentString::const_char_iterator p,end;
   word.EndReading(end);
 
   // try inserting a tryme character before every letter
@@ -243,7 +242,7 @@ nsresult myspSuggestMgr::forgotchar(char **wlst,const nsAFlatCString &word, PRUi
       }
       if (cwrd && pAMgr->check(candidate)) {
         if (*ns < maxSug) {
-          wlst[*ns] = ToNewCString(candidate);
+          wlst[*ns] = ToNewUnicode(candidate);
           if(!wlst[*ns])
             return NS_ERROR_OUT_OF_MEMORY;
           (*ns)++;
@@ -265,7 +264,7 @@ nsresult myspSuggestMgr::forgotchar(char **wlst,const nsAFlatCString &word, PRUi
     }
     if (cwrd && pAMgr->check(candidate)) {
       if (*ns < maxSug) {
-        wlst[*ns] = ToNewCString(candidate);
+        wlst[*ns] = ToNewUnicode(candidate);
         if(!wlst[*ns])
           return NS_ERROR_OUT_OF_MEMORY;
         (*ns)++;
@@ -277,15 +276,14 @@ nsresult myspSuggestMgr::forgotchar(char **wlst,const nsAFlatCString &word, PRUi
 
 
 /* error is should have been two words */
-nsresult myspSuggestMgr::twowords(char ** wlst,const nsAFlatCString &word, PRUint32 *ns)
+nsresult myspSuggestMgr::twowords(PRUnichar ** wlst,const nsAFlatString &word, PRUint32 *ns)
 {
-  nsSharableCString candidate;
-  nsString stCand;
+  nsAutoString candidate;
   PRUint32 pos;
   PRUint32 wl=word.Length();
   if (wl < 3) return NS_OK;
   candidate.Assign(word);
-  nsSharableCString temp;
+  nsAutoString temp;
 
   // split the string into two pieces after every char
   // if both pieces are good words make them a suggestion
@@ -295,8 +293,8 @@ nsresult myspSuggestMgr::twowords(char ** wlst,const nsAFlatCString &word, PRUin
       temp.Assign(Substring(candidate,pos,wl-pos));
       if (pAMgr->check(temp)) {
         if (*ns < maxSug) {
-          candidate.Insert(' ',pos);
-          wlst[*ns] = ToNewCString(candidate);
+          candidate.Insert(PRUnichar(' '),pos);
+          wlst[*ns] = ToNewUnicode(candidate);
           if(!wlst[*ns])
             return NS_ERROR_OUT_OF_MEMORY;
           (*ns)++;
@@ -309,15 +307,14 @@ nsresult myspSuggestMgr::twowords(char ** wlst,const nsAFlatCString &word, PRUin
 
 
 // error is adjacent letter were swapped
-nsresult myspSuggestMgr::swapchar(char **wlst,const nsAFlatCString &word, PRUint32 *ns)
+nsresult myspSuggestMgr::swapchar(PRUnichar **wlst,const nsAFlatString &word, PRUint32 *ns)
 {
-  nsSharableCString candidate;
-  char	tmpc;
+  nsAutoString candidate;
+  PRUnichar	tmpc;
   PRBool cwrd;
-  nsString stCand;
   PRUint32 k;
   candidate.Assign(word);
-  nsACString::iterator p,q,end;
+  nsASingleFragmentString::char_iterator p,q,end;
   candidate.EndWriting(end);
 
   for (candidate.BeginWriting(p),q=p, q++;  q != end;  p++,q++) {
@@ -333,7 +330,7 @@ nsresult myspSuggestMgr::swapchar(char **wlst,const nsAFlatCString &word, PRUint
     }
     if (cwrd && pAMgr->check(candidate)) {
       if (*ns < maxSug) {
-        wlst[*ns] = ToNewCString(candidate);
+        wlst[*ns] = ToNewUnicode(candidate);
         if(!wlst[*ns])
           return NS_ERROR_OUT_OF_MEMORY;
         (*ns)++;
