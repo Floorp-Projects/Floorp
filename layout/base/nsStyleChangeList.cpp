@@ -57,6 +57,7 @@ nsresult
 nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 aHint)
 {
   NS_ASSERTION(aFrame || (aHint >= NS_STYLE_HINT_FRAMECHANGE), "must have frame");
+  NS_ASSERTION(aContent || (aHint < NS_STYLE_HINT_FRAMECHANGE), "must have content");
 
   if ((0 < mCount) && (NS_STYLE_HINT_FRAMECHANGE == aHint)) { // filter out all other changes for same content
     if (aContent) {
