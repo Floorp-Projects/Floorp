@@ -414,7 +414,6 @@ void printusage(void)
 int main(int argc, char **argv)
 {
     int rv = -1;
-    nsresult result = NS_OK;
 
     if (argc < 2) {
         printusage();
