@@ -31,6 +31,7 @@
 #include "nsIBox.h"
 #include "nsCOMPtr.h"
 #include "nsIScrollableFrame.h"
+#include "nsBoxLayoutState.h"
 
 nsresult
 NS_NewTempleLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
@@ -47,7 +48,10 @@ nsTempleLayout::nsTempleLayout(nsIPresShell* aPresShell):nsMonumentLayout(aPresS
 
 nsTempleLayout::~nsTempleLayout()
 {
-  delete mMonuments;
+  if (mMonuments) {
+    nsBoxLayoutState state((nsIPresContext*)nsnull);
+    mMonuments->Destroy(state);
+  }
 }
 
 NS_IMETHODIMP
@@ -228,7 +232,7 @@ nsTempleLayout::DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
 
   if (mMonuments) {
     nsBoxSizeList* tmp = mMonuments;
-    mMonuments->Release(aState);
+    mMonuments->Destroy(aState);
     mMonuments = nsnull;
   }
 
