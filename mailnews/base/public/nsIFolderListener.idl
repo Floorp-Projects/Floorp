@@ -26,6 +26,6 @@ interface nsIFolderListener : nsISupports {
 
 	void OnItemAdded(in nsIFolder parentFolder, in nsISupports item);
 	void OnItemRemoved(in nsIFolder parentFolder, in nsISupports item);
-	void OnItemPropertyChanged(in nsISupports item, in string property, in string value);
+	void OnItemPropertyChanged(in nsISupports item, in string property, in string oldValue, in string newValue);
 
 };

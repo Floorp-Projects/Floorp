@@ -8,7 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
-#include "nsID.h" /* interface nsID */
 #include "nsIFolder.h" /* interface nsIFolder */
 
 #ifdef XPIDL_JS_STUBS
@@ -16,7 +15,7 @@
 #endif
 class nsIFolder; /* forward decl */
 
-/* starting interface:    nsIFolderListener */
+/* starting interface nsIFolderListener */
 
 /* {1c5ef9f0-d1c0-11d2-94CA-006097222B83} */
 #define NS_IFOLDERLISTENER_IID_STR "1c5ef9f0-d1c0-11d2-94CA-006097222B83"
@@ -37,8 +36,8 @@ class nsIFolderListener : public nsISupports {
   /* void OnItemRemoved (in nsIFolder parentFolder, in nsISupports item); */
   NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item) = 0;
 
-  /* void OnItemPropertyChanged (in nsISupports item, in string property, in string value); */
-  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property, const char *value) = 0;
+  /* void OnItemPropertyChanged (in nsISupports item, in string property, in string oldValue, in string newValue); */
+  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property, const char *oldValue, const char *newValue) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
