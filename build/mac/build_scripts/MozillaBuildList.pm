@@ -312,6 +312,10 @@ sub ProcessJarManifests()
     {
       CreateJarFromManifest(":mozilla:extensions:cview:resources:jar.mn", $chrome_dir, \%jars);
     }
+    if ($main::options{ldap_experimental})
+    {
+      CreateJarFromManifest(":mozilla:directory:xpcom:tests:jar.mn", $chrome_dir, \%jars);
+    }
     if ($main::options{help})
     {
       CreateJarFromManifest(":mozilla:extensions:help:resources:jar.mn", $chrome_dir, \%jars);
