@@ -713,8 +713,8 @@ var nsEditHTMLCommand =
 //-----------------------------------------------------------------------------------
 // TABLE EDITING COMMANDS
 // Command Updating Strategy:
-//   Don't update 
-
+//   Don't update on on selection change, only when menu is displayed,
+//   with this "oncreate" hander:
 function EditorInitTableMenu()
 {
   // Change text on the "Join..." item depending if we
@@ -745,15 +745,14 @@ function EditorInitTableMenu()
   document.getElementById("menu_SelectAllCells").setAttribute("acceltext",DragStr);
   // And add "Del" or "Clear"
   document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
-dump("*** commandset id=composerTableMenuItems:"+document.getElementById('composerTableMenuItems')+"\n");
 
+  // Set enable states for all table commands
   goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
 }
 
 
 function goUpdateTableMenuItems(commandset)
 {
-dump(" **** goUpdateTableMenuItems: commandset="+commandset+"\n");
   // Insert table can be done any time (if editable document)
   goUpdateCommand("cmd_InsertTable");
 
