@@ -41,3 +41,9 @@ objdir_name:
 
 os_arch:
 	@echo $(OS_ARCH)
+
+dll_prefix:
+	@echo $(DLL_PREFIX)
+
+dll_suffix:
+	@echo $(DLL_SUFFIX)
