@@ -46,13 +46,12 @@ NS_DEF_PTR(nsIDOMRange);
 // Range property ids
 //
 enum Range_slots {
-  RANGE_ISPOSITIONED = -1,
-  RANGE_STARTPARENT = -2,
-  RANGE_STARTOFFSET = -3,
-  RANGE_ENDPARENT = -4,
-  RANGE_ENDOFFSET = -5,
-  RANGE_ISCOLLAPSED = -6,
-  RANGE_COMMONPARENT = -7
+  RANGE_STARTPARENT = -1,
+  RANGE_STARTOFFSET = -2,
+  RANGE_ENDPARENT = -3,
+  RANGE_ENDOFFSET = -4,
+  RANGE_ISCOLLAPSED = -5,
+  RANGE_COMMONPARENT = -6
 };
 
 /***********************************************************************/
@@ -71,17 +70,6 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case RANGE_ISPOSITIONED:
-      {
-        PRBool prop;
-        if (NS_OK == a->GetIsPositioned(&prop)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
       case RANGE_STARTPARENT:
       {
         nsIDOMNode* prop;
@@ -178,99 +166,7 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case RANGE_ISPOSITIONED:
-      {
-        PRBool prop;
-        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
-          return JS_FALSE;
-        }
-      
-        a->SetIsPositioned(prop);
-        
-        break;
-      }
-      case RANGE_STARTPARENT:
-      {
-        nsIDOMNode* prop;
-        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
-                                                kINodeIID, "Node",
-                                                cx, *vp)) {
-          return JS_FALSE;
-        }
-      
-        a->SetStartParent(prop);
-        NS_IF_RELEASE(prop);
-        break;
-      }
-      case RANGE_STARTOFFSET:
-      {
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a number");
-          return JS_FALSE;
-        }
-      
-        a->SetStartOffset(prop);
-        
-        break;
-      }
-      case RANGE_ENDPARENT:
-      {
-        nsIDOMNode* prop;
-        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
-                                                kINodeIID, "Node",
-                                                cx, *vp)) {
-          return JS_FALSE;
-        }
-      
-        a->SetEndParent(prop);
-        NS_IF_RELEASE(prop);
-        break;
-      }
-      case RANGE_ENDOFFSET:
-      {
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a number");
-          return JS_FALSE;
-        }
-      
-        a->SetEndOffset(prop);
-        
-        break;
-      }
-      case RANGE_ISCOLLAPSED:
-      {
-        PRBool prop;
-        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
-          return JS_FALSE;
-        }
-      
-        a->SetIsCollapsed(prop);
-        
-        break;
-      }
-      case RANGE_COMMONPARENT:
-      {
-        nsIDOMNode* prop;
-        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
-                                                kINodeIID, "Node",
-                                                cx, *vp)) {
-          return JS_FALSE;
-        }
-      
-        a->SetCommonParent(prop);
-        NS_IF_RELEASE(prop);
-        break;
-      }
+      case 0:
       default:
         return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
@@ -362,6 +258,90 @@ RangeSetStart(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
 
 //
+// Native method SetStartBefore
+//
+PR_STATIC_CALLBACK(JSBool)
+RangeSetStartBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNodePtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SetStartBefore(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setStartBefore requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetStartAfter
+//
+PR_STATIC_CALLBACK(JSBool)
+RangeSetStartAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNodePtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SetStartAfter(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setStartAfter requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method SetEnd
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -410,6 +390,90 @@ RangeSetEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
 //
+// Native method SetEndBefore
+//
+PR_STATIC_CALLBACK(JSBool)
+RangeSetEndBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNodePtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SetEndBefore(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setEndBefore requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetEndAfter
+//
+PR_STATIC_CALLBACK(JSBool)
+RangeSetEndAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNodePtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SetEndAfter(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setEndAfter requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Collapse
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -440,39 +504,6 @@ RangeCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   else {
     JS_ReportError(cx, "Function collapse requires 1 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Unposition
-//
-PR_STATIC_CALLBACK(JSBool)
-RangeUnposition(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->Unposition()) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function unposition requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -565,6 +596,55 @@ RangeSelectNodeContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
 
 //
+// Native method CompareEndPoints
+//
+PR_STATIC_CALLBACK(JSBool)
+RangeCompareEndPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 nativeRet;
+  PRUint32 b0;
+  nsIDOMRangePtr b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b1,
+                                           kIRangeIID,
+                                           "Range",
+                                           cx,
+                                           argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->CompareEndPoints(b0, b1, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else {
+    JS_ReportError(cx, "Function compareEndPoints requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method DeleteContents
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -632,10 +712,10 @@ RangeExtractContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
 
 //
-// Native method CopyContents
+// Native method CloneContents
 //
 PR_STATIC_CALLBACK(JSBool)
-RangeCopyContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+RangeCloneContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -650,14 +730,14 @@ RangeCopyContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   if (argc >= 0) {
 
-    if (NS_OK != nativeThis->CopyContents(&nativeRet)) {
+    if (NS_OK != nativeThis->CloneContents(&nativeRet)) {
       return JS_FALSE;
     }
 
     nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
-    JS_ReportError(cx, "Function copyContents requires 0 parameters");
+    JS_ReportError(cx, "Function cloneContents requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -840,13 +920,12 @@ JSClass RangeClass = {
 //
 static JSPropertySpec RangeProperties[] =
 {
-  {"isPositioned",    RANGE_ISPOSITIONED,    JSPROP_ENUMERATE},
-  {"startParent",    RANGE_STARTPARENT,    JSPROP_ENUMERATE},
-  {"startOffset",    RANGE_STARTOFFSET,    JSPROP_ENUMERATE},
-  {"endParent",    RANGE_ENDPARENT,    JSPROP_ENUMERATE},
-  {"endOffset",    RANGE_ENDOFFSET,    JSPROP_ENUMERATE},
-  {"isCollapsed",    RANGE_ISCOLLAPSED,    JSPROP_ENUMERATE},
-  {"commonParent",    RANGE_COMMONPARENT,    JSPROP_ENUMERATE},
+  {"startParent",    RANGE_STARTPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"startOffset",    RANGE_STARTOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"endParent",    RANGE_ENDPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"endOffset",    RANGE_ENDOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"isCollapsed",    RANGE_ISCOLLAPSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"commonParent",    RANGE_COMMONPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -857,14 +936,18 @@ static JSPropertySpec RangeProperties[] =
 static JSFunctionSpec RangeMethods[] = 
 {
   {"setStart",          RangeSetStart,     2},
+  {"setStartBefore",          RangeSetStartBefore,     1},
+  {"setStartAfter",          RangeSetStartAfter,     1},
   {"setEnd",          RangeSetEnd,     2},
+  {"setEndBefore",          RangeSetEndBefore,     1},
+  {"setEndAfter",          RangeSetEndAfter,     1},
   {"collapse",          RangeCollapse,     1},
-  {"unposition",          RangeUnposition,     0},
   {"selectNode",          RangeSelectNode,     1},
   {"selectNodeContents",          RangeSelectNodeContents,     1},
+  {"compareEndPoints",          RangeCompareEndPoints,     2},
   {"deleteContents",          RangeDeleteContents,     0},
   {"extractContents",          RangeExtractContents,     0},
-  {"copyContents",          RangeCopyContents,     0},
+  {"cloneContents",          RangeCloneContents,     0},
   {"insertNode",          RangeInsertNode,     1},
   {"surroundContents",          RangeSurroundContents,     1},
   {"clone",          RangeClone,     0},
@@ -913,6 +996,23 @@ nsresult NS_InitRangeClass(nsIScriptContext *aContext, void **aPrototype)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
       return NS_ERROR_FAILURE;
+    }
+
+    if ((PR_TRUE == JS_LookupProperty(jscontext, global, "Range", &vp)) &&
+        JSVAL_IS_OBJECT(vp) &&
+        ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
+      vp = INT_TO_JSVAL(nsIDOMRange::START_TO_START);
+      JS_SetProperty(jscontext, constructor, "START_TO_START", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMRange::START_TO_END);
+      JS_SetProperty(jscontext, constructor, "START_TO_END", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMRange::END_TO_START);
+      JS_SetProperty(jscontext, constructor, "END_TO_START", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMRange::END_TO_END);
+      JS_SetProperty(jscontext, constructor, "END_TO_END", &vp);
+
     }
 
   }

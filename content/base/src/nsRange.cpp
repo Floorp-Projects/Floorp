@@ -38,47 +38,42 @@ public:
   nsRange();
   virtual ~nsRange();
 
+  // IsPositioned attribute disappeared from the dom spec
   NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);
-  NS_IMETHOD    SetIsPositioned(PRBool aIsPositioned);
 
   NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent);
-  NS_IMETHOD    SetStartParent(nsIDOMNode* aStartParent);
-
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset);
-  NS_IMETHOD    SetStartOffset(PRInt32 aStartOffset);
 
   NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent);
-  NS_IMETHOD    SetEndParent(nsIDOMNode* aEndParent);
-
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset);
-  NS_IMETHOD    SetEndOffset(PRInt32 aEndOffset);
 
   NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);
-  NS_IMETHOD    SetIsCollapsed(PRBool aIsCollapsed);
 
   NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent);
-  NS_IMETHOD    SetCommonParent(nsIDOMNode* aCommonParent);
 
   NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset);
+  NS_IMETHOD    SetStartBefore(nsIDOMNode* sibling);
+  NS_IMETHOD    SetStartAfter(nsIDOMNode* sibling);
 
   NS_IMETHOD    SetEnd(nsIDOMNode* aParent, PRInt32 aOffset);
+  NS_IMETHOD    SetEndBefore(nsIDOMNode* sibling);
+  NS_IMETHOD    SetEndAfter(nsIDOMNode* sibling);
 
   NS_IMETHOD    Collapse(PRBool aToStart);
 
   NS_IMETHOD    Unposition();
 
   NS_IMETHOD    SelectNode(nsIDOMNode* aN);
-
   NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN);
+
+  NS_IMETHOD    CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange, PRInt32* ret);
 
   NS_IMETHOD    DeleteContents();
 
   NS_IMETHOD    ExtractContents(nsIDOMDocumentFragment** aReturn);
-
-  NS_IMETHOD    CopyContents(nsIDOMDocumentFragment** aReturn);
+  NS_IMETHOD    CloneContents(nsIDOMDocumentFragment** aReturn);
 
   NS_IMETHOD    InsertNode(nsIDOMNode* aN);
-
   NS_IMETHOD    SurroundContents(nsIDOMNode* aN);
 
   NS_IMETHOD    Clone(nsIDOMRange** aReturn);
@@ -727,6 +722,16 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
   return res;
 }
 
+nsresult nsRange::SetStartBefore(nsIDOMNode* sibling)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsRange::SetStartAfter(nsIDOMNode* sibling)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 {
   nsresult res;
@@ -748,6 +753,16 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
   
   res = DoSetRange(mStartParent,mStartOffset,aParent,aOffset);
   return res;
+}
+
+nsresult nsRange::SetEndBefore(nsIDOMNode* sibling)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsRange::SetEndAfter(nsIDOMNode* sibling)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsRange::Collapse(PRBool aToStart)
@@ -879,10 +894,40 @@ nsresult nsRange::DeleteContents()
   return NS_OK;
 }
 
-nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange, PRInt32* ret)
+{
+  if (ret == 0)
+    return NS_ERROR_NULL_POINTER;
+  if (srcRange == 0)
+    return NS_ERROR_INVALID_ARG;
 
-nsresult nsRange::CopyContents(nsIDOMDocumentFragment** aReturn)
+  return NS_ERROR_NOT_IMPLEMENTED;
+
+#if 0
+  switch (how)
+  {
+  case nsIDOMRange::START_TO_START:
+  case nsIDOMRange::START_TO_END:
+  case nsIDOMRange::END_TO_START:
+  case nsIDOMRange::END_TO_END:
+    return NS_ERROR_NOT_IMPLEMENTED;
+  default:  // shouldn't get here
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  return NS_ERROR_UNEXPECTED;
+#endif
+}
+
+nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
+{ 
+  nsresult res = CloneContents(aReturn);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  res = DeleteContents();
+  return res; 
+}
+
+nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult nsRange::InsertNode(nsIDOMNode* aN)
@@ -895,31 +940,5 @@ nsresult nsRange::Clone(nsIDOMRange** aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult nsRange::ToString(nsString& aReturn)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-//
-// We don't actually want to allow setting this ...
-// These are all read only attributes that the idl
-// is generating setters for
-//
-nsresult nsRange::SetIsPositioned(PRBool aIsPositioned)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-nsresult nsRange::SetStartParent(nsIDOMNode* aNode)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-nsresult nsRange::SetStartOffset(PRInt32 aOffset)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-nsresult nsRange::SetEndParent(nsIDOMNode* aNode)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-nsresult nsRange::SetEndOffset(PRInt32 aOffset)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-nsresult nsRange::SetIsCollapsed(PRBool aIsCollapsed)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-nsresult nsRange::SetCommonParent(nsIDOMNode* aCommonParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
