@@ -577,6 +577,15 @@ nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
 
+  // a user might have a new server without any groups.
+  // if so, bail out.  no need to establish a connection to the server
+  PRInt32 numGroups = 0;
+  rv = GetNumGroupsNeedingCounts(&numGroups);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (!numGroups)
+    return NS_OK;
+
   nsCOMPtr<nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
