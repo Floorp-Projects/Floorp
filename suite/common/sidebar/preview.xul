@@ -17,7 +17,6 @@
   Reserved.
 
 -->
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/preview.css" type="text/css"?>

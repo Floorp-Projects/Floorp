@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?> 
 <!-- DON'T localize: strres test cases -->
 
-<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
  
 <!DOCTYPE window> 
 	<!-- padding 0px is just a workaround for windows not displaying paddings correctly

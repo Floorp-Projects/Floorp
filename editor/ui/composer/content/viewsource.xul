@@ -23,7 +23,6 @@
    -    Sammy Ford
   -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/viewSource.dtd" >

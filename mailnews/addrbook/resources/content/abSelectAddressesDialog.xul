@@ -19,7 +19,6 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://addressbook/content/abDirTreeOverlay.xul"?>
 <?xul-overlay href="chrome://addressbook/content/abResultsTreeOverlay.xul"?>

@@ -23,7 +23,6 @@
    -    Ben Goodger
   -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 

@@ -8,7 +8,7 @@
     <skin> 
       <RDF:Description about="chrome://global/skin/">
 	    <base>resource:/chrome/global/skin/default/</base>
-        <main>xul.css</main> 
+        <main>skin.css</main> 
       </RDF:Description> 
     </skin> 
 	
