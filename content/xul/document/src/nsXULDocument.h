@@ -640,12 +640,15 @@ protected:
     class BroadcasterHookup : public nsForwardReference
     {
     protected:
-        nsCOMPtr<nsIContent> mObservesElement;
+        nsXULDocument* mDocument;              // [WEAK]
+        nsCOMPtr<nsIContent> mObservesElement; // [OWNER]
         PRBool mResolved;
 
     public:
-        BroadcasterHookup(nsIContent* aObservesElement) :
-            mObservesElement(aObservesElement), mResolved(PR_FALSE) {}
+        BroadcasterHookup(nsXULDocument* aDocument, nsIContent* aObservesElement) :
+            mDocument(aDocument),
+            mObservesElement(aObservesElement),
+            mResolved(PR_FALSE) {}
 
         virtual ~BroadcasterHookup();
 
@@ -662,14 +665,15 @@ protected:
     class OverlayForwardReference : public nsForwardReference
     {
     protected:
-        nsCOMPtr<nsIContent> mOverlay;
+        nsXULDocument* mDocument;      // [WEAK]
+        nsCOMPtr<nsIContent> mOverlay; // [OWNER]
         PRBool mResolved;
 
         nsresult Merge(nsIContent* aTargetNode, nsIContent* aOverlayNode);
 
     public:
-        OverlayForwardReference(nsIContent* aOverlay)
-            : mOverlay(aOverlay), mResolved(PR_FALSE) {}
+        OverlayForwardReference(nsXULDocument* aDocument, nsIContent* aOverlay)
+            : mDocument(aDocument), mOverlay(aOverlay), mResolved(PR_FALSE) {}
 
         virtual ~OverlayForwardReference();
 
@@ -682,11 +686,13 @@ protected:
 
     static
     nsresult
-    InsertElement(nsIContent* aParent, nsIContent* aChild);
+    CheckBroadcasterHookup(nsXULDocument* aDocument,
+                           nsIContent* aElement,
+                           PRBool* aDidResolve);
 
     static
     nsresult
-    ProcessCommonAttributes(nsIContent* aElement);
+    InsertElement(nsIContent* aParent, nsIContent* aChild);
 
     static
     PRBool
