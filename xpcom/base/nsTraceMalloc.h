@@ -50,7 +50,7 @@ PR_BEGIN_EXTERN_C
 /**
  * Trace-malloc stats, traced via the 'Z' event at the end of a log file.
  */
-struct nsTMStats {
+typedef struct nsTMStats {
     uint32 calltree_maxstack;
     uint32 calltree_maxdepth;
     uint32 calltree_parents;
@@ -71,7 +71,7 @@ struct nsTMStats {
     uint32 realloc_failures;
     uint32 free_calls;
     uint32 null_free_calls;
-};
+} nsTMStats;
 
 #define NS_TMSTATS_STATIC_INITIALIZER {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 
@@ -103,7 +103,7 @@ struct nsTMStats {
  *
  * See xpcom/base/bloatblame.c for an example log-file reader.
  */
-PR_EXTERN(void) NS_TraceMallocStartup(int logfd, int sitefd);
+PR_EXTERN(void) NS_TraceMallocStartup(int logfd);
 
 /**
  * Stop all malloc tracing, flushing any buffered events to the logfile.
@@ -127,6 +127,12 @@ PR_EXTERN(void) NS_TraceMallocEnable(void);
  * which means malloc failure.
  */
 PR_EXTERN(int) NS_TraceMallocChangeLogFD(int fd);
+
+/**
+ * Close the file descriptor fd and forget any bookkeeping associated with it.
+ * Do nothing if fd is -1.
+ */
+PR_EXTERN(void) NS_TraceMallocCloseLogFD(int fd);
 
 PR_END_EXTERN_C
 

@@ -182,37 +182,71 @@ static int my_dladdr(const void *address, Dl_info *info)
 
 typedef struct logfile logfile;
 
+#define STARTUP_TMBUFSIZE (16 * 1024)
+#define LOGFILE_TMBUFSIZE (16 * 1024)
+
 struct logfile {
     int         fd;
+    int         lfd;            /* logical fd, dense among all logfiles */
+    char        *buf;
+    int         bufsize;
     int         pos;
     uint32      size;
     uint32      simsize;
     logfile     *next;
-    char        buf[16*1024];
+    logfile     **prevp;
 };
 
-static logfile   logfile1 = {-1, 0, 0, 0, NULL, {0,}};
-static logfile   logfile0 = {-1, 0, 0, 0, &logfile1, {0,}};
-static logfile   *logfile_list = &logfile0;
-static logfile   *logfp = &logfile0;
-static logfile   *sitefp = &logfile1;
+static char      default_buf[STARTUP_TMBUFSIZE];
+static logfile   default_logfile = {-1, 0, default_buf, STARTUP_TMBUFSIZE, 0, 0, 0, NULL, NULL};
+static logfile   *logfile_list = NULL;
+static logfile   **logfile_tail = &logfile_list;
+static logfile   *logfp = &default_logfile;
 static PRMonitor *tmmon = NULL;
+
+/* We don't want more than 32 logfiles open at once, ok? */
+typedef uint32          lfd_set;
+
+#define LFD_SET_STATIC_INITIALIZER 0
+#define LFD_SET_SIZE    32
+
+#define LFD_ZERO(s)     (*(s) = 0)
+#define LFD_BIT(i)      ((uint32)1 << (i))
+#define LFD_TEST(i,s)   (LFD_BIT(i) & *(s))
+#define LFD_SET(i,s)    (*(s) |= LFD_BIT(i))
+#define LFD_CLR(i,s)    (*(s) &= ~LFD_BIT(i))
 
 static logfile *get_logfile(int fd)
 {
     logfile *fp;
+    int lfd;
 
-    for (fp = logfile_list; fp; fp = fp->next)
+    for (fp = logfile_list; fp; fp = fp->next) {
         if (fp->fd == fd)
             return fp;
-    fp = __libc_malloc(sizeof(logfile));
+    }
+    lfd = 0;
+retry:
+    for (fp = logfile_list; fp; fp = fp->next) {
+        if (fp->fd == lfd) {
+            if (++lfd >= LFD_SET_SIZE)
+                return NULL;
+            goto retry;
+        }
+    }
+    fp = __libc_malloc(sizeof(logfile) + LOGFILE_TMBUFSIZE);
     if (!fp)
         return NULL;
     fp->fd = fd;
+    fp->lfd = lfd;
+    fp->buf = (char*) (fp + 1);
+    fp->bufsize = LOGFILE_TMBUFSIZE;
     fp->pos = 0;
     fp->size = fp->simsize = 0;
-    fp->next = logfile_list;
-    logfile_list = fp;
+    fp->next = NULL;
+    fp->prevp = logfile_tail;
+    *logfile_tail = fp;
+    logfile_tail = &fp->next;
     return fp;
 }
 
@@ -244,7 +278,7 @@ static void flush_logfile(logfile *fp)
 
 static void log_byte(logfile *fp, char byte)
 {
-    if (fp->pos == sizeof fp->buf)
+    if (fp->pos == fp->bufsize)
         flush_logfile(fp);
     fp->buf[fp->pos++] = byte;
 }
@@ -254,7 +288,7 @@ static void log_string(logfile *fp, const char *str)
     int len, rem, cnt;
 
     len = strlen(str);
-    while ((rem = fp->pos + len - sizeof fp->buf) > 0) {
+    while ((rem = fp->pos + len - fp->bufsize) > 0) {
         cnt = len - rem;
         strncpy(&fp->buf[fp->pos], str, cnt);
         str += cnt;
@@ -330,21 +364,22 @@ typedef struct callsite callsite;
 struct callsite {
     uint32      pc;
     uint32      serial;
+    lfd_set     lfdset;
     char        *name;
     callsite    *parent;
     callsite    *siblings;
     callsite    *kids;
 };
 
-static uint32           suppress_tracing = 0;
-static uint32           library_serial_generator = 0;
-static uint32           method_serial_generator = 0;
-static uint32           callsite_serial_generator = 0;
-static uint32           tmstats_serial_generator = 0;
-static callsite         calltree_root = {0, 0, NULL, NULL, NULL, NULL};
+static uint32   suppress_tracing = 0;
+static uint32   library_serial_generator = 0;
+static uint32   method_serial_generator = 0;
+static uint32   callsite_serial_generator = 0;
+static uint32   tmstats_serial_generator = 0;
+static callsite calltree_root = {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, NULL, NULL, NULL};
 
 /* Basic instrumentation. */
-static struct nsTMStats tmstats = NS_TMSTATS_STATIC_INITIALIZER;
+static nsTMStats tmstats = NS_TMSTATS_STATIC_INITIALIZER;
 
 /* Parent with the most kids (tmstats.calltree_maxkids). */
 static callsite *calltree_maxkids_parent;
@@ -382,6 +417,44 @@ static void log_tmstats(logfile *fp)
     log_uint32(fp, calltree_maxstack_top ? calltree_maxstack_top->serial : 0);
 }
 
+static void *generic_alloctable(void *pool, PRSize size)
+{
+    return __libc_malloc(size);
+}
+
+static void generic_freetable(void *pool, void *item)
+{
+    __libc_free(item);
+}
+
+typedef struct lfdset_entry {
+    PLHashEntry base;
+    lfd_set     lfdset;
+} lfdset_entry;
+
+static PLHashEntry *lfdset_allocentry(void *pool, const void *key)
+{
+    lfdset_entry *le = __libc_malloc(sizeof *le);
+    if (le)
+        LFD_ZERO(&le->lfdset);
+    return &le->base;
+}
+
+static void lfdset_freeentry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+    lfdset_entry *le;
+
+    if (flag != HT_FREE_ENTRY)
+        return;
+    le = (lfdset_entry*) he;
+    __libc_free((void*) le);
+}
+
+static PLHashAllocOps lfdset_hashallocops = {
+    generic_alloctable, generic_freetable,
+    lfdset_allocentry,  lfdset_freeentry
+};
+
 /* Table of library pathnames mapped to to logged 'L' record serial numbers. */
 static PLHashTable *libraries = NULL;
 
@@ -390,7 +463,7 @@ static PLHashTable *methods = NULL;
 
 static callsite *calltree(uint32 *bp)
 {
-    logfile *fp = sitefp;
+    logfile *fp = logfp;
     uint32 *bpup, *bpdown, pc;
     uint32 depth, nkids;
     callsite *parent, *site, **csp, *tmp;
@@ -398,9 +471,10 @@ static callsite *calltree(uint32 *bp)
     int ok, len, maxstack, offset;
     uint32 library_serial, method_serial;
     const char *library, *symbol;
-    char *method;
+    char *method, *slash;
     PLHashNumber hash;
     PLHashEntry **hep, *he;
+    lfdset_entry *le;
 
     /* Reverse the stack frame list to avoid recursion. */
     bpup = NULL;
@@ -433,19 +507,35 @@ static callsite *calltree(uint32 *bp)
                 *csp = site->siblings;
                 site->siblings = parent->kids;
                 parent->kids = site;
+
+                /* Check whether we've logged for this frame and logfile yet. */
+                if (!LFD_TEST(fp->lfd, &site->lfdset)) {
+                    /*
+                     * Some other logfile put this site in the calltree.  We
+                     * must an event for the site, and possibly first for its
+                     * method and/or library.  Note the code after the while
+                     * loop that tests if (!site).
+                     */
+                    break;
+                }
+
+                /* Site already built and logged to fp -- go up the stack. */
                 goto upward;
             }
             tmstats.calltree_kidsteps++;
             csp = &site->siblings;
         }
-        tmstats.calltree_kidmisses++;
 
-        /* Check for recursion: see if pc is on our ancestor line. */
-        for (site = parent; site; site = site->parent) {
-            if (site->pc == pc) {
-                tmstats.callsite_recurrences++;
-                last_callsite_recurrence = site;
-                goto upward;
+        if (!site) {
+            tmstats.calltree_kidmisses++;
+
+            /* Check for recursion: see if pc is on our ancestor line. */
+            for (site = parent; site; site = site->parent) {
+                if (site->pc == pc) {
+                    tmstats.callsite_recurrences++;
+                    last_callsite_recurrence = site;
+                    goto upward;
+                }
             }
         }
 
@@ -464,7 +554,7 @@ static callsite *calltree(uint32 *bp)
             if (!libraries) {
                 libraries = PL_NewHashTable(100, PL_HashString,
                                             PL_CompareStrings, PL_CompareValues,
-                                            NULL, NULL);
+                                            &lfdset_hashallocops, NULL);
                 if (!libraries) {
                     printf("OINK 1\n");
                     tmstats.btmalloc_failures++;
@@ -476,25 +566,33 @@ static callsite *calltree(uint32 *bp)
             he = *hep;
             if (he) {
                 library_serial = (uint32) he->value;
+                le = (lfdset_entry *) he;
+                if (LFD_TEST(fp->lfd, &le->lfdset)) {
+                    /* We already logged an event on fp for this library. */
+                    le = NULL;
+                }
             } else {
                 library = strdup(library);
                 if (library) {
                     library_serial = ++library_serial_generator;
                     he = PL_HashTableRawAdd(libraries, hep, hash, library,
                                             (void*) library_serial);
-                    if (he) {
-                        char *slash = strrchr(library, '/');
-                        if (slash)
-                            library = slash + 1;
-                        log_event1(fp, 'L', library_serial);
-                        log_string(fp, library);
-                    }
                 }
                 if (!he) {
                     printf("OINK 2\n");
                     tmstats.btmalloc_failures++;
                     return NULL;
                 }
+                le = (lfdset_entry *) he;
+            }
+            if (le) {
+                /* Need to log an event to fp for this lib. */
+                slash = strrchr(library, '/');
+                if (slash)
+                    library = slash + 1;
+                log_event1(fp, 'L', library_serial);
+                log_string(fp, library);
+                LFD_SET(fp->lfd, &le->lfdset);
             }
         }
 
@@ -509,14 +607,14 @@ static callsite *calltree(uint32 *bp)
              */
             method = cplus_demangle(symbol, 3);
         }
-        if (! method) {
+        if (!method) {
             method = symbol
                      ? strdup(symbol)
                      : PR_smprintf("%s+%X",
                                    info.dli_fname ? info.dli_fname : "main",
-                                   offset);
+                                   (char*)pc - (char*)info.dli_fbase);
         }
-        if (! method) {
+        if (!method) {
             printf("OINK 3\n");
             tmstats.btmalloc_failures++;
             return NULL;
@@ -527,7 +625,7 @@ static callsite *calltree(uint32 *bp)
         if (!methods) {
             methods = PL_NewHashTable(10000, PL_HashString,
                                       PL_CompareStrings, PL_CompareValues,
-                                      NULL, NULL);
+                                      &lfdset_hashallocops, NULL);
             if (!methods) {
                 printf("OINK 4\n");
                 tmstats.btmalloc_failures++;
@@ -542,6 +640,11 @@ static callsite *calltree(uint32 *bp)
             method_serial = (uint32) he->value;
             free((void*) method);
             method = (char *) he->key;
+            le = (lfdset_entry *) he;
+            if (LFD_TEST(fp->lfd, &le->lfdset)) {
+                /* We already logged an event on fp for this method. */
+                le = NULL;
+            }
         } else {
             method_serial = ++method_serial_generator;
             he = PL_HashTableRawAdd(methods, hep, hash, method,
@@ -552,41 +655,49 @@ static callsite *calltree(uint32 *bp)
                 free((void*) method);
                 return NULL;
             }
+            le = (lfdset_entry *) he;
+        }
+        if (le) {
             log_event2(fp, 'N', method_serial, library_serial);
             log_string(fp, method);
+            LFD_SET(fp->lfd, &le->lfdset);
         }
 
         /* Create a new callsite record. */
-        site = __libc_malloc(sizeof(callsite));
         if (!site) {
-            printf("OINK 6\n");
-            tmstats.btmalloc_failures++;
-            return NULL;
-        }
+            site = __libc_malloc(sizeof(callsite));
+            if (!site) {
+                printf("OINK 6\n");
+                tmstats.btmalloc_failures++;
+                return NULL;
+            }
 
-        /* Update parent and max-kids-per-parent stats. */
-        if (!parent->kids)
-            tmstats.calltree_parents++;
-        nkids = 1;
-        for (tmp = parent->kids; tmp; tmp = tmp->siblings)
-            nkids++;
-        if (nkids > tmstats.calltree_maxkids) {
-            tmstats.calltree_maxkids = nkids;
-            calltree_maxkids_parent = parent;
-        }
+            /* Update parent and max-kids-per-parent stats. */
+            if (!parent->kids)
+                tmstats.calltree_parents++;
+            nkids = 1;
+            for (tmp = parent->kids; tmp; tmp = tmp->siblings)
+                nkids++;
+            if (nkids > tmstats.calltree_maxkids) {
+                tmstats.calltree_maxkids = nkids;
+                calltree_maxkids_parent = parent;
+            }
 
-        /* Insert the new site into the tree. */
-        site->pc = pc;
-        site->serial = ++callsite_serial_generator;
-        site->name = method;
-        site->parent = parent;
-        site->siblings = parent->kids;
-        parent->kids = site;
-        site->kids = NULL;
+            /* Insert the new site into the tree. */
+            site->pc = pc;
+            site->serial = ++callsite_serial_generator;
+            LFD_ZERO(&site->lfdset);
+            site->name = method;
+            site->parent = parent;
+            site->siblings = parent->kids;
+            parent->kids = site;
+            site->kids = NULL;
+        }
 
         /* Log the site with its parent, method, and offset. */
         log_event4(fp, 'S', site->serial, parent->serial, method_serial,
                    offset);
+        LFD_SET(fp->lfd, &site->lfdset);
 
       upward:
         parent = site;
@@ -647,16 +758,6 @@ typedef struct allocation {
 static allocation alloc_heap[ALLOC_HEAP_SIZE];
 static allocation *alloc_freelist = NULL;
 static int alloc_heap_initialized = 0;
-
-static void *generic_alloctable(void *pool, PRSize size)
-{
-    return __libc_malloc(size);
-}
-
-static void generic_freetable(void *pool, void *item)
-{
-    __libc_free(item);
-}
 
 static PLHashEntry *alloc_allocentry(void *pool, const void *key)
 {
@@ -864,38 +965,25 @@ void free(__ptr_t ptr)
 
 static const char magic[] = NS_TRACE_MALLOC_MAGIC;
 
-PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd, int sitefd)
+PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
 {
     /* We must be running on the primordial thread. */
     PR_ASSERT(suppress_tracing == 0);
-    suppress_tracing = 1;
+    PR_ASSERT(logfp == &default_logfile);
+    suppress_tracing = (logfd < 0);
 
-    /* Give logfile0 (AKA *logfp) the passed-in logfd, if it's an open fd. */
-    if (logfd >= 0)
+    if (suppress_tracing == 0) {
+        /* Log everything in logfp (aka default_logfile)'s buffer to logfd. */
         logfp->fd = logfd;
-
-    /* If sitefd is open, log callsite info to it, else alias it to logfp. */
-    if (sitefd >= 0 && sitefd != logfd) {
-        /* Flush site traces first, then if logfd is open, any malloc traces. */
-        sitefp->fd = sitefd;
-        (void) write(sitefd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
-        flush_logfile(sitefp);
-        if (logfd >= 0) {
-            (void) write(logfd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
-            flush_logfile(logfp);
-        }
-    } else if (logfd >= 0) {
-        /* No site file, flush site traces to a common site/malloc log file. */
-        sitefp->fd = logfd;
+        logfile_list = &default_logfile;
+        logfp->prevp = &logfile_list;
+        logfile_tail = &logfp->next;
         (void) write(logfd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
-        flush_logfile(sitefp);
-        sitefp->fd = -1;
-        sitefp = logfp;
+        flush_logfile(logfp);
     }
 
     atexit(NS_TraceMallocShutdown);
     tmmon = PR_NewMonitor();
-    suppress_tracing = 0;
 }
 
 PR_IMPLEMENT(void) NS_TraceMallocShutdown()
@@ -909,16 +997,14 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
                 (unsigned long) tmstats.btmalloc_failures,
                 (unsigned long) tmstats.dladdr_failures);
     }
-    log_tmstats(sitefp);
     for (fp = logfile_list; fp; fp = next) {
         next = fp->next;
+        log_tmstats(fp);
         flush_logfile(fp);
         if (fp->fd >= 0) {
             close(fp->fd);
             fp->fd = -1;
         }
-        if (fp != &logfile0 && fp != &logfile1)
-            __libc_free((void*) fp);
     }
     if (tmmon)
         PR_DestroyMonitor(tmmon);
@@ -968,4 +1054,62 @@ PR_IMPLEMENT(int) NS_TraceMallocChangeLogFD(int fd)
     return oldfp->fd;
 }
 
-#endif /* defined __linux__ && defined DEBUG */
+static PRIntn
+lfd_clr_enumerator(PLHashEntry *he, PRIntn i, void *arg)
+{
+    lfdset_entry *le = (lfdset_entry*) he;
+    logfile *fp = (logfile*) arg;
+
+    LFD_CLR(fp->lfd, &le->lfdset);
+    return HT_ENUMERATE_NEXT;
+}
+
+static void
+lfd_clr_walk(callsite *site, logfile *fp)
+{
+    callsite *kid;
+    
+    LFD_CLR(fp->lfd, &site->lfdset);
+    for (kid = site->kids; kid; kid = kid->siblings)
+        lfd_clr_walk(kid, fp);
+}
+
+PR_IMPLEMENT(void)
+NS_TraceMallocCloseLogFD(int fd)
+{
+    logfile *fp;
+
+    if (tmmon)
+        PR_EnterMonitor(tmmon);
+
+    fp = get_logfile(fd);
+    if (fp) {
+        flush_logfile(fp);
+        if (fp == &default_logfile) {
+            /* Leave default_logfile in logfile_list with an fd of -1. */
+            fp->fd = -1;
+
+            /* NB: we can never free lfd 0, it belongs to default_logfile. */
+            PR_ASSERT(fp->lfd == 0);
+        } else {
+            /* Clear fp->lfd in all possible lfdsets. */
+            PL_HashTableEnumerateEntries(libraries, lfd_clr_enumerator, fp);
+            PL_HashTableEnumerateEntries(methods, lfd_clr_enumerator, fp);
+            lfd_clr_walk(&calltree_root, fp);
+
+            /* Unlink fp from logfile_list, freeing lfd for reallocation. */
+            *fp->prevp = fp->next;
+
+            /* Reset logfp if we must, then free fp. */
+            if (fp == logfp)
+                logfp = &default_logfile;
+            free((void*) fp);
+        }
+    }
+
+    if (tmmon)
+        PR_ExitMonitor(tmmon);
+    close(fd);
+}
+
+#endif /* NS_TRACE_MALLOC */

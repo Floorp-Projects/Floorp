@@ -958,10 +958,24 @@ TraceMallocChangeLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     return JS_TRUE;
 }
 
+static JSBool
+TraceMallocCloseLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    int32 fd;
+
+    if (JSVAL_IS_VOID(argv[0]))
+        return JS_TRUE;
+    if (!JS_ValueToECMAInt32(cx, argv[0], &fd))
+        return JS_FALSE;
+    NS_TraceMallocCloseLogFD((int) fd);
+    return JS_TRUE;
+}
+
 static JSFunctionSpec TraceMallocFunctions[] = {
     {"TraceMallocDisable",        TraceMallocDisable,       0, 0, 0},
     {"TraceMallocEnable",         TraceMallocEnable,        0, 0, 0},
     {"TraceMallocChangeLogFile",  TraceMallocChangeLogFile, 1, 0, 0},
+    {"TraceMallocCloseLogFile",   TraceMallocCloseLogFile,  1, 0, 0},
     {NULL,                        NULL,                     0, 0, 0}
 };
 
