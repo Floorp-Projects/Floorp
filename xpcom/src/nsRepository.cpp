@@ -761,7 +761,6 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
 		else
 		{
 			PR_LOG(logmodule, PR_LOG_WARNING, ("\t\tdeleting old Factory Entry."));
-			delete old;
 		}
 	}
 	
@@ -805,7 +804,6 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
 		else
 		{
 			PR_LOG(logmodule, PR_LOG_WARNING,("\t\tdeleting registered Factory."));
-			delete old;
 		}
 	}
 	
