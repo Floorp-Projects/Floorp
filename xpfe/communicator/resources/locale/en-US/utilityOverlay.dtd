@@ -46,7 +46,7 @@
 <!ENTITY selectAllCmd.label					"Select All">  
 <!ENTITY selectAllCmd.key					"A">  
 <!ENTITY selectAllCmd.accesskey				"a"> 
-<!ENTITY preferencesCmd.label				"Preferences">
+<!ENTITY preferencesCmd.label				"Preferences...">
 <!ENTITY preferencesCmd.key					"E">  
 <!ENTITY preferencesCmd.accesskey			"e"> 
 
