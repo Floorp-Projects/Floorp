@@ -39,7 +39,8 @@
 ////////////////////////////////////////////////////////////////////////
 
 class LocalStoreImpl : public nsILocalStore,
-                       public nsIRDFDataSource
+                       public nsIRDFDataSource,
+                       public nsIRDFRemoteDataSource
 {
 private:
     nsCOMPtr<nsIRDFDataSource> mInner;
@@ -161,6 +162,9 @@ public:
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
+	NS_IMETHOD Init(const char *uri);
+	NS_IMETHOD Flush();
+	NS_IMETHOD Refresh(PRBool sync);
 };
 
 
@@ -222,6 +226,9 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
     else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIRDFDataSource *, this);
     }
+    else if (aIID.Equals(nsIRDFRemoteDataSource::GetIID())) {
+        *aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource *, this);
+    }
     else {
         *aResult = nsnull;
         return NS_NOINTERFACE;
@@ -237,6 +244,36 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
 // nsIRDFDataSource interface
+
+nsresult
+LocalStoreImpl::Init(const char *uri)
+{
+	return(NS_OK);
+}
+
+nsresult
+LocalStoreImpl::Flush()
+{
+	nsCOMPtr<nsIRDFRemoteDataSource>	remote = do_QueryInterface(mInner);
+	nsresult				rv = NS_OK;
+	if (remote)
+	{
+		rv = remote->Flush();
+	}
+	return(rv);
+}
+
+nsresult
+LocalStoreImpl::Refresh(PRBool sync)
+{
+	nsCOMPtr<nsIRDFRemoteDataSource>	remote = do_QueryInterface(mInner);
+	nsresult				rv = NS_OK;
+	if (remote)
+	{
+		rv = remote->Refresh(sync);
+	}
+	return(rv);
+}
 
 nsresult
 LocalStoreImpl::Init()
