@@ -148,7 +148,7 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
   [toolbar setAlwaysCustomizableByDrag:NO];
   [toolbar setShowsContextMenu:NO];
   [mWindow setToolbar:toolbar];
-  [toolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];\
+  [toolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];
 }
 
 - (NSWindow *)window
