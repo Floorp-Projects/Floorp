@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 DEPTH=..\..\..
+REQUIRES	= xpcom string uconv necko
 include <$(DEPTH)\config\config.mak>
 
 

@@ -36,6 +36,7 @@ DEPTH=..\..\..
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
 MODULE=uconv
+REQUIRES=xpcom string uconv
 LIBRARY_NAME=ucvibm
 MODULE_NAME=nsUCvIBMModule
 

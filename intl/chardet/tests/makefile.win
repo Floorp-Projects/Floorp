@@ -26,7 +26,7 @@ DEPTH = ..\..\..
 MAKE_OBJ_TYPE = EXE
 PROG1 = .\$(OBJDIR)\DetectCharset.exe
 PROGRAMS = $(PROG1)
-
+REQUIRES=chardet
 LCFLAGS=-DUSE_NSREG
 
 

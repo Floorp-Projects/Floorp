@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..
 
+REQUIRES	= xpcom string necko locale
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=strres
