@@ -99,13 +99,6 @@ sub print_script_preview {
     <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">);
 
 
-    foreach $param ($query->param()) {
-      if ($param =~ /^(MOZ_|--)/) {
-		next if $query->param($param) eq '';
-		print "<input type='hidden' name=$param value='".$query->param($param)."'>\n";
-      }
-	}
-
   print qq(
     <TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
     <TR><TD>
@@ -125,7 +118,16 @@ sub print_script_preview {
 
     <form action='.mozconfig' method='get'>
     <input type='hidden' name='saveas' value='1'>
+);
+    foreach $param ($query->param()) {
+      if ($param =~ /^(MOZ_|--)/) {
+        next if $query->param($param) eq '';
+        print "<input type='hidden' name=$param value='"
+          .$query->param($param)."'>\n";
+      }
+    }
 
+  print qq(
     <!--
     <table cellpadding=0 cellspacing=1><tr><td>
 	<input type='submit' value='Save the script'>
