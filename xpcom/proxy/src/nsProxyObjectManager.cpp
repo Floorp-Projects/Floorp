@@ -109,12 +109,13 @@ nsProxyObjectManager::~nsProxyObjectManager()
 {
     delete mProxyClassMap;
     delete mProxyObjectMap;
+    nsProxyObjectManager::mInstance = nsnull;
 }
 
 nsProxyObjectManager *
 nsProxyObjectManager::GetInstance()
 {
-    if (mInstance == NULL) 
+    if (mInstance == nsnull) 
     {
         mInstance = new nsProxyObjectManager();
     }
@@ -128,7 +129,7 @@ nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInst
 {
     nsProxyObjectManager *proxyObjectManager = GetInstance();
 
-    if (proxyObjectManager == NULL)
+    if (proxyObjectManager == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     return proxyObjectManager->QueryInterface(aIID, aInstancePtr);
@@ -288,23 +289,23 @@ NS_IMPL_ISUPPORTS(nsProxyEventFactory,nsIFactory::GetIID())
 NS_IMETHODIMP
 nsProxyEventFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    if (aResult == NULL)
+    if (aResult == nsnull)
     {
         return NS_ERROR_NULL_POINTER;
     }
 
-    *aResult = NULL;
+    *aResult = nsnull;
 
     nsProxyObjectManager *inst = nsProxyObjectManager::GetInstance();
 
-    if (inst == NULL)
+    if (inst == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult result =  inst->QueryInterface(aIID, aResult);
 
     if (NS_FAILED(result)) 
     {
-        *aResult = NULL;
+        *aResult = nsnull;
     }
 
     NS_ADDREF(inst);  // Are we sure that we need to addref???
@@ -353,7 +354,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
     printf("*** nsProxyObjectManager is being registered.  Hold on to your seat...\n");
 #endif
 
-    rv = compMgr->RegisterComponent(kProxyObjectManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    rv = compMgr->RegisterComponent(kProxyObjectManagerCID, nsnull, nsnull, path, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
   
   done:
@@ -396,12 +397,12 @@ NSGetFactory(nsISupports* aServMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-    if (aFactory == NULL)
+    if (aFactory == nsnull)
     {
         return NS_ERROR_NULL_POINTER;
     }
 
-    *aFactory = NULL;
+    *aFactory = nsnull;
     nsISupports *inst;
 
     
@@ -410,7 +411,7 @@ NSGetFactory(nsISupports* aServMgr,
     else
         return NS_ERROR_ILLEGAL_VALUE;
 
-    if (inst == NULL)
+    if (inst == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult res = inst->QueryInterface(nsIFactory::GetIID(), (void**) aFactory);
