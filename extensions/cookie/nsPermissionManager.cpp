@@ -266,6 +266,10 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
   // of adding a new one
   nsHostEntry *entry = mHostTable.PutEntry(aHost.get());
   if (!entry) return NS_ERROR_FAILURE;
+  if (!entry->GetKey()) {
+    mHostTable.RawRemoveEntry(entry);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (entry->PermissionsAreEmpty()) {
     ++mHostCount;
