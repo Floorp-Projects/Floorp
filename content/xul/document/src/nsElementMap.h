@@ -17,6 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Chris Waterson <waterson@netscape.com>
+ *
  * Contributor(s): 
  *
  *
@@ -47,23 +50,33 @@
 #include "nsError.h"
 #include "plhash.h"
 #include "nsIContent.h"
+#include "nsFixedSizeAllocator.h"
 
 class nsString;
 class nsISupportsArray;
 
 class nsElementMap
 {
-private:
+protected:
     PLHashTable* mMap;
+    nsFixedSizeAllocator mPool;
+
+    static PLHashAllocOps gAllocOps;
 
     class ContentListItem {
     public:
+        static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
+            return aAllocator.Alloc(aSize); }
+
+        static void operator delete(void* aPtr, size_t aSize) {
+            nsFixedSizeAllocator::Free(aPtr, aSize); }
+
         ContentListItem(nsIContent* aContent) : mNext(nsnull), mContent(aContent) {
-            MOZ_COUNT_CTOR(XUL_nsElementMap_ContentListItem);
+            MOZ_COUNT_CTOR(nsElementMap::ContentListItem);
         }
 
         ~ContentListItem() {
-            MOZ_COUNT_DTOR(XUL_nsElementMap_ContentListItem);
+            MOZ_COUNT_DTOR(nsElementMap::ContentListItem);
         }
 
         ContentListItem* mNext;
@@ -98,6 +111,7 @@ public:
     typedef PRIntn (*nsElementMapEnumerator)(const nsString& aID,
                                              nsIContent* aElement,
                                              void* aClosure);
+
     nsresult
     Enumerate(nsElementMapEnumerator aEnumerator, void* aClosure);
 
