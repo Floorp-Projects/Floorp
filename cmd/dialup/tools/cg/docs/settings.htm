@@ -36,7 +36,7 @@
 
 <FORM NAME="asglobals">
 
-<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="3" WIDTH="100%" ID="nospace">
+<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="2" WIDTH="100%" ID="nospace">
 	<TR>
 		<TD BGCOLOR="#CCCCFF">
 			<spacer type=horizontal size=4>
@@ -51,30 +51,28 @@
 	</TR>
 </TABLE>
 
-<TABLE BORDER="1" CELLSPACING="0"  CELLPADDING="3" BGCOLOR="#FFFFFF" WIDTH="100%" ID="nospace">
+<TABLE BORDER="1" CELLSPACING="0"  CELLPADDING="2" BGCOLOR="#FFFFFF" WIDTH="100%" ID="nospace">
 	<TR>
 		<TD ALIGN=LEFT VALIGN=TOP>
 		
-<TABLE BORDER="0" CELLSPACING="0"  CELLPADDING="3" BGCOLOR="#FFFFFF" WIDTH="100%" ID="nospace">
+<TABLE BORDER="0" CELLSPACING="0"  CELLPADDING="1" BGCOLOR="#FFFFFF" WIDTH="100%" ID="nospace">
 	<TR>
 		<TD VALIGN="TOP" ROWSPAN=2>
 			<INPUT TYPE="RADIO" NAME="asmode">
 		</TD>
 		<TD VALIGN=TOP>
 		<spacer type=vertical size=2>
-			<B CLASS="item">Use Internet Account Server (IAS) Mode Only</B>
-			<P CLASS="itemtext">Select this option to run Account Setup in Internet Account Server (IAS) mode 
-            only. Account Setup turns off the &quot;Welcome to Account Setup&quot; screen 
-            and doesn't give users the option of using the NCI mode. To offer the IAS mode, 
-            you must have an Internet account server that supports Netscape's 
-            Internet Account Server Protocol.</P>
+			<B CLASS="item">Internet Account Server (IAS) Mode: Use Your Internet Account Server</B>
+			<P CLASS="itemtext">Select this option to run Account Setup in Internet Account Server (IAS) mode.
+	    Account Setup turns off the &quot;Start Account Setup&quot; screen and doesn't give users the option of using offline account creation (NCI mode). To offer IAS mode, 
+            you must have an Internet account server that supports Netscape's Internet Account Server Protocol.</P>
 			
 		</TD>
 	</TR>
 		
 	<TR>
 		<TD>
-			<spacer type=vertical size=2>
+			<spacer type=vertical size=1>
 		</TD>
 	</TR>
 
@@ -84,10 +82,10 @@
 		</TD>
 		<TD VALIGN=TOP>
 		<spacer type=vertical size=2>
-			<B CLASS="item">Use Network Configuration (NCI) Mode Only</B>
-			<P CLASS="itemtext">Select this option to run Account Setup in Network Configuration (NCI) mode only. 
-            Account Setup turns off the &quot;Welcome to Account Setup&quot; screen and 
-            doesn't give users the option of using the IAS mode.</P>
+			<B CLASS="item">Network Configuration (NCI) Mode: Use Offline Account Creation</B>
+			<P CLASS="itemtext">Select this option to run Account Setup in Network Configuration (NCI) mode. 
+            Account Setup turns off the &quot;Start Account Setup&quot; screen and 
+            doesn't give users the option of connecting to a registration server (IAS mode).</P>
 		
 		</TD>
 	</TR>
@@ -95,7 +93,7 @@
 	
 	<TR>
 		<TD>
-			<spacer type=vertical size=2>
+			<spacer type=vertical size=1>
 		</TD>
 	</TR>
 
@@ -105,19 +103,40 @@
 		</TD>
 		<TD VALIGN=TOP>
 		<spacer type=vertical size=2>
-			<B CLASS="item">Offer Both Modes</B> <FONT STYLE="fontFamily='PrimaSans BT,Helvetica,Arial';fontSize='11'">(user chooses mode)</FONT>
-			<P CLASS="itemtext">Account Setup displays the &quot;Welcome to Account Setup&quot; screen and lets 
-			users choose IAS or NCI mode.
+			<B CLASS="item">Offer Your Registration Server (IAS Mode) and Offline Account Creation (NCI Mode)</B>
+			<P CLASS="itemtext">Account Setup displays the &quot;Start Account Setup&quot; screen and lets 
+			users choose your registration server (IAS mode) or offline account creation (NCI mode).
 		
 		</TD>
 	</TR>
+	
+	<TR>
+		<TD>
+			<spacer type=vertical size=1>
+		</TD>
+	</TR>
+
+	<TR>
+		<TD VALIGN="TOP" ROWSPAN=2>
+			<INPUT TYPE="RADIO" NAME="asmode">
+		</TD>
+		<TD VALIGN=TOP>
+		<spacer type=vertical size=2>
+			<B CLASS="item">Offer Netscape Registration Server and Offline Account Creation (NCI Mode)</B>
+			<P CLASS="itemtext">Account Setup displays the &quot;Start Account Setup&quot; screen and lets 
+			users choose Netscape's registration Server or offline account creation (NCI mode). 
+			You don't provide IAS files in this mode.
+		
+		</TD>
+	</TR>
+
 </TABLE>
 
 		</TD>
 	</TR>
 </TABLE>
 
-<spacer type=vertical size=10>
+<spacer type=vertical size=8>
 
 <TABLE BORDER="0" CELLSPACING="0"  CELLPADDING="0" BGCOLOR="#FFFFFF" WIDTH="100%" ID="nospace">
 	<TR>
@@ -141,17 +160,6 @@
 		</TD>
 		<TD VALIGN=CENTER>
 			<FONT STYLE="fontFamily='PrimaSans BT,Helvetica,Arial';fontSize='10'">Show Account Setup Introduction Screens</FONT>
-			</FONT>
-		</TD>
-	</TR>
-
-	<TR>
-		<TD VALIGN="CENTER">
-			<INPUT TYPE="CHECKBOX" NAME="OneStepMode" VALUE="OneStepMode">
-		</TD>
-		<TD VALIGN=TOP><FONT FACE="Helvetica,Arial" POINT-SIZE="10" ALIGN=LEFT VALIGN=TOP>
-			<FONT STYLE="fontFamily='PrimaSans BT,Helvetica,Arial';fontSize='10'">
-			<P CLASS="itemtext">Direct users to your Internet account registration server. You must also configure Account Setup in following screens to access your registration server. If you do not check this box, users will be sent to Netscape's Internet account registration server.</P></FONT>
 			</FONT>
 		</TD>
 	</TR>
