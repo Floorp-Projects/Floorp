@@ -46,7 +46,7 @@ var gRequestObserver =
       linkChecker.status = status;
       for (var i = 0; i < gNumLinksCalledBack; i++)
       {
-        if (linkChecker ==  gLinksBeingChecked[i])
+        if (linkChecker == gLinksBeingChecked[i])
           gLinksBeingChecked[i].status = status;
       }
 
@@ -108,8 +108,9 @@ function Startup()
             = Components.classes["@mozilla.org/network/urichecker;1"]
                 .createInstance()
                   .QueryInterface(Components.interfaces.nsIURIChecker);
-          gLinksBeingChecked[gNumLinksToCheck].asyncCheckURI(uri, gRequestObserver, null,
-							     Components.interfaces.nsIRequest.LOAD_NORMAL);
+          // XXX uri creation needs to be localized
+          gLinksBeingChecked[gNumLinksToCheck].init(GetIOService().newURI(uri, null, null));
+          gLinksBeingChecked[gNumLinksToCheck].asyncCheck(gRequestObserver, null);
 
           // Add item  
           var linkChecker = gLinksBeingChecked[gNumLinksToCheck].QueryInterface(Components.interfaces.nsIURIChecker);

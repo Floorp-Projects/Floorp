@@ -16,11 +16,12 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Akkana Peck <akkana@netscape.com> (original author)
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,135 +38,204 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsURIChecker.h"
-
 #include "nsIServiceManager.h"
 #include "nsIAuthPrompt.h"
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
+#include "nsNetUtil.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"  // for ToNewUnicode()
 
-//Interfaces for addref, release and queryinterface
-NS_IMPL_ISUPPORTS5(nsURIChecker, nsIURIChecker,
-                   nsIRequest, nsIStreamListener,
-                   nsIHttpEventSink, nsIInterfaceRequestor)
+//-----------------------------------------------------------------------------
 
-nsURIChecker::nsURIChecker()
+static PRBool
+ServerIsNES3x(nsIHttpChannel *httpChannel)
 {
-    mStatus = NS_OK;
-    mIsPending = PR_FALSE;
+    nsCAutoString server;
+    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Server"), server);
+    // case sensitive string comparison is OK here.  the server string
+    // is a well-known value, so we should not have to worry about it
+    // being case-smashed or otherwise case-mutated.
+    return StringBeginsWith(server,
+                            NS_LITERAL_CSTRING("Netscape-Enterprise/3."));
 }
 
-nsURIChecker::~nsURIChecker()
+//-----------------------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS5(nsURIChecker,
+                   nsIURIChecker,
+                   nsIRequest,
+                   nsIStreamListener,
+                   nsIHttpEventSink,
+                   nsIInterfaceRequestor)
+
+nsURIChecker::nsURIChecker()
+    : mStatus(NS_OK)
+    , mIsPending(PR_FALSE)
+    , mAllowHead(PR_TRUE)
 {
 }
 
 void
-nsURIChecker::SetStatusAndCallBack(nsIRequest* aRequest, nsresult aStatus)
+nsURIChecker::SetStatusAndCallBack(nsresult aStatus)
 {
     mStatus = aStatus;
     mIsPending = PR_FALSE;
 
-    mObserver->OnStartRequest(NS_STATIC_CAST(nsIRequest*, this), mCtxt);
-    mObserver->OnStopRequest(NS_STATIC_CAST(nsIRequest*, this),
-                             mCtxt, mStatus);
-    
-    // We don't want to read the actual data, so cancel now:
-    if (aRequest)
-        aRequest->Cancel(NS_BINDING_ABORTED);
+    if (mObserver) {
+        mObserver->OnStartRequest(this, mObserverContext);
+        mObserver->OnStopRequest(this, mObserverContext, mStatus);
+        mObserver = nsnull;
+        mObserverContext = nsnull;
+    }
 }
 
-/////////////////////////////////////////////////////
-// nsIURIChecker methods
-//
-NS_IMETHODIMP
-nsURIChecker::AsyncCheckURI(const nsACString &aURI,
-                            nsIRequestObserver *aObserver,
-                            nsISupports* aCtxt,
-                            nsLoadFlags aLoadFlags,
-                            nsIRequest** aRequestRet)
+nsresult
+nsURIChecker::CheckStatus()
 {
-    nsresult rv;
+    NS_ASSERTION(mChannel, "no channel");
 
-    mStatus = NS_OK;
-    mIsPending = PR_TRUE;
-    mStatus = NS_BINDING_REDIRECTED;
-    mObserver = aObserver;
-    mCtxt = aCtxt;
-    if (aRequestRet) {
-        *aRequestRet = this;
-        NS_ADDREF(*aRequestRet);
-    }
+    nsresult status;
+    nsresult rv = mChannel->GetStatus(&status);
+    // DNS errors and other obvious problems will return failure status
+    if (NS_FAILED(rv) || NS_FAILED(status))
+        return NS_BINDING_FAILED;
 
-    // Get the IO Service:
-    nsCOMPtr<nsIIOService> ios (do_GetIOService(&rv));
-    if (NS_FAILED(rv)) return rv;
-    if (!ios) return NS_ERROR_UNEXPECTED;
-
-    // Make the URI
-    nsCOMPtr<nsIURI> URI;
-    rv = ios->NewURI(aURI, nsnull, nsnull, getter_AddRefs(URI)); // XXX need charset for i18n URLs
-    if (NS_FAILED(rv)) return rv;
-
-    // Make a new channel:
-    rv = ios->NewChannelFromURI(URI, getter_AddRefs(mChannel));
-    if (NS_FAILED(rv)) return rv;
-
-    // Set the load flags
-    mChannel->SetLoadFlags(aLoadFlags);
-
-    // See if it's an http channel, which needs special treatment:
+    // If status is zero, it might still be an error if it's http:
+    // http has data even when there's an error like a 404.
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
-    if (httpChannel) {
-        // We can have an HTTP channel that has a non-HTTP URL if
-        // we're doing FTP via an HTTP proxy, for example.  See for
-        // example bug 148813
-        nsCOMPtr<nsIURI> channelURI;
-        mChannel->GetURI(getter_AddRefs(channelURI));
-        if (channelURI) {
-            PRBool isReallyHTTP = PR_FALSE;
-            channelURI->SchemeIs("http", &isReallyHTTP);
-            if (!isReallyHTTP)
-                channelURI->SchemeIs("https", &isReallyHTTP);
-            if (isReallyHTTP)
-                httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));
+    if (!httpChannel)
+        return NS_BINDING_SUCCEEDED;
+
+    PRUint32 responseStatus;
+    rv = httpChannel->GetResponseStatus(&responseStatus);
+    if (NS_FAILED(rv))
+        return NS_BINDING_FAILED;
+
+    // If it's between 200-299, it's valid:
+    if (responseStatus / 100 == 2)
+        return NS_BINDING_SUCCEEDED;
+
+    // If we got a 404 (not found), we need some extra checking:
+    // toplevel urls from Netscape Enterprise Server 3.6, like the old AOL-
+    // hosted http://www.mozilla.org, generate a 404 and will have to be
+    // retried without the head.
+    if (responseStatus == 404) {
+        if (mAllowHead && ServerIsNES3x(httpChannel)) {
+            mAllowHead = PR_FALSE;
+
+            // save the current value of mChannel in case we can't issue
+            // the new request for some reason.
+            nsCOMPtr<nsIChannel> lastChannel = mChannel;
+
+            nsCOMPtr<nsIURI> uri;
+            PRUint32 loadFlags;
+
+            rv  = lastChannel->GetOriginalURI(getter_AddRefs(uri));
+            rv |= lastChannel->GetLoadFlags(&loadFlags);
+
+            // XXX we are carrying over the load flags, but what about other
+            // parameters that may have been set on lastChannel??
+
+            if (NS_SUCCEEDED(rv)) {
+                rv = Init(uri);
+                if (NS_SUCCEEDED(rv)) {
+                    rv = mChannel->SetLoadFlags(loadFlags);
+                    if (NS_SUCCEEDED(rv)) {
+                        rv = AsyncCheck(mObserver, mObserverContext);
+                        // if we succeeded in loading the new channel, then we
+                        // want to return without notifying our observer.
+                        if (NS_SUCCEEDED(rv))
+                            return NS_BASE_STREAM_WOULD_BLOCK;
+                    }
+                }
+            }
+            // it is important to update this so our observer will be able
+            // to access our baseChannel attribute if they want.
+            mChannel = lastChannel;
         }
     }
+
+    // If we get here, assume the resource does not exist.
+    return NS_BINDING_FAILED;
+}
+
+//-----------------------------------------------------------------------------
+// nsIURIChecker methods:
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsURIChecker::Init(nsIURI *aURI)
+{
+    nsresult rv;
+    nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = ios->NewChannelFromURI(aURI, getter_AddRefs(mChannel));
+    if (NS_FAILED(rv)) return rv;
+
+    if (mAllowHead) {
+        mAllowHead = PR_FALSE;
+        // See if it's an http channel, which needs special treatment:
+        nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+        if (httpChannel) {
+            // We can have an HTTP channel that has a non-HTTP URL if
+            // we're doing FTP via an HTTP proxy, for example.  See for
+            // example bug 148813
+            PRBool isReallyHTTP = PR_FALSE;
+            aURI->SchemeIs("http", &isReallyHTTP);
+            if (!isReallyHTTP)
+                aURI->SchemeIs("https", &isReallyHTTP);
+            if (isReallyHTTP) {
+                httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));
+                // set back to true so we'll know that this request is issuing
+                // a HEAD request.  this is used down in OnStartRequest to
+                // handle cases where we need to repeat the request as a normal
+                // GET to deal with server borkage.
+                mAllowHead = PR_TRUE;
+            }
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsURIChecker::AsyncCheck(nsIRequestObserver *aObserver,
+                         nsISupports *aObserverContext)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
 
     // Hook us up to listen to redirects and the like (this creates a reference
     // cycle!)
     mChannel->SetNotificationCallbacks(this);
     
     // and start the request:
-    rv = mChannel->AsyncOpen(this, nsnull);
-
-    // break cycle if we fail to open the channel.
+    nsresult rv = mChannel->AsyncOpen(this, nsnull);
     if (NS_FAILED(rv))
         mChannel = nsnull;
+    else {
+        // ok, wait for OnStartRequest to fire.
+        mIsPending = PR_TRUE;
+        mObserver = aObserver;
+        mObserverContext = aObserverContext;
+    }
     return rv;
 }
 
 NS_IMETHODIMP
-nsURIChecker::GetBaseRequest(nsIRequest** aRequest)
+nsURIChecker::GetBaseChannel(nsIChannel **aChannel)
 {
-    if (!mChannel) {
-        NS_ASSERTION(aRequest, "null out param!");
-        *aRequest = 0;
-        return NS_ERROR_NOT_INITIALIZED;
-    }
-    return CallQueryInterface(mChannel, aRequest);
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
+    NS_ADDREF(*aChannel = mChannel);
+    return NS_OK;
 }
 
-/////////////////////////////////////////////////////
-// nsIRequest methods
-//
+//-----------------------------------------------------------------------------
+// nsIRequest methods:
+//-----------------------------------------------------------------------------
+
 NS_IMETHODIMP
 nsURIChecker::GetName(nsACString &aName)
 {
-    if (!mChannel)
-        return NS_ERROR_NOT_INITIALIZED;
-
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
     return mChannel->GetName(aName);
 }
 
@@ -179,180 +249,103 @@ nsURIChecker::IsPending(PRBool *aPendingRet)
 NS_IMETHODIMP
 nsURIChecker::GetStatus(nsresult* aStatusRet)
 {
-    NS_ENSURE_ARG(aStatusRet);
     *aStatusRet = mStatus;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsURIChecker::Cancel(nsresult status)
+NS_IMETHODIMP
+nsURIChecker::Cancel(nsresult status)
 {
-    if (!mChannel)
-        return NS_ERROR_NOT_INITIALIZED;
-
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
     return mChannel->Cancel(status);
 }
 
-NS_IMETHODIMP nsURIChecker::Suspend()
+NS_IMETHODIMP
+nsURIChecker::Suspend()
 {
-    if (!mChannel)
-        return NS_ERROR_NOT_INITIALIZED;
-
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
     return mChannel->Suspend();
 }
 
-NS_IMETHODIMP nsURIChecker::Resume()
+NS_IMETHODIMP
+nsURIChecker::Resume()
 {
-    if (!mChannel)
-        return NS_ERROR_NOT_INITIALIZED;
-
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
     return mChannel->Resume();
 }
 
-NS_IMETHODIMP nsURIChecker::GetLoadGroup(nsILoadGroup **aLoadGroup)
+NS_IMETHODIMP
+nsURIChecker::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
-    if (!mChannel) {
-        NS_ASSERTION(aLoadGroup, "null out param!");
-        *aLoadGroup = 0;
-        return NS_ERROR_NOT_INITIALIZED;
-    }
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
     return mChannel->GetLoadGroup(aLoadGroup);
 }
 
-NS_IMETHODIMP nsURIChecker::SetLoadGroup(nsILoadGroup *aLoadGroup)
+NS_IMETHODIMP
+nsURIChecker::SetLoadGroup(nsILoadGroup *aLoadGroup)
 {
-    if (!mChannel)
-        return NS_ERROR_NOT_INITIALIZED;
-
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
     return mChannel->SetLoadGroup(aLoadGroup);
 }
 
-NS_IMETHODIMP nsURIChecker::GetLoadFlags(nsLoadFlags *aLoadFlags)
+NS_IMETHODIMP
+nsURIChecker::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    if (!mChannel)
-        return NS_ERROR_NOT_INITIALIZED;
-
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
     return mChannel->GetLoadFlags(aLoadFlags);
 }
 
-NS_IMETHODIMP nsURIChecker::SetLoadFlags(nsLoadFlags aLoadFlags)
+NS_IMETHODIMP
+nsURIChecker::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    if (!mChannel)
-        return NS_ERROR_NOT_INITIALIZED;
-
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
     return mChannel->SetLoadFlags(aLoadFlags);
 }
 
-/////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // nsIStreamListener methods:
-//
+//-----------------------------------------------------------------------------
+
 NS_IMETHODIMP
 nsURIChecker::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt)
 {
-    if (!aRequest)
-        return NS_ERROR_INVALID_ARG;
-    if (!mChannel)
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ASSERTION(aRequest == mChannel, "unexpected request");
 
-    nsresult status;
-    nsresult rv = aRequest->GetStatus(&status);
-    // DNS errors and other obvious problems will return failure status
-    if (NS_FAILED(rv) || NS_FAILED(status)) {
-        SetStatusAndCallBack(nsnull, NS_BINDING_FAILED);
-        return NS_OK;
-    }
+    nsresult rv = CheckStatus();
+    if (rv != NS_BASE_STREAM_WOULD_BLOCK)
+        SetStatusAndCallBack(rv);
 
-    // If status is zero, it might still be an error if it's http:
-    // http has data even when there's an error like a 404.
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
-    if (!httpChannel) {
-        SetStatusAndCallBack(aRequest, NS_BINDING_SUCCEEDED);
-        return NS_OK;
-    }
-    PRUint32 responseStatus;
-    rv = httpChannel->GetResponseStatus(&responseStatus);
-    if (NS_FAILED(rv)) {
-        SetStatusAndCallBack(aRequest, NS_BINDING_FAILED);
-        return NS_OK;
-    }
-    // If it's between 200-299, it's valid:
-    if (responseStatus / 100 == 2) {
-        SetStatusAndCallBack(aRequest, NS_BINDING_SUCCEEDED);
-        return NS_OK;
-    }
-    // If we got a 404 (not found), we need some extra checking:
-    // toplevel urls from Netscape Enterprise Server 3.6,
-    // like http://www.mozilla.org, generate a 404
-    // and will have to be retried without the head.
-    if (responseStatus == 404)
-    {
-        // We don't want to read the actual data, so cancel now:
-        aRequest->Cancel(NS_BINDING_ABORTED);
-
-        nsCAutoString server;
-        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Server"), server);
-        if (NS_SUCCEEDED(rv)) {
-            if (server.Equals(NS_LITERAL_CSTRING("Netscape-Enterprise/3.6"),
-                              nsCaseInsensitiveCStringComparator())) {
-                mStatus = NS_OK;
-                // Open a new channel for a real (not head) request:
-                nsCOMPtr<nsIIOService> ios (do_GetIOService(&rv));
-                if (NS_FAILED(rv)) return rv;
-                if (!ios) return NS_ERROR_UNEXPECTED;
-                nsCOMPtr<nsIURI> URI;
-                rv = mChannel->GetOriginalURI(getter_AddRefs(URI));
-                if (NS_FAILED(rv)) return rv;
-                rv = ios->NewChannelFromURI(URI, getter_AddRefs(mChannel));
-                if (NS_FAILED(rv)) return rv;
-                return mChannel->AsyncOpen(this, nsnull);
-            }
-        }
-
-        // Else it was a normal 404, so return as expected
-        SetStatusAndCallBack(aRequest, NS_BINDING_FAILED);
-        return NS_OK;
-    }
-
-    // If we get here, then it's an http channel, not a 100, 200 or 404.
-    // Treat it as an error.
-    SetStatusAndCallBack(aRequest, NS_BINDING_FAILED);
-    return NS_OK;
+    // cancel the request (we don't care to look at the data).
+    return NS_BINDING_ABORTED;
 }
 
 NS_IMETHODIMP
 nsURIChecker::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                              nsresult statusCode)
 {
-    // break reference cycle between us and the channel (see comment in
-    // AsyncCheckURI)
-    mChannel = nsnull;
-
-    // also a good idea to release our reference to the observer since it
-    // may be owning us as well.
-    mObserver = nsnull;
+    // NOTE: we may have kicked off a subsequent request, so we should not do
+    // any cleanup unless this request matches the one we are currently using.
+    if (mChannel == request) {
+        // break reference cycle between us and the channel (see comment in
+        // AsyncCheckURI)
+        mChannel = nsnull;
+    }
     return NS_OK;
 }
 
-// OnDataAvailable shouldn't generally be called,
-// since we use head requests whenever possible,
-// but in practice we're seeing it every time.
 NS_IMETHODIMP
 nsURIChecker::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
                                nsIInputStream *aInput, PRUint32 aOffset,
                                PRUint32 aCount)
 {
-#ifdef DEBUG_akkana
-    nsCAutoString name;
-    GetName(name);
-    printf("OnDataAvailable: %s\n", name.get());
-#endif
-    // If we've gotten here, something went wrong with the previous cancel,
-    // so return a failure code to cancel the request:
+    NS_NOTREACHED("nsURIChecker::OnDataAvailable");
     return NS_BINDING_ABORTED;
 }
 
-/////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // nsIInterfaceRequestor methods:
-//
+//-----------------------------------------------------------------------------
+
 NS_IMETHODIMP
 nsURIChecker::GetInterface(const nsIID & aIID, void **aResult)
 {
@@ -364,9 +357,10 @@ nsURIChecker::GetInterface(const nsIID & aIID, void **aResult)
     return QueryInterface(aIID, aResult);
 }
 
-/////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // nsIHttpEventSink methods:
-//
+//-----------------------------------------------------------------------------
+
 NS_IMETHODIMP
 nsURIChecker::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
 {
