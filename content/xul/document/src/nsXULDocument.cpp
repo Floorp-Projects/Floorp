@@ -578,6 +578,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     rv = PrepareStyleSheets(mDocumentURL);
     if (NS_FAILED(rv)) return rv;
 
+    RetrieveRelevantHeaders(aChannel);
+
     // Look in the chrome cache: we've got this puppy loaded
     // already.
     nsCOMPtr<nsIXULPrototypeDocument> proto;

@@ -83,6 +83,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
 #include "nsIXPointer.h"
+#include "nsIFileChannel.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -786,36 +787,7 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     CopyASCIItoUCS2(Substring(start, semicolon), mContentType);
   }
 
-  PRBool have_contentLanguage = PR_FALSE;
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    nsCAutoString contentLanguage;
-    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Language"),
-                                        contentLanguage);
-
-    if (NS_SUCCEEDED(rv)) {
-      // XXX what's wrong w/ ASCII?
-      CopyASCIItoUCS2(contentLanguage, mContentLanguage);
-
-      have_contentLanguage = PR_TRUE;
-    }
-  }
-
-  if (!have_contentLanguage) {
-    nsCOMPtr<nsIPrefBranch> prefBranch =
-      do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    if (prefBranch) {
-      nsXPIDLCString prefLanguage;
-
-      rv = prefBranch->GetCharPref("intl.accept_languages",
-                                   getter_Copies(prefLanguage));
-
-      if (NS_SUCCEEDED(rv)) {
-        mContentLanguage.AssignWithConversion(prefLanguage);
-      }
-    }
-  }
+  RetrieveRelevantHeaders(aChannel);
 
   return rv;
 }
@@ -839,6 +811,18 @@ nsDocument::GetDocumentURL(nsIURI** aURI) const
 {
   *aURI = mDocumentURL;
   NS_IF_ADDREF(*aURI);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetLastModified(nsAString& aLastModified)
+{
+  if (!mLastModified.IsEmpty()) {
+    aLastModified.Assign(mLastModified);
+  } else {
+    aLastModified.Assign(NS_LITERAL_STRING("January 1, 1970 GMT"));
+  }
 
   return NS_OK;
 }
@@ -4136,4 +4120,80 @@ nsDocument::SetBidiEnabled(PRBool aBidiEnabled)
   mBidiEnabled = aBidiEnabled;
 
   return NS_OK;
+}
+
+void
+nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
+{
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  nsresult rv;
+  PRBool have_contentLanguage = PR_FALSE;
+
+  if (httpChannel) {
+    nsCAutoString header;
+    
+    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
+                                        header);
+ 
+    if (NS_SUCCEEDED(rv)) {
+      CopyASCIItoUCS2(header, mLastModified);
+    }
+
+    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Language"),
+                                        header);
+
+    if (NS_SUCCEEDED(rv)) {
+      // XXX what's wrong w/ ASCII?
+      CopyASCIItoUCS2(header, mContentLanguage);
+      
+      have_contentLanguage = PR_TRUE;
+    }
+  }
+  
+  if (!have_contentLanguage) {
+    nsCOMPtr<nsIPrefBranch> prefBranch =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+    if (prefBranch) {
+      nsXPIDLCString prefLanguage;
+
+      rv = prefBranch->GetCharPref("intl.accept_languages",
+                                   getter_Copies(prefLanguage));
+
+      if (NS_SUCCEEDED(rv)) {
+        CopyASCIItoUCS2(prefLanguage, mContentLanguage);
+      }
+    } 
+  }
+
+  nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
+  if (fileChannel) {
+    PRTime modDate, usecs;
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = fileChannel->GetFile(getter_AddRefs(file));
+    if (NS_SUCCEEDED(rv)) {
+      rv = file->GetLastModifiedTime(&modDate);
+      if (NS_SUCCEEDED(rv)) {
+        PRExplodedTime prtime;
+        char buf[100];
+        PRInt64 intermediateValue;
+
+        LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
+        LL_MUL(usecs, modDate, intermediateValue);
+        PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
+
+        // Use '%#c' for windows, because '%c' is backward-compatible and
+        // non-y2k with msvc; '%#c' requests that a full year be used in the
+        // result string.  Other OSes just use "%c".
+        PR_FormatTime(buf, sizeof buf,
+#ifdef XP_WIN
+                      "%#c",
+#else
+                      "%c",
+#endif
+                      &prtime);
+        mLastModified.AssignWithConversion(buf);
+      }
+    }
+  }
 }

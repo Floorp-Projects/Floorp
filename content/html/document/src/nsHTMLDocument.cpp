@@ -40,7 +40,6 @@
 #include "nsICharsetAlias.h"
 
 #include "nsCOMPtr.h"
-#include "nsIFileChannel.h"
 #include "nsXPIDLString.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
@@ -754,20 +753,16 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsAString& aCharset,
   }
 }
 
-nsresult
+void
 nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 {
   mHttpChannel = do_QueryInterface(aChannel);
-  nsresult rv;
+
+  nsDocument::RetrieveRelevantHeaders(aChannel);
 
   if (mHttpChannel) {
     nsCAutoString header;
-    rv = mHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
-                                         header);
- 
-    if (NS_SUCCEEDED(rv)) {
-      SetLastModified(NS_ConvertASCIItoUCS2(header));
-    }
+    nsresult rv;
 
     // The misspelled key 'referer' is as per the HTTP spec
     rv = mHttpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
@@ -777,43 +772,7 @@ nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     }
   }
 
-  nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
-  if (fileChannel) {
-    PRTime modDate, usecs;
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = fileChannel->GetFile(getter_AddRefs(file));
-    if (NS_SUCCEEDED(rv)) {
-      // if we failed to get a last modification date, then we don't
-      // want to necessarily fail to create a document for this
-      // file. Just don't set the last modified date on it...
-      rv = file->GetLastModifiedTime(&modDate);
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoString lastModified;
-        PRExplodedTime prtime;
-        char buf[100];
-        PRInt64 intermediateValue;
-
-        LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-        LL_MUL(usecs, modDate, intermediateValue);
-        PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
-
-        // Use '%#c' for windows, because '%c' is backward-compatible and
-        // non-y2k with msvc; '%#c' requests that a full year be used in the
-        // result string.  Other OSes just use "%c".
-        PR_FormatTime(buf, sizeof buf,
-#ifdef XP_WIN
-                      "%#c",
-#else
-                      "%c",
-#endif
-                      &prtime);
-        lastModified.AssignWithConversion(buf);
-        SetLastModified(lastModified);
-      }
-    }
-  }
-
-  return NS_OK;
+  return;
 }
 
 NS_IMETHODIMP
@@ -864,8 +823,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  RetrieveRelevantHeaders(aChannel);
 
   nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(aChannel);
   if (cachingChan) {
@@ -1322,14 +1279,6 @@ NS_IMETHODIMP
 nsHTMLDocument::SetBaseTarget(const nsAString& aTarget)
 {
   mBaseTarget = aTarget;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetLastModified(const nsAString& aLastModified)
-{
-  mLastModified.Assign(aLastModified);
 
   return NS_OK;
 }
@@ -3281,18 +3230,6 @@ nsHTMLDocument::SetFgColor(const nsAString& aFgColor)
     body->SetText(aFgColor);
   }
   // XXXldb And otherwise?
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetLastModified(nsAString& aLastModified)
-{
-  if (!mLastModified.IsEmpty()) {
-    aLastModified.Assign(mLastModified);
-  } else {
-    aLastModified.Assign(NS_LITERAL_STRING("January 1, 1970 GMT"));
-  }
 
   return NS_OK;
 }

@@ -120,7 +120,6 @@ public:
   NS_IMETHOD GetBaseTarget(nsAString& aTarget);
   NS_IMETHOD SetBaseTarget(const nsAString& aTarget);
 
-  NS_IMETHOD SetLastModified(const nsAString& aLastModified);
   NS_IMETHOD SetReferrer(const nsAString& aReferrer);
 
   NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
@@ -260,13 +259,12 @@ protected:
 
   nsresult BaseResetToURI(nsIURI* aURI);
 
-  nsresult RetrieveRelevantHeaders(nsIChannel *aChannel);
+  virtual void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
   nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
   nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   nsString mBaseTarget;
-  nsString mLastModified;
   nsString mReferrer;
 
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
