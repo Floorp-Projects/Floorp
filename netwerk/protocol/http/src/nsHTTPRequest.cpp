@@ -130,10 +130,13 @@ nsHTTPRequest::Build()
            ("\tnsHTTPRequest [this=%x].\tFirst line: %s",
             this, lineBuffer.GetBuffer()));
 
+#if 0
+    rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(), 
+                         &bytesWritten);
+#else
     rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
                          &bytesWritten);
-//    rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(), 
-//                         &bytesWritten);
+#endif
     if (NS_FAILED(rv)) return rv;
     
 /*    switch (m_Method)
@@ -177,18 +180,24 @@ nsHTTPRequest::Build()
                ("\tnsHTTPRequest [this=%x].\t\t%s\n",
                 this, lineBuffer.GetBuffer()));
 
+#if 0
+        rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(),
+                             &bytesWritten);
+#else
         rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(),
                              &bytesWritten);
-//        rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(),
-//                             &bytesWritten);
+#endif
         if (NS_FAILED(rv)) return rv;
 
         lineBuffer.Truncate();
     }
 
     // Write the final \r\n
+#if 0
+    rv = m_Request->Fill(CRLF, PL_strlen(CRLF), &bytesWritten);
+#else
     rv = buf->Write(CRLF, PL_strlen(CRLF), &bytesWritten);
-//    rv = m_Request->Fill(CRLF, PL_strlen(CRLF), &bytesWritten);
+#endif
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
