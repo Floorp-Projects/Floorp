@@ -467,17 +467,6 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		_XfeConfigFlags(nw) |= XfeConfigExpose;
     }
 
-    /* top_shadow_color */
-    if (_XfeTopShadowColor(nw) != _XfeTopShadowColor(ow))
-    {
-		insensitive_top_gc_flag = True;
-
-		if (!_XfeIsSensitive(nw))
-		{
-			_XfeConfigFlags(nw) |= XfeConfigExpose;
-		}
-    }
-
     /* bottom_shadow_color */
     if (_XfeBottomShadowColor(nw) != _XfeBottomShadowColor(ow))
     {
@@ -488,6 +477,17 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 			_XfeConfigFlags(nw) |= XfeConfigExpose;
 		}
 
+    }
+
+    /* top_shadow_color */
+    if (_XfeTopShadowColor(nw) != _XfeTopShadowColor(ow))
+    {
+		insensitive_top_gc_flag = True;
+
+		if (!_XfeIsSensitive(nw))
+		{
+			_XfeConfigFlags(nw) |= XfeConfigExpose;
+		}
     }
 
     /* label_alignment */
