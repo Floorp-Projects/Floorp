@@ -64,6 +64,10 @@ xul|outlinerrows {
   -moz-binding: none;
 }
 
+xul|outlinercol.outliner-columnpicker {
+  display: none;
+}
+
 xul|outlinerbody {
   -moz-binding: url("chrome://forms/content/select.xml#select-outlinerbody");
 }
