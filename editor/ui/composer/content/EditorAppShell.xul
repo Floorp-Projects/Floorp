@@ -126,7 +126,7 @@
     </toolbar>
   </toolbox>
 
-  <html:iframe id="content-frame" html:name="content" html:src="chrome://editor/content/EditorInitPage.html" flex="100%" />
+  <html:iframe type="content" id="content-frame" html:name="content" html:src="chrome://editor/content/EditorInitPage.html" flex="100%" />
   
   </box>
 </window>

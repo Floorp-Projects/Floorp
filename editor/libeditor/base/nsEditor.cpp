@@ -401,10 +401,12 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   if ((nsnull==aDoc) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
-  mDoc = do_QueryInterface(aDoc);
+  mDoc = aDoc;
   mPresShell = aPresShell;
-  NS_ADDREF(mPresShell);
   mPresShell->GetViewManager(&mViewManager);
+  if (mViewManager){
+    mViewManager->Release(); //we want a weak link
+  }
   mUpdateCount=0;
   InsertTextTxn::ClassInit();
 

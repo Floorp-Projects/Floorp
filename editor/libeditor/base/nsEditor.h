@@ -70,7 +70,7 @@ private:
   nsVoidArray *mActionListeners;
 
 protected:
-  nsCOMPtr<nsIDOMDocument> mDoc;
+  nsIDOMDocument * mDoc;
 
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
