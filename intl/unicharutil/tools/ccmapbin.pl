@@ -16,7 +16,7 @@
 #
 # The Initial Developer of the Original Code is
 # Jungshik Shin <jshin@mailaps.org>.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Portions created by the Initial Developer are Copyright (C) 2002, 2003
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -39,6 +39,8 @@
 # See bug 180266 for details.
 #
 # Revised to support extended CCMaps for non-BMP characters : 2003-09-19 (bug 205387)  
+# Revised to support the automatic generation of a macro defining the size
+#   of a CCMap in terms of PRUint16 : 2003-12-11 (bug 224337)
 
 use strict;
 
@@ -50,11 +52,18 @@ use vars qw($e_mid_offset $e_pg_offset);
 
 my $ifn = $ARGV[0];
 
-my ($ifh, $class);
+my ($ifh, $variable, $class);
 open $ifh , "< $ifn" or die "Cannot open $ifn";
 
 if (@ARGV >= 2) {
-	$class = $ARGV[1];
+	$variable = $ARGV[1];
+	printf STDERR 
+  "$0:\n\t VARIABLE $variable is specified in the command line.\n" .
+  "\t The variable name spec. in the input file will be ignored.\n";
+}
+
+if (@ARGV >= 3) {
+	$class = $ARGV[2];
 	printf STDERR 
   "$0:\n\t CLASS $class is specified in the command line.\n" .
   "\t The class spec. in the input file will be ignored.\n";
@@ -89,6 +98,15 @@ my @fillinfo = ();
 my %comments = ();
 
 my $planes = &read_input(\@fillinfo,$ifh,\%comments);
+
+if (!defined($variable) && !defined($comments{'VARIABLE'})) 
+{
+  printf STDERR "Variable name is not specified in the cmd line. " .
+    "Neither is it found in the input file.\n\n" ;
+  usage();
+}
+
+$variable = $comments{'VARIABLE'} if (! defined($variable));
 
 if (!defined($class) && !defined($comments{'CLASS'})) 
 {
@@ -149,7 +167,7 @@ foreach my $plane (0 .. ($have_non_bmp ? 16 : 0))
   }
 }
 
-&print_ccmap(\@ccmap,  \%pg_flags, $class, \%comments, $have_non_bmp);
+&print_ccmap(\@ccmap,  \%pg_flags, $variable, $class, \%comments, $have_non_bmp);
 
 exit 0;
 
@@ -158,14 +176,21 @@ exit 0;
 sub usage
 {
   print STDERR <<USAGE;
-Usage: $0 input_file [class]
+Usage: $0 input_file [variable [class]]
 
 The output file "class.ccmap" will be generated with 
 all three cases LE(16/32/64bit)/BE(16bit), BE(32bit), and BE(64bit)
-put together.
+put together. 'variable' will be used to name two macros, one for
+dimensioning the size of a PRUin16[]  and the other for the array
+initializer.
 
+When 'variable' is omitted, it has to be specified in the input file with
+the following syntax.
+
+VARIABLE:: variable
+   
 When 'class' is omitted, it has to be specified in the input file with
-the following syntax
+the following syntax.
 
 CLASS:: class_name
    
@@ -186,13 +211,16 @@ sub read_input
   {
     $lc++;
     chomp;
-    /^CLASS::/ and 
-      ($comments_p->{'CLASS'} = $_) =~ s/^CLASS::\s*([a-zA-Z0-9_]+).*$/$1/,
+    /^\s*VARIABLE::\s*([a-zA-Z][a-zA-Z0-9_]*)$/ and 
+      $comments_p->{'VARIABLE'} = $1,
       next;
-    /^DESCRIPTION::/ and 
-      ($comments_p->{'DESC'} = $_) =~ s/^DESCRIPTION::\s*//, next;
-    /^FILE::/ and 
-      ($comments_p->{'FILE'} = $_) =~ s/^FILE::\s*//, next;
+    /^\s*CLASS::/ and 
+      ($comments_p->{'CLASS'} = $_) =~ s/^\s*CLASS::\s*([a-zA-Z0-9_]+).*$/$1/,
+      next;
+    /^\s*DESCRIPTION::/ and 
+      ($comments_p->{'DESC'} = $_) =~ s/^\s*DESCRIPTION::\s*//, next;
+    /^\s*FILE::/ and 
+      ($comments_p->{'FILE'} = $_) =~ s/^\s*FILE::\s*//, next;
 
     next unless /^\s*0[Xx][0-9A-Fa-f]{4}/; 
 
@@ -340,7 +368,7 @@ sub add_plane
 
 sub print_ccmap
 {
-  my($ccmap_p,$pg_flags_p, $class, $comments_p, $is_ext) = @_;
+  my($ccmap_p,$pg_flags_p, $variable, $class, $comments_p, $is_ext) = @_;
 
 
   my $ofn = $class . ($is_ext ? ".x-ccmap" : ".ccmap"); 
@@ -348,11 +376,13 @@ sub print_ccmap
   open OUT, "> $ofn" or 
   die "cannot open $ofn for output\n";
 
-  print OUT print_preamble($class);
+  print OUT print_preamble($variable, $class);
 
   print OUT "\n/*\n"; 
-  defined ($comments_p->{'CLASS'}) and 
-    print OUT "   CLASS:: $comments_p->{'CLASS'}\n";
+# defined ($comments_p->{'CLASS'}) and 
+#   print OUT "   CLASS:: $comments_p->{'CLASS'}\n";
+  print OUT "   VARIABLE:: $variable\n";
+  print OUT "   CLASS:: $class\n";
   defined ($comments_p->{'DESC'}) and 
     print OUT "   DESCRIPTION:: $comments_p->{'DESC'}\n";
   defined ($comments_p->{'FILE'}) and 
@@ -367,9 +397,10 @@ sub print_ccmap
 
   printf OUT "*/\n\n";
 
+
   my(@idxlist, @int16toint32);
 
-# When CCMap is accessed, (PRUint16 *) is casted to 
+# When CCMap is accessed, (PRUint16 *) is cast to 
 # the pointer type of the ALU of a machine.  
 # For little endian machines, the size of the ALU
 # doesn't matter (16, 32, 64). For Big endian
@@ -388,7 +419,7 @@ sub print_ccmap
 # For BMP-only CCMap, 16BE CCMap is identical to LE CCMaps.
 # With non-BMP characters present, to avoid the misalignment on 64bit
 # machines, we have to store the ccmap flag (indicating whether the map 
-# is extended or not)and the BMP map size in two 32bit integers instead of
+# is extended or not) and the BMP map size in two 32bit integers instead of
 # two 16bit integers (bug 225340)
   my @fmts = $is_ext ? ("64LE", "LE", "16BE", "32BE", "64BE") : ("LE", "32BE", "64BE") ;
   foreach my $fmt (@fmts)
@@ -401,10 +432,12 @@ sub print_ccmap
         @int16toint32 = (1, 0, 3, 2);
         print OUT "#if (defined(IS_LITTLE_ENDIAN) && ALU_SIZE == 64)\n" .
 		          "// Precompiled CCMap for Little Endian(64bit)\n"; 
-        printf OUT "/* EXTFLG */ 0x%04X,0x0000,0x%04X,0x0000,\n", 
+        printf OUT "#define ${variable}_SIZE %d\n", scalar @$ccmap_p + 2;
+        printf OUT "#define ${variable}_INITIALIZER    \\\n";
+        printf OUT "/* EXTFLG */ 0x%04X,0x0000,0x%04X,0x0000,    \\\n", 
 	               $ccmap_p->[0], $ccmap_p->[1];
         last;
-	  };
+	    };
       /LE/ and do {
         @idxlist = (0, 1, 2, 3);
         @int16toint32 = (1, 0, 3, 2);
@@ -414,8 +447,12 @@ sub print_ccmap
                   "#if (defined(IS_LITTLE_ENDIAN) || ALU_SIZE == 16)\n" . 
                   "// Precompiled CCMap for Little Endian(16/32/64bit)\n" .
                   "// and Big Endian(16bit)\n";
-        printf OUT "/* EXTFLG */ 0x%04X,0x%04X,\n", 
-	               $ccmap_p->[0], $ccmap_p->[1];
+        printf OUT "#define ${variable}_SIZE %d\n", scalar @$ccmap_p;
+        printf OUT "#define ${variable}_INITIALIZER    \\\n";
+        if ($is_ext) {
+             printf OUT "/* EXTFLG */ 0x%04X,0x%04X,    \\\n", 
+	                   $ccmap_p->[0], $ccmap_p->[1];
+        }
         last;
       };
       /16BE/ and do {
@@ -423,7 +460,9 @@ sub print_ccmap
         @int16toint32 = (0, 1, 2, 3);
         print OUT "#elif (ALU_SIZE == 16)\n" .
                   "// Precompiled CCMap for Big Endian(16bit)\n";
-        printf OUT "/* EXTFLG */ 0x%04X,0x%04X,\n", 
+        printf OUT "#define ${variable}_SIZE %d\n", scalar @$ccmap_p;
+        printf OUT "#define ${variable}_INITIALIZER    \\\n";
+        printf OUT "/* EXTFLG */ 0x%04X,0x%04X,    \\\n", 
 	               $ccmap_p->[0], $ccmap_p->[1];
         last;
       };
@@ -432,8 +471,12 @@ sub print_ccmap
         @int16toint32 = (0, 1, 2, 3);
         print OUT "#elif (ALU_SIZE == 32)\n" .
                   "// Precompiled CCMap for  Big Endian(32bit)\n";
-        printf OUT "/* EXTFLG */ 0x%04X,0x%04X,\n", 
-	               $ccmap_p->[0], $ccmap_p->[1];
+        printf OUT "#define ${variable}_SIZE %d\n", scalar @$ccmap_p;
+        printf OUT "#define ${variable}_INITIALIZER    \\\n";
+        if ($is_ext) {
+             printf OUT "/* EXTFLG */ 0x%04X,0x%04X,    \\\n", 
+	                   $ccmap_p->[0], $ccmap_p->[1];
+        }
         last;
       };
       /64BE/ and do {
@@ -441,8 +484,13 @@ sub print_ccmap
         @int16toint32 = (0, 1, 2, 3);
         print OUT "#elif (ALU_SIZE == 64)\n" .
                   "// Precompiled CCMap for Big Endian(64bit)\n";
-        printf OUT "/* EXTFLG */ 0x0000,0x%04X,0x0000,0x%04X,\n", 
-		           $ccmap_p->[0], $ccmap_p->[1];
+        printf OUT "#define ${variable}_SIZE %d\n", scalar @$ccmap_p + 
+                   ($is_ext ? 2 : 0);
+        printf OUT "#define ${variable}_INITIALIZER    \\\n";
+        if ($is_ext) {
+             printf OUT "/* EXTFLG */ 0x0000,0x%04X,0x0000,0x%04X,    \\\n", 
+	                   $ccmap_p->[0], $ccmap_p->[1];
+        }
         last;
       };
     }
@@ -453,14 +501,16 @@ sub print_ccmap
       printf OUT "/* %06x */ ", $offset - ($is_ext ? 2 : 0);
       for my $i (0 .. 3) {
         for my $j (defined($pg_flags_p->{$offset}) ? 
-                   ($pg_flags_p->{$offset} > 0 ? @idxlist : @int16toint32)  : (0,1,2,3)) {
+                   ($pg_flags_p->{$offset} > 0 ? 
+                   @idxlist : @int16toint32)  : (0,1,2,3)) {
           printf OUT "0x%04X,", $ccmap_p->[$offset + $i * 4 + $j];
         }
-        print OUT "\n             " if $i==1; 
+        print OUT "    \\\n             " if $i==1; 
       }
-      print OUT "\n";
+      if ($offset + 16 < @$ccmap_p) {print OUT "    \\\n"; }
       $offset += 16;
     }
+    print OUT "\n";
   } 
 
   print OUT <<END;
@@ -476,7 +526,7 @@ END
 sub print_preamble
 {
 
- my($class) = @_;
+ my($variable, $class) = @_;
  sprintf <<PREAMBLE;
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -532,6 +582,7 @@ sub print_preamble
   In addition, the input file can have the following optional lines that
   read
 
+      VARIABLE::$variable
       CLASS::$class
       DESCRIPTION:: description of a character class 
       FILE:: mozilla source file to include the output file
@@ -539,12 +590,13 @@ sub print_preamble
 
   Then, run the following in the current directory.
 
-    perl ccmapbin.pl input_file [$class] 
+    perl ccmapbin.pl input_file [$variable [$class]] 
 
   which will generate $class.ccmap (or $class.x-ccmap if the ccmap
-  includes non-BMP characters.)
+  includes non-BMP characters.). $variable is used as the prefix
+  in macros for the array initializer and the array size. 
 
-  (see bug 180266 and bug 167136)
+  (see bug 180266, bug 167136, and bug 224337)
 
  */
 

@@ -687,11 +687,9 @@ static PRUint16* gEmptyCCMap = nsnull;
 // Here we define those characters.
 // XXX: This array can (and need, for performance) be made |const| when 
 // GTK port of gfx gets sync'd with Xlib port for multiple device contexts.
-//
-static PRUint16 gDoubleByteSpecialCharsCCMap[] = {
+  
 #include "dbyte_special_chars.ccmap"
-};
-
+DEFINE_CCMAP(gDoubleByteSpecialCharsCCMap, /* nothing */);
 
 static PRBool
 FreeCharSetMap(nsHashKey* aKey, void* aData, void* aClosure)

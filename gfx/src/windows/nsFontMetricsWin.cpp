@@ -166,14 +166,9 @@ static PRUint16* gUserDefinedCCMap = nsnull;
 // http://www.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt)
 // and turn them to  nothingness.
 static nsFontWin* gFontForIgnorable = nsnull;
-static PRUint16 gIgnorableCCMapExtRaw[] = {
-#include "ignorable.x-ccmap"
-};
 
-// It's a pre-compiled extended ccmap so that the first CCMAP_EXTRA
-// (2 on 16/32bit machines, 4 on 64bit machines)
-// elements are used to store the ccmap flag and the size of the BMP map.
-static PRUint16 *gIgnorableCCMapExt = gIgnorableCCMapExtRaw + CCMAP_EXTRA;
+#include "ignorable.x-ccmap"
+DEFINE_X_CCMAP(gIgnorableCCMapExt, /* nothing */);
 
 static nsCharsetInfo gCharsetInfo[eCharset_COUNT] =
 {
@@ -1496,9 +1491,8 @@ PLHashAllocOps fontmap_HashAllocOps = {
 // Keith Packard to use in fonts.conf of fontconfig package.
 // Some of this may not have to be here because they're filtered out before
 // reaching here. Needs further investigation. 
-static const PRUint16 gCharsWithBlankGlyphCCMap[] = {
 #include "blank_glyph.ccmap"
-};
+DEFINE_CCMAP(gCharsWithBlankGlyphCCMap, const);
 
 #define SHOULD_BE_SPACE_CHAR(ch)  (CCMAP_HAS_CHAR(gCharsWithBlankGlyphCCMap,ch))
 
