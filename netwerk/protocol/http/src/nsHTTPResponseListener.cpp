@@ -46,9 +46,9 @@
 #include "nsXPIDLString.h" 
 
 #include "nsIIOService.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID) ;
 
-#if defined(PR_LOGGING)
+#if defined(PR_LOGGING) 
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
 
@@ -58,40 +58,42 @@ extern PRLogModuleInfo* gHTTPLog;
 //
 static const int kMAX_HEADER_SIZE = 60000;
 
-static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID) ;
 
-nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel *aChannel, nsHTTPHandler *handler)
-                       : mChannel(aChannel), mHandler (handler)
+nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel *aChannel, 
+        nsHTTPHandler *handler) 
+           :mChannel(aChannel) , 
+            mHandler(handler) 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_REFCNT() ;
 
   // mChannel is not an interface pointer, so COMPtrs cannot be used :-(
-  NS_ASSERTION(aChannel, "HTTPChannel is null.");
-  NS_ADDREF(mChannel);
+  NS_ASSERTION(aChannel, "HTTPChannel is null.") ;
+  NS_ADDREF(mChannel) ;
 
-#if defined(PR_LOGGING)
+#if defined(PR_LOGGING) 
   nsCOMPtr<nsIURI> url;
   nsXPIDLCString urlCString; 
 
-  aChannel->GetURI(getter_AddRefs(url));
+  aChannel->GetURI(getter_AddRefs(url)) ;
   if (url) {
-    url->GetSpec(getter_Copies(urlCString));
+    url->GetSpec(getter_Copies(urlCString)) ;
   }
   
   PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-         ("Creating nsHTTPResponseListener [this=%x] for URI: %s.\n", 
-           this, (const char *)urlCString));
+("Creating nsHTTPResponseListener [this=%x] for URI: %s.\n", 
+           this,(const char *) urlCString)) ;
 #endif
 }
 
-nsHTTPResponseListener::~nsHTTPResponseListener()
+nsHTTPResponseListener::~nsHTTPResponseListener() 
 {
   // mChannel is not an interface pointer, so COMPtrs cannot be used :-(
-  NS_IF_RELEASE(mChannel);
+  NS_IF_RELEASE(mChannel) ;
 }
 
 
-void nsHTTPResponseListener::SetListener(nsIStreamListener *aListener)
+void nsHTTPResponseListener::SetListener(nsIStreamListener *aListener) 
 {
   mResponseDataListener = aListener;
 }
@@ -99,12 +101,12 @@ void nsHTTPResponseListener::SetListener(nsIStreamListener *aListener)
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
-NS_IMPL_THREADSAFE_ADDREF(nsHTTPResponseListener)
-NS_IMPL_THREADSAFE_RELEASE(nsHTTPResponseListener)
+NS_IMPL_THREADSAFE_ADDREF(nsHTTPResponseListener) 
+NS_IMPL_THREADSAFE_RELEASE(nsHTTPResponseListener) 
 
 NS_IMPL_QUERY_INTERFACE2(nsHTTPResponseListener, 
                          nsIStreamListener, 
-                         nsIStreamObserver);
+                         nsIStreamObserver) ;
 
 
 
@@ -116,18 +118,18 @@ NS_IMPL_QUERY_INTERFACE2(nsHTTPResponseListener,
 // the cache.
 //
 ///////////////////////////////////////////////////////////////////////////////
-nsHTTPCacheListener::nsHTTPCacheListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler)
-                   : nsHTTPResponseListener(aChannel, handler)
+nsHTTPCacheListener::nsHTTPCacheListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler) 
+                   : nsHTTPResponseListener(aChannel, handler) 
 {
-  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("Creating nsHTTPCacheListener [this=%x].\n", this));
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+          ("Creating nsHTTPCacheListener [this=%x].\n", this)) ;
 
 }
 
-nsHTTPCacheListener::~nsHTTPCacheListener()
+nsHTTPCacheListener::~nsHTTPCacheListener() 
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Deleting nsHTTPCacheListener [this=%x].\n", this));
+            ("Deleting nsHTTPCacheListener [this=%x].\n", this)) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,24 +137,26 @@ nsHTTPCacheListener::~nsHTTPCacheListener()
 
 NS_IMETHODIMP
 nsHTTPCacheListener::OnStartRequest(nsIChannel *aChannel,
-                                    nsISupports *aContext)
+                                    nsISupports *aContext) 
 {
-    PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPCacheListener::OnStartRequest [this=%x]\n", this));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
+            ("nsHTTPCacheListener::OnStartRequest [this=%x]\n", this)) ;
     mBodyBytesReceived = 0;
     
     // get and store the content length which will be used in ODA for computing
     // progress information. 
-    aChannel->GetContentLength(&mContentLength);
-    return mResponseDataListener->OnStartRequest(mChannel, aContext);
+    aChannel->GetContentLength(&mContentLength) ;
+    return mResponseDataListener->OnStartRequest(mChannel, aContext) ;
 }
 
 NS_IMETHODIMP
 nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
                                    nsISupports *aContext,
                                    nsresult aStatus,
-                                   const PRUnichar *aErrorMsg)
+                                   const PRUnichar *aErrorMsg) 
 {
-    PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPCacheListener::OnStopRequest [this=%x]\n", this));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
+            ("nsHTTPCacheListener::OnStopRequest [this=%x]\n", this)) ;
 
     //
     // Notify the channel that the response has finished.  Since there
@@ -161,8 +165,8 @@ nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
     //
     nsresult rv = mChannel->ResponseCompleted(mResponseDataListener, 
                                      aStatus, 
-                                     aErrorMsg);
-//    NS_IF_RELEASE (mChannel);
+                                     aErrorMsg) ;
+//    NS_IF_RELEASE(mChannel) ;
     return rv;
 }
 
@@ -174,28 +178,28 @@ nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
                                      nsISupports *aContext,
                                      nsIInputStream *aStream,
                                      PRUint32 aSourceOffset,
-                                     PRUint32 aCount)
+                                     PRUint32 aCount) 
 {
     nsresult channelStatus = NS_OK, rv = NS_OK;
     
-    if (mChannel)
-        mChannel -> GetStatus (&channelStatus);
+    if (mChannel) 
+        mChannel->GetStatus(&channelStatus) ;
 
-    if (NS_FAILED (channelStatus))  // Canceled http channel
+    if (NS_FAILED(channelStatus)) // Canceled http channel
          return NS_OK;
 
-    rv = mResponseDataListener -> OnDataAvailable(mChannel, 
+    rv = mResponseDataListener->OnDataAvailable(mChannel, 
                                                 aContext,
                                                 aStream,
                                                 aSourceOffset,
-                                                aCount);
+                                                aCount) ;
     if (NS_FAILED(rv)) return rv;
 
 
     mBodyBytesReceived += aCount;
 
     // Report progress
-    rv = mChannel->ReportProgress(mBodyBytesReceived, mContentLength);
+    rv = mChannel->ReportProgress(mBodyBytesReceived, mContentLength) ;
 
     return rv;
 }
@@ -205,25 +209,25 @@ nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
 
 nsresult
 nsHTTPCacheListener::FireSingleOnData(nsIStreamListener *aListener, 
-                                      nsISupports *aContext)
+                                      nsISupports *aContext) 
 {
   NS_ASSERTION(0, "nsHTTPCacheListener::FireSingleOnData(...) "
-                  "should never be called.");
+                  "should never be called.") ;
  
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsHTTPCacheListener::Abort()
+nsresult nsHTTPCacheListener::Abort() 
 {
   NS_ASSERTION(0, "nsHTTPCachedResponseListener::Abort() "
-                  "should never be called.");
+                  "should never be called.") ;
  
   return NS_ERROR_FAILURE;
 }
 
 
-static NS_DEFINE_CID(kSupportsVoidCID, NS_SUPPORTS_VOID_CID);
-static NS_DEFINE_IID(kSupportsVoidIID, NS_ISUPPORTSVOID_IID); 
+static NS_DEFINE_CID(kSupportsVoidCID, NS_SUPPORTS_VOID_CID) ;
+static NS_DEFINE_IID(kSupportsVoidIID, NS_ISUPPORTSVOID_IID) ; 
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -234,45 +238,45 @@ static NS_DEFINE_IID(kSupportsVoidIID, NS_ISUPPORTSVOID_IID);
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler, nsHTTPPipelinedRequest * request, PRBool aDoingProxySSLConnect)
-                    : nsHTTPResponseListener (aChannel, handler),
-                      mResponse(nsnull),
-                      mFirstLineParsed(PR_FALSE),
-                      mHeadersDone(PR_FALSE),
-                      mSimpleResponse (PR_FALSE),
-                      mBytesReceived(0),
-                      mBodyBytesReceived (0),
-                      mCompressHeaderChecked (PR_FALSE),
-                      mChunkHeaderChecked (PR_FALSE),
-                      mDataReceived (PR_FALSE),
-                      mPipelinedRequest (request),
-                      mDoingProxySSLConnect (aDoingProxySSLConnect)
+nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler, nsHTTPPipelinedRequest * request, PRBool aDoingProxySSLConnect) 
+                    : nsHTTPResponseListener(aChannel, handler) ,
+                      mResponse(nsnull) ,
+                      mFirstLineParsed(PR_FALSE) ,
+                      mHeadersDone(PR_FALSE) ,
+                      mSimpleResponse(PR_FALSE) ,
+                      mBytesReceived(0) ,
+                      mBodyBytesReceived(0) ,
+                      mCompressHeaderChecked(PR_FALSE) ,
+                      mChunkHeaderChecked(PR_FALSE) ,
+                      mDataReceived(PR_FALSE) ,
+                      mPipelinedRequest(request) ,
+                      mDoingProxySSLConnect(aDoingProxySSLConnect) 
 {
-    mChannel -> mHTTPServerListener = this;
+    mChannel->mHTTPServerListener = this;
 
-    nsRepository::CreateInstance (kSupportsVoidCID, NULL, 
-                kSupportsVoidIID, getter_AddRefs (mChunkHeaderEOF));
+    nsRepository::CreateInstance(kSupportsVoidCID, NULL, 
+                kSupportsVoidIID, getter_AddRefs(mChunkHeaderEOF)) ;
 
-    if (mChunkHeaderEOF)
-        mChunkHeaderEOF -> SetData (&mChunkHeaderCtx);
+    if (mChunkHeaderEOF) 
+        mChunkHeaderEOF->SetData(&mChunkHeaderCtx) ;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Creating nsHTTPServerListener [this=%x].\n", this));
+("Creating nsHTTPServerListener [this=%x].\n", this)) ;
 }
 
-nsHTTPServerListener::~nsHTTPServerListener()
+nsHTTPServerListener::~nsHTTPServerListener() 
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Deleting nsHTTPServerListener [this=%x].\n", this));
+("Deleting nsHTTPServerListener [this=%x].\n", this)) ;
 
     // These two should go away in the OnStopRequest() callback.
     // But, just in case...
-    NS_IF_RELEASE(mResponse);
+    NS_IF_RELEASE(mResponse) ;
 }
 
-static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
+static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID) ;
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID) ;
+static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID) ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamListener methods:
@@ -282,41 +286,41 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                                       nsISupports* context,
                                       nsIInputStream *i_pStream, 
                                       PRUint32 i_SourceOffset,
-                                      PRUint32 i_Length)
+                                      PRUint32 i_Length) 
 {
     nsresult rv = NS_OK, channelStatus = NS_OK;
     PRUint32 actualBytesRead;
 
-    if (mChannel)
-        mChannel -> GetStatus (&channelStatus);
+    if (mChannel) 
+        mChannel->GetStatus(&channelStatus) ;
 
-    if (NS_FAILED (channelStatus))      // Canceled http channel
+    if (NS_FAILED(channelStatus)) // Canceled http channel
          return NS_OK;
 
-    NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
+    NS_ASSERTION(i_pStream, "No stream supplied by the transport!") ;
     nsCOMPtr<nsIBufferInputStream> bufferInStream = 
-        do_QueryInterface(i_pStream);
+        do_QueryInterface(i_pStream) ;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPServerListener::OnDataAvailable [this=%x].\n"
+("nsHTTPServerListener::OnDataAvailable [this=%x].\n"
             "\tstream=%x. \toffset=%d. \tlength=%d.\n",
-            this, i_pStream, i_SourceOffset, i_Length));
+            this, i_pStream, i_SourceOffset, i_Length)) ;
 
-    if (i_Length > 0)
+    if (i_Length > 0) 
         mDataReceived = PR_TRUE;
 
-    while (!mHeadersDone)
+    while (!mHeadersDone) 
     {
-        if (!mResponse)
+        if (!mResponse) 
         {
-            mResponse = new nsHTTPResponse ();
-            if (!mResponse)
+            mResponse = new nsHTTPResponse() ;
+            if (!mResponse) 
             {
-                NS_ERROR("Failed to create the response object!");
+                NS_ERROR("Failed to create the response object!") ;
                 return NS_ERROR_OUT_OF_MEMORY;
             }
-            NS_ADDREF (mResponse);
-            mChannel -> SetResponse (mResponse);
+            NS_ADDREF(mResponse) ;
+            mChannel->SetResponse(mResponse) ;
         }
     
         //
@@ -327,105 +331,106 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
         // Parse the status line from the server.  This is always the 
         // first line of the response...
         //
-        if (!mFirstLineParsed)
+        if (!mFirstLineParsed) 
         {
-            rv = ParseStatusLine(bufferInStream, i_Length, &actualBytesRead);
-            NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
+            rv = ParseStatusLine(bufferInStream, i_Length, &actualBytesRead) ;
+            NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around") ;
             i_Length -= actualBytesRead;
         }
 
-        PR_LOG (gHTTPLog, PR_LOG_ALWAYS, 
-            ("\tOnDataAvailable [this=%x]. Parsing Headers\n", this));
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+("\tOnDataAvailable [this=%x]. Parsing Headers\n", this)) ;
         //
         // Parse the response headers as long as there is more data and
         // the headers are not done...
         //
-        while (NS_SUCCEEDED(rv) && i_Length && !mHeadersDone)
+        while (NS_SUCCEEDED(rv) && i_Length && !mHeadersDone) 
         {
-            rv = ParseHTTPHeader(bufferInStream, i_Length, &actualBytesRead);
-            NS_ASSERTION (i_Length - actualBytesRead <= i_Length, "wrap around");
+            rv = ParseHTTPHeader(bufferInStream, i_Length, &actualBytesRead) ;
+            NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around") ;
             i_Length -= actualBytesRead;
         }
 
         if (NS_FAILED(rv)) return rv;
         
         // Don't do anything else until all headers have been parsed
-        if (!mHeadersDone)
+        if (!mHeadersDone) 
             return NS_OK;
 
         //
         // All the headers have been read.
         //
 
-        if (mResponse)
+        if (mResponse) 
         {
             PRUint32 statusCode = 0;
-            mResponse -> GetStatus (&statusCode);
+            mResponse->GetStatus(&statusCode) ;
 
-            if (statusCode == 304)  // no content
+            if (statusCode == 304) // no content
             {
-                rv = FinishedResponseHeaders ();
-                if (NS_FAILED (rv))
+                rv = FinishedResponseHeaders() ;
+                if (NS_FAILED(rv)) 
                     return rv;
 
-                rv = mPipelinedRequest -> AdvanceToNextRequest ();
-                if (NS_FAILED (rv))
+                rv = mPipelinedRequest->AdvanceToNextRequest() ;
+                if (NS_FAILED(rv)) 
                 {
-                    mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
+                    mHandler->ReleasePipelinedRequest(mPipelinedRequest) ;
                     mPipelinedRequest = nsnull;
 
-                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
+                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface(channel, &rv) ;
 
-                    // XXX/ruslan: will be replaced with the new Cancel (code)
-                    if (NS_SUCCEEDED (rv))
-                        trans -> SetBytesExpected (0);
+                    // XXX/ruslan: will be replaced with the new Cancel(code) 
+                    if (NS_SUCCEEDED(rv)) 
+                        trans->SetBytesExpected(0) ;
                }
                else
                {
-                   OnStartRequest (nsnull, nsnull);
+                   OnStartRequest(nsnull, nsnull) ;
                }
             }
             else
-            if (statusCode == 100)  // Continue
+            if (statusCode == 100) // Continue
             {
                 mHeadersDone     = PR_FALSE;
                 mFirstLineParsed = PR_FALSE;
-                mHeaderBuffer.Truncate ();
+                mHeaderBuffer.Truncate() ;
 
-                mChannel -> SetResponse (nsnull);
-                NS_RELEASE (mResponse);
+                mChannel->SetResponse(nsnull) ;
+                NS_RELEASE(mResponse) ;
 
                 mResponse = nsnull;
                 mBytesReceived = 0;
 
-                PR_LOG (gHTTPLog, PR_LOG_DEBUG, 
-                    ("\tOnDataAvailable [this=%x]. (100) Continue\n", this));
+                PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+                    ("\tOnDataAvailable [this=%x].(100) Continue\n", this)) ;
             }
             else
-            if (statusCode == 200 && mDoingProxySSLConnect)
+            if (statusCode == 200 && mDoingProxySSLConnect) 
             {
                 mDoingProxySSLConnect = PR_FALSE;
 
                 mHeadersDone     = PR_FALSE;
                 mFirstLineParsed = PR_FALSE;
-                mHeaderBuffer.Truncate ();
+                mHeaderBuffer.Truncate() ;
 
-                mChannel -> SetResponse (nsnull);
-                NS_RELEASE (mResponse);
+                mChannel->SetResponse(nsnull) ;
+                NS_RELEASE(mResponse) ;
 
                 mResponse = nsnull;
                 mBytesReceived = 0;
-                mPipelinedRequest -> RestartRequest (REQUEST_RESTART_SSL);
+                mPipelinedRequest->RestartRequest(REQUEST_RESTART_SSL) ;
 
                 return NS_OK;
 
-                PR_LOG (gHTTPLog, PR_LOG_DEBUG, 
-                    ("\tOnDataAvailable [this=%x]. (200) SSL CONNECT\n", this));
+                PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+                        ("\tOnDataAvailable [this=%x].(200) SSL CONNECT\n", 
+                        this)) ;
             }
             else
             {
-                rv = FinishedResponseHeaders ();
-                if (NS_FAILED (rv))
+                rv = FinishedResponseHeaders() ;
+                if (NS_FAILED(rv)) 
                     return rv;
             }
         } /* mResponse */
@@ -437,18 +442,18 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
     // straight through to the consumer.
     //
 
-    if (mSimpleResponse && mHeaderBuffer.Length ())
+    if (mSimpleResponse && mHeaderBuffer.Length()) 
     {
 
-        const char * cp = mHeaderBuffer.GetBuffer ();
+        const char * cp = mHeaderBuffer.GetBuffer() ;
         nsCOMPtr<nsIByteArrayInputStream>   is;
 
         nsresult rv1 = 
-            NS_NewByteArrayInputStream (getter_AddRefs (is), strdup (cp), mHeaderBuffer.Length ());            
+            NS_NewByteArrayInputStream(getter_AddRefs(is) , strdup(cp) , mHeaderBuffer.Length()) ;            
         
-        if (NS_SUCCEEDED (rv1))
-            mResponseDataListener -> OnDataAvailable (mChannel, 
-                    mChannel -> mResponseContext, is, 0, mHeaderBuffer.Length ());
+        if (NS_SUCCEEDED(rv1)) 
+            mResponseDataListener->OnDataAvailable(mChannel, 
+                    mChannel->mResponseContext, is, 0, mHeaderBuffer.Length()) ;
         
         mSimpleResponse = PR_FALSE;
     }
@@ -462,170 +467,170 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
         rv = NS_BINDING_ABORTED;
     }
 
-    if (NS_SUCCEEDED(rv)) {
-        if (i_Length) {
+    if (NS_SUCCEEDED(rv) && i_Length) {
+        PRBool bApplyConversion = PR_TRUE;
+        (void) (mChannel->GetApplyConversion(&bApplyConversion));
 
-            if (!mCompressHeaderChecked)
+        if (bApplyConversion && !mCompressHeaderChecked) 
+        {
+            nsXPIDLCString compressHeader;
+            rv = mResponse->GetHeader(nsHTTPAtoms::Content_Encoding, 
+                    getter_Copies(compressHeader)) ;
+            mCompressHeaderChecked = PR_TRUE;
+
+            if (NS_SUCCEEDED(rv) && compressHeader) 
             {
-                nsXPIDLCString compressHeader;
-                rv = mResponse -> GetHeader (nsHTTPAtoms::Content_Encoding, getter_Copies (compressHeader));
-                mCompressHeaderChecked = PR_TRUE;
+                NS_WITH_SERVICE(nsIStreamConverterService, 
+                        StreamConvService, kStreamConverterServiceCID, &rv) ;
+                if (NS_FAILED(rv)) return rv;
 
-                if (NS_SUCCEEDED (rv) && compressHeader)
+                nsString fromStr; fromStr.AssignWithConversion(compressHeader) ;
+                nsString toStr;     toStr.AssignWithConversion("uncompressed") ;
+
+                nsCOMPtr<nsIStreamListener> converterListener;
+                rv = StreamConvService->AsyncConvertData(
+                        fromStr.GetUnicode() , 
+                        toStr.GetUnicode() , 
+                        mResponseDataListener, 
+                        channel, 
+                        getter_AddRefs(converterListener)) ;
+                if (NS_FAILED(rv)) return rv;
+                mResponseDataListener = converterListener;
+            }
+        }
+
+        if (!mChunkHeaderChecked) 
+        {
+            mChunkHeaderChecked = PR_TRUE;
+
+            nsXPIDLCString chunkHeader;
+            rv = mResponse->GetHeader(nsHTTPAtoms::Transfer_Encoding, getter_Copies(chunkHeader)) ;
+
+            nsXPIDLCString trailerHeader;
+            rv = mResponse->GetHeader(nsHTTPAtoms::Trailer, getter_Copies(trailerHeader)) ;
+
+            if (NS_SUCCEEDED(rv) && chunkHeader) 
+            {
+                NS_WITH_SERVICE(nsIStreamConverterService, 
+                        StreamConvService, kStreamConverterServiceCID, &rv) ;
+                if (NS_FAILED(rv)) return rv;
+
+                nsString fromStr; fromStr.AssignWithConversion(chunkHeader) ;
+                nsString toStr;     toStr.AssignWithConversion("unchunked") ;
+
+                mChunkHeaderCtx.SetEOF(PR_FALSE) ;
+                if (trailerHeader) 
                 {
-    				NS_WITH_SERVICE (nsIStreamConverterService, 
-                            StreamConvService, kStreamConverterServiceCID, &rv);
-					if (NS_FAILED(rv)) return rv;
+                    nsCString ts(trailerHeader) ;
+                    ts.StripWhitespace() ;
 
-					nsString fromStr; fromStr.AssignWithConversion ( compressHeader );
-					nsString toStr;     toStr.AssignWithConversion ( "uncompressed" );
-				
-                    nsCOMPtr<nsIStreamListener> converterListener;
-					rv = StreamConvService->AsyncConvertData(
-                            fromStr.GetUnicode(), 
-                            toStr.GetUnicode(), 
-                            mResponseDataListener, 
-                            channel, 
-                            getter_AddRefs (converterListener));
-					if (NS_FAILED(rv)) return rv;
-					mResponseDataListener = converterListener;
+                    char *cp = ts;
+
+                    while (*cp) 
+                    {
+                        char * pp = PL_strchr(cp , ',') ;
+                        if (pp == NULL) 
+                        {
+                            mChunkHeaderCtx.AddTrailerHeader(cp) ;
+                            break;
+                        }
+                        else
+                        {
+                            *pp = 0;
+                            mChunkHeaderCtx.AddTrailerHeader(cp) ;
+                            *pp = ',';
+                            cp = pp + 1;
+                        }
+                    }
+                }
+
+                nsCOMPtr<nsIStreamListener> converterListener;
+                rv = StreamConvService->AsyncConvertData(
+                        fromStr.GetUnicode() , 
+                        toStr.GetUnicode() , 
+                        mResponseDataListener, 
+                        mChunkHeaderEOF,
+                        getter_AddRefs(converterListener)) ;
+                if (NS_FAILED(rv)) return rv;
+                mResponseDataListener = converterListener;
+            }
+        }
+
+        rv = mResponseDataListener->OnDataAvailable(mChannel, mChannel->mResponseContext, i_pStream, 0, i_Length) ;
+
+        PRInt32 cl = -1;
+        mResponse->GetContentLength(&cl) ;
+
+        mBodyBytesReceived += i_Length;
+
+        // Report progress
+        rv = mChannel->ReportProgress(mBodyBytesReceived, cl) ;
+        if (NS_FAILED(rv)) return rv;
+
+        PRBool eof = mChunkHeaderCtx.GetEOF() ;
+
+        if (mPipelinedRequest
+                &&(cl != -1 && cl - mBodyBytesReceived == 0 || eof)) 
+        {
+            if (eof && mResponse) 
+            {
+                nsVoidArray *mh = mChunkHeaderCtx.GetAllHeaders() ;
+
+                for (int i = mh->Count() - 1; i >= 0; i--) 
+                {
+                    nsHTTPChunkConvHeaderEntry *he =(nsHTTPChunkConvHeaderEntry *) mh->ElementAt(i) ;
+                    if (he) 
+                    {
+                        nsCOMPtr<nsIAtom> hAtom = dont_AddRef(NS_NewAtom(he->mName)) ;
+                        mResponse->SetHeader(hAtom, he->mValue) ;
+                    }
                 }
             }
+            nsresult rv1 = mPipelinedRequest->AdvanceToNextRequest() ;
 
-            if (!mChunkHeaderChecked)
+            if (NS_FAILED(rv1)) 
             {
-                mChunkHeaderChecked = PR_TRUE;
-                
-                nsXPIDLCString chunkHeader;
-                rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
-                
-                nsXPIDLCString trailerHeader;
-                rv = mResponse -> GetHeader (nsHTTPAtoms::Trailer, getter_Copies (trailerHeader));
+                mHandler->ReleasePipelinedRequest(mPipelinedRequest) ;
+                mPipelinedRequest = nsnull;
 
-                if (NS_SUCCEEDED (rv) && chunkHeader)
-                {
-    				NS_WITH_SERVICE (nsIStreamConverterService, 
-                            StreamConvService, kStreamConverterServiceCID, &rv);
-		    		if (NS_FAILED(rv)) return rv;
+                nsCOMPtr<nsISocketTransport> trans = do_QueryInterface(channel, &rv1) ;
 
-			    	nsString fromStr; fromStr.AssignWithConversion ( chunkHeader );
-				    nsString toStr;     toStr.AssignWithConversion ( "unchunked" );
+                // XXX/ruslan: will be replaced with the new Cancel(code) 
+                if (NS_SUCCEEDED(rv1)) 
+                    trans->SetBytesExpected(0) ;
 
-                    mChunkHeaderCtx.SetEOF (PR_FALSE);
-                    if (trailerHeader)
-                    {
-                        nsCString ts (trailerHeader);
-                        ts.StripWhitespace ();
-
-                        char *cp = ts;
-
-                        while (*cp)
-                        {
-                            char * pp = PL_strchr (cp , ',');
-                            if (pp == NULL)
-                            {
-                                mChunkHeaderCtx.AddTrailerHeader (cp);
-                                break;
-                            }
-                            else
-                            {
-                                *pp = 0;
-                                mChunkHeaderCtx.AddTrailerHeader (cp);
-                                *pp = ',';
-                                cp = pp + 1;
-                            }
-                        }
-                    }
-
-                    nsCOMPtr<nsIStreamListener> converterListener;
-					rv = StreamConvService->AsyncConvertData(
-                            fromStr.GetUnicode(), 
-                            toStr.GetUnicode(), 
-                            mResponseDataListener, 
-                            mChunkHeaderEOF,
-                            getter_AddRefs (converterListener));
-					if (NS_FAILED(rv)) return rv;
-					mResponseDataListener = converterListener;
-                }
-			}
-
-            rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
-
-            PRInt32 cl = -1;
-			mResponse -> GetContentLength (&cl);
-
-            mBodyBytesReceived += i_Length;
-
-            // Report progress
-            rv = mChannel->ReportProgress(mBodyBytesReceived, cl);
-            if (NS_FAILED(rv)) return rv;
-
-            PRBool eof = mChunkHeaderCtx.GetEOF ();
-
-            if (mPipelinedRequest
-                && (cl != -1 && cl - mBodyBytesReceived == 0 || eof))
+            }
+            else
             {
-                if (eof && mResponse)
+                PRUint32 status = 0;
+                if (mResponse) 
+                    mResponse->GetStatus(&status) ;
+
+                if (status != 304 || !mChannel->mCachedResponse) 
                 {
-                    nsVoidArray *mh = mChunkHeaderCtx.GetAllHeaders ();
-
-                    for (int i = mh -> Count () - 1; i >= 0; i--)
-                    {
-                        nsHTTPChunkConvHeaderEntry *he = (nsHTTPChunkConvHeaderEntry *) mh -> ElementAt (i);
-                        if (he)
-                        {
-                            nsCOMPtr<nsIAtom> hAtom = dont_AddRef (NS_NewAtom (he -> mName));
-                            mResponse -> SetHeader (hAtom, he -> mValue);
-                        }
-                    }
+                    mChannel->ResponseCompleted(mResponseDataListener, NS_OK, nsnull) ;
+                    mChannel->mHTTPServerListener = 0;
                 }
-                nsresult rv1 = mPipelinedRequest -> AdvanceToNextRequest ();
 
-                if (NS_FAILED (rv1))
-                {
-                    mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
-                    mPipelinedRequest = nsnull;
+                OnStartRequest(nsnull, nsnull) ;
 
-                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv1);
+                PRUint32 streamLen = 0;
+                i_pStream->Available(&streamLen) ;
 
-                    // XXX/ruslan: will be replaced with the new Cancel (code)
-                    if (NS_SUCCEEDED (rv1))
-			    		trans -> SetBytesExpected (0);
-
-                }
-                else
-                {
-                    PRUint32 status = 0;
-                    if (mResponse)
-                        mResponse -> GetStatus(&status);
-
-                    if (status != 304 || !mChannel -> mCachedResponse)
-                    {
-                        mChannel -> ResponseCompleted (mResponseDataListener, NS_OK, nsnull);
-                        mChannel -> mHTTPServerListener = 0;
-                    }
-
-                    OnStartRequest (nsnull, nsnull);
-                    
-                    PRUint32 streamLen = 0;
-                    i_pStream -> Available (&streamLen);
-
-                    if (streamLen > 0)
-                        OnDataAvailable (channel, context, i_pStream, 0, streamLen);
-                }
-			}
+                if (streamLen > 0) 
+                    OnDataAvailable(channel, context, i_pStream, 0, streamLen) ;
+            }
         }
-    } 
-
+    }
     return rv;
 }
 
 
 NS_IMETHODIMP
-nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pContext)
+nsHTTPServerListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext) 
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPServerListener::OnStartRequest [this=%x].\n", this));
+("nsHTTPServerListener::OnStartRequest [this=%x].\n", this)) ;
 
     // Initialize header varaibles...  
     mHeadersDone     = PR_FALSE;
@@ -635,91 +640,91 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
     mDataReceived          = PR_FALSE;
     mBytesReceived     = 0;
     mBodyBytesReceived = 0;
-    mHeaderBuffer.Truncate ();
+    mHeaderBuffer.Truncate() ;
 
-    NS_IF_RELEASE (mResponse);
-    NS_IF_RELEASE ( mChannel);
+    NS_IF_RELEASE(mResponse) ;
+    NS_IF_RELEASE(mChannel) ;
 
     mResponse = nsnull;
     mChannel  = nsnull;
-    mResponseDataListener = null_nsCOMPtr ();
+    mResponseDataListener = null_nsCOMPtr() ;
 
-    mChunkHeaderCtx.SetEOF (PR_FALSE);
+    mChunkHeaderCtx.SetEOF(PR_FALSE) ;
 
     nsHTTPRequest * req;
-    mPipelinedRequest -> GetCurrentRequest (&req);
+    mPipelinedRequest->GetCurrentRequest(&req) ;
     
-    if (req)
+    if (req) 
     {
-        mChannel = req -> mConnection;
-        if (mChannel)
+        mChannel = req->mConnection;
+        if (mChannel) 
         {
-            mChannel -> mHTTPServerListener = this;
-            NS_ADDREF (mChannel);
+            mChannel->mHTTPServerListener = this;
+            NS_ADDREF(mChannel) ;
         }
-        NS_RELEASE (req);
+        NS_RELEASE(req) ;
     }
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContext, nsresult i_Status, const PRUnichar* i_pMsg)
+nsHTTPServerListener::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext, nsresult i_Status, const PRUnichar* i_pMsg) 
 {
     nsresult rv = i_Status, channelStatus = NS_OK;
 
-    if (mChannel)
-        mChannel -> GetStatus (&channelStatus);
+    if (mChannel) 
+        mChannel->GetStatus(&channelStatus) ;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPServerListener::OnStopRequest [this=%x]."
-            "\tStatus = %x, mDataReceived=%d\n", this, i_Status, mDataReceived));
+("nsHTTPServerListener::OnStopRequest [this=%x]."
+            "\tStatus = %x, mDataReceived=%d\n", this, i_Status, mDataReceived)) ;
 
-    if (NS_SUCCEEDED (channelStatus) && !mDataReceived
-        && (NS_SUCCEEDED (i_Status) || i_Status == NS_ERROR_FAILURE))   // EOF or not a well-known error, like timeout
+    if (NS_SUCCEEDED(channelStatus) && !mDataReceived
+        &&(NS_SUCCEEDED(i_Status) || i_Status == NS_ERROR_FAILURE)) // EOF or not a well-known error, like timeout
     {
         // no data has been received from the channel at all - must be due to the fact that the
         // server has dropped the connection on keep-alive
 
-        if (mPipelinedRequest)
+        if (mPipelinedRequest) 
         {
-            rv = mPipelinedRequest -> RestartRequest (REQUEST_RESTART_NORMAL);
-            if (NS_SUCCEEDED (rv))
+            rv = mPipelinedRequest->RestartRequest(REQUEST_RESTART_NORMAL) ;
+            if (NS_SUCCEEDED(rv)) 
             {
-//                NS_IF_RELEASE (mChannel);
+//                NS_IF_RELEASE(mChannel) ;
                 return rv;
             }
         }
     }
 
-    if (NS_SUCCEEDED (i_Status) && !mHeadersDone)
+    if (NS_SUCCEEDED(i_Status) && !mHeadersDone) 
     {
         //
         // Oh great!!  The server has closed the connection without sending 
         // an entity.  Assume that it has sent all the response headers and
         // process them - in case the status indicates that some action should
-        // be taken (ie. redirect).
+        // be taken(ie. redirect) .
         //
         // Ignore the return code, since the request is being completed...
         //
         mHeadersDone = PR_TRUE;
-        if (mResponse)  {
-            FinishedResponseHeaders();
+        if (mResponse) {
+            FinishedResponseHeaders() ;
         }
     }
 
     // Notify the HTTPChannel that the response has completed...
-    NS_ASSERTION(mChannel, "HTTPChannel is null.");
-    if (mChannel)
+    NS_ASSERTION(mChannel, "HTTPChannel is null.") ;
+    if (mChannel) 
     {
         PRUint32 status = 0;
-        if (mResponse)
-            mResponse -> GetStatus(&status);
+        if (mResponse) 
+            mResponse->GetStatus(&status) ;
 
-        if (status != 304 || !mChannel -> mCachedResponse)
+        if (status != 304 || !mChannel->mCachedResponse) 
         {
-            mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
-            mChannel -> mHTTPServerListener = 0;
+            mChannel->ResponseCompleted(mResponseDataListener, i_Status, i_pMsg) ;
+            mChannel->mHTTPServerListener = 0;
         }
 
         PRUint32 capabilities = 0;
@@ -727,80 +732,80 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
         PRUint32 keepAliveTimeout = 0;
         PRInt32  keepAliveMaxCon = -1;
 
-        if (mResponse && channel)   // this is the actual response from the transport
+        if (mResponse && channel) // this is the actual response from the transport
         {
             HTTPVersion ver;
-            rv = mResponse -> GetServerVersion (&ver);
-            if (NS_SUCCEEDED (rv))
+            rv = mResponse->GetServerVersion(&ver) ;
+            if (NS_SUCCEEDED(rv)) 
             {
                 nsXPIDLCString connectionHeader;
                 PRBool usingProxy = PR_FALSE;
                 
-                if (mChannel)
-                    mChannel -> GetUsingProxy (&usingProxy);
+                if (mChannel) 
+                    mChannel->GetUsingProxy(&usingProxy) ;
 
-                if (usingProxy)
-                    rv = mResponse -> GetHeader (nsHTTPAtoms::Proxy_Connection, getter_Copies (connectionHeader));
+                if (usingProxy) 
+                    rv = mResponse->GetHeader(nsHTTPAtoms::Proxy_Connection, getter_Copies(connectionHeader)) ;
                 else
-                    rv = mResponse -> GetHeader (nsHTTPAtoms::Connection      , getter_Copies (connectionHeader));
+                    rv = mResponse->GetHeader(nsHTTPAtoms::Connection      , getter_Copies(connectionHeader)) ;
 
-                if (ver == HTTP_ONE_ONE )
+                if (ver == HTTP_ONE_ONE) 
                 {
                     // ruslan: some older incorrect 1.1 servers may do this
-                    if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcasecmp (connectionHeader,    "close"  ))
+                    if (NS_SUCCEEDED(rv) && connectionHeader && !PL_strcasecmp(connectionHeader,    "close")) 
                         capabilities = nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES;
                     else
                     {
-                        capabilities = (usingProxy ? nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PROXY_PIPELINING : nsIHTTPProtocolHandler::ALLOW_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PIPELINING);
+                        capabilities =(usingProxy ? nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PROXY_PIPELINING : nsIHTTPProtocolHandler::ALLOW_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PIPELINING) ;
 
                         nsXPIDLCString serverHeader;
-                        rv = mResponse -> GetHeader (nsHTTPAtoms::Server, getter_Copies (serverHeader));
+                        rv = mResponse->GetHeader(nsHTTPAtoms::Server, getter_Copies(serverHeader)) ;
 
-                        if (NS_SUCCEEDED (rv))
-                            mHandler -> Check4BrokenHTTPServers (serverHeader, &capabilities);
+                        if (NS_SUCCEEDED(rv)) 
+                            mHandler->Check4BrokenHTTPServers(serverHeader, &capabilities) ;
                     }
                 }
                 else
-                if (ver == HTTP_ONE_ZERO)
+                if (ver == HTTP_ONE_ZERO) 
                 {
-                    if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcasecmp (connectionHeader, "keep-alive"))
-                        capabilities = (usingProxy ? NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE) : NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_KEEPALIVE));
+                    if (NS_SUCCEEDED(rv) && connectionHeader && !PL_strcasecmp(connectionHeader, "keep-alive")) 
+                        capabilities =(usingProxy ? NS_STATIC_CAST(unsigned long, nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE) : NS_STATIC_CAST(unsigned long, nsIHTTPProtocolHandler::ALLOW_KEEPALIVE)) ;
                 }
 
                 nsXPIDLCString keepAliveHeader;
-                rv = mResponse -> GetHeader (nsHTTPAtoms::Keep_Alive, getter_Copies (keepAliveHeader));
+                rv = mResponse->GetHeader(nsHTTPAtoms::Keep_Alive, getter_Copies(keepAliveHeader)) ;
 
                 const char *
-                cp = PL_strstr (keepAliveHeader, "max=");
+                cp = PL_strstr(keepAliveHeader, "max=") ;
 
-                if (cp)
-                    keepAliveMaxCon = atoi (cp + 4);
+                if (cp) 
+                    keepAliveMaxCon = atoi(cp + 4) ;
 
-                cp = PL_strstr (keepAliveHeader, "timeout=");
-                if (cp)
-                    keepAliveTimeout = (PRUint32) atoi (cp + 8);
+                cp = PL_strstr(keepAliveHeader, "timeout=") ;
+                if (cp) 
+                    keepAliveTimeout =(PRUint32) atoi(cp + 8) ;
             }
         }
 
-        if (mPipelinedRequest)
+        if (mPipelinedRequest) 
         {
-            while (NS_SUCCEEDED (mPipelinedRequest -> AdvanceToNextRequest ()))
+            while (NS_SUCCEEDED(mPipelinedRequest->AdvanceToNextRequest()) ) 
             {
-                OnStartRequest (nsnull, nsnull);
-                mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
-                mChannel -> mHTTPServerListener = 0;
+                OnStartRequest(nsnull, nsnull) ;
+                mChannel->ResponseCompleted(mResponseDataListener, i_Status, i_pMsg) ;
+                mChannel->mHTTPServerListener = 0;
             }
 
-            mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
+            mHandler->ReleasePipelinedRequest(mPipelinedRequest) ;
             mPipelinedRequest = nsnull;
         }
 
-        if (channel)
-            mHandler -> ReleaseTransport (channel, capabilities, PR_FALSE, keepAliveTimeout, keepAliveMaxCon);
+        if (channel) 
+            mHandler->ReleaseTransport(channel, capabilities, PR_FALSE, keepAliveTimeout, keepAliveMaxCon) ;
     }
 
-    NS_IF_RELEASE (mChannel );
-    NS_IF_RELEASE (mResponse);
+    NS_IF_RELEASE(mChannel) ;
+    NS_IF_RELEASE(mResponse) ;
 
     return NS_OK;
 }
@@ -808,10 +813,10 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPServerListener methods:
 
-nsresult nsHTTPServerListener::Abort()
+nsresult nsHTTPServerListener::Abort() 
 {
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("nsHTTPServerListener::Abort [this=%x].", this));
+("nsHTTPServerListener::Abort [this=%x].", this)) ;
 
   //
   // Clearing the data consumer will cause the response to abort.  This
@@ -824,18 +829,18 @@ nsresult nsHTTPServerListener::Abort()
 
 
 nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener, 
-        nsISupports *aContext)
+        nsISupports *aContext) 
 {
     nsresult rv;
 
     if (mHeadersDone) {
-        rv = FinishedResponseHeaders();
+        rv = FinishedResponseHeaders() ;
         if (NS_FAILED(rv)) return rv;
         
         if (mBytesReceived && mResponseDataListener) {
             rv = mResponseDataListener->OnDataAvailable(mChannel, 
                     mChannel->mResponseContext,
-                    mDataStream, 0, mBytesReceived);
+                    mDataStream, 0, mBytesReceived) ;
         }
         mDataStream = 0;
     }
@@ -848,11 +853,11 @@ nsWriteToString(void* closure,
                 const char* fromRawSegment,
                 PRUint32 offset,
                 PRUint32 count,
-                PRUint32 *writeCount)
+                PRUint32 *writeCount) 
 {
-  nsString *str = (nsString*)closure;
+  nsString *str =(nsString*) closure;
 
-  str->AppendWithConversion(fromRawSegment, count);
+  str->AppendWithConversion(fromRawSegment, count) ;
   *writeCount = count;
   
   return NS_OK;
@@ -861,7 +866,7 @@ nsWriteToString(void* closure,
 
 nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in, 
                                                PRUint32 aLength,
-                                               PRUint32 *aBytesRead)
+                                               PRUint32 *aBytesRead) 
 {
   nsresult rv = NS_OK;
 
@@ -869,8 +874,8 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
   PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("nsHTTPServerListener::ParseStatusLine [this=%x].\taLength=%d\n", 
-          this, aLength));
+("nsHTTPServerListener::ParseStatusLine [this=%x].\taLength=%d\n", 
+          this, aLength)) ;
 
   *aBytesRead = 0;
 
@@ -881,7 +886,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
 
   // Look for the LF which ends the Status-Line.
   // n.b. Search looks at all pending data not just the first aLength bytes
-  rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
+  rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd) ;
   if (NS_FAILED(rv)) return rv;
   if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
 
@@ -897,26 +902,26 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
   }
 
   rv = in->ReadSegments(nsWriteToString, 
-                        (void*)&mHeaderBuffer, 
+(void*) &mHeaderBuffer, 
                         totalBytesToRead, 
-                        &actualBytesRead);
+                        &actualBytesRead) ;
   if (NS_FAILED(rv)) return rv;
 
   *aBytesRead += actualBytesRead;
 
-  PRUint32 bL = mHeaderBuffer.Length ();
+  PRUint32 bL = mHeaderBuffer.Length() ;
 
   if (bL > 0
-      && PL_strncmp (mHeaderBuffer, "HTTP/", bL > 5 ? 5 : bL))
+      && PL_strncmp(mHeaderBuffer, "HTTP/", bL > 5 ? 5 : bL)) 
   {
       // this is simple http response
       mSimpleResponse = PR_TRUE;
       mHeadersDone    = PR_TRUE;
       mFirstLineParsed= PR_TRUE;
 
-      mResponse -> SetStatus (200);
-      mResponse -> SetServerVersion ("HTTP/1.0" );
-      mResponse -> SetContentType   ("text/html");
+      mResponse->SetStatus(200) ;
+      mResponse->SetServerVersion("HTTP/1.0") ;
+      mResponse->SetContentType("text/html") ;
 
       return NS_OK;
   }
@@ -925,31 +930,31 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
   if (!bFoundString) return NS_OK;
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n"
-         , this, mHeaderBuffer.GetBuffer()));
+("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n"
+         , this, mHeaderBuffer.GetBuffer()) ) ;
 
   //
   // Replace all LWS with single SP characters.  Also remove the CRLF
   // characters...
   //
-  mHeaderBuffer.CompressSet(" \t", ' ');
-  mHeaderBuffer.Trim("\r\n", PR_FALSE);
+  mHeaderBuffer.CompressSet(" \t", ' ') ;
+  mHeaderBuffer.Trim("\r\n", PR_FALSE) ;
 
-  rv = mResponse->ParseStatusLine(mHeaderBuffer);
+  rv = mResponse->ParseStatusLine(mHeaderBuffer) ;
   if (NS_SUCCEEDED(rv)) {
     HTTPVersion ver;
 
-    rv = mResponse->GetServerVersion(&ver);
+    rv = mResponse->GetServerVersion(&ver) ;
     if (HTTP_ZERO_NINE == ver) {
       //
       // This is a HTTP/0.9 response...
       // Pretend that the headers have been consumed.
       //
       PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-             ("\tParseStatusLine [this=%x]. HTTP/0.9 Server Response!"
-              " Hold onto you seats!\n", this));
+("\tParseStatusLine [this=%x]. HTTP/0.9 Server Response!"
+              " Hold onto you seats!\n", this)) ;
 
-      mResponse->SetStatus(200);
+      mResponse->SetStatus(200) ;
 
       // XXX: There will be no Content-Type or Content-Length headers!
       mHeadersDone = PR_TRUE;
@@ -963,7 +968,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
 
 nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
                                                PRUint32 aLength,
-                                               PRUint32 *aBytesRead)
+                                               PRUint32 *aBytesRead) 
 {
   nsresult rv = NS_OK;
 
@@ -987,13 +992,13 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
     // If last character in the header string is a LF, then the header 
     // may be complete...
     //
-    if (!mHeaderBuffer.IsEmpty() && mHeaderBuffer.Last() == '\n' ) {
+    if (!mHeaderBuffer.IsEmpty() && mHeaderBuffer.Last() == '\n') {
       // This line is either LF or CRLF so the header is complete...
       if (mHeaderBuffer.Length() <= 2) {
           break;
       }
 
-      rv = in->Search(" ", PR_FALSE, &bFoundString, &offsetOfEnd);
+      rv = in->Search(" ", PR_FALSE, &bFoundString, &offsetOfEnd) ;
       if (NS_FAILED(rv)) return rv;
       if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
 
@@ -1003,12 +1008,12 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
 
       if (!bFoundString || offsetOfEnd != 0) {
           // then check for tab too
-          rv = in->Search("\t", PR_FALSE, &bFoundString, &offsetOfEnd);
+          rv = in->Search("\t", PR_FALSE, &bFoundString, &offsetOfEnd) ;
           if (NS_FAILED(rv)) return rv;
           if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
 
-          NS_ASSERTION(!(!bFoundString && offsetOfEnd == 0), 
-                  "should have been checked above");
+          NS_ASSERTION(!(!bFoundString && offsetOfEnd == 0) , 
+                  "should have been checked above") ;
           if (!bFoundString || offsetOfEnd != 0) {
               break; // neither space nor tab, so jump out of the loop
           }
@@ -1017,7 +1022,7 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
     }
 
     // Look for the next LF in the buffer...
-    rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
+    rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd) ;
     if (NS_FAILED(rv)) return rv;
     if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
 
@@ -1035,9 +1040,9 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
 
     // Append the buffer into the header string...
     rv = in->ReadSegments(nsWriteToString, 
-                          (void*)&mHeaderBuffer, 
+(void*) &mHeaderBuffer, 
                           totalBytesToRead, 
-                          &actualBytesRead);
+                          &actualBytesRead) ;
     if (NS_FAILED(rv)) return rv;
 
     *aBytesRead += actualBytesRead;
@@ -1045,45 +1050,45 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
     // Partial header - wait for more data to arrive...
     if (!bFoundString) return NS_OK;
 
-  } while (PR_TRUE);
+  } while (PR_TRUE) ;
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("\tParseHTTPHeader [this=%x].\tGot header string:%s\n",
-          this, mHeaderBuffer.GetBuffer()));
+("\tParseHTTPHeader [this=%x].\tGot header string:%s\n",
+          this, mHeaderBuffer.GetBuffer()) ) ;
 
   //
   // Replace all LWS with single SP characters.  And remove all of the CRLF
   // characters...
   //
-  mHeaderBuffer.CompressSet(" \t", ' ');
-  mHeaderBuffer.StripChars("\r\n");
+  mHeaderBuffer.CompressSet(" \t", ' ') ;
+  mHeaderBuffer.StripChars("\r\n") ;
 
   if (mHeaderBuffer.Length() == 0) {
     mHeadersDone = PR_TRUE;
     return NS_OK;
   }
 
-  return mResponse->ParseHeader(mHeaderBuffer);
+  return mResponse->ParseHeader(mHeaderBuffer) ;
 }
 
 nsresult
-nsHTTPServerListener::FinishedResponseHeaders ()
+nsHTTPServerListener::FinishedResponseHeaders() 
 {
     nsresult rv;
 
-    rv = mChannel -> FinishedResponseHeaders ();
+    rv = mChannel->FinishedResponseHeaders() ;
     if (NS_FAILED(rv)) return rv;
 
     //
     // Fire the OnStartRequest notification - now that user data is available
     //
-    if (NS_SUCCEEDED(rv) && mResponseDataListener)
+    if (NS_SUCCEEDED(rv) && mResponseDataListener) 
     {
-        rv = mResponseDataListener -> OnStartRequest (mChannel, mChannel -> mResponseContext);
-        if (NS_FAILED(rv))
+        rv = mResponseDataListener->OnStartRequest(mChannel, mChannel->mResponseContext) ;
+        if (NS_FAILED(rv)) 
         {
-            PR_LOG(gHTTPLog, PR_LOG_ERROR, ("\tOnStartRequest [this=%x]. Consumer failed!"
-                        "Status: %x\n", this, rv));
+            PR_LOG(gHTTPLog, PR_LOG_ERROR,("\tOnStartRequest [this=%x]. Consumer failed!"
+                        "Status: %x\n", this, rv)) ;
         }
     } 
 
@@ -1096,46 +1101,46 @@ nsHTTPServerListener::FinishedResponseHeaders ()
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
-NS_IMPL_THREADSAFE_ADDREF (nsHTTPFinalListener)
-NS_IMPL_THREADSAFE_RELEASE(nsHTTPFinalListener)
+NS_IMPL_THREADSAFE_ADDREF(nsHTTPFinalListener) 
+NS_IMPL_THREADSAFE_RELEASE(nsHTTPFinalListener) 
 
-NS_IMPL_QUERY_INTERFACE2  (nsHTTPFinalListener, 
+NS_IMPL_QUERY_INTERFACE2(nsHTTPFinalListener, 
                            nsIStreamListener, 
-                           nsIStreamObserver);
+                           nsIStreamObserver) ;
 
 static  PRUint32    sFinalListenersCreated = 0;
 static  PRUint32    sFinalListenersDeleted = 0;
 
 nsHTTPFinalListener::nsHTTPFinalListener(
-        nsHTTPChannel* aChannel, nsIStreamListener* aListener, nsISupports *aContext)
+        nsHTTPChannel* aChannel, nsIStreamListener* aListener, nsISupports *aContext) 
     :
-    mOnStartFired (PR_FALSE),
-    mOnStopFired  (PR_FALSE),
-    mShutdown     (PR_FALSE),
-    mBusy         (PR_FALSE),
-    mOnStopPending(PR_FALSE)
+    mOnStartFired(PR_FALSE) ,
+    mOnStopFired(PR_FALSE) ,
+    mShutdown(PR_FALSE) ,
+    mBusy(PR_FALSE) ,
+    mOnStopPending(PR_FALSE) 
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-            ("Creating nsHTTPFinalListener [this=%x], created=%u, deleted=%u\n", 
-            this, ++sFinalListenersCreated, sFinalListenersDeleted));
+("Creating nsHTTPFinalListener [this=%x], created=%u, deleted=%u\n", 
+            this, ++sFinalListenersCreated, sFinalListenersDeleted)) ;
 
-    NS_INIT_REFCNT();
+    NS_INIT_REFCNT() ;
 
     mChannel  =  aChannel;
     mContext  =  aContext;
     mListener = aListener;
 
-    NS_ASSERTION (aChannel, "HTTPChannel is null.");
-    NS_ADDREF  (mChannel);
+    NS_ASSERTION(aChannel, "HTTPChannel is null.") ;
+    NS_ADDREF(mChannel) ;
 }
 
-nsHTTPFinalListener::~nsHTTPFinalListener()
+nsHTTPFinalListener::~nsHTTPFinalListener() 
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-            ("Deleting nsHTTPFinalListener [this=%x], created=%u, deleted=%u\n",
-            this, sFinalListenersCreated, ++sFinalListenersDeleted));
+("Deleting nsHTTPFinalListener [this=%x], created=%u, deleted=%u\n",
+            this, sFinalListenersCreated, ++sFinalListenersDeleted)) ;
 
-    NS_IF_RELEASE(mChannel);
+    NS_IF_RELEASE(mChannel) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1143,56 +1148,56 @@ nsHTTPFinalListener::~nsHTTPFinalListener()
 
 NS_IMETHODIMP
 nsHTTPFinalListener::OnStartRequest(nsIChannel *aChannel,
-                                    nsISupports *aContext)
+                                    nsISupports *aContext) 
 {
-    PR_LOG (gHTTPLog, PR_LOG_DEBUG,
-            ("nsHTTPFinalListener::OnStartRequest [this=%x]"
-            ", mOnStartFired=%u\n", this, mOnStartFired));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
+("nsHTTPFinalListener::OnStartRequest [this=%x]"
+            ", mOnStartFired=%u\n", this, mOnStartFired)) ;
 
-    if (mShutdown || mOnStartFired || mBusy)
+    if (mShutdown || mOnStartFired || mBusy) 
         return NS_OK;
 
     mOnStartFired = PR_TRUE;
-    return mListener -> OnStartRequest (aChannel, aContext);
+    return mListener->OnStartRequest(aChannel, aContext) ;
 }
 
 NS_IMETHODIMP
 nsHTTPFinalListener::OnStopRequest(nsIChannel *aChannel,
                                    nsISupports *aContext,
                                    nsresult aStatus,
-                                   const PRUnichar *aErrorMsg)
+                                   const PRUnichar *aErrorMsg) 
 {
-    PR_LOG (gHTTPLog, PR_LOG_DEBUG,
-            ("nsHTTPFinalListener::OnStopRequest [this=%x]"
-            ", mOnStopFired=%u\n", this, mOnStopFired));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
+("nsHTTPFinalListener::OnStopRequest [this=%x]"
+            ", mOnStopFired=%u\n", this, mOnStopFired)) ;
 
-    if (mShutdown || mOnStopFired)
+    if (mShutdown || mOnStopFired) 
         return NS_OK;
 
-    if (mBusy)
+    if (mBusy) 
     {
         mOnStopPending = PR_TRUE;
         return NS_OK;
     }
 
-    if (mChannel)
+    if (mChannel) 
     {
         PRUint32 status;
-        mChannel -> GetStatus (&status);
+        mChannel->GetStatus(&status) ;
 
-        if (NS_FAILED (status) && NS_SUCCEEDED (aStatus))
+        if (NS_FAILED(status) && NS_SUCCEEDED(aStatus)) 
             aStatus = status;
     }
 
-    if (!mOnStartFired)
+    if (!mOnStartFired) 
     {
         // XXX/ruslan: uncomment me when the webshell is fixed
         // mOnStartFired = PR_TRUE;
-        // mListener -> OnStartRequest (aChannel, aContext);
+        // mListener->OnStartRequest(aChannel, aContext) ;
     }
 
     mOnStopFired = PR_TRUE;
-    nsresult rv = mListener -> OnStopRequest (aChannel, aContext, aStatus, aErrorMsg);
+    nsresult rv = mListener->OnStopRequest(aChannel, aContext, aStatus, aErrorMsg) ;
 
     return rv;
 }
@@ -1205,32 +1210,32 @@ nsHTTPFinalListener::OnDataAvailable(nsIChannel *aChannel,
                                      nsISupports *aContext,
                                      nsIInputStream *aStream,
                                      PRUint32 aSourceOffset,
-                                     PRUint32 aCount)
+                                     PRUint32 aCount) 
 {
-    PR_LOG (gHTTPLog, PR_LOG_DEBUG,
-            ("nsHTTPFinalListener::OnDataAvailable [this=%x]\n",
-            this));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
+("nsHTTPFinalListener::OnDataAvailable [this=%x]\n",
+            this)) ;
 
-    if (!mShutdown)
+    if (!mShutdown) 
     {
         PRUint32 status;
-        mChannel -> GetStatus (&status);
+        mChannel->GetStatus(&status) ;
 
-        if (NS_SUCCEEDED (status))
+        if (NS_SUCCEEDED(status)) 
         {
-            NS_ASSERTION (mOnStopFired == PR_FALSE, "OnDataAvailable fired after OnStopRequest");
+            NS_ASSERTION(mOnStopFired == PR_FALSE, "OnDataAvailable fired after OnStopRequest") ;
 
-            if (mOnStopFired)
+            if (mOnStopFired) 
                 return NS_OK;
 
             mBusy = PR_TRUE;
-            nsresult rv = mListener -> OnDataAvailable (aChannel, aContext, 
-                                aStream, aSourceOffset, aCount);
+            nsresult rv = mListener->OnDataAvailable(aChannel, aContext, 
+                                aStream, aSourceOffset, aCount) ;
             
             mBusy = PR_FALSE;
 
-            if (mOnStopPending)
-                OnStopRequest (mChannel, mContext, NS_OK, nsnull);
+            if (mOnStopPending) 
+                OnStopRequest(mChannel, mContext, NS_OK, nsnull) ;
 
             return rv;
         }
@@ -1240,18 +1245,18 @@ nsHTTPFinalListener::OnDataAvailable(nsIChannel *aChannel,
 }
 
 void
-nsHTTPFinalListener::FireNotifications ()
+nsHTTPFinalListener::FireNotifications() 
 {
-    PR_LOG (gHTTPLog, PR_LOG_DEBUG,
-            ("nsHTTPFinalListener::FireNotifications [this=%x]\n",
-            this));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,
+("nsHTTPFinalListener::FireNotifications [this=%x]\n",
+            this)) ;
 
-    if (!mShutdown)
-        OnStopRequest  (mChannel, mContext, NS_OK, nsnull);
+    if (!mShutdown) 
+        OnStopRequest(mChannel, mContext, NS_OK, nsnull) ;
 }
 
 void
-nsHTTPFinalListener::Shutdown ()
+nsHTTPFinalListener::Shutdown() 
 {
     mShutdown = PR_TRUE;
 }
