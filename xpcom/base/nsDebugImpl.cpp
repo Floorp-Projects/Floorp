@@ -46,7 +46,7 @@
 #include <signal.h>
 /* for nsTraceRefcnt::WalkTheStack() */
 #include "nsISupportsUtils.h"
-#include "nsTraceRefcnt.h"
+#include "nsTraceRefcntImpl.h"
 
 #if defined(__GNUC__) && defined(__i386)
 #  define DebugBreak() { asm("int $3"); }
@@ -325,7 +325,7 @@ nsDebugImpl::Break(const char *aFile, PRInt32 aLine)
 
       // walk the stack
       //
-      nsTraceRefcnt::WalkTheStack(stderr);
+      nsTraceRefcntImpl::WalkTheStack(stderr);
     } 
     else if ( strcmp(assertBehavior,"abort")==0 ) {
 
