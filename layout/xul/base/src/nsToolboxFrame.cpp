@@ -182,7 +182,7 @@ nsToolboxFrame :: Paint ( nsIPresContext& aPresContext,
 void
 nsToolboxFrame :: DrawGrippies (  nsIPresContext& aPresContext, nsIRenderingContext & aRenderingContext ) const
 {
-  for ( int i = 0; i < mNumToolbars; ++i ) {
+  for ( PRUint32 i = 0; i < mNumToolbars; ++i ) {
     const TabInfo & grippy = mGrippies[i];
     
     PRBool hilight = (mGrippyHilighted == i) ? PR_TRUE : PR_FALSE;
@@ -408,7 +408,7 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
 void
 nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
 {
-	for ( int i = 0; i < mNumToolbars; ++i ) {
+	for ( PRUint32 i = 0; i < mNumToolbars; ++i ) {
 		if ( mGrippies[i].mBoundingRect.Contains(aMouseLoc) ) {
 			if ( i != mGrippyHilighted ) {
 				// unhilight the old one
@@ -433,7 +433,7 @@ nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
 void
 nsToolboxFrame :: OnMouseLeftClick ( nsPoint & aMouseLoc )
 {
-	for ( int i = 0; i < mNumToolbars; ++i ) {
+	for ( PRUint32 i = 0; i < mNumToolbars; ++i ) {
 		if ( mGrippies[i].mBoundingRect.Contains(aMouseLoc) ) {
 			TabInfo & clickedTab = mGrippies[i];			
 			if ( clickedTab.mCollapsed )

@@ -173,7 +173,7 @@ jvalue* JNIMethod::marshallArgs(va_list args)
 		jni_type* argTypes = mArgTypes;
 		jargs = new jvalue[argCount];
 		if (jargs != NULL) {
-			for (int i = 0; i < argCount; i++) {
+			for (PRUint32 i = 0; i < argCount; i++) {
 				switch (argTypes[i]) {
 				case jobject_type:
 					jargs[i].l = va_arg(args, jobject);

@@ -1433,7 +1433,7 @@ PRIVATE int net_CacheWrite (NET_StreamClass *stream, CONST char* buffer, int32 l
 	  {
 		/* increase the global cache size counter
 		 */
-        if(NET_XP_FileWrite((char *) buffer, len, obj->fp) < (uint32)len)
+        if(NET_XP_FileWrite((char *) buffer, len, obj->fp) < len)
 		  {
 			TRACEMSG(("Error writing to cache file"));
 			NET_XP_FileClose(obj->fp);

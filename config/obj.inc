@@ -169,7 +169,7 @@ CONFIG_OBJ_INC=1
         -Fd$(PBDFILE)
         -Fe.\$(OBJDIR)\
         $(CURDIR)$(*B).c
-<<
+<<KEEP
 !endif
 
 

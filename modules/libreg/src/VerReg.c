@@ -1226,9 +1226,9 @@ static REGERR vr_GetUninstallItemPath(char *regPackageName, char *regbuf, uint32
  */
 static REGERR vr_convertPackageName(char *regPackageName, char *convertedPackageName, uint32 convertedDataLength)
 {
-    int32 length = 0;
-    int i;
-    int j = 0;
+    uint32 length = 0;
+    uint32 i;
+    uint32 j = 0;
 
     length = XP_STRLEN(regPackageName);
     
@@ -1286,9 +1286,9 @@ static REGERR vr_convertPackageName(char *regPackageName, char *convertedPackage
 
 static REGERR vr_unmanglePackageName(char *mangledPackageName, char *regPackageName, uint32 regPackageLength)
 {
-    int32 length = 0;
-    int i = 0;
-    int j = 0;
+    uint32 length = 0;
+    uint32 i = 0;
+    uint32 j = 0;
 
     length = XP_STRLEN(mangledPackageName);
     
@@ -1833,7 +1833,7 @@ VR_INTERFACE(REGERR) VR_EnumUninstall(REGENUM *state, char* userPackageName,
         return err;
     }
 
-    if (len2 <= XP_STRLEN(regbuf))
+    if (len2 <= (int32)XP_STRLEN(regbuf))
     {
         err =  REGERR_BUFTOOSMALL;
         *userPackageName = '\0';
