@@ -183,6 +183,10 @@ public:
   // get the toplevel window for this widget
   virtual GtkWindow *GetTopLevelWindow(void);
 
+#ifdef NS_DEBUG
+  static nsWidget *debugWidget;
+#endif
+
 protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
@@ -219,6 +223,9 @@ protected:
   PRBool       mHasFocus;
   // this is the current GdkSuperWin with the focus
   static nsWidget *focusWindow;
+  // 
+  PRBool mIsDragDest;
+
 
   //////////////////////////////////////////////////////////////////
   //
@@ -424,7 +431,6 @@ public:
 
 
 private:
-  PRBool mIsDragDest;
   static nsILookAndFeel *sLookAndFeel;
   static PRUint32 sWidgetCount;
 

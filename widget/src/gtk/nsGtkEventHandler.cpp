@@ -840,6 +840,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
   if (object != nsnull &&
       GDK_IS_SUPERWIN (object))
     {
+
       // It was an event on one of our superwindows
 
       nsWindow *window = (nsWindow *)gtk_object_get_data (object, "nsWindow");

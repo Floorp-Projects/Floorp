@@ -50,6 +50,7 @@ nsDragService::nsDragService()
   NS_INIT_REFCNT();
   mWidget = nsnull;
   mNumFlavors = 0;
+  g_print("nsDragService::nsDragService\n");
 }
 
 //-------------------------------------------------------------------------
@@ -59,6 +60,7 @@ nsDragService::nsDragService()
 //-------------------------------------------------------------------------
 nsDragService::~nsDragService()
 {
+  g_print("nsDragService::~nsDragService\n");
 }
 
 enum {
@@ -112,6 +114,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray *aTransferableA
                                                 nsIScriptableRegion *aRegion,
                                                 PRUint32 aActionType)
 {
+  g_print("nsDragService::InvokeDragSession\n");
   mWidget = gtk_get_event_widget(gtk_get_current_event());
 
   // add the flavors from the transferables. Cache this array for the send data proc
@@ -202,6 +205,8 @@ nsDragService::RegisterDragItemsAndFlavors(nsISupportsArray *inArray)
   GtkTargetList *targetlist;
   targetlist = gtk_target_list_new(nsnull, numDragItems);
 
+  g_print("nsDragService::RegisterDragItemsAndFlavors\n");
+
   for (unsigned int i = 0; i < numDragItems; ++i)
   {
     nsCOMPtr<nsISupports> genericItem;
@@ -240,9 +245,8 @@ nsDragService::RegisterDragItemsAndFlavors(nsISupportsArray *inArray)
 /* return PR_TRUE if we have converted or PR_FALSE if we havn't and need to keep being called */
 PRBool nsDragService::DoConvert(GdkAtom type)
 {
-#ifdef DEBUG_DRAG
-  g_print("    nsDragService::DoRealConvert(%li)\n    {\n", type);
-#endif
+
+  g_print("nsDragService::DoRealConvert(%li)\n    {\n", type);
   int e = 0;
   // Set a flag saying that we're blocking waiting for the callback:
   mBlocking = PR_TRUE;
@@ -327,6 +331,8 @@ nsDragService::SelectionReceiver (GtkWidget *aWidget,
 {
   gint type;
 
+  g_print("nsDragService::SelectionReceiver\n");
+
   mBlocking = PR_FALSE;
 
   if (aSD->length < 0)
@@ -378,6 +384,7 @@ nsDragService::SelectionReceiver (GtkWidget *aWidget,
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
 {
+  g_print("nsDragService::GetNumDropItems\n");
   *aNumItems = 0;
   return NS_OK;
 }
@@ -463,13 +470,24 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
-  return NS_ERROR_FAILURE;
+  g_print("nsDragService::IsDataFlavorSupported\n");
+  if (!aDataFlavor || !_retval)
+    return NS_ERROR_FAILURE;
+
+  *_retval = PR_TRUE;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession **aSession)
 {
-  return NS_ERROR_FAILURE;
+  g_print("nsDragService::GetCurrentSession\n");
+  if (!aSession)
+    return NS_ERROR_FAILURE;
+
+  *aSession = (nsIDragSession *)this;
+  NS_ADDREF(*aSession);
+  return NS_OK;
 }
 
 
