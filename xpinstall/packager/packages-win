@@ -165,6 +165,7 @@ bin\components\ucvtw2.dll
 bin\components\unicharutil.xpt
 bin\components\urildr.dll
 bin\components\uriloader.xpt
+bin\components\exthandler.xpt
 bin\components\urlbarhistory.dll
 bin\components\urlbarhistory.xpt
 bin\components\urlwidgt.dll
