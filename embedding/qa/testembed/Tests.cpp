@@ -635,6 +635,63 @@ void CTests::OnToolsTestYourMethod()
 		rv = qaDOMWindow->ScrollTo(50,50);
 		RvTestResult(rv, "nsIDOMWindow::ScrollTo() test", 2);
 	}
+
+
+	// nsIWebBrowserSetup methods
+
+	nsCOMPtr <nsIWebBrowserSetup> qaWBSetup(do_QueryInterface(qaWebBrowser, &rv));
+	if (!qaWBSetup)
+		QAOutput("Didn't get WebBrowser Setup object.", 2);
+	else
+		RvTestResult(rv, "nsIWebBrowserSetup object test", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, PR_TRUE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_PLUGINS, PR_TRUE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, PR_FALSE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_PLUGINS, PR_FALSE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT, PR_TRUE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_JAVASCRIPT, PR_TRUE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT, PR_FALSE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_JAVASCRIPT, PR_FALSE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS, PR_TRUE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_META_REDIRECTS, PR_TRUE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS, PR_FALSE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_META_REDIRECTS, PR_FALSE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES, PR_TRUE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_SUBFRAMES, PR_TRUE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES, PR_FALSE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_SUBFRAMES, PR_FALSE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_IMAGES, PR_TRUE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_IMAGES, PR_TRUE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_IMAGES, PR_FALSE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_IMAGES, PR_FALSE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT, PR_TRUE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_FOCUS_DOC_BEFORE_CONTENT, PR_TRUE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT, PR_FALSE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_FOCUS_DOC_BEFORE_CONTENT, PR_FALSE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY, PR_TRUE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_USE_GLOBAL_HISTORY, PR_TRUE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY, PR_FALSE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_USE_GLOBAL_HISTORY, PR_FALSE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER, PR_TRUE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_IS_CHROME_WRAPPER, PR_TRUE)", 2);
+
+	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER, PR_FALSE);
+	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_IS_CHROME_WRAPPER, PR_FALSE)", 2);
 }
 
 // ***********************************************************************
