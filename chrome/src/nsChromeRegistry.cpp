@@ -22,6 +22,7 @@
  * Contributor(s): 
  */
 
+#include <string.h>
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
@@ -70,8 +71,11 @@
 #include "nsIIOService.h"
 #include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"
+#include "prio.h"
 
 static char kChromePrefix[] = "chrome://";
+static char kInstalledChromeFileName[] = "installed-chrome.txt";
+
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -88,6 +92,7 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, selectedLocale);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, baseURL);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packages);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, package);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, name);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -205,8 +210,10 @@ nsChromeRegistry::nsChromeRegistry()
 
     rv = mRDFService->GetResource(kURICHROME_package, getter_AddRefs(mPackage));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
-  }
 
+    rv = mRDFService->GetResource(kURICHROME_name, getter_AddRefs(mName));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+  }
 }
 
 nsChromeRegistry::~nsChromeRegistry()
@@ -463,7 +470,9 @@ nsChromeRegistry::GetBaseURL(const nsCAutoString& aPackage, const nsCAutoString&
     }
 
     if (!selectedProvider)
-      return NS_ERROR_FAILURE;
+      rv = FindProvider(aPackage, aProvider, arc, getter_AddRefs(selectedProvider));
+    if (!selectedProvider)
+      return rv;
 
     resource = do_QueryInterface(selectedProvider);
     if (!resource)
@@ -476,6 +485,146 @@ nsChromeRegistry::GetBaseURL(const nsCAutoString& aPackage, const nsCAutoString&
                               resource,
                               mBaseURL);
   return NS_OK;
+}
+
+// locate 
+NS_IMETHODIMP
+nsChromeRegistry::FindProvider(const nsCAutoString& aPackage,
+                               const nsCAutoString& aProvider,
+                               nsIRDFResource *aArc,
+                               nsIRDFNode **aSelectedProvider)
+{
+  *aSelectedProvider = nsnull;
+
+  nsCAutoString rootStr("urn:mozilla:");
+  nsresult rv = NS_OK;
+
+  rootStr += aProvider;
+  rootStr += ":root";
+
+  // obtain the provider root resource
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = GetResource(rootStr, getter_AddRefs(resource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the package resource.");
+    return rv;
+  }
+
+  // wrap it in a container
+  nsCOMPtr<nsIRDFContainer> container;
+  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                          nsnull,
+                                          NS_GET_IID(nsIRDFContainer),
+                                          getter_AddRefs(container));
+  if (NS_SUCCEEDED(rv))
+    rv = container->Init(mChromeDataSource, resource);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // step through its (seq) arcs
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  if (NS_FAILED(rv = container->GetElements(getter_AddRefs(arcs))))
+    return rv;
+
+  PRBool moreElements;
+  arcs->HasMoreElements(&moreElements);
+  for ( ; moreElements; arcs->HasMoreElements(&moreElements)) {
+
+    // get next arc resource
+    nsCOMPtr<nsISupports> supports;
+    arcs->GetNext(getter_AddRefs(supports));
+    nsCOMPtr<nsIRDFResource> kid = do_QueryInterface(supports);
+
+    if (kid) {
+      // get its name
+      nsCAutoString providerName;
+      nsChromeRegistry::FollowArc(mChromeDataSource, providerName, kid, mName);
+
+      // get its package list
+      nsCOMPtr<nsIRDFNode> packageNode;
+      nsCOMPtr<nsIRDFResource> packageList;
+      if (NS_SUCCEEDED(mChromeDataSource->GetTarget(kid, mPackages, PR_TRUE, getter_AddRefs(packageNode))))
+        packageList = do_QueryInterface(packageNode);
+      if (!packageList)
+        continue;
+
+      // if aPackage is named in kid's package list, select it and we're done
+      SelectPackageInProvider(packageList, aPackage, aProvider, providerName,
+                            aArc, aSelectedProvider);
+      if (aSelectedProvider)
+        return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
+                                          const nsCAutoString& aPackage,
+                                          const nsCAutoString& aProvider,
+                                          const nsCAutoString& aProviderName,
+                                          nsIRDFResource *aArc,
+                                          nsIRDFNode **aSelectedProvider)
+{
+  *aSelectedProvider = nsnull;
+
+  nsresult rv = NS_OK;
+
+  // wrap aPackageList in a container
+  nsCOMPtr<nsIRDFContainer> container;
+  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                          nsnull,
+                                          NS_GET_IID(nsIRDFContainer),
+                                          getter_AddRefs(container));
+  if (NS_SUCCEEDED(rv))
+    rv = container->Init(mChromeDataSource, aPackageList);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // step through its (seq) arcs
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  if (NS_FAILED(rv = container->GetElements(getter_AddRefs(arcs))))
+    return rv;
+
+  PRBool moreElements;
+  arcs->HasMoreElements(&moreElements);
+  for ( ; moreElements; arcs->HasMoreElements(&moreElements)) {
+
+    // get next arc resource
+    nsCOMPtr<nsISupports> supports;
+    arcs->GetNext(getter_AddRefs(supports));
+    nsCOMPtr<nsIRDFResource> kid = do_QueryInterface(supports);
+
+    if (kid) {
+      // get its package resource
+      nsCOMPtr<nsIRDFNode> packageNode;
+      nsCOMPtr<nsIRDFResource> package;
+      if (NS_SUCCEEDED(mChromeDataSource->GetTarget(kid, mPackage, PR_TRUE, getter_AddRefs(packageNode))))
+        package = do_QueryInterface(packageNode);
+      if (!package)
+        continue;
+
+      // get its name
+      nsCAutoString packageName;
+      nsChromeRegistry::FollowArc(mChromeDataSource, packageName, package, mName);
+
+      // select provider assuming it comes from the install directory.
+      // XXX we really should be keeping track of whether it's from there,
+      // or from the profile
+      if (packageName.Equals(aPackage)) {
+        nsAutoString providerNameUC;
+        nsAutoString packageNameUC;
+        providerNameUC.AssignWithConversion(aProviderName);
+        packageNameUC.AssignWithConversion(packageName);
+        SelectProviderForPackage(aProvider, providerNameUC.GetUnicode(),
+                          packageNameUC.GetUnicode(), aArc, PR_FALSE, PR_TRUE);
+        *aSelectedProvider = kid;
+        NS_ADDREF(*aSelectedProvider);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsChromeRegistry::GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult)
@@ -1258,7 +1407,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
     if (val.Find(prefix) == 0) {
       // It's valid.
       
-      if (aProviderType.Equals("package")) {
+      if (aProviderType.Equals("package") && !val.Equals("urn:mozilla:package:root")) {
         // Get the literal for our base URL.
         nsAutoString unistr;unistr.AssignWithConversion(aBaseURL);
         nsCOMPtr<nsIRDFLiteral> literal;
@@ -1304,7 +1453,10 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
           nsCOMPtr<nsISupports> supp;
           seqKids->GetNext(getter_AddRefs(supp));
           nsCOMPtr<nsIRDFNode> kid = do_QueryInterface(supp);
-          installContainer->AppendElement(kid);
+          PRInt32 index;
+          installContainer->IndexOf(kid, &index);
+          if (index == -1)
+            installContainer->AppendElement(kid);
           seqKids->HasMoreElements(&moreKids);
         }
 
@@ -1321,7 +1473,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
 
           // Iterate over our kids a second time.
           nsCOMPtr<nsISimpleEnumerator> seqKids;
-          installContainer->GetElements(getter_AddRefs(seqKids));
+          container->GetElements(getter_AddRefs(seqKids));
           PRBool moreKids;
           seqKids->HasMoreElements(&moreKids);
           while (moreKids) {
@@ -1691,6 +1843,113 @@ void nsChromeRegistry::GetUserSheetURL(nsCString & aURL)
 {
   aURL = mProfileRoot;
   aURL.Append("user.css");
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::CheckForNewChrome() {
+
+  nsresult rv;
+
+  GetInstallRoot(mInstallRoot); // ensure install root is set
+
+  nsCOMPtr<nsIFileLocator> locator;
+
+  // open the installed-chrome file
+
+  rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
+                                          nsnull,
+                                          NS_GET_IID(nsIFileLocator),
+                                          getter_AddRefs(locator));
+
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIFileSpec> listFileInterface;
+  locator->GetFileLocation(nsSpecialFileSpec::App_ChromeDirectory, getter_AddRefs(listFileInterface));
+  if (!listFileInterface)
+    return NS_ERROR_FAILURE;
+
+  nsFileSpec listFileSpec;
+  nsCOMPtr<nsILocalFile> listFile;
+  listFileInterface->GetFileSpec(&listFileSpec);
+  NS_FileSpecToIFile(&listFileSpec, getter_AddRefs(listFile));
+
+  PRFileDesc *file;
+
+  listFile->AppendRelativePath(kInstalledChromeFileName);
+  rv = listFile->OpenNSPRFileDesc(PR_RDWR, 0, &file);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // file is open. 
+
+  PRFileInfo finfo;
+
+  if (PR_GetOpenFileInfo(file, &finfo) == PR_SUCCESS) {
+    char *dataBuffer = new char[finfo.size+1];
+    if (dataBuffer) {
+      PRInt32 bufferSize = PR_Read(file, dataBuffer, finfo.size);
+      if (bufferSize > 0) {
+        dataBuffer[bufferSize] = '\r'; //  be sure to terminate in a delimiter
+        ProcessNewChromeBuffer(dataBuffer, bufferSize);
+      }
+      delete [] dataBuffer;
+    }
+  }
+  PR_Close(file);
+  listFile->Delete(PR_FALSE);
+
+  return NS_OK;
+}
+
+// flaming unthreadsafe function
+void
+nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength) {
+
+  char   *bufferEnd = aBuffer + aLength;
+  char   *chromeType,      // "content", "locale" or "skin"
+         *chromeProfile,   // "install" or "profile"
+         *chromeLocType,   // type of location (local path or URL)
+         *chromeLocation;  // base location of chrome (jar file)
+  PRBool isProfile;
+
+  nsCAutoString content("content");
+  nsCAutoString locale("locale");
+  nsCAutoString skin("skin");
+  nsCAutoString profile("profile");
+
+  static const char *delim = ",\r\n";
+
+  chromeType = strtok(aBuffer, delim);
+  do {
+    // parse one line of installed-chrome.txt
+    if (!chromeType)
+      break;
+    chromeProfile = strtok(0, delim);
+    if (!chromeProfile || chromeProfile > bufferEnd)
+      break;
+    chromeLocType = strtok(0, delim); // unused for now. assume "path"
+    if (!chromeLocType || chromeProfile > bufferEnd)
+      break;
+    chromeLocation = strtok(0, delim);
+    if (!chromeLocation || chromeProfile > bufferEnd)
+      break;
+
+    isProfile = profile.Equals(chromeProfile);
+    nsFileSpec chromeFile(chromeLocation);
+    nsFileURL fileURL(chromeFile);
+    const char* chromeURL = fileURL.GetURLString();
+
+    // process the line
+    if (skin.Equals(chromeType))
+      InstallSkin(chromeURL, isProfile);
+    else if (content.Equals(chromeType))
+      InstallPackage(chromeURL, isProfile);
+    else if (locale.Equals(chromeType))
+      InstallLocale(chromeURL, isProfile);
+
+    chromeType = strtok(0, delim);
+  } while (chromeType < bufferEnd);
 }
 
 //////////////////////////////////////////////////////////////////////

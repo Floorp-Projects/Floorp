@@ -88,6 +88,18 @@ private:
   NS_IMETHOD GetBaseURL(const nsCAutoString& aPackage, const nsCAutoString& aProvider, 
                              nsCAutoString& aBaseURL);
 
+  NS_IMETHOD FindProvider(const nsCAutoString& aPackage,
+                          const nsCAutoString& aProvider,
+                          nsIRDFResource *aArc,
+                          nsIRDFNode **aSelectedProvider);
+
+  NS_IMETHOD SelectPackageInProvider(nsIRDFResource *aPackageList,
+                                   const nsCAutoString& aPackage,
+                                   const nsCAutoString& aProvider,
+                                   const nsCAutoString& aProviderName,
+                                   nsIRDFResource *aArc,
+                                   nsIRDFNode **aSelectedProvider);
+
   NS_IMETHOD SetProvider(const nsCAutoString& aProvider,
                          nsIRDFResource* aSelectionArc,
                          const PRUnichar* aProviderName,
@@ -109,7 +121,7 @@ private:
                              const nsCAutoString& aBaseURL,
                              PRBool aUseProfile);
 
-
+  void ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
 protected:
   PRBool mInstallInitialized;
@@ -130,6 +142,7 @@ protected:
   nsCOMPtr<nsIRDFResource> mBaseURL;
   nsCOMPtr<nsIRDFResource> mPackages;
   nsCOMPtr<nsIRDFResource> mPackage;
+  nsCOMPtr<nsIRDFResource> mName;
 
   // Style Sheets
   nsCOMPtr<nsICSSStyleSheet> mScrollbarSheet;
