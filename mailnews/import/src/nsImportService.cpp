@@ -70,7 +70,6 @@
 
 PRLogModuleInfo *IMPORTLOGMODULE = nsnull;
 
-static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static nsIImportService *	gImportService = nsnull;
 static const char *	kWhitespace = "\b\t\r\n ";
 
@@ -533,14 +532,11 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 	// load the component and get all of the info we need from it....
 	// then call AddModule
 	nsresult	rv;
-   	nsCOMPtr<nsIComponentManager> compMgr = 
-   	         do_GetService(kComponentManagerCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-	
+
 	nsCID				clsId;
 	clsId.Parse( pClsId);
 	nsIImportModule *	module;
-	rv = compMgr->CreateInstance( clsId, nsnull, NS_GET_IID(nsIImportModule), (void **) &module);
+	rv = CallCreateInstance( clsId, &module);
 	if (NS_FAILED(rv)) return rv;
 	
 	nsString	theTitle;	
@@ -579,11 +575,7 @@ nsIImportModule *ImportModuleDesc::GetModule( PRBool keepLoaded)
 	}
 	
 	nsresult	rv;
-   	nsCOMPtr<nsIComponentManager> compMgr = 
-   	         do_GetService(kComponentManagerCID, &rv);
-	if (NS_FAILED(rv)) return nsnull;
-	
-	rv = compMgr->CreateInstance( m_cid, nsnull, NS_GET_IID(nsIImportModule), (void **) &m_pModule);
+	rv = CallCreateInstance( m_cid, &m_pModule);
 	if (NS_FAILED(rv)) {
 		m_pModule = nsnull;
 		return nsnull;

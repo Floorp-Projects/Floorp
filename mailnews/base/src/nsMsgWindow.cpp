@@ -74,7 +74,6 @@
 #include "nsIExternalProtocolService.h"
 
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
-static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsMsgWindow,
                               nsIMsgWindow,
@@ -95,24 +94,20 @@ nsMsgWindow::~nsMsgWindow()
 nsresult nsMsgWindow::Init()
 {
   // register ourselves as a content listener with the uri dispatcher service
-  nsresult rv = NS_OK;
+  nsresult rv;
   nsCOMPtr<nsIURILoader> dispatcher = 
            do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) 
-    rv = dispatcher->RegisterContentListener(this);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = dispatcher->RegisterContentListener(this);
+  if (NS_FAILED(rv))
+    return rv;
 
   // create Undo/Redo Transaction Manager
-  nsCOMPtr<nsIComponentManager> compMgr = 
-           do_GetService(kComponentManagerCID, &rv);
-
+  mTransactionManager = do_CreateInstance(kTransactionManagerCID, &rv);
   if (NS_SUCCEEDED(rv))
-  {
-    rv = compMgr->CreateInstance(kTransactionManagerCID, nsnull,
-                                 NS_GET_IID(nsITransactionManager),
-                                 getter_AddRefs(mTransactionManager));
-    if (NS_SUCCEEDED(rv))
-      mTransactionManager->SetMaxTransactionCount(-1);
-  }
+    mTransactionManager->SetMaxTransactionCount(-1);
 
   return rv;
 }

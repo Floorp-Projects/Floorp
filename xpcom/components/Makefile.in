@@ -65,7 +65,6 @@ endif
 
 EXPORTS		= \
 		nsCategoryManagerUtils.h \
-		nsComponentManagerUtils.h \
 		nsComponentManagerObsolete.h \
 		nsIServiceManagerUtils.h \
 		nsIServiceManagerObsolete.h \

@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCSSScanner.h"
+#include "nsIFactory.h"
 #include "nsIInputStream.h"
 #include "nsIUnicharInputStream.h"
 #include "nsString.h"

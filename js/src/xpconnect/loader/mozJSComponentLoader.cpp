@@ -47,6 +47,7 @@
 #include "nsICategoryManager.h"
 #include "nsIComponentLoader.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentManagerObsolete.h"
 #include "nsIGenericFactory.h"
 #include "nsILocalFile.h"
 #include "nsIModule.h"
