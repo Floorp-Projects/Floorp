@@ -3,10 +3,13 @@ for illustration/documentation purposes only and are not maintained
 regularly. Current scripts to build mozilla will live in an another spot
 in the mozilla tree.
 
-Two examples have been provided:
+Three examples have been provided:
 
 mozilla-windows.pl: perl script that drives mozilla tinderbox builds for Win32
 mozilla-unix.pl   : perl script that drives mozilla tinderbox builds for UNIX
+build-moz-smoke.pl: perl script that drives mozilla tinderbox builds for UNIX,
+	and subsequently runs the executable returning a green tree only if
+	it does not crash.
 
 These scripts show the basic elements of a Tinderbox client script. These
 elements are:
