@@ -75,8 +75,11 @@ private:
 
     PRBool mCurrentProfileAvailable;
 
-    PRBool mIsLangSpecified;
-    nsAutoString mLangName;
+    PRBool mIsUILocaleSpecified;
+    nsAutoString mUILocaleName;
+
+    PRBool mIsContentLocaleSpecified;
+    nsAutoString mContentLocaleName;
     
 public:
     nsProfile();
