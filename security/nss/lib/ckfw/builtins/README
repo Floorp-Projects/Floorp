@@ -1,0 +1,31 @@
+This README file explains how to add a builtin root CA certificate to NSS.
+The builtin root CA certificates in NSS are stored in the nssckbi PKCS #11
+module. The sources to the nssckbi module are in this directory. You need
+to use the addbuiltin command-line tool to add a root CA certificate to
+the nssckbi module. In the procedure described below, we assume that the
+new root CA certificate is distributed in DER format in the file newroot.der.
+
+1. Build addbuiltin by doing gmake in mozilla/security/nss/cmd/addbuiltin.
+(addbuiltin is not built by default.)
+
+2. Add the directory where the addbuiltin executable resides to your PATH
+environment variable. Then, add the directory where the NSPR and NSS shared
+libraries (DLLs) reside to the platform-specific environment variable that
+specifies your shared library search path: LD_LIBRARY_PATH (most Unix
+variants), SHLIB_PATH (32-bit HP-UX), LIBPATH (AIX), or PATH (Windows).
+
+3. Copy newroot.der to this directory.
+
+4. In this directory, run addbuiltin to add the new root certificate. The
+argument to the -n option should be replaced by the name of the root
+certificate. Then run "gmake generate".
+
+    % addbuiltin -n "Name of the Root Certificate" -t C,C,C < newroot.der >> certdata.txt
+    % gmake generate
+
+5. Edit constants.c to bump the version of the module.
+
+6. Run gmake in this directory to build the nssckbi module.
+
+7. After you verify that the new nssckbi module is correct, check in
+certdata.txt, certdata.c, and constants.c.
