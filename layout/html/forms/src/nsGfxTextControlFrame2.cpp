@@ -976,7 +976,7 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
       return rv?rv:NS_ERROR_FAILURE;
     if (doc)
     {
-      doc->RemoveObserver(mTextListener);
+      //doc->RemoveObserver(mTextListener);
     }
   }
   return nsBoxFrame::Destroy(aPresContext);
@@ -2566,7 +2566,7 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
       rv = shell->GetDocument(getter_AddRefs(doc));
       if (NS_FAILED(rv) || !doc)
         return rv?rv:NS_ERROR_FAILURE;
-      doc->AddObserver(mTextListener);
+      //doc->AddObserver(mTextListener);
     }
 
   }
