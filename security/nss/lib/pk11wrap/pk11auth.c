@@ -557,6 +557,11 @@ void PK11_LogoutAll(void)
     SECMODModuleList *mlp = NULL;
     int i;
 
+    /* NSS is not initialized, there are not tokens to log out */
+    if (lock == NULL) {
+	return;
+    }
+
     SECMOD_GetReadLock(lock);
     /* find the number of entries */
     for (mlp = modList; mlp != NULL; mlp = mlp->next) {
