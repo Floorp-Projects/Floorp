@@ -19,44 +19,83 @@
 #ifndef _nsMemCacheObject_h_
 #define _nsMemCacheObject_h_
 
+#include <prtypes.h>
+
 #include "nsCacheObject.h"
 
-class nsMemCacheObject : public nsCacheObject
+class nsMemCacheObject
 {
 public:
-	nsMemCacheObject(void);
-	nsMemCacheObject(const nsCacheObject&);
+
+    nsMemCacheObject(void);
+    nsMemCacheObject(nsCacheObject* io_pObject);
 	nsMemCacheObject(const char* i_url); 
 	~nsMemCacheObject();
 
-	void Next(nsCacheObject* pObject);
-	nsMemCacheObject* Next(void) const;
-
+    void*               Data(void) const;
+    
+    void                Next(nsMemCacheObject* pObject);
+    void                Next(nsCacheObject* io_pObject);
+	
+    nsMemCacheObject*   Next(void) const;
+    
+    nsCacheObject*      ThisObject(void) const;
+	
 private:
 	nsMemCacheObject* m_pNextObject;
-	/* The actual data of this cache object */
-	char* m_pData;
+    nsCacheObject*  m_pObject;
+	void* m_pData;
 
-	nsMemCacheObject& operator=(const nsMemCacheObject& lco);	
+	nsMemCacheObject& operator=(const nsMemCacheObject& mco);	
+	nsMemCacheObject(const nsMemCacheObject&);
 
 };
 
 inline nsMemCacheObject::nsMemCacheObject(void):
-	nsCacheObject(), 
-	m_pNextObject(0) 
+	m_pObject(new nsCacheObject()), 
+	m_pNextObject(0),
+    m_pData(0)
 {
 }
 
-inline nsMemCacheObject::nsMemCacheObject(const nsCacheObject& another):
-	nsCacheObject(another),
-	m_pNextObject(0)
+inline nsMemCacheObject::nsMemCacheObject(nsCacheObject* io_pObject):
+	m_pObject(io_pObject),
+	m_pNextObject(0),
+    m_pData(0)
 {
 }
 
 inline nsMemCacheObject::nsMemCacheObject(const char* i_url):
-	nsCacheObject(i_url), 
-	m_pNextObject(0) 
+	m_pObject(new nsCacheObject(i_url)), 
+	m_pNextObject(0),
+    m_pData(0)
 {
+}
+
+inline void* nsMemCacheObject::Data(void) const
+{
+//    PR_ASSERT(m_pData);
+    return m_pData;
+}
+
+inline nsMemCacheObject* nsMemCacheObject::Next(void) const
+{
+    return m_pNextObject;
+}
+
+inline void nsMemCacheObject::Next(nsMemCacheObject* pObject)
+{
+    m_pNextObject = pObject;
+}
+
+inline void nsMemCacheObject::Next(nsCacheObject* pObject)
+{
+    m_pNextObject = new nsMemCacheObject(pObject);
+}
+
+inline nsCacheObject* nsMemCacheObject::ThisObject(void) const
+{
+   return m_pObject;
 }
 
 #endif //_nsMemCacheObject_h_

@@ -122,40 +122,28 @@ void CCbView::OnInitialUpdate()
 	pCO->LastModified(time(0));
 	pMM->AddObject(pCO);
 	
-	pCO->Address("http://www.microsnot.com/");
-	pCO->Size(1230);
-	pCO->Etag("Another");
-	
-    int j = 1000;
+    int j = 10000;
     char tmpBuff[10];
     while (j--)
     {
+        pCO = new nsCacheObject(itoa(j,tmpBuff,10));
         pMM->AddObject(pCO);
-        pCO->Address(itoa(j,tmpBuff,10));
     }
-	if (pMM->AddObject(pCO))
-	{
-		char buffer[10];
-		m_Mesg += itoa(pMM->Entries(), buffer, 10);
-		m_Mesg += " nsCacheObject(s) added successfully.\n";
-	}
-	else
-		m_Mesg += "Failed to add a cache object!\n";
+	m_Mesg += itoa(pMM->Entries(), tmpBuff, 10);
+	m_Mesg += " nsCacheObject(s) added.\n";
+
+    char* traceBuff = (char*) pCM->Trace();
+	m_Mesg += "-----------------\n";
+	m_Mesg += traceBuff;
+    delete[] traceBuff;
+    traceBuff = (char*) pMM->Trace();
+    m_Mesg += traceBuff;
+    delete[] traceBuff;
 
 	m_Mesg += "-----------------\n";
-	m_Mesg += pCM->Trace();
-	m_Mesg += pMM->Trace();
 
-	m_Mesg += "-----------------\n";
-	/*
-    for (int i = pMM->Entries(); i>0 ; i--)
-	{
-		m_Mesg += pMM->GetObject(i-1)->Trace();
-	}
 
-    m_Mesg += "-----------------\n";
-    */
-	char buffer[10];
+    char buffer[10];
     m_Mesg += "Worst case time= ";
 	m_Mesg += itoa(pCM->WorstCaseTime(), buffer, 10);
     m_Mesg += " microsec.\n";
@@ -171,9 +159,9 @@ void CCbView::OnInitialUpdate()
     m_Mesg += itoa(t, buffer, 10);
     m_Mesg += " microsec.\n";
 
-	delete pMM; 
-	pMM = 0;
-	delete pCO;
+//	delete pMM; 
+//    pMM = 0;
+
 	CView::OnInitialUpdate();
 }
 

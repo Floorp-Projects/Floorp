@@ -33,38 +33,31 @@
 
 #define DEFAULT_SIZE 10*0x100000L
 
-nsCacheModule::nsCacheModule():
-	m_Size(DEFAULT_SIZE),
-	m_pNext(0), 
-	m_Entries(0)
-{
-}
-
-nsCacheModule::nsCacheModule(const PRUint32 i_size):
-	m_Size(i_size),
-	m_pNext(0),
-	m_Entries(0)
+nsCacheModule::nsCacheModule(const PRUint32 i_size=DEFAULT_SIZE):
+    m_Size(i_size),
+    m_pNext(0),
+    m_Entries(0)
 {
 }
 
 nsCacheModule::~nsCacheModule()
 {
-	if (m_pNext)
-	{
-		delete m_pNext;
-		m_pNext = 0;
-	}
+    if (m_pNext)
+    {
+        delete m_pNext;
+        m_pNext = 0;
+    }
 }
 
 const char* nsCacheModule::Trace() const
 {
-	char linebuffer[128];
-	char* total;
+    char linebuffer[128];
+    char* total;
 
-	sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
-	
+    sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
+
     total = new char[strlen(linebuffer) + 1];
     strcpy(total, linebuffer);
 
-	return total;
+    return total;
 }

@@ -20,19 +20,16 @@ IGNORE_MANIFEST = 1
 DEPTH=..\..\..\..
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = cachelib
-DLL = .\$(OBJDIR)\$(DLLNAME).dll
+
+LIBNAME = .\$(OBJDIR)\cachelib
+
+DLL = $(LIBNAME).dll
 
 LIBRARY_NAME=cachelib
 
-MISCDEP = 		    \
-    $(LIBNSPR)  	    \
-    $(DIST)\lib\xpcom32.lib \
-    $(NULL)
-
 MODULE = cache
 
-OBJS =					\
+CPP_OBJS =					\
 	.\$(OBJDIR)\nsCacheObject.obj 	\
 	.\$(OBJDIR)\nsCacheModule.obj 	\
 	.\$(OBJDIR)\nsMemModule.obj 	\
@@ -53,18 +50,21 @@ LCFLAGS =				\
 	$(LCFLAGS)			\
 	-DNS_DLLNAME=$(DLLNAME).dll	\
 	$(NULL)
-	
+
+# Remember to change libplc21 to $whatever it is...
 LLIBS =				 \
- 	$(DIST)\lib\xpcom32.lib  \
 	$(LIBNSPR)		 \
+	$(DIST)\lib\libplc21.lib \
+ 	$(DIST)\lib\xpcom32.lib  \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+        $(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
+        $(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\bin\$(DLLNAME).$(DLL_SUFFIX)
+	rm -f $(DIST)\lib\$(DLLNAME).$(LIB_SUFFIX)
 

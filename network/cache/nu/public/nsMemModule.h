@@ -28,30 +28,59 @@
 #include "nsCacheModule.h"
 #include "nsMemCacheObject.h"
 
+//#include <nsHashtable.h>
+/*
+// {5D51B250-E6C2-11d1-AFE5-006097BFC036}
+static const NS_MEMMODULE_IID = 
+{ 0x5d51b250, 0xe6c2, 0x11d1, { 0xaf, 0xe5, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
+*/
+
+static const PRUint32 DEFAULT_SIZE= 5*1024*1024;
+
 class nsMemModule : public nsCacheModule
 {
 
 public:
-	nsMemModule();
-	nsMemModule(const PRUint32 size);
-	~nsMemModule();
+    nsMemModule(const PRUint32 size=DEFAULT_SIZE);
+    ~nsMemModule();
 
-	PRBool          AddObject(nsCacheObject* i_pObject);
-	PRBool          Contains(nsCacheObject* i_pObject) const;
+/*
+    NS_IMETHOD              QueryInterface(const nsIID& aIID, 
+                                           void** aInstancePtr);
+    NS_IMETHOD_(nsrefcnt)   AddRef(void);
+    NS_IMETHOD_(nsrefcnt)   Release(void);
+
+*/
+	PRBool          AddObject(nsCacheObject* io_pObject);
+	PRBool          Contains(nsCacheObject* io_pObject) const;
     PRBool          Contains(const char* i_url) const;
-	nsCacheObject*	GetObject(PRUint32 i_index) const;
+	nsCacheObject*	GetObject(const PRUint32 i_index) const;
 	nsCacheObject*	GetObject(const char* i_url) const;
 
-	// Start of nsMemModule specific stuff...
-	// Here is a sample implementation using linked list
+    // Start of nsMemModule specific stuff...
+    // Here is a sample implementation using linked list
 protected:
-	nsMemCacheObject* LastObject(void) const;
+    nsMemCacheObject* LastObject(void) const;
 
 private:
-	nsMemCacheObject* m_pFirstObject;
+    nsMemCacheObject* m_pFirstObject;
 
-	nsMemModule(const nsMemModule& mm);
-	nsMemModule& operator=(const nsMemModule& mm);
+//    nsHashtable m_ht;
+    //Optimization
+    nsMemCacheObject* m_pLastObject;
+
+    nsMemModule(const nsMemModule& mm);
+    nsMemModule& operator=(const nsMemModule& mm);
+
+    /*
+    class nsMemKey : public nsHashKey
+    {
+    public:
+      PRUint32 HashValue();
+      PRBool Equals(nsHashKey *aKey);
+      nsHashKey *Clone();
+    };
+    */
 };
 
 #endif

@@ -105,12 +105,12 @@ private:
 inline const char* nsCacheObject::Address(void) const
 {
 	return m_Url;
-}
+};
 
 inline const char* nsCacheObject::Etag(void) const 
 {
 	return m_Etag;
-}
+};
 
 inline PRIntervalTime nsCacheObject::Expires(void) const
 {
@@ -120,58 +120,58 @@ inline PRIntervalTime nsCacheObject::Expires(void) const
 inline void nsCacheObject::Expires(PRIntervalTime i_Expires)
 {
 	m_Expires = i_Expires;
-}
+};
 
 inline PRUint16 nsCacheObject::Hits(void) const
 {
 	return m_Hits;
-}
+};
 
 inline PRBool nsCacheObject::IsExpired(void) const
 {
 	PRIntervalTime now = PR_IntervalNow();
 	return (m_Expires <= now);
-}
+};
 
 inline PRBool nsCacheObject::IsPartial(void) const
 {
 	return (m_Flags & nsCacheObject::PARTIAL);
-}
+};
 
 inline PRIntervalTime nsCacheObject::LastAccessed(void) const
 {
 	return m_LastAccessed;
-}
+};
 
 inline PRIntervalTime nsCacheObject::LastModified(void) const
 {
 	return m_LastModified;
-}
+};
 
 inline void nsCacheObject::LastModified(PRIntervalTime i_LastModified)
 {
 	m_LastModified = i_LastModified;
-}
+};
 
 inline PRInt16 nsCacheObject::Module(void) const
 {
     return m_Module;
-}
+};
 
 inline void nsCacheObject::Module(PRUint16 i_Module) 
 {
     m_Module = i_Module;
-}
+};
 
 inline PRUint32 nsCacheObject::Size(void) const
 {
 	return m_Size;
-}
+};
 
 inline void nsCacheObject::Size(PRUint32 i_Size)
 {
 	m_Size = i_Size;
-}
+};
 
 #endif // nsCacheObject_h__
 

@@ -32,14 +32,13 @@ nsMemCacheObject::~nsMemCacheObject()
 		delete m_pNextObject;
 		m_pNextObject = 0;
 	}
-}
 
-nsMemCacheObject* nsMemCacheObject::Next(void) const
-{
-	return m_pNextObject;
-}
+    if (m_pObject)
+    {
+        delete m_pObject;
+        m_pObject = 0;
+    }
 
-void nsMemCacheObject::Next(nsCacheObject* pObject) 
-{
-	m_pNextObject = (nsMemCacheObject*) pObject;
+    // Free the void* if allocated - TODO
+
 }
