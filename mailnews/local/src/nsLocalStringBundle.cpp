@@ -33,42 +33,44 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define LOCAL_MSGS_URL       "chrome://messenger/locale/localMsgs.properties"
 
-extern "C" 
-PRUnichar *
-LocalGetStringByID(PRInt32 stringID)
+nsLocalStringService::nsLocalStringService()
 {
-	nsresult    res;
-	char*       propertyURL = NULL;
-	nsString	resultString = "???";
+  NS_INIT_ISUPPORTS();
+}
 
-	propertyURL = LOCAL_MSGS_URL;
+nsLocalStringService::~nsLocalStringService()
+{}
 
-	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
-	if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-	{
-		nsCOMPtr<nsIURI>	url;
-		nsILocale   *locale = nsnull;
+NS_IMPL_ADDREF(nsLocalStringService);
+NS_IMPL_RELEASE(nsLocalStringService);
 
-		nsIStringBundle* sBundle = nsnull;
-		res = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
+NS_INTERFACE_MAP_BEGIN(nsLocalStringService)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgStringService)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgStringService)
+NS_INTERFACE_MAP_END
 
-		if (NS_SUCCEEDED(res))
-		{
-			PRUnichar *ptrv = nsnull;
-			res = sBundle->GetStringFromID(stringID, &ptrv);
-			NS_RELEASE(sBundle);
-			if (NS_FAILED(res)) 
-			{
-				resultString = "[StringID";
-				resultString.Append(stringID, 10);
-				resultString += "?]";
-				return resultString.ToNewUnicode();
-			}
+NS_IMETHODIMP 
+nsLocalStringService::GetStringByID(PRInt32 aStringID, PRUnichar ** aString)
+{
+  nsresult rv = NS_OK;
+  
+  if (!mLocalStringBundle)
+    rv = InitializeStringBundle();
 
-			return ptrv;
-		}
-	}
+  NS_ENSURE_TRUE(mLocalStringBundle, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_SUCCESS(mLocalStringBundle->GetStringFromID(aStringID, aString), NS_ERROR_UNEXPECTED);
 
-	return resultString.ToNewUnicode();
+  return rv;
+}
+
+nsresult
+nsLocalStringService::InitializeStringBundle()
+{
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
+
+  NS_ENSURE_SUCCESS(stringService->CreateBundle(LOCAL_MSGS_URL, nsnull, getter_AddRefs(mLocalStringBundle)), 
+                    NS_ERROR_FAILURE);
+  return NS_OK;
 }
 

@@ -22,11 +22,24 @@
 #ifndef _nsLocalStringBundle_H__
 #define _nsLocalStringBundle_H__
 
-NS_BEGIN_EXTERN_C
+#include "nsIMsgStringService.h"
+#include "nsIStringBundle.h"
+#include "nsMsgLocalCID.h"
+#include "nsCOMPtr.h"
 
-PRUnichar     *LocalGetStringByID(PRInt32 stringID);
+class nsLocalStringService : public nsIMsgStringService
+{
+public:
+  nsLocalStringService();
+  virtual ~nsLocalStringService();
 
-NS_END_EXTERN_C
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGSTRINGSERVICE;
+
+private:
+  nsCOMPtr<nsIStringBundle> mLocalStringBundle;
+  nsresult InitializeStringBundle();
+};
 
 #define	IMAP_OUT_OF_MEMORY                                 -1000
 #define	LOCAL_STATUS_SELECTING_MAILBOX                      4000
