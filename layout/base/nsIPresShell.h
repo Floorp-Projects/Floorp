@@ -43,6 +43,7 @@
 #include "nsReflowType.h"
 #include "nsCompatibility.h"
 #include "nsCOMArray.h"
+#include "nsFrameManagerBase.h"
 #include <stdio.h> // for FILE definition
 
 class nsIAtom;
@@ -164,7 +165,10 @@ public:
     return mFrameConstructor;
   }
 
-  nsFrameManager* FrameManager() { return mFrameManager; }
+  nsFrameManager* FrameManager() const {
+    return NS_REINTERPRET_CAST(nsFrameManager*,
+      &NS_CONST_CAST(nsIPresShell*, this)->mFrameManager);
+  }
 
 #endif
 
@@ -658,7 +662,7 @@ protected:
   nsStyleSet*               mStyleSet;      // [OWNS]
   nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
-  nsFrameManager*           mFrameManager;  // [OWNS]
+  nsFrameManagerBase        mFrameManager;  // [OWNS]
 };
 
 /**

@@ -212,7 +212,7 @@ public:
   UndisplayedNode*          mNext;
 };
 
-class nsFrameManager::UndisplayedMap {
+class nsFrameManagerBase::UndisplayedMap {
 public:
   UndisplayedMap(PRUint32 aNumBuckets = 16) NS_HIDDEN;
   ~UndisplayedMap(void) NS_HIDDEN;
@@ -1863,7 +1863,7 @@ nsFrameManager::DestroyPropertyList(nsIPresContext* aPresContext)
   }
 }
 
-nsFrameManager::PropertyList*
+nsFrameManagerBase::PropertyList*
 nsFrameManager::GetPropertyListFor(nsIAtom* aPropertyName) const
 {
   PropertyList* result;
@@ -1990,9 +1990,9 @@ nsFrameManager::RemoveFrameProperty(const nsIFrame* aFrame,
 
 MOZ_DECL_CTOR_COUNTER(UndisplayedMap)
 
-nsFrameManager::UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
+nsFrameManagerBase::UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
 {
-  MOZ_COUNT_CTOR(nsFrameManager::UndisplayedMap);
+  MOZ_COUNT_CTOR(nsFrameManagerBase::UndisplayedMap);
   mTable = PL_NewHashTable(aNumBuckets, (PLHashFunction)HashKey,
                            (PLHashComparator)CompareKeys,
                            (PLHashComparator)nsnull,
@@ -2000,15 +2000,15 @@ nsFrameManager::UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
   mLastLookup = nsnull;
 }
 
-nsFrameManager::UndisplayedMap::~UndisplayedMap(void)
+nsFrameManagerBase::UndisplayedMap::~UndisplayedMap(void)
 {
-  MOZ_COUNT_DTOR(nsFrameManager::UndisplayedMap);
+  MOZ_COUNT_DTOR(nsFrameManagerBase::UndisplayedMap);
   Clear();
   PL_HashTableDestroy(mTable);
 }
 
 PLHashEntry**  
-nsFrameManager::UndisplayedMap::GetEntryFor(nsIContent* aParentContent)
+nsFrameManagerBase::UndisplayedMap::GetEntryFor(nsIContent* aParentContent)
 {
   if (mLastLookup && (aParentContent == (*mLastLookup)->key)) {
     return mLastLookup;
@@ -2022,7 +2022,7 @@ nsFrameManager::UndisplayedMap::GetEntryFor(nsIContent* aParentContent)
 }
 
 UndisplayedNode* 
-nsFrameManager::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
+nsFrameManagerBase::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
 {
   PLHashEntry** entry = GetEntryFor(aParentContent);
   if (*entry) {
@@ -2032,8 +2032,8 @@ nsFrameManager::UndisplayedMap::GetFirstNode(nsIContent* aParentContent)
 }
 
 void
-nsFrameManager::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
-                                              nsIContent* aParentContent)
+nsFrameManagerBase::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
+                                                  nsIContent* aParentContent)
 {
   PLHashEntry** entry = GetEntryFor(aParentContent);
   if (*entry) {
@@ -2059,9 +2059,9 @@ nsFrameManager::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
 }
 
 nsresult 
-nsFrameManager::UndisplayedMap::AddNodeFor(nsIContent* aParentContent,
-                                           nsIContent* aChild, 
-                                           nsStyleContext* aStyle)
+nsFrameManagerBase::UndisplayedMap::AddNodeFor(nsIContent* aParentContent,
+                                               nsIContent* aChild, 
+                                               nsStyleContext* aStyle)
 {
   UndisplayedNode*  node = new UndisplayedNode(aChild, aStyle);
   if (! node) {
@@ -2073,8 +2073,8 @@ nsFrameManager::UndisplayedMap::AddNodeFor(nsIContent* aParentContent,
 }
 
 void
-nsFrameManager::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
-                                              UndisplayedNode* aNode)
+nsFrameManagerBase::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
+                                                  UndisplayedNode* aNode)
 {
   PLHashEntry** entry = GetEntryFor(aParentContent);
   NS_ASSERTION(*entry, "content not in map");
@@ -2105,7 +2105,7 @@ nsFrameManager::UndisplayedMap::RemoveNodeFor(nsIContent* aParentContent,
 }
 
 void
-nsFrameManager::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
+nsFrameManagerBase::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
 {
   PLHashEntry** entry = GetEntryFor(aParentContent);
   NS_ASSERTION(entry, "content not in map");
@@ -2128,7 +2128,7 @@ RemoveUndisplayedEntry(PLHashEntry* he, PRIntn i, void* arg)
 }
 
 void
-nsFrameManager::UndisplayedMap::Clear(void)
+nsFrameManagerBase::UndisplayedMap::Clear(void)
 {
   mLastLookup = nsnull;
   PL_HashTableEnumerateEntries(mTable, RemoveUndisplayedEntry, 0);
@@ -2136,15 +2136,15 @@ nsFrameManager::UndisplayedMap::Clear(void)
 
 //----------------------------------------------------------------------
     
-nsFrameManager::PropertyList::PropertyList(nsIAtom*                aName,
-                                         NSFramePropertyDtorFunc aDtorFunc)
+nsFrameManagerBase::PropertyList::PropertyList(nsIAtom*                aName,
+                                               NSFramePropertyDtorFunc aDtorFunc)
   : mName(aName), mDtorFunc(aDtorFunc), mNext(nsnull)
 {
   PL_DHashTableInit(&mFrameValueMap, PL_DHashGetStubOps(), this,
                     sizeof(PropertyListMapEntry), 16);
 }
 
-nsFrameManager::PropertyList::~PropertyList()
+nsFrameManagerBase::PropertyList::~PropertyList()
 {
   PL_DHashTableFinish(&mFrameValueMap);
 }
@@ -2153,8 +2153,8 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
                           PRUint32 number, void *arg)
 {
-  nsFrameManager::PropertyList *propList =
-      NS_STATIC_CAST(nsFrameManager::PropertyList*, table->data);
+  nsFrameManagerBase::PropertyList *propList =
+      NS_STATIC_CAST(nsFrameManagerBase::PropertyList*, table->data);
   nsIPresContext *presContext = NS_STATIC_CAST(nsIPresContext*, arg);
   PropertyListMapEntry* entry = NS_STATIC_CAST(PropertyListMapEntry*, hdr);
 
@@ -2164,7 +2164,7 @@ DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
 }
 
 void
-nsFrameManager::PropertyList::Destroy(nsIPresContext* aPresContext)
+nsFrameManagerBase::PropertyList::Destroy(nsIPresContext* aPresContext)
 {
   // Enumerate any remaining frame/value pairs and destroy the value object
   if (mDtorFunc)
@@ -2173,8 +2173,8 @@ nsFrameManager::PropertyList::Destroy(nsIPresContext* aPresContext)
 }
 
 PRBool
-nsFrameManager::PropertyList::RemovePropertyForFrame(nsIPresContext* aPresContext,
-                                                     const nsIFrame* aFrame)
+nsFrameManagerBase::PropertyList::RemovePropertyForFrame(nsIPresContext* aPresContext,
+                                                         const nsIFrame* aFrame)
 {
   PropertyListMapEntry *entry = NS_STATIC_CAST(PropertyListMapEntry*,
       PL_DHashTableOperate(&mFrameValueMap, aFrame, PL_DHASH_LOOKUP));
