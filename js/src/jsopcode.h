@@ -181,10 +181,12 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines);
 /*
  * Find the source expression that resulted in v, and return a new string
  * containing it.  Fall back on v's string conversion if we can't find the
- * bytecode that generated and pushed v on the operand stack.
+ * bytecode that generated and pushed v on the operand stack.  Don't look
+ * for v on the stack if checkStack is false.
  */
 extern JSString *
-js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback);
+js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
+			   JSString *fallback);
 
 JS_END_EXTERN_C
 

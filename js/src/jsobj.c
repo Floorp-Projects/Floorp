@@ -804,19 +804,19 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   js_obj_toSource,        0, 0, OBJ_TOSTRING_EXTRA},
+    {js_toSource_str,         js_obj_toSource,        0, 0, OBJ_TOSTRING_EXTRA},
 #endif
-    {js_toString_str,	js_obj_toString,	0, 0, OBJ_TOSTRING_EXTRA},
-    {js_valueOf_str,	obj_valueOf,		0},
-    {js_eval_str,	obj_eval,		1, 0, 1},
+    {js_toString_str,         js_obj_toString,        0, 0, OBJ_TOSTRING_EXTRA},
+    {js_valueOf_str,          obj_valueOf,            0},
+    {js_eval_str,             obj_eval,               1},
 #if JS_HAS_OBJ_WATCHPOINT
-    {"watch",           obj_watch,              2},
-    {"unwatch",         obj_unwatch,            1},
+    {"watch",                 obj_watch,              2},
+    {"unwatch",               obj_unwatch,            1},
 #endif
 #if JS_HAS_NEW_OBJ_METHODS
-    {"hasOwnProperty",  obj_hasOwnProperty,     1},
-    {"isPrototypeOf",   obj_isPrototypeOf,      1},
-    {"propertyIsEnumerable", obj_propertyIsEnumerable, 1},
+    {"hasOwnProperty",        obj_hasOwnProperty,     1},
+    {"isPrototypeOf",         obj_isPrototypeOf,      1},
+    {"propertyIsEnumerable",  obj_propertyIsEnumerable, 1},
 #endif
     {0}
 };
@@ -1873,7 +1873,7 @@ read_only:
 	JS_UNLOCK_OBJ(cx, obj);
 	if (JSVERSION_IS_ECMA(cx->version))
 	    return JS_TRUE;
-	str = js_DecompileValueGenerator(cx, js_IdToValue(id), NULL);
+	str = js_DecompileValueGenerator(cx, JS_FALSE, js_IdToValue(id), NULL);
 	if (str)
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_READ_ONLY, JS_GetStringBytes(str));
@@ -2017,7 +2017,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 	    *rval = JSVAL_FALSE;
 	    return JS_TRUE;
 	}
-	str = js_DecompileValueGenerator(cx, js_IdToValue(id), NULL);
+	str = js_DecompileValueGenerator(cx, JS_FALSE, js_IdToValue(id), NULL);
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_PERMANENT, JS_GetStringBytes(str));
@@ -2144,7 +2144,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 	    str = NULL;
 	}
 	*vp = OBJECT_TO_JSVAL(obj);
-	str = js_DecompileValueGenerator(cx, v, str);
+	str = js_DecompileValueGenerator(cx, JS_TRUE, v, str);
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_CANT_CONVERT_TO,
@@ -2477,7 +2477,7 @@ js_ValueToNonNullObject(JSContext *cx, jsval v)
     if (!js_ValueToObject(cx, v, &obj))
 	return NULL;
     if (!obj) {
-	str = js_DecompileValueGenerator(cx, v, NULL);
+	str = js_DecompileValueGenerator(cx, JS_TRUE, v, NULL);
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_NO_PROPERTIES, JS_GetStringBytes(str));

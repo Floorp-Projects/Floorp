@@ -868,7 +868,8 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
 	if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
 	    return JS_FALSE;
 	if (!prop) {
-	    str = js_DecompileValueGenerator(cx, js_IdToValue(id), NULL);
+	    str = js_DecompileValueGenerator(cx, JS_FALSE, js_IdToValue(id),
+					     NULL);
 	    if (str)
 		js_ReportIsNotDefined(cx, JS_GetStringBytes(str));
 	    return JS_FALSE;
@@ -878,7 +879,8 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
 	if (!ok)
 	    return JS_FALSE;
 	if (!(attrs & JSPROP_EXPORTED)) {
-	    str = js_DecompileValueGenerator(cx, js_IdToValue(id), NULL);
+	    str = js_DecompileValueGenerator(cx, JS_FALSE, js_IdToValue(id),
+					     NULL);
 	    if (str) {
 		JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				     JSMSG_NOT_EXPORTED,
@@ -1082,7 +1084,8 @@ js_Interpret(JSContext *cx, jsval *result)
 	    if (nuses) {
 		fp->sp = sp - nuses;
 		for (n = 0; n < nuses; n++) {
-		    str = js_DecompileValueGenerator(cx, *fp->sp, NULL);
+		    str = js_DecompileValueGenerator(cx, JS_TRUE, *fp->sp,
+						     NULL);
 		    if (str != NULL) {
 			fprintf(tracefp, "%s %s",
 				(n == 0) ? "  inputs:" : ",",
@@ -2747,7 +2750,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	  case JSOP_INSTANCEOF:
 	    rval = POP();
 	    if (JSVAL_IS_PRIMITIVE(rval)) {
-		str = js_DecompileValueGenerator(cx, rval, NULL);
+		str = js_DecompileValueGenerator(cx, JS_TRUE, rval, NULL);
 		if (str) {
 		    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 					 JSMSG_BAD_INSTANCEOF_RHS,
@@ -2820,7 +2823,8 @@ js_Interpret(JSContext *cx, jsval *result)
 	    if (ndefs) {
 		fp->sp = sp - ndefs;
 		for (n = 0; n < ndefs; n++) {
-		    str = js_DecompileValueGenerator(cx, *fp->sp, NULL);
+		    str = js_DecompileValueGenerator(cx, JS_TRUE, *fp->sp,
+						     NULL);
 		    if (str) {
 			fprintf(tracefp, "%s %s",
 				(n == 0) ? "  output:" : ",",

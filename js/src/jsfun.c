@@ -1117,7 +1117,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
      * Throw a runtime error if instanceof is called on a function
      * that has a non-Object as its .prototype value.
      */
-    str = js_DecompileValueGenerator(cx, OBJECT_TO_JSVAL(obj), NULL);
+    str = js_DecompileValueGenerator(cx, JS_TRUE, OBJECT_TO_JSVAL(obj), NULL);
     if (str) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROTOTYPE,
 			     JS_GetStringBytes(str));
@@ -1748,7 +1748,7 @@ js_ValueToFunction(JSContext *cx, jsval *vp, JSBool constructing)
 void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
 {
-    const char *typename;
+    JSType type;
     JSString *fallback;
     JSStackFrame *fp;
     JSString *str;
@@ -1759,16 +1759,16 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
      * called as the default case inside js_DecompileValueGenerator (and
      * so recursing back to here).
      */
-    typename = JS_GetTypeName(cx, JS_TypeOfValue(cx, *vp));
-    fallback = JS_InternString(cx, typename);
+    type = JS_TypeOfValue(cx, *vp);
+    fallback = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
     fp = cx->fp;
     if (fp) {
         jsval *sp = fp->sp;
         fp->sp = vp;
-        str = js_DecompileValueGenerator(cx, *vp, fallback);
+        str = js_DecompileValueGenerator(cx, JS_TRUE, *vp, fallback);
         fp->sp = sp;
     } else {
-        str = js_DecompileValueGenerator(cx, *vp, fallback);
+        str = js_DecompileValueGenerator(cx, JS_TRUE, *vp, fallback);
     }
     if (str) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,

@@ -529,12 +529,26 @@ typedef struct SprintStack {
 static JSBool
 PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
 {
-    JS_ASSERT(JSOP_LIMIT <= 254);
+    uintN top;
+
+    JS_ASSERT(JSOP_LIMIT <= JSOP_GETPROP2);
     if (!SprintAlloc(&ss->sprinter, PAREN_SLOP))
 	return JS_FALSE;
-    JS_ASSERT(ss->top < ss->printer->script->depth);
-    ss->offsets[ss->top] = off;
-    ss->opcodes[ss->top++] = (op >= 128) ? op - 128 : op;
+
+    /* ss->top points to the next free slot; be paranoid about overflow. */
+    top = ss->top;
+    JS_ASSERT(top < ss->printer->script->depth);
+    if (top >= ss->printer->script->depth) {
+	JS_ReportOutOfMemory(ss->sprinter.context);
+	return JS_FALSE;
+    }
+
+    /* The opcodes stack must contain real bytecodes that index js_CodeSpec. */
+    ss->offsets[top] = off;
+    ss->opcodes[top] = (op == JSOP_GETPROP2) ? JSOP_GETPROP
+		     : (op == JSOP_GETELEM2) ? JSOP_GETELEM
+		     : (jsbytecode) op;
+    ss->top = ++top;
     ss->sprinter.offset += PAREN_SLOP;
     return JS_TRUE;
 }
@@ -546,9 +560,15 @@ PopOff(SprintStack *ss, JSOp op)
     JSCodeSpec *cs, *topcs;
     ptrdiff_t off;
 
-    top   = --ss->top;
-    cs    = &js_CodeSpec[op];
+    /* ss->top points to the next free slot; be paranoid about underflow. */
+    top = ss->top;
+    JS_ASSERT(top != 0);
+    if (top == 0)
+	return 0;
+
+    ss->top = --top;
     topcs = &js_CodeSpec[ss->opcodes[top]];
+    cs = &js_CodeSpec[op];
     if (topcs->prec != 0 && topcs->prec < cs->prec) {
 	ss->offsets[top] -= 2;
 	ss->sprinter.offset = ss->offsets[top];
@@ -2130,17 +2150,19 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
 }
 
 JSString *
-js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback)
+js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
+			   JSString *fallback)
 {
     JSStackFrame *fp;
     jsbytecode *pc, *begin, *end, *tmp;
     jsval *sp, *base, *limit;
     JSScript *script;
+    JSOp op;
     JSCodeSpec *cs;
     uint32 format, mode;
     intN depth;
     jssrcnote *sn;
-    uintN len, maxoplen;
+    uintN len, off;
     JSPrinter *jp;
     JSString *name;
 
@@ -2151,10 +2173,18 @@ js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback)
     /* Try to find sp's generating pc depth slots under it on the stack. */
     pc = fp->pc;
     limit = (jsval *) cx->stackPool.current->avail;
-    if (!pc &&
-	fp->argv &&
-	fp->down &&
-	(script = fp->down->script) != NULL) {
+    if (!pc && fp->argv && fp->down) {
+	/*
+	 * Current frame is native, look under it for a scripted call in which
+	 * a decompilable bytecode string that generated the value might exist.
+	 * But if we're told not to check the stack for v, give up.
+	 */
+	if (!checkStack)
+	    goto do_fallback;
+	script = fp->down->script;
+	if (!script)
+	    goto do_fallback;
+
 	/*
 	 * Native frame called by script: try to match v with actual argument.
 	 * If (fp->sp < fp->argv), normally an impossibility, then we are in
@@ -2169,32 +2199,50 @@ js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback)
 	    }
 	}
     } else {
-	/* Could be native frame called by native code, so check script. */
+	/*
+	 * At this point, pc may or may not be null.  I.e., we could be in a
+	 * script activation, or we could be in a native frame that was called
+	 * by another native function.  Check script.
+	 */
 	script = fp->script;
 	if (!script)
 	    goto do_fallback;
 
-	/* OK, interpreted frame.  Try the operand at sp, or one above it. */
-	sp = fp->sp;
-	if (sp[0] != v && sp + 1 < limit && sp[1] == v)
-	    sp++;
+	/*
+	 * OK, we're in an interpreted frame.  The interpreter calls us just
+	 * after popping one or two operands for a given bytecode at fp->pc.
+	 * So try the operand at sp, or one above it.
+	 */
+	if (checkStack) {
+	    sp = fp->sp;
+	    if (sp[0] != v && sp + 1 < limit && sp[1] == v)
+		sp++;
 
-	/* Try to find an operand-generating pc just above fp's variables. */
-	depth = (intN)script->depth;
-	base = fp->vars
-	       ? fp->vars + fp->nvars
-	       : (jsval *) cx->stackPool.current->base;
-	if (JS_UPTRDIFF(sp - depth, base) < JS_UPTRDIFF(limit, base))
-	    pc = (jsbytecode *) sp[-depth];
+	    if (sp[0] == v) {
+		/* Try to find an operand-generating pc just above fp's vars. */
+		depth = (intN)script->depth;
+		base = fp->vars
+		       ? fp->vars + fp->nvars
+		       : (jsval *) cx->stackPool.current->base;
+		if (JS_UPTRDIFF(sp - depth, base) < JS_UPTRDIFF(limit, base))
+		    pc = (jsbytecode *) sp[-depth];
+	    }
+	}
+
+	/*
+	 * If fp->pc was null, and either we had no luck checking the stack,
+	 * or our caller synthesized v himself and does not want us to check
+	 * the stack, then we fall back.
+	 */
+	if (!pc)
+	    goto do_fallback;
     }
 
-    /* Be paranoid about loading an invalid pc from sp[-depth]. */
-    if (!pc)
-	goto do_fallback;
-
     /*
+     * Be paranoid about loading an invalid pc from sp[-depth].
+     *
      * Using an object for which js_DefaultValue fails as part of an expression
-     * blows this assert.  Disabled for now.
+     * blows this assert.  Disabled for now.  XXXbe true w/ JSINVOKE_INTERNAL?
      * JS_ASSERT(JS_UPTRDIFF(pc, script->code) < (jsuword)script->length);
      */
     if (JS_UPTRDIFF(pc, script->code) >= (jsuword)script->length) {
@@ -2202,7 +2250,10 @@ js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback)
 	if (!pc)
 	    goto do_fallback;
     }
-    cs = &js_CodeSpec[*pc];
+    op = *pc;
+    if (op == JSOP_TRAP)
+	op = JS_GetTrapOpcode(cx, script, pc);
+    cs = &js_CodeSpec[op];
     format = cs->format;
     mode = (format & JOF_MODEMASK);
 
@@ -2216,31 +2267,35 @@ js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback)
 	begin = pc - js_GetSrcNoteOffset(sn, 0);
     }
     end = pc + cs->length;
-    len =PTRDIFF(end, begin, jsbytecode);
+    len = PTRDIFF(end, begin, jsbytecode);
 
     if (format & (JOF_SET | JOF_DEL | JOF_INCDEC | JOF_IMPORT)) {
-	/* These formats require bytecode source extension. */
-	maxoplen = js_CodeSpec[JSOP_GETPROP].length;
-	tmp = JS_malloc(cx, (len + maxoplen) * sizeof(jsbytecode));
+	tmp = JS_malloc(cx, len * sizeof(jsbytecode));
 	if (!tmp)
 	    return NULL;
 	memcpy(tmp, begin, len * sizeof(jsbytecode));
 	if (mode == JOF_NAME) {
 	    tmp[0] = JSOP_NAME;
 	} else {
-	    if (begin[0] == JSOP_TRAP)
-		tmp[0] = JS_GetTrapOpcode(cx, script, begin);
+	    /*
+	     * We must replace the faulting pc's bytecode with a corresponding
+	     * JSOP_GET* code.  For JSOP_SET{PROP,ELEM}, we must use the "2nd"
+	     * form of JSOP_GET{PROP,ELEM}, to throw away the assignment op's
+	     * right-hand operand and decompile it as if it were a GET of its
+	     * left-hand operand.
+	     */
+	    off = len - cs->length;
+	    JS_ASSERT(off == PTRDIFF(pc, begin, jsbytecode));
 	    if (mode == JOF_PROP) {
-		tmp[len++] = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
-		tmp[len++] = pc[1];
-		tmp[len++] = pc[2];
+		tmp[off] = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
 	    } else {
-		tmp[len++] = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
+		JS_ASSERT(mode == JOF_ELEM);
+		tmp[off] = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
 	    }
 	}
 	begin = tmp;
     } else {
-	/* No need to extend script bytecode. */
+	/* No need to revise script bytecode. */
 	tmp = NULL;
     }
 
