@@ -756,11 +756,7 @@ fi
 #
 # l10n/
 #
-if [ "$MOZ_LANGPACKS" ]; then
-	MAKEFILES_langpacks=`cat ${srcdir}/l10n/makefiles.all`
-else
-	MAKEFILES_langpacks=`cat ${srcdir}/l10n/makefiles`
-fi
+MAKEFILES_langpacks=`cat ${srcdir}/l10n/makefiles.all`
 
 if [ "$MOZ_L10N" ]; then
     MAKEFILES_l10n="l10n/Makefile"
