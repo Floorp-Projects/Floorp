@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is mozilla.org code.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp.  Portions created by Netscape are
+   - Copyright (C) 2001 Netscape Communications Corp.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Terry Hayes <thayes@netscape.com>
+  -->
+
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/pref-ssl.dtd">
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul" ?>
+
+<window
+  id="pref-ciphers" title="&cipher.title;"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  onload="onLoad();" orient="vertical"
+>
+  <script><![CDATA[
+    var prefs = null;
+
+    function onLoad() {
+      doSetOKCancel(doOK, doCancel);
+
+      // Set checkboxes from prefs
+      const nsIPref = Components.interfaces.nsIPref;
+
+      prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
+
+      // Enumerate each checkbox on this page and set value
+      var prefElements = document.getElementsByAttribute("pref", "true");
+      for (var i = 0; i < prefElements.length; i++) {
+        var element = prefElements[i];
+        var prefString = element.getAttribute("prefstring");
+        var prefValue = false;
+
+        try {
+          prefValue = prefs.GetBoolPref(prefString);
+        } catch(e) { /* Put debug output here */ }
+
+        element.setAttribute("checked", prefValue);
+      }
+    }
+
+    function doOK() {
+     // Save the prefs
+     try {
+      // Enumerate each checkbox on this page and save the value
+      var prefElements = document.getElementsByAttribute("pref", "true");
+      for (var i = 0; i < prefElements.length; i++) {
+        var element = prefElements[i];
+        var prefString = element.getAttribute("prefstring");
+        var prefValue = element.getAttribute("checked");
+
+        
+        if (typeof(prefValue) == "string") prefValue = (prefValue == "true");
+
+        prefs.SetBoolPref(prefString, prefValue);
+      }
+
+      prefs.savePrefFile(null);
+     } catch(e) { }
+
+     window.close();
+    }
+
+    function doCancel() {
+      window.close();
+    }
+  ]]></script>
+
+  <vbox style="overflow: hidden;" flex="1">
+
+  <titledbox orient="vertical" autostretch="never">
+    <label value="&cipher.ssl2.label;"/>
+
+    <checkbox label="&cipher.ssl2.rc4_128;" pref="true"
+         prefstring="security.ssl2.rc4_128"/>
+    <checkbox label="&cipher.ssl2.rc2_128;" pref="true"
+         prefstring="security.ssl2.rc2_128"/>
+    <checkbox label="&cipher.ssl2.des_ede3_192;" pref="true"
+         prefstring="security.ssl2.des_ede3_192"/>
+    <checkbox label="&cipher.ssl2.des_64;" pref="true"
+         prefstring="security.ssl2.des_64"/>
+    <checkbox label="&cipher.ssl2.rc4_40;" pref="true"
+         prefstring="security.ssl2.rc4_40"/>
+    <checkbox label="&cipher.ssl2.rc2_40;" pref="true"
+         prefstring="security.ssl2.rc2_40"/>
+
+  </titledbox>
+
+  <titledbox orient="vertical" autostretch="never">
+    <label value="&cipher.ssl3.label;"/>
+
+    <checkbox label="&cipher.ssl3.rsa_rc4_128_md5;" pref="true"
+         prefstring="security.ssl3.rsa_rc4_128_md5"/>
+    <checkbox label="&cipher.ssl3.rsa_fips_des_ede3_sha;" pref="true"
+         prefstring="security.ssl3.rsa_fips_des_ede3_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_des_ede3_sha;" pref="true"
+         prefstring="security.ssl3.rsa_des_ede3_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_fips_des_sha;" pref="true"
+         prefstring="security.ssl3.rsa_fips_des_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_1024_rc4_56_sha;" pref="true"
+         prefstring="security.ssl3.rsa_1024_rc4_56_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_1024_des_cbc_sha;" pref="true"
+         prefstring="security.ssl3.rsa_1024_des_cbc_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_rc4_40_md5;" pref="true"
+         prefstring="security.ssl3.rsa_rc4_40_md5"/>
+    <checkbox label="&cipher.ssl3.rsa_rc2_40_md5;" pref="true"
+         prefstring="security.ssl3.rsa_rc2_40_md5"/>
+    <checkbox label="&cipher.ssl3.rsa_null_md5;" pref="true"
+         prefstring="security.ssl3.rsa_null_md5"/>
+  </titledbox>
+
+  <separator/>
+
+  <keyset id="dialogKeys"/>
+  <box id="okCancelButtonsRight"/>
+
+  </vbox>
+
+</window>
