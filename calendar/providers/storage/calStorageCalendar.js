@@ -308,7 +308,7 @@ calStorageCalendar.prototype = {
             return;
         }
 
-        this.deleteItem(aItem.id);
+        this.deleteItemById(aItem.id);
 
         if (aListener)
             aListener.onOperationComplete (this,
@@ -801,7 +801,7 @@ calStorageCalendar.prototype = {
     },
 
     // delete the event with the given uid
-    deleteItem: function (aID) {
+    deleteItemById: function (aID) {
         this.mDeleteItem.params.id = aID;
         this.mDeleteItem.params.cal_id = this.mCalId;
         this.mDeleteAttendees.params.item_id = aID;
