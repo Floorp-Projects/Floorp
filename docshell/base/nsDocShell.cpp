@@ -75,7 +75,6 @@ nsDocShell::nsDocShell() :
   mItemType(typeContent),
   mCurrentScrollbarPref(-1,-1),
   mDefaultScrollbarPref(-1,-1),
-  mUpdateHistoryOnLoad(PR_TRUE),
   mInitialPageLoad(PR_TRUE),
   mAllowPlugins(PR_TRUE),
   mViewMode(viewNormal),
@@ -189,11 +188,21 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 // nsDocShell::nsIDocShell
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIURI* aReferrer)
+NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
 {
    NS_ENSURE_ARG(aURI);
 
-   NS_ENSURE_SUCCESS(InternalLoad(aURI, aReferrer), NS_ERROR_FAILURE);
+   nsCOMPtr<nsIURI> referrer;
+   PRBool replace = PR_FALSE;
+   if(aLoadInfo)
+      {
+      aLoadInfo->GetReferrer(getter_AddRefs(referrer));
+      aLoadInfo->GetReplaceSessionHistorySlot(&replace);
+      }
+      
+
+   NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, nsnull, 
+      replace ? loadNormalReplace : loadNormal), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -2225,26 +2234,6 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       return NS_OK;
       }
    
-   // Determine if this type of load should go into session history   
-   switch(aLoadType)
-      {
-      case loadHistory:
-      case loadReloadNormal:
-      case loadReloadBypassCache:
-      case loadReloadBypassProxy:
-      case loadRelaodBypassProxyAndCache:
-         mUpdateHistoryOnLoad = PR_FALSE;
-         break;
-
-      default:
-         NS_ERROR("Need to update case");
-         // Fall through to a normal type of load.
-      case loadNormal:
-      case loadLink:
-         mUpdateHistoryOnLoad = PR_TRUE;
-         break;
-      } 
-   
    NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
    
    NS_ENSURE_SUCCESS(DoURILoad(aURI), NS_ERROR_FAILURE);
@@ -2301,7 +2290,30 @@ NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
    UpdateCurrentSessionHistory();
    UpdateCurrentGlobalHistory();
 
-   if(mUpdateHistoryOnLoad)
+   PRBool updateHistory = PR_TRUE;
+
+   // Determine if this type of load should update history   
+   switch(mLoadType)
+      {
+      case loadHistory:
+      case loadReloadNormal:
+      case loadReloadBypassCache:
+      case loadReloadBypassProxy:
+      case loadRelaodBypassProxyAndCache:
+         updateHistory = PR_FALSE;
+         break;
+
+      case loadNormal:
+      case loadNormalReplace:
+      case loadLink:
+         break;
+      
+      default:
+         NS_ERROR("Need to update case");
+         break;
+      } 
+
+   if(updateHistory)
       {
       PRBool shouldAdd = PR_FALSE;
 
@@ -2373,7 +2385,16 @@ NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI* aURI)
    PRBool shouldPersist = PR_FALSE;
    ShouldPersistInSessionHistory(aURI, &shouldPersist);
 
-   nsCOMPtr<nsISHEntry> entry(do_CreateInstance(NS_SHENTRY_PROGID));
+   nsCOMPtr<nsISHEntry> entry;
+   if(loadNormalReplace == mLoadType)
+      {
+      PRInt32 index = 0;
+      mSessionHistory->GetIndex(&index);
+      mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+      }
+
+   if(!entry)
+      entry = do_CreateInstance(NS_SHENTRY_PROGID);
    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIInputStream> inputStream;

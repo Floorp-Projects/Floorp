@@ -1296,6 +1296,7 @@ NS_IMETHODIMP nsWebShell::LoadURI(const PRUnichar* aURI)
 NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsIInputStream* aPostData, loadType aLoadType)
 {
+   PRBool updateHistory = PR_TRUE;
    switch(aLoadType)
       {
       case loadHistory:
@@ -1303,15 +1304,16 @@ NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       case loadReloadBypassCache:
       case loadReloadBypassProxy:
       case loadRelaodBypassProxyAndCache:
-         mUpdateHistoryOnLoad = PR_FALSE;
+         updateHistory = PR_FALSE;
          break;
 
       default:
          NS_ERROR("Need to update case");
          // Fall through to a normal type of load.
+      case loadNormalReplace:
       case loadNormal:
       case loadLink:
-         mUpdateHistoryOnLoad = PR_TRUE;
+         updateHistory = PR_TRUE;
          break;
       } 
 
@@ -1323,7 +1325,7 @@ NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       aReferrer->GetSpec(getter_Copies(referrer));
 
 
-   return LoadURL(nsAutoString(url).GetUnicode(), nsnull, mUpdateHistoryOnLoad,
+   return LoadURL(nsAutoString(url).GetUnicode(), nsnull, updateHistory,
       0, 0, nsnull, nsAutoString(referrer).GetUnicode());
 }
 

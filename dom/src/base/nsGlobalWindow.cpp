@@ -53,6 +53,7 @@
 #include "nsIContentViewerEdit.h"
 #include "nsICookieService.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocument.h"
@@ -2472,14 +2473,20 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
          return NS_ERROR_FAILURE;
       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
 
-      nsCOMPtr<nsIURI> codebaseURI;
+      nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
       if(codebase)
          {
+         newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+         NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
          nsresult rv;
+         nsCOMPtr<nsIURI> codebaseURI;
          if (NS_FAILED(rv = codebase->GetURI(getter_AddRefs(codebaseURI))))
             return rv;
+
+         loadInfo->SetReferrer(codebaseURI);
          }
-      newDocShell->LoadURI(uriToLoad, codebaseURI); 
+      newDocShell->LoadURI(uriToLoad, loadInfo); 
       }
 
    if(windowIsNew)
