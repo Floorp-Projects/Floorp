@@ -25,6 +25,7 @@
 #include "nsCRT.h"
 #include "nsIWidget.h"
 #include "nsIFactory.h"
+#include "nsIViewObserver.h"
 
 class nsIPresContext;
 
@@ -90,8 +91,8 @@ public:
   virtual PRBool HasTransparency();
   virtual void SetContentTransparency(PRBool aTransparent);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  virtual void SetFrame(nsIFrame *aFrame);
-  virtual nsIFrame * GetFrame();
+  virtual void SetClientData(void *aData);
+  virtual void * GetClientData();
   virtual nsIWidget * GetOffsetFromWidget(nscoord *aDx, nscoord *aDy);
   virtual void GetScrollOffset(nscoord *aDx, nscoord *aDy);
 
@@ -111,7 +112,7 @@ protected:
   //XXX should there be pointers to last child so backward walking is fast?
   nsIView           *mNextSibling;
   nsIView           *mFirstChild;
-  nsIFrame          *mFrame;
+  void              *mClientData;
   PRInt32           mZindex;
   nsViewVisibility  mVis;
   PRInt32           mNumKids;

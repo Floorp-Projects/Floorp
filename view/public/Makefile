@@ -24,6 +24,7 @@ EXPORTS =               \
     nsIViewManager.h    \
     nsIScrollableView.h    \
     nsViewsCID.h    \
+    nsIViewObserver.h    \
     $(NULL)
 
 MODULE = raptor
