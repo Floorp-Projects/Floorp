@@ -40,7 +40,6 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsIPopupSetFrame.h"
-#include "nsIMenuFrame.h"
 #include "nsIFrame.h"
 
 NS_IMPL_ADDREF_INHERITED(nsXULMenuListElement, nsXULAggregateElement);
