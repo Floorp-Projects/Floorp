@@ -122,9 +122,7 @@ nsNetDiskCache::Init(void)
     return NS_ERROR_OUT_OF_MEMORY ;
   }
 
-  char* tempPref = 0 ;
   if(pref) {
-    PRInt32 nTemp = 0 ;
 
     /*
     rv = pref->CopyCharPref(CACHE_DIR_PREF, &tempPref) ;
@@ -432,7 +430,7 @@ nsNetDiskCache::SetNextCache(nsINetDataCache *aNextCache)
 NS_IMETHODIMP
 nsNetDiskCache::GetStorageInUse(PRUint32 *aStorageInUse)
 {
-  PRUint32 total_size = m_StorageInUse, len = 0 ;
+  PRUint32 total_size = m_StorageInUse;
 
   // FUR!!
   // GetStorageInUse() can be called hundreds of times per second, i.e. every

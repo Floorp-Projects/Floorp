@@ -282,7 +282,7 @@ nsCachedNetData::ComputeProfit(PRUint32 aNow)
     //  that it corresponds to the document on the server
     double probabilityFreshness;
     PRInt32 halfLife, age, docTime;
-    bool potentiallyStale;
+    PRBool potentiallyStale;
 
     docTime = GetFlag(LAST_MODIFIED_KNOWN) ? mLastModifiedTime : mLastUpdateTime;
     age = now - docTime;
@@ -293,10 +293,10 @@ nsCachedNetData::ComputeProfit(PRUint32 aNow)
         potentiallyStale = now > mExpirationTime;
         halfLife = mExpirationTime - mLastModifiedTime;
     } else if (GetFlag(STALE_TIME_KNOWN)) {
-        potentiallyStale = true;
+        potentiallyStale = PR_TRUE;
         halfLife = mStaleTime - docTime;
     } else {
-        potentiallyStale = true;
+        potentiallyStale = PR_TRUE;
         halfLife = TYPICAL_HALFLIFE;
     }
     
