@@ -29,6 +29,7 @@
 #include "nsIFileWidget.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsIComboBox.h"
+#include "nsISound.h"
 
 #include "nsWidgetsCID.h"
 
@@ -91,6 +92,8 @@ static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
+static NS_DEFINE_CID(kCSound,   	  NS_SOUND_CID);
+
 static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
 
 
@@ -217,7 +220,14 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance\n"));
       inst = (nsISupports *) (nsWidget *) new nsComboBox();
  	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsComboBox\n" ));
     }
+    else if (mClassID.Equals(kCSound)) {
+    	nsISound* aSound = nsnull;
+    	NS_NewSound(&aSound);
+        inst = (nsISupports*) aSound;
+ 	    PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsSound\n" ));
 
+    }
+	
 #if 1
 /* Widget we don't support */
     else if (mClassID.Equals(kCTabWidget)) {
