@@ -442,15 +442,15 @@ StreamListenerProxyEvent::StreamListenerProxyEvent(nsStreamListenerProxy* aProxy
     mProxy = aProxy;
     mURL   = aURL;
 
-    NS_ADDREF(mProxy);
-    NS_ADDREF(mURL);
+    NS_IF_ADDREF(mProxy);
+    NS_IF_ADDREF(mURL);
 
 }
 
 StreamListenerProxyEvent::~StreamListenerProxyEvent()
 {
-    NS_RELEASE(mProxy);
-    NS_RELEASE(mURL);
+    NS_IF_RELEASE(mProxy);
+    NS_IF_RELEASE(mURL);
 }
 
 void StreamListenerProxyEvent::InitEvent()
