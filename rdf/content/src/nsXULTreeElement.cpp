@@ -45,6 +45,7 @@
 #include "nsIContentIterator.h"
 #include "nsLayoutCID.h"
 #include "nsString.h"
+#include "nsITreeBoxObject.h"
 
 static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
@@ -271,78 +272,54 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   // First clear our selection out completely.
   ClearItemSelectionInternal();
 
-  // Get a range so we can create an iterator
-	nsCOMPtr<nsIDOMRange> range;
-	nsresult result;
-	result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
-						NS_GET_IID(nsIDOMRange), getter_AddRefs(range));
+  PRInt32 startIndex = 0,
+          endIndex = 0;
 
-	PRInt32 startIndex = 0;
-	PRInt32 endIndex = 0;
+  // Get the indices of the starting and ending rows
+  // so we can determine if this is a forward or backward
+  // selection
 
-  nsCOMPtr<nsIDOMNode> startParentNode;
-  nsCOMPtr<nsIDOMNode> endParentNode;
+  GetRowIndexOf(startItem, &startIndex);
+  GetRowIndexOf(aEndItem, &endIndex);
 
-  startItem->GetParentNode(getter_AddRefs(startParentNode));
-  aEndItem->GetParentNode(getter_AddRefs(endParentNode));
+  PRBool didSwap = (endIndex < startIndex);
+  nsCOMPtr<nsIDOMElement> currentItem;
+  // If it's a backward selection, swap the starting and
+  // ending items so we always iterate forward
+  if (didSwap) {
+      currentItem = do_QueryInterface(aEndItem);
+      aEndItem = startItem;
+      startItem = do_QueryInterface(currentItem);
+  } else
+      currentItem = do_QueryInterface(startItem);
 
-  nsCOMPtr<nsIContent> startParent = do_QueryInterface(startParentNode);
-  nsCOMPtr<nsIContent> endParent = do_QueryInterface(endParentNode);
+  nsCOMPtr<nsIBoxObject> boxObject;
+  mOuter->GetBoxObject(getter_AddRefs(boxObject));
+  nsCOMPtr<nsITreeBoxObject> treebox = do_QueryInterface(boxObject);
 
-  nsCOMPtr<nsIContent> startItemContent = do_QueryInterface(startItem);
-  nsCOMPtr<nsIContent> endItemContent = do_QueryInterface(aEndItem);
-  startParent->IndexOf(startItemContent, startIndex);
-	endParent->IndexOf(endItemContent, endIndex);
+  nsAutoString trueString; trueString.AssignWithConversion("true", 4);
+  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsIAtom> tag;
 
-	result = range->SetStart(startParentNode, startIndex);
-	result = range->SetEnd(endParentNode, endIndex+1);
-	if (NS_FAILED(result) || 
-      ((startParentNode.get() == endParentNode.get()) && (startIndex == endIndex+1)))
-	{
-		// Ranges need to be increasing, try reversing directions
-		result = range->SetStart(endParentNode, endIndex);
-		result = range->SetEnd(startParentNode, startIndex+1);
-		if (NS_FAILED(result))
-			return NS_ERROR_FAILURE;
-	}
 
-	// Create the iterator
-	nsCOMPtr<nsIContentIterator> iter;
-	result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-																							NS_GET_IID(nsIContentIterator), 
-																							getter_AddRefs(iter));
-	if (NS_FAILED(result))
-    return result;
+  while (PR_TRUE) {
+      content = do_QueryInterface(currentItem);
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag && tag.get() == kTreeItemAtom)
+          content->SetAttribute(kNameSpaceID_None, kSelectedAtom, 
+          trueString, /*aNotify*/ PR_TRUE);
+      if (currentItem == aEndItem)
+          break;
+      nsCOMPtr<nsIDOMElement> nextItem;
+      treebox->GetNextItem(currentItem, 1, getter_AddRefs(nextItem));
+      currentItem = nextItem;
+  }
 
-	// Iterate and select
-	nsAutoString trueString; trueString.AssignWithConversion("true", 4);
-	nsCOMPtr<nsIContent> content;
-	nsCOMPtr<nsIAtom> tag;
-
-	iter->Init(range);
-	result = iter->First();
-	while (NS_SUCCEEDED(result) && NS_ENUMERATOR_FALSE == iter->IsDone())
-	{
-		result = iter->CurrentNode(getter_AddRefs(content));
-		if (NS_FAILED(result) || !content)
-			return result; // result;
-
-		// If tag==item, Do selection stuff
-    content->GetTag(*getter_AddRefs(tag));
-    if (tag && tag.get() == kTreeItemAtom)
-    {
-      // Only select if we aren't already selected.
-			content->SetAttribute(kNameSpaceID_None, kSelectedAtom, 
-														trueString, /*aNotify*/ PR_TRUE);
-		}
-
-		result = iter->Next();
-		// XXX Deal with closed nodes here
-		// XXX Also had strangeness where parent of selected subrange was selected even 
-		// though it wasn't in the range.
-	}
-
-  SetCurrentItem(aEndItem);
+  // We want the focused item to end up being the last one the user clicked
+  if (didSwap)
+      SetCurrentItem(startItem);
+  else
+      SetCurrentItem(aEndItem);
   FireOnSelectHandler();
 
   return NS_OK;
