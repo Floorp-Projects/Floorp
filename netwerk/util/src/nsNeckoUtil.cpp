@@ -128,13 +128,13 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 }
 
 nsresult
-NS_NewLoadGroup(nsILoadGroup* *result)
+NS_NewLoadGroup(nsILoadGroup* parent, nsILoadGroup* *result)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    return serv->NewLoadGroup(nsnull, result); // nsnull needs to be a good parent
+    return serv->NewLoadGroup(parent, result); // nsnull needs to be a good parent
 }
 
 ////////////////////////////////////////////////////////////////////////////////
