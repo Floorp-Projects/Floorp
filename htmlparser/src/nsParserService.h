@@ -63,6 +63,7 @@ protected:
                        nsObserverEntry** aEntry);
 
   nsDeque  mEntries;  //each topic holds a list of observers per tag.
+  PRBool   mHaveNotifiedCategoryObservers;
 };
 
 #endif

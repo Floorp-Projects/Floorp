@@ -22,10 +22,12 @@
 #include "nsParserService.h"
 #include "nsHTMLEntities.h"
 #include "nsElementTable.h"
+#include "nsICategoryManager.h"
 
 nsParserService::nsParserService() : mEntries(0)
 {
   NS_INIT_ISUPPORTS();
+  mHaveNotifiedCategoryObservers = PR_FALSE;
 }
 
 nsParserService::~nsParserService()
@@ -185,6 +187,14 @@ nsParserService::GetTopicObservers(const nsAString& aTopic,
 nsObserverEntry*
 nsParserService::GetEntry(const nsAString& aTopic)
 {
+  if(!mHaveNotifiedCategoryObservers) {
+    mHaveNotifiedCategoryObservers = PR_TRUE;
+    NS_CreateServicesFromCategory("parser-service-category",
+                                  NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
+                                  "parser-service-start"); 
+  }
+
+
   PRInt32 index = 0;
   nsObserverEntry* entry = nsnull;
 

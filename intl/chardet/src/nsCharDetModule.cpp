@@ -134,10 +134,27 @@ static NS_METHOD nsMetaCharsetObserverRegistrationProc(nsIComponentManager *aCom
   nsCOMPtr<nsICategoryManager> 
     categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
   if (NS_SUCCEEDED(rv)) {
-    rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY, "Meta Charset",
-                        "service," NS_META_CHARSET_CONTRACTID,
-                        PR_TRUE, PR_TRUE,
-                        nsnull);
+    rv = categoryManager->AddCategoryEntry("parser-service-category", 
+                                           "Meta Charset Service",
+                                            NS_META_CHARSET_CONTRACTID,
+                                            PR_TRUE, PR_TRUE,
+                                            nsnull);
+  }
+  return rv;
+}
+
+static NS_METHOD nsMetaCharsetObserverUnegistrationProc(nsIComponentManager *aCompMgr,
+                                                        nsIFile *aPath,
+                                                        const char *registryLocation,
+                                                        const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> 
+    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = categoryManager->DeleteCategoryEntry("parser-service-category", 
+                                              NS_META_CHARSET_CONTRACTID,
+                                              PR_TRUE);
   }
   return rv;
 }
@@ -409,7 +426,8 @@ static const nsModuleComponentInfo components[] =
 {
  { "Meta Charset", NS_META_CHARSET_CID, 
     NS_META_CHARSET_CONTRACTID, nsMetaCharsetObserverConstructor, 
-    nsMetaCharsetObserverRegistrationProc, NULL},
+    nsMetaCharsetObserverRegistrationProc, nsMetaCharsetObserverUnegistrationProc,
+    NULL},
  { "Document Charset Info", NS_DOCUMENTCHARSETINFO_CID, 
     NS_DOCUMENTCHARSETINFO_CONTRACTID, nsDocumentCharsetInfoConstructor, 
     NULL, NULL},
