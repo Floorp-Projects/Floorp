@@ -1,3 +1,4 @@
+#ifndef MOZ_XUL_APP
 comm.jar:
 *       content/navigator/contents.rdf                 (resources/content/contents.rdf)
 *       content/navigator-region/contents.rdf          (resources/content/contents-region.rdf)
@@ -78,3 +79,4 @@ en-win.jar:
 *       locale/en-US/navigator-platform/contents.rdf        (resources/locale/en-US/win/contents-platform.rdf)
         locale/en-US/navigator-platform/platformNavigationBindings.dtd (resources/locale/en-US/win/platformNavigationBindings.dtd)
         locale/en-US/navigator-platform/navigator.properties (resources/locale/en-US/win/navigator.properties)
+#endif
