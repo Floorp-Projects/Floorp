@@ -28,6 +28,12 @@
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsINameSpaceManager.h" 
+#include "nsIXULTreeSlice.h"
+#include "nsIMonument.h"
+#include "nsIBoxLayout.h"
+#include "nsMonumentLayout.h"
+
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 //
 // NS_NewXULTreeCellFrame
@@ -80,6 +86,77 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     {
       return NS_ERROR_FAILURE;
     }
+
+    // If we are in either the first 2 pixels or the last 2 pixels, we're going to
+    // do something really strange.  Check for an adjacent splitter.
+    PRBool left = PR_FALSE;
+    PRBool right = PR_FALSE;
+    if (mRect.x + mRect.width - 60 < aPoint.x)
+      right = PR_TRUE;
+    else if (mRect.x + 60 > aPoint.x)
+      left = PR_TRUE;
+
+    if (left || right) {
+      // Figure out if we're a header.
+      nsIFrame* grandpa;
+      mParent->GetParent(&grandpa);
+      nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(grandpa));
+      if (!slice) {
+        // We are a header.
+        // Determine our index.
+        nsCOMPtr<nsIContent> par;
+        mParent->GetContent(getter_AddRefs(par));
+        PRInt32 i;
+        par->IndexOf(mContent, i);
+
+        // Now find the nth column in the other temple.
+        nsCOMPtr<nsIBox> box(do_QueryInterface(mParent));
+        nsCOMPtr<nsIBoxLayout> lm;
+        box->GetLayoutManager(getter_AddRefs(lm));
+        nsCOMPtr<nsIMonument> mon(do_QueryInterface(lm));
+        nsTempleLayout* temple = nsnull;
+        nsIBox* templeBox = nsnull;
+        mon->GetOtherTemple(box, &temple, &templeBox);
+        
+        nsMonumentIterator iter(templeBox);
+        nsIBox* child = nsnull;
+        nsObeliskLayout* ob;
+        PRInt32 currIndex = 0;
+        if (left)
+          i--;
+
+        do {
+          if (i < 0) break;
+
+          iter.GetNextObelisk(&ob, PR_TRUE);
+          iter.GetBox(&child);
+
+          if (currIndex >= i)
+            break;
+
+          currIndex++;
+
+        } while (child);
+
+        nsIBox* splitBox = nsnull;
+        if (child) 
+          child->GetNextBox(&splitBox);
+        nsIFrame* splitter = nsnull;
+        if (splitBox)
+          splitBox->QueryInterface(kIFrameIID, (void**)&splitter); 
+        nsCOMPtr<nsIAtom> tag;
+        nsCOMPtr<nsIContent> content;
+        if (splitter) {
+          splitter->GetContent(getter_AddRefs(content));
+          content->GetTag(*getter_AddRefs(tag));
+          if (tag.get() == nsXULAtoms::splitter) {
+            *aFrame = splitter;
+            return NS_OK;
+          }
+        }
+      }
+    }
+
     nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
     nsCOMPtr<nsIContent> content;
     if (result == NS_OK) {
