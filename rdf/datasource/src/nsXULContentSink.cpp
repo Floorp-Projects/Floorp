@@ -968,7 +968,15 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
-        SplitQualifiedName(key, nameSpaceID, attr);
+        attr = key;
+        nsIAtom* prefix = CutNameSpacePrefix(attr);
+        if (prefix != nsnull)
+        {
+            SplitQualifiedName(key, nameSpaceID, attr);
+            NS_RELEASE(prefix);
+        }
+        else
+            nameSpaceID = kNameSpaceID_None; // Unqualified attributes have a namespace of none (always)
 
 		// Look for XUL:ID
         if (nameSpaceID != kNameSpaceID_None)
