@@ -309,16 +309,15 @@
 
   function DoPreferences()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
+    var prefsCore = XPAppCoresManager.Find("PrefsCore");
+    if (!prefsCore) {
+      prefsCore = new PrefsCore();
+      if (prefsCore) {
+        prefsCore.Init("PrefsCore");
       }
     }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/samples/PrefsWindow.html",
-                             window);
+    if (prefsCore) {
+      prefsCore.ShowWindow(window);
     }
   }
 
