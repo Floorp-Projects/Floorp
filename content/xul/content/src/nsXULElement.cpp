@@ -3446,7 +3446,14 @@ NS_IMETHODIMP
 RDFElementImpl::GetMappedAttributeImpact(const nsIAtom* aAttribute, 
                                          PRInt32& aHint) const
 {
-  aHint = NS_STYLE_HINT_CONTENT;  // we never map attribtes to style
+  aHint = NS_STYLE_HINT_CONTENT;  // we never map attributes to style
+  if (mTag == kTreeColAtom) {
+    // Ok, we almost never map attributes to style. ;)
+    // The width attribute of a treecol is an exception to this rule.
+    nsCOMPtr<nsIAtom> widthAtom = dont_AddRef(NS_NewAtom("width"));
+    if (widthAtom == aAttribute)
+      aHint = NS_STYLE_HINT_REFLOW;
+  }
   return NS_OK;
 }
 
