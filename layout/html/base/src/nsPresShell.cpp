@@ -477,6 +477,7 @@ PresShell::Init(nsIDocument* aDocument,
   if (!NS_SUCCEEDED(result))
     return result;
   selection->Clear();//clear all old selection
+  // XXX This code causes the document object (and the entire content model) to be leaked...
 #if 0
   nsCOMPtr<nsIDOMRange>range;
   if (NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
