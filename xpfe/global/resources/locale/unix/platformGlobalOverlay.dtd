@@ -4,8 +4,10 @@
 <!ENTITY closeCmd.key						"W">  
 <!ENTITY closeCmd.accesskey					"c">
 
-<!ENTITY quitApplicationCmd.label			"Exit"> 
+<!ENTITY quitApplicationCmd.label			"Quit"> 
 <!ENTITY quitApplicationCmd.key				"Q"> 
+<!ENTITY quitApplicationCmd.accesskey		"q">
 
 <!ENTITY redoCmd.label						"Redo">  
 <!ENTITY redoCmd.key						"Z">  
+<!ENTITY redoCmd.accesskey					"r">

@@ -55,8 +55,27 @@ Rights Reserved.
 	<commandset id="globalEditMenuItems"/>
 </commands>
 
+<keyset id="keyset">
+	<!-- File Menu -->
+	<key id="key_newNavigator"/>
+	<key id="key_newMessage"/>
+	<key id="key_close"/>
+	<key id="key_quit"/>
+	<!-- Edit Menu -->
+	<key id="key_undo"/>
+	<key id="key_redo"/>
+	<key id="key_cut"/>
+	<key id="key_copy"/>
+	<key id="key_paste"/>
+	<key id="key_delete"/>
+	<key id="key_selectAll"/>
+	<key id="key_preferences"/>
+</keyset>
+
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
+	<broadcaster id="cmd_newNavigator"/>
+	<broadcaster id="cmd_newMessage"/>
 	<broadcaster id="cmd_close" oncommand="CloseMessenger()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
@@ -70,81 +89,70 @@ Rights Reserved.
 				 valueMessage="&deleteMsgCmd.label;"
 				 valueMessages="&deleteMsgsCmd.label;"/>
 	<broadcaster id="cmd_selectAll"/>
+	<broadcaster id="cmd_preferences"/>
+
+	<broadcaster id="Messenger:Throbber" busy="false"/>
+	<broadcaster id="Messenger:Status"/>
+	<broadcaster id="Messenger:LoadingProgress"/>
 </broadcasterset>
 
-<keyset id="keyset">
-	<!-- File Menu -->
-	<key id="key_close"/>
-	<key id="key_quit"/>
-	<!-- Edit Menu -->
-	<key id="key_undo"/>
-	<key id="key_redo"/>
-	<key id="key_cut"/>
-	<key id="key_copy"/>
-	<key id="key_paste"/>
-	<key id="key_delete"/>
-	<key id="key_selectAll"/>
-</keyset>
+  <!-- The main mail three pane frame -->
+  <box align="horizontal" style="height:100px" flex="1">
+    <box id="sidebarbox" />
+    <splitter id="sidebarsplitter" collapse="before" persist="state"/>
+    <box align="vertical"  flex="1"  style="border-left:solid black 1px">
+      <toolbox>
+        <menubar>
+          <menu id="menu_File">
+            <menupopup id="menu_FilePopup">
+              <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
+              <menu id="menu_New">
+                <menupopup>
+                  <menuitem value="&newFolderCmd.label;" oncommand="MsgNewFolder();"/>
+                  <menuitem value="&newAccountCmd.label;" oncommand="MsgNewAccount();"/>
+                  <menuseparator/>
+                  <menuitem id="menu_newNavigator"/>
+                  <menuitem id="menu_newMessage"/>
+                  <menuitem id="cmd_newCard"/>
+                </menupopup>
+              </menu>
 
-  <broadcaster id="Messenger:Throbber" busy="false"/>
-  <broadcaster id="Messenger:Status"/>
-  <broadcaster id="Messenger:LoadingProgress"/>
-     <!-- The main mail three pane frame -->
-    <box align="horizontal" style="height:100px" flex="1">
-      <box id="sidebarbox" />
-      <splitter id="sidebarsplitter" collapse="before" persist="state"/>
-      <box align="vertical"  flex="1"  style="border-left:solid black 1px">
-       <toolbox>
-     <menubar>
-    <menu id="menu_File">
-	  <menupopup id="menu_FilePopup">
-      <menu value="&newMenu.label;">
-        <menupopup>
-		<menuitem value="&newNavCmd.label;" oncommand="NewBrowserWindow();"/>
-        <menuitem value="&newMessageCmd.label;" oncommand="MsgNewMessage();"/>
-        <menuitem value="&newBlankPageCmd.label;" oncommand="NewBlankPage();"/>
-        <menuseparator/>
-        <menuitem value="&newPageFromTemplate.label;" oncommand="TemplatePage();"/>
-        <menuitem value="&newPageFromWizard.label;" oncommand="WizardPage();"/>
-		</menupopup>
-      </menu>
-      <menuitem value="&newFolderCmd.label;" oncommand="MsgNewFolder();"/>
-      <menuitem value="&openAttachmentCmd.label;" oncommand="MsgOpenAttachment();"/>
-      <menuseparator/>
-      <menuitem id="menu_close"/>
-      <menu value="&saveAsMenu.label;">
-        <menupopup>
-		<menuitem value="&saveAsFileCmd.label;" oncommand="MsgSaveAsFile();"/>
-        <menuitem value="&saveAsTemplateCmd.label;" oncommand="MsgSaveAsTemplate();"/>
-		</menupopup>
-      </menu>
-      <menuseparator/>
-      <menuitem value="&getNewMsgCmd.label;" oncommand="MsgGetMessage();"/>
-      <menuitem value="&sendUnsentCmd.label;" oncommand="MsgSendUnsentMsg();"/>
-      <menuitem value="&loadFirstDraft.label;" oncommand="MsgLoadFirstDraft();"/>      
-      <menuitem value="&emptyTrashCmd.label;" oncommand="MsgEmptyTrash();"/>
-      <menuitem value="&subscribeCmd.label;" oncommand="MsgSubscribe();"/>
-	  <menuseparator/>
-	  <menuitem value="&renameFolder.label;" oncommand="MsgRenameFolder();"/>
-	  <menuitem value="&compactFolder.label;" oncommand="MsgCompactFolder();"/>
-      <menuseparator/>
-      <menuitem value="&importCmd.label;" oncommand="MsgImport();"/>
-      <menuseparator/>
-      <menu value="&offlineMenu.label;">
-        <menupopup>
-		<menuitem value="&workOfflineCmd.label;" oncommand="MsgWorkOffline();"/>
-        <menuitem value="&syncCmd.label;" oncommand="MsgSynchronize();"/>
-        <menuitem value="&getSelectedCmd.label;" oncommand="MsgGetSelectedMsg();"/>
-        <menuitem value="&getFlaggedCmd.label;" oncommand="MsgGetFlaggedMsg();"/>
-		</menupopup>
-      </menu>
-      <menuseparator/>
-      <menuitem id="menu_pageSetup"/>
-      <menuitem value="&printPreviewCmd.label;" oncommand="PrintPreview();"/>
-      <menuitem value="&printCmd.label;" oncommand="Print();"/>
-      <menuseparator/>
-	  </menupopup>
-    </menu>
+              <menuitem value="&openAttachmentCmd.label;" oncommand="MsgOpenAttachment();"/>
+              <menuseparator/>
+              <menuitem id="menu_close"/>
+              <menu value="&saveAsMenu.label;">
+                <menupopup>
+                  <menuitem value="&saveAsFileCmd.label;" oncommand="MsgSaveAsFile();"/>
+                  <menuitem value="&saveAsTemplateCmd.label;" oncommand="MsgSaveAsTemplate();"/>
+                </menupopup>
+              </menu>
+              <menuseparator/>
+              <menuitem value="&getNewMsgCmd.label;" oncommand="MsgGetMessage();"/>
+              <menuitem value="&sendUnsentCmd.label;" oncommand="MsgSendUnsentMsg();"/>
+              <menuitem value="&loadFirstDraft.label;" oncommand="MsgLoadFirstDraft();"/>      
+              <menuitem value="&emptyTrashCmd.label;" oncommand="MsgEmptyTrash();"/>
+              <menuitem value="&subscribeCmd.label;" oncommand="MsgSubscribe();"/>
+              <menuseparator/>
+              <menuitem value="&renameFolder.label;" oncommand="MsgRenameFolder();"/>
+              <menuitem value="&compactFolder.label;" oncommand="MsgCompactFolder();"/>
+              <menuseparator/>
+              <menuitem value="&importCmd.label;" oncommand="MsgImport();"/>
+              <menuseparator/>
+              <menu value="&offlineMenu.label;">
+                <menupopup>
+                  <menuitem value="&workOfflineCmd.label;" oncommand="MsgWorkOffline();"/>
+                  <menuitem value="&syncCmd.label;" oncommand="MsgSynchronize();"/>
+                  <menuitem value="&getSelectedCmd.label;" oncommand="MsgGetSelectedMsg();"/>
+                  <menuitem value="&getFlaggedCmd.label;" oncommand="MsgGetFlaggedMsg();"/>
+                </menupopup>
+              </menu>
+              <menuseparator/>
+              <menuitem id="menu_pageSetup"/>
+              <menuitem value="&printPreviewCmd.label;" oncommand="PrintPreview();"/>
+              <menuitem value="&printCmd.label;" oncommand="Print();"/>
+              <menuseparator/>
+            </menupopup>
+          </menu>
 	
 	<menu id="menu_Edit">
 		<menupopup>
@@ -155,7 +163,6 @@ Rights Reserved.
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
 			 <menuseparator/>
-			<menuitem value="This delete not yet working"/>
 			<menuitem id="menu_delete"/>
 			 <menuseparator/>
 			<menuitem value="&deleteMsgCmd.label;" oncommand="MsgDeleteMessage(false);"/>

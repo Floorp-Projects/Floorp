@@ -87,7 +87,6 @@ var folderListener = {
 /* Functions related to startup */
 function OnLoadMessenger()
 {
-
     verifyAccounts();
     
     loadStartPage();
@@ -99,6 +98,8 @@ function OnLoadMessenger()
     loadStartFolder();
 
     getFolderListener();
+    
+    goSetDefaultController(DefaultController);
 }
 
 function OnUnloadMessenger()
@@ -131,7 +132,6 @@ function saveWindowPosition()
     win.setAttribute( "height", h );
     win.setAttribute( "width", w );
     // save x, y, width, height
-
 }
 
 
@@ -277,8 +277,6 @@ function OnLoadFolderPane(folderTree)
 	folderTree.database.AddDataSource(accountManagerDataSource);
     folderTree.database.AddDataSource(folderDataSource);
 	folderTree.setAttribute('ref', 'msgaccounts:/');
-	
-	SetupCommandUpdateHandlers();
 }
 
 function OnLoadThreadPane(threadTree)

@@ -25,32 +25,31 @@ Rights Reserved.
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
 <!-- File menu items -->
-<!ENTITY newMenu.label "New"> 
-<!ENTITY newNavCmd.label ".Navigator Window">  
-<!ENTITY newMessageCmd.label "Message">  
-<!ENTITY newBlankPageCmd.label ".Blank Page">  
-<!ENTITY newPageFromTemplate.label ".Page from Template">  
-<!ENTITY newPageFromWizard.label ".Page from Wizard">  
-<!ENTITY newFolderCmd.label "New Folder...">  
-<!ENTITY openAttachmentCmd.label ".Open Attachment">  
-<!ENTITY saveAsMenu.label "Save As"> 
-<!ENTITY saveAsFileCmd.label "File">  
-<!ENTITY saveAsTemplateCmd.label "Template">  
-<!ENTITY getNewMsgCmd.label "Get New Messages">  
-<!ENTITY sendUnsentCmd.label "Send Unsent Messages">  
-<!ENTITY loadFirstDraft.label "Load First Draft Message">
-<!ENTITY subscribeCmd.label "Subscribe...">  
-<!ENTITY renameFolder.label "Rename Folder...">
-<!ENTITY compactFolder.label "Compact This Folder">
-<!ENTITY emptyTrashCmd.label "Empty Trash">  
-<!ENTITY importCmd.label ".Import...">  
-<!ENTITY offlineMenu.label ".Offline"> 
-<!ENTITY workOfflineCmd.label ".Work Offline">  
-<!ENTITY syncCmd.label ".Synchronize">  
-<!ENTITY getSelectedCmd.label ".Get Selected Messages">  
-<!ENTITY getFlaggedCmd.label ".Get Flagged Messages">  
-<!ENTITY printPreviewCmd.label ".Print Preview">  
-<!ENTITY printCmd.label "Print">  
+<!ENTITY newMessage.label				"New Message">  
+<!ENTITY newMessage.accesskey			"n">  
+<!ENTITY newFolderCmd.label				"Folder...">  
+<!ENTITY newFolderCmd.accesskey			"f">  
+<!ENTITY newAccountCmd.label			"Account...">  
+<!ENTITY newAccountCmd.accesskey		"a">  
+<!ENTITY openAttachmentCmd.label		".Open Attachment">  
+<!ENTITY saveAsMenu.label				"Save As"> 
+<!ENTITY saveAsFileCmd.label			"File">  
+<!ENTITY saveAsTemplateCmd.label		"Template">  
+<!ENTITY getNewMsgCmd.label				"Get New Messages">  
+<!ENTITY sendUnsentCmd.label			"Send Unsent Messages">  
+<!ENTITY loadFirstDraft.label			"Load First Draft Message">
+<!ENTITY subscribeCmd.label				"Subscribe...">  
+<!ENTITY renameFolder.label				"Rename Folder...">
+<!ENTITY compactFolder.label			"Compact This Folder">
+<!ENTITY emptyTrashCmd.label			"Empty Trash">  
+<!ENTITY importCmd.label				".Import...">  
+<!ENTITY offlineMenu.label				".Offline"> 
+<!ENTITY workOfflineCmd.label			".Work Offline">  
+<!ENTITY syncCmd.label					".Synchronize">  
+<!ENTITY getSelectedCmd.label			".Get Selected Messages">  
+<!ENTITY getFlaggedCmd.label			".Get Flagged Messages">  
+<!ENTITY printPreviewCmd.label			".Print Preview">  
+<!ENTITY printCmd.label					"Print">  
 
 <!-- Edit Menu -->
 <!ENTITY deleteMsgCmd.label "Delete Message">  

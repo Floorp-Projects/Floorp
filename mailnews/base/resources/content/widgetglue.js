@@ -24,6 +24,40 @@
  * and then calls a function/command in commandglue
  */
 
+// Default Controller object
+var DefaultController =
+{
+	IsCommandEnabled: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_undo":
+				return true;
+			
+			case "cmd_redo":
+				return true;
+			
+			default:
+				return false;
+		}
+	},
+
+	DoCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_undo":
+				messenger.Undo();
+				break;
+			
+			case "cmd_redo":
+				messenger.Redo();
+				break;
+		}
+	}
+};
+
+
 // Controller object for folder pane
 var FolderPaneController =
 {
@@ -552,23 +586,6 @@ function MsgSynchronize() {}
 function MsgGetSelectedMsg() {}
 function MsgGetFlaggedMsg() {}
 
-/* FIX ME - this should be handled in JS controllers
-
-function MsgEditUndo() 
-{
-    messenger.Undo();
-}
-
-function MsgEditRedo() 
-{
-    messenger.Redo();
-}
-
-function MsgEditCut() {}
-function MsgEditCopy() {}
-function MsgEditPaste() {}
-function MsgSelectAll() {}
-*/
 function MsgSelectThread() {}
 function MsgSelectFlaggedMsg() {}
 function MsgFind() {}

@@ -14,13 +14,13 @@
 	
 	<!-- quit -->
 	<menupopup id="menu_FilePopup">
-		<menuitem value="&quitApplicationCmd.label;" key="key_quit" observes="cmd_quit"/>
+		<menuitem value="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" observes="cmd_quit"/>
 	</menupopup>
 	<key id="key_quit" command="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
  	<broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
 	
 	<!-- Edit Menu -->
-	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" observes="cmd_redo"/>
+	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
 	<key id="key_redo" command="true" shift="true" key="&redoCmd.key;" observes="cmd_redo"/>
 	
 </overlay>		
