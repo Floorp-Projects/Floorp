@@ -107,14 +107,6 @@ NS_IMETHODIMP CBrowserShell::CommonConstruct()
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
   mWebBrowserAsWebNav = webNav;
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mWebBrowser));
-  NS_ENSURE_TRUE(treeItem, NS_ERROR_FAILURE);
-  mWebBrowserAsTreeItem = treeItem;
-  
-  nsCOMPtr<nsIWebProgress> asProgress(do_GetInterface(mWebBrowser));
-  NS_ENSURE_TRUE(asProgress, NS_ERROR_FAILURE);
-  mWebBrowserAsProgress = asProgress;
-  
   return NS_OK;
 }
 
@@ -198,9 +190,15 @@ void CBrowserShell::EventMouseUp(const EventRecord	&inMacEvent)
 
 
 void CBrowserShell::AdjustCursorSelf(Point				/* inPortPt */,
-                                     const EventRecord&	/* inMacEvent */)
+                                     const EventRecord&	inMacEvent)
 {
-   // Do nothing - mozilla takes care of this during null events on mouse moved events
+   static Point	lastWhere = {0, 0};
+
+   if ((*(long*)&lastWhere != *(long*)&inMacEvent.where))
+   {
+      HandleMouseMoved(inMacEvent);
+      lastWhere = inMacEvent.where;
+   }
 }
 
 
@@ -241,32 +239,11 @@ void CBrowserShell::SpendTime(const EventRecord&		inMacEvent)
          // We have to feed it suspendResumeMessages for it to know
 
      	  unsigned char eventType = ((inMacEvent.message >> 24) & 0x00ff);
-     	  if (eventType == mouseMovedMessage)
-     	    HandleMouseMoved(inMacEvent);
-     	  else if (eventType == suspendResumeMessage)
+     	  if (eventType == suspendResumeMessage)
    	      mMessageSink.DispatchOSEvent(const_cast<EventRecord&>(inMacEvent), GetMacPort());
      }
      break;
-  	
-  	case nullEvent:
-  	{
-  		static Point	lastWhere = {0, 0};
-
-    	if ((*(long*)&lastWhere != *(long*)&inMacEvent.where))
-    	{
-    	  HandleMouseMoved(inMacEvent);
-    		lastWhere = inMacEvent.where;
-    	}
-
-  		Repeater::DoIdlers(inMacEvent);
-  		// yield to other threads
-  		::PR_Sleep(PR_INTERVAL_NO_WAIT);
-  	}
-  	break;
   }
-    
-	Repeater::DoRepeaters(inMacEvent);
-
 }
 
 //*****************************************************************************
@@ -311,6 +288,42 @@ NS_METHOD CBrowserShell::GetWebBrowser(nsIWebBrowser** aBrowser)
 
    *aBrowser = mWebBrowser;
    NS_IF_ADDREF(*aBrowser);
+   return NS_OK;
+}
+
+
+NS_METHOD CBrowserShell::SetWebBrowser(nsIWebBrowser* aBrowser)
+{
+   NS_ENSURE_ARG(aBrowser);
+
+	FocusDraw();
+	
+	CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(GetMacPort()));
+	NS_ENSURE_TRUE(ourWindow, NS_ERROR_FAILURE);
+	
+	nsCOMPtr<nsIWidget>  aWidget;
+	ourWindow->GetWidget(getter_AddRefs(aWidget));
+	NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
+	
+	mWebBrowser = aBrowser;
+
+   nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(mWebBrowser));
+   NS_ENSURE_TRUE(baseWin, NS_ERROR_FAILURE);
+   mWebBrowserAsBaseWin = baseWin;
+  
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+   mWebBrowserAsWebNav = webNav;
+
+	Rect portFrame;
+	CalcPortFrameRect(portFrame);
+	nsRect   r(portFrame.left, portFrame.top, portFrame.right - portFrame.left, portFrame.bottom - portFrame.top);
+		
+   mWebBrowserAsBaseWin->InitWindow(aWidget->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
+   mWebBrowserAsBaseWin->Create();
+   
+   AdjustFrame();   
+
    return NS_OK;
 }
 
