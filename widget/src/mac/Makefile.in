@@ -87,6 +87,7 @@ CPPSRCS         = nsAppShell.cpp \
 		nsWidgetSupport.cpp \
 		nsWindow.cpp \
 		nsMacNativeUnicodeConverter.cpp \
+		nsStylClipboardUtils.cpp \
 		$(GFX_LCPPSRCS) \
 		$(NULL)
 
