@@ -232,7 +232,7 @@ public:
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     nsIInputStream* aPostDataStream=nsnull,
+                     nsIInputStream* aPostDataStream=nsnull,                     
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
@@ -289,6 +289,7 @@ public:
                          nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
+  NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState);
 
   // nsIWebShellServices
   NS_IMETHOD LoadDocument(const char* aURL, 
@@ -2818,6 +2819,31 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
+{
+  nsresult rv = NS_OK;
+  // XXX Need to think about what to do for framesets.
+  // For now, return an error if this webshell 
+  // contains a frame or a frameset document.
+  if (mParent || mChildren.Count() > 0) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  // Ask the pres shell for the history state
+  if (mContentViewer) {
+    nsCOMPtr<nsIDocumentViewer> docv = do_QueryInterface(mContentViewer);
+    if (nsnull != docv) {
+      nsCOMPtr<nsIPresShell> shell;
+      rv = docv->GetPresShell(*getter_AddRefs(shell));
+      if (NS_SUCCEEDED(rv)) {
+        rv = shell->GetHistoryState((nsILayoutHistoryState**) aLayoutHistoryState);
+      }
+    }
+  }
+
+  return rv;
+}
 
 //----------------------------------------------------------------------
 // Web Shell Services API

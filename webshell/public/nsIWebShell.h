@@ -461,6 +461,11 @@ public:
   NS_IMETHOD SetUrlDispatcher(nsIUrlDispatcher * anObserver) = 0;
   NS_IMETHOD GetUrlDispatcher(nsIUrlDispatcher *& aResult)=0;
 
+  /**
+   * Get the history state for the document.
+   */
+  NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState) = 0;
+
 };
 
 extern "C" NS_WEB nsresult
