@@ -27,6 +27,7 @@ MODULE = intl
 
 XPIDLSRCS = \
 	.\nsIStringBundle.idl \
+	.\nsIAcceptLang.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
