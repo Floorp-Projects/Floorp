@@ -610,16 +610,16 @@ nsHTTPHandler::InitUserAgentComponents()
     if (GetVersionEx(&info)) {
         if ( info.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
             if (info.dwMajorVersion      == 3) {
-                mAppOSCPU = "NT3.51";
+                mAppOSCPU = "WinNT3.51";
             }
             else if (info.dwMajorVersion == 4) {
-                mAppOSCPU = "NT4.0";
+                mAppOSCPU = "WinNT4.0";
             }
             else if (info.dwMajorVersion == 5) {
                 mAppOSCPU = "Windows NT 5.0";
             }
             else {
-                mAppOSCPU = "NT";
+                mAppOSCPU = "WinNT";
             }
         } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
             if (info.dwMinorVersion > 0)
