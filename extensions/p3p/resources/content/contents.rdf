@@ -46,7 +46,7 @@
     chrome:displayName="Platform for Privacy Preferences Project"
     chrome:author="Netscape Communications Corporation"
     chrome:name="p3p"
-    chrome:localeVersion="1.5a">
+    chrome:localeVersion="1.5b">
   </RDF:Description>
 
   <RDF:Seq about="urn:mozilla:overlays">

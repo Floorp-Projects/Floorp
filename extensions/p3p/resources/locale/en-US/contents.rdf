@@ -53,7 +53,7 @@
   </RDF:Description>
 
   <RDF:Description about="urn:mozilla:locale:en-US:p3p"
-    chrome:localeVersion="1.5a"/>
+    chrome:localeVersion="1.5b"/>
 
 </RDF:RDF>
 
