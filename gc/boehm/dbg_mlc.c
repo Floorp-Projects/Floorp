@@ -155,6 +155,8 @@ ptr_t p;
     PRINT_CALL_CHAIN(ohdr);
 }
 
+#if defined(SAVE_CALL_CHAIN)
+
 #include "call_tree.h"
 
 #define CALL_TREE(ohdr) ((call_tree*)ohdr->oh_ci[0].ci_pc)
@@ -235,7 +237,7 @@ void GC_trace_object(ptr_t p, int verbose)
             wend = (word*)((word)wp + scan->oh_sz);
             while (wp < wend) {
                 p = (ptr_t) *wp++;
-                // if (verbose) GC_err_printf1("\t0x%08lX\n", p);
+                if (verbose) GC_err_printf1("\t0x%08lX\n", p);
                 if (IS_PLAUSIBLE_POINTER(p)) {
                     p = GC_base(p);
                     if (p && GC_has_debug_info(p)) {
@@ -278,6 +280,8 @@ void GC_trace_object(ptr_t p, int verbose)
     UNLOCK();
     ENABLE_SIGNALS();
 }
+
+#endif /* SAVE_CALL_CHAIN */
 
 void GC_debug_print_heap_obj_proc(p)
 ptr_t p;
