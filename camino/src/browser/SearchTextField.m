@@ -180,11 +180,17 @@
 
         // If the user hit tab, go to the next key view
       case NSTabTextMovement:
-        [[self window] selectKeyViewFollowingView:self];
+      {
+//        [[self window] selectKeyViewFollowingView:self];
+        // we should be able to just select the next key view, but at some point we have
+        // to break the cycle and kick the user off the toolbar. Do it here. Selecting
+        // the window allows us to tab into the content area.
+        NSWindow* wind = [self window];
+        [wind makeFirstResponder:wind];
 
-        if ([[self window] firstResponder] == [self window])
-          [self selectText:self];
-      
+//        if ([[self window] firstResponder] == [self window])
+//          [self selectText:self];
+      }
           break;
 
         // If the user hit shift-tab, go to the key view before us

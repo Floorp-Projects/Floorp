@@ -644,6 +644,21 @@ static NSArray* sToolbarDefaults = nil;
       // actually move the window
       [[self window] setFrameOrigin: testBrowserFrame.origin];
     }
+    
+    // if the search field is not on the toolbar, nil out the nextKeyView of the
+    // url bar so that we know to break off the toolbar when tabbing. If it is,
+    // and we're running on pre-panther, set the search bar as the tab view. We
+    // don't want to do this on panther because it will do it for us.
+    if (![mSearchBar window])
+      [mURLBar setNextKeyView:nil];
+    else {
+      const float kPantherAppKit = 743.0;
+      if (NSAppKitVersionNumber < kPantherAppKit)
+        [mURLBar setNextKeyView:mSearchBar];
+    }
+    
+    // needed when full keyboard access is enabled
+    [mLock setRefusesFirstResponder:YES];
 }
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
@@ -728,6 +743,15 @@ static NSArray* sToolbarDefaults = nil;
     mSidebarToolbarItem = item;
   else if ( [[item itemIdentifier] isEqual:BookmarkToolbarItemIdentifier] )
     mBookmarkToolbarItem = item;
+  else if ( [[item itemIdentifier] isEqual:SearchToolbarItemIdentifier] ) {
+    // restore the next key view of the url bar to the search bar, but only
+    // if we're on jaguar. On panther, we really don't know that it should
+    // be the search toolbar (it could be another toolbar button if full keyboard
+    // access is enabled) but it will fix itself automatically.
+    const float kPantherAppKit = 743.0;
+    if (NSAppKitVersionNumber < kPantherAppKit)
+      [mURLBar setNextKeyView:mSearchBar];
+  }
 }
 
 //
@@ -746,6 +770,12 @@ static NSArray* sToolbarDefaults = nil;
     [self stopThrobber];
   else if ( [[item itemIdentifier] isEqual:BookmarkToolbarItemIdentifier] )
     mBookmarkToolbarItem = nil;
+  else if ( [[item itemIdentifier] isEqual:SearchToolbarItemIdentifier] ) {
+    // search bar removed, set next key view of url bar to nil which tells
+    // it to break out of the toolbar tab ring on a tab.
+    [mURLBar setNextKeyView:nil];
+  }
+
 }
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar

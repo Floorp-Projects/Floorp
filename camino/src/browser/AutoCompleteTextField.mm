@@ -761,10 +761,15 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       [self completeSelectedResult];
       return YES;
     } else {
-      // The usual nextKeyView business in the NIB should handle but it doesn't
-      // this is basically a benign hack
-      NSWindow* wind = [self window];
-      [wind makeFirstResponder:wind];
+      // use the normal key view unless we know more about our siblings and have
+      // explicitly nil'd out the next key view. In that case, select the window
+      // to break out of the toolbar and tab through the rest of the window
+      if ([self nextKeyView])
+        [[self window] selectKeyViewFollowingView:self];
+      else {
+        NSWindow* wind = [self window];
+        [wind makeFirstResponder:wind];
+      }
     }
   } else if (command == @selector(deleteBackward:) || 
              command == @selector(deleteForward:)) {

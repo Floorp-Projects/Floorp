@@ -43,6 +43,11 @@
   [super dealloc];
 }
 
+- (BOOL)acceptsFirstResponder
+{
+  return NO;
+}
+
 - (void) resetCursorRects
 {
   // XXX provide image for drag-hand cursor
