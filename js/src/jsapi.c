@@ -2064,24 +2064,37 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 	goto error;
     }
 
+    /* Grow as needed if we don't know the exact amount ahead of time. */
     n = JSVAL_TO_INT(num_properties);
+    if (n <= 0)
+        n = 8;
 
     /* Create an array of jsids large enough to hold all the properties */
     ida = js_NewIdArray(cx, n);
-    if (n) {
-	i = 0;
-	vector = &ida->vector[0];
-	while (1) {
-	    if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &id))
+    if (!ida)
+    	goto error;
+
+    i = 0;
+    vector = &ida->vector[0];
+    while (1) {
+	if (i == ida->length) {
+	    /* Grow length by factor of 1.5 instead of doubling. */
+	    jsint newlen = ida->length + (((jsuint)ida->length + 1) >> 1);
+	    ida = js_GrowIdArray(cx, ida, newlen);
+	    if (!ida)
 		goto error;
-
-	    /* No more jsid's to enumerate ? */
-	    if (iter_state == JSVAL_NULL)
-		break;
-	    vector[i++] = id;
+	    vector = &ida->vector[0];
 	}
-    }
 
+	if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &id))
+	    goto error;
+
+	/* No more jsid's to enumerate ? */
+	if (iter_state == JSVAL_NULL)
+	    break;
+	vector[i++] = id;
+    }
+    ida->length = i;
     return ida;
 
 error:

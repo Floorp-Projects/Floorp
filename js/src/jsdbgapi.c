@@ -723,6 +723,8 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 
 /************************************************************************/
 
+/* XXXbe this all needs to be reworked to avoid requiring JSScope types. */
+
 JS_PUBLIC_API(JSScopeProperty *)
 JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
 {
@@ -777,17 +779,24 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 {
+    JSClass *clasp;
     JSScope *scope;
     uint32 i, n;
     JSPropertyDesc *pd;
     JSScopeProperty *sprop;
     jsval state;
-    jsid  num_prop;
 
-    if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &state, &num_prop))
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if (!OBJ_IS_NATIVE(obj) || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+			     JSMSG_CANT_DESCRIBE_PROPS, clasp->name);
+    	return JS_FALSE;
+    }
+    if (!clasp->enumerate(cx, obj))
 	return JS_FALSE;
-    scope = (JSScope *)obj->map;
+
     /* have no props, or object's scope has not mutated from that of proto */
+    scope = (JSScope *)obj->map;
     if (!scope->props ||
 	(OBJ_GET_PROTO(cx,obj) &&
 	 scope == (JSScope *)(OBJ_GET_PROTO(cx,obj)->map))) {
@@ -795,6 +804,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 	pda->array = NULL;
 	return JS_TRUE;
     }
+
     n = scope->map.freeslot;
     pd = JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
     if (!pd)

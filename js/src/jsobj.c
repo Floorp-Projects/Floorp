@@ -2330,6 +2330,15 @@ js_NewIdArray(JSContext *cx, jsint length)
     return ida;
 }
 
+extern JSIdArray *
+js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length)
+{
+    ida = JS_realloc(cx, ida, sizeof(JSIdArray) + (length - 1) * sizeof(jsval));
+    if (ida)
+	ida->length = length;
+    return ida;
+}
+
 /* Private type used to iterate over all properties of a native JS object */
 typedef struct JSNativeIteratorState {
     jsint next_index;   /* index into jsid array */
