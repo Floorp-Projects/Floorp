@@ -74,6 +74,7 @@ interface nsIPrintSettings : nsISupports
   const short kLegalPaperSize     = 1;
   const short kExecutivePaperSize = 2;
   const short kA4PaperSize        = 3;
+  const short kA3PaperSize        = 4;
 
   /**
    * Print Frame Constants

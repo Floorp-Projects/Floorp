@@ -72,7 +72,7 @@ static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_I
 /* 
  * Paper Names 
  */
-char* paper_string[]={ "Letter", "Legal", "Executive", "A4" };
+char* paper_string[]={ "Letter", "Legal", "Executive", "A4", "A3" };
 
 /* 
  * global
