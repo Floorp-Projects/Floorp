@@ -44,8 +44,9 @@
 #include <langinfo.h>
 #endif
 
-NS_DEFINE_IID(kIPosixLocaleIID,NS_IPOSIXLOCALE_IID);
-NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
+// {84B0F181-C6C7-11d2-B3B0-00805F8A6670}
+static NS_DEFINE_IID(kIPosixLocaleIID,NS_IPOSIXLOCALE_IID);
+static NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
 
 class nsUNIXCharset : public nsIPlatformCharset
 {
@@ -69,7 +70,7 @@ private:
   NS_IMETHOD VerifyCharset(nsString &aCharset);
 };
 
-NS_IMPL_ISUPPORTS(nsUNIXCharset, kIPlatformCharsetIID);
+NS_IMPL_ISUPPORTS1(nsUNIXCharset, nsIPlatformCharset);
 
 static nsURLProperties *gNLInfo = nsnull;
 static nsURLProperties *gInfo_deprecated = nsnull;
