@@ -352,6 +352,7 @@ widget/src/motif/Makefile
 widget/src/photon/Makefile
 widget/src/rhapsody/Makefile
 widget/src/xlib/Makefile
+widget/src/xlib/window_service/Makefile
 widget/src/xpwidgets/Makefile
 widget/tests/Makefile
 widget/tests/scribble/Makefile
