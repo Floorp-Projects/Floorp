@@ -418,7 +418,7 @@ nsresult nsTimerBeOS::Init(PRUint32 aDelay, PRUint32 aType)
         return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsTimerBeOS, kITimerIID);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimerBeOS, nsITimer);
 
 
 void nsTimerBeOS::Cancel()
