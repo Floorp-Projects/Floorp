@@ -2448,6 +2448,12 @@ HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseHTML", aNode, 0, this);
   if (nsnull != mHeadContext) {
+    if(mCurrentContext==mHeadContext) {
+      PRInt32 numContexts = mContextStack.Count();
+      // Pop off the second html context if it's not done earlier
+      mContextStack.RemoveElementAt(--numContexts);
+      mCurrentContext = nsnull;
+    }
     mHeadContext->End();
     delete mHeadContext;
     mHeadContext = nsnull;
