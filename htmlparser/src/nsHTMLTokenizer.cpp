@@ -123,9 +123,6 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
   if (aParseMode==eDTDMode_strict) {
     mFlags = NS_IPARSER_FLAG_STRICT_MODE;
   }
-  else if (aParseMode==eDTDMode_transitional) {
-    mFlags = NS_IPARSER_FLAG_TRANSITIONAL_MODE;
-  }
   else if (aParseMode==eDTDMode_quirks)  {
     mFlags = NS_IPARSER_FLAG_QUIRKS_MODE;
   }
@@ -139,17 +136,13 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
   if (aDocType==ePlainText) {
     mFlags |= NS_IPARSER_FLAG_PLAIN_TEXT;
   }
-  else if (aDocType==eXMLText) {
-    mFlags |= NS_IPARSER_FLAG_XML_TEXT;
+  else if (aDocType==eXML) {
+    mFlags |= NS_IPARSER_FLAG_XML;
   }
-  else if (aDocType==eXHTMLText) {
-    mFlags |= NS_IPARSER_FLAG_XHTML_TEXT;
-  }
-  else if (aDocType==eHTML3Text) {
-    mFlags |= NS_IPARSER_FLAG_HTML3_TEXT;
-  }
-  else if (aDocType==eHTML4Text) {
-    mFlags |= NS_IPARSER_FLAG_HTML4_TEXT;
+  else if (aDocType==eHTML_Quirks ||
+           aDocType==eHTML3_Quirks ||
+           aDocType==eHTML_Strict) {
+    mFlags |= NS_IPARSER_FLAG_HTML;
   }
   
   mFlags |= (aCommand==eViewSource)? NS_IPARSER_FLAG_VIEW_SOURCE:NS_IPARSER_FLAG_VIEW_NORMAL;
@@ -541,7 +534,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         result=aScanner.Peek(theNextChar, 1);
         if(NS_OK==result) {
           // xml allow non ASCII tag name, consume as end tag. need to make xml view source work
-          PRBool isXML=(mFlags & (NS_IPARSER_FLAG_XML_TEXT | NS_IPARSER_FLAG_XHTML_TEXT));
+          PRBool isXML=(mFlags & NS_IPARSER_FLAG_XML);
           if(nsCRT::IsAsciiAlpha(theNextChar)||(kGreaterThan==theNextChar)|| 
              (isXML && (! nsCRT::IsAscii(theNextChar)))) { 
             result=ConsumeEndTag(aChar,aToken,aScanner);
@@ -621,7 +614,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
          // support XML like syntax to fix bugs like 44186
         if(!key.IsEmpty() && kForwardSlash==key.First() && text.IsEmpty()) {
           aToken->SetEmpty(PR_TRUE);
-          isUsableAttr = !(mFlags & (NS_IPARSER_FLAG_STRICT_MODE|NS_IPARSER_FLAG_TRANSITIONAL_MODE)); 
+          isUsableAttr = !(mFlags & NS_IPARSER_FLAG_STRICT_MODE); 
         }
         if(isUsableAttr) {
           theAttrCount++;

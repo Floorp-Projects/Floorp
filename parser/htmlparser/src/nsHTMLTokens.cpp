@@ -211,7 +211,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
   nsresult result=NS_OK;
-  if(aFlag & (NS_IPARSER_FLAG_HTML3_TEXT | NS_IPARSER_FLAG_HTML4_TEXT)) {
+  if (aFlag & NS_IPARSER_FLAG_HTML) {
     nsAutoString theSubstr;
     result=aScanner.GetIdentifier(theSubstr,PR_TRUE);
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
@@ -339,7 +339,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) 
   nsresult result=NS_OK;
   nsAutoString buffer;
   PRInt32 offset;
-  if(aFlag & (NS_IPARSER_FLAG_HTML3_TEXT | NS_IPARSER_FLAG_HTML4_TEXT)) {
+  if (aFlag & NS_IPARSER_FLAG_HTML) {
     nsAutoString theSubstr;
     result=aScanner.ReadUntil(theSubstr,kGreaterThan,PR_FALSE);
     if (NS_FAILED(result)) {
@@ -657,7 +657,6 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
      
     if (found && theTermStrPos != endPos) {
       if(!(aFlag & NS_IPARSER_FLAG_STRICT_MODE) &&
-         !(aFlag & NS_IPARSER_FLAG_TRANSITIONAL_MODE) &&
          !theLastIteration && !aIgnoreComments) {
         nsReadingIterator<PRUnichar> endComment(ltOffset);
         endComment.advance(5);
@@ -1008,7 +1007,7 @@ CCommentToken::CCommentToken(const nsAReadableString& aName) : CHTMLToken(eHTMLT
 
 /*
  *  This method consumes a comment using the (CORRECT) comment parsing
- *  algorithm supplied by W3C. 
+ *  algorithm according to ISO 8879 (SGML).
  *  
  *  @update  gess 01/04/99
  *  @param   

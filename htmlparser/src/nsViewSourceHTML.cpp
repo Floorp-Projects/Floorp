@@ -338,7 +338,7 @@ CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
   mSink=0;
   mLineNumber=0;
   mTokenizer=0;
-  mDocType=eHTML3Text;
+  mDocType=eHTML3_Quirks; // why?
   mValidator=0;
   mHasOpenRoot=PR_FALSE;
   mHasOpenBody=PR_FALSE;

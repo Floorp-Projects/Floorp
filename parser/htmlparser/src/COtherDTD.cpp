@@ -141,7 +141,7 @@ COtherDTD::COtherDTD() : nsIDTD() {
   mComputedCRC32=0;
   mExpectedCRC32=0;
   mDTDState=NS_OK;
-  mDocType=eHTML4Text;
+  mDocType=eHTML_Strict;
   mHadFrameset=PR_FALSE;
   mHadBody=PR_FALSE;
   mHasOpenScript=PR_FALSE;
@@ -264,7 +264,6 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
       else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
         switch(aParserContext.mDTDMode) {
           case eDTDMode_strict:
-          case eDTDMode_transitional:
             result=ePrimaryDetect;
             break;
           default:
@@ -282,7 +281,6 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
             if(!theBufHasXML) {
               switch(aParserContext.mDTDMode) {
                 case eDTDMode_strict:
-                case eDTDMode_transitional:
                   result=ePrimaryDetect;
                   break;
                 default:
@@ -326,7 +324,7 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::WillBuildModel(), this=%p\n", this));
 
     mDocType=aParserContext.mDocType;
-    mBodyContext->mFlags.mTransitional=PRBool(aParserContext.mDTDMode==eDTDMode_transitional);
+    mBodyContext->mFlags.mTransitional=PR_FALSE;
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);

@@ -73,10 +73,10 @@ enum eCRCQuality {
 
 enum eParserDocType {
   ePlainText = 0,
-  eXMLText,
-  eXHTMLText,
-  eHTML3Text,
-  eHTML4Text
+  eXML,
+  eHTML_Quirks,
+  eHTML3_Quirks, // separate, for editor output, since HTML pre-4.0 lacks tbody
+  eHTML_Strict
 };
 
 
@@ -385,15 +385,12 @@ const PRUnichar kNullCh           = '\0';
 #define NS_IPARSER_FLAG_UNKNOWN_MODE         0x00000000
 #define NS_IPARSER_FLAG_QUIRKS_MODE          0x00000002
 #define NS_IPARSER_FLAG_STRICT_MODE          0x00000004
-#define NS_IPARSER_FLAG_TRANSITIONAL_MODE    0x00000008
 #define NS_IPARSER_FLAG_AUTO_DETECT_MODE     0x00000010
 #define NS_IPARSER_FLAG_VIEW_NORMAL          0x00000020
 #define NS_IPARSER_FLAG_VIEW_SOURCE          0x00000040
 #define NS_IPARSER_FLAG_VIEW_ERRORS          0x00000080
 #define NS_IPARSER_FLAG_PLAIN_TEXT           0x00000100
-#define NS_IPARSER_FLAG_XML_TEXT             0x00000200
-#define NS_IPARSER_FLAG_XHTML_TEXT           0x00000400
-#define NS_IPARSER_FLAG_HTML3_TEXT           0x00000800
-#define NS_IPARSER_FLAG_HTML4_TEXT           0x00001000 
+#define NS_IPARSER_FLAG_XML                  0x00000200
+#define NS_IPARSER_FLAG_HTML                 0x00000400
 
 #endif 

@@ -184,10 +184,9 @@ eAutoDetectResult CWellFormedDTD::CanParse(CParserContext& aParserContext,nsStri
       result=ePrimaryDetect;
     }
     else {
-      if(-1<aBuffer.Find("<?xml ")) {
-        if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType( NS_ConvertASCIItoUCS2(kXMLTextContentType) );
-        }
+      if (0 == aParserContext.mMimeType.Length() &&
+          kNotFound != aBuffer.Find("<?xml ")) {
+        aParserContext.SetMimeType(NS_ConvertASCIItoUCS2(kXMLTextContentType));
         result=eValidDetect;
       }
     }

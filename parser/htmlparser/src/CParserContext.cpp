@@ -133,19 +133,12 @@ void CParserContext::SetMimeType(const nsString& aMimeType){
   mDocType=ePlainText;
 
   if(mMimeType.EqualsWithConversion(kHTMLTextContentType))
-    mDocType=eHTML4Text;
-  else if(mMimeType.EqualsWithConversion(kXMLTextContentType))
-    mDocType=eXMLText;
-  else if(mMimeType.EqualsWithConversion(kXMLApplicationContentType))
-    mDocType=eXMLText;
-  else if(mMimeType.EqualsWithConversion(kXHTMLApplicationContentType))
-    mDocType=eXMLText;
-  else if(mMimeType.EqualsWithConversion(kXULTextContentType))
-    mDocType=eXMLText;
-  else if(mMimeType.EqualsWithConversion(kRDFTextContentType))
-    mDocType=eXMLText;
-  else if(mMimeType.EqualsWithConversion(kXIFTextContentType))
-    mDocType=eXMLText;
+    mDocType=eHTML_Strict;
+  else if (mMimeType.EqualsWithConversion(kXMLTextContentType) ||
+           mMimeType.EqualsWithConversion(kXMLApplicationContentType) ||
+           mMimeType.EqualsWithConversion(kXHTMLApplicationContentType) ||
+           mMimeType.EqualsWithConversion(kXULTextContentType) ||
+           mMimeType.EqualsWithConversion(kRDFTextContentType) ||
+           mMimeType.EqualsWithConversion(kXIFTextContentType))
+    mDocType=eXML;
 }
-
-

@@ -67,8 +67,6 @@ static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
  
 static const  char* kNullToken = "Error: Null token given";
 static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static char*        kVerificationDir = "c:/temp";
-
 
 #ifdef  ENABLE_CRC
 static char gShowCRC;
@@ -161,8 +159,8 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mOpenMapCount(0),
     mParser(0),       
     mTokenizer(0),
-    mDocType(eHTML3Text),
     mDTDMode(eDTDMode_quirks),
+    mDocType(eHTML3_Quirks), // why not eHTML_Quirks?
     mParserCommand(eViewNormal),
     mSkipTarget(eHTMLTag_unknown),
     mDTDState(NS_OK),
@@ -339,7 +337,6 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
           if(!theBufHasXML) {
             switch(aParserContext.mDTDMode) {
               case eDTDMode_strict:
-              case eDTDMode_transitional:
                 result=eValidDetect;
                 break;
               default:
@@ -2298,7 +2295,6 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
      *************************************************************/
     nsDTDMode theMode=mDTDMode;
     switch(mDTDMode) {
-      case eDTDMode_transitional:
       case eDTDMode_strict:
         theMode=eDTDMode_strict;
         break;
@@ -3870,7 +3866,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
       theTag=(eHTMLTags)mScratch[--theLen];
 
 #ifdef ALLOW_TR_AS_CHILD_OF_TABLE
-      if((eHTML3Text==mDocType) && (eHTMLTag_tbody==theTag)) {
+      if((eHTML3_Quirks==mDocType) && (eHTMLTag_tbody==theTag)) {
         //the prev. condition prevents us from emitting tbody in html3.2 docs; fix bug 30378
         continue;
       }
