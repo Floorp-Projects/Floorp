@@ -1902,13 +1902,24 @@ static PRBool AttributeChangeRequiresReflow(const nsIAtom* aAttribute)
      aAttribute==nsHTMLAtoms::width);
 }
 
+static PRBool AttributeChangeRequiresReframe(const nsIAtom* aAttribute)
+{
+  return (PRBool)
+    (aAttribute==nsHTMLAtoms::id           ||
+     aAttribute==nsHTMLAtoms::kClass       ||
+     aAttribute==nsHTMLAtoms::dir);
+}
+
 PRBool
 nsGenericHTMLElement::SetStyleHintForCommonAttributes(const nsIContent* aNode,
                                                       const nsIAtom* aAttribute,
                                                       PRInt32* aHint)
 {
   PRBool setHint = PR_TRUE;
-  if (PR_TRUE == AttributeChangeRequiresReflow(aAttribute)) {
+  if (PR_TRUE == AttributeChangeRequiresReframe(aAttribute)) {
+    *aHint = NS_STYLE_HINT_FRAMECHANGE;
+  }
+  else if (PR_TRUE == AttributeChangeRequiresReflow(aAttribute)) {
     *aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (PR_TRUE == AttributeChangeRequiresRepaint(aAttribute)) {
