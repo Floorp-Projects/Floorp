@@ -122,6 +122,8 @@ protected:
 
   nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
+  void InsertNewFrame(nsIFrame* aNewFrame, nsIFrame* aPrevSibling);
+
   friend nsresult NS_NewInlineFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                                     nsIFrame*& aNewFrame);
 };
