@@ -881,14 +881,21 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     nsCOMPtr<nsIRDFResource> res;
     nsString2 uri("", eOneByte);
     char* hostName = nsnull;
+	char *userName = nsnull;
 
     rv = GetHostname(&hostName);
     if (NS_FAILED(rv)) return rv;
 
+    rv = GetUsername(&userName);
+    if (NS_FAILED(rv)) return rv;
+
     uri.Append(kImapRootURI);
     uri.Append('/');
+	uri.Append(userName);
+	uri.Append('@');
     uri.Append(hostName);
     PR_FREEIF(hostName);
+	PR_FREEIF(userName);
 
     if (!m_transactionManager)
         m_transactionManager = do_QueryInterface(txnMgr, &rv);

@@ -59,7 +59,7 @@ nsImapUrl::nsImapUrl()
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
 	m_userName = nsnull;
-	m_onlineSubDirSeparator = '\0'; 
+	m_onlineSubDirSeparator = '/'; 
 }
 
 nsresult nsImapUrl::Initialize(const char * aUserName)

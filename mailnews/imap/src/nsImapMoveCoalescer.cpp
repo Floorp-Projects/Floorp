@@ -56,12 +56,16 @@ nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
 		}
 		else
 		{
-			m_destFolders->AppendElement(folder);
-			keysToAdd = nsMsgKeySet::Create();
-			if (!keysToAdd)
-				return NS_ERROR_OUT_OF_MEMORY;
+			nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
+			if (supports)
+			{
+				m_destFolders->AppendElement(supports);
+				keysToAdd = nsMsgKeySet::Create();
+				if (!keysToAdd)
+					return NS_ERROR_OUT_OF_MEMORY;
 
-			m_sourceKeySets.AppendElement(keysToAdd);
+				m_sourceKeySets.AppendElement(keysToAdd);
+			}
 		}
 		if (keysToAdd)
 			keysToAdd->Add(key);
