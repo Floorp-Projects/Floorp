@@ -88,8 +88,9 @@ static bool promptLine(LineReader &inReader, string &s, const char *prompt)
     return inReader.readLine(s) != 0;
 }
 
+World world;
+JSScope global;
 
-JavaScript::World world;
 /* "filename" of the console */
 const String ConsoleName = widenCString("<console>");
 const bool showTokens = false;
@@ -122,9 +123,7 @@ static JSValue print(const JSValues &argv)
     return kUndefinedValue;
 }
 
-
-#ifdef INTERPRET_INPUT
-static void genCode(Context &cx, StmtNode *p, const String &fileName)
+static ICodeModule* genCode(Context &cx, StmtNode *p, const String &fileName)
 {
     ICodeGenerator icg(&cx.getWorld(), cx.getGlobalObject());
     
@@ -139,24 +138,91 @@ static void genCode(Context &cx, StmtNode *p, const String &fileName)
 
     ICodeModule *icm = icg.complete();
     icm->setFileName (fileName);
-
-    JSValue result = cx.interpret(icm, JSValues());
-    stdOut << "result = " << result << "\n";
-
-    delete icm;
-    
+    return icm;
 }
-#endif
+
+static void readEvalFile(FILE* in, const String& fileName)
+{
+    Context cx(world, &global);
+
+    String buffer;
+    string line;
+    LineReader inReader(in);
+        
+    while (inReader.readLine(line) != 0) {
+        appendChars(buffer, line.data(), line.size());
+        try {
+            Arena a;
+            Parser p(world, a, buffer, fileName);
+            StmtNode *parsedStatements = p.parseProgram();
+			ASSERT(p.lexer.peek(true).hasKind(Token::end));
+            {
+            	PrettyPrinter f(stdOut, 30);
+            	{
+            		PrettyPrinter::Block b(f, 2);
+                	f << "Program =";
+                	f.linearBreak(1);
+                	StmtNode::printStatements(f, parsedStatements);
+            	}
+            	f.end();
+            }
+    	    stdOut << '\n';
+
+			// Generate code for parsedStatements, which is a linked 
+            // list of zero or more statements
+            ICodeModule* icm = genCode(cx, parsedStatements, fileName);
+            if (icm) {
+                JSValue result = cx.interpret(icm, JSValues());
+                delete icm;
+            }
+
+            clear(buffer);
+        } catch (Exception &e) {
+            /* If we got a syntax error on the end of input,
+             * then wait for a continuation
+             * of input rather than printing the error message. */
+            if (!(e.hasKind(Exception::syntaxError) &&
+                  e.lineNum && e.pos == buffer.size() &&
+                  e.sourceFile == fileName)) {
+                stdOut << '\n' << e.fullMessage();
+                clear(buffer);
+            }
+        }
+    }
+}
+
+static JSValue load(const JSValues &argv)
+{
+    size_t n = argv.size();
+    if (n > 1) {                // the 'this' parameter is un-interesting
+        struct {
+            char operator() (char16 ch) { return static_cast<char>(ch); }
+        } narrow;
+        for (size_t i = 1; i < n; ++i) {
+            JSValue val = argv[i].toString();
+            if (val.isString()) {
+                String fileName(*val.string);
+                std::string str(fileName.length(), char());
+                std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
+                FILE* f = fopen(str.c_str(), "r");
+                if (f) {
+                    readEvalFile(f, fileName);
+                    fclose(f);
+                }
+            }
+        }
+    }
+    return kUndefinedValue;
+}
 
 static void readEvalPrint(FILE *in, World &world)
 {
-    JSScope glob;
-    Context cx(world, &glob);
+    Context cx(world, &global);
 #ifdef DEBUGGER_FOO
     jsd.attachToContext (&cx);
 #endif
-    StringAtom& printName = world.identifiers[widenCString("print")];
-    glob.defineNativeFunction(printName, print);
+    global.defineNativeFunction(world.identifiers[widenCString("print")], print);
+    global.defineNativeFunction(world.identifiers[widenCString("load")], load);
 
     String buffer;
     string line;
@@ -198,7 +264,12 @@ static void readEvalPrint(FILE *in, World &world)
 #endif
 				// Generate code for parsedStatements, which is a linked 
                 // list of zero or more statements
-                genCode(cx, parsedStatements, ConsoleName);
+                ICodeModule* icm = genCode(cx, parsedStatements, ConsoleName);
+                if (icm) {
+                    JSValue result = cx.interpret(icm, JSValues());
+                    stdOut << "result = " << result << "\n";
+                    delete icm;
+                }
 #endif
             }
             clear(buffer);
