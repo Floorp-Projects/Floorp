@@ -18,13 +18,14 @@
 
 #include "nsThread.h"
 #include "prmem.h"
+//#include <stdio.h>
 
-PRUintn nsThread::kIThreadSelf = 0;
+PRUintn nsThread::kIThreadSelfIndex = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsThread::nsThread()
-    : mThread(nsnull), mRunnable(nsnull)
+    : mThread(nsnull), mRunnable(nsnull), mDead(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -32,7 +33,6 @@ nsThread::nsThread()
 nsresult
 nsThread::Init(nsIRunnable* runnable,
                PRUint32 stackSize,
-               PRThreadType type,
                PRThreadPriority priority,
                PRThreadScope scope,
                PRThreadState state)
@@ -40,9 +40,12 @@ nsThread::Init(nsIRunnable* runnable,
     mRunnable = runnable;
     NS_ADDREF(mRunnable);
 
-    NS_ADDREF_THIS();   // released in nsIThread::Exit
-    mThread = PR_CreateThread(type, Main, this,
-                              priority, scope, PR_JOINABLE_THREAD, stackSize);
+    NS_ADDREF_THIS();   // released in nsThread::Exit
+    if (state == PR_JOINABLE_THREAD)
+        NS_ADDREF_THIS();   // released in nsThread::Join
+    mThread = PR_CreateThread(PR_USER_THREAD, Main, this,
+                              priority, scope, state, stackSize);
+//    printf("%x %x (%d) create\n", this, mThread, mRefCnt);
     if (mThread == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -50,6 +53,7 @@ nsThread::Init(nsIRunnable* runnable,
 
 nsThread::~nsThread()
 {
+//    printf("%x %x (%d) destroy\n", this, mThread, mRefCnt);
     NS_IF_RELEASE(mRunnable);
 }
 
@@ -62,14 +66,13 @@ nsThread::Main(void* arg)
     rv = self->RegisterThreadSelf();
     NS_ASSERTION(rv == NS_OK, "failed to set thread self");
 
+//    printf("%x %x (%d) start run\n", self, self->mThread, self->mRefCnt);
     rv = self->mRunnable->Run();
     NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
     PRThreadState state;
     rv = self->GetState(&state);
-    if (NS_SUCCEEDED(rv) && state == PR_UNJOINABLE_THREAD) {
-        Exit(arg);
-    }
+//    printf("%x %x (%d) end run\n", self, self->mThread, self->mRefCnt);
 }
 
 void
@@ -77,7 +80,8 @@ nsThread::Exit(void* arg)
 {
     nsThread* self = (nsThread*)arg;
     nsresult rv = NS_OK;
-    self->mThread = nsnull;
+    self->mDead = PR_TRUE;
+//    printf("%x %x (%d) exit\n", self, self->mThread, self->mRefCnt - 1);
     NS_RELEASE(self);
 }
 
@@ -86,16 +90,26 @@ NS_IMPL_ISUPPORTS(nsThread, nsIThread::GetIID());
 NS_IMETHODIMP
 nsThread::Join()
 {
-    if (mThread == nsnull)
-        return NS_ERROR_FAILURE;
+    // don't check for mDead here because nspr calls Exit (cleaning up
+    // thread-local storage) before they let us join with the thread
+
+//    printf("%x %x (%d) start join\n", this, mThread, mRefCnt);
     PRStatus status = PR_JoinThread(mThread);
-    return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
+    // XXX can't use NS_RELEASE here because the macro wants to set
+    // this to null (bad c++)
+//    printf("%x %x (%d) end join\n", this, mThread, mRefCnt);
+    if (status == PR_SUCCESS) {
+        this->Release();   // most likely the final release of this thread 
+        return NS_OK;
+    }
+    else
+        return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsThread::GetPriority(PRThreadPriority *result)
 {
-    if (mThread == nsnull)
+    if (mDead)
         return NS_ERROR_FAILURE;
     *result = PR_GetThreadPriority(mThread);
     return NS_OK;
@@ -104,7 +118,7 @@ nsThread::GetPriority(PRThreadPriority *result)
 NS_IMETHODIMP
 nsThread::SetPriority(PRThreadPriority value)
 {
-    if (mThread == nsnull)
+    if (mDead)
         return NS_ERROR_FAILURE;
     PR_SetThreadPriority(mThread, value);
     return NS_OK;
@@ -113,7 +127,7 @@ nsThread::SetPriority(PRThreadPriority value)
 NS_IMETHODIMP
 nsThread::Interrupt()
 {
-    if (mThread == nsnull)
+    if (mDead)
         return NS_ERROR_FAILURE;
     PRStatus status = PR_Interrupt(mThread);
     return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
@@ -122,25 +136,16 @@ nsThread::Interrupt()
 NS_IMETHODIMP
 nsThread::GetScope(PRThreadScope *result)
 {
-    if (mThread == nsnull)
+    if (mDead)
         return NS_ERROR_FAILURE;
     *result = PR_GetThreadScope(mThread);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsThread::GetType(PRThreadType *result)
-{
-    if (mThread == nsnull)
-        return NS_ERROR_FAILURE;
-    *result = PR_GetThreadType(mThread);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThread::GetState(PRThreadState *result)
 {
-    if (mThread == nsnull)
+    if (mDead)
         return NS_ERROR_FAILURE;
     *result = PR_GetThreadState(mThread);
     return NS_OK;
@@ -149,7 +154,7 @@ nsThread::GetState(PRThreadState *result)
 NS_IMETHODIMP
 nsThread::GetPRThread(PRThread* *result)
 {
-    if (mThread == nsnull)
+    if (mDead)
         return NS_ERROR_FAILURE;
     *result = mThread;
     return NS_OK;
@@ -159,7 +164,6 @@ NS_BASE nsresult
 NS_NewThread(nsIThread* *result, 
              nsIRunnable* runnable,
              PRUint32 stackSize,
-             PRThreadType type,
              PRThreadPriority priority,
              PRThreadScope scope,
              PRThreadState state)
@@ -169,7 +173,7 @@ NS_NewThread(nsIThread* *result,
     if (thread == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = thread->Init(runnable, stackSize, type, priority, scope, state);
+    rv = thread->Init(runnable, stackSize, priority, scope, state);
     if (NS_FAILED(rv)) {
         delete thread;
         return rv;
@@ -187,13 +191,13 @@ nsThread::RegisterThreadSelf()
 {
     PRStatus status;
 
-    if (kIThreadSelf == 0) {
-        status = PR_NewThreadPrivateIndex(&kIThreadSelf, Exit);
+    if (kIThreadSelfIndex == 0) {
+        status = PR_NewThreadPrivateIndex(&kIThreadSelfIndex, Exit);
         if (status != PR_SUCCESS) return NS_ERROR_FAILURE;
-        NS_ASSERTION(kIThreadSelf != 0, "couldn't get thread private index");
+        NS_ASSERTION(kIThreadSelfIndex != 0, "couldn't get thread private index");
     }
 
-    status = PR_SetThreadPrivate(kIThreadSelf, this);
+    status = PR_SetThreadPrivate(kIThreadSelfIndex, this);
     if (status != PR_SUCCESS) return NS_ERROR_FAILURE;
 
     return NS_OK;
@@ -211,13 +215,13 @@ nsIThread::GetIThread(PRThread* prthread, nsIThread* *result)
     PRStatus status;
     nsThread* thread;
 
-    if (nsThread::kIThreadSelf == 0) {
-        status = PR_NewThreadPrivateIndex(&nsThread::kIThreadSelf, nsThread::Exit);
+    if (nsThread::kIThreadSelfIndex == 0) {
+        status = PR_NewThreadPrivateIndex(&nsThread::kIThreadSelfIndex, nsThread::Exit);
         if (status != PR_SUCCESS) return NS_ERROR_FAILURE;
-        NS_ASSERTION(nsThread::kIThreadSelf != 0, "couldn't get thread private index");
+        NS_ASSERTION(nsThread::kIThreadSelfIndex != 0, "couldn't get thread private index");
     }
 
-    thread = (nsThread*)PR_GetThreadPrivate(nsThread::kIThreadSelf);
+    thread = (nsThread*)PR_GetThreadPrivate(nsThread::kIThreadSelfIndex);
     if (thread == nsnull) {
         // if the current thread doesn't have an nsIThread associated
         // with it, make one
@@ -245,10 +249,8 @@ nsThreadPool::nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads)
 
 nsresult
 nsThreadPool::Init(PRUint32 stackSize,
-                   PRThreadType type,
                    PRThreadPriority priority,
-                   PRThreadScope scope,
-                   PRThreadState state)
+                   PRThreadScope scope)
 {
     nsresult rv;
 
@@ -273,8 +275,8 @@ nsThreadPool::Init(PRUint32 stackSize,
 
         nsIThread* thread;
 
-        rv = NS_NewThread(&thread, runnable, stackSize, PR_SYSTEM_THREAD, 
-                          priority, scope, state);
+        rv = NS_NewThread(&thread, runnable, stackSize, priority, scope, 
+                          PR_JOINABLE_THREAD);  // needed for Shutdown
         NS_RELEASE(runnable);
         if (NS_FAILED(rv)) goto exit;
 
@@ -292,15 +294,8 @@ nsThreadPool::Init(PRUint32 stackSize,
 
 nsThreadPool::~nsThreadPool()
 {
-    Shutdown();
     if (mThreads) {
-        // clean up the worker threads
-        PRUint32 count = mThreads->Count();
-        for (PRUint32 i = 0; i < count; i++) {
-            nsIThread* thread = (nsIThread*)((*mThreads)[i]);
-            thread->Interrupt();
-            thread->Join();     // XXX race?
-        }
+        Shutdown();
         NS_RELEASE(mThreads);
     }
 
@@ -330,8 +325,6 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
     PR_ExitMonitor(mRequestMonitor);
     return rv;
 }
-
-#include <stdio.h>
 
 nsIRunnable*
 nsThreadPool::GetRequest()
@@ -367,14 +360,11 @@ nsThreadPool::GetRequest()
 }
 
 NS_IMETHODIMP
-nsThreadPool::Shutdown()
+nsThreadPool::ProcessPendingRequests()
 {
-    nsresult rv = NS_OK;
-    PRUint32 count;
-    PRUint32 i;
-
-    // first wait for any outstanding requests to be processed
+    nsresult rv;
     PR_CEnterMonitor(this);
+
     while (mRequests->Count() > 0) {
         PRStatus status = PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
         if (status != PR_SUCCESS) {
@@ -382,21 +372,38 @@ nsThreadPool::Shutdown()
             break;
         }
     }
+
     PR_CExitMonitor(this);
-    if (NS_FAILED(rv)) return rv;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsThreadPool::Shutdown()
+{
+    nsresult rv = NS_OK;
+    PRUint32 count;
+    PRUint32 i;
 
     mShuttingDown = PR_TRUE;
+    ProcessPendingRequests();
     
     // then interrupt the threads and join them
     count = mThreads->Count();
     for (i = 0; i < count; i++) {
         nsIThread* thread = (nsIThread*)((*mThreads)[0]);
-        rv = thread->Interrupt();
-        if (NS_FAILED(rv)) return rv;
+
+        // we don't care about the error from Interrupt, because the
+        // thread may have already terminated its event loop
+        (void)thread->Interrupt();
+
         rv = thread->Join();
-        if (NS_FAILED(rv)) return rv;
+        // don't break out of the loop because of an error here
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Join failed");
+
+        NS_RELEASE(thread);
         rv = mThreads->RemoveElementAt(0);
-        if (NS_FAILED(rv)) return rv;
+        // don't break out of the loop because of an error here
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveElementAt failed");
     }
 
     return rv;
@@ -406,17 +413,15 @@ NS_BASE nsresult
 NS_NewThreadPool(nsIThreadPool* *result,
                  PRUint32 minThreads, PRUint32 maxThreads,
                  PRUint32 stackSize,
-                 PRThreadType type,
                  PRThreadPriority priority,
-                 PRThreadScope scope,
-                 PRThreadState state)
+                 PRThreadScope scope)
 {
     nsresult rv;
     nsThreadPool* pool = new nsThreadPool(minThreads, maxThreads);
     if (pool == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = pool->Init(stackSize, type, priority, scope, state);
+    rv = pool->Init(stackSize, priority, scope);
     if (NS_FAILED(rv)) {
         delete pool;
         return rv;

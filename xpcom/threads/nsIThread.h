@@ -73,7 +73,6 @@ public:
     NS_IMETHOD Interrupt() = 0;
 
     NS_IMETHOD GetScope(PRThreadScope *result) = 0;
-    NS_IMETHOD GetType(PRThreadType *result) = 0;
     NS_IMETHOD GetState(PRThreadState *result) = 0;
 
     NS_IMETHOD GetPRThread(PRThread* *result) = 0;
@@ -83,7 +82,6 @@ extern NS_BASE nsresult
 NS_NewThread(nsIThread* *result, 
              nsIRunnable* runnable,
              PRUint32 stackSize = 0,
-             PRThreadType type = PR_USER_THREAD,
              PRThreadPriority priority = PR_PRIORITY_NORMAL,
              PRThreadScope scope = PR_GLOBAL_THREAD,
              PRThreadState state = PR_JOINABLE_THREAD);
@@ -111,6 +109,8 @@ public:
 
     NS_IMETHOD DispatchRequest(nsIRunnable* runnable) = 0;
 
+    NS_IMETHOD ProcessPendingRequests() = 0;
+
     NS_IMETHOD Shutdown() = 0;
 };
 
@@ -118,10 +118,8 @@ extern NS_BASE nsresult
 NS_NewThreadPool(nsIThreadPool* *result,
                  PRUint32 minThreads, PRUint32 maxThreads,
                  PRUint32 stackSize = 0,
-                 PRThreadType type = PR_USER_THREAD,
                  PRThreadPriority priority = PR_PRIORITY_NORMAL,
-                 PRThreadScope scope = PR_GLOBAL_THREAD,
-                 PRThreadState state = PR_JOINABLE_THREAD);
+                 PRThreadScope scope = PR_GLOBAL_THREAD);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -33,7 +33,6 @@ public:
     NS_IMETHOD SetPriority(PRThreadPriority value);
     NS_IMETHOD Interrupt();
     NS_IMETHOD GetScope(PRThreadScope *result);
-    NS_IMETHOD GetType(PRThreadType *result);
     NS_IMETHOD GetState(PRThreadState *result);
     NS_IMETHOD GetPRThread(PRThread* *result);
 
@@ -43,7 +42,6 @@ public:
 
     nsresult Init(nsIRunnable* runnable,
                   PRUint32 stackSize,
-                  PRThreadType type,
                   PRThreadPriority priority,
                   PRThreadScope scope,
                   PRThreadState state);
@@ -53,11 +51,12 @@ public:
     static void Main(void* arg);
     static void Exit(void* arg);
 
-    static PRUintn kIThreadSelf;
+    static PRUintn kIThreadSelfIndex;
 
 protected:
     PRThread*           mThread;
     nsIRunnable*        mRunnable;
+    PRBool              mDead;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +68,7 @@ public:
 
     // nsIThreadPool methods:
     NS_IMETHOD DispatchRequest(nsIRunnable* runnable);
+    NS_IMETHOD ProcessPendingRequests();
     NS_IMETHOD Shutdown();
 
     // nsThreadPool methods:
@@ -76,10 +76,8 @@ public:
     virtual ~nsThreadPool();
 
     nsresult Init(PRUint32 stackSize,
-                  PRThreadType type,
                   PRThreadPriority priority,
-                  PRThreadScope scope,
-                  PRThreadState state);
+                  PRThreadScope scope);
     nsIRunnable* GetRequest();
     
 protected:
