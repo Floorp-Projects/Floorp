@@ -499,14 +499,6 @@ nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
     if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
       result.width -= aBorderPadding.left +
                       aBorderPadding.right;
-      if (! aPresContext->IsPaginated()) {
-        nsIDeviceContext* dc = aPresContext->GetDeviceContext();
-        float sbWidth, sbHeight;
-
-        dc->GetScrollBarDimensions(sbWidth, sbHeight);
-        result.width -= NSToCoordRound(sbWidth);
-        NS_RELEASE(dc);
-      }
     }
     // If our height is constrained then subtract for the border/padding
     if (aMaxSize.height != NS_UNCONSTRAINEDSIZE) {
