@@ -117,11 +117,6 @@ interface nsINetDataCache : nsISupports
     attribute nsINetDataCache nextCache;
 
     /**
-     * The maximum permitted size of the cache, in kB.
-	 */
-    readonly attribute PRUint32 capacity;
-
-    /**
      * An estimate of the amount of storage occupied by the cache, in kB.
      * Actual use may be slightly higher than reported due to cache overhead
      * and heap fragmentation (in the memory cache) or block quantization (in

@@ -27,6 +27,7 @@ interface nsICachedNetData;
 interface nsINetDataCache;
 interface nsINetDataDiskCache;
 interface nsIURI;
+interface nsIFileSpec;
 
 /**
  * The network-response cache manager is partly responsible for the caching of
@@ -36,11 +37,7 @@ interface nsIURI;
  *
  * The cache manager supervises the actions of individual cache components,
  * such as the memory cache, the disk cache and any extension caches, e.g. a
- * read-only CD-ROM cache.  It also manages the coalescing of multiple,
- * simultaneous requests for the same URI.  That is, if a cache entry fill is
- * in progress while a second request is made for the same URI, the cache
- * manager will seamlessly splice together the streams from the stored disk
- * content and the content inbound from the network.
+ * read-only CD-ROM cache.
  *
  * @See nsINetDataCache
  * @See nsICachedNetData
@@ -90,7 +87,7 @@ interface nsINetDataCacheManager : nsISupports
      * The optionally-NULL secondaryKey argument can be used, e.g. for form
      * post data or for HTTP headers in the case of HTTP.
      */
-    nsICachedNetData getCachedNetData(in nsIURI uri,
+    nsICachedNetData getCachedNetData(in string uri,
                                       [size_is(secondaryKeyLength)] in string secondaryKey,
                                       in PRUint32 secondaryKeyLength,
                                       in PRUint32 flags);
@@ -100,7 +97,7 @@ interface nsINetDataCacheManager : nsISupports
      * only partial data is stored.  The flags argument behaves the same as for
      * the GetCachedNetData() method, above.
      */
-    boolean contains(in nsIURI uri,
+    boolean contains(in string uri,
                      [size_is(secondaryKeyLength)] in string secondaryKey,
                      in PRUint32 secondaryKeyLength,
                      in PRUint32 flags);
@@ -153,4 +150,14 @@ interface nsINetDataCacheManager : nsISupports
      * accomodate the requested capacity.
      */
     attribute PRUint32 memCacheCapacity;
+
+	/**
+	 * This attribute must be set before attempting to store into the disk cache.
+	 */
+    attribute nsIFileSpec diskCacheFolder;
 };
+
+%{ C++
+// ProgID prefix for Components that implement this interface
+#define NS_NETWORK_CACHE_MANAGER_PROGID NS_NETWORK_CACHE_PROGID "?name=manager"
+%}

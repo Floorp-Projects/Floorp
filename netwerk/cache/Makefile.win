@@ -22,12 +22,12 @@
 
 DEPTH=..\..
 DIRS= 	\
-	public \
-	obj			\
+	public                  \
 	mgr			\
-	pref			\
-	module			\
-	tests			\
+	memcache		\
+	filecache		\
+	build                   \
 	$(NULL)
 
-include <$(DEPTH)\config\rules.mak> 
+include <$(DEPTH)\config\rules.mak>
+
