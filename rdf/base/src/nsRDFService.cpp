@@ -58,6 +58,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
+#include "nsWeakReference.h"
 #include "nsXPIDLString.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -94,7 +95,8 @@ static PRLogModuleInfo* gLog = nsnull;
 //
 //   This is the RDF service.
 //
-class RDFServiceImpl : public nsIRDFService
+class RDFServiceImpl : public nsIRDFService,
+                       public nsSupportsWeakReference
 {
 protected:
     PLHashTable* mNamedDataSources;
@@ -633,10 +635,7 @@ RDFServiceImpl::GetRDFService(nsIRDFService** mgr)
     return NS_OK;
 }
 
-
-NS_IMPL_THREADSAFE_ADDREF(RDFServiceImpl);
-NS_IMPL_THREADSAFE_RELEASE(RDFServiceImpl);
-NS_IMPL_THREADSAFE_QUERY_INTERFACE(RDFServiceImpl, kIRDFServiceIID);
+NS_IMPL_THREADSAFE_ISUPPORTS2(RDFServiceImpl, nsIRDFService, nsISupportsWeakReference)
 
 
 NS_IMETHODIMP

@@ -40,6 +40,7 @@
 #include "plstr.h"
 #include "rdf.h"
 #include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 
@@ -49,7 +50,7 @@ class LocalStoreImpl : public nsILocalStore,
                        public nsIRDFDataSource,
                        public nsIRDFRemoteDataSource
 {
-private:
+protected:
     nsCOMPtr<nsIRDFDataSource> mInner;
 
     LocalStoreImpl();
@@ -60,6 +61,8 @@ private:
     NS_NewLocalStore(nsILocalStore** aResult);
 
     nsCOMPtr<nsISupportsArray> mObservers;
+
+    static nsWeakPtr gRDF;
 
 public:
     // nsISupports interface
@@ -197,6 +200,8 @@ public:
 	NS_IMETHOD Refresh(PRBool sync);
 };
 
+nsWeakPtr LocalStoreImpl::gRDF;
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -208,10 +213,9 @@ LocalStoreImpl::LocalStoreImpl(void)
 
 LocalStoreImpl::~LocalStoreImpl(void)
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: LocalStoreImpl\n", gInstanceCount);
-#endif
+    nsCOMPtr<nsIRDFService> rdf = do_QueryReferent(gRDF);
+    if (rdf)
+        rdf->UnregisterDataSource(this);
 }
 
 
@@ -387,8 +391,11 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
     if (NS_FAILED(rv)) return rv;
 
     // register this as a named data source with the RDF service
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
+
+    // for later
+    gRDF = getter_AddRefs(NS_GetWeakReference(rdf));
 
     rv = rdf->RegisterDataSource(this, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register local store");
