@@ -140,7 +140,8 @@ public:
   NS_IMETHOD ContentChanged(nsIContent* aContent,
                             nsISupports* aSubContent);
   NS_IMETHOD AttributeChanged(nsIContent* aChild,
-                              nsIAtom* aAttribute);
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer);
   NS_IMETHOD ContentInserted(nsIContent* aContainer,
