@@ -1557,6 +1557,7 @@ static PRBool IsPseudoClass(const nsIAtom* aAtom)
                 (nsCSSAtoms::lastChildPseudo == aAtom) ||
                 (nsCSSAtoms::lastNodePseudo == aAtom) ||
                 (nsCSSAtoms::linkPseudo == aAtom) ||
+                (nsCSSAtoms::menuActivePseudo == aAtom) ||
                 (nsCSSAtoms::rootPseudo == aAtom) ||
                 (nsCSSAtoms::xblBoundElementPseudo == aAtom) ||
                 (nsCSSAtoms::visitedPseudo == aAtom));

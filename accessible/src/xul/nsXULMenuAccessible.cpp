@@ -42,6 +42,7 @@
 #include "nsIAccessible.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULPopupElement.h"
+#include "nsIDOMXULMenuBarElement.h"
 
 // ------------------------ Menu Item -----------------------------
 
@@ -58,10 +59,22 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
   // Focused?
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No DOM element for menu  node!");
-  PRBool isFocused = PR_FALSE;
-  element->HasAttribute(NS_LITERAL_STRING("menuactive"), &isFocused); 
-  if (isFocused)
-    *_retval |= STATE_FOCUSED;
+  nsCOMPtr<nsIDOMNode> parentNode;
+  mDOMNode->GetParentNode(getter_AddRefs(parentNode));
+  if (parentNode) {
+    nsCOMPtr<nsIDOMElement> currentItem;
+    nsCOMPtr<nsIDOMXULPopupElement> popupEl = do_QueryInterface(parentNode);
+    if (popupEl)
+      popupEl->GetActiveItem(getter_AddRefs(currentItem));
+    else {
+      nsCOMPtr<nsIDOMXULMenuBarElement> menubar = do_QueryInterface(parentNode);
+      if (menubar)
+        menubar->GetActiveMenu(getter_AddRefs(currentItem));
+    }
+
+    if (currentItem == element)
+        *_retval |= STATE_FOCUSED;
+  }
 
   // Has Popup?
   nsAutoString tagName;

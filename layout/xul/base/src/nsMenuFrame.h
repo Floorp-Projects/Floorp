@@ -167,6 +167,8 @@ public:
   NS_IMETHOD MarkChildrenStyleChange();
   NS_IMETHOD MarkAsGenerated();
 
+  NS_IMETHOD NotifyStateChanged(nsIMenuFrame* aOtherFrame);
+
   // nsIScrollableViewProvider methods
 
   NS_IMETHOD GetScrollableView(nsIScrollableView** aView);

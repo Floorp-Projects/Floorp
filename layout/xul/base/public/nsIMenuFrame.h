@@ -84,6 +84,8 @@ public:
 
   NS_IMETHOD GetActiveChild(nsIDOMElement** aResult)=0;
   NS_IMETHOD SetActiveChild(nsIDOMElement* aChild)=0;
+
+  NS_IMETHOD NotifyStateChanged(nsIMenuFrame* aOtherMenuFrame) = 0;
 };
 
 #endif
