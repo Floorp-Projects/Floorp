@@ -230,9 +230,8 @@ $(OBJDIR)/Makefile $(OBJDIR)/config.status $(OBJDIR)/config.cache: $(TOPSRCDIR)/
 	@echo ../configure
 	@cd $(OBJDIR) && \
 	  $(TOPSRCDIR)/configure $(CONFIG_FLAGS) \
-	  || echo "*** Fix above errors and then restart with\
-             \"$(MAKE) -f client.mk build\"" \
-          && exit 1
+	  || ( echo "*** Fix above errors and then restart with\
+               \"$(MAKE) -f client.mk build\"" && exit 1 )
 
 ifdef CONFIG_STATUS
 $(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
@@ -244,12 +243,8 @@ endif
 ####################################
 # Depend
 
-depend:
-	@if test -d $(OBJDIR)/dist; then \
-	    cd $(OBJDIR); $(MAKE) $@; \
-	else \
-	    echo "$(MAKE): Skipping depend. No $(OBJDIR)/dist." 2>&1 ;\
-	fi
+depend: $(OBJDIR)/Makefile $(OBJDIR)/config.status $(OBJDIR)/config.cache
+	cd $(OBJDIR); $(MAKE) $@;
 
 ####################################
 # Build it
