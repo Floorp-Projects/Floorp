@@ -54,8 +54,8 @@ pref("font.name.serif.zh-CN", "serif");
 pref("font.name.sans-serif.zh-CN", "sans-serif");
 pref("font.name.monospace.zh-CN", "monospace");
 
-pref("font.size.variable.x-western", 16);
-pref("font.size.fixed.x-western", 14);
+pref("font.size.variable.x-western", 14);
+pref("font.size.fixed.x-western", 12);
 
 pref("applications.telnet", "pterm telnet %h %p");
 pref("applications.tn3270", "pterm tn3270 %h");
