@@ -126,7 +126,7 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
   for(unsigned int i=0; i < aNumberOfFilters; i++)
   {
     // we need *.{htm, html, xul, etc}
-    const char *foo = aTitles[i].ToNewCString();
+    char *foo = aTitles[i].ToNewCString();
     char *filters = aFilters[i].ToNewCString();
     printf("%20s %s\n", foo, filters);
 
