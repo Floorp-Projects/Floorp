@@ -27,6 +27,8 @@ config("startup.homepage_override_url","http://www.mozilla.org/mozorg.html");
 config("autoadmin.append_emailaddr",false);
 config("autoadmin.failover_to_cached",true);
 
+config("browser.chromeURL","chrome://navigator/content/navigator.xul");
+
 config("toolbar.logo.url","http://home.netscape.com/");
 config("toolbar.logo.win_small_file","");
 config("toolbar.logo.win_large_file","");
