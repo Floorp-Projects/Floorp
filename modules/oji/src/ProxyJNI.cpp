@@ -237,7 +237,7 @@ private:
     jvalue* mArgs;
 };
 
-static const jvalue kErrorValue;
+static jvalue kErrorValue;
 
 class ProxyJNIEnv : public JNIEnv {
 private:
