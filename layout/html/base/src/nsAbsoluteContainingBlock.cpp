@@ -193,7 +193,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 
   nsIFrame* kidFrame;
   for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
-    nsReflowReason  reason = aReflowState.reason;
+    nsReflowReason  reason = reflowState.reason;
 
     nsFrameState kidState;
     kidFrame->GetFrameState(&kidState);
