@@ -991,6 +991,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                     trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
                     if (dbFolderInfo)
                       dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+                    dbFolderInfo = nsnull;
 
                     nsString folderName(idlFolderName);
                     trashFolder->SetParent(nsnull);
