@@ -187,28 +187,12 @@ getHTTPRequestHeaders(View *view, char *host, char *verbose)
 	char		**r;
 	char		**ret;
 	char		*scriptName;
-	char		*serverURL;
 	char		*str;
 
-	serverURL = "SERVER_URL=";
-	scriptName = "SCRIPT_NAME=";
+	scriptName = "view.cgi";
 	e = environ;
 	while (*e)
 	{
-		if (!strncmp(*e, serverURL, strlen(serverURL)))
-		{
-			if (strchr(*e, '='))
-			{
-				serverURL = strchr(*e, '=') + 1;
-			}
-		}
-		else if (!strncmp(*e, scriptName, strlen(scriptName)))
-		{
-			if (strchr(*e, '='))
-			{
-				scriptName = strchr(*e, '=') + 1;
-			}
-		}
 		e++;
 	}
 	ret = malloc((e - environ + 1) * sizeof(*e));
@@ -216,14 +200,12 @@ getHTTPRequestHeaders(View *view, char *host, char *verbose)
 	{
 		return NULL;
 	}
-	me = malloc(strlen(serverURL) + strlen(scriptName) +
-		strlen(verbose) + 1);
+	me = malloc(strlen(scriptName) + strlen(verbose) + 1);
 	if (!me)
 	{
 		return NULL;
 	}
-	strcpy(me, serverURL);
-	strcat(me, scriptName);
+	strcpy(me, scriptName);
 	strcat(me, verbose);
 
 	e = environ;
