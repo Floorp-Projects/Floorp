@@ -136,6 +136,11 @@ struct mime_stream_data {           /* This struct is the state we pass around
 //
 struct mime_draft_data 
 {
+  /* WARNING: You cannot use a c++ object, in that structure, which is dependent on its constructor or 
+           destructor as mime_draft_data is not created using the new operator. nsCOMPtr however are ok
+           to use as long you set it to null before the structure get freed.
+  */
+
   char                *url_name;           // original url name */
   nsMimeOutputType    format_out;          // intended output format; should be FO_OPEN_DRAFT */
   nsMIMESession       *stream;             // not used for now 
@@ -154,6 +159,7 @@ struct mime_draft_data
   char                *mailcharset;        // get it from CHARSET of Content-Type 
   PRBool              forwardInline;
   nsCOMPtr<nsIMsgIdentity>      identity;
+  char                *originalMsgURI;     // the original URI of the message we are currently processing
 };
 
 ////////////////////////////////////////////////////////////////
@@ -180,7 +186,7 @@ extern "C" nsresult     mimeEmitterAddAllHeaders(MimeDisplayOptions *opt, const 
 extern "C" nsresult     mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url,
                                                    PRBool aNotDownloaded);
 extern "C" nsresult     mimeEmitterEndAttachment(MimeDisplayOptions *opt);
-extern "C" nsresult		mimeEmitterEndAllAttachments(MimeDisplayOptions *opt);
+extern "C" nsresult		  mimeEmitterEndAllAttachments(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeEmitterStartBody(MimeDisplayOptions *opt, PRBool bodyOnly, const char *msgID, const char *outCharset);
 extern "C" nsresult     mimeEmitterEndBody(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeEmitterEndHeader(MimeDisplayOptions *opt);

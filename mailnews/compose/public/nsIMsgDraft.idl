@@ -37,7 +37,6 @@
 #include "nsISupports.idl"
 #include "nsIOutputStream.idl"
 #include "nsIMsgIdentity.idl"
-#include "nsIMsgHdr.idl"
 
 interface nsIMsgWindow;
 
@@ -49,10 +48,9 @@ interface nsIMsgDraft : nsISupports
 	 * This is the primary interface for drafts and templates, loaded by
 	 * a URI
 	 */
-	void		OpenDraftMsg(in string msgURI, out nsIMsgDBHdr aMsgToReplace,
-                             in nsIMsgIdentity identity, in PRBool addInlineHeaders, in nsIMsgWindow aMsgWindow);
+	void		OpenDraftMsg(in string msgURI, in string originalMsgURI, in nsIMsgIdentity identity,
+                       in PRBool addInlineHeaders, in nsIMsgWindow aMsgWindow);
 
-	void		OpenEditorTemplate(in string msgURI, out nsIMsgDBHdr aMsgReplace,
-                                   in nsIMsgIdentity identity, in nsIMsgWindow aMsgWindow);  
+	void		OpenEditorTemplate(in string msgURI, in nsIMsgIdentity identity, in nsIMsgWindow aMsgWindow);  
 };
 

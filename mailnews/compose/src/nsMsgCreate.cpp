@@ -99,7 +99,7 @@ static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_C
 
 nsresult    
 nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType aOutType, 
-                                            nsIMsgIdentity * identity, nsIMsgDBHdr **aMsgToReplace, nsIMsgWindow *aMsgWindow)
+                                            nsIMsgIdentity * identity, const char *originalMsgURI, nsIMsgWindow *aMsgWindow)
 {
   nsresult  rv;
 
@@ -140,9 +140,10 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
   if (mimeConverter)
   {
-	  mimeConverter->SetMimeOutputType(mOutType);  // Set the type of output for libmime
-      mimeConverter->SetForwardInline(mAddInlineHeaders);
-      mimeConverter->SetIdentity(identity);
+    mimeConverter->SetMimeOutputType(mOutType);  // Set the type of output for libmime
+    mimeConverter->SetForwardInline(mAddInlineHeaders);
+    mimeConverter->SetIdentity(identity);
+    mimeConverter->SetOriginalMsgURI(originalMsgURI);
   }
 
   nsCOMPtr<nsIStreamListener> convertedListener = do_QueryInterface(mimeParser);
@@ -192,10 +193,6 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
     return NS_ERROR_UNEXPECTED;
   }
 
-  // Make sure we return this if requested!
-  if (aMsgToReplace)
-     GetMsgDBHdrFromURI(msgURI, aMsgToReplace);
-
   // Now, just plug the two together and get the hell out of the way!
   rv = mMessageService->DisplayMessage(mURI, convertedListener, aMsgWindow, nsnull, mailCharset, nsnull);
 
@@ -209,8 +206,8 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
 }
 
 nsresult
-nsMsgDraft::OpenDraftMsg(const char *msgURI, nsIMsgDBHdr **aMsgToReplace,
-                         nsIMsgIdentity * identity, PRBool addInlineHeaders, nsIMsgWindow *aMsgWindow)
+nsMsgDraft::OpenDraftMsg(const char *msgURI, const char *originalMsgURI, nsIMsgIdentity * identity,
+                         PRBool addInlineHeaders, nsIMsgWindow *aMsgWindow)
 {
   // We should really never get here, but if we do, just return 
   // with an error
@@ -219,14 +216,13 @@ nsMsgDraft::OpenDraftMsg(const char *msgURI, nsIMsgDBHdr **aMsgToReplace,
   
   mAddInlineHeaders = addInlineHeaders;
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageDraftOrTemplate, 
-                                         identity, aMsgToReplace, aMsgWindow);
+                                         identity, originalMsgURI, aMsgWindow);
 }
 
 nsresult
-nsMsgDraft::OpenEditorTemplate(const char *msgURI, nsIMsgDBHdr **aMsgToReplace,
-							   nsIMsgIdentity * identity, nsIMsgWindow *aMsgWindow)
+nsMsgDraft::OpenEditorTemplate(const char *msgURI, nsIMsgIdentity * identity, nsIMsgWindow *aMsgWindow)
 {
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageEditorTemplate, 
-                                         identity, aMsgToReplace, aMsgWindow);
+                                         identity, nsnull, aMsgWindow);
 }
 

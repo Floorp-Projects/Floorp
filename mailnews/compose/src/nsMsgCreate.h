@@ -55,7 +55,7 @@ public:
 	NS_DECL_NSIMSGDRAFT
 
   nsresult    ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType aOutType,
-                                              nsIMsgIdentity * identity, nsIMsgDBHdr **aMsgToReplace, nsIMsgWindow *aMsgWindow);
+                                              nsIMsgIdentity * identity, const char *originalMsgURI, nsIMsgWindow *aMsgWindow);
 
   // 
   // Implementation data...

@@ -850,6 +850,20 @@ nsStreamConverter::SetIdentity(nsIMsgIdentity * aIdentity)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsStreamConverter::SetOriginalMsgURI(const char * originalMsgURI)
+{
+  mOriginalMsgURI = originalMsgURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamConverter::GetOriginalMsgURI(char ** result)
+{
+  if (!result) return NS_ERROR_NULL_POINTER;
+  *result = ToNewCString(mOriginalMsgURI);
+  return NS_OK;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Methods for nsIStreamListener...

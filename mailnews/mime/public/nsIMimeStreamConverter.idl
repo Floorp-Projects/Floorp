@@ -83,25 +83,25 @@ interface nsIMimeStreamConverter : nsISupports {
 
 	void GetMimeOutputType(out nsMimeOutputType aOutFormat);
     
-	/* 
-     * This is needed by libmime for MHTML link processing...the url is the URL string associated
-     * with this input stream
-     */ 
-    void SetStreamURI(in nsIURI aURI); 
-    
-    /*
-     * This is used to extract headers while parsing a message
-     */
-  	void SetMimeHeadersListener(in nsIMimeStreamConverterListener listener, in nsMimeOutputType aType);
+  /* 
+  * This is needed by libmime for MHTML link processing...the url is the URL string associated
+  * with this input stream
+  */ 
+  void SetStreamURI(in nsIURI aURI); 
 
-    /*
-     * This is used for forward inline
-     */
-    attribute PRBool forwardInline;
-    
-     /*
-     * This is used for OpenDraft, OpenEditorTemplate and Forward inline (which use OpenDraft)
-     */
+  /*
+  * This is used to extract headers while parsing a message
+  */
+  void SetMimeHeadersListener(in nsIMimeStreamConverterListener listener, in nsMimeOutputType aType);
 
-	attribute nsIMsgIdentity identity;
+  /*
+  * This is used for forward inline
+  */
+  attribute PRBool forwardInline;
+
+  /*
+  * This is used for OpenDraft, OpenEditorTemplate and Forward inline (which use OpenDraft)
+  */
+  attribute nsIMsgIdentity identity;
+  attribute string originalMsgURI;
 };

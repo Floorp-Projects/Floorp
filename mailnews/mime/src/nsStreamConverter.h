@@ -107,6 +107,8 @@ private:
   nsCOMPtr<nsIMimeStreamConverterListener>	mMimeStreamConverterListener;
   PRBool 						            mForwardInline;
   nsCOMPtr<nsIMsgIdentity>		  mIdentity;
+  nsCString                     mOriginalMsgURI;
+
 #ifdef DEBUG_mscott  
   PRTime mConvertContentTime;
 #endif
