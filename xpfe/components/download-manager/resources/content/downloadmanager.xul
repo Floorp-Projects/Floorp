@@ -1,0 +1,200 @@
+﻿<?xml version="1.0"?> 
+
+<!-- <?xml-stylesheet href="chrome://communicator/skin/downloadmanager/downloadmanager.css"?> -->
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
+<!DOCTYPE window [
+<!ENTITY % platformDTD SYSTEM "chrome://communicator/locale/downloadmanager/platformStrings.ent" >
+%platformDTD;
+<!ENTITY % downloadManagerDTD SYSTEM "chrome://communicator/locale/downloadmanager/downloadmanager.ent">
+%downloadManagerDTD;
+]>
+
+<window id="downloadManager" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        windowtype="Download:Manager"
+        orient="vertical"
+        width="600" height="400" screenX="10" screenY="10"
+        persist="width height screenX screenY"
+        title="&downloadManager.title;"
+        onload="Startup();" onunload="Shutdown();">
+        
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/treePopups.js"></script>
+
+  <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"></script>
+
+  <commands id="commands">
+    <commandset id="commandUpdate_Downloads"
+                commandupdater="true"
+                events="focus,tree-select"
+                oncommandupdate="downloadViewController.onCommandUpdate()"/>
+  
+    <commandset id="downloadCommands">
+      <command id="cmd_downloadFile" 
+               label="&cmd.downloadFile.label;" accesskey="&cmd.downloadFile.accesskey;"
+               oncommand="goDoCommand('cmd_downloadFile');"/>
+      <command id="cmd_properties" 
+               label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
+               oncommand="goDoCommand('cmd_properties');"/>
+      <command id="cmd_pause" 
+               label="&cmd.pause.label;" accesskey="&cmd.pause.accesskey;"
+               oncommand="goDoCommand('cmd_pause');"/>
+      <command id="cmd_delete" 
+               label="&cmd.delete.label;" accesskey="&cmd.delete.accesskey;"
+               oncommand="goDoCommand('cmd_delete');"/>
+      <command id="cmd_openfile"  
+               label="&cmd.openfile.label;" accesskey="&cmd.openfile.accesskey;"
+               oncommand="goDoCommand('cmd_openfile');"/>
+      <command id="cmd_showinshell" 
+               label="&cmd.showinshell.label;" accesskey="&cmd.showinshell.accesskey;"
+               oncommand="goDoCommand('cmd_showinshell');"/>
+    </commandset>      
+
+    <!-- File Menu -->
+    <command id="cmd_newNavigator"/>
+    <command id="cmd_close" oncommand="close()"/>
+    <command id="cmd_quit"/>
+
+  </commands>  
+  
+  <keyset id="tasksKeys">
+    <!-- File Menu -->
+    <key id="key_newNavigator"/>
+    <key id="key_close"/>
+    <key id="key_quit"/>
+
+    <!-- These keybindings do not have a command specified in the overlay, 
+         which is good, but we need to specify it ourselves here -->
+    <key id="key_selectAll" command="cmd_selectAll"/>
+
+    <!-- We need to provide our own delete key binding because the key_delete
+         handler in platformGlobalOverlay.xul maps command to "cmd_delete" which
+         is NOT what we want! -->
+    <key id="key_delete" command="cmd_delete"/>
+
+    <key id="key_properties" key="&cmd.properties.keybinding;"  
+         command="cmd_properties" modifiers="accel"/>
+  </keyset>
+  
+          
+  <toolbar>
+    <toolbarbutton id="btn_downloadFile" command="cmd_downloadFile"/>
+    <toolbarseparator/>
+    <toolbarbutton id="btn_properties" command="cmd_properties"/>
+    <toolbarbutton id="btn_pause" command="cmd_pause"/>
+    <toolbarseparator/>
+    <toolbarbutton id="btn_delete" command="cmd_delete"/>
+    <toolbarseparator/>
+    <toolbarbutton id="btn_openfile" command="cmd_openfile"/>
+    <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
+  </toolbar>
+
+  <tree id="downloadView" ref="NC:DownloadsRoot"
+        datasources="rdf:downloads"
+        multiple="true" flags="dont-test-empty"
+        ondragover="nsDragAndDrop.dragOver(event, downloadView);"
+        ondraggesture="nsDragAndDrop.startDrag(event, downloadView);"
+        ondragdrop="nsDragAndDrop.drop(event, downloadView);"
+        onclick="downloadView.onClick(event);"
+        onselect="downloadView.onSelect(event);"
+        style="height: 0px; width: 0px;" flex="1">
+
+    <treehead>
+      <treerow id="headRow">
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&view.header.name.label;"
+                  onclick="return TriStateColumnSort('Name');"
+                  observes="Name" />
+        <treecell class="treecell-header sortDirectionIndicator" 
+                  label="&view.header.progress.label;"
+                  onclick="return TriStateColumnSort('Progress');"
+                  observes="Progress" />
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&view.header.timeremaining.label;"
+                  onclick="return TriStateColumnSort('TimeRemaining');"
+                  observes="TimeRemaining" />
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&view.header.transferred.label;" 
+                  onclick="return TriStateColumnSort('Transferred');"
+                  observes="Transferred" />
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&view.header.transferrate.label;"
+                  onclick="return TriStateColumnSort('TransferRate');"
+                  observes="TransferRate" />
+        <treecell class="treecell-header" allowevents="true" id="popupCell">
+          <menu class="treecell-popupcell-menu" align="center" pack="center">
+            <menupopup popupanchor="bottomright" popupalign="topright"
+                      onpopupshowing="BuildTreePopup(document.getElementById('theColumns'), 
+                                               document.getElementById('headRow'), this,
+                                               document.getElementById('popupCell'))"/>
+          </menu>
+        </treecell>
+      </treerow>
+    </treehead>
+
+    <template>
+      <rule>
+        <treechildren>
+          <treeitem uri="rdf:*" persist="open" class="download-item"
+                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+            <treerow>
+              <treecell class="treecell-indent" 
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"
+                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                        rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+              <treecell>
+                <progressmeter class="tree-progressmeter" value="rdf:http://home.netscape.com/NC-rdf#Progress"/>
+              </treecell>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#TransferRate"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    </template>
+
+    <treechildren flex="1" id="downloadViewChildren" context="dlContext"/>
+
+    <treecolgroup id="theColumns">
+      <treecol id="Name"
+               sortSeparators="true" width="4*" flex="4"
+               persist="width sortActive sortDirection" 
+               resource="http://home.netscape.com/NC-rdf#Name"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Progress"
+               sortSeparators="true" width="4*" flex="4"
+               persist="width sortActive sortDirection" 
+               resource="http://home.netscape.com/NC-rdf#Progress"
+               resource2="http://home.netscape.com/NC-rdf#Name"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="TimeRemaining"
+               sortSeparators="true" width="1*" flex="1"
+               persist="width sortActive sortDirection" 
+               resource="http://home.netscape.com/NC-rdf#TimeRemaining"
+               resource2="http://home.netscape.com/NC-rdf#Name"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Transferred"
+               sortSeparators="true" width="1*" flex="1"
+               persist="width sortActive sortDirection" 
+               resource="http://home.netscape.com/NC-rdf#Transferred"
+               resource2="http://home.netscape.com/NC-rdf#Name"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="TransferRate"
+               sortSeparators="true" width="1*" flex="1"
+               persist="width sortActive sortDirection" 
+               resource="http://home.netscape.com/NC-rdf#TransferRate"
+               resource2="http://home.netscape.com/NC-rdf#Name"/>
+      <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
+    </treecolgroup>
+  </tree>
+    
+  <statusbar id="status-bar">
+    <statusbarpanel id="statusbar-text" flex="1"/>
+  </statusbar>
+        
+</window>        

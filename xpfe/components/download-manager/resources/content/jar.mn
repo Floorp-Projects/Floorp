@@ -1,0 +1,4 @@
+comm.jar:
+	content/communicator/downloadmanager/downloadmanager.xul
+	content/communicator/downloadmanager/downloadmanager.js
+

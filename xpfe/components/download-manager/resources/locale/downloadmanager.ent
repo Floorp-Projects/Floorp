@@ -1,0 +1,21 @@
+<!ENTITY view.header.name.label           "Name">
+<!ENTITY view.header.progress.label       "Status">
+<!ENTITY view.header.timeremaining.label  "Time Remaining">
+<!ENTITY view.header.transferred.label    "Transferred">
+<!ENTITY view.header.transferrate.label   "Rate">
+
+<!ENTITY downloadManager.title            "Download Manager">
+
+
+<!ENTITY cmd.downloadFile.label           "Download File">
+<!ENTITY cmd.downloadFile.accesskey       "o">
+<!ENTITY cmd.properties.label             "Properties">
+<!ENTITY cmd.properties.accesskey         "i">
+<!ENTITY cmd.properties.keybinding        "i">
+<!ENTITY cmd.pause.label                  "Pause">
+<!ENTITY cmd.pause.accesskey              "p">
+<!ENTITY cmd.delete.label                 "Delete">
+<!ENTITY cmd.delete.accesskey             "d">
+<!ENTITY cmd.openfile.label               "Open File">
+<!ENTITY cmd.openfile.accesskey           "o">
+
