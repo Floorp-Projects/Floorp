@@ -128,7 +128,8 @@ function Startup()
 function InitDialog()
 {
   InitImage();
-  gDialog.showLinkBorder.checked = gDialog.border.value != "0";
+  var border = TrimString(gDialog.border.value);
+  gDialog.showLinkBorder.checked = border != "" && border > 0;
 }
 
 function ChangeLinkLocation()
@@ -141,8 +142,9 @@ function ToggleShowLinkBorder()
 {
   if (gDialog.showLinkBorder.checked)
   {
-    if (TrimString(gDialog.border.value) == "0")
-      gDialog.border.value = "";
+    var border = TrimString(gDialog.border.value);
+    if (!border || border == "0")
+      gDialog.border.value = "2";
   }
   else
   {
@@ -210,11 +212,25 @@ function onAccept()
 
       // Create or remove the link as appropriate
       var href = gDialog.hrefInput.value;
-      if (href != gOriginalHref) {
+      if (href != gOriginalHref)
+      {
         if (href)
-          editorShell.SetTextProperty("a", "href", href);
+          EditorSetTextProperty("a", "href", href);
         else
-          editorShell.RemoveTextProperty("href", "");
+          EditorRemoveTextProperty("href", "");
+      }
+
+      // If inside a link, always write the 'border' attribute
+      if (href)
+      {
+        if (gDialog.showLinkBorder.checked)
+        {
+          // Use default = 2 if border attribute is empty
+          if (!globalElement.hasAttribute("border"))
+            globalElement.setAttribute("border", "2");
+        }
+        else
+          globalElement.setAttribute("border", "0");
       }
 
       // All values are valid - copy to actual element in doc or
