@@ -24,9 +24,19 @@
 #define nsWebBrowser_h__
 
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
 
 #include "nsCWebBrowser.h"
+
+// Interfaces needed
+#include "nsIBaseWindow.h"
+#include "nsIDocShell.h"
+#include "nsIProgress.h"
+#include "nsIScrollable.h"
+#include "nsISupportsArray.h"
+#include "nsITextScroll.h"
+#include "nsIWidget.h"
+#include "nsIWebBrowser.h"
+#include "nsIWebBrowserNav.h"
 
 class nsWebBrowserInitInfo
 {

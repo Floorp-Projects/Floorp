@@ -30,7 +30,6 @@
 //Interfaces Needed
 #include "nsIComponentManager.h"
 #include "nsIDeviceContext.h"
-#include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIInterfaceRequestor.h"
