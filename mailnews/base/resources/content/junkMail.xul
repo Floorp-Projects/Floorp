@@ -11,6 +11,7 @@
 <dialog id="junkMail"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         windowtype="mailnews:junk"
         title="&window.title;"
         onload="onJunkMailLoad()"
@@ -20,11 +21,27 @@
         persist="screenX screenY width height">
 
 <script type="application/x-javascript" src="chrome://messenger/content/junkMail.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
 <vbox>
   <hbox align="center">
     <label value="&account.label;" accesskey="&account.accesskey;"/>
-    <menulist id="server" />
+    <menulist oncommand="onServerClick(event);" id="server">
+      <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                   containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
+        <template>
+          <rule nc:CanGetMessages="true">
+            <menuitem uri="..." value="..."
+                 class="folderMenuItem menuitem-iconic"
+                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                 IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                 label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </rule>
+        </template>
+      </menupopup>
+    </menulist>
+
     <spacer flex="1"/>
     <button label="&viewLog.label;" accesskey="&viewLog.accesskey;" oncommand="junkLog()"/>
   </hbox>
@@ -36,7 +53,7 @@
   <separator/>
 
   <hbox>
-    <radiogroup flex="1" id="junk_level" orient="horizontal">
+    <radiogroup flex="1" id="level" orient="horizontal">
       <!-- using 0 - 100, in case we ever do a slider or add more levels.  
            this way, the exist pref value will migrate nice. -->
       <radio flex="1" id="off" value="0" accesskey="&off.accesskey;" label="&off.label;"/>
@@ -52,18 +69,30 @@
 
   <hbox align="center">
     <checkbox id="move" accesskey="&move.accesskey;" label="&move.label;"/>
-    <menulist id="move_folder_uri"/>
+    <menulist id="actionTargetFolder"/>
   </hbox>
 
   <hbox autostretch="never" align="center">
     <checkbox id="purge" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
-    <textbox id="purge_interval" />
+    <textbox id="purgeInterval" />
     <label value="&purge2.label;"/>
   </hbox>
 
   <hbox align="center">
-    <checkbox id="whitelist" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
-    <menulist id="whitelist_ab_uri" />
+    <checkbox id="whiteList" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
+    <menulist id="whiteListAbURI">
+     <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
+        datasources="rdf:addressdirectory">
+        <template>
+        <rule nc:IsWriteable="false"/>
+        <rule nc:IsMailList="false">
+          <menuitem uri="..."
+                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+        </rule>
+        </template>
+      </menupopup>
+    </menulist>
   </hbox>
 </vbox>
 

@@ -1,15 +1,13 @@
 var gLogView;
 var gLogJunk;
-var gXXX;
+var gSpamSettings;
 
 function onLoad()
 {
-  return;
-
-  gXXX = window.arguments[0].xxx;
+  gSpamSettings = window.arguments[0].spamSettings;
 
   gLogJunk = document.getElementById("logJunk");
-  gLogJunk.checked = gXXX.loggingEnabled;
+  gLogJunk.checked = gSpamSettings.loggingEnabled;
 
   gLogView = document.getElementById("logView");
 
@@ -18,21 +16,21 @@ function onLoad()
 
   // if log doesn't exist, this will create an empty file on disk
   // otherwise, the user will get an error that the file doesn't exist
-  gXXX.ensureLogFile();
+  gSpamSettings.ensureLogFile();
 
-  gLogView.setAttribute("src", gXXX.logURL);
+  gLogView.setAttribute("src", gSpamSettings.logURL);
 }
 
 function toggleJunkLog()
 {
-  gXXX.loggingEnabled =  gLogJunk.checked;
+  gSpamSettings.loggingEnabled =  gLogJunk.checked;
 }
 
 function clearLog()
 {
-  gXXX.clearLog();
+  gSpamSettings.clearLog();
 
   // reload the newly truncated file
-  gLogView.setAttribute("src", gXXX.logURL);
+  gLogView.setAttribute("src", gSpamSettings.logURL);
 }
 
