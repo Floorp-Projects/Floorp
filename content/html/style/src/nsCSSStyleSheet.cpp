@@ -579,7 +579,7 @@ protected:
 
   nsVoidArray*          mRuleProcessors;
 
-friend CSSRuleProcessor;
+friend class CSSRuleProcessor;
 };
 
 
