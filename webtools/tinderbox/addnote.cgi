@@ -87,46 +87,59 @@ Go back to the Error Log</a>
 
 #print "$buildname \n $buildtime \n $errorparser \n $logfile \n  $tree \n $enc_buildname \n";
 
-    print "
-<title>Add a Comment to the log</title>
-<H1>Add a Comment to the log</h1>
+    print qq(
+<head><title>Add a Comment to $buildname log</title></head>
+<body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
-<form action='addnote.cgi' METHOD='post'>
+<table><tr><td>
+<b><font size="+2">Add a Log Comment</font></b>
+</td></tr><tr><td>
+<b><code>$buildname</code></b>
+</td></tr></table>
 
-<br>Your email address: <INPUT Type='input' name='who' size=32><BR>
-<TEXTAREA NAME=note ROWS=10 COLS=30 WRAP=HARD>
-</textarea>
 <INPUT Type='hidden' name='buildname' value='${buildname}'>
 <INPUT Type='hidden' name='buildtime' value='${buildtime}'>
 <INPUT Type='hidden' name='errorparser' value='$errorparser'>
 <INPUT Type='hidden' name='logfile' value='$logfile'>
-<INPUT Type='hidden' name='tree' value='$tree'><BR>
+<INPUT Type='hidden' name='tree' value='$tree'>
 
-This note will be added to the log selected for <B>$buildname</B>; 
-however, you can add a note to the following platforms on this tree (the
-most current builds) by selecting the builds below. Note that itallicized
-builds are currently 'turned off' on the Tinderbox page for this
-tree.<BR>";
+<form action='addnote.cgi' METHOD='post'>
 
-for $i (@names){
-    if( $i ne "" ){
+<table border=0 cellpadding=4 cellspacing=1>
+<tr valign=top>
+  <td align=right>
+     <NOWRAP>Email address:</NOWRAP>
+  </td><td>
+     <INPUT Type='input' name='who' size=32><BR>
+  </td>
+</tr><tr valign=top>
+  <td align=right>
+     Comment:
+  </td><td>
+     <TEXTAREA NAME=note ROWS=10 COLS=30 WRAP=HARD>
+     </textarea>
+  </td>
+</tr>
+</table>
+<b><font size="+2">Builds</font></b><br>
+);
 
-	if ($i eq $buildname) {
-        next;
-	}
+for $other_build (@names){
+    if( $other_build ne "" ){
+      
+      if( $other_build eq $buildname ){
+        print "<INPUT TYPE=checkbox NAME=\"$other_build\" CHECKED>";
+      } else {
+        print "<INPUT TYPE=checkbox NAME=\"$other_build\">";
+      }
 
-
-        print "<INPUT TYPE=checkbox NAME=\"$i\">";
-
-        if (exists ${$ignore_builds}{$i}) {
-           print "<I>$i</I><BR>\n";
-        } else {
-           print "$i<BR>\n";
-        } #EndIf
+      if (not exists ${$ignore_builds}{$other_build}) {
+        print "$other_build<BR>\n";
+      } #EndIf
     }
 } #Endfor
 
-print "<INPUT Type='submit' name='submit' value='Add Note To Log'><BR>
+print "<INPUT Type='submit' name='submit' value='Add Comment'><BR>
 </form>\n</body>\n</html>";
 }
 
