@@ -86,22 +86,6 @@
               </listrow>
             </listitem>
           </rule>
-          <rule nc:DownloadState="2" parsetype="Integer">
-            <listitem uri="rdf:*">
-              <listrow>
-                <listcell src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
-                              label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              </listrow>
-            </listitem>
-          </rule>
-          <rule nc:DownloadState="3" parsetype="Integer">
-            <listitem uri="rdf:*">
-              <listrow>
-                <listcell src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
-                              label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              </listrow>
-            </listitem>
-          </rule>
         </template>
       </listbox>
     </vbox>
