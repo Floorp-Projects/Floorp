@@ -32,6 +32,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDocumentLoader.h"
 
 #include "nsIStreamTransfer.h"
 
@@ -127,9 +128,10 @@ struct nsUnknownContentDialog : public nsIXULWindowCallbacks,
     NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) { return NS_OK; }
 
     // nsUnknownContentDialog stuff
-    nsUnknownContentDialog( nsIURL *aURL, const char *aContentType )
+    nsUnknownContentDialog( nsIURL *aURL, const char *aContentType, nsIDocumentLoader *aDocLoader )
         : mUrl( aURL ),
-          mContentType( aContentType ) {
+          mContentType( aContentType ),
+          mDocLoader( aDocLoader ) {
         NS_INIT_REFCNT();
     }
     ~nsUnknownContentDialog() {
@@ -138,12 +140,8 @@ struct nsUnknownContentDialog : public nsIXULWindowCallbacks,
         mWindow = aWindow;
     }
     void OnSave();
-    void OnMore() {
-        // Not yet implemented.
-    }
-    void OnPick() {
-        // Not yet implemented.
-    }
+    void OnMore();
+    void OnPick();
     void OnClose() {
         if ( mWindow ) {
             mWindow->Close();
@@ -155,6 +153,7 @@ private:
     nsCOMPtr<nsIWebShell>       mWebShell;
     nsCOMPtr<nsIWebShellWindow> mWindow;
     nsString                    mContentType;
+    nsCOMPtr<nsIDocumentLoader> mDocLoader;
     nsInstanceCounter           mInstanceCounter;
 }; // nsUnknownContentDialog
 
@@ -205,7 +204,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURL *aURL,
     
         if ( NS_SUCCEEDED(rv) ) {
             // Create "save to disk" nsIXULCallbacks...
-            nsUnknownContentDialog *dialog = new nsUnknownContentDialog( aURL, aContentType );
+            nsUnknownContentDialog *dialog = new nsUnknownContentDialog( aURL, aContentType, aDocLoader );
     
             rv = mAppShell->CreateTopLevelWindow( nsnull,
                                                   url,
@@ -348,6 +347,31 @@ nsUnknownContentDialog::AttributeChanged( nsIDocument *aDocument,
 }
 
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
+
+// OnMore: Go to netcenter 'plugin picker" page.
+void
+nsUnknownContentDialog::OnMore() {
+    if ( mDocLoader ) {
+        nsCOMPtr<nsIContentViewerContainer> container;
+        nsresult rv = mDocLoader->GetContainer( getter_AddRefs( container ) );
+        if ( NS_SUCCEEDED( rv ) ) {
+            nsCOMPtr<nsIWebShell> webShell;
+            rv = container->QueryInterface( nsIWebShell::GetIID(),
+                                            (void**)getter_AddRefs( webShell ) );
+            if ( NS_SUCCEEDED( rv ) ) {
+                nsString moreUrl = "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi?";        
+                moreUrl += mContentType;
+                webShell->LoadURL( moreUrl.GetUnicode() );
+            }
+        }
+    }
+}
+
+// OnPick: Launch (platform specific) app picker.
+void
+nsUnknownContentDialog::OnPick() {
+    DEBUG_PRINTF( PR_STDOUT, "nsUnknownContentdialog::OnPick() not implemented yet\n" );        
+}
 
 // OnSave: Pass on the URL to the "stream xfer" component.
 void
