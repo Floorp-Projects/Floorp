@@ -28,6 +28,7 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageProperties.dtd">
 
@@ -45,9 +46,11 @@
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EdImageProps.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
+  <script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
+  <popupset id="aTooltipSet" />
 
   <titledbox orient="vertical">
     <title><text value="&locationBox.label;"/></title>
@@ -59,6 +62,7 @@
           <text class = "label" 
             for   = "srcInput"
             value = "&locationEditField.label;"
+            tooltip="aTooltip" tooltiptext="&locationEditField.tooltip;"
             align = "right" />
           <textfield 
             id         = "srcInput" 
@@ -67,16 +71,17 @@
             onmouseup  = "doOverallEnabling()"
             onchange   = "doOverallEnabling()" />
           <!-- from EdDialogOverlay.xul -->
-          <button id="ChooseFile"/>
+          <button id="ChooseFile" tooltip="aTooltip" tooltiptext="&ChooseFile.tooltip;"/>
         </row>
         <row>
           <text class = "label"
             id    = "altTextLabel" 
             for   = "altTextInput"
+            tooltip="aTooltip" tooltiptext="&altTextEditField.tooltip;"
             value = "&altTextEditField.label;" />
           <textfield
             id       ="altTextInput"
-            class      = "MinWidth20em"
+            class    = "MinWidth20em"
             onchange = "doOverallEnabling()"/>
           <spring/> <!-- placeholder for 3rd column -->
         </row>
@@ -89,10 +94,11 @@
       id      = "MoreFewerButton" 
       align   = "left" 
       oncommand = "onMoreFewerImage()" 
+      tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
     <spring flex="1"/>
     <!-- From EdDialogOverlay.xul -->
-    <button id="AdvancedEditButton"/>
+    <button id="AdvancedEditButton" tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;"/>
   </box>
 
   <!-- Area that shows and hides via MoreFewerButton --> 
@@ -106,10 +112,12 @@
             <radio
               id      = "originalsizeRadio" 
               value   = "&originalSizeRadio.label;"
+              tooltip = "aTooltip" tooltiptext="&originalSizeRadio.tooltip;"
               oncommand = "doDimensionEnabling( true );"/>
             <radio
               id      = "customsizeRadio" 
               value   = "&customSizeRadio.label;"
+              tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
               oncommand = "doDimensionEnabling( true );" />
           </radiogroup>
           <spring class="spacer"/>
@@ -121,6 +129,7 @@
                 <text class = "label" 
                   id    = "widthLabel"
                   for   = "widthInput"
+                  tooltip="aTooltip" tooltiptext="&widthEditField.tooltip;"
                   value = "&widthEditField.label;" />
                 <textfield
                   id       = "widthInput" 
@@ -136,6 +145,7 @@
                 <text class = "label" 
                   id    = "heightLabel"
                   for   = "heightInput"
+                  tooltip="aTooltip" tooltiptext="&heightEditField.tooltip;"
                   value = "&heightEditField.label;" />
                 <textfield 
                   id       = "heightInput" 
@@ -149,7 +159,8 @@
             </rows>          
           </grid>
           <!--////// CONSTRAIN DIMENSIONS //////-->
-          <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"/>
+          <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"
+               tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
         </titledbox>
         <!--////// IMAGE MAP BUTTONS //////-->
         <titledbox flex="1">
@@ -159,11 +170,13 @@
               class   = "dialog"
               id      = "editImageMap"
               oncommand = "editImageMap()"
+              tooltip = "aTooltip" tooltiptext="&editImageMapButton.tooltip;"
               value   = "&editImageMapButton.label;"/>
             <button
               class   = "dialog"
               id      = "removeImageMap"
               oncommand = "removeImageMap()"
+              tooltip = "aTooltip" tooltiptext="&removeImageMapButton.tooltip;"
               value   = "&removeImageMapButton.label;"/>
           </box>
         </titledbox>
@@ -195,6 +208,7 @@
                 <text 
                   class = "label align-right" 
                   id    = "leftrightLabel"
+                  tooltip="aTooltip" tooltiptext="&leftRightEditField.tooltip;"
                   value = "&leftRightEditField.label;"/>
                 <textfield 
                   class     = "narrow"
@@ -210,6 +224,7 @@
                 <text 
                   class = "label align-right" 
                   id    = "topbottomLabel"
+                  tooltip="aTooltip" tooltiptext="&topBottomEditField.tooltip;"
                   value = "&topBottomEditField.label;"/>
                 <textfield 
                   class     = "narrow"
@@ -224,6 +239,7 @@
               <row valign="baseline" autostretch="never">
                 <text class = "label align-right" 
                   id    = "borderLabel"
+                  tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;"
                   value = "&borderEditField.label;"/>
                 <textfield
                   class     = "narrow"
@@ -245,7 +261,7 @@
     <box>
       <spring flex="1"/>
       <!-- From EdDialogOverlay -->
-      <button id="AdvancedEditButton2"/>
+      <button id="AdvancedEditButton2" tooltip="aTooltip" tooltiptext="&AdvancedEditButton2.tooltip;"/>
     </box>
   </box> <!-- END OF MORE/FEWER SECTION -->
   <separator class="groove"/>

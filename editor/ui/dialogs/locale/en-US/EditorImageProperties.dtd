@@ -31,20 +31,33 @@
 <!-- These are in the location box. -->
 <!ENTITY locationBox.label "Image Information">
 <!ENTITY locationEditField.label "Image URL">
+<!ENTITY locationEditField.tooltip "Image URL label tooltip">
+<!ENTITY ChooseFile.tooltip "Image URL label tooltip">
 <!ENTITY altTextEditField.label "Alternative Text">
+<!ENTITY altTextEditField.tooltip "Alternative Text tooltip">
+
+<!ENTITY MoreFewerButton.tooltip "Display more or fewer properties for this image tooltip">
+<!ENTITY AdvancedEditButton.tooltip "Edit additional properties for this image tooltip">
 
 <!-- These controls are in the Dimensions box of the expanded area -->
 <!ENTITY dimensionsBox.label "Dimensions">
 <!ENTITY originalSizeRadio.label "Original Size">
+<!ENTITY originalSizeRadio.tooltip "Original Size tooltip">
 <!ENTITY customSizeRadio.label "Custom Size">
+<!ENTITY customSizeRadio.tooltip "Custom Size tooltip">
 <!ENTITY heightEditField.label "Height">
+<!ENTITY heightEditField.tooltip "Height tooltip">
 <!ENTITY widthEditField.label "Width">
+<!ENTITY widthEditField.tooltip "Width tooltip">
 <!ENTITY constrainCheckbox.label "Constrain">
+<!ENTITY constrainCheckbox.tooltip "Constrain tooltip">
 
 <!-- These controls are in the Image Map box of the expanded area -->
 <!ENTITY imagemapBox.label "Image Map">
 <!ENTITY removeImageMapButton.label "Remove Image Map">
+<!ENTITY removeImageMapButton.tooltip "Remove Image Map tooltip">
 <!ENTITY editImageMapButton.label "Edit Image Map...">
+<!ENTITY editImageMapButton.tooltip "Edit Image Map tooltip">
 
 <!-- These are the options for image alignment -->
 <!ENTITY alignment.label "Align Text to Image">
@@ -56,11 +69,20 @@
 
 <!-- These controls are in the Spacing Box of the expanded area -->
 <!ENTITY spacingBox.label "Spacing">
+<!ENTITY spacingBox.tooltip "Spacing tooltip">
 <!ENTITY leftRightEditField.label "Left and Right">
+<!ENTITY leftRightEditField.tooltip "Left and Right tooltip">
 <!ENTITY topBottomEditField.label "Top and Bottom">
+<!ENTITY topBottomEditField.tooltip "Top and Bottom tooltip">
 <!ENTITY borderEditField.label "Solid Border">
+<!ENTITY borderEditField.tooltip "Solid Border tooltip">
 
-<!-- These controls may be added some day -->
+<!ENTITY AdvancedEditButton2.tooltip "Edit additional properties of this image tooltip">
+
+<!-- These controls may be added some day; currently not used -->
 <!ENTITY leaveAtLocationCheckbox.label "Leave">
+<!ENTITY leaveAtLocationCheckbox.tooltip "Leave tooltip">
 <!ENTITY makePageBackgroundCheckbox.label "Make Page Background">
+<!ENTITY makePageBackgroundCheckbox.tooltip "Make Page Background tooltip">
 <!ENTITY editImageButton.label "Edit Image">
+<!ENTITY editImageButton.tooltip "Edit Image tooltip">
