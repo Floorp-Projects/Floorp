@@ -223,7 +223,7 @@ nsAutoCompleteController::HandleEnter(PRBool *_retval)
     popup->GetSelectedIndex(&selectedIndex);
     *_retval = selectedIndex >= 0;
   }
-    
+  
   ClearSearchTimer();
   EnterMatch();
   
@@ -242,6 +242,13 @@ nsAutoCompleteController::HandleEscape(PRBool *_retval)
   ClosePopup();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::HandleTab()
+{
+  PRBool cancel;
+  return HandleEnter(&cancel);
 }
 
 NS_IMETHODIMP

@@ -447,15 +447,29 @@ nsContextMenu.prototype = {
             return false;
         }
     },
+    
+    updateHistoryForLink : function () {
+        var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                    .getService(Components.interfaces.nsIGlobalHistory);
+        if (!globalHistory.isVisited(this.link.href)) {
+          globalHistory.addPage(this.link.href);
+          var oldHref = this.link.href;
+          this.link.href = "";
+          this.link.href = oldHref;
+        }
+    },
+
     // Open linked-to URL in a new window.
     openLink : function () {
         // Determine linked-to URL.
         openNewWindowWith( this.linkURL() );
+        this.updateHistoryForLink();
     },
     // Open linked-to URL in a new tab.
     openLinkInTab : function () {
         // Determine linked-to URL.
         openNewTabWith( this.linkURL() );
+        this.updateHistoryForLink();
     },
     // Open frame in a new tab.
     openFrameInTab : function () {

@@ -524,10 +524,11 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
         mController->HandleKeyNavigation(nsIAutoCompleteController::KEY_PAGE_DOWN, &cancel);
         break;
       case nsIDOMKeyEvent::DOM_VK_ESCAPE:
-      case nsIDOMKeyEvent::DOM_VK_TAB:
         mController->HandleEscape(&cancel);
-        if (cancel && k == nsIDOMKeyEvent::DOM_VK_TAB)
-          cancel = PR_FALSE;
+        break;
+      case nsIDOMKeyEvent::DOM_VK_TAB:
+        mController->HandleTab();
+        cancel = PR_FALSE;
         break;
       case nsIDOMKeyEvent::DOM_VK_RETURN:
         mController->HandleEnter(&cancel);
