@@ -83,7 +83,8 @@ EX_LIBS = \
 	$(DIST)/bin/libxp.so \
 	$(DIST)/bin/libxpcom.so \
 	$(DIST)/bin/libzlib.so \
-	$(NULL)
+	$(DIST)/bin/libraptorplugin.so \
+        $(NULL)
 
 ifeq ($(OS_ARCH),Linux)
 EX_LIBS += \
