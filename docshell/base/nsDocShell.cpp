@@ -2619,6 +2619,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
   	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
   	 		break;
      case nsIDocShellLoadInfo::loadNormal:
+     case nsIDocShellLoadInfo::loadLink:
 		   // Set cache checking flags
 		   if ( mPrefs )
 		   {
