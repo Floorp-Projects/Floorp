@@ -6,7 +6,7 @@ RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
 // the current profile directory
 // XXX obviously, this shouldn't be hard-coded
-profiledir = 'file:///D|/tmp/flash/';
+profiledir = 'resource:/';
 
 // the location of the flash registry.
 flashdb = profiledir + 'flash-registry.rdf';
