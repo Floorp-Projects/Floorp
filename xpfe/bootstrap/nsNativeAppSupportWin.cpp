@@ -140,10 +140,6 @@ activateWindow( nsIDOMWindowInternal *win ) {
 }
 
 
-
-// Define this macro to 1 to get DDE debugging output.
-#define MOZ_DEBUG_DDE 0
-
 #ifdef DEBUG_law
 #undef MOZ_DEBUG_DDE
 #define MOZ_DEBUG_DDE 1
@@ -366,7 +362,8 @@ private:
                                                     ULONG    dwData1,
                                                     ULONG    dwData2 );
     static void HandleRequest( LPBYTE request, PRBool newWindow = PR_TRUE );
-    static nsCString ParseDDEArg( HSZ args, int index );
+    static void ParseDDEArg( HSZ args, int index, nsCString& string);
+    static void ParseDDEArg( const char* args, int index, nsCString& aString);
     static void ActivateLastWindow();
     static HDDEDATA CreateDDEData( DWORD value );
     static HDDEDATA CreateDDEData( LPBYTE value, DWORD len );
@@ -1023,9 +1020,9 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     *aResult = PR_FALSE;
 
     // Grab mutex first.
-	int retval;
-	UINT id = ID_DDE_APPLICATION_NAME;
-	retval = LoadString( (HINSTANCE) NULL, id, (LPTSTR) nameBuffer, sizeof(nameBuffer) );
+    int retval;
+    UINT id = ID_DDE_APPLICATION_NAME;
+    retval = LoadString( (HINSTANCE) NULL, id, (LPTSTR) nameBuffer, sizeof(nameBuffer) );
     if ( retval == 0 ) {
         // No app name; just keep running.
         *aResult = PR_TRUE;
@@ -1408,12 +1405,12 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     PRBool new_window = PR_FALSE;
 
                     // Get the URL from the first argument in the command.
-                    nsCAutoString url( ParseDDEArg( hsz2, 0 ) );
-
+                    nsCAutoString url;
+                    ParseDDEArg(hsz2, 0, url);
                     // Read the 3rd argument in the command to determine if a
                     // new window is to be used.
-                    nsCAutoString windowID( ParseDDEArg( hsz2, 2 ) );
-
+                    nsCAutoString windowID;
+                    ParseDDEArg(hsz2, 2, windowID);
                     // "0" means to open the URL in a new window.
                     if ( windowID.Equals( "0" ) ) {
                         new_window = PR_TRUE;
@@ -1527,8 +1524,8 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                 }
                 case topicActivate: {
                     // Activate a Nav window...
-                    nsCString windowID = ParseDDEArg( hsz2, 0 );
-
+                    nsCAutoString windowID;
+                    ParseDDEArg(hsz2, 0, windowID);
                     // 4294967295 is decimal for 0xFFFFFFFF which is also a
                     //   correct value to do that Activate last window stuff
                     if ( windowID.Equals( "-1" ) ||
@@ -1581,13 +1578,13 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
             // Default is to open in current window.
             PRBool new_window = PR_FALSE;
 
-            // Get the URL from the first argument in the command.
-            HSZ args = ::DdeCreateStringHandle( mInstance, (const char*)request, CP_WINANSI );
-            nsCAutoString url( ParseDDEArg( args, 0 ) );
+            nsCAutoString url;
+            ParseDDEArg((const char*) request, 0, url);
 
             // Read the 3rd argument in the command to determine if a
             // new window is to be used.
-            nsCAutoString windowID( ParseDDEArg( args, 2 ) );
+            nsCAutoString windowID;
+            ParseDDEArg((const char*) request, 2, windowID);
 
             // "0" means to open the URL in a new window.
             if ( windowID.Equals( "0" ) ) {
@@ -1601,8 +1598,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
 #endif
             // Now handle it.
             HandleRequest( LPBYTE( url.get() ), new_window );
-            // Release the args string.
-            ::DdeFreeStringHandle( mInstance, args );
+
             // Release the data.
             DdeUnaccessData( hdata );
             result = (HDDEDATA)DDE_FACK;
@@ -1638,32 +1634,25 @@ static PRInt32 advanceToEndOfQuotedArg( const char *p, PRInt32 offset, PRInt32 l
     return offset;
 }
 
-// Utility to parse out argument from a DDE item string.
-nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
-    nsCString result;
-    DWORD argLen = DdeQueryString( mInstance, args, NULL, NULL, CP_WINANSI );
-    if ( argLen ) {
-        nsCString temp;
-        // Ensure result's buffer is sufficiently big.
-        temp.SetLength( argLen + 1 );
-        // Now get the string contents.
-        DdeQueryString( mInstance, args, (char*)temp.get(), temp.Length(), CP_WINANSI );
-        // Parse out the given arg.
-        const char *p = temp.get();
+void nsNativeAppSupportWin::ParseDDEArg( const char* args, int index, nsCString& aString) {
+    if ( args ) {
+        int argLen = strlen(args);
+        nsDependentCString temp(args, argLen);
+
         // offset points to the comma preceding the desired arg.
         PRInt32 offset = -1;
         // Skip commas till we get to the arg we want.
         while( index-- ) {
             // If this arg is quoted, then go to closing quote.
-            offset = advanceToEndOfQuotedArg( p, offset, argLen );
+            offset = advanceToEndOfQuotedArg( args, offset, argLen);
             // Find next comma.
             offset = temp.FindChar( ',', offset );
             if ( offset == kNotFound ) {
                 // No more commas, give up.
-                return result;
+                aString = args;
+                return;
             }
         }
-
         // The desired argument starts just past the preceding comma,
         // which offset points to, and extends until the following
         // comma (or the end of the string).
@@ -1672,7 +1661,7 @@ nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
         // deal with that before searching for the terminating comma.
         // We advance offset so it ends up pointing to the start of
         // the argument we want.
-        PRInt32 end = advanceToEndOfQuotedArg( p, offset++, argLen );
+        PRInt32 end = advanceToEndOfQuotedArg( args, offset++, argLen );
         // Find next comma (or end of string).
         end = temp.FindChar( ',', end );
         if ( end == kNotFound ) {
@@ -1680,9 +1669,24 @@ nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
             end = argLen;
         }
         // Extract result.
-        result.Assign( p + offset, end - offset );
+        aString.Assign( args + offset, end - offset );
     }
-    return result;
+    return;
+}
+
+// Utility to parse out argument from a DDE item string.
+void nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index, nsCString& aString) {
+    DWORD argLen = DdeQueryString( mInstance, args, NULL, NULL, CP_WINANSI );
+    // there wasn't any string, so return empty string
+    if ( !argLen ) return;
+    nsCAutoString temp;
+    // Ensure result's buffer is sufficiently big.
+    temp.SetLength( argLen );
+    // Now get the string contents.
+    DdeQueryString( mInstance, args, (char*)temp.get(), temp.Length(), CP_WINANSI );
+    // Parse out the given arg.
+    ParseDDEArg(temp.get(), index, aString);
+    return;
 }
 
 void nsNativeAppSupportWin::ActivateLastWindow() {
@@ -2394,10 +2398,10 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
         }
         if (isMail) {
             mailBundle->GetStringFromName( NS_LITERAL_STRING( "MailNews" ).get(),
-			                               getter_Copies( text ) );
+                                           getter_Copies( text ) );
             mailText = (const PRUnichar*)text;
             mailBundle->GetStringFromName( NS_LITERAL_STRING( "Addressbook" ).get(),
-			                               getter_Copies( text ) );
+                                           getter_Copies( text ) );
             addressbookText = (const PRUnichar*)text;
         }
 
