@@ -590,9 +590,15 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     
   case NS_KEY_PRESS:
     {
+
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+#ifdef XP_MAC
+    PRBool isSpecialAccessKeyDown = keyEvent->isControl;
+#else
+    PRBool isSpecialAccessKeyDown = keyEvent->isAlt;
+#endif
       //This is to prevent keyboard scrolling while alt modifier in use.
-      if (keyEvent->isAlt) {
+      if (isSpecialAccessKeyDown) {
         //Alt key is down, we may need to do an accesskey
         if (mAccessKeys) {
           //Someone registered an accesskey.  Find and activate it.
@@ -1984,7 +1990,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
   }
   //else continue looking for next highest priority tab
   mCurrentTabIndex = GetNextTabIndex(aRootContent, forward);
-  return GetNextTabbableContent(aRootContent, nsnull, forward, aResult);
+  return GetNextTabbableContent(aRootContent, aFrame, forward, aResult);
 }
 
 PRInt32
