@@ -60,8 +60,6 @@ REQUIRES = \
 
 CPPSRCS = \
     StdAfx.cpp             \
-    ControlSite.cpp        \
-    ControlSiteIPFrame.cpp \
     ItemContainer.cpp      \
     PropertyBag.cpp        \
     MozillaControl.cpp     \

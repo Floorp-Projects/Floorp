@@ -42,6 +42,9 @@
 #include "PropertyDlg.h"
 #include "resource.h"
 
+#include "nsIMIMEInfo.h"
+#include "nsIMIMEService.h"
+
 CPropertyDlg::CPropertyDlg() :
     mPPage(NULL)
 {
@@ -96,8 +99,30 @@ LRESULT CPropertyDlg::OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 
 LRESULT CPPageDlg::OnInitDialog(UINT uMsg, WPARAM wParam,  LPARAM lParam, BOOL& bHandled)
 {
-    SetDlgItemText(IDC_PROTOCOL, mProtocol.get());
-    SetDlgItemText(IDC_TYPE, mType.get());
-    SetDlgItemText(IDC_ADDRESS, mURL.get());
+    nsAutoString desc;
+    if (!mType.IsEmpty())
+    {
+        nsresult rv;
+        nsCOMPtr<nsIMIMEService> mimeService;
+        mimeService = do_GetService("@mozilla.org/mime;1", &rv);
+        NS_ENSURE_TRUE(mimeService, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIMIMEInfo> mimeInfo;
+        nsCAutoString contentType;
+        contentType.AssignWithConversion(mType);
+        mimeService->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeInfo));
+        if (mimeInfo)
+        {
+            nsXPIDLString description;
+            mimeInfo->GetDescription(getter_Copies(description));
+            desc = description;
+        }
+    }
+
+    USES_CONVERSION;
+    SetDlgItemText(IDC_PROTOCOL, W2T(desc.get()));
+    SetDlgItemText(IDC_TYPE, W2T(mType.get()));
+    SetDlgItemText(IDC_ADDRESS, W2T(mURL.get()));
+
     return 1;
 }

@@ -160,8 +160,6 @@ typedef long int32;
 #include "PropertyList.h"
 #include "PropertyBag.h"
 #include "ItemContainer.h"
-#include "ControlSite.h"
-#include "ControlSiteIPFrame.h"
 
 #include "IEHtmlDocument.h"
 #include "CPMozillaControl.h"

@@ -41,9 +41,10 @@
 #include "IEHtmlElementCollection.h"
 #include "IEHtmlElement.h"
 
-#include "MozillaBrowser.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMNSHTMLDocument.h"
 
-#include <stack>
+#include "MozillaBrowser.h"
 
 CIEHtmlDocument::CIEHtmlDocument() :
     mControl(NULL)
@@ -342,8 +343,29 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_frames(IHTMLFramesCollection2 __R
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_embeds(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
+    // Validate parameters
+    if (p == NULL)
+    {
+        return E_INVALIDARG;
+    }
     *p = NULL;
-    return E_NOTIMPL;
+
+    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc = do_QueryInterface(mDOMDocument);
+    if (!htmlDoc)
+        return E_FAIL;
+
+    nsCOMPtr<nsIDOMHTMLCollection> nodeList;
+    htmlDoc->GetEmbeds(getter_AddRefs(nodeList));
+
+    // Get all elements
+    CIEHtmlElementCollectionInstance *pCollection = NULL;
+    CIEHtmlElementCollection::CreateFromDOMHTMLCollection(this, nodeList, (CIEHtmlElementCollection **) &pCollection);
+    if (pCollection)
+    {
+        pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
+    }
+
+    return S_OK;
 }
 
 
@@ -353,64 +375,89 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_plugins(IHTMLElementCollection __
     return E_NOTIMPL;
 }
 
+#define IMPL_SET_COLOR(name, v) \
+    CComVariant vStr; \
+    if (FAILED(::VariantChangeType(&vStr, &v, 0, VT_BSTR))) \
+        return E_INVALIDARG; \
+    if (!mDOMDocument) \
+        return E_UNEXPECTED; \
+    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc = do_QueryInterface(mDOMDocument); \
+    if (!htmlDoc) \
+        return E_FAIL; \
+    USES_CONVERSION; \
+    nsAutoString val(OLE2W(vStr.bstrVal)); \
+    htmlDoc->Set ## name(val); \
+    return S_OK;
+
+#define IMPL_GET_COLOR(name, v) \
+    if (p == NULL) return E_INVALIDARG; \
+    if (!mDOMDocument) return E_UNEXPECTED; \
+    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc = do_QueryInterface(mDOMDocument); \
+    if (!htmlDoc) return E_FAIL; \
+    USES_CONVERSION; \
+    nsAutoString val; \
+    htmlDoc->Get ## name(val); \
+    p->vt = VT_BSTR; \
+    p->bstrVal = ::SysAllocString(W2COLE(val.get())); \
+    return S_OK;
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_alinkColor(VARIANT v)
 {
-    return E_NOTIMPL;
+    IMPL_SET_COLOR(AlinkColor, v);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_alinkColor(VARIANT __RPC_FAR *p)
 {
-    return E_NOTIMPL;
+    IMPL_GET_COLOR(AlinkColor, p);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_bgColor(VARIANT v)
 {
-    return E_NOTIMPL;
+    IMPL_SET_COLOR(BgColor, v);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_bgColor(VARIANT __RPC_FAR *p)
 {
-    return E_NOTIMPL;
+    IMPL_GET_COLOR(BgColor, p);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_fgColor(VARIANT v)
 {
-    return E_NOTIMPL;
+    IMPL_SET_COLOR(FgColor, v);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_fgColor(VARIANT __RPC_FAR *p)
 {
-    return E_NOTIMPL;
+    IMPL_GET_COLOR(FgColor, p);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_linkColor(VARIANT v)
 {
-    return E_NOTIMPL;
+    IMPL_SET_COLOR(LinkColor, v);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_linkColor(VARIANT __RPC_FAR *p)
 {
-    return E_NOTIMPL;
+    IMPL_GET_COLOR(LinkColor, p);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_vlinkColor(VARIANT v)
 {
-    return E_NOTIMPL;
+    IMPL_SET_COLOR(VlinkColor, v);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_vlinkColor(VARIANT __RPC_FAR *p)
 {
-    return E_NOTIMPL;
+    IMPL_GET_COLOR(VlinkColor, p);
 }
 
 
@@ -430,8 +477,25 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_location(IHTMLLocation __RPC_FAR 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_lastModified(BSTR __RPC_FAR *p)
 {
+    if (p == NULL)
+    {
+        return E_INVALIDARG;
+    }
     *p = NULL;
-    return E_NOTIMPL;
+    if (!mDOMDocument)
+    {
+        return E_UNEXPECTED;
+    }
+    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc = do_QueryInterface(mDOMDocument);
+    if (!htmlDoc)
+    {
+        return E_FAIL;
+    }
+    USES_CONVERSION;
+    nsAutoString val;
+    htmlDoc->GetLastModified(val);
+    *p = ::SysAllocString(W2COLE(val.get()));
+    return S_OK;
 }
 
 
