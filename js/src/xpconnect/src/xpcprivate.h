@@ -85,6 +85,11 @@
 #include "nsIScriptObjectOwner.h"   // for DOM hack in xpcconvert.cpp
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
+#define XPC_USE_SECURITY_CHECKED_COMPONENT
+#endif
+
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+#include "nsISecurityCheckedComponent.h"
 #endif
 
 #include "nsIConsoleService.h"
@@ -1217,13 +1222,20 @@ private:
 
 /***************************************************************************/
 
-class nsXPCException : public nsIXPCException
+class nsXPCException : 
+            public nsIXPCException
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+          , public nsISecurityCheckedComponent
+#endif
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCEXCEPTION
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
+#endif
 
     static nsXPCException* NewException(const char *aMessage,
                                         nsresult aResult,
@@ -1450,12 +1462,20 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService
 /***************************************************************************/
 // 'Components' object
 
-class nsXPCComponents : public nsIXPCComponents, public nsIXPCScriptable
+class nsXPCComponents : public nsIXPCComponents, 
+                        public nsIXPCScriptable
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+                      , public nsISecurityCheckedComponent
+#endif
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
     XPC_DECLARE_IXPCSCRIPTABLE
+
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
+#endif
 
 public:
     static JSBool
