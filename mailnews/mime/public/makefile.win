@@ -20,6 +20,7 @@ IGNORE_MANIFEST=1
 
 EXPORTS =					\
 	nsIStreamConverter.h			\
+	nsIMimeObjectClassAccess.h		\
         $(NULL)
 
 MODULE=mime
