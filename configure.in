@@ -543,6 +543,7 @@ elif test "$OS_ARCH" = "Windows_NT"; then
 # Moreover, it doesn't have the -p option, so we need to use uname -m.
 #
     OS_ARCH=WINNT
+    OS_TARGET=WINNT
     OS_MINOR_RELEASE=`uname -v`
     if test "$OS_MINOR_RELEASE" = "00"; then
         OS_MINOR_RELEASE=0
@@ -562,6 +563,7 @@ elif echo "$OS_ARCH" | grep -c CYGWIN_NT >/dev/null; then
 #
     OS_RELEASE=`echo $OS_ARCH | sed 's|^CYGWIN_NT-||'`
     OS_ARCH=WINNT
+    OS_TARGET=WINNT
     CPU_ARCH=`uname -m`
     #
     # Cygwin's uname -m returns "i686" on a Pentium Pro machine.
@@ -576,6 +578,7 @@ elif test "$OS_ARCH" = "CYGWIN32_NT"; then
 # the uname.exe in the GNU-Win32 tools.
 #
     OS_ARCH=WINNT
+    OS_TARGET=WINNT
     CPU_ARCH=`uname -m`
     #
     # GNU-Win32's uname -m returns "i686" on a Pentium Pro machine.
@@ -585,12 +588,6 @@ elif test "$OS_ARCH" = "CYGWIN32_NT"; then
     fi
 fi
 
-if test -n "$MOZILLA_CLIENT" && test "$OS_ARCH" = "WINNT"; then
-    OS_TARGET=WIN95
-    if test -n "$MOZ_DEBUG"; then
-        USE_DEBUG_RTL=1
-    fi
-fi
 if test -z "$OS_TARGET"; then
     OS_TARGET=$OS_ARCH
 fi
