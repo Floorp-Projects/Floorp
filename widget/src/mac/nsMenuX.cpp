@@ -824,7 +824,6 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
     }
   }
   else if ( kind == kEventMenuTargetItem ) {
-printf("tracking!!\n");
     // remember which menu ID we're over for later
     MenuRef menuRef;
     ::GetEventParameter(event, kEventParamDirectObject, typeMenuRef, NULL, sizeof(menuRef), NULL, &menuRef);
