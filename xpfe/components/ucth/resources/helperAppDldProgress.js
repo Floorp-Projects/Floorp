@@ -103,7 +103,7 @@ var progressListener = {
       // Get current time.
       var now = ( new Date() ).getTime();
       // If interval hasn't elapsed, ignore it.
-      if ( now - lastUpdate < interval && aMaxTotalProgress != "-1" &&  eval(aCurTotalProgress) < eval(aMaxTotalProgress) )
+      if ( now - lastUpdate < interval && aMaxTotalProgress != "-1" &&  parseInt(aCurTotalProgress) < parseInt(aMaxTotalProgress) )
         return;
 
       // Update this time.
@@ -306,7 +306,7 @@ function loadDialog()
 
 function replaceInsert( text, index, value ) {
    var result = text;
-   var regExp = eval( "/#"+index+"/" );
+   var regExp = new RegExp( "#"+index );
    result = result.replace( regExp, value );
    return result;
 }

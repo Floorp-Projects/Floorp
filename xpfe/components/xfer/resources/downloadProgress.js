@@ -80,7 +80,7 @@ function getString( stringId ) {
 
 function replaceInsert( text, index, value ) {
    var result = text;
-   var regExp = eval( "/#"+index+"/" );
+   var regExp = new RegExp( "#"+index );
    result = result.replace( regExp, value );
    return result;
 }
@@ -194,7 +194,7 @@ function onProgress( bytes, max ) {
          &&
          max != "-1"
          &&
-         eval(bytes) < eval(max) ) {
+         parseInt(bytes) < parseInt(max) ) {
         return;
     }
 
