@@ -708,5 +708,5 @@ SECMOD_DestroyModuleList(SECMODModuleList *list) {
 PRBool
 SECMOD_CanDeleteInternalModule(void)
 {
-    return (PRBool) pendingModule == NULL;
+    return (PRBool) (pendingModule == NULL);
 }

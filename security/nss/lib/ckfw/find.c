@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.3 $ $Date: 2002/02/08 00:10:00 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.4 $ $Date: 2002/09/06 00:27:33 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -135,7 +135,6 @@ nssCKFWFindObjects_Create
 )
 {
   NSSCKFWFindObjects *fwFindObjects = NULL;
-  NSSArena *arena;
   NSSCKMDSession *mdSession;
   NSSCKMDToken *mdToken;
   NSSCKMDInstance *mdInstance;
@@ -143,13 +142,6 @@ nssCKFWFindObjects_Create
   mdSession = nssCKFWSession_GetMDSession(fwSession);
   mdToken = nssCKFWToken_GetMDToken(fwToken);
   mdInstance = nssCKFWInstance_GetMDInstance(fwInstance);
-
-#ifdef notdef
-  arena = nssCKFWSession_GetArena(fwSession, pError);
-  if( (NSSArena *)NULL == arena ) {
-    goto loser;
-  }
-#endif
 
   fwFindObjects = nss_ZNEW(NULL, NSSCKFWFindObjects);
   if( (NSSCKFWFindObjects *)NULL == fwFindObjects ) {

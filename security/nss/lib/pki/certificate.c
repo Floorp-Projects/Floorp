@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.41 $ $Date: 2002/08/30 22:57:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.42 $ $Date: 2002/09/06 00:27:46 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -301,7 +301,6 @@ filter_subject_certs_for_id
 )
 {
     NSSCertificate **si;
-    NSSCertificate *rvCert = NULL;
     nssDecodedCert *dcp;
     int nextOpenSlot = 0;
 

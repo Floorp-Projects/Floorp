@@ -34,7 +34,7 @@
 /*
  * Berkeley DB 1.85 Shim code to handle blobs.
  *
- * $Id: dbmshim.c,v 1.2 2002/09/05 00:25:29 jpierre%netscape.com Exp $
+ * $Id: dbmshim.c,v 1.3 2002/09/06 00:27:49 wtc%netscape.com Exp $
  */
 #include "mcom_db.h"
 #include "secitem.h"
@@ -47,7 +47,8 @@
 #include "pcertt.h"
 #include "secasn1.h"
 #include "secerr.h"
-#include "base64.h"
+#include "nssb64.h"
+#include "blapi.h"
 #include "sechash.h"
 
 #include "pkcs11i.h"
@@ -446,7 +447,6 @@ dbs_put(const DB *dbs, DBT *key, const DBT *data, unsigned int flags)
 static int
 dbs_sync(const DB *dbs, unsigned int flags)
 {
-    int ret;
     DB *db = (DB *)dbs->internal;
 
     dbs_freemap();
@@ -457,7 +457,6 @@ dbs_sync(const DB *dbs, unsigned int flags)
 static int
 dbs_del(const DB *dbs, const DBT *key, unsigned int flags)
 {
-    PRStatus prstat;
     int ret;
     DBS *dbsp = (DBS *)dbs;
     DB *db = (DB *)dbs->internal;
@@ -478,7 +477,6 @@ dbs_del(const DB *dbs, const DBT *key, unsigned int flags)
 static int
 dbs_seq(const DB *dbs, DBT *key, DBT *data, unsigned int flags)
 {
-    PRStatus prstat;
     int ret;
     DBS *dbsp = (DBS *)dbs;
     DB *db = (DB *)dbs->internal;

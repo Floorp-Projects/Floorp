@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.18 2002/05/01 00:21:50 wtc%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.19 2002/09/06 00:27:52 wtc%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -720,8 +720,6 @@ ssl_CreateSecurityInfo(sslSocket *ss)
 SECStatus
 ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os)
 {
-    int rv;
-
     ss->sec.send 		= os->sec.send;
     ss->sec.isServer 		= os->sec.isServer;
     ss->sec.keyBits    		= os->sec.keyBits;
@@ -1064,7 +1062,6 @@ SECStatus
 SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, void *arg)
 {
     sslSocket *ss;
-    SECStatus rv;
     
     ss = ssl_FindSocket(fd);
     if (!ss) {

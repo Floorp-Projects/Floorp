@@ -1192,8 +1192,6 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
     PRBool checkedChain = PR_FALSE;
     PRInt32 i;
     SECCertUsage certUsage = 0;
-    PRBool doOCSP = PR_FALSE;
-    PRBool checkedCRL = PR_FALSE;
     PRBool checkedOCSP = PR_FALSE;
     PRBool checkAllUsages = PR_FALSE;
     PRBool revoked = PR_FALSE;

@@ -536,7 +536,6 @@ SECMOD_HasRootCerts(void)
    SECMODModuleList *modules = SECMOD_GetDefaultModuleList();
    SECMODListLock *moduleLock = SECMOD_GetDefaultModuleListLock();
    int i;
-   PK11SlotInfo *slot = NULL;
    PRBool found = PR_FALSE;
 
    /* work through all the slots */

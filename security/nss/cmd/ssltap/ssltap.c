@@ -60,7 +60,7 @@
 
 #include "plgetopt.h"
 
-#define VERSIONSTRING "$Revision: 1.2 $ ($Date: 2002/03/15 06:04:32 $) $Author: wtc%netscape.com $"
+#define VERSIONSTRING "$Revision: 1.3 $ ($Date: 2002/09/06 00:27:25 $) $Author: wtc%netscape.com $"
 
 
 struct _DataBufferList;
@@ -347,18 +347,12 @@ void partial_packet(int thispacket, int size, int needed)
 
 char * get_time_string(void)
 {
-  struct tm *tm;
   char      *cp;
   char      *eol;
   time_t     tt;
 
   time(&tt);
-#if 0
-  tm = localtime(&tt);
-  cp = asctime(tm);
-#else
   cp = ctime(&tt);
-#endif
   eol = strchr(cp, '\n');
   if (eol) 
     *eol = 0;
@@ -1060,7 +1054,7 @@ showErr(const char * msg) {
 
 int main(int argc,  char *argv[])
 {
-  char *hostname;
+  char *hostname=NULL;
   PRUint16 rendport=DEFPORT,port;
   PRHostEnt hp;
   PRStatus r;

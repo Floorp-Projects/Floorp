@@ -2223,7 +2223,7 @@ sec_pkcs12_validate_cert(sec_PKCS12SafeBag *cert,
 			 SEC_PKCS12NicknameCollisionCallback nicknameCb,
 			 void *wincx)
 {
-    CERTCertificate *leafCert, *testCert;
+    CERTCertificate *leafCert;
 
     if(!cert) {
 	return;

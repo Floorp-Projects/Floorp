@@ -58,7 +58,6 @@ PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
     CK_MECHANISM mechanism;
     CK_OBJECT_HANDLE objectID = CK_INVALID_HANDLE;
     CK_RV crv;
-    CK_BBOOL cktrue = CK_TRUE;
     CK_ATTRIBUTE pTemplate[] = {
 	{ CKA_PRIME, NULL, 0 },
 	{ CKA_SUBPRIME, NULL, 0 },

@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.18 2002/09/05 16:34:27 wtc%netscape.com Exp $
+ * $Id: crl.c,v 1.19 2002/09/06 00:27:29 wtc%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1055,7 +1055,6 @@ PRBool CRLStillExists(CERTSignedCrl* crl)
     CK_ULONG crl_class;
     PRStatus status;
     PK11SlotInfo* slot = NULL;
-    NSSToken* token = NULL;
     nssCryptokiObject instance;
     NSSArena* arena;
     PRBool xstatus = PR_TRUE;
@@ -1391,9 +1390,6 @@ SECStatus DPCache_Update(CRLDPCache* cache, CERTCertificate* issuer, int64 t,
 SECStatus DPCache_Initialize(CRLDPCache* cache, CERTCertificate* issuer,
                              SECItem* subject, SECItem* dp)
 {
-    CK_OBJECT_HANDLE crloid = 0;
-    SECItem* crlder = NULL;
-
     PORT_Assert(cache);
     if (!cache) {
         return SECFailure;
