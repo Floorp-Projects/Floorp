@@ -54,8 +54,11 @@ print "Content-type: text/html\n\n";
 
 sub parse_params {
   if ($query->param('nspr_option') eq 'userdefined') {
+    my $nspr_dir = $query->param('nspr_dir');
+    $nspr_dir =~ s@/$@@;
+    $nspr_dir =~ s@/lib$@@;
     $query->param(-name=>'--with-nspr',
-		  -values=>[$query->param('nspr_dir')]);
+		  -values=>[$nspr_dir]);
   }
   if ($query->param('nspr_option') eq 'rpm') {
     $query->param(-name=>'--with-nspr',
@@ -91,7 +94,7 @@ sub print_script_preview {
     </HEAD>
     <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
-	<form action='.mozconfig.sh' method='get'>
+	<form action='.mozconfig' method='get'>
         <input type='hidden' name='saveas' value='1'>);
 
     foreach $param ($query->param()) {
@@ -102,18 +105,20 @@ sub print_script_preview {
 	}
 
   print qq(
-    <table cellspacing=2 cellpading=0 border=0 width=500><tr><td>
+    <table cellspacing=2 cellpading=0 border=0 width=600><tr><td>
 
     <font size='+1' face='Helvetica,Arial'><b>
     Configurator Script Preview</b></font>
     </td></tr><tr></tr><tr><td>
-    Check the script to make sure your options are correct. When you are done,
-    save this script to <code><b>\$HOME/.mozconfig.sh</b></code>.*
+    Check the script to make sure the options are correct. When you are done,
+    save this script as <code><b>~/.mozconfig</b></code>.
     </td></tr></table>
 
+    <!--
     <table cellpadding=0 cellspacing=1><tr><td>
-	<input type='submit' value='Save this script'>
+	<input type='submit' value='Save the script'>
 	</td></tr></table>
+    -->
 
     <table cellspacing=2 cellpading=0 border=0><tr><td>
 	<table bgcolor="#FF0000" cellspacing=0 cellpadding=2 border=0><tr valign=middle><td align=center>
@@ -128,35 +133,44 @@ sub print_script_preview {
 	   </td></tr></table>
 
     <table cellpadding=0 cellspacing=1><tr><td>
-	<input type='submit' value='Save this script'>
+	<input type='submit' value='Save the script'>
 	</td></tr></table>
 
 <table cellspacing=0 cellpadding=0>
 <tr><td colspan=3>
-After the script is saved, build the tree with,
+Save the script, then build the tree as follows,
 </td></tr><tr><td>&nbsp;</td><td>
-  1.</td><td> <code>cd mozilla</code>
+  1.</td><td> <code>cvs co mozilla/client.mk</code>
 </td></tr><tr><td></td><td>
-  2.</td><td> <code>gmake -f client.mk</code><br>
+  2.</td><td> <code>cd mozilla</code>
 </td></tr><tr><td></td><td>
-</td><td>     (default targets = "<code>checkout build</code>")
+  3.</td><td> <code>gmake -f client.mk</code><br>
+</td></tr><tr><td></td><td>
+</td><td>     (default targets = <code>checkout build</code>)
 </td></tr>
-<tr></tr><tr><td colspan=3>
-Steps to run the viewer,
+</td></tr><tr><td>&nbsp;</td></tr><tr><td colspan=3>
+Here is a shortcut you can use to run <code>viewer</code>
+or <code>apprunner</code> when the tree is built,
 </td></tr><tr><td></td><td>
   1.</td><td> <code>cd &lt;objdir&gt;</code>
 </td></tr><tr><td></td><td>
-  2.</td><td> <code>gmake run_viewer</code>
+  2a.</td><td> <code>gmake run_viewer
+</td></tr><tr><td></td><td>
+  2b.</td><td> <code>gmake run_apprunner
+<!--
 </td></tr><tr><td>&nbsp;</td></tr><tr><td colspan=3>
-* The build searches for this script in the following places,
+<A NAME='places'>
+ The build searches for mozconfig in the following places,
 </td></tr><tr><td></td><td></td><td>
    If <code>\$MOZCONFIG</code> is set, use that file,
 </td></tr><tr><td></td><td></td><td>
-   else try <code>&lt;topsrcdir&gt/mozconfig.sh</code>
+   else try <code>&lt;topsrcdir&gt/mozconfig</code>
 </td></tr><tr><td></td><td></td><td>
-   else try <code>\$HOME/.mozconfig.sh</code>
+   else try <code>\$HOME/.mozconfig</code>
+-->
 </td></tr></table>
-<hr>
+<p>
+<hr align=left width=600>
            Send questions or comments to 
            &lt;<a href="mailto:slamm\@netscape.com?subject=About the Build Configurator">slamm\@netcape.com</a>&gt;.
 	</form>
@@ -179,8 +193,11 @@ sub print_script {
   print "#          --with-pthreads\n";
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
-      next if $query->param($param) eq '';
-      print "mk_add_options $param=".$query->param($param)."\n";
+      my $value = $query->param($param);
+      next if $value eq '';
+      next if $param eq 'MOZ_CO_MODULE' and $value eq 'SeaMonkeyEditor';
+      next if $param eq 'MOZ_CO_BRANCH' and $value eq 'HEAD';
+      print "mk_add_options $param=".$value."\n";
       $need_blank_line = 1;
     }
   }
@@ -199,7 +216,7 @@ sub print_script {
 sub print_configure_form {
   mkdir 'configure-mirror', 0777 if not -d 'configure-mirror';
   system 'echo :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot Ay=0=a%0bZ | cat > configure-mirror/.cvspass' if not -f 'configure-mirror/.cvspass';
-  link 'config.cgi', '.mozconfig.sh' if not -f '.mozconfig.sh';
+  link 'config.cgi', '.mozconfig' if not -f '.mozconfig';
   # Set the HOME variable to pick up '.cvspass' for cvs login
   system "cd configure-mirror && HOME=. cvs -d $CVSROOT co mozilla/configure.in > /dev/null 2>&1";
 
@@ -213,7 +230,7 @@ sub print_configure_form {
     <font size='+1' face='Helvetica,Arial'><b>
     Mozilla Unix Build Configurator</b></font><p>
 
-    <FORM action='config.cgi' method='POST'>
+    <FORM action='config.cgi' method='POST' name='ff'>
     <INPUT Type='hidden' name='preview' value='1'>
 
     This form produces a script that you can save and use to configure your
@@ -228,18 +245,18 @@ sub print_configure_form {
     <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=0><tr><td>
     <table cellspacing=0 cellpadding=1>
 
-    <!-- Checkout options -->
+    <!-- Check out options -->
     <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>Checkout options:</b></font><br>
+    <font face="Helvetica,Arial"><b>Check out options:</b></font><br>
     </td></tr><tr><td>
     <table cellpadding=0 cellspacing=0><tr><td>
-    Module to checkout
+    Check out module
     </td><td>
-    <input type="text" name="MOZ_CO_MODULES"> (default is SeaMonkeyEditor)
+    <input type="text" name="MOZ_CO_MODULE" value="SeaMonkeyEditor">
     </td></tr><tr><td>
-    Branch to checkout
+    Check out branch
     </td><td>
-    <input type="text" name="MOZ_CO_BRANCH">  (default is HEAD)
+    <input type="text" name="MOZ_CO_BRANCH" value="HEAD">
     </td></tr></table>
     </td></tr>
 
@@ -247,15 +264,16 @@ sub print_configure_form {
     <tr bgcolor="$chrome_color"><td>
     <font face="Helvetica,Arial"><b>
     Object Directory:</b></font><br>
-    </td></tr><tr><td>
+    </td></tr><tr><td><table><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@" checked>
-    mozilla (i.e. In the source tree)<br>
+    <code>mozilla</code></td><td> (i.e. In the source tree)<br></td></tr><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/obj-\@CONFIG_GUESS\@">
-    mozilla/obj-\@CONFIG_GUESS\@ (e.g. <code>mozilla/obj-i686-pc-linux-gnu</code>)<br>
+    <code>mozilla/obj-\@CONFIG_GUESS\@</code> </td><td>(e.g. <code>mozilla/obj-i686-pc-linux-gnu</code>)<br>
     <!-- Take this option out for now...
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/../obj-\@CONFIG_GUESS\@">
-    mozilla/../obj-\@CONFIG_GUESS\@ (e.g. <code>mozilla/../obj-i686-pc-linux-gnu</code>)<br>
+    mozilla/../obj-\@CONFIG_GUESS\@(e.g. <code>mozilla/../obj-i686-pc-linux-gnu</code>)<br>
     -->
+    </td></tr></table>
     </td></tr>
 
     <!-- NSPR -->
@@ -264,9 +282,9 @@ sub print_configure_form {
     </td></tr><tr><td>
     <input type="radio" name="nspr_option" value="tip" checked>
     Build nspr from the tip (installs in <code>\@OBJDIR\@/nspr</code>)<br>
-    <input type="radio" name="nspr_option" value="userdefined">
+    <input type="radio" name="nspr_option" value="userdefined" onclick="document.ff.nspr_dir.focus();">
     NSPR is installed in
-    <input type="text" name="nspr_dir"> (omit trailing '<code>/lib</code>')<br>
+    <input type="text" name="nspr_dir" onfocus="document.ff.nspr_option[1].checked=true;"><br>
     <input type="radio" name="nspr_option" value="rpm">
     NSPR is installed in /usr/lib (NSPR RPM installation)
     </td></tr>
@@ -282,7 +300,8 @@ sub print_configure_form {
     the NSPR supported platforms</a>
     to see if you can choose this option.<p>
     <input type="checkbox" name="--with-pthreads" value="yes">
-    Build both NSPR and mozilla with pthreads<br>
+    If the NSPR you selected was built with pthreads or you would like to 
+    build nspr with pthreads select this option.<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     (Sets <code>USE_PTHREADS=1</code> for nspr, 
     and <code>--with-pthreads</code> for mozilla client.)
@@ -296,10 +315,10 @@ sub print_configure_form {
     Enable debugging<br>
     <input type="radio" name="debug_option" value="no">
     Disable debugging<br>
-    <input type="radio" name="debug_option" value="userdefined">
+    <input type="radio" name="debug_option" value="userdefined" onclick="document.ff.debug_dirs.focus();">
     Enable debugging but only for the following directories: <br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <input type="text" name="debug_dirs" size=50> (comma separated, no spaces)<br>
+    <input type="text" name="debug_dirs" size=50 onfocus="document.ff.debug_option[2].checked=true;"> (comma separated, no spaces)<br>
     </td></tr>
 
     </table>
