@@ -25,6 +25,7 @@
 #include "nsIRequest.idl"
 
 interface imgIContainer;
+interface imgIDecoderObserver;
 interface nsIURI;
 
 /**
@@ -62,6 +63,8 @@ interface imgIRequest : nsIRequest
   readonly attribute unsigned long imageStatus;
 
   readonly attribute nsIURI URI;
+
+  readonly attribute imgIDecoderObserver decoderObserver;
 };
 
 %{C++

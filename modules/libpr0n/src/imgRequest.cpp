@@ -275,6 +275,12 @@ NS_IMETHODIMP imgRequest::GetURI(nsIURI **aURI)
   return NS_ERROR_FAILURE;
 }
 
+/* readonly attribute imgIDecoderObserver decoderObserver; */
+NS_IMETHODIMP imgRequest::GetDecoderObserver(imgIDecoderObserver **aDecoderObserver)
+{
+  return NS_ERROR_FAILURE;
+}
+
 
 /** imgIContainerObserver methods **/
 

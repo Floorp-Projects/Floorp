@@ -164,6 +164,15 @@ NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
   return mOwner->GetURI(aURI);
 }
 
+/* readonly attribute imgIDecoderObserver decoderObserver; */
+NS_IMETHODIMP imgRequestProxy::GetDecoderObserver(imgIDecoderObserver **aDecoderObserver)
+{
+  *aDecoderObserver = mObserver;
+  NS_IF_ADDREF(*aDecoderObserver);
+  return NS_OK;
+}
+
+
 /** imgIContainerObserver methods **/
 
 /* [noscript] void frameChanged (in imgIContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
