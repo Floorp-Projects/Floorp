@@ -86,6 +86,14 @@ endif
 
 OBJDIR_TAG = _DBG
 LDFLAGS = -DEBUG -DEBUGTYPE:CV
+#
+# When PROFILE=1 is defined, set the compile and link options
+# to build targets for use by the ms-win32 profiler
+#
+ifdef PROFILE
+LDFLAGS += -PROFILE -MAP
+DLLFLAGS += -PROFILE -MAP
+endif
 endif
 
 DEFINES += -DWIN32
