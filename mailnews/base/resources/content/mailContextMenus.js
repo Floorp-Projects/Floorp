@@ -113,7 +113,6 @@ function fillThreadPaneContextMenu()
     isNewsgroup = IsNewsMessage(selectedMessage);
   }
 
-
   SetupNewMessageWindowMenuItem("threadPaneContext-openNewWindow", numSelected, false);
   SetupEditAsNewMenuItem("threadPaneContext-editAsNew", numSelected, false);
 
@@ -138,7 +137,6 @@ function fillThreadPaneContextMenu()
   SetupDeleteMenuItem("threadPaneContext-delete", numSelected, false);
   SetupAddSenderToABMenuItem("threadPaneContext-addSenderToAddressBook", numSelected, false);
   SetupAddAllToABMenuItem("threadPaneContext-addAllToAddressBook", numSelected, false);
-
 
   ShowMenuItem("threadPaneContext-sep-edit", (numSelected <= 1));
 
@@ -339,7 +337,6 @@ function fillFolderPaneContextMenu()
 function SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, specialFolder)
 {
   var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-  var isMail = serverType != 'nntp';
   var folderTree = GetFolderTree();
   var isSpecialFolder = !(specialFolder == "none" || (specialFolder == "Junk" && CanRenameDeleteJunkMail(msgFolder.URI)));
   var canRename = GetFolderAttribute(folderTree, folderResource, "CanRename") == "true";
@@ -361,7 +358,6 @@ function SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, 
   var isSpecialFolder = !(specialFolder == "none" || (specialFolder == "Junk" && CanRenameDeleteJunkMail(msgFolder.URI)));
   //Can't currently delete Accounts or special folders.
   var showRemove = (numSelected <=1) && (isMail && !isSpecialFolder) && !isServer;
-
 
   ShowMenuItem("folderPaneContext-remove", showRemove);
   if(showRemove)
@@ -438,7 +434,6 @@ function SetMenuItemLabel(id, label)
   var item = document.getElementById(id);
   if(item)
     item.setAttribute('label', label);
-
 }
 
 function SetMenuItemAccessKey(id, accessKey)
@@ -446,7 +441,6 @@ function SetMenuItemAccessKey(id, accessKey)
   var item = document.getElementById(id);
   if(item)
     item.setAttribute('accesskey', accessKey);
-
 }
 
 function fillMessagePaneContextMenu()
@@ -523,7 +517,6 @@ function ShowSeparator(aSeparatorID)
 
 function IsMenuItemShowing(menuID)
 {
-
   var item = document.getElementById(menuID);
   if (item)
     return item.hidden != "true";
