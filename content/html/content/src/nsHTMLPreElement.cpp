@@ -179,7 +179,9 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     // wrap: empty
     aAttributes->GetAttribute(nsHTMLAtoms::wrap, value);
     if (value.GetUnit() == eHTMLUnit_Empty) {
-      // XXX set
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
     }
       
     // variable: empty
@@ -190,10 +192,30 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       font->mFont.name = "serif";
     }
 
-    // cols: int
+    // cols: int (nav4 attribute)
     aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
     if (value.GetUnit() == eHTMLUnit_Integer) {
-      // XXX set
+      nsStylePosition* position = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+      position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Chars);
+      // Force wrap property on since we want to wrap at a width
+      // boundary not just a newline.
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
+    }
+
+    // width: int (html4 attribute == nav4 cols)
+    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() == eHTMLUnit_Integer) {
+      nsStylePosition* position = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+      position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Chars);
+      // Force wrap property on since we want to wrap at a width
+      // boundary not just a newline.
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
     }
 
     // tabstop: int
@@ -202,7 +224,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       // XXX set
     }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
