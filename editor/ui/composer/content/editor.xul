@@ -114,59 +114,57 @@
   </menubar>
 
 <toolbox>
-   <!-- toolbar filled out from editorOverlay -->
-   <!-- add  class="standard" for dark blue background (icons need rework first) -->
-   <toolbar id="EditToolbar" class="standard" persist="collapsed">
-   <!-- box id="toolbar_button_box" -->
-      <titledbutton id="newButton"/>
-      <titledbutton id="openButton"/>
-      <titledbutton id="saveButton"/>
-      <toolbarseparator/>
-      <titledbutton id="printButton"/>
-      <titledbutton id="findButton"/>
-      <titledbutton id="spellingButton"/>
-      <toolbarseparator/>
-      <titledbutton id="imageButton"/>
-      <titledbutton id="hlineButton"/>
-      <titledbutton id="tableButton"/>
-      <titledbutton id="linkButton"/>
-      <titledbutton id="namedAnchorButton"/>
-      <spring flex="100%"/>
+  <!-- toolbar filled out from editorOverlay -->
+  <!-- add  class="standard" for dark blue background (icons need rework first) -->
+  <toolbar id="EditToolbar" class="standard" persist="collapsed">
+    <titledbutton id="newButton"/>
+    <titledbutton id="openButton"/>
+    <titledbutton id="saveButton"/>
+    <toolbarseparator/>
+    <titledbutton id="printButton"/>
+    <titledbutton id="findButton"/>
+    <titledbutton id="spellingButton"/>
+    <toolbarseparator/>
+    <titledbutton id="imageButton"/>
+    <titledbutton id="hlineButton"/>
+    <titledbutton id="tableButton"/>
+    <titledbutton id="linkButton"/>
+    <titledbutton id="namedAnchorButton"/>
+    <spring flex="100%"/>
 
-		  <box id="toolbar_throbber_box" align="vertical">
-			  <titledbutton id="Throbber" onclick="window.open('http://www.mozilla.org/editor');">
-				  <observes element="Editor:Throbber" attribute="busy"/>
-			  </titledbutton>
-		  </box>
-
-    </toolbar>
+		<box id="toolbar_throbber_box" align="vertical">
+			<titledbutton id="Throbber" onclick="window.open('http://www.mozilla.org/editor');">
+				<observes element="Editor:Throbber" attribute="busy"/>
+			</titledbutton>
+		</box>
+  </toolbar>
     
-    <toolbar id="FormatToolbar" persist="collapsed">
-      <html:div>
-        <!-- items are filled out from editorOverlay -->
-        <html:select id="ParagraphSelect"/>
-        <html:select id="FontFaceSelect"/>
-      </html:div>
+  <toolbar id="FormatToolbar" persist="collapsed">
+    <html:div>
+      <!-- items are filled out from editorOverlay -->
+      <html:select id="ParagraphSelect"/>
+      <html:select id="FontFaceSelect"/>
+    </html:div>
 
-      <html:div id="ColorButtons"/>
-      
-      <titledbutton id="DecreaseFontSizeButton"/>
-      <titledbutton id="IncreaseFontSizeButton"/>
-      <titledbutton id="boldButton"/>
-      <titledbutton id="italicButton"/>
-      <titledbutton id="underlineButton"/>
-      <titledbutton id="ulButton"/>
-      <titledbutton id="olButton"/>
-      <titledbutton id="outdentButton"/>
-      <titledbutton id="indentButton"/>
+    <html:div id="ColorButtons"/>
+  
+    <titledbutton id="DecreaseFontSizeButton"/>
+    <titledbutton id="IncreaseFontSizeButton"/>
+    <titledbutton id="boldButton"/>
+    <titledbutton id="italicButton"/>
+    <titledbutton id="underlineButton"/>
+    <titledbutton id="ulButton"/>
+    <titledbutton id="olButton"/>
+    <titledbutton id="outdentButton"/>
+    <titledbutton id="indentButton"/>
 
-      <menu>
-        <titledbutton id="AlignPopupButton"/>
-        <menupopup id="AlignmentPopup"/>
-      </menu>
-      <spring flex="100%"/>
-    </toolbar>
-    </toolbox>
+    <menu>
+      <titledbutton id="AlignPopupButton"/>
+      <menupopup id="AlignmentPopup"/>
+    </menu>
+    <spring flex="100%"/>
+  </toolbar>
+</toolbox>
 
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebar-parent" align="horizontal" flex="100%">
