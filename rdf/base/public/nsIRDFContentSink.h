@@ -33,7 +33,6 @@
 #include "nsIXMLContentSink.h"
 class nsIDocument;
 class nsIRDFDataSource;
-class nsINameSpaceManager;
 class nsIURI;
 
 // {751843E2-8309-11d2-8EAC-00805F29F370}
@@ -51,7 +50,7 @@ public:
     /**
      * Initialize the content sink.
      */
-    NS_IMETHOD Init(nsIURI* aURL, nsINameSpaceManager* aNameSpaceManager) = 0;
+    NS_IMETHOD Init(nsIURI* aURL) = 0;
 
     /**
      * Set the content sink's RDF Data source
