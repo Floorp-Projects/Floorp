@@ -129,10 +129,12 @@ protected:
       Enumerator();
       ~Enumerator();
 
-      NS_IMETHOD_(nsISupports*) Next();
-      NS_IMETHOD_(nsISupports*) Previous();
-      NS_IMETHOD_(void) Reset();
-      NS_IMETHOD_(void) ResetToLast();
+      virtual nsresult First();
+      virtual nsresult Last();
+      virtual nsresult Next();
+      virtual nsresult Prev();
+      virtual nsresult CurrentItem(nsISupports **aItem);
+      virtual nsresult IsDone(PRBool *aDone);
 
       void Append(nsIWidget* aWidget);
       void Remove(nsIWidget* aWidget);

@@ -221,19 +221,22 @@ nsIEnumerator* nsBaseWidget::GetChildren()
 {
   if (mChildren) {
     // Reset the current position to 0
-    mChildren->Reset();
-
+    mChildren->First();
+    nsISupports   * child;
+    if (!NS_SUCCEEDED(mChildren->CurrentItem(&child))) {
+      return NULL;
+    }
     // Make a copy of our enumerator
     Enumerator * children = new Enumerator;
     NS_ADDREF(children);
-    nsISupports   * next = mChildren->Next();
-    while (next) {
+    do
+    {
       nsIWidget *widget;
-      if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
+      if (NS_OK == child->QueryInterface(kIWidgetIID, (void**)&widget)) {
         children->Append(widget);
       }
-      next = mChildren->Next();
     }
+    while (NS_SUCCEEDED(mChildren->Next()));
 
     return (nsIEnumerator*)children;
   }
@@ -434,63 +437,95 @@ nsBaseWidget::Enumerator::~Enumerator()
   }
 }
 
-//-------------------------------------------------------------------------
-//
-// Get enumeration next element. Return null at the end
-//
-//-------------------------------------------------------------------------
-nsISupports* nsBaseWidget::Enumerator::Next()
+
+//enumerator interfaces
+nsresult
+nsBaseWidget::Enumerator::Next()
 {
-  if (mCurrentPosition < mChildren.Count()) {
+  if (mCurrentPosition < (mChildren.Count() -1) )
+    mCurrentPosition ++;
+  else
+    return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+
+
+ 
+nsresult
+nsBaseWidget::Enumerator::Prev()
+{
+  if (mCurrentPosition > 0 )
+    mCurrentPosition --;
+  else
+    return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+
+
+
+nsresult
+nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
+{
+
+  if (!aItem)
+    return NS_ERROR_NULL_POINTER;
+  if (mCurrentPosition >= 0 && mCurrentPosition < mChildren.Count() ) {
     nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(mCurrentPosition);
-
-    mCurrentPosition++;
     NS_IF_ADDREF(widget);
-    return widget;
+    *aItem = (nsISupports *)widget;
   }
+  else
+    return NS_ERROR_FAILURE;
 
-  return NULL;
+  return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Get enumeration previous element. Return null at the end
-//
-//-------------------------------------------------------------------------
-nsISupports* nsBaseWidget::Enumerator::Previous()
-{
-  if (mCurrentPosition > 0) {
-    mCurrentPosition--;
-    nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(mCurrentPosition);
 
-    NS_IF_ADDREF(widget);
-    return widget;
+
+nsresult
+nsBaseWidget::Enumerator::First()
+{
+  if (mChildren.Count()) {
+    mCurrentPosition = 0;
+    return NS_OK;
   }
+  else
+    return NS_ERROR_FAILURE;
 
-  return NULL;
+  return NS_OK;
 }
 
 
-//-------------------------------------------------------------------------
-//
-// Reset enumerator internal pointer to the beginning
-//
-//-------------------------------------------------------------------------
-void nsBaseWidget::Enumerator::Reset()
+
+nsresult
+nsBaseWidget::Enumerator::Last()
 {
-  mCurrentPosition = 0;
+  if (mChildren.Count() ) {
+    mCurrentPosition = mChildren.Count()-1;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 
-//-------------------------------------------------------------------------
-//
-// Reset enumerator internal pointer to the end
-//
-//-------------------------------------------------------------------------
-void nsBaseWidget::Enumerator::ResetToLast()
+
+nsresult
+nsBaseWidget::Enumerator::IsDone(PRBool *aDone)
 {
-  mCurrentPosition = mChildren.Count();
+    if (!aDone)
+        return NS_ERROR_NULL_POINTER;
+    if ((mCurrentPosition == (mChildren.Count() -1)) || mChildren.Count() <= 0 ){ //empty lists always return done
+        *aDone = PR_TRUE;
+    }
+    else
+        *aDone = PR_FALSE;
+    return NS_OK;
 }
+
+
 
 
 //-------------------------------------------------------------------------
