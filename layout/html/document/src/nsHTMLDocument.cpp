@@ -548,6 +548,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
   aContainer->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
 
+  //
+  // The following logic is mirrored in nsWebShell::Embed!
+  //
   nsCOMPtr<nsIMarkupDocumentViewer> muCV;
   nsCOMPtr<nsIContentViewer> cv;
   webShell->GetContentViewer(getter_AddRefs(cv));
