@@ -17,11 +17,11 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width:100%">
 
-	<html:script language="JavaScript" src="AccountManager.js"/>
-
 	<tree rdf:datasources="rdf:msgaccountmanager"
-          onclick="showPage(event)" id="accounttree"
-          style="height: 100%">
+          rdf:containment="http://home.netscape.com/NC-rdf#Settings"
+          onclick="parent.showPage(event)" id="accounttree"
+          style="height: 100%"
+          ref="msgaccounts:/">
 
 	  <template>
 	  	<rule>
@@ -29,7 +29,7 @@
 			<treeitem uri="...">
 		  		<treerow >
                     <treecell treeallowevents="true">
-                      <titledbutton class="twisty" onclick="return ToggleTwisty(event.target.parentNode.parentNode.parentNode)"/>
+                      <titledbutton class="twisty" onclick="return parent.ToggleTwisty(event.target.parentNode.parentNode.parentNode)"/>
                     </treecell>
 					<treecell>
                         <treeindentation/>
@@ -50,23 +50,7 @@
 		</treerow>
 	  </treehead>
 
-	  <treechildren rdf:containment="http://home.netscape.com/NC-rdf#Settings">
-	    <treeitem id="msgaccounts:/" open="true"/>
-      </treechildren>
-	  
 	</tree>
-	
-	<box align="vertical">
-		<box align="horizontal">
-			<titledbutton class="push" flex="50%" name="Duplicate" value="&duplicate.label;"/>
-			<titledbutton class="push" flex="50%" name="Delete" value="&delete.label;"/>
-		</box>
-		<box align="horizontal">
-			<titledbutton class="push" name="NewAccount" value="&newAccount.label;" flex="100%"/>
-		</box>
-		<box align="horizontal">
-			<titledbutton class="push" name="Default" value="&setAsDefault.label;" flex="100%"/>
-		</box>
-	</box>
 
 </window>
+	
