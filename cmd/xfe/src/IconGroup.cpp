@@ -188,7 +188,7 @@ static _name_and_group_t _iconGroups[] =
 //
 //////////////////////////////////////////////////////////////////////////
 IconGroup *
-IconGroup_findGroupForName(char * name)
+IconGroup_findGroupForName(const char * name)
 {
 	Cardinal i;
 

@@ -234,7 +234,7 @@ IconGroup_createOneIcon			(fe_icon *				icon,
 								 Pixel					background_pixel);
 	
 extern IconGroup * 
-IconGroup_findGroupForName		(char * name);
+IconGroup_findGroupForName		(const char * name);
 											
 #ifdef __cplusplus
 }
