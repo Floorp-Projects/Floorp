@@ -36,7 +36,7 @@ CPPSRCS		= nsChromeFactory.cpp
 
 LOCAL_INCLUDES	= -I$(srcdir)/../src
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libchrome_s.a
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libchrome_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
@@ -44,6 +44,10 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
+
+ifeq ($(OS_ARCH),os2)
+EXTRA_DSO_LDOPTS += $(MOZ_TIMER_LIBS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

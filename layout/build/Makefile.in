@@ -30,7 +30,15 @@ BUILD_DATE = gbdate.h
 
 MODULE		= layout
 LIBRARY_NAME	= raptorhtml
+SHORT_LIBNAME	= nglayout
 IS_COMPONENT	= 1
+EXTRA_DSO_LIBS	= jsdom
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	+= nggfx
+else
+EXTRA_DSO_LIBS	+= raptorgfx
+endif
 
 REQUIRES	= xpcom raptor dom js
 
@@ -47,38 +55,38 @@ endif
 EXPORTS		= nsLayoutCID.h $(BUILD_DATE)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libraptorevents_s.a \
-		$(DIST)/lib/libraptorhtmlbase_s.a \
-		$(DIST)/lib/libnglhtmlcon_s.a \
-		$(DIST)/lib/libraptorhtmldoc_s.a \
-		$(DIST)/lib/libraptorhtmlforms_s.a \
-		$(DIST)/lib/libraptorhtmlstyle_s.a \
-		$(DIST)/lib/libraptorhtmltable_s.a \
-		$(DIST)/lib/libraptorxmlcontent_s.a \
-		$(DIST)/lib/libraptorxmldoc_s.a \
-		$(DIST)/lib/libraptorxulcontent_s.a \
-		$(DIST)/lib/libraptorxulbase_s.a \
-		$(DIST)/lib/libraptorxbl_s.a \
-		$(DIST)/lib/libraptorlayout_s.a \
+		$(DIST)/lib/libraptorevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmlbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnglhtmlcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmlforms_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmlstyle_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmltable_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxmlcontent_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxulcontent_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxulbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxbl_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorlayout_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifdef MOZ_PERF
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/libmozutil_s.a \
+		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 
 ifdef MOZ_MATHML
 SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/libraptormathmlcontent_s.a \
-                $(DIST)/lib/libraptormathmlbase_s.a \
+                $(DIST)/lib/libraptormathmlcontent_s.$(LIB_SUFFIX) \
+                $(DIST)/lib/libraptormathmlbase_s.$(LIB_SUFFIX) \
                 $(NSNULL)
 endif
 
 ifdef MOZ_SVG
 SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/libraptorsvgcontent_s.a \
-                $(DIST)/lib/libraptorsvgbase_s.a \
+                $(DIST)/lib/libraptorsvgcontent_s.$(LIB_SUFFIX) \
+                $(DIST)/lib/libraptorsvgbase_s.$(LIB_SUFFIX) \
                 $(NSNULL)
 endif
 
@@ -88,12 +96,14 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
-		$(NSPR_LIBS) \
-		$(XPCOM_LIBS) \
-		-lraptorgfx \
-		-ljsdom \
-		-lmozjs \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXPORT_OBJS	= 1
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -111,4 +121,9 @@ $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 $(BUILD_DATE):	FORCE
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
+
+# To prevent ILink from crashing
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_DLLFLAGS	:= ilink /FREE /NOE /NOL /DLL /O:nglayout.dll /M /INC:_dllentry
+endif
 
