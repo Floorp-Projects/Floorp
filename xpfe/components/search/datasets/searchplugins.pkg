@@ -1,13 +1,7 @@
 [xpfe-locale-US]
-dist/bin/searchplugins/bugzilla.gif
-dist/bin/searchplugins/bugzilla.src
 dist/bin/searchplugins/dmoz.gif
 dist/bin/searchplugins/dmoz.src
 dist/bin/searchplugins/google.gif
 dist/bin/searchplugins/google.src
-dist/bin/searchplugins/lxrmozilla.gif
-dist/bin/searchplugins/lxrmozilla.src
-dist/bin/searchplugins/mozilla.gif
-dist/bin/searchplugins/mozilla.src
 dist/bin/searchplugins/NetscapeSearch.gif
 dist/bin/searchplugins/NetscapeSearch.src
