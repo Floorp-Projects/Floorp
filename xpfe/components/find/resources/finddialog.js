@@ -56,8 +56,6 @@
             if (dialog.findKey.getAttribute("value") == "") {
 	            dialog.find.setAttribute("disabled", "true");
 	       	}
-	       	
-	       	dialog.findKey.focus();
         }
 
         function loadData()
