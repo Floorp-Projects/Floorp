@@ -352,7 +352,6 @@ PRUint8   *alphabits;
     *aSImage = aTheImage->GetBits() + (starty * (*aSLSpan)) + (3 * startx);
          
     // 24 bit
-    *aNumbytes/=3;
     doalpha = PR_TRUE;
 
     if(alphabits)
@@ -385,13 +384,15 @@ PRUint8   *alphabits,*s1,*d1,*m1;
 
   if(CalcAlphaMetrics(aTheImage,aULLocation,&numlines,&numbytes,&s1,&d1,&m1,&slinespan,&dlinespan,&mlinespan))
     {
+    alphabits = aTheImage->GetAlphaBits();
     if(alphabits)
       {
+      numbytes/=3;    // since the mask is only 8 bits, this routine wants number of pixels
       Do24BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,aBlendQuality);
       }
     else
       {
-      Do24Blend(50,numlines,numbytes,s1,d1,slinespan,dlinespan,aBlendQuality);
+      Do24Blend(128,numlines,numbytes,s1,d1,slinespan,dlinespan,aBlendQuality);
       }
     }
 }
@@ -403,27 +404,24 @@ void
 nsImageWin::Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality)
 {
 PRUint8   *d1,*d2,*s1,*s2,*m1,*m2;
-PRInt32   x,y,val1,val2,temp1,inc;
+PRInt32   x,y;
+PRUint32  val1,val2,temp1,numlines,xinc,yinc;
 PRInt32   sspan,dspan,mspan;
 
-  if(aBlendQuality == nsHighQual )
-    inc = 1;
-  else
-    inc = 2;
-
-  sspan = aSLSpan*inc;
-  dspan = aDLSpan*inc;
-  mspan = aMLSpan*inc;
-
+  sspan = aSLSpan;
+  dspan = aDLSpan;
+  mspan = aMLSpan;
 
   // now go thru the image and blend (remember, its bottom upwards)
   s1 = aSImage;
   d1 = aDImage;
   m1 = aMImage;
 
-  printf("increment = %d\n",inc);
+  numlines = aNumlines;  
+  xinc = 1;
+  yinc = 1;
 
-  for (y = 0; y < aNumlines; y+=inc)
+  for (y = 0; y < aNumlines; y++)
     {
     s2 = s1;
     d2 = d1;
@@ -433,22 +431,22 @@ PRInt32   sspan,dspan,mspan;
       {
       val1 = (*m2);
       val2 = 255-val1;
-      temp1 = (((*d2)*val1)/255)+(((*s2)*val2)/255);
 
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
       if(temp1>255)
         temp1 = 255;
       *d2 = (unsigned char)temp1;
       d2++;
       s2++;
-    
-      temp1 = (((*d2)*val1)/255)+(((*s2)*val2)/255);
+  
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
       if(temp1>255)
         temp1 = 255;
       *d2 = (unsigned char)temp1;
       d2++;
       s2++;
 
-      temp1 = (((*d2)*val1)/255)+(((*s2)*val2)/255);
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
       if(temp1>255)
         temp1 = 255;
       *d2 = (unsigned char)temp1;
@@ -459,21 +457,29 @@ PRInt32   sspan,dspan,mspan;
     s1 += sspan;
     d1 += dspan;
     m1 += mspan;
-  }
+    }
 }
 
 //------------------------------------------------------------
 
 // This routine can not be fast enough
 void
-nsImageWin::Do24Blend(PRInt8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality)
+nsImageWin::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality)
 {
-PRInt32   x,y;
 PRUint8   *d1,*d2,*s1,*s2;
+PRInt32  x,y,val1,val2,temp1,numlines,xinc,yinc;;
+
 
   // now go thru the image and blend (remember, its bottom upwards)
   s1 = aSImage;
   d1 = aDImage;
+
+  val1 = aBlendVal;
+  val2 = 255-val1;
+
+  numlines = aNumlines;  
+  xinc = 1;
+  yinc = 1;
 
   for(y = 0; y < aNumlines; y++)
     {
@@ -482,7 +488,11 @@ PRUint8   *d1,*d2,*s1,*s2;
 
     for(x = 0; x < aNumbytes; x++)
       {
-      *d2 = (*d2 + *s2) >> 1;
+      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+      if(temp1>255)
+        temp1 = 255;
+      *d2 = (unsigned char)temp1; 
+
       d2++;
       s2++;
       }

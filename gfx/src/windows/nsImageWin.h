@@ -129,7 +129,7 @@ private:
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
    */
-  void Do24Blend(PRInt8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+  void Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
                 PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality);
 
 

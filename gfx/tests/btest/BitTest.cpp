@@ -276,6 +276,7 @@ nsIImage        *theimage;
     aImage->CompositeImage(aBImage,location,quality);
     }
 
+  // speed test
   if(aTestNum == 2)
     {
     printf("\nSTARTING Blending TEST\n");
@@ -293,23 +294,31 @@ nsIImage        *theimage;
       for(i=0;i<200;i++)
         {
         aBImage->MoveAlphaMask(rand()%w,rand()%h);
-
         theimage = aImage->DuplicateImage();
         theimage->CompositeImage(aBImage,location,quality);
         drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
         NS_RELEASE(theimage);
 
+        // non buffered
+        //aImage->CompositeImage(aBImage,location,quality);
+        //drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
         }
       }
     else
+      {
       for(i=0;i<200;i++)
         {
         aBImage->MoveAlphaMask(rand()%w,rand()%h);
-        theimage = aImage->DuplicateImage();
-        theimage->CompositeImage(aBImage,location,quality);
-        drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
-        NS_RELEASE(theimage);
+        //theimage = aImage->DuplicateImage();
+        //theimage->CompositeImage(aBImage,location,quality);
+        //drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
+        //NS_RELEASE(theimage);
+
+        // non buffered
+        aImage->CompositeImage(aBImage,location,quality);
+        drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
         }
+      }
 
     ::GetSystemTime(&thetime);
     min = thetime.wMinute-min;
