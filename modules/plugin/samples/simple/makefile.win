@@ -21,6 +21,7 @@
 
 
 MODULE		= npsimple
+REQUIRES	= xpcom plugin string
 
 LIBRARY_NAME	= npsimple
 
