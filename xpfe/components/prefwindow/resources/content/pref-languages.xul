@@ -35,6 +35,8 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["active_languages", "DefaultCharsetList"];
+    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    observerService.notifyObservers(null, "charsetmenu-selected", "other");
   ]]>
   </script>
 
