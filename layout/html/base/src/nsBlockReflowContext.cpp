@@ -161,7 +161,8 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
   // Apply post-reflow horizontal alignment. When a block element
   // doesn't use it all of the available width then we need to
   // align it using the text-align property.
-  if (NS_UNCONSTRAINEDSIZE != mSpace.width) {
+  if (NS_UNCONSTRAINEDSIZE != mSpace.width &&
+      NS_UNCONSTRAINEDSIZE != mOuterReflowState.mComputedWidth) {
     // It is possible that the object reflowed was given a
     // constrained width and ended up picking a different width
     // (e.g. a table width a set width that ended up larger
