@@ -835,6 +835,11 @@ nsTextEditRules::WillOutputText(nsIDOMSelection *aSelection,
     *aOutString = mPasswordText;
     *aCancel = PR_TRUE;
   }
+  else if (mBogusNode)
+  { // this means there's no content, so output null string
+    *aOutString = "";
+    *aCancel = PR_TRUE;
+  }
   return NS_OK;
 }
 
