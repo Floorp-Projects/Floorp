@@ -131,6 +131,13 @@ protected:
                                     nsIFrame*&       aNewFrame,
                                     nsAbsoluteItems& aFixedItems);
 
+  PRBool CreateGeneratedContentFrame(nsIPresContext*  aPresContext,
+                                     nsIFrame*        aFrame,
+                                     nsIContent*      aContent,
+                                     nsIStyleContext* aStyleContext,
+                                     nsIAtom*         aPseudoElement,
+                                     nsIFrame**       aResult);
+
   // BEGIN TABLE SECTION
   nsresult ConstructTableFrame(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
