@@ -72,9 +72,16 @@ public:
 
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
 
+
 protected:
   ~nsDeviceContextUnix();
   nsresult CreateFontCache();
+  void AllocColors();
+  uint8 AllocColor(uint8 aRed, uint8 aGreen, 
+                   uint8 aBlue, PRBool aCanAlloc);
+
+  Display *GetDisplay();
+
 
   nsDrawingSurfaceUnix * mSurface ;
 
@@ -84,6 +91,10 @@ protected:
   PRUint32      mNumCells;
   Colormap      mColormap;
   nsPaletteInfo mPaletteInfo;
+  PRBool        mColorsAllocated;
+  uint8*        mIndex;
+  XColor*       mDeviceColors;
+  Display*      mDisplay;
 
 public:
   void InstallColormap(void);

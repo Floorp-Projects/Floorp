@@ -24,6 +24,7 @@
 #include "nspr.h"
 #include "il_util.h"
 
+
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 #define NS_TO_X_COMPONENT(a) ((a << 8) | (a))
@@ -34,7 +35,25 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 #define NS_TO_X(a) (NS_TO_X_RED(a) | NS_TO_X_GREEN(a) | NS_TO_X_BLUE(a))
 
-#define COLOR_CUBE_SIZE 216
+#define COLOR_CUBE_SIZE 216 
+
+typedef struct {
+   int red, green, blue;
+} nsReservedColor;
+
+#define RESERVED_SIZE 0
+
+nsReservedColor sReservedColors[] = {  
+                     { 0,     0,   0 },
+                     { 128,   0,   0 },
+                     {  0,  128,   0 }, 
+                     { 128, 128,   0 }, 
+                     { 0,     0, 128 }, 
+                     {128,    0, 128 }, 
+                     { 0,   128, 128 }, 
+                     { 192, 192, 192 }, 
+                     { 192, 220, 192 }, 
+                     { 166, 202, 240 } };
 
 
 nsDeviceContextUnix :: nsDeviceContextUnix()
@@ -58,6 +77,10 @@ nsDeviceContextUnix :: nsDeviceContextUnix()
   mPaletteInfo.sizePalette = 0;
   mPaletteInfo.numReserved = 0;
   mPaletteInfo.palette = NULL;
+  mColorsAllocated = PR_FALSE;
+  mIndex = 0;
+  mDeviceColors = NULL;
+  mDisplay = 0;
 }
 
 nsDeviceContextUnix :: ~nsDeviceContextUnix()
@@ -66,6 +89,12 @@ nsDeviceContextUnix :: ~nsDeviceContextUnix()
     delete mSurface;
     mSurface = nsnull;
   }
+
+  if (mIndex)
+    delete mIndex;
+
+  if (mDeviceColors)
+    delete mDeviceColors;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextUnix, kDeviceContextIID)
@@ -111,6 +140,90 @@ NS_IMETHODIMP nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aCon
   return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
+Display *nsDeviceContextUnix::GetDisplay()
+{
+  if (mDisplay)
+    return(mDisplay);
+
+  if (mSurface) { 
+    mDisplay = mSurface->display;
+  }
+  else { 
+    mDisplay = XtDisplay((Widget)mWidget);
+  }
+
+  return(mDisplay);
+}
+
+// Try to find existing color then allocate color if one can not be found and
+// aCanAlloc is PR_TRUE. If all else fails try and find the closest match to
+// an existing color. 
+
+uint8 nsDeviceContextUnix :: AllocColor(uint8 aRed, uint8 aGreen, uint8 aBlue, PRBool aCanAlloc)
+{
+  Display* display = GetDisplay();
+
+  if (NULL == mDeviceColors) {
+    mDeviceColors = new XColor[256];
+    for (int i = 0; i < 256; i++) {
+      mDeviceColors[i].pixel = i;
+    }
+  }
+
+  XQueryColors(display, mColormap,  mDeviceColors, 256);
+
+   // Look for perfect match
+  for (int i = 0; i < 256; i++) {
+    if (((mDeviceColors[i].red >> 8)== aRed) && 
+        ((mDeviceColors[i].green >> 8) == aGreen) &&
+        ((mDeviceColors[i].blue >> 8) == aBlue)) {
+      return(mDeviceColors[i].pixel);
+    }
+  }
+
+  // Try and allocate the color 
+  XColor color;
+  color.red = aRed << 8;
+  color.green = aGreen << 8;
+  color.blue = aBlue << 8;
+  color.pixel = 0;
+  color.flags = DoRed | DoGreen | DoBlue;
+  color.pad = 0;
+
+  if (::XAllocColor(display, mColormap, &color)) { 
+    return(color.pixel);
+  }
+
+ 
+   // No more colors left, now must look for closest match. 
+
+  uint8 closest = 0;
+  uint8 r, g, b;
+  unsigned long distance = ~0;
+  unsigned long d;
+  int dr, dg, db;
+  // No color found so look for the closest match
+  for (int i = 0; i < 256; i++) {
+    r = mDeviceColors[i].red >> 8;
+    g = mDeviceColors[i].green >> 8;
+    b = mDeviceColors[i].blue >> 8;
+    dr = r - aRed; 
+    dg = g - aGreen; 
+    db = b - aBlue; 
+    if (dr < 0) dr = -dr;
+    if (dg < 0) dg = -dg;
+    if (db < 0) db = -db;
+    d = (dr << 1) + (dg << 2) + db;
+    if (d < distance) {
+     distance = d;
+     closest = mDeviceColors[i].pixel;
+    }
+  }
+
+  return(closest);
+}
+
+
 NS_IMETHODIMP nsDeviceContextUnix :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   PRUint32 newcolor = 0;
@@ -124,126 +237,18 @@ NS_IMETHODIMP nsDeviceContextUnix :: ConvertPixel(nscolor aColor, PRUint32 & aPi
 
   switch (mDepth) {
     
-  case 8:
-    {
-      
-      if (mWriteable == PR_FALSE) {
-	
-	Status rc ;
-	XColor colorcell;
-	
-	colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
-	colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
-	colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
-	
-	colorcell.pixel = 0;
-	colorcell.flags = 0;
-	colorcell.pad = 0;
-	
-	// On static displays, this will return closest match
-	rc = ::XAllocColor(mSurface->display,
-			   mColormap,
-			   &colorcell);
-	
-	if (rc == 0) {
-	  // Punt ... this cannot happen!
-	  fprintf(stderr,"WHOA! IT FAILED!\n");
-	} else {
-	  newcolor = colorcell.pixel;
-	} // rc == 0
-      } else {
-	
-	// Check to see if this exact color is present.  If not, add it ourselves.  
-	// If there are no unallocated cells left, do our own closest match lookup 
-	//since X doesn't provide us with one.
-      
-	Status rc ;
-	XColor colorcell;
-      
-	colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
-	colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
-	colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
-	
-	colorcell.pixel = 0;
-	colorcell.flags = 0;
-	colorcell.pad = 0;
+  case 8: {
+      newcolor = AllocColor(NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor), PR_TRUE);
 
-	// On non-static displays, this may fail
-	rc = ::XAllocColor(mSurface->display,
-			   mColormap,
-			   &colorcell);
-
-	if (rc == 0) {
-	
-	  // The color does not already exist AND we do not have any unallocated colorcells left
-	  // At his point we need to implement our own lookup matching algorithm.
-
-	  unsigned long pixel;
-      
-	  rc = ::XAllocColorCells(mSurface->display,
-				  mColormap,
-				  False,0,0,
-				  &pixel,
-				  1);
-	
-	  if (rc == 0){
-
-	    fprintf(stderr, "Failed to allocate Color cells...this sux\n");
-	  
-	  } else {
-
-	    colorcell.pixel = pixel;
-	    colorcell.pad = 0 ;
-	    colorcell.flags = DoRed | DoGreen | DoBlue ;
-	    colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
-	    colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
-	    colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
-	    
-	    ::XStoreColor(mSurface->display, mColormap, &colorcell);
-	    
-	    newcolor = colorcell.pixel;
-	    
-	  } // rc == 0 
-	} else {
-	  newcolor = colorcell.pixel;
-	} // rc == 0
-      } // mWriteable == FALSE
-    } // 8
+  } 
   break;
 
-  case 12:
-    {
+  default: {
       newcolor = (PRUint32)NS_TO_X(aColor);
-    } // 12
-  break;
-
-  case 15:
-    {
-      newcolor = (PRUint32)NS_TO_X(aColor);
-    } // 15
-  break;
-
-  case 16:
-    {
-      newcolor = (PRUint32)NS_TO_X(aColor);
-    } // 16
-  break;
-
-  case 24:
-    {
-      newcolor = (PRUint32)NS_TO_X(aColor);
-	//newcolor = (PRUint32)NS_TO_X24(aColor);
-    } // 24
-  break;
-  
-  default:
-    {
-      newcolor = (PRUint32)NS_TO_X(aColor);
-      //      newcolor = (PRUint32) aColor;
-    } // default
+  } 
   break;
     
-  } // switch(mDepth)
+  } 
   
   aPixel = newcolor;
   return NS_OK;
@@ -307,7 +312,7 @@ void nsDeviceContextUnix :: InstallColormap(Display* aDisplay, Drawable aDrawabl
   {
     mPaletteInfo.isPaletteDevice = PR_FALSE;
     if (mDepth == 8) {
-      mPaletteInfo.numReserved = 10;
+      mPaletteInfo.numReserved = RESERVED_SIZE;
       mPaletteInfo.sizePalette = (PRUint32) pow(2, mDepth);
     }
   }
@@ -330,7 +335,7 @@ void nsDeviceContextUnix :: InstallColormap(Display* aDisplay, Drawable aDrawabl
     // XXX We should check the XExtensions to see if this hardware supports multiple
     //         hardware colormaps.  If so, change this colormap to be a RGB ramp.
     if (mDepth == 8) {
-
+       AllocColors();
     }
   }
 
@@ -428,6 +433,53 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const nsString& aFontNam
   return rv;
 }
 
+void nsDeviceContextUnix::AllocColors()
+{
+    uint8* index = new uint8[256];
+
+    if (PR_TRUE == mColorsAllocated)
+      return;
+ 
+    mColorsAllocated = PR_TRUE;
+
+    Display* d;
+    if (mSurface) { 
+      d = mSurface->display;
+    }
+    else {
+      d = XtDisplay((Widget)mWidget);
+    }
+
+    IL_RGB  reserved[RESERVED_SIZE];
+    //memset(reserved, 0, sizeof(reserved));
+    // Setup the reserved colors
+    for (int i = 0; i < RESERVED_SIZE; i++) {
+     reserved[i].red = sReservedColors[i].red;
+     reserved[i].green = sReservedColors[i].green;
+     reserved[i].blue = sReservedColors[i].blue;
+     index[i] = i;
+    }
+
+    IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, RESERVED_SIZE, COLOR_CUBE_SIZE + RESERVED_SIZE);
+
+      // Create a pseudo color space
+    IL_ColorSpace* colorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
+
+      // Create a logical palette
+     XColor xcolor;
+     NI_RGB* map = colorSpace->cmap.map;    
+
+     for (PRInt32 i = RESERVED_SIZE; i < (COLOR_CUBE_SIZE + RESERVED_SIZE); i++)     {
+       index[i] = AllocColor(map->red, map->green, map->blue, PR_TRUE);
+       map++;
+     }
+
+    mIndex = index;
+
+    if (mColorSpace)
+      mColorSpace->cmap.index = mIndex;
+
+}
 
 NS_IMETHODIMP nsDeviceContextUnix::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 {
@@ -443,8 +495,6 @@ NS_IMETHODIMP nsDeviceContextUnix::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   InstallColormap();
 
-  if (nsnull == mColorSpace) {
-
     if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) {
       //
       // 8-BIT Visual
@@ -457,13 +507,17 @@ NS_IMETHODIMP nsDeviceContextUnix::GetILColorSpace(IL_ColorSpace*& aColorSpace)
       // matter what they're set to...
       IL_RGB  reserved[10];
       memset(reserved, 0, sizeof(reserved));
-      IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
+//      IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
+      IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 0, COLOR_CUBE_SIZE );
+
       if (nsnull == colorMap) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
   
       // Create a pseudo color space
       mColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
+      mColorSpace->cmap.index = mIndex;
+
   
     } else if (16 == mDepth) {
       // 
@@ -485,23 +539,14 @@ NS_IMETHODIMP nsDeviceContextUnix::GetILColorSpace(IL_ColorSpace*& aColorSpace)
       return NS_OK;
     }
     else {
-printf("\n\n\n\n Unknown depth %d\n",mDepth);
-      IL_RGBBits colorRGBBits;
-      // Default is to create a 16-bit color space
-      colorRGBBits.red_shift = mRedOffset;  
-      colorRGBBits.red_bits = mRedBits;
-      colorRGBBits.green_shift = mGreenOffset;
-      colorRGBBits.green_bits = mGreenBits; 
-      colorRGBBits.blue_shift = mBlueOffset; 
-      colorRGBBits.blue_bits = mBlueBits;  
-      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 16);
+      DeviceContextImpl::GetILColorSpace(aColorSpace);
+      return NS_OK;
     }
   
     if (nsnull == mColorSpace) {
       aColorSpace = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  }
 
   NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
   aColorSpace = mColorSpace;
