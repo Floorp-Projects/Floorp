@@ -160,14 +160,14 @@ static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
 static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
 
 // GFXWIN
-static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
-static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
-static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
-static NS_DEFINE_IID(kCBlenderIID, NS_BLENDER_CID);
-static NS_DEFINE_IID(kCDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
-static NS_DEFINE_IID(kCDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
+static NS_DEFINE_CID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+static NS_DEFINE_CID(kCDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_CID(kCFontMetricsCID, NS_FONT_METRICS_CID);
+static NS_DEFINE_CID(kCImageCID, NS_IMAGE_CID);
+static NS_DEFINE_CID(kCRegionCID, NS_REGION_CID);
+static NS_DEFINE_CID(kCBlenderCID, NS_BLENDER_CID);
+static NS_DEFINE_CID(kCDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+static NS_DEFINE_CID(kCDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
 
 // VIEW
@@ -360,14 +360,14 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kFileSpecWithUICID,   NS_FILESPECWITHUI_CLASSNAME, NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   // GFXWIN
-  nsComponentManager::RegisterComponentLib(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCRegionIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCBlenderIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCDeviceContextSpecCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCDeviceContextSpecFactoryCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "component://netscape/gfx/renderingcontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "component://netscape/gfx/devicecontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "component://netscape/gfx/fontmetrics", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCImageCID, "Image", "component://netscape/gfx/image", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCRegionCID, "Region", "component://netscape/gfx/region", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCBlenderCID, "Blender", "component://netscape/gfx/blender", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCDeviceContextSpecCID, "Device Context Spec", "component://netscape/gfx/devicecontextspec", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCDeviceContextSpecFactoryCID, "Device Context Spec Factory", "component://netscape/gfx/devicecontextspecfactory", GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
   // VIEW
   nsComponentManager::RegisterComponentLib(kCViewManagerCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
