@@ -204,3 +204,5 @@ MSG_DEF(JSMSG_ILLEGAL_CHARACTER,      144, 0, JSEXN_SYNTAXERR, "illegal characte
 MSG_DEF(JSMSG_BAD_OCTAL,              145, 1, JSEXN_NONE, "{0} is not a legal ECMA-262 numeric constant")
 MSG_DEF(JSMSG_BAD_INDIRECT_CALL,      146, 1, JSEXN_CALLERR, "function {0} must be called directly, and not by way of a function of another name.")
 MSG_DEF(JSMSG_UNCAUGHT_EXCEPTION,     147, 1, JSEXN_NONE, "uncaught exception: {0}")
+MSG_DEF(JSMSG_INVALID_BACKREF,        148, 0, JSEXN_SYNTAXERR, "non-octal digit in an escape sequence that doesn't match a back-reference")
+MSG_DEF(JSMSG_BAD_BACKREF,            149, 0, JSEXN_SYNTAXERR, "back-reference exceeds number of capturing parentheses")
