@@ -506,14 +506,14 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
     gtk_signal_new("dom_focus_in",
                    GTK_RUN_LAST,
                    GET_OBJECT_CLASS_TYPE(klass),
-                   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_activate),
+                   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_focus_in),
                    gtk_marshal_BOOL__POINTER,
                    GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
   moz_embed_signals[DOM_FOCUS_OUT] =
     gtk_signal_new("dom_focus_out",
                    GTK_RUN_LAST,
                    GET_OBJECT_CLASS_TYPE(klass),
-                   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_activate),
+                   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_focus_out),
                    gtk_marshal_BOOL__POINTER,
                    GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
 #ifdef MOZ_WIDGET_GTK
