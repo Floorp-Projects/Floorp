@@ -33,9 +33,6 @@
 
 #include "mpi.h"
 
- /* XXX to be replaced by define in blapit.h */
-#define NSS_FREEBL_DEFAULT_CHUNKSIZE 2048
-
 #define CHECK_SEC_OK(func) if (SECSuccess != (rv = func)) goto cleanup
 
 #define CHECK_MPI_OK(func) if (MP_OKAY > (err = func)) goto cleanup

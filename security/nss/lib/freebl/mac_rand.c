@@ -79,7 +79,7 @@ size_t RNG_GetNoise(void *buf, size_t maxbytes)
     return CopyLowBits(buf, maxbytes,  &microTickCount, sizeof(microTickCount));
 }
 
-void RNG_FileForRNG(char *filename)
+void RNG_FileForRNG(const char *filename)
 {   
     unsigned char buffer[BUFSIZ];
     size_t bytes;

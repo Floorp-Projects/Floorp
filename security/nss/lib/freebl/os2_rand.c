@@ -107,7 +107,7 @@ size_t RNG_GetNoise(void *buf, size_t maxbuf)
 }
 
 static BOOL
-EnumSystemFiles(void (*func)(char *))
+EnumSystemFiles(void (*func)(const char *))
 {
     APIRET              rc;
     ULONG               sysInfo = 0;
@@ -158,13 +158,13 @@ EnumSystemFiles(void (*func)(char *))
 static int    dwNumFiles, dwReadEvery;
 
 static void
-CountFiles(char *file)
+CountFiles(const char *file)
 {
     dwNumFiles++;
 }
 
 static void
-ReadFiles(char *file)
+ReadFiles(const char *file)
 {
     if ((dwNumFiles % dwReadEvery) == 0)
         RNG_FileForRNG(file);
@@ -293,7 +293,7 @@ void RNG_SystemInfoForRNG(void)
    RNG_RandomUpdate(buffer, nBytes);
 }
 
-void RNG_FileForRNG(char *filename)
+void RNG_FileForRNG(const char *filename)
 {
     struct stat stat_buf;
     unsigned char buffer[1024];

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.8 2001/11/14 23:03:19 ian.mcgreer%sun.com Exp $
+ * $Id: blapi.h,v 1.9 2001/11/15 02:41:14 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -725,7 +725,7 @@ extern SECStatus RNG_RNGInit(void);
 ** Update the global random number generator with more seeding
 ** material
 */
-extern SECStatus RNG_RandomUpdate(void *data, size_t bytes);
+extern SECStatus RNG_RandomUpdate(const void *data, size_t bytes);
 
 /*
 ** Generate some random bytes, using the global random number generator

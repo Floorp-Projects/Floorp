@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.4 2001/01/24 05:26:16 wtc%netscape.com Exp $
+ * $Id: loader.c,v 1.5 2001/11/15 02:41:16 nelsonb%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -866,7 +866,7 @@ RNG_RNGInit(void)
 }
 
 SECStatus 
-RNG_RandomUpdate(void *data, size_t bytes)
+RNG_RandomUpdate(const void *data, size_t bytes)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
