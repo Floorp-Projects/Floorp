@@ -1333,9 +1333,6 @@ nsDOMClassInfo::RegisterExternalClasses()
 #define DOM_CLASSINFO_MAP_BEGIN(_class, _interface)                           \
   _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), PR_TRUE)
 
-#define DOM_CLASSINFO_MAP_BEGIN_NO_PRIMARY_INTERFACE(_class)                  \
-  _DOM_CLASSINFO_MAP_BEGIN(_class, nsnull, PR_TRUE)
-
 #define DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(_class, _interface)               \
   _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), PR_FALSE)
 
@@ -1585,7 +1582,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
   
-  DOM_CLASSINFO_MAP_BEGIN(KeyboardEvent, nsIDOMKeyEvent)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(KeyboardEvent, nsIDOMKeyEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMKeyEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
@@ -1906,7 +1903,8 @@ nsDOMClassInfo::Init()
 
   // This should be removed, there are no users of this class any more.
 
-  DOM_CLASSINFO_MAP_BEGIN(HTMLTableColGroupElement, nsIDOMHTMLTableColElement)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(HTMLTableColGroupElement,
+                                      nsIDOMHTMLTableColElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableColElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
@@ -2015,11 +2013,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSValueList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CSSRect, nsIDOMRect)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSRect, nsIDOMRect)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMRect)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CSSRGBColor, nsIDOMRGBColor)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSRGBColor, nsIDOMRGBColor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMRGBColor)
   DOM_CLASSINFO_MAP_END
 
@@ -2130,7 +2128,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(ContentList, nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentList, nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
   DOM_CLASSINFO_MAP_END
