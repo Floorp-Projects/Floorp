@@ -26,6 +26,10 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+REQUIRES	= string \
+		  xpcom \
+		  $(NULL)
+
 CPPSRCS = Attr.cpp \
         CDATASection.cpp \
         CharacterData.cpp \

@@ -75,10 +75,13 @@ TX_IMPL_ATOM_STATICS;
 TX_IMPL_DOM_STATICS;
 #endif
 
+TX_LG_IMPL;
+
 /* static */
 MBool
 txXSLTProcessor::txInit()
 {
+    TX_LG_CREATE;
 #ifdef TX_EXE
     if (!txNamespaceManager::init())
         return MB_FALSE;
@@ -108,6 +111,7 @@ txXSLTProcessor::txInit()
 MBool
 txXSLTProcessor::txShutdown()
 {
+    TX_LG_DELETE;
 #ifdef TX_EXE
     txNamespaceManager::shutdown();
 #endif

@@ -41,7 +41,10 @@
 #define txMozillaString_h__
 
 #include "nsReadableUtils.h"
+#ifndef TX_EXE
 #include "nsUnicharUtils.h"
+typedef nsCaseInsensitiveStringComparator txCaseInsensitiveStringComparator;
+#endif
 
 MOZ_DECL_CTOR_COUNTER(String)
 
@@ -152,7 +155,7 @@ inline MBool String::isEqualIgnoreCase(const String& aData) const
 {
   if (this == &aData)
     return MB_TRUE;
-  return mString.Equals(aData.mString, nsCaseInsensitiveStringComparator());
+  return mString.Equals(aData.mString, txCaseInsensitiveStringComparator());
 }
 
 inline MBool String::isEmpty() const
@@ -198,6 +201,7 @@ inline String& String::subString(PRUint32 aStart, PRUint32 aEnd,
   return aDest;
 }
 
+#ifndef TX_EXE
 inline void String::toLowerCase()
 {
   ToLowerCase(mString);
@@ -207,6 +211,7 @@ inline void String::toUpperCase()
 {
   ToUpperCase(mString);
 }
+#endif
 
 inline String::operator nsAString&()
 {

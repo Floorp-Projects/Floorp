@@ -30,434 +30,80 @@
 #include <stdlib.h>
 #include <string.h>
 
-String::String() : mBuffer(0),
-                   mBufferLength(0),
-                   mLength(0)
+String::String(const UNICODE_CHAR* aSource, PRUint32 aLength)
 {
-}
-
-String::String(const String& aSource) : mBuffer(aSource.toUnicode()),
-                                        mBufferLength(aSource.mLength),
-                                        mLength(aSource.mLength)
-{
-}
-
-String::String(const UNICODE_CHAR* aSource,
-               PRUint32 aLength) : mBuffer(0),
-                                   mBufferLength(0),
-                                   mLength(0)
-{
-  if (!aSource) {
-    return;
-  }
-
-  if (aLength == 0) {
-    aLength = unicodeLength(aSource);
-  }
-  if (!ensureCapacity(aLength)) {
-    return;
-  }
-  memcpy(mBuffer, aSource, aLength * sizeof(UNICODE_CHAR));
-  mLength = aLength;
-}
-
-String::~String()
-{
-  delete [] mBuffer;
-}
-
-void String::append(UNICODE_CHAR aSource)
-{
-  if (!ensureCapacity(1)) {
-    return;
-  }
-  mBuffer[mLength] = aSource;
-  ++mLength;
-}
-
-void String::append(const String& aSource)
-{
-  if (!ensureCapacity(aSource.mLength)) {
-    return;
-  }
-  memcpy(&mBuffer[mLength], aSource.mBuffer,
-         aSource.mLength * sizeof(UNICODE_CHAR));
-  mLength += aSource.mLength;
-}
-
-void String::append(const UNICODE_CHAR* aSource, PRUint32 aLength)
-{
-  if (!ensureCapacity(aLength)) {
-    return;
-  }
-  memcpy(&mBuffer[mLength], aSource,
-         aLength * sizeof(UNICODE_CHAR));
-  mLength += aLength;
-}
-
-void String::insert(PRUint32 aOffset, UNICODE_CHAR aSource)
-{
-  if (!ensureCapacity(1)) {
-    return;
-  }
-  if (aOffset < mLength) {
-    memmove(&mBuffer[aOffset + 1], &mBuffer[aOffset],
-            (mLength - aOffset) * sizeof(UNICODE_CHAR));
-  }
-  mBuffer[aOffset] = aSource;
-  mLength += 1;
-}
-
-void String::insert(PRUint32 aOffset, const String& aSource)
-{
-  if (!ensureCapacity(aSource.mLength)) {
-    return;
-  }
-  if (aOffset < mLength) {
-    memmove(&mBuffer[aOffset + aSource.mLength], &mBuffer[aOffset],
-            (mLength - aOffset) * sizeof(UNICODE_CHAR));
-  }
-  memcpy(&mBuffer[aOffset], aSource.mBuffer,
-         aSource.mLength * sizeof(UNICODE_CHAR));
-  mLength += aSource.mLength;
-}
-
-void String::replace(PRUint32 aOffset, UNICODE_CHAR aSource)
-{
-  if (aOffset < mLength) {
-    mBuffer[aOffset] = aSource;
+  if (aLength) {
+    mString = Substring(aSource, aSource + aLength);
   }
   else {
-    append(aSource);
+    mString = nsDependentString(aSource);
   }
 }
 
-void String::replace(PRUint32 aOffset, const String& aSource)
+int
+txCaseInsensitiveStringComparator::operator()(const char_type* lhs,
+                                              const char_type* rhs,
+                                              PRUint32 aLength ) const
 {
-  if (aOffset < mLength) {
-    PRUint32 finalLength = aOffset + aSource.mLength;
-
-    if (finalLength > mLength) {
-      if (!ensureCapacity(finalLength - mBufferLength)) {
-        return;
-      }
-      mLength = finalLength;
-    }
-    memcpy(&mBuffer[aOffset], aSource.mBuffer,
-           aSource.mLength * sizeof(UNICODE_CHAR));
-  }
-  else {
-    append(aSource);
-  }
-}
-
-void String::deleteChars(PRUint32 aOffset, PRUint32 aCount)
-{
-  PRUint32 cutEnd = aOffset + aCount;
-
-  if (cutEnd < mLength) {
-    memmove(&mBuffer[aOffset], &mBuffer[cutEnd],
-            (mLength - cutEnd) * sizeof(UNICODE_CHAR));
-    mLength -= aCount;
-  }
-  else {
-    mLength = aOffset;
-  }
-}
-
-void String::clear()
-{
-  mLength = 0;
-}
-
-PRInt32 String::indexOf(UNICODE_CHAR aData,
-                        PRInt32 aOffset) const
-{
-  NS_ASSERTION(aOffset >= 0, "Passed negative offset to indexOf.");
-  if (aOffset < 0) {
-    return kNotFound;
-  }
-
-  PRInt32 searchIndex = aOffset;
-
-  while (searchIndex < (PRInt32)mLength) {
-    if (mBuffer[searchIndex] == aData) {
-      return searchIndex;
-    }
-    ++searchIndex;
-  }
-  return kNotFound;
-}
-
-PRInt32 String::indexOf(const String& aData, PRInt32 aOffset) const
-{
-  NS_ASSERTION(aOffset >= 0, "Passed negative offset to indexOf.");
-  if (aOffset < 0) {
-    return kNotFound;
-  }
-
-  PRInt32 searchIndex = aOffset;
-  PRInt32 searchLimit = mLength - aData.mLength;
-
-  while (searchIndex <= searchLimit) {
-    if (memcmp(&mBuffer[searchIndex], aData.mBuffer,
-        aData.mLength * sizeof(UNICODE_CHAR)) == 0) {
-      return searchIndex;
-    }
-    ++searchIndex;
-  }
-  return kNotFound;
-}
-
-PRInt32 String::lastIndexOf(UNICODE_CHAR aData,
-                            PRInt32 aOffset) const
-{
-  NS_ASSERTION(aOffset >= 0, "Passed negative offset to lastIndexOf.");
-  if (aOffset < 0) {
-     return kNotFound;
-  }
-
-  PRUint32 searchIndex = mLength - aOffset;
-  while (--searchIndex >= 0) {
-    if (mBuffer[searchIndex] == aData) {
-      return searchIndex;
-    }
-  }
-  return kNotFound;
-}
-
-MBool String::isEqual(const String& aData) const
-{
-  if (mLength != aData.mLength) {
-    return MB_FALSE;
-  }
-  return (memcmp(mBuffer, aData.mBuffer, mLength * sizeof(UNICODE_CHAR)) == 0);
-}
-
-MBool String::isEqualIgnoreCase(const String& aData) const
-{
-  if (mLength != aData.mLength) {
-    return MB_FALSE;
-  }
-
   UNICODE_CHAR thisChar, otherChar;
   PRUint32 compLoop = 0;
-  while (compLoop < mLength) {
-    thisChar = mBuffer[compLoop];
+  while (compLoop < aLength) {
+    thisChar = lhs[compLoop];
     if ((thisChar >= 'A') && (thisChar <= 'Z')) {
       thisChar += 32;
     }
-    otherChar = aData.mBuffer[compLoop];
+    otherChar = rhs[compLoop];
     if ((otherChar >= 'A') && (otherChar <= 'Z')) {
       otherChar += 32;
     }
     if (thisChar != otherChar) {
-      return MB_FALSE;
+      return thisChar - otherChar;
     }
     ++compLoop;
   }
-  return MB_TRUE;
+  return 0;
+
 }
 
-void String::truncate(PRUint32 aLength)
+int
+txCaseInsensitiveStringComparator::operator()(char_type lhs,
+                                              char_type rhs) const
 {
-  NS_ASSERTION(aLength <= mBufferLength, "truncate can't increase buffer");
-  mLength = (aLength > mBufferLength) ? mBufferLength : aLength;
-}
-
-String& String::subString(PRUint32 aStart, String& aDest) const
-{
-  return subString(aStart, mLength, aDest);
-}
-
-String& String::subString(PRUint32 aStart, PRUint32 aEnd,
-                          String& aDest) const
-{
-  PRUint32 end = (aEnd > mLength) ? mLength : aEnd;
-
-  aDest.clear();
-  if (aStart >= end) {
-    return aDest;
+  if (lhs >= 'A' && lhs <= 'Z') {
+    lhs += 32;
   }
-  PRUint32 substrLength = end - aStart;
-
-  if (!aDest.ensureCapacity(substrLength)) {
-    return aDest;
+  if (rhs >= 'A' && rhs <= 'Z') {
+    rhs += 32;
   }
-  memcpy(aDest.mBuffer, &mBuffer[aStart],
-         substrLength * sizeof(UNICODE_CHAR));
-  aDest.mLength = substrLength;
-
-  return aDest;
-}
+  return lhs - rhs;
+} 
 
 void String::toLowerCase()
 {
-  PRUint32 conversionLoop;
-
-  for (conversionLoop = 0; conversionLoop < mLength; ++conversionLoop) {
-    if ((mBuffer[conversionLoop] >= 'A') &&
-        (mBuffer[conversionLoop] <= 'Z'))
-      mBuffer[conversionLoop] += 32;
+  nsAFlatString::char_iterator c, e;
+  mString.BeginWriting(c);
+  mString.EndWriting(e);
+  while (c != e) {
+    if (*c >= 'A' && *c <= 'Z')
+      *c += 32;
+    ++c;
   }
 }
 
 void String::toUpperCase()
 {
-  PRUint32 conversionLoop;
-
-  for (conversionLoop = 0; conversionLoop < mLength; ++conversionLoop) {
-    if ((mBuffer[conversionLoop] >= 'a') &&
-        (mBuffer[conversionLoop] <= 'z'))
-      mBuffer[conversionLoop] -= 32;
+  nsAFlatString::char_iterator c, e;
+  mString.BeginWriting(c);
+  mString.EndWriting(e);
+  while (c != e) {
+    if (*c >= 'a' && *c <= 'z')
+      *c -= 32;
+    ++c;
   }
-}
-
-String& String::operator = (const String& aSource)
-{
-  delete [] mBuffer;
-  mBuffer = aSource.toUnicode();
-  mBufferLength = aSource.mLength;
-  mLength = aSource.mLength;
-  return *this;
-}
-
-MBool String::ensureCapacity(PRUint32 aCapacity)
-{
-  PRUint32 needed = aCapacity + mLength;
-  if (needed >= 0x8000) {
-    NS_ASSERTION(0, "Asked for too large a buffer.");
-    return MB_FALSE;
-  }
-
-  if (needed < mBufferLength) {
-    return MB_TRUE;
-  }
-
-  UNICODE_CHAR* tempBuffer = new UNICODE_CHAR[needed];
-  NS_ASSERTION(tempBuffer, "Couldn't allocate string buffer.");
-  if (!tempBuffer) {
-    return MB_FALSE;
-  }
-
-  if (mLength > 0) {
-    memcpy(tempBuffer, mBuffer, mLength * sizeof(UNICODE_CHAR));
-  }
-  delete [] mBuffer;
-  mBuffer = tempBuffer;
-  mBufferLength = needed;
-  return MB_TRUE;
-}
-
-UNICODE_CHAR* String::toUnicode() const
-{
-  if (mLength == 0) {
-    return 0;
-  }
-  UNICODE_CHAR* tmpBuffer = new UNICODE_CHAR[mLength];
-  NS_ASSERTION(tmpBuffer, "out of memory");
-  if (tmpBuffer) {
-    memcpy(tmpBuffer, mBuffer, mLength * sizeof(UNICODE_CHAR));
-  }
-  return tmpBuffer;
-}
-
-PRUint32 String::unicodeLength(const UNICODE_CHAR* aData)
-{
-  PRUint32 index = 0;
-
-  // Count UNICODE_CHARs Until a Unicode "NULL" is found.
-  while (aData[index] != 0x0000) {
-    ++index;
-  }
-  return index;
 }
 
 ostream& operator<<(ostream& aOutput, const String& aSource)
 {
-  PRUint32 outputLoop;
-
-  for (outputLoop = 0; outputLoop < aSource.mLength; ++outputLoop) {
-    aOutput << (char)aSource.charAt(outputLoop);
-  }
+  aOutput << NS_LossyConvertUCS2toASCII(aSource.mString).get();
   return aOutput;
-}
-
-// XXX DEPRECATED
-String::String(PRUint32 aSize) : mBuffer(0),
-                                 mBufferLength(0),
-                                 mLength(0)
-{
-  ensureCapacity(aSize);
-}
-
-String::String(const char* aSource) : mBuffer(0),
-                                      mBufferLength(0),
-                                      mLength(0)
-{
-  if (!aSource) {
-    return;
-  }
-
-  PRUint32 length = strlen(aSource);
-  if (!ensureCapacity(length)) {
-    return;
-  }
-  PRUint32 counter;
-  for (counter = 0; counter < length; ++counter) {
-    mBuffer[counter] = (UNICODE_CHAR)aSource[counter];
-  }
-  mLength = length;
-}
-
-void String::append(const char* aSource)
-{
-  if (!aSource) {
-    return;
-  }
-
-  PRUint32 length = strlen(aSource);
-  if (!ensureCapacity(length)) {
-    return;
-  }
-  PRUint32 counter;
-  for (counter = 0; counter < length; ++counter) {
-    mBuffer[mLength + counter] = (UNICODE_CHAR)aSource[counter];
-  }
-  mLength += length;
-}
-
-MBool String::isEqual(const char* aData) const
-{
-  if (!aData) {
-    return MB_FALSE;
-  }
-
-  PRUint32 length = strlen(aData);
-  if (length != mLength) {
-    return MB_FALSE;
-  }
-
-  PRUint32 counter;
-  for (counter = 0; counter < length; ++counter) {
-    if (mBuffer[counter] != (UNICODE_CHAR)aData[counter]) {
-      return MB_FALSE;
-    }
-  }
-  return MB_TRUE;
-}
-
-NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2(const char* aSource)
-{
-  NS_ASSERTION(aSource, "can't convert a null to UCS2");
-
-  PRUint32 length = strlen(aSource);
-  if (!ensureCapacity(length)) {
-    return;
-  }
-  PRUint32 counter;
-  for (counter = 0; counter < length; ++counter) {
-    mBuffer[counter] = (UNICODE_CHAR)aSource[counter];
-  }
-  mLength = length;
 }

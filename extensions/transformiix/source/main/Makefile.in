@@ -35,7 +35,9 @@ SIMPLE_PROGRAMS += txXSLTMarkDriver$(BIN_SUFFIX)
 endif
 EXTRA_DEPS = $(LIBRARY)
 
-REQUIRES = expat \
+REQUIRES = string \
+	   xpcom \
+	   expat \
            $(NULL)
 
 OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
@@ -131,6 +133,7 @@ CPP_PROG_LINK		= 1
 
 EXTRA_LIBS = \
              $(LIB_PREFIX)tx.$(LIB_SUFFIX) \
+             $(MOZ_COMPONENT_LIBS) \
              $(NULL)
 SHARED_LIBRARY_LIBS = \
              $(DIST)/lib/$(LIB_PREFIX)expat_s.$(LIB_SUFFIX) \

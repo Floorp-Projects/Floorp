@@ -40,7 +40,9 @@ REQUIRES	= string \
 		  unicharutil \
 		  $(NULL)
 else
-REQUIRES = expat \
+REQUIRES = string \
+	   xpcom \
+	   expat \
            $(NULL)
 endif
 

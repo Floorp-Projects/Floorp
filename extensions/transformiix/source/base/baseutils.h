@@ -32,39 +32,13 @@
 #ifndef TRANSFRMX_BASEUTILS_H
 #define TRANSFRMX_BASEUTILS_H
 
-#ifdef TX_EXE
-  // Standalone
-  typedef int PRInt32;
-  typedef unsigned int PRUint32;
+#include "prtypes.h"
+#include "nscore.h"
+#include "nsDebug.h"
+typedef PRBool MBool;
 
-  typedef PRInt32 MBool;
-
-  #define MB_TRUE  (MBool)1
-  #define MB_FALSE (MBool)0
-
-  #ifdef DEBUG
-    #define NS_ASSERTION(_cond, _msg)                                \
-    if(!(_cond)) {                                                   \
-      cerr << "ASSERTION (" << #_cond << ") " << _msg << endl;       \
-      cerr << "on line " << __LINE__ << " in " << __FILE__ << endl;  \
-    }
-    #else
-      #define NS_ASSERTION(_cond, _msg) {}
-    #endif
-
-  #define NS_PTR_TO_INT32(x) ((char *)(x) - (char *)0)
-  #define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
-
-#else
-  // Mozilla module
-  #include "prtypes.h"
-  #include "nscore.h"
-  #include "nsDebug.h"
-  typedef PRBool MBool;
-
-  #define MB_TRUE  PR_TRUE
-  #define MB_FALSE PR_FALSE
-#endif
+#define MB_TRUE  PR_TRUE
+#define MB_FALSE PR_FALSE
 
 #ifndef NULL
  #define NULL 0
