@@ -148,6 +148,9 @@ int CBrowserFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create URL Bar\n");
 		return -1;      // fail to create
 	}
+    
+    // Load the Most Recently Used(MRU) Urls into the UrlBar
+    m_wndUrlBar.LoadMRUList();
 
 	// Create the toolbar with Back, Fwd, Stop, etc. buttons..
 	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP

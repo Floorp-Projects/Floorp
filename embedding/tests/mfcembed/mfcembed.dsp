@@ -126,6 +126,10 @@ SOURCE=.\MfcEmbed.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\MostRecentUrls.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ProfileMgr.cpp
 # End Source File
 # Begin Source File
@@ -167,6 +171,10 @@ SOURCE=.\IBrowserFrameGlue.h
 # Begin Source File
 
 SOURCE=.\MfcEmbed.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MostRecentUrls.h
 # End Source File
 # Begin Source File
 
