@@ -52,7 +52,7 @@
 #pragma mark -
 
 // see the header file for comments
-nsDownloader::nsDownloader(DownloadControllerFactory* inControllerFactory)
+CHDownloader::CHDownloader(DownloadControllerFactory* inControllerFactory)
 : mControllerFactory(inControllerFactory)
 , mDownloadDisplay(nil)
 {
@@ -60,15 +60,15 @@ nsDownloader::nsDownloader(DownloadControllerFactory* inControllerFactory)
   [mControllerFactory retain];
 }
 
-nsDownloader::~nsDownloader()
+CHDownloader::~CHDownloader()
 {
   [mControllerFactory release];
 }
 
-NS_IMPL_ISUPPORTS1(nsDownloader, nsISupports);
+NS_IMPL_ISUPPORTS1(CHDownloader, nsISupports);
 
 void
-nsDownloader::CreateDownloadDisplay()
+CHDownloader::CreateDownloadDisplay()
 {
   mDownloadDisplay = [mControllerFactory createDownloadController];
   [mDownloadDisplay setDownloadListener:this];

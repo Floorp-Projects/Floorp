@@ -68,7 +68,7 @@ class nsDownloadListener;
     BOOL      mDownloadIsComplete;
     long      mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
         
-    nsDownloader        *mDownloader;   // we hold a ref to this
+    CHDownloader        *mDownloader;   // we hold a ref to this
     NSTimer             *mDownloadTimer;
 }
 

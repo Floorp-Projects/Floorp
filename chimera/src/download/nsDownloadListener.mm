@@ -45,7 +45,7 @@
 #include "netCore.h"
 
 nsDownloadListener::nsDownloadListener(DownloadControllerFactory* inControllerFactory)
-: nsDownloader(inControllerFactory)
+: CHDownloader(inControllerFactory)
 , mBypassCache(PR_FALSE)
 , mNetworkTransfer(PR_FALSE)
 , mGotFirstStateChange(PR_FALSE)
@@ -57,7 +57,7 @@ nsDownloadListener::~nsDownloadListener()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsDownloadListener, nsDownloader, nsIDownload, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS_INHERITED2(nsDownloadListener, CHDownloader, nsIDownload, nsIWebProgressListener)
 
 #pragma mark -
 
