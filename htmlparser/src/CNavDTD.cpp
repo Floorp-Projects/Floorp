@@ -1168,10 +1168,6 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
 nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode& aNode) {
   nsresult  result=NS_OK;
 
-  // Some tags need no to be opened regardless of what the parent says.
-  if(gHTMLElements[aChildTag].HasSpecialProperty(kLegalOpen)) {
-    return !NS_OK;
-  }
   //The trick here is to see if the parent can contain the child, but prefers not to.
   //Only if the parent CANNOT contain the child should we look to see if it's potentially a child
   //of another section. If it is, the cache it for later.
@@ -1471,19 +1467,32 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       break;
     
     default:
-      {
+     {
         //now check to see if this token should be omitted, or 
         //if it's gated from closing by the presence of another tag.
-        if((gHTMLElements[theChildTag].CanOmitEndTag()) || (kNotFound==GetIndexOfChildOrSynonym(mBodyContext->mStack,theChildTag))) {
+        if(gHTMLElements[theChildTag].CanOmitEndTag()) {
           UpdateStyleStackForCloseTag(theChildTag,theChildTag);
         }
         else {
-          eHTMLTags theTarget=FindAutoCloseTargetForEndTag(theChildTag,mBodyContext->mStack);
-          if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch)){
-             result = HandleSavedTokensAbove(theTarget);
+          if(kNotFound==GetIndexOfChildOrSynonym(mBodyContext->mStack,theChildTag)) {
+            UpdateStyleStackForCloseTag(theChildTag,theChildTag);
+            if(nsHTMLElement::IsBlockCloser(theChildTag)) {
+              // Oh boy!! we found a "stray" block closer. Nav4.x and IE introduce line break in
+              // such cases. So, let's simulate that effect for compatibility.
+              // Ex. <html><body>Hello</P>There</body></html>
+              CHTMLToken* theToken = (CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theChildTag);
+              result=HandleStartToken(theToken);
+            }
+            else return result;
           }
-          if(eHTMLTag_unknown!=theTarget) {
-            result=CloseContainersTo(theTarget,PR_FALSE);
+          if(result==NS_OK) {
+            eHTMLTags theTarget=FindAutoCloseTargetForEndTag(theChildTag,mBodyContext->mStack);
+            if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch)){
+               result = HandleSavedTokensAbove(theTarget);
+            }
+            if(eHTMLTag_unknown!=theTarget) {
+              result=CloseContainersTo(theTarget,PR_FALSE);
+            }
           }
         }
       }
@@ -1794,8 +1803,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       return PR_TRUE;
     }//if
   }//if
-  if(aChild == eHTMLTag_script)
-    return PR_TRUE;
   return gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
 } 
 
