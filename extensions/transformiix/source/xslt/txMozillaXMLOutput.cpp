@@ -463,7 +463,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create text node");
 
         nsCOMPtr<nsIDOMNode> resultNode;
-        mCurrentNode->AppendChild(text, getter_AddRefs(resultNode));
+        rv = mCurrentNode->AppendChild(text, getter_AddRefs(resultNode));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append text node");
 
         mText.Truncate();
@@ -478,7 +478,29 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement)
 
     mDontAddCurrent = (atom == txHTMLAtoms::script);
 
-    if (mCreatingNewDocument) {
+    if (atom == txHTMLAtoms::head) {
+        // Insert META tag, according to spec, 16.2, like
+        // <META http-equiv="Content-Type" content="text/html; charset=EUC-JP">
+        nsresult rv;
+        nsCOMPtr<nsIDOMNode> foo;
+        nsCOMPtr<nsIDOMElement> meta;
+        rv = mDocument->CreateElement(NS_LITERAL_STRING("meta"),
+                                      getter_AddRefs(meta));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create meta element");
+        rv = meta->SetAttribute(NS_LITERAL_STRING("http-equiv"),
+                                NS_LITERAL_STRING("Content-Type"));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Can't set http-equiv on meta");
+        nsAutoString metacontent;
+        metacontent.Append(mOutputFormat.mMediaType);
+        metacontent.Append(NS_LITERAL_STRING("; charset="));
+        metacontent.Append(mOutputFormat.mEncoding);
+        rv = meta->SetAttribute(NS_LITERAL_STRING("content"),
+                                metacontent);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Can't set content on meta");
+        rv = aElement->AppendChild(meta, getter_AddRefs(foo));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append meta");
+    }
+    else if (mCreatingNewDocument) {
         nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
             do_QueryInterface(aElement);
         if (ssle) {
