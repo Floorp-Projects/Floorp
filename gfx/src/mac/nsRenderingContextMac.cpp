@@ -198,8 +198,10 @@ nsresult nsRenderingContextMac :: CommonInit()
   //((nsDeviceContextMac *)mContext)->InstallColormap();
 
   mFontCache = mContext->GetFontCache();
-  mP2T = mContext->GetDevUnitsToAppUnits();
-  mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),mContext->GetAppUnitsToDevUnits());
+  mContext->GetDevUnitsToAppUnits(mP2T);
+  float app2dev;
+  mContext->GetAppUnitsToDevUnits(app2dev);
+  mTMatrix->AddScale(app2dev, app2dev);
   return NS_OK;
 }
 

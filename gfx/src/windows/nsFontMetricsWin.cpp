@@ -174,7 +174,8 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
     ? FW_BOLD : FW_NORMAL;
   logFont.lfItalic = (mFont->style & NS_FONT_STYLE_ITALIC)
     ? TRUE : FALSE;
-  float app2dev = aContext->GetAppUnitsToDevUnits();
+  float app2dev;
+  aContext->GetAppUnitsToDevUnits(app2dev);
   float app2twip;
   aContext->GetDevUnitsToTwips(app2twip);
   app2twip *= app2dev;
@@ -205,7 +206,8 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   HFONT oldfont = ::SelectObject(dc, (HGDIOBJ) mFontHandle);
 
   // Get font metrics
-  float dev2app = aContext->GetDevUnitsToAppUnits();
+  float dev2app;
+  aContext->GetDevUnitsToAppUnits(dev2app);
   TEXTMETRIC metrics;
   ::GetTextMetrics(dc, &metrics);
   mHeight = nscoord(metrics.tmHeight * dev2app);
@@ -285,7 +287,8 @@ nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString&
   ::ReleaseDC(win, hdc);
 
 
-  float app2dev = aContext->GetAppUnitsToDevUnits();
+  float app2dev;
+  aContext->GetAppUnitsToDevUnits(app2dev);
   float dev2twip;
   aContext->GetDevUnitsToTwips(dev2twip);
   float app2twip = dev2twip * app2dev;

@@ -105,24 +105,28 @@ NS_IMETHODIMP DeviceContextImpl :: GetDevUnitsToTwips(float &aDevUnitsToTwips) c
   return NS_OK;
 }
 
-void DeviceContextImpl :: SetAppUnitsToDevUnits(float aAppUnits)
+NS_IMETHODIMP DeviceContextImpl :: SetAppUnitsToDevUnits(float aAppUnits)
 {
   mAppUnitsToDevUnits = aAppUnits;
+  return NS_OK;
 }
 
-void DeviceContextImpl :: SetDevUnitsToAppUnits(float aDevUnits)
+NS_IMETHODIMP DeviceContextImpl :: SetDevUnitsToAppUnits(float aDevUnits)
 {
   mDevUnitsToAppUnits = aDevUnits;
+  return NS_OK;
 }
 
-float DeviceContextImpl :: GetAppUnitsToDevUnits() const
+NS_IMETHODIMP DeviceContextImpl :: GetAppUnitsToDevUnits(float &aAppUnits) const
 {
-  return mAppUnitsToDevUnits;
+  aAppUnits = mAppUnitsToDevUnits;
+  return NS_OK;
 }
 
-float DeviceContextImpl :: GetDevUnitsToAppUnits() const
+NS_IMETHODIMP DeviceContextImpl :: GetDevUnitsToAppUnits(float &aDevUnits) const
 {
-  return mDevUnitsToAppUnits;
+  aDevUnits = mDevUnitsToAppUnits;
+  return NS_OK;
 }
 
 NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)

@@ -456,9 +456,10 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
 
 nsresult nsRenderingContextWin :: CommonInit(void)
 {
-	mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
-                     mContext->GetAppUnitsToDevUnits());
-  mP2T = mContext->GetDevUnitsToAppUnits();
+  float app2dev;
+  mContext->GetAppUnitsToDevUnits(app2dev);
+	mTMatrix->AddScale(app2dev, app2dev);
+  mContext->GetDevUnitsToAppUnits(mP2T);
   mContext->GetFontCache(mFontCache);
 
 #ifdef NS_DEBUG

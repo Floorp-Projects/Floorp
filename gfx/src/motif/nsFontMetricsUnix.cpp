@@ -190,7 +190,9 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 char * nsFontMetricsUnix::PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired)
 {
   int         idx;
-  PRInt32     desiredpix = NSToIntRound(mContext->GetAppUnitsToDevUnits() * desired);
+  float       app2dev;
+  mContext->GetAppUnitsToDevUnits(app2dev);
+  PRInt32     desiredpix = NSToIntRound(app2dev * desired);
   XFontStruct *curfont;
   PRInt32     closestmin = -1, minidx;
 
@@ -239,7 +241,8 @@ void nsFontMetricsUnix::RealizeFont()
   mContext->GetNativeWidget(widget);
   mFontInfo = ::XQueryFont(XtDisplay((Widget)widget), mFontHandle);
 
-  float f = mContext->GetDevUnitsToAppUnits();
+  float f;
+  mContext->GetDevUnitsToAppUnits(f);
   
   mAscent = nscoord(mFontInfo->ascent * f);
   mDescent = nscoord(mFontInfo->descent * f);
@@ -289,7 +292,9 @@ nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
   
   rc = (PRInt32) ::XTextWidth(mFontInfo, aString, nsCRT::strlen(aString));
 
-  return (nscoord(rc * mContext->GetDevUnitsToAppUnits()));
+  float dev2app;
+  mContext->GetDevUnitsToAppUnits(dev2app);
+  return nscoord(rc * dev2app);
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
@@ -321,7 +326,9 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
   
   width = ::XTextWidth16(mFontInfo, mXstring, aLength);
 
-  return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
+  float dev2app;
+  mContext->GetDevUnitsToAppUnits(dev2app);
+  return nscoord(width * dev2app);
 }
 
 // XXX this needs to be implemented

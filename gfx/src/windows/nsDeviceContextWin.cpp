@@ -95,7 +95,6 @@ int CALLBACK fontcallback(ENUMLOGFONT FAR *lpelf, NEWTEXTMETRIC FAR *lpntm,
 
 NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const nsString& aFontName)
 {
-  nsNativeWidget  widget;
   HWND    hwnd = (HWND)mWidget;
   HDC     hdc = ::GetDC(hwnd);
   PRBool  isthere = PR_FALSE;
