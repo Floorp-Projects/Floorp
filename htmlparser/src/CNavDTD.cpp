@@ -58,7 +58,6 @@
 #include "nsDTDUtils.h"
 #include "nsHTMLTokenizer.h"
 #include "nsTime.h"
-#include "nsViewSourceHTML.h"
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
 #include "nsLinebreakConverter.h"
