@@ -28,8 +28,7 @@
 #include "nsAETokens.h"
 #include "nsAEUtils.h"
 
-
-
+static OSErr AECoerceDescData(const AEDesc *theAEDesc, DescType typeCode, void *dataPtr, Size maximumSize);
 
 /*----------------------------------------------------------------------------
 	CreateAliasAEDesc 
@@ -66,7 +65,7 @@ OSErr GetTextFromAEDesc(const AEDesc *inDesc, Handle *outTextHandle)
 	if (err != noErr) return err;
 	
 	MyHLock(textHandle);
-	err = AEGetDescData(inDesc, typeChar, *textHandle, textLength);
+	err = AECoerceDescData(inDesc, typeChar, *textHandle, textLength);
 	MyHUnlock(textHandle);
 	
 	if (err != noErr)
@@ -89,37 +88,17 @@ exit:
 	Get a copy of the data from the AE desc. The will attempt to coerce to the
 	requested type, returning an error on failure.
 ----------------------------------------------------------------------------*/
-OSErr AEGetDescData(const AEDesc *theAEDesc, DescType typeCode, void *dataPtr, Size maximumSize)
+
+OSErr AEGetDescData(const AEDesc *theAEDesc, void *dataPtr, Size maximumSize)
 {
-	Size			dataLength;
-	OSErr		err;
-	
-	if (theAEDesc->descriptorType != typeCode)
+	if (theAEDesc->dataHandle)
 	{
-		AEDesc	coercedDesc = { typeNull, nil };
-		
-		err = AECoerceDesc(theAEDesc, typeCode, &coercedDesc);
-		if (err != noErr) return err;
-		
-		dataLength = GetHandleSize(coercedDesc.dataHandle);
-		BlockMoveData(*coercedDesc.dataHandle, dataPtr, Min(dataLength, maximumSize));
-		
-		AEDisposeDesc(&coercedDesc);
+		Size dataLength = GetHandleSize(theAEDesc->dataHandle);
+		BlockMoveData(*theAEDesc->dataHandle, dataPtr, Min(dataLength, maximumSize));
 	}
 	else
-	{
-		if (theAEDesc->dataHandle)
-		{
-			dataLength = GetHandleSize(theAEDesc->dataHandle);
-			BlockMoveData(*theAEDesc->dataHandle, dataPtr, Min(dataLength, maximumSize));
-		}
-		else
-			return paramErr;
-	}
-	
-	return noErr;
+		return paramErr;
 }
-
 
 /*----------------------------------------------------------------------------
 	AEGetDescDataSize 
@@ -139,6 +118,25 @@ Size AEGetDescDataSize(const AEDesc *theAEDesc)
 
 #endif //TARGET_CARBON
 
+static OSErr AECoerceDescData(const AEDesc *theAEDesc, DescType typeCode, void *dataPtr, Size maximumSize)
+{
+	OSErr err;
+	
+	if (theAEDesc->descriptorType != typeCode)
+	{
+		AEDesc	coercedDesc = { typeNull, nil };
+		err = AECoerceDesc(theAEDesc, typeCode, &coercedDesc);
+		if (err != noErr) return err;
+		
+		err = AEGetDescData(&coercedDesc, dataPtr, maximumSize);
+		AEDisposeDesc(&coercedDesc);
+		return err;
+	}
+	else
+	{
+	    return AEGetDescData(theAEDesc, dataPtr, maximumSize);
+	}
+}
 
 #pragma mark -
 
@@ -153,7 +151,7 @@ OSErr CreateThreadAEInfo(const AppleEvent *event, AppleEvent *reply, TThreadAEIn
 	TThreadAEInfo	*threadAEInfo = nil;
 	OSErr		err;
 	
-	err = MyNewBlockClear(sizeof(TThreadAEInfo), &threadAEInfo);
+	err = MyNewBlockClear(sizeof(TThreadAEInfo), (void**)&threadAEInfo);
 	if (err != noErr) return err;
 	
 	threadAEInfo->mAppleEvent = *event;
@@ -276,137 +274,87 @@ StAEDesc& StAEDesc::operator= (const StAEDesc& rhs)
 
 Boolean StAEDesc::GetBoolean()
 {
-	if (descriptorType == typeBoolean)
-		return **(Boolean **)dataHandle;
-	else
-	{
-		StAEDesc	tempDesc;
-		if (::AECoerceDesc(this, typeBoolean, &tempDesc) == noErr)
-			return **(Boolean **)tempDesc.dataHandle;
-		else
-			ThrowOSErr(errAECoercionFail);
-	}
-	return false;
+    Boolean result = false;
+    OSErr err = ::AECoerceDescData(this, typeBoolean, &result, sizeof(result));
+    if (err != noErr)
+        ThrowOSErr(errAECoercionFail);
+    return result;
 }
 
 SInt16 StAEDesc::GetShort()
 {
-	if (descriptorType == typeShortInteger)
-		return **(SInt16 **)dataHandle;
-	else
-	{
-		StAEDesc	tempDesc;
-		if (::AECoerceDesc(this, typeShortInteger, &tempDesc) == noErr)
-			return **(SInt16 **)tempDesc.dataHandle;
-		else
-			ThrowOSErr(errAECoercionFail);
-	}
-	return 0;
+    SInt16 result = 0;
+    OSErr err = ::AECoerceDescData(this, typeShortInteger, &result, sizeof(result));
+    if (err != noErr)
+        ThrowOSErr(errAECoercionFail);
+    return result;
 }
 
 SInt32 StAEDesc::GetLong()
 {
-	if (descriptorType == typeLongInteger)
-		return **(SInt32 **)dataHandle;
-	else
-	{
-		StAEDesc	tempDesc;
-		if (::AECoerceDesc(this, typeLongInteger, &tempDesc) == noErr)
-			return **(SInt32 **)tempDesc.dataHandle;
-		else
-			ThrowOSErr(errAECoercionFail);
-	}
-	return 0;
+    SInt32 result = 0;
+    OSErr err = ::AECoerceDescData(this, typeLongInteger, &result, sizeof(result));
+    if (err != noErr)
+        ThrowOSErr(errAECoercionFail);
+    return result;
 }
 
 DescType StAEDesc::GetEnumType()
 {
-	if (descriptorType == typeEnumeration)
-		return **(DescType **)dataHandle;
-	else
-	{
-		StAEDesc	tempDesc;
-		if (::AECoerceDesc(this, typeEnumeration, &tempDesc) == noErr)
-			return **(DescType **)tempDesc.dataHandle;
-		else
-			ThrowOSErr(errAECoercionFail);
-	}
-	return 0;
+    DescType result = typeNull;
+    OSErr err = ::AECoerceDescData(this, typeEnumeration, &result, sizeof(result));
+    if (err != noErr)
+        ThrowOSErr(errAECoercionFail);
+    return result;
 }
-
 
 void StAEDesc::GetRect(Rect& outData)
 {
-	if (descriptorType == typeQDRectangle)
-		outData = **(Rect **)dataHandle;
-	else
-	{
-		StAEDesc	tempDesc;
-		if (::AECoerceDesc(this, typeQDRectangle, &tempDesc) == noErr)
-			outData = **(Rect **)tempDesc.dataHandle;
-		else
-			ThrowOSErr(errAECoercionFail);
-	}
+    OSErr err = ::AECoerceDescData(this, typeQDRectangle, &outData, sizeof(Rect));
+    if (err != noErr)
+        ThrowOSErr(errAECoercionFail);
 }
 
 
 void StAEDesc::GetRGBColor(RGBColor& outData)
 {
-	if (descriptorType == typeRGBColor)
-		outData = **(RGBColor **)dataHandle;
-	else
-	{
-		StAEDesc	tempDesc;
-		if (::AECoerceDesc(this, typeRGBColor, &tempDesc) == noErr)
-			outData = **(RGBColor **)tempDesc.dataHandle;
-		else
-			ThrowOSErr(errAECoercionFail);
-	}
+    OSErr err = ::AECoerceDescData(this, typeRGBColor, &outData, sizeof(RGBColor));
+    if (err != noErr)
+        ThrowOSErr(errAECoercionFail);
 }
-
 
 void StAEDesc::GetLongDateTime(LongDateTime& outDateTime)
 {
-	if (descriptorType == typeLongDateTime)
-		outDateTime = **(LongDateTime **)dataHandle;
-	else
-	{
-		StAEDesc	tempDesc;
-		if (::AECoerceDesc(this, typeLongDateTime, &tempDesc) == noErr)
-			outDateTime = **(LongDateTime **)tempDesc.dataHandle;
-		else
-			ThrowOSErr(errAECoercionFail);
-	}
+    OSErr err = ::AECoerceDescData(this, typeLongDateTime, &outDateTime, sizeof(LongDateTime));
+    if (err != noErr)
+        ThrowOSErr(errAECoercionFail);
 }
 
 void StAEDesc::GetFileSpec(FSSpec &outFileSpec)
 {
-	if (descriptorType == typeFSS)
-		outFileSpec = **(FSSpec **)dataHandle;
-	else
-	{
-		StAEDesc	tempDesc;
-		if (::AECoerceDesc(this, typeFSS, &tempDesc) == noErr)
-			outFileSpec = **(FSSpec **)tempDesc.dataHandle;
-		else
-			ThrowOSErr(errAECoercionFail);
-	}
+    OSErr err = ::AECoerceDescData(this, typeFSS, &outFileSpec, sizeof(FSSpec));
+    if (err != noErr)
+        ThrowOSErr(errAECoercionFail);
 }
 
 void StAEDesc::GetCString(char *outString, short maxLen)
 {
 	if (descriptorType == typeChar)
 	{
-		long		dataSize = GetDataSize();
-		StrCopySafe(outString, *dataHandle, Min(dataSize, maxLen));
+		long dataSize = GetDataSize();
+		dataSize = Min(dataSize, maxLen-1);
+		if (AEGetDescData(this, outString, dataSize) == noErr)
+    		outString[dataSize] = '\0';
 	}
 	else
 	{
-		StAEDesc	tempDesc;
+		StAEDesc tempDesc;
 		if (::AECoerceDesc(this, typeChar, &tempDesc) == noErr)
 		{
-			long		dataSize = tempDesc.GetDataSize();
-			StrCopySafe(outString, *tempDesc.dataHandle, Min(dataSize, maxLen));
+			long dataSize = tempDesc.GetDataSize();
+    		dataSize = Min(dataSize, maxLen-1);
+    		if (AEGetDescData(&tempDesc, outString, dataSize) == noErr)
+        		outString[dataSize] = '\0';
 		}
 		else
 			ThrowOSErr(errAECoercionFail);
@@ -417,10 +365,10 @@ void StAEDesc::GetPString(Str255 outString)
 {
 	if (descriptorType == typeChar)
 	{
-		long	stringLen = GetDataSize();
+		long stringLen = GetDataSize();
 		if (stringLen > 255)
 			stringLen = 255;
-		BlockMoveData(*dataHandle, &outString[1], stringLen);
+		AEGetDescData(this, outString+1, stringLen);
 		outString[0] = stringLen;
 	}
 	else
@@ -428,10 +376,10 @@ void StAEDesc::GetPString(Str255 outString)
 		StAEDesc	tempDesc;
 		if (::AECoerceDesc(this, typeChar, &tempDesc) == noErr)
 		{
-			long	stringLen = tempDesc.GetDataSize();
+			long stringLen = tempDesc.GetDataSize();
 			if (stringLen > 255)
 				stringLen = 255;
-			BlockMoveData(*tempDesc.dataHandle, &outString[1], stringLen);
+			AEGetDescData(&tempDesc, outString+1, stringLen);
 			outString[0] = stringLen;
 		}
 		else
@@ -441,29 +389,28 @@ void StAEDesc::GetPString(Str255 outString)
 
 Handle StAEDesc::GetTextHandle()
 {
-	StAEDesc	tempDesc;
-	Handle	data = nil;
-	
+    Handle data = nil;
+    
 	if (descriptorType == typeChar)
 	{
-		data = dataHandle;
+	    Size dataSize = GetDataSize();
+	    data = ::NewHandle(dataSize);
+	    if (data == NULL)
+	        ThrowOSErr(memFullErr);
+        ::HLock(data);
+        ::AEGetDescData(this, *data, dataSize);
+        ::HUnlock(data);
 	}
 	else
 	{
+    	StAEDesc tempDesc;
 		if (::AECoerceDesc(this, typeChar, &tempDesc) == noErr)
-			data = tempDesc.dataHandle;
+		    data = tempDesc.GetTextHandle();
 		else
-			ThrowOSErr(errAECoercionFail);
+		    ThrowOSErr(errAECoercionFail);
 	}
 	
-	if (data)
-	{
-		OSErr	err = ::HandToHand(&data);
-		ThrowIfOSErr(err);
-		return data;
-	}
-	
-	return nil;
+	return data;
 }
 
 
@@ -843,34 +790,28 @@ OSErr GetObjectClassFromAppleEvent(const AppleEvent *appleEvent, DescType *objec
 ---------------------------------------------------------------------------*/
 OSErr DescToPString(const AEDesc* desc, Str255 aPString, short maxLength)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	long		charCount;
-	
 	if (desc->descriptorType == typeChar)
 	{
-		dataHandle = desc->dataHandle;
+		long stringLen = AEGetDescDataSize(desc);
+		if (stringLen > maxLength)
+			stringLen = maxLength;
+		AEGetDescData(desc, aPString+1, stringLen);
+		aPString[0] = stringLen;
 	}
 	else
 	{
-		if (AECoerceDesc(desc, typeChar, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
+    	StAEDesc tempDesc;
+		if (AECoerceDesc(desc, typeChar, &tempDesc) == noErr) {
+    		long stringLen = tempDesc.GetDataSize();
+    		if (stringLen > maxLength)
+    			stringLen = maxLength;
+    		AEGetDescData(&tempDesc, aPString+1, stringLen);
+    		aPString[0] = stringLen;
+		} else
 			return errAECoercionFail;
 	}
-	
-	charCount = GetHandleSize(dataHandle);
-	
-	if (charCount > maxLength)
-	{
-		return errAECoercionFail;
-	}
-
-	BlockMoveData(*dataHandle, &aPString[1], charCount);
-	aPString[0] = charCount;
 	return noErr;
 }
-
 
 
 /*----------------------------------------------------------------------------
@@ -881,31 +822,30 @@ OSErr DescToPString(const AEDesc* desc, Str255 aPString, short maxLength)
 --------------------------------------------------------------------------- */
 OSErr DescToCString(const AEDesc* desc, CStr255 aCString, short maxLength)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	long		charCount;
-	
 	if (desc->descriptorType == typeChar)
 	{
-		dataHandle = desc->dataHandle;
+	    long stringLen = AEGetDescDataSize(desc);
+	    if (stringLen >= maxLength)
+	        stringLen = maxLength - 1;
+		if (AEGetDescData(desc, aCString, stringLen) == noErr)
+    		aCString[stringLen] = '\0';
+    	else
+			return errAECoercionFail;
 	}
 	else
 	{
-		if (AECoerceDesc(desc, typeChar, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
+    	StAEDesc tempDesc;
+		if (AECoerceDesc(desc, typeChar, &tempDesc) == noErr) {
+    	    long stringLen = AEGetDescDataSize(&tempDesc);
+    	    if (stringLen >= maxLength)
+    	        stringLen = maxLength - 1;
+    		if (AEGetDescData(&tempDesc, aCString, stringLen) == noErr)
+        		aCString[stringLen] = '\0';
+        	else
+    			return errAECoercionFail;
+		} else
 			return errAECoercionFail;
 	}
-	
-	charCount = GetHandleSize(dataHandle);
-	
-	if (charCount > maxLength)
-	{
-		return errAECoercionFail;
-	}
-
-	BlockMoveData(*dataHandle, aCString, charCount);
-	aCString[charCount] = '\0';
 	return noErr;
 }
 
@@ -915,14 +855,10 @@ OSErr DescToCString(const AEDesc* desc, CStr255 aCString, short maxLength)
 
 OSErr DescToDescType(const AEDesc *desc, DescType *descType)
 {
-	OSErr		err = noErr;
-		
-	if (GetHandleSize(desc->dataHandle) == 4)
-		*descType = *(DescType*)*(desc->dataHandle);
+	if (AEGetDescDataSize(desc) == sizeof(DescType))
+	    return AEGetDescData(desc, descType, sizeof(DescType));
 	else
-		err = errAECoercionFail;
-
-	return err;
+		return errAECoercionFail;
 }
 
 //----------------------------------------------------------------------------------
@@ -931,23 +867,7 @@ OSErr DescToDescType(const AEDesc *desc, DescType *descType)
 
 OSErr DescToBoolean(const AEDesc* desc, Boolean* aBoolean)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	
-	if (desc->descriptorType == typeBoolean)
-	{
-		dataHandle = desc->dataHandle;
-	}
-	else
-	{
-		if (AECoerceDesc(desc, typeBoolean, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
-			return errAECoercionFail;
-	}
-	
-	*aBoolean = **dataHandle;
-	return noErr;
+    return AECoerceDescData(desc, typeBoolean, aBoolean, sizeof(Boolean));
 }
 
 //----------------------------------------------------------------------------------
@@ -956,23 +876,7 @@ OSErr DescToBoolean(const AEDesc* desc, Boolean* aBoolean)
 
 OSErr DescToFixed(const  AEDesc* desc, Fixed* aFixed)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	
-	if (desc->descriptorType == typeFixed)
-	{
-		dataHandle = desc->dataHandle;
-	}
-	else
-	{
-		if (AECoerceDesc(desc, typeFixed, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
-			return errAECoercionFail;
-	}
-	
-	*aFixed = *(Fixed *)*dataHandle;	
-	return noErr;
+    return AECoerceDescData(desc, typeFixed, aFixed, sizeof(Fixed));
 }
 
 //----------------------------------------------------------------------------------
@@ -981,48 +885,16 @@ OSErr DescToFixed(const  AEDesc* desc, Fixed* aFixed)
 
 OSErr DescToFloat(const  AEDesc* desc, float* aFloat)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-		
-	if (desc->descriptorType == typeFloat)
-	{
-		dataHandle = desc->dataHandle;
-	}
-	else
-	{
-		if (AECoerceDesc(desc, typeFloat, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
-			return errAECoercionFail;
-	}	
-	
-	*aFloat = **(float**)dataHandle;
-	return noErr;
+    return AECoerceDescData(desc, typeFloat, aFloat, sizeof(float));
 }
 
 //----------------------------------------------------------------------------------
 //	Converts descriptor dataHandle  to a long
 //----------------------------------------------------------------------------------
 
-OSErr DescToLong(const  AEDesc* desc, long* aLong)
+OSErr DescToLong(const AEDesc* desc, long* aLong)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	
-	if (desc->descriptorType == typeLongInteger)
-	{
-		dataHandle = desc->dataHandle;
-	}
-	else
-	{
-		if (AECoerceDesc(desc, typeLongInteger, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
-			return errAECoercionFail;
-	}
-	
-	*aLong = *(long *)*dataHandle;
-	return noErr;
+    return AECoerceDescData(desc, typeLongInteger, aLong, sizeof(long));
 }
 
 //----------------------------------------------------------------------------------
@@ -1031,22 +903,7 @@ OSErr DescToLong(const  AEDesc* desc, long* aLong)
 
 OSErr DescToRGBColor(const  AEDesc* desc, RGBColor* aRGBColor)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	
-	if (desc->descriptorType == typeRGBColor)	// a color value
-	{
-		dataHandle = desc->dataHandle;
-	}
-	else	{
-		if (AECoerceDesc(desc, typeRGBColor, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
-			return errAECoercionFail;
-	}
-	
-	*aRGBColor = *(RGBColor *)*dataHandle;
-	return noErr;
+    return AECoerceDescData(desc, typeRGBColor, aRGBColor, sizeof(RGBColor));
 }
 
 //----------------------------------------------------------------------------------
@@ -1055,23 +912,7 @@ OSErr DescToRGBColor(const  AEDesc* desc, RGBColor* aRGBColor)
 
 OSErr DescToShort(const  AEDesc* desc, short* aShort)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	
-	if (desc->descriptorType == typeShortInteger)
-	{
-		dataHandle = desc->dataHandle;
-	}
-	else
-	{
-		if (AECoerceDesc(desc, typeShortInteger, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
-			return errAECoercionFail;
-	}
-	
-	*aShort = *(short *)*dataHandle;
-	return noErr;
+    return AECoerceDescData(desc, typeShortInteger, aShort, sizeof(short));
 }
 
 //----------------------------------------------------------------------------------
@@ -1080,26 +921,27 @@ OSErr DescToShort(const  AEDesc* desc, short* aShort)
 
 OSErr DescToTextHandle(const AEDesc* desc, Handle *text)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle  = nil;
-	OSErr	err;
-	
+    Handle data = nil;
+    
 	if (desc->descriptorType == typeChar)
 	{
-		dataHandle = desc->dataHandle;
+	    Size dataSize = ::AEGetDescDataSize(desc);
+	    data = ::NewHandle(dataSize);
+	    if (data == NULL)
+	        return memFullErr;
+        ::HLock(data);
+        ::AEGetDescData(desc, *data, dataSize);
+        ::HUnlock(data);
 	}
 	else
 	{
-		if (AECoerceDesc(desc, typeChar, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
+    	StAEDesc tempDesc;
+		if (::AECoerceDesc(desc, typeChar, &tempDesc) == noErr)
+		    data = tempDesc.GetTextHandle();
 		else
-			return errAECoercionFail;
+		    return errAECoercionFail;
 	}
-	
-	err = HandToHand(&dataHandle);
-	if (err != noErr) return err;
-	
-	*text = dataHandle;
+	*text = data;
 	return noErr;
 }
 
@@ -1109,23 +951,7 @@ OSErr DescToTextHandle(const AEDesc* desc, Handle *text)
 
 OSErr DescToRect(const  AEDesc* desc, Rect* aRect)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	
-	if (desc->descriptorType == typeRectangle)
-	{
-		dataHandle = desc->dataHandle;
-	}
-	else
-	{
-		if (AECoerceDesc(desc, typeQDRectangle, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
-			return errAECoercionFail;
-	}
-	
-	*aRect = *(Rect *)*dataHandle;
-	return(noErr);
+    return AECoerceDescData(desc, typeRectangle, aRect, sizeof(Rect));
 }
 
 //----------------------------------------------------------------------------------
@@ -1134,23 +960,7 @@ OSErr DescToRect(const  AEDesc* desc, Rect* aRect)
 
 OSErr DescToPoint(const  AEDesc* desc, Point* aPoint)
 {
-	StAEDesc	tempDesc;
-	Handle	dataHandle 	= nil;
-	
-	if (desc->descriptorType == typeQDPoint)
-	{
-		dataHandle = desc->dataHandle;
-	}
-	else
-	{
-		if (AECoerceDesc(desc, typeQDPoint, &tempDesc) == noErr)
-			dataHandle = tempDesc.dataHandle;
-		else
-			return errAECoercionFail;
-	}
-	
-	*aPoint = *(Point *)*dataHandle;
-	return(noErr);
+    return AECoerceDescData(desc, typeQDPoint, aPoint, sizeof(Point));
 }
 
 #pragma mark -

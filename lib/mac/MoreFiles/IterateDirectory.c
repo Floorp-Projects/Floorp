@@ -33,7 +33,7 @@
 ** stack space used when recursively calling IterateDirectoryLevel
 ** and to hold global information that might be needed at any time.
 */
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=mac68k
 #endif
 struct IterateGlobals
@@ -47,7 +47,7 @@ struct IterateGlobals
 	unsigned short			currentLevel;	/* The current level IterateLevel is on */
 	void					*yourDataPtr;	/* A pointer to caller data the filter may need to access */
 };
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=reset
 #endif
 

@@ -37,6 +37,8 @@
 
 #include <memory>
 
+using std::auto_ptr;
+
 class nsMacMessagePump;
 class nsMacMessageSink;
 class nsIToolkit;

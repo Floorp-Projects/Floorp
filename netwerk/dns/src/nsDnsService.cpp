@@ -54,18 +54,15 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "pprthred.h"
 
 #if TARGET_CARBON
-
-#define nsDNS_NOTIFIER_ROUTINE	nsDnsServiceNotifierRoutineUPP
-#define INIT_OPEN_TRANSPORT()	InitOpenTransport(mClientContext, kInitOTForExtensionMask)
-#define OT_OPEN_INTERNET_SERVICES(config, flags, err)	OTOpenInternetServices(config, flags, err, mClientContext)
-#define OT_OPEN_ENDPOINT(config, flags, info, err)		OTOpenEndpoint(config, flags, info, err, mClientContext)
-
+#define INIT_OPEN_TRANSPORT()	InitOpenTransportInContext(kInitOTForExtensionMask, &mClientContext)
+#define OT_OPEN_INTERNET_SERVICES(config, flags, err)	OTOpenInternetServicesInContext(config, flags, err, mClientContext)
+#define OT_OPEN_ENDPOINT(config, flags, info, err)		OTOpenEndpointInContext(config, flags, info, err, mClientContext)
+#define CLOSE_OPEN_TRANSPORT() do { if (mClientContext) CloseOpenTransportInContext(mClientContext); } while (0)
 #else
-
-#define nsDNS_NOTIFIER_ROUTINE	nsDnsServiceNotifierRoutine
 #define INIT_OPEN_TRANSPORT()	InitOpenTransport()
 #define OT_OPEN_INTERNET_SERVICES(config, flags, err)	OTOpenInternetServices(config, flags, err)
 #define OT_OPEN_ENDPOINT(config, flags, info, err)		OTOpenEndpoint(config, flags, info, err)
+#define CLOSE_OPEN_TRANSPORT() CloseOpenTransport()
 #endif /* TARGET_CARBON */
 
 typedef struct nsInetHostInfo {
@@ -907,12 +904,7 @@ nsDNSService::LateInit()
 //    create Open Transport Service Provider for DNS Lookups
     OSStatus    errOT;
 
-#if TARGET_CARBON
     nsDnsServiceNotifierRoutineUPP	=  NewOTNotifyUPP(nsDnsServiceNotifierRoutine);
-
-    errOT = OTAllocClientContext((UInt32)0, &clientContext);
-    NS_ASSERTION(err == kOTNoError, "error allocating OTClientContext.");
-#endif /* TARGET_CARBON */
 
     errOT = INIT_OPEN_TRANSPORT();
     NS_ASSERTION(errOT == kOTNoError, "InitOpenTransport failed.");
@@ -922,7 +914,7 @@ nsDNSService::LateInit()
     NS_ASSERTION((mServiceRef != NULL) && (errOT == kOTNoError), "error opening OT service.");
 
     /* Install notify function for DNR Address To String completion */
-    errOT = OTInstallNotifier(mServiceRef, nsDNS_NOTIFIER_ROUTINE, this);
+    errOT = OTInstallNotifier(mServiceRef, nsDnsServiceNotifierRoutineUPP, this);
     NS_ASSERTION(errOT == kOTNoError, "error installing dns notification routine.");
 
     /* Put us into async mode */
@@ -1218,7 +1210,7 @@ nsDNSService::Shutdown()
 
 		// let's shutdown Open Transport so outstanding lookups won't complete while we're cleaning them up
         (void) OTCloseProvider((ProviderRef)mServiceRef);
-        CloseOpenTransport();           // terminate routine should check flag and do this if Shutdown() is bypassed somehow
+        CLOSE_OPEN_TRANSPORT();           // terminate routine should check flag and do this if Shutdown() is bypassed somehow
 
         PRThread* dnsServiceThread;
         rv = mThread->GetPRThread(&dnsServiceThread);

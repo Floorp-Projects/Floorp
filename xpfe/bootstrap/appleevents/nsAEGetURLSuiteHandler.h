@@ -40,11 +40,11 @@ public:
 						AEGetURLSuiteHandler();
 						~AEGetURLSuiteHandler();
 
-	void					HandleGetURLSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply);	// throws OSErrs
+	void					HandleGetURLSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply);	// throws OSErrs
 
 protected:
 
-	void					HandleGetURLEvent(AppleEvent *appleEvent, AppleEvent *reply);
+	void					HandleGetURLEvent(const AppleEvent *appleEvent, AppleEvent *reply);
 	
 };
 

@@ -73,10 +73,8 @@
 #endif
 
 #if DEBUG
-#if !TARGET_CARBON
 #include <SIOUX.h>
 #include "macstdlibextras.h"
-#endif
 #endif
 
 #define DRAW_ON_RESIZE	0		// if 1, enable live-resize except when the command key is down
@@ -319,7 +317,7 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 	
 	SInt32  sleepTime = (havePendingEvent || BrowserIsBusy()) ? 0 : 2;
 	
-	::LMSetSysEvtMask(everyEvent); // we need keyUp events
+	::SetEventMask(everyEvent); // we need keyUp events
 	PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mMouseRgn);
 
 	sNextWNECall = ::TickCount() + kWNECallIntervalTicks;
@@ -343,10 +341,8 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 	{
 
 #if DEBUG
-#if !TARGET_CARBON
 		if ((anEvent->what != kHighLevelEvent) && SIOUXHandleOneEvent(anEvent))
 			return;
-#endif
 #endif
 
 		switch(anEvent->what)
@@ -556,8 +552,9 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 							::SizeWindow(whichWindow, width, height, true);
 							::DrawGrowIcon(whichWindow);
 
-							anEvent.where.h = width;	// simulate a click in the grow icon
-							anEvent.where.v = height;
+                            // simulate a click in the grow icon
+							anEvent.where.h = width - 8;    // on Aqua, clicking at (width, height) misses the grow icon. inset a bit.
+							anEvent.where.v = height - 8;
 							::LocalToGlobal(&anEvent.where);
 							DispatchOSEventToRaptor(anEvent, whichWindow);
 
@@ -589,6 +586,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 					Rect portRect;
 					Point newPt = botRight(*::GetWindowPortBounds(whichWindow, &portRect));
 					::LocalToGlobal(&newPt);
+					newPt.h -= 8, newPt.v -= 8;
 					anEvent.where = newPt;	// important!
 					DispatchOSEventToRaptor(anEvent, whichWindow);
 				}
@@ -766,6 +764,7 @@ void	nsMacMessagePump::DoKey(EventRecord &anEvent)
 //-------------------------------------------------------------------------
 void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 {
+#if !TARGET_CARBON
 	if (HiWord(anEvent.message) != noErr)
 	{
 		// Error mounting disk. Ask if user wishes to format it.	
@@ -774,6 +773,7 @@ void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 		::DIBadMount(pt, (SInt32) anEvent.message);
 		::DIUnload();
 	}
+#endif
 }
 
 

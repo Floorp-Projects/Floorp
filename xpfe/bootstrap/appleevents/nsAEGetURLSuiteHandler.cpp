@@ -49,7 +49,7 @@ AEGetURLSuiteHandler::~AEGetURLSuiteHandler()
 	HandleGetURLSuiteEvent 
 	
 ----------------------------------------------------------------------------*/
-void AEGetURLSuiteHandler::HandleGetURLSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AEGetURLSuiteHandler::HandleGetURLSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	OSErr		err = noErr;
 	
@@ -96,7 +96,7 @@ void AEGetURLSuiteHandler::HandleGetURLSuiteEvent(AppleEvent *appleEvent, AppleE
 	HandleGetURLEvent 
 	
 ----------------------------------------------------------------------------*/
-void AEGetURLSuiteHandler::HandleGetURLEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AEGetURLSuiteHandler::HandleGetURLEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	StAEDesc		directParameter;
 	OSErr		err;

@@ -357,6 +357,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 				break;
 
 			case eWindowType_dialog:
+#if !TARGET_CARBON
 				if (aInitData &&
 					aInitData->mBorderStyle != eBorderStyle_all &&
 					aInitData->mBorderStyle != eBorderStyle_default &&
@@ -372,6 +373,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 				hOffset = kDialogMarginWidth;
 				vOffset = kDialogTitleBarHeight;
 				break;
+#endif
 
 			case eWindowType_toplevel:
 				if (aInitData &&
@@ -408,6 +410,12 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 		Rect wRect;
 		nsRectToMacRect(aRect, wRect);
+		
+#if TARGET_CARBON
+		// enforce some minimums on carbon. otherwise the system hangs.
+		if (aRect.width < 100) wRect.right = wRect.left + 100;
+		if (aRect.height < 100) wRect.bottom = wRect.top + 100;
+#endif
 
 #ifdef WINDOW_SIZE_TWEAKING
 		// see also the Resize method
@@ -510,8 +518,9 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
     if ( mAcceptsActivation )
       ::ShowWindow(mWindowPtr);
     else {
-      ::BringToFront(mWindowPtr); // competes with ComeToFront, but makes popups work
       ::ShowHide(mWindowPtr, true);
+      ::BringToFront(mWindowPtr); // competes with ComeToFront, but makes popups work
+      //::SendBehind(::FrontWindow(), mWindowPtr);
     }
     ComeToFront();
   }
@@ -679,8 +688,7 @@ void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-	if (mWindowMadeHere)
-	{
+	if (mWindowMadeHere) {
       // Sanity check against screen size
       Rect screenRect;
 	  ::GetRegionBounds(::GetGrayRgn(), &screenRect);

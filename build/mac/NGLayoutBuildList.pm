@@ -1641,7 +1641,16 @@ sub BuildRuntimeProjects()
 
     BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",                       "NSStdLib$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
-    BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",                      "NSPR20$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    #// for NSPR under Carbon, have to link against some additional static libraries when NOT building with TARGET_CARBON.
+    if ( $main::CARBON ) {
+        BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",                  "NSPR20$D.shlb (Carbon)", 0, 0, 0);
+        _MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
+        if ($main::ALIAS_SYM_FILES) {
+            _MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");
+        }
+    } else {
+        BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",                  "NSPR20$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    }
 
     print("--- Runtime projects complete ----\n");
 }
@@ -1761,7 +1770,16 @@ sub BuildNeckoProjects()
 
     print("--- Starting Necko projects ----\n");
 
+    if ( $main::CARBON ) {
+        BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",                    "Necko$D.shlb (Carbon)", 0, 0, 0);
+        _MakeAlias(":mozilla:netwerk:macbuild:Necko$D.shlb",                        ":mozilla:dist:viewer_debug:Components:");
+        if ($main::ALIAS_SYM_FILES) {
+            _MakeAlias(":mozilla:netwerk:macbuild:Necko$D.shlb.xSYM",               ":mozilla:dist:viewer_debug:Components:");
+        }
+    } else {
     BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",                    "Necko$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+    
     BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",                   "Necko2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",                "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 

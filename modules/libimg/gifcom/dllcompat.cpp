@@ -343,6 +343,7 @@ static void  swap (
 #endif /* XP_MAC */
 #ifdef XP_MAC
 #include <OSUtils.h>
+#include <time.h>
 
 static void MyReadLocation(MachineLocation * loc)
 {

@@ -115,13 +115,17 @@ void nsHeapZoneHeader::SetupHeapZone(Ptr zonePtr, Size ptrSize)
 {
 	Ptr		zoneStart = zonePtr + sizeof(nsHeapZoneHeader);
 	Ptr		endZone = zonePtr + ptrSize;
-	
+
+#if !TARGET_CARBON	
 	::InitZone(nil, kHeapZoneMasterPointers, endZone, zoneStart);
-	
+#endif
+
 	mHeapZone = (THz)zoneStart;
-	
+
+#if !TARGET_CARBON	
 	// set the current zone back to the application zone, because InitZone changes it
 	::SetZone(::ApplicationZone());
+#endif
 }
 
 
@@ -129,10 +133,13 @@ void nsHeapZoneHeader::SetupHeapZone(Ptr zonePtr, Size ptrSize)
 Ptr nsHeapZoneHeader::AllocateZonePtr(Size ptrSize)
 //--------------------------------------------------------------------
 {
+#if !TARGET_CARBON	
 	::SetZone(mHeapZone);
+#endif
 	Ptr		thePtr = ::NewPtr(ptrSize);
+#if !TARGET_CARBON	
 	::SetZone(::ApplicationZone());
-
+#endif
 	mChunkCount += (thePtr != nil);
 	
 	return thePtr;
@@ -143,7 +150,9 @@ Ptr nsHeapZoneHeader::AllocateZonePtr(Size ptrSize)
 void nsHeapZoneHeader::DisposeZonePtr(Ptr thePtr, Boolean &outWasLastChunk)
 //--------------------------------------------------------------------
 {
+#if !TARGET_CARBON	
 	MEM_ASSERT(::PtrZone(thePtr) == mHeapZone, "Ptr disposed from wrong zone!");
+#endif
 	::DisposePtr(thePtr);
 	mChunkCount --;
 	outWasLastChunk = (mChunkCount == 0);
@@ -154,10 +163,14 @@ void nsHeapZoneHeader::DisposeZonePtr(Ptr thePtr, Boolean &outWasLastChunk)
 /* static */ nsHeapZoneHeader* nsHeapZoneHeader::GetZoneFromPtr(Ptr subheapPtr)
 //--------------------------------------------------------------------
 {
+#if !TARGET_CARBON	
 	THz		ptrZone = ::PtrZone(subheapPtr);
 	MEM_ASSERT(ptrZone && (::MemError() == noErr), "Problem getting zone from ptr");
 	
 	return (nsHeapZoneHeader *)((char *)ptrZone - sizeof(nsHeapZoneHeader));
+#else
+    return NULL;
+#endif
 }
 
 
@@ -411,9 +424,9 @@ void nsAllocatorManager::FreeSubheap(Ptr subheapPtr)
 	
 	// increase the stack size by 32k. Someone is bound to have fun with
 	// recursion
+#if !TARGET_CARBON 
 	SetApplLimit(GetApplLimit() - inAppStackSizeInc);	
 
-#if !TARGET_CARBON 
 	MaxApplZone();
 #endif
 

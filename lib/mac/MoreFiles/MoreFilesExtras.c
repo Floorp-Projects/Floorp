@@ -55,7 +55,7 @@
 ** stack space used when recursively calling DeleteLevel and to hold
 ** global information that might be needed at any time. */
 
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=mac68k
 #endif
 struct DeleteEnumGlobals
@@ -64,7 +64,7 @@ struct DeleteEnumGlobals
 	Str63			itemName;			/* the name of the current item */
 	UniversalFMPB	myPB;				/* the parameter block used for PBGetCatInfo calls */
 };
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=reset
 #endif
 
@@ -87,7 +87,7 @@ pascal	void	TruncPString(StringPtr destination,
 			/* a multi-byte character. */
 			while (maxLength != 0)
 			{
-				charType = CharByte((Ptr)&source[1], maxLength);
+				charType = CharacterByteType((Ptr)&source[1], maxLength, 0);
 				if ( (charType == smSingleByte) || (charType == smLastByte) )
 					break;	/* source[maxLength] is now a valid last character */ 
 				--maxLength;
@@ -438,7 +438,7 @@ pascal	OSErr	HGetVInfo(short volReference,
 #undef	pascal
 #endif
 
-#if GENERATINGCFM && !TARGET_CARBON
+#if TARGET_RT_MAC_CFM && !TARGET_CARBON
 pascal OSErr PBXGetVolInfoSync(XVolumeParamPtr paramBlock)
 {
 	enum
@@ -547,6 +547,8 @@ pascal	OSErr	CheckVolLock(ConstStr255Param pathname,
 
 /*****************************************************************************/
 
+#if CALL_NOT_IN_CARBON
+
 pascal	OSErr GetDriverName(short driverRefNum,
 							Str255 driverName)
 {
@@ -644,6 +646,8 @@ pascal	OSErr	FindDrive(ConstStr255Param pathname,
 	
 	return ( result );
 }
+
+#endif /* CALL_NOT_IN_CARBON */
 
 /*****************************************************************************/
 
@@ -802,6 +806,8 @@ pascal	OSErr	GetVolFileSystemID(ConstStr255Param pathname,
 }
 
 /*****************************************************************************/
+
+#if CALL_NOT_IN_CARBON
 
 pascal	OSErr	GetVolState(ConstStr255Param pathname,
 							short vRefNum,
@@ -977,6 +983,8 @@ pascal	OSErr	UnmountAndEject(ConstStr255Param pathname,
 	
 	return ( error );
 }
+
+#endif /* CALL_NOT_IN_CARBON */
 
 /*****************************************************************************/
 

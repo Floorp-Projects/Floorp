@@ -50,7 +50,7 @@ AESpyglassSuiteHandler::~AESpyglassSuiteHandler()
 	HandleSpyglassSuiteEvent 
 	
 ----------------------------------------------------------------------------*/
-void AESpyglassSuiteHandler::HandleSpyglassSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AESpyglassSuiteHandler::HandleSpyglassSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	OSErr		err = noErr;
 	
@@ -105,7 +105,7 @@ void AESpyglassSuiteHandler::HandleSpyglassSuiteEvent(AppleEvent *appleEvent, Ap
 	HandleOpenURLEvent 
 	
 ----------------------------------------------------------------------------*/
-void AESpyglassSuiteHandler::HandleOpenURLEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AESpyglassSuiteHandler::HandleOpenURLEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	StAEDesc		directParameter;
 	FSSpec		saveToFile;
@@ -161,7 +161,7 @@ void AESpyglassSuiteHandler::HandleOpenURLEvent(AppleEvent *appleEvent, AppleEve
 	HandleRegisterURLEchoEvent 
 	
 ----------------------------------------------------------------------------*/
-void AESpyglassSuiteHandler::HandleRegisterURLEchoEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AESpyglassSuiteHandler::HandleRegisterURLEchoEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	// extract the direct parameter (the requester's signature)
 	StAEDesc directParameter;
@@ -170,10 +170,14 @@ void AESpyglassSuiteHandler::HandleRegisterURLEchoEvent(AppleEvent *appleEvent, 
 
 	if (typeType == directParameter.descriptorType)
 	{
-		mDocObserver = new nsDocLoadObserver;
-		ThrowIfNil(mDocObserver);
-		NS_ADDREF(mDocObserver);        // our owning ref
-		mDocObserver->AddEchoRequester(**(OSType**)directParameter.dataHandle);
+	    if (mDocObserver == nsnull) {
+    		mDocObserver = new nsDocLoadObserver;
+    		ThrowIfNil(mDocObserver);
+    		NS_ADDREF(mDocObserver);        // our owning ref
+    	}
+    	OSType requester;
+    	if (AEGetDescData(&directParameter, &requester, sizeof(requester)) == noErr)
+    		mDocObserver->AddEchoRequester(requester);
 	}
 }
 
@@ -181,7 +185,7 @@ void AESpyglassSuiteHandler::HandleRegisterURLEchoEvent(AppleEvent *appleEvent, 
 	HandleUnregisterURLEchoEvent 
 	
 ----------------------------------------------------------------------------*/
-void AESpyglassSuiteHandler::HandleUnregisterURLEchoEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AESpyglassSuiteHandler::HandleUnregisterURLEchoEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	// extract the direct parameter (the requester's signature)
 	StAEDesc directParameter;

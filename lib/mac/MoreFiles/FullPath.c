@@ -180,7 +180,7 @@ pascal	OSErr	FSpGetFullPath(const FSSpec *spec,
 	if ( result == noErr )
 	{
 		/* Return the length */
-		*fullPathLength = InlineGetHandleSize(*fullPath);
+		*fullPathLength = GetHandleSize(*fullPath);
 		result = realResult;	// return realResult in case it was fnfErr
 	}
 	else

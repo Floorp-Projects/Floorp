@@ -203,19 +203,20 @@ PRBool nsFileWidget::Show()
 // this doesn't seem to work as of yet...I'll play around with it some more.
 //
 //-------------------------------------------------------------------------
-pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data ) ;
-pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
+static pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
 {
-	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
 	switch ( msg ) {
-		case kNavCBEvent:
-			switch ( cbRec->eventData.eventDataParms.event->what ) {
-				case updateEvt:
-					::BeginUpdate(window);
-					::EndUpdate(window);
-					break;
+	case kNavCBEvent:
+		switch ( cbRec->eventData.eventDataParms.event->what ) {
+		case updateEvt:
+        	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
+		    if (window) {
+				::BeginUpdate(window);
+				::EndUpdate(window);
 			}
 			break;
+		}
+		break;
 	}
 }
 

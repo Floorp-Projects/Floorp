@@ -219,10 +219,10 @@ protected:
 #if TARGET_CARBON
   static OSStatus PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
   static OSStatus CountUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
-#else
+#endif
+
   static void PaintUpdateRect (Rect * r, void* data) ;
   static void CountUpdateRect (Rect * r, void* data) ;
-#endif
 	
 };
 

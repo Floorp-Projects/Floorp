@@ -156,6 +156,11 @@ inline GrafPtr GetQDGlobalsThePort ( )
   return qd.thePort;
 }
 
+inline const BitMap * GetPortBitMapForCopyBits(CGrafPtr port)
+{
+    return &((GrafPtr)port)->portBits;
+}
+
 #endif /* !TARGET_CARBON */
 
 #endif /* CarbonHelpers_h__ */

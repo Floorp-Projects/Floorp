@@ -43,11 +43,12 @@ AECoercionHandlers::AECoercionHandlers()
 {
 	OSErr	err;
 	
+	// XXX: Note inconsistent type between NewAECoerceDescProc and AEInstallCoercionHandler. Buggy headers when using Carbon?
 	mTextDescToPascalString = NewAECoerceDescProc(TextToPascalStringCoercion);
 	ThrowIfNil(mTextDescToPascalString);
 
 	err = ::AEInstallCoercionHandler(typeChar, typePascalString,
-								mTextDescToPascalString,
+								(AECoercionHandlerUPP) mTextDescToPascalString,
 								(long)this,
 								true,			/* Pass a pointer not a descriptor */
 								false );		/* Application table, not System */
@@ -57,7 +58,7 @@ AECoercionHandlers::AECoercionHandlers()
 	ThrowIfNil(mPascalStringDescToText);
 
 	err = ::AEInstallCoercionHandler(typePascalString, typeChar,
-								mPascalStringDescToText,
+								(AECoercionHandlerUPP) mPascalStringDescToText,
 								(long)this,
 								true,			/* Pass a pointer not a descriptor */
 								false );		/* Application table, not System */
@@ -75,14 +76,14 @@ AECoercionHandlers::~AECoercionHandlers()
 {
 	if (mTextDescToPascalString)
 	{
-		AERemoveCoercionHandler(typeChar, typePascalString, mTextDescToPascalString, false);
-		DisposeRoutineDescriptor(mTextDescToPascalString);
+		AERemoveCoercionHandler(typeChar, typePascalString, (AECoercionHandlerUPP) mTextDescToPascalString, false);
+		DisposeAECoerceDescUPP(mTextDescToPascalString);
 	}
 
 	if (mPascalStringDescToText)
 	{
-		AERemoveCoercionHandler(typePascalString, typeChar, mPascalStringDescToText, false);
-		DisposeRoutineDescriptor(mPascalStringDescToText);
+		AERemoveCoercionHandler(typePascalString, typeChar, (AECoercionHandlerUPP) mPascalStringDescToText, false);
+		DisposeAECoerceDescUPP(mPascalStringDescToText);
 	}
 }
 
@@ -93,7 +94,7 @@ AECoercionHandlers::~AECoercionHandlers()
 	TextToPascalStringCoercion 
 	
 ----------------------------------------------------------------------------*/
-OSErr AECoercionHandlers::TextToPascalStringCoercion(const AEDesc *fromDesc, DescType toType, long handlerRefcon, AEDesc *toDesc)
+pascal OSErr AECoercionHandlers::TextToPascalStringCoercion(const AEDesc *fromDesc, DescType toType, long handlerRefcon, AEDesc *toDesc)
 {
 	OSErr	err = noErr;
 	
@@ -121,7 +122,7 @@ OSErr AECoercionHandlers::TextToPascalStringCoercion(const AEDesc *fromDesc, Des
 	
 ----------------------------------------------------------------------------*/
 
-OSErr AECoercionHandlers::PascalStringToTextCoercion(const AEDesc *fromDesc, DescType toType, long handlerRefcon, AEDesc *toDesc)
+pascal OSErr AECoercionHandlers::PascalStringToTextCoercion(const AEDesc *fromDesc, DescType toType, long handlerRefcon, AEDesc *toDesc)
 {
 	OSErr	err = noErr;
 	
@@ -132,16 +133,15 @@ OSErr AECoercionHandlers::PascalStringToTextCoercion(const AEDesc *fromDesc, Des
 	{
 		case typePascalString:
 			{
-				Handle	dataHandle = fromDesc->dataHandle;
-				long		stringLen = *(unsigned char *)(*dataHandle);
+				long stringLen = AEGetDescDataSize(fromDesc);
 				if (stringLen > 255)
 				{
 					err = errAECoercionFail;
 					break;
 				}
-				
-				StHandleLocker		locker(dataHandle);
-				err = AECreateDesc(typeChar, *dataHandle + 1, stringLen, toDesc);
+				Str255 str;
+				AEGetDescData(fromDesc, str, sizeof(str) - 1);
+				err = AECreateDesc(typeChar, str + 1, str[0], toDesc);
 			}
 			break;
 			

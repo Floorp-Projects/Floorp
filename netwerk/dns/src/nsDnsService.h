@@ -84,8 +84,8 @@ protected:
     QHdr                  mCompletionQueue;
 #if TARGET_CARBON
     OTClientContextPtr    mClientContext;
-    OTNotifyUPP           nsDnsServiceNotifierRoutineUPP;
 #endif /* TARGET_CARBON */
+    OTNotifyUPP           nsDnsServiceNotifierRoutineUPP;
 #endif /* XP_MAC */
 
 #if defined(XP_PC) && !defined(XP_OS2)

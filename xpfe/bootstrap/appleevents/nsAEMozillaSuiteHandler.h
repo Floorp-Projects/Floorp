@@ -40,7 +40,7 @@ public:
 						AEMozillaSuiteHandler();
 						~AEMozillaSuiteHandler();
 
-	void					HandleMozillaSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply);		// throws OSErrs
+	void					HandleMozillaSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply);		// throws OSErrs
 
 protected:
 

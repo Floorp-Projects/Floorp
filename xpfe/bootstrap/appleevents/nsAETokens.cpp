@@ -25,20 +25,28 @@
 
 #include "nsAETokens.h"
 
+AETokenDesc::AETokenDesc(const AEDesc* token)
+    : mTokenValid(false)
+{
+    mTokenValid = (AEGetDescDataSize(token) == sizeof(CoreTokenRecord));
+    if (mTokenValid)
+        AEGetDescData(token, &mTokenData, sizeof(CoreTokenRecord));
+}
+
+AETokenDesc::~AETokenDesc() {}
+
 // ---------------------------------------------------------------------------
 
 DescType AETokenDesc::GetDispatchClass() const
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	return (tokenData) ? (**tokenData).dispatchClass : typeNull;
+	return (mTokenValid ? mTokenData.dispatchClass : typeNull);
 }
 
 // ---------------------------------------------------------------------------
 
 DescType AETokenDesc::GetObjectClass() const
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	return (tokenData) ? (**tokenData).objectClass : typeNull;
+	return (mTokenValid ? mTokenData.objectClass : typeNull);
 }
 
 // ---------------------------------------------------------------------------
@@ -48,32 +56,28 @@ DescType AETokenDesc::GetObjectClass() const
 
 Boolean AETokenDesc::UsePropertyCode() const
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	return (tokenData) ? ((**tokenData).propertyCode != typeNull) : false;
+	return (mTokenValid ? mTokenData.propertyCode != typeNull : false);
 }
 
 // ---------------------------------------------------------------------------
 
 DescType AETokenDesc::GetPropertyCode() const
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	return (tokenData) ? (**tokenData).propertyCode : typeNull;
+	return (mTokenValid ? mTokenData.propertyCode : typeNull);
 }
 
 // ---------------------------------------------------------------------------
 
 long AETokenDesc::GetDocumentID() const
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	return (tokenData) ? (**tokenData).documentID : 0;
+	return (mTokenValid ? mTokenData.documentID : typeNull);
 }
 
 // ---------------------------------------------------------------------------
 
 WindowPtr AETokenDesc::GetWindowPtr() const
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	return (tokenData) ? (**tokenData).window : nil;
+	return (mTokenValid ? mTokenData.window : nil);
 }
 
 
@@ -81,8 +85,7 @@ WindowPtr AETokenDesc::GetWindowPtr() const
 
 TAEListIndex AETokenDesc::GetElementNumber() const
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	return (tokenData) ? (**tokenData).elementNumber : 0;
+	return (mTokenValid ? mTokenData.elementNumber : 0);
 }
 
 
@@ -93,42 +96,30 @@ TAEListIndex AETokenDesc::GetElementNumber() const
 
 void AETokenDesc::SetPropertyCode(DescType propertyCode)
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	ThrowIfNil(tokenData);
-	(**tokenData).propertyCode = propertyCode;
+	mTokenData.propertyCode = propertyCode;
 }
 
 // ---------------------------------------------------------------------------
 void AETokenDesc::SetDispatchClass(DescType dispatchClass)
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	ThrowIfNil(tokenData);
-	(**tokenData).dispatchClass = dispatchClass;
+	mTokenData.dispatchClass = dispatchClass;
 }
 
 
 // ---------------------------------------------------------------------------
 void AETokenDesc::SetObjectClass(DescType objectClass)
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	ThrowIfNil(tokenData);
-	(**tokenData).objectClass = objectClass;
+	mTokenData.objectClass = objectClass;
 }
 
 // ---------------------------------------------------------------------------
 void AETokenDesc::SetElementNumber(TAEListIndex number)
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	ThrowIfNil(tokenData);
-	(**tokenData).elementNumber = number;
+	mTokenData.elementNumber = number;
 }
 
 // ---------------------------------------------------------------------------
 void AETokenDesc::SetWindow(WindowPtr wind)
 {
-	CoreTokenHandle 	tokenData 	= GetTokenHandle();
-	ThrowIfNil(tokenData);
-	(**tokenData).window = wind;
+	mTokenData.window = wind;
 }
-
-

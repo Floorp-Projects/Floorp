@@ -115,7 +115,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIDOMXULDocument.h"
 // End hack
 
-#if defined(XP_MAC) || defined(RHAPSODY)
+#if (defined(XP_MAC) && !TARGET_CARBON) || defined(RHAPSODY)
 #define USE_NATIVE_MENUS
 #endif
 

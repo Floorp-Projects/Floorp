@@ -24,6 +24,8 @@
 
 #include <memory>	// for auto_ptr
 
+using std::auto_ptr;
+
 #include "nsWindow.h"
 #include "nsMacEventHandler.h"
 

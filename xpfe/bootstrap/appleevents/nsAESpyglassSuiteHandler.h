@@ -74,14 +74,14 @@ public:
 						AESpyglassSuiteHandler();
 						~AESpyglassSuiteHandler();
 
-	void					HandleSpyglassSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply);	// throws OSErrs
+	void					HandleSpyglassSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply);	// throws OSErrs
 
 protected:
 
-	void					HandleOpenURLEvent(AppleEvent *appleEvent, AppleEvent *reply);
+	void					HandleOpenURLEvent(const AppleEvent *appleEvent, AppleEvent *reply);
 	
-	void					HandleRegisterURLEchoEvent(AppleEvent *appleEvent, AppleEvent *reply);
-	void					HandleUnregisterURLEchoEvent(AppleEvent *appleEvent, AppleEvent *reply);
+	void					HandleRegisterURLEchoEvent(const AppleEvent *appleEvent, AppleEvent *reply);
+	void					HandleUnregisterURLEchoEvent(const AppleEvent *appleEvent, AppleEvent *reply);
 
 protected:
 

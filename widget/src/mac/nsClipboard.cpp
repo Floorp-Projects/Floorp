@@ -43,6 +43,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsMemory.h"
 
 #include <Scrap.h>
 
@@ -213,9 +214,10 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
   // create a mime mapper. It's ok for this to fail because the data may come from
   // another app which obviously wouldn't put our mime mapping data on the clipboard.
   char* mimeMapperData = nsnull;
-  GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), (void**)&mimeMapperData, 0 );
+  errCode = GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), (void**)&mimeMapperData, 0 );
   nsMimeMapperMac theMapper ( mimeMapperData );
-  nsCRT::free ( mimeMapperData );
+  if (mimeMapperData)
+    nsCRT::free ( mimeMapperData );
  
   // Now walk down the list of flavors. When we find one that is actually on the
   // clipboard, copy out the data into the transferable in that format. SetTransferData()
@@ -295,6 +297,11 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
   if ( !outData || !inMacFlavor )
     return NS_ERROR_FAILURE;
 
+  // set up default results.
+  *outData = nsnull;
+  if ( outDataSize )
+      *outDataSize = 0;
+
   // check if it is on the clipboard
   long offsetUnused = 0;
 
@@ -306,9 +313,10 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
   err = ::GetCurrentScrap(&scrap);
   if (err != noErr) return NS_ERROR_FAILURE;
   err = ::GetScrapFlavorSize(scrap, inMacFlavor, &dataSize);
+  if (err != noErr) return NS_ERROR_FAILURE;
   // check err??
   if (dataSize > 0) {
-    char* dataBuff = new char[dataSize];
+    char* dataBuff = (char*) nsMemory::Alloc(dataSize);
     if ( !dataBuff )
       return NS_ERROR_OUT_OF_MEMORY;
     err = ::GetScrapFlavorData(scrap, inMacFlavor, &dataSize, dataBuff);
@@ -370,6 +378,7 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
 NS_IMETHODIMP
 nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 aWhichClipboard, PRBool * outResult ) 
 {
+  nsresult rv = NS_OK;
   *outResult = PR_FALSE;  // assume there is nothing there we want.
   if ( aWhichClipboard != kGlobalClipboard )
     return NS_OK;
@@ -377,7 +386,7 @@ nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 a
   // create a mime mapper. It's ok for this to fail because the data may come from
   // another app which obviously wouldn't put our mime mapping data on the clipboard.
   char* mimeMapperData = nsnull;
-  GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), (void**)&mimeMapperData, 0 );
+  rv = GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), (void**)&mimeMapperData, 0 );
   nsMimeMapperMac theMapper ( mimeMapperData );
   nsMemory::Free ( mimeMapperData );
   

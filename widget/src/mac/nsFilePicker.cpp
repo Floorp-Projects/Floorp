@@ -166,16 +166,18 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //-------------------------------------------------------------------------
 static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
 {
-	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
 	switch ( msg ) {
-		case kNavCBEvent:
-			switch ( cbRec->eventData.eventDataParms.event->what ) {
-				case updateEvt:
-					::BeginUpdate(window);
-					::EndUpdate(window);
-					break;
-			}
+	case kNavCBEvent:
+		switch ( cbRec->eventData.eventDataParms.event->what ) {
+		case updateEvt:
+        	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
+		    if (window) {
+    			::BeginUpdate(window);
+	    		::EndUpdate(window);
+	        }
 			break;
+		}
+		break;
 	}
 }
 

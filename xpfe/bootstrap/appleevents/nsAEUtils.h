@@ -36,7 +36,7 @@
 #include <Files.h>
 #include <Errors.h>
 #include <Aliases.h>
-
+#include <MacWindows.h>
 
 #include "nsAEDefs.h"
 #include "nsMacUtils.h"
@@ -95,7 +95,7 @@ OSErr ResumeThreadAE(TThreadAEInfo *threadAEInfo, OSErr threadError);
 
 #if !TARGET_CARBON
 
-OSErr AEGetDescData(const AEDesc *theAEDesc,  DescType typeCode,  void * dataPtr, Size maximumSize);
+OSErr AEGetDescData(const AEDesc *theAEDesc,  void * dataPtr, Size maximumSize);
 Size AEGetDescDataSize(const AEDesc *theAEDesc);
 
 #endif /* TARGET_CARBON */
@@ -163,19 +163,22 @@ public:
 					
 	StAEDesc& 		operator= (const StAEDesc&rhs);		// throws OSErrs
 
-	Size				GetDataSize() { return (dataHandle) ? GetHandleSize(dataHandle) : 0; }
+	Size			GetDataSize()
+	                {
+                        return AEGetDescDataSize(this);
+	                }
 		
 	Boolean			GetBoolean();
 	SInt16			GetShort();
 	SInt32			GetLong();
-	DescType			GetEnumType();
+	DescType		GetEnumType();
 	
-	void				GetRect(Rect& outRect);
-	void				GetRGBColor(RGBColor& outColor);
-	void				GetLongDateTime(LongDateTime& outDateTime);
-	void				GetFileSpec(FSSpec &outFileSpec);
-	void				GetCString(char *outString, short maxLen);
-	void				GetPString(Str255 outString);
+	void			GetRect(Rect& outRect);
+	void			GetRGBColor(RGBColor& outColor);
+	void			GetLongDateTime(LongDateTime& outDateTime);
+	void			GetFileSpec(FSSpec &outFileSpec);
+	void			GetCString(char *outString, short maxLen);
+	void			GetPString(Str255 outString);
 	
 	Handle			GetTextHandle();
 	

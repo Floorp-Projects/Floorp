@@ -32,7 +32,7 @@
 //##############################################################################
 
 // needed because we are not compiling the relevant parts of New.cp
-nothrow_t nothrow; 
+std::nothrow_t nothrow; 
 
 void* operator new (size_t size, const std::nothrow_t& ) throw()
 {

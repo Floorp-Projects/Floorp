@@ -32,17 +32,11 @@
 #include "nsString.h"
 
 
-nsMimeMapperMac :: nsMimeMapperMac ( )
-  : mCounter(0)
-{
-}
-
 nsMimeMapperMac :: nsMimeMapperMac ( const char* inMappings )
   : mCounter(0)
 {
-  if ( strlen(inMappings) )
+  if (inMappings && strlen(inMappings) )
     ParseMappings ( inMappings );
-
 }
 
 

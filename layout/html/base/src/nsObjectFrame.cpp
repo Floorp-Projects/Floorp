@@ -2202,6 +2202,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 // Here's where we forward events to plugins.
 
 #ifdef XP_MAC
+
+#if TARGET_CARBON
+inline Boolean OSEventAvail(EventMask mask, EventRecord* event) { return EventAvail(mask, event); }
+#endif
+
 static void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 {
 	::OSEventAvail(0, &aMacEvent);

@@ -85,7 +85,7 @@ enum
 
 /* local data structures */
 
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=mac68k
 #endif
 
@@ -134,7 +134,7 @@ struct APPLRec
 typedef struct APPLRec APPLRec;
 typedef APPLRec *APPLRecPtr;
 
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=reset
 #endif
 
@@ -314,7 +314,7 @@ static	OSErr	GetAPPLFromDesktopFile(ConstStr255Param volName,
 				applResHandle = Get1Resource(kAPPLResType, 0);
 				if ( applResHandle != NULL )
 				{
-					applSize = InlineGetHandleSize((Handle)applResHandle);
+					applSize = GetHandleSize((Handle)applResHandle);
 					if ( applSize != 0 )	/* make sure the APPL resource isn't empty */
 					{
 						foundCreator = false;
@@ -1110,7 +1110,7 @@ static	OSErr	GetCommentFromDesktopFile(short vRefNum,
 						commentHandle = (StringHandle)Get1Resource(kFCMTResType,commentID);
 						if ( commentHandle != NULL )
 						{
-							if ( InlineGetHandleSize((Handle)commentHandle) > 0 )
+							if ( GetHandleSize((Handle)commentHandle) > 0 )
 							{
 								BlockMoveData(*commentHandle, comment, *commentHandle[0] + 1);
 							}

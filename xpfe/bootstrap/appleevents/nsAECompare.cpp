@@ -35,21 +35,23 @@ Boolean AEComparisons::CompareTexts(DescType oper, const AEDesc *desc1, const AE
 	Boolean	result = false;
 	
 	short	compareResult;
+	Handle  lhsHandle = 0, rhsHandle = 0;
 	char  	*lhs;
 	char  	*rhs;
 	long		lhsSize;
 	long		rhsSize;
-	char		h1State, h2State;
 	
-	lhsSize = GetHandleSize(desc1->dataHandle);
-	h1State = HGetState(desc1->dataHandle);
-	HLock(desc1->dataHandle);
-	lhs = *(desc1->dataHandle);
+	// FIXME:  this can leak lhsHandle if second conversion fails.
+	if (DescToTextHandle(desc1, &lhsHandle) != noErr || DescToTextHandle(desc2, &rhsHandle) != noErr)
+	    goto fail;
 	
-	rhsSize = GetHandleSize(desc2->dataHandle);
-	h2State = HGetState(desc2->dataHandle);
-	HLock(desc2->dataHandle);
-	rhs = *(desc2->dataHandle);
+	lhsSize = GetHandleSize(lhsHandle);
+	HLock(lhsHandle);
+	lhs = *(lhsHandle);
+	
+	rhsSize = GetHandleSize(rhsHandle);
+	HLock(rhsHandle);
+	rhs = *(rhsHandle);
 
 	compareResult = ::CompareText(lhs, rhs, lhsSize, rhsSize, nil);
 
@@ -129,8 +131,9 @@ Boolean AEComparisons::CompareTexts(DescType oper, const AEDesc *desc1, const AE
 			ThrowOSErr(errAEBadTestKey);
 	}
 
-	HSetState(desc1->dataHandle, h1State);
-	HSetState(desc2->dataHandle, h2State);
+fail:
+    if (lhsHandle) DisposeHandle(lhsHandle);
+    if (rhsHandle) DisposeHandle(rhsHandle);
 	
 	return result;
 }

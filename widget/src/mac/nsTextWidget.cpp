@@ -25,6 +25,8 @@
 #include <Appearance.h>
 #include <memory>
 
+using std::auto_ptr;
+
 #if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 #include <ControlDefinitions.h>
 #endif

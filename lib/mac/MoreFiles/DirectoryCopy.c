@@ -52,7 +52,7 @@ enum
 ** stack space used when recursively calling CopyLevel and to hold
 ** global information that might be needed at any time. */
 
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=mac68k
 #endif
 struct EnumerateGlobals
@@ -67,7 +67,7 @@ struct EnumerateGlobals
 	Str63		itemName;			/* the name of the current item */
 	CInfoPBRec	myCPB;				/* the parameter block used for PBGetCatInfo calls */
 };
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=reset
 #endif
 
@@ -79,7 +79,7 @@ typedef EnumerateGlobals *EnumerateGlobalsPtr;
 ** stack space used when recursively calling GetLevelSize and to hold
 ** global information that might be needed at any time. */
 
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=mac68k
 #endif
 struct PreflightGlobals
@@ -95,7 +95,7 @@ struct PreflightGlobals
 	unsigned long	tempBlocks;			/* temporary storage for calculations (save some stack space)  */
 	CopyFilterProcPtr copyFilterProc;	/* pointer to filter function */
 };
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=reset
 #endif
 

@@ -576,6 +576,7 @@ void AEApplicationClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredT
 			break;
 			
 		case pClipboard:
+#if !TARGET_CARBON		
 			{
 				//	Return all of the items currently on the clipboard.
 				//	The returned information is an AEList, and each data type
@@ -627,7 +628,8 @@ void AEApplicationClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredT
 					scrapPtr += itemLength;
 				}
 				HUnlock  (scrapInfo->scrapHandle);
-			} 
+			}
+#endif
 			break;
 
 		default:
@@ -667,7 +669,7 @@ void AEApplicationClass::SetDataForObject(const AEDesc *token, AEDesc *data)
 			case pClipboard:
 				//	The data should be an AE list containing a series of things to be placed on the
 				//	clipboard. The data type of each item is also the clipboard type for that data
-				
+#if !TARGET_CARBON				
 				err = ZeroScrap();
 				ThrowIfOSErr(err);
 				
@@ -687,6 +689,7 @@ void AEApplicationClass::SetDataForObject(const AEDesc *token, AEDesc *data)
 								   	 	*currentItemDesc.dataHandle);
 					ThrowIfOSErr(err);
 				}
+#endif
 				break;
 				
 			default:
