@@ -1135,8 +1135,13 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
       if ( abs(currBounds.left-aX) > kMoveThreshold || abs(currBounds.top-aY) > kMoveThreshold ) {
         ::MoveWindow(mWindowPtr, aX, aY, false);
         
-        Rect newBounds;
-        ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &newBounds );
+        // update userstate to match, if appropriate
+        PRInt32 sizeMode;
+        nsBaseWidget::GetSizeMode ( &sizeMode );
+        if ( sizeMode == nsSizeMode_Normal ) {
+          ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
+          ::SetWindowUserState ( mWindowPtr, &currBounds );
+        }  
       }  
     }
 
@@ -1174,10 +1179,17 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 
     // move the window if it has not been moved yet
     // (ie. if this function isn't called in response to a DragWindow event)
-    Point macPoint = topLeft(portBounds);
-    ::LocalToGlobal(&macPoint);
-    if (macPoint.h != aX || macPoint.v != aY)
+    ::LocalToGlobal((Point *) &portBounds.top);
+    ::LocalToGlobal((Point *) &portBounds.bottom);
+    if (portBounds.left != aX || portBounds.top != aY) {
       ::MoveWindow(mWindowPtr, aX, aY, false);
+
+      // update userstate to match, if appropriate
+      PRInt32 sizeMode;
+      GetSizeMode(&sizeMode);
+      if (sizeMode == nsSizeMode_Normal)
+        ::SetWindowUserState(mWindowPtr, &portBounds);
+    }
 
     // propagate the event in global coordinates
     Inherited::Move(aX, aY);
@@ -1498,6 +1510,16 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
       // make sure that we don't infinitely recurse if live-resize is on
       mResizeIsFromUs = PR_TRUE;
       ::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+
+      // update userstate to match, if appropriate
+      PRInt32 sizeMode;
+      GetSizeMode(&sizeMode);
+      if (sizeMode == nsSizeMode_Normal) {
+        Rect portBounds;
+        ::GetWindowBounds(mWindowPtr, kWindowGlobalPortRgn, &portBounds);
+        ::SetWindowUserState(mWindowPtr, &portBounds);
+      }
+
       mResizeIsFromUs = PR_FALSE;
 
 #if defined(XP_MACOSX)
