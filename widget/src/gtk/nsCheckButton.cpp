@@ -22,9 +22,6 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-#include "nsXtEventHandler.h"
-#include <Xm/ToggleB.h>
-
 NS_IMPL_ADDREF(nsCheckButton)
 NS_IMPL_RELEASE(nsCheckButton)
 
@@ -61,12 +58,12 @@ NS_METHOD nsCheckButton::Create(nsIWidget *aParent,
                       nsWidgetInitData *aInitData)
 {
   aParent->AddChild(this);
-  GtkWidget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = (GtkWidget *) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
 
   InitToolkit(aToolkit, aParent);
@@ -74,6 +71,7 @@ NS_METHOD nsCheckButton::Create(nsIWidget *aParent,
 
 
   mWidget = gtk_check_button_new();
+  mLabel = gtk_label_new(NULL);
 
 /*
   mWidget = ::XtVaCreateManagedWidget("",
@@ -232,7 +230,7 @@ NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   if (mLabel) {
-    gtk_label_set(mLabel, label);
+    gtk_label_set(GTK_LABEL(mLabel), label);
   } else {
     mLabel = gtk_label_new(label);
     gtk_container_add(GTK_CONTAINER(mWidget), mLabel);
@@ -252,7 +250,7 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
 {
   char * text;
   if (mLabel) {
-    gtk_label_get(mLabel, &text);
+    gtk_label_get(GTK_LABEL(mLabel), &text);
     aBuffer.SetLength(0);
     aBuffer.Append(text);
   }

@@ -69,11 +69,12 @@ public:
   void DisArmed();
 
 private:
-  GtkWidget *mlabel;
-  Boolean mInitialState;
-  Boolean mNewValue;
-  Boolean mValueWasSet;
-  Boolean mIsArmed;
+  GtkWidget *mWidget;
+  GtkWidget *mLabel;
+  PRBool mInitialState;
+  PRBool mNewValue;
+  PRBool mValueWasSet;
+  PRBool mIsArmed;
 
 };
 
