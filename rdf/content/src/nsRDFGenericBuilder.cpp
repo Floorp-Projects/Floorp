@@ -34,6 +34,8 @@
 
  */
 
+#define FORCE_PR_LOG
+
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
@@ -273,6 +275,21 @@ public:
     CreateElement(PRInt32 aNameSpaceID,
                   nsIAtom* aTag,
                   nsIContent** aResult);
+
+#ifdef PR_LOGGING
+    nsresult
+    Log(const char* aOperation,
+        nsIContent* aElement, 
+        nsIRDFResource* aSource,
+        nsIRDFResource* aProperty,
+        nsIRDFNode* aTarget);
+
+#define LOG(_op, _ele, _src, _prop, _targ) \
+    Log(_op, _ele, _src, _prop, _targ)
+
+#else
+#define LOG(_op, _ele, _src, _prop, _targ)
+#endif
 
 protected:
     nsIXULDocument*            mDocument; // [WEAK]
@@ -963,7 +980,9 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
         // the same parent has the content model builder's root
         if (!IsElementInWidget(element))
             continue;
-        
+
+        LOG("assert", element, aSource, aProperty, aTarget);
+
         nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget);
         if (resource && IsContainmentProperty(element, aProperty)) {
             // Okay, the target  _is_ a resource, and the property is
@@ -1082,6 +1101,8 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
         if (!IsElementInWidget(element))
             continue;
         
+        LOG("unassert", element, aSource, aProperty, aTarget);
+
         nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget);
         if (resource && IsContainmentProperty(element, aProperty)) {
             // Okay, the object _is_ a resource, and the predicate is
@@ -1205,6 +1226,8 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
         // the same parent has the content model builder's root
         if (!IsElementInWidget(element))
             continue;
+
+        LOG("change", element, aSource, aProperty, aNewTarget);
         
         nsCOMPtr<nsIRDFResource> oldresource = do_QueryInterface(aOldTarget);
         if (oldresource && IsContainmentProperty(element, aProperty)) {
@@ -1562,20 +1585,16 @@ RDFGenericBuilderImpl::FindTemplate(nsIContent* aElement,
 PRBool
 RDFGenericBuilderImpl::IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
 {
-    // never copy rdf:property attribute
-    if ((aAttribute == kPropertyAtom) && (aNameSpaceID == kNameSpaceID_RDF)) {
-        return PR_TRUE;
-    }
-    // never copy rdf:instanceOf attribute
-    else if ((aAttribute == kInstanceOfAtom) && (aNameSpaceID == kNameSpaceID_RDF)) {
-        return PR_TRUE;
-    }
-    // never copy {}:ID attribute
-    else if ((aAttribute == kIdAtom) && (aNameSpaceID == kNameSpaceID_None)) {
+    // XXX Note that we patently ignore namespaces. This is because
+    // HTML elements lie and tell us that their attributes are
+    // _always_ in the HTML namespace. Urgh.
+
+    // never copy the ID attribute
+    if (aAttribute == kIdAtom) {
         return PR_TRUE;
     }
     // never copy {}:uri attribute
-    else if ((aAttribute == kURIAtom) && (aNameSpaceID == kNameSpaceID_None)) {
+    else if (aAttribute == kURIAtom) {
         return PR_TRUE;
     }
     else {
@@ -1671,6 +1690,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
 		// check whether this item is the "resource" element
 		PRBool isResourceElement = PR_FALSE;
+        PRBool isUnique = aIsUnique;
 
         {
             PRUnichar buf[128];
@@ -1683,7 +1703,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if ((rv == NS_CONTENT_ATTR_HAS_VALUE) &&
                 (idValue.Equals("...") || idValue.Equals("rdf:*"))) {
                 isResourceElement = PR_TRUE;
-                aIsUnique = PR_FALSE;
+                isUnique = PR_FALSE;
             }
         }
 
@@ -1691,10 +1711,22 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 		rv = tmplKid->GetTag(*getter_AddRefs(tag));
         if (NS_FAILED(rv)) return rv;
 
+#ifdef PR_LOGGING
+        if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+            nsAutoString tagname;
+            tag->ToString(tagname);
+            PR_LOG(gLog, PR_LOG_DEBUG,
+                   ("rdfgeneric[%p]     building %s %s %s",
+                    this, (const char*) nsCAutoString(tagname),
+                    (isResourceElement ? "[resource]" : ""),
+                    (isUnique ? "[unique]" : "")));
+        }
+#endif
+
         PRBool realKidAlreadyExisted = PR_FALSE;
 
         nsCOMPtr<nsIContent> realKid;
-        if (aIsUnique) {
+        if (isUnique) {
             // The content is "unique"; that is, we haven't hit the
             // "resource" element yet.
             rv = EnsureElementHasGenericChild(aRealNode, nameSpaceID, tag, aNotify, getter_AddRefs(realKid));
@@ -1860,7 +1892,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // hand" because HTML won't build itself up
                 // lazily. Note that we _don't_ need to notify: we'll
                 // add the entire subtree in a single whack.
-                rv = BuildContentFromTemplate(tmplKid, realKid, aIsUnique, aChild, -1, PR_FALSE);
+                rv = BuildContentFromTemplate(tmplKid, realKid, isUnique, aChild, -1, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 if (isResourceElement) {
@@ -1881,7 +1913,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
 
             // We'll _already_ have added the unique elements.
-            if (! aIsUnique) {
+            if (! isUnique) {
                 // Add into content model, special casing treeitems.
                 //
                 // XXX I've hacked insertion sorting to be OFF for
@@ -2974,3 +3006,52 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
     NS_ADDREF(*aResult);
     return NS_OK;
 }
+
+
+#ifdef PR_LOGGING
+nsresult
+RDFGenericBuilderImpl::Log(const char* aOperation,
+                           nsIContent* aElement, 
+                           nsIRDFResource* aSource,
+                           nsIRDFResource* aProperty,
+                           nsIRDFNode* aTarget)
+{
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsresult rv;
+
+        const char* sourceStr;
+        rv = aSource->GetValueConst(&sourceStr);
+        if (NS_FAILED(rv)) return rv;
+
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("rdfgeneric[%p] %8s [%s]--", this, aOperation, sourceStr));
+
+        const char* propertyStr;
+        rv = aProperty->GetValueConst(&propertyStr);
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString targetStr;
+        rv = gXULUtils->GetTextForNode(aTarget, targetStr);
+        if (NS_FAILED(rv)) return rv;
+
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("                       --[%s]-->[%s]",
+                propertyStr,
+                (const char*) nsCAutoString(targetStr)));
+
+        nsCOMPtr<nsIAtom> tag;
+        rv = aElement->GetTag(*getter_AddRefs(tag));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString tagname;
+        rv = tag->ToString(tagname);
+        if (NS_FAILED(rv)) return rv;
+
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("               %s(%p)",
+                (const char*) nsCAutoString(tagname),
+                aElement));
+    }
+    return NS_OK;
+}
+#endif
