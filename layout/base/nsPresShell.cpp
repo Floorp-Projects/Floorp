@@ -162,9 +162,6 @@ static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 
 #undef NOISY
 
-// Uncomment the following define if you want asynchronous reflow to be enabled during document load
-// #define ASYNC_REFLOW_DURING_DOC_LOAD 1
-
 //========================================================================
 #ifdef MOZ_REFLOW_PERF
 class ReflowCountMgr;
@@ -261,6 +258,10 @@ protected:
 // This data member is initialized from the layout.reflow.timeslice pref.
 #define NS_MAX_REFLOW_TIME    1000000
 static PRInt32 gMaxRCProcessingTime = -1;
+
+// Set to true to enable async reflow during document load.
+// This flag is initialized from the layout.reflow.async.duringDocLoad pref.
+static PRBool gAsyncReflowDuringDocLoad = PR_FALSE;
 
 // Largest chunk size we recycle
 static const size_t gMaxRecycledSize = 400;
@@ -701,7 +702,7 @@ DummyLayoutRequest::~DummyLayoutRequest()
 NS_IMETHODIMP
 DummyLayoutRequest::Cancel(nsresult status)
 {
-  // XXX Cancel layout - Implement this if we decide to enable the ASYNC_REFLOW_DURING_DOC_LOAD compile switch.
+  // XXX Cancel layout - Implement this if we decide to enable the layout.reflow.async.duringDocLoad pref
   return NS_OK;
 }
 
@@ -1373,12 +1374,14 @@ PresShell::Init(nsIDocument* aDocument,
 
   if (gMaxRCProcessingTime == -1) {
     // First, set the defaults
-    gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;    
+    gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;
+    gAsyncReflowDuringDocLoad = PR_FALSE;
 
     // Get the prefs service
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
     if (NS_SUCCEEDED(result)) {
-      prefs->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);      
+      prefs->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);
+      prefs->GetBoolPref("layout.reflow.async.duringDocLoad", &gAsyncReflowDuringDocLoad);
     }
   }
 
@@ -2635,16 +2638,13 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
     ReflowCommandAdded(aReflowCommand);
   }
 
-  // Kick off a reflow event if we aren't batching reflows
+  // For async reflow during doc load, post a reflow event if we are not batching reflow commands.
+  // For sync reflow during doc load, post a reflow event if we are not batching reflow commands
   // and the document is not loading.
-  //
-  // If we're in the middle of a drag, process it right away (needed for mac,
-  // might as well do it on all platforms just to keep the code paths the same).
-#ifdef ASYNC_REFLOW_DURING_DOC_LOAD
-  if (!mBatchReflows) {
-#else
-  if (!mBatchReflows && !mDocumentLoading) {
-#endif
+  if ((gAsyncReflowDuringDocLoad && !mBatchReflows) ||
+      (!gAsyncReflowDuringDocLoad && !mBatchReflows && !mDocumentLoading)) {
+    // If we're in the middle of a drag, process it right away (needed for mac,
+    // might as well do it on all platforms just to keep the code paths the same).
     if ( IsDragInProgress() )
       FlushPendingNotifications();
     else
@@ -4345,11 +4345,9 @@ PresShell::DidCauseReflow()
 {    
   mViewManager->CacheWidgetChanges(PR_FALSE);
 
-#ifndef ASYNC_REFLOW_DURING_DOC_LOAD
-  if (mDocumentLoading) {
+  if (!gAsyncReflowDuringDocLoad && mDocumentLoading) {
     FlushPendingNotifications();
   }
-#endif
 
   return NS_OK;
 }
@@ -4544,44 +4542,45 @@ PresShell::CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult)
 nsresult
 PresShell::ReflowCommandAdded(nsIReflowCommand* aRC)
 {
-#ifdef ASYNC_REFLOW_DURING_DOC_LOAD
-  NS_PRECONDITION(mRCCreatedDuringLoad >= 0, "PresShell's reflow command queue is in a bad state.");
-  if (mDocumentLoading) {
-    PRInt32 flags;
-    aRC->GetFlags(&flags);
-    flags |= NS_RC_CREATED_DURING_DOCUMENT_LOAD;
-    aRC->SetFlags(flags);    
-    mRCCreatedDuringLoad++;
 
-    if (!mDummyLayoutRequest) {
-      AddDummyLayoutRequest();
+  if (gAsyncReflowDuringDocLoad) {
+    NS_PRECONDITION(mRCCreatedDuringLoad >= 0, "PresShell's reflow command queue is in a bad state.");
+    if (mDocumentLoading) {
+      PRInt32 flags;
+      aRC->GetFlags(&flags);
+      flags |= NS_RC_CREATED_DURING_DOCUMENT_LOAD;
+      aRC->SetFlags(flags);    
+      mRCCreatedDuringLoad++;
+
+      if (!mDummyLayoutRequest) {
+        AddDummyLayoutRequest();
+      }
+
+  #ifdef DEBUG_nisheeth
+      printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
+  #endif
     }
-
-#ifdef DEBUG_nisheeth
-    printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
-#endif
   }
-#endif
   return NS_OK;
 }
 
 nsresult
 PresShell::ReflowCommandRemoved(nsIReflowCommand* aRC)
 {
-#ifdef ASYNC_REFLOW_DURING_DOC_LOAD
-  NS_PRECONDITION(mRCCreatedDuringLoad >= 0, "PresShell's reflow command queue is in a bad state.");  
-  PRInt32 flags;
-  aRC->GetFlags(&flags);
-  if (flags & NS_RC_CREATED_DURING_DOCUMENT_LOAD) {
-    mRCCreatedDuringLoad--;
-#ifdef DEBUG_nisheeth
-    printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
-#endif
-  }
+  if (gAsyncReflowDuringDocLoad) {
+    NS_PRECONDITION(mRCCreatedDuringLoad >= 0, "PresShell's reflow command queue is in a bad state.");  
+    PRInt32 flags;
+    aRC->GetFlags(&flags);
+    if (flags & NS_RC_CREATED_DURING_DOCUMENT_LOAD) {
+      mRCCreatedDuringLoad--;
+  #ifdef DEBUG_nisheeth
+      printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
+  #endif
+    }
 
-  if (mRCCreatedDuringLoad == 0 && !mDocumentLoading && mDummyLayoutRequest)
-    RemoveDummyLayoutRequest();
-#endif
+    if (mRCCreatedDuringLoad == 0 && !mDocumentLoading && mDummyLayoutRequest)
+      RemoveDummyLayoutRequest();
+  }
   return NS_OK;
 }
 
@@ -4590,28 +4589,29 @@ nsresult
 PresShell::AddDummyLayoutRequest(void)
 { 
   nsresult rv = NS_OK;
-#ifdef ASYNC_REFLOW_DURING_DOC_LOAD  
-  rv = DummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest));
-  if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  if (mDocument) {
-    rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  if (loadGroup) {
-    rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
+  if (gAsyncReflowDuringDocLoad) {
+    rv = DummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest));
     if (NS_FAILED(rv)) return rv;
 
-    rv = loadGroup->AddChannel(mDummyLayoutRequest, nsnull);
-    if (NS_FAILED(rv)) return rv;
-  }
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    if (mDocument) {
+      rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    if (loadGroup) {
+      rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = loadGroup->AddChannel(mDummyLayoutRequest, nsnull);
+      if (NS_FAILED(rv)) return rv;
+    }
 
 #ifdef DEBUG_nisheeth
-  printf("presshell=%p, Added dummy layout request.\n", this);
+    printf("presshell=%p, Added dummy layout request.\n", this);
 #endif
-#endif
+  }
   return rv;
 }
 
@@ -4619,25 +4619,25 @@ nsresult
 PresShell::RemoveDummyLayoutRequest(void)
 {
   nsresult rv = NS_OK;
-#ifdef ASYNC_REFLOW_DURING_DOC_LOAD
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  if (mDocument) {
-    rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    if (NS_FAILED(rv)) return rv;
-  }
 
-  if (loadGroup && mDummyLayoutRequest) {
-    rv = loadGroup->RemoveChannel(mDummyLayoutRequest, nsnull, NS_OK, nsnull);
-    if (NS_FAILED(rv)) return rv;
+  if (gAsyncReflowDuringDocLoad) {
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    if (mDocument) {
+      rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+      if (NS_FAILED(rv)) return rv;
+    }
 
-    mDummyLayoutRequest = nsnull;
-  }
+    if (loadGroup && mDummyLayoutRequest) {
+      rv = loadGroup->RemoveChannel(mDummyLayoutRequest, nsnull, NS_OK, nsnull);
+      if (NS_FAILED(rv)) return rv;
+
+      mDummyLayoutRequest = nsnull;
+    }
 
 #ifdef DEBUG_nisheeth
-  printf("presshell=%p, Removed dummy layout request.\n", this);
+    printf("presshell=%p, Removed dummy layout request.\n", this);
 #endif
-
-#endif
+  }
   return rv;
 }
 
