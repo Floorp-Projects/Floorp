@@ -181,9 +181,11 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &fe2);      
         SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
-        dObj->AddDataFlavor(kURLMime, &fe2);      
+        dObj->AddDataFlavor(kURLMime, &fe2);  
+#ifdef CFSTR_SHELLURL
         SET_FORMATETC(fe2, ::RegisterClipboardFormat(CFSTR_SHELLURL), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &fe2);      
+#endif
       }
     }
   }
