@@ -23,8 +23,12 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(ae12670a-1dd1-11b2-80cd-82ec93559deb)]
 
+%{C++
+#define COMMAND_LINE_ARGUMENT_HANDLERS "command-line-argument-handlers"
+%}
+
+[scriptable, uuid(ae12670a-1dd1-11b2-80cd-82ec93559deb)]
 interface nsICmdLineHandler : nsISupports
 {
     readonly attribute string commandLineArgument;
