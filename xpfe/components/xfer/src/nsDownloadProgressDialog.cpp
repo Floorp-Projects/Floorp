@@ -163,18 +163,17 @@ nsDownloadProgressDialog::Show() {
 
         if ( NS_SUCCEEDED(rv) ) {
             // Create "save to disk" nsIXULCallbacks...
-            nsIWebShellWindow *newWindow;
+            nsCOMPtr<nsIWebShellWindow> newWindow;
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
-                                                 newWindow,
+                                                 *getter_AddRefs(newWindow),
                                                  nsnull,
                                                  this,
                                                  0,
                                                  0 );
             if ( NS_SUCCEEDED( rv ) ) {
                 mWindow = newWindow;
-                NS_RELEASE( newWindow );
             } else {
                 DEBUG_PRINTF( PR_STDOUT, "Error creating download progress dialog, rv=0x%X\n", (int)rv );
             }

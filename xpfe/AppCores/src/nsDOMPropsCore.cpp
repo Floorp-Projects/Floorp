@@ -463,13 +463,13 @@ nsDOMPropsCore::ShowProperties(const nsString& aUrl, nsIDOMWindow* aParent, nsID
   if (NS_FAILED(rv))
     return rv;
 
-  nsIWebShellWindow *newWindow;
 
   nsPropertiesDialog *dialog = new nsPropertiesDialog(aNode);
 
   nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
 
-  rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, newWindow,
+  nsCOMPtr<nsIWebShellWindow> newWindow;
+  rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, *getter_AddRefs(newWindow),
                                       nsnull, dialog, 450, 240);
 
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
