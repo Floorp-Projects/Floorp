@@ -38,8 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#define PR_LOGGING 1
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG 1 /* Allow logging in the release build */
+#endif /* MOZ_LOGGING */
 #include "prlog.h"
  
 #include "nsDeviceContextXP.h"

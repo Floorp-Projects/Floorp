@@ -22,6 +22,8 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Jacek Piskozub <piskozub@iopan.gda.pl>
+ *   Leon Sha <leon.sha@sun.com>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -142,6 +144,13 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG 1 /* Allow logging in the release build */
+#endif /* MOZ_LOGGING */
+#include "prlog.h"
+
+#include <errno.h>
+
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kRangeCID,     NS_RANGE_CID);
 
@@ -154,6 +163,10 @@ static NS_DEFINE_CID(kRangeCID,     NS_RANGE_CID);
 #include <wtypes.h>
 #include <winuser.h>
 #endif
+
+#ifdef PR_LOGGING 
+static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
+#endif /* PR_LOGGING */
 
 // special class for handeling DOM context menu events
 // because for some reason it starves other mouse events if implemented on the same class
@@ -1665,22 +1678,85 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     
     window.window = &port;
     npprint.print.embedPrint.platformPrint = (void*)window.window;
-
+    npprint.print.embedPrint.window = window;
+    // send off print info to plugin
+    rv = pi->Print(&npprint);
 #elif defined(XP_UNIX) && !defined(XP_MACOSX)
-    // UNIX does things completely differently
-    PRUnichar *printfile = nsnull;
-    if (printSettings) {
-      printSettings->GetToFileName(&printfile);
-    }
-    if (!printfile) 
-      return NS_OK; // XXX what to do on UNIX when we don't have a PS file???? 
+    /* UNIX does things completely differently:
+     * We call the plugin and it sends generated PostScript data into a
+     * file handle we provide. If the plugin returns with success we embed
+     * this PostScript code fragment into the PostScript job we send to the
+     * printer.
+     */
 
+    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("nsObjectFrame::Paint() start for X11 platforms\n"));
+           
+    FILE *plugintmpfile = tmpfile();
+    if( !plugintmpfile ) {
+      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: could not open tmp. file, errno=%d\n", errno));
+      return NS_ERROR_FAILURE;
+    }
+ 
+    /* Send off print info to plugin */
     NPPrintCallbackStruct npPrintInfo;
     npPrintInfo.type = NP_PRINT;
-    npPrintInfo.fp = (FILE*)printfile;    
-    npprint.print.embedPrint.platformPrint = (void*) &npPrintInfo;
+    npPrintInfo.fp   = plugintmpfile;
+    npprint.print.embedPrint.platformPrint = (void *)&npPrintInfo;
+    npprint.print.embedPrint.window        = window;
+    rv = pi->Print(&npprint);
+    if (NS_FAILED(rv)) {
+      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: plugin returned failure %lx\n", (long)rv));
+      fclose(plugintmpfile);
+      return rv;
+    }
+
+    unsigned char *pluginbuffer;
+    long           fileLength;
+
+    /* Get file size */
+    fseek(plugintmpfile, 0, SEEK_END);
+    fileLength = ftell(plugintmpfile);
+    
+    /* Safeguard against bogus values
+     * (make sure we clamp the size to a reasonable value (say... 128 MB)) */
+    if( fileLength <= 0 || fileLength > (128 * 1024 * 1024) ) {
+      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: file size %ld too large\n", fileLength));
+      fclose(plugintmpfile);
+      return NS_ERROR_FAILURE;
+    }
+
+    pluginbuffer = new unsigned char[fileLength+1];
+    if (!pluginbuffer) {
+      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: no buffer memory for %ld bytes\n", fileLength+1));
+      fclose(plugintmpfile);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    /* Read data into temp. buffer */
+    long numBytesRead = 0;
+    fseek(plugintmpfile, 0, SEEK_SET);
+    numBytesRead = fread(pluginbuffer, 1, fileLength, plugintmpfile);
+    
+    if( numBytesRead == fileLength ) {
+      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("sending %ld bytes of PostScript data to printer\n", numBytesRead));
+
+      /* Send data to printer */
+      aRenderingContext.RenderPostScriptDataFragment(pluginbuffer, numBytesRead);
+    }
+    else
+    {
+      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
+             ("error: bytes read in buffer (%ld) does not match file length (%ld)\n",
+             numBytesRead, fileLength));
+    }
+
+    fclose(plugintmpfile);
+    delete [] pluginbuffer;
+
+    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
 
 #else  // Windows and non-UNIX, non-Mac(Classic) cases
+
     // we need the native printer device context to pass to plugin
     // On Windows, this will be the HDC
     PRUint32 pDC = 0;
@@ -1690,12 +1766,11 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
       return NS_OK;  // no dc implemented so quit
 
     npprint.print.embedPrint.platformPrint = (void*)pDC;
-#endif 
-
-
     npprint.print.embedPrint.window = window;
     // send off print info to plugin
     rv = pi->Print(&npprint);
+
+#endif
 
 #if defined(XP_MAC) && !TARGET_CARBON
     // Clean-up on Mac

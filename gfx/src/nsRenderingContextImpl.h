@@ -136,6 +136,7 @@ public:
   NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
   NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect);
 
+  NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen);
 
 protected:
   virtual ~nsRenderingContextImpl();

@@ -20,7 +20,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Leon Sha <leon.sha@sun.com>
+ *   Boris Zbarsky <bzbarsky@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -823,6 +825,57 @@ public:
                       nscoord aXImageStart, nscoord aYImageStart,
                       const nsRect * aTargetRect) = 0;
 
+  /**
+   * Render the provided postscript fragment to the current rendering
+   * surface.
+   *
+   * This is usually implemented via including a PostScript data fragment 
+   * into the output of a print device which supports embedding
+   * of PostScript code fragments (this may be a PostScript printer, a PCL
+   * printer which supports embedded PostScript fragments in the PCL stream
+   * etc. etc.) on the drawing surface this nsIRenderingContext is currently
+   * rendering on (e.g. the embedded PostScript code "draws" on this surface
+   * as if the matching nsIRenderingContext methods would have been called).
+   *
+   * The PostScript code fragment MUST NOT contain any code which begins a
+   * new page.
+   *
+   * The PostScript code fragment can only contain PostScript Level 1 and
+   * Level 2 code, PostScript Level 3 is not allowed yet.
+   *
+   * This must be called after nsIDeviceContext::BeginPage() and
+   * before nsIDeviceContext::EndPage().
+   *
+   * There is no gurantee that the PostScript data are included into the
+   * output and it may happen that the PostScript code fragment passed via
+   * RenderPostScriptDataFragment() may be included multiple times into the
+   * output (for example if PS data come from a plugin which is split over
+   * multiple pages the data may be embedded for each page and the matching
+   * visible area is clipped).
+   *
+   * The PostScript code will operate in its own context and can use the
+   * whole drawable area which is defined by the caller of this method via
+   * establishing a clipping area to set the X,Y and width/height of the
+   * output area (e.g. the output created by the passed PostScript code
+   * fragment is positioned (X, Y pos) and limited (width, height) via
+   * defining a clipping area before calling this method).
+   *
+   * The initial PostScript coordinate system is aligned with the top and
+   * left edges of the clip rect, with the positive X axis along the top
+   * edge and the positive Y axis along the left edge.
+   *
+   * Note that nsIRenderingContext and PostScript have the vertical axis
+   * NOT flipped - "0,0" means "left, top" edge for both
+   * nsIRenderingContext and the PostScript fragment code (this is different
+   * from the PostScript "default" where "0,0" means "left, bottom" edge -
+   * the nsIRenderingContext implementation ensures that both X and Y axis
+   * for PostScript are the same as used in the nsIRenderingContext).
+   *
+   * @param aData - PostScript fragment data
+   * @param aLength - Length of PostScript fragment data
+   * @return error status
+   */
+  NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen) = 0;
 };
 
 //modifiers for text rendering

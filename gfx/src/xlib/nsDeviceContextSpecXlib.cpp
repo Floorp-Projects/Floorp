@@ -42,8 +42,9 @@
 #define SET_PRINTER_FEATURES_VIA_PREFS 1 
 #define PRINTERFEATURES_PREF "print.tmp.printerfeatures"
 
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#define PR_LOGGING 1
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG 1 /* Allow logging in the release build */
+#endif /* MOZ_LOGGING */
 #include "prlog.h"
 
 #include "nsDeviceContextSpecXlib.h"

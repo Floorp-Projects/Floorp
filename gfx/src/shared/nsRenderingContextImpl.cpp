@@ -925,3 +925,11 @@ nsRenderingContextImpl::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoor
 {
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsRenderingContextImpl::RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+

@@ -228,3 +228,13 @@ nsRenderingContextXp::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX
   NS_NOTREACHED("nsRenderingContextXp::CopyOffScreenBits() not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsRenderingContextXp::RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen)
+{
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::RenderPostScriptDataFragment()\n"));
+
+  return mPrintContext->RenderPostScriptDataFragment(aData, aDatalen);
+}
+
+
