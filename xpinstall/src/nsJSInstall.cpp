@@ -26,6 +26,13 @@
 
 #include "nsIDOMInstallVersion.h"
 
+#ifdef XP_WIN
+#include "nsWinReg.h"
+#include "nsJSWinReg.h"
+
+extern JSClass WinRegClass;
+#endif
+
 //
 // Install property ids
 //
@@ -38,6 +45,23 @@ enum Install_slots
   INSTALL_FORCE           = -5,
   INSTALL_ARGUMENTS       = -6
 };
+
+/***********************************************************************/
+//
+// class for WinProfile
+//
+// JSClass WinProfileClass = {
+//   "WinProfile",
+//   JSCLASS_HAS_PRIVATE,
+//   JS_PropertyStub,
+//   JS_PropertyStub,
+//   JS_PropertyStub,
+//   JS_PropertyStub,
+//   JS_EnumerateStub,
+//   JS_ResolveStub,
+//   JS_ConvertStub,
+//   WinProfileCleanup
+//};
 
 /***********************************************************************/
 //
@@ -147,6 +171,12 @@ static void PR_CALLBACK FinalizeInstall(JSContext *cx, JSObject *obj)
     nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
     delete nativeThis;
 }
+
+// static void PR_CALLBACK WinProfileCleanup(JSContext *cx, JSObject *obj)
+// {
+//     nsWinProfile *nativeThis = (nsWinProfile*)JS_GetPrivate(cx, obj);
+//     delete nativeThis;
+// }
 
 void nsCvrtJSValToStr(nsString&  aString,
                       JSContext* aContext,
@@ -1026,31 +1056,30 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  PRInt32 nativeRet;
 
   *rval = JSVAL_NULL;
 
+#ifdef XP_WIN
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if(nsnull == nativeThis)
+  {
     return JS_TRUE;
   }
 
   if(argc >= 0)
   {
     //  public int GetWinRegistry (void);
-
-    if(NS_OK != nativeThis->GetWinRegistry(&nativeRet))
+    if(NS_OK != nativeThis->GetWinRegistry(cx, &WinRegClass, rval))
     {
       return JS_FALSE;
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
     JS_ReportError(cx, "Function GetWinRegistry requires 0 parameters");
     return JS_FALSE;
   }
+#endif
 
   return JS_TRUE;
 }
@@ -1368,9 +1397,6 @@ InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 }
 
 
-
-
-
 /***********************************************************************/
 //
 // class for Install
@@ -1387,7 +1413,6 @@ JSClass InstallClass = {
   JS_ConvertStub,
   FinalizeInstall
 };
-
 
 //
 // Install class properties
@@ -1439,7 +1464,6 @@ static JSConstDoubleSpec install_constants[] =
     {0}
 };
 
-
 //
 // Install class methods
 //
@@ -1469,6 +1493,20 @@ static JSFunctionSpec InstallMethods[] =
 
 
 //
+// WinProfile class methods
+//
+// static JSFunctionSpec WinProfileMethods[] = 
+// {
+//   {"writeString",                WinProfileWriteString,               3},
+//   {"getString",                  WinProfileGetString,                 2},
+//   {"getFilename",                WinProfileGetFilename,               0},
+//   {"install",                    WinProfileInstall,                   0},
+//   {"finalWriteString",           WinProfileFinalWriteString,          3},
+//   {0}
+// };
+
+
+//
 // Install constructor
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1486,6 +1524,8 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, co
   JSContext *jscontext  = (JSContext *)aContext->GetNativeContext();
   JSObject *global      = JS_GetGlobalObject(jscontext);
   JSObject *installObject = nsnull;
+  JSObject *winRegPrototype = nsnull;
+//   JSObject *winProfilePrototype = nsnull;
   nsInstall *nativeInstallObject;
 
   installObject  = JS_InitClass( jscontext,         // context
@@ -1499,6 +1539,17 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, co
                                  InstallProperties, // ctor props (static)
                                  InstallMethods);   // ctor funcs (static)
 
+//   winProfilePrototype  = JS_InitClass( jscontext,          // context
+//                                        global,             // global object
+//                                        nsnull,             // parent proto 
+//                                        &WinProfileClass,   // JSClass
+//                                        nsnull,             // JSNative ctor
+//                                        0,                  // ctor args
+//                                        nsnull,             // proto props
+//                                        nsnull,             // proto funcs
+//                                        nsnull,             // ctor props (static)
+//                                        WinProfileMethods); // ctor funcs (static)
+
   if (nsnull == installObject) 
   {
       return NS_ERROR_FAILURE;
@@ -1506,7 +1557,6 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, co
 
   if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
             return NS_ERROR_FAILURE;
-  
   
   nativeInstallObject = new nsInstall();
 
@@ -1516,6 +1566,20 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, co
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);
  
+#ifdef XP_WIN
+  if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
+  {
+      return NS_ERROR_FAILURE;
+  }
+  nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
+
+//   if(NS_OK != InitWinProfileObject(jscontext, global, winRegPrototype)
+//   {
+//       return NS_ERROR_FAILURE;
+//   }
+//   nativeInstallObject->SaveWinProfilePrototype(winProfilePrototype);
+#endif
+
   return NS_OK;
 }
 
@@ -1524,7 +1588,9 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, co
 
 PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const char* args)
 {
-  JSObject *installObject = nsnull;
+  JSObject *installObject   = nsnull;
+  JSObject *winRegPrototype = nsnull;
+//   JSObject *winProfilePrototype = nsnull;
   nsInstall *nativeInstallObject;
 
   installObject  = JS_InitClass( jscontext,         // context
@@ -1538,6 +1604,17 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char*
                                  InstallProperties, // ctor props (static)
                                  InstallMethods);   // ctor funcs (static)
 
+//   winProfilePrototype  = JS_InitClass( jscontext,          // context
+//                                        global,             // global object
+//                                        nsnull,             // parent proto 
+//                                        &WinProfileClass,   // JSClass
+//                                        nsnull,             // JSNative ctor
+//                                        0,                  // ctor args
+//                                        nsnull,             // proto props
+//                                        nsnull,             // proto funcs
+//                                        nsnull,             // ctor props (static)
+//                                        WinProfileMethods); // ctor funcs (static)
+
   if (nsnull == installObject) 
   {
       return NS_ERROR_FAILURE;
@@ -1546,7 +1623,6 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char*
   if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
             return NS_ERROR_FAILURE;
   
-  
   nativeInstallObject = new nsInstall();
 
   nativeInstallObject->SetJarFileLocation(jarfile);
@@ -1554,6 +1630,20 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char*
 
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);
+ 
+#ifdef XP_WIN
+  if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
+  {
+      return NS_ERROR_FAILURE;
+  }
+  nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
+
+//   if(NS_OK != InitWinProfileObject(jscontext, global, winRegPrototype)
+//   {
+//       return NS_ERROR_FAILURE;
+//   }
+//   nativeInstallObject->SaveWinProfilePrototype(winProfilePrototype);
+#endif
  
   return NS_OK;
 }

@@ -89,6 +89,10 @@ OBJS =                                          \
        .\$(OBJDIR)\nsInstallUninstall.obj       \
        .\$(OBJDIR)\nsInstallResources.obj       \
        .\$(OBJDIR)\ScheduledTasks.obj           \
+       .\$(OBJDIR)\nsWinReg.obj                 \
+       .\$(OBJDIR)\nsJSWinReg.obj               \
+       .\$(OBJDIR)\nsWinRegItem.obj             \
+       .\$(OBJDIR)\nsWinRegValue.obj            \
        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
