@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.28 2002/10/25 03:21:19 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.29 2002/11/15 05:03:53 jpierre%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -431,6 +431,10 @@ CERT_ImportCRL (CERTCertDBHandle *handle, SECItem *derCRL, char *url,
 						int type, void * wincx);
 
 extern void CERT_DestroyCrl (CERTSignedCrl *crl);
+
+/* this is a hint to flush the CRL cache. crlKey is the DER subject of
+   the issuer (CA). */
+void CERT_CRLCacheRefreshIssuer(CERTCertDBHandle* dbhandle, SECItem* crlKey);
 
 /*
 ** Decode a certificate and put it into the temporary certificate database

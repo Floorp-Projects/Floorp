@@ -723,3 +723,10 @@ CERT_VerifySignedDataWithPublicKey;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.6.1 {       # NSS 3.6.1 release
+;+    global:
+CERT_CRLCacheRefreshIssuer;
+;+    local:
+;+       *;
+;+};
+
