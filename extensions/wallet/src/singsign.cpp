@@ -2479,7 +2479,7 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
       buffer += ">";
       buffer += url->URLName;
       buffer += ":";
-      buffer += data->isPassword ? "" : data->value; // in case all fields are passwords
+      buffer += data->isPassword ? nsAutoString("") : data->value; // in case all fields are passwords
       buffer += "</OPTION>\n";
       signonNum++;
     }
