@@ -2003,11 +2003,13 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
     /* use the session Info to determine if the card has been removed and then
      * re-inserted */
     if (slot->session != CK_INVALID_SESSION) {
+	if (slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
 	crv = PK11_GETTAB(slot)->C_GetSessionInfo(slot->session, &sessionInfo);
 	if (crv != CKR_OK) {
 	    PK11_GETTAB(slot)->C_CloseSession(slot->session);
 	    slot->session = CK_INVALID_SESSION;
 	}
+        if (slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
     }
     if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
 
