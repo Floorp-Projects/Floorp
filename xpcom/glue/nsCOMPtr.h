@@ -1141,7 +1141,7 @@ inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs.get());
+    return NS_STATIC_CAST(const T*, lhs.get()) == NS_STATIC_CAST(const U*, rhs.get());
   }
 
 
@@ -1150,7 +1150,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs.get());
+    return NS_STATIC_CAST(const T*, lhs.get()) != NS_STATIC_CAST(const U*, rhs.get());
   }
 
 
@@ -1161,7 +1161,7 @@ inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) == rhs;
   }
 
 template <class T, class U>
@@ -1169,7 +1169,7 @@ inline
 NSCAP_BOOL
 operator==( const U* lhs, const nsCOMPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return lhs == NS_STATIC_CAST(const T*, rhs.get());
   }
 
 template <class T, class U>
@@ -1177,7 +1177,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) != rhs;
   }
 
 template <class T, class U>
@@ -1185,7 +1185,7 @@ inline
 NSCAP_BOOL
 operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+    return lhs != NS_STATIC_CAST(const T*, rhs.get());
   }
 
   // To avoid ambiguities caused by the presence of builtin |operator==|s
@@ -1208,7 +1208,7 @@ inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(void*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) == NS_CONST_CAST(const U*, rhs);
   }
 
 template <class T, class U>
@@ -1216,7 +1216,7 @@ inline
 NSCAP_BOOL
 operator==( U* lhs, const nsCOMPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
+    return NS_CONST_CAST(const U*, lhs) == NS_STATIC_CAST(const T*, rhs.get());
   }
 
 template <class T, class U>
@@ -1224,7 +1224,7 @@ inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, U* rhs )
   {
-    return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(void*, rhs);
+    return NS_STATIC_CAST(const T*, lhs.get()) != NS_CONST_CAST(const U*, rhs);
   }
 
 template <class T, class U>
@@ -1232,7 +1232,7 @@ inline
 NSCAP_BOOL
 operator!=( U* lhs, const nsCOMPtr<T>& rhs )
   {
-    return NS_STATIC_CAST(void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
+    return NS_CONST_CAST(const U*, lhs) != NS_STATIC_CAST(const T*, rhs.get());
   }
 #endif
 
