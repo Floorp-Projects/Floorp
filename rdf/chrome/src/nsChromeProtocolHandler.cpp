@@ -606,8 +606,23 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIXULPrototypeDocument> proto;
-    rv = cache->GetPrototype(aURI, getter_AddRefs(proto));
-    if (NS_FAILED(rv)) return rv;
+    cache->GetPrototype(aURI, getter_AddRefs(proto));
+
+    // Same comment as nsXULDocument::StartDocumentLoad and
+    // nsXULDocument::ResumeWalk
+    // - Ben Goodger
+    //
+    // We don't abort on failure here because there are too many valid
+    // cases that can return failure, and the null-ness of |proto| is enough
+    // to trigger the fail-safe parse-from-disk solution. Example failure cases
+    // (for reference) include:
+    //
+    // NS_ERROR_NOT_AVAILABLE: the URI cannot be found in the FastLoad cache, 
+    //                         parse from disk
+    // other: the FastLoad cache file, XUL.mfl, could not be found, probably
+    //        due to being accessed before a profile has been selected (e.g.
+    //        loading chrome for the profile manager itself). This must be 
+    //        parsed from disk. 
 
     if (proto) {
         // ...in which case, we'll create a dummy stream that'll just
