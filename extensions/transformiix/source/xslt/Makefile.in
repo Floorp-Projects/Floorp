@@ -41,6 +41,9 @@ REQUIRES	= string \
 		  unicharutil \
 		  xpconnect \
 		  js \
+		  htmlparser \
+		  webshell \
+		  docshell \
 		  $(NULL)
 endif
 

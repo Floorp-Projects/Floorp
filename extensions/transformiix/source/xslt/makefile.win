@@ -31,6 +31,9 @@ REQUIRES	= string \
 		  unicharutil \
 		  xpconnect \
 		  js \
+		  htmlparser \
+		  webshell \
+		  docshell \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

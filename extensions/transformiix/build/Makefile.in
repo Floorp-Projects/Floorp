@@ -46,6 +46,9 @@ REQUIRES	= xpcom \
 		  caps \
 		  locale \
 		  unicharutil \
+		  htmlparser \
+		  webshell \
+		  docshell \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule
