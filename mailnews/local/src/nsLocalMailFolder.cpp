@@ -244,7 +244,6 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
-	folder->SetDepth(mDepth + 1);
 	if(name.Compare("Inbox", PR_TRUE) == 0)
 	{
 		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
@@ -350,7 +349,9 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (path.IsDirectory()) {
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
       SetFlag(newFlags);
-      if (mDepth == 0)
+      PRBool isServer;
+      rv = GetIsServer(&isServer);
+      if (NS_SUCCEEDED(rv) && isServer)
       {
         // make sure we have all the default mailbox created
         nsFileSpec fileSpec;
@@ -851,8 +852,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDeletable(PRBool *deletable)
   if(!deletable)
     return NS_ERROR_NULL_POINTER;
 
+  PRBool isServer;
+  GetIsServer(&isServer);
   // These are specified in the "Mail/News Windows" UI spec
-
   if (mFlags & MSG_FOLDER_FLAG_TRASH)
   {
     PRBool moveToTrash;
@@ -860,7 +862,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDeletable(PRBool *deletable)
     if(moveToTrash)
       *deletable = PR_TRUE;  // allow delete of trash if we don't use trash
   }
-  else if (mDepth == 1)
+  else if (isServer)
     *deletable = PR_FALSE;
   else if (mFlags & MSG_FOLDER_FLAG_INBOX || 
     mFlags & MSG_FOLDER_FLAG_DRAFTS || 
@@ -887,7 +889,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetCanBeRenamed(PRBool *canBeRenamed)
     return NS_ERROR_NULL_POINTER;
 
     // The root mail folder can't be renamed
-  if (mDepth < 2)
+  PRBool isServer;
+  nsresult rv;
+  rv = GetIsServer(&isServer);
+  if (NS_SUCCEEDED(rv) && isServer)
     *canBeRenamed = PR_FALSE;
 
   // Here's a weird case necessitated because we don't have a separate

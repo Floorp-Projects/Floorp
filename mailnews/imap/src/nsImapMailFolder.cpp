@@ -289,7 +289,6 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	if (supports)
 		mSubFolders->AppendElement(supports);
     folder->SetParent(this);
-    folder->SetDepth(mDepth+1);
 	*child = folder;
 	NS_IF_ADDREF(*child);
 	return rv;
@@ -333,7 +332,9 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
 		if (NS_FAILED(rv)) return rv;
 
 		// host directory does not need .sbd tacked on
-		if (mDepth > 0)
+        PRBool isServer;
+        rv = GetIsServer(&isServer);
+		if (NS_SUCCEEDED(rv) && !isServer)
 			rv = AddDirectorySeparator(path);
 
         if(NS_FAILED(rv)) return rv;
@@ -425,7 +426,9 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 
 	selectFolder = PR_TRUE;
 
-    if (mDepth == 0)
+    PRBool isServer;
+    rv = GetIsServer(&isServer);
+    if (NS_SUCCEEDED(rv) && isServer)
     {
         if (!m_haveDiscoverAllFolders)
         {
