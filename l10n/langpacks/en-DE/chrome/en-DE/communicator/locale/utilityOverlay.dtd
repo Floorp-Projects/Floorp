@@ -93,5 +93,8 @@
 <!ENTITY interUsersCmd.label				"International Users">  
 <!-- LOCALIZATION NOTE  (helpAtCmd.label): Do NOT translate "Netscape.com" -->
 <!ENTITY helpAtCmd.label				"Help at Netscape.com">
-<!ENTITY releaseCommCmd.label				"Release Notes">
-<!ENTITY aboutCommCmd.label				"About">
+<!ENTITY releaseCmd.label				"Release Notes">
+<!ENTITY releaseCmd.accesskey				"r">
+<!ENTITY aboutCmd.label					"About &brandShortName;">
+<!ENTITY aboutCommPluginsCmd.label			"About Plug-ins">
+<!ENTITY aboutCommPluginsCmd.accesskey			"p">
