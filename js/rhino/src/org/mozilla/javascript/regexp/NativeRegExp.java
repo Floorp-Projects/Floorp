@@ -1502,7 +1502,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                                     stop, index);
                         if (kidMatch != -1) return kidMatch;
                         for (int i = num; i < state.parenCount; i++)
-                            state.parens[i].length = 0;
+                            state.parens[i] = null;
                         state.parenCount = num;
                     }
                 }

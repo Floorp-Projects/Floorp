@@ -42,7 +42,6 @@ package org.mozilla.javascript;
 
 import java.util.*;
 import java.lang.reflect.*;
-import org.mozilla.javascript.tools.shell.Global;
 
 /**
  * This is the class that implements the runtime.
@@ -115,8 +114,7 @@ public class ScriptRuntime {
     }
 
     public static boolean toBoolean(Object[] args, int index) {
-        return (0 <= index && index < args.length) 
-            ? toBoolean(args[index]) : false;
+        return (index < args.length) ? toBoolean(args[index]) : false;
     }
     /**
      * Convert the value to a number.
@@ -142,8 +140,7 @@ public class ScriptRuntime {
     }
 
     public static double toNumber(Object[] args, int index) {
-        return (0 <= index && index < args.length) 
-            ? toNumber(args[index]) : NaN;
+        return (index < args.length) ? toNumber(args[index]) : NaN;
     }
     
     // This definition of NaN is identical to that in java.lang.Double
@@ -431,8 +428,7 @@ public class ScriptRuntime {
     }
 
     public static String toString(Object[] args, int index) {
-        return (0 <= index && index < args.length) 
-            ? toString(args[index]) : "undefined";
+        return (index < args.length) ? toString(args[index]) : "undefined";
     }
 
     public static String numberToString(double d, int base) {
@@ -525,21 +521,7 @@ public class ScriptRuntime {
      * See ECMA 9.4.
      */
     public static double toInteger(Object val) {
-        double d = toNumber(val);
-
-        // if it's NaN
-        if (d != d)
-            return +0.0;
-
-        if (d == 0.0 ||
-            d == Double.POSITIVE_INFINITY ||
-            d == Double.NEGATIVE_INFINITY)
-            return d;
-
-        if (d > 0.0)
-            return Math.floor(d);
-        else
-            return Math.ceil(d);
+        return toInteger(toNumber(val));
     }
 
     // convenience method
@@ -557,6 +539,10 @@ public class ScriptRuntime {
             return Math.floor(d);
         else
             return Math.ceil(d);
+    }
+
+    public static double toInteger(Object[] args, int index) {
+        return (index < args.length) ? toInteger(args[index]) : +0.0;
     }
 
     /**
@@ -592,8 +578,7 @@ public class ScriptRuntime {
     }
 
     public static int toInt32(Object[] args, int index) {
-        return (0 <= index && index < args.length) 
-            ? toInt32(args[index]) : 0;
+        return (index < args.length) ? toInt32(args[index]) : 0;
     }
 
     public static int toInt32(double d) {
@@ -1794,11 +1779,35 @@ public class ScriptRuntime {
     // Statements
     // ------------------
 
+    private static final String GLOBAL_CLASS = 
+        "org.mozilla.javascript.tools.shell.Global";
+
+    private static ScriptableObject getGlobal(Context cx) {
+        try {
+            Class globalClass = loadClassName(GLOBAL_CLASS);
+            Class[] parm = { Context.class };
+            Constructor globalClassCtor = globalClass.getConstructor(parm);
+            Object[] arg = { cx };
+            return (ScriptableObject) globalClassCtor.newInstance(arg);
+        } catch (ClassNotFoundException e) {
+            // fall through...
+        } catch (NoSuchMethodException e) {
+            // fall through...
+        } catch (InvocationTargetException e) {
+            // fall through...
+        } catch (IllegalAccessException e) {
+            // fall through...
+        } catch (InstantiationException e) {
+            // fall through...
+        }
+        return new ImporterTopLevel(cx);
+    }
+
     public static void main(String scriptClassName, String[] args)
         throws JavaScriptException
     {
         Context cx = Context.enter();
-        ScriptableObject global = new Global(cx);
+        ScriptableObject global = getGlobal(cx);
 
         // get the command line arguments and define "arguments" 
         // array in the top-level object
@@ -1872,7 +1881,7 @@ public class ScriptRuntime {
 
     public static Scriptable runScript(Script script) {
         Context cx = Context.enter();
-        ScriptableObject global = new Global(cx);
+        ScriptableObject global = getGlobal(cx);
         try {
             script.exec(cx, global);
         } catch (JavaScriptException e) {
@@ -2038,10 +2047,10 @@ public class ScriptRuntime {
                 if (cl != null)
                     return cl.loadClass(className);
             } else {
-            	ClassLoader cl = ScriptRuntime.class.getClassLoader();
-            	if (cl != null)
+                ClassLoader cl = ScriptRuntime.class.getClassLoader();
+                if (cl != null)
                     return cl.loadClass(className);
-			}
+            }
         } catch (SecurityException e) {
             // fall through...
         } catch (IllegalAccessException e) {

@@ -67,7 +67,7 @@ public class NativeBoolean extends IdScriptable {
     }
 
     public int methodArity(int methodId, IdFunction function) {
-        if (methodId == CONSTRUCTOR_ID) {
+        if (methodId == Id_constructor) {
             return 1;
         }
         return 0;
@@ -79,7 +79,7 @@ public class NativeBoolean extends IdScriptable {
         throws JavaScriptException
     {
         switch (methodId) {
-        case CONSTRUCTOR_ID:
+        case Id_constructor:
             return jsConstructor(args, thisObj == null);
 
         case Id_toString:
@@ -89,7 +89,7 @@ public class NativeBoolean extends IdScriptable {
             return wrap_boolean(realThis(thisObj, f).jsFunction_valueOf());
         }
 
-        return Scriptable.NOT_FOUND;
+        return null;  // Unreachable
     }
 
     private NativeBoolean realThis(Scriptable thisObj, IdFunction f) {
@@ -119,17 +119,25 @@ public class NativeBoolean extends IdScriptable {
         return booleanValue;
     }
 
-    protected int getMaxPrototypeMethodId() { return MAX_PROTOTYPE_METHOD; }
+    protected int getMaximumId() { return MAX_ID; }
+
+    protected String getIdName(int id) {
+        if (id == Id_constructor) return "constructor";
+        if (id == Id_toString) return "toString";
+        if (id == Id_valueOf) return "valueOf";
+        return null;        
+    }
 
 // #string_id_map#
 
-    protected int mapNameToMethodId(String s) {
+    protected int mapNameToId(String s) {
         int id;
-// #generated# Last update: 2001-03-26 18:00:51 GMT+02:00
+// #generated# Last update: 2001-04-23 10:38:18 CEST
         L0: { id = 0; String X = null;
             int s_length = s.length();
             if (s_length==7) { X="valueOf";id=Id_valueOf; }
             else if (s_length==8) { X="toString";id=Id_toString; }
+            else if (s_length==11) { X="constructor";id=Id_constructor; }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
 // #/generated#
@@ -137,9 +145,10 @@ public class NativeBoolean extends IdScriptable {
     }
 
     private static final int
-        Id_toString             =  1,
-        Id_valueOf              =  2,
-        MAX_PROTOTYPE_METHOD    =  2;
+        Id_constructor          = 1,
+        Id_toString             = 2,
+        Id_valueOf              = 3,
+        MAX_ID                  = 3;
 
 // #/string_id_map#
 
