@@ -411,9 +411,12 @@ void nsTransform2D :: TransformCoord(nscoord *ptX, nscoord *ptY)
       break;
 
     case MG_2DSCALE | MG_2DTRANSLATION:
-      // You need to round the translation seperatly than the scale
-      // The translation is added into the matrix as pixels (after the scale
-      // multiply, so taking out the numbers requires it to be on pixel boundries
+      // You can not use a translation that is not rounded to calculate a 
+      // final destination and get consistent results.  The translation is rounded 
+      // seperatly only for the final coordinate location.  Its ok 
+      // to keep the tranlation in floating for the matrix.. just don't use it
+      // pre-rounded for coordinate locations.  Its not valid to translate 1.333 pixels for example
+      // on output since .33 pixel is not a valid output unit and can cause inconsistencies. (dcone)
       *ptX = NSToCoordRound(*ptX * m00) + NSToCoordRound(m20);
       *ptY = NSToCoordRound(*ptY * m11) + NSToCoordRound(m21);
       break;
@@ -494,6 +497,7 @@ void nsTransform2D :: Transform(float *aX, float *aY, float *aWidth, float *aHei
 void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight)
 {
   float x, y;
+  float ex,ey;
 
   switch (type)
   {
@@ -528,13 +532,28 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
       break;
 
     case MG_2DSCALE | MG_2DTRANSLATION:
-      // You need to round the translation seperatly than the scale
-      // The translation is added into the matrix as pixels (after the scale
-      // multiply, so taking out the numbers requires it to be on pixel boundries
-      *aX = NSToCoordRound(*aX * m00) + NSToCoordRound(m20);
-      *aY = NSToCoordRound(*aY * m11) + NSToCoordRound(m21);
-      *aWidth = NSToCoordRound(*aWidth * m00);
-      *aHeight = NSToCoordRound(*aHeight * m11);
+      // first transform the X and Y locations
+      x = *aX * m00 + m20;  
+      y = *aY * m11 + m21;
+      *aX =  NSToCoordRound(x);
+      *aY =  NSToCoordRound(y);
+
+      // the starting locations have a direct effect on the width and height if and only if
+      // the width and height are used to calculate positions relative to these locations.
+      // The layout engine does count on the width and height to be so many units away, so an
+      // error can be introduced if you round and then add a rounded width. To compensate, this error
+      // should be added to the width or height before rounding.  If the width or height is used as a 
+      // measurment, or distance, then use the direct floating point number.  This width and height 
+      // has an error adjustment for the starting locations inorder to calculate the ending positions.
+      // The error is the fractional difference between the transformed point and the next  pixel
+
+      // calculate the error
+      ex = x - float(NSToCoordRound(x));
+      ey = y - float(NSToCoordRound(y));
+
+      // now you can transform with the error added in
+      *aWidth = NSToCoordRound(*aWidth * m00 + ex);
+      *aHeight = NSToCoordRound(*aHeight * m11 + ey);
       break;
 
     default:
@@ -542,15 +561,18 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
       x = (float)*aX;
       y = (float)*aY;
       
-      *aX = NSToCoordRound(x * m00 + y * m10 + m20);
-      *aY = NSToCoordRound(x * m01 + y * m11 + m21);
+      x = x * m00 + y * m10 + m20;
+      y = x * m01 + y * m11 + m21;
+      ex = x - float(NSToCoordRound(x));
+      ey = y - float(NSToCoordRound(y));
+      *aX = NSToCoordRound(x);
+      *aY = NSToCoordRound(y);
 
       x = (float)*aWidth;
       y = (float)*aHeight;
 
-      *aWidth = NSToCoordRound(x * m00 + y * m10);
-      *aHeight = NSToCoordRound(x * m01 + y * m11);
-
+      *aWidth = NSToCoordRound((x * m00 + y * m10)+ex);
+      *aHeight = NSToCoordRound((x * m01 + y * m11)+ey);
       break;
   }
 }
