@@ -58,12 +58,14 @@
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
 </stringbundleset>
 
 <resourcebundle id="resource_bundle_messengercompose"/>
 
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/>
@@ -528,7 +530,7 @@
 
     <progressmeter id="compose-progressmeter" class="progressmeter-statusbar" 
                    mode="normal" value="0" statusbar="true"/>
-    <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/> 
+    <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-icononly"/> 
     <resizer class="window-diagonal"/>
   </statusbar>
 

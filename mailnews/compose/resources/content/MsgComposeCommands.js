@@ -172,6 +172,9 @@ var g_send_default_charset = null;
 var g_charsetTitle = null;
 var g_charsetConvertManager = Components.classes['@mozilla.org/charset-converter-manager;1'].getService();
 g_charsetConvertManager = g_charsetConvertManager.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
+  //Create message window object
+var msgWindowContractID      = "@mozilla.org/messenger/msgwindow;1";
+var msgWindow = Components.classes[msgWindowContractID].createInstance();
 
 
 var defaultController =
@@ -2178,3 +2181,4 @@ function DisplaySaveFolderDlg(folderURI)
   }//if
   return;
 }
+
