@@ -88,9 +88,6 @@ public:
 
   // Overloaded placement operator for allocating from an arena
   void* operator new(size_t aSize, NodeArena* aArena) {return aArena->AllocLeafNode();}
-
-private:
-  void  operator delete(void*);  // no implementation
 };
 
 // Constructors
@@ -124,7 +121,6 @@ public:
 private:
 	TwoNode(const TwoNode&);        // no implementation
 	void operator=(const TwoNode&); // no implementation
-  void  operator delete(void*);   // no implementation
 };
 
 // Constructor
