@@ -138,10 +138,48 @@ PRUnichar nsCRT::ToLower(PRUnichar aChar)
   return TOLOWER(aChar);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// My lovely strtok routine
+
+#define IS_DELIM(m, c)          ((m)[(c) >> 3] & (1 << ((c) & 7)))
+#define SET_DELIM(m, c)         ((m)[(c) >> 3] |= (1 << ((c) & 7)))
+#define DELIM_TABLE_SIZE        32
+
 char* nsCRT::strtok(char* str, const char* delims, char* *newStr)
 {
-  return NULL;
+  NS_ASSERTION(str, "Unlike regular strtok, the first argument cannot be null.");
+
+  char delimTable[DELIM_TABLE_SIZE];
+  PRUint32 i;
+  char* result;
+
+  for (i = 0; i < DELIM_TABLE_SIZE; i++)
+    delimTable[i] = '\0';
+
+  do {
+    SET_DELIM(delimTable, *delims);
+  } while (*delims++);
+
+  // skip to beginning
+  while (*str && IS_DELIM(delimTable, *str)) {
+    str++;
+  }
+  result = str;
+
+  // fix up the end of the token
+  while (*str) {
+    if (IS_DELIM(delimTable, *str)) {
+      *str++ = '\0';
+      break;
+    }
+    str++;
+  }
+  *newStr = str;
+
+  return str == result ? NULL : result;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 PRUint32 nsCRT::strlen(const PRUnichar* s)
 {
