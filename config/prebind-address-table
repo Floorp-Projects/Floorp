@@ -8,3 +8,4 @@
 0x08000000       @executable_path/libsmime3.dylib
 0x09000000       @executable_path/libsoftokn3.dylib
 0x0a000000       @executable_path/libxpcom_compat.dylib
+0x10000000       @executable_path/libmozcomps.dylib

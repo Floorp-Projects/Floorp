@@ -66,7 +66,6 @@ REQUIRES = \
 CPPSRCS = nsBrowserApp.cpp
 
 LIBS = \
-	$(EXTRA_DSO_LDOPTS) \
 	$(EXTRA_DSO_LIBS) \
 	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
@@ -102,9 +101,6 @@ EXTRA_DEPS	+= \
 	$(NULL)
 DEFINES		+= $(STATIC_DEFINES)
 CPPSRCS		+= $(STATIC_CPPSRCS)
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-EXTRA_DSO_LDOPTS+= -L$(DEPTH)/dist/lib/components
-endif
 EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
 REQUIRES	+= $(STATIC_REQUIRES)
 EXTRA_LIBS	+= $(STATIC_EXTRA_LIBS)
@@ -139,10 +135,6 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
-endif
-
-ifeq ($(OS_ARCH),Darwin)
-EXTRA_DSO_LDOPTS := $(subst -dynamiclib -install_name @executable_path/\$@ -compatibility_version 1 -current_version 1,-execute,$(EXTRA_DSO_LDOPTS))
 endif
 
 $(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)

@@ -264,9 +264,13 @@ endif
 # tier 99 - application binaries
 #
 
+ifdef MOZ_COMPONENTLIB
+tier_99_dirs   += embedding/componentlib
+else
 ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))
 tier_99_dirs   += modules/staticmod
 endif
+endif # MOZ_COMPONENTLIB
 
 ifdef MOZ_PHOENIX
 tier_99_dirs	+= browser
