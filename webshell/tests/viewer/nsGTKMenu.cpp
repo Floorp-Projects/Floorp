@@ -40,6 +40,7 @@ GtkItemFactoryEntry menu_items[] =
   { "/_File",				nsnull,	nsnull,			0,			"<Branch>" },
   { "/File/_New Window",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_WINDOW_OPEN,	nsnull },
   { "/File/_Open...",			nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_FILE_OPEN,	nsnull },
+  { "/File/_View Source",             nsnull, (GIFC)gtk_ifactory_cb,  VIEW_SOURCE,            nsnull },
   { "/File/_Samples",			nsnull,	nsnull,			0,			"<Branch>" },
   { "/File/Samples/demo #0",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEMO0,		nsnull },
   { "/File/Samples/demo #1",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEMO1,		nsnull },
@@ -55,7 +56,7 @@ GtkItemFactoryEntry menu_items[] =
   { "/File/_Test Sites",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOP100,		nsnull },
   { "/File/Test _Widgets",		nsnull,	nsnull,			0,			"<Branch>" },
   { "/File/Test Widgets/_Tree View",	nsnull, (GIFC)gtk_ifactory_cb,	VIEWER_TREEVIEW,	nsnull },
-//  { "/File/Test Widgets/Tool_bar Test",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOOLBARDEMO,	nsnull },
+  { "/File/Test Widgets/Tool_bar Test",       nsnull, (GIFC)gtk_ifactory_cb,  VIEWER_TOOLBARDEMO,     nsnull },
   { "/File/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/File/Print _Preview",		nsnull,	nsnull,			0,			"<Branch>" },
   { "/File/Print Preview/One Column",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_ONE_COLUMN,	nsnull },
@@ -103,7 +104,7 @@ GtkItemFactoryEntry menu_items[] =
   { "/Debug/Compatibility/Standard",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_STANDARD_MODE,	nsnull },
 #endif
 
-  { "/_Tools/",				nsnull,	nsnull,			0,		"<Branch>" },
+  { "/_Tools",                                nsnull, nsnull,                 0,              "<Branch>" },
   { "/Tools/_JavaScript Console",	nsnull,	(GIFC)gtk_ifactory_cb,	JS_CONSOLE,	nsnull },
   { "/Tools/_Editor Mode",		nsnull,	(GIFC)gtk_ifactory_cb,	EDITOR_MODE,	nsnull }
 };
