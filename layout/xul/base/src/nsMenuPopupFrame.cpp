@@ -1076,7 +1076,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       else {
         // move it up to be on screen, but don't let it go off the screen at the top
         if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
-          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenBottomTwips;
+          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenHeightTwips;
           if ( screenViewLocY - moveDistY < screenTopTwips )
             moveDistY = screenViewLocY - screenTopTwips;          
           screenViewLocY -= moveDistY;
@@ -1090,9 +1090,15 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       PRInt32 xSpillage = (screenViewLocX + mRect.width) - screenRightTwips;
       if ( xSpillage > 0 )
         mRect.width -= xSpillage;
-      PRInt32 ySpillage = (screenViewLocY + mRect.height) - screenBottomTwips;
+      PRInt32 ySpillage = (screenViewLocY + mRect.height + parentRect.height) - screenHeightTwips;
       if ( ySpillage > 0 )
         mRect.height -= ySpillage;
+
+      // shrink to fit onto the screen, vertically and horizontally
+      if(mRect.width > screenWidthTwips) 
+          mRect.width = screenWidthTwips;    
+      if(mRect.height > screenHeightTwips)
+          mRect.height = screenHeightTwips;   
 
     } // if it doesn't fit on screen
   } // if anchored to parent
