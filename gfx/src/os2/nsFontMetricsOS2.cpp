@@ -15,7 +15,7 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -76,18 +76,18 @@ static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsGlobalFont* nsFontMetricsOS2::gGlobalFonts = nsnull;
-static int gGlobalFontsAlloc = 0;
 int nsFontMetricsOS2::gGlobalFontsCount = 0;
+PRBool nsFontMetricsOS2::gSubstituteVectorFonts = PR_TRUE;
 
 PLHashTable* nsFontMetricsOS2::gFamilyNames = nsnull;
-
-PLHashTable* nsFontEnumeratorOS2::gFontTypes = nsnull;
 
 #define NS_MAX_FONT_WEIGHT 900
 #define NS_MIN_FONT_WEIGHT 100
 
 #undef CHAR_BUFFER_SIZE
 #define CHAR_BUFFER_SIZE 1024
+
+nscoord nsFontMetricsOS2::gDPI = 0;
 
 static nsICharsetConverterManager2* gCharSetManager = nsnull;
 static nsIPref* gPref = nsnull;
@@ -135,8 +135,24 @@ nsFontHandleOS2::nsFontHandleOS2()
 
 void nsFontHandleOS2::SelectIntoPS( HPS hps, long lcid)
 {
-   GFX (::GpiSetCharBox (hps, &charbox), FALSE);
    GFX (::GpiSetCharSet (hps, lcid), FALSE);
+   GFX (::GpiSetCharBox (hps, &charbox), FALSE);
+}
+
+int PR_CALLBACK
+prefChanged(const char *aPref, void *aClosure)
+{
+  nsresult rv;
+
+  if( PL_strcmp(aPref, "browser.display.screen_resolution") == 0 )
+  {
+    PRInt32 dpi;
+    rv = gPref->GetIntPref( aPref, &dpi );
+    if( NS_SUCCEEDED(rv) )
+       nsFontMetricsOS2::gDPI = dpi;
+  }
+
+  return 0;
 }
 
 static void
@@ -145,6 +161,8 @@ FreeGlobals(void)
   // XXX complete this
 
   gInitialized = 0;
+
+  gPref->UnregisterCallback( "browser.display.screen_resolution", prefChanged, NULL );
 
   NS_IF_RELEASE(gCharSetManager);
   NS_IF_RELEASE(gPref);
@@ -190,6 +208,35 @@ InitGlobals(void)
 
   ulSystemCodePage = WinQueryCp(HMQ_CURRENT);
 
+  if( !nsFontMetricsOS2::gGlobalFonts )
+    if( !nsFontMetricsOS2::InitializeGlobalFonts() )
+      return NS_ERROR_OUT_OF_MEMORY;
+
+  // Set prefVal the value of the pref "browser.display.screen_resolution"
+  // When a new profile is created, the pref is set to 0.  This tells the code
+  // to default to font resolution of the screen (96 or 120)
+  nsresult res;
+  PRInt32 prefVal = -1;
+
+  res = gPref->GetIntPref( "browser.display.screen_resolution", &prefVal );
+  if (NS_FAILED(res))
+    prefVal = 0;
+
+  gPref->RegisterCallback( "browser.display.screen_resolution", prefChanged, NULL );
+
+  if( prefVal == 0 )
+  {
+    long res;
+    HPS ps = ::WinGetScreenPS(HWND_DESKTOP);
+    HDC hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
+    GFX (::DevQueryCaps(hdc, CAPS_HORIZONTAL_FONT_RES, 1, &res), FALSE);
+    ::WinReleasePS(ps);
+    prefVal = res;
+    gPref->SetIntPref( "browser.display.screen_resolution", prefVal );
+  }
+
+  nsFontMetricsOS2::gDPI = prefVal;
+
   gInitialized = 1;
 
   return NS_OK;
@@ -203,7 +250,7 @@ nsFontMetricsOS2::nsFontMetricsOS2()
   // members are zeroed by new operator (hmm) - yeah right
   mTriedAllGenerics = 0;
 }
-  
+
 nsFontMetricsOS2::~nsFontMetricsOS2()
 {
    Destroy();
@@ -217,7 +264,9 @@ nsFontMetricsOS2::~nsFontMetricsOS2()
 
 NS_IMPL_ISUPPORTS1(nsFontMetricsOS2, nsIFontMetrics)
 
-nsresult nsFontMetricsOS2::Init( const nsFont &aFont,  nsIAtom* aLangGroup, nsIDeviceContext *aContext)
+NS_IMETHODIMP
+nsFontMetricsOS2::Init( const nsFont &aFont,  nsIAtom* aLangGroup,
+                        nsIDeviceContext *aContext)
 {
   nsresult res;
   if (!gInitialized) {
@@ -226,7 +275,22 @@ nsresult nsFontMetricsOS2::Init( const nsFont &aFont,  nsIAtom* aLangGroup, nsID
       return res;
     }
   }
-   mFont = new nsFont( aFont);
+
+  static int initialized = 0;
+  if (!initialized)
+  {
+    initialized = 1;
+    nsresult rv;
+
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    if (NS_SUCCEEDED(rv) && prefs)
+    {
+      res = prefs->GetBoolPref("font.substitute_vector_fonts", &gSubstituteVectorFonts);
+      NS_ASSERTION( NS_SUCCEEDED(rv), "Could not get pref 'font.substitute_vector_fonts'" );
+    }
+  }
+
+   mFont = new nsFont(aFont);
    mLangGroup = aLangGroup;
    //   mIndexOfSubstituteFont = -1;
    mDeviceContext = (nsDeviceContextOS2 *) aContext;
@@ -254,55 +318,146 @@ CompareKeys(const void* aStr1, const void* aStr2)
     ((const nsString*) aStr2)->get()) == 0;
 }
 
+// Utility; delete [] when done.
+static PFONTMETRICS getMetrics( long &lFonts, PCSZ facename, HPS hps)
+{
+   LONG lWant = 0;
+   lFonts = GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE,
+                                  facename, &lWant, 0, 0),
+                 GPI_ALTERROR);
+   PFONTMETRICS pMetrics = new FONTMETRICS [ lFonts];
+
+   GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE, facename,
+                         &lFonts, sizeof (FONTMETRICS), pMetrics),
+        GPI_ALTERROR);
+
+   return pMetrics;
+}
+
 // aName is a font family name.  see if fonts of that family exist
 //  if so, return font structure with family name
-nsFontOS2*
-nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName)
-{ 
-  nsFontOS2* font = nsnull;
+FATTRS*
+nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName, BOOL bBold, BOOL bItalic)
+{
+  FATTRS*  font = nsnull;
+
   char familyname[FACESIZE];
+  char alias[FACESIZE];
   WideCharToMultiByte(0, aName->get(), aName->Length() + 1,
     familyname, sizeof(familyname));
 
-  char facename[FACESIZE];
-  FACENAMEDESC fnd = { sizeof(FACENAMEDESC), FWEIGHT_NORMAL,
-                       FWIDTH_DONT_CARE, 0, 0 };
-   
-  ULONG rc = ::GpiQueryFaceString( aPS, familyname, &fnd, FACESIZE, facename);
+  USHORT flags = bBold ? FM_SEL_BOLD : 0;
+  flags |= bItalic ? FM_SEL_ITALIC : 0;
 
-  // if GpiQueryFaceString cannot find matching font
-  if( rc == GPI_ERROR )
+   // always pass vector fonts to the printer
+  if( !mDeviceContext->SupportsRasterFonts() &&
+      GetVectorSubstitute( familyname, bBold, bItalic, alias ))
   {
-    FACENAMEDESC fnd2 = { sizeof(FACENAMEDESC), FWEIGHT_DONT_CARE,
-                         FWIDTH_DONT_CARE, 0, 0 };
-   
-    rc = ::GpiQueryFaceString( aPS, familyname, &fnd2, FACESIZE, facename);
+    font = new FATTRS;
+    memset( font, 0, sizeof(FATTRS) );
+    font->usRecordLength = sizeof(FATTRS);
+    PL_strcpy( font->szFacename, alias );
+    font->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
+    return font;
   }
 
-  // if still fails, then maybe aName is realy a font face name, not family name
-  if( rc == GPI_ERROR )
+  int i = 0;
+  while( i < nsFontMetricsOS2::gGlobalFontsCount )
   {
-    strcpy( facename, familyname );
+    if( PL_strcmp( gGlobalFonts[i].fontMetrics.szFamilyname, familyname ) == 0 )
+    {
+      font = new FATTRS;
+      memset( font, 0, sizeof(FATTRS) );
+      font->usRecordLength = sizeof(FATTRS);
+
+      for( int j = i; j < gGlobalFonts[i].nextFamily; j++ )
+      {
+        FONTMETRICS *fm = &gGlobalFonts[j].fontMetrics;
+        if( (fm->fsSelection & (FM_SEL_ITALIC | FM_SEL_BOLD)) == flags )
+        {
+          PL_strcpy( font->szFacename, fm->szFacename );
+          if( fm->fsDefn & FM_DEFN_OUTLINE ||
+              !mDeviceContext->SupportsRasterFonts() )
+            font->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
+          else
+            font->fsFontUse = 0;
+          if( fm->fsType & FM_TYPE_MBCS )
+            font->fsType |= FATTR_TYPE_MBCS;
+          if( fm->fsType & FM_TYPE_DBCS )
+            font->fsType |= FATTR_TYPE_DBCS;
+          return font;
+        }
+      }
+
+       // A font of family "familyname" and with the applied effects (bold &
+       // italic) was not found.  Therefore, just look for a 'regular' font
+       // (that is not italic and not bold), and then have the
+       // system simulate the appropriate effects (see RealizeFont()).
+      for( int m = i; m < gGlobalFonts[i].nextFamily; m++ )
+      {
+        FONTMETRICS *fm = &gGlobalFonts[m].fontMetrics;
+        if( !(fm->fsSelection & (FM_SEL_ITALIC | FM_SEL_BOLD)) )
+        {
+          PL_strcpy( font->szFacename, fm->szFacename );
+          if( fm->fsDefn & FM_DEFN_OUTLINE ||
+              !mDeviceContext->SupportsRasterFonts() )
+            font->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
+          else
+            font->fsFontUse = 0;
+          if( fm->fsType & FM_TYPE_MBCS )
+            font->fsType |= FATTR_TYPE_MBCS;
+          if( fm->fsType & FM_TYPE_DBCS )
+            font->fsType |= FATTR_TYPE_DBCS;
+           // fake the effects
+          if( bBold )
+            font->fsSelection |= FATTR_SEL_BOLD;
+          if( bItalic )
+            font->fsSelection |= FATTR_SEL_ITALIC;
+          return font;
+        }
+      }
+    }
+
+    i = gGlobalFonts[i].nextFamily;
+  }   // end while
+
+   // If a font was not found, then maybe "familyname" is really a face name.
+   // See if a font with that facename exists on system and fake any applied
+   // effects
+  long lFonts = 0;
+  PFONTMETRICS pMetrics = getMetrics( lFonts, familyname, aPS );
+
+  if( lFonts > 0 )
+  {
+    font = new FATTRS;
+    memset( font, 0, sizeof(FATTRS) );
+    font->usRecordLength = sizeof(FATTRS);
+    PL_strcpy( font->szFacename, familyname );
+    font->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
+    if( bBold )
+      font->fsSelection |= FATTR_SEL_BOLD;
+    if( bItalic )
+      font->fsSelection |= FATTR_SEL_ITALIC;
+
+    if( mDeviceContext->SupportsRasterFonts() )
+    {
+      for (int i = 0 ; i < lFonts ; i++)
+        if( !(pMetrics[i].fsDefn & FM_DEFN_OUTLINE) )
+        {
+          font->fsFontUse = 0;
+          break;
+        }
+    }
   }
 
-  long lWant = 0;
-  long lFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC | QF_PRIVATE,
-                                      facename, &lWant, 0, 0),
-                     GPI_ALTERROR);
-
-  if (lFonts > 0) {
-    font = new nsFontOS2();
-    strcpy(font->mName, familyname);
-  }
   return font;
 }
 
-
-nsFontOS2*
-nsFontMetricsOS2::FindUserDefinedFont(HPS aPS, PRUnichar aChar)
+FATTRS*
+nsFontMetricsOS2::FindUserDefinedFont(HPS aPS, BOOL bBold, BOOL bItalic)
 {
   if (mIsUserDefined) {
-    nsFontOS2* font = LoadFont(aPS, &mUserDefined);
+    FATTRS* font = LoadFont(aPS, &mUserDefined, bBold, bItalic);
 #ifdef XP_OS2
     if (font) {
 #else
@@ -387,8 +542,8 @@ nsFontMetricsOS2::InitializeFamilyNames(void)
   return gFamilyNames;
 }
 
-nsFontOS2*
-nsFontMetricsOS2::FindLocalFont(HPS aPS, PRUnichar aChar)
+FATTRS*
+nsFontMetricsOS2::FindLocalFont(HPS aPS, BOOL bBold, BOOL bItalic)
 {
   if (!gFamilyNames) {
     if (!InitializeFamilyNames()) {
@@ -406,7 +561,7 @@ nsFontMetricsOS2::FindLocalFont(HPS aPS, PRUnichar aChar)
     if (!winName) {
       winName = name;
     }
-    nsFontOS2* font = LoadFont(aPS, winName);
+    FATTRS* font = LoadFont(aPS, winName, bBold, bItalic);
 #ifdef XP_OS2
     if (font) {
 #else
@@ -419,26 +574,12 @@ nsFontMetricsOS2::FindLocalFont(HPS aPS, PRUnichar aChar)
   return nsnull;
 }
 
-nsFontOS2*
-nsFontMetricsOS2::LoadGenericFont(HPS aPS, PRUnichar aChar, char** aName)
+FATTRS*
+nsFontMetricsOS2::LoadGenericFont(HPS aPS, BOOL bBold, BOOL bItalic, char** aName)
 {
   if (*aName) {
     int found = 0;
     int i;
-#ifndef XP_OS2
-    for (i = 0; i < mLoadedFontsCount; i++) {
-      nsFontOS2* font = mLoadedFonts[i];
-      if (!strcmp(font->mName, *aName)) {
-        found = 1;
-        break;
-      }
-    }
-    if (found) {
-      nsMemory::Free(*aName);
-      *aName = nsnull;
-      return nsnull;
-    }
-#endif
     PRUnichar name[FACESIZE] = { 0 };
     PRUnichar format[] = { '%', 's', 0 };
     PRUint32 n = nsTextFormatter::snprintf(name, FACESIZE, format, *aName);
@@ -447,7 +588,7 @@ nsFontMetricsOS2::LoadGenericFont(HPS aPS, PRUnichar aChar, char** aName)
     if (n && (n != (PRUint32) -1)) {
       nsAutoString  fontName(name);
 
-      nsFontOS2* font = LoadFont(aPS, &fontName);
+      FATTRS* font = LoadFont(aPS, &fontName, bBold, bItalic);
 #ifdef XP_OS2
       if (font) {
 #else
@@ -465,7 +606,7 @@ typedef struct PrefEnumInfo
 {
   PRUnichar         mChar;
   HPS               mPS;
-  nsFontOS2*        mFont;
+  FATTRS*        mFont;
   nsFontMetricsOS2* mMetrics;
 } PrefEnumInfo;
 
@@ -476,26 +617,25 @@ PrefEnumCallback(const char* aName, void* aClosure)
   if (info->mFont) {
     return;
   }
-  PRUnichar ch = info->mChar;
   HPS ps = info->mPS;
   nsFontMetricsOS2* metrics = info->mMetrics;
   char* value = nsnull;
   gPref->CopyCharPref(aName, &value);
-  nsFontOS2* font = metrics->LoadGenericFont(ps, ch, &value);
+  FATTRS* font = metrics->LoadGenericFont(ps, PR_FALSE, PR_FALSE, &value);
   if (font) {
     info->mFont = font;
   }
   else {
     gPref->CopyDefaultCharPref(aName, &value);
-    font = metrics->LoadGenericFont(ps, ch, &value);
+    font = metrics->LoadGenericFont(ps, PR_FALSE, PR_FALSE, &value);
     if (font) {
       info->mFont = font;
     }
   }
 }
 
-nsFontOS2*
-nsFontMetricsOS2::FindGenericFont(HDC aPS, PRUnichar aChar)
+FATTRS*
+nsFontMetricsOS2::FindGenericFont(HDC aPS, BOOL bBold, BOOL bItalic)
 {
   if (mTriedAllGenerics) {
     return nsnull;
@@ -513,43 +653,46 @@ nsFontMetricsOS2::FindGenericFont(HDC aPS, PRUnichar aChar)
     pref.ToCString(name, sizeof(name));
     char* value = nsnull;
     gPref->CopyCharPref(name, &value);
-    nsFontOS2* font = LoadGenericFont(aPS, aChar, &value);
+    FATTRS* font = LoadGenericFont(aPS, bBold, bItalic, &value);
     if (font) {
       return font;
     }
     gPref->CopyDefaultCharPref(name, &value);
-    font = LoadGenericFont(aPS, aChar, &value);
+    font = LoadGenericFont(aPS, bBold, bItalic, &value);
     if (font) {
       return font;
     }
   }
+  prefix.ToCString(name, sizeof(name));
+  PrefEnumInfo info = { nsnull, aPS, nsnull, this };
+  gPref->EnumerateChildren(name, PrefEnumCallback, &info);
+  if (info.mFont) {
+    return info.mFont;
+  }
+#if 0
   prefix.ToCString(name, sizeof(name));
   PrefEnumInfo info = { aChar, aPS, nsnull, this };
   gPref->EnumerateChildren(name, PrefEnumCallback, &info);
   if (info.mFont) {
     return info.mFont;
   }
+#endif
   mTriedAllGenerics = 1;
 
   return nsnull;
 }
 
 // returns family name of font that can display given char
-nsFontOS2*
-nsFontMetricsOS2::FindFont(HPS aPS, PRUnichar aChar)
+FATTRS*
+nsFontMetricsOS2::FindFont(HPS aPS, BOOL bBold, BOOL bItalic)
 {
-  nsFontOS2* font = FindUserDefinedFont(aPS, aChar);
+  FATTRS* font = FindUserDefinedFont(aPS, bBold, bItalic);
   if (!font) {
-    font = FindLocalFont(aPS, aChar);
+    font = FindLocalFont(aPS, bBold, bItalic);
     if (!font) {
-      font = FindGenericFont(aPS, aChar);
+      font = FindGenericFont(aPS, bBold, bItalic);
       if (!font) {
-        font = FindGlobalFont(aPS, aChar);
-#ifndef XP_OS2
-        if (!font) {
-          font = FindSubstituteFont(aPS, aChar);
-        }
-#endif
+        font = FindGlobalFont(aPS, bBold, bItalic);
       }
     }
   }
@@ -582,81 +725,88 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   return PR_TRUE; // don't stop
 }
 
-// Current strategy wrt. image/outline fonts:
-//   If image face requested is available in the point size requested,
-//   use it.  If not, use the corresponding outline font.  The reason
-//   why we deal with this here instead of letting GpiCreateLogFont() do
-//   something sensible is because it doesn't do the right thing with
-//   bold/italic effects: if we ask for bold Tms Rmn in 35 pt, we don't
-//   get Times New Roman Bold in 35 pt, but Times New Roman 35pt with a
-//   fake bold effect courtesy of gpi, which looks ugly.
-//
-// Yes, it would be easier & quite plausable to ignore image fonts altogether
-//   and just use outlines, but I reckon image fonts look better at lower
-//   point sizes.
-//
-// Candidate for butchery!
-
-// Utility; delete [] when done.
-static PFONTMETRICS getMetrics( long &lFonts, PCSZ facename, HPS hps)
+PRBool
+nsFontMetricsOS2::GetVectorSubstitute( const char* aFacename, PRBool aIsBold,
+                    PRBool aIsItalic, char* alias )
 {
-   LONG lWant = 0;
-   lFonts = GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE,
-                                  facename, &lWant, 0, 0),
-                 GPI_ALTERROR);
-   PFONTMETRICS pMetrics = new FONTMETRICS [ lFonts];
+  PRBool rv = PR_FALSE;
 
-   GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE, facename,
-                         &lFonts, sizeof (FONTMETRICS), pMetrics),
-        GPI_ALTERROR);
-
-   return pMetrics;
-}
-
-// Utility; expects font familyname; delete [] when done.
-static PFONTMETRICS getMetrics2( long &lFonts, PCSZ familyname, HPS hps)
-{
-  char facename[FACESIZE];
-
-  FACENAMEDESC fnd = { sizeof( FACENAMEDESC), FWEIGHT_NORMAL,
-                       FWIDTH_DONT_CARE, 0, 0 };
-   
-  ULONG rc = ::GpiQueryFaceString( hps, familyname, &fnd, FACESIZE, facename);
-
-  // if GpiQueryFaceString cannot find matching font
-  if( rc == GPI_ERROR )
+  if( PL_strcmp( aFacename, "Tms Rmn" ) == 0 )
   {
-    FACENAMEDESC fnd2 = { sizeof( FACENAMEDESC), FWEIGHT_DONT_CARE,
-                         FWIDTH_DONT_CARE, 0, 0 };
-   
-    rc = ::GpiQueryFaceString( hps, familyname, &fnd2, FACESIZE, facename);
+    if( !aIsBold && !aIsItalic )
+      PL_strcpy( alias, "Times New Roman" );
+    else if( aIsBold )
+      if( !aIsItalic )
+        PL_strcpy( alias, "Times New Roman Bold" );
+      else
+        PL_strcpy( alias, "Times New Roman Bold Italic" );
+    else
+      PL_strcpy( alias, "Times New Roman Italic" );
+
+    rv = PR_TRUE;
   }
 
-  // if still fails, then maybe aName is realy a font face name, not family name
-  if( rc == GPI_ERROR )
+  if( PL_strcmp( aFacename, "Helv" ) == 0 )
   {
-    strcpy( facename, familyname );
+    if( !aIsBold && !aIsItalic )
+      PL_strcpy( alias, "Helvetica" );
+    else if( aIsBold )
+      if( !aIsItalic )
+        PL_strcpy( alias, "Helvetica Bold" );
+      else
+        PL_strcpy( alias, "Helvetica Bold Italic" );
+    else
+      PL_strcpy( alias, "Helvetica Italic" );
+
+    rv = PR_TRUE;
   }
 
-  LONG lWant = 0;
-  lFonts = GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE,
-                                 facename, &lWant, 0, 0),
-                GPI_ALTERROR);
-  PFONTMETRICS pMetrics = new FONTMETRICS [ lFonts];
+   // When printing, substitute vector fonts for these common bitmap fonts
+  if( !mDeviceContext->SupportsRasterFonts() )
+  {
+    if( PL_strcmp( aFacename, "System Proportional" ) == 0 )
+    {
+      if( !aIsBold && !aIsItalic )
+        PL_strcpy( alias, "Helvetica" );
+      else if( aIsBold )
+        if( !aIsItalic )
+          PL_strcpy( alias, "Helvetica Bold" );
+        else
+          PL_strcpy( alias, "Helvetica Bold Italic" );
+      else
+        PL_strcpy( alias, "Helvetica Italic" );
 
-  GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE, facename,
-                        &lFonts, sizeof (FONTMETRICS), pMetrics),
-       GPI_ALTERROR);
+      rv = PR_TRUE;
+    }
 
-  return pMetrics;
+    if( PL_strcmp( aFacename, "System Monospaced" ) == 0 ||
+        PL_strcmp( aFacename, "System VIO" ) == 0 )
+    {
+      if( !aIsBold && !aIsItalic )
+        PL_strcpy( alias, "Courier" );
+      else if( aIsBold )
+        if( !aIsItalic )
+          PL_strcpy( alias, "Courier Bold" );
+        else
+          PL_strcpy( alias, "Courier Bold Italic" );
+      else
+        PL_strcpy( alias, "Courier Italic" );
+
+      rv = PR_TRUE;
+    }
+  }
+
+  return rv;
 }
 
 nsresult nsFontMetricsOS2::RealizeFont()
 {
-nsresult res;
-HWND  win = NULL;
-HDC   ps = NULL;
-  
+  nsresult  res;
+  HWND      win = NULL;
+  HDC       ps = NULL;
+  LONG      lHeight;
+  SIZEF     charbox;
+
   if (NULL != mDeviceContext->mPrintDC){
     ps = mDeviceContext->mPrintPS;
   } else {
@@ -667,7 +817,7 @@ HDC   ps = NULL;
     } /* endif */
   }
 
-  mFont->EnumerateFamilies(FontEnumCallback, this); 
+  mFont->EnumerateFamilies(FontEnumCallback, this);
   PRUnichar* value = nsnull;
   if (!mGeneric) {
     gPref->CopyUnicharPref("font.default", &value);
@@ -682,7 +832,7 @@ HDC   ps = NULL;
     mGeneric = &mDefaultFont;
   }
 
-#ifndef XP_OS2
+//#ifndef XP_OS2
   if (mLangGroup.get() == gUserDefined) {
     if (!gUserDefinedConverter) {
       nsCOMPtr<nsIAtom> charset;
@@ -721,108 +871,56 @@ HDC   ps = NULL;
       mIsUserDefined = 1;
     }
   }
-#endif
+//#endif
 
-  nsFontOS2* font = FindFont(ps, 'a');
-  if (!font) {
-    return NS_ERROR_FAILURE;
-  }
+  nsFontHandleOS2 *fh = new nsFontHandleOS2;
+  if (!fh)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  char szFamily[FACESIZE] = "";
+  BOOL bBold = mFont->weight > NS_FONT_WEIGHT_NORMAL;
+  BOOL bItalic = !!(mFont->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE));
 
-  strcpy(szFamily, font->mName);
+  FATTRS* fattrs = FindFont(ps, bBold, bItalic);
 
-  delete font;
-
-   nsFontHandleOS2 *fh = new nsFontHandleOS2;
-   if (!fh)
-     return NS_ERROR_OUT_OF_MEMORY;
-
-   // 3) Work out what our options are wrt. image/outline, prefer image.
-   BOOL bImage = FALSE;
-
-   if (mDeviceContext->SupportsRasterFonts()) {
-      long lFonts = 0; int i;
-      PFONTMETRICS pMetrics = getMetrics2( lFonts, szFamily, ps);
-
-      for (i = 0 ; i < lFonts ; i++)
-         if (!(pMetrics [i].fsDefn & FM_DEFN_OUTLINE))
-         {
-            bImage = TRUE;
-            break;
-         }
-      delete [] pMetrics;
-   } /* endif */
-
-   if (!bImage) 
-      fh->fattrs.fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
-
-   // 4) Try to munge the face for italic & bold effects (could do better)
-   BOOL bBold = mFont->weight > NS_FONT_WEIGHT_NORMAL;
-   BOOL bItalic = !!(mFont->style & NS_FONT_STYLE_ITALIC);
-   FACENAMEDESC fnd = { sizeof( FACENAMEDESC),
-                        bBold ? FWEIGHT_BOLD : FWEIGHT_NORMAL,
-                        FWIDTH_DONT_CARE,
-                        0,
-                        bItalic ? FTYPE_ITALIC | FTYPE_OBLIQUE : 0 };
-   
-   ULONG rc = ::GpiQueryFaceString( ps, szFamily, &fnd,
-                                    FACESIZE, fh->fattrs.szFacename);
-
-   if( rc == GPI_ERROR )
-   {
-      FACENAMEDESC fnd2 = { sizeof( FACENAMEDESC),
-                            bBold ? FWEIGHT_BOLD : FWEIGHT_DONT_CARE,
-                            FWIDTH_DONT_CARE,
-                            0,
-                            bItalic ? FTYPE_ITALIC | FTYPE_OBLIQUE : 0 };
-   
-      rc = ::GpiQueryFaceString( ps, szFamily, &fnd2, FACESIZE, fh->fattrs.szFacename);
-   }
-
-   if( rc == GPI_ERROR)
-   {  // no real font, fake it
-      strcpy( fh->fattrs.szFacename, szFamily);
-      if( bBold) fh->fattrs.fsSelection |= FATTR_SEL_BOLD;
-      if( bItalic) fh->fattrs.fsSelection |= FATTR_SEL_ITALIC;
-   }
-
-   // 5) Add misc effects
-   if( mFont->decorations & NS_FONT_DECORATION_UNDERLINE)
-      fh->fattrs.fsSelection |= FATTR_SEL_UNDERSCORE;
-   if( mFont->decorations & NS_FONT_DECORATION_LINE_THROUGH)
-      fh->fattrs.fsSelection |= FATTR_SEL_STRIKEOUT;
+   // 5) Add effects
+  if( mFont->decorations & NS_FONT_DECORATION_UNDERLINE)
+    fattrs->fsSelection |= FATTR_SEL_UNDERSCORE;
+  if( mFont->decorations & NS_FONT_DECORATION_LINE_THROUGH)
+    fattrs->fsSelection |= FATTR_SEL_STRIKEOUT;
 
    // 6) Encoding
    // There doesn't seem to be any encoding stuff yet, so guess.
    // (XXX unicode hack; use same codepage as converter!)
-     char name[128];
-    const PRUnichar* langGroup = nsnull;
-    mLangGroup->GetUnicode(&langGroup);
-    nsAutoString langName(langGroup);
-    langName.ToCString(name, sizeof(name));
-     for (int j=0; j < eCharSet_COUNT; j++ ) {
-        if (name[0] == gCharSetInfo[j].mLangGroup[0]) {
-          if (!strcmp(name, gCharSetInfo[j].mLangGroup)) {
-            fh->fattrs.usCodePage = gCharSetInfo[j].mCodePage;
-            mCodePage = gCharSetInfo[j].mCodePage;
-            break;
-          } /* endif */
-       } /* endif */
-    } /* endfor */
+  char name[128];
+  const PRUnichar* langGroup = nsnull;
+  mLangGroup->GetUnicode(&langGroup);
+  nsAutoString langName(langGroup);
+  langName.ToCString(name, sizeof(name));
+  for (int j=0; j < eCharSet_COUNT; j++ )
+  {
+    if (name[0] == gCharSetInfo[j].mLangGroup[0])
+    {
+      if (!strcmp(name, gCharSetInfo[j].mLangGroup))
+      {
+        fattrs->usCodePage = gCharSetInfo[j].mCodePage;
+        mCodePage = gCharSetInfo[j].mCodePage;
+        break;
+      }
+    }
+  }
 //   fh->fattrs.usCodePage = gGfxModuleData.ulCodepage;
-           
+
    // 7) Find the point size for the font, and set up the charbox too
-   float app2dev, app2twip, twip2dev;
-   float textZoom = 1.0;
-   mDeviceContext->GetTextZoom(textZoom);
-   mDeviceContext->GetAppUnitsToDevUnits( app2dev);
-   mDeviceContext->GetDevUnitsToTwips( app2twip);
-   mDeviceContext->GetTwipsToDevUnits( twip2dev);
+  float app2dev, app2twip, twip2dev;
+  float textZoom = 1.0;
+  mDeviceContext->GetTextZoom( textZoom );
+  mDeviceContext->GetAppUnitsToDevUnits( app2dev );
+  mDeviceContext->GetDevUnitsToTwips( app2twip );
+  mDeviceContext->GetTwipsToDevUnits( twip2dev );
 
    // !! Windows wants to mply up here.  I don't think I do.  If fonts
    // !! ever begin to look `squished', try enabling the following code
-#if 0
+#if 1
    float scale;
    mDeviceContext->GetCanonicalPixelScale(scale);
    app2twip *= app2dev * scale;
@@ -833,61 +931,99 @@ HDC   ps = NULL;
    // Note: are you confused by the block above, and thinking that app2twip
    //       must be 1?  Well, there's *no* guarantee that app units are
    //       twips, despite whatever nscoord.h says!
-   LONG lHeight = NSToIntRound(mFont->size * app2dev * textZoom);
-   int points = mFont->size/20;
-   fh->charbox.cx = MAKEFIXED(lHeight, 0);
-   fh->charbox.cy = fh->charbox.cx;
 
-   // 8) If we're using an image font, check it's available in the size
-   //    required, substituting an outline if necessary.
-   if( bImage)
-   {
-      HDC    hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
+   // 8) If we're using an image font, load the font with the closest
+   //    matching size
+  int points = mFont->size / 20;
+  if( fattrs->fsFontUse == 0 )    /* if image font */
+  {
+    char alias[FACESIZE];
 
-      long   res[ 2];
-      GFX (::DevQueryCaps( hdc, CAPS_HORIZONTAL_FONT_RES, 2, res), FALSE);
-      long lFonts = 0; int i;
-      PFONTMETRICS pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, ps);
+     // If the font.substitute_vector_fonts pref is set, then we exchange
+     // Times New Roman for Tms Rmn and Helvetica for Helv if the requested
+     // points size is less than the minimum or more than the maximum point
+     // size available for Tms Rmn and Helv.
+    if( gSubstituteVectorFonts &&
+        GetVectorSubstitute(fattrs->szFacename, bBold, bItalic, alias) )
+    {
+      if( points > 18 || points < 8 )
+      {
+        PL_strcpy( fattrs->szFacename, alias );
+        fattrs->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
+        fattrs->fsSelection &= ~(FM_SEL_BOLD | FM_SEL_ITALIC);
+      }
+    }
+
+     // If still using an image font
+    if( fattrs->fsFontUse == 0 )
+    {
+      long lFonts = 0;
+      PFONTMETRICS pMetrics = getMetrics( lFonts, fattrs->szFacename, ps);
 
       int curPoints = 0;
-      for( i = 0; i < lFonts; i++) {
-         if( !stricmp(fh->fattrs.szFacename, pMetrics[i].szFacename) &&
-             pMetrics[i].sXDeviceRes == res[0] &&
-             pMetrics[i].sYDeviceRes == res[1])
-         {
-            if (pMetrics[i].sNominalPointSize / 10 == points) {
-               // image face found fine, set required size in fattrs.
-               fh->fattrs.lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
-               fh->fattrs.lAveCharWidth = pMetrics[i].lAveCharWidth;
-               break;
-            } else {
-               if (abs(pMetrics[i].sNominalPointSize / 10 - points) < abs(curPoints - points)) {
-                  curPoints = pMetrics[i].sNominalPointSize / 10;
-                  fh->fattrs.lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
-                  fh->fattrs.lAveCharWidth = pMetrics[i].lAveCharWidth;
-               } else if (abs(pMetrics[i].sNominalPointSize / 10 - points) == abs(curPoints - points)) {
-                  if ((pMetrics[i].sNominalPointSize / 10) > curPoints) {
-                     curPoints = pMetrics[i].sNominalPointSize / 10;
-                     fh->fattrs.lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
-                     fh->fattrs.lAveCharWidth = pMetrics[i].lAveCharWidth;
-                  } /* endif */
-               } /* endif */
-            } /* endif */
-         } /* endif */
+      for( int i = 0; i < lFonts; i++)
+      {
+        if( pMetrics[i].sYDeviceRes == gDPI )
+        {
+          if (pMetrics[i].sNominalPointSize / 10 == points)
+          {
+            // image face found fine, set required size in fattrs.
+            fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+            fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
+            break;
+          }
+          else
+          {
+            if (abs(pMetrics[i].sNominalPointSize / 10 - points) < abs(curPoints - points))
+            {
+              curPoints = pMetrics[i].sNominalPointSize / 10;
+              fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+              fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
+            }
+            else if (abs(pMetrics[i].sNominalPointSize / 10 - points) == abs(curPoints - points))
+            {
+              if ((pMetrics[i].sNominalPointSize / 10) > curPoints)
+              {
+                curPoints = pMetrics[i].sNominalPointSize / 10;
+                fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+                fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
+              }
+            }
+          }
+        }
       } /* endfor */
+
       delete [] pMetrics;
-   }
+    }
+  }
+
+   // set up the charbox;  set for image fonts also, in case we need to
+   //  substitute a font later on (for UTF-8, etc)
+  if (!mDeviceContext->mPrintDC)
+    if( fattrs->fsFontUse == 0 )    /* if image font */
+      lHeight = NSToIntRound( points * gDPI / 72 );
+    else
+      lHeight = NSToIntRound( mFont->size * app2dev * textZoom * gDPI / 96 );
+  else
+    if( fattrs->fsFontUse == 0 )
+      lHeight = NSToIntRound( points * 20 * app2dev * textZoom );
+    else
+      lHeight = NSToIntRound( mFont->size * app2dev * textZoom );
+
+  fh->charbox.cx = MAKEFIXED(lHeight, 0);
+  fh->charbox.cy = fh->charbox.cx;
 
    // 9) Record font handle & record various font metrics to cache
-   mFontHandle = fh;
-   GFX (::GpiCreateLogFont (ps, 0, 1, &fh->fattrs), GPI_ERROR);
-   fh->SelectIntoPS( ps, 1);
+  fh->fattrs = *fattrs;
+  mFontHandle = fh;
+  GFX (::GpiCreateLogFont (ps, 0, 1, fattrs), GPI_ERROR);
+  fh->SelectIntoPS( ps, 1 );
 
-   FONTMETRICS fm;
-   GFX (::GpiQueryFontMetrics (ps, sizeof (fm), &fm), FALSE);
+  FONTMETRICS fm;
+  GFX (::GpiQueryFontMetrics (ps, sizeof (fm), &fm), FALSE);
 
-   float dev2app;
-   mDeviceContext->GetDevUnitsToAppUnits( dev2app);
+  float dev2app;
+  mDeviceContext->GetDevUnitsToAppUnits( dev2app);
 
    // PM includes the internal leading in the max ascender.  So the max
    // ascender we tell raptor about should be lMaxAscent - lInternalLeading.
@@ -896,29 +1032,37 @@ HDC   ps = NULL;
    // More so 'cos layout doesn't look at the leading we give it.
    //
    // So let's leave it as zero to avoid confusion & change it if necessary.
+  nscoord onePixel = NSToCoordRound(1 * dev2app);
 
-   mHeight             = NSToCoordRound( fm.lMaxBaselineExt * dev2app);
-   mMaxAscent          = NSToCoordRound( fm.lMaxAscender * dev2app);
-   mMaxDescent         = NSToCoordRound( fm.lMaxDescender * dev2app);
-   mMaxAdvance         = NSToCoordRound( fm.lMaxCharInc * dev2app);
+  mHeight             = NSToCoordRound( fm.lMaxBaselineExt * dev2app);
+  mMaxAscent          = NSToCoordRound( fm.lMaxAscender * dev2app);
+  mMaxDescent         = NSToCoordRound( fm.lMaxDescender * dev2app);
+  mMaxAdvance         = NSToCoordRound( fm.lMaxCharInc * dev2app);
 
-   mMaxHeight          = NSToCoordRound( fm.lMaxBaselineExt * dev2app);
-   mEmHeight           = NSToCoordRound( fm.lEmHeight * dev2app);
-   // XXXXOS2TODO Not sure about these two - hs
-   mEmAscent           = NSToCoordRound((fm.lMaxAscender - fm.lInternalLeading) * dev2app);
-   mEmDescent          = NSToCoordRound( fm.lMaxDescender * dev2app);
+  mMaxHeight          = NSToCoordRound( fm.lMaxBaselineExt * dev2app);
+  mEmHeight           = NSToCoordRound( fm.lEmHeight * dev2app);
+  // XXXXOS2TODO Not sure about these two - hs
+  mEmAscent           = NSToCoordRound((fm.lMaxAscender - fm.lInternalLeading) * dev2app);
+  mEmDescent          = NSToCoordRound( fm.lMaxDescender * dev2app);
 
-   mLeading            = NSToCoordRound( fm.lInternalLeading * dev2app);
-   mXHeight            = NSToCoordRound( fm.lXHeight * dev2app);
+  mLeading            = NSToCoordRound( fm.lInternalLeading * dev2app);
+  mXHeight            = NSToCoordRound( fm.lXHeight * dev2app);
 
-   mSuperscriptYOffset = NSToCoordRound( fm.lSuperscriptYOffset * dev2app);
-   mSubscriptYOffset   = NSToCoordRound( fm.lSubscriptYOffset * dev2app); // !! check this
-   mStrikeoutPosition  = NSToCoordRound( fm.lStrikeoutPosition * dev2app);
-   mStrikeoutSize      = NSToCoordRound( fm.lStrikeoutSize * dev2app);
-   mUnderlinePosition  = NSToCoordRound( -fm.lUnderscorePosition * dev2app);
-   mUnderlineSize      = NSToCoordRound( fm.lUnderscoreSize * dev2app);
+   // Not all fonts specify these two values correctly, and some not at all
+  mSuperscriptYOffset = mXHeight;
+  mSubscriptYOffset   = NSToCoordRound( mXHeight / 3.0f );
 
-   mAveCharWidth       = NSToCoordRound( fm.lAveCharWidth * dev2app);
+   // Using lStrikeoutPosition puts the strikeout too high
+   // Use 50% of lXHeight instead
+  mStrikeoutPosition  = NSToCoordRound( mXHeight / 2.0f);
+  mStrikeoutSize      = PR_MAX(onePixel, NSToCoordRound(fm.lStrikeoutSize * dev2app));
+
+   // Let there always be a minimum of one pixel space between the text
+   // and the underline
+  mUnderlinePosition  = -PR_MAX(onePixel*2, NSToCoordRound( fm.lUnderscorePosition * dev2app));
+  mUnderlineSize      = PR_MAX(onePixel, NSToCoordRound(fm.lUnderscoreSize * dev2app));
+
+  mAveCharWidth       = PR_MAX(1, NSToCoordRound(fm.lAveCharWidth * dev2app));
 
    // Cache the width of a single space.
   SIZEL  size;
@@ -926,12 +1070,13 @@ HDC   ps = NULL;
   mSpaceWidth = NSToCoordRound(float(size.cx) * dev2app);
 
    // 10) Clean up
-   GFX (::GpiSetCharSet (ps, LCID_DEFAULT), FALSE);
-   GFX (::GpiDeleteSetId (ps, 1), FALSE);
-   if (NULL == mDeviceContext->mPrintDC)
-      ::WinReleasePS(ps);
+  GFX (::GpiSetCharSet (ps, LCID_DEFAULT), FALSE);
+  GFX (::GpiDeleteSetId (ps, 1), FALSE);
+  if (NULL == mDeviceContext->mPrintDC)
+    ::WinReleasePS(ps);
+  delete fattrs;
 
-   return NS_OK;
+  return NS_OK;
 }
 
 nsresult nsFontMetricsOS2::GetSpaceWidth(nscoord &aSpaceWidth)
@@ -1030,7 +1175,7 @@ NS_IMETHODIMP nsFontMetricsOS2::GetLangGroup(nsIAtom** aLangGroup)
 NS_IMETHODIMP
 nsFontMetricsOS2::GetNormalLineHeight(nscoord &aHeight)
 {
-  aHeight = mEmDescent + mEmAscent + mLeading;
+  aHeight = mEmHeight + mLeading;
   return NS_OK;
 }
 
@@ -1069,109 +1214,153 @@ nsFontMetricsOS2::GetAveCharWidth(nscoord &aAveCharWidth)
   return NS_OK;
 }
 
-nsGlobalFont*
-nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
+static int PR_CALLBACK
+CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 {
-  static int gInitializedGlobalFonts = 0;
-  if (!gInitializedGlobalFonts) {
-    LONG lRemFonts = 0, lNumFonts;
-    lNumFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC, NULL, &lRemFonts, 0, 0),
-                     GPI_ALTERROR);
-    PFONTMETRICS pFontMetrics = (PFONTMETRICS) nsMemory::Alloc(lNumFonts * sizeof(FONTMETRICS));
-    lRemFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC, NULL, &lNumFonts,
-                                      sizeof (FONTMETRICS), pFontMetrics),
-                     GPI_ALTERROR);
-    for (int i=0; i < lNumFonts; i++) {
-      BOOL fAlreadyFound = FALSE;
-      for (int j = 0; j < gGlobalFontsCount && !fAlreadyFound; j++) {
-        if (!strcmp(gGlobalFonts[j].fontMetrics.szFamilyname,
-                 pFontMetrics[i].szFamilyname)) {
-              fAlreadyFound = TRUE;
-         }
-      }
-      if (fAlreadyFound) {
-         continue;
-      } /* endif */
+  const nsString str1( *((const PRUnichar**)aArg1) );
+  const nsString str2( *((const PRUnichar**)aArg2) );
 
-#ifdef MOZ_MATHML
-      // XXX need a better way to deal with non-TrueType fonts?
-      if (!(fontType & TRUETYPE_FONTTYPE)) {
-        //printf("rejecting %s\n", logFont->lfFaceName);
+   // intermingle vertical fonts (start with '@') with horizontal fonts
+  if( str1.EqualsWithConversion( "@", PR_FALSE, 1 ))
+  {
+    if( str2.EqualsWithConversion( "@", PR_FALSE, 1 ))
+      return str1.CompareWithConversion( str2 );
+    else
+    {
+      nsString temp( str1 );
+      temp.Trim( "@", PR_TRUE, PR_FALSE );
+      int rv = temp.CompareWithConversion( str2 );
+      if( rv == 0 )
         return 1;
-      }
-#endif
-      // XXX ignore vertical fonts
-      if (pFontMetrics[i].szFamilyname[0] == '@')
-      {
-        continue;
-      }
-
-#ifdef OLDCODE
-      for (int j = 0; j < nsFontMetricsOS2::gGlobalFontsCount; j++) {
-        if (!strcmp(gGlobalFonts[i].logFont.szFacename,
-                 logFont->lfFaceName)) {
-
-          //work-around for Win95/98 problem 
-          int   charSetSigBit = charSetToBit[gCharSetToIndex[logFont->lfCharSet]];
-          if 	(charSetSigBit >= 0) {
-            DWORD  charsetSigAdd = 1 << charSetSigBit;
-            gGlobalFonts[i].signature.fsCsb[0] |= charsetSigAdd;
-          }
-
-          return 1;
-        }
-      }
-#endif
-
-      // XXX make this smarter: don't add font to list if we already have a font
-      // with the same font signature -- erik
-      if (gGlobalFontsCount == gGlobalFontsAlloc) {
-        int newSize = 2 * (gGlobalFontsAlloc ? gGlobalFontsAlloc : 1);
-        nsGlobalFont* newPointer = (nsGlobalFont*)
-        PR_Realloc(gGlobalFonts, newSize*sizeof(nsGlobalFont));
-        if (newPointer) {
-          gGlobalFonts = newPointer;
-          gGlobalFontsAlloc = newSize;
-        }
-      }
-
-      nsGlobalFont* font = &gGlobalFonts[gGlobalFontsCount];
-      gGlobalFontsCount++;
-
-      PRUnichar name[FACESIZE];
-      name[0] = L'\0';
-      MultiByteToWideChar(0, pFontMetrics[i].szFamilyname,
-         strlen(pFontMetrics[i].szFamilyname) + 1, name, sizeof(name)/sizeof(name[0]));
-      font->name = new nsString(name);
-      if (!font->name) {
-        gGlobalFontsCount--;
-        continue;
-      }
-
-      font->map = nsnull;
-      font->fontMetrics = pFontMetrics[i];
-      font->skip = 0;
-
-      gGlobalFonts[gGlobalFontsCount].signature  = pFontMetrics[i].fsDefn;
-    } /* endwhile */
-    gInitializedGlobalFonts = 1;
-    nsMemory::Free(pFontMetrics);
+      else
+        return rv;
+    }
   }
+  else if( str2.EqualsWithConversion( "@", PR_FALSE, 1 ))
+  {
+    nsString temp( str2 );
+    temp.Trim( "@", PR_TRUE, PR_FALSE );
+    int rv = str1.CompareWithConversion( temp );
+    if( rv == 0 )
+      return -1;
+    else
+      return rv;
+  }
+  else
+    return str1.CompareWithConversion( str2 );
+}
+
+static int PR_CALLBACK
+CompareFontFamilyNames(const void* aArg1, const void* aArg2, void* aClosure)
+{
+  const nsGlobalFont* font1 = (const nsGlobalFont*) aArg1;
+  const nsGlobalFont* font2 = (const nsGlobalFont*) aArg2;
+
+   // put vertical fonts at end of global font list
+  if( font1->name->EqualsWithConversion( "@", PR_FALSE, 1 ))
+  {
+    if( font2->name->EqualsWithConversion( "@", PR_FALSE, 1 ))
+      return font1->name->CompareWithConversion( *(font2->name) );
+    else
+      return 1;
+  }
+  else if( font2->name->EqualsWithConversion( "@", PR_FALSE, 1 ))
+     return -1;
+  else
+    return font1->name->CompareWithConversion( *(font2->name) );
+}
+
+nsGlobalFont*
+nsFontMetricsOS2::InitializeGlobalFonts()
+{
+  HPS aPS = ::WinGetScreenPS(HWND_DESKTOP);
+
+  LONG lRemFonts = 0, lNumFonts;
+  lNumFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC, NULL, &lRemFonts, 0, 0),
+                   GPI_ALTERROR);
+  PFONTMETRICS pFontMetrics = (PFONTMETRICS) nsMemory::Alloc(lNumFonts * sizeof(FONTMETRICS));
+  lRemFonts = GFX (::GpiQueryFonts (aPS, QF_PUBLIC, NULL, &lNumFonts,
+                                    sizeof (FONTMETRICS), pFontMetrics),
+                   GPI_ALTERROR);
+
+  gGlobalFonts = (nsGlobalFont*) nsMemory::Alloc( lNumFonts * sizeof(nsGlobalFont) );
+
+  for (int i=0; i < lNumFonts; i++)
+  {
+     // The discrepencies between the Courier bitmap and outline fonts are
+     // too much to deal with, so we only use the outline font
+    if( !(pFontMetrics[i].fsDefn & FM_DEFN_OUTLINE) &&
+        PL_strcmp(pFontMetrics[i].szFamilyname, "Courier") == 0 )
+      continue;
+
+    nsGlobalFont* font = &gGlobalFonts[gGlobalFontsCount];
+    gGlobalFontsCount++;
+
+    PRUnichar name[FACESIZE];
+    name[0] = L'\0';
+
+     // for DBCS fonts, display using facename rather than familyname
+    int length;
+    if( pFontMetrics[i].fsType & FM_TYPE_DBCS )
+    {
+      length = MultiByteToWideChar(0, pFontMetrics[i].szFacename,
+         strlen(pFontMetrics[i].szFacename) + 1, name, sizeof(name)/sizeof(name[0]));
+    }
+    else
+    {
+      length = MultiByteToWideChar(0, pFontMetrics[i].szFamilyname,
+         strlen(pFontMetrics[i].szFamilyname) + 1, name, sizeof(name)/sizeof(name[0]));
+    }
+
+    font->name = new nsString(name, length-1);
+    if (!font->name)
+    {
+      gGlobalFontsCount--;
+      continue;
+    }
+
+    font->fontMetrics = pFontMetrics[i];
+
+     // Set the FM_SEL_BOLD flag in fsSelection.  This makes the check for
+     // bold and italic much easier in LoadFont
+    if( font->fontMetrics.usWeightClass > 5 )
+      font->fontMetrics.fsSelection |= FM_SEL_BOLD;
+
+    font->signature  = pFontMetrics[i].fsDefn;
+  } /* for loop */
+
+  nsMemory::Free(pFontMetrics);
+
+  NS_QuickSort(gGlobalFonts, gGlobalFontsCount, sizeof(nsGlobalFont),
+               CompareFontFamilyNames, nsnull);
+
+  int prevIndex = 0;
+  nsString lastName;
+
+  for( int j = 0; j < gGlobalFontsCount; j++ )
+  {
+    if( !gGlobalFonts[j].name->EqualsWithConversion( lastName ) )
+    {
+      gGlobalFonts[prevIndex].nextFamily = j;
+      prevIndex = j;
+      lastName = *(gGlobalFonts[j].name);
+    }
+    else
+      gGlobalFonts[j].nextFamily = 0;
+  }
+  gGlobalFonts[prevIndex].nextFamily = gGlobalFontsCount;
+
+  ::WinReleasePS(aPS);
 
   return gGlobalFonts;
 }
 
-nsFontOS2*
-nsFontMetricsOS2::FindGlobalFont(HPS aPS, PRUnichar c)
+FATTRS*
+nsFontMetricsOS2::FindGlobalFont(HPS aPS, BOOL bBold, BOOL bItalic)
 {
-  if (!gGlobalFonts) {
-    if (!InitializeGlobalFonts(aPS)) {
-      return nsnull;
-    }
-  }
   for (int i = 0; i < gGlobalFontsCount; i++) {
-    if (!gGlobalFonts[i].skip) {
 #ifndef XP_OS2
+    if (!gGlobalFonts[i].skip) {
       if (!gGlobalFonts[i].map) {
         HFONT font = ::CreateFontIndirect(&gGlobalFonts[i].logFont);
         if (!font) {
@@ -1194,104 +1383,13 @@ nsFontMetricsOS2::FindGlobalFont(HPS aPS, PRUnichar c)
         return LoadFont(aDC, gGlobalFonts[i].name);
       }
 #else
-        return LoadFont(aPS, gGlobalFonts[i].name);
+        return LoadFont(aPS, gGlobalFonts[i].name, bBold, bItalic);
 #endif
-    }
+//    }
   }
 
   return nsnull;
 }
-
-
-// The Font Enumerator
-
-nsFontEnumeratorOS2::nsFontEnumeratorOS2()
-{
-  NS_INIT_REFCNT();
-}
-
-NS_IMPL_ISUPPORTS1(nsFontEnumeratorOS2, nsIFontEnumerator)
-
-static int gInitializedFontEnumerator = 0;
-
-static int
-InitializeFontEnumerator(void)
-{
-  gInitializedFontEnumerator = 1;
-
-  if (!nsFontMetricsOS2::gGlobalFonts) {
-    HPS ps = ::WinGetScreenPS(HWND_DESKTOP);
-    if (!nsFontMetricsOS2::InitializeGlobalFonts(ps)) {
-      ::WinReleasePS(ps);
-      return 0;
-    }
-    ::WinReleasePS(ps);
-  }
-
-  return 1;
-}
-
-static int PR_CALLBACK
-CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
-{
-  const PRUnichar* str1 = *((const PRUnichar**) aArg1);
-  const PRUnichar* str2 = *((const PRUnichar**) aArg2);
-
-  // XXX add nsICollation stuff
-
-  return nsCRT::strcmp(str1, str2);
-}
-
-NS_IMETHODIMP
-nsFontEnumeratorOS2::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
-{
-  if (aCount) {
-    *aCount = 0;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aResult) {
-    *aResult = nsnull;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (!gInitializedFontEnumerator) {
-    if (!InitializeFontEnumerator()) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  PRUnichar** array = (PRUnichar**)
-    nsMemory::Alloc(nsFontMetricsOS2::gGlobalFontsCount * sizeof(PRUnichar*));
-  if (!array) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  for (int i = 0; i < nsFontMetricsOS2::gGlobalFontsCount; i++) {
-    PRUnichar* str = nsFontMetricsOS2::gGlobalFonts[i].name->ToNewUnicode();
-    if (!str) {
-      for (i = i - 1; i >= 0; i--) {
-        nsMemory::Free(array[i]);
-      }
-      nsMemory::Free(array);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    array[i] = str;
-  }
-
-  //NS_QuickSort(array, nsFontMetricsOS2::gGlobalFontsCount, sizeof(PRUnichar*),
-  //  CompareFontNames, nsnull);
-
-  *aCount = nsFontMetricsOS2::gGlobalFontsCount;
-  *aResult = array;
-
-  return NS_OK;
-}
-
-
-
 
 static int
 SignatureMatchesLangGroup(USHORT* aSignature,
@@ -1337,108 +1435,120 @@ FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric,
     return 1;
   }
 
-#ifdef OLDCODE
-  switch (aFont->logFont.lfPitchAndFamily & 0xF0) {
-  case FF_DONTCARE:
-    return 0;
-  case FF_ROMAN:
-    if (!strcmp(aGeneric, "serif")) {
-      return 1;
-    }
-    return 0;
-  case FF_SWISS:
-    if (!strcmp(aGeneric, "sans-serif")) {
-      return 1;
-    }
-    return 0;
-  case FF_MODERN:
-    if (!strcmp(aGeneric, "monospace")) {
-      return 1;
-    }
-    return 0;
-  case FF_SCRIPT:
-    if (!strcmp(aGeneric, "cursive")) {
-      return 1;
-    }
-    return 0;
-  case FF_DECORATIVE:
-    if (!strcmp(aGeneric, "fantasy")) {
-      return 1;
-    }
-    return 0;
-  default:
-    return 0;
-  }
-#endif
-
   return 0;
 }
 
-typedef struct fonthash
+NS_IMETHODIMP
+nsFontMetricsOS2::SetUnicodeFont( HPS aPS, LONG lcid )
 {
-  char* mName;
-  char* mType;
-} fontHash;
+  char fontPref[32];
+  char* value = nsnull;
+  char* generic = mGeneric->ToNewCString();
 
-static fontHash gFontTypeTable[] =
-{
-  { "devanagari mt for ibm",        "serif" },
-  { "georgia",                      "serif" },
-  { "lucida bright",                "serif" },
-  { "roman",                        "serif" },
-  { "times new roman",              "serif" },
-  { "times new roman mt 30",        "serif" },
-  { "times new roman wt j",         "serif" },
-  { "tms rmn",                      "serif" },
-  { "arial",                        "sans-serif" },
-  { "helv",                         "sans-serif" },
-  { "helvetica",                    "sans-serif" },
-  { "lucida sans",                  "sans-serif" },
-  { "monotype sans wt",             "sans-serif" },
-  { "swiss",                        "sans-serif" },
-  { "system proportional",          "sans-serif" },
-  { "thonburi",                     "sans-serif" },
-  { "verdana",                      "sans-serif" },
-  { "warpsans",                     "sans-serif" },
-  { "courier",                      "monospace" },
-  { "courier new",                  "monospace" },
-  { "courierthai",                  "monospace" },
-  { "lucida sans typewriter",       "monospace" },
-  { "monotype sans duospace wt j",  "monospace" },
-  { "system monospaced",            "monospace" },
-  { "system vio",                   "monospace" },
-  { "symbol",                       "fantasy" },
-  { "symbol set",                   "fantasy" },
-  { "wingdings",                    "fantasy" },
+  sprintf( fontPref, "font.name.%s.x-unicode", generic );
+  nsMemory::Free( generic );
 
-  { nsnull, nsnull }
-};
+  gPref->CopyCharPref( fontPref, &value );
+  nsAutoString fontName;
+  fontName.AssignWithConversion( value );
 
-PLHashTable*
-nsFontEnumeratorOS2::InitializeFontHashes(void)
-{
-  static int gInitializedFontHashes = 0;
-  if (!gInitializedFontHashes) {
-    gInitializedFontHashes = 1;
-    gFontTypes = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, nsnull, nsnull);
-    if (!gFontTypes) {
-      return nsnull;
-    }
-    fonthash* f = gFontTypeTable;
-    while (f->mName) {
-      nsString* name = new nsString;
-      nsString* type = new nsString;
-      if (name) {
-        name->AssignWithConversion(f->mName);
-        type->AssignWithConversion(f->mType);
-        PL_HashTableAdd(gFontTypes, name, (void*) type);
-      }
-      f++;
-    }
+  PRBool bBold = mFont->weight > NS_FONT_WEIGHT_NORMAL;
+  PRBool bItalic = !!(mFont->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE));
+  FATTRS* fattrs = LoadFont( aPS, &fontName, bBold, bItalic );
+
+  nsMemory::Free( value );
+
+   // if the font specified in prefs was not found, then fall back on
+   // Times New Roman MT 30
+  if( !fattrs && PL_strcmp( value, "Times New Roman MT 30" ) != 0 )
+  {
+    fontName.AssignWithConversion( "Times New Roman MT 30" );
+    fattrs = LoadFont( aPS, &fontName, bBold, bItalic );
   }
 
-  return gFontTypes;
+   // if font in prefs not found, and backup font of Times New Roman MT 30
+   // failed, then return error
+  if( !fattrs )
+    return NS_ERROR_FAILURE;
+
+  fattrs->usCodePage = 1208;
+
+   // Add effects
+  if( mFont->decorations & NS_FONT_DECORATION_UNDERLINE )
+    fattrs->fsSelection |= FATTR_SEL_UNDERSCORE;
+  if( mFont->decorations & NS_FONT_DECORATION_LINE_THROUGH )
+    fattrs->fsSelection |= FATTR_SEL_STRIKEOUT;
+
+  if( fattrs->fsFontUse == 0 )    /* if image font */
+  {
+     // If we're using an image font, load the font with the closest
+     //  matching size
+    long lFonts = 0;
+    PFONTMETRICS pMetrics = getMetrics( lFonts, fattrs->szFacename, aPS );
+
+    int points = mFont->size / 20;
+    int curPoints = 0;
+    for( int i = 0; i < lFonts; i++)
+    {
+      if( pMetrics[i].sYDeviceRes == gDPI )
+      {
+        if (pMetrics[i].sNominalPointSize / 10 == points)
+        {
+           // image face found fine, set required size in fattrs.
+          fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+          fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
+          break;
+        }
+        else
+        {
+          if (abs(pMetrics[i].sNominalPointSize / 10 - points) < abs(curPoints - points))
+          {
+            curPoints = pMetrics[i].sNominalPointSize / 10;
+            fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+            fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
+          }
+          else if (abs(pMetrics[i].sNominalPointSize / 10 - points) == abs(curPoints - points))
+          {
+            if ((pMetrics[i].sNominalPointSize / 10) > curPoints)
+            {
+              curPoints = pMetrics[i].sNominalPointSize / 10;
+              fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+              fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
+            }
+          }
+        }
+      }
+    } /* endfor */
+
+    delete [] pMetrics;
+  }
+
+  GFX (::GpiCreateLogFont (aPS, 0, lcid, fattrs), GPI_ERROR);
+
+  delete fattrs;
+
+  return NS_OK;
 }
+
+
+// The Font Enumerator
+
+nsFontEnumeratorOS2::nsFontEnumeratorOS2()
+{
+  NS_INIT_REFCNT();
+}
+
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorOS2, nsIFontEnumerator)
+
+enum fontTypes
+{
+  FONT_TYPE_SERIF = 1,
+  FONT_TYPE_SANS_SERIF = 2,
+  FONT_TYPE_MONOSPACE = 3,
+  FONT_TYPE_FANTASY = 4,
+  FONT_TYPE_CURSIVE = 5
+};
+
 
 NS_IMETHODIMP
 nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
@@ -1460,16 +1570,144 @@ nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (!gInitializedFontEnumerator) {
-    if (!InitializeFontEnumerator()) {
-      return NS_ERROR_FAILURE;
-    }
+  PRUnichar** array = (PRUnichar**)
+    nsMemory::Alloc(nsFontMetricsOS2::gGlobalFontsCount * sizeof(PRUnichar*));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!gFontTypes) {
-    if (!InitializeFontHashes()) {
-      return NS_ERROR_FAILURE;
+  int genericType;
+  if( PL_strcmp(aGeneric, "serif") == 0 )
+    genericType = FONT_TYPE_SERIF;
+  else if( PL_strcmp(aGeneric, "sans-serif") == 0 )
+    genericType = FONT_TYPE_SANS_SERIF;
+  else if( PL_strcmp(aGeneric, "monospace") == 0 )
+    genericType = FONT_TYPE_MONOSPACE;
+  else if( PL_strcmp(aGeneric, "fantasy") == 0 )
+    genericType = FONT_TYPE_FANTASY;
+  else if( PL_strcmp(aGeneric, "cursive") == 0 )
+    genericType = FONT_TYPE_CURSIVE;
+  else
+    NS_ASSERTION( 0, "Unknown font type given" );
+
+  int count = 0;
+  int i = 0;
+  while( i < nsFontMetricsOS2::gGlobalFontsCount )
+  {
+    nsGlobalFont* font = &(nsFontMetricsOS2::gGlobalFonts[i]);
+    FONTMETRICS* fm = &(font->fontMetrics);
+    PRUnichar* str = font->name->ToNewUnicode();
+
+    if (!str) {
+      for (i = count - 1; i >= 0; i--) {
+        nsMemory::Free(array[i]);
+      }
+      nsMemory::Free(array);
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    if( fm->fsType & FM_TYPE_DBCS ) /* DBCS */
+    {
+      if( genericType == FONT_TYPE_MONOSPACE || 
+          genericType == FONT_TYPE_SANS_SERIF ||
+          genericType == FONT_TYPE_SERIF )
+        array[count++] = str;
+    }
+    else if( fm->fsType & FM_TYPE_FIXED ||   /* Monospace fonts */
+        fm->panose.bProportion == 9   )
+    {
+      if( genericType == FONT_TYPE_MONOSPACE )
+        array[count++] = str;
+    }
+    else if( fm->panose.bFamilyType == 2 )  /* Text and Display */
+    {
+      if( fm->panose.bSerifStyle > 10 )     /* sans-serif           */
+      {                                     /* 11-15 of bSerifStyle */
+        if( genericType == FONT_TYPE_SANS_SERIF )
+          array[count++] = str;
+      }
+      else if( fm->panose.bSerifStyle < 2 ) /* if of type "Any" or "No Fit" */
+      {                                     /* add to both                  */
+        if( genericType == FONT_TYPE_SERIF ||
+            genericType == FONT_TYPE_SANS_SERIF )
+          array[count++] = str;
+      }
+      else if( genericType == FONT_TYPE_SERIF ) /* assume remaining fonts of */
+        array[count++] = str;                   /* type 2 are serif          */
+
+       // for utf8 purposes, add the font 'Times New Roman MT 30' for the
+       // Sans-Serif & Monospace lists, since in most cases, this is the only
+       // unicode font available on OS/2 systems
+      if( (genericType == FONT_TYPE_SANS_SERIF ||
+           genericType == FONT_TYPE_MONOSPACE)   &&
+          PL_strcmp(&aLangGroup[2],"unicode") == 0 &&
+          font->name->CompareWithConversion("Times New Roman MT 30") == 0 )
+        array[count++] = str;
+    }
+    else if( fm->panose.bFamilyType == 3 )  /* Script */
+    {
+      if( genericType == FONT_TYPE_CURSIVE )
+        array[count++] = str;
+    }
+    else if( fm->panose.bFamilyType > 3 )   /* Decorative, Pictorial */
+    {
+      if( genericType == FONT_TYPE_FANTASY )
+        array[count++] = str;
+    }
+    else
+    {
+       // These common bitmap fonts do not have PANOSE info, so we hardcode
+       // these checks here
+      if( font->name->CompareWithConversion("Tms Rmn") == 0 )
+      {
+        if( genericType == FONT_TYPE_SERIF )
+          array[count++] = str;
+      }
+      else if( font->name->CompareWithConversion("Helv") == 0 ||
+               font->name->CompareWithConversion("System Proportional") == 0 ||
+               font->name->CompareWithConversion("WarpSans") == 0 )
+      {
+        if( genericType == FONT_TYPE_SANS_SERIF )
+          array[count++] = str;
+      }
+      else if( font->name->CompareWithConversion("Symbol Set") == 0 )
+      {
+        if( genericType == FONT_TYPE_FANTASY )
+          array[count++] = str;
+      }
+      else
+      {
+         // Any font that has not set any of the above fields gets added to
+         // every font menu in prefs
+        array[count++] = str;
+      }
+    }
+
+    i = font->nextFamily;
+  }
+
+  NS_QuickSort(array, count, sizeof(PRUnichar*), CompareFontNames, nsnull);
+
+  *aCount = count;
+  *aResult = array;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorOS2::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
+{
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
   }
 
   PRUnichar** array = (PRUnichar**)
@@ -1478,27 +1716,26 @@ nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  int count = 0;
-  for (int i = 0; i < nsFontMetricsOS2::gGlobalFontsCount; i++) {
+  int i = 0;
+  while( i < nsFontMetricsOS2::gGlobalFontsCount )
+  {
     PRUnichar* str = nsFontMetricsOS2::gGlobalFonts[i].name->ToNewUnicode();
     if (!str) {
-      for (i = count - 1; i >= 0; i--) {
+      for (i = i - 1; i >= 0; i--) {
         nsMemory::Free(array[i]);
       }
       nsMemory::Free(array);
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    nsAutoString low(str);
-    low.ToLowerCase();
-    nsString* type = (nsString*) PL_HashTableLookup(gFontTypes, &low);
-    if( type == NULL || type->CompareWithConversion( aGeneric ) == 0 )
-      array[count++] = str;
+    array[i] = str;
+
+    i = nsFontMetricsOS2::gGlobalFonts[i].nextFamily;
   }
 
-  //NS_QuickSort(array, nsFontMetricsOS2::gGlobalFontsCount, sizeof(PRUnichar*),
-  //  CompareFontNames, nsnull);
+  NS_QuickSort(array, nsFontMetricsOS2::gGlobalFontsCount, sizeof(PRUnichar*),
+    CompareFontNames, nsnull);
 
-  *aCount = count;
+  *aCount = nsFontMetricsOS2::gGlobalFontsCount;
   *aResult = array;
 
   return NS_OK;
@@ -1510,14 +1747,18 @@ nsFontEnumeratorOS2::HaveFontFor(const char* aLangGroup, PRBool* aResult)
   NS_ENSURE_ARG_POINTER(aLangGroup);
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = PR_FALSE;
+
   // XXX stub
-  return NS_OK;
+  NS_ASSERTION( 0, "HaveFontFor is not implemented" );
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFontEnumeratorOS2::UpdateFontList(PRBool *updateFontList)
 {
   *updateFontList = PR_FALSE; // always return false for now
+  NS_ASSERTION( 0, "UpdateFontList is not implemented" );
   return NS_OK;
 }
 
