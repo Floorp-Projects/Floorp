@@ -6,8 +6,8 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2002/05/01 01:48:13 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/05/10 21:19:42 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
@@ -50,7 +50,7 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.9 $ )[1];
+$VERSION = ( qw $Revision: 1.10 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
@@ -247,6 +247,11 @@ sub savetree_db {
 # looks like:
 # 		$DATABASE{$tree}{$time};
 
+# so really everything above the dotted line is an implementation
+# about how the database is stored on the disk, this part is an
+# implementation of the DATABASE datastructure.
+
+
 
 # remove all records from the database which are older then last_time.
 
@@ -287,6 +292,15 @@ sub event_times_vec {
   return @out;
 }
 
+# where can people attach notices to?
+# Really this is the names the columns produced by this DB
+
+# the default for columns is not to allow notices, unless they have
+# installed all the hooks they need and override this function.
+
+sub notice_association {
+    return ;
+}
 
 
 1;
