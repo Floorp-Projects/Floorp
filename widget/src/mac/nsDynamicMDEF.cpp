@@ -32,7 +32,6 @@
 
 #include <Resources.h>
 #include <MixedMode.h>
-#include <A4Stuff.h>
   
 extern nsWeakPtr    gMacMenubar;
 extern Handle       gSystemMDEFHandle;  
