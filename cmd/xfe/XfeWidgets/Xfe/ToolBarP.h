@@ -88,6 +88,7 @@ typedef struct _XfeToolBarPart
     Boolean				raised;					/* Raised ?				*/
 
 	/* Radio resources */
+    unsigned char		toggle_behavior;		/* Toggle behavior		*/
     Boolean				radio_behavior;			/* Radio behavior ?		*/
     Widget				active_button;			/* Active button ?		*/
 
@@ -97,8 +98,9 @@ typedef struct _XfeToolBarPart
     Modifiers			selection_modifiers;	/* Selection modifiers	*/
 
 	/* Indicator resources */
-    int					indicator_position;		/* Indicator Position	*/
 	unsigned char		indicator_location;		/* Indicator Location	*/
+    int					indicator_position;		/* Indicator Position	*/
+	Cardinal			indicator_threshold;	/* Indicator Threshold	*/
 	Boolean				dynamic_indicator;		/* Dynamic indicator ?	*/
 
 	/* Geometry resources */

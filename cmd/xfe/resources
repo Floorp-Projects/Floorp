@@ -5833,6 +5833,7 @@ Drag this to create a link to this page
 
 *personalToolbar.spacing:						1
 *personalToolbar.raiseBorderThickness:			2
+*personalToolbar.indicatorThreshold:			10
 
 *personalToolbar*XfeButton.marginBottom:		1
 *personalToolbar*XfeButton.marginLeft:			1

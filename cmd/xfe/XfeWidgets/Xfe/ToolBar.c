@@ -45,9 +45,11 @@
 #define MESSAGE6 "XmNindicatorPosition is less than 0."
 #define MESSAGE7 "XmNindicatorPosition is more than XmNnumChildren."
 #define MESSAGE8 "No valid edit text found in toolbar."
+#define MESSAGE9 "XmNindicatorThreshold bust be greater than 0."
 
-#define DEFAULT_MAX_CHILD_HEIGHT	0
-#define DEFAULT_MAX_CHILD_WIDTH		0
+#define DEFAULT_MAX_CHILD_HEIGHT		0
+#define DEFAULT_MAX_CHILD_WIDTH			0
+#define DEFAULT_INDICATOR_THRESHOLD		10
 
 #define INDICATOR_NAME				"Indicator"
 #define EDIT_TEXT_NAME				"EditText"
@@ -299,6 +301,15 @@ static XtResource resources[] =
 		(XtPointer) False
     },
     { 
+		XmNtoggleBehavior,
+		XmCToggleBehavior,
+		XmRToolBarToggleBehavior,
+		sizeof(unsigned char),
+		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . toggle_behavior),
+		XmRImmediate, 
+		(XtPointer) XmTOOL_BAR_TOGGLE_ZERO_OR_ONE
+    },
+    { 
 		XmNactiveButton,
 		XmCActiveButton,
 		XmRWidget,
@@ -368,6 +379,15 @@ static XtResource resources[] =
 
 	/* Indicator resources */
     { 
+		XmNindicatorLocation,
+		XmCIndicatorLocation,
+		XmRToolBarIndicatorLocation,
+		sizeof(unsigned char),
+		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . indicator_location),
+		XmRImmediate, 
+		(XtPointer) XmINDICATOR_LOCATION_BEGINNING
+    },
+    { 
 		XmNindicatorPosition,
 		XmCIndicatorPosition,
 		XmRInt,
@@ -377,13 +397,13 @@ static XtResource resources[] =
 		(XtPointer) XmINDICATOR_DONT_SHOW
     },
     { 
-		XmNindicatorLocation,
-		XmCIndicatorLocation,
-		XmRToolBarIndicatorLocation,
-		sizeof(unsigned char),
-		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . indicator_location),
+		XmNindicatorThreshold,
+		XmCIndicatorThreshold,
+		XmRCardinal,
+		sizeof(Cardinal),
+		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . indicator_threshold),
 		XmRImmediate, 
-		(XtPointer) XmINDICATOR_LOCATION_BEGINNING
+		(XtPointer) DEFAULT_INDICATOR_THRESHOLD
     },
     { 
 		XmNdynamicIndicator,
@@ -623,6 +643,14 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		_XfeWarning(nw,MESSAGE4);
 	}
 
+	/* indicator_threshold */
+	if (tp->indicator_threshold == 0)
+	{
+		tp->indicator_threshold = DEFAULT_INDICATOR_THRESHOLD;
+      
+		_XfeWarning(nw,MESSAGE9);
+	}
+
 	/* Add Button3 translations */
 	XfeOverrideTranslations(nw,_XfeToolBarExtraTranslations);
 
@@ -791,6 +819,18 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 						XmINDICATOR_LOCATION_BEGINNING);
 
 		layout_indicator = True;
+	}
+
+    /* indicator_threshold */
+    if (np->indicator_threshold != op->indicator_threshold)
+    {
+		/* indicator_threshold */
+		if (np->indicator_threshold == 0)
+		{
+			np->indicator_threshold = op->indicator_threshold;
+
+			_XfeWarning(nw,MESSAGE9);
+		}
 	}
     
 	/* Layout the indicator if needed */ 
@@ -1816,6 +1856,12 @@ ButtonSetActiveWidget(Widget	w,
 	Cardinal			i;
 	Widget				new_active_button = NULL;
 
+#ifdef DEBUG_ramiro
+    printf("ButtonSetActiveWidget(%s,%s)\n",
+           XtName(w),
+           _XfeIsAlive(button) ? XtName(button) : "NULL");
+#endif
+
 	for (i = 0; i < _XfemNumChildren(w); i++)
 	{
 		Widget child = _XfemChildren(w)[i];
@@ -2286,6 +2332,7 @@ XfeToolBarSetSelectedButton(Widget w,Widget button)
 /* extern */ unsigned char
 XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 {
+    XfeToolBarPart *	tp = _XfeToolBarPart(w);
 	unsigned char		result = XmINDICATOR_LOCATION_NONE;
 	int					start_pos;
 	int					end_pos;
@@ -2301,7 +2348,7 @@ XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 	{
 		if (XfeIsCascade(item))
 		{
-			start_pos = _XfeWidth(item) / 4;
+			start_pos = _XfeWidth(item) / tp->indicator_threshold;
 			end_pos = _XfeWidth(item) - start_pos;
 		}
 		else
@@ -2317,7 +2364,7 @@ XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 	{
 		if (XfeIsCascade(item))
 		{
-			start_pos = _XfeHeight(item) / 4;
+			start_pos = _XfeHeight(item) / tp->indicator_threshold;
 			end_pos = _XfeHeight(item) - start_pos;
 		}
 		else

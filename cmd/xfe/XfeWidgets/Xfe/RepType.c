@@ -263,6 +263,20 @@ RegisterToolBarSelectionPolicy(void)
 }
 /*----------------------------------------------------------------------*/
 static void
+RegisterToolBarToggleBehavior(void)
+{
+    static String names[] = 
+    { 
+		"tool_bar_toggle_one_or_more",
+		"tool_bar_toggle_only_one",
+		"tool_bar_toggle_zero_or_more",
+		"tool_bar_toggle_zero_or_one"
+    };
+	
+    XmRepTypeRegister(XmRToolBarToggleBehavior,names,NULL,XtNumber(names));
+}
+/*----------------------------------------------------------------------*/
+static void
 RegisterToolBarIndicatorLocation(void)
 {
     static String names[] = 
@@ -313,6 +327,7 @@ XfeRegisterRepresentationTypes(void)
 	RegisterRulesType();
 	RegisterToolBarIndicatorLocation();
 	RegisterToolBarSelectionPolicy();
+	RegisterToolBarToggleBehavior();
 	RegisterToolScrollArrowPlacement();
 
 /* 	XfeRegisterArrowType(); */
