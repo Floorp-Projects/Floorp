@@ -634,6 +634,11 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
         clazz = 0;
     }
   }
+ 
+  // see bug #189988
+  if (opts && opts->format_out == nsMimeOutput::nsMimeMessageDecrypt && (clazz != (MimeObjectClass *)&mimeEncryptedCMSClass)) {
+    clazz = (MimeObjectClass *)&mimeExternalObjectClass;
+  }
 
   if (!exact_match_p)
     NS_ASSERTION(clazz, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
