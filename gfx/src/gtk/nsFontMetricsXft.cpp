@@ -104,6 +104,7 @@ static const MozXftLangGroup MozXftLangGroups[] = {
     { "x-cyrillic",     0x0411, (const FcChar8 *)"ru" },
     { "x-baltic",       0x0104, (const FcChar8 *)"lv" },
     { "x-devanagari",   0x0905, (const FcChar8 *)"hi" },
+    { "x-tamil",        0x0B85, (const FcChar8 *)"ta" },
     { "x-unicode",      0x0000,                  0    },
     { "x-user-def",     0x0000,                  0    },
 };
