@@ -25,31 +25,32 @@
     
 */
 XPTC_InvokeByIndex:
-        save    %sp,-(64 + 16),%sp   ! room for the register window and
+        save    %sp,-(64 + 16),%sp  ! room for the register window and
                                     ! struct pointer, rounded up to 0 % 16
         mov     %i2,%o0             ! paramCount
-        mov     %i3,%o1             ! params
         call    invoke_count_words  ! returns the required stack size in %o0
-        nop 
+        mov     %i3,%o1             ! delay slot: params
+
         sll     %o0,2,%l0           ! number of bytes
         sub     %sp,%l0,%sp         ! create the additional stack space
-            
-        mov     %sp,%o0             ! pointer for copied args
-        add     %o0,72,%o0          ! step past the register window, the
-                                    ! struct result pointer and the 'this' slot
+
+        add     %sp,72,%o0          ! pointer for copied args, + register win
+                                    ! + result ptr + 'this' slot
+
         mov     %i2,%o1             ! paramCount
-        mov     %i3,%o2             ! params
         call    invoke_copy_to_stack
-        nop
+        mov     %i3,%o2             ! delay slot: params
+
 !
 !   calculate the target address from the vtable
+!   instructions reordered to lessen stalling.
 !
-        sll     %i1,3,%l0           ! index *= 8
-        add     %l0,12,%l0          ! += 12 (there's 1 extra entry in the vTable)
-				    ! and we need the fn ptr which is the second
-				    ! half of the 8 byte vTable entry
         ld      [%i0],%l1           ! *that --> address of vtable
-        ld      [%l0 + %l1],%l0     ! that->vtable[index * 8 + 12] --> target address
+        sll     %i1,3,%l0           ! index *= 8
+        add     %l0,12,%l0          ! += 12 (there's 1 extra entry in the vTable
+        ld      [%l0 + %l1],%l0     ! that->vtable[index * 8 + 12] -->
+                                    !                           target address
+
 !
 !   set 'that' as the 'this' pointer and then load the next arguments
 !   into the outgoing registers
@@ -59,12 +60,9 @@ XPTC_InvokeByIndex:
         ld      [%sp + 76],%o2
         ld      [%sp + 80],%o3
         ld      [%sp + 84],%o4
-        ld      [%sp + 88],%o5
         jmpl    %l0,%o7             ! call the routine
-        nop
-        mov     %o0,%i0             ! propogate return value
-        b .LL1
-        nop
-.LL1:
+        ld      [%sp + 88],%o5      ! delay slot: last argument
+
+        mov     %o0,%i0             ! propagate return value
         ret
         restore
