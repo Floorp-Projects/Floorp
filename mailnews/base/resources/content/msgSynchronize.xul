@@ -25,7 +25,6 @@ Contributors:
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgSynchronize.dtd" >
@@ -64,6 +63,6 @@ Contributors:
     </hbox>
 
     <separator/>
-    <hbox id="okCancelButtonsRight" flex="1"/>
+    <hbox id="okCancelButtonsRight"/>
 
 </window>

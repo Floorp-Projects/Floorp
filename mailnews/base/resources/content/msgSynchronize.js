@@ -118,7 +118,7 @@ function SortSynchronizePane(column, sortKey)
     var node = FindInWindow(window, column);
     if(!node) {
         dump('Couldnt find sort column\n');
-        return false;
+        return;
     }
 
     node.setAttribute("sort", sortKey);
