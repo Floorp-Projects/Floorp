@@ -186,13 +186,8 @@ nsHTMLHtmlElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus)
 {
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-  if (nsnull != mInner.mDocument) {
-    return mInner.mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                            aFlags, aEventStatus);
-  }
-  *aEventStatus = nsEventStatus_eIgnore;
-  return NS_OK;
+  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                               aFlags, aEventStatus);
 }
 
 

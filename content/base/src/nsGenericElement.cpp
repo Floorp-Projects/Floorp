@@ -1011,10 +1011,21 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   //Bubbling stage
-  if ((NS_EVENT_FLAG_CAPTURE != aFlags) && 
-      (mParent != nsnull) && (mDocument != nsnull)) {
-    ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                  NS_EVENT_FLAG_BUBBLE, aEventStatus);
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && mDocument) {
+    if (mParent) {
+      /*
+       * If there's a parent we pass the event to the parent...
+       */
+      ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                    NS_EVENT_FLAG_BUBBLE, aEventStatus);
+    } else {
+      /*
+       * If there's no parent but there is a document (i.e. this is the
+       * root node) we pass the event to the document...
+       */
+      ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                      NS_EVENT_FLAG_BUBBLE, aEventStatus);
+    }
   }
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
