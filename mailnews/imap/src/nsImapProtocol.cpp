@@ -20,6 +20,7 @@
 
 #include "nsImapProtocol.h"
 #include "nscore.h"
+#include "nsImapProxyEvent.h"
 
 // netlib required files
 #include "nsIStreamListener.h"
@@ -92,6 +93,7 @@ nsImapProtocol::nsImapProtocol()
     m_thread = nsnull;
     m_monitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
+    m_consumer = nsnull;
 }
 
 nsresult nsImapProtocol::Initialize(PLEventQueue * aSinkEventQueue)
@@ -247,10 +249,8 @@ nsImapProtocol::GetThreadEventQueue(PLEventQueue **aEventQueue)
     // *** should subclassing PLEventQueue and ref count it ***
     // *** need to find a way to prevent dangling pointer ***
     // *** a callback mechanism or a semaphor control thingy ***
-    PR_CEnterMonitor(this);
-    *aEventQueue = m_eventQueue;
-    PR_CNotify(this);
-    PR_CExitMonitor(this);
+    if (aEventQueue)
+        *aEventQueue = m_eventQueue;
     return NS_OK;
 }
 
@@ -280,7 +280,6 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 
 	// we would read a line from the stream and then parse it.....I think this function can
 	// effectively replace ReadLineFromSocket...
-
 	return NS_OK;
 }
 
@@ -423,6 +422,8 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 				NS_ASSERTION(0, "I don't think we should get here for imap urls");
 			}
 		} // if we have an imap url and a transport
+        if (aConsumer)
+            m_consumer = aConsumer;
 	} // if we received a url!
 
 	return rv;

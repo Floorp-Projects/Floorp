@@ -26,15 +26,18 @@ REQUIRES=xpcom js nspr netlib
 
 CPPSRCS=    nsImapUrl.cpp								\
 			nsImapProtocol.cpp							\
+			nsImapProxyEvent.cpp								\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapProtocol.obj				\
+			.\$(OBJDIR)\nsImapProxyEvent.obj				\
 			$(NULL)
 
 
 EXPORTS=	nsImapUrl.h									\
 			nsImapProtocol.h							\
+			nsImapProxyEvent.h							\
             $(NULL)
 
 LINCS=													\
