@@ -63,6 +63,7 @@ private:
   Atom           mMozCommandAtom;
   Atom           mMozResponseAtom;
   Atom           mMozWMStateAtom;
+  Atom           mMozUserAtom;
 
   nsCString      mLockData;
 

@@ -36,6 +36,7 @@
 #include "plstr.h"
 #include "prsystem.h"
 #include "prlog.h"
+#include "prenv.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <strings.h>
@@ -51,6 +52,7 @@
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
 #define MOZILLA_COMMAND_PROP   "_MOZILLA_COMMAND"
 #define MOZILLA_RESPONSE_PROP  "_MOZILLA_RESPONSE"
+#define MOZILLA_USER_PROP      "_MOZILLA_USER"
 
 static PRLogModuleInfo *sRemoteLm = NULL;
 
@@ -64,6 +66,7 @@ XRemoteClient::XRemoteClient()
   mMozCommandAtom = 0;
   mMozResponseAtom = 0;
   mMozWMStateAtom = 0;
+  mMozUserAtom = 0;
   if (!sRemoteLm)
     sRemoteLm = PR_NewLogModule("XRemoteClient");
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::XRemoteClient"));
@@ -96,6 +99,7 @@ XRemoteClient::Init (void)
   mMozCommandAtom  = XInternAtom(mDisplay, MOZILLA_COMMAND_PROP, False);
   mMozResponseAtom = XInternAtom(mDisplay, MOZILLA_RESPONSE_PROP, False);
   mMozWMStateAtom  = XInternAtom(mDisplay, "WM_STATE", False);
+  mMozUserAtom      = XInternAtom(mDisplay, MOZILLA_USER_PROP, False);
 
   mInitialized = PR_TRUE;
 
@@ -188,7 +192,7 @@ XRemoteClient::FindWindow(void)
     Atom type;
     int format;
     unsigned long nitems, bytesafter;
-    unsigned char *version = 0;
+    unsigned char *data_return = 0;
     Window w;
     w = kids[i];
     // find the inner window with WM_STATE on it
@@ -198,13 +202,48 @@ XRemoteClient::FindWindow(void)
 				    0, (65536 / sizeof (long)),
 				    False, XA_STRING,
 				    &type, &format, &nitems, &bytesafter,
-				    &version);
-    if (!version)
+				    &data_return);
+
+    if (!data_return)
       continue;
-    XFree(version);
+
+    XFree(data_return);
+    data_return = 0;
+
     if (status == Success && type != None) {
-      result = w;
-      break;
+      // Check to see if it has the user atom on that window.  If there
+      // is then we need to make sure that it matches what we have.
+      char *logname;
+      logname = PR_GetEnv("LOGNAME");
+
+      if (logname) {
+	status = XGetWindowProperty(mDisplay, w, mMozUserAtom,
+				    0, (65536 / sizeof(long)),
+				    False, XA_STRING,
+				    &type, &format, &nitems, &bytesafter,
+				    &data_return);
+
+	// if there's a username compare it with what we have
+	if (data_return) {
+
+	  // if the IDs are equal then this is the window we want.  if
+	  // they aren't fall through to the next loop iteration.
+	  if (!strcmp(logname, (const char *)data_return)) {
+	    XFree(data_return);
+	    result = w;
+	    break;
+	  }
+
+	  XFree(data_return);
+	}
+      }
+
+      // ok, this is the one we want since there's no username attribute on
+      // it.
+      else {
+	result = w;
+	break;
+      }
     }
   }
 

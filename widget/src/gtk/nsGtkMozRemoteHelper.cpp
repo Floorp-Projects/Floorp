@@ -25,18 +25,21 @@
 #include <nsIXRemoteService.h>
 #include <nsCOMPtr.h>
 #include <nsIServiceManager.h>
+#include <prprf.h>
+#include <prenv.h>
 #include "nsGtkMozRemoteHelper.h"
-
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
 #define MOZILLA_COMMAND_PROP   "_MOZILLA_COMMAND"
 #define MOZILLA_RESPONSE_PROP  "_MOZILLA_RESPONSE"
+#define MOZILLA_USER_PROP      "_MOZILLA_USER"
 
 Atom nsGtkMozRemoteHelper::sMozVersionAtom  = 0;
 Atom nsGtkMozRemoteHelper::sMozLockAtom     = 0;
 Atom nsGtkMozRemoteHelper::sMozCommandAtom  = 0;
 Atom nsGtkMozRemoteHelper::sMozResponseAtom = 0;
+Atom nsGtkMozRemoteHelper::sMozUserAtom     = 0;
 
 // XXX get this dynamically
 static char *sRemoteVersion          = "5.0";
@@ -49,8 +52,20 @@ nsGtkMozRemoteHelper::SetupVersion(GdkWindow *aWindow)
   EnsureAtoms();
   window = GDK_WINDOW_XWINDOW(aWindow);
 
+  // set our version
   XChangeProperty(GDK_DISPLAY(), window, sMozVersionAtom, XA_STRING,
 		  8, PropModeReplace, data, strlen(sRemoteVersion));
+
+  // get our username
+  char *logname;
+  logname = PR_GetEnv("LOGNAME");
+  if (logname) {
+    data = (unsigned char *)logname;
+    
+    // set the property on the window if it's available
+    XChangeProperty(GDK_DISPLAY(), window, sMozUserAtom, XA_STRING,
+		    8, PropModeReplace, data, strlen(logname));
+  }
 
 }
 
@@ -157,7 +172,10 @@ nsGtkMozRemoteHelper::EnsureAtoms(void)
   if (!sMozCommandAtom)
     sMozCommandAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_COMMAND_PROP, False);
   if (!sMozResponseAtom)
-    sMozResponseAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_RESPONSE_PROP, False);
+    sMozResponseAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_RESPONSE_PROP,
+				   False);
+  if (!sMozUserAtom)
+    sMozUserAtom = XInternAtom(GDK_DISPLAY(), MOZILLA_USER_PROP, False);
 
 }
 
