@@ -23,7 +23,6 @@ classic.jar:
     skin/classic/global/buttonBindings.xml
     skin/classic/global/classicBindings.xml
     skin/classic/global/menulistBindings.xml
-    skin/classic/global/treeBindings.xml
     skin/classic/global/tasksOverlay.css
     skin/classic/global/dialogOverlay.css
     skin/classic/global/scroll-thumb-horiz.gif

@@ -7,26 +7,27 @@
  **/
 tree 
   {
-    background-color      : window;
     border-spacing        : 0px;
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-right          : 1px solid threedhighlight;
-    border-bottom         : 1px solid threedhighlight;
+    border-top            : 1px solid ThreeDShadow;
+    border-right          : 1px solid ThreeDHighlight;
+    border-bottom         : 1px solid ThreeDHighlight;
+    border-left           : 1px solid ThreeDShadow;
+    background-color      : -moz-field;
+    color                 : WindowText;    
   }
 
 .tree-container-treerows[dragover="true"][dragdroptree="true"]
   {
-    border                : 2px solid highlight;
+    border                : 2px solid Highlight;
     padding               : 0px;
   }  
   
 .tree-container-treerows
   {
-    border-left           : 1px solid threeddarkshadow;
-    border-top            : 1px solid threeddarkshadow;
-    border-right          : 1px solid threedface;
-    border-bottom         : 1px solid threedface;
+    border-top            : 1px solid ThreeDDarkShadow;
+    border-right          : 1px solid ThreeDLightShadow;
+    border-bottom         : 1px solid ThreeDLightShadow;
+    border-left           : 1px solid ThreeDDarkShadow;
   }  
 
 .tree-container-treerows[dragdroptree="true"]
@@ -41,127 +42,138 @@ tree.inset
 
 tree > treechildren treeitem[selected="true"] > treerow
   {
-	  color: buttontext;
-  	background-color: threedface;
+	  color: ButtonText;
+  	background-color: ThreeDFace;
   }
 
-tree:focus > treechildren treeitem[selected="true"] > treerow
+treerow 
   {
-	  color: highlighttext;
-  	background-color: highlight;
+    border        : 1px solid transparent;
   }
-
-treerow {
-  border: 1px solid transparent;
-}
-
-treehead > treerow {
-  border: none;
-}
   
-tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
+treehead > treeitem > treerow,
+treehead > treerow 
   {
-    border: 1px dotted CaptionText;
+    border              : none;
   }
-
-treeitem[dd-dropon="true"] > treerow { 
-	color: highlighttext;
-	background-color: highlight;
-}
-
+  
 treecell 
   { 
+    padding               : 0px 0px 1px 2px;
     white-space           : nowrap;
     vertical-align        : middle;
-    padding               : 0px 0px 1px 2px;
   } 
 
-.treecell-header,
-.treecell-inset-header 
-  { 
-    -moz-binding          : url("chrome://global/skin/treeBindings.xml#treecell-header");
-    border-left           : 1px solid threedhighlight !important;
-    border-top            : 1px solid threedhighlight !important;
-    border-right          : 1px solid threeddarkshadow !important;
-    border-bottom         : 1px solid threeddarkshadow !important;
-    background-color      : threedface;
-    padding               : 0px;
+tree:focus > treechildren treeitem[selected="true"] > treerow,
+treeitem[dd-dropon="true"] > treerow
+  {
+  	background-color    : Highlight;
+	  color               : HighlightText;
   }
 
-/* slimline sidebar treeheaders */  
-.treecell-header.treecell-header-sidebarpanel,
-.treecell-inset-header.treecell-header-sidebarpanel
+tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
   {
-    border-left           : none !important;
-    border-top            : 1px solid threedhighlight !important;
-    border-bottom         : 1px solid threedshadow !important;
-    border-right          : none !important;
-    padding               : 0px 0px 0px 3px;
+    /* this is not the right color, what we really need is a color complementary
+       to Highlight, but someone needs to implement that first */
+    border              : 1px dotted #F5DB95;
   }
 
-.treecell-header-sidebarpanel > .treecell-header-box
-  {
-    border                : none !important;
-    border-right          : 1px solid threedface !important;
-  }
- 
 .treecell-header-image 
   {
-    -moz-binding          : url("chrome://global/skin/treeBindings.xml#treecell-header-image");
-    padding               : 0px;
+    list-style-image      : inherit;
   }
   
-.tree-header-image
+.treecell-header,
+.treecell-inset-header,
+.treecell-header-image
+  { 
+    border-left           : 1px solid ThreeDHighlight !important;
+    border-top            : 1px solid ThreeDHighlight !important;
+    border-right          : 1px solid ThreeDDarkShadow !important;
+    border-bottom         : 1px solid ThreeDDarkShadow !important;
+    padding               : 0px;
+    background-color      : ThreeDFace;
+    color                 : ButtonText;
+  }
+
+.treecell-header-box,
+.treecell-header-image-box 
   {
-    list-style-image      : inherit;
+    border-left           : 1px solid ThreeDLightShadow;
+    border-top            : 1px solid ThreeDLightShadow;
+    border-right          : 1px solid ThreeDShadow;
+    border-bottom         : 1px solid ThreeDShadow;
   }  
+
+.treecell-header-box
+  {
+    padding               : 0px 4px 0px 4px;
+  }
+
+.treecell-header-image-box 
+  {
+    padding               : 0px 1px 0px 1px;
+  }
+  
+.treecell-header:hover:active,
+.treecell-header-image:hover:active,
+.treecell-inset-header:hover:active 
+  {
+    border                : 1px solid ThreeDShadow !important;
+  }
+
+.treecell-header:hover:active > .treecell-header-box,
+.treecell-inset-header:hover:active > .treecell-header-box,
+.treecell-header-image:hover:active > .treecell-header-image-box
+  {
+    border-top            : 1px solid transparent;
+    border-right          : none;
+    border-bottom         : none;
+    border-left           : 1px solid transparent;
+  }
+  
+.treecell-header:hover:active > .treecell-header-box,
+.treecell-inset-header:hover:active > .treecell-header-box
+  {
+    padding               : 1px 4px 0px 5px;
+  }
+  
+.treecell-header-image:hover:active > .treecell-header-image-box
+  {
+    padding               : 1px 1px 0px 2px;
+  }
 
 .treecell-image 
   {
     padding               : 0px;
   }
-
-.treecell-header-box
+    
+/* slimline sidebar treeheaders */  
+.treecell-header.treecell-header-sidebarpanel,
+.treecell-inset-header.treecell-header-sidebarpanel
   {
-    border-left           : 1px solid threedface;
-    border-top            : 1px solid threedface;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-    padding               : 0px 5px 0px 4px;
-  }  
-  
-.treecell-header-image-box
-  {
-    border-left           : 1px solid threedface;
-    border-top            : 1px solid threedface;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-    padding               : 0px 0px 0px 0px;
-  }  
-  
-.sortable.treecell-header:hover:active,
-.sortable.treecell-inset-header:hover:active
-  {
-    border                : 1px solid threedshadow;
+    border-left           : none !important;
+    border-top            : 1px solid ThreeDHighlight !important;
+    border-bottom         : 1px solid ThreeDShadow !important;
+    border-right          : none !important;
+    padding               : 0px 1px 1px 3px;
   }
 
-.sortable.treecell-header:hover:active > .treecell-header-box,
-.sortable.treecell-inset-header:hover:active > .treecell-header-box
+.treecell-header-sidebarpanel > .treecell-header-box
   {
-    border                : 1px solid threedface;
-    padding               : 2px 4px 0px 5px;
+    border                : none !important;
+    border-right          : 1px solid ThreeDFace !important;
   }
-  
-  
+ 
 /** class="propertylist" ******************************************
  *  class for cells in grid-formatted property lists.
  **/
-treecell.propertylist 
-  {
-    padding-left          : 5px;
-    border-right          : 1px solid threedface;
-    border-bottom         : 1px solid threedface;
-  }
+ 
+treecell.propertylist {
+  border-right          : 1px solid ThreeDFace;
+  border-bottom         : 1px solid ThreeDFace;
+  padding-left          : 5px;
+}
 
 .tree-cell-primary-icon {
   list-style-image: inherit;
@@ -174,9 +186,9 @@ treecell.propertylist
 }
 
 .tree-cell-twisty {
- list-style-image: url("chrome://global/skin/twisty-closed.gif");
- -moz-user-focus:ignore;
- padding-right: 2px;
+  list-style-image: url("chrome://global/skin/twisty-closed.gif");
+  -moz-user-focus:ignore;
+  padding-right: 2px;
 }
 
 .treecell-indent > .tree-cell-primary-icon {
@@ -191,16 +203,8 @@ treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
   list-style-image: url("chrome://global/skin/twisty-closed-selected.gif");
 }
 
-.tree-cell-twisty:hover {
- text-decoration: none;
-}
-
-.tree-cell-twisty:active {
- text-decoration: none;
-}
-
 .tree-cell-twisty[disabled="true"] {
- list-style-image: none;
+  list-style-image: none;
 }
 
 treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
@@ -211,18 +215,21 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
   list-style-image: url("chrome://global/skin/twisty-open-selected.gif");
 }
 
-
 /* tree header with sort direction indicators */
+
+.tree-header-sortdirection {
+  list-style-image: none;
+}
+
 .sortDirectionIndicator[sortDirection="ascending"]  > .treecell-header-box > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortAscending.gif");
-  margin-right: 3px;
 }
 
 .sortDirectionIndicator[sortDirection="descending"] > .treecell-header-box > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortDescending.gif");
-  margin-right: 3px;
 }
 
+/* column selection popup menu icon */
 
 .treecell-popup-icon
   {

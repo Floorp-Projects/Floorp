@@ -405,109 +405,59 @@ searchterm
     border-left         : none;
   }
   
-#threadpane-splitter
-  {
-    border-left         : none;
-    border-top          : none;
-  }
-
-#messagepanebox
-  {
-    border-top         : 1px solid threedshadow;
-    border-left         : 1px solid threedshadow;
-    border-right        : 1px solid threedface;
-    border-bottom       : 1px solid threedface;
-  }
-
-#msgHeaderView 
-  {
-    border-top: none;
-  }
-
-#msgHeaderView > toolbar > toolbargrippy
-  {
-    border-left          : none;
-  }
-
-  
-#messagepane 
-  {
-    border-left          : 1px solid threeddarkshadow;
-    border-top           : 1px solid threeddarkshadow;
-  }
-
-#status-bar {
-  border-left            : 1px solid threedshadow;
-}
-  
-  
 /** 
  *Focus rings on 3 pane view
  */
 
-#folderTree > treehead,
-#folderTree > treechildren,
-#threadTree[focusring="false"] > treehead,
-#threadTree[focusring="false"] > treechildren
+#threadpane-splitter
 {
-  border-left: 1px solid transparent;
-  border-right: 1px solid transparent;
+  border-left         : none;
+  border-top          : none;
 }
 
-#folderTree > treehead,
-#threadTree[focusring="false"] > treehead
+#threadTree  
 {
-  border-top: 1px solid transparent;
+  border-top            : none;
 }
 
-#folderTree > treechildren,
-#threadTree[focusring="false"] > treechildren
+#folderTree> treechildren,
+#threadTree > treechildren
 {
-  border-bottom: 1px solid transparent;
-}
-
-#folderTree:focus > treehead,
-#folderTree:focus > treechildren,
-#threadTree[focusring="true"] > treehead,
-#threadTree[focusring="true"] > treechildren
-{
-  border-left: 1px solid black;
-  border-right: 1px solid black;
-}
-
-#folderTree:focus > treehead,
-#threadTree[focusring="true"] > treehead
-{
-  border-top: 1px solid black;
+  border                : 1px solid transparent;
 }
 
 #folderTree:focus > treechildren,
 #threadTree[focusring="true"] > treechildren
 {
-  border-bottom: 1px solid black;
+  border                : 1px solid black;
 }
 
-#folderTree > treehead > treerow > .treecell-header:first-child,
-#threadTree > treehead > treerow > .treecell-header:first-child
- {
-  border-left: none !important;
-}
-
-#folderTree > treehead > treerow > .treecell-header,
-#threadTree > treehead > treerow > .treecell-header
- {
-  border-top: none !important;
-}
-
-#folderTree > treehead > treerow > .treecell-header > .treecell-header-box,
-#threadTree > treehead > treerow > .treecell-header > .treecell-header-box 
+#messagepane 
 {
-  border-top: none  !important;
+  border-left           : 1px solid ThreeDDarkShadow;
+  border-top            : 1px solid ThreeDDarkShadow;
 }
 
 #messagepanebox[focusring="true"] 
 {
-  border: 1px solid black;
+  border                : 1px solid black;
+}
+#messagepanebox
+  {
+    border-top          : 1px solid ThreeDShadow;
+    border-left         : 1px solid ThreeDShadow;
+    border-right        : 1px solid ThreeDFace;
+    border-bottom       : 1px solid ThreeDFace;
+  }
+
+#msgHeaderView 
+{
+  border-top           : none;
+}
+
+#msgHeaderView > toolbar > toolbargrippy
+{
+  border-left          : none;
 }
 
 .awIdentityLabel
@@ -519,4 +469,9 @@ searchterm
 #accountCentralBox
 {
   background-color:#FFFFFF;
+}
+
+#status-bar 
+{
+  border-left          : 1px solid ThreeDShadow;
 }

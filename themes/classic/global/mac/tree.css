@@ -50,7 +50,6 @@ treecell {
 } 
 
 .treecell-header, .treecell-inset-header { 
-  -moz-binding: url("chrome://global/skin/treeBindings.xml#treecell-header");
   background-color: #CCCCCC; 
   border-left: 1px solid #666666 !important;
   border-top: 1px solid #666666 !important;
@@ -101,7 +100,6 @@ treecell {
 
 .treecell-header-image 
   {
-    -moz-binding          : url("chrome://global/skin/treeBindings.xml#treecell-header-image");
     padding               : 0px;
   }
 

@@ -414,7 +414,6 @@ iframe {
     list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
 
-
 menu.push {
   border: 1px outset white;
   padding: 2px;
@@ -496,7 +495,6 @@ box#messagepanebox
    min-height: 10px;
    height: 0px;
 }
-
 
 /**
  * this belongs in the mail filter window
@@ -604,21 +602,22 @@ searchterm {
  
 #folderTree
 {
-  border-left: 1px solid #63717B;
   border-bottom: 1px solid #C6D3D6;
+  border-left: 1px solid #63717B;
 }
 
 #folderTree > .tree-container-treerows
 {
-  border-left: 1px solid #000000;
   border-bottom: 1px solid #7B969C;
+  border-left: 1px solid #000000;
 }
 
 #threadTree
 {
-  border-left: 1px solid #63717B;
+  border-top: 1px solid #63717B;
   border-right: none;
   border-bottom: 1px solid #C6D3D6;
+  border-left: 1px solid #63717B;
 }
 
 #threadTree > .tree-container-treerows
@@ -627,89 +626,43 @@ searchterm {
   border-bottom: 1px solid #7B969C;
 }
 
-#folderTree > treehead,
-#threadTree[focusring="false"] > treehead
-{
-  border-left: 1px solid #EFEFEF;
-  border-top: 1px solid transparent;
-}
-
-#folderTree > treehead
-{
-  border-right: 1px solid transparent;
-}
-
-#threadTree[focusring="false"] > treehead
-{
-  border-top: 1px solid #63717B;
-}
-
 #folderTree > treechildren,
-#threadTree[focusring="false"] > treechildren
+#threadTree > treechildren
 {
-  border-left: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-}
-
-#folderTree > treechildren
-{
-  border-right: 1px solid transparent;
-}
-
-#folderTree:focus > treehead,
-#threadTree[focusring="true"]  > treehead
-{
-  border-left: 1px solid black;
-  border-top: 1px solid black;
-}
-
-#folderTree:focus > treehead
-{
-  border-right: 1px solid black;
+  border: 1px solid transparent;
 }
 
 #folderTree:focus > treechildren,
-#threadTree[focusring="true"]  > treechildren
+#threadTree[focusring="true"] > treechildren
 {
-  border-left: 1px solid black;
-  border-bottom: 1px solid black;
-}
-
-#folderTree:focus > treechildren
-{
-  border-right: 1px solid black;
-}
-
-#threadTree > treehead > treerow > .treecell-header:first-child
-{
-  border-left: none;
+  border: 1px solid black;
 }
 
 #messagepanebox
 {
-  border-left: 1px solid #63717B;
   border-top: 1px solid #63717B;
+  border-left: 1px solid #63717B;
   border-bottom: 1px solid #000000;
 }
 
 #msgHeaderView {
-  border-left: 1px solid #000000;
   border-top: 1px solid #000000;
   border-right: 1px solid #7B969C;
+  border-left: 1px solid #000000;
 }
 
 #messagepane
 {
-  border-left: 1px solid #000000;
   border-top: 1px solid #000000;
   border-bottom: none;
+  border-left: 1px solid #000000;
 }
 
 #messagepanebox[focusring="true"]
 {
-  border-left: 1px solid #000000;
   border-top: 1px solid #000000;
   border-bottom: 1px solid #000000;
+  border-left: 1px solid #000000;
 }
 
 .awIdentityLabel

@@ -102,19 +102,19 @@ treeitem[open="true"] > treerow > .threadcol-threadWithUnread{
   list-style-image: url("chrome://messenger/skin/thread-new-open.gif");
 }
 
-treecell.threadColumnHeader[currentView="threaded"] > .tree-header-image {
+treecell.threadColumnHeader[currentView="threaded"] {
   list-style-image: url("chrome://messenger/skin/threadcol.gif");
 }
 
-treecell.threadColumnHeader[currentView="unthreaded"] > .tree-header-image {
+treecell.threadColumnHeader[currentView="unthreaded"] {
   list-style-image: url("chrome://messenger/skin/unthreadcol.gif");
 }
 
-treecell.readColumnHeader > .tree-header-image {
+treecell.readColumnHeader {
   list-style-image: url("chrome://messenger/skin/unreadmail.gif");
 }
 
-treecell.flagColumnHeader > .tree-header-image {
+treecell.flagColumnHeader {
   list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
 }
 

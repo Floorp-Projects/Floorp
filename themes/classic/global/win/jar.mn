@@ -25,7 +25,6 @@ classic.jar:
     skin/classic/global/classicBindings.xml
     skin/classic/global/menulistBindings.xml
     skin/classic/global/tabBindings.xml
-    skin/classic/global/treeBindings.xml
     skin/classic/global/scrollbar-slider-bg.gif
     skin/classic/global/error-icon.gif
     skin/classic/global/message-icon.gif

@@ -303,8 +303,3 @@ treeitem.ae-selection[selected="true"] > treerow {
   width: 100%;
 }
 
-
-/* Why is default padding so strict! */
-.treecell-header {
-  padding : 1px 1px 1px 4px;
-}
