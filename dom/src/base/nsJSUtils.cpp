@@ -303,6 +303,9 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
           return PR_FALSE;
         }
       }
+      else {
+        return nsGenericResolve(aContext, aObj, aId);
+      }
     }
     else {
       return PR_FALSE;
