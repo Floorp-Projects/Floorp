@@ -113,11 +113,17 @@ pull_seamonkey:
 # nmake has to be hardcoded, or we have to depend on mozilla/config
 # being pulled already to figure out what $(NMAKE) should be.
 
-clobber_all:
+clobber_all: clobber_nspr clobber_seamonkey
+
+build_all: build_nspr build_seamonkey
+
+clobber_nspr:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	nmake -f makefile.win clobber_all
+
+clobber_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
-!if exist(dist)
-	rd /s /q dist
-!endif
+	-rd /s /q dist
 	set DIST_DIRS=1
 	set LAYOUT_DIRS=1
 	set CLIENT_DIRS=1
@@ -130,10 +136,19 @@ depend:
 	set CLIENT_DIRS=1
 	nmake -f makefile.win depend 
 
-build_all:
-	@cd $(MOZ_SRC)\mozilla\.
+build_nspr:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	nmake -f makefile.win export
+
+build_seamonkey:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	set DIST_DIRS=1
 	set LAYOUT_DIRS=1
+	set CLIENT_DIRS=1
+	nmake -f makefile.win all
+
+build_client:
+	@cd $(MOZ_SRC)\mozilla\.
 	set CLIENT_DIRS=1
 	nmake -f makefile.win all
 
@@ -149,13 +164,16 @@ build_dist:
 
 clobber_dist:
 	@cd $(MOZ_SRC)\mozilla\.
-	rd /s /q dist
 	set DIST_DIRS=1
+	nmake -f makefile.win clobber_all
+
+clobber_client:
+	@cd $(MOZ_SRC)\mozilla\.
+	set CLIENT_DIRS=1
 	nmake -f makefile.win clobber_all
 
 clobber_layout:
 	@cd $(MOZ_SRC)\mozilla\.
-	rd /s /q dist
 	set LAYOUT_DIRS=1
 	nmake -f makefile.win clobber_all
 

@@ -42,7 +42,6 @@ DIRS = \
 !if defined(DIST_DIRS)
   config			\
   dbm				\
-  nsprpub			\
   include			\
   jpeg				\
   modules\libreg		\
@@ -96,6 +95,7 @@ DIRS = \
 
 
 !ifdef NECKO
+all::
 export::
         @echo NECKO is enabled
 !endif
@@ -108,7 +108,14 @@ export::
 include <$(DEPTH)\config\rules.mak>
 
 
+#//------------------------------------------------------------------------
+#//
+#// MOZILLA_OFFICIAL junk: rebase and splitsym for binary release
+#//
+#//------------------------------------------------------------------------
 #// should make sure we have rebase, and die if not
+
+!if defined(MOZILLA_OFFICIAL)
 
 !if [for %i in (. %PATH%) do $(QUIET)if exist %i\$(REBASE) echo %i\$(REBASE) > rebase.yes]
 !endif
@@ -116,6 +123,7 @@ include <$(DEPTH)\config\rules.mak>
 !if !exist(rebase.yes)  
 REBASE=
 !if [del rebase.yes]                                                           
+!endif
 !endif
 !endif
 
