@@ -99,6 +99,7 @@ CPPSRCS += nsEditorParserObserver.cpp     \
            nsHTMLEditorStyle.cpp          \
            nsHTMLEditRules.cpp            \
            nsInterfaceState.cpp           \
+           nsHTMLURIRefObject.cpp         \
            nsTableEditor.cpp              \
            nsWSRunObject.cpp              \
            TextEditorTest.cpp             \

@@ -137,6 +137,7 @@ CPPSRCS = $(CPPSRCS)                      \
            nsHTMLEditorStyle.cpp          \
            nsHTMLEditRules.cpp            \
            nsInterfaceState.cpp           \
+           nsHTMLURIRefObject.cpp         \
            nsTableEditor.cpp              \
            nsWSRunObject.cpp              \
            TextEditorTest.cpp             \
@@ -155,6 +156,7 @@ CPP_OBJS = $(CPP_OBJS)                                \
            .\$(OBJDIR)\nsHTMLEditorStyle.obj          \
            .\$(OBJDIR)\nsHTMLEditRules.obj            \
            .\$(OBJDIR)\nsInterfaceState.obj           \
+           .\$(OBJDIR)\nsHTMLURIRefObject.obj         \
            .\$(OBJDIR)\nsTableEditor.obj              \
            .\$(OBJDIR)\nsWSRunObject.obj              \
            .\$(OBJDIR)\TextEditorTest.obj             \
