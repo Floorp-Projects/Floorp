@@ -247,6 +247,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
     if (moz5)
     {
         localFile->InitWithPath(moz5);
+        localFile->Normalize();
         *aFile = localFile;
         return NS_OK;
     }
