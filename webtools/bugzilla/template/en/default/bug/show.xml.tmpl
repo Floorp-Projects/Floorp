@@ -38,29 +38,37 @@
   [% ELSE %]
     <bug>
       [% FOREACH field = bug.fields %]
-        [%+ PROCESS bug_field %]
+        [% IF displayfields.$field %]
+          [%+ PROCESS bug_field %]
+        [% END %]
       [% END %]
 
       [%# Now handle 'special' fields #%]
-      [% FOREACH g = bug.groups %]
-        [% NEXT UNLESS g.ison %]
-        <group>[% g.name FILTER xml %]</group>
+      [% IF displayfields.group %]
+        [% FOREACH g = bug.groups %]
+          [% NEXT UNLESS g.ison %]
+          <group>[% g.name FILTER xml %]</group>
+        [% END %]
       [% END %]
 
-      [% FOREACH c = bug.longdescs %]
-        <long_desc>
-          <who>[% c.email FILTER xml %]</who>
-          <bug_when>[% c.time FILTER time FILTER xml %]</bug_when>
-          <thetext>[% c.body FILTER xml %]</thetext>
-        </long_desc>
+      [% IF displayfields.long_desc %]
+        [% FOREACH c = bug.longdescs %]
+          <long_desc>
+            <who>[% c.email FILTER xml %]</who>
+            <bug_when>[% c.time FILTER time FILTER xml %]</bug_when>
+            <thetext>[% c.body FILTER xml %]</thetext>
+          </long_desc>
+        [% END %]
       [% END %]
-
-      [% FOREACH a = bug.attachments %]
-        <attachment>
-          <attachid>[% a.attachid %]</attachid>
-          <date>[% a.date FILTER time FILTER xml %]</date>
-          <desc>[% a.description FILTER xml %]</desc>
-        </attachment>
+      
+      [% IF displayfields.attachment %]
+        [% FOREACH a = bug.attachments %]
+          <attachment>
+            <attachid>[% a.attachid %]</attachid>
+            <date>[% a.date FILTER time FILTER xml %]</date>
+            <desc>[% a.description FILTER xml %]</desc>
+          </attachment>
+        [% END %]
       [% END %]
     </bug>
   [% END %]

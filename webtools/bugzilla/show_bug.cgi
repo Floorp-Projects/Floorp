@@ -76,9 +76,30 @@ my @bug_list;
 if ($::COOKIE{"BUGLIST"}) {
     @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
 }
+
 $vars->{'bug_list'} = \@bug_list;
+
+# Work out which fields we are displaying (currently XML only.)
+# If no explicit list is defined, we show all fields. We then exclude any
+# on the exclusion list. This is so you can say e.g. "Everything except 
+# attachments" without listing almost all the fields.
+my @fieldlist = (Bug::fields(), 'group', 'long_desc', 'attachment');
+my %displayfields;
+
+if ($cgi->param("field")) {
+    @fieldlist = $cgi->param("field");
+}
+
+foreach (@fieldlist) {
+    $displayfields{$_} = 1;
+}
+
+foreach ($cgi->param("excludefield")) {
+    $displayfields{$_} = undef;    
+}
+
+$vars->{'displayfields'} = \%displayfields;
 
 print "Content-type: $format->{'ctype'}\n\n";
 $template->process("$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());
-
