@@ -30,9 +30,9 @@
     <treecol/>
     <treehead>
       <treerow>
-        <treecell value="Name"/>
-        <treecell value="Size"/>
-        <treecell value="Permissions"/>
+        <treecell class="treecell-header" value="Name"/>
+        <treecell class="treecell-header" value="Size"/>
+        <treecell class="treecell-header" value="Permissions"/>
       </treerow>
     </treehead>
   </tree>
