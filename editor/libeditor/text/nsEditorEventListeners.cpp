@@ -737,22 +737,22 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      // hard-coded change structure test -- GetParagraphStyle
+      // hard-coded change structure test -- GetPargraphTags
       case nsIDOMUIEvent::DOM_VK_0:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
           {
-            printf("testing GetParagraphStyle\n");
-            nsStringArray styles;
-            nsresult result = htmlEditor->GetParagraphStyle(&styles);
+            printf("testing GetPargraphTags\n");
+            nsStringArray tagList;
+            nsresult result = htmlEditor->GetParagraphTags(&tagList);
             if (NS_SUCCEEDED(result))
             {
-              PRInt32 count = styles.Count();
+              PRInt32 count = tagList.Count();
               PRInt32 i;
               for (i=0; i<count; i++)
               {
-                nsString *tag = styles.StringAt(i);
+                nsString *tag = tagList.StringAt(i);
                 char *tagCString = tag->ToNewCString();
                 printf("%s ", tagCString);
                 nsCRT::free(tagCString);

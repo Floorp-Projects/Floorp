@@ -180,7 +180,7 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
 {
   nsStringArray tagList;
   
-  mEditor->GetParagraphStyle(&tagList);
+  mEditor->GetParagraphTags(&tagList);
 
   PRInt32 numTags = tagList.Count();
   if (numTags > 0)

@@ -90,10 +90,11 @@ public:
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
 
-  NS_IMETHOD GetParagraphFormat(nsString& aParagraphFormat);
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
 
-  NS_IMETHOD GetParagraphStyle(nsStringArray *aTagList);
+  NS_IMETHOD GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists);
+  NS_IMETHOD GetParagraphTags(nsStringArray *aTagList);
+  NS_IMETHOD GetListTags(nsStringArray *aTagList);
   NS_IMETHOD RemoveParagraphStyle();
 
   NS_IMETHOD AddBlockParent(nsString& aParentTag);

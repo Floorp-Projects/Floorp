@@ -223,19 +223,22 @@ public:
    * Document me!
    * 
    */
-  NS_IMETHOD GetParagraphFormat(nsString& aParagraphFormat)=0;
-
-  /**
-   * Document me!
-   * 
-   */
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat)=0;
 
   /**
-   * Document me!
+   * Get a list of tagnames of all paragraph tags
+   *  (the closest block parent tags) of all
+   *  elements in the current selection
    * 
    */
-  NS_IMETHOD GetParagraphStyle(nsStringArray *aTagList)=0;
+  NS_IMETHOD GetParagraphTags(nsStringArray *aTagList)=0;
+
+  /**
+   * Get a list of tagnames of all list tags
+   *  (the closest parent tags that are UL, OL, or DL) of all
+   *  elements in the current selection
+   */
+  NS_IMETHOD GetListTags(nsStringArray *aTagList)=0;
 
   /** Add a block parent node around the selected content.
     * Only legal nestings are allowed.
@@ -296,11 +299,13 @@ public:
     *   given a selection anchor node.
     *
     * @param aTagName  The HTML tagname
-    *    Special input values for Links and Named anchors:
+    *  Special input values:
     *    Use "href" to get a link node 
     *      (an "A" tag with the "href" attribute set)
     *    Use "anchor" or "namedanchor" to get a named anchor node
     *      (an "A" tag with the "name" attribute set)
+    *    Use "list" to get an OL, UL, or DL list node
+    *    Use "td" to get either a TD or TH cell node
     *
     * @param aNode    The node in the document to start the search
     *     If it is null, the anchor node of the current selection is used

@@ -1990,27 +1990,6 @@ nsEditorShell::SetWrapColumn(PRInt32 aWrapColumn)
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetParagraphFormat(PRUnichar * *paragraphFormat)
-{
-  nsresult  err = NS_NOINTERFACE;
-  
-  nsAutoString aParagraphFormat;
-  
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-      err = mEditor->GetParagraphFormat(aParagraphFormat);
-      break;
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  *paragraphFormat = aParagraphFormat.ToNewUnicode();
-  
-  return err;
-}
-
-NS_IMETHODIMP
 nsEditorShell::SetParagraphFormat(const PRUnichar * paragraphFormat)
 {
   nsresult  err = NS_NOINTERFACE;

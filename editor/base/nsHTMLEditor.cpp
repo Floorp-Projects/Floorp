@@ -145,6 +145,57 @@ static PRBool IsNamedAnchorNode(nsIDOMNode *aNode)
   return PR_FALSE;
 }
 
+static PRBool IsListNode(nsIDOMNode *aNode)
+{
+  if (aNode)
+  {
+    nsCOMPtr<nsIDOMElement>element;
+    element = do_QueryInterface(aNode);
+    if (element)
+    {
+      nsAutoString tagName;
+      if (NS_SUCCEEDED(element->GetTagName(tagName)))
+      {
+        tagName.ToLowerCase();
+        // With only 3 tests, it doesn't 
+        //  seem worth using nsAtoms
+        if (tagName.Equals("ol") || 
+            tagName.Equals("ul") ||
+            tagName.Equals("dl"))
+        {
+          return PR_TRUE;
+        }
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
+static PRBool IsCellNode(nsIDOMNode *aNode)
+{
+  if (aNode)
+  {
+    nsCOMPtr<nsIDOMElement>element;
+    element = do_QueryInterface(aNode);
+    if (element)
+    {
+      nsAutoString tagName;
+      if (NS_SUCCEEDED(element->GetTagName(tagName)))
+      {
+        tagName.ToLowerCase();
+        // With only 3 tests, it doesn't 
+        //  seem worth using nsAtoms
+        if (tagName.Equals("td") || 
+            tagName.Equals("th"))
+        {
+          return PR_TRUE;
+        }
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 
 nsHTMLEditor::nsHTMLEditor()
 : nsEditor()
@@ -1456,14 +1507,6 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
   return res;
 }
 
-
-NS_IMETHODIMP nsHTMLEditor::GetParagraphFormat(nsString& aParagraphFormat)
-{
-  nsresult res = NS_ERROR_NOT_INITIALIZED;
-
-  return res;
-}
-
 NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 {
   nsresult res = NS_ERROR_NOT_INITIALIZED;
@@ -1485,16 +1528,11 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
   return res;
 }
 
-
-// get the paragraph style(s) for the selection
 // XXX: ERROR_HANDLING -- this method needs a little work to ensure all error codes are 
 //                        checked properly, all null pointers are checked, and no memory leaks occur
 NS_IMETHODIMP 
-nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
+nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
 {
-#if 0
-  if (gNoisy) { printf("---------- nsHTMLEditor::GetParagraphStyle ----------\n"); }
-#endif
   if (!aTagList) { return NS_ERROR_NULL_POINTER; }
 
   nsresult res;
@@ -1534,7 +1572,13 @@ nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
         if (NS_SUCCEEDED(res) && startParent) 
         {
           nsCOMPtr<nsIDOMElement> blockParent;
-          res = GetBlockParent(startParent, getter_AddRefs(blockParent));
+          if (aGetLists)
+          {
+            // Get the "ol", "ul", or "dl" parent element
+            res = GetElementOrParentByTagName("list", startParent, getter_AddRefs(blockParent));
+          } else {
+            res = GetBlockParent(startParent, getter_AddRefs(blockParent));
+          }
           if (NS_SUCCEEDED(res) && blockParent)
           {
             nsAutoString blockParentTag;
@@ -1555,8 +1599,24 @@ nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
     }
     NS_RELEASE(blockSections);
   }
-
   return res;
+}
+
+
+// get the paragraph style(s) for the selection
+NS_IMETHODIMP 
+nsHTMLEditor::GetParagraphTags(nsStringArray *aTagList)
+{
+#if 0
+  if (gNoisy) { printf("---------- nsHTMLEditor::GetPargraphTags ----------\n"); }
+#endif
+  return GetParentBlockTags(aTagList, PR_FALSE);
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetListTags(nsStringArray *aTagList)
+{
+  return GetParentBlockTags(aTagList, PR_TRUE);
 }
 
 // use this when block parents are to be added regardless of current state
@@ -2001,8 +2061,6 @@ nsHTMLEditor::Align(const nsString& aAlignType)
   return res;
 }
 
-
-
 NS_IMETHODIMP
 nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
 {
@@ -2032,6 +2090,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
     TagName = "a";  
   }
   PRBool findTableCell = aTagName.EqualsIgnoreCase("td");
+  PRBool findList = aTagName.EqualsIgnoreCase("list");
 
   // default is null - no element found
   *aReturn = nsnull;
@@ -2042,6 +2101,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
 
   while (PR_TRUE)
   {
+    nsAutoString currentTagName; 
     // Test if we have a link (an anchor with href set)
     if ( (getLink && IsLinkNode(currentNode)) ||
          (getNamedAnchor && IsNamedAnchorNode(currentNode)) )
@@ -2049,16 +2109,28 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
       bNodeFound = PR_TRUE;
       break;
     } else {
-      nsAutoString currentTagName; 
-      currentNode->GetNodeName(currentTagName);
-      // Table cells are a special case:
-      // Match either "td" or "th" for them
-      if (currentTagName.EqualsIgnoreCase(TagName) ||
-          (findTableCell && currentTagName.EqualsIgnoreCase("th")))
+      if (findList)
       {
-        bNodeFound = PR_TRUE;
-        break;
-      } 
+        // Match "ol", "ul", or "dl" for lists
+        if (IsListNode(currentNode))
+          goto NODE_FOUND;
+
+      } else if (findTableCell)
+      {
+        // Table cells are another special case:
+        // Match either "td" or "th" for them
+        if (IsCellNode(currentNode))
+          goto NODE_FOUND;
+
+      } else {
+        currentNode->GetNodeName(currentTagName);
+        if (currentTagName.EqualsIgnoreCase(TagName))
+        {
+NODE_FOUND:
+          bNodeFound = PR_TRUE;
+          break;
+        } 
+      }
     }
     // Search up the parent chain
     // We should never fail because of root test below, but lets be safe
