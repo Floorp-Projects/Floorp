@@ -366,7 +366,7 @@ SelectionImageService::CreateImage(nscolor aImageColor, imgIContainer *aContaine
           data[i+2] = NS_GET_B(aImageColor);
 #endif
 #if defined(XP_MAC) || defined(XP_MACOSX)
-          data[i] = 0
+          data[i] = 0;
           data[i+1] = NS_GET_R(aImageColor);
           data[i+2] = NS_GET_G(aImageColor);
           data[i+3] = NS_GET_B(aImageColor);
