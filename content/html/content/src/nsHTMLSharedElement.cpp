@@ -250,7 +250,15 @@ nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
                                            const nsAReadableString& aValue,
                                            nsHTMLValue& aResult)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    if (aAttribute == nsHTMLAtoms::align) {
+      if (ParseAlignValue(aValue, aResult)) {
+        return NS_CONTENT_ATTR_HAS_VALUE;
+      }
+    } else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  } else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
     if (aAttribute == nsHTMLAtoms::size) {
       if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
         return NS_CONTENT_ATTR_HAS_VALUE;
@@ -276,7 +284,16 @@ nsHTMLSharedLeafElement::AttributeToString(nsIAtom* aAttribute,
                                            const nsHTMLValue& aValue,
                                            nsAWritableString& aResult) const
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    if (aAttribute == nsHTMLAtoms::align) {
+      if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+        AlignValueToString(aValue, aResult);
+        return NS_CONTENT_ATTR_HAS_VALUE;
+      }
+    } else if (ImageAttributeToString(aAttribute, aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  } else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
     if (aAttribute == nsHTMLAtoms::align) {
       if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
         AlignValueToString(aValue, aResult);
@@ -379,6 +396,21 @@ SpacerMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 static void
+EmbedMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                           nsRuleData* aData)
+{
+  if (!aData)
+    return;
+
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+}
+
+
+static void
 PlainMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                            nsRuleData* aData)
 {
@@ -391,6 +423,20 @@ nsHTMLSharedLeafElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                                   PRInt32 aModType,
                                                   PRInt32& aHint) const
 {
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+      if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
+        if (!GetImageAlignAttributeImpact(aAttribute, aHint)) {
+          if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
+            aHint = NS_STYLE_HINT_CONTENT;
+          }
+        }
+      }
+    }
+
+    return NS_OK;
+  }
+
   if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
     if ((aAttribute == nsHTMLAtoms::usemap) ||
         (aAttribute == nsHTMLAtoms::ismap)) {
@@ -413,7 +459,9 @@ nsHTMLSharedLeafElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLSharedLeafElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    aMapRuleFunc = &EmbedMapAttributesIntoRule;
+  } else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
     aMapRuleFunc = &SpacerMapAttributesIntoRule;
   } else {
     aMapRuleFunc = &PlainMapAttributesIntoRule;
