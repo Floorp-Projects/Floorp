@@ -192,7 +192,7 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
 
 #ifdef NS_PRINT_PREVIEW
   /* Defer to Alt when there is one */
-  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+  if (mAltDC && ((mUseAltDC & kUseAltDCFor_CREATERC_PAINT) || (mUseAltDC & kUseAltDCFor_CREATERC_REFLOW))) {
     return mAltDC->CreateRenderingContext(aContext);
   }
 #endif /* NS_PRINT_PREVIEW */

@@ -113,10 +113,11 @@ typedef void * nsNativeDeviceContext;
  * Conts need for Print Preview
  */
 #ifdef NS_PRINT_PREVIEW
-const PRUint8 kUseAltDCFor_NONE        = 0x00; // Do not use the AltDC for anything
-const PRUint8 kUseAltDCFor_FONTMETRICS = 0x01; // Use it for only getting the font metrics
-const PRUint8 kUseAltDCFor_CREATE_RC   = 0x02; // Use when creating RenderingContexts
-const PRUint8 kUseAltDCFor_SURFACE_DIM = 0x04; // Use it for getting the Surface Dimensions
+const PRUint8 kUseAltDCFor_NONE            = 0x00; // Do not use the AltDC for anything
+const PRUint8 kUseAltDCFor_FONTMETRICS     = 0x01; // Use it for only getting the font metrics
+const PRUint8 kUseAltDCFor_CREATERC_REFLOW = 0x02; // Use when creating RenderingContexts for Reflow
+const PRUint8 kUseAltDCFor_CREATERC_PAINT  = 0x04; // Use when creating RenderingContexts for Painting
+const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Surface Dimensions
 #endif
 
 #define NS_IDEVICE_CONTEXT_IID   \
