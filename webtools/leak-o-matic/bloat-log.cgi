@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 #
-# $Id: bloat-log.cgi,v 1.1 1999/11/15 22:31:33 waterson%netscape.com Exp $
+# $Id: bloat-log.cgi,v 1.2 1999/11/16 22:10:07 waterson%netscape.com Exp $
 #
 
 #
@@ -35,7 +35,7 @@ use Zip;
 $::query = new CGI();
 
 # The ZIP where all the log files are kept
-$::log = $::query->param('log' => 'current');
+$::log = $::query->param('log');
 $::zip = new Zip($::log);
 
 print $::query->header;
