@@ -42,7 +42,7 @@
         <xul:label value="&failed.label;" class="bold"/>
       </xul:deck>
     </content>
-    <implementation>
+    <implementation>           
       <method name="onEnd">
         <parameter name="aType"/>
         <body>
@@ -87,7 +87,6 @@
         ]]>
         </getter>
       </property>
-
       <method name="launch">
         <body>
         <![CDATA[
