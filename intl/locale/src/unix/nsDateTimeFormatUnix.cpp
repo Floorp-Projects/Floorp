@@ -124,7 +124,6 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   // generate data/time string
   char *old_locale = setlocale(LC_TIME, NULL);
   (void) setlocale(LC_TIME, platformLocale);
-#ifdef CRASHES_SEE_BUG_10412
   if (strlen(fmtD) && strlen(fmtT)) {
     PL_strcat(fmtD, " ");
     PL_strcat(fmtD, fmtT);
@@ -139,12 +138,6 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   else {
     PL_strcpy(strOut, "");
   }
-#else
-#ifdef DEBUG
-  printf("date is hacked out to work around #10412\n");
-#endif /* DEBUG */
-  PL_strcpy(strOut, ""); 
-#endif /* CRASHES_SEE_BUG_10412 */
   (void) setlocale(LC_TIME, old_locale);
 
   // convert result to unicode

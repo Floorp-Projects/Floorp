@@ -305,7 +305,8 @@ nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
     else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFDateIID, (void**) &dateLiteral))) {
 	PRInt64		theDate;
         if (NS_SUCCEEDED(rv = dateLiteral->GetValue( &theDate ))) {
-#if 0
+/* sspitzer:  don't switch off until #10412 is fixed.  this causes crashers on UNIX.  I'm investigating */
+#if 1
 		PRExplodedTime	dateData;
 		PR_ExplodeTime(theDate, PR_LocalTimeParameters, &dateData);
 		char		dateBuf[128];
