@@ -217,20 +217,56 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+  // This is mostly a copy of nsBoxFrame::Reflow().
+  // We aren't able to share an implementation because of the frame
+  // class hierarchy.  If you make changes here, please keep
+  // nsBoxFrame::Reflow in sync.
+
   DO_GLOBAL_REFLOW_COUNT("nsLeafBoxFrame", aReflowState.reason);
-   NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
+
+  NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
+
+#ifdef DO_NOISY_REFLOW
+  printf("\n-------------Starting LeafBoxFrame Reflow ----------------------------\n");
+  printf("%p ** nsLBF::Reflow %d R: ", this, myCounter++);
+  switch (aReflowState.reason) {
+    case eReflowReason_Initial:
+      printf("Ini");break;
+    case eReflowReason_Incremental:
+      printf("Inc");break;
+    case eReflowReason_Resize:
+      printf("Rsz");break;
+    case eReflowReason_StyleChange:
+      printf("Sty");break;
+    case eReflowReason_Dirty:
+      printf("Drt ");
+      break;
+    default:printf("<unknown>%d", aReflowState.reason);break;
+  }
+  
+  printSize("AW", aReflowState.availableWidth);
+  printSize("AH", aReflowState.availableHeight);
+  printSize("CW", aReflowState.mComputedWidth);
+  printSize("CH", aReflowState.mComputedHeight);
+
+  printf(" *\n");
+
+#endif
 
   aStatus = NS_FRAME_COMPLETE;
 
   // create the layout state
   nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
 
+  // coelesce reflows if we are root.
   state.HandleReflow(this);
-
+  
   nsSize computedSize(aReflowState.mComputedWidth,aReflowState.mComputedHeight);
 
   nsMargin m;
-  GetBorderAndPadding(m);
+  m = aReflowState.mComputedBorderPadding;
+
+  //GetBorderAndPadding(m);
 
   // this happens sometimes. So lets handle it gracefully.
   if (aReflowState.mComputedHeight == 0) {
@@ -239,28 +275,46 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
     computedSize.height = minSize.height - m.top - m.bottom;
   }
 
+  nsSize prefSize(0,0);
+
   // if we are told to layout intrinic then get our preferred size.
   if (computedSize.width == NS_INTRINSICSIZE || computedSize.height == NS_INTRINSICSIZE) {
-     nsSize prefSize;
-     nsSize minSize;
-     nsSize maxSize;
+     nsSize minSize(0,0);
+     nsSize maxSize(0,0);
      GetPrefSize(state, prefSize);
      GetMinSize(state,  minSize);
      GetMaxSize(state,  maxSize);
      BoundsCheck(minSize, prefSize, maxSize);
-
-    // get our desiredSize
-    if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
-       computedSize.width = prefSize.width - m.left - m.right;
-
-    if (aReflowState.mComputedHeight == NS_INTRINSICSIZE || aReflowState.mComputedHeight == 0)
-       computedSize.height = prefSize.height - m.top - m.bottom;
   }
 
-  nsRect r(0,0,computedSize.width, computedSize.height);
-  r.Inflate(m);
-  r.x = mRect.x;
-  r.y = mRect.y;
+  // get our desiredSize
+  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
+    computedSize.width = prefSize.width;
+  } else {
+    computedSize.width += m.left + m.right;
+  }
+
+  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+    computedSize.height = prefSize.height;
+  } else {
+    computedSize.height += m.top + m.bottom;
+  }
+
+  // handle reflow state min and max sizes
+
+  if (computedSize.width > aReflowState.mComputedMaxWidth)
+    computedSize.width = aReflowState.mComputedMaxWidth;
+
+  if (computedSize.height > aReflowState.mComputedMaxHeight)
+    computedSize.height = aReflowState.mComputedMaxHeight;
+
+  if (computedSize.width < aReflowState.mComputedMinWidth)
+    computedSize.width = aReflowState.mComputedMinWidth;
+
+  if (computedSize.height < aReflowState.mComputedMinHeight)
+    computedSize.height = aReflowState.mComputedMinHeight;
+
+  nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
 
   SetBounds(state, r);
  
@@ -271,13 +325,64 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
   GetBounds(r);
   
   // get the ascent
-  nscoord ascent;
-  GetAscent(state, ascent);
+  nscoord ascent = r.height;
+
+  // Only call GetAscent when not doing Initial reflow while in PP
+  // or when it is Initial reflow while in PP and a chrome doc
+  // If called again with initial reflow it crashes because the 
+  // frames are fully constructed (I think).
+  PRBool isChrome;
+  PRBool isInitialPP = nsBoxFrame::IsInitialReflowForPrintPreview(state, isChrome);
+  if (!isInitialPP || (isInitialPP && isChrome)) {
+    GetAscent(state, ascent);
+  }
 
   aDesiredSize.width  = r.width;
   aDesiredSize.height = r.height;
   aDesiredSize.ascent = ascent;
   aDesiredSize.descent = 0;
+
+  // max sure the max element size reflects
+  // our min width
+  nsSize* maxElementSize = nsnull;
+  state.GetMaxElementSize(&maxElementSize);
+  if (maxElementSize)
+  {
+     nsSize minSize(0,0);
+     GetMinSize(state,  minSize);
+
+     if (mRect.width > minSize.width) {
+       if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
+         maxElementSize->width = minSize.width;
+       } else {
+         maxElementSize->width = mRect.width;
+       }
+     } else {
+        maxElementSize->width = mRect.width;
+     }
+
+     if (mRect.height > minSize.height) {
+       if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+         maxElementSize->height = minSize.height;
+       } else {
+         maxElementSize->height = mRect.height;
+       }
+     } else {
+        maxElementSize->height = mRect.height;
+     }
+  }
+#ifdef DO_NOISY_REFLOW
+  {
+    printf("%p ** nsLBF(done) W:%d H:%d  ", this, aDesiredSize.width, aDesiredSize.height);
+
+    if (maxElementSize) {
+      printf("MW:%d MH:%d\n", maxElementSize->width, maxElementSize->height); 
+    } else {
+      printf("MW:? MH:?\n"); 
+    }
+
+  }
+#endif
 
   return NS_OK;
 }
