@@ -26,15 +26,18 @@
 
 #+allegro (shadow 'state)
 #+allegro (shadow 'type)
+#+lispworks (shadow 'define-action)
+#+lispworks (shadow 'type)
 
 (defparameter *semantic-engine-filenames*
   '("Utilities" "Markup" "RTF" "HTML" "GrammarSymbol" "Grammar" "Parser" "Metaparser" "Lexer" "Calculus" "CalculusMarkup"))
 
 (defparameter *semantics-filenames*
-  '("JS20/Parser" "JS20/Lexer" "JS20/Kernel" "JS20/RegExp"))
+  '("JS20/Parser" "JS20/Lexer" "JS20/RegExp" "JS20/Kernel"))
 
 (defparameter *semantic-engine-directory*
-  (make-pathname 
+  (make-pathname
+   #+lispworks :host #+lispworks (pathname-host *load-truename*)
    :directory (pathname-directory #-mcl *load-truename*
                                   #+mcl (truename *loading-file-source-file*))))
 
@@ -49,8 +52,9 @@
             (push (subseq filename 0 slash) directories)
             (setq filename (subseq filename (1+ slash))))
           (return (if directories
-                    (make-pathname :directory (cons ':relative (nreverse directories)) :name filename)
-                    filename)))))))
+                    (make-pathname :directory (cons ':relative (nreverse directories)) :name filename #+lispworks :type #+lispworks "lisp")
+                    #-lispworks filename
+                    #+lispworks (make-pathname :name filename :type "lisp"))))))))
 
 
 ; Convert a filename string possibly containing slashes relative to *semantic-engine-directory*

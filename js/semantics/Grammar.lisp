@@ -565,7 +565,7 @@
       (do ((pos 0 (1+ pos))
            (constraints (production-constraints production))
            (first t))
-          ()
+          (nil)
         (when (= pos (item-dot item))
           (if first
             (setq first nil)
@@ -803,7 +803,7 @@
     (pprint-newline :mandatory stream)
     (pprint-logical-block (stream (laitems-sorted-nicely state))
       (do ((first t nil))
-          ()
+          (nil)
         (pprint-exit-if-list-exhausted)
         (unless first
           (pprint-newline :mandatory stream))
