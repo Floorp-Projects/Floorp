@@ -106,6 +106,9 @@ public:
   NS_IMETHOD  GetScratchPoint(nsPoint **aPoint);
   NS_IMETHOD  GetExtents(nsRect *aExtents);
 
+  // XXX Temporary for Bug #19416
+  NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore);
+
   // Helper function to get the view that's associated with a widget
   static nsIView*  GetViewFor(nsIWidget* aWidget);
 
@@ -133,6 +136,9 @@ protected:
   PRUint32          mVFlags;
   nsIRegion*        mDirtyRegion;
   nsPoint           mScratchPoint;
+
+  // Bug #19416
+  PRBool            mShouldIgnoreSetPosition;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
