@@ -49,7 +49,7 @@
   <script type="application/x-javascript">
   <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->
   <![CDATA[
-    var _elementIDs = ["maintainTableStructure", "preserveFormatting", "saveAssociatedFiles", "showPublishDialog", "recentFiles", "useCSS"];
+    var _elementIDs = ["maintainTableStructure", "preserveFormatting", "saveAssociatedFiles", "showPublishDialog", "recentFiles", "useCSS", "crInPCreatesNewP"];
   ]]>
   </script>        
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -187,9 +187,18 @@
   <groupbox>
     <caption label="&cssEditing.label;"/>
     <checkbox
-      label     = "&useCSS.label;"
-      id        = "useCSS"
-      prefstring= "editor.use_css"
+      label      = "&useCSS.label;"
+      id         = "useCSS"
+      prefstring = "editor.use_css"
     />
+  </groupbox>
+
+  <groupbox>
+    <caption label="&carriageReturns.label;"/>
+    <checkbox
+      label      = "&crInPCreatesNewP.label;"
+      id         = "crInPCreatesNewP"
+      prefstring = "editor.CR_creates_new_p"
+      />
   </groupbox>
 </page>

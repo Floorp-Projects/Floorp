@@ -151,8 +151,9 @@ nsHTMLEditor::nsHTMLEditor()
 : nsPlaintextEditor()
 , mIgnoreSpuriousDragEvent(PR_FALSE)
 , mTypeInState(nsnull)
-, mSelectedCellIndex(0)
+, mCRInParagraphCreatesParagraph(PR_FALSE)
 , mHTMLCSSUtils(nsnull)
+, mSelectedCellIndex(0)
 , mIsObjectResizingEnabled(PR_TRUE)
 , mIsResizing(PR_FALSE)
 , mIsAbsolutelyPositioningEnabled(PR_TRUE)
@@ -163,11 +164,6 @@ nsHTMLEditor::nsHTMLEditor()
 , mIsInlineTableEditingEnabled(PR_TRUE)
 , mGridSize(0)
 {
-  mBoldAtom = do_GetAtom("b");
-  mItalicAtom = do_GetAtom("i");
-  mUnderlineAtom = do_GetAtom("u");
-  mFontAtom = do_GetAtom("font");
-  mLinkAtom = do_GetAtom("a");
 } 
 
 nsHTMLEditor::~nsHTMLEditor()
@@ -6114,3 +6110,16 @@ nsHTMLEditor::IsAnonymousElement(nsIDOMElement * aElement, PRBool * aReturn)
   return NS_OK;
 }
 
+nsresult
+nsHTMLEditor::SetReturnInParagraphCreatesNewParagraph(PRBool aCreatesNewParagraph)
+{
+  mCRInParagraphCreatesParagraph = aCreatesNewParagraph;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLEditor::GetReturnInParagraphCreatesNewParagraph(PRBool *aCreatesNewParagraph)
+{
+  *aCreatesNewParagraph = mCRInParagraphCreatesParagraph;
+  return NS_OK;
+}

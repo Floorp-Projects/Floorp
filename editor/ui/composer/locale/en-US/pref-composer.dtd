@@ -39,3 +39,6 @@
 
 <!ENTITY  cssEditing.label          "Cascading Style Sheets (CSS) Editing">
 <!ENTITY  useCSS.label              "Use CSS styles instead of HTML elements and attributes">
+
+<!ENTITY  carriageReturns.label     "Behavior of the return key">
+<!ENTITY  crInPCreatesNewP.label    "Return in a paragraph always creates a new paragraph">

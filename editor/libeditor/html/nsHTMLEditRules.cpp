@@ -6288,10 +6288,18 @@ nsHTMLEditRules::ReturnInParagraph(nsISelection *aSelection,
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
 
-  nsCOMPtr<nsIDOMNode> sibling;
-  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  nsresult res = nsEditor::GetNodeLocation(aNode, address_of(parent), &offset);
+  if (NS_FAILED(res)) return res;
 
-  // easy case, in a text node:
+  PRBool  doesCRCreateNewP;
+  res = mHTMLEditor->GetReturnInParagraphCreatesNewParagraph(&doesCRCreateNewP);
+  if (NS_FAILED(res)) return res;
+
+  PRBool newBRneeded = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> sibling;
+
   if (mHTMLEditor->IsTextNode(aNode))
   {
     nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aNode);
@@ -6304,46 +6312,37 @@ nsHTMLEditRules::ReturnInParagraph(nsISelection *aSelection,
     {
       // is there a BR prior to it?
       mHTMLEditor->GetPriorHTMLSibling(aNode, address_of(sibling));
-      if (!sibling) 
+      if (!sibling ||
+          !mHTMLEditor->IsVisBreak(sibling) || nsTextEditUtils::HasMozAttr(sibling))
       {
-        // no previous sib, so
-        // just fall out to default of inserting a BR
-        return res;
+        newBRneeded = PR_TRUE;
       }
-      if (mHTMLEditor->IsVisBreak(sibling) && !nsTextEditUtils::HasMozAttr(sibling))
-      {
-        // split para
-        nsCOMPtr<nsIDOMNode> selNode = aNode;
-        *aHandled = PR_TRUE;
-        res = SplitParagraph(aPara, sibling, aSelection, address_of(selNode), &aOffset);
-      }
-      // else just fall out to default of inserting a BR
-      return res;
     }
-    // at end of text node?
-    if (aOffset == (PRInt32)strLength)
+    else if (aOffset == (PRInt32)strLength)
     {
+      // we're at the end of text node...
       // is there a BR after to it?
       res = mHTMLEditor->GetNextHTMLSibling(aNode, address_of(sibling));
-      if (!sibling) 
+      if (!sibling ||
+          !mHTMLEditor->IsVisBreak(sibling) || nsTextEditUtils::HasMozAttr(sibling)) 
       {
-        // no next sib, so
-        // just fall out to default of inserting a BR
-        return res;
+        newBRneeded = PR_TRUE;
+        offset++;
       }
-      if (mHTMLEditor->IsVisBreak(sibling) && !nsTextEditUtils::HasMozAttr(sibling))
-      {
-        // split para
-        nsCOMPtr<nsIDOMNode> selNode = aNode;
-        *aHandled = PR_TRUE;
-        res = SplitParagraph(aPara, sibling, aSelection, address_of(selNode), &aOffset);
-      }
-      // else just fall out to default of inserting a BR
-      return res;
     }
-    // inside text node
-    // just fall out to default of inserting a BR
-    return res;
+    else
+    {
+      if (doesCRCreateNewP)
+      {
+        nsCOMPtr<nsIDOMNode> tmp;
+        res = mEditor->SplitNode(aNode, aOffset, getter_AddRefs(tmp));
+        if (NS_FAILED(res)) return res;
+        aNode = tmp;
+      }
+
+      newBRneeded = PR_TRUE;
+      offset++;
+    }
   }
   else
   {
@@ -6359,18 +6358,26 @@ nsHTMLEditRules::ReturnInParagraph(nsISelection *aSelection,
       if (NS_FAILED(res)) return res;
       if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) || nsTextEditUtils::HasMozAttr(nearNode)) 
       {
-        // just fall out to default of inserting a BR
-        return res;
+        newBRneeded = PR_TRUE;
       }
     }
-    // else split para
-    *aHandled = PR_TRUE;
-    res = SplitParagraph(aPara, nearNode, aSelection, address_of(selNode), &aOffset);
+    if (!newBRneeded)
+      sibling = nearNode;
   }
-  
-  return res;
-}
+  if (newBRneeded)
+  {
+    // if CR does not create a new P, default to BR creation
+    if (!doesCRCreateNewP)
+      return NS_OK;
 
+    nsCOMPtr<nsIDOMNode> brNode;
+    res =  mHTMLEditor->CreateBR(parent, offset, address_of(brNode));
+    sibling = brNode;
+  }
+  nsCOMPtr<nsIDOMNode> selNode = aNode;
+  *aHandled = PR_TRUE;
+  return SplitParagraph(aPara, sibling, aSelection, address_of(selNode), &aOffset);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // SplitParagraph: split a paragraph at selection point, possibly deleting a br

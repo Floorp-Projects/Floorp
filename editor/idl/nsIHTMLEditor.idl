@@ -51,7 +51,7 @@ interface nsIContentFilter;
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
 %}
-[scriptable, uuid(4b0fd0d0-1dd2-11b2-bf2e-ef20fbca2c88)]
+[scriptable, uuid(afc36593-5787-4420-93d9-b2c0ccbf0cad)]
 
 interface nsIHTMLEditor : nsISupports
 {
@@ -600,5 +600,13 @@ interface nsIHTMLEditor : nsISupports
   void checkSelectionStateForAnonymousButtons(in nsISelection aSelection);
 
   boolean isAnonymousElement(in nsIDOMElement aElement);
+
+  /**
+   * A boolean indicating if a return key pressed in a paragraph creates
+   * another paragraph or just inserts a <br> at the caret
+   *
+   * @return    true if CR in a paragraph creates a new paragraph
+   */
+  attribute boolean returnInParagraphCreatesNewParagraph;
 };
 

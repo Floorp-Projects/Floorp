@@ -134,3 +134,5 @@ pref("editor.disable_spell_checker", false);
 pref("editor.dont_lock_spell_files", true);
 #endif
 #endif
+
+pref("editor.CR_creates_new_p",      false);

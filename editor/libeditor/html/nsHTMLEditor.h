@@ -768,21 +768,12 @@ protected:
 
   TypeInState*         mTypeInState;
 
-  nsCOMPtr<nsIAtom>    mBoldAtom;
-  nsCOMPtr<nsIAtom>    mItalicAtom;
-  nsCOMPtr<nsIAtom>    mUnderlineAtom;
-  nsCOMPtr<nsIAtom>    mFontAtom;
-  nsCOMPtr<nsIAtom>    mLinkAtom;
-
   nsCOMPtr<nsIDOMNode> mCachedNode;
-  
-  PRBool   mCachedBoldStyle;
-  PRBool   mCachedItalicStyle;
-  PRBool   mCachedUnderlineStyle;
-  nsString mCachedFontName;
 
-  // Used to disable HTML formatting commands during HTML source editing
-  PRBool   mCanEditHTML;
+  PRPackedBool mCRInParagraphCreatesParagraph;
+
+  PRPackedBool mCSSAware;
+  nsHTMLCSSUtils *mHTMLCSSUtils;
 
   // Used by GetFirstSelectedCell and GetNextSelectedCell
   PRInt32  mSelectedCellIndex;
@@ -790,13 +781,9 @@ protected:
   nsString mLastStyleSheetURL;
   nsString mLastOverrideStyleSheetURL;
 
-  PRBool mCSSAware;
-  nsHTMLCSSUtils *mHTMLCSSUtils;
-
   // Maintain a list of associated style sheets and their urls.
   nsStringArray mStyleSheetURLs;
   nsCOMArray<nsICSSStyleSheet> mStyleSheets;
-  PRInt32 mNumStyleSheets;
   
   // an array for holding default style settings
   nsVoidArray mDefaultStyles;
