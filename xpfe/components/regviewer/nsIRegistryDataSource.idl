@@ -1,0 +1,45 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+
+   Registry viewer interface
+
+*/
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(8FA81100-6F88-11d3-BE43-00104BDE6048)]
+interface nsIRegistryDataSource : nsISupports
+{
+    /**
+     * Open and initialize the registry viewer
+     */
+    void open(in string aPlatformFileName);
+
+    /**
+     * Open a stock registry
+     */
+    void openWellKnownRegistry(in long aID);
+};
+
+%{C++
+// {8FA81101-6F88-11d3-BE43-00104BDE6048}
+#define NS_REGISTRYVIEWER_CID \
+{ 0x8fa81101, 0x6f88, 0x11d3, { 0xbe, 0x43, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
+%}

@@ -1,0 +1,925 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
+ */
+
+/*
+
+  A datasource that wraps an nsIRegstry object
+
+*/
+
+#include "nsCOMPtr.h"
+#include "nsEnumeratorUtils.h"
+#include "nsIComponentManager.h"
+#include "nsIEnumerator.h"
+#include "nsIGenericFactory.h"
+#include "nsIRDFDataSource.h"
+#include "nsIRDFService.h"
+#include "nsIRegistry.h"
+#include "nsIRegistryDataSource.h"
+#include "nsIServiceManager.h"
+#include "nsRDFCID.h"
+#include "nsXPIDLString.h"
+#include "plstr.h"
+#include "rdf.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kGenericFactoryCID,   NS_GENERICFACTORY_CID);
+static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRegistryViewerCID,   NS_REGISTRYVIEWER_CID);
+static NS_DEFINE_CID(kRegistryCID,         NS_REGISTRY_CID);
+
+#define NS_REGISTRY_NAMESPACE_URI "urn:mozilla-registry:"
+static const char kKeyPrefix[] = NS_REGISTRY_NAMESPACE_URI "key:";
+static const char kValuePrefix[] = NS_REGISTRY_NAMESPACE_URI "value:";
+
+//------------------------------------------------------------------------
+
+class nsRegistryDataSource : public nsIRDFDataSource,
+                             public nsIRegistryDataSource
+{
+public:
+    static NS_IMETHODIMP
+    Create(nsISupports* aOuter, const nsIID& aIID, void** aResult);
+
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSIRDFDATASOURCE
+
+    NS_DECL_NSIREGISTRYDATASOURCE
+
+    // Implementation methods
+    PRInt32 GetKey(nsIRDFResource* aResource);
+
+    nsCOMPtr<nsIRegistry> mRegistry;
+    nsCOMPtr<nsISupportsArray> mObservers;
+
+    static nsrefcnt gRefCnt;
+    static nsIRDFService* gRDF;
+
+    static nsIRDFResource* kKeyRoot;
+    static nsIRDFResource* kSubkeys;
+    static nsIRDFLiteral*  kBinaryLiteral;
+
+    class SubkeyEnumerator : public nsISimpleEnumerator
+    {
+    public:
+        NS_DECL_ISUPPORTS
+
+        NS_DECL_NSISIMPLEENUMERATOR
+
+        static nsresult
+        Create(nsRegistryDataSource* aViewer, nsIRDFResource* aRootKey, nsISimpleEnumerator** aResult);
+
+    protected:
+        nsRegistryDataSource*        mViewer;
+        nsCOMPtr<nsIRDFResource> mRootKey;
+        nsCOMPtr<nsIEnumerator>  mEnum;
+        nsCOMPtr<nsIRDFResource> mCurrent;
+        PRBool                   mStarted;
+
+        SubkeyEnumerator(nsRegistryDataSource* aViewer, nsIRDFResource* aRootKey);
+        virtual ~SubkeyEnumerator();
+        nsresult Init();
+
+        nsresult
+        ConvertRegistryNodeToResource(nsISupports* aRegistryNode, nsIRDFResource** aResult);
+    };
+
+protected:
+    nsRegistryDataSource();
+    virtual ~nsRegistryDataSource();
+    nsresult Init();
+};
+
+
+nsrefcnt nsRegistryDataSource::gRefCnt = 0;
+nsIRDFService* nsRegistryDataSource::gRDF;
+
+nsIRDFResource* nsRegistryDataSource::kKeyRoot;
+nsIRDFResource* nsRegistryDataSource::kSubkeys;
+nsIRDFLiteral*  nsRegistryDataSource::kBinaryLiteral;
+
+
+//------------------------------------------------------------------------
+//
+// Constructors, destructors.
+//
+
+nsRegistryDataSource::nsRegistryDataSource()
+{
+    NS_INIT_REFCNT();
+}
+
+
+nsRegistryDataSource::~nsRegistryDataSource()
+{
+    if (mRegistry) {
+        mRegistry->Close();
+    }
+
+    if  (--gRefCnt == 0) {
+        if (gRDF) nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
+
+        NS_IF_RELEASE(kKeyRoot);
+        NS_IF_RELEASE(kSubkeys);
+        NS_IF_RELEASE(kBinaryLiteral);
+    }
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::Create(nsISupports* aOuter, const nsIID& aIID, void** aResult)
+{
+    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    nsRegistryDataSource* result = new nsRegistryDataSource();
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = result->Init();
+    if (NS_FAILED(rv)) {
+        delete result;
+        return rv;
+    }
+
+    NS_ADDREF(result);
+    rv = result->QueryInterface(aIID, aResult);
+    NS_RELEASE(result);
+    return rv;
+}
+
+//------------------------------------------------------------------------
+
+NS_IMPL_ADDREF(nsRegistryDataSource);
+NS_IMPL_RELEASE(nsRegistryDataSource);
+
+NS_IMETHODIMP
+nsRegistryDataSource::QueryInterface(const nsIID& aIID, void** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (aIID.Equals(NS_GET_IID(nsIRDFDataSource)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
+        *aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIRegistryDataSource))) {
+        *aResult = NS_STATIC_CAST(nsIRegistryDataSource*, this);
+    }
+    else {
+        *aResult = nsnull;
+        return NS_NOINTERFACE;
+    }
+
+    NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*, this));
+    return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
+nsresult
+nsRegistryDataSource::Init()
+{
+    if (gRefCnt++ == 0) {
+        nsresult rv;
+        rv = nsServiceManager::GetService(kRDFServiceCID,
+                                          nsCOMTypeInfo<nsIRDFService>::GetIID(),
+                                          (nsISupports**) &gRDF);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDF->GetResource(NS_REGISTRY_NAMESPACE_URI "key:/", &kKeyRoot);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDF->GetResource(NS_REGISTRY_NAMESPACE_URI "subkeys", &kSubkeys);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gRDF->GetLiteral(nsAutoString("[binary data]").GetUnicode(), &kBinaryLiteral);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
+
+
+PRInt32
+nsRegistryDataSource::GetKey(nsIRDFResource* aResource)
+{
+    // Quick check for common resources
+    if (aResource == kKeyRoot) {
+        return nsIRegistry::Common;
+    }
+
+    nsresult rv;
+    const char* uri;
+    rv = aResource->GetValueConst(&uri);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    if (PL_strncmp(uri, kKeyPrefix, sizeof(kKeyPrefix) - 1) != 0)
+        return -1;
+
+    nsIRegistry::Key key;
+    const char* path = uri + sizeof(kKeyPrefix); // one extra to skip initial '/'
+    rv = mRegistry->GetSubtree(nsIRegistry::Common, path, &key);
+    if (NS_FAILED(rv)) return -1;
+
+    return key;
+}
+
+
+
+
+//------------------------------------------------------------------------
+//
+// nsIRegistryViewer interface
+//
+
+NS_IMETHODIMP
+nsRegistryDataSource::Open(const char* aPlatformFileName)
+{
+    NS_PRECONDITION(aPlatformFileName != nsnull, "null ptr");
+    if (! aPlatformFileName)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    rv = nsComponentManager::CreateInstance(kRegistryCID,
+                                            nsnull,
+                                            nsCOMTypeInfo<nsIRegistry>::GetIID(),
+                                            getter_AddRefs(mRegistry));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mRegistry->Open(aPlatformFileName);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::OpenWellKnownRegistry(PRInt32 aID)
+{
+    nsresult rv;
+    rv = nsComponentManager::CreateInstance(kRegistryCID,
+                                            nsnull,
+                                            nsCOMTypeInfo<nsIRegistry>::GetIID(),
+                                            getter_AddRefs(mRegistry));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mRegistry->OpenWellKnownRegistry(aID);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+
+
+//------------------------------------------------------------------------
+//
+// nsIRDFDataSource interface
+//
+
+NS_IMETHODIMP
+nsRegistryDataSource::GetURI(char * *aURI)
+{
+    *aURI = nsXPIDLCString::Copy("rdf:registry");
+    return *aURI ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::GetSource(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, nsIRDFResource **_retval)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::GetSources(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, nsISimpleEnumerator **_retval)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **_retval)
+{
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    PRInt32 key;
+    if (aTruthValue && ((key = GetKey(aSource)) != -1)) {
+        nsresult rv;
+
+        if (aProperty == kSubkeys) {
+            nsCOMPtr<nsISimpleEnumerator> results;
+            rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(results));
+            if (NS_FAILED(rv)) return rv;
+
+            PRBool hasMore;
+            rv = results->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return rv;
+
+            if (hasMore) {
+                nsCOMPtr<nsISupports> isupports;
+                rv = results->GetNext(getter_AddRefs(isupports));
+                if (NS_FAILED(rv)) return rv;
+
+                return isupports->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) _retval);
+            }
+        }
+        else {
+            const char* uri;
+            rv = aProperty->GetValueConst(&uri);
+            if (NS_FAILED(rv)) return rv;
+
+            if (PL_strncmp(uri, kValuePrefix, sizeof(kValuePrefix) -1) == 0) {
+                const char* path = uri + sizeof(kValuePrefix) - 1;
+
+                uint32 type;
+                rv = mRegistry->GetValueType(key, path, &type);
+                if (NS_FAILED(rv)) return rv;
+
+                switch (type) {
+                case nsIRegistry::String: {
+                    nsXPIDLCString value;
+                    rv = mRegistry->GetString(key, path, getter_Copies(value));
+                    if (NS_FAILED(rv)) return rv;
+
+                    nsCOMPtr<nsIRDFLiteral> literal;
+                    rv = gRDF->GetLiteral(nsAutoString(value).GetUnicode(), getter_AddRefs(literal));
+                    if (NS_FAILED(rv)) return rv;
+
+                    return literal->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) _retval);
+                }
+
+                case nsIRegistry::Int32: {
+                    int32 value;
+                    rv = mRegistry->GetInt(key, path, &value);
+                    if (NS_FAILED(rv)) return rv;
+
+                    nsCOMPtr<nsIRDFInt> literal;
+                    rv = gRDF->GetIntLiteral(value, getter_AddRefs(literal));
+                    if (NS_FAILED(rv)) return rv;
+
+                    return literal->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) _retval);
+                }
+
+                case nsIRegistry::Bytes:
+                case nsIRegistry::File:
+                default:
+                    *_retval = kBinaryLiteral;
+                    NS_ADDREF(*_retval);
+                    return NS_OK;
+                }
+            }
+        }
+    }
+
+    *_retval = nsnull;
+    return NS_RDF_NO_VALUE;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsISimpleEnumerator **_retval)
+{
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    do {
+        if (! aTruthValue)
+            break;
+
+        if (aProperty == kSubkeys) {
+            return SubkeyEnumerator::Create(this, aSource, _retval);
+        }
+        else {
+            nsresult rv;
+            nsCOMPtr<nsIRDFNode> node;
+            rv = GetTarget(aSource, aProperty, aTruthValue, getter_AddRefs(node));
+            if (NS_FAILED(rv)) return rv;
+
+            if (node) {
+                return NS_NewSingletonEnumerator(_retval, node);
+            }
+        }
+    } while (0);
+
+    return NS_NewEmptyEnumerator(_retval);
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::Assert(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue)
+{
+    return NS_RDF_ASSERTION_REJECTED;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::Unassert(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget)
+{
+    return NS_RDF_ASSERTION_REJECTED;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::Change(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aOldTarget, nsIRDFNode *aNewTarget)
+{
+    return NS_RDF_ASSERTION_REJECTED;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::Move(nsIRDFResource *aOldSource, nsIRDFResource *aNewSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget)
+{
+    return NS_RDF_ASSERTION_REJECTED;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::HasAssertion(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, PRBool *_retval)
+{
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    if (! aTarget)
+        return NS_ERROR_NULL_POINTER;
+
+    PRInt32 key;
+    if (aTruthValue && ((key = GetKey(aSource)) != -1)) {
+        nsresult rv;
+
+        if (aProperty == kSubkeys) {
+            nsCOMPtr<nsISimpleEnumerator> results;
+            rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(results));
+            if (NS_FAILED(rv)) return rv;
+
+            do {
+                PRBool hasMore;
+                rv = results->HasMoreElements(&hasMore);
+                if (NS_FAILED(rv)) return rv;
+
+                if (! hasMore)
+                    break;
+
+                nsCOMPtr<nsISupports> isupports;
+                rv = results->GetNext(getter_AddRefs(isupports));
+                if (NS_FAILED(rv)) return rv;
+
+                nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
+                NS_ASSERTION(node != nsnull, "not an nsIRDFNode");
+                if (! node)
+                    return NS_ERROR_UNEXPECTED;
+
+                if (node.get() == aTarget) {
+                    *_retval = PR_TRUE;
+                    return NS_OK;
+                }
+            } while (0);
+        }
+        else {
+            nsCOMPtr<nsIRDFNode> node;
+            rv = GetTarget(aSource, aProperty, aTruthValue, getter_AddRefs(node));
+            if (NS_FAILED(rv)) return rv;
+
+            if (node.get() == aTarget) {
+                *_retval = PR_TRUE;
+                return NS_OK;
+            }
+        }
+    }
+
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::AddObserver(nsIRDFObserver *aObserver)
+{
+    NS_PRECONDITION(aObserver != nsnull, "null ptr");
+    if (! aObserver)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mObservers) {
+        nsresult rv;
+        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    mObservers->AppendElement(aObserver);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::RemoveObserver(nsIRDFObserver *aObserver)
+{
+    NS_PRECONDITION(aObserver != nsnull, "null ptr");
+    if (! aObserver)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mObservers) {
+        mObservers->RemoveElement(aObserver);
+    }
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
+{
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    PRInt32 key = GetKey(aSource);
+    if (key == -1)
+        return NS_NewEmptyEnumerator(_retval);
+
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsArray> array;
+    rv = NS_NewISupportsArray(getter_AddRefs(array));
+    if (NS_FAILED(rv)) return rv;
+
+    array->AppendElement(kSubkeys);
+
+    if (key != nsIRegistry::Common) {
+        // XXX In hopes that we'll all be using nsISimpleEnumerator someday
+        nsCOMPtr<nsIEnumerator> values0;
+        rv = mRegistry->EnumerateValues(key, getter_AddRefs(values0));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsISimpleEnumerator> values;
+        rv = NS_NewAdapterEnumerator(getter_AddRefs(values), values0);
+        if (NS_FAILED(rv)) return rv;
+
+        do {
+            PRBool hasMore;
+            rv = values->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return rv;
+
+            if (! hasMore)
+                break;
+
+            nsCOMPtr<nsISupports> isupports;
+            rv = values->GetNext(getter_AddRefs(isupports));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIRegistryValue> value = do_QueryInterface(isupports);
+            NS_ASSERTION(value != nsnull, "not a registry value");
+            if (! value)
+                return NS_ERROR_UNEXPECTED;
+
+            nsXPIDLCString valueStr;
+            rv = value->GetName(getter_Copies(valueStr));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCAutoString propertyStr(kValuePrefix);
+            propertyStr += (const char*) valueStr;
+        
+            nsCOMPtr<nsIRDFResource> property;
+            rv = gRDF->GetResource(propertyStr, getter_AddRefs(property));
+            if (NS_FAILED(rv)) return rv;
+
+            array->AppendElement(property);
+        } while (0);
+    }
+
+    return NS_NewArrayEnumerator(_retval, array);
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::GetAllResources(nsISimpleEnumerator **_retval)
+{
+    return NS_NewEmptyEnumerator(_retval);
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments, PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
+{
+    return NS_NewEmptyEnumerator(_retval);
+}
+
+
+//------------------------------------------------------------------------
+//
+// nsSubkeyEnumerator
+//
+
+nsRegistryDataSource::SubkeyEnumerator::SubkeyEnumerator(nsRegistryDataSource* aViewer, nsIRDFResource* aRootKey)
+    : mViewer(aViewer),
+      mRootKey(aRootKey),
+      mStarted(PR_FALSE)
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF(mViewer);
+}
+
+nsRegistryDataSource::SubkeyEnumerator::~SubkeyEnumerator()
+{
+    NS_RELEASE(mViewer);
+}
+
+nsresult
+nsRegistryDataSource::SubkeyEnumerator::Init()
+{
+    NS_PRECONDITION(mViewer->mRegistry != nsnull, "null ptr");
+    if (! mViewer->mRegistry)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    PRInt32 key = mViewer->GetKey(mRootKey);
+    if (key == -1)
+        return NS_ERROR_UNEXPECTED;
+
+    rv = mViewer->mRegistry->EnumerateSubtrees(key, getter_AddRefs(mEnum));
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+
+nsresult
+nsRegistryDataSource::SubkeyEnumerator::Create(nsRegistryDataSource* aViewer,
+                                           nsIRDFResource* aRootKey,
+                                           nsISimpleEnumerator** aResult)
+{
+    SubkeyEnumerator* result = new SubkeyEnumerator(aViewer, aRootKey);
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = result->Init();
+    if (NS_FAILED(rv)) {
+        delete result;
+        return rv;
+    }
+
+    *aResult = result;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
+
+nsresult
+nsRegistryDataSource::SubkeyEnumerator::ConvertRegistryNodeToResource(nsISupports* aRegistryNode,
+                                                                      nsIRDFResource** aResult)
+{
+    nsCOMPtr<nsIRegistryNode> node = do_QueryInterface(aRegistryNode);
+    NS_ASSERTION(node != nsnull, "not a registry node");
+    if (! node)
+        return NS_ERROR_UNEXPECTED;
+
+    nsresult rv;
+
+    const char* rootURI;
+    rv = mRootKey->GetValueConst(&rootURI);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString path;
+    rv = node->GetName(getter_Copies(path));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString newURI(rootURI);
+    if (newURI.Last() != '/') newURI += '/';
+    newURI += path;
+
+    rv = gRDF->GetResource(newURI, aResult);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(nsRegistryDataSource::SubkeyEnumerator, nsCOMTypeInfo<nsISimpleEnumerator>::GetIID());
+
+NS_IMETHODIMP
+nsRegistryDataSource::SubkeyEnumerator::HasMoreElements(PRBool* _retval)
+{
+    nsresult rv;
+
+    if (mCurrent) {
+        *_retval = PR_TRUE;
+        return NS_OK;
+    }
+
+    if (! mStarted) {
+        mStarted = PR_TRUE;
+        rv = mEnum->First();
+        if (rv == NS_OK) {
+            nsCOMPtr<nsISupports> isupports;
+            mEnum->CurrentItem(getter_AddRefs(isupports));
+
+            rv = ConvertRegistryNodeToResource(isupports, getter_AddRefs(mCurrent));
+            if (NS_FAILED(rv)) return rv;
+
+            *_retval = PR_TRUE;
+        }
+        else {
+            *_retval = PR_FALSE;
+        }
+    }
+    else {
+        *_retval = PR_FALSE;
+
+        rv = mEnum->IsDone();
+        if (rv != NS_OK) {
+            // We're not done. Advance to the next one.
+            rv = mEnum->Next();
+            if (rv == NS_OK) {
+                nsCOMPtr<nsISupports> isupports;
+                mEnum->CurrentItem(getter_AddRefs(isupports));
+
+                rv = ConvertRegistryNodeToResource(isupports, getter_AddRefs(mCurrent));
+                if (NS_FAILED(rv)) return rv;
+
+                *_retval = PR_TRUE;
+            }
+        }
+    }
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRegistryDataSource::SubkeyEnumerator::GetNext(nsISupports** _retval)
+{
+    nsresult rv;
+
+    PRBool hasMore;
+    rv = HasMoreElements(&hasMore);
+    if (NS_FAILED(rv)) return rv;
+
+    if (! hasMore)
+        return NS_ERROR_UNEXPECTED;
+
+    *_retval = mCurrent;
+    NS_ADDREF(*_retval);
+    mCurrent = nsnull;
+    return NS_OK;
+}
+
+ 
+//------------------------------------------------------------------------
+//
+// Component Manager exports
+//
+
+extern "C" PR_IMPLEMENT(nsresult)
+NSGetFactory(nsISupports* aServiceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
+{
+    NS_PRECONDITION(aFactory != nsnull, "null ptr");
+    if (! aFactory)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIGenericFactory::ConstructorProcPtr constructor;
+
+    if (aClass.Equals(kRegistryViewerCID)) {
+        constructor = nsRegistryDataSource::Create;
+    }
+    else {
+        *aFactory = nsnull;
+        return NS_NOINTERFACE; // XXX
+    }
+
+    nsresult rv;
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServiceMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIGenericFactory> factory;
+    rv = compMgr->CreateInstance(kGenericFactoryCID,
+                                 nsnull,
+                                 nsIGenericFactory::GetIID(),
+                                 getter_AddRefs(factory));
+
+    if (NS_FAILED(rv)) return rv;
+
+    rv = factory->SetConstructor(constructor);
+    if (NS_FAILED(rv)) return rv;
+
+    *aFactory = factory;
+    NS_ADDREF(*aFactory);
+    return NS_OK;
+}
+
+
+
+extern "C" PR_IMPLEMENT(nsresult)
+NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, servMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->RegisterComponent(kRegistryViewerCID, "Registry Viewer",
+                                    "component://netscape/registry-viewer",
+                                    aPath, PR_TRUE, PR_TRUE);
+
+    return NS_OK;
+}
+
+
+
+extern "C" PR_IMPLEMENT(nsresult)
+NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, servMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->UnregisterComponent(kRegistryViewerCID, aPath);
+
+    return NS_OK;
+}
+
+
