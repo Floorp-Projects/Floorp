@@ -53,6 +53,13 @@ const kDefaultDescending = "descending";
 const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
 const kCollectedAddressbookURI = "moz-abmdbdirectory://history.mab";
 
+// List/card selections in the results pane.
+const kNothingSelected = 0;
+const kListsAndCards = 1;
+const kMultipleListsOnly = 2;
+const kSingleListOnly = 3;
+const kCardsOnly = 4;
+
 // Controller object for Results Pane
 var ResultsPaneController =
 {
@@ -310,10 +317,58 @@ function SetupAbCommandUpdateHandlers()
     gAbResultsTree.controllers.appendController(ResultsPaneController);
 }
 
+function GetSelectedCardTypes()
+{
+  var cards = GetSelectedAbCards();
+  if (!cards)
+    return kNothingSelected; // no view
+
+  var count = cards.length;
+  if (!count)
+    return kNothingSelected;  // nothing selected
+
+  var mailingListCnt = 0;
+  var cardCnt = 0;
+  for (var i = 0; i < count; i++) { 
+    if (cards[i].isMailList)
+      mailingListCnt++;
+    else
+      cardCnt++;
+  }
+  if (mailingListCnt && cardCnt)
+    return kListsAndCards;        // lists and cards selected
+  else if (mailingListCnt && !cardCnt) {
+    if (mailingListCnt > 1)
+      return kMultipleListsOnly; // only multiple mailing lists selected
+    else
+      return kSingleListOnly;    // only single mailing list
+  }
+  else if (!mailingListCnt && cardCnt)
+    return kCardsOnly;           // only card(s) selected
+}
+
 function AbDelete()
 {
-  if (gAbView) 
-    gAbView.deleteSelectedCards();
+  var types = GetSelectedCardTypes();
+  if (types == kNothingSelected)
+    return;
+
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  // If at least one mailing list is selected then prompt users for deletion.
+  if (types != kCardsOnly)
+  {
+    var confirmDeleteMessage;
+    if (types == kListsAndCards)
+      confirmDeleteMessage = gAddressBookBundle.getString("confirmDeleteListsAndCards");
+    else if (types == kMultipleListsOnly)
+      confirmDeleteMessage = gAddressBookBundle.getString("confirmDeleteMailingLists");
+    else
+      confirmDeleteMessage = gAddressBookBundle.getString("confirmDeleteMailingList");
+    if (!promptService.confirm(window, null, confirmDeleteMessage))
+      return;
+  }
+
+  gAbView.deleteSelectedCards();
 }
 
 function AbNewCard(abListItem)
