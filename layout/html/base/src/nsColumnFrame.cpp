@@ -757,7 +757,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
       }
 
       // Did the child fit?
-      if ((nsnull != mFirstChild) &&
+      if ((kidFrame != mFirstChild) &&
           ((kidAvailSize.height <= 0) ||
            (kidRect.YMost() > kidAvailSize.height))) {
         // The child's height is too big to fit in our remaining
