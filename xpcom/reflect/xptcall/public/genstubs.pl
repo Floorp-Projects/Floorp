@@ -4,7 +4,18 @@
 # be included in the declaraion and a file to be used for expanding macros
 # to represent the implementation of the stubs.
 
-$entry_count    = 256;
+#
+# if "$entry_count" is ever changed and the .inc files regenerated then
+# the following issues need to be addressed:
+#
+# 1) Alpah NT has a .def file that lists exports by symbol. It will need
+#    updating.
+# 2) The current Linux ARM code has a limitation of only having 256-3 stubs
+#
+# more dependencies???
+#
+
+$entry_count    = 128;
 $sentinel_count = 10;
 
 $decl_name = "xptcstubsdecl.inc";
