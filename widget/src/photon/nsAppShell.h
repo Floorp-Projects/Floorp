@@ -20,7 +20,6 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
-#include "nsIObserver.h"
 #include <Pt.h>
 
 /**
@@ -30,16 +29,13 @@
 class nsIEventQueueService;
 class EventQueueTokenQueue;
 
-class nsAppShell : public nsIAppShell,
-                   public nsIObserver
+class nsAppShell : public nsIAppShell
 {
   public:
     nsAppShell(); 
     virtual           ~nsAppShell();
 
     NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIOBSERVER
 
     PRBool            OnPaint();
 
@@ -49,6 +45,8 @@ class nsAppShell : public nsIAppShell,
     virtual nsresult  Run(); 
     NS_IMETHOD        Spinup();
     NS_IMETHOD        Spindown();
+    NS_IMETHOD        ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
+                        { return NS_OK; }
     NS_IMETHOD        GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
     NS_IMETHOD        DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
     NS_IMETHOD        EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
@@ -58,8 +56,6 @@ class nsAppShell : public nsIAppShell,
     NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);
 
 private:
-  void          RegisterObserver(PRBool aRegister);
-
     nsDispatchListener   *mDispatchListener;
 	EventQueueTokenQueue *mEventQueueTokens;
     static PRBool        mPtInited;

@@ -63,7 +63,7 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Run()
+NS_METHOD nsAppShell::Run(void)
 {
   NS_ADDREF_THIS();
     // Process messages
@@ -77,6 +77,15 @@ NS_METHOD nsAppShell::Run()
   Release();
   return msg.wParam;
 }
+
+inline NS_METHOD nsAppShell::Spinup(void)
+{ return NS_OK; }
+
+inline NS_METHOD nsAppShell::Spindown(void)
+{ return NS_OK; }
+
+inline NS_METHOD nsAppShell::ListenToEventQueue(nsIEventQueue * aQueue, PRBool aListen)
+{ return NS_OK; }
 
 NS_METHOD
 nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
@@ -174,7 +183,7 @@ nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Exit()
+NS_METHOD nsAppShell::Exit(void)
 {
   PostQuitMessage(0);
   return NS_OK;

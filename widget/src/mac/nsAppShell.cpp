@@ -84,7 +84,7 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 // Enter a message handler loop
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsAppShell::Run()
+NS_IMETHODIMP nsAppShell::Run(void)
 {
 	if (!mMacPump.get())
 		return NS_ERROR_NOT_INITIALIZED;
@@ -110,7 +110,7 @@ NS_IMETHODIMP nsAppShell::Run()
 // Exit appshell
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsAppShell::Exit()
+NS_IMETHODIMP nsAppShell::Exit(void)
 {
 	if (mMacPump.get())
 	{
@@ -126,10 +126,20 @@ NS_IMETHODIMP nsAppShell::Exit()
 
 //-------------------------------------------------------------------------
 //
+// respond to notifications that an event queue has come or gone
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue * aQueue, PRBool aListen)
+{ // unnecessary; handled elsewhere
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Prepare to process events
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsAppShell::Spinup()
+NS_IMETHODIMP nsAppShell::Spinup(void)
 {
 	if (mMacPump.get())
 	{
@@ -144,7 +154,7 @@ NS_IMETHODIMP nsAppShell::Spinup()
 // Stop being prepared to process events.
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsAppShell::Spindown()
+NS_IMETHODIMP nsAppShell::Spindown(void)
 {
 	if (mMacPump.get())
 		mMacPump->StopRunning();

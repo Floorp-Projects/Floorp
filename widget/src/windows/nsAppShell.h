@@ -32,25 +32,11 @@ class nsAppShell : public nsIAppShell
     virtual                 ~nsAppShell();
 
     NS_DECL_ISUPPORTS
-
-    PRBool                  OnPaint();
-
-    // nsIAppShellInterface
-  
-    NS_IMETHOD            Create(int* argc, char ** argv);
-    NS_IMETHOD            Run(); 
-    NS_IMETHOD            Spinup() { return NS_OK; }
-    NS_IMETHOD            Spindown() { return NS_OK; }
-    NS_IMETHOD            GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
-    NS_IMETHOD            DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
-    NS_IMETHOD            EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
-                            nsIWidget *aWidget, PRBool *aForWindow);
-
-    NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
-    NS_IMETHOD            Exit();
+    NS_DECL_NSIAPPSHELL
 
   private:
     nsDispatchListener*     mDispatchListener;
 };
 
 #endif // nsAppShell_h__
+

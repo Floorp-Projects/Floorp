@@ -44,26 +44,13 @@ class nsAppShell : public nsIAppShell
     virtual ~nsAppShell();
 
     NS_DECL_ISUPPORTS
-
-    // nsIAppShellInterface
+    NS_DECL_NSIAPPSHELL
   
-    NS_IMETHOD              Create(int* argc, char ** argv);
-    NS_IMETHOD              Run();
-    NS_IMETHOD              Spinup();
-    NS_IMETHOD              Spindown();
-    NS_IMETHOD              Exit();
-    NS_IMETHOD              SetDispatchListener(nsDispatchListener* aDispatchListener);
-
-    NS_IMETHOD GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
-    NS_IMETHOD DispatchNativeEvent(PRBool aRealEvent, void *aEvent);
-	NS_IMETHOD EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
-                                  PRBool *aForWindow);
-
   private:
     nsDispatchListener             *mDispatchListener;    // note: we don't own this, but it can be NULL
     auto_ptr<nsToolkit>            mToolKit;
     auto_ptr<nsMacMessagePump>     mMacPump;
-    auto_ptr<nsMacMessageSink>     mMacSink;             //¥¥¥ this will be COM, so use scc's COM_auto_ptr
+    auto_ptr<nsMacMessageSink>     mMacSink;             //€€€ this will be COM, so use scc's COM_auto_ptr
     PRBool                         mExitCalled;
 	static PRBool                  mInitializedToolbox;
 };

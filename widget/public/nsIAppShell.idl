@@ -26,6 +26,7 @@
 
 native int(int);
 [ptr] native nsDispatchListener(nsDispatchListener);
+[ptr] native nsIEventQueue(nsIEventQueue);
 [ptr] native UndefinednsIWidget(nsIWidget);
 [ref] native PRBoolRef(PRBool);
 [ref] native voidStarRef(void *);
@@ -80,6 +81,15 @@ interface nsIAppShell : nsISupports
   */
   
   void Spindown();
+
+ /**
+  * An event queue has been created or destroyed. Hook or unhook it from
+  * your system, as necessary.
+  * @param aQueue the queue in question
+  * @param aListen PR_TRUE for a new queue wanting hooking up. PR_FALSE
+  *                for a queue wanting to be unhooked.
+  */
+  void ListenToEventQueue(in nsIEventQueue aQueue, in PRBool aListen);
 
  /**
   * After event dispatch execute app specific code
