@@ -31,9 +31,7 @@ LIBRARY_NAME	= history
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsGlobalHistory.cpp  \
-                  nsSHEntry.cpp        \
-                  nsSHTransaction.cpp   \
-                  $(NULL)
+            $(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
