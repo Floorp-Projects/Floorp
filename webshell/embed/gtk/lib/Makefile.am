@@ -32,6 +32,9 @@ BASE_LIBS =          \
         -l$(MOZ_LIB_UTIL_PREFIX)util    \
         $(NULL)
 
+MOZ_WIDGET_TOOLKIT_LDFLAGS=-lwidgetgtk
+MOZ_GFX_TOOLKIT_LDFLAGS=-lgfxgtk
+
 GECKO_LIBS =                  \
         -lraptorwebwidget     \
 		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
