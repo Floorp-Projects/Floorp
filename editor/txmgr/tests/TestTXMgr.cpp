@@ -498,6 +498,42 @@ public:
   }
 };
 
+class TestTransactionFactory
+{
+public:
+  virtual TestTransaction *create(nsITransactionManager *txmgr, PRInt32 flags) = 0;
+};
+
+class SimpleTransactionFactory : public TestTransactionFactory
+{
+public:
+
+  TestTransaction *create(nsITransactionManager *txmgr, PRInt32 flags)
+  {
+    return (TestTransaction *)new SimpleTransaction(flags);
+  }
+};
+
+class AggregateTransactionFactory : public TestTransactionFactory
+{
+public:
+
+  PRInt32 mMaxLevel;
+  PRInt32 mNumChildrenPerNode;
+
+  AggregateTransactionFactory(PRInt32 aMaxLevel, PRInt32 aNumChildrenPerNode)
+      : mMaxLevel(aMaxLevel), mNumChildrenPerNode(aNumChildrenPerNode)
+  {
+  }
+
+  TestTransaction *create(nsITransactionManager *txmgr, PRInt32 flags)
+  {
+    return (TestTransaction *)new AggregateTransaction(txmgr, mMaxLevel,
+                                                       mNumChildrenPerNode,
+                                                       flags);
+  }
+};
+
 void
 reset_globals()
 {
@@ -517,20 +553,8 @@ reset_globals()
 }
 
 nsresult
-simple_test()
+quick_test(TestTransactionFactory *factory)
 {
-  /*******************************************************************
-   *
-   * Initialize globals for test.
-   *
-   *******************************************************************/
-
-  reset_globals();
-  sDestructorOrderArr = sSimpleTestDestructorOrderArr;
-  sDoOrderArr         = sSimpleTestDoOrderArr;
-  sUndoOrderArr       = sSimpleTestUndoOrderArr;
-  sRedoOrderArr       = sSimpleTestRedoOrderArr;
-
   /*******************************************************************
    *
    * Create a transaction manager implementation:
@@ -543,7 +567,7 @@ simple_test()
   nsISupports  *isup          = 0;
   nsITransactionManager  *mgr = 0;
   nsITransaction *tx          = 0;
-  SimpleTransaction *tximpl   = 0;
+  TestTransaction *tximpl   = 0;
   nsITransaction *u1 = 0, *u2 = 0;
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
@@ -672,7 +696,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -695,7 +719,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -718,7 +742,7 @@ simple_test()
 
   if (tx != 0) {
     printf("ERROR: PeekUndoStack() on empty undo stack failed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -741,7 +765,7 @@ simple_test()
 
   if (tx != 0) {
     printf("ERROR: PeekRedoStack() on empty redo stack failed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -811,7 +835,7 @@ simple_test()
 
   printf("Test coalescing of transactions ... ");
 
-  tximpl = new SimpleTransaction(MERGE_FLAG);
+  tximpl = factory->create(mgr, MERGE_FLAG);
   tx = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -842,7 +866,7 @@ simple_test()
 
   if (u1 != tx) {
     printf("ERROR: Top of undo stack is different!. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->PeekRedoStack(&r1);
@@ -853,7 +877,7 @@ simple_test()
   }
 
   for (i = 1; i <= 20; i++) {
-    tximpl = new SimpleTransaction();
+    tximpl = factory->create(mgr, NONE_FLAG);
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -881,7 +905,7 @@ simple_test()
 
   if (u1 != u2) {
     printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->PeekRedoStack(&r2);
@@ -893,7 +917,7 @@ simple_test()
 
   if (r1 != r2) {
     printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfUndoItems(&numitems);
@@ -907,7 +931,7 @@ simple_test()
   if (numitems != 1) {
     printf("ERROR: GetNumberOfUndoItems() expected 1 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -921,7 +945,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->Clear();
@@ -940,10 +964,10 @@ simple_test()
    *
    *******************************************************************/
 
-  printf("Execute 20 simple transactions ... ");
+  printf("Execute 20 transactions ... ");
 
   for (i = 1; i <= 20; i++) {
-    tximpl = new SimpleTransaction();
+    tximpl = factory->create(mgr, NONE_FLAG);
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -973,7 +997,7 @@ simple_test()
   if (numitems != 10) {
     printf("ERROR: GetNumberOfUndoItems() expected 10 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -987,7 +1011,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1018,7 +1042,7 @@ simple_test()
   }
 
   for (i = 1; i <= 20; i++) {
-    tximpl = new SimpleTransaction(TRANSIENT_FLAG);
+    tximpl = factory->create(mgr, TRANSIENT_FLAG);
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1046,7 +1070,7 @@ simple_test()
 
   if (u1 != u2) {
     printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->PeekRedoStack(&r2);
@@ -1058,7 +1082,7 @@ simple_test()
 
   if (r1 != r2) {
     printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfUndoItems(&numitems);
@@ -1072,7 +1096,7 @@ simple_test()
   if (numitems != 10) {
     printf("ERROR: GetNumberOfUndoItems() expected 10 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1086,7 +1110,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1119,7 +1143,7 @@ simple_test()
   if (numitems != 6) {
     printf("ERROR: GetNumberOfUndoItems() expected 6 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1133,7 +1157,7 @@ simple_test()
   if (numitems != 4) {
     printf("ERROR: GetNumberOfRedoItems() expected 4 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1166,7 +1190,7 @@ simple_test()
   if (numitems != 8) {
     printf("ERROR: GetNumberOfUndoItems() expected 8 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1180,7 +1204,7 @@ simple_test()
   if (numitems != 2) {
     printf("ERROR: GetNumberOfRedoItems() expected 2 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1193,7 +1217,7 @@ simple_test()
 
   printf("Check if new transactions prune the redo stack ... ");
 
-  tximpl = new SimpleTransaction();
+  tximpl = factory->create(mgr, NONE_FLAG);
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1222,7 +1246,7 @@ simple_test()
   if (numitems != 9) {
     printf("ERROR: GetNumberOfUndoItems() expected 9 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1236,7 +1260,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1268,7 +1292,7 @@ simple_test()
   if (numitems != 5) {
     printf("ERROR: GetNumberOfUndoItems() expected 5 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1282,7 +1306,7 @@ simple_test()
   if (numitems != 4) {
     printf("ERROR: GetNumberOfRedoItems() expected 4 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->Clear();
@@ -1304,7 +1328,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1318,7 +1342,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1329,10 +1353,10 @@ simple_test()
    *
    *******************************************************************/
 
-  printf("Execute 5 simple transactions ... ");
+  printf("Execute 5 transactions ... ");
 
   for (i = 1; i <= 5; i++) {
-    tximpl = new SimpleTransaction();
+    tximpl = factory->create(mgr, NONE_FLAG);
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1362,7 +1386,7 @@ simple_test()
   if (numitems != 5) {
     printf("ERROR: GetNumberOfUndoItems() expected 5 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1376,7 +1400,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1389,7 +1413,7 @@ simple_test()
 
   printf("Test transaction Do() error ... ");
 
-  tximpl = new SimpleTransaction(THROWS_DO_ERROR_FLAG);
+  tximpl = factory->create(mgr, THROWS_DO_ERROR_FLAG);
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1433,7 +1457,7 @@ simple_test()
 
   if (u1 != u2) {
     printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->PeekRedoStack(&r2);
@@ -1445,7 +1469,7 @@ simple_test()
 
   if (r1 != r2) {
     printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfUndoItems(&numitems);
@@ -1459,7 +1483,7 @@ simple_test()
   if (numitems != 5) {
     printf("ERROR: GetNumberOfUndoItems() expected 5 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1473,7 +1497,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1486,7 +1510,7 @@ simple_test()
 
   printf("Test transaction Undo() error ... ");
 
-  tximpl = new SimpleTransaction(THROWS_UNDO_ERROR_FLAG);
+  tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1537,7 +1561,7 @@ simple_test()
 
   if (u1 != u2) {
     printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->PeekRedoStack(&r2);
@@ -1549,7 +1573,7 @@ simple_test()
 
   if (r1 != r2) {
     printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfUndoItems(&numitems);
@@ -1563,7 +1587,7 @@ simple_test()
   if (numitems != 6) {
     printf("ERROR: GetNumberOfUndoItems() expected 6 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1577,7 +1601,7 @@ simple_test()
   if (numitems != 0) {
     printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1590,7 +1614,7 @@ simple_test()
 
   printf("Test transaction Redo() error ... ");
 
-  tximpl = new SimpleTransaction(THROWS_REDO_ERROR_FLAG);
+  tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1614,7 +1638,7 @@ simple_test()
   // Execute a normal transaction to be used in a later test:
   //
 
-  tximpl = new SimpleTransaction();
+  tximpl = factory->create(mgr, NONE_FLAG);
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1681,7 +1705,7 @@ simple_test()
 
   if (u1 != u2) {
     printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->PeekRedoStack(&r2);
@@ -1693,7 +1717,7 @@ simple_test()
 
   if (r1 != r2) {
     printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfUndoItems(&numitems);
@@ -1707,7 +1731,7 @@ simple_test()
   if (numitems != 6) {
     printf("ERROR: GetNumberOfUndoItems() expected 6 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   result = mgr->GetNumberOfRedoItems(&numitems);
@@ -1721,7 +1745,7 @@ simple_test()
   if (numitems != 2) {
     printf("ERROR: GetNumberOfRedoItems() expected 2 got %d. (%d)\n",
            numitems, result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
@@ -1766,7 +1790,7 @@ simple_test()
   if (sConstructorCount != sDestructorCount) {
     printf("ERROR: Transaction constructor count (%d) != destructor count (%d).\n",
            sConstructorCount, sDestructorCount);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   if (NS_FAILED(result)) {
@@ -1777,6 +1801,36 @@ simple_test()
   printf("passed\n");
 
   return NS_OK;
+}
+
+nsresult
+simple_test()
+{
+  /*******************************************************************
+   *
+   * Initialize globals for test.
+   *
+   *******************************************************************/
+
+  reset_globals();
+  sDestructorOrderArr = sSimpleTestDestructorOrderArr;
+  sDoOrderArr         = sSimpleTestDoOrderArr;
+  sUndoOrderArr       = sSimpleTestUndoOrderArr;
+  sRedoOrderArr       = sSimpleTestRedoOrderArr;
+
+  /*******************************************************************
+   *
+   * Run the quick test.
+   *
+   *******************************************************************/
+
+  SimpleTransactionFactory factory;
+
+  printf("\n-----------------------------------------------------\n");
+  printf("- Begin Simple Transaction Test:\n");
+  printf("-----------------------------------------------------\n");
+
+  return quick_test(&factory);
 }
 
 nsresult
@@ -1789,6 +1843,7 @@ aggregation_test()
    *******************************************************************/
 
   reset_globals();
+
   sDestructorOrderArr = sAggregateTestDestructorOrderArr;
   sDoOrderArr         = sAggregateTestDoOrderArr;
   sUndoOrderArr       = sAggregateTestUndoOrderArr;
@@ -1796,1057 +1851,29 @@ aggregation_test()
 
   /*******************************************************************
    *
-   * Create a transaction manager implementation:
+   * Run the quick test.
    *
    *******************************************************************/
 
-  printf("Get transaction manager nsISupports() interface ... ");
+  AggregateTransactionFactory factory(3,2);
 
-  PRInt32 i, numitems = 0;
-  nsISupports  *isup          = 0;
-  nsITransactionManager  *mgr = 0;
-  nsITransaction *tx          = 0;
-  SimpleTransaction *tximpl   = 0;
-  nsITransaction *u1 = 0, *u2 = 0;
-  nsITransaction *r1 = 0, *r2 = 0;
-  nsresult result;
+  printf("\n-----------------------------------------------------\n");
+  printf("- Begin Aggregate Transaction Test:\n");
+  printf("-----------------------------------------------------\n");
 
-  result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
-                                        kITransactionManagerIID, &isup);
-
-  if (NS_FAILED(result) || !isup) {
-    printf("ERROR: Failed to get TransactionManager nsISupports interface.\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Test QueryInterface():
-   *
-   *******************************************************************/
-
-  printf("Get the nsITransactionManager interface ... ");
-
-  result = isup->QueryInterface(kITransactionManagerIID, (void **)&mgr);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to get TransactionManager interface. (%d)\n", result);
-    return result;
-  }
-
-  if (!mgr) {
-    printf("ERROR: QueryInterface() returned NULL pointer.\n");
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  result = mgr->SetMaxTransactionCount(10);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: SetMaxTransactionCount(10) failed. (%d)\n", result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Test coalescing by executing a transaction that can merge any
-   * command into itself. Then execute 20 transaction. Afterwards,
-   * we should still have the first transaction sitting on the undo
-   * stack.
-   *
-   *******************************************************************/
-
-  printf("Test coalescing of transactions ... ");
-
-  tximpl = new AggregateTransaction(mgr, 3, 2, MERGE_FLAG);
-  tx = 0;
-
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: QueryInterface() failed for initial transaction. (%d)\n",
-           result);
-    return result;
-  }
-
-  result = mgr->Do(tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to execute initial transaction. (%d)\n", result);
-    return result;
-  }
-
-  tx->Release();
-
-  u1 = u2 = r1 = r2 = 0;
-
-  result = mgr->PeekUndoStack(&u1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (u1 != tx) {
-    printf("ERROR: Top of undo stack is different!. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  for (i = 1; i <= 20; i++) {
-    tximpl = new AggregateTransaction(mgr, 3, 2);
-
-    tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-    if (NS_FAILED(result)) {
-      printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
-             i, result);
-      return result;
-    }
-
-    result = mgr->Do(tx);
-    if (NS_FAILED(result)) {
-      printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
-      return result;
-    }
-
-    tx->Release();
-  }
-
-  result = mgr->PeekUndoStack(&u2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (u1 != u2) {
-    printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (r1 != r2) {
-    printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 1 item failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 1) {
-    printf("ERROR: GetNumberOfUndoItems() expected 1 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->Clear();
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Clear() failed. (%d)\n", result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Execute 20 transactions. Afterwards, we should have 10
-   * transactions on the undo stack:
-   *
-   *******************************************************************/
-
-  printf("Execute 20 aggregate transactions ... ");
-
-  for (i = 1; i <= 20; i++) {
-    tximpl = new AggregateTransaction(mgr, 3, 2);
-
-    tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-    if (NS_FAILED(result)) {
-      printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
-             i, result);
-      return result;
-    }
-
-    result = mgr->Do(tx);
-    if (NS_FAILED(result)) {
-      printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
-      return result;
-    }
-
-    tx->Release();
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 10 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 10) {
-    printf("ERROR: GetNumberOfUndoItems() expected 10 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Execute 20 transient transactions. Afterwards, we should still
-   * have the same 10 transactions on the undo stack:
-   *
-   *******************************************************************/
-
-  printf("Execute 20 transient aggregate transactions ... ");
-
-  u1 = u2 = r1 = r2 = 0;
-
-  result = mgr->PeekUndoStack(&u1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  for (i = 1; i <= 20; i++) {
-    tximpl = new AggregateTransaction(mgr, 3, 2, TRANSIENT_FLAG);
-
-    tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-    if (NS_FAILED(result)) {
-      printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
-             i, result);
-      return result;
-    }
-
-    result = mgr->Do(tx);
-    if (NS_FAILED(result)) {
-      printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
-      return result;
-    }
-
-    tx->Release();
-  }
-
-  result = mgr->PeekUndoStack(&u2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (u1 != u2) {
-    printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (r1 != r2) {
-    printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 10 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 10) {
-    printf("ERROR: GetNumberOfUndoItems() expected 10 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Undo 4 transactions. Afterwards, we should have 6 transactions
-   * on the undo stack, and 4 on the redo stack:
-   *
-   *******************************************************************/
-
-  printf("Undo 4 transactions ... ");
-
-  for (i = 1; i <= 4; i++) {
-    result = mgr->Undo();
-    if (NS_FAILED(result)) {
-      printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
-      return result;
-    }
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 6 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 6) {
-    printf("ERROR: GetNumberOfUndoItems() expected 6 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 4) {
-    printf("ERROR: GetNumberOfRedoItems() expected 4 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Redo 2 transactions. Afterwards, we should have 8 transactions
-   * on the undo stack, and 2 on the redo stack:
-   *
-   *******************************************************************/
-
-  printf("Redo 2 transactions ... ");
-
-  for (i = 1; i <= 2; ++i) {
-    result = mgr->Redo();
-    if (NS_FAILED(result)) {
-      printf("ERROR: Failed to redo transaction %d. (%d)\n", i, result);
-      return result;
-    }
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 8 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 8) {
-    printf("ERROR: GetNumberOfUndoItems() expected 8 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on redo stack with 2 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 2) {
-    printf("ERROR: GetNumberOfRedoItems() expected 2 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Execute a new transaction. The redo stack should get pruned!
-   *
-   *******************************************************************/
-
-  printf("Check if new aggregate transactions prune the redo stack ... ");
-
-  tximpl = new AggregateTransaction(mgr, 3, 2);
-  tx     = 0;
-
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->Do(tx);
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to execute transaction. (%d)\n", result);
-    return result;
-  }
-
-  tx->Release();
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 9 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 9) {
-    printf("ERROR: GetNumberOfUndoItems() expected 9 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on redo stack with 0 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Undo 4 transactions then clear the undo and redo stacks.
-   *
-   *******************************************************************/
-
-  printf("Undo 4 transactions then clear the undo and redo stacks ... ");
-
-  for (i = 1; i <= 4; ++i) {
-    result = mgr->Undo();
-    if (NS_FAILED(result)) {
-      printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
-      return result;
-    }
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 5 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 5) {
-    printf("ERROR: GetNumberOfUndoItems() expected 5 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on redo stack with 4 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 4) {
-    printf("ERROR: GetNumberOfRedoItems() expected 4 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->Clear();
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Clear() failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on cleared undo stack failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty cleared stack failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Execute 5 transactions.
-   *
-   *******************************************************************/
-
-  printf("Execute 5 aggregate transactions ... ");
-
-  for (i = 1; i <= 5; i++) {
-    tximpl = new AggregateTransaction(mgr, 3, 2);
-
-    tx = 0;
-    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-    if (NS_FAILED(result)) {
-      printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
-             i, result);
-      return result;
-    }
-
-    result = mgr->Do(tx);
-    if (NS_FAILED(result)) {
-      printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
-      return result;
-    }
-
-    tx->Release();
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 5 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 5) {
-    printf("ERROR: GetNumberOfUndoItems() expected 5 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Test transaction Do() error:
-   *
-   *******************************************************************/
-
-  printf("Test aggregate transaction Do() error ... ");
-
-  tximpl = new AggregateTransaction(mgr, 3, 2, THROWS_DO_ERROR_FLAG);
-  tx     = 0;
-
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
-    return result;
-  }
-
-  u1 = u2 = r1 = r2 = 0;
-
-  result = mgr->PeekUndoStack(&u1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->Do(tx);
-
-  if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
-    return result;
-  }
-
-  tx->Release();
-
-  result = mgr->PeekUndoStack(&u2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (u1 != u2) {
-    printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (r1 != r2) {
-    printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 5 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 5) {
-    printf("ERROR: GetNumberOfUndoItems() expected 5 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty redo stack. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Test transaction Undo() error:
-   *
-   *******************************************************************/
-
-  printf("Test aggregate transaction Undo() error ... ");
-
-  tximpl = new AggregateTransaction(mgr, 3, 2, THROWS_UNDO_ERROR_FLAG);
-  tx     = 0;
-
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->Do(tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
-    return result;
-  }
-
-  tx->Release();
-
-  u1 = u2 = r1 = r2 = 0;
-
-  result = mgr->PeekUndoStack(&u1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->Undo();
-
-  if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Undo() returned unexpected error. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekUndoStack(&u2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (u1 != u2) {
-    printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (r1 != r2) {
-    printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 6 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 6) {
-    printf("ERROR: GetNumberOfUndoItems() expected 6 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty redo stack. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 0) {
-    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Test transaction Redo() error:
-   *
-   *******************************************************************/
-
-  printf("Test aggregate transaction Redo() error ... ");
-
-  tximpl = new AggregateTransaction(mgr, 3, 2, THROWS_REDO_ERROR_FLAG);
-  tx     = 0;
-
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: QueryInterface() failed for RedoErrorTransaction. (%d)\n",
-           result);
-    return result;
-  }
-
-  result = mgr->Do(tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
-    return result;
-  }
-
-  tx->Release();
-
-  //
-  // Execute a normal transaction to be used in a later test:
-  //
-
-  tximpl = new AggregateTransaction(mgr, 3, 2);
-  tx     = 0;
-
-  result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: QueryInterface() failed for transaction. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->Do(tx);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Do() returned unexpected error. (%d)\n", result);
-    return result;
-  }
-
-  tx->Release();
-
-  //
-  // Undo the 2 transactions just executed.
-  //
-
-  for (i = 1; i <= 2; ++i) {
-    result = mgr->Undo();
-    if (NS_FAILED(result)) {
-      printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
-      return result;
-    }
-  }
-
-  //
-  // The RedoErrorTransaction should now be at the top of the redo stack!
-  //
-
-  u1 = u2 = r1 = r2 = 0;
-
-  result = mgr->PeekUndoStack(&u1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r1);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->Redo();
-
-  if (NS_FAILED(result) && result != NS_ERROR_FAILURE) {
-    printf("ERROR: Redo() returned unexpected error. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekUndoStack(&u2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (u1 != u2) {
-    printf("ERROR: Top of undo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->PeekRedoStack(&r2);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
-    return result;
-  }
-
-  if (r1 != r2) {
-    printf("ERROR: Top of redo stack changed. (%d)\n", result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfUndoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfUndoItems() on undo stack with 6 items failed. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 6) {
-    printf("ERROR: GetNumberOfUndoItems() expected 6 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  result = mgr->GetNumberOfRedoItems(&numitems);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: GetNumberOfRedoItems() on empty redo stack. (%d)\n",
-           result);
-    return result;
-  }
-
-  if (numitems != 2) {
-    printf("ERROR: GetNumberOfRedoItems() expected 2 got %d. (%d)\n",
-           numitems, result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Release the transaction manager. Any transactions on the undo
-   * and redo stack should automatically be released:
-   *
-   *******************************************************************/
-
-  // mgr->Write(&console);
-
-  printf("Release the transaction manager ... ");
-
-  result = mgr->Release();
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = nsServiceManager::ReleaseService(kCTransactionManagerFactoryCID,
-                                        isup);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsServiceManager::ReleaseService() failed. (%d)\n", result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  /*******************************************************************
-   *
-   * Make sure number of transactions created matches number of
-   * transactions destroyed!
-   *
-   *******************************************************************/
-
-  printf("Number of transactions created and destroyed match ... ");
-
-  if (sConstructorCount != sDestructorCount) {
-    printf("ERROR: Transaction constructor count (%d) != destructor count (%d).\n",
-           sConstructorCount, sDestructorCount);
-    return result;
-  }
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  return NS_OK;
+  return quick_test(&factory);
 }
 
 nsresult
-stress_test()
+stress_test(TestTransactionFactory *factory, PRInt32 iterations)
 {
-  /*******************************************************************
-   *
-   * Initialize globals for test.
-   *
-   *******************************************************************/
-
-  reset_globals();
-
   /*******************************************************************
    *
    * Create a transaction manager:
    *
    *******************************************************************/
 
-  printf("Simple transaction stress test (may take a while) ... ");
+  printf("Stress test (may take a while) ... ");
   fflush(stdout);
 
   PRInt32 i, j;
@@ -2876,12 +1903,7 @@ stress_test()
     return NS_ERROR_NULL_POINTER;
   }
 
-  //
-  // A num == 1500 sends 1,125,750 transactions through the system!!
-  //
-  PRInt32 num = 1500;
-                      
-  for (i = 1; i <= num; i++) {
+  for (i = 1; i <= iterations; i++) {
     /*******************************************************************
      *
      * Execute a bunch of transactions:
@@ -2889,7 +1911,7 @@ stress_test()
      *******************************************************************/
 
     for (j = 1; j <= i; j++) {
-      tximpl = new SimpleTransaction();
+      TestTransaction *tximpl = factory->create(mgr, NONE_FLAG);
 
       tx = 0;
       result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -2973,17 +1995,43 @@ stress_test()
   if (sConstructorCount != sDestructorCount) {
     printf("ERROR: Transaction constructor count (%d) != destructor count (%d).\n",
            sConstructorCount, sDestructorCount);
-    return result;
-  }
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
+    return NS_ERROR_FAILURE;
   }
 
   printf("passed\n");
 
+  printf("%d transactions processed during stress test.\n", sConstructorCount);
+
   return NS_OK;
+}
+
+nsresult
+simple_stress_test()
+{
+  /*******************************************************************
+   *
+   * Initialize globals for test.
+   *
+   *******************************************************************/
+
+  reset_globals();
+
+  /*******************************************************************
+   *
+   * Do the stress test:
+   *
+   *******************************************************************/
+
+  SimpleTransactionFactory factory;
+
+  printf("\n-----------------------------------------------------\n");
+  printf("- Simple Transaction Stress Test:\n");
+  printf("-----------------------------------------------------\n");
+
+  //
+  // 1500 iterations sends 1,125,750 transactions through the system!!
+  //
+  return stress_test(&factory, 1500);
 }
 
 nsresult
@@ -2999,148 +2047,20 @@ aggregation_stress_test()
 
   /*******************************************************************
    *
-   * Create a transaction manager:
+   * Do the stress test:
    *
    *******************************************************************/
 
-  printf("Aggregated transaction stress test (may take a while) ... ");
-  fflush(stdout);
+  AggregateTransactionFactory factory(3,4);
 
-  PRInt32 i, j;
-  nsISupports  *isup           = 0;
-  nsITransactionManager  *mgr  = 0;
-  nsITransaction *tx           = 0;
-  AggregateTransaction *tximpl = 0;
-  nsresult result;
-
-  result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
-                                        kITransactionManagerIID, &isup);
-
-  if (NS_FAILED(result) || !isup) {
-    printf("ERROR: Failed to get nsITransactionManager interface.\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  result = isup->QueryInterface(kITransactionManagerIID, (void **)&mgr);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to get TransactionManager interface. (%d)\n", result);
-    return result;
-  }
-
-  if (!mgr) {
-    printf("ERROR: QueryInterface() returned NULL pointer.\n");
-    return NS_ERROR_NULL_POINTER;
-  }
+  printf("\n-----------------------------------------------------\n");
+  printf("- Aggregate Transaction Stress Test:\n");
+  printf("-----------------------------------------------------\n");
 
   //
-  // A num == 500 sends 2,630,250 transactions through the system!!
+  // 500 iterations sends 2,630,250 transactions through the system!!
   //
-  PRInt32 num = 500;
-                      
-  for (i = 1; i <= num; i++) {
-    /*******************************************************************
-     *
-     * Execute a bunch of transactions:
-     *
-     *******************************************************************/
-
-    for (j = 1; j <= i; j++) {
-      tximpl = new AggregateTransaction(mgr, 3, 4);
-
-      tx = 0;
-      result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
-      if (NS_FAILED(result)) {
-        printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
-               i, result);
-        return result;
-      }
-
-      result = mgr->Do(tx);
-      if (NS_FAILED(result)) {
-        printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
-        return result;
-      }
-
-      tx->Release();
-    }
-
-    /*******************************************************************
-     *
-     * Undo all the transactions:
-     *
-     *******************************************************************/
-
-    for (j = 1; j <= i; j++) {
-      result = mgr->Undo();
-      if (NS_FAILED(result)) {
-        printf("ERROR: Failed to undo transaction %d-%d. (%d)\n", i, j, result);
-        return result;
-      }
-    }
-
-    /*******************************************************************
-     *
-     * Redo all the transactions:
-     *
-     *******************************************************************/
-
-    for (j = 1; j <= i; j++) {
-      result = mgr->Redo();
-      if (NS_FAILED(result)) {
-        printf("ERROR: Failed to redo transaction %d-%d. (%d)\n", i, j, result);
-        return result;
-      }
-    }
-
-    /*******************************************************************
-     *
-     * Undo all the transactions again so that they all end up on
-     * the redo stack for pruning the next time we execute a new
-     * transaction
-     *
-     *******************************************************************/
-
-    for (j = 1; j <= i; j++) {
-      result = mgr->Undo();
-      if (NS_FAILED(result)) {
-        printf("ERROR: Failed to undo transaction %d-%d. (%d)\n", i, j, result);
-        return result;
-      }
-    }
-  }
-
-  result = mgr->Release();
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
-  }
-
-  result = nsServiceManager::ReleaseService(kCTransactionManagerFactoryCID,
-                                        isup);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsServiceManager::ReleaseService() failed. (%d)\n", result);
-    return result;
-  }
-
-  // printf("%d  %d -  ", sConstructorCount, sDestructorCount);
-
-  if (sConstructorCount != sDestructorCount) {
-    printf("ERROR: Transaction constructor count (%d) != destructor count (%d).\n",
-           sConstructorCount, sDestructorCount);
-    return result;
-  }
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
-  }
-
-  printf("passed\n");
-
-  return NS_OK;
+  return stress_test(&factory, 500);
 }
 
 int
@@ -3161,7 +2081,7 @@ main (int argc, char *argv[])
   if (NS_FAILED(result))
     return result;
 
-  result = stress_test();
+  result = simple_stress_test();
 
   if (NS_FAILED(result))
     return result;
