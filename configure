@@ -7680,6 +7680,9 @@ mailnews/base/build/Makefile
 mailnews/base/tests/Makefile
 mailnews/imap/Makefile
 mailnews/imap/public/Makefile
+mailnews/local/Makefile
+mailnews/local/public/Makefile
+mailnews/local/src/Makefile
 mailnews/imap/src/Makefile
 mailnews/news/Makefile
 mailnews/news/public/Makefile
