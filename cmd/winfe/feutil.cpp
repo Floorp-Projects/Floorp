@@ -2219,7 +2219,15 @@ BOOL FEU_FindExecutable(const char *pFileName, char *pExecutable, BOOL bIdentity
     //  pFileName may not be a file name, but an extension.
     //  We want to support just extensions for ease, so check on it.
     if(bExtension && pFileName) {
-        //  We have an extension.
+        //  Do we need to add a period?
+        char aExt[_MAX_EXT];
+        if(*pFileName != '.')   {
+            aExt[0] = '.';
+            aExt[1] = '\0';
+            strcat(aExt, pFileName);
+            pFileName = aExt;
+        }
+
         //  Fill out the rest of the name.
         bFreeFileName = TRUE;
         pFileName = (const char *)WH_TempFileName(xpTemporary, "G", pFileName);

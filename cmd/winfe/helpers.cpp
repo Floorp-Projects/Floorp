@@ -378,23 +378,6 @@ char *InventDescription(const char *pExtension)
     return NULL;
 }
 
-static BOOL
-HasShellOpenCommand(LPCSTR lpszFileClass)
-{
-	char	szKey[_MAX_PATH];
-	HKEY	hKey;
-
-	// See if there's a shell/open key specified for the file class
-	PR_snprintf(szKey, sizeof(szKey), "%s\\shell\\open", lpszFileClass);
-
-	if (RegOpenKey(HKEY_CLASSES_ROOT, szKey, &hKey) == ERROR_SUCCESS) {
-		RegCloseKey(hKey);
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
 // Create a front-end data structure if necessary, and set how_handle as
 // HANDLE_SHELLEXECUTE if there's a shell\open command for the file extension.
 // It will also set the description if there isn't already one
@@ -421,12 +404,19 @@ void ShellHelper(NET_cdataStruct *pNet, const char *pExtension)
             if (GetClassName(pExtension, pApp->strFileClass)) {
 				// XXX - We really should handle verbs other than Open. FindExecutable()
 				// and ShellExecute() don't either, but ShellExecuteEx() does...
-				if (HasShellOpenCommand((LPCSTR)pApp->strFileClass)) {
+                char aExe[_MAX_PATH];
+                aExe[0] = '\0';
+				if(FEU_FindExecutable(pExtension, aExe, FALSE, TRUE))   {
 					pApp->how_handle = HANDLE_SHELLEXECUTE;
 					pApp->csCmd = MIME_SHELLEXECUTE;
 				}
+                else if(aExe[0])    {
+                    //  We reach this only if the extension itself is executable.
+                    //  Those that are themselves shellexecutable must save or
+                    //      we risk security.
+                    pApp->how_handle = HANDLE_SAVE;
+                }
             }
-
 
             //  application/octet-stream is always save.
             if(!stricmp(pNet->ci.type, APPLICATION_OCTET_STREAM)) {
