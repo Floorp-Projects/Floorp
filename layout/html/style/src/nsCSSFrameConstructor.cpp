@@ -3836,8 +3836,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   //  2) nsIScrollable::Scrollbar_Auto = scrollbars appear if needed
   //  3) nsIScrollable::Scrollbar_Always = scrollbars always
   // Only need to create a scroll frame/view for cases 2 and 3.
-  // Currently Scrollbar_Always isn't honored, as
-  // scrollportview::SetScrollPref is not implemented.
 
   PRBool isHTML = aDocElement->IsContentOfType(nsIContent::eHTML);
   PRBool isXUL = PR_FALSE;
@@ -3856,6 +3854,11 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       isScrollable = PR_FALSE;
   }
 
+  // Don't create a scrollframe when we're inside a frame or iframe with
+  // scrolling="no".  This makes the frame hierarchy inconsistent and is
+  // unnecessary for correctness (since
+  // nsGfxScrollFrameInner::GetScrollbarStyles handles all the necessary
+  // cases), but it seems to be needed for performance.
   if (isScrollable) {
     nsresult rv;
     if (aPresContext) {
@@ -3864,12 +3867,13 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
         nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(container, &rv);
         if (NS_SUCCEEDED(rv) && scrollableContainer) {
           PRInt32 scrolling = -1;
-          // XXX We should get prefs for X and Y and deal with these independently!
           scrollableContainer->GetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,&scrolling);
           if (nsIScrollable::Scrollbar_Never == scrolling) {
-            isScrollable = PR_FALSE;
+            scrollableContainer->GetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,&scrolling);
+            if (nsIScrollable::Scrollbar_Never == scrolling) {
+              isScrollable = PR_FALSE;
+            }
           }
-          // XXX NS_STYLE_OVERFLOW_SCROLL should create 'always on' scrollbars
         }
       }
     }
