@@ -75,7 +75,7 @@ sub cmdCosesVariantAdd {
     if (defined($user)) {
         my $protocol = $app->input->getArgument('cosesEditor.variantProtocol');
         my @data = ('', $protocol, 1.0, '', '', '', '', '', '');
-        my $id = $app->getService('dataSource.strings')->setVariant($app, undef, @data);
+        my $id = $app->getService('dataSource.strings.customised')->setVariant($app, undef, @data);
         my $expectedStrings = $self->getExpectedStrings($app, $protocol);
         $app->output->cosesEditorVariant($id, @data, $expectedStrings, {});
     } # else, user has been notified
@@ -88,7 +88,7 @@ sub cmdCosesVariantEdit {
     my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
     if (defined($user)) {
         my $id = $app->input->getArgument('cosesEditor.variantID');
-        my $dataSource = $app->getService('dataSource.strings');
+        my $dataSource = $app->getService('dataSource.strings.customised');
         my @data = $dataSource->getVariant($app, $id);
         my $expectedStrings = $self->getExpectedStrings($app, $data[1]);
         my $variantStrings = \$dataSource->getVariantStrings($app, $id);
@@ -115,7 +115,7 @@ sub cmdCosesVariantCommit {
     my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
     if (defined($user)) {
         my($id, $data, $variantStrings) = $self->getVariantEditorArguments($app);
-        my $dataSource = $app->getService('dataSource.strings');
+        my $dataSource = $app->getService('dataSource.strings.customised');
         $dataSource->setVariant($app, $id, @$data);
         foreach my $string (keys(%$variantStrings)) {
             $dataSource->setString($app, $id, $string, @{$variantStrings->{$string}});
@@ -133,7 +133,7 @@ sub cmdCosesStringEdit {
         my $id = $app->input->getArgument('cosesEditor.stringID');
         my $strings = $self->getExpectedStrings($app);
         my $expectedVariants = $self->getDescribedVariants($app, $id);
-        my $stringVariants = \$app->getService('dataSource.strings')->getStringVariants($app, $id);
+        my $stringVariants = \$app->getService('dataSource.strings.customised')->getStringVariants($app, $id);
         $app->output->cosesEditorString($id, $strings->{$id}, $expectedVariants, $stringVariants);
     } # else, user has been notified
 }
@@ -154,7 +154,7 @@ sub cmdCosesStringCommit {
                                 $input->getArgument('cosesEditor.stringVariant.$index.value')];
             $index += 1;
         }
-        my $dataSource = $app->getService('dataSource.strings');
+        my $dataSource = $app->getService('dataSource.strings.customised');
         foreach my $variant (keys(%variants)) {
             $dataSource->setString($app, $variant, $id, @{$variants{$variant}});
         }
@@ -170,7 +170,7 @@ sub cmdCosesVariantExport {
     if (defined($user)) {
         # get data
         my $id = $app->input->getArgument('cosesEditor.variantID');
-        my $dataSource = $app->getService('dataSource.strings');
+        my $dataSource = $app->getService('dataSource.strings.customised');
         my @data = $dataSource->getVariant($app, $id);
         my %strings = $dataSource->getVariantStrings($app, $id);
 
@@ -217,7 +217,7 @@ sub cmdCosesVariantImport {
         $XML->walk($self, $XML->parse($file), $data);
 
         # add data
-        my $dataSource = $app->getService('dataSource.strings');
+        my $dataSource = $app->getService('dataSource.strings.customised');
         my $id = $dataSource->setVariant($app, undef, @{$data->{'variant'}});
         foreach my $string (keys(%{$data->{'strings'}})) {
             $dataSource->setString($app, $id, $string, @{$data->{'strings'}->{$string}});
@@ -412,7 +412,7 @@ sub getExpectedStrings {
 sub getDescribedVariants {
     my $self = shift;
     my($app, $string) = @_;
-    my $variants = \$app->getService('dataSource.strings')->getDescribedVariants($app);
+    my $variants = \$app->getService('dataSource.strings.customised')->getDescribedVariants($app);
     if (defined($string)) {
         my $defaults = $app->getSelectingService('dataSource.strings.default');
         foreach my $variant (keys(%$variants)) {
