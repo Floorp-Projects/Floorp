@@ -147,6 +147,13 @@ GraphicsState :: ~GraphicsState()
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95 = NOT_SETUP;
 
+// A few of the stock objects are needed all the time, so we just get them
+// once
+static HFONT  gStockSystemFont = (HFONT)::GetStockObject(SYSTEM_FONT);
+static HBRUSH gStockWhiteBrush = (HBRUSH)::GetStockObject(WHITE_BRUSH);
+static HPEN   gStockBlackPen = (HPEN)::GetStockObject(BLACK_PEN);
+static HPEN   gStockWhitePen = (HPEN)::GetStockObject(WHITE_PEN);
+
 nsRenderingContextWin :: nsRenderingContextWin()
 {
   NS_INIT_REFCNT();
@@ -170,18 +177,15 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mDCOwner = nsnull;
   mFontMetrics = nsnull;
   mOrigSolidBrush = NULL;
-  mWhiteBrush = NULL;
   mOrigFont = NULL;
-  mDefFont = NULL;
   mOrigSolidPen = NULL;
-  mBlackPen = NULL;
   mOrigPalette = NULL;
-  mCurrBrushColor = NS_RGB(255, 255, 255);
+  mCurrBrushColor = RGB(255, 255, 255);
   mCurrFontMetrics = nsnull;
   mCurrPenColor = NULL;
   mCurrPen = NULL;
   mNullPen = NULL;
-  mCurrTextColor = NS_RGB(0, 0, 0);
+  mCurrTextColor = RGB(0, 0, 0);
   mCurrLineStyle = nsLineStyle_kSolid;
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
@@ -226,8 +230,6 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
       mOrigFont = NULL;
     }
 
-    mDefFont = NULL;  // stock object so we don't need to delete it
-
     if (NULL != mOrigSolidPen)
     {
       ::SelectObject(mDC, mOrigSolidPen);
@@ -236,19 +238,19 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
   }
 
   mCurrBrush = NULL;   // don't delete - owned by brush cache
-  mWhiteBrush = NULL;  // stock object so we don't need to delete it
 
   //don't kill the font because the font cache/metrics owns it
   mCurrFont = NULL;
 
-  if (NULL != mCurrPen)
+  if (mCurrPen && (mCurrPen != gStockBlackPen) && (mCurrPen != gStockWhitePen)) {
     VERIFY(::DeleteObject(mCurrPen));
+  }
 
-  if ((NULL != mNullPen) && (mNullPen != mCurrPen))
+  if ((NULL != mNullPen) && (mNullPen != mCurrPen)) {
     VERIFY(::DeleteObject(mNullPen));
+  }
 
   mCurrPen = NULL;
-  mBlackPen = NULL;  // stock object so we don't need to delete it
   mNullPen = NULL;
 
   if (nsnull != mStateCache)
@@ -415,9 +417,9 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   }
   else
   {
-    prevbrush = mWhiteBrush;
-    prevfont = mDefFont;
-    prevpen = mBlackPen;
+    prevbrush = gStockWhiteBrush;
+    prevfont = gStockSystemFont;
+    prevpen = gStockBlackPen;
   }
 
   mOrigSolidBrush = (HBRUSH)::SelectObject(aNewDC, prevbrush);
@@ -461,10 +463,6 @@ nsresult nsRenderingContextWin :: CommonInit(void)
 #ifdef NS_DEBUG
   mInitialized = PR_TRUE;
 #endif
-
-  mWhiteBrush = (HBRUSH)::GetStockObject(WHITE_BRUSH);
-  mDefFont = (HFONT)::GetStockObject(SYSTEM_FONT);
-  mBlackPen = (HPEN)::GetStockObject(BLACK_PEN);
 
   mContext->GetGammaTable(mGammaTable);
 
@@ -2111,7 +2109,7 @@ SolidBrushCache::SolidBrushCache()
   : mIndexOldest(2)
 {
   // First two entries are stock objects
-  mCache[0].mBrush = (HBRUSH)::GetStockObject(WHITE_BRUSH);
+  mCache[0].mBrush = gStockWhiteBrush;
   mCache[0].mBrushColor = RGB(255, 255, 255);
   mCache[1].mBrush = (HBRUSH)::GetStockObject(BLACK_BRUSH);
   mCache[1].mBrushColor = RGB(0, 0, 0);
@@ -2239,16 +2237,21 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mSolidPen))
   {
-    // XXX This is really slow performance wise to create and destroy pens
-    // all the time. We either need to:
-    // - maintain a small cache
-    // - use the new DC_PEN stock solid color pen in Win 98 and NT 5.0
-    HPEN  tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
+    HPEN  tpen;
+     
+    if (RGB(0, 0, 0) == mColor) {
+      tpen = gStockBlackPen;
+    } else if (RGB(255, 255, 255) == mColor) {
+      tpen = gStockWhitePen;
+    } else {
+      tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
+    }
 
     ::SelectObject(mDC, tpen);
 
-    if (NULL != mCurrPen)
+    if (mCurrPen && (mCurrPen != gStockBlackPen) && (mCurrPen != gStockWhitePen)) {
       VERIFY(::DeleteObject(mCurrPen));
+    }
 
     mStates->mSolidPen = mCurrPen = tpen;
     mCurrPenColor = mCurrentColor;
