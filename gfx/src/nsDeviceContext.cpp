@@ -60,6 +60,7 @@ DeviceContextImpl :: DeviceContextImpl()
   mDevUnitsToAppUnits = 1.0f;
   mAppUnitsToDevUnits = 1.0f;
   mGammaValue = 1.0f;
+  mCPixelScale = 1.0f;
   mGammaTable = new PRUint8[256];
   mZoom = 1.0f;
   mWidget = nsnull;
@@ -167,7 +168,7 @@ NS_IMETHODIMP DeviceContextImpl :: GetDevUnitsToAppUnits(float &aDevUnits) const
 
 NS_IMETHODIMP DeviceContextImpl :: GetCanonicalPixelScale(float &aScale) const
 {
-  aScale = 1.0f;
+  aScale = mCPixelScale;
   return NS_OK;
 }
 
