@@ -88,27 +88,23 @@ static NS_DEFINE_IID(kAppCoresFactoryCID,     NS_APPCORESFACTORY_CID);
 static NS_DEFINE_IID(kMailCoreFactoryCID,     NS_MAILCOREFACTORY_CID);
 
 
-static SDL_TaskList     *gTasks         = nsnull;
-static SDL_TaskList     *gNextReadyTask = nsnull;
-
-
 /////////////////////////////////////////////////////////////////////////
 // nsAppCoresManager
 /////////////////////////////////////////////////////////////////////////
 
 nsAppCoresManager::nsAppCoresManager()
 {
-    mScriptObject   = nsnull;
-    
-    IncInstanceCount();
-    NS_INIT_REFCNT();
+  mScriptObject   = nsnull;
+  
+  IncInstanceCount();
+  NS_INIT_REFCNT();
 }
 
 
 //--------------------------------------------------------
 nsAppCoresManager::~nsAppCoresManager()
 {
-    DecInstanceCount(); 
+  DecInstanceCount(); 
 }
 
 
@@ -121,41 +117,36 @@ NS_IMPL_RELEASE(nsAppCoresManager)
 NS_IMETHODIMP 
 nsAppCoresManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 {
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
+  if (aInstancePtr == NULL) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
+  // Always NULL result, in case of failure
+  *aInstancePtr = NULL;
 
+  
+  if ( aIID.Equals(kIAppCoresManagerIID) ) {
+    nsIDOMAppCoresManager* tmp = this;
+    *aInstancePtr = (void*)tmp;
+    AddRef();
+    return NS_OK;
+  }
+  else if ( aIID.Equals(kIScriptObjectOwnerIID)) {   
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtr = (void*)tmp;
+    AddRef();
+    return NS_OK;
+  }
+  else if ( aIID.Equals(kISupportsIID) ) {
+    nsIDOMAppCoresManager* tmp1 = this;
+    nsISupports* tmp2 = tmp1;
     
-    if ( aIID.Equals(kIAppCoresManagerIID) )
-    {
-        nsIDOMAppCoresManager* tmp = this;
-        *aInstancePtr = (void*)tmp;
-        AddRef();
-        return NS_OK;
-    }
-    else if ( aIID.Equals(kIScriptObjectOwnerIID))
-    {   
-        nsIScriptObjectOwner* tmp = this;
-        *aInstancePtr = (void*)tmp;
-        AddRef();
-        return NS_OK;
-    }
-    else if ( aIID.Equals(kISupportsIID) )
-    {
-         
-        nsIDOMAppCoresManager* tmp1 = this;
-        nsISupports* tmp2 = tmp1;
-        
-        *aInstancePtr = (void*)tmp2;
-        AddRef();
-        return NS_OK;
-    }
+    *aInstancePtr = (void*)tmp2;
+    AddRef();
+    return NS_OK;
+  }
 
-     return NS_NOINTERFACE;
+  return NS_NOINTERFACE;
 }
 
 
@@ -163,20 +154,17 @@ nsAppCoresManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 NS_IMETHODIMP 
 nsAppCoresManager::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
-    nsresult res = NS_OK;
-    
-    if (nsnull == mScriptObject) 
-    {
-        nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-
-        res = NS_NewScriptAppCoresManager(aContext, (nsISupports *)(nsIDOMAppCoresManager*)this, global, (void**)&mScriptObject);
-        
-        NS_IF_RELEASE(global);
-    }
+  nsresult res = NS_OK;
   
+  if (nsnull == mScriptObject)  {
+    nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+    res = NS_NewScriptAppCoresManager(aContext, (nsISupports *)(nsIDOMAppCoresManager*)this, global, (void**)&mScriptObject);
+    NS_IF_RELEASE(global);
+  }
 
-    *aScriptObject = mScriptObject;
-    return res;
+
+  *aScriptObject = mScriptObject;
+  return res;
 }
 
 //--------------------------------------------------------
@@ -191,118 +179,74 @@ nsAppCoresManager::SetScriptObject(void *aScriptObject)
 NS_IMETHODIMP
 nsAppCoresManager::Startup()
 {
-
-    
     /***************************************/
-    /* Add us to the Javascript Name Space */
-    /***************************************/
+  /* Add us to the Javascript Name Space */
+  /***************************************/
 
-    nsIScriptNameSetRegistry *registry;
-    nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                                   kIScriptNameSetRegistryIID,
-                                                  (nsISupports **)&registry);
-    if (NS_OK == result) 
-    {
-        nsAppCoresNameSet* nameSet = new nsAppCoresNameSet();
-        registry->AddExternalNameSet(nameSet);
-        /* FIX - do we need to release this service?  When we do, it get deleted,and our name is lost. */
-    }
+  nsIScriptNameSetRegistry *registry;
+  nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
+                                                 kIScriptNameSetRegistryIID,
+                                                (nsISupports **)&registry);
+  if (NS_OK == result) {
+    nsAppCoresNameSet* nameSet = new nsAppCoresNameSet();
+    registry->AddExternalNameSet(nameSet);
+    /* FIX - do we need to release this service?  When we do, it get deleted,and our name is lost. */
+  }
 
-    return result;
+  return result;
+}
+
+
+static PRBool CleanUp(void* aElement, void *aData)
+{
+  nsIDOMBaseAppCore * appCore = (nsIDOMBaseAppCore *)aElement;
+  NS_RELEASE(appCore);
+  return PR_TRUE;
 }
 
 //--------------------------------------------------------
 NS_IMETHODIMP
 nsAppCoresManager::Shutdown()
 {
-    return NS_OK;
+  mList.EnumerateForwards(CleanUp, nsnull);
+  return NS_OK;
 }
 
 //--------------------------------------------------------
 NS_IMETHODIMP    
-nsAppCoresManager::Add(nsIDOMBaseAppCore* aTask)
+nsAppCoresManager::Add(nsIDOMBaseAppCore* aAppCore)
 {
    
-    if (aTask == NULL)
-        return NS_ERROR_FAILURE;
+  if (aAppCore == NULL)
+      return NS_ERROR_FAILURE;
 
-    /* Check to see if we already have this task in our list */
-    SDL_TaskList *node = gTasks;
-    nsString      nodeIDString;
-    nsString      addIDString;
+  /* Check to see if we already have this task in our list */
+  nsString      nodeIDString;
+  nsString      addIDString;
 
-    aTask->GetId(addIDString);
+  aAppCore->GetId(addIDString);
 
-    while (node != NULL)
-    {
-        node->task->GetId(nodeIDString);
-         
-        if (nodeIDString == addIDString)
-        {
-            /*we already have this ID in our list, ignore */
-            return NS_OK;    
-        }
-
-        node = node->next;
+  PRInt32 i;
+  for (i=0;i<mList.Count();i++) {
+    ((nsIDOMBaseAppCore *)mList[i])->GetId(nodeIDString);
+     
+    if (nodeIDString == addIDString) {
+      /*we already have this ID in our list, ignore */
+      return NS_ERROR_FAILURE;    
     }
+  }
 
-    /* add the task to our list */
-    SDL_TaskList* taskNode = (SDL_TaskList*)PR_MALLOC(sizeof(SDL_TaskList));
-    
-    aTask->AddRef();
+  aAppCore->AddRef();
+  mList.AppendElement(aAppCore);
 
-    taskNode->next = gTasks;
-    taskNode->task = aTask;
-    gTasks = taskNode;
-
-    /* Lets set the next task to run to this one */
-    gNextReadyTask = taskNode;
-    
-    return NS_OK;
+  return NS_OK;
 }
 
 //--------------------------------------------------------
 NS_IMETHODIMP    
-nsAppCoresManager::Remove(nsIDOMBaseAppCore* aTask)
+nsAppCoresManager::Remove(nsIDOMBaseAppCore* aAppCore)
 {
-    if (aTask == NULL)
-        return NS_ERROR_FAILURE;
-
-    /* Remove from our list */
-    
-    SDL_TaskList *node = gTasks;
-    SDL_TaskList *lastnode = gTasks;
-    nsString      nodeIDString;
-    nsString      doomedIDString;
-
-    aTask->GetId(doomedIDString);
-
-    while (node != NULL)
-    {
-        node->task->GetId(nodeIDString);
-        
-        if (nodeIDString == doomedIDString)
-        {
-            /* we want to delete this node */
-            
-            if (node == gTasks)
-            {
-                gTasks = node->next;
-            }
-            else
-            {
-                lastnode->next = node->next;
-            }
-
-            node->task->Release();
-            PR_DELETE(node);
-            break;
-        }
-
-        lastnode = node;
-        node = node->next;
-    }
-    return NS_OK;
+  return (mList.RemoveElement(aAppCore)?NS_OK : NS_ERROR_FAILURE);
 }
 
 
@@ -310,25 +254,22 @@ nsAppCoresManager::Remove(nsIDOMBaseAppCore* aTask)
 NS_IMETHODIMP    
 nsAppCoresManager::Find(const nsString& aId, nsIDOMBaseAppCore** aReturn)
 {
-    *aReturn=nsnull;
+  *aReturn=nsnull;
 
-    SDL_TaskList *node = gTasks;
-    nsString      nodeIDString;
+  nsString nodeIDString;
 
-    while (node != NULL)
-    {
-        node->task->GetId(nodeIDString);
-        
-        if (nodeIDString == aId)
-        {
-            *aReturn = node->task;
-            node->task->AddRef();
-            break;
-        }
-        node = node->next;
+  PRInt32 i;
+  for (i=0;i<mList.Count();i++) {
+    nsIDOMBaseAppCore * appCore = (nsIDOMBaseAppCore *)mList.ElementAt(i);
+    appCore->GetId(nodeIDString);
+    if (nodeIDString == aId) {
+      NS_ADDREF(appCore);
+      *aReturn = appCore;
+      return NS_OK;    
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 
