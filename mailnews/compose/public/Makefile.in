@@ -22,8 +22,17 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS= \
-                nsISmtpUrl.h  \
+IDLSRCS = \
+		nsIMsgCompose.idl \
+		$(NULL)
+
+EXPORTS = \
+		nsIMsgCompose.h \
+		nsMsgComposeFact.h \
+		nsMsgCompFields.h	\
+		nsMsgCompFieldsFact.h	\
+		nsISmtpUrl.h	\
+		MsgCompGlue.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -18,12 +18,20 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-EXPORTS =							\
-		nsISmtpUrl.h				\
-        $(NULL)
+IDLSRCS =							\
+			nsIMsgCompose.idl		\
+			$(NULL)
+
+EXPORTS =	 						\
+			nsIMsgCompose.h			\
+			nsMsgComposeFact.h		\
+			nsIMsgCompFields.h		\
+			nsMsgCompFieldsFact.h	\
+			nsISmtpUrl.h			\
+			MsgCompGlue.h			\
+			$(NULL)
 
 MODULE=mailnews
-
 
 include <$(DEPTH)\config\rules.mak>
 
