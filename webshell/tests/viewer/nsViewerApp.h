@@ -51,6 +51,10 @@ public:
 
   NS_IMETHOD Exit();
 
+  void Run() {
+    mAppShell->Run();
+  }
+
 protected:
   nsViewerApp();
 

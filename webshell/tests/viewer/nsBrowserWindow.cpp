@@ -148,10 +148,13 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
     bw->Destroy();
     return nsEventStatus_eConsumeDoDefault;
 
+  case NS_MENU_SELECTED:
+    return bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->menuItem);
+
   default:
     break;
   }
-  return bw->DispatchMenuItem(aEvent);
+  return nsEventStatus_eIgnore;
 }
 
 static nsEventStatus PR_CALLBACK
@@ -211,40 +214,36 @@ HandleLocationEvent(nsGUIEvent *aEvent)
 }
 
 nsEventStatus
-nsBrowserWindow::DispatchMenuItem(nsGUIEvent* aEvent)
+nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
-  nsEventStatus result = nsEventStatus_eIgnore;
-  if (aEvent->message == NS_MENU_SELECTED) {
-    nsMenuEvent* menuEvent = (nsMenuEvent*)aEvent;
-    result = DispatchDebugMenu(menuEvent);
-    if (nsEventStatus_eIgnore != result) {
-      return result;
-    }
-    switch (menuEvent->menuItem) {
-    case VIEWER_EXIT:
-      mApp->Exit();
-      return nsEventStatus_eConsumeNoDefault;
+  nsEventStatus result = DispatchDebugMenu(aID);
+  if (nsEventStatus_eIgnore != result) {
+    return result;
+  }
+  switch (aID) {
+  case VIEWER_EXIT:
+    mApp->Exit();
+    return nsEventStatus_eConsumeNoDefault;
 
-    case VIEWER_DEMO0:
-    case VIEWER_DEMO1:
-    case VIEWER_DEMO2:
-    case VIEWER_DEMO3:
-    case VIEWER_DEMO4:
-    case VIEWER_DEMO5:
-    case VIEWER_DEMO6:
-    case VIEWER_DEMO7:
-    case VIEWER_DEMO8: 
-    case VIEWER_DEMO9: 
-      {
-        PRIntn ix = menuEvent->menuItem - VIEWER_DEMO0;
-        nsAutoString url(SAMPLES_BASE_URL);
-        url.Append("/test");
-        url.Append(ix, 10);
-        url.Append(".html");
-        LoadURL(url);
-      }
-      break;
+  case VIEWER_DEMO0:
+  case VIEWER_DEMO1:
+  case VIEWER_DEMO2:
+  case VIEWER_DEMO3:
+  case VIEWER_DEMO4:
+  case VIEWER_DEMO5:
+  case VIEWER_DEMO6:
+  case VIEWER_DEMO7:
+  case VIEWER_DEMO8: 
+  case VIEWER_DEMO9: 
+    {
+      PRIntn ix = aID - VIEWER_DEMO0;
+      nsAutoString url(SAMPLES_BASE_URL);
+      url.Append("/test");
+      url.Append(ix, 10);
+      url.Append(".html");
+      LoadURL(url);
     }
+    break;
   }
   return nsEventStatus_eIgnore;
 }
@@ -1025,11 +1024,11 @@ nsBrowserWindow::ShowStyleSize()
 }
 
 nsEventStatus
-nsBrowserWindow::DispatchDebugMenu(nsMenuEvent* aEvent)
+nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
 
-  switch(aEvent->menuItem) {
+  switch(aID) {
   case VIEWER_VISUAL_DEBUGGING:
     ToggleFrameBorders();
     result = nsEventStatus_eConsumeNoDefault;
