@@ -77,13 +77,13 @@ public class NativeFunction extends ScriptableObject implements Function {
                              ScriptableObject.READONLY |
                              ScriptableObject.PERMANENT;
             obj.defineProperty("constructor", this, attr);
-			// put the prototype property into the object now, then in the
-			// wacky case of a user defining a function Object(), we don't
-			// get an infinite loop trying to find the prototype.
-			put(s, this, obj);
-			Scriptable proto = getObjectPrototype(this);			
-			if (proto != obj) // not the one we just made, it must remain grounded
-				obj.setPrototype(proto);
+            // put the prototype property into the object now, then in the
+            // wacky case of a user defining a function Object(), we don't
+            // get an infinite loop trying to find the prototype.
+            put(s, this, obj);
+            Scriptable proto = getObjectPrototype(this);            
+            if (proto != obj) // not the one we just made, it must remain grounded
+                obj.setPrototype(proto);
             return obj;
         }
         if (s.equals("arguments")) {
@@ -838,20 +838,24 @@ public class NativeFunction extends ScriptableObject implements Function {
                                              Object[] args, Function funObj)
     {
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-        if (!(val instanceof NativeFunction)) {
-            throw NativeGlobal.typeError1
-                ("msg.incompat.call", "toString", funObj);
-        }
-        if (val instanceof NativeJavaMethod) {
-            return "\nfunction " + ((NativeFunction) val).jsGet_name() +
-                "() {/*\n" + val.toString() + "*/}\n";
-        }
+        if (val instanceof NativeFunction) {
+            NativeFunction funVal = (NativeFunction)val;
+            if (funVal instanceof NativeJavaMethod) {
+                return "\nfunction " + funVal.jsGet_name() +
+                    "() {/*\n" + val.toString() + "*/}\n";
+            }
+            int indent = 0;
+            if (args.length > 0)
+                indent = (int)ScriptRuntime.toNumber(args[0]);
 
-        int indent = 0;
-        if (args.length > 0)
-            indent = (int)ScriptRuntime.toNumber(args[0]);
-
-        return ((NativeFunction) val).decompile(indent, true, false);
+            return funVal.decompile(indent, true, false);
+        }
+        else if (val instanceof IdFunction) {
+            IdFunction funVal = (IdFunction)val;
+            return funVal.toStringForScript(cx);
+        }
+        throw NativeGlobal.typeError1
+            ("msg.incompat.call", "toString", thisObj);
     }
 
     public static Object jsConstructor(Context cx, Object[] args,

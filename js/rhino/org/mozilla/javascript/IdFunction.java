@@ -39,6 +39,10 @@ package org.mozilla.javascript;
 
 public class IdFunction extends ScriptableObject implements Function
 {
+    /** Indicates that native implementation was overwritten by script */
+    public static final 
+        IdFunction WAS_OVERWRITTEN = new IdFunction(null, "", 0);
+    
     public static final int FUNCTION_ONLY = 0;
 
     public static final int CONSTRUCTOR_ONLY = 1;
@@ -48,7 +52,9 @@ public class IdFunction extends ScriptableObject implements Function
     public static interface Master {
         /** 'thisObj' will be null if invoked as constructor, in which case
          ** instance of Scriptable should be returned */
-        public Object execMethod(int methodId, IdFunction function, Context cx,                                 Scriptable scope, Scriptable thisObj, Object[] args)
+        public Object execMethod(int methodId, IdFunction function,
+                                 Context cx, Scriptable scope, 
+                                 Scriptable thisObj, Object[] args)
             throws JavaScriptException;
 
         public int methodArity(int methodId, IdFunction function);
@@ -103,7 +109,9 @@ public class IdFunction extends ScriptableObject implements Function
         if (nameToId(name) == 0) {
             super.delete(name);
         }
-    }        /**
+    }
+    
+    /**
      * Implements the instanceof operator for JavaScript Function objects.
      * <p>
      * <code>
@@ -119,14 +127,16 @@ public class IdFunction extends ScriptableObject implements Function
      */
     public boolean hasInstance(Scriptable instance) {
         Object protoProp = ScriptableObject.getProperty(this, "prototype");
-        if (protoProp instanceof Scriptable && protoProp != Undefined.instance) {
+        if (protoProp instanceof Scriptable && protoProp != Undefined.instance)
+        {
             return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
         }
         throw NativeGlobal.typeError1
             ("msg.instanceof.bad.prototype", this.methodName, instance);
     }
     
-    public Object call(Context cx, Scriptable scope, Scriptable thisObj,                        Object[] args)
+    public Object call(Context cx, Scriptable scope, Scriptable thisObj, 
+                       Object[] args)
         throws JavaScriptException
     {
         if (functionType != CONSTRUCTOR_ONLY) {
@@ -141,10 +151,12 @@ public class IdFunction extends ScriptableObject implements Function
         throws JavaScriptException
     {
         if (functionType != FUNCTION_ONLY) {
-            Object result 
-                = master.execMethod(methodId, this, cx, scope, null, args);
             // It is program error not to return Scriptable from constructor
-            return (Scriptable)result;
+            Scriptable result = (Scriptable)master.execMethod(methodId, this,
+                                                              cx, scope, 
+                                                              null, args);
+            postConstruction(result);
+            return result;
         }
         else {
             return Undefined.instance;
@@ -165,12 +177,70 @@ public class IdFunction extends ScriptableObject implements Function
         return result;
     }
 
+    // Copied from NativeFunction
+    protected Scriptable getClassPrototype() {
+        Object protoVal = immunePrototypeProperty;
+        if (protoVal == NOT_FOUND) {
+            protoVal = super.get("prototype", this);
+        }
+        if (!(protoVal instanceof Scriptable)
+            || protoVal == Undefined.instance)
+        {
+            protoVal = getClassPrototype(this, "Object");
+        }
+        return (Scriptable) protoVal;
+    }
+
+    protected Object toStringForScript(Context cx) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("function() { [native code for ");
+        if (master instanceof Scriptable) {
+            Scriptable smaster = (Scriptable)master;
+            sb.append(smaster.getClassName());
+            sb.append('.');
+        }
+        sb.append(methodName);
+        sb.append(", arity=");
+        sb.append(getArity());
+        sb.append("] }");
+        return sb.toString();
+    }
+    
+    /** Make value as DontEnum, DontDelete, ReadOnly
+     ** prototype property of this native Function object
+     ** if not already set
+     */
+    protected void setImmunePrototypeProperty(Object value) {
+        if (immunePrototypeProperty == NOT_FOUND) {
+            immunePrototypeProperty = value;
+        }
+    }
+    
+    private int getArity() {
+        return master.methodArity(methodId, this);
+    }
+    
+    // Copied from NativeFunction.construct
+    private void postConstruction(Scriptable newObj) {
+        if (newObj.getPrototype() == null) {
+            newObj.setPrototype(getClassPrototype());
+        }
+        if (newObj.getParentScope() == null) {
+            Scriptable parent = getParentScope();
+            if (newObj != parent) {
+                newObj.setParentScope(parent);
+            }
+        }
+    }
+
     private Object getField(int fieldId) {
         switch (fieldId) {
             case ID_ARITY: case ID_LENGTH: 
-                return new Integer(master.methodArity(methodId, this));
+                return new Integer(getArity());
             case ID_NAME: 
                 return methodName;
+            case ID_PROTOTYPE:
+                return immunePrototypeProperty;
         }
         return null;
     }
@@ -182,6 +252,14 @@ public class IdFunction extends ScriptableObject implements Function
             case 4: guess = "name"; id = ID_NAME; break;
             case 5: guess = "arity"; id = ID_ARITY; break;
             case 6: guess = "length"; id = ID_LENGTH; break;
+            case 9: 
+                if (immunePrototypeProperty != NOT_FOUND) {
+                // Try to guess only if immunePrototypeProperty is defined, 
+                // delegate to ScriptableObject otherwise
+                    guess = "prototype"; id = ID_PROTOTYPE; 
+                }
+                break;
+            
         }
         return (guess != null && guess.equals(s)) ? id : 0;
     }
@@ -189,7 +267,8 @@ public class IdFunction extends ScriptableObject implements Function
     private static final int 
         ID_ARITY     = 1,
         ID_LENGTH    = 2,
-        ID_NAME      = 3;
+        ID_NAME      = 3,
+        ID_PROTOTYPE = 4;
         
     protected final Master master;
     protected final String methodName;
@@ -198,4 +277,7 @@ public class IdFunction extends ScriptableObject implements Function
     protected Object idTag;
     
     protected int functionType = FUNCTION_ONLY;
+
+    // If != NOT_FOUND, represent script-immune prototype property
+    private Object immunePrototypeProperty = NOT_FOUND; 
 }
