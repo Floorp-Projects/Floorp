@@ -60,10 +60,11 @@ typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
 typedef bool (Read)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-typedef bool (ReadPublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, LookupKind *lookupKind, Phase phase, js2val *rval);
+typedef bool (ReadPublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
 typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
-typedef bool (WritePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
+typedef bool (WritePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
 typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
+typedef bool (DeletePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
 typedef bool (BracketRead)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
 typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
 typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
@@ -636,8 +637,9 @@ public:
     Read *read;
     ReadPublic *readPublic;
     Write *write;
-    WritePublic *readWrite;
+    WritePublic *writePublic;
     DeleteProperty *deleteProperty;
+    DeletePublic *deletePublic;
     BracketRead *bracketRead;    
     BracketWrite *bracketWrite;
     BracketDelete *bracketDelete;

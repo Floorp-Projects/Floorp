@@ -3640,8 +3640,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     Member *JS2Metadata::findCommonMember(js2val base, Multiname *multiname, Access access, bool flat)
     {
         Member *m = NULL;
-        if (JS2VAL_IS_PRIMITIVE(base))
-            return NULL;
+        if (JS2VAL_IS_PRIMITIVE(base))  
+            return NULL;                    // XXX call toObject() for E3 compatibility...
         JS2Object *baseObj = JS2VAL_TO_OBJECT(base);
         switch (baseObj->kind) {
         case SimpleInstanceKind:
@@ -3825,11 +3825,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
-    bool defaultReadPublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, LookupKind *lookupKind, Phase phase, js2val *rval)
+    bool defaultReadPublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, Phase phase, js2val *rval)
     {
         // XXX could speed up by pushing knowledge of single namespace?
+        LookupKind lookup(false, JS2VAL_NULL);
         Multiname mn(name, meta->publicNamespace);
-        return defaultReadProperty(meta, base, limit, &mn, lookupKind, phase, rval);
+        return defaultReadProperty(meta, base, limit, &mn, &lookup, phase, rval);
     }
 
     bool defaultBracketRead(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval)
@@ -3889,11 +3890,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
-    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, LookupKind *lookupKind, bool createIfMissing, js2val newValue)
+    bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
     {
         // XXX could speed up by pushing knowledge of single namespace?
+        LookupKind lookup(false, JS2VAL_NULL);
         Multiname mn(name, meta->publicNamespace);
-        return defaultWriteProperty(meta, base, limit, &mn, lookupKind, createIfMissing, newValue);
+        return defaultWriteProperty(meta, base, limit, &mn, &lookup, createIfMissing, newValue);
     }
 
     bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue)
@@ -3965,6 +3967,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (JS2VAL_IS_UNINITIALIZED(lookupKind->thisObject))
             meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
         return meta->readInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, phase, rval);
+    }
+
+    bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result)
+    {
+        // XXX could speed up by pushing knowledge of single namespace & lookup?
+        LookupKind lookup(false, JS2VAL_NULL);
+        Multiname mn(name, meta->publicNamespace);
+        return defaultDeleteProperty(meta, base, limit, &mn, &lookup, result);
     }
 
     bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval)
@@ -4178,8 +4188,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             read(defaultReadProperty),
             readPublic(defaultReadPublicProperty),
             write(defaultWriteProperty),
+            writePublic(defaultWritePublicProperty),
+            deleteProperty(defaultDeleteProperty),
+            deletePublic(defaultDeletePublic),
             bracketRead(defaultBracketReadProperty),
             bracketWrite(defaultBracketReadProperty),
+            bracketDelete(defaultBracketDelete),
             slotCount(super ? super->slotCount : 0)
     {
 

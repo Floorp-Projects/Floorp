@@ -58,11 +58,10 @@ namespace MetaData {
 
 uint32 getLength(JS2Metadata *meta, JS2Object *obj)
 {
-    LookupKind lookup(false, JS2VAL_NULL);
     uint32 length = 0;
     js2val result;
     JS2Class *c = meta->objectType(obj);
-    if (c->readPublic(meta, obj, c, meta->engine->length_StringAtom, &lookup, RunPhase, &result))
+    if (c->readPublic(meta, OBJECT_TO_JS2VAL(obj), c, meta->engine->length_StringAtom, RunPhase, &result))
         length = toUInt32(meta->toInteger(result));
     return length;
 }
@@ -70,40 +69,22 @@ uint32 getLength(JS2Metadata *meta, JS2Object *obj)
 js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
 {
     js2val result = meta->engine->allocNumber(newLength);
-
     if ((obj->kind == SimpleInstanceKind)
             || (checked_cast<SimpleInstance *>(obj)->type == meta->arrayClass)) {
         uint32 length = getLength(meta, obj);
         if (newLength < length) {
             // need to delete all the elements above the new length
             // XXX (But only for array instances, maybe should have setArrayLength as a specialization)
-            LookupKind lookup(false, JS2VAL_NULL);
             bool deleteResult;
+            JS2Class *c = meta->objectType(obj);
             for (uint32 i = newLength; i < length; i++) {
-                meta->mn1->name = meta->engine->numberToString(i);
-                meta->deleteProperty(OBJECT_TO_JS2VAL(obj), meta->mn1, &lookup, RunPhase, &deleteResult);
+                c->deletePublic(meta, OBJECT_TO_JS2VAL(obj), c, meta->engine->numberToString(i), &deleteResult);
             }
         }
     }
-
-    if (obj->kind == SimpleInstanceKind) {
-        // Can't call 'writeDynamicProperty' as that'll just cycle back here for
-        // ArrayInstances.
-/*
-        DynamicPropertyMap *dMap = &checked_cast<SimpleInstance *>(obj)->dynamicProperties;
-        DynamicPropertyBinding **dpbP = (*dMap)[*meta->engine->length_StringAtom];
-        if (dpbP) {
-            (*dpbP)->v.value = result;
-            return result;
-        }
-        DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->length_StringAtom, DynamicPropertyValue(result, DynamicPropertyValue::PERMANENT));
-        checked_cast<SimpleInstance *>(obj)->dynamicProperties.insert(dpb->name, dpb); 
-*/
-    }
-    else {
-        meta->mn1->name = meta->engine->length_StringAtom;
-        meta->writeDynamicProperty(obj, meta->mn1, true, result, RunPhase);
-    }
+    // XXX if obj is an ArrayInstance, is this necessary? 
+    JS2Class *c = meta->objectType(obj);
+    c->writePublic(meta, OBJECT_TO_JS2VAL(obj), c, meta->engine->length_StringAtom, true, result);
     return result;
 }
 
@@ -122,15 +103,13 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
                     meta->reportError(Exception::rangeError, "Array length too large", meta->engine->errorPos());
             }
             else {
-                meta->mn1->name = meta->engine->numberToString((int32)0);
-                meta->writeDynamicProperty(arrInst, meta->mn1, true, argv[0], RunPhase);
+                meta->createDynamicProperty(arrInst, meta->engine->numberToString((int32)0), argv[0], ReadWriteAccess, false, true);
             }
         }
         else {
             uint32 i;
             for (i = 0; i < argc; i++) {
-//                DynamicPropertyBinding *dpb = new DynamicPropertyBinding(*meta->engine->numberToString(i), DynamicPropertyValue(argv[i], DynamicPropertyValue::ENUMERATE));
-//                arrInst->dynamicProperties.insert(dpb->name, dpb); 
+                meta->createDynamicProperty(arrInst, meta->engine->numberToString(i), argv[i], ReadWriteAccess, false, true);
             }
             setLength(meta, arrInst, i);
         }
@@ -155,8 +134,7 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
         js2val result;
         String *s = new String();
         for (uint32 i = 0; i < length; i++) {
-            meta->mn1->name = meta->engine->numberToString(i);
-            if (meta->readDynamicProperty(arrInst, meta->mn1, &lookup, RunPhase, &result)
+            if (meta->arrayClass->readPublic(meta, thisValue, meta->arrayClass, meta->engine->numberToString(i), RunPhase, &result))
                     && !JS2VAL_IS_UNDEFINED(result)
                     && !JS2VAL_IS_NULL(result) )
                 s->append(*meta->toString(result));
@@ -187,8 +165,7 @@ static js2val Array_toSource(JS2Metadata *meta, const js2val thisValue, js2val *
         js2val result;
         String *s = new String();
         for (uint32 i = 0; i < length; i++) {
-            meta->mn1->name = meta->engine->numberToString(i);
-            if (meta->readDynamicProperty(arrInst, meta->mn1, &lookup, RunPhase, &result)
+            if (meta->arrayClass->readPublic(meta, thisValue, meta->arrayClass, meta->engine->numberToString(i), RunPhase, &result))
                     && !JS2VAL_IS_UNDEFINED(result))
                 s->append(*meta->toString(result));
             if (i < (length - 1))
