@@ -182,8 +182,6 @@ UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse messge for MSIME
 UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert messge for ATOK
 UINT nsWindow::uWM_HEAP_DUMP       = 0; // Heap Dump to a file
 
-PRBool nsWindow::sSkipWMCHARProcessing; // enables the skipping of WM_CHAR processing the key press
-
 #ifdef ACCESSIBILITY
 BOOL nsWindow::gIsAccessibilityOn = FALSE;
 #endif
@@ -2868,6 +2866,9 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   else if (mIsControlDown && aVirtualKeyCode == NS_VK_TAB) {
     DispatchKeyEvent(NS_KEY_PRESS, 0, NS_VK_TAB, aKeyData);
   }
+  else if (mIsControlDown && aVirtualKeyCode == VK_BACK) {
+    DispatchKeyEvent(NS_KEY_PRESS, 0, VK_BACK, aKeyData);
+  }
   else if (mIsControlDown && !mIsShiftDown && aVirtualKeyCode == NS_VK_SUBTRACT) {
     DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode-64, 0, aKeyData);
   }
@@ -2896,11 +2897,8 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 
    // Fix for 50255 (<ctrl><enter> not working
    // Send keypress event for <ctrl><enter> keyboard action
-   // Set sSkipWMCHARProcessing to true so the 0x0a char code sent to OnCHar
-   // will be thrown away.
   if (mIsControlDown && aVirtualKeyCode == VK_RETURN ) 
   {
-    sSkipWMCHARProcessing = PR_TRUE;
     DispatchKeyEvent(NS_KEY_PRESS,  0, aVirtualKeyCode, aKeyData);
   } 
 
@@ -3607,12 +3605,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
             unsigned char    ch = (unsigned char)wParam;
             UINT            char_result;
-  
+            UINT            virtualKeyCode;  
+            virtualKeyCode = MapVirtualKey(LOBYTE(HIWORD(lParam)), 1);
+
             // <ctrl><enter> and <ctrl>J and generate exactly the same char code
             // but we want to "eat" the event for <ctrl><enter> because
             // we generate the KEY_PRESS on the KeyDown, so we want to throw 
             // this event away here 
-            if (mIsControlDown && ch == 0x0a && sSkipWMCHARProcessing) {
+            // <ctrl><backSpace> also generates a char code event but it is handled in 
+            // the KeyDown method, so we can ignore it here as we do for ctrl+enter.
+            if ((mIsControlDown && virtualKeyCode == VK_RETURN)  ||
+                (mIsControlDown && virtualKeyCode == VK_BACK)) {
               result = PR_FALSE;
               break;
             }
@@ -3681,10 +3684,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                    (WM_KEYDOWN==msg)?"WM_KEYDOWN":"WM_SYSKEYDOWN" , wParam, lParam);
 #endif
 
-            // Always set this to false
-            // Used to discard the processing of the WM_CHAR events for:
-            //   <ctrl><enter>
-            sSkipWMCHARProcessing = PR_FALSE;
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             if(WM_SYSKEYDOWN==msg)
             {
