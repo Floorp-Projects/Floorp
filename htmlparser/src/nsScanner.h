@@ -215,11 +215,11 @@ class nsScanner {
        *  @return  error code
        */
       nsresult ReadUntil(nsAWritableString& aString,
-                         const nsAReadableString& aTermSet,
+                         const nsAFlatString& aTermSet,
                          PRBool addTerminal);
 
       nsresult ReadUntil(nsAWritableString& aString,
-                         const nsAReadableCString& aTermSet,
+                         const nsAFlatCString& aTermSet,
                          PRBool addTerminal);
 
       nsresult ReadUntil(nsAWritableString& aString,
@@ -233,7 +233,7 @@ class nsScanner {
 
       nsresult ReadUntil(nsReadingIterator<PRUnichar>& aStart,
                          nsReadingIterator<PRUnichar>& aEnd,
-                         const nsAReadableString& aTerminalSet,
+                         const nsAFlatString& aTerminalSet,
                          PRBool addTerminal);
 
 
