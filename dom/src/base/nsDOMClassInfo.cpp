@@ -3940,7 +3940,7 @@ nsWindowSH::CacheDocumentProperty(JSContext *cx, JSObject *obj,
   if (!::JS_DefineUCProperty(cx, obj, NS_REINTERPRET_CAST(const jschar *,
                                                           doc_str.get()),
                              doc_str.Length(), v, nsnull,
-                             nsnull, JSPROP_READONLY)) {
+                             nsnull, JSPROP_READONLY | JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -4133,7 +4133,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                         ::JS_GetStringLength(str), v, nsnull,
-                                        nsnull, 0);
+                                        nsnull, JSPROP_ENUMERATE);
 
       sDoSecurityCheckInAddProperty = PR_TRUE;
 
@@ -4181,7 +4181,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                    ::JS_GetStringLength(str), v, nsnull,
-                                   nsnull, 0)) {
+                                   nsnull, JSPROP_ENUMERATE)) {
           return NS_ERROR_FAILURE;
         }
 
@@ -4209,7 +4209,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                    ::JS_GetStringLength(str), v, nsnull,
-                                   nsnull, JSPROP_READONLY)) {
+                                   nsnull,
+                                   JSPROP_READONLY | JSPROP_ENUMERATE)) {
           return NS_ERROR_FAILURE;
         }
 
@@ -4991,7 +4992,7 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                       ::JS_GetStringLength(str), v, nsnull,
-                                      nsnull, 0);
+                                      nsnull, JSPROP_ENUMERATE);
 
     sDoSecurityCheckInAddProperty = PR_TRUE;
 
