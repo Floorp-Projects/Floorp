@@ -286,8 +286,6 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mBlackPen = ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
   mOrigSolidPen = ::SelectObject(mDC, mBlackPen);
 
-  mNullPen = ::CreatePen(PS_NULL, 0, 0);
-
   return NS_OK;
 }
 
@@ -646,6 +644,10 @@ void nsRenderingContextWin::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   int pfm = ::GetPolyFillMode(mDC);
   ::SetPolyFillMode(mDC, WINDING);
   SetupSolidBrush();
+
+  if (NULL == mNullPen)
+    mNullPen = ::CreatePen(PS_NULL, 0, 0);
+
   HPEN oldPen = ::SelectObject(mDC, mNullPen);
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldPen);
