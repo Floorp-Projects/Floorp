@@ -72,7 +72,7 @@ szUninstall = fProgram + "Uninstall";
 // are normally not logged for uninstall.
 logComment("Installing: " + fProgram + "component.reg");
 
-if(verifyDiskSpace(fProgram, srDest) == true)
+if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
   err = addDirectory("",
