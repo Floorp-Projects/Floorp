@@ -1743,22 +1743,20 @@
     
     (rule :paren-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :paren-expression (\( (:assignment-expression allow-in) \)) paren-expression-assignment-expression
-        (validate (validate :assignment-expression))
-        (eval (eval :assignment-expression))))
+        ((validate cxt env) :forward)
+        ((eval env phase) (return ((eval :assignment-expression) env phase)))))
     
     (rule :paren-list-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref))
                                   (eval-as-list (-> (environment phase) (vector object))))
       (production :paren-list-expression (:paren-expression) paren-list-expression-paren-expression
-        ((validate cxt env) ((validate :paren-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :paren-expression) env phase)))
         ((eval-as-list env phase)
          (const r obj-or-ref ((eval :paren-expression) env phase))
          (const elt object (read-reference r phase))
          (return (vector elt))))
       (production :paren-list-expression (\( (:list-expression allow-in) \, (:assignment-expression allow-in) \)) paren-list-expression-list-expression
-        ((validate cxt env)
-         ((validate :list-expression) cxt env)
-         ((validate :assignment-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :list-expression) env phase))
          (exec (read-reference ra phase))
@@ -1908,14 +1906,14 @@
     (%heading 2 "Postfix Expressions")
     (rule :postfix-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression
-        (validate (validate :attribute-expression))
-        (eval (eval :attribute-expression)))
+        ((validate cxt env) :forward)
+        ((eval env phase) (return ((eval :attribute-expression) env phase))))
       (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression
-        (validate (validate :full-postfix-expression))
-        (eval (eval :full-postfix-expression)))
+        ((validate cxt env) :forward)
+        ((eval env phase) (return ((eval :full-postfix-expression) env phase))))
       (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression
-        (validate (validate :short-new-expression))
-        (eval (eval :short-new-expression))))
+        ((validate cxt env) :forward)
+        ((eval env phase) (return ((eval :short-new-expression) env phase)))))
     
     (rule :attribute-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier
@@ -2006,9 +2004,7 @@
     
     (rule :full-new-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new
-        ((validate cxt env)
-         ((validate :full-new-subexpression) cxt env)
-         ((validate :arguments) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :full-new-subexpression) env phase))
          (const f object (read-reference r phase))
@@ -2046,7 +2042,7 @@
     
     (rule :short-new-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :short-new-expression (new :short-new-subexpression) short-new-expression-new
-        ((validate cxt env) ((validate :short-new-subexpression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :short-new-subexpression) env phase))
          (const f object (read-reference r phase))
@@ -2054,11 +2050,11 @@
     
     (rule :short-new-subexpression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full
-        (validate (validate :full-new-subexpression))
-        (eval (eval :full-new-subexpression)))
+        ((validate cxt env) :forward)
+        ((eval env phase) (return ((eval :full-new-subexpression) env phase))))
       (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short
-        (validate (validate :short-new-expression))
-        (eval (eval :short-new-expression))))
+        ((validate cxt env) :forward)
+        ((eval env phase) (return ((eval :short-new-expression) env phase)))))
     (%print-actions ("Validation" strict validate) ("Evaluation" eval))
     
     
@@ -2097,10 +2093,10 @@
     (%heading 2 "Member Operators")
     (rule :member-operator ((validate (-> (context environment) void)) (eval (-> (environment obj-optional-limit phase) obj-or-ref)))
       (production :member-operator (\. :qualified-identifier) member-operator-qualified-identifier
-        ((validate cxt env) ((validate :qualified-identifier) cxt env))
+        ((validate cxt env) :forward)
         ((eval (env :unused) base (phase :unused)) (return (new dot-reference base (multiname :qualified-identifier)))))
       (production :member-operator (:brackets) member-operator-brackets
-        ((validate cxt env) ((validate :brackets) cxt env))
+        ((validate cxt env) :forward)
         ((eval env base phase)
          (const args argument-list ((eval :brackets) env phase))
          (return (new bracket-reference base args)))))
@@ -2128,10 +2124,10 @@
     
     (rule :paren-expressions ((validate (-> (context environment) void)) (eval (-> (environment phase) argument-list)))
       (production :paren-expressions (\( \)) paren-expressions-none
-        ((validate (cxt :unused) (env :unused)))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (return (new argument-list (vector-of object) (list-set-of named-argument)))))
       (production :paren-expressions (:paren-list-expression) paren-expressions-some
-        ((validate cxt env) ((validate :paren-list-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const positional (vector object) ((eval-as-list :paren-list-expression) env phase))
          (return (new argument-list positional (list-set-of named-argument))))))
@@ -2297,12 +2293,10 @@
     (%heading 2 "Multiplicative Operators")
     (rule :multiplicative-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :multiplicative-expression (:unary-expression) multiplicative-expression-unary
-        ((validate cxt env) ((validate :unary-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :unary-expression) env phase))))
       (production :multiplicative-expression (:multiplicative-expression * :unary-expression) multiplicative-expression-multiply
-        ((validate cxt env)
-         ((validate :multiplicative-expression) cxt env)
-         ((validate :unary-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2310,9 +2304,7 @@
          (const b object (read-reference rb phase))
          (return (multiply a b phase))))
       (production :multiplicative-expression (:multiplicative-expression / :unary-expression) multiplicative-expression-divide
-        ((validate cxt env)
-         ((validate :multiplicative-expression) cxt env)
-         ((validate :unary-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2320,9 +2312,7 @@
          (const b object (read-reference rb phase))
          (return (divide a b phase))))
       (production :multiplicative-expression (:multiplicative-expression % :unary-expression) multiplicative-expression-remainder
-        ((validate cxt env)
-         ((validate :multiplicative-expression) cxt env)
-         ((validate :unary-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2387,12 +2377,10 @@
     (%heading 2 "Additive Operators")
     (rule :additive-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :additive-expression (:multiplicative-expression) additive-expression-multiplicative
-        ((validate cxt env) ((validate :multiplicative-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :multiplicative-expression) env phase))))
       (production :additive-expression (:additive-expression + :multiplicative-expression) additive-expression-add
-        ((validate cxt env)
-         ((validate :additive-expression) cxt env)
-         ((validate :multiplicative-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :additive-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2400,9 +2388,7 @@
          (const b object (read-reference rb phase))
          (return (add a b phase))))
       (production :additive-expression (:additive-expression - :multiplicative-expression) additive-expression-subtract
-        ((validate cxt env)
-         ((validate :additive-expression) cxt env)
-         ((validate :multiplicative-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :additive-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2449,12 +2435,10 @@
     (%heading 2 "Bitwise Shift Operators")
     (rule :shift-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :shift-expression (:additive-expression) shift-expression-additive
-        ((validate cxt env) ((validate :additive-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :additive-expression) env phase))))
       (production :shift-expression (:shift-expression << :additive-expression) shift-expression-left
-        ((validate cxt env)
-         ((validate :shift-expression) cxt env)
-         ((validate :additive-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :shift-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2462,9 +2446,7 @@
          (const b object (read-reference rb phase))
          (return (shift-left a b phase))))
       (production :shift-expression (:shift-expression >> :additive-expression) shift-expression-right-signed
-        ((validate cxt env)
-         ((validate :shift-expression) cxt env)
-         ((validate :additive-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :shift-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2472,9 +2454,7 @@
          (const b object (read-reference rb phase))
          (return (shift-right a b phase))))
       (production :shift-expression (:shift-expression >>> :additive-expression) shift-expression-right-unsigned
-        ((validate cxt env)
-         ((validate :shift-expression) cxt env)
-         ((validate :additive-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :shift-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2541,12 +2521,10 @@
     (%heading 2 "Relational Operators")
     (rule (:relational-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:relational-expression :beta) (:shift-expression) relational-expression-shift
-        ((validate cxt env) ((validate :shift-expression) cxt env))
+       ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :shift-expression) env phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) < :shift-expression) relational-expression-less
-        ((validate cxt env)
-         ((validate :relational-expression) cxt env)
-         ((validate :shift-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :relational-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2554,9 +2532,7 @@
          (const b object (read-reference rb phase))
          (return (is-less a b phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) > :shift-expression) relational-expression-greater
-        ((validate cxt env)
-         ((validate :relational-expression) cxt env)
-         ((validate :shift-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :relational-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2564,9 +2540,7 @@
          (const b object (read-reference rb phase))
          (return (is-less b a phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) <= :shift-expression) relational-expression-less-or-equal
-        ((validate cxt env)
-         ((validate :relational-expression) cxt env)
-         ((validate :shift-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :relational-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2574,9 +2548,7 @@
          (const b object (read-reference rb phase))
          (return (is-less-or-equal a b phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) >= :shift-expression) relational-expression-greater-or-equal
-        ((validate cxt env)
-         ((validate :relational-expression) cxt env)
-         ((validate :shift-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :relational-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2584,24 +2556,16 @@
          (const b object (read-reference rb phase))
          (return (is-less-or-equal b a phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) is :shift-expression) relational-expression-is
-        ((validate cxt env)
-         ((validate :relational-expression) cxt env)
-         ((validate :shift-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (todo)))
       (production (:relational-expression :beta) ((:relational-expression :beta) as :shift-expression) relational-expression-as
-        ((validate cxt env)
-         ((validate :relational-expression) cxt env)
-         ((validate :shift-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (todo)))
       (production (:relational-expression allow-in) ((:relational-expression allow-in) in :shift-expression) relational-expression-in
-        ((validate cxt env)
-         ((validate :relational-expression) cxt env)
-         ((validate :shift-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (todo)))
       (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof
-        ((validate cxt env)
-         ((validate :relational-expression) cxt env)
-         ((validate :shift-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (todo))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
@@ -2623,12 +2587,10 @@
     (%heading 2 "Equality Operators")
     (rule (:equality-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:equality-expression :beta) ((:relational-expression :beta)) equality-expression-relational
-        ((validate cxt env) ((validate :relational-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :relational-expression) env phase))))
       (production (:equality-expression :beta) ((:equality-expression :beta) == (:relational-expression :beta)) equality-expression-equal
-        ((validate cxt env)
-         ((validate :equality-expression) cxt env)
-         ((validate :relational-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :equality-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2636,9 +2598,7 @@
          (const b object (read-reference rb phase))
          (return (is-equal a b phase))))
       (production (:equality-expression :beta) ((:equality-expression :beta) != (:relational-expression :beta)) equality-expression-not-equal
-        ((validate cxt env)
-         ((validate :equality-expression) cxt env)
-         ((validate :relational-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :equality-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2647,9 +2607,7 @@
          (const c boolean (is-equal a b phase))
          (return (not c))))
       (production (:equality-expression :beta) ((:equality-expression :beta) === (:relational-expression :beta)) equality-expression-strict-equal
-        ((validate cxt env)
-         ((validate :equality-expression) cxt env)
-         ((validate :relational-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :equality-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2657,9 +2615,7 @@
          (const b object (read-reference rb phase))
          (return (is-strictly-equal a b phase))))
       (production (:equality-expression :beta) ((:equality-expression :beta) !== (:relational-expression :beta)) equality-expression-strict-not-equal
-        ((validate cxt env)
-         ((validate :equality-expression) cxt env)
-         ((validate :relational-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :equality-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2714,12 +2670,10 @@
     (%heading 2 "Binary Bitwise Operators")
     (rule (:bitwise-and-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality
-        ((validate cxt env) ((validate :equality-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :equality-expression) env phase))))
       (production (:bitwise-and-expression :beta) ((:bitwise-and-expression :beta) & (:equality-expression :beta)) bitwise-and-expression-and
-        ((validate cxt env)
-         ((validate :bitwise-and-expression) cxt env)
-         ((validate :equality-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :bitwise-and-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2729,12 +2683,10 @@
     
     (rule (:bitwise-xor-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and
-        ((validate cxt env) ((validate :bitwise-and-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :bitwise-and-expression) env phase))))
       (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ (:bitwise-and-expression :beta)) bitwise-xor-expression-xor
-        ((validate cxt env)
-         ((validate :bitwise-xor-expression) cxt env)
-         ((validate :bitwise-and-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :bitwise-xor-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2744,12 +2696,10 @@
     
     (rule (:bitwise-or-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor
-        ((validate cxt env) ((validate :bitwise-xor-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :bitwise-xor-expression) env phase))))
       (production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| (:bitwise-xor-expression :beta)) bitwise-or-expression-or
-        ((validate cxt env)
-         ((validate :bitwise-or-expression) cxt env)
-         ((validate :bitwise-xor-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :bitwise-or-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2810,12 +2760,10 @@
     (%heading 2 "Binary Logical Operators")
     (rule (:logical-and-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:logical-and-expression :beta) ((:bitwise-or-expression :beta)) logical-and-expression-bitwise-or
-        ((validate cxt env) ((validate :bitwise-or-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :bitwise-or-expression) env phase))))
       (production (:logical-and-expression :beta) ((:logical-and-expression :beta) && (:bitwise-or-expression :beta)) logical-and-expression-and
-        ((validate cxt env)
-         ((validate :logical-and-expression) cxt env)
-         ((validate :bitwise-or-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-and-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2827,12 +2775,10 @@
     
     (rule (:logical-xor-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:logical-xor-expression :beta) ((:logical-and-expression :beta)) logical-xor-expression-logical-and
-        ((validate cxt env) ((validate :logical-and-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :logical-and-expression) env phase))))
       (production (:logical-xor-expression :beta) ((:logical-xor-expression :beta) ^^ (:logical-and-expression :beta)) logical-xor-expression-xor
-        ((validate cxt env)
-         ((validate :logical-xor-expression) cxt env)
-         ((validate :logical-and-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-xor-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2844,12 +2790,10 @@
     
     (rule (:logical-or-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:logical-or-expression :beta) ((:logical-xor-expression :beta)) logical-or-expression-logical-xor
-        ((validate cxt env) ((validate :logical-xor-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :logical-xor-expression) env phase))))
       (production (:logical-or-expression :beta) ((:logical-or-expression :beta) \|\| (:logical-xor-expression :beta)) logical-or-expression-or
-        ((validate cxt env)
-         ((validate :logical-or-expression) cxt env)
-         ((validate :logical-xor-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-or-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2864,13 +2808,10 @@
     (%heading 2 "Conditional Operator")
     (rule (:conditional-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:conditional-expression :beta) ((:logical-or-expression :beta)) conditional-expression-logical-or
-        ((validate cxt env) ((validate :logical-or-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :logical-or-expression) env phase))))
       (production (:conditional-expression :beta) ((:logical-or-expression :beta) ? (:assignment-expression :beta) \: (:assignment-expression :beta)) conditional-expression-conditional
-        ((validate cxt env)
-         ((validate :logical-or-expression) cxt env)
-         ((validate :assignment-expression 1) cxt env)
-         ((validate :assignment-expression 2) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-or-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2884,13 +2825,10 @@
     
     (rule (:non-assignment-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:non-assignment-expression :beta) ((:logical-or-expression :beta)) non-assignment-expression-logical-or
-        ((validate cxt env) ((validate :logical-or-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :logical-or-expression) env phase))))
       (production (:non-assignment-expression :beta) ((:logical-or-expression :beta) ? (:non-assignment-expression :beta) \: (:non-assignment-expression :beta)) non-assignment-expression-conditional
-        ((validate cxt env)
-         ((validate :logical-or-expression) cxt env)
-         ((validate :non-assignment-expression 1) cxt env)
-         ((validate :non-assignment-expression 2) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :logical-or-expression) env phase))
          (const a object (read-reference ra phase))
@@ -2987,16 +2925,14 @@
     (rule (:list-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref))
                                     (eval-as-list (-> (environment phase) (vector object))))
       (production (:list-expression :beta) ((:assignment-expression :beta)) list-expression-assignment
-        ((validate cxt env) ((validate :assignment-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :assignment-expression) env phase)))
         ((eval-as-list env phase)
          (const r obj-or-ref ((eval :assignment-expression) env phase))
          (const elt object (read-reference r phase))
          (return (vector elt))))
       (production (:list-expression :beta) ((:list-expression :beta) \, (:assignment-expression :beta)) list-expression-comma
-        ((validate cxt env)
-         ((validate :list-expression) cxt env)
-         ((validate :assignment-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const ra obj-or-ref ((eval :list-expression) env phase))
          (exec (read-reference ra phase))
@@ -3147,7 +3083,7 @@
     (%heading 2 "Expression Statement")
     (rule :expression-statement ((validate (-> (context environment) void)) (eval (-> (environment) object)))
       (production :expression-statement ((:- function {) (:list-expression allow-in)) expression-statement-list-expression
-        ((validate cxt env) ((validate :list-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env)
          (const r obj-or-ref ((eval :list-expression) env run))
          (return (read-reference r run)))))
@@ -3384,7 +3320,7 @@
     (%heading 2 "Throw Statement")
     (rule :throw-statement ((validate (-> (context environment) void)) (eval (-> (environment) object)))
       (production :throw-statement (throw :no-line-break (:list-expression allow-in)) throw-statement-throw
-        (validate (validate :list-expression))
+        ((validate cxt env) ((validate :list-expression) cxt env))
         ((eval env)
          (const r obj-or-ref ((eval :list-expression) env run))
          (const a object (read-reference r run))
@@ -3526,18 +3462,16 @@
     (%heading 2 "Attributes")
     (rule :attributes ((validate (-> (context environment) void)) (eval (-> (environment phase) attribute)))
       (production :attributes (:attribute) attributes-one
-        ((validate cxt env) ((validate :attribute) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :attribute) env phase))))
       (production :attributes (:attribute-combination) attributes-attribute-combination
-        ((validate cxt env) ((validate :attribute-combination) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :attribute-combination) env phase)))))
     
     
     (rule :attribute-combination ((validate (-> (context environment) void)) (eval (-> (environment phase) attribute)))
       (production :attribute-combination (:attribute :no-line-break :attributes) attribute-combination-more
-        ((validate cxt env)
-         ((validate :attribute) cxt env)
-         ((validate :attributes) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const a attribute ((eval :attribute) env phase))
          (rwhen (in a false-type :narrow-false)
@@ -3548,7 +3482,7 @@
     
     (rule :attribute ((validate (-> (context environment) void)) (eval (-> (environment phase) attribute)))
       (production :attribute (:attribute-expression) attribute-attribute-expression
-        ((validate cxt env) ((validate :attribute-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :attribute-expression) env phase))
          (const a object (read-reference r phase))
@@ -3556,25 +3490,25 @@
            (throw bad-value-error))
          (return a)))
       (production :attribute (true) attribute-true
-        ((validate (cxt :unused) (env :unused)))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (return true)))
       (production :attribute (false) attribute-false
-        ((validate (cxt :unused) (env :unused)))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (return false)))
       (production :attribute (public) attribute-public
-        ((validate (cxt :unused) (env :unused)))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (return public-namespace)))
       (production :attribute (:nonexpression-attribute) attribute-nonexpression-attribute
-        ((validate (cxt :unused) env) ((validate :nonexpression-attribute) env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :nonexpression-attribute) env phase)))))
     
     
-    (rule :nonexpression-attribute ((validate (-> (environment) void)) (eval (-> (environment phase) attribute)))
+    (rule :nonexpression-attribute ((validate (-> (context environment) void)) (eval (-> (environment phase) attribute)))
       (production :nonexpression-attribute (final) nonexpression-attribute-final
-        ((validate (env :unused)))
+        ((validate (cxt :unused) (env :unused)))
         ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false final none false false))))
       (production :nonexpression-attribute (private) nonexpression-attribute-private
-        ((validate env)
+        ((validate (cxt :unused) env)
          (rwhen (in (get-enclosing-class env) (tag none))
            (throw syntax-error)))
         ((eval env (phase :unused))
@@ -3582,7 +3516,7 @@
          (assert (not-in c (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local c) " cannot be " (:tag none) " at this point.")
          (return (& private-namespace c))))
       (production :nonexpression-attribute (static) nonexpression-attribute-static
-        ((validate (env :unused)))
+        ((validate (cxt :unused) (env :unused)))
         ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false static none false false)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
@@ -3732,12 +3666,10 @@
     (rule (:variable-binding-list :beta) ((validate (-> (context environment attribute-opt-not-false boolean) void))
                                           (eval (-> (environment boolean) void)))
       (production (:variable-binding-list :beta) ((:variable-binding :beta)) variable-binding-list-one
-        ((validate cxt env attr immutable) ((validate :variable-binding) cxt env attr immutable))
+        ((validate cxt env attr immutable) :forward)
         ((eval env immutable) ((eval :variable-binding) env immutable)))
       (production (:variable-binding-list :beta) ((:variable-binding-list :beta) \, (:variable-binding :beta)) variable-binding-list-more
-        ((validate cxt env attr immutable)
-         ((validate :variable-binding-list) cxt env attr immutable)
-         ((validate :variable-binding) cxt env attr immutable))
+        ((validate cxt env attr immutable) :forward)
         ((eval env immutable)
          ((eval :variable-binding-list) env immutable)
          ((eval :variable-binding) env immutable))))
@@ -3865,23 +3797,23 @@
     
     (rule (:variable-initialisation :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) object-opt)))
       (production (:variable-initialisation :beta) () variable-initialisation-none
-        ((validate (cxt :unused) (env :unused)))
+        ((validate cxt env) :forward)
         ((eval (env :unused) (phase :unused)) (return none)))
       (production (:variable-initialisation :beta) (= (:variable-initialiser :beta)) variable-initialisation-variable-initialiser
-        ((validate cxt env) ((validate :variable-initialiser) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :variable-initialiser) env phase)))))
     
     (rule (:variable-initialiser :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) object)))
       (production (:variable-initialiser :beta) ((:assignment-expression :beta)) variable-initialiser-assignment-expression
-        ((validate cxt env) ((validate :assignment-expression) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :assignment-expression) env phase))
          (return (read-reference r phase))))
       (production (:variable-initialiser :beta) (:nonexpression-attribute) variable-initialiser-nonexpression-attribute
-        ((validate (cxt :unused) env) ((validate :nonexpression-attribute) env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :nonexpression-attribute) env phase))))
       (production (:variable-initialiser :beta) (:attribute-combination) variable-initialiser-attribute-combination
-        ((validate cxt env) ((validate :attribute-combination) cxt env))
+        ((validate cxt env) :forward)
         ((eval env phase) (return ((eval :attribute-combination) env phase)))))
     
     
@@ -3917,12 +3849,10 @@
     
     (rule :untyped-variable-binding-list ((validate (-> (context environment) void)) (eval (-> (environment) void)))
       (production :untyped-variable-binding-list (:untyped-variable-binding) untyped-variable-binding-list-one
-        ((validate cxt env) ((validate :untyped-variable-binding) cxt env))
+        ((validate cxt env) :forward)
         ((eval env) ((eval :untyped-variable-binding) env)))
       (production :untyped-variable-binding-list (:untyped-variable-binding-list \, :untyped-variable-binding) untyped-variable-binding-list-more
-        ((validate cxt env)
-         ((validate :untyped-variable-binding-list) cxt env)
-         ((validate :untyped-variable-binding) cxt env))
+        ((validate cxt env) :forward)
         ((eval env)
          ((eval :untyped-variable-binding-list) env)
          ((eval :untyped-variable-binding) env))))
