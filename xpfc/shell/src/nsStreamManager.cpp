@@ -50,6 +50,22 @@ nsStreamManager::nsStreamManager()
 nsStreamManager::~nsStreamManager()
 {
   if (mStreamObjects != nsnull) {
+
+	  nsIIterator * iterator;
+
+	  mStreamObjects->CreateIterator(&iterator);
+	  iterator->Init();
+
+    nsStreamObject * item;
+
+	  while(!(iterator->IsDone()))
+	  {
+		  item = (nsStreamObject *) iterator->CurrentItem();
+		  NS_RELEASE(item);
+		  iterator->Next();
+	  }
+	  NS_RELEASE(iterator);
+
     mStreamObjects->RemoveAll();
     NS_RELEASE(mStreamObjects);
   }
