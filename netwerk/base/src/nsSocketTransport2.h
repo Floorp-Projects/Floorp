@@ -196,6 +196,10 @@ private:
     PRPackedBool mInputClosed;
     PRPackedBool mOutputClosed;
 
+    // this flag is used to determine if the results of a host lookup arrive
+    // recursively or not.  this flag is not protected by any lock.
+    PRPackedBool mResolving;
+
     nsCOMPtr<nsIDNSRequest> mDNSRequest;
     nsCOMPtr<nsIDNSRecord>  mDNSRecord;
     PRNetAddr               mNetAddr;
