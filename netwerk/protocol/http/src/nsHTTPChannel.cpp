@@ -783,6 +783,12 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     mEventSink->OnRedirect((nsISupports*)(nsIRequest*)this, newURI);
   }
 
+  // Null out pointers that are no longer needed...
+  //
+  // This will prevent the OnStopRequest(...) notification from being fired
+  // for the original URL in ResponseCompleted(...)...
+  //
+  mResponseDataListener = 0;
 
   *aResult = channel;
   NS_ADDREF(*aResult);
@@ -797,20 +803,8 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
 {
   nsresult rv = NS_OK;
 
-  PRBool bPropogateOnStop = PR_TRUE;
-
-  // Don't fire OnStops for redirects -- confuses imagelib. See #17393
-  if (mResponse && (aStatus == NS_OK))
-  {
-    PRUint32 resp;
-    mResponse->GetStatus(&resp);
-    // 3* is the redirects. A 401 error will also confuse imagelib.
-    if (3 == (int)(resp/100) || 401 == resp)
-        bPropogateOnStop = PR_FALSE;
-  }
-
   // Call the consumer OnStopRequest(...) to end the request...
-  if (bPropogateOnStop && mResponseDataListener) {
+  if (mResponseDataListener) {
     rv = mResponseDataListener->OnStopRequest(this, 
                                               mResponseContext, 
                                               aStatus, 
