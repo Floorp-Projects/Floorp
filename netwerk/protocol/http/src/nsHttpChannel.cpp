@@ -139,6 +139,10 @@ nsHttpChannel::Init(nsIURI *uri,
     rv = mURI->GetAsciiHost(host);
     if (NS_FAILED(rv)) return rv;
 
+    // reject the URL if it doesn't specify a host
+    if (host.IsEmpty())
+        return NS_ERROR_MALFORMED_URI;
+
     rv = mURI->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
 
