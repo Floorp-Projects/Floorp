@@ -88,6 +88,12 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     NS_DECL_NSIWEBPROGRESSLISTENER
 
+  public:
+    nsIDocShell* GetContentAreaDocShell();
+    nsIDOMWindow* GetContentWindow();
+    nsIDocumentLoader* GetContentAreaDocLoader();
+    void ReinitializeContentVariables();
+
   protected:
     nsresult InitializeSearch(nsIFindComponent*);
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
@@ -98,17 +104,16 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
 
-    nsIScriptContext   *mToolbarScriptContext;			// weak reference
     nsIScriptContext   *mContentScriptContext;			// weak reference
 
-    nsIDOMWindow       *mToolbarWindow;							// weak reference
-    nsIDOMWindow       *mContentWindow;							// weak reference
+    nsWeakPtr          mContentWindowWeak;
+    nsWeakPtr          mContentAreaDocShellWeak;
+    nsWeakPtr          mContentAreaDocLoaderWeak;
 
     nsIWebShellWindow  *mWebShellWin;								// weak reference
     nsIDocShell *       mDocShell;									// weak reference
     nsIDOMWindow*       mDOMWindow;                         // weak reference
-    nsIDocShell *       mContentAreaDocShell;				// weak reference
-    nsIDocumentLoader * mContentAreaDocLoader;          // weak reference
+
     nsCOMPtr<nsIUrlbarHistory> mUrlbarHistory;                  //We own this
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
     nsInstanceCounter   mInstanceCounter;
