@@ -1371,31 +1371,12 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
   // Compute the combined area of our children
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
-  nscoord xa = 0, ya = 0, xb = aMetrics.width, yb = aMetrics.height;
+  nsRect area(0, 0, aMetrics.width, aMetrics.height);
   if (NS_STYLE_OVERFLOW_CLIP != aReflowState.mStyleDisplay->mOverflow) {
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
-         ++line)
-    {
-      // Compute min and max x/y values for the reflowed frame's
-      // combined areas
-      nsRect lineCombinedArea(line->GetCombinedArea());
-      nscoord x = lineCombinedArea.x;
-      nscoord y = lineCombinedArea.y;
-      nscoord xmost = x + lineCombinedArea.width;
-      nscoord ymost = y + lineCombinedArea.height;
-      if (x < xa) {
-        xa = x;
-      }
-      if (xmost > xb) {
-        xb = xmost;
-      }
-      if (y < ya) {
-        ya = y;
-      }
-      if (ymost > yb) {
-        yb = ymost;
-      }
+         ++line) {
+      area.UnionRect(area, line->GetCombinedArea());
     }
 
     // Factor the bullet in; normally the bullet will be factored into
@@ -1404,25 +1385,15 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
     // factor it in anyway (it can't hurt if it was already done).
     // XXXldb Can we just fix GetCombinedArea instead?
     if (mBullet) {
-      nsRect r = mBullet->GetRect();
-      if (r.x < xa) xa = r.x;
-      if (r.y < ya) ya = r.y;
-      nscoord xmost = r.XMost();
-      if (xmost > xb) xb = xmost;
-      nscoord ymost = r.YMost();
-      if (ymost > yb) yb = ymost;
+      area.UnionRect(area, mBullet->GetRect());
     }
   }
 #ifdef NOISY_COMBINED_AREA
   ListTag(stdout);
-  printf(": ca=%d,%d,%d,%d\n", xa, ya, xb-xa, yb-ya);
+  printf(": ca=%d,%d,%d,%d\n", area.x, area.y, area.width, area.height);
 #endif
 
-  aMetrics.mOverflowArea.x = xa;
-  aMetrics.mOverflowArea.y = ya;
-  aMetrics.mOverflowArea.width = xb - xa;
-  aMetrics.mOverflowArea.height = yb - ya;
-
+  aMetrics.mOverflowArea = area;
 }
 
 nsresult
@@ -2119,8 +2090,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // XXX EVIL O(N^2) EVIL
       aState.RecoverStateFrom(line, deltaY);
 
-      // Keep mY up to date in case we're propagating reflow damage.
-      aState.mY = line->mBounds.YMost();
+      // Keep mY up to date in case we're propagating reflow damage
+      // and also because our final height may depend on it. Only
+      // update mY if the line is not empty, because that's what
+      // PlaceLine does.
+      if (!line->IsEmpty()) {
+        aState.mY = line->mBounds.YMost();
+      }
       needToRecoverState = PR_TRUE;
     }
 
