@@ -1060,18 +1060,20 @@ public class Context {
                NotAFunctionException,
                JavaScriptException
     {
-        Object ctorVal = ScriptRuntime.getTopLevelProp(scope, constructorName);
+        scope = ScriptableObject.getTopLevelScope(scope);
+        Object ctorVal = ScriptableObject.getProperty(scope, constructorName);
+        if (ctorVal instanceof Function) {
+            Function ctor = (Function) ctorVal;
+            if (args == null) { args = ScriptRuntime.emptyArgs; }
+            return ctor.construct(this, scope, args);
+        }
         if (ctorVal == Scriptable.NOT_FOUND) {
             String message = getMessage1("msg.ctor.not.found", constructorName);
             throw new PropertyException(message);
-        }
-        if (!(ctorVal instanceof Function)) {
+        } else {
             String message = getMessage1("msg.not.ctor", constructorName);
             throw new NotAFunctionException(message);
         }
-        Function ctor = (Function) ctorVal;
-        return ctor.construct(this, ctor.getParentScope(),
-                              (args == null) ? ScriptRuntime.emptyArgs : args);
     }
 
     /**
