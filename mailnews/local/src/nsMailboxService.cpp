@@ -124,8 +124,12 @@ nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStrea
 }
 
 
-nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURL **aURL)
+nsresult
+nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
+                              nsIStreamListener * aMailboxCopyHandler,
+                              PRBool moveMessage,
+                              nsIUrlListener * aUrlListener,
+                              nsIURL **aURL)
 {
 	nsMailboxUrl * mailboxUrl = nsnull;
 	nsIMailboxUrl * url = nsnull;
@@ -147,7 +151,8 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI, nsIStreamLis
 			nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
 			char *rootURI = folderURI.ToNewCString();
 			nsLocalURI2Path(kMailboxMessageRootURI, rootURI, folderPath);
-
+            delete[] rootURI;
+            
 			nsFilePath filePath(folderPath); // convert to file url representation...
 			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
 			
@@ -182,8 +187,10 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI, nsIStreamLis
 	return rv;
 }
 
-nsresult nsMailboxService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
+nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
+                                          nsISupports * aDisplayConsumer, 
+										  nsIUrlListener * aUrlListener,
+                                          nsIURL ** aURL)
 {
 	nsMailboxUrl * mailboxUrl = nsnull;
 	nsIMailboxUrl * url = nsnull;
@@ -232,8 +239,11 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI, nsISupports *
 	return rv;
 }
 
-nsresult nsMailboxService::DisplayMessageNumber(const nsFileSpec& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
-                                                nsIUrlListener * aUrlListener, nsIURL ** aURL)
+nsresult nsMailboxService::DisplayMessageNumber(const char *url,
+                                                PRUint32 aMessageNumber,
+                                                nsISupports * aDisplayConsumer,
+                                                nsIUrlListener * aUrlListener,
+                                                nsIURL ** aURL)
 {
 	nsMsgKeyArray msgKeys;
 	nsresult rv = NS_OK;
@@ -241,13 +251,18 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFileSpec& aMailboxPath, 
 	nsIMsgDatabase * mailDB = nsnull;
 	nsIMsgDatabase *mailDBFactory;
 
-	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	rv = nsComponentManager::CreateInstance(kCMailDB,
+                                            nsnull,
+                                            nsIMsgDatabase::GetIID(),
+                                            (void **) &mailDBFactory);
+    nsFileSpec mailboxPath;
+    // ALECF: convert uri->mailboxPath with nsLocalURI2Path
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-		rv = mailDBFactory->Open((nsFileSpec&) aMailboxPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+		rv = mailDBFactory->Open((nsFileSpec&) mailboxPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
 		mailDBFactory->Release();
 	}
-//	rv = nsMailDatabase::Open((nsFileSpec&) aMailboxPath, PR_FALSE, &mailDb);
+//	rv = nsMailDatabase::Open((nsFileSpec&) mailboxPath, PR_FALSE, &mailDb);
 
 	if (NS_SUCCEEDED(rv) && mailDB)
 	{
@@ -261,7 +276,10 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFileSpec& aMailboxPath, 
 			mailDB = nsnull;
 			char * uri = nsnull;
 
-			nsBuildLocalMessageURI(aMailboxPath, msgKey, &uri);
+			nsBuildLocalMessageURI(url, msgKey, &uri);
+#ifdef DEBUG_alecf
+            fprintf(stderr, "nsBuildLocalMessageURI(%s, %d -> %s) in nsMailboxService::DisplayMessageNumber", url, msgKey, uri);
+#endif
 
 			rv = DisplayMessage(uri, aDisplayConsumer, aUrlListener, aURL);
 		}

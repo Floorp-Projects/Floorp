@@ -73,8 +73,11 @@ public:
 	// message number 'n' in this mailbox without having to go out and get the key for message number 
 	// 'n'. this function simply makes that possible. 
 	/////////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD DisplayMessageNumber(const nsFileSpec& aMailboxPath, PRUint32 aMessageNumber, 
-		nsISupports * aDisplayConsumer,	nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD DisplayMessageNumber(const char *url,
+                                    PRUint32 aMessageNumber, 
+                                    nsISupports * aDisplayConsumer,
+                                    nsIUrlListener * aUrlListener,
+                                    nsIURL ** aURL) = 0;
 
 };
 

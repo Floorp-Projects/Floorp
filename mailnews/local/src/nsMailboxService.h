@@ -53,8 +53,11 @@ public:
 							nsIUrlListener * aUrlListener, nsIURL ** aURL);
 	
 
-	NS_IMETHOD DisplayMessageNumber(const nsFileSpec& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
-									nsIUrlListener * aUrlListener, nsIURL ** aURL);
+	NS_IMETHOD DisplayMessageNumber(const char *url,
+                                    PRUint32 aMessageNumber,
+                                    nsISupports * aDisplayConsumer,
+									nsIUrlListener * aUrlListener,
+                                    nsIURL ** aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End suppport for the nsIMailboxService Interface
