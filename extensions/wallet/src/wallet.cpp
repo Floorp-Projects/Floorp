@@ -51,6 +51,7 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #include "prtypes.h"
 #include "prlong.h"
 #include "prinrval.h"
+#include "allxpstr.h"
 
 /***************************************************/
 /* The following declarations define the data base */
@@ -555,11 +556,12 @@ char key[maxKeySize+1];
 PRUint32 keyPosition = 0;
 PRBool keyFailure = FALSE;
 
-PRBool wallet_BadKey() {
+PUBLICPRBool
+wallet_BadKey() {
   return keyFailure;
 }
 
-void
+PUBLIC void
 wallet_SetKey() {
   keyFailure = FALSE;
   keyPosition = 0;
@@ -584,7 +586,7 @@ wallet_SetKey() {
   keyPosition = 0;
 }
 
-char
+PUBLIC char
 wallet_GetKey() {
   if (keyPosition >= PL_strlen(key)) {
     keyPosition = 0;
@@ -592,12 +594,12 @@ wallet_GetKey() {
   return key[keyPosition++];
 }
 
-void
+PUBLIC void
 wallet_RestartKey() {
   keyPosition = 0;
 }
 
-void
+PUBLIC void
 wallet_WriteKey(nsOutputFileStream strm) {
   /* If we store the key obscured by the key itself, then the result will be zero
    * for all keys (since we are using XOR to obscure).  So instead we store
@@ -1431,8 +1433,7 @@ wallet_RequestToPrefill(XP_List * list) {
   PRInt32 g = 0;
 
   XPDialogStrings* strings;
-  strings = XP_GetDialogStrings(16024);
-//strings = XP_GetDialogStrings(XP_CERT_PAGE_STRINGS); /* why doesn't this link? */
+  strings = XP_GetDialogStrings(XP_CERT_PAGE_STRINGS); /* why doesn't this link? */
   if (!strings) {
     return;
   }
