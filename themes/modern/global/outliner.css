@@ -46,23 +46,22 @@ outlinerbody:-moz-outliner-row {
 }
 
 outlinerbody:-moz-outliner-row(selected) {
-  background-color: #E5F2FF;
+  background-color: #C7D0D9;
 }
 
 outlinerbody:-moz-outliner-row(selected, focus) {
-  background-color: #B8DBFF;
+  background-color: #424F63;
 }
 
 outlinerbody:-moz-outliner-row(current, focus) {
-  border-color: #A5C4E4;
+  border-top-color: #000000;
+  border-bottom-color: #000000;
 }
 
 /* ::::: outliner cells ::::: */
 
 outlinerbody:-moz-outliner-cell {
-  border-top: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-  padding: 0px 0px 1px 2px;
+  padding: 0px 0px 0px 2px;
 }
 
 outlinerbody:-moz-outliner-cell-text {
@@ -71,6 +70,10 @@ outlinerbody:-moz-outliner-cell-text {
 
 outlinerbody:-moz-outliner-cell-text(selected) {
   color: #000000;
+}
+
+outlinerbody:-moz-outliner-cell-text(selected, focus) {
+  color: #FFFFFF;
 }
 
 /* ::::: outliner columns ::::: */

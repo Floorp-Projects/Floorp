@@ -40,7 +40,7 @@ toolbar {
     Removes disappearance of scrollbars in content pane when window
     is made smaller. Talk to evaughan@netscape.com for details. */
   background: url("chrome://global/skin/toolbar/tb-mid.gif") #C7D0D9 repeat-x top;
-  color: #22262F;
+  color: #000000;
 }
 
 toolbar > .toolbar-holder {
@@ -58,7 +58,7 @@ menubar {
     Removes disappearance of scrollbars in content pane when window
     is made smaller. Talk to evaughan@netscape.com for details. */
   background-color: #DDE3EB;
-  color: #22262F;
+  color: #000000;
 }
   
 menubar > .toolbar-holder {

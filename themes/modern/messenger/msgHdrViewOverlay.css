@@ -111,8 +111,12 @@ mail-emailaddress {
 .emailDisplayButton {
   cursor: pointer;
   min-height: 16px;
-  color: blue;
+  color: #424F63;
   text-decoration: underline;
+}
+
+.emailDisplayButton:hover {
+  color: #1455D6;
 }
 
 .emailDisplayImage {

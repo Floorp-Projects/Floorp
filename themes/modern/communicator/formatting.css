@@ -32,14 +32,11 @@
 
 .text-link {
   cursor: pointer;
-  color: #666699;
+  color: #424F63;
   text-decoration: underline;
 }
 
 .text-link:hover {
-  color: #333366;
+  color: #1455D6;
 }
 
-.text-link:hover:active {
-  color: #990000;
-} 

@@ -61,18 +61,14 @@ treerow {
 }
 
 treeitem[selected="true"] > treerow {
-  background-color: #E5F2FF;
+  background-color: #C7D0D9;
   color: #000000;
 }
 
 tree:focus > treechildren treeitem[selected="true"] > treerow,
 treeitem[dd-dropon="true"] > treerow {
-  background-color: #B8DBFF;
-  color: #000000;
-}
-
-tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow {
-  border-color: #A5C4E4;
+  background-color: #424F63;
+  color: #FFFFFF;
 }
 
 treehead > treeitem > treerow,
@@ -91,8 +87,8 @@ treecell {
 } 
  
 tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > treecell {
-  border-top-color: #A5C4E4;
-  border-bottom-color: #A5C4E4;
+  border-top-color: #000000;
+  border-bottom-color: #000000;
 }
 
 /* ::::: iconic treecell ::::: */
