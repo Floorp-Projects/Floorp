@@ -35,11 +35,6 @@ nsIMenuBar.h
 nsIMenuButton.h
 nsIMenuItem.h
 nsIPopUpMenu.h
-nsIToolbar.h
-nsIToolbarItem.h
-nsIToolbarItemHolder.h
-nsIToolbarManager.h
-nsIToolbarManagerListener.h
 nsIImageButton.h
 nsIImageButtonListener.h
 nsIContentConnector.h
