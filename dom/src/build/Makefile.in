@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -59,8 +58,6 @@ EXTRA_DSO_LDOPTS =	       \
 	$(MKSHLIB_UNFORCE_ALL) \
 	$(NULL)
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
 
-$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
