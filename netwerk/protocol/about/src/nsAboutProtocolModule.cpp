@@ -68,5 +68,5 @@ static nsModuleComponentInfo components[] =
    },
 };
 
-NS_IMPL_NSGETMODULE("nsAboutProtocolModule", components);
+NS_IMPL_NSGETMODULE(nsAboutProtocolModule, components);
 

@@ -49,4 +49,4 @@ static nsModuleComponentInfo components[] =
     nsHTTPSHandler::Create }
 };
   
-NS_IMPL_NSGETMODULE("nsHTTPHandlerModule", components)
+NS_IMPL_NSGETMODULE(nsHTTPHandlerModule, components)

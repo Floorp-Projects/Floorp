@@ -81,4 +81,4 @@ static nsModuleComponentInfo components[] = {
     },
 };
 
-NS_IMPL_NSGETMODULE("nsCookieModule", components)
+NS_IMPL_NSGETMODULE(nsCookieModule, components)

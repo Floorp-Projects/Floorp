@@ -38,4 +38,4 @@ static nsModuleComponentInfo gResComponents[] = {
     }
 };
 
-NS_IMPL_NSGETMODULE("cacheservice", gResComponents)
+NS_IMPL_NSGETMODULE(cacheservice, gResComponents)

@@ -42,5 +42,5 @@ static nsModuleComponentInfo components[] =
     nsPNGDecoderConstructor, },
 };
 
-NS_IMPL_NSGETMODULE("nsPNGDecoderModule", components)
+NS_IMPL_NSGETMODULE(nsPNGDecoderModule, components)
 

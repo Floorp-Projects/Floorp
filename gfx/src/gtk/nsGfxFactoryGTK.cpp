@@ -186,5 +186,5 @@ nsGfxGTKModuleDtor(nsIModule *self)
   nsRenderingContextGTK::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsGfxGTKModule", components, nsGfxGTKModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxGTKModule, components, nsGfxGTKModuleDtor)
 

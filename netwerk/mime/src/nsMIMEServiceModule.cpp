@@ -44,4 +44,4 @@ static nsModuleComponentInfo gResComponents[] = {
     },
 };
 
-NS_IMPL_NSGETMODULE("nsMIMEService", gResComponents)
+NS_IMPL_NSGETMODULE(nsMIMEService, gResComponents)

@@ -186,5 +186,5 @@ nsGfxOS2ModuleDtor(nsIModule *self)
 //  nsRenderingContextOS2::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsGfxOS2Module", components, nsGfxOS2ModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxOS2Module, components, nsGfxOS2ModuleDtor)
 

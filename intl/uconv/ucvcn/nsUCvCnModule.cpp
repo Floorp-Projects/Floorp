@@ -161,4 +161,4 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsUCvCnModule", components);
+NS_IMPL_NSGETMODULE(nsUCvCnModule, components);

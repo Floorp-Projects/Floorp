@@ -198,4 +198,4 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsUCvTW2Module", components);
+NS_IMPL_NSGETMODULE(nsUCvTW2Module, components);

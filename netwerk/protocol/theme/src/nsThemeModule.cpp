@@ -32,4 +32,4 @@ static nsModuleComponentInfo gResComponents[] = {
     }
 };
 
-NS_IMPL_NSGETMODULE("theme", gResComponents)
+NS_IMPL_NSGETMODULE(theme, gResComponents)

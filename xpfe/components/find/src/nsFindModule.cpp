@@ -37,5 +37,5 @@ nsFindModuleDtor(nsIModule* self)
     nsFindService::FreeSingleton();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsFindComponent", gComponents, nsFindModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsFindComponent, gComponents, nsFindModuleDtor)
 

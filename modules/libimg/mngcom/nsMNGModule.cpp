@@ -41,4 +41,4 @@ static nsModuleComponentInfo components[] =
      MNGDecoder::Create }
 };
 
-NS_IMPL_NSGETMODULE("nsMNGModule", components)
+NS_IMPL_NSGETMODULE(nsMNGModule, components)

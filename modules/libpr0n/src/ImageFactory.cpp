@@ -68,4 +68,4 @@ ImageModuleDestructor(nsIModule *self)
   imgCache::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsImageLib2Module", components, ImageModuleDestructor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsImageLib2Module, components, ImageModuleDestructor)

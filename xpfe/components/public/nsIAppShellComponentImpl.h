@@ -63,7 +63,7 @@
 #define NS_IMPL_NSGETMODULE1(_class)                                           \
 static _class *g##_class;                                                     \
 extern "C" NS_EXPORT nsresult                                                 \
-NSGetModule(nsIComponentManager *servMgr,                                     \
+NSGetModule_##_class(nsIComponentManager *servMgr,                            \
             nsIFile* aPath,                                                   \
             nsIModule** aResult)                                              \
 {                                                                             \
@@ -88,32 +88,48 @@ class nsInstanceCounter {
 public:
     // ctor increments (shared library) global instance counter.
     nsInstanceCounter() {
+#if defined (DYNLINKED_MODULES)
         PR_AtomicIncrement( &mInstanceCount );
+#endif /* defined (DYNLINKED_MODULES) */
     }
     // dtor decrements it.
     ~nsInstanceCounter() {
+#if defined (DYNLINKED_MODULES)
         PR_AtomicDecrement( &mInstanceCount );
+#endif /* defined (DYNLINKED_MODULES) */
     }
     // Tests whether shared library can be unloaded.
     static PRBool CanUnload() {
+#if defined (DYNLINKED_MODULES)
         return mInstanceCount == 0 && mLockCount == 0;
+#else /* !defined (DYNLINKED_MODULES) */
+	return 0;
+#endif /* !defined (DYNLINKED_MODULES) */
     }
     // Lock/unlock (a factory).
     static nsresult LockFactory( PRBool aLock ) {
+#if defined (DYNLINKED_MODULES)
         if (aLock)
             PR_AtomicIncrement( &mLockCount ); 
         else
             PR_AtomicDecrement( &mLockCount );
+#endif /* defined (DYNLINKED_MODULES) */
         return NS_OK;
     }
+#if defined (DYNLINKED_MODULES)
 private:
     static PRInt32 mInstanceCount, mLockCount;
+#endif /* defined (DYNLINKED_MODULES) */
 }; // nsInstanceCounter
 
+#if defined (DYNLINKED_MODULES)
 #define NS_DEFINE_MODULE_INSTANCE_COUNTER() \
 PRInt32 nsInstanceCounter::mInstanceCount = 0; \
-PRInt32 nsInstanceCounter::mLockCount = 0; \
-\
+PRInt32 nsInstanceCounter::mLockCount = 0;
+#else /* !defined (DYNLINKED_MODULES) */
+#define NS_DEFINE_MODULE_INSTANCE_COUNTER()
+#endif /* !defined (DYNLINKED_MODULES) */
+
 // Declare component-global class.
 class nsAppShellComponentImpl {
 public:
@@ -124,7 +140,12 @@ public:
     // Override this to perform initialization for your component.
     NS_IMETHOD DoInitialization() { return NS_OK; }
     static nsIAppShellService *GetAppShell() {
-        if ( !mAppShell ) {
+#if defined (DYNLINKED_MODULES)
+        if ( !mAppShell )
+#else /* !defined (DYNLINKED_MODULES) */
+	nsIAppShellService *mAppShell = 0;
+#endif /* !defined (DYNLINKED_MODULES) */
+	{
             nsCID cid = NS_APPSHELL_SERVICE_CID;
             nsServiceManager::GetService( cid,
                                          NS_GET_IID(nsIAppShellService),
@@ -132,17 +153,27 @@ public:
         }
         return mAppShell;
     }
+#if defined (DYNLINKED_MODULES)
     static nsIAppShellService *mAppShell;
     static nsICmdLineService  *mCmdLine;
+#endif /* !defined (DYNLINKED_MODULES) */
     #ifdef NS_DEBUG
     nsAppShellComponentImpl();
     virtual ~nsAppShellComponentImpl();
     #endif
 }; // nsAppShellComponent
 
+#if defined (DYNLINKED_MODULES)
 #define NS_DEFINE_COMPONENT_GLOBALS() \
 nsIAppShellService *nsAppShellComponentImpl::mAppShell   = 0; \
 nsICmdLineService  *nsAppShellComponentImpl::mCmdLine    = 0;
+#define SAVE_STUFF \
+   mAppShell = anAppShell; \
+   mCmdLine  = aCmdLineService;
+#else /* !defined (DYNLINKED_MODULES) */
+#define NS_DEFINE_COMPONENT_GLOBALS()
+#define SAVE_STUFF
+#endif /* !defined (DYNLINKED_MODULES) */
 
 // Macros to define ctor/dtor for implementation class.
 // These differ in debug vs. non-debug situations.
@@ -168,8 +199,7 @@ NS_IMETHODIMP \
 className::Initialize( nsIAppShellService *anAppShell, \
                        nsICmdLineService  *aCmdLineService ) { \
     nsresult rv = NS_OK; \
-    mAppShell = anAppShell; \
-    mCmdLine  = aCmdLineService; \
+    SAVE_STUFF \
     if ( Is_Service() ) { \
         rv = nsServiceManager::RegisterService( contractId, this ); \
     } \

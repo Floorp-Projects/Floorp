@@ -70,4 +70,4 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     }
 };
 
-NS_IMPL_NSGETMODULE("necko secondary protocols", gNetModuleInfo)
+NS_IMPL_NSGETMODULE(necko_secondary_protocols, gNetModuleInfo)

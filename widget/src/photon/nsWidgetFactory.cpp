@@ -168,5 +168,5 @@ static nsModuleComponentInfo components[] =
 };
 
 
-NS_IMPL_NSGETMODULE("nsWidgetPhModule", components)
+NS_IMPL_NSGETMODULE(nsWidgetPhModule, components)
 

@@ -37,4 +37,4 @@ static nsModuleComponentInfo components[] =
      JPGDecoder::Create }
 };
 
-NS_IMPL_NSGETMODULE("nsJPGModule", components)
+NS_IMPL_NSGETMODULE(nsJPGModule, components)

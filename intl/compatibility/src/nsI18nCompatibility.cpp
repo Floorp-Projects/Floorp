@@ -69,4 +69,4 @@ static nsModuleComponentInfo components[] =
     NS_I18NCOMPATIBILITY_CONTRACTID, nsI18nCompatibilityConstructor}
 };
 
-NS_IMPL_NSGETMODULE("I18nCompatibility", components)
+NS_IMPL_NSGETMODULE(I18nCompatibility, components)

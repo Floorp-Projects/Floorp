@@ -38,5 +38,5 @@ static nsModuleComponentInfo components[] =
     gfxImageFrameConstructor, },
 };
 
-NS_IMPL_NSGETMODULE("nsGfx2Module", components)
+NS_IMPL_NSGETMODULE(nsGfx2Module, components)
 

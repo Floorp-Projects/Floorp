@@ -469,5 +469,5 @@ static nsModuleComponentInfo components[] =
 #endif /* INCLUDE_DBGDETECTOR */
 };
 
-NS_IMPL_NSGETMODULE("nsCharDetModule", components)
+NS_IMPL_NSGETMODULE(nsCharDetModule, components)
 

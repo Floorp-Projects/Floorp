@@ -57,4 +57,4 @@ static nsModuleComponentInfo components[] = {
  {nsnull, PROFILER_CID, XPCTOOLS_PROFILER_CONTRACTID, nsXPCToolsProfilerConstructor}
 };
 
-NS_IMPL_NSGETMODULE("xpctools", components)
+NS_IMPL_NSGETMODULE(xpctools, components)

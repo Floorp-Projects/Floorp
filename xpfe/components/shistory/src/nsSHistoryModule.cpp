@@ -56,4 +56,4 @@ static nsModuleComponentInfo gSHistoryModuleInfo[] =
       NS_SHISTORY_INTERNAL_CONTRACTID, nsSHistoryConstructor }
 };
 
-NS_IMPL_NSGETMODULE("Session History Module", gSHistoryModuleInfo)
+NS_IMPL_NSGETMODULE(Session_History_Module, gSHistoryModuleInfo)

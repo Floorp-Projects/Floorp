@@ -36,5 +36,5 @@ static nsModuleComponentInfo components[] =
      GIFDecoder::Create }
 };
 
-NS_IMPL_NSGETMODULE("nsGIFModule", components)
+NS_IMPL_NSGETMODULE(nsGIFModule, components)
 

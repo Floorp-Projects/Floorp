@@ -309,6 +309,6 @@ nsWidgetOS2ModuleDtor(nsIModule *self)
   // what shall we do here?
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsWidgetOS2Module",
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetOS2Module,
                               components,
                               nsWidgetOS2ModuleDtor)

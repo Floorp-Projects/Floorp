@@ -30,4 +30,4 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsCNativeAppModule", components)
+NS_IMPL_NSGETMODULE(nsCNativeAppModule, components)

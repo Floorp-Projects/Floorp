@@ -194,5 +194,5 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsUCvIBMModule", components);
+NS_IMPL_NSGETMODULE(nsUCvIBMModule, components);
 

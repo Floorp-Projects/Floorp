@@ -42,4 +42,4 @@ static nsModuleComponentInfo components[] =
     nsDeviceContextXPConstructor }  
 };
 
-NS_IMPL_NSGETMODULE("nsGfxXPModule", components)
+NS_IMPL_NSGETMODULE(nsGfxXPModule, components)

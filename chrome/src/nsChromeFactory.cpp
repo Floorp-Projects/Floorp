@@ -51,5 +51,5 @@ static nsModuleComponentInfo components[] =
     },
 };
 
-NS_IMPL_NSGETMODULE("nsChromeModule", components);
+NS_IMPL_NSGETMODULE(nsChromeModule, components);
 

@@ -1103,5 +1103,5 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("nsUCvLatinModule", components);
+NS_IMPL_NSGETMODULE(nsUCvLatinModule, components);
 

@@ -1324,4 +1324,4 @@ static nsModuleComponentInfo components[] = {
 #endif
 };
 
-NS_IMPL_NSGETMODULE("JS component loader", components);
+NS_IMPL_NSGETMODULE(JS_component_loader, components);

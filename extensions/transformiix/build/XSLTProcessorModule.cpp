@@ -195,4 +195,4 @@ static nsModuleComponentInfo components[] = {
       nsSyncLoaderConstructor }
 };
 
-NS_IMPL_NSGETMODULE("TransformiixModule", components)
+NS_IMPL_NSGETMODULE(TransformiixModule, components)

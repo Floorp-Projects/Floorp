@@ -517,6 +517,6 @@ static nsModuleComponentInfo gJSModuleInfo[] = {
       nsJSProtocolHandler::Create }
 };
 
-NS_IMPL_NSGETMODULE("javascript: protocol", gJSModuleInfo)
+NS_IMPL_NSGETMODULE(javascript__protocol, gJSModuleInfo)
 
 ////////////////////////////////////////////////////////////////////////////////

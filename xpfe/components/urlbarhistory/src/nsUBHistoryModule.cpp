@@ -43,4 +43,4 @@ static nsModuleComponentInfo gUBHistoryModuleInfo[] =
       NS_URLBARAUTOCOMPLETE_CONTRACTID, nsUrlbarHistoryConstructor }
 };
 
-NS_IMPL_NSGETMODULE("Urlbar History Module", gUBHistoryModuleInfo)
+NS_IMPL_NSGETMODULE(Urlbar_History_Module, gUBHistoryModuleInfo)

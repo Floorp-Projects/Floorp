@@ -54,6 +54,6 @@ nsXlibTimerModuleDtor(nsIModule *self)
     nsTimerXlib::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR("nsXlibTimerModule",
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsXlibTimerModule,
                               components,
                               nsXlibTimerModuleDtor)

@@ -849,4 +849,4 @@ static nsModuleComponentInfo components[] = {
     },
 };
 
-NS_IMPL_NSGETMODULE("nsRegistryViewerModule", components)
+NS_IMPL_NSGETMODULE(nsRegistryViewerModule, components)
