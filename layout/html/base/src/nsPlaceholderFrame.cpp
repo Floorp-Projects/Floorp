@@ -57,6 +57,15 @@ NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+// These are useful for debugging
+nsPlaceholderFrame::nsPlaceholderFrame()
+{
+}
+
+nsPlaceholderFrame::~nsPlaceholderFrame()
+{
+}
+
 NS_IMETHODIMP
 nsPlaceholderFrame::Reflow(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
@@ -160,4 +169,5 @@ nsPlaceholderFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   *aResult = sizeof(*this);
   return NS_OK;
 }
+
 #endif

@@ -975,7 +975,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                                             state.mOverflowFloaters.GetLength(), PR_FALSE);
       if (!newLine) 
         return NS_ERROR_OUT_OF_MEMORY;
-      state.mOverflowFloaters.SetFrames(nsnull);
       mLines.push_back(newLine);
       nsLineList::iterator nextToLastLine = ----end_lines();
       PushLines(state, nextToLastLine);
@@ -5281,11 +5280,17 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
                                      nsIFrame*       aChild)
 {
 #ifdef DEBUG
+  // out-of-flow and placeholders frames don't satisfy the IsChild condition because
+  // DeleteChildsNextInFlow needs to be called on the parent of the next-in-flow
   nsFrameState childState;
   aChild->GetFrameState(&childState);
-  NS_PRECONDITION((childState & NS_FRAME_OUT_OF_FLOW) || IsChild(aPresContext, aChild), 
-                  "bad geometric parent");
+  nsCOMPtr<nsIAtom> frameType;
+  aChild->GetFrameType(getter_AddRefs(frameType));
+  if ((nsLayoutAtoms::placeholderFrame != frameType) && !(childState & NS_FRAME_OUT_OF_FLOW)) {
+    NS_PRECONDITION(IsChild(aPresContext, aChild), "bad geometric parent");
+  }
 #endif
+
   nsIFrame* nextInFlow;
   aChild->GetNextInFlow(&nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
@@ -5321,9 +5326,10 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   nsIFrame* nextInFlow;
   aPlaceholder->GetNextInFlow(&nextInFlow);
   if (nextInFlow) {
+    // Use nextInFlow's parent since it always will be able to find nextInFlow.
+    // If aPlaceholder's parent is an inline, nextInFlow's will be a block.
     nsHTMLContainerFrame* parent;
-    aPlaceholder->GetParent((nsIFrame**)&parent);
-    NS_ASSERTION(parent, "no parent");
+    nextInFlow->GetParent((nsIFrame**)&parent);
     parent->DeleteChildsNextInFlow(aState.mPresContext, aPlaceholder);
   }
   // Reflow the floater.
