@@ -109,4 +109,4 @@ protected:
   PRUint32 mSearchesOngoing;
 };
 
-#endif __nsAutoCompleteController__
+#endif /* __nsAutoCompleteController__ */
