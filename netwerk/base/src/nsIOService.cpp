@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
 // TODO: I am sure that there are more ports to be added.  
 //       This cut is based on the classic mozilla codebase
 
-PRInt32 gBadPortList[] = { 
+PRInt16 gBadPortList[] = { 
   1,    // tcpmux          
   7,    // echo     
   9,    // discard          
@@ -765,8 +765,9 @@ nsIOService::SetOffline(PRBool offline)
 
 
 NS_IMETHODIMP
-nsIOService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsIOService::AllowPort(PRInt32 inPort, const char *scheme, PRBool *_retval)
 {
+    PRInt16 port = inPort;
     if (port == -1) {
         *_retval = PR_TRUE;
         return NS_OK;
