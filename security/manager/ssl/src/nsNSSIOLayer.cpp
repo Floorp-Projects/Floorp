@@ -240,7 +240,7 @@ nsNSSSocketInfo::SetUseTLS(PRBool useTLS)
 NS_IMETHODIMP
 nsNSSSocketInfo::ProxyStepUp()
 {
-  return NS_OK;
+  return TLSStepUp();
 }
 
 NS_IMETHODIMP
@@ -252,6 +252,7 @@ nsNSSSocketInfo::TLSStepUp()
   if (SECSuccess != SSL_ResetHandshake(mFd, PR_FALSE))
     return NS_ERROR_FAILURE;
 
+  PR_Write(mFd, nsnull, 0);
   return NS_OK;
 }
 
@@ -724,7 +725,7 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
-  if (useTLS &&
+  if ((useTLS || proxyHost) &&
       SECSuccess != SSL_OptionSet(sslSock, SSL_SECURITY, PR_FALSE))
     goto loser;
 
