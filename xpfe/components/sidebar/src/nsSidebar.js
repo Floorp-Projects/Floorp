@@ -117,7 +117,10 @@ function (aTitle, aContentURL, aCustomizeURL)
     if (!rv)
         return;
 
-    container.AppendElement(panel_resource);
+    this.datasource.Assert(this.rdf.GetResource(this.resource),
+                           this.rdf.GetResource(this.nc + "inbatch"),
+                           this.rdf.GetLiteral("true"),
+                           true);
 
     /* Now make some sidebar-ish assertions about it... */
     this.datasource.Assert(panel_resource,
@@ -134,6 +137,12 @@ function (aTitle, aContentURL, aCustomizeURL)
                                this.rdf.GetLiteral(aCustomizeURL),
                                true);
         
+    container.AppendElement(panel_resource);
+
+    this.datasource.Unassert(this.rdf.GetResource(this.resource),
+                             this.rdf.GetResource(this.nc + "inbatch"),
+                             this.rdf.GetLiteral("true"));
+
     /* Write the modified panels out. */
     this.datasource.QueryInterface(nsIRDFRemoteDataSource).Flush();
 
