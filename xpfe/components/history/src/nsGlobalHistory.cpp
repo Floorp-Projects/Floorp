@@ -3600,7 +3600,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
                        // while passing these around between the 3 arrays
     // step through the enumerator
     PRBool hasMore;
-    while (true) {
+    while (PR_TRUE) {
       enumerator->HasMoreElements(&hasMore);
       if (!hasMore) break;
       enumerator->GetNext(&entry);
