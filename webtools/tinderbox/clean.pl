@@ -44,7 +44,7 @@ sub files_to_remove {
 # Remove build.dat entries older than 7 days
 #
 sub log_files_to_trim {
-  return unless /^(?:notes.txt|build.dat|bloat.dat|warnings.dat)$/;
+  return unless /^(?:notes.txt|build.dat|scrape.dat|warnings.dat)$/;
   warn "Cleaning $File::Find::name\n";
   my $file = $_;
   my $range_start = 0;

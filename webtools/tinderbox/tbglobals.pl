@@ -146,7 +146,6 @@ sub tb_load_data {
 
   make_build_table($td, $build_list);
 
-  $td->{bloaty}     = load_bloaty($td);
   $td->{pageloader} = load_pageloader($td);
   $td->{scrape}     = load_scrape($td);
   $td->{warnings}   = load_warnings($td);
@@ -242,7 +241,7 @@ sub tb_check_password {
 
   print "Content-type: text/html\n";
   print "Set-Cookie: tinderbox_password= ; path=/ ; "
-       ." expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
+       ." Expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
   print "\n";
 
   EmitHtmlHeader("What's the magic word?",
@@ -392,33 +391,6 @@ sub load_who {
 }
     
 
-# Load data about code bloat & leaks
-#   File format: <logfile>|<leak_delta>|<bloat_delta>
-#
-sub load_bloaty {
-  my $treedata = $_[0];
-  local $_;
-
-  my $bloaty = {};
-  my ($bloat_baseline,  $leaks_baseline)  = (0,0);
-
-  open(BLOATLOG, "<$treedata->{name}/bloat.dat");
-  while (<BLOATLOG>) {
-    chomp;
-    my ($logfile, $leaks, $bloat) = split /\|/;
-
-    # Allow 1k of noise
-    my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
-    my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
-    
-    # If there was a rise or drop, set a new baseline
-    $leaks_baseline = $leaks unless $leaks_cmp == 0;
-    $bloat_baseline = $bloat unless $bloat_cmp == 0;
-
-    $bloaty->{$logfile} = [ $leaks, $bloat, $leaks_cmp, $bloat_cmp ];
-  }
-  return $bloaty;
-}
 
 
 # Load data about pageloader times.
@@ -430,18 +402,10 @@ sub load_pageloader {
 
   my $pageloader = {};
   
-  open(BLOATLOG, "<$treedata->{name}/pageloader.dat");
-  while (<BLOATLOG>) {
+  open(PAGELOADERLOG, "<$treedata->{name}/pageloader.dat");
+  while (<PAGELOADERLOG>) {
     chomp;
     my ($logfile, $pageloader_time) = split /\|/;
-
-    # Allow 1k of noise
-    # my $leaks_cmp = int(($leaks - $leaks_baseline) / 1000);
-    # my $bloat_cmp = int(($bloat - $bloat_baseline) / 1000);
-    
-    # If there was a rise or drop, set a new baseline
-    # $leaks_baseline = $leaks unless $leaks_cmp == 0;
-    # $bloat_baseline = $bloat unless $bloat_cmp == 0;
 
     $pageloader->{$logfile} = [ $pageloader_time ];
   }
@@ -458,8 +422,8 @@ sub load_scrape {
 
   my $scrape = {};
   
-  open(BLOATLOG, "<$treedata->{name}/scrape.dat");
-  while (<BLOATLOG>) {
+  open(SCRAPELOG, "<$treedata->{name}/scrape.dat");
+  while (<SCRAPELOG>) {
     chomp;
     my @list =  split /\|/;
     my $logfile = @list[0];

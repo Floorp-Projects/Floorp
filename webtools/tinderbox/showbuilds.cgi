@@ -226,8 +226,9 @@ sub print_page_head {
                         Successful Build, optional bloaty stats:<br>
                         <tt>Lk:XXX</tt> (bytes leaked)<br>
                         <tt>Bl:YYYY</tt> (bytes allocated, bloat)<br>
-                        <tt>Tp:TT.T</tt> (page-loader time, sec)<br>
-                        <tt>Ts:TT.T</tt> (startup time, sec)<br>
+                        <tt>Tp:TT.T</tt> (page-loader time, ms)<br>
+                        <tt>Txul:TT.T</tt> (XUL openwindow time, ms)<br>
+                        <tt>Ts:TT.T</tt>   (startup time, sec)<br>
                       </td>
                 <tr bgcolor="$colormap{building}">
                   <td>Build in progress</td>
@@ -258,25 +259,6 @@ sub print_table_body {
   }
 }
 
-sub print_bloat_delta {
-  my ($value, $compare) = @_;
-  my $units = 'B';
-  $value = $value || 0;
-  $compare = $compare || 0;
-
-  if ($value >= 1000000) {
-    $value = int($value / 1000000);
-    $min =   int($min / 1000000);
-    $units = 'MB';
-  } elsif ($value >= 10000) {
-    $value = int($value / 1000);
-    $min =   int($min / 1000);
-    $units = 'KB';
-  }
-
-  # Took out colors because the numbers jump around too much. -slamm
-  return "$value$units";
-}
 
 BEGIN {
   # Make $lasthour persistent private variable for print_table_row().
@@ -382,15 +364,6 @@ BEGIN {
           print" <A HREF=$binaryurl>D</A>";
       }
       
-      # Leak/Bloat
-      if (defined $td->{bloaty}{$logfile}) {
-        my ($leaks, $bloat, $leaks_cmp, $bloat_cmp)
-            = @{ $td->{bloaty}{$logfile} };
-        # ex: Lk:21KB
-        print "<br>Lk:", print_bloat_delta($leaks, $leaks_cmp),
-              "<br>Bl:", print_bloat_delta($bloat, $bloat_cmp);
-      }
-
       # Pageloader data
       if (defined $td->{pageloader}{$logfile}) {
         my ($pageloader_time)
