@@ -656,55 +656,15 @@ NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel *channel, nsCString &aWindowTarg
   nsCOMPtr<nsIDocShellTreeItem>  treeItem;
   *aRetargetedWindowContext = nsnull;
 
+  PRBool mustMakeNewWindow = PR_FALSE;
+
   if(!name.Length() || name.EqualsIgnoreCase("_self"))
   {
       *aRetargetedWindowContext = aWindowContext;
   }
   else if (name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
   {
-      nsCOMPtr<nsIDOMWindowInternal> parentWindow;
-      JSContext* jsContext = nsnull;
-
-      if (aWindowContext)
-      {
-        parentWindow = do_GetInterface(aWindowContext);
-        if (parentWindow)
-        {
-          nsCOMPtr<nsIScriptGlobalObject> sgo;     
-          sgo = do_QueryInterface( parentWindow );
-          if (sgo)
-          {
-            nsCOMPtr<nsIScriptContext> scriptContext;
-            sgo->GetContext( getter_AddRefs( scriptContext ) );
-            if (scriptContext)
-              jsContext = (JSContext*)scriptContext->GetNativeContext();
-          }
-        }
-      }
-      if (!parentWindow || !jsContext)
-      {
-          return NS_ERROR_FAILURE;
-      }
-
-      // Create a new window (context) so that the uri loader has a proper
-      // target to push the content into.
-
-      void* mark;
-      jsval* argv;
-
-      nsAutoString uriValue; // Empty
-      argv = JS_PushArguments(jsContext, &mark, "Ws", uriValue.GetUnicode(), "");
-      NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIDOMWindowInternal> newWindow;
-      parentWindow->Open(jsContext, argv, 2, getter_AddRefs(newWindow));
-      JS_PopArguments(jsContext, mark);
-
-      nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(newWindow);
-      nsIDocShell *docShell = nsnull;
-      sgo->GetDocShell(&docShell);
-
-      *aRetargetedWindowContext = (nsISupports *) docShell;
+      mustMakeNewWindow = PR_TRUE;
       aWindowTarget.Assign("");
   }
   else if(name.EqualsIgnoreCase("_parent"))
@@ -736,6 +696,13 @@ NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel *channel, nsCString &aWindowTarg
   {
     windowCtxtAsTreeItem->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
 
+    // The named window cannot be found so it must be created to receive the
+    // channel data.
+
+    if (!treeItem) {
+      mustMakeNewWindow = PR_TRUE;
+    }
+
     // Bug 13871: Prevent frameset spoofing
     //     See BugSplat 336170, 338737 and XP_FindNamedContextInList in the classic codebase
     //     Per Nav's behaviour:
@@ -762,6 +729,53 @@ NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel *channel, nsCString &aWindowTarg
          } // else (no parent) allow this load since shell is a toplevel window
        } // else (target from origin domain) allow this load
      } // else (pref is false) allow this load
+  }
+
+  if (mustMakeNewWindow) {
+      nsCOMPtr<nsIDOMWindowInternal> parentWindow;
+      JSContext* jsContext = nsnull;
+
+      if (aWindowContext)
+      {
+        parentWindow = do_GetInterface(aWindowContext);
+        if (parentWindow)
+        {
+          nsCOMPtr<nsIScriptGlobalObject> sgo;     
+          sgo = do_QueryInterface( parentWindow );
+          if (sgo)
+          {
+            nsCOMPtr<nsIScriptContext> scriptContext;
+            sgo->GetContext( getter_AddRefs( scriptContext ) );
+            if (scriptContext)
+              jsContext = (JSContext*)scriptContext->GetNativeContext();
+          }
+        }
+      }
+      if (!parentWindow || !jsContext)
+      {
+          return NS_ERROR_FAILURE;
+      }
+
+      // Create a new window (context) so that the uri loader has a proper
+      // target to push the content into.
+
+      void* mark;
+      jsval* argv;
+
+      nsAutoString uriValue; // Empty
+      argv = JS_PushArguments(jsContext, &mark, "Ws",
+          uriValue.GetUnicode(), aWindowTarget.get());
+      NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIDOMWindowInternal> newWindow;
+      parentWindow->Open(jsContext, argv, 2, getter_AddRefs(newWindow));
+      JS_PopArguments(jsContext, mark);
+
+      nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(newWindow);
+      nsIDocShell *docShell = nsnull;
+      sgo->GetDocShell(&docShell);
+
+      *aRetargetedWindowContext = (nsISupports *) docShell;
   }
 
   nsCOMPtr<nsISupports> treeItemCtxt (do_QueryInterface(treeItem));
