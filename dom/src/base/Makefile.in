@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  find \
 		  appshell \
 		  intl \
+		  unicharutil \
 		  $(NULL)
 
 ifdef NS_TRACE_MALLOC
