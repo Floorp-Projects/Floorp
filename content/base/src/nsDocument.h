@@ -71,6 +71,7 @@
 #include "nsICSSLoader.h"
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIRadioGroupContainer.h"
+#include "nsIScriptEventManager.h"
 
 #include "pldhash.h"
 
@@ -521,6 +522,7 @@ public:
   NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference);
   NS_IMETHOD SetContainer(nsISupports *aContainer);
   NS_IMETHOD GetContainer(nsISupports **aContainer);
+  NS_IMETHOD GetScriptEventManager(nsIScriptEventManager **aResult);
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -675,6 +677,8 @@ protected:
 
   nsString mContentLanguage;
   nsString mContentType;
+
+  nsCOMPtr<nsIScriptEventManager> mScriptEventManager;
 
 private:
   // These are not implemented and not supported.

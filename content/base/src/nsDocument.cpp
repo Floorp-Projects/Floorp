@@ -146,6 +146,8 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 #include "nsIHttpChannel.h"
 #include "nsIPref.h"
 
+#include "nsScriptEventManager.h"
+
 /**
  * A struct that holds all the information about a radio group.
  */
@@ -3751,6 +3753,19 @@ nsDocument::GetContainer(nsISupports **aContainer)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocument::GetScriptEventManager(nsIScriptEventManager **aResult)
+{
+  if (!mScriptEventManager) {
+    mScriptEventManager = new nsScriptEventManager(this);
+    // automatically AddRefs
+  }
+
+  *aResult = mScriptEventManager;
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
+}
 nsresult
 nsDocument::GetRadioGroup(const nsAString& aName,
                           nsRadioGroupStruct **aRadioGroup)
