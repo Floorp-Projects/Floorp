@@ -68,10 +68,17 @@ function getIspDefaultsForUri(domainURI)
 
     if (!result) return null;
     
-    // add this extra attribute which is the domain itself
-    var domainData = domainURI.split(':');
-    if (domainData.length > 1)
-    result.domain = domainData[1];
+    // The domainURI should be in the format domain:aol.com. (Where 
+    // aol.com is the domain name to use for all email addresses). If
+    // it does not match this pattern, then it is possible no domain
+    // has been specified, so we should leave it uninitialized.
+    if (/^domain:/.test(domainURI)) {
+        // add this extra attribute which is the domain itself
+        var domainData = domainURI.split(':');
+        if (domainData.length > 1) {
+            result.domain = domainData[1];
+        }
+    }
     
     return result;
 }
