@@ -30,6 +30,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/messenger.dtd \
 		$(srcdir)/messenger.properties \
 		$(srcdir)/threadpane.dtd \
+		$(srcdir)/msgHdrViewOverlay.dtd \
 		$(srcdir)/folderpane.dtd \
 		$(srcdir)/newFolderNameDialog.dtd \
 		$(srcdir)/subscribeDialog.dtd \
