@@ -32,17 +32,17 @@ public:
   virtual nsresult Init();
 
   virtual void SetTo(const nsIRegion &aRegion);
-  virtual void SetTo(const nsRect &aRect);
+  virtual void SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual void Intersect(const nsIRegion &aRegion);
-  virtual void Intersect(const nsRect &aRect);
+  virtual void Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual void Union(const nsIRegion &aRegion);
-  virtual void Union(const nsRect &aRect);
+  virtual void Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual void Subtract(const nsIRegion &aRegion);
   virtual PRBool IsEmpty(void);
   virtual PRBool IsEqual(const nsIRegion &aRegion);
-  virtual void GetBoundingBox(nsRect &aRect);
-  virtual void Offset(nscoord aXOffset, nscoord aYOffset);
-  virtual PRBool ContainsRect(const nsRect &aRect);
+  virtual void GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight);
+  virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset);
+  virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure);
 
   //windows specific
@@ -53,6 +53,7 @@ private:
   ~nsRegionWin();
 
   HRGN  mRegion;
+  int   mRegionType;
 };
 
 #endif  // nsRegionWin_h___ 

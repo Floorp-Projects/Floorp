@@ -54,12 +54,15 @@ public:
   /**
   * copy operator equivalent that takes a rect
   *
-  * @param      rect to copy
+  * @param      aX xoffset of rect to set region to
+  * @param      aY yoffset of rect to set region to
+  * @param      aWidth width of rect to set region to
+  * @param      aHeight height of rect to set region to
   * @return     void
   *
   **/
 
-  virtual void SetTo(const nsRect &aRect) = 0;
+  virtual void SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
 
   /**
   * destructively intersect another region with this one
@@ -74,12 +77,15 @@ public:
   /**
   * destructively intersect a rect with this region
   *
-  * @param      rect to intersect
+  * @param      aX xoffset of rect to intersect with region
+  * @param      aY yoffset of rect to intersect with region
+  * @param      aWidth width of rect to intersect with region
+  * @param      aHeight height of rect to intersect with region
   * @return     void
   *
   **/
 
-  virtual void Intersect(const nsRect &aRect) = 0;
+  virtual void Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
 
   /**
   * destructively union another region with this one
@@ -94,12 +100,15 @@ public:
   /**
   * destructively union a rect with this region
   *
-  * @param      rect to union
+  * @param      aX xoffset of rect to union with region
+  * @param      aY yoffset of rect to union with region
+  * @param      aWidth width of rect to union with region
+  * @param      aHeight height of rect to union with region
   * @return     void
   *
   **/
 
-  virtual void Union(const nsRect &aRect) = 0;
+  virtual void Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
 
   /**
   * destructively subtract another region with this one
@@ -136,11 +145,14 @@ public:
   * returns the bounding box of the region i.e. the smallest
   * rectangle that completely contains the region.        
   *
-  * @param      rect to set to the bounding box
+  * @param      aX out parameter for xoffset of bounding rect for region
+  * @param      aY out parameter for yoffset of bounding rect for region
+  * @param      aWidth out parameter for width of bounding rect for region
+  * @param      aHeight out parameter for height of bounding rect for region
   * @return     void
   *
   **/
-  virtual void GetBoundingBox(nsRect &aRect) = 0;
+  virtual void GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight) = 0;
 
   /**
   * offsets the region in x and y
@@ -150,7 +162,7 @@ public:
   * @return          void
   *
   **/
-  virtual void Offset(nscoord aXOffset, nscoord aYOffset) = 0;
+  virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset) = 0;
 
   /**
   * does the region completely contain the rectangle?
@@ -160,7 +172,7 @@ public:
   *
   **/
 
-  virtual PRBool ContainsRect(const nsRect &aRect) = 0;
+  virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
   
   /**
   * invoke a function for each rectangle in the region
