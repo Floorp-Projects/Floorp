@@ -77,12 +77,6 @@ Rights Reserved.
     <command id="cmd_renameFolder" oncommand="goDoCommand('cmd_renameFolder')" />
 </commandset>
 
-<broadcasterset id="broadcasterset">
-	<broadcaster id="cmd_toggleWorkOffline" oncommand="goDoCommand('cmd_toggleWorkOffline')" disabled="true"/>
-</broadcasterset>
-
-<statusbarpanel id="offline-status" tooltip="aTooltip" observes="cmd_toggleWorkOffline"/> 
-
 <commandset id="mailCommands">
   <command id="cmd_newNavigator"/>
   <command id="cmd_newEditor"/>

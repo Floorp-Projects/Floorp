@@ -158,6 +158,8 @@ function CreateMailWindowGlobals()
   messagesBox       = document.getElementById("messagesBox");
   accountCentralBox = document.getElementById("accountCentralBox");
   gPaneConfig = pref.GetIntPref("mail.pane_config");
+
+  setOfflineStatus();
 }
 
 function InitMsgWindow()
