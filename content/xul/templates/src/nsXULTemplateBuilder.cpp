@@ -1146,7 +1146,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 					}
 				}
 				// set natural order hint
-				if (aNaturalOrderPos > 0)
+				if ((aNaturalOrderPos > 0) && (isContainmentElement == PR_TRUE))
 				{
 					nsAutoString	pos, zero("0000");
 					pos.Append(aNaturalOrderPos, 10);
