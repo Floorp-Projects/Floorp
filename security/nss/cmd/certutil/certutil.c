@@ -2161,7 +2161,7 @@ main(int argc, char **argv)
     CERTCertDBHandle *certHandle;
     PK11SlotInfo *slot = NULL;
     CERTName *  subject         = 0;
-    PRFileDesc *inFile          = 0;
+    PRFileDesc *inFile          = PR_STDIN;
     PRFileDesc *outFile         = 0;
     char *      certfile        = "tempcert";
     char *      certreqfile     = "tempcertreq";
@@ -2693,6 +2693,7 @@ main(int argc, char **argv)
      */
  
     if (certutil.commands[cmd_CreateAndAddCert].activated) { 
+	PORT_Assert(inFile != PR_STDIN);
 	PR_Close(inFile);
 	PR_Close(outFile);
 	inFile = PR_Open(certfile, PR_RDONLY, 0);
@@ -2717,6 +2718,7 @@ main(int argc, char **argv)
     }
 
     if (certutil.commands[cmd_CreateAndAddCert].activated) {
+	PORT_Assert(inFile != PR_STDIN);
 	PR_Close(inFile);
 	PR_Delete(certfile);
 	PR_Delete(certreqfile);
