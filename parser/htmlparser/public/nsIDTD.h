@@ -115,7 +115,8 @@ public:
                                             PRInt32 aVersion) = 0;
 
     NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
-                              nsIContentSink* aSink=0) = 0;
+                              nsITokenizer* aTokenizer,
+                              nsIContentSink* aSink) = 0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -125,7 +126,7 @@ public:
      */
     NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
                              nsIParser* aParser,
-                             nsIContentSink* aSink = nsnull) = 0;
+                             nsIContentSink* aSink) = 0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -134,8 +135,8 @@ public:
      * @return
      */
     NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer,
-                          nsITokenObserver* anObserver = nsnull,
-                          nsIContentSink* aSink = nsnull) = 0;
+                          nsITokenObserver* anObserver,
+                          nsIContentSink* aSink) = 0;
 
     /**
      * Called during model building phase of parse process. Each token
@@ -148,14 +149,6 @@ public:
      * @return error code (usually 0)
      */
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser) = 0;
-
-    /**
-     * 
-     * @update	gess 12/20/99
-     * @param   ptr-ref to (out) tokenizer
-     * @return  nsresult
-     */
-    NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer) = 0;
 
     /**
      * If the parse process gets interrupted midway, this method is
@@ -206,6 +199,8 @@ public:
      */
     NS_IMETHOD_(void) Terminate() = 0;
 
+    NS_IMETHOD CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo) = 0;
+
 /* XXX Temporary measure, pending further work by RickG  */
 
 
@@ -235,15 +230,15 @@ public:
     NS_IMETHOD_(const nsIID&)  GetMostDerivedIID(void) const;\
     NS_IMETHOD CreateNewInstance(nsIDTD** aInstancePtrResult);\
     NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext, const nsString& aBuffer, PRInt32 aVersion);\
-    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink=0);\
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);\
-    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver=0,nsIContentSink* aSink=0);\
+    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink);\
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink);\
+    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink);\
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);\
-    NS_IMETHOD GetTokenizer(nsITokenizer*& aTokenizer);\
     NS_IMETHOD WillResumeParse(nsIContentSink* aSink = 0);\
     NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0);\
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
+    NS_IMETHOD CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo);\
     NS_IMETHOD_(void)  Terminate();\
     NS_IMETHOD StringTagToIntTag(const nsAString &aTag, PRInt32* aIntTag) const ;\
     NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const ;\

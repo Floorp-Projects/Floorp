@@ -100,7 +100,9 @@ class nsCParserNode :  public nsIParserNode {
 #endif
 
   public:
-    static nsCParserNode* Create(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator)
+    static nsCParserNode* Create(CToken* aToken,
+                                 nsTokenAllocator* aTokenAllocator,
+                                 nsNodeAllocator* aNodeAllocator)
     {
 #ifdef HEAP_ALLOCATED_NODES
       return new
@@ -109,7 +111,7 @@ class nsCParserNode :  public nsIParserNode {
       void* place = pool.Alloc(sizeof(nsCParserNode));
       return ::new (place)
 #endif
-        nsCParserNode(aToken, aLineNumber, aTokenAllocator, aNodeAllocator);
+        nsCParserNode(aToken, aTokenAllocator, aNodeAllocator);
     }
 
     static void Destroy(nsCParserNode* aNode, nsFixedSizeAllocator& aPool)
@@ -132,7 +134,9 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess5/11/98
      * @param   aToken is the token this node "refers" to
      */
-    nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator=0);
+    nsCParserNode(CToken* aToken,
+                  nsTokenAllocator* aTokenAllocator,
+                  nsNodeAllocator* aNodeAllocator=0);
 
     /**
      * Destructor
@@ -144,7 +148,9 @@ class nsCParserNode :  public nsIParserNode {
      * Init
      * @update	gess5/11/98
      */
-    virtual nsresult Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator=0);
+    virtual nsresult Init(CToken* aToken,
+                          nsTokenAllocator* aTokenAllocator,
+                          nsNodeAllocator* aNodeAllocator=0);
 
     /**
      * Retrieve the name of the node
@@ -159,20 +165,6 @@ class nsCParserNode :  public nsIParserNode {
      * @return  string containing node text
      */
     virtual const nsAString& GetText() const;
-
-    /**
-     * Retrieve skipped context from node
-     * @update	gess5/11/98
-     * @return  string containing skipped content
-     */
-    virtual const nsString& GetSkippedContent() const;
-
-    /**
-     * Retrieve skipped context from node
-     * @update	gess5/11/98
-     * @return  string containing skipped content
-     */
-    virtual void SetSkippedContent(nsString& aString);
 
     /**
      * Retrieve the type of the parser node.
@@ -276,10 +268,8 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual nsresult ReleaseAll();
 
-    PRInt32   mLineNumber;
     CToken*   mToken;
     nsDeque*  mAttributes;
-    nsString* mSkippedContent;
     PRInt32   mUseCount;
     PRBool    mGenericState;
     nsCOMPtr<nsIAtom> mIDAttributeAtom;

@@ -227,6 +227,10 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
+  if (NS_SUCCEEDED(result) && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+    result = aScanner.SkipWhitespace(mNewlineCount);
+  }
+
   return result;
 }
 
@@ -286,7 +290,7 @@ void CStartToken::GetSource(nsString& anOutputString){
  *  @param   result appended to the output string.
  *  @return  nada
  */
-void CStartToken::AppendSource(nsString& anOutputString){
+void CStartToken::AppendSourceTo(nsAString& anOutputString){
   anOutputString.Append(PRUnichar('<'));
   /*
    * Watch out for Bug 15204 
@@ -329,46 +333,30 @@ CEndToken::CEndToken(const nsAString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
  *  @param   aFlag - contains information such as |dtd mode|view mode|doctype|etc...
  *  @return  error result
  */
-nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) {
-  //if you're here, we've already Consumed the <! chars, and are
-   //ready to Consume the rest of the open tag identifier.
-   //Stop consuming as soon as you see a space or a '>'.
-   //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
-
-  nsresult result=NS_OK;
-  nsAutoString buffer;
-  PRInt32 offset;
+nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) 
+{
+  nsresult result = NS_OK;
   if (aFlag & NS_IPARSER_FLAG_HTML) {
     nsAutoString theSubstr;
-    result=aScanner.ReadUntil(theSubstr,kGreaterThan,PR_FALSE);
-    if (NS_FAILED(result)) {
-      return result;
-    }
+    result=aScanner.GetIdentifier(theSubstr,PR_TRUE);
+    NS_ENSURE_SUCCESS(result, result);
     
-    offset = theSubstr.FindCharInSet(" \r\n\t\b",0);
-    if (offset != kNotFound) {
-      theSubstr.Left(buffer, offset);
-      mTypeID = nsHTMLTags::LookupTag(buffer);
-    }
-    else {
-      mTypeID = nsHTMLTags::LookupTag(theSubstr);
-    }
-
+    mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
     if(eHTMLTag_userdefined==mTypeID) {
       mTextValue=theSubstr;
     }
-
   }
   else {
-    mTextValue.SetLength(0);
-    result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_FALSE);
-    if (NS_FAILED(result)) {
-      return result;
-    }
-    mTypeID = eHTMLTag_userdefined;
+    result = aScanner.ReadIdentifier(mTextValue,PR_TRUE);
+    NS_ENSURE_SUCCESS(result, result);
+
+    mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
-  result=aScanner.GetChar(aChar); //eat the closing '>;
+  if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+    result = aScanner.SkipWhitespace(mNewlineCount);
+    NS_ENSURE_SUCCESS(result, result);
+  }
 
   return result;
 }
@@ -466,7 +454,7 @@ void CEndToken::GetSource(nsString& anOutputString){
  *  @param   result appended to the output string.
  *  @return  nada
  */
-void CEndToken::AppendSource(nsString& anOutputString){
+void CEndToken::AppendSourceTo(nsAString& anOutputString){
   anOutputString.Append(NS_LITERAL_STRING("</"));
   if(mTextValue.Length()>0)
     anOutputString.Append(mTextValue);
@@ -1267,6 +1255,8 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
   else {
     result=ConsumeComment(aScanner,mTextValue);
   }
+
+  mNewlineCount = !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) ? mTextValue.CountChar(kNewLine) : -1;
   return result;
 }
 
@@ -1394,7 +1384,9 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
       default:
         break;
     }
-  }  
+  }
+
+  mNewlineCount = 1;
   return result;
 }
 
@@ -1531,7 +1523,7 @@ const nsAString& CAttributeToken::GetStringValue(void)
  */
 void CAttributeToken::GetSource(nsString& anOutputString){
   anOutputString.Truncate();
-  AppendSource(anOutputString);
+  AppendSourceTo(anOutputString);
 }
 
 /*
@@ -1541,7 +1533,7 @@ void CAttributeToken::GetSource(nsString& anOutputString){
  *  @param   result appended to the output string.
  *  @return  nada
  */
-void CAttributeToken::AppendSource(nsString& anOutputString){
+void CAttributeToken::AppendSourceTo(nsAString& anOutputString){
   anOutputString.Append(mTextKey);
   if(mTextValue.Length() || mHasEqualWithoutValue) 
     anOutputString.Append(NS_LITERAL_STRING("="));
@@ -1727,10 +1719,10 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
   nsReadingIterator<PRUnichar> wsstart, wsend;
   
   if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-    result = aScanner.ReadWhitespace(wsstart, wsend);
+    result = aScanner.ReadWhitespace(wsstart, wsend, mNewlineCount);
   }
   else {
-    result = aScanner.SkipWhitespace();
+    result = aScanner.SkipWhitespace(mNewlineCount);
   }
 
   if (NS_OK==result) {
@@ -1752,11 +1744,11 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
     //now it's time to Consume the (optional) value...
     if (NS_OK==result) {
       if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-        result = aScanner.ReadWhitespace(start, wsend);
+        result = aScanner.ReadWhitespace(start, wsend, mNewlineCount);
         aScanner.BindSubstring(mTextKey, wsstart, wsend);
       }
       else {
-        result = aScanner.SkipWhitespace();
+        result = aScanner.SkipWhitespace(mNewlineCount);
       }
 
       if (NS_OK==result) { 
@@ -1766,10 +1758,10 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
             result=aScanner.GetChar(aChar);  //skip the equal sign...
             if (NS_OK==result) {
               if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-                result = aScanner.ReadWhitespace(mTextValue);
+                result = aScanner.ReadWhitespace(mTextValue, mNewlineCount);
               }
               else {
-                result = aScanner.SkipWhitespace();
+                result = aScanner.SkipWhitespace(mNewlineCount);
               }
 
               if (NS_OK==result) {
@@ -1805,10 +1797,10 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                 }//if
                 if (NS_OK==result) {
                   if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-                    result = aScanner.ReadWhitespace(mTextValue);
+                    result = aScanner.ReadWhitespace(mTextValue, mNewlineCount);
                   }
                   else {
-                    result = aScanner.SkipWhitespace();
+                    result = aScanner.SkipWhitespace(mNewlineCount);
                   }
                 }
               }//if
@@ -1926,7 +1918,7 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
  */
 nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) {
   mTextValue.Assign(aChar);
-  nsresult result=aScanner.ReadWhitespace(mTextValue);
+  nsresult result=aScanner.ReadWhitespace(mTextValue, mNewlineCount);
   if(NS_OK==result) {
     mTextValue.StripChar(kCR);
   }
@@ -2237,7 +2229,7 @@ void CEntityToken::GetSource(nsString& anOutputString){
  *  @param   result appended to the output string.
  *  @return  nada
  */
-void CEntityToken::AppendSource(nsString& anOutputString){
+void CEntityToken::AppendSourceTo(nsAString& anOutputString){
   anOutputString.Append(NS_LITERAL_STRING("&"));
   anOutputString+=mTextValue;
   //anOutputString+=";";

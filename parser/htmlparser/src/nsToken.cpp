@@ -67,6 +67,7 @@ CToken::CToken(PRInt32 aTag) {
 #endif 
   mAttrCount=0;
   mNewlineCount=0;
+  mLineNumber = 0;
   mTypeID=aTag;
   // Note that the use count starts with 1 instead of 0. This
   // is because of the assumption that any token created is in
@@ -156,7 +157,7 @@ void CToken::GetSource(nsString& anOutputString){
  * @update	harishd 3/23/00
  * @return  reference to string containing string value
  */
-void CToken::AppendSource(nsString& anOutputString){
+void CToken::AppendSourceTo(nsAString& anOutputString){
   anOutputString.Append(GetStringValue());
 }
 
@@ -180,16 +181,6 @@ void CToken::SetTypeID(PRInt32 aTypeID) {
  */
 PRInt32 CToken::GetTypeID(void) {
   return mTypeID;
-}
-
-/**
- *  Sets the attribute count for this token
- *  
- *  @update gess 3/25/98
- *  @param  value -- new attr count
- */
-void CToken::SetAttributeCount(PRInt16 value) {
-  mAttrCount=value;
 }
 
 /**

@@ -822,7 +822,8 @@ nsExpatDriver::CanParse(CParserContext& aParserContext,
 }
 
 NS_IMETHODIMP 
-nsExpatDriver::WillBuildModel(const CParserContext& aParserContext, 
+nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
+                              nsITokenizer* aTokenizer,
                               nsIContentSink* aSink)
 {
 
@@ -882,12 +883,6 @@ nsExpatDriver::DidBuildModel(nsresult anErrorCode,
   return result;
 }
 
-NS_IMETHODIMP nsExpatDriver::GetTokenizer(nsITokenizer*& aTokenizer)
-{
-  aTokenizer = this;
-  return NS_OK;
-}
-
 NS_IMETHODIMP                     
 nsExpatDriver::WillTokenize(PRBool aIsFinalChunk,
                             nsTokenAllocator* aTokenAllocator)
@@ -927,6 +922,12 @@ nsExpatDriver::Terminate()
 }
 
 /*************************** Unused methods ***************************************/ 
+
+NS_IMETHODIMP 
+nsExpatDriver::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo)
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP_(CToken*)
 nsExpatDriver::PushTokenFront(CToken* aToken)
