@@ -408,7 +408,6 @@ private:
 NS_BEGIN_EXTERN_C
 
 nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
-nsresult NS_NewNntpUrl(nsINntpUrl ** aResult, const nsString urlSpec);
 
 NS_END_EXTERN_C
 
