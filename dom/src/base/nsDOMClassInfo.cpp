@@ -838,6 +838,7 @@ JSString *nsDOMClassInfo::sScrollY_id         = nsnull;
 JSString *nsDOMClassInfo::sOpen_id            = nsnull;
 JSString *nsDOMClassInfo::sItem_id            = nsnull;
 JSString *nsDOMClassInfo::sEnumerate_id       = nsnull;
+JSString *nsDOMClassInfo::sNavigator_id       = nsnull;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
@@ -911,6 +912,7 @@ nsDOMClassInfo::DefineStaticJSStrings(JSContext *cx)
   sOpen_id           = ::JS_InternString(cx, "open");
   sItem_id           = ::JS_InternString(cx, "item");
   sEnumerate_id      = ::JS_InternString(cx, "enumerateProperties");
+  sNavigator_id      = ::JS_InternString(cx, "navigator");
 
   return NS_OK;
 }
@@ -2663,6 +2665,7 @@ nsDOMClassInfo::ShutDown()
   sOpen_id            = jsnullstring;
   sItem_id            = jsnullstring;
   sEnumerate_id       = jsnullstring;
+  sNavigator_id       = jsnullstring;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -2918,8 +2921,9 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
   if (needsSecurityCheck(cx, wrapper)) {
-    nsresult rv = doCheckPropertyAccess(cx, obj, id, wrapper,
-                                        nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+    nsresult rv =
+      doCheckPropertyAccess(cx, obj, id, wrapper,
+                            nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 
     if (NS_FAILED(rv)) {
       // Security check failed. The security manager set a JS
@@ -3717,7 +3721,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         NS_ENSURE_SUCCESS(rv, rv);
 
         jsval v;
-
         rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), &v);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3740,14 +3743,39 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // undefined to override the predefined property. This is done
         // for compatibility with other browsers.
 
-        *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                         ::JS_GetStringLength(str),
-                                         JSVAL_VOID, nsnull, nsnull,
-                                         JSPROP_ENUMERATE);
+        if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                   ::JS_GetStringLength(str),
+                                   JSVAL_VOID, nsnull, nsnull,
+                                   JSPROP_ENUMERATE)) {
+          return NS_ERROR_FAILURE;
+        }
 
         *objp = obj;
 
-        return *_retval ? NS_OK : NS_ERROR_FAILURE;
+        return NS_OK;
+      }
+    } else {
+      if (str == sNavigator_id) {
+        nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(native));
+        NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
+
+        nsCOMPtr<nsIDOMNavigator> navigator;
+        rv = window->GetNavigator(getter_AddRefs(navigator));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        jsval v;
+        rv = WrapNative(cx, obj, navigator, NS_GET_IID(nsIDOMNavigator), &v);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                   ::JS_GetStringLength(str), v, nsnull,
+                                   nsnull, 0)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        *objp = obj;
+
+        return NS_OK;
       }
     }
 
