@@ -114,9 +114,9 @@ static JSValue function_constructor(Context *cx, const JSValues& argv)
     // argv[0] will be NULL
 
     if (argv.size() >= 2) {        
-        int32 parameterCount = argv.size() - 2;
+        uint32 parameterCount = argv.size() - 2;
         JSString source("function (");
-        for (int32 i = 0; i < parameterCount; i++) {
+        for (uint32 i = 0; i < parameterCount; i++) {
             source.append((JSValue::valueToString(argv[i + 1]).string));
             if (i < (parameterCount - 1)) source.append(",");
         }
