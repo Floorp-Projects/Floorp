@@ -107,7 +107,7 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
 		NS_NEWXPCOM(inst, nsRenderingContextMac);
 	}
 	else if (mClassID.Equals(kCImage)) {
-		NS_NEWXPCOM(inst, nsImageMac);
+	  inst = NS_STATIC_CAST(nsIImage*, new nsImageMac());
 	}
 	else if (mClassID.Equals(kCRegion)) {
 		NS_NEWXPCOM(inst, nsRegionMac);
