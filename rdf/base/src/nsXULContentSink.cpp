@@ -45,6 +45,7 @@
 
 */
 
+#include "nsCOMPtr.h"
 #include "nsIContentSink.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -55,6 +56,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIXMLContentSink.h"
+#include "nsLayoutCID.h"
 #include "nsRDFCID.h"
 #include "nsVoidArray.h"
 #include "prlog.h"
@@ -78,12 +80,14 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
 // XPCOM IIDs
 
 static NS_DEFINE_IID(kIContentSinkIID,         NS_ICONTENT_SINK_IID); // XXX grr...
+static NS_DEFINE_IID(kINameSpaceManagerIID,    NS_INAMESPACEMANAGER_IID);
+static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,       NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,          NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentSinkIID,      NS_IXMLCONTENT_SINK_IID);
-static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 
+static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
@@ -295,9 +299,9 @@ rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
 ////////////////////////////////////////////////////////////////////////
 
 typedef enum {
-    eRDFContentSinkState_InProlog,
-    eRDFContentSinkState_InDocumentElement,
-    eRDFContentSinkState_InEpilog
+    eXULContentSinkState_InProlog,
+    eXULContentSinkState_InDocumentElement,
+    eXULContentSinkState_InEpilog
 } RDFContentSinkState;
 
 
@@ -337,6 +341,19 @@ public:
     NS_IMETHOD GetDataSource(nsIRDFXMLDataSource*& ds);
 
 protected:
+    static nsrefcnt             gRefCnt;
+    static nsINameSpaceManager* gNameSpaceManager;
+    static nsIRDFService*       gRDFService;
+
+    // pseudo-constants
+    static nsIRDFResource* kRDF_child; // XXX needs to be NC:child (or something else)
+    static nsIRDFResource* kRDF_type;
+
+    static nsresult
+    MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
+                                 const nsString& aTag,
+                                 nsIRDFResource** aResource);
+
     // Text management
     nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                        PRBool* aDidFlush=nsnull);
@@ -350,10 +367,8 @@ protected:
     void      PushNameSpacesFrom(const nsIParserNode& aNode);
     nsIAtom*  CutNameSpacePrefix(nsString& aString);
     PRInt32   GetNameSpaceID(nsIAtom* aPrefix);
-    void      GetNameSpaceURI(PRInt32 aID, nsString& aURI);
     void      PopNameSpaces();
 
-    nsINameSpaceManager*  mNameSpaceManager;
     nsVoidArray* mNameSpaceStack;
     
     void SplitQualifiedName(const nsString& aQualifiedName,
@@ -362,12 +377,11 @@ protected:
 
     // RDF-specific parsing
     nsresult GetXULIDAttribute(const nsIParserNode& aNode, nsIRDFResource** aResource);
-    nsresult AddProperties(const nsIParserNode& aNode, nsIRDFResource* aSubject);
+    nsresult AddAttributes(const nsIParserNode& aNode, nsIRDFResource* aSubject);
 
     virtual nsresult OpenTag(const nsIParserNode& aNode);
     
     // Miscellaneous RDF junk
-    nsIRDFService*         mRDFService;
     nsIRDFXMLDataSource*   mDataSource;
     RDFContentSinkState    mState;
 
@@ -379,19 +393,22 @@ protected:
     nsVoidArray* mContextStack;
 
     nsIURL*      mDocumentURL;
-    PRUint32     mGenSym; // for generating anonymous resources
 
     PRBool       mHaveSetRootResource;
 };
+
+nsrefcnt             XULContentSinkImpl::gRefCnt = 0;
+nsINameSpaceManager* XULContentSinkImpl::gNameSpaceManager = nsnull;
+nsIRDFService*       XULContentSinkImpl::gRDFService = nsnull;
+
+nsIRDFResource*      XULContentSinkImpl::kRDF_child  = nsnull;
+nsIRDFResource*      XULContentSinkImpl::kRDF_type   = nsnull;
 
 ////////////////////////////////////////////////////////////////////////
 
 XULContentSinkImpl::XULContentSinkImpl()
     : mDocumentURL(nsnull),
-      mRDFService(nsnull),
       mDataSource(nsnull),
-      mGenSym(0),
-      mNameSpaceManager(nsnull),
       mNameSpaceStack(nsnull),
       mContextStack(nsnull),
       mText(nsnull),
@@ -401,19 +418,37 @@ XULContentSinkImpl::XULContentSinkImpl()
       mHaveSetRootResource(PR_FALSE)
 {
     NS_INIT_REFCNT();
+
+    if (gRefCnt++ == 0) {
+        nsresult rv;
+
+        rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+                                          nsnull,
+                                          kINameSpaceManagerIID,
+                                          (void**) &gNameSpaceManager);
+
+        NS_VERIFY(NS_SUCCEEDED(rv), "unable to construct namespace manager");
+
+        rv = nsServiceManager::GetService(kRDFServiceCID,
+                                          kIRDFServiceIID,
+                                          (nsISupports**) &gRDFService);
+
+        NS_VERIFY(NS_SUCCEEDED(rv), "unable to get RDF service");
+
+        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_child, &kRDF_child)),
+                  "unalbe to get resource");
+
+        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_type,  &kRDF_type)),
+                  "unalbe to get resource");
+    }
 }
 
 
 XULContentSinkImpl::~XULContentSinkImpl()
 {
     NS_IF_RELEASE(mDocumentURL);
-
-    if (mRDFService)
-        nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
-
     NS_IF_RELEASE(mDataSource);
 
-    NS_IF_RELEASE(mNameSpaceManager);
     if (mNameSpaceStack) {
         NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
 
@@ -443,6 +478,13 @@ XULContentSinkImpl::~XULContentSinkImpl()
         delete mContextStack;
     }
     PR_FREEIF(mText);
+
+    if (--gRefCnt == 0) {
+        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+        NS_IF_RELEASE(gNameSpaceManager);
+        NS_IF_RELEASE(kRDF_child);
+        NS_IF_RELEASE(kRDF_type);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -468,6 +510,34 @@ XULContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_OK;
     }
     return NS_NOINTERFACE;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+XULContentSinkImpl::MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
+                                                 const nsString& aTag,
+                                                 nsIRDFResource** aResource)
+{
+    nsresult rv;
+    nsAutoString uri;
+
+    rv = gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
+    NS_VERIFY(NS_SUCCEEDED(rv), "unable to get namespace URI");
+
+    // some hacky logic to try to construct an appopriate URI for the
+    // namespace/tag pair.
+    if ((uri.Last() != '#' || uri.Last() != '/') &&
+        (aTag.First() != '#')) {
+        uri.Append('#');
+    }
+
+    uri.Append(aTag);
+
+    rv = gRDFService->GetUnicodeResource(uri, aResource);
+    NS_VERIFY(NS_SUCCEEDED(rv), "unable to get resource");
+
+    return rv;
 }
 
 
@@ -509,7 +579,7 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
 {
     // XXX Hopefully the parser will flag this before we get here. If
     // we're in the epilog, there should be no new elements
-    NS_PRECONDITION(mState != eRDFContentSinkState_InEpilog, "tag in XUL doc epilog");
+    NS_PRECONDITION(mState != eXULContentSinkState_InEpilog, "tag in XUL doc epilog");
 
 #ifdef DEBUG
     const nsString& text = aNode.GetText();
@@ -526,15 +596,12 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
     nsresult rv;
 
     switch (mState) {
-    case eRDFContentSinkState_InProlog:
+    case eXULContentSinkState_InProlog:
+    case eXULContentSinkState_InDocumentElement:
         rv = OpenTag(aNode);
         break;
 
-    case eRDFContentSinkState_InDocumentElement:
-        rv = OpenTag(aNode);
-        break;
-
-    case eRDFContentSinkState_InEpilog:
+    case eXULContentSinkState_InEpilog:
         PR_ASSERT(0);
         rv = NS_ERROR_UNEXPECTED; // XXX
         break;
@@ -562,7 +629,7 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 
     PRInt32 nestLevel = mContextStack->Count();
     if (nestLevel == 0)
-        mState = eRDFContentSinkState_InEpilog;
+        mState = eXULContentSinkState_InEpilog;
 
     PopNameSpaces();
       
@@ -765,24 +832,21 @@ XULContentSinkImpl::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
     mDocumentURL = aURL;
     NS_ADDREF(aURL);
 
-    mNameSpaceManager = aNameSpaceManager;
-    NS_ADDREF(mNameSpaceManager);
-
 	nsresult rv;
 
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-    rv = mNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+    rv = gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
     
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                     kIRDFServiceIID,
-                                                    (nsISupports**) &mRDFService)))
+                                                    (nsISupports**) &gRDFService)))
         return rv;
 
-    mState = eRDFContentSinkState_InProlog;
+    mState = eXULContentSinkState_InProlog;
     return NS_OK;
 }
 
@@ -826,32 +890,51 @@ rdf_IsDataInBuffer(PRUnichar* buffer, PRInt32 length)
 nsresult
 XULContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 {
-    nsresult rv = NS_OK;
-    PRBool didFlush = PR_FALSE;
-    if (0 != mTextLength) {
-        if (aCreateTextNode && rdf_IsDataInBuffer(mText, mTextLength)) {
-            // XXX if there's anything but whitespace, then we'll
-            // create a text node.
+    if (aDidFlush)
+        *aDidFlush = PR_FALSE;
 
-           if (mState == eRDFContentSinkState_InDocumentElement) {
-                nsAutoString value;
-                value.Append(mText, mTextLength);
-                value.Trim(" \t\n\r");
+    // Don't do anything if there's no text to create a node from.
+    if (! mTextLength)
+        return NS_OK;
 
-                rv = rdf_Assert(mDataSource,
-                                GetContextElement(0),
-                                kURIRDF_child,
-                                value);
+    // Don't do anything if they've told us not to create a text node
+    if (! aCreateTextNode)
+        return NS_OK;
 
-            } 
-        }
-        mTextLength = 0;
-        didFlush = PR_TRUE;
+    // Don't bother if there's nothing but whitespace.
+    // XXX This could cause problems...
+    if (! rdf_IsDataInBuffer(mText, mTextLength))
+        return NS_OK;
+
+    // Don't bother if we're not in XUL document body
+    if (mState != eXULContentSinkState_InDocumentElement)
+        return NS_OK;
+
+    // Trim the leading and trailing whitespace, create an RDF
+    // literal, and put it into the graph.
+    nsAutoString value;
+    value.Append(mText, mTextLength);
+    value.Trim(" \t\n\r");
+
+    nsresult rv;
+    nsCOMPtr<nsIRDFLiteral> literal;
+    if (NS_FAILED(rv = gRDFService->GetLiteral(value, getter_AddRefs(literal)))) {
+        NS_ERROR("unable to create RDF literal");
+        return rv;
     }
-    if (nsnull != aDidFlush) {
-        *aDidFlush = didFlush;
+
+    if (NS_FAILED(rv = mDataSource->Assert(GetContextElement(0), kRDF_child, literal, PR_TRUE))) {
+        NS_ERROR("unable to make assertion");
+        return rv;
     }
-    return rv;
+
+    // Reset our text buffer
+    mTextLength = 0;
+
+    if (aDidFlush)
+        *aDidFlush = PR_TRUE;
+
+    return NS_OK;
 }
 
 
@@ -899,7 +982,7 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
             // appropriate...
             rdf_FullyQualifyURI(mDocumentURL, uri);
 
-            return mRDFService->GetUnicodeResource(uri, aResource);
+            return gRDFService->GetUnicodeResource(uri, aResource);
         }
     }
 
@@ -910,7 +993,7 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
 }
 
 nsresult
-XULContentSinkImpl::AddProperties(const nsIParserNode& aNode,
+XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
                                   nsIRDFResource* aSubject)
 {
     // Add tag attributes to the content attributes
@@ -924,6 +1007,14 @@ XULContentSinkImpl::AddProperties(const nsIParserNode& aNode,
         const nsString& key = aNode.GetKeyAt(i);
         SplitQualifiedName(key, nameSpaceID, attr);
 
+        if (nameSpaceID == kNameSpaceID_HTML)
+            attr.ToUpperCase();
+
+        // Don't add xmlns: declarations, these are really just
+        // processing instructions.
+        if (nameSpaceID == kNameSpaceID_XMLNS)
+            continue;
+
         // skip xul:id (and potentially others in the future). These
         // are all "special" and should've been dealt with by the
         // caller.
@@ -934,7 +1025,16 @@ XULContentSinkImpl::AddProperties(const nsIParserNode& aNode,
         v = aNode.GetValueAt(i);
         rdf_StripAndConvert(v);
 
-        GetNameSpaceURI(nameSpaceID, k);
+        // Get the URI for the namespace, so we can construct a
+        // fully-qualified property name.
+        gNameSpaceManager->GetNameSpaceURI(nameSpaceID, k);
+
+        // Insert a '#' if the namespace doesn't end with one, or the
+        // attribute doesn't start with one.
+        if (! ((attr.First() == '#') &&
+               (k.Last() == '#' || k.Last() == '/'))) {
+            k.Append('#');
+        }
         k.Append(attr);
 
         // Add the attribute to RDF
@@ -952,49 +1052,67 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
 {
     // an "object" non-terminal is a "container".  Change the content sink's
     // state appropriately.
-
-    if (! mRDFService)
-        return NS_ERROR_NOT_INITIALIZED;
-
     nsAutoString tag;
     PRInt32 nameSpaceID;
 
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
+    // HTML tags all need to be upper-cased
+    if (nameSpaceID == kNameSpaceID_HTML)
+        tag.ToUpperCase();
+
     // Figure out the URI of this object, and create an RDF node for it.
     nsresult rv;
-    nsIRDFResource* rdfResource;
-    if (NS_FAILED(rv = GetXULIDAttribute(aNode, &rdfResource)))
+
+    nsCOMPtr<nsIRDFResource> rdfResource;
+    if (NS_FAILED(rv = GetXULIDAttribute(aNode, getter_AddRefs(rdfResource))))
         return rv;
 
-	// We now have an RDF node for the container.  Hook it up to its parent container
-	// with a "child" relationship.
-	if (mHaveSetRootResource) // The root node has no enclosing container.
-		rdf_Assert(mDataSource, GetContextElement(0), kURIRDF_child, rdfResource);
-    
-    // Push the element onto the context stack, so that child containers
-	// will hook up to us as their parent.
-    PushContext(rdfResource, mState);
+    // Convert the container's namespace/tag pair to a fully qualified
+    // URI so that we can specify it as an RDF resource.
+    nsCOMPtr<nsIRDFResource> tagResource;
+    if (NS_FAILED(rv = MakeResourceFromQualifiedTag(nameSpaceID, tag, getter_AddRefs(tagResource)))) {
+        NS_ERROR("unable to construct resource from namespace/tag pair");
+        return rv;
+    }
 
-    // XXX destructively alter "ns" to contain the fully qualified
-    // tag name. We can do this 'cause we don't need it anymore...
-    nsAutoString nameSpace;
-    GetNameSpaceURI(nameSpaceID, nameSpace);  // XXX append ':' too?
-    nameSpace.Append(tag);
-    rdf_Assert(mDataSource, rdfResource, kURIRDF_type, nameSpace);
+    if (NS_FAILED(rv = mDataSource->Assert(rdfResource, kRDF_type, tagResource, PR_TRUE))) {
+        NS_ERROR("unable to assert tag type");
+        return rv;
+    }
 
 	// Make arcs from us to all of our attribute values (with the attribute names
 	// as the labels of the arcs).
-    AddProperties(aNode, rdfResource);
-
-	// This code sets the root (happens if we're the first open container).
-    if (mDataSource && !mHaveSetRootResource) {
-        mHaveSetRootResource = PR_TRUE;
-        mDataSource->SetRootResource(rdfResource);
+    if (NS_FAILED(rv = AddAttributes(aNode, rdfResource))) {
+        NS_ERROR("problem adding properties to node");
+        return rv;
     }
 
-    NS_RELEASE(rdfResource);
+    if (!mHaveSetRootResource) {
+        // This code sets the root (happens if we're the first open
+        // container).
+        mHaveSetRootResource = PR_TRUE;
+        if (NS_FAILED(rv = mDataSource->SetRootResource(rdfResource))) {
+            NS_ERROR("couldn't set root resource");
+            return rv;
+        }
+    }
+    else {
+        // We now have an RDF node for the container.  Hook it up to
+        // its parent container with a "child" relationship.
+		if (NS_FAILED(rv = mDataSource->Assert(GetContextElement(0),
+                                               kRDF_child,
+                                               rdfResource,
+                                               PR_TRUE))) {
+            NS_ERROR("unable to assert child");
+            return rv;
+        }
+    }
 
+    // Push the element onto the context stack, so that child
+    // containers will hook up to us as their parent.
+    PushContext(rdfResource, mState);
+    mState = eXULContentSinkState_InDocumentElement;
     return NS_OK;
 }
 
@@ -1083,7 +1201,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
         NS_ADDREF(nameSpace);
     }
     else {
-        mNameSpaceManager->CreateRootNameSpace(nameSpace);
+        gNameSpaceManager->CreateRootNameSpace(nameSpace);
     }
 
     if (nsnull != nameSpace) {
@@ -1157,12 +1275,6 @@ XULContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix)
     }
 
     return id;
-}
-
-void
-XULContentSinkImpl::GetNameSpaceURI(PRInt32 aID, nsString& aURI)
-{
-  mNameSpaceManager->GetNameSpaceURI(aID, aURI);
 }
 
 void
