@@ -1749,7 +1749,7 @@ nsPluginHostImpl::nsPluginHostImpl()
   if (obsService)
   {
     obsService->AddObserver(this, NS_LITERAL_STRING("quit-application").get());
-    obsService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    obsService->AddObserver(this, NS_ConvertASCIItoUCS2(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
   }
 }
 
@@ -1762,7 +1762,7 @@ nsPluginHostImpl::~nsPluginHostImpl()
   if (obsService)
   {
     obsService->RemoveObserver(this, NS_LITERAL_STRING("quit-application").get());
-    obsService->RemoveObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    obsService->RemoveObserver(this, NS_ConvertASCIItoUCS2(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
   }
   Destroy();
 }
@@ -4432,8 +4432,8 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
   if (newString)
     nsCRT::free(newString);
 #endif
-//  if (NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID) == aTopic || 
-//      NS_LITERAL_STRING("quit-application") == aTopic)
+  if (NS_ConvertASCIItoUCS2(NS_XPCOM_SHUTDOWN_OBSERVER_ID).Equals(aTopic) ||
+      NS_LITERAL_STRING("quit-application").Equals(aTopic))
   {
     Destroy();
   }
