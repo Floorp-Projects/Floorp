@@ -50,11 +50,7 @@ nsBlockAccessible(aDomNode, aShell)
 /* unsigned long getRole (); */
 NS_IMETHODIMP nsHTMLTableCellAccessible::GetRole(PRUint32 *aResult)
 {
-#ifndef MOZ_ACCESSIBILITY_ATK
   *aResult = ROLE_CELL;
-#else
-  *aResult = ROLE_TEXT; // in ATK, we are a blocktext
-#endif
   return NS_OK;
 }
 

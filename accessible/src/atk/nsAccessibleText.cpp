@@ -55,6 +55,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDeviceContext.h"
 #include "nsIDocument.h"
+#include "nsIDocumentEncoder.h"
 #include "nsIFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsIPlaintextEditor.h"
@@ -585,6 +586,8 @@ NS_IMETHODIMP nsAccessibleText::GetText(PRInt32 aStartOffset, PRInt32 aEndOffset
 {
   nsAutoString text;
   mTextNode->GetNodeValue(text);
+  if (aEndOffset == -1) // get all text from aStartOffset
+    aEndOffset = text.Length();
   aText = Substring(text, aStartOffset, aEndOffset - aStartOffset);
   return NS_OK;
 }
@@ -892,11 +895,11 @@ nsAccessibleText(aNode)
 {
 }
 
-void nsAccessibleEditableText::Shutdown()
+void nsAccessibleEditableText::ShutdownEditor()
 {
-  if (mEditor) {
-    mEditor->RemoveEditActionListener(this);
-    mEditor = nsnull;
+  if (mPlainEditor) {
+    mPlainEditor->RemoveEditActionListener(this);
+    mPlainEditor = nsnull;
   }
 }
 
@@ -906,9 +909,9 @@ void nsAccessibleEditableText::Shutdown()
 
 void nsAccessibleEditableText::SetEditor(nsIEditor* aEditor)
 {
-  mEditor = aEditor;
-  if (mEditor)
-    mEditor->AddEditActionListener(this);
+  mPlainEditor = aEditor;
+  if (mPlainEditor)
+    mPlainEditor->AddEditActionListener(this);
 }
 
 PRBool nsAccessibleEditableText::IsSingleLineTextControl(nsIDOMNode *aDomNode)
@@ -931,12 +934,51 @@ nsresult nsAccessibleEditableText::FireTextChangeEvent(AtkTextChange *aTextData)
   return NS_OK;
 }
 
+nsresult nsAccessibleEditableText::GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel)
+{
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mTextNode));
+  if (!doc)
+    return nsAccessibleText::GetSelections(aSelCon, aDomSel);
+    
+  // it's composer
+  if (!mPlainEditor)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISelectionController> selCon;
+  nsCOMPtr<nsISelection> domSel;
+  mPlainEditor->GetSelectionController(getter_AddRefs(selCon));
+  if (selCon)
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
+
+  NS_ENSURE_TRUE(selCon && domSel, NS_ERROR_FAILURE);
+
+  PRBool isSelectionCollapsed;
+  domSel->GetIsCollapsed(&isSelectionCollapsed);
+  // Don't perform any actions when the selection is not collapsed
+  if (!isSelectionCollapsed) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aSelCon) {
+    *aSelCon = selCon;
+    NS_ADDREF(*aSelCon);
+  }
+
+  if (aDomSel) {
+    *aDomSel = domSel;
+    NS_ADDREF(*aDomSel);
+  }
+
+  return NS_OK;
+}
+
 nsITextControlFrame* nsAccessibleEditableText::GetTextFrame()
 {
   nsCOMPtr<nsIDOMDocument> domDoc;
   mTextNode->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  NS_ENSURE_TRUE(doc, nsnull);
+  if (!doc) // that could be a composer
+    return nsnull;
 
   nsCOMPtr<nsIPresShell> shell;
   doc->GetShellAt(0, getter_AddRefs(shell));
@@ -963,6 +1005,44 @@ nsresult nsAccessibleEditableText::GetSelectionRange(PRInt32 *aStartPos, PRInt32
     return textFrame->GetSelectionRange(aStartPos, aEndPos);
   }
   else {
+    // editor, revised according to nsTextControlFrame::GetSelectionRange
+    NS_ENSURE_TRUE(mPlainEditor, NS_ERROR_FAILURE);
+    nsCOMPtr<nsISelection> selection;
+    nsresult rv = mPlainEditor->GetSelection(getter_AddRefs(selection));  
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+
+    PRInt32 numRanges = 0;
+    selection->GetRangeCount(&numRanges);
+    NS_ENSURE_TRUE(numRanges >= 1, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMRange> firstRange;
+    rv = selection->GetRangeAt(0, getter_AddRefs(firstRange));
+    NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMNode> startNode, endNode;
+    PRInt32 startOffset = 0, endOffset = 0;
+
+    // Get the start point of the range.
+    rv = firstRange->GetStartContainer(getter_AddRefs(startNode));
+    NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
+
+    rv = firstRange->GetStartOffset(&startOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the end point of the range.
+    rv = firstRange->GetEndContainer(getter_AddRefs(endNode));
+    NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
+
+    rv = firstRange->GetEndOffset(&endOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Convert the start/end point to a selection offset.
+    rv = DOMPointToOffset(mPlainEditor, startNode, startOffset, aStartPos);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = DOMPointToOffset(mPlainEditor, endNode, endOffset, aEndPos);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -975,6 +1055,45 @@ nsresult nsAccessibleEditableText::SetSelectionRange(PRInt32 aStartPos, PRInt32 
     return textFrame->SetSelectionRange(aStartPos, aEndPos);
   }
   else {
+    // editor, revised according to nsTextControlFrame::SetSelectionRange
+    NS_ENSURE_TRUE(mPlainEditor, NS_ERROR_FAILURE);
+    if (aStartPos > aEndPos)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMNode> startNode, endNode;
+    PRInt32 startOffset, endOffset;
+
+    nsresult rv = OffsetToDOMPoint(mPlainEditor, aStartPos, getter_AddRefs(startNode), &startOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (aStartPos == aEndPos) {
+      endNode   = startNode;
+      endOffset = startOffset;
+    }
+    else {
+      rv = OffsetToDOMPoint(mPlainEditor, aEndPos, getter_AddRefs(endNode), &endOffset);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Create a new range to represent the new selection.
+    nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kRangeCID);
+    NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
+
+    rv = range->SetStart(startNode, startOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = range->SetEnd(endNode, endOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the selection, clear it and add the new range to it!
+    nsCOMPtr<nsISelection> selection;
+    mPlainEditor->GetSelection(getter_AddRefs(selection));
+    NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+
+    rv = selection->RemoveAllRanges();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return selection->AddRange(range);
   }
 
   return NS_OK;
@@ -1019,13 +1138,16 @@ NS_IMETHODIMP nsAccessibleEditableText::GetCharacterCount(PRInt32 *aCharacterCou
 
   nsITextControlFrame *textFrame = GetTextFrame();
   if (textFrame) {
-    textFrame->GetTextLength(aCharacterCount);
-    return NS_OK;
-  }
-  else {
+    return textFrame->GetTextLength(aCharacterCount);
   }
 
-  return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mPlainEditor, NS_ERROR_FAILURE);
+  NS_NAMED_LITERAL_STRING(format, "text/plain");
+  nsAutoString text;
+  mPlainEditor->OutputToString(format, nsIDocumentEncoder::OutputFormatted, text);
+  *aCharacterCount = text.Length();
+
+  return NS_OK;
 }
 
 /*
@@ -1033,39 +1155,48 @@ NS_IMETHODIMP nsAccessibleEditableText::GetCharacterCount(PRInt32 *aCharacterCou
  */
 NS_IMETHODIMP nsAccessibleEditableText::GetText(PRInt32 aStartOffset, PRInt32 aEndOffset, nsAString & aText)
 {
+  if (aStartOffset == aEndOffset)
+    return NS_OK;
+
+  nsAutoString text;
   nsITextControlFrame *textFrame = GetTextFrame();
   if (textFrame) {
-    nsAutoString text;
     textFrame->GetValue(text, PR_TRUE);
-
-    if (aEndOffset == -1) // get all text from aStartOffset
-      aEndOffset = text.Length();
-
-    aText = Substring(text, aStartOffset, aEndOffset - aStartOffset);
-    return NS_OK;
   }
   else {
+    NS_ENSURE_TRUE(mPlainEditor, NS_ERROR_FAILURE);
+    NS_NAMED_LITERAL_STRING(format, "text/plain");
+    mPlainEditor->OutputToString(format, nsIDocumentEncoder::OutputFormatted, text);
   }
 
-  return NS_ERROR_FAILURE;
+  PRUint32 length = text.Length();
+  if (aEndOffset == -1) // get all text from aStartOffset
+    aEndOffset = length;
+
+  NS_ENSURE_TRUE((0 <= aStartOffset && aStartOffset < aEndOffset && aEndOffset <= length),
+                 NS_ERROR_FAILURE);
+
+  aText = Substring(text, aStartOffset, aEndOffset - aStartOffset);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessibleEditableText::GetTextBeforeOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType,
                                                     PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText)
 {
-  return GetTextHelper(eGetBefore, aBoundaryType, aOffset, aStartOffset, aEndOffset, mEditor, aText);
+  return GetTextHelper(eGetBefore, aBoundaryType, aOffset, aStartOffset, aEndOffset, mPlainEditor, aText);
 }
 
 NS_IMETHODIMP nsAccessibleEditableText::GetTextAtOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType,
                                                 PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText)
 {
-  return GetTextHelper(eGetAt, aBoundaryType, aOffset, aStartOffset, aEndOffset, mEditor, aText);
+  return GetTextHelper(eGetAt, aBoundaryType, aOffset, aStartOffset, aEndOffset, mPlainEditor, aText);
 }
 
 NS_IMETHODIMP nsAccessibleEditableText::GetTextAfterOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType,
                                                    PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText)
 {
-  return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, mEditor, aText);
+  return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, mPlainEditor, aText);
 }
 
 /**
@@ -1094,8 +1225,8 @@ NS_IMETHODIMP nsAccessibleEditableText::SetTextContents(const nsAString &aText)
 NS_IMETHODIMP nsAccessibleEditableText::InsertText(const nsAString &aText, PRInt32 aPosition)
 {
   if (NS_SUCCEEDED(SetSelectionRange(aPosition, aPosition))) {
-    nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(mEditor));
-    return peditor->InsertText(aText);
+    nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(mPlainEditor));
+    return peditor ? peditor->InsertText(aText) : NS_ERROR_FAILURE;
   }
 
   return NS_ERROR_FAILURE;
@@ -1103,32 +1234,32 @@ NS_IMETHODIMP nsAccessibleEditableText::InsertText(const nsAString &aText, PRInt
 
 NS_IMETHODIMP nsAccessibleEditableText::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  if (NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
-    return mEditor->Copy();
+  if (mPlainEditor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
+    return mPlainEditor->Copy();
 
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAccessibleEditableText::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  if (NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
-    return mEditor->Cut();
+  if (mPlainEditor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
+    return mPlainEditor->Cut();
 
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAccessibleEditableText::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  if (NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
-    return mEditor->DeleteSelection(nsIEditor::eNone);
+  if (mPlainEditor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
+    return mPlainEditor->DeleteSelection(nsIEditor::eNone);
 
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAccessibleEditableText::PasteText(PRInt32 aPosition)
 {
-  if (NS_SUCCEEDED(SetSelectionRange(aPosition, aPosition)))
-    return mEditor->Paste(nsIClipboard::kGlobalClipboard);
+  if (mPlainEditor && NS_SUCCEEDED(SetSelectionRange(aPosition, aPosition)))
+    return mPlainEditor->Paste(nsIClipboard::kGlobalClipboard);
 
   return NS_ERROR_FAILURE;
 }
@@ -1159,7 +1290,7 @@ NS_IMETHODIMP nsAccessibleEditableText::DidInsertNode(nsIDOMNode *aNode, nsIDOMN
   if (textContent) {
     textData.add = PR_TRUE;
     textContent->GetTextLength((int *)&textData.length);
-    DOMPointToOffset(mEditor, aNode, 0, &textData.start);
+    DOMPointToOffset(mPlainEditor, aNode, 0, &textData.start);
     FireTextChangeEvent(&textData);
   }
   return NS_OK;
@@ -1183,7 +1314,7 @@ NS_IMETHODIMP nsAccessibleEditableText::WillDeleteNode(nsIDOMNode *aChild)
       return NS_OK;
   }
 
-  DOMPointToOffset(mEditor, aChild, 0, &textData.start);
+  DOMPointToOffset(mPlainEditor, aChild, 0, &textData.start);
   return FireTextChangeEvent(&textData);
 }
 
@@ -1223,7 +1354,7 @@ NS_IMETHODIMP nsAccessibleEditableText::DidInsertText(nsIDOMCharacterData *aText
 
   textData.add = PR_TRUE;
   textData.length = aString.Length();
-  DOMPointToOffset(mEditor, aTextNode, aOffset, &textData.start);
+  DOMPointToOffset(mPlainEditor, aTextNode, aOffset, &textData.start);
   return FireTextChangeEvent(&textData);
 }
 
@@ -1233,7 +1364,7 @@ NS_IMETHODIMP nsAccessibleEditableText::WillDeleteText(nsIDOMCharacterData *aTex
 
   textData.add = PR_FALSE;
   textData.length = aLength;
-  DOMPointToOffset(mEditor, aTextNode, aOffset, &textData.start);
+  DOMPointToOffset(mPlainEditor, aTextNode, aOffset, &textData.start);
   return FireTextChangeEvent(&textData);
 }
 

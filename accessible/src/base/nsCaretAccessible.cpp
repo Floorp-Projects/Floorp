@@ -41,7 +41,7 @@
 #include "nsIAccessibleEvent.h"
 #include "nsICaret.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLBodyElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFrame.h"
@@ -90,15 +90,16 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
 
   // When focus moves such that the caret is part of a new frame selection
   // this removes the old selection listener and attaches a new one for the current focus
-  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
-  if (!presShell || !content)
+  nsCOMPtr<nsIPresShell> presShell;
+  nsRootAccessible::GetEventShell(aCurrentNode, getter_AddRefs(presShell));
+  if (!presShell)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> doc;
   presShell->GetDocument(getter_AddRefs(doc));
   if (!doc)  // we also should try to QI to document instead (necessary to do when node is a document)
     doc = do_QueryInterface(aCurrentNode);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
   if (!content)
     doc->GetRootContent(getter_AddRefs(content));  // If node is not content, use root content
 
@@ -135,10 +136,8 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     return NS_OK;
 #endif    
 
-  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-  if (!presShell)
-    return NS_ERROR_FAILURE;
-
+  nsCOMPtr<nsIPresShell> presShell;
+  nsRootAccessible::GetEventShell(mCurrentDOMNode, getter_AddRefs(presShell));
   nsCOMPtr<nsISelection> domSel(do_QueryReferent(mDomSelectionWeak));
   if (!presShell || domSel != aSel)
     return NS_OK;  // Only listening to selection changes in currently focused frame
@@ -194,48 +193,50 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_LOCATION_CHANGE, this, nsnull);
   }
 #else
-  nsCOMPtr<nsIDOMNode> focusNode;
-  nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mCurrentDOMNode));
-  nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mCurrentDOMNode));
-  if (inputElement || textArea) {
-    focusNode = mCurrentDOMNode;
-  }
-  else {
-    domSel->GetFocusNode(getter_AddRefs(focusNode));
-    nsCOMPtr<nsIDOMNode> blockNode;
-    nsAccessible::GetParentBlockNode(focusNode, getter_AddRefs(blockNode));
-    nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(blockNode));
-    if (body) {
-      nsCOMPtr<nsIDocument> doc;
-      presShell->GetDocument(getter_AddRefs(doc));
-      nsCOMPtr<nsIDocument> parentDoc;
-      doc->GetParentDocument(getter_AddRefs(parentDoc));
-      nsCOMPtr<nsIDOMDocument> xulDoc(do_QueryInterface(parentDoc));
-      nsCOMPtr<nsIDOMElement> domElement;
-      xulDoc->GetElementById(NS_LITERAL_STRING("content-frame"), getter_AddRefs(domElement));
-      focusNode = do_QueryInterface(domElement);
-    }
-    else {
-      focusNode = blockNode;
+  nsCOMPtr<nsIAccessible> accessible;
+  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+  accService->GetAccessibleInShell(mCurrentDOMNode, presShell, getter_AddRefs(accessible));
+  nsCOMPtr<nsIAccessibleDocument> docAcc(do_QueryInterface(accessible));
+  if (docAcc) {
+    PRBool isEditable;
+    docAcc->GetIsEditable(&isEditable);
+    if (!isEditable) { // this is not a composer window, find out the text accessible object
+      nsCOMPtr<nsIDOMNode> focusNode;
+      domSel->GetFocusNode(getter_AddRefs(focusNode));
+      if (!focusNode) {
+        return NS_OK;
+      }
+      nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(focusNode));
+      if (anchorElement) {
+        // do not report caret-move event for link
+        return NS_OK;
+      }
+      nsCOMPtr<nsIDOMNode> blockNode;
+      if (NS_FAILED(nsAccessible::GetParentBlockNode(presShell, focusNode, getter_AddRefs(blockNode)))) {
+        return NS_OK;
+      }
+      accService->GetAccessibleInShell(blockNode, presShell, getter_AddRefs(accessible));
+      if (!accessible) {
+        return NS_OK;
+      }
     }
   }
 
-  if (!focusNode)
+  if (!accessible) {
     return NS_OK;
-  
-  nsCOMPtr<nsIAccessible> accessible;
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  accService->GetAccessibleInWeakShell(focusNode, mWeakShell, getter_AddRefs(accessible));
-  if (accessible) {
-    if (isCollapsed) {
+  }
+
+  if (isCollapsed) {
+    nsCOMPtr<nsIAccessibleText> textAcc(do_QueryInterface(accessible));
+    if (textAcc) {
       PRInt32 caretOffset;
-      domSel->GetFocusOffset(&caretOffset);
+      textAcc->GetCaretOffset(&caretOffset);
       mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
     }
-    else {
-      //Current text interface doesn't support this event yet
-      //mListener->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
-    }
+  }
+  else {
+    //Current text interface doesn't support this event yet
+    //mListener->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
   }
 #endif
 

@@ -100,12 +100,13 @@ class nsRootAccessible : public nsDocAccessibleWrap,
 
     void ShutdownAll();
 
+    static void GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell);
+
   protected:
     nsresult AddEventListeners();
     nsresult RemoveEventListeners();
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
-    void GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell);
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
     nsCOMPtr<nsIAccessibilityService> mAccService;
     nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;

@@ -48,10 +48,7 @@ nsBlockAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)
 
 NS_IMETHODIMP nsHTMLBlockAccessible::GetName(nsAString& aName)
 {
-  nsAutoString name(NS_LITERAL_STRING("Paragraph "));
-  name.AppendInt(GetIndex());
-  aName = name;
-  return NS_OK;
+  return nsBlockAccessible::GetName(aName);
 }
 
 NS_IMETHODIMP nsHTMLBlockAccessible::GetRole(PRUint32 *aRole)
@@ -65,6 +62,11 @@ NS_IMETHODIMP nsHTMLBlockAccessible::GetState(PRUint32 *aState)
   nsAccessible::GetState(aState);
   *aState &= ~STATE_FOCUSABLE;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLBlockAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+{
+  return nsAccessibleHyperText::GetBounds(mWeakShell, x, y, width, height);
 }
 
 NS_IMETHODIMP nsHTMLBlockAccessible::Shutdown()

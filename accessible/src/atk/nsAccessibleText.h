@@ -67,7 +67,7 @@ public:
 protected:
   nsCOMPtr<nsIDOMNode> mTextNode;
 
-  nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
+  virtual nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
   nsresult GetTextHelperCore(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType,
                              PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset,
                              nsISelectionController *aSelCon, nsISelection *aDomSel,
@@ -106,18 +106,22 @@ public:
   NS_IMETHOD GetTextAfterOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType,
                                 PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText);
 
-  void Shutdown();
+  void ShutdownEditor();
 
   static PRBool IsSingleLineTextControl(nsIDOMNode *aDomNode);
 
 protected:
+  virtual nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
+
   void SetEditor(nsIEditor *aEditor);
   nsITextControlFrame* GetTextFrame();
   nsresult GetSelectionRange(PRInt32 *aStartPos, PRInt32 *aEndPos);
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
   nsresult FireTextChangeEvent(AtkTextChange *aTextData);
 
-  nsCOMPtr<nsIEditor>  mEditor;
+  // To solve the naming conflict with nsDocAccessible::mEditor, we have to name it
+  // "mPlainEditor", though it's not necessary to be a "plaintext" editor.
+  nsCOMPtr<nsIEditor>  mPlainEditor;
 };
 
 class nsTextAccessibleWrap : public nsTextAccessible,

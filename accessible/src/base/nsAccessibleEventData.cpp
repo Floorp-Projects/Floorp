@@ -47,4 +47,3 @@ nsAccessibleEventData::nsAccessibleEventData(PRUint32 aEventType, nsIAccessible 
   mEventData(aEventData)
 {
 }
-

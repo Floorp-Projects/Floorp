@@ -188,7 +188,11 @@ nsAccessibleWrap(aNode, aShell)
 /** We are a Property Page */
 NS_IMETHODIMP nsXULTabPanelsAccessible::GetRole(PRUint32 *_retval)
 {
+#ifndef MOZ_ACCESSIBILITY_ATK
   *_retval = ROLE_PROPERTYPAGE;
+#else
+  *_retval = ROLE_PANE;
+#endif
   return NS_OK;
 }
 

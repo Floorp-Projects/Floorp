@@ -206,9 +206,6 @@ public:
   void UndoSplitPlaceholders(nsBlockReflowState& aState,
                              nsIFrame*           aLastPlaceholder);
   
-#ifdef MOZ_ACCESSIBILITY_ATK
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
-#endif
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();

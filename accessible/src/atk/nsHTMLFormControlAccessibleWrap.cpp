@@ -62,6 +62,6 @@ nsHTMLTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::Shutdown()
 {
-  nsAccessibleEditableText::Shutdown();
+  nsAccessibleEditableText::ShutdownEditor();
   return nsHTMLTextFieldAccessible::Shutdown();
 }

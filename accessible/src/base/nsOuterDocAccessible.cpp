@@ -74,7 +74,11 @@ NS_IMETHODIMP nsOuterDocAccessible::GetValue(nsAString& aValue)
 /* unsigned long getRole (); */
 NS_IMETHODIMP nsOuterDocAccessible::GetRole(PRUint32 *_retval)
 {
+#ifndef MOZ_ACCESSIBILITY_ATK
   *_retval = ROLE_CLIENT;
+#else
+  *_retval = ROLE_PANE;
+#endif
   return NS_OK;
 }
 
