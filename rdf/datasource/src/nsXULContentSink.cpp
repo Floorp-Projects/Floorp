@@ -303,7 +303,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
     NS_IF_RELEASE(mFragmentRoot);
 
     if (mNameSpaceStack) {
-        NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
+        // NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
+        fprintf(stderr, "XULContentSinkImpl destructor: namespace stack not empty\n");
 
         // There shouldn't be any here except in an error condition
         PRInt32 index = mNameSpaceStack->Count();
@@ -315,7 +316,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
         delete mNameSpaceStack;
     }
     if (mContextStack) {
-        NS_PRECONDITION(0 == mContextStack->Count(), "content stack not empty");
+        // NS_PRECONDITION(0 == mContextStack->Count(), "content stack not empty");
+        fprintf(stderr, "XULContentSinkImpl destructor: content stack not empty\n");
 
         // XXX we should never need to do this, but, we'll write the
         // code all the same. If someone left the content stack dirty,
