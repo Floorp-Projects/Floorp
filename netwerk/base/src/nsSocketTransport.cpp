@@ -2227,6 +2227,7 @@ nsSocketRequest::OnStop()
             mStartFired = PR_TRUE;
         }
         mObserver->OnStopRequest(this, mContext, mStatus, nsnull);
+        mObserver = 0;
     }
     return NS_OK;
 }
@@ -2329,6 +2330,13 @@ nsSocketReadRequest::SetSocket(PRFileDesc *aSock)
             mInputStream->SetSocket(aSock);
         }
     }
+}
+
+nsresult
+nsSocketReadRequest::OnStop()
+{
+    mListener = 0;
+    return nsSocketRequest::OnStop();
 }
 
 //
@@ -2437,6 +2445,13 @@ nsSocketWriteRequest::SetSocket(PRFileDesc *aSock)
             mOutputStream->SetSocket(aSock);
         }
     }
+}
+
+nsresult
+nsSocketWriteRequest::OnStop()
+{
+    mProvider = 0;
+    return nsSocketRequest::OnStop();
 }
 
 //
