@@ -1636,7 +1636,10 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
     destsurf = mRenderingSurface;
   }
   else
+  {
+    NS_ENSURE_TRUE(mOffscreenSurface != nsnull, NS_ERROR_FAILURE);
     destsurf = mOffscreenSurface;
+  }
   
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
     mTranMatrix->TransformCoord(&srcX, &srcY);
