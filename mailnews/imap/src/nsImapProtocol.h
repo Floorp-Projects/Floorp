@@ -555,7 +555,7 @@ private:
   void Subscribe(const char *mailboxName);
   void Unsubscribe(const char *mailboxName);
   void Idle();
-  void EndIdle();
+  void EndIdle(PRBool waitForResponse = PR_TRUE);
   // Some imap servers include the mailboxName following the dir-separator in the list of 
   // subfolders of the mailboxName. In fact, they are the same. So we should decide if
   // we should delete such subfolder and provide feedback if the delete operation succeed.

@@ -873,7 +873,12 @@ void nsImapProtocol::ReleaseUrlState()
     nsCOMPtr<nsIMsgMailNewsUrl>  mailnewsurl = do_QueryInterface(m_runningUrl);
     if (m_imapServerSink)  
       m_imapServerSink->RemoveChannelFromUrl(mailnewsurl, NS_OK);
-    m_runningUrl = nsnull; // force us to release our last reference on the url
+
+    {
+      nsAutoCMonitor mon (this);
+      m_runningUrl = nsnull; // force us to release our last reference on the url
+      m_urlInProgress = PR_FALSE;
+    }
 
     // we want to make sure the imap protocol's last reference to the url gets released
     // back on the UI thread. This ensures that the objects the imap url hangs on to
@@ -1025,7 +1030,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
   if (m_currentServerCommandTagNumber > 0)
   {
     if (TestFlag(IMAP_CONNECTION_IS_OPEN) && m_idle)
-      EndIdle();
+      EndIdle(PR_FALSE);
 
     if (closeNeeded && GetDeleteIsMoveToTrash() &&
         TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
@@ -1414,7 +1419,6 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   ResetProgressInfo();
 
   ClearFlag(IMAP_CLEAN_UP_URL_STATE);
-  m_urlInProgress = PR_FALSE;
 
   if (imapMailFolderSink)
   {
@@ -5175,12 +5179,12 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             UidExpunge(oldMsgId);
           }
         }
-      // for non UIDPLUS servers,
-      // this code used to check for imapAction==nsIImapUrl::nsImapAppendMsgFromFile, which
-      // meant we'd get into this code whenever sending a message, as well
-      // as when copying messages to an imap folder from local folders or an other imap server.
-      // This made sending a message slow when there was a large sent folder. I don't believe
-      // this code worked anyway.
+        // for non UIDPLUS servers,
+        // this code used to check for imapAction==nsIImapUrl::nsImapAppendMsgFromFile, which
+        // meant we'd get into this code whenever sending a message, as well
+        // as when copying messages to an imap folder from local folders or an other imap server.
+        // This made sending a message slow when there was a large sent folder. I don't believe
+        // this code worked anyway.
         else if (m_imapExtensionSink && imapAction == nsIImapUrl::nsImapAppendDraftFromFile )
         {   // *** code me to search for the newly appended message
           // go to selected state
@@ -6746,7 +6750,10 @@ void nsImapProtocol::Idle()
   }
 }
 
-void nsImapProtocol::EndIdle()
+// until we can fix the hang on shutdown waiting for server
+// responses, we need to not wait for the server response
+// on shutdown.
+void nsImapProtocol::EndIdle(PRBool waitForResponse /* = PR_TRUE */)
 {
   // clear the async wait - otherwise, we seem to have trouble doing a blocking read
   nsCOMPtr <nsIAsyncInputStream> asyncInputStream = do_QueryInterface(m_inputStream);
@@ -6756,7 +6763,8 @@ void nsImapProtocol::EndIdle()
   if (NS_SUCCEEDED(rv))
   {
     m_idle = PR_FALSE;
-    ParseIMAPandCheckForNewMail();
+    if (waitForResponse)
+      ParseIMAPandCheckForNewMail();
   }
   m_imapMailFolderSink = nsnull;
 }
