@@ -156,11 +156,6 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
     }
     catch(e) {dump(e+"\n");}
     
-    /*var ftpChannel = destChannel.QueryInterface(Components.interfaces.nsIFTPChannel);
-    if (ftpChannel) dump("ftp channel found\n");
-    if (ftpChannel)
-      return ftpChannel;
-    */
     try {
        var httpChannel = destChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
     }
@@ -174,7 +169,12 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
        dump("http channel found\n");
        return httpChannel;
     }
-    var httpsChannel = destChannel.QueryInterface(Components.interfaces.nsIHTTPSChannel);
+    var ftpChannel = destChannel.QueryInterface(Components.interfaces.nsIFtpChannel);
+    if (ftpChannel) dump("ftp channel found\n");
+    if (ftpChannel)
+      return ftpChannel;
+    
+    var httpsChannel = destChannel.QueryInterface(Components.interfaces.nsIHttpsChannel);
     if (httpsChannel) dump("https channel found\n");
     if (httpsChannel)
       return httpsChannel;
