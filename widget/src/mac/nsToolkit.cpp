@@ -32,11 +32,12 @@ PRBool nsToolkit::mInit = PR_FALSE;
 nsWindow* nsToolkit::mFocusedWidget = nsnull;
   
 
-//-------------------------------------------------------------------------
-//
-// constructor
-//
-//-------------------------------------------------------------------------
+//=================================================================
+/*  Constructor
+ *  @update  dc 08/31/98
+ *  @param   NONE
+ *  @return  NONE
+ */
 nsToolkit::nsToolkit() 
 {
 	NS_INIT_REFCNT();
@@ -56,37 +57,61 @@ nsToolkit::nsToolkit()
 }
 
 
-//-------------------------------------------------------------------------
-//
-// destructor
-//
-//-------------------------------------------------------------------------
+//=================================================================
+/*  Destructor.
+ *  @update  dc 08/31/98
+ *  @param   NONE
+ *  @return  NONE
+ */
 nsToolkit::~nsToolkit()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
+//=================================================================
+/*  Set the focus to a widget, send out the appropriate focus/defocus events
+ *  @update  dc 08/31/98
+ *  @param   aMouseInside -- A boolean indicating if the mouse is inside the control
+ *  @return  NONE
+ */
 void nsToolkit::SetFocus(nsWindow *aFocusWidget)
 { 
-mFocusedWidget =  aFocusWidget;
+nsGUIEvent	guiEvent;
+
+	
+	// tell the old widget, it is not focused
+	if(mFocusedWidget)
+		{
+		guiEvent.message = NS_LOSTFOCUS;
+		guiEvent.widget=mFocusedWidget;
+		mFocusedWidget->DispatchFocus(guiEvent);
+		}
+	
+	// let the new one know
+	if(aFocusWidget)
+		{
+		mFocusedWidget =  aFocusWidget;
+		guiEvent.message = NS_GOTFOCUS;
+		guiEvent.widget=mFocusedWidget;		
+		mFocusedWidget->DispatchFocus(guiEvent);
+		mFocusedWidget->SetFocus();
+		}
 }
 
-//-------------------------------------------------------------------------
-//
-// nsISupports implementation macro
-//
-//-------------------------------------------------------------------------
+//=================================================================
+/*  nsISupports implementation macro's
+ *  @update  dc 08/31/98
+ *  @param   NONE
+ *  @return  NONE
+ */
 NS_DEFINE_IID(kIToolkitIID, NS_ITOOLKIT_IID);
 NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
 
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
+//=================================================================
+/*  Initialize the Toolbox
+ *  @update  dc 08/31/98
+ *  @param   aThread -- A pointer to a PRThread, not really sure of its use for the Mac yet
+ *  @return  NONE
+ */
 void nsToolkit::Init(PRThread *aThread)
 {
 }
