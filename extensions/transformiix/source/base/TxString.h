@@ -30,20 +30,23 @@
 
 #include "baseutils.h"
 
-#ifdef TX_EXE
 #include "TxObject.h"
 #include <iostream.h>
-typedef unsigned short UNICODE_CHAR;
-const PRInt32 kNotFound = -1;
-#else
 #include "nsString.h"
 typedef PRUnichar UNICODE_CHAR;
+
+#ifdef TX_EXE
+class txCaseInsensitiveStringComparator
+: public nsStringComparator
+{
+public:
+    virtual int operator()(const char_type*, const char_type*, PRUint32 aLength) const;
+    virtual int operator()(char_type, char_type) const;
+};
 #endif
 
 class String
-#ifdef TX_EXE
 : public TxObject
-#endif
 {
 public:
     /*
@@ -62,9 +65,8 @@ public:
      * If aLength is zero it computes the length from the supplied string.
      */
     explicit String(const UNICODE_CHAR* aSource, PRUint32 aLength = 0);
-#else
-    explicit String(const nsAString& aSource);
 #endif
+    explicit String(const nsAString& aSource);
     ~String();
 
     /*
@@ -73,9 +75,7 @@ public:
     void append(UNICODE_CHAR aSource);
     void append(const String& aSource);
     void append(const UNICODE_CHAR* aSource, PRUint32 aLength);
-#ifndef TX_EXE
     void append(const nsAString& aSource);
-#endif
 
     /*
      * Insert aSource at aOffset in this string.
@@ -116,7 +116,7 @@ public:
      * Returns index of last occurrence of aData.
      */
     PRInt32 lastIndexOf(UNICODE_CHAR aData,
-                        PRInt32 aOffset = 0) const;
+                        PRInt32 aOffset = -1) const;
 
     /*
      * Check equality between strings.
@@ -166,14 +166,6 @@ public:
      */
     void truncate(PRUint32 aLength);
 
-#ifdef TX_EXE
-    /*
-     * Assignment operator. Override default assignment operator
-     * only on standalone, the default will do the right thing for
-     * module.
-     */
-    String& operator = (const String& aSource);
-#else
     /*
      * Return a reference to this string's nsString.
      */
@@ -183,36 +175,11 @@ public:
      * Return a const reference to this string's nsString.
      */
     operator const nsAString&() const;
-#endif
 
-#ifndef TX_EXE
 private:
     nsString mString;
-#else
-protected:
-    /*
-     * Make sure the string buffer can hold aCapacity characters.
-     */
-    MBool ensureCapacity(PRUint32 aCapacity);
-
-    /*
-     * Allocate a new UNICODE_CHAR buffer and copy this string's
-     * buffer into it. Caller needs to free the buffer.
-     */
-    UNICODE_CHAR* toUnicode() const;
-
-    /*
-     * Compute the unicode length of aData.
-     */
-    static PRUint32 unicodeLength(const UNICODE_CHAR* aData);
 
     friend ostream& operator << (ostream& aOutput, const String& aSource);
-    friend class txCharBuffer;
-
-    UNICODE_CHAR* mBuffer;
-    PRUint32 mBufferLength;
-    PRUint32 mLength;
-#endif
 
 // XXX DEPRECATED
 public:
@@ -220,91 +187,18 @@ public:
     explicit String(const char* aSource); // XXX Used for literal strings
     void append(const char* aSource);
     MBool isEqual(const char* aData) const;
-#ifndef TX_EXE
     nsString& getNSString();
     const nsString& getConstNSString() const;
-#endif
 // XXX DEPRECATED
 };
-
-#ifdef TX_EXE
-
-/*
- * Class for converting char*s into Strings
- */
-
-class NS_ConvertASCIItoUCS2 : public String
-{
-public:
-    explicit NS_ConvertASCIItoUCS2(const char* aSource);
-};
-
-/*
- * A helper class for getting a char* buffer out of a String.
- * Don't use this directly, use NS_LossyConvertUCS2toASCII which
- * is typedef'ed to this class on standalone and will fall back
- * on the Mozilla implementation for the Mozilla module.
- */
-class txCharBuffer
-{
-public:
-    txCharBuffer(const String& aString) : mString(aString),
-                                          mBuffer(0)
-    {
-    };
-
-    ~txCharBuffer()
-    {
-        delete [] mBuffer;
-    };
-
-    const char* get()
-    {
-        if (!mBuffer) {
-            mBuffer = new char[mString.mLength + 1];
-            NS_ASSERTION(mBuffer, "out of memory");
-            if (mBuffer) {
-                PRUint32 loop;
-                for (loop = 0; loop < mString.mLength; ++loop) {
-                    mBuffer[loop] = (char)mString.mBuffer[loop];
-                }
-                mBuffer[mString.mLength] = 0;
-            }
-        }
-        return mBuffer;
-    }
-
-private:
-    const String& mString;
-    char* mBuffer;
-};
-
-typedef txCharBuffer NS_LossyConvertUCS2toASCII;
 
 /*
  * Translate UNICODE_CHARs to Chars and output to the provided stream.
  */
 ostream& operator << (ostream& aOutput, const String& aSource);
 
-inline UNICODE_CHAR String::charAt(PRUint32 aIndex) const
-{
-  NS_ASSERTION(aIndex < mLength, "|charAt| out-of-range");
-  return mBuffer[aIndex];
-}
-
-inline MBool String::isEmpty() const
-{
-  return (mLength == 0);
-}
-
-inline PRUint32 String::length() const
-{
-  return mLength;
-}
-#else
 // txMozillaString.h contains all inline implementations for the 
 // Mozilla module.
 #include "txMozillaString.h"
-#endif
 
 #endif // txString_h__

@@ -145,10 +145,12 @@ MBool XMLUtils::isValidQName(const String& aName)
 **/
 MBool XMLUtils::isWhitespace(const String& aText)
 {
-    PRUint32 size = aText.length();
-    PRUint32 i;
-    for (i = 0; i < size; ++i) {
-        if (!isWhitespace(aText.charAt(i))) {
+    const nsAFlatString& text = aText.getConstNSString();
+    nsAFlatString::const_char_iterator start, end;
+    text.BeginReading(start);
+    text.EndReading(end);
+    for ( ; start != end; ++start) {
+        if (!isWhitespace(*start)) {
             return MB_FALSE;
         }
     }

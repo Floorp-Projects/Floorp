@@ -171,7 +171,6 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
     return rv;
 }
 
-TX_LG_IMPL;
 static PRBool gInitialized = PR_FALSE;
 static nsIExceptionProvider *gXPathExceptionProvider = 0;
 nsINameSpaceManager *gTxNameSpaceManager = 0;

@@ -26,11 +26,12 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef TX_EXE
-MODULE = transformiix
 REQUIRES	= string \
 		  xpcom \
-		  unicharutil \
+		  $(NULL)
+ifndef TX_EXE
+MODULE = transformiix
+REQUIRES	+= unicharutil \
 		  dom \
 		  content \
 		  widget \
