@@ -37,6 +37,43 @@
 
 class nsDebug {
 public:
+  /**
+   * Log a fatal abort message (to stdout and to the NSPR log file)
+   * and then abort the program when called.
+   */
+  static NS_COM void AbortIfFalse(const char* aStr, const char* aExpr,
+                                  const char* aFile, PRIntn aLine);
+
+  /**
+   * Log a warning message when an expression is not true. Used by
+   * the NS_WARN_IF_FALSE macro below when debugging is enabled.
+   *
+   * The default behavior of this method is print a message to stdout
+   * and to log an event in the NSPR log file.
+   */
+  static NS_COM PRBool WarnIfFalse(const char* aStr, const char* aExpr,
+                                   const char* aFile, PRIntn aLine);
+
+  /**
+   * Enable flying a warning message box (if the platform supports
+   * such a thing) when WarnIfFalse is called in addition to
+   * the usual printing to stdout and the NSPR log file.
+   *
+   * If aOnOff is PR_TRUE then the message-box is enabled, otherwise
+   * the message-box is disabled.
+   */
+  static NS_COM void SetWarningMessageBoxEnable(PRBool aOnOff);
+
+  /**
+   * Get the current setting of the message-box enable.
+   */
+  static NS_COM PRBool GetWarningMessageBoxEnable(void);
+
+  // Note: Methods below this line are the old ones; please start using
+  // the new ones. The old ones will be removed eventually!
+
+  //////////////////////////////////////////////////////////////////////
+
   // XXX add in log controls here
   // XXX probably want printf type arguments
 
@@ -93,7 +130,56 @@ public:
                              const char* aFile, PRIntn aLine);
 };
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
+
+/**
+ * Abort the execution of the program if the expresion evaluates to
+ * false.
+ *
+ * There is no status value returned from the macro.
+ *
+ * Note that the non-debug version of this macro does <b>not</b>
+ * evaluate the expression argument. Hence side effect statements
+ * as arguments to the macro will yield improper execution in a
+ * non-debug build. For example:
+ *
+ *      NS_ABORT_IF_FALSE(0 == foo++, "yikes foo should be zero");
+ *
+ * Note also that the non-debug version of this macro does <b>not</b>
+ * evaluate the message argument.
+ */
+#define NS_ABORT_IF_FALSE(_expr,_msg) \
+if (!(_expr))                         \
+  nsDebug::AbortIfFalse(_msg, #_expr, __FILE__, __LINE__)
+
+/**
+ * Warn if a given condition is false.
+ *
+ * Program execution continues past the usage of this macro.
+ *
+ * The macro returns a status value that can be used in an "if"
+ * statement. For example:
+ *
+ *      if (NS_WARN_IF_FALSE(aPtr, "null pointer")) {
+ *        return NS_ERROR_NULL_POINTER;
+ *      }
+ *
+ * Note that the non-debug version of this macro <b>does</b> evaluate
+ * the expression as this macro continues to return a boolean
+ * value. Therefore side effect expressions will work
+ * correctly. However, they are still "poor form" so don't do it!
+ *
+ * Note also that the non-debug version of this macro does <b>not</b>
+ * evaluate the message argument.
+ */
+#define NS_WARN_IF_FALSE(_e,_msg) \
+  (!(_e) ? nsDebug::WarnIfFalse(_msg, #_e, __FILE__, __LINE__) : PR_FALSE)
+
+// Note: Macros below this line are the old ones; please start using
+// the new ones. The old ones will be removed eventually!
+
+//////////////////////////////////////////////////////////////////////
+
 /**
  * Test a precondition for truth. If the expression is not true then
  * trigger a program failure.
@@ -166,6 +252,23 @@ if (!(expr))                       \
   nsDebug::Break(__FILE__, __LINE__)
 
 #else /* NS_DEBUG */
+
+/**
+ * The non-debug version of this macro does not evaluate the
+ * expression or the message arguments to the macro.
+ */
+#define NS_ABORT_IF_FALSE(_expr,_msg) {}
+
+/**
+ * Note that the non-debug version of this macro <b>does</b> evaluate
+ * the expression as this macro continues to return a boolean
+ * value.
+ *
+ * The non-debug version of this macro does <b>not</b> evaluate the
+ * message argument.
+ */
+#define NS_WARN_IF_FALSE(_e,_msg) \
+  (!(_e) ? PR_TRUE : PR_FALSE)
 
 #define NS_PRECONDITION(expr,str)  {}
 #define NS_ASSERTION(expr,str)     {}

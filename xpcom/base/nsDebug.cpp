@@ -17,6 +17,7 @@
  */
 
 #include "nsDebug.h"
+#include "prprf.h"
 #include "prlog.h"
 #include "prinit.h"
 
@@ -25,8 +26,8 @@
 #include <Debug.h>
 #endif
 
-#if defined(XP_UNIX)
-/* for abort() */
+#if defined(XP_UNIX) || defined(_WIN32)
+/* for abort() and getenv() */
 #include <stdlib.h>
 #endif
 
@@ -93,7 +94,7 @@
  * always compiled in, in case some other module that uses it is
  * compiled with debugging even if this library is not.
  */
-
+static PRBool gWarningMessageBoxEnable;
 static PRLogModuleInfo* gDebugLog;
 
 static void InitLog(void)
@@ -101,8 +102,100 @@ static void InitLog(void)
   if (0 == gDebugLog) {
     gDebugLog = PR_NewLogModule("nsDebug");
     gDebugLog->level = PR_LOG_DEBUG;
+
+#if defined(XP_UNIX) || defined(_WIN32)
+    if (getenv("MOZ_WARNING_MESSAGE_BOX")) {
+      gWarningMessageBoxEnable = PR_TRUE;
+    }
+#endif
   }
 }
+
+NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
+                                  const char* aFile, PRIntn aLine)
+{
+  InitLog();
+
+  char buf[2000];
+  PR_snprintf(buf, sizeof(buf),
+              "AbortIfFalse: %s: '%s', file %s, line %d",
+              aStr, aExpr, aFile, aLine);
+
+  // Write out the message to the debug log
+  PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf));
+  PR_LogFlush();
+
+  // And write it out to the stdout
+  printf("%s\n", buf);
+  fflush(stdout);
+
+  // Now exit the application, trying to make the local equivalent of
+  // a core dump happen.
+#if defined(_WIN32)
+#ifdef _M_IX86
+   ::DebugBreak();
+#else /* _M_ALPHA */
+  PR_Abort();
+#endif
+#elif defined(XP_MAC)
+  DebugStr(buffer);
+  ExitToShell();
+#elif defined(XP_UNIX)
+  PR_Abort();
+#elif defined(XP_BEOS)
+  {
+	DEBUGGER(buf);
+  } 
+#endif
+}
+
+NS_COM PRBool nsDebug::WarnIfFalse(const char* aStr, const char* aExpr,
+                                   const char* aFile, PRIntn aLine)
+{
+  InitLog();
+
+  char buf[2000];
+  PR_snprintf(buf, sizeof(buf),
+              "Warning: %s: '%s', file %s, line %d",
+              aStr, aExpr, aFile, aLine);
+
+#if defined(_WIN32)
+  PRBool abortInstead = PR_FALSE;
+  if (gWarningMessageBoxEnable) {
+    char msg[2000];
+    PR_snprintf(msg, sizeof(msg),
+                "%s\n\nDo you wish to continue running?", buf);
+    if (IDNO == ::MessageBox(NULL, msg, "nsDebug::WarnIfFalse", 
+                             MB_YESNO | MB_ICONWARNING))
+      abortInstead = PR_TRUE;
+  }
+  if (abortInstead) {
+    AbortIfFalse(aStr, aExpr, aFile, aLine);
+    return PR_TRUE;
+  }
+#endif
+
+  // Write out the warning message to the debug log
+  PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf));
+
+  // And write it out to the stdout
+  printf("%s\n", buf);
+
+  return PR_TRUE;
+}
+
+NS_COM void nsDebug::SetWarningMessageBoxEnable(PRBool aSetting)
+{
+  gWarningMessageBoxEnable = aSetting;
+}
+
+NS_COM PRBool nsDebug::GetWarningMessageBoxEnable(void)
+{
+  return gWarningMessageBoxEnable;
+}
+
+// Below is obsolete
+//----------------------------------------------------------------------
 
 NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
 {
