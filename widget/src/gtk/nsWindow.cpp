@@ -235,6 +235,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
 
   gtk_widget_set_events (mWidget,
+  
                          GDK_BUTTON_PRESS_MASK |
                          GDK_BUTTON_RELEASE_MASK |
                          GDK_POINTER_MOTION_MASK |
@@ -254,8 +255,8 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                        NULL);
 
     gtk_signal_connect(GTK_OBJECT(mainWindow),
-                       "configure_event",
-                       GTK_SIGNAL_FUNC(handle_configure_event),
+                       "size_allocate",
+                       GTK_SIGNAL_FUNC(handle_size_allocate),
                        this);
 
 // VBox for the menu, etc.
@@ -281,30 +282,21 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 void nsWindow::InitCallbacks(char * aName)
 {
   gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "configure_event",
-                     GTK_SIGNAL_FUNC(handle_configure_event),
-                     this);
-
-  gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_press_event",
 		     GTK_SIGNAL_FUNC(handle_button_press_event),
 		     this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_release_event",
 		     GTK_SIGNAL_FUNC(handle_button_release_event),
 		     this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "motion_notify_event",
 		     GTK_SIGNAL_FUNC(handle_motion_notify_event),
 		     this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "enter_notify_event",
 		     GTK_SIGNAL_FUNC(handle_enter_notify_event),
 		     this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "leave_notify_event",
 		     GTK_SIGNAL_FUNC(handle_leave_notify_event),
@@ -317,7 +309,6 @@ void nsWindow::InitCallbacks(char * aName)
                      "key_press_event",
 		     GTK_SIGNAL_FUNC(handle_key_press_event),
 		     this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
 		     GTK_SIGNAL_FUNC(handle_key_release_event),
