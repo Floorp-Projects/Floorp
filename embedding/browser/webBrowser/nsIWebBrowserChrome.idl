@@ -134,3 +134,4 @@ interface nsIWebBrowserChrome : nsISupports
      */
     void exitModalEventLoop(in nsresult aStatus);
 };
+
