@@ -1016,6 +1016,14 @@ public:
   virtual PRBool IsContainingBlock() const = 0;
 
   /**
+   * Does this frame want to capture the mouse when the user clicks in
+   * it or its children? If so, return the view which should be
+   * targeted for mouse capture. The view need not be this frame's view,
+   * it could be the view on a child.
+   */
+  virtual nsIView* GetMouseCapturer() const { return nsnull; }
+
+  /**
    * Invalidate part of the frame by asking the view manager to repaint.
    * aDamageRect is allowed to extend outside the frame's bounds. We'll do the right
    * thing. But it must be within the bounds of the view enclosing this frame.

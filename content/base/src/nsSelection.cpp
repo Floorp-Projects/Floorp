@@ -239,9 +239,8 @@ public:
                              SelectionDetails **aReturnDetails, SelectionType aType, PRBool aSlowCheck);
   NS_IMETHOD   Repaint(nsIPresContext* aPresContext);
 
-  nsresult     StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
+  nsresult     StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay);
   nsresult     StopAutoScrollTimer();
-  nsresult     DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
   nsresult     DoAutoScrollView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews);
   nsresult     ScrollPointIntoClipView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
   nsresult     ScrollPointIntoView(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
@@ -322,7 +321,7 @@ public:
                        PRBool aContinueSelection, PRBool aMultipleSelection,PRBool aHint);
   NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
   NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent);
-  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
+  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay);
   NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
@@ -615,20 +614,8 @@ public:
       if (!frame)
         return NS_OK;
 
-      //the frame passed in here will be a root frame for the view. there is no need to call the constrain
-      //method here. the root frame has NO content now unfortunately...
-      PRInt32 startPos = 0;
-      PRInt32 contentOffsetEnd = 0;
-      PRBool  beginOfContent;
-      nsCOMPtr<nsIContent> newContent;
-      nsresult result = frame->GetContentAndOffsetsFromPoint(mPresContext, mPoint,
-                                                   getter_AddRefs(newContent), 
-                                                   startPos, contentOffsetEnd,beginOfContent);
+      mFrameSelection->HandleDrag(mPresContext, frame, mPoint);
 
-      if (NS_SUCCEEDED(result))
-        result = mFrameSelection->HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE, beginOfContent);
-
-      //mFrameSelection->HandleDrag(mPresContext, mFrame, mPoint);
       mSelection->DoAutoScrollView(mPresContext, mView, mPoint, PR_TRUE);
     }
     return NS_OK;
@@ -2585,10 +2572,10 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
 }
 
 NS_IMETHODIMP
-nsSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
+nsSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
 {
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-  return mDomSelections[index]->StartAutoScrollTimer(aPresContext, aFrame, aPoint, aDelay);
+  return mDomSelections[index]->StartAutoScrollTimer(aPresContext, aView, aPoint, aDelay);
 }
 
 NS_IMETHODIMP
@@ -5238,7 +5225,7 @@ nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoi
 }
 
 nsresult
-nsTypedSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
+nsTypedSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
 {
   nsresult result;
   if (!mFrameSelection)
@@ -5265,7 +5252,7 @@ nsTypedSelection::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *a
   if (NS_FAILED(result))
     return result;
 
-  return DoAutoScroll(aPresContext, aFrame, aPoint);
+  return DoAutoScrollView(aPresContext, aView, aPoint, PR_TRUE);
 }
 
 nsresult
@@ -5677,21 +5664,6 @@ nsTypedSelection::DoAutoScrollView(nsIPresContext *aPresContext, nsIView *aView,
   }
 
   return NS_OK;
-}
-
-nsresult
-nsTypedSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
-{
-  if (!aPresContext || !aFrame)
-    return NS_ERROR_NULL_POINTER;
-
-  // Find the closest view to the frame!
-
-  nsIView *closestView = aFrame->GetClosestView();
-  if (!closestView)
-    return NS_ERROR_FAILURE;
-
-  return DoAutoScrollView(aPresContext, closestView, aPoint, PR_TRUE);
 }
 
 NS_IMETHODIMP

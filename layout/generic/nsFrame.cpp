@@ -1731,6 +1731,23 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   return frameselection->MaintainSelection();
 }
 
+// Figure out which view we should point capturing at, given that drag started
+// in this frame.
+static nsIView* GetNearestCapturingView(nsIFrame* aFrame) {
+  nsIView* view;
+  while (aFrame && !(view = aFrame->GetMouseCapturer())) {
+    aFrame = aFrame->GetParent();
+  }
+  if (!aFrame) {
+    return nsnull;
+  }
+
+#ifdef DEBUG_roc
+  printf("*** Setting capture to frame %p, view %p\n", (void*)aFrame, (void*)view);
+#endif
+  return view;
+}
+
 NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext, 
                                   nsGUIEvent*     aEvent,
                                   nsEventStatus*  aEventStatus)
@@ -1785,8 +1802,28 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
         frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
       else
         frameselection->HandleDrag(aPresContext, this, aEvent->point);
-      
-      frameselection->StartAutoScrollTimer(aPresContext, this, aEvent->point, 30);
+
+      nsIView* captureView = GetNearestCapturingView(this);
+      if (captureView) {
+        // Get the view that aEvent->point is relative to. This is disgusting.
+        nsPoint dummyPoint;
+        nsIView* eventView;
+        GetOffsetFromView(aPresContext, dummyPoint, &eventView);
+        nsPoint pt = aEvent->point;
+        nsIView* view = eventView;
+        while (view && view != captureView) {
+          pt += view->GetPosition();
+          view = view->GetParent();
+        }
+        if (!view) {
+          // Hmm. Maybe captureView is a child of eventView? Recover by
+          // subtracting the global offset of eventView.
+          for (view = eventView; view; view = view->GetParent()) {
+            pt -= view->GetPosition();
+          }
+        }
+        frameselection->StartAutoScrollTimer(aPresContext, captureView, pt, 30);
+      }
     }
   }
 
@@ -4500,24 +4537,26 @@ nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell* aPresShell,
   return rv;
 }
 
-
 NS_IMETHODIMP
 nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
-    // get its view
-  nsIView* view = GetClosestView();
+  // get its view
+  nsIView* view = GetNearestCapturingView(this);
+  if (!view) {
+    return NS_ERROR_FAILURE;
+  }
 
-  PRBool result;
+  nsIViewManager* viewMan = view->GetViewManager();
+  if (!viewMan) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (view) {
-    nsIViewManager* viewMan = view->GetViewManager();
-    if (viewMan) {
-      if (aGrabMouseEvents) {
-        viewMan->GrabMouseEvents(view, result);
-      } else {
-        viewMan->GrabMouseEvents(nsnull, result);
-      }
-    }
+  if (aGrabMouseEvents) {
+    PRBool result;
+    viewMan->GrabMouseEvents(view, result);
+  } else {
+    PRBool result;
+    viewMan->GrabMouseEvents(nsnull, result);
   }
 
   return NS_OK;
@@ -4527,7 +4566,7 @@ PRBool
 nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
 {
     // get its view
-  nsIView* view = GetClosestView();
+  nsIView* view = GetNearestCapturingView(this);
   
   if (view) {
     nsIViewManager* viewMan = view->GetViewManager();

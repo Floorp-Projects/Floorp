@@ -121,7 +121,9 @@ public:
   NS_IMETHOD GetMargin(nsMargin& aMargin);
 
   virtual nsresult GetContentOf(nsIContent** aContent);
-  
+
+  virtual nsIView* GetMouseCapturer() const;
+
 protected:
   nsScrollBoxFrame(nsIPresShell* aShell);
 
