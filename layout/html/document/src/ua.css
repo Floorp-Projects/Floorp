@@ -313,12 +313,14 @@ ul, menu, dir {
   display: block;
   list-style-type: disc;
   margin: 1em 0 1em 40px;
+  counter-reset: -html-counter 0;
 }
 
 ol {
   display: block;
   list-style-type: decimal;
   margin: 1em 0 1em 40px;
+  counter-reset: -html-counter 0;
 }
 
 li {
@@ -378,6 +380,9 @@ dt {
 dd {
   display: block;
   margin-left: 40px;
+}
+dl dl {
+  margin: 0 0 0 40px;
 }
 
 /* leafs */
