@@ -27,6 +27,13 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   display: none;
 }
 
+/* ::::: Hide the link toolbar if it is set to autohide and has no items. ::::: */
+
+#linktoolbar[hidden="maybe"][hasitems="false"]
+{
+  display: none;
+}
+
 /* ::::: urlbar autocomplete ::::: */
 
 #urlbar {
