@@ -474,20 +474,22 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
       if (event->state & GDK_MOD1_MASK)
         return PR_FALSE;
 
-  // Don't pass shift, control and alt as key press events
+  NS_ADDREF(win);
+  nsKeyEvent keyDownEvent(NS_KEY_DOWN, win);
+  InitKeyEvent(event, keyDownEvent);
+  win->OnKey(keyDownEvent);
+
+  // Don't pass Shift, Control, Alt and Meta as NS_KEY_PRESS events.
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
       || event->keyval == GDK_Control_L
       || event->keyval == GDK_Control_R
       || event->keyval == GDK_Alt_L
       || event->keyval == GDK_Alt_R
+      || event->keyval == GDK_Meta_L
+      || event->keyval == GDK_Meta_R
      )
     return PR_TRUE;
-
-  NS_ADDREF(win);
-  nsKeyEvent keyDownEvent(NS_KEY_DOWN, win);
-  InitKeyEvent(event, keyDownEvent);
-  win->OnKey(keyDownEvent);
 
   //
   // Second, dispatch the Key event as a key press event w/ a Unicode
@@ -513,17 +515,6 @@ gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
 {
   nsTextWidget* win = (nsTextWidget*)p;
   nsKeyEvent kevent(NS_KEY_UP, win);
-
-  // Don't pass shift, control and alt as key release events
-  if (event->keyval == GDK_Shift_L
-      || event->keyval == GDK_Shift_R
-      || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R
-      || event->keyval == GDK_Alt_L
-      || event->keyval == GDK_Alt_R
-     )
-    return PR_TRUE;
-
   InitKeyEvent(event, kevent);
   NS_ADDREF(win);
   win->OnKey(kevent);
@@ -553,12 +544,6 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
       if (event->state & GDK_MOD1_MASK)
         return PR_FALSE;
 
-  // Don't pass shift and control as key press events
-  if (event->keyval == GDK_Shift_L
-      || event->keyval == GDK_Shift_R
-      || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R)
-    return PR_TRUE;
 
   NS_ADDREF(win);
 
@@ -575,6 +560,16 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   else
     win->OnKey(keyDownEvent);
 
+  // Don't pass Shift, Alt, Control and Meta as NS_KEY_PRESS events.
+  if (event->keyval == GDK_Shift_L
+      || event->keyval == GDK_Shift_R
+      || event->keyval == GDK_Control_L
+      || event->keyval == GDK_Control_R
+      || event->keyval == GDK_Alt_L
+      || event->keyval == GDK_Alt_R
+      || event->keyval == GDK_Meta_L
+      || event->keyval == GDK_Meta_R)
+    return PR_TRUE;
 
   //
   // Second, dispatch the Key event as a key press event w/ a Unicode
@@ -643,13 +638,6 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
 
   // should we drop this event?
   if (shouldDrop)
-    return PR_TRUE;
-
-  // Don't pass shift, control and alt as key release events
-  if (event->keyval == GDK_Shift_L
-      || event->keyval == GDK_Shift_R
-      || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R)
     return PR_TRUE;
 
   nsWidget *win = (nsWidget *)p;
