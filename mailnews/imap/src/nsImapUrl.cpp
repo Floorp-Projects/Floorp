@@ -916,14 +916,24 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result)
 
 }
 
-char nsImapUrl::GetOnlineSubDirSeparator()
+NS_IMETHODIMP nsImapUrl::GetOnlineSubDirSeparator(char* separator)
 {
-	return m_onlineSubDirSeparator;
+    if (separator)
+    {
+        *separator = m_onlineSubDirSeparator;
+        return NS_OK;
+    }
+    else
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
 }
 
-void nsImapUrl::SetOnlineSubDirSeparator(char onlineDirSeparator)
+NS_IMETHODIMP
+nsImapUrl::SetOnlineSubDirSeparator(char onlineDirSeparator)
 {
 	m_onlineSubDirSeparator = onlineDirSeparator;
+    return NS_OK;
 }
 
 
@@ -931,6 +941,15 @@ NS_IMETHODIMP nsImapUrl::MessageIdsAreUids(PRBool *result)
 {
     NS_LOCK_INSTANCE();
 	*result = m_idsAreUids;
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsImapUrl::GetChildDiscoveryDepth(PRInt32* result)
+{
+    NS_LOCK_INSTANCE();
+    *result = m_discoveryDepth;
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -1244,7 +1263,7 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
 	char *rv = NULL;
 	char delimiterToUse = onlineDelimiter;
 	if (onlineDelimiter == kOnlineHierarchySeparatorUnknown)
-		delimiterToUse = GetOnlineSubDirSeparator();
+		GetOnlineSubDirSeparator(&delimiterToUse);
 	NS_ASSERTION(delimiterToUse != kOnlineHierarchySeparatorUnknown, "hierarchy separator unknown");
 	if (canonicalPath)
 		rv = ReplaceCharsInCopiedString(canonicalPath, '/', delimiterToUse);
@@ -1288,7 +1307,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 
 	if (onlineDelimiter == kOnlineHierarchySeparatorUnknown ||
 		onlineDelimiter == 0)
-		delimiterToUse = GetOnlineSubDirSeparator();
+		GetOnlineSubDirSeparator(&delimiterToUse);
 
 	NS_ASSERTION (serverPath, "Oops... null serverPath");
 

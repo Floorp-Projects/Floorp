@@ -78,6 +78,9 @@ public:
 	NS_IMETHOD	CreateListOfMessageIdsString(nsString2 *result) ;
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result);
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result);	// kAddMsgFlags or kSubtractMsgFlags only
+    NS_IMETHOD GetChildDiscoveryDepth(PRInt32* result);
+    NS_IMETHOD GetOnlineSubDirSeparator(char* separator);
+	NS_IMETHOD SetOnlineSubDirSeparator(char onlineDirSeparator);
 
 	// for enabling or disabling mime parts on demand. Setting this to TRUE says we
 	// can use mime parts on demand, if we chose.
@@ -149,8 +152,6 @@ protected:
 	// handle the imap specific parsing
 	void		ParseImapPart(char *imapPartOfUrl);
 
-	char		GetOnlineSubDirSeparator();
-	void		SetOnlineSubDirSeparator(char onlineDirSeparator);
 	char *		ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
 	void		ParseFolderPath(char **resultingCanonicalPath);
 	void		ParseSearchCriteriaString();
