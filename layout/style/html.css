@@ -662,6 +662,7 @@ input[type="submit"] {
   font: button;
   cursor: default;
   white-space: pre;
+  -moz-box-sizing: border-box;
   -moz-user-select: none;
   -moz-binding: none;
 }
