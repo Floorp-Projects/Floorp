@@ -113,7 +113,6 @@ print "within the $rootdir directory..\n" if ($rootdir);
 # this is my lame way of checking if a command succeeded AND getting
 # output from it. I'd love a better way. -alecf@netscape.com
 my $have_checkins = 0;
-@args = ("wget", "--quiet", "--output-document=-", "\"$url\"");
 open CHECKINS,"wget --quiet --output-document=- \"$url\"|" or
   die "Error opening wget: $!\n";
 
@@ -122,6 +121,13 @@ $header = <CHECKINS> and $have_checkins=1;
 if (!$have_checkins) {
 
   open CHECKINS, "lynx -source '$url'|" or die "Error opening lynx: $!\n";
+
+  $header = <CHECKINS> and $have_checkins = 1;
+}
+
+if (!$have_checkins) {
+
+  open CHECKINS, "curl -s '$url'|" or die "Error opening curl $!\n";
 
   $header = <CHECKINS> and $have_checkins = 1;
 }
