@@ -61,6 +61,8 @@ public:
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
 
+  NS_IMETHOD GetRect(nsRect&);
+
   Display * GetDisplay() { return mDisplay; }
   Screen * GetScreen() { return mScreen; }
   Visual * GetVisual() { return mVisual; }
