@@ -464,8 +464,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
                                 nsISelection *aSelection, 
                                 PRBool          *aCancel,
                                 PRBool          *aHandled,
-                                const nsAReadableString *inString,
-                                nsAWritableString *outString,
+                                const nsAString *inString,
+                                nsAString *outString,
                                 PRInt32          aMaxLength)
 {  
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
@@ -555,7 +555,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
 
     if (singleLineNewlineBehavior == eReplaceWithSpaces)
     {
-      //nsAWritableString destString;
+      //nsAString destString;
       //NormalizeCRLF(outString,destString);
 
       tString.ReplaceChar(CRLF, ' ');
@@ -1056,8 +1056,8 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
 
 nsresult
 nsTextEditRules::WillOutputText(nsISelection *aSelection, 
-                                const nsAReadableString  *aOutputFormat,
-                                nsAWritableString *aOutString,                                
+                                const nsAString  *aOutputFormat,
+                                nsAString *aOutString,                                
                                 PRBool   *aCancel,
                                 PRBool   *aHandled)
 {
@@ -1253,8 +1253,8 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
 
 nsresult
 nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection, 
-                                           const nsAReadableString  *aInString,
-                                           nsAWritableString  *aOutString,
+                                           const nsAString  *aInString,
+                                           nsAString  *aOutString,
                                            PRInt32          aMaxLength)
 {
   if (!aSelection || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
@@ -1308,7 +1308,7 @@ nsTextEditRules::ResetIMETextPWBuf()
 }
 
 nsresult
-nsTextEditRules::RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAWritableString *aIMEString)
+nsTextEditRules::RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAString *aIMEString)
 {
   if (!aIMEString) {
     return NS_ERROR_NULL_POINTER;
@@ -1330,7 +1330,7 @@ nsTextEditRules::RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAWritableString *aIME
 }
 
 nsresult
-nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAWritableString *aOutString)
+nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAString *aOutString)
 {
   if (!aOutString) {return NS_ERROR_NULL_POINTER;}
 

@@ -164,13 +164,13 @@ static nsCOMPtr<nsIDOMNode> GetTableParent(nsIDOMNode* aNode)
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAReadableString & aInString)
+NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInString)
 {
   nsAutoString charset;
   return LoadHTMLWithCharset(aInString, charset);
 }
 
-NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAReadableString & aInputString, const nsAReadableString & aCharset)
+NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAString & aInputString, const nsAString & aCharset)
 {
   nsresult res = NS_OK;
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
@@ -662,8 +662,8 @@ NS_IMETHODIMP nsHTMLEditor::PrepareTransferable(nsITransferable **transferable)
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable, 
-                                                   const nsAReadableString & aContextStr,
-                                                   const nsAReadableString & aInfoStr)
+                                                   const nsAString & aContextStr,
+                                                   const nsAString & aInfoStr)
 {
   nsresult rv = NS_OK;
   char* bestFlavor = nsnull;
@@ -1659,9 +1659,9 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
 }
 
 nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
-                                                  const nsAReadableString & aInputString,
-                                                  const nsAReadableString & aContextStr,
-                                                  const nsAReadableString & aInfoStr,
+                                                  const nsAString & aInputString,
+                                                  const nsAString & aContextStr,
+                                                  const nsAString & aInfoStr,
                                                   nsCOMPtr<nsIDOMNode> *outFragNode,
                                                   PRInt32 *outRangeStartHint,
                                                   PRInt32 *outRangeEndHint)

@@ -87,14 +87,14 @@ public:
 
   /* ------------ nsIEditorMailSupport overrides -------------- */
   NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsQuotation(const nsAReadableString& aQuotedText,
+  NS_IMETHOD InsertAsQuotation(const nsAString& aQuotedText,
                                nsIDOMNode** aNodeInserted);
-  NS_IMETHOD PasteAsCitedQuotation(const nsAReadableString& aCitation,
+  NS_IMETHOD PasteAsCitedQuotation(const nsAString& aCitation,
                                    PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsCitedQuotation(const nsAReadableString& aQuotedText,
-                                    const nsAReadableString& aCitation,
+  NS_IMETHOD InsertAsCitedQuotation(const nsAString& aQuotedText,
+                                    const nsAString& aCitation,
                                     PRBool aInsertHTML,
-                                    const nsAReadableString& aCharset,
+                                    const nsAString& aCharset,
                                     nsIDOMNode** aNodeInserted);
   NS_IMETHOD Rewrap(PRBool aRespectNewlines);
   NS_IMETHOD StripCites();
@@ -102,16 +102,16 @@ public:
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
-  NS_IMETHOD SetCompositionString(const nsAReadableString & aCompositionString, nsIPrivateTextRangeList * aTextRange, nsTextEventReply * aReply);
+  NS_IMETHOD SetCompositionString(const nsAString & aCompositionString, nsIPrivateTextRangeList * aTextRange, nsTextEventReply * aReply);
   NS_IMETHOD GetReconversionString(nsReconversionEventReply* aReply);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
   NS_IMETHOD BeginComposition(nsTextEventReply* aReply);
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
-                                      const nsAReadableString & aAttribute,
-                                      const nsAReadableString & aValue);
+                                      const nsAString & aAttribute,
+                                      const nsAString & aValue);
   NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                         const nsAReadableString & aAttribute);
+                                         const nsAString & aAttribute);
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
@@ -120,7 +120,7 @@ public:
 
   NS_IMETHOD DeleteSelection(EDirection aAction);
 
-  NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString & characterSet);
+  NS_IMETHOD SetDocumentCharacterSet(const nsAString & characterSet);
 
   /** we override this here to install event listeners */
   NS_IMETHOD PostCreate();
@@ -142,13 +142,13 @@ public:
   NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
   NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
 
-  NS_IMETHOD OutputToString(nsAWritableString& aOutputString,
-                            const nsAReadableString& aFormatType,
+  NS_IMETHOD OutputToString(nsAString& aOutputString,
+                            const nsAString& aFormatType,
                             PRUint32 aFlags);
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
-                            const nsAReadableString& aFormatType,
-                            const nsAReadableString& aCharsetOverride,
+                            const nsAString& aFormatType,
+                            const nsAString& aCharsetOverride,
                             PRUint32 aFlags);
 
 
@@ -164,7 +164,7 @@ public:
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 
   /* ------------ Utility Routines, not part of public API -------------- */
-  NS_IMETHOD TypedText(const nsAReadableString& aString, PRInt32 aAction);
+  NS_IMETHOD TypedText(const nsAString& aString, PRInt32 aAction);
 
   /** returns the absolute position of the end points of aSelection
     * in the document as a text stream.
@@ -204,9 +204,9 @@ protected:
   NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
 
   // Helpers for output routines
-  NS_IMETHOD GetAndInitDocEncoder(const nsAReadableString& aFormatType,
+  NS_IMETHOD GetAndInitDocEncoder(const nsAString& aFormatType,
                                   PRUint32 aFlags,
-                                  const nsAReadableString& aCharset,
+                                  const nsAString& aCharset,
                                   nsIDocumentEncoder** encoder);
 
   // key event helpers

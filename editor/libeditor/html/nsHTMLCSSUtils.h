@@ -55,7 +55,7 @@
 
 class nsHTMLEditor;
 
-typedef void (*nsProcessValueFunc)(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+typedef void (*nsProcessValueFunc)(const nsAString * aInputString, nsAString & aOutputString,
                                    const char * aDefaultValueString,
                                    const char * aPrependString, const char* aAppendString);
 
@@ -109,7 +109,7 @@ public:
     * @param aProperty      [IN] an atom containing a HTML tag name
     * @param aAttribute     [IN] a string containing the name of a HTML attribute carried by the element above
     */
-  PRBool      IsCSSEditableProperty(nsIDOMNode * aNode, nsIAtom * aProperty, const nsAReadableString * aAttribute);
+  PRBool      IsCSSEditableProperty(nsIDOMNode * aNode, nsIAtom * aProperty, const nsAString * aAttribute);
 
   /** adds/remove a CSS declaration to the STYLE atrribute carried by a given element
     *
@@ -118,9 +118,9 @@ public:
     * @param aValue         [IN] a string containing the value of the CSS property
     */
   nsresult    SetCSSProperty(nsIDOMElement * aElement, nsIAtom * aProperty,
-                             const nsAReadableString & aValue);
+                             const nsAString & aValue);
   nsresult    RemoveCSSProperty(nsIDOMElement * aElement, nsIAtom * aProperty,
-                                const nsAReadableString & aPropertyValue);
+                                const nsAString & aPropertyValue);
 
   /** gets the specified/computed style value of a CSS property for a given node (or its element
     * ancestor if it is not an element)
@@ -130,9 +130,9 @@ public:
     * @param aPropertyValue [OUT] the retrieved value of the property
     */
   nsresult    GetSpecifiedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                   nsAWritableString & aValue);
+                                   nsAString & aValue);
   nsresult    GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                  nsAWritableString & aValue);
+                                  nsAString & aValue);
 
   /** Removes a CSS property from the specified declarations in STYLE attribute
    ** and removes the node if it is an useless span
@@ -142,7 +142,7 @@ public:
    * @param aPropertyValue  [IN] the value of the property we have to rremove if the property
    *                             accepts more than one value
    */
-  nsresult    RemoveCSSInlineStyle(nsIDOMNode * aNode, nsIAtom * aProperty, nsAReadableString & aPropertyValue);
+  nsresult    RemoveCSSInlineStyle(nsIDOMNode * aNode, nsIAtom * aProperty, const nsAString & aPropertyValue);
 
    /** Answers true is the property can be removed by setting a "none" CSS value
      * on a node
@@ -151,19 +151,19 @@ public:
      * @param aProperty     [IN] an atom containing a CSS property
      * @param aAttribute    [IN] pointer to an attribute name or null if this information is irrelevant
      */
-  PRBool      IsCSSInvertable(nsIAtom * aProperty, const nsAReadableString * aAttribute);
+  PRBool      IsCSSInvertable(nsIAtom * aProperty, const nsAString * aAttribute);
 
   /** Get the default browser background color if we need it for GetCSSBackgroundColorState
     *
     * @param aColor         [OUT] the default color as it is defined in prefs
     */
-  nsresult    GetDefaultBackgroundColor(nsAWritableString & aColor);
+  nsresult    GetDefaultBackgroundColor(nsAString & aColor);
 
   /** Get the default length unit used for CSS Indent/Outdent
     *
     * @param aLengthUnit    [OUT] the default length unit as it is defined in prefs
     */
-  nsresult    GetDefaultLengthUnit(nsAWritableString & aLengthUnit);
+  nsresult    GetDefaultLengthUnit(nsAString & aLengthUnit);
 
   /** asnwers true if the element aElement carries an ID or a class
     *
@@ -184,8 +184,8 @@ public:
     */
   nsresult    GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                                                    nsIAtom * aHTMLProperty,
-                                                   const nsAReadableString * aAttribute,
-                                                   nsAWritableString & aValueString,
+                                                   const nsAString * aAttribute,
+                                                   nsAString & aValueString,
                                                    PRUint8 aStyleType);
 
   /** Does the node aNode (or his parent if it is not an element node) carries
@@ -201,9 +201,9 @@ public:
     */
   nsresult    IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                                                   nsIAtom * aHTMLProperty,
-                                                  const nsAReadableString * aAttribute,
+                                                  const nsAString * aAttribute,
                                                   PRBool & aIsSet,
-                                                  nsAWritableString & aValueString,
+                                                  nsAString & aValueString,
                                                   PRUint8 aStyleType);
 
   /** Adds to the node the CSS inline styles equivalent to the HTML style
@@ -217,8 +217,8 @@ public:
     */
   nsresult    SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                           nsIAtom * aHTMLProperty,
-                                          const nsAReadableString * aAttribute,
-                                          const nsAReadableString * aValue,
+                                          const nsAString * aAttribute,
+                                          const nsAString * aValue,
                                           PRInt32 * aCount);
 
   /** removes from the node the CSS inline styles equivalent to the HTML style
@@ -230,8 +230,8 @@ public:
     */
   nsresult    RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                              nsIAtom *aHTMLProperty,
-                                             const nsAReadableString *aAttribute,
-                                             const nsAReadableString *aValue);
+                                             const nsAString *aAttribute,
+                                             const nsAString *aValue);
 
   /** parses a "xxxx.xxxxxuuu" string where x is a digit and u an alpha char
     * we need such a parser because nsIDOMCSSStyleDeclaration::GetPropertyCSSValue() is not
@@ -241,7 +241,7 @@ public:
     * @param aValue         [OUT] numeric part
     * @param aUnit          [OUT] unit part
     */
-  void        ParseLength(nsAReadableString & aString, float * aValue, nsIAtom ** aUnit);
+  void        ParseLength(const nsAString & aString, float * aValue, nsIAtom ** aUnit);
 
   /** sets the mIsCSSPrefChecked private member ; used as callback from observer when
     * the css pref state is changed
@@ -308,7 +308,7 @@ private:
   void      BuildCSSDeclarations(nsVoidArray & aPropertyArray,
                                  nsStringArray & cssValueArray,
                                  const CSSEquivTable * aEquivTable,
-                                 const nsAReadableString * aValue,
+                                 const nsAString * aValue,
                                  PRBool aGetOrRemoveRequest);
 
   /** retrieves the CSS declarations equivalent to the given HTML property/attribute/value
@@ -326,8 +326,8 @@ private:
     */
   void      GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
                                                  nsIAtom * aHTMLProperty,
-                                                 const nsAReadableString *aAttribute,
-                                                 const nsAReadableString *aValue,
+                                                 const nsAString *aAttribute,
+                                                 const nsAString *aValue,
                                                  nsVoidArray & aPropertyArray,
                                                  nsStringArray & aValueArray,
                                                  PRBool aGetOrRemoveRequest);
@@ -349,7 +349,7 @@ private:
     */
   nsresult    CreateCSSPropertyTxn(nsIDOMElement * aElement, 
                                    nsIAtom * aProperty,
-                                   const nsAReadableString & aValue,
+                                   const nsAString & aValue,
                                    ChangeCSSInlineStyleTxn ** aTxn,
                                    PRBool aRemoveProperty);
 
@@ -363,7 +363,7 @@ private:
                                       COMPUTED_STYLE_TYPE  to query the computed style values
     */
   nsresult    GetCSSInlinePropertyBase(nsIDOMNode * aNode, nsIAtom * aProperty,
-                                       nsAWritableString & aValue,
+                                       nsAString & aValue,
                                        nsIDOMViewCSS * aViewCSS,
                                        PRUint8 aStyleType);
 

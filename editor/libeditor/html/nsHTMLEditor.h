@@ -126,69 +126,69 @@ public:
                                        nsIDOMCSSStyleRule **_retval); 
 
   NS_IMETHOD SetCSSInlineProperty(nsIAtom *aProperty, 
-                             const nsAReadableString & aAttribute, 
-                             const nsAReadableString & aValue);
+                             const nsAString & aAttribute, 
+                             const nsAString & aValue);
                             
   NS_IMETHOD SetInlineProperty(nsIAtom *aProperty, 
-                             const nsAReadableString & aAttribute, 
-                             const nsAReadableString & aValue);
+                             const nsAString & aAttribute, 
+                             const nsAString & aValue);
   
   NS_IMETHOD GetInlineProperty(nsIAtom *aProperty, 
-                             const nsAReadableString & aAttribute, 
-                             const nsAReadableString & aValue, 
+                             const nsAString & aAttribute, 
+                             const nsAString & aValue, 
                              PRBool *aFirst, 
                              PRBool *aAny, 
                              PRBool *aAll);
   NS_IMETHOD GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
-                             const nsAReadableString &aAttribute,
-                             const nsAReadableString &aValue,
+                             const nsAString &aAttribute,
+                             const nsAString &aValue,
                              PRBool *aFirst, 
                              PRBool *aAny, 
                              PRBool *aAll,
-                             nsAWritableString &outValue);
+                             nsAString &outValue);
   NS_IMETHOD RemoveAllInlineProperties();
-  NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsAReadableString & aAttribute);
+  NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsAString & aAttribute);
   NS_IMETHOD IncreaseFontSize();
   NS_IMETHOD DecreaseFontSize();
 
-  NS_IMETHOD InsertHTML(const nsAReadableString &aInputString);
-  NS_IMETHOD InsertHTMLWithCharset(const nsAReadableString& aInputString,
-                                   const nsAReadableString& aCharset);
-  NS_IMETHOD LoadHTML(const nsAReadableString &aInputString);
-  NS_IMETHOD LoadHTMLWithCharset(const nsAReadableString& aInputString,
-                                   const nsAReadableString& aCharset);
-  NS_IMETHOD RebuildDocumentFromSource(const nsAReadableString& aSourceString);
+  NS_IMETHOD InsertHTML(const nsAString &aInputString);
+  NS_IMETHOD InsertHTMLWithCharset(const nsAString& aInputString,
+                                   const nsAString& aCharset);
+  NS_IMETHOD LoadHTML(const nsAString &aInputString);
+  NS_IMETHOD LoadHTMLWithCharset(const nsAString& aInputString,
+                                   const nsAString& aCharset);
+  NS_IMETHOD RebuildDocumentFromSource(const nsAString& aSourceString);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
 
-  NS_IMETHOD SetParagraphFormat(const nsAReadableString& aParagraphFormat);
+  NS_IMETHOD SetParagraphFormat(const nsAString& aParagraphFormat);
 
   NS_IMETHOD GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists);
 
-  NS_IMETHOD GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat);
-  NS_IMETHOD GetFontFaceState(PRBool *aMixed, nsAWritableString &outFace);
-  NS_IMETHOD GetFontColorState(PRBool *aMixed, nsAWritableString &outColor);
-  NS_IMETHOD GetCSSBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutColor, PRBool aBlockLevel);
-  NS_IMETHOD GetHTMLBackgroundColorState(PRBool *aMixed, nsAWritableString &outColor);
-  NS_IMETHOD GetBackgroundColorState(PRBool *aMixed, nsAWritableString &outColor);
-  NS_IMETHOD GetHighlightColorState(PRBool *aMixed, nsAWritableString &outColor);
+  NS_IMETHOD GetParagraphState(PRBool *aMixed, nsAString &outFormat);
+  NS_IMETHOD GetFontFaceState(PRBool *aMixed, nsAString &outFace);
+  NS_IMETHOD GetFontColorState(PRBool *aMixed, nsAString &outColor);
+  NS_IMETHOD GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, PRBool aBlockLevel);
+  NS_IMETHOD GetHTMLBackgroundColorState(PRBool *aMixed, nsAString &outColor);
+  NS_IMETHOD GetBackgroundColorState(PRBool *aMixed, nsAString &outColor);
+  NS_IMETHOD GetHighlightColorState(PRBool *aMixed, nsAString &outColor);
   NS_IMETHOD GetHighlightColor(PRBool *mixed, PRUnichar **_retval);
   NS_IMETHOD GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *aDL);
   NS_IMETHOD GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBool *aDD);
   NS_IMETHOD GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign);
   NS_IMETHOD GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent);
 
-  NS_IMETHOD MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList, const nsAReadableString& aBulletType);
-  NS_IMETHOD RemoveList(const nsAReadableString& aListType);
-  NS_IMETHOD Indent(const nsAReadableString& aIndent);
-  NS_IMETHOD Align(const nsAReadableString& aAlign);
+  NS_IMETHOD MakeOrChangeList(const nsAString& aListType, PRBool entireList, const nsAString& aBulletType);
+  NS_IMETHOD RemoveList(const nsAString& aListType);
+  NS_IMETHOD Indent(const nsAString& aIndent);
+  NS_IMETHOD Align(const nsAString& aAlign);
 
-  NS_IMETHOD GetElementOrParentByTagName(const nsAReadableString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn);
-  NS_IMETHOD GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElement** aReturn);
-  NS_IMETHOD CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDOMElement** aReturn);
-  NS_IMETHOD GetNextElementByTagName(nsIDOMElement *aCurrentElement, const nsAReadableString *aTagName, nsIDOMElement **aReturn);
+  NS_IMETHOD GetElementOrParentByTagName(const nsAString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn);
+  NS_IMETHOD GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aReturn);
+  NS_IMETHOD CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement** aReturn);
+  NS_IMETHOD GetNextElementByTagName(nsIDOMElement *aCurrentElement, const nsAString *aTagName, nsIDOMElement **aReturn);
 
 
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
@@ -200,17 +200,17 @@ public:
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
-  NS_IMETHOD SetCompositionString(const nsAReadableString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
+  NS_IMETHOD SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
   NS_IMETHOD GetReconversionString(nsReconversionEventReply* aReply);
 
   /* ------------ nsIEditorStyleSheets methods -------------- */
 
-  NS_IMETHOD ApplyStyleSheet(const nsAReadableString & aURL, nsICSSStyleSheet **aStyleSheet);
-  NS_IMETHOD ApplyOverrideStyleSheet(const nsAReadableString & aURL, nsICSSStyleSheet **aStyleSheet);
+  NS_IMETHOD ApplyStyleSheet(const nsAString & aURL, nsICSSStyleSheet **aStyleSheet);
+  NS_IMETHOD ApplyOverrideStyleSheet(const nsAString & aURL, nsICSSStyleSheet **aStyleSheet);
   /* Above 2 methods call this with appropriate aOverride value 
    * Not exposed to IDL interface 
   */
-  nsresult   ApplyDocumentOrOverrideStyleSheet(const nsAReadableString & aURL, PRBool aOverride, nsICSSStyleSheet **aStyleSheet);
+  nsresult   ApplyDocumentOrOverrideStyleSheet(const nsAString & aURL, PRBool aOverride, nsICSSStyleSheet **aStyleSheet);
   NS_IMETHOD AddStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD RemoveOverrideStyleSheet(nsICSSStyleSheet* aSheet);
@@ -218,13 +218,13 @@ public:
   /* ------------ nsIEditorMailSupport methods -------------- */
 
   NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsQuotation(const nsAReadableString & aQuotedText, nsIDOMNode **aNodeInserted);
-  NS_IMETHOD PasteAsCitedQuotation(const nsAReadableString & aCitation,
+  NS_IMETHOD InsertAsQuotation(const nsAString & aQuotedText, nsIDOMNode **aNodeInserted);
+  NS_IMETHOD PasteAsCitedQuotation(const nsAString & aCitation,
                                    PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsCitedQuotation(const nsAReadableString & aQuotedText,
-                                    const nsAReadableString & aCitation,
+  NS_IMETHOD InsertAsCitedQuotation(const nsAString & aQuotedText,
+                                    const nsAString & aCitation,
                                     PRBool aInsertHTML,
-                                    const nsAReadableString & aCharset,
+                                    const nsAString & aCharset,
                                     nsIDOMNode **aNodeInserted);
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
 
@@ -291,13 +291,13 @@ public:
   /* miscellaneous */
   // This sets background on the appropriate container element (table, cell,)
   //   or calls into nsTextEditor to set the page background
-  NS_IMETHOD SetCSSBackgroundColor(const nsAReadableString& aColor);
-  NS_IMETHOD SetHTMLBackgroundColor(const nsAReadableString& aColor);
-  NS_IMETHOD SetBackgroundColor(const nsAReadableString& aColor);
-  NS_IMETHOD SetBodyAttribute(const nsAReadableString& aAttr, const nsAReadableString& aValue);
+  NS_IMETHOD SetCSSBackgroundColor(const nsAString& aColor);
+  NS_IMETHOD SetHTMLBackgroundColor(const nsAString& aColor);
+  NS_IMETHOD SetBackgroundColor(const nsAString& aColor);
+  NS_IMETHOD SetBodyAttribute(const nsAString& aAttr, const nsAString& aValue);
   // aTitle may be null or empty string to remove child contents of <title>
 
-  NS_IMETHOD SetDocumentTitle(const nsAReadableString &aTitle);
+  NS_IMETHOD SetDocumentTitle(const nsAString &aTitle);
 
   /* ------------ Block methods moved from nsEditor -------------- */
   static nsCOMPtr<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
@@ -373,8 +373,8 @@ public:
   NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
   NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
 
-  NS_IMETHOD GetHeadContentsAsHTML(nsAWritableString& aOutputString);
-  NS_IMETHOD ReplaceHeadContentsWithHTML(const nsAReadableString &aSourceToInsert);
+  NS_IMETHOD GetHeadContentsAsHTML(nsAString& aOutputString);
+  NS_IMETHOD ReplaceHeadContentsWithHTML(const nsAString &aSourceToInsert);
 
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
@@ -387,16 +387,16 @@ public:
   NS_IMETHOD EndOperation();
 
   /** returns PR_TRUE if aParentTag can contain a child of type aChildTag */
-  virtual PRBool TagCanContainTag(const nsAReadableString& aParentTag, const nsAReadableString& aChildTag);
+  virtual PRBool TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag);
   
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
-                                      const nsAReadableString & aAttribute,
-                                      const nsAReadableString & aValue);
+                                      const nsAString & aAttribute,
+                                      const nsAString & aValue);
   NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                         const nsAReadableString & aAttribute);
+                                         const nsAString & aAttribute);
 
   /** join together any afjacent editable text nodes in the range */
   NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);
@@ -407,7 +407,7 @@ public:
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
   /* ------------ Utility Routines, not part of public API -------------- */
-  NS_IMETHOD TypedText(const nsAReadableString& aString, PRInt32 aAction);
+  NS_IMETHOD TypedText(const nsAString& aString, PRInt32 aAction);
   nsresult InsertNodeAtPoint( nsIDOMNode *aNode, 
                               nsCOMPtr<nsIDOMNode> *ioParent, 
                               PRInt32 *ioOffset, 
@@ -575,18 +575,18 @@ protected:
     */
   virtual void IsTextPropertySetByContent(nsIDOMNode        *aNode,
                                           nsIAtom           *aProperty, 
-                                          const nsAReadableString *aAttribute,
-                                          const nsAReadableString *aValue,
+                                          const nsAString   *aAttribute,
+                                          const nsAString   *aValue,
                                           PRBool            &aIsSet,
                                           nsIDOMNode       **aStyleNode,
-                                          nsAWritableString *outValue = nsnull) const;
+                                          nsAString *outValue = nsnull) const;
 
   /** style-based query returns PR_TRUE if (aProperty, aAttribute) is set in aSC.
     * WARNING: not well tested yet since we don't do style-based queries anywhere.
     */
   virtual void IsTextStyleSet(nsIStyleContext *aSC, 
                               nsIAtom         *aProperty, 
-                              const nsAReadableString  *aAttributes, 
+                              const nsAString  *aAttributes, 
                               PRBool          &aIsSet) const;
 
 
@@ -597,26 +597,26 @@ protected:
 
   // Methods for handling plaintext quotations
   NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsPlaintextQuotation(const nsAReadableString & aQuotedText,
+  NS_IMETHOD InsertAsPlaintextQuotation(const nsAString & aQuotedText,
                                         nsIDOMNode **aNodeInserted);
 
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
   NS_IMETHOD InsertFromTransferable(nsITransferable *transferable, 
-                                    const nsAReadableString & aContextStr,
-                                    const nsAReadableString & aInfoStr);
-  nsresult   InsertHTMLWithContext(const nsAReadableString & aInputString, 
-                                   const nsAReadableString & aContextStr, 
-                                   const nsAReadableString & aInfoStr);
-  nsresult   InsertHTMLWithCharsetAndContext(const nsAReadableString & aInputString,
-                                             const nsAReadableString & aCharset,
-                                             const nsAReadableString & aContextStr,
-                                             const nsAReadableString & aInfoStr);
+                                    const nsAString & aContextStr,
+                                    const nsAString & aInfoStr);
+  nsresult   InsertHTMLWithContext(const nsAString & aInputString, 
+                                   const nsAString & aContextStr, 
+                                   const nsAString & aInfoStr);
+  nsresult   InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
+                                             const nsAString & aCharset,
+                                             const nsAString & aContextStr,
+                                             const nsAString & aInfoStr);
   nsresult   StripFormattingNodes(nsIDOMNode *aNode, PRBool aOnlyList = PR_FALSE);
   nsresult   CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
-                                        const nsAReadableString & aInputString,
-                                        const nsAReadableString & aContextStr,
-                                        const nsAReadableString & aInfoStr,
+                                        const nsAString & aInputString,
+                                        const nsAString & aContextStr,
+                                        const nsAString & aInfoStr,
                                         nsCOMPtr<nsIDOMNode> *outFragNode,
                                         PRInt32 *outRangeStartHint,
                                         PRInt32 *outRangeEndHint);
@@ -647,8 +647,8 @@ protected:
   PRBool IsModifiable();
 
   /* helpers for block transformations */
-  nsresult MakeDefinitionItem(const nsAReadableString & aItemType);
-  nsresult InsertBasicBlock(const nsAReadableString & aBlockType);
+  nsresult MakeDefinitionItem(const nsAString & aItemType);
+  nsresult InsertBasicBlock(const nsAString & aBlockType);
   
   /* increase/decrease the font size of selection */
   nsresult RelativeFontChange( PRInt32 aSizeChange);
@@ -668,35 +668,35 @@ protected:
                                         PRInt32 aStartOffset,
                                         PRInt32 aEndOffset,
                                         nsIAtom *aProperty, 
-                                        const nsAReadableString *aAttribute,
-                                        const nsAReadableString *aValue);
+                                        const nsAString *aAttribute,
+                                        const nsAString *aValue);
   nsresult SetInlinePropertyOnNode( nsIDOMNode *aNode,
                                     nsIAtom *aProperty, 
-                                    const nsAReadableString *aAttribute,
-                                    const nsAReadableString *aValue);
+                                    const nsAString *aAttribute,
+                                    const nsAString *aValue);
 
   nsresult PromoteInlineRange(nsIDOMRange *inRange);
   nsresult SplitStyleAboveRange(nsIDOMRange *aRange, 
                                 nsIAtom *aProperty, 
-                                const nsAReadableString *aAttribute);
+                                const nsAString *aAttribute);
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
                                 PRInt32 *aOffset,
                                 nsIAtom *aProperty, 
-                                const nsAReadableString *aAttribute,
+                                const nsAString *aAttribute,
                                 nsCOMPtr<nsIDOMNode> *outLeftNode = nsnull,
                                 nsCOMPtr<nsIDOMNode> *outRightNode = nsnull);
   nsresult RemoveStyleInside(nsIDOMNode *aNode, 
                              nsIAtom *aProperty, 
-                             const nsAReadableString *aAttribute, 
+                             const nsAString *aAttribute, 
                              PRBool aChildrenOnly = PR_FALSE);
-  nsresult RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAReadableString *aAttribute);
+  nsresult RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAString *aAttribute);
 
   PRBool NodeIsProperty(nsIDOMNode *aNode);
-  PRBool HasAttr(nsIDOMNode *aNode, const nsAReadableString *aAttribute);
-  PRBool HasAttrVal(nsIDOMNode *aNode, const nsAReadableString *aAttribute, const nsAReadableString *aValue);
+  PRBool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
+  PRBool HasAttrVal(nsIDOMNode *aNode, const nsAString *aAttribute, const nsAString *aValue);
   PRBool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
   PRBool IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
-  PRBool IsOnlyAttribute(nsIDOMNode *aElement, const nsAReadableString *aAttribute);
+  PRBool IsOnlyAttribute(nsIDOMNode *aElement, const nsAString *aAttribute);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
@@ -726,12 +726,12 @@ protected:
   NS_IMETHOD IgnoreSpuriousDragEvent(PRBool aIgnoreSpuriousDragEvent) {mIgnoreSpuriousDragEvent = aIgnoreSpuriousDragEvent; return NS_OK;}
 
   nsresult GetInlinePropertyBase(nsIAtom *aProperty, 
-                             const nsAReadableString *aAttribute,
-                             const nsAReadableString *aValue,
+                             const nsAString *aAttribute,
+                             const nsAString *aValue,
                              PRBool *aFirst, 
                              PRBool *aAny, 
                              PRBool *aAll,
-                             nsAWritableString *outValue);
+                             nsAString *outValue);
   nsresult HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrIdOrClass);
   nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAtom * aTag);
 

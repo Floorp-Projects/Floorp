@@ -49,7 +49,7 @@
  ********************************************************/
  
 PRBool
-nsTextEditUtils::NodeIsType(nsIDOMNode *aNode, const nsAReadableString& aTag)
+nsTextEditUtils::NodeIsType(nsIDOMNode *aNode, const nsAString& aTag)
 {
   NS_PRECONDITION(aNode, "null node passed to nsHTMLEditUtils::NodeIsType");
   if (aNode)
