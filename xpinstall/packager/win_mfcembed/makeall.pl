@@ -93,11 +93,11 @@ if($inRedirIniURL eq "")
 }
 
 $seiFileNameGeneric   = "nsinstall.exe";
-$seiFileNameSpecific  = "mre-win32-installer.exe";
-$seiStubRootName = "mre-win32-stub-installer";
+$seiFileNameSpecific  = "mfcembed-win32-installer.exe";
+$seiStubRootName = "mfcembed-win32-stub-installer";
 $seiFileNameSpecificStub  = "$seiStubRootName.exe";
 $seuFileNameSpecific  = "MREUninstall.exe";
-$seuzFileNameSpecific = "mreuninstall.zip";
+$seuzFileNameSpecific = "mfcembeduninstall.zip";
 
 # set environment vars for use by other .pl scripts called from this script.
 if($versionParts[2] eq "0")
@@ -131,7 +131,7 @@ if(!(-d "$inStagePath"))
 }
 
 # List of components for to create xpi files from
-@gComponentList = ("mre");
+@gComponentList = ("mfcembed");
 
 if(VerifyComponents()) # return value of 0 means no errors encountered
 {
@@ -178,13 +178,13 @@ if(MakeXpiFile())
 }
 
 # Grab xpcom from mozilla build
-if(system("copy $inDistPath\\..\\install\\xpcom.xpi $inDistPath"))
+if(system("copy $inDistPath\\..\\install\\xpi\\xpcom.xpi $inDistPath"))
 {
-  die "\n Error: copy $inDistPath\\..\\install\\xpcom.xpi $inDistPath\n";
+  die "\n Error: copy $inDistPath\\..\\install\\xpi\\xpcom.xpi $inDistPath\n";
 }
-if(system("copy $inDistPath\\..\\install\\xpcom.xpi $inDistPath\\xpi"))
+if(system("copy $inDistPath\\..\\install\\xpi\\xpcom.xpi $inDistPath\\xpi"))
 {
-  die "\n Error: copy $inDistPath\\..\\install\\xpcom.xpi $inDistPath\\xpi\n";
+  die "\n Error: copy $inDistPath\\..\\install\\xpi\\xpcom.xpi $inDistPath\\xpi\n";
 }
 
 
