@@ -428,7 +428,8 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
    * Mac builds don't break by adding an extra variable
    * on the stack. -javi
    */
-#if defined(macintosh) || defined (XP_OS2)
+#if defined(macintosh) || defined (XP_OS2) \
+    || (defined(HPUX) && defined(__ia64))
   unsigned char *sieve;
   
   sieve = malloc(SIEVE_SIZE);
@@ -570,7 +571,8 @@ CLEANUP:
   mp_clear(&q);
   if (nTries)
     *nTries += i;
-#if defined(macintosh) || defined(XP_OS2)
+#if defined(macintosh) || defined(XP_OS2) \
+    || (defined(HPUX) && defined(__ia64))
   if (sieve != NULL) {
   	memset(sieve, 0, SIEVE_SIZE);
   	free (sieve);
