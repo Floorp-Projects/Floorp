@@ -33,8 +33,8 @@ export::
   $(MAKE_INSTALL) $(XPDIST)\idl\nsISupports.idl .\idl
   $(MAKE_INSTALL) $(XPDIST)\idl\nsrootidl.idl .\idl
 
-  $(MAKE_INSTALL) $(XPDIST)\include\npapi.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\npupp.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\plugin\npapi.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\plugin\npupp.h .\include
 
   $(MAKE_INSTALL) $(XPDIST)\include\java\jni.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\java\jni_md.h .\include
