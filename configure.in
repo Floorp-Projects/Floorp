@@ -3759,6 +3759,15 @@ MOZ_ARG_ENABLE_BOOL(ldap,
   MOZ_LDAP_XPCOM=1
     )
 
+
+dnl --enable-ldap-experimental
+dnl
+MOZ_ARG_ENABLE_BOOL(ldap-experimental,
+[  --enable-ldap-experimental
+                          Enable LDAP experimental features (default=no)],
+  MOZ_LDAP_XPCOM_EXPERIMENTAL=1
+    )
+
 dnl --disable-xul
 dnl
 MOZ_XUL=1
@@ -3961,6 +3970,7 @@ AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
 AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(MOZ_BUILD_XPFE)
 AC_SUBST(MOZ_LDAP_XPCOM)
+AC_SUBST(MOZ_LDAP_XPCOM_EXPERIMENTAL)
 
 AC_SUBST(XPCOM_USE_LEA)
 AC_SUBST(UNIX_CRASH_ON_ASSERT)
