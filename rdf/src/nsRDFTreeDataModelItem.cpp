@@ -16,15 +16,15 @@
  * Reserved.
  */
 
-#include "nsRDFTreeItem.h"
+#include "nsRDFTreeDataModelItem.h"
 
-const PRUint32 nsRDFTreeItem::kInvalidIndentationLevel = PRUint32(-1);
+const PRUint32 nsRDFTreeDataModelItem::kInvalidIndentationLevel = PRUint32(-1);
 
-static NS_DEFINE_IID(kITreeItemIID, NS_ITREEITEM_IID);
+static NS_DEFINE_IID(kITreeDMItemIID, NS_ITREEDMITEM_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFTreeItem::nsRDFTreeItem(nsRDFTreeModel& tree, RDF_Resource& resource)
+nsRDFTreeDataModelItem::nsRDFTreeDataModelItem(nsRDFTreeModel& tree, RDF_Resource& resource)
     : nsRDFDataModelItem(resource),
       mTree(tree),
       mOpen(PR_FALSE),
@@ -33,20 +33,20 @@ nsRDFTreeItem::nsRDFTreeItem(nsRDFTreeModel& tree, RDF_Resource& resource)
 }
 
 
-nsRDFTreeItem::~nsRDFTreeItem(void)
+nsRDFTreeDataModelItem::~nsRDFTreeDataModelItem(void)
 {
 }
 
 
 NS_IMETHODIMP
-nsRDFTreeItem::QueryInterface(const nsIID& iid, void** result)
+nsRDFTreeDataModelItem::QueryInterface(const nsIID& iid, void** result)
 {
     if (NULL == result)
         return NS_ERROR_NULL_POINTER;
 
     *result = NULL;
-    if (iid.Equals(kITreeItemIID)) {
-        *result = static_cast<nsITreeItem*>(this);
+    if (iid.Equals(kITreeDMItemIID)) {
+        *result = static_cast<nsITreeDMItem*>(this);
         nsRDFDataModelItem::AddRef(); // delegate to the superclass
         return NS_OK;
     }
@@ -60,14 +60,14 @@ nsRDFTreeItem::QueryInterface(const nsIID& iid, void** result)
 
 
 NS_IMETHODIMP
-nsRDFTreeItem::GetTriggerImage(nsIImage*& pImage, nsIImageGroup* pGroup) const
+nsRDFTreeDataModelItem::GetTriggerImage(nsIImage*& pImage, nsIImageGroup* pGroup) const
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP
-nsRDFTreeItem::GetIndentationLevel(PRUint32& indentation) const
+nsRDFTreeDataModelItem::GetIndentationLevel(PRUint32& indentation) const
 {
     // 1. ask the tree what the parent/child URI is.
     // 2. use it to walk back up to the root, counting as we go
