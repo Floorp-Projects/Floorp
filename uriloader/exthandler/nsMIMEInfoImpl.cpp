@@ -53,6 +53,13 @@ nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
 {
 }
 
+nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType) :
+    mMIMEType(aMIMEType),
+    mPreferredAction(nsIMIMEInfo::saveToDisk),
+    mAlwaysAskBeforeHandling(PR_TRUE)
+{
+}
+
 nsMIMEInfoBase::~nsMIMEInfoBase()
 {
 }
@@ -130,13 +137,6 @@ nsMIMEInfoBase::GetMIMEType(nsACString& aMIMEType)
         return NS_ERROR_NOT_INITIALIZED;
 
     aMIMEType = mMIMEType;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEInfoBase::SetMIMEType(const nsACString& aMIMEType)
-{
-    mMIMEType = aMIMEType;
     return NS_OK;
 }
 

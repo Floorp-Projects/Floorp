@@ -106,7 +106,7 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 }
 
 
-nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIMEInfo **_retval) {
+nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsMIMEInfoBeOS**_retval) {
 
 	LOG(("-- nsOSHelperAppService::SetMIMEInfoForType: %s\n",aMIMEType));
 
@@ -186,7 +186,7 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 }
 
 nsresult nsOSHelperAppService::GetMimeInfoFromExtension(const char *aFileExt,
-        nsIMIMEInfo ** _retval) {
+        nsMIMEInfoBeOS ** _retval) {
 	// if the extension is null, return immediately
 	if (!aFileExt || !*aFileExt)
 		return NS_ERROR_INVALID_ARG;
@@ -234,7 +234,7 @@ nsresult nsOSHelperAppService::GetMimeInfoFromExtension(const char *aFileExt,
 }
 
 nsresult nsOSHelperAppService::GetMimeInfoFromMIMEType(const char *aMIMEType,
-        nsIMIMEInfo ** _retval) {
+        nsMIMEInfoBeOS ** _retval) {
 	// if the mime type is null, return immediately
 	if (!aMIMEType || !*aMIMEType)
 		return NS_ERROR_INVALID_ARG;
@@ -266,7 +266,7 @@ already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool* aFound)
 {
   *aFound = PR_TRUE;
-  nsIMIMEInfo* mi = nsnull;
+  nsMIMEInfoBeOS* mi = nsnull;
   const nsCString& flatType = PromiseFlatCString(aMIMEType);
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
   GetMimeInfoFromMIMEType(flatType.get(), &mi);
@@ -280,7 +280,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACS
     return mi;
 
   *aFound = PR_FALSE;
-  mi = new nsMIMEInfoBeOS(flatType.get());
+  mi = new nsMIMEInfoBeOS(flatType);
   if (!mi)
     return nsnull;
   NS_ADDREF(mi);

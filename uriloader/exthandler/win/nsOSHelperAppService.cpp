@@ -366,7 +366,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const char 
     nsAutoString description;
     PRBool found = GetValueString(hKey, NULL, description);
 
-    nsMIMEInfoWin* mimeInfo = new nsMIMEInfoWin(typeToUse.get());
+    nsMIMEInfoWin* mimeInfo = new nsMIMEInfoWin(typeToUse);
     if (mimeInfo)
     {
       NS_ADDREF(mimeInfo);
@@ -464,7 +464,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     }
     if (!miByExt && !mi) {
       *aFound = PR_FALSE;
-      mi = new nsMIMEInfoWin(flatType.get());
+      mi = new nsMIMEInfoWin(flatType);
       if (mi) {
         NS_ADDREF(mi);
         if (!aFileExt.IsEmpty())

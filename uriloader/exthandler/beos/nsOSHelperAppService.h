@@ -45,6 +45,8 @@
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
 
+class nsMIMEInfoBeOS;
+
 class nsOSHelperAppService : public nsExternalHelperAppService
 {
 public:
@@ -64,9 +66,9 @@ public:
 	virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
 
 protected:
-	nsresult SetMIMEInfoForType(const char *aMIMEType, nsIMIMEInfo **_retval);
-	nsresult GetMimeInfoFromExtension(const char *aFileExt, nsIMIMEInfo **_retval);
-	nsresult GetMimeInfoFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval);
+	nsresult SetMIMEInfoForType(const char *aMIMEType, nsMIMEInfoBeOS **_retval);
+	nsresult GetMimeInfoFromExtension(const char *aFileExt, nsMIMEInfoBeOS **_retval);
+	nsresult GetMimeInfoFromMIMEType(const char *aMIMEType, nsMIMEInfoBeOS **_retval);
 };
 
 #endif // nsOSHelperAppService_h__
