@@ -34,6 +34,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULElement.h"
+#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsIWindowMediator.h"
@@ -48,6 +49,24 @@
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 //*****************************************************************************
+//*** nsSiteWindow2 declaration
+//*****************************************************************************
+
+class nsSiteWindow2 : public nsIEmbeddingSiteWindow2
+{
+public:
+  nsSiteWindow2(nsContentTreeOwner *aAggregator);
+  virtual ~nsSiteWindow2();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIEMBEDDINGSITEWINDOW
+  NS_DECL_NSIEMBEDDINGSITEWINDOW2
+
+private:
+  nsContentTreeOwner *mAggregator;
+};
+
+//*****************************************************************************
 //***    nsContentTreeOwner: Object Management
 //*****************************************************************************
 
@@ -55,11 +74,15 @@ nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull),
    mPrimary(fPrimary), mContentTitleSetting(PR_FALSE), 
    mChromeFlags(nsIWebBrowserChrome::CHROME_ALL)
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
+
+  // note if this fails, QI on nsIEmbeddingSiteWindow2 will simply fail
+  mSiteWindow2 = new nsSiteWindow2(this);
 }
 
 nsContentTreeOwner::~nsContentTreeOwner()
 {
+  delete mSiteWindow2;
 }
 
 //*****************************************************************************
@@ -75,6 +98,7 @@ NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow2, mSiteWindow2)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -665,5 +689,146 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
 nsXULWindow* nsContentTreeOwner::XULWindow()
 {
    return mXULWindow;
+}
+
+//*****************************************************************************
+//*** nsSiteWindow2 implementation
+//*****************************************************************************
+
+nsSiteWindow2::nsSiteWindow2(nsContentTreeOwner *aAggregator)
+{
+  NS_INIT_REFCNT();
+  mAggregator = aAggregator;
+}
+
+nsSiteWindow2::~nsSiteWindow2()
+{
+}
+
+NS_IMPL_ADDREF_USING_AGGREGATOR(nsSiteWindow2, mAggregator);
+NS_IMPL_RELEASE_USING_AGGREGATOR(nsSiteWindow2, mAggregator);
+
+NS_INTERFACE_MAP_BEGIN(nsSiteWindow2)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow2)
+NS_INTERFACE_MAP_END_AGGREGATED(mAggregator)
+
+NS_IMETHODIMP
+nsSiteWindow2::SetDimensions(PRUint32 aFlags,
+                    PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY)
+{
+  // XXX we're ignoring aFlags
+  return mAggregator->SetPositionAndSize(aX, aY, aCX, aCY, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsSiteWindow2::GetDimensions(PRUint32 aFlags,
+                    PRInt32 *aX, PRInt32 *aY, PRInt32 *aCX, PRInt32 *aCY)
+{
+  // XXX we're ignoring aFlags
+  return mAggregator->GetPositionAndSize(aX, aY, aCX, aCY);
+}
+
+NS_IMETHODIMP
+nsSiteWindow2::SetFocus(void)
+{
+  nsXULWindow *window = mAggregator->XULWindow();
+  if (window) {
+    nsCOMPtr<nsIDocShell> docshell;
+    window->GetDocShell(getter_AddRefs(docshell));
+    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(docshell));
+    if (domWindow)
+      domWindow->Focus();
+  }
+  return NS_OK;
+}
+
+/* this implementation focuses another window. if there isn't another
+   window to focus, we do nothing. */
+NS_IMETHODIMP
+nsSiteWindow2::Blur(void)
+{
+  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+  nsCOMPtr<nsIXULWindow>        xulWindow;
+  PRBool                        more, foundUs;
+  nsXULWindow                  *ourWindow = mAggregator->XULWindow();
+
+  {
+    nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+    if (windowMediator)
+      windowMediator->GetZOrderXULWindowEnumerator(0, PR_TRUE,
+                        getter_AddRefs(windowEnumerator));
+  }
+
+  if (!windowEnumerator)
+    return NS_ERROR_FAILURE;
+
+  // step through the top-level windows
+  foundUs = PR_FALSE;
+  windowEnumerator->HasMoreElements(&more);
+  while (more) {
+
+    nsCOMPtr<nsISupports>  nextWindow;
+    nsCOMPtr<nsIXULWindow> nextXULWindow;
+
+    windowEnumerator->GetNext(getter_AddRefs(nextWindow));
+    nextXULWindow = do_QueryInterface(nextWindow);
+
+    // got it!(?)
+    if (foundUs) {
+      xulWindow = nextXULWindow;
+      break;
+    }
+
+    // remember the very first one, in case we have to wrap
+    if (!xulWindow)
+      xulWindow = nextXULWindow;
+
+    // look for us
+    if (nextXULWindow == ourWindow)
+      foundUs = PR_TRUE;
+
+    windowEnumerator->HasMoreElements(&more);
+  }
+
+  // change focus to the window we just found
+  if (xulWindow) {
+    nsCOMPtr<nsIDocShell> docshell;
+    xulWindow->GetDocShell(getter_AddRefs(docshell));
+    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(docshell));
+    if (domWindow)
+      domWindow->Focus();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSiteWindow2::GetVisibility(PRBool *aVisibility)
+{
+  return mAggregator->GetVisibility(aVisibility);
+}
+
+NS_IMETHODIMP
+nsSiteWindow2::SetVisibility(PRBool aVisibility)
+{
+  return mAggregator->SetVisibility(aVisibility);
+}
+
+NS_IMETHODIMP
+nsSiteWindow2::GetTitle(PRUnichar * *aTitle)
+{
+  return mAggregator->GetTitle(aTitle);
+}
+
+NS_IMETHODIMP
+nsSiteWindow2::SetTitle(const PRUnichar * aTitle)
+{
+  return mAggregator->SetTitle(aTitle);
+}
+
+NS_IMETHODIMP
+nsSiteWindow2::GetSiteWindow(void **aSiteWindow)
+{
+  return mAggregator->GetParentNativeWindow(aSiteWindow);
 }
 

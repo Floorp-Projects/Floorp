@@ -42,6 +42,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
@@ -133,27 +134,30 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
 {
   nsresult rv;
-   NS_ENSURE_ARG_POINTER(aSink);
 
-   if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
-      rv = EnsurePrompter();
-      if (NS_FAILED(rv)) return rv;
-      return mPrompter->QueryInterface(aIID, aSink);
-   }   
-   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
-      rv = EnsureAuthPrompter();
-      if (NS_FAILED(rv)) return rv;
-      return mAuthPrompter->QueryInterface(aIID, aSink);
-   }
-   if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) && 
-      NS_SUCCEEDED(EnsureContentTreeOwner()) &&
-      NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
-      return NS_OK;
-   else
-      return QueryInterface(aIID, aSink);
+  NS_ENSURE_ARG_POINTER(aSink);
 
-   NS_IF_ADDREF(((nsISupports*)*aSink));
-   return NS_OK;   
+  if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
+    rv = EnsurePrompter();
+    if (NS_FAILED(rv)) return rv;
+    return mPrompter->QueryInterface(aIID, aSink);
+  }   
+  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+    rv = EnsureAuthPrompter();
+    if (NS_FAILED(rv)) return rv;
+    return mAuthPrompter->QueryInterface(aIID, aSink);
+  }
+  if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) && 
+    NS_SUCCEEDED(EnsureContentTreeOwner()) &&
+    NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
+    return NS_OK;
+
+  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow2)) && 
+    NS_SUCCEEDED(EnsureContentTreeOwner()) &&
+    NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
+    return NS_OK;
+
+  return QueryInterface(aIID, aSink);
 }
 
 //*****************************************************************************
