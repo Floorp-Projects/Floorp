@@ -547,7 +547,66 @@ mozXMLTermMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 NS_IMETHODIMP
 mozXMLTermMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  return NS_OK;
+  nsresult result;
+
+  if (!aMouseEvent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aMouseEvent);
+  if (!mouseEvent) {
+    // Non-mouse event passed; do not consume it
+    return NS_OK;
+  }
+
+  PRUint16 buttonCode = 0;
+  mouseEvent->GetButton(&buttonCode);
+
+  PRInt32 screenX, screenY;
+  result = mouseEvent->GetScreenX(&screenX);
+  result = mouseEvent->GetScreenY(&screenY);
+
+  XMLT_LOG(mozXMLTermMouseListener::MouseClick,50, ("buttonCode=%d\n",
+                                                    buttonCode));
+
+#ifndef NO_WORKAROUND
+  // Without this workaround, clicking on the xmlterm window to give it
+  // focus fails position the cursor at the end of the last line
+  // (For some reason, the MouseDown event causes the cursor to be positioned
+  // in the line above the location of the mouse click
+
+  // Get selection
+  nsCOMPtr<nsIPresShell> presShell;
+  result = mXMLTerminal->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(result) || !presShell)
+    return NS_OK; // Do not consume mouse event
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  result = presShell->GetSelection(SELECTION_NORMAL,
+                                     getter_AddRefs(selection));
+
+  if (NS_FAILED(result) || !selection)
+    return NS_OK; // Do not consume mouse event
+
+  // Locate selection range
+  nsCOMPtr<nsIDOMNSUIEvent> uiEvent (do_QueryInterface(mouseEvent));
+  if (!uiEvent)
+    return NS_OK; // Do not consume mouse event
+
+  nsCOMPtr<nsIDOMNode> parentNode;
+  result = uiEvent->GetRangeParent(getter_AddRefs(parentNode));
+  if (NS_FAILED(result) || !parentNode)
+    return NS_OK; // Do not consume mouse event
+
+  PRInt32 offset = 0;
+  result = uiEvent->GetRangeOffset(&offset);
+  if (NS_FAILED(result))
+    return NS_OK; // Do not consume mouse event
+
+  (void)selection->Collapse(parentNode, offset);
+#endif // !NO_WORKAROUND
+
+  return NS_OK; // Do not consume mouse event
 }
 
 

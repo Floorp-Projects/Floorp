@@ -225,6 +225,35 @@
         return SetPrompt(field.value);
       }
 
+      // Display more tips
+      function MoreTips() {
+        dump("xmlterm: MoreTips\n");
+
+        var moreTipsElement = document.getElementById('moretips');
+        var moreTipsFrame = document.getElementById('moretipsframe');
+
+        if (moreTipsFrame) {
+           // Remove more tips iframe
+           document.body.removeChild(moreTipsFrame);
+           moreTipsElement.firstChild.data = "More tips/news";
+        } else {
+           // Create more tips iframe
+           moreTipsFrame = document.createElement("iframe");
+           moreTipsFrame.setAttribute('ID', 'moretipsframe');
+           moreTipsFrame.setAttribute('CLASS', 'moretipsframe');
+           moreTipsFrame.setAttribute('WIDTH', '100%');
+           moreTipsFrame.setAttribute('SRC', 'http://xmlterm.org/newstips.html');
+
+           dump(moreTipsFrame);
+
+           // Insert more tips iframe in body
+           var sessionElement = document.getElementById('session');
+           document.body.insertBefore(moreTipsFrame, sessionElement);
+           moreTipsElement.firstChild.data = "Hide tips/news";
+        }
+        return false;
+      }
+
       // onLoad event handler
       function LoadHandler() {
         dump("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
@@ -276,8 +305,6 @@
         //contentWindow.xmlterm = xmlterm;
 
         //dump(contentWindow.xmlterm);
-
-        return (false);
 
         // The following code is for testing IFRAMEs only
         dump("[Main] "+window+"\n");
@@ -340,11 +367,19 @@
           <INPUT TYPE="button" VALUE="SetPrompt"  onClick="return SetPromptValue();">
           <BR>
           Input Value:
-          <INPUT SIZE=50 TYPE="text" ID="InputValue" VALUE=""
-                  onFocus="return FormFocus();" onBlur="return FormBlur();">
+          <INPUT SIZE=50 TYPE="text" ID="InputValue"
+                 VALUE="<img src='http:/dmoz.org/img/lizard2a.gif'>"
+                 onFocus="return FormFocus();" onBlur="return FormBlur();">
         </FORM>
     </TABLE>
 
+<SPAN CLASS="tips" ID="tips">
+<B>Tip:</B> Click the SetPrompt button to use a cool Mozilla prompt from dmoz.org!
+</SPAN>
+<SPAN CLASS="moretips" ID="moretips" onClick="return MoreTips();">
+More tips/news
+</SPAN>
+<P>
 <!--
     <IFRAME NAME="iframet" SRC="chrome://xmlterm/content/xmltblank.html"
             FRAMEBORDER=0>
