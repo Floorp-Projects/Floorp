@@ -66,15 +66,12 @@ nsMultiMixedConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *
     //  and OnStopRequest() call combinations. We call of series of these for each sub-part
     //  in the raw stream.
     mFinalListener = aListener;
-    NS_ADDREF(mFinalListener);
-
     return NS_OK;
 }
 
-
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
+nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                                   nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
     nsresult rv;
     char *buffer = nsnull, *rootMemPtr = nsnull;
@@ -90,47 +87,34 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         nsCOMPtr<nsIHTTPChannel> httpChannel;
         rv = channel->QueryInterface(NS_GET_IID(nsIHTTPChannel), getter_AddRefs(httpChannel));
         if (NS_SUCCEEDED(rv)) {
-            nsIAtom *header = NS_NewAtom("content-type");
+            nsCOMPtr<nsIAtom> header = NS_NewAtom("content-type");
             if (!header) return NS_ERROR_OUT_OF_MEMORY;
             rv = httpChannel->GetResponseHeader(header, getter_Copies(delimiter));
-            NS_RELEASE(header);
             if (NS_FAILED(rv)) return rv;
-
-            if (!delimiter) return NS_ERROR_FAILURE;
-            bndry = PL_strstr(delimiter, "boundary");
-            if (!bndry) return NS_ERROR_FAILURE;
-
-            bndry = PL_strchr(bndry, '=');
-            if (!bndry) return NS_ERROR_FAILURE;
-
-            bndry++; // move past the equals sign
-
-            nsCString boundaryString(bndry);
-            boundaryString.StripWhitespace();
-            mBoundaryCStr = boundaryString.ToNewCString();
-            if (!mBoundaryCStr) return NS_ERROR_OUT_OF_MEMORY;
-            mBoundaryStrLen = boundaryString.Length();
         } else {
             // try asking the channel directly
             rv = channel->GetContentType(getter_Copies(delimiter));
             if (NS_FAILED(rv)) return rv;
-
-            if (!delimiter) return NS_ERROR_FAILURE;
-            bndry = PL_strstr(delimiter, "boundary");
-            if (!bndry) return NS_ERROR_FAILURE;
-
-            bndry = PL_strchr(bndry, '=');
-            if (!bndry) return NS_ERROR_FAILURE;
-
-            bndry++; // move past the equals sign
-
-            nsCString boundaryString(bndry);
-            boundaryString.StripWhitespace();
-            mBoundaryCStr = boundaryString.ToNewCString();
-            if (!mBoundaryCStr) return NS_ERROR_OUT_OF_MEMORY;
-            mBoundaryStrLen = boundaryString.Length();
         }
+        if (!delimiter) return NS_ERROR_FAILURE;
+        bndry = PL_strstr(delimiter, "boundary");
+        if (!bndry) return NS_ERROR_FAILURE;
+
+        bndry = PL_strchr(bndry, '=');
+        if (!bndry) return NS_ERROR_FAILURE;
+
+        bndry++; // move past the equals sign
+
+        nsCAutoString boundaryString(bndry);
+        boundaryString.StripWhitespace();
+        // we're not using the beginning "--" to delimit boundaries
+        // so just make them part of the boundary delimiter.
+        boundaryString.Insert("--", 0, 2);                 ;
+        mBoundaryCStr = boundaryString.ToNewCString();
+        if (!mBoundaryCStr) return NS_ERROR_OUT_OF_MEMORY;
+        mBoundaryStrLen = boundaryString.Length();
     }
+
 
     rv = inStr->Available(&bufLen);
     if (NS_FAILED(rv)) return rv;
@@ -142,173 +126,222 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     if (NS_FAILED(rv) || read == 0) return rv;
     buffer[bufLen] = '\0';
 
-    // Break up the stream into it sub parts and send off an On*() triple combination
-    // for each subpart.
+    if (mBufferedData.Length() > 0) {
+        mBufferedData.Append(buffer);
+        nsAllocator::Free(buffer);
+        buffer = mBufferedData.ToNewCString();
+    }
+    char *cursor = buffer;
+    PRBool done = PR_FALSE;
 
-    // This design of HTTP's multipart/x-mixed-replace (see nsMultiMixedConv.h for more info)
-    // was flawed from the start. This parsing makes the following, poor, assumption about
-    // the data coming from the server:
-    // 
-    //  - The server will never send a partial boundary token
-    // 
-    // This assumption is necessary in order for this type to be handled. Also note that
-    // the server doesn't send any Content-Length information.
-    char *boundaryLoc = PL_strstr(buffer, mBoundaryCStr);
-    do {
-        if (boundaryLoc) {
-            // check for another
-            char *boundaryLoc2 = PL_strstr(boundaryLoc + mBoundaryStrLen, mBoundaryCStr);
-
-            if (!mBoundaryStart) {
-                // see if this is the end
-                if (*(boundaryLoc + mBoundaryStrLen + 1) == '-')
-                    break;
-
-                mPartCount++;
-                // This is the start of a part. We want to build up a new stub
-                // channel and call through to our listener.
-                mBoundaryStart = PR_TRUE;
-                nsCString contentTypeStr;
-                PRInt32 contentLength = -1;
-
-                NS_IF_RELEASE(mPartChannel);
-
-                // First build up a dummy uri.
-                nsIURI *partURI = nsnull;
-                rv = BuildURI(channel, &partURI);
-                if (NS_FAILED(rv)) return rv;
-
-                // check for any headers in this part
-                char *headersEnd = PL_strstr(boundaryLoc + mBoundaryStrLen, "\n\n");
-                if (headersEnd) {
-                    char *headerStart = boundaryLoc + mBoundaryStrLen + 1;
-                    char *headerCStr = nsnull;
-                    while ( (headerCStr = PL_strchr(headerStart, '\n')) ) {
-                        *headerCStr = '\0';
-
-                        char *colon = PL_strchr(headerStart, ':');
-                        if (colon) {
-                            *colon = '\0';
-                            nsCString headerStr(headerStart);
-                            headerStr.ToLowerCase();
-                            nsIAtom *header = NS_NewAtom(headerStr.GetBuffer());
-                            if (!header) return NS_ERROR_OUT_OF_MEMORY;
-                            *colon = ':';
-
-                            nsCString headerVal(colon + 1);
-                            headerVal.StripWhitespace();
-
-                            if (headerStr.Equals("content-type")) {
-                                contentTypeStr = headerVal;
-                            } else if (headerStr.Equals("content-length")) {
-                                contentLength = atoi(headerVal);
-                            } else if (headerStr.Equals("set-cookie")) {
-                                // setting headers on the HTTP channel
-                                // causes HTTP to notify, again if necessary,
-                                // it's header observers.
-                                nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel, &rv);
-                                if (NS_SUCCEEDED(rv)) {
-                                    rv = httpChannel->SetResponseHeader(header, headerVal);
-                                    // XXX probably don't want to fail so hard.
-                                    if (NS_FAILED(rv)) return rv;
-                                }
-                            }
-                            NS_RELEASE(header);
-                        }
-                        
-                        *headerCStr = '\n';
-                        if (headerCStr[1] == '\n') break;
-                        // increment and move on.
-                        headerStart = headerCStr + 1;
-                    }
+    while (cursor) {
+        char *boundary = PL_strstr(cursor, mBoundaryCStr);
+        if (boundary) {
+            mFoundBoundary = PR_TRUE;
+            if (cursor == boundary) {
+                if (!mNewPart) {
+                    // we were processing a part and ran into a boundary
+                    // thus that makes it an ending boundary. finish this
+                    // part and move on.
+                    rv = mFinalListener->OnStopRequest(mPartChannel, context, NS_OK, nsnull);
+                    if (NS_FAILED(rv)) break;
+                    mPartChannel = 0;
+                }
+                // the boundary occurs at the beginning of the data.
+                // we obviously don't want to set it to null, instead
+                // set the cursor to the beginnning of the real data
+                // and look for another boundary after that.
+                cursor += mBoundaryStrLen;
+                if (*cursor == '-') {
+                    // we've reached the end of the line
+                    done = PR_TRUE;
+                } else {
+                    // we just passed a boundary, therefore we're guaranteed to be
+                    // processing a new part.
+                    mNewPart = PR_TRUE;
+                    // see if there's another boundary.
+                    boundary = PL_strstr(cursor, mBoundaryCStr);
+                    if (boundary) *boundary = '\0';
                 }
 
-                NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-                if (NS_FAILED(rv)) return rv;
-
-                if (contentTypeStr.Length() < 1)
-                    contentTypeStr = "text/html"; // default to text/html, that's all we'll ever see anyway
-                rv = serv->NewInputStreamChannel(partURI, contentTypeStr.GetBuffer(), contentLength,
-                                                 nsnull, nsnull, nsnull, &mPartChannel);
-                NS_RELEASE(partURI);
-                if (NS_FAILED(rv)) return rv;
-
-                // Let's start off the load. NOTE: we don't forward on the channel passed
-                // into our OnDataAvailable() as it's the root channel for the raw stream.
-                rv = mFinalListener->OnStartRequest(mPartChannel, ctxt);
-                if (NS_FAILED(rv)) return rv;
-
-
-                // pull the boundary loc, and headers from the stream.
-                if (headersEnd)
-                    // even though we're at the end of the headers, there might not be any data
-                    // so be sure to check for null byte before sending it off. the parser doesn't
-                    // like parsing zero length streams. :).
-                    boundaryLoc = headersEnd + 2;
-                else
-                    boundaryLoc += mBoundaryStrLen;
-
-                if (boundaryLoc2) {
-                    // there was another boundary loc (signifying the end of this part)
-                    // in the buffer. Build up this hunk and fire it off.
-                    mBoundaryStart = PR_FALSE;
-                    char tmpChar = *boundaryLoc2;
-                    *boundaryLoc2 = '\0';
-
-                    rv = SendData(boundaryLoc, mPartChannel, ctxt);
-                    if (NS_FAILED(rv)) return rv;
-
-                    *boundaryLoc2 = tmpChar;
-
-                    rv = mFinalListener->OnStopRequest(mPartChannel, ctxt, NS_OK, nsnull);
-                    if (NS_FAILED(rv)) return rv;
-
-                    // increment the buffer and start over.
-                    buffer = boundaryLoc2;
-                    
-                    boundaryLoc = PL_strstr(buffer, mBoundaryCStr);
-                } else {
-                    // fire off what we've got
-                    buffer = boundaryLoc;
-
-                    // null byte check
-                    if (*buffer) { 
-                        rv = SendData(buffer, mPartChannel, ctxt);
-                        if (NS_FAILED(rv)) return rv;
-                    }
-                    boundaryLoc = PL_strstr(buffer, mBoundaryCStr);
+                if (*cursor == '\r') {
+                    if (cursor[1] == '\n')
+                        cursor++; // if it's a CRLF, move two places.
+                    cursor++;
                 }
             } else {
-                // this boundaryLoc is an ending delimiter.
-                mBoundaryStart = PR_FALSE;
-                char tmpChar = *boundaryLoc;
-                *boundaryLoc = '\0';
+                *boundary = '\0';
+            }
+        } else if (!mFoundBoundary) {
+            // we haven't seen a boundary yet, buffer this up.
+            mBufferedData = cursor;
+            break; // XXX do more here.
+        }
+        if (mNewPart) {
+            // check for a newline char, then figure out if
+            // we're dealing w/ CRLFs as line delimiters.
+            // unfortunately we can see both :(
+            char *newLine = PL_strstr(cursor, "\r\n");
+            if (!newLine) {
+                // try straight newline char
+                newLine = PL_strchr(cursor, '\n');
+            } else {
+                // we're dealing w/ CRLFs char combos
+                mLineFeedIncrement = 2;
+            }
+            //if ( (newLine > cursor) && (newLine[-1] == '\r') ) {
+            //    mLineFeedIncrement = 2;
+            //}
+            char *headerStart = cursor;
+            while (newLine) {
+                *newLine = '\0';
+                char *colon = PL_strchr(headerStart, ':');
+                if (colon) {
+                    // Header name
+                    *colon = '\0';
+                    nsCAutoString headerStr(headerStart);
+                    headerStr.StripWhitespace();
+                    headerStr.ToLowerCase();
+                    nsCOMPtr<nsIAtom> header = NS_NewAtom(headerStr.GetBuffer());
+                    if (!header) {
+                        nsAllocator::Free(buffer);
+                        return NS_ERROR_OUT_OF_MEMORY;
+                    }
+                    *colon = ':';
+                    // END Header name
 
-                if (*buffer) {
-                    rv = SendData(buffer, mPartChannel, ctxt);
-                    if (NS_FAILED(rv)) return rv;
+                    // Header value
+                    nsCAutoString headerVal(colon + 1);
+                    headerVal.StripWhitespace();
+                    // END Header value
+
+                    // examine header
+                    if (headerStr.Equals("content-type")) {
+                        mContentType = headerVal;
+                    } else if (headerStr.Equals("content-length")) {
+                        mContentLength = atoi(headerVal);
+                    } else if (headerStr.Equals("set-cookie")) {
+                        // setting headers on the HTTP channel
+                        // causes HTTP to notify, again if necessary,
+                        // it's header observers.
+                        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel, &rv);
+                        if (NS_SUCCEEDED(rv)) {
+                            rv = httpChannel->SetResponseHeader(header, headerVal);
+                            if (NS_FAILED(rv)) {
+                                nsAllocator::Free(buffer);
+                                return rv;
+                            }
+                        }
+                    }
                 }
+                if (    (newLine[mLineFeedIncrement] == '\n')
+                     || (newLine[mLineFeedIncrement] == '\r')
+                     || (newLine == cursor) ) {
+                    // that's it we've processed all the headers and 
+                    // this is no longer a mNewPart
+                    mNewPart = PR_FALSE;
 
-                *boundaryLoc = tmpChar;
+                    // First build up a dummy uri.
+                    nsCOMPtr<nsIURI> partURI;
+                    rv = BuildURI(channel, getter_AddRefs(partURI));
+                    if (NS_FAILED(rv)) {
+                        nsAllocator::Free(buffer);
+                        return rv;
+                    }
 
-                rv = mFinalListener->OnStopRequest(mPartChannel, ctxt, NS_OK, nsnull);
-                if (NS_FAILED(rv)) return rv;
+                    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+                    if (NS_FAILED(rv)) {
+                        nsAllocator::Free(buffer);
+                        return rv;
+                    }
 
-                buffer = boundaryLoc;
-                boundaryLoc = PL_strstr(buffer, mBoundaryCStr);
+                    if (mContentType.Length() < 1)
+                        mContentType = "text/html"; // default to text/html, that's all we'll ever see anyway
+                    rv = serv->NewInputStreamChannel(partURI, mContentType.GetBuffer(), mContentLength,
+                                                     nsnull, nsnull, nsnull, getter_AddRefs(mPartChannel));
+                    if (NS_FAILED(rv)) {
+                        nsAllocator::Free(buffer);
+                        return rv;
+                    }
+
+                    // Let's start off the load. NOTE: we don't forward on the channel passed
+                    // into our OnDataAvailable() as it's the root channel for the raw stream.
+                    rv = mFinalListener->OnStartRequest(mPartChannel, context);
+                    if (NS_FAILED(rv)) {
+                        nsAllocator::Free(buffer);
+                        return rv;
+                    }
+                    break;
+                }
+                headerStart = newLine + mLineFeedIncrement;
+                newLine = PL_strstr(headerStart, "\r\n");
+                if (!newLine)
+                    newLine = PL_strchr(headerStart, '\r');
+            } // end while (newLine)
+
+            if (mNewPart) {
+                // we broke out because we have incomplete headers
+                // buffer the data and fall out.
+                if (*headerStart)
+                    mBufferedData = headerStart;
+                break;
+            } else {
+                mPartCount++;
+                // we broke out because we reached two linefeeds (noting
+                // the end of the header section. move the cursor over the
+                // linefeeds into the data and start processing it.
+                if (cursor == newLine) {
+                    // all we got was a newline in this read. kick out
+                    break;
+                } else {
+                    cursor = newLine + mLineFeedIncrement + 1;
+                }
+            }
+        } // end mNewPart
+
+        // after processing headers, it's possible that cursor points to
+        // a null byte. If it does don't send it off because it's meaningless.
+        if (!*cursor)
+            break; // XXX more to do here.
+
+        // Check for a completed part
+        if (!done) {
+            // If we've gotten this far we know we're processing a hunk of data
+            // and that all the headers for this part have been processed.
+            // Just send off the data.
+            SendData(cursor, mPartChannel, context);
+        }
+
+        if (boundary) {
+            // We know this is the end of a part. Set mNewPart to TRUE
+            // so anymore data we receive gets kicked into the mNewPart
+            // cycle, tell the listener we're done w/ this part, reset
+            // the partChannel (mNewPart will create a new one if we
+            // get that far), and see if we're completely done.
+            mNewPart = PR_TRUE;
+            rv = mFinalListener->OnStopRequest(mPartChannel, context, NS_OK, nsnull);
+            if (NS_FAILED(rv)) break;
+
+            mPartChannel = 0; // kill this channel. it's done
+            if (done || (*(boundary+mBoundaryStrLen+1) == '-') ) {
+                // it's completely over
+                break;
+            } else {
+                cursor = boundary + mBoundaryStrLen;
+            }
+            if (*cursor == '\r') {
+                if (*cursor == '\n')
+                    cursor++; // if it's a CRLF move two places.
+                cursor++;
             }
         } else {
-            // null byte check
-            if (*buffer) { 
-                rv = SendData(buffer, mPartChannel, ctxt);
-                if (NS_FAILED(rv)) return rv;
-            }
+            // no more data. kick out
+            break; 
         }
-    } while (boundaryLoc);
+    } // end while (cursor)
+    nsAllocator::Free(buffer);
 
-    nsAllocator::Free(rootMemPtr);
-
-    return NS_OK;
+    return rv;
 }
 
 
@@ -328,21 +361,20 @@ nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
 // nsMultiMixedConv methods
 nsMultiMixedConv::nsMultiMixedConv() {
     NS_INIT_ISUPPORTS();
-    mFinalListener      = nsnull;
     mBoundaryCStr       = nsnull;
-    mPartChannel        = nsnull;
     mBoundaryStrLen     = mPartCount = 0;
+    mNewPart            = PR_TRUE;
+    mFoundBoundary      = PR_FALSE;
+    mContentLength      = -1;
+    mLineFeedIncrement  = 1;
 }
 
 nsMultiMixedConv::~nsMultiMixedConv() {
-    NS_IF_RELEASE(mFinalListener);
     if (mBoundaryCStr) nsAllocator::Free(mBoundaryCStr);
-    NS_IF_RELEASE(mPartChannel);
 }
 
 nsresult
 nsMultiMixedConv::Init() {
-    mBoundaryStart = PR_FALSE;
     return NS_OK;
 }
 
@@ -351,49 +383,39 @@ nsresult
 nsMultiMixedConv::SendData(const char *aBuffer, nsIChannel *aChannel, nsISupports *aCtxt) {
 
     nsresult rv;
-    nsISupports *stringStreamSup = nsnull;
-    rv = NS_NewStringInputStream(&stringStreamSup, aBuffer);
+    nsCOMPtr<nsISupports> inStreamSup;
+    rv = NS_NewStringInputStream(getter_AddRefs(inStreamSup), aBuffer);
     if (NS_FAILED(rv)) return rv;
 
-    nsIInputStream *inStr = nsnull;
-    rv = stringStreamSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inStr);
-    NS_RELEASE(stringStreamSup);
+    nsCOMPtr<nsIInputStream> inStream = do_QueryInterface(inStreamSup, &rv);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 len;
-    rv = inStr->Available(&len);
+    rv = inStream->Available(&len);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mFinalListener->OnDataAvailable(aChannel, aCtxt, inStr, 0, len);
-    NS_RELEASE(inStr);
-    if (NS_FAILED(rv)) return rv;
-
-    return rv;
+    return mFinalListener->OnDataAvailable(aChannel, aCtxt, inStream, 0, len);
 }
 
 nsresult
 nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
     nsresult rv;
-    char *uriSpec = nsnull;
-    nsIURI *rootURI = nsnull;
-    rv = aChannel->GetURI(&rootURI);
+    nsXPIDLCString uriSpec;
+    nsCOMPtr<nsIURI> rootURI;
+    rv = aChannel->GetURI(getter_AddRefs(rootURI));
     if (NS_FAILED(rv)) return rv;
 
-    rv = rootURI->Clone(_retval);
-    NS_RELEASE(rootURI);
+    rv = rootURI->GetSpec(getter_Copies(uriSpec));
     if (NS_FAILED(rv)) return rv;
 
-    rv = (*_retval)->GetSpec(&uriSpec);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCString dummyURIStr(uriSpec);
+    nsCAutoString dummyURIStr(uriSpec);
     dummyURIStr.Append("##");
     dummyURIStr.Append(mPartCount);
 
-    char *dummyCStr = dummyURIStr.ToNewCString();
-    rv = (*_retval)->SetSpec(dummyCStr);
-    nsAllocator::Free(dummyCStr);
-    return rv;    
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return serv->NewURI(dummyURIStr.GetBuffer(), nsnull, _retval);
 }
 
 nsresult
