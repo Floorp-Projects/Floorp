@@ -74,6 +74,7 @@ public:
     mRefCnt = 0;
     mPressed = PR_FALSE;
   }
+  virtual ~nsSplitterFrameImpl() {}
 
   // mouse listener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
