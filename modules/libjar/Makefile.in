@@ -28,6 +28,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
+# Make this a true dynamic component even in static builds because
+# this component is shared by installer
+MOZ_STATIC_COMPONENT_LIBS=
+BUILD_STATIC_LIBS=
+BUILD_SHARED_LIBS=1
+
 # Linux and Solaris installer needs standalone libjar
 ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
 DIRS		= standalone
