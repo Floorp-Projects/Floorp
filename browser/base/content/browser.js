@@ -4846,6 +4846,24 @@ var contentAreaDNDObserver = {
           /^\s*(javascript|data):/.test(url))
         return;
 
+      var sourceDoc = aDragSession.sourceDocument;
+
+      if (sourceDoc) {
+        var sourceURI = sourceDoc.documentURI;
+
+        const nsIScriptSecurityManager =
+          Components.interfaces.nsIScriptSecurityManager;
+        var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+          .getService(nsIScriptSecurityManager);
+
+        try {
+          secMan.checkLoadURIStr(sourceURI, url,
+                                 nsIScriptSecurityManager.STANDARD);
+        } catch (e) {
+          throw "Drop of " + url + " denied.";
+        }
+      }
+
       switch (document.firstChild.getAttribute('windowtype')) {
         case "navigator:browser":
           var postData = { };

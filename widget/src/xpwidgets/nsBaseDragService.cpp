@@ -105,8 +105,8 @@ nsBaseDragService::GetCanDrop(PRBool * aCanDrop)
 NS_IMETHODIMP
 nsBaseDragService::SetDragAction(PRUint32 anAction)
 {
- mDragAction = anAction;
- return NS_OK;
+  mDragAction = anAction;
+  return NS_OK;
 }
 
 //---------------------------------------------------------
@@ -199,23 +199,23 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                      nsIScriptableRegion * aRegion,
                                      PRUint32 aActionType)
 {
-  NS_WARN_IF_FALSE(aDOMNode, "No node provided to InvokeDragSession, you should provide one");
-  if (aDOMNode) {
-    // stash the document of the dom node
-    aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
-    mSourceNode = aDOMNode;
+  NS_ENSURE_TRUE(aDOMNode, NS_ERROR_INVALID_ARG);
 
-    // When the mouse goes down, the selection code starts a mouse
-    // capture. However, this gets in the way of determining drag
-    // feedback for things like trees because the event coordinates
-    // are in the wrong coord system. Turn off capture by getting the
-    // frame associated with the DOM Node.
-    nsIFrame* dragFrame = nsnull;
-    nsCOMPtr<nsPresContext> context;
-    GetFrameFromNode(aDOMNode, &dragFrame, getter_AddRefs(context));
-    if (dragFrame && context)
-      dragFrame->CaptureMouse(context, PR_FALSE);
-  }
+  // stash the document of the dom node
+  aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
+  mSourceNode = aDOMNode;
+
+  // When the mouse goes down, the selection code starts a mouse
+  // capture. However, this gets in the way of determining drag
+  // feedback for things like trees because the event coordinates
+  // are in the wrong coord system. Turn off capture by getting the
+  // frame associated with the DOM Node.
+  nsIFrame* dragFrame = nsnull;
+  nsCOMPtr<nsPresContext> context;
+  GetFrameFromNode(aDOMNode, &dragFrame, getter_AddRefs(context));
+  if (dragFrame && context)
+    dragFrame->CaptureMouse(context, PR_FALSE);
+
   return NS_OK;
 }
 
@@ -257,8 +257,12 @@ nsBaseDragService::EndDragSession()
   if (!mDoingDrag) {
     return NS_ERROR_FAILURE;
   }
+
   mDoingDrag = PR_FALSE;
-  mSourceDocument = nsnull;     // release the source document we've been holding
+
+  // release the source we've been holding on to.
+  mSourceDocument = nsnull;
+  mSourceNode = nsnull;
 
   return NS_OK;
 }

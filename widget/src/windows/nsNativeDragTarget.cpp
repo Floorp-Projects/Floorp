@@ -312,8 +312,22 @@ nsNativeDragTarget::DragLeave()
   // dispatch the event into Gecko
   DispatchDragDropEvent(NS_DRAGDROP_EXIT, gDragLastPoint);
 
-  // tell the drag service that we're done with it
-  mDragService->EndDragSession();
+  nsCOMPtr<nsIDragSession> currentDragSession;
+  mDragService->GetCurrentSession(getter_AddRefs(currentDragSession));
+
+  if (currentDragSession) {
+    nsCOMPtr<nsIDOMNode> sourceNode;
+    currentDragSession->GetSourceNode(getter_AddRefs(sourceNode));
+
+    if (!sourceNode) {
+      // We're leaving a window while doing a drag that was
+      // initiated in a different app. End the drag session, since
+      // we're done with it for now (until the user drags back into
+      // mozilla).
+      mDragService->EndDragSession();
+    }
+  }
+
   return S_OK;
 }
 
