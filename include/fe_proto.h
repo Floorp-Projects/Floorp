@@ -53,7 +53,7 @@ typedef void * LO_TextBlock;
 #    define LINEBREAK           "\015\012"
 #    define LINEBREAK_LEN       2
 #  else
-#    ifdef XP_UNIX
+#    if defined(XP_UNIX) || defined(XP_BEOS)
 #      define LINEBREAK         "\012"
 #      define LINEBREAK_LEN     1
 #    endif /* XP_UNIX */
@@ -314,7 +314,7 @@ extern void FE_Progress (MWContext *context, const char * Msg);
 
 extern void FE_Alert (MWContext * context, const char * Msg);
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 extern void FE_Alert_modal (MWContext * context, const char * Msg);
 #endif
 
@@ -1117,7 +1117,7 @@ void FE_FinishedRelayout(MWContext * pMWContext);
 void FE_UpdateEnableStates(MWContext * pMWContext);
 #endif /* XP_WIN */
 
-#if defined(XP_WIN) || defined(XP_UNIX)
+#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_BEOS)
 /* MOVE THESE OUT OF XP_WIN WHEN ALL PLATFORMS IMPLEMENT IT*/
 /* Called during "sizing" of a table when we are really adding/subtracting
  * rows or columns. Front end should draw a line
