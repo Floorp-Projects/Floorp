@@ -224,7 +224,7 @@ char* icalrestriction_must_have_duration(icalrestriction_property_record *rec,
     
     if( !icalcomponent_get_first_property(comp,ICAL_DURATION_PROPERTY)){
 
-	return "Failed iTIP restrictions for STATUS property. This component must have a DURATION property";
+	return "Failed iTIP restrictions. This component must have a DURATION property";
 
     }
 
@@ -235,7 +235,7 @@ char* icalrestriction_must_have_repeat(icalrestriction_property_record *rec,
 				       icalproperty* prop){
     if( !icalcomponent_get_first_property(comp,ICAL_REPEAT_PROPERTY)){
 
-	return "Failed iTIP restrictions for STATUS property. This component must have a REPEAT property";
+	return "Failed iTIP restrictions. This component must have a REPEAT property";
 
     }
 
@@ -252,9 +252,9 @@ char* icalrestriction_no_dtend(icalrestriction_property_record *rec,
 			       icalcomponent* comp, 
 			       icalproperty* prop){
 
-    if( !icalcomponent_get_first_property(comp,ICAL_DTEND_PROPERTY)){
+    if( icalcomponent_get_first_property(comp,ICAL_DTEND_PROPERTY)){
 
-	return "Failed iTIP restrictions for STATUS property. The component must not have both DURATION and DTEND";
+	return "Failed iTIP restrictions. The component must not have both DURATION and DTEND";
 
     }
 

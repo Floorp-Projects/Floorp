@@ -3,7 +3,7 @@
   FILE: icalrecur.c
   CREATOR: eric 16 May 2000
   
-  $Id: icalrecur.c,v 1.3 2002/03/14 15:17:52 mikep%oeone.com Exp $
+  $Id: icalrecur.c,v 1.4 2002/04/29 15:14:41 mostafah%oeone.com Exp $
   $Locker:  $
     
 
@@ -919,7 +919,7 @@ icalrecur_iterator* icalrecur_iterator_new(struct icalrecurrencetype rule,
 	for (;;) {
             expand_year_days(impl,impl->last.year);
 	    if (impl->days[0] != ICAL_RECURRENCE_ARRAY_MAX)
-	        break; // break when no days are expanded
+	        break; /* break when no days are expanded */
 	    increment_year(impl,impl->rule.interval);
 	}
 
