@@ -153,6 +153,22 @@ public:
   NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
                       PRInt32 *aFontID);
 
+  NS_IMETHOD GetTextDimensions(const char* aString, PRUint32 aLength,
+                               nsTextDimensions& aDimensions)
+  { /* fix me */ return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
+                               nsTextDimensions& aDimensions, PRInt32 *aFontID)
+  { /* fix me */ return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD DrawString2(const char *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        const nscoord* aSpacing)
+  { /* fix me */ return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD DrawString2(const PRUnichar *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        PRInt32 aFontID,
+                        const nscoord* aSpacing)
+  { /* fix me */ return NS_ERROR_NOT_IMPLEMENTED; }
+
   NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         const nscoord* aSpacing);
