@@ -30,6 +30,7 @@ class nsIStreamObserver;
 class nsIDocumentLoader;
 class nsIWebShell;
 class nsIWebShellContainer;
+class nsIPref;
 
 // Interface ID for nsIWebShell
 #define NS_IWEB_SHELL_IID \
@@ -108,6 +109,9 @@ public:
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult) = 0;
 
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
+
+  NS_IMETHOD SetPrefs(nsIPref* aPrefs) = 0;
+  NS_IMETHOD GetPrefs(nsIPref*& aPrefs) = 0;
 
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
   NS_IMETHOD SetParent(nsIWebShell* aParent) = 0;

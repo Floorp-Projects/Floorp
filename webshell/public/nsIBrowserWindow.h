@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 
 class nsIAppShell;
+class nsIPref;
 class nsIFactory;
 class nsIWebShell;
 class nsString;
@@ -49,6 +50,7 @@ struct nsRect;
 class nsIBrowserWindow : public nsISupports {
 public:
   NS_IMETHOD Init(nsIAppShell* aAppShell,
+                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   PRUint32 aChromeMask) = 0;
 

@@ -34,6 +34,7 @@
 #include "nsplugin.h"
 #include "nsIPluginHost.h"
 #include "nsPluginsCID.h"
+#include "nsIPref.h"
 
 #include "prlog.h"
 
@@ -107,6 +108,8 @@ public:
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult);
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
+  NS_IMETHOD SetPrefs(nsIPref* aPrefs);
+  NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
@@ -167,6 +170,7 @@ protected:
   nsIWebShellContainer* mContainer;
   nsIContentViewer* mContentViewer;
   nsIDeviceContext* mDeviceContext;
+  nsIPref* mPrefs;
   nsIWidget* mWindow;
   nsISupports* mInnerWindow;
   nsIDocumentLoader* mDocLoader;
@@ -265,6 +269,8 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mInnerWindow);
 
   NS_IF_RELEASE(mContentViewer);
+  NS_IF_RELEASE(mDeviceContext);
+  NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
 
@@ -375,6 +381,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
   bounds.x = bounds.y = 0;
   rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                             mDeviceContext, 
+                            mPrefs,
                             bounds,
                             mScrollPref);
   if (NS_OK == rv) {
@@ -395,7 +402,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //XXX make sure plugins have started up. this really needs to
   //be associated with the nsIContentViewerContainer interfaces,
   //not the nsIWebShell interfaces. this is a hack. MMP
-  CreatePluginHost();
+//  CreatePluginHost();
 
   mScrollPref = aScrolling;
 
@@ -615,6 +622,22 @@ nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
   return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsWebShell::SetPrefs(nsIPref* aPrefs)
+{
+  NS_IF_RELEASE(mPrefs);
+  mPrefs = aPrefs;
+  NS_IF_ADDREF(mPrefs);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetPrefs(nsIPref*& aPrefs)
+{
+  aPrefs = mPrefs;
+  NS_IF_ADDREF(aPrefs);
+  return NS_OK;
+}
 
 nsresult
 nsWebShell::GetRootWebShell(nsIWebShell*& aResult)
