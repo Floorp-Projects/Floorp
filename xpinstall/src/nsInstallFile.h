@@ -67,23 +67,24 @@ class nsInstallFile : public nsInstallObject
 
         PRBool CanUninstall();
         PRBool RegisterPackageNode();
-	  
-  
+
+
     private:
 
         /* Private Fields */
         nsString*     mVersionInfo;	  /* Version info for this file*/
         
         nsString*     mJarLocation;	      /* Location in the JAR */
-        nsFileSpec*   mExtracedFile;	  /* temporary file location */
+        nsFileSpec*   mExtractedFile;	  /* temporary file location */
         nsFileSpec*   mFinalFile;	      /* final file destination */
 
         nsString*   mVersionRegistryName; /* full version path */
-        
+
         PRBool      mForceInstall;   /* whether install is forced */
         PRBool      mReplaceFile;    /* whether file exists */
         PRBool      mChildFile;      /* whether file is a child */
         PRBool      mUpgradeFile;    /* whether file is an upgrade */
+        PRBool      mSkipInstall;    /* if true don't install this file */
 
 
         PRInt32     CompleteFileMove();
