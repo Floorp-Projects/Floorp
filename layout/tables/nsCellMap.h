@@ -112,7 +112,6 @@ public:
                                   PRInt32* aColSpan = nsnull);
 
   void AddColsAtEnd(PRUint32 aNumCols);
-  PRInt32 RemoveUnusedCols(PRInt32 aMaxNumToRemove);
 
   PRBool RowIsSpannedInto(PRInt32 aRowIndex);
   PRBool RowHasSpanningCells(PRInt32 aRowIndex);

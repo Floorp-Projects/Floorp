@@ -730,11 +730,7 @@ void nsTableFrame::RemoveCol(nsIPresContext&       aPresContext,
   if (aRemoveFromCellMap) {
     nsTableCellMap* cellMap = GetCellMap();
     if (cellMap) {
-      // check to see if the cell map can remove the col
-      if (cellMap->RemoveUnusedCols(1) < 1) { 
-        // it couldn't be removed so we need a new anonymous col frame
-        CreateAnonymousColFrames(aPresContext, 1, eColAnonymousCell, PR_TRUE);
-      }
+      CreateAnonymousColFrames(aPresContext, 1, eColAnonymousCell, PR_TRUE);
     }
   }
 }
