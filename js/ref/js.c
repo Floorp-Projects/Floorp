@@ -147,6 +147,81 @@ out:
     PR_FreeArenaPool(&cx->tempPool);
 }
 
+static int
+usage()
+{
+    fprintf(stderr, "usage: js [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    return 2;
+}
+
+static int
+ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
+{
+    int i;
+    char *filename = NULL;
+    jsint length;
+    jsval *vector;
+    jsval *p;
+    JSObject *argsObj;
+
+    for (i=0; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            switch (argv[i][1]) {
+            case 'v':
+                if (i+1 == argc) {
+                    return usage();
+                }
+                JS_SetVersion(cx, atoi(argv[i+1]));
+                i++;
+                break;
+
+            case 'f':
+                if (i+1 == argc) {
+                    return usage();
+                }
+                filename = argv[i+1];
+                /* "-f -" means read from stdin */
+                if (filename[0] == '-' && filename[1] == '\0')
+                    filename = NULL;
+                Process(cx, obj, filename);
+                i++;
+                break;
+            default:
+                return usage();
+            }
+        } else {
+            filename = argv[i++];
+            break;
+        }
+    }
+
+    length = argc - i;
+    vector = JS_malloc(cx, length * sizeof(jsval));
+    p = vector;
+
+    if (vector == NULL)
+        return 1;
+
+    while (i < argc) {
+        JSString *str = JS_NewStringCopyZ(cx, argv[i]);
+        if (str == NULL)
+            return 1;
+        *p++ = STRING_TO_JSVAL(str);
+        i++;
+    }
+    argsObj = JS_NewArrayObject(cx, length, vector);
+    if (argsObj == NULL)
+        return 1;
+
+    if (!JS_DefineProperty(cx, obj, "arguments", 
+                           OBJECT_TO_JSVAL(argsObj), NULL, NULL, 0))
+        return 1;
+
+    Process(cx, obj, filename);
+    return 0;
+}
+
+
 static JSBool
 Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1151,11 +1226,11 @@ static JSClass global_class = {
 int
 main(int argc, char **argv)
 {
-    int c, i;
     JSVersion version;
     JSRuntime *rt;
     JSContext *cx;
     JSObject *glob, *it;
+    int result;
 
 #ifdef XP_OS2
    /* these streams are normally line buffered on OS/2 and need a \n, *
@@ -1165,24 +1240,8 @@ main(int argc, char **argv)
 #endif
 
     version = JSVERSION_DEFAULT;
-#ifdef XP_UNIX
-    while ((c = getopt(argc, argv, "v:")) != -1) {
-	switch (c) {
-	  case 'v':
-	    version = atoi(optarg);
-	    break;
-	  default:
-	    fprintf(stderr, "usage: js [-v version]\n");
-	    return 2;
-	}
-    }
-    argc -= optind;
-    argv += optind;
-#else
-    c = -1;
     argc--;
     argv++;
-#endif
 
     rt = JS_NewRuntime(8L * 1024L * 1024L);
     if (!rt)
@@ -1238,12 +1297,7 @@ main(int argc, char **argv)
 #endif /* JSDEBUGGER_JAVA_UI */
 #endif /* JSDEBUGGER */
 
-    if (argc > 0) {
-	for (i = 0; i < argc; i++)
-	    Process(cx, glob, argv[i]);
-    } else {
-	Process(cx, glob, NULL);
-    }
+    result = ProcessArgs(cx, glob, argv, argc);
 
 #ifdef JSDEBUGGER
     if (_jsdc)
@@ -1253,5 +1307,5 @@ main(int argc, char **argv)
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
-    return 0;
+    return result;
 }
