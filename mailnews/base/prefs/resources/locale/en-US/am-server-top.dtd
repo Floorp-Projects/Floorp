@@ -18,6 +18,7 @@
 -->
 <!ENTITY biffStart.label "Check for new mail every ">
 <!ENTITY biffEnd.label "minutes">
+<!ENTITY isSecure.label "use secure connection. (SSL)">
 <!ENTITY leaveOnServer.label "Leave messages on server">
 <!ENTITY deleteOnServer.label "Delete messages on server when deleted locally.">
 <!ENTITY downloadOnBiff.label "Automatically download any new messages">
