@@ -31,6 +31,7 @@ struct nsStyleContent;
 struct nsStyleDisplay;
 class nsIPresShell;
 class nsVoidArray;
+class nsIFrameManager;
 
 class nsFrameConstructorState;
 
@@ -115,9 +116,10 @@ public:
   // Request to find the primary frame associated with a given content object.
   // This is typically called by the pres shell when there is no mapping in
   // the pres shell hash table
-  NS_IMETHOD FindPrimaryFrameFor(nsIPresContext* aPresContext,
-                                 nsIContent*     aContent,
-                                 nsIFrame**      aFrame);
+  NS_IMETHOD FindPrimaryFrameFor(nsIPresContext*  aPresContext,
+                                 nsIFrameManager* aFrameManager,
+                                 nsIContent*      aContent,
+                                 nsIFrame**       aFrame);
 
   NS_IMETHOD CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                         nsIFrame*       aParentFrame,
@@ -174,11 +176,12 @@ protected:
                                      PRBool           aForBlock,
                                      nsIFrame**       aResult);
 
-  nsresult AppendFrames(nsIPresContext* aPresContext,
-                        nsIPresShell*   aPresShell,
-                        nsIContent*     aContainer,
-                        nsIFrame*       aParentFrame,
-                        nsIFrame*       aFrameList);
+  nsresult AppendFrames(nsIPresContext*  aPresContext,
+                        nsIPresShell*    aPresShell,
+                        nsIFrameManager* aFrameManager,
+                        nsIContent*      aContainer,
+                        nsIFrame*        aParentFrame,
+                        nsIFrame*        aFrameList);
 
   // BEGIN TABLE SECTION
   nsresult ConstructTableFrame(nsIPresContext*          aPresContext,
@@ -388,6 +391,7 @@ protected:
   // END TABLE SECTION
 
   nsresult CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
+                                     nsIFrameManager* aFrameManager,
                                      nsIContent*      aContent,
                                      nsIFrame*        aFrame,
                                      nsIStyleContext* aStyleContext,
@@ -478,8 +482,9 @@ protected:
 
   PRBool IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay);
 
-  nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
-                        nsIContent* aContent);
+  nsIFrame* GetFrameFor(nsIPresShell*   aFrameManager,
+                        nsIPresContext* aPresContext,
+                        nsIContent*     aContent);
 
   nsIFrame* GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
@@ -553,6 +558,7 @@ protected:
                                 PRBool                   aForBlock);
 
   nsresult WrapTextFrame(nsIPresContext* aPresContext,
+                         nsFrameConstructorState& aState,
                          nsIFrame* aTextFrame,
                          nsIContent* aParentContent,
                          nsIContent* aChildContent,
@@ -562,6 +568,7 @@ protected:
                          PRBool aForBlock);
 
   void CreateFloatingFirstLetterFrame(nsIPresContext* aPresContext,
+                                      nsIFrameManager* aFrameManager,
                                       nsIFrame* aTextFrame,
                                       nsIContent* aContent,
                                       nsIContent* aChildContent,

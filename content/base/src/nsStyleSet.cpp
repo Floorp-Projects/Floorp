@@ -142,9 +142,10 @@ public:
   // Request to find the primary frame associated with a given content object.
   // This is typically called by the pres shell when there is no mapping in
   // the pres shell hash table
-  NS_IMETHOD FindPrimaryFrameFor(nsIPresContext* aPresContext,
-                                 nsIContent*     aContent,
-                                 nsIFrame**      aFrame);
+  NS_IMETHOD FindPrimaryFrameFor(nsIPresContext*  aPresContext,
+                                 nsIFrameManager* aFrameManager,
+                                 nsIContent*      aContent,
+                                 nsIFrame**       aFrame);
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
 
@@ -892,11 +893,13 @@ StyleSetImpl::CreateContinuingFrame(nsIPresContext* aPresContext,
 // This is typically called by the pres shell when there is no mapping in
 // the pres shell hash table
 NS_IMETHODIMP
-StyleSetImpl::FindPrimaryFrameFor(nsIPresContext* aPresContext,
-                                  nsIContent*     aContent,
-                                  nsIFrame**      aFrame)
+StyleSetImpl::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
+                                  nsIFrameManager* aFrameManager,
+                                  nsIContent*      aContent,
+                                  nsIFrame**       aFrame)
 {
-  return mFrameConstructor->FindPrimaryFrameFor(aPresContext, aContent, aFrame);
+  return mFrameConstructor->FindPrimaryFrameFor(aPresContext, aFrameManager,
+                                                aContent, aFrame);
 }
 
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)
