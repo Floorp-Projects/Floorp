@@ -52,6 +52,8 @@ int GC_address_to_source(char* codeAddr, char symbolName[256], char fileName[256
 	return 0;
 }
 
+GC_PTR GC_malloc_atomic(size_t size_in_bytes) { return NULL; }
+
 void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize)
 {
 	strncpy(unmangled_name, mangled_name, buffersize);
