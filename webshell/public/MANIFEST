@@ -3,16 +3,17 @@
 #
 
 nsIBrowserWindow.h
+nsIClipboardCommands.h
 nsIContentViewer.h
 nsIContentViewerContainer.h
+nsIDocStreamLoaderFactory.h
 nsIDocumentLoader.h
 nsIDocumentLoaderObserver.h
-nsIDocStreamLoaderFactory.h
 nsILinkHandler.h
+nsIModalWindowSupport.h
+nsIRefreshURI.h
 nsIThrobber.h
+nsIUrlDispatcher.h
 nsIWebShell.h
 nsIWebShellServices.h
-nsIClipboardCommands.h
-nsIUrlDispatcher.h
 nsweb.h
-nsIRefreshURI.h

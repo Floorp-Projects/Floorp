@@ -25,17 +25,18 @@ include <$(DEPTH)\config\config.mak>
 
 EXPORTS =                               \
         nsIBrowserWindow.h              \
+        nsIClipboardCommands.h          \
         nsIContentViewer.h              \
         nsIContentViewerContainer.h     \
+        nsIDocStreamLoaderFactory.h     \
         nsIDocumentLoader.h             \
         nsIDocumentLoaderObserver.h     \
-        nsIDocStreamLoaderFactory.h     \
         nsILinkHandler.h                \
+        nsIModalWindowSupport.h         \
         nsIThrobber.h                   \
+        nsIUrlDispatcher.h    \
         nsIWebShell.h                   \
         nsIWebShellServices.h           \
-        nsIClipboardCommands.h          \
-        nsIUrlDispatcher.h    \
         nsweb.h                         \
 !ifdef NECKO
         nsIRefreshURI.h                 \

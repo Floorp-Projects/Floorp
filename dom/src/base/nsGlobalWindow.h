@@ -48,6 +48,7 @@ class nsIDocument;
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIBrowserWindow;
+class nsIModalWindowSupport;
 
 #include "jsapi.h"
 
@@ -223,7 +224,8 @@ protected:
   void          DropTimeout(nsTimeoutImpl *aTimeout,
                             nsIScriptContext* aContext=nsnull);
   void          HoldTimeout(nsTimeoutImpl *aTimeout);
-  nsresult      GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser);
+  nsresult      GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser,
+                            nsIWebShell *aWebShell=nsnull);
   nsresult      CheckWindowName(JSContext *cx, nsString& aName);
   PRInt32       WinHasOption(char *options, char *name, PRBool& aPresenceFlag);
   PRBool        CheckForEventListener(JSContext *aContext, nsString& aPropName);
@@ -235,6 +237,7 @@ protected:
   nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell,
                   char *aFeatures, PRBool aNewWindow, PRBool aDialog);
   nsresult      ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
+  nsresult      GetModalWindowSupport(nsIModalWindowSupport **msw);
 
   static nsresult WebShellToDOMWindow(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
 

@@ -198,6 +198,12 @@ CWebShellContainer::Close()
 }
 
 
+NS_IMETHODIMP ShowModally(PRBool aPrepare)
+{
+	NG_TRACE_METHOD(CWebShellContainer::ShowModally);
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 CWebShellContainer::SetChrome(PRUint32 aNewChromeMask)
 {

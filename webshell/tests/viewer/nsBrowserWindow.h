@@ -96,6 +96,7 @@ public:
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Close();
+  NS_IMETHOD ShowModally(PRBool aPrepare);
   NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
   NS_IMETHOD SetTitle(const PRUnichar* aTitle);

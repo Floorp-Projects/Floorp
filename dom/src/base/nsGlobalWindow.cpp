@@ -58,6 +58,7 @@
 #else
 #include "nsINetSupport.h"
 #endif
+#include "nsIModalWindowSupport.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
@@ -2050,14 +2051,23 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
       (nsnull != webShellContainer)) {
 
     PRBool windowIsNew;
+    PRBool windowIsModal;
+    nsCOMPtr<nsIModalWindowSupport> modalWinSupport;
 
     // Check for existing window of same name.
     windowIsNew = PR_FALSE;
+    windowIsModal = PR_FALSE;
     webShellContainer->FindWebShellWithName(name.GetUnicode(), newOuterShell);
     if (nsnull == newOuterShell) {
-                        // No window of that name, and we are allowed to create a new one now.
-      webShellContainer->NewWebShell(chromeFlags, PR_FALSE, newOuterShell);
       windowIsNew = PR_TRUE;
+      if (chromeFlags & NS_CHROME_MODAL) {
+        GetModalWindowSupport(getter_AddRefs(modalWinSupport));
+        if (modalWinSupport && NS_SUCCEEDED(modalWinSupport->PrepareModality()))
+          windowIsModal = PR_TRUE;
+      }
+
+      // No window of that name, and we are allowed to create a new one now.
+      webShellContainer->NewWebShell(chromeFlags, PR_FALSE, newOuterShell);
     }
 
     if (nsnull != newOuterShell) {
@@ -2067,6 +2077,15 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
         newOuterShell->SetName(name.GetUnicode());
         newOuterShell->LoadURL(mAbsURL.GetUnicode());
         SizeAndShowOpenedWebShell(newOuterShell, options, windowIsNew, aDialog);
+        if (windowIsModal) {
+          nsIBrowserWindow *newWindow;
+          GetBrowserWindowInterface(newWindow, newOuterShell);
+          if (nsnull != newWindow) {
+            newWindow->ShowModally(PR_FALSE);
+            NS_RELEASE(newWindow);
+          }
+          modalWinSupport->FinishModality();
+        }
       }
       NS_RELEASE(newOuterShell);
     }
@@ -2178,10 +2197,11 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures, PRBool aDialog) {
 
   /* Finally, once all the above normal chrome has been divined, deal
      with the features that are more operating hints than appearance
-     instructions. */
+     instructions. (Note modality implies dependence.) */
 
   chromeFlags |= WinHasOption(aFeatures, "chrome", presenceFlag) ? NS_CHROME_OPEN_AS_CHROME : 0;
-  chromeFlags |= WinHasOption(aFeatures, "modal", presenceFlag) ? NS_CHROME_MODAL : 0;
+  chromeFlags |= WinHasOption(aFeatures, "dependent", presenceFlag) ? NS_CHROME_DEPENDENT : 0;
+  chromeFlags |= WinHasOption(aFeatures, "modal", presenceFlag) ? (NS_CHROME_MODAL | NS_CHROME_DEPENDENT) : 0;
   chromeFlags |= WinHasOption(aFeatures, "dialog", presenceFlag) ? NS_CHROME_OPEN_AS_DIALOG : 0;
 
   /* and dialogs need to have the last word. assume dialogs are dialogs,
@@ -2238,18 +2258,7 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell,
   }
 
   // get the nsIBrowserWindow corresponding to the given aOuterShell
-  nsIWebShell *rootShell;
-  aOuterShell->GetRootWebShellEvenIfChrome(rootShell);
-  if (nsnull != rootShell) {
-    nsIWebShellContainer *newContainer;
-    rootShell->GetContainer(newContainer);
-    if (nsnull != newContainer) {
-      if (NS_FAILED(newContainer->QueryInterface(kIBrowserWindowIID, (void**)&openedWindow)))
-        openedWindow = nsnull;
-        NS_RELEASE(newContainer);
-      }
-      NS_RELEASE(rootShell);
-    }
+  GetBrowserWindowInterface(openedWindow, aOuterShell);
 
   // set size
   if (nsnull != openedWindow) {
@@ -2450,21 +2459,28 @@ GlobalWindowImpl::WinHasOption(char *options, char *name, PRBool& aPresenceFlag)
 }
 
 nsresult 
-GlobalWindowImpl::GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser)
+GlobalWindowImpl::GetBrowserWindowInterface(
+                    nsIBrowserWindow*& aBrowser,
+                    nsIWebShell *aWebShell)
 {
   nsresult ret = NS_ERROR_FAILURE;
+  aBrowser = nsnull;
   
-  if (nsnull != mWebShell) {
-    nsIWebShell *mRootWebShell;
-    mWebShell->GetRootWebShellEvenIfChrome(mRootWebShell);
-    if (nsnull != mRootWebShell) {
-      nsIWebShellContainer *mRootContainer;
-      mRootWebShell->GetContainer(mRootContainer);
-      if (nsnull != mRootContainer) {
-        ret = mRootContainer->QueryInterface(kIBrowserWindowIID, (void**)&aBrowser);
-        NS_RELEASE(mRootContainer);
+  if (nsnull == aWebShell)
+    aWebShell = mWebShell;
+  if (nsnull != aWebShell) {
+    nsIWebShell *rootWebShell;
+    aWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
+    if (nsnull != rootWebShell) {
+      nsIWebShellContainer *rootContainer;
+      rootWebShell->GetContainer(rootContainer);
+      if (nsnull != rootContainer) {
+        ret = rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&aBrowser);
+        if (NS_FAILED(ret))
+          aBrowser = nsnull;
+        NS_RELEASE(rootContainer);
       }
-      NS_RELEASE(mRootWebShell);
+      NS_RELEASE(rootWebShell);
     }
   }
   return ret;
@@ -3324,3 +3340,24 @@ NavigatorImpl::JavaEnabled(PRBool* aReturn)
 
   return rv;
 }
+
+nsresult
+GlobalWindowImpl::GetModalWindowSupport(nsIModalWindowSupport **msw)
+{
+  NS_ASSERTION(msw, "null return param in GetModalWindowSupport");
+  *msw = nsnull;
+
+  if (nsnull == mWebShell)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIWebShell> rootWebShell;
+  mWebShell->GetRootWebShellEvenIfChrome(*getter_AddRefs(rootWebShell));
+  if (rootWebShell) {
+    nsCOMPtr<nsIWebShellContainer> rootContainer;
+    rootWebShell->GetContainer(*getter_AddRefs(rootContainer));
+    if (rootContainer)
+      rootContainer->QueryInterface(nsIModalWindowSupport::GetIID(), (void**)msw);
+  }
+  return NS_OK;
+}
+

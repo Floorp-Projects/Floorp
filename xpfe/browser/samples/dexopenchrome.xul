@@ -12,18 +12,22 @@
     <![CDATA[
     var featureList = new Array("all",
                         "close", "titlebar", "resizable", "scrollbars",
-                        "chrome", "dialog", "modal",
+                        "chrome", "dialog", "modal", "dependent",
                         "menubar", "toolbar", "status", "location");
 
     function OpenWindow(extension) {
       var features = CalculateFeatures();
+      dump("******* begin open window\n");
       window.open("resource:/res/samples/dexparamdialog."+extension,
         "New", features);
+      dump("******* end open window\n");
     }
     function OpenDialog(extension) {
       var features = CalculateFeatures();
+      dump("******* begin opendialog\n");
       window.openDialog("resource:/res/samples/dexparamdialog."+extension,
         "New", features, {remind:true});
+      dump("******* end opendialog\n");
     }
     function CalculateFeatures() {
       var ctr;
@@ -42,8 +46,6 @@
         } else {
           element = document.getElementById(featureList[ctr]+"-ex");
           if (element && element.checked) { // titlebar, close, dialog
-//        if (featureList[ctr] == "titlebar" || featureList[ctr] == "close" ||
-//            featureList[ctr] == "dialog") {
             if (features.length > 0)
               features = features + ",";
             features = features + featureList[ctr] + "=no";
@@ -109,6 +111,11 @@
     </html:tr>
     <html:tr>
       <html:td>
+        <html:input type="checkbox" id="dependent"/>dependent
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
         <html:input type="checkbox" id="menubar"/>menubar
       </html:td>
     </html:tr>
@@ -127,6 +134,8 @@
         <html:input type="checkbox" id="location"/>location
       </html:td>
     </html:tr>
+  </html:table>
+  <html:table>
     <html:tr>
       <html:td colspan="2">
         <html:center>Open</html:center>

@@ -601,8 +601,11 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                       nsWidgetInitData *aInitData,
                       nsNativeWidget aNativeParent)
 {
-    
-    BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
+    nsIWidget *baseParent = aInitData &&
+                 (aInitData->mWindowType == eWindowType_dialog ||
+                  aInitData->mWindowType == eWindowType_toplevel) ?
+                  nsnull : aParent;
+    BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, 
        aAppShell, aToolkit, aInitData);
 
       // See if the caller wants to explictly set clip children and clip siblings

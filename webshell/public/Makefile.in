@@ -26,18 +26,19 @@ MODULE = raptor
 
 EXPORTS =					\
         nsIBrowserWindow.h \
+        nsIClipboardCommands.h \
         nsIContentViewer.h \
         nsIContentViewerContainer.h \
+        nsIDocStreamLoaderFactory.h \
         nsIDocumentLoader.h \
         nsIDocumentLoaderObserver.h \
         nsILinkHandler.h \
+        nsIModalWindowSupport.h \
         nsIThrobber.h \
+        nsIUrlDispatcher.h \
         nsIWebShell.h \
         nsIWebShellServices.h \
-        nsIClipboardCommands.h \
         nsweb.h \
-        nsIDocStreamLoaderFactory.h \
-        nsIUrlDispatcher.h \
         $(NULL)
 
 ifdef NECKO
@@ -51,3 +52,4 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
+

@@ -21,6 +21,7 @@
 #include "nsWebShellWindow.h"
 
 #include "nsLayoutCID.h"
+#include "nsIWeakReference.h"
 #include "nsIDocumentLoader.h"
 
 #include "nsIComponentManager.h"
@@ -291,22 +292,31 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-	if ( aIID.Equals(kIBrowserWindowIID) ) {
+  if (aIID.Equals(kIBrowserWindowIID)) {
     *aInstancePtr = (void*) (nsIBrowserWindow*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if ( aIID.Equals(kIUrlDispatcherIID) ) {
+  if (aIID.Equals(kIUrlDispatcherIID)) {
      *aInstancePtr = (void*) (nsIUrlDispatcher*) this;
      NS_ADDREF_THIS();
      return NS_OK;
   }	
- if (aIID.Equals(kIPromptIID )) {
+  if (aIID.Equals(kIPromptIID )) {
     *aInstancePtr = (void*)(nsIPrompt*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  
+  if (aIID.Equals(nsIModalWindowSupport::GetIID())) {
+     *aInstancePtr = (void*)NS_STATIC_CAST(nsIModalWindowSupport*, this);
+     NS_ADDREF_THIS();
+     return NS_OK;
+  }
+  if (aIID.Equals(nsISupportsWeakReference::GetIID())) {
+    *aInstancePtr = (void*)NS_STATIC_CAST(nsISupportsWeakReference *, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShellContainer*)this;
     NS_ADDREF_THIS();
@@ -325,7 +335,6 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsWidgetInitData& widgetInitData)
 {
   nsresult rv;
-
   nsIWidget *parentWidget;
 
   mCreatedVisible = aCreatedVisible;
@@ -343,6 +352,23 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 
   if (!aParent || NS_FAILED(aParent->GetWidget(parentWidget)))
     parentWidget = nsnull;
+
+  /* This next bit is troublesome. We carry two different versions of a pointer
+     to our parent window. One is the parent window's widget, which is passed
+     to our own widget. The other is a weak reference we keep here to our
+     parent WebShellWindow. The former is useful to the widget, and we can't
+     trust its treatment of the parent reference because they're platform-
+     specific. The latter is useful to this class.
+       A better implementation would be one in which the parent keeps strong
+     references to its children and closes them before it allows itself
+     to be closed. This would mimic the behaviour of OSes that support
+     top-level child windows in OSes that do not. Later.
+  */
+  parentWidget = nsnull;
+  if (aParent) {
+    aParent->GetWidget(parentWidget);
+    mParentWindow = getter_AddRefs(NS_GetWeakReference(aParent));
+  }
 
   mWindow->SetClientData(this);
   mWindow->Create(parentWidget,                       // Parent nsIWidget
@@ -1447,8 +1473,9 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   if ((aChromeMask & NS_CHROME_OPEN_AS_CHROME) != 0) {
     // Just do a nice normal create of a web shell and
     // return it immediately. 
-    
-    rv = appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, aChromeMask,
+
+    nsIWebShellWindow *parent = aChromeMask & NS_CHROME_DEPENDENT ? this : nsnull;
+    rv = appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, aChromeMask,
                                  nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                  getter_AddRefs(newWindow));
     if (NS_SUCCEEDED(rv)) {
@@ -1697,6 +1724,35 @@ nsWebShellWindow::ShowModalInternal()
 }
 
 
+// yes, this one's name and ShowModal are a confusing pair. plan is to merge
+// the two someday.
+NS_IMETHODIMP
+nsWebShellWindow::ShowModally(PRBool aPrepare)
+{
+  nsresult            rv;
+  nsCOMPtr<nsIWidget> parentWidget;
+
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (aPrepare && NS_FAILED(appShell->PushThreadEventQueue()))
+    aPrepare = PR_FALSE;
+
+  parentWidget = do_QueryReference(mParentWindow);
+  if (parentWidget)
+    parentWidget->Enable(PR_FALSE);
+  rv = ShowModal();
+  if (parentWidget)
+    parentWidget->Enable(PR_TRUE);
+
+  if (aPrepare)
+    appShell->PopThreadEventQueue();
+
+  return rv;
+}
+
+
 /* return the main, outermost webshell in this window */
 NS_IMETHODIMP 
 nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
@@ -1802,9 +1858,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
   mChromeInitialized = PR_TRUE;
 
-  if (mLockedUntilChromeLoad) {
-    mLockedUntilChromeLoad = PR_FALSE;
-  }
+  mLockedUntilChromeLoad = PR_FALSE;
 
 #ifdef XP_MAC // Anyone still using native menus should add themselves here.
   // register as document listener
@@ -2903,3 +2957,23 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmCheckYN(const PRUnichar *text, const PRUn
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+// nsIModalWindowSupport interface
+nsresult nsWebShellWindow::PrepareModality()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  return appShell->PushThreadEventQueue();
+}
+
+nsresult nsWebShellWindow::FinishModality()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  return appShell->PopThreadEventQueue();
+}
+
