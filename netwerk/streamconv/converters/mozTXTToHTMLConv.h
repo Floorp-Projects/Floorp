@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * 
  * The "License" shall be the Mozilla Public License Version 1.1, except
  * Sections 6.2 and 11, but with the addition of the below defined Section 14.
@@ -28,7 +28,7 @@
  * 
  * The Initial Developer of the Original Code is Ben Bucksch
  * <http://www.bucksch.org>. Portions created by Ben Bucksch are Copyright
- * (C) 1999 Ben Bucksch. All Rights Reserved.
+ * (C) 1999, 2000 Ben Bucksch. All Rights Reserved.
  * 
  * Contributor(s):
  */
@@ -41,8 +41,10 @@
 #define _mozTXTToHTMLConv_h__
 
 #include "mozITXTToHTMLConv.h"
+#include "nsIIOService.h"
 #include "nsString.h"
 #include "nsTimer.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
@@ -68,30 +70,29 @@ public:
 /**
   see mozITXTToHTMLConv::ScanTXT
  */
-  nsAutoString ScanTXT(const nsAutoString& text, PRUint32 whattodo);
+  void ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, PRUint32 whattodo, nsString& aOutString);
 
 /**
-  see mozITXTToHTMLConv::ScanHTML
+  see mozITXTToHTMLConv::ScanHTML. We will modify aInString potentially...
  */
-  nsAutoString ScanHTML(const nsAutoString& text, PRUint32 whattodo);
+  void ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOutString);
 
 /**
   see mozITXTToHTMLConv::CiteLevelTXT
  */
-  PRInt32 CiteLevelTXT(const nsAutoString& line,PRUint32& logLineStart);
+  PRInt32 CiteLevelTXT(const PRUnichar * line,PRUint32& logLineStart);
 
 
   // Timing!
   MOZ_TIMER_DECLARE(mScanTXTTimer)
   MOZ_TIMER_DECLARE(mGlyphHitTimer)
-  MOZ_TIMER_DECLARE(mRightTimer)
   MOZ_TIMER_DECLARE(mTotalMimeTime)
 
 
 //////////////////////////////////////////////////////////
 protected:
 //////////////////////////////////////////////////////////
-
+  nsCOMPtr<nsIIOService> mIOService; // for performance reasons, cache the netwerk service...
 /**
   Completes<ul>
   <li>Case 1: mailto: "mozilla@bucksch.org" -> "mailto:mozilla@bucksch.org"
@@ -103,8 +104,8 @@ protected:
   @param pos (in): position of "@" (case 1) or first "." (case 2 and 3)
   @return Completed URL at success and empty string at failure
  */
-  nsAutoString CompleteAbbreviatedURL(const nsAutoString& text,
-       const PRUint32 pos);
+  void CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aInLength, 
+                              const PRUint32 pos, nsString& aOutString);
 
 
 //////////////////////////////////////////////////////////
@@ -126,46 +127,50 @@ private:
            else starting at 2. char of text (text[1]).
          Chars after "after"-delimiter are ignored.
   @param rep (in): the string to look for
+  @param aRepLen (in): the number of bytes in the string to look for
   @param before (in): limitation before rep
   @param after (in): limitation after rep
   @return true, if rep is found and limitation spec is met or rep is empty
 */
-  PRBool ItMatchesDelimited(const nsAutoString& text,
-       const char* rep, LIMTYPE before, LIMTYPE after);
+  PRBool ItMatchesDelimited(const PRUnichar * aInString, PRInt32 aInLength,
+    const char* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
 
 /**
   @param see ItMatchesDelimited
   @return Number of ItMatchesDelimited in text
 */
-  PRUint32 NumberOfMatches(const nsAutoString& text,
-       const char* rep, LIMTYPE before, LIMTYPE after);
+  PRUint32 NumberOfMatches(const PRUnichar * aInString, PRInt32 aInStringLength,
+     const char* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
 
 /**
   Currently only changes "<", ">" and "&". All others stay as they are.<p>
   "Char" in function name to avoid side effects with nsString(ch)
   constructors.
-  @param ch (in)
-  @return ch in its HTML representation
+  @param ch (in) 
+  @param aStringToAppendto (out) - the string to append the escaped
+                                   string to.
 */
-  nsAutoString EscapeChar(const PRUnichar ch);
+  void EscapeChar(const PRUnichar ch, nsString& aStringToAppendto);
 
 /**
-  See EscapeChar
+  See EscapeChar. Escapes the string in place.
 */
-  nsAutoString EscapeStr(const nsAutoString& aString);
+  void EscapeStr(nsString& aInString);
 
 /**
   Currently only reverts "<", ">" and "&". All others stay as they are.<p>
-  @param aString (in) HTML string
-  @return aString in its plain text representation
+  @param aInString (in) HTML string
+  @param aStartPos (in) start index into the buffer
+  @param aLength (in) length of the buffer
+  @param aOutString (out) unescaped buffer
 */
-  nsAutoString UnescapeStr(const nsAutoString& aString);
+  void UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos, PRInt32 aLength, nsString& aOutString);
 
 /**
   <em>Note</em>: I use different strategies to pass context between the
   functions (full text and pos vs. cutted text and col0, glphyTextLen vs.
   replaceBefore/-After). It makes some sense, but is hard to understand
-  (maintain) :-(. If somebody has an elegant way, tell me.
+  (maintain) :-(.
 */
 
 /**
@@ -176,16 +181,17 @@ private:
   @param text (in): includes possibly a URL
   @param pos (in): position in text, where either ":", "." or "@" are found
   @param whathasbeendone (in): What the calling ScanTXT did/has to do with the
-              (not-linkified) text. (Needed to calculate replaceBefore.)
-              NOT what will be done with the content of the link.
+              (not-linkified) text, i.e. usually the "whattodo" parameter.
+              (Needed to calculate replaceBefore.) NOT what will be done with
+              the content of the link.
   @param outputHTML (out): URL with HTML-a tag
   @param replaceBefore (out): Number of chars of URL before pos
   @param replaceAfter (out): Number of chars of URL after pos
   @return URL found
 */
-  PRBool FindURL(const nsAutoString& text, const PRUint32 pos,
-       const PRUint32 whathasbeendone, nsAutoString& outputHTML,
-       PRInt32& replaceBefore, PRInt32& replaceAfter);
+  PRBool FindURL(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
+          const PRUint32 whathasbeendone,
+          nsString& outputHTML, PRInt32& replaceBefore, PRInt32& replaceAfter);
 
   enum modetype {
          unknown,
@@ -207,7 +213,7 @@ private:
 	                      "www.mozilla.org", "ftp.mozilla.org" and
                               "mozilla@bucksch.org". */
       /* RFC1738 and RFC2396E type URLs may use multiple lines,
-         whitespace is stripped. Special characters like "," stay intact.*/
+         whitespace is stripped. Special characters like ")" stay intact.*/
   };
 
 /**
@@ -217,8 +223,8 @@ private:
  *             similar) starts
  * @return |check|-conform start has been found
  */
-  PRBool FindURLStart(const nsAutoString& text, const PRUint32 pos,
-       const modetype check, PRUint32& start);
+  PRBool FindURLStart(const PRUnichar * aInString, PRInt32 aInLength, const PRUint32 pos,
+            	               const modetype check, PRUint32& start);
 
 /**
  * @param text (in), pos (in): see FindURL
@@ -227,8 +233,8 @@ private:
  * @param end (out): Similar to |start| param of FindURLStart
  * @return |check|-conform end has been found
  */
-  PRBool FindURLEnd(const nsAutoString& text, const PRUint32 pos,
-       const modetype check, const PRUint32 start, PRUint32& end);
+  PRBool FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLength, const PRUint32 pos,
+           const modetype check, const PRUint32 start, PRUint32& end);
 
 /**
  * @param text (in), pos (in), whathasbeendone (in): see FindURL
@@ -240,11 +246,11 @@ private:
  *             Should be placed between the <a> and </a> tags.
  * @param replaceBefore(out), replaceAfter (out): see FindURL
  */
-  void CalculateURLBoundaries(const nsAutoString& text,
-       const PRUint32 pos, const PRUint32 whathasbeendone,
-       const modetype check, const PRUint32 start, const PRUint32 end,
-       nsAutoString& txtURL, nsAutoString& desc,
-       PRInt32& replaceBefore, PRInt32& replaceAfter);
+  void CalculateURLBoundaries(const PRUnichar * aInString, PRInt32 aInStringLength, 
+     const PRUint32 pos, const PRUint32 whathasbeendone,
+     const modetype check, const PRUint32 start, const PRUint32 end,
+     nsString& txtURL, nsString& desc,
+     PRInt32& replaceBefore, PRInt32& replaceAfter);
 
 /**
  * @param txtURL (in), desc (in): see CalculateURLBoundaries
@@ -252,8 +258,8 @@ private:
  * @return A valid URL could be found (and creation of HTML successful)
  */
   PRBool CheckURLAndCreateHTML(
-       const nsAutoString& txtURL, const nsAutoString& desc,
-       nsAutoString& outputHTML);
+       const nsString& txtURL, const nsString& desc,
+       nsString& outputHTML);
 
 /**
   @param text (in): line of text possibly with tagTXT.<p>
@@ -264,28 +270,32 @@ private:
   @param col0 (in): tagTXT is on the beginning of the line (or paragraph).
               open must be 0 then.
   @param tagTXT (in): Tag in plaintext to search for, e.g. "*"
+  @param aTagTxtLen (in): length of tagTXT.
   @param tagHTML (in): HTML-Tag to replace tagTXT with,
               without "<" and ">", e.g. "strong"
   @param attributeHTML (in): HTML-attribute to add to opening tagHTML,
               e.g. "class=txt_star"
-  @param outputHTML (out): string to insert in output stream
+  @param aOutString: string to APPEND the converted html into
   @param open (in/out): Number of currently open tags of type tagHTML
   @return Conversion succeeded
 */
-  PRBool StructPhraseHit(const nsAutoString& text, PRBool col0,
-       const char* tagTXT,
-       const char* tagHTML, const char* attributeHTML,
-       nsAutoString& outputHTML, PRUint32& openTags);
+  PRBool StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, PRBool col0,
+     const char* tagTXT,
+     PRInt32 aTagTxtLen, 
+     const char* tagHTML, const char* attributeHTML,
+     nsString& aOutputString, PRUint32& openTags);
 
 /**
   @param text (in), col0 (in): see GlyphHit
   @param tagTXT (in): Smily, see also StructPhraseHit
+  @param aTagTxtLen (in): length of tagTXT
   @param tagHTML (in): see StructPhraseHit
-  @param outputHTML (out), glyphTextLen (out): see GlyphHit
+  @param outputHTML (out): new string containing the html for the smily
+  @param glyphTextLen (out): see GlyphHit
 */
-  PRBool SmilyHit(const nsAutoString& text, PRBool col0,
-                  const char* tagTXT, const char* tagHTML,
-                  nsAutoString& outputHTML, PRInt32& glyphTextLen);
+  PRBool SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool col0,
+         const char* tagTXT, PRInt32 aTagTxtLen, const char* tagHTML,
+         nsString& outputHTML, PRInt32& glyphTextLen);
 
 /**
   Checks, if we can replace some chars at the start of line with prettier HTML
@@ -298,12 +308,12 @@ private:
               else
                 starting one char before Glyph
   @param col0 (in): text starts at the beginning of the line (or paragraph)
-  @param outputHTML (out): see StructPhraseHit
+  @param aOutString (out): APPENDS html for the glyph to this string
   @param glyphTextLen (out): Length of original text to replace
   @return see StructPhraseHit
 */
-  PRBool GlyphHit(const nsAutoString& text, PRBool col0,
-       nsAutoString& outputHTML, PRInt32& glyphTextLen);
+  PRBool GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBool col0,
+       nsString& aOutString, PRInt32& glyphTextLen);
 
 };
 
