@@ -311,6 +311,8 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
 
     // cacl the x and y positions of the text
     nsRect rect(aRect);
+    nscoord quarterInch = NS_INCHES_TO_TWIPS(0.25);
+    rect.Deflate(quarterInch,0);
     nscoord x = GetXPosition(aRenderingContext, rect, aJust, str);
     nscoord y;
     if (aHeaderFooter == eHeader) {
