@@ -730,6 +730,12 @@
 
             var oldTab = aTab;
             
+            // clean up the before/afterselected attributes before removing the tab
+            if (index > 0)
+              this.mTabContainer.childNodes[index-1].removeAttribute("beforeselected");
+            if (index < this.mTabContainer.childNodes.length - 1)
+              this.mTabContainer.childNodes[index+1].removeAttribute("afterselected");
+
             this.mTabContainer.removeChild(oldTab);
             this.mPanelContainer.removeChild(oldBrowser);
 
