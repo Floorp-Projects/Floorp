@@ -156,16 +156,24 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr,
                          (nsISupports**)&gCompMgr);
   if (NS_FAILED(rv)) return rv;
 
+  rv = NS_NOINTERFACE;
   if (aClass.Equals(kEditorCID)) {
-    return GetEditFactory(aFactory, aClass);
+    rv = GetEditFactory(aFactory, aClass);
+    if (NS_FAILED(rv)) goto done;
   }
   else if (aClass.Equals(kTextEditorCID)) {
-    return GetTextEditFactory(aFactory, aClass);
+    rv = GetTextEditFactory(aFactory, aClass);
+    if (NS_FAILED(rv)) goto done;
   }
   else if (aClass.Equals(kHTMLEditorCID)) {
-    return GetHTMLEditFactory(aFactory, aClass);
+    rv = GetHTMLEditFactory(aFactory, aClass);
+    if (NS_FAILED(rv)) goto done;
   }
-  return NS_NOINTERFACE;
+  
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, gCompMgr);
+
+  return rv;
 }
 
 
