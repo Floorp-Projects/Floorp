@@ -140,6 +140,8 @@
 
   #define NSCAP_FEATURE_INLINE_STARTASSIGNMENT
     // under VC++, we win by inlining StartAssignment
+    // but we need to diable the tons of bogus warnings
+  #pragma warning( disable: 4514 )
 #endif
 
 #define NSCAP_FEATURE_FACTOR_DESTRUCTOR
@@ -308,7 +310,7 @@ class nsCOMPtr_helper
 				- (except for its name) operator() is a valid [XP]COM `getter'
 				- that interface pointer it returns is already |AddRef()|ed (as from any good getter)
 				- it matches the type requested with the supplied |nsIID| argument
-				- its constructor provides an optional |nsresult*| that |operator()| can fill
+				- it's constructor provides an optional |nsresult*| that |operator()| can fill
 					in with an error when it is executed
 					
 			See |class nsQueryInterface| for an example.
@@ -445,6 +447,8 @@ class nsCOMPtr
     private:
       void    assign_with_AddRef( nsISupports* );
       void		assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
+//    void    assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
+//    void    assign_with_QueryReferent( nsIWeakReference*, const nsIID&, nsresult* );
       void**  begin_assignment();
 
     private:
@@ -463,7 +467,6 @@ class nsCOMPtr
         {
           if ( mRawPtr )
             NSCAP_RELEASE(mRawPtr);
-          mRawPtr = 0;  
         }
 #endif
 
@@ -472,6 +475,12 @@ class nsCOMPtr
         {
           // nothing else to do here
         }
+
+			nsCOMPtr( const nsCOMPtr_helper& helper )
+					: NSCAP_CTOR_BASE(0)
+				{
+					assign_from_helper(helper, NS_GET_IID(T));
+				}
 
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
       void
@@ -491,13 +500,6 @@ class nsCOMPtr
 #else
       #define NSCAP_ASSERT_NO_QUERY_NEEDED();
 #endif
-
-			nsCOMPtr( const nsCOMPtr_helper& helper )
-					: NSCAP_CTOR_BASE(0)
-				{
-					assign_from_helper(helper, NS_GET_IID(T));
-          NSCAP_ASSERT_NO_QUERY_NEEDED();
-				}
 
       nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
           : NSCAP_CTOR_BASE(aSmartPtr.mRawPtr)
@@ -542,7 +544,6 @@ class nsCOMPtr
 			operator=( const nsCOMPtr_helper& rhs )
 				{
 					assign_from_helper(rhs, NS_GET_IID(T));
-          NSCAP_ASSERT_NO_QUERY_NEEDED();
 					return *this;
 				}
 
@@ -619,121 +620,6 @@ class nsCOMPtr
         }
   };
 
-// template <>
-class nsCOMPtr<nsISupports>
-		: private nsCOMPtr_base
-	{
-		public:
-			typedef nsISupports element_type;
-
-#ifndef NSCAP_FEATURE_FACTOR_DESTRUCTOR
-		 ~nsCOMPtr()
-	 			{
-	 				if ( mRawPtr )
-	 					NSCAP_RELEASE(mRawPtr);
-                    mRawPtr = 0; 
-	 			}
-#endif
-
-			nsCOMPtr()
-					: nsCOMPtr_base(0)
-				{
-          // nothing else to do here
-				}
-
-			nsCOMPtr( const nsCOMPtr_helper& helper )
-					: nsCOMPtr_base(0)
-				{
-					assign_from_helper(helper, NS_GET_IID(nsISupports));
-				}
-
-			nsCOMPtr( const nsDontQueryInterface<nsISupports>& aSmartPtr )
-					: nsCOMPtr_base(aSmartPtr.mRawPtr)
-				{
-          // nothing else to do here
-				}
-
-			nsCOMPtr( const nsCOMPtr<nsISupports>& aSmartPtr )
-					: nsCOMPtr_base(aSmartPtr.mRawPtr)
-				{
-					if ( mRawPtr )
-						NSCAP_ADDREF(mRawPtr);
-				}
-
-			nsCOMPtr( nsISupports* aRawPtr )
-					: nsCOMPtr_base(aRawPtr)
-				{
-					if ( mRawPtr )
-						NSCAP_ADDREF(mRawPtr);
-				}
-
-			nsCOMPtr<nsISupports>&
-			operator=( nsISupports* rhs )
-				{
-					assign_with_AddRef(rhs);
-					return *this;
-				}
-
-			nsCOMPtr<nsISupports>&
-			operator=( const nsCOMPtr_helper& rhs )
-				{
-					assign_from_helper(rhs, NS_GET_IID(nsISupports));
-					return *this;
-				}
-
-			nsCOMPtr<nsISupports>&
-			operator=( const nsDontQueryInterface<nsISupports>& rhs )
-				{
-					assign_with_AddRef(rhs.mRawPtr);
-					return *this;
-				}
-
-			nsCOMPtr<nsISupports>&
-			operator=( const nsCOMPtr<nsISupports>& rhs )
-				{
-					assign_with_AddRef(rhs.mRawPtr);
-					return *this;
-				}
-
-			nsDerivedSafe<nsISupports>*
-			get() const
-				{
-					return NSCAP_REINTERPRET_CAST(nsDerivedSafe<nsISupports>*, mRawPtr);
-				}
-
-			nsDerivedSafe<nsISupports>*
-			operator->() const
-				{
-          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator->().");
-          return get();
-				}
-
-			nsDerivedSafe<nsISupports>&
-			operator*() const
-				{
-          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator*().");
-          return *get();
-				}
-
-			operator nsDerivedSafe<nsISupports>*() const
-				{
-					return get();
-				}
-
-			nsISupports**
-			StartAssignment()
-				{
-#ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-          return NSCAP_REINTERPRET_CAST(nsISupports**, begin_assignment());
-#else
-          if ( mRawPtr )
-            NSCAP_RELEASE(mRawPtr);
-          mRawPtr = 0;
-          return NSCAP_REINTERPRET_CAST(nsISupports**, &mRawPtr);
-#endif
-				}
-	};
-
 #ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
 template <class T>
 void
@@ -801,13 +687,11 @@ class nsGetterAddRefs
           // nothing else to do
         }
 
-#if 0
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
 		 ~nsGetterAddRefs()
 		 		{
-		 			mTargetSmartPtr.Assert_NoQueryNeeded();
+		 			// mTargetSmartPtr.Assert_NoQueryNeeded();
 		 		}
-#endif
 #endif
 
       operator void**()
@@ -826,47 +710,9 @@ class nsGetterAddRefs
           return mTargetSmartPtr.StartAssignment();
         }
 
-			operator nsISupports**()
-				{
-          return NSCAP_REINTERPRET_CAST(nsISupports**, mTargetSmartPtr.StartAssignment());
-				}
-
     private:
       nsCOMPtr<T>& mTargetSmartPtr;
   };
-
-
-// template <>
-class nsGetterAddRefs<nsISupports>
-	{
-    public:
-      explicit
-      nsGetterAddRefs( nsCOMPtr<nsISupports>& aSmartPtr )
-          : mTargetSmartPtr(aSmartPtr)
-        {
-          // nothing else to do
-        }
-
-      operator void**()
-        {
-          return NSCAP_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
-        }
-
-      nsISupports*&
-      operator*()
-        {
-          return *(mTargetSmartPtr.StartAssignment());
-        }
-
-      operator nsISupports**()
-        {
-          return mTargetSmartPtr.StartAssignment();
-        }
-
-    private:
-      nsCOMPtr<nsISupports>& mTargetSmartPtr;
-	};
-
 
 template <class T>
 inline
