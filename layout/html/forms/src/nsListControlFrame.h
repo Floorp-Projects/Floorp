@@ -160,6 +160,7 @@ public:
 protected:
   NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
   NS_IMETHOD IsTargetOptionDisabled(PRBool &aIsDisabled);
+  nsresult   CountAllChild(nsIDOMNode * aNode, PRInt32& aCount);
 
   nsListControlFrame();
   virtual ~nsListControlFrame();
