@@ -121,11 +121,6 @@ function (aTitle, aContentURL, aCustomizeURL)
     if (!rv)
         return;
 
-    this.datasource.Assert(this.rdf.GetResource(this.resource),
-                           this.rdf.GetResource(this.nc + "inbatch"),
-                           this.rdf.GetLiteral("true"),
-                           true);
-
     /* Now make some sidebar-ish assertions about it... */
     this.datasource.Assert(panel_resource,
                            this.rdf.GetResource(this.nc + "title"),
@@ -143,8 +138,14 @@ function (aTitle, aContentURL, aCustomizeURL)
         
     container.AppendElement(panel_resource);
 
+    // Use an assertion to pass a "refresh" event to all the sidebars.
+    // They use observers to watch for this assertion (in sidebarOverlay.js).
+    this.datasource.Assert(this.rdf.GetResource(this.resource),
+                           this.rdf.GetResource(this.nc + "refresh"),
+                           this.rdf.GetLiteral("true"),
+                           true);
     this.datasource.Unassert(this.rdf.GetResource(this.resource),
-                             this.rdf.GetResource(this.nc + "inbatch"),
+                             this.rdf.GetResource(this.nc + "refresh"),
                              this.rdf.GetLiteral("true"));
 
     /* Write the modified panels out. */
