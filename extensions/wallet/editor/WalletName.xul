@@ -48,11 +48,11 @@
   
   <titledbox class="tabpanel" autostretch="never">
     <title><text value="&name.title;"/></title>
-    <grid class="indent">
+    <grid class="indent" flex="1">
 
       <columns>
+        <column/>
         <column flex="1"/>
-        <column width="200"/>
       </columns>
 
       <rows>

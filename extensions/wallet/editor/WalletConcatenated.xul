@@ -65,10 +65,10 @@
 
   <titledbox class="tabpanel" autostretch="never" hidden="true">
     <title><text value="&concatPrimary.title;"/></title>
-    <grid class="indent">
+    <grid class="indent" flex="1">
       <columns>
-        <column width="150"/>
-        <column width="175"/>
+        <column/>
+        <column flex="1"/>
       </columns>
       <rows>
 
@@ -200,8 +200,8 @@
     <title><text value="&concatShipping.title;"/></title>
     <grid class="indent">
       <columns>
-        <column width="150"/>
-        <column width="175"/>
+        <column/>
+        <column flex="1"/>
       </columns>
       <rows>
 
@@ -333,8 +333,8 @@
     <title><text value="&concatBilling.title;"/></title>
     <grid class="indent">
       <columns>
-        <column width="150"/>
-        <column width="175"/>
+        <column/>
+        <column flex="1"/>
       </columns>
       <rows>
 
@@ -466,8 +466,8 @@
     <title><text value="&concatOther.title;"/></title>
     <grid class="indent">
       <columns>
-        <column width="150"/>
-        <column width="175"/>
+        <column/>
+        <column flex="1"/>
       </columns>
       <rows>
 

@@ -50,11 +50,11 @@
   
   <titledbox class="tabpanel" autostretch="never">
     <title><text value="&misc.title;"/></title>
-    <grid class="indent">
+    <grid class="indent" flex="1">
 
       <columns>
-        <column width="130"/>
-        <column width="225"/>
+        <column/>
+        <column flex="1"/>
       </columns>
 
       <rows>
@@ -62,46 +62,46 @@
         <row>
           <html>&miscSS.label;</html>
           <box>
-          <menulist id="socsec.prefix" editable="true" width="45"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
-          <html>___</html>
-          <menulist id="socsec.middle" editable="true" width="38"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
-          <html>___</html>
-          <menulist id="socsec.suffix" editable="true" width="52"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
+            <menulist id="socsec.prefix" editable="true" flex="33%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
+            <text value="__"/>
+            <menulist id="socsec.middle" editable="true" flex="24%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
+            <text value="__"/>
+            <menulist id="socsec.suffix" editable="true" flex="43%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
           </box>
         </row>
 
         <row>
           <html>&miscLicense.label;</html>
           <box>
-          <menulist id="license.number" editable="true" width="110"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
-          <spring style="width: 5px;"/>
-          <html>&miscLicenseState.label;</html>
-          <menulist id="license.state" editable="true" width="53"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
+            <menulist id="license.number" editable="true" flex="70" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
+            <spring style="width: 5px;"/>
+            <html>&miscLicenseState.label;</html>
+            <menulist id="license.state" editable="true" flex="30" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
           </box>
         </row>
 
@@ -118,54 +118,54 @@
         <row>
           <html>&miscBirthday.label;</html>
           <box>
-          <html>&miscBirthdayMonth.label;</html>
-          <menulist id="bdate.month" editable="true" width="38"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
-          <html>&miscBirthdayDay.label;</html>
-          <menulist id="bdate.day" editable="true" width="38"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
-          <html>&miscBirthdayYear.label;</html>
-          <menulist id="bdate.year" editable="true" width="52"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
+            <html>&miscBirthdayMonth.label;</html>
+            <menulist id="bdate.month" editable="true" flex="40%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
+            <html>&miscBirthdayDay.label;</html>
+            <menulist id="bdate.day" editable="true" flex="20%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
+            <html>&miscBirthdayYear.label;</html>
+            <menulist id="bdate.year" editable="true" flex="40%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
           </box>
         </row>
 
         <row>
           <html>&miscAnniv.label;</html>
           <box>
-          <html>&miscAnnivMonth.label;</html>
-          <menulist id="anniv.month" editable="true" width="38"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
-          <html>&miscAnnivDay.label;</html>
-          <menulist id="anniv.day" editable="true" width="38"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
-          <html>&miscAnnivYear.label;</html>
-          <menulist id="anniv.year" editable="true" width="52"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
+            <html>&miscAnnivMonth.label;</html>
+            <menulist id="anniv.month" editable="true" flex="40%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
+            <html>&miscAnnivDay.label;</html>
+            <menulist id="anniv.day" editable="true" flex="20%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
+            <html>&miscAnnivYear.label;</html>
+            <menulist id="anniv.year" editable="true" flex="40%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
           </box>
         </row>
 

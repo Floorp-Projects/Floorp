@@ -49,11 +49,11 @@
   
   <titledbox class="tabpanel" autostretch="never">
     <title><text value="&address.title;"/></title>
-    <grid class="indent">
+    <grid class="indent" flex="1">
 
       <columns>
-        <column width="100"/>
-        <column width="250"/>
+        <column/>
+        <column flex="1"/>
       </columns>
 
       <rows>
@@ -111,14 +111,14 @@
         <row>
           <html>&addressZipcode.label;</html>
           <box>
-          <menulist id="postalcode.prefix" editable="true" width="60"
+          <menulist id="postalcode.prefix" editable="true" flex="55%" width="0"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
               <menuitem value="" len="0"/>
             </menupopup>
           </menulist>
-          <html>__</html>
-          <menulist id="postalcode.suffix" editable="true" width="53"
+          <text value="__"/>
+          <menulist id="postalcode.suffix" editable="true" flex="45%" width="0"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
               <menuitem value="" len="0"/>

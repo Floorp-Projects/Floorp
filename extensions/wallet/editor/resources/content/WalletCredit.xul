@@ -48,11 +48,11 @@
   
   <titledbox class="tabpanel" autostretch="never">
     <title><text value="&credit.title;"/></title>
-    <grid class="indent">
+    <grid class="indent" flex="1">
 
       <columns>
-        <column width="100"/>
-        <column width="200"/>
+        <column/>
+        <column flex="1"/>
       </columns>
 
       <rows>
@@ -80,21 +80,20 @@
         <row>
           <html>&creditExpires.label;</html>
           <box>
-          <html>&creditExpiresMonth.label;</html>
-          <menulist id="card.expdate.month" editable="true" width="38"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
-          <spring style="width: 15px;"/>
-          <html>&creditExpiresYear.label;</html>
-          <menulist id="card.expdate.year" editable="true" width="53"
-                    onchange="Append(this)" onmousedown="Append(this)">
-            <menupopup>
-              <menuitem value="" len="0"/>
-            </menupopup>
-          </menulist>
+            <html>&creditExpiresMonth.label;</html>
+            <menulist id="card.expdate.month" editable="true" flex="40%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
+            <html>&creditExpiresYear.label;</html>
+            <menulist id="card.expdate.year" editable="true" flex="60%" width="0"
+                      onchange="Append(this)" onmousedown="Append(this)">
+              <menupopup>
+                <menuitem value="" len="0"/>
+              </menupopup>
+            </menulist>
           </box>
         </row>
 
