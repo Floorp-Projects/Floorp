@@ -28,7 +28,7 @@ nsTypelibRecord::nsTypelibRecord(int size, nsTypelibRecord *next,
       header(header)
 {
     this->interfaceRecords = (nsInterfaceRecord **)
-        allocator->Alloc(size * (sizeof (nsInterfaceRecord *)) + 1);
+        allocator->Alloc((size + 1) * (sizeof (nsInterfaceRecord *)));
     // XXX how to account for failure in a constructor?  Can we return null?
 
     // NULL-terminate it.  The rest will get filled in.
