@@ -535,8 +535,6 @@ private:
 	// based on the imap action passed into the url. The following functions are imap protocol handlers for
 	// each action. They are called by ProcessAuthenticatedStateUrl.
 	void OnLSubFolders();
-	void OnGetMailAccount();
-	void OnOfflineToOnlineMove();
 	void OnAppendMsgFromFile();
 	char * OnCreateServerSourceFolderPathString();
   char * OnCreateServerDestinationFolderPathString();
