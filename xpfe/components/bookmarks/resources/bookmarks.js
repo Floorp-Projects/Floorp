@@ -245,7 +245,7 @@ function copySelectionToClipboard()
         trans.addDataFlavor("text/html");
 
         var wstring_uri = "component://netscape/supports-wstring";
-        var htmlData = Components.classes[string_uri].createInstance();
+        var htmlData = Components.classes[wstring_uri].createInstance();
         if (htmlData) {
             var wstring_interface = Components.interfaces.nsISupportsWString;
             htmlData = htmlData.QueryInterface(wstring_interface);
