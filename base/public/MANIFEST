@@ -19,3 +19,5 @@ nsIObserver.h
 nsEscape.h
 nsStdFileStream.h
 nsQuickSort.h
+nsIThread.h
+nsIByteBufferInputStream.h
