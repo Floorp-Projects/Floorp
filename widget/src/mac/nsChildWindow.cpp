@@ -105,7 +105,8 @@ void nsChildWindow::CalcWindowRegions()
 			do {
 				// when we reach ourself, stop clipping.
 				nsCOMPtr<nsISupports> item;
-				if (NS_FAILED(siblings->CurrentItem(getter_AddRefs(item))) || item == this)
+				if (NS_FAILED(siblings->CurrentItem(getter_AddRefs(item))) ||
+				    item == NS_STATIC_CAST(nsIWidget*, this))
 					break;
 				
 				nsCOMPtr<nsIWidget> sibling(do_QueryInterface(item));
