@@ -973,7 +973,7 @@ StressClient_GetClientAuthData(void * arg,
         SECKEYPrivateKey * privkey = NULL;
         CERTCertNicknames * names;
         int                 i;
-        void *             proto_win;
+        void *             proto_win = NULL;
         SECStatus          rv         = SECFailure;
 
         if (Cert_And_Key) {
