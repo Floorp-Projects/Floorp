@@ -128,14 +128,24 @@ nsProxyAutoConfig.prototype = {
     }
 }
 
+// Synchronous calls to nsDNSService::Resolve ignore the cache! (bug 97097)
+// Keep a simple one of our own.
+var dnsResolveCachedHost = null;
+var dnsResolveCachedIp = null;
+
 // wrapper for dns.resolve to catch exception on failure
 function dnsResolve(host) {
-    try {
-        var ip = dns.resolve(host);
-        return ip;
+    if (host == dnsResolveCachedHost) {
+        return dnsResolveCachedIp;
     }
-    catch (e) {}
-    return null;
+    dnsResolveCachedHost = host;
+    try {
+        dnsResolveCachedIp = dns.resolve(host);
+    }
+    catch (e) {
+        dnsResolveCachedIp = null;
+    }
+    return dnsResolveCachedIp;
 }
 
 var pacModule = new Object();
