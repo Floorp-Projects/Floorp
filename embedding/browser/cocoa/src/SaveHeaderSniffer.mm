@@ -47,6 +47,7 @@
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIMIMEHeaderParam.h"
 #include "nsIDownload.h"
 #include "nsIStringEnumerator.h"
 
@@ -185,15 +186,24 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         
     // We need to figure out what file name to use.
     nsCAutoString defaultFileName;
+    // (1) Use the HTTP header suggestion.
     if (!mContentDisposition.IsEmpty()) {
-        // (1) Use the HTTP header suggestion.
-        PRInt32 index = mContentDisposition.Find("filename=");
-        if (index >= 0) {
-            // Take the substring following the prefix.
-            index += 9;
-            nsCAutoString filename;
-            mContentDisposition.Right(filename, mContentDisposition.Length() - index);
-            defaultFileName = filename;
+        nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = 
+            do_GetService("@mozilla.org/network/mime-hdrparam;1");
+        if (mimehdrpar) {
+            nsCAutoString fallbackCharset;
+            if (mURL)
+                mURL->GetOriginCharset(fallbackCharset);
+            nsAutoString fileName;
+            rv = mimehdrpar->GetParameter(mContentDisposition, "filename",
+                                          fallbackCharset, PR_TRUE, nsnull,
+                                          fileName);
+            if (NS_FAILED(rv) || fileName.IsEmpty())
+               rv = mimehdrpar->GetParameter(mContentDisposition, "name",
+                                             fallbackCharset, PR_TRUE, nsnull,
+                                             fileName);
+            if (NS_SUCCEEDED(rv) && !fileName.IsEmpty())
+                CopyUTF16toUTF8(fileName, defaultFileName);
         }
     }
     
@@ -208,7 +218,7 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         nsAutoString title;
         if (htmlDoc)
             htmlDoc->GetTitle(title); // (3) Use the title of the document.
-        defaultFileName.AssignWithConversion(title);
+        CopyUTF16toUTF8(title, defaultFileName);
     }
     
     if (defaultFileName.IsEmpty()) {
