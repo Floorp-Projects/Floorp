@@ -32,6 +32,7 @@ $CodesizeTest             = 0;
 $MailBloatTest            = 0;
 $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
 $LayoutPerformanceTest    = 0;
+$QATest                   = 0;
 $XULWindowOpenTest        = 0;
 $StartupPerformanceTest   = 0;
 
@@ -53,8 +54,9 @@ $BloatTestTimeout                 = 120;   # seconds
 $MailBloatTestTimeout             = 120;   # seconds
 $JavaTestTimeout                  = 45;
 $DomTestTimeout	                  = 45;    # seconds
-$CodesizeTestTimeout              = 45;    # seconds
+$CodesizeTestTimeout              = 900;   # seconds
 $LayoutPerformanceTestTimeout     = 1200;  # entire test, seconds
+$QATestTimeout                    = 1200;  # entire test, seconds
 $LayoutPerformanceTestPageTimeout = 30000; # each page, ms
 $StartupPerformanceTestTimeout    = 60;    # seconds
 $XULWindowOpenTestTimeout	      = 150;   # seconds

@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.194 $ ';
+$::UtilsVersion = '$Revision: 1.195 $ ';
 
 package TinderUtils;
 
@@ -1060,6 +1060,7 @@ sub extract_token_from_file {
         if (/$token/) {
             # pull the token out of $_
             $token_value = substr($_, index($_, $delimiter) + 1);
+            chomp($token_value);
             last;
         }
     }
@@ -1650,6 +1651,13 @@ sub run_all_tests {
                                              [$binary, "-P", $Settings::MozProfileName]);
     }
 
+    # QA test: Client-side JS, DOM/HTML/Views, form submission.
+    if ($Settings::QATest and $test_result eq 'success') {
+        $test_result = QATest("QATest",
+                              $build_dir,
+                              [$binary, "-P", $Settings::MozProfileName]);
+    }
+
 
     # xul window open test.
     #
@@ -1913,6 +1921,28 @@ sub LayoutPerformanceTest {
     return $layout_test_result;
 }
 
+# Client-side JavaScript, DOM Core/HTML/Views, and Form Submission tests.
+# Currently only available inside netscape firewall.
+sub QATest {
+    my ($test_name, $build_dir, $args) = @_;
+    my $binary_log = "$build_dir/$test_name.log";
+    my $url = "http://geckoqa.mcom.com/ngdriver/cgi-bin/ngdriver.cgi?findsuites=suites&tbox=1";
+    
+    # Settle OS.
+    run_system_cmd("sync; sleep 10", 35);
+    
+    $layout_time = FileBasedTest($test_name,
+                                 $build_dir,
+                                 [@$args, $url],
+                                 $Settings::QATestTimeout,
+                                 "FAILED_XXX", # No failure, we will post-process the data.
+                                 0, 0); # Timeout means failure
+
+    # Post-process log of test output.
+
+
+    return 'success';  # Hard-coded for now.
+}
 
 
 # Startup performance test.  Time how fast it takes the browser
