@@ -24,18 +24,21 @@
 
 #include "nsXtEventHandler.h"
 
-#define DBG 0
+NS_IMPL_ADDREF(nsScrollbar)
+NS_IMPL_RELEASE(nsScrollbar)
 
 //-------------------------------------------------------------------------
 //
 // nsScrollbar constructor
 //
 //-------------------------------------------------------------------------
-nsScrollbar::nsScrollbar(nsISupports *aOuter, PRBool aIsVertical) : nsWindow(aOuter)
+nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
 {
-    strcpy(gInstanceClassName, "nsScrollbar");
-    mOrientation  = (aIsVertical) ? XmVERTICAL : XmHORIZONTAL;
-    mLineIncrement = 0;
+  NS_INIT_REFCNT();
+
+  strcpy(gInstanceClassName, "nsScrollbar");
+  mOrientation  = (aIsVertical) ? XmVERTICAL : XmHORIZONTAL;
+  mLineIncrement = 0;
 
 }
 //-------------------------------------------------------------------------
@@ -132,36 +135,35 @@ nsScrollbar::~nsScrollbar()
 {
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsScrollbar::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
+    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-  if (aIID.Equals(kInsScrollbarIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+    static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
+    if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
+        *aInstancePtr = (void*) ((nsIScrollbar*)this);
+        AddRef();
+        result = NS_OK;
+    }
 
+    return result;
 }
-
 
 //-------------------------------------------------------------------------
 //
 // Define the range settings 
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
+NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
-    int max = aEndRange;
-    XtVaGetValues(mWidget, XmNmaximum, &max, nsnull);
-    if (DBG) printf("SetMaxRange %d\n", max);
+  int max = aEndRange;
+  XtVaGetValues(mWidget, XmNmaximum, &max, nsnull);
+  return NS_OK;
 
 }
 
@@ -171,11 +173,12 @@ void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 // Return the range settings 
 //
 //-------------------------------------------------------------------------
-PRUint32 nsScrollbar::GetMaxRange()
+NS_METHOD nsScrollbar::GetMaxRange(PRUint32 & aMaxRange)
 {
-    int maxRange = 0;
-    XtVaGetValues(mWidget, XmNmaximum, &maxRange, nsnull);
-    return (PRUint32)maxRange;
+  int maxRange = 0;
+  XtVaGetValues(mWidget, XmNmaximum, &maxRange, nsnull);
+  aMaxRange = (PRUint32)maxRange;
+  return NS_OK;
 }
 
 
@@ -184,11 +187,12 @@ PRUint32 nsScrollbar::GetMaxRange()
 // Set the thumb position
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetPosition(PRUint32 aPos)
+NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    int pos = (int)aPos;
-    if (DBG) printf("SetPosition %d\n", pos);
-    XtVaSetValues(mWidget, XmNvalue, pos, nsnull);
+  int pos = (int)aPos;
+  XtVaSetValues(mWidget, XmNvalue, pos, nsnull);
+
+  return NS_OK;
 }
 
 
@@ -197,12 +201,13 @@ void nsScrollbar::SetPosition(PRUint32 aPos)
 // Get the current thumb position.
 //
 //-------------------------------------------------------------------------
-PRUint32 nsScrollbar::GetPosition()
+NS_METHOD nsScrollbar::GetPosition(PRUint32 & aPos)
 {
-    int pagePos = 0;
-    XtVaGetValues(mWidget, XmNvalue, &pagePos, nsnull);
+  int pagePos = 0;
+  XtVaGetValues(mWidget, XmNvalue, &pagePos, nsnull);
 
-    return (PRUint32)pagePos;
+  aPos = (PRUint32)pagePos;
+  return NS_OK;
 }
 
 
@@ -211,13 +216,13 @@ PRUint32 nsScrollbar::GetPosition()
 // Set the thumb size
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetThumbSize(PRUint32 aSize)
+NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-    if (aSize > 0) {
-      XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize, nsnull);
-      XtVaSetValues(mWidget, XmNsliderSize, (int)aSize, nsnull);
-    }
-    if (DBG) printf("SetThumbSize %d\n", aSize);
+  if (aSize > 0) {
+    XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize, nsnull);
+    XtVaSetValues(mWidget, XmNsliderSize, (int)aSize, nsnull);
+  }
+  return NS_OK;
 }
 
 
@@ -226,12 +231,13 @@ void nsScrollbar::SetThumbSize(PRUint32 aSize)
 // Get the thumb size
 //
 //-------------------------------------------------------------------------
-PRUint32 nsScrollbar::GetThumbSize()
+NS_METHOD nsScrollbar::GetThumbSize(PRUint32 & aThumbSize)
 {
-    int pageSize = 0;
-    XtVaGetValues(mWidget, XmNpageIncrement, &pageSize, nsnull);
+  int pageSize = 0;
+  XtVaGetValues(mWidget, XmNpageIncrement, &pageSize, nsnull);
 
-    return (PRUint32)pageSize;
+  aThumbSize = (PRUint32)pageSize;
+  return NS_OK;
 }
 
 
@@ -240,14 +246,14 @@ PRUint32 nsScrollbar::GetThumbSize()
 // Set the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
+NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 {
   if (aLineIncrement > 0) {
     mLineIncrement = aLineIncrement;
     XtVaSetValues(mWidget, XmNincrement, aLineIncrement, nsnull);
   }
 
-  if (DBG) printf("SetLineIncrement %d\n", aLineIncrement);
+  return NS_OK;
 }
 
 
@@ -256,9 +262,10 @@ void nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 // Get the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-PRUint32 nsScrollbar::GetLineIncrement()
+NS_METHOD nsScrollbar::GetLineIncrement(PRUint32 & aLineInc)
 {
-    return mLineIncrement;
+  aLineInc =  mLineIncrement;
+  return NS_OK;
 }
 
 
@@ -267,7 +274,7 @@ PRUint32 nsScrollbar::GetLineIncrement()
 // Set all scrolling parameters
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
+NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
 
@@ -278,10 +285,6 @@ void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
     int maxPos = maxRange - thumbSize;
     int pos    = ((int)aPosition) > maxPos ? maxPos-1 : ((int)aPosition);
 
-    if (DBG) printf("SetParameters Max: %6d Thumb: %4d Pos: %4d Line: %4d \n", 
-                    maxRange, thumbSize, 
-                    pos, mLineIncrement);
-
     XtVaSetValues(mWidget, 
                   XmNincrement,     mLineIncrement,
                   XmNminimum,       0,
@@ -291,6 +294,7 @@ void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                   XmNvalue,         pos,
                   nsnull);
 
+  return NS_OK;
 }
 
 
@@ -308,7 +312,6 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
 
-  if (DBG) printf("*&*&*&*&*&*&*()()()()(((( nsScrollbar::OnResize\n");
   return nsWindow::OnResize(aEvent);
   //return PR_FALSE;
 }
@@ -343,7 +346,11 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
         {
             XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
             newPosition += mLineIncrement;
-            PRUint32 max = GetMaxRange() - GetThumbSize();
+            PRUint32 thumbSize;
+            PRUint32 maxRange;
+            GetThumbSize(thumbSize);
+            GetMaxRange(maxRange);
+            PRUint32 max = maxRange - thumbSize;
             if (newPosition > (int)max) 
                 newPosition = (int)max;
 
@@ -388,7 +395,12 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
         case NS_SCROLLBAR_PAGE_NEXT: 
         {
             XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
-            PRUint32 max = GetMaxRange() - GetThumbSize();
+            PRUint32 thumbSize;
+            GetThumbSize(thumbSize);
+            PRUint32 maxRange;
+            GetThumbSize(thumbSize);
+            GetMaxRange(maxRange);
+            PRUint32 max = maxRange - thumbSize;
             if (newPosition > (int)max) 
                 newPosition = (int)max;
 
@@ -446,63 +458,4 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     }
     return result;
 }
-
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-#define GET_OUTER() ((nsScrollbar*) ((char*)this - nsScrollbar::GetOuterOffset()))
-
-// nsIScrollbar part
-void nsScrollbar::AggScrollbar::SetMaxRange(PRUint32 aEndRange)
-{
-  GET_OUTER()->SetMaxRange(aEndRange);
-}
-
-PRUint32 nsScrollbar::AggScrollbar::GetMaxRange()
-{
-  return GET_OUTER()->GetMaxRange();
-}
-
-void nsScrollbar::AggScrollbar::SetPosition(PRUint32 aPos)
-{
-  GET_OUTER()->SetPosition(aPos);
-}
-
-PRUint32 nsScrollbar::AggScrollbar::GetPosition()
-{
-  return GET_OUTER()->GetPosition();
-}
-
-void nsScrollbar::AggScrollbar::SetThumbSize(PRUint32 aSize)
-{
-  GET_OUTER()->SetThumbSize(aSize);
-}
-
-PRUint32 nsScrollbar::AggScrollbar::GetThumbSize()
-{
-  return GET_OUTER()->GetThumbSize();
-}
-
-void nsScrollbar::AggScrollbar::SetLineIncrement(PRUint32 aSize)
-{
-  GET_OUTER()->SetLineIncrement(aSize);
-}
-
-PRUint32 nsScrollbar::AggScrollbar::GetLineIncrement()
-{
-  return GET_OUTER()->GetLineIncrement();
-}
-
-void nsScrollbar::AggScrollbar::SetParameters(PRUint32 aMaxRange, 
-                                              PRUint32 aThumbSize,
-                                              PRUint32 aPosition, 
-                                              PRUint32 aLineIncrement)
-{
-  GET_OUTER()->SetParameters(aMaxRange, aThumbSize, aPosition, aLineIncrement);
-}
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsScrollbar, AggScrollbar);
 
