@@ -132,9 +132,8 @@
   <form method="post" action="long_list.cgi">
     <input type="hidden" name="buglist" value="[% buglist %]">
     <input type="submit" value="Long Format">
-
-    <a href="query.cgi">Query Page</a> &nbsp;&nbsp;
-    <a href="enter_bug.cgi">Enter New Bug</a> &nbsp;&nbsp;
+    &nbsp;&nbsp;
+    <a href="buglist.cgi?[% urlquerypart %]&ctype=csv">CSV</a> &nbsp;&nbsp;
     <a href="colchange.cgi?[% urlquerypart %]">Change Columns</a> &nbsp;&nbsp;
 
     [% IF bugs.size > 1 && caneditbugs && !dotweak %]
