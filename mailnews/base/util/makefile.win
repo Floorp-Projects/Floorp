@@ -41,7 +41,6 @@ EXPORTS=                \
 	nsMsgIncomingServer.h	\
 	nsNewsSummarySpec.h \
 	nsMsgUtils.h \
-	nsMessage.h \
 	nsMsgProtocol.h \
 	nsMsgMailNewsUrl.h \
 	nsMsgTxn.h \
