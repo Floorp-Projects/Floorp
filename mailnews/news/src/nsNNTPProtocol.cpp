@@ -2401,7 +2401,7 @@ nsNNTPProtocol::SetNewsFolder()
 	// xxx todo:  I need to fix this so this is passed in when I create the nsNNTPProtocol
 
     if (!m_newsFolder) {
-        nsCAutoString folderURI = "news://";
+        nsCAutoString folderURI("news://");
 
 		if ((const char *)m_userName) {
 			folderURI += (const char *)m_userName;

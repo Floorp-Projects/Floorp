@@ -1023,7 +1023,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   }
 #endif
 
-  nsCAutoString uriStr = uri;
+  nsCAutoString uriStr(uri);
   nsCAutoString newsgroupName;
   
   NS_ASSERTION((uriStr.Find(kNewsRootURI) == 0), "uriStr didn't start with news:/");
@@ -1311,7 +1311,7 @@ NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
     aMsgFolder->GetName(getter_Copies(newsgroupName));
     if (NS_FAILED(rv)) return rv;
 
-    nsCString searchUrl = (const char *) serverUri;
+    nsCString searchUrl(NS_STATIC_CAST(const char *, serverUri));
     nsCString asciiNewsgroupName;
     asciiNewsgroupName.AssignWithConversion(newsgroupName);
     searchUrl.Append(aSearchUri);

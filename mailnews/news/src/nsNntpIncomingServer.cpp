@@ -145,7 +145,7 @@ nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
 	// set the leaf name to "dummy", and then call MakeUnique with a suggested leaf name
 	rv = path->AppendRelativeUnixPath("dummy");
 	if (NS_FAILED(rv)) return rv;
-	nsCAutoString newsrcFileName = NEWSRC_FILE_PREFIX;
+	nsCAutoString newsrcFileName(NEWSRC_FILE_PREFIX);
 	newsrcFileName.Append(hostname);
 	newsrcFileName.Append(NEWSRC_FILE_SUFFIX);
 	rv = path->MakeUniqueWithSuggestedName((const char *)newsrcFileName);
@@ -975,7 +975,7 @@ nsNntpIncomingServer::AddNewsgroupToSubscribeDS(const char *aName)
 	nsresult rv;
 
 	// since this comes from the server, append it to the list
-	mGroupsOnServer.AppendCString(aName);
+	mGroupsOnServer.AppendCString(nsCAutoString(aName));
 
 	rv = AddToSubscribeDS(aName, PR_FALSE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
@@ -1227,7 +1227,7 @@ NS_IMETHODIMP
 nsNntpIncomingServer::AddNewsgroup(const char *name)
 {
 	// handle duplicates?
-	mSubscribedNewsgroups.AppendCString(name);
+	mSubscribedNewsgroups.AppendCString(nsCAutoString(name));
 	return NS_OK;
 }
 
@@ -1235,6 +1235,6 @@ NS_IMETHODIMP
 nsNntpIncomingServer::RemoveNewsgroup(const char *name)
 {
 	// handle duplicates?
-	mSubscribedNewsgroups.RemoveCString(name);
+	mSubscribedNewsgroups.RemoveCString(nsCString(name));
 	return NS_OK;
 }
