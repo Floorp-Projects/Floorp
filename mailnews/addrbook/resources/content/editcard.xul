@@ -127,12 +127,12 @@ function GenerateDisplayName()
 						<box align="horizontal" flex="100%">
 							<spring flex="100%"/>
 							<html:label for="FirstName">&FirstName.label;</html:label>
-							<html:input type="text" id="FirstName" class="CardEdit" onkeyup="if (event.which == 13) { GenerateDisplayName(); }" />
+							<html:input type="text" id="FirstName" class="CardEdit" onkeyup="GenerateDisplayName();" />
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
 							<html:label for="LastName">&LastName.label;</html:label>
-							<html:input id="LastName" type="text" class="CardEdit" onkeyup="if (event.which == 13) { GenerateDisplayName(); }"/>
+							<html:input id="LastName" type="text" class="CardEdit" onkeyup="GenerateDisplayName();"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
