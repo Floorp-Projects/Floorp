@@ -1111,7 +1111,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   }
   
   if (NS_FAILED(aStatus) || !aDataStream) {
-    LOG_WARN(("  Load failed: status %d, data stream %p",
+    LOG_WARN(("  Load failed: status %u, data stream %p",
               aStatus, aDataStream));
     mLoader->SheetComplete(this, PR_FALSE);
     return NS_OK;
@@ -1761,9 +1761,15 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
   }
   
 
-#ifdef DEBUG
+  // This is a mess.  If we have a document.write() that writes out
+  // two <link> elements pointing to the same url, we will actually
+  // end up blocking the same parser twice.  This seems very wrong --
+  // if we blocked it the first time, why is more stuff getting
+  // written??  In any case, we only want to unblock it once.
+  // Otherwise we get icky things like crashes in layout...  We need
+  // to stop blocking the parser.  We really do.
   PRBool seenParser = PR_FALSE;
-#endif
+  
   // Go through and deal with the whole linked list.
   SheetLoadData* data = aLoadData;
   while (data) {
@@ -1775,11 +1781,12 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
     }
                            
     if (data->mParserToUnblock) {
-#ifdef DEBUG
-      NS_ASSERTION(!seenParser, "Should not have multiple parsers involved!");
-      seenParser = PR_TRUE;
-#endif
-      data->mParserToUnblock->ContinueParsing();
+      LOG(("Parser to unblock: %p", data->mParserToUnblock.get()));
+      if (!seenParser) {
+        LOG(("Unblocking parser: %p", data->mParserToUnblock.get()));
+        seenParser = PR_TRUE;
+        data->mParserToUnblock->ContinueParsing();
+      }
       data->mParserToUnblock = nsnull; // drop the ref, just in case
     }
 
