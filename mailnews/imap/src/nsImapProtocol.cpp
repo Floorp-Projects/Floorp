@@ -649,7 +649,29 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 // when the connection is done processing the current state, free any per url state data...
 void nsImapProtocol::ReleaseUrlState()
 {
-  m_runningUrl = null_nsCOMPtr();
+  if (m_runningUrl)
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl>  mailnewsurl = do_QueryInterface(m_runningUrl);
+    if (m_imapServerSink)  
+      m_imapServerSink->RemoveChannelFromUrl(mailnewsurl, NS_OK);
+    m_runningUrl = nsnull; // force us to release our last reference on the url
+
+    // we want to make sure the imap protocol's last reference to the url gets released
+    // back on the UI thread. This ensures that the objects the imap url hangs on to
+    // properly get released back on the UI thread. In order to do this, we need a
+    // a fancy texas two step where we first give the ui thread the url we want to
+    // release, then we forget about our copy. Then we tell it to release the url
+    // for real.
+    if (m_imapMailFolderSink)
+    {
+      m_imapMailFolderSink->PrepareToReleaseUrl(mailnewsurl);
+      mailnewsurl = nsnull;
+      // at this point in time, we MUST have released all of our references to 
+      // the url from the imap protocol. otherwise this whole exercise is moot.
+      m_imapMailFolderSink->ReleaseUrl();
+    }
+  }
+
   m_imapMailFolderSink = null_nsCOMPtr();
   m_imapMessageSink = null_nsCOMPtr();
   m_imapExtensionSink = null_nsCOMPtr();
@@ -664,13 +686,8 @@ void nsImapProtocol::ReleaseUrlState()
   
   m_channelInputStream = null_nsCOMPtr();
   m_channelOutputStream = null_nsCOMPtr();
-
-  // mscott - do we need to release all of our sinks here? will we re-use them on the next
-  // url request? I'm guessing we need to release them even though we'll just re-acquire
-  // them on the next request.
-  // YES, we should release them - they may not be valid, because we may switch folders.
-
 }
+
 
 NS_IMETHODIMP nsImapProtocol::Run()
 {
@@ -1172,33 +1189,29 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   if (m_channelListener)
     rv = m_channelListener->OnStopRequest(m_mockChannel, m_channelContext, NS_OK, nsnull);
 
-    m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
-    PseudoInterrupt(PR_FALSE);  // clear this, because we must be done interrupting?
-    nsCOMPtr<nsISupports> copyState;
+  m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
+  PseudoInterrupt(PR_FALSE);  // clear this, because we must be done interrupting?
+  nsCOMPtr<nsISupports> copyState;
 
   if (m_runningUrl)
     rv = m_runningUrl->GetCopyState(getter_AddRefs(copyState));
-    if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && GetServerStateParser().LastCommandSuccessful() 
-		&& m_imapMiscellaneousSink && copyState)
-    {
-        m_imapMiscellaneousSink->CopyNextStreamMessage(this, copyState);
-        WaitForFEEventCompletion();
-    }
+  if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && GetServerStateParser().LastCommandSuccessful() 
+	&& m_imapMiscellaneousSink && copyState)
+  {
+      m_imapMiscellaneousSink->CopyNextStreamMessage(this, copyState);
+      WaitForFEEventCompletion();
+  }
 
   // removing the channel from the current url needs to be done on the UI thread
   // because it triggers a set of events that perculate back to JS that require it 
   // being on the UI thread....so call a proxy instead of removing the channel ourselves...
 
-  // probably the wrong place to remove the channel - we need
-  // a place where we know we're finished with the url.
-  if (m_runningUrl && m_imapServerSink)
-    m_imapServerSink->RemoveChannelFromUrl(mailnewsurl, NS_OK);
+  // this is so hokey...we MUST clear any local references to the url 
+  // BEFORE calling ReleaseUrlState
+  mailnewsurl = nsnull;
+  copyState = nsnull;   
 
-  // release this by hand so that we can load the next queued url without thinking
-  // this connection is busy running a url.
-  m_runningUrl = null_nsCOMPtr();
-
-    // release the url as we are done with it...
+  // release the url as we are done with it...
   ReleaseUrlState();
   ResetProgressInfo();
   // now try queued urls, now that we've released this connection.
