@@ -415,7 +415,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
                                             getter_AddRefs(directoryService));
             if (NS_FAILED(rv)) return rv;
             directoryService->Get("xpcom.currentProcess.componentRegistry", NS_GET_IID(nsIFile), 
-                                          (void**)&registryLocation);
+                                          getter_AddRefs(registryLocation));
 
             if (registryLocation != nsnull)
                 foundReg = PR_TRUE;
@@ -432,6 +432,8 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
 
     char *regFile;
     registryLocation->GetPath(&regFile);  // dougt fix...
+	// dveditz needs to fix his registry so that I can pass an
+	// nsIFile interface and not hack 
 
 
 #ifdef DEBUG_dp
@@ -441,6 +443,8 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
     PR_Lock(mregLock);
     err = NR_RegOpen((char*)regFile, &mReg );
     PR_Unlock(mregLock);
+
+	nsAllocator::Free(regFile);
 
     // Store the registry that was opened for optimizing future opens.
     mCurRegID = regid;
