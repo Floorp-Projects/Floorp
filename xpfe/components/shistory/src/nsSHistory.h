@@ -23,29 +23,29 @@
 #ifndef nsSHistory_h
 #define nsSHistory_h
 
+// Helper Classes
 #include "nsCOMPtr.h"
-#include "nsISHistory.h"
 
-class nsISHEntry;
-class nsISHTransaction;
+//Interfaces Needed
+#include "nsISHistory.h"
+#include "nsISHTransaction.h"
 
 class nsSHistory: public nsISHistory
 {
 public:
+	nsSHistory();
+
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSISHISTORY
 
-	nsSHistory();
-
 protected:
-	virtual ~nsSHistory();
+   virtual ~nsSHistory();
 
-private:
-    friend NS_IMETHODIMP
-		NS_NewSHistory(nsISupports * aOuter, REFNSIID aIID, void** aResult);
-      NS_IMETHOD PrintHistory();
-      NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
-	nsCOMPtr<nsISHTransaction> mListRoot;
+   NS_IMETHOD PrintHistory();
+   NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
+	
+protected:
+   nsCOMPtr<nsISHTransaction> mListRoot;
 	PRInt32 mIndex;
 	PRInt32 mLength;
 };

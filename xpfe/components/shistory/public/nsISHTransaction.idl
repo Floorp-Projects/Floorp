@@ -41,15 +41,15 @@ interface nsISHTransaction : nsISupports
 	/**
 	 * The parent of this transaction
 	 */
-	readonly attribute nsISHTransaction parent;
+	attribute nsISHTransaction prev;
 
 	/**
 	 * The legitimate child of this transaction 
 	 */
-	readonly attribute nsISHTransaction child;
+	attribute nsISHTransaction next;
 
 	/**
-	 * The *other* children of this transaction.
+	 * The other paths that have been navigated from this transaction
 	 */
 	readonly attribute nsISHTransaction lrvList;
 
@@ -62,7 +62,7 @@ interface nsISHTransaction : nsISupports
 	/**
 	 * Create a transaction with parent and History Entry 
 	 */
-	 void create(in nsISHEntry aSHEntry, in nsISHTransaction aParent);
+	 void create(in nsISHEntry aSHEntry, in nsISHTransaction aPrev);
 };
 
 %{ C++

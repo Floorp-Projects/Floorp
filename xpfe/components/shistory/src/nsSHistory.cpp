@@ -21,38 +21,45 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "nsISupportsUtils.h"
-#include "nsCOMPtr.h"
+// Local Includes 
 #include "nsSHistory.h"
-#include "nsIGenericFactory.h"
+
+// Helper Classes
 #include "nsXPIDLString.h"
-#include "nsString.h"
+
+// Interfaces Needed
+#include "nsIGenericFactory.h"
 #include "nsILayoutHistoryState.h"
 
-
-#ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
-#define WEB_TRACE(_bit,_args)            \
-   PR_BEGIN_MACRO                         \
-     if (WEB_LOG_TEST(gLogModule,_bit)) { \
-       PR_LogPrint _args;                 \
-     }                                    \
-   PR_END_MACRO
-#else
-#define WEB_TRACE(_bit,_args)
-#endif
-
-NS_IMPL_ISUPPORTS1(nsSHistory, nsISHistory)
+//*****************************************************************************
+//***    nsSHistory: Object Management
+//*****************************************************************************
 
 nsSHistory::nsSHistory() : mListRoot(nsnull), mIndex(-1), mLength(0)
 {
-NS_INIT_REFCNT();
+   NS_INIT_REFCNT();
 }
 
 
 nsSHistory::~nsSHistory()
 {
-  //NS_IF_RELEASE(mListRoot);  
 }
+
+//*****************************************************************************
+//    nsSHistory: nsISupports
+//*****************************************************************************
+
+NS_IMPL_ADDREF(nsSHistory)
+NS_IMPL_RELEASE(nsSHistory)
+
+NS_INTERFACE_MAP_BEGIN(nsSHistory)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHistory)
+   NS_INTERFACE_MAP_ENTRY(nsISHistory)
+NS_INTERFACE_MAP_END
+
+//*****************************************************************************
+//    nsSHistory: nsISHistory
+//*****************************************************************************
 
 /* Add an entry to the History list at mIndex and 
  * increment the index to point to the new entry
@@ -86,8 +93,11 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
    txn->SetPersist(aPersist);
 	NS_ENSURE_SUCCESS(txn->Create(aSHEntry, currentTxn), NS_ERROR_FAILURE);
    
-   mLength++;
-   mIndex++;
+   // A little tricky math here...  Basically when adding an object regardless of
+   // what the length was before, it should always be set back to the current and
+   // lop off the forward.
+   mLength = (++mIndex + 1);
+
    // If this is the very first transaction, initialize the list
    if(!mListRoot)
       mListRoot = txn;
@@ -187,7 +197,7 @@ nsSHistory::GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult)
 
      while(1) {
        nsCOMPtr<nsISHTransaction> ptr;
-	   rv = tempPtr->GetChild(getter_AddRefs(ptr));
+	   rv = tempPtr->GetNext(getter_AddRefs(ptr));
 	   if (NS_SUCCEEDED(rv) && ptr) {
           cnt++;
 		  if (cnt == aIndex) {
@@ -251,10 +261,10 @@ nsSHistory::PrintHistory()
               Recycle(title);
               Recycle(titleCStr);
 
-              nsCOMPtr<nsISHTransaction> child;
-              rv = txn->GetChild(getter_AddRefs(child));
-              if (NS_SUCCEEDED(rv) && child) {
-                      txn = child;
+              nsCOMPtr<nsISHTransaction> next;
+              rv = txn->GetNext(getter_AddRefs(next));
+              if (NS_SUCCEEDED(rv) && next) {
+                      txn = next;
                       index++;
                       continue;
               }
@@ -277,32 +287,3 @@ nsSHistory::GetRootTransaction(nsISHTransaction ** aResult)
       return NS_OK;
 }
 
-
-NS_IMETHODIMP
-NS_NewSHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsresult rv = NS_OK;
-
-  nsSHistory* result = new nsSHistory();
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-
-  rv = result->QueryInterface(aIID, aResult);
-
-  if (NS_FAILED(rv)) {
-    delete result;
-    *aResult = nsnull;
-    return rv;
-  }
-
-  return rv;
-}

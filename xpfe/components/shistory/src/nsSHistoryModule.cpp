@@ -28,28 +28,28 @@
 #include "nsISHTransaction.h"
 #include "nsISHistory.h"
 
-extern NS_IMETHODIMP NS_NewSHTransaction(nsISupports * aOuter, REFNSIID aIID, void** aResult);
-extern NS_IMETHODIMP NS_NewSHEntry(nsISupports * aOuter, REFNSIID aIID, void** aResult);
-extern NS_IMETHODIMP NS_NewSHistory(nsISupports * aOuter, REFNSIID aIID, void** aResult);
- 
+#include "nsSHEntry.h"
+#include "nsSHistory.h"
+#include "nsSHTransaction.h"
+
+// Factory Constructors
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHistory)
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the history library
 
-static nsModuleComponentInfo gSHistoryModuleInfo[] = {
-  { "nsSHEntry",
-    NS_SHENTRY_CID,
-    NS_SHENTRY_PROGID, 
-    NS_NewSHEntry },
-  { "nsSHTransaction",
-    NS_SHTRANSACTION_CID,
-    NS_SHTRANSACTION_PROGID, 
-    NS_NewSHTransaction },
-    { "nsSHistory",
-    NS_SHISTORY_CID,
-    NS_SHISTORY_PROGID, 
-    NS_NewSHistory }
+static nsModuleComponentInfo gSHistoryModuleInfo[] = 
+{
+   { "nsSHEntry", NS_SHENTRY_CID,
+      NS_SHENTRY_PROGID, nsSHEntryConstructor },
+   { "nsSHTransaction", NS_SHTRANSACTION_CID,
+      NS_SHTRANSACTION_PROGID, nsSHTransactionConstructor },
+   { "nsSHistory", NS_SHISTORY_CID,
+      NS_SHISTORY_PROGID, nsSHistoryConstructor }
 };
 
-
-NS_IMPL_NSGETMODULE("shistory", gSHistoryModuleInfo)
+NS_IMPL_NSGETMODULE("Session History Module", gSHistoryModuleInfo)
