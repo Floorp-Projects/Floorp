@@ -2032,7 +2032,9 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
 nsresult
 nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 {
-  nsresult result = NS_OK;
+  // If we already have a parser we ignore the document.open call.
+  if (mParser)
+    return NS_OK;
 
   // Stop current loads targetted at the window this document is in.
   if (mScriptGlobalObject) {
@@ -2044,60 +2046,60 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     }
   }
 
+  nsresult result = NS_OK;
+
   // The open occurred after the document finished loading.
   // So we reset the document and create a new one.
-  if (nsnull == mParser) {
-    nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+  nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
-    result = NS_OpenURI(getter_AddRefs(channel), aSourceURL, nsnull, group);
+  result = NS_OpenURI(getter_AddRefs(channel), aSourceURL, nsnull, group);
+  if (NS_FAILED(result)) return result;
+
+  //Before we reset the doc notify the globalwindow of the change.
+  if (mScriptGlobalObject) {
+    //Hold onto ourselves on the offchance that we're down to one ref
+    nsCOMPtr<nsIDOMDocument> kungFuDeathGrip (do_QueryInterface((nsIHTMLDocument*)this));
+    result = mScriptGlobalObject->SetNewDocument(kungFuDeathGrip);
     if (NS_FAILED(result)) return result;
+  }
 
-    //Before we reset the doc notify the globalwindow of the change.
-    if (mScriptGlobalObject) {
-      //Hold onto ourselves on the offchance that we're down to one ref
-      nsCOMPtr<nsIDOMDocument> kungFuDeathGrip (do_QueryInterface((nsIHTMLDocument*)this));
-      result = mScriptGlobalObject->SetNewDocument(kungFuDeathGrip);
-      if (NS_FAILED(result)) return result;
-    }
-
-    result = Reset(channel, group);
-    if (NS_FAILED(result)) return result;
-    if (NS_OK == result) {
-      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-      
-      result = nsComponentManager::CreateInstance(kCParserCID, 
-                                                  nsnull, 
-                                                  kCParserIID, 
-                                                  (void **)&mParser);
-      mIsWriting = 1;
-      
-      if (NS_OK == result) { 
-        nsCOMPtr<nsIHTMLContentSink> sink;
-        nsCOMPtr<nsIWebShell> webShell;
+  result = Reset(channel, group);
+  if (NS_FAILED(result)) return result;
+  if (NS_OK == result) {
+    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+    
+    result = nsComponentManager::CreateInstance(kCParserCID, 
+                                                nsnull, 
+                                                kCParserIID, 
+                                                (void **)&mParser);
+    mIsWriting = 1;
+    
+    if (NS_OK == result) { 
+      nsCOMPtr<nsIHTMLContentSink> sink;
+      nsCOMPtr<nsIWebShell> webShell;
         
-        // Get the webshell of our primary presentation shell
-        nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
-        if (shell) {
-          nsCOMPtr<nsIPresContext> cx;
-          shell->GetPresContext(getter_AddRefs(cx));
-          nsCOMPtr<nsISupports> container;
-          if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
-            if (container) {
-              webShell = do_QueryInterface(container);
+      // Get the webshell of our primary presentation shell
+      nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+      if (shell) {
+        nsCOMPtr<nsIPresContext> cx;
+        shell->GetPresContext(getter_AddRefs(cx));
+        nsCOMPtr<nsISupports> container;
+        if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
+          if (container) {
+            webShell = do_QueryInterface(container);
             }
-          }
         }
-
-        result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL, webShell);
-
-        if (NS_OK == result) {
-          nsCOMPtr<nsIDTD> theDTD;
-          NS_NewNavHTMLDTD(getter_AddRefs(theDTD));
-          mParser->RegisterDTD(theDTD);
-          mParser->SetContentSink(sink); 
-        }
+      }
+      
+      result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL, webShell);
+      
+      if (NS_OK == result) {
+        nsCOMPtr<nsIDTD> theDTD;
+        NS_NewNavHTMLDTD(getter_AddRefs(theDTD));
+        mParser->RegisterDTD(theDTD);
+        mParser->SetContentSink(sink); 
       }
     }
   }
