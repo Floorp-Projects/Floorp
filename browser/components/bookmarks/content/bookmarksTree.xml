@@ -682,10 +682,9 @@
           //observer.beginUpdateBatch(this.db);
           const kDSIID = Components.interfaces.nsIDragService;
           const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
-          // disabling ctrl-DND for now bookmarks are not cloned
+
           if (dragSession.dragAction & kCopyAction)
-             SOUND.beep();
-            //BookmarksUtils.insertSelection("drag", selection, target, true);
+            BookmarksUtils.insertSelection("drag", selection, target);
           else
             BookmarksUtils.moveSelection  ("drag", selection, target);
           //observer.endUpdateBatch(this.db);
