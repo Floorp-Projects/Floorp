@@ -90,8 +90,8 @@ public:
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto);
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
-  NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
-  NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult);
+  NS_IMETHOD SetContainer(nsISupports* aContainer);
+  NS_IMETHOD GetContainer(nsISupports** aContainerResult);
   NS_IMETHOD Stop(void);
   NS_IMETHOD GetBounds(nsRect& aResult);
   NS_IMETHOD SetBounds(const nsRect& aBounds);
@@ -298,7 +298,7 @@ DocumentViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::SetContainer(nsIContentViewerContainer* aContainer)
+DocumentViewerImpl::SetContainer(nsISupports* aContainer)
 {
   mContainer = aContainer;
   if (mPresContext) {
@@ -308,12 +308,13 @@ DocumentViewerImpl::SetContainer(nsIContentViewerContainer* aContainer)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::GetContainer(nsIContentViewerContainer*& aResult)
+DocumentViewerImpl::GetContainer(nsISupports** aResult)
 {
-   if(mContainer)
-      return mContainer->QueryInterface( nsIContentViewerContainer::GetIID(), (void**)&aResult );
-   else
-      aResult = nsnull;
+   NS_ENSURE_ARG_POINTER(aResult);
+
+   *aResult = mContainer;
+   NS_IF_ADDREF(*aResult);
+
    return NS_OK;
 }
 
@@ -520,7 +521,6 @@ static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTOR
 NS_IMETHODIMP
 DocumentViewerImpl::Print(void)
 {
-nsCOMPtr<nsIContentViewerContainer>   containerResult;
 nsCOMPtr<nsIWebShell>                 webContainer;
 nsCOMPtr<nsIDeviceContextSpecFactory> factory;
 PRInt32                               width,height;
@@ -550,8 +550,7 @@ nsCOMPtr<nsIPref>                     prefs;
         NS_RELEASE(devspec);
 
         // Get the webshell for this documentviewer
-        rv = this->GetContainer(*getter_AddRefs(containerResult));
-        webContainer = do_QueryInterface(containerResult);
+        webContainer = do_QueryInterface(mContainer);
         if(webContainer) {
           // load the document and do the initial reflow on the entire document
           rv = NS_NewPrintContext(&mPrintPC);
@@ -1012,13 +1011,9 @@ void PR_CALLBACK DocumentViewerImpl::DestroyPLEvent(PLEvent* aEvent)
 
 void DocumentViewerImpl::DocumentReadyForPrinting()
 {
-  nsresult rv;
-  
-  nsCOMPtr<nsIContentViewerContainer> containerResult;
   nsCOMPtr<nsIWebShell> webContainer;
 
-  rv = this->GetContainer(*getter_AddRefs(containerResult));
-  webContainer = do_QueryInterface(containerResult);
+  webContainer = do_QueryInterface(mContainer);
   if(webContainer) {
     //
     // Remove ourselves as an image group observer...
