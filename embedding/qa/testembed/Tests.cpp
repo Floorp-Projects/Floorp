@@ -659,32 +659,37 @@ void CTests::OnToolsTestYourMethod2()
 {
 	// place your test code here
 
-		// nsIWebProgress test cases
+	nsCAutoString theSpec;
+	nsCOMPtr<nsIURI> theURI;
+	nsCOMPtr<nsIChannel> theChannel;
+	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
 
-		// get webProg object
-	nsCOMPtr<nsIInterfaceRequestor> qaIReq(do_QueryInterface(qaWebBrowser));
-	nsCOMPtr<nsIWebProgress> qaWebProgress(do_GetInterface(qaIReq));
-	if (!qaWebProgress)
-		QAOutput("Didn't get web progress object.", 2);
-	else
-		QAOutput("We got web progress object.", 2);
+	theSpec = "javascript:document.write('TEST')";
+	FormatAndPrintOutput("the uri spec = ", theSpec, 2);
 
-		// addWebProgListener
-	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
-	rv = qaWebProgress->AddProgressListener(listener, nsIWebProgress::NOTIFY_ALL);
-	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
+	rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
+	RvTestResult(rv, "NS_NewURI", 2);
 
-		// removeWebProgListener
-	rv = qaWebProgress->RemoveProgressListener(listener);
-	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", 2);
+	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
+	RvTestResult(rv, "NS_OpenURI", 2);
 
-		// getTheDOMWindow
-	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
-	rv = qaWebProgress->GetDOMWindow(getter_AddRefs(qaDOMWindow));
-	if (!qaWebProgress)
-		QAOutput("Didn't get DOM Window object.", 2);
-	else
-		RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 2);
+	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
+	nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
+
+	// this calls nsIStreamListener::OnDataAvailable()
+	rv = theChannel->AsyncOpen(listener, nsnull);
+	RvTestResult(rv, "AsyncOpen()", 2);
+
+	nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
+
+	CNsIRequest::IsPendingReqTest(theRequest);
+	CNsIRequest::GetStatusReqTest(theRequest);
+	CNsIRequest::SuspendReqTest(theRequest);	
+	CNsIRequest::ResumeReqTest(theRequest);	
+	CNsIRequest::CancelReqTest(theRequest);	
+	CNsIRequest::SetLoadGroupTest(theRequest, theLoadGroup);	
+	CNsIRequest::GetLoadGroupTest(theRequest);
 
 }
 
