@@ -253,6 +253,9 @@ sub BuildDist()
     InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
     InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",						"$distdirectory:oji:");
 
+	#DBM
+    InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
+	
 	#LAYERS (IS THIS STILL NEEDED)
 	InstallFromManifest(":mozilla:lib:liblayer:include:MANIFEST",					"$distdirectory:layers:");
 
