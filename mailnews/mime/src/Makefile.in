@@ -42,6 +42,7 @@ EXPORTS =\
 		mimepbuf.h						\
 		modlmime.h						\
 		mimerosetta.h					\
+		comi18n.h					\
 		$(NULL)
 
 CPPSRCS = \
