@@ -1611,8 +1611,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
 
   if (mCopyState->m_undoMsgTxn)
-      localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
-
+    rv = localUndoTxn->QueryInterface(nsCOMTypeInfo<nsMsgTxn>::GetIID(),
+                                      getter_AddRefs(mCopyState->m_undoMsgTxn));
   
 	//Copy the header to the new database
 	if(copySucceeded && mCopyState->m_message)
