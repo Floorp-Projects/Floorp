@@ -30,7 +30,9 @@
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIFrame;
-
+class nsXULTreeGroupFrame;
+class nsPoint;
+class nsRect;
 
 class nsTreeItemDragCapturer : public nsIDOMDragListener
 {
@@ -43,7 +45,7 @@ public:
   } ;
   
     // default ctor and dtor
-  nsTreeItemDragCapturer ( nsIFrame* inTreeItem, nsIPresContext* inPresContext );
+  nsTreeItemDragCapturer ( nsXULTreeGroupFrame* inTreeItem, nsIPresContext* inPresContext );
   virtual ~nsTreeItemDragCapturer();
 
     // interfaces for addref and release and queryinterface
@@ -65,11 +67,16 @@ protected:
     // middle region of the row height. If this is the case, |outBefore| is meaningless. 
   void ComputeDropPosition(nsIDOMEvent* aDragEvent, nscoord* outYLoc, PRBool* outBefore, PRBool* outDropOnMe);
 
+    // Take the mouse coordinates from the DOM event and convert them into frame-relative
+    // coordinates.
+  void ConvertEventCoordsToRowCoords ( nsIDOMEvent* inDragEvent, nsPoint* outCoords,
+                                          nsRect* outRowRect ) ;
+  
     // Since there are so many nested tree items, we have to weed out when the event is not
     // really for us.
   PRBool IsEventTargetMyTreeItem ( nsIDOMEvent* inEvent ) ;
   
-  nsIFrame* mTreeItem;    // rowGroup owns me, don't be circular
+  nsXULTreeGroupFrame* mTreeItem;    // rowGroup owns me, don't be circular
   nsIPresContext*  mPresContext;     // weak reference
   PRInt32          mCurrentDropLoc;
 

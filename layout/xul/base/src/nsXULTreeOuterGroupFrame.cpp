@@ -140,7 +140,7 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
  mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0),
- mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull),
+ mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCanDropBetweenRows(PR_TRUE),
  mTreeLayoutState(eTreeLayoutNormal), mReflowCallbackPosted(PR_FALSE)
 {
 }
@@ -233,6 +233,17 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   if ( receiver ) {
     mDragOverListener = new nsDragOverListener(this);
     receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragOverListener, PR_FALSE);
+  }
+  
+  // our parent is the <tree> tag. check if it has an attribute denying the ability to
+  // drop between rows and cache it here for the benefit of the rows inside us.
+  nsCOMPtr<nsIContent> parent;
+  mContent->GetParent ( *getter_AddRefs(parent) );
+  if ( parent ) {
+    nsAutoString attr;
+    parent->GetAttribute ( kNameSpaceID_None, nsXULAtoms::ddNoDropBetweenRows, attr ); 
+    if ( attr.Equals(NS_ConvertASCIItoUCS2("true")) )
+      mCanDropBetweenRows = PR_FALSE;
   }
   
   return rv;

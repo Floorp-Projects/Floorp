@@ -37,6 +37,9 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIView.h"
 #include "nsIFrame.h"
+#include "nsXULTreeGroupFrame.h"
+#include "nsXULTreeOuterGroupFrame.h"
+
 
 NS_IMPL_ADDREF(nsTreeItemDragCapturer)
 NS_IMPL_RELEASE(nsTreeItemDragCapturer)
@@ -49,7 +52,7 @@ NS_IMPL_QUERY_INTERFACE2(nsTreeItemDragCapturer, nsIDOMEventListener, nsIDOMDrag
 // Init member variables. We can't really do much of anything important here because
 // any subframes might not be totally intialized yet, or in the hash table
 //
-nsTreeItemDragCapturer :: nsTreeItemDragCapturer ( nsIFrame* inTreeItem, nsIPresContext* inPresContext )
+nsTreeItemDragCapturer :: nsTreeItemDragCapturer ( nsXULTreeGroupFrame* inTreeItem, nsIPresContext* inPresContext )
   : mTreeItem(inTreeItem), mPresContext(inPresContext), mCurrentDropLoc(kNoDropLoc)
 {
   NS_INIT_REFCNT();
@@ -110,18 +113,92 @@ void
 nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord* outYLoc,
                                                       PRBool* outBefore, PRBool* outDropOnMe )
 {
-  *outYLoc = 0;
+  *outYLoc = kNoDropLoc;
   *outBefore = PR_FALSE;
   *outDropOnMe = PR_FALSE;
 
-  //
-  // Get the mouse coordinates from the DOM event, but they will be in the 
-  // window/widget coordinate system. We must first get them into the frame-relative
-  // coordinate system. Yuck.
-  //
+  float p2t;
+  mPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+  // Gecko trickery to get mouse coordinates into the right coordinate system for
+  // comparison with the row.
+  nsPoint pnt(0,0);
+  nsRect rowRect;
+  ConvertEventCoordsToRowCoords ( aDragEvent, &pnt, &rowRect);
   
+  // check the outer group frame to see if the tree allows drops between rows. If it
+  // doesn't then basically the entire row is a drop zone for a container.
+  PRBool allowsDropsBetweenRows = PR_TRUE;
+  nsXULTreeOuterGroupFrame* outerGroup = mTreeItem->GetOuterFrame();
+  if ( outerGroup )
+    allowsDropsBetweenRows = outerGroup->CanDropBetweenRows();
+  
+  // now check if item is a container
+  PRBool isContainer = PR_FALSE;
+  nsCOMPtr<nsIContent> treeItemContent;
+  mTreeItem->GetContent ( getter_AddRefs(treeItemContent) );
+  nsCOMPtr<nsIDOMElement> treeItemNode ( do_QueryInterface(treeItemContent) );
+  if ( treeItemNode ) {
+    nsAutoString value;
+    treeItemNode->GetAttribute(NS_ConvertASCIItoUCS2("container"), value);  // can't use an atom here =(
+    isContainer = value.EqualsWithConversion("true");
+  }
+  else
+    NS_WARNING("Not a DOM element");
+  
+  if ( allowsDropsBetweenRows ) {
+    // if we have a container, the area is broken up into 3 pieces (top, middle, bottom). If
+    // it isn't it's only broken up into two (top and bottom)
+    if ( isContainer ) {
+      if (pnt.y <= (rowRect.y + (rowRect.height / 4))) {
+         *outBefore = PR_TRUE;
+         *outYLoc = 0;
+      } 
+      else if (pnt.y >= (rowRect.y + PRInt32(float(rowRect.height) *0.75))) {
+        *outBefore = PR_FALSE;
+        *outYLoc = rowRect.y + rowRect.height - onePixel;
+      } 
+      else {
+        // we're on the container
+        *outDropOnMe = PR_TRUE;
+        *outYLoc = kContainerDropLoc;
+      }
+    } // if row is a container
+    else {
+      if (pnt.y <= (rowRect.y + (rowRect.height / 2))) {
+        *outBefore = PR_TRUE;
+        *outYLoc = 0;
+      }
+      else
+        *outYLoc = rowRect.y + rowRect.height - onePixel;
+    } // else is not a container
+  } // if can drop between rows
+  else {
+    // the tree doesn't allow drops between rows, therefore only drops on containers
+    // are valid. For this case, make the entire cell a dropzone for this row as there
+    // is no concept of above and below.
+    if ( isContainer ) {
+      *outYLoc = kContainerDropLoc;
+      *outDropOnMe = PR_TRUE;   
+    }
+  } // else only allow drops on containers
+  
+} // ComputeDropPosition
+
+
+//
+// ConvertEventCoordsToRowCoords
+//
+// Get the mouse coordinates from the DOM event, but they will be in the 
+// window/widget coordinate system. We must first get them into the frame-relative
+// coordinate system of the row. Yuck.
+//
+void
+nsTreeItemDragCapturer :: ConvertEventCoordsToRowCoords ( nsIDOMEvent* inDragEvent, nsPoint* outCoords, nsRect* outRowRect )
+{
   // get mouse coordinates and translate them into twips
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aDragEvent));
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(inDragEvent));
   PRInt32 x,y = 0;
   mouseEvent->GetClientX(&x);
   mouseEvent->GetClientY(&y);
@@ -133,11 +210,10 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
   
   // get the rect of the row (not the tree item) that the mouse is over. This is
   // where we need to start computing things from.
-  nsRect rowRect;
   nsIFrame* rowFrame;
   mTreeItem->FirstChild(mPresContext, nsnull, &rowFrame);
   NS_ASSERTION ( rowFrame, "couldn't get rowGroup's row frame" );
-  rowFrame->GetRect(rowRect);
+  rowFrame->GetRect(*outRowRect);
 
   // compute the offset to top level in twips
   float t2p;
@@ -167,47 +243,11 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
   nscoord viewOffsetToParentX = 0, viewOffsetToParentY = 0;
   containingView->GetPosition ( &viewOffsetToParentX, &viewOffsetToParentY );
   pnt.MoveBy ( -viewOffsetToParentX, -viewOffsetToParentY );
-  
-  // now check if item is a container
-  PRBool isContainer = PR_FALSE;
-  nsCOMPtr<nsIContent> treeItemContent;
-  mTreeItem->GetContent ( getter_AddRefs(treeItemContent) );
-  nsCOMPtr<nsIDOMElement> treeItemNode ( do_QueryInterface(treeItemContent) );
-  if ( treeItemNode ) {
-    nsAutoString value;
-    treeItemNode->GetAttribute(NS_ConvertASCIItoUCS2("container"), value);  // can't use an atom here =(
-    isContainer = value.EqualsWithConversion("true");
-  }
-  else
-    NS_WARNING("Not a DOM element");
-  
-  // if we have a container, the area is broken up into 3 pieces (top, middle, bottom). If
-  // it isn't it's only broken up into two (top and bottom)
-  if ( isContainer ) {
-    if (pnt.y <= (rowRect.y + (rowRect.height / 4))) {
-       *outBefore = PR_TRUE;
-       *outYLoc = 0;
-    } 
-    else if (pnt.y >= (rowRect.y + PRInt32(float(rowRect.height) *0.75))) {
-      *outBefore = PR_FALSE;
-      *outYLoc = rowRect.y + rowRect.height - onePixel;
-    } 
-    else {
-      // we're on the container
-      *outDropOnMe = PR_TRUE;
-      *outYLoc = kContainerDropLoc;
-    }
-  } // if row is a container
-  else {
-    if (pnt.y <= (rowRect.y + (rowRect.height / 2))) {
-      *outBefore = PR_TRUE;
-      *outYLoc = 0;
-    }
-    else
-      *outYLoc = rowRect.y + rowRect.height - onePixel;
-  } // else is not a container
 
-} // ComputeDropPosition
+  if ( outCoords )
+    *outCoords = pnt;
+
+} // ConvertEventCoordsToRowCoords
 
 
 //
@@ -240,7 +280,6 @@ nsTreeItemDragCapturer::DragOver(nsIDOMEvent* aDragEvent)
     if ( content ) {
       char buffer[10];
 
-      	// need the cast, because on some platforms, PR[U]int32 != long, but we're using "%ld"
       sprintf(buffer, "%d", yLoc);
       content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
       content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2(beforeMe ? "true" : "false"), PR_FALSE );

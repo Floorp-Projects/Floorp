@@ -186,6 +186,7 @@ public:
   NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta);
 
   PRBool IsTreeSorted ( ) const { return mTreeIsSorted; }
+  PRBool CanDropBetweenRows ( ) const { return mCanDropBetweenRows; }
 
   nsTreeLayoutState GetTreeLayoutState() { return mTreeLayoutState; }
   void SetTreeLayoutState(nsTreeLayoutState aState) { mTreeLayoutState = aState; }
@@ -208,6 +209,7 @@ protected:
   nscoord mOnePixel;
   PRInt32 mCurrentIndex; // Row-based
   PRPackedBool mTreeIsSorted;
+  PRPackedBool mCanDropBetweenRows;      // is the user allowed to drop between rows
   
 #if USE_TIMER_TO_DELAY_SCROLLING
   PRPackedBool mAutoScrollTimerHasFired;
