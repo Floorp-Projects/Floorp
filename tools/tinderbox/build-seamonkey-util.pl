@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.278 $ ';
+$::UtilsVersion = '$Revision: 1.279 $ ';
 
 package TinderUtils;
 
@@ -364,6 +364,8 @@ sub SetupEnv {
         $ENV{MOZILLA_OFFICIAL} = 1;
       if ($Settings::OS =~ /^WIN/) {
           $ENV{MOZ_DEBUG_SYMBOLS}      = 1;
+#          $ENV{MOZ_PROFILE}      = 1;
+#          $ENV{PDBFILE}      = "NONE";
       }
     }
 
@@ -1639,6 +1641,7 @@ sub run_all_tests {
           $test_result = "success";
         } else {
           $test_result = "testfailed";
+          print_log "Error: create profile failed.\n";
         }
       }
 
@@ -1946,6 +1949,7 @@ sub run_all_tests {
             }
         } else {
             $test_result = 'testfailed';
+            print_log "Error: XulWindowOpenTime test failed.\n";
         }
     }
 
@@ -2019,6 +2023,7 @@ sub AliveTest {
         return 'success';
     } else {
         print_test_errors($result, $binary_basename);
+        print_log "$test_name: test failed\n";
         return 'testfailed';
     }
 }
@@ -2166,6 +2171,7 @@ sub LayoutPerformanceTest {
       $layout_test_result = 'success';
     } else {
       $layout_test_result = 'testfailed';
+      print_log "LayoutPerformanceTest: test failed\n";
     }
     
     if($layout_test_result eq 'success') {
@@ -2214,6 +2220,7 @@ sub DHTMLPerformanceTest {
       $dhtml_test_result = 'success';
     } else {
       $dhtml_test_result = 'testfailed';
+      print_log "DHTMLTest: test failed\n";
     }
     
     if($dhtml_test_result eq 'success') {
@@ -2471,6 +2478,7 @@ sub StartupPerformanceTest {
       push(@times, $startuptime);
     } else {
       $startup_test_result = 'testfailed';
+      print_log "StartupPerformanceTest: test failed\n";
     }
     
   } # for loop
@@ -2573,6 +2581,7 @@ sub BloatTest {
         return 'testfailed';
     } elsif ($result->{exit_value}) {
         print_test_errors($result, $binary_basename);
+        print_log "Error: bloat test failed.\n";
         return 'testfailed';
     }
 
@@ -2819,6 +2828,7 @@ sub BloatTest2 {
         return 'testfailed';
     } elsif ($result->{exit_value}) {
         print_test_errors($result, $binary_basename);
+        print_log "Error: bloat test failed.\n";
         return 'testfailed';
     }
 
