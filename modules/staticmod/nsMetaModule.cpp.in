@@ -107,6 +107,7 @@ NSGetModule(nsIComponentManager *servMgr,
     // Dummy up an nsModuleInfo struct to register us as a generic
     // module that contains all our sub-module's components.
     nsModuleInfo metainfo;
+    memset(&metainfo, 0, sizeof(metainfo));
     metainfo.mVersion    = NS_MODULEINFO_VERSION;
     metainfo.mModuleName = META_MODULE " meta module";
     metainfo.mComponents = gComponentInfo;
