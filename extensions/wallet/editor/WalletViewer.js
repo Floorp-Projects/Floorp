@@ -18,17 +18,6 @@
  * Contributor(s):
  */
 
-var sizeToShow = function() {
-  if (navigator.platform.indexOf("Win") != -1) {
-    sizeToShow = function() {};
-  } else {
-    sizeToShow = function() {
-      window.resizeBy(0, 1);
-      window.resizeBy(0, -1);
-    };
-  }
-};
-
 function initPanel() {
   var tag = document.getElementById("panelFrame").getAttribute("tag");
   if (hWalletViewer) {
@@ -37,7 +26,6 @@ function initPanel() {
     window.queuedTag = tag;
     window.queuedTagPending = true;
   }
-  sizeToShow(); //XXXjag work-around for bug 86726
 }
 
 window.doneLoading = false;
