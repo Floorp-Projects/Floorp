@@ -27,6 +27,7 @@
 #include "prprf.h"
 #include "nsDOMAttributes.h"
 #include "nsICSSParser.h"
+#include "nsISupportsArray.h"
 
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -92,6 +93,31 @@ void nsHTMLTagContent::ToHTMLString(nsString& aBuf) const
   } else {
     aBuf.Append("?NULL");
   }
+
+  if (nsnull != mAttributes) {
+    nsISupportsArray* attrs;
+    nsresult rv = NS_NewISupportsArray(&attrs);
+    if (NS_OK == rv) {
+      mAttributes->GetAllAttributeNames(attrs);
+      PRInt32 i, n = attrs->Count();
+      nsAutoString name, value, quotedValue;
+      for (i = 0; i < n; i++) {
+        nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
+        atom->ToString(name);
+        aBuf.Append(' ');
+        aBuf.Append(name);
+        value.Truncate();
+        GetAttribute(name, value);
+        if (value.Length() > 0) {
+          aBuf.Append('=');
+          QuoteForHTML(value, quotedValue);
+          aBuf.Append(quotedValue);
+        }
+      }
+      NS_RELEASE(attrs);
+    }
+  }
+
   aBuf.Append('>');
 }
 
