@@ -173,15 +173,16 @@ nsresult nsImapOfflineSync::AdvanceToNextFolder()
 
 void nsImapOfflineSync::AdvanceToFirstIMAPFolder()
 {
+  nsresult rv;
   m_currentServer = nsnull;
-  nsresult rv = AdvanceToNextFolder();
   nsCOMPtr <nsIMsgImapMailFolder> imapFolder;
   do
   {
+    rv = AdvanceToNextFolder();
     if (m_currentFolder)
       imapFolder = do_QueryInterface(m_currentFolder);
   }
-	while (m_currentFolder && !imapFolder);
+  while (NS_SUCCEEDED(rv) && m_currentFolder && !imapFolder);
 }
 
 void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *currentOp)
