@@ -270,9 +270,9 @@ function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
 {
   attArray[attArray.length] = name;
   var treekids    = document.getElementById ( treekids );
-  var treeitem    = document.createElement ( "treeitem" );
-  var treerow     = document.createElement ( "treerow" );
-  var attrcell    = document.createElement ( "treecell" );
+  var treeitem    = document.createElementNS ( "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treeitem" );
+  var treerow     = document.createElementNS ( "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treerow" );
+  var attrcell    = document.createElementNS ( "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treecell" );
   attrcell.setAttribute( "class", "propertylist" );
   attrcell.setAttribute( "value", name.toLowerCase() );
   treerow.appendChild ( attrcell );
@@ -293,10 +293,10 @@ function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
 // optional parameters for initial values.
 function CreateCellWithField( name, value )
 {
-  var valcell     = document.createElement ( "treecell" );
+  var valcell     = document.createElementNS ( "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treecell" );
   valcell.setAttribute ( "class", "value propertylist" );
   valcell.setAttribute ( "allowevents", "true" );
-  var valField    = document.createElement ( "html:input" );
+  var valField    = document.createElementNS ( "http://www.w3.org/TR/REC-html40", "html:input" );
   valField.setAttribute ( "type", "text" );
   if ( name  ) valField.setAttribute ( "id", name );
   if ( value ) valField.setAttribute ( "value", value );
