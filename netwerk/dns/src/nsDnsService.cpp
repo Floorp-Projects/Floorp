@@ -33,6 +33,7 @@
 #include "netCore.h"
 #ifdef DNS_TIMING
 #include "prinrval.h"
+#include "prtime.h"
 #endif
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -154,6 +155,7 @@ static char *BufAlloc(PRIntn amount, char **bufp, PRIntn *buflenp, PRIntn align)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsDNSLookup::nsDNSLookup(nsISupports * clientContext, const char * hostName, nsIDNSListener* listener)
+    : mStartTime(PR_IntervalNow())
 {
     MOZ_COUNT_CTOR(nsDNSLookup);
 
@@ -456,7 +458,15 @@ nsDNSService::nsDNSService()
 
 #ifdef DNS_TIMING
     if (getenv("DNS_TIMING")) {
-        mOut = fopen("dns-timing.txt", "w");
+        mOut = fopen("dns-timing.txt", "a");
+        if (mOut) {
+            PRTime now = PR_Now();
+            PRExplodedTime time;
+            PR_ExplodeTime(now, PR_LocalTimeParameters, &time);
+            char buf[128];
+            PR_FormatTimeUSEnglish(buf, sizeof(buf), "%c", &time);
+            fprintf(mOut, "############### DNS starting new run: %s\n", buf);
+        }
     }
 #endif
 }
@@ -877,17 +887,17 @@ nsDNSService::Shutdown()
 
 #elif defined(XP_PC)
     SendMessage(mDNSWindow, WM_DNS_SHUTDOWN, 0, 0);
-	if (mThread)
-	    rv = mThread->Join();
+    if (mThread)
+        rv = mThread->Join();
 
 #elif defined(XP_UNIX)
     // XXXX - ?
 #endif
 
-  if (mThreadLock) {
-      PR_DestroyLock(mThreadLock);
-      mThreadLock = nsnull;
-  }
+    if (mThreadLock) {
+        PR_DestroyLock(mThreadLock);
+        mThreadLock = nsnull;
+    }
 
-  return rv;
+    return rv;
 }
