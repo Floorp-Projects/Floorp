@@ -80,8 +80,8 @@ typedef unsigned char       PRUint8;
 #define PR_TRUE             1
 #define PR_FALSE            0
 
-#define INVALID_SXP   -1
-#define NON_SXP       -2
+#define INVALID_SXP   -2
+#define NON_SXP       -1
 #define VALID_SXP     1
 #define MATCH 0
 #define NOMATCH 1
@@ -91,6 +91,6 @@ typedef unsigned char       PRUint8;
 #define PR_SEEK_SET   SEEK_SET
 #define PR_SEEK_END   SEEK_END
 
-#define XP_RegExpValid(a)       NON_SXP
-#define XP_RegExpMatch(a,b,c)   PR_FALSE
+#define NS_WildCardValid(a)       NON_SXP
+#define NS_WildCardMatch(a,b,c)   PR_FALSE
 

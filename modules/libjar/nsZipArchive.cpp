@@ -34,17 +34,18 @@
 
 #ifndef STANDALONE
 
+#include "nsWildCard.h"
 #include "nscore.h"
 #include "prmem.h"
 #include "prio.h"
 #include "plstr.h"
-#include "xp_regexp.h"
+#include "prlog.h"
 #define ZFILE_CREATE    PR_WRONLY | PR_CREATE_FILE
 #define READTYPE  PRInt32
 #include "zlib.h"
 #include "nsISupportsUtils.h"
 
-#else
+#else /* STANDALONE */
 
 #ifdef XP_WIN
 #include "windows.h"
@@ -611,7 +612,7 @@ nsZipFind* nsZipArchive::FindInit( const char * aPattern )
   // validate the pattern
   if ( aPattern )
   {
-    switch (XP_RegExpValid( (char*)aPattern ))
+    switch (NS_WildCardValid( (char*)aPattern ))
     {
       case INVALID_SXP:
         return 0;
@@ -669,7 +670,7 @@ PRInt32 nsZipArchive::FindNext( nsZipFind* aFind, nsZipItem** aResult)
     else if ( aFind->mPattern == 0 )  
       found = PR_TRUE;            // always match
     else if ( aFind->mRegExp )
-      found = (XP_RegExpMatch( item->name, aFind->mPattern, PR_FALSE ) == MATCH);
+      found = (NS_WildCardMatch( item->name, aFind->mPattern, PR_FALSE ) == MATCH);
     else
 #if defined(STANDALONE) && defined(XP_MAC)
       // simulate <regexp>* matches
