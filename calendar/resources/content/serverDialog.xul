@@ -104,6 +104,20 @@
                         </hbox>
                         <textbox flex="1" id="server-name-textbox"/>
                     </row>
+
+				   <!-- Color -->  
+                    //added by Dallas
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <description flex="1">&calendar.server.dialog.color.label;</description>
+						</hbox>
+                        <hbox align="center">
+                           <colorpicker id="calendar-color"
+                              class="small-margin"
+                              type="button"
+                              palettename="standard"/>
+                        </hbox>
+                    </row>
                     
                     <!-- Remote Location -->    
                     <row align="center">

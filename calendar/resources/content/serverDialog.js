@@ -96,6 +96,8 @@ function loadCalendarServerDialog()
    
    document.getElementById( "server-local-path-textbox" ).value = gCalendarObject.path;
    
+   document.getElementById( "calendar-color" ).color = gCalendarObject.color; //added by Dallas
+
    // start focus on title
    
    var firstFocus = document.getElementById( "server-name-textbox" );
@@ -121,6 +123,8 @@ function onOKCommand()
    gCalendarObject.password = document.getElementById( "server-password-textbox" ).value;
 
    gCalendarObject.publishAutomatically = document.getElementById( "server-publish-checkbox" ).checked;
+
+   gCalendarObject.color = document.getElementById( "calendar-color" ).color; //added by Dallas
 
    //TODO: check that the gCalendarObject.path is actually a file, if its not, create it.
    

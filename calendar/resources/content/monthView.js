@@ -257,6 +257,8 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
    var eventDayInView;
    var dayBoxItem;
    var calendarEventDisplay;
+   var calIndex;
+   var calNumber;
 
    // add each calendarEvent
    for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
@@ -282,7 +284,16 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          eventBox.setAttribute( "id", "month-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
-         eventBox.setAttribute( "class", "month-day-event-box-class" );
+	   
+		// start calendar color change by CofC
+        var containerName = gCalendarWindow.calendarManager.getCalendarByName(
+						calendarEventDisplay.event.parent.server ).subject.split(":")[2];
+
+        // set the event box to be of class week-view-event-class and the appropriate calendar-color class
+        eventBox.setAttribute("class", "month-view-event-class " + containerName );
+
+		// end calendar color change by CofC
+		     
          if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
          {
             eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );

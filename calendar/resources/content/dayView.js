@@ -336,7 +336,16 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    eventBox.setAttribute( "left", Math.round( left ) );
    
    //if you change this class, you have to change calendarViewDNDObserver in calendarDragDrop.js
-   eventBox.setAttribute( "class", "day-view-event-class" );
+   
+   // start calendar color change by CofC
+   var containerName = gCalendarWindow.calendarManager.getCalendarByName(
+						calendarEventDisplay.event.parent.server ).subject.split(":")[2];
+
+   // set the event box to be of class week-view-event-class and the appropriate calendar-color class
+   eventBox.setAttribute("class", "day-view-event-class " + containerName );
+
+   // end calendar color change by CofC
+
    eventBox.setAttribute( "flex", "1" );
    eventBox.setAttribute( "eventbox", "dayview" );
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
@@ -349,13 +358,14 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "eventTooltip" );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
+
    if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
    {
       eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
    }
 
    var eventHTMLElement = document.createElement( "label" );
-   eventHTMLElement.setAttribute( "class", "day-view-event-label-class" );
+   //eventHTMLElement.setAttribute( "class", "day-view-event-label-class" );
    eventHTMLElement.setAttribute( "value", calendarEventDisplay.event.title );
    eventHTMLElement.setAttribute( "flex", "1" );
    eventHTMLElement.setAttribute( "crop", "end" );

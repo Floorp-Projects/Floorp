@@ -440,7 +440,16 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
                                   ) 
                         );
    
-   eventBox.setAttribute( "class", "week-view-event-class" );
+
+   // start calendar color change by CofC
+   var containerName = gCalendarWindow.calendarManager.getCalendarByName(
+						calendarEventDisplay.event.parent.server ).subject.split(":")[2];
+
+   // set the event box to be of class week-view-event-class and the appropriate calendar-color class
+   eventBox.setAttribute("class", "week-view-event-class " + containerName );
+
+   // end calendar color change by CofC
+
    eventBox.setAttribute( "eventbox", "weekview" );
    eventBox.setAttribute( "dayindex", index+1 );
    eventBox.setAttribute( "onclick", "weekEventItemClick( this, event )" );

@@ -84,6 +84,9 @@ var gEventSource = null;
 // single global instance of CalendarWindow
 var gCalendarWindow;
 
+// style sheet number for calendar
+var gCalendarStyleSheet;
+
 //an array of indexes to boxes for the week view
 var gHeaderDateItemArray = null;
 
@@ -144,6 +147,44 @@ function calendarInit()
    update_date();
    	
 	checkForMailNews();
+
+   // Change made by CofC for Calendar Coloring
+   // initialize calendar color style rules in the calendar's styleSheet
+
+   // find calendar's style sheet index
+   for (var i=0; i<document.styleSheets.length; i++)
+   {
+      if (document.styleSheets[i].href == "chrome://calendar/skin/calendar.css")
+	  {
+          gCalendarStyleSheet = document.styleSheets[i];
+		  break;
+	  }
+   }
+
+   var calendarNode;
+   var calendarColor;
+
+   // loop through the calendars via the rootSequence of the RDF datasource
+   var seq = gCalendarWindow.calendarManager.rdf.getRootSeq("urn:calendarcontainer");
+   var list = seq.getSubNodes();
+
+	for(var i=0; i<list.length;i++)
+	{
+
+     calendarNode = gCalendarWindow.calendarManager.rdf.getNode( list[i].subject );
+     
+	 // grab the container name and use it for the name of the style rule
+	 containerName = list[i].subject.split(":")[2];
+
+	 // obtain calendar color from the rdf datasource
+     calendarColor = calendarNode.getAttribute("http://home.netscape.com/NC-rdf#color");
+
+	 // if the calendar had a color attribute create a style sheet for it
+     if (calendarColor != null)
+       gCalendarStyleSheet.insertRule("." + containerName + " { background-color:" + calendarColor + "!important;}", 1);
+
+   }
+   // CofC Calendar Coloring Change
 
    if( window.arguments && window.arguments[0].channel )
    {

@@ -46,6 +46,7 @@ function CalendarObject()
    this.remotePath = "";
    this.active = false;
    this.username = "";
+   this.color = ""; 
    this.password = "";
    this.publishAutomatically = false;
 }
@@ -90,6 +91,7 @@ function calendarManager( CalendarWindow )
       node.setAttribute( "http://home.netscape.com/NC-rdf#active", "true" );
       node.setAttribute( "http://home.netscape.com/NC-rdf#remote", "false" );
       node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", "" );
+      node.setAttribute( "http://home.netscape.com/NC-rdf#color", "#F9F4FF"); //default color
    }
    else
    {
@@ -146,6 +148,10 @@ calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCal
 
    // open the dialog modally
    openDialog("chrome://calendar/content/localCalDialog.xul", "caAddServer", "chrome,modal", args );
+   
+   // CofC
+   // call the calendar color update function with the calendar object
+   calendarColorStyleRuleUpdate( ThisCalendarObject );
 }
 
 /*
@@ -169,6 +175,7 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
    ThisCalendarObject.remote = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remote" );
    ThisCalendarObject.username = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#username" );
    ThisCalendarObject.password = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#password" );
+   ThisCalendarObject.color = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#color"); 
    ThisCalendarObject.remotePath = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
    ThisCalendarObject.publishAutomatically = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" );
    
@@ -184,6 +191,10 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
 
    // open the dialog modally
    openDialog("chrome://calendar/content/localCalDialog.xul", "caEditServer", "chrome,modal", args );
+
+   // CofC
+   // call the calendar color update function with the calendar object
+   calendarColorStyleRuleUpdate( ThisCalendarObject );
 }
 
 
@@ -216,6 +227,10 @@ calendarManager.prototype.launchAddRemoteCalendarDialog = function calMan_launch
 
    // open the dialog modally
    openDialog("chrome://calendar/content/serverDialog.xul", "caAddServer", "chrome,modal", args );
+
+   // CofC
+   // call the calendar color update function with the calendar object
+   calendarColorStyleRuleUpdate( ThisCalendarObject );
 }
 
 /*
@@ -239,7 +254,7 @@ calendarManager.prototype.launchEditRemoteCalendarDialog = function calMan_launc
    ThisCalendarObject.remote = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remote" );
    ThisCalendarObject.remotePath = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
    ThisCalendarObject.publishAutomatically = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" );
-   
+   ThisCalendarObject.color = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#color" );
    var args = new Object();
    args.mode = "edit";
 
@@ -252,6 +267,10 @@ calendarManager.prototype.launchEditRemoteCalendarDialog = function calMan_launc
 
    // open the dialog modally
    openDialog("chrome://calendar/content/serverDialog.xul", "caEditServer", "chrome,modal", args );
+   
+   // CofC
+   // call the calendar color update function with the calendar object
+   calendarColorStyleRuleUpdate( ThisCalendarObject );
 }
 
 
@@ -283,6 +302,9 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    }
    
    node.setAttribute("http://home.netscape.com/NC-rdf#path", CalendarObject.path);
+
+   // CofC save off the color of the new calendar
+   node.setAttribute("http://home.netscape.com/NC-rdf#color", CalendarObject.color);
    
    if( CalendarObject.remotePath.indexOf( "http://" ) != -1 ||
        CalendarObject.remotePath.indexOf( "https://" ) != -1 ||
@@ -314,7 +336,7 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
 
 
 /*
-** Called when OK is clicked in the new server dialog.
+** Called when OK is clicked in the edit localCalendar dialog.
 */
 calendarManager.prototype.editLocalCalendarDialogResponse = function calMan_editServerDialogResponse( CalendarObject )
 {
@@ -328,7 +350,7 @@ calendarManager.prototype.editLocalCalendarDialogResponse = function calMan_edit
    node.setAttribute( "http://home.netscape.com/NC-rdf#name", CalendarObject.name );
    node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarObject.remotePath );
    node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
-   
+   node.setAttribute("http://home.netscape.com/NC-rdf#color", CalendarObject.color);
    this.rdf.flush();
 }
 /*
@@ -345,7 +367,7 @@ calendarManager.prototype.editServerDialogResponse = function calMan_editServerD
    node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarObject.password);
    node.setAttribute( "http://home.netscape.com/NC-rdf#name", CalendarObject.name );
    node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
-
+   node.setAttribute("http://home.netscape.com/NC-rdf#color", CalendarObject.color);
    this.rdf.flush();
 }
 
@@ -895,6 +917,50 @@ function deleteCalendar( )
    refreshToDoTree( false );
 
    gCalendarWindow.currentView.refreshEvents();
+}
+
+// CofC
+// College of Charleston calendar color change code... when returning from the dialog
+// update the calendar's background color style in the event it was changed.
+// Author(s): Dallas Vaughan, Paul Buhler
+function calendarColorStyleRuleUpdate( ThisCalendarObject )
+{
+   var j = -1;
+   
+   // obtain calendar name from the Id
+   containerName = ThisCalendarObject.Id.split(':')[2];
+
+   var tempStyleSheets = document.styleSheets;
+   for (var i=0; i<tempStyleSheets.length; i++)
+   {
+      if (tempStyleSheets[i].href == "chrome://calendar/skin/calendar.css")
+	  {
+          j = i;
+          break;
+	  }
+   }
+
+   // check that the calendar.css stylesheet was found
+   if( j != -1 )
+   {
+	   var ruleList = tempStyleSheets[j].cssRules;
+	   var ruleName;
+
+	   for (var i=0; i < ruleList.length; i++)
+	   {
+		  ruleName = ruleList[i].cssText.split(' ');
+
+		  // find the existing rule so that it can be deleted
+	      if (ruleName[0] == "." + containerName)
+		  {
+	         tempStyleSheets[j].deleteRule(i);
+	         break;
+	      }
+	   }
+
+	   // insert the new calendar color rule
+	   tempStyleSheets[j].insertRule("." + containerName + " { background-color:" +ThisCalendarObject.color + " !important;}",1);
+	}
 }
 
 

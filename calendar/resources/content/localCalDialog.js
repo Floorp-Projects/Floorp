@@ -113,6 +113,10 @@ function loadCalendarServerDialog()
       document.getElementById( "server-path-textbox" ).setAttribute( "readonly", "true" );
    }
    
+
+   // CofC - calendar coloring change
+   document.getElementById("calendar-color").color = gCalendarObject.color;
+
    document.getElementById( "calendar-local-serverwindow" ).setAttribute( "title", titleDataItem.getAttribute( "value" ) );
 
    document.getElementById( "server-name-textbox" ).value = gCalendarObject.name;
@@ -154,6 +158,9 @@ function onOKCommand()
    gCalendarObject.password = document.getElementById( "server-password-textbox" ).value;
 
    gCalendarObject.publishAutomatically = document.getElementById( "server-publish-checkbox" ).checked;
+   
+   //Dallas
+   gCalendarObject.color = document.getElementById( "calendar-color" ).color;
    
    // call caller's on OK function
    gOnOkFunction( gCalendarObject );
