@@ -3585,8 +3585,29 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
     // Notify the parent frame passing it the list of new frames
     if (NS_SUCCEEDED(result)) {
-      result = adjustedParentFrame->AppendFrames(*aPresContext, *shell,
-                                                 nsnull, firstAppendedFrame);
+      nsIFrame* firstChild;
+      adjustedParentFrame->FirstChild(nsnull, &firstChild);
+      nsFrameList frames(firstChild);
+
+      // See if the parent has a :after pseudo-element
+      nsIFrame* lastChild = frames.LastChild();
+      PRBool    lastIsGenerated = PR_FALSE;
+      if (lastChild) {
+        nsFrameState  state;
+
+        lastChild->GetFrameState(&state);
+        if (state & NS_FRAME_GENERATED_CONTENT) {
+          lastIsGenerated = PR_TRUE;
+        }
+      }
+
+      if (lastIsGenerated) {
+        result = adjustedParentFrame->InsertFrames(*aPresContext, *shell,
+                                                   nsnull, lastChild, firstAppendedFrame);
+      } else {
+        result = adjustedParentFrame->AppendFrames(*aPresContext, *shell,
+                                                   nsnull, firstAppendedFrame);
+      }
 
       // If there are new absolutely positioned child frames, then notify
       // the parent
