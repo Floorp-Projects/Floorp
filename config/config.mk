@@ -503,7 +503,7 @@ ifdef MOZ_EDITOR
 #
 # Enable HTMLArea form element support.
 #
-DEFINES		+= -DENDER
+DEFINES		+= -DENDER -DMOZ_ENDER_MIME
 endif
 
 ifdef NO_SECURITY
@@ -552,7 +552,7 @@ endif
 # i'm not sure if SHACK and ENDER still need to be defined explicitly
 # but I will just to be on the safe side. -skinny
 ifdef SMART_MAIL
-DEFINES     += -DSMART_MAIL -DENDER -DSHACK
+DEFINES     += -DSMART_MAIL -DENDER -DMOZ_ENDER_MIME -DSHACK
 endif
 
 

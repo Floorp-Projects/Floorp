@@ -38,7 +38,9 @@ CPPSRCS	= \
 	addrutil.cpp \
 	bytearr.cpp \
 	dwordarr.cpp \
+	memstrem.cpp \
 	mhtmlstm.cpp \
+	mprdecod.cpp \
 	msgbg.cpp \
 	msgcflds.cpp \
 	msgcpane.cpp \
@@ -66,6 +68,7 @@ EXPORTS = \
 	error.h \
 	m_binhex.h \
 	mhtmlstm.h \
+	mprdecod.h \
 	msg.h \
 	msgcflds.h \
 	msgcpane.h \
