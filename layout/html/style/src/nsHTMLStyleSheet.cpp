@@ -242,28 +242,32 @@ public:
                             nsIFrame*&      aFrameSubTree);
 
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              PRInt32         aNewIndexInContainer);
 
   NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
                              PRInt32         aIndexInContainer);
 
   NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
-                             nsIDocument*    aDocument,
                              nsIContent*     aContainer,
                              nsIContent*     aOldChild,
                              nsIContent*     aNewChild,
                              PRInt32         aIndexInContainer);
 
   NS_IMETHOD ContentRemoved(nsIPresContext* aPresContext,
-                            nsIDocument*    aDocument,
                             nsIContent*     aContainer,
                             nsIContent*     aChild,
                             PRInt32         aIndexInContainer);
+
+  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
+                            nsIContent* aContent,
+                            nsISupports* aSubContent);
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aContent,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
 
   // XXX style rule enumerations
 
@@ -1378,7 +1382,6 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
 
 NS_IMETHODIMP
 HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
-                                    nsIDocument*    aDocument,
                                     nsIContent*     aContainer,
                                     PRInt32         aNewIndexInContainer)
 {
@@ -1414,14 +1417,16 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
       aContainer->ChildAt(i, child);
       ConstructFrame(aPresContext, child, parentFrame, frame);
 
-      // Link the frame into the child frame list
-      if (nsnull == lastChildFrame) {
-        firstAppendedFrame = frame;
-      } else {
-        lastChildFrame->SetNextSibling(frame);
-      }
+      if (nsnull != frame) {
+        // Link the frame into the child frame list
+        if (nsnull == lastChildFrame) {
+          firstAppendedFrame = frame;
+        } else {
+          lastChildFrame->SetNextSibling(frame);
+        }
 
-      lastChildFrame = frame;
+        lastChildFrame = frame;
+      }
       NS_RELEASE(child);
     }
 
@@ -1511,7 +1516,6 @@ FindNextSibling(nsIPresShell* aPresShell,
 
 NS_IMETHODIMP
 HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
-                                    nsIDocument*    aDocument,
                                     nsIContent*     aContainer,
                                     nsIContent*     aChild,
                                     PRInt32         aIndexInContainer)
@@ -1580,7 +1584,6 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 HTMLStyleSheetImpl::ContentReplaced(nsIPresContext* aPresContext,
-                                    nsIDocument*    aDocument,
                                     nsIContent*     aContainer,
                                     nsIContent*     aOldChild,
                                     nsIContent*     aNewChild,
@@ -1592,7 +1595,6 @@ HTMLStyleSheetImpl::ContentReplaced(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
-                                   nsIDocument*    aDocument,
                                    nsIContent*     aContainer,
                                    nsIContent*     aChild,
                                    PRInt32         aIndexInContainer)
@@ -1625,6 +1627,260 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
   NS_RELEASE(shell);
   return rv;
 }
+
+static void
+RemapStyleInTree(nsIPresContext* aPresContext,
+                 nsIFrame* aFrame)
+{
+  nsIStyleContext*  sc;
+  aFrame->GetStyleContext(nsnull, sc);
+  if (nsnull != sc) {
+    sc->RemapStyle(aPresContext);
+
+    // Update the children too...
+    nsIFrame* kid;
+    aFrame->FirstChild(kid);
+    while (nsnull != kid) {
+      RemapStyleInTree(aPresContext, kid);
+      kid->GetNextSibling(kid);
+    }
+  }
+}
+
+static void
+ApplyStyleChangeToTree(nsIPresContext* aPresContext,
+                       nsIFrame* aFrame)
+{
+  nsIContent* content;
+  nsIFrame* geometricParent;
+  aFrame->GetGeometricParent(geometricParent);
+  aFrame->GetContent(content);
+
+  if (nsnull != content) {
+    PRBool  onlyRemap = PR_FALSE;
+    nsIStyleContext* oldSC;
+    aFrame->GetStyleContext(nsnull, oldSC);
+    nsIStyleContext* newSC =
+      aPresContext->ResolveStyleContextFor(content, geometricParent);
+    if (newSC == oldSC) {
+      // Force cached style data to be recomputed
+      newSC->RemapStyle(aPresContext);
+      onlyRemap = PR_TRUE;
+    }
+    else {
+      // Switch to new style context
+      aFrame->SetStyleContext(aPresContext, newSC);
+    }
+    NS_IF_RELEASE(oldSC);
+    NS_RELEASE(newSC);
+    NS_RELEASE(content);
+
+    // Update the children too...
+    nsIFrame* kid;
+    aFrame->FirstChild(kid);
+    if (onlyRemap) {
+      while (nsnull != kid) {
+        RemapStyleInTree(aPresContext, kid);
+        kid->GetNextSibling(kid);
+      }
+    }
+    else {
+      while (nsnull != kid) {
+        ApplyStyleChangeToTree(aPresContext, kid);
+        kid->GetNextSibling(kid);
+      }
+    }
+  }
+}
+
+static void
+ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
+                           nsIFrame* aFrame)
+{
+  nsIViewManager* viewManager = nsnull;
+
+  // Trigger rendering updates by damaging this frame and any
+  // continuations of this frame.
+  while (nsnull != aFrame) {
+    // Get the frame's bounding rect
+    nsRect r;
+    aFrame->GetRect(r);
+    r.x = 0;
+    r.y = 0;
+
+    // Get view if this frame has one and trigger an update. If the
+    // frame doesn't have a view, find the nearest containing view
+    // (adjusting r's coordinate system to reflect the nesting) and
+    // update there.
+    nsIView* view;
+    aFrame->GetView(view);
+    if (nsnull != view) {
+    } else {
+      nsPoint offset;
+      aFrame->GetOffsetFromView(offset, view);
+      NS_ASSERTION(nsnull != view, "no view");
+      r += offset;
+    }
+    if (nsnull == viewManager) {
+      view->GetViewManager(viewManager);
+    }
+    viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
+
+    aFrame->GetNextInFlow(aFrame);
+  }
+
+  if (nsnull != viewManager) {
+    viewManager->Composite();
+    NS_RELEASE(viewManager);
+  }
+}
+
+static void
+StyleChangeReflow(nsIPresContext* aPresContext,
+                  nsIFrame* aFrame)
+{
+  nsIPresShell* shell;
+  shell = aPresContext->GetShell();
+    
+  nsIReflowCommand* reflowCmd;
+  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+                                        nsIReflowCommand::StyleChanged);
+  if (NS_SUCCEEDED(rv)) {
+    shell->AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+
+  NS_RELEASE(shell);
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::ContentChanged(nsIPresContext* aPresContext,
+                                   nsIContent*  aContent,
+                                   nsISupports* aSubContent)
+{
+  nsIPresShell* shell = aPresContext->GetShell();
+  nsresult      rv = NS_OK;
+
+  // Find the child frame
+  nsIFrame* frame = shell->FindFrameWithContent(aContent);
+
+  // Notify the first frame that maps the content. It will generate a reflow
+  // command
+
+  // It's possible the frame whose content changed isn't inserted into the
+  // frame hierarchy yet, or that there is no frame that maps the content
+  if (nsnull != frame) {
+#if 0
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+       ("nsHTMLStyleSheet::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
+        aContent, ContentTag(aContent, 0),
+        aSubContent, frame));
+#endif
+    frame->ContentChanged(aPresContext, aContent, aSubContent);
+  }
+
+  NS_RELEASE(shell);
+  return rv;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
+                                     nsIContent* aContent,
+                                     nsIAtom* aAttribute,
+                                     PRInt32 aHint)
+{
+  nsresult  result = NS_OK;
+
+  nsIPresShell* shell = aPresContext->GetShell();
+  nsIFrame* frame = shell->FindFrameWithContent(aContent);
+
+  if (nsnull != frame) {
+    PRBool  restyle = PR_FALSE;
+    PRBool  reflow  = PR_FALSE;
+    PRBool  reframe = PR_FALSE;
+    PRBool  render  = PR_FALSE;
+
+#if 0
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+       ("HTMLStyleSheet::AttributeChanged: content=%p[%s] frame=%p",
+        aContent, ContentTag(aContent, 0), frame));
+#endif
+
+    nsIHTMLContent* htmlContent;
+    result = aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+
+    if (NS_OK == result) {
+      nsIAtom*  tag;
+      htmlContent->GetTag(tag);
+
+      // handle specific attributes by tag
+      if (tag == nsHTMLAtoms::img) {
+        if ((nsHTMLAtoms::width == aAttribute) ||
+            (nsHTMLAtoms::height == aAttribute)) {
+          restyle = PR_TRUE;
+          reflow = PR_TRUE;
+        }
+      }
+      else if (tag == nsHTMLAtoms::hr) {
+        if (nsHTMLAtoms::noshade == aAttribute) {
+          render = PR_TRUE;
+        }
+      }
+      else {
+      }
+
+      // handle general attributes
+      if (nsHTMLAtoms::style == aAttribute) {
+        switch (aHint) {
+          default:
+          case NS_STYLE_HINT_UNKNOWN:
+          case NS_STYLE_HINT_FRAMECHANGE:
+            reframe = PR_TRUE;
+          case NS_STYLE_HINT_REFLOW:
+            reflow = PR_TRUE;
+          case NS_STYLE_HINT_VISUAL:
+            render = PR_TRUE;
+          case NS_STYLE_HINT_CONTENT:
+            restyle = PR_TRUE;
+            break;
+        }
+      }
+      else if (nsHTMLAtoms::color == aAttribute) {
+        restyle = PR_TRUE;
+        render = PR_TRUE;
+      }
+      else if (nsHTMLAtoms::face == aAttribute) {
+        restyle = PR_TRUE;
+        reflow = PR_TRUE;
+      }
+
+
+      NS_IF_RELEASE(tag);
+      NS_RELEASE(htmlContent);
+    }
+
+    // apply changes
+    if (PR_TRUE == restyle) {
+      ApplyStyleChangeToTree(aPresContext, frame);
+    }
+    if (PR_TRUE == reframe) {
+      NS_NOTYETIMPLEMENTED("frame change reflow");
+    }
+    else if (PR_TRUE == reflow) {
+      StyleChangeReflow(aPresContext, frame);
+    }
+    else if (PR_TRUE == render) {
+      ApplyRenderingChangeToTree(aPresContext, frame);
+    }
+    else {  // let the frame deal with it, since we don't know how to
+      frame->AttributeChanged(aPresContext, aContent, aAttribute, aHint);
+    }
+  }
+
+  NS_RELEASE(shell);
+  return result;
+}
+
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
