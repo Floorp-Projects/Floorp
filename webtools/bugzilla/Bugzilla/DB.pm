@@ -233,6 +233,158 @@ sub bz_get_field_defs {
     return(@fields);
 }
 
+# XXX - Need to make this cross-db compatible
+# XXX - This shouldn't print stuff to stdout
+sub bz_add_field ($$$) {
+    my ($self, $table, $field, $definition) = @_;
+
+    my $ref = $self->bz_get_field_def($table, $field);
+    return if $ref; # already added?
+
+    print "Adding new field $field to table $table ...\n";
+    $self->do("ALTER TABLE $table
+              ADD COLUMN $field $definition");
+}
+
+# XXX - Need to make this cross-db compatible
+# XXX - This shouldn't print stuff to stdout
+sub bz_change_field_type ($$$) {
+    my ($self, $table, $field, $newtype) = @_;
+
+    my $ref = $self->bz_get_field_def($table, $field);
+
+    my $oldtype = $ref->[1];
+    if (! $ref->[2]) {
+        $oldtype .= qq{ not null};
+    }
+    if ($ref->[4]) {
+        $oldtype .= qq{ default "$ref->[4]"};
+    }
+
+    if ($oldtype ne $newtype) {
+        print "Updating field type $field in table $table ...\n";
+        print "old: $oldtype\n";
+        print "new: $newtype\n";
+        $self->do("ALTER TABLE $table
+                  CHANGE $field
+                  $field $newtype");
+    }
+}
+
+# XXX - Need to make this cross-db compatible
+# XXX - This shouldn't print stuff to stdout
+sub bz_drop_field ($$) {
+    my ($self, $table, $field) = @_;
+
+    my $ref = $self->bz_get_field_def($table, $field);
+    return unless $ref; # already dropped?
+
+    print "Deleting unused field $field from table $table ...\n";
+    $self->do("ALTER TABLE $table
+              DROP COLUMN $field");
+}
+
+# XXX - Needs to be made cross-db compatible
+sub bz_drop_table_indexes ($) {
+    my ($self, $table) = @_;
+    my %seen;
+
+    # get the list of indexes
+    my $sth = $self->prepare("SHOW INDEX FROM $table");
+    $sth->execute;
+
+    # drop each index
+    while ( my $ref = $sth->fetchrow_arrayref) {
+
+      # note that some indexes are described by multiple rows in the
+      # index table, so we may have already dropped the index described
+      # in the current row.
+      next if exists $seen{$$ref[2]};
+
+      if ($$ref[2] eq 'PRIMARY') {
+          # The syntax for dropping a PRIMARY KEY is different
+          # from the normal DROP INDEX syntax.
+          $self->do("ALTER TABLE $table DROP PRIMARY KEY");
+      }
+      else {
+          $self->do("ALTER TABLE $table DROP INDEX $$ref[2]");
+      }
+      $seen{$$ref[2]} = 1;
+
+    }
+}
+
+# XXX - Needs to be made cross-db compatible
+sub bz_rename_field ($$$) {
+    my ($self, $table, $field, $newname) = @_;
+
+    my $ref = $self->bz_get_field_def($table, $field);
+    return unless $ref; # already renamed?
+
+    if ($$ref[1] ne $newname) {
+        print "Updating field $field in table $table ...\n";
+        my $type = $$ref[1];
+        $type .= " NOT NULL" if !$$ref[2];
+        $type .= " auto_increment" if $$ref[5] =~ /auto_increment/;
+        $self->do("ALTER TABLE $table
+                  CHANGE $field
+                  $newname $type");
+    }
+}
+
+# XXX - Needs to be made cross-db compatible.
+sub bz_get_field_def ($$) {
+    my ($self, $table, $field) = @_;
+    my $sth = $self->prepare("SHOW COLUMNS FROM $table");
+    $sth->execute;
+
+    while (my $ref = $sth->fetchrow_arrayref) {
+        next if $$ref[0] ne $field;
+        return $ref;
+   }
+}
+
+# XXX - Needs to be made cross-db compatible
+sub bz_get_index_count ($) {
+    my ($self, $table) = @_;
+
+    my $sth = $self->prepare("SHOW INDEX FROM $table");
+    $sth->execute;
+
+    if ( $sth->rows == -1 ) {
+      die ("Unexpected response while counting indexes in $table:" .
+           " \$sth->rows == -1");
+    }
+
+    return ($sth->rows);
+}
+
+# XXX - Needs to be made cross-db compatible.
+sub bz_get_index_def ($$) {
+    my ($self, $table, $field) = @_;
+    my $sth = $self->prepare("SHOW INDEX FROM $table");
+    $sth->execute;
+
+    while (my $ref = $sth->fetchrow_arrayref) {
+        next if $$ref[2] ne $field;
+        return $ref;
+   }
+}
+
+# XXX - Needs to be made cross-db compatible
+sub bz_table_exists ($) {
+   my ($self, $table) = @_;
+   my $exists = 0;
+   my $sth = $self->prepare("SHOW TABLES");
+   $sth->execute;
+   while (my ($dbtable) = $sth->fetchrow_array ) {
+      if ($dbtable eq $table) {
+         $exists = 1;
+      }
+   }
+   return $exists;
+}
+
 sub bz_last_key {
     my ($self, $table, $column) = @_;
 
@@ -342,8 +494,18 @@ Bugzilla::DB - Database access routines, using L<DBI>
   # Get the results
   my @result = $sth->fetchrow_array;
 
+  # Schema Changes
+  $dbh->bz_add_field($table, $column, $definition);
+  $dbh->bz_change_field_type($table, $column, $newtype);
+  $dbh->bz_drop_field($table, $column);
+  $dbh->bz_drop_table_indexes($table);
+  $dbh->bz_rename_field($table, $column, $newname);
+
   # Schema Information
-  my @fields = $dbh->bz_get_field_defs();
+  my @fields    = $dbh->bz_get_field_defs();
+  my @fieldinfo = $dbh->bz_get_field_def($table, $column);
+  my @indexinfo = $dbh->bz_get_index_def($table, $index);
+  my $exists    = $dbh->bz_table_exists($table);
 
 =head1 DESCRIPTION
 
@@ -534,12 +696,104 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               $column = name of column containing serial data type (scalar)
  Returns:     Last inserted ID (scalar)
 
+=item C<bz_add_field>
+
+ Description: Adds a new column to a table in the database. Prints out
+              a brief statement that it did so, to stdout.
+ Params:      $table = the table where the column is being added
+              $column = the name of the new column
+              $definition = SQL for defining the new column
+ Returns:     none
+
+=item C<bz_change_field_type>
+
+ Description: Changes the data type of a column in a table. Prints out 
+              the changes being made to stdout. If the new type is the 
+              same as the old type, the function returns without changing
+              anything.
+ Params:      $table = the table where the column is
+              $column = the name of the column you want to change
+              $newtype = the new data type of the column, in SQL format.
+ Returns:     none
+
+=item C<bz_drop_field>
+
+ Description: Removes a column from a database table. If the column 
+              doesn't exist, we return without doing anything. If we do
+              anything, we print a short message to stdout about the change.
+ Params:      $table = The table where the column is
+              $column = The name of the column you want to drop
+ Returns:     none
+
+=item C<bz_drop_table_indexes>
+
+ Description: Drops all indexes on a given table.
+ Params:      $table = the table on which you wish to remove all indexes
+ Returns:     none
+
+=item C<bz_rename_field>
+
+ Description: Renames a column in a database table. If the column 
+              doesn't exist, or if the new name is the same as the 
+              old name, we return without changing anything.
+ Params:      $table = the table where the column is that you want to rename
+              $column = the name of the column you want to rename
+              $newname = the new name of the column
+ Returns:     none
+
 =item C<bz_get_field_defs>
 
  Description: Returns a list of all the "bug" fields in Bugzilla. The list
               contains hashes, with a 'name' key and a 'description' key.
  Params:      none
  Returns:     List of all the "bug" fields
+
+=item C<bz_get_field_def>
+
+ Description: Returns information about a column in a table in the database.
+ Params:      $table = name of table containing the column (scalar)
+              $column = column you want info about (scalar)
+ Returns:     An reference to an array containing information about the
+              field, with the following information in each array place:
+              0 = column name
+              1 = column type
+              2 = 'YES' if the column can be NULL, empty string otherwise
+              3 = The type of key, either 'MUL', 'UNI', 'PRI, or ''.
+              4 = The default value
+              5 = An "extra" column, per MySQL docs. Don't use it.
+              If the column does not exist, the function returns undef.
+
+=item C<bz_get_index_count>
+
+ Description: Returns the number of indexes on a certain table.
+ Params:      $table = the table that you want to count indexes on
+ Returns:     The number of indexes on the table.
+
+=item C<bz_get_index_def>
+
+ Description: Returns information about an index on a table in the database.
+ Params:      $table = name of table containing the index (scalar)
+              $index = name of the index (scalar)
+ Returns:     A reference to an array containing information about the
+              index, with the following information in each array place:
+              0 = name of the table that the index is on
+              1 = 0 if unique, 1 if not unique
+              2 = name of the index
+              3 = seq_in_index (either 1 or 0)
+              4 = Name of ONE column that the index is on
+              5 = 'Collation' of the index. Usually 'A'.
+              6 = Cardinality. Either a number or undef.
+              7 = sub_part. Usually undef. Sometimes 1.
+              8 = "packed". Usually undef.
+              9 = comments. Usually an empty string. Sometimes 'FULLTEXT'.
+              If the index does not exist, the function returns undef.
+
+=item C<bz_table_exists>
+
+ Description: Returns whether or not the specified table exists in the DB.
+ Params:      $table = the name of the table you're checking the existence
+                       of (scalar)
+ Returns:     A true value if the table exists, a false value otherwise.
 
 =item C<bz_start_transaction>
 
