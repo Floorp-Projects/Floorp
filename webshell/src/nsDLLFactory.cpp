@@ -29,14 +29,14 @@ static NS_DEFINE_IID(kWebShellCID,          NS_WEB_SHELL_CID);
 nsresult NS_NewDocLoaderServiceFactory(nsIFactory** aResult);
 
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_WEB nsresult 
+extern "C" NS_EXPORT nsresult 
 NSGetFactory_WEB_DLL(nsISupports* serviceMgr,
                      const nsCID &aClass,
                      const char *aClassName,
                      const char *aProgID,
                      nsIFactory **aFactory)
 #else
-extern "C" NS_WEB nsresult
+extern "C" NS_EXPORT nsresult
 NSGetFactory(nsISupports* serviceMgr,
              const nsCID &aClass,
              const char *aClassName,
