@@ -19,9 +19,54 @@
 #ifndef __nsImapIncomingServer_h
 #define __nsImapIncomingServer_h
 
+#include "msgCore.h"
 #include "nsIImapIncomingServer.h"
-#include "nscore.h"
+#include "nsMsgIncomingServer.h"
+#include "nsIImapServerSink.h"
+#include "nsIStringBundle.h"
 
-NS_IMETHODIMP NS_NewImapIncomingServer(nsISupports * aOuter, REFNSIID iid, void **result);
+/* get some implementation from nsMsgIncomingServer */
+class nsImapIncomingServer : public nsMsgIncomingServer,
+                             public nsIImapIncomingServer,
+							 public nsIImapServerSink
+                             
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+
+    nsImapIncomingServer();
+    virtual ~nsImapIncomingServer();
+
+    // overriding nsMsgIncomingServer methods
+	NS_IMETHOD SetKey(const char * aKey);  // override nsMsgIncomingServer's implementation...
+	NS_IMETHOD GetServerURI(char * *aServerURI);
+
+	NS_DECL_NSIIMAPINCOMINGSERVER
+	NS_DECL_NSIIMAPSERVERSINK
+    
+	NS_IMETHOD PerformBiff();
+	NS_IMETHOD CloseCachedConnections();
+
+protected:
+	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
+	nsresult GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
+	nsresult GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
+
+	nsresult DeleteNonVerifiedFolders(nsIFolder *parentFolder);
+	PRBool NoDescendentsAreVerified(nsIFolder *parentFolder);
+	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
+private:
+    nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
+                                   nsIImapUrl* aImapUrl,
+                                   nsIImapProtocol** aImapConnection);
+    PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
+    nsCOMPtr<nsISupportsArray> m_connectionCache;
+    nsCOMPtr<nsISupportsArray> m_urlQueue;
+	nsCOMPtr<nsIStringBundle>	m_stringBundle;
+    nsVoidArray					m_urlConsumers;
+	PRUint32					m_capability;
+	nsCString					m_manageMailAccountUrl;
+};
+
 
 #endif

@@ -21,9 +21,7 @@
 
 #include "nsString.h"
 
-#include "nsIImapIncomingServer.h"
 #include "nsIMAPHostSessionList.h"
-#include "nsMsgIncomingServer.h"
 #include "nsImapIncomingServer.h"
 #include "nsIImapUrl.h"
 #include "nsIUrlListener.h"
@@ -40,63 +38,17 @@
 #include "plstr.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgFolder.h"
-#include "nsIImapServerSink.h"
 #include "nsImapUtils.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsINetSupportDialogService.h"
 #include "nsEnumeratorUtils.h"
-#include "nsIStringBundle.h"
 
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
-/* get some implementation from nsMsgIncomingServer */
-class nsImapIncomingServer : public nsMsgIncomingServer,
-                             public nsIImapIncomingServer,
-							 public nsIImapServerSink
-                             
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-
-    nsImapIncomingServer();
-    virtual ~nsImapIncomingServer();
-
-    // overriding nsMsgIncomingServer methods
-	NS_IMETHOD SetKey(const char * aKey);  // override nsMsgIncomingServer's implementation...
-	NS_IMETHOD GetServerURI(char * *aServerURI);
-
-	NS_DECL_NSIIMAPINCOMINGSERVER
-	NS_DECL_NSIIMAPSERVERSINK
-    
-	NS_IMETHOD PerformBiff();
-	NS_IMETHOD CloseCachedConnections();
-
-protected:
-	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
-	nsresult GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
-	nsresult GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
-
-	nsresult DeleteNonVerifiedFolders(nsIFolder *parentFolder);
-	PRBool NoDescendentsAreVerified(nsIFolder *parentFolder);
-	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
-private:
-    nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
-                                   nsIImapUrl* aImapUrl,
-                                   nsIImapProtocol** aImapConnection);
-    PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
-    nsCOMPtr<nsISupportsArray> m_connectionCache;
-    nsCOMPtr<nsISupportsArray> m_urlQueue;
-	nsCOMPtr<nsIStringBundle>	m_stringBundle;
-    nsVoidArray					m_urlConsumers;
-	PRUint32					m_capability;
-	nsCString					m_manageMailAccountUrl;
-};
-
 
 NS_IMPL_ADDREF_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
 NS_IMPL_RELEASE_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
@@ -525,20 +477,6 @@ NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 	return rv;
 }
     
-NS_IMETHODIMP NS_NewImapIncomingServer(nsISupports * aOuter, REFNSIID iid, void **result)
-{
-    if (!result) return NS_ERROR_NULL_POINTER;
-
-    if (aOuter)
-    {
-        *result = nsnull;
-        return NS_ERROR_NO_AGGREGATION;
-    }
-
-    nsImapIncomingServer *server = new nsImapIncomingServer();
-    if (!server) return NS_ERROR_OUT_OF_MEMORY;
-    return server->QueryInterface(iid, result);
-}
 
 NS_IMETHODIMP
 nsImapIncomingServer::CloseCachedConnections()
