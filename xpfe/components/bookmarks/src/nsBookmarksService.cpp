@@ -479,26 +479,26 @@ BookmarkParser::ParseBookmark(const nsString& aLine,
     // XXX There was some other cruft here to deal with aliases, but
     // since I have no clue what those are, I'll punt.
 
+	nsresult rv = NS_ERROR_OUT_OF_MEMORY; // in case ToNewCString() fails
+
 	char *cURL = url.ToNewCString();
-	if (cURL)
-	{
+	if (cURL) {
 		char *cShortcutURL = shortcut.ToNewCString();
-        if (! cShortcutURL)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-		nsresult rv = AddBookmark(aContainer,
-                                  cURL,
-                                  name.GetUnicode(),
-                                  addDate,
-                                  lastVisitDate,
-                                  lastModifiedDate,
-                                  cShortcutURL,
-                                  nodeType);
-
-		delete [] cURL;
-		if (cShortcutURL)	delete [] cShortcutURL;
+		if (cShortcutURL) {
+			rv = AddBookmark(aContainer,
+							 cURL,
+							 name.GetUnicode(),
+							 addDate,
+							 lastVisitDate,
+							 lastModifiedDate,
+							 cShortcutURL,
+							 nodeType);
+		}
+		delete [] cShortcutURL;
 	}
-	return(NS_OK);
+	delete [] cURL;
+
+	return rv;
 }
 
 
@@ -523,7 +523,6 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
 		return rv;
 	}
 
-	PRBool		result = PR_FALSE;
 	if (nsnull != mIEFavoritesRoot)
 	{
 		if (!PL_strcmp(aURL, mIEFavoritesRoot))
@@ -765,12 +764,12 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 {
     // XXX TO DO: Convert to a date literal
 
-    nsAutoString time;
-    time.Append(aTime, 10);
+    nsAutoString timeStr;
+    timeStr.Append(aTime, 10);
 
     nsresult rv;
     nsIRDFLiteral* literal;
-    if (NS_FAILED(rv = gRDF->GetLiteral(time.GetUnicode(), &literal))) {
+    if (NS_FAILED(rv = gRDF->GetLiteral(timeStr.GetUnicode(), &literal))) {
         NS_ERROR("unable to get literal for time");
         return rv;
     }
