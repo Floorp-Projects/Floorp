@@ -22,6 +22,7 @@
 #
 # Generates mostfreq list from data collected by collectstats.pl.
 
+
 use diagnostics;
 use strict;
 use CGI "param";

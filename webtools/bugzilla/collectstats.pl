@@ -24,6 +24,7 @@
 
 # Run me out of cron at midnight to collect Bugzilla statistics.
 
+
 use AnyDBM_File;
 use diagnostics;
 use strict;
