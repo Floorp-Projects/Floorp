@@ -891,8 +891,8 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* value = (PRUnichar*)aValue;
-  PRUnichar* start = (PRUnichar*)valueList;
+  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue;
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList;
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {
@@ -932,8 +932,8 @@ static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue,
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* value = (PRUnichar*)aValue;
-  PRUnichar* start = (PRUnichar*)valueList;
+  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue;
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList;
   PRUnichar* end   = start;
 
   if (kNullCh != *start) {
