@@ -104,6 +104,10 @@ nsFileIO::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMETHODIMP
 nsFileIO::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 {
+   NS_ASSERTION(file, "File must not be null");
+   if (file == nsnull)
+        return NS_ERROR_NOT_INITIALIZED;
+
     mFile = file;
     mIOFlags = ioFlags;
     mPerm = perm;
@@ -125,6 +129,10 @@ nsFileIO::GetFile(nsIFile* *aFile)
 NS_IMETHODIMP
 nsFileIO::Open(char **contentType, PRInt32 *contentLength)
 {
+    NS_ASSERTION(mFile, "File must not be null");
+    if (mFile == nsnull)
+        return NS_ERROR_NOT_INITIALIZED;
+
     // don't actually open the file here -- we'll do it on demand in the
     // GetInputStream/GetOutputStream methods
     nsresult rv = NS_OK;
@@ -188,6 +196,10 @@ nsFileIO::Close(nsresult status)
 NS_IMETHODIMP
 nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
 {
+    NS_ASSERTION(mFile, "File must not be null");
+    if (mFile == nsnull)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv;
     PRBool isDir;
     rv = mFile->IsDirectory(&isDir);
@@ -224,6 +236,10 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
 NS_IMETHODIMP
 nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
 {
+    NS_ASSERTION(mFile, "File must not be null");
+    if (mFile == nsnull)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv;
     PRBool isDir;
     rv = mFile->IsDirectory(&isDir);
@@ -257,6 +273,10 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
 NS_IMETHODIMP
 nsFileIO::GetName(char* *aName)
 {
+    NS_ASSERTION(mFile, "File must not be null");
+    if (mFile == nsnull)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return mFile->GetPath(aName);
 }
 
