@@ -73,7 +73,9 @@ WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version`";
     $approved = $approved_array["$approved"];
 
 echo"<h4><a href=\"listmanager.php?function=editversion&id=$id&vid=$vid\">Version $version</a> - $approved</h4>\n";
-echo"$filename - for $os<br>\n";
+echo"$filename";
+if ($os !="ALL") {echo" - for $os"; }
+echo"<br>\n";
 
 
 $sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `version` TV
@@ -99,7 +101,7 @@ $sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `version` TV
 	</div>
     <div id="side" class="right">
     <h2>Statistics</h2>
-        <img src="/images/download.png" border=0 height=34 width=34 alt="" class="iconbar">Downloads this Week: <?php echo"$downloadcount"; ?><br>
+        <img src="/images/download.png" border=0 height=32 width=32 alt="" class="iconbar">Downloads this Week: <?php echo"$downloadcount"; ?><br>
         Total Downloads: <?php echo"$totaldownloads"; ?><BR>
     <BR>
         <img src="/images/ratings.png" border=0 height=34 width=34 alt="" class="iconbar">Rated: <?php echo"$rating"; ?> of 5<BR>&nbsp;<br>
