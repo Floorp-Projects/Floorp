@@ -318,5 +318,13 @@ PRBool nsUnicodeToUTF7::DirectEncodable(PRUnichar aChar) {
   else if (aChar == 9) return PR_TRUE;
   else if (aChar == 13) return PR_TRUE;
   else if (aChar == 10) return PR_TRUE;
+  else if (aChar == 60) return PR_TRUE;  // '<'
+  else if (aChar == 33) return PR_TRUE;  // '!'
+  else if (aChar == 34) return PR_TRUE;  // '"'
+  else if (aChar == 62) return PR_TRUE;  // '>'
+  else if (aChar == 61) return PR_TRUE;  // '='
+  else if (aChar == 59) return PR_TRUE;  // ';'
+  else if (aChar == 91) return PR_TRUE;  // '['
+  else if (aChar == 93) return PR_TRUE;  // ']'
   else return PR_FALSE;
 }
