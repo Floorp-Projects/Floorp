@@ -1,0 +1,49 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Brian Ryner
+ */
+
+#include "nsIStreamConverter.idl"
+#include "nsrootidl.idl"
+
+%{C++
+// {933355f6-1dd2-11b2-a9b0-d335b9e35983}
+#define NSITXTTOHTMLCONV_CID \
+    { 0x933355f6, 0x1dd2, 0x11b2, \
+    { 0xa9, 0xb0, 0xd3, 0x35, 0xb9, 0xe3, 0x59, 0x83 } }
+%}
+
+[scriptable, uuid(933355f6-1dd2-11b2-a9b0-d335b9e35983)]
+interface nsITXTToHTMLConv : nsIStreamConverter {
+
+/**
+  @param text: Title to set for the HTML document.  Only applicable if PreFormatHTML(true)
+               is called.
+  @result      The given title will be used to form an HTML document from the plain text document.
+ */
+  void      SetTitle([const] in wstring text);
+
+/**
+  @param value: true to use an HTML header and footer on the document, false to omit it.
+  @result       The document will use a header and footer if vale = true.
+ */
+  void      PreFormatHTML(in boolean value);
+
+};
