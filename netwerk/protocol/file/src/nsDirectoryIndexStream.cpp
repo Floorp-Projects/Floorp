@@ -47,7 +47,7 @@ nsDirectoryIndexStream::Init(const nsFileSpec& aDir)
 
     // Sigh. We have to allocate on the heap because there are no
     // assignment operators defined.
-    mIter = new nsDirectoryIterator(mDir, PR_TRUE);
+    mIter = new nsDirectoryIterator(mDir, PR_FALSE);		// rjc: don't resolve aliases
     if (! mIter)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -152,6 +152,9 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         while (PRUint32(mBuf.Length()) < aCount && mIter->Exists()) {
             nsFileSpec current = mIter->Spec();
             ++(*mIter);
+
+		// rjc: don't return hidden files/directories!
+		if (current.IsHidden())	continue;
 
             PRFileInfo fileinfo;
             PRStatus status = PR_GetFileInfo(nsNSPRPath(current), &fileinfo);
