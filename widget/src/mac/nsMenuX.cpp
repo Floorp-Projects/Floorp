@@ -52,6 +52,7 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 #include "nsIPresContext.h"
+#include "nsIMenuCommandDispatcher.h"
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -293,6 +294,15 @@ NS_METHOD nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
 
   ::SetMenuItemModifiers(mMacMenuHandle, currItemIndex, macModifiers);
 
+  // set its command. we get the unique command id from the menubar
+  nsCOMPtr<nsIMenuCommandDispatcher> dispatcher ( do_QueryInterface(mManager) );
+  if ( dispatcher ) {
+    PRUint32 commandID = 0L;
+    dispatcher->Register(aMenuItem, &commandID);
+    if ( commandID )
+      ::SetMenuItemCommandID(mMacMenuHandle, currItemIndex, commandID);
+  }
+  
   PRBool isEnabled;
   aMenuItem->GetEnabled(&isEnabled);
   if(isEnabled)
@@ -412,8 +422,20 @@ NS_METHOD nsMenuX::RemoveItem(const PRUint32 aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuX::RemoveAll()
 {
-  if (mMacMenuHandle != NULL)
+  if (mMacMenuHandle != NULL) {    
+    // clear command id's
+    nsCOMPtr<nsIMenuCommandDispatcher> dispatcher ( do_QueryInterface(mManager) );
+    if ( dispatcher ) {
+      for ( int i = 1; i <= mNumMenuItems; ++i ) {
+        PRUint32 commandID = 0L;
+        OSErr err = ::GetMenuItemCommandID(mMacMenuHandle, i, (unsigned long*)&commandID);
+        if ( !err )
+          dispatcher->Unregister(commandID);
+      }
+    }
     ::DeleteMenuItems(mMacMenuHandle, 1, ::CountMenuItems(mMacMenuHandle));
+  }
+  
   mMenuItemsArray.Clear();    // remove all items
   return NS_OK;
 }
@@ -455,110 +477,8 @@ NS_METHOD nsMenuX::RemoveMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  //printf("MenuItemSelected called \n");
-  nsEventStatus eventStatus = nsEventStatus_eIgnore;
-
-  // Determine if this is the correct menu to handle the event. We can't use
-  // the HiWord of the command because of MenuSelect bugs in Carbon. Use
-  // the menuID we've been tracking manually instead. However, we don't get
-  // the carbon events for the apple menu, so if MenuSelect() tells us we've hit
-  // the apple menu (where there are no submenus we care about), it is
-  // actually correct and |gCurrentlyTrackedMenuID| is wrong. Go figure.
-  MenuID probablyWrongMenuID = HiWord(((nsMenuEvent)aMenuEvent).mCommand);
-  if ( probablyWrongMenuID == nsMenuBarX::kAppleMenuID )
-    gCurrentlyTrackedMenuID = nsMenuBarX::kAppleMenuID;
-  MenuID menuID = gCurrentlyTrackedMenuID;
-
-  if( menuID == nsMenuBarX::kAppleMenuID ) {
-    PRInt16 menuItemID = LoWord(((nsMenuEvent)aMenuEvent).mCommand);
-    if (menuItemID == 1) {
-			/* handle about app here */
-			nsresult rv = NS_ERROR_FAILURE;
-		 
-	    // Go find the about menu item
-	    if (!mMenuContent)
-      	return nsEventStatus_eConsumeNoDefault;
-	    nsCOMPtr<nsIDocument> doc; 
-	    mMenuContent->GetDocument(*getter_AddRefs(doc));
-	    if (!doc)
-      	return nsEventStatus_eConsumeNoDefault;
-	    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(doc);
-	    if (!xulDoc) {
-      	NS_ERROR("nsIDOMDocument to nsIDOMXULDocument QI failed.");
-      	return nsEventStatus_eConsumeNoDefault;
-	  	}
-	    
-	    // "aboutName" is the element id for the "About &shortBrandName;"
-	    // <menuitem/>. This is the glue code which causes any script code
-	    // in the <menuitem/> to be executed.
-	    nsCOMPtr<nsIDOMElement> domElement;
-	    xulDoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(domElement));
-	    if (!domElement)
-	      	return nsEventStatus_eConsumeNoDefault;
-	    
-	    // Now get the pres context so we can execute the command
-	  	nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-	  	if (!webShell)
-	  	    return nsEventStatus_eConsumeNoDefault;
-	  	nsCOMPtr<nsIPresContext> presContext;
-	  	MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
-
-	  	nsEventStatus status = nsEventStatus_eIgnore;
-	  	nsMouseEvent event;
-	  	event.eventStructType = NS_MOUSE_EVENT;
-	  	event.message = NS_XUL_COMMAND;
-
-	  	nsCOMPtr<nsIContent> contentNode = do_QueryInterface(domElement);
-	  	if (!contentNode)
-	      	return nsEventStatus_eConsumeNoDefault;
-
-	  	rv = contentNode->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-	  	return nsEventStatus_eConsumeNoDefault;
-		}
-	}
-	else if (mMacMenuID == menuID)
-  {
-    // Call MenuItemSelected on the correct nsMenuItem
-    PRInt16 menuItemID = LoWord(((nsMenuEvent)aMenuEvent).mCommand);
-    
-    nsCOMPtr<nsISupports>     menuSupports = getter_AddRefs(mMenuItemsArray.ElementAt(menuItemID - 1));
-    NS_ASSERTION(menuSupports, "Somehow our item list was torn down prematurely");
-    nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(menuSupports);
-    if (menuListener)
-    {
-      // call our ondestroy handler now because the menu is going away.
-      // do it now before sending the event into the dom in case our window
-      // goes away.
-      OnDestroy();
-      
-      eventStatus = menuListener->MenuItemSelected(aMenuEvent);
-      if(nsEventStatus_eIgnore != eventStatus)
-        return eventStatus;
-    }
-  } 
-
-  // Make sure none of our submenus are the ones that should be handling this
-  PRUint32    numItems;
-  mMenuItemsArray.Count(&numItems);
-  for (PRUint32 i = numItems; i > 0; i--)
-  {
-    nsCOMPtr<nsISupports>     menuSupports = getter_AddRefs(mMenuItemsArray.ElementAt(i - 1));    
-    nsCOMPtr<nsIMenu>         submenu = do_QueryInterface(menuSupports);
-    nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(submenu);
-    if (menuListener)
-    {
-      // call our ondestroy handler now because the menu is going away.
-      // do it now before sending the event into the dom in case our window
-      // goes away.
-      OnDestroy();
-      
-      eventStatus = menuListener->MenuItemSelected(aMenuEvent);
-      if(nsEventStatus_eIgnore != eventStatus)
-        return eventStatus;
-    }
-  }
-  
-  return eventStatus;
+  // all this is now handled by Carbon Events.
+  return nsEventStatus_eConsumeNoDefault;
 }
 
 //-------------------------------------------------------------------------

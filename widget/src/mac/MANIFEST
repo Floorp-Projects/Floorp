@@ -5,3 +5,4 @@
 nsMacMessageSink.h
 nsMacMessagePump.h
 nsIChangeManager.idl
+nsIMenuCommandDispatcher.idl

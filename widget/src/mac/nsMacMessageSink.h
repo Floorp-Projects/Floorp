@@ -75,7 +75,9 @@ private:
 public:
 									
 	PRBool					DispatchOSEvent(EventRecord &anEvent, WindowPtr aWindow);
+#if USE_MENUSELECT
 	PRBool					DispatchMenuCommand(EventRecord &anEvent, long menuResult, WindowPtr aWindow);
+#endif
 
 	static void			AddRaptorWindowToList(WindowPtr wind, nsMacWindow* theRaptorWindow);
 	static void			RemoveRaptorWindowFromList(WindowPtr wind);

@@ -48,6 +48,8 @@ class nsIMenuItem;
 class nsIMenuListener;
 class nsIChangeManager;
 class nsIContent;
+class nsIMenuCommandDispatcher;
+
 
 // {ab6cea83-00ff-11d5-bb6f-f432a43ead7c}
 #define NS_IMENU_IID      \

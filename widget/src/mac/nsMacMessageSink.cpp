@@ -64,6 +64,7 @@ NS_EXPORT PRBool nsMacMessageSink::DispatchOSEvent(
 }
 
 
+#if USE_MENUSELECT
 //-------------------------------------------------------------------------
 //
 // DispatchMenuCommand
@@ -85,6 +86,7 @@ NS_EXPORT PRBool nsMacMessageSink::DispatchMenuCommand(
 	}
   return eventHandled;
 }
+#endif
 
 
 #pragma mark -

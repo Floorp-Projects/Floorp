@@ -528,6 +528,8 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 }
 
 
+#if USE_MENUSELECT
+
 //-------------------------------------------------------------------------
 //
 // Handle Menu commands
@@ -592,6 +594,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 	return eventHandled;
 }
 
+#endif
 
 //-------------------------------------------------------------------------
 //

@@ -540,11 +540,13 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 			    nsWatchTask::GetTask().Suspend();			  
 					long menuResult = ::MenuSelect(anEvent.where);
 					nsWatchTask::GetTask().Resume();
+#if USE_MENUSELECT
 					if (HiWord(menuResult) != 0)
 					{
 						menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
 						DoMenu(anEvent, menuResult);
 					}
+#endif
 				}
 				
 				break;
@@ -798,6 +800,7 @@ void	nsMacMessagePump::DoKey(EventRecord &anEvent)
 	//}
 	//else
 	{
+#if USE_MENUSELECT
 		PRBool handled = DispatchOSEventToRaptor(anEvent, GetFrontApplicationWindow());
 		/* we want to call this if cmdKey is pressed and no other modifier keys are pressed */
 		if((!handled) && (anEvent.what == keyDown) && (anEvent.modifiers == cmdKey) )
@@ -810,6 +813,7 @@ void	nsMacMessagePump::DoKey(EventRecord &anEvent)
 				DoMenu(anEvent, menuResult);
 			}
 		}
+#endif
 	}
 }
 
@@ -841,13 +845,13 @@ void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 //-------------------------------------------------------------------------
 extern Boolean SIOUXIsAppWindow(WindowPtr window);
 
+#if USE_MENUSELECT
 void	nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 {
 	// The app can handle its menu commands here or
 	// in the nsNativeBrowserWindow and nsNativeViewerApp
 	
-#if !TARGET_CARBON
-extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently requires
+  extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently requires
 									// APPLE_MENU_HACK to be defined in nsMenu.h
 									// One of these days it'll become a non-hack
 									// and things will be less convoluted
@@ -869,7 +873,6 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 			return;
 		}
 	}
-#endif
 
 	// Note that we still give Raptor a shot at the event as it will eventually
 	// handle the About... selection
@@ -877,7 +880,7 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 
 	HiliteMenu(0);
 }
-
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -934,6 +937,9 @@ PRBool	nsMacMessagePump::DispatchOSEventToRaptor(
 }
 
 
+
+#if USE_MENUSELECT
+
 //-------------------------------------------------------------------------
 //
 // DispatchMenuCommandToRaptor
@@ -952,3 +958,4 @@ PRBool nsMacMessagePump::DispatchMenuCommandToRaptor(
 	return handled;
 }
 
+#endif

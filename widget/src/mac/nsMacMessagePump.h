@@ -97,13 +97,17 @@ private:
 	void			DoMouseMove(EventRecord &anEvent);
 	void			DoUpdate(EventRecord &anEvent);
 	void 			DoKey(EventRecord &anEvent);
+#if USE_MENUSELECT
 	void 			DoMenu(EventRecord &anEvent, long menuResult);
+#endif
 	void 			DoDisk(const EventRecord &anEvent);
 	void			DoActivate(EventRecord &anEvent);
 	void			DoIdle(EventRecord &anEvent);
 
 	PRBool		DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
+#if USE_MENUSELECT
 	PRBool		DispatchMenuCommandToRaptor(EventRecord &anEvent, long menuResult);
+#endif
 
 	PRBool		BrowserIsBusy();
 	

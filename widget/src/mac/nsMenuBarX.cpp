@@ -76,7 +76,8 @@ static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
-NS_IMPL_ISUPPORTS5(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIDocumentObserver, nsIChangeManager, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS6(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIDocumentObserver, 
+                    nsIChangeManager, nsIMenuCommandDispatcher, nsISupportsWeakReference)
 
 MenuRef nsMenuBarX::sAppleMenu = nsnull;
 EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
@@ -86,12 +87,9 @@ EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 // nsMenuBarX constructor
 //
 nsMenuBarX::nsMenuBarX()
+  : mNumMenus(0), mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mDocument(nsnull), mCurrentCommandID(1)
 {
   NS_INIT_REFCNT();
-  mNumMenus       = 0;
-  mParent         = nsnull;
-  mIsMenuBarAdded = PR_FALSE;
-  mDocument       = nsnull;
 
   OSStatus status = ::CreateNewMenu(0, 0, &mRootMenu);
   NS_ASSERTION(status == noErr, "nsMenuBarX::nsMenuBarX:  creation of root menu failed.");
@@ -246,8 +244,6 @@ nsMenuBarX :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
 } // RegisterAsDocumentObesrver
 
 
-#if TARGET_CARBON
-
 //
 // AquifyMenuBar
 //
@@ -271,29 +267,40 @@ nsMenuBarX :: AquifyMenuBar ( )
     HideItem ( domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nsnull );
     HideItem ( domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent) );
   }
+      
+} // AquifyMenuBar
+
+
+//
+// InstallCommandEventHandler
+//
+// Grab our window and install an event handler to handle command events which are
+// used to drive the action when the user chooses an item from a menu. We have to install
+// it on the window because the menubar isn't in the event chain for a menu command event.
+//
+OSStatus
+nsMenuBarX :: InstallCommandEventHandler ( )
+{
+  OSStatus err = noErr;
   
-  // Install the command handler to deal with prefs/quit. We have to install it on the window because the
-  // menubar isn't in the event chain for a menu command event. Don't enable the prefs item
-  // just yet, wait until we actually find a pref node in the DOM.
   WindowRef myWindow = NS_REINTERPRET_CAST(WindowRef, mParent->GetNativeData(NS_NATIVE_DISPLAY));
   NS_ASSERTION ( myWindow, "Can't get WindowRef to install command handler!" );
   if ( myWindow && sCommandEventHandler ) {
-    EventTypeSpec commandEventList[] = { {kEventClassCommand, kEventCommandProcess},
-                                          {kEventClassCommand, kEventCommandUpdateStatus} };
-    OSStatus err = ::InstallWindowEventHandler ( myWindow, sCommandEventHandler, 2, commandEventList, this, NULL );
+    const EventTypeSpec commandEventList[] = { {kEventClassCommand, kEventCommandProcess},
+                                               {kEventClassCommand, kEventCommandUpdateStatus} };
+    err = ::InstallWindowEventHandler ( myWindow, sCommandEventHandler, 2, commandEventList, this, NULL );
     NS_ASSERTION ( err == noErr, "Uh oh, command handler not installed" );
   }
-    
-} // AquifyMenuBar
+
+  return err;
+  
+} // InstallCommandEventHandler
 
 
 //
 // CommandEventHandler
 //
 // Processes Command carbon events from enabling/selecting of items in the menu.
-//
-// NOTE: eventually, all menu dispatching will go through this routine, for now, we only
-//       dispatch prefs and quit this way
 //
 pascal OSStatus
 nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
@@ -327,12 +334,36 @@ nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
             handled = noErr;
           break;
         }
-          
-#if NOT_YET
+        
         case kHICommandAbout:
+        {
+          // the 'about' command is special because we don't have a nsIMenu or nsIMenuItem
+          // for the apple menu. Grovel for the content node with an id of "aboutName" 
+          // and call it directly.
+          nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(self->mDocument);
+	        if ( xulDoc ) {
+      	    nsCOMPtr<nsIDOMElement> domElement;
+      	    xulDoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(domElement));
+      	    nsCOMPtr<nsIContent> aboutContent ( do_QueryInterface(domElement) );
+      	    self->ExecuteCommand(aboutContent);
+          }
           handled = noErr;
           break;
-#endif    
+        }
+
+        default:
+        {
+          // given the commandID, look it up in our hashtable and dispatch to
+          // that content node. Recall that we store weak pointers to the content
+          // nodes in the hash table.
+          nsPRUint32Key key ( command.commandID );
+          nsIMenuItem* content = NS_REINTERPRET_CAST(nsIMenuItem*, self->mObserverTable.Get(&key));
+          if ( content )
+            content->DoCommand();
+          handled = noErr;          
+          break; 
+        }        
+
       } // switch on commandID
       break;
     }
@@ -410,9 +441,6 @@ nsMenuBarX :: HideItem ( nsIDOMDocument* inDoc, nsAReadableString & inID, nsICon
 } // HideItem
 
 
-#endif
-
-
 nsEventStatus
 nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                             void * menubarNode, void * aWebShell )
@@ -426,14 +454,15 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
     
   Create(aParentWindow);
   
-#if TARGET_CARBON
   // if we're on X (using aqua UI guidelines for menus), remove quit and prefs
   // from our menubar.
   SInt32 result = 0L;
   OSStatus err = ::Gestalt ( gestaltMenuMgrAttr, &result );
   if ( !err && (result & gestaltMenuMgrAquaLayoutMask) )
     AquifyMenuBar();
-#endif
+  err = InstallCommandEventHandler();
+  if ( err )
+    return nsEventStatus_eIgnore;
 
   nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
   if (webShell) RegisterAsDocumentObserver(webShell);
@@ -613,6 +642,8 @@ nsMenuBarX :: CreateAppleMenu ( nsIMenu* inMenu )
       ::CFRelease(labelRef);
     }
     
+    ::SetMenuItemCommandID(sAppleMenu, 1, kHICommandAbout);
+
     ::AppendMenu(sAppleMenu, "\p-");
   }
 
@@ -930,6 +961,56 @@ nsMenuBarX :: Lookup ( nsIContent *aContent, nsIChangeObserver **_retval )
   *_retval = NS_REINTERPRET_CAST(nsIChangeObserver*, mObserverTable.Get(&key));
   NS_IF_ADDREF ( *_retval );
   
+  return NS_OK;
+}
+
+
+#pragma mark -
+
+
+//
+// Implementation methods for nsIMenuCommandDispatcher
+//
+
+
+//
+// Register
+//
+// Given a menu item, creates a unique 4-character command ID and
+// maps it to the item. Returns the id for use by the client.
+//
+NS_IMETHODIMP 
+nsMenuBarX :: Register ( nsIMenuItem* inMenuItem, PRUint32* outCommandID )
+{
+  // no real need to check for uniqueness. We always start afresh with each
+  // window at 1. Even if we did get close to the reserved Apple command id's,
+  // those don't start until at least '    ', which is integer 538976288. If
+  // we have that many menu items in one window, I think we have other problems.
+  
+  // put it in the table, set out param for client
+  nsPRUint32Key key ( mCurrentCommandID );
+  mObserverTable.Put ( &key, inMenuItem );
+  *outCommandID = mCurrentCommandID;
+
+  // make id unique for next time
+  ++mCurrentCommandID;
+  
+  return NS_OK;
+}
+
+
+// 
+// Unregister
+//
+// Removes the mapping between the given 4-character command ID
+// and its associated menu item.
+//
+NS_IMETHODIMP 
+nsMenuBarX :: Unregister ( PRUint32 inCommandID )
+{
+  nsPRUint32Key key ( inCommandID );
+  mObserverTable.Remove ( &key );
+
   return NS_OK;
 }
 

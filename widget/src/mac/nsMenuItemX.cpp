@@ -201,38 +201,14 @@ NS_METHOD nsMenuItemX::IsSeparator(PRBool & aIsSep)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItemX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  switch ( mMenuType ) {
-    case eCheckbox:
-      SetChecked(!mIsChecked);
-      break;
-
-    case eRadio:
-    {
-      // we only want to muck with things if we were selected and we're not
-      // already checked. 
-      if ( mIsChecked )
-        break;       
-      SetChecked(PR_TRUE);
-      break;
-    }
-      
-    case eRegular:
-      break;          // do nothing special
-      
-  } // which menu type
-      
-  DoCommand();
+  // this is all handled by Carbon Events
   return nsEventStatus_eConsumeNoDefault;
 }
 
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItemX::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  //if(mXULCommandListener)
-  //  return mXULCommandListener->MenuSelected(aMenuEvent);
-    
-    DoCommand();
-    return nsEventStatus_eIgnore;
+  return nsEventStatus_eIgnore;
 }
 
 //-------------------------------------------------------------------------
@@ -309,7 +285,7 @@ NS_METHOD nsMenuItemX::DoCommand()
   }
   else
     mContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-
+  
   return nsEventStatus_eConsumeNoDefault;
 }
     
