@@ -49,7 +49,7 @@
   </script>
             
   <!-- Fancy panel header -->
-  <box class="box-smallheader" title="SSL" description="Settings for SSL"/>
+  <box class="box-smallheader" title="SSL"/>
 
   <titledbox orient="horizontal">
     <label value="&SSLProtocolVersions;"/>
@@ -68,8 +68,8 @@
     </box>
 
     <box orient="vertical" halign="right">
-      <button class="dialog" label="&edit.sslciphers;" disabled="true"
-        oncommand="window.openDialog('chrome://pippki/content/cipherViewer.xul', '',
+      <button class="dialog" label="&edit.sslciphers;"
+        oncommand="window.openDialog('chrome://pippki/content/pref-ciphers.xul', '',
                        'modal=yes,resizable,chrome');" />
     </box>
 
