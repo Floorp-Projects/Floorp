@@ -1372,6 +1372,12 @@ void EDT_PreClose(MWContext * pMWContext,char* pURL, EDT_PreCloseCallbackFn done
  */
 XP_Bool EDT_IsSameURL(char *url1,char *url2,char *base1,char *base2);
 
+/* Check for valid image file extensions
+ * Used primarily to NOT mangle image URLs that are not really files,
+ *  but server-generated images, as with counter URLs
+ */
+XP_Bool EDT_IsImageURL(char *pImageURL);
+
 /*
  * Extract the Extra HTML string from the ED_Element pointer in an image struct
  * (ED_Element is a void* to external users
