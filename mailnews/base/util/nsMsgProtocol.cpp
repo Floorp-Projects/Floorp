@@ -48,6 +48,11 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
 	m_tempMsgFileSpec += "tempMessage.eml";
     m_url = aURL;
+
+	nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aURL);
+	if (mailUrl) {
+		mailUrl->GetLoadGroup(getter_AddRefs(m_loadGroup));
+	}
 }
 
 nsMsgProtocol::~nsMsgProtocol()
@@ -258,9 +263,9 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	// okay now kick us off to the next state...
 	// our first state is a process state so drive the state machine...
 	nsresult rv = NS_OK;
-	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
+	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL, &rv);
 
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv) && aMsgUrl)
 	{
 		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
 
@@ -285,6 +290,7 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
                 }
                 rv = m_channel->SetTransferCount(m_readCount);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "SetTransferCount failed");
+
                 // put us in a state where we are always notified of incoming data
                 rv = m_channel->AsyncRead(this /* stream observer */, urlSupports);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
