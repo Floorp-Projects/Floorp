@@ -53,8 +53,7 @@
 		{
 		    dump("Creating prefwindow object...");
 	        prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
-            prefwindow.Init("preftree.xul");
-	        prefwindow.ShowWindow(window);
+            prefwindow.showWindow("navigator.js", window, url);
 			dump("...created\n");
 		}
 		else
@@ -63,7 +62,7 @@
 		}
 		if (prefwindow)
 		{
-			prefwindow.ChangePanel(url);
+			prefwindow.changePanel(url);
 		}
 		return true;
 	}
