@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.10 2001/09/18 01:59:19 nelsonb%netscape.com Exp $
+ * $Id: sslcon.c,v 1.11 2001/09/20 21:26:40 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -41,7 +41,6 @@
 #include "sechash.h"
 #include "cryptohi.h"		/* for SGN_ funcs */
 #include "keyhi.h" 		/* for SECKEY_ high level functions. */
-#include "softoken.h"		/* for RSA_FormatBlock */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -52,7 +51,6 @@
 #include "prtime.h" 	/* for PR_Now() */
 
 #define XXX
-
 static PRBool policyWasSet;
 
 /* This ordered list is indexed by (SSL_CK_xx * 3)   */
@@ -1997,6 +1995,65 @@ ssl2_ClientHandleServerCert(sslSocket *ss, PRUint8 *certData, int certLen)
     return SECSuccess;
 }
 
+
+/*
+ * Format one block of data for public/private key encryption using
+ * the rules defined in PKCS #1. SSL2 does this itself to handle the
+ * rollback detection.
+ */
+#define RSA_BLOCK_MIN_PAD_LEN           8
+#define RSA_BLOCK_FIRST_OCTET           0x00
+#define RSA_BLOCK_AFTER_PAD_OCTET       0x00
+#define RSA_BLOCK_PUBLIC_OCTET       	0x02
+unsigned char *
+ssl_FormatSSL2Block(unsigned modulusLen, SECItem *data)
+{
+    unsigned char *block;
+    unsigned char *bp;
+    int padLen;
+    SECStatus rv;
+    int i;
+
+    PORT_Assert (data->len <= (modulusLen - (3 + RSA_BLOCK_MIN_PAD_LEN)));
+    block = (unsigned char *) PORT_Alloc(modulusLen);
+    if (block == NULL)
+	return NULL;
+
+    bp = block;
+
+    /*
+     * All RSA blocks start with two octets:
+     *	0x00 || BlockType
+     */
+    *bp++ = RSA_BLOCK_FIRST_OCTET;
+    *bp++ = RSA_BLOCK_PUBLIC_OCTET;
+
+    /*
+     * 0x00 || BT || Pad || 0x00 || ActualData
+     *   1      1   padLen    1      data->len
+     * Pad is all non-zero random bytes.
+     */
+    padLen = modulusLen - data->len - 3;
+    PORT_Assert (padLen >= RSA_BLOCK_MIN_PAD_LEN);
+    rv = PK11_GenerateRandom(bp, padLen);
+    if (rv == SECFailure) goto loser;
+    /* replace all the 'zero' bytes */
+    for (i = 0; i < padLen; i++) {
+	while (bp[i] == RSA_BLOCK_AFTER_PAD_OCTET) {
+    	    rv = PK11_GenerateRandom(bp+i, 1);
+	    if (rv == SECFailure) goto loser;
+	}
+    }
+    bp += padLen;
+    *bp++ = RSA_BLOCK_AFTER_PAD_OCTET;
+    PORT_Memcpy (bp, data->data, data->len);
+
+    return block;
+loser:
+    if (block) PORT_Free(block);
+    return NULL;
+}
+
 /*
 ** Given the server's public key and cipher specs, generate a session key
 ** that is ready to use for encrypting/decrypting the byte stream. At
@@ -2022,7 +2079,7 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
     int               caLen;	/* length of IV data at *ca.	*/
     int               nc;
 
-    SECItem           eblock;	/* holds unencrypted PKCS#1 formatted key. */
+    unsigned char *eblock;	/* holds unencrypted PKCS#1 formatted key. */
     SECItem           rek;	/* holds portion of symkey to be encrypted. */
 
     PRUint8           keyData[SSL_MAX_MASTER_KEY_BYTES];
@@ -2031,8 +2088,7 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
     PORT_Assert( ssl_Have1stHandshakeLock(ss) );
     PORT_Assert((ss->sec != 0));
 
-    eblock.data = 0;
-    eblock.len  = 0;
+    eblock = NULL;
 
     sec = ss->sec;
     sid = sec->ci.sid;
@@ -2112,32 +2168,27 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
     modulusLen = SECKEY_PublicKeyStrength(serverKey);
     rek.data   = keyData + ckLen;
     rek.len    = keyLen  - ckLen;
-    rv = RSA_FormatBlock(&eblock, modulusLen, RSA_BlockPublic, &rek);
-    if (rv) 
+    eblock = ssl_FormatSSL2Block(modulusLen, &rek);
+    if (eblock == NULL) 
     	goto loser;
+
     /* Set up the padding for version 2 rollback detection. */
     /* XXX We should really use defines here */
     if (ss->enableSSL3 || ss->enableTLS) {
 	PORT_Assert((modulusLen - rek.len) > 12);
-	PORT_Memset(eblock.data + modulusLen - rek.len - 8 - 1, 0x03, 8);
+	PORT_Memset(eblock + modulusLen - rek.len - 8 - 1, 0x03, 8);
     }
     ekbuf = (PRUint8*) PORT_Alloc(modulusLen);
     if (!ekbuf) 
 	goto loser;
     PRINT_BUF(10, (ss, "master key encryption block:",
-		   eblock.data, eblock.len));
+		   eblock, modulusLen));
 
     /* Encrypt ekitem */
-    rv = PK11_PubEncryptRaw(serverKey, ekbuf, eblock.data, modulusLen,
+    rv = PK11_PubEncryptRaw(serverKey, ekbuf, eblock, modulusLen,
 						ss->pkcs11PinArg);
     if (rv) 
     	goto loser;
-
-    if (eblock.len != modulusLen) {
-	/* Something strange just happened */
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	goto loser;
-    }
 
     /*  Now we have everything ready to send */
     rv = ssl2_SendSessionKeyMessage(ss, cipher, keyLen << 3, ca, caLen,
@@ -2155,7 +2206,7 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
   done:
     PORT_Memset(keyData, 0, sizeof(keyData));
     PORT_ZFree(ekbuf, modulusLen);
-    SECITEM_ZfreeItem(&eblock, PR_FALSE);
+    PORT_ZFree(eblock, modulusLen);
     SECKEY_DestroyPublicKey(serverKey);
     return rv;
 }
