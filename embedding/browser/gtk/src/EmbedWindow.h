@@ -74,6 +74,7 @@ private:
   nsCOMPtr<nsIWebBrowser>  mWebBrowser; // [OWNER]
   nsCOMPtr<nsIBaseWindow>  mBaseWindow; // [OWNER]
   static GtkWidget        *sTipWindow;
+  PRBool                   mVisibility;
 
 };
   

@@ -83,6 +83,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   {
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		    moz_embed_signals[NET_STOP]);
+    // let our owner know that the load finished
+    mOwner->ContentFinishedLoading();
   }
 
   return NS_OK;

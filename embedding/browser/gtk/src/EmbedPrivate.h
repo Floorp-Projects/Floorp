@@ -77,6 +77,12 @@ class EmbedPrivate {
   // attach event listeners.
   void        ContentProgressChange (void);
 
+  // This is an upcall from the progress listener when content is
+  // finished loading.  We have this so that if it's chrome content
+  // that we can size to content properly and show ourselves if
+  // visibility is set.
+  void        ContentFinishedLoading(void);
+
   GtkMozEmbed                   *mOwningWidget;
 
   // all of the objects that we own
@@ -118,6 +124,10 @@ class EmbedPrivate {
 
   // chrome mask
   PRUint32                       mChromeMask;
+  // is this a chrome window?
+  PRBool                         mIsChrome;
+  // has the chrome finished loading?
+  PRBool                         mChromeLoaded;
 
  private:
 
