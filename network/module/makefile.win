@@ -94,7 +94,6 @@ NETLIBS=\
 		$(NULL)
 
 LLIBS=$(LLIBS)  $(LIBNSPR)                  \
-		$(DIST)\lib\dbm32.lib	    \
 		$(DIST)\lib\secfreenav32.lib \
 		$(DIST)\lib\libpwcac.lib    \
                 $(DIST)\lib\libplc21.lib    \
