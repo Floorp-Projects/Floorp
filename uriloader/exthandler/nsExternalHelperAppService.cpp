@@ -827,8 +827,6 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
 NS_IMETHODIMP
 nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData )
 {
-  nsresult rv = NS_OK;
-
   if (!strcmp(aTopic, "profile-before-change")) {
     ExpungeTemporaryFiles();
     nsCOMPtr <nsIRDFRemoteDataSource> flushableDataSource = do_QueryInterface(mOverRideDataSource);
@@ -1839,10 +1837,10 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
   // The helper app dialog has told us what to do.
   mReceivedDispositionInfo = PR_TRUE;
 
-  if (!aNewFileLocation)
+  nsCOMPtr<nsILocalFile> fileToUse = do_QueryInterface(aNewFileLocation);
+  if (!fileToUse)
   {
     nsAutoString leafName;
-    nsCOMPtr<nsILocalFile> fileToUse;
     mTempFile->GetLeafName(leafName);
     if (mSuggestedFileName.IsEmpty())
       rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName, mTempFileExtension);
@@ -1862,20 +1860,20 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
       Cancel();
       return NS_ERROR_FAILURE;
     }
-    
-    mFinalFileDestination = do_QueryInterface(fileToUse);
-
-    if (!mProgressListenerInitialized)
-      CreateProgressListener();
-
-    // now that the user has chosen the file location to save to, it's okay to fire the refresh tag
-    // if there is one. We don't want to do this before the save as dialog goes away because this dialog
-    // is modal and we do bad things if you try to load a web page in the underlying window while a modal
-    // dialog is still up. 
-    ProcessAnyRefreshTags();
   }
+  
+  mFinalFileDestination = do_QueryInterface(fileToUse);
 
-  return rv;
+  if (!mProgressListenerInitialized)
+    CreateProgressListener();
+
+  // now that the user has chosen the file location to save to, it's okay to fire the refresh tag
+  // if there is one. We don't want to do this before the save as dialog goes away because this dialog
+  // is modal and we do bad things if you try to load a web page in the underlying window while a modal
+  // dialog is still up. 
+  ProcessAnyRefreshTags();
+
+  return NS_OK;
 }
 
 
@@ -2281,11 +2279,12 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
 
   // find the file extension (if any)
   PRInt32 extLoc = specStr.RFindChar('.');
+  PRInt32 specLength = specStr.Length();
   if (-1 != extLoc &&
-      extLoc != specStr.Length() - 1 &&
+      extLoc != specLength - 1 &&
       // nothing over 20 chars long can be sanely considered an
       // extension.... Dat dere would be just data.
-      specStr.Length() - extLoc < 20) 
+      specLength - extLoc < 20) 
   {
     return GetTypeFromExtension(PromiseFlatCString(
              Substring(specStr, extLoc + 1, specStr.Length() - extLoc - 1)
