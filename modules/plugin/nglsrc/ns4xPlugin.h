@@ -22,6 +22,7 @@
 #include "nsplugin.h"
 #include "prlink.h"  // for PRLibrary
 #include "npupp.h"
+#include "nsPluginHostImpl.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -38,9 +39,16 @@
 
 // XXX These are defined in platform specific FE directories right now :-/
 
+#if defined(XP_PC) || defined(XP_UNIX)
 typedef NS_CALLBACK_(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
 typedef NS_CALLBACK_(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
 typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);
+#endif
+
+#ifdef XP_MAC
+typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);
+typedef NS_CALLBACK_(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFuncs* pCallbacks, NPP_ShutdownUPP* unloadUpp);
+#endif
 
 class nsIServiceManager;
 class nsIAllocator;
@@ -99,10 +107,14 @@ public:
    * and initializes an ns4xPlugin object, and returns it in
    * <b>result</b>.
    */
+   
   static nsresult
-  CreatePlugin(PRLibrary *library,
-               nsIPlugin **result,
-			   nsIServiceManager* serviceMgr);
+  CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr);
+
+#ifdef XP_MAC
+  void
+  SetPluginRefNum(short aRefNum);
+#endif
 
 protected:
   /**
@@ -210,6 +222,10 @@ protected:
 
 #if defined(XP_MAC) && !defined(powerc)
 #pragma pointers_in_A0
+#endif
+
+#ifdef XP_MAC
+  short fPluginRefNum;
 #endif
 
   /**

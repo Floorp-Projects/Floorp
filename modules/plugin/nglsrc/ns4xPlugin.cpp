@@ -25,6 +25,11 @@
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
 #include "nsIPluginStreamListener.h"
+#include "nsPluginsDir.h"
+
+#ifdef XP_MAC
+#include <Resources.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -115,6 +120,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, ns
 
 ns4xPlugin::~ns4xPlugin(void)
 {
+
 }
 
 
@@ -148,6 +154,24 @@ ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
     return NS_NOINTERFACE;
 }
 
+#ifdef XP_MAC
+static char* p2cstrdup(StringPtr pstr)
+{
+	int len = pstr[0];
+	char* cstr = new char[len + 1];
+	if (cstr != NULL) {
+		::BlockMoveData(pstr + 1, cstr, len);
+		cstr[len] = '\0';
+	}
+	return cstr;
+}
+
+void
+ns4xPlugin::SetPluginRefNum(short aRefNum)
+{
+	fPluginRefNum = aRefNum;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Static factory method.
@@ -161,15 +185,14 @@ ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
 */
 
 nsresult
-ns4xPlugin::CreatePlugin(PRLibrary *library,
-                         nsIPlugin **result,
-                         nsIServiceManager* serviceMgr)
+ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 {
     CheckClassInitialized();
-
+    
+#ifdef XP_PC
 	// XXX this only applies on Windows
     NP_GETENTRYPOINTS pfnGetEntryPoints =
-        (NP_GETENTRYPOINTS)PR_FindSymbol(library, "NP_GetEntryPoints");
+        (NP_GETENTRYPOINTS)PR_FindSymbol(pluginTag->mLibrary, "NP_GetEntryPoints");
 
     if (pfnGetEntryPoints == NULL)
         return NS_ERROR_FAILURE;
@@ -182,26 +205,26 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
     if (pfnGetEntryPoints(&callbacks) != NS_OK)
         return NS_ERROR_FAILURE; // XXX
 
-#ifdef XP_WIN // XXX This is really XP, but we need to figure out how to do HIBYTE()
+#ifdef XP_PC // XXX This is really XP, but we need to figure out how to do HIBYTE()
     if (HIBYTE(callbacks.version) < NP_VERSION_MAJOR)
         return NS_ERROR_FAILURE;
-#endif    
+#endif
 
     NP_PLUGINSHUTDOWN pfnShutdown =
-        (NP_PLUGINSHUTDOWN)PR_FindSymbol(library, "NP_Shutdown");
+        (NP_PLUGINSHUTDOWN)PR_FindSymbol(pluginTag->mLibrary, "NP_Shutdown");
 
 	// create the new plugin handler
-    *result = new ns4xPlugin(&callbacks, pfnShutdown, serviceMgr);
+    pluginTag->mEntryPoint = new ns4xPlugin(&callbacks, pfnShutdown, serviceMgr);
 
-    NS_ADDREF(*result);
-
-    if (*result == NULL)
+    if (pluginTag->mEntryPoint == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(pluginTag->mEntryPoint);
 	
 	// we must init here because the plugin may call NPN functions
 	// when we call into the NP_Initialize entry point - NPN functions
 	// require that mBrowserManager be set up
-    (*result)->Initialize();
+    pluginTag->mEntryPoint->Initialize();
 
     // the NP_Initialize entry point was misnamed as NP_PluginInit,
     // early in plugin project development.  Its correct name is
@@ -210,11 +233,11 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
     // we'll accept either name
 
     NP_PLUGININIT pfnInitialize =
-        (NP_PLUGININIT)PR_FindSymbol(library, "NP_Initialize");
+        (NP_PLUGININIT)PR_FindSymbol(pluginTag->mLibrary, "NP_Initialize");
 
     if (!pfnInitialize) {
         pfnInitialize =
-            (NP_PLUGININIT)PR_FindSymbol(library, "NP_PluginInit");
+            (NP_PLUGININIT)PR_FindSymbol(pluginTag->mLibrary, "NP_PluginInit");
     }
 
     if (pfnInitialize == NULL)
@@ -222,6 +245,66 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
 
 	if (pfnInitialize(&(ns4xPlugin::CALLBACKS)) != NS_OK)
 		return NS_ERROR_UNEXPECTED;
+#endif
+
+#ifdef XP_MAC
+	// get the mainRD entry point
+	NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(pluginTag->mLibrary, "mainRD");
+	if(pfnMain == NULL)
+		return NS_ERROR_FAILURE;
+		
+	NPP_ShutdownUPP pfnShutdown;
+	NPPluginFuncs callbacks;
+    memset((void*) &callbacks, 0, sizeof(callbacks));
+    callbacks.size = sizeof(callbacks);	
+
+	nsPluginsDir pluginsDir;
+	if(!pluginsDir.Valid())
+		return NS_ERROR_FAILURE;
+		
+	short appRefNum = ::CurResFile();
+	short pluginRefNum;
+	for(nsDirectoryIterator iter(pluginsDir); iter.Exists(); iter++)
+	{
+		const nsFileSpec& file = iter;
+		if (pluginsDir.IsPluginFile(file)) 
+		{
+				FSSpec spec = file;
+				char* fileName = p2cstrdup(spec.name);
+				if(!PL_strcmp(fileName, pluginTag->mFileName))
+					{
+					Boolean targetIsFolder, wasAliased;
+					OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
+					pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
+					}
+		}
+	}
+
+	// call into the entry point
+	if(CallNPP_MainEntryProc(pfnMain, &(ns4xPlugin::CALLBACKS), &callbacks, &pfnShutdown) != NPERR_NO_ERROR)
+		return NS_ERROR_FAILURE;
+
+	::UseResFile(appRefNum);
+
+	if ((callbacks.version >> 8) < NP_VERSION_MAJOR)
+		return NS_ERROR_FAILURE;
+	
+	// create the new plugin handler
+	ns4xPlugin* plugin = new ns4xPlugin(&callbacks, (NP_PLUGINSHUTDOWN)pfnShutdown, serviceMgr);
+
+	if(plugin == NULL)
+    	return NS_ERROR_OUT_OF_MEMORY;
+
+	plugin->SetPluginRefNum(pluginRefNum);
+	
+    pluginTag->mEntryPoint = plugin;
+      
+    NS_ADDREF(pluginTag->mEntryPoint);
+#endif
+
+#ifdef XP_UNIX
+	return NS_ERROR_FAILURE;
+#endif
 
     return NS_OK;
 }
@@ -288,7 +371,13 @@ ns4xPlugin::Shutdown(void)
 #ifdef NS_DEBUG
 	printf("shutting down plugin %08x\n", this);
 #endif
+#ifdef XP_MAC
+	CallNPP_ShutdownProc(fShutdownEntry);
+	::CloseResFile(fPluginRefNum);
+#else
     fShutdownEntry();
+#endif
+
     fShutdownEntry = nsnull;
   }
 

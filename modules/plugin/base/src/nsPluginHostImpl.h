@@ -52,6 +52,7 @@ public:
   PRLibrary     *mLibrary;
   nsIPlugin     *mEntryPoint;
   PRUint32      mFlags;
+  char          *mFileName;
 };
 
 #define MAX_ACTIVE_PLUGINS 10
