@@ -1307,20 +1307,22 @@ nsMessenger::GetTransactionManager(nsITransactionManager* *aTxnMgr)
 
 NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
 {
-	// Set a default charset of the webshell.
-    if (mDocShell) 
+	// We want to redisplay the currently selected message (if any) but forcing the 
+  // redisplay to use characterSet
+  if (!mLastDisplayURI.IsEmpty())
+  {
+    nsIMsgMessageService * messageService = nsnull;
+    nsresult rv = GetMessageServiceFromURI(mLastDisplayURI, &messageService);
+    
+    if (NS_SUCCEEDED(rv) && messageService)
     {
-        nsCOMPtr<nsIContentViewer> cv;
-        mDocShell->GetContentViewer(getter_AddRefs(cv));
-        if (cv) 
-        {
-            nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
-            if (muDV)
-                muDV->SetDefaultCharacterSet(characterSet);
-        }
-	}
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+      messageService->DisplayMessage(mLastDisplayURI, webShell, mMsgWindow, nsnull, characterSet, nsnull);
+      ReleaseMessageServiceFromURI(mLastDisplayURI, messageService);
+    }
+  }
   
-    return NS_OK;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
