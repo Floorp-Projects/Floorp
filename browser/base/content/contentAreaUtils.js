@@ -257,16 +257,48 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
   const nsILocalFile = Components.interfaces.nsILocalFile;
   const lfContractID = "@mozilla.org/file/local;1";
 
+  // ben 07/31/2003:
+  // |browser.download.defaultFolder| holds the default download folder for 
+  // all files when the user has elected to have all files automatically
+  // download to a folder. The values of |defaultFolder| can be either their
+  // desktop, their downloads folder (My Documents\My Downloads) or some other
+  // location of their choosing (which is mapped to |browser.download.dir|
+  // This pref is _unset_ when the user has elected to be asked about where
+  // to place every download - this will force the prompt to ask the user
+  // where to put saved files. 
   var dir = null;
   try {
-    dir = prefs.getComplexValue("dir", nsILocalFile);
+    dir = prefs.getComplexValue("defaultFolder", nsILocalFile);
   }
-  catch (e) {
-  }
-
+  catch (e) { }
+  
   var filterIndex = 0;
   var file;
-  if (!aSkipPrompt) {
+  if (!aSkipPrompt || !dir) {
+    // If we're asking the user where to save the file, root the Save As...
+    // dialog on they place they last picked. 
+    try {
+      dir = prefs.getComplexValue("dir", nsILocalFile);
+    }
+    catch (e) {
+      // No default download location. Default to desktop. 
+      var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
+
+      function getDesktopKey()
+      {      
+#ifdef XP_WIN
+        return "DeskV";
+#endif
+#ifdef XP_MACOSX
+        return "Desk";
+#endif
+        return "Home";
+      }
+      
+      dir = fileLocator.get(getDesktopKey(), Components.interfaces.nsILocalFile);
+    }
+
+
     var fp = makeFilePicker();
     var titleKey = aData.filePickerTitle || "SaveLinkTitle";
     var bundle = getStringBundle();
@@ -309,6 +341,10 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     file = fp.file;
   }
   else {
+    // ben 07/31/2003: 
+    // We don't nullcheck dir here because dir should never be null if we get here
+    // unless something is badly wrong, and if it is, I want to know about it in
+    // bugs. 
     dir.append(defaultString);
     file = dir;
   }
