@@ -134,6 +134,12 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static nsAutoString LinkCommand("linkclick");
 //----------------------------------------------------------------------
 
+typedef enum {
+   eCharsetReloadInit,
+   eCharsetReloadRequested,
+   eCharsetReloadStopOrigional,
+} eCharsetReloadState;
+
 class nsWebShell : public nsIWebShell,
                    public nsIWebShellContainer,
                    public nsIWebShellServices,
@@ -446,6 +452,8 @@ protected:
   PRInt32 mScrolling[2];
   nsVoidArray mRefreshments;
 
+  eCharsetReloadState mCharsetReloadState;
+
   nsWebShellType mWebShellType;
   nsIContent* mChromeElement; // Weak reference.
 
@@ -621,6 +629,7 @@ nsWebShell::nsWebShell()
   mProcessedEndDocumentLoad = PR_FALSE;
   mHintCharset = "";
   mHintCharsetSource = kCharsetUninitialized;
+  mCharsetReloadState = eCharsetReloadInit;
   mViewSource=PR_FALSE;
   mForceCharacterSet = "";
   mHistoryService = nsnull;
@@ -1903,7 +1912,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 {
   // Initialize margnwidth, marginheight. Put scrolling back the way it was
   // before the last document was loaded.
-  InitFrameData(PR_FALSE);
+
+	InitFrameData(PR_FALSE);
 
   const char *cmd = mViewSource ? "view-source" : "view" ;
   mViewSource = PR_FALSE; // reset it
@@ -2781,11 +2791,18 @@ nsWebShell::LoadDocument(const char* aURL,
                          nsCharsetSource aSource)
 {
   // XXX hack. kee the aCharset and aSource wait to pick it up
-  mHintCharset = aCharset;
-  mHintCharsetSource = aSource;
+  if( aSource > mHintCharsetSource ) {
+    mHintCharset = aCharset;
+    mHintCharsetSource = aSource;
+    if(eCharsetReloadRequested != mCharsetReloadState) 
+    {
 
-  nsAutoString url(aURL);
-  LoadURL(url.GetUnicode());
+        mCharsetReloadState = eCharsetReloadRequested;
+
+        nsAutoString url(aURL);
+        LoadURL(url.GetUnicode());
+    }
+  }
   return NS_OK;
 }
 
@@ -2796,25 +2813,38 @@ nsWebShell::ReloadDocument(const char* aCharset,
 {
 
   // XXX hack. kee the aCharset and aSource wait to pick it up
-  mHintCharset = aCharset;
-  mHintCharsetSource= aSource;
-  mViewSource = (0==PL_strcmp("view-source", aCmd));
-  return Reload(nsIChannel::LOAD_NORMAL);
+  if( aSource > mHintCharsetSource ) {
+     mHintCharset = aCharset;
+     mHintCharsetSource = aSource;
+     mViewSource = (0==PL_strcmp("view-source", aCmd));
+     if(eCharsetReloadRequested != mCharsetReloadState) 
+     {
+        mCharsetReloadState = eCharsetReloadRequested;
+        return Reload(nsIChannel::LOAD_NORMAL);
+     }
+  }
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsWebShell::StopDocumentLoad(void)
 {
-  Stop();
+  if(eCharsetReloadRequested != mCharsetReloadState) 
+  {
+     Stop();
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::SetRendering(PRBool aRender)
 {
-  if (mContentViewer) {
-    mContentViewer->SetEnableRendering(aRender);
+  if(eCharsetReloadRequested != mCharsetReloadState) 
+  {
+    if (mContentViewer) {
+       mContentViewer->SetEnableRendering(aRender);
+    }
   }
   return NS_OK;
 }
@@ -3525,6 +3555,10 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
   {
       mDocLoaderObserver->OnEndURLLoad(mDocLoader, channel, aStatus);
   }
+  if(eCharsetReloadRequested == mCharsetReloadState)
+      mCharsetReloadState = eCharsetReloadStopOrigional;
+  else 
+      mCharsetReloadState = eCharsetReloadInit;
 
   return NS_OK;
 }
@@ -4128,8 +4162,7 @@ NS_IMETHODIMP nsWebShell::GetCharacterSetHint (const PRUnichar** oHintCharset, n
     *oHintCharset = nsnull;
   } else {
     *oHintCharset = mHintCharset.GetUnicode();
-    // clean up after we access it.
-    mHintCharsetSource = kCharsetUninitialized;
+     mHintCharsetSource = kCharsetUninitialized;
   }
   return NS_OK;
 }
