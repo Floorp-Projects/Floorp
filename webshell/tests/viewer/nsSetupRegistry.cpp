@@ -213,6 +213,7 @@ static NS_DEFINE_CID(kXULContentSinkCID,        NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
+static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,     NS_HTML_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kSelectionCID,             NS_SELECTION_CID);
 static NS_DEFINE_CID(kRangeCID,                 NS_RANGE_CID);
@@ -317,6 +318,7 @@ NS_SetupRegistry()
   nsRepository::RegisterComponent(kCSSParserCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kPresShellCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kHTMLStyleSheetCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kHTMLCSSStyleSheetCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kTextNodeCID,       NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kSelectionCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kRangeCID,		    NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
