@@ -484,6 +484,7 @@ const gXPInstallObserver = {
       var browser = this._getBrowser(aSubject.QueryInterface(Components.interfaces.nsIDocShell));
       if (browser) {
         var bundlePreferences = document.getElementById("bundle_preferences");
+        var webNav = aSubject.QueryInterface(Components.interfaces.nsIWebNavigation);
         var params = { blockVisible   : false, 
                        sessionVisible : false, 
                        allowVisible   : true, 
@@ -491,7 +492,6 @@ const gXPInstallObserver = {
                        permissionType : "install",
                        windowTitle    : bundlePreferences.getString("installpermissionstitle"),
                        introText      : bundlePreferences.getString("installpermissionstext") };
-        var webNav = aSubject.QueryInterface(Components.interfaces.nsIWebNavigation);
         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                           .getService(Components.interfaces.nsIWindowMediator);
         var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
