@@ -26,9 +26,6 @@ class nsPrefWindow
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
 
-//    // This class implements the nsIAppShellComponent interface functions.
-//    NS_DECL_IAPPSHELLCOMPONENT
-
     // This class implements the nsIFindComponent interface functions.
 	NS_IMETHOD showWindow(
 		const PRUnichar *id,
@@ -77,9 +74,7 @@ class nsPrefWindow
 	static nsPrefWindow* sPrefWindow;
 	static PRUint32      sInstanceCount;
     
-    
-    nsIWebShellWindow*   mWindow;
-    nsString             mTreeScript;     
+        nsString             mTreeScript;     
     nsString             mPanelScript;     
 
     nsIDOMWindow*        mTreeFrame;
