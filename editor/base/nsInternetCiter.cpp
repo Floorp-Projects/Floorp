@@ -184,6 +184,13 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
                         PRBool aRespectNewlines,
                         nsAWritableString& aOutString)
 {
+  // There shouldn't be returns in this string, only dom newlines.
+  // Check to make sure:
+#ifdef DEBUG
+  PRInt32 cr = aInString.FindChar(PRUnichar('\r'));
+  NS_ASSERTION((cr < 0), "Rewrap: CR in string gotten from DOM!\n");
+#endif /* DEBUG */
+
   nsCOMPtr<nsILineBreaker> lineBreaker;
   nsILineBreakerFactory *lf;
   nsresult rv = NS_OK;
