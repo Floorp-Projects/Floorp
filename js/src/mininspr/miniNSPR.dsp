@@ -33,16 +33,17 @@ RSC=rc.exe
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "Release"
-# PROP BASE Intermediate_Dir "Release"
+# PROP BASE Output_Dir "miniNSP0"
+# PROP BASE Intermediate_Dir "miniNSP0"
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "..\Release"
 # PROP Intermediate_Dir "..\Release"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "MINI_NSPR" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "XP_PC" /D "MINI_NSPR" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -58,16 +59,17 @@ LINK32=link.exe
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "Debug"
-# PROP BASE Intermediate_Dir "Debug"
+# PROP BASE Output_Dir "miniNSP1"
+# PROP BASE Intermediate_Dir "miniNSP1"
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "..\Debug"
 # PROP Intermediate_Dir "..\Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "MINI_NSPR" /YX /FD /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "XP_PC" /D "MINI_NSPR" /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -87,35 +89,35 @@ LINK32=link.exe
 # Name "miniNSPR - Win32 Debug"
 # Begin Source File
 
-SOURCE=.\plhash.c
+SOURCE=.\mininspr\plhash.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\prdtoa.c
+SOURCE=.\mininspr\prdtoa.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\prlog.c
+SOURCE=.\mininspr\prlog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\prlog2.c
+SOURCE=.\mininspr\prlog2.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\prlong.c
+SOURCE=.\mininspr\prlong.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\prmem.c
+SOURCE=.\mininspr\prmem.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\prprf.c
+SOURCE=.\mininspr\prprf.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\prstubs.c
+SOURCE=.\mininspr\prstubs.c
 # End Source File
 # End Target
 # End Project
