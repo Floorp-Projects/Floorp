@@ -86,7 +86,7 @@ nsMacControl::~nsMacControl()
 //-------------------------------------------------------------------------
 PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 {
-	if (mControl)
+	if (mControl && mVisible)
 	{
 		// set the control text attributes
 		// (the rendering context has already set these attributes for
