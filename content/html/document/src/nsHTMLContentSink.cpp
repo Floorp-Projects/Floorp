@@ -465,6 +465,8 @@ public:
   nsString mTitle;
   nsString mUnicodeXferBuf;
 
+  nsString mSkippedContent;
+
   // Do we notify based on time?
   PRPackedBool mNotifyOnTimer;
 
@@ -992,8 +994,8 @@ SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
 static nsresult
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
                   nsIDOMHTMLFormElement* aForm, nsIWebShell* aWebShell,
-                  nsIHTMLContent** aResult, const nsAString* aSkippedContent,
-                  PRBool aInsideNoXXXTag, PRBool aFromParser);
+                  nsIHTMLContent** aResult, PRBool aInsideNoXXXTag,
+                  PRBool aFromParser);
 
 /**
  * Factory subroutine to create all of the html content objects.
@@ -1033,7 +1035,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
   // XXX if the parser treated the text in a textarea like a normal
   // textnode we wouldn't need to do this.
-  nsAutoString skippedContent;
+
   if (aNodeType == eHTMLTag_textarea) {
     nsCOMPtr<nsIDTD> dtd;
     mParser->GetDTD(getter_AddRefs(dtd));
@@ -1041,13 +1043,43 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
     PRInt32 lineNo = 0;
 
-    dtd->CollectSkippedContent(eHTMLTag_textarea, skippedContent, lineNo);
+    dtd->CollectSkippedContent(eHTMLTag_textarea, mSkippedContent, lineNo);
   }
 
   // Make the content object
-  rv = MakeContentObject(aNodeType, nodeInfo, aForm,
-                         aWebShell, aResult, &skippedContent,
+  rv = MakeContentObject(aNodeType, nodeInfo, aForm, aWebShell, aResult,
                          !!mInsideNoXXXTag, PR_TRUE);
+
+  if (aNodeType == eHTMLTag_textarea && !mSkippedContent.IsEmpty()) {
+    // XXX: if the parser treated the text in a textarea like a normal
+    // textnode we wouldn't need to do this.
+
+    // If the text area has some content, set it
+
+    // Strip only one leading newline if there is one (bug 40394)
+    nsString::const_iterator start, end;
+    mSkippedContent.BeginReading(start);
+    mSkippedContent.EndReading(end);
+    if (*start == nsCRT::CR) {
+      ++start;
+
+      if (start != end && *start == nsCRT::LF) {
+        ++start;
+      }
+    } else if (*start == nsCRT::LF) {
+      ++start;
+    }
+
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> ta(do_QueryInterface(*aResult));
+    NS_ASSERTION(ta, "Huh? text area doesn't implement "
+                 "nsIDOMHTMLTextAreaElement?");
+
+    ta->SetDefaultValue(Substring(start, end));
+
+    // Release whatever's in the skipped content string, no point in
+    // holding on to this any longer.
+    mSkippedContent.Truncate();
+  }
 
   PRInt32 id;
   mDocument->GetAndIncrementContentID(&id);
@@ -1081,7 +1113,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
 
   if (aCaseSensitive) {
     rv = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull, nsnull,
-                           aResult, nsnull, PR_FALSE, PR_FALSE);
+                           aResult, PR_FALSE, PR_FALSE);
   } else {
     // Revese map id to name to get the correct character case in
     // the tag name.
@@ -1109,7 +1141,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
     }
 
     rv = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull, nsnull, aResult,
-                           nsnull, PR_FALSE, PR_FALSE);
+                           PR_FALSE, PR_FALSE);
   }
 
   return rv;
@@ -1178,8 +1210,8 @@ nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
 nsresult
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
                   nsIDOMHTMLFormElement* aForm, nsIWebShell* aWebShell,
-                  nsIHTMLContent** aResult, const nsAString* aSkippedContent,
-                  PRBool aInsideNoXXXTag, PRBool aFromParser)
+                  nsIHTMLContent** aResult, PRBool aInsideNoXXXTag,
+                  PRBool aFromParser)
 {
   nsresult rv = NS_OK;
 
@@ -1438,31 +1470,6 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
     break;
   case eHTMLTag_textarea:
     rv = NS_NewHTMLTextAreaElement(aResult, aNodeInfo);
-    // XXX: if the parser treated the text in a textarea like a normal
-    // textnode we wouldn't need to do this.
-
-    // If the text area has some content, set it
-    if (aSkippedContent && (!aSkippedContent->IsEmpty())) {
-      // Strip only one leading newline if there is one (bug 40394)
-      nsString::const_iterator start, end;
-      aSkippedContent->BeginReading(start);
-      aSkippedContent->EndReading(end);
-      if (*start == nsCRT::CR) {
-        ++start;
-
-        if (start != end && *start == nsCRT::LF) {
-          ++start;
-        }
-      } else if (*start == nsCRT::LF) {
-        ++start;
-      }
-
-      nsCOMPtr<nsIDOMHTMLTextAreaElement> ta(do_QueryInterface(*aResult));
-      if (ta) {
-        ta->SetDefaultValue(Substring(start, end));
-      }
-    }
-
     if (!aInsideNoXXXTag) {
       SetForm(*aResult, aForm);
     }
