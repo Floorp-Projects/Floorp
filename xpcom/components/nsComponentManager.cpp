@@ -267,6 +267,8 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     NS_IF_RELEASE(mRegistry);
 #endif /* USE_REGISTRY */
 
+    delete mComponentsDir;
+
     // Release all the component loaders
     if (mLoaders)
 	delete mLoaders;
@@ -1744,7 +1746,7 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
 
  out:
     // XXX if failed, undo registry adds or set invalid bit?  How?
-    delete [] cidString;    // XXX nsAllocator?
+    nsCRT::free(cidString);
     return rv;
 }
 
