@@ -1469,7 +1469,7 @@ failed:
      * default implementation
      */
     PRFileDesc *listenSock;
-    PRNetAddr selfAddr;
+    PRNetAddr selfAddr, peerAddr;
     PRUint16 port;
 
     f[0] = f[1] = NULL;
@@ -1507,8 +1507,21 @@ failed:
             == PR_FAILURE) {
         goto failed;
     }
-    f[1] = PR_Accept(listenSock, NULL, PR_INTERVAL_NO_TIMEOUT);
+    /*
+     * A malicious local process may connect to the listening
+     * socket, so we need to verify that the accepted connection
+     * is made from our own socket f[0].
+     */
+    if (PR_GetSockName(f[0], &selfAddr) == PR_FAILURE) {
+        goto failed;
+    }
+    f[1] = PR_Accept(listenSock, &peerAddr, PR_INTERVAL_NO_TIMEOUT);
     if (f[1] == NULL) {
+        goto failed;
+    }
+    if (peerAddr.inet.port != selfAddr.inet.port) {
+        /* the connection we accepted is not from f[0] */
+        PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
         goto failed;
     }
     PR_Close(listenSock);
@@ -1520,6 +1533,9 @@ failed:
     }
     if (f[0]) {
         PR_Close(f[0]);
+    }
+    if (f[1]) {
+        PR_Close(f[1]);
     }
     return PR_FAILURE;
 #endif
