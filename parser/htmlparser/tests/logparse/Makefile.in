@@ -44,7 +44,7 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/../../src
+LOCAL_INCLUDES = -I$(srcdir)/../../public -I$(srcdir)/../../src
 
 include $(topsrcdir)/config/rules.mk
 
