@@ -310,6 +310,7 @@ pref("mail.identity.default.directoryServer","");
 pref("mail.identity.default.overrideGlobal_Pref", false);
 pref("mail.identity.default.auto_quote", true);
 pref("mail.identity.default.reply_on_top", 0); // 0=bottom 1=top 2=select
+pref("mail.identity.default.sig_bottom", true); // true=below quoted false=above quoted
 
 // Headers to always add to outgoing mail
 // examples: "header1,header2"
