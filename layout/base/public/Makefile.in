@@ -80,6 +80,10 @@ nsIStatefulFrame.h \
 nsISelfScrollingFrame.h \
 $(NULL)
 
+XPIDLSRCS	= \
+		nsIChromeEventHandler.idl			\
+		$(NULL)
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
