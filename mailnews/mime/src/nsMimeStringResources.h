@@ -62,5 +62,8 @@
 #define	MIME_MSG_NO_HEADERS                                  1034
 #define	MIME_MSG_SHOW_ATTACHMENT_PANE                                  1035
 #define	MIME_MSG_NOT_DOWNLOADED                                       1036
+#define MIME_MSG_PARTIAL_FMT_1          1037
+#define MIME_MSG_PARTIAL_FMT_2          1038
+#define MIME_MSG_PARTIAL_FMT_3          1039
 
 #endif /* _NAME_OF_THIS_HEADER_FILE__ */

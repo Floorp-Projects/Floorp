@@ -33,6 +33,8 @@
 #include "nsCRT.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
+#include "nsMsgMessageFlags.h"
+#include "nsEscape.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,
@@ -46,6 +48,9 @@ static int MimeMessage_parse_line (char *, PRInt32, MimeObject *);
 static int MimeMessage_parse_eof (MimeObject *, PRBool);
 static int MimeMessage_close_headers (MimeObject *obj);
 static int MimeMessage_write_headers_html (MimeObject *);
+static char *MimeMessage_partial_message_html(const char *data,
+											  void *closure,
+											  MimeHeaders *headers);
 
 #ifdef MOZ_SECURITY
 HG56268
@@ -457,6 +462,20 @@ HG09091
     PR_FREEIF(msgID);
     PR_FREEIF(lct);
     PR_FREEIF(charset);
+
+	// setting up truncated message html fotter function
+	char *xmoz = MimeHeaders_get(msg->hdrs, HEADER_X_MOZILLA_STATUS, FALSE,
+								 FALSE);
+	if (xmoz)
+	{
+		PRUint32 flags = 0;
+		char dummy = 0;
+		if (sscanf(xmoz, " %lx %c", &flags, &dummy) == 1 &&
+			flags & MSG_FLAG_PARTIAL)
+			obj->options->generate_footer_html_fn =
+				MimeMessage_partial_message_html;
+		PR_FREEIF(xmoz);
+	}
   }
 
   return 0;
@@ -483,29 +502,30 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 
   // Mark the end of the mail body if we are actually emitting the
   // body of the message (i.e. not Header ONLY)
-  if ( 
-      (outer_p) &&
-      ( obj->options && (obj->options->part_to_load == NULL) ) &&
-      (obj->options->headers != MimeHeadersOnly)
-     )
-    mimeEmitterEndBody(obj->options);
-
-  if (outer_p &&
-	  obj->options &&
-	  obj->options->write_html_p &&
-	  obj->options->generate_footer_html_fn)
-	{
-	  char *html =
-		obj->options->generate_footer_html_fn (NULL,
-											   obj->options->html_closure,
-											   msg->hdrs);
-	  if (html)
-		{
-		  int lstatus = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
-		  PR_Free(html);
-		  if (lstatus < 0) return lstatus;
-		}
-	}
+  if (outer_p && obj->options && obj->options->write_html_p)
+  {
+	  if (obj->options->generate_footer_html_fn)
+	  {
+		  mime_stream_data *msd = 
+			  (mime_stream_data *) obj->options->stream_closure;
+		  if (msd)
+		  {
+			  char *html = obj->options->generate_footer_html_fn
+				  (msd->url_name, obj->options->html_closure, msg->hdrs);
+			  if (html)
+			  {
+				  int lstatus = MimeObject_write(obj, html,
+												 nsCRT::strlen(html),
+												 PR_FALSE);
+				  PR_Free(html);
+				  if (lstatus < 0) return lstatus;
+			  }
+		  }
+	  }
+	  if (obj->options->part_to_load == nsnull && 
+		  obj->options->headers != MimeHeadersOnly)
+		  mimeEmitterEndBody(obj->options);
+  }
 
 #ifdef MIME_DRAFTS
   if ( obj->options &&
@@ -525,7 +545,7 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 
 
   /* Put out a separator after every message/rfc822 object. */
-  if (!abort_p)
+  if (!abort_p && !outer_p)
 	{
 	  status = MimeObject_write_separator(obj);
 	  if (status < 0) return status;
@@ -727,6 +747,43 @@ MimeMessage_write_headers_html (MimeObject *obj)
   return 0;
 }
 
+static char *
+MimeMessage_partial_message_html(const char *data, void *closure,
+								 MimeHeaders *headers)
+{
+#if defined(DEBUG_jefft)
+	printf ("** generate partial message html...\n");
+#endif 
+	char *partialMsgHtml = nsnull;
+	char *uidl = MimeHeaders_get(headers, HEADER_X_UIDL, PR_FALSE, PR_FALSE);
+	char *msgId = MimeHeaders_get(headers, HEADER_MESSAGE_ID, PR_FALSE,
+								  PR_FALSE);
+	char *msgIdPtr = PL_strstr(msgId, "<");
+
+	if (msgIdPtr)
+		msgIdPtr++;
+	else
+		msgIdPtr = msgId;
+	char *gtPtr = PL_strstr(msgIdPtr, ">");
+	if (gtPtr)
+		*gtPtr = 0;
+
+	char *escapedMsgId = msgIdPtr ? nsEscape(msgIdPtr, url_Path) : nsnull;
+	char *fmt1 = MimeGetStringByID(1037);
+	char *fmt2 = MimeGetStringByID(1038);
+	char *fmt3 = MimeGetStringByID(1039);
+	char *msgUrl = PR_smprintf("%s&id=%s&uidl=%s", data, escapedMsgId, uidl);
+	partialMsgHtml = PR_smprintf("%s%s%s%s", fmt1,fmt2, msgUrl, fmt3);
+	PR_FREEIF(uidl);
+	PR_FREEIF(msgId);
+	PR_FREEIF(escapedMsgId);
+	PR_FREEIF(msgUrl);
+	PR_FREEIF(fmt1);
+	PR_FREEIF(fmt2);
+	PR_FREEIF(fmt3);
+
+	return partialMsgHtml;
+}
 
 #if defined(DEBUG) && defined(XP_UNIX)
 static int

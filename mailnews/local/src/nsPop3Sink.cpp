@@ -31,6 +31,7 @@
 #include "nsParseMailbox.h"
 #include "nsIFolder.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsMsgLocalFolderHdrs.h"
 
 NS_IMPL_ISUPPORTS(nsPop3Sink, NS_GET_IID(nsIPop3Sink));
 
@@ -234,9 +235,11 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
         uidlCString += MSG_LINEBREAK;
         WriteLineToMailbox(uidlCString);
     }
-    WriteLineToMailbox("X-Mozilla-Status: 8000" MSG_LINEBREAK);
+    // WriteLineToMailbox("X-Mozilla-Status: 8000" MSG_LINEBREAK);
+    char *statusLine = PR_smprintf(X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, flags);
+    WriteLineToMailbox(statusLine);
     WriteLineToMailbox("X-Mozilla-Status2: 00000000" MSG_LINEBREAK);
-
+    PR_smprintf_free(statusLine);
     return NS_OK;
 }
 
