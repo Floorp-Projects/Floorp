@@ -1,3 +1,4 @@
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -12,45 +13,36 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../..
-
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE = necko
-
-LIBRARY_NAME = neckobase_s
-
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS =                              \
-        nsAsyncStreamListener.cpp      \
-        nsSyncStreamListener.cpp       \
-        nsIOService.cpp                \
-        nsSocketTransport.cpp          \
-        nsSocketTransportService.cpp   \
-        nsStdURL.cpp              \
-        nsSimpleURI.cpp                \
-	nsNetModuleMgr.cpp             \
-	nsNetModRegEntry.cpp           \
-	nsLoadGroup.cpp                \
-	nsInputStreamChannel.cpp       \
-        $(NULL)
+MODULE		= necko
+LIBRARY_NAME	= neckobase_s
 
-include $(topsrcdir)/config/config.mk
+CPPSRCS		= \
+		nsAsyncStreamListener.cpp \
+		nsSyncStreamListener.cpp \
+		nsIOService.cpp \
+		nsSocketTransport.cpp \
+		nsSocketTransportService.cpp \
+		nsStdURL.cpp \
+		nsSimpleURI.cpp \
+		nsNetModuleMgr.cpp \
+		nsNetModRegEntry.cpp \
+		nsLoadGroup.cpp \
+		nsInputStreamChannel.cpp \
+		$(NULL)
 
-MKSHLIB :=
-
-# we don't want the shared lib, but we want to force the creation of a 
-# static l\ib.
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
-# hack until necko lands
-ifndef NECKO
-PUBLIC = $(DEPTH)/netwerk/dist/include
-endif
-
 include $(topsrcdir)/config/rules.mk
+
