@@ -70,7 +70,7 @@ myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 }
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimerImpl, nsITimer)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsTimerImpl, nsITimer, nsITimerScriptable)
 
 
 PR_STATIC_CALLBACK(PRStatus) InitThread(void)
@@ -115,6 +115,8 @@ nsTimerImpl::~nsTimerImpl()
 {
   if (mCallbackType == CALLBACK_TYPE_INTERFACE)
     NS_RELEASE(mCallback.i);
+  else if (mCallbackType == CALLBACK_TYPE_OBSERVER)
+    NS_RELEASE(mCallback.o);
 
   if (gThread)
     gThread->RemoveTimer(this);
@@ -187,13 +189,37 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void) nsTimerImpl::Cancel()
+NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
+                                PRUint32 aDelay,
+                                PRUint32 aPriority,
+                                PRUint32 aType)
+{
+  SetDelayInternal(aDelay);
+
+  mCallback.o = aObserver;
+  NS_ADDREF(mCallback.o);
+  mCallbackType = CALLBACK_TYPE_OBSERVER;
+
+  mPriority = (PRUint8)aPriority;
+  mType = (PRUint8)aType;
+
+  if (!gThread)
+    return NS_ERROR_FAILURE;
+
+  gThread->AddTimer(this);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTimerImpl::Cancel()
 {
   mCancelled = PR_TRUE;
   mClosure = nsnull;
 
   if (gThread)
     gThread->RemoveTimer(this);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(void) nsTimerImpl::SetDelay(PRUint32 aDelay)
@@ -257,6 +283,9 @@ void nsTimerImpl::Process()
       (*mCallback.c)(this, mClosure);
     else if (mCallbackType == CALLBACK_TYPE_INTERFACE)
       mCallback.i->Notify(this);
+    else if (mCallbackType == CALLBACK_TYPE_OBSERVER)
+      mCallback.o->Observe((nsITimerScriptable *) this, 
+        NS_TIMER_CALLBACK_TOPIC, nsnull);
     /* else the timer has been canceled, and we shouldn't do anything */
   }
 
@@ -298,6 +327,7 @@ void* handleMyEvent(MyEventType* event)
   }
 #endif
   NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->Process();
+
   return NULL;
 }
 
