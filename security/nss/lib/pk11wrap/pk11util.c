@@ -329,6 +329,7 @@ SECMOD_DeleteInternalModule(char *name) {
 SECStatus
 SECMOD_AddModule(SECMODModule *newModule) {
     SECStatus rv;
+    SECMODModule *oldModule;
     int i;
 
     /* Test if a module w/ the same name already exists */
@@ -336,7 +337,8 @@ SECMOD_AddModule(SECMODModule *newModule) {
     /* We should probably add a new return value such as */
     /* SECDublicateModule, but to minimize ripples, I'll */
     /* give SECWouldBlock a new meaning */
-    if (SECMOD_FindModule(newModule->commonName)) {
+    if ((oldModule = SECMOD_FindModule(newModule->commonName)) != NULL) {
+	SECMOD_DestroyModule(oldModule);
         return SECWouldBlock;
         /* module already exists. */
     }
