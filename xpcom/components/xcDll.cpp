@@ -64,6 +64,11 @@
 #endif
 #endif /* defined(DEBUG) */
 
+#define UNLOAD_DEPENDENT_LIBS
+#ifdef HPUX
+#undef UNLOAD_DEPENDENT_LIBS
+#endif
+
 #include "nsNativeComponentLoader.h"
 
 nsDll::nsDll(nsIFile *dllSpec, nsNativeComponentLoader *loader)
@@ -152,7 +157,9 @@ PRBool nsDll::Load(void)
     nsXPIDLCString extraData;
     manager->GetOptionalData(m_dllSpec, nsnull, getter_Copies(extraData));
     
+#ifdef UNLOAD_DEPENDENT_LIBS
     nsVoidArray dependentLibArray;
+#endif
 
     // if there was any extra data, treat it as a listing of dependent libs
     if (extraData != nsnull) 
@@ -215,8 +222,10 @@ PRBool nsDll::Load(void)
             // if we couldn't load the dependent library.  We did the best we
             // can.  Now just let us fail later if this really was a required
             // dependency.
+#ifdef UNLOAD_DEPENDENT_LIBS
             if (lib) 
                 dependentLibArray.AppendElement((void*)lib);
+#endif
                 
             token = nsCRT::strtok(newStr, " ", &newStr);
         }
@@ -235,12 +244,14 @@ PRBool nsDll::Load(void)
     // the dependency library we just loaded.  
     // XXX should we unload later - or even at all?
 
+#ifdef UNLOAD_DEPENDENT_LIBS
     if (extraData != nsnull)
     {
         PRInt32 arrayCount = dependentLibArray.Count();
         for (PRInt32 index = 0; index < arrayCount; index++)
             PR_UnloadLibrary((PRLibrary*)dependentLibArray.ElementAt(index));
     }
+#endif
 #endif
 
 #ifdef NS_BUILD_REFCNT_LOGGING
