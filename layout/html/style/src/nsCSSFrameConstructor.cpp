@@ -2977,6 +2977,13 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
 
   if (!parentFrame) return rv; // if pseudo frame wasn't created
 
+  NS_ASSERTION(parentFrame == aState.mPseudoFrames.mCellInner.mFrame,
+               "Weird parent in ConstructTableForeignFrame");
+
+  // Push the parent as the floater containing block
+  nsFrameConstructorSaveState saveState;
+  aState.PushFloatContainingBlock(parentFrame, saveState, PR_FALSE, PR_FALSE);
+  
   // save the pseudo frame state XXX - why
   nsPseudoFrames prevPseudoFrames; 
   aState.mPseudoFrames.Reset(&prevPseudoFrames);
@@ -6059,6 +6066,17 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
         return NS_ERROR_FAILURE;
       }
     }
+  }
+
+  nsFrameConstructorSaveState pseudoSaveState;
+  if (pseudoParent) {
+    // We pushed an anonymous table cell.  The inner block of this
+    // needs to become the float containing block.  Luckily, it's
+    // hanging about in adjParentFrame!
+    NS_ASSERTION(adjParentFrame == aState.mPseudoFrames.mCellInner.mFrame,
+                 "Weird parent frame in ConstructFrameByDisplayType");
+    aState.PushFloatContainingBlock(adjParentFrame, pseudoSaveState,
+                                    PR_FALSE, PR_FALSE);
   }
 
   // If this is "body", try propagating its scroll style to the viewport
