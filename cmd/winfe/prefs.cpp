@@ -25,6 +25,7 @@
 #include <olectl.h>
 #include "winprefs/isppageo.h"
 #include "winprefs/brprefid.h"
+#include "winprefs/wprefid.h"
 #ifdef MOZ_LOC_INDEP
 #include "winprefs/liprefid.h"
 #include "winprefs/iliprefs.h"
@@ -2251,7 +2252,7 @@ void
 wfe_DisplayPreferences(CGenericFrame *pFrame)
 {
 	HINSTANCE					 	hPrefDll;
-	LPSPECIFYPROPERTYPAGEOBJECTS	categories[6];
+	LPSPECIFYPROPERTYPAGEOBJECTS	categories[7];
 	PFNPREFS					 	pfnCreatePropertyFrame;
 	ULONG						 	nCategories = 0;
 	ULONG						 	nInitialCategory;
@@ -2334,6 +2335,25 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
         if (CreateAdvancedCategory(pContext, &categories[nCategories])) {
 			nCategories++;
 		}
+
+        // Windows Desktop Integration category.
+        if (SUCCEEDED(FEU_CoCreateInstance(CLSID_WindowsPrefs,
+                                           NULL,
+                                           CLSCTX_INPROC_SERVER,
+                                           IID_ISpecifyPropertyPageObjects,
+                                           (LPVOID *)&categories[nCategories]))) {
+            nCategories++;
+        } else {
+            // Register DLL and try again.
+            RegisterCLSIDForDll( "winpref.dll" );
+            if (SUCCEEDED(FEU_CoCreateInstance(CLSID_WindowsPrefs,
+                                               NULL,
+                                               CLSCTX_INPROC_SERVER,
+                                               IID_ISpecifyPropertyPageObjects,
+                                               (LPVOID *)&categories[nCategories]))) {
+                nCategories++;
+            }
+        }
              
         // Make sure we have at least one category
 		if (nCategories == 0) {
