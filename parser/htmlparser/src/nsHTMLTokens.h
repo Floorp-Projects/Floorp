@@ -163,10 +163,10 @@ class CEntityToken : public CHTMLToken {
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& aScanner);
     static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
-    static  PRInt32     FindEntityIndex(nsString& aString);
-    static  PRInt32     FindEntityIndexMax(const char* aBuffer,PRInt32 aCount=-1);
-    static  PRBool      VerifyEntityTable(void);
-    static  PRInt32     ReduceEntities(nsString& aString);
+//    static  PRInt32     FindEntityIndex(nsString& aString);
+//    static  PRInt32     FindEntityIndexMax(const char* aBuffer,PRInt32 aCount=-1);
+//    static  PRBool      VerifyEntityTable(void);
+//    static  PRInt32     ReduceEntities(nsString& aString);
     virtual  void       DebugDumpSource(ostream& out);
 
   private:
