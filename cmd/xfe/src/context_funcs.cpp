@@ -75,7 +75,7 @@ extern "C" char * _XmStringGetTextConcat(XmString);
 extern "C" int statfs(char *, struct statfs *);
 #define STATFS statfs
 #else
-#if defined(BSDI) || defined(NETBSD) || defined(OPENBSD) || defined(RHAPSODY)
+#if defined(BSDI) || defined(NETBSD) || defined(OPENBSD) || defined(RHAPSODY) || defined(FREEBSD)
 #include <sys/mount.h>    /* for statfs() */
 #define STATFS statfs
 #else
