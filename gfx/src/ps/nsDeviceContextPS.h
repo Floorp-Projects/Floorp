@@ -99,7 +99,7 @@ public:
 
   nsPostScriptObj*    GetPrintContext() { return mPSObj; }
   nsHashtable*        GetPSFontGeneratorList() { return mPSFontGeneratorList; }
-  PRBool               mTTPEnable;
+  PRBool               mFTPEnable;
 
 protected:
   virtual     ~nsDeviceContextPS();

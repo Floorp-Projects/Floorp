@@ -283,6 +283,11 @@ public:
    */
   nsresult end_document();
   /** ---------------------------------------------------
+   *  add CID check code
+   *	@update 01/20/03 louie
+   */
+  void add_cid_check();
+  /** ---------------------------------------------------
    *  move the cursor to this location
    *	@update 2/1/99 dwc
    */

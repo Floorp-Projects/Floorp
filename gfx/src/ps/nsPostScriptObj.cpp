@@ -1993,10 +1993,18 @@ FILE *f;
   initlanggroup();
 
   fprintf(f, "%%%%EndProlog\n");
-#ifdef MOZ_ENABLE_FREETYPE2
-  AddCIDCheckCode(f);
-#endif
+}
 
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
+ *	@update 20/01/03 louie
+ */
+void
+nsPostScriptObj::add_cid_check()
+{
+#ifdef MOZ_ENABLE_FREETYPE2
+  AddCIDCheckCode(mPrintContext->prSetup->out);
+#endif
 }
 
 /** ---------------------------------------------------

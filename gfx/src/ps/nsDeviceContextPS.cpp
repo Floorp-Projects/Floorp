@@ -213,9 +213,14 @@ nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,
   nsresult rv;
   nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
-    rv = pref->GetBoolPref("font.FreeType2.printing", &mTTPEnable);
+    rv = pref->GetBoolPref("font.FreeType2.enable", &mFTPEnable);
     if (NS_FAILED(rv))
-      mTTPEnable = PR_FALSE;
+      mFTPEnable = PR_FALSE;
+    if (mFTPEnable) {
+      rv = pref->GetBoolPref("font.FreeType2.printing", &mFTPEnable);
+      if (NS_FAILED(rv))
+        mFTPEnable = PR_FALSE;
+    }
   }
   
 #ifdef NS_FONTPS_DEBUG
@@ -435,6 +440,13 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
 
   NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
   
+#ifdef MOZ_ENABLE_FREETYPE2
+  // Before output Type8 font, check whether printer support CID font
+  if (mFTPEnable && mPSFontGeneratorList)
+    if (mPSFontGeneratorList->Count() > 0)
+      mPSObj->add_cid_check();
+#endif
+ 
   /* Core of TrueType printing:
    *   enumerate items("nsPSFontGenerator") in hashtable
    *   to generate Type8 font and output to Postscript file
