@@ -143,6 +143,9 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun);
 extern JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 
+extern JS_FRIEND_API(void)
+js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
+
 extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
 

@@ -1135,8 +1135,8 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
     }
 }
 
-void
-js_DestroyScript(JSContext *cx, JSScript *script)
+JS_FRIEND_API(void)
+js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 {
     JSRuntime *rt;
     JSDestroyScriptHook hook;
@@ -1145,6 +1145,12 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     hook = rt->destroyScriptHook;
     if (hook)
         hook(cx, script, rt->destroyScriptHookData);
+}
+
+void
+js_DestroyScript(JSContext *cx, JSScript *script)
+{
+    js_CallDestroyScriptHook(cx, script);
 
     JS_ClearScriptTraps(cx, script);
     js_FreeAtomMap(cx, &script->atomMap);
