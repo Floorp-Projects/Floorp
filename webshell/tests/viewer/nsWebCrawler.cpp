@@ -152,6 +152,8 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mOutputDir= nsnull;
   mPostExit = PR_FALSE;
   mDelay = 0;
+  mWidth = -1;
+  mHeight = -1;
   mMaxPages = -1;
   mRecord = nsnull;
   mLinkTag = NS_NewAtom("A");
@@ -569,6 +571,13 @@ nsWebCrawler::FindMoreURLs()
   }
 }
 
+void 
+nsWebCrawler::SetBrowserWindow(nsIBrowserWindow* aWindow) 
+{
+  mBrowser = aWindow;
+  NS_ADDREF(mBrowser);
+}
+
 static void
 TimerCallBack(nsITimer *aTimer, void *aClosure)
 {
@@ -592,7 +601,16 @@ nsWebCrawler::LoadNextURL()
       if (nsnull != url) {
         if (OkToLoad(*url)) {
           RecordLoadedURL(*url);
-
+          if (0<=mWidth || 0<=mHeight)
+          {
+            nsRect r;
+            mBrowser->GetBounds(r);
+            if (0<=mWidth)
+              r.width = mWidth;
+            if (0<=mHeight)
+              r.height = mHeight;
+            mBrowser->SizeTo(r.width, r.height);
+          }
           nsIWebShell* webShell;
           mBrowser->GetWebShell(webShell);
           webShell->LoadURL(*url);

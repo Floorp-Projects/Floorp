@@ -54,14 +54,21 @@ public:
   // Add a domain that must be avoided
   void AddAvoidDomain(const nsString& aDomain);
 
-  void SetBrowserWindow(nsIBrowserWindow* aWindow) {
-    mBrowser = aWindow;
-    NS_ADDREF(mBrowser);
-  }
+  void SetBrowserWindow(nsIBrowserWindow* aWindow);
 
   // Set the delay (by default, the timer is set to one second)
   void SetDelay(PRInt32 aSeconds) {
     mDelay = aSeconds;
+  }
+
+  /** Set the initial window width */
+  void SetWidth(PRInt32 aWidth) {
+    mWidth = aWidth;
+  }
+
+  /** Set the initial window width */
+  void SetHeight(PRInt32 aHeight) {
+    mHeight = aHeight;
   }
 
   void EnableJiggleLayout() {
@@ -128,6 +135,8 @@ protected:
   PRBool mJiggleLayout;
   PRBool mPostExit;
   PRInt32 mDelay;
+  PRInt32 mWidth;
+  PRInt32 mHeight;
   PRInt32 mMaxPages;
 
   nsVoidArray mPendingURLs;
