@@ -22,7 +22,7 @@ HTML {
 
 BODY {
   background: white;
-  cursor: arrow;
+  cursor: default;
   display: block;
   line-height: normal;
 //XXX not yet...  margin: 8px;
@@ -150,7 +150,7 @@ TD, TH {
   border-color: #C0C0C0;
   line-height: 1.1;
   display: table-cell;
-  cursor: arrow;
+  cursor: default;
 }
 TH {
   font-weight: bold;
@@ -185,25 +185,25 @@ A:link {
   display: inline;
   color: blue;
   text-decoration: underline;
-  cursor: hand;
+  cursor: pointer;
 }
 A:visited {
   display: inline;
   color: purple;
   text-decoration: underline;
-  cursor: hand;
+  cursor: pointer;
 }
 A:active {
   display: inline;
   color: lime;
   text-decoration: underline;
-  cursor: hand;
+  cursor: pointer;
 }
 A:out-of-date {
   display: inline;
   color: red;
   text-decoration: underline;
-  cursor: hand;
+  cursor: pointer;
 }
 A:link IMG {
   display: inline;
@@ -428,7 +428,7 @@ BUTTON {
   display: inline;
   vertical-align: bottom;
   background-color: white; 
-	border: 3px outset grey; 
+	border: 3px outset gray;
 	padding: 3px
 }
 SELECT {
