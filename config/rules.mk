@@ -94,6 +94,13 @@ endif
 
 REPORT_BUILD = @echo $(notdir $<)
 
+ifneq (,$(findstring s,$(MAKEFLAGS)))
+	ELOG := . $(topsrcdir)/build/autoconf/print-failed-commands.sh
+else
+	ELOG :=
+endif
+
+
 #
 # Library rules
 #
@@ -714,17 +721,17 @@ endif
 %: %.c
 	$(REPORT_BUILD)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	$(CC) -Fo$@ -c $(CFLAGS) $<
+	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
 
 %.o: %.c Makefile.in
 	$(REPORT_BUILD)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	$(CC) -Fo$@ -c $(CFLAGS) $<
+	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CC) -o $@ -c $(COMPILE_CFLAGS) $<
+	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
 endif
 
 moc_%.cpp: %.h
@@ -746,19 +753,19 @@ moc_%.cpp: %.h
 #
 %.o: %.cc
 	$(REPORT_BUILD)
-	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
 %.o: %.cpp
 	$(REPORT_BUILD)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
-	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
+	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
 	rm -f t_$*.cc
 else
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	$(CCC) -Fo$@ -c $(CXXFLAGS) $<
+	$(ELOG) $(CCC) -Fo$@ -c $(CXXFLAGS) $<
 else
-	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
@@ -1086,7 +1093,7 @@ $(XPIDL_GEN_DIR):
 
 $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE)
 	$(REPORT_BUILD)
-	$(XPIDL_COMPILE) -m header -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
+	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
@@ -1098,7 +1105,7 @@ ifndef NO_GEN_XPT
 # into $(XPIDL_MODULE).xpt and export it to $(DIST)/bin/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE)
 	$(REPORT_BUILD)
-	$(XPIDL_COMPILE) -m typelib -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
+	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $^
