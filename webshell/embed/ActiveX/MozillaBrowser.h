@@ -303,6 +303,7 @@ protected:
 
 	// Mozilla interfaces
     nsIWebShell			*	m_pIWebShell;
+	nsIBaseWindow		*	m_pIWebShellWin;
 	nsIPref             *   m_pIPref;
 	nsIEditor			*	m_pEditor;
     nsIServiceManager   *   m_pIServiceManager;
