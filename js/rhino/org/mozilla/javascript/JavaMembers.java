@@ -474,7 +474,8 @@ class JavaMembers {
                                    Class staticType)
     {
         Class cl = dynamicType;
-        JavaMembers members = (JavaMembers) classTable.get(cl);
+        Hashtable ct = classTable;  // use local reference to avoid synchronize
+        JavaMembers members = (JavaMembers) ct.get(cl);
         if (members != null)
             return members;
         if (staticType != null && staticType != dynamicType &&
@@ -483,26 +484,21 @@ class JavaMembers {
         {
             cl = staticType;
         }
-        synchronized (classTable) {
-            members = (JavaMembers) classTable.get(cl);
-            if (members != null)
-                return members;
-            try {
-                members = new JavaMembers(scope, cl);
-            } catch (SecurityException e) {
-                // Reflection may fail for objects that are in a restricted 
-                // access package (e.g. sun.*).  If we get a security
-                // exception, try again with the static type. Otherwise, 
-                // rethrow the exception.
-                if (cl != staticType)
-                    members = new JavaMembers(scope, staticType);
-                else
-                    throw e;
-            }
-            if (Context.isCachingEnabled)
-                classTable.put(cl, members);
-            return members;
+        try {
+            members = new JavaMembers(scope, cl);
+        } catch (SecurityException e) {
+            // Reflection may fail for objects that are in a restricted 
+            // access package (e.g. sun.*).  If we get a security
+            // exception, try again with the static type. Otherwise, 
+            // rethrow the exception.
+            if (cl != staticType)
+                members = new JavaMembers(scope, staticType);
+            else
+                throw e;
         }
+        if (Context.isCachingEnabled) 
+            ct.put(cl, members);
+        return members;
     }
 
     RuntimeException reportMemberNotFound(String memberName) {
