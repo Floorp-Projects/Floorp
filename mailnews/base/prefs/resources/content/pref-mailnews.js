@@ -13,6 +13,6 @@ function setHomePageToDefaultPage(folderFieldId)
 {
   var homePageField = document.getElementById(folderFieldId);
   var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-  var url = prefs.CopyDefaultCharPref("mailnews.start_page.url");
+  var url = prefs.getDefaultLocalizedUnicharPref("mailnews.start_page.url");
   homePageField.value = url;
 }

@@ -360,7 +360,7 @@ pref("ldap_2.version",											3); /* Update kCurrentListVersion in include/di
 pref("mailnews.confirm.moveFoldersToTrash", true);
 pref("mailnews.remember_selected_message", true);
 
-pref("mailnews.start_page.url", "http://www.mozilla.org/mailnews/start.html");
+pref("mailnews.start_page.url", "chrome://messenger/locale/messenger.properties");
 pref("mailnews.start_page.enabled", true);
 
 /* default prefs for Mozilla 5.0 */
