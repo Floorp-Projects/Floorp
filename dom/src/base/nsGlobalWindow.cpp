@@ -143,6 +143,7 @@
 #include "plbase64.h"
 
 #include "nsIPrintSettings.h"
+#include "nsIPrintSettingsService.h"
 
 #include "nsWindowRoot.h"
 #include "nsNetCID.h"
@@ -2619,10 +2620,31 @@ GlobalWindowImpl::Print()
   nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
   if (NS_SUCCEEDED(GetInterface(NS_GET_IID(nsIWebBrowserPrint),
                                 getter_AddRefs(webBrowserPrint)))) {
+
+    nsCOMPtr<nsIPrintSettingsService> printSettingsService = 
+      do_GetService("@mozilla.org/gfx/printsettings-service;1");
+    
     nsCOMPtr<nsIPrintSettings> printSettings;
-    webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
-    webBrowserPrint->Print(printSettings, nsnull);
-  }
+    if (printSettingsService) {
+      printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+
+      nsXPIDLString printerName;
+      printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
+      if (printerName)
+        printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
+      printSettingsService->InitPrintSettingsFromPrefs(printSettings, 
+                                                         PR_TRUE, 
+                                                         nsIPrintSettings::kInitSaveAll); 
+      webBrowserPrint->Print(printSettings, nsnull);
+      printSettingsService->SavePrintSettingsToPrefs(printSettings, 
+                                                       PR_TRUE, 
+                                                       nsIPrintSettings::kInitSaveAll); 
+    } else {
+      webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+      webBrowserPrint->Print(printSettings, nsnull);
+    }
+  } 
+
   return NS_OK;
 }
 
