@@ -859,12 +859,13 @@ nsresult nsMsgCompose::ShowWindow(PRBool show)
 nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor) 
 { 
   *aEditor = m_editor;
+  NS_IF_ADDREF(*aEditor);
   return NS_OK;
 } 
 
 nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor) 
 { 
-    // First, store the editor shell.
+    // First, store the editor shell but do not addref it (see sfraser@netscape.com for explanation).
     m_editor = aEditor;
 
     //
@@ -1473,8 +1474,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
 
     mComposeObj->ProcessSignature(mIdentity, &mSignature);
     
-    nsIEditorShell *editor = nsnull;
-    if (NS_SUCCEEDED(mComposeObj->GetEditor(&editor)) && editor)
+    nsCOMPtr<nsIEditorShell>editor;
+    if (NS_SUCCEEDED(mComposeObj->GetEditor(getter_AddRefs(editor))) && editor)
     {
       mComposeObj->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, composeHTML);
     }

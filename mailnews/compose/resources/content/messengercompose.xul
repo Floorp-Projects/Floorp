@@ -95,6 +95,8 @@
 	<broadcaster id="cmd_sendButton" oncommand="goDoCommand('cmd_sendButton')"/>
 	<broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
 	<broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
+<!--NYI	<broadcaster id="cmd_printSetup" oncommand="dump('PRINT SETUP\n');"/>  -->
+	<broadcaster id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
 	<broadcaster id="cmd_quit"/>
 
 	<!-- Edit Menu -->
@@ -192,6 +194,7 @@
 	<key id="key_save"  key="&saveCmd.key;" observes="cmd_saveDefault" modifiers="accel"/>
 	<!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
 	<!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" observes="cmd_sendLater"/ -->
+	<key id="key_print"  key="&printCmd.key;" observes="cmd_print" modifiers="accel"/>
 	<key id="key_quit"/>
 	
 	<!-- Edit Menu -->
@@ -257,6 +260,9 @@
           <menuseparator/>
           <menuitem value="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
           <menuitem value="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
+          <menuseparator/>
+<!--NYI          <menuitem value="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" observes="cmd_printSetup"/>   -->
+          <menuitem id="printMenuItem" value="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" observes="cmd_print"/>
           <menuseparator/>
         </menupopup>
       </menu>

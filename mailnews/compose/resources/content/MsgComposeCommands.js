@@ -109,6 +109,8 @@ var defaultController =
       case "cmd_sendButton":
       case "cmd_sendNow":
       case "cmd_sendLater":
+//      case "cmd_printSetup":
+      case "cmd_print":
       case "cmd_quit":
       
       //Edit Menu
@@ -216,6 +218,8 @@ var defaultController =
       case "cmd_saveAsTemplate":
       case "cmd_sendButton":
       case "cmd_sendLater":
+//      case "cmd_printSetup":
+      case "cmd_print":
         return !windowLocked;
       case "cmd_sendNow":
         return !(windowLocked || (ioService && ioService.offline))
@@ -343,6 +347,10 @@ var defaultController =
         break;
       case "cmd_sendNow"            : if (defaultController.isCommandEnabled(command)) SendMessage();          break;
       case "cmd_sendLater"          : if (defaultController.isCommandEnabled(command)) SendMessageLater();     break;
+//      case "cmd_printSetup"         : dump("PRINT SETUP\n");                                                   break;
+      case "cmd_print"              : DoCommandPrint();                                                        break;
+      
+      //Edit Menu
       case "cmd_account"            : MsgAccountManager();    break;
       case "cmd_preferences"        : DoCommandPreferences(); break;
 
@@ -389,6 +397,8 @@ function CommandUpdate_MsgCompose()
   goUpdateCommand("cmd_sendButton");
   goUpdateCommand("cmd_sendNow");
   goUpdateCommand("cmd_sendLater");
+//  goUpdateCommand("cmd_printSetup");
+  goUpdateCommand("cmd_print");
   goUpdateCommand("cmd_quit");
 
   //Edit Menu
@@ -500,6 +510,19 @@ function DoCommandClose()
 {
   if (ComposeCanClose())
     CloseWindow()
+}
+
+function DoCommandPrint()
+{
+  if (msgCompose)
+  {
+    var editorShell = msgCompose.editor;
+    if (editorShell)
+      try {
+        editorShell.FinishHTMLSource();
+        editorShell.Print();
+      } catch(ex) {dump("#PRINT ERROR: " + ex + "\n");}
+  }
 }
 
 function DoCommandPreferences()

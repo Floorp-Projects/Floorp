@@ -32,9 +32,9 @@
 <!ENTITY sendLaterCmd.label "Send Later">
 	<!ENTITY sendLaterCmd.keycode "VK_ENTER">
 	<!ENTITY sendLaterCmd.accesskey "L">
-<!ENTITY printPreviewCmd.label ".Print Preview">
-	<!ENTITY printPreviewCmd.accesskey "v">
-<!ENTITY printCmd.label ".Print...">
+<!ENTITY printSetupCmd.label "Page Setup...">
+	<!ENTITY printSetupCmd.accesskey "u">
+<!ENTITY printCmd.label "Print...">
 	<!ENTITY printCmd.key "P">
 	<!ENTITY printCmd.accesskey "P">
 <!ENTITY closeCmd.label "Close">
