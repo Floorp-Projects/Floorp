@@ -60,7 +60,6 @@
 #include "nsHTMLAtoms.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#include "nsBidiPresUtils.h"
 //static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
 
@@ -135,12 +134,10 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       if (context) {
         context->IsArabicEncoding(arabicCharset);
         if (arabicCharset) {
-          nsBidiPresUtils* bidiUtils;
           PRUint32 bidiOptions;
           PRBool isVisual;
           PRBool isBidiSystem;
 
-          context->GetBidiUtils(&bidiUtils);
           context->GetBidi(&bidiOptions);
           context->IsVisualMode(isVisual);
           context->GetIsBidiSystem(isBidiSystem);
@@ -156,7 +153,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
               }
             }
             else { //nonbidisystem
-              bidiUtils->HandleNumbers(buffer, newBuffer);//ahmed
+              HandleNumbers(buffer, newBuffer);//ahmed
             }
             buffer = newBuffer;
           }
@@ -168,7 +165,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
               if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_VISUAL) || (!isBidiSystem) ) {
                 nsAutoString newBuffer;
                 Conv_06_FE_WithReverse(buffer, newBuffer, GET_BIDI_OPTION_DIRECTION(bidiOptions));
-                bidiUtils->HandleNumbers(newBuffer, buffer);
+                HandleNumbers(newBuffer, buffer);
               }
             }
           }
