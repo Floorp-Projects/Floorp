@@ -25,6 +25,19 @@
           ((/= a 0) (return 78.0))
           ((< x 0 rational) (return -zero))
           (nil (return +zero))))
+       
+       (define (x-truncate-finite-float64 (x finite-float64)) integer
+         (rwhen (:narrow-false (in (tag +zero -zero) x))
+           (return 0))
+         (if (> x 0 rational)
+           (return (floor x))
+           (return (ceiling x))))
+       
+       (define (compare (x rational) (y rational)) order
+         (cond
+          ((< x y rational) (return less))
+          ((= x y rational) (return equal))
+          (nil (return greater))))
        )))
   
   (defparameter *sfg* (world-grammar *sfw* 'standard-function-grammar)))
