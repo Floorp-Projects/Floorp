@@ -72,7 +72,7 @@ void nsDrawingSurfaceOS2::SelectFont( nsIFontMetrics *metrics)
    metrics->GetFontHandle( fh);
 
    nsFontOS2 *pHandle = (nsFontOS2 *) fh;
-   FontHandleKey    key((void*)pHandle->ulHashMe);
+   FontHandleKey    key((void*)pHandle->mHashMe);
 
    if( !mHTFonts->Get( &key))
    {
@@ -80,7 +80,7 @@ void nsDrawingSurfaceOS2::SelectFont( nsIFontMetrics *metrics)
          // ids used up, need to empty table and start again.
          FlushFontCache();
 
-      GFX (::GpiCreateLogFont (mPS, 0, mNextID, &pHandle->fattrs), GPI_ERROR);
+      GFX (::GpiCreateLogFont (mPS, 0, mNextID, &pHandle->mFattrs), GPI_ERROR);
       mHTFonts->Put( &key, (void *) mNextID);
       mNextID++;
       if( mTopID < 254)
