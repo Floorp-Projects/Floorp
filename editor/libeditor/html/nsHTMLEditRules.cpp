@@ -50,10 +50,6 @@
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
 #include "nsIPref.h"
-#ifdef IBMBIDI
-#include "nsIPresContext.h"
-#include "nsIFrameSelection.h"
-#endif // IBMBIDI
 
 #include "nsEditorUtils.h"
 #include "nsWSRunObject.h"
@@ -1344,6 +1340,14 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         return res;
       }
     }
+
+#ifdef IBMBIDI
+    // Test for distance between caret and text that will be deleted
+    res = CheckBidiLevelForDeletion(startNode, startOffset, aAction, aCancel);
+    if (NS_FAILED(res)) return res;
+    if (*aCancel) return NS_OK;
+#endif // IBMBIDI
+
     if (!bPlaintext)
     {
       // gather up ws data here.  We may be next to non-significant ws.
