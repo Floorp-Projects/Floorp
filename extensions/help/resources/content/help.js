@@ -96,13 +96,16 @@ function init() {
   helpGlossaryPanel = document.getElementById("help-glossary-tree");
   helpBrowser = document.getElementById("help-content");
 
-  var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
-  helpFileURI = params.GetString(0);
-  helpBaseURI = helpFileURI.substring(0, helpFileURI.lastIndexOf("/")+1); // trailing "/" included.
+  var helpTopic = defaultTopic;
+  if ("arguments" in window && window.arguments[0] instanceof Components.interfaces.nsIDialogParamBlock) {
+    helpFileURI = window.arguments[0].GetString(0);
+    helpBaseURI = helpFileURI.substring(0, helpFileURI.lastIndexOf("/")+1); // trailing "/" included.
+    helpTopic = window.arguments[0].GetString(1);
+  }
 
   loadHelpRDF();
 
-  displayTopic(params.GetString(1));
+  displayTopic(helpTopic);
 
   // move to right end of screen
   var width = document.documentElement.getAttribute("width");
