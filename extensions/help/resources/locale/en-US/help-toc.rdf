@@ -8,16 +8,16 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="welcome" nc:name="Help and Support Center" nc:link="welcome_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window" nc:link="help_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail" nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp" nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="chrome://help/locale/privacy_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="chrome://help/locale/using_certs_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="chrome://help/locale/profiles_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="tools" nc:name="Tools and Development" nc:link="chrome://help/locale/developer_tools.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="forieusers.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="nav_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail" nc:name="Using Mail" nc:link="mail_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp" nc:name="Creating Web Pages"  nc:link="composer_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="customize_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="privacy_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="using_certs_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="profiles_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="shortcuts.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="tools" nc:name="Tools and Development" nc:link="developer_tools.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -36,11 +36,11 @@
   <rdf:Description about="#ieusers">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="terms" nc:name="Terminology Differences" nc:link="chrome://help/locale/forieusers.xhtml#mozilla_and_internet_explorer_terminology_differences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="favorites" nc:name="About Your IE Favorites" nc:link="chrome://help/locale/forieusers.xhtml#about_your_ie_favorites"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="key-features" nc:name="Browser Features" nc:link="chrome://help/locale/forieusers.xhtml#browser_features"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="more-features" nc:name="Other Features" nc:link="chrome://help/locale/forieusers.xhtml#other_features"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="chrome://help/locale/forieusers.xhtml#keyboard_shortcuts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="terms" nc:name="Terminology Differences" nc:link="forieusers.xhtml#mozilla_and_internet_explorer_terminology_differences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="favorites" nc:name="About Your IE Favorites" nc:link="forieusers.xhtml#about_your_ie_favorites"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="key-features" nc:name="Browser Features" nc:link="forieusers.xhtml#browser_features"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="more-features" nc:name="Other Features" nc:link="forieusers.xhtml#other_features"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="forieusers.xhtml#keyboard_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -48,13 +48,13 @@
   <rdf:Description about="#nav">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc" nc:name="Navigating Web Pages" nc:link="chrome://help/locale/nav_help.xhtml#navigating_web_pages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-search" nc:name="Searching the Web" nc:link="chrome://help/locale/nav_help.xhtml#searching_the_web"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-printsave" nc:name="Copying, Saving, and Printing Pages" nc:link="chrome://help/locale/nav_help.xhtml#copying_saving_and_printing_pages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-language" nc:name="Using Languages and International Content" nc:link="chrome://help/locale/nav_help.xhtml#using_languages_and_international_content"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-ses" nc:name="Improving Speed and Efficiency" nc:link="chrome://help/locale/nav_help.xhtml#improving_speed_and_efficiency"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-proxies" nc:name="Proxies" nc:link="chrome://help/locale/nav_help.xhtml#proxies"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-page-info" nc:name="Viewing Page Info" nc:link="chrome://help/locale/page_info_help.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc" nc:name="Navigating Web Pages" nc:link="nav_help.xhtml#navigating_web_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-search" nc:name="Searching the Web" nc:link="nav_help.xhtml#searching_the_web"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-printsave" nc:name="Copying, Saving, and Printing Pages" nc:link="nav_help.xhtml#copying_saving_and_printing_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-language" nc:name="Using Languages and International Content" nc:link="nav_help.xhtml#using_languages_and_international_content"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-ses" nc:name="Improving Speed and Efficiency" nc:link="nav_help.xhtml#improving_speed_and_efficiency"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-proxies" nc:name="Proxies" nc:link="nav_help.xhtml#proxies"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-page-info" nc:name="Viewing Page Info" nc:link="page_info_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -62,14 +62,14 @@
   <rdf:Description about="#nav-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-view" nc:name="Viewing Your Home Page" nc:link="chrome://help/locale/nav_help.xhtml#viewing_your_home_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-move" nc:name="Moving to Another Page" nc:link="chrome://help/locale/nav_help.xhtml#moving_to_another_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-link" nc:name="Clicking a Link" nc:link="chrome://help/locale/nav_help.xhtml#clicking_a_link"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-steps" nc:name="Retracing Your Steps" nc:link="chrome://help/locale/nav_help.xhtml#retracing_your_steps"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-reload" nc:name="Stopping and Reloading"  nc:link="chrome://help/locale/nav_help.xhtml#stopping_and_reloading"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-bmark" nc:name="Visiting Bookmarked Pages"  nc:link="chrome://help/locale/nav_help.xhtml#visiting_bookmarked_pages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-tabbed" nc:name="Using Tabbed Browsing"  nc:link="chrome://help/locale/nav_help.xhtml#using_tabbed_browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-sidebar" nc:name="Using Sidebar"  nc:link="chrome://help/locale/nav_help.xhtml#using_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-view" nc:name="Viewing Your Home Page" nc:link="nav_help.xhtml#viewing_your_home_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-move" nc:name="Moving to Another Page" nc:link="nav_help.xhtml#moving_to_another_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-link" nc:name="Clicking a Link" nc:link="nav_help.xhtml#clicking_a_link"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-steps" nc:name="Retracing Your Steps" nc:link="nav_help.xhtml#retracing_your_steps"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-reload" nc:name="Stopping and Reloading"  nc:link="nav_help.xhtml#stopping_and_reloading"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-bmark" nc:name="Visiting Bookmarked Pages"  nc:link="nav_help.xhtml#visiting_bookmarked_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-tabbed" nc:name="Using Tabbed Browsing"  nc:link="nav_help.xhtml#using_tabbed_browsing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-sidebar" nc:name="Using Sidebar"  nc:link="nav_help.xhtml#using_sidebar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -77,13 +77,13 @@
   <rdf:Description about="#nav-doc-search">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-searchweb" nc:name="Fast Searches" nc:link="chrome://help/locale/nav_help.xhtml#fast_searches"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-smartsearch" nc:name="Advanced Search Mode" nc:link="chrome://help/locale/nav_help.xhtml#advanced_search_mode"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-searchprefs" nc:name="Setting Search Preferences" nc:link="chrome://help/locale/nav_help.xhtml#setting_search_preferences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Internet Keywords" nc:link="chrome://help/locale/nav_help.xhtml#using_internet_keywords"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-searchpage" nc:name="Searching Within a Page" nc:link="chrome://help/locale/nav_help.xhtml#searching_within_a_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-find_as_you_type" nc:name="Using Find-as-you-type" nc:link="chrome://help/locale/nav_help.xhtml#using_find_as_you_type"/></rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-searchbookmark" nc:name="Searching the Bookmarks or History List" nc:link="chrome://help/locale/nav_help.xhtml#searching_the_bookmarks_or_history_list"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-searchweb" nc:name="Fast Searches" nc:link="nav_help.xhtml#fast_searches"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-smartsearch" nc:name="Advanced Search Mode" nc:link="nav_help.xhtml#advanced_search_mode"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-searchprefs" nc:name="Setting Search Preferences" nc:link="nav_help.xhtml#setting_search_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-keywords" nc:name="Using Internet Keywords" nc:link="nav_help.xhtml#using_internet_keywords"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-searchpage" nc:name="Searching Within a Page" nc:link="nav_help.xhtml#searching_within_a_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-find_as_you_type" nc:name="Using Find-as-you-type" nc:link="nav_help.xhtml#using_find_as_you_type"/></rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-searchbookmark" nc:name="Searching the Bookmarks or History List" nc:link="nav_help.xhtml#searching_the_bookmarks_or_history_list"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -91,9 +91,9 @@
   <rdf:Description about="#nav-doc-printsave">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-copy" nc:name="Copying Part of a Page" nc:link="chrome://help/locale/nav_help.xhtml#copying_part_of_a_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-save" nc:name="Saving All or Part of a Page" nc:link="chrome://help/locale/nav_help.xhtml#saving_all_or_part_of_a_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-print" nc:name="Printing a Page" nc:link="chrome://help/locale/nav_help.xhtml#printing_a_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-copy" nc:name="Copying Part of a Page" nc:link="nav_help.xhtml#copying_part_of_a_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-save" nc:name="Saving All or Part of a Page" nc:link="nav_help.xhtml#saving_all_or_part_of_a_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-print" nc:name="Printing a Page" nc:link="nav_help.xhtml#printing_a_page"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -101,9 +101,9 @@
   <rdf:Description about="#nav-doc-language">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-charencode" nc:name="Selecting Character Encodings and Fonts" nc:link="chrome://help/locale/nav_help.xhtml#selecting_character_encodings_and_fonts"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-languagepref" nc:name="Setting Language Preferences" nc:link="chrome://help/locale/nav_help.xhtml#setting_language_preferences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-webcontent" nc:name="Finding International Web Content" nc:link="chrome://help/locale/nav_help.xhtml#finding_international_web_content"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-charencode" nc:name="Selecting Character Encodings and Fonts" nc:link="nav_help.xhtml#selecting_character_encodings_and_fonts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-languagepref" nc:name="Setting Language Preferences" nc:link="nav_help.xhtml#setting_language_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-webcontent" nc:name="Finding International Web Content" nc:link="nav_help.xhtml#finding_international_web_content"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -111,13 +111,13 @@
   <rdf:Description about="#nav-doc-ses">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-helperapps" nc:name="Managing Different File Types" nc:link="chrome://help/locale/nav_help.xhtml#managing_different_file_types"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-default" nc:name="Making Mozilla Your Default Browser" nc:link="chrome://help/locale/nav_help.xhtml#making_mozilla_your_default_browser"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-autoload" nc:name="Automatic Loading" nc:link="chrome://help/locale/nav_help.xhtml#automatic_loading"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="chrome://help/locale/nav_help.xhtml#changing_cache_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-smartup" nc:name="Getting the Latest Software Automatically" nc:link="chrome://help/locale/nav_help.xhtml#getting_the_latest_software_automatically"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-mousewheel" nc:name="Using a Mouse Wheel" nc:link="chrome://help/locale/nav_help.xhtml#using_a_mouse_wheel"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-quicklaunch" nc:name="Using Quick Launch" nc:link="chrome://help/locale/nav_help.xhtml#using_quick_launch"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-helperapps" nc:name="Managing Different File Types" nc:link="nav_help.xhtml#managing_different_file_types"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-default" nc:name="Making Mozilla Your Default Browser" nc:link="nav_help.xhtml#making_mozilla_your_default_browser"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-autoload" nc:name="Automatic Loading" nc:link="nav_help.xhtml#automatic_loading"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-cache" nc:name="Changing Cache Settings" nc:link="nav_help.xhtml#changing_cache_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-smartup" nc:name="Getting the Latest Software Automatically" nc:link="nav_help.xhtml#getting_the_latest_software_automatically"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-mousewheel" nc:name="Using a Mouse Wheel" nc:link="nav_help.xhtml#using_a_mouse_wheel"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-quicklaunch" nc:name="Using Quick Launch" nc:link="nav_help.xhtml#using_quick_launch"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -125,7 +125,7 @@
   <rdf:Description about="#nav-proxies">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-prox" nc:name="Setting Proxy Values" nc:link="chrome://help/locale/nav_help.xhtml#setting_proxy_values"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-prox" nc:name="Setting Proxy Values" nc:link="nav_help.xhtml#setting_proxy_values"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -133,11 +133,11 @@
   <rdf:Description about="#nav-page-info">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="pageinfo_general" nc:name="General Tab" nc:link="chrome://help/locale/page_info_help.xhtml#general_tab"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="pageinfo_forms" nc:name="Forms Tab" nc:link="chrome://help/locale/page_info_help.xhtml#forms_tab"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="pageinfo_links" nc:name="Links Tab" nc:link="chrome://help/locale/page_info_help.xhtml#links_tab"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="pageinfo_media" nc:name="Media Tab" nc:link="chrome://help/locale/page_info_help.xhtml#media_tab"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="pageinfo_security" nc:name="Security Tab" nc:link="chrome://help/locale/page_info_help.xhtml#security_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_general" nc:name="General Tab" nc:link="page_info_help.xhtml#general_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_forms" nc:name="Forms Tab" nc:link="page_info_help.xhtml#forms_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_links" nc:name="Links Tab" nc:link="page_info_help.xhtml#links_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_media" nc:name="Media Tab" nc:link="page_info_help.xhtml#media_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_security" nc:name="Security Tab" nc:link="page_info_help.xhtml#security_tab"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -148,21 +148,21 @@
 <rdf:Description about="#mail">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc" nc:name="Getting Started with Mail" nc:link="chrome://help/locale/mail_help.xhtml#getting_started_with_mozilla_mail_and_newsgroups" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-read"    nc:name="Reading Messages" nc:link="chrome://help/locale/mail_help.xhtml#reading_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send"    nc:name="Sending Messages" nc:link="chrome://help/locale/mail_help.xhtml#sending_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html"    nc:name="Creating HTML Mail Messages" nc:link="chrome://help/locale/mail_help.xhtml#creating_html_mail_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-attach"  nc:name="Using Attachments" nc:link="chrome://help/locale/mail_help.xhtml#using_attachments" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-delete" nc:name="Deleting Messages" nc:link="chrome://help/locale/mail_help.xhtml#deleting_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-address" nc:name="Using Address Books" nc:link="chrome://help/locale/mail_help.xhtml#using_address_books" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-folders" nc:name="Organizing Your Messages" nc:link="chrome://help/locale/mail_help.xhtml#organizing_your_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-junk" nc:name="Controlling Junk Mail" nc:link="chrome://help/locale/mail_help.xhtml#controlling_junk_mail" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-importing-other" nc:name="Importing Mail from Other Programs" nc:link="chrome://help/locale/mail_help.xhtml#importing_mail_from_other_programs" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-news" nc:name="Getting Started With Newsgroups" nc:link="chrome://help/locale/mail_help.xhtml#getting_started_with_newsgroups" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-offline" nc:name="Working Offline" nc:link="chrome://help/locale/mail_help.xhtml#working_offline" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt" nc:name="Signing &amp; Encrypting Messages" nc:link="chrome://help/locale/mail_sec_help.xhtml#signing_and_encrypting_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-account-settings" nc:name="Mail and Newsgroups Account Settings" nc:link="chrome://help/locale/mail_help.xhtml#mail_and_newsgroups_account_settings" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-mailprefs" nc:name="Mail and Newsgroup Preferences" nc:link="chrome://help/locale/mail_help.xhtml#mail_and_newsgroup_preferences" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc" nc:name="Getting Started with Mail" nc:link="mail_help.xhtml#getting_started_with_mozilla_mail_and_newsgroups" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-read"    nc:name="Reading Messages" nc:link="mail_help.xhtml#reading_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send"    nc:name="Sending Messages" nc:link="mail_help.xhtml#sending_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html"    nc:name="Creating HTML Mail Messages" nc:link="mail_help.xhtml#creating_html_mail_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-attach"  nc:name="Using Attachments" nc:link="mail_help.xhtml#using_attachments" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-delete" nc:name="Deleting Messages" nc:link="mail_help.xhtml#deleting_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-address" nc:name="Using Address Books" nc:link="mail_help.xhtml#using_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-folders" nc:name="Organizing Your Messages" nc:link="mail_help.xhtml#organizing_your_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-junk" nc:name="Controlling Junk Mail" nc:link="mail_help.xhtml#controlling_junk_mail" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-importing-other" nc:name="Importing Mail from Other Programs" nc:link="mail_help.xhtml#importing_mail_from_other_programs" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-news" nc:name="Getting Started With Newsgroups" nc:link="mail_help.xhtml#getting_started_with_newsgroups" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-offline" nc:name="Working Offline" nc:link="mail_help.xhtml#working_offline" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt" nc:name="Signing &amp; Encrypting Messages" nc:link="mail_sec_help.xhtml#signing_and_encrypting_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-account-settings" nc:name="Mail and Newsgroups Account Settings" nc:link="mail_help.xhtml#mail_and_newsgroups_account_settings" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-mailprefs" nc:name="Mail and Newsgroup Preferences" nc:link="mail_help.xhtml#mail_and_newsgroup_preferences" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -171,9 +171,9 @@
  <rdf:Description about="#mail-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-setup" nc:name="Using the Mail Account Setup Wizard"  nc:link="chrome://help/locale/mail_help.xhtml#using_the_mail_account_setup_wizard"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add" nc:name="Setting Up Additional Accounts"  nc:link="chrome://help/locale/mail_help.xhtml#setting_up_additional_mail_and_news_accounts"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-change" nc:name="Changing the Settings for an Account"  nc:link="chrome://help/locale/mail_help.xhtml#changing_the_settings_for_an_account"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-setup" nc:name="Using the Mail Account Setup Wizard"  nc:link="mail_help.xhtml#using_the_mail_account_setup_wizard"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add" nc:name="Setting Up Additional Accounts"  nc:link="mail_help.xhtml#setting_up_additional_mail_and_news_accounts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-change" nc:name="Changing the Settings for an Account"  nc:link="mail_help.xhtml#changing_the_settings_for_an_account"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -181,11 +181,11 @@
  <rdf:Description about="#mail-doc-read">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-notify" nc:name="Getting New Messages"  nc:link="chrome://help/locale/mail_help.xhtml#getting_new_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-view" nc:name="Choosing How You View the Mail Window"  nc:link="chrome://help/locale/mail_help.xhtml#choosing_how_you_view_the_mail_window"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-thread" nc:name="Sorting and Threading Messages"  nc:link="chrome://help/locale/mail_help.xhtml#sorting_and_threading_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-printsave" nc:name="Saving and Printing Messages"  nc:link="chrome://help/locale/mail_help.xhtml#saving_and_printing_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-scripts" nc:name="Controlling Images, Scripts, and Plug-ins"  nc:link="chrome://help/locale/mail_help.xhtml#controlling_images_scripts_and_plug-ins"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-notify" nc:name="Getting New Messages"  nc:link="mail_help.xhtml#getting_new_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-view" nc:name="Choosing How You View the Mail Window"  nc:link="mail_help.xhtml#choosing_how_you_view_the_mail_window"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-thread" nc:name="Sorting and Threading Messages"  nc:link="mail_help.xhtml#sorting_and_threading_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-printsave" nc:name="Saving and Printing Messages"  nc:link="mail_help.xhtml#saving_and_printing_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-scripts" nc:name="Controlling Images, Scripts, and Plug-ins"  nc:link="mail_help.xhtml#controlling_images_scripts_and_plug-ins"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -193,15 +193,15 @@
   <rdf:Description about="#mail-doc-send">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-send-compose" nc:name="Composing Messages" nc:link="chrome://help/locale/mail_help.xhtml#composing_mail_and_newsgroup_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-new" nc:name="Using the Compose Window" nc:link="chrome://help/locale/mail_help.xhtml#using_the_message_composition_window" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-address" nc:name="Addressing a Message" nc:link="chrome://help/locale/mail_help.xhtml#addressing_a_message" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-options" nc:name="Selecting Message Sending Options" nc:link="chrome://help/locale/mail_help.xhtml#selecting_message_sending_options" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-reply" nc:name="Replying to a Message" nc:link="chrome://help/locale/mail_help.xhtml#replying_to_a_message" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-forward" nc:name="Forwarding a Message" nc:link="chrome://help/locale/mail_help.xhtml#forwarding_a_message" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-receipt" nc:name="Confirming That Your Message Was Opened" nc:link="chrome://help/locale/mail_help.xhtml#confirming_that_your_message_was_opened" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-edit" nc:name="Saving and Editing a Message Draft" nc:link="chrome://help/locale/mail_help.xhtml#saving_and_editing_a_message_draft" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-template" nc:name="Creating and Using Templates" nc:link="chrome://help/locale/mail_help.xhtml#creating_and_using_templates" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-compose" nc:name="Composing Messages" nc:link="mail_help.xhtml#composing_mail_and_newsgroup_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-new" nc:name="Using the Compose Window" nc:link="mail_help.xhtml#using_the_message_composition_window" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-address" nc:name="Addressing a Message" nc:link="mail_help.xhtml#addressing_a_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-options" nc:name="Selecting Message Sending Options" nc:link="mail_help.xhtml#selecting_message_sending_options" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-reply" nc:name="Replying to a Message" nc:link="mail_help.xhtml#replying_to_a_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-forward" nc:name="Forwarding a Message" nc:link="mail_help.xhtml#forwarding_a_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-receipt" nc:name="Confirming That Your Message Was Opened" nc:link="mail_help.xhtml#confirming_that_your_message_was_opened" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-edit" nc:name="Saving and Editing a Message Draft" nc:link="mail_help.xhtml#saving_and_editing_a_message_draft" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-template" nc:name="Creating and Using Templates" nc:link="mail_help.xhtml#creating_and_using_templates" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -209,11 +209,11 @@
   <rdf:Description about="#mail-doc-html">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-html-use" nc:name="Using HTML in Your Messages" nc:link="chrome://help/locale/mail_help.xhtml#using_html_in_your_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html-options" nc:name="Choosing HTML Mail Sending Options" nc:link="chrome://help/locale/mail_help.xhtml#choosing_html_mail_sending_options" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html-address" nc:name="Specifying Recipients for HTML Messages" nc:link="chrome://help/locale/mail_help.xhtml#specifying_recipients_for_html_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html-source" nc:name="Viewing HTML Message Source" nc:link="chrome://help/locale/mail_help.xhtml#viewing_the_message_source_for_html_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html-question" nc:name="Using the HTML Mail Question Dialog Box" nc:link="chrome://help/locale/mail_help.xhtml#using_the_html_mail_question_dialog_box" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-use" nc:name="Using HTML in Your Messages" nc:link="mail_help.xhtml#using_html_in_your_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-options" nc:name="Choosing HTML Mail Sending Options" nc:link="mail_help.xhtml#choosing_html_mail_sending_options" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-address" nc:name="Specifying Recipients for HTML Messages" nc:link="mail_help.xhtml#specifying_recipients_for_html_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-source" nc:name="Viewing HTML Message Source" nc:link="mail_help.xhtml#viewing_the_message_source_for_html_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-question" nc:name="Using the HTML Mail Question Dialog Box" nc:link="mail_help.xhtml#using_the_html_mail_question_dialog_box" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -221,7 +221,7 @@
 <rdf:Description about="#mail-doc-html-use">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-html-edit" nc:name="Editing or Inserting HTML" nc:link="chrome://help/locale/mail_help.xhtml#editing_or_inserting_html_elements" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-edit" nc:name="Editing or Inserting HTML" nc:link="mail_help.xhtml#editing_or_inserting_html_elements" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -229,9 +229,9 @@
   <rdf:Description about="#mail-doc-attach">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-attach-file" nc:name="Attaching a File or Web Page" nc:link="chrome://help/locale/mail_help.xhtml#attaching_a_file_or_web_page" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-attach-view" nc:name="Viewing and Opening Attachments" nc:link="chrome://help/locale/mail_help.xhtml#viewing_and_opening_attachments" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-attach-save" nc:name="Saving Attachments" nc:link="chrome://help/locale/mail_help.xhtml#saving_attachments" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-attach-file" nc:name="Attaching a File or Web Page" nc:link="mail_help.xhtml#attaching_a_file_or_web_page" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-attach-view" nc:name="Viewing and Opening Attachments" nc:link="mail_help.xhtml#viewing_and_opening_attachments" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-attach-save" nc:name="Saving Attachments" nc:link="mail_help.xhtml#saving_attachments" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -239,8 +239,8 @@
 <rdf:Description about="#mail-doc-delete">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-delete-server" nc:name="Deleting POP or IMAP Messages" nc:link="chrome://help/locale/mail_help.xhtml#deleting_pop_or_imap_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-delete-trash" nc:name="Moving Messages to and from the Trash" nc:link="chrome://help/locale/mail_help.xhtml#moving_messages_to_and_from_the_trash" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-delete-server" nc:name="Deleting POP or IMAP Messages" nc:link="mail_help.xhtml#deleting_pop_or_imap_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-delete-trash" nc:name="Moving Messages to and from the Trash" nc:link="mail_help.xhtml#moving_messages_to_and_from_the_trash" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -248,15 +248,15 @@
   <rdf:Description about="#mail-doc-address">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-add-about" nc:name="About Mail Address Books" nc:link="chrome://help/locale/mail_help.xhtml#about_address_books" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-names" nc:name="Adding Entries to Your Address Books" nc:link="chrome://help/locale/mail_help.xhtml#adding_entries_to_your_address_books" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-book" nc:name="Creating a New Address Book" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_new_address_book" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-card" nc:name="Creating a New Address Book Card" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_new_address_book_card" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-list" nc:name="Creating a Mailing List" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_mailing_list" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-listedit" nc:name="Editing a Mailing List" nc:link="chrome://help/locale/mail_help.xhtml#editing_a_mailing_list" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_ab_search" nc:name="Searching Address Books" nc:link="chrome://help/locale/mail_help.xhtml#searching_address_books_and_directories" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-export" nc:name="Exporting Address Books" nc:link="chrome://help/locale/mail_help.xhtml#exporting_address_books" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-sync-LDAP-add" nc:name="Adding and Removing LDAP Directories" nc:link="chrome://help/locale/mail_help.xhtml#adding_and_removing_ldap_directories" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-about" nc:name="About Mail Address Books" nc:link="mail_help.xhtml#about_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-names" nc:name="Adding Entries to Your Address Books" nc:link="mail_help.xhtml#adding_entries_to_your_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-book" nc:name="Creating a New Address Book" nc:link="mail_help.xhtml#creating_a_new_address_book" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-card" nc:name="Creating a New Address Book Card" nc:link="mail_help.xhtml#creating_a_new_address_book_card" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-list" nc:name="Creating a Mailing List" nc:link="mail_help.xhtml#creating_a_mailing_list" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-listedit" nc:name="Editing a Mailing List" nc:link="mail_help.xhtml#editing_a_mailing_list" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_ab_search" nc:name="Searching Address Books" nc:link="mail_help.xhtml#searching_address_books_and_directories" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-export" nc:name="Exporting Address Books" nc:link="mail_help.xhtml#exporting_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-sync-LDAP-add" nc:name="Adding and Removing LDAP Directories" nc:link="mail_help.xhtml#adding_and_removing_ldap_directories" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -265,7 +265,7 @@
 <rdf:Description about="#mail-doc-add-card">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-card-properties" nc:name="Editing Card Properties" nc:link="chrome://help/locale/mail_help.xhtml#viewing_or_editing_card_properties" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-card-properties" nc:name="Editing Card Properties" nc:link="mail_help.xhtml#viewing_or_editing_card_properties" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -273,7 +273,7 @@
 <rdf:Description about="#mail_ab_search">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_advanced_ab_search" nc:name="Searching for Specific Entries" nc:link="chrome://help/locale/mail_help.xhtml#searching_for_specific_entries" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_advanced_ab_search" nc:name="Searching for Specific Entries" nc:link="mail_help.xhtml#searching_for_specific_entries" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -281,7 +281,7 @@
 <rdf:Description about="#mail-doc-add-sync-LDAP-add">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-ldap-properties" nc:name="Directory Server Settings" nc:link="chrome://help/locale/mail_help.xhtml#directory_server_settings" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-ldap-properties" nc:name="Directory Server Settings" nc:link="mail_help.xhtml#directory_server_settings" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -289,16 +289,16 @@
   <rdf:Description about="#mail-doc-folders">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="folder-creating" nc:name="Creating a Folder" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_folder"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="folder-renaming" nc:name="Renaming a Folder" nc:link="chrome://help/locale/mail_help.xhtml#renaming_a_folder"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="folder-copying" nc:name="Moving or Copying a Folder" nc:link="chrome://help/locale/mail_help.xhtml#moving_or_copying_a_folder"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="folder-opening" nc:name="Filing Messages in Folders" nc:link="chrome://help/locale/mail_help.xhtml#filing_messages_in_folders"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="folder-sharing" nc:name="Sharing Folders" nc:link="chrome://help/locale/mail_help.xhtml#sharing_folders_with_other_users"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="labeling-messages" nc:name="Labeling Messages" nc:link="chrome://help/locale/mail_help.xhtml#labeling_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-flagging" nc:name="Marking or Flagging Messages" nc:link="chrome://help/locale/mail_help.xhtml#marking_or_flagging_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="message-views-using" nc:name="Using Message Views" nc:link="chrome://help/locale/mail_help.xhtml#using_message_views"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-filters" nc:name="Creating Message Filters" nc:link="chrome://help/locale/mail_help.xhtml#creating_message_filters"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="search-mailnews" nc:name="Searching Through Messages" nc:link="chrome://help/locale/mail_help.xhtml#searching_through_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-creating" nc:name="Creating a Folder" nc:link="mail_help.xhtml#creating_a_folder"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-renaming" nc:name="Renaming a Folder" nc:link="mail_help.xhtml#renaming_a_folder"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-copying" nc:name="Moving or Copying a Folder" nc:link="mail_help.xhtml#moving_or_copying_a_folder"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-opening" nc:name="Filing Messages in Folders" nc:link="mail_help.xhtml#filing_messages_in_folders"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-sharing" nc:name="Sharing Folders" nc:link="mail_help.xhtml#sharing_folders_with_other_users"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="labeling-messages" nc:name="Labeling Messages" nc:link="mail_help.xhtml#labeling_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-flagging" nc:name="Marking or Flagging Messages" nc:link="mail_help.xhtml#marking_or_flagging_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="message-views-using" nc:name="Using Message Views" nc:link="mail_help.xhtml#using_message_views"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-filters" nc:name="Creating Message Filters" nc:link="mail_help.xhtml#creating_message_filters"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="search-mailnews" nc:name="Searching Through Messages" nc:link="mail_help.xhtml#searching_through_messages"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -306,7 +306,7 @@
 <rdf:Description about="#folder-sharing">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="folder-subscribing" nc:name="Subscribing to a Shared Folder" nc:link="chrome://help/locale/mail_help.xhtml#subscribing_to_a_shared_folder"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-subscribing" nc:name="Subscribing to a Shared Folder" nc:link="mail_help.xhtml#subscribing_to_a_shared_folder"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -314,10 +314,10 @@
 <rdf:Description about="#labeling-messages">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="label-apply" nc:name="Applying a Label" nc:link="chrome://help/locale/mail_help.xhtml#applying_a_label"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-customize" nc:name="Customizing Labels" nc:link="chrome://help/locale/mail_help.xhtml#customizing_labels"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-sort" nc:name="Sorting Messages by Label" nc:link="chrome://help/locale/mail_help.xhtml#sorting_messages_by_label"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-remove" nc:name="Removing Labels" nc:link="chrome://help/locale/mail_help.xhtml#removing_labels"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="label-apply" nc:name="Applying a Label" nc:link="mail_help.xhtml#applying_a_label"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="label-customize" nc:name="Customizing Labels" nc:link="mail_help.xhtml#customizing_labels"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="label-sort" nc:name="Sorting Messages by Label" nc:link="mail_help.xhtml#sorting_messages_by_label"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="label-remove" nc:name="Removing Labels" nc:link="mail_help.xhtml#removing_labels"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -325,7 +325,7 @@
 <rdf:Description about="#message-views-using">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="message-views-create-new" nc:name="Creating a Custom View" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_custom_view"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="message-views-create-new" nc:name="Creating a Custom View" nc:link="mail_help.xhtml#creating_a_custom_view"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -333,7 +333,7 @@
 <rdf:Description about="#mail-filters">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="send-filter" nc:name="Filtering Messages from a Specific Sender" nc:link="chrome://help/locale/mail_help.xhtml#filtering_messages_from_a_specific_sender"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="send-filter" nc:name="Filtering Messages from a Specific Sender" nc:link="mail_help.xhtml#filtering_messages_from_a_specific_sender"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -341,7 +341,7 @@
 <rdf:Description about="#search-mailnews">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="search_messages" nc:name="Searching for Specific Messages" nc:link="chrome://help/locale/mail_help.xhtml#searching_for_specific_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="search_messages" nc:name="Searching for Specific Messages" nc:link="mail_help.xhtml#searching_for_specific_messages"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -349,9 +349,9 @@
 <rdf:Description about="#mail-junk">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-junk-controls" nc:name="Using Junk Mail Controls" nc:link="chrome://help/locale/mail_help.xhtml#using_junk_mail_controls" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-junk-options" nc:name="Junk Mail Controls Options" nc:link="chrome://help/locale/mail_help.xhtml#junk_controls_options" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-junk-filters" nc:name="Junk Mail Controls and Filters" nc:link="chrome://help/locale/mail_help.xhtml#junk_controls_and_filters" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-junk-controls" nc:name="Using Junk Mail Controls" nc:link="mail_help.xhtml#using_junk_mail_controls" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-junk-options" nc:name="Junk Mail Controls Options" nc:link="mail_help.xhtml#junk_controls_options" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-junk-filters" nc:name="Junk Mail Controls and Filters" nc:link="mail_help.xhtml#junk_controls_and_filters" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -359,8 +359,8 @@
 <rdf:Description about="#mail-importing-other">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-importing-mail-messages" nc:name="Importing Mail Messages" nc:link="chrome://help/locale/mail_help.xhtml#importing_mail_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-importing-mail-settings" nc:name="Importing Mail Settings" nc:link="chrome://help/locale/mail_help.xhtml#importing_mail_settings" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-importing-mail-messages" nc:name="Importing Mail Messages" nc:link="mail_help.xhtml#importing_mail_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-importing-mail-settings" nc:name="Importing Mail Settings" nc:link="mail_help.xhtml#importing_mail_settings" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -368,13 +368,13 @@
   <rdf:Description about="#mail-doc-news">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-subscribe" nc:name="Subscribing to Newsgroups" nc:link="chrome://help/locale/mail_help.xhtml#subscribing_to_newsgroups"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-reading-news" nc:name="Reading Newsgroup Messages" nc:link="chrome://help/locale/mail_help.xhtml#reading_newsgroup_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-posting" nc:name="Posting Newsgroup Messages" nc:link="chrome://help/locale/mail_help.xhtml#posting_newsgroup_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-replying-news" nc:name="Contributing to Ongoing Discussions" nc:link="chrome://help/locale/mail_help.xhtml#contributing_to_ongoing_discussions"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-monitoring" nc:name="Monitoring Threads" nc:link="chrome://help/locale/mail_help.xhtml#monitoring_threads"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-delete-news" nc:name="Removing a Newsgroup" nc:link="chrome://help/locale/mail_help.xhtml#removing_a_newsgroup"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-add-newsserver" nc:name="Adding a Newsgroup Server" nc:link="chrome://help/locale/mail_help.xhtml#adding_a_newsgroup_server"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-subscribe" nc:name="Subscribing to Newsgroups" nc:link="mail_help.xhtml#subscribing_to_newsgroups"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-reading-news" nc:name="Reading Newsgroup Messages" nc:link="mail_help.xhtml#reading_newsgroup_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-posting" nc:name="Posting Newsgroup Messages" nc:link="mail_help.xhtml#posting_newsgroup_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-replying-news" nc:name="Contributing to Ongoing Discussions" nc:link="mail_help.xhtml#contributing_to_ongoing_discussions"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-monitoring" nc:name="Monitoring Threads" nc:link="mail_help.xhtml#monitoring_threads"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-delete-news" nc:name="Removing a Newsgroup" nc:link="mail_help.xhtml#removing_a_newsgroup"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-add-newsserver" nc:name="Adding a Newsgroup Server" nc:link="mail_help.xhtml#adding_a_newsgroup_server"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -382,15 +382,15 @@
 <rdf:Description about="#mail-doc-offline">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-offline-setup" nc:name="Setting Up Mail to Work Offline" nc:link="chrome://help/locale/mail_help.xhtml#setting_up_mozilla_mail_and_newsgroups_to_work_offline"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-inbox" nc:name="Downloading Your Inbox" nc:link="chrome://help/locale/mail_help.xhtml#downloading_your_inbox_for_offline_use"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-folder" nc:name="Downloading an Individual Folder" nc:link="chrome://help/locale/mail_help.xhtml#downloading_an_individual_folder_for_offline_use"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-flagged" nc:name="Downloading Selected or Flagged Messages" nc:link="chrome://help/locale/mail_help.xhtml#downloading_selected_or_flagged_messages_for_offline_use"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-directory" nc:name="Downloading Directory Entries" nc:link="chrome://help/locale/mail_help.xhtml#downloading_directory_entries_for_offline_use"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-accounts" nc:name="Setting Up Your Accounts for Working Offline" nc:link="chrome://help/locale/mail_help.xhtml#setting_up_your_accounts_for_working_offline"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-items" nc:name="Selecting Items for Offline Viewing" nc:link="chrome://help/locale/mail_help.xhtml#selecting_items_for_offline_viewing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-sync" nc:name="Downloading and Synchronizing Your Messages" nc:link="chrome://help/locale/mail_help.xhtml#downloading_and_synchronizing_your_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-go" nc:name="Working Offline and Reconnecting Later" nc:link="chrome://help/locale/mail_help.xhtml#working_offline_and_reconnecting_later"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-setup" nc:name="Setting Up Mail to Work Offline" nc:link="mail_help.xhtml#setting_up_mozilla_mail_and_newsgroups_to_work_offline"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-inbox" nc:name="Downloading Your Inbox" nc:link="mail_help.xhtml#downloading_your_inbox_for_offline_use"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-folder" nc:name="Downloading an Individual Folder" nc:link="mail_help.xhtml#downloading_an_individual_folder_for_offline_use"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-flagged" nc:name="Downloading Selected or Flagged Messages" nc:link="mail_help.xhtml#downloading_selected_or_flagged_messages_for_offline_use"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-directory" nc:name="Downloading Directory Entries" nc:link="mail_help.xhtml#downloading_directory_entries_for_offline_use"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-accounts" nc:name="Setting Up Your Accounts for Working Offline" nc:link="mail_help.xhtml#setting_up_your_accounts_for_working_offline"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-items" nc:name="Selecting Items for Offline Viewing" nc:link="mail_help.xhtml#selecting_items_for_offline_viewing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-sync" nc:name="Downloading and Synchronizing Your Messages" nc:link="mail_help.xhtml#downloading_and_synchronizing_your_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-go" nc:name="Working Offline and Reconnecting Later" nc:link="mail_help.xhtml#working_offline_and_reconnecting_later"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -398,13 +398,13 @@
 <rdf:Description about="#sign-encrypt">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="sign-encrypt-about" nc:name="Digital Signatures &amp; Encryption" nc:link="chrome://help/locale/mail_sec_help.xhtml#about_digital_signatures_and_encryption" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-get" nc:name="Getting Other People's Certificates" nc:link="chrome://help/locale/mail_sec_help.xhtml#getting_other_peoples_certificates" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-config" nc:name="Configuring Security Settings" nc:link="chrome://help/locale/mail_sec_help.xhtml#configuring_security_settings" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-signing" nc:name="Signing &amp; Encrypting a New Message" nc:link="chrome://help/locale/mail_sec_help.xhtml#signing_and_encrypting_a_new_message" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-read" nc:name="Reading Signed &amp; Encrypted Messages" nc:link="chrome://help/locale/mail_sec_help.xhtml#reading_signed_and_encrypted_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="compose_security" nc:name="Message Security - Compose Window" nc:link="chrome://help/locale/mail_sec_help.xhtml#message_security_compose_window" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="received_security" nc:name="Message Security - Received Message" nc:link="chrome://help/locale/mail_sec_help.xhtml#message_security_recieved_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-about" nc:name="Digital Signatures &amp; Encryption" nc:link="mail_sec_help.xhtml#about_digital_signatures_and_encryption" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-get" nc:name="Getting Other People's Certificates" nc:link="mail_sec_help.xhtml#getting_other_peoples_certificates" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-config" nc:name="Configuring Security Settings" nc:link="mail_sec_help.xhtml#configuring_security_settings" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-signing" nc:name="Signing &amp; Encrypting a New Message" nc:link="mail_sec_help.xhtml#signing_and_encrypting_a_new_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-read" nc:name="Reading Signed &amp; Encrypted Messages" nc:link="mail_sec_help.xhtml#reading_signed_and_encrypted_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="compose_security" nc:name="Message Security - Compose Window" nc:link="mail_sec_help.xhtml#message_security_compose_window" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="received_security" nc:name="Message Security - Received Message" nc:link="mail_sec_help.xhtml#message_security_recieved_message" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -412,8 +412,8 @@
 <rdf:Description about="#sign-encrypt-about">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="sign-encrypt-about-sig" nc:name="How Digital Signatures Work" nc:link="chrome://help/locale/mail_sec_help.xhtml#how_digital_signatures_work" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="sign-encrypt-about-encrypt" nc:name="How Encryption Works" nc:link="chrome://help/locale/mail_sec_help.xhtml#how_encryption_works" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-about-sig" nc:name="How Digital Signatures Work" nc:link="mail_sec_help.xhtml#how_digital_signatures_work" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="sign-encrypt-about-encrypt" nc:name="How Encryption Works" nc:link="mail_sec_help.xhtml#how_encryption_works" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -422,15 +422,15 @@
 <rdf:Description about="#mail-doc-account-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_account_identity" nc:name="Account Settings"  nc:link="chrome://help/locale/mail_help.xhtml#account_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-choose" nc:name="Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#server_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_copies" nc:name="Copies &amp; Folders"  nc:link="chrome://help/locale/mail_help.xhtml#copies_and_folders"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_addressing_settings" nc:name="Composition &amp; Addressing"  nc:link="chrome://help/locale/mail_help.xhtml#addressing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-offline-space" nc:name="Offline and Disk Space"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-account-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.xhtml#return_receipts"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_security_settings" nc:name="Security"  nc:link="chrome://help/locale/mail_help.xhtml#security"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_local_folders_settings" nc:name="Local Folders"  nc:link="chrome://help/locale/mail_help.xhtml#local_folders"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_smtp" nc:name="Outgoing Server (SMTP)"  nc:link="chrome://help/locale/mail_help.xhtml#outgoing_server"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_account_identity" nc:name="Account Settings"  nc:link="mail_help.xhtml#account_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-choose" nc:name="Server Settings"  nc:link="mail_help.xhtml#server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_copies" nc:name="Copies &amp; Folders"  nc:link="mail_help.xhtml#copies_and_folders"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_addressing_settings" nc:name="Composition &amp; Addressing"  nc:link="mail_help.xhtml#addressing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-offline-space" nc:name="Offline and Disk Space"  nc:link="mail_help.xhtml#offline_and_disk_space"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-account-receipts" nc:name="Return Receipts" nc:link="mail_help.xhtml#return_receipts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_security_settings" nc:name="Security"  nc:link="mail_help.xhtml#security"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_local_folders_settings" nc:name="Local Folders"  nc:link="mail_help.xhtml#local_folders"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_smtp" nc:name="Outgoing Server (SMTP)"  nc:link="mail_help.xhtml#outgoing_server"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -438,12 +438,12 @@
 <rdf:Description about="#mail-doc-choose">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-choose-IMAP" nc:name="About IMAP"  nc:link="chrome://help/locale/mail_help.xhtml#about_internet_message_access_protocol"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-choose-POP" nc:name="About POP"  nc:link="chrome://help/locale/mail_help.xhtml#about_post_office_protocol"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_server_imap" nc:name="IMAP Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#imap_server_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-imap-advanced" nc:name="Advanced IMAP Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#advanced_imap_server_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_server_pop3" nc:name="POP Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#pop_server_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_server_nntp" nc:name="News Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#news_server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-choose-IMAP" nc:name="About IMAP"  nc:link="mail_help.xhtml#about_internet_message_access_protocol"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-choose-POP" nc:name="About POP"  nc:link="mail_help.xhtml#about_post_office_protocol"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_server_imap" nc:name="IMAP Server Settings"  nc:link="mail_help.xhtml#imap_server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-imap-advanced" nc:name="Advanced IMAP Server Settings"  nc:link="mail_help.xhtml#advanced_imap_server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_server_pop3" nc:name="POP Server Settings"  nc:link="mail_help.xhtml#pop_server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_server_nntp" nc:name="News Server Settings"  nc:link="mail_help.xhtml#news_server_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -451,9 +451,9 @@
 <rdf:Description about="#mail-doc-offline-space">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_offline_imap" nc:name="IMAP"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settings_imap"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_offline_pop3" nc:name="POP"  nc:link="chrome://help/locale/mail_help.xhtml#disk_space_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_offline_nntp" nc:name="News"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settings_nntp"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_imap" nc:name="IMAP"  nc:link="mail_help.xhtml#offline_and_disk_space_settings_imap"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_pop3" nc:name="POP"  nc:link="mail_help.xhtml#disk_space_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_nntp" nc:name="News"  nc:link="mail_help.xhtml#offline_and_disk_space_settings_nntp"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -461,9 +461,9 @@
 <rdf:Description about="#mail_security_settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_security_settings_certs" nc:name="About Certificates"  nc:link="chrome://help/locale/mail_help.xhtml#about_certificates"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_security_settings_sign" nc:name="Digital Signing"  nc:link="chrome://help/locale/mail_help.xhtml#digital_signing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_security_settings_encrypt" nc:name="Encryption"  nc:link="chrome://help/locale/mail_help.xhtml#encryption"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_security_settings_certs" nc:name="About Certificates"  nc:link="mail_help.xhtml#about_certificates"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_security_settings_sign" nc:name="Digital Signing"  nc:link="mail_help.xhtml#digital_signing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_security_settings_encrypt" nc:name="Encryption"  nc:link="mail_help.xhtml#encryption"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -471,16 +471,16 @@
 <rdf:Description about="#mail-doc-mailprefs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_prefs_general" nc:name="Mail and Newsgroups" nc:link="chrome://help/locale/mail_help.xhtml#mail_and_newsgroups"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_windows" nc:name="Windows" nc:link="chrome://help/locale/mail_help.xhtml#windows"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_display" nc:name="Message Display" nc:link="chrome://help/locale/mail_help.xhtml#message_display"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_notifications" nc:name="Notifications" nc:link="chrome://help/locale/mail_help.xhtml#notifications"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_messages" nc:name="Composition" nc:link="chrome://help/locale/mail_help.xhtml#composition"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_formatting" nc:name="Send Format" nc:link="chrome://help/locale/mail_help.xhtml#send_format"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_addressing" nc:name="Addressing" nc:link="chrome://help/locale/mail_help.xhtml#addressing_preferences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-prefs-labels" nc:name="Labels" nc:link="chrome://help/locale/mail_help.xhtml#labels"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-prefs-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.xhtml#return_receipts_preferences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_offline" nc:name="Offline and Disk Space" nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_general" nc:name="Mail and Newsgroups" nc:link="mail_help.xhtml#mail_and_newsgroups"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_windows" nc:name="Windows" nc:link="mail_help.xhtml#windows"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_display" nc:name="Message Display" nc:link="mail_help.xhtml#message_display"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_notifications" nc:name="Notifications" nc:link="mail_help.xhtml#notifications"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_messages" nc:name="Composition" nc:link="mail_help.xhtml#composition"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_formatting" nc:name="Send Format" nc:link="mail_help.xhtml#send_format"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_addressing" nc:name="Addressing" nc:link="mail_help.xhtml#addressing_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-prefs-labels" nc:name="Labels" nc:link="mail_help.xhtml#labels"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-prefs-receipts" nc:name="Return Receipts" nc:link="mail_help.xhtml#return_receipts_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_offline" nc:name="Offline and Disk Space" nc:link="mail_help.xhtml#offline_and_disk_space_preferences"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -490,14 +490,14 @@
 <rdf:Description about="#comp">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc"	nc:name="Starting a New Page"  nc:link="chrome://help/locale/composer_help.xhtml#starting_a_new_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="page_change" nc:name="Formatting Your Web Pages"  nc:link="chrome://help/locale/composer_help.xhtml#formatting_your_web_pages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-table" nc:name="Adding Tables to Your Web Page"  nc:link="chrome://help/locale/composer_help.xhtml#adding_tables_to_your_web_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-image" nc:name="Adding Images to Your Web Page"  nc:link="chrome://help/locale/composer_help.xhtml#adding_images_to_your_web_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-page" nc:name="Setting Page Properties"  nc:link="chrome://help/locale/composer_help.xhtml#setting_page_properties"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="link_properties" nc:name="Creating Links"  nc:link="chrome://help/locale/composer_help.xhtml#creating_links_in_composer"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish" nc:name="Publishing Your Pages"  nc:link="chrome://help/locale/composer_help.xhtml#publishing_your_pages_on_the_web"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-prefs" nc:name="Composer Preferences"  nc:link="chrome://help/locale/composer_help.xhtml#composer_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc"	nc:name="Starting a New Page"  nc:link="composer_help.xhtml#starting_a_new_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="page_change" nc:name="Formatting Your Web Pages"  nc:link="composer_help.xhtml#formatting_your_web_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table" nc:name="Adding Tables to Your Web Page"  nc:link="composer_help.xhtml#adding_tables_to_your_web_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-image" nc:name="Adding Images to Your Web Page"  nc:link="composer_help.xhtml#adding_images_to_your_web_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-page" nc:name="Setting Page Properties"  nc:link="composer_help.xhtml#setting_page_properties"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="link_properties" nc:name="Creating Links"  nc:link="composer_help.xhtml#creating_links_in_composer"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish" nc:name="Publishing Your Pages"  nc:link="composer_help.xhtml#publishing_your_pages_on_the_web"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-prefs" nc:name="Composer Preferences"  nc:link="composer_help.xhtml#composer_preferences"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -505,8 +505,8 @@
   <rdf:Description about="#comp-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-create" nc:name="Creating a New Page"  nc:link="chrome://help/locale/composer_help.xhtml#creating_a_new_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-save" nc:name="Saving and Browsing Your Page"  nc:link="chrome://help/locale/composer_help.xhtml#saving_and_browsing_your_new_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-create" nc:name="Creating a New Page"  nc:link="composer_help.xhtml#creating_a_new_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-save" nc:name="Saving and Browsing Your Page"  nc:link="composer_help.xhtml#saving_and_browsing_your_new_page"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -514,16 +514,16 @@
   <rdf:Description about="#page_change">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="props-para" nc:name="Formatting Paragraphs, Headings, and Lists"  nc:link="chrome://help/locale/composer_help.xhtml#formatting_paragraphs_headings_and_lists"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="lists" nc:name="Working with Lists"  nc:link="chrome://help/locale/composer_help.xhtml#working_with_lists"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="char" nc:name="Changing Text Color, Style, and Font"  nc:link="chrome://help/locale/composer_help.xhtml#changing_text_color_style_and_font"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="style-remove" nc:name="Removing or Discontinuing Text Styles"  nc:link="chrome://help/locale/composer_help.xhtml#removing_or_discontinuing_text_styles"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="find-text" nc:name="Finding and Replacing Text"  nc:link="chrome://help/locale/composer_help.xhtml#finding_and_replacing_text"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="props-hrule" nc:name="Inserting Horizontal Lines"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_horizontal_lines"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="special-chars" nc:name="Inserting Special Characters"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_special_characters"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="html-tag" nc:name="Inserting HTML Elements and Attributes"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_html_elements_and_attributes"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="validate-html" nc:name="Validating the HTML"  nc:link="chrome://help/locale/composer_help.xhtml#validating_the_html"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-choose" nc:name="Choosing the Right Editing Mode"  nc:link="chrome://help/locale/composer_help.xhtml#choosing_the_right_editing_mode"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="props-para" nc:name="Formatting Paragraphs, Headings, and Lists"  nc:link="composer_help.xhtml#formatting_paragraphs_headings_and_lists"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="lists" nc:name="Working with Lists"  nc:link="composer_help.xhtml#working_with_lists"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="char" nc:name="Changing Text Color, Style, and Font"  nc:link="composer_help.xhtml#changing_text_color_style_and_font"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="style-remove" nc:name="Removing or Discontinuing Text Styles"  nc:link="composer_help.xhtml#removing_or_discontinuing_text_styles"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="find-text" nc:name="Finding and Replacing Text"  nc:link="composer_help.xhtml#finding_and_replacing_text"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="props-hrule" nc:name="Inserting Horizontal Lines"  nc:link="composer_help.xhtml#inserting_horizontal_lines"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="special-chars" nc:name="Inserting Special Characters"  nc:link="composer_help.xhtml#inserting_special_characters"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="html-tag" nc:name="Inserting HTML Elements and Attributes"  nc:link="composer_help.xhtml#inserting_html_elements_and_attributes"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="validate-html" nc:name="Validating the HTML"  nc:link="composer_help.xhtml#validating_the_html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-choose" nc:name="Choosing the Right Editing Mode"  nc:link="composer_help.xhtml#choosing_the_right_editing_mode"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -531,7 +531,7 @@
 <rdf:Description about="#props-hrule">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="props-hrule-horiz" nc:name="Setting Horizontal Line Properties"  nc:link="chrome://help/locale/composer_help.xhtml#setting_horizontal_line_properties"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="props-hrule-horiz" nc:name="Setting Horizontal Line Properties"  nc:link="composer_help.xhtml#setting_horizontal_line_properties"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -539,7 +539,7 @@
 <rdf:Description about="#html-tag">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="advanced_property_editor" nc:name="Using the Advanced Property Editor"  nc:link="chrome://help/locale/composer_help.xhtml#using_the_advanced_property_editor"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="advanced_property_editor" nc:name="Using the Advanced Property Editor"  nc:link="composer_help.xhtml#using_the_advanced_property_editor"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -547,12 +547,12 @@
   <rdf:Description about="#comp-doc-table">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-table-insert" nc:name="Inserting a Table"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_a_table"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="table_properties" nc:name="Changing a Table's Properties"  nc:link="chrome://help/locale/composer_help.xhtml#changing_a_tables_properties"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-table-add" nc:name="Adding/Deleting Rows, Columns, and Cells"  nc:link="chrome://help/locale/composer_help.xhtml#adding_and_deleting_rows_columns_and_cells"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-table-select" nc:name="Selecting Table Elements"  nc:link="chrome://help/locale/composer_help.xhtml#selecting_table_elements"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-table-copy" nc:name="Moving, Copying, and Deleting Tables"  nc:link="chrome://help/locale/composer_help.xhtml#moving_copying_and_deleting_tables"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-tableize" nc:name="Converting Text into a Table"  nc:link="chrome://help/locale/composer_help.xhtml#converting_text_into_a_table"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-insert" nc:name="Inserting a Table"  nc:link="composer_help.xhtml#inserting_a_table"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="table_properties" nc:name="Changing a Table's Properties"  nc:link="composer_help.xhtml#changing_a_tables_properties"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-add" nc:name="Adding/Deleting Rows, Columns, and Cells"  nc:link="composer_help.xhtml#adding_and_deleting_rows_columns_and_cells"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-select" nc:name="Selecting Table Elements"  nc:link="composer_help.xhtml#selecting_table_elements"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-copy" nc:name="Moving, Copying, and Deleting Tables"  nc:link="composer_help.xhtml#moving_copying_and_deleting_tables"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-tableize" nc:name="Converting Text into a Table"  nc:link="composer_help.xhtml#converting_text_into_a_table"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -560,7 +560,7 @@
 <rdf:Description about="#comp-doc-table-add">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-table-change-default" nc:name="Changing the Default Table Editing Behavior"  nc:link="chrome://help/locale/composer_help.xhtml#changing_the_default_table_editing_behavior"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-table-change-default" nc:name="Changing the Default Table Editing Behavior"  nc:link="composer_help.xhtml#changing_the_default_table_editing_behavior"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -568,8 +568,8 @@
   <rdf:Description about="#comp-doc-image">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-image-insert" nc:name="Inserting an Image into Your Page"  nc:link="chrome://help/locale/composer_help.xhtml#inserting_an_image_into_your_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="image_properties" nc:name="Editing Image Properties"  nc:link="chrome://help/locale/composer_help.xhtml#editing_image_properties"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-image-insert" nc:name="Inserting an Image into Your Page"  nc:link="composer_help.xhtml#inserting_an_image_into_your_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="image_properties" nc:name="Editing Image Properties"  nc:link="composer_help.xhtml#editing_image_properties"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -577,8 +577,8 @@
   <rdf:Description about="#comp-doc-page">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-page-props" nc:name="Setting Page Properties and Meta Tags"  nc:link="chrome://help/locale/composer_help.xhtml#setting_page_properties_and_meta_tags"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-page-appear" nc:name="Setting Colors and Background"  nc:link="chrome://help/locale/composer_help.xhtml#setting_page_colors_and_backgrounds"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-page-props" nc:name="Setting Page Properties and Meta Tags"  nc:link="composer_help.xhtml#setting_page_properties_and_meta_tags"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-page-appear" nc:name="Setting Colors and Background"  nc:link="composer_help.xhtml#setting_page_colors_and_backgrounds"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -586,10 +586,10 @@
   <rdf:Description about="#link_properties">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-links-inpage" nc:name="Within the Same Page"  nc:link="chrome://help/locale/composer_help.xhtml#creating_links_within_the_same_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-links-others" nc:name="To Other Pages"  nc:link="chrome://help/locale/composer_help.xhtml#creating_links_to_other_pages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-links-images" nc:name="Using Images as Links"  nc:link="chrome://help/locale/composer_help.xhtml#using_images_as_links"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-links-remove" nc:name="Removing or Discontinuing Links"  nc:link="chrome://help/locale/composer_help.xhtml#removing_or_discontinuing_links"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-links-inpage" nc:name="Within the Same Page"  nc:link="composer_help.xhtml#creating_links_within_the_same_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-links-others" nc:name="To Other Pages"  nc:link="composer_help.xhtml#creating_links_to_other_pages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-links-images" nc:name="Using Images as Links"  nc:link="composer_help.xhtml#using_images_as_links"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-links-remove" nc:name="Removing or Discontinuing Links"  nc:link="composer_help.xhtml#removing_or_discontinuing_links"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -597,14 +597,14 @@
 <rdf:Description about="#comp-doc-publish">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-prepare" nc:name="Publishing a Document"  nc:link="chrome://help/locale/composer_help.xhtml#publishing_a_document"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-update" nc:name="Updating a Published Document"  nc:link="chrome://help/locale/composer_help.xhtml#updating_a_published_document"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-as" nc:name="Changing the File Name or Publishing Location"  nc:link="chrome://help/locale/composer_help.xhtml#changing_the_filename_or_publishing_location"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-newsite" nc:name="Creating a New Publishing Site"  nc:link="chrome://help/locale/composer_help.xhtml#creating_a_new_publishing_site"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-default" nc:name="Choosing the Default Publishing Site"  nc:link="chrome://help/locale/composer_help.xhtml#choosing_the_default_publishing_site"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-delete" nc:name="Deleting a Publishing Site"  nc:link="chrome://help/locale/composer_help.xhtml#deleting_a_publishing_site"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting" nc:name="Solving Common Publishing Problems"  nc:link="chrome://help/locale/composer_help.xhtml#solving_common_publishing_problems"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-settings" nc:name="Publishing Settings"  nc:link="chrome://help/locale/composer_help.xhtml#publishing_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-prepare" nc:name="Publishing a Document"  nc:link="composer_help.xhtml#publishing_a_document"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-update" nc:name="Updating a Published Document"  nc:link="composer_help.xhtml#updating_a_published_document"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-as" nc:name="Changing the File Name or Publishing Location"  nc:link="composer_help.xhtml#changing_the_filename_or_publishing_location"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-newsite" nc:name="Creating a New Publishing Site"  nc:link="composer_help.xhtml#creating_a_new_publishing_site"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-default" nc:name="Choosing the Default Publishing Site"  nc:link="composer_help.xhtml#choosing_the_default_publishing_site"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-delete" nc:name="Deleting a Publishing Site"  nc:link="composer_help.xhtml#deleting_a_publishing_site"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting" nc:name="Solving Common Publishing Problems"  nc:link="composer_help.xhtml#solving_common_publishing_problems"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-settings" nc:name="Publishing Settings"  nc:link="composer_help.xhtml#publishing_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -612,7 +612,7 @@
 <rdf:Description about="#comp-doc-publish-prepare">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-tips" nc:name="Publishing Tips"  nc:link="chrome://help/locale/composer_help.xhtml#tips_for_avoiding_broken_links_or_missing_images"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-tips" nc:name="Publishing Tips"  nc:link="composer_help.xhtml#tips_for_avoiding_broken_links_or_missing_images"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -620,9 +620,9 @@
 <rdf:Description about="#comp-doc-publish-troubleshooting">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-settings" nc:name="Verifying Your Publishing Settings"  nc:link="chrome://help/locale/composer_help.xhtml#verifying_your_publishing_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-files" nc:name="Checking Your File Names"  nc:link="chrome://help/locale/composer_help.xhtml#checking_your_filenames"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-errors" nc:name="Fixing Publishing Errors"  nc:link="chrome://help/locale/composer_help.xhtml#fixing_publishing_errors"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-settings" nc:name="Verifying Your Publishing Settings"  nc:link="composer_help.xhtml#verifying_your_publishing_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-files" nc:name="Checking Your File Names"  nc:link="composer_help.xhtml#checking_your_filenames"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-troubleshooting-errors" nc:name="Fixing Publishing Errors"  nc:link="composer_help.xhtml#fixing_publishing_errors"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -630,9 +630,9 @@
 <rdf:Description about="#comp-doc-publish-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-publishtab" nc:name="Publish Page - Publish"  nc:link="chrome://help/locale/composer_help.xhtml#publish_page_publish"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-settingstab" nc:name="Publish Page - Settings"  nc:link="chrome://help/locale/composer_help.xhtml#publish_page_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="comp-doc-publish-site-settings" nc:name="Publish Settings"  nc:link="chrome://help/locale/composer_help.xhtml#publish_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-publishtab" nc:name="Publish Page - Publish"  nc:link="composer_help.xhtml#publish_page_publish"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-settingstab" nc:name="Publish Page - Settings"  nc:link="composer_help.xhtml#publish_page_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="comp-doc-publish-site-settings" nc:name="Publish Settings"  nc:link="composer_help.xhtml#publish_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -640,8 +640,8 @@
   <rdf:Description about="#comp-doc-prefs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="composer_prefs_general" nc:name="Composer"  nc:link="chrome://help/locale/composer_help.xhtml#composer"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="composer_prefs_newpage" nc:name="New Page Settings" nc:link="chrome://help/locale/composer_help.xhtml#new_page_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="composer_prefs_general" nc:name="Composer"  nc:link="composer_help.xhtml#composer"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="composer_prefs_newpage" nc:name="New Page Settings" nc:link="composer_help.xhtml#new_page_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -651,13 +651,13 @@
 <rdf:Description about="#cust">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-doc" nc:name="Sidebar"  nc:link="chrome://help/locale/customize_help.xhtml#sidebar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed" nc:name="Tabbed Browsing"  nc:link="chrome://help/locale/customize_help.xhtml#tabbed_browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="chrome://help/locale/customize_help.xhtml#changing_fonts_colors_and_themes"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-toolbar" nc:name="Toolbars"  nc:link="chrome://help/locale/customize_help.xhtml#toolbars"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk" nc:name="Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#bookmarks"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Mozilla Starts Up"  nc:link="chrome://help/locale/customize_help.xhtml#specifying_how_mozilla_starts_up"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-settings" nc:name="Navigator Settings"  nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#navigator_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-doc" nc:name="Sidebar"  nc:link="customize_help.xhtml#sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed" nc:name="Tabbed Browsing"  nc:link="customize_help.xhtml#tabbed_browsing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="customize_help.xhtml#changing_fonts_colors_and_themes"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-toolbar" nc:name="Toolbars"  nc:link="customize_help.xhtml#toolbars"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk" nc:name="Bookmarks"  nc:link="customize_help.xhtml#bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Mozilla Starts Up"  nc:link="customize_help.xhtml#specifying_how_mozilla_starts_up"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-settings" nc:name="Navigator Settings"  nc:link="cs_nav_prefs_appearance.xhtml#navigator_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -665,13 +665,13 @@
  <rdf:Description about="#cust-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is Sidebar?"  nc:link="chrome://help/locale/customize_help.xhtml#what_is_sidebar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using Sidebar"  nc:link="chrome://help/locale/customize_help.xhtml#using_sidebar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#adding_sidebar_tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#customizing_individual_sidebar_tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#reorganizing_sidebar_tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#removing_sidebar_tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing"  nc:link="chrome://help/locale/customize_help.xhtml#opening_closing_and_resizing_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is Sidebar?"  nc:link="customize_help.xhtml#what_is_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using Sidebar"  nc:link="customize_help.xhtml#using_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding Sidebar Tabs"  nc:link="customize_help.xhtml#adding_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="customize_help.xhtml#customizing_individual_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing Sidebar Tabs"  nc:link="customize_help.xhtml#reorganizing_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing Sidebar Tabs"  nc:link="customize_help.xhtml#removing_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing"  nc:link="customize_help.xhtml#opening_closing_and_resizing_sidebar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -679,11 +679,11 @@
 <rdf:Description about="#cust-tabbed">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-tabbed-whatis" nc:name="What is Tabbed Browsing?"  nc:link="chrome://help/locale/customize_help.xhtml#what_is_tabbed_browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedsetting" nc:name="Setting up Tabbed Browsing"  nc:link="chrome://help/locale/customize_help.xhtml#setting_up_tabbed_browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedopening" nc:name="Opening Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#opening_tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedbookmarking" nc:name="Bookmarking Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#bookmarking_tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedclosing" nc:name="Closing Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#closing_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-whatis" nc:name="What is Tabbed Browsing?"  nc:link="customize_help.xhtml#what_is_tabbed_browsing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedsetting" nc:name="Setting up Tabbed Browsing"  nc:link="customize_help.xhtml#setting_up_tabbed_browsing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedopening" nc:name="Opening Tabs"  nc:link="customize_help.xhtml#opening_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedbookmarking" nc:name="Bookmarking Tabs"  nc:link="customize_help.xhtml#bookmarking_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-tabbed-tabbedclosing" nc:name="Closing Tabs"  nc:link="customize_help.xhtml#closing_tabs"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -691,9 +691,9 @@
 <rdf:Description about="#cust-font">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-fonts" nc:name="Changing the Default Font"  nc:link="chrome://help/locale/customize_help.xhtml#changing_the_default_fonts"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-colors" nc:name="Changing the Default Colors"  nc:link="chrome://help/locale/customize_help.xhtml#changing_the_default_colors"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-themes" nc:name="Changing the Theme"  nc:link="chrome://help/locale/customize_help.xhtml#changing_the_theme"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-fonts" nc:name="Changing the Default Font"  nc:link="customize_help.xhtml#changing_the_default_fonts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-colors" nc:name="Changing the Default Colors"  nc:link="customize_help.xhtml#changing_the_default_colors"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-themes" nc:name="Changing the Theme"  nc:link="customize_help.xhtml#changing_the_theme"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -701,11 +701,11 @@
 <rdf:Description about="#cust-toolbar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-main" nc:name="Navigation Toolbar"  nc:link="chrome://help/locale/customize_help.xhtml#navigation_toolbar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-personal" nc:name="Personal Toolbar"  nc:link="chrome://help/locale/customize_help.xhtml#personal_toolbar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-status" nc:name="Status Bar"  nc:link="chrome://help/locale/customize_help.xhtml#status_bar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-taskbar" nc:name="Component Bar"  nc:link="chrome://help/locale/customize_help.xhtml#component_bar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-hide" nc:name="Hiding a Toolbar"  nc:link="chrome://help/locale/customize_help.xhtml#hiding_a_toolbar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-main" nc:name="Navigation Toolbar"  nc:link="customize_help.xhtml#navigation_toolbar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-personal" nc:name="Personal Toolbar"  nc:link="customize_help.xhtml#personal_toolbar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-status" nc:name="Status Bar"  nc:link="customize_help.xhtml#status_bar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-taskbar" nc:name="Component Bar"  nc:link="customize_help.xhtml#component_bar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-hide" nc:name="Hiding a Toolbar"  nc:link="customize_help.xhtml#hiding_a_toolbar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -713,13 +713,13 @@
 <rdf:Description about="#cust-bkmk">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-bkmk-intro" nc:name="What Are Bookmarks?"  nc:link="chrome://help/locale/customize_help.xhtml#what_are_bookmarks"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-use" nc:name="Using Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#using_bookmarks"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-create" nc:name="Creating New Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#creating_new_bookmarks"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-organize" nc:name="Organizing Your Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#organizing_your_bookmarks"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-change" nc:name="Changing Individual Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#changing_individual_bookmarks"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-search" nc:name="Searching Your Bookmarks"  nc:link="chrome://help/locale/customize_help.xhtml#searching_your_bookmarks"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-bkmk-multiple" nc:name="Exporting or Importing a Bookmark List"  nc:link="chrome://help/locale/customize_help.xhtml#exporting_or_importing_a_bookmark_list"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-intro" nc:name="What Are Bookmarks?"  nc:link="customize_help.xhtml#what_are_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-use" nc:name="Using Bookmarks"  nc:link="customize_help.xhtml#using_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-create" nc:name="Creating New Bookmarks"  nc:link="customize_help.xhtml#creating_new_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-organize" nc:name="Organizing Your Bookmarks"  nc:link="customize_help.xhtml#organizing_your_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-change" nc:name="Changing Individual Bookmarks"  nc:link="customize_help.xhtml#changing_individual_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-search" nc:name="Searching Your Bookmarks"  nc:link="customize_help.xhtml#searching_your_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-bkmk-multiple" nc:name="Exporting or Importing a Bookmark List"  nc:link="customize_help.xhtml#exporting_or_importing_a_bookmark_list"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -727,9 +727,9 @@
 <rdf:Description about="#cust-page">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-startpage" nc:name="Specifying a Starting Page"  nc:link="chrome://help/locale/customize_help.xhtml#specifying_a_starting_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-home" nc:name="Changing Your Home Page"  nc:link="chrome://help/locale/customize_help.xhtml#changing_your_home_page"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-start" nc:name="Specifying Which Components Open at Launch"  nc:link="chrome://help/locale/customize_help.xhtml#specifying_which_components_open_at_launch"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-startpage" nc:name="Specifying a Starting Page"  nc:link="customize_help.xhtml#specifying_a_starting_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-home" nc:name="Changing Your Home Page"  nc:link="customize_help.xhtml#changing_your_home_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-start" nc:name="Specifying Which Components Open at Launch"  nc:link="customize_help.xhtml#specifying_which_components_open_at_launch"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -737,9 +737,9 @@
 <rdf:Description about="#nav-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="appearance_pref" nc:name="Appearance" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#appearance_preferences"/> </rdf:li>
-        <rdf:li><rdf:Description ID="navigator_pref_navigator" nc:name="Navigator" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#navigator_preferences"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_advanced" nc:name="Advanced" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref" nc:name="Appearance" nc:link="cs_nav_prefs_appearance.xhtml#appearance_preferences"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_navigator" nc:name="Navigator" nc:link="cs_nav_prefs_navigator.xhtml#navigator_preferences"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_advanced" nc:name="Advanced" nc:link="cs_nav_prefs_advanced.xhtml"/> </rdf:li>
 
       </rdf:Seq>
     </nc:subheadings>
@@ -748,10 +748,10 @@
 <rdf:Description about="#appearance_pref">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="appearance_pref_fonts" nc:name="Fonts" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#fonts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="appearance_pref_colors" nc:name="Colors" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#colors"/> </rdf:li>
-        <rdf:li><rdf:Description ID="appearance_pref_themes" nc:name="Themes" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#themes"/> </rdf:li>
-        <rdf:li><rdf:Description ID="appearance_pref_content_packs" nc:name="Languages/Content" nc:link="chrome://help/locale/cs_nav_prefs_appearance.xhtml#languages_content"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="appearance_pref_fonts" nc:name="Fonts" nc:link="cs_nav_prefs_appearance.xhtml#fonts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref_colors" nc:name="Colors" nc:link="cs_nav_prefs_appearance.xhtml#colors"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref_themes" nc:name="Themes" nc:link="cs_nav_prefs_appearance.xhtml#themes"/> </rdf:li>
+        <rdf:li><rdf:Description ID="appearance_pref_content_packs" nc:name="Languages/Content" nc:link="cs_nav_prefs_appearance.xhtml#languages_content"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -759,13 +759,13 @@
 <rdf:Description about="#navigator_pref_navigator">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="navigator_pref_history" nc:name="History" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#history"/> </rdf:li>
-        <rdf:li><rdf:Description ID="navigator_pref_languages" nc:name="Languages" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#languages"/> </rdf:li>
-        <rdf:li><rdf:Description ID="navigator_pref_helper_applications" nc:name="Helper Applications" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#helper_applications"/> </rdf:li>
-        <rdf:li><rdf:Description ID="navigator_pref_smart_browsing" nc:name="Smart Browsing" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#smart_browsing"/> </rdf:li>
-        <rdf:li><rdf:Description ID="navigator_pref_internet_searching" nc:name="Internet Search" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#internet_search"/> </rdf:li>
-        <rdf:li><rdf:Description ID="navigator_pref_tabbed_browsing" nc:name="Tabbed Browsing" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#tabbed_browsing"/> </rdf:li>
-        <rdf:li><rdf:Description ID="navigator_pref_downloads" nc:name="Downloads" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#downloads"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_history" nc:name="History" nc:link="cs_nav_prefs_navigator.xhtml#history"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_languages" nc:name="Languages" nc:link="cs_nav_prefs_navigator.xhtml#languages"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_helper_applications" nc:name="Helper Applications" nc:link="cs_nav_prefs_navigator.xhtml#helper_applications"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_smart_browsing" nc:name="Smart Browsing" nc:link="cs_nav_prefs_navigator.xhtml#smart_browsing"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_internet_searching" nc:name="Internet Search" nc:link="cs_nav_prefs_navigator.xhtml#internet_search"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_tabbed_browsing" nc:name="Tabbed Browsing" nc:link="cs_nav_prefs_navigator.xhtml#tabbed_browsing"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_downloads" nc:name="Downloads" nc:link="cs_nav_prefs_navigator.xhtml#downloads"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -773,7 +773,7 @@
 <rdf:Description about="#navigator_pref_smart_browsing">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="navigator_pref_autocomplete-adv" nc:name="Auto-complete" nc:link="chrome://help/locale/cs_nav_prefs_navigator.xhtml#location_bar_autocomplete"/> </rdf:li>
+        <rdf:li><rdf:Description ID="navigator_pref_autocomplete-adv" nc:name="Auto-complete" nc:link="cs_nav_prefs_navigator.xhtml#location_bar_autocomplete"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -781,15 +781,15 @@
 <rdf:Description about="#advanced_pref_advanced">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="advanced_pref_scripts" nc:name="Scripts &amp; Plug-ins" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#scripts_and_plug-ins"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_keyboard_nav" nc:name="Keyboard Navigation" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#keyboard_navigation"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_cache" nc:name="Cache" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#cache"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_proxies" nc:name="Proxies" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#proxies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_http_networking" nc:name="HTTP Networking" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#http_networking"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_installation" nc:name="Software Installation" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#software_installation"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_mouse_wheel" nc:name="Mouse Wheel" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#mouse_wheel"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_dom_inspector" nc:name="DOM Inspector" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#dom_inspector"/> </rdf:li>
-        <rdf:li><rdf:Description ID="advanced_pref_system" nc:name="System" nc:link="chrome://help/locale/cs_nav_prefs_advanced.xhtml#system"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_scripts" nc:name="Scripts &amp; Plug-ins" nc:link="cs_nav_prefs_advanced.xhtml#scripts_and_plug-ins"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_keyboard_nav" nc:name="Keyboard Navigation" nc:link="cs_nav_prefs_advanced.xhtml#keyboard_navigation"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_cache" nc:name="Cache" nc:link="cs_nav_prefs_advanced.xhtml#cache"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_proxies" nc:name="Proxies" nc:link="cs_nav_prefs_advanced.xhtml#proxies"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_http_networking" nc:name="HTTP Networking" nc:link="cs_nav_prefs_advanced.xhtml#http_networking"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_installation" nc:name="Software Installation" nc:link="cs_nav_prefs_advanced.xhtml#software_installation"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_mouse_wheel" nc:name="Mouse Wheel" nc:link="cs_nav_prefs_advanced.xhtml#mouse_wheel"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_dom_inspector" nc:name="DOM Inspector" nc:link="cs_nav_prefs_advanced.xhtml#dom_inspector"/> </rdf:li>
+        <rdf:li><rdf:Description ID="advanced_pref_system" nc:name="System" nc:link="cs_nav_prefs_advanced.xhtml#system"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -799,14 +799,14 @@
 <rdf:Description about="#using-priv-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.xhtml#privacy_on_the_internet"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-cookies" nc:name="Using the Cookie Manager" nc:link="chrome://help/locale/using_priv_help.xhtml#using_the_cookie_manager"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password" nc:name="Using the Password Manager" nc:link="chrome://help/locale/using_priv_help.xhtml#using_the_password_manager"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-forms" nc:name="Using the Form Manager" nc:link="chrome://help/locale/using_priv_help.xhtml#using_the_form_manager"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-encrypt" nc:name="Encrypting Stored Sensitive Information" nc:link="chrome://help/locale/using_priv_help.xhtml#encrypting_stored_sensitive_information"/> </rdf:li>
-        <rdf:li><rdf:Description ID="images-help-managing" nc:name="Managing Images" nc:link="chrome://help/locale/using_priv_help.xhtml#managing_images"/> </rdf:li>
-        <rdf:li><rdf:Description ID="pop_up_blocking" nc:name="Controlling Popups" nc:link="chrome://help/locale/cs_priv_prefs_popup.xhtml"/> </rdf:li>
-        <rdf:li><rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences" nc:link="chrome://help/locale/privsec_help.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="privacy_help.xhtml#privacy_on_the_internet"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-cookies" nc:name="Using the Cookie Manager" nc:link="using_priv_help.xhtml#using_the_cookie_manager"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password" nc:name="Using the Password Manager" nc:link="using_priv_help.xhtml#using_the_password_manager"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-forms" nc:name="Using the Form Manager" nc:link="using_priv_help.xhtml#using_the_form_manager"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-encrypt" nc:name="Encrypting Stored Sensitive Information" nc:link="using_priv_help.xhtml#encrypting_stored_sensitive_information"/> </rdf:li>
+        <rdf:li><rdf:Description ID="images-help-managing" nc:name="Managing Images" nc:link="using_priv_help.xhtml#managing_images"/> </rdf:li>
+        <rdf:li><rdf:Description ID="pop_up_blocking" nc:name="Controlling Popups" nc:link="cs_priv_prefs_popup.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences" nc:link="privsec_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -814,10 +814,10 @@
 <rdf:Description about="#privacy-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Website?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_information_does_my_browser_give_to_a_web_site"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_are_cookies_and_how_do_they_work"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-email" nc:name="How Can I Control Web Pages in Email Messages?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_can_i_control_web_pages_in_email_messages"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_do_i_make_sure_unauthorized_people_dont_use_information_about_me"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Website?"  		nc:link="privacy_help.xhtml#what_information_does_my_browser_give_to_a_web_site"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="privacy_help.xhtml#what_are_cookies_and_how_do_they_work"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-email" nc:name="How Can I Control Web Pages in Email Messages?"  		nc:link="privacy_help.xhtml#how_can_i_control_web_pages_in_email_messages"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="privacy_help.xhtml#how_do_i_make_sure_unauthorized_people_dont_use_information_about_me"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -825,12 +825,12 @@
 <rdf:Description about="#using-priv-help-cookies">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-priv-help-cookies-manage" nc:name="Enabling &amp; Disabling Cookies" nc:link="chrome://help/locale/using_priv_help.xhtml#enabling_and_disabling_cookies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-cookies-site" nc:name="Managing Cookies Site-By-Site" nc:link="chrome://help/locale/using_priv_help.xhtml#managing_cookies_site-by-site"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-cookies-view" nc:name="Viewing Cookies" nc:link="chrome://help/locale/using_priv_help.xhtml#viewing_cookies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-cookies-remove" nc:name="Removing Cookies" nc:link="chrome://help/locale/using_priv_help.xhtml#removing_cookies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-cookies-policies" nc:name="Setting Privacy Levels" nc:link="chrome://help/locale/using_priv_help.xhtml#setting_privacy_levels"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-cookies-settings" nc:name="Cookie Manager Settings" nc:link="chrome://help/locale/using_priv_help.xhtml#cookie_manager_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-cookies-manage" nc:name="Enabling &amp; Disabling Cookies" nc:link="using_priv_help.xhtml#enabling_and_disabling_cookies"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-cookies-site" nc:name="Managing Cookies Site-By-Site" nc:link="using_priv_help.xhtml#managing_cookies_site-by-site"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-cookies-view" nc:name="Viewing Cookies" nc:link="using_priv_help.xhtml#viewing_cookies"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-cookies-remove" nc:name="Removing Cookies" nc:link="using_priv_help.xhtml#removing_cookies"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-cookies-policies" nc:name="Setting Privacy Levels" nc:link="using_priv_help.xhtml#setting_privacy_levels"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-cookies-settings" nc:name="Cookie Manager Settings" nc:link="using_priv_help.xhtml#cookie_manager_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -838,11 +838,11 @@
 <rdf:Description about="#using-priv-help-cookies-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="cookies_prefs" nc:name="Cookie Preferences" nc:link="chrome://help/locale/using_priv_help.xhtml#cookies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cookies_stored" nc:name="Stored Cookies" nc:link="chrome://help/locale/using_priv_help.xhtml#stored_cookies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cookie_sites" nc:name="Cookie Sites" nc:link="chrome://help/locale/using_priv_help.xhtml#cookie_sites"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy_levels" nc:name="Privacy Settings" nc:link="chrome://help/locale/using_priv_help.xhtml#privacy_settings"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cookie_notify" nc:name="Cookie Notification" nc:link="chrome://help/locale/using_priv_help.xhtml#cookie_notification"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cookies_prefs" nc:name="Cookie Preferences" nc:link="using_priv_help.xhtml#cookies"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cookies_stored" nc:name="Stored Cookies" nc:link="using_priv_help.xhtml#stored_cookies"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cookie_sites" nc:name="Cookie Sites" nc:link="using_priv_help.xhtml#cookie_sites"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy_levels" nc:name="Privacy Settings" nc:link="using_priv_help.xhtml#privacy_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cookie_notify" nc:name="Cookie Notification" nc:link="using_priv_help.xhtml#cookie_notification"/> </rdf:li>
 
       </rdf:Seq>
     </nc:subheadings>
@@ -851,8 +851,8 @@
 <rdf:Description about="#privacy_levels">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="privacy_levels-level" nc:name="Level of Privacy" nc:link="chrome://help/locale/using_priv_help.xhtml#level_of_privacy"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy_levels-accept" nc:name="Cookie Acceptance Policy" nc:link="chrome://help/locale/using_priv_help.xhtml#cookie_acceptance_policy"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy_levels-level" nc:name="Level of Privacy" nc:link="using_priv_help.xhtml#level_of_privacy"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy_levels-accept" nc:name="Cookie Acceptance Policy" nc:link="using_priv_help.xhtml#cookie_acceptance_policy"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -860,11 +860,11 @@
 <rdf:Description about="#using-priv-help-password">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-priv-help-password-manage" nc:name="Remembering User Names and Passwords" nc:link="chrome://help/locale/using_priv_help.xhtml#using_password_manager_to_remember_user_names_and_passwords"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-auto" nc:name="Entering Names and Passwords Automatically" nc:link="chrome://help/locale/using_priv_help.xhtml#entering_user_names_and_passwords_automatically"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-onoff" nc:name="Turning On and Off" nc:link="chrome://help/locale/using_priv_help.xhtml#turning_password_manager_on_and_off"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-view" nc:name="Managing Stored Passwords" nc:link="chrome://help/locale/using_priv_help.xhtml#viewing_and_managing_stored_passwords"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-settings" nc:name="Password Settings" nc:link="chrome://help/locale/passwords_help.xhtml#password_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-manage" nc:name="Remembering User Names and Passwords" nc:link="using_priv_help.xhtml#using_password_manager_to_remember_user_names_and_passwords"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-auto" nc:name="Entering Names and Passwords Automatically" nc:link="using_priv_help.xhtml#entering_user_names_and_passwords_automatically"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-onoff" nc:name="Turning On and Off" nc:link="using_priv_help.xhtml#turning_password_manager_on_and_off"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-view" nc:name="Managing Stored Passwords" nc:link="using_priv_help.xhtml#viewing_and_managing_stored_passwords"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-settings" nc:name="Password Settings" nc:link="passwords_help.xhtml#password_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -872,9 +872,9 @@
 <rdf:Description about="#using-priv-help-password-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="passwords_prefs" nc:name="Password Preferences" nc:link="chrome://help/locale/passwords_help.xhtml#passwords"/> </rdf:li>
-        <rdf:li><rdf:Description ID="password_mgr" nc:name="Password Manager" nc:link="chrome://help/locale/passwords_help.xhtml#password_manager"/> </rdf:li>
-        <rdf:li><rdf:Description ID="passwords_master" nc:name="Master Password Preferences" nc:link="chrome://help/locale/passwords_help.xhtml#master_passwords"/> </rdf:li>
+        <rdf:li><rdf:Description ID="passwords_prefs" nc:name="Password Preferences" nc:link="passwords_help.xhtml#passwords"/> </rdf:li>
+        <rdf:li><rdf:Description ID="password_mgr" nc:name="Password Manager" nc:link="passwords_help.xhtml#password_manager"/> </rdf:li>
+        <rdf:li><rdf:Description ID="passwords_master" nc:name="Master Password Preferences" nc:link="passwords_help.xhtml#master_passwords"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -882,9 +882,9 @@
 <rdf:Description about="#passwords_master">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="change_pwd_1" nc:name="Change Master Password" nc:link="chrome://help/locale/passwords_help.xhtml#change_master_password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-timeout" nc:name="Master Password Timeout" nc:link="chrome://help/locale/passwords_help.xhtml#master_password_timeout"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-reset" nc:name="Reset Master Password" nc:link="chrome://help/locale/passwords_help.xhtml#reset_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="change_pwd_1" nc:name="Change Master Password" nc:link="passwords_help.xhtml#change_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-timeout" nc:name="Master Password Timeout" nc:link="passwords_help.xhtml#master_password_timeout"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-password-settings-master-prefs-reset" nc:name="Reset Master Password" nc:link="passwords_help.xhtml#reset_master_password"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -892,8 +892,8 @@
 <rdf:Description about="#using-priv-help-password-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="change_pwd" nc:name="Change Master Password" nc:link="chrome://help/locale/passwords_help.xhtml#change_master_password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="reset_pwd" nc:name="Reset Master Password" nc:link="chrome://help/locale/passwords_help.xhtml#reset_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="change_pwd" nc:name="Change Master Password" nc:link="passwords_help.xhtml#change_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="reset_pwd" nc:name="Reset Master Password" nc:link="passwords_help.xhtml#reset_master_password"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -901,13 +901,13 @@
 <rdf:Description about="#using-priv-help-forms">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-priv-help-forms-saveinfo" nc:name="Saving Form Data" nc:link="chrome://help/locale/using_priv_help.xhtml#saving_form_data"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-forms-auto" nc:name="Filling Out Forms Automatically" nc:link="chrome://help/locale/using_priv_help.xhtml#filling_out_forms_automatically"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-forms-notify" nc:name="Turning off Form Manager Notification" nc:link="chrome://help/locale/using_priv_help.xhtml#turning_off_form_manager_notification"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-forms-view-edit" nc:name="Managing Stored Form Data" nc:link="chrome://help/locale/using_priv_help.xhtml#managing_stored_form_data"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-sites-view-edit" nc:name="Editing Stored Site Information" nc:link="chrome://help/locale/using_priv_help.xhtml#editing_stored_site_information"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-forms-forms" nc:name="Viewing Privacy Policies" nc:link="chrome://help/locale/using_priv_help.xhtml#viewing_privacy_policies"/> </rdf:li>
-        <rdf:li><rdf:Description ID="form_settings" nc:name="Form Settings" nc:link="chrome://help/locale/using_priv_help.xhtml#form_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-forms-saveinfo" nc:name="Saving Form Data" nc:link="using_priv_help.xhtml#saving_form_data"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-forms-auto" nc:name="Filling Out Forms Automatically" nc:link="using_priv_help.xhtml#filling_out_forms_automatically"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-forms-notify" nc:name="Turning off Form Manager Notification" nc:link="using_priv_help.xhtml#turning_off_form_manager_notification"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-forms-view-edit" nc:name="Managing Stored Form Data" nc:link="using_priv_help.xhtml#managing_stored_form_data"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-sites-view-edit" nc:name="Editing Stored Site Information" nc:link="using_priv_help.xhtml#editing_stored_site_information"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-forms-forms" nc:name="Viewing Privacy Policies" nc:link="using_priv_help.xhtml#viewing_privacy_policies"/> </rdf:li>
+        <rdf:li><rdf:Description ID="form_settings" nc:name="Form Settings" nc:link="using_priv_help.xhtml#form_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -915,10 +915,10 @@
 <rdf:Description about="#form_settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="forms_prefs" nc:name="Form Preferences" nc:link="chrome://help/locale/using_priv_help.xhtml#forms"/> </rdf:li>
-        <rdf:li><rdf:Description ID="forms_data" nc:name="Form Manager - Data" nc:link="chrome://help/locale/using_priv_help.xhtml#form_manager_data"/> </rdf:li>
-        <rdf:li><rdf:Description ID="forms_sites" nc:name="Form Manager - Sites" nc:link="chrome://help/locale/using_priv_help.xhtml#form_manager_sites"/> </rdf:li>
-        <rdf:li><rdf:Description ID="forms_prefill" nc:name="Prefill Form Data" nc:link="chrome://help/locale/using_priv_help.xhtml#prefill_form_data"/> </rdf:li>
+        <rdf:li><rdf:Description ID="forms_prefs" nc:name="Form Preferences" nc:link="using_priv_help.xhtml#forms"/> </rdf:li>
+        <rdf:li><rdf:Description ID="forms_data" nc:name="Form Manager - Data" nc:link="using_priv_help.xhtml#form_manager_data"/> </rdf:li>
+        <rdf:li><rdf:Description ID="forms_sites" nc:name="Form Manager - Sites" nc:link="using_priv_help.xhtml#form_manager_sites"/> </rdf:li>
+        <rdf:li><rdf:Description ID="forms_prefill" nc:name="Prefill Form Data" nc:link="using_priv_help.xhtml#prefill_form_data"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -926,11 +926,11 @@
 <rdf:Description about="#using-priv-help-encrypt">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-priv-help-encrypt-on" nc:name="Turning Encryption On and Off" nc:link="chrome://help/locale/using_priv_help.xhtml#turning_encryption_on_and_off"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-encrypt-master" nc:name="Setting a Master Password" nc:link="chrome://help/locale/using_priv_help.xhtml#setting_a_master_password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-encrypt-change" nc:name="Changing Your Master Password" nc:link="chrome://help/locale/using_priv_help.xhtml#changing_your_master_password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-encrypt-logout" nc:name="Logging Out of Your Master Password" nc:link="chrome://help/locale/using_priv_help.xhtml#logging_out_of_your_master_password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-priv-help-encrypt-forget" nc:name="What to Do If You Forget Your Master Password" nc:link="chrome://help/locale/using_priv_help.xhtml#what_to_do_if_you_forget_your_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-encrypt-on" nc:name="Turning Encryption On and Off" nc:link="using_priv_help.xhtml#turning_encryption_on_and_off"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-encrypt-master" nc:name="Setting a Master Password" nc:link="using_priv_help.xhtml#setting_a_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-encrypt-change" nc:name="Changing Your Master Password" nc:link="using_priv_help.xhtml#changing_your_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-encrypt-logout" nc:name="Logging Out of Your Master Password" nc:link="using_priv_help.xhtml#logging_out_of_your_master_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-priv-help-encrypt-forget" nc:name="What to Do If You Forget Your Master Password" nc:link="using_priv_help.xhtml#what_to_do_if_you_forget_your_master_password"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -938,7 +938,7 @@
 <rdf:Description about="#pop_up_blocking">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="pop_up_blocking_prefs" nc:name="Popup Preferences" nc:link="chrome://help/locale/cs_priv_prefs_popup.xhtml#privacy_and_security_preferences_popup_windows"/> </rdf:li>
+        <rdf:li><rdf:Description ID="pop_up_blocking_prefs" nc:name="Popup Preferences" nc:link="cs_priv_prefs_popup.xhtml#privacy_and_security_preferences_popup_windows"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -947,7 +947,7 @@
 <rdf:Description about="#images-help-managing">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="images_prefs" nc:name="Image Preferences" nc:link="chrome://help/locale/using_priv_help.xhtml#images"/> </rdf:li>
+        <rdf:li><rdf:Description ID="images_prefs" nc:name="Image Preferences" nc:link="using_priv_help.xhtml#images"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -957,13 +957,13 @@
 <rdf:Description about="#using-help-certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-help-certs-get" nc:name="Getting Your Own Certificate" nc:link="chrome://help/locale/using_certs_help.xhtml#getting_your_own_certificate"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-info" nc:name="Checking Security For a Web Page" nc:link="chrome://help/locale/using_certs_help.xhtml#checking_security_for_a_web_page"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-manage" nc:name="Managing Certificates" nc:link="chrome://help/locale/using_certs_help.xhtml#managing_certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-devices" nc:name="Managing Smart Cards and Other Security Devices" nc:link="chrome://help/locale/using_certs_help.xhtml#managing_smart_cards_and_other_security_devices"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-ssl" nc:name="Managing SSL Warnings and Settings" nc:link="chrome://help/locale/using_certs_help.xhtml#managing_ssl_warnings_and_settings"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-validation" nc:name="Controlling Validation" nc:link="chrome://help/locale/using_certs_help.xhtml#controlling_validation"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-context-help" nc:name="Certificate Settings" nc:link="chrome://help/locale/certs_prefs_help.xhtml#certificate_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-get" nc:name="Getting Your Own Certificate" nc:link="using_certs_help.xhtml#getting_your_own_certificate"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-info" nc:name="Checking Security For a Web Page" nc:link="using_certs_help.xhtml#checking_security_for_a_web_page"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-manage" nc:name="Managing Certificates" nc:link="using_certs_help.xhtml#managing_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-devices" nc:name="Managing Smart Cards and Other Security Devices" nc:link="using_certs_help.xhtml#managing_smart_cards_and_other_security_devices"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-ssl" nc:name="Managing SSL Warnings and Settings" nc:link="using_certs_help.xhtml#managing_ssl_warnings_and_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-validation" nc:name="Controlling Validation" nc:link="using_certs_help.xhtml#controlling_validation"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-context-help" nc:name="Certificate Settings" nc:link="certs_prefs_help.xhtml#certificate_settings"/> </rdf:li>
 
       </rdf:Seq>
     </nc:subheadings>
@@ -973,10 +973,10 @@
 <rdf:Description about="#using-help-certs-manage">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-help-certs-manage-my" nc:name="That Identify You" nc:link="chrome://help/locale/using_certs_help.xhtml#managing_certificates_that_identify_you"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-manage-others" nc:name="That Identify Others" nc:link="chrome://help/locale/using_certs_help.xhtml#managing_certificates_that_identify_others"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-manage-sites" nc:name="That Identify Websites" nc:link="chrome://help/locale/using_certs_help.xhtml#managing_certificates_that_identify_websites"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-manage-cas" nc:name="That Identify CAs" nc:link="chrome://help/locale/using_certs_help.xhtml#managing_certificates_that_identify_certificate_authorities"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-manage-my" nc:name="That Identify You" nc:link="using_certs_help.xhtml#managing_certificates_that_identify_you"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-manage-others" nc:name="That Identify Others" nc:link="using_certs_help.xhtml#managing_certificates_that_identify_others"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-manage-sites" nc:name="That Identify Websites" nc:link="using_certs_help.xhtml#managing_certificates_that_identify_websites"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-manage-cas" nc:name="That Identify CAs" nc:link="using_certs_help.xhtml#managing_certificates_that_identify_certificate_authorities"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -984,10 +984,10 @@
 <rdf:Description about="#using-help-certs-devices">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-help-certs-devices-about" nc:name="About Security Devices and Modules" nc:link="chrome://help/locale/using_certs_help.xhtml#about_security_devices_and_modules"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-devices-devices" nc:name="Using Security Devices" nc:link="chrome://help/locale/using_certs_help.xhtml#using_security_devices"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-devices-modules" nc:name="Using Security Modules" nc:link="chrome://help/locale/using_certs_help.xhtml#using_security_modules"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-devices-fips" nc:name="Enabling FIPS Mode" nc:link="chrome://help/locale/using_certs_help.xhtml#enable_fips_mode"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-devices-about" nc:name="About Security Devices and Modules" nc:link="using_certs_help.xhtml#about_security_devices_and_modules"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-devices-devices" nc:name="Using Security Devices" nc:link="using_certs_help.xhtml#using_security_devices"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-devices-modules" nc:name="Using Security Modules" nc:link="using_certs_help.xhtml#using_security_modules"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-devices-fips" nc:name="Enabling FIPS Mode" nc:link="using_certs_help.xhtml#enable_fips_mode"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -995,7 +995,7 @@
 <rdf:Description about="#using-help-certs-ssl">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="ssl-settings" nc:name="SSL Settings" nc:link="chrome://help/locale/ssl_help.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="ssl-settings" nc:name="SSL Settings" nc:link="ssl_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1003,8 +1003,8 @@
 <rdf:Description about="#ssl-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="ssl_prefs" nc:name="SSL Preferences" nc:link="chrome://help/locale/ssl_help.xhtml#privacy_and_security_preferences_ssl"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cipher_help" nc:name="Edit Ciphers" nc:link="chrome://help/locale/ssl_help.xhtml#edit_ciphers"/> </rdf:li>
+        <rdf:li><rdf:Description ID="ssl_prefs" nc:name="SSL Preferences" nc:link="ssl_help.xhtml#privacy_and_security_preferences_ssl"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cipher_help" nc:name="Edit Ciphers" nc:link="ssl_help.xhtml#edit_ciphers"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1012,10 +1012,10 @@
 <rdf:Description about="#using-help-certs-validation">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-help-certs-validation-how" nc:name="How Validation Works" nc:link="chrome://help/locale/using_certs_help.xhtml#how_validation_works"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-validation-crls" nc:name="Managing CRLs" nc:link="chrome://help/locale/using_certs_help.xhtml#managing_crls"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-validation-ocsp" nc:name="Configuring OCSP" nc:link="chrome://help/locale/using_certs_help.xhtml#configuring_ocsp"/> </rdf:li>
-        <rdf:li><rdf:Description ID="validation_prefs" nc:name="Validation Settings" nc:link="chrome://help/locale/validation_help.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-validation-how" nc:name="How Validation Works" nc:link="using_certs_help.xhtml#how_validation_works"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-validation-crls" nc:name="Managing CRLs" nc:link="using_certs_help.xhtml#managing_crls"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-validation-ocsp" nc:name="Configuring OCSP" nc:link="using_certs_help.xhtml#configuring_ocsp"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation_prefs" nc:name="Validation Settings" nc:link="validation_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1023,9 +1023,9 @@
 <rdf:Description about="#using-help-certs-validation-crls">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="using-help-certs-validation-crls-next" nc:name="About the Next Update Date" nc:link="chrome://help/locale/using_certs_help.xhtml#about_the_next_update_date"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-validation-crls-import" nc:name="Importing CRLs" nc:link="chrome://help/locale/using_certs_help.xhtml#importing_crls"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-validation-crls-view" nc:name="Viewing and Managing CRLs" nc:link="chrome://help/locale/using_certs_help.xhtml#viewing_and_managing_crls"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-validation-crls-next" nc:name="About the Next Update Date" nc:link="using_certs_help.xhtml#about_the_next_update_date"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-validation-crls-import" nc:name="Importing CRLs" nc:link="using_certs_help.xhtml#importing_crls"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-validation-crls-view" nc:name="Viewing and Managing CRLs" nc:link="using_certs_help.xhtml#viewing_and_managing_crls"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1033,10 +1033,10 @@
 <rdf:Description about="#validation_prefs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="validation-prefs" nc:name="Validation Preferences" nc:link="chrome://help/locale/validation_help.xhtml#privacy_and_security_preferences_validation"/> </rdf:li>
-        <rdf:li><rdf:Description ID="validation-crl-manage" nc:name="Manage CRLs" nc:link="chrome://help/locale/validation_help.xhtml#manage_crls"/> </rdf:li>
-        <rdf:li><rdf:Description ID="validation-crl-import" nc:name="CRL Import Status" nc:link="chrome://help/locale/validation_help.xhtml#crl_import_status"/> </rdf:li>
-        <rdf:li><rdf:Description ID="validation-crl-auto-update-prefs" nc:name="Automatic CRL Update Preferences" nc:link="chrome://help/locale/validation_help.xhtml#automatic_crl_update_preferences"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation-prefs" nc:name="Validation Preferences" nc:link="validation_help.xhtml#privacy_and_security_preferences_validation"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation-crl-manage" nc:name="Manage CRLs" nc:link="validation_help.xhtml#manage_crls"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation-crl-import" nc:name="CRL Import Status" nc:link="validation_help.xhtml#crl_import_status"/> </rdf:li>
+        <rdf:li><rdf:Description ID="validation-crl-auto-update-prefs" nc:name="Automatic CRL Update Preferences" nc:link="validation_help.xhtml#automatic_crl_update_preferences"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1044,10 +1044,10 @@
 <rdf:Description about="#using-help-certs-context-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="certs_prefs" nc:name="Certificate Preferences" nc:link="chrome://help/locale/certs_prefs_help.xhtml#privacy_and_security_preferences_certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="certs-help" nc:name="Certificate Manager" nc:link="chrome://help/locale/certs_help.xhtml"/> </rdf:li>
-        <rdf:li><rdf:Description ID="sec_devices" nc:name="Device Manager" nc:link="chrome://help/locale/certs_help.xhtml#device_manager"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cert-dialog-help" nc:name="Certificate Information and Decisions" nc:link="chrome://help/locale/cert_dialog_help.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="certs_prefs" nc:name="Certificate Preferences" nc:link="certs_prefs_help.xhtml#privacy_and_security_preferences_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="certs-help" nc:name="Certificate Manager" nc:link="certs_help.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="sec_devices" nc:name="Device Manager" nc:link="certs_help.xhtml#device_manager"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help" nc:name="Certificate Information and Decisions" nc:link="cert_dialog_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1057,10 +1057,10 @@
 <rdf:Description about="#certs-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="my_certs" nc:name="Your Certificates" nc:link="chrome://help/locale/certs_help.xhtml#your_certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="others_certs" nc:name="Other People's Certificates" nc:link="chrome://help/locale/certs_help.xhtml#other_peoples_certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="web_certs" nc:name="Website Certificates" nc:link="chrome://help/locale/certs_help.xhtml#web_site_certificates"/> </rdf:li>
-        <rdf:li><rdf:Description ID="ca_certs" nc:name="Authorities" nc:link="chrome://help/locale/certs_help.xhtml#authorities"/> </rdf:li>
+        <rdf:li><rdf:Description ID="my_certs" nc:name="Your Certificates" nc:link="certs_help.xhtml#your_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="others_certs" nc:name="Other People's Certificates" nc:link="certs_help.xhtml#other_peoples_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="web_certs" nc:name="Website Certificates" nc:link="certs_help.xhtml#web_site_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="ca_certs" nc:name="Authorities" nc:link="certs_help.xhtml#authorities"/> </rdf:li>
 
       </rdf:Seq>
     </nc:subheadings>
@@ -1069,8 +1069,8 @@
 <rdf:Description about="#my_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="cert_backup_pwd" nc:name="Choose a Certificate Backup Password" nc:link="chrome://help/locale/certs_help.xhtml#choose_a_certificate_backup_password"/> </rdf:li>
-        <rdf:li><rdf:Description ID="delete_my_certs" nc:name="Delete Your Certificate" nc:link="chrome://help/locale/certs_help.xhtml#delete_your_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert_backup_pwd" nc:name="Choose a Certificate Backup Password" nc:link="certs_help.xhtml#choose_a_certificate_backup_password"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_my_certs" nc:name="Delete Your Certificate" nc:link="certs_help.xhtml#delete_your_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1078,7 +1078,7 @@
 <rdf:Description about="#others_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="delete_email_certs" nc:name="Delete Email Certificates" nc:link="chrome://help/locale/certs_help.xhtml#delete_email_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_email_certs" nc:name="Delete Email Certificates" nc:link="certs_help.xhtml#delete_email_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1086,8 +1086,8 @@
 <rdf:Description about="#web_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="edit_web_certs" nc:name="Edit Website Certificate Settings" nc:link="chrome://help/locale/certs_help.xhtml#edit_web_site_certificate_trust_settings"/> </rdf:li>
-        <rdf:li><rdf:Description ID="delete_web_certs" nc:name="Delete Website Certificate" nc:link="chrome://help/locale/certs_help.xhtml#delete_web_site_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="edit_web_certs" nc:name="Edit Website Certificate Settings" nc:link="certs_help.xhtml#edit_web_site_certificate_trust_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_web_certs" nc:name="Delete Website Certificate" nc:link="certs_help.xhtml#delete_web_site_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1095,8 +1095,8 @@
 <rdf:Description about="#ca_certs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="edit_ca_certs" nc:name="Edit CA Certificate Settings" nc:link="chrome://help/locale/certs_help.xhtml#edit_ca_certificate_trust_settings"/> </rdf:li>
-        <rdf:li><rdf:Description ID="delete_ca_certs" nc:name="Delete CA Certificate" nc:link="chrome://help/locale/certs_help.xhtml#delete_ca_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="edit_ca_certs" nc:name="Edit CA Certificate Settings" nc:link="certs_help.xhtml#edit_ca_certificate_trust_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="delete_ca_certs" nc:name="Delete CA Certificate" nc:link="certs_help.xhtml#delete_ca_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1105,13 +1105,13 @@
 <rdf:Description about="#cert-dialog-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="cert_details" nc:name="Certificate Viewer" nc:link="chrome://help/locale/cert_dialog_help.xhtml#certificate_viewer"/> </rdf:li>
-        <rdf:li><rdf:Description ID="which_token" nc:name="Choose Security Device" nc:link="chrome://help/locale/cert_dialog_help.xhtml#choose_security_device"/> </rdf:li>
-        <rdf:li><rdf:Description ID="priv_key_copy" nc:name="Encryption Key Copy" nc:link="chrome://help/locale/cert_dialog_help.xhtml#encryption_key_copy"/> </rdf:li>
-        <rdf:li><rdf:Description ID="backup_your_cert" nc:name="Certificate Backup" nc:link="chrome://help/locale/cert_dialog_help.xhtml#certificate_backup"/> </rdf:li>
-        <rdf:li><rdf:Description ID="which_cert" nc:name="User Identification Request" nc:link="chrome://help/locale/cert_dialog_help.xhtml#user_identification_request"/> </rdf:li>
-        <rdf:li><rdf:Description ID="new_ca" nc:name="New Certificate Authority" nc:link="chrome://help/locale/cert_dialog_help.xhtml#new_certificate_authority"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cert-dialog-help-website" nc:name="Website Certificates" nc:link="chrome://help/locale/cert_dialog_help.xhtml#web_site_certificates"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert_details" nc:name="Certificate Viewer" nc:link="cert_dialog_help.xhtml#certificate_viewer"/> </rdf:li>
+        <rdf:li><rdf:Description ID="which_token" nc:name="Choose Security Device" nc:link="cert_dialog_help.xhtml#choose_security_device"/> </rdf:li>
+        <rdf:li><rdf:Description ID="priv_key_copy" nc:name="Encryption Key Copy" nc:link="cert_dialog_help.xhtml#encryption_key_copy"/> </rdf:li>
+        <rdf:li><rdf:Description ID="backup_your_cert" nc:name="Certificate Backup" nc:link="cert_dialog_help.xhtml#certificate_backup"/> </rdf:li>
+        <rdf:li><rdf:Description ID="which_cert" nc:name="User Identification Request" nc:link="cert_dialog_help.xhtml#user_identification_request"/> </rdf:li>
+        <rdf:li><rdf:Description ID="new_ca" nc:name="New Certificate Authority" nc:link="cert_dialog_help.xhtml#new_certificate_authority"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help-website" nc:name="Website Certificates" nc:link="cert_dialog_help.xhtml#web_site_certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1119,8 +1119,8 @@
 <rdf:Description about="#cert_details">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="cert-dialog-help-details-general" nc:name="General Tab" nc:link="chrome://help/locale/cert_dialog_help.xhtml#general_tab"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cert-dialog-help-details-details" nc:name="Details Tab" nc:link="chrome://help/locale/cert_dialog_help.xhtml#details_tab"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help-details-general" nc:name="General Tab" nc:link="cert_dialog_help.xhtml#general_tab"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cert-dialog-help-details-details" nc:name="Details Tab" nc:link="cert_dialog_help.xhtml#details_tab"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1128,10 +1128,10 @@
 <rdf:Description about="#cert-dialog-help-website">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="new_web_cert" nc:name="Website Certified by an Unknown Authority" nc:link="chrome://help/locale/cert_dialog_help.xhtml#web_site_certified_by_an_unknown_authority"/> </rdf:li>
-        <rdf:li><rdf:Description ID="exp_web_cert" nc:name="Server Certificate Expired" nc:link="chrome://help/locale/cert_dialog_help.xhtml#server_certificate_expired"/> </rdf:li>
-        <rdf:li><rdf:Description ID="not_yet_web_cert" nc:name="Server Certificate Not Yet Valid" nc:link="chrome://help/locale/cert_dialog_help.xhtml#server_certificate_not_yet_valid"/> </rdf:li>
-        <rdf:li><rdf:Description ID="bad_name_web_cert" nc:name="Domain Name Mismatch" nc:link="chrome://help/locale/cert_dialog_help.xhtml#domain_name_mismatch"/> </rdf:li>
+        <rdf:li><rdf:Description ID="new_web_cert" nc:name="Website Certified by an Unknown Authority" nc:link="cert_dialog_help.xhtml#web_site_certified_by_an_unknown_authority"/> </rdf:li>
+        <rdf:li><rdf:Description ID="exp_web_cert" nc:name="Server Certificate Expired" nc:link="cert_dialog_help.xhtml#server_certificate_expired"/> </rdf:li>
+        <rdf:li><rdf:Description ID="not_yet_web_cert" nc:name="Server Certificate Not Yet Valid" nc:link="cert_dialog_help.xhtml#server_certificate_not_yet_valid"/> </rdf:li>
+        <rdf:li><rdf:Description ID="bad_name_web_cert" nc:name="Domain Name Mismatch" nc:link="cert_dialog_help.xhtml#domain_name_mismatch"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1141,8 +1141,8 @@
 <rdf:Description about="#profile-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="profile-help-create" nc:name="Creating a New Profile" nc:link="chrome://help/locale/profiles_help.xhtml#creating_a_new_profile"/> </rdf:li>
-        <rdf:li><rdf:Description ID="profile-help-delete" nc:name="Deleting or Renaming a Profile" nc:link="chrome://help/locale/profiles_help.xhtml#deleting_or_renaming_a_profile"/> </rdf:li>
+        <rdf:li><rdf:Description ID="profile-help-create" nc:name="Creating a New Profile" nc:link="profiles_help.xhtml#creating_a_new_profile"/> </rdf:li>
+        <rdf:li><rdf:Description ID="profile-help-delete" nc:name="Deleting or Renaming a Profile" nc:link="profiles_help.xhtml#deleting_or_renaming_a_profile"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1152,9 +1152,9 @@
 <rdf:Description about="#tools">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="tools-js_console" nc:name="JavaScript Console" nc:link="chrome://help/locale/developer_tools.xhtml#js_console"/> </rdf:li>
-        <rdf:li><rdf:Description ID="tools-inspector" nc:name="DOM Inspector" nc:link="chrome://help/locale/developer_tools.xhtml#inspector"/> </rdf:li>
-        <rdf:li><rdf:Description ID="tools-venkman" nc:name="JavaScript Debugger" nc:link="chrome://help/locale/developer_tools.xhtml#venkman"/> </rdf:li>
+        <rdf:li><rdf:Description ID="tools-js_console" nc:name="JavaScript Console" nc:link="developer_tools.xhtml#js_console"/> </rdf:li>
+        <rdf:li><rdf:Description ID="tools-inspector" nc:name="DOM Inspector" nc:link="developer_tools.xhtml#inspector"/> </rdf:li>
+        <rdf:li><rdf:Description ID="tools-venkman" nc:name="JavaScript Debugger" nc:link="developer_tools.xhtml#venkman"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
 </rdf:Description>
@@ -1163,12 +1163,12 @@
 <rdf:Description about="#shortcuts">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="shortcuts_using" nc:name="Using Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml#using_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_general" nc:name="General Mozilla Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml#general_mozilla_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator" nc:name="Navigator Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_mail" nc:name="Mail &amp; Newsgroups Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_composer" nc:name="Composer Shortcuts" nc:link="chrome://help/locale/shortcuts-composer.xhtml"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_help" nc:name="Help Window Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml#help_window_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_using" nc:name="Using Shortcuts" nc:link="shortcuts.xhtml#using_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_general" nc:name="General Mozilla Shortcuts" nc:link="shortcuts.xhtml#general_mozilla_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator" nc:name="Navigator Shortcuts" nc:link="shortcuts-navigator.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail" nc:name="Mail &amp; Newsgroups Shortcuts" nc:link="shortcuts-mailnews.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_composer" nc:name="Composer Shortcuts" nc:link="shortcuts-composer.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_help" nc:name="Help Window Shortcuts" nc:link="shortcuts.xhtml#help_window_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1176,12 +1176,12 @@
 <rdf:Description about="#shortcuts_navigator">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_bookmarks" nc:name="Bookmark Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#bookmarks_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_page_navigation" nc:name="Page Navigation Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#page_navigation_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_page_viewing" nc:name="Page Viewing Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#page_viewing_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_tabbed_browsing" nc:name="Tabbed Browsing Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#tabbed_browsing_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_sidebar" nc:name="Sidebar Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#sidebar_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_forms" nc:name="Forms Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#forms_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_bookmarks" nc:name="Bookmark Shortcuts" nc:link="shortcuts-navigator.xhtml#bookmarks_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_page_navigation" nc:name="Page Navigation Shortcuts" nc:link="shortcuts-navigator.xhtml#page_navigation_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_page_viewing" nc:name="Page Viewing Shortcuts" nc:link="shortcuts-navigator.xhtml#page_viewing_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_tabbed_browsing" nc:name="Tabbed Browsing Shortcuts" nc:link="shortcuts-navigator.xhtml#tabbed_browsing_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_sidebar" nc:name="Sidebar Shortcuts" nc:link="shortcuts-navigator.xhtml#sidebar_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_forms" nc:name="Forms Shortcuts" nc:link="shortcuts-navigator.xhtml#forms_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1189,9 +1189,9 @@
 <rdf:Description about="#shortcuts_mail">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="shortcuts_mail_general" nc:name="General Mail Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#general_mail_and_newsgroups_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_mail_message_list" nc:name="Message List Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#message_list_shortcuts"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_mail_message_compose" nc:name="Message Compose Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#message_compose_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail_general" nc:name="General Mail Shortcuts" nc:link="shortcuts-mailnews.xhtml#general_mail_and_newsgroups_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail_message_list" nc:name="Message List Shortcuts" nc:link="shortcuts-mailnews.xhtml#message_list_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail_message_compose" nc:name="Message Compose Shortcuts" nc:link="shortcuts-mailnews.xhtml#message_compose_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
