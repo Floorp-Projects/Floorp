@@ -1335,16 +1335,6 @@ PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
   return rv;
 }
 
-// define array of all CSS property hints
-const nsChangeHint nsCSSProps::kHintTable[eCSSProperty_COUNT] = {
-    #define CSS_PROP(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) hint_,
-    #include "nsCSSPropList.h"
-    #undef CSS_PROP
-    #define CSS_PROP_SHORTHAND(name_, id_, method_, hint_) hint_,
-    #include "nsCSSPropList.h"
-    #undef CSS_PROP_SHORTHAND
-};
-
 // define array of all CSS property types
 const nsCSSType nsCSSProps::kTypeTable[eCSSProperty_COUNT_no_shorthands] = {
     #define CSS_PROP(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) type_,
