@@ -21,6 +21,7 @@
 
 #include <sys/stat.h>
 #include <direct.h>
+#include <limits.h>
 #include <stdlib.h>
 #include "prio.h"
 #include "nsError.h"
@@ -411,10 +412,10 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
 
 	strcat(aDrive, "\\");
 
-	PRUint32 dwSectorsPerCluster = 0;
-	PRUint32 dwBytesPerSector = 0;
-	PRUint32 dwFreeClusters = 0;
-	PRUint32 dwTotalClusters = 0;
+	DWORD dwSectorsPerCluster = 0;
+	DWORD dwBytesPerSector = 0;
+	DWORD dwFreeClusters = 0;
+	DWORD dwTotalClusters = 0;
 	if (!GetDiskFreeSpace(aDrive, 
 						&dwSectorsPerCluster, 
 						&dwBytesPerSector, 
