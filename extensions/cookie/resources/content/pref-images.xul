@@ -22,7 +22,6 @@
      Peter Annema <disttsc@bart.nl>
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -32,7 +31,8 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="init();">
+      onload="init();"
+      headertitle="&lHeader;">
           
   <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
@@ -71,8 +71,6 @@
   </script>
 
   <broadcaster id="haveImageBlocking" hidden="true"/>
-
-  <hbox class="box-smallheader" id="imagesHeader" title="&lHeader;"/>
 
   <groupbox id="imagesArea">
     <caption label="&imageBlocking.label;"/>

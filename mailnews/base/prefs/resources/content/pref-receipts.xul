@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
-
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-receipts.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://messenger/content/pref-receipts.xul');">
+      onload="parent.initPanel('chrome://messenger/content/pref-receipts.xul');"
+      headertitle="&pane.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -17,8 +17,4 @@
     }
   ]]>  
   </script>
-
-
-  <hbox class="box-smallheader" title="&pane.title;"/>
-
 </page>

@@ -1,15 +1,13 @@
 <?xml version="1.0"?>
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
-
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-viewing_messages.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');">
+      onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');"
+      headertitle="&pane.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -38,8 +36,6 @@
     }
   ]]>
   </script>
-
-  <hbox class="box-smallheader" title="&pane.title;"/>
 
   <groupbox>
     <caption label="&displayWidth.label;"/>

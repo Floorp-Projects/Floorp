@@ -23,12 +23,12 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://cookie/locale/pref-cookies.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="init();">
+      onload="init();"
+      headertitle="&lHeader;">
 
   <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
@@ -87,7 +87,6 @@
   ]]>
   </script>
 
-  <hbox class="box-smallheader" id="cookieHeader" title="&lHeader;"/>
     <description>&cookieDetails;</description>
     <radiogroup id="networkCookieBehaviour"
                 prefstring="network.cookie.cookieBehavior">

@@ -24,11 +24,13 @@ Contributor(s):
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-mailnews.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="Init();">
+      onload="Init();"
+      headertitle="&pane.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -39,8 +41,6 @@ Contributor(s):
   </script>
   <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
   
-  <hbox class="box-smallheader" title="&pane.title;"/>
-
   <groupbox>
     <caption label="&windowSettings.label;"/>
     
