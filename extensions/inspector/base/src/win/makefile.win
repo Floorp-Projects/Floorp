@@ -31,6 +31,7 @@ REQUIRES	= xpcom \
 		  content \
 		  locale \
 		  dom \
+      necko \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
