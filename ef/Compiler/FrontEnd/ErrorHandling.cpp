@@ -77,13 +77,10 @@ NS_EXTERN void
 verifyError(VerifyError::Cause cause)
 {
 #ifdef DEBUG
-	fprintf(stderr, "\n*** VERIFY ERROR *** [%d] %s\n", cause, verifyErrorString[cause]);
+	fprintf(stderr, "\n*** NOTE: Throwing verify error: %s\n", verifyErrorString[cause]);
 #endif
 
-#ifdef __GNUC__
-	exit(cause);
-#endif
-	throw VerifyError(cause);
+        throw VerifyError(cause);
 }
 
 //
@@ -93,11 +90,8 @@ NS_EXTERN void
 runtimeError(RuntimeError::Cause cause)
 {
 #ifdef DEBUG
-	fprintf(stderr, "\n*** RUNTIME ERROR *** [%d] %s\n", cause, runtimeErrorString[cause]);
+	fprintf(stderr, "\n*** NOTE: Throwing runtime error: %s\n", runtimeErrorString[cause]);
 #endif
 
-#ifdef __GNUC__
-	exit(cause);
-#endif
 	throw RuntimeError(cause);
 }
