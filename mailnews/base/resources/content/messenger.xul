@@ -55,7 +55,6 @@ Rights Reserved.
 <!ENTITY syncCmd.label ".Synchronize">  
 <!ENTITY getSelectedCmd.label ".Get Selected Messages">  
 <!ENTITY getFlaggedCmd.label ".Get Flagged Messages">  
-<!ENTITY pageSetupCmd.label ".Page Setup...">  
 <!ENTITY printPreviewCmd.label ".Print Preview">  
 <!ENTITY printCmd.label ".Print">  
 <!ENTITY closeCmd.label "Close">  
@@ -287,7 +286,7 @@ Rights Reserved.
         <menuitem name="&getFlaggedCmd.label;" onclick="MsgGetFlaggedMsg();"/>
       </menu>
       <separator/>
-      <menuitem name="&pageSetupCmd.label;" onclick="PageSetup();"/>
+      <menuitem id="pageSetup"/>
       <menuitem name="&printPreviewCmd.label;" onclick="PrintPreview();"/>
       <menuitem name="&printCmd.label;" onclick="Print();"/>
       <separator/>

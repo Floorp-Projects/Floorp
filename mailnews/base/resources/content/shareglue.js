@@ -27,7 +27,6 @@ function NewBrowserWindow() {}
 function NewBlankPage() {} 
 function TemplatePage() {}
 function WizardPage() {}
-function PageSetup() {}
 function PrintPreview() {}
 function Print() {}
 

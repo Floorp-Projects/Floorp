@@ -20,7 +20,6 @@
 <!ENTITY newDirectoryCmd.label				".New Directory...">  
 <!ENTITY importCmd.label					".Import..."> 
 <!ENTITY exportCmd.label					".Export...">  
-<!ENTITY pageSetupCmd.label					".Page Setup...">  
 <!ENTITY printPreviewCmd.label				".Print Preview">  
 <!ENTITY printCardViewCmd.label				".Print Card View...">  
 <!ENTITY printAddressBook.label				".Print Address Book...">  
@@ -107,7 +106,7 @@
 			<menuitem name="&importCmd.label;" onclick="AbImport()"/>
 			<menuitem name="&exportCmd.label;" onclick="AbExport()"/>
 			<separator/>
-			<menuitem name="&pageSetupCmd.label;" onclick="AbPageSetup()"/>
+			<menuitem id="pageSetup"/>
 			<menuitem name="&printPreviewCmd.label;" onclick="AbPrintPreview()"/>
 			<menuitem name="&printCardViewCmd.label;" onclick="AbCardView()"/>
 			<menuitem name="&printAddressBook.label;" onclick="AbPrintAddressBook()"/>
