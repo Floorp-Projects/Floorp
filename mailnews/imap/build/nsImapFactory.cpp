@@ -17,18 +17,15 @@
  */
 
 #include "msgCore.h" // for pre-compiled headers...
-#include "nsIServiceManager.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
+
 #include "nsIMAPHostSessionList.h"
 #include "nsImapIncomingServer.h"
 #include "nsImapService.h"
-#include "pratom.h"
-#include "nsCOMPtr.h"
 #include "nsImapMailFolder.h"
 #include "nsImapMessage.h"
-
-// include files for components this factory creates...
 #include "nsImapUrl.h"
 #include "nsImapProtocol.h"
 #include "nsMsgImapCID.h"
@@ -43,275 +40,212 @@ static NS_DEFINE_CID(kCImapResource, NS_IMAPRESOURCE_CID);
 static NS_DEFINE_CID(kCImapMessageResource, NS_IMAPMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 
-////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
-
-class nsImapFactory : public nsIFactory
-{   
+// Module implementation for the sample library
+class nsMsgImapModule : public nsIModule
+{
 public:
-	// nsISupports methods
-	NS_DECL_ISUPPORTS 
+    nsMsgImapModule();
+    virtual ~nsMsgImapModule();
 
-	nsImapFactory(const nsCID &aClass, const char* aClassName, const char* aProgID); 
+    NS_DECL_ISUPPORTS
 
-	// nsIFactory methods   
-	NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-	NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIMODULE
 
 protected:
-	virtual ~nsImapFactory();   
+    nsresult Initialize();
 
-	nsCID mClassID;
-	char* mClassName;
-	char* mProgID;
-};   
+    void Shutdown();
 
-nsImapFactory::nsImapFactory(const nsCID &aClass, const char* aClassName, const char* aProgID)
-  : mClassID(aClass), mClassName(nsCRT::strdup(aClassName)), mProgID(nsCRT::strdup(aProgID))
-{   
-	NS_INIT_REFCNT();
-}   
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mFactory;
+};
 
-nsImapFactory::~nsImapFactory()   
+
+nsMsgImapModule::nsMsgImapModule()
+    : mInitialized(PR_FALSE)
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-	nsCRT::free(mClassName);
-	nsCRT::free(mProgID);
-}   
+    NS_INIT_ISUPPORTS();
+}
 
-nsresult nsImapFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-	if (aResult == NULL) 
-		return NS_ERROR_NULL_POINTER;  
+nsMsgImapModule::~nsMsgImapModule()
+{
+    Shutdown();
+}
 
-	// Always NULL result, in case of failure   
-	*aResult = NULL;   
+NS_IMPL_ISUPPORTS(nsMsgImapModule, NS_GET_IID(nsIModule))
 
-	// we support two interfaces....nsISupports and nsFactory.....
-	if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
-		*aResult = (void *)(nsISupports*)this;   
-	else if (aIID.Equals(nsIFactory::GetIID()))   
-		*aResult = (void *)(nsIFactory*)this;   
+// Perform our one-time intialization for this module
+nsresult nsMsgImapModule::Initialize()
+{
+    if (mInitialized)
+        return NS_OK;
 
-	if (*aResult == NULL)
-		return NS_NOINTERFACE;
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
 
-	AddRef(); // Increase reference count for caller   
-	return NS_OK;   
-}   
+// Shutdown this module, releasing all of the module resources
+void nsMsgImapModule::Shutdown()
+{
+    // Release the factory object
+    mFactory = null_nsCOMPtr();
+}
 
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP nsMsgImapModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
+    nsresult rv;
 
-NS_IMPL_ADDREF(nsImapFactory)
-NS_IMPL_RELEASE(nsImapFactory)
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj)
+        return NS_ERROR_INVALID_POINTER;
 
-nsresult nsImapFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
-{  
-	nsresult rv = NS_OK;
+    *r_classObj = NULL;
 
-	if (aResult == NULL)  
-		return NS_ERROR_NULL_POINTER;  
-
-	*aResult = NULL;  
-  
-	nsISupports *inst = nsnull;
-
-	// ClassID check happens here
-	// Whenever you add a new class that supports an interface, plug it in here!!!
-	
-	// do they want a local datasource ?
-	if (mClassID.Equals(kCImapUrl)) 
-	{
-		inst = NS_STATIC_CAST(nsIImapUrl*, new nsImapUrl());
-	}
-	else if (mClassID.Equals(kCImapProtocol))
-	{
-		inst = NS_STATIC_CAST(nsIImapProtocol *, new nsImapProtocol());
-	}
-	else if (mClassID.Equals(kCImapHostSessionList))
-	{
-		inst = NS_STATIC_CAST(nsIImapHostSessionList *, new nsIMAPHostSessionList());
-	}
-	else if (mClassID.Equals(kCImapIncomingServer))
-	{
-		return NS_NewImapIncomingServer(aIID, aResult);
-	}
-	else if (mClassID.Equals(kCImapService))
-	{
-		inst = NS_STATIC_CAST(nsIImapService *, new nsImapService());
-	}
-	else if (mClassID.Equals(kCImapResource))
-	{
-		inst = NS_STATIC_CAST(nsIMsgImapMailFolder *, new nsImapMailFolder());
-	}
-    else if (mClassID.Equals(kCImapMockChannel))
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) 
     {
-        return nsImapMockChannel::Create(aIID, aResult);
+        rv = Initialize();
+        if (NS_FAILED(rv)) // Initialization failed! yikes!
+            return rv;
     }
-	else if (mClassID.Equals(kCImapMessageResource)) 
-	{
-		nsImapMessage * imapMessage = new nsImapMessage();
-		if (imapMessage)
-			rv = imapMessage->QueryInterface(aIID, aResult);
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-		if (NS_FAILED(rv) && imapMessage)
-			delete imapMessage;
-		return rv;
- 	}
-	if (inst == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
 
-	rv = inst->QueryInterface(aIID, aResult);
-	if (NS_FAILED(rv))
-		delete inst;
-	return rv;
-}  
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
 
-nsresult nsImapFactory::LockFactory(PRBool aLock)  
-{  
-	if (aLock)
-		PR_AtomicIncrement(&g_LockCount); 
-	else
-		PR_AtomicDecrement(&g_LockCount); 
-
-  return NS_OK;
-}  
-
-// return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aProgID,
-                                           nsIFactory **aFactory)
-{
-	if (nsnull == aFactory)
-		return NS_ERROR_NULL_POINTER;
-
-	*aFactory = new nsImapFactory(aClass, aClassName, aProgID);
-
-	if (aFactory)
-		return (*aFactory)->QueryInterface(nsIFactory::GetIID(), (void**)aFactory); // they want a Factory Interface so give it to them
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-}
-
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
-{
-    return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
-}
-
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char* path)
-{
-	nsresult rv = NS_OK;
-	nsresult finalResult = NS_OK;
-
-	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = compMgr->RegisterComponent(kCImapUrl, nsnull, nsnull,
-                                    path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kCImapProtocol, nsnull, nsnull,
-									path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) finalResult = rv;
-
-    rv = compMgr->RegisterComponent(kCImapMockChannel, nsnull, nsnull, 
-                                    path, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kCImapHostSessionList, nsnull, nsnull,
-									path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	
-	rv = compMgr->RegisterComponent(kCImapIncomingServer,
-									"Imap Incoming Server",
-									"component://netscape/messenger/server&type=imap",
-									path, PR_TRUE, PR_TRUE);
-
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	// register our RDF resource factories:
-	rv = compMgr->RegisterComponent(kCImapResource,
-								  "Mail/News Imap Resource Factory",
-								  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap",
-								  path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kCImapService, nsnull, 
-								  "component://netscape/messenger/messageservice;type=imap_message", 
-								path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) finalResult = rv;
-	rv = compMgr->RegisterComponent(kCImapService, nsnull, 
-								  "component://netscape/messenger/messageservice;type=imap", 
-								path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kCImapService, nsnull, nsnull,
-									path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kCImapService,  
-                                    "Imap Protocol Handler",
-                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "imap",
-                                    path, PR_TRUE, PR_TRUE);
-
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kCImapService,  
-                                  "Imap Protocol Handler",
-                                  NS_IMAPPROTOCOLINFO_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kCImapMessageResource,
-                                   "Imap Message Resource Factory",
-                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message",
-                                   path, PR_TRUE, PR_TRUE);
-
-   if (NS_FAILED(rv)) finalResult = rv;
-
-  return finalResult;
-}
-
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char* path)
-{
-	nsresult rv = NS_OK;
-	nsresult finalResult = NS_OK;
-
-	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = compMgr->UnregisterComponent(kCImapUrl, path);
-	if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->UnregisterComponent(kCImapProtocol, path);
-	if (NS_FAILED(rv)) finalResult = rv;
-
-    rv = compMgr->UnregisterComponent(kCImapMockChannel, path);
-	if (NS_FAILED(rv)) finalResult = rv;
+    if (aClass.Equals(kCImapUrl))
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), &NS_NewImapUrl);
+    else if (aClass.Equals(kCImapProtocol))
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapProtocol);
+    else if (aClass.Equals(kCImapHostSessionList))
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapHostSessionList);
+    else if (aClass.Equals(kCImapIncomingServer))
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapIncomingServer);
+    else if (aClass.Equals(kCImapService))
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapService);
+    else if (aClass.Equals(kCImapResource))
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapMailFolder);
+    else if (aClass.Equals(kCImapMockChannel))
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapMockChannel);
+    else if (aClass.Equals(kCImapMessageResource)) 
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewImapMessage);
     
-	rv = compMgr->UnregisterComponent(kCImapHostSessionList, path);
-	if (NS_FAILED(rv)) finalResult = rv;
+    
+    if (fact)
+        rv = fact->QueryInterface(aIID, r_classObj);
 
-	rv = compMgr->UnregisterComponent(kCImapIncomingServer, path);
-	if (NS_FAILED(rv))finalResult = rv;
+    return rv;
+}
 
-	rv = compMgr->UnregisterComponent(kCImapService, path);
-	if (NS_FAILED(rv)) finalResult = rv;
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
 
-	rv = compMgr->UnregisterComponent(kCImapMessageResource, path);
-	if (NS_FAILED(rv)) finalResult = rv;
+// The list of components we register
+static Components gComponents[] = {
+    { "Imap Url", &kCImapUrl,
+      nsnull },
+    { "Imap Protocol Channel", &kCImapProtocol,
+      nsnull },    
+    { "Imap Mock Channel", &kCImapMockChannel,
+      nsnull },
+    { "Imap Host Session List", &kCImapHostSessionList,
+      nsnull },
+    { "Imap Incoming Server", &kCImapIncomingServer,
+      "component://netscape/messenger/server&type=imap" },
+    { "Mail/News Imap Resource Factory", &kCImapResource,
+      NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap" },
+    { "Imap Service", &kCImapService,
+      "component://netscape/messenger/messageservice;type=imap_message" },
+    { "Imap Service", &kCImapService,
+      "component://netscape/messenger/messageservice;type=imap"},
+    { "Imap Protocol Handler", &kCImapService,
+      NS_NETWORK_PROTOCOL_PROGID_PREFIX "imap"},
+    { "Imap Protocol Handler", &kCImapService,
+      NS_IMAPPROTOCOLINFO_PROGID},
+    { "Imap Message Resource Factory", &kCImapMessageResource,
+      NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message"}
 
-	rv = compMgr->UnregisterComponent(kCImapResource, path);
-	if (NS_FAILED(rv)) finalResult = rv;
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
-	return finalResult;
+NS_IMETHODIMP nsMsgImapModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec* aPath,
+                          const char* registryLocation,
+                          const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) 
+    {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) 
+            break;
+        cp++;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP nsMsgImapModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                            nsIFileSpec* aPath,
+                            const char* registryLocation)
+{
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) 
+    {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgImapModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload)
+        return NS_ERROR_INVALID_POINTER;
+
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsMsgImapModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(return_cobj, "Null argument");
+    NS_ASSERTION(gModule == NULL, "nsMsgImapModule: Module already created.");
+
+    // Create an initialize the imap module instance
+    nsMsgImapModule *module = new nsMsgImapModule();
+    if (!module)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = module->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    if (NS_FAILED(rv)) 
+    {
+        delete module;
+        module = nsnull;
+    }
+    gModule = module;                  // WARNING: Weak Reference
+    return rv;
 }
