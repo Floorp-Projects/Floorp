@@ -40,7 +40,6 @@
 #include "nscore.h"
 #include "nsJVMManager.h"
 #include "nspr.h"
-#include "xp_path.h"
 #include "ProxyJNI.h"
 #include "nsIPluginHost.h"
 #include "nsIServiceManager.h"
@@ -457,7 +456,8 @@ nsJVMManager::GetClasspathAdditions(const char* *result)
         const char* path = (const char*)(*fClassPathAdditions)[i];
         char* oldPath = classpathAdditions;
         if (oldPath) {
-            classpathAdditions = PR_smprintf("%s%c%s", oldPath, PR_PATH_SEPARATOR, path);
+            char sep = PR_GetPathSeparator();
+            classpathAdditions = PR_smprintf("%s%c%s", oldPath, sep, path);
             PR_Free(oldPath);
         }
         else
@@ -1057,7 +1057,8 @@ nsJVMManager::AddToClassPath(const char* dirPath)
         PRDirEntry* dirent;
         while ((dirent = PR_ReadDir(dir, PR_SKIP_BOTH)) != NULL) {
             PRFileInfo info;
-            char* path = PR_smprintf("%s%c%s", dirPath, PR_DIRECTORY_SEPARATOR, PR_DirName(dirent));
+            char sep = PR_GetDirectorySeparator();
+            char* path = PR_smprintf("%s%c%s", dirPath, sep, PR_DirName(dirent));
 			if (path != NULL) {
         		PRBool freePath = PR_TRUE;
 	            if ((PR_GetFileInfo(path, &info) == PR_SUCCESS)
