@@ -28,7 +28,7 @@
 
 
 
-nsIMAPNamespace::nsIMAPNamespace(EIMAPNamespaceType type, const char *prefix, char delimiter, XP_Bool from_prefs)
+nsIMAPNamespace::nsIMAPNamespace(EIMAPNamespaceType type, const char *prefix, char delimiter, PRBool from_prefs)
 {
 	m_namespaceType = type;
 	m_prefix = PL_strdup(prefix);
