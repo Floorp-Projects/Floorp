@@ -49,6 +49,9 @@
 #define NS_ERROR_UCONV_NOCONV \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x01)
 
+#define NS_ERROR_USING_FALLBACK_LOCALE \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x02)
+
 #ifdef DEBUG
 #define REGSELF_PRINTF(x,y)                                             \
   printf("RegSelf %s to %s converter complete\n",                       \
