@@ -53,6 +53,9 @@
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
+#include "nsSpecialSystemDirectory.h"
+
+
 #undef DEBUG_DND_XLATE
 #define MODAL_TIMERS_BROKEN
 
@@ -1940,33 +1943,36 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 }
 
 // Just give the window a default icon, Mozilla.
-#include "mozicon50.xpm"
-#include "minimozicon.xpm"
-
 nsresult nsWindow::SetIcon()
 {
   static GdkPixmap *w_pixmap = nsnull;
   static GdkBitmap *w_mask   = nsnull;
   static GdkPixmap *w_minipixmap = nsnull;
   static GdkBitmap *w_minimask = nsnull;
+  static nsSpecialSystemDirectory sysDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+
   GtkStyle         *w_style;
 
   w_style = gtk_widget_get_style (mShell);
 
   if (!w_pixmap) {
-    w_pixmap =
-      gdk_pixmap_create_from_xpm_d (mShell->window,
-				    &w_mask,
-				    &w_style->bg[GTK_STATE_NORMAL],
-				    mozicon50_xpm);
+    nsFileSpec bigIcon = sysDir + "/icons/" + "mozicon50.xpm";
+    if (bigIcon.Exists()) {
+      w_pixmap = gdk_pixmap_create_from_xpm(mShell->window,
+                                            &w_mask,
+                                            &w_style->bg[GTK_STATE_NORMAL],
+                                            bigIcon.GetNativePathCString());
+    }
   }
 
   if (!w_minipixmap) {
-    w_minipixmap =
-      gdk_pixmap_create_from_xpm_d (mShell->window,
-                                    &w_minimask,
-                                    &w_style->bg[GTK_STATE_NORMAL],
-                                    minimozicon_xpm);
+    nsFileSpec miniIcon = sysDir + "/icons/" + "mozicon16.xpm";
+    if (miniIcon.Exists()) {
+      w_minipixmap = gdk_pixmap_create_from_xpm(mShell->window,
+                                                &w_minimask,
+                                                &w_style->bg[GTK_STATE_NORMAL],
+                                                miniIcon.GetNativePathCString());
+    }
   }
 
   if (SetIcon(w_pixmap, w_mask) != NS_OK)
