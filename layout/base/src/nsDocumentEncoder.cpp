@@ -82,6 +82,7 @@ nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
   NS_INIT_REFCNT();
   mDocument = 0;
   mSelection = 0;
+  mPresShell = 0;
   mAddHeader = PR_FALSE;
 }
 
