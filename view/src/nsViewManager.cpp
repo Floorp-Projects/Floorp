@@ -533,22 +533,15 @@ nsViewManager::CreateRegion(nsIRegion* *result)
   nsresult rv;
 
   if (!mRegionFactory) {
-    nsCOMPtr<nsIComponentManager> compMgr;
-    rv = NS_GetComponentManager(getter_AddRefs(compMgr));
-
-    if (NS_SUCCEEDED(rv))
-      rv = compMgr->GetClassObject(kRegionCID,
-                                   NS_GET_IID(nsIFactory),
-                                   getter_AddRefs(mRegionFactory));
-
-    if (!mRegionFactory) {
+    mRegionFactory = do_GetClassObject(kRegionCID, &rv);
+    if (NS_FAILED(rv)) {
       *result = nsnull;
-      return NS_ERROR_FAILURE;
+      return rv;
     }
   }
 
   nsIRegion* region = nsnull;
-  rv = mRegionFactory->CreateInstance(nsnull, NS_GET_IID(nsIRegion), (void**)&region);
+  rv = CallCreateInstance(mRegionFactory, &region);
   if (NS_SUCCEEDED(rv)) {
     rv = region->Init();
     *result = region;

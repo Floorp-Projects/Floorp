@@ -212,12 +212,7 @@ nsCSSScanner::~nsCSSScanner()
   nsresult rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &gConsoleService);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-  nsCOMPtr<nsIComponentManager> compMgr;
-  rv = NS_GetComponentManager(getter_AddRefs(compMgr));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  rv = compMgr->GetClassObjectByContractID(NS_SCRIPTERROR_CONTRACTID,
-                                           NS_GET_IID(nsIFactory),
-                                           (void**)&gScriptErrorFactory);
+  rv = CallGetClassObject(NS_SCRIPTERROR_CONTRACTID, &gScriptErrorFactory);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   NS_ASSERTION(gConsoleService && gScriptErrorFactory,
                "unexpected null pointer without failure");
@@ -287,10 +282,9 @@ void nsCSSScanner::OutputError()
   // Log it to the JavaScript console
 
   if (InitGlobals()) {
-    nsCOMPtr<nsIScriptError> errorObject;
-    nsresult rv =
-      gScriptErrorFactory->CreateInstance(nsnull, NS_GET_IID(nsIScriptError),
-                                          getter_AddRefs(errorObject));
+    nsresult rv;
+    nsCOMPtr<nsIScriptError> errorObject =
+      do_CreateInstance(gScriptErrorFactory, &rv);
     if (NS_SUCCEEDED(rv)) {
       rv = errorObject->Init(mError.get(),
                              NS_ConvertASCIItoUCS2(mFileName.get()).get(),

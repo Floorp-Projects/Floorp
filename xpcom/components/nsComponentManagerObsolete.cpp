@@ -39,6 +39,7 @@
 // Global Static Component Manager Methods
 // (for when you need to link with xpcom)
 
+#include "nsXPCOM.h"
 #include "nsIComponentManagerObsolete.h"
 #include "nsComponentManagerObsolete.h"
 
@@ -67,6 +68,17 @@ nsComponentManager::GetClassObject(const nsCID &aClass, const nsIID &aIID,
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
     return cm->GetClassObject(aClass, aIID, aResult);
+}
+
+nsresult
+nsComponentManager::GetClassObjectByContractID(const char *aContractID,
+                                               const nsIID &aIID,
+                                               void **aResult)
+{
+    nsCOMPtr<nsIComponentManager> cm;
+    nsresult rv = NS_GetComponentManager(getter_AddRefs(cm));
+    if (NS_FAILED(rv)) return rv;
+    return cm->GetClassObjectByContractID(aContractID, aIID, aResult);
 }
 
 nsresult

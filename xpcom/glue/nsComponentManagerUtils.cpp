@@ -87,6 +87,64 @@ nsCreateInstanceByContractID::operator()( const nsIID& aIID, void** aInstancePtr
     return status;
 }
 
+nsresult
+nsCreateInstanceFromFactory::operator()( const nsIID& aIID, void** aInstancePtr ) const
+{
+    nsresult status;
+    if ( mFactory )
+        status = mFactory->CreateInstance(mOuter, aIID, aInstancePtr);
+    else
+        status = NS_ERROR_NULL_POINTER;
+    
+    if ( NS_FAILED(status) )
+        *aInstancePtr = 0;
+    if ( mErrorPtr )
+        *mErrorPtr = status;
+    return status;
+}
+
+
+nsresult
+nsGetClassObjectByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+{
+    nsCOMPtr<nsIComponentManager> compMgr;
+    nsresult status = NS_GetComponentManager(getter_AddRefs(compMgr));
+    if (compMgr)
+        status = compMgr->GetClassObject(mCID, aIID, aInstancePtr);
+    else if (NS_SUCCEEDED(status))
+        status = NS_ERROR_UNEXPECTED;
+
+    if ( NS_FAILED(status) )
+        *aInstancePtr = 0;
+    
+    if ( mErrorPtr )
+        *mErrorPtr = status;
+    return status;
+}
+
+nsresult
+nsGetClassObjectByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+{
+    nsresult status;
+    if ( mContractID ) {
+        nsCOMPtr<nsIComponentManager> compMgr;
+        status = NS_GetComponentManager(getter_AddRefs(compMgr));
+        if (compMgr)
+            status = compMgr->GetClassObjectByContractID(mContractID,
+                                                         aIID, aInstancePtr);
+        else if (NS_SUCCEEDED(status))
+            status = NS_ERROR_UNEXPECTED;
+    }
+    else
+        status = NS_ERROR_NULL_POINTER;
+    
+    if ( NS_FAILED(status) )
+        *aInstancePtr = 0;
+    if ( mErrorPtr )
+        *mErrorPtr = status;
+    return status;
+}
+
 
 nsresult
 nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
