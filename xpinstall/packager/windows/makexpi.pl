@@ -82,16 +82,22 @@ if(-e "install.js")
   unlink("install.js");
 }
 
+# make sure inDestPath exists
+if(!(-e "$inDestPath"))
+{
+  system("mkdir /s $inDestPath");
+}
+
 print "\n Making $inComponentName.xpi...\n";
 
 $saveCwdir = cwd();
+
+# change directory to where the files are, else zip will store
+# unwanted path information.
 chdir("$inStagePath\\$inComponentName");
-
 system("zip -r $inDestPath\\$inComponentName.xpi *");
-copy("$inComponentName.xpi", "$inDestPath");
-unlink("inComponentName.xpi");
-
 chdir("$saveCwdir");
+
 copy("$inComponentName.js", "install.js");
 system("zip -g $inDestPath\\$inComponentName.xpi install.js");
 
