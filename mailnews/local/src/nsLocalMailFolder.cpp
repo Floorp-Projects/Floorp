@@ -481,6 +481,10 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       if (NS_FAILED(rv)) return rv;
 
       // must happen after CreateSubFolders, or the folders won't exist.
+      // don't call this more than necessary, it's expensive
+      SetPrefFlag();
+
+      // must happen after CreateSubFolders, or the folders won't exist.
       if (createdDefaultMailboxes && isServer) {
         nsCOMPtr<nsIFolder> rootFolder;
         rv = localMailServer->SetFlagsOnDefaultMailboxes();
@@ -494,11 +498,6 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     mInitialized = PR_TRUE;      // XXX do this on failure too?
   }
   rv = mSubFolders->Enumerate(result);
-  if (isServer)
-  {
-        // *** setting identity pref special folders flag
-        SetPrefFlag();
-  }
   return rv;
 }
 
