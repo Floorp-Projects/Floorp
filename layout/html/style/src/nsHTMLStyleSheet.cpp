@@ -333,21 +333,15 @@ protected:
                               PRInt32 aAttrCount,
                               nsIHTMLAttributes*& aAttributes);
 
-  nsresult ConstructRootFrame(nsIPresContext*  aPresContext,
-                              nsIContent*      aContent,
-                              nsIStyleContext* aStyleContext,
-                              nsIFrame*&       aNewFrame);
+  nsresult ConstructRootFrame(nsIPresContext* aPresContext,
+                              nsIContent*     aDocElement,
+                              nsIFrame*&      aNewFrame);
 
-  nsresult ConstructXMLRootDescendants(nsIPresContext*  aPresContext,
-                                       nsIContent*      aContent,
-                                       nsIStyleContext* aRootPseudoStyle,
-                                       nsIFrame*        aParentFrame,
-                                       nsIFrame*&       aNewFrame);
-
-  nsresult ConstructXMLRootFrame(nsIPresContext*  aPresContext,
-                                 nsIContent*      aContent,
-                                 nsIStyleContext* aStyleContext,
-                                 nsIFrame*&       aNewFrame);
+  nsresult ConstructDocElementFrame(nsIPresContext*  aPresContext,
+                                    nsIContent*      aDocElement,
+                                    nsIFrame*        aRootFrame,
+                                    nsIStyleContext* aRootStyleContext,
+                                    nsIFrame*&       aNewFrame);
 
   nsresult ConstructTableFrame(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
@@ -387,7 +381,7 @@ protected:
 
   nsresult CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame);
 
-  PRBool IsScrollable(nsIPresContext* aPresContext, nsIAtom* aTag, const nsStyleDisplay* aDisplay);
+  PRBool IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay);
 
   nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
                         nsIContent* aContent);
@@ -1085,7 +1079,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_TABLE_CAPTION:
         // Have we already created a caption? If so, ignore this caption
         if (nsnull == captionFrame) {
-          NS_NewBodyFrame(captionFrame, NS_BODY_NO_AUTO_MARGINS);
+          NS_NewAreaFrame(captionFrame, NS_BODY_NO_AUTO_MARGINS);
           captionFrame->Init(*aPresContext, childContent, aNewFrame, childStyleContext);
           // Process the caption's child content and set the initial child list
           nsIFrame* captionChildList;
@@ -1245,10 +1239,10 @@ HTMLStyleSheetImpl::ConstructTableCellFrame(nsIPresContext*  aPresContext,
     // Initialize the table cell frame
     aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
 
-    // Create a body frame that will format the cell's content
+    // Create an area frame that will format the cell's content
     nsIFrame*   cellBodyFrame;
 
-    rv = NS_NewBodyFrame(cellBodyFrame, NS_BODY_NO_AUTO_MARGINS);
+    rv = NS_NewAreaFrame(cellBodyFrame, NS_BODY_NO_AUTO_MARGINS);
     if (NS_FAILED(rv)) {
       aNewFrame->DeleteFrame(*aPresContext);
       aNewFrame = nsnull;
@@ -1276,207 +1270,190 @@ HTMLStyleSheetImpl::ConstructTableCellFrame(nsIPresContext*  aPresContext,
 }
 
 nsresult
-HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
-                                       nsIContent*      aContent,
-                                       nsIStyleContext* aStyleContext,
-                                       nsIFrame*&       aNewFrame)
+HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
+                                             nsIContent*      aDocElement,
+                                             nsIFrame*        aRootFrame,
+                                             nsIStyleContext* aRootStyleContext,
+                                             nsIFrame*&       aNewFrame)
+{
+  // See if we're paginated
+  if (aPresContext->IsPaginated()) {
+    nsIFrame* scrollFrame;
+    nsIFrame* pageSequenceFrame;
+
+    // Create a page sequence frame and wrap it in a scroll frame. Let the
+    // scroll frame and page sequence frame share the same style context as
+    // the root frame.
+    // XXX We only need the scroll frame if it's print preview...
+    NS_NewScrollFrame(scrollFrame);
+    scrollFrame->Init(*aPresContext, nsnull, aRootFrame, aRootStyleContext);
+
+    // The page sequence frame needs a view, because it's a scrolled frame
+    NS_NewSimplePageSequenceFrame(pageSequenceFrame);
+    pageSequenceFrame->Init(*aPresContext, nsnull, scrollFrame, aRootStyleContext);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
+                                             aRootStyleContext, PR_TRUE);
+
+    // Create the first page
+    nsIFrame* pageFrame;
+    NS_NewPageFrame(pageFrame);
+
+    // Initialize the page and force it to have a view. This makes printing of
+    // the pages easier and faster.
+    // XXX Use a PAGE style context...
+    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, aRootStyleContext);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
+                                             aRootStyleContext, PR_TRUE);
+
+    // Resolve the style context for the document element
+    nsIStyleContext*  styleContext;
+    styleContext = aPresContext->ResolveStyleContextFor(aDocElement, aRootStyleContext);
+
+    // Create an area frame for the document element. This serves as the
+    // "initial containing block"
+    nsIFrame* areaFrame;
+
+    NS_NewAreaFrame(areaFrame, 0);
+    areaFrame->Init(*aPresContext, aDocElement, pageFrame, styleContext);
+    NS_RELEASE(styleContext);
+
+    // Process the child content
+    nsIFrame* childList = nsnull;
+    ProcessChildren(aPresContext, areaFrame, aDocElement, childList);
+    
+    // Set the initial child lists
+    areaFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    pageFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
+    pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
+    scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
+
+    // Return the scroll frame as the frame sub-tree
+    aNewFrame = scrollFrame;
+  
+  } else {
+    // Resolve the style context for the document element
+    nsIStyleContext*  styleContext;
+    styleContext = aPresContext->ResolveStyleContextFor(aDocElement, aRootStyleContext);
+  
+    // Unless the 'overflow' policy forbids scrolling, wrap the frame in a
+    // scroll frame.
+    nsIFrame*             scrollFrame = nsnull;
+    PRInt32               scrolling = -1;
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      styleContext->GetStyleData(eStyleStruct_Display);
+  
+    // XXX Check the webshell and see if scrolling is enabled there. This needs
+    // to go away...
+    nsISupports* container;
+    if (nsnull != aPresContext) {
+      aPresContext->GetContainer(&container);
+      if (nsnull != container) {
+        nsIWebShell* webShell = nsnull;
+        container->QueryInterface(kIWebShellIID, (void**) &webShell);
+        if (nsnull != webShell) {
+          webShell->GetScrolling(scrolling);
+          NS_RELEASE(webShell);
+        }
+        NS_RELEASE(container);
+      }
+    }
+    if (-1 == scrolling) {
+      scrolling = display->mOverflow;
+    }
+  
+    if (NS_STYLE_OVERFLOW_HIDDEN != scrolling) {
+      NS_NewScrollFrame(scrollFrame);
+      scrollFrame->Init(*aPresContext, aDocElement, aRootFrame, styleContext);
+  
+      // The scrolled frame gets a pseudo element style context
+      nsIStyleContext*  scrolledPseudoStyle =
+        aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                                   nsHTMLAtoms::scrolledContentPseudo,
+                                                   styleContext);
+      NS_RELEASE(styleContext);
+      styleContext = scrolledPseudoStyle;
+    }
+
+    // Create an area frame for the document element. This serves as the
+    // "initial containing block"
+    nsIFrame* areaFrame;
+
+    // XXX Until we clean up how painting damage is handled, we need to use the
+    // flag that says that this is the body...
+    NS_NewAreaFrame(areaFrame, NS_BODY_THE_BODY);
+    areaFrame->Init(*aPresContext, aDocElement, scrollFrame ? scrollFrame :
+                    aRootFrame, styleContext);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
+                                             styleContext, PR_FALSE);
+    NS_RELEASE(styleContext);
+    
+    // Process the child content
+    nsIFrame* childList = nsnull;
+    ProcessChildren(aPresContext, areaFrame, aDocElement, childList);
+    
+    // Set the initial child lists
+    areaFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    if (nsnull != scrollFrame) {
+      scrollFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
+    }
+
+    aNewFrame = scrollFrame ? scrollFrame : areaFrame;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
+                                       nsIContent*     aDocElement,
+                                       nsIFrame*&      aNewFrame)
 {
 #ifdef NS_DEBUG
     nsIDocument*  doc;
     nsIContent*   rootContent;
 
-    // Verify it's the root content object
-    aContent->GetDocument(doc);
+    // Verify that the content object is really the root content object
+    aDocElement->GetDocument(doc);
     rootContent = doc->GetRootContent();
     NS_RELEASE(doc);
-    NS_ASSERTION(rootContent == aContent, "unexpected content");
+    NS_ASSERTION(rootContent == aDocElement, "unexpected content");
     NS_RELEASE(rootContent);
 #endif
 
-  // Create the root frame
-  nsresult  rv = NS_NewHTMLFrame(aNewFrame);
-
-  if (NS_SUCCEEDED(rv)) {
-    // Bind root frame to root view (and root window)
-    nsIPresShell*   presShell = aPresContext->GetShell();
-    nsIViewManager* viewManager = presShell->GetViewManager();
-    nsIView*        rootView;
-  
-    NS_RELEASE(presShell);
-    viewManager->GetRootView(rootView);
-    aNewFrame->SetView(rootView);
-    NS_RELEASE(viewManager);
-  
-    // Initialize the frame
-    aNewFrame->Init(*aPresContext, aContent, nsnull, aStyleContext);
-  
-    // See if we're paginated
-    if (aPresContext->IsPaginated()) {
-      nsIFrame*  scrollFrame;
-      nsIFrame*  pageSequenceFrame;
-
-      // XXX This isn't the correct pseudo element style context to use...
-      nsIStyleContext*  pseudoStyle;
-      pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
-                      nsHTMLAtoms::columnPseudo, aStyleContext);
-
-      // Wrap the simple page sequence frame in a scroll frame
-      // XXX Only do this if it's print preview
-      if NS_SUCCEEDED(NS_NewScrollFrame(scrollFrame)) {
-        // Initialize the frame
-        scrollFrame->Init(*aPresContext, aContent, aNewFrame, pseudoStyle);
-
-        // Create a simple page sequence frame
-        rv = NS_NewSimplePageSequenceFrame(pageSequenceFrame);
-        if (NS_SUCCEEDED(rv)) {
-          nsIFrame* pageFrame;
-          nsIFrame* childList;
-  
-          // Initialize the frame and force it to have a view
-          pageSequenceFrame->Init(*aPresContext, aContent, scrollFrame, pseudoStyle);
-          nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
-                                                   pseudoStyle, PR_TRUE);
-
-          // Create the first page
-          NS_NewPageFrame(pageFrame);
-
-          // Initialize it and force it to have a view
-          // XXX Use a PAGE style context...
-          pageFrame->Init(*aPresContext, aContent, pageSequenceFrame, pseudoStyle);
-          nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
-                                                   pseudoStyle, PR_TRUE);
-          NS_RELEASE(pseudoStyle);
-  
-          // Process the child content, and set the page and page sequence frame's
-          // initial child lists
-          rv = ProcessChildren(aPresContext, pageFrame, aContent, childList);
-          if (NS_SUCCEEDED(rv)) {
-            pageFrame->SetInitialChildList(*aPresContext, nsnull, childList);
-            pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
-    
-            // Set the scroll frame's initial child list
-            scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
-          }
-
-          // Set the root frame's initial child list
-          aNewFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
-        }
-      }
-    } else {
-      nsIFrame* childList;
-
-      // Process the child content, and set the frame's initial child list
-      rv = ProcessChildren(aPresContext, aNewFrame, aContent, childList);
-      if (NS_SUCCEEDED(rv)) {
-        aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
-      }
-    }
-  }
-
-  return rv;  
-}
-
-nsresult
-HTMLStyleSheetImpl::ConstructXMLRootDescendants(nsIPresContext*  aPresContext,
-                                                nsIContent*      aContent,
-                                                nsIStyleContext* aRootPseudoStyle,
-                                                nsIFrame*        aParentFrame,
-                                                nsIFrame*&       aNewFrame)
-{
-  nsresult rv = NS_OK;
-  // Create a scroll frame.
-  // XXX Use the rootPseudoStyle overflow style information to decide whether
-  // we create a scroll frame or just a body wrapper frame...
-  nsIFrame* scrollFrame = nsnull;
-  
-  rv = NS_NewScrollFrame(scrollFrame);
-
-  if (NS_SUCCEEDED(rv)) {
-    // Initialize the scroll frame
-    scrollFrame->Init(*aPresContext, nsnull, aParentFrame, aRootPseudoStyle);
-    
-    // The scroll frame gets the root pseudo style context, and the scrolled
-    // frame gets a SCROLLED-CONTENT pseudo element style context.
-    nsIStyleContext*  scrolledPseudoStyle;
-    nsIFrame*         wrapperFrame;
-    
-    scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
-      (nsnull, nsHTMLAtoms::scrolledContentPseudo,
-       aRootPseudoStyle);
-    
-    // Create a body frame to wrap the document element
-    NS_NewBodyFrame(wrapperFrame, NS_BODY_THE_BODY|NS_BODY_SHRINK_WRAP);
-
-    // Initialize it and force it to have a view
-    wrapperFrame->Init(*aPresContext, nsnull, scrollFrame, scrolledPseudoStyle);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
-                                             scrolledPseudoStyle, PR_TRUE);
-    
-    // Construct a frame for the document element and process its children
-    nsIFrame* docElementFrame;
-    ConstructFrame(aPresContext, aContent, wrapperFrame, docElementFrame);
-    wrapperFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
-    
-    // Set the scroll frame's initial child list
-    scrollFrame->SetInitialChildList(*aPresContext, nsnull, wrapperFrame);
-  }
-
-  aNewFrame = scrollFrame;
-
-  return rv;
-}
-
-nsresult
-HTMLStyleSheetImpl::ConstructXMLRootFrame(nsIPresContext*  aPresContext,
-                                          nsIContent*      aContent,
-                                          nsIStyleContext* aStyleContext,
-                                          nsIFrame*&       aNewFrame)
-{
-  // Create the root frame. It gets a special pseudo element style.
-  // XXX It's wrong that the document element's style context (which is
-  // passed in) isn't based on the xml-root pseudo element style context
-  // we create below. That means that things like font information defined
-  // in the ua.css don't get properly inherited. We could re-resolve the
-  // style context, or change the flow of control so we create the style
-  // context rather than pass it in...
+  nsIFrame*         rootFrame;
   nsIStyleContext*  rootPseudoStyle;
+
+  // Create the root frame
+  NS_NewHTMLFrame(rootFrame);
+  
+  // Create a pseudo element style context
   rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
-                      nsHTMLAtoms::xmlRootPseudo, nsnull);
+                      nsHTMLAtoms::rootPseudo, nsnull);
 
-  // XXX It would be nice if we didn't need this and we made the scroll
-  // frame (or the body wrapper frame) the root of the frame hierarchy
-  nsresult  rv = NS_NewHTMLFrame(aNewFrame);
+  // Initialize the root frame. It has a NULL content object
+  rootFrame->Init(*aPresContext, nsnull, nsnull, rootPseudoStyle);
 
-  if (NS_SUCCEEDED(rv)) {
-    // Bind root frame to root view (and root window)
-    nsIPresShell*   presShell = aPresContext->GetShell();
-    nsIViewManager* viewManager = presShell->GetViewManager();
-    nsIView*        rootView;
+  // Bind the root frame to the root view
+  nsIPresShell*   presShell = aPresContext->GetShell();
+  nsIViewManager* viewManager = presShell->GetViewManager();
+  nsIView*        rootView;
   
-    NS_RELEASE(presShell);
-    viewManager->GetRootView(rootView);
-    aNewFrame->SetView(rootView);
-    NS_RELEASE(viewManager);
+  NS_RELEASE(presShell);
+  viewManager->GetRootView(rootView);
+  rootFrame->SetView(rootView);
+  NS_RELEASE(viewManager);
   
-    // Initialize the frame
-    aNewFrame->Init(*aPresContext, nsnull, nsnull, rootPseudoStyle);
+  // Create frames for the document element and its child content
+  nsIFrame* docElementFrame;
+  ConstructDocElementFrame(aPresContext, aDocElement, rootFrame,
+                           rootPseudoStyle, docElementFrame);
+  NS_RELEASE(rootPseudoStyle);
 
-    // Create a scroll frame.
-    // XXX Use the rootPseudoStyle overflow style information to decide whether
-    // we create a scroll frame or just a body wrapper frame...
-    nsIFrame* scrollFrame;
-    
-    rv = ConstructXMLRootDescendants(aPresContext, aContent, rootPseudoStyle,
-                                     aNewFrame, scrollFrame);
+  // Set the root frame's initial child list
+  rootFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
 
-    // initialize the root frame
-    if (NS_SUCCEEDED(rv)) {
-      aNewFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
-    }
-  }
-
-  NS_IF_RELEASE(rootPseudoStyle);
-  return rv;
+  aNewFrame = rootFrame;
+  return NS_OK;  
 }
 
 nsresult
@@ -1542,10 +1519,6 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
         NS_NewBlockFrame(blockFrame, 0);
         blockFrame->Init(*aPresContext, aContent, aNewFrame, aStyleContext);
         aNewFrame = blockFrame;
-        processChildren = PR_TRUE;
-      }
-      else if (nsHTMLAtoms::body == aTag) {
-        rv = NS_NewBodyFrame(aNewFrame, NS_BODY_THE_BODY|NS_BODY_NO_AUTO_MARGINS);
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::form == aTag) {
@@ -1614,13 +1587,13 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
   aNewFrame = nsnull;
 
   // If the element is floated and it's a block or inline, then we need to
-  // wrap it in a BODY frame
+  // wrap it in a area frame
   if (((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
        (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay)) &&
       (NS_STYLE_FLOAT_NONE != aDisplay->mFloats)) {
 
-    // The body wrapper frame gets the original style context
-    NS_NewBodyFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
+    // The area wrapper frame gets the original style context
+    NS_NewAreaFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
     wrapperFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
                                              aStyleContext, PR_FALSE);
@@ -1708,7 +1681,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
 
   case NS_STYLE_DISPLAY_TABLE_CAPTION:
     // XXX We should check for being inside of a table row frame...
-    rv = NS_NewBodyFrame(aNewFrame, NS_BODY_NO_AUTO_MARGINS);
+    rv = NS_NewAreaFrame(aNewFrame, NS_BODY_NO_AUTO_MARGINS);
     processChildren = PR_TRUE;
     break;
 
@@ -1801,37 +1774,13 @@ HTMLStyleSheetImpl::GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame,
 }
 
 PRBool
-HTMLStyleSheetImpl::IsScrollable(nsIPresContext* aPresContext,
-                                 nsIAtom* aTag,
+HTMLStyleSheetImpl::IsScrollable(nsIPresContext*       aPresContext,
                                  const nsStyleDisplay* aDisplay)
 {
   // For the time being it's scrollable if the overflow property is auto or
   // scroll, regardless of whether the width or height is fixed in size
-  PRInt32 scrolling = -1;
-
-  if (nsHTMLAtoms::body == aTag) {
-    // XXX temporary hack: For body tags we check our webshell and see
-    // if scrolling is enabled there. This needs to go away!
-    nsISupports* container;
-    if (nsnull != aPresContext) {
-      aPresContext->GetContainer(&container);
-      if (nsnull != container) {
-        nsIWebShell* webShell = nsnull;
-        container->QueryInterface(kIWebShellIID, (void**) &webShell);
-        if (nsnull != webShell) {
-          webShell->GetScrolling(scrolling);
-          NS_RELEASE(webShell);
-        }
-        NS_RELEASE(container);
-      }
-    }
-  }
-
-  if (-1 == scrolling) {
-    scrolling = aDisplay->mOverflow;
-  }
-  if ((NS_STYLE_OVERFLOW_SCROLL == scrolling) ||
-      (NS_STYLE_OVERFLOW_AUTO == scrolling)) {
+  if ((NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) ||
+      (NS_STYLE_OVERFLOW_AUTO == aDisplay->mOverflow)) {
     return PR_TRUE;
   }
 
@@ -1846,69 +1795,50 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
 {
   nsresult  rv;
 
-  // Get the tag
-  nsIAtom*  tag;
-  aContent->GetTag(tag);
+  // Initialize OUT paremeter
+  aFrameSubTree = nsnull;
 
-  // Resolve the style context.
-  // XXX Cheesy hack for text
-  nsIStyleContext* parentStyleContext = nsnull;
-  if (nsnull != aParentFrame) {
-    aParentFrame->GetStyleContext(parentStyleContext);
-  }
-  nsIStyleContext* styleContext;
-  if (nsnull == tag) {
-    nsIContent* parentContent = nsnull;
-    if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(parentContent);
-    }
-    styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                              nsHTMLAtoms::textPseudo, 
-                                                              parentStyleContext);
-    NS_IF_RELEASE(parentContent);
+  // See if we're constructing a frame for the document element
+  if (nsnull == aParentFrame) {
+    // The root frame has only a single child frame, which is the frame for
+    // the document element
+    rv = ConstructRootFrame(aPresContext, aContent, aFrameSubTree);
+
   } else {
-    styleContext = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext);
-  }
-  NS_IF_RELEASE(parentStyleContext);
-  // XXX bad api - no nsresult returned!
-  if (nsnull == styleContext) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    // Pre-check for display "none" - if we find that, don't create
-    // any frame at all.
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      styleContext->GetStyleData(eStyleStruct_Display);
-    if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-      aFrameSubTree = nsnull;
-      rv = NS_OK;
+    // Get the element's tag
+    nsIAtom*  tag;
+    aContent->GetTag(tag);
+  
+    // Resolve the style context based on the content object and the parent
+    // style context
+    nsIStyleContext* styleContext;
+    nsIStyleContext* parentStyleContext;
+
+    aParentFrame->GetStyleContext(parentStyleContext);
+    if (nsnull == tag) {
+      // Use a special pseudo element style context for text
+      nsIContent* parentContent = nsnull;
+      if (nsnull != aParentFrame) {
+        aParentFrame->GetContent(parentContent);
+      }
+      styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
+                                                                nsHTMLAtoms::textPseudo, 
+                                                                parentStyleContext);
+      rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+      NS_IF_RELEASE(parentContent);
+    } else {
+      styleContext = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext);
+      rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
     }
-    else {
-      // Create a frame.
-      if (nsnull == aParentFrame) {
-        nsIDocument* document;
-        rv = aContent->GetDocument(document);
-        if (NS_FAILED(rv)) {
-          NS_RELEASE(styleContext);
-          return rv;
-        }
-        if (nsnull != document) {
-          nsIXMLDocument* xmlDocument;
-          rv = document->QueryInterface(kIXMLDocumentIID, (void **)&xmlDocument);
-          if (NS_FAILED(rv)) {
-            // Construct the root frame object
-            rv = ConstructRootFrame(aPresContext, aContent, styleContext,
-                                    aFrameSubTree);
-          }
-          else {
-            // Construct the root frame object for XML
-            rv = ConstructXMLRootFrame(aPresContext, aContent, styleContext,
-                                       aFrameSubTree);
-            NS_RELEASE(xmlDocument);
-          }
-          NS_RELEASE(document);
-        }
-      } else {
+    NS_IF_RELEASE(parentStyleContext);
+
+    if (NS_SUCCEEDED(rv)) {
+      // Pre-check for display "none" - if we find that, don't create
+      // any frame at all
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        styleContext->GetStyleData(eStyleStruct_Display);
+
+      if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
         // If the frame is a block-level frame and is scrollable then wrap it
         // in a scroll frame.
         // XXX Applies to replaced elements, too, but how to tell if the element
@@ -1916,71 +1846,67 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         nsIFrame* scrollFrame = nsnull;
         nsIFrame* wrapperFrame = nsnull;
 
-        // If we're paginated then don't ever make the BODY scrollable
-        // XXX Use a special BODY rule for paged media...
-        if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
-          if ((display->mDisplay!=NS_STYLE_DISPLAY_TABLE) && display->IsBlockLevel() &&
-              IsScrollable(aPresContext, tag, display)) {
+        if ((display->mDisplay!=NS_STYLE_DISPLAY_TABLE) && display->IsBlockLevel() &&
+            IsScrollable(aPresContext, display)) {
 
-            // Create a scroll frame which will wrap the frame that needs to
-            // be scrolled
-            if (NS_SUCCEEDED(NS_NewScrollFrame(scrollFrame))) {
-              nsIStyleContext*  scrolledPseudoStyle;
-              
-              // The scroll frame gets the original style context, and the scrolled
-              // frame gets a SCROLLED-CONTENT pseudo element style context that
-              // inherits the background properties
-              scrollFrame->Init(*aPresContext, aContent, aParentFrame, styleContext);
-              scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
-                                      (aContent, nsHTMLAtoms::scrolledContentPseudo,
-                                       styleContext);
-              NS_RELEASE(styleContext);
-              
-              // If the content element can contain children then wrap it in a
-              // BODY frame. Don't do this for the BODY element, though...
-              PRBool  isContainer;
-              aContent->CanContainChildren(isContainer);
-              if (isContainer && (tag != nsHTMLAtoms::body)) {
-                NS_NewBodyFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
+          // Create a scroll frame which will wrap the frame that needs to
+          // be scrolled
+          if (NS_SUCCEEDED(NS_NewScrollFrame(scrollFrame))) {
+            nsIStyleContext*  scrolledPseudoStyle;
+            
+            // The scroll frame gets the original style context, and the scrolled
+            // frame gets a SCROLLED-CONTENT pseudo element style context that
+            // inherits the background properties
+            scrollFrame->Init(*aPresContext, aContent, aParentFrame, styleContext);
+            scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                                    (aContent, nsHTMLAtoms::scrolledContentPseudo,
+                                     styleContext);
+            NS_RELEASE(styleContext);
+            
+            // If the content element can contain children then wrap it in a
+            // area frame
+            PRBool  isContainer;
+            aContent->CanContainChildren(isContainer);
+            if (isContainer) {
+              NS_NewAreaFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
 
-                // Initialize the frame and force it to have a view
-                wrapperFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle);
-                nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
-                                                         scrolledPseudoStyle, PR_TRUE);
+              // Initialize the frame and force it to have a view
+              wrapperFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle);
+              nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
+                                                       scrolledPseudoStyle, PR_TRUE);
 
-                // The wrapped frame also gets a pseudo style context, but it doesn't
-                // inherit any background properties. It does inherit the 'display'
-                // property (it's very important that it does)
-                nsIStyleContext*  wrappedPseudoStyle;
-                wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
-                                       (aContent, nsHTMLAtoms::wrappedFramePseudo,
-                                        scrolledPseudoStyle);
-                NS_RELEASE(scrolledPseudoStyle);
-                aParentFrame = wrapperFrame;
-                styleContext = wrappedPseudoStyle;
+              // The wrapped frame also gets a pseudo style context, but it doesn't
+              // inherit any background properties. It does inherit the 'display'
+              // property (it's very important that it does)
+              nsIStyleContext*  wrappedPseudoStyle;
+              wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                                     (aContent, nsHTMLAtoms::wrappedFramePseudo,
+                                      scrolledPseudoStyle);
+              NS_RELEASE(scrolledPseudoStyle);
+              aParentFrame = wrapperFrame;
+              styleContext = wrappedPseudoStyle;
 
-              } else {
-                aParentFrame = scrollFrame;
-                styleContext = scrolledPseudoStyle;
-              }
+            } else {
+              aParentFrame = scrollFrame;
+              styleContext = scrolledPseudoStyle;
             }
           }
         }
-
+  
         // See if the element is absolutely positioned
         const nsStylePosition* position = (const nsStylePosition*)
           styleContext->GetStyleData(eStyleStruct_Position);
-
+  
         if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-          // If it can contain children then wrap it in a BODY frame.
+          // If it can contain children then wrap it in an area frame.
           // XxX Don't wrap tables, because that causes all sort of problems.
           // We need to figure out how to wrap tables...
           PRBool  isContainer;
           aContent->CanContainChildren(isContainer);
 
           if ((NS_STYLE_DISPLAY_TABLE != display->mDisplay) && isContainer) {
-            // The body wrapper frame gets the original style context
-            NS_NewBodyFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
+            // The area wrapper frame gets the original style context
+            NS_NewAreaFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
             wrapperFrame->Init(*aPresContext, aContent, aParentFrame, styleContext);
             nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
                                                      styleContext, PR_FALSE);
@@ -2026,11 +1952,12 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
           aFrameSubTree = wrapperFrame;
         }
       }
+      NS_RELEASE(styleContext);
     }
-    NS_RELEASE(styleContext);
+    
+    NS_IF_RELEASE(tag);
   }
   
-  NS_IF_RELEASE(tag);
   return rv;
 }
 
@@ -2070,11 +1997,11 @@ HTMLStyleSheetImpl::ReconstructFrames(nsIPresContext* aPresContext,
         // we create this pseudostyle
         nsIStyleContext*  rootPseudoStyle;
         rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
-                      nsHTMLAtoms::xmlRootPseudo, nsnull);
+                      nsHTMLAtoms::rootPseudo, nsnull);
         
-        rv = ConstructXMLRootDescendants(aPresContext, aContent,
-                                         rootPseudoStyle, aParentFrame,
-                                         newChild);
+        rv = ConstructDocElementFrame(aPresContext, aContent,
+                                      aParentFrame, rootPseudoStyle, newChild);
+
         if (NS_SUCCEEDED(rv)) {
           rv = NS_NewHTMLReflowCommand(&reflowCmd, aParentFrame,
                                        nsIReflowCommand::FrameInserted,
@@ -2109,12 +2036,9 @@ HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresC
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
-    nsIAtom* tag;
-    aContent->GetTag(tag);
-    if (display->IsBlockLevel() && IsScrollable(aPresContext, tag, display)) {
+    if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
       frame->FirstChild(nsnull, frame);
     }
-    NS_IF_RELEASE(tag);
   }
 
   return frame;

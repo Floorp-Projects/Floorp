@@ -190,8 +190,10 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     kidMaxSize.width -= left + right;
     kidMaxSize.height -= top + bottom;
     nsHTMLReflowMetrics desiredSize(nsnull);
+    // We must pass in that the available height is unconstrained, because
+    // constrained is only for when we're paginated...
     nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, reflowState,
-                                     kidMaxSize);
+                                     nsSize(kidMaxSize.width, NS_UNCONSTRAINEDSIZE));
     // XXX HACK
     kidReflowState.widthConstraint = eHTMLFrameConstraint_Fixed;
     kidReflowState.minWidth = kidMaxSize.width;
@@ -220,12 +222,8 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     }
 
-    // If this is a resize reflow and we have non-zero border or padding
-    // then do a repaint to make sure we repaint correctly.
-    // XXX We could be smarter about only damaging the border/padding area
-    // that was affected by the resize...
-    if ((eReflowReason_Resize == reflowState.reason) &&
-        ((left != 0) || (top != 0) || (right != 0) || (bottom) != 0)) {
+    // If this is a resize reflow then do a repaint
+    if (eReflowReason_Resize == reflowState.reason) {
       nsRect  damageRect(0, 0, reflowState.maxSize.width, reflowState.maxSize.height);
       Invalidate(damageRect, PR_FALSE);
     }

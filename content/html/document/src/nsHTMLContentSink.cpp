@@ -53,6 +53,7 @@
 
 #include "nsIWebShell.h"
 #include "nsIHTMLDocument.h"
+#include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 
 // XXX Go through a factory for this one
@@ -1850,6 +1851,12 @@ HTMLContentSink::StartLayout()
     return;
   }
   mLayoutStarted = PR_TRUE;
+
+  // If it's a frameset document then disable scrolling; otherwise, let the
+  // style dictate. We need to do this before the initial reflow...
+  if (mWebShell) {
+    mWebShell->SetScrolling(mFrameset ? NS_STYLE_OVERFLOW_HIDDEN : -1);
+  }
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {

@@ -398,6 +398,8 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   nsRect rect(border.left, border.top, kidDesiredSize.width, kidDesiredSize.height);
   mFirstChild->SetRect(rect);
 
+  // XXX Moved to root frame
+#if 0
   // If this is a resize reflow then repaint the scrolled frame
   if (eReflowReason_Resize == aReflowState.reason) {
     nsIView*        scrolledView;
@@ -409,6 +411,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     viewManager->UpdateView(scrolledView, damageRect, NS_VMREFRESH_NO_SYNC);
     NS_RELEASE(viewManager);
   }
+#endif
 
   // Compute our desired size. If our size was fixed then use the fixed size;
   // otherwise, shrink wrap around the scrolled frame

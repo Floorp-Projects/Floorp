@@ -354,7 +354,7 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
   PRUint8 flags = (mInline) ? NS_BODY_SHRINK_WRAP : 0;
-  NS_NewBodyFrame(mFirstChild, flags);
+  NS_NewAreaFrame(mFirstChild, flags);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext =

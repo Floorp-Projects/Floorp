@@ -217,7 +217,7 @@ public:
   static nsIAtom* repeat;
   static nsIAtom* rev;
   static nsIAtom* rightpadding;
-  static nsIAtom* rootContentPseudo;
+  static nsIAtom* rootPseudo;
   static nsIAtom* rows;
   static nsIAtom* rowspan;
   static nsIAtom* rules;
@@ -281,8 +281,6 @@ public:
   static nsIAtom* width;
   static nsIAtom* wrap;
   static nsIAtom* wrappedFramePseudo;
-
-  static nsIAtom* xmlRootPseudo;
 
   static nsIAtom* zindex;
 };
