@@ -56,6 +56,9 @@ public :
 
     nsCOMPtr<nsICommandManager> mCommandManager;
 
+    // GeckoContainerUI overrides
+    virtual void UpdateStatusBarText(const PRUnichar* aStatusText);
+
     void MakeEditable();
     nsresult DoCommand(const char *aCommand, nsICommandParams *aCommandParams);
     void IsCommandEnabled(const char *aCommand, PRBool *retval);

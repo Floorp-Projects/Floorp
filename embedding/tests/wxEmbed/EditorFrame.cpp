@@ -64,8 +64,9 @@ EditorFrame::EditorFrame(wxWindow* aParent)
     SetupDefaultGeckoWindow();
 
     SendSizeEvent(); // 
-
     
+    CreateStatusBar();
+
     MakeEditable();
 
     mCommandManager = do_GetInterface(mWebBrowser);
@@ -73,6 +74,7 @@ EditorFrame::EditorFrame(wxWindow* aParent)
     nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
     webNav->LoadURI(NS_ConvertASCIItoUCS2("www.mozilla.org").get(),
         nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
+
 }
 
 void EditorFrame::MakeEditable()
@@ -107,7 +109,6 @@ void EditorFrame::IsCommandEnabled(const char *aCommand, PRBool *retval)
     }
 }
 
-
 void EditorFrame::GetCommandState(const char *aCommand, nsICommandParams *aCommandParams)
 {
     if (mCommandManager)
@@ -118,6 +119,10 @@ void EditorFrame::GetCommandState(const char *aCommand, nsICommandParams *aComma
     }
 }
 
+void EditorFrame::UpdateStatusBarText(const PRUnichar* aStatusText)
+{
+    SetStatusText(aStatusText);
+}
 
 static
 nsresult MakeCommandParams(nsICommandParams **aParams)
@@ -133,12 +138,12 @@ nsresult MakeCommandParams(nsICommandParams **aParams)
     return rv;
 }
 
-const char kCmdBold[]      = "cmd_bold";
-const char kCmdItalic[]    = "cmd_italic";
-const char kCmdUnderline[] = "cmd_underline";
-const char kCmdIndent[]    = "cmd_indent";
-const char kCmdOutdent[]   = "cmd_outdent";
-const char kCmdAlign[]     = "cmd_align";
+static const char kCmdBold[]      = "cmd_bold";
+static const char kCmdItalic[]    = "cmd_italic";
+static const char kCmdUnderline[] = "cmd_underline";
+static const char kCmdIndent[]    = "cmd_indent";
+static const char kCmdOutdent[]   = "cmd_outdent";
+static const char kCmdAlign[]     = "cmd_align";
 
 void EditorFrame::OnEditBold(wxCommandEvent &event)
 {

@@ -38,6 +38,14 @@
 #include "nsIURI.h"
 
 BEGIN_EVENT_TABLE(BrowserFrame, GeckoFrame)
+
+    // View menu
+    EVT_MENU(XRCID("view_pagesource"),  BrowserFrame::OnViewPageSource)
+    EVT_UPDATE_UI(XRCID("view_pagesource"),
+                                        BrowserFrame::OnUpdateViewPageSource)
+
+    // Browser operations, back / forward etc.
+    // TODO some of these can go in GeckoFrame
     EVT_MENU(XRCID("browse_back"),      BrowserFrame::OnBrowserBack)
     EVT_UPDATE_UI(XRCID("browse_back"), BrowserFrame::OnUpdateBrowserBack)
     EVT_MENU(XRCID("browse_fwd"),       BrowserFrame::OnBrowserForward)
@@ -100,6 +108,42 @@ void BrowserFrame::OnFileSave(wxCommandEvent & WXUNUSED(event))
 }
 
 void BrowserFrame::OnFilePrint(wxCommandEvent & WXUNUSED(event))
+{
+}
+
+void BrowserFrame::OnViewPageSource(wxCommandEvent &event)
+{
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
+    if(!webNav)
+        return;
+
+    // Get the URI object whose source we want to view.
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIURI> currentURI;
+    rv = webNav->GetCurrentURI(getter_AddRefs(currentURI));
+    if(NS_FAILED(rv) || !currentURI)
+        return;
+
+    // Get the uri string associated with the nsIURI object
+    nsCAutoString uriString;
+    rv = currentURI->GetSpec(uriString);
+    if(NS_FAILED(rv))
+        return;
+
+    // Build the view-source: url
+    nsAutoString viewSrcUrl(L"view-source:");
+    viewSrcUrl.AppendWithConversion(uriString.get());
+
+    BrowserFrame *frame = new BrowserFrame(NULL);
+    if (frame)
+    {
+        frame->Show(TRUE);
+        frame->LoadURI(viewSrcUrl.get());
+    }
+
+}
+
+void BrowserFrame::OnUpdateViewPageSource(wxUpdateUIEvent &event)
 {
 }
 
