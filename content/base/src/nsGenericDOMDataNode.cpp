@@ -387,14 +387,15 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
   }
 
   PRUint32 amount = aCount;
-  if (aStart + amount > textLength) {
+  if (amount > textLength - aStart) {
     amount = textLength - aStart;
   }
+
   if (mText.Is2b()) {
     aReturn.Assign(mText.Get2b() + aStart, amount);
   }
   else {
-    aReturn.Assign(NS_ConvertASCIItoUCS2(mText.Get1b() + aStart, amount).get(), amount);
+    aReturn.Assign(NS_ConvertASCIItoUCS2(mText.Get1b() + aStart, amount));
   }
 
   return NS_OK;
