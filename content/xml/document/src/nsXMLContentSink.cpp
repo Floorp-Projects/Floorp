@@ -834,7 +834,18 @@ nsXMLContentSink::AddLeaf(const nsIParserNode& aNode)
       break;
 
     case eToken_cdatasection:
-      AddCDATASection(aNode);
+      /*
+       * If we're inside a <html:script> tag we add the data as text so that
+       * the script can be processed.
+       *
+       * -- jst@citec.fi
+       */
+      if (mInScript) {
+        AddText(aNode.GetText());
+      } else {
+        AddCDATASection(aNode);
+      }
+
       break;
 
     case eToken_entity:
