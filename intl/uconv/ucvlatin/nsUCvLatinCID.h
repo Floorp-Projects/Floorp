@@ -198,6 +198,11 @@ NS_DECLARE_ID(kVPSToUnicodeCID,
 NS_DECLARE_ID(kUTF8ToUnicodeCID, 
   0x5534ddc0, 0xdd96, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+// Class ID for our UTF7ToUnicode charset converter
+// {77CFAAF1-1CF4-11d3-8AAF-00600811A836}
+NS_DECLARE_ID(kUTF7ToUnicodeCID, 
+  0x77cfaaf1, 0x1cf4, 0x11d3, 0x8a, 0xaf, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
 // Class ID for our MUTF7ToUnicode charset converter
 // {B57F97C1-0D70-11d3-8AAE-00600811A836}
 NS_DECLARE_ID(kMUTF7ToUnicodeCID, 
@@ -376,6 +381,11 @@ NS_DECLARE_ID(kUnicodeToVPSCID,
 // {7C657D18-EC5E-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kUnicodeToUTF8CID, 
   0x7c657d18, 0xec5e, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToUTF7 charset converter
+// {77CFAAF2-1CF4-11d3-8AAF-00600811A836}
+NS_DECLARE_ID(kUnicodeToUTF7CID, 
+  0x77cfaaf2, 0x1cf4, 0x11d3, 0x8a, 0xaf, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our UnicodeToMUTF7 charset converter
 // {B57F97C2-0D70-11d3-8AAE-00600811A836}

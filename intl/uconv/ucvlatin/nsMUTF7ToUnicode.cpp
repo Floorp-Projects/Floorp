@@ -20,23 +20,10 @@
 #include "nsMUTF7ToUnicode.h"
 
 //----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-static PRUint16 g_utMappingTable[] = {
-#include "cp1252.ut"
-};
-
-static PRInt16 g_utShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-//----------------------------------------------------------------------
 // Class nsMUTF7ToUnicode [implementation]
 
 nsMUTF7ToUnicode::nsMUTF7ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+: nsBasicUTF7Decoder(',', '&')
 {
 }
 

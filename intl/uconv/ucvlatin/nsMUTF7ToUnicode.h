@@ -20,18 +20,18 @@
 #ifndef nsMUTF7ToUnicode_h___
 #define nsMUTF7ToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUTF7ToUnicode.h"
 
 //----------------------------------------------------------------------
 // Class nsMUTF7ToUnicode [declaration]
 
 /**
- * A character set converter from MUTF7 to Unicode.
+ * A character set converter from Modified UTF7 to Unicode.
  *
  * @created         18/May/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsMUTF7ToUnicode : public nsOneByteDecoderSupport
+class nsMUTF7ToUnicode : public nsBasicUTF7Decoder 
 {
 public:
 
