@@ -14,6 +14,20 @@
     <!-- other parameters of command are assumed to have
       some useful initial value -->
   </xul:commands>
+  <xul:menubar>
+    <xul:menu name="File">
+      <xul:menuitem name="Print" cmd="nsCmd:BrowserPrint""/>
+    </xul:menu>
+    <xul:menu name="View">
+      <xul:menuitem name="Reload" cmd="nsCmd:BrowserReload"/>
+    </xul:menu>
+    <xul:menu name="Go">
+      <xul:menuitem name="Back" cmd="nsCmd:BrowserBack"/>
+      <xul:menuitem name="Forward" cmd="nsCmd:BrowserForward" />
+      <xul:menuitem name="Home" cmd="nsCmd:BrowserHome"/>
+    </xul:menu>
+
+  </xul:menubar>
   <xul:toolbar>
           <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:BR/>Back
