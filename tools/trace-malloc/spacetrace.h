@@ -667,7 +667,7 @@ extern int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation, PRB
 extern void htmlHeader(const char* aTitle);
 extern void htmlFooter(void);
 extern void htmlAnchor(const char* aHref, const char* aText, const char* aTarget);
-
+extern char *FormatNumber(PRInt32 num);
 
 /*
 ** shared globals
