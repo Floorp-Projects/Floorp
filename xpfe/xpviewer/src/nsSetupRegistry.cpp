@@ -40,6 +40,8 @@
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
 
+#include "nsIEditor.h"
+
 #ifdef XP_PC
 
 #define WIDGET_DLL "raptorwidget.dll"
@@ -52,6 +54,7 @@
 #define DOM_DLL    "jsdom.dll"
 #define LAYOUT_DLL "raptorhtml.dll"
 #define NETLIB_DLL "netlib.dll"
+#define EDITOR_DLL "ender.dll"
 
 #else
 
@@ -76,7 +79,7 @@
 #define DOM_DLL    "libjsdom.so"
 #define LAYOUT_DLL "libraptorhtml.so"
 #define NETLIB_DLL "libnetlib.so"
-
+#define EDITOR_DLL "libeditor.so"
 #endif // XP_MAC
 
 #endif // XP_PC
@@ -133,6 +136,7 @@ static NS_DEFINE_IID(kCMenuButtonCID, NS_MENUBUTTON_CID);
 static NS_DEFINE_IID(kCMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenuCID, NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
+static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -188,4 +192,6 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCMenuBarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
 }

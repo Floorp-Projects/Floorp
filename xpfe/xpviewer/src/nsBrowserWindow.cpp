@@ -97,12 +97,7 @@
 #endif
 
 
-#ifdef NGEDITOR
 #include "nsIEditor.h"
-//these defines are for use with the experimental autopointers. 
-//they WILL NOT be permanent
-#include "COM_auto_ptr.h"
-#endif //NGEDITOR
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -183,9 +178,9 @@ static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuButtonIID, NS_IMENUBUTTON_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
-#ifdef NGEDITOR
+static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
-#endif
+
 
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
@@ -2834,52 +2829,56 @@ nsBrowserWindow::DoJSConsole()
 void
 nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
 {
-#ifdef NGEDITOR
   PRInt32 i, n;
   if (nsnull != aWebShell) 
   {
-    COM_auto_ptr<nsIContentViewer> cViewer;
-    aWebShell->GetContentViewer(*getter_AddRefs(cViewer));//returns an addreffed viewer  dereference it because it accepts a reference to a * not a **
+    nsIContentViewer *cViewer;
+    aWebShell->GetContentViewer(cViewer);//returns an addreffed viewer  dereference it because it accepts a reference to a * not a **
     if (cViewer) 
     {
-      COM_auto_ptr<nsIDocumentViewer>  dViewer;
-      if (NS_SUCCEEDED(cViewer->QueryInterface(kIDocumentViewerIID, getter_AddRefs(dViewer)))) 
+      nsIDocumentViewer *dViewer;
+      if (NS_SUCCEEDED(cViewer->QueryInterface(kIDocumentViewerIID, (void **)&dViewer))) 
       { //returns an addreffed document viewer
-        COM_auto_ptr<nsIDocument>  doc;
-        dViewer->GetDocument(*getter_AddRefs(doc)); //returns an addreffed document
+        nsIDocument *doc;
+        dViewer->GetDocument(doc); //returns an addreffed document
         if (doc) 
         {
-          COM_auto_ptr<nsIDOMDocument> domDoc;
-          if (NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID, getter_AddRefs(domDoc))))
+          nsIDOMDocument *domDoc;
+          if (NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID, (void **)&domDoc)))
           { //returns an addreffed domdocument
-            COM_auto_ptr<nsIEditor>  editor;
-            nsRepository::CreateInstance(kIEditorIID, nsnull, kIEditorIID, (void **)getter_AddRefs(editor));
-            editor->Init(domDoc);
-            AddEditor(editor); //new call to set the editor interface this will addref
+            nsIEditor *editor;
+            if (NS_SUCCEEDED(nsRepository::CreateInstance(kIEditFactoryIID, nsnull, kIEditorIID, (void **)editor)))
+            {
+              editor->Init(domDoc);
+              AddEditor(editor); //new call to set the editor interface this will addref
+              NS_IF_RELEASE(editor);
+            }
+            NS_IF_RELEASE(domDoc);
           }
+          NS_IF_RELEASE(doc);
         }
+        NS_IF_RELEASE(dViewer);
       }
+      NS_IF_RELEASE(cViewer);
     }
     aWebShell->GetChildCount(n);
     for (i = 0; i < n; i++) {
-      COM_auto_ptr<nsIWebShell>  child;
-      aWebShell->ChildAt(i, *getter_AddRefs(child));
+      nsIWebShell *child;
+      aWebShell->ChildAt(i, child);
       DoEditorMode(child); //doesnt addref
+      NS_IF_RELEASE(child);
     }
   }
-#endif //NGEDITOR
 }
 
 
 
-#ifdef NGEDITOR
 void
 nsBrowserWindow::AddEditor(nsIEditor *aEditor)
 {
   if (!mEditor)//THIS FUNCTION REALLY NEEDS HELP
     mEditor = aEditor;
 }
-#endif //NGEDITOR
 
 
 
@@ -3385,9 +3384,7 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
   {"Debug Robot",   "R", VIEWER_DEBUGROBOT},
   {"-", NULL, 0},
   {"Show Content Quality",   ".", VIEWER_SHOW_CONTENT_QUALITY},
-#ifdef NGEDITOR
-    {"Editor",   "E", EDITOR_MODE},
-#endif
+  {"Editor",   "E", EDITOR_MODE},
   {NULL, NULL, 0}
   };
 
