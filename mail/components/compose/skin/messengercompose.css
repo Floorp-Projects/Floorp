@@ -457,6 +457,10 @@ treechildren::-moz-tree-image(remote-err) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.png");
 }
 
+#MsgHeadersToolbar {
+  min-height: 132px;
+}
+
 /* ::::: format toolbar ::::: */
 
 #FormatToolbar > toolbarbutton {
