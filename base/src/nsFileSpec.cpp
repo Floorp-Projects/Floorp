@@ -20,11 +20,15 @@
 
 #include "prtypes.h"
 
-#if DEBUG
+#ifdef NS_USING_NAMESPACE
+#include <ostream>
+#include <strstream>
+#include <string>
+#else
 #include <ostream.h>
-#endif
-
 #include <strstream.h>
+#include <string.h>
+#endif
 
 #ifdef NS_USING_NAMESPACE
 	using std::ends;
@@ -44,7 +48,7 @@ NS_NAMESPACE nsFileSpecHelpers
 		char*& ioPath,
 		char inSeparator,
 		const char* inLeafName);
-	NS_NAMESPACE_PROTOTYPE const char* GetLeaf(const char* inPath, char inSeparator);
+	NS_NAMESPACE_PROTOTYPE char* GetLeaf(const char* inPath, char inSeparator); // allocated
 	NS_NAMESPACE_PROTOTYPE char* StringDup(const char* inString, int allocLength = 0);
 	NS_NAMESPACE_PROTOTYPE char* AllocCat(const char* inString1, const char* inString2);
 	NS_NAMESPACE_PROTOTYPE char* StringAssign(char*& ioString, const char* inOther);
@@ -117,7 +121,7 @@ void nsFileSpecHelpers::LeafReplace(
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
-const char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
+char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
 // Returns a pointer to an allocated string representing the leaf.
 //----------------------------------------------------------------------------------------
 {
@@ -369,7 +373,7 @@ void nsNativeFileSpec::MakeUnique()
 		// start with "Picture-1.jpg" after "Picture.jpg" exists
 		char buf[nsFileSpecHelpers::kMaxFilenameLength + 1];
 		ostrstream newName(buf, nsFileSpecHelpers::kMaxFilenameLength);
-		newName << leafName << "-" << index << suffix << ends;
+		newName << leafName << "-" << index << suffix << '\0'; // should be: << std::ends;
 		SetLeafName(newName.str()); // or: SetLeafName(buf)
 	}
 	if (*suffix)
@@ -392,7 +396,7 @@ void nsNativeFileSpec::operator = (const nsFileURL& inURL)
 //----------------------------------------------------------------------------------------
 nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup((char*)inPath))
+:    mPath(nsFileSpecHelpers::StringDup((const char*)inPath))
 {
 }
 #endif // XP_UNIX
@@ -410,7 +414,7 @@ void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup((char*)inSpec))
+:    mPath(nsFileSpecHelpers::StringDup((const char*)inSpec))
 {
 }
 #endif //XP_UNIX
@@ -445,7 +449,7 @@ void nsNativeFileSpec::operator = (const nsNativeFileSpec& inSpec)
 
 #if defined(XP_UNIX) || defined(XP_PC)
 //----------------------------------------------------------------------------------------
-nsNativeFileSpec::operator = (const char* inString)
+void nsNativeFileSpec::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
     mPath = nsFileSpecHelpers::StringAssign(mPath, inString);

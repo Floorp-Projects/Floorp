@@ -31,18 +31,12 @@ nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
-	delete [] mPath;
 	// Convert '/' to '\'
-	const char* str = (const char*)inSpec;
-	mPath = new char[1 + strlen(str);
-	const char* src = str;
-	char* dst = mPath;
-	for (const char* temp = str; *temp; src++,dst++)
+	nsFileSpecHelpers::StringAssign(mPath, inSpec.mPath);
+	for (const char* cp = mPath; *cp; cp++)
 	{
-		if (*src == '/')
-			*dst = '\\';
-		else
-			*dst = *src;
+		if (*cp == '/')
+			*cp = '\\';
 	}
 } // nsNativeFileSpec::operator =
 
@@ -55,21 +49,15 @@ nsFilePath::nsFilePath(const nsNativeFileSpec& inSpec)
 } // nsFilePath::nsFilePath
 
 //----------------------------------------------------------------------------------------
-nsFilePath::operator = (const nsNativeFileSpec& inSpec)
+void nsFilePath::operator = (const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
-	delete [] mPath;
 	// Convert '\' to '/'
-	const char* str = (const char*)inSpec;
-	mPath = new char[1 + strlen(str);
-	const char* src = str;
-	char* dst = mPath;
-	for (const char* temp = str; *temp; src++,dst++)
+	nsFileSpecHelpers::StringAssign(mPath, inSpec.mPath);
+	for (const char* cp = mPath; *cp; cp++)
 	{
-		if (*src == '\\')
-			*dst = '/';
-		else
-			*dst = *src;
+		if (*cp == '\\')
+			*cp = '/';
 	}
 } // nsFilePath::operator =
 

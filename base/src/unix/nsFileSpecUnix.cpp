@@ -23,14 +23,14 @@
 void nsNativeFileSpec::SetLeafName(const char* inLeafName)
 //----------------------------------------------------------------------------------------
 {
-	nsFileHelpers::LeafReplace(mPath, '/', inLeafName);
+	nsFileSpecHelpers::LeafReplace(mPath, '/', inLeafName);
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
 char* nsNativeFileSpec::GetLeafName() const
 //----------------------------------------------------------------------------------------
 {
-	return nsFileHelpers::GetLeaf(mPath, '/');
+	return nsFileSpecHelpers::GetLeaf(mPath, '/');
 } // nsNativeFileSpec::GetLeafName
 
 //----------------------------------------------------------------------------------------
