@@ -278,8 +278,16 @@ nsTableFrame::nsTableFrame()
   mBits.mCellMapValid = PR_TRUE;
   mBits.mIsInvariantWidth = PR_FALSE;
   mBits.mHasScrollableRowGroup = PR_FALSE;
+  // XXX We really shouldn't do this, but if we don't then we'll have a
+  // problem with the tree control...
+#if 0
   mColumnWidthsLength = 0;  
   mColumnWidths = nsnull;
+#else
+  mColumnWidthsLength = 10;  
+  mColumnWidths = new PRInt32[mColumnWidthsLength];
+  nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
+#endif
   mCellMap = new nsCellMap(0, 0);
 }
 
