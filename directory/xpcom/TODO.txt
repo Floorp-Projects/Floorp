@@ -1,7 +1,5 @@
 housecleaning
 ------------- 
-* fix mac compiler warnings
-
 * sort out nsldap.h vs. nsLDAP.h.  can the former go away?
 
 * why do searches that return lots of entries to the nsLDAPChannel
