@@ -95,7 +95,7 @@ export:: $(TARGETS) $(HEADERS)
 # Create mini-SDK directory for NSPR
 ifndef MOZ_NATIVE_NSPR
 ifeq ($(OS_ARCH),WINNT)
-_ABS_DIST = $(shell cd $(DIST) && cygpath -w `pwd` | sed -s 's|\\|/|g')
+_ABS_DIST = $(shell cd $(DIST) && cygpath -w `pwd` | sed -e 's|\\|/|g')
 else
 _ABS_DIST = $(shell cd $(DIST) && pwd)
 endif
