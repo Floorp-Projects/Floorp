@@ -36,7 +36,7 @@
   #%]
 
 [% filtered_login = login FILTER html %]
-[% INCLUDE global/header
+[% INCLUDE global/header.html.tmpl
    title = "User Preferences"
    h2 = filtered_login
    style = "td.selected_tab {
@@ -90,7 +90,7 @@
 <form method="post">
   <input type="hidden" name="tab" value="[% current_tab.name %]">
 
-  [% INCLUDE "prefs/${current_tab.name}.tmpl" IF current_tab.name.defined %]
+  [% INCLUDE "account/prefs/${current_tab.name}.html.tmpl" IF current_tab.name.defined %]
 
   [% IF current_tab.saveable %]
     <input type="hidden" name="dosave" value="1">
@@ -107,7 +107,7 @@
   
 </form>
 
-[% INCLUDE global/footer %]
+[% INCLUDE global/footer.html.tmpl %]
 
     
     

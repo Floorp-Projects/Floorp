@@ -19,7 +19,7 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% INCLUDE global/header
+[% INCLUDE global/header.html.tmpl
            title = "Show Votes"
            h2 = "Bug <a href='show_bug.cgi?id=$bug_id'>$bug_id</a>"
  %]
@@ -46,4 +46,4 @@
 
 <p>Total votes: [% total %]</p>
 
-[% INCLUDE global/footer %]
+[% INCLUDE global/footer.html.tmpl %]

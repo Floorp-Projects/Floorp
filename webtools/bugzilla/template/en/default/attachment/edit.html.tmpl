@@ -24,7 +24,7 @@
 [% h1 = BLOCK %]Edit Attachment #[% attachid %] for <a href="show_bug.cgi?id=[% bugid %]">Bug #[% bugid %]</a>[% END %]
 [% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
 
-[% INCLUDE global/header 
+[% INCLUDE global/header.html.tmpl 
   title = title
   h1 = h1
   h2 = h2
@@ -223,4 +223,4 @@
 
 <br>
 
-[% INCLUDE global/footer %]
+[% INCLUDE global/footer.html.tmpl %]

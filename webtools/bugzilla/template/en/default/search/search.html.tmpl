@@ -21,7 +21,7 @@
   #                 Gervase Markham <gerv@gerv.net>
   #%]
 
-[% INCLUDE global/header 
+[% INCLUDE global/header.html.tmpl 
   title = "Search for bugs"
   extra = " onLoad=\"selectProduct(document.forms['queryform']);\""
 %]
@@ -839,7 +839,7 @@ function selectProduct(f) {
 
 </FORM>
 
-[% INCLUDE global/footer %]
+[% INCLUDE global/footer.html.tmpl %]
 
 [%############################################################################%]
 [%# Block for SELECT fields                                                  #%]

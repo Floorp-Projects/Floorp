@@ -31,7 +31,7 @@
 [%# Page Header                                                              #%]
 [%############################################################################%]
 
-[% PROCESS global/header
+[% PROCESS global/header.html.tmpl
   title = title
   style = style
 %]
@@ -82,7 +82,7 @@
 [%############################################################################%]
 
 [% FLUSH %]
-[% PROCESS buglist/table.tmpl %]
+[% PROCESS list/table.html.tmpl %]
 
 [%############################################################################%]
 [%# Succeeding Status Line                                                   #%]
@@ -113,7 +113,7 @@
 
 [% IF dotweak %]
 
-  [% PROCESS "buglist/change-form.tmpl" %]
+  [% PROCESS "list/edit-multiple.html.tmpl" %]
   
   </form>
 
@@ -157,5 +157,5 @@
 [%# Page Footer                                                              #%]
 [%############################################################################%]
 
-[% PROCESS global/footer %]
+[% PROCESS global/footer.html.tmpl %]
 

@@ -21,7 +21,7 @@
   #                 Myk Melez <myk@mozilla.org>
   #%]
 
-[% PROCESS global/header 
+[% PROCESS global/header.html.tmpl 
    title = "Dependency tree for Bug $bugid"
    h1    = "Dependency tree for bug <a href=\"show_bug.cgi?id=$bugid\">$bugid</a>"
    style = "strike { background-color: #d9d9d9; color: #000000; }"
@@ -73,7 +73,7 @@
 
 [% PROCESS depthControlToolbar %]
 
-[% PROCESS global/footer %]
+[% PROCESS global/footer.html.tmpl %]
 
 
 [%###########################################################################%]

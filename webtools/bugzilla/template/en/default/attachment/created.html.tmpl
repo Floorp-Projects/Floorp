@@ -19,7 +19,7 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
-[% INCLUDE global/header 
+[% INCLUDE global/header.html.tmpl 
   title = "Changes Submitted"
   style = "th { text-align: left; }"
 %]
@@ -53,4 +53,4 @@
 <a href="attachment.cgi?bugid=[% bugid %]&action=enter">Create Another Attachment to Bug #[% bugid %]</a>
 </p>
 
-[% INCLUDE global/footer %]
+[% INCLUDE global/footer.html.tmpl %]

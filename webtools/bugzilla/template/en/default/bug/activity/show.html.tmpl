@@ -26,7 +26,7 @@
   # activity.html.tmpl template fulfilled.
   #%]
  
-[% INCLUDE global/header 
+[% INCLUDE global/header.html.tmpl 
   title = "Changes made to bug $bug_id"
   h1 = "Activity log"
   h2 = "Bug <a href='show_bug.cgi?id=$bug_id'>$bug_id</a>"
@@ -34,10 +34,10 @@
 
 <br>
 
-[% INCLUDE show/activity.html.tmpl %]
+[% INCLUDE bug/activity/table.html.tmpl %]
 
 <p>
   <a href="show_bug.cgi?id=[% bug_id %]">Back to bug [% bug_id %]</a>
 </p>
 
-[% INCLUDE global/footer %]
+[% INCLUDE global/footer.html.tmpl %]
