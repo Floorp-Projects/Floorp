@@ -23,6 +23,7 @@
  *  Jan Varga <varga@utcru.sk>
  *  Peter Annema <disttsc@bart.nl>
  *  Johann Petrak <johann@ai.univie.ac.at>
+ *  Akkana Peck <akkana@netscape.com>
  */
 
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
@@ -295,11 +296,13 @@ function selectOnOK()
         ret = nsIFilePicker.returnCancel;
       } else {
         // we need to pop up a dialog asking if you want to save
+        var confirmTitle = gFilePickerBundle.getString("confirmTitle");
         var message =
           gFilePickerBundle.getFormattedString("confirmFileReplacing",
                                                [file.path]);
 
-        var rv = window.confirm(message);
+        promptService = Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
+        var rv = promptService.confirm(window, title, message)
         if (rv) {
           ret = nsIFilePicker.returnReplace;
           retvals.directory = file.parent.path;
