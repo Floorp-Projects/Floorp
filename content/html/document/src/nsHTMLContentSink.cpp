@@ -2542,82 +2542,84 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   }
   NS_IF_RELEASE(sco);
 
+  if ((0 == type.Length()) || type.EqualsIgnoreCase("text/css")) { 
     // The skipped content contains the inline style data
-  const nsString& content = aNode.GetSkippedContent();
+    const nsString& content = aNode.GetSkippedContent();
 
-  nsIURL* url = nsnull;
-  nsIUnicharInputStream* uin = nsnull;
-  if (0 == src.Length()) {
-    // Create a string to hold the data and wrap it up in a unicode
-    // input stream.
-    rv = NS_NewStringUnicharInputStream(&uin, new nsString(content));
-    if (NS_OK != rv) {
-      return rv;
-    }
+    nsIURL* url = nsnull;
+    nsIUnicharInputStream* uin = nsnull;
+    if (0 == src.Length()) {
+      // Create a string to hold the data and wrap it up in a unicode
+      // input stream.
+      rv = NS_NewStringUnicharInputStream(&uin, new nsString(content));
+      if (NS_OK != rv) {
+        return rv;
+	  }
 
-    // Use the document's url since the style data came from there
-    if (0 < mBaseHREF.Length()) { // use base URL
-      rv = NS_NewURL(&url, mBaseHREF);
-      if (NS_FAILED(rv)) {
+      // Use the document's url since the style data came from there
+      if (0 < mBaseHREF.Length()) { // use base URL
+        rv = NS_NewURL(&url, mBaseHREF);
+        if (NS_FAILED(rv)) {
+          url = mDocumentURL;
+          NS_IF_ADDREF(url);
+		}
+	  }
+      else {
         url = mDocumentURL;
         NS_IF_ADDREF(url);
-      }
-    }
-    else {
-      url = mDocumentURL;
-      NS_IF_ADDREF(url);
-    }
+	  }
 
-    // Now that we have a url and a unicode input stream, parse the
-    // style sheet.
-    rv = LoadStyleSheet(url, uin, PR_TRUE, title, media, element);
-    NS_RELEASE(url);
-    NS_RELEASE(uin);
-  } else {
-    // src with immediate style data doesn't add up
-    // XXX what does nav do?
-    // Use the SRC attribute value to load the URL
-    nsAutoString absURL;
-    nsIURLGroup* urlGroup;
-    (void)mDocumentURL->GetURLGroup(&urlGroup);
-    rv = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, src, absURL);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    if (urlGroup) {
-      rv = urlGroup->CreateURL(&url, nsnull, absURL, nsnull);
-      NS_RELEASE(urlGroup);
-    }
-    else {
-      rv = NS_NewURL(&url, absURL);
-    }
-    if (NS_OK != rv) {
-      return rv;
-    }
+      // Now that we have a url and a unicode input stream, parse the
+      // style sheet.
+      rv = LoadStyleSheet(url, uin, PR_TRUE, title, media, element);
+      NS_RELEASE(url);
+      NS_RELEASE(uin);
+	} else {
+      // src with immediate style data doesn't add up
+      // XXX what does nav do?
+      // Use the SRC attribute value to load the URL
+      nsAutoString absURL;
+      nsIURLGroup* urlGroup;
+      (void)mDocumentURL->GetURLGroup(&urlGroup);
+      rv = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, src, absURL);
+      if (NS_OK != rv) {
+        return rv;
+	  }
+      if (urlGroup) {
+        rv = urlGroup->CreateURL(&url, nsnull, absURL, nsnull);
+        NS_RELEASE(urlGroup);
+	  }
+      else {
+        rv = NS_NewURL(&url, absURL);
+	  }
+      if (NS_OK != rv) {
+        return rv;
+	  }
 
-    nsAsyncStyleProcessingDataHTML* d = new nsAsyncStyleProcessingDataHTML;
-    if (nsnull == d) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    d->mTitle.SetString(title);
-    d->mMedia.SetString(media);
-    d->mIsActive = PR_TRUE;
-    d->mURL = url;
-    NS_ADDREF(url);
-    d->mElement = element;
-    NS_ADDREF(element);
-    d->mSink = this;
-    NS_ADDREF(this);
+      nsAsyncStyleProcessingDataHTML* d = new nsAsyncStyleProcessingDataHTML;
+      if (nsnull == d) {
+        return NS_ERROR_OUT_OF_MEMORY;
+	  }
+      d->mTitle.SetString(title);
+      d->mMedia.SetString(media);
+      d->mIsActive = PR_TRUE;
+      d->mURL = url;
+      NS_ADDREF(url);
+      d->mElement = element;
+      NS_ADDREF(element);
+      d->mSink = this;
+      NS_ADDREF(this);
 
-    nsIUnicharStreamLoader* loader;
-    rv = NS_NewUnicharStreamLoader(&loader,
-                                   url, 
-                                   (nsStreamCompleteFunc)nsDoneLoadingStyle, 
-                                   (void *)d);
-    NS_RELEASE(url);
-    if (NS_OK == rv) {
-      rv = NS_ERROR_HTMLPARSER_BLOCK;
-    }
+      nsIUnicharStreamLoader* loader;
+      rv = NS_NewUnicharStreamLoader(&loader,
+                                     url, 
+                                     (nsStreamCompleteFunc)nsDoneLoadingStyle, 
+                                     (void *)d);
+      NS_RELEASE(url);
+      if (NS_OK == rv) {
+        rv = NS_ERROR_HTMLPARSER_BLOCK;
+	  }
+	}
   }
 
   NS_RELEASE(element);
