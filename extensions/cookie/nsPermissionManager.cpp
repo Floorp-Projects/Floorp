@@ -180,6 +180,8 @@ static const char kPermissionsFileName[] = "hostperm.1";
 static const char kOldPermissionsFileName[] = "cookperm.txt";
 static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
 
+static const PRUint32 kLazyWriteTimeout = 2000; //msec
+
 NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference)
 
 nsPermissionManager::nsPermissionManager()
@@ -189,6 +191,9 @@ nsPermissionManager::nsPermissionManager()
 
 nsPermissionManager::~nsPermissionManager()
 {
+  if (mWriteTimer)
+    mWriteTimer->Cancel();
+
   RemoveTypeStrings();
   RemoveAllFromMemory();
 }
@@ -244,7 +249,7 @@ nsPermissionManager::Add(nsIURI     *aURI,
   if (NS_FAILED(rv)) return rv;
 
   mChangedList = PR_TRUE;
-  Write();
+  LazyWrite();
   return NS_OK;
 }
 
@@ -334,7 +339,7 @@ nsPermissionManager::Remove(const nsACString &aHost,
       --mHostCount;
     }
     mChangedList = PR_TRUE;
-    Write();
+    LazyWrite();
 
     // Notify Observers
     if (oldPermission != nsIPermissionManager::UNKNOWN_ACTION)
@@ -351,7 +356,7 @@ nsPermissionManager::RemoveAll()
 {
   RemoveAllFromMemory();
   NotifyObservers(nsnull, NS_LITERAL_STRING("cleared").get());
-  Write();
+  LazyWrite();
   return NS_OK;
 }
 
@@ -456,6 +461,11 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change.
+
+    if (mWriteTimer) {
+      mWriteTimer->Cancel();
+      mWriteTimer = 0;
+    }
     
     // Dump current permission.  This will be done by calling 
     // RemoveAllFromMemory which clears the memory-resident
@@ -465,13 +475,15 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
     // was accepted).  If this condition ever changes, the permission
     // file would need to be updated here.
 
-    RemoveTypeStrings();
-    RemoveAllFromMemory();
-    
-    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
+    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       if (mPermissionsFile) {
         mPermissionsFile->Remove(PR_FALSE);
       }
+    } else {
+      Write();
+    }
+    RemoveTypeStrings();
+    RemoveAllFromMemory();
   }  
   else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // The profile has aleady changed.    
@@ -790,6 +802,28 @@ AddEntryToList(nsHostEntry *entry, void *arg)
   return PL_DHASH_NEXT;
 }
 
+void
+nsPermissionManager::LazyWrite()
+{
+  if (mWriteTimer) {
+    mWriteTimer->SetDelay(kLazyWriteTimeout);
+  } else {
+    mWriteTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mWriteTimer) {
+      mWriteTimer->InitWithFuncCallback(DoLazyWrite, this, kLazyWriteTimeout,
+                                        nsITimer::TYPE_ONE_SHOT);
+    }
+  }
+}
+
+void
+nsPermissionManager::DoLazyWrite(nsITimer *aTimer,
+                                 void     *aClosure)
+{
+  nsPermissionManager *service = NS_REINTERPRET_CAST(nsPermissionManager*, aClosure);
+  service->Write();
+  service->mWriteTimer = 0;
+}
 
 nsresult
 nsPermissionManager::Write()
