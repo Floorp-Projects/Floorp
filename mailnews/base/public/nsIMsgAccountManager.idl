@@ -49,8 +49,8 @@ interface nsIMsgAccountManager : nsISupports {
   string getAccountKey(in nsIMsgAccount account);
 
   /* utility routines to enumerate elements in all accounts */
-  nsISupportsArray getAllIdentities();
-  nsISupportsArray getAllServers();
+  readonly attribute nsISupportsArray allIdentities;
+  readonly attribute nsISupportsArray allServers;
 
   void LoadAccounts();
 };

@@ -51,11 +51,11 @@ class nsIMsgAccountManager : public nsISupports {
   /* string getAccountKey (in nsIMsgAccount account); */
   NS_IMETHOD getAccountKey(nsIMsgAccount *account, char **_retval) = 0;
 
-  /* nsISupportsArray getAllIdentities (); */
-  NS_IMETHOD getAllIdentities(nsISupportsArray **_retval) = 0;
+  /* readonly attribute nsISupportsArray allIdentities; */
+  NS_IMETHOD GetAllIdentities(nsISupportsArray * *aAllIdentities) = 0;
 
-  /* nsISupportsArray getAllServers (); */
-  NS_IMETHOD getAllServers(nsISupportsArray **_retval) = 0;
+  /* readonly attribute nsISupportsArray allServers; */
+  NS_IMETHOD GetAllServers(nsISupportsArray * *aAllServers) = 0;
 
   /* void LoadAccounts (); */
   NS_IMETHOD LoadAccounts() = 0;

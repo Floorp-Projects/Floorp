@@ -76,11 +76,11 @@ public:
   /* string getAccountKey (in nsIMsgAccount account); */
   NS_IMETHOD getAccountKey(nsIMsgAccount *account, char **_retval) ;
 
-  /* nsISupportsArray getAllIdentities (); */
-  NS_IMETHOD getAllIdentities(nsISupportsArray **_retval) ;
+  /* nsISupportsArray GetAllIdentities (); */
+  NS_IMETHOD GetAllIdentities(nsISupportsArray **_retval) ;
 
-  /* nsISupportsArray getAllServers (); */
-  NS_IMETHOD getAllServers(nsISupportsArray **_retval) ;
+  /* nsISupportsArray GetAllServers (); */
+  NS_IMETHOD GetAllServers(nsISupportsArray **_retval) ;
 
   NS_IMETHOD LoadAccounts();
 
@@ -337,9 +337,9 @@ nsMsgAccountManager::addServerToArray(nsHashKey *key, void *aData,
   return PR_TRUE;
 }
 
-/* nsISupportsArray getAllIdentities (); */
+/* nsISupportsArray GetAllIdentities (); */
 NS_IMETHODIMP
-nsMsgAccountManager::getAllIdentities(nsISupportsArray **_retval)
+nsMsgAccountManager::GetAllIdentities(nsISupportsArray **_retval)
 {
   nsresult rv;
   nsISupportsArray *identities;
@@ -355,9 +355,9 @@ nsMsgAccountManager::getAllIdentities(nsISupportsArray **_retval)
   return rv;
 }
 
-/* nsISupportsArray getAllServers (); */
+/* nsISupportsArray GetAllServers (); */
 NS_IMETHODIMP
-nsMsgAccountManager::getAllServers(nsISupportsArray **_retval)
+nsMsgAccountManager::GetAllServers(nsISupportsArray **_retval)
 {
   nsresult rv;
   nsISupportsArray *servers;
@@ -588,7 +588,7 @@ nsMsgAccountManager::upgradePrefs()
 
       rv = m_prefs->CopyCharPref("mail.directory", &oldstr);
       if (NS_SUCCEEDED(rv)) {
-        popServer->SetRootFolderPath(oldstr);
+        server->SetLocalPath(oldstr);
         PR_Free(oldstr);
       }
 
