@@ -411,7 +411,8 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
     else 
     {
       NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID,&rv);
-      if (NS_SUCCEEDED(rv))
+      NS_ASSERTION(!(curFolder == mDestFolder), "The source folder and the destination folder are the same");
+      if (NS_SUCCEEDED(rv) && curFolder != mDestFolder)
       {
          if (mCommand == nsMsgViewCommandType::moveMessages)
            copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_TRUE /* isMove */,copyServListener, window);

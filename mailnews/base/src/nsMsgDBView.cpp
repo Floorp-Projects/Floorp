@@ -1389,16 +1389,20 @@ nsresult
 nsMsgDBView::ApplyCommandToIndicesWithFolder(nsMsgViewCommandTypeValue command, nsMsgViewIndex* indices,
                     PRInt32 numIndices, nsIMsgFolder *destFolder)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   NS_ENSURE_ARG_POINTER(destFolder);
 
   switch (command) {
     case nsMsgViewCommandType::copyMessages:
-        rv = CopyMessages(mMsgWindow, indices, numIndices, PR_FALSE /* isMove */, destFolder);
+        NS_ASSERTION(!(m_folder == destFolder), "The source folder and the destination folder are the same");
+        if (m_folder != destFolder)
+          rv = CopyMessages(mMsgWindow, indices, numIndices, PR_FALSE /* isMove */, destFolder);
         break;
     case nsMsgViewCommandType::moveMessages:
-        rv = CopyMessages(mMsgWindow, indices, numIndices, PR_TRUE  /* isMove */, destFolder);
+        NS_ASSERTION(!(m_folder == destFolder), "The source folder and the destination folder are the same");
+        if (m_folder != destFolder)
+          rv = CopyMessages(mMsgWindow, indices, numIndices, PR_TRUE  /* isMove */, destFolder);
         break;
     default:
         NS_ASSERTION(PR_FALSE, "unhandled command");
