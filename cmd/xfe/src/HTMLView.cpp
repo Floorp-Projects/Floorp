@@ -1048,7 +1048,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
     {
       Widget focus = XmGetFocusWidget (CONTEXT_WIDGET (m_contextData));
 
-      if (focus && XmIsTextField (focus) || XmIsTextField(focus)) {
+      if (focus && (XmIsTextField (focus) || XmIsTextField(focus))) {
         char *text = fe_GetTextField(focus);
 
         if (text == NULL) return;
@@ -1435,60 +1435,58 @@ XFE_HTMLView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*)
 char *
 XFE_HTMLView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo*)
 {
-#define IS_CMD(command) (cmd == (command))
-
   Boolean framesArePresent = hasSubViews();
 
-  if (IS_CMD(xfeCmdSaveAs)) {
+  if (cmd == xfeCmdSaveAs) {
     if (framesArePresent) 
       return stringFromResource("saveFramesetAsCmdString");
     else
       return stringFromResource("saveAsCmdString");
-  } else if (IS_CMD(xfeCmdEditPage)) {
+  } else if (cmd == xfeCmdEditPage) {
 	  char* name = cmd;
 
 	  if (framesArePresent) 
 		  name = "editFrameSet";
 
 	  return getLabelString(name);
-  } else if (IS_CMD(xfeCmdPrint)) {
+  } else if (cmd == xfeCmdPrint) {
     if (framesArePresent) 
       return stringFromResource("printFrameCmdString");
     else
       return stringFromResource("printCmdString");
 /* Don't use "Select All in Frame" because a textfield may have focus
-  } else if (IS_CMD(xfeCmdSelectAll)) {
+  } else if (cmd == xfeCmdSelectAll) {
     if (framesArePresent) 
       return stringFromResource("selectAllInFrameCmdString");
     else
       return stringFromResource("selectAllCmdString");
 */
-  } else if (IS_CMD(xfeCmdFindInObject)) {
+  } else if (cmd == xfeCmdFindInObject) {
     if (framesArePresent) 
       return stringFromResource("findInFrameCmdString");
     else
       return stringFromResource("findInObjectCmdString");
-  } else if (IS_CMD(xfeCmdStopLoading)) {
+  } else if (cmd == xfeCmdStopLoading) {
     if (fe_IsContextLooping(m_contextData))
       return stringFromResource("stopAnimationsCmdString");
     else
       return stringFromResource("stopLoadingCmdString");
-  } else if (IS_CMD(xfeCmdFrameReload)) {
+  } else if (cmd == xfeCmdFrameReload) {
     if (framesArePresent)
       return stringFromResource("reloadWithFrameCmdString");
     else
       return stringFromResource("reloadNonFrameCmdString");
-  } else if (IS_CMD(xfeCmdViewFrameSource)) {
+  } else if (cmd == xfeCmdViewFrameSource) {
     if (framesArePresent)
       return stringFromResource("pageSourceWithFrameCmdString");
     else
       return stringFromResource("pageSourceNonFrameCmdString");
-  } else if (IS_CMD(xfeCmdViewFrameInfo)) {
+  } else if (cmd == xfeCmdViewFrameInfo) {
     if (framesArePresent)
       return stringFromResource("pageInfoWithFrameCmdString");
     else
       return stringFromResource("pageInfoNonFrameCmdString");
-  } else if (IS_CMD(xfeCmdOpenImage)) {
+  } else if (cmd == xfeCmdOpenImage) {
     if (m_imageUnderMouse && m_imageUnderMouse->address) {
 
 #define BUFMAX 100
@@ -1524,7 +1522,7 @@ XFE_HTMLView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo*)
     }
     return stringFromResource("openImageCmdString");
   }
-  else if (IS_CMD(xfeCmdChangeDocumentEncoding))
+  else if (cmd == xfeCmdChangeDocumentEncoding)
     {
       char buf[80]; 
       char *res = NULL;
@@ -1541,14 +1539,13 @@ XFE_HTMLView::commandToString(CommandType cmd, void *calldata, XFE_CommandInfo*)
         return NULL;
 
     }
-  else if (IS_CMD(xfeCmdSetDefaultDocumentEncoding))
+  else if (cmd == xfeCmdSetDefaultDocumentEncoding)
     {
       char *res;
       res = "setDefaultDocCSID";
       return stringFromResource(res);
     }
   return NULL;
-#undef IS_CMD
 }
 
 void XFE_HTMLView::setScrollbarsActive(XP_Bool b)
@@ -1768,8 +1765,6 @@ void
 XFE_HTMLView::reload(Widget, XEvent *event, XP_Bool onlyReloadFrame)
 {
   fe_UserActivity (m_contextData);
-/*  if (fe_hack_self_inserting_accelerator (widget, NULL, NULL))
-    return; */
   
   MWContext *context = m_contextData;
 
@@ -2062,6 +2057,10 @@ XFE_HTMLView::doPopup(MWContext *context, CL_Layer *layer,
 		  if (isCommandEnabled(xfeCmdCopy))        ADD_SPEC ( copy_spec );
 		  if (isLink)                              ADD_SPEC ( copyLink_spec );
 		  if (isImage)                             ADD_SPEC ( copyImage_spec );
+
+          // Update item sensitivity and labels.
+          m_popup->update();
+
 		  // Finish up the popup
 		  m_popup->position (event);
 		  m_popup->show();
