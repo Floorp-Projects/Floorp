@@ -131,7 +131,12 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 		comps[*compNum].forceupgrade = (strstr(attr, "FORCE_UPGRADE") != NULL);
 		comps[*compNum].uncompress = (strstr(attr, "UNCOMPRESS") != NULL);
 		comps[*compNum].downloadonly = (strstr(attr, "DOWNLOAD_ONLY") != NULL);
+		comps[*compNum].supersede = (strstr(attr, "SUPERSEDE") != NULL);
+		comps[*compNum].ignoreerror = (strstr(attr, "IGNORE_DOWNLOAD_ERROR") != NULL);
 		comps[*compNum].unselected = (strstr(attr, "UNSELECTED") != NULL);
+		// using strcmp for VISIBLE attrib instead of strstr since ststr returns 
+		// true for INVISIBLE attribs also (VISIBLE is a part of INVISIBLE)
+		comps[*compNum].visible = (strcmp(attr, "VISIBLE") == 0);
 		comps[*compNum].empty	 = strcmp(attr, "");
 		
 		if (!(comps[*compNum].selected && comps[*compNum].invisible && 

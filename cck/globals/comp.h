@@ -12,6 +12,9 @@ typedef struct s_component {
 	BOOL	uncompress;
 	BOOL	downloadonly;
 	BOOL	unselected;
+	BOOL	supersede;
+	BOOL	ignoreerror;
+	BOOL	visible;
 	BOOL	empty;
 	
 	} COMPONENT;

@@ -1750,7 +1750,7 @@ void init_components()
 			Components[i].selected = FALSE;
 		}
 		else 
-			if ((Components[i].additional) || !(Components[i].empty))
+			if ((Components[i].additional) || (Components[i].visible))
 			Components[i].selected = TRUE;
 	}
 }
@@ -1788,36 +1788,54 @@ void invisible()
 			Cee.Format("C%d", componentOrder);
 			WritePrivateProfileString("Setup Type0",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
 			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
-			if (Components[i].additional && !(Components[i].launchapp) &&
-				!Components[i].forceupgrade && !(Components[i].invisible))
-				WritePrivateProfileString(Components[i].compname, "Attributes",
-				"SELECTED|ADDITIONAL", iniDstPath);
-			else if (Components[i].additional && !(Components[i].launchapp) &&
-				Components[i].forceupgrade && !(Components[i].unselected) &&
-				!(Components[i].invisible))
-				WritePrivateProfileString(Components[i].compname, "Attributes",
-				"SELECTED|ADDITIONAL|FORCE_UPGRADE", iniDstPath);
-			else if (Components[i].additional && !(Components[i].launchapp) &&
-				Components[i].forceupgrade && Components[i].unselected &&
-				!(Components[i].invisible))
-				WritePrivateProfileString(Components[i].compname, "Attributes",
-				"UNSELECTED|ADDITIONAL|FORCE_UPGRADE", iniDstPath);
-			else if (!(Components[i].disabled) && !(Components[i].additional) &&
-				Components[i].forceupgrade && !(Components[i].invisible))
-				WritePrivateProfileString(Components[i].compname, "Attributes",
-				"SELECTED|FORCE_UPGRADE", iniDstPath);
-			else if (Components[i].additional && Components[i].launchapp && 
-				Components[i].uncompress && !(Components[i].invisible))
-				WritePrivateProfileString(Components[i].compname, "Attributes",
-				"SELECTED|UNCOMPRESS|LAUNCHAPP|ADDITIONAL", iniDstPath);
-			 else if (!(Components[i].additional) && 
-				 !(Components[i].forceupgrade) && !(Components[i].invisible))
-				 WritePrivateProfileString(Components[i].compname, "Attributes",
-				 "SELECTED|INVISIBLE", iniDstPath);
-			componentOrder++;
+
+			CString strAttributes = "SELECTED";
+			CString strSep = "|";
+
+			if (Components[i].disabled)
+				strAttributes += strSep + "DISABLED";
+
+			if (Components[i].invisible)
+				strAttributes += strSep + "INVISIBLE";
+
+			if (Components[i].visible)
+				strAttributes += strSep + "VISIBLE";
+
+			if (Components[i].uncompress)
+				strAttributes += strSep + "UNCOMPRESS";
+
+			if (Components[i].launchapp)
+				strAttributes += strSep + "LAUNCHAPP";
+
+			if (Components[i].additional)
+				strAttributes += strSep + "ADDITIONAL";
+
+			if (Components[i].forceupgrade)
+				strAttributes += strSep + "FORCE_UPGRADE";
+
+			if (Components[i].supersede)
+				strAttributes += strSep + "SUPERSEDE";
+
+			if (Components[i].downloadonly)
+				strAttributes += strSep + "DOWNLOAD_ONLY";
+
+			if (Components[i].ignoreerror)
+				strAttributes += strSep + "IGNORE_DOWNLOAD_ERROR";
+
+			if (Components[i].unselected)
+			{
+				// UNSELECTED attribute must not appear with SELECTED attribute
+				if ( (strAttributes.Find("SELECTED")) != -1 )
+					strAttributes.Replace("SELECTED", "UNSELECTED");
+			}
+
+			WritePrivateProfileString(Components[i].compname, "Attributes", 
+				strAttributes, iniDstPath);
+			 componentOrder++;
 		}
 		else
-			WritePrivateProfileString(Components[i].compname, "Attributes", "INVISIBLE", iniDstPath);
+			WritePrivateProfileString(Components[i].compname, "Attributes",	
+			"INVISIBLE", iniDstPath);
 	}
 }
 
@@ -1855,18 +1873,23 @@ void LinuxInvisible()
 			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,
 				(LPCTSTR)component,iniDstPath);
 
-			if ((Components[i].invisible) && (Components[i].downloadonly))
-				WritePrivateProfileString(Components[i].compname,"Attributes",
-				"SELECTED|INVISIBLE|DOWNLOAD_ONLY",iniDstPath);
-			else if ((Components[i].invisible) && !(Components[i].downloadonly))
-				WritePrivateProfileString(Components[i].compname,"Attributes",
-				"SELECTED|INVISIBLE",iniDstPath);
-			else if (!Components[i].empty)
-				WritePrivateProfileString(Components[i].compname,"Attributes",
-				"",iniDstPath);
-			else
-				WritePrivateProfileString(Components[i].compname,"Attributes",
-				"SELECTED",iniDstPath);
+			CString strAttributes = "SELECTED";
+			CString strSep = "|";
+
+			if (Components[i].invisible)
+				strAttributes += strSep + "INVISIBLE";
+
+			if (Components[i].downloadonly)
+				strAttributes += strSep + "DOWNLOAD_ONLY";
+
+			if (Components[i].visible)
+			// VISIBLE attribute must appear by itself 
+			// this may require change in future if VISIBLE attribute in the 
+			// browser installer appears with other attributes
+				strAttributes = "VISIBLE";
+
+			WritePrivateProfileString(Components[i].compname, "Attributes",
+				strAttributes, iniDstPath);
 			componentOrder++;
 		}
 		else
