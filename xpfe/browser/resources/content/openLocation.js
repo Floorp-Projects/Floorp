@@ -96,7 +96,9 @@ function open() {
     window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
   }
 
-	return true;
+   // Delay closing slightly to avoid timing bug on Linux.
+   window.setTimeout( "window.close()", 10 );
+   return false;
 }
 
 function createInstance( progid, iidName ) {
