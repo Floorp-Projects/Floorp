@@ -619,12 +619,14 @@ CDockedRDFCoordinator :: FinishCreateSelf ( )
 	// initialize the navCenter shelf. If we are a standalone window, we won't have
 	// a LDividedView so no expando-collapso stuff happens.
 	LDividedView* navCenter = dynamic_cast<LDividedView*>(FindPaneByID('ExCt'));
+	Assert_( navCenter != NULL );
 	if ( navCenter )
 		mNavCenter = new CShelf ( navCenter, NULL, 
 									(LDividedView::FeatureFlags)(LDividedView::eZapClosesFirst | LDividedView::eNoOpenByDragging) );
 
 	// initialize the shelf holding the ad space & the tree
 	LDividedView* adSpace = dynamic_cast<LDividedView*>(FindPaneByID('guts'));
+	Assert_( adSpace != NULL );
 	if ( adSpace )
 		mAdSpace = new CShelf ( adSpace, NULL, 
 									(LDividedView::FeatureFlags)(LDividedView::eZapClosesSecond | LDividedView::eNoOpenByDragging) );
@@ -658,9 +660,11 @@ CDockedRDFCoordinator :: SavePlace ( LStream* outStreamData )
 {
 	if ( !outStreamData )
 		return;
-		
-	NavCenterShelf().GetShelf()->SavePlace(outStreamData);
-	AdSpaceShelf().GetShelf()->SavePlace(outStreamData);
+	
+	if ( mNavCenter )
+		NavCenterShelf().GetShelf()->SavePlace(outStreamData);
+	if ( mAdSpace )
+		AdSpaceShelf().GetShelf()->SavePlace(outStreamData);
 	
 } // SavePlace
 
@@ -675,9 +679,11 @@ CDockedRDFCoordinator :: RestorePlace ( LStream* inStreamData )
 {
 	if ( !inStreamData )	// if reading from new/empty prefs, the stream will be null
 		return;
-		
-	NavCenterShelf().GetShelf()->RestorePlace(inStreamData);
-	AdSpaceShelf().GetShelf()->RestorePlace(inStreamData);
+	
+	if ( mNavCenter )	
+		NavCenterShelf().GetShelf()->RestorePlace(inStreamData);
+	if ( mAdSpace )
+		AdSpaceShelf().GetShelf()->RestorePlace(inStreamData);
 	
 } // RestorePlace
 
