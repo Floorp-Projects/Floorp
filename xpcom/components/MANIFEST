@@ -1,4 +1,3 @@
-nsXPComFactory.h
 nsComponentManagerUtils.h
 nsCategoryManagerUtils.h
 nsStaticComponent.h

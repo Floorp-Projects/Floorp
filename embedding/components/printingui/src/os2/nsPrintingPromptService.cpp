@@ -38,7 +38,6 @@
 
 #include "nsPrintingPromptService.h"
 
-#include "nsXPComFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
