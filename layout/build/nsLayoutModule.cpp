@@ -128,7 +128,6 @@
 #include "nsIAutoCopy.h"
 #include "nsIPrintPreviewContext.h"
 #include "nsCSSLoader.h"
-#include "nsIModifyableXPointer.h"
 #include "nsXULAtoms.h"
 #include "nsLayoutCID.h"
 
@@ -368,7 +367,6 @@ nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewFrameLoader(nsIFrameLoader** aResult);
 nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
-nsresult NS_NewXPointerResult(nsIXPointerResult **aResult);
 
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -424,7 +422,6 @@ MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopySe
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
 MAKE_CTOR(CreateCaret,                  nsICaret,               NS_NewCaret)
 
-MAKE_CTOR(CreateXPointerResult,           nsIXPointerResult,           NS_NewXPointerResult)
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
 MAKE_CTOR(CreateEventStateManager,        nsIEventStateManager,        NS_NewEventStateManager)
