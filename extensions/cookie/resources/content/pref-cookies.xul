@@ -59,9 +59,11 @@
       <radio group="networkCookieBehaviour" data="1" value="&accOrgCookiesRadio.label;" accesskey="&accOrgCookiesRadio.accesskey;"/>
       <radio group="networkCookieBehaviour" data="2" value="&disableCookies.label;" accesskey="&disableCookies.accesskey;"/>
     </radiogroup>
-    <checkbox class="indent" id="networkWarnAboutCookies" value="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
+    <box autostretch="never">
+      <checkbox class="indent" id="networkWarnAboutCookies" value="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
               pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
               prefattribute="checked"/>
+    </box>
     <box autostretch="never" halign="right">
       <button class="dialog" value="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"/>
       <button class="dialog" value="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"/>

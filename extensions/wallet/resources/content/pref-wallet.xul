@@ -73,13 +73,15 @@
                  prefattribute="value"/>
     </box>
 -->
-    <checkbox id="walletCaptureForms"
+    <box autostretch="never">
+      <checkbox id="walletCaptureForms"
               value="&walletEnabled.label;"
               accesskey="&walletEnabled.accesskey;"
               pref="true"
               preftype="bool"
               prefstring="wallet.captureForms"
               prefattribute="checked"/>
+    </box>
     <box autostretch="never" halign="right">
       <button class="dialog"
               value="&viewWallet.label;"

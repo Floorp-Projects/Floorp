@@ -104,10 +104,12 @@
       <radio id="accOrgImages" group="networkImageBehaviour" data="1" value="&accOrgImagesRadio.label;" accesskey="&accOrgImagesRadio.accesskey;"/>
       <radio group="networkImageBehaviour" data="2" value="&disableImages.label;" accesskey="&disableImages.accesskey;"/>
     </radiogroup>
-    
-    <checkbox class="indent" id="networkImageWarnAboutImages" value="&warnAboutImages.label;" accesskey="&warnAboutImages.accesskey;"
+
+    <box autostretch="never">    
+      <checkbox class="indent" id="networkImageWarnAboutImages" value="&warnAboutImages.label;" accesskey="&warnAboutImages.accesskey;"
               pref="true" preftype="bool" prefstring="network.image.warnAboutImages" 
               prefattribute="checked"/>
+    </box>
 
     <box autostretch="never" halign="right">
       <button class="dialog" id="viewImages" value="&viewImages.label;" accesskey="&viewImages.accesskey;" oncommand="viewImages();"/>
