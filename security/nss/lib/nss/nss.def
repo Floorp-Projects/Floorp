@@ -730,6 +730,7 @@ PK11_WaitForTokenEvent;
 ;+       *;
 ;+};
 ;+NSS_3.7.1 { 	# NSS 3.7.1 release
+;+    global:
 PK11_TokenRefresh;
 ;+    local:
 ;+       *;
