@@ -213,6 +213,8 @@ nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outS
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
 	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+	OSType				typeToSave = 'TEXT';
+	OSType				creatorToSave = 'MOZZ';
 
 	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
 	if (anErr == noErr)	{	
@@ -224,14 +226,13 @@ nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outS
 		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
 		
 		// Display the get file dialog
-		anErr = ::NavGetFile(
+		anErr = ::NavPutFile(
 					NULL,
 					&reply,
 					&dialogOptions,
 					eventProc,
-					NULL, // preview proc
-					NULL, // filter proc
-					NULL, //typeList,
+					typeToSave,
+					creatorToSave,
 					NULL); // callbackUD	
 	
 		// See if the user has selected save
