@@ -65,3 +65,16 @@ PRInt32 nsCBreathLoop::PlatformGetReturnCode(void* platformEventData)
 {
 	return 0;
 }
+
+nsresult nsCBreathLoop::PlatformRetrieveNextEvent(void* platformFilterData,
+	void* platformEventData)
+{
+	nsCWinFilter* filter=(nsCWinFilter*)platformFilterData;
+	MSG* pMsg=(MSG*)platformEventData;
+	
+	filter->wRemoveFlags|= PM_REMOVE;
+	if(::PeekMessage(pMsg, filter->hWnd, filter->wMsgFilterMin, 
+		filter->wMsgFilterMax, filter->wRemoveFlags))
+		return NS_OK;
+	return NS_COMFALSE;
+}

@@ -41,6 +41,8 @@ protected:
 	nsresult PlatformExit(PRInt32 exitCode);
 
 	PRInt32 PlatformGetReturnCode(void* platformEventData);
+	nsresult PlatformRetrieveNextEvent(void* platformFilterData, 
+		void* platformEventData);
 };
 
 #endif /* nsCBreathLoop_h__ */

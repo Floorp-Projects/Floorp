@@ -75,6 +75,15 @@ NS_IMETHODIMP nsCEvent::SetNativeData(nsNativeEventDataType dataType,
 
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsCEvent::GetIsExitEvent(PRBool* aIsExitEvent)
+{
+	NS_ENSURE_ARG_POINTER(aIsExitEvent);
+
+	*aIsExitEvent = m_msg.message == WM_QUIT ? PR_TRUE : PR_FALSE;
+
+	return NS_OK;
+}
 //*****************************************************************************
 // nsCEvent::nsIWinEvent
 //*****************************************************************************   
