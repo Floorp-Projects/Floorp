@@ -23,7 +23,7 @@
 
 
 #include "nsProxyEvent.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
 
 #include "nsRepository.h"
@@ -260,11 +260,11 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
 				return NS_ERROR_FAILURE;
 			}
 			
-			rv = manager->GetProxyObject(self->GetQueue(), 
- 										 aIID, 
- 										 self->GetRealObject(), 
-										 self->GetProxyType(),
-										 (void**)&aIdentificationObject);
+			rv = manager->GetProxyForObject(self->GetQueue(), 
+                                            aIID, 
+                                            self->GetRealObject(), 
+                                            self->GetProxyType(),
+                                            (void**) &aIdentificationObject);
 		}
 		
 		NS_IF_RELEASE((*aInstancePtr));

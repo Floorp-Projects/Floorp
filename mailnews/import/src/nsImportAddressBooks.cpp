@@ -48,7 +48,7 @@
 #include "nsIAbDirectory.h"
 #include "nsImportStringBundle.h"
 #include "nsTextFormatter.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
 
 #include "ImportDebug.h"
@@ -812,7 +812,7 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 			char *parentUri = PR_smprintf( "%s", kDirectoryDataSourceRoot);
 			rv = rdfService->GetResource( parentUri, getter_AddRefs(parentResource));
 			nsCOMPtr<nsIAbDirectory> parentDir;
-			rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
+			rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
 										parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
 			if (parentUri)
 				PR_smprintf_free(parentUri);

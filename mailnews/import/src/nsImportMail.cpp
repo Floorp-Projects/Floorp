@@ -35,7 +35,7 @@
 #include "nsIImportMailboxDescriptor.h"
 #include "nsCRT.h"
 #include "nsString.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
 
 #include "nsIFileSpec.h"
@@ -783,7 +783,7 @@ ImportMailThread( void *stuff)
 	// Initialize the curFolder proxy object
 	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
-		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
+		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
 										curFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 
 		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", (long) rv);
@@ -821,7 +821,7 @@ ImportMailThread( void *stuff)
 						break;
 					}
 
-					rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder), 
+					rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder), 
 													subFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 					if (NS_FAILED( rv)) {
 						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
@@ -836,7 +836,7 @@ ImportMailThread( void *stuff)
 					while ((newDepth < depth) && NS_SUCCEEDED( rv)) {
 						nsCOMPtr<nsIFolder> parFolder;
 						curProxy->GetParent( getter_AddRefs( parFolder));
-						rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
+						rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
 														parFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 						depth--;
 					}

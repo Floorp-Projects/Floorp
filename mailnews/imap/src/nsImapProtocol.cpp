@@ -69,7 +69,7 @@ PRLogModuleInfo *IMAP;
 #include "nsIImapIncomingServer.h"
 #include "nsIPref.h"
 #include "nsImapUtils.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 
 #if 0
 #include "nsIHashAlgorithm.h"
@@ -454,7 +454,7 @@ nsImapProtocol::SetupSinkProxy()
         nsCOMPtr<nsIImapMailFolderSink> aImapMailFolderSink;
         res = m_runningUrl->GetImapMailFolderSink(getter_AddRefs(aImapMailFolderSink));
         if (NS_SUCCEEDED(res) && aImapMailFolderSink)
-          res = proxyManager->GetProxyObject(m_sinkEventQueue,
+          res = proxyManager->GetProxyForObject(m_sinkEventQueue,
                                              NS_GET_IID(nsIImapMailFolderSink),
                                              aImapMailFolderSink,
                                              PROXY_SYNC | PROXY_ALWAYS,
@@ -466,7 +466,7 @@ nsImapProtocol::SetupSinkProxy()
         nsCOMPtr<nsIImapMessageSink> aImapMessageSink;
         res = m_runningUrl->GetImapMessageSink(getter_AddRefs(aImapMessageSink));
         if (NS_SUCCEEDED(res) && aImapMessageSink)
-          res = proxyManager->GetProxyObject(m_sinkEventQueue,
+          res = proxyManager->GetProxyForObject(m_sinkEventQueue,
                                              NS_GET_IID(nsIImapMessageSink),
                                              aImapMessageSink,
                                              PROXY_SYNC | PROXY_ALWAYS,
@@ -504,7 +504,7 @@ nsImapProtocol::SetupSinkProxy()
          nsCOMPtr<nsIImapServerSink> aImapServerSink;
          res = m_runningUrl->GetImapServerSink(getter_AddRefs(aImapServerSink));
          if (NS_SUCCEEDED(res) && aImapServerSink)
-            res = proxyManager->GetProxyObject(  m_sinkEventQueue,
+            res = proxyManager->GetProxyForObject(  m_sinkEventQueue,
                              NS_GET_IID(nsIImapServerSink),
                              aImapServerSink,
                              PROXY_SYNC | PROXY_ALWAYS,

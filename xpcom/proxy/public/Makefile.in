@@ -31,11 +31,12 @@ XPIDL_MODULE	= proxyObjInst
 
 EXPORTS		= \
 		nsProxyEvent.h \
-		nsProxyObjectManager.h \
 		nsProxiedService.h \
 		$(NULL)
 
-XPIDLSRCS	= nsIProxyCreateInstance.idl
+XPIDLSRCS	= nsIProxyCreateInstance.idl \
+                  nsIProxyObjectManager.idl  \
+                  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 

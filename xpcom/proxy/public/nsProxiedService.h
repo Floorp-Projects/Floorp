@@ -25,7 +25,7 @@
 #define __nsProxiedServiceManager_h_
 
 #include "nsIServiceManager.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // NS_WITH_PROXIED_SERVICE: macro to make using services that need to be proxied
@@ -40,7 +40,7 @@
 //      if(NS_FAILED(rv))
 //          return;
 //      nsIMyService pIProxiedObject = NULL;
-//      rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, 
+//      rv = pIProxyObjectManager->GetProxyForObject(pIProxyQueue, 
 //                                                              NS_GET_IID(nsIMyService), 
 //                                                              pIMyService, PROXY_SYNC,
 //                                                              (void**)&pIProxiedObject);
@@ -96,7 +96,7 @@ class nsProxiedService
 
        PRInt32 proxyType = PROXY_SYNC;
        if (always) proxyType |= PROXY_ALWAYS;
-       *rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, 
+       *rv = pIProxyObjectManager->GetProxyForObject(pIProxyQueue, 
                                                   aIID, 
                                                   mService,
                                                   proxyType, 

@@ -21,19 +21,26 @@
  *  Doug Turner <dougt@netscape.com> 
  */
 
+#include <stdio.h>
 
 #include "stdafx.h"
 #include "resource.h"
 
+class nsIWebBrowser;
 
+#include "nsIDocShell.h"
+#include "nsIWebNavigation.h"
+#include "nsIEditorShell.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
 
 #include "WebBrowser.h"
-
-WebBrowser         *mozBrowser = nsnull;
+WebBrowser *mozBrowser = nsnull;
 
 extern nsresult NS_InitEmbedding(const char *aPath);
 extern nsresult NS_TermEmbedding();
 
+extern nsresult CreateNativeWindowWidget(nsIWebBrowser **outBrowser);
 
 
 #define MAX_LOADSTRING 100
@@ -45,19 +52,42 @@ TCHAR szWindowClass[MAX_LOADSTRING];								// The title bar text
 
 // Foward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
-BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK	OpenURI(HWND, UINT, WPARAM, LPARAM);
 
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+
+ConvertDocShellToDOMWindow(nsIDocShell* aDocShell, nsIDOMWindow** aDOMWindow)
 {
- 	// TODO: Place code here.
-	MSG msg;
-	
+  if (!aDOMWindow)
+    return NS_ERROR_FAILURE;
+
+  *aDOMWindow = nsnull;
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject(do_GetInterface(aDocShell));
+
+  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(scriptGlobalObject));
+  if (!domWindow)
+    return NS_ERROR_FAILURE;
+
+  *aDOMWindow = domWindow.get();
+  NS_ADDREF(*aDOMWindow);
+
+  return NS_OK;
+}
+
+
+#define RUN_EDITOR 1
+nsCOMPtr<nsIEditorShell> editor;
+
+int main ()
+{
+ 	
+    printf("\nYour embedded, man!\n\n");
+    
+    MSG msg;
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+
 	// Initialize global strings
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadString(hInstance, IDC_WINEMBED, szWindowClass, MAX_LOADSTRING);
@@ -65,11 +95,36 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     NS_InitEmbedding(nsnull);
 
-	// Perform application initialization:
-	if (!InitInstance (hInstance, nCmdShow)) 
-	{
-		return FALSE;
-	}
+    nsCOMPtr<nsIWebBrowser> theBrowser;
+
+	CreateNativeWindowWidget(getter_AddRefs(theBrowser));
+
+
+#ifndef RUN_EDITOR
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(theBrowser));
+    webNav->LoadURI(NS_ConvertASCIItoUCS2("http://people.netscape.com/dougt").GetUnicode());
+    
+#else
+
+    nsresult rv;
+    editor = do_CreateInstance("component://netscape/editor/editorshell", &rv);
+    
+	if (NS_FAILED(rv))
+        return -1;
+    
+    nsCOMPtr <nsIDocShell> rootDocShell;
+    theBrowser->GetDocShell(getter_AddRefs(rootDocShell));
+
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    ConvertDocShellToDOMWindow(rootDocShell, getter_AddRefs(domWindow));
+   
+    editor->Init();
+    editor->SetEditorType(NS_ConvertASCIItoUCS2("html").GetUnicode());
+    editor->SetWebShellWindow(domWindow);
+    editor->SetContentWindow(domWindow);
+    editor->LoadUrl(NS_ConvertASCIItoUCS2("http://lxr.mozilla.org/").GetUnicode());
+#endif
+
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0)) 
@@ -78,6 +133,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		DispatchMessage(&msg);
 	}
     
+#ifdef RUN_EDITOR
+    PRBool duh;
+    editor->SaveDocument(PR_FALSE, PR_FALSE, &duh);
+#endif
+
     NS_TermEmbedding();
 
 	return msg.wParam;
@@ -119,21 +179,20 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	return RegisterClassEx(&wcex);
 }
 
-//
-//   FUNCTION: InitInstance(HANDLE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
-   HWND hWnd;
 
-   hInst = hInstance; // Store instance handle in our global variable
+
+nsresult CreateNativeWindowWidget(nsIWebBrowser **outBrowser)
+{
+
+    STARTUPINFO StartupInfo;
+    StartupInfo.dwFlags = 0;
+    GetStartupInfo( &StartupInfo );
+
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    int nCmdShow = StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT;
+
+
+   HWND hWnd;
 
    hWnd = CreateWindow( szWindowClass, 
                         szTitle, 
@@ -149,19 +208,17 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    if (!hWnd)
    {
-      return FALSE;
+      return NS_ERROR_FAILURE;
    }
-
-   
 
     mozBrowser = new WebBrowser();
     if (! mozBrowser)
-        return FALSE;
+        return NS_ERROR_FAILURE;
 
     NS_ADDREF(mozBrowser);
 
     if ( NS_FAILED( mozBrowser->Init(hWnd) ) )
-        return FALSE;
+        return NS_ERROR_FAILURE;
 
     RECT rect;
     GetClientRect(hWnd, &rect);
@@ -172,7 +229,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
-    return TRUE;
+    if (outBrowser) 
+        mozBrowser->GetIWebBrowser(outBrowser);
+
+    return NS_OK;
 }
 
 //
@@ -210,8 +270,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				   break;
 				
                 case MOZ_Print:
-                    if (mozBrowser)
-                        mozBrowser->Print();
+                    //if (mozBrowser)
+                    //    mozBrowser->Print();
+                    editor->SetTextProperty(NS_ConvertASCIItoUCS2("font").GetUnicode(),
+                                            NS_ConvertASCIItoUCS2("color").GetUnicode(),
+                                            NS_ConvertASCIItoUCS2("BLUE").GetUnicode());
                     break;
 
                 default:

@@ -38,7 +38,6 @@
 #include "nsHTTPAtoms.h"
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
-#include "nsProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
@@ -273,10 +272,6 @@ nsHTTPServerListener::~nsHTTPServerListener()
     // But, just in case...
     NS_IF_RELEASE(mResponse) ;
 }
-
-static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID) ;
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID) ;
-static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID) ;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamListener methods:

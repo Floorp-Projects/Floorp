@@ -56,6 +56,7 @@ public:
    nsresult Init(nsNativeWidget widget);
    nsresult GoTo(char* url);
    nsresult Print(void);
+   nsresult GetIWebBrowser(nsIWebBrowser **outBrowser);
 
    WebBrowser();
    virtual ~WebBrowser();
@@ -64,6 +65,8 @@ protected:
     
     nsCOMPtr<nsIWidget>     mWindow;
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
+    nsCOMPtr<nsIBaseWindow> mBaseWindow;
+
 };
 
 #endif /* __WebBrowser__ */

@@ -50,7 +50,7 @@
 #include "nsInstallProgressDialog.h"
 #include "nsInstallResources.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsIDOMWindow.h"
 #include "nsDirectoryService.h"
 #include "nsFileLocations.h"
@@ -200,7 +200,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers, PRUint32 aChromeTyp
                 NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
                 if (NS_SUCCEEDED(rv))
                 {
-                    rv = pmgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIXPIProgressDlg),
+                    rv = pmgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIXPIProgressDlg),
                             Idlg, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mDlg) );
 
                 }

@@ -23,7 +23,7 @@
 
 
 #include "nsProxyEvent.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
 
 #include "nsIProxyCreateInstance.h"
@@ -143,7 +143,11 @@ nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInst
 
 
 NS_IMETHODIMP 
-nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, PRInt32 proxyType, void** aProxyObject)
+nsProxyObjectManager::GetProxyForObject(nsIEventQueue *destQueue, 
+                                        REFNSIID aIID, 
+                                        nsISupports* aObj, 
+                                        PRInt32 proxyType, 
+                                        void** aProxyObject)
 {
     nsresult rv;
     nsCOMPtr<nsIEventQueue> postQ;
@@ -185,13 +189,14 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
 
 
 NS_IMETHODIMP 
-nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, 
-                                     const nsCID &aClass, 
-                                     nsISupports *aDelegate, 
-                                     const nsIID &aIID, 
-                                     PRInt32 proxyType, 
-                                     void** aProxyObject)
+nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue, 
+                                 const nsCID &aClass, 
+                                 nsISupports *aDelegate, 
+                                 const nsIID &aIID, 
+                                 PRInt32 proxyType, 
+                                 void** aProxyObject)
 {
+
     *aProxyObject = nsnull;
     
     // 1. Create a proxy for creating an instance on another thread.
@@ -202,7 +207,11 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue,
     if (ciObject == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv = GetProxyObject(destQueue, NS_GET_IID(nsIProxyCreateInstance), ciObject, PROXY_SYNC, (void**)&ciProxy);
+    nsresult rv = GetProxyForObject(destQueue, 
+                                    NS_GET_IID(nsIProxyCreateInstance), 
+                                    ciObject, 
+                                    PROXY_SYNC, 
+                                    (void**)&ciProxy);
     
     if (NS_FAILED(rv))
     {
@@ -235,163 +244,17 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue,
 
     // 5.  Now create a proxy object for the requested object.
 
-    rv = GetProxyObject(destQueue, aIID, aObj, proxyType, aProxyObject);
+    rv = GetProxyForObject(destQueue, aIID, aObj, proxyType, aProxyObject);
 
     
     // 6. release ownership of aObj so that aProxyObject owns it.
     
     NS_RELEASE(aObj);
 
-    // 7. return the error returned from GetProxyObject.  Either way, we our out of here.
+    // 7. return the error returned from GetProxyForObject.  Either way, we our out of here.
 
     return rv;   
 }
-/////////////////////////////////////////////////////////////////////////
-// nsProxyEventFactory
-/////////////////////////////////////////////////////////////////////////
-nsProxyEventFactory::nsProxyEventFactory(void)
-{
-    NS_INIT_REFCNT();
-}
-
-nsProxyEventFactory::~nsProxyEventFactory(void)
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsProxyEventFactory,nsIFactory)
-
-NS_IMETHODIMP
-nsProxyEventFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (aResult == nsnull)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *aResult = nsnull;
-
-    nsProxyObjectManager *inst = nsProxyObjectManager::GetInstance();
-
-    if (inst == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult result =  inst->QueryInterface(aIID, aResult);
-
-    if (NS_FAILED(result)) 
-    {
-        *aResult = nsnull;
-    }
-
-    NS_ADDREF(inst);  // Are we sure that we need to addref???
-
-    return result;
-
-}
-
-NS_IMETHODIMP
-nsProxyEventFactory::LockFactory(PRBool aLock)
-{
-// not implemented.
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-#if 0
-////////////////////////////////////////////////////////////////////////////////
-// DLL Entry Points:
-////////////////////////////////////////////////////////////////////////////////
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
-extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* aServMgr)
-{
-    return 0;
-}
-
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char *path)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID, 
-                             NS_GET_IID(nsIComponentManager), 
-                             (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) return rv;
-
-#ifdef NS_DEBUG
-    printf("*** nsProxyObjectManager is being registered.  Hold on to your seat...\n");
-#endif
-
-    rv = compMgr->RegisterComponent(kProxyObjectManagerCID, nsnull, nsnull, path, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
-  
-  done:
-    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-    return rv;
-}
-
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID, 
-                             NS_GET_IID(nsIComponentManager), 
-                             (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) return rv;
-
-#ifdef NS_DEBUG
-    printf("*** nsProxyObjectManager is being unregistered.  Na na na na hey hey\n");
-#endif
-    
-    rv = compMgr->UnregisterComponent(kProxyObjectManagerCID, path);
-    if (NS_FAILED(rv)) goto done;
-
-  done:
-    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-    return rv;
-}
 
 
-
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-{
-    if (aFactory == nsnull)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *aFactory = nsnull;
-    nsProxyEventFactory *inst = nsnull;
-    
-    if (aClass.Equals(kProxyObjectManagerCID) )
-        inst = new nsProxyEventFactory();
-    else
-        return NS_ERROR_ILLEGAL_VALUE;
-
-    if (inst == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(inst);    // Stabilize
-
-    nsresult res = inst->QueryInterface(NS_GET_IID(nsIFactory), (void**) aFactory);
-
-    NS_RELEASE(inst);   // Destabilize and avoid leaks. Note we also avoid delete <interface pointer>.
-
-    return res;
-}
-#endif
 

@@ -34,7 +34,7 @@
 
 #include "nsITestProxy.h"
 
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -150,7 +150,7 @@ printf("calling back to caller!\n\n");
     
     PR_ASSERT(manager);
 
-    manager->GetProxyObject((nsIEventQueue*)p1, NS_GET_IID(nsITestProxy), this, PROXY_SYNC, (void**)&proxyObject);
+    manager->GetProxyForObject((nsIEventQueue*)p1, NS_GET_IID(nsITestProxy), this, PROXY_SYNC, (void**)&proxyObject);
     proxyObject->Test3(nsnull, nsnull);
     
     printf("Deleting Proxy Object\n");
@@ -210,9 +210,9 @@ void TestCase_TwoClassesOneInterface(void *arg)
     PR_ASSERT(foo2);
     
     
-    manager->GetProxyObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
+    manager->GetProxyForObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
     
-    manager->GetProxyObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo2, PROXY_SYNC, (void**)&proxyObject2);
+    manager->GetProxyForObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo2, PROXY_SYNC, (void**)&proxyObject2);
 
     
     
@@ -277,7 +277,7 @@ void TestCase_NestedLoop(void *arg)
     PR_ASSERT(foo);
     
     
-    manager->GetProxyObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
+    manager->GetProxyForObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
     
     if (proxyObject)
     {
@@ -334,7 +334,7 @@ void TestCase_2(void *arg)
 
     nsITestProxy         *proxyObject;
 
-    manager->GetProxyObject(argsStruct->queue,
+    manager->GetProxy(argsStruct->queue,
                             NS_GET_IID(nsITestProxy),   // should be CID!
                             nsnull, 
                             NS_GET_IID(nsITestProxy), 
@@ -367,7 +367,7 @@ void TestCase_nsISupports(void *arg)
     
     PR_ASSERT(foo);
 
-     manager->GetProxyObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
+     manager->GetProxyForObject(argsStruct->queue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
     
     if (proxyObject != nsnull)
     {   
@@ -444,7 +444,7 @@ static void PR_CALLBACK EventLoop( void *arg )
     
     PR_ASSERT(foo);
 
-    manager->GetProxyObject(gEventQueue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
+    manager->GetProxyForObject(gEventQueue, NS_GET_IID(nsITestProxy), foo, PROXY_SYNC, (void**)&proxyObject);
 
     PRInt32 a;
     proxyObject->Test(1, 2, &a);

@@ -26,7 +26,7 @@
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
 
 #include "nsMsgBaseCID.h"
@@ -226,7 +226,7 @@ nsresult nsOutlookCompose::CreateComponents( void)
 		if (NS_SUCCEEDED( rv) && m_pMsgSend) {
 			NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
 			if (NS_SUCCEEDED(rv)) {
-				rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgSend),
+				rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgSend),
 										m_pMsgSend, PROXY_SYNC, (void **)&m_pSendProxy);
 				if (NS_FAILED( rv)) {
 					m_pSendProxy = nsnull;

@@ -28,7 +28,7 @@
 
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
@@ -253,11 +253,11 @@ nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
      *
      * Would it be better to catch that case and leave the listener unproxied?
      */
-    rv = proxyManager->GetProxyObject(NS_CURRENT_EVENTQ,
-                                      NS_GET_IID(nsIConsoleListener),
-                                      listener,
-                                      PROXY_ASYNC | PROXY_ALWAYS,
-                                      getter_AddRefs(proxiedListener));
+    rv = proxyManager->GetProxyForObject(NS_CURRENT_EVENTQ,
+                                         NS_GET_IID(nsIConsoleListener),
+                                         listener,
+                                         PROXY_ASYNC | PROXY_ALWAYS,
+                                         getter_AddRefs(proxiedListener));
     if (NS_FAILED(rv))
         return rv;
 

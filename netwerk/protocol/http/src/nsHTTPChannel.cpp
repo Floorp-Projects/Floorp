@@ -40,7 +40,6 @@
 #include "nsNetUtil.h"
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
-#include "nsProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
@@ -60,20 +59,14 @@
 #include "nsIPref.h"
 #include "nsIAuthenticator.h"
 
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-#include "nsProxiedService.h"
-
-static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
 
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler): 
     mResponse(nsnull),

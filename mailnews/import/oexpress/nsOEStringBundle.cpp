@@ -25,7 +25,7 @@
 #include "nsIStringBundle.h"
 #include "nsOEStringBundle.h"
 #include "nsIServiceManager.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsIURI.h"
 
 /* This is the next generation string retrieval call */
@@ -67,7 +67,7 @@ nsIStringBundle *nsOEStringBundle::GetStringBundleProxy( void)
 	// create a proxy object if we aren't on the same thread?
 	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
-		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
+		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
 										m_pBundle, PROXY_SYNC | PROXY_ALWAYS, (void **) &strProxy);
 	}
 

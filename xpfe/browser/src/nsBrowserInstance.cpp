@@ -116,14 +116,15 @@
 #include "nsIContentViewerFile.h"
 #include "nsINameSpaceManager.h"
 #include "nsFileStream.h"
- 
+#include "nsIProxyObjectManager.h" 
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 // Stuff to implement find/findnext
 #include "nsIFindComponent.h"
@@ -172,7 +173,7 @@ FindNamedXULElement(nsIDocShell * aShell, const char *aId, nsCOMPtr<nsIDOMElemen
 //*****************************************************************************
 
 #ifdef ENABLE_PAGE_CYCLER
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsITimer.h"
 
 static void TimesUp(nsITimer *aTimer, void *aClosure);
@@ -251,10 +252,10 @@ public:
       StopTimer();
       NS_WITH_SERVICE(nsIAppShellService, appShellServ, kAppShellServiceCID, &rv);
       if(NS_FAILED(rv)) return rv;
-      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, nsIProxyObjectManager::GetCID(), &rv);
+      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
       if(NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIAppShellService> appShellProxy;
-      rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIAppShellService), 
+      rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIAppShellService), 
                                                 appShellServ, PROXY_ASYNC | PROXY_ALWAYS,
                                                 getter_AddRefs(appShellProxy));
 

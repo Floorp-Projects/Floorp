@@ -51,7 +51,7 @@
 #include "nsXPIDLString.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "nsProxyObjectManager.h"
+#include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
@@ -3950,7 +3950,7 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 		char *parentUri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, file);
 		rv = rdfService->GetResource( parentUri, getter_AddRefs(parentResource));
 		nsCOMPtr<nsIAbDirectory> parentDir;
-		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
+		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
 									parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
 		if (parentDir)
 		{
