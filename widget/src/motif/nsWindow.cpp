@@ -29,7 +29,6 @@
 #include "nsXtEventHandler.h"
 
 #include "X11/Xlib.h"
-#include "Xm/XmP.h"
 #include "Xm/Xm.h"
 #include "Xm/MainW.h"
 #include "Xm/Frame.h"
