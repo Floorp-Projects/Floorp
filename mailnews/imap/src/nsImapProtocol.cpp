@@ -810,7 +810,8 @@ nsImapProtocol::ImapThreadMainLoop()
 		// we already have a url to process then jump right in and
 		// process the current url. Don't try to wait for the monitor
 		// the first time because it may have already been signaled.
-		if (TestFlag(IMAP_FIRST_PASS_IN_THREAD) && m_runningUrl)
+		// But make sure we have a channel first, or ProcessCurrentUrl will fail.
+		if (TestFlag(IMAP_FIRST_PASS_IN_THREAD) && m_runningUrl && m_channel)
 		{
 			// if we launched another url, just loop around and process it.
 			if (ProcessCurrentURL())
