@@ -176,8 +176,8 @@ WSPPropertyBagWrapper::CallMethod(PRUint16 methodIndex,
       }
     }
 
-    rv = WSPProxy::VariantToArrayValue(arrayType.TagPart(), params, iinfo,
-                                       val);
+    rv = WSPProxy::VariantToArrayValue(arrayType.TagPart(), params, params + 1,
+                                       iinfo, val);
   }
   else {
     NS_ERROR("Unexpected method signature for property bag wrapper");
