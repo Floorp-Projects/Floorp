@@ -1252,15 +1252,16 @@ struct nsCOMTypeInfo<nsISupports>
 #define NS_GET_IID(T) nsCOMTypeInfo<T>::GetIID()
 
 // a type-safe shortcut for calling the |QueryInterface()| member function
-template <class DestinationType>
+template <class T, class DestinationType>
 inline
 nsresult
-CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
+CallQueryInterface( T* aSource, DestinationType** aDestination )
   {
     NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
 
-    return aSource->QueryInterface(NS_GET_IID(DestinationType), (void**)aDestination);
+    return aSource->QueryInterface(NS_GET_IID(DestinationType),
+                                   NS_REINTERPRET_CAST(void**, aDestination));
   }
 
 } // extern "C++"
