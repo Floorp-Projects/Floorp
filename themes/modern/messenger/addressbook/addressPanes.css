@@ -61,3 +61,10 @@ treechildren:-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/secure-directory.gif");
 }
 
+#dirTree [sortDirection="ascending"] {
+  list-style-image: none;
+}
+
+#dirTree [sortDirection="descending"] {
+  list-style-image: none;
+}
