@@ -30,6 +30,7 @@ CPPSRCS			= \
 			  nsNetThread.cpp     \
 			  nsRelatedLinks.cpp  \
 			  nsNetStream.cpp     \
+			  nsNetStreamLoader.cpp \
 			  nsHttpUrl.cpp       \
 			  nsStubContext.cpp   \
 			  nsNetStubs.cpp      \
@@ -52,6 +53,7 @@ EXPORTS = nsINetService.h               \
           nsINetlibURL.h                \
           nsIProtocol.h       \
           nsIProtocolURLFactory.h       \
+          nsIUnicharStreamLoader.h	\
           $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

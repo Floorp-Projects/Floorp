@@ -27,6 +27,7 @@ EXPORTS = nsINetService.h               \
           nsIRelatedLinks.h             \
           nsINetlibURL.h                \
           nsIURLGroup.h                 \
+          nsIUnicharStreamLoader.h	\
           nsIConnectionInfo.h           \
           nsIRefreshUrl.h               \
           nsIProtocol.h                 \
@@ -63,6 +64,7 @@ OBJS=                                   \
         .\$(OBJDIR)\nsNetService.obj    \
         .\$(OBJDIR)\nsNetThread.obj     \
         .\$(OBJDIR)\nsNetStream.obj     \
+        .\$(OBJDIR)\nsNetStreamLoader.obj \
         .\$(OBJDIR)\nsRelatedLinks.obj  \
         .\$(OBJDIR)\nsHttpUrl.obj       \
         .\$(OBJDIR)\nsStubContext.obj   \
