@@ -174,11 +174,11 @@ public:
         {*(XPTParamDescriptor*)this = desc;}
 
 
-    PRBool IsIn()  const    {return (PRBool) (XPT_PD_IS_IN(flags));}
-    PRBool IsOut() const    {return (PRBool) (XPT_PD_IS_OUT(flags));}
-    PRBool IsRetval() const {return (PRBool) (XPT_PD_IS_RETVAL(flags));}
-    PRBool IsShared() const {return (PRBool) (XPT_PD_IS_SHARED(flags));}
-    PRBool IsDipper() const {return (PRBool) (XPT_PD_IS_DIPPER(flags));}
+    PRBool IsIn()  const    {return 0 != (XPT_PD_IS_IN(flags));}
+    PRBool IsOut() const    {return 0 != (XPT_PD_IS_OUT(flags));}
+    PRBool IsRetval() const {return 0 != (XPT_PD_IS_RETVAL(flags));}
+    PRBool IsShared() const {return 0 != (XPT_PD_IS_SHARED(flags));}
+    PRBool IsDipper() const {return 0 != (XPT_PD_IS_DIPPER(flags));}
     const nsXPTType GetType() const {return type.prefix;}
 
     // NOTE: other activities on types are done via methods on nsIInterfaceInfo
@@ -195,11 +195,11 @@ public:
     nsXPTMethodInfo(const XPTMethodDescriptor& desc)
         {*(XPTMethodDescriptor*)this = desc;}
 
-    PRBool IsGetter()      const {return (PRBool) (XPT_MD_IS_GETTER(flags) );}
-    PRBool IsSetter()      const {return (PRBool) (XPT_MD_IS_SETTER(flags) );}
-    PRBool IsNotXPCOM()    const {return (PRBool) (XPT_MD_IS_NOTXPCOM(flags));}
-    PRBool IsConstructor() const {return (PRBool) (XPT_MD_IS_CTOR(flags)   );}
-    PRBool IsHidden()      const {return (PRBool) (XPT_MD_IS_HIDDEN(flags) );}
+    PRBool IsGetter()      const {return 0 != (XPT_MD_IS_GETTER(flags) );}
+    PRBool IsSetter()      const {return 0 != (XPT_MD_IS_SETTER(flags) );}
+    PRBool IsNotXPCOM()    const {return 0 != (XPT_MD_IS_NOTXPCOM(flags));}
+    PRBool IsConstructor() const {return 0 != (XPT_MD_IS_CTOR(flags)   );}
+    PRBool IsHidden()      const {return 0 != (XPT_MD_IS_HIDDEN(flags) );}
     const char* GetName()  const {return name;}
     uint8 GetParamCount()  const {return num_args;}
     /* idx was index before I got _sick_ of the warnings on Unix, sorry jband */
