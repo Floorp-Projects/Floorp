@@ -473,7 +473,7 @@ void nsWindow::Create(nsIWidget *aParent,
       res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
 
       if (NS_OK == res)
-        mContext->Init();
+        mContext->Init(nsnull);
     }
 
     if (nsnull != aInitData) {
@@ -570,7 +570,7 @@ void nsWindow::Create(nsNativeWindow aParent,
       res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
 
       if (NS_OK == res)
-        mContext->Init();
+        mContext->Init(nsnull);
     }
 
     if (nsnull != aInitData) {

@@ -19,8 +19,11 @@
 #include <Xm/CascadeBG.h>
 #include <Xm/PushBG.h>
 #include <Xm/SeparatoG.h>
+#include <Xm/RowColumn.h>
 #include "resources.h"
 #include "nsMotifMenu.h"
+
+#include "stdio.h"
 
 //==============================================================
   typedef struct _callBackInfo {

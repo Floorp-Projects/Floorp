@@ -31,6 +31,9 @@ class nsIFontMetrics;
 class nsIWidget;
 struct nsFont;
 
+//a cross platform way of specifying a navite device context
+typedef void * nsNativeDeviceContext;
+
 #define NS_IDEVICE_CONTEXT_IID   \
 { 0x5931c580, 0xb917, 0x11d1,    \
 { 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
@@ -38,7 +41,7 @@ struct nsFont;
 class nsIDeviceContext : public nsISupports
 {
 public:
-  virtual nsresult Init() = 0;
+  virtual nsresult Init(nsNativeDeviceContext aNativeDeviceContext) = 0;
 
   virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView) = 0;
   virtual void InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow) = 0;
@@ -87,6 +90,8 @@ public:
 
   //XXX the return from this really needs to be ref counted somehow. MMP
   virtual PRUint8 * GetGammaTable(void) = 0;
+
+  virtual nsNativeDeviceContext GetNativeDeviceContext(void) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */

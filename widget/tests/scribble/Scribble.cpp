@@ -411,7 +411,7 @@ nsresult CreateApplication()
     res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&scribbleData.mContext);
 
     if (NS_OK == res)
-      scribbleData.mContext->Init();
+      scribbleData.mContext->Init(nsnull);
 
 
      // Create an application shell

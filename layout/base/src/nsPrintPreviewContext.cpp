@@ -45,7 +45,7 @@ PrintPreviewContext::PrintPreviewContext()
 
   if (NS_OK == res)
   {
-    mDeviceContext->Init();
+    mDeviceContext->Init(nsnull);
 
     mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
     mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());

@@ -395,17 +395,22 @@ nscolor nsRenderingContextUnix :: GetColor() const
 
 void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 {
-  /*
-  Font id = ::XLoadFont(mRenderingSurface->display, "fixed");
-
-  XFontStruct * fs = ::XQueryFont(mRenderingSurface->display, id);
-
-  ::XSetFont(mRenderingSurface->display, mRenderingSurface->gc, id);
-  */
-
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = mFontCache->GetMetricsFor(aFont);
 
+  if (mFontMetrics) {
+    
+    Font handle;
+    handle = ::XLoadFont(mRenderingSurface->display, "fixed");
+    
+    ::XSetFont(mRenderingSurface->display,
+		 mRenderingSurface->gc,
+	       (Font)handle);
+      
+    ::XFlushGC(mRenderingSurface->display,
+	       mRenderingSurface->gc);
+    
+  }
 }
 
 const nsFont& nsRenderingContextUnix :: GetFont()
