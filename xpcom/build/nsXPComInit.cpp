@@ -840,7 +840,7 @@ internal_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine,
     return NS_RegisterXPCOMExitRoutine(exitRoutine, priority);
 }
 
-nsresult NS_COM PR_CALLBACK
+PR_STATIC_CALLBACK(nsresult)
 internal_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 {
     return NS_UnregisterXPCOMExitRoutine(exitRoutine);
