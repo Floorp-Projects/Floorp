@@ -7,20 +7,11 @@
 </HEAD>
 <BODY>
 
-<CENTER>
-<H2>
-<FONT COLOR="#CC0000"><FONT SIZE=+3>WARNING:</FONT></FONT></H2></CENTER>
-
-<CENTER>
-<H2>
-<FONT COLOR="#CC0000">This document is a skeleton, still&nbsp;<BR>
-very much under construction.</FONT></H2></CENTER>
-
 <H2>
 Introduction</H2>
 This is the README file for the JavaScript LiveConnect implementation.&nbsp;
 It consists of build conventions and instructions, source code conventions,
-a design walk-through, and a brief file-by-file description of the source.
+and a brief file-by-file description of the source.
 
 <P>This document assumes basic familiarity with JSRef, the reference implementation
 of JavaScript, and with the LiveConnect technology&nbsp; (LiveConnect allows
@@ -40,20 +31,134 @@ that can be used interactively and with test scripts.
 
 <P><I>Scott Furman, 4/8/98</I>
 <H2>
+Compatibility</H2>
+Unlike this release, all previous versions of LiveConnect appeared only
+as a component of Netscape Navigator, not as a standalone module.&nbsp;
+The variants of LiveConnect that appeared in Navigator versions 3.x and
+4.x all behave much the same, modulo bugs.&nbsp; For brevity we refer to
+this classic version of LiveConnect as "LC1" and this most recent release
+as "LC2".&nbsp; The following incompatibilities with LC1 are known:
+<UL>
+<LI>
+As in LC1, JavaScript objects appear to Java as instances of <I>netscape.javascript.JSObject</I>.&nbsp;
+In LC1, two <I>JSObject</I>'s could be tested for equality, i.e. to see
+if they refer to the same instance, by using the `==' operator.&nbsp; Instead,
+developers must now use the <TT>equals()</TT>method of <I>netscape.javascript.JSObject</I>
+for comparison, a method that overrides <TT>java.lang.Object.equals()</TT>.&nbsp;
+Using <TT>equals()</TT> instead of `==' should work the same on both LC1
+and LC2.&nbsp;<BR>
+<BR>
+It is not possible to replicate the identity behavior of the `==' operator
+that LC1 provides without the use of "weak" references, i.e. references
+that do not contribute to making a Java object reachable for purposes of
+garbage collection, but which nonetheless allow reference to an object
+as long as it is reachable by other means.&nbsp; The use of weak references
+is not portable, however.&nbsp; It is not part of the JNI or the JDK and
+it is not provided on all JVMs.&nbsp; The JDK1.2 release will include standard
+support for weak references.<BR>
+<BR></LI>
+
+<LI>
+It's possible that, in a set of overloaded Java methods, more than one
+is compatible with the types of the actual arguments in a call from JavaScript
+via LiveConnect.&nbsp; LC1 resolved these ambiguities in a simplistic manner,
+by simply invoking whatever method was enumerated first by the JVM.&nbsp;
+The enumeration order of reflected methods using <I>java.lang.reflect</I>&nbsp;
+is not specified by Sun and may differ among vendor's JVMs, i.e. enumeration
+could be in order of classfile appearance, hashtable order, etc.&nbsp;&nbsp;&nbsp;
+With the Netscape and Sun JVMs, it is possible to change the behavior of
+an LC1 program by changing the order that Java methods appear in a source
+file, thus changing the method enumeration order.&nbsp; Hence, the Java
+method chosen when there is more than one compatible method may vary depending
+on the JVM.<BR>
+<BR>
+A future release of LiveConnect will provide a new algorithm for overloaded
+Java method resolution that is both independent of the JVM used and more
+likely than LC1 to invoke the method that the developer expects.<BR>
+<BR></LI>
+
+<LI>
+There are several minor changes in error handling to make LiveConnect more
+conformant to ECMAScript.&nbsp; These include, for example, making any
+attempt to delete JavaObject, JavaClass or JavaPackage properties fail
+silently, rather than causing an error.&nbsp; Also, some error messages
+have been changed to be more informative.&nbsp; These changes should generally
+be backward-compatible with LC1 because few programs that use LiveConnect
+will depend on the exact behavior of LiveConnect when handling errors.</LI>
+</UL>
+
+<H2>
+New Features</H2>
+Several minor features have been added to this release of LiveConnect.&nbsp;
+These features were not available in the versions of LiveConnect that were
+integrated with Netscape Naviagtor versions 4.x and earlier.
+<BR>&nbsp;
+<BLOCKQUOTE>
+<LI>
+The Java methods of <I>java.lang.Object</I> are now invokeable methods
+of <TT><FONT SIZE=+1>JavaArray</FONT></TT> objects, matching the behavior
+of arrays when accessed from Java<I>.</I>&nbsp; (Java arrays are a subclass
+of <I>java.lang.Object</I>.) For example, Java's <TT><FONT SIZE=+1>getClass()</FONT></TT>
+and <TT><FONT SIZE=+1>hashCode()</FONT></TT> methods can now be called
+on <TT><FONT SIZE=+1>JavaArray</FONT></TT> objects.&nbsp; (In prior versions
+of LiveConnect, the methods of <I>java.lang.Object</I> were only inherited
+by non-array Java objects.)</LI>
+
+
+<P>Note that this change has caused the string representation of JavaArray
+objects to change.&nbsp; Previously, the JavaArray toString() method always
+printed "<TT><FONT SIZE=+1>[object JavaArray]"</FONT></TT> for all <TT><FONT SIZE=+1>JavaArray</FONT></TT>'s.&nbsp;
+Now, the Java <TT><FONT SIZE=+1>java.lang.Object.toString()</FONT></TT>
+method is called to convert JavaArray objects to strings, just as with
+other, non-array Java objects that are accessible via LiveConnect.&nbsp;
+<TT><FONT SIZE=+1>java.lang.Object.toString()</FONT></TT>is defined in
+the <I>Java Language Specification</I> to return the value of the following
+expression:
+
+<P><TT><FONT SIZE=-1>getClass().getName() + '@' + Integer.toHexString(hashCode())</FONT></TT>
+<BR>&nbsp;
+<LI>
+A one-character string is now an acceptable match for an argument to a
+Java method of type <TT><FONT SIZE=+1>char</FONT></TT>.&nbsp; (In earlier
+versions of LiveConnect, the only acceptable match for a <TT><FONT SIZE=+1>char</FONT></TT>
+had to be a JavaScript value that was convertible to a number.)&nbsp; For
+example, the following is now possible:</LI>
+
+
+<P><TT><FONT SIZE=-1>c = new java.lang.Character("F")</FONT></TT>
+<BR>&nbsp;
+<LI>
+A JavaClass object is now an acceptable match for an argument to a Java
+method of type <I>java.lang.Class</I>.&nbsp; For example, you can now write:</LI>
+
+
+<P><TT><FONT SIZE=-1>java.lang.reflect.Array.newInstance(java.lang.String,
+3)</FONT></TT>
+
+<P>instead of the more verbose:
+
+<P><TT><FONT SIZE=-1>jls = java.lang.Class.forName("java.lang.String")</FONT></TT>
+<BR><TT><FONT SIZE=-1>java.lang.reflect.Array.newInstance(jls, 3)</FONT></TT>
+<BR>&nbsp;</BLOCKQUOTE>
+
+<H2>
 Build conventions</H2>
 Update your JVM's <TT><FONT SIZE=+1>CLASSPATH</FONT></TT> to point to the
 <TT><FONT SIZE=+1>liveconnect/classes</FONT></TT> subdirectory.&nbsp; If
 you do not, LiveConnect will still operate but with the limitation that
 JS objects may not be passed as arguments of Java methods and it will not
 be possible to call from Java into JavaScript, i.e. the <I>netscape.javascript.JSObject</I>
-class will be inaccessible.&nbsp; If your <TT><FONT SIZE=+1>CLASSPATH</FONT></TT>
+class will be inaccessible.&nbsp; Another downside of operating without
+these classes is that Java error messages will not include a Java stack
+trace, when one is available.&nbsp; If your <TT><FONT SIZE=+1>CLASSPATH</FONT></TT>
 is set improperly, you will see a message like, "<TT><FONT SIZE=+1>initialization
 error: Can't load class netscape/javascript/JSObject</FONT></TT>" when
 starting a LiveConnect debug build.
 
-<P>To enable multi-threaded execution, define the <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>
-cpp macro and flesh out the stubs and required headers in jslock.c/.h.&nbsp;
-See the JS API docs for more.&nbsp; JSRef must also be built with <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>.
+<P>By default, LiveConnect is not re-entrant.&nbsp; To enable multi-threaded
+execution, define the <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT> cpp macro
+and flesh out the stubs and required headers in jslock.c/.h.&nbsp; See
+the JS API docs for more.&nbsp; JSRef must also be built with <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>.
 <BR>&nbsp;
 <UL><B>Windows</B>
 <UL>
@@ -87,54 +192,48 @@ in the JDK's bin directory.</LI>
 
 <LI>
 Use any Java compiler to compile the java source files in the <TT><FONT SIZE=+1>js/ref/liveconnect/classes/netscape/javascript</FONT></TT>
-directory.<BR>
+directory.</LI>
+</UL>
+<BR>
+<B>Mac OS</B>
+<UL>
+<LI>
+Using CodeWarrior Pro 3 is recommended.&nbsp; With some modifications,
+the project files can be made to work with CodeWarrior Pro 2.&nbsp; The
+CodeWarrior project files are <TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT>,
+<TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/LiveConnectShell.mcp</FONT></TT>,
+and<TT><FONT SIZE=+1> js/ref/macbuild/JSRef.mcp</FONT></TT>.</LI>
+
+<LI>
+Install Apple's JVM, MRJ 2.0 (or later), and the <A HREF="ftp://dev.apple.com/devworld/Java/MRJSDK2.0.1EarlyAccess4.hqx">MRJ
+SDK v2.0.1ea4</A>.&nbsp; Note: You do not need to install MRJ if you are
+running a recent version of MacOS 8, since it is shipped with the OS.</LI>
+
+<LI>
+Copy the folders CIncludes &amp; Libraries from the SDK's Interfaces&amp;Libraries
+directory to <TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/JavaSession</FONT></TT>.</LI>
+
+<LI>
+Build the JavaScript test application, <TT><FONT SIZE=+1>JSRef</FONT></TT>,
+with <TT><FONT SIZE=+1>js/ref/macbuild/JSRef.mcp</FONT></TT>.</LI>
+
+<LI>
+Build the LiveConnect test application, <TT><FONT SIZE=+1>LiveConnectShell</FONT></TT>,
+with <TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/LiveConnectShell.mcp</FONT></TT>.</LI>
+
+<LI>
+Build <TT><FONT SIZE=+1>liveconnect.jar</FONT></TT> with <TT><FONT SIZE=+1>js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT>.</LI>
+
+<LI>
+Make an alias to <TT><FONT SIZE=+1>liveconnect.jar</FONT></TT> and place
+it in "<TT><FONT SIZE=+1>{SystemFolder}Extensions:MRJ Libraries:MRJClasses</FONT></TT>".<BR>
 <BR></LI>
 </UL>
-
-   <B>Mac OS</B>
-   <UL>
-      <LI>Using CodeWarrior Pro 3 is recommended.&nbsp; CodeWarrior
-      Pro 2 should work but has not been tested.&nbsp; The
-      CodeWarrior project files are <TT><FONT
-      SIZE="+1">js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT>,
-      <TT><FONT
-      SIZE="+1">js/ref/liveconnect/macbuild/LiveConnectShell.mcp</FONT></TT>,
-      and<TT><FONT SIZE="+1"> js/ref/macbuild/JSRef.mcp</FONT></TT>.
-      
-      <LI>Install Apple's JVM, MRJ 2.0 (or later),and the
-      <A HREF="ftp://dev.apple.com/devworld/Java/MRJSDK2.0.1EarlyAccess4.hqx">MRJ
-      SDK v2.0.1ea4</A>.
-      
-      <LI>Copy the folders CIncludes &amp; Libraries from
-      Interfaces&amp;Libraries to <TT><FONT
-      SIZE="+1">js/ref/liveconnect/macbuild/JavaSession</FONT></TT>.
-      
-      <LI>Build the JavaScript test application, <TT><FONT
-      SIZE="+1">JSRef</FONT></TT>, with <TT><FONT
-      SIZE="+1">js/ref/macbuild/JSRef.mcp</FONT></TT>.
-      
-      <LI>Build the LiveConnect test application, <TT><FONT
-      SIZE="+1">LiveConnectShell</FONT></TT>, with <TT><FONT
-      SIZE="+1">js/ref/liveconnect/macbuild/LiveConnectShell.mcp</FONT></TT>.
-      
-      <LI>Build <TT><FONT SIZE="+1">liveconnect.jar</FONT></TT> with
-      <TT><FONT
-      SIZE="+1">js/ref/liveconnect/macbuild/LiveConnect.mcp</FONT></TT>.
-      
-      <LI>Make an alias to <TT><FONT
-      SIZE="+1">liveconnect.jar</FONT></TT> and place it in
-      "<TT><FONT SIZE="+1">{SystemFolder}Extensions:MRJ
-      Libraries:MRJClasses</FONT></TT>".<BR>
-      
-      <BR>
-      
-   
-   </UL>
-
 <B>Unix</B>
 <UL>
 <LI>
-<FONT COLOR="#FF0000">No Makefiles created yet</FONT></LI>
+<FONT COLOR="#FF0000">No Makefiles have been completed yet.&nbsp; These
+notes are a work in progress.</FONT></LI>
 
 <LI>
 Use vendor cc or gcc (ftp://prep.ai.mit.edu/pub/gnu) for compiling,&nbsp;
@@ -215,12 +314,9 @@ be used after the return type and before the function name).</LI>
 The LiveConnect API</H2>
 All public LiveConnect entry points and callbacks are documented in jsjava.h,
 the header file that exports those functions.
-<H2>
-Design walk-through</H2>
-&nbsp;
 <BR>&nbsp;
 <H2>
-File walk-through</H2>
+File Walk-through</H2>
 &nbsp;
 <TABLE BORDER=3 CELLSPACING=0 CELLPADDING=4 >
 <TR>
