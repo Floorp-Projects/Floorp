@@ -36,7 +36,7 @@
  */
 #define LINE_MIN 0
 #define XCOORD_MIN 0x80000000
-#define LINE_MAX 0x7fffffff
+#define MY_LINE_MAX 0x7fffffff
 #define XCOORD_MAX 0x7fffffff
 class nsFrameOrigin {
 public:
@@ -575,7 +575,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   if (!blockFrame || !iter)
     return nsnull;
 
-  nsFrameOrigin minOrig(LINE_MAX, XCOORD_MAX);
+  nsFrameOrigin minOrig(MY_LINE_MAX, XCOORD_MAX);
   PRInt32 testLine, thisLine;
 
   aFrame->GetRect(tempRect);
