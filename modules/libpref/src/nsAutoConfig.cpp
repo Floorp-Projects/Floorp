@@ -58,15 +58,7 @@ nsresult nsAutoConfig::Init()
         return rv;
 
     rv = observerService->AddObserver(this,NS_LITERAL_STRING("profile-after-change").get());
-    if (NS_FAILED(rv)) 
-        return rv;
     
-    nsCOMPtr<nsIPrefService> prefs =
-        do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
-    
-    rv = prefs->GetBranch(nsnull,getter_AddRefs(mPrefBranch));
     return rv;
 }
 
@@ -250,6 +242,19 @@ nsresult nsAutoConfig::downloadAutoConfig()
     if (!mBuf.IsEmpty())
         mBuf.Truncate(0);
 
+    // Get the preferences branch and save it to the member variable
+    if (!mPrefBranch) {
+
+        nsCOMPtr<nsIPrefService> prefs =
+            do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) 
+            return rv;
+    
+        rv = prefs->GetBranch(nsnull,getter_AddRefs(mPrefBranch));
+        if (NS_FAILED(rv))
+            return rv;
+    }
+    
     // Check to see if the network is online/offline 
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
