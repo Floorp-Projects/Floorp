@@ -508,7 +508,7 @@ void RNG_FileForRNG(const char *filename)
     struct stat     stat_buf;
     unsigned char   buffer[1024];
 
-    static DWORD    totalFileBytes = 0;
+   /* static DWORD    totalFileBytes = 0; */
 
     /* windows doesn't initialize all the bytes in the stat buf,
      * so initialize them all here to avoid UMRs.
