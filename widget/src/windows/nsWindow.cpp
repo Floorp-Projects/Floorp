@@ -202,6 +202,7 @@ static UINT         gHookTimerId   = 0;
 // for figuring out 1 - 3 Clicks
 ////////////////////////////////////////////////////
 static POINT gLastMousePoint;
+static POINT gLastMouseMovePoint;
 static LONG  gLastMouseDownTime = 0L;
 static LONG  gLastClickCount    = 0L;
 ////////////////////////////////////////////////////
@@ -4326,6 +4327,17 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   mp.y      = (short)HIWORD(pos);
   PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mp.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
                                    (abs(gLastMousePoint.y - mp.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
+
+  // Supress mouse moves caused by widget creation
+  if ((aEventType == NS_MOUSE_MOVE) &&
+     (gLastMouseMovePoint.x == mp.x) &&
+     (gLastMouseMovePoint.y == mp.y))
+  {
+     return result;
+  } else {
+    gLastMouseMovePoint.x = mp.x;
+    gLastMouseMovePoint.y = mp.y;
+  }
 
   // we're going to time double-clicks from mouse *up* to next mouse *down*
   if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) {
