@@ -1,13 +1,13 @@
-<!ENTITY window.title "Password Manager">
-<!ENTITY lHeader "Password Manager">
+<!ENTITY window.title "Forms/Passwords">
+<!ENTITY lHeader "Forms/Passwords">
 <!ENTITY remSignCheck.label "Manage stored passwords and user names">
 <!ENTITY capFormsCheck.label "Enable prefilling of forms">
 <!ENTITY rHeader "Manage stored data about yourself">
 <!--LOCALIZATION NOTE (server.label): 'Wallet' is a product name and should not be translated. -->
-<!ENTITY server.label "Server for wallet tables">
-<!ENTITY walletHeader "Wallet">
-<!ENTITY walletDetails "Wallet stores personal information so that filling out forms on webpages is easier.">
-<!ENTITY viewWallet.label "View Wallet Entries">
+<!ENTITY server.label "Server for tables">
+<!ENTITY walletHeader "Form Manager">
+<!ENTITY walletDetails "Form Manager stores personal information so that filling out forms on webpages is easier.">
+<!ENTITY viewWallet.label "View Stored Information">
 <!ENTITY signonHeader "Password Manager">
 <!ENTITY signonDetails "Password Manager stores your usernames and passwords for web sites that require you to log in, and enters them for you automatically when you visit those sites.">
 <!ENTITY viewSignons.label "View Stored Passwords">
