@@ -5,6 +5,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
+#include "nsXPIDLString.h"
 
 void Passed();
 void Failed(const char* explanation = nsnull);
@@ -19,33 +20,33 @@ void VerifyResult(nsresult rv)
         printf("rv = %d\n", rv);
     }
 }
-//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void Banner(const char* bannerString)
-//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 {
     printf("---------------------------\n");
     printf("%s\n", bannerString);
     printf("---------------------------\n");
 }
 
-//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void Passed()
-//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 {
     printf("Test passed.");
 }
 
-//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void Failed(const char* explanation)
-//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 {
     printf("ERROR : Test failed.\n");
     printf("REASON: %s.\n", explanation);
 }
 
-//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void Inspect()
-//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 {
     printf("^^^^^^^^^^ PLEASE INSPECT OUTPUT FOR ERRORS\n");
 }
@@ -53,27 +54,24 @@ void Inspect()
 void GetPaths(nsIFile* file)
 {
     nsresult rv;
-    char* fileName;
+    nsXPIDLCString pathName;
 
     printf("Getting Paths\n");
 
-    rv = file->GetPath(nsIFile::UNIX_PATH, &fileName);
+    rv = file->GetPath(nsIFile::UNIX_PATH, getter_Copies(pathName));
     VerifyResult(rv);
     
-    printf("Unix filepath: %s\n", fileName);
-    nsAllocator::Free( fileName );
+    printf("Unix filepath: %s\n", (const char *)pathName);
 
-    rv = file->GetPath(nsIFile::NATIVE_PATH, &fileName);
+    rv = file->GetPath(nsIFile::NATIVE_PATH, getter_Copies(pathName));
     VerifyResult(rv);
     
-    printf("Native filepath: %s\n", fileName);
-    nsAllocator::Free( fileName );
+    printf("Native filepath: %s\n", (const char *)pathName);
     
-    rv = file->GetPath(nsIFile::NSPR_PATH, &fileName);
+    rv = file->GetPath(nsIFile::NSPR_PATH, getter_Copies(pathName));
     VerifyResult(rv);
     
-    printf("NSPR filepath: %s\n", fileName);
-    nsAllocator::Free( fileName );
+    printf("NSPR filepath: %s\n", (const char *)pathName);
 }
 
 extern "C" void
@@ -85,7 +83,9 @@ NS_SetupRegistry()
 void InitTest(PRInt32 creationType, char* creationPath, char* appendPath)
 {
     nsIFile* file = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL, nsCOMTypeInfo<nsIFile>::GetIID(), (void**) &file);
+    nsresult rv = nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL,
+						     NS_GET_IID(nsIFile),
+						     (void**) &file);
     
     if (NS_FAILED(rv) || (!file)) 
     {
@@ -93,7 +93,7 @@ void InitTest(PRInt32 creationType, char* creationPath, char* appendPath)
         return;
     }
 
-    char* fileName;
+    nsXPIDLCString leafName;
 
     Banner("InitWithPath");
     printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
@@ -102,28 +102,26 @@ void InitTest(PRInt32 creationType, char* creationPath, char* appendPath)
     VerifyResult(rv);
     
     printf("Getting Filename\n");
-    rv = file->GetFileName(&fileName);
-    printf(" %s\n", fileName);
+    rv = file->GetLeafName(getter_Copies(leafName));
+    printf(" %s\n", (const char *)leafName);
     VerifyResult(rv);
-    nsAllocator::Free( fileName );
 
     printf("Appending %s \n", appendPath);
     rv = file->AppendPath(appendPath);
     VerifyResult(rv);
 
     printf("Getting Filename\n");
-    rv = file->GetFileName(&fileName);
-    printf(" %s\n", fileName);
+    rv = file->GetLeafName(getter_Copies(leafName));
+    printf(" %s\n", (const char *)leafName);
     VerifyResult(rv);
-    nsAllocator::Free( fileName );
 
     GetPaths(file);
 
     
-    printf("Check For Existance\n");
+    printf("Check For Existence\n");
 
     PRBool exists;
-    file->IsExists(&exists);
+    file->Exists(&exists);
 
     if (exists)
         printf("Yup!\n");
@@ -132,10 +130,14 @@ void InitTest(PRInt32 creationType, char* creationPath, char* appendPath)
 }
 
 
-void CreationTest(PRInt32 creationType, char* creationPath, char* appendPath, PRInt32 whatToCreate, PRInt32 perm)
+void CreationTest(PRInt32 creationType, char* creationPath, char* appendPath,
+		  PRInt32 whatToCreate, PRInt32 perm)
 {
-    nsIFile* file = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL, nsCOMTypeInfo<nsIFile>::GetIID(), (void**) &file);
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = 
+      nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL,
+					 NS_GET_IID(nsIFile),
+					 (void **)getter_AddRefs(file));
     
     if (NS_FAILED(rv) || (!file)) 
     {
@@ -156,7 +158,7 @@ void CreationTest(PRInt32 creationType, char* creationPath, char* appendPath, PR
     printf("Check For Existance\n");
 
     PRBool exists;
-    file->IsExists(&exists);
+    file->Exists(&exists);
 
     if (exists)
         printf("Yup!\n");
@@ -167,7 +169,7 @@ void CreationTest(PRInt32 creationType, char* creationPath, char* appendPath, PR
     rv = file->Create(whatToCreate, perm);  
     VerifyResult(rv);
 
-    rv = file->IsExists(&exists);
+    rv = file->Exists(&exists);
     VerifyResult(rv);
 
     
@@ -177,14 +179,16 @@ void CreationTest(PRInt32 creationType, char* creationPath, char* appendPath, PR
         return;
     }
     
-    NS_RELEASE(file);
 }    
     
 void
-DeletetionTest(PRInt32 creationType, char* creationPath, char* appendPath, PRBool recursive)
+DeletionTest(PRInt32 creationType, char* creationPath, char* appendPath, PRBool recursive)
 {
-    nsIFile* file = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL, nsCOMTypeInfo<nsIFile>::GetIID(), (void**) &file);
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = 
+      nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL,
+					 NS_GET_IID(nsIFile),
+					 (void**)getter_AddRefs(file));
     
     if (NS_FAILED(rv) || (!file)) 
     {
@@ -205,7 +209,7 @@ DeletetionTest(PRInt32 creationType, char* creationPath, char* appendPath, PRBoo
     printf("Check For Existance\n");
 
     PRBool exists;
-    file->IsExists(&exists);
+    file->Exists(&exists);
 
     if (exists)
         printf("Yup!\n");
@@ -215,7 +219,7 @@ DeletetionTest(PRInt32 creationType, char* creationPath, char* appendPath, PRBoo
     rv = file->Delete(recursive);  
     VerifyResult(rv);
 
-    rv = file->IsExists(&exists);
+    rv = file->Exists(&exists);
     VerifyResult(rv);
     
     if (exists)
@@ -224,12 +228,11 @@ DeletetionTest(PRInt32 creationType, char* creationPath, char* appendPath, PRBoo
         return;
     }
     
-    NS_RELEASE(file);
 }
 
 
 
-void main(void)
+int main(void)
 {
     NS_SetupRegistry();
 
@@ -242,12 +245,28 @@ void main(void)
     InitTest(nsIFile::NATIVE_PATH, "d:\\temp\\", "sub1/sub2/");
 
     CreationTest(nsIFile::UNIX_PATH, "/c|/temp/", "file.txt", nsIFile::NORMAL_FILE_TYPE, 0644);
-    DeletetionTest(nsIFile::UNIX_PATH, "/c|/temp/", "file.txt", PR_FALSE);
+    DeletionTest(nsIFile::UNIX_PATH, "/c|/temp/", "file.txt", PR_FALSE);
 
     
     CreationTest(nsIFile::UNIX_PATH, "/c|/temp/", "mumble/a/b/c/d/e/f/g/h/i/j/k/", nsIFile::DIRECTORY_TYPE, 0644);
-    DeletetionTest(nsIFile::UNIX_PATH, "/c|/temp/", "mumble", PR_TRUE);
+    DeletionTest(nsIFile::UNIX_PATH, "/c|/temp/", "mumble", PR_TRUE);
 
-#endif
+#else
+#ifdef XP_UNIX
+    InitTest(nsIFile::UNIX_PATH, "/tmp/", "sub1/sub2/");
+    InitTest(nsIFile::NATIVE_PATH, "/tmp/", "sub1/sub2/");
+    
+    InitTest(nsIFile::UNIX_PATH, "/tmp", "sub1/sub2/");
+    InitTest(nsIFile::NATIVE_PATH, "/tmp", "sub1/sub2/");
 
+    CreationTest(nsIFile::UNIX_PATH, "/tmp", "file.txt",
+		 nsIFile::NORMAL_FILE_TYPE, 0644);
+    DeletionTest(nsIFile::UNIX_PATH, "/tmp/", "file.txt", PR_FALSE);
+
+    
+    CreationTest(nsIFile::UNIX_PATH, "/tmp", "mumble/a/b/c/d/e/f/g/h/i/j/k/",
+		 nsIFile::DIRECTORY_TYPE, 0644);
+    DeletionTest(nsIFile::UNIX_PATH, "/tmp", "mumble", PR_TRUE);
+#endif /* XP_UNIX */
+#endif /* XP_PC */
 }
