@@ -53,10 +53,8 @@ NS_IMETHODIMP
 nsXFormsResetElement::HandleAction(nsIDOMEvent* aEvent,
                                    nsIXFormsActionElement *aParentAction)
 {
-  nsCOMPtr<nsIDOMNode> model =
-    nsXFormsUtils::GetModelAndBind(mElement,
-                                   nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                   nsnull);
+  nsCOMPtr<nsIDOMNode> model = nsXFormsUtils::GetModel(mElement);
+  
   if (model) {
     if (aParentAction) {
       aParentAction->SetRebuild(model, PR_FALSE);

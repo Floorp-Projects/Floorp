@@ -216,13 +216,9 @@ NS_IMETHODIMP
 nsXFormsInputElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
 {
   if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    nsCOMPtr<nsIDOMElement> bindElement;
-    nsCOMPtr<nsIModelElementPrivate> model;
+    nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
 
-    model = do_QueryInterface(
-        nsXFormsUtils::GetModelAndBind(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       getter_AddRefs(bindElement)));
+    nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);    
     if (model)
       model->RemoveFormControl(this);
   }
@@ -315,6 +311,10 @@ nsXFormsInputElement::Refresh()
 
   nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
 
+  // @bug / todo: If \<input\> has binding attributes that are invalid, we
+  // should clear the content. But the content should be left if the element
+  // is unbound.
+  // @see https://bugzilla.mozilla.org/show_bug.cgi?id=265216
   if (model) {
     model->AddFormControl(this);
 

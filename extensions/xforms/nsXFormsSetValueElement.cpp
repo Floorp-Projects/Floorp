@@ -65,11 +65,8 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
   if (!mElement)
     return NS_OK;
   
-  nsCOMPtr<nsIDOMElement> bind;
-  nsCOMPtr<nsIDOMNode> dommodel =
-    nsXFormsUtils::GetModelAndBind(mElement,
-                                   nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                   getter_AddRefs(bind));
+  nsCOMPtr<nsIDOMNode> dommodel = nsXFormsUtils::GetModel(mElement);
+  
   if (!dommodel)
     return NS_OK;
 

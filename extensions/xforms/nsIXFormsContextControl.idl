@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,16 +15,16 @@
  * The Original Code is Mozilla XForms support.
  *
  * The Initial Developer of the Original Code is
- * Olli Pettay.
+ * Novell, Inc.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Olli Pettay <Olli.Pettay@helsinki.fi> (original author)
+ *  Allan Beaufour <abeaufour@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,43 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXFormsActionModuleBase.h"
-#include "nsXFormsActionElement.h"
 
-class nsXFormsRefreshElement : public nsXFormsActionModuleBase
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+
+/**
+ * Interface for elements that sets the XPath context of its children.
+ */
+[uuid(38a904ba-147c-4c7f-9356-9fff88107868)]
+interface nsIXFormsContextControl : nsISupports
 {
-public:
-  nsXFormsRefreshElement();
-  NS_DECL_NSIXFORMSACTIONMODULEELEMENT
+  /**
+   * Used by children to retrieve the context of their parent.
+   *
+   * @param aModelID          The modelID
+   * @param aContextNode      The context node
+   * @param aContextPosition  The context position
+   * @param aContextSize      The context size
+   * 
+   * @note The actual model ID must be returned. An empty |aModelID| should
+   * only be returned if the default model has an id="".
+   */
+  void getContext(out AString aModelID, out nsIDOMElement aContextNode, out long aContextPosition, out long aContextSize);
 };
-
-nsXFormsRefreshElement::nsXFormsRefreshElement()
-{
-}
-
-NS_IMETHODIMP
-nsXFormsRefreshElement::HandleAction(nsIDOMEvent* aEvent,
-                                     nsIXFormsActionElement *aParentAction)
-{
-  nsCOMPtr<nsIDOMNode> model = nsXFormsUtils::GetModel(mElement);
-  
-  if (model) {
-    if (aParentAction) {
-      aParentAction->SetRefresh(model, PR_FALSE);
-    }
-    return nsXFormsUtils::DispatchEvent(model, eEvent_Refresh);
-  }
-  return NS_OK;
-}
-
-NS_HIDDEN_(nsresult)
-NS_NewXFormsRefreshElement(nsIXTFElement **aResult)
-{
-  *aResult = new nsXFormsRefreshElement();
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-

@@ -45,6 +45,7 @@
 
 // Form controls
 NS_HIDDEN_(nsresult) NS_NewXFormsInputElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsGroupElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsTriggerElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsSubmitElement(nsIXTFElement **aElement);
@@ -77,6 +78,8 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsStubElement(aElement);
   if (aTagName.EqualsLiteral("input"))
     return NS_NewXFormsInputElement(aElement);
+  if (aTagName.EqualsLiteral("group"))
+    return NS_NewXFormsGroupElement(aElement);
   if (aTagName.EqualsLiteral("output"))
     return NS_NewXFormsOutputElement(aElement);
   if (aTagName.EqualsLiteral("label"))

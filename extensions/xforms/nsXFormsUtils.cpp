@@ -52,6 +52,7 @@
 #include "nsIDOMText.h"
 #include "nsIXFormsModelElement.h"
 
+#include "nsIXFormsContextControl.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
@@ -179,8 +180,8 @@ nsXFormsUtils::Init()
   return NS_OK;
 }
 
-/* static */ nsIDOMNode*
-nsXFormsUtils::GetParentModel(nsIDOMElement *aElement)
+/* static */ void
+nsXFormsUtils::GetParentModel(nsIDOMElement *aElement, nsIDOMNode **aModel)
 {
   nsCOMPtr<nsIDOMNode> modelWrapper;
 
@@ -201,76 +202,108 @@ nsXFormsUtils::GetParentModel(nsIDOMElement *aElement)
     temp.swap(modelWrapper);
     temp->GetParentNode(getter_AddRefs(modelWrapper));
   }
-
-  // We're releasing this reference, but the node is owned by the DOM.
-  return modelWrapper;
+  *aModel = nsnull;
+  modelWrapper.swap(*aModel);
 }
 
-/* static */ nsIDOMNode*
-nsXFormsUtils::GetModelAndBind(nsIDOMElement  *aElement,
-                               PRUint32        aElementFlags,
-                               nsIDOMElement **aBindElement)
-{
-  NS_ENSURE_TRUE(aElement, nsnull);
+/**
+ * beaufour: Section 7.4 in the specification does a really bad job of
+ * explaining how to find the model, so the code below is my interpretation of
+ * it...
+ *
+ * @see http://bugzilla.mozilla.org/show_bug.cgi?id=265216
+ */
 
+/* static */ nsresult
+nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
+                              PRUint32        aElementFlags,
+                              nsIDOMNode    **aModel,
+                              nsIDOMElement **aBindElement,
+                              nsIDOMElement **aContextNode,
+                              PRInt32        *aContextPosition,
+                              PRInt32        *aContextSize)
+{
+  *aBindElement = nsnull;
+  NS_ENSURE_ARG(aElement);
+  NS_ENSURE_ARG_POINTER(aContextNode);
+
+  // Find correct model element
   nsCOMPtr<nsIDOMDocument> domDoc;
   aElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  if (!domDoc)
-    return nsnull;
-  
-  if (aBindElement) {
-    *aBindElement = nsnull;
-  
-    nsAutoString bindId;
-    aElement->GetAttribute(NS_LITERAL_STRING("bind"), bindId);
-  
-    if (!bindId.IsEmpty()) {
-      // Get the bind element with the given id.
-      domDoc->GetElementById(bindId, aBindElement);
-  
-      if (*aBindElement)
-        return GetParentModel(*aBindElement);
-    }
-  }
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
-  if (aElementFlags & ELEMENT_WITH_MODEL_ATTR) {
-    // If no bind was given, we use model.
+  nsAutoString bindId;
+  aElement->GetAttribute(NS_LITERAL_STRING("bind"), bindId);
+  ///
+  /// @todo: Is there a need for ELEMENT_WITH_BIND_ATTR?
+  if (!bindId.IsEmpty()) {
+    // CASE 1: Use @bind
+    domDoc->GetElementById(bindId, aBindElement);
+
+    if (*aBindElement)
+      GetParentModel(*aBindElement, aModel);
+
+    // Error: There was a bind attribute, but it did not lead us to a model.
+    NS_ENSURE_TRUE(*aModel, NS_ERROR_FAILURE);
+  } else if (aElementFlags & ELEMENT_WITH_MODEL_ATTR) {
+    // CASE 2: Use @model
+    // If bind did not set model, and the element has a model attribute we use this
     nsAutoString modelId;
     aElement->GetAttribute(NS_LITERAL_STRING("model"), modelId);
+    
+    if (!modelId.IsEmpty()) {
+      nsCOMPtr<nsIDOMElement> modelElement;
+      domDoc->GetElementById(modelId, getter_AddRefs(modelElement));
+      NS_IF_ADDREF(*aModel = modelElement);
 
-    nsCOMPtr<nsIDOMNode> modelWrapper;
-
-    if (modelId.IsEmpty()) {
-      // No model given, so use the first one in the document.
-      nsCOMPtr<nsIDOMNodeList> nodes;
-      domDoc->GetElementsByTagNameNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                     NS_LITERAL_STRING("model"),
-                                     getter_AddRefs(nodes));
-
-      if (!nodes)
-        return nsnull;
-
-      nodes->Item(0, getter_AddRefs(modelWrapper));
-    } else {
-      nsCOMPtr<nsIDOMElement> wrapperElement;
-      domDoc->GetElementById(modelId, getter_AddRefs(wrapperElement));
-      modelWrapper = wrapperElement;
+      // Not tag found for that ID
+      NS_ENSURE_TRUE(*aModel, NS_ERROR_FAILURE);
     }
-
-    // We're releasing this reference, but the node is owned by the DOM.
-    return modelWrapper;
   }
 
-  // If no bind was given, we assume the given element is a child
-  // of the model.
-  return GetParentModel(aElement);
+  nsresult rv = FindParentContext(aElement,
+                                  aModel,
+                                  aContextNode,
+                                  aContextPosition,
+                                  aContextSize);
+  // CASE 3/4: Use parent's model / first model in document.
+  // If FindParentContext() does not find a parent context but |aModel| is not
+  // set, it sets the model to the first model in the document.
+
+  return rv;
+}
+
+/* static */ already_AddRefed<nsIDOMNode>
+nsXFormsUtils::GetModel(nsIDOMElement  *aElement,
+                        PRUint32        aElementFlags)
+
+{
+
+  nsCOMPtr<nsIDOMNode> model;
+  nsCOMPtr<nsIDOMElement> contextNode;
+  nsCOMPtr<nsIDOMElement> bind;
+  
+  nsresult rv = GetNodeContext(aElement,
+                               aElementFlags,
+                               getter_AddRefs(model),
+                               getter_AddRefs(bind),
+                               getter_AddRefs(contextNode));
+
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsIDOMNode *result = nsnull;
+  if (model)
+    CallQueryInterface(model, &result);  // addrefs
+  return result;
 }
 
 /* static */ already_AddRefed<nsIDOMXPathResult>
 nsXFormsUtils::EvaluateXPath(const nsAString &aExpression,
                              nsIDOMNode      *aContextNode,
                              nsIDOMNode      *aResolverNode,
-                             PRUint16         aResultType)
+                             PRUint16         aResultType,
+                             PRInt32          aContextPosition,
+                             PRInt32          aContextSize)
 {
   nsCOMPtr<nsIDOMDocument> doc;
   aContextNode->GetOwnerDocument(getter_AddRefs(doc));
@@ -283,6 +316,8 @@ nsXFormsUtils::EvaluateXPath(const nsAString &aExpression,
   eval->CreateNSResolver(aResolverNode, getter_AddRefs(resolver));
   NS_ENSURE_TRUE(resolver, nsnull);
 
+  ///
+  /// @todo Evaluate() should use aContextPosition and aContextSize
   nsCOMPtr<nsISupports> supResult;
   eval->Evaluate(aExpression, aContextNode, resolver, aResultType, nsnull,
                  getter_AddRefs(supResult));
@@ -389,16 +424,25 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
                                    nsIDOMNode    **aModel,
                                    nsIDOMElement **aBind)
 {
-  // A control may be attached to a model by either using the 'bind'
-  // attribute to give the id of a bind element, or using the 'model'
-  // attribute to give the id of a model.  If neither of these are given,
-  // the control belongs to the first model in the document.
+  if (!aElement || !aBind || !aModel) {
+    return nsnull;
+  }
 
   *aBind = nsnull;
+  *aModel = nsnull;
 
-  NS_IF_ADDREF(*aModel = GetModelAndBind(aElement, aElementFlags, aBind));
-  if (!*aModel)
-    return nsnull;
+  nsCOMPtr<nsIDOMElement> contextNode;
+  PRInt32 contextPosition;
+  PRInt32 contextSize;
+  nsresult rv = GetNodeContext(aElement,
+                               aElementFlags,
+                               aModel,
+                               aBind,
+                               getter_AddRefs(contextNode),
+                               &contextPosition,
+                               &contextSize);
+
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   // If there is a bind element, we just evaluate its nodeset.
   if (*aBind)
@@ -415,27 +459,34 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
     expr.Assign(aDefaultRef);
   } 
 
-  // Get the instance data and evaluate the xpath expression.
-  // XXXfixme when xpath extensions are implemented (instance())
-  nsCOMPtr<nsIDOMDocument> instanceDoc;
-  nsCOMPtr<nsIXFormsModelElement> model = do_QueryInterface(*aModel);
-  if (!model) {
-    // The referenced model is not actually a model element, or does not exist.
-    return nsnull;
+  if (!contextNode) {
+    nsCOMPtr<nsIDOMDocument> instanceDoc;
+    nsCOMPtr<nsIXFormsModelElement> model = do_QueryInterface(*aModel);
+    if (!model) {
+      // The referenced model is not actually a model element, or does not exist.
+      return nsnull;
+    }
+    
+    model->GetInstanceDocument(NS_LITERAL_STRING(""),
+                               getter_AddRefs(instanceDoc));
+    
+    if (!instanceDoc)
+      return nsnull;
+    
+    instanceDoc->GetDocumentElement(getter_AddRefs(contextNode));
+    
+    if (!contextNode) {
+      return nsnull;   // this will happen if the doc is still loading
+    }
   }
 
-  model->GetInstanceDocument(NS_LITERAL_STRING(""),
-                             getter_AddRefs(instanceDoc));
-
-  if (!instanceDoc)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMElement> docElement;
-  instanceDoc->GetDocumentElement(getter_AddRefs(docElement));
-  if (!docElement)
-    return nsnull;   // this will happen if the doc is still loading
-
-  return EvaluateXPath(expr, docElement, aElement, aResultType);
+  // Evaluate |expr|
+  return EvaluateXPath(expr,
+                       contextNode,
+                       aElement,
+                       aResultType,
+                       contextSize,
+                       contextPosition);
 }
 
 /* static */ void
@@ -692,5 +743,95 @@ nsXFormsUtils::CloneScriptingInterfaces(const nsIID *aIIDList,
  
   *aOutArray = iids;
   *aOutCount = aIIDCount;
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
+                                 nsIDOMNode    **aModel,
+                                 nsIDOMElement **aContextNode,
+                                 PRInt32        *aContextPosition,
+                                 PRInt32        *aContextSize)
+{
+  NS_ENSURE_ARG(aElement);
+  NS_ENSURE_ARG_POINTER(aModel);
+  NS_ENSURE_ARG_POINTER(aContextNode);
+
+  nsCOMPtr<nsIDOMNode> elementNode = do_QueryInterface(aElement);
+  NS_ENSURE_TRUE(elementNode, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMNode> curNode;
+  nsresult rv = elementNode->GetParentNode(getter_AddRefs(curNode));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  // If a model is set, get its ID
+  nsAutoString childModelID;
+  if (*aModel) {
+    nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(*aModel);
+    NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
+    modelElement->GetAttribute(NS_LITERAL_STRING("id"), childModelID);
+  }  
+
+  // Find our context:
+  // Iterate over all parents and find first one that implements nsIXFormsContextControl,
+  // and has the same model as us.
+  nsCOMPtr<nsIDOMNode> temp;  
+  nsAutoString contextModelID;
+  while (curNode) {
+    nsCOMPtr<nsIXFormsContextControl> contextControl = do_QueryInterface(curNode);
+    nsCOMPtr<nsIDOMElement> cElement = do_QueryInterface(curNode);
+    if (contextControl && cElement) {
+      PRInt32 cSize;
+      PRInt32 cPosition;
+      nsCOMPtr<nsIDOMElement> tempNode;
+      rv = contextControl->GetContext(contextModelID, getter_AddRefs(tempNode), &cPosition, &cSize);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // If the call failed, it means that we _have_ a parent which sets the
+      // context but it is invalid, ie. the XPath expression could have
+      // generated an error.
+
+      if (childModelID.IsEmpty()
+          || childModelID.Equals(contextModelID)) {
+        NS_ADDREF(*aContextNode = tempNode);
+        if (aContextSize) 
+          *aContextSize = cSize;
+        if (aContextPosition)
+          *aContextPosition = cPosition;
+        break;
+      }
+    }
+    // Next ancestor
+    temp.swap(curNode);
+    rv = temp->GetParentNode(getter_AddRefs(curNode));
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+  }
+
+  // Child had no model set, set it
+  if (!*aModel) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    nsresult rv = aElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+
+    if (!*aContextNode || contextModelID.IsEmpty()) {
+      // We have either not found a context node, or we have found one where
+      // the model ID is empty. That means we use the first model in document
+      nsCOMPtr<nsIDOMNodeList> nodes;
+      domDoc->GetElementsByTagNameNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                     NS_LITERAL_STRING("model"),
+                                     getter_AddRefs(nodes));
+      // No model element in document!
+      NS_ENSURE_TRUE(nodes, NS_ERROR_FAILURE);
+      
+      nodes->Item(0, aModel);
+    } else {
+      // Get the model with the correct ID
+      nsCOMPtr<nsIDOMElement> modelElement;
+      domDoc->GetElementById(contextModelID, getter_AddRefs(modelElement));
+      NS_IF_ADDREF(*aModel = modelElement);
+    }    
+  }
+  
   return NS_OK;
 }

@@ -180,13 +180,9 @@ NS_IMETHODIMP
 nsXFormsOutputElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
 {
   if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    nsCOMPtr<nsIDOMElement> bindElement;
-    nsCOMPtr<nsIModelElementPrivate> model;
+    nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
 
-    model = do_QueryInterface(
-        nsXFormsUtils::GetModelAndBind(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       getter_AddRefs(bindElement)));
+    nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);    
     if (model)
       model->RemoveFormControl(this);
   }

@@ -133,18 +133,43 @@ public:
    * Locate the model that is a parent of |aElement|.  This method walks up the
    * content tree looking for the containing model.
    */
-  static NS_HIDDEN_(nsIDOMNode*)
-    GetParentModel(nsIDOMElement *aElement);
+  static NS_HIDDEN_(void)
+    GetParentModel(nsIDOMElement *aElement, nsIDOMNode **aModel);
 
   /**
-   * Locate the model that |aElement| is bound to, and if applicable, the
-   * \<bind\> element that it uses.  The model is returned and the
-   * bind element is returned (addrefed) in |aBindElement|.
+   * Find the evaluation context for an element.
+   *
+   * That is, the model it is bound to (|aModel|), and if applicable the
+   * \<bind\> element that it uses (|aBindElement| and the context node
+   * (|aContextNode|).
+   *
+   * @param aElement          The element
+   * @param aElementFlags     Flags describing characteristics of aElement
+   * @param aModel            The \<model\> for the element
+   * @param aBindElement      The \<bind\> the element is bound to (if any)
+   * @param aContextNode      The context node for the element
    */
-  static NS_HIDDEN_(nsIDOMNode*)
-    GetModelAndBind(nsIDOMElement  *aElement,
-                    PRUint32        aElementFlags,
-                    nsIDOMElement **aBindElement);
+  static NS_HIDDEN_(nsresult)
+    GetNodeContext(nsIDOMElement  *aElement,
+                   PRUint32        aElementFlags,
+                   nsIDOMNode    **aModel,
+                   nsIDOMElement **aBindElement,
+                   nsIDOMElement **aContextNode,
+                   PRInt32        *aContextPosition = nsnull,
+                   PRInt32        *aContextSize = nsnull);
+
+  /**
+   * Locate the model for an element.
+   *
+   * @note Actually it is just a shortcut for GetNodeContext().
+   *
+   * @param aElement          The element
+   * @param aElementFlags     Flags describing characteristics of aElement
+   * @return                  The model
+   */
+  static NS_HIDDEN_(already_AddRefed<nsIDOMNode>)
+    GetModel(nsIDOMElement  *aElement,
+             PRUint32        aElementFlags = ELEMENT_WITH_MODEL_ATTR);
 
   /**
    * Evaluate a 'bind' or |aBindingAttr| attribute on |aElement|.
@@ -191,7 +216,9 @@ public:
     EvaluateXPath(const nsAString &aExpression,
                   nsIDOMNode      *aContextNode,
                   nsIDOMNode      *aResolverNode,
-                  PRUint16         aResultType);
+                  PRUint16         aResultType,
+                  PRInt32          aContextPosition = 1,
+                  PRInt32          aContextSize = 1);
 
   /**
    * Given a node in the instance data, get its string value according
@@ -247,6 +274,24 @@ public:
                                                        unsigned int aIIDCount,
                                                        PRUint32 *aOutCount,
                                                        nsIID ***aOutArray);
+
+  /**
+   * Returns the context for the element, if set by a parent node.
+   *
+   * Controls inheriting from nsIXFormsContextControl sets the context for its children.
+   *
+   * @param aElement          The document element of the caller
+   * @param aModel            The model for |aElement| (if (!*aModel), it is set)
+   * @param aContextNode      The resulting context node
+   * @param aContextPosition  The resulting context position
+   * @param aContextSize      The resulting context size
+   */
+  static NS_HIDDEN_(nsresult) FindParentContext(nsIDOMElement  *aElement,
+                                                nsIDOMNode    **aModel,
+                                                nsIDOMElement **aContextNode,
+                                                PRInt32        *aContextPosition,
+                                                PRInt32        *aContextSize);
+
 };
 
 #endif
