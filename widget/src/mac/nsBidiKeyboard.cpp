@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Simon Montagu
+ *   Asaf Romano <mozilla.mano@sent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,12 +53,57 @@ nsBidiKeyboard::~nsBidiKeyboard()
 NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
 {
   *aIsRTL = PR_FALSE;
-  // XXX Insert platform specific code to determine keyboard direction
-  return NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // KLGetCurrentKeyboardLayout and KLGetKeyboardLayoutProperty are only available on OS 10.2 and later.
+  static PRBool checked = PR_FALSE;
+  static fpKLGetCurrentKeyboardLayout_type fpKLGetCurrentKeyboardLayout = NULL;
+  static fpKLGetKeyboardLayoutProperty_type fpKLGetKeyboardLayoutProperty = NULL;
+
+  if (!checked) {
+    CFBundleRef bundle =        ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
+    if (bundle) {
+      fpKLGetCurrentKeyboardLayout =
+          ::CFBundleGetFunctionPointerForName(bundle, CFSTR("KLGetCurrentKeyboardLayout"));
+      fpKLGetKeyboardLayoutProperty =
+          ::CFBundleGetFunctionPointerForName(bundle, CFSTR("KLGetKeyboardLayoutProperty"));
+    }
+    
+    checked = PR_TRUE;
+  }
+  
+  if (fpKLGetCurrentKeyboardLayout) {
+    OSStatus err;
+    KeyboardLayoutRef currentKeyboard;
+    const void* currentKeyboardResID;
+  
+    err = fpKLGetCurrentKeyboardLayout(&currentKeyboard);
+    if (err == noErr)
+    {
+      err = fpKLGetKeyboardLayoutProperty(currentKeyboard, 
+          kKLIdentifier, &currentKeyboardResID);
+      if (err == noErr)
+      {
+        rv = NS_OK;
+        *aIsRTL = IsRTLLanguage((SInt32)currentKeyboardResID);
+      }
+    }  
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
 {
   // XXX Insert platform specific code to set keyboard language
   return NS_OK;
+}
+
+PRBool nsBidiKeyboard::IsRTLLanguage(SInt32 aKeyboardResID)
+{
+  // Check if the resource id is BiDi associated (Arabic, Persian, Hebrew)
+  // (Persian is included in the Arabic range)
+  // http://developer.apple.com/documentation/mac/Text/Text-534.html#HEADING534-0
+  // Note: these ^^ values are negative on Mac OS X
+  return (aKeyboardResID >= -18943 && aKeyboardResID <= -17920);
 }

@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Simon Montagu
+ *   Asaf Romano <mozilla.mano@sent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,6 +41,11 @@
 #ifndef __nsBidiKeyboard
 #define __nsBidiKeyboard
 #include "nsIBidiKeyboard.h"
+#include <Carbon/Carbon.h>
+
+typedef OSStatus (*fpKLGetCurrentKeyboardLayout_type) (KeyboardLayoutRef*);
+typedef OSStatus (*fpKLGetKeyboardLayoutProperty_type) 
+    (KeyboardLayoutRef, KeyboardLayoutPropertyTag, void**);
 
 class nsBidiKeyboard : public nsIBidiKeyboard
 {
@@ -49,7 +55,9 @@ public:
 
   nsBidiKeyboard();
   virtual ~nsBidiKeyboard();
-  /* additional members */
+
+protected:
+  PRBool IsRTLLanguage(SInt32 aKeyboardResID);
 };
 
 
