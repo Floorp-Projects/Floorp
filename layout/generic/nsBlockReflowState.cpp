@@ -309,15 +309,19 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
     mBlock->ListTag(stdout);
     printf(": bad parent: maxSize WAS %d,%d\n",
            maxSize.width, maxSize.height);
-    maxSize.width = NS_UNCONSTRAINEDSIZE;
-    mUnconstrainedWidth = PR_TRUE;
+    if (maxSize.width > 100000) {
+      maxSize.width = NS_UNCONSTRAINEDSIZE;
+      mUnconstrainedWidth = PR_TRUE;
+    }
   }
   if (!mUnconstrainedHeight && (maxSize.height > 100000)) {
     mBlock->ListTag(stdout);
     printf(": bad parent: maxSize WAS %d,%d\n",
            maxSize.width, maxSize.height);
-    maxSize.height = NS_UNCONSTRAINEDSIZE;
-    mUnconstrainedHeight = PR_TRUE;
+    if (maxSize.height > 100000) {
+      maxSize.height = NS_UNCONSTRAINEDSIZE;
+      mUnconstrainedHeight = PR_TRUE;
+    }
   }
 #endif
 
@@ -2206,8 +2210,7 @@ nsBaseIBFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
   }
   else {
-    // XXX there is no break-after support here yet
-    NS_ASSERTION(!NS_INLINE_IS_BREAK_AFTER(frameReflowStatus), "not yet implemented");
+    // Note: line-break-after a block is a nop
 
     // Try to place the child block
     PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
@@ -2605,15 +2608,15 @@ nsBaseIBFrame::ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine)
     nsLineBox* line = nextInFlow->mLines;
     while (nsnull != line) {
       if (0 != line->ChildCount()) {
-        return PR_FALSE;
+        return !line->IsBlock();
       }
       line = line->mNext;
     }
     nextInFlow = (nsBaseIBFrame*) nextInFlow->mNextInFlow;
   }
 
-  // This is the last line
-  return PR_TRUE;
+  // This is the last line - so don't allow justification
+  return PR_FALSE;
 }
 
 nsresult
@@ -4515,6 +4518,15 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState& aState,
       mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
     }
   }
+#if 0
+  if (nsnull != aMetrics.maxElementSize) {
+    ListTag(stdout); printf(": maxElementSize=%d,%d\n",
+                            *aMetrics.maxElementSize);
+    if (aMetrics.maxElementSize->width > 15000) {
+      printf("YIKES!\n");
+    }
+  }
+#endif
 }
 
 void
