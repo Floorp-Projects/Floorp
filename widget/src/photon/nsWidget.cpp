@@ -1180,6 +1180,7 @@ void nsWidget::ProcessDrag( PhEvent_t *event, PRUint32 aEventType, PhPoint_t *po
 
 	DispatchDragDropEvent( event, aEventType, pos );
 
+	int old_subtype = event->subtype;
 	event->subtype = Ph_EV_DND_ENTER;
 
 	PRBool canDrop;
@@ -1192,6 +1193,8 @@ void nsWidget::ProcessDrag( PhEvent_t *event, PRUint32 aEventType, PhPoint_t *po
 		static PhCharacterCursorDescription_t drop_cursor = { { Ph_CURSOR_PASTE, sizeof(PhCharacterCursorDescription_t) }, PgRGB( 255, 255, 224 ) };
 		PhAckDnd( event, Ph_EV_DND_MOTION, ( PhCursorDescription_t * ) &drop_cursor );
 		}
+
+	event->subtype = old_subtype;
 
 	// Clear the cached value
 	currSession->SetCanDrop(PR_FALSE);
