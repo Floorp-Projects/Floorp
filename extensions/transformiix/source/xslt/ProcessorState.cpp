@@ -43,30 +43,16 @@
 #include "ExprResult.h"
 #include "Names.h"
 #include "XMLParser.h"
-#ifndef TX_EXE
-//  #include "nslog.h"
-//  #define PRINTF NS_LOG_PRINTF(XPATH)
-//  #define FLUSH  NS_LOG_FLUSH(XPATH)
-#else
-  #include "TxLog.h"
-#endif
-
-  //-------------/
- //- Constants -/
-//-------------/
-const String ProcessorState::wrapperNSPrefix  = "transformiix";
-const String ProcessorState::wrapperName      = "transformiix:result";
-const String ProcessorState::wrapperNS        = "http://www.mitre.org/TransforMiix";
+#include "txAtoms.h"
 
 /**
  * Creates a new ProcessorState
 **/
-ProcessorState::ProcessorState()
+ProcessorState::ProcessorState() : mXPathParseContext(0),
+                                   mSourceDocument(0),
+                                   xslDocument(0),
+                                   resultDocument(0)
 {
-    mSourceDocument = 0;
-    xslDocument = 0;
-    resultDocument = 0;
-    mXPathParseContext = 0;
     initialize();
 } //-- ProcessorState
 
@@ -77,22 +63,20 @@ ProcessorState::ProcessorState()
 ProcessorState::ProcessorState(Document* aSourceDocument,
                                Document* aXslDocument,
                                Document* aResultDocument)
+    : mXPathParseContext(0),
+      mSourceDocument(aSourceDocument),
+      xslDocument(aXslDocument),
+      resultDocument(aResultDocument)
 {
-    mSourceDocument = aSourceDocument;
-    xslDocument = aXslDocument;
-    resultDocument = aResultDocument;
-    mXPathParseContext = 0;
     initialize();
 } //-- ProcessorState
 
 /**
  * Destroys this ProcessorState
 **/
-ProcessorState::~ProcessorState() {
-
-  delete resultNodeStack;
-
-  while ( ! variableSets.empty() ) {
+ProcessorState::~ProcessorState()
+{
+  while (! variableSets.empty()) {
       delete (NamedMap*) variableSets.pop();
   }
 
@@ -101,7 +85,7 @@ ProcessorState::~ProcessorState() {
   while (iter.hasNext())
       delete (ImportFrame*)iter.next();
 
-  // Make sure that xslDocument and mSourceDocument isn't deleted along with
+  // Make sure that xslDocument and mSourceDocument aren't deleted along with
   // the rest of the documents in the loadedDocuments hash
   if (xslDocument)
       loadedDocuments.remove(xslDocument->getBaseURI());
@@ -129,30 +113,31 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
         recieveError(err);
         return;
     }
-    //-- get attribute set, if already exists, then merge
+    // Get attribute set, if already exists, then merge
     NodeSet* attSet = (NodeSet*)aImportFrame->mNamedAttributeSets.get(name);
-    if ( !attSet) {
+    if (!attSet) {
         attSet = new NodeSet();
         aImportFrame->mNamedAttributeSets.put(name, attSet);
     }
 
-    //-- add xsl:attribute elements to attSet
+    // Add xsl:attribute elements to attSet
     Node* node = aAttributeSet->getFirstChild();
     while (node) {
-        if ( node->getNodeType() == Node::ELEMENT_NODE) {
-            String nodeName = node->getNodeName();
-            String ns;
-            XMLUtils::getNameSpace(nodeName, ns);
-            if ( !xsltNameSpace.isEqual(ns)) continue;
-            String localPart;
-            XMLUtils::getLocalPart(nodeName, localPart);
-            if ( ATTRIBUTE.isEqual(localPart) ) attSet->add(node);
+        if (node->getNodeType() == Node::ELEMENT_NODE) {
+            PRInt32 nsID = node->getNamespaceID();
+            if (nsID != kNameSpaceID_XSLT)
+                continue;
+            txAtom* nodeName;
+            if (!node->getLocalName(&nodeName) || !nodeName)
+                continue;
+            if (nodeName == txXSLTAtoms::attribute)
+                attSet->add(node);
+            TX_RELEASE_ATOM(nodeName);
         }
         node = node->getNextSibling();
     }
 
-} //-- addAttributeSet
-
+}
 /**
  * Registers the given ErrorObserver with this ProcessorState
 **/
@@ -255,111 +240,6 @@ void ProcessorState::addLREStylesheet(Document* aStylesheet,
     else
         delete templ;
 }
-
-/**
- * Adds the given node to the result tree
- * @param node the Node to add to the result tree
-**/
-MBool ProcessorState::addToResultTree(Node* node) {
-
-    Node* current = resultNodeStack->peek();
-#ifndef TX_EXE
-    String nameSpaceURI, name, localName;
-#endif
-
-    switch (node->getNodeType()) {
-
-        case Node::ATTRIBUTE_NODE:
-        {
-            if (current->getNodeType() != Node::ELEMENT_NODE) return MB_FALSE;
-            Element* element = (Element*)current;
-            Attr* attr = (Attr*)node;
-#ifndef TX_EXE
-            name = attr->getName();
-            getResultNameSpaceURI(name, nameSpaceURI);
-            // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
-            if (getOutputFormat()->isHTMLOutput()) {
-                name.toLowerCase();
-            }
-            element->setAttributeNS(nameSpaceURI, name, attr->getValue());
-#else
-            element->setAttribute(attr->getName(),attr->getValue());
-#endif
-            delete node;
-            break;
-        }
-        case Node::ELEMENT_NODE:
-            //-- if current node is the document, make sure
-            //-- we don't already have a document element.
-            //-- if we do, create a wrapper element
-            if ( current == resultDocument ) {
-                Element* docElement = resultDocument->getDocumentElement();
-                if ( docElement ) {
-                    String nodeName(wrapperName);
-                    Element* wrapper = resultDocument->createElement(nodeName);
-                    resultNodeStack->push(wrapper);
-                    current->appendChild(wrapper);
-                    current = wrapper;
-                }
-#ifndef TX_EXE
-                else {
-                    // Checking if we should set the output method to HTML
-                    name = node->getNodeName();
-                    XMLUtils::getLocalPart(name, localName);
-                    if (localName.isEqualIgnoreCase(HTML)) {
-                        setOutputMethod(HTML);
-                        // XXX HACK (pvdb) Workaround for BUG 51656 
-                        // Html rendered as xhtml
-                        name.toLowerCase();
-                    }
-                }
-#endif
-            }
-            current->appendChild(node);
-            break;
-        case Node::TEXT_NODE :
-            //-- if current node is the document, create wrapper element
-            if ( current == resultDocument && 
-                 !XMLUtils::isWhitespace(node->getNodeValue())) {
-                String nodeName(wrapperName);
-                Element* wrapper = resultDocument->createElement(nodeName);
-                resultNodeStack->push(wrapper);
-                while (current->hasChildNodes()){
-                    wrapper->appendChild(current->getFirstChild());
-                    current->removeChild(current->getFirstChild());
-                }
-                current->appendChild(wrapper);
-                current = wrapper;
-            }
-            current->appendChild(node);
-            break;
-        case Node::PROCESSING_INSTRUCTION_NODE:
-        case Node::COMMENT_NODE :
-            current->appendChild(node);
-            break;
-        case Node::DOCUMENT_FRAGMENT_NODE:
-        {
-            current->appendChild(node);
-            delete node; //-- DOM Implementation does not clean up DocumentFragments
-            break;
-
-        }
-        //-- only add if not adding to document Node
-        default:
-            if (current != resultDocument) current->appendChild(node);
-            else return MB_FALSE;
-            break;
-    }
-    return MB_TRUE;
-
-} //-- addToResultTree
-
-/**
- * Copies the node using the rules defined in the XSL specification
-**/
-Node* ProcessorState::copyNode(Node* node) {
-    return 0;
-} //-- copyNode
 
 /*
  * Retrieve the document designated by the URI uri, using baseUri as base URI.
@@ -493,7 +373,8 @@ Node* ProcessorState::findTemplate(Node* aNode,
 
                 if (templ->mTemplate->getNodeType() == Node::ELEMENT_NODE) {
                     Element* elem = (Element*)templ->mTemplate;
-                    priorityAttr = elem->getAttribute(PRIORITY_ATTR);
+                    elem->getAttr(txXSLTAtoms::priority, kNameSpaceID_None,
+                                  priorityAttr);
                 }
 
                 double tmpPriority;
@@ -567,13 +448,6 @@ Node* ProcessorState::getCurrentNode() {
     return currentNodeStack.peek();
 } //-- setCurrentNode
 
-/**
- * Gets the default Namespace URI stack.
-**/ 
-Stack* ProcessorState::getDefaultNSURIStack() {
-    return &defaultNameSpaceURIStack;
-} //-- getDefaultNSURIStack
-
 Expr* ProcessorState::getExpr(Element* aElem, ExprAttr aAttr)
 {
     NS_ASSERTION(aElem, "missing element while getting expression");
@@ -586,13 +460,16 @@ Expr* ProcessorState::getExpr(Element* aElem, ExprAttr aAttr)
         String attr;
         switch (aAttr) {
             case SelectAttr:
-                attr = aElem->getAttribute(SELECT_ATTR);
+                aElem->getAttr(txXSLTAtoms::select, kNameSpaceID_None,
+                               attr);
                 break;
             case TestAttr:
-                attr = aElem->getAttribute(TEST_ATTR);
+                aElem->getAttr(txXSLTAtoms::test, kNameSpaceID_None,
+                               attr);
                 break;
             case ValueAttr:
-                attr = aElem->getAttribute(VALUE_ATTR);
+                aElem->getAttr(txXSLTAtoms::value, kNameSpaceID_None,
+                               attr);
                 break;
         }
 
@@ -626,10 +503,12 @@ PatternExpr* ProcessorState::getPattern(Element* aElem, PatternAttr aAttr)
         String attr;
         switch (aAttr) {
             case CountAttr:
-                attr = aElem->getAttribute(COUNT_ATTR);
+                aElem->getAttr(txXSLTAtoms::count, kNameSpaceID_None,
+                               attr);
                 break;
             case FromAttr:
-                attr = aElem->getAttribute(FROM_ATTR);
+                aElem->getAttr(txXSLTAtoms::from, kNameSpaceID_None,
+                               attr);
                 break;
         }
 
@@ -668,89 +547,39 @@ Element* ProcessorState::getNamedTemplate(String& aName)
     return 0;
 }
 
-/**
- * Returns the namespace URI for the given name, this method should only be
- * called for determining a namespace declared within the context (ie. the stylesheet)
-**/
-void ProcessorState::getNameSpaceURI(const String& name, String& nameSpaceURI) {
-    String prefix;
-    XMLUtils::getNameSpace(name, prefix);
-    getNameSpaceURIFromPrefix(prefix, nameSpaceURI);
-
-} //-- getNameSpaceURI
-
-/**
- * Returns the namespace URI for the given namespace prefix, this method should
- * only be called for determining a namespace declared within the context
- * (ie. the stylesheet)
-**/
-void ProcessorState::getNameSpaceURIFromPrefix(const String& prefix, String& nameSpaceURI) {
+void ProcessorState::getNameSpaceURIFromPrefix(const String& aPrefix,
+                                               String& aNamespaceURI)
+{
     if (mXPathParseContext)
-        XMLDOMUtils::getNameSpace(prefix, mXPathParseContext, nameSpaceURI);
-} //-- getNameSpaceURI
+        XMLDOMUtils::getNamespaceURI(aPrefix, mXPathParseContext,
+                                     aNamespaceURI);
+}
 
-/**
- * Returns the NodeStack which keeps track of where we are in the
- * result tree
- * @return the NodeStack which keeps track of where we are in the
- * result tree
-**/
-NodeStack* ProcessorState::getNodeStack() {
-    return resultNodeStack;
-} //-- getNodeStack
+txOutputFormat* ProcessorState::getOutputFormat()
+{
+    return &mOutputFormat;
+}
 
-/**
- * Returns the OutputFormat which contains information on how
- * to serialize the output. I will be removing this soon, when
- * change to an event based printer, so that I can serialize
- * as I go
-**/
-OutputFormat* ProcessorState::getOutputFormat() {
-    return &format;
-} //-- getOutputFormat
-
-Document* ProcessorState::getResultDocument() {
+Document* ProcessorState::getResultDocument()
+{
     return resultDocument;
-} //-- getResultDocument
+}
 
-/**
- * Returns the namespace URI for the given name, this method should only be
- * called for returning a namespace declared within in the result document.
-**/
-void ProcessorState::getResultNameSpaceURI(const String& name, String& nameSpaceURI) {
-    String prefix;
-    XMLUtils::getNameSpace(name, prefix);
-    if (prefix.isEmpty()) {
-        nameSpaceURI.clear();
-        nameSpaceURI.append(*(String*)defaultNameSpaceURIStack.peek());
-    }
-    else {
-        String* result = (String*)nameSpaceMap.get(prefix);
-        if (result) {
-            nameSpaceURI.clear();
-            nameSpaceURI.append(*result);
-        }
-    }
-
-} //-- getResultNameSpaceURI
-
-Stack* ProcessorState::getVariableSetStack() {
+Stack* ProcessorState::getVariableSetStack()
+{
     return &variableSets;
-} //-- getVariableSetStack
+}
 
-String& ProcessorState::getXSLNamespace() {
-    return xsltNameSpace;
-} //-- getXSLNamespace
-
-/**
+/*
  * Determines if the given XSL node allows Whitespace stripping
-**/
+ */
 MBool ProcessorState::isXSLStripSpaceAllowed(Node* node) {
 
-    if ( !node ) return MB_FALSE;
-    return (MBool)(PRESERVE != getXMLSpaceMode(node));
+    if (!node)
+        return MB_FALSE;
+    return (MBool)(getXMLSpaceMode(node) != PRESERVE);
 
-} //--isXSLStripSpaceAllowed
+}
 
 /**
  * Removes and returns the current source node being processed, from the stack
@@ -792,39 +621,6 @@ void ProcessorState::pushCurrentNode(Node* node) {
 } //-- setCurrentNode
 
 /**
- * Sets a new default Namespace URI.
-**/ 
-void ProcessorState::setDefaultNameSpaceURIForResult(const String& nsURI) {
-    String* nsTempURIPointer = 0;
-    String* nsURIPointer = 0;
-    StringListIterator theIterator(&nameSpaceURIList);
-
-    while (theIterator.hasNext()) {
-        nsTempURIPointer = theIterator.next();
-        if (nsTempURIPointer->isEqual(nsURI)) {
-            nsURIPointer = nsTempURIPointer;
-            break;
-        }
-    }
-    if ( ! nsURIPointer ) {
-        nsURIPointer = new String(nsURI);
-        nameSpaceURIList.add(nsURIPointer);
-    }
-    defaultNameSpaceURIStack.push(nsURIPointer);
-} //-- setDefaultNameSpaceURI
-
-/**
- * Sets the output method. Valid output method options are,
- * "xml", "html", or "text".
-**/ 
-void ProcessorState::setOutputMethod(const String& method) {
-    format.setMethod(method);
-    if ( method.indexOf(HTML) == 0 ) {
-        setDefaultNameSpaceURIForResult(HTML_NS);
-    }
-}
-
-/*
  * Adds the set of names to the Whitespace handling list.
  * xsl:strip-space calls this with MB_TRUE, xsl:preserve-space 
  * with MB_FALSE
@@ -859,9 +655,11 @@ void ProcessorState::shouldStripSpace(String& aNames,
 /**
  * Adds the supplied xsl:key to the set of keys
 **/
-MBool ProcessorState::addKey(Element* aKeyElem) {
-    String keyName = aKeyElem->getAttribute(NAME_ATTR);
-    if(!XMLUtils::isValidQName(keyName))
+MBool ProcessorState::addKey(Element* aKeyElem)
+{
+    String keyName;
+    aKeyElem->getAttr(txXSLTAtoms::name, kNameSpaceID_None, keyName);
+    if (!XMLUtils::isValidQName(keyName))
         return MB_FALSE;
     txXSLKey* xslKey = (txXSLKey*)xslKeys.get(keyName);
     if (!xslKey) {
@@ -907,61 +705,77 @@ MBool ProcessorState::addDecimalFormat(Element* element)
     String attValue = element->getAttribute(NAME_ATTR);
     String formatName = attValue;
 
-    attValue = element->getAttribute(DECIMAL_SEPARATOR_ATTR);
-    if (attValue.length() == 1)
-        format->mDecimalSeparator = attValue.charAt(0);
-    else if (!attValue.isEmpty())
-        success = MB_FALSE;
+    if (element->getAttr(txXSLTAtoms::decimalSeparator,
+                         kNameSpaceID_None, attValue)) {
+        if (attValue.length() == 1)
+            format->mDecimalSeparator = attValue.charAt(0);
+        else
+            success = MB_FALSE;
+    }
 
-    attValue = element->getAttribute(GROUPING_SEPARATOR_ATTR);
-    if (attValue.length() == 1)
-        format->mGroupingSeparator = attValue.charAt(0);
-    else if (!attValue.isEmpty())
-        success = MB_FALSE;
+    if (element->getAttr(txXSLTAtoms::groupingSeparator,
+                         kNameSpaceID_None, attValue)) {
+        if (attValue.length() == 1)
+            format->mGroupingSeparator = attValue.charAt(0);
+        else
+            success = MB_FALSE;
+    }
 
-    attValue = element->getAttribute(INFINITY_ATTR);
-    if (!attValue.isEmpty())
+    if (element->getAttr(txXSLTAtoms::infinity,
+                         kNameSpaceID_None, attValue))
         format->mInfinity=attValue;
 
-    attValue = element->getAttribute(MINUS_SIGN_ATTR);
-    if (attValue.length() == 1)
-        format->mMinusSign = attValue.charAt(0);
-    else if (!attValue.isEmpty())
-        success = MB_FALSE;
+    if (element->getAttr(txXSLTAtoms::minusSign,
+                         kNameSpaceID_None, attValue)) {
+        if (attValue.length() == 1)
+            format->mMinusSign = attValue.charAt(0);
+        else
+            success = MB_FALSE;
+    }
 
-    attValue = element->getAttribute(NAN_ATTR);
-    if (!attValue.isEmpty())
+    if (element->getAttr(txXSLTAtoms::NaN, kNameSpaceID_None,
+                         attValue))
         format->mNaN=attValue;
         
-    attValue = element->getAttribute(PERCENT_ATTR);
-    if (attValue.length() == 1)
-        format->mPercent = attValue.charAt(0);
-    else if (!attValue.isEmpty())
-        success = MB_FALSE;
+    if (element->getAttr(txXSLTAtoms::percent, kNameSpaceID_None,
+                         attValue)) {
+        if (attValue.length() == 1)
+            format->mPercent = attValue.charAt(0);
+        else
+            success = MB_FALSE;
+    }
 
-    attValue = element->getAttribute(PER_MILLE_ATTR);
-    if (attValue.length() == 1)
-        format->mPerMille = attValue.charAt(0);
-    else if (!attValue.isEmpty())
-        success = MB_FALSE;
+    if (element->getAttr(txXSLTAtoms::perMille,
+                         kNameSpaceID_None, attValue)) {
+        if (attValue.length() == 1)
+            format->mPerMille = attValue.charAt(0);
+        else if (!attValue.isEmpty())
+            success = MB_FALSE;
+    }
 
-    attValue = element->getAttribute(ZERO_DIGIT_ATTR);
-    if (attValue.length() == 1)
-        format->mZeroDigit = attValue.charAt(0);
-    else if (!attValue.isEmpty())
-        success = MB_FALSE;
+    if (element->getAttr(txXSLTAtoms::zeroDigit,
+                         kNameSpaceID_None, attValue)) {
+        if (attValue.length() == 1)
+            format->mZeroDigit = attValue.charAt(0);
+        else if (!attValue.isEmpty())
+            success = MB_FALSE;
+    }
 
-    attValue = element->getAttribute(DIGIT_ATTR);
-    if (attValue.length() == 1)
-        format->mDigit = attValue.charAt(0);
-    else if (!attValue.isEmpty())
-        success = MB_FALSE;
+    if (element->getAttr(txXSLTAtoms::digit, kNameSpaceID_None,
+                         attValue)) {
+        if (attValue.length() == 1)
+            format->mDigit = attValue.charAt(0);
+        else
+            success = MB_FALSE;
+    }
 
-    attValue = element->getAttribute(PATTERN_SEPARATOR_ATTR);
-    if (attValue.length() == 1)
-        format->mPatternSeparator = attValue.charAt(0);
-    else if (!attValue.isEmpty())
-        success = MB_FALSE;
+    if (element->getAttr(txXSLTAtoms::patternSeparator,
+                         kNameSpaceID_None, attValue)) {
+        if (attValue.length() == 1)
+            format->mPatternSeparator = attValue.charAt(0);
+        else
+            success = MB_FALSE;
+    }
 
     if (!success) {
         delete format;
@@ -1025,9 +839,9 @@ ExprResult* ProcessorState::getVariable(String& name) {
 
     StackIterator* iter = variableSets.iterator();
     ExprResult* exprResult = 0;
-    while ( iter->hasNext() ) {
+    while (iter->hasNext()) {
         NamedMap* map = (NamedMap*) iter->next();
-        if ( map->get(name)) {
+        if (map->get(name)) {
             exprResult = ((VariableBinding*)map->get(name))->getValue();
             break;
         }
@@ -1039,13 +853,13 @@ ExprResult* ProcessorState::getVariable(String& name) {
 /**
  * Determines if the given XML node allows Whitespace stripping
 **/
-MBool ProcessorState::isStripSpaceAllowed(Node* node) {
+MBool ProcessorState::isStripSpaceAllowed(Node* node)
+{
+    if (!node)
+        return MB_FALSE;
 
-    if ( !node ) return MB_FALSE;
-
-    switch ( node->getNodeType() ) {
-
-        case Node::ELEMENT_NODE :
+    switch (node->getNodeType()) {
+        case Node::ELEMENT_NODE:
         {
             // check Whitespace stipping handling list against given Node
             ImportFrame* frame;
@@ -1060,30 +874,31 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node) {
                         return iNameTest->stripsSpace();
                 }
             }
-            String method;
-            if (format.getMethod(method).isEqual("html")) {
+            if (mOutputFormat.mMethod == eHTMLOutput) {
                 String ucName = name;
                 ucName.toUpperCase();
-                if (ucName.isEqual("SCRIPT")) return MB_FALSE;
+                if (ucName.isEqual("SCRIPT"))
+                    return MB_FALSE;
             }
             break;
         }
         case Node::TEXT_NODE:
         case Node::CDATA_SECTION_NODE:
+        {
             if (!XMLUtils::shouldStripTextnode(node->getNodeValue()))
                 return MB_FALSE;
             return isStripSpaceAllowed(node->getParentNode());
+        }
         case Node::DOCUMENT_NODE:
+        {
             return MB_TRUE;
-        default:
-            break;
+        }
     }
     XMLSpaceMode mode = getXMLSpaceMode(node);
-    if (mode == DEFAULT) return (MBool)(defaultSpace == STRIP);
+    if (mode == DEFAULT)
+        return MB_FALSE;
     return (MBool)(STRIP == mode);
-
-} //--isStripSpaceAllowed
-
+}
 
 /**
  *  Notifies this Error observer of a new error, with default
@@ -1098,7 +913,7 @@ void ProcessorState::recieveError(String& errorMessage) {
 **/
 void ProcessorState::recieveError(String& errorMessage, ErrorLevel level) {
     ListIterator* iter = errorObservers.iterator();
-    while ( iter->hasNext()) {
+    while (iter->hasNext()) {
         ErrorObserver* observer = (ErrorObserver*)iter->next();
         observer->recieveError(errorMessage, level);
     }
@@ -1197,46 +1012,48 @@ void ProcessorState::sortByDocumentOrder(NodeSet* nodes) {
  //- Private Methods -/
 //-------------------/
 
-/**
+/*
  * Returns the closest xml:space value for the given Text node
-**/
-ProcessorState::XMLSpaceMode ProcessorState::getXMLSpaceMode(Node* node) {
+ */
+ProcessorState::XMLSpaceMode ProcessorState::getXMLSpaceMode(Node* aNode)
+{
+    NS_ASSERTION(aNode, "Calling getXMLSpaceMode with NULL node!");
 
-    if (!node) return DEFAULT; //-- we should never see this
-
-    Node* parent = node;
-    while ( parent ) {
-        switch ( parent->getNodeType() ) {
+    Node* parent = aNode;
+    while (parent) {
+        switch (parent->getNodeType()) {
             case Node::ELEMENT_NODE:
             {
-                String value = ((Element*)parent)->getAttribute(XML_SPACE);
-                if ( value.isEqual(PRESERVE_VALUE)) {
+                String value;
+                ((Element*)parent)->getAttr(txXMLAtoms::space,
+                                            kNameSpaceID_XML, value);
+                if (value.isEqual(PRESERVE_VALUE))
                     return PRESERVE;
-                }
                 break;
             }
             case Node::TEXT_NODE:
             case Node::CDATA_SECTION_NODE:
-                //-- we will only see this the first time through the loop
-                //-- if the argument node is a text node
+            {
+                // We will only see this the first time through the loop
+                // if the argument node is a text node.
                 break;
+            }
             default:
+            {
                 return DEFAULT;
+            }
         }
         parent = parent->getParentNode();
     }
     return DEFAULT;
-
-} //-- getXMLSpaceMode
+}
 
 /**
  * Initializes this ProcessorState
 **/
-void ProcessorState::initialize() {
-    //-- initialize default-space
-    defaultSpace = PRESERVE;
-
-    //-- add global variable set
+void ProcessorState::initialize()
+{
+    // add global variable set
     NamedMap* globalVars = new NamedMap();
     globalVars->setObjectDeletion(MB_TRUE);
     variableSets.push(globalVars);
@@ -1247,84 +1064,25 @@ void ProcessorState::initialize() {
     mExprHashes[ValueAttr].setOwnership(Map::eOwnsItems);
     mPatternHashes[CountAttr].setOwnership(Map::eOwnsItems);
     mPatternHashes[FromAttr].setOwnership(Map::eOwnsItems);
-    nameSpaceMap.setObjectDeletion(MB_TRUE);
 
-    //-- create NodeStack
-    resultNodeStack = new NodeStack();
-    resultNodeStack->push(this->resultDocument);
-
-    setDefaultNameSpaceURIForResult("");
-
-    //-- determine xsl properties
-    Element* element = NULL;
+    // determine xslt properties
     if (mSourceDocument) {
         loadedDocuments.put(mSourceDocument->getBaseURI(), mSourceDocument);
     }
     if (xslDocument) {
-        element = xslDocument->getDocumentElement();
         loadedDocuments.put(xslDocument->getBaseURI(), xslDocument);
         // XXX hackarond to get namespacehandling in a little better shape
         // we won't need to do this once we resolve namespaces during parsing
-        mXPathParseContext = element;
+        mXPathParseContext = xslDocument->getDocumentElement();
     }
-    if ( element ) {
 
-	    //-- process namespace nodes
-	    NamedNodeMap* atts = element->getAttributes();
-	    if ( atts ) {
-	        for (PRUint32 i = 0; i < atts->getLength(); i++) {
-	            Attr* attr = (Attr*)atts->item(i);
-	            String attName = attr->getName();
-	            String attValue = attr->getValue();
-	            if ( attName.indexOf(XMLUtils::XMLNS) == 0) {
-	                String ns;
-	                XMLUtils::getLocalPart(attName, ns);
-	                // default namespace
-	                if ( attName.isEqual(XMLUtils::XMLNS) ) {
-	                    //-- Is this correct?
-	                    setDefaultNameSpaceURIForResult(attValue);
-	                }
-	                // namespace declaration
-	                else {
-	                    String ns;
-	                    XMLUtils::getLocalPart(attName, ns);
-	                    nameSpaceMap.put(ns, new String(attValue));
-	                }
-	                // check for XSL namespace
-	                if ( attValue.indexOf(XSLT_NS) == 0) {
-	                    xsltNameSpace = ns;
-	                }
-	            }
-	            else if ( attName.isEqual(DEFAULT_SPACE_ATTR) ) {
-	                if ( attValue.isEqual(STRIP_VALUE) ) {
-	                    defaultSpace = STRIP;
-	                }
-	            }
-	            else if ( attName.isEqual(RESULT_NS_ATTR) ) {
-	                if (!attValue.isEmpty()) {
-	                    if ( attValue.indexOf(HTML_NS) == 0 ) {
-	                        setOutputMethod("html");
-	                    }
-	                    else setOutputMethod(attValue);
-	                }
-	            }
-	            else if ( attName.isEqual(INDENT_RESULT_ATTR) ) {
-	                if (!attValue.isEmpty()) {
-	                    format.setIndent(attValue.isEqual(YES_VALUE));
-	                }
-	            }
-
-	        } //-- end for each att
-	    } //-- end if atts are not null
-	}
-    
-    //-- make sure all keys are deleted
+    // make sure all keys are deleted
     xslKeys.setObjectDeletion(MB_TRUE);
-    
-    //-- Make sure all loaded documents get deleted
+
+    // Make sure all loaded documents get deleted
     loadedDocuments.setObjectDeletion(MB_TRUE);
 
-    //-- add predefined default decimal format
+    // add predefined default decimal format
     defaultDecimalFormatSet = MB_FALSE;
     decimalFormats.put("", new txDecimalFormat);
     decimalFormats.setObjectDeletion(MB_TRUE);

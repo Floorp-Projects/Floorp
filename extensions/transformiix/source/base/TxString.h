@@ -121,9 +121,7 @@ class String : public TxObject
 
     virtual MBool isEqual(const String& data) const; //Check equality between
                                                      //strings
-#ifndef TX_EXE
     virtual MBool isEqualIgnoreCase(const String& data) const;
-#endif
 
     //Returns index of last occurrence of data
     virtual PRInt32 lastIndexOf(UNICODE_CHAR data) const;

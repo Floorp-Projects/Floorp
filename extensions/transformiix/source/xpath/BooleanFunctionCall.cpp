@@ -27,7 +27,7 @@
  */
 
 #include "FunctionLib.h"
-#include "Names.h"
+#include "txAtoms.h"
 
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
@@ -82,7 +82,8 @@ ExprResult* BooleanFunctionCall::evaluate(Node* context, ContextState* cs) {
             if ( requireParams(1,1,cs) ) {
                 String arg1, lang;
                 evaluateToString((Expr*)iter->next(),context, cs, arg1);
-                lang = ((Element*)context)->getAttribute(XML_LANG_ATTR);
+                ((Element*)context)->getAttr(txXMLAtoms::lang,
+                                             kNameSpaceID_XML, lang);
                 arg1.toUpperCase(); // case-insensitive comparison
                 lang.toUpperCase();
                 result = (MBool)(lang.indexOf(arg1) == 0);

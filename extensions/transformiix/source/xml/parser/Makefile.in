@@ -53,8 +53,8 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../net -I$(srcdir)/../dom
 ifdef TX_EXE
-INCLUDES += -I$(srcdir)/xmlparse
-COMPILE_CFLAGS += -DXML_UNICODE -I$(srcdir)/xmltok
+INCLUDES += -I$(srcdir)/xmlparse -I$(srcdir)/xmltok
+COMPILE_CFLAGS += -DXML_UNICODE
 endif
 
 libs:: $(OBJS)

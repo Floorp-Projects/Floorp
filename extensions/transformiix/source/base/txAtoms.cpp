@@ -48,18 +48,14 @@ XML_ATOMS;
 #define TX_ATOM(_name, _value) txAtom* txXSLTAtoms::_name = 0
 #include "txXSLTAtomList.h"
 #undef TX_ATOM
-#ifndef TX_EXE
 #define TX_ATOM(_name, _value) txAtom* txHTMLAtoms::_name = 0
 #include "txHTMLAtomList.h"
 #undef TX_ATOM
-#endif
 
 static PRUint32 gXMLRefCnt = 0;
 static PRUint32 gXPathRefCnt = 0;
 static PRUint32 gXSLTRefCnt = 0;
-#ifndef TX_EXE
 static PRUint32 gHTMLRefCnt = 0;
-#endif
 
 #ifdef TX_EXE
 #define TX_ATOM(_name, _value)           \
@@ -99,7 +95,6 @@ MBool txXSLTAtoms::init()
     return MB_TRUE;
 }
 
-#ifndef TX_EXE
 MBool txHTMLAtoms::init()
 {
     if (0 == gHTMLRefCnt++) {
@@ -108,7 +103,6 @@ MBool txHTMLAtoms::init()
     }
     return MB_TRUE;
 }
-#endif
 
 #undef TX_ATOM
 
@@ -142,7 +136,6 @@ void txXSLTAtoms::shutdown()
     }
 }
 
-#ifndef TX_EXE
 void txHTMLAtoms::shutdown()
 {
     NS_ASSERTION(gHTMLRefCnt != 0, "bad release atoms");
@@ -151,6 +144,5 @@ void txHTMLAtoms::shutdown()
 #include "txHTMLAtomList.h"
     }
 }
-#endif
 
 #undef TX_ATOM

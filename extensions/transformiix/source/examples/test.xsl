@@ -82,17 +82,13 @@
   <HEAD>
     <TITLE>TransforMiiX Test Cases</TITLE>
     <SCRIPT Language="JavaScript">
-     <xsl:text>
       // This is a test for properly printing SCRIPT elements
-      // currently there is a bug, so use xsl:text as a wrapper as I
-      // have done here
       function foo() {
           var x = 1;
           var y = 2;
           return (x &lt; y);
       }
      //
-     </xsl:text>
     </SCRIPT>
   </HEAD>
   <BODY BGColor="#FFFFFF" Text="#000000">

@@ -53,9 +53,8 @@ MozillaObjectWrapper::MozillaObjectWrapper(nsISupports* aNsObject,
 MozillaObjectWrapper::~MozillaObjectWrapper()
 {
     MOZ_COUNT_DTOR(MozillaObjectWrapper);
-    if (ownerDocument && (ownerDocument != this) &&
-            !ownerDocument->inHashTableDeletion())
-        ownerDocument->removeWrapper(getNSObj());
+    NS_ASSERTION(ownerDocument->bInHashTableDeletion,
+                 "Never directly delete a DOM object, except a document!");
 }
 
 /**

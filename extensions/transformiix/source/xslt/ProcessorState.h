@@ -36,7 +36,7 @@
 #include "ExprParser.h"
 #include "Expr.h"
 #include "StringList.h"
-#include "OutputFormat.h"
+#include "txOutputFormat.h"
 #include "Map.h"
 
 class txXSLKey;
@@ -48,11 +48,6 @@ class txDecimalFormat;
 class ProcessorState : public ContextState {
 
 public:
-
-    static const String wrapperNSPrefix;
-    static const String wrapperName;
-    static const String wrapperNS;
-
     /**
      * Creates a new ProcessorState
     **/
@@ -92,6 +87,9 @@ public:
         // Map of named attribute sets
         NamedMap mNamedAttributeSets;
 
+        // Output format, as specified by the xsl:output elements
+        txOutputFormat mOutputFormat;
+
         // ImportFrame which is the first one *not* imported by this frame
         ImportFrame* mFirstNotImported;
 
@@ -99,7 +97,6 @@ public:
 
         // Namespace aliases (xsl:namespace-alias)
         // Toplevel variables/parameters
-        // Output specifier (xsl:output)
     };
     // To be able to do some cleaning up in destructor
     friend class ImportFrame;
@@ -132,17 +129,6 @@ public:
     void addLREStylesheet(Document* aStylesheet, ImportFrame* aImportFrame);
 
     /**
-     *  Adds the given Node to the Result Tree
-     *
-    **/
-    MBool addToResultTree(Node* node);
-
-    /**
-     * Copies the node using the rules defined in the XSL specification
-    **/
-    Node* copyNode(Node* node);
-
-    /**
      * Returns the AttributeSet associated with the given name
      * or null if no AttributeSet is found
     **/
@@ -152,11 +138,6 @@ public:
      * Returns the source node currently being processed
     **/
     Node* getCurrentNode();
-
-    /**
-     * Gets the default Namespace URI stack.
-    **/ 
-    Stack* getDefaultNSURIStack();
 
     /*
      * Returns the template associated with the given name, or
@@ -178,10 +159,10 @@ public:
      * change to an event based printer, so that I can serialize
      * as I go
     **/
-    OutputFormat* getOutputFormat();
+    txOutputFormat* getOutputFormat();
 
-    
-    Stack*     getVariableSetStack();
+
+    Stack* getVariableSetStack();
 
     enum ExprAttr {
         SelectAttr = 0,
@@ -201,15 +182,6 @@ public:
      * Returns a pointer to the result document
     **/
     Document* getResultDocument();
-
-    /**
-     * Returns the namespace URI for the given name, this method should
-     * only be called to get a namespace declared within the result
-     * document.
-    **/
-    void getResultNameSpaceURI(const String& name, String& nameSpaceURI);
-
-    String& getXSLNamespace();
 
     /**
      * Retrieve the document designated by the URI uri, using baseUri as base URI.
@@ -307,19 +279,7 @@ public:
     **/
     void pushCurrentNode(Node* node);
 
-
     /**
-     * Sets a new default Namespace URI. This is used for the Result Tree
-    **/ 
-    void setDefaultNameSpaceURIForResult(const String& nsURI);
-
-    /**
-     * Sets the output method. Valid output method options are,
-     * "xml", "html", or "text".
-    **/ 
-    void setOutputMethod(const String& method);
-
-    /*
      * Adds the set of names to the Whitespace stripping handling list.
      * xsl:strip-space calls this with MB_TRUE, xsl:preserve-space 
      * with MB_FALSE
@@ -399,23 +359,12 @@ public:
     **/
     virtual void sortByDocumentOrder(NodeSet* nodes);
 
-    //------------------------------------------/
-    //- Virtual Methods from NamespaceResolver -/
-    //------------------------------------------/
-
-    /**
-     * Returns the namespace URI for the given name, this method should
-     * only be called to get a namespace declared within the context (ie.
-     * the stylesheet).
-    **/ 
-    void getNameSpaceURI(const String& name, String& nameSpaceURI);
-
     /**
      * Returns the namespace URI for the given namespace prefix. This method
      * should only be called to get a namespace declared within the
      * context (ie. the stylesheet).
     **/
-    void getNameSpaceURIFromPrefix(const String& prefix, String& nameSpaceURI);
+    void getNameSpaceURIFromPrefix(const String& aPrefix, String& aNamespaceURI);
 
 private:
 
@@ -431,49 +380,38 @@ private:
     /**
      * The list of ErrorObservers registered with this ProcessorState
     **/
-    List  errorObservers;
+    List errorObservers;
 
     /**
      * Stack of URIs for currently entered stylesheets
     **/
-    Stack          enteredStylesheets;
+    Stack enteredStylesheets;
 
     /**
      * List of import containers. Sorted by ascending import precedence
     **/
-    txList         mImportFrames;
-
-    /**
-     * Current stack of nodes, where we are in the result document tree
-    **/
-    NodeStack*     resultNodeStack;
-
+    txList mImportFrames;
 
     /**
      * The output format used when serializing the result
     **/
-    OutputFormat format;
-
-    /**
-     * Default whitespace stripping mode
-    **/
-    XMLSpaceMode       defaultSpace;
+    txOutputFormat mOutputFormat;
 
     /**
      * The set of loaded documents. This includes both document() loaded
      * documents and xsl:include/xsl:import'ed documents.
     **/
-    NamedMap       loadedDocuments;
+    NamedMap loadedDocuments;
     
     /**
      * The set of all available keys
     **/
-    NamedMap       xslKeys;
+    NamedMap xslKeys;
 
     /*
      * A list of all avalible decimalformats
      */
-    NamedMap       decimalFormats;
+    NamedMap decimalFormats;
     
     /*
      * bool indicating if the default decimal format has been explicitly set
@@ -505,16 +443,11 @@ private:
     Document*      resultDocument;
     Stack          variableSets;
     ExprParser     exprParser;
-    String         xsltNameSpace;
-    NamedMap       nameSpaceMap;
-    StringList     nameSpaceURIList;
-    Stack          defaultNameSpaceURIStack;
-    Stack          xsltNameSpaces;
 
     /**
      * Returns the closest xml:space value for the given node
     **/
-    XMLSpaceMode getXMLSpaceMode(Node* node);
+    XMLSpaceMode getXMLSpaceMode(Node* aNode);
 
     /**
      * Initializes the ProcessorState

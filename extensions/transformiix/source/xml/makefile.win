@@ -33,7 +33,6 @@ DIRS=dom parser
 
 !if defined(TX_EXE)
 DEFINES=$(DEFINES) -DTX_EXE
-DIRS = $(DIRS) printer
 !endif
 
 CPP_OBJS=				\

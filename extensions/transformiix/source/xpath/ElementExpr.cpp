@@ -119,7 +119,7 @@ MBool ElementExpr::matches(Node* node, Node* context, ContextState* cs) {
         String prefix2;
         if (idx > 0) nodeName.subString(0, idx, prefix2);
         // use source tree to aquire namespace for node
-        XMLDOMUtils::getNameSpace(prefix2, (Element*) node, nsURI2);
+        XMLDOMUtils::getNamespaceURI(prefix2, (Element*) node, nsURI2);
 
         if (!nsURI.isEqual(nsURI2)) return MB_FALSE;
     }

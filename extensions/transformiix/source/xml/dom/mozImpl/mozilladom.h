@@ -72,7 +72,6 @@
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMText.h"
 #include "nsINameSpaceManager.h"
-
 #include "txAtom.h"
 
 #ifndef NULL
@@ -331,8 +330,6 @@ class Document : public Node
         Document(nsIDOMDocument* aDocument);
         ~Document();
 
-        PRBool inHashTableDeletion();
-
         Element* getDocumentElement();
         DocumentType* getDoctype();
         DOMImplementation* getImplementation();
@@ -401,9 +398,16 @@ class Document : public Node
 
         Element* getElementById(const String aID);
 
-    private:
-        PRBool bInHashTableDeletion;
+        PRInt32 namespaceURIToID(const String& aNamespaceURI);
+        void namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI);
 
+#ifdef DEBUG
+protected:
+        PRBool bInHashTableDeletion;
+        friend class MozillaObjectWrapper;
+#endif
+
+    private:
         nsObjectHashtable *wrapperHashTable;
 
         nsCOMPtr<nsINameSpaceManager> nsNSManager;
@@ -421,8 +425,9 @@ class Element : public Node
         const String& getTagName();
         const String& getAttribute(const String& aName);
         void setAttribute(const String& aName, const String& aValue);
-        void setAttributeNS(const String& aNamespaceURI, const String& aName,
-                    const String& aValue);
+        void setAttributeNS(const String& aNamespaceURI,
+                            const String& aName,
+                            const String& aValue);
         void removeAttribute(const String& aName);
         Attr* getAttributeNode(const String& aName);
         Attr* setAttributeNode(Attr* aNewAttr);

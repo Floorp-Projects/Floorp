@@ -37,7 +37,15 @@
 
 
 #ifndef TX_EXE
+#include "nsICSSStyleSheet.h"
+#include "nsICSSLoaderObserver.h"
 #include "nsIDocumentTransformer.h"
+#include "nsIDOMHTMLScriptElement.h"
+#include "nsIObserver.h"
+#include "nsIScriptLoaderObserver.h"
+
+#include "txMozillaTextOutput.h"
+#include "txMozillaXMLOutput.h"
 #endif
 
 #include "dom.h"
@@ -48,11 +56,12 @@
 #include "TxString.h"
 #include "ErrorObserver.h"
 #include "List.h"
+#include "txTextHandler.h"
 
 #ifndef TX_EXE
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
 #define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
-{ 0xbacd8ad0, 0x552f, 0x11d3, {0xa9, 0xf7, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
+{ 0xbacd8ad0, 0x552f, 0x11d3, { 0xa9, 0xf7, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 } }
 
 #define TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID \
 "@mozilla.org/document-transformer;1?type=text/xsl"
@@ -73,7 +82,8 @@ MBool txShutdown();
 **/
 class XSLTProcessor
 #ifndef TX_EXE
-: public nsIDocumentTransformer
+: public nsIDocumentTransformer,
+  public nsIScriptLoaderObserver
 #endif
 {
 
@@ -81,8 +91,11 @@ public:
 #ifndef TX_EXE
     // nsISupports interface
     NS_DECL_ISUPPORTS
+
     // nsIDocumentTransformer interface
     NS_DECL_NSIDOCUMENTTRANSFORMER
+
+    NS_DECL_NSISCRIPTLOADEROBSERVER
 #endif
 
     /**
@@ -250,21 +263,6 @@ private:
                       MBool allowShadowing,
                       ProcessorState* ps);
 
-
-#ifdef TX_EXE
-
-    /**
-     * Prints the given XML document to the given ostream and uses
-     * the properties specified in the OutputFormat.
-     * This method is used to print the result tree
-     * @param document the XML document to print
-     * @param format the OutputFormat specifying formatting info
-     * @param ostream the Stream to print to
-    **/
-    void print(Document& document, OutputFormat* format, ostream& out);
-#endif
-
-
     /**
      * Processes the xsl:with-param elements of the given xsl action
     **/
@@ -274,21 +272,7 @@ private:
      * Looks up the given XSLType with the given name
      * The ProcessorState is used to get the current XSLT namespace
     **/
-    short getElementType(const String& name, ProcessorState* ps);
-
-
-    /**
-     * Gets the Text value of the given DocumentFragment. The value is placed
-     * into the given destination String. If a non text node element is
-     * encountered and warningForNonTextNodes is turned on, the MB_FALSE
-     * will be returned, otherwise true is always returned.
-     * @param dfrag the document fragment to get the text from
-     * @param dest the destination string to place the text into.
-     * @param deep indicates to process non text nodes and recusively append
-     * their value. If this value is true, the allowOnlyTextNodes flag is ignored.
-    **/
-    MBool getText
-        (DocumentFragment* dfrag, String& dest, MBool deep, MBool allowOnlyTextNodes);
+    short getElementType(Element* aElement, ProcessorState* aPs);
 
     /**
      * Notifies all registered ErrorObservers of the given error
@@ -316,12 +300,13 @@ private:
                  const String& mode,
                  ProcessorState* ps);
 
-    void processAction(Node* node, Node* xslAction, ProcessorState* ps);
+    void processAction(Node* aNode, Node* aXsltAction, ProcessorState* aPs);
 
     /**
-     * Processes the attribute sets specified in the names argument
+     * Processes the attribute sets specified in the use-attribute-sets attribute
+     * of the element specified in aElement
     **/
-    void processAttributeSets(const String& names, Node* node, ProcessorState* ps);
+    void processAttributeSets(Element* aElement, Node* node, ProcessorState* ps);
 
     /**
      * Processes the children of the specified element using the given context node
@@ -375,23 +360,54 @@ private:
 
     ExprResult* processVariable(Node* node, Element* xslVariable, ProcessorState* ps);
 
-    /**
-     * Performs the xsl:copy action as specified in the XSL Working Draft
-    **/
-    void xslCopy(Node* node, Element* action, ProcessorState* ps);
+    void startTransform(Node* aNode, ProcessorState* aPs);
 
-    /**
-     * Performs the xsl:copy-of action as specified in the XSLT Working Draft
-    **/
-    void xslCopyOf(ExprResult* exprResult, ProcessorState* ps);
+    MBool initializeHandlers(ProcessorState* aPs);
 
+    /*
+     * Performs the xsl:copy action as specified in the XSLT specification
+     */
+    void xslCopy(Node* aNode, Element* aAction, ProcessorState* aPs);
+
+    /*
+     * Performs the xsl:copy-of action as specified in the XSLT specification
+     */
+    void xslCopyOf(ExprResult* aExprResult, ProcessorState* aPs);
+
+    /*
+     * Copy a node. For document nodes, copy the children.
+     */
+    void copyNode(Node* aNode, ProcessorState* aPs);
+
+    void startElement(ProcessorState* aPs, const String& aName, const PRInt32 aNsID);
+
+    void processChildrenAsValue(Node* aNode, 
+                                Element* aElement,
+                                ProcessorState* aPs,
+                                MBool aOnlyText,
+                                String& aValue);
+
+#ifdef TX_EXE
+    txStreamXMLEventHandler* mOutputHandler;
+#else
+    txMozillaXMLEventHandler* mOutputHandler;
+#endif
+    txXMLEventHandler* mResultHandler;
+    MBool mHaveDocumentElement;
+    Stack mAttributeSetStack;
+#ifndef TX_EXE
+    void SignalTransformEnd();
+
+    nsCOMPtr<nsIDocument> mDocument;
+    nsCOMPtr<nsIObserver> mObserver;
+#endif
 }; //-- XSLTProcessor
 
 class XSLType : public TxObject {
 
 public:
     enum types {
-        APPLY_IMPORTS =  1,
+        APPLY_IMPORTS = 1,
         APPLY_TEMPLATES,
         ATTRIBUTE,
         ATTRIBUTE_SET,
@@ -408,6 +424,7 @@ public:
         KEY,
         FOR_EACH,
         LITERAL,
+        MESSAGE,
         NUMBER,
         OTHERWISE,
         OUTPUT,
@@ -421,8 +438,7 @@ public:
         VALUE_OF,
         VARIABLE,
         WHEN,
-        WITH_PARAM,
-        MESSAGE
+        WITH_PARAM
     };
 
     XSLType(const XSLType& xslType);

@@ -38,15 +38,27 @@ REQUIRES	= string \
 		  content_xsl \
 		  widget \
 		  necko \
+		  unicharutil \
 		  $(NULL)
 endif
 
 CPPSRCS = Names.cpp \
         Numbering.cpp \
-        OutputFormat.cpp \
+        txOutputFormat.cpp \
         ProcessorState.cpp \
+        txRtfHandler.cpp \
+        txTextHandler.cpp \
         VariableBinding.cpp \
         XSLTProcessor.cpp
+
+ifdef TX_EXE
+CPPSRCS += txHTMLOutput.cpp	\
+           txTextOutput.cpp \
+           txXMLOutput.cpp
+else
+CPPSRCS += txMozillaTextOutput.cpp \
+           txMozillaXMLOutput.cpp
+endif
 
 include $(topsrcdir)/config/rules.mk
 

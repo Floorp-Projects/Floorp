@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Peter Van der Beken, peterv@netscape.com
+ *   Peter Van der Beken <peterv@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -41,6 +41,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventQueueService.h"
@@ -297,7 +298,9 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocu
         return rv;
     }
 
-    if (mLoadSuccess) {
+    nsCOMPtr<nsIDOMElement> documentElement;
+    DOMDocument->GetDocumentElement(getter_AddRefs(documentElement));
+    if (mLoadSuccess && documentElement) {
         *_retval = DOMDocument;
         NS_ADDREF(*_retval);
     }

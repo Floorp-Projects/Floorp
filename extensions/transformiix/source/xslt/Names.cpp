@@ -71,59 +71,22 @@ const String PROC_INST          = "processing-instruction";
 const String PRESERVE_SPACE     = "preserve-space";
 const String SORT               = "sort";
 const String STRIP_SPACE        = "strip-space";
-const String STYLESHEET         = "stylesheet";
 const String TEMPLATE           = "template";
 const String TEXT               = "text";
-const String TRANSFORM          = "transform";
 const String VALUE_OF           = "value-of";
 const String VARIABLE           = "variable";
 const String WHEN               = "when";
 const String WITH_PARAM         = "with-param";
 
 //-- Attributes
-const String CASE_ORDER_ATTR         = "case-order";
-const String CDATA_ELEMENTS_ATTR     = "cdata-section-elements";
-const String COUNT_ATTR              = "count";
-const String DATA_TYPE_ATTR          = "data-type";
-const String DECIMAL_SEPARATOR_ATTR  = "decimal-separator";
-const String DEFAULT_SPACE_ATTR      = "default-space";
-const String DIGIT_ATTR              = "digit";
-const String DOCTYPE_PUBLIC_ATTR     = "doctype-public";
-const String DOCTYPE_SYSTEM_ATTR     = "doctype-system";
 const String ELEMENTS_ATTR           = "elements";
-const String ENCODING_ATTR           = "encoding";
-const String EXPR_ATTR               = "expr";
-const String FORMAT_ATTR             = "format";
-const String FROM_ATTR               = "from";
-const String GROUPING_SEPARATOR_ATTR = "grouping-separator";
 const String HREF_ATTR               = "href";
-const String INDENT_ATTR             = "indent";
-const String INFINITY_ATTR           = "infinity";
-const String LANG_ATTR               = "lang";
-const String LEVEL_ATTR              = "level";
 const String MATCH_ATTR              = "match";
-const String METHOD_ATTR             = "method";
-const String MEDIA_TYPE_ATTR         = "media-type";
-const String MINUS_SIGN_ATTR         = "minus-sign";
 const String MODE_ATTR               = "mode";
 const String NAME_ATTR               = "name";
-const String NAMESPACE_ATTR          = "namespace";
-const String NAN_ATTR                = "NaN";
-const String OMIT_XMLDECL_ATTR       = "omit-xml-declaration";
-const String ORDER_ATTR              = "order";
-const String PATTERN_SEPARATOR_ATTR  = "pattern-separator";
-const String PER_MILLE_ATTR          = "per-mille";
-const String PERCENT_ATTR            = "percent";
-const String PRIORITY_ATTR           = "priority";
 const String SELECT_ATTR             = "select";
-const String STANDALONE              = "standalone";
 const String TEST_ATTR               = "test";
 const String USE_ATTR                = "use";
-const String USE_ATTRIBUTE_SETS_ATTR = "use-attribute-sets";
-const String VALUE_ATTR              = "value";
-const String VERSION_ATTR            = "version";
-const String XML_LANG_ATTR           = "xml:lang";
-const String ZERO_DIGIT_ATTR         = "zero-digit";
 
 //-- Attribute Values
 const String ANY_VALUE            = "any";
@@ -141,9 +104,6 @@ const String UPPER_FIRST_VALUE    = "upper-first";
 const String YES_VALUE            = "yes";
 
 //-- Stylesheet attributes
-const String INDENT_RESULT_ATTR   = "indent-result";
-const String RESULT_NS_ATTR       = "result-ns";
-
 const String ANCESTOR_AXIS            =  "ancestor";
 const String ANCESTOR_OR_SELF_AXIS    =  "ancestor-or-self";
 const String ATTRIBUTE_AXIS           =  "attribute";

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Peter Van der Beken, peterv@netscape.com
+ *   Peter Van der Beken <peterv@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -75,7 +75,7 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(Node* context, ContextState*
             exprResult->stringValue(property);
             if (XMLUtils::isValidQName(property)) {
                 String prefix;
-                XMLUtils::getNameSpace(property, prefix);
+                XMLUtils::getPrefix(property, prefix);
                 if (prefix.isEmpty() &&
                     (property.isEqual(XPathNames::BOOLEAN_FN) ||
                      property.isEqual(XPathNames::CONCAT_FN) ||

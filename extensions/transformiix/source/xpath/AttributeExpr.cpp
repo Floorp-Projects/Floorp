@@ -132,8 +132,8 @@ MBool AttributeExpr::matches(Node* node, Node* context, ContextState* cs) {
         String nsForNode;
         Node* parent = node->getXPathParent();
         if (parent) 
-            XMLDOMUtils::getNameSpace(prefixForNode, (Element*)parent,
-                                      nsForNode);
+            XMLDOMUtils::getNamespaceURI(prefixForNode, (Element*)parent,
+                                         nsForNode);
         String nsForTest;
         if (!prefix.isEmpty())
             cs->getNameSpaceURIFromPrefix(prefix, nsForTest);

@@ -27,6 +27,7 @@
 
 #include "dom.h"
 #include "txAtoms.h"
+#include "XMLUtils.h"
 
 //
 //Construct a new element with the specified tagName and Document owner.
@@ -48,6 +49,18 @@ Element::Element(const String& tagName, Document* owner) :
     nodeName.subString(idx+1, tmp);
     mLocalName = TX_GET_ATOM(tmp);
   }
+}
+
+Element::Element(const String& aNamespaceURI,
+                 const String& aTagName,
+                 Document* aOwner) :
+         NodeDefinition(Node::ELEMENT_NODE, aTagName, NULL_STRING, aOwner)
+{
+  Element(aTagName, aOwner);
+  if (aNamespaceURI.isEmpty())
+    mNamespaceID = kNameSpaceID_None;
+  else
+    mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
 }
 
 //
@@ -171,19 +184,58 @@ const String& Element::getAttribute(const String& name)
 //
 void Element::setAttribute(const String& name, const String& value)
 {
-  Attr* tempAttribute;
+  // Check to see if an attribute with this name already exists. If it does
+  // overwrite its value, if not, add it.
+  Attr* tempAttribute = getAttributeNode(name);
+  if (tempAttribute) {
+    tempAttribute->setNodeValue(value);
+  }
+  else {
+    tempAttribute = getOwnerDocument()->createAttribute(name);
+    tempAttribute->setNodeValue(value);
+    tempAttribute->ownerElement = this;
+    mAttributes.append(tempAttribute);
+  }
+}
 
-  //Check to see if an attribute with this name already exists.  If it does
-  //over write its value, if not, add it.
-  tempAttribute = getAttributeNode(name);
-  if (tempAttribute)
-      tempAttribute->setNodeValue(value);
-  else
-    {
-      tempAttribute = getOwnerDocument()->createAttribute(name);
-      tempAttribute->setNodeValue(value);
-      mAttributes.setNamedItem(tempAttribute);
+void Element::setAttributeNS(const String& aNamespaceURI,
+                             const String& aName,
+                             const String& aValue)
+{
+  // Check to see if an attribute with this name already exists. If it does
+  // overwrite its value, if not, add it.
+  PRInt32 namespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
+  String localPart;
+  XMLUtils::getLocalPart(aName, localPart);
+  txAtom* localName = TX_GET_ATOM(localPart);
+
+  Attr* foundNode = 0;
+  AttrMap::ListItem* item = mAttributes.firstItem;
+  while (item) {
+    foundNode = (Attr*)item->node;
+    txAtom* attrName;
+    if (foundNode->getLocalName(&attrName) &&
+        namespaceID == foundNode->getNamespaceID() &&
+        localName == attrName) {
+      TX_IF_RELEASE_ATOM(attrName);
+      break;
     }
+    TX_IF_RELEASE_ATOM(attrName);
+    foundNode = 0;
+    item = item->next;
+  }
+  TX_IF_RELEASE_ATOM(localName);
+
+  if (foundNode) {
+    foundNode->setNodeValue(aValue);
+  }
+  else {
+    Attr* temp = getOwnerDocument()->createAttributeNS(aNamespaceURI,
+                                                       aName);
+    temp->setNodeValue(aValue);
+    temp->ownerElement = this;
+    mAttributes.append(temp);
+  }
 }
 
 //

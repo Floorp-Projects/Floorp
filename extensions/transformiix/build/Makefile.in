@@ -124,10 +124,14 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../source/xml/parser/XMLParser.$(OBJ_SUFFIX) \
   ../source/xml/parser/nsSyncLoader.$(OBJ_SUFFIX) \
-  ../source/xslt/OutputFormat.$(OBJ_SUFFIX) \
+  ../source/xslt/txOutputFormat.$(OBJ_SUFFIX) \
   ../source/xslt/Names.$(OBJ_SUFFIX) \
   ../source/xslt/Numbering.$(OBJ_SUFFIX) \
   ../source/xslt/ProcessorState.$(OBJ_SUFFIX) \
+  ../source/xslt/txMozillaTextOutput.$(OBJ_SUFFIX) \
+  ../source/xslt/txMozillaXMLOutput.$(OBJ_SUFFIX) \
+  ../source/xslt/txRtfHandler.$(OBJ_SUFFIX) \
+  ../source/xslt/txTextHandler.$(OBJ_SUFFIX) \
   ../source/xslt/VariableBinding.$(OBJ_SUFFIX) \
   ../source/xslt/XSLTProcessor.$(OBJ_SUFFIX) \
   ../source/xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
@@ -155,8 +159,7 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
   -I$(srcdir)/../source/net \
   -I$(srcdir)/../source/xml -I$(srcdir)/../source/xml/dom \
-  -I$(srcdir)/../source/xml/parser \
-  -I$(srcdir)/../source/xml/printer -I$(srcdir)/../source/xpath \
+  -I$(srcdir)/../source/xml/parser -I$(srcdir)/../source/xpath \
   -I$(srcdir)/../source/xslt/util -I$(srcdir)/../source/xslt/functions
 
 _T_VERSION = $(shell date +%Y%m%d%H)

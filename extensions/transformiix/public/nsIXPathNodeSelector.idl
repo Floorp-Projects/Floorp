@@ -37,7 +37,7 @@ interface nsIXPathNodeSelector : nsISupports
    * @returns The result of the XPath query.
    */
     nsIDOMNodeList selectNodes(in nsIDOMNode aContextNode,
-	                             in DOMString aPattern);						  
+                               in DOMString aPattern);
 };
 
 

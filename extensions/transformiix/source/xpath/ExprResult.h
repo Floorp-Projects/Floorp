@@ -46,11 +46,11 @@ public:
 
     //-- ResultTypes
     enum ResultType {
-        NODESET  = 1,
+        TREE_FRAGMENT = 0,
+        NUMBER,
         STRING,
         BOOLEAN,
-        TREE_FRAGMENT,
-        NUMBER
+        NODESET
     };
 
     virtual ~ExprResult() {};

@@ -467,6 +467,9 @@ PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
             elem = do_QueryInterface(nsNode);
     }
 
+    if (!aPrefix || aPrefix == txXMLAtoms::_empty)
+        aPrefix = txXMLAtoms::xmlns;
+
     while (elem) {
         nsAutoString uri;
         rv = elem->GetAttr(kNameSpaceID_XMLNS, aPrefix, uri);
@@ -485,6 +488,11 @@ PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
         rv = temp->GetParent(*getter_AddRefs(elem));
         NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
     }
+
+    if (aPrefix == txXMLAtoms::xmlns)
+        // No default namespace
+        return kNameSpaceID_None;
+
     // Error, namespace not found
     return kNameSpaceID_Unknown;
 }

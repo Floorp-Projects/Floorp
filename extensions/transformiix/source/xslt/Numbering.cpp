@@ -30,6 +30,7 @@
 
 #include "Numbering.h"
 #include "Names.h"
+#include "txAtoms.h"
 
 void Numbering::doNumbering(Element* xslNumber, String& dest, Node* context,
                             ProcessorState* ps)
@@ -40,7 +41,9 @@ void Numbering::doNumbering(Element* xslNumber, String& dest, Node* context,
     int* counts = 0;
     int nbrOfCounts = 0;
 
-    String valueAttr = xslNumber->getAttribute(VALUE_ATTR);
+    String valueAttr;
+    xslNumber->getAttr(txXSLTAtoms::value, kNameSpaceID_None,
+                       valueAttr);
     //-- check for expr
     if (!valueAttr.isEmpty()) {
         Expr* expr = ps->getExpr(xslNumber, ProcessorState::ValueAttr);
@@ -57,7 +60,9 @@ void Numbering::doNumbering(Element* xslNumber, String& dest, Node* context,
 
         //-- create count expression
 
-        String countAttr = xslNumber->getAttribute(COUNT_ATTR);
+        String countAttr;
+        xslNumber->getAttr(txXSLTAtoms::count, kNameSpaceID_None,
+                           countAttr);
 
         Pattern* countPattern;
         MBool ownsPattern;
@@ -103,8 +108,12 @@ void Numbering::doNumbering(Element* xslNumber, String& dest, Node* context,
         NodeSet* nodes = 0;
         int cnum = 0;
 
-        String level = xslNumber->getAttribute(LEVEL_ATTR);
-        String fromAttr = xslNumber->getAttribute(FROM_ATTR);
+        String level;
+        xslNumber->getAttr(txXSLTAtoms::level, kNameSpaceID_None,
+                           level);
+        String fromAttr;
+        xslNumber->getAttr(txXSLTAtoms::from, kNameSpaceID_None,
+                           fromAttr);
         PatternExpr* from = 0;
 
         if (MULTIPLE_VALUE.isEqual(level))

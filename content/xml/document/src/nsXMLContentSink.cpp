@@ -432,7 +432,10 @@ nsXMLContentSink::Observe(nsISupports *aSubject, const char *aTopic, const PRUni
 
       mDocument = resultDoc;
       NS_ADDREF(mDocument);
-      mDocument->SetRootContent(content);
+      nsCOMPtr<nsIContent> root;
+      mDocument->GetRootContent(getter_AddRefs(root));
+      if (!root)
+        mDocument->SetRootContent(content);
 
       // Reset the observer on the transform mediator
       mXSLTransformMediator->SetTransformObserver(nsnull);

@@ -25,5 +25,3 @@
  */
 
 #include "MacSharedPrefix.h"
-
-#define HAVE_RINT 1
