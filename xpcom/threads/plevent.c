@@ -69,7 +69,10 @@
 #endif
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-#if !defined(MOZ_WIDGET_COCOA) && TARGET_CARBON
+#if defined(MOZ_WIDGET_COCOA)
+#include <CoreFoundation/CoreFoundation.h>
+#define MAC_USE_CFRUNLOOPSOURCE
+#elif defined(TARGET_CARBON)
 #include <CarbonEvents.h>
 #define MAC_USE_CARBON_EVENT
 #else
@@ -169,7 +172,10 @@ struct PLEventQueue {
 #elif defined(XP_BEOS)
     port_id             eventport;
 #elif defined(XP_MAC) || defined(XP_MACOSX)
-#if defined(MAC_USE_CARBON_EVENT)
+#if defined(MAC_USE_CFRUNLOOPSOURCE)
+    CFRunLoopSourceRef  mRunLoopSource;
+    CFRunLoopRef        mMainRunLoop;
+#elif defined(MAC_USE_CARBON_EVENT)
     EventHandlerUPP     eventHandlerUPP;
     EventHandlerRef     eventHandlerRef;
 #elif defined(MAC_USE_WAKEUPPROCESS)
@@ -984,6 +990,12 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 
 #elif defined(XP_OS2)
     WinDestroyWindow(self->eventReceiverWindow);
+#elif defined(MAC_USE_CFRUNLOOPSOURCE)
+
+    CFRunLoopRemoveSource(self->mMainRunLoop, self->mRunLoopSource, kCFRunLoopCommonModes);
+    CFRelease(self->mRunLoopSource);
+    CFRelease(self->mMainRunLoop);
+
 #elif defined(MAC_USE_CARBON_EVENT)
     EventComparatorUPP comparator = NewEventComparatorUPP(_md_CarbonEventComparator);
     PR_ASSERT(comparator != NULL);
@@ -1286,7 +1298,10 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-#if defined(MAC_USE_CARBON_EVENT)
+#if defined(MAC_USE_CFRUNLOOPSOURCE)
+  	CFRunLoopSourceSignal(self->mRunLoopSource);
+  	CFRunLoopWakeUp(self->mMainRunLoop);
+#elif defined(MAC_USE_CARBON_EVENT)
     OSErr err;
     EventRef newEvent;
     if (CreateEvent(NULL, kEventClassPL, kEventProcessPLEvents,
@@ -1600,7 +1615,14 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 } /* end _md_CreateEventQueue() */
 #endif /* (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS) */
 
-#if defined(MAC_USE_CARBON_EVENT)
+#if defined(MAC_USE_CFRUNLOOPSOURCE)
+static void _md_EventReceiverProc(void *info)
+{
+  PLEventQueue *queue = (PLEventQueue*)info;
+  PL_ProcessPendingEvents(queue);
+}
+
+#elif defined(MAC_USE_CARBON_EVENT)
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
@@ -1645,7 +1667,23 @@ static pascal Boolean _md_CarbonEventComparator(EventRef inEvent,
 #if defined(XP_MAC) || defined(XP_MACOSX)
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
-#if defined(MAC_USE_CARBON_EVENT)
+#if defined(MAC_USE_CFRUNLOOPSOURCE)
+    CFRunLoopSourceContext sourceContext = {0};
+    sourceContext.version = 0;
+    sourceContext.info = (void*)eventQueue;
+    sourceContext.perform = _md_EventReceiverProc;
+
+    // make a run loop source
+    eventQueue->mRunLoopSource = CFRunLoopSourceCreate(kCFAllocatorDefault, 0 /* order */, &sourceContext);
+    PR_ASSERT(eventQueue->mRunLoopSource);
+    
+    eventQueue->mMainRunLoop = CFRunLoopGetCurrent();
+    CFRetain(eventQueue->mMainRunLoop);
+    
+    // and add it to the run loop.
+    CFRunLoopAddSource(eventQueue->mMainRunLoop, eventQueue->mRunLoopSource, kCFRunLoopCommonModes);
+
+#elif defined(MAC_USE_CARBON_EVENT)
     eventQueue->eventHandlerUPP = NewEventHandlerUPP(_md_EventReceiverProc);
     PR_ASSERT(eventQueue->eventHandlerUPP);
     if (eventQueue->eventHandlerUPP)
