@@ -312,6 +312,12 @@ function selectFindBar()
 
 function closeFindBar()
 {
+  // ensure the dom is ready...
+  setTimeout(delayedCloseFindBar, 0);
+}
+
+function delayedCloseFindBar()
+{
   var findField = document.getElementById("find-field");
   var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                      .getService(Components.interfaces.nsIWindowWatcher);
