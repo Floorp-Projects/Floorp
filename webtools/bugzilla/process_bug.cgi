@@ -1309,6 +1309,10 @@ foreach my $id (@idlist) {
         }
     }
 
+    # We need to run processmail for dependson/blocked bugs if the dependencies
+    # change or the status or resolution change. This var keeps track of that.
+    my $check_dep_bugs = 0;
+
     if (defined $::FORM{'dependson'}) {
         my $me = "blocked";
         my $target = "dependson";
@@ -1353,6 +1357,7 @@ foreach my $id (@idlist) {
                     LogDependencyActivity($k, $snapshot{$k}, $me, $target);
                 }
                 LogDependencyActivity($id, $oldsnap, $target, $me);
+                $check_dep_bugs = 1;
             }
 
             my $tmp = $me;
@@ -1444,7 +1449,7 @@ foreach my $id (@idlist) {
     #
     my $origOwner = "";
     my $origQaContact = "";
-
+    
     foreach my $c (@::log_columns) {
         my $col = $c;           # We modify it, don't want to modify array
                                 # values in place.
@@ -1491,6 +1496,13 @@ foreach my $id (@idlist) {
                 RemoveVotes($id, 0,
                             "This bug has been moved to a different product");
             }
+            
+            if ($col eq 'bug_status' 
+                && IsOpenedState($old) ne IsOpenedState($new))
+            {
+                $check_dep_bugs = 1;
+            }
+            
             LogActivityEntry($id,$col,$old,$new,$whoid,$timestamp);
             $bug_changed = 1;
         }
@@ -1568,22 +1580,24 @@ foreach my $id (@idlist) {
           || ThrowTemplateError($template->error());
     }
 
-    foreach my $k (keys(%dependencychanged)) {
-        $vars->{'mail'} = "";
-        open(PMAIL, "-|") or exec('./processmail', $k, $::COOKIE{'Bugzilla_login'});
-        $vars->{'mail'} .= $_ while <PMAIL>;
-        close(PMAIL);
-        
-        $vars->{'id'} = $k;
-        $vars->{'type'} = "dep";
-        
-        # Let the user know we checked to see if we should email notice
-        # of this change to users with a relationship to the dependent
-        # bug and who did and didn't receive email about it.
-        $template->process("bug/process/results.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-    }
+    if ($check_dep_bugs) {
+        foreach my $k (keys(%dependencychanged)) {
+            $vars->{'mail'} = "";
+            open(PMAIL, "-|") 
+              or exec('./processmail', $k, $::COOKIE{'Bugzilla_login'});
+            $vars->{'mail'} .= $_ while <PMAIL>;
+            close(PMAIL);
 
+            $vars->{'id'} = $k;
+            $vars->{'type'} = "dep";
+
+            # Let the user know we checked to see if we should email notice
+            # of this change to users with a relationship to the dependent
+            # bug and who did and didn't receive email about it.
+            $template->process("bug/process/results.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
+        }
+    }
 }
 
 # Show next bug, if it exists.
