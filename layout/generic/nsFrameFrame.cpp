@@ -720,6 +720,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 	    if (value.EqualsIgnoreCase("content")) {
 		    // The web shell's type is content.
 		    mWebShell->SetWebShellType(nsWebShellContent);
+        mWebShell->SetName(value);
       }
       else {
         // Inherit our type from our parent webshell.  If it is
@@ -727,14 +728,14 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 		    // content.
 		    mWebShell->SetWebShellType(parentType);
       }
-#endif // INCLUDE_XUL
+#endif // INCLUDE_XUL 
 
       nsIPref*  outerPrefs = nsnull;  // connect the prefs
       outerShell->GetPrefs(outerPrefs);
       if (nsnull != outerPrefs) {
         mWebShell->SetPrefs(outerPrefs);
         NS_RELEASE(outerPrefs);
-      }
+      } 
       NS_RELEASE(outerShell);
     }
     NS_RELEASE(container);
