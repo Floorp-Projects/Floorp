@@ -1135,6 +1135,12 @@ SearchDataSource::ReadFileContents(char *basename, nsString& sourceContents)
 #endif
 	searchEngine += basename;
 
+#ifdef	XP_MAC
+	// be sure to resolve aliases in case we encounter one
+	PRBool	wasAliased = PR_FALSE;
+	searchEngine.ResolveAlias(wasAliased);
+#endif	XP_MAC
+
 	nsInputFileStream		searchFile(searchEngine);
 	if (! searchFile.is_open())
 	{
@@ -1696,31 +1702,36 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 		href = nsnull;
 		if (NS_FAILED(rv))	continue;
 
-		// look for Site
-		PRInt32	protocolOffset = site.FindCharInSet(":");
-		if (protocolOffset >= 0)
+		// look for Site (if it isn't already set)
+		nsCOMPtr<nsIRDFNode>		oldSiteRes = nsnull;
+		mDataSource->GetTarget(res, kNC_Site, PR_TRUE, getter_AddRefs(oldSiteRes));
+		if (!oldSiteRes)
 		{
-			site.Cut(0, protocolOffset+1);
-			while (site[0] == PRUnichar('/'))
+			PRInt32	protocolOffset = site.FindCharInSet(":");
+			if (protocolOffset >= 0)
 			{
-				site.Cut(0, 1);
-			}
-			PRInt32	slashOffset = site.FindCharInSet("/");
-			if (slashOffset >= 0)
-			{
-				site.Truncate(slashOffset);
-			}
-			if (site.Length() > 0)
-			{
-				const PRUnichar	*siteUni = site.GetUnicode();
-				if (siteUni)
+				site.Cut(0, protocolOffset+1);
+				while (site[0] == PRUnichar('/'))
 				{
-					nsCOMPtr<nsIRDFLiteral>	siteLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(siteUni, getter_AddRefs(siteLiteral))))
+					site.Cut(0, 1);
+				}
+				PRInt32	slashOffset = site.FindCharInSet("/");
+				if (slashOffset >= 0)
+				{
+					site.Truncate(slashOffset);
+				}
+				if (site.Length() > 0)
+				{
+					const PRUnichar	*siteUni = site.GetUnicode();
+					if (siteUni)
 					{
-						if (siteLiteral)
+						nsCOMPtr<nsIRDFLiteral>	siteLiteral;
+						if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(siteUni, getter_AddRefs(siteLiteral))))
 						{
-							mDataSource->Assert(res, kNC_Site, siteLiteral, PR_TRUE);
+							if (siteLiteral)
+							{
+								mDataSource->Assert(res, kNC_Site, siteLiteral, PR_TRUE);
+							}
 						}
 					}
 				}
@@ -1777,17 +1788,23 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 			nameStr.Truncate(eolOffset);
 		}
 
-		if (nameStr.Length() > 0)
+		// look for Name (if it isn't already set)
+		nsCOMPtr<nsIRDFNode>		oldNameRes = nsnull;
+		mDataSource->GetTarget(res, kNC_Name, PR_TRUE, getter_AddRefs(oldNameRes));
+		if (!oldNameRes)
 		{
-			const PRUnichar	*nameUni = nameStr.GetUnicode();
-			if (nameUni)
+			if (nameStr.Length() > 0)
 			{
-				nsCOMPtr<nsIRDFLiteral>	nameLiteral;
-				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nameUni, getter_AddRefs(nameLiteral))))
+				const PRUnichar	*nameUni = nameStr.GetUnicode();
+				if (nameUni)
 				{
-					if (nameLiteral)
+					nsCOMPtr<nsIRDFLiteral>	nameLiteral;
+					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nameUni, getter_AddRefs(nameLiteral))))
 					{
-						mDataSource->Assert(res, kNC_Name, nameLiteral, PR_TRUE);
+						if (nameLiteral)
+						{
+							mDataSource->Assert(res, kNC_Name, nameLiteral, PR_TRUE);
+						}
 					}
 				}
 			}
@@ -1805,65 +1822,82 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 					relEnd - relStart - relevanceStartStr.Length());
 			}
 		}
-		if (relItem.Length() > 0)
+
+		// look for Relevance (if it isn't already set)
+		nsCOMPtr<nsIRDFNode>		oldRelRes = nsnull;
+		mDataSource->GetTarget(res, kNC_Relevance, PR_TRUE, getter_AddRefs(oldRelRes));
+		if (!oldRelRes)
 		{
-			// save real relevance
-			const PRUnichar	*relUni = relItem.GetUnicode();
-			if (relUni)
+			if (relItem.Length() > 0)
 			{
-				nsCOMPtr<nsIRDFLiteral>	relLiteral;
-				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relUni, getter_AddRefs(relLiteral))))
+				// save real relevance
+				const PRUnichar	*relUni = relItem.GetUnicode();
+				if (relUni)
 				{
-					if (relLiteral)
+					nsCOMPtr<nsIRDFLiteral>	relLiteral;
+					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relUni, getter_AddRefs(relLiteral))))
 					{
-						mDataSource->Assert(res, kNC_Relevance, relLiteral, PR_TRUE);
+						if (relLiteral)
+						{
+							mDataSource->Assert(res, kNC_Relevance, relLiteral, PR_TRUE);
+						}
 					}
 				}
-			}
 
-			// If its a percentage, remove "%", left-pad with "0"s and set special sorting value
-			if (relItem[relItem.Length()-1] == PRUnichar('%'))
-			{
-				relItem.Cut(relItem.Length()-1, 1);
-
-				nsAutoString	zero("000");
-				if (relItem.Length() < 3)
+				// If its a percentage, remove "%", left-pad with "0"s and set special sorting value
+				if (relItem[relItem.Length()-1] == PRUnichar('%'))
 				{
-					relItem.Insert(zero, 0, 3-relItem.Length()); 
-				}
+					relItem.Cut(relItem.Length()-1, 1);
 
-				const PRUnichar	*relSortUni = relItem.GetUnicode();
-				if (relSortUni)
-				{
-					nsCOMPtr<nsIRDFLiteral>	relSortLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relSortUni, getter_AddRefs(relSortLiteral))))
+					nsAutoString	zero("000");
+					if (relItem.Length() < 3)
 					{
-						if (relSortLiteral)
+						relItem.Insert(zero, 0, 3-relItem.Length()); 
+					}
+
+					const PRUnichar	*relSortUni = relItem.GetUnicode();
+					if (relSortUni)
+					{
+						nsCOMPtr<nsIRDFLiteral>	relSortLiteral;
+						if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relSortUni, getter_AddRefs(relSortLiteral))))
 						{
-							mDataSource->Assert(res, kNC_RelevanceSort, relSortLiteral, PR_TRUE);
+							if (relSortLiteral)
+							{
+								mDataSource->Assert(res, kNC_RelevanceSort, relSortLiteral, PR_TRUE);
+							}
 						}
 					}
 				}
 			}
 		}
 
-		// set reference to engine this came from
-		nsAutoString	engineStr;
-		if (NS_SUCCEEDED(rv = SearchDataSource::GetData(data, "search", "name", engineStr)))
+		// set reference to engine this came from (if it isn't already set)
+		nsCOMPtr<nsIRDFNode>		oldEngineRes = nsnull;
+		mDataSource->GetTarget(res, kNC_Engine, PR_TRUE, getter_AddRefs(oldEngineRes));
+		if (!oldEngineRes)
 		{
-			const PRUnichar		*engineUni = engineStr.GetUnicode();
-			nsCOMPtr<nsIRDFLiteral>	engineLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(engineUni, getter_AddRefs(engineLiteral))))
+			nsAutoString	engineStr;
+			if (NS_SUCCEEDED(rv = SearchDataSource::GetData(data, "search", "name", engineStr)))
 			{
-				if (engineLiteral)
+				const PRUnichar		*engineUni = engineStr.GetUnicode();
+				nsCOMPtr<nsIRDFLiteral>	engineLiteral;
+				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(engineUni, getter_AddRefs(engineLiteral))))
 				{
-					mDataSource->Assert(res, kNC_Engine, engineLiteral, PR_TRUE);
+					if (engineLiteral)
+					{
+						mDataSource->Assert(res, kNC_Engine, engineLiteral, PR_TRUE);
+					}
 				}
 			}
 		}
 
-		// Note: always add in parent-child relationship last!
-		rv = mDataSource->Assert(mParent, kNC_Child, res, PR_TRUE);
+		// Note: always add in parent-child relationship last!  (if it isn't already set)
+		PRBool		parentHasChildFlag = PR_FALSE;
+		mDataSource->HasAssertion(mParent, kNC_Child, res, PR_TRUE, &parentHasChildFlag);
+		if (parentHasChildFlag == PR_FALSE)
+		{
+			rv = mDataSource->Assert(mParent, kNC_Child, res, PR_TRUE);
+		}
 	}
 	return(NS_OK);
 }
