@@ -210,24 +210,62 @@ tstclnt -p ${PORT} -h ${HOST} -q
  cat ${SSLCOV} | while read tls param testname
 do
     if [ $tls != "#" ]; then
-	echo "********************* $testname ****************************"
-	TLS_FLAG=-T
-	if [ $tls = "TLS" ]; then
-	    TLS_FLAG=""
-	fi
-	sparam=""
-	if [ ${param} = "i" ]; then
-		sparam='-c i'
-	fi
+	if [ $param != "i" ]; then
+	    echo "********************* $testname ****************************"
+	    TLS_FLAG=-T
+	    if [ $tls = "TLS" ]; then
+		TLS_FLAG=""
+	    fi
 
-	tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
-	if [ $? -ne 0 ]; then
-	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-	else
-	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
+	    tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
+	    if [ $? -ne 0 ]; then
+		echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+	    else
+		echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
+	    fi
 	fi
     fi
 done 
+
+# now kill the server
+${KILL} `cat ${SERVERPID}`
+wait `cat ${SERVERPID}`
+if [ ${fileout} -eq 1 ]; then
+   cat ${SERVEROUTFILE}
+fi
+${SLEEP}
+
+# Launch the server for the null cipher tests
+echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss -c i &"
+if [ ${fileout} -eq 1 ]; then
+    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss -c i > ${SERVEROUTFILE} 2>&1 & 
+else
+    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss -c i -i ${SERVERPID} & 
+fi
+# wait until it's alive
+echo "tstclnt -p ${PORT} -h ${HOST} -q"
+tstclnt -p ${PORT} -h ${HOST} -q
+
+ cat ${SSLCOV} | while read tls param testname
+do
+    if [ $tls != "#" ]; then
+	if [ $param == "i" ]; then
+	    echo "********************* $testname ****************************"
+	    TLS_FLAG=-T
+	    if [ $tls = "TLS" ]; then
+		TLS_FLAG=""
+	    fi
+
+	    tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
+	    if [ $? -ne 0 ]; then
+		echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+	    else
+		echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
+	    fi
+	fi
+    fi
+done 
+
 # now kill the server
 ${KILL} `cat ${SERVERPID}`
 wait `cat ${SERVERPID}`
