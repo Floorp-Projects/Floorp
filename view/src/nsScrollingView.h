@@ -22,6 +22,9 @@
 #include "nsView.h"
 #include "nsIScrollableView.h"
 
+//this is a class that acts as a container for other views and provides
+//automatic management of scrolling of the views it contains.
+
 class nsScrollingView : public nsView, public nsIScrollableView
 {
 public:
