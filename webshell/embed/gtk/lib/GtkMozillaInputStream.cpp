@@ -19,10 +19,6 @@
 
 #include "stdio.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-static NS_DEFINE_IID(kIBaseStreamIID, NS_IBASESTREAM_IID);
-
 GtkMozillaInputStream::GtkMozillaInputStream(void)
 {
   mBuffer = nsnull;
@@ -41,11 +37,11 @@ GtkMozillaInputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   nsISupports *ifp = nsnull;
 
-  if (aIID.Equals(kIInputStreamIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIInputStream))) {
     ifp = (nsIInputStream*)this;
-  } else if(aIID.Equals(kIBaseStreamIID)) {
+  } else if(aIID.Equals(NS_GET_IID(nsIBaseStream))) {
     ifp = (nsIBaseStream*)this;;
-  } else if(aIID.Equals(kISupportsIID)) {
+  } else if(aIID.Equals(NS_GET_IID(nsISupports))) {
     ifp = this;
   } else {
     *aInstancePtr = 0;

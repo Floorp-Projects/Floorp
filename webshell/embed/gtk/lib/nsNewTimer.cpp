@@ -19,7 +19,6 @@
 #include "nsUnixTimerCIID.h"
 #include "nsIComponentManager.h"
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 static NS_DEFINE_CID(kCTimerGtkCID, NS_TIMER_GTK_CID);
 
 //////////////////////////////////////////////////////////////////////////
@@ -48,7 +47,7 @@ nsresult NS_NewTimer(nsITimer ** aInstancePtrResult)
   }
 
   rv = factory->CreateInstance(NULL,
-                               kITimerIID,
+                               NS_GET_IID(nsITimer),
                                (void **)& timer);
 
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not instanciate a timer.");

@@ -19,9 +19,9 @@
 #include "nsRepository.h"
 #include "nsIWebShell.h"
 #include "nsIURL.h"
-#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsFileSpec.h"
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
@@ -29,17 +29,8 @@
 
 #include "nsIPref.h"
 
-
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
-
-// static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
-// static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
+static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 GtkMozillaContainer::GtkMozillaContainer(GtkMozilla *moz, nsIPref * aPrefs)
 {
@@ -50,6 +41,7 @@ GtkMozillaContainer::GtkMozillaContainer(GtkMozilla *moz, nsIPref * aPrefs)
   mStream = nsnull;
 
   mChannel = nsnull;
+  mLoadGroup = nsnull;
   mContext = nsnull;
   
   mozilla = moz;
@@ -65,13 +57,6 @@ GtkMozillaContainer::~GtkMozillaContainer(void)
 {
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mPrefs);
-
-//   if (nsnull != mPrefs) 
-//   {
-//     mPrefs->ShutDown();
-
-//     NS_RELEASE(mPrefs);
-//   }
 }
 
 void
@@ -81,7 +66,7 @@ GtkMozillaContainer::Show()
     
   nsresult rv = nsRepository::CreateInstance(kWebShellCID, 
                                              nsnull,
-                                             kIWebShellIID,
+                                             NS_GET_IID(nsIWebShell),
                                              (void**) &mWebShell);
   
   if (NS_FAILED(rv) || !mWebShell) 
@@ -89,22 +74,6 @@ GtkMozillaContainer::Show()
     printf("Cannot create WebShell!\n");
     return;
   }
-
-//   rv = nsComponentManager::CreateInstance(kPrefCID, 
-//                                           nsnull, 
-//                                           kIPrefIID,
-//                                           (void **) &mPrefs);
-  
-//   if (NS_OK != rv) 
-//   {
-//     printf("Cannot create Prefs!\n");
-//     return rv;
-//   }
-
-  
-//   mPrefs->StartUp();
-//   mPrefs->ReadUserPrefs();
-
  
   if (mozilla) 
   {
@@ -171,11 +140,7 @@ GtkMozillaContainer::Stop()
 void
 GtkMozillaContainer::Reload(GtkMozillaReloadType type)
 {
-#ifdef NECKO
  mWebShell->Reload((nsLoadFlags)type);
-#else
- mWebShell->Reload((nsURLReloadType)type);
-#endif
 }
 
 gint
@@ -187,19 +152,18 @@ GtkMozillaContainer::Back()
 gint
 GtkMozillaContainer::CanBack()
 {
- return mWebShell->CanBack()==NS_OK;
+  return mWebShell->CanBack()==NS_OK;
 }
 
 gint
 GtkMozillaContainer::Forward()
 {
- return NS_SUCCEEDED(mWebShell->Forward());
+  return NS_SUCCEEDED(mWebShell->Forward());
 }
 
 gint
 GtkMozillaContainer::CanForward()
 {
-  nsresult rv = mWebShell->CanForward();
   return mWebShell->CanForward()==NS_OK;
 }
 
@@ -241,9 +205,9 @@ GtkMozillaContainer::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   nsISupports *ifp = nsnull;
 
-  if (aIID.Equals(kIWebShellContainerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIWebShellContainer))) {
     ifp = (nsIWebShellContainer*)this;
-  } else if(aIID.Equals(kISupportsIID)) {
+  } else if(aIID.Equals(NS_GET_IID(nsISupports))) {
     ifp = this;
   } else {
     *aInstancePtr = 0;
@@ -341,9 +305,9 @@ GtkMozillaContainer::EndLoadURL(nsIWebShell* aShell,
 
 nsresult
 GtkMozillaContainer::CreateContentViewer(const char *aCommand,
-                                         nsIChannel * aChannel,
-                                         nsILoadGroup * aLoadGroup, 
-                                         const char* aContentType, 
+                                         nsIChannel *aChannel,
+                                         nsILoadGroup *aLoadGroup, 
+                                         const char *aContentType, 
                                          nsIContentViewerContainer* aContainer,
                                          nsISupports* aExtraInfo,
                                          nsIStreamListener** aDocListenerResult,
@@ -363,7 +327,7 @@ GtkMozillaContainer::CreateContentViewer(const char *aCommand,
     // Create an instance of the document-loader-factory object
     nsIDocumentLoaderFactory* factory;
     rv = nsComponentManager::CreateInstance(cid, (nsISupports *)nsnull,
-                                            kIDocumentLoaderFactoryIID, 
+                                            NS_GET_IID(nsIDocumentLoaderFactory), 
                                             (void **)&factory);
     if (NS_FAILED(rv)) {
         return rv;
@@ -382,7 +346,6 @@ GtkMozillaContainer::CreateContentViewer(const char *aCommand,
     NS_RELEASE(factory);
     return rv;
 }
-
 
 NS_IMETHODIMP
 GtkMozillaContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress,
@@ -466,74 +429,91 @@ GtkMozillaContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocu
 gint
 GtkMozillaContainer::StartStream(const char *base_url, 
                                  const char *action,
-								 nsISupports * ctxt)
-  // const char *content_type
+                                 nsISupports * ctxt,
+                                 const char *content_type)
 {
-#if 0
   nsresult rv = NS_OK;
-  nsString url_str(base_url);
   nsIURI* url = nsnull;
   nsIContentViewer* viewer = nsnull;
-  nsIStreamListener* listener = nsnull;
 
-#ifndef NECKO  
-  rv = NS_NewURL(&url, url_str, NULL, mWebShell);
-#else
-  rv = NS_NewURI(&url, url_str, NULL);  // XXX where should the container go? (mWebShell)
-#endif // NECKO
+  NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) 
+    goto error;
 
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
-
-  rv = CreateContentViewer(url,
-                           content_type, 
-                           action, 
-                           mWebShell,
-                           nsnull,
-                           &listener, 
-                           &viewer);
+  mStream = new GtkMozillaInputStream();
+  if (mStream == nsnull)
+    goto error;
+  NS_ADDREF(mStream); /* Own this */
   
+  nsIInputStream *istream = NULL;
+  rv = CallQueryInterface(mStream, &istream);
+  if (NS_FAILED(rv))
+    goto error;
+
+  nsString url_str(base_url);
+  rv = NS_NewURI(&url, url_str, NULL);
+  if (NS_FAILED(rv)) 
+    goto error;
+  
+  rv = NS_NewLoadGroup(nsnull, nsnull, nsnull, &mLoadGroup);
+  if (NS_FAILED(rv)) 
+    goto error;
+  
+  rv = serv->NewInputStreamChannel(url, content_type, 
+                                   1024/*len*/, istream,
+                                   mLoadGroup , &mChannel);
+  if (NS_FAILED(rv)) 
+    goto error;
+  
+  NS_RELEASE(istream);
+
+  rv = CreateContentViewer(action, mChannel, mLoadGroup, content_type,
+                           mWebShell, nsnull, &mListener, &viewer);
   if (NS_FAILED(rv)) {
     printf("GtkMozillaContainer: Unable to create ContentViewer for action=%s, content-type=%s\n", action, content_type);
-    goto done;
+    goto error;
   }
 
   rv = viewer->SetContainer((nsIContentViewerContainer*)mWebShell);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
+  if (NS_FAILED(rv)) 
+    goto error;
 
   rv = mWebShell->Embed(viewer, action, nsnull);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
+  if (NS_FAILED(rv)) 
+    goto error;
 
   /*
    * Pass the OnStartRequest(...) notification out to the document 
    * IStreamListener.
    */
-  rv = listener->OnStartRequest(url, content_type);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
-
-  mStream = new GtkMozillaInputStream();
-
-  mChannel = url;
+  rv = mListener->OnStartRequest(mChannel, ctxt);
+  if (NS_FAILED(rv)) 
+    goto error;
 
   mContext = ctxt;
-
-  mListener = listener;
   
- done:
   NS_IF_RELEASE(viewer);
 
   if (NS_SUCCEEDED(rv))
     return 0;
   else
     return -1;
-#endif
+
+ error:
+  if (mStream != NULL) {
+    delete mStream;
+    mStream = NULL;
+  }
+
+  NS_IF_RELEASE(istream);
+  NS_IF_RELEASE(url);
+  NS_IF_RELEASE(mLoadGroup);
+  NS_IF_RELEASE(mChannel);
+  NS_IF_RELEASE(viewer);
+  NS_IF_RELEASE(mListener);
+  
+  return -1;
+
 }
 
 gint
@@ -592,6 +572,7 @@ GtkMozillaContainer::EndStream(void)
     return;
   
   NS_IF_RELEASE(mChannel);
+  NS_IF_RELEASE(mLoadGroup);
   NS_IF_RELEASE(mListener);
   NS_IF_RELEASE(mStream);
 }
