@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrintPreviewListener.h"
+#include "nsIContent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsLiteralString.h"
 
@@ -142,7 +143,10 @@ static PRBool IsKeyOK(nsIDOMEvent* aEvent)
 
 NS_IMETHODIMP nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aKeyEvent)
 { 
-  if (!IsKeyOK(aKeyEvent)) {
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aKeyEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(target));
+  if (content && !content->IsContentOfType(nsIContent::eXUL) && !IsKeyOK(aKeyEvent)) {
     aKeyEvent->StopPropagation();
     aKeyEvent->PreventDefault(); 
   }
