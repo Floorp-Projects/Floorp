@@ -21,12 +21,8 @@
 #include "xmlparse.h"
 #include "prefselement.h"
 
-// Required disk space for Win build
-#define WDISK_SPACE 27577549
 // Required disk space for Linux build
 #define LDISK_SPACE 84934656
-// Required disk space for Mac OS build
-#define MDISK_SPACE 5976884
 
 int interpret(char *cmd);
 
@@ -34,6 +30,7 @@ CString rootPath;
 CString configName;
 CString configPath;
 CString workspacePath;
+CString shellPath;
 CString cdPath;
 CString networkPath;
 CString tempPath;
@@ -1966,7 +1963,101 @@ void DiskSpaceAlert(ULONGLONG required, ULONGLONG available)
 	AfxMessageBox("Not enough disk space. Required: "+requiredSpace+" bytes. Available: "+availableSpace+" bytes.", MB_OK);
 }
 
+ULONGLONG FindDirSize(CString dirPath)
+// Find the total size of a directory in bytes 
+{
+	ULONGLONG dirSize = 0;
+	CFileFind fileFind;
 
+	dirPath += "\\*.*";
+	BOOL bFound = fileFind.FindFile (dirPath);
+
+	while (bFound)
+	{
+		bFound = fileFind.FindNextFile ();
+		if (fileFind.IsDirectory () && !fileFind.IsDots ())
+		{
+			dirSize += FindDirSize (fileFind.GetFilePath ());
+		}
+		else
+		{
+			dirSize += fileFind.GetLength ();
+		}
+	}
+	return dirSize;
+}
+
+ULONGLONG FindFileSize(CString fileName)
+// Find the size of a file in bytes 
+{
+	CFile file(fileName, CFile::modeReadWrite);
+	ULONGLONG fileSize = file.GetLength();
+	file.Close();
+	return fileSize;
+}
+
+ULONGLONG ComputeReqdWinDiskSpace()
+/*
+Compute required disk space for Windows build
+Required disk space =
+ Total size for selected components +
+ Total size for third party components +
+ Total size for CD autorun +  
+ Total size used for various file operations +
+ Size of skinclas.xpi +
+ Total size of setupfiles (contents of NSSetup.zip) and NSSetup.exe 
+*/
+{
+	ULONGLONG requiredSize=0;
+	
+	// Total size of selected components 
+	for (int i=0; i<numComponents; i++)
+	{
+		if (Components[i].selected)
+			requiredSize += FindFileSize(nscpxpiPath + "\\" + Components[i].archive);
+	}
+
+	// Total size of thirdparty components
+	if ( !((GetGlobal("CustomComponentPath1")).IsEmpty()) )
+		requiredSize += FindFileSize(GetGlobal("CustomComponentPath1"));
+	if ( !((GetGlobal("CustomComponentPath2")).IsEmpty()) )
+		requiredSize += FindFileSize(GetGlobal("CustomComponentPath2"));
+
+	// Total size of CD autorun files
+	CString cdDir= GetGlobal("CD image");
+	if (cdDir.Compare("1")==0)
+		requiredSize += FindDirSize(shellPath);
+
+	// Approximate size (4MB) for various file operations
+	requiredSize += 4194304;
+	
+	// size of skinclas.xpi since it gets copied even though deselected
+	requiredSize += FindFileSize(nscpxpiPath + "\\skinclas.xpi");
+
+	// size of setup files and NSSetup.exe
+	requiredSize += 691926;
+
+	return requiredSize;
+}
+
+ULONGLONG ComputeReqdMacDiskSpace()
+/*
+Compute required disk space for Mac OS build
+Required disk space =
+ Total size of Mac scripts and zip file +
+ Total size for various file operations
+*/
+{
+	ULONGLONG requiredSize=0;
+
+	// size of Mac scripts and zip file
+	requiredSize += FindDirSize(platformPath);
+
+	// Approximate size (4MB) for various file operations
+	requiredSize += 4194304;
+
+	return requiredSize;
+}
 
 BOOL FillGlobalWidgetArray(CString file)
 {
@@ -2039,6 +2130,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	iniDstPath      = cdPath + "\\config.ini";
 	scriptPath      = rootPath + "script_" + curPlatform + ".ib";
 	workspacePath   = configPath + "\\Workspace";
+	shellPath       = workspacePath + "\\Autorun\\";
 	xpiDstPath      = cdPath;
 
 	// variables for language-region information
@@ -2087,17 +2179,17 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	}
 
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
+	init_components();
 
 //Check for disk space before continuing
-
 	ULARGE_INTEGER nTotalBytes, nTotalFreeBytes, nTotalAvailable;
 	GetDiskFreeSpaceEx(NULL,&nTotalAvailable, &nTotalBytes, &nTotalFreeBytes);
-	// Checking for 26.3MB disk space
 	if (curPlatform == "Windows")
 	{
-		if ((nTotalAvailable.QuadPart) < WDISK_SPACE)
+		ULONGLONG reqdWinDiskSpace = ComputeReqdWinDiskSpace();
+		if ((nTotalAvailable.QuadPart) < reqdWinDiskSpace)
 		{
-			DiskSpaceAlert(WDISK_SPACE,(nTotalAvailable.QuadPart));
+			DiskSpaceAlert(reqdWinDiskSpace, (nTotalAvailable.QuadPart));
 			return FALSE;
 		}
 	}
@@ -2111,16 +2203,16 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	}
 	else if (curPlatform == "Mac OS")
 	{
-		if ((nTotalAvailable.QuadPart) < MDISK_SPACE)
+		ULONGLONG reqdMacDiskSpace = ComputeReqdMacDiskSpace();
+		if ((nTotalAvailable.QuadPart) < reqdMacDiskSpace)
 		{
-			DiskSpaceAlert(MDISK_SPACE,(nTotalAvailable.QuadPart));
+			DiskSpaceAlert(reqdMacDiskSpace, (nTotalAvailable.QuadPart));
 			return FALSE;
 		}
 	}
 //Check for Disk space over
 
-
-	init_components();
+	
 //checking for the autorun CD shell - inorder to create a Core dir or not
 	CString cdDir= GetGlobal("CD image");
 	CString networkDir = GetGlobal("Network");
@@ -2295,7 +2387,6 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	{
 		if (cdDir.Compare("1") ==0)
 		{
-			CString shellPath = workspacePath + "\\Autorun\\";
 			CopyDir(shellPath, outputPath, NULL, TRUE);
 			CreateRshell ();
 			WritePrivateProfileString("Message Stream", "Status", "Disabled", iniDstPath);
