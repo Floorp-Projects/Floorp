@@ -43,7 +43,6 @@
 #import "BookmarksDataSource.h"
 #import "BookmarkInfoController.h"
 #import "SiteIconProvider.h"
-#import "ImageAndTextCell.h"
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
@@ -79,19 +78,6 @@ const int kBookmarksRootItemTag = -2;
 
 -(void) awakeFromNib
 {
-  NSTableColumn *tableColumn = nil;
-  NSButtonCell *imageAndTextCell = nil;
-
-  // Insert custom cell types into the table view, the standard one does text only.
-//XXX take this out when we switch to the in-window bookmarks because it's
-//XXX done by the BookmarksController (as it should be)
-  tableColumn = [mOutlineView tableColumnWithIdentifier: @"Name"];
-  imageAndTextCell = [[[ImageAndTextCell alloc] init] autorelease];
-  [imageAndTextCell setEditable: YES];
-  [imageAndTextCell setWraps: NO];
-  [tableColumn setDataCell:imageAndTextCell];
-  [tableColumn setEditable: YES];
-
   // make sure these are disabled at the start since the outliner
   // starts off with no selection.
   [mEditBookmarkButton setEnabled:NO];
