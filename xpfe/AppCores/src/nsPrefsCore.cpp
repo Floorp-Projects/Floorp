@@ -440,7 +440,7 @@ nsresult nsPrefsCore::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
                 char* prefNameString = GetSubstitution(prefName);
                 InitializeOneWidget(element, widgetType, prefNameString,
                                     prefType, ordinal);
-                delete [] prefNameString;
+                PR_Free(prefNameString);
             }
         }
     }
