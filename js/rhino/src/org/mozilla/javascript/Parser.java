@@ -37,6 +37,7 @@
 
 package org.mozilla.javascript;
 
+import java.io.Reader;
 import java.io.IOException;
 
 /**
@@ -51,7 +52,56 @@ import java.io.IOException;
  * @author Brendan Eich
  */
 
-class Parser {
+public class Parser
+{
+    public Parser(CompilerEnvirons compilerEnv)
+    {
+        this.compilerEnv = compilerEnv;
+    }
+
+    protected Decompiler createDecompiler(CompilerEnvirons compilerEnv)
+    {
+        return new Decompiler();
+    }
+
+
+    /*
+     * Build a parse tree from the given sourceString.
+     *
+     * @return an Object representing the parsed
+     * program.  If the parse fails, null will be returned.  (The
+     * parse failure will result in a call to the ErrorReporter from
+     * CompilerEnvirons.)
+     */
+    public ScriptOrFnNode parse(String sourceString,
+                                String sourceLocation, int lineno)
+    {
+        this.ts = new TokenStream(compilerEnv, null, sourceString,
+                                  sourceLocation, lineno);
+        try {
+            return parse();
+        } catch (IOException ex) {
+            // Should never happen
+            throw new IllegalStateException(ex.getMessage());
+        }
+    }
+
+    /*
+     * Build a parse tree from the given sourceString.
+     *
+     * @return an Object representing the parsed
+     * program.  If the parse fails, null will be returned.  (The
+     * parse failure will result in a call to the ErrorReporter from
+     * CompilerEnvirons.)
+     */
+    public ScriptOrFnNode parse(Reader sourceReader,
+                                String sourceLocation, int lineno)
+        throws IOException
+    {
+        this.ts = new TokenStream(compilerEnv, sourceReader, null,
+                                  sourceLocation, lineno);
+        return parse();
+    }
 
     private void mustMatchToken(int toMatch, String messageId)
         throws IOException, ParserException
@@ -73,26 +123,15 @@ class Parser {
         throw new ParserException();
     }
 
-    /*
-     * Build a parse tree from the given TokenStream.
-     *
-     * @param ts the TokenStream to parse
-     * @param nf the node factory to use to build parse nodes
-     *
-     * @return an Object representing the parsed
-     * program.  If the parse fails, null will be returned.  (The
-     * parse failure will result in a call to the current Context's
-     * ErrorReporter.)
-     */
-    public ScriptOrFnNode parse(TokenStream ts, Decompiler decompiler)
+    private ScriptOrFnNode parse()
         throws IOException
     {
-        this.compilerEnv = ts.compilerEnv;
-        this.ts = ts;
+        this.decompiler = createDecompiler(compilerEnv);
         this.nf = new IRFactory(this);
         currentScriptOrFn = nf.createScript();
         this.decompiler = decompiler;
         int sourceStartOffset = decompiler.getCurrentOffset();
+        this.encodedSource = null;
         decompiler.addToken(Token.SCRIPT);
 
         this.ok = true;
@@ -148,7 +187,22 @@ class Parser {
 
         nf.initScript(currentScriptOrFn, pn);
 
+        if (compilerEnv.isGeneratingSource()) {
+            encodedSource = decompiler.getEncodedSource();
+        }
+        this.decompiler = null; // It helps GC
+
         return currentScriptOrFn;
+    }
+
+    public String getEncodedSource()
+    {
+        return encodedSource;
+    }
+
+    public boolean eof()
+    {
+        return ts.eof();
     }
 
     /*
@@ -1473,7 +1527,7 @@ class Parser {
     }
 
     CompilerEnvirons compilerEnv;
-    TokenStream ts;
+    private TokenStream ts;
 
     private IRFactory nf;
 
@@ -1483,7 +1537,9 @@ class Parser {
 
     private int nestingOfWith;
 
-    Decompiler decompiler;
+    private Decompiler decompiler;
+    private String encodedSource;
+
 }
 
 // Exception to unwind

@@ -396,8 +396,7 @@ public class NodeTransformer
                 if (bind == null || bind.getType() != Token.BINDNAME)
                     break;
                 String name = bind.getString();
-                Context cx = Context.getCurrentContext();
-                if (cx != null && cx.isActivationNeeded(name)) {
+                if (isActivationNeeded(name)) {
                     // use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
@@ -418,10 +417,10 @@ public class NodeTransformer
                 if (inFunction) {
                     Node n = node.getFirstChild().getNext();
                     String name = n == null ? "" : n.getString();
-                    Context cx = Context.getCurrentContext();
-                    if ((cx != null && cx.isActivationNeeded(name)) ||
-                        (name.equals("length") &&
-                         cx.getLanguageVersion() == Context.VERSION_1_2))
+                    if (isActivationNeeded(name)
+                        || (name.equals("length")
+                            && compilerEnv.getLanguageVersion()
+                               == Context.VERSION_1_2))
                     {
                         // Use of "arguments" or "length" in 1.2 requires
                         // an activation object.
@@ -435,8 +434,7 @@ public class NodeTransformer
                 if (!inFunction || inWithStatement())
                     break;
                 String name = node.getString();
-                Context cx = Context.getCurrentContext();
-                if (cx != null && cx.isActivationNeeded(name)) {
+                if (isActivationNeeded(name)) {
                     // Use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
@@ -530,8 +528,19 @@ public class NodeTransformer
     {
         int lineno = stmt.getLineno();
         String sourceName = tree.getSourceName();
-        compilerEnv.reportSyntaxError(
-            true, message, sourceName, lineno, null, 0);
+        compilerEnv.reportSyntaxError(message, sourceName, lineno, null, 0);
+    }
+
+    private boolean isActivationNeeded(String name)
+    {
+        if ("arguments".equals(name))
+            return true;
+        if (compilerEnv.activationNames != null
+            && compilerEnv.activationNames.containsKey(name))
+        {
+            return true;
+        }
+        return false;
     }
 
     private ObjArray loops;

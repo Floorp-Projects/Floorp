@@ -521,9 +521,10 @@ public class Context
      *
      * @see org.mozilla.javascript.ErrorReporter
      */
-    public ErrorReporter getErrorReporter() {
+    public final ErrorReporter getErrorReporter()
+    {
         if (errorReporter == null) {
-            errorReporter = new DefaultErrorReporter();
+            return DefaultErrorReporter.instance;
         }
         return errorReporter;
     }
@@ -534,15 +535,20 @@ public class Context
      * @return the previous error reporter
      * @see org.mozilla.javascript.ErrorReporter
      */
-    public ErrorReporter setErrorReporter(ErrorReporter reporter) {
-        ErrorReporter result = errorReporter;
-        Object listeners = propertyListeners;
-        if (listeners != null && errorReporter != reporter) {
-            firePropertyChangeImpl(listeners, errorReporterProperty,
-                                   errorReporter, reporter);
+    public ErrorReporter setErrorReporter(ErrorReporter reporter)
+    {
+        if (reporter == null) throw new IllegalArgumentException();
+        ErrorReporter old = getErrorReporter();
+        if (reporter == old) {
+            return old;
         }
-        errorReporter = reporter;
-        return result;
+        Object listeners = propertyListeners;
+        if (listeners != null) {
+            firePropertyChangeImpl(listeners, errorReporterProperty,
+                                   old, reporter);
+        }
+        this.errorReporter = reporter;
+        return old;
     }
 
     /**
@@ -707,10 +713,10 @@ public class Context
      * @see org.mozilla.javascript.ErrorReporter
      */
     public static EvaluatorException reportRuntimeError(String message,
-                                                      String sourceName,
-                                                      int lineno,
-                                                      String lineSource,
-                                                      int lineOffset)
+                                                        String sourceName,
+                                                        int lineno,
+                                                        String lineSource,
+                                                        int lineOffset)
     {
         Context cx = getCurrentContext();
         if (cx != null) {
@@ -996,25 +1002,21 @@ public class Context
     {
         boolean errorseen = false;
         CompilerEnvirons compilerEnv = new CompilerEnvirons();
-        compilerEnv.initFromContext(this, null);
+        compilerEnv.initFromContext(this);
+        compilerEnv.setErrorReporter(DefaultErrorReporter.instance);
         // no source name or source text manager, because we're just
         // going to throw away the result.
-        TokenStream ts = new TokenStream(compilerEnv,
-                                         null, source, null, 1);
-
-        Parser p = new Parser();
-        Decompiler decompiler = new Decompiler();
+        compilerEnv.setGeneratingSource(false);
+        Parser p = new Parser(compilerEnv);
         try {
-            p.parse(ts, decompiler);
-        } catch (IOException ioe) {
-            errorseen = true;
+            p.parse(source, null, 1);
         } catch (EvaluatorException ee) {
             errorseen = true;
         }
         // Return false only if an error occurred as a result of reading past
         // the end of the file, i.e. if the source could be fixed by
         // appending more source.
-        if (errorseen && ts.eof())
+        if (errorseen && p.eof())
             return false;
         else
             return true;
@@ -2069,8 +2071,7 @@ public class Context
         if (!(scope == null ^ returnFunction)) Kit.codeBug();
 
         CompilerEnvirons compilerEnv = new CompilerEnvirons();
-        ErrorReporter reporter = getErrorReporter();
-        compilerEnv.initFromContext(this, reporter);
+        compilerEnv.initFromContext(this);
         compilerEnv.setFromEval(fromEval);
 
         if (debugger != null) {
@@ -2080,12 +2081,13 @@ public class Context
             }
         }
 
-        TokenStream ts = new TokenStream(compilerEnv,
-                                         sourceReader, sourceString,
-                                         sourceName, lineno);
-        Parser p = new Parser();
-        Decompiler decompiler = new Decompiler();
-        ScriptOrFnNode tree = p.parse(ts, decompiler);
+        Parser p = new Parser(compilerEnv);
+        ScriptOrFnNode tree;
+        if (sourceString != null) {
+            tree = p.parse(sourceString, sourceName, lineno);
+        } else {
+            tree = p.parse(sourceReader, sourceName, lineno);
+        }
         int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
         if (syntaxErrorCount == 0) {
             Interpreter compiler = createCompiler();
@@ -2096,11 +2098,7 @@ public class Context
                 securityDomain = null;
             }
 
-            String encodedSource = null;
-            if (compilerEnv.isGeneratingSource()) {
-                encodedSource = decompiler.getEncodedSource();
-            }
-            decompiler = null; // It helps GC
+            String encodedSource = p.getEncodedSource();
 
             Object result = compiler.compile(this, scope, compilerEnv,
                                              tree, encodedSource,
@@ -2119,11 +2117,12 @@ public class Context
         }
         String msg = Context.getMessage1("msg.got.syntax.errors",
                                          String.valueOf(syntaxErrorCount));
-        throw reporter.runtimeError(msg, sourceName, lineno, null, 0);
+        throw compilerEnv.getErrorReporter().
+            runtimeError(msg, sourceName, lineno, null, 0);
     }
 
     private static Class codegenClass = Kit.classOrNull(
-                             "org.mozilla.javascript.optimizer.ClassCompiler");
+                             "org.mozilla.javascript.optimizer.Codegen");
 
     private Interpreter createCompiler() {
         Interpreter result = null;
@@ -2237,8 +2236,6 @@ public class Context
      * @return true if an function activation object is needed.
      */
     public boolean isActivationNeeded(String name) {
-        if ("arguments".equals(name))
-            return true;
         return activationNames != null && activationNames.containsKey(name);
     }
 
@@ -2330,7 +2327,7 @@ public class Context
      * This is the list of names of objects forcing the creation of
      * function activation records.
      */
-    private Hashtable activationNames;
+    Hashtable activationNames;
 
     // For the interpreter to indicate line/source for error reports.
     int interpreterLineIndex;

@@ -2078,7 +2078,9 @@ public class ScriptRuntime {
 
             // get the command line arguments and define "arguments"
             // array in the top-level object
-            Scriptable argsObj = cx.newArray(global, args);
+            Object[] argsCopy = new Object[args.length];
+            System.arraycopy(args, 0, argsCopy, 0, args.length);
+            Scriptable argsObj = cx.newArray(global, argsCopy);
             global.defineProperty("arguments", argsObj,
                                   ScriptableObject.DONTENUM);
             script.exec(cx, global);

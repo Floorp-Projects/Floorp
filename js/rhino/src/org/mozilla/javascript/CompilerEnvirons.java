@@ -38,11 +38,27 @@
 
 package org.mozilla.javascript;
 
+import java.util.Hashtable;
+
 public class CompilerEnvirons
 {
-    public void initFromContext(Context cx, ErrorReporter syntaxErrorReporter)
+    public CompilerEnvirons()
     {
-        setSyntaxErrorReporter(syntaxErrorReporter);
+        this.errorReporter = DefaultErrorReporter.instance;
+        this.syntaxErrorCount = 0;
+        this.fromEval = false;
+        this.languageVersion = Context.VERSION_DEFAULT;
+        this.generateDebugInfo = true;
+        this.useDynamicScope = false;
+        this.reservedKeywordAsIdentifier = false;
+        this.allowMemberExprAsFunctionName = false;
+        this.optimizationLevel = 0;
+        this.generatingSource = true;
+    }
+
+    public void initFromContext(Context cx)
+    {
+        setErrorReporter(cx.getErrorReporter());
         this.languageVersion = cx.getLanguageVersion();
         useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
         generateDebugInfo = (!cx.isGeneratingDebugChanged()
@@ -55,6 +71,7 @@ public class CompilerEnvirons
         this.optimizationLevel = cx.getOptimizationLevel();
 
         this.generatingSource = cx.isGeneratingSource();
+        this.activationNames = cx.activationNames;
     }
 
     public final int getSyntaxErrorCount()
@@ -62,36 +79,39 @@ public class CompilerEnvirons
         return syntaxErrorCount;
     }
 
-    public void setSyntaxErrorReporter(ErrorReporter syntaxErrorReporter)
+    public final ErrorReporter getErrorReporter()
     {
-        this.syntaxErrorReporter = syntaxErrorReporter;
+        return errorReporter;
     }
 
-    public final void reportSyntaxError(boolean isError,
-                                        String message,
+    public void setErrorReporter(ErrorReporter errorReporter)
+    {
+        if (errorReporter == null) throw new IllegalArgumentException();
+        this.errorReporter = errorReporter;
+    }
+
+    public final void reportSyntaxError(String message,
                                         String sourceName, int lineno,
                                         String lineText, int lineOffset)
     {
-        if (isError) {
-            ++syntaxErrorCount;
-            if (fromEval) {
-                // We're probably in an eval. Need to throw an exception.
-                throw ScriptRuntime.constructError(
-                    "SyntaxError", message, sourceName,
-                    lineno, lineText, lineOffset);
-            } else if (syntaxErrorReporter != null) {
-                syntaxErrorReporter.error(message, sourceName, lineno,
-                                          lineText, lineOffset);
-            } else {
-                throw new EvaluatorException(message, sourceName, lineno,
-                                            lineText, lineOffset);
-            }
+        ++syntaxErrorCount;
+        if (fromEval) {
+            // We're probably in an eval. Need to throw an exception.
+            throw ScriptRuntime.constructError(
+                "SyntaxError", message, sourceName,
+                lineno, lineText, lineOffset);
         } else {
-            if (syntaxErrorReporter != null) {
-                syntaxErrorReporter.warning(message, sourceName,
-                                            lineno, lineText, lineOffset);
-            }
+            getErrorReporter().error(message, sourceName, lineno,
+                                     lineText, lineOffset);
         }
+    }
+
+    public final void reportSyntaxWarning(String message,
+                                          String sourceName, int lineno,
+                                          String lineText, int lineOffset)
+    {
+        getErrorReporter().warning(message, sourceName,
+                                   lineno, lineText, lineOffset);
     }
 
     public final boolean isFromEval()
@@ -159,7 +179,6 @@ public class CompilerEnvirons
      * the body of the function.
      * Note that code generated without source is not fully ECMA
      * conformant.
-     * @since 1.3
      */
     public void setGeneratingSource(boolean generatingSource)
     {
@@ -167,17 +186,18 @@ public class CompilerEnvirons
     }
 
 
-    private ErrorReporter syntaxErrorReporter;
+    private ErrorReporter errorReporter;
     private int syntaxErrorCount;
 
     private boolean fromEval;
 
     int languageVersion = Context.VERSION_DEFAULT;
-    boolean generateDebugInfo;
+    boolean generateDebugInfo = true;
     boolean useDynamicScope;
     boolean reservedKeywordAsIdentifier;
     boolean allowMemberExprAsFunctionName;
-    private int optimizationLevel;
-    private boolean generatingSource;
+    private int optimizationLevel = 0;
+    private boolean generatingSource = true;
+    Hashtable activationNames;
 }
 

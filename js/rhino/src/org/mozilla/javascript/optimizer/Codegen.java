@@ -52,8 +52,126 @@ import java.lang.reflect.Constructor;
  * @author Roger Lawrence
  */
 
-class Codegen
+public class Codegen extends Interpreter
 {
+    public Object compile(Context cx, Scriptable scope,
+                          CompilerEnvirons compilerEnv,
+                          ScriptOrFnNode scriptOrFn,
+                          String encodedSource,
+                          boolean returnFunction,
+                          SecurityController securityController,
+                          Object securityDomain)
+    {
+        OptClassNameHelper
+            nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
+        Class[] interfaces = nameHelper.getTargetImplements();
+        Class superClass = nameHelper.getTargetExtends();
+        boolean isPrimary = (interfaces == null && superClass == null);
+        String mainClassName = nameHelper.getScriptClassName(isPrimary);
+
+        byte[] mainClassBytes = compileToClassFile(compilerEnv, mainClassName,
+                                                   scriptOrFn, encodedSource,
+                                                   returnFunction);
+
+        boolean onlySave = false;
+        ClassRepository repository = nameHelper.getClassRepository();
+        if (repository != null) {
+            try {
+                if (!repository.storeClass(mainClassName, mainClassBytes,
+                                           true))
+                {
+                    onlySave = true;
+                }
+            } catch (IOException iox) {
+                throw Context.throwAsScriptRuntimeEx(iox);
+            }
+
+            if (!isPrimary) {
+                String adapterClassName = nameHelper.getScriptClassName(true);
+                int functionCount = scriptOrFn.getFunctionCount();
+                ObjToIntMap functionNames = new ObjToIntMap(functionCount);
+                for (int i = 0; i != functionCount; ++i) {
+                    FunctionNode ofn = scriptOrFn.getFunctionNode(i);
+                    String name = ofn.getFunctionName();
+                    if (name != null && name.length() != 0) {
+                        functionNames.put(name, ofn.getParamCount());
+                    }
+                }
+                if (superClass == null) {
+                    superClass = ScriptRuntime.ObjectClass;
+                }
+                byte[] classFile = JavaAdapter.createAdapterCode(
+                                       functionNames, adapterClassName,
+                                       superClass, interfaces,
+                                       mainClassName);
+                try {
+                    if (!repository.storeClass(adapterClassName, classFile,
+                                               true))
+                    {
+                        onlySave = true;
+                    }
+                } catch (IOException iox) {
+                    throw Context.throwAsScriptRuntimeEx(iox);
+                }
+            }
+        }
+
+        if (onlySave) { return null; }
+
+        Exception e = null;
+        Class result = null;
+        ClassLoader parentLoader = cx.getApplicationClassLoader();
+        GeneratedClassLoader loader;
+        if (securityController == null) {
+            loader = cx.createClassLoader(parentLoader);
+        } else {
+            loader = securityController.createClassLoader(parentLoader,
+                                                          securityDomain);
+        }
+
+        try {
+            result = loader.defineClass(mainClassName, mainClassBytes);
+            loader.linkClass(result);
+        } catch (SecurityException x) {
+            e = x;
+        } catch (IllegalArgumentException x) {
+            e = x;
+        }
+        if (e != null)
+            throw new RuntimeException("Malformed optimizer package " + e);
+
+        if (scriptOrFn.getType() == Token.FUNCTION) {
+            NativeFunction f;
+            try {
+                Constructor ctor = result.getConstructors()[0];
+                Object[] initArgs = { scope, cx, new Integer(0) };
+                f = (NativeFunction)ctor.newInstance(initArgs);
+            } catch (Exception ex) {
+                throw new RuntimeException
+                    ("Unable to instantiate compiled class:"+ex.toString());
+            }
+            int ftype = ((FunctionNode)scriptOrFn).getFunctionType();
+            OptRuntime.initFunction(f, ftype, scope, cx);
+            return f;
+        } else {
+            Script script;
+            try {
+                script = (Script) result.newInstance();
+            } catch (Exception ex) {
+                throw new RuntimeException
+                    ("Unable to instantiate compiled class:"+ex.toString());
+            }
+            return script;
+        }
+    }
+
+    public void notifyDebuggerCompilationDone(Context cx,
+                                              ScriptOrFnNode scriptOrFn,
+                                              String debugSource)
+    {
+        // Not supported
+    }
+
     byte[] compileToClassFile(CompilerEnvirons compilerEnv,
                               String mainClassName,
                               ScriptOrFnNode scriptOrFn,

@@ -294,16 +294,14 @@ public class TokenStream
 
     public final void reportCurrentLineError(String message)
     {
-        compilerEnv.reportSyntaxError(true, message,
-                                      getSourceName(), getLineno(),
+        compilerEnv.reportSyntaxError(message, getSourceName(), getLineno(),
                                       getLine(), getOffset());
     }
 
     public final void reportCurrentLineWarning(String message)
     {
-        compilerEnv.reportSyntaxError(false, message,
-                                      getSourceName(), getLineno(),
-                                      getLine(), getOffset());
+        compilerEnv.reportSyntaxWarning(message, getSourceName(), getLineno(),
+                                        getLine(), getOffset());
     }
 
     public final String getSourceName() { return sourceName; }
