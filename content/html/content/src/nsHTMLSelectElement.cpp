@@ -2114,31 +2114,43 @@ NS_IMETHODIMP
 nsHTMLOptionCollection::SetOption(PRInt32 aIndex,
                                   nsIDOMHTMLOptionElement *aOption)
 {
+  if (aIndex < 0 || !mSelect) {
+    return NS_OK;
+  }
+  
+  // if the new option is null, just remove this option.  Note that it's safe
+  // to pass a too-large aIndex in here.
+  if (!aOption) {
+    mSelect->Remove(aIndex);
+
+    // We're done.
+    return NS_OK;
+  }
+
   nsresult rv = NS_OK;
 
-  // If the indx is within range
-  if (mSelect && aIndex >= 0 && aIndex <= mElements.Count()) {
-    // if the new option is null, remove this option
-    if (!aOption) {
-      mSelect->Remove(aIndex);
+  // Now we're going to be setting an option in our collection
+  if (aIndex > mElements.Count()) {
+    // Fill our array with blank options up to (but not including, since we're
+    // about to change it) aIndex, for compat with other browsers.
+    rv = SetLength(aIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-      // We're done.
-      return NS_OK;
-    }
+  NS_ASSERTION(aIndex <= mElements.Count(), "SetLength lied");
+  
+  nsCOMPtr<nsIDOMNode> ret;
+  if (aIndex == mElements.Count()) {
+    rv = mSelect->AppendChild(aOption, getter_AddRefs(ret));
+  } else {
+    // Find the option they're talking about and replace it
+    nsIDOMHTMLOptionElement *refChild = mElements.ObjectAt(aIndex);
+    NS_ENSURE_TRUE(refChild, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsIDOMNode> ret;
-    if (aIndex == mElements.Count()) {
-      rv = mSelect->AppendChild(aOption, getter_AddRefs(ret));
-    } else {
-      // Find the option they're talking about and replace it
-      nsIDOMHTMLOptionElement *refChild = mElements.ObjectAt(aIndex);
-      NS_ENSURE_TRUE(refChild, NS_ERROR_UNEXPECTED);
-
-      nsCOMPtr<nsIDOMNode> parent;
-      refChild->GetParentNode(getter_AddRefs(parent));
-      if (parent) {
-        rv = parent->ReplaceChild(aOption, refChild, getter_AddRefs(ret));
-      }
+    nsCOMPtr<nsIDOMNode> parent;
+    refChild->GetParentNode(getter_AddRefs(parent));
+    if (parent) {
+      rv = parent->ReplaceChild(aOption, refChild, getter_AddRefs(ret));
     }
   }
 
