@@ -283,7 +283,7 @@ PRIntn PR_CALLBACK nsAccessNode::ClearCacheEntry(nsHashKey *aKey, void *aAccessN
   nsIAccessNode* accessNode = NS_STATIC_CAST(nsIAccessNode*, aAccessNode);
   accessNode->Shutdown();
 
-  return PL_DHASH_NEXT;
+  return kHashEnumerateRemove;
 }
 
 void nsAccessNode::ClearCache(nsSupportsHashtable *aCache)

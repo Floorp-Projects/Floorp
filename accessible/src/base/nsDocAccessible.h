@@ -40,15 +40,16 @@
 #define _nsDocAccessible_H_
 
 #include "nsAccessibleWrap.h"
-#include "nsIAccessibleDocument.h"
-#include "nsIDocument.h"
-#include "nsIAccessibleEventReceiver.h"
 #include "nsHashtable.h"
-#include "nsIWebProgressListener.h"
-#include "nsITimer.h"
-#include "nsIWebProgress.h"
+#include "nsIAccessibleDocument.h"
+#include "nsIAccessibleEventReceiver.h"
+#include "nsIDocument.h"
+#include "nsIDOMMutationListener.h"
 #include "nsIScrollPositionListener.h"
+#include "nsITimer.h"
 #include "nsIWeakReference.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 
 class nsIScrollableView;
 
@@ -58,11 +59,12 @@ class nsDocAccessible : public nsAccessibleWrap,
                         public nsIAccessibleDocument,
                         public nsIAccessibleEventReceiver,
                         public nsIWebProgressListener,
+                        public nsIDOMMutationListener,
                         public nsIScrollPositionListener,
                         public nsSupportsWeakReference
 {
   enum EBusyState {eBusyStateUninitialized, eBusyStateLoading, eBusyStateDone};
-
+  
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEDOCUMENT
   NS_DECL_NSIACCESSIBLEEVENTRECEIVER
@@ -80,12 +82,22 @@ class nsDocAccessible : public nsAccessibleWrap,
     NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
     NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
 
+    // ----- nsIDOMMutationListener -------------------------
+    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+    NS_IMETHOD SubtreeModified(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD NodeInserted(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD NodeRemoved(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD NodeRemovedFromDocument(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD NodeInsertedIntoDocument(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD AttrModified(nsIDOMEvent* aMutationEvent);
+    NS_IMETHOD CharacterDataModified(nsIDOMEvent* aMutationEvent);
+
     NS_DECL_NSIWEBPROGRESSLISTENER
 
     // nsIAccessNode
     NS_IMETHOD Shutdown();
 
-  protected:  
+  protected:
     virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsIFrame* GetFrame();
     void AddContentDocListeners();
@@ -93,6 +105,8 @@ class nsDocAccessible : public nsAccessibleWrap,
     void AddScrollListener(nsIPresShell *aPresShell);
     void RemoveScrollListener(nsIPresShell *aPresShell);
     void FireDocLoadFinished();
+    void InvalidateCacheSubtree(nsIDOMNode *aStartNode);
+    void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
     static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
 
@@ -110,6 +124,5 @@ class nsDocAccessible : public nsAccessibleWrap,
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsNewDocument;
 };
-
 
 #endif  

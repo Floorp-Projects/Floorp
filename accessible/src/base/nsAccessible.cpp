@@ -209,6 +209,14 @@ NS_IMETHODIMP nsAccessible::SetAccNextSibling(nsIAccessible *aNextSibling)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAccessible::InvalidateChildren()
+{
+  // Document has transformed, reset our invalid children and child count
+  mAccChildCount = -1;
+  mFirstChild = mNextSibling = mParent = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAccessible::GetAccParent(nsIAccessible **  aAccParent)
 {
   if (mParent) {
@@ -1293,6 +1301,8 @@ NS_IMETHODIMP nsAccessible::GetXULAccName(nsAString& _retval)
 
 NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
 {
+  if (!mWeakShell)
+    return NS_ERROR_FAILURE; // Don't fire event for accessible that has been shut down
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   nsCOMPtr<nsIAccessible> eventHandlingAccessible(do_QueryInterface(docAccessible));
   if (eventHandlingAccessible) {

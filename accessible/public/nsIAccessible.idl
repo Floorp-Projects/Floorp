@@ -80,6 +80,7 @@ interface nsIAccessible : nsISupports
   [noscript] void setAccParent(in nsIAccessible aAccParent);
   [noscript] void setAccFirstChild(in nsIAccessible aAccFirstChild);
   [noscript] void setAccNextSibling(in nsIAccessible aAccNextSibling);
+  [noscript] void invalidateChildren();
   [noscript] void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
   [noscript] void getNativeInterface(out voidPtr aOutAccessible);
 

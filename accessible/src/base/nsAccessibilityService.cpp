@@ -762,15 +762,16 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(node));
   if (textContent) {
     // If empty text string, don't include in accessible tree
-    // Items with length 0 are already gone, we just need to check for single NBSP's
+    // Items with length 0 are already gone, we also need to check for single NBSP's
+    // or newlines, both of which indicate an empty text object
     PRInt32 textLength = 0;
     textContent->GetTextLength(&textLength);
     if (textLength == 1) {
-      const PRUnichar NBSP = 160;
       const nsTextFragment *textFrag;
       textContent->GetText(&textFrag);
       PRUnichar theChar = textFrag->CharAt(0);
-      if (theChar == NBSP)
+      // Check for NBSP (160) or newline
+      if (theChar == 160 || theChar=='\n')
         return NS_ERROR_FAILURE;
     }
     nsCOMPtr<nsIDOMNode> parentNode;
