@@ -168,8 +168,12 @@ IMAGE_CheckForPermission
   /* use common routine to make decision */
   PRUnichar * message = CKutil_Localize(NS_LITERAL_STRING("PermissionToAcceptImage").get());
   PRUnichar * new_string = nsTextFormatter::smprintf(message, hostname ? hostname : "");
-  *permission = Permission_Check(0, hostname, IMAGEPERMISSION,
-                                image_GetWarningPref(), new_string);
+  if (NS_SUCCEEDED(PERMISSION_Read())) {
+    *permission = Permission_Check(0, hostname, IMAGEPERMISSION,
+                                   image_GetWarningPref(), new_string);
+  } else {
+    *permission = PR_TRUE;
+  }
   PR_FREEIF(new_string);
   Recycle(message);
   return NS_OK;
