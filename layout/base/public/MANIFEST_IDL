@@ -9,3 +9,4 @@ nsISelectionPrivate.idl
 nsISelectionListener.idl
 nsIContentPolicy.idl
 nsIDiskDocument.idl
+nsIPrintListener.idl
