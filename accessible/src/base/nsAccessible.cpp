@@ -1335,7 +1335,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
     elt->GetAttribute(NS_LITERAL_STRING("alt"), textEquivalent);
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("title"), textEquivalent);
-    if (imageContent) {
+    if (textEquivalent.IsEmpty() && imageContent) {
       nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
       nsCOMPtr<nsIDOMNode> imageNode(do_QueryInterface(aContent));
       if (imageNode && presShell)
