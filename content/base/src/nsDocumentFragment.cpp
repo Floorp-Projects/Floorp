@@ -47,6 +47,7 @@
 #include "nsIDOMDocument.h"
 #include "nsDOMError.h"
 #include "nsIDOM3Node.h"
+#include "nsLayoutAtoms.h"
 
 
 class nsDocumentFragment : public nsGenericContainerElement,
@@ -174,23 +175,14 @@ nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                        nsIDocument* aOwnerDocument)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ENSURE_ARG(aOwnerDocument);
 
-  nsCOMPtr<nsINodeInfoManager> nimgr;
+  nsINodeInfoManager *nimgr = aOwnerDocument->GetNodeInfoManager();
+
   nsCOMPtr<nsINodeInfo> nodeInfo;
-
-  nsresult rv;
-
-  if (aOwnerDocument) {
-    nimgr = aOwnerDocument->GetNodeInfoManager();
-  } else {
-    rv = nsNodeInfoManager::GetAnonymousManager(getter_AddRefs(nimgr));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = nimgr->GetNodeInfo(NS_LITERAL_CSTRING("#document-fragment"),
-                          nsnull, kNameSpaceID_None,
-                          getter_AddRefs(nodeInfo));
+  nsresult rv = nimgr->GetNodeInfo(nsLayoutAtoms::documentFragmentNodeName,
+                                   nsnull, kNameSpaceID_None,
+                                   getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsDocumentFragment* it = new nsDocumentFragment(aOwnerDocument);

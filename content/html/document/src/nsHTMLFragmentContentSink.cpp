@@ -155,6 +155,7 @@ public:
   nsString mBaseHREF;
   nsString mBaseTarget;
 
+  nsCOMPtr<nsIDocument> mTargetDocument;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
 };
 
@@ -245,8 +246,10 @@ nsHTMLFragmentContentSink::WillBuildModel(void)
     return NS_OK;
   }
 
+  NS_ASSERTION(mTargetDocument, "Need a document!");
+
   nsCOMPtr<nsIDOMDocumentFragment> frag;
-  nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), nsnull);
+  nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), mTargetDocument);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(frag, &mRoot);
@@ -697,18 +700,18 @@ nsHTMLFragmentContentSink::GetFragment(nsIDOMDocumentFragment** aFragment)
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument)
 {
-  if (aTargetDocument) {
-    mNodeInfoManager = aTargetDocument->GetNodeInfoManager();
-  }
+  NS_ENSURE_ARG_POINTER(aTargetDocument);
 
+  mTargetDocument = aTargetDocument;
+  mNodeInfoManager = aTargetDocument->GetNodeInfoManager();
   if (mNodeInfoManager) {
     return NS_OK;
   }
 
   nsresult rv = NS_NewNodeInfoManager(getter_AddRefs(mNodeInfoManager));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mNodeInfoManager->Init(nsnull);
+  
+  rv = mNodeInfoManager->Init(aTargetDocument);
   if (NS_FAILED(rv)) {
     mNodeInfoManager = nsnull;
   }

@@ -1094,15 +1094,15 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
             if (insertAsImage)
             {
               stuffToPaste.Assign(NS_LITERAL_STRING("<IMG src=\""));
-              stuffToPaste.Append(NS_ConvertUTF8toUCS2(urltext));
+              AppendUTF8toUTF16(urltext, stuffToPaste);
               stuffToPaste.Append(NS_LITERAL_STRING("\" alt=\"\" >"));
             }
             else /* insert as link */
             {
               stuffToPaste.Assign(NS_LITERAL_STRING("<A href=\""));
-              stuffToPaste.Append(NS_ConvertUTF8toUCS2(urltext));
+              AppendUTF8toUTF16(urltext, stuffToPaste);
               stuffToPaste.Append(NS_LITERAL_STRING("\">"));
-              stuffToPaste.Append(NS_ConvertUTF8toUCS2(urltext));
+              AppendUTF8toUTF16(urltext, stuffToPaste);
               stuffToPaste.Append(NS_LITERAL_STRING("</A>"));
             }
             nsAutoEditBatch beginBatching(this);
@@ -2151,15 +2151,11 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   nsCOMPtr<nsIDOMNode> contextAsNode, tmp;  
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsIDOMElement> rootElement;
-  GetRootElement(getter_AddRefs(rootElement));
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  GetDocument(getter_AddRefs(domDoc));
 
-  nsCOMPtr<nsIDocument> doc;
-  if (rootElement) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    rootElement->GetOwnerDocument(getter_AddRefs(domDoc));
-    doc = do_QueryInterface(domDoc);
-  }
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
   
   // if we have context info, create a fragment for that
   nsVoidArray tagStack;
