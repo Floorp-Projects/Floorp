@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.34 $';
+$Version = '$Revision: 1.35 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -16,12 +16,12 @@ sub InitVars {
     $BuildDepend = 1;		# Depend or Clobber
     $BuildNSCommercial = 0;	# Build Netscape commercial client (internal only)
     $BuildOnce = 0;		# Build once, don't send results to server
-    $ReportStatus = 1;	# Send results to server, or not
+    $ReportStatus = 1;		# Send results to server, or not
     $RunTest = 1;		# Run the smoke test on successful build, or not
-    $UseFullCircle = 0;	# Enable FullCircle Talkback debugging, or not
+    $UseFullCircle = 0;		# Enable FullCircle Talkback debugging, or not
     $UseMotif = 0;		# Build using Motif instead of GTK+, or not
     $UseObjDir = 1;		# Use a separate object dir, or build in the source tree
-    $UseTimeStamp = 0;	# Use the CVS 'pull-by-timestamp' option, or not
+    $UseTimeStamp = 0;		# Use the CVS 'pull-by-timestamp' option, or not
 
     # Set these to what makes sense for your system
     $cpus = 1;
@@ -188,7 +188,7 @@ sub SetupEnv {
 	    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	    $Compiler = 'egcc';
 	} else {
-	    $ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
+	    $ENV{'PATH'} = '/opt/usr/local/bin:/usr/ccs/bin:' . $ENV{'PATH'};
 	}
 	if ( $CPU eq 'i86pc' ) {
 	    $ENV{'PATH'} = '/opt/gnu/bin:' . $ENV{'PATH'};
@@ -207,10 +207,17 @@ sub SetupEnv {
 		chop($comptmp);
 		$Compiler = "cc/CC \($comptmp\)";
 		$NSPRArgs .= 'BUILD_OPT=1 NS_USE_NATIVE=1';
+	    } elsif ( $ENV{'HOST'} eq 'nebiros' || $ENV{'HOST'} eq 'liekkio' ) {
+		$ENV{'PATH'} = '/tools/ns/workshop-5.0/bin:' . $ENV{'PATH'};
+		$ConfigureEnvArgs = 'CC=cc CXX=CC';
+		$comptmp = `cc -V 2>&1 | head -1`;
+		chop($comptmp);
+		$Compiler = "cc/CC \($comptmp\)";
+		$NSPRArgs .= 'NS_USE_NATIVE=1';
 	    } else {
 		$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
 	    }
-	    if ( $OSVerMajor eq '5' ) {
+	    if ( $OSVerMajor eq '5' && $OSVer ne '5.3' ) {
 		$NSPRArgs .= ' USE_PTHREADS=1';
 	    }
 	}
@@ -261,14 +268,18 @@ sub FinalizeLDLibPath {
 	if ( $CPU eq 'i86pc' ) {
 	    $ENV{'LD_LIBRARY_PATH'} .= ':/opt/gnu/lib';
 	} else {
+	    $ENV{'LD_LIBRARY_PATH'} = '/opt/usr/local/lib:' . $ENV{'LD_LIBRARY_PATH'};
 	    # This is utterly lame....
 	    if ( $ENV{'HOST'} eq 'fugu' ) {
 		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop/lib:/usrlocal/lib:' . $ENV{'LD_LIBRARY_PATH'};
 	    }
+	    if ( $ENV{'HOST'} eq 'nebiros' || $ENV{'HOST'} eq 'liekkio' ) {
+		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop-5.0/lib:' . $ENV{'LD_LIBRARY_PATH'};
+	    }
 	}
     }
     if ( $OS eq 'UnixWare' ) {
-	$ENV{'LPATH'} = '/usr/ucblib:/usr/X/lib:' . $ENV{'LD_LIBRARY_PATH'};
+	$ENV{'LPATH'} = '/usr/ucblib:/usr/X/lib:/usr/ccs/lib:' . $ENV{'LD_LIBRARY_PATH'};
     }
 }
 
@@ -668,7 +679,7 @@ sub CVSTime {
     $mon++; # month is 0 based.
 
     if ( $UseTimeStamp ) {
-	$BuildStart = `date '+%D %H:%M'`;
+	$BuildStart = `date '+%m/%d/%Y %H:%M'`;
 	chop($BuildStart);
 	$CVSCO .= " -D '$BuildStart'";
     }
