@@ -39,26 +39,22 @@
 
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
+#include "nsIASN1Object.h"
+#include "nsISMimeCert.h"
 
-/* private NSS defines used by PSM */
-/* (must be declated before cert.h) */
-#define CERT_NewTempCertificate __CERT_NewTempCertificate
-#define CERT_AddTempCertToPerm __CERT_AddTempCertToPerm
-
-#include "prtypes.h"
-#include "cert.h"
-#include "secitem.h"
-#include "nsString.h"
-
+#include "nsNSSCertHeader.h"
 
 class nsINSSComponent;
+class nsIASN1Sequence;
 
 /* Certificate */
-class nsNSSCertificate : public nsIX509Cert 
+class nsNSSCertificate : public nsIX509Cert,
+                         public nsISMimeCert
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIX509CERT
+  NS_DECL_NSISMIMECERT
 
   nsNSSCertificate(CERTCertificate *cert);
   /* from a request? */
@@ -83,88 +79,17 @@ private:
   nsresult GetSortableDate(PRTime aTime, PRUnichar **_aSortableDate);
 };
 
-/* Header file */
-#define CRL_AUTOUPDATE_TIMIINGTYPE_PREF "security.crl.autoupdate.timingType"
-#define CRL_AUTOUPDATE_TIME_PREF "security.crl.autoupdate.nextInstant"
-#define CRL_AUTOUPDATE_URL_PREF "security.crl.autoupdate.url"
-#define CRL_AUTOUPDATE_DAYCNT_PREF "security.crl.autoupdate.dayCnt"
-#define CRL_AUTOUPDATE_FREQCNT_PREF "security.crl.autoupdate.freqCnt"
-#define CRL_AUTOUPDATE_ERRCNT_PREF "security.crl.autoupdate.errCount"
-#define CRL_AUTOUPDATE_ERRDETAIL_PREF "security.crl.autoupdate.errDetail"
-#define CRL_AUTOUPDATE_ENABLED_PREF "security.crl.autoupdate.enable."
-#define CRL_AUTOUPDATE_DEFAULT_DELAY 30000UL
-	  
-class nsCrlEntry : public nsICrlEntry
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICRLENTRY
+#define NS_NSS_LONG 4
+#define NS_NSS_GET_LONG(x) ((((unsigned long)((x)[0])) << 24) | \
+                            (((unsigned long)((x)[1])) << 16) | \
+                            (((unsigned long)((x)[2])) <<  8) | \
+                             ((unsigned long)((x)[3])) )
+#define NS_NSS_PUT_LONG(src,dest) (dest)[0] = (((src) >> 24) & 0xff); \
+                                  (dest)[1] = (((src) >> 16) & 0xff); \
+                                  (dest)[2] = (((src) >>  8) & 0xff); \
+                                  (dest)[3] = ((src) & 0xff); 
 
-  nsCrlEntry();
-  nsCrlEntry(CERTSignedCrl *);
-  nsCrlEntry(const PRUnichar*, const PRUnichar*, const PRUnichar*, const PRUnichar*, PRTime, PRTime, const PRUnichar*, const PRUnichar*);
-  virtual ~nsCrlEntry();
-  /* additional members */
-private:
-  nsString mOrg;
-  nsString mOrgUnit;
-  nsString mLastUpdateLocale;
-  nsString mNextUpdateLocale;
-  PRTime mLastUpdate;
-  PRTime mNextUpdate;
-  nsString mNameInDb;
-  nsString mLastFetchURL;
-  nsString mNextAutoUpdateDate;
-};
 
-class nsNSSCertCache : public nsINSSCertCache
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSINSSCERTCACHE
-
-  nsNSSCertCache();
-  virtual ~nsNSSCertCache();
-
-private:
-  PRLock *mutex;
-  CERTCertList *mCertList;
-};
-
-class nsNSSCertificateDB : public nsIX509CertDB
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIX509CERTDB
-
-  nsNSSCertificateDB(); 
-  virtual ~nsNSSCertificateDB();
-
-  static PRUint32 getCertType(CERTCertificate *cert);
-
-private:
-
-  void getCertNames(CERTCertList *certList,
-                    PRUint32      type, 
-                    PRUint32     *_count,
-                    PRUnichar  ***_certNameList);
-
-  CERTDERCerts *getCertsFromPackage(PRArenaPool *arena, char *data, 
-                                    PRUint32 length);
-  nsresult handleCACertDownload(nsISupportsArray *x509Certs, 
-                                nsIInterfaceRequestor *ctx);
-
-  PRBool GetCertsByTypeFromCertList(CERTCertList *aCertList,
-                                    PRUint32 aType,
-                                    nsCertCompareFunc  aCertCmpFn,
-                                    void              *aCertCmpFnArg,
-                                    nsISupportsArray **_certs);
-};
-
-// Use this function to generate a default nickname for a user
-// certificate that is to be imported onto a token.
-char *
-default_nickname(CERTCertificate *cert, nsIInterfaceRequestor* ctx);
 
 
 #endif /* _NS_NSSCERTIFICATE_H_ */

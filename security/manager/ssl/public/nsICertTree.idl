@@ -35,8 +35,9 @@
 
 #include "nsISupports.idl"
 #include "nsITreeView.idl"
-#include "nsIX509Cert.idl"
-#include "nsIX509CertDB.idl"
+
+interface nsINSSCertCache;
+interface nsIX509Cert;
 
 [scriptable, uuid(4ea60761-31d6-491d-9e34-4b53a26c416c)]
 interface nsICertTree : nsITreeView {

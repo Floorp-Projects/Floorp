@@ -48,6 +48,8 @@ var gCount;
 var gSMimeContractID = "@mozilla.org/messenger-smime/smimejshelper;1";
 var gISMimeJSHelper = Components.interfaces.nsISMimeJSHelper;
 var gIX509Cert = Components.interfaces.nsIX509Cert;
+const nsICertificateDialogs = Components.interfaces.nsICertificateDialogs;
+const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1"
 
 function getStatusExplanation(value)
 {
@@ -257,6 +259,11 @@ function onSelectionChange(event)
   }
 }
 
+function viewCertHelper(parent, cert) {
+  var cd = Components.classes[nsCertificateDialogs].getService(nsICertificateDialogs);
+  cd->viewCert(parent, cert);
+}
+
 function viewSelectedCert()
 {
   if (gListBox.selectedItems.length > 0)
@@ -265,7 +272,7 @@ function viewSelectedCert()
     var cert = gCerts.value[selected];
     if (cert)
     {
-      cert.view();
+      viewCertHelper(cert);
     }
   }
 }

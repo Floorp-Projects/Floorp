@@ -39,6 +39,8 @@ const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
 const nsICMSMessageErrors = Components.interfaces.nsICMSMessageErrors;
+const nsICertificateDialogs = Components.interfaces.nsICertificateDialogs;
+const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1"
 
 var gSignerCert = null;
 var gEncryptionCert = null;
@@ -231,17 +233,22 @@ function onLoad()
   }
 }
 
+function viewCertHelper(parent, cert) {
+  var cd = Components.classes[nsCertificateDialogs].getService(nsICertificateDialogs);
+  cd->viewCert(parent, cert);
+}
+
 function viewSignatureCert()
 {
   if (gSignerCert) {
-    gSignerCert.view();
+    viewCertHelper(gSignerCert);
   }
 }
 
 function viewEncryptionCert()
 {
   if (gEncryptionCert) {
-    gEncryptionCert.view();
+    viewCertHelper(gEncryptionCert);
   }
 }
 

@@ -24,8 +24,15 @@
 #ifndef __NS_NSSDIALOGS_H__
 #define __NS_NSSDIALOGS_H__
 
-#include "nsINSSDialogs.h"
+#include "nsITokenPasswordDialogs.h"
+#include "nsISecurityWarningDialogs.h"
 #include "nsIBadCertListener.h"
+#include "nsICertificateDialogs.h"
+#include "nsIClientAuthDialogs.h"
+#include "nsICertPickDialogs.h"
+#include "nsITokenDialogs.h"
+#include "nsIDOMCryptoDialogs.h"
+#include "nsIGeneratingKeypairInfoDialogs.h"
 
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
@@ -37,8 +44,7 @@
     { 0x93, 0x7e, 0xc4, 0x5f, 0x14, 0xde, 0xf7, 0x78 }}
 
 class nsNSSDialogs
-: public nsINSSDialogs,
-  public nsITokenPasswordDialogs,
+: public nsITokenPasswordDialogs,
   public nsIBadCertListener,
   public nsISecurityWarningDialogs,
   public nsICertificateDialogs,
@@ -50,7 +56,6 @@ class nsNSSDialogs
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSINSSDIALOGS
   NS_DECL_NSITOKENPASSWORDDIALOGS
   NS_DECL_NSIBADCERTLISTENER
   NS_DECL_NSISECURITYWARNINGDIALOGS

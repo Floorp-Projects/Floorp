@@ -36,16 +36,19 @@
 #include "nsPK11TokenDB.h"
 #include "nsPKCS11Slot.h"
 #include "nsNSSCertificate.h"
+#include "nsNSSCertificateDB.h"
+#include "nsNSSCertCache.h"
+#include "nsCMS.h"
 #include "nsCertTree.h"
 #include "nsCrypto.h"
 //For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
 
 #include "nsCMSSecureMessage.h"
-#include "nsCMS.h"
 #include "nsCertPicker.h"
 #include "nsCURILoader.h"
 #include "nsICategoryManager.h"
+#include "nsCRLManager.h"
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
@@ -156,6 +159,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSEncoder)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSMessage)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertPicker)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCRLManager)
 
 static NS_METHOD RegisterPSMContentListeners(
                       nsIComponentManager *aCompMgr,
@@ -348,6 +352,13 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/uriloader/psm-external-content-listener;1",
     PSMContentListenerConstructor,
     RegisterPSMContentListeners
+  },
+
+  {
+    "PSM CRL Manager",
+    NS_CRLMANAGER_CID,
+    NS_CRLMANAGER_CONTRACTID,
+    nsCRLManagerConstructor
   }
 };
 

@@ -1,0 +1,477 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Netscape security libraries.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 2000 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ *
+ */
+
+#include "nsCRLManager.h"
+#include "nsCRLInfo.h"
+
+#include "nsCOMPtr.h"
+#include "nsIDateTimeFormat.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsComponentManagerUtils.h"
+#include "nsReadableUtils.h"
+#include "nsNSSComponent.h"
+#include "nsIWindowWatcher.h"
+#include "nsCOMPtr.h"
+#include "nsIPrompt.h"
+#include "nsICertificateDialogs.h"
+#include "nsISupportsArray.h"
+
+#include "nsNSSCertHeader.h"
+
+#include "nspr.h"
+extern "C" {
+#include "pk11func.h"
+#include "certdb.h"
+#include "cert.h"
+#include "secerr.h"
+#include "nssb64.h"
+#include "secasn1.h"
+#include "secder.h"
+}
+#include "ssl.h"
+#include "ocsp.h"
+#include "plbase64.h"
+
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
+static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
+NS_IMPL_ISUPPORTS1(nsCRLManager, nsICRLManager)
+
+NS_IMETHODIMP 
+nsCRLManager::ImportCrl (PRUint8 *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType, PRBool doSilentDonwload, const PRUnichar* crlKey)
+{
+  nsresult rv;
+  PRArenaPool *arena = NULL;
+  CERTCertificate *caCert;
+  SECItem derName = { siBuffer, NULL, 0 };
+  SECItem derCrl;
+  CERTSignedData sd;
+  SECStatus sec_rv;
+  CERTSignedCrl *crl;
+  nsCAutoString url;
+  nsCOMPtr<nsICRLInfo> crlData;
+  PRBool importSuccessful;
+  PRInt32 errorCode;
+  nsString errorMessage;
+  
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv)) return rv;
+	         
+  aURI->GetSpec(url);
+  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if (!arena) {
+    goto loser;
+  }
+  memset(&sd, 0, sizeof(sd));
+
+  derCrl.data = (unsigned char*)aData;
+  derCrl.len = aLength;
+  sec_rv = CERT_KeyFromDERCrl(arena, &derCrl, &derName);
+  if (sec_rv != SECSuccess) {
+    goto loser;
+  }
+
+  caCert = CERT_FindCertByName(CERT_GetDefaultCertDB(), &derName);
+  if (!caCert) {
+    if (aType == SEC_KRL_TYPE){
+      goto loser;
+    }
+  } else {
+    sec_rv = SEC_ASN1DecodeItem(arena,
+                            &sd, SEC_ASN1_GET(CERT_SignedDataTemplate), 
+                            &derCrl);
+    if (sec_rv != SECSuccess) {
+      goto loser;
+    }
+    sec_rv = CERT_VerifySignedData(&sd, caCert, PR_Now(),
+                               nsnull);
+    if (sec_rv != SECSuccess) {
+      goto loser;
+    }
+  }
+  
+  crl = SEC_NewCrl(CERT_GetDefaultCertDB(), (char*)url.get(), &derCrl,
+                   aType);
+  
+  if (!crl) {
+    goto loser;
+  }
+
+  crlData = new nsCRLInfo(crl);
+  SSL_ClearSessionCache();
+  SEC_DestroyCrl(crl);
+  
+  importSuccessful = PR_TRUE;
+  goto done;
+
+loser:
+  importSuccessful = PR_FALSE;
+  errorCode = PR_GetError();
+  switch (errorCode) {
+    case SEC_ERROR_CRL_EXPIRED:
+      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureExpired").get(), errorMessage);
+      break;
+
+	case SEC_ERROR_CRL_BAD_SIGNATURE:
+      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureBadSignature").get(), errorMessage);
+      break;
+
+	case SEC_ERROR_CRL_INVALID:
+      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureInvalid").get(), errorMessage);
+      break;
+
+	case SEC_ERROR_OLD_CRL:
+      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureOld").get(), errorMessage);
+      break;
+
+	case SEC_ERROR_CRL_NOT_YET_VALID:
+      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureNotYetValid").get(), errorMessage);
+      break;
+
+    default:
+      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailureReasonUnknown").get(), errorMessage);
+      errorMessage.AppendInt(errorCode,16);
+      break;
+  }
+
+done:
+          
+  if(!doSilentDonwload){
+    if (!importSuccessful){
+      nsString message;
+      nsString temp;
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+      nsCOMPtr<nsIPrompt> prompter;
+      if (wwatch){
+        wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+        nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure1").get(), message);
+        message.Append(NS_LITERAL_STRING("\n").get());
+        message.Append(errorMessage);
+        nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CrlImportFailure2").get(), temp);
+        message.Append(NS_LITERAL_STRING("\n").get());
+        message.Append(temp);
+     
+        if(prompter)
+          prompter->Alert(0, message.get());
+      }
+    } else {
+      nsCOMPtr<nsICertificateDialogs> certDialogs;
+      // Not being able to display the success dialog should not
+      // be a fatal error, so don't return a failure code.
+      if (NS_SUCCEEDED(::getNSSDialogs(getter_AddRefs(certDialogs),
+				       NS_GET_IID(nsICertificateDialogs),
+               NS_CERTIFICATEDIALOGS_CONTRACTID))) {
+	nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+	certDialogs->CrlImportStatusDialog(cxt, crlData);
+      }
+    }
+  } else {
+    if(crlKey == nsnull){
+      return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID,&rv);
+    if (NS_FAILED(rv)){
+      return rv;
+    }
+    
+    nsCAutoString updateErrCntPrefStr(CRL_AUTOUPDATE_ERRCNT_PREF);
+    updateErrCntPrefStr.AppendWithConversion(crlKey);
+    if(importSuccessful){
+      PRUnichar *updateTime;
+      nsCAutoString updateTimeStr;
+      PRUnichar *updateURL;
+      nsCAutoString updateURLStr;
+      PRInt32 timingTypePref;
+      double dayCnt;
+      char *dayCntStr;
+      nsCAutoString updateTypePrefStr(CRL_AUTOUPDATE_TIMIINGTYPE_PREF);
+      nsCAutoString updateTimePrefStr(CRL_AUTOUPDATE_TIME_PREF);
+      nsCAutoString updateUrlPrefStr(CRL_AUTOUPDATE_URL_PREF);
+      nsCAutoString updateDayCntPrefStr(CRL_AUTOUPDATE_DAYCNT_PREF);
+      nsCAutoString updateFreqCntPrefStr(CRL_AUTOUPDATE_FREQCNT_PREF);
+      updateTypePrefStr.AppendWithConversion(crlKey);
+      updateTimePrefStr.AppendWithConversion(crlKey);
+      updateUrlPrefStr.AppendWithConversion(crlKey);
+      updateDayCntPrefStr.AppendWithConversion(crlKey);
+      updateFreqCntPrefStr.AppendWithConversion(crlKey);
+
+      pref->GetIntPref(updateTypePrefStr.get(),&timingTypePref);
+      
+      //Compute and update the next download instant
+      if(timingTypePref == TYPE_AUTOUPDATE_TIME_BASED){
+        pref->GetCharPref(updateDayCntPrefStr.get(),&dayCntStr);
+      }else{
+        pref->GetCharPref(updateFreqCntPrefStr.get(),&dayCntStr);
+      }
+      dayCnt = atof(dayCntStr);
+      nsMemory::Free(dayCntStr);
+
+      PRBool toBeRescheduled = PR_FALSE;
+      if(NS_SUCCEEDED(ComputeNextAutoUpdateTime(crlData, timingTypePref, dayCnt, &updateTime))){
+        updateTimeStr.AssignWithConversion(updateTime);
+        nsMemory::Free(updateTime);
+        pref->SetCharPref(updateTimePrefStr.get(),updateTimeStr.get());
+        //Now, check if this update time is already in the past. This would
+        //imply we have downloaded the same crl, or there is something wrong
+        //with the next update date. We will not reschedule this crl in this
+        //session anymore - or else, we land into a loop. It would anyway be
+        //imported once the browser is restarted.
+        PRTime nextTime;
+        PR_ParseTimeString(updateTimeStr.get(),PR_TRUE, &nextTime);
+        if(LL_CMP(nextTime, > , PR_Now())){
+          toBeRescheduled = PR_TRUE;
+        }
+      }
+      
+      //Update the url to download from, next time
+      crlData->GetLastFetchURL(&updateURL);
+      updateURLStr.AssignWithConversion(updateURL);
+      nsMemory::Free(updateURL);
+      pref->SetCharPref(updateUrlPrefStr.get(),updateURLStr.get());
+      
+      pref->SetIntPref(updateErrCntPrefStr.get(),0);
+      pref->SavePrefFile(nsnull);
+      
+      if(toBeRescheduled == PR_TRUE){
+        nsAutoString hashKey(crlKey);
+        nssComponent->RemoveCrlFromList(hashKey);
+        nssComponent->DefineNextTimer();
+      }
+
+    } else{
+      PRInt32 errCnt;
+      nsCAutoString errMsg;
+      nsCAutoString updateErrDetailPrefStr(CRL_AUTOUPDATE_ERRDETAIL_PREF);
+      updateErrDetailPrefStr.AppendWithConversion(crlKey);
+      errMsg.AssignWithConversion(errorMessage.get());
+      rv = pref->GetIntPref(updateErrCntPrefStr.get(),&errCnt);
+      if( (NS_FAILED(rv)) || (errCnt ==0)){
+        pref->SetIntPref(updateErrCntPrefStr.get(),1);
+      }else{
+        pref->SetIntPref(updateErrCntPrefStr.get(),errCnt+1);
+      }
+      pref->SetCharPref(updateErrDetailPrefStr.get(),errMsg.get());
+      pref->SavePrefFile(nsnull);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsCRLManager::UpdateCRLFromURL( const PRUnichar *url, const PRUnichar* key, PRBool *res)
+{
+  nsresult rv;
+  nsAutoString downloadUrl(url);
+  nsAutoString dbKey(key);
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if(NS_FAILED(rv)){
+    *res = PR_FALSE;
+    return rv;
+  }
+
+  rv = nssComponent->DownloadCRLDirectly(downloadUrl, dbKey);
+  if(NS_FAILED(rv)){
+    *res = PR_FALSE;
+  } else {
+    *res = PR_TRUE;
+  }
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP 
+nsCRLManager::RescheduleCRLAutoUpdate(void)
+{
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if(NS_FAILED(rv)){
+    return rv;
+  }
+  rv = nssComponent->DefineNextTimer();
+  return rv;
+}
+
+/*
+ * getCRLs
+ *
+ * Export a set of certs and keys from the database to a PKCS#12 file.
+*/
+
+NS_IMETHODIMP 
+nsCRLManager::GetCrls(nsISupportsArray ** aCrls)
+{
+  SECStatus sec_rv;
+  CERTCrlHeadNode *head = nsnull;
+  CERTCrlNode *node = nsnull;
+  nsCOMPtr<nsISupportsArray> crlsArray;
+  nsresult rv;
+  rv = NS_NewISupportsArray(getter_AddRefs(crlsArray));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Get the list of certs //
+  sec_rv = SEC_LookupCrls(CERT_GetDefaultCertDB(), &head, -1);
+  if (sec_rv != SECSuccess) {
+    goto loser;
+  }
+
+  if (head) {
+    for (node=head->first; node != nsnull; node = node->next) {
+
+      nsCOMPtr<nsICRLInfo> entry = new nsCRLInfo((node->crl));
+      crlsArray->AppendElement(entry);
+    }
+    PORT_FreeArena(head->arena, PR_FALSE);
+  }
+
+  *aCrls = crlsArray;
+  NS_IF_ADDREF(*aCrls);
+  return NS_OK;
+loser:
+  return NS_ERROR_FAILURE;;
+}
+
+/*
+ * deletetCrl
+ *
+ * Delete a Crl entry from the cert db.
+*/
+NS_IMETHODIMP 
+nsCRLManager::DeleteCrl(PRUint32 aCrlIndex)
+{
+  CERTSignedCrl *realCrl = nsnull;
+  CERTCrlHeadNode *head = nsnull;
+  CERTCrlNode *node = nsnull;
+  SECStatus sec_rv;
+  PRUint32 i;
+
+  // Get the list of certs //
+  sec_rv = SEC_LookupCrls(CERT_GetDefaultCertDB(), &head, -1);
+  if (sec_rv != SECSuccess) {
+    goto loser;
+  }
+
+  if (head) {
+    for (i = 0, node=head->first; node != nsnull; i++, node = node->next) {
+      if (i != aCrlIndex) {
+        continue;
+      }
+      realCrl = SEC_FindCrlByName(CERT_GetDefaultCertDB(), &(node->crl->crl.derName), node->type);
+      SEC_DeletePermCRL(realCrl);
+      SEC_DestroyCrl(realCrl);
+      SSL_ClearSessionCache();
+    }
+    PORT_FreeArena(head->arena, PR_FALSE);
+  }
+  return NS_OK;
+loser:
+  return NS_ERROR_FAILURE;;
+}
+
+NS_IMETHODIMP
+nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info, 
+  PRUint32 autoUpdateType, double dayCnt, PRUnichar **nextAutoUpdate)
+{
+  if (!info)
+    return NS_ERROR_FAILURE;
+
+  PRTime microsecInDayCnt;
+  PRTime now = PR_Now();
+  PRTime tempTime;
+  PRInt64 diff = 0;
+  PRInt64 secsInDay = 86400UL;
+  PRInt64 temp;
+  PRInt64 cycleCnt = 0;
+  PRInt64 secsInDayCnt;
+  PRFloat64 tmpData;
+  
+  LL_L2F(tmpData,secsInDay);
+  LL_MUL(tmpData,dayCnt,tmpData);
+  LL_F2L(secsInDayCnt,tmpData);
+  LL_MUL(microsecInDayCnt, secsInDayCnt, PR_USEC_PER_SEC);
+    
+  PRTime lastUpdate;
+  PRTime nextUpdate;
+  
+  nsresult rv;
+
+  rv = info->GetLastUpdate(&lastUpdate);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = info->GetNextUpdate(&nextUpdate);
+  if (NS_FAILED(rv))
+    return rv;
+
+  switch (autoUpdateType) {
+  case TYPE_AUTOUPDATE_FREQ_BASED:
+    LL_SUB(diff, now, lastUpdate);             //diff is the no of micro sec between now and last update
+    LL_DIV(cycleCnt, diff, microsecInDayCnt);   //temp is the number of full cycles from lst update
+    LL_MOD(temp, diff, microsecInDayCnt);
+    if(!(LL_IS_ZERO(temp))) {
+      LL_ADD(cycleCnt,cycleCnt,1);            //no of complete cycles till next autoupdate instant
+    }
+    LL_MUL(temp,cycleCnt,microsecInDayCnt);    //micro secs from last update
+    LL_ADD(tempTime, lastUpdate, temp);
+    break;  
+  case TYPE_AUTOUPDATE_TIME_BASED:
+    LL_SUB(tempTime, nextUpdate, microsecInDayCnt);
+    break;
+  default:
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  //Now, a basic constraing is that the next auto update date can never be after
+  //next update, if one is defined
+  if(LL_CMP(nextUpdate , > , 0 )) {
+    if(LL_CMP(tempTime , > , nextUpdate)) {
+      tempTime = nextUpdate;
+    }
+  }
+
+  nsAutoString nextAutoUpdateDate;
+  PRExplodedTime explodedTime;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter = do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  PR_ExplodeTime(tempTime, PR_GMTParameters, &explodedTime);
+  dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSeconds,
+                                      &explodedTime, nextAutoUpdateDate);
+  *nextAutoUpdate = ToNewUnicode(nextAutoUpdateDate);
+
+  return NS_OK;
+}
+

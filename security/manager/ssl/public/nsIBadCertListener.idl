@@ -36,7 +36,7 @@
 #include "nsISupports.idl"
 
 interface nsIX509Cert;
-interface nsITransportSecurityInfo;
+interface nsIInterfaceRequestor;
 
 [scriptable, uuid(86960956-edb0-11d4-998b-00b0d02354a0)]
 interface nsIBadCertListener : nsISupports {
@@ -44,18 +44,22 @@ interface nsIBadCertListener : nsISupports {
   const short UNINIT_ADD_FLAG = -1;
   const short ADD_TRUSTED_FOR_SESSION =1;
   const short ADD_TRUSTED_PERMANENTLY = 2;
-  boolean unknownIssuer(in nsITransportSecurityInfo socketInfo, 
+  boolean unknownIssuer(in nsIInterfaceRequestor socketInfo, 
                         in nsIX509Cert cert,
                         out short certAddType);
 
-  boolean mismatchDomain(in nsITransportSecurityInfo socketInfo,
+  boolean mismatchDomain(in nsIInterfaceRequestor socketInfo,
                          in wstring targetURL,
                          in nsIX509Cert cert);
 
-  boolean certExpired(in nsITransportSecurityInfo socketInfo,
+  boolean certExpired(in nsIInterfaceRequestor socketInfo,
                       in nsIX509Cert cert);
-  void crlNextupdate(in nsITransportSecurityInfo socketInfo,
+
+  void crlNextupdate(in nsIInterfaceRequestor socketInfo,
                      in wstring targetURL, in nsIX509Cert cert);
 
 };
 
+%{C++
+#define NS_BADCERTLISTENER_CONTRACTID "@mozilla.org/nsBadCertListener;1"
+%}

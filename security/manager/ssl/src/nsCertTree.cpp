@@ -39,6 +39,9 @@
 #include "nsIX509CertDB.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsNSSCertificate.h"
+#include "nsNSSCertHelper.h"
+#include "nsINSSCertCache.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -263,7 +266,7 @@ nsCertTree::GetCertAtIndex(PRInt32 index)
   return rawPtr;
 }
 
-nsCertCompareFunc
+nsCertTree::nsCertCompareFunc
 nsCertTree::GetCompareFuncFromCertType(PRUint32 aType)
 {
   switch (aType) {
@@ -277,6 +280,75 @@ nsCertTree::GetCompareFuncFromCertType(PRUint32 aType)
     default:
       return CmpWebSiteCert;
   }
+}
+
+PRBool
+nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
+                                       PRUint32 aType,
+                                       nsCertCompareFunc  aCertCmpFn,
+                                       void *aCertCmpFnArg,
+                                       nsISupportsArray **_certs)
+{
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("GetCertsByTypeFromCertList"));
+  if (!aCertList)
+    return PR_FALSE;
+  nsCOMPtr<nsISupportsArray> certarray;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(certarray));
+  if (NS_FAILED(rv)) return PR_FALSE;
+  CERTCertListNode *node;
+  int i, count = 0;
+  for (node = CERT_LIST_HEAD(aCertList);
+       !CERT_LIST_END(node, aCertList);
+       node = CERT_LIST_NEXT(node)) {
+    if (getCertType(node->cert) == aType) {
+      nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(node->cert);
+      if (pipCert) {
+        for (i=0; i<count; i++) {
+          nsCOMPtr<nsISupports> isupport = 
+            dont_AddRef(certarray->ElementAt(i));
+          nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(isupport);
+          if ((*aCertCmpFn)(aCertCmpFnArg, pipCert, cert) < 0) {
+            certarray->InsertElementAt(pipCert, i);
+            break;
+          }
+        }
+        if (i == count) certarray->AppendElement(pipCert);
+          count++;
+      }
+    }
+  }
+  *_certs = certarray;
+  NS_ADDREF(*_certs);
+  return PR_TRUE;
+}
+
+PRBool 
+nsCertTree::GetCertsByType(PRUint32           aType,
+                           nsCertCompareFunc  aCertCmpFn,
+                           void              *aCertCmpFnArg,
+                           nsISupportsArray **_certs)
+{
+  CERTCertList *certList = NULL;
+  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+  certList = PK11_ListCerts(PK11CertListUnique, cxt);
+  PRBool rv = GetCertsByTypeFromCertList(certList, aType, aCertCmpFn, aCertCmpFnArg, _certs);
+  if (certList)
+    CERT_DestroyCertList(certList);
+  return rv;
+}
+
+PRBool 
+nsCertTree::GetCertsByTypeFromCache(nsINSSCertCache   *aCache,
+                                    PRUint32           aType,
+                                    nsCertCompareFunc  aCertCmpFn,
+                                    void              *aCertCmpFnArg,
+                                    nsISupportsArray **_certs)
+{
+  NS_ENSURE_ARG_POINTER(aCache);
+  CERTCertList *certList = NS_REINTERPRET_CAST(CERTCertList*, aCache->GetCachedCerts());
+  if (!certList)
+    return NS_ERROR_FAILURE;
+  return GetCertsByTypeFromCertList(certList, aType, aCertCmpFn, aCertCmpFnArg, _certs);
 }
 
 // LoadCerts
@@ -294,12 +366,9 @@ nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, PRUint32 aType)
     mNumRows = 0;
   }
   InitCompareHash();
-  nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
-  if (certdb == nsnull) return NS_ERROR_FAILURE;
-
-  rv = certdb->GetCertsByTypeFromCache(aCache, aType, 
-                              GetCompareFuncFromCertType(aType), &mCompareCache,
-                              getter_AddRefs(mCertArray));
+  rv = GetCertsByTypeFromCache(aCache, aType, 
+                               GetCompareFuncFromCertType(aType), &mCompareCache,
+                               getter_AddRefs(mCertArray));
   if (NS_FAILED(rv)) return rv;
   return UpdateUIContents();
 }
@@ -315,11 +384,9 @@ nsCertTree::LoadCerts(PRUint32 aType)
     mNumRows = 0;
   }
   InitCompareHash();
-  nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
-  if (certdb == nsnull) return NS_ERROR_FAILURE;
-  rv = certdb->GetCertsByType(aType, 
-                              GetCompareFuncFromCertType(aType), &mCompareCache,
-                              getter_AddRefs(mCertArray));
+  rv = GetCertsByType(aType, 
+                      GetCompareFuncFromCertType(aType), &mCompareCache,
+                      getter_AddRefs(mCertArray));
   if (NS_FAILED(rv)) return rv;
   return UpdateUIContents();
 }

@@ -69,10 +69,6 @@ interface nsICMSSecureMessage : nsISupports
   string receiveMessage(in string msg);
 };
 
-/**
- * NS_CMSMESSAGE_CONTRACTID - contract id of a class that
- *   implements nsICMSMessage
- */
 %{C++
 #define NS_CMSSECUREMESSAGE_CONTRACTID "@mozilla.org/nsCMSSecureMessage;1"
 %}

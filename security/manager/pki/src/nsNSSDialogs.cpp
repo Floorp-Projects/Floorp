@@ -43,11 +43,13 @@
 #include "nsILocaleService.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
-#include "nsIWindowWatcher.h"
 
 #include "nsNSSDialogs.h"
 #include "nsPKIParamBlock.h"
 #include "nsIKeygenThread.h"
+#include "nsNSSDialogHelper.h"
+#include "nsIX509CertValidity.h"
+#include "nsICRLInfo.h"
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 #define STRING_BUNDLE_URL    "chrome://communicator/locale/security.properties"
@@ -62,59 +64,6 @@ static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
-/**
- * Common class that uses the window watcher service to open a
- * standard dialog, with or without a parent context. The params
- * parameter can be an nsISupportsArray so any number of additional
- * arguments can be used.
- */
-class nsNSSDialogHelper
-{
-public:
-  const static char *kDefaultOpenWindowParam;
-  //The params is going to be either a nsIPKIParamBlock or
-  //nsIDialogParamBlock
-  static nsresult openDialog(
-                  nsIDOMWindowInternal *window,
-                  const char *url,
-                  nsISupports *params);
-};
-
-const char* nsNSSDialogHelper::kDefaultOpenWindowParam = "centerscreen,chrome,modal,titlebar";
-
-nsresult
-nsNSSDialogHelper::openDialog(
-    nsIDOMWindowInternal *window,
-    const char *url,
-    nsISupports *params)
-{
-  nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> windowWatcher = 
-           do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIDOMWindowInternal *parent = window;
-
-  nsCOMPtr<nsIDOMWindowInternal> activeParent;
-  if (!parent) {
-    nsCOMPtr<nsIDOMWindow> active;
-    windowWatcher->GetActiveWindow(getter_AddRefs(active));
-    if (active) {
-      active->QueryInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(activeParent));
-      parent = activeParent;
-    }
-  }
-
-  nsCOMPtr<nsIDOMWindow> newWindow;
-  rv = windowWatcher->OpenWindow(parent,
-                                 url,
-                                 "_blank",
-                                 nsNSSDialogHelper::kDefaultOpenWindowParam,
-                                 params,
-                                 getter_AddRefs(newWindow));
-  return rv;
-}
-
 /* ==== */
 static NS_DEFINE_CID(kPKIParamBlockCID, NS_PKIPARAMBLOCK_CID);
 
@@ -127,16 +76,15 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS10(nsNSSDialogs, nsINSSDialogs, 
-                                             nsITokenPasswordDialogs,
-                                             nsISecurityWarningDialogs,
-                                             nsIBadCertListener,
-                                             nsICertificateDialogs,
-                                             nsIClientAuthDialogs,
-                                             nsICertPickDialogs,
-                                             nsITokenDialogs,
-                                             nsIDOMCryptoDialogs,
-                                             nsIGeneratingKeypairInfoDialogs);
+NS_IMPL_THREADSAFE_ISUPPORTS9(nsNSSDialogs, nsITokenPasswordDialogs,
+                                            nsISecurityWarningDialogs,
+                                            nsIBadCertListener,
+                                            nsICertificateDialogs,
+                                            nsIClientAuthDialogs,
+                                            nsICertPickDialogs,
+                                            nsITokenDialogs,
+                                            nsIDOMCryptoDialogs,
+                                            nsIGeneratingKeypairInfoDialogs);
 
 nsresult
 nsNSSDialogs::Init()
@@ -224,10 +172,8 @@ nsNSSDialogs::GetPassword(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
-/* boolean unknownIssuer (in nsITransportSecurityInfo socketInfo,
-                          in nsIX509Cert cert, out addType); */
 NS_IMETHODIMP
-nsNSSDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
+nsNSSDialogs::UnknownIssuer(nsIInterfaceRequestor *socketInfo,
                             nsIX509Cert *cert, PRInt16 *outAddType,
                             PRBool *_retval)
 {
@@ -284,12 +230,8 @@ nsNSSDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
   return NS_OK; 
 }
 
-/* boolean mismatchDomain (in nsITransportSecurityInfo socketInfo, 
-                           in wstring targetURL, 
-                           in nsIX509Cert cert); */
-
 NS_IMETHODIMP 
-nsNSSDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo, 
+nsNSSDialogs::MismatchDomain(nsIInterfaceRequestor *socketInfo, 
                              const PRUnichar *targetURL, 
                              nsIX509Cert *cert, PRBool *_retval) 
 {
@@ -328,10 +270,8 @@ nsNSSDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
   return NS_OK;  
 }
 
-/* boolean certExpired (in nsITransportSecurityInfo socketInfo, 
-                        in nsIX509Cert cert); */
 NS_IMETHODIMP 
-nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo, 
+nsNSSDialogs::CertExpired(nsIInterfaceRequestor *socketInfo, 
                           nsIX509Cert *cert, PRBool *_retval)
 {
   nsresult rv;
@@ -422,7 +362,7 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
 }
 
 NS_IMETHODIMP 
-nsNSSDialogs::CrlNextupdate(nsITransportSecurityInfo *socketInfo, 
+nsNSSDialogs::CrlNextupdate(nsIInterfaceRequestor *socketInfo, 
                           const PRUnichar * targetURL, nsIX509Cert *cert)
 {
   nsresult rv;
@@ -445,7 +385,7 @@ nsNSSDialogs::CrlNextupdate(nsITransportSecurityInfo *socketInfo,
 }
 
 NS_IMETHODIMP 
-nsNSSDialogs::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICrlEntry *crl)
+nsNSSDialogs::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl)
 {
   nsresult rv;
 
@@ -464,7 +404,7 @@ nsNSSDialogs::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICrlEntry *crl
 }
 
 nsresult
-nsNSSDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
+nsNSSDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *canceled)
 {
   nsresult rv;
 
@@ -472,11 +412,12 @@ nsNSSDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
                    NS_LITERAL_STRING("EnterSecureMessage").get(),
                    NS_LITERAL_STRING("EnterSecureShowAgain").get());
 
+  *canceled = PR_FALSE;
   return rv;
 }
 
 nsresult
-nsNSSDialogs::AlertEnteringWeak(nsIInterfaceRequestor *ctx)
+nsNSSDialogs::AlertEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *canceled)
 {
   nsresult rv;
 
@@ -484,11 +425,12 @@ nsNSSDialogs::AlertEnteringWeak(nsIInterfaceRequestor *ctx)
                    NS_LITERAL_STRING("WeakSecureMessage").get(),
                    NS_LITERAL_STRING("WeakSecureShowAgain").get());
 
+  *canceled = PR_FALSE;
   return rv;
 }
 
 nsresult
-nsNSSDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
+nsNSSDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *canceled)
 {
   nsresult rv;
 
@@ -496,12 +438,13 @@ nsNSSDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
                    NS_LITERAL_STRING("LeaveSecureMessage").get(),
                    NS_LITERAL_STRING("LeaveSecureShowAgain").get());
 
+  *canceled = PR_FALSE;
   return rv;
 }
 
 
 nsresult
-nsNSSDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx)
+nsNSSDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx, PRBool *canceled)
 {
   nsresult rv;
 
@@ -509,6 +452,7 @@ nsNSSDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx)
                    NS_LITERAL_STRING("MixedContentMessage").get(),
                    NS_LITERAL_STRING("MixedContentShowAgain").get());
 
+  *canceled = PR_FALSE;
   return rv;
 }
 
@@ -918,7 +862,8 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
 
 /* void viewCert (in nsIX509Cert cert); */
 NS_IMETHODIMP 
-nsNSSDialogs::ViewCert(nsIX509Cert *cert)
+nsNSSDialogs::ViewCert(nsIInterfaceRequestor *ctx, 
+                       nsIX509Cert *cert)
 {
   nsresult rv;
 
@@ -930,7 +875,10 @@ nsNSSDialogs::ViewCert(nsIX509Cert *cert)
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsNSSDialogHelper::openDialog(nsnull,
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
+
+  rv = nsNSSDialogHelper::openDialog(parent,
                                      "chrome://pippki/content/certViewer.xul",
                                      block);
   return rv;
@@ -1024,3 +972,5 @@ nsNSSDialogs::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, PRBool *_retval)
   } 
   return rv;
 }
+
+

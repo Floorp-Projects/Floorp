@@ -35,3 +35,13 @@ function setText(id, value) {
   element.appendChild(textNode);
 }
 
+const nsICertificateDialogs = Components.interfaces.nsICertificateDialogs;
+const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1"
+
+function viewCertHelper(parent, cert) {
+  if (!cert)
+    return;
+
+  var cd = Components.classes[nsCertificateDialogs].getService(nsICertificateDialogs);
+  cd.viewCert(parent, cert);
+}

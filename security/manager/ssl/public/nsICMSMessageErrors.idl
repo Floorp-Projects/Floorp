@@ -36,57 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-interface nsISupportsArray;
-interface nsIX509Cert;
-
-%{ C++
-typedef void (*NSSCMSContentCallback)(void *arg, const char *buf, unsigned long len);
-%}
-
-native NSSCMSContentCallback(NSSCMSContentCallback);
-[ptr] native UnsignedCharPtr(unsigned char);
-
-/*
- * nsIHash
- *  Generic hashing interface
- */
-[uuid(a31a3028-ae28-11d5-ba4b-00108303b117)]
-interface nsIHash : nsISupports
-{
-  const short HASH_AlgNULL = 0;
-  const short HASH_AlgMD2  = 1;
-  const short HASH_AlgMD5  = 2;
-  const short HASH_AlgSHA1 = 3;
-  const unsigned long MD2_LEN  = 16;
-  const unsigned long MD5_LEN  = 16;
-  const unsigned long SHA1_LEN = 20;
-  const unsigned long MAX_HASH_LEN = SHA1_LEN;  
-
-  unsigned long resultLen(in short aAlg);
-  void create(in short aAlg);
-  void begin();
-  void update(in UnsignedCharPtr aBuf, in  unsigned long aLen);
-  void end(in UnsignedCharPtr aHash, out unsigned long aLen, in unsigned long aMaxLen);
-};
-
-/**
- * nsICMSMessage
- *  Interface to a CMS Message
- */
-[uuid(a4557478-ae16-11d5-ba4b-00108303b117)]
-interface nsICMSMessage : nsISupports
-{
-  void contentIsSigned(out boolean aSigned);
-  void contentIsEncrypted(out boolean aEncrypted);
-  void getSignerCommonName(out string aName);
-  void getSignerEmailAddress(out string aEmail);
-  void getSignerCert(out nsIX509Cert scert);
-  void getEncryptionCert(out nsIX509Cert ecert);
-  void verifySignature();
-  void verifyDetachedSignature(in UnsignedCharPtr aDigestData, in unsigned long aDigestDataLen);
-  void CreateEncrypted(in nsISupportsArray aRecipientCerts);
-  void CreateSigned(in nsIX509Cert scert, in nsIX509Cert ecert, in UnsignedCharPtr aDigestData, in unsigned long aDigestDataLen);
-};
 
 /**
  * nsICMSMessageErrors
@@ -115,41 +64,7 @@ interface nsICMSMessageErrors : nsISupports
   const long ENCRYPT_NO_BULK_ALG = 1056;
 };
 
-/**
- * nsICMSDecoder
- *  Interface to decode an CMS message
- */
-[uuid(65244a06-a342-11d5-ba47-00108303b117)]
-interface nsICMSDecoder : nsISupports
-{
-  void start(in NSSCMSContentCallback cb, in voidPtr arg);
-  void update(in string aBuf, in long aLen);
-  void finish(out nsICMSMessage msg);
-};
-
-/**
- * nsICMSEncoder
- *  Interface to Encode an CMS message
- */
-[uuid(a15789aa-8903-462b-81e9-4aa2cff4d5cb)]
-interface nsICMSEncoder : nsISupports
-{
-  void start(in nsICMSMessage aMsg, in NSSCMSContentCallback cb, in voidPtr arg);
-  void update(in string aBuf, in long aLen);
-  void finish();
-  void encode(in nsICMSMessage aMsg);
-};
-
-/**
- * NS_CMSMESSAGE_CONTRACTID - contract id of a class that
- *   implements nsICMSMessage
- */
-%{C++
-#define NS_CMSDECODER_CONTRACTID "@mozilla.org/nsCMSDecoder;1"
-#define NS_CMSENCODER_CONTRACTID "@mozilla.org/nsCMSEncoder;1"
-#define NS_CMSMESSAGE_CONTRACTID "@mozilla.org/nsCMSMessage;1"
-#define NS_HASH_CONTRACTID "@mozilla.org/nsHash;1"
-
+%{ C++
 /**
  * CMS specific nsresult error codes
  */

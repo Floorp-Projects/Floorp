@@ -24,12 +24,11 @@
 #include "nsCrypto.h"
 #include "nsKeygenHandler.h"
 #include "nsKeygenThread.h"
-#include "nsINSSDialogs.h"
 #include "nsNSSCertificate.h"
+#include "nsNSSCertificateDB.h"
 #include "nsPKCS12Blob.h"
 #include "nsPK11TokenDB.h"
 #include "nsIServiceManager.h"
-#include "nsINSSDialogs.h"
 #include "nsIMemory.h"
 #include "nsCRT.h"
 #include "prprf.h"
@@ -51,6 +50,8 @@
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsXPIDLString.h"
+#include "nsIGeneratingKeypairInfoDialogs.h"
+#include "nsIDOMCryptoDialogs.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jscntxt.h"
@@ -638,7 +639,8 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
   }
 
   rv = getNSSDialogs((void**)&dialogs,
-                     NS_GET_IID(nsIGeneratingKeypairInfoDialogs));
+                     NS_GET_IID(nsIGeneratingKeypairInfoDialogs),
+                     NS_GENERATINGKEYPAIRINFODIALOGS_CONTRACTID);
 
   if (NS_SUCCEEDED(rv)) {
     KeygenRunnable = new nsKeygenThread();
@@ -1476,7 +1478,8 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
 
     nsCOMPtr<nsIDOMCryptoDialogs> dialogs;
     nsresult rv = getNSSDialogs(getter_AddRefs(dialogs),
-                                NS_GET_IID(nsIDOMCryptoDialogs));
+                                NS_GET_IID(nsIDOMCryptoDialogs),
+                                NS_DOMCRYPTODIALOGS_CONTRACTID);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1644,7 +1647,8 @@ nsP12Runnable::Run()
   NS_ASSERTION(mCertArr, "certArr is NULL while trying to back up");
   nsCOMPtr<nsIDOMCryptoDialogs> dialogs;
   nsresult rv = getNSSDialogs(getter_AddRefs(dialogs),
-                              NS_GET_IID(nsIDOMCryptoDialogs));
+                              NS_GET_IID(nsIDOMCryptoDialogs),
+                              NS_DOMCRYPTODIALOGS_CONTRACTID);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1890,7 +1894,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
       localNick = currCert->nickname;
     }
     else if (nickname == nsnull || nickname[0] == '\0') {
-      localNick = default_nickname(currCert, ctx);
+      localNick = nsNSSCertificateDB::default_nickname(currCert, ctx);
       freeLocalNickname = PR_TRUE;
     } else {
       //This is the case where we're getting a brand new

@@ -38,8 +38,9 @@
 #ifndef _MIMEMPKC_H_
 #define _MIMEMPKC_H_
 
-#include "nsICMS.h"
 #include "mimemsig.h"
+
+class nsICMSMessage;
 
 /* The MimeMultipartSignedCMS class implements a multipart/signed MIME 
    container with protocol=application/x-CMS-signature, which passes the

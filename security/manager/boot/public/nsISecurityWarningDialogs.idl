@@ -39,22 +39,22 @@ interface nsISecurityWarningDialogs : nsISupports
   /**
    * alertEnteringSecure
    */
-  void alertEnteringSecure(in nsIInterfaceRequestor ctx);
+  boolean alertEnteringSecure(in nsIInterfaceRequestor ctx);
 
   /**
    * alertEnteringWeak
    */
-  void alertEnteringWeak(in nsIInterfaceRequestor ctx);
+  boolean alertEnteringWeak(in nsIInterfaceRequestor ctx);
 
   /**
    * alertLeavingSecure
    */
-  void alertLeavingSecure(in nsIInterfaceRequestor ctx);
+  boolean alertLeavingSecure(in nsIInterfaceRequestor ctx);
 
   /**
    * alertMixedMode
    */
-  void alertMixedMode(in nsIInterfaceRequestor ctx);
+  boolean alertMixedMode(in nsIInterfaceRequestor ctx);
 
   /**
    * confirmPostToInsecure
@@ -67,3 +67,6 @@ interface nsISecurityWarningDialogs : nsISupports
   boolean confirmPostToInsecureFromSecure(in nsIInterfaceRequestor ctx);
 };
 
+%{C++
+#define NS_SECURITYWARNINGDIALOGS_CONTRACTID "@mozilla.org/nsSecurityWarningDialogs;1"
+%}

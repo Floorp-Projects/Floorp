@@ -123,7 +123,7 @@ function importCert(ber_value)
   var cert_bytes = ber_value.get(cert_length);
 
   if (cert_bytes) {
-    gCertDB.importEmailCertificate2(cert_length.value, cert_bytes);
+    gCertDB.importEmailCertificate(cert_bytes, cert_length.value, null);
   }
 }
 

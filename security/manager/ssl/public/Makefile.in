@@ -50,13 +50,35 @@ XPIDLSRCS = \
     nsIX509CertDB.idl \
     nsIPKCS11Slot.idl \
     nsIPK11TokenDB.idl \
-    nsINSSDialogs.idl \
+    nsICertificateDialogs.idl \
+    nsICertPickDialogs.idl \
+    nsIClientAuthDialogs.idl \
+    nsIDOMCryptoDialogs.idl \
+    nsIGeneratingKeypairInfoDialogs.idl \
+    nsITokenDialogs.idl \
+    nsITokenPasswordDialogs.idl \
     nsISSLStatus.idl \
     nsICertTree.idl \
     nsIKeygenThread.idl \
     nsICMSSecureMessage.idl \
-    nsICMS.idl \
     nsIUserCertPicker.idl \
+    nsIASN1Object.idl \
+    nsIASN1PrintableItem.idl \
+    nsIASN1Sequence.idl \
+    nsICMSDecoder.idl \
+    nsICMSEncoder.idl \
+    nsICMSMessageErrors.idl \
+    nsICMSMessage.idl \
+    nsICRLInfo.idl \
+    nsIHash.idl \
+    nsINSSCertCache.idl \
+    nsIOCSPResponder.idl \
+    nsIPK11Token.idl \
+    nsIPKCS11ModuleDB.idl \
+    nsIPKCS11Module.idl \
+    nsIX509CertValidity.idl \
+    nsICRLManager.idl \
+    nsISMimeCert.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

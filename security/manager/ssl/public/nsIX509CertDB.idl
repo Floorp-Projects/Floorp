@@ -37,13 +37,10 @@
 
 interface nsISupportsArray;
 interface nsIX509Cert;
-interface nsIPK11Token;
 interface nsILocalFile;
 interface nsIInterfaceRequestor;
-interface nsIURI;
 
 %{C++
-
 #define NS_X509CERTDB_CID { /* da48b3c0-1284-11d5-ac67-000064657374 */ \
     0xda48b3c0,                                                        \
     0x1284,                                                            \
@@ -52,65 +49,7 @@ interface nsIURI;
   }
 
 #define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
-
-typedef int (*nsCertCompareFunc)(void *, nsIX509Cert *a, nsIX509Cert *b);
-
-#define NS_NSSCERTCACHE_CID { /* 3f429a14-dffe-417d-8cb8-fdf09bacd09e */ \
-    0x3f429a14,                                                          \
-    0xdffe,                                                              \
-    0x417d,                                                              \
-    {0x8c, 0xb8, 0xfd, 0xf0, 0x9b, 0xac, 0xd0, 0x9e}                     \
-  }
-
-#define NS_NSSCERTCACHE_CONTRACTID "@mozilla.org/security/nsscertcache;1"
-
 %}
-
-native nsCertCompareFunc(nsCertCompareFunc);
-native nsAutoString(nsAutoString);
-[ref] native nsAutoStringRef(nsAutoString);
-
-[scriptable, uuid(96b2f5ae-4334-11d5-ba27-00108303b117)]
-interface nsIOCSPResponder : nsISupports {
-  readonly attribute wstring responseSigner;
-  readonly attribute wstring serviceURL;
-};
-
-[scriptable, uuid(c185d920-4a3e-11d5-ba27-00108303b117)]
-interface nsICrlEntry : nsISupports {
-  readonly attribute wstring org;
-  readonly attribute wstring orgUnit;
-  readonly attribute wstring lastUpdateLocale;
-  readonly attribute wstring nextUpdateLocale;
-  readonly attribute wstring nameInDb;
-  readonly attribute wstring lastFetchURL;
-  
-  const unsigned long TYPE_AUTOUPDATE_TIME_BASED     = 1;
-  const unsigned long TYPE_AUTOUPDATE_FREQ_BASED     = 2;
-  
-  wstring ComputeNextAutoUpdateTime(in unsigned long autoUpdateType,
-                                    in double noOfDays);
-
-  
-};
-
-[scriptable, uuid(6c143dac-bd65-4333-b594-7ed1e748e0f9)]
-interface nsINSSCertCache : nsISupports {
-
-  /*
-   * cacheAllCerts
-   *
-   * Creates a cache of all certificates currently known to NSS.
-   */
-  void cacheAllCerts();
-
-  /*
-   * getCachedCerts
-   *
-   * Returns the cached CERTCertList*
-   */
-  [notxpcom, noscript] voidPtr getCachedCerts();
-};
 
 [scriptable, uuid(da48b3c0-1284-11d5-ac67-000064657374)]
 interface nsIX509CertDB : nsISupports {
@@ -121,7 +60,7 @@ interface nsIX509CertDB : nsISupports {
   const unsigned long TRUSTED_EMAIL   = 1 << 1;
   const unsigned long TRUSTED_OBJSIGN = 1 << 2;
 
-  nsIX509Cert getCertByNickname(in nsIPK11Token aToken,
+  nsIX509Cert getCertByNickname(in nsISupports aToken,
                                 in wstring aNickname);
 
   /*
@@ -131,7 +70,7 @@ interface nsIX509CertDB : nsISupports {
    * retrieved by getting the dbKey attribute of
    * the certificate.
    */
-  nsIX509Cert getCertByDBKey(in string aDBkey, in nsIPK11Token aToken);
+  nsIX509Cert getCertByDBKey(in string aDBkey, in nsISupports aToken);
 
   /*
    * getCertNicknames
@@ -145,33 +84,10 @@ interface nsIX509CertDB : nsISupports {
    * aType - type of certificate to obtain (see nsIX509Cert)
    * count, certNameList - the returned array of names
    */
-  void getCertNicknames(in nsIPK11Token aToken, 
+  void getCertNicknames(in nsISupports aToken, 
                         in unsigned long aType,
                         out unsigned long count,
                         [array, size_is(count)] out wstring certNameList);
-
-  /*
-   * getCertsByType
-   *
-   * Obtain a list of certs from the database.
-   *
-   */
-  [notxpcom, noscript] boolean getCertsByTypeFromCache(in nsINSSCertCache cache,
-                                                       in unsigned long aType,
-                                                       in nsCertCompareFunc aCertCmpFn,
-                                                       in voidPtr aCertCmpFnArg,
-                                                       out nsISupportsArray certs);
-
-  /*
-   * getCertsByType
-   *
-   * Obtain a list of certs from the database.
-   *
-   */
-  [notxpcom, noscript] boolean getCertsByType(in unsigned long aType,
-                                              in nsCertCompareFunc aCertCmpFn,
-                                              in voidPtr aCertCmpFnArg,
-                                              out nsISupportsArray certs);
 
   /* Get the user encryption cert */
   nsIX509Cert getEmailEncryptionCert(in wstring aNickname);
@@ -180,7 +96,7 @@ interface nsIX509CertDB : nsISupports {
   nsIX509Cert getEmailSigningCert(in wstring aNickname);
 
   /* Get a cert by email address */
-  nsIX509Cert getCertByEmailAddress(in nsIPK11Token aToken,
+  nsIX509Cert getCertByEmailAddress(in nsISupports aToken,
                              in string aEmailAddress);
 
   /*
@@ -192,31 +108,27 @@ interface nsIX509CertDB : nsISupports {
    *     the certs will utlimtately live.  Currently, they'll
    *     be placed in the default token.
    */
-  [noscript] void importCertificates(in charPtr data,
-                                     in unsigned long length,
-                                     in unsigned long type,
-                                     in nsIInterfaceRequestor ctx);
-
-  [noscript] void importEmailCertificate(in charPtr data,
-                                     in unsigned long length,
-                                     in nsIInterfaceRequestor ctx);
-
-  [noscript] void importServerCertificate(in charPtr data,
-                                          in unsigned long length,
-                                          in nsIInterfaceRequestor ctx);
+  void importCertificates([array, size_is(length)] in octet data,
+                          in unsigned long length,
+                          in unsigned long type,
+                          in nsIInterfaceRequestor ctx);
 
   /*
-   * importEmailCertificate2
+   * importEmailCertificate
    *
    * Import a user certificate into the database.
-   * Scriptable version of importEmailCertificate.
    *
    * @param length - The number of bytes contained in the data array.
    *
    * @param data - Raw certificate data, containing the certificate to import.
    */
-  void importEmailCertificate2(in unsigned long length,
-                              [array, size_is(length)] in octet data);
+  void importEmailCertificate([array, size_is(length)] in octet data,
+                              in unsigned long length,
+                              in nsIInterfaceRequestor ctx);
+
+  void importServerCertificate([array, size_is(length)] in octet data,
+                               in unsigned long length,
+                               in nsIInterfaceRequestor ctx);
 
   /*
    * importCertificate
@@ -224,9 +136,9 @@ interface nsIX509CertDB : nsISupports {
    * Import a user certificate into the database.
    * XXX This method and the importCertificate should be merged into one.
    */
-  [noscript] void importUserCertificate(in charPtr data, 
-                                    in unsigned long length,
-                                    in nsIInterfaceRequestor ctx);
+  void importUserCertificate([array, size_is(length)] in octet data,
+                             in unsigned long length,
+                             in nsIInterfaceRequestor ctx);
   /*
    * deleteCertificate
    *
@@ -263,7 +175,7 @@ interface nsIX509CertDB : nsISupports {
    *
    * Import certificate(s) from file
    */
-  void importCertsFromFile(in nsIPK11Token aToken,
+  void importCertsFromFile(in nsISupports aToken,
                          in nsILocalFile aFile,
                          in unsigned long aType);
 
@@ -272,7 +184,7 @@ interface nsIX509CertDB : nsISupports {
    *
    * Import a PKCS#12 file contain cert(s) and key(s) into the database.
    */
-  void importPKCS12File(in nsIPK11Token aToken,
+  void importPKCS12File(in nsISupports aToken,
                         in nsILocalFile aFile);
 
   /*
@@ -280,7 +192,7 @@ interface nsIX509CertDB : nsISupports {
    *
    * Export a set of certs and keys from the database to a PKCS#12 file.
    */
-  void exportPKCS12File(in nsIPK11Token aToken,
+  void exportPKCS12File(in nsISupports aToken,
                         in nsILocalFile aFile,
                         in PRUint32 count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
@@ -291,50 +203,6 @@ interface nsIX509CertDB : nsISupports {
    * Export a set of OCSP responders i.e. CA names and (optional) URLs.
    */
   nsISupportsArray getOCSPResponders();
-
-  /*
-   * importCrl
-   *
-   * Import a CRL into the database.
-   */
-  [noscript] void importCrl(in charPtr data, 
-                            in unsigned long length,
-                            in nsIURI uri,
-                            in PRUint32 type,
-                            in PRBool doSilentDownload,
-                            in wstring crlKey);
-
-  
-  /*
-   * update crl from url
-   * update an existing crl from the last fetched url. Needed for the update
-   * button in crl manager
-   */
-  boolean updateCRLFromURL(in wstring url, in wstring key);
-
-
-  /*
-   * getCrls
-   *
-   * Get a list of Crl entries in the DB.
-   */
-  nsISupportsArray getCrls();
-
-  /*
-   * deleteCrl
-   *
-   * Delete the crl.
-   */
-  void deleteCrl(in PRUint32 crlIndex);
-
-
-  /* This would reschedule the autoupdate of crls with auto update enable.
-   * Most likely to be called when update prefs are changed, or when a crl
-   * is deleted, etc. However, this might not be the most relevant place for
-   * this api, but unless we have a separate crl handler object....
-   */
-  void rescheduleCRLAutoUpdate();
-
 
   /*
    * Query about the status of OCSP
@@ -360,6 +228,5 @@ interface nsIX509CertDB : nsISupports {
    * 
    */
   nsIX509Cert constructX509FromBase64(in string base64);
-
 };
 

@@ -61,7 +61,7 @@ public:
 //
 
 nsresult 
-getNSSDialogs(void **_result, REFNSIID aIID);
+getNSSDialogs(void **_result, REFNSIID aIID, const char *contract);
 
 extern "C" {
 // a "fake" unicode conversion function

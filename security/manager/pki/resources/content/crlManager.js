@@ -20,15 +20,15 @@
  *  David Drinan <ddrinan@netscape.com>
  */
 
-const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
-const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
-const nsICrlEntry = Components.interfaces.nsICrlEntry;
+const nsICRLManager = Components.interfaces.nsICRLManager;
+const nsCRLManager  = "@mozilla.org/security/crlmanager;1";
+const nsICRLInfo = Components.interfaces.nsICRLInfo;
 const nsISupportsArray = Components.interfaces.nsISupportsArray;
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
 const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
 const nsIPref             = Components.interfaces.nsIPref;
 
-var certdb;
+var crlManager;
 var crls;
 var prefs;
 
@@ -46,15 +46,15 @@ function onLoad()
   var crlEntry;
   var i;
 
-  certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+  crlManager = Components.classes[nsCRLManager].getService(nsICRLManager);
   prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
-  crls = certdb.getCrls();
+  crls = crlManager.getCrls();
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var autoupdateEnabledString;
   var autoupdateErrCntString;
 
   for (i=0; i<crls.Count(); i++) {
-    crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
+    crlEntry = crls.QueryElementAt(i, nsICRLInfo);
     var org = crlEntry.org;
     var orgUnit = crlEntry.orgUnit;
     var lastUpdate = crlEntry.lastUpdateLocale;
@@ -108,7 +108,7 @@ function DeleteCrlSelected() {
   if(i<0){
     return;
   }
-  crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
+  crlEntry = crls.QueryElementAt(i, nsICRLInfo);
     
   var autoupdateEnabled = false;
   var autoupdateParamAvailable = false;
@@ -139,11 +139,11 @@ function DeleteCrlSelected() {
     }
 
     if(autoupdateEnabled){
-      certdb.rescheduleCRLAutoUpdate();
+      crlManager.rescheduleCRLAutoUpdate();
     }
           
     // Now, try to delete it
-    certdb.deleteCrl(i);
+    crlManager.deleteCrl(i);
     DeleteItemSelected("crltree", "crltree_", "crlList");
     //To do: If delete fails, we should be able to retrieve the deleted
     //settings
@@ -203,7 +203,7 @@ function EditAutoUpdatePrefs() {
   if(i<0){
     return;
   }
-  crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
+  crlEntry = crls.QueryElementAt(i, nsICRLInfo);
   var params = Components.classes[nsPKIParamBlock].createInstance(nsIPKIParamBlock);
   params.setISupportAtIndex(1, crlEntry);
   window.openDialog("chrome://pippki/content/pref-crlupdate.xul","",
@@ -212,11 +212,12 @@ function EditAutoUpdatePrefs() {
 
 function UpdateCRL()
 {
+  var crlEntry;
   var crltree = document.getElementById("crltree");
   var i = crltree.currentIndex;
   if(i<0){
     return;
   }
-  crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
-  certdb.updateCRLFromURL(crlEntry.lastFetchURL, crlEntry.nameInDb);
+  crlEntry = crls.QueryElementAt(i, nsICRLInfo);
+  crlManager.updateCRLFromURL(crlEntry.lastFetchURL, crlEntry.nameInDb);
 }

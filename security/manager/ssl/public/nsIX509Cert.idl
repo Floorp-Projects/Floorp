@@ -36,77 +36,8 @@
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
 
-[scriptable, uuid(e701dfd8-1dd1-11b2-a172-ffa6cc6156ad)]
-interface nsIX509CertValidity : nsISupports {
-  readonly attribute PRTime notBefore;
-  readonly attribute wstring notBeforeLocalTime;
-  readonly attribute wstring notBeforeGMT;
-  readonly attribute PRTime notAfter;
-  readonly attribute wstring notAfterLocalTime;
-  readonly attribute wstring notAfterGMT;
-};
-
-//
-// Overview of how this ASN1 interface is intended to
-// work.
-//
-// First off, the nsIASN1Sequence is any type in ASN1
-// that consists of sub-elements (ie SEQUENCE, SET)
-// nsIASN1Printable Items are all the other types that
-// can be viewed by themselves without interpreting further.
-// Examples would include INTEGER, UTF-8 STRING, OID.
-// These are not intended to directly reflect the numberous
-// types that exist in ASN1, but merely an interface to ease
-// producing a tree display the ASN1 structure of any DER
-// object.
-//
-
-[scriptable, uuid(ba8bf582-1dd1-11b2-898c-f40246bc9a63)]
-interface nsIASN1Object : nsISupports {
-  const unsigned long ASN1_END_CONTENTS     = 0;
-  const unsigned long ASN1_BOOLEAN          = 1;
-  const unsigned long ASN1_INTEGER          = 2;
-  const unsigned long ASN1_BIT_STRING       = 3;
-  const unsigned long ASN1_OCTET_STRING     = 4;
-  const unsigned long ASN1_NULL             = 5; 
-  const unsigned long ASN1_OBJECT_ID        = 6;
-  const unsigned long ASN1_ENUMERATED       = 10;
-  const unsigned long ASN1_UTF8_STRING      = 12;
-  const unsigned long ASN1_SEQUENCE         = 16;
-  const unsigned long ASN1_SET              = 17;
-  const unsigned long ASN1_PRINTABLE_STRING = 19;
-  const unsigned long ASN1_T61_STRING       = 20;
-  const unsigned long ASN1_IA5_STRING       = 22;
-  const unsigned long ASN1_UTC_TIME         = 23;
-  const unsigned long ASN1_GEN_TIME         = 24;
-  const unsigned long ASN1_VISIBLE_STRING   = 26;
-  const unsigned long ASN1_UNIVERSAL_STRING = 28; 
-  const unsigned long ASN1_BMP_STRING       = 30;
-  const unsigned long ASN1_HIGH_TAG_NUMBER  = 31;
-  const unsigned long ASN1_CONTEXT_SPECIFIC = 32;
-  const unsigned long ASN1_APPLICATION      = 33;
-  const unsigned long ASN1_PRIVATE          = 34;
-
-  // This will be either one of the const
-  // values above.
-  attribute unsigned long type;
-  attribute unsigned long tag;
-  attribute wstring displayName;
-  attribute wstring displayValue;
-};
-
-[scriptable, uuid(b6b957e6-1dd1-11b2-89d7-e30624f50b00)]
-interface nsIASN1Sequence : nsIASN1Object {
-  attribute nsISupportsArray ASN1Objects;
-  attribute boolean processObjects;
-  attribute boolean showObjects;
-};
-
-[scriptable, uuid(114e1142-1dd2-11b2-ac26-b6db19d9184a)]
-interface nsIASN1PrintableItem : nsIASN1Object {
-  [noscript] void setData(in charPtr data, in unsigned long len);
-  [noscript] void getData(out charPtr data, out unsigned long len);
-};
+interface nsIX509CertValidity;
+interface nsIASN1Object;
 
 [scriptable, uuid(f0980f60-ee3d-11d4-998b-00b0d02354a0)]
 interface nsIX509Cert : nsISupports {
@@ -185,16 +116,10 @@ interface nsIX509Cert : nsISupports {
   const unsigned long CERT_USAGE_StatusResponder = 10;
   const unsigned long CERT_USAGE_AnyCA = 11;
 
-  void verifyForUsage(in PRUint32 usage,
-                      out PRUint32 verificationResult);
-
   /*
-   * This method is here to make it easier to view a cert.
-   * It will get the implemention of the nsICertificateDialogs
-   * interface and call the viewCert method passing itself
-   * as a parameter.
-   */
-  void view();
+   * output is verification result, bitmask?
+  */
+  PRUint32 verifyForUsage(in PRUint32 usage);
 
   /*
    * This is the attribute which describes the ASN1 layout
@@ -203,11 +128,10 @@ interface nsIX509Cert : nsISupports {
    */
   readonly attribute nsIASN1Object ASN1Structure;
 
-  [noscript] unsigned long getRawDER(out charPtr result);
+  void getRawDER(out unsigned long length,
+	               [retval, array, size_is(length)] out octet data);
 
-  PRBool isSameCert(in nsIX509Cert other);
-
-  void saveSMimeProfile();
+  boolean isSameCert(in nsIX509Cert other);
 };
 
 %{C++

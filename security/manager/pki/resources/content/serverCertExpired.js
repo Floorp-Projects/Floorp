@@ -69,5 +69,5 @@ function viewCert()
     var isupport = pkiParams.getISupportAtIndex(1);
     cert = isupport.QueryInterface(nsIX509Cert);
   }
-  cert.view();
+  viewCertHelper(window, cert);
 }

@@ -25,8 +25,8 @@
 #include "nsMsgComposeSecure.h"
 #include "nspr.h"
 #include "nsCOMPtr.h"
-#include "nsICMS.h"
 #include "nsIX509Cert.h"
+#include "nsISMimeCert.h"
 #include "nsIMimeConverter.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
@@ -915,7 +915,10 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
     // Make sure self's configured cert is prepared for being used
     // as an email recipient cert.
     
-    mSelfEncryptionCert->SaveSMimeProfile();
+    nsCOMPtr<nsISMimeCert> sc = do_QueryInterface(mSelfEncryptionCert);
+    if (sc) {
+      sc->SaveSMimeProfile();
+    }
   }
 
   /* If the message is to be encrypted, then get the recipient certs */

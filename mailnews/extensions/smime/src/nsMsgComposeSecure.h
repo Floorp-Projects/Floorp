@@ -25,10 +25,12 @@
 #include "nsIMsgComposeSecure.h"
 #include "nsIMsgSMIMECompFields.h"
 #include "nsCOMPtr.h"
-#include "nsICMS.h"
+#include "nsICMSEncoder.h"
 #include "nsIX509Cert.h"
 #include "nsIMimeConverter.h"
 #include "nsIStringBundle.h"
+#include "nsIHash.h"
+#include "nsICMSMessage.h"
 
 class nsIMsgCompFields;
 

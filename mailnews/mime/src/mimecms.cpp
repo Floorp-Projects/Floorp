@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsICMS.h"
+#include "nsICMSMessage.h"
+#include "nsICMSMessageErrors.h"
+#include "nsICMSDecoder.h"
 #include "mimecms.h"
 #include "mimemsig.h"
 #include "nsCRT.h"

@@ -42,9 +42,9 @@
 #include "nsIServiceManager.h"
 #include "nsNSSComponent.h"
 #include "nsNSSCertificate.h"
-#include "nsINSSDialogs.h"
 #include "nsReadableUtils.h"
 #include "nsNSSCleaner.h"
+#include "nsICertPickDialogs.h"
 
 NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
 NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
@@ -168,7 +168,9 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
 
   if (CertsToUse) {
     nsICertPickDialogs *dialogs = nsnull;
-    rv = getNSSDialogs((void**)&dialogs, NS_GET_IID(nsICertPickDialogs));
+    rv = getNSSDialogs((void**)&dialogs, 
+      NS_GET_IID(nsICertPickDialogs), 
+      NS_CERTPICKDIALOGS_CONTRACTID);
 
     if (NS_SUCCEEDED(rv)) {
       /* Throw up the cert picker dialog and get back the index of the selected cert */

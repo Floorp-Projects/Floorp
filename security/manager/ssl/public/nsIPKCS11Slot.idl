@@ -34,12 +34,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
-#include "nsIPK11TokenDB.idl"
 
-%{C++
-#define NS_PKCS11MODULEDB_CONTRACTID "@mozilla.org/security/pkcs11moduledb;1"
-%}
+interface nsIPK11Token;
 
 [scriptable, uuid(c2d4f296-ee60-11d4-998b-00b0d02354a0)]
 interface nsIPKCS11Slot : nsISupports {
@@ -67,39 +63,5 @@ interface nsIPKCS11Slot : nsISupports {
   /* more fun with workarounds - we're referring to everything by token name */
   readonly attribute wstring tokenName;
 
-};
-
-[scriptable, uuid(8a44bdf9-d1a5-4734-bd5a-34ed7fe564c2)]
-interface nsIPKCS11Module : nsISupports
-{
-
-  readonly attribute wstring name;
-  readonly attribute wstring libName;
-
-  nsIPKCS11Slot findSlotByName(in wstring name);
-
-  nsIEnumerator listSlots();
-
-};
-
-[scriptable, uuid(ff9fbcd7-9517-4334-b97a-ceed78909974)]
-interface nsIPKCS11ModuleDB : nsISupports
-{
-
-  nsIPKCS11Module getInternal();
-
-  nsIPKCS11Module getInternalFIPS();
-
-  nsIPKCS11Module findModuleByName(in wstring name);
-
-  nsIPKCS11Slot findSlotByName(in wstring name);
-
-  nsIEnumerator listModules();
-
-  readonly attribute boolean canToggleFIPS;
-
-  void toggleFIPSMode();
-
-  readonly attribute boolean isFIPSEnabled;
 };
 
