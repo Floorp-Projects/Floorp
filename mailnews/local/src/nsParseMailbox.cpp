@@ -1449,7 +1449,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 		return rv;
 
 	nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
-    NS_ENSURE_TRUE(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = rootMsgFolder->GetServer(getter_AddRefs(server));
