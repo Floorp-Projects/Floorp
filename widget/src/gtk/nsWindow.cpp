@@ -1749,6 +1749,17 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     InstallToplevelDragMotionSignal();
     InstallToplevelDragDropSignal();
     InstallToplevelDragDataReceivedSignal();
+
+    AddToEventMask(mShell, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "key_press_event",
+                       GTK_SIGNAL_FUNC(handle_key_press_event),
+                       this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "key_release_event",
+                       GTK_SIGNAL_FUNC(handle_key_release_event),
+                       this);
+
     // set the shell window as a drop target
     gtk_drag_dest_set (mShell,
                        (GtkDestDefaults)0,
