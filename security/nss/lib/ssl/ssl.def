@@ -35,10 +35,8 @@
 ;+    global:
 LIBRARY ssl3 ;+ UNIX_REMOVE
 EXPORTS ;+ UNIX_REMOVE
-;;SSL_ImplementedCiphers;
-;;SSL_NumImplementedCiphers;
-SSL_ImplementedCiphers DATA ;+ UNIX_REMOVE
-SSL_NumImplementedCiphers DATA ;+ UNIX_REMOVE
+SSL_ImplementedCiphers DATA ;
+SSL_NumImplementedCiphers DATA ;
 NSS_CmpCertChainWCANames;
 NSS_FindCertKEAType;
 NSS_GetClientAuthData;
