@@ -111,7 +111,7 @@
     <command id="Browser:Open" oncommand="BrowserOpenWindow();"/>
     <command id="Browser:Print" oncommand="BrowserPrint();"/>
     <command id="cmd_quit"/>
-    <command id="cmd_close" oncommand="if(BrowserCanClose()){BrowserClose();}"/>
+    <command id="cmd_close" oncommand="BrowserClose()"/>
   
     <!-- Edit Menu -->
     <command id="cmd_undo"/>

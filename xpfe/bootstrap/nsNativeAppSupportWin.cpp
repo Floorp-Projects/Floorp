@@ -253,8 +253,7 @@ public:
     NS_IMETHOD Start( PRBool *aResult );
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
-    NS_IMETHOD SetIsServerMode( PRBool aIsServerMode );
-    NS_IMETHOD CacheBrowserWindow( nsIDOMWindow *aWindow, PRBool *aResult );
+    NS_IMETHOD StartServerMode();
 
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
@@ -280,10 +279,9 @@ private:
     static PRBool   InitTopicStrings();
     static int      FindTopic( HSZ topic );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
-    static nsresult OpenWindow( const char *urlstr, const char *args, nsIDOMWindow **aResult = 0 );
+    static nsresult OpenWindow( const char *urlstr, const char *args );
     static nsresult OpenBrowserWindow( const char *args );                   
-    static nsresult ReParent( nsIDOMWindowInternal *window, HWND newParent );
-    static nsCOMPtr<nsIDOMWindowInternal> mCachedWin;                        
+    static nsresult ReParent( nsISupports *window, HWND newParent );
     static int   mConversations;
     enum {
         topicOpenURL,
@@ -604,7 +602,6 @@ const char * const topicNames[] = { "WWW_OpenURL",
                                     "WWW_UnRegisterViewer" };
 
 // Static member definitions.
-nsCOMPtr<nsIDOMWindowInternal> nsNativeAppSupportWin::mCachedWin = 0;
 int   nsNativeAppSupportWin::mConversations = 0;
 HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
@@ -945,7 +942,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
         switch ( uType ) {
             case XTYP_CONNECT:
                 // Make sure its for our service/topic.
-                if ( FindTopic( hsz1 ) < topicCount ) {
+                if ( FindTopic( hsz1 ) != -1 ) {
                     // We support this connection.
                     result = (HDDEDATA)1;
                 }
@@ -1066,7 +1063,7 @@ nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
-static HWND hwndForDOMWindow( nsIDOMWindowInternal * );
+static HWND hwndForDOMWindow( nsISupports * );
 
 void nsNativeAppSupportWin::ActivateLastWindow() {
     nsCOMPtr<nsIWindowMediator> med( do_GetService( kWindowMediatorCID ) );
@@ -1156,6 +1153,8 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
                  NS_SUCCEEDED( appShell->GetNativeAppSupport( getter_AddRefs( native ) ) ) &&
                  native ) {
                 native->SetIsServerMode( PR_FALSE );
+                // This closes app if there are no top-level windows.
+                appShell->UnregisterTopLevelWindow( 0 );
             }
         } else {
             #if MOZ_DEBUG_DDE
@@ -1339,13 +1338,9 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
 }
 
 nsresult
-nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args, nsIDOMWindow **aResult ) {
+nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
 
   nsresult rv = NS_ERROR_FAILURE;
-
-  if ( aResult ) { 
-      *aResult = 0;
-  }                
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
@@ -1356,11 +1351,6 @@ nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args, nsIDOMWi
     nsCOMPtr<nsIDOMWindow> newWindow;
     rv = wwatch->OpenWindow(0, urlstr, "_blank", "chrome,dialog=no,all",
                    sarg, getter_AddRefs(newWindow));
-    if ( aResult ) {                     
-        // Caller wants resulting window.
-        *aResult = newWindow;            
-        NS_IF_ADDREF( *aResult );        
-    }                                    
 #if MOZ_DEBUG_DDE
   } else {
       printf("Get WindowWatcher (or create string) failed\n");
@@ -1388,7 +1378,7 @@ static LRESULT CALLBACK focusFilterProc( HWND hwnd, UINT uMsg, WPARAM wParam, LP
     }
 }
 
-HWND hwndForDOMWindow( nsIDOMWindowInternal *window ) {
+HWND hwndForDOMWindow( nsISupports *window ) {
     nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
     if ( !ppScriptGlobalObj ) {
         return 0;
@@ -1410,7 +1400,7 @@ HWND hwndForDOMWindow( nsIDOMWindowInternal *window ) {
 }
 
 nsresult
-nsNativeAppSupportWin::ReParent( nsIDOMWindowInternal *window, HWND newParent ) {
+nsNativeAppSupportWin::ReParent( nsISupports *window, HWND newParent ) {
     HWND hMainFrame = hwndForDOMWindow( window );
     if ( !hMainFrame ) {
         return NS_ERROR_FAILURE;
@@ -1513,14 +1503,6 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args ) {
         if ( !navWin ) {
             // Have to open a new one.
             break;
-        } else {
-            // Check if we're using the cached (hidden) window.
-            if ( mCachedWin == navWin ) {
-                // Drop window from cache.
-                mCachedWin = 0;
-                // Show it.
-                ReParent( navWin, 0 );
-            }
         }
         // Get content window.
         navWin->GetContent( getter_AddRefs( content ) );
@@ -1555,33 +1537,56 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args ) {
     return OpenWindow( "chrome://navigator/content", args );
 }
 
+//   This opens a special browser window for purposes of priming the pump for
+//   server mode (getting stuff into the caching, loading .dlls, etc.).  The
+//   window will have these attributes:
+//     - Load about:blank (no home page)
+//     - No toolbar (so there's no sidebar panels loaded, either)
+//     - Pass magic arg to cause window to close in onload handler.
 NS_IMETHODIMP
-nsNativeAppSupportWin::SetIsServerMode( PRBool aIsServerMode ) {
-    // Pas to base class implementation.
-    nsresult rv = nsNativeAppSupportBase::SetIsServerMode( aIsServerMode );
-    if ( NS_SUCCEEDED(rv) && !aIsServerMode && mCachedWin ) {
-        // Server mode is now off.  Discard cached window.
-        mCachedWin->Close();
-        mCachedWin = 0;
+nsNativeAppSupportWin::StartServerMode() {
+    // Create some of the objects we'll need.
+    nsCOMPtr<nsIWindowWatcher>   ww(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsISupportsWString> arg1(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+    nsCOMPtr<nsISupportsWString> arg2(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+    if ( !ww || !arg1 || !arg2 ) {
+        return NS_OK;
     }
-    return rv;
-}
 
-NS_IMETHODIMP
-nsNativeAppSupportWin::CacheBrowserWindow(nsIDOMWindow *aWindow, PRBool *aResult) {
-    NS_ENSURE_ARG( aResult );
-    *aResult = PR_FALSE;
-    // Cache this window if we don't already have one.
-    if ( !mCachedWin ) {
-        NS_ENSURE_ARG( aWindow );
-        nsresult rv = NS_OK;
-        mCachedWin = do_QueryInterface( aWindow, &rv );
-        if ( NS_SUCCEEDED( rv ) ) {
-            // We cached this window; tell caller so they don't close it.
-            *aResult = PR_TRUE;
-            // Re-parent it to hide it.
-            ReParent( mCachedWin, (HWND)MessageWindow() );
-        }
+    // Create the array for the arguments.
+    nsCOMPtr<nsISupportsArray>   argArray;
+    NS_NewISupportsArray( getter_AddRefs( argArray ) );
+    if ( !argArray ) {
+        return NS_OK;
     }
+
+    // arg1 is the url to load.
+    // arg2 is the string that tells navigator.js to auto-close.
+    arg1->SetData( NS_LITERAL_STRING( "about:blank" ).get() );
+    arg2->SetData( NS_LITERAL_STRING( "turbo=yes" ).get() );
+
+    // Put args into array.
+    if ( NS_FAILED( argArray->AppendElement( arg1 ) ) ||
+         NS_FAILED( argArray->AppendElement( arg2 ) ) ) {
+        return NS_OK;
+    }
+
+    // Now open the window.
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    ww->OpenWindow( 0,
+                    "chrome://navigator/content",
+                    "_blank",
+                    "chrome,dialog=no,toolbar=no",
+                    argArray,
+                    getter_AddRefs( newWindow ) );
+
+    if ( !newWindow ) {
+        return NS_OK;
+    }
+
+    // Hide this window by re-parenting it (to ensure it doesn't appear).
+    ReParent( newWindow, (HWND)MessageWindow() );
+
     return NS_OK;
 }
+
