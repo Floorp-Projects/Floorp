@@ -342,3 +342,14 @@ res\table-remove-column.gif
 res\table-remove-row-active.gif
 res\table-remove-row-hover.gif
 res\table-remove-row.gif
+
+; talkback
+components\qfaservices.dll
+components\qfaservices.xpt
+components\BrandRes.dll
+components\fullsoft.dll
+components\master.ini
+components\talkback-l10n.ini
+components\talkback.cnt
+components\talkback.exe
+components\talkback.hlp
