@@ -69,6 +69,7 @@ public:
 
 extern nsresult NS_NewRDFHTMLBuilder(nsIRDFContentModelBuilder** aResult);
 extern nsresult NS_NewRDFMenuBuilder(nsIRDFContentModelBuilder** aResult);
+extern nsresult NS_NewRDFToolbarBuilder(nsIRDFContentModelBuilder** aResult);
 extern nsresult NS_NewRDFTreeBuilder(nsIRDFContentModelBuilder** aResult);
 extern nsresult NS_NewRDFXULBuilder(nsIRDFContentModelBuilder** aResult);
 
