@@ -28,6 +28,8 @@
 
 interface nsIFileURL;
 interface nsIFilePath;
+interface nsIOutputStream;
+interface nsIInputStream;
 
 // Define Progid and CID
 %{C++
@@ -37,7 +39,10 @@ interface nsIFilePath;
 
 #define NS_FILESPEC_PROGID "component://netscape/filespec"
 #define NS_FILESPEC_CLASSNAME "File Spec"
+
 %}
+
+native nsFileSpec(nsFileSpec);
 
 [scriptable, uuid(d8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFileSpec : nsISupports
@@ -59,6 +64,11 @@ interface nsIFileSpec : nsISupports
 	attribute string LeafName;
 
 	readonly attribute nsIFileSpec Parent;
+	readonly attribute nsIInputStream InputStream;
+	readonly attribute nsIOutputStream OutputStream;
+	[nonscriptable] readonly attribute nsFileSpec FileSpec;
+	
+	attribute string FileContents;
 
 	void makeUnique();
 	void makeUniqueWithSuggestedName(in string suggestedName);
@@ -104,6 +114,16 @@ interface nsIFileSpec : nsISupports
 	
 };
 	
+// Define Progid and CID
+%{C++
+// {a3020981-2018-11d3-915f-a957795b7ebc}
+#define NS_DIRECTORYITERATOR_CID \
+{ 0xa3020981, 0x2018, 0x11d3, { 0x91, 0x5f, 0xa9, 0x57, 0x79, 0x5b, 0x7e, 0xbc } }
+
+#define NS_DIRECTORYITERATOR_PROGID "component://netscape/directoryiterator"
+#define NS_DIRECTORYITERATOR_CLASSNAME "nsIDirectoryIterator"
+%}
+
 [scriptable, uuid(d8c0a083-0868-11d3-915f-d9d889d48e3c)]
 interface nsIDirectoryIterator : nsISupports
 {
@@ -118,4 +138,9 @@ interface nsIDirectoryIterator : nsISupports
 NS_COM nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **result);
 NS_COM nsresult NS_NewFileSpec(nsIFileSpec** result);
 NS_COM nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
+
+#define NS_BOOL_ACCESSOR(_method) { PRBool rv; return NS_SUCCEEDED(f->_method(&rv)) && rv; }
+inline PRBool Exists(nsIFileSpec* f) NS_BOOL_ACCESSOR(exists)
+inline PRBool Exists(nsIDirectoryIterator* f) NS_BOOL_ACCESSOR(exists)
+inline PRBool IsDirectory(nsIFileSpec* f) NS_BOOL_ACCESSOR(isDirectory)
 %}
