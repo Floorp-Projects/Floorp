@@ -3174,6 +3174,7 @@ fi
 if test "$_INCREMENTAL_MAKEFILES"; then
   MAKEFILES="
     Makefile
+    xpinstall/packager/Makefile
     build/unix/nspr_my_config.mk
     build/unix/nspr_my_overrides.mk
     build/package/rpm/mozilla.spec
@@ -3183,22 +3184,11 @@ if test "$_INCREMENTAL_MAKEFILES"; then
   "
   dnl Create needed subdirectories because config.status is lame.
   dnl It can only create one directory level at a time.
-  changequote(,)
-  $PERL -e '
-    foreach (split /\s+/, "'"$MAKEFILES"'") {
-      $dir = /(.*)\/.*/ ? "$1" : ".";
-      while (not defined $have_seen{$dir}) {
-	$have_seen{$dir} = 1;
-	last if -d $dir;
-	push @dirs, $dir;
-	$dir =~ s/\/[^\/]+$//;
-      }
-    }
-    sub by_subdir_count {
-      split(/\//,$a) <=> split(/\//,$b)
-    }
-    system "mkdir ".join(" ",sort by_subdir_count @dirs) if @dirs;'
-  changequote([,])
+  for file in $MAKEFILES
+  do
+    dir=`dirname $file`
+    if test ! -d $dir; then rm -f $dir; mkdir -p $dir; else true; fi
+  done
 else
   dnl Manually make the directories to get around deficiency in AC_OUTPUT
   for dir in lib modules modules/security build build/package; do
