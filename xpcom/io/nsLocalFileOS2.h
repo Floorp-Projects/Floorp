@@ -115,6 +115,7 @@ public:
 public:
     static void GlobalInit();
     static void GlobalShutdown();
+    static PRBool FSCharsetIsUTF8() { return mFSCharsetIsUTF8; }
 
 private:
 
@@ -146,8 +147,6 @@ private:
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool followSymlinks, PRBool move);
 
     nsresult SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal);
-
-    static PRBool FSCharsetIsUTF8() { return mFSCharsetIsUTF8; }
 
     // XXX impl
     PRBool PathIsASCII() { return PR_FALSE; }
