@@ -23,13 +23,17 @@
  */
 
 #include "nsDiskCacheDevice.h"
+#include "nsCacheService.h"
+
 #include "nsICacheService.h"
 #include "nsIFileTransportService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsISupportsArray.h"
+#include "nsICacheVisitor.h"
 #include "nsXPIDLString.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+
+static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -99,7 +103,7 @@ static nsresult installPrefListeners(nsDiskCacheDevice* device)
     rv = prefs->GetIntPref(CACHE_DISK_CAPACITY, &cacheCapacity);
     if (NS_FAILED(rv)) {
 #if DEBUG
-        const kTenMegabytes = 10 * 1024 * 1024;
+        const PRInt32 kTenMegabytes = 10 * 1024 * 1024;
         rv = prefs->SetIntPref(CACHE_DISK_CAPACITY, kTenMegabytes);
 #else
 		return rv;
@@ -203,17 +207,6 @@ private:
 };
 NS_IMPL_ISUPPORTS0(DiskCacheEntry);
 
-#if 0
-// get rid of warning on linux until this routine is used.
-static DiskCacheEntry*
-getDiskCacheEntry(nsCacheEntry * entry)
-{
-    nsCOMPtr<nsISupports> data;
-    entry->GetData(getter_AddRefs(data));
-    return (DiskCacheEntry*) data.get();
-}
-#endif
-
 static DiskCacheEntry*
 ensureDiskCacheEntry(nsCacheEntry * entry)
 {
@@ -225,6 +218,272 @@ ensureDiskCacheEntry(nsCacheEntry * entry)
             entry->SetData(data.get());
     }
     return (DiskCacheEntry*) data.get();
+}
+
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+class nsDiskCacheDeviceInfo : public nsICacheDeviceInfo {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICACHEDEVICEINFO
+
+    nsDiskCacheDeviceInfo(nsDiskCacheDevice* device)
+        :   mDevice(device)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    virtual ~nsDiskCacheDeviceInfo() {}
+    
+private:
+    nsDiskCacheDevice* mDevice;
+};
+NS_IMPL_ISUPPORTS1(nsDiskCacheDeviceInfo, nsICacheDeviceInfo);
+
+/* readonly attribute string description; */
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetDescription(char * *aDescription)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute string usageReport; */
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(char * *aUsageReport)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute unsigned long entryCount; */
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetEntryCount(PRUint32 *aEntryCount)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute unsigned long totalSize; */
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetTotalSize(PRUint32 *aTotalSize)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute unsigned long maximumSize; */
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+struct MetaDataHeader {
+    PRUint32        mHeaderSize;
+    PRInt32         mFetchCount;
+    PRUint32        mLastFetched;
+    PRUint32        mLastValidated;     // NOT NEEDED
+    PRUint32        mExpirationTime;
+    PRUint32        mDataSize;
+    PRUint32        mKeySize;
+    PRUint32        mMetaDataSize;
+    // followed by null-terminated key and metadata string values.
+
+    MetaDataHeader()
+        :   mHeaderSize(sizeof(MetaDataHeader)),
+            mFetchCount(0),
+            mLastFetched(0),
+            mLastValidated(0),
+            mExpirationTime(0),
+            mDataSize(0),
+            mKeySize(0),
+            mMetaDataSize(0)
+    {
+    }
+
+    MetaDataHeader(nsCacheEntry* entry)
+        :   mHeaderSize(sizeof(MetaDataHeader)),
+            mFetchCount(entry->FetchCount()),
+            mLastFetched(entry->LastFetched()),
+            mLastValidated(entry->LastValidated()),
+            mExpirationTime(entry->ExpirationTime()),
+            mDataSize(entry->DataSize()),
+            mKeySize(entry->Key()->Length() + 1),
+            mMetaDataSize(0)
+    {
+    }
+};
+
+struct MetaDataFile : MetaDataHeader {
+    char*           mKey;
+    char*           mMetaData;
+
+    MetaDataFile()
+        :   mKey(nsnull), mMetaData(nsnull)
+    {
+    }
+    
+    MetaDataFile(nsCacheEntry* entry)
+        :   MetaDataHeader(entry),
+            mKey(nsnull), mMetaData(nsnull)
+    {
+    }
+    
+    ~MetaDataFile()
+    {
+        delete[] mKey;
+        delete[] mMetaData;
+    }
+    
+    nsresult Init(nsCacheEntry* entry)
+    {
+        PRUint32 size = 1 + entry->Key()->Length();
+        mKey = new char[size];
+        if (!mKey) return NS_ERROR_OUT_OF_MEMORY;
+        nsCRT::memcpy(mKey, entry->Key()->get(), size);
+        return entry->FlattenMetaData(&mMetaData, &mMetaDataSize);
+    }
+
+    nsresult Write(nsIOutputStream* output);
+    nsresult Read(nsIInputStream* input);
+};
+
+nsresult MetaDataFile::Write(nsIOutputStream* output)
+{
+    nsresult rv;
+    PRUint32 count;
+    
+    rv = output->Write((char*)this, mHeaderSize, &count);
+    if (NS_FAILED(rv)) return rv;
+    
+    // write the key to the file.
+    rv = output->Write(mKey, mKeySize, &count);
+    if (NS_FAILED(rv)) return rv;
+    
+    // write the flattened metadata to the file.
+    if (mMetaDataSize) {
+        rv = output->Write(mMetaData, mMetaDataSize, &count);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    return NS_OK;
+}
+
+nsresult MetaDataFile::Read(nsIInputStream* input)
+{
+    nsresult rv;
+    PRUint32 count;
+    
+    // read the header size used by this file.
+    rv = input->Read((char*)&mHeaderSize, sizeof(mHeaderSize), &count);
+    if (NS_FAILED(rv)) return rv;
+    rv = input->Read((char*)&mFetchCount, mHeaderSize - sizeof(mHeaderSize), &count);
+    if (NS_FAILED(rv)) return rv;
+
+    // read in the key.
+    delete[] mKey;
+    mKey = new char[mKeySize];
+    if (!mKey) return NS_ERROR_OUT_OF_MEMORY;
+    rv = input->Read(mKey, mKeySize, &count);
+    if (NS_FAILED(rv)) return rv;
+
+    // read in the metadata.
+    delete mMetaData;
+    mMetaData = nsnull;
+    if (mMetaDataSize) {
+        mMetaData = new char[mMetaDataSize];
+        if (!mMetaData) return NS_ERROR_OUT_OF_MEMORY;
+        rv = input->Read(mMetaData, mMetaDataSize, &count);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    return NS_OK;
+}
+
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+class nsCacheEntryInfo : public nsICacheEntryInfo {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICACHEENTRYINFO
+
+    nsCacheEntryInfo()
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    virtual ~nsCacheEntryInfo() {}
+    
+    nsresult Read(nsIInputStream * input)
+    {
+        nsresult rv = mMetaDataFile.Read(input);
+        if (NS_FAILED(rv)) return rv;
+        mClientID = mMetaDataFile.mKey;
+        char* colon = ::strchr(mClientID, ':');
+        if (!colon) return NS_ERROR_FAILURE;
+        *colon = '\0';
+        mKey = colon + 1;
+        return NS_OK;
+    }
+    
+    const char* ClientID() { return mClientID; }
+    
+private:
+    MetaDataFile mMetaDataFile;
+    char* mClientID;
+    char* mKey;
+};
+NS_IMPL_ISUPPORTS1(nsCacheEntryInfo, nsICacheEntryInfo);
+
+NS_IMETHODIMP nsCacheEntryInfo::GetClientID(char * *aClientID)
+{
+    char * result = nsCRT::strdup(mClientID);
+    if (!result) return NS_ERROR_OUT_OF_MEMORY;
+    *aClientID = result;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheEntryInfo::GetKey(char * *aKey)
+{
+    char * result = nsCRT::strdup(mKey);
+    if (!result) return NS_ERROR_OUT_OF_MEMORY;
+    *aKey = result;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheEntryInfo::GetFetchCount(PRInt32 *aFetchCount)
+{
+    return *aFetchCount = mMetaDataFile.mFetchCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheEntryInfo::GetLastFetched(PRTime *aLastFetched)
+{
+    *aLastFetched = ConvertSecondsToPRTime(mMetaDataFile.mLastFetched);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheEntryInfo::GetLastModified(PRTime *aLastModified)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsCacheEntryInfo::GetLastValidated(PRTime *aLastValidated)
+{
+    *aLastValidated = ConvertSecondsToPRTime(mMetaDataFile.mLastValidated);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheEntryInfo::GetExpirationTime(PRTime *aExpirationTime)
+{
+    *aExpirationTime = ConvertSecondsToPRTime(mMetaDataFile.mExpirationTime);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheEntryInfo::GetStreamBased(PRBool *aStreamBased)
+{
+    *aStreamBased = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
+{
+    *aDataSize = mMetaDataFile.mDataSize;
+    return NS_OK;
 }
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -270,7 +529,7 @@ nsDiskCacheDevice::Create(nsCacheDevice **result)
 const char *
 nsDiskCacheDevice::GetDeviceID()
 {
-    return "disk";
+    return DISK_CACHE_DEVICE_ID;
 }
 
 
@@ -406,6 +665,17 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 nsresult
 nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
 {
+    // XXX
+    nsDiskCacheDeviceInfo* deviceInfo = new nsDiskCacheDeviceInfo(this);
+    nsCOMPtr<nsICacheDeviceInfo> ref(deviceInfo);
+    
+    PRBool keepGoing;
+    nsresult rv = visitor->VisitDevice(DISK_CACHE_DEVICE_ID, deviceInfo, &keepGoing);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (keepGoing)
+        return visitEntries(visitor);
+
     return NS_OK;
 }
 
@@ -459,14 +729,20 @@ nsresult nsDiskCacheDevice::getTransportForFile(nsIFile* file, nsCacheAccessMode
     return service->CreateTransport(file, ioFlags, PR_IRUSR | PR_IWUSR, result);
 }
 
-/**
- * Search the cache directory for already cached entries, and add them to mCachedEntries?
- */
-nsresult nsDiskCacheDevice::scanEntries()
+
+// XXX All these transports and opening/closing of files. We need a way to cache open files,
+// XXX and to seek. Perhaps I should just be using ANSI FILE objects for all of the metadata
+// XXX operations.
+
+nsresult nsDiskCacheDevice::visitEntries(nsICacheVisitor * visitor)
 {
     nsCOMPtr<nsISimpleEnumerator> entries;
     nsresult rv = mCacheDirectory->GetDirectoryEntries(getter_AddRefs(entries));
     if (NS_FAILED(rv)) return rv;
+    
+    nsCacheEntryInfo* entryInfo = new nsCacheEntryInfo();
+    if (!entryInfo) return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsICacheEntryInfo> ref(entryInfo);
     
     for (PRBool more; NS_SUCCEEDED(entries->HasMoreElements(&more)) && more;) {
         nsCOMPtr<nsISupports> next;
@@ -476,154 +752,31 @@ nsresult nsDiskCacheDevice::scanEntries()
         if (NS_FAILED(rv)) break;
         nsXPIDLCString name;
         rv = file->GetLeafName(getter_Copies(name));
-        if (nsCRT::strlen(name) > 8) {
-            // this must be a metadata file, read the key in, and create an inactive entry for it.
+        if (nsCRT::strlen(name) == 9) {
+            // this must be a metadata file.
             nsCOMPtr<nsITransport> transport;
             rv = getTransportForFile(file, nsICache::ACCESS_READ, getter_AddRefs(transport));
             if (NS_FAILED(rv)) continue;
             nsCOMPtr<nsIInputStream> input;
             rv = transport->OpenInputStream(0, -1, 0, getter_AddRefs(input));
             if (NS_FAILED(rv)) continue;
-            PRUint32 count;
-            rv = input->Available(&count);
-            if (NS_FAILED(rv)) continue;
-            char* buffer = new char[count + 1];
-            nsXPIDLCString owner;
-            *getter_Copies(owner) = buffer;
-            rv = input->Read(buffer, count, &count);
-            if (NS_FAILED(rv)) continue;
-            buffer[count] = '\0';
-            nsCString* key = new nsCString(buffer);
-            nsCacheEntry* cacheEntry = new nsCacheEntry(key, PR_TRUE, nsICache::STORE_ON_DISK);
-            rv = BindEntry(cacheEntry);
+            
+            // read the metadata file.
+            rv = entryInfo->Read(input);
+            input->Close();
+            if (NS_FAILED(rv)) break;
+            
+            // tell the visitor about this entry.
+            PRBool keepGoing;
+            rv = visitor->VisitEntry(DISK_CACHE_DEVICE_ID, entryInfo->ClientID(),
+                                     entryInfo, &keepGoing);
+            if (NS_FAILED(rv)) return rv;
+            if (!keepGoing) break;
         }
     }
 
     return NS_OK;
 }
-
-struct MetaDataHeader {
-    PRUint32        mHeaderSize;
-    PRInt32         mFetchCount;
-    PRUint32        mLastFetched;
-    PRUint32        mLastValidated;     // NOT NEEDED
-    PRUint32        mExpirationTime;
-    PRUint32        mDataSize;
-    PRUint32        mKeySize;
-    PRUint32        mMetaDataSize;
-    // followed by null-terminated key and metadata string values.
-
-    MetaDataHeader()
-        :   mHeaderSize(sizeof(MetaDataHeader)),
-            mFetchCount(0),
-            mLastFetched(0),
-            mLastValidated(0),
-            mExpirationTime(0),
-            mDataSize(0),
-            mKeySize(0),
-            mMetaDataSize(0)
-    {
-    }
-
-    MetaDataHeader(nsCacheEntry* entry)
-        :   mHeaderSize(sizeof(MetaDataHeader)),
-            mFetchCount(entry->FetchCount()),
-            mLastFetched(entry->LastFetched()),
-            mLastValidated(entry->LastValidated()),
-            mExpirationTime(entry->ExpirationTime()),
-            mDataSize(entry->DataSize()),
-            mKeySize(entry->Key()->Length() + 1),
-            mMetaDataSize(0)
-    {
-    }
-};
-
-struct MetaDataFile : MetaDataHeader {
-    char*           mKey;
-    char*           mMetaData;
-
-    MetaDataFile()
-        :   mKey(nsnull), mMetaData(nsnull)
-    {
-    }
-    
-    MetaDataFile(nsCacheEntry* entry)
-        :   MetaDataHeader(entry),
-            mKey(nsnull), mMetaData(nsnull)
-    {
-    }
-    
-    ~MetaDataFile()
-    {
-        delete[] mKey;
-        delete[] mMetaData;
-    }
-    
-    nsresult Init(nsCacheEntry* entry)
-    {
-        PRUint32 size = 1 + entry->Key()->Length();
-        mKey = new char[size];
-        if (!mKey) return NS_ERROR_OUT_OF_MEMORY;
-        nsCRT::memcpy(mKey, entry->Key()->get(), size);
-        return entry->FlattenMetaData(&mMetaData, &mMetaDataSize);
-    }
-
-    nsresult Write(nsIOutputStream* output);
-    nsresult Read(nsIInputStream* input);
-};
-
-nsresult MetaDataFile::Write(nsIOutputStream* output)
-{
-    nsresult rv;
-    PRUint32 count;
-    
-    rv = output->Write((char*)this, mHeaderSize, &count);
-    if (NS_FAILED(rv)) return rv;
-    
-    // write the key to the file.
-    rv = output->Write(mKey, mKeySize, &count);
-    if (NS_FAILED(rv)) return rv;
-    
-    // write the flattened metadata to the file.
-    if (mMetaDataSize) {
-        rv = output->Write(mMetaData, mMetaDataSize, &count);
-        if (NS_FAILED(rv)) return rv;
-    }
-    
-    return NS_OK;
-}
-
-nsresult MetaDataFile::Read(nsIInputStream* input)
-{
-    nsresult rv;
-    PRUint32 count;
-    
-    // read the header size used by this file.
-    rv = input->Read((char*)&mHeaderSize, sizeof(mHeaderSize), &count);
-    if (NS_FAILED(rv)) return rv;
-    rv = input->Read((char*)&mFetchCount, mHeaderSize - sizeof(mHeaderSize), &count);
-    if (NS_FAILED(rv)) return rv;
-
-    // read in the key.
-    mKey = new char[mKeySize];
-    if (!mKey) return NS_ERROR_OUT_OF_MEMORY;
-    rv = input->Read(mKey, mKeySize, &count);
-    if (NS_FAILED(rv)) return rv;
-
-    // read in the metadata.
-    if (mMetaDataSize) {
-        mMetaData = new char[mMetaDataSize];
-        if (!mMetaData) return NS_ERROR_OUT_OF_MEMORY;
-        rv = input->Read(mMetaData, mMetaDataSize, &count);
-        if (NS_FAILED(rv)) return rv;
-    }
-    
-    return NS_OK;
-}
-
-// XXX All these transports and opening/closing of files. We need a way to cache open files,
-// XXX and to seek. Perhaps I should just be using ANSI FILE objects for all of the metadata
-// XXX operations.
 
 nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsCacheEntry* entry)
 {
