@@ -2084,8 +2084,10 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         goto bad;
 
     /* XXXbe called with lock held */
-    if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), &value))
+    if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), &value)) {
+        (void) js_RemoveScopeProperty(cx, scope, id);
         goto bad;
+    }
 
     PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     if (SPROP_HAS_VALID_SLOT(sprop, scope))
@@ -2651,6 +2653,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
         /* XXXbe called with obj locked */
         if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), vp)) {
+            (void) js_RemoveScopeProperty(cx, scope, id);
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
