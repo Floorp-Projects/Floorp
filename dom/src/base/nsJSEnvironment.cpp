@@ -147,21 +147,30 @@ NS_ScriptErrorReporter(JSContext *cx,
           }
 
           if (report) {
-            nsAutoString fileUni;
+            nsAutoString fileUni, msg;
             fileUni.AssignWithConversion(report->filename);
-            const PRUnichar *newFileUni = fileUni.ToNewUnicode();
             PRUint32 column = report->uctokenptr - report->uclinebuf;
-            rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage), newFileUni,
-                                   NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf), report->lineno,
-                                   column, report->flags, category);
-            nsMemory::Free((void *)newFileUni);
+
+            const PRUnichar *m = NS_REINTERPRET_CAST(const PRUnichar*,
+                                                     report->ucmessage);
+
+            if (!m && message) {
+              msg.AssignWithConversion(message);
+
+              m = msg.get();
+            }
+
+            rv = errorObject->Init(m, fileUni.get(),
+                                   NS_REINTERPRET_CAST(const PRUnichar*,
+                                                       report->uclinebuf),
+                                   report->lineno, column, report->flags,
+                                   category);
           } else if (message) {
             nsAutoString messageUni;
             messageUni.AssignWithConversion(message);
-            const PRUnichar *newMessageUni = messageUni.ToNewUnicode();
-            rv = errorObject->Init(newMessageUni, nsnull, nsnull,
+
+            rv = errorObject->Init(messageUni.get(), nsnull, nsnull,
                                    0, 0, 0, category);
-            nsMemory::Free((void *)newMessageUni);
           }
 
           if (NS_SUCCEEDED(rv))

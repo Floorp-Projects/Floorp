@@ -3199,14 +3199,16 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   if (argc < 1) {
     ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-    return NS_ERROR_FAILURE;
+
+    return ncc->SetExceptionWasThrown(PR_TRUE);
   }
 
   if (argc > 1 && !::JS_ValueToNumber(cx, argv[1], &interval)) {
     ::JS_ReportError(cx,
                      "Second argument to %s must be a millisecond interval",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-    return NS_ERROR_ILLEGAL_VALUE;
+
+    return ncc->SetExceptionWasThrown(PR_TRUE);
   }
 
   switch (::JS_TypeOfValue(cx, argv[0])) {
@@ -3226,7 +3228,8 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   default:
     ::JS_ReportError(cx, "useless %s call (missing quotes around argument?)",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-    return NS_ERROR_FAILURE;
+
+    return ncc->SetExceptionWasThrown(PR_TRUE);
   }
 
   timeout = new nsTimeoutImpl();
