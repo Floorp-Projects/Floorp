@@ -79,9 +79,9 @@ public:
                                           nsresult aStatus);
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
+    nsresult            SetContentLength(PRInt32 aContentLength);
     nsresult            SetContentType(const char* aContentType);
     nsresult            SetCharset(const char *aCharset);
-
 protected:
     nsCOMPtr<nsIURI>            mURI;
     PRBool                      mConnected; 
@@ -101,6 +101,7 @@ protected:
     nsCOMPtr<nsISupports>       mResponseContext;
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
 
+    PRInt32                     mContentLength;
     nsCString                   mContentType;
     nsCString                   mCharset;
     nsIInputStream*             mPostStream;

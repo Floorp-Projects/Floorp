@@ -232,6 +232,14 @@ nsInputStreamChannel::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsInputStreamChannel::GetContentLength(PRInt32 *aContentLength)
+{
+    // The content length is unknown...
+    *aContentLength = -1;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;

@@ -557,6 +557,21 @@ nsFileChannel::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsFileChannel::GetContentLength(PRInt32 *aContentLength)
+{
+    nsresult rv;
+    PRUint32 length;
+
+    rv = GetFileSize(&length);
+    if (NS_SUCCEEDED(rv)) {
+        *aContentLength = (PRInt32)length;
+    } else {
+        *aContentLength = -1;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
 nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;

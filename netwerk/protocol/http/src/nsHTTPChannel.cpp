@@ -58,7 +58,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mURI(dont_QueryInterface(i_URL)),
     mConnected(PR_FALSE),
     mState(HS_IDLE),
-    mRefCnt(0),
     mHandler(dont_QueryInterface(i_Handler)),
     mEventSinkGetter(dont_QueryInterface(i_EventSinkGetter)),
     mResponse(nsnull),
@@ -73,6 +72,9 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPChannel [this=%x].\n", this));
+
+    // The content length is unknown...
+    mContentLength = -1;
 
     mVerb = i_Verb;
 
@@ -315,6 +317,14 @@ nsHTTPChannel::GetContentType(char * *aContentType)
 
     return rv;
 }
+
+NS_IMETHODIMP
+nsHTTPChannel::GetContentLength(PRInt32 *aContentLength)
+{
+    *aContentLength = mContentLength;
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
@@ -712,6 +722,12 @@ nsresult nsHTTPChannel::GetResponseContext(nsISupports** aContext)
   }
 
   return NS_ERROR_NULL_POINTER;
+}
+
+nsresult nsHTTPChannel::SetContentLength(PRInt32 aContentLength)
+{
+    mContentLength = aContentLength;
+    return NS_OK;
 }
 
 nsresult nsHTTPChannel::SetContentType(const char* aContentType)

@@ -1723,6 +1723,14 @@ nsSocketTransport::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsSocketTransport::GetContentLength(PRInt32 *aContentLength)
+{
+  // The content length is always unknown for transports...
+  *aContentLength = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
   NS_ASSERTION(0, "transports shouldn't end up in groups");

@@ -65,6 +65,7 @@ protected:
     PRUint32                mLoadAttributes;
     nsILoadGroup            *mLoadGroup;
     nsCString               mContentType;
+    PRInt32                 mContentLength;
 
 };
 

@@ -118,6 +118,12 @@ interface nsIChannel : nsIRequest
      */
     readonly attribute string ContentType;
 
+	/**
+	 * Returns the length of the data assiciated with the channel if available.
+	 * If the length is unknown then -1 is returned.
+	 */
+	readonly attribute long ContentLength;
+
     /**
      * Accesses the principal corresponding to the entity that is 
 	 * responsible for this channel. Used by security code to grant

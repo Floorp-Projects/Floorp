@@ -37,6 +37,8 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 // nsDataChannel methods
 nsDataChannel::nsDataChannel() {
     NS_INIT_REFCNT();
+
+    mContentLength = -1;
 }
 
 nsDataChannel::~nsDataChannel() {
@@ -188,6 +190,8 @@ nsDataChannel::ParseData() {
     }
     if (NS_FAILED(rv)) return rv;
 
+    // Initialize the content length of the data...
+    mContentLength = dataToWrite->dataLen;
 
     rv = bufInStream->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&mDataStream);
     NS_RELEASE(bufInStream);
@@ -196,6 +200,7 @@ nsDataChannel::ParseData() {
 
     *comma = ',';
 
+    nsAllocator::Free(dataToWrite);
     nsAllocator::Free(spec);
 
     return NS_OK;
@@ -350,6 +355,13 @@ nsDataChannel::GetContentType(char* *aContentType) {
         return NS_ERROR_FAILURE;
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetContentLength(PRInt32 *aContentLength)
+{
+    *aContentLength = mContentLength;
     return NS_OK;
 }
 
