@@ -61,7 +61,7 @@ endif
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 LOCAL_INCLUDES	+= -I$(srcdir)/os2
-HSRCS		+= dirent.h getopt.h
+HSRCS		+= dirent.h
 endif
 
 ifeq ($(OS_CONFIG),SunOS4.1)
@@ -76,7 +76,6 @@ export:: $(TARGETS)
 	$(INSTALL) -m 444 nsBuildID.h $(DIST)/include
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(INSTALL) -m 444 $(srcdir)/os2/dirent.h  $(DIST)/include
-	$(INSTALL) -m 444 $(srcdir)/os2/getopt.h  $(DIST)/include
 endif
 	-rm -f $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 
