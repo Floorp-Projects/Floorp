@@ -1655,7 +1655,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 // Realize the drawing palette
                 int i = ::RealizePalette(hDC);
 
-                // Did the realization change?
+                // Did any of our colors change?
                 if (i > 0) {
                   // Yes, so repaint
                   ::InvalidateRect(mWnd, (LPRECT)NULL, TRUE);
@@ -1830,7 +1830,8 @@ PRBool nsWindow::OnPaint()
     PAINTSTRUCT ps;
     HDC hDC = ::BeginPaint(mWnd, &ps);
 
-
+    // XXX What is this check doing? If it's trying to check for an empty
+    // paint rect then use the IsRectEmpty() function...
     if (ps.rcPaint.left || ps.rcPaint.right || ps.rcPaint.top || ps.rcPaint.bottom) {
         // call the event callback 
         if (mEventCallback) {
