@@ -39,6 +39,8 @@ LCFLAGS = \
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib          \
  $(LIBNSPR)                     \
+ $(DIST)\lib\timer_s.lib	\
+ $(DIST)\lib\neckoutil_s.lib    \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
