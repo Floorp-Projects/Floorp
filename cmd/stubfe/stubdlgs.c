@@ -240,6 +240,11 @@ FE_SaveErrorContinueDialog(MWContext *context,
 }
 
 int
-XFE_AskStreamQuestion(MWContext * window_id)
+FE_AskStreamQuestion(MWContext * window_id)
+{
+}
+
+ED_CharsetEncode
+FE_EncodingDialog(MWContext* context, char* newCharset)
 {
 }

@@ -54,7 +54,6 @@ REQUIRES	= \
 
 CSRCS = \
 	main.c \
-	stubbm.c \
 	stubctxt.c \
 	stubdlgs.c \
 	stubedit.c \

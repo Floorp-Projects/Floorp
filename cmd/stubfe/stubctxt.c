@@ -648,8 +648,7 @@ FE_GetURL (MWContext *context,
 
 void
 FE_SetRefreshURLTimer(MWContext *context, 
-		      uint32     seconds, 
-		      char      *refresh_url)
+					  URL_Struct *url_s)
 {
 }
 

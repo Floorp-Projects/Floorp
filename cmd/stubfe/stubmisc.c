@@ -20,6 +20,8 @@
                   generic stuff.
 */
 
+#include "fe_proto.h"
+
 void
 fe_GetProgramDirectory(char *path, int len)
 {
@@ -29,3 +31,18 @@ void
 FEU_StayingAlive(void)
 {
 }
+
+XP_Bool
+FE_GetLabelAndMnemonic(char* name, char** str, void* v_xm_str, void* v_mnemonic) 
+{
+}
+
+
+char *fe_GetConfigDir()
+{
+}
+
+char *fe_GetConfigDirFilename(char *filename)
+{
+}
+

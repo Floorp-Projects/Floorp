@@ -20,4 +20,11 @@
    stubenc.c --- encoding stuff specific to the stub fe.
 */
 
+#include "libi18n.h"
+
 char **fe_encoding_extensions = 0; /* gag.  used by mkcache.c. */
+
+INTLCharSetID
+FE_GetCharSetID(INTL_CharSetID_Selector selector)
+{
+}
