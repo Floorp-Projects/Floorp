@@ -5,135 +5,112 @@
  **/
 
 /* outer frame */
-  button 
+  button, button.left
     {
-      border              : 1px solid #000000;
-      -moz-border-radius  : 3px 2px 2px 3px;
+      behavior            : url("chrome://global/skin/buttonBindings.xml#buttonleft");
+      border-left         : 1px solid buttonhighlight;
+      border-top          : 1px solid buttonhighlight;
+      border-right        : 1px solid threeddarkshadow;
+      border-bottom       : 1px solid threeddarkshadow;
       margin              : 1px 5px 2px 5px;
-      background-color    : #CCCCCC;
+      background-color    : buttonface;
+      min-width           : 8em;
+      font                : button;
+      color               : buttontext;
+    }
+  
+  .button-box-1  
+    {
+      border-left         : 1px solid threedface;
+      border-top          : 1px solid threedface;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
+    }
+
+  .button-box-2
+    {
+      border              : 1px solid threedface;
+    }
+    
+  button:hover:active 
+    {
+      border              : 1px solid threeddarkshadow;
+    }
+
+  button:hover:active > .button-box-1
+    {
+      border              : 1px solid threedshadow;
+    }
+
+  button:hover:active > .button-box-1 > .button-box-2
+    {
+      border              : 1px solid threedface;
+    }
+
+  button:hover:active > .button-box-1 > .button-box-2 > .button-box-text
+    {
+      padding             : 1px 2px 0px 3px;
     }
   
   button[disabled="true"],
-  button[disabled="true"]:hover,
   button[disabled="true"]:hover:active 
     {
-      border              : 1px solid #999999;
-      color               : #999999;
+      color               : graytext;
     }
         
-/* internal frame */
-  button > .button-internal-box 
+  button[disabled="true"] > .button-box-1 > .button-box-2 > .button-box-text,
+  button[disabled="true"]:hover:active > .button-box-1 > .button-box-2 > .button-box-text
     {
-      vertical-align      : middle;
-      text-align          : center;
-      border              : 1px outset #CCCCCC;
-      padding             : 2px;
-    }
-    
-  button:hover:active > .button-internal-box 
-    {
-      border              : 1px inset #CCCCCC;
-      padding             : 3px 1px 1px 3px;  
-    }
-  
-  button[disabled="true"] > .button-internal-box,
-  button[disabled="true"]:hover > .button-internal-box,
-  button[disabled="true"]:hover:active > .button-internal-box 
-    {
-      border              : 1px outset #CCCCCC;
-      -moz-border-radius  : 0px;
-      padding             : 2px;
+      padding             : 0px 3px 1px 2px;
     }
 
 /* text wrapping frame (hack because <text> does not support alignment) */
-  .button-text-container
+  .button-box-text,
+  button[disabled]:focus > .button-box-1 > .button-box-2 > .button-box-text
     {
       text-align          : center;
       vertical-align      : middle;
+      padding             : 0px 3px 1px 2px;
+      border              : 1px solid buttonface;
+      margin              : 1px;
     }
 
-/* text frame */
-  .button-text 
+  button:focus > .button-box-1 > .button-box-2 > .button-box-text
     {
-      padding             : 0px 2px 0px 2px;
-    }
-  
-  button[orient="vertical"] > .button-internal-box > .button-text-container > .button-text
-    {
-      padding             : 2px 2px 0px 2px;
-    }
-  
+      border              : 1px dotted threeddarkshadow;
+    }    
+    
 /** Styles for "DEFAULT" buttons (usually 'OK' or equivalent in dialogs. 
  *  To activate, set 'default' attribute on button.
  **/
  
 /* outer frame */  
-  button[default] 
+  button[default], button:focus
     {
-      /* XXX this is a HACK until 'orient' is supported in CSS! XXX */
-      /* strictly speaking not necessary because default for buttonright is 
-       * to lay image out horizontally, but leaving here as a reminder to
-       * implement this feature */
-      behavior            : url(chrome://global/content/xulBindings.xml#buttonright);
-      font-weight         : bold;
-	    list-style-image    : url("chrome://global/skin/return.gif");
-    }
-  
-  button[default][disabled="true"]
-    {
-      list-style-image    : url("chrome://global/skin/return-disabled.gif");
-    }
-    
-/** Styles for 'dialog' buttons (usually any command button in a dialog)
- *  This class gives buttons 10px of padding on each side to increase the
- *  strike area and make buttons with small amounts of text (e.g. 'OK') 
- *  look less silly.
- **/
-
-/* internal frame */
-  .button-dialog > .button-internal-box,
-  .button-dialog:hover > .button-internal-box
-    {
-      padding             : 2px 10px 2px 10px;
-    }
-  
-  .button-dialog:hover:hover:active > .button-internal-box 
-    {
-      padding             : 3px 9px 1px 11px;
+      border              : 1px solid threeddarkshadow;
     }
 
-/** Styles for grey toolbar buttons. These buttons are used in places like
- *  editor's formatting toolbar or toolbars wanting a button similar to a command
- *  button but without an initial outset frame.
- **/ 
-  .button-borderless 
+  button[default] > .button-box-1,
+  button:focus > .button-box-1
     {
-      border              : 1px solid #CCCCCC;
-    }
-  
-  .button-borderless:hover
-    {
-      border              : 1px solid #000000;
-    }
-    
-  .button-borderless > .button-internal-box 
-    {
-      border              : 1px solid #CCCCCC;
-    }
-  
-  .button-borderless:hover > .button-internal-box 
-    {
-      border              : 1px outset #CCCCCC;
-    }
-  
-  .button-borderless:hover:active > .button-internal-box 
-    {
-      border              : 1px inset #CCCCCC;
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threeddarkshadow;
+      border-bottom       : 1px solid threeddarkshadow;
     }
 
+  button[default] > .button-box-1 > .button-box-2,
+  button:focus > .button-box-1 > .button-box-2
+    {
+      border-left         : 1px solid threedface;
+      border-top          : 1px solid threedface;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
+    }
+  
 /** plain (raw) buttons, class="plain" **/
   button.plain, button.plain:hover, button.plain:hover:active,
-  button.plain:hover:active > .button-internal-box,
+  button:hover:active > .button-internal-box,
   button.plain > .button-internal-box, 
   button.plain > .button-internal-box:hover:active,
   button.plain > .button-internal-box > .button-text-container, 
@@ -148,14 +125,6 @@
       padding             : 0px;
     }
     
-
-/** 
- * utility class for buttons with associated popup
- **/
-.button-popup 
-  {
-	  list-style-image      : url(chrome://global/skin/taskbar-popup-arrow.gif);
-  }
     
     
     

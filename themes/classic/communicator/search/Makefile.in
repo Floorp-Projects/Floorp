@@ -31,13 +31,13 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/search
 
 EXPORT_RESOURCE_SAMPLES = \
-		icons.css \
-		result.gif \
 		category.gif \
-		internet.css \
-		search-editor.css \
 		findresults.css \
+		icons.css \
+		internet.css \
 		internetresults.css \
+		result.gif \
+		search-editor.css \
 		search.css \
 		$(NULL)
 

@@ -34,7 +34,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/tb-menubutton-dm-disabled.gif \
 		$(NULL)
 
-DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet 
+DIRS = bookmarks directory profile regviewer related search sidebar unix wallet xpinstall
 
 include $(topsrcdir)/config/rules.mk
 

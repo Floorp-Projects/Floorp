@@ -36,7 +36,7 @@ CHROME_MISC = \
 	manifest.rdf \
 	$(NULL)
 
-DIRS  = communicator global navigator editor messenger 
+DIRS  = communicator editor global messenger navigator
 
 include $(topsrcdir)/config/rules.mk
 

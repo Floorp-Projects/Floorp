@@ -31,9 +31,9 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/related
 
 EXPORT_RESOURCE_SAMPLES = \
-        related.css \
-        sitemap.gif \
-        $(NULL)
+		related.css \
+		sitemap.gif \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -31,7 +31,6 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/global/skin
 
 EXPORT_RESOURCE_SAMPLES = \
-	alert-icon.gif \
 	animthrob.gif \
 	animthrob_single.gif \
 	blank.gif \
@@ -51,7 +50,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	closedtwisty.gif \
 	dir-closed.gif \
 	dir-open.gif \
-	error-icon.gif \
 	gray-bottomleft.gif \
 	gray-bottomright.gif \
 	gray-topright.gif \
@@ -68,7 +66,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	menu-check-disabled.gif \
 	menu-check-hover.gif \
 	menu-check.gif \
-	message-icon.gif \
 	moreCols.gif \
 	moreCols_dis.gif \
 	moreCols_mo.gif \
@@ -83,7 +80,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	otherbutton28-bg-hover.gif \
 	print.gif \
 	progressmeter-busy.gif \
-	question-icon.gif \
 	return-disabled.gif \
 	return.gif \
 	scroll-down-disabled.gif \
@@ -134,6 +130,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	smallheader-bg.gif \
 	splitter-drag-bg.gif \
 	$(NULL)
+
+DIRS = unix
 
 include $(topsrcdir)/config/rules.mk
 

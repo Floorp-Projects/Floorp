@@ -31,16 +31,16 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/sidebar
 
 EXPORT_RESOURCE_SAMPLES = \
-        list-up-dis.gif  \
-        sidebar-icon.gif \
         customize.css  \
-        list-up.gif \
-        sidebar-topright-cap.gif \
         list-down-dis.gif  \
-        preview.css  \
-        sidebar.css \
         list-down.gif \
+        list-up-dis.gif  \
+        list-up.gif \
+        preview.css  \
         sidebar-bottomright-cap.gif \
+        sidebar-icon.gif \
+        sidebar-topright-cap.gif \
+        sidebar.css \
         sidebarOverlay.css \
         sidebarSplitterBindings.xml \
 	sbgrippy-left-hover.gif \
@@ -52,6 +52,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	sidebar-open-hover.gif \
 	sidebar-open.gif \
 	$(NULL)
+
+DIRS = unix
 
 include $(topsrcdir)/config/rules.mk
 

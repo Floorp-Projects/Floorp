@@ -2,47 +2,53 @@
 
 .color-dialog
   {
-    background-color      : #CCCCCC;
-    color                 : #000000;
+    background-color      : threedface;
+    color                 : windowtext;
   }
   
 .color-window
   {
-    background-color      : #FFFFFF;
-    color                 : #000000;
+    background-color      : window;
+    color                 : windowtext;
   }
 
 /* inset areas */
 .inset
   {
-    border                : 1px inset #CCCCCC;
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-right          : 1px solid threedhighlight;
+    border-bottom         : 1px solid threedhighlight;
     margin                : 0px 5px 5px 5px;
   }
   
 /* formatting */
 .groove-top
   {
-    border-top            : 2px groove #CCCCCC;  
+    border-top            : 2px groove threedface;  
   }
   
 .groove-right
   {
-    border-right          : 2px groove #CCCCCC;
+    border-right          : 2px groove threedface;
   }
   
 .groove-left
   {
-    border-left           : 2px groove #CCCCCC;
+    border-left           : 2px groove threedface;
   }
   
 .groove-bottom
   {
-    border-bottom         : 2px groove #CCCCCC;
+    border-bottom         : 2px groove threedface;
   }
   
 .outset
   {
-    border                : 1px outset #CCCCCC;
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
   }  
   
 /** separator rules **/
@@ -72,7 +78,8 @@
   separator.groove,
   separator.groove[orient="horizontal"] 
     {
-      border-top: 2px groove #CCCCCC;
+      border-top: 1px solid threedshadow;
+      border-bottom: 1px solid threedhighlight;
       height: 0px;
       margin-top: 0.4em;
       margin-bottom: 0.4em;
@@ -80,7 +87,8 @@
   
   separator.groove[orient="vertical"] 
     {
-      border-left: 2px groove #CCCCCC;
+      border-left: 1px solid threedshadow;
+      border-right: 1px solid threedhighlight;
       margin-left: 0.4em;
       margin-right: 0.4em;
     }
@@ -88,13 +96,15 @@
 /* groove separators (0 padding, for dividing effects) */  
   separator.groove-thin 
     {
-      border-top: 2px groove #CCCCCC;
+      border-top: 1px solid threedshadow;
+      border-bottom: 1px solid threedhighlight;
       height: 0px;
     }
   
   separator[orient="vertical"].groove-thin 
     {
-      border-left: 2px groove #CCCCCC;
+      border-left: 1px solid threedshadow;
+      border-right: 1px solid threedhighlight;
     }
 
 /** text formatting rules **/
@@ -106,7 +116,7 @@
     
   text[disabled="true"] 
     {
-      color                 : #999999;
+      color                 : graytext;
     }    
     
   html
@@ -133,4 +143,9 @@
   .box-padded
     {
       padding             : 5px;
+    }    
+
+  .spaced
+    {
+      margin              : 3px 5px 4px 5px;
     }    

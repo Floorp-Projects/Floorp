@@ -13,14 +13,14 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
 #
 
-DEPTH		= ../../../..
-THEME_ROOT_DEPTH = @srcdir@/../..
+DEPTH		= ../../../../..
+THEME_ROOT_DEPTH = @srcdir@/../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -28,18 +28,14 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/messenger/skin/messengercompose
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/sidebar
 
 EXPORT_RESOURCE_SAMPLES = \
-		address.gif \
-		attach.gif \
-		messengercompose.css \
-		quote.gif \
-		save.gif \
-		send.gif \
-		spelling.gif \
-		stop.gif \
-		$(NULL)
+	customize.css  \
+	preview.css \
+	sidebar.css  \
+	sidebarBindings.xml \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

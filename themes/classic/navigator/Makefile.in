@@ -39,8 +39,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	broken.gif \
 	errorl.gif \
 	forward.gif \
-	forward-disabled.gif \
 	forward-hover.gif \
+	forward-disabled.gif \
 	home.gif \
 	location-hover.gif \
 	location.gif \
@@ -49,6 +49,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	mynetscape.gif \
 	n-box-persbar.gif \
 	navigator.css \
+	pageInfo.css \
 	print.gif \
 	questionl.gif \
 	reload.gif \
@@ -59,8 +60,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	stop-disabled.gif \
 	stop-hover.gif \
 	unlock.gif \
-	pageInfo.css \
-    $(NULL)
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

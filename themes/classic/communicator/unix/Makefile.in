@@ -28,23 +28,18 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/messenger/skin/messengercompose
-
-EXPORT_RESOURCE_SAMPLES = \
-		address.gif \
-		attach.gif \
-		messengercompose.css \
-		quote.gif \
-		save.gif \
-		send.gif \
-		spelling.gif \
-		stop.gif \
+EXPORT_RESOURCE = \
+		$(srcdir)/box.css \
+		$(srcdir)/brand.css \
+		$(srcdir)/button.css \
+		$(srcdir)/communicator.css \
+		$(srcdir)/formatting.css \
+		$(srcdir)/menubutton.css \
+		$(srcdir)/toolbar.css \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
 install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin
 

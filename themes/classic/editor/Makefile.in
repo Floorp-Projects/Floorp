@@ -31,12 +31,12 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/editor/skin
 
 EXPORT_RESOURCE_SAMPLES = \
-        EdImageMapPage.css \
-        EditorToolbars.css \
-        EdImageMap.css \
-        EditorDialog.css  \
-        editor.css \
-		$(NULL)
+	EdImageMap.css \
+	EdImageMapPage.css \
+	EditorDialog.css  \
+	EditorToolbars.css \
+	editor.css \
+	$(NULL)
 
 DIRS =  images 
 
