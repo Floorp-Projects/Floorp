@@ -30,7 +30,6 @@ MODULE		= walletviewers
 LIBRARY_NAME	= signonviewer_s
 XPIDL_MODULE	= signonviewer
 
-REQUIRES	= walleteditor raptor xpcom
 
 CPPSRCS		= nsSignonViewer.cpp
 

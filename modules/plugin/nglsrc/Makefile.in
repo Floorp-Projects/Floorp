@@ -30,7 +30,6 @@ MODULE		= raptor
 LIBRARY_NAME	= raptorplugin
 SHORT_LIBNAME	= ngplugin
 
-REQUIRES	= raptor plugin java xpcom netlib libplc3 oji
 
 CPPSRCS		= \
 		nsPluginHostImpl.cpp \

@@ -31,7 +31,6 @@ LIBRARY_NAME	= AutoAdmin
 CSRCS		= prefldap.c icondata.c
 endif
 
-REQUIRES	= ldap js pref
 
 XFEDIR		= $(DEPTH)/cmd/xfe/icons
 

@@ -34,7 +34,6 @@ XPIDLSRCS	= \
 		nsIEvaluateStringProxy.idl \
 		$(NULL)
 
-REQUIRES	= netwerk xpcom
 
 CPPSRCS		= nsJSProtocolHandler.cpp
 

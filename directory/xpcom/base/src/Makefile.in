@@ -43,7 +43,6 @@ LIBRARY_NAME	= mozldap
 SHORT_LIBNAME	= mozldap
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom necko
 
 CPPSRCS		= \
 		nsLDAPService.cpp \

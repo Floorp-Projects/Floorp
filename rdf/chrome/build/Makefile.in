@@ -30,7 +30,6 @@ MODULE		= chrome
 LIBRARY_NAME	= chrome
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom
 
 CPPSRCS		= nsChromeFactory.cpp
 

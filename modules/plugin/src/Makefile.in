@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= plugimpl
 LIBRARY_NAME	= plug
 
-REQUIRES	= lay layer js style applet img util java pref xpcom raptor netcnvts plugin plugimpl oji ojiimpl caps
 
 CSRCS		= npassoc.c
 
@@ -42,7 +41,6 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)
 CPPSRCS		= npwplat.cpp
-REQUIRES	+= xp libfont os2font jtools
 INCLUDES	+= -I$(DEPTH)/cmd/os2fe/nfc/include -I$(DEPTH)/cmd/os2fe -I$(DEPTH)/cmd/winfe
 endif
 

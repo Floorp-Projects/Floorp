@@ -23,7 +23,6 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=xmlextrasbase_s 
 MODULE=xmlextras
-REQUIRES=xpcom raptor dom
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

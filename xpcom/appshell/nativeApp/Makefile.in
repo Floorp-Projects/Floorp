@@ -30,7 +30,6 @@ MODULE		= xpcom_nativeapp
 LIBRARY_NAME	= nativeapp
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom
 
 CPPSRCS		= \
 		nsCNativeAppImpl.cpp \

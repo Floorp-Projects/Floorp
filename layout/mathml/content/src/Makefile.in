@@ -54,7 +54,6 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE=layout
 
-REQUIRES = xpcom raptor dom
 
 MKSHLIB :=
 

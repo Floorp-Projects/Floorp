@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
 
-REQUIRES	= xpcom
 
 CPPSRCS		= nsTimerGtk.cpp
 

@@ -41,7 +41,6 @@ MODULE		= ucvibm
 LIBRARY_NAME	= ucvibm
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsCP850ToUnicode.cpp \

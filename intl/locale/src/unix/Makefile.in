@@ -30,7 +30,6 @@ MODULE		= locale
 LIBRARY_NAME	= nslocale
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom unicharutil
 
 CPPSRCS		= \
 		nsCollationUnix.cpp \

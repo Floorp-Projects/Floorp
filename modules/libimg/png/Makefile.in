@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= png
 LIBRARY_NAME	= png
 
-REQUIRES	= util
 
 CSRCS		= \
 		png.c \
@@ -56,7 +55,6 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 LOCAL_INCLUDES	= -I$(srcdir)
 
 ifndef MOZ_NATIVE_ZLIB
-REQUIRES	+= zlib
 EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lzlib
 endif
 

@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= zlib
 LIBRARY_NAME	= zlib
 
-REQUIRES	= java
 
 CSRCS		= \
 		adler32.c \

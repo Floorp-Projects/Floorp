@@ -28,7 +28,6 @@ LIBRARY_NAME	= nslocale
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= nslocale_s
 
-REQUIRES	= xpcom unicharutil
 
 CPPSRCS		= \
 		nsLocaleOS2.cpp \

@@ -23,7 +23,6 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=raptorxulcontent_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor pref
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

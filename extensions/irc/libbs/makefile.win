@@ -48,7 +48,6 @@ OBJS = \
     .\$(OBJDIR)\bsXPCConnectionFactory.obj \
     $(NULL)
 
-REQUIRES = bs xpcom
 LIBRARY_NAME = bs
 IS_COMPONENT = 1
 

@@ -76,7 +76,6 @@ CPPSRCS =				\
 	$(NULL)
 
 MODULE=raptor 
-REQUIRES=xpcom raptor dom 
 # EXPORTS=
 
 CPP_OBJS=					\

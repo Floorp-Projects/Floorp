@@ -68,7 +68,6 @@ PROGRAMS = $(PROG1) \
 
 LCFLAGS=-DUSE_NSREG -GX
 
-REQUIRES=libreg
 
 LINCS=                     \
         -Iservices         \

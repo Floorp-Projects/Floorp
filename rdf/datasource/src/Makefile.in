@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= rdf
 LIBRARY_NAME	= rdfdatasource_s
 
-REQUIRES	= dom js netlib rdf raptor xpcom
 
 CPPSRCS		= \
 		nsLocalStore.cpp \

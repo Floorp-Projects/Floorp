@@ -30,7 +30,6 @@ MODULE		= raptor
 LIBRARY_NAME	= gfx_photon
 IS_COMPONENT	= 1
 
-REQUIRES	= util img xpcom raptor netlib ps
 
 CPPSRCS		= \
 		nsDeviceContextPh.cpp \

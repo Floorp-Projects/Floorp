@@ -30,7 +30,6 @@ MODULE		= walletviewers
 LIBRARY_NAME	= cookieviewer_s
 XPIDL_MODULE	= cookieviewer
 
-REQUIRES	= walleteditor raptor xpcom
 
 CPPSRCS		= nsCookieViewer.cpp
 

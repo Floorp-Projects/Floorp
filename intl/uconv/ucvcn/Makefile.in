@@ -30,7 +30,6 @@ MODULE		= ucvcn
 LIBRARY_NAME	= ucvcn
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsGB2312ToUnicodeV2.cpp \

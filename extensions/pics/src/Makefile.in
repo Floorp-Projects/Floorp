@@ -29,8 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= pics
 LIBRARY_NAME	= pics
 
-REQUIRES	= js netlib xpcom xppref32 nspr
-
 CSRCS		= \
 		cslabel.c \
 		csparse.c \

@@ -30,7 +30,6 @@ MODULE		= chardet
 LIBRARY_NAME	= chardet
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsCharDetModule.cpp \

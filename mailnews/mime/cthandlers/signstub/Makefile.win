@@ -32,7 +32,6 @@ DEPTH=..\..\..\..
 #//
 #//------------------------------------------------------------------------
 MODULE  = signed
-REQUIRES=
 #EXPORTS =
 # Exported headers here!!!               	
 #	          $(NULL)

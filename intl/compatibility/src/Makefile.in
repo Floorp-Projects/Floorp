@@ -30,7 +30,6 @@ MODULE		= intlcmpt
 LIBRARY_NAME	= intlcmpt
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom
 
 CPPSRCS		= \
 		nsI18nCompatibility.cpp \

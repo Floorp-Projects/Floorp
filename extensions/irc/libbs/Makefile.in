@@ -30,8 +30,6 @@ MODULE		= bs
 LIBRARY_NAME	= bs
 IS_COMPONENT	= 1
 
-REQUIRES	= bs xpcom
-
 CSRCS		= \
 		bsutil.c \
 		bserror.c \

@@ -30,7 +30,6 @@ MODULE		= ucvtw
 LIBRARY_NAME	= ucvtw
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsBIG5ToUnicode.cpp \

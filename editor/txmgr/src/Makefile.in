@@ -30,8 +30,6 @@ MODULE		= txmgr
 LIBRARY_NAME	= txmgr
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom
-
 CPPSRCS		= \
 		nsTransactionItem.cpp \
 		nsTransactionManager.cpp \

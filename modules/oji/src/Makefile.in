@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ojiimpl
 IS_COMPONENT	= 1
 
-REQUIRES	= img java js lay layer plugin plugimpl pref style util xpcom raptor oji caps
 
 ifdef MOZ_OJI
 LIBRARY_NAME	= oji

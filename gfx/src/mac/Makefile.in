@@ -27,7 +27,6 @@ LIBRARY_NAME	= gfx_mac
 MODULE		= raptor
 IS_COMPONENT	= 1
 
-REQUIRES	= util img xpcom raptor netlib
 
 CPPSRCS = \
 		nsATSUIUtils.cpp \

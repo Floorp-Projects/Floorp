@@ -41,7 +41,6 @@ DEPTH=..\..\..\..
 #//
 #//------------------------------------------------------------------------
 MODULE  = vcard
-REQUIRES=
 # EXPORTS =
 # Put any necessary exported headers here!!!               	
 #	          $(NULL)

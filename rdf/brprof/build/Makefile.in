@@ -32,7 +32,6 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= nsBrowsingProfileFactory.cpp
 
-REQUIRES	= xpcom
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libbrprof_s.$(LIB_SUFFIX)
 

@@ -25,7 +25,6 @@ DIRS=util functions
 
 LIBRARY_NAME=transformix_xslt
 MODULE=transformix
-REQUIRES=xpcom raptor
 
 DEFINES=-DMOZILLA
 

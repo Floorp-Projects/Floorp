@@ -27,7 +27,6 @@ MODULE = nkcache
 
 LIBRARY_NAME = nkmemcache_s
 
-REQUIRES	= nspr dbm 
 
 EXPORTS=nsMemCacheCID.h \
 	nsMemCache.h \

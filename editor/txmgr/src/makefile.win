@@ -40,8 +40,6 @@ CPP_OBJS =					\
 
 MODULE=txmgr 
 
-REQUIRES=xpcom base raptor
-
 LINCS=-I$(PUBLIC)\xpcom \
       -I$(PUBLIC)\txmgr \
       -I$(PUBLIC)\base \

@@ -32,7 +32,6 @@ DEPTH=..\..\..\..
 #//
 #//------------------------------------------------------------------------
 MODULE  = smime
-REQUIRES=
 #EXPORTS =
 # Exported headers here!!!               	
 #	          $(NULL)

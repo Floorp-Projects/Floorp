@@ -39,7 +39,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= timer
 LIBRARY_NAME	= timer
 
-REQUIRES	= xpcom
 
 EXPORTS=nsTimerManager.h nsWindowsTimer.h nsIWindowsTimerMap.h os2TimerGlue.h
 

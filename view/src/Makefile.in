@@ -46,7 +46,6 @@ CPPSRCS		= \
 		nsViewFactory.cpp \
 		$(NULL)
 
-REQUIRES	= raptor xpcom
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \

@@ -31,7 +31,6 @@ LIBRARY_NAME	= rdf
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= jsdom
 
-REQUIRES	= dom js netlib rdf raptor xpcom
 
 CPPSRCS		= \
 		nsRDFModule.cpp \

@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= rdfbase
 LIBRARY_NAME	= brprof_s
 
-REQUIRES	= brprof netlib rdf rdfutil raptor xpcom
 
 CPPSRCS		= nsBrowsingProfile.cpp
 

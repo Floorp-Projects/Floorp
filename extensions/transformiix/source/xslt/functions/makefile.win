@@ -23,7 +23,6 @@ DEPTH=..\..\..\..\..
 
 LIBRARY_NAME=transformix_xslt_functions
 MODULE=transformix
-REQUIRES=xpcom raptor
 
 CPPSRCS=					\
 	GenerateIDFunctionCall.cpp		\

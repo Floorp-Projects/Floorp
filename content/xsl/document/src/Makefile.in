@@ -49,7 +49,6 @@ LOCAL_INCLUDES = 				\
 
 MODULE=layout
 
-REQUIRES = xpcom raptor dom js pref
 
 MKSHLIB :=
 

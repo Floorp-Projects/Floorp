@@ -23,7 +23,6 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=transformix_xpath
 MODULE=transformix
-REQUIRES=xpcom raptor
 
 CPPSRCS=				\
 	AdditiveExpr.cpp		\

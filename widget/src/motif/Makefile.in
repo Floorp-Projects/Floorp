@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= widget_motif
 
-REQUIRES	= util img xpcom raptor netlib
 
 DIRS		= app_context
 

@@ -30,7 +30,6 @@ MODULE		= wallet
 LIBRARY_NAME	= wallet
 IS_COMPONENT	= 1
 
-REQUIRES	= wallet
 
 CPPSRCS		= \
 		nsWalletFactory.cpp \

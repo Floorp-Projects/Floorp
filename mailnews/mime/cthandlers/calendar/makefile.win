@@ -39,7 +39,6 @@ DEPTH=..\..\..\..
 #//
 #//------------------------------------------------------------------------
 MODULE  = calendar
-REQUIRES=
 #EXPORTS =
 # Exported headers here!!!               	
 #	          $(NULL)

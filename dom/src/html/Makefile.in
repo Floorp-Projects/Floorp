@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 LIBRARY_NAME	= jsdomhtml_s
 
-REQUIRES	= xpcom raptor dom js netlib
 
 CPPSRCS		= \
 		nsJSHTMLIFrameElement.cpp \

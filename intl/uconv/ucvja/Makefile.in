@@ -30,7 +30,6 @@ MODULE		= ucvja
 LIBRARY_NAME	= ucvja
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsJapaneseToUnicode.cpp \

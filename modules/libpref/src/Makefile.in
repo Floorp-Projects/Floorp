@@ -30,7 +30,6 @@ MODULE		= pref
 LIBRARY_NAME	= pref
 IS_COMPONENT	= 1
 
-REQUIRES	= js pref security ldap img layer xpcom util
 
 CSRCS		= prefapi.c
 

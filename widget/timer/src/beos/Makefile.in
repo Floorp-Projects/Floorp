@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= timer
 LIBRARY_NAME	= timer_beos
 
-REQUIRES	= xpcom
 
 CPPSRCS		= nsTimer.cpp
 

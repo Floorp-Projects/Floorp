@@ -107,7 +107,6 @@ endif
 # Also create static library libxmlterm.a
 override NO_STATIC_LIB=
 
-REQUIRES =
 
 include $(topsrcdir)/config/config.mk
 

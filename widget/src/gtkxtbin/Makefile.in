@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE          = gtkxtbin
 LIBRARY_NAME	= gtkxtbin
 
-REQUIRES	= gtkxtbin
 
 CSRCS           = \
                 gtkxtbin.c \

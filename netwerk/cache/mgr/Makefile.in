@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= nkcache 
 LIBRARY_NAME	= nkcachemgr_s
 
-REQUIRES	= nspr
 
 EXPORTS		= \
 		nsCacheManager.h \

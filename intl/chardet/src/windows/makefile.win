@@ -44,7 +44,6 @@ CPP_OBJS= \
 
 MODULE=chardetnativeTest
 
-REQUIRES=xpcom
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=chardetnativeTest

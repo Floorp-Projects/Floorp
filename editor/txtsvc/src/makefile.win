@@ -38,8 +38,6 @@ CPP_OBJS =					\
 
 MODULE=txtsvc 
 
-REQUIRES=xpcom base dom raptor
-
 LINCS=-I$(PUBLIC)\xpcom \
       -I$(PUBLIC)\txtsvc \
       -I$(PUBLIC)\editor \

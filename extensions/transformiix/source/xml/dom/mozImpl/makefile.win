@@ -23,8 +23,6 @@ DEPTH=..\..\..\..\..\..
 
 LIBRARY_NAME=transformix_xml_dom_mozImpl
 MODULE=transformix
-REQUIRES=xpcom raptor
-
 CPPSRCS=						\
 	MozillaAttr.cpp					\
 	MozillaCDATASection.cpp			\

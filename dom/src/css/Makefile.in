@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 LIBRARY_NAME	= jsdomcss_s
 
-REQUIRES	= xpcom raptor dom js netlib
 
 CPPSRCS		= \
 		nsJSCSS2Properties.cpp \

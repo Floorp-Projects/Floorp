@@ -30,7 +30,6 @@ MODULE		= walletviewers
 LIBRARY_NAME	= walletpreview_s
 XPIDL_MODULE	= walletpreview
 
-REQUIRES	= walleteditor raptor xpcom
 
 CPPSRCS		= nsWalletPreview.cpp
 

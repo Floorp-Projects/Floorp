@@ -29,7 +29,6 @@ PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG
 
-REQUIRES=libreg
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\lwbrk -I$(PUBLIC)\raptor
 

@@ -40,7 +40,6 @@ CPPSRCS = \
 	$(NULL)
 
 MODULE=wallet
-REQUIRES=wallet
 EXPORTS= $(NULL)
 
 LLIBS=$(LLIBS)  $(LIBNSPR)		\

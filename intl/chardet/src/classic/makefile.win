@@ -44,7 +44,6 @@ CPP_OBJS= \
 
 MODULE=chardetc
 
-REQUIRES=xpcom
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=chardetc

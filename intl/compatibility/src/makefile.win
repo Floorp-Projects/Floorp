@@ -39,7 +39,6 @@ CPP_OBJS= \
 
 MODULE=intlcmpt
 
-REQUIRES=xpcom
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor
 

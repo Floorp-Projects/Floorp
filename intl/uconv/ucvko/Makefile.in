@@ -30,7 +30,6 @@ MODULE		= ucvko
 LIBRARY_NAME	= ucvko
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsEUCKRToUnicode.cpp \

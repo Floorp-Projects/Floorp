@@ -50,7 +50,6 @@ CPP_OBJS= \
 
 MODULE=lwbrk
 
-REQUIRES=xpcom
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\lwbrk -I$(PUBLIC)\raptor
 

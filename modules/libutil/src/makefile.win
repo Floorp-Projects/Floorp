@@ -22,7 +22,6 @@
 MODULE=util 
 DEPTH=..\..\.. 
 CSRCS=obs.c 
-REQUIRES=nspr util 
 LIBRARY_NAME=util 
 CPPSRCS=stopwatch.cpp \
         nsTimer.cpp \

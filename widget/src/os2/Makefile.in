@@ -27,7 +27,6 @@ LIBRARY_NAME	= wdgtos2
 
 EXTRA_DSO_LIBS	= nggfx
 
-REQUIRES	= util img xpcom raptor netlib
 
 DIRS		= res
 

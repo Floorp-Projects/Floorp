@@ -29,8 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= TestCookie$(BIN_SUFFIX)
 CPPSRCS		= TestCookie.cpp
 
-REQUIRES	= js cookie pref xpcom include
-
 LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
