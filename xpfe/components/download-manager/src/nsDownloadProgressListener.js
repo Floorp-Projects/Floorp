@@ -61,7 +61,6 @@ nsDownloadProgressListener.prototype = {
     {
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       {
-        this.downloadItem = null;
         // we are done downloading...
         // Indicate completion in status area.
         var msg = getString( "completeMsg", this.doc );
