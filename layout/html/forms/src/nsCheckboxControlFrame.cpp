@@ -35,10 +35,8 @@
 #include "nsIDOMHTMLInputElement.h"
 
 
-#ifdef XP_PC
-#define NS_PC_DESIRED_CHECKBOX_SIZE 20
-#define NS_PC_ABSOLUTE_CHECKBOX_SIZE 12
-#endif
+#define NS_DESIRED_CHECKBOX_SIZE 20
+#define NS_ABSOLUTE_CHECKBOX_SIZE 12
 
 
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
@@ -129,8 +127,8 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
 #ifdef XP_PC
-   aDesiredWidgetSize.width  = NSIntPixelsToTwips(NS_PC_DESIRED_CHECKBOX_SIZE, p2t);
-   aDesiredWidgetSize.height = NSIntPixelsToTwips(NS_PC_DESIRED_CHECKBOX_SIZE, p2t);
+   aDesiredWidgetSize.width  = NSIntPixelsToTwips(NS_DESIRED_CHECKBOX_SIZE, p2t);
+   aDesiredWidgetSize.height = NSIntPixelsToTwips(NS_DESIRED_CHECKBOX_SIZE, p2t);
 #endif
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
@@ -307,8 +305,8 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
   aPresContext.GetScaledPixelsToTwips(p2t);
  
     //Offset fixed size checkbox in to the middle of the area reserved for the checkbox
-  const int printOffsetX = (NS_PC_DESIRED_CHECKBOX_SIZE - NS_PC_ABSOLUTE_CHECKBOX_SIZE);
-  const int printOffsetY = (NS_PC_DESIRED_CHECKBOX_SIZE - NS_PC_ABSOLUTE_CHECKBOX_SIZE);
+  const int printOffsetX = (NS_DESIRED_CHECKBOX_SIZE - NS_ABSOLUTE_CHECKBOX_SIZE);
+  const int printOffsetY = (NS_DESIRED_CHECKBOX_SIZE - NS_ABSOLUTE_CHECKBOX_SIZE);
   aRenderingContext.Translate(NSIntPixelsToTwips(printOffsetX, p2t), 
                               NSIntPixelsToTwips(printOffsetY, p2t));
 
