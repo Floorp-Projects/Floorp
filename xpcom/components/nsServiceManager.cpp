@@ -164,6 +164,7 @@ static PRBool
 DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 {
     nsServiceEntry* entry = (nsServiceEntry*)aData;
+    entry->NotifyListeners();
     NS_RELEASE(entry->mService);
     delete entry;
     return PR_TRUE;
