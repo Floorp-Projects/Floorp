@@ -115,7 +115,7 @@ static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
 #endif
 
 // GFXWIN
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_OS2)
 static NS_DEFINE_CID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kCDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kCFontMetricsCID, NS_FONT_METRICS_CID);
@@ -210,7 +210,7 @@ NS_SetupRegistry()
 #endif
 
   // GFXWIN
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_OS2)
   nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "@mozilla.org/gfx/renderingcontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "@mozilla.org/gfx/devicecontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "@mozilla.org/gfx/fontmetrics;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
