@@ -546,16 +546,6 @@ sub MakeUninstall
     print "\n Error: copy uninstall.ini $inDistPath\\uninstall\n";
     return(1);
   }
-  if(system("cp defaults_info.ini $inDistPath"))
-  {
-    print "\n Error: copy defaults_info.ini $inDistPath\n";
-    return(1);
-  }
-  if(system("cp defaults_info.ini $inDistPath\\uninstall"))
-  {
-    print "\n Error: copy defaults_info.ini $inDistPath\\uninstall\n";
-    return(1);
-  }
   if(system("cp $inDistPath\\uninstall.exe $inDistPath\\uninstall"))
   {
     print "\n Error: copy $inDistPath\\uninstall.exe $inDistPath\\uninstall\n";
@@ -601,7 +591,7 @@ sub MakeUninstall
   system("rc -r $inDistPath\\$seuFileNameSpecificRC $inDistPath\\temp.res");
   system("cat $inDistPath\\$seuFileNameSpecificRes $inDistPath\\temp.res > $inDistPath\\new.res");
   unlink("$inDistPath\\$seuFileNameSpecificRes");
-  rename("$inDistPath\\new.res", "$inDistPath\\$seuFileNameSpecificStubRes");
+  rename("$inDistPath\\new.res", "$inDistPath\\$seuFileNameSpecificRes");
   unlink("$inDistPath\\temp.res");
   system("rc $inDistPath\\$seuFileNameSpecificRes $inDistPath\\$seuFileNameSpecific");
 

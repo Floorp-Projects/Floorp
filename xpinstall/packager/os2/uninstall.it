@@ -16,14 +16,13 @@ Product Name=$ProductName$
 
 ; This provides information on where in the OS/2 INI to locate the Uninstall log files
 ;
-Main App=[Product OS2INIKey]
+Main App=[Product OS2INIApp]
 Decrypt Main App=TRUE
 
 App=[Product CurrentVersion]
 Decrypt App=TRUE
 
 Uninstall Filename=$UninstallFile$
-Defaults Info Filename=defaults_info.ini
 
 [Check Instance0]
 Class Name=MozillaMessageWindow
