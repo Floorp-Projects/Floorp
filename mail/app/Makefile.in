@@ -77,7 +77,7 @@ endif
 endif
 
 LIBS = \
-	$(call EXPAND_LIBNAME, xulapp_s) \
+	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(TK_LIBS) \

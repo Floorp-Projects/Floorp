@@ -75,6 +75,6 @@ IDD_SPLASH DIALOGEX
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_DDE_APPLICATION_NAME,            "Minotaur"
-    IDS_STARTMENU_APPNAME,              "Minotaur"
+    ID_DDE_APPLICATION_NAME,            "Thunderbird"
+    IDS_STARTMENU_APPNAME,              "Thunderbird"
 END
