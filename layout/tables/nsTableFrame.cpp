@@ -1903,10 +1903,10 @@ nsTableFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread
   if ((aSpread == eSpreadDown) && aSelected){
     nsIFrame* kid;
     nsresult rv = FirstChild(nsnull, &kid);
-    while (nsnull != kid) {
+    while (NS_SUCCEEDED(rv) && nsnull != kid) {
       kid->SetSelected(nsnull,PR_FALSE,eSpreadDown);
 
-      kid->GetNextSibling(&kid);
+      rv = kid->GetNextSibling(&kid);
     }
   }
   return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
@@ -4905,7 +4905,7 @@ PRBool nsTableFrame::IsAutoWidth(const nsHTMLReflowState& aReflowState,
   PRBool isAuto = PR_TRUE;  // the default
 
   nsStylePosition* tablePosition = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-  const nsStyleSpacing* spacing;
+//unused  const nsStyleSpacing* spacing;
 
   switch (tablePosition->mWidth.GetUnit()) {
 
