@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.1 2002/04/25 02:51:10 seawood%netscape.com Exp $
+## $Id: mozilla.in,v 1.2 2002/06/13 12:16:52 seawood%netscape.com Exp $
 ## 
 ## Usage:
 ##
@@ -50,19 +50,20 @@ else
     found=1
   else
     here=`/bin/pwd`
-    until test $found != 0 -o ! -L "$progname" ; do
+    while [ -h "$progname" ]; do
+      bn=`basename "$progname"`
+      cd `dirname "$progname"`
+      progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
+      if [ ! -x "$progname" ]; then
+        break
+      fi
+      curdir=`dirname $progname`
       run_moz="$curdir/run-mozilla.sh"
       if [ -x $run_moz ]; then
-        dist_bin=$curdir
+        cd $curdir
+        dist_bin=`pwd`
         found=1
-      else
-        bn=`basename "$progname"`
-        cd `dirname "$progname"`
-        progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
-        if [ ! -x "$progname" ]; then
-          break
-        fi
-        curdir=`dirname $progname`
+        break
       fi
     done
     cd $here
