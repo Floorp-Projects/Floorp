@@ -46,6 +46,8 @@ public:
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32* aResult) = 0;
   NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32* aResult) = 0;
   NS_IMETHOD GetRowCount(PRInt32* aResult) = 0;
+  NS_IMETHOD BeginBatch()=0;
+  NS_IMETHOD EndBatch()=0;
 };
 
 #endif

@@ -230,7 +230,7 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 // Constructor
 nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
- mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0),
+ mBatchCount(0), mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mOldIndex(0),
  mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCanDropBetweenRows(PR_TRUE),
  mRowHeightWasSet(PR_FALSE), mReflowCallbackPosted(PR_FALSE), mYPosition(0), mScrolling(PR_FALSE),
  mScrollSmoother(nsnull), mTimePerRow(TIME_PER_ROW_INITAL), mAdjustScroll(PR_FALSE)
@@ -545,6 +545,9 @@ nsXULTreeOuterGroupFrame::ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNew
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 { 
+  if (mScrolling)
+    return NS_OK;
+
   PRInt32 oldTwipIndex, newTwipIndex;
   oldTwipIndex = mCurrentIndex*mRowHeight;
   newTwipIndex = (aNewIndex*mOnePixel);
@@ -627,31 +630,26 @@ nsXULTreeOuterGroupFrame::InternalPositionChangedCallback()
 }
 
 NS_IMETHODIMP
-nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
+nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool aForceDestruct)
 {  
   if (aDelta == 0)
     return NS_OK;
 
-    // begin timing how long it takes to scroll a row
-    PRTime start = PR_Now();
+  // begin timing how long it takes to scroll a row
+  PRTime start = PR_Now();
 
-    //printf("Actually doing scroll mCurrentIndex=%d, delta=%d!\n", mCurrentIndex, aDelta);
+  //printf("Actually doing scroll mCurrentIndex=%d, delta=%d!\n", mCurrentIndex, aDelta);
 
-  //if (mContentChain) {
-    // XXX Eventually we need to make the code smart enough to look at a content chain
-    // when building ANOTHER content chain.
-    // Ensure all reflows happen first and make sure we're dirty.
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
-    shell->FlushPendingNotifications();
- // }
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+  shell->FlushPendingNotifications();
 
   PRInt32 visibleRows = 0;
   if (mRowHeight)
 	  visibleRows = GetAvailableHeight()/mRowHeight;
   
   // Get our presentation context.
-  if (aDelta < visibleRows) {
+  if (aDelta < visibleRows && !aForceDestruct) {
     PRInt32 loseRows = aDelta;
 
     // scrolling down
@@ -710,15 +708,16 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
   
   mYPosition = mCurrentIndex*mRowHeight;
   nsBoxLayoutState state(mPresContext);
-  nsCOMPtr<nsIBoxLayout> layout;
-  GetLayoutManager(getter_AddRefs(layout));
-  nsTreeLayout* treeLayout = (nsTreeLayout*)layout.get();
-  treeLayout->LazyRowCreator(state, this);
   mScrolling = PR_TRUE;
+  MarkDirtyChildren(state);
   shell->FlushPendingNotifications();
   mScrolling = PR_FALSE;
+  
   VerticalScroll(mYPosition);
 
+  if (aForceDestruct)
+    Redraw(state, nsnull, PR_FALSE);
+  
   PRTime end = PR_Now();
 
   PRTime difTime;
@@ -1092,6 +1091,10 @@ nsXULTreeOuterGroupFrame::FindNextRowContent(PRInt32& aDelta, nsIContent* aUpwar
 void
 nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 {
+  NS_ASSERTION(aRowIndex >= 0, "Ensure row is visible called with a negative number!");
+  if (aRowIndex < 0)
+    return;
+
   PRInt32 rows = 0;
   if (mRowHeight)
     rows = GetAvailableHeight()/mRowHeight;
@@ -1106,8 +1109,8 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 
   PRBool up = aRowIndex < mCurrentIndex;
   if (up) {
-    mCurrentIndex = aRowIndex;
     delta = mCurrentIndex - aRowIndex;
+    mCurrentIndex = aRowIndex;
   }
   else {
     // Bring it just into view.
@@ -1119,7 +1122,7 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 }
 
 void
-nsXULTreeOuterGroupFrame::ScrollToIndex(PRInt32 aRowIndex)
+nsXULTreeOuterGroupFrame::ScrollToIndex(PRInt32 aRowIndex, PRBool aForceDestruct)
 {
   if (( aRowIndex < 0 ) || (mRowHeight == 0))
     return;
@@ -1130,11 +1133,14 @@ nsXULTreeOuterGroupFrame::ScrollToIndex(PRInt32 aRowIndex)
 
   // Check to be sure we're not scrolling off the bottom of the tree
   PRInt32 lastPageTopRow = GetRowCount() - (GetAvailableHeight() / mRowHeight);
+  if (lastPageTopRow < 0)
+    lastPageTopRow = 0;
+
   if (aRowIndex > lastPageTopRow)
     return;
 
   mCurrentIndex = newIndex;
-  InternalPositionChanged(up, delta);
+  InternalPositionChanged(up, delta, aForceDestruct);
 
   // This change has to happen immediately.
   // Flush any pending reflow commands.
@@ -1207,6 +1213,24 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
 }
 
 NS_IMETHODIMP
+nsXULTreeOuterGroupFrame::EndBatch()
+{
+  NS_ASSERTION(mBatchCount, "EndBatch called on a tree that isn't batching!\n");
+  if (mBatchCount == 0)
+    return NS_OK;
+
+  mBatchCount--;
+  if (mBatchCount == 0) {
+    if (mCurrentIndex == mOldIndex) {
+      nsBoxLayoutState state(mPresContext);
+      MarkDirtyChildren(state);
+    }
+    else ScrollToIndex(mCurrentIndex, PR_TRUE);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
 {
   // Now dirty the world.
@@ -1251,6 +1275,82 @@ nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlus
   return NS_OK;
 }
 
+void
+nsXULTreeOuterGroupFrame::RegenerateRowGroupInfo(PRBool aOnScreenCount)
+{ 
+  NeedsRecalc(); 
+  
+  PRInt32 oldRowCount = GetRowCount();
+  if (mRowGroupInfo) 
+    mRowGroupInfo->Clear(); 
+  PRInt32 newRowCount = GetRowCount();
+
+  if (mRowHeight <= 0)
+      return;
+
+  // For removal only, we need to know how many rows are onscreen.  These subtract
+  // from the amount that we need to adjust.  For example, if the tree widget is
+  // scrolled to index 40, and if a folder that is offscreen at index 0
+  // is deleted, and it contains 9 kids, then a total of 10 rows are vanishing.  
+  // newRowCount - oldRowCount will be -10 following the removal.  However, if 4 of those
+  // 10 rows were onscreen, then the tree widget's index only needs to be adjusted by
+  // -6 (-10 + 4).  
+  PRInt32 delta = newRowCount-oldRowCount+aOnScreenCount;
+  PRInt32 newIndex = mCurrentIndex + delta;
+  PRBool adjust = PR_FALSE;
+
+  // Check to be sure we're not scrolling off the bottom of the tree
+  PRInt32 lastPageTopRow = newRowCount - (GetAvailableHeight() / mRowHeight);
+  if (lastPageTopRow < 0) {
+    if (aOnScreenCount > 0)
+      adjust = PR_TRUE;
+    lastPageTopRow = 0;
+  }
+  
+  if (newIndex > lastPageTopRow) { 
+    newIndex = lastPageTopRow;
+    if (aOnScreenCount > 0)
+      adjust = PR_TRUE;
+  }
+
+  if (newIndex < 0)
+    newIndex = 0;
+
+  if (!adjust) {
+    if (mCurrentIndex == 0 || delta == 0)
+      return; // Just a simple update or we aren't scrolled, so bail.
+
+    nsCOMPtr<nsIContent> row;
+    GetFirstRowContent(getter_AddRefs(row));
+    NS_ASSERTION(row, "No row in regen check!");
+    if (!row)
+      return;
+
+    // An element was passed in that was either removed or added.
+    // We need to adjust our scroll position if this element's index
+    // is < our current scrolled index.
+    PRInt32 index = 0;
+    nsCOMPtr<nsIContent> item;
+    row->GetParent(*getter_AddRefs(item));
+    IndexOfItem(mContent, item, PR_FALSE, PR_TRUE, &index);
+    if (index == -1 || index == mCurrentIndex)
+      return;
+  }
+  
+  // We mark the outer row group dirty and force a comprehensive
+  // rebuild of all tree widget frames.  This ensures that we
+  // stay precisely in sync whenever we lose content from above.
+  if (IsBatching())
+    mCurrentIndex = newIndex;
+  else ScrollToIndex(newIndex, !adjust);
+
+  if (adjust) {
+    // Force a full redraw.
+    nsBoxLayoutState state(mPresContext);
+    Redraw(state, nsnull, PR_FALSE);
+  }
+}
+
 //
 // Paint
 //
@@ -1261,6 +1361,7 @@ nsXULTreeOuterGroupFrame :: Paint ( nsIPresContext* aPresContext, nsIRenderingCo
                                       const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer)
 {
   nsresult res = NS_OK;
+  
   res = nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
   
   if ( (aWhichLayer == eFramePaintLayer_Content) &&

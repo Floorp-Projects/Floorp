@@ -130,7 +130,7 @@ public:
     return mRowHeight;
   }
 
-  void ClearRowGroupInfo() { if (mRowGroupInfo) mRowGroupInfo->Clear(); NeedsRecalc(); };
+  void RegenerateRowGroupInfo(PRInt32 aOnscreenCount);
   
   void SetRowHeight(PRInt32 aRowHeight);
   PRBool IsFixedRowSize();
@@ -147,6 +147,9 @@ public:
 
   NS_IMETHOD GetRowCount(PRInt32* aResult) { *aResult = GetRowCount(); return NS_OK; }
   
+  NS_IMETHOD BeginBatch() { mBatchCount++; mOldIndex = mCurrentIndex; return NS_OK; }
+  NS_IMETHOD EndBatch();
+
   NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD VisibilityChanged(PRBool aVisible);
@@ -172,14 +175,14 @@ public:
   // that the row is at the top of the screen (if the row was offscreen to start with).
   void EnsureRowIsVisible(PRInt32 aRowIndex);
 
-  void ScrollToIndex(PRInt32 aRowIndex);
+  void ScrollToIndex(PRInt32 aRowIndex, PRBool aForceDestruct=PR_FALSE);
   
   NS_IMETHOD IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
                          PRBool aDescendIntoRows, // Invariant
                          PRBool aParentIsOpen,
                          PRInt32 *aResult);
 
-  NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta);
+  NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool aForceDestruct=PR_FALSE);
   NS_IMETHOD InternalPositionChangedCallback();
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
@@ -189,6 +192,7 @@ public:
 
   void PostReflowCallback();
 
+  PRBool IsBatching() const { return mBatchCount > 0; };
 
 protected:
 
@@ -203,10 +207,12 @@ protected:
   nsresult StopScrollTracking();
 #endif
 
+  PRUint32 mBatchCount;
   nsXULTreeRowGroupInfo* mRowGroupInfo;
   PRInt32 mRowHeight;
   nscoord mOnePixel;
   PRInt32 mCurrentIndex; // Row-based
+  PRInt32 mOldIndex; 
   PRPackedBool mTreeIsSorted;
   PRPackedBool mCanDropBetweenRows;      // is the user allowed to drop between rows
   

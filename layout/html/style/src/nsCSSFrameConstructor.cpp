@@ -8262,8 +8262,10 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
     aContainer->GetTag(*getter_AddRefs(tag));
-    if (tag && (tag.get() == nsXULAtoms::treechildren ||
-        tag.get() == nsXULAtoms::treeitem)) {
+    PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
+    PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
+
+    if (treeChildren || treeItem) {
       // Walk up to the outermost tree row group frame and tell it that
       // content was added.
       nsCOMPtr<nsIContent> parent;
@@ -8287,15 +8289,40 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
           // Get the primary frame for the parent of the child that's being added.
           nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
-  
-          treeRowGroup->ClearRowGroupInfo();
-          
+   
+          nsBoxLayoutState state(aPresContext);
+            
           nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
           if (innerGroup) {
-            nsBoxLayoutState state(aPresContext);
             innerGroup->MarkDirtyChildren(state);
           }
-          shell->FlushPendingNotifications();
+          else {
+            treeRowGroup->MarkDirtyChildren(state);
+            
+            // Resolve our style context to find out if we need to clear out our
+            // undisplayed content.
+            if (treeChildren) {
+              nsCOMPtr<nsIContent> parent;
+              aContainer->GetParent(*getter_AddRefs(parent));
+              if (parent) {
+                nsAutoString open;
+                parent->GetAttribute(kNameSpaceID_None, nsXULAtoms::open, open);
+                if (open.EqualsIgnoreCase("true")) {
+                  // Clear our undisplayed content.
+                  nsCOMPtr<nsIPresShell>    shell;
+                  aPresContext->GetShell(getter_AddRefs(shell));
+                  nsCOMPtr<nsIFrameManager> frameManager;
+                  shell->GetFrameManager(getter_AddRefs(frameManager));
+                  frameManager->ClearUndisplayedContentIn(aContainer, parent);
+                }
+              }
+            }
+          }
+
+          treeRowGroup->RegenerateRowGroupInfo(0);
+         
+          if (!treeRowGroup->IsBatching())
+            shell->FlushPendingNotifications();
 
           return NS_OK;
         }
@@ -8567,8 +8594,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
     aContainer->GetTag(*getter_AddRefs(tag));
-    if (tag && (tag.get() == nsXULAtoms::treechildren ||
-                tag.get() == nsXULAtoms::treeitem)) {
+    PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
+    PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
+    if (treeChildren || treeItem) {
       // Walk up to the outermost tree row group frame and tell it that
       // content was added.
       nsCOMPtr<nsIContent> parent;
@@ -8600,7 +8628,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
           nsIFrame* prevSibling = FindPreviousSibling(shell,
                                                        aContainer,
                                                        aIndexInContainer);
-          if (prevSibling || innerFrame) {
+          if (innerFrame) {
             // We're onscreen, but because of the fact that we can be called to
             // "kill" a displayed frame (e.g., when you close a tree node), we
             // have to see if this slaying is taking place.  If so, then we don't
@@ -8617,16 +8645,18 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             const nsStyleDisplay* display = (const nsStyleDisplay*)
               styleContext->GetStyleData(eStyleStruct_Display);
 
-            if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-
-              nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
+            nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                     GetAbsoluteContainingBlock(aPresContext, innerFrame),
                                     GetFloaterContainingBlock(aPresContext, innerFrame),
                                     aFrameState);
+
+            if (NS_STYLE_DISPLAY_NONE == display->mDisplay && treeItem) {
               state.mFrameManager->SetUndisplayedContent(aChild, styleContext);
               return NS_OK;
             }
-  
+          }
+
+          if (prevSibling || innerFrame) {
             nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
             nsBoxLayoutState state(aPresContext);
             
@@ -8638,11 +8668,12 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
               else innerGroup->MarkDirtyChildren(state);
             }
 
-            treeRowGroup->ClearRowGroupInfo();
+            treeRowGroup->RegenerateRowGroupInfo(0);
             treeRowGroup->MarkDirtyChildren(state);
           }
 
-          shell->FlushPendingNotifications();
+          if (!treeRowGroup->IsBatching())
+            shell->FlushPendingNotifications();
           return NS_OK;
         }
       }
@@ -9236,15 +9267,18 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   if (aContainer) {
     nsCOMPtr<nsIAtom> tag;
     aContainer->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::treechildren ||
-        tag.get() == nsXULAtoms::treeitem) {
+    PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
+    PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
+
+    if (treeChildren || treeItem) {
+      PRInt32 onScreenDelta = 0;
       if (childFrame) {
         // Convert to a tree row group frame.
         nsIFrame* parentFrame;
         childFrame->GetParent(&parentFrame);
         nsXULTreeGroupFrame* treeRowGroup = (nsXULTreeGroupFrame*)parentFrame;
         if (treeRowGroup) {
-          treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer);
+          treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer, onScreenDelta);
         }
       }
       {
@@ -9270,10 +9304,16 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           // Convert to a tree row group frame.
           nsXULTreeOuterGroupFrame* treeRowGroup = (nsXULTreeOuterGroupFrame*)parentFrame;
           if (treeRowGroup) {
+            // If a tree item is removed, try to find an item we can use
+            // to detect if the removed item was above our current scroll
+            // position.
+            treeRowGroup->RegenerateRowGroupInfo(onScreenDelta);
+            
             nsBoxLayoutState state(aPresContext);
             treeRowGroup->MarkDirtyChildren(state);
-            treeRowGroup->ClearRowGroupInfo();
-            shell->FlushPendingNotifications();
+
+            if (!treeRowGroup->IsBatching())
+              shell->FlushPendingNotifications();
           }
           return NS_OK;
         }

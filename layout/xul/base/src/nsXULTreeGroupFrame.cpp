@@ -418,17 +418,26 @@ nsXULTreeGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFrame* a
   // content was inserted
   if (mTopFrame == nsnull) return;
 
-  // if we're inserting content at the top of visible content,
-  // then ignore it because it would go off-screen
-  // except of course in the case of the first row, where we're
-  // actually adding visible content
+  // if we're inserting the item before the first visible content,
+  // then ignore it because it will end up off-screen
+  // (except of course in the case of the first row, where we're
+  // actually adding visible content)
   if(aNextSibling == mTopFrame) {
-    if (aIndex == 0)
-      // it's the first row, blow away mTopFrame so it can be
-      // crecreated later
+    if (aIndex > 0) // We aren't at the front, so we have to be offscreen.
+      return;       // Just bail.
+    
+    nsCOMPtr<nsIContent> content;
+    aNextSibling->GetContent(getter_AddRefs(content));
+    PRInt32 siblingIndex;
+    mContent->IndexOf(content, siblingIndex);
+    
+    if (siblingIndex == 1 && mOuterFrame->GetYPosition() == 0)
+      // We just inserted an item in front of the first of our children
+      // and we're at the top, such that we have to show the row.
+      // This item is our new visible top row.
       mTopFrame = nsnull;
     else
-      // it's not visible, nothing to do
+      // The newly inserted row is offscreen.  We can just bail.
       return;
   }
 
@@ -450,7 +459,7 @@ nsXULTreeGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFrame* a
 
 void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext, 
                                            nsIFrame* aChildFrame,
-                                           PRInt32 aIndex)
+                                           PRInt32 aIndex, PRInt32& aOnScreenRowCount)
 {
   // if we're removing the top row, the new top row is the next row
   if (mTopFrame && mTopFrame == aChildFrame)
@@ -459,34 +468,14 @@ void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
   // Go ahead and delete the frame.
   nsBoxLayoutState state(aPresContext);
   if (aChildFrame) {
+    nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(aChildFrame));
+    if (slice)
+      slice->GetOnScreenRowCount(&aOnScreenRowCount);
+
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame, nsnull);
 
     Remove(state, aChildFrame);
     mFrames.DestroyFrame(aPresContext, aChildFrame);
-    MarkDirtyChildren(state);
-
-    // Get our old row count.
-    PRInt32 rowCount = mOuterFrame->GetRowCount();
-
-    // See if the last row is visible.  If it is, we need to pull back
-    // by the amount of rows that we lose.
-    PRInt32 index;
-    mOuterFrame->GetIndexOfFirstVisibleRow(&index);
-    PRInt32 vis;
-    mOuterFrame->GetNumberOfVisibleRows(&vis);
-
-    if (index > 0 && index + vis >= rowCount) {
-      // Danger, Will Robinson, danger! We need to scroll backwards.
-      mOuterFrame->ClearRowGroupInfo();
-      PRInt32 newCount = mOuterFrame->GetRowCount();
-      PRInt32 delta = rowCount - newCount;
-      mOuterFrame->ScrollToIndex(index-delta);
-      if (index-delta <= 0) {
-        // Repaint the world.
-        mOuterFrame->Redraw(state, nsnull, PR_FALSE);
-      }
-      return;
-    }
   }
 
   MarkDirtyChildren(state);
