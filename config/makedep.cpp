@@ -104,14 +104,14 @@ class CFileRecord {
 public:
     CString m_shortName;
     CString m_pathName;
-    CPtrArray m_includes;
+    CPtrArray m_includes;  // pointers to CFileRecords in fileMap
     BOOL m_bVisited;
     BOOL m_bSystem;
     BOOL m_bSource;
-    static CMapStringToPtr fileMap;
-	static CStringArray orderedFileNames;
-	static CMapStringToPtr includeMap;
-	static CMapStringToPtr noDependMap;
+    static CMapStringToPtr fileMap;      // contains all allocated CFileRecords
+    static CStringArray orderedFileNames;
+    static CMapStringToPtr includeMap;   // pointer to CFileRecords in fileMap
+    static CMapStringToPtr noDependMap;
 
     CFileRecord( const char *shortName, const char* pFullName, BOOL bSystem, BOOL bSource):
                 m_shortName( shortName ),
@@ -648,10 +648,10 @@ public:
 
 };
 
-CMapStringToPtr CFileRecord::fileMap;
+CMapStringToPtr CFileRecord::fileMap;           // contains all allocated CFileRecords
 CStringArray CFileRecord::orderedFileNames;
-CMapStringToPtr CFileRecord::includeMap;
-CMapStringToPtr CFileRecord::noDependMap;
+CMapStringToPtr CFileRecord::includeMap;        // pointers to CFileRecords in fileMap
+CMapStringToPtr CFileRecord::noDependMap;       // no data, just an index
 
 int main( int argc, char** argv ){
     int i = 1;
@@ -847,5 +847,20 @@ int main( int argc, char** argv ){
 		}
 	}
 	iRecursion--;
+
+    if (iRecursion == 0 )
+    {
+        // last time through -- clean up allocated CFileRecords!
+        CFileRecord *pFRec;
+        CString     name;
+        POSITION    next;
+
+        next = CFileRecord::fileMap.GetStartPosition();
+        while( next ){
+            CFileRecord::fileMap.GetNextAssoc( next, name, *(void**)&pFRec );
+            delete pFRec;
+        }
+    }
+
     return mainReturn;
 }
