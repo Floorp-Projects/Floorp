@@ -46,10 +46,8 @@ IMAPGetStringByID(PRInt32 stringID)
 	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
 	if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 	{
-		nsILocale   *locale = nsnull;
-
 		nsIStringBundle* sBundle = nsnull;
-		res = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
+		res = sBundleService->CreateBundle(propertyURL, &sBundle);
 
 		if (NS_SUCCEEDED(res))
 		{

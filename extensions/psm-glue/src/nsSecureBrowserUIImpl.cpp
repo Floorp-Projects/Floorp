@@ -167,8 +167,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window, nsIDOMElement *button)
     NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsILocale* locale = nsnull;
-    rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL, locale, getter_AddRefs(mStringBundle));
+    rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL, getter_AddRefs(mStringBundle));
     if (NS_FAILED(rv)) return rv;
 
     // hook up to the form post notifications:

@@ -268,9 +268,8 @@ CKutil_Localize(const PRUnichar *genericString) {
   PRUnichar *ptrv = nsnull;
   NS_WITH_SERVICE(nsIStringBundleService, pStringService, kStringBundleServiceCID, &ret); 
   if (NS_SUCCEEDED(ret) && (nsnull != pStringService)) {
-    nsCOMPtr<nsILocale> locale;
     nsCOMPtr<nsIStringBundle> bundle;
-    ret = pStringService->CreateBundle(LOCALIZATION, locale, getter_AddRefs(bundle));
+    ret = pStringService->CreateBundle(LOCALIZATION, getter_AddRefs(bundle));
     if (NS_SUCCEEDED(ret) && bundle) {
       ret = bundle->GetStringFromName(genericString, &ptrv);
       if ( NS_SUCCEEDED(ret) && (ptrv) ) {

@@ -265,8 +265,7 @@ nsresult nsMsgOfflineManager::ShowStatus(const char *statusMsgName)
                         kStringBundleServiceCID, &res);
     if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
     {
-      res = sBundleService->CreateBundle(propertyURL, nsnull,
-                                               getter_AddRefs(mStringBundle));
+      res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mStringBundle));
     }
   }
   if (mStringBundle)

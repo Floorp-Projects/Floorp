@@ -102,7 +102,6 @@ nsPop3IncomingServer::initializeStrings()
     
     nsCOMPtr<nsIStringBundle> bundle;
     rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
-                                     nsnull,
                                      getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
     

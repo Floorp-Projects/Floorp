@@ -592,9 +592,8 @@ nsPromptService::GetLocaleString(const char *aKey, PRUnichar **aResult)
 
   nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
   nsCOMPtr<nsIStringBundle> stringBundle;
-  nsILocale *locale = nsnull;
  
-  rv = stringService->CreateBundle(kCommonDialogsProperties, locale, getter_AddRefs(stringBundle));
+  rv = stringService->CreateBundle(kCommonDialogsProperties, getter_AddRefs(stringBundle));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).GetUnicode(), aResult);

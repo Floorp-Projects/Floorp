@@ -606,7 +606,7 @@ nsExtensibleStringBundle::Init(const char * aRegistryKey)
     res = registry->GetStringUTF8(key, "name", getter_Copies(name));
     if (NS_FAILED(res)) return res;
 
-    res = sbServ->CreateBundle(name, nsnull, getter_AddRefs(bundle));
+    res = sbServ->CreateBundle(name, getter_AddRefs(bundle));
     if (NS_FAILED(res)) {
       res = components->Next();
       if (NS_FAILED(res)) return res;
@@ -956,8 +956,7 @@ nsStringBundleService::recycleEntry(bundleCacheEntry_t *aEntry)
 }
 
 NS_IMETHODIMP
-nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
-                                    nsIStringBundle** aResult)
+nsStringBundleService::CreateBundle(const char* aURLSpec, nsIStringBundle** aResult)
 {
 #ifdef DEBUG_tao_
   printf("\n++ nsStringBundleService::CreateBundle ++\n");

@@ -346,7 +346,6 @@ nsP3PService::Init( ) {
                       ("P3PService:  Creating string bundle.\n") );
 
               rv = pStringBundleService->CreateBundle((const char *)xcsSpec,
-                                                       nsnull,
                                                        getter_AddRefs( mStringBundle ) );
             }
           }

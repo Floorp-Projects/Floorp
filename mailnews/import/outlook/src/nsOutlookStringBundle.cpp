@@ -48,8 +48,7 @@ nsIStringBundle *nsOutlookStringBundle::GetStringBundle( void)
 
 	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &rv); 
 	if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) {
-		nsILocale   *		locale = nsnull;
-		rv = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
+		rv = sBundleService->CreateBundle(propertyURL, &sBundle);
 	}
 	
 	m_pBundle = sBundle;

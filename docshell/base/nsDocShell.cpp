@@ -67,7 +67,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsIWebProgress.h"
 #include "nsILayoutHistoryState.h"
-#include "nsILocaleService.h"
 #include "nsITimer.h"
 #include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
@@ -4289,7 +4288,6 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
    NS_ENSURE_SUCCESS(hEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetReferrerURI(getter_AddRefs(referrerURI)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)), NS_ERROR_FAILURE);
-
    NS_ENSURE_SUCCESS(InternalLoad(uri, referrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                                   postData, nsnull, aLoadType, aEntry),
       NS_ERROR_FAILURE);
@@ -4521,17 +4519,10 @@ NS_IMETHODIMP nsDocShell::GetPromptAndStringBundle(nsIPrompt** aPrompt,
 {
    NS_ENSURE_SUCCESS(GetInterface(NS_GET_IID(nsIPrompt), (void**)aPrompt), NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsILocaleService> localeService(do_GetService(NS_LOCALESERVICE_CONTRACTID));
-   NS_ENSURE_TRUE(localeService, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsILocale> locale;
-   localeService->GetSystemLocale(getter_AddRefs(locale));
-   NS_ENSURE_TRUE(locale, NS_ERROR_FAILURE);
-
    nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
    NS_ENSURE_TRUE(stringBundleService, NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(stringBundleService->CreateBundle(DIALOG_STRING_URI, locale, 
+   NS_ENSURE_SUCCESS(stringBundleService->CreateBundle(DIALOG_STRING_URI, 
       getter_AddRefs(aStringBundle)), NS_ERROR_FAILURE);
 
    return NS_OK;

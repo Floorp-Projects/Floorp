@@ -1737,8 +1737,7 @@ nsMessenger::InitStringBundle()
                         kStringBundleServiceCID, &res);
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
-			nsILocale   *locale = nsnull;
-			res = sBundleService->CreateBundle(propertyURL, locale,
+			res = sBundleService->CreateBundle(propertyURL,
                                                getter_AddRefs(mStringBundle));
 		}
     }
