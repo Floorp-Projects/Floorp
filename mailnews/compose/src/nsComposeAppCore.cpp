@@ -24,6 +24,7 @@
 #include "nsIDOMAppCoresManager.h"
 #include "nsJSComposeAppCore.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIScriptContextOwner.h"
 
@@ -130,9 +131,12 @@ public:
 	NS_IMETHOD CompleteCallback(nsAutoString& aScript);
 	NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
 	NS_IMETHOD SetEditor(nsIDOMEditorAppCore *editor);
-	NS_IMETHOD NewMessage(nsAutoString& aUrl, nsIDOMXULTreeElement *tree,
-                          nsIDOMNodeList *nodeList, nsIDOMMsgAppCore *
-                          msgAppCore, PRInt32 messageType);
+	NS_IMETHOD NewMessage(nsAutoString& aUrl,
+							nsAutoString& args,
+							nsIDOMXULTreeElement *tree,
+							nsIDOMNodeList *nodeList,
+							nsIDOMMsgAppCore * msgAppCore,
+							PRInt32 messageType);
 	NS_IMETHOD SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
                            nsAutoString& aAddrBcc, 
                            nsAutoString& aAddrNewsgroup,
@@ -153,16 +157,72 @@ protected:
 	/* rhp - need this to drive message display */
 	nsIDOMWindow			*mWindow;
 	nsIWebShell				*mWebShell;
+	nsIWebShellWindow		*mWebShellWindow;
 	nsIDOMEditorAppCore     *mEditor;
 
-	/* jefft */
 	nsIMsgCompFields *mMsgCompFields;
 	nsIMsgSend *mMsgSend;
     nsIMsgPost *mMsgPost;
 
+	nsAutoString mArgs;
+
     // ****** Hack Alert ***** Hack Alert ***** Hack Alert *****
     void HackToGetBody(PRInt32 what);
 };
+
+
+static const int APP_DEBUG = 1;
+static nsresult setAttribute( nsIWebShell *shell,
+                              const char *id,
+                              const char *name,
+                              const nsString &value ) {
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIContentViewer> cv;
+    rv = shell ? shell->GetContentViewer(getter_AddRefs(cv))
+               : NS_ERROR_NULL_POINTER;
+    if ( cv ) {
+        // Up-cast.
+        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+        if ( docv ) {
+            // Get the document from the doc viewer.
+            nsCOMPtr<nsIDocument> doc;
+            rv = docv->GetDocument(*getter_AddRefs(doc));
+            if ( doc ) {
+                // Up-cast.
+                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
+                if ( xulDoc ) {
+                    // Find specified element.
+                    nsCOMPtr<nsIDOMElement> elem;
+                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
+                    if ( elem ) {
+                        // Set the text attribute.
+                        rv = elem->SetAttribute( name, value );
+                        if ( APP_DEBUG ) {
+                            char *p = value.ToNewCString();
+                            delete [] p;
+                        }
+                        if ( rv != NS_OK ) {
+                             if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
+                        }
+                    } else {
+                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
+                    }
+                } else {
+                  if (APP_DEBUG)   printf("Upcast to nsIDOMXULDocument failed\n");
+                }
+            } else {
+                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
+            }
+        } else {
+             if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
+        }
+    } else {
+        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+    }
+    return rv;
+}
+
 
 //
 // nsComposeAppCore
@@ -171,13 +231,14 @@ nsComposeAppCore::nsComposeAppCore()
 {
 	NS_INIT_REFCNT();
 	mScriptObject		= nsnull;
-	mWebShell			= nsnull; 
-	mScriptContext	= nsnull;
-	mWindow			= nsnull;
-	mEditor			= nsnull;
-	mMsgCompFields	= nsnull;
-	mMsgSend		= nsnull;
-    mMsgPost        = nsnull;
+	mWebShell			= nsnull;
+	mWebShellWindow		= nsnull;
+	mScriptContext		= nsnull;
+	mWindow				= nsnull;
+	mEditor				= nsnull;
+	mMsgCompFields		= nsnull;
+	mMsgSend			= nsnull;
+    mMsgPost			= nsnull;
 }
 
 nsComposeAppCore::~nsComposeAppCore()
@@ -196,6 +257,7 @@ nsComposeAppCore::~nsComposeAppCore()
 	}
 
 	NS_IF_RELEASE(mWebShell);
+	NS_IF_RELEASE(mWebShellWindow);
 	NS_IF_RELEASE(mScriptContext);
 	NS_IF_RELEASE(mWindow);
 	NS_IF_RELEASE(mEditor);
@@ -207,6 +269,7 @@ nsComposeAppCore::~nsComposeAppCore()
 NS_IMETHODIMP
 nsComposeAppCore::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
 {
+    setAttribute( aWebShell, "args", "value", mArgs );
 	return NS_OK;
 }
 
@@ -215,7 +278,7 @@ NS_IMETHODIMP
 nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
 {
     mWebShell = aWebShell;
-#if 1 // --**--**-- This should the way it should work. However, we don't know
+	  // --**--**-- This should the way it should work. However, we don't know
       // how to query for the nsIDOMEditorAppCore interface from nsIWebShell.
  	nsIDOMDocument* domDoc = nsnull;
  	if (nsnull != aWebShell) {
@@ -276,7 +339,6 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
  		
  		SetWindowFields(domDoc, to, cc, bcc, newsgroup, subject, body);
  	}
-#endif    
 	return NS_OK;
 }
 
@@ -579,39 +641,12 @@ NS_IMETHODIMP
 nsComposeAppCore::CompleteCallback(nsAutoString& aScript)
 {
 	mScript = aScript;
-#if 0 // --*--*--*-- This doesn't work. There are more than one instance of
-      // nsComposeAppCore. Which one are we setting?
-	nsCOMPtr<nsIDOMDocument> domDoc;
-    nsresult res;
-
- 	if (nsnull != mWindow) {
-        res = mWindow->GetDocument(getter_AddRefs(domDoc));
- 	}
- 
- 	if (NS_SUCCEEDED(res) && mMsgCompFields && domDoc)
- 	{
-         char *aString;
-         mMsgCompFields->GetTo(&aString);
-         nsString to = aString;
-         mMsgCompFields->GetCc(&aString);
-         nsString cc = aString;
-         mMsgCompFields->GetBcc(&aString);
-         nsString bcc = aString;
-         mMsgCompFields->GetNewsgroups(&aString);
-         nsString bcc = aString;
-         mMsgCompFields->GetSubject(&aString);
-         nsString subject = aString;
-         mMsgCompFields->GetBody(&aString);
-         nsString body = aString;
- 		
- 		 SetWindowFields(domDoc, to, cc, bcc, newsgroup, subject, body);
- 	}
-#endif 
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsComposeAppCore::NewMessage(nsAutoString& aUrl,
+							 nsAutoString& args,
                              nsIDOMXULTreeElement *tree,
                              nsIDOMNodeList *nodeList,
                              nsIDOMMsgAppCore * msgAppCore,
@@ -621,6 +656,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
 	nsresult rv;
 	nsString controllerCID;
 
+	mArgs = args;
 	nsIAppShellService* appShell;
     rv = nsServiceManager::GetService(kAppShellServiceCID,
                                       nsIAppShellService::GetIID(),
@@ -639,12 +675,11 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
 	else
 		goto done;
 
-	nsIWebShellWindow* newWindow;
 	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDF";
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
                                    controllerCID,
-                                   newWindow,   // result widget
+                                   mWebShellWindow,   // result widget
                                    nsnull,      // observer
                                    this,      // callbacks
                                    615,         // width
@@ -871,9 +906,13 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 		mScriptContext->EvaluateString(mScript, url, 0, rVal, &isUndefined);
 	}
 
-	if (mWindow) {
-		mWindow->Close();	//JFD Doesn't work yet because mopener wasn't set!
-		NS_RELEASE(mWindow);
+	if (mWindow)
+	{
+//		mWindow->Close();
+//ducarroz: mWindow->Close doesn't work yet because mopener wasn't set!
+//		if (mWebShellWindow)
+//			mWebShellWindow->Close();
+//ducarroz: mWebShellWindow->Close doesn't work too!
 	}
 
 	PR_FREEIF(pUserEmail);
