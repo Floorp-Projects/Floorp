@@ -146,6 +146,34 @@ typedef PRUint16 PRUnichar;
 /* ------------------------------------------------------------------------ */
 /* Casting macros for hiding C++ features from older compilers */
 
+  /*
+    All our compiler support template specialization, but not all support the
+    |template <>| notation.  The compiler that don't understand this notation
+    just omit it for specialization.
+
+    Need to add an autoconf test for this.
+  */
+
+  // under Metrowerks (Mac), we don't have autoconf yet
+#ifdef __MWERKS__
+  #define HAVE_CPP_SPECIALIZATION
+  #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
+#endif
+
+  // under VC++ (Windows), we don't have autoconf yet
+#if defined(_MSC_VER) && (_MSC_VER>=1100)
+  // VC++ 5.0 and greater implement template specialization, 4.2 is unknown
+  #define HAVE_CPP_SPECIALIZATION
+  #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
+#endif
+
+
+#ifdef HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
+  #define NS_SPECIALIZE_TEMPLATE  template <>
+#else
+  #define NS_SPECIALIZE_TEMPLATE
+#endif
+
 /* unix and beos now determine this automatically */
 #if ! defined XP_UNIX && ! defined XP_BEOS
 #define HAVE_CPP_NEW_CASTS /* we'll be optimistic. */
@@ -154,30 +182,37 @@ typedef PRUint16 PRUnichar;
 #if defined(HAVE_CPP_NEW_CASTS)
 #define NS_STATIC_CAST(__type, __ptr)      static_cast<__type>(__ptr)
 #define NS_CONST_CAST(__type, __ptr)       const_cast<__type>(__ptr)
-#define NS_REINTERPRET_CAST(__type, __ptr) reinterpret_cast<__type>(__ptr)
+
+#define NS_REINTERPRET_POINTER_CAST(__type, __ptr)    reinterpret_cast<__type>(__ptr)
+#define NS_REINTERPRET_NONPOINTER_CAST(__type, __obj) reinterpret_cast<__type>(__obj)
+#define NS_REINTERPRET_CAST(__type, __expr)           reinterpret_cast<__type>(__expr)
+
 #else
 #define NS_STATIC_CAST(__type, __ptr)      ((__type)(__ptr))
 #define NS_CONST_CAST(__type, __ptr)       ((__type)(__ptr))
 
-  /* Note: the following is only appropriate for pointers. */
-#define NS_REINTERPRET_CAST(__type, __ptr) ((__type)((void*)(__ptr)))
-  /*
-  	Why cast to a |void*| first?  Well, when old-style casting from
-  	a pointer to a base to a pointer to a derived class, the cast will be
-  	ambiguous if the source pointer type appears multiple times in the
-  	destination, e.g.,
-  	
-  	  class Base {};
-  	  class Derived : public Base, public Base {};
-  	  
-  	  void foo( Base* b )
-  	    {
-  	      ((Derived*)b)->some_deried_member ... // Error: Ambiguous, expand from which |Base|?
-  	    }
+#define NS_REINTERPRET_POINTER_CAST(__type, __ptr)     ((__type)((void*)(__ptr)))
+#define NS_REINTERPRET_NONPOINTER_CAST(__type, __obj)  ((__type)(__obj))
 
-		an old-style cast (like |static_cast|) will change the pointer, but
-		here, doesn't know how.  The cast to |void*| prevents it from thinking
-		it needs to expand the original pointer.
+  /* Note: the following is only appropriate for pointers. */
+#define NS_REINTERPRET_CAST(__type, __expr)            NS_REINTERPRET_POINTER_CAST(__type, __expr)
+  /*
+    Why cast to a |void*| first?  Well, when old-style casting from
+    a pointer to a base to a pointer to a derived class, the cast will be
+    ambiguous if the source pointer type appears multiple times in the
+    destination, e.g.,
+    
+      class Base {};
+      class Derived : public Base, public Base {};
+      
+      void foo( Base* b )
+        {
+          ((Derived*)b)->some_deried_member ... // Error: Ambiguous, expand from which |Base|?
+        }
+
+    an old-style cast (like |static_cast|) will change the pointer, but
+    here, doesn't know how.  The cast to |void*| prevents it from thinking
+    it needs to expand the original pointer.
 
     The cost is, |NS_REINTERPRET_CAST| is no longer appropriate for non-pointer
     conversions.  Also, mis-applying |NS_REINTERPRET_CAST| to cast |this| to something

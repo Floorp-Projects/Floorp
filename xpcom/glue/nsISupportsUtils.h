@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Scott Collins <scc@ScottCollins.net>
  */
 
 #ifndef __nsISupportsUtils_h
@@ -26,6 +27,9 @@
 
 /***************************************************************************/
 /* this section copied from the hand written nsISupports.h */
+
+#include "nscore.h"
+  // for |NS_SPECIALIZE_TEMPLATE|, and the casts, et al
 
 #include "nsDebug.h"
 #include "nsID.h"
@@ -36,21 +40,6 @@
 #if defined(NS_MT_SUPPORTED)
 #include "prcmon.h"
 #endif  /* NS_MT_SUPPORTED */
-
-  // under Metrowerks (Mac), we don't have autoconf yet
-#ifdef __MWERKS__
-  #define HAVE_CPP_SPECIALIZATION
-#endif
-
-  // under VC++ (Windows), we don't have autoconf yet
-#if defined(_MSC_VER) && (_MSC_VER>=1100)
-  // VC++ 5.0 and greater implement template specialization, 4.2 is unknown
-  #define HAVE_CPP_SPECIALIZATION
-#endif
-
-#ifdef HAVE_CPP_SPECIALIZATION
- #define NSCAP_FEATURE_HIDE_NSISUPPORTS_GETIID
-#endif
 
 /*@{*/
 
@@ -91,10 +80,6 @@ typedef PRUint32 nsrefcnt;
  */
 class nsISupports {
 public:
-
-#ifndef NSCAP_FEATURE_HIDE_NSISUPPORTS_GETIID
-  static const nsIID& GetIID() { static nsIID iid = NS_ISUPPORTS_IID; return iid; }
-#endif
 
   /**
    * @name Methods
@@ -293,16 +278,16 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
 }
 
 #define NS_IMPL_QUERY_TAIL(_supports_interface)                          \
-	NS_IMPL_QUERY_BODY_AMBIGUOUS(nsISupports, _supports_interface)         \
-	NS_IMPL_QUERY_TAIL_GUTS
+  NS_IMPL_QUERY_BODY_AMBIGUOUS(nsISupports, _supports_interface)         \
+  NS_IMPL_QUERY_TAIL_GUTS
 
 
-	/*
-		This is the new scheme.  Using this notation now will allow us to switch to
-		a table driven mechanism when it's ready.  Note the difference between this
-		and the (currently) underlying NS_IMPL_QUERY_INTERFACE mechanism.  You must
-		explicitly mention |nsISupports| when using the interface maps.
-	*/
+  /*
+    This is the new scheme.  Using this notation now will allow us to switch to
+    a table driven mechanism when it's ready.  Note the difference between this
+    and the (currently) underlying NS_IMPL_QUERY_INTERFACE mechanism.  You must
+    explicitly mention |nsISupports| when using the interface maps.
+  */
 #define NS_INTERFACE_MAP_BEGIN(_implClass)                         NS_IMPL_QUERY_HEAD(_implClass)
 #define NS_INTERFACE_MAP_ENTRY(_interface)                         NS_IMPL_QUERY_BODY(_interface)
 #define NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(_interface, _implClass)   NS_IMPL_QUERY_BODY_AMBIGUOUS(_interface, _implClass)
@@ -862,19 +847,17 @@ class nsISupports;
 
 template <class T>
 struct nsCOMTypeInfo
-{
-    static const nsIID& GetIID() { return T::GetIID(); }
-};
-
-#ifdef NSCAP_FEATURE_HIDE_NSISUPPORTS_GETIID
-  template <>
-  struct nsCOMTypeInfo<nsISupports>
   {
-      static const nsIID& GetIID() {
-          static nsIID iid = NS_ISUPPORTS_IID; return iid;
-      }
+    static const nsIID& GetIID() { return T::GetIID(); }
   };
-#endif
+
+NS_SPECIALIZE_TEMPLATE
+struct nsCOMTypeInfo<nsISupports>
+  {
+    static const nsIID& GetIID() {
+        static nsIID iid = NS_ISUPPORTS_IID; return iid;
+    }
+  };
 
 #define NS_GET_IID(T) nsCOMTypeInfo<T>::GetIID()
 
@@ -883,12 +866,12 @@ template <class DestinationType>
 inline
 nsresult
 CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
-{
+  {
     NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
 
     return aSource->QueryInterface(NS_GET_IID(DestinationType), (void**)aDestination);
-}
+  }
 
 } // extern "C++"
 
