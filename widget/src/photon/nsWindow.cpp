@@ -214,7 +214,7 @@ void nsWindow::OnDestroy()
 
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget - Not Implemented.\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget\n"));
 
   mClipChildren = aInitData->clipChildren;
   mClipSiblings = aInitData->clipSiblings;

@@ -265,7 +265,7 @@ NS_METHOD nsMenuBar::SetNativeData(void * aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::Paint()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::Paint - Not Implemented\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::Paint\n"));
   mParent->Invalidate(PR_TRUE);
   return NS_OK;
 }
