@@ -362,7 +362,7 @@ NS_IMETHODIMP nsXPBaseWindow::SetTitle(const PRUnichar* aTitle)
 //---------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::GetTitle(const PRUnichar** aResult)
 {
-  *aResult = mTitle.GetUnicode();
+  *aResult = mTitle.ToNewUnicode();
   return NS_OK;
 }
 

@@ -1767,9 +1767,9 @@ nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::GetTitle(const PRUnichar** aResult)
+nsBrowserWindow::GetTitle(PRUnichar** aResult)
 {
-  *aResult = mTitle.GetUnicode();
+  *aResult = mTitle.ToNewUnicode();
   return NS_OK;
 }
 
