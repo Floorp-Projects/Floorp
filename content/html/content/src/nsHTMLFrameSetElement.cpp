@@ -87,8 +87,9 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
 private:
   nsresult ParseRowCol(const nsAString& aValue,
                        PRInt32&         aNumSpecs,
@@ -107,7 +108,7 @@ private:
   PRInt32          mNumCols;
   /**
    * The style hint to return for the rows/cols attrs in
-   * GetMappedAttributeImpact
+   * GetAttributeChangeHint
    */
   nsChangeHint      mCurrentRowColHint;
   /**
@@ -220,7 +221,7 @@ nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
    *  columns has changed.  If it has, we need to reframe; otherwise
    *  we want to reflow.  So we set mCurrentRowColHint here, then call
    *  nsGenericHTMLContainerElement::SetAttr, which will end up
-   *  calling GetMappedAttributeImpact and notifying layout with that
+   *  calling GetAttributeChangeHint and notifying layout with that
    *  hint.  Once nsGenericHTMLContainerElement::SetAttr returns, we
    *  want to go back to our normal hint, which is
    *  NS_STYLE_HINT_REFLOW.
@@ -384,24 +385,18 @@ nsHTMLFrameSetElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLFrameSetElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                                nsChangeHint& aHint) const
+nsHTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType,
+                                              nsChangeHint& aHint) const
 {
-  // can't be static const because it uses mCurrentRowColHint
-  const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::rows, mCurrentRowColHint },
-    { &nsHTMLAtoms::cols, mCurrentRowColHint },
-    { nsnull, NS_STYLE_HINT_NONE },
-  };
-
-  const AttributeImpactEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap
-  };
-  
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-
-  return NS_OK;
+  nsresult rv =
+    nsGenericHTMLContainerElement::GetAttributeChangeHint(aAttribute,
+                                                          aModType, aHint);
+  if (aAttribute == nsHTMLAtoms::rows ||
+      aAttribute == nsHTMLAtoms::cols) {
+    NS_UpdateHint(aHint, mCurrentRowColHint);
+  }
+  return rv;
 }
 
 nsresult

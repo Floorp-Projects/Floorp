@@ -119,8 +119,7 @@ public:
     return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
   }
 
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
 protected:
@@ -485,31 +484,27 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     }
   }
 
-  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP
-nsHTMLIFrameElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                              PRInt32 aModType,
-                                              nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsHTMLIFrameElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::height, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::frameborder, NS_STYLE_HINT_REFLOW },
-    { nsnull, NS_STYLE_HINT_NONE },
+  static const AttributeDependenceEntry attributes[] = {
+    { &nsHTMLAtoms::width },
+    { &nsHTMLAtoms::height },
+    { &nsHTMLAtoms::frameborder },
+    { nsnull },
   };
 
-  static const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry* const map[] = {
     attributes,
+    sImageAlignAttributeMap,
     sCommonAttributeMap,
   };
   
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 

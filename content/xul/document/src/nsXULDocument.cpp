@@ -1092,8 +1092,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 
 NS_IMETHODIMP
 nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute, PRInt32 aModType,
-                                nsChangeHint aHint)
+                                nsIAtom* aAttribute, PRInt32 aModType)
 {
     nsresult rv;
 
@@ -1152,7 +1151,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute,
-                                   aModType, aHint);
+                                   aModType);
     }
 
     // See if there is anything we need to persist in the localstore.

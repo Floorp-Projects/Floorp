@@ -313,8 +313,7 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
                                        nsIContent*  aContent,
                                        PRInt32      aNameSpaceID,
                                        nsIAtom*     aAttribute,
-                                       PRInt32      aModType, 
-                                       nsChangeHint aHint)
+                                       PRInt32      aModType)
 {
     // Check for a change to the 'ref' attribute on an atom, in which
     // case we may need to nuke and rebuild the entire content model

@@ -229,8 +229,7 @@ public:
                               nsIContent* aContent,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType, 
-                              nsChangeHint aHint) = 0;
+                              PRInt32 aModType) = 0;
 
 
   /**

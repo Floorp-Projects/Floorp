@@ -65,9 +65,6 @@ public:
 
   // nsIDOMHTMLBaseElement
   NS_DECL_NSIDOMHTMLBASEFONTELEMENT
-
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
 };
 
 nsresult
@@ -201,26 +198,4 @@ nsHTMLBaseFontElement::SetSize(PRInt32 aSize)
   nsHTMLValue value(aSize, eHTMLUnit_Integer);
 
   return SetHTMLAttribute(nsHTMLAtoms::size, value, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsHTMLBaseFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                                nsChangeHint& aHint) const
-{
-  static const AttributeImpactEntry attributes[] = {
-    // XXX this seems a bit harsh, perhaps we need a reflow_all?    
-    { &nsHTMLAtoms::color, NS_STYLE_HINT_RECONSTRUCT_ALL },
-    { &nsHTMLAtoms::face, NS_STYLE_HINT_RECONSTRUCT_ALL },
-    { &nsHTMLAtoms::size, NS_STYLE_HINT_RECONSTRUCT_ALL },
-    { nsnull, NS_STYLE_HINT_NONE }
-  };
-
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap,
-  };
-  
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-  
-  return NS_OK;
 }

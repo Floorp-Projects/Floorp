@@ -1210,12 +1210,27 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                              nsIContent* aChild,
                              PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
-                             PRInt32 aModType,
-                             PRInt32 aHint)
+                             PRInt32 aModType)
 {
   nsresult rv = nsContainerFrame::AttributeChanged(aPresContext, aChild,
                                                    aNameSpaceID, aAttribute,
-                                                   aModType, aHint);
+                                                   aModType);
+
+  // Ignore 'width', 'height', 'screenX', 'screenY' and 'sizemode' on a
+  // <window>.
+  nsCOMPtr<nsIAtom> tag;
+  mContent->GetTag(getter_AddRefs(tag));
+  if ((tag == nsXULAtoms::window ||
+       tag == nsXULAtoms::page ||
+       tag == nsXULAtoms::dialog ||
+       tag == nsXULAtoms::wizard) &&
+      (nsXULAtoms::width == aAttribute ||
+       nsXULAtoms::height == aAttribute ||
+       nsXULAtoms::screenX == aAttribute ||
+       nsXULAtoms::screenY == aAttribute ||
+       nsXULAtoms::sizemode == aAttribute)) {
+    return rv;
+  }
 
   if (aAttribute == nsHTMLAtoms::width       ||
       aAttribute == nsHTMLAtoms::height      ||

@@ -73,8 +73,7 @@ public:
                    nsIContent*     aContent,
                    PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
-                   PRInt32         aModType, 
-                   PRInt32         aHint);
+                   PRInt32         aModType);
 
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.

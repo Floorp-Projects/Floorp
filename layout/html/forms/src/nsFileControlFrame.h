@@ -100,8 +100,7 @@ public:
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
-                              PRInt32         aModType, 
-                              PRInt32         aHint);
+                              PRInt32         aModType);
 
   NS_IMETHOD     GetName(nsAString* aName);
   NS_IMETHOD_(PRInt32) GetType() const;

@@ -70,8 +70,9 @@ public:
   // nsIDOMHTMLMapElement
   NS_DECL_NSIDOMHTMLMAPELEMENT
 
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
 
@@ -212,20 +213,15 @@ NS_IMPL_STRING_ATTR(nsHTMLMapElement, Name, name)
 
 
 NS_IMETHODIMP
-nsHTMLMapElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                           nsChangeHint& aHint) const
+nsHTMLMapElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                         PRInt32 aModType,
+                                         nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::name, NS_STYLE_HINT_RECONSTRUCT_ALL },
-    { nsnull, NS_STYLE_HINT_NONE }
-  };
-
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap,
-  };
-
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-  
-  return NS_OK;
+  nsresult rv =
+    nsGenericHTMLContainerElement::GetAttributeChangeHint(aAttribute,
+                                                          aModType, aHint);
+  if (aAttribute == nsHTMLAtoms::name) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_RECONSTRUCT_ALL);
+  }
+  return rv;
 }

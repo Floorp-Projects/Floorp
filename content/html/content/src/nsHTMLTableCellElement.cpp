@@ -84,8 +84,7 @@ public:
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 
 protected:
   // This does not return a nsresult since all we care about is if we
@@ -247,6 +246,8 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   // get table, add its rules too
   // XXX can we safely presume structure or do we need to QI on the way up?
+  // XXXldb This needs to handle the possibility (for XHTML) that
+  // there's no row-group.
   nsCOMPtr<nsIContent> row;
 
   GetParent(getter_AddRefs(row));
@@ -510,32 +511,33 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP
-nsHTMLTableCellElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                                 nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsHTMLTableCellElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW }, 
-    { &nsHTMLAtoms::valign, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::nowrap, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::abbr, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::axis, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::headers, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::scope, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::height, NS_STYLE_HINT_REFLOW },
-    { nsnull, NS_STYLE_HINT_NONE }
+  static const AttributeDependenceEntry attributes[] = {
+    { &nsHTMLAtoms::align }, 
+    { &nsHTMLAtoms::valign },
+    { &nsHTMLAtoms::nowrap },
+#if 0
+    // XXXldb If these are implemented, they might need to move to
+    // GetAttributeChangeHint (depending on how, and preferably not).
+    { &nsHTMLAtoms::abbr },
+    { &nsHTMLAtoms::axis },
+    { &nsHTMLAtoms::headers },
+    { &nsHTMLAtoms::scope },
+#endif
+    { &nsHTMLAtoms::width },
+    { &nsHTMLAtoms::height },
+    { nsnull }
   };
 
-  static const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
     sBackgroundAttributeMap,
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 NS_IMETHODIMP

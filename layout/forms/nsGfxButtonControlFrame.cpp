@@ -337,8 +337,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        nsIContent*     aChild,
                                        PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
-                                       PRInt32         aModType, 
-                                       PRInt32         aHint)
+                                       PRInt32         aModType)
 {
   nsresult rv = NS_OK;
 
@@ -356,7 +355,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   // defer to HTMLButtonControlFrame
   } else {
-    rv = nsHTMLButtonControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
+    rv = nsHTMLButtonControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
   }
   return rv;
 }

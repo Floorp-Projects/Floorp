@@ -1468,8 +1468,7 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
-                                 nsIAtom* aAttribute, PRInt32 aModType,
-                                 nsChangeHint aHint)
+                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 
@@ -1503,7 +1502,7 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
   }
 
   return nsDocument::AttributeChanged(aContent, aNameSpaceID, aAttribute,
-                                      aModType, aHint);
+                                      aModType);
 }
 
 NS_IMETHODIMP

@@ -90,8 +90,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 
 protected:
   GenericElementCollection *mTBodies;
@@ -1231,6 +1230,16 @@ static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
+  // XXX Bug 211636:  This function is used by a single style rule
+  // that's used to match two different type of elements -- tables, and
+  // table cells.  (nsHTMLTableCellElement overrides
+  // WalkContentStyleRules so that this happens.)  This violates the
+  // nsIStyleRule contract, since it's the same style rule object doing
+  // the mapping in two different ways.  It's also incorrect since it's
+  // testing the display type of the style context rather than checking
+  // which *element* it's matching (style rules should not stop matching
+  // when the display type is changed).
+
   if (!aData)
     return;
 
@@ -1492,41 +1501,38 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   }
 }
 
-NS_IMETHODIMP
-nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                             nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsHTMLTableElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::layout, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::cellpadding, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::cellspacing, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::cols, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::border, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::frame, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::height, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::hspace, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::vspace, NS_STYLE_HINT_REFLOW },
+  static const AttributeDependenceEntry attributes[] = {
+    { &nsHTMLAtoms::layout },
+    { &nsHTMLAtoms::cellpadding },
+    { &nsHTMLAtoms::cellspacing },
+    { &nsHTMLAtoms::cols },
+    { &nsHTMLAtoms::border },
+    { &nsHTMLAtoms::frame },
+    { &nsHTMLAtoms::width },
+    { &nsHTMLAtoms::height },
+    { &nsHTMLAtoms::hspace },
+    { &nsHTMLAtoms::vspace },
     
-    { &nsHTMLAtoms::bordercolor, NS_STYLE_HINT_VISUAL },
+    { &nsHTMLAtoms::bordercolor },
     
     // Changing to rules will force border-collapse. Unfortunately, if
     // border-collapse was already in effect, then a frame change is
     // not necessary.
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::rules, NS_STYLE_HINT_FRAMECHANGE },
-    { nsnull, NS_STYLE_HINT_NONE }
+    { &nsHTMLAtoms::align },
+    { &nsHTMLAtoms::rules },
+    { nsnull }
   };
 
-  static const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
     sBackgroundAttributeMap,
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-  
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 NS_IMETHODIMP

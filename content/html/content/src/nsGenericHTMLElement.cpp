@@ -1726,10 +1726,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
     }
 
     // set as string value to avoid another string copy
-    nsChangeHint impact = NS_STYLE_HINT_NONE;
-    PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
-                                   : PRInt32(nsIDOMMutationEvent::ADDITION);
-    GetMappedAttributeImpact(aAttribute, modHint, impact);
+    PRBool mapped = HasAttributeDependentStyle(aAttribute);
 
     nsCOMPtr<nsIHTMLStyleSheet> sheet =
       dont_AddRef(GetAttrStyleSheet(mDocument));
@@ -1738,9 +1735,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
       result = NS_NewHTMLAttributes(&mAttributes);
       NS_ENSURE_SUCCESS(result, result);
     }
-    result = mAttributes->SetAttributeFor(aAttribute, aValue,
-                                          (impact & ~(nsChangeHint_AttrChange | nsChangeHint_Aural
-                                                      | nsChangeHint_Content)) != 0,
+    result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
                                           this, sheet);
   }
 
@@ -1785,8 +1780,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
         modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION) :
                        PRInt32(nsIDOMMutationEvent::ADDITION);
 
-      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, modHint, 
-                                  NS_STYLE_HINT_UNKNOWN);
+      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, modHint);
       mDocument->EndUpdate();
     }
   }
@@ -1880,8 +1874,7 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
       PRInt32 modHint =
         modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
                      : PRInt32(nsIDOMMutationEvent::ADDITION);
-      mDocument->AttributeChanged(this, namespaceID, localName, modHint, 
-                                  NS_STYLE_HINT_UNKNOWN);
+      mDocument->AttributeChanged(this, namespaceID, localName, modHint);
       mDocument->EndUpdate();
     }
   }
@@ -1964,9 +1957,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     }
   }
   
-  nsChangeHint impact = NS_STYLE_HINT_NONE;
-  GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION,
-                           impact);
+  PRBool mapped = HasAttributeDependentStyle(aAttribute);
   nsCOMPtr<nsIHTMLStyleSheet> sheet;
   if (mDocument) {
     PRBool modification = PR_TRUE;
@@ -1990,9 +1981,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
         NS_ENSURE_SUCCESS(rv, rv);
       }
       PRInt32 count;
-      result = mAttributes->SetAttributeFor(aAttribute, aValue,
-                                            (impact & ~(nsChangeHint_AttrChange | nsChangeHint_Aural
-                                                        | nsChangeHint_Content)) != 0,
+      result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
                                             this, sheet, count);
       if (0 == count) {
         delete mAttributes;
@@ -2038,7 +2027,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     }
 
     if (aNotify) {
-      mDocument->AttributeChanged(this, kNameSpaceID_None, aAttribute, nsIDOMMutationEvent::MODIFICATION, impact);
+      mDocument->AttributeChanged(this, kNameSpaceID_None, aAttribute, nsIDOMMutationEvent::MODIFICATION);
       mDocument->EndUpdate();
     }
   }
@@ -2048,9 +2037,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
       NS_ENSURE_SUCCESS(rv, rv);
     }
     PRInt32 count;
-    result = mAttributes->SetAttributeFor(aAttribute, aValue,
-                                          (impact & ~(nsChangeHint_AttrChange | nsChangeHint_Aural
-                                                      | nsChangeHint_Content)) != 0,
+    result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
                                           this, sheet, count);
     if (0 == count) {
       delete mAttributes;
@@ -2134,8 +2121,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 
     if (aNotify) {
       mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
-                                  nsIDOMMutationEvent::REMOVAL,
-                                  NS_STYLE_HINT_UNKNOWN);
+                                  nsIDOMMutationEvent::REMOVAL);
       mDocument->EndUpdate();
     }
   }
@@ -2322,14 +2308,8 @@ nsresult
 nsGenericHTMLElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsresult result = NS_OK;
-
-  if (aRuleWalker) {
-    if (mAttributes) {
-      result = mAttributes->WalkMappedAttributeStyleRules(aRuleWalker);
-    }
-  }
-  else {
-    result = NS_ERROR_NULL_POINTER;
+  if (mAttributes) {
+    result = mAttributes->WalkMappedAttributeStyleRules(aRuleWalker);
   }
   return result;
 }
@@ -2600,18 +2580,14 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                               PRInt32 aModType,
-                                               nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsGenericHTMLElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
-  static const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry* const map[] = {
     sCommonAttributeMap
   };
   
-  FindAttributeImpact(aAttribute, aHint,
-                map, NS_ARRAY_LENGTH(map));
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 /**
@@ -3245,69 +3221,68 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
 
 
 
-const nsGenericHTMLElement::AttributeImpactEntry
+/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
 nsGenericHTMLElement::sCommonAttributeMap[] = {
-  { &nsHTMLAtoms::dir, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::lang, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::_baseHref, NS_STYLE_HINT_VISUAL },
-  { nsnull, NS_STYLE_HINT_NONE }
+  { &nsHTMLAtoms::dir },
+  { &nsHTMLAtoms::lang },
+  { nsnull }
 };
 
-const
-nsGenericHTMLElement::AttributeImpactEntry
-nsGenericHTMLElement::sImageAttributeMap[] = {
-  { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::height, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::hspace, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::vspace, NS_STYLE_HINT_REFLOW },
-  { nsnull, NS_STYLE_HINT_NONE }
+/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+nsGenericHTMLElement::sImageMarginSizeAttributeMap[] = {
+  { &nsHTMLAtoms::width },
+  { &nsHTMLAtoms::height },
+  { &nsHTMLAtoms::hspace },
+  { &nsHTMLAtoms::vspace },
+  { nsnull }
 };
 
-const nsGenericHTMLElement::AttributeImpactEntry
+/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
 nsGenericHTMLElement::sImageAlignAttributeMap[] = {
-  { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
-  { nsnull, NS_STYLE_HINT_NONE }
+  { &nsHTMLAtoms::align },
+  { nsnull }
 };
 
-const nsGenericHTMLElement::AttributeImpactEntry
+/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+nsGenericHTMLElement::sDivAlignAttributeMap[] = {
+  { &nsHTMLAtoms::align },
+  { nsnull }
+};
+
+/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
 nsGenericHTMLElement::sImageBorderAttributeMap[] = {
-  { &nsHTMLAtoms::border, NS_STYLE_HINT_REFLOW },
-  { nsnull, NS_STYLE_HINT_NONE }
+  { &nsHTMLAtoms::border },
+  { nsnull }
 };
 
-
-const nsGenericHTMLElement::AttributeImpactEntry
+/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
 nsGenericHTMLElement::sBackgroundAttributeMap[] = {
-  { &nsHTMLAtoms::background, NS_STYLE_HINT_VISUAL },
-  { &nsHTMLAtoms::bgcolor, NS_STYLE_HINT_VISUAL },
-  { nsnull, NS_STYLE_HINT_NONE }
+  { &nsHTMLAtoms::background },
+  { &nsHTMLAtoms::bgcolor },
+  { nsnull }
 };
 
-void
-nsGenericHTMLElement::FindAttributeImpact(const nsIAtom* aAttribute,
-                                          nsChangeHint& aHint,
-                                          const AttributeImpactEntry* const aMaps[],
-                                          PRUint32 aMapCount)
+PRBool
+nsGenericHTMLElement::FindAttributeDependence(const nsIAtom* aAttribute,
+                                              const AttributeDependenceEntry* const aMaps[],
+                                              PRUint32 aMapCount)
 {
   for (PRUint32 mapindex = 0; mapindex < aMapCount; ++mapindex) {
-    const AttributeImpactEntry* map = aMaps[mapindex];
-    while (map->attribute) {
+    for (const AttributeDependenceEntry* map = aMaps[mapindex];
+         map->attribute; ++map) {
       if (aAttribute == *map->attribute) {
-        aHint = map->hint;
-        return;
+        return PR_TRUE;
       }
-      map++;
     }
   }
 
-  // fall-through
-  aHint = NS_STYLE_HINT_CONTENT;
+  return PR_FALSE;
 }
 
 
 void
-nsGenericHTMLElement::MapAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
-                                            nsRuleData* aRuleData)
+nsGenericHTMLElement::MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                                 nsRuleData* aRuleData)
 {
   if (aRuleData->mSID == eStyleStruct_Display || aRuleData->mSID == eStyleStruct_TextReset) {
     nsHTMLValue value;
@@ -3393,8 +3368,8 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsIHTMLMappedAttributes*
 }
 
 void
-nsGenericHTMLElement::MapImagePositionAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
-                                                    nsRuleData* aData)
+nsGenericHTMLElement::MapImageSizeAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
+                                                 nsRuleData* aData)
 {
   if (!aAttributes || aData->mSID != eStyleStruct_Position || !aData->mPositionData)
     return;

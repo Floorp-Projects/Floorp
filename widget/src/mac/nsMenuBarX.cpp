@@ -800,13 +800,13 @@ nsMenuBarX::DocumentWillBeDestroyed( nsIDocument * aDocument )
 
 NS_IMETHODIMP
 nsMenuBarX::AttributeChanged( nsIDocument * aDocument, nsIContent * aContent, PRInt32 aNameSpaceID,
-                              nsIAtom * aAttribute, PRInt32 aModType, nsChangeHint aHint)
+                              nsIAtom * aAttribute, PRInt32 aModType )
 {
   // lookup and dispatch to registered thang.
   nsCOMPtr<nsIChangeObserver> obs;
   Lookup ( aContent, getter_AddRefs(obs) );
   if ( obs )
-    obs->AttributeChanged ( aDocument, aNameSpaceID, aAttribute, (PRInt32)aHint );
+    obs->AttributeChanged ( aDocument, aNameSpaceID, aAttribute );
 
   return NS_OK;
 }

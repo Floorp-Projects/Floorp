@@ -115,8 +115,7 @@ public:
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType,
-                               PRInt32         aHint);
+                               PRInt32         aModType);
 
   NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
                                const nsPoint& aPoint, 
@@ -657,18 +656,14 @@ nsSVGOuterSVGFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent*     aChild,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
-                                     PRInt32         aModType,
-                                     PRInt32         aHint)
+                                     PRInt32         aModType)
 {
 #ifdef DEBUG
 //  {
-//    printf("** nsSVGOuterSVGFrame::AttributeChanged(");
 //    nsAutoString str;
 //    aAttribute->ToString(str);
-//    nsCAutoString cstr;
-//    cstr.AssignWithConversion(str);
-//    printf(cstr.get());
-//    printf(", hint:%d)\n",aHint);
+//    printf("** nsSVGOuterSVGFrame::AttributeChanged(%s)\n",
+//           NS_LossyConvertUCS2toASCII(str).get());
 //  }
 #endif
   return NS_OK;

@@ -735,8 +735,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
                                     nsIContent*  aContent,
                                     PRInt32      aNameSpaceID,
                                     nsIAtom*     aAttribute,
-                                    PRInt32      aModType, 
-                                    nsChangeHint aHint)
+                                    PRInt32      aModType)
 {
   // Make sure this notification concerns us.
   // First check the tag to see if it's one that we care about.

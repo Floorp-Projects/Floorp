@@ -96,8 +96,7 @@ public:
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType,
-                               PRInt32         aHint);
+                               PRInt32         aModType);
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
@@ -262,17 +261,13 @@ nsSVGGenericContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
                                              nsIContent*     aChild,
                                              PRInt32         aNameSpaceID,
                                              nsIAtom*        aAttribute,
-                                             PRInt32         aModType,
-                                             PRInt32         aHint)
+                                             PRInt32         aModType)
 {
 #ifdef DEBUG
-    printf("** nsSVGGenericContainerFrame::AttributeChanged(");
     nsAutoString str;
     aAttribute->ToString(str);
-    nsCAutoString cstr;
-    cstr.AssignWithConversion(str);
-    printf(cstr.get());
-    printf(", hint:%d)\n",aHint);
+    printf("** nsSVGGenericContainerFrame::AttributeChanged(%s)\n",
+           NS_LossyConvertUCS2toASCII(str).get());
 #endif
 
   return NS_OK;

@@ -257,8 +257,10 @@ public:
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                      PRInt32 aModType, nsChangeHint& aHint) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 
 
 protected:
@@ -1873,30 +1875,34 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   if (!aData || !aAttributes)
     return;
 
-  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                              PRInt32 aModType,
-                                              nsChangeHint& aHint) const
+nsHTMLSelectElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                            PRInt32 aModType,
+                                            nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::multiple, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::size, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW },
-    { nsnull, NS_STYLE_HINT_NONE }
-  };
+  nsresult rv =
+    nsGenericHTMLContainerFormElement::GetAttributeChangeHint(aAttribute,
+                                                              aModType, aHint);
+  if (aAttribute == nsHTMLAtoms::multiple ||
+      aAttribute == nsHTMLAtoms::size) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
+  }
+  return rv;
+}
 
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
+NS_IMETHODIMP_(PRBool)
+nsHTMLSelectElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+{
+  static const AttributeDependenceEntry* const map[] = {
     sCommonAttributeMap,
+    sImageAlignAttributeMap
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 NS_IMETHODIMP

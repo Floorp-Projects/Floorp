@@ -1303,8 +1303,7 @@ nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
 
 
 NS_IMETHODIMP
-nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                               PRInt32 aHint)
+nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute)
 {
   if (gConstructingMenu)
     return NS_OK;

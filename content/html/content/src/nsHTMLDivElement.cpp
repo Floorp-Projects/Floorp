@@ -76,8 +76,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
@@ -216,23 +215,15 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aD
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP
-nsHTMLDivElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                           nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsHTMLDivElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW },
-    { nsnull, NS_STYLE_HINT_NONE }
-  };
-
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
+  static const AttributeDependenceEntry* const map[] = {
+    sDivAlignAttributeMap,
     sCommonAttributeMap
   };
   
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-  
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 NS_IMETHODIMP

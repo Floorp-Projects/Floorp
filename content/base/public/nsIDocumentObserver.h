@@ -153,14 +153,12 @@ public:
    * @param aAttribute the atom name of the attribute
    * @param aModType Whether or not the attribute was added, changed, or removed.
    *   The constants are defined in nsIDOMMutationEvent.h.
-   * @param aHint The style hint.
    */
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
-                              PRInt32      aModType,    
-                              nsChangeHint aHint) = 0;
+                              PRInt32      aModType) = 0;
 
   /**
    * Notifcation that the content model has had data appended to the
@@ -362,8 +360,7 @@ public:
                                 nsIContent* aContent,                        \
                                 PRInt32 aNameSpaceID,                        \
                                 nsIAtom* aAttribute,                         \
-                                PRInt32 aModType,                            \
-                                nsChangeHint aHint);                         \
+                                PRInt32 aModType);                           \
     NS_IMETHOD ContentAppended(nsIDocument* aDocument,                       \
                                nsIContent* aContainer,                       \
                                PRInt32 aNewIndexInContainer);                \
@@ -466,8 +463,7 @@ _class::AttributeChanged(nsIDocument* aDocument,                          \
                                        nsIContent* aContent,              \
                                        PRInt32 aNameSpaceID,              \
                                        nsIAtom* aAttribute,               \
-                                       PRInt32 aModType,                  \
-                                       nsChangeHint aHint)                \
+                                       PRInt32 aModType)                  \
 {                                                                         \
   return NS_OK;                                                           \
 }                                                                         \

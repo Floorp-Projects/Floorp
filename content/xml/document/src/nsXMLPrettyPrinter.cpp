@@ -266,8 +266,7 @@ nsXMLPrettyPrinter::AttributeChanged(nsIDocument* aDocument,
                                      nsIContent* aContent,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
-                                     PRInt32 aModType,
-                                     nsChangeHint aHint)
+                                     PRInt32 aModType)
 {
     MaybeUnhook(aContent);
     return NS_OK;

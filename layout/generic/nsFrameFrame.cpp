@@ -169,8 +169,7 @@ public:
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType,
-                              PRInt32 aHint);
+                              PRInt32 aModType);
 
   // if the content is "visibility:hidden", then just hide the view
   // and all our contents. We don't extend "visibility:hidden" to
@@ -609,8 +608,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent* aChild,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
-                                        PRInt32 aModType,
-                                        PRInt32 aHint)
+                                        PRInt32 aModType)
 {
   nsCOMPtr<nsIAtom> type;
   aChild->GetTag(getter_AddRefs(type));

@@ -95,9 +95,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                      PRInt32 aModType,
-                                      PRInt32& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
@@ -324,29 +322,26 @@ nsHTMLSharedContainerElement::AttributeToString(nsIAtom* aAttribute,
                                                           aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLSharedContainerElement::GetMappedAttributeImpact(const nsIAtom* aAttr,
-                                                       PRInt32 aModType,
-                                                       PRInt32& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsHTMLSharedContainerElement::HasAttributeDependentStyle(const nsIAtom* aAttr) const
 {
+  if (nsGenericHTMLContainerElement::HasAttributeDependentStyle(aAttr)) {
+    return PR_TRUE;
+  }
+
   if (mNodeInfo->Equals(nsHTMLAtoms::dir)  ||
       mNodeInfo->Equals(nsHTMLAtoms::menu) ||
       mNodeInfo->Equals(nsHTMLAtoms::ol)) {
     if (aAttr == nsHTMLAtoms::type) {
-      aHint = NS_STYLE_HINT_REFLOW;
-    } else if (mNodeInfo->Equals(nsHTMLAtoms::dir) &&
-               aAttr == nsHTMLAtoms::compact) {
-      aHint = NS_STYLE_HINT_CONTENT;  // XXX
+      return PR_TRUE;
     }
   } else if (mNodeInfo->Equals(nsHTMLAtoms::caption)) {
     if (aAttr == nsHTMLAtoms::align) {
-      aHint = NS_STYLE_HINT_REFLOW;
+      return PR_TRUE;
     }
   }
 
-  return nsGenericHTMLContainerElement::GetMappedAttributeImpact(aAttr,
-                                                                 aModType,
-                                                                 aHint);
+  return PR_FALSE;
 }
 
 static void

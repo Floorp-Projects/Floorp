@@ -136,17 +136,17 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
 
 NS_IMETHODIMP
 nsLeafBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
-                               nsIContent* aChild,
-                               PRInt32 aNameSpaceID,
-                               nsIAtom* aAttribute,
-                               PRInt32 aModType, 
-                               PRInt32 aHint)
+                                 nsIContent* aChild,
+                                 PRInt32 aNameSpaceID,
+                                 nsIAtom* aAttribute,
+                                 PRInt32 aModType)
 {
-    nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aModType, aHint);
+  nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
+                                              aNameSpaceID, aAttribute,
+                                              aModType);
 
-    if (aAttribute == nsXULAtoms::mousethrough) 
-       UpdateMouseThrough();
+  if (aAttribute == nsXULAtoms::mousethrough) 
+    UpdateMouseThrough();
 
   return rv;
 }

@@ -93,15 +93,14 @@ nsMathMLmfencedFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        nsIContent*     aContent,
                                        PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
-                                       PRInt32         aModType, 
-                                       PRInt32         aHint)
+                                       PRInt32         aModType)
 {
   RemoveFencesAndSeparators();
   CreateFencesAndSeparators(aPresContext);
 
   return nsMathMLContainerFrame::
          AttributeChanged(aPresContext, aContent, aNameSpaceID,
-                          aAttribute, aModType, aHint);
+                          aAttribute, aModType);
 }
 
 nsresult

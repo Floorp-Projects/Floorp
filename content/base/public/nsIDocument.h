@@ -400,8 +400,7 @@ public:
   NS_IMETHOD AttributeChanged(nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType,
-                              nsChangeHint aHint) = 0;
+                              PRInt32 aModType) = 0;
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer) = 0;
   NS_IMETHOD ContentInserted(nsIContent* aContainer,

@@ -175,14 +175,14 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsTreeColFrame::AttributeChanged(nsIPresContext* aPresContext,
-                                     nsIContent* aChild,
-                                     PRInt32 aNameSpaceID,
-                                     nsIAtom* aAttribute,
-                                     PRInt32 aModType, 
-                                     PRInt32 aHint)
+                                 nsIContent* aChild,
+                                 PRInt32 aNameSpaceID,
+                                 nsIAtom* aAttribute,
+                                 PRInt32 aModType)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                               aNameSpaceID, aAttribute, aModType, aHint);
+                                             aNameSpaceID, aAttribute,
+                                             aModType);
 
   if (aAttribute == nsHTMLAtoms::width || aAttribute == nsHTMLAtoms::hidden) {
     // Invalidate the tree.

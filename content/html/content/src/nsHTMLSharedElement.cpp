@@ -103,8 +103,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                      PRInt32 aModType, nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 };
 
 nsresult
@@ -301,7 +300,7 @@ SpacerMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     return;
 
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
 
   if (aData->mPositionData) {
     nsHTMLValue value;
@@ -390,8 +389,8 @@ EmbedMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 
   nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
@@ -404,45 +403,40 @@ PlainMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 
-NS_IMETHODIMP
-nsHTMLSharedLeafElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                                  PRInt32 aModType,
-                                                  nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsHTMLSharedLeafElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    static const AttributeImpactEntry* const map[] = {
+    static const AttributeDependenceEntry* const map[] = {
       sCommonAttributeMap,
-      sImageAttributeMap,
+      sImageMarginSizeAttributeMap,
       sImageAlignAttributeMap,
       sImageBorderAttributeMap
     };
     
-    FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-    return NS_OK;
+    return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
   }
 
   if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
-    static const AttributeImpactEntry attributes[] = {
-      { &nsHTMLAtoms::usemap, NS_STYLE_HINT_FRAMECHANGE },
-      { &nsHTMLAtoms::ismap, NS_STYLE_HINT_FRAMECHANGE },
-      { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW },
-      { nsnull, NS_STYLE_HINT_NONE }
+    static const AttributeDependenceEntry attributes[] = {
+      // XXXldb This is just wrong.
+      { &nsHTMLAtoms::usemap },
+      { &nsHTMLAtoms::ismap },
+      { &nsHTMLAtoms::align },
+      { nsnull }
     };
 
-    static const AttributeImpactEntry* const map[] = {
+    static const AttributeDependenceEntry* const map[] = {
       attributes,
       sCommonAttributeMap,
-      sImageAttributeMap,
+      sImageMarginSizeAttributeMap,
       sImageBorderAttributeMap,
     };
     
-    FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-    
-    return NS_OK;
+    return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
   }
 
-  return nsGenericHTMLLeafElement::GetMappedAttributeImpact(aAttribute,
-                                                            aModType, aHint);
+  return nsGenericHTMLLeafElement::HasAttributeDependentStyle(aAttribute);
 }
 
 NS_IMETHODIMP

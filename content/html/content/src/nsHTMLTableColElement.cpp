@@ -83,8 +83,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 };
 
 nsresult
@@ -251,10 +250,9 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
   if (!aAttributes || !aData)
     return;
 
-  nsHTMLValue value;
-  
   if (aData->mPositionData && aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
     // width
+    nsHTMLValue value;
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() != eHTMLUnit_Null) {
       switch (value.GetUnit()) {
@@ -306,8 +304,6 @@ void ColMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   if (!aAttributes || !aData)
     return;
 
-  nsHTMLValue value;
-  
   if (aData->mSID == eStyleStruct_Table && 
       aData->mTableData &&
       aData->mTableData->mSpan.GetUnit() == eCSSUnit_Null) {
@@ -322,31 +318,38 @@ void ColMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   MapAttributesIntoRule(aAttributes, aData);
 }
 
-NS_IMETHODIMP
-nsHTMLTableColElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                                PRInt32 aModType,
-                                                nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsHTMLTableColElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
-  // we don't match "span" if we're a <col>
-  nsIAtom** matchSpan = mNodeInfo->Equals(nsHTMLAtoms::col) ?
-    nsnull : &nsHTMLAtoms::span;
-  
-  const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::valign, NS_STYLE_HINT_REFLOW },
-    { matchSpan, NS_STYLE_HINT_REFLOW },
-    { nsnull, NS_STYLE_HINT_NONE }
+  static const AttributeDependenceEntry attributes[] = {
+    { &nsHTMLAtoms::width },
+    { &nsHTMLAtoms::align },
+    { &nsHTMLAtoms::valign },
+    { nsnull }
   };
 
-  const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry span_attribute[] = {
+    { &nsHTMLAtoms::span }
+  };
+
+  static const AttributeDependenceEntry* const col_map[] = {
     attributes,
     sCommonAttributeMap,
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
+  static const AttributeDependenceEntry* const colspan_map[] = {
+    attributes,
+    span_attribute,
+    sCommonAttributeMap,
+  };
 
-  return NS_OK;
+  // we don't match "span" if we're a <col>
+  // XXXldb Should this be reflected in the mapping function?
+  if (mNodeInfo->Equals(nsHTMLAtoms::col))
+    return FindAttributeDependence(aAttribute, col_map,
+                                   NS_ARRAY_LENGTH(col_map));
+  return FindAttributeDependence(aAttribute, colspan_map,
+                                 NS_ARRAY_LENGTH(colspan_map));
 }
 
 

@@ -393,8 +393,7 @@ nsMenuItem :: UncheckRadioSiblings ( nsIContent* inCheckedContent )
 
 
 NS_IMETHODIMP
-nsMenuItem :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                                    PRInt32 aHint )
+nsMenuItem :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute )
 {  
   if (aAttribute == nsWidgetAtoms::checked) {
     // if we're a radio menu, uncheck our sibling radio items. No need to

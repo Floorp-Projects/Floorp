@@ -39,7 +39,7 @@ interface nsIDocument;
 interface nsIChangeObserver : nsISupports
 {
   void AttributeChanged ( in nsIDocument aDocument,
-                           in long aNameSpaceID, in nsIAtom aAttribute, in long aHint) ;
+                           in long aNameSpaceID, in nsIAtom aAttribute ) ;
 
   void ContentRemoved ( in nsIDocument aDocument, in nsIContent aChild, 
                           in long aIndexInContainer ) ;
