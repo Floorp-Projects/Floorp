@@ -52,12 +52,11 @@ CSRCS		= bullet.c \
 		  laytrav.c \
                   $(NULL)
 
-REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs
+REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy
 
 include $(DEPTH)/config/config.mk
 
-ifdef MOZ_PRIVACY
-REQUIRES	+= privacy
+ifdef TRANSACTION_RECEIPTS
 EXPORTS		+= laylayer.h
 endif
 
