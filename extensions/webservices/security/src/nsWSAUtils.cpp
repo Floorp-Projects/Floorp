@@ -237,49 +237,38 @@ nsWSAUtils::GetOfficialHostName(nsIURI* aServiceURI,
   nsRefPtr<nsDNSListener> listener = new nsDNSListener();
   NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     
-  nsCOMPtr<nsIDNSRequest> dummy;
-  rv = dns->AsyncResolve(host, PR_FALSE, listener, nsnull, getter_AddRefs(dummy));
-  
-  if (NS_FAILED(rv)) 
-    return rv;
-    
   nsCOMPtr<nsIEventQueueService> eventQService = 
     do_GetService(kEventQueueServiceCID, &rv);
   
   if (NS_FAILED(rv))
-      return rv;
+    return rv;
 
   nsCOMPtr<nsIEventQueue> eventQ;
   rv = eventQService->PushThreadEventQueue(getter_AddRefs(eventQ));
   
   if (NS_FAILED(rv))
-      return rv;
- 
-  while (!listener->mLookupFinished)
-    eventQ->ProcessPendingEvents();
+    return rv;
+
+  nsCOMPtr<nsIDNSRequest> dummy;
+  rv = dns->AsyncResolve(host, PR_FALSE, listener, eventQ, getter_AddRefs(dummy));
   
+  PLEvent *ev;
+  while (NS_SUCCEEDED(rv) && !listener->mLookupFinished) {
+    rv = eventQ->WaitForEvent(&ev);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "WaitForEvent failed");
+    if (NS_SUCCEEDED(rv)) {
+      rv = eventQ->HandleEvent(ev);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "HandleEvent failed");
+    }
+  }
+
+  aResult.Assign(listener->mOfficialHostName);
+
   eventQService->PopThreadEventQueue(eventQ);
    
-  aResult.Assign(listener->mOfficialHostName);
-  
-  return NS_OK;
+  return rv;
 }
 
-static void* PR_CALLBACK
-EventHandler(PLEvent *aEvent)
-{
-  nsDNSListener* listener = (nsDNSListener*)PL_GetEventOwner(aEvent);
-  if (listener)
-    listener->mLookupFinished = PR_TRUE;
-  return 0;
-}
-
-static void PR_CALLBACK
-DestroyHandler(PLEvent *aEvent)
-{
-  delete aEvent;
-}
- 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSListener,
                               nsIDNSListener)
 
@@ -300,19 +289,7 @@ nsDNSListener::OnLookupComplete(nsIDNSRequest* aRequest,
   if (aRecord)
     aRecord->GetCanonicalName(mOfficialHostName);
 
-  // Post an event to the UI thread's event queue to cause
-  // ProcessPendingEvents to run.
-  nsCOMPtr<nsIEventQueue> uiEventQ;
-  nsresult rv = NS_GetMainEventQ(getter_AddRefs(uiEventQ));
-  if (uiEventQ) {
-    PLEvent* event = new PLEvent();
-    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-    PL_InitEvent(event, this, EventHandler, DestroyHandler);
-    rv = uiEventQ->PostEvent(event);
-    if (NS_FAILED(rv))
-      PL_DestroyEvent(event);
-  }
-  return rv;
+  mLookupFinished = PR_TRUE;
+  return NS_OK;
 }
 
