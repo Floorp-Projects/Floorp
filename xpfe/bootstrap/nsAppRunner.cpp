@@ -1032,7 +1032,7 @@ static void DumpHelp(char *appname)
   printf("%s-ProfileWizard%sStart with profile wizard.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-SelectProfile%sStart with profile selection dialog.\n",HELP_SPACER_1,HELP_SPACER_2);
-#ifdef XP_UNIX
+#ifdef MOZ_ENALBLE_XREMOTE
   printf("%s-remote <command>%sExecute <command> in an already running\n"
          "%sMozilla process.  For more info, see:\n"
          "\n%shttp://home.netscape.com/newsref/std/x-remote.html\n\n",
@@ -1080,7 +1080,7 @@ static nsresult DumpVersion(char *appname)
   return rv;
 }
 
-#ifdef XP_UNIX
+#ifdef MOZ_ENABLE_XREMOTE
 // use int here instead of a PR type since it will be returned
 // from main - just to keep types consistent
 static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
@@ -1256,7 +1256,7 @@ int main(int argc, char* argv[])
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
-#ifdef XP_UNIX
+#ifdef MOZ_ENABLE_XREMOTE
   // handle -remote now that xpcom is fired up
   int remoterv;
   PRBool argused = PR_FALSE;
