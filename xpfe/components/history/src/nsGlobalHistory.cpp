@@ -266,11 +266,11 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   PRInt32 days;
   LL_L2I(days, ageInDays);
 
-  if (term->method == "is")
+  if (term->method.Equals("is"))
     return (days == matchSearchTerm->intValue);
-  else if (term->method == "isgreater")
+  else if (term->method.Equals("isgreater"))
     return (days >  matchSearchTerm->intValue);
-  else if (term->method == "isless")
+  else if (term->method.Equals("isless"))
     return (days <  matchSearchTerm->intValue);
   
   return PR_FALSE;
@@ -3107,7 +3107,7 @@ nsGlobalHistory::SearchEnumerator::RowMatches(nsIMdbRow *aRow,
     
     searchTerm *term = (searchTerm*)aQuery->terms[i];
 
-    if (term->datasource != "history")
+    if (!term->datasource.Equals("history"))
       continue;                 // we only match against history queries
     
     // use callback if it exists
@@ -3135,7 +3135,7 @@ nsGlobalHistory::SearchEnumerator::RowMatches(nsIMdbRow *aRow,
       mdbYarn yarn;
       aRow->AliasCellYarn(mEnv, property_column, &yarn);
 
-      if (term->method == "is") {
+      if (term->method.Equals("is")) {
         // is the cell in unicode or not? Hmm...let's assume so?
         nsLiteralCString rowVal((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
 
