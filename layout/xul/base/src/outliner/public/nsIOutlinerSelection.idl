@@ -54,6 +54,10 @@ interface nsIOutlinerSelection : nsISupports
   // Selects all rows.
   void selectAll();
 
+  // Iterate the selection using these methods.
+  long getRangeCount();
+  void getRangeAt(in long i, out long min, out long max);
+
   // This attribute is a boolean indicating whether or not the
   // "select" event should fire when the selection is changed using
   // one of our methods.  A view can use this to temporarily suppress

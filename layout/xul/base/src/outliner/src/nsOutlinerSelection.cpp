@@ -29,6 +29,7 @@ nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
 {
   NS_INIT_ISUPPORTS();
   mOutliner = aOutliner;
+  mSuppressed = PR_FALSE;
 }
 
 nsOutlinerSelection::~nsOutlinerSelection()
@@ -85,24 +86,38 @@ NS_IMETHODIMP nsOutlinerSelection::SelectAll()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::GetSelectEventsSuppressed(PRBool *aSelectEventsSuppressed)
+NS_IMETHODIMP nsOutlinerSelection::GetRangeCount(PRInt32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsOutlinerSelection::GetRangeAt(PRInt32 i, PRInt32 *min, PRInt32 *max)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsOutlinerSelection::GetSelectEventsSuppressed(PRBool *aSelectEventsSuppressed)
+{
+  *aSelectEventsSuppressed = mSuppressed;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::SetSelectEventsSuppressed(PRBool aSelectEventsSuppressed)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  mSuppressed = aSelectEventsSuppressed;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::GetCurrentIndex(PRInt32 *aCurrentIndex)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  *aCurrentIndex = mCurrentIndex;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aCurrentIndex)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  mCurrentIndex = aCurrentIndex;
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
