@@ -1014,8 +1014,7 @@ StartupEmbedding()
 
 	profile_dir = (char *)alloca(strlen(getenv("HOME")) + strlen("/.ph") + 1);
 	sprintf(profile_dir, "%s/.ph", getenv("HOME"));
-    //rv = StartupProfile(profile_dir, "mozilla");
-    rv = StartupProfile("/home/briane", ".mozilla");
+    rv = StartupProfile(profile_dir, "mozilla");
     if (NS_FAILED(rv))
       	NS_WARNING("Warning: Failed to start up profiles.\n");
     
