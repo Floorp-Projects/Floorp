@@ -27,7 +27,8 @@ nsHTTPRequest::nsHTTPRequest(nsIUrl* i_pURL, HTTPMethod i_Method):
     m_pURI(i_pURL),
     m_Method(i_Method),
     m_pArray(new nsVoidArray()),
-    m_Version(HTTP_ONE_ZERO)
+    m_Version(HTTP_ONE_ZERO),
+    m_Request(nsnull)
 {
     Build();
 }
