@@ -560,7 +560,11 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
         errorCode = pConn->pConsumer->OnDataAvailable(pConn->pURL, pConn->pNetStream, bytesWritten);
     }
 
-    return ((NS_OK == errorCode) && (bytesWritten == length));
+	/* Abort the connection if an error occurred... */
+	if (NS_FAILED(errorCode) || (bytesWritten != length)) {
+		return -1;
+	}
+    return 1;
 }
 
 unsigned int stub_is_write_ready(NET_StreamClass *stream)

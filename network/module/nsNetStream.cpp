@@ -556,7 +556,7 @@ nsresult nsBlockingStream::Write(const char *aBuf,
                                  PRInt32 *aWriteCount)
 {
     PRInt32 bytesFree;
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     LockStream();
 
