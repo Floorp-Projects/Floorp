@@ -31,6 +31,13 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsImportABDescriptor.obj	\
 		.\$(OBJDIR)\nsImportAddressBooks.obj	\
 		.\$(OBJDIR)\nsImportStringBundle.obj	\
+		.\$(OBJDIR)\ImportTranslate.obj			\
+		.\$(OBJDIR)\nsImportTranslator.obj		\
+		.\$(OBJDIR)\ImportCharSet.obj			\
+		.\$(OBJDIR)\ImportOutFile.obj			\
+		.\$(OBJDIR)\nsImportScanFile.obj		\
+		.\$(OBJDIR)\nsImportEncodeScan.obj		\
+		.\$(OBJDIR)\nsImportMimeEncode.obj		\
         $(NULL)
 
 LLIBS=\

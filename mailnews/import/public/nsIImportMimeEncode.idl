@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+	Encodes a file from disk into an output stream including properly
+	encoded mime headers.
+*/
+
+#include "nsISupports.idl"
+
+interface nsIFileSpec;
+
+[scriptable, uuid(455ca0a0-8de2-11d3-a206-00a0cc26da63)]
+interface nsIImportMimeEncode : nsISupports
+{	
+	
+	void	EncodeFile( in nsIFileSpec inFile, in nsIFileSpec outFile, [const] in string fileName, [const] in string mimeType);
+
+	boolean	DoWork( out boolean done);
+	
+	long	NumBytesProcessed();
+
+	boolean	DoEncoding();
+	void	Initialize( in nsIFileSpec inFile, in nsIFileSpec outFile, [const] in string fileName, [const] in string mimeType);
+
+};
+	
+
+
+%{ C++
+
+#define NS_IMPORTMIMEENCODE_CID                      \
+{ /* e4a1a340-8de2-11d3-a206-00a0cc26da63 */         \
+    0xe4a1a340,                                      \
+    0x8de2,                                          \
+    0x11d3,                                          \
+    {0xa2, 0x06, 0x00, 0xa0, 0xcc, 0x26, 0xda, 0x63} \
+}
+
+%}

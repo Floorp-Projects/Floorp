@@ -15,27 +15,32 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+  
+/*
+	Outlook (Win32) import module
+*/
+
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+#include "nsIServiceManager.h"
+#include "nsIRegistry.h"
 #include "nsIImportService.h"
-#include "nsImportMimeEncode.h"
+#include "nsOutlookImport.h"
 
-#include "ImportDebug.h"
+#include "OutlookDebugLog.h"
 
+static NS_DEFINE_CID(kOutlookImportCID,    	NS_OUTLOOKIMPORT_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
-static NS_DEFINE_CID(kImportMimeEncodeCID,	NS_IMPORTMIMEENCODE_CID);
+static NS_DEFINE_CID(kRegistryCID,			NS_REGISTRY_CID);
 
 
-extern nsresult NS_NewImportService(nsIImportService** aImportService);
-extern nsresult NS_NewImportMimeEncode( nsIImportMimeEncode **aMimeEncode);
-
-// Module implementation for the import service library
-class nsImportServiceModule : public nsIModule
+// Module implementation for the Outlook Express import library
+class nsOutlookImportModule : public nsIModule
 {
 public:
-    nsImportServiceModule();
-    virtual ~nsImportServiceModule();
+    nsOutlookImportModule();
+    virtual ~nsOutlookImportModule();
 
     NS_DECL_ISUPPORTS
 
@@ -55,7 +60,7 @@ protected:
 // Functions used to create new instances of a given object by the
 // generic factory.
 
-#define MAKE_CTOR(_name)                                             \
+#define MAKE_CTOR(_iface, _name)                                     \
 static NS_IMETHODIMP                                                 \
 CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 {                                                                    \
@@ -66,7 +71,7 @@ CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
         *aResult = nsnull;                                           \
         return NS_ERROR_NO_AGGREGATION;                              \
     }                                                                \
-    nsI##_name* inst;                                                \
+    nsI##_iface* inst;                                                \
     nsresult rv = NS_New##_name(&inst);                              \
     if (NS_FAILED(rv)) {                                             \
         *aResult = nsnull;                                           \
@@ -80,29 +85,28 @@ CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
     return rv;                                                       \
 }
 
-MAKE_CTOR(ImportService)
-MAKE_CTOR(ImportMimeEncode)
+MAKE_CTOR(ImportModule, OutlookImport)
 
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
 
-nsImportServiceModule::nsImportServiceModule()
+nsOutlookImportModule::nsOutlookImportModule()
     : mInitialized(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 }
 
-nsImportServiceModule::~nsImportServiceModule()
+nsOutlookImportModule::~nsOutlookImportModule()
 {
     Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsImportServiceModule, kIModuleIID)
+NS_IMPL_ISUPPORTS(nsOutlookImportModule, kIModuleIID)
 
 // Perform our one-time intialization for this module
 nsresult
-nsImportServiceModule::Initialize()
+nsOutlookImportModule::Initialize()
 {
     if (mInitialized) {
         return NS_OK;
@@ -113,7 +117,7 @@ nsImportServiceModule::Initialize()
 
 // Shutdown this module, releasing all of the module resources
 void
-nsImportServiceModule::Shutdown()
+nsOutlookImportModule::Shutdown()
 {
     // Release the factory object
     mFactory = nsnull;
@@ -121,7 +125,7 @@ nsImportServiceModule::Shutdown()
 
 // Create a factory object for creating instances of aClass.
 NS_IMETHODIMP
-nsImportServiceModule::GetClassObject(nsIComponentManager *aCompMgr,
+nsOutlookImportModule::GetClassObject(nsIComponentManager *aCompMgr,
                                const nsCID& aClass,
                                const nsIID& aIID,
                                void** r_classObj)
@@ -146,14 +150,14 @@ nsImportServiceModule::GetClassObject(nsIComponentManager *aCompMgr,
     // Choose the appropriate factory, based on the desired instance
     // class type (aClass).
     nsCOMPtr<nsIGenericFactory> fact;
-    if (aClass.Equals(kImportServiceCID)) {
+    if (aClass.Equals(kOutlookImportCID)) {
         if (!mFactory) {
             // Create and save away the factory object for creating
             // new instances of Sample. This way if we are called
             // again for the factory, we won't need to create a new
             // one.
             rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
-                                      CreateNewImportService);
+                                      CreateNewOutlookImport);
         }
         fact = mFactory;
     }
@@ -161,7 +165,7 @@ nsImportServiceModule::GetClassObject(nsIComponentManager *aCompMgr,
 		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 #ifdef DEBUG
         char* cs = aClass.ToString();
-        printf("+++ nsImportServiceModule: unable to create factory for %s\n", cs);
+        printf("+++ nsOutlookImportModule: unable to create factory for %s\n", cs);
         nsCRT::free(cs);
 #endif
     }
@@ -183,16 +187,41 @@ struct Components {
 
 // The list of components we register
 static Components gComponents[] = {
-    { "Import Service Component", &kImportServiceCID,
-      "component://mozilla/import/import-service", },
-	{ "Import Mime Encoder", &kImportMimeEncodeCID,
-	  "component://mozilla/import/import-mimeencode"},
+    { "Outlook Import Component", &kOutlookImportCID,
+      "component://mozilla/import/import-outlook", },
 };
-
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
+nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
+{
+	nsRegistryKey	nScapeKey;
+
+	nsresult rv = reg->GetSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
+	if (NS_FAILED(rv)) {
+		rv = reg->AddSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
+	}
+	if (NS_FAILED( rv))
+		return( rv);
+
+	nsRegistryKey	iKey;
+	rv = reg->GetSubtree( nScapeKey, "Import", &iKey);
+	if (NS_FAILED( rv)) {
+		rv = reg->AddSubtree( nScapeKey, "Import", &iKey);
+	}
+	
+	if (NS_FAILED( rv))
+		return( rv);
+
+	rv = reg->GetSubtree( iKey, "Modules", pKey);
+	if (NS_FAILED( rv)) {
+		rv = reg->AddSubtree( iKey, "Modules", pKey);
+	}
+
+	return( rv);
+}
+
 NS_IMETHODIMP
-nsImportServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
+nsOutlookImportModule::RegisterSelf(nsIComponentManager *aCompMgr,
                           nsIFileSpec* aPath,
                           const char* registryLocation,
                           const char* componentType)
@@ -200,7 +229,7 @@ nsImportServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
     nsresult rv = NS_OK;
 
 #ifdef DEBUG
-    printf("*** Registering ImportService components\n");
+    printf("*** Registering Outlook import components\n");
 #endif
 
     Components* cp = gComponents;
@@ -211,7 +240,7 @@ nsImportServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
                                              PR_TRUE);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
-            printf("nsImportServiceModule: unable to register %s component => %x\n",
+            printf("nsOutlookImportModule: unable to register %s component => %x\n",
                    cp->mDescription, rv);
 #endif
             break;
@@ -219,16 +248,50 @@ nsImportServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
         cp++;
     }
 
+    {
+    	NS_WITH_SERVICE( nsIRegistry, reg, kRegistryCID, &rv);
+    	if (NS_FAILED(rv)) {
+	    	IMPORT_LOG0( "*** Import Outlook, ERROR GETTING THE Registry\n");
+    		return rv;
+    	}
+    	
+    	rv = reg->OpenDefault();
+    	if (NS_FAILED(rv)) {
+	    	IMPORT_LOG0( "*** Import Outlook, ERROR OPENING THE REGISTRY\n");
+    		return( rv);
+    	}
+    	
+		nsRegistryKey	importKey;
+		
+		rv = GetImportModulesRegKey( reg, &importKey);
+		if (NS_FAILED( rv)) {
+			IMPORT_LOG0( "*** Import Outlook, ERROR getting Netscape/Import registry key\n");
+			return( rv);
+		}		
+		    	
+		nsRegistryKey	key;
+    	rv = reg->AddSubtree( importKey, "Outlook", &key);
+    	if (NS_FAILED(rv)) return( rv);
+    	
+    	rv = reg->SetString( key, "Supports", kOutlookSupportsString);
+    	if (NS_FAILED(rv)) return( rv);
+    	char *myCID = kOutlookImportCID.ToString();
+    	rv = reg->SetString( key, "CLSID", myCID);
+    	delete [] myCID;
+    	if (NS_FAILED(rv)) return( rv);  	
+    }
+    
     return rv;
 }
 
+
 NS_IMETHODIMP
-nsImportServiceModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+nsOutlookImportModule::UnregisterSelf(nsIComponentManager* aCompMgr,
                             nsIFileSpec* aPath,
                             const char* registryLocation)
 {
 #ifdef DEBUG
-    printf("*** Unregistering ImportService components\n");
+    printf("*** Unregistering Outlook import components\n");
 #endif
     Components* cp = gComponents;
     Components* end = cp + NUM_COMPONENTS;
@@ -236,7 +299,7 @@ nsImportServiceModule::UnregisterSelf(nsIComponentManager* aCompMgr,
         nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
-            printf("nsImportServiceModule: unable to unregister %s component => %x\n",
+            printf("nsOutlookImportModule: unable to unregister %s component => %x\n",
                    cp->mDescription, rv);
 #endif
         }
@@ -247,7 +310,7 @@ nsImportServiceModule::UnregisterSelf(nsIComponentManager* aCompMgr,
 }
 
 NS_IMETHODIMP
-nsImportServiceModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+nsOutlookImportModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 {
     if (!okToUnload) {
         return NS_ERROR_INVALID_POINTER;
@@ -258,7 +321,7 @@ nsImportServiceModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnlo
 
 //----------------------------------------------------------------------
 
-static nsImportServiceModule *gModule = NULL;
+static nsOutlookImportModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
                                           nsIFileSpec* location,
@@ -267,10 +330,10 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     nsresult rv = NS_OK;
 
     NS_ASSERTION(return_cobj, "Null argument");
-    NS_ASSERTION(gModule == NULL, "nsImportServiceModule: Module already created.");
+    NS_ASSERTION(gModule == NULL, "nsOutlookImportModule: Module already created.");
 
     // Create an initialize the layout module instance
-    nsImportServiceModule *m = new nsImportServiceModule();
+    nsOutlookImportModule *m = new nsOutlookImportModule();
     if (!m) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -284,5 +347,6 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     gModule = m;                  // WARNING: Weak Reference
     return rv;
 }
+
 
 

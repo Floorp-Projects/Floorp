@@ -1,4 +1,4 @@
-#!nmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,22 +15,35 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
-IGNORE_MANIFEST=1
+DEPTH=..\..\..\..
 
-XPIDLSRCS=      .\nsIImportService.idl  			\
-				.\nsIImportModule.idl				\
-				.\nsIImportMail.idl					\
-				.\nsIImportMailboxDescriptor.idl	\
-				.\nsIImportGeneric.idl				\
-				.\nsIImportAddressBooks.idl			\
-				.\nsIImportABDescriptor.idl			\
-				.\nsIImportSettings.idl				\
-				.\nsIImportMimeEncode.idl			\
-                $(NULL)
+MODULE=impOutlk
 
-MODULE= import
+MAKE_OBJ_TYPE=DLL
+DLLNAME=$(MODULE)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
+
+CPP_OBJS=\
+        .\$(OBJDIR)\nsOutlookFactory.obj  		\
+		.\$(OBJDIR)\nsOutlookRegUtil.obj		\
+		.\$(OBJDIR)\nsOutlookStringBundle.obj	\
+		.\$(OBJDIR)\nsOutlookImport.obj			\
+		.\$(OBJDIR)\nsOutlookSettings.obj		\
+		.\$(OBJDIR)\MapiApi.obj					\
+		.\$(OBJDIR)\nsOutlookMail.obj			\
+		.\$(OBJDIR)\MapiMessage.obj				\
+		.\$(OBJDIR)\MapiMimeTypes.obj			\
+        $(NULL)
+
+LLIBS=\
+        $(DIST)\lib\xpcom.lib       \
+        $(DIST)\lib\plc3.lib        \
+ 		$(LIBNSPR)  				\
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+        $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 

@@ -21,7 +21,7 @@ LocalDirs=public src resources
 
 
 !if "$(_MSC_VER)" == "1200"
-DIRS=$(LocalDirs) oexpress
+DIRS=$(LocalDirs) oexpress outlook
 !else
 DIRS=$(LocalDirs)
 !endif

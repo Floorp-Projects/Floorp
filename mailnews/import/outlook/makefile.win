@@ -1,4 +1,4 @@
-#!nmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,21 +16,10 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
 
-XPIDLSRCS=      .\nsIImportService.idl  			\
-				.\nsIImportModule.idl				\
-				.\nsIImportMail.idl					\
-				.\nsIImportMailboxDescriptor.idl	\
-				.\nsIImportGeneric.idl				\
-				.\nsIImportAddressBooks.idl			\
-				.\nsIImportABDescriptor.idl			\
-				.\nsIImportSettings.idl				\
-				.\nsIImportMimeEncode.idl			\
-                $(NULL)
-
-MODULE= import
+DIRS=resources src
 
 
 include <$(DEPTH)\config\rules.mak>
+
 
