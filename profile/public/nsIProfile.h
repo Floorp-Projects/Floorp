@@ -19,7 +19,6 @@
 #ifndef nsIProfile_h__
 #define nsIProfile_h__
 
-#include "jsapi.h"
 #include "nsISupports.h"
 #include "nsFileSpec.h"
 
