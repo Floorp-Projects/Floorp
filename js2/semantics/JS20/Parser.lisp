@@ -2689,12 +2689,9 @@
         (return (is-strictly-equal (& original a) b phase)))
        ((in b alias-instance :narrow-true)
         (return (is-strictly-equal a (& original b) phase)))
-       ((and (in a float32 :narrow-true) (in b float32 :narrow-true))
-        (return (= (general-number-compare a b) equal order)))
-       ((and (in a float64 :narrow-true) (in b float64 :narrow-true))
+       ((and (in a general-number :narrow-true) (in b general-number :narrow-true))
         (return (= (general-number-compare a b) equal order)))
        (nil
-        (// "Note that a " (:type long) " 5 is strictly equal to itself but not to " (:type u-long) " 5 or " (:type float64) " 5.")
         (return (= a b object)))))
     
     
